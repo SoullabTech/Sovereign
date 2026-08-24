@@ -200,6 +200,19 @@ describe('PUBLIC SURFACE — the server may know why; the member gets the class'
     expect(publicConflictBody.length).toBe(1); // action only
   });
 
+  it('ROUTE: the operator log carries no member identifier fragment', () => {
+    const route = readFileSync(
+      path.join(process.cwd(), 'app/api/studio/personal/enter/route.ts'), 'utf8');
+    // A truncated UUID is a FRAGMENT of the real identifier, not a derivation:
+    // still directly matchable against it. The slug is `personal-<first8>`, so
+    // logging it leaks the same fragment under a different name.
+    expect(route).not.toContain('memberId.slice(');
+    expect(route).toContain('member: memberRef(memberId)');
+    const warnBlock = route.slice(route.indexOf('unresolved unique conflict'),
+                                  route.indexOf('unresolved unique conflict') + 400);
+    expect(warnBlock).not.toMatch(/\bslug\b\s*,/);
+  });
+
   it('ROUTE: the 409 body is publicConflictBody(action), and the constraint only reaches the log', () => {
     const route = readFileSync(
       path.join(process.cwd(), 'app/api/studio/personal/enter/route.ts'), 'utf8');

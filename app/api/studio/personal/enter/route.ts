@@ -13,6 +13,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { query, transaction } from '@/lib/db/postgres';
 import { v4 as uuid } from 'uuid';
+import { memberRef } from '@/lib/privacy/memberRef';
 import {
   decideProvisioning, classifyCollision, isUniqueViolation, constraintNameOf,
   publicConflictBody, personalSlugFor,
@@ -194,11 +195,15 @@ export async function POST(request: NextRequest) {
       // Unresolvable. The constraint name is EVIDENCE — it belongs in operator
       // telemetry, not in the member's response. `practitioners_slug_key` is
       // internal schema; the client needs the classified state only.
+      // memberRef, not a slice: a truncated UUID is a FRAGMENT of the real
+      // identifier, still directly matchable against it. The slug is omitted
+      // for the same reason — `personal-<first8>` embeds that same fragment, so
+      // logging it would reintroduce the leak under a different variable name.
+      // An operator with the ref can reach the slug through authorized means.
       console.warn('[Studio Personal Enter] unresolved unique conflict', {
         state: after.action,
         constraint: after.constraint ?? 'unnamed',
-        member: memberId.slice(0, 8),
-        slug,
+        member: memberRef(memberId),
       });
 
       return NextResponse.json(publicConflictBody(after.action), { status: 409 });
