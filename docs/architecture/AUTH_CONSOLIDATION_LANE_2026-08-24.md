@@ -1,13 +1,16 @@
 # Auth Consolidation Lane — 2026-08-24
 
-**Base:** `e56e502f` (`clean-main-no-secrets`, merge of PR #1073).
-**Status:** Part 1 (transport honesty + attribution) is **BUILT on current
-canonical, not deployed**. Parts 2–4 are **PROPOSED, not authorized**.
+**Base:** `e56e502f` (merge of PR #1073). **Merged and live as `73106dc90`.**
+**Status:** Part 1 (transport honesty + attribution) is **LIVE for the negative
+path on one route, and BUILT-only everywhere else** — see §2.6.1 for exactly
+what was witnessed and what was not. Parts 2–4 are **PROPOSED, not authorized**.
 
 Read with `docs/canon/MARKETING_CLAIM_DISCIPLINE.md` in hand. Sections are
-labelled **VERIFIED** (read out of the code at this commit), **BUILT** (changed
-on this branch, tests green, not in production), or **PROPOSED** (a direction,
-not a decision). Nothing here is Live until it is deployed and witnessed.
+labelled **VERIFIED** (read out of the code at this commit), **BUILT** (merged,
+tests green, not observed in production), **LIVE** (observed running in
+production, scoped to what was actually observed), or **PROPOSED** (a direction,
+not a decision). Deployed is not witnessed, and witnessing one path does not
+witness its siblings.
 
 ---
 
@@ -218,10 +221,71 @@ Negative controls, per this repo's convention:
 Gates: `check:no-supabase` clean; `npm run typecheck` no-regression green (not
 re-baselined).
 
-**Deliberately NOT claimed:** none of this is verified in production. This does
-not restore delivery — that needs provider capacity, which is an account action.
-It makes every auth path report what the provider actually said, to the right
-party, with honest advice about what to do next.
+### 2.6.1 Production witness — 2026-08-24, live at `73106dc90`
+
+Merged as PR #1074 and deployed through `pre-deploy-gate.sh deploy-maia
+73106dc90`; running-container provenance verified (`GIT_COMMIT=73106dc90`).
+Prior live SHA was `e56e502f`, so #1072 and #1073 were already in production and
+this deploy added the hardening layer only.
+
+**WITNESSED LIVE — the negative path on `POST /api/members/email-code`,**
+against a genuine Resend `monthly_quota_exceeded` refusal:
+
+| Property | Observed |
+|---|---|
+| Refusal not reported as success | `HTTP 502`, no `success` field |
+| Attribution | `reason: "email_provider_refused"` |
+| Retry advice | `retryable: false`; copy contains no "try again" |
+| Routed to a monitored mailbox | `support@soullab.life` |
+| No enumeration | no `isExistingMember` in the body |
+| Operator signal | `TRANSPORT_DOWN kind=quota_exceeded providerCode=monthly_quota_exceeded` |
+| Raw provider name preserved beside our class | `providerCode` and `failureKind` both present on one line |
+| No address in logs | `member=anonymous` |
+| No false success line | no `[EMAIL-CODE] Code sent` emitted |
+| Code invalidated, not deleted | row present with `used = t` |
+
+Two requests landed 8s apart and were handled identically. Which row proves
+*which* claim matters: the route invalidates outstanding codes for an address at
+the START of each request, so the earlier row could have been marked `used` by
+the second request rather than by the failure burn. **The later row is the one
+that proves the burn** — nothing followed it to invalidate it.
+
+**NOT WITNESSED — test-proven only:**
+
+- The **success path**. Blocked on provider capacity, which is an account
+  action, not a code one. Its CONTROL value is exactly that it rules out a route
+  broken into never succeeding.
+- `magic-link`, `recover`, `reset-password`, `send-verification` — centralised
+  and unit-proven, never exercised in production.
+- The **session-is-authentication** invariant.
+- The **member** branch of PII-safe logging. The witness used a non-member
+  address, so it exercised `memberRef(null) → 'anonymous'`. The branch where
+  `memberRef(member.id)` must produce a hash — the branch where a real address
+  would surface if that call were wired wrong — is a different code path and was
+  not observed.
+- Every remaining cell of the launch gate (§7).
+
+One green witness, on one route, for one failure class, in one attempt shape.
+That is genuinely Live and it is genuinely narrow. **Signup remains closed**:
+this did not restore delivery and was never going to. What changed is that a
+person meeting a closed door is now told so accurately and pointed at a mailbox
+that exists.
+
+### 2.6.2 Carried out of this lane — ops findings from the deploy
+
+Recorded here so they are not lost; neither belongs to auth and neither was
+touched.
+
+- **Deploy-lock provenance.** A lock refusal prints the holder's `git_commit`
+  from the working-tree HEAD, not the immutable SHA the holder is deploying.
+  Under the `git archive` snapshot design the checkout does not determine what
+  gets built, so during a refusal you cannot tell whether the deploy already
+  running targets the same commit you want. Observed: holder reported
+  `git_commit=7c9dd5192` while deploying `73106dc90`.
+- **Rollback image hygiene.** `deploy-tag` could not prune stale tags
+  (`maia-sovereign:9aefae046`, `:staging`) because containers still reference
+  them. `:current` / `:previous` / `:<sha>` custody is intact, so rollback is
+  unaffected, but stale tags accumulate.
 
 ### 2.7 Sibling sweep after structural moves — method
 
@@ -426,7 +490,11 @@ unset in production and every `beta_waitlist` row is from July.
 - Production logs showing `[MAIA/email] sent` with real message ids **while**
   members still report no code → the failure is downstream of acceptance
   (deliverability, spam placement), and §5's webhook work becomes urgent rather
-  than next.
+  than next. *Still open — cannot be tested until capacity is restored, since no
+  send is currently being accepted at all.*
+- A member-address refusal logging anything other than a `memberRef` hash → the
+  PII-safe logging claim holds only for the anonymous branch witnessed in
+  §2.6.1, and the member branch needs its own fix.
 - The Better Auth spike failing question 2 (iOS WebView) → invariant 7 needs a
   different mechanism, and §4 is withdrawn rather than deferred.
 - Members proving able to sign in on the live commit → the transport bug was not
