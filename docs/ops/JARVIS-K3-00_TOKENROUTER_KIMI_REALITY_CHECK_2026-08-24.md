@@ -64,6 +64,7 @@ tree:    clean (0 modified files at bind time)
 runtime: Node v22.22.2, ephemeral remote container (not Mac Studio, not minisforum)
 
 TOKENROUTER
+account:          ABSENT — signup incomplete (captcha failure, 2026-08-24)
 credential:       ABSENT (this session only — see scope note)
 endpoint:         https://api.tokenrouter.com/v1
 catalog reachable: NO — egress policy 403 on CONNECT
@@ -90,6 +91,7 @@ evidence:         none. No TokenRouter API response was obtained in this session
 
 VERDICT
 D — blocked. Not incompatible, not disproven: untested.
+     As of 2026-08-24 also UNEXECUTABLE — no account exists.
 
 NEXT ACTION
 Kelly: decide whether to allowlist api.tokenrouter.com for a JARVIS session and
@@ -137,9 +139,28 @@ mechanism — not through the conversation.
 
 ---
 
+## Blocker 0 — no TokenRouter account (added 2026-08-24, after initial report)
+
+Kelly reports being **unable to complete TokenRouter signup — the captcha does not
+work**. This blocker is upstream of the other two: with no account, there is no
+key to provision and nothing to authenticate against, so the proof is currently
+unexecutable *by anyone*, not merely unexecutable from this container.
+
+This was not independently verified: `tokenrouter.com` is on the same denied
+egress path as the API, so no assessment was made of whether the captcha failure
+is general or specific to Kelly's browser/network.
+
+**Standing observation, held as observation and not as a finding**: a provider
+being promoted this week, whose free-tier alias is not on its public model page,
+and whose signup flow does not complete, is a thin foundation to build a JARVIS
+lane on. That is a reason to spend no further effort here without a specific
+motivating need — it is not evidence of anything wrong with the provider.
+
 ## Re-run conditions
 
-`JARVIS-K3-00` should be re-run unchanged once either:
+**Precondition (blocker 0)**: a working TokenRouter account must exist.
+
+Then `JARVIS-K3-00` should be re-run unchanged once either:
 
 - the host is allowlisted **and** the key is provisioned to that session; or
 - an operator runs steps 3–5 from a machine with existing egress and pastes the
