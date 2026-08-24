@@ -1,0 +1,65 @@
+
+=== 0. BUILDING THE SYNTHETIC LINEAGE ===
+  PASS  8 lineage nodes + 1 unrelated control persisted
+          {"total_entries": 9, "entity_types": {"evidence": 2, "authority": 1, "decision": 1, "project_knowledge": 1, "skill": 1, "project_scene": 1, "action": 1, "outcom
+
+=== 1. THE SIX QUESTIONS, ANSWERED DETERMINISTICALLY ===
+  PASS  Why does C exist? — full ancestry returned
+          ['C', 'B', 'A', 'F']
+  PASS  What evidence supports B? — B's inputs are retrievable
+          used_entities=['A', 'F']
+  PASS  What decision caused G? — B is in G's ancestry
+          ['G', 'B', 'A', 'F']
+  PASS  What resulted from B? — forward traversal reaches C, D, E, G, H
+          ['C', 'G', 'H', 'D', 'E']
+  PASS  What depends on A, directly or indirectly? — transitive impact set
+          ['B', 'C', 'G', 'H', 'D', 'E']
+  PASS  What was the state before and after a superseding fact? — both retained
+          revision_history(A) rows=2
+
+=== 2. CORRECTION CASCADE — INVALIDATE A, DO NOT DELETE IT ===
+  PASS  A is marked invalidated, not removed
+          invalidated=True reason=superseded by re-measurement
+  PASS  the invalidation records who and when
+          by=jarvis-03-experiment at=2026-08-24T15:27:02.859208+00:00
+  PASS  the dependency set JARVIS needs is returned after invalidation
+          impact set = ['B', 'C', 'D', 'E', 'G', 'H']
+  PASS  ...and it covers every node JARVIS must re-status
+          required=['B', 'C', 'D', 'E'] got=['B', 'C', 'D', 'E', 'G', 'H']
+  PASS  Semantica did NOT assign statuses itself — it has no such vocabulary
+          correct: traversal is not adjudication
+
+=== 3. NEGATIVE CONTROLS ===
+  PASS  1. an unrelated evidence node (Z) is NOT in A's impact set
+          impact=['B', 'C', 'D', 'E', 'G', 'H']
+  PASS  2. a contradictory fact did not overwrite the historical fact
+          history rows=3; pre-correction entry still retrievable
+  PASS  3. the append-only hash chain verifies — history is not silently rewritable
+          {"valid": true, "total_entries": 11, "broken_links": []}
+  PASS  4. missing provenance stays missing — it is not inferred
+          derived_from_id=None used_entities=[]
+  PASS  4b. FINDING: a source= string matching an entity id IS auto-promoted to a derivation edge
+          derived_from_id=A — provenance the caller never asserted
+  PASS  4c. FINDING: unknown kwargs are silently accepted, not rejected
+          a mistyped provenance field fails open — it records nothing and raises nothing
+  PASS  5. no chain-of-thought is required or manufactured
+          provenance/manager.py references no private model reasoning
+
+=== 4. EDGE TYPING — WHAT THE MODEL CAN AND CANNOT SAY ===
+  PASS  FINDING: edges are untyped — traversal cannot distinguish 'supports' from 'authorizes'
+          both arrive as undifferentiated used_entities; the relation name survives only in metadata, which no traversal method reads
+
+=== 5. OPERATIONAL ===
+  PASS  representative traversal latency is workable
+          1.05 ms per full-impact traversal (9 nodes)
+  PASS  durable across process-local reopen — SQLite, no server
+          reopened the same db file
+  PASS  exportable to W3C PROV-O turtle — no lock-in
+          9950 chars; head: @prefix ex: <https://semantica.dev/ns#> .
+  PASS  storage is a plain readable SQLite file — a second export path exists
+          tables=['provenance']
+
+==============================================================
+JARVIS-03 GRAPH EXPERIMENT: 24 passed · 0 failed
+==============================================================
+
