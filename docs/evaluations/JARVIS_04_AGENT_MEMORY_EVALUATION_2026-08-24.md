@@ -35,7 +35,28 @@ The only obtainable `aivm` (PyPI 0.5.0, Apache-2.0, `github.com/Erotemic/aivm`) 
 
 That is execution sandboxing, adjacent to JARVIS-02's subject matter, **not memory**. Either the intended referent is something else, or the name collided. **The intended AIVM remains UNKNOWN and was not evaluated.**
 
-### 1.3 What was evaluated instead
+### 1.3 ⚠️ Scope of the conclusion — narrowed on founder correction, 2026-08-24
+
+Everything below establishes that this class does not satisfy **JARVIS's governed-recall
+requirement**. It does **not** establish that `mem0` is a poor memory product. It is a widely
+adopted one that appears to do the job it was built for.
+
+The narrower claim is the stronger one:
+
+```text
+MEMORY PRODUCT                    JARVIS RECALL
+stores / retrieves        ≠       recovers knowledge
+useful recollections              + preserves provenance
+                                  + knows evidentiary standing
+                                  + handles supersession
+                                  + can reintroduce it lawfully into reasoning
+```
+
+`mem0` solves the first problem. JARVIS needs the second. **That is an architectural
+incompatibility, not a quality judgement**, and the disposition below should be read as
+*not suitable as memory-of-record under current JARVIS requirements* — nothing wider.
+
+### 1.4 What was evaluated instead
 
 With both named candidates unobtainable, the unit answers the **central question about the class** using the leading obtainable representative: **`mem0ai 2.0.19`** — *"Long-term memory for AI Agents"*, Apache-2.0, 8 core dependencies. This is a fair test: mem0 is the most widely adopted agent-memory substrate, and if the class helps JARVIS, it should show here.
 
@@ -82,6 +103,43 @@ The directive required carrying forward two negative controls. The candidate rep
 2. **`semantica.context`** — model-authored decision/reasoning/confidence with governance verdicts. ✅ reproduced, and **escalated**: mem0's `DEFAULT_UPDATE_MEMORY_PROMPT` makes an LLM *"a smart memory manager which controls the memory of a system"*, emitting `ADD` / `UPDATE` / `DELETE` / `NONE` over existing memory, and `FACT_RETRIEVAL_PROMPT` decides what becomes a fact in the first place.
 
 ⛔ **Per the ruling's own test, that settles it: a candidate reproducing either pattern is not a canonical JARVIS memory authority.** This one reproduces both.
+
+---
+
+### 2.1 ⭐ The positive form of this finding
+
+Stated as a prohibition rather than a product verdict, because the prohibition is what generalises:
+
+> **Do not let retrieval create epistemic standing.**
+
+Making model-authored recollection the canonical record would **invert** JARVIS's epistemic
+architecture — the derivative recollection would become more operationally privileged than the
+evidence it was derived from. That is the incompatibility, in one sentence.
+
+It also leaves a clean future architecture in which vector search *can* exist — just never as the
+authority layer:
+
+```text
+DURABLE SOURCE MATERIAL
+        ↓
+RETRIEVAL / INDEX                    ← similarity may live here
+        ↓
+candidate relevant material          ← NOT yet knowledge
+        ↓
+MECHANICAL PROVENANCE BINDING
+        ↓
+EXISTING EPISTEMIC ADJUDICATION      ← epistemic-guard.mjs; standing is assigned HERE
+        ↓
+governed claim / knowledge object
+        ↓
+CONTEXT REINTRODUCTION
+        ↓
+present reasoning
+```
+
+Two different functions, never merged: similarity answers *"what resembles this question?"*; the
+guard separately answers *"what is this, where did it come from, what standing does it have, and
+may it influence this decision?"*
 
 ---
 
@@ -205,4 +263,22 @@ Stated as inputs, not as a recommendation. **JARVIS-05 is not begun.**
 
 **Carried forward unchanged:** the `headOf()` divergence (JARVIS-02 §6); the `spawnSync git ENOENT` aperture (JARVIS-01 A10). Neither prevented truthful JARVIS-04 evidence.
 
-**JARVIS-04 is complete. STOP. JARVIS-05 is not begun.**
+### ⚠️ Programme-horizon statement — STALE
+
+This report originally closed *"JARVIS-05 is not begun."* **That was true of this lane and false of
+the programme**, and it must not become canonical programme state. Verified on
+`SoullabTech/JARVIS` `main` 2026-08-24: `JARVIS-05` (`98c4576`) and `JARVIS-06` (`28f5ee0`) are
+both **COMPLETE**, authored concurrently in another lane, and the JCR relationship this report's
+map entry called `UNADJUDICATED` has since been **adjudicated** in JARVIS-05 §1.
+
+⛔ Corrected rather than deleted — the original line records what this lane could see when it
+wrote it, which is the honest reading of a chronology defect.
+
+```text
+JARVIS-04 evaluation           COMPLETE
+observations                   VALID
+programme-horizon statement    STALE — superseded by JARVIS-05 / JARVIS-06
+```
+
+**JARVIS-04 is complete. STOP. ⛔ No further unit is launched from this lane** — see the
+concurrent-writer hazard recorded in the programme map.
