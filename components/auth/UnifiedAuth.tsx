@@ -98,7 +98,7 @@ function generatePassword(): string {
   return Array.from(a, (b) => b.toString(16).padStart(2, '0')).join('').slice(0, 32);
 }
 
-type Phase = 'email' | 'code' | 'name' | 'password' | 'waitlist';
+type Phase = 'email' | 'code' | 'name' | 'password';
 
 /**
  * Remember, per browser, that a sign-in code send recently FAILED.
@@ -139,14 +139,34 @@ function hasRecentEmailSendFailure(): boolean {
   }
 }
 
-function UnifiedAuthInner() {
+/**
+ * Why the person came through the door.
+ *
+ * /signin opens on username + password: a returning member already has
+ * credentials. /signup opens on email: a new person has none.
+ *
+ * Both routes rendered <UnifiedAuth /> with no props, so the shared component
+ * could not tell them apart and opened on email for everyone — asking a
+ * returning member for an email address on a page whose job is signing them in.
+ *
+ * Presentation only. All auth machinery below is unchanged and shared; this
+ * decides which door opens first and which is the peer alternative.
+ */
+export type AuthMode = 'signin' | 'signup';
+
+function UnifiedAuthInner({ mode = 'signup' }: { mode?: AuthMode }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const preVerified = searchParams?.get('verified') === 'true';
   const emailParam = searchParams?.get('email') || '';
   const usernameParam = searchParams?.get('u') || '';
 
-  const [phase, setPhase] = useState<Phase>(preVerified ? 'name' : usernameParam ? 'password' : 'email');
+  // `?verified=` and `?u=` still win — they name a specific person mid-flow.
+  // Otherwise the arrival intent decides. A returning member opens on password;
+  // someone joining opens on email.
+  const [phase, setPhase] = useState<Phase>(
+    preVerified ? 'name' : usernameParam ? 'password' : mode === 'signin' ? 'password' : 'email'
+  );
   const [email, setEmail] = useState(emailParam);
   const [code, setCode] = useState('');
   const [name, setName] = useState('');
@@ -278,9 +298,6 @@ function UnifiedAuthInner() {
         markRecentEmailSendFailure();
         return;
       }
-      // Private beta: a non-admitted email is waitlisted server-side (no code sent).
-      if (data?.status === 'waitlist') { setPhase('waitlist'); return; }
-      clearRecentEmailSendFailure();
       setCode('');
       setPhase('code');
     } catch {
@@ -506,7 +523,7 @@ function UnifiedAuthInner() {
                 {usernameParam ? `Welcome back, ${usernameParam.charAt(0).toUpperCase() + usernameParam.slice(1).toLowerCase()}.` : 'Welcome'}
               </h1>
               <p className="text-sm text-slate-300/80 font-light mb-6 text-center leading-relaxed">
-                {usernameParam ? 'Continue your conversation with MAIA.' : 'Sign in with your password.'}
+                {usernameParam ? 'Continue your conversation with MAIA.' : 'Sign in with your username and password.'}
               </p>
               {errorBlock}
               <form onSubmit={signInWithPassword} className="space-y-3">
@@ -517,12 +534,24 @@ function UnifiedAuthInner() {
                 </div>
                 <button type="submit" disabled={isLoading || !username || !password} className={primaryBtn}>{isLoading ? 'Signing in…' : 'Sign in'}</button>
               </form>
-              <p className="mt-4 text-xs text-slate-500/80 text-center leading-relaxed">
-                Usually sign in with an emailed code? Go back and use your email instead.
-              </p>
-              <div className="mt-3 text-center">
-                <button type="button" onClick={() => { setPhase('email'); setError(''); }} className="text-xs text-slate-500 hover:text-slate-300 transition-colors">← Back to email</button>
-              </div>
+              {/* Face ID / Touch ID is the easy return path, so it sits directly under
+                  Sign in — not below the email fallback. One tap goes straight to the
+                  biometric prompt; there is no intermediate username screen. A cancel
+                  or a missing credential returns here with a message and no loop
+                  (see continueWithBiometric). */}
+              {bioAvailable && (
+                <button type="button" onClick={continueWithBiometric} disabled={isLoading} className={`${outlineBtn} mt-3`}>
+                  Sign in with {biometricLabel}
+                </button>
+              )}
+
+              {/* Email stays a peer door, not a footnote. Members who joined through
+                  the email-code flow were given a generated password they have never
+                  seen, so this cannot be a dead end for them — it is how they get out
+                  of a phase they should not have landed in. */}
+              <button type="button" onClick={() => { setPhase('email'); setError(''); }} disabled={isLoading} className={`${outlineBtn} mt-3`}>
+                Email me a sign-in code instead
+              </button>
             </motion.div>
           ) : phase === 'name' ? (
             <motion.div key="name" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
@@ -550,29 +579,25 @@ function UnifiedAuthInner() {
                 <button type="button" onClick={() => { setPhase('email'); setError(''); setCode(''); }} className="hover:text-slate-300 transition-colors">Change email</button>
               </div>
             </motion.div>
-          ) : phase === 'waitlist' ? (
-            <motion.div key="waitlist" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-center">
-              <h1 className="text-3xl font-extralight text-white/80 mb-4 tracking-[0.2em]">Thank you</h1>
-              <p className="text-sm text-slate-300/80 font-light mb-6 leading-relaxed">
-                We&apos;re welcoming people in small groups so we can give each person careful attention. Join the waitlist and we&apos;ll reach out as we expand.
-              </p>
-              <p className="text-xs text-slate-500 mb-6">You&apos;re on the list — <span className="text-slate-300">{email}</span>.</p>
-              <button type="button" onClick={() => { setPhase('email'); setError(''); }} className="text-xs text-slate-500 hover:text-slate-300 transition-colors">Use a different email</button>
-            </motion.div>
           ) : (
             <motion.div key="email" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
               <h1 className="text-3xl font-extralight text-white/80 mb-3 tracking-[0.2em] text-center" style={arrivalSignin ? { fontFamily: 'Spectral, Georgia, serif' } : undefined}>{arrivalSignin ? 'Welcome.' : 'Welcome'}</h1>
-              <p className={`text-sm font-light mb-6 text-center leading-relaxed ${arrivalSignin ? 'text-slate-300/95' : 'text-slate-300/80'}`}>{arrivalSignin ? 'Sign in to enter.' : 'Enter your email to continue.'}</p>
+              <p className={`text-sm font-light mb-6 text-center leading-relaxed ${arrivalSignin ? 'text-slate-300/95' : 'text-slate-300/80'}`}>{mode === 'signin' ? 'Sign in with an emailed code.' : 'Enter your email to continue.'}</p>
               {errorBlock}
 
               <form onSubmit={sendCode} className="space-y-3">
                 <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" placeholder="Email address" autoComplete="email" autoFocus className={inputCls} />
-                <button type="submit" disabled={isLoading || !email} className={sendBlocked ? outlineBtn : primaryBtn}>{isLoading ? 'Sending…' : 'Continue'}</button>
+                {/* sendBlocked demotes Continue so the username+password button can carry
+                    primary weight instead. That button only exists on /signin — nobody
+                    joining has a password — so on /signup the demotion would leave the
+                    card with NO primary action and nothing promoted in its place.
+                    Continue stays primary there; the failed-send message still shows. */}
+                <button type="submit" disabled={isLoading || !email} className={sendBlocked && mode === 'signin' ? outlineBtn : primaryBtn}>{isLoading ? 'Sending…' : 'Continue'}</button>
               </form>
 
               {bioAvailable && (
                 <button type="button" onClick={continueWithBiometric} disabled={isLoading} className={`${outlineBtn} mt-3`}>
-                  Continue with {biometricLabel}
+                  Sign in with {biometricLabel}
                 </button>
               )}
 
@@ -587,9 +612,15 @@ function UnifiedAuthInner() {
                   carries primary weight and Continue drops to outline. The card points at
                   the alternative that is already valid, without growing a second password
                   button to say the same thing twice. */}
-              <button type="button" onClick={() => { setPhase('password'); setError(''); setSendBlocked(false); }} disabled={isLoading} className={`${sendBlocked ? primaryBtn : outlineBtn} mt-3`}>
-                Sign in with username and password
-              </button>
+              {/* Signing in and joining are different asks. On /signin, username +
+                  password is a peer door. On /signup nobody has a password yet, so
+                  offering one would be a door to nowhere — that route gets a link to
+                  /signin instead, below the OAuth row. */}
+              {mode === 'signin' && (
+                <button type="button" onClick={() => { setPhase('password'); setError(''); setSendBlocked(false); }} disabled={isLoading} className={`${sendBlocked ? primaryBtn : outlineBtn} mt-3`}>
+                  Sign in with username and password
+                </button>
+              )}
 
               <div className="mt-6 flex items-center gap-3">
                 <div className={`flex-1 h-px ${dividerCls}`} />
@@ -612,6 +643,15 @@ function UnifiedAuthInner() {
                   </svg>
                 </button>
               </div>
+
+              {/* /signup has no password door — nobody joining has one yet. Someone who
+                  already has an account needs a way across, not a password form here. */}
+              {mode === 'signup' && (
+                <p className="mt-6 text-xs text-slate-400/80 text-center">
+                  Already a member?{' '}
+                  <a href="/signin" className="text-amber-300/90 hover:text-amber-200 transition-colors">Sign in</a>
+                </p>
+              )}
             </motion.div>
           )}
         </AnimatePresence>
@@ -620,10 +660,10 @@ function UnifiedAuthInner() {
   );
 }
 
-export default function UnifiedAuth() {
+export default function UnifiedAuth({ mode }: { mode?: AuthMode } = {}) {
   return (
     <Suspense fallback={<div className="min-h-[100dvh] bg-soullab-core flex items-center justify-center text-slate-400/70">Loading…</div>}>
-      <UnifiedAuthInner />
+      <UnifiedAuthInner mode={mode} />
     </Suspense>
   );
 }
