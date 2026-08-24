@@ -17,7 +17,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
 import { randomBytes } from 'crypto';
-import { Resend } from 'resend';
+import { sendEmail, SENDERS } from '@/lib/email/sendEmail';
 import {
   checkRateLimit,
   getClientIP,
@@ -30,14 +30,6 @@ import { trackOnboarding } from '@/lib/onboarding/telemetry';
 const ENDPOINT = '/api/members/magic-link';
 
 // Lazy init Resend
-let resend: Resend | null = null;
-function getResend() {
-  if (!resend) {
-    resend = new Resend(process.env.RESEND_API_KEY);
-  }
-  return resend;
-}
-
 // Generate secure token
 function generateToken(): string {
   return randomBytes(32).toString('hex');
@@ -158,9 +150,9 @@ export async function POST(request: NextRequest) {
     const buttonText = isExistingMember ? 'Sign In' : 'Continue Signup';
 
     // Send magic link email
-    try {
-      await getResend().emails.send({
-        from: 'Soullab <noreply@soullab.life>',
+    const delivery = await sendEmail({
+      purpose: 'auth:magic-link',
+      from: SENDERS.noreply,
         to: normalizedEmail,
         subject,
         html: `
@@ -220,21 +212,35 @@ The Soullab Team
         `.trim()
       });
 
-      console.log(`[MAGIC-LINK] Email sent to: ${normalizedEmail} (existing: ${isExistingMember})`);
-    } catch (emailError) {
-      console.error('[MAGIC-LINK] Failed to send email:', emailError);
+    if (!delivery.success) {
+      // Resend RESOLVES on API rejections (429 quota, bad key, invalid
+      // recipient) — it does not throw. Reading `delivery.success` is what
+      // stops a failed send from being reported as a sent one.
+      console.error(
+        `[MAGIC-LINK] Delivery FAILED (${delivery.failureKind}) — nothing reached ${normalizedEmail}: ${delivery.error}`
+      );
       return NextResponse.json(
-        { error: 'Failed to send magic link email. Please try again.' },
-        { status: 500 }
+        {
+          error: delivery.ourFault
+            ? "We couldn't send that email — that's on our side, not yours. Please try again in a few minutes."
+            : "Failed to send magic link email. Please try again.",
+          reason: delivery.failureKind,
+          retryable: delivery.retryable === true,
+        },
+        { status: delivery.ourFault ? 503 : 500 }
       );
     }
 
     trackOnboarding({ event: 'magic_link_sent', email: normalizedEmail, path: 'POST /api/members/magic-link', metadata: { isExistingMember } });
 
+    // NO `isExistingMember` IN THE RESPONSE (removed 2026-08-24). It told any
+    // anonymous caller whether an address has a Soullab account before that
+    // caller had proved they own it — account enumeration. Existing-vs-new is
+    // resolved after the link is followed, where ownership has been proved.
+    // It still shapes the email body and server-side telemetry.
     return NextResponse.json({
       success: true,
       message: 'Check your email for a sign-in link.',
-      isExistingMember
     });
   } catch (error) {
     console.error('[MAGIC-LINK] Request error:', error);

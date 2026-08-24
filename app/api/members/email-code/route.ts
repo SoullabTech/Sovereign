@@ -16,6 +16,17 @@ export const dynamic = 'force-dynamic';
  *   /api/members/register-email's "recently verified email" check keeps working.
  * - 10-minute expiry, attempt-capped on verify, rate-limited on request.
  * - Graceful degradation if the table/columns are missing.
+ * - No enumeration: the response is identical for a known and an unknown email.
+ *
+ * DELIVERY INVARIANT (2026-08-24)
+ * This route reports success ONLY when the email provider accepted the send and
+ * returned a message id. It sends through `lib/email/sendEmail.ts`, which reads
+ * Resend's `{ data, error }` result — Resend RESOLVES rather than throws on API
+ * rejections, so an `await` in a bare try/catch reports "code sent" for mail
+ * that never left. That is how a 429 monthly-quota outage presented to members
+ * as a working sign-in with a code that never arrived. An undelivered code is
+ * burned here rather than left live, so a member who retries is never asked for
+ * a code they were never sent.
  *
  * Verify lives at POST /api/members/email-code/verify.
  */
@@ -23,7 +34,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
 import { randomBytes, randomInt } from 'crypto';
-import { Resend } from 'resend';
+import { sendEmail, SENDERS } from '@/lib/email/sendEmail';
 import {
   checkRateLimit,
   getClientIP,
@@ -32,14 +43,6 @@ import {
 import { trackOnboarding } from '@/lib/onboarding/telemetry';
 
 const ENDPOINT = '/api/members/email-code';
-
-let resendClient: InstanceType<typeof Resend> | null = null;
-function getResend(): InstanceType<typeof Resend> {
-  if (!resendClient) {
-    resendClient = new Resend(process.env.RESEND_API_KEY);
-  }
-  return resendClient;
-}
 
 function generateToken(): string {
   return randomBytes(32).toString('hex');
@@ -170,19 +173,23 @@ export async function POST(request: NextRequest) {
       [normalizedEmail]
     );
 
-    await query(
+    const inserted = await query(
       `INSERT INTO magic_link_tokens (email, member_id, token, code, expires_at, attempts)
-       VALUES ($1, $2, $3, $4, $5, 0)`,
+       VALUES ($1, $2, $3, $4, $5, 0)
+       RETURNING id`,
       [normalizedEmail, memberId, token, code, expiresAt]
     );
+    const codeRowId = (inserted.rows[0]?.id as string) || null;
 
-    // Send the code by email.
-    try {
-      await getResend().emails.send({
-        from: 'Soullab <noreply@soullab.life>',
-        to: normalizedEmail,
-        subject: `Your Soullab code: ${code}`,
-        html: `
+    // Send the code by email. `sendEmail` inspects Resend's `{ data, error }`
+    // result and never throws — so this is a value we must read, not an
+    // exception we may ignore.
+    const delivery = await sendEmail({
+      purpose: 'auth:email-code',
+      from: SENDERS.noreply,
+      to: normalizedEmail,
+      subject: `Your Soullab code: ${code}`,
+      html: `
           <div style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; max-width: 520px; margin: 0 auto; padding: 40px 20px;">
             <div style="text-align: center; margin-bottom: 28px;">
               <img src="https://soullab.life/Soullablogo.png" alt="Soullab" width="140" style="max-width: 140px;" />
@@ -204,20 +211,52 @@ export async function POST(request: NextRequest) {
             </div>
           </div>
         `,
-        text: `Hello ${memberName},\n\nYour Soullab code is: ${code}\n\nEnter it to ${isExistingMember ? 'sign in' : 'continue'}. This code expires in 10 minutes.\n\nIf you didn't request it, you can safely ignore this email.\n\nWith presence,\nThe Soullab Team`,
+      text: `Hello ${memberName},\n\nYour Soullab code is: ${code}\n\nEnter it to ${isExistingMember ? 'sign in' : 'continue'}. This code expires in 10 minutes.\n\nIf you didn't request it, you can safely ignore this email.\n\nWith presence,\nThe Soullab Team`,
+    });
+
+    if (!delivery.success) {
+      // The code exists in the database but is in nobody's inbox. Burn it so a
+      // retry issues a fresh one and no stale code is left live.
+      if (codeRowId) {
+        await safeQuery('UPDATE magic_link_tokens SET used = true WHERE id = $1', [codeRowId]);
+      }
+      trackOnboarding({
+        event: 'magic_link_send_failed',
+        email: normalizedEmail,
+        path: `POST ${ENDPOINT}`,
+        metadata: { channel: 'code', failureKind: delivery.failureKind ?? 'unknown', provider: 'resend' },
       });
-    } catch (emailError) {
-      console.error('[EMAIL-CODE] Failed to send email:', emailError);
+
+      // Tell the member the truth, and tell them whose problem it is. A quota
+      // or credential failure is ours; saying "please try again" would send
+      // them in circles through a door that cannot open.
+      const ours = delivery.ourFault === true;
+      const status = ours ? 503 : 400;
+      const message = ours
+        ? "We couldn't send your code — that's on our side, not yours. Please try again in a few minutes."
+        : "We couldn't send a code to that address. Please check it and try again.";
+
+      console.error(
+        `[EMAIL-CODE] Delivery FAILED (${delivery.failureKind}) — no code reached ${normalizedEmail}: ${delivery.error}`
+      );
       return NextResponse.json(
-        { error: 'Could not send the code. Please try again.' },
-        { status: 500 }
+        { error: message, reason: delivery.failureKind, retryable: delivery.retryable === true },
+        { status }
       );
     }
 
     trackOnboarding({ event: 'magic_link_sent', email: normalizedEmail, path: 'POST /api/members/email-code', metadata: { isExistingMember, channel: 'code' } });
-    console.log(`[EMAIL-CODE] Code sent to ${normalizedEmail} (existing: ${isExistingMember})`);
+    // Only reachable with a provider-issued message id — "sent" is now a fact.
+    console.log(`[EMAIL-CODE] Code sent to ${normalizedEmail} (existing: ${isExistingMember}, messageId: ${delivery.id})`);
 
-    return NextResponse.json({ success: true, isExistingMember });
+    // NO `isExistingMember` IN THE RESPONSE (removed 2026-08-24). Returning it
+    // told any anonymous caller whether an address has a Soullab account, before
+    // that caller had proved they own the address — an account-enumeration leak
+    // in the very route whose header claims "no enumeration leak". Existing-vs-new
+    // is decided after the code is verified, at POST /api/members/email-code/verify,
+    // where ownership has been proved. `isExistingMember` still shapes the email
+    // body and server-side telemetry; it just never crosses the wire unproved.
+    return NextResponse.json({ success: true });
   } catch (error) {
     console.error('[EMAIL-CODE] Request error:', error);
     return NextResponse.json({ error: 'Could not send the code. Please try again.' }, { status: 500 });

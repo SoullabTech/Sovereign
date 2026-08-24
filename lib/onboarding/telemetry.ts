@@ -47,6 +47,10 @@ export type OnboardingEvent =
   | 'token_invalid'
   | 'token_expired'
   | 'token_already_used'
+  // The provider refused or failed the send — the member never received a code
+  // or link. Distinct from 'magic_link_sent', which now means the provider
+  // accepted the send and returned a message id.
+  | 'magic_link_send_failed'
   | 'session_missing_after_verify'
   | 'redirect_loop_detected'
   | 'registration_failed'

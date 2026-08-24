@@ -1,7 +1,6 @@
 // Production requires force-dynamic for database access
 export const dynamic = 'force-dynamic'
 
-
 /**
  * Passkey Recovery via Email
  * Sends member their passkey if email matches
@@ -9,20 +8,11 @@ export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
-import { Resend } from 'resend';
+import { sendEmail, SENDERS } from '@/lib/email/sendEmail';
 
 export const revalidate = false;
 
 // Skip during static export (Capacitor builds)
-
-// Lazy init to avoid build-time errors
-let resend: Resend | null = null;
-function getResend() {
-  if (!resend) {
-    resend = new Resend(process.env.RESEND_API_KEY);
-  }
-  return resend;
-}
 
 export async function POST(request: NextRequest) {
   // During static export, return placeholder response
@@ -57,9 +47,9 @@ export async function POST(request: NextRequest) {
     const member = result.rows[0];
 
     // Send recovery email
-    try {
-      await getResend().emails.send({
-        from: 'Soullab <noreply@soullab.life>',
+    const delivery = await sendEmail({
+      purpose: 'auth:passkey-recovery',
+      from: SENDERS.noreply,
         to: email,
         subject: 'Your Soullab Passkey',
         html: `
@@ -122,12 +112,22 @@ The Soullab Team
         `.trim()
       });
 
-      console.log('[MEMBERS] Recovery email sent to:', email);
-    } catch (emailError) {
-      console.error('[MEMBERS] Failed to send recovery email:', emailError);
+    if (!delivery.success) {
+      // Resend RESOLVES on API rejections (429 quota, bad key, invalid
+      // recipient) — it does not throw. Reading `delivery.success` is what
+      // stops a failed send from being reported as a sent one.
+      console.error(
+        `[MEMBERS] Delivery FAILED (${delivery.failureKind}) — nothing reached ${email}: ${delivery.error}`
+      );
       return NextResponse.json(
-        { error: 'Failed to send recovery email' },
-        { status: 500 }
+        {
+          error: delivery.ourFault
+            ? "We couldn't send that email — that's on our side, not yours. Please try again in a few minutes."
+            : "Failed to send recovery email",
+          reason: delivery.failureKind,
+          retryable: delivery.retryable === true,
+        },
+        { status: delivery.ourFault ? 503 : 500 }
       );
     }
 

@@ -1,7 +1,6 @@
 // Production requires force-dynamic for database access
 export const dynamic = 'force-dynamic'
 
-
 /**
  * Password Reset Flow
  * POST /api/members/reset-password - Request reset (sends email)
@@ -11,7 +10,7 @@ export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
 import { randomBytes } from 'crypto';
-import { Resend } from 'resend';
+import { sendEmail, SENDERS } from '@/lib/email/sendEmail';
 import { hashPassword } from '@/lib/auth/passwordUtils';
 import {
   checkRateLimit,
@@ -22,14 +21,6 @@ import {
 const ENDPOINT = '/api/members/reset-password';
 
 // Lazy init Resend
-let resend: Resend | null = null;
-function getResend() {
-  if (!resend) {
-    resend = new Resend(process.env.RESEND_API_KEY);
-  }
-  return resend;
-}
-
 // Generate secure token
 function generateToken(): string {
   return randomBytes(32).toString('hex');
@@ -99,9 +90,9 @@ export async function POST(request: NextRequest) {
     const resetLink = `https://soullab.life/reset-password?token=${token}`;
 
     // Send reset email
-    try {
-      await getResend().emails.send({
-        from: 'Soullab <noreply@soullab.life>',
+    const delivery = await sendEmail({
+      purpose: 'auth:password-reset',
+      from: SENDERS.noreply,
         to: email,
         subject: 'Reset Your Soullab Password',
         html: `
@@ -161,12 +152,22 @@ The Soullab Team
         `.trim()
       });
 
-      console.log('[MEMBERS] Password reset email sent to:', email);
-    } catch (emailError) {
-      console.error('[MEMBERS] Failed to send reset email:', emailError);
+    if (!delivery.success) {
+      // Resend RESOLVES on API rejections (429 quota, bad key, invalid
+      // recipient) — it does not throw. Reading `delivery.success` is what
+      // stops a failed send from being reported as a sent one.
+      console.error(
+        `[MEMBERS] Delivery FAILED (${delivery.failureKind}) — nothing reached ${email}: ${delivery.error}`
+      );
       return NextResponse.json(
-        { error: 'Failed to send reset email' },
-        { status: 500 }
+        {
+          error: delivery.ourFault
+            ? "We couldn't send that email — that's on our side, not yours. Please try again in a few minutes."
+            : "Failed to send reset email",
+          reason: delivery.failureKind,
+          retryable: delivery.retryable === true,
+        },
+        { status: delivery.ourFault ? 503 : 500 }
       );
     }
 

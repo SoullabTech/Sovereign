@@ -23,7 +23,12 @@ jest.mock('@/lib/db/postgres', () => ({
 }));
 
 // Resend is mocked so no real email is ever sent; mockSend records delivery.
-const mockSend = jest.fn<(...args: unknown[]) => Promise<{ id: string }>>();
+// NOTE the shape: Resend resolves `{ data, error }`, never a bare `{ id }`.
+// This mock used to return `{ id }`, a shape the provider never produces —
+// which meant the suite could not have caught the 2026-08-24 quota outage.
+// The delivery + failure contract itself is proven in ./delivery.test.ts.
+type ResendResult = { data: { id: string } | null; error: { name: string; message: string } | null };
+const mockSend = jest.fn<(...args: unknown[]) => Promise<ResendResult>>();
 jest.mock('resend', () => ({
   Resend: jest.fn().mockImplementation(() => ({
     emails: { send: (...args: unknown[]) => mockSend(...args) },
@@ -79,7 +84,7 @@ describe('POST /api/members/email-code — open-signup gate (BETA_ALLOWLIST_ENAB
 
   beforeEach(() => {
     jest.clearAllMocks();
-    mockSend.mockResolvedValue({ id: 'email-mock' });
+    mockSend.mockResolvedValue({ data: { id: 'email-mock' }, error: null });
     installDb();
     delete process.env.BETA_ALLOWLIST_ENABLED;
     delete process.env.CAPACITOR_BUILD;
@@ -98,7 +103,7 @@ describe('POST /api/members/email-code — open-signup gate (BETA_ALLOWLIST_ENAB
     const body = await res.json();
 
     expect(res.status).toBe(200);
-    expect(body).toEqual({ success: true, isExistingMember: false });
+    expect(body).toEqual({ success: true });
     expect(mockSend).toHaveBeenCalledTimes(1);      // code delivered
     expect(waitlistInserted()).toBe(false);          // proof #4: no waitlist row
     expect(allowlistChecked()).toBe(false);          // gate short-circuited, allowlist not consulted
@@ -110,7 +115,7 @@ describe('POST /api/members/email-code — open-signup gate (BETA_ALLOWLIST_ENAB
     const res = await POST(req('another@example.com'));
     const body = await res.json();
 
-    expect(body).toEqual({ success: true, isExistingMember: false });
+    expect(body).toEqual({ success: true });
     expect(mockSend).toHaveBeenCalledTimes(1);
     expect(waitlistInserted()).toBe(false);
   });
@@ -134,7 +139,7 @@ describe('POST /api/members/email-code — open-signup gate (BETA_ALLOWLIST_ENAB
     const res = await POST(req('vip@example.com'));
     const body = await res.json();
 
-    expect(body).toEqual({ success: true, isExistingMember: false });
+    expect(body).toEqual({ success: true });
     expect(mockSend).toHaveBeenCalledTimes(1);
     expect(waitlistInserted()).toBe(false);
   });
@@ -146,7 +151,9 @@ describe('POST /api/members/email-code — open-signup gate (BETA_ALLOWLIST_ENAB
     const res = await POST(req('existing@example.com'));
     const body = await res.json();
 
-    expect(body).toEqual({ success: true, isExistingMember: true });
+    // `isExistingMember` is deliberately absent — see delivery.test.ts
+    // ("no account enumeration"). The response is identical for any address.
+    expect(body).toEqual({ success: true });
     expect(mockSend).toHaveBeenCalledTimes(1);
     expect(waitlistInserted()).toBe(false);
   });
@@ -156,7 +163,9 @@ describe('POST /api/members/email-code — open-signup gate (BETA_ALLOWLIST_ENAB
     const res = await POST(req('returning@example.com'));
     const body = await res.json();
 
-    expect(body).toEqual({ success: true, isExistingMember: true });
+    // `isExistingMember` is deliberately absent — see delivery.test.ts
+    // ("no account enumeration"). The response is identical for any address.
+    expect(body).toEqual({ success: true });
     expect(mockSend).toHaveBeenCalledTimes(1);
     expect(waitlistInserted()).toBe(false);
   });
