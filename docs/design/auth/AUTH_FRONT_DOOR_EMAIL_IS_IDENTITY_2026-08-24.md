@@ -106,6 +106,20 @@ answer is likely to gate on availability only *after* an authentication attempt,
 
 ### Deployment state at the time of the incident
 
-`docker exec maia-sovereign printenv GIT_COMMIT` → **`e56e502ff`** (PR #1073). #1074 is merged at
+`docker exec maia-sovereign printenv GIT_COMMIT` → **`e56e502ff`** (PR #1073). #1074 was merged at
 `73106dc90` and **was not live**. The `hello@soullab.life` in the member-facing error is confirmed
 runtime evidence of the gap, not a message-copy discrepancy. Merged is not deployed.
+
+**Closed 2026-08-24.** `73106dc90` deployed via `pre-deploy-gate.sh deploy-maia`, with the
+fail-closed post-swap check confirming it:
+`Running container provenance verified: GIT_COMMIT=73106dc90 == asserted 73106dc90`.
+Co-Lab boundaries 33 passed · 0 failed · 0 warned. Rollback tags refreshed.
+
+Two attempts were needed. The first ran in the foreground over ssh and died when the terminal was
+interrupted — the remote process tree outlived the client briefly, then died on its broken stdout
+pipe. The deploy-lane flock behaved exactly as designed throughout: it refused the second attempt
+while the first still held the lock (`Holder pid 475350 is ALIVE`), and released cleanly when that
+tree died, leaving the running container untouched at `e56e502ff` the whole time. **Operational
+note:** this build takes ~5 minutes; run it detached
+(`setsid nohup … </dev/null >/tmp/deploy.log 2>&1 &`) and tail the log, so an interrupted terminal
+cannot kill it.
