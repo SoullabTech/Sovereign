@@ -1,5 +1,11 @@
 # JARVIS Self-Learning — JSL-00 (Learning Trace) + JSL-01 (Experience Memory)
 
+> ⛔ **FROZEN 2026-08-24 by founder ruling — architectural evidence, not canonical
+> implementation. Do not merge, wire, or extend.** Disposition, the eight recorded findings, and
+> the corrected sequencing: [`JARVIS_SL_SPIKE_FROZEN_2026-08-24.md`](./JARVIS_SL_SPIKE_FROZEN_2026-08-24.md).
+> The capability track is named **JARVIS-SL** prospectively; `JSL-00`/`JSL-01` labels below are
+> retained only because renaming CI-bound executable files for cosmetic consistency was refused.
+
 **Class: BUILT SUBSTRATE (Cat 3). Wired into `npm run jarvis:proof`. Zero production callers.**
 Authored 2026-08-24, founder-directed, following NVIDIA's AVO / ARC-AGI-3 result.
 
@@ -71,7 +77,7 @@ letting the ledger go unnamed once it starts producing rows.
   delegation run
         │
         ▼
-  ┌─────────────────────┐
+  ┌───────────────────┐
   │  JSL-00  TRACE      │   append-only, per Work Unit
   │  OBSERVATION        │   learning/traces/<work_unit_id>.jsonl
   │  HYPOTHESIS         │
@@ -82,14 +88,14 @@ letting the ledger go unnamed once it starts producing rows.
   └──────────┬──────────┘   J5 evidence kind adjudicable
              │
              ▼
-  ┌─────────────────────┐
+  ┌───────────────────┐
   │  JSL-01  RETRIEVAL  │   deterministic, cross-Work-Unit
   │  query by symptom   │   "we tried this before —
   │  strategy record    │    here is what happened"
   └──────────┬──────────┘
              │  proposes (never records)
              ▼
-  ┌─────────────────────┐
+  ┌───────────────────┐
   │  epistemic-guard    │   HYPOTHESIS → OBSERVATION → PROVEN → INVARIANT
   │  (already existed)  │   G5: no rung-skipping, no rise on rereading
   └──────────┬──────────┘
