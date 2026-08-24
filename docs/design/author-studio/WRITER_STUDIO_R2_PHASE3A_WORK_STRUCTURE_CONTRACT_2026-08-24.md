@@ -287,3 +287,147 @@ That is what keeps "rail vs navigator vs destination" a disclosure question rath
 It does not authorize a build lane, lift the W8 freeze, merge #995, extend `Worktable.tsx`, rename
 anything in the repository, or touch `/book-studio/canvas`. It defines the contract that the build
 lane must satisfy when the freeze is lifted.
+
+---
+
+# Amendment 1 — founder, 2026-08-24
+
+> **Binding before implementation begins.** Accepted with the contract above. Where this
+> amendment and the original text differ, this amendment governs. The original text is left
+> unedited so the record shows what changed and when.
+
+## A1.1 — Source is two witnesses, not one
+
+Part 2 named a single immutable Source. That is insufficient, and the reason is the Part 1
+finding itself: if we replace a lossy interpretation with merely *better preserved extracted
+text*, we enshrine one extractor's output as original truth.
+
+```text
+SOURCE ARTIFACT          the original PDF / DOCX / EPUB / pasted payload
+                         arrival provenance · raw hash
+        │
+        ▼
+SOURCE TEXT              the exact extraction result
+                         extractor + version · text hash · page/source-position mapping
+        │
+        ▼
+INTERPRETATION           candidate furniture · boundaries · headings
+        │
+        ▼
+WORK STRUCTURE           member-authoritative
+```
+
+Both are immutable; they answer different questions:
+
+- **The artifact proves what arrived.**
+- **The source text proves what the extractor produced.**
+- A better extractor can later run against the immutable artifact **without pretending the
+  previous extraction was original truth.**
+- Interpretation can be regenerated **without re-extracting**.
+- A changed extraction is **distinguishable from** a changed structure.
+
+### Distinct identities
+
+`base_source_hash` must not carry all of these meanings. The eventual identities are:
+
+| Identity | Names |
+|---|---|
+| `sourceArtifactHash` | what arrived |
+| `sourceTextHash` | what the extractor produced |
+| `extractorVersion` | which extractor produced it |
+| `interpretationVersion` | which analysis produced the current candidates |
+| `workRevision` | which revision of the living text |
+
+## A1.2 — Legacy imports are not source
+
+**Binding migration rule:**
+
+> **A legacy interpreted import is not an immutable source.**
+
+Nothing imported through the current pipeline can be retrospectively certified as lossless.
+That includes the manuscript presently on the founder's table. Where lines were dropped by
+
+```js
+if (body.trim().length === 0) continue;
+```
+
+**no algorithmic operation can recover them from `manuscript_sections`.** The characters are
+not there to be recovered.
+
+Therefore:
+
+1. If the original file still exists, **re-import it through the lawful pipeline.**
+2. If it does not, **preserve what exists and label its provenance honestly** — as an
+   interpreted import of unknown fidelity, never as a source.
+3. ⛔ **Never manufacture "original restored" from an already lossy cut.** A restore offered
+   against a legacy import must say what it can and cannot return.
+
+## A1.3 — Anchors need a declared coordinate system
+
+Part 4's delta arithmetic is correct but underspecified. An offset means nothing until the
+unit is named, and the failure mode is silent:
+
+```text
+browser JS length  ≠  Unicode code points  ≠  UTF-8 bytes  ≠  server-side index
+```
+
+Emoji, composed characters, curly quotes and normalization each turn an unstated choice into
+anchor drift.
+
+**The coordinate contract:**
+
+> **Offsets are UTF-16 code-unit positions within a canonical text revision, expressed as
+> `[start, end)` ranges.**
+
+Locked alongside it:
+
+| Item | Rule |
+|---|---|
+| **Newline normalization** | One policy, declared, applied at source-text creation only |
+| **Unicode normalization** | ⛔ **No silent normalization after source-text creation.** Whatever form the source text is in, it stays in |
+| **Delta identity** | Every delta carries the **base revision id / base text hash** it applies to |
+| **Delta shape** | `base revision` + `[start, end)` + inserted length |
+| **Intersecting anchors** | An anchor intersecting the replaced range becomes `TOUCHED` |
+| **Broken chains** | A delta whose base revision is not the current revision makes affected anchors `UNRESOLVED` — ⛔ **never silently fuzzy-matched** |
+
+Content matching remains the **explicit** recovery mechanism for conflict, import and
+second-device cases, invoked as a named act rather than reached for automatically.
+
+> This makes `manuscriptMap.ts` a **structural locator, not another classifier** — which is
+> the whole distinction this contract exists to hold.
+
+## A1.4 — Restoring text snapshots first
+
+Part 5 correctly split *restore structure* from *restore text*. One addition:
+
+> **Restoring imported text must first snapshot the current Work revision.**
+
+Even after a destructive confirmation, there must be a recoverable version boundary.
+**"I confirmed" must never mean "therefore we may erase history."**
+
+## A1.5 — The #995 decomposition is settled
+
+| Harvest | Reject |
+|---|---|
+| `CanvasShell` | heading regexes |
+| Easel architecture | the inferred `Heading` ontology |
+| Paper choices | live structure detection |
+| Theme behavior | `onHeadings` as structural authority |
+| Navigator region | |
+| Remembered width | |
+| Central-surface ownership rule | |
+| Existing save pathway where compatible | |
+
+**Navigator visual hierarchy comes from member-declared depth, never machine-detected heading
+kind.**
+
+The regex machinery **may survive elsewhere, as an import interpretation strategy** — detecting
+*"this may be a heading"* is legitimate in the Interpretation layer. What it loses is the
+authority to say *"therefore this is a structural node in your Work."*
+
+## A1.6 — The distinction to preserve above all
+
+> **What actually arrived → what software thinks it sees → what the writer says the Work is.**
+
+Founder, 2026-08-24: *"That distinction is foundational. I would preserve it even if every
+component around it changes."*
