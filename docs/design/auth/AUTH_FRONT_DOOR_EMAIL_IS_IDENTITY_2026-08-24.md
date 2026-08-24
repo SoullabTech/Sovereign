@@ -175,3 +175,65 @@ with no message id is precisely the manufactured success this witness exists to 
 may have been reworded the same way the refusal line was. Match on the `Code sent` marker and a
 non-empty id, not on an exact string.)*
 
+---
+
+## Observed impact — and a claim withdrawn
+
+Two refusals logged `member=anonymous`, and they were read here as new arrivals being turned away.
+**That reading was wrong and is withdrawn.** `magic_link_tokens` settles it — every recorded attempt
+in the window was the founder's own:
+
+```
+witness-quota@soullab.life  21:03:35   curl probe
+witness-quota@soullab.life  21:03:27   curl probe
+kelly@soullab.life          20:58:36   browser negative witness
+kelly@soullab.life          20:01:41   pre-deploy attempt
+```
+
+`memberRef()` returns `anonymous` for any address without an account, which is why the probe address
+logged that way. The inference was mechanically sound and factually false.
+
+The precise claim, stated at the width the evidence supports:
+
+```text
+PROVIDER CONDITION     Resend quota exhausted → systemic outage for ALL recipients
+OBSERVED IMPACT        every recorded email-code attempt was the founder's
+OTHER USERS BLOCKED    unsupported — withdrawn
+```
+
+Absence of recorded attempts is **not** proof nobody else was affected. The transport was genuinely
+down for everyone, so anyone who tried would have failed. And the record is incomplete at its front
+edge: a code row is written *before* the send, so a refused send leaves a row — but a request
+rejected earlier (rate limiter, validation) returns before any row exists and leaves no trace beyond
+transient container logs. So: no evidence another person met the outage, which is weaker than
+"nobody did", and the distinction is the point.
+
+**Consequence for triage:** this is an infrastructure repair, not an active user emergency. Restore
+capacity because authentication email is objectively unavailable — not because of imagined users
+waiting.
+
+## Additional production evidence from the curl probe
+
+An unauthenticated `POST /api/members/email-code` for a **nonexistent** address returned:
+
+```
+HTTP 502
+{"error":"We can't send codes right now. …contact support@soullab.life…",
+ "reason":"email_provider_refused","retryable":false}
+```
+
+Four things confirmed live, beyond the original witness:
+
+- **`TRANSPORT_DOWN` escalation.** A second, operator-facing line fires alongside the per-request
+  refusal: `[MAIA/email] TRANSPORT_DOWN kind=quota_exceeded providerCode=monthly_quota_exceeded
+  purpose=auth:email-code — email delivery is failing for ALL recipients. Check the provider
+  account.` It names the systemic condition and the remedy, distinctly from the individual failure.
+- **Enumeration safety holds under failure.** The response for an address with no account is
+  byte-identical to one with an account — same status, message, `reason`, `retryable`. Nothing leaks
+  registration status, which is exactly what #1074 set out to protect and is the constraint any
+  front-door redesign must preserve (constraint 3 above).
+- **Failed credentials are invalidated, not left live.** `used = true` on the refused row: a code
+  nobody received never remains a usable outstanding credential.
+- **No manufactured success.** No `Code sent` line, no 200, no "check your inbox" — under a real
+  provider failure, from an unauthenticated caller.
+
