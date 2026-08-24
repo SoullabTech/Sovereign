@@ -9,14 +9,16 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
+import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
+import { unauthenticatedResponse } from '@/lib/auth/authFailure';
 
 export async function GET(request: NextRequest) {
   try {
     // Get member ID from header (same pattern as practitioner dashboard)
-    const memberId = request.headers.get('x-member-id');
+    const memberId = await getMemberIdFromRequest(request);
 
     if (!memberId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return unauthenticatedResponse();
     }
 
     // Find practitioner by member_id

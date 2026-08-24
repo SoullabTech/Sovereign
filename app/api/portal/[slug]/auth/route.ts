@@ -10,7 +10,8 @@ export async function generateStaticParams() { return []; }
 
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
-import { cookies } from 'next/headers';
+import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
+import { unauthenticatedResponse } from '@/lib/auth/authFailure';
 
 export async function GET(
   request: NextRequest,
@@ -55,21 +56,14 @@ export async function GET(
       );
     }
 
-    // Get session from cookies or headers
-    const cookieStore = await cookies();
-    const sessionToken = cookieStore.get('session_token')?.value;
-    const memberId = cookieStore.get('member_id')?.value;
-
-    // Also check localStorage sync (sent as header)
-    const authHeader = request.headers.get('x-member-id');
-
-    const effectiveMemberId = memberId || authHeader;
+    // AUTH-01-D: identity comes from a verified session only. The `member_id`
+    // cookie and the `x-member-id` header are both caller-controlled — either one
+    // previously named any member and returned that practitioner's record,
+    // including `m.email`.
+    const effectiveMemberId = await getMemberIdFromRequest(request);
 
     if (!effectiveMemberId) {
-      return NextResponse.json(
-        { error: 'Not authenticated' },
-        { status: 401 }
-      );
+      return unauthenticatedResponse();
     }
 
     // Look up practitioner by slug
@@ -154,7 +148,10 @@ export async function GET(
     const isDev = process.env.NODE_ENV === 'development';
     if (isDev) {
       const { slug } = params;
-      const authHeader = request.headers.get('x-member-id');
+      // AUTH-01-D: this dev-only bypass no longer echoes a caller-supplied identity.
+      // It runs only when NODE_ENV === 'development' AND the database is unavailable,
+      // and now returns fixed placeholder ids rather than any value the caller chose.
+      const authHeader: string | null = null;
       console.log('[Practitioner Auth] Dev bypass: returning mock practitioner for slug:', slug);
 
       // Use deterministic UUIDs for dev mode (valid UUID format required by Postgres)

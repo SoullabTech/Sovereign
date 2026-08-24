@@ -11,9 +11,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
 import { getMemberIdIfAuthenticated } from '@/lib/auth/session';
-import { headers } from 'next/headers';
 
-const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /**
  * Get member ID from session (preferred) or x-member-id header (fallback).
@@ -26,17 +24,12 @@ async function getMemberIdWithFallback(): Promise<string | null> {
     return sessionMemberId;
   }
 
-  // Fallback: x-member-id header (for beta/local development)
-  const headerStore = await headers();
-  const headerMemberId = headerStore.get('x-member-id');
-  if (headerMemberId && UUID_REGEX.test(headerMemberId)) {
-    // Verify member exists
-    const result = await query('SELECT id FROM members WHERE id = $1', [headerMemberId]);
-    if (result.rows.length > 0) {
-      return headerMemberId;
-    }
-  }
-
+  // AUTH-01-D: the x-member-id fallback is REMOVED. It accepted any well-formed
+  // member UUID after a mere existence check — precisely the impersonation pattern
+  // lib/auth/getMemberFromRequest.ts:19-22 documents as previously fixed. Member
+  // UUIDs are exposed to clients, so "the row exists" was never evidence that the
+  // caller is that member. Native/iOS clients authenticate with x-session-token,
+  // which getMemberIdIfAuthenticated already validates.
   return null;
 }
 

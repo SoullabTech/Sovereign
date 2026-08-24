@@ -8,9 +8,10 @@
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
 import { query } from '@/lib/db/postgres';
 import { generateInviteCode, hashInviteCode } from '@/lib/portal/invites';
+import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
+import { unauthenticatedResponse } from '@/lib/auth/authFailure';
 
 export async function POST(
   request: NextRequest,
@@ -25,12 +26,13 @@ export async function POST(
       return NextResponse.json({ error: 'clientId required' }, { status: 400 });
     }
 
-    // Get practitioner auth from cookies/headers
-    const cookieStore = await cookies();
-    const memberId = cookieStore.get('member_id')?.value || request.headers.get('x-member-id');
+    // AUTH-01-D: identity comes from a verified session only. The `member_id`
+    // cookie and `x-member-id` header are caller-controlled; either previously let
+    // any caller create portal invites in another practitioner's name.
+    const memberId = await getMemberIdFromRequest(request);
 
     if (!memberId) {
-      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+      return unauthenticatedResponse();
     }
 
     // Verify practitioner owns this slug

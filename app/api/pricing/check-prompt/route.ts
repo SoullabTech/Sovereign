@@ -15,6 +15,8 @@ import {
   recordPromptResponse,
   PROMPT_MESSAGES,
 } from '@/lib/pricing';
+import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
+import { unauthenticatedResponse } from '@/lib/auth/authFailure';
 
 // ============================================
 // GET - Check for upgrade prompt
@@ -22,7 +24,7 @@ import {
 
 export async function GET(request: NextRequest) {
   try {
-    const memberId = request.headers.get('x-member-id');
+    const memberId = await getMemberIdFromRequest(request);
     if (!memberId) {
       return NextResponse.json({ prompt: null }, { status: 200 });
     }
@@ -91,9 +93,9 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const memberId = request.headers.get('x-member-id');
+    const memberId = await getMemberIdFromRequest(request);
     if (!memberId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return unauthenticatedResponse();
     }
 
     const body = await request.json();
