@@ -50,7 +50,15 @@ export type OnboardingEvent =
   | 'session_missing_after_verify'
   | 'redirect_loop_detected'
   | 'registration_failed'
-  | 'email_already_exists';
+  | 'email_already_exists'
+  // The provider accepted the request and REFUSED the send (quota, unverified
+  // domain, suppressed recipient). Distinct from 'magic_link_sent', which must
+  // now mean the provider actually took the message — see the 2026-08-24 quota
+  // incident, where six real signup attempts recorded magic_link_sent while
+  // Resend had rejected every one with 429 monthly_quota_exceeded. A funnel
+  // that cannot see this drop reports a delivery problem as a member who
+  // simply never came back.
+  | 'magic_link_send_failed';
 
 export interface TelemetryPayload {
   event: OnboardingEvent;
