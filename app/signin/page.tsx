@@ -8,5 +8,5 @@
 import UnifiedAuth from '@/components/auth/UnifiedAuth';
 
 export default function SigninPage() {
-  return <UnifiedAuth intent="returning" />;
+  return <UnifiedAuth mode="signin" />;
 }

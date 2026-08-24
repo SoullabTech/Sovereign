@@ -6,5 +6,5 @@
 import UnifiedAuth from '@/components/auth/UnifiedAuth';
 
 export default function SignupPage() {
-  return <UnifiedAuth intent="joining" />;
+  return <UnifiedAuth mode="signup" />;
 }
