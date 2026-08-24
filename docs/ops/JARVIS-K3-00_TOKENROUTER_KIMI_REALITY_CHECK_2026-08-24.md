@@ -1,7 +1,7 @@
 # JARVIS-K3-00 — TokenRouter / Kimi K3 Reality Check
 
 **Date**: 2026-08-24
-**Status**: **BLOCKED — proof not executable in this environment**
+**Status**: **CLOSED — VERDICT D. Not adopted.** (closed by Kelly, 2026-08-24)
 **Scope**: proof-only. No integration, no routing change, no deploy.
 
 ---
@@ -197,3 +197,81 @@ Then `JARVIS-K3-00` should be re-run unchanged once either:
 `JARVIS-K3-01` (opt-in experimental worker lane, Claude untouched as the trusted
 default reasoning path) remains **unauthorized** and is gated on a `VERDICT: A`
 from a completed `JARVIS-K3-00`.
+
+
+---
+
+# CLOSURE — JARVIS-K3-00, VERDICT D
+
+**Closed by**: Kelly, 2026-08-24.
+
+## Disposition
+
+**Not adopted. Marketing claim remains unverified. No integration, no spend, no
+production change.**
+
+**Re-open only if** TokenRouter exposes a verifiable K3 catalog entry, or an
+explicit 50M-token allocation is visible on the account.
+
+## Decision-quality evidence (sufficient without completing the probe)
+
+1. The claimed free K3 route is **not publicly listed** — `moonshotai/kimi-k3-free`
+   does not appear on TokenRouter's public model page.
+2. The account shows a **$20 balance, not a visible 50M-token allocation**. If a
+   50M free grant were live, it would be expected to appear *as an allocation*.
+   Dollars are the shape you would expect if the promotion did not apply.
+3. The remaining friction is **account/key plumbing, not evidence about K3**.
+
+Continuing would have spent more attention proving access mechanics than
+evaluating the thing actually under question.
+
+## Final ledger
+
+```text
+tokens spent      : 0
+credit spent      : $0
+production changes: none
+routing changes   : none
+Claude/OpenAI path: untouched
+data sent to TR   : none (no repo, member, MAIA or proprietary content)
+catalog answer    : never obtained
+50M claim         : UNVERIFIED — neither confirmed nor refuted
+```
+
+## Credential hygiene — closed out
+
+A 27-character value later identified as not API-key shaped was supplied during
+run 1. Exposure assessment:
+
+- **Chat**: never entered. No credential was pasted into the conversation.
+- **Shell history**: never entered — `read -rs` held; `grep` over `~/.zsh_history`
+  returned nothing.
+- **Third-party logs**: **exposed once.** It was transmitted to
+  `api.tokenrouter.com` as a bearer token before the shape preflight existed, and
+  the 401 response carried a request id, so it is recorded server-side as a
+  rejected credential.
+
+**Action**: rotate that value, and change it anywhere it is reused. The
+third-party log exposure alone is sufficient grounds.
+
+## What this job was worth
+
+The proof cost zero tokens, zero dollars, and zero production changes, and it
+stopped an unverified third-party marketing claim from becoming a JARVIS
+integration. The `prove first, integrate second` sequencing did exactly the work
+it was chosen to do.
+
+Two artifacts remain reusable if this is ever re-opened:
+`scripts/jarvis-k3-00-probe.sh` (now shape-gated in preflight, so a non-key value
+is refused locally and never transmitted) and `scripts/jarvis-k3-00-keyshape.sh`.
+
+## Downstream
+
+`JARVIS-K3-01` — the opt-in experimental worker lane — is **not authorized** and
+has no path to authorization without a VERDICT A. Claude remains the trusted
+default reasoning path, unmodified.
+
+Standing note for any future provider evaluation: JARVIS still has **no
+credential lane** (no keytar, no Electron `safeStorage`, no keychain, zero
+`API_KEY` references). Any external model provider requires that seam to be
+designed first — it is `JARVIS-K3-01`'s true prerequisite, not the model wiring.
