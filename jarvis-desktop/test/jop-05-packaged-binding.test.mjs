@@ -225,13 +225,33 @@ describe('JOP-05 · the shipping handlers use the resolved root', () => {
   // the C1 proof already builds its own paths and therefore could not have
   // caught this. A bare REPO_ROOT is not a style question — main.js never
   // declares it, so reaching it is a ReferenceError on every C1 task.
+  // Comments are stripped BEFORE scanning. The original check counted every
+  // occurrence in the file, which meant the prose recording the defect —
+  // "resolved its canonical modules from a bare `REPO_ROOT`" — failed the test
+  // that exists to prevent the defect. That is backwards: it would have forced
+  // the history to be deleted to keep the suite green, which the neighbouring
+  // test below explicitly refuses to do. A *reference* is code, not prose, so
+  // the scan now looks at code.
+  const CODE = MAIN
+    .replace(/\/\*[\s\S]*?\*\//g, ' ')   // block comments
+    .replace(/^[ \t]*\/\/.*$/gm, ' ')     // whole-line comments
+    .replace(/([^:])\/\/.*$/gm, '$1');    // trailing comments, sparing '://' in URLs
+
   test('main.js references no undeclared REPO_ROOT', () => {
-    const bare = [...MAIN.matchAll(/\bREPO_ROOT\b/g)].filter((m) => {
-      const before = MAIN.slice(Math.max(0, m.index - 8), m.index);
-      const after = MAIN.slice(m.index, m.index + 20);
+    const bare = [...CODE.matchAll(/\bREPO_ROOT\b/g)].filter((m) => {
+      const before = CODE.slice(Math.max(0, m.index - 8), m.index);
+      const after = CODE.slice(m.index, m.index + 20);
       return !before.endsWith('JARVIS_') && !after.startsWith('REPO_ROOT_MODE');
     });
     assert.equal(bare.length, 0, `main.js reads an identifier it does not declare (${bare.length} sites)`);
+  });
+
+  // The stripper itself is proven, so a future regex slip cannot silently turn
+  // this into a test that scans nothing and passes everything.
+  test('the comment stripper removes prose but keeps code', () => {
+    assert.ok(!/bare `REPO_ROOT` identifier/.test(CODE), 'prose survived the strip — the scan would false-positive');
+    assert.match(CODE, /REPO_ROOT_MODE/, 'the strip removed real code — the scan would false-negative');
+    assert.match(CODE, /process\.env\.JARVIS_REPO_ROOT/, 'the strip removed the env read');
   });
 
   test('every declared identifier the module uses actually exists', () => {
