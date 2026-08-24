@@ -68,7 +68,7 @@ function generatePassword(): string {
   return Array.from(a, (b) => b.toString(16).padStart(2, '0')).join('').slice(0, 32);
 }
 
-type Phase = 'email' | 'code' | 'name' | 'password' | 'waitlist';
+type Phase = 'email' | 'code' | 'name' | 'password';
 
 function UnifiedAuthInner() {
   const router = useRouter();
@@ -180,8 +180,9 @@ function UnifiedAuthInner() {
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) { setError(data?.error || 'Could not send the code. Please try again.'); return; }
-      // Private beta: a non-admitted email is waitlisted server-side (no code sent).
-      if (data?.status === 'waitlist') { setPhase('waitlist'); return; }
+      // No admission gate: a valid email always yields a code. The private-beta
+      // waitlist response was removed server-side (2026-08-24 access incident),
+      // so there is no non-error, non-code branch left to handle here.
       setCode('');
       setPhase('code');
     } catch {
@@ -445,15 +446,6 @@ function UnifiedAuthInner() {
                 <span className="text-slate-700">·</span>
                 <button type="button" onClick={() => { setPhase('email'); setError(''); setCode(''); }} className="hover:text-slate-300 transition-colors">Change email</button>
               </div>
-            </motion.div>
-          ) : phase === 'waitlist' ? (
-            <motion.div key="waitlist" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-center">
-              <h1 className="text-3xl font-extralight text-white/80 mb-4 tracking-[0.2em]">Thank you</h1>
-              <p className="text-sm text-slate-300/80 font-light mb-6 leading-relaxed">
-                We&apos;re welcoming people in small groups so we can give each person careful attention. Join the waitlist and we&apos;ll reach out as we expand.
-              </p>
-              <p className="text-xs text-slate-500 mb-6">You&apos;re on the list — <span className="text-slate-300">{email}</span>.</p>
-              <button type="button" onClick={() => { setPhase('email'); setError(''); }} className="text-xs text-slate-500 hover:text-slate-300 transition-colors">Use a different email</button>
             </motion.div>
           ) : (
             <motion.div key="email" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
