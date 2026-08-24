@@ -5,6 +5,7 @@
   "main": "src/main.js",
   "private": true,
   "scripts": {
+    "test": "node --test test/*.test.mjs",
     "start": "electron .",
     "test": "for f in test/*.test.mjs; do echo \"── $f\"; node \"$f\" || exit 1; done",
     "gate-zero": "node test/gate-zero-c1-restart.test.mjs && node test/repository-topology-invariant.test.mjs",
