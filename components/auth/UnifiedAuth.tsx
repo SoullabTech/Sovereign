@@ -30,6 +30,17 @@
  * a member holding a valid password should not be stranded while we decide whether
  * the failure was permanent. Email remains the default the moment sending works.
  *
+ * 2026-08-24 (third pass): the card also REMEMBERS that a send recently failed,
+ * per browser, for 30 minutes, so a fresh visit does not pretend nothing happened
+ * and walk the member back into the same wall. What is remembered is one narrow
+ * observation — a send failed — and what it buys is PRESENTATION, not a destination:
+ * the full card still renders, with Continue demoted, password recovery prominent,
+ * and Google / Apple / biometric all reachable. It deliberately does NOT open the
+ * password phase — see the paragraph above: an email-code member's password is
+ * generated and never seen, so a password-first card would strand precisely the
+ * people a send failure hurts most. Cleared the instant a send succeeds, and
+ * expiring on its own since whatever caused the failure may already be over.
+ *
  * Both app/signin/page.tsx and app/signup/page.tsx render this. Visual language:
  * dark navy + holoflower, matching /welcome-back. No teal, no induction.
  */
@@ -89,6 +100,45 @@ function generatePassword(): string {
 
 type Phase = 'email' | 'code' | 'name' | 'password' | 'waitlist';
 
+/**
+ * Remember, per browser, that a sign-in code send recently FAILED.
+ *
+ * That is the whole claim, and the naming is deliberate. This is set on any
+ * non-OK response or transport exception, so the only fact in evidence is
+ * "a send failed recently" — not that the provider is down, not that the
+ * transport is broken, not that the next attempt will fail. Naming it a
+ * diagnosis would license the UI to act on a conclusion nothing established.
+ *
+ * Without this memory, every fresh visit opens on the email field again and
+ * walks the member back into the same wall — type address, wait, read the same
+ * refusal. What the observation buys is presentation only: the card renders in
+ * its failed-send state instead of pretending nothing happened.
+ *
+ * Deliberately short-lived and per-browser: whatever caused the failure may
+ * already be over, so this expires on its own and any successful send clears
+ * it immediately. Storage is best-effort — a private window or blocked site
+ * data just means the member gets the pre-existing behavior, never an error.
+ */
+const RECENT_EMAIL_SEND_FAILURE_KEY = 'maia_recent_email_send_failure';
+const RECENT_EMAIL_SEND_FAILURE_TTL_MS = 30 * 60 * 1000;
+
+function markRecentEmailSendFailure(): void {
+  try { localStorage.setItem(RECENT_EMAIL_SEND_FAILURE_KEY, String(Date.now())); } catch { /* best-effort */ }
+}
+function clearRecentEmailSendFailure(): void {
+  try { localStorage.removeItem(RECENT_EMAIL_SEND_FAILURE_KEY); } catch { /* best-effort */ }
+}
+function hasRecentEmailSendFailure(): boolean {
+  try {
+    const at = Number(localStorage.getItem(RECENT_EMAIL_SEND_FAILURE_KEY));
+    if (!at || Number.isNaN(at)) return false;
+    if (Date.now() - at > RECENT_EMAIL_SEND_FAILURE_TTL_MS) { clearRecentEmailSendFailure(); return false; }
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 function UnifiedAuthInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -112,6 +162,25 @@ function UnifiedAuthInner() {
   const [isLoading, setIsLoading] = useState(false);
   const [bioAvailable, setBioAvailable] = useState(false);
   const [bioPlatformAvailable, setBioPlatformAvailable] = useState(false);
+
+  // If this browser hit an email-send failure recently, open on username + password
+  // instead of walking the member back into the door we know is shut. Runs after
+  // mount (never in the useState initializer) so the server-rendered markup and the
+  // first client render agree — localStorage does not exist during SSR.
+  useEffect(() => {
+    if (preVerified || usernameParam) return; // an explicit intent already chose the phase
+    if (!hasRecentEmailSendFailure()) return;
+    // Restore the failed-transport PRESENTATION on the full card — never jump the
+    // member into the password phase. Accounts created through the email-code flow
+    // hold a generated password they have never seen; opening them directly onto a
+    // password form would strand exactly the people this is meant to help. They keep
+    // every door: Google, Apple, biometric, and a retry of email itself.
+    setSendBlocked(true);
+    // sendBlocked demotes Continue, so say why. Hedged deliberately, and matching
+    // what is actually stored: a send failed recently. Not that it is failing now,
+    // and not "a few minutes ago" — the window runs to 30.
+    setError('Recently we couldn’t send a sign-in code. You can try again, or use another way in below.');
+  }, [preVerified, usernameParam]);
   const arrivalSignin = isFeatureEnabled('arrivalSignin'); // Arrival remodel — fully transitioned (default on; flag is a kill-switch). Presentation only.
   // Arrival remodel — navy cosmos + subtle plum atmosphere; the controls stay the original navy (plum reverted per brand
   // direction 2026-07-22: navy foundation, plum only as the bloom). Only card + field + holoflower + copy differ. Presentation only.
@@ -206,15 +275,18 @@ function UnifiedAuthInner() {
       if (!res.ok) {
         setError(data?.error || 'Could not send the code. Please try again.');
         setSendBlocked(true);
+        markRecentEmailSendFailure();
         return;
       }
       // Private beta: a non-admitted email is waitlisted server-side (no code sent).
       if (data?.status === 'waitlist') { setPhase('waitlist'); return; }
+      clearRecentEmailSendFailure();
       setCode('');
       setPhase('code');
     } catch {
       setError('Could not send the code. Please try again.');
       setSendBlocked(true);
+      markRecentEmailSendFailure();
     } finally {
       setIsLoading(false);
     }
