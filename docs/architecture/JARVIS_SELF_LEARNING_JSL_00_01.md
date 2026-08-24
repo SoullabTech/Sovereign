@@ -77,7 +77,7 @@ letting the ledger go unnamed once it starts producing rows.
   delegation run
         │
         ▼
-  ┌───────────────────┐
+  ┌─────────────────────┐
   │  JSL-00  TRACE      │   append-only, per Work Unit
   │  OBSERVATION        │   learning/traces/<work_unit_id>.jsonl
   │  HYPOTHESIS         │
@@ -88,14 +88,14 @@ letting the ledger go unnamed once it starts producing rows.
   └──────────┬──────────┘   J5 evidence kind adjudicable
              │
              ▼
-  ┌───────────────────┐
+  ┌─────────────────────┐
   │  JSL-01  RETRIEVAL  │   deterministic, cross-Work-Unit
   │  query by symptom   │   "we tried this before —
   │  strategy record    │    here is what happened"
   └──────────┬──────────┘
              │  proposes (never records)
              ▼
-  ┌───────────────────┐
+  ┌─────────────────────┐
   │  epistemic-guard    │   HYPOTHESIS → OBSERVATION → PROVEN → INVARIANT
   │  (already existed)  │   G5: no rung-skipping, no rise on rereading
   └──────────┬──────────┘
