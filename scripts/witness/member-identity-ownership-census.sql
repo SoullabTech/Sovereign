@@ -53,6 +53,11 @@
 --   and cheap and does not depend on analyze state, so 'never analyzed' no longer implies
 --   'assume large'. reltuples is retained only as a reported fact (the anlz column), never as a
 --   gate.
+--   PRECISION, so the heap column is not over-read: pg_relation_size() is the actual on-disk
+--   size of the relation. It is evidence about whether the physical relation is small enough to
+--   permit the controlled probe — and about NOTHING ELSE. It is not a row count, not an
+--   estimate of one, and must never be cited as one. Row counts in this report come only from
+--   the A and B columns, and only where status is OK.
 --
 -- Run (from the Mac Studio checkout; nothing is written to the shared worktree):
 --   git fetch origin claude/member-identity-portrait-split-y4zhaq && \
@@ -139,6 +144,11 @@ DECLARE
   n_error    int := 0;
   n_uncnt    int := 0;
   tally      jsonb := '{}'::jsonb;
+  own_a      int := 0;   -- rows under the canonical candidate only
+  own_b      int := 0;   -- rows under the legacy candidate only
+  own_both   int := 0;   -- rows under both
+  own_zero   int := 0;   -- measured, genuinely empty for both
+  own_unc    int := 0;   -- not measured — never counted as zero
   -- NOT named `t`: a plpgsql record variable shadows a same-named SQL alias, and the discovery
   -- query below aliases information_schema.tables as t. That collision fails the whole block
   -- with "record t is not assigned yet".
@@ -288,6 +298,15 @@ BEGIN
       ELSE                                              'REBIND_CHECK'
     END;
     tally := tally || jsonb_build_object(rule, coalesce((tally ->> rule)::int, 0) + 1);
+    -- ownership pattern is tracked independently of the merge rule: SESSION_NO_REBIND and
+    -- PROVENANCE_PRESERVE each cover A-only and both-inhabited relations, so the rule tally
+    -- alone cannot answer "how many relations does B inhabit".
+    IF na IS NULL OR nb IS NULL THEN own_unc  := own_unc  + 1;
+    ELSIF na = 0 AND nb = 0     THEN own_zero := own_zero + 1;
+    ELSIF nb = 0                THEN own_a    := own_a    + 1;
+    ELSIF na = 0                THEN own_b    := own_b    + 1;
+    ELSE                             own_both := own_both + 1;
+    END IF;
 
     -- every field is truncated and '|'-separated: a long index name must never bleed into the
     -- next column and make a status unreadable
@@ -305,6 +324,9 @@ BEGIN
 
   RAISE NOTICE '%', repeat('-', 190);
   RAISE NOTICE 'relations examined: %   UNCOUNTED: %   ERROR: %', n_total, n_uncnt, n_error;
+  RAISE NOTICE 'ownership: A-only % | B-only % | both % | zero % | UNCOUNTED % (sum %)',
+               own_a, own_b, own_both, own_zero, own_unc,
+               own_a + own_b + own_both + own_zero + own_unc;
   RAISE NOTICE 'tally by rule:';
   FOR tally_row IN SELECT key, value::int AS n FROM jsonb_each_text(tally) ORDER BY 2 DESC, 1 LOOP
     RAISE NOTICE '    % : %', rpad(tally_row.key, 24), tally_row.n;
