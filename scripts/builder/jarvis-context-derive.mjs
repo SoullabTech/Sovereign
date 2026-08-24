@@ -122,6 +122,49 @@ const CONNECTIVES = new Set([
 ]);
 
 /**
+ * Paths that hold PROOFS ABOUT code rather than the code itself: tests, specs,
+ * fixtures, benchmarks, evaluation harnesses.
+ *
+ * These are legitimate evidence for a question about a test. They are not
+ * primary evidence for a question about an implementation, and the difference
+ * is structural rather than a matter of degree: a proof artifact is *written
+ * about* the subject, so it reliably contains the subject's vocabulary — its
+ * paths, its symbols, and in an adversarial proof the very fabrication under
+ * test. On lexical selection it therefore beats the implementation it guards,
+ * and the worker is handed a description of the code in place of the code.
+ *
+ * Witnessed on 2026-08-24: for "inspect the MAIA signup implementation", the
+ * top-ranked evidence was the proof file asserting what that inspection should
+ * find — including the fabricated Java path it exists to reject, which the
+ * worker then repeated back as though it were source.
+ */
+const PROOF_PATH = new RegExp(
+  [
+    '(^|/)(tests?|__tests__|__mocks__|spec|specs|e2e|fixtures?|benchmarks?|evals?)(/|$)',
+    '\\.(test|spec)\\.[cm]?[jt]sx?$',
+    '(^|/)[\\w.-]*(proof|benchmark|fixture)[\\w.-]*\\.[cm]?[jt]sx?$',
+  ].join('|'),
+  'i',
+);
+
+/** True when `ref` is a proof/evaluation artifact rather than shipping code. */
+export function isProofArtifact(ref) {
+  return PROOF_PATH.test(String(ref || ''));
+}
+
+/**
+ * Did the author ask ABOUT proofs? Then proofs are the subject, not a
+ * substitute for it, and the tiering below must not fire.
+ */
+function asksAboutProofs(terms, compounds) {
+  // Boundaried, not substring: "inspect" contains "spec", so a raw substring
+  // probe reads every inspection request as a request about specs and disables
+  // the tiering exactly when it is most needed. Witnessed here on 2026-08-24.
+  const probe = /(^|[^a-z])(tests?|specs?|proofs?|benchmarks?|fixtures?|evals?)([^a-z]|$)/i;
+  return terms.some((t) => probe.test(t.term)) || compounds.some((c) => probe.test(c));
+}
+
+/**
  * Code names things by joining words: "email code" is `email-code` on disk.
  * Rejoining adjacent prompt words in the four conventions a repository actually
  * uses turns a phrase into a candidate PATH, and a path hit is the strongest
@@ -276,7 +319,8 @@ export function deriveContextSelectors(prompt, repo, opts = {}) {
   // directory is evidence of where the author means; the same phrase is not
   // expected to appear verbatim in file bodies.
   const located = new Set();
-  for (const compound of compoundCandidates(prompt)) {
+  const compounds = compoundCandidates(prompt);
+  for (const compound of compounds) {
     const hit = pathsMatching(repo, compound);
     if (!hit.total || hit.total > ubiquity) continue;
     const rarity = 1 / Math.log2(hit.total + 2);
@@ -313,7 +357,7 @@ export function deriveContextSelectors(prompt, repo, opts = {}) {
 
   // Rank by accumulated weight, then breadth of distinct terms, then the
   // shorter path, then lexicographic. Every tier is deterministic.
-  const ranked = [...scored.entries()]
+  const byWeight = [...scored.entries()]
     .map(([file, m]) => ({
       file,
       weight: [...m.values()].reduce((a, b) => a + b, 0),
@@ -324,8 +368,21 @@ export function deriveContextSelectors(prompt, repo, opts = {}) {
       b.weight - a.weight ||
       b.termScore - a.termScore ||
       a.file.length - b.file.length ||
-      a.file.localeCompare(b.file))
-    .slice(0, maxFiles);
+      a.file.localeCompare(b.file));
+
+  // A TIER, not a weight. No score a proof artifact can accumulate lifts it
+  // above shipping code, because the problem is not that proofs scored too
+  // highly — they scored correctly on vocabulary they legitimately contain.
+  // Tuning the weight would only move the threshold at which the same
+  // substitution happens again. Proofs still reach the worker as secondary
+  // evidence when implementation does not fill the slots, and when the author
+  // asked about proofs they are the subject and this ordering does not apply.
+  const ranked = asksAboutProofs(terms, compounds)
+    ? byWeight.slice(0, maxFiles)
+    : [
+        ...byWeight.filter((r) => !isProofArtifact(r.file)),
+        ...byWeight.filter((r) => isProofArtifact(r.file)),
+      ].slice(0, maxFiles);
 
   const selectors = [];
   for (const r of ranked) {
@@ -340,7 +397,8 @@ export function deriveContextSelectors(prompt, repo, opts = {}) {
     if (!span) continue;
     selectors.push({
       ref: r.file,
-      why: `derived: matched ${r.terms.slice(0, 4).join(', ')}`,
+      why: `derived${isProofArtifact(r.file) ? ' (proof artifact — secondary evidence)' : ''}: `
+        + `matched ${r.terms.slice(0, 4).join(', ')}`,
       selector: { type: 'lines', start: span.start, end: span.end },
     });
   }

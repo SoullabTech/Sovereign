@@ -3,9 +3,12 @@
 //
 // The failure this covers: a C1 task that asked JARVIS to inspect the bound
 // repository reached the worker with NO fragments. qwen2.5:7b answered from its
-// weights and invented `src/main/java/com/jarvis/signup/ResendEmailCodeService.java`
-// — a Java service, in a TypeScript repository, for a route that lives at
-// app/api/members/email-code/route.ts. The verifier refused to certify it
+// weights and invented a Java service under src/main/java — in a TypeScript
+// repository — for a route that lives under app/api/members. Both paths are
+// built at runtime below (FABRICATION, REAL_ROUTE) and deliberately do NOT
+// appear here in full: a comment is as retrievable as code, and naming them
+// whole is precisely what made this file win its own search. The verifier
+// refused to certify the answer
 // (UNVERIFIED / NO_EVIDENCE_CONTEXT), which was correct. What was missing was
 // not judgement but perception: nothing had selected any repository evidence.
 //
@@ -28,7 +31,7 @@ const HERE = path.dirname(fileURLToPath(import.meta.url));
 const DESKTOP = path.resolve(HERE, '..');
 const REPO_ROOT = path.resolve(DESKTOP, '..');
 
-const { deriveContextSelectors } = await import(
+const { deriveContextSelectors, isProofArtifact } = await import(
   `file://${path.join(REPO_ROOT, 'scripts', 'builder', 'jarvis-context-derive.mjs')}`);
 const { materializePacket, renderFragments } = await import(
   `file://${path.join(REPO_ROOT, 'scripts', 'builder', 'jarvis-context.mjs')}`);
@@ -52,11 +55,28 @@ const t = (name, fn) => {
   catch (e) { console.log(`  ✗ ${name}\n      ${e.message}`); fail++; }
 };
 
+// ── RULE: a proof artifact must not contain, verbatim, the strings it exists
+// to detect. Those strings participate in retrieval, so a proof written about a
+// subject becomes the best lexical match FOR that subject — and gets selected
+// as evidence in place of the code it guards.
+//
+// Witnessed 2026-08-24: with the prompt, the expected route and the fabricated
+// Java path all present here as literals, this file was materialized as primary
+// evidence for "inspect the MAIA signup implementation", and the worker read the
+// fabrication out of it and repeated it back as source.
+//
+// Assembled from parts so the selector corpus never contains them. This is the
+// class-level rule, not a fix to one string: test 20 enforces it on this file.
+const asm = (...parts) => parts.join('');
+
 // The task shape that failed on the founder walk.
-const SIGNUP_PROMPT =
-  'Inspect the MAIA signup implementation and explain how the beta signup email code is sent and resent.';
-// The fabrication it produced, verbatim.
-const FABRICATION = 'src/main/java/com/jarvis/signup/ResendEmailCodeService.java';
+const SIGNUP_PROMPT = asm(
+  'Inspect the MAIA sign', 'up implementation and explain how the beta ',
+  'sign', 'up email ', 'code is sent and resent.');
+// The fabrication it produced.
+const FABRICATION = asm('src/main/java/com/jarvis/sign', 'up/Resend', 'Email', 'Code', 'Service.java');
+// The route the task is actually about.
+const REAL_ROUTE = asm('app/api/members/email', '-', 'code/route.ts');
 
 const gitStatusBefore = execFileSync('git', ['-C', REPO_ROOT, 'status', '--porcelain'], { encoding: 'utf8' });
 const selectors = deriveContextSelectors(SIGNUP_PROMPT, REPO_ROOT);
@@ -75,7 +95,7 @@ t('2. every derived ref is a real file on disk (nothing fabricated)', () => {
 
 t('3. the ACTUAL TypeScript email-code route is selected', () => {
   const refs = selectors.map((s) => s.ref);
-  assert.ok(refs.includes('app/api/members/email-code/route.ts'),
+  assert.ok(refs.includes(REAL_ROUTE),
     `expected the real route in evidence, got:\n      ${refs.join('\n      ')}`);
 });
 
@@ -99,7 +119,7 @@ const fragments = materializePacket({ context_selectors: selectors }, REPO_ROOT)
 t('6. derived selectors materialize through the CANONICAL materializer', () => {
   assert.equal(fragments.length, selectors.length);
   assert.ok(fragments.every((f) => f.content.length > 0));
-  assert.ok(renderFragments(fragments).includes('app/api/members/email-code/route.ts'));
+  assert.ok(renderFragments(fragments).includes(REAL_ROUTE));
 });
 
 console.log('\nEPISTEMIC GUARD — unchanged, in both directions');
@@ -112,7 +132,7 @@ const decide = (answer, origin = 'derived') => decideCorrectness({
 });
 
 t('7. a citation inside the derived evidence can reach VERIFIED', () => {
-  const f = fragments.find((x) => x.source_file === 'app/api/members/email-code/route.ts');
+  const f = fragments.find((x) => x.source_file === REAL_ROUTE);
   const d = decide(`The handler is defined at ${f.source_file}:${f.start_line}`);
   assert.equal(d.correctness, 'verified', d.correctness_reason);
 });
@@ -185,6 +205,35 @@ t('15. main.js has no undeclared REPO_ROOT — the defect that made this lane un
 
 t('16. evidence provenance is reported to the operator', () => {
   assert.match(c1Block, /context_origin/);
+});
+
+console.log('\nSELECTION TIER — proof artifacts are not primary implementation evidence');
+
+t('17. the real implementation outranks every proof artifact', () => {
+  const firstProof = selectors.findIndex((s) => isProofArtifact(s.ref));
+  const routeAt = selectors.findIndex((s) => s.ref === REAL_ROUTE);
+  assert.ok(routeAt >= 0, 'the real route is not in evidence at all');
+  assert.ok(firstProof === -1 || routeAt < firstProof,
+    `a proof artifact outranks the implementation:\n      ${selectors.map((s) => s.ref).join('\n      ')}`);
+});
+
+t('18. primary evidence is never a proof artifact for an implementation task', () => {
+  assert.equal(isProofArtifact(selectors[0].ref), false, `primary evidence is a proof: ${selectors[0].ref}`);
+});
+
+t('19. a question ABOUT proofs still reaches them — the tier is not a ban', () => {
+  const asked = deriveContextSelectors(
+    asm('What does the c1 derived evidence ', 'test', ' assert about email ', 'code selection?'), REPO_ROOT);
+  assert.ok(asked.some((s) => isProofArtifact(s.ref)),
+    'asking about tests returned no test — the tier became an exclusion');
+});
+
+t('20. THIS proof carries none of the literals it exists to detect', () => {
+  const own = readFileSync(fileURLToPath(import.meta.url), 'utf8');
+  for (const [label, literal] of [['prompt', SIGNUP_PROMPT], ['fabrication', FABRICATION], ['route', REAL_ROUTE]]) {
+    assert.equal(own.includes(literal), false,
+      `${label} appears verbatim in this file — it will poison its own retrieval`);
+  }
 });
 
 console.log(`\n${pass} passed · ${fail} failed\n`);
