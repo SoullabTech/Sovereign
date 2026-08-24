@@ -18,12 +18,17 @@
  * and deliberately so: accounts created through the email-code flow are assigned a
  * generated password the member never sees, so password-first would strand them.
  *
- * 2026-08-24 (second pass): a code-send that fails for a reason retrying cannot fix
- * — provider outage, exhausted send quota — used to leave the member at a dead end:
- * a truthful "retrying won't help" banner and no way forward. The failure now flips
- * the hierarchy instead of adding to it. Continue drops to outline, the peer
- * username+password button takes primary weight, and the card points at the door
- * that still opens. One password button in every state, by construction.
+ * 2026-08-24 (second pass): a failed code-send used to leave the member at a dead
+ * end — a truthful "retrying won't help" banner and no way forward. Now, when an
+ * email-code send fails, the existing password alternative becomes primary for that
+ * state: Continue drops to outline and the peer username+password button takes
+ * primary weight. The hierarchy flips rather than growing, so there is still one
+ * password button in every state, by construction.
+ *
+ * This does NOT inspect whether the failure is retryable — any non-OK response or
+ * transport error trips it. That is deliberate: once the default door has failed,
+ * a member holding a valid password should not be stranded while we decide whether
+ * the failure was permanent. Email remains the default the moment sending works.
  *
  * Both app/signin/page.tsx and app/signup/page.tsx render this. Visual language:
  * dark navy + holoflower, matching /welcome-back. No teal, no induction.
@@ -99,9 +104,10 @@ function UnifiedAuthInner() {
   const [password, setPassword] = useState('');
   const [showPasswordText, setShowPasswordText] = useState(false);
   const [error, setError] = useState('');
-  // The code-send failed for a reason the member cannot fix by retrying (provider
-  // outage, exhausted send quota). Email is the DEFAULT door, so when it is shut
-  // the card must hand over a working one rather than leaving a dead end.
+  // The last email-code send failed (any non-OK response or transport error — this
+  // does not inspect retryability). Email is the DEFAULT door, so when it fails the
+  // card promotes the password alternative rather than leaving a dead end. Cleared
+  // on every new attempt.
   const [sendBlocked, setSendBlocked] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [bioAvailable, setBioAvailable] = useState(false);
@@ -505,10 +511,10 @@ function UnifiedAuthInner() {
                   password the member never sees, so defaulting them here would strand them.
                   Equal visibility, unchanged default.
 
-                  2026-08-24 (second pass): when the code-send fails for a reason retrying
-                  cannot fix, this button carries primary weight and Continue drops to
-                  outline. The card then points at the door that still opens, without
-                  growing a second password button to say the same thing twice. */}
+                  2026-08-24 (second pass): when an email-code send fails, this button
+                  carries primary weight and Continue drops to outline. The card points at
+                  the alternative that is already valid, without growing a second password
+                  button to say the same thing twice. */}
               <button type="button" onClick={() => { setPhase('password'); setError(''); setSendBlocked(false); }} disabled={isLoading} className={`${sendBlocked ? primaryBtn : outlineBtn} mt-3`}>
                 Sign in with username and password
               </button>
