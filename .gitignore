@@ -456,3 +456,6 @@ scripts/eval/reports/
 
 # Walk probe snapshots (scripts/walk/*) — local evidence, never committed
 .walk/
+
+# JARVIS per-session run stamps (Stop hook)
+.jarvis/run/

@@ -1,0 +1,7 @@
+{
+  "name": "soullab-jarvis",
+  "description": "JARVIS operating layer for Soullab: session orientation, executable governance hooks, and bounded-job / debug / deploy skills. Moves repeated prose governance into hooks and progressive-disclosure skills.",
+  "version": "0.1.0",
+  "author": { "name": "Soullab" },
+  "keywords": ["jarvis", "governance", "hooks", "context-governor", "maia-sovereign"]
+}

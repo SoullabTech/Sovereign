@@ -1,0 +1,11 @@
+{
+  "name": "soullab",
+  "owner": { "name": "Soullab" },
+  "plugins": [
+    {
+      "name": "soullab-jarvis",
+      "source": "./plugins/soullab-jarvis",
+      "description": "JARVIS operating layer: session orientation, executable governance hooks, bounded-job / debug / deploy skills."
+    }
+  ]
+}

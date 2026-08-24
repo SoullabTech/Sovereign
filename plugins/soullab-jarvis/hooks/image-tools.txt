@@ -1,0 +1,15 @@
+# Tools whose results are measured to enter context as pixels or bulk media.
+# One case-insensitive SUBSTRING per line, matched against the tool name.
+# Basis: docs/architecture/audits/JARVIS_CONTEXT_ARCHITECTURE_AUDIT_2026-08-16.md §2
+#   image-producing verification = ~70% of per-session tool inflow (~121k tok/session).
+#   iOS simulator control averaged 30,374 tok/call; computer-use screenshot 77,047 tok/call.
+#
+# Explicit enumeration only. Add a line when a new image emitter shows up in the
+# transcript census; do NOT widen these into loose patterns like "read" or "get".
+simulator
+computer
+screenshot
+browser_batch
+computer_batch
+playwright
+puppeteer
