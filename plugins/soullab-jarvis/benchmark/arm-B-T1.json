@@ -1,0 +1,36 @@
+{
+  "schema": "arm-record/1",
+  "status": "PREFLIGHT",
+  "arm": "B",
+  "session_id": null,
+  "transcript": null,
+  "launch_timestamp": "2026-08-24T21:54:56Z",
+  "bound_at": null,
+  "cwd": "/Users/soullab/jarvis-bench-dfbdef18",
+  "repo": {
+    "head": "dfbdef18d361d3939c652435bd387d2c38508567",
+    "tree": "0746b8c1e83872bf5658cdd5c2f4b66e3b6c96bc",
+    "detached": true,
+    "clean": true
+  },
+  "plugin": {
+    "present_in_list": true,
+    "present_in_registry": true,
+    "installed_sha": "dfbdef18d361d3939c652435bd387d2c38508567",
+    "install_path": "/Users/soullab/.claude/plugins/cache/soullab/soullab-jarvis/0.1.0",
+    "installed_version": "0.1.0",
+    "tree_digests": {
+      "scratchpad": "9006cff2aca7f19f833f1931d7d8859797f77a65e03cfd7dba732cd3703d431a",
+      "armlog": "62398ae7cfbb8ac4e54c3f45ccbacd8ff70c0fe385cec5d18ca47dae94ec06fe"
+    },
+    "marketplace_source": "/Users/soullab/jarvis-bench-dfbdef18"
+  },
+  "cli_version": "2.1.241 (Claude Code)",
+  "model": "claude-opus-5",
+  "task_id": "T1",
+  "task_set_sha": "5dc9a7dffabd4e83674ad78c51434be978288c5453f20277b4bd7d154f5b9c5c",
+  "task_set_path": "/Users/soullab/jarvis-adapter-bench/plugins/soullab-jarvis/benchmark/emit-task.py",
+  "task_prompt_sha256": "8067ad43977a969da783e4311475f2508fe447e96b66c94106afb046bbe58c67",
+  "task_prompt_len": 230,
+  "expected_prompt_source": "typed"
+}
