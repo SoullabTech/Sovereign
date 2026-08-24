@@ -35,6 +35,20 @@ export type ProvisionDecision =
   | { action: 'create' };
 
 /**
+ * What `classifyCollision` can actually return.
+ *
+ * `create` is provably unreachable there: the function only consults the
+ * constraint name AFTER `decideProvisioning` has already said `create`, and
+ * every branch from that point returns a `CollisionConflict`. Saying so in the
+ * type is what lets a caller narrow to a conflict without a cast — and a cast
+ * at the call site would have asserted the same fact with less evidence behind
+ * it, in the file least able to check it.
+ */
+export type CollisionOutcome =
+  | Exclude<ProvisionDecision, { action: 'create' }>
+  | CollisionConflict;
+
+/**
  * Decide from the rows a member ACTUALLY has. `rows` must come from an
  * unfiltered `WHERE member_id = $1` — passing a status-filtered set here
  * reintroduces the defect one layer up.
@@ -92,7 +106,7 @@ export function personalSlugFor(memberId: string): string {
 export function classifyCollision(
   rowsAfterReread: PractitionerRow[],
   constraint?: string | null,
-): ProvisionDecision | CollisionConflict {
+): CollisionOutcome {
   // The re-read is STRONGER evidence than the constraint name: if the member now
   // owns a practitioner, a concurrent request won and the conflict is resolved,
   // whichever unique index happened to fire. Recovery is deliberately
