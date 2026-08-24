@@ -383,11 +383,11 @@ See: `docs/bridge-d-verification.md` for full verification guide.
 
 ## Co-Lab Release Gate (MANDATORY before tester invites)
 
-**No invite unless `verify-colab-boundaries.ts` passes 31/31 in production.**
+**No invite unless `verify-constitution-colab.ts` passes 31/31 in production.**
 
 Run inside the container on minisforum:
 ```bash
-docker exec maia-sovereign sh -c 'DATABASE_URL="$DATABASE_URL" npx tsx scripts/verify-colab-boundaries.ts'
+docker exec maia-sovereign sh -c 'DATABASE_URL="$DATABASE_URL" npx tsx scripts/verify-constitution-colab.ts'
 ```
 
 Pass condition: `31 passed · 0 failed · 0 warned`
