@@ -196,3 +196,98 @@ No provider change. No email abstraction migration. No fallback provider. No que
 No webhook. No delivery-record system. No marketing/transactional separation. No billing
 change. No DNS/MX/SPF/DKIM/DMARC inspection or change. No secret read or printed. No test
 communication sent.
+
+---
+
+# ADDENDUM 2026-08-24 — THE PRODUCTION LINE MOVED. THE AUTHORIZED ACT IS NOT EXECUTABLE AS WRITTEN.
+
+The re-fetch that the authorized act opens with **fails at its own steps 2 and 3.**
+
+```text
+clean-main-no-secrets   be5b3b8  ->  e01d4a7e97b999f08fa4125e3836f5f28aeaf300
+  e01d4a7e9  Merge pull request #1072 from SoullabTech/fix/email-send-result-truthfulness
+  aae10b014  fix(signup): never report a code as sent when the provider refused
+
+step 2  "confirm it is still be5b3b8"                  -> FAILS, it is e01d4a7
+step 3  "confirm 0e7b8ce is still its FF successor"    -> FAILS, no longer an ancestor
+```
+
+**PR #1072 is already merged.** The instruction not to merge it arrived after it had
+landed. `0e7b8ce` is not on the production line and is no longer fast-forwardable onto it.
+
+## Landing `0e7b8ce` whole would now do the forbidden thing
+
+```
+git merge-tree origin/clean-main-no-secrets 0e7b8ce
+  -> CONFLICT (content): app/api/members/email-code/route.ts
+```
+
+The two sibling implementations collide on exactly the route they both fix. Resolving that
+conflict **is** combining both. Do not land `0e7b8ce` whole.
+
+## What is actually true on the production line now
+
+The landed implementation is **sound for signup**. Verified, not assumed:
+
+- `app/api/members/email-code/__tests__/route.test.ts` at `e01d4a7`: **16 passed, 0 failed**.
+- Against the chosen implementation's incident test, it returns **502, not 200** — it
+  refuses to report success the provider never gave. The two behavioural "failures" in that
+  cross-run are a status-code convention difference (`502` vs `500`); the structural
+  assertions fail because #1072 routes through `sendEmail()` instead of calling
+  `getResend()` inline — by design, not defect.
+- On refusal it emits a distinct failure telemetry event carrying `providerCode`, logs
+  `[EMAIL-CODE] Provider REFUSED the send …`, and never emits `Code sent`.
+
+**But its coverage is narrower than the chosen implementation's.** On the current
+production line:
+
+| route | state at `e01d4a7` |
+|---|---|
+| `email-code` | ✅ fixed via `sendEmail()` (PR #1072) |
+| `magic-link` | ❌ **still a bare discarding `await` — still lies** |
+| `recover` | ❌ **still a bare discarding `await` — still lies** |
+| `reset-password` | ❌ **still a bare discarding `await` — still lies** |
+
+`0e7b8ce` covered all four. What landed covers one.
+
+## The non-overlapping remainder applies cleanly
+
+The `0e7b8ce` delta for **only** the three still-broken routes applies to the current
+production line with **no conflict and no overlap with #1072**:
+
+```
+git diff 0e7b8ce^ 0e7b8ce -- app/api/members/{magic-link,recover,reset-password}/route.ts
+  -> git apply --check against e01d4a7 : APPLIES CLEANLY
+```
+
+That is one implementation per route — not a combination.
+
+## Witness commands CORRECTED
+
+The grep recorded earlier looks for `Resend rejected the send`, which is the **chosen**
+implementation's marker. The **landed** implementation prints a different line. On
+`e01d4a7`, use:
+
+```bash
+ssh soullab@minisforum \
+  'docker logs maia-sovereign --since 10m 2>&1 | grep -E "EMAIL-CODE.*(Code sent|Provider REFUSED)"'
+```
+
+- **Accepted** → `[EMAIL-CODE] Code sent to <addr> (existing: <bool>, id: <resend-id>)`
+- **Rejected** → `[EMAIL-CODE] Provider REFUSED the send for <addr> — status=… providerCode=… error=…`
+  — `providerCode` is the field that answers the billing question. Record it verbatim.
+
+The HTTP status on refusal is **502** on this implementation, not 500.
+
+## Decision required before the Mac Studio act can run
+
+1. **Deploy `e01d4a7` as-is now.** Signup becomes truthful and the witness proceeds
+   immediately. `magic-link` / `recover` / `reset-password` keep lying until a separate act.
+2. **First reconcile the three-route remainder of `0e7b8ce` onto `e01d4a7`, then deploy
+   that SHA.** All four account-access routes truthful at the witness. Costs one small
+   commit — verified clean-applying above — before deploying.
+
+Either way, `0e7b8ce` is not landed whole and PR #1072 is not un-merged. Billing stays
+UNKNOWN until the witness reports `providerCode`.
+
+**Nothing further executed. No deploy, no push to `clean-main-no-secrets`, no PR action.**
