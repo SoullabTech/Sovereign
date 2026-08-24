@@ -92,16 +92,18 @@ where it is PRESENT, with the drift banner raised.
 ## State
 
 ```
-ARM A            ADMISSIBLE  (unchanged; promptSource discrepancy OPEN)
+ARM A            ADMISSIBLE  (promptSource discrepancy CLOSED, see ARM_LOG)
 ARM B            DOES NOT EXIST — never launched
 POSTFLIGHT       REPAIRED, 46/46 proof green
 A/B COMPARISON   NOT AUTHORIZED
 ```
 
-**Open before any A/B comparison:** Arm A's transcript carries
-`promptSource: ['queued','typed']` while the run sheet records `typed`. Resolve
-what `queued` signifies first, or the arms may differ in delivery mechanics and
-we would only discover it after the differential. `arm-postflight.py` records
+**CLOSED 2026-08-24** — see `ARM_LOG_2026-08-24.md`, "promptSource discrepancy
+RESOLVED". Arm A has exactly one T1 delivery (`typed`, idx 8); the `queued`
+record is the operator's post-completion acceptance verdict, not a second task.
+`queued` denotes transport -- typed during generation, held to the next turn
+boundary. One comparability item carries forward: that acceptance tail is 2,727
+chars plus one assistant turn that Arm B will not have unless matched. `arm-postflight.py` records
 the delivering message's `promptSource` and WARNs on mismatch with the record's
 `expected_prompt_source`; it does not void on it.
 
