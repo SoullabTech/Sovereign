@@ -383,6 +383,22 @@ export function formatRuntimeContextForResponse(ctx: MaiaRuntimeContext): object
     fallbackActive: ctx.provider.fallbackActive,
     promptBlockChars: ctx.promptBlock.chars,
     promptLayers: ctx.promptBlock.layers,
+    // ── Recognition signal (2026-08-24, iOS memory-context divergence) ──────
+    // Whether THIS request resolved to a verified member, and whether that made
+    // it eligible for cross-session memory. Booleans only — never the member
+    // UUID, never content (client-exposed UUIDs are what made the bare
+    // `x-member-id` claim impersonable in the first place).
+    //
+    // Why it is in the response and not only in the server log: when identity
+    // fails to resolve, this route does not error — it answers normally as an
+    // anonymous caller. That degradation was previously invisible to the
+    // client, so a device could present a recognized member while conversing
+    // as a stranger, and the only witness was an ssh session into production.
+    // A member (or a tester) can now tell "MAIA has nothing to recall" apart
+    // from "MAIA was never told who I am" from the device itself.
+    memberRecognized: ctx.member.userId !== null,
+    crossSessionMemory: ctx.member.allowCrossSessionMemory,
+    sanctuary: ctx.member.isSanctuary,
     builtAt: ctx.builtAt,
   };
 }

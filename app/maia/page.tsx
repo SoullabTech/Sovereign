@@ -62,6 +62,7 @@ import {
   REFLECTION_LENSES,
 } from '@/lib/consciousness/therapeuticFrameworks';
 import { apiUrl, apiFetch, clearAuthState } from '@/lib/http/apiBase';
+import { reportServerIdentityParity } from '@/lib/auth/verifyServerIdentity';
 
 // Migration version - increment to force re-auth for all users
 const SESSION_VERSION = 2; // Bumped to fix UUID-as-name bug (Jan 5, 2026)
@@ -511,6 +512,17 @@ function MAIAPageContent() {
 
       // Load user data first (needed for session registration)
       const initialData = await getInitialUserData();
+
+      // 🔎 IDENTITY PARITY (2026-08-24, iOS memory-context divergence).
+      // Ask the server whether it recognizes this device, and compare with what
+      // localStorage believes. On the web the cookie + middleware keep the two
+      // in step; on iOS neither exists, so a device with a stale/absent
+      // `maia_session_token` can look signed in while every turn resolves to an
+      // anonymous caller — MAIA converses normally and recalls nothing.
+      // Non-blocking and non-destructive: this only observes and logs
+      // (`[identity] parity`). It never clears credentials and never redirects,
+      // so an offline boot cannot sign a member out of their own device.
+      reportServerIdentityParity().catch(() => { /* never blocks arrival */ });
 
       // Get or create persistent sessionId via the CANONICAL identity module
       // (lib/maia/presence/conversationIdentity) — the same module the global
