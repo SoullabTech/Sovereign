@@ -51,6 +51,13 @@ hits), symbol (7), anchor (4), SHA (9), token budget (12–13) — **all witness
 
 ### 3.1 ⛔ NOTHING IS ON TRUNK
 
+> **⚠️ SUPERSEDED 2026-08-24 — custody only. The evidence below is preserved, not withdrawn.**
+> The C1 mechanism cluster has since merged: `334c11f92` is contained in
+> `origin/clean-main-no-secrets`. The table below is a true record of custody **as of 2026-08-16**
+> and must not be cited as current trunk state. What has *not* changed is the distinction it was
+> defending — `merged ≠ packaged ≠ installed ≠ running ≠ witnessed`. See
+> `docs/governance/JARVIS_ARCHITECTURE_CONVERGENCE_DIRECTIVE_2026-08-24.md` §9.
+
 | Commit | Date | Subject | On trunk? |
 |---|---|---|---|
 | `df58fef2f` | 2026-08-10 | JARVIS Unit 8 precision context router | **NO** |
