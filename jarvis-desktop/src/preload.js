@@ -23,6 +23,12 @@ contextBridge.exposeInMainWorld('jarvis', {
   getMechanismStatus: () => ipcRenderer.invoke('jarvis:mechanism-status'),
   runWorkUnit: (packet) => ipcRenderer.invoke('jarvis:run-work-unit', { packet }),
 
+  // Durable run history, read-only. Served by the canonical store in the bound
+  // repository — the renderer cannot name a path, only a bounded page or a run
+  // id whose shape the store itself validates.
+  listRuns: (opts) => ipcRenderer.invoke('jarvis:list-runs', opts || {}),
+  getRun: (runId) => ipcRenderer.invoke('jarvis:get-run', runId),
+
   getRepoConfig: () => ipcRenderer.invoke('jarvis:repo-config'),
   chooseRepo: () => ipcRenderer.invoke('jarvis:choose-repo'),
   clearRepo: () => ipcRenderer.invoke('jarvis:clear-repo'),

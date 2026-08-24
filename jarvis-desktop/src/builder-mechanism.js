@@ -145,6 +145,42 @@ async function loadMechanism(root) {
 }
 
 /**
+ * Load ONLY the durable run store from the bound root.
+ *
+ * B1 (2026-08-24). The C1 lane needs to persist runs, and persistence is the
+ * one thing the mechanism cluster already does correctly — so C1 uses THIS
+ * store rather than growing a Desktop-local one. A second run store would fork
+ * the audit substrate and give the founder two disagreeing histories, which is
+ * the same class of error as a Desktop-local copy of the verifier.
+ *
+ * Narrower than loadMechanism() on purpose. loadMechanism() demands all five
+ * modules because it is about to EXECUTE a governed work unit and the gate must
+ * be present. Persisting a C1 run needs the store and nothing else; requiring
+ * the governance gate to be on disk before a C1 run may be recorded would make
+ * durability hostage to a module C1 never calls, and the failure mode of that
+ * is silently unrecorded runs — exactly what B1 exists to end.
+ *
+ * NO SUBSTITUTION applies here as it does everywhere else in this file: the
+ * store is resolved from the bound root or not at all.
+ */
+async function loadStore(root) {
+  if (!root) {
+    return { ok: false, reason: 'no execution substrate is bound — a run cannot be attributed to a repository', store: null };
+  }
+  const dir = mechanismDir(root);
+  const file = path.join(dir, 'jarvis-runtime-store.mjs');
+  if (!fs.existsSync(file)) {
+    return { ok: false, reason: `the bound repository does not carry the durable run store — missing ${file}`, store: null };
+  }
+  try {
+    const store = await import(`file://${file}?t=${Date.now()}`);
+    return { ok: true, reason: null, store };
+  } catch (e) {
+    return { ok: false, reason: `run store import failed from ${dir}: ${String(e.message).slice(0, 300)}`, store: null };
+  }
+}
+
+/**
  * Drive one governed work unit through the mechanism.
  *
  * Desktop supplies the `ctx` the pipeline requires — transition/emit/cancelled/
@@ -243,5 +279,6 @@ module.exports = {
   mechanismState,
   advisoryLaneNote,
   loadMechanism,
+  loadStore,
   runWorkUnit,
 };

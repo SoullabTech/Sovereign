@@ -50,6 +50,44 @@ function provenanceRows(p) {
     </div>`;
 }
 
+// REPOSITORY TOPOLOGY (2026-08-24). Rendered as its own card, below the two
+// identities rather than inside them.
+//
+// "Which JARVIS is this?" can be answered completely and correctly while the
+// binary was still built from a DIFFERENT CHECKOUT of the same repository than
+// the one being operated — same history, same object store, different source.
+// That is not a provenance failure, which is exactly why it needs its own
+// surface: a founder reading a green provenance card had no way to see it.
+//
+// Each identity gets its own row. Nothing here is summarised into "the repo",
+// and a divergence is stated in full rather than reduced to a badge.
+function topologyRows(topo) {
+  if (!topo) return '';
+  const rel = topo.relationship || {};
+  const unclean = ['DIVERGED_UNDECLARED', 'CROSS_REPOSITORY', 'SAME_WORKTREE_DRIFT', 'UNKNOWN'].includes(rel.state);
+  const row = (label, value, note) =>
+    `<div class="row"><span class="label">${label}</span><span class="kv" style="text-align:right;max-width:420px">${
+      value === null || value === undefined || value === '' ? '—' : String(value)
+    }${note ? ` <span class="hint">${note}</span>` : ''}</span></div>`;
+
+  return `
+    <div class="card">
+      <h3>Repository topology — four identities, never collapsed</h3>
+      ${row('Repository', topo.repository_identity)}
+      ${row('Operated worktree', topo.operated_worktree, topo.operated_is_linked_worktree ? '(linked worktree)' : '')}
+      ${row('Operated branch', topo.operated_branch)}
+      ${row('Operated commit', topo.operated_commit, topo.operated_dirty ? '(uncommitted changes)' : '')}
+      ${row('Build-source worktree', topo.build_source_worktree)}
+      ${row('Build-source commit', topo.build_source_commit, topo.build_source_dirty ? '(built from a dirty tree)' : '')}
+      ${row('Running artifact SHA', topo.running_artifact_sha)}
+      <div class="row">
+        <span class="label">Build ⇄ operated</span>
+        <span class="state ${rel.state === 'ALIGNED' || rel.state === 'DIVERGED_DECLARED' ? 'AVAILABLE' : unclean ? 'UNAVAILABLE' : 'UNKNOWN'}">${rel.state || 'UNKNOWN'}</span>
+      </div>
+      ${rel.detail ? `<div class="${unclean ? 'precedence' : 'hint'}">${rel.detail}</div>` : ''}
+    </div>`;
+}
+
 // JOP-01 — every non-ready organ renders STATE · REASON · REMEDIATION · SOURCE.
 // A state badge with no reason is not an acceptable founder-facing fact; that
 // is the whole defect this unit exists to remove.
@@ -201,6 +239,7 @@ function renderHome() {
     ${group('Not authorized', v.capabilities.not_authorized)}
 
     ${provenanceRows(s.provenance)}
+    ${topologyRows(s.topology)}
     <div class="hint">Observed ${v.observed_at || 'unknown'}</div>
   `;
   document.getElementById('convo').addEventListener('keydown', onConvoKey);
@@ -557,6 +596,7 @@ function renderSystem() {
       ${stateRow('Production', s.production || { state: 'NOT PROBED', detail: 'Requires explicit production/SSH authority, which Desktop does not hold. Not probed by design.' })}
     </div>
     ${provenanceRows(s.provenance)}
+    ${topologyRows(s.topology)}
     <div class="card">
       <h3>Builder OS detail</h3>
       <pre>${JSON.stringify(s.builder_os.detail, null, 2)}</pre>

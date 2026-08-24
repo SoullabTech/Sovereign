@@ -18,6 +18,13 @@ const MECH = require('./builder-mechanism.js');
 // from the worker's self-report. The verifier itself stays in scripts/builder —
 // a Desktop-local copy would fork it and defeat the containment.
 const { decideCorrectness } = require('./correctness');
+// B1: C1 runs are durable. The record SHAPE lives in its own module so it can be
+// proven without Electron; the canonical store does the writing.
+const C1 = require('./c1-run-record.js');
+// Repository topology. "The repo" is four identities, and a run that cannot name
+// which checkout and which commit it operated against carries no provenance
+// forward, however faithfully it is stored.
+const TOPO = require('./repo-topology.js');
 
 // ---------------------------------------------------------------------------
 // Instance identity.
@@ -217,6 +224,56 @@ function readSubstrateVersion(root) {
   } catch {
     return unread;
   }
+}
+
+// ---------------------------------------------------------------------------
+// REPOSITORY TOPOLOGY (2026-08-24).
+//
+// The eight identities, kept apart:
+//
+//   repository ............. the shared git object store (--git-common-dir)
+//   branch ................. of the operated checkout
+//   worktree ............... which checkout is operated
+//   commit ................. its exact source state
+//   build-source worktree .. which checkout produced this artifact
+//   build-source commit .... its exact source state at package time
+//   running artifact SHA ... what this binary reports itself to be
+//   operated worktree ...... restated on the run record, so a stored run is
+//                            readable without knowing which field meant what
+//
+// Two worktrees of ONE repository share history and object storage and can hold
+// different source. Collapsing them into "the repo" is how a fix made in one
+// checkout can be believed while an app built from another ships the old
+// implementation. This function refuses that collapse; it decides nothing and
+// resolves nothing, it only reports the relationship (see repo-topology.js).
+//
+// The declared contract lives in config, not in code: only the founder can say
+// whether a build/operated split is intentional. Absent a declaration, a split
+// is reported as UNDECLARED rather than assumed benign.
+function currentTopologyRecord(root) {
+  const buildInfo = readBuildInfo();
+  // A stamp_version 1 build recorded only a SHA — no worktree, no repository.
+  // Such a build genuinely CANNOT say where it came from, and that absence is
+  // reported as absence rather than back-filled from the operated substrate,
+  // which would fabricate exactly the alignment the invariant exists to test.
+  const build =
+    buildInfo && buildInfo.build_source_worktree
+      ? {
+          worktree: buildInfo.build_source_worktree,
+          repository: buildInfo.build_source_repository || null,
+          branch: buildInfo.build_source_branch || null,
+          commit: buildInfo.build_source_commit || buildInfo.app_build_sha || null,
+          dirty: typeof buildInfo.build_source_dirty === 'boolean' ? buildInfo.build_source_dirty : null,
+          is_linked_worktree:
+            typeof buildInfo.build_source_is_linked_worktree === 'boolean' ? buildInfo.build_source_is_linked_worktree : null,
+        }
+      : null;
+  return TOPO.topologyRecord({
+    build,
+    operated: root ? TOPO.readTopology(root, { env: childEnv(process.env).env }) : null,
+    artifactSha: buildInfo ? buildInfo.app_build_sha || null : null,
+    declaredContract: RepoConfig.readConfig(app.getPath('appData')).topology_contract || null,
+  });
 }
 
 function currentProvenance() {
@@ -475,6 +532,13 @@ ipcMain.handle('jarvis:status', async () => {
     repo_root: currentRoot() || `UNKNOWN (${REPO_ROOT_MODE} mode) — set JARVIS_REPO_ROOT, or run from inside a checkout with all four canonical markers`,
     repo_root_mode: REPO_ROOT_MODE,
     provenance: currentProvenance(),
+    // REPOSITORY TOPOLOGY. Surfaced alongside provenance rather than folded
+    // into it: provenance answers "who am I and what am I acting on", topology
+    // answers "which CHECKOUT of which repository, and was this binary built
+    // from it". A build/operated split is invisible to the first question and
+    // is the entire subject of the second — the 2026-08-24 finding was a system
+    // that could answer provenance correctly and still ship the wrong code.
+    topology: currentTopologyRecord(currentRoot()),
     // The Home ACTIVE WORKSPACE panel reads this and nothing else. It is the
     // SAME resolution the router uses — not a second read of the binding — so
     // the panel cannot drift from what Work will actually route against. That
@@ -725,9 +789,27 @@ ipcMain.handle('jarvis:run-work-unit', async (_evt, req) => {
 // not overlap, and neither is a route into the other.
 // ---------------------------------------------------------------------------
 ipcMain.handle('jarvis:submit-task', async (_evt, task) => {
-  if (!currentRoot()) return { status: 'error', reason: 'repo root not found — cannot route' };
-  const routerPath = path.join(currentRoot(), 'scripts', 'builder', 'router.mjs');
-  const detPath = path.join(currentRoot(), 'scripts', 'builder', 'deterministic.mjs');
+  // ONE referent for the whole handler.
+  //
+  // B2 (2026-08-24). The C1 branch below resolved its canonical modules from a
+  // bare `REPO_ROOT` identifier that does not exist in this module — only
+  // `REPO_ROOT_MODE` and `process.env.JARVIS_REPO_ROOT` do. Every C1 task
+  // therefore threw `ReferenceError: REPO_ROOT is not defined` on its first
+  // line, was caught by the branch's own catch, and surfaced as an ordinary
+  // `status: 'failed'` — a repository-resolution defect wearing the costume of
+  // a task failure. It survived because the identifier LOOKED like the
+  // repository, and "the repo" is precisely the collapse this app now refuses.
+  //
+  // The repository-resolution contract is already established and has exactly
+  // one implementation: RESOLVED, read through currentRoot(). C1 is bound to
+  // it here rather than given a second resolver. Snapshotting it once also
+  // means a Preferences rebind mid-task cannot move the substrate underneath a
+  // run that has already started — the run stays attributable to the root it
+  // was admitted against.
+  const root = currentRoot();
+  if (!root) return { status: 'error', reason: 'repo root not found — cannot route' };
+  const routerPath = path.join(root, 'scripts', 'builder', 'router.mjs');
+  const detPath = path.join(root, 'scripts', 'builder', 'deterministic.mjs');
 
   const { route } = await import(`file://${routerPath}?t=${Date.now()}`);
   const decision = route(task);
@@ -748,7 +830,7 @@ ipcMain.handle('jarvis:submit-task', async (_evt, task) => {
   if (decision.execution_lane === 'C0') {
     try {
       const { runCapability } = await import(`file://${detPath}?t=${Date.now()}`);
-      const r = runCapability(task.capability, task.args || {}, currentRoot());
+      const r = runCapability(task.capability, task.args || {}, root);
       response.result = r;
       response.status = 'completed';
       // Independent verification: a second, structurally different check —
@@ -765,6 +847,50 @@ ipcMain.handle('jarvis:submit-task', async (_evt, task) => {
       response.result = { error: e.message };
     }
   } else if (decision.execution_lane === 'C1') {
+    // ── B1: durable run, opened BEFORE the worker is invoked ────────────────
+    // A record that only appears on success would make the history a highlight
+    // reel and would make a crash mid-run indistinguishable from a task never
+    // submitted. The store is the canonical one, loaded from the bound root.
+    //
+    // Persistence failure never blocks the run. A founder mid-task must not
+    // lose an answer because a disk write failed — but the failure IS surfaced
+    // on the response (`persistence`), because a silently unrecorded run is the
+    // exact condition B1 exists to end. Degrade loudly, never quietly.
+    const storeLoad = await MECH.loadStore(root);
+    let c1Run = null;
+    const persistence = { persisted: false, run_id: null, reason: storeLoad.ok ? null : storeLoad.reason };
+    if (storeLoad.ok) {
+      try {
+        c1Run = C1.openRun({
+          runId: storeLoad.store.newRunId(),
+          task,
+          now: storeLoad.store.nowISO(),
+          topology: currentTopologyRecord(root),
+          provenance: currentProvenance(),
+        });
+        storeLoad.store.saveRun(c1Run);
+        storeLoad.store.appendEvent({ run_id: c1Run.run_id, kind: 'c1-opened', lane: 'C1' });
+        persistence.run_id = c1Run.run_id;
+      } catch (e) {
+        c1Run = null;
+        persistence.reason = `run store write failed: ${String(e.message).slice(0, 200)}`;
+      }
+    }
+    /** Persist a terminal C1 record. Never throws into the run's own path. */
+    const closeRun = (closed) => {
+      // `c1Run` is null whenever the open failed, and a record with no run_id
+      // must never reach saveRun — the store keys files by run_id and would
+      // write an unaddressable one.
+      if (!storeLoad.ok || !c1Run || !closed || !closed.run_id) return;
+      try {
+        storeLoad.store.saveRun(closed);
+        storeLoad.store.appendEvent({ run_id: closed.run_id, kind: 'c1-closed', to: closed.state, disposition: closed.disposition });
+        persistence.persisted = true;
+      } catch (e) {
+        persistence.reason = `run store write failed at close: ${String(e.message).slice(0, 200)}`;
+      }
+    };
+
     try {
       // ── canonical evidence substrate ───────────────────────────────────────
       // Imported, never reimplemented. materializePacket() builds the ONLY
@@ -777,8 +903,8 @@ ipcMain.handle('jarvis:submit-task', async (_evt, task) => {
       // the planner, the orchestrator and the queue are NEVER invoked from
       // here; jarvis-runtime-pipeline.mjs has no top-level side effects, so
       // importing it for verifyEvidence() does not wake the delegate path.
-      const ctxPath = path.join(REPO_ROOT, 'scripts', 'builder', 'jarvis-context.mjs');
-      const pipePath = path.join(REPO_ROOT, 'scripts', 'builder', 'jarvis-runtime-pipeline.mjs');
+      const ctxPath = path.join(root, 'scripts', 'builder', 'jarvis-context.mjs');
+      const pipePath = path.join(root, 'scripts', 'builder', 'jarvis-runtime-pipeline.mjs');
       const { materializePacket, renderFragments } = await import(`file://${ctxPath}?t=${Date.now()}`);
       const { verifyEvidence } = await import(`file://${pipePath}?t=${Date.now()}`);
 
@@ -789,7 +915,7 @@ ipcMain.handle('jarvis:submit-task', async (_evt, task) => {
         // Fail closed: an unresolvable selector must not silently degrade into
         // "no evidence required". materializeOne throws on any invalid selector.
         try {
-          fragments = materializePacket({ context_selectors: selectors }, REPO_ROOT);
+          fragments = materializePacket({ context_selectors: selectors }, root);
         } catch (e) {
           materialization_error = e.message;
         }
@@ -846,9 +972,31 @@ ipcMain.handle('jarvis:submit-task', async (_evt, task) => {
         fragments_offered: fragments.length,
         evidence,
       };
+
+      // Stored verbatim, including a completed run whose answer the canonical
+      // verifier judged incorrect. COMPLETED is about the worker; correctness
+      // is about the answer; the record keeps both, unmerged.
+      closeRun(C1.completeRun(c1Run, {
+        now: storeLoad.ok ? storeLoad.store.nowISO() : null,
+        result: response.result,
+        verification: response.verification,
+      }));
+      response.persistence = persistence;
     } catch (e) {
       response.status = 'failed';
       response.result = { error: e.message };
+      // A named class, not a flat "failed". The undefined-REPO_ROOT defect (B2)
+      // spent its whole life disguised as a task failure precisely because this
+      // path recorded nothing a reader could sweep for a pattern.
+      const failureClass = C1.classifyFailure(e);
+      response.failure_class = failureClass;
+      closeRun(C1.failRun(c1Run, {
+        now: storeLoad.ok ? storeLoad.store.nowISO() : null,
+        failureClass,
+        failureDetail: e.message,
+        result: response.result,
+      }));
+      response.persistence = persistence;
     }
   } else if (decision.execution_lane === 'C3') {
     response.status = 'routed_not_executed';
@@ -856,6 +1004,59 @@ ipcMain.handle('jarvis:submit-task', async (_evt, task) => {
   }
 
   return response;
+});
+
+// ---------------------------------------------------------------------------
+// RUN RETRIEVAL (B1/B3, 2026-08-24).
+//
+// Persisting a run and being able to GET IT BACK are two claims, and only the
+// second is what "durable run history" means to a founder. There was no
+// retrieval surface at all before this: runs written by the work-unit lane were
+// reachable only by opening JSON files by hand, so nothing in the app could
+// demonstrate that a run survived a restart.
+//
+// Read-only, bounded, and served by the canonical store from the BOUND ROOT —
+// so what the console shows is the same history the terminal sees. There is no
+// Desktop-side index that could drift from it.
+// ---------------------------------------------------------------------------
+ipcMain.handle('jarvis:list-runs', async (_evt, req) => {
+  const root = currentRoot();
+  const load = await MECH.loadStore(root);
+  if (!load.ok) return { available: false, reason: load.reason, total: 0, runs: [] };
+  try {
+    // The store's own bound listing. Desktop clamps once more so a renderer
+    // cannot ask for an unbounded page.
+    const limit = Math.min(Math.max(Number((req && req.limit) || 25), 1), 100);
+    const offset = Math.max(Number((req && req.offset) || 0), 0);
+    const page = load.store.listRuns({ limit, offset });
+    return { available: true, reason: null, source: MECH.mechanismDir(root), ...page };
+  } catch (e) {
+    return { available: false, reason: `run store read failed: ${String(e.message).slice(0, 200)}`, total: 0, runs: [] };
+  }
+});
+
+ipcMain.handle('jarvis:get-run', async (_evt, runId) => {
+  const root = currentRoot();
+  const load = await MECH.loadStore(root);
+  if (!load.ok) return { available: false, reason: load.reason, run: null };
+  try {
+    // loadRun() validates the id shape itself and returns null for anything
+    // that is not a well-formed run id, so a renderer cannot use this to read
+    // an arbitrary path. That check stays in the store; it is not re-done here.
+    const run = load.store.loadRun(String(runId || ''));
+    if (!run) return { available: true, reason: 'no run with that id in this repository', run: null };
+    return {
+      available: true,
+      reason: null,
+      run,
+      // Named as its own fact rather than left for a caller to infer from a
+      // nested field: "the run came back AND still knows what it operated
+      // against" is the whole Gate Zero retrieval condition.
+      provenance_intact: !!(run.topology && run.topology.operated_worktree && run.topology.operated_commit),
+    };
+  } catch (e) {
+    return { available: false, reason: `run store read failed: ${String(e.message).slice(0, 200)}`, run: null };
+  }
 });
 
 // ---------------------------------------------------------------------------

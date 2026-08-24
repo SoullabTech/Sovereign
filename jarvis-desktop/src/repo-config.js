@@ -41,7 +41,7 @@ function configPath(appSupportDir) {
  */
 function readConfig(appSupportDir) {
   const p = configPath(appSupportDir);
-  const absent = { present: false, repo_root: null, set_at: null, set_by: null, problem: null, path: p };
+  const absent = { present: false, repo_root: null, set_at: null, set_by: null, topology_contract: null, problem: null, path: p };
 
   let raw;
   try {
@@ -70,6 +70,16 @@ function readConfig(appSupportDir) {
     repo_root: parsed.repo_root,
     set_at: typeof parsed.set_at === 'string' ? parsed.set_at : null,
     set_by: typeof parsed.set_by === 'string' ? parsed.set_by : null,
+    // TOPOLOGY CONTRACT (2026-08-24). A free-text founder declaration that this
+    // app is INTENTIONALLY built from one worktree and operated against
+    // another. Deliberately not a boolean: "yes it's fine" is not a contract,
+    // and the reason has to survive the person who knew it. Absent by default,
+    // so an undeclared build/operated split reads as the hazard it is rather
+    // than as a configured arrangement. Only the founder can write it.
+    topology_contract:
+      typeof parsed.topology_contract === 'string' && parsed.topology_contract.trim()
+        ? parsed.topology_contract.trim()
+        : null,
     problem: null,
     path: p,
   };
@@ -85,12 +95,18 @@ function writeConfig(appSupportDir, repoRoot, setBy) {
   const p = configPath(appSupportDir);
   fs.mkdirSync(dir, { recursive: true });
 
+  // Rebinding the repository must not silently erase a topology contract the
+  // founder wrote earlier. Preserved rather than re-asked, and never invented:
+  // if none was declared the field stays absent.
+  const existing = readConfig(appSupportDir);
+
   const body = JSON.stringify(
     {
       version: CONFIG_VERSION,
       repo_root: repoRoot,
       set_at: new Date().toISOString(),
       set_by: setBy || 'unknown',
+      ...(existing.topology_contract ? { topology_contract: existing.topology_contract } : {}),
     },
     null,
     2,
