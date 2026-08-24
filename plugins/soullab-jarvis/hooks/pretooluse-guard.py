@@ -13,6 +13,12 @@ Two jobs:
   2. NAMED-TRAP DENIALS. Four things CLAUDE.md already forbids in prose, made
      mechanical. Each denial cites the line it enforces.
 
+SECURITY BOUNDARY: this is workflow enforcement, NOT the security boundary. It runs
+in the same trust domain as what it governs and is defeated by one env var. The real
+controls live elsewhere: flock on .deploy.lock, the Dockerfile deploy-lane tripwire,
+check:no-supabase in pre-commit, and remote branch protection. This hook makes those
+prohibitions fail early and legibly; it does not replace them. See README.md.
+
 Fail-open by construction: any parse error, missing field, or unreadable file
 exits 0 silently. A broken guard must never wedge a session.
 

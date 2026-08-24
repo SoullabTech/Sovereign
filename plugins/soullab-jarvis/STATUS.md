@@ -1,5 +1,9 @@
 # soullab-jarvis — status
 
+> **Classification: the Claude Code *adapter* for JARVIS** — not a new JARVIS core.
+> Adoption ruling: `ADOPTION_RULING.md` — **HOLD**, pending the §4 differential.
+
+
 Held to this repo's own rungs: **built ≠ wired ≠ surfacing ≠ verified.**
 
 | Component | Rung | Evidence |
@@ -33,8 +37,10 @@ on real sessions.
   loop; it is not tamper-proof.
 - **`image-tools.txt` is explicit enumeration.** A new image emitter is invisible until added.
   The list came from a 40-transcript census on one machine and may not match another.
-- **The trap list is four rules, not a policy.** It encodes named `CLAUDE.md` prohibitions. It
-  is not a security boundary and should not be described as one.
+- **The trap list is four rules, not a policy.** It encodes named `CLAUDE.md` prohibitions.
+  It is **not a security boundary** and must never be described as one — see README.md
+  *Security boundary*. High-consequence prohibitions must remain enforced by JARVIS
+  authority / tool / repository controls even when the hook is unavailable.
 - **The Stop hook is advisory.** It emits evidence; it enforces nothing.
 
 ## First measurement to run (before any claim)

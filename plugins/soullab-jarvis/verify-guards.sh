@@ -52,7 +52,31 @@ echo "== fail-open =="
 chk "malformed stdin -> allow"                "$(decide 'not json at all')" "allow(silent)"
 chk "empty stdin -> allow"                    "$(decide '')" "allow(silent)"
 
+echo "== fail-open boundary under guard IMPLEMENTATION ERROR =="
+# A broken guard must degrade to ALLOW. It must never emit a deny and never exit 2
+# (exit 2 is the block signal). This is the documented fail-open boundary.
+BROKE="$LAB/broken-guard.py"
+sed 's/^import json$/import json  # noqa/; 1a\
+raise RuntimeError("simulated guard implementation error")' "$HOOKS/pretooluse-guard.py" > "$BROKE"
+BOUT="$(printf '%s' "$(bash_cmd 'rm -f ~/MAIA-SOVEREIGN/.deploy.lock')" | python3 "$BROKE" 2>/dev/null)"; BRC=$?
+chk "crashed guard: exit is not 2 (block)"   "$([ "$BRC" -ne 2 ] && echo ok || echo "exit$BRC")" ok
+chk "crashed guard: emits no deny"           "$(printf '%s' "$BOUT" | grep -c deny)" 0
+
+# Unreadable rule file must not turn into a deny either.
+NORULES="$LAB/norules"; mkdir -p "$NORULES"
+cp "$HOOKS/pretooluse-guard.py" "$NORULES/"   # no image-tools.txt alongside it
+chk "missing image-tools.txt -> allow"       "$(printf '%s' "$(tool_call 'chrome_screenshot' "$LAB/main.jsonl")" | python3 "$NORULES/pretooluse-guard.py" 2>/dev/null | grep -c deny)" 0
+
 echo "== stop hook =="
+# A crashed Stop hook must never block session termination (exit 2 would).
+BROKESTOP="$LAB/broken-stop.py"
+sed '1a\
+raise RuntimeError("simulated stop hook error")' "$HOOKS/stop-close-out.py" > "$BROKESTOP"
+SOUT="$(printf '{"session_id":"x","cwd":"%s","stop_hook_active":false}' "$PWD" | python3 "$BROKESTOP" 2>/dev/null)"; SRC=$?
+chk "crashed stop hook: exit is not 2"       "$([ "$SRC" -ne 2 ] && echo ok || echo "exit$SRC")" ok
+chk "crashed stop hook: no block decision"   "$(printf '%s' "$SOUT" | grep -c '"decision"')" 0
+S2="$(printf '{"session_id":"proof2-%s","cwd":"%s","stop_hook_active":false}' "$$" "$PWD" | python3 "$HOOKS/stop-close-out.py" | python3 -c 'import json,sys;print("block" if json.load(sys.stdin).get("decision")=="block" else "no-block")')"
+chk "healthy stop hook never blocks"         "$S2" no-block
 S1="$(printf '{"session_id":"proof-%s","cwd":"%s","stop_hook_active":true}' "$$" "$PWD" | python3 "$HOOKS/stop-close-out.py")"
 chk "stop_hook_active -> silent (no loop)"    "${S1:-empty}" empty
 chk "session-start emits valid JSON"          "$(bash "$HOOKS/session-start.sh" </dev/null | python3 -c 'import json,sys;print("ok" if json.load(sys.stdin)["hookSpecificOutput"]["hookEventName"]=="SessionStart" else "bad")')" ok

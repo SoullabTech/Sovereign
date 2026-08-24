@@ -25,9 +25,11 @@ starting and discovering the boundary by crossing it.
 ## While running
 
 - **Scope creep is a finding, not a task.** Adjacent problems get named in the report, not fixed.
-- **Guards are structural, not advisory.** The `PreToolUse` hook denies deploy-lockfile
-  deletion, bare production compose builds, `@supabase` installs, and protected-branch
-  force-pushes. A denial is information: the lane is wrong, not the guard.
+- **A guard denial is information: the lane is wrong, not the guard.** The `PreToolUse` hook
+  denies deploy-lockfile deletion, bare production compose builds, `@supabase` installs, and
+  protected-branch force-pushes. It is **workflow enforcement, not a security boundary** — the
+  real controls are the `flock`, the Dockerfile deploy-lane tripwire, `check:no-supabase` in
+  pre-commit, and remote branch protection. Do not reason as though the hook replaces them.
 - **One deploy at a time** is enforced by `flock` on `.deploy.lock`. Never delete the lockfile.
 
 ## Closing

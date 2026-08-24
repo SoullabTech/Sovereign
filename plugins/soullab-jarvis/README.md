@@ -1,7 +1,23 @@
 # soullab-jarvis
 
-A Claude Code plugin that moves JARVIS governance **out of prose and into hooks**, and JARVIS
-know-how **out of the always-resident prompt and into skills that load on trigger**.
+**The Claude Code adapter for JARVIS.** Not a new JARVIS core — the layer where JARVIS makes
+Claude Code behave according to Soullab's operating discipline without stuffing that discipline
+into every prompt. Claude Code becomes a worker inside JARVIS's discipline; JARVIS does not
+become a Claude configuration.
+
+```
+JARVIS CORE          authority · evidence · memory · governance
+      |
+CLAUDE CODE ADAPTER  SessionStart · PreToolUse · Stop · Skills · references
+      |
+CLAUDE CODE          the worker
+```
+
+It moves JARVIS governance **out of prose and into hooks**, and JARVIS know-how **out of the
+always-resident prompt and into skills that load on trigger**.
+
+**Status: BUILT, not ADOPTED.** See `ADOPTION_RULING.md` — every component is HOLD until the
+A/B differential in `benchmark/PROTOCOL.md` runs.
 
 The premise, stated plainly: JARVIS's complexity belongs in small, selectively loaded skills,
 and its safety belongs in hooks. Both make it cheaper *and* more reliable, because a rule the
@@ -61,6 +77,39 @@ path — so the session stops re-deriving it. Budget: under ~40 lines. It carrie
 **Stop** prints the changed paths and the close-out checklist. **It does not block** — a
 governance layer whose failure mode is "the session cannot end" is worse than the prose it
 replaces.
+
+## Security boundary — read before trusting a denial
+
+**Claude Code hooks are workflow enforcement, not the security boundary.**
+
+```
+Claude Code hook   ->  fast prevention · good UX · changes the default path
+JARVIS authority
++ tool/repo controls  ->  actual enforcement
+```
+
+A `PreToolUse` denial is **convenience enforcement, not security authority.** It runs in the
+same trust domain as the thing it governs, it is defeated by one environment variable, and it
+does not exist at all for anyone who has not installed the plugin.
+
+For **image isolation** this is fine. The failure mode of a broken hook is wasted tokens.
+
+For the four high-consequence prohibitions it is not sufficient on its own:
+
+| Prohibition | Hook gives | Must ALSO be enforced at |
+|---|---|---|
+| `.deploy.lock` deletion | early, legible refusal | the deploy lane itself — `flock` is the real control; the lock is a kernel object, not a file convention |
+| bare production compose | early, legible refusal | the Dockerfile deploy-lane tripwire, which already fails the build in under a second |
+| `@supabase` install | early, legible refusal | `npm run check:no-supabase` in the pre-commit hook and CI |
+| protected-branch force-push | early, legible refusal | branch protection on the remote |
+
+Three of those four already have a real boundary underneath (`flock`, the tripwire, the
+pre-commit check). **Protected-branch force-push is the one that depends on remote branch
+protection being configured — verify that separately; this hook is not a substitute.**
+
+The rule to carry: *if the only thing standing between a command and production is a Python
+script in a plugin, that is a finding, not a control.* This plugin deliberately builds no new
+security infrastructure — it makes existing prohibitions fail early and legibly.
 
 ## Escape hatches
 
