@@ -1,20 +1,23 @@
-# JSL-00 — Gate Zero binding report
+# JARVIS-SL-00 — Gate Zero census (subject-side evidence)
 
 **Date:** 2026-08-24
-**Program:** JSL — JARVIS Self-Learning (founder execution mandate, 2026-08-24)
-**Status:** **GATE ZERO PARTIAL — STOPPED AT TWO §23 CONDITIONS**
-**Authored in:** `SoullabTech/Sovereign` @ branch `claude/jarvis-self-learning-build-uizovx`
+**Programme:** JARVIS · self-learning capability track
+**Status:** **SUPERSEDED IN PART — GATE ZERO NOW CLOSED**
+**Class:** subject-side **evidence**. ⛔ Not canon.
 
-> ## This document is NOT JSL-00.
+> ## Canonical custody is `SoullabTech/JARVIS`
 >
-> JSL-00 (`architecture/JSL-00_SELF_LEARNING_AUTHORITY_AND_ARCHITECTURE_2026-08-24.md`) is
-> constitutional canon and its canonical home is **`SoullabTech/JARVIS`**. It could not be
-> authored in this session — see §1. This file is **evidence**: the Gate Zero (§5) binding and
-> bounded capability census, recorded where it was gathered so JSL-00 can be written against
-> facts rather than memory.
+> This file records the census **as executed against this repository**, and stays here because
+> historical evidence belongs where it was witnessed. The governing record is
+> `architecture/JARVIS-SL-00_AUTHORITY_CROSSING_AND_CUSTODY_RECONCILIATION_2026-08-24.md`
+> in `SoullabTech/JARVIS`. ⛔ Do not cite this file as canon.
 >
-> Authoring JSL-00 here would have created a second canonical ledger — a §23 stop condition in
-> its own right. It was not done.
+> **Renamed** from `JSL-00_GATE_ZERO_BINDING_REPORT_…` per founder correction 2026-08-24: JARVIS is
+> the programme, self-learning is a capability track within it, and a top-level `JSL` namespace
+> would have become competing canon. Findings below are unaltered by the rename.
+>
+> **Two of its conclusions are superseded** — see §7. The census evidence itself stands and was
+> confirmed against canon.
 
 ---
 
@@ -203,3 +206,48 @@ Per §0, §23, and §26 — recorded so absence is not mistaken for oversight:
 | JSL-01 | **BLOCKED** (STOP-1) · **SCOPE REDUCED** (STOP-2) |
 
 Per §26, execution stops here.
+
+
+---
+
+## 7. Superseded by founder ruling and canonical binding, 2026-08-24
+
+Recorded here so this file is not read as current.
+
+**STOP-1 — RESOLVED.** Access to `SoullabTech/JARVIS` was granted. It was cloned and bound at
+`edf0b73a4da31270682d6bc9f4b6ab0f60310238`. Every premise this report carried as `UNKNOWN` is now
+verified: `README.md` did state `IMPLEMENTATION AUTHORITY ⛔ WITHHELD`; it did state *"No JARVIS
+engine exists"*; `CUSTODY.md` did explicitly refuse `~/jarvis-runtime` as a JARVIS home.
+
+**STOP-2 — CONFIRMED as a finding, but its recommendation is WITHDRAWN.** The census was accurate:
+the machinery exists and executes. ⛔ But §5 option (c) — *"Sovereign is the executable home, JARVIS
+is constitutional custody only"* — **would have contradicted canon.** `README.md` names
+MAIA-SOVEREIGN a *"surveyed subject and integration target — NOT JARVIS's owner"*, JCR-01 §2.1
+already assigns `evaluators/` · `probes/` · `ledger/` · `projections/` · `adapters/` ·
+`control-room/` to JARVIS, and `CUSTODY.md` already refused a MAIA-SOVEREIGN worktree as a JARVIS
+home. That option is withdrawn.
+
+⭐ The error is worth naming precisely: the report reasoned from *where the code currently runs* to
+*where it should live*. Canon had already settled the second question. **Measured location is not
+custody** — the same failure class this programme exists to detect, pointed the other way.
+
+**Founder Ruling 3 (2026-08-24):** `SoullabTech/JARVIS` is canonical home for both constitutional
+architecture and JARVIS-native executable implementation. The mechanisms here are
+**historical/incubated implementation that arose before executable custody caught up with
+constitutional custody**. They are to be migrated or adapted — ⛔ **never rebuilt**.
+
+**Their disposition is mapped, not decided here.** See JARVIS-SL-00 §5 in canonical custody: 30
+rows classified `MOVE` / `ADAPT` / `REMAIN` / `SHARED` / `DEPRECATE` / `UNKNOWN`. ⛔ Migration
+execution is **not authorized** and has **not** occurred. Nothing in this repository was moved,
+altered, or deleted by that act — only this file was renamed and annotated.
+
+### What the census additionally produced, now recorded in canon
+
+- ⚠️ **`orient.mjs` does not resolve.** JCR-01 §3.1 elects to reuse a verdict vocabulary from
+  `scripts/builder/orient.mjs:201`. Five independent probes against this repository find no such
+  file and **zero occurrences** of the vocabulary strings. Recorded `UNRESOLVED` — not `ABSENT` —
+  because this clone is shallow (165 commits).
+- ⚠️ **The JCR artifacts are tracked nowhere in this repository**, confirming from the remote's
+  side that `CUSTODY.md` §0.1 measured the hazard correctly and that JARVIS now holds sole custody.
+- ⚠️ **No jurisdiction admission layer was located** anywhere in the ecology — the one ratified
+  constraint with no enforcing mechanism. Highest-risk gap; must be built in JARVIS, not migrated.
