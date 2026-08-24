@@ -280,3 +280,97 @@ Unauthenticated `curl` against `/api/studio/whoami` and `/api/soul-portrait/mine
 proves nothing about `ce284751` — those routes need a real session. Test by signing into the browser
 as kelly@soullab.life, or read practitioner status from §2 of the footprint census.
 
+---
+
+# FOOTPRINT RESULT — 2026-08-24T19:55:50Z — **ce284751 IS THE CANONICAL KELLY**
+
+The census inverted the expected reading. `ce284751` (kelly@soullab.life) does not merely hold the
+portraits — it holds **essentially the entire MAIA history**. The account the browser is signed into
+is the thin one.
+
+| surface | ce284751 kelly@ | 49ae4717 soullab1@ |
+|---|---:|---:|
+| `member_theme_signals` | **1268** | 34 |
+| `relationship_entries` | **806** | 32 |
+| `state_vectors` | **655** | 17 |
+| `member_sessions` | **392** | 45 |
+| `trust_observations` | **353** | 52 |
+| `living_field_affinities` | **259** | 1 |
+| `auth_sessions` | **235** | 41 |
+| `member_memory_atoms` | **133** | 1 |
+| `member_idea_blocks` | **106** | 0 |
+| `team_messages` (sender) | **101** | 0 |
+| `scribe_sessions` | **73** | 0 |
+| `soul_portraits` | **16** | 0 |
+
+**`ce284751` is a practitioner** — `practitioner_id 0776d427-d550-4da9-8944-cddc3619befa`. The
+`/studio/*` gate will pass for it. That closes the open question from the witness.
+
+## This reverses the earlier recommendation
+
+The prior note said: *if the history sits under 49ae4717 and only the portraits sit under ce284751,
+move 16 portrait rows.* **The data says the opposite.** Moving portraits to `49ae4717` would drag
+16 rows toward the account holding ~1% of the history, stranding 1268 theme signals, 806
+relationship entries, 133 memory atoms, and Kelly's entire Co-Lab message history.
+
+**No write is correct here.** The act is to sign in as **kelly@soullab.life**.
+
+## Not perfectly one-sided — the stranded remainder
+
+`49ae4717` is not empty, and consolidation is not authorized on the strength of a lopsided table.
+It leads in a few places:
+
+| surface | ce284751 | 49ae4717 |
+|---|---:|---:|
+| `marketing_contacts` (practitioner_id) | 0 | **24** |
+| `working_draft_revisions` (saved_by) | 1 | **3** |
+| `member_manuscripts` | 1 | **2** |
+| `manuscript_working_drafts` | 1 | **2** |
+| `admin_role_grants` (target_id) | 0 | **2** |
+| `oauth_accounts` | 0 | **1** |
+| `manifestation_corpus` | 0 | **1** |
+
+Signing in as `kelly@soullab.life` strands these. Small and bounded — 24 marketing contacts and a
+couple of manuscript drafts — but real, and a separate decision from the portraits.
+
+**Also found:** `49ae4717` has **two** practitioner rows (`fb0cb8b7…` and `717da53c…`, the latter
+being what `/api/studio/whoami` reports). A duplicate practitioner record. Recorded, not touched.
+
+## Interpretation boundary (founder, 2026-08-24)
+
+§1 is a census of **direct FK ownership only**. Anything linked indirectly through a
+session/practitioner/relationship object, held in legacy text columns or JSON, or carrying no FK to
+`members(id)`, does not appear. The result looks decisively one-sided; that is a reason to check the
+known indirect memory/session surfaces before any consolidation, not a reason to skip it.
+
+Since the recommended act is a sign-in and not a write, that check is not blocking — it becomes
+blocking only if consolidation is ever authorized.
+
+## Delete-trace conclusion — narrowed (founder correction)
+
+The script's earlier wording overreached. Corrected in `1b3f4751b`'s successor:
+
+- **Proven:** none of the six carried a consent-ledger row. The NO ACTION FK refuses that delete, and
+  `soul_portrait_consents` shows `n_tup_del = 0`, so no child was removed first to clear the way.
+- **NOT proven:** that none was *published*. `publishOwnedPortrait` stamps `published_at` and does
+  **not** write consent (`portraitStore.ts:181-190`), so a published-but-unconsented portrait was
+  deletable. Publication is not what the FK protects.
+- **`24 − 6 = 18` is supporting consistency, not identity reconstruction.** Counters do not retain
+  row identity. The six cannot be named, and the arithmetic does not name them.
+- The surviving `liveness-test-delete-me` row is *suggestive* of development cleanup, not evidence
+  of it.
+
+## Standing holds
+
+```text
+SIGN IN AS kelly@soullab.life     ← the act. zero writes.
+MOVE 16 PORTRAITS                 NO — and now clearly the wrong direction
+MERGE ACCOUNTS                    NO
+DELETE ANY MEMBER                 NO (practitioners.member_id is ON DELETE CASCADE)
+REVOKE SESSIONS                   NO
+TOUCH FAMILY ACCOUNTS             NO
+STRANDED 49ae4717 REMAINDER       open, small, separate decision
+DUPLICATE PRACTITIONER ROW        recorded, untouched
+DELETE TRACE                      separate lane, conclusion narrowed
+```
+

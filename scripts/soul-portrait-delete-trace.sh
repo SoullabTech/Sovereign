@@ -14,12 +14,19 @@
 #   · 24 inserted − 6 deleted = 18 live. The arithmetic closes; nothing is
 #     unaccounted for beyond those six.
 #   · 9 ledger rows == 9 'active' portraits, 0 orphans.
-#   · The consent FK is NO ACTION, so a consented portrait CANNOT be plainly
-#     deleted. The six therefore had no ledger rows — unpublished drafts.
+#   · The consent FK is NO ACTION, so a portrait WITH AN EXTANT LEDGER ROW
+#     cannot be plainly deleted. soul_portrait_consents also shows n_tup_del = 0,
+#     so no child was removed first to clear the way (same reset caveat).
+#     This bounds the six to rows that had NO ledger row at delete time.
+#     It does NOT bound them to unpublished rows: publishing stamps
+#     published_at and does NOT write consent (portraitStore.ts:181-190), so a
+#     published-but-unconsented portrait was deletable. Publication is not what
+#     the FK protects.
 #   · A surviving row is literally named 'liveness-test-delete-me-525d2a9e',
-#     showing that throwaway drafts were being created in this window.
-# So the six are bounded to unconsented drafts. This trace asks whether we can
-# say more than that.
+#     showing throwaway drafts were being created in this window. Suggestive of
+#     development cleanup — not evidence of it.
+# So the six are bounded to rows without ledger entries. Whether any was
+# published is NOT established. This trace asks whether we can say more.
 #
 # STRUCTURALLY READ ONLY. No writes, no log rotation, no cleanup.
 set -euo pipefail
@@ -78,11 +85,16 @@ cat <<'EOT'
  In that case the defensible finding is the bounded one, and it is
  already established without any log:
 
-   Six unconsented draft rows were deleted from soul_portraits at an
-   unrecorded time. No consented or published portrait could have been
-   among them — the NO ACTION FK refuses that delete. The insert/delete
-   arithmetic closes exactly against the live row count, so nothing is
-   unaccounted for. No member-visible portrait is missing as a result.
+   Six rows were deleted from soul_portraits at an unrecorded time. None
+   of them carried a consent-ledger row: the NO ACTION FK refuses that
+   delete, and no ledger row was itself ever deleted (n_tup_del = 0 on
+   soul_portrait_consents). Whether any of the six was PUBLISHED is not
+   established — publishing does not write consent, so a
+   published-but-unconsented portrait was deletable.
+
+   24 - 6 = 18 against the live count is supporting consistency, NOT an
+   identity reconstruction. Counters do not retain row identity. The six
+   cannot be named, and this arithmetic does not name them.
 
  §3 or §4 returns hits → the trace becomes a real investigation. A hit in
    §4 in particular would contradict the Phase 1 finding that no code path
