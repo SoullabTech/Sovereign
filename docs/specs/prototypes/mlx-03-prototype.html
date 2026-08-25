@@ -1,151 +1,149 @@
 <title>MLX-03 Prototype</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,300;0,400;0,500;1,300&family=Inter:wght@300;400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,200;0,300;0,400;1,300&family=Inter:wght@300;400;500&display=swap">
 <style>
 :root{
-  --deep:#060D18; --canvas:#0A1628; --lift:#0F1D32; --surface:#121A2B; --elevated:#1A2235;
-  --hairline:#1E2F4D; --edge:#2A3F63;
-  --ink:#F5F7FB; --ink-2:#B7C0D1; --ink-3:#7F8AA3;
+  --deep:#060D18; --canvas:#0A1628; --lift:#0F1D32; --surface:#121A2B;
+  --hairline:#1B2A45; --edge:#2A3F63;
+  --ink:#F5F7FB; --ink-2:#B7C0D1; --ink-3:#7F8AA3; 
   --gold:#B8860B; --gold-soft:#D4AF37; --practice:#5E7FA6;
   --serif:'Spectral',Georgia,serif; --sans:'Inter',system-ui,-apple-system,sans-serif;
-  --r:14px;
 }
 *{box-sizing:border-box}
 body{margin:0;background:var(--deep);color:var(--ink);font-family:var(--sans);font-weight:300;
      -webkit-font-smoothing:antialiased;line-height:1.55}
-h1,h2,h3{margin:0;font-weight:400;text-wrap:balance}
-button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
-:focus-visible{outline:2px solid var(--gold-soft);outline-offset:3px;border-radius:4px}
-@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+h1,h2{margin:0;font-weight:300;text-wrap:balance}
+button{font:inherit;color:inherit;background:none;border:none;cursor:pointer;text-align:left}
+:focus-visible{outline:1px solid var(--gold-soft);outline-offset:4px;border-radius:3px}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
 
-/* ── chrome ─────────────────────────────────────────── */
-.shell{display:grid;grid-template-columns:290px 1fr;min-height:100vh;gap:0}
+.shell{display:grid;grid-template-columns:286px 1fr;min-height:100vh}
 .rail{background:var(--deep);border-right:1px solid var(--hairline);padding:26px 22px 40px;
       position:sticky;top:0;height:100vh;overflow-y:auto}
-.brand{font-family:var(--serif);font-size:19px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink)}
+.brand{font-family:var(--serif);font-size:18px;letter-spacing:.17em;text-transform:uppercase}
 .brand em{font-style:normal;color:var(--gold-soft)}
-.rail-note{margin-top:8px;font-size:11.5px;color:var(--ink-3);line-height:1.6}
-.jt{margin-top:30px;font-size:10.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-3);
-    padding-bottom:9px;border-bottom:1px solid var(--hairline)}
-.steps{list-style:none;margin:12px 0 0;padding:0;display:flex;flex-direction:column;gap:1px}
-.steps button{display:flex;gap:11px;align-items:baseline;width:100%;text-align:left;padding:8px 9px;
-              border-radius:8px;font-size:13px;color:var(--ink-2);transition:background .18s,color .18s}
+.rail-note{margin-top:9px;font-size:11.5px;color:var(--ink-3);line-height:1.65}
+.jt{margin-top:28px;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-3);
+    padding-bottom:8px;border-bottom:1px solid var(--hairline)}
+.steps{list-style:none;margin:10px 0 0;padding:0}
+.steps button{display:flex;gap:11px;align-items:baseline;width:100%;padding:7px 9px;border-radius:7px;
+              font-size:13px;color:var(--ink-2);transition:background .2s,color .2s}
 .steps button:hover{background:var(--lift);color:var(--ink)}
 .steps button[aria-current="true"]{background:var(--surface);color:var(--ink)}
 .steps button[aria-current="true"] .n{color:var(--gold-soft)}
-.n{font-size:10.5px;color:var(--ink-3);font-variant-numeric:tabular-nums;min-width:15px}
-.stage{padding:22px 30px 60px;display:flex;flex-direction:column;align-items:center;gap:16px}
-.bar{width:100%;max-width:1080px;display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
-.crumb{font-size:11.5px;color:var(--ink-3);letter-spacing:.08em;text-transform:uppercase}
+.n{font-size:10px;color:var(--ink-3);font-variant-numeric:tabular-nums;min-width:14px}
+.stage{padding:22px 30px 60px;display:flex;flex-direction:column;align-items:center;gap:15px}
+.bar{width:100%;max-width:1060px;display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
+.crumb{font-size:11px;color:var(--ink-3);letter-spacing:.09em;text-transform:uppercase}
 .crumb b{color:var(--ink-2);font-weight:400}
 .toggle{display:flex;border:1px solid var(--hairline);border-radius:999px;overflow:hidden}
-.toggle button{padding:6px 15px;font-size:11.5px;color:var(--ink-3);letter-spacing:.06em}
+.toggle button{padding:6px 15px;font-size:11.5px;color:var(--ink-3);letter-spacing:.05em}
 .toggle button[aria-pressed="true"]{background:var(--surface);color:var(--ink)}
 
-/* ── device ─────────────────────────────────────────── */
-.device{width:100%;max-width:1080px;border:1px solid var(--hairline);border-radius:var(--r);
-        background:var(--canvas);overflow:hidden;position:relative;box-shadow:0 24px 70px -30px #000}
-.device.phone{max-width:390px;border-radius:30px}
-.viewport{position:relative;height:660px;overflow-y:auto;overflow-x:hidden}
-.device.phone .viewport{height:720px}
-canvas#field{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;opacity:.85}
-.screen{position:relative;min-height:100%;padding:44px 52px;display:none;flex-direction:column}
-.device.phone .screen{padding:30px 22px}
-.screen.on{display:flex;animation:in .5s ease both}
-@keyframes in{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:none}}
+.device{width:100%;max-width:1060px;border:1px solid var(--hairline);border-radius:14px;
+        background:var(--canvas);overflow:hidden;position:relative;box-shadow:0 26px 74px -32px #000}
+.device.phone{max-width:390px;border-radius:32px}
+.viewport{position:relative;height:668px;overflow-y:auto;overflow-x:hidden;perspective:1400px}
+.device.phone .viewport{height:724px}
+canvas#field{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.screen{position:relative;min-height:100%;padding:56px 62px;display:none;flex-direction:column}
+.device.phone .screen{padding:34px 24px}
+.screen.on{display:flex}
+/* motion: place has depth. inward opens deeper; outward returns to centre. */
+.screen.in-deeper{animation:deeper .62s cubic-bezier(.22,.61,.36,1) both}
+.screen.in-return{animation:ret .58s cubic-bezier(.22,.61,.36,1) both}
+.screen.in-lateral{animation:lat .5s ease both}
+@keyframes deeper{from{opacity:0;transform:scale(.965) translateZ(0)}to{opacity:1;transform:none}}
+@keyframes ret{from{opacity:0;transform:scale(1.035)}to{opacity:1;transform:none}}
+@keyframes lat{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 
-/* ── type ───────────────────────────────────────────── */
-.eyebrow{font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:var(--ink-3)}
-.voice{font-family:var(--serif);font-weight:300;line-height:1.32;letter-spacing:-.01em}
-.d1{font-size:38px}.d2{font-size:28px}.d3{font-size:21px}
-.device.phone .d1{font-size:28px}.device.phone .d2{font-size:22px}
-.lede{color:var(--ink-2);font-size:15px;max-width:62ch}
-.sub{color:var(--ink-3);font-size:12.5px;line-height:1.6}
+.eyebrow{font-size:9.5px;letter-spacing:.26em;text-transform:uppercase;color:var(--ink-3)}
+.voice{font-family:var(--serif);font-weight:200;line-height:1.28;letter-spacing:-.012em;color:var(--ink)}
+.d1{font-size:46px}.d2{font-size:33px}.d3{font-size:22px}
+.device.phone .d1{font-size:31px}.device.phone .d2{font-size:25px}
+.lede{color:var(--ink-2);font-size:15px;max-width:58ch;font-weight:300}
+.sub{color:var(--ink-3);font-size:12.5px;line-height:1.65}
 .hr{height:1px;background:var(--hairline);border:0;margin:0}
+.stack{display:flex;flex-direction:column;gap:30px}
+.stack.tight{gap:20px}
+.spacer{flex:1;min-height:18px}
 
-/* ── doorways ───────────────────────────────────────── */
-.doors{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.device.phone .doors{grid-template-columns:1fr}
-.door{border:1px solid var(--hairline);border-radius:11px;padding:15px 16px;background:#0d1a2ecc;
-      text-align:left;transition:border-color .2s,background .2s,transform .2s}
-.door:hover{border-color:var(--edge);background:var(--lift);transform:translateY(-1px)}
-.door .t{font-family:var(--serif);font-size:16px;color:var(--ink)}
-.door .s{font-size:12px;color:var(--ink-3);margin-top:3px}
-.dunno{margin-top:12px;padding:12px 16px;border:1px dashed var(--edge);border-radius:11px;
-       width:100%;text-align:left;font-family:var(--serif);font-size:15px;color:var(--ink-2);
-       transition:color .2s,border-color .2s}
-.dunno:hover{color:var(--ink);border-color:var(--gold)}
-.quiet-doors{margin-top:6px}
-.quiet-doors .door{padding:11px 14px;background:transparent}
-.quiet-doors .door .t{font-size:14px;color:var(--ink-2)}
+/* doorways — possibilities arising around a question, not a survey */
+.doorlist{display:grid;grid-template-columns:1fr 1fr;gap:0 40px}
+.device.phone .doorlist{grid-template-columns:1fr}
+.door{font-family:var(--serif);font-size:18px;font-weight:300;color:var(--ink-2);padding:11px 0;
+      border-bottom:1px solid var(--hairline);transition:color .28s,padding-left .28s}
+.door:hover{color:var(--ink);padding-left:7px}
+.dunno{font-family:var(--serif);font-size:16px;font-style:italic;color:var(--ink-3);
+       padding:8px 0;transition:color .28s}
+.dunno:hover{color:var(--gold-soft)}
+.quiet .door{font-size:15px;color:var(--ink-3);border-bottom-color:transparent}
+.quiet .door:hover{color:var(--ink-2)}
 
-/* ── world ──────────────────────────────────────────── */
-.stack{display:flex;flex-direction:column;gap:26px}
-.continue{border:1px solid var(--edge);border-left:2px solid var(--gold);border-radius:11px;
-          padding:16px 18px;background:linear-gradient(100deg,#12203acc,#0d1a2e00);text-align:left;width:100%}
-.continue:hover{background:linear-gradient(100deg,#16274499,#0d1a2e00)}
-.row{display:flex;justify-content:space-between;align-items:baseline;gap:14px}
-.sphere{display:flex;flex-direction:column;gap:9px}
-.sphere-h{display:flex;align-items:baseline;gap:11px;padding-bottom:7px;border-bottom:1px solid var(--hairline)}
-.sphere-h .nm{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-2)}
-.sphere-h .ln{font-size:12px;color:var(--ink-3);font-style:italic;font-family:var(--serif)}
-.places{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-.device.phone .places{grid-template-columns:1fr 1fr}
-.place{text-align:left;border-radius:9px;padding:11px 12px;transition:background .18s}
-.place:hover{background:var(--lift)}
-.place .pn{font-family:var(--serif);font-size:15.5px;color:var(--ink)}
-.place .ps{font-size:11.5px;color:var(--ink-3);margin-top:2px;line-height:1.45}
-.practice .sphere-h{border-color:#2c3f57}
-.practice .place:hover{background:#132132}
-.practice .place .pn{color:#dce6f2}
-.dot{width:5px;height:5px;border-radius:50%;background:var(--gold);display:inline-block}
-.dot.p{background:var(--practice)}
-.util{margin-top:10px;font-size:11.5px;color:var(--ink-3)}
-.util button{color:var(--ink-3);text-decoration:underline;text-underline-offset:3px}
-.util button:hover{color:var(--ink-2)}
+/* one dominant element per screen */
+.primary{border:1px solid var(--edge);border-left:2px solid var(--gold);border-radius:12px;
+         padding:20px 22px;background:linear-gradient(105deg,#12203ab3,#0d1a2e00);width:100%;
+         transition:background .3s,border-color .3s}
+.primary:hover{background:linear-gradient(105deg,#16274499,#0d1a2e00);border-color:#3a5079}
+.primary.p{border-left-color:var(--practice)}
+.signals{display:flex;gap:44px;flex-wrap:wrap}
+.signal{min-width:180px}
+.signal .v{font-family:var(--serif);font-size:15px;color:var(--ink-2);margin-top:6px;line-height:1.5}
+.signal .m{font-size:11.5px;color:var(--ink-3);margin-top:4px}
 
-/* ── maia ───────────────────────────────────────────── */
-.maia{display:flex;flex-direction:column;gap:20px;flex:1}
-.utter{font-family:var(--serif);font-size:23px;font-weight:300;line-height:1.4;max-width:34ch;color:var(--ink)}
-.device.phone .utter{font-size:19px}
-.said{align-self:flex-end;max-width:32ch;background:var(--surface);border:1px solid var(--hairline);
-      border-radius:13px 13px 3px 13px;padding:11px 15px;font-size:14px;color:var(--ink-2)}
-.composer{margin-top:auto;display:flex;align-items:center;gap:12px;border-top:1px solid var(--hairline);padding-top:15px}
-.mic{width:38px;height:38px;border-radius:50%;border:1px solid var(--edge);display:grid;place-items:center;flex:none}
-.mic i{width:9px;height:9px;border-radius:50%;background:var(--gold-soft);display:block;animation:pulse 3.4s ease-in-out infinite}
-@keyframes pulse{0%,100%{opacity:.5;transform:scale(.85)}50%{opacity:1;transform:scale(1.1)}}
+/* world — named spheres, places as language not tiles */
+.world{display:flex;flex-direction:column;gap:17px}
+.sph{display:flex;flex-direction:column;gap:5px}
+.sph .nm{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-3)}
+.sph .nm b{color:var(--ink-2);font-weight:400}
+.sph .line{font-family:var(--serif);font-size:16.5px;color:var(--ink-2);display:flex;flex-wrap:wrap;gap:0 3px}
+.sph .line button{font-family:var(--serif);font-size:16.5px;color:var(--ink-2);transition:color .24s}
+.sph .line button:hover{color:var(--gold-soft)}
+.sph .line span{color:var(--ink-3);opacity:.55}
+.sph.p .line button:hover{color:#9fc0e4}
+.sph .ln{font-family:var(--serif);font-style:italic;font-size:12.5px;color:var(--ink-3);margin-top:1px}
+
+/* maia */
+.maia{display:flex;flex-direction:column;gap:22px;flex:1}
+.utter{font-family:var(--serif);font-size:25px;font-weight:200;line-height:1.4;max-width:33ch;color:var(--ink)}
+.device.phone .utter{font-size:20px}
+.said{align-self:flex-end;max-width:31ch;color:var(--ink-3);font-size:14px;text-align:right;
+      border-right:1px solid var(--hairline);padding-right:14px}
+.composer{margin-top:auto;display:flex;align-items:center;gap:13px;border-top:1px solid var(--hairline);padding-top:16px}
+.mic{width:36px;height:36px;border-radius:50%;border:1px solid var(--edge);display:grid;place-items:center;flex:none}
+.mic i{width:8px;height:8px;border-radius:50%;background:var(--gold-soft);display:block;animation:pulse 4s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:.45;transform:scale(.8)}50%{opacity:.95;transform:scale(1.12)}}
 .cfield{flex:1;font-size:13.5px;color:var(--ink-3)}
-.offer{border-top:1px solid var(--hairline);padding-top:13px;font-size:12.5px;color:var(--ink-3);font-style:italic;font-family:var(--serif)}
+.offer{font-family:var(--serif);font-style:italic;font-size:13px;color:var(--ink-3)}
 
-/* ── landing ────────────────────────────────────────── */
-.spine{display:flex;flex-direction:column;gap:2px;margin-top:6px}
-.sec{padding:14px 0;border-bottom:1px solid var(--hairline);display:flex;gap:16px;align-items:baseline}
-.sec .ix{font-size:10.5px;color:var(--ink-3);font-variant-numeric:tabular-nums;min-width:20px}
-.sec .body{flex:1}
-.sec .h{font-family:var(--serif);font-size:17px}
-.sec .q{font-size:12.5px;color:var(--ink-3);margin-top:2px}
-.cta{margin-top:22px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
-.btn{padding:11px 22px;border-radius:999px;background:var(--gold);color:#160e02;font-size:13.5px;font-weight:500;
-     letter-spacing:.02em}
+.spine{display:flex;flex-direction:column}
+.sec{padding:11px 0;border-bottom:1px solid var(--hairline);display:flex;gap:18px;align-items:baseline}
+.sec .ix{font-size:10px;color:var(--ink-3);font-variant-numeric:tabular-nums;min-width:22px}
+.sec .h{font-family:var(--serif);font-size:16px;color:var(--ink-2)}
+.sec .q{font-size:12px;color:var(--ink-3)}
+.cta{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.btn{padding:11px 24px;border-radius:999px;background:var(--gold);color:#160e02;font-size:13.5px;font-weight:500}
 .btn:hover{background:var(--gold-soft)}
 .btn.ghost{background:none;border:1px solid var(--edge);color:var(--ink-2)}
 .btn.ghost:hover{border-color:var(--gold);color:var(--ink)}
-.field-in{border:1px solid var(--edge);border-radius:10px;padding:12px 15px;background:#0b1728;
-          font-size:14px;color:var(--ink-3);max-width:340px}
+.home{font-size:12px;color:var(--ink-3);letter-spacing:.05em}
+.home:hover{color:var(--gold-soft)}
+.field-in{border:1px solid var(--edge);border-radius:9px;padding:12px 15px;background:#0b172899;
+          font-size:14px;color:var(--ink-3);max-width:330px}
+.entries{display:flex;flex-direction:column}
+.entry{padding:15px 0;border-bottom:1px solid var(--hairline)}
+.entry .m{font-size:10px;color:var(--ink-3);letter-spacing:.16em;text-transform:uppercase}
+.entry .x{font-family:var(--serif);font-size:16px;color:var(--ink-2);margin-top:6px;line-height:1.5;font-weight:300}
+.mine{display:inline-block;font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--gold-soft);
+      margin-top:8px;opacity:.8}
+.note{font-family:var(--serif);font-style:italic;font-size:13px;color:var(--ink-3);line-height:1.65;max-width:52ch}
+.util{font-size:11.5px;color:var(--ink-3)}
+.util button{color:var(--ink-3);text-decoration:underline;text-underline-offset:3px}
+.util button:hover{color:var(--ink-2)}
 
-/* ── entry / relationships ──────────────────────────── */
-.entries{display:flex;flex-direction:column;gap:1px;margin-top:4px}
-.entry{padding:13px 0;border-bottom:1px solid var(--hairline)}
-.entry .m{font-size:11px;color:var(--ink-3);letter-spacing:.06em}
-.entry .x{font-family:var(--serif);font-size:15.5px;color:var(--ink-2);margin-top:4px;line-height:1.5}
-.mine{display:inline-block;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold-soft);
-      border:1px solid #3a2f14;border-radius:4px;padding:1px 6px;margin-top:7px}
-.note{margin-top:16px;border-left:2px solid var(--hairline);padding:2px 0 2px 14px;font-size:12px;color:var(--ink-3);line-height:1.6}
-
-/* ── annotation ─────────────────────────────────────── */
-.anno{width:100%;max-width:1080px;border:1px solid var(--hairline);border-left:2px solid var(--gold);
-      border-radius:0 10px 10px 0;background:#0b1626;padding:14px 18px;font-size:12.5px;color:var(--ink-2);line-height:1.65}
+.anno{width:100%;max-width:1060px;border-left:2px solid var(--gold);background:#0b1626;
+      padding:14px 18px;font-size:12.5px;color:var(--ink-2);line-height:1.7;border-radius:0 9px 9px 0}
 .anno b{color:var(--ink);font-weight:500}
 .anno code{font-family:var(--sans);font-size:11.5px;color:var(--gold-soft)}
 @media(max-width:900px){.shell{grid-template-columns:1fr}.rail{position:static;height:auto;border-right:0;border-bottom:1px solid var(--hairline)}}
@@ -154,319 +152,266 @@ canvas#field{position:absolute;inset:0;width:100%;height:100%;pointer-events:non
 <div class="shell">
 <nav class="rail">
   <div class="brand">SOUL<em>LAB</em></div>
-  <p class="rail-note">MLX-03 · clickable prototype of the frozen experience architecture. Isolated from production routing and data. Nothing here writes.</p>
-
+  <p class="rail-note">MLX-03A · founder design gate. Clickable prototype of the frozen architecture, isolated from production routing and data. Nothing here writes.</p>
   <div class="jt">Journey A — first arrival</div>
   <ul class="steps" id="jA"></ul>
   <div class="jt">Journey B — returning member</div>
   <ul class="steps" id="jB"></ul>
 </nav>
-
 <main class="stage">
   <div class="bar">
     <div class="crumb" id="crumb"></div>
-    <div class="toggle">
-      <button id="tD" aria-pressed="true">Desktop</button>
-      <button id="tP" aria-pressed="false">Mobile</button>
-    </div>
+    <div class="toggle"><button id="tD" aria-pressed="true">Desktop</button><button id="tP" aria-pressed="false">Mobile</button></div>
   </div>
-
-  <div class="device" id="device">
-    <div class="viewport" id="viewport">
-      <canvas id="field"></canvas>
-      <div id="screens"></div>
-    </div>
-  </div>
-
+  <div class="device" id="device"><div class="viewport" id="viewport">
+    <canvas id="field"></canvas><div id="screens"></div>
+  </div></div>
   <div class="anno" id="anno"></div>
 </main>
 </div>
 
 <script>
+/* depth: 0 = threshold/centre · 1 = a place · 2 = inside a place. drives transition direction. */
 const S = {
-/* ══ JOURNEY A ══════════════════════════════════════ */
-landing:{j:'A',n:'Public landing',crumb:'Surface A · <b>Public landing</b>',
-anno:'<b>The landing is a compressed experience of the product</b>, not a pitch in front of it — fifteen sections in layers of increasing depth, opening and closing on the same question. Section 14 shows the arrival that now actually exists. Studio material (Portfolio, Past Sites, Book) has moved to <code>/about</code>.',
+landing:{j:'A',n:'Public landing',d:0,air:{lum:.34,cool:.30,drift:.55},crumb:'Surface A · <b>Public landing</b>',
+anno:'The hero is one question and one proposition — <b>gravity before inventory</b>. The spine sits below it, in layers of increasing depth. Studio material has moved to <code>/about</code>.',
 h:`<div class="stack">
- <div>
-  <div class="eyebrow">Soullab</div>
-  <h1 class="voice d1" style="margin-top:14px">What is asking for your attention?</h1>
-  <p class="lede" style="margin-top:16px">MAIA is a relational intelligence for understanding your life, relationships, choices, patterns and creative work.</p>
-  <div class="cta"><button class="btn" data-go="join">Meet MAIA</button><button class="btn ghost" data-go="join">See how it works</button></div>
- </div>
- <hr class="hr">
- <div>
-  <div class="eyebrow">The page, in order</div>
-  <div class="spine">
-   ${[['01','Invitation','What is asking for your attention?'],['02','Doorways','What can I bring to MAIA?'],['03','Arrival','What happens when I enter?'],['04','Conversation','What does MAIA actually feel like?'],['05','The House','What exists beyond the conversation?'],['05b','For your life','MAIA · Keeps · Journal · Relationships · Living Field'],['05c','For those who accompany others','Sessions · Preparation · Encounters · Notes'],['05d','One ecosystem','Different relationships. Same world.'],['06','Continuity','Kept · Recent · Continue'],['07','Relationships','Can MAIA help with the people in my life?'],['08','Know yourself','Journal · patterns over time'],['09','Create','Can I work and make things here?'],['10','Elements','What is the deeper map?'],['11','Voice + text','How do I interact?'],['12','Consent','MAIA remembers with consent. Never by stealth.'],['13','Architecture','AIN · Spiralogic · sovereign infrastructure'],['14','After signup','Show me exactly where I am going.'],['15','Begin','Enter Soullab.']]
-   .map(([i,h,q])=>`<div class="sec"><span class="ix">${i}</span><div class="body"><div class="h">${h}</div><div class="q">${q}</div></div></div>`).join('')}
-  </div>
- </div>
+ <div class="eyebrow">Soullab</div>
+ <div><h1 class="voice d1">What is asking for your&nbsp;attention?</h1>
+  <p class="lede" style="margin-top:22px">MAIA is a relational intelligence for understanding your life, relationships, choices, patterns and creative work.</p></div>
+ <div class="cta"><button class="btn" data-go="join">Meet MAIA</button><button class="btn ghost" data-go="join">See how it works</button></div>
+ <div class="spacer"></div>
+ <div><div class="eyebrow">The page, in order</div>
+  <div class="spine" style="margin-top:10px">
+  ${[['01','Invitation','What is asking for your attention?'],['02','Doorways','What can I bring?'],['03','Arrival','What happens when I enter?'],['04','Conversation','What does MAIA feel like?'],['05','The House','What exists beyond conversation?'],['05b','For your life','Living Field · Journal · Relationships'],['05c','For those who accompany others','Encounters · Preparation · Notes'],['06','Continuity','Kept · Recent · Continue'],['10','Elements','What is the deeper map?'],['12','Consent','Remembered with consent. Never by stealth.'],['14','After signup','Show me exactly where I am going.'],['15','Begin','Enter Soullab.']]
+  .map(([i,h,q])=>`<div class="sec"><span class="ix">${i}</span><div><div class="h">${h}</div><div class="q">${q}</div></div></div>`).join('')}
+  </div></div>
 </div>`},
 
-join:{j:'A',n:'Create your Soullab',crumb:'Surface A → <b>Join</b>',
-anno:'Signup is already clean and is left alone: email → six-digit code → name. <b>R1 removed everything after it</b> — the ten-lens self-classification, the birth-data ask, and the elemental lesson.',
-h:`<div class="stack" style="max-width:400px">
- <div class="eyebrow">Create your Soullab</div>
+join:{j:'A',n:'Create your Soullab',d:0,air:{lum:.32,cool:.34,drift:.5},crumb:'Surface A → <b>Join</b>',
+anno:'Signup was already clean and is left alone: email → code → name. <b>R1 removed everything after it.</b>',
+h:`<div class="stack"><div class="eyebrow">Create your Soullab</div>
  <h2 class="voice d2">Your space is waiting.</h2>
  <div class="field-in">you@example.com</div>
  <div class="cta"><button class="btn" data-go="name">Continue</button></div>
- <p class="sub">We'll email a six-digit code. No password to invent.</p>
-</div>`},
+ <p class="sub">We'll email a six-digit code. No password to invent.</p></div>`},
 
-name:{j:'A',n:'Name',crumb:'Surface A → <b>Name</b>',
-anno:'The last thing asked before value. <b>Nothing else is collected.</b> Birth data now lives where it means something — in Soul Portrait / Astrology, with its consent model intact.',
-h:`<div class="stack" style="max-width:400px">
- <div class="eyebrow">One thing</div>
+name:{j:'A',n:'Name',d:0,air:{lum:.32,cool:.34,drift:.5},crumb:'Surface A → <b>Name</b>',
+anno:'The last thing asked before value. <b>Nothing else is collected</b> — birth data now lives in Soul Portrait / Astrology, with its consent model intact.',
+h:`<div class="stack"><div class="eyebrow">One thing</div>
  <h2 class="voice d2">What should MAIA call you?</h2>
  <div class="field-in">Kelly</div>
- <div class="cta"><button class="btn" data-go="doorway">Enter Soullab</button></div>
-</div>`},
+ <div class="cta"><button class="btn" data-go="doorway">Enter Soullab</button></div></div>`},
 
-doorway:{j:'A',n:'Doorway',crumb:'Surface B · <b>Guided arrival</b>',
-anno:'<b>This screen replaces three.</b> One tap and MAIA starts — never a questionnaire. The choice is session-scoped (R3): it frames MAIA\'s opening turn, writes no durable fact, and never touches <code>member_spiral_state</code>. <b>“I don\'t know where to begin” is a first-class door</b>, not a fallback.',
+doorway:{j:'A',n:'Doorway',d:0,air:{lum:.28,cool:.26,drift:.32},crumb:'Surface B · <b>Guided arrival</b>',
+anno:'<b>This screen replaces three.</b> The question holds the centre and the possibilities arise around it — no cards, no survey. One tap and MAIA starts. Session-scoped (R3): no durable fact, never <code>member_spiral_state</code>. <b>“I don\'t know where to begin” is a door</b>, not a fallback.',
 h:`<div class="stack">
- <div>
-  <div class="eyebrow">Welcome to Soullab</div>
-  <h2 class="voice d2" style="margin-top:12px">What brings you here today?</h2>
-  <p class="sub" style="margin-top:8px;max-width:44ch">You don't need to know what to ask, or how to use AI.</p>
- </div>
- <div class="doors">
-  ${[['Something is on my mind',''],['I\'m going through a change',''],['I want to understand myself',''],['I need clarity about a decision',''],['Something in a relationship',''],['I\'m making something','']]
-  .map(([t])=>`<button class="door" data-go="maiaOpen"><div class="t">${t}</div></button>`).join('')}
+ <div class="eyebrow">Welcome to Soullab</div>
+ <div style="margin-top:26px"><h2 class="voice d2">What is asking for your&nbsp;attention?</h2>
+  <p class="sub" style="margin-top:12px;max-width:42ch">You don't need to know what to ask, or how to use AI.</p></div>
+ <div class="spacer"></div>
+ <div class="doorlist">
+  ${['Something is on my mind','I\'m going through a change','I want to understand myself','I need clarity about a decision','Something in a relationship','I\'m making something'].map(t=>`<button class="door" data-go="maiaOpen">${t}</button>`).join('')}
  </div>
  <button class="dunno" data-go="maiaOpen">I don't know where to begin</button>
 </div>`},
 
-maiaOpen:{j:'A',n:'MAIA opens',crumb:'Surface D · <b>MAIA</b> — opened by the door',
-anno:'The door sets <b>how MAIA opens, not what the member is dealing with</b>. Nothing here characterizes them — they have said nothing yet. MAIA is a presence in the environment, not a chat window with an avatar: no bot bubble, no prompt-suggestion chips.',
+maiaOpen:{j:'A',n:'MAIA opens',d:1,air:{lum:.30,cool:.42,drift:.22},crumb:'Surface D · <b>MAIA</b> — opened by the door',
+anno:'The door sets <b>how MAIA opens, not what the member is dealing with</b>. Nothing characterizes them — they have said nothing yet. MAIA is a presence in the environment: no bot bubble, no avatar, no prompt chips.',
 h:`<div class="maia">
  <div class="eyebrow">Something keeps repeating</div>
  <p class="utter">We can start with whatever keeps returning. It doesn't have to make sense yet — what have you been noticing?</p>
  <div class="said">The same argument with my brother, three times this month.</div>
- <p class="utter" style="font-size:20px">Three times. What's the moment it turns?</p>
+ <p class="utter" style="font-size:21px">Three times. What's the moment it turns?</p>
  <div class="composer"><span class="mic"><i></i></span><span class="cfield">Speak, or type instead</span>
-  <button class="btn ghost" data-go="houseNew" style="padding:8px 16px">The House ⌂</button></div>
-</div>`},
+  <button class="home" data-go="houseNew">The House ⌂</button></div></div>`},
 
-houseNew:{j:'A',n:'House — new member',crumb:'Surface C · <b>MAIA House</b> — S1, nothing kept yet',
-anno:'<b>The threshold order is fixed</b>: Continue · Kept · Recent · Doorways · “I don\'t know” · Your Soullab. A new member meets the doorways first <i>because nothing sits above them</i> — not because the system decided they need help. Each place carries its plain line on first encounter (R5b-ii). Your Soullab is short here and holds no dead tiles.',
+houseNew:{j:'A',n:'House — new member',d:0,air:{lum:.31,cool:.30,drift:.4},crumb:'Surface C · <b>MAIA House</b> — S1, nothing kept yet',
+anno:'<b>Arrival, not a menu.</b> The greeting and the question hold the screen; the doorways arise beneath. A new member meets them first <i>because nothing sits above them</i> — not because the system judged they need help. Your Soullab is one quiet line: the world exists, and it does not shout.',
 h:`<div class="stack">
- <div><div class="eyebrow">Good afternoon, Kelly</div>
-  <h2 class="voice d2" style="margin-top:10px">What is asking for your attention?</h2></div>
- <div class="doors">
-  ${['Talk it through','Find my next step','Understand a pattern','Something in a relationship','Make something','Know myself'].map(t=>`<button class="door" data-go="maiaOpen"><div class="t">${t}</div></button>`).join('')}
+ <div class="eyebrow">Good afternoon, Kelly</div>
+ <h2 class="voice d2">What is asking for your&nbsp;attention?</h2>
+ <div class="doorlist" style="margin-top:6px">
+  ${['Talk it through','Find my next step','Understand a pattern','Something in a relationship','Make something','Know myself'].map(t=>`<button class="door" data-go="maiaOpen">${t}</button>`).join('')}
  </div>
  <button class="dunno" data-go="maiaOpen">I don't know where to begin</button>
- <div class="sphere">
-  <div class="sphere-h"><span class="dot"></span><span class="nm">My Life</span><span class="ln">the life I am living and becoming</span></div>
-  <div class="places">
-   <button class="place" data-go="livingField"><div class="pn">Living Field</div><div class="ps">A place to gather and reflect on lived experience.</div></button>
-   <button class="place" data-go="relationships"><div class="pn">Relationships</div><div class="ps">A place to reflect on the relationships that shape your life.</div></button>
-   <button class="place"><div class="pn">Journal</div><div class="ps">Expressive writing.</div></button>
-   <button class="place"><div class="pn">Anchor</div><div class="ps">A quiet place to return.</div></button>
-  </div>
+ <div class="spacer"></div>
+ <div class="sph">
+  <div class="nm">Your Soullab · <b>My Life</b></div>
+  <div class="line"><button data-go="livingField">Living Field</button><span>·</span><button data-go="relationships">Relationships</button><span>·</span><button>Journal</button><span>·</span><button>Anchor</button></div>
+  <div class="ln">a place to gather and reflect on lived experience</div>
  </div>
 </div>`},
 
-livingField:{j:'A',n:'A place — Living Field',crumb:'My Life → <b>Living Field</b>',
-anno:'The empty state is a real place, not a broken panel. <b>Living Field\'s line survives Invariant 16 unchanged</b> — it names the place and the activity, never who the member is becoming. MAIA is present at the edge, offering without demanding the foreground.',
+livingField:{j:'A',n:'A place — Living Field',d:1,air:{lum:.26,cool:.36,drift:.18},crumb:'My Life → <b>Living Field</b>',
+anno:'The empty state is a real place, not a broken panel. <b>Living Field\'s line survives Invariant 16 unchanged</b> — it names the place and the activity, never who the member is becoming. MAIA offers from the edge without taking the foreground.',
 h:`<div class="stack">
- <div class="row"><div><div class="eyebrow">My Life</div>
-  <h2 class="voice d2" style="margin-top:8px">Living Field</h2>
-  <p class="sub" style="margin-top:6px">A place to gather and reflect on lived experience.</p></div>
-  <button class="btn ghost" data-go="houseNew" style="padding:8px 16px">⌂</button></div>
- <hr class="hr">
- <p class="lede" style="font-family:var(--serif);font-size:17px;color:var(--ink-3)">Nothing gathered here yet. What you bring will stay in your words.</p>
+ <div style="display:flex;justify-content:space-between;align-items:baseline;gap:16px">
+  <div><div class="eyebrow">My Life</div><h2 class="voice d2" style="margin-top:9px">Living Field</h2></div>
+  <button class="home" data-go="houseNew">⌂</button></div>
+ <p class="sub" style="margin-top:-16px">A place to gather and reflect on lived experience.</p>
+ <div class="spacer"></div>
+ <p class="voice d3" style="color:var(--ink-3);max-width:34ch">Nothing gathered here yet. What you bring will stay in your words.</p>
+ <div class="spacer"></div>
  <div class="offer">Something you said earlier this week may belong here.</div>
 </div>`},
 
-/* ══ JOURNEY B ══════════════════════════════════════ */
-houseBack:{j:'B',n:'House — returning',crumb:'Surface C · <b>MAIA House</b> — S5, world leads',
-anno:'<b>The same fixed order, now filled.</b> The member\'s world has displaced the doorways downward — they are quieter and still present, because the architecture must not assume expertise eliminates uncertainty (R4). Note the subtitles are gone: the scaffolding receded, the destinations did not move. <b>Recession is spatial, never eliminative.</b>',
-h:`<div class="stack">
- <div><div class="eyebrow">Good morning, Kelly</div>
-  <h2 class="voice d2" style="margin-top:10px">Welcome back.</h2></div>
- <button class="continue" data-go="continueThread">
+houseBack:{j:'B',n:'House — returning',d:0,air:{lum:.30,cool:.32,drift:.36},crumb:'Surface C · <b>MAIA House</b> — S5, the world leads',
+anno:'<b>The density fix: richness without simultaneity.</b> Everything exists; nothing speaks at the same volume. One live thread is dominant, Kept and Recent are small signals, the world is named in language rather than tiled, and the doorways sit quiet at the bottom — still present, because expertise does not eliminate uncertainty (R4). Subtitles are gone: the scaffolding receded, the destinations did not move.',
+h:`<div class="stack tight">
+ <div class="eyebrow">Good morning, Kelly</div>
+ <button class="primary" data-go="continueThread">
   <div class="eyebrow">Continue</div>
-  <div class="voice d3" style="margin-top:5px">The argument with your brother</div>
-  <div class="sub" style="margin-top:3px">Tuesday · 24 exchanges</div></button>
- <div class="row" style="gap:26px;align-items:flex-start">
-  <div style="flex:1"><div class="eyebrow">Kept</div>
-   <div class="sub" style="margin-top:6px;color:var(--ink-2);font-family:var(--serif);font-size:14.5px">“The moment it turns is when he says my name.”</div>
-   <div class="sub" style="margin-top:4px">3 things you've chosen not to lose</div></div>
-  <div style="flex:1"><div class="eyebrow">Recent</div>
-   <div class="sub" style="margin-top:6px;color:var(--ink-2)">Living Field · Relationships · Ideas</div></div>
+  <div class="voice" style="font-size:26px;margin-top:8px">The argument with your brother</div>
+  <div class="sub" style="margin-top:6px">Tuesday · 24 exchanges</div></button>
+ <div class="signals">
+  <div class="signal"><div class="eyebrow">Kept</div>
+   <div class="v">“The moment it turns is when he says my name.”</div>
+   <div class="m">3 things you've chosen not to lose</div></div>
+  <div class="signal"><div class="eyebrow">Recent</div>
+   <div class="v" style="color:var(--ink-3)">Living Field · Relationships · Ideas</div></div>
  </div>
- <div class="sphere">
-  <div class="sphere-h"><span class="dot"></span><span class="nm">My Life</span></div>
-  <div class="places">
-   <button class="place" data-go="livingField"><div class="pn">Living Field</div></button>
-   <button class="place" data-go="relationships"><div class="pn">Relationships</div></button>
-   <button class="place"><div class="pn">Journal</div></button>
-   <button class="place"><div class="pn">Anchor</div></button>
-  </div>
+ <div class="spacer"></div>
+ <div class="world">
+  <div class="eyebrow">Your world</div>
+  <div class="sph"><div class="nm"><b>My Life</b></div>
+   <div class="line"><button data-go="livingField">Living Field</button><span>·</span><button>Journal</button><span>·</span><button data-go="relationships">Relationships</button><span>·</span><button>Anchor</button></div></div>
+  <div class="sph"><div class="nm"><b>My Contribution</b></div>
+   <div class="line"><button data-go="contribution">Ideas</button><span>·</span><button>Wisdom</button><span>·</span><button>Studios</button></div></div>
+  <div class="sph p"><div class="nm"><b>My Practice</b></div>
+   <div class="line"><button data-go="practice">People</button><span>·</span><button data-go="practice">Encounters</button><span>·</span><button data-go="practice">Preparation</button></div></div>
  </div>
- <div class="sphere">
-  <div class="sphere-h"><span class="dot"></span><span class="nm">My Contribution</span></div>
-  <div class="places">
-   <button class="place" data-go="contribution"><div class="pn">Ideas</div></button>
-   <button class="place"><div class="pn">Wisdom</div></button>
-   <button class="place"><div class="pn">Studios</div></button>
-  </div>
- </div>
- <div class="sphere practice">
-  <div class="sphere-h"><span class="dot p"></span><span class="nm" style="color:#cddaea">My Practice</span></div>
-  <div class="places">
-   <button class="place" data-go="practice"><div class="pn">People</div></button>
-   <button class="place" data-go="practice"><div class="pn">Encounters</div></button>
-   <button class="place" data-go="practice"><div class="pn">Preparation</div></button>
-  </div>
- </div>
- <hr class="hr">
- <div class="quiet-doors">
+ <div class="spacer"></div>
+ <div class="quiet">
   <div class="eyebrow">Begin somewhere new</div>
-  <div class="doors" style="margin-top:9px">
-   ${['Talk it through','Understand a pattern','Find my next step','Make something'].map(t=>`<button class="door" data-go="maiaOpen"><div class="t">${t}</div></button>`).join('')}
-  </div>
-  <button class="dunno" data-go="maiaOpen" style="margin-top:9px">I don't know where to begin</button>
+  <div class="doorlist" style="margin-top:7px">
+   ${['Talk it through','Understand a pattern','Find my next step','Make something'].map(t=>`<button class="door" data-go="maiaOpen">${t}</button>`).join('')}</div>
+  <button class="dunno" data-go="maiaOpen" style="margin-top:6px">I don't know where to begin</button>
  </div>
 </div>`},
 
-continueThread:{j:'B',n:'Continue',crumb:'Continue → <b>MAIA</b>',
-anno:'Tapping Continue is a <b>member gesture naming that thread</b> — consent to resume it, now, and nothing else. It promotes no atom to ambient eligibility. The two-channel rule holds: the member sees all their own material; MAIA receives only what the consent gates permit.',
+continueThread:{j:'B',n:'Continue',d:1,air:{lum:.29,cool:.42,drift:.2},crumb:'Continue → <b>MAIA</b>',
+anno:'Tapping Continue is a <b>member gesture naming that thread</b> — consent to resume it now, and nothing else. It promotes no atom to ambient eligibility. The two-channel rule holds.',
 h:`<div class="maia">
  <div class="eyebrow">Continuing · Tuesday</div>
  <p class="utter">You left off at the moment it turns — when he says your name. Do you want to stay there, or look at what came after?</p>
  <div class="said">Stay there.</div>
  <div class="composer"><span class="mic"><i></i></span><span class="cfield">Speak, or type instead</span>
-  <button class="btn ghost" data-go="houseBack" style="padding:8px 16px">The House ⌂</button></div>
-</div>`},
+  <button class="home" data-go="houseBack">The House ⌂</button></div></div>`},
 
-relationships:{j:'B',n:'Relationships',crumb:'My Life → <b>Relationships</b> — member-authored scope',
-anno:'<b>R2 reduced scope, visible.</b> Everything on this screen is the member\'s: their relationships, realms, check-ins, entries, their own words. Withheld until the Relationship Room Constitution\'s authorship inversion is remedied — persisted MAIA reflection, inferred field tone, pattern assigned as fact, suggested movement. <b>A member may bring a relationship to MAIA; MAIA does not thereby acquire authorship over it.</b>',
-h:`<div class="stack">
- <div class="row"><div><div class="eyebrow">My Life</div>
-  <h2 class="voice d2" style="margin-top:8px">Relationships</h2>
-  <p class="sub" style="margin-top:6px">A place to reflect on the relationships that shape your life.</p></div>
-  <button class="btn ghost" data-go="houseBack" style="padding:8px 16px">⌂</button></div>
- <div>
-  <div class="eyebrow">People in your life</div>
-  <div class="places" style="margin-top:8px;grid-template-columns:1fr 1fr">
-   <button class="place" style="border:1px solid var(--hairline)"><div class="pn">My brother</div><div class="ps">Last check-in · Tuesday</div></button>
-   <button class="place" style="border:1px solid var(--hairline)"><div class="pn">Ama</div><div class="ps">Last check-in · three weeks ago</div></button>
-  </div>
-  <div class="sub" style="margin-top:9px">Inner figures · The larger field</div>
- </div>
- <div>
-  <div class="eyebrow">Your entries</div>
+relationships:{j:'B',n:'Relationships',d:1,air:{lum:.27,cool:.30,drift:.16},crumb:'My Life → <b>Relationships</b> — member-authored scope',
+anno:'<b>R2 reduced scope, visible.</b> Everything here is the member\'s — their people, realms, check-ins, words. Withheld until the Relationship Room Constitution\'s authorship inversion is remedied: persisted MAIA reflection, inferred field tone, pattern as fact, suggested movement. <b>A member may bring a relationship to MAIA; MAIA does not thereby acquire authorship over it.</b>',
+h:`<div class="stack tight">
+ <div style="display:flex;justify-content:space-between;align-items:baseline;gap:16px">
+  <div><div class="eyebrow">My Life</div><h2 class="voice d2" style="margin-top:9px">Relationships</h2></div>
+  <button class="home" data-go="houseBack">⌂</button></div>
+ <p class="sub" style="margin-top:-14px">A place to reflect on the relationships that shape your life.</p>
+ <div class="sph" style="margin-top:12px"><div class="nm">People in your life</div>
+  <div class="line"><button>My brother</button><span>·</span><button>Ama</button></div>
+  <div class="ln">inner figures · the larger field</div></div>
+ <div style="margin-top:8px"><div class="eyebrow">Your entries</div>
   <div class="entries">
-   <div class="entry"><div class="m">TUESDAY · CHECK-IN</div>
+   <div class="entry"><div class="m">Tuesday · check-in</div>
     <div class="x">“The moment it turns is when he says my name. Everything before that is fine.”</div>
-    <span class="mine">Your words</span></div>
-   <div class="entry"><div class="m">LAST MONTH · ENTRY</div>
+    <div class="mine">Your words</div></div>
+   <div class="entry"><div class="m">Last month · entry</div>
     <div class="x">“I want to be the one who doesn't escalate. I don't know yet if I can.”</div>
-    <span class="mine">Your words</span></div>
-  </div>
- </div>
- <div class="note">This place holds what you have written. MAIA can think with you about a relationship in conversation — it does not write conclusions about it here.</div>
+    <div class="mine">Your words</div></div>
+  </div></div>
+ <p class="note">This place holds what you have written. MAIA can think with you about a relationship in conversation — it does not write conclusions about it here.</p>
  <div class="cta"><button class="btn ghost" data-go="maiaOpen">Bring this into conversation</button></div>
 </div>`},
 
-contribution:{j:'B',n:'My Contribution',crumb:'<b>My Contribution</b> → Ideas',
-anno:'<b>My Contribution, not My Work</b> — the heading had to stop colliding with My Practice, and Wisdom does not belong under a word about producing things. The orientation line appears on first encounter and recedes with familiarity: the name is the destination, the line is scaffolding.',
+contribution:{j:'B',n:'My Contribution',d:1,air:{lum:.33,cool:.18,drift:.5},crumb:'<b>My Contribution</b>',
+anno:'<b>My Contribution, not My Work</b> — the heading had to stop colliding with My Practice, and Wisdom does not sit under a word about producing things. The orientation line appears on first encounter and recedes with familiarity: the name is the destination, the line is scaffolding.',
 h:`<div class="stack">
- <div class="row"><div>
-  <div class="sphere-h" style="border:0;padding:0"><span class="dot"></span><span class="nm">My Contribution</span></div>
-  <p class="sub" style="margin-top:7px;max-width:46ch">Ideas, wisdom, creations, and what you're bringing into the world.</p></div>
-  <button class="btn ghost" data-go="houseBack" style="padding:8px 16px">⌂</button></div>
- <hr class="hr">
- <div class="places" style="grid-template-columns:1fr 1fr 1fr">
-  <button class="place"><div class="pn">Ideas</div><div class="ps">What you're thinking, exploring and developing.</div></button>
-  <button class="place"><div class="pn">Wisdom</div><div class="ps">What you've learned, gathered and want to carry.</div></button>
-  <button class="place"><div class="pn">Studios</div><div class="ps">Places where ideas become work.</div></button>
- </div>
- <hr class="hr">
+ <div style="display:flex;justify-content:space-between;align-items:baseline;gap:16px">
+  <div><div class="eyebrow">My Contribution</div>
+   <h2 class="voice d2" style="margin-top:9px">Ideas, wisdom, creations,<br>and what you're bringing into the world.</h2></div>
+  <button class="home" data-go="houseBack">⌂</button></div>
+ <div class="spacer"></div>
+ <div class="sph"><div class="line" style="font-size:19px">
+  <button>Ideas</button><span>·</span><button>Wisdom</button><span>·</span><button>Studios</button></div></div>
+ <div class="spacer"></div>
  <div><div class="eyebrow">In progress</div>
-  <div class="entries"><div class="entry"><div class="m">IDEA · SEVEN DAYS OPEN</div>
+  <div class="entries"><div class="entry"><div class="m">Idea · seven days open</div>
    <div class="x">“A short essay about the moment a conversation turns.”</div></div></div></div>
 </div>`},
 
-practice:{j:'B',n:'My Practice',crumb:'<b>My Practice</b> — accompaniment, not administration',
-anno:'<b>The R6 test.</b> Accompaniment is in the foreground; administration is one quiet line at the bottom. No caseload grid, no billing tiles, no client-management dashboard. Capture, MARK/SPEAK and MAIA-drafted notes are phase 8 and appear nowhere — the Live subset already establishes a real place. <i>If a screenshot of this could be mistaken for practice-management software, it has failed.</i>',
-h:`<div class="stack">
- <div class="row"><div>
-  <div class="sphere-h practice" style="border:0;padding:0"><span class="dot p"></span><span class="nm" style="color:#cddaea">My Practice</span></div>
-  <p class="sub" style="margin-top:7px;max-width:48ch">The people, encounters and work you hold in service of others.</p></div>
-  <button class="btn ghost" data-go="houseBack" style="padding:8px 16px">⌂</button></div>
- <hr class="hr">
- <div>
-  <div class="eyebrow">Tomorrow</div>
-  <div class="continue" style="border-left-color:var(--practice);margin-top:9px">
-   <div class="voice d3">Miriam · 10:00</div>
-   <div class="sub" style="margin-top:4px">Fourth encounter. Last time you noted a question you wanted to return to.</div>
-   <div class="sub" style="margin-top:9px;color:#9fb4cc">Prepare →</div></div>
- </div>
- <div class="places" style="grid-template-columns:1fr 1fr 1fr">
-  <button class="place"><div class="pn">People</div><div class="ps">The people you accompany.</div></button>
-  <button class="place"><div class="pn">Encounters</div><div class="ps">What happened, and what matters now.</div></button>
-  <button class="place"><div class="pn">Notes</div><div class="ps">What you noticed and chose to retain.</div></button>
- </div>
- <div class="note" style="border-color:#2c3f57">Session Room and Co-Lab open from an encounter, where consent is already established.</div>
+practice:{j:'B',n:'My Practice',d:1,air:{lum:.25,cool:.66,drift:.14},crumb:'<b>My Practice</b> — accompaniment, not administration',
+anno:'<b>The R6 test.</b> Tomorrow\'s encounter and the preparation it invites hold the screen; administration is one line at the bottom. No caseload grid, no billing tiles. Capture, MARK/SPEAK and MAIA-drafted notes are phase 8 and appear nowhere — the Live subset already establishes a real place. <i>If a screenshot of this could be mistaken for practice-management software, it has failed.</i>',
+h:`<div class="stack tight">
+ <div style="display:flex;justify-content:space-between;align-items:baseline;gap:16px">
+  <div><div class="eyebrow">My Practice</div>
+   <h2 class="voice d2" style="margin-top:9px">The people, encounters and work<br>you hold in service of others.</h2></div>
+  <button class="home" data-go="houseBack">⌂</button></div>
+ <div class="spacer"></div>
+ <div><div class="eyebrow">Tomorrow</div>
+  <button class="primary p" style="margin-top:9px">
+   <div class="voice" style="font-size:24px">Miriam · 10:00</div>
+   <div class="sub" style="margin-top:7px;max-width:44ch">Fourth encounter. Last time you noted a question you wanted to return to.</div>
+   <div class="sub" style="margin-top:12px;color:#9fb4cc">Prepare →</div></button></div>
+ <div class="spacer"></div>
+ <div class="sph p"><div class="line" style="font-size:18px">
+  <button>People</button><span>·</span><button>Encounters</button><span>·</span><button>Notes</button></div>
+  <div class="ln">what you noticed and chose to retain</div></div>
+ <p class="note">Session Room and Co-Lab open from an encounter, where consent is already established.</p>
+ <div class="spacer"></div>
  <div class="util">Booking, calendar, agreements and billing live in <button>practice settings</button>.</div>
 </div>`}
 };
 
-/* ── router ─────────────────────────────────────────── */
-const order = Object.keys(S);
-const screens = document.getElementById('screens');
-screens.innerHTML = order.map(k=>`<section class="screen" id="s-${k}">${S[k].h}</section>`).join('');
-const mk=(id,j)=>{const ul=document.getElementById(id);
-  ul.innerHTML = order.filter(k=>S[k].j===j).map((k,i)=>
-    `<li><button data-go="${k}" id="b-${k}"><span class="n">${String(i+1).padStart(2,'0')}</span><span>${S[k].n}</span></button></li>`).join('');};
+const order=Object.keys(S), screens=document.getElementById('screens');
+screens.innerHTML=order.map(k=>`<section class="screen" id="s-${k}">${S[k].h}</section>`).join('');
+const mk=(id,j)=>{document.getElementById(id).innerHTML=order.filter(k=>S[k].j===j)
+  .map((k,i)=>`<li><button data-go="${k}" id="b-${k}"><span class="n">${String(i+1).padStart(2,'0')}</span><span>${S[k].n}</span></button></li>`).join('');};
 mk('jA','A'); mk('jB','B');
 
 let cur=null;
 function go(k){
-  if(!S[k])return;
-  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));
-  document.getElementById('s-'+k).classList.add('on');
+  if(!S[k]||k===cur)return;
+  const from=cur?S[cur].d:0, to=S[k].d;
+  const dir = to>from ? 'in-deeper' : to<from ? 'in-return' : 'in-lateral';
+  document.querySelectorAll('.screen').forEach(s=>{s.classList.remove('on','in-deeper','in-return','in-lateral');});
+  const el=document.getElementById('s-'+k);
+  el.classList.add('on',dir);
   document.querySelectorAll('.steps button').forEach(b=>b.setAttribute('aria-current','false'));
   const b=document.getElementById('b-'+k); if(b)b.setAttribute('aria-current','true');
   document.getElementById('crumb').innerHTML=S[k].crumb;
   document.getElementById('anno').innerHTML=S[k].anno;
   document.getElementById('viewport').scrollTop=0;
-  cur=k; tone(k);
+  cur=k; air=S[k].air;
 }
-document.addEventListener('click',e=>{const t=e.target.closest('[data-go]'); if(t)go(t.dataset.go);});
+document.addEventListener('click',e=>{const t=e.target.closest('[data-go]');if(t)go(t.dataset.go);});
 const dev=document.getElementById('device');
-document.getElementById('tD').onclick=()=>{dev.classList.remove('phone');tD.setAttribute('aria-pressed','true');tP.setAttribute('aria-pressed','false');size();};
-document.getElementById('tP').onclick=()=>{dev.classList.add('phone');tP.setAttribute('aria-pressed','true');tD.setAttribute('aria-pressed','false');size();};
+tD.onclick=()=>{dev.classList.remove('phone');tD.setAttribute('aria-pressed','true');tP.setAttribute('aria-pressed','false');size();};
+tP.onclick=()=>{dev.classList.add('phone');tP.setAttribute('aria-pressed','true');tD.setAttribute('aria-pressed','false');size();};
 
-/* ── elemental field: light and motion, never icons ── */
+/* ── atmosphere ──────────────────────────────────────────────────────
+   NOT a colour taxonomy. Every place lives in one narrow navy family;
+   what changes is luminance, temperature, drift speed and stillness —
+   felt, not decoded. No place owns a hue.                            */
 const cv=document.getElementById('field'), cx=cv.getContext('2d');
-let W,H,t=0,target=[0.55,0.42,0.30],now=[0.55,0.42,0.30];
-const TONES={landing:[.58,.40,.26],join:[.55,.42,.30],name:[.55,.42,.30],
- doorway:[.60,.46,.24],maiaOpen:[.50,.52,.34],houseNew:[.56,.44,.28],livingField:[.46,.54,.36],
- houseBack:[.54,.46,.30],continueThread:[.50,.52,.34],relationships:[.44,.50,.44],
- contribution:[.62,.44,.22],practice:[.40,.48,.58]};
-function tone(k){target=TONES[k]||[.55,.42,.30];}
-function size(){const r=cv.getBoundingClientRect();W=cv.width=r.width*devicePixelRatio;H=cv.height=r.height*devicePixelRatio;}
+let W,H,t=0, air={lum:.32,cool:.32,drift:.5}, now={lum:.32,cool:.32,drift:.5};
+function size(){const r=cv.getBoundingClientRect();W=cv.width=Math.max(1,r.width*devicePixelRatio);H=cv.height=Math.max(1,r.height*devicePixelRatio);}
 addEventListener('resize',size);
 const reduce=matchMedia('(prefers-reduced-motion:reduce)').matches;
+const seeds=[[.20,.16,.66],[.80,.34,.54],[.48,.88,.60]];
 function draw(){
-  t+=reduce?0:0.0016;
-  for(let i=0;i<3;i++)now[i]+=(target[i]-now[i])*0.02;
+  for(const k in air) now[k]+=(air[k]-now[k])*0.022;
+  t+= reduce?0:0.0009*(0.4+now.drift);
   cx.clearRect(0,0,W,H);
-  const blobs=[[0.22,0.18,0.62],[0.78,0.30,0.5],[0.5,0.86,0.55]];
-  blobs.forEach((b,i)=>{
-    const x=(b[0]+Math.sin(t*(0.7+i*0.23)+i)*0.06)*W;
-    const y=(b[1]+Math.cos(t*(0.5+i*0.31)+i*2)*0.07)*H;
-    const rad=b[2]*Math.max(W,H)*0.62;
+  seeds.forEach((b,i)=>{
+    const x=(b[0]+Math.sin(t*(0.8+i*0.27)+i)*0.055)*W;
+    const y=(b[1]+Math.cos(t*(0.6+i*0.33)+i*2)*0.06)*H;
+    const rad=b[2]*Math.max(W,H)*0.66;
     const g=cx.createRadialGradient(x,y,0,x,y,rad);
-    const hue=[36,200,150][i], a=[now[0],now[2],now[1]][i];
-    g.addColorStop(0,`hsla(${hue},${28+a*30}%,${11+a*9}%,${0.30+a*0.22})`);
-    g.addColorStop(1,'hsla(215,40%,6%,0)');
+    // hue band 202–224: all navy. cool shifts within the band only.
+    const hue=202+now.cool*22+i*3;
+    const sat=16+(1-now.cool)*16;
+    const light=(6.5+now.lum*7)*(1-i*0.10);
+    g.addColorStop(0,`hsla(${hue},${sat}%,${light}%,${0.34+now.lum*0.30})`);
+    g.addColorStop(1,'hsla(214,38%,5%,0)');
     cx.fillStyle=g; cx.fillRect(0,0,W,H);
   });
   requestAnimationFrame(draw);
