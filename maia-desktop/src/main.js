@@ -30,6 +30,7 @@
 
 const { app, BrowserWindow, ipcMain, session } = require('electron');
 const path = require('node:path');
+const fs = require('node:fs');
 
 const { createDiagnostics } = require('./voice/diagnostics');
 const { createEpochState, EPOCH_END_REASONS } = require('./voice/epoch');
@@ -53,9 +54,45 @@ function broadcast(channel, payload) {
   }
 }
 
+// ── device-witness evidence sink (MAIA-D01 device closure) ──────────────────
+//
+// ADDITIVE, and deliberately OUTSIDE the capture path: it observes the same
+// records the surface already receives and appends them to a JSONL file. It
+// touches no frame, no VAD state, no epoch state, and no bridge channel — tests
+// assert that, so "outside the capture path" is checkable rather than claimed.
+//
+// It exists because the founder walk must be judged on diagnostic evidence, not
+// on whether the final transcript "looks mostly right". Reading events off a
+// screen and recalling them afterwards is the kind of witness this programme
+// keeps having to correct.
+//
+// Records are already privacy-refusing at the emitter: it throws on transcript
+// text, so nothing this sink can write contains member speech. It forwards the
+// emitted record verbatim and appends one number; it never composes a record of
+// its own, which would put content on disk the emitter never vetted.
+let witnessStream = null;
+function witnessPath() {
+  const dir = path.join(app.getPath('userData'), 'witness');
+  fs.mkdirSync(dir, { recursive: true });
+  return path.join(dir, `d01-witness-${Date.now()}.jsonl`);
+}
+function witnessWrite(record, frames) {
+  if (!witnessStream) return;
+  try { witnessStream.write(JSON.stringify({ ...record, frames }) + '\n'); }
+  catch { /* evidence capture must never break capture */ }
+}
+
 function newVoiceSession() {
+  if (!witnessStream) {
+    const p = witnessPath();
+    witnessStream = fs.createWriteStream(p, { flags: 'a' });
+    console.log(`[D01 witness] evidence → ${p}`);
+  }
   const diagnostics = createDiagnostics(
-    (event, record) => broadcast('maia:voice-event', record),
+    (event, record) => {
+      broadcast('maia:voice-event', record);
+      witnessWrite(record, voice ? voice.frames : 0);
+    },
     { surface: 'desktop', now: () => Date.now() }
   );
 

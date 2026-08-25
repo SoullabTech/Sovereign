@@ -161,3 +161,30 @@ test('every emitted event name exists in the canonical union or is a declared ne
   assert.ok(!canonical.includes("'voice_tail_lost'"),
     'voice_tail_lost now exists canonically — reuse it instead of declaring it new');
 });
+
+// ── device-witness evidence sink (MAIA-D01 device closure) ──────────────────
+
+test('the evidence sink is OUTSIDE the capture path', () => {
+  // It may observe records and write them. It may NOT appear in frame handling,
+  // VAD, epoch transitions, or the bridge — "additive" has to be checkable.
+  const frameHandler = /ipcMain\.handle\('maia:voice-frame'[\s\S]*?\n\}\);/.exec(mainJs)[0];
+  assert.ok(!frameHandler.includes('witness'), 'the evidence sink entered frame handling');
+  assert.ok(!preload.includes('witness'), 'the evidence sink reached the bridge');
+  for (const f of ['epoch.js', 'vad.js', 'diagnostics.js', 'transcription.js']) {
+    assert.ok(!strip(path.join('voice', f)).includes('witness'),
+      `the evidence sink entered the pure voice core (${f})`);
+  }
+});
+
+test('the evidence sink can never break capture', () => {
+  const w = /function witnessWrite\([\s\S]*?\n\}/.exec(mainJs)[0];
+  assert.ok(/try\s*\{/.test(w) && /catch/.test(w), 'a failing write could propagate into capture');
+});
+
+test('the evidence sink writes only records the privacy-refusing emitter produced', () => {
+  // It appends `frames` (a number) and nothing else. If it ever composed its own
+  // record, the emitter's refusal would no longer cover what lands on disk.
+  assert.ok(/witnessWrite\(record, /.test(mainJs), 'the sink must forward the emitted record verbatim');
+  const w = /function witnessWrite\([\s\S]*?\n\}/.exec(mainJs)[0];
+  assert.ok(/\.\.\.record, frames/.test(w), 'the sink composes a record instead of forwarding one');
+});
