@@ -120,6 +120,57 @@ attention?"*, offers several recognizable starting places plus *"I don't know wh
 **one tap, and MAIA starts.** Any addition that turns the doorway into a form violates this ruling rather
 than extending it.
 
+### MLX-R5a — GREEN (Kelly, 2026-08-25): two spheres over the shipped spine.
+
+Preserves the live architecture and World names rather than inventing a replacement taxonomy; gives the
+ecosystem its personal / practitioner distinction; and retires **Worlds / Rooms** as abstract navigation
+concepts a member has to decode.
+
+```
+   SOULLAB
+   │
+   ├── MY SOULLAB
+   │   │
+   │   ├── MY LIFE                    ├── MY WORK  ⚠️ label not frozen — see R5b
+   │   │   ├── Living Field           │   ├── Ideas
+   │   │   ├── Journal                │   ├── Wisdom
+   │   │   ├── Anchor                 │   ├── Creative / Studio surfaces
+   │   │   ├── Relationships          │   └── …
+   │   │   ├── Soul Portrait
+   │   │   └── …
+   │
+   └── MY PRACTICE                    ← eligible helpers only
+       ├── People / Caseload          ├── Preparation
+       ├── Sessions                   ├── Encounters
+       ├── Session Room               └── Studios / practitioner tools
+```
+
+**The governing rule this establishes:**
+
+> **Use familiar words for orientation; preserve distinctive names for actual places.**
+
+A new member must never have to understand what a *World* is in order to navigate. Once inside, Living Field,
+Anchor, Ideas, Wisdom, Keeps and Soul Portrait retain their identity. *That is how Soullab becomes both
+familiar and unmistakably its own ecosystem.*
+
+**What the two spheres mean:**
+
+| | |
+|---|---|
+| **My Soullab** | the life I am living |
+| **My Practice** | the responsibility I carry for those I serve |
+
+*Same ecosystem. Different relational jurisdiction.* The two constituencies become visible without splitting
+the product into two products.
+
+**Implementation notes.** `Worlds` / `Rooms` retire as **group headings**, not as registry classifications —
+`classification: 'world'` may remain in code (§2.96: label and object are already separate layers). The second
+sphere renders through the `audience` gate that already exists in `maiaNav.ts`. **No route is renamed.**
+
+**Explicitly NOT frozen:** the label **"My Work."** Now that *My Practice* sits beside it, *My Work* is
+ambiguous — creative and intellectual work, or professional practice? Candidates include Creative Work,
+Making, Projects, or a Soullab-native term. **Nothing is renamed until R5b resolves it.**
+
 ### Standing design requirement — no cognitive cliff (Kelly, 2026-08-25)
 
 > **The landing page and MAIA House are two versions of the same world.** They are not designed separately.
