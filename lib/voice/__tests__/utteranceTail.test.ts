@@ -143,3 +143,54 @@ describe('shouldEmitThrottled — throttle guards the log, not the data', () => 
     expect(shouldEmitThrottled(T0 + 10, T0, 50)).toBe(false);
   });
 });
+
+describe('measureTailOverlap — lost vs re-delivered, not merely lengths', () => {
+  const { measureTailOverlap } = require('../utteranceTail');
+
+  it('detects a fully re-delivered tail', () => {
+    const r = measureTailOverlap('is this part', 'is this part that I meant');
+    expect(r.overlapChars).toBe(12);
+    expect(r.overlapRatio).toBe(1);
+  });
+
+  it('reports ~0 when the tail is genuinely gone', () => {
+    const r = measureTailOverlap('is this part', 'and then we moved on');
+    expect(r.overlapChars).toBe(0);
+    expect(r.overlapRatio).toBe(0);
+  });
+
+  it('is not fooled by similar LENGTH — the defect this exists to prevent', () => {
+    // Same length as the tail, entirely different words. A length-only
+    // comparison would call this re-delivered and suppress a needed repair.
+    const tail = 'is this part';
+    const next = 'we left then';
+    expect(next.length).toBe(tail.length);
+    expect(measureTailOverlap(tail, next).overlapChars).toBe(0);
+  });
+
+  it('detects a partially re-delivered tail', () => {
+    const r = measureTailOverlap('you to understand this', 'this is what I meant');
+    expect(r.overlapChars).toBe(4);
+    expect(r.overlapRatio).toBeCloseTo(4 / 22, 2);
+  });
+
+  it('normalizes case and whitespace across the restart seam', () => {
+    expect(measureTailOverlap('IS   THIS  part', 'is this part again').overlapChars).toBe(12);
+  });
+
+  it('returns ratio -1 when there was no tail to compare', () => {
+    expect(measureTailOverlap('', 'anything').overlapRatio).toBe(-1);
+    expect(measureTailOverlap('   ', 'anything').overlapRatio).toBe(-1);
+  });
+
+  it('reports 0, not -1, when a tail existed but the next result was empty', () => {
+    // Distinct cases: "nothing to compare" vs "compared and found nothing".
+    expect(measureTailOverlap('is this part', '')).toEqual({ overlapChars: 0, overlapRatio: 0 });
+  });
+
+  it('returns counts only — never the words', () => {
+    const r = measureTailOverlap('is this part', 'is this part again');
+    expect(Object.keys(r).sort()).toEqual(['overlapChars', 'overlapRatio']);
+    for (const v of Object.values(r)) expect(typeof v).toBe('number');
+  });
+});

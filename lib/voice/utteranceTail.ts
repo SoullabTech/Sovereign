@@ -145,3 +145,55 @@ export function shouldEmitThrottled(
   if (!lastEmitAt || lastEmitAt <= 0) return true;
   return now - lastEmitAt >= minIntervalMs;
 }
+
+/**
+ * How much of a previous epoch's unfinalized tail reappeared at the head of the
+ * next epoch's first final.
+ *
+ * WHY LENGTHS ALONE ARE NOT ENOUGH
+ * --------------------------------
+ * Comparing `precedingEpochTailChars` against the next final's length only asks
+ * "is there enough material here to have contained the tail?" Two unrelated
+ * utterances of similar length answer yes. That would let a genuinely LOST tail
+ * masquerade as re-delivered and suppress a repair that is actually needed.
+ *
+ * So we measure the actual suffix→prefix overlap: the longest suffix of the
+ * tail that is also a prefix of the new result. High ratio = Safari re-spoke
+ * the tail after restart (salvage would double-count it). Near zero = the tail
+ * is gone (salvage is justified).
+ *
+ * PRIVACY
+ * -------
+ * Both strings stay in memory. This function returns COUNTS ONLY — callers emit
+ * `overlapChars` and `overlapRatio`, never the words. The tail text lives in a
+ * ref for the duration of one restart seam, the same class of in-memory holding
+ * as `accumulatedTranscript`, and is never persisted or logged.
+ */
+export interface TailOverlap {
+  /** Characters of the tail that reappeared at the head of the new result. */
+  overlapChars: number;
+  /** overlapChars / tail length, 0..1. -1 when there was no tail to compare. */
+  overlapRatio: number;
+}
+
+/** Lowercase, trim, collapse internal whitespace — recognizers vary on spacing. */
+function normalize(text: string): string {
+  return (text || '').toLowerCase().trim().replace(/\s+/g, ' ');
+}
+
+export function measureTailOverlap(tail: string, next: string): TailOverlap {
+  const a = normalize(tail);
+  const b = normalize(next);
+  if (!a.length || !b.length) {
+    return { overlapChars: 0, overlapRatio: a.length ? 0 : -1 };
+  }
+  // Longest suffix of `a` that is a prefix of `b`. Tails are short (a phrase),
+  // so the straightforward scan is cheaper than building a failure table.
+  const max = Math.min(a.length, b.length);
+  for (let k = max; k > 0; k--) {
+    if (a.slice(a.length - k) === b.slice(0, k)) {
+      return { overlapChars: k, overlapRatio: Number((k / a.length).toFixed(3)) };
+    }
+  }
+  return { overlapChars: 0, overlapRatio: 0 };
+}
