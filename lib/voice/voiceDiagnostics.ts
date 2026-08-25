@@ -47,6 +47,25 @@ export type VoiceDiagEvent =
   // (local maia-whisper, NOT OpenAI cloud). All four are observational —
   // no transcript content in telemetry, only durations/byte-counts/mime/error.
   | 'voice_fallback_recording_started'
+  // ── TTS playback witness ────────────────────────────────────────────────
+  // Capture had telemetry; playback had none. That asymmetry is why a whole
+  // tester session of "choppy, cut off, repeated the beginning" produced a
+  // silent log while the capture stream stayed legible. These events make the
+  // playback path observable WITHOUT changing its behavior.
+  //
+  // The sequence that would mechanically prove the suspected replay bug:
+  //   playback_started    currentTimeMs ~0
+  //   playback_interrupted currentTimeMs > 0   ← audio was already audible
+  //   playback_retry      same chunkId
+  //   playback_started    currentTimeMs ~0     ← the head plays again
+  //
+  // Metadata is media-element state only. No transcript, no spoken text.
+  | 'voice_playback_started'
+  | 'voice_playback_interrupted'
+  | 'voice_playback_retry'
+  | 'voice_playback_resumed'
+  | 'voice_playback_ended'
+  | 'voice_playback_failed'
   | 'voice_fallback_transcribe_sent'
   | 'voice_fallback_transcribe_result'
   | 'voice_fallback_failed'
