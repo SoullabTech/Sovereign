@@ -713,21 +713,22 @@ is the entry.
 
 ## A3.2 — Jarvis owns the build graph
 
-`docs/programme/WRITERS_STUDIO_PROGRAMME_BOARD.md` is the operational cockpit. Every session must be
+`docs/programme/WRITERS_STUDIO_BUILD_GRAPH.md` is the operational cockpit. Every session must be
 able to say **which nodes exist, which are partial, which are blocked, which have zero callers, and
 which one it is advancing now.**
-
-> **Custody note (2026-08-25, founder-directed).** This amendment was ratified naming
-> `WRITERS_STUDIO_BUILD_GRAPH.md`. That file's verified node evidence — including the zero-caller
-> Canvas cluster — was folded into `WRITERS_STUDIO_PROGRAMME_BOARD.md` and the file removed, so that
-> exactly one artifact holds live programme state. **The substance of A3.2 is unchanged**: Jarvis
-> owns the cockpit, node states are evidence, and it is updated in the same commit as the work.
-> Only the artifact's name changed. The Programme Board is subordinate to this brief; where they
-> conflict, this brief and duly ratified unit/specification artifacts govern.
 
 Node states are **evidence** — set by reading canonical (file presence, importer count, live
 route), never by what a document says should be true. The graph is updated in the same commit as
 the work that changes it, never as a separate act of bookkeeping.
+
+> **Operational custody note (2026-08-25).** `WRITERS_STUDIO_BUILD_GRAPH.md`, named in §A3.2, was
+> subsequently consolidated into `WRITERS_STUDIO_PROGRAMME_BOARD.md` by programme ruling. The Board
+> is now the sole live cockpit. **This changes the artifact location only; the ratified substance of
+> §A3.2 is unchanged.**
+>
+> The ratified text above is preserved verbatim as the historical record of what was actually
+> ratified. Amendments are not rewritten after ratification — not even for a filename — because a
+> correction that small is exactly the precedent that makes larger ones look ordinary.
 
 ## A3.3 — Jarvis carries capability to production
 
