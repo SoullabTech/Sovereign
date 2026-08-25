@@ -233,6 +233,21 @@ invoicing · wholesale practitioner backend rewrite.
 
 ---
 
+## 11.5 · Prototype inclusion vs launch inclusion
+
+A distinction that governs Relationships, and any future surface in the same position:
+
+| | |
+|---|---|
+| **Prototype inclusion** | authorized by the R2 reduced-scope ruling — MLX-03 composes My Life as **Living Field · Journal · Anchor · Relationships** |
+| **Launch inclusion** | contingent on the authenticated runtime walk confirming the member-authored path behaves as source evidence indicates |
+
+**If the later walk fails, repair the bounded path or remove Relationships from the launch payload. Do not
+distort the prototype now by designing My Life around an artificial absence.** The runtime walk is a **launch
+gate, not an MLX-03 blocker.**
+
+---
+
 ## 12 · Change control
 
 This document changes only by: **(a)** a founder ruling recorded in MLX-01 and reflected here, **(b)** the R2
