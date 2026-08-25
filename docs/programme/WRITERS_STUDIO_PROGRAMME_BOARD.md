@@ -98,13 +98,22 @@ unbuilt while the unit list reads complete. They create no WS-08+.
 | Node | State | Evidence |
 |---|---|---|
 | `components/canvas/CanvasShell.tsx` | **ZERO-CALLERS** | merged on canonical; **0 importers** |
-| `components/canvas/registry.ts` | **ZERO-CALLERS** | merged on canonical; **0 importers** |
+| `components/canvas/registry.ts` | **ZERO-CALLERS** | merged on canonical; **1 importer** — `CanvasShell.tsx:4` (`import type { CanvasContext, CanvasRegistry } from './registry'`), which is itself unreachable. Cluster-internal only |
 | `app/writers-studio/canvas/WritingSurface.tsx` — easel, four papers | **ZERO-CALLERS** | merged on canonical; **0 importers** |
 | Wiring (`canvas/page.tsx` as the writing deployment) | **DESIGNED** | PR #995, open since 2026-08-06; carries a regex-authority defect to remove first |
 | Live canvas page | **PARTIAL** | imports `Worktable`, `WorkDrawer`, `MaterialsDrawer` — the superseded generation |
 
 > The shell, the easel and the papers are **finished and unreachable**. WS-02 connects them.
 > ⛔ We do not build a second Worktable beside them.
+
+**Census method** — re-verified 2026-08-25 against canonical `bd87d497f`: grep for every import
+path resolving to each module across `app/`, `components/`, `lib/`, excluding self-references.
+
+> **Evidence correction (2026-08-25).** This row previously read `0 importers` for `registry.ts`.
+> That was wrong: `CanvasShell.tsx` imports its types. The **state is unchanged** — the cluster is
+> still ZERO-CALLERS, because its only importer is itself unreachable — but *"node states are
+> evidence"* means the evidence statement has to be right, not merely the conclusion. Corrected
+> here as part of a Board re-derivation rather than as a separate cleanup.
 
 ## CORE AUTHORING
 
@@ -126,7 +135,7 @@ unbuilt while the unit list reads complete. They create no WS-08+.
 | Node | State | Evidence / next |
 |---|---|---|
 | Creative Companion (Reflect · Question · Notice · Connect · Shape · Develop · Critique) | **ABSENT** | the Window renders one honest sentence |
-| **Developmental Editor** | **DESIGNED** | `DEVELOPMENTAL_EDITOR_CAPABILITY.md`. Spans seed → mature manuscript; **Work Structure is a dependency of the structure-aware lenses only**, not of the whole capability. Mature-manuscript fixture: `ELEMENTAL_ALCHEMY_MANUSCRIPT.md` Ch10 `L3492–3817`, 5 pre-registered findings |
+| **Developmental Editor** | **DESIGNED** | `DEVELOPMENTAL_EDITOR_CAPABILITY.md`. Spans seed → mature manuscript; **Work Structure is a dependency of the structure-aware lenses only**, not of the whole capability. Mature-manuscript fixture: `ELEMENTAL_ALCHEMY_MANUSCRIPT.md` Ch10 `L3492–3817`, 5 pre-registered findings. **A non-runtime diagnostic/proof substrate and recovery lens now exist** — `scripts/writers-studio/**`, 44/44 proven incl. negative control, no member-reachable surface. ⛔ Still DESIGNED: `PARTIAL` means *member-reachable*, and tooling that no member can reach does not promote the row |
 | Whole-Work Intelligence | **ABSENT** | — |
 | Memory / Provenance (source → notice → recognition → decision → Work) | **DESIGNED** | programme invariant §A1.3 |
 
