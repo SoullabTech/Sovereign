@@ -681,3 +681,61 @@ Not substantially built until a person can actually do this, end to end:
 **If we cannot do that, we are not done.**
 
 > Enough designing the possibility of Writer's Studio. Build Writer's Studio.
+
+---
+
+# Amendment 3 — The programme entry rule and the build graph (founder, 2026-08-24)
+
+## A3.1 — A specification does not admit a feature
+
+> **A feature is not part of Writer's Studio merely because it has a specification.** It enters the
+> programme only when it has all five:
+>
+> 1. an authoritative **programme entry**
+> 2. an identified **dependency chain**
+> 3. an executable **vertical slice**
+> 4. a **real-Work acceptance case**
+> 5. a **path to production**
+
+This exists to break one historical pattern, which has now happened often enough to be a law of
+this repository rather than an accident:
+
+```text
+great idea → great R&D → prototype → another architecture generation → ZERO CALLERS
+```
+
+`components/canvas/CanvasShell.tsx`, `components/canvas/registry.ts` and the easel with its four
+papers are that pattern's current instance: **merged on canonical, zero importers, invisible to
+every member.** The Developmental Editor must not become the next one.
+
+⛔ **A specification living on an unmerged branch is not a programme entry.** Custody on canonical
+is the entry.
+
+## A3.2 — Jarvis owns the build graph
+
+`docs/programme/WRITERS_STUDIO_BUILD_GRAPH.md` is the operational cockpit. Every session must be
+able to say **which nodes exist, which are partial, which are blocked, which have zero callers, and
+which one it is advancing now.**
+
+Node states are **evidence** — set by reading canonical (file presence, importer count, live
+route), never by what a document says should be true. The graph is updated in the same commit as
+the work that changes it, never as a separate act of bookkeeping.
+
+## A3.3 — Jarvis carries capability to production
+
+Jarvis is responsible for the whole path — **programme → dependency → vertical slice → runtime
+proof** — not for the implementation of whichever feature was mentioned that day. A unit that ends
+in a merged branch nobody calls has not been delivered.
+
+## A3.4 — Dependency, not bureaucracy
+
+The Developmental Editor's Continuity lens cannot know what the reader has already encountered
+without authoritative Work Structure. So:
+
+```text
+WORK STRUCTURE → DEVELOPMENTAL CONTEXT → DEVELOPMENTAL EDITOR
+               → PROVENANCE / DECISIONS → SAFE EDIT ADOPTION
+```
+
+That is sequencing. **The Developmental Editor is required, not optional** — and it is one of the
+principal acceptance surfaces for whether MAIA genuinely understands a Work.
