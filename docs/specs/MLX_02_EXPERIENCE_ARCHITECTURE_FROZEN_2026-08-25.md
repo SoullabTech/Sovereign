@@ -48,8 +48,8 @@
    │   │   ├── Living Field      a place to gather and reflect on lived experience
    │   │   ├── Journal           expressive writing
    │   │   ├── Anchor            a quiet place to return
-   │   │   ├── Relationships     [R2 walk]  where self and other meet
-   │   │   └── Soul Portrait     [verify member reach]
+   │   │   └── Relationships     [R2 GOVERNANCE-BLOCKED — see PREFLIGHT §1]  where self and other meet
+   │   │                         (Soul Portrait moved to My Practice — PREFLIGHT §2)
    │   │
    │   └── MY CONTRIBUTION       what I am learning, creating, developing and offering
    │       ├── Ideas             what you're thinking, exploring and developing
@@ -63,7 +63,8 @@
        ├── Sessions
        ├── Notes / Observations
        ├── Co-Lab
-       └── Session Room
+       ├── Session Room
+       └── Soul Portrait         [moved from My Life — practitioner authors and sends]
 ```
 
 **Rules.** Member-facing label, canonical object and route are three separate layers — **no route is renamed.**
@@ -215,14 +216,18 @@ invoicing · wholesale practitioner backend rewrite.
 
 ## 11 · Open items (do not block the freeze)
 
-1. **R2 verification walk** — the one gated ruling. Relationships' placement and landing section 07 depend on it.
+1. **R2 is GOVERNANCE-BLOCKED, not walk-blocked** — `MLX_PREFLIGHT_VERIFICATION_2026-08-25.md` §1. The
+   Relationship Room Constitution (ratified 2026-08-14) states **build authority remains closed** and names an
+   unremedied authorship inversion, verified still present in code. A walk cannot clear this; a founder ruling
+   on paths A/B/C can.
 2. **Search does not exist.** A member accumulating Keeps and journal entries with no way to find anything is
    a platform that stops feeling like a place. Belongs in the phase 5 slice order.
-3. **Soul Portrait** — routes exist, no registry entry; verify member reach before depicting.
-4. **Filename collision** — `docs/canon/SOULLAB_DESIGN_CANON.md` (governing standard) and
-   `docs/SOULLAB_DESIGN_CANON.md` (v1.0 visual language: palette, typography, components, Stellium). They are
-   complementary, not duplicates, but the identical name makes every citation ambiguous. Suggested: rename the
-   older to a visual-language title and have the canon name it as its implementation layer.
+3. **Soul Portrait is practitioner-owner only** — resolved: it moves to My Practice and leaves the landing
+   page's member capabilities (PREFLIGHT §2).
+4. ~~Filename collision~~ — **RESOLVED 2026-08-25.** The older file is now
+   `docs/design/SOULLAB_VISUAL_LANGUAGE_v1.0.md`, retitled and pointed at the governing canon as its
+   implementation layer; inbound references updated. `docs/canon/SOULLAB_DESIGN_CANON.md` is the single
+   unambiguous authority.
 5. **`CLAUDE.md` onboarding section is stale** — documents `/begin → /intro-maia → /intro-daimon →
    /test-elemental` which are deprecated redirects or nonexistent. Should be corrected when R1 ships.
 

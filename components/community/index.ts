@@ -10,7 +10,7 @@
  * - Border: border-stone-200/60
  * - Rounded corners: rounded-xl
  *
- * @see /docs/SOULLAB_DESIGN_CANON.md
+ * @see /docs/design/SOULLAB_VISUAL_LANGUAGE_v1.0.md
  */
 
 // ============================================================================

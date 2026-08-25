@@ -229,7 +229,8 @@ For dark pages being updated:
 
 ## Reference
 
-- **Soullab Design Canon:** `/docs/SOULLAB_DESIGN_CANON.md`
+- **Soullab Design Canon (governing):** `/docs/canon/SOULLAB_DESIGN_CANON.md`
+- **Soullab Visual Language (implementation):** `/docs/design/SOULLAB_VISUAL_LANGUAGE_v1.0.md`
 - **Stellium Design System:** `/lib/stellium/design-system.ts`
 - **Vibe Presets:** `/lib/theme/vibePresets.ts`
 - **Practitioner Theme Schema:** `/lib/theme/practitionerTheme.ts`

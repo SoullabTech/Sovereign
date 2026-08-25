@@ -1,6 +1,11 @@
-# Soullab Design Canon v1.0
+# Soullab Visual Language v1.0
 
-A canonical reference for the Soullab visual language. All new components and pages should follow these principles.
+**Renamed 2026-08-25** (was `docs/SOULLAB_DESIGN_CANON.md`). The governing aesthetic and experiential
+standard is **`docs/canon/SOULLAB_DESIGN_CANON.md`** — founder-ratified canon. **This document is its
+implementation layer:** the concrete visual language — palette, typography, components, motion, theme
+integration — through which that canon is expressed. Where the two differ, **canon governs.**
+
+A reference for the Soullab visual language. All new components and pages should follow these principles.
 
 ---
 
