@@ -17,7 +17,7 @@
  */
 
 import { query } from '@/lib/db/postgres';
-import { Resend } from 'resend';
+import { sendEmail } from '@/lib/email/sendEmail';
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -49,15 +49,6 @@ const THRESHOLDS = {
 };
 
 const COOLDOWN_MINUTES = 15;
-
-// ─── Resend (lazy init) ────────────────────────────────────────────────────────
-
-let resendClient: Resend | null = null;
-function getResend(): Resend | null {
-  if (!process.env.RESEND_API_KEY) return null;
-  if (!resendClient) resendClient = new Resend(process.env.RESEND_API_KEY);
-  return resendClient;
-}
 
 // ─── Cooldown check ───────────────────────────────────────────────────────────
 
@@ -114,10 +105,9 @@ async function insertAlert(
 // ─── Email dispatch ────────────────────────────────────────────────────────────
 
 async function sendAlertEmail(alert: SecurityAlert): Promise<boolean> {
-  const resend = getResend();
   const recipientEmail = process.env.DEV_EMAIL;
 
-  if (!resend || !recipientEmail) {
+  if (!recipientEmail) {
     console.warn('[AlertEngine] Email not configured — alert stored in DB only');
     return false;
   }
@@ -126,10 +116,12 @@ async function sendAlertEmail(alert: SecurityAlert): Promise<boolean> {
     const severityColor = alert.severity === 'CRITICAL' ? '#ef4444' : '#f59e0b';
     const severityBg    = alert.severity === 'CRITICAL' ? '#fef2f2' : '#fffbeb';
 
-    await resend.emails.send({
+    const result = await sendEmail({
+      purpose: 'security:alert',
       from:    'Soullab Security <noreply@soullab.life>',
       to:      recipientEmail,
       subject: `[${alert.severity}] MAIA Security: ${alert.title}`,
+      metadata: { severity: alert.severity },
       html: `
         <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:600px;margin:0 auto;padding:40px 20px;background:#f8fafc;">
           <div style="background:${severityBg};border:2px solid ${severityColor};border-radius:12px;padding:24px;margin-bottom:24px;">
@@ -174,6 +166,15 @@ async function sendAlertEmail(alert: SecurityAlert): Promise<boolean> {
         </div>
       `,
     });
+
+    // A refused alert is not a delivered alert. Marking it notified would
+    // suppress the retry AND leave an operator believing security paging works.
+    if (!result.success) {
+      console.error(
+        `[AlertEngine] alert email REFUSED failureKind=${result.failureKind ?? 'unclassified'} providerCode=${result.providerCode ?? 'unnamed'}`
+      );
+      return false;
+    }
 
     // Mark as notified
     await query(

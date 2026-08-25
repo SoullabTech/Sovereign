@@ -4,24 +4,10 @@
  * Relationship-framed, not platform-signup-framed.
  * The client is accepting Jondi's invitation, not signing up for software.
  *
- * Uses Resend (same pattern as lib/portal/notifications.ts).
+ * Sends through lib/email/sendEmail (the one outbound email API).
  */
 
-import { Resend } from 'resend';
-
-let resendClient: Resend | null = null;
-
-function getResend(): Resend | null {
-  if (!resendClient) {
-    const apiKey = process.env.RESEND_API_KEY;
-    if (!apiKey) {
-      console.warn('[PracticeField/inviteEmail] RESEND_API_KEY not configured');
-      return null;
-    }
-    resendClient = new Resend(apiKey);
-  }
-  return resendClient;
-}
+import { sendEmail } from '@/lib/email/sendEmail';
 
 export interface RelationshipInviteEmailParams {
   clientEmail: string;
@@ -35,12 +21,10 @@ export interface RelationshipInviteEmailParams {
 export async function sendRelationshipInviteEmail(
   params: RelationshipInviteEmailParams
 ): Promise<{ success: boolean; error?: string }> {
-  const resend = getResend();
-  if (!resend) {
-    console.warn('[PracticeField/inviteEmail] Resend not configured — logging invite instead');
-    console.log(`[INVITE] ${params.practitionerName} → ${params.clientEmail}: ${params.baseUrl}/join/${params.inviteToken}`);
-    return { success: true };
-  }
+  // WAS: log the invite link to stdout and `return { success: true }`. An
+  // unconfigured provider had not sent anything, so the caller recorded a
+  // delivered invitation that never existed — and the join token was printed
+  // to the operational log. `sendEmail` reports `not_configured` honestly.
 
   const acceptUrl = `${params.baseUrl}/join/${params.inviteToken}`;
   const greeting = params.clientName ? `Hi ${params.clientName},` : 'Hi,';
@@ -98,16 +82,19 @@ export async function sendRelationshipInviteEmail(
   `.trim();
 
   try {
-    const result = await resend.emails.send({
+    const result = await sendEmail({
+      purpose: 'invite:practice-field',
       from: 'Soullab <noreply@soullab.life>',
       to: params.clientEmail,
       subject: `${params.practitionerName} has invited you into a shared space`,
       html,
     });
 
-    if (result.error) {
-      console.error('[PracticeField/inviteEmail] Resend error:', result.error);
-      return { success: false, error: String(result.error) };
+    if (!result.success) {
+      console.error(
+        `[PracticeField/inviteEmail] REFUSED failureKind=${result.failureKind ?? 'unclassified'} providerCode=${result.providerCode ?? 'unnamed'}`
+      );
+      return { success: false, error: result.error };
     }
 
     return { success: true };

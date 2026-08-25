@@ -1,4 +1,4 @@
-import { Resend } from 'resend';
+import { sendEmail } from '@/lib/email/sendEmail';
 
 const RESEND_API_KEY = process.env.RESEND_API_KEY ?? '';
 
@@ -34,7 +34,6 @@ export async function sendPartnerNotification(opts: {
   messagePreview?: string;
 }) {
   if (!RESEND_API_KEY) return;
-  const resend = new Resend(RESEND_API_KEY);
   const recipient = getRecipient(opts.actorId);
   const actor = getActor(opts.actorId);
   if (!recipient?.email) return;
@@ -102,15 +101,19 @@ export async function sendPartnerNotification(opts: {
     </div>
   `;
 
-  try {
-    await resend.emails.send({
-      from: 'Soullab <noreply@soullab.life>',
-      to: [recipient.email],
-      replyTo: actor.email || undefined,
-      subject,
-      html,
-    });
-  } catch (err) {
-    console.error('[PartnerNotification] send failed:', err);
+  const result = await sendEmail({
+    purpose: 'notify:partner',
+    from: 'Soullab <noreply@soullab.life>',
+    to: [recipient.email],
+    replyTo: actor.email || undefined,
+    subject,
+    html,
+  });
+  // Non-fatal by design, but no longer invisible: the try/catch this replaces
+  // could not observe a provider refusal, because the provider resolves them.
+  if (!result.success) {
+    console.error(
+      `[PartnerNotification] REFUSED failureKind=${result.failureKind ?? 'unclassified'} providerCode=${result.providerCode ?? 'unnamed'}`
+    );
   }
 }

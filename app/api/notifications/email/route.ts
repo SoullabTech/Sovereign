@@ -6,27 +6,12 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { Resend } from 'resend';
+import { sendEmail } from '@/lib/email/sendEmail';
 import { resolveSendAuthority } from '@/lib/notifications/sendAuthority';
 
 export const dynamic = 'force-dynamic';
 
 const isDev = process.env.NODE_ENV === 'development';
-
-// Lazy-load Resend client
-let resendClient: Resend | null = null;
-
-function getResend(): Resend | null {
-  if (!resendClient) {
-    const apiKey = process.env.RESEND_API_KEY;
-    if (!apiKey) {
-      console.warn('[Email Notifications] RESEND_API_KEY not configured');
-      return null;
-    }
-    resendClient = new Resend(apiKey);
-  }
-  return resendClient;
-}
 
 export async function POST(request: NextRequest) {
   try {
@@ -62,15 +47,8 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    const resend = getResend();
-    if (!resend) {
-      return NextResponse.json(
-        { error: 'Email service not configured' },
-        { status: 503 }
-      );
-    }
-
-    const result = await resend.emails.send({
+    const result = await sendEmail({
+      purpose: 'reminder:session',
       from: 'Session Reminder <reminders@soullab.life>',
       to,
       subject,
@@ -82,11 +60,22 @@ export async function POST(request: NextRequest) {
       ],
     });
 
-    console.log(`[Email Notifications] Reminder sent to ${to}`);
+    // Never report a reminder as sent on a refusal. `not_configured` keeps its
+    // distinct 503 so an unconfigured environment stays diagnosable.
+    if (!result.success) {
+      return NextResponse.json(
+        {
+          error: result.error ?? 'Could not send the reminder.',
+          failureKind: result.failureKind ?? 'unclassified',
+          retryable: result.retryable === true,
+        },
+        { status: result.status === 'not_configured' ? 503 : 502 }
+      );
+    }
 
     return NextResponse.json({
       success: true,
-      id: result.data?.id,
+      id: result.id,
     });
   } catch (error) {
     console.error('[Email Notifications] Error:', error);

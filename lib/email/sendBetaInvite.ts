@@ -1,10 +1,25 @@
-import { Resend } from 'resend';
+import { sendEmail } from './sendEmail';
+
+/**
+ * Sender for beta invitations.
+ *
+ * NOTE — deliberately left on `soullab.org`, the address this sender has always
+ * used, rather than silently moved to the `soullab.life` identity in SENDERS.
+ * If `soullab.org` is not a verified domain on the provider account these sends
+ * fail as `provider_config` — which is now VISIBLE rather than swallowed. That
+ * is a deliverability decision for an operator, not a drive-by edit.
+ */
+const BETA_INVITE_SENDER = 'Kelly @ Soullab <kelly@soullab.org>';
+
+/** Ceiling on one batch. Exceeding it truncates loudly — never silently. */
+const MAX_INVITES_PER_BATCH = 100;
+
+/** Failures that mean EVERY remaining send in the batch would fail too. */
+const TRANSPORT_WIDE_FAILURES = new Set<string>([
+  'quota_exceeded', 'provider_auth', 'provider_config', 'not_configured',
+]);
 import fs from 'fs';
 import path from 'path';
-
-function getResendClient() {
-  return new Resend(process.env.RESEND_API_KEY);
-}
 
 export interface BetaInvite {
   name: string;
@@ -46,25 +61,37 @@ export async function sendBetaInvite(invite: BetaInvite, template: string = 'bet
           .replace(/\{\{BetaCode\}\}/g, invite.betaCode || '')
       : '';
 
-    const resend = getResendClient();
-    const result = await resend.emails.send({
-      from: 'Kelly @ Soullab <kelly@soullab.org>',
+    const result = await sendEmail({
+      purpose: 'invite:beta',
+      from: BETA_INVITE_SENDER,
       to: invite.email,
       subject: config.subject,
       html: personalizedHtml,
       text: personalizedText,
+      idempotencyKey: `invite:beta:${template}:${invite.email}`,
       tags: [
         { name: 'campaign', value: 'beta-launch' },
         { name: 'type', value: config.tag }
       ]
     });
 
-    console.log(`✅ Sent to ${invite.name} (${invite.email}):`, result.id);
+    // The previous code read `result.id` off the raw SDK response — a field
+    // that does not exist there (the id lives under `result.data.id`), so every
+    // send reported `{ success: true, id: undefined }` and a refusal reported
+    // success as well.
+    if (!result.success) {
+      console.error(
+        `❌ Invite to ${invite.name} REFUSED: failureKind=${result.failureKind ?? 'unclassified'} providerCode=${result.providerCode ?? 'unnamed'}`
+      );
+      return { success: false, error: result.error, failureKind: result.failureKind };
+    }
+
+    console.log(`✅ Sent to ${invite.name}:`, result.id);
     return { success: true, id: result.id };
 
   } catch (error: any) {
     console.error(`❌ Failed to send to ${invite.email}:`, error.message);
-    return { success: false, error: error.message };
+    return { success: false, error: error.message, failureKind: 'exception' };
   }
 }
 
@@ -79,56 +106,40 @@ export async function sendBatchInvites(invites: BetaInvite[], template: string =
     textTemplate = fs.readFileSync(textTemplatePath, 'utf-8');
   }
 
-  const resend = getResendClient();
   const results: any[] = [];
 
-  // Use Resend's batch API (send all at once, up to 100 per batch)
-  try {
-    const batchData = invites.map(invite => ({
-      from: 'Kelly @ Soullab <kelly@soullab.org>',
-      to: invite.email,
-      subject: config.subject,
-      html: htmlTemplate
-        .replace(/\{\{Name\}\}/g, invite.name)
-        .replace(/\{\{BetaCode\}\}/g, invite.betaCode || ''),
-      text: textTemplate
-        ? textTemplate
-            .replace(/\{\{Name\}\}/g, invite.name)
-            .replace(/\{\{BetaCode\}\}/g, invite.betaCode || '')
-        : '',
-      tags: [
-        { name: 'campaign', value: 'beta-launch' },
-        { name: 'type', value: config.tag }
-      ]
-    }));
+  // Resend's batch API was used here and every invite in the batch was marked
+  // `success: true` regardless of what came back — including a literal
+  // 'batch-sent' placeholder id. One refused batch reported 100 delivered
+  // invitations. Per-message sends cost more calls and are the only shape in
+  // which a per-recipient refusal is visible at all.
+  //
+  // NO SILENT CAP: a batch larger than the ceiling is TRUNCATED AND SAID SO.
+  const batch = invites.slice(0, MAX_INVITES_PER_BATCH);
+  if (invites.length > batch.length) {
+    console.warn(
+      `[BetaInvite] batch of ${invites.length} exceeds MAX_INVITES_PER_BATCH=${MAX_INVITES_PER_BATCH}; ` +
+        `sending ${batch.length}, DROPPING ${invites.length - batch.length}. Re-run for the remainder.`
+    );
+  }
 
-    // Resend batch API can handle up to 100 emails at once
-    const batchResult = await resend.batch.send(batchData);
+  for (const invite of batch) {
+    const result = await sendBetaInvite(invite, template);
+    results.push({ ...invite, ...result });
 
-    console.log(`✅ Batch sent successfully:`, batchResult);
+    // A transport-wide refusal (quota, bad key, unverified sender) fails for
+    // every remaining recipient too. Continuing burns the rest of the list
+    // against a provider that is refusing everything.
+    if (!result.success && TRANSPORT_WIDE_FAILURES.has(result.failureKind ?? '')) {
+      console.error(
+        `[BetaInvite] ABORTING batch — failureKind=${result.failureKind} is transport-wide; ` +
+          `${batch.length - results.length} invite(s) not attempted.`
+      );
+      break;
+    }
 
-    // Map results back to invites
-    invites.forEach((invite, index) => {
-      results.push({
-        ...invite,
-        success: true,
-        id: batchResult.data?.[index]?.id || 'batch-sent'
-      });
-    });
-
-  } catch (error: any) {
-    console.error(`❌ Batch send failed:`, error.message);
-
-    // Fallback: send individually if batch fails
-    console.log('Falling back to individual sends...');
-    for (const invite of invites) {
-      const result = await sendBetaInvite(invite, template);
-      results.push({ ...invite, ...result });
-
-      // Only add delay if specified and doing individual sends
-      if (delayMs > 0) {
-        await new Promise(resolve => setTimeout(resolve, delayMs));
-      }
+    if (delayMs > 0) {
+      await new Promise(resolve => setTimeout(resolve, delayMs));
     }
   }
 

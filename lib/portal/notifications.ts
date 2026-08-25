@@ -7,22 +7,8 @@
  * - Booking notifications to practitioners
  */
 
-import { Resend } from 'resend';
+import { sendEmail } from '@/lib/email/sendEmail';
 
-// Lazy-load Resend client
-let resendClient: Resend | null = null;
-
-function getResend(): Resend | null {
-  if (!resendClient) {
-    const apiKey = process.env.RESEND_API_KEY;
-    if (!apiKey) {
-      console.warn('[Portal Notifications] RESEND_API_KEY not configured');
-      return null;
-    }
-    resendClient = new Resend(apiKey);
-  }
-  return resendClient;
-}
 
 // ============================================================================
 // Types
@@ -66,16 +52,12 @@ export async function sendBookingConfirmation(
   booking: BookingDetails,
   practitioner: PractitionerInfo
 ): Promise<{ success: boolean; id?: string; error?: string }> {
-  const resend = getResend();
-  if (!resend) {
-    return { success: false, error: 'Email service not configured' };
-  }
-
   const formattedDate = formatDateTime(booking.dateTime, booking.timezone);
   const practitionerDisplay = practitioner.businessName || practitioner.name;
 
   try {
-    const result = await resend.emails.send({
+    const result = await sendEmail({
+      purpose: 'portal:booking-confirmation',
       from: `${practitionerDisplay} <bookings@soullab.life>`,
       replyTo: practitioner.email,
       to: booking.clientEmail,
@@ -86,10 +68,16 @@ export async function sendBookingConfirmation(
         { name: 'type', value: 'booking-confirmation' },
         { name: 'portal', value: practitioner.portalSlug },
       ],
+
     });
 
     console.log(`[Portal Notifications] Booking confirmation sent to ${booking.clientEmail}`);
-    return { success: true, id: result.data?.id };
+    if (!result.success) {
+      // The provider REFUSES by resolving, so the try/catch around this call
+      // never saw a refusal: every portal notification reported success.
+      return { success: false, error: result.error };
+    }
+    return { success: true, id: result.id };
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';
     console.error('[Portal Notifications] Failed to send booking confirmation:', message);
@@ -235,15 +223,11 @@ export async function sendBookingNotificationToPractitioner(
   booking: BookingDetails,
   practitioner: PractitionerInfo
 ): Promise<{ success: boolean; id?: string; error?: string }> {
-  const resend = getResend();
-  if (!resend) {
-    return { success: false, error: 'Email service not configured' };
-  }
-
   const formattedDate = formatDateTime(booking.dateTime, booking.timezone);
 
   try {
-    const result = await resend.emails.send({
+    const result = await sendEmail({
+      purpose: 'portal:booking-notification',
       from: 'Soullab Bookings <bookings@soullab.life>',
       to: practitioner.email,
       subject: `New Booking: ${booking.clientName} - ${booking.sessionType}`,
@@ -253,10 +237,16 @@ export async function sendBookingNotificationToPractitioner(
         { name: 'type', value: 'booking-notification' },
         { name: 'portal', value: practitioner.portalSlug },
       ],
+
     });
 
     console.log(`[Portal Notifications] Booking notification sent to practitioner ${practitioner.email}`);
-    return { success: true, id: result.data?.id };
+    if (!result.success) {
+      // The provider REFUSES by resolving, so the try/catch around this call
+      // never saw a refusal: every portal notification reported success.
+      return { success: false, error: result.error };
+    }
+    return { success: true, id: result.id };
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';
     console.error('[Portal Notifications] Failed to send practitioner notification:', message);
@@ -338,16 +328,12 @@ export async function sendCancellationNotification(
   practitioner: PractitionerInfo,
   reason?: string
 ): Promise<{ success: boolean; id?: string; error?: string }> {
-  const resend = getResend();
-  if (!resend) {
-    return { success: false, error: 'Email service not configured' };
-  }
-
   const formattedDate = formatDateTime(booking.dateTime, booking.timezone);
   const practitionerDisplay = practitioner.businessName || practitioner.name;
 
   try {
-    const result = await resend.emails.send({
+    const result = await sendEmail({
+      purpose: 'portal:booking-cancellation',
       from: `${practitionerDisplay} <bookings@soullab.life>`,
       replyTo: practitioner.email,
       to: booking.clientEmail,
@@ -358,10 +344,16 @@ export async function sendCancellationNotification(
         { name: 'type', value: 'booking-cancellation' },
         { name: 'portal', value: practitioner.portalSlug },
       ],
+
     });
 
     console.log(`[Portal Notifications] Cancellation notification sent to ${booking.clientEmail}`);
-    return { success: true, id: result.data?.id };
+    if (!result.success) {
+      // The provider REFUSES by resolving, so the try/catch around this call
+      // never saw a refusal: every portal notification reported success.
+      return { success: false, error: result.error };
+    }
+    return { success: true, id: result.id };
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';
     console.error('[Portal Notifications] Failed to send cancellation notification:', message);
@@ -377,15 +369,11 @@ export async function sendCancellationNotificationToPractitioner(
   practitioner: PractitionerInfo,
   reason?: string
 ): Promise<{ success: boolean; id?: string; error?: string }> {
-  const resend = getResend();
-  if (!resend) {
-    return { success: false, error: 'Email service not configured' };
-  }
-
   const formattedDate = formatDateTime(booking.dateTime, booking.timezone);
 
   try {
-    const result = await resend.emails.send({
+    const result = await sendEmail({
+      purpose: 'portal:booking-cancellation-practitioner',
       from: 'Soullab Bookings <bookings@soullab.life>',
       to: practitioner.email,
       subject: `Booking Cancelled: ${booking.clientName} - ${booking.sessionType}`,
@@ -395,10 +383,16 @@ export async function sendCancellationNotificationToPractitioner(
         { name: 'type', value: 'booking-cancellation-practitioner' },
         { name: 'portal', value: practitioner.portalSlug },
       ],
+
     });
 
     console.log(`[Portal Notifications] Cancellation alert sent to practitioner ${practitioner.email}`);
-    return { success: true, id: result.data?.id };
+    if (!result.success) {
+      // The provider REFUSES by resolving, so the try/catch around this call
+      // never saw a refusal: every portal notification reported success.
+      return { success: false, error: result.error };
+    }
+    return { success: true, id: result.id };
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';
     console.error('[Portal Notifications] Failed to send practitioner cancellation alert:', message);
@@ -503,17 +497,13 @@ export async function sendRescheduleNotification(
   oldDateTime: Date,
   newDateTime: Date
 ): Promise<{ success: boolean; id?: string; error?: string }> {
-  const resend = getResend();
-  if (!resend) {
-    return { success: false, error: 'Email service not configured' };
-  }
-
   const oldFormatted = formatDateTime(oldDateTime, booking.timezone);
   const newFormatted = formatDateTime(newDateTime, booking.timezone);
   const practitionerDisplay = practitioner.businessName || practitioner.name;
 
   try {
-    const result = await resend.emails.send({
+    const result = await sendEmail({
+      purpose: 'portal:booking-reschedule',
       from: `${practitionerDisplay} <bookings@soullab.life>`,
       replyTo: practitioner.email,
       to: booking.clientEmail,
@@ -524,10 +514,16 @@ export async function sendRescheduleNotification(
         { name: 'type', value: 'booking-reschedule' },
         { name: 'portal', value: practitioner.portalSlug },
       ],
+
     });
 
     console.log(`[Portal Notifications] Reschedule notification sent to ${booking.clientEmail}`);
-    return { success: true, id: result.data?.id };
+    if (!result.success) {
+      // The provider REFUSES by resolving, so the try/catch around this call
+      // never saw a refusal: every portal notification reported success.
+      return { success: false, error: result.error };
+    }
+    return { success: true, id: result.id };
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';
     console.error('[Portal Notifications] Failed to send reschedule notification:', message);
@@ -544,16 +540,12 @@ export async function sendRescheduleNotificationToPractitioner(
   oldDateTime: Date,
   newDateTime: Date
 ): Promise<{ success: boolean; id?: string; error?: string }> {
-  const resend = getResend();
-  if (!resend) {
-    return { success: false, error: 'Email service not configured' };
-  }
-
   const oldFormatted = formatDateTime(oldDateTime, booking.timezone);
   const newFormatted = formatDateTime(newDateTime, booking.timezone);
 
   try {
-    const result = await resend.emails.send({
+    const result = await sendEmail({
+      purpose: 'portal:booking-reschedule-practitioner',
       from: 'Soullab Bookings <bookings@soullab.life>',
       to: practitioner.email,
       subject: `Booking Rescheduled: ${booking.clientName} - ${booking.sessionType}`,
@@ -563,10 +555,16 @@ export async function sendRescheduleNotificationToPractitioner(
         { name: 'type', value: 'booking-reschedule-practitioner' },
         { name: 'portal', value: practitioner.portalSlug },
       ],
+
     });
 
     console.log(`[Portal Notifications] Reschedule alert sent to practitioner ${practitioner.email}`);
-    return { success: true, id: result.data?.id };
+    if (!result.success) {
+      // The provider REFUSES by resolving, so the try/catch around this call
+      // never saw a refusal: every portal notification reported success.
+      return { success: false, error: result.error };
+    }
+    return { success: true, id: result.id };
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';
     console.error('[Portal Notifications] Failed to send practitioner reschedule alert:', message);
@@ -679,15 +677,11 @@ export async function sendInquiryNotification(
   inquiry: InquiryDetails,
   practitioner: PractitionerInfo
 ): Promise<{ success: boolean; id?: string; error?: string }> {
-  const resend = getResend();
-  if (!resend) {
-    return { success: false, error: 'Email service not configured' };
-  }
-
   const sourceLabel = inquiry.source === 'portal_chat' ? 'Chat Inquiry' : 'Contact Form';
 
   try {
-    const result = await resend.emails.send({
+    const result = await sendEmail({
+      purpose: 'portal:inquiry-notification',
       from: 'Soullab Portal <portal@soullab.life>',
       to: practitioner.email,
       replyTo: inquiry.email || undefined,
@@ -699,10 +693,16 @@ export async function sendInquiryNotification(
         { name: 'portal', value: practitioner.portalSlug },
         { name: 'source', value: inquiry.source },
       ],
+
     });
 
     console.log(`[Portal Notifications] Inquiry notification sent to ${practitioner.email}`);
-    return { success: true, id: result.data?.id };
+    if (!result.success) {
+      // The provider REFUSES by resolving, so the try/catch around this call
+      // never saw a refusal: every portal notification reported success.
+      return { success: false, error: result.error };
+    }
+    return { success: true, id: result.id };
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';
     console.error('[Portal Notifications] Failed to send inquiry notification:', message);
@@ -793,15 +793,11 @@ export async function sendPortalClaimEmail(
   invite: ClaimInviteDetails,
   practitioner: PractitionerInfo
 ): Promise<{ success: boolean; id?: string; error?: string }> {
-  const resend = getResend();
-  if (!resend) {
-    return { success: false, error: 'Email service not configured' };
-  }
-
   const practitionerDisplay = practitioner.businessName || practitioner.name;
 
   try {
-    const result = await resend.emails.send({
+    const result = await sendEmail({
+      purpose: 'portal:portal-claim-invite',
       from: `${practitionerDisplay} <bookings@soullab.life>`,
       replyTo: practitioner.email,
       to: invite.clientEmail,
@@ -812,10 +808,16 @@ export async function sendPortalClaimEmail(
         { name: 'type', value: 'portal-claim-invite' },
         { name: 'portal', value: practitioner.portalSlug },
       ],
+
     });
 
     console.log(`[Portal Notifications] Claim invite sent to ${invite.clientEmail}`);
-    return { success: true, id: result.data?.id };
+    if (!result.success) {
+      // The provider REFUSES by resolving, so the try/catch around this call
+      // never saw a refusal: every portal notification reported success.
+      return { success: false, error: result.error };
+    }
+    return { success: true, id: result.id };
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';
     console.error('[Portal Notifications] Failed to send claim invite:', message);
