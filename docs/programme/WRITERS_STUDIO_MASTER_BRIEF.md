@@ -713,9 +713,17 @@ is the entry.
 
 ## A3.2 — Jarvis owns the build graph
 
-`docs/programme/WRITERS_STUDIO_BUILD_GRAPH.md` is the operational cockpit. Every session must be
+`docs/programme/WRITERS_STUDIO_PROGRAMME_BOARD.md` is the operational cockpit. Every session must be
 able to say **which nodes exist, which are partial, which are blocked, which have zero callers, and
 which one it is advancing now.**
+
+> **Custody note (2026-08-25, founder-directed).** This amendment was ratified naming
+> `WRITERS_STUDIO_BUILD_GRAPH.md`. That file's verified node evidence — including the zero-caller
+> Canvas cluster — was folded into `WRITERS_STUDIO_PROGRAMME_BOARD.md` and the file removed, so that
+> exactly one artifact holds live programme state. **The substance of A3.2 is unchanged**: Jarvis
+> owns the cockpit, node states are evidence, and it is updated in the same commit as the work.
+> Only the artifact's name changed. The Programme Board is subordinate to this brief; where they
+> conflict, this brief and duly ratified unit/specification artifacts govern.
 
 Node states are **evidence** — set by reading canonical (file presence, importer count, live
 route), never by what a document says should be true. The graph is updated in the same commit as
