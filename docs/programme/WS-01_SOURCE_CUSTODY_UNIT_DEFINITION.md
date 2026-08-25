@@ -185,3 +185,45 @@ Stop and report if: the arrival cannot be persisted at ingest without a visible 
 import surface · the orphan-heading repair would require relaxing the `CHECK` · a control in §4
 cannot be made to fail on the known-bad baseline · the founder's §6 ruling is needed and absent ·
 the work would touch any prohibited surface to proceed.
+
+---
+
+## WS-01 Founder re-pin — 2026-08-25
+
+> Appended, not rewritten. The historical `Gate state | P0 = FAIL (evidence record 001)`
+> row above stands exactly as recorded and is **not** revised by this entry.
+
+```text
+WS-01 FOUNDER RE-PIN — 2026-08-25
+
+P0-D has NOT RUN. No P0-D failure has occurred, and the Master
+Operating Brief's repaired-candidate restart rule — "a repaired
+candidate restarts the walk at A" (referenced there as §9, under
+the "8–10. The frozen walk" heading) — is not triggered.
+
+Acceptance candidate re-pinned before P0-D execution:
+
+FROM
+e92f532396705daaf6cd346445276a08a5957904
+feature/ws-01-source-custody-v2
+
+TO
+4a551d3d13a27ec442252be7822865e0f2d31978
+feature/ws-01-source-custody-v3
+
+Basis:
+- WS-01 custody mechanism is byte-identical between v2 and v3.
+- migration is byte-identical.
+- ingest route is byte-identical.
+- P0/P0-D acceptance text is identical apart from lineage-specific seal identity.
+- v3 is the deployed candidate.
+- redeploying v2 would regress unrelated later production work.
+
+This is an explicit candidate-identity correction, not acceptance,
+not a silent substitution, and not modification of the frozen candidate.
+
+CURRENT STATE
+P0-D       NOT RUN
+A–H        NOT REACHED
+BUILD MODE CLOSED
+```
