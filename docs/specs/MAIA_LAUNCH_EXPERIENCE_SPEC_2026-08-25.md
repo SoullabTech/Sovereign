@@ -210,6 +210,77 @@ The line **disappears as the member becomes familiar with the House**, per the p
 (§2.9.6). This establishes the general mechanism: **familiarity without flattening the architecture** —
 distinctive name, plain line beneath it, line recedes.
 
+### MLX-R5b(ii) — GREEN (Kelly, 2026-08-25): the canonical place names stand.
+
+**Living Field · Anchor · Wisdom · Co-Lab** — and the other established canonical destination names — are
+**kept. No cosmetic rename pass.** Existing plain-language descriptions are promoted into visible orientation
+where needed; replacements are not invented where canonical copy already exists.
+
+**The rule, now explicit:**
+
+> **Familiar language organizes the ecosystem. Distinctive language names the places within it.**
+
+What a member encounters:
+
+```
+   MY LIFE
+     Living Field   — a place to gather and reflect on lived experience
+     Anchor         — what helps you return to what matters
+     Journal        — expressive writing
+
+   MY CONTRIBUTION
+     Ideas          — what you're thinking, exploring and developing
+     Wisdom         — what you've learned, gathered and want to carry forward
+     Studios        — places where ideas become work
+```
+
+**One flag on the subtitles.** Where a registry line already exists it is **canonical and preferred** — most
+of all for **Living Field**, whose current line (*"a place to gather and reflect on lived experience"*) was
+authored under Invariant 16 constraint after two prior attempts were rejected for asserting the person
+(*"Who you are becoming"*) and then for an agentless outcome-claim (*"…becomes coherent"*). Illustrative
+alternatives such as *"your unfolding life…"* drift back toward naming the member rather than the place. **Any
+new subtitle for Living Field passes the same test the label did**; elsewhere, promote what is already written.
+
+**The combination this achieves:** *the structure is recognizable; the destinations are ownable.* Soullab
+becomes neither an incomprehensible mystical system nor a generic productivity app.
+
+### The canonical vocabulary spine after R5
+
+```
+   SOULLAB
+
+   MY SOULLAB
+   │
+   ├── MY LIFE                    the life I am living and becoming
+   │   ├── Living Field
+   │   ├── Journal
+   │   ├── Anchor
+   │   ├── Relationships          ⚠️ placement pending R2
+   │   ├── Soul Portrait
+   │   └── eligible personal places
+   │
+   ├── MY CONTRIBUTION            what I am learning, creating, developing and offering
+   │   ├── Ideas
+   │   ├── Wisdom
+   │   ├── Studios
+   │   └── eligible contribution places
+   │
+   └── MY PRACTICE                [role gated] the people and relationships entrusted to my care
+       ├── People / Caseload
+       ├── Sessions
+       ├── Session Room
+       ├── Preparation
+       ├── Encounters
+       ├── Co-Lab
+       └── eligible practitioner places
+```
+
+**The spine is settled. Individual child placements are not frozen** — Relationships awaits R2, and Co-Lab's
+placement under My Practice is consistent with its existing conditional visibility (founder/practitioner OR a
+pending count) but may move.
+
+**R5 is closed.** Vocabulary no longer blocks the shell.
+
 ### Standing design requirement — no cognitive cliff (Kelly, 2026-08-25)
 
 > **The landing page and MAIA House are two versions of the same world.** They are not designed separately.
