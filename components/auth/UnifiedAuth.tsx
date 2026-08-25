@@ -575,13 +575,24 @@ function UnifiedAuthInner({ mode = 'signup' }: { mode?: AuthMode }) {
                   faces three doors they cannot open and no exit — the mirror of the
                   "Already a member?" link /signup carries.
 
-                  Destination is /begin, not /signup: the onboarding invariant is a
-                  single entry point for new members (/begin → intro → induction →
-                  /maia). /signup is the email door for someone already headed in. */}
+                  Destination is /signup, not /begin. The earlier rationale here read
+                  "single entry point for new members (/begin → intro → induction →
+                  /maia)" — but that equated ONE ENTRY POINT with ONE URL, and /begin
+                  was deprecated 2026-05-16. app/begin/page.tsx is now a legacy stub
+                  that redirects to /signin, and next.config.js:187 redirects it
+                  permanently as well. So this link sent a person without an account
+                  from /signin straight back to /signin — an exit that returned them
+                  to the room they were trying to leave.
+
+                  The invariant that actually holds is about the IMPLEMENTATION, not
+                  the address: one UnifiedAuth, two explicit entry intents. Returning
+                  people enter through /signin (mode="signin", password-first);
+                  joining people enter through /signup (mode="signup", email-first).
+                  Same component, same doors, different opening phase. */}
               {mode === 'signin' && (
                 <p className="mt-6 text-xs text-slate-400/80 text-center">
                   New to Soullab?{' '}
-                  <a href="/begin" className="text-amber-300/90 hover:text-amber-200 transition-colors">Begin Journey</a>
+                  <a href="/signup" className="text-amber-300/90 hover:text-amber-200 transition-colors">Begin Journey</a>
                 </p>
               )}
             </motion.div>

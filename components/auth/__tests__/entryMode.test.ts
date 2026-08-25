@@ -150,14 +150,57 @@ describe('/signin offers a way out for someone with no account', () => {
     expect(passwordPhase).toContain('New to Soullab?');
   });
 
-  // /begin, not /signup: the onboarding invariant is a single entry point for
-  // new members. Asserted so a later edit cannot quietly reroute it.
-  it('routes them to the canonical entry point', () => {
-    expect(passwordPhase).toContain('href="/begin"');
-    expect(passwordPhase).not.toContain('href="/signup"');
+  // SUPERSEDED GUARD. This previously asserted href="/begin" and forbade
+  // href="/signup", on the rationale "a single entry point for new members".
+  // That defended a routing assumption already retired: /begin was deprecated
+  // 2026-05-16, app/begin/page.tsx is a legacy stub calling redirect('/signin'),
+  // and next.config.js redirects it permanently too. The exit therefore returned
+  // the person to /signin — the room they were trying to leave.
+  //
+  // The error was equating ONE ENTRY POINT with ONE URL. The system already has
+  // one auth IMPLEMENTATION with two explicit entry intents:
+  //
+  //     UnifiedAuth
+  //       |- /signin -> mode="signin"  returning - password-first
+  //       \- /signup -> mode="signup"  joining   - email-first
+  //
+  // The destination must be a door that OPENS.
+  it('escapes to /signup, the joining entry intent', () => {
+    expect(passwordPhase).toContain('href="/signup"');
+  });
+
+  it('never routes a new member through the deprecated /begin', () => {
+    expect(passwordPhase).not.toContain('href="/begin"');
+    expect(COMPONENT).not.toContain('href="/begin"');
   });
 
   it('is gated to signin — /signup already has its own footer', () => {
     expect(COMPONENT).toMatch(/mode === 'signin' && \(\s*<p[^>]*>\s*New to Soullab\?/);
+  });
+});
+
+// AUTH-ENTRY-01 scope controls. Repointing the escape must not quietly change what
+// either door IS, or the exit would land somewhere just as wrong.
+describe('AUTH-ENTRY-01 · the two entry intents resolve to one implementation', () => {
+  it('/signin renders UnifiedAuth in returning mode', () => {
+    expect(read('app/signin/page.tsx')).toMatch(/mode=["']signin["']/);
+  });
+
+  it('/signup renders UnifiedAuth in joining mode', () => {
+    expect(read('app/signup/page.tsx')).toMatch(/mode=["']signup["']/);
+  });
+
+  it('/begin stays a legacy redirect and is not rebuilt as an auth surface', () => {
+    const begin = read('app/begin/page.tsx');
+    expect(begin).toMatch(/redirect\(['"]\/signin['"]\)/);
+    expect(begin).not.toContain('UnifiedAuth');
+  });
+
+  // SCOPE: a regression sentinel over THIS COMPONENT's source text only. It says
+  // the card did not regrow a waitlist surface while the escape was repointed. It
+  // is NOT evidence that the signup backend has no waitlist behaviour — nothing
+  // here reads the API. Do not cite it for that.
+  it('the card itself did not regrow a waitlist surface', () => {
+    expect(COMPONENT.toLowerCase()).not.toContain('waitlist');
   });
 });
