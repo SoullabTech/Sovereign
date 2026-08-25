@@ -494,7 +494,7 @@ export const ModernTextInput = forwardRef<HTMLTextAreaElement, ModernTextInputPr
               // capped app-wide (accessibility — see app/layout.tsx), so
               // raising the field's own font-size is the only fix that
               // doesn't also block a member's own zoom.
-              className={`w-full min-h-[40px] max-h-[120px] bg-transparent border-none outline-none resize-none
+              className={`w-full min-h-[40px] max-h-[200px] overflow-y-auto bg-transparent border-none outline-none resize-none
                        text-[16px] leading-relaxed placeholder:text-white/40 transition-colors pr-12
                        ${enableVoiceInput || isRecording
                          ? 'text-blue-300 cursor-not-allowed'
