@@ -167,9 +167,48 @@ the product into two products.
 `classification: 'world'` may remain in code (§2.96: label and object are already separate layers). The second
 sphere renders through the `audience` gate that already exists in `maiaNav.ts`. **No route is renamed.**
 
-**Explicitly NOT frozen:** the label **"My Work."** Now that *My Practice* sits beside it, *My Work* is
-ambiguous — creative and intellectual work, or professional practice? Candidates include Creative Work,
-Making, Projects, or a Soullab-native term. **Nothing is renamed until R5b resolves it.**
+**"My Work" — RESOLVED by R5b(i): it becomes *My Contribution*.** See below.
+
+### MLX-R5b(i) — GREEN (Kelly, 2026-08-25): "My Work" becomes **My Contribution**.
+
+The three-part grammar this completes:
+
+```
+   MY SOULLAB
+
+   MY LIFE            The life I am living and becoming
+   MY CONTRIBUTION    What I am making, learning, developing and offering
+   MY PRACTICE        The people I am entrusted to serve
+```
+
+**Why this beat the more familiar option.** *Creative Work* would have bought immediate familiarity by
+distorting Wisdom — a gathered library does not sit under a heading about producing things, so choosing it
+would have forced Wisdom out of the group. *My Contribution* honestly contains all of it: Ideas · Wisdom ·
+Studios · writing · teaching · creative work · knowledge · things being developed · things eventually offered
+into the world. **No regrouping is required.**
+
+**The architectural advantage.** The system already understands this as the **Contribution Field**, paired
+with the **Personal Field** (`maiaNav.ts`, the `work` / `life` groups). We are not laying poetic navigation
+over an unrelated ontology — *we are making the underlying architecture legible.*
+
+**The ambiguity it prevents.** For a therapist, teacher, coach, healer or facilitator, *My Work* and *My
+Practice* sound like the same thing. The ruled pair does not:
+
+| | |
+|---|---|
+| **My Contribution** | what I make and offer |
+| **My Practice** | my entrusted work with people |
+
+That is a constitutional distinction, not a labelling preference.
+
+**Orientation line (recedes with familiarity).** Because *My Contribution* is less immediately obvious than a
+conventional word, it carries a supporting line on first encounter:
+
+> **My Contribution** — *Ideas, wisdom, creations and things you're bringing into the world.*
+
+The line **disappears as the member becomes familiar with the House**, per the progressive-richness curve
+(§2.9.6). This establishes the general mechanism: **familiarity without flattening the architecture** —
+distinctive name, plain line beneath it, line recedes.
 
 ### Standing design requirement — no cognitive cliff (Kelly, 2026-08-25)
 
