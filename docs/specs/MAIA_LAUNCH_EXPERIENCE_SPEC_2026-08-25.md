@@ -961,6 +961,37 @@ Actual practitioner capabilities are shown below that framing, not in place of i
 
 Indicative, not literal. **It should feel like an ecology of interconnected places, not a software sitemap.**
 
+### 2.97.8 The aesthetic standard — formal criteria, not a mood board
+
+> **The target is not "beautiful wellness software." It is world-class digital craft with restraint, soul, and
+> unmistakable identity.**
+
+| Criterion | |
+|---|---|
+| **Sophisticated simplicity** | Fewer elements, better hierarchy. No clutter, no decorative excess. |
+| **Refined materiality** | Typography, spacing, motion, texture, light and surfaces considered at the level of a premium cultural product. |
+| **Soulful, not sentimental** | Warmth and depth without cliché, mysticism-as-decoration, or healing-app aesthetics. |
+| **Elemental, not literal** | Fire/Water/Earth/Air/Aether through rhythm, movement, atmosphere, density, transitions and spatial behaviour — not icons. |
+| **Quietly futuristic** | Adaptive, intelligent, fluid, context-aware. Never neon sci-fi or AI spectacle. |
+| **Human first** | Made around attention, relationship, thought, feeling and lived experience. |
+| **Distinctive enough to own** | A screenshot is eventually recognizable as Soullab **without the logo**. |
+| **Familiar enough to enter** | People with high aesthetic standards feel **intrigued, not confused**. |
+| **No cheapness anywhere** | Weak icons, generic cards, inconsistent spacing, stock photography, busy gradients, clumsy transitions, mismatched typography — **each fails review**. |
+
+**The test that guards against the wrong kind of restraint:**
+
+> **If simplifying the interface makes it feel generic, we have simplified the wrong thing.**
+> The goal is not minimalism for its own sake. It is **depth without noise.**
+
+### 2.97.9 Screen review — four questions, every major screen
+
+Applied to the landing page, the House, MAIA, and every ecosystem surface in the first high-fidelity pass:
+
+1. **Does it feel inevitable?** — nothing seems arbitrary.
+2. **Does it feel spacious but alive?** — not empty.
+3. **Does it feel emotionally intelligent?** — not clinical, cute, or performatively spiritual.
+4. **Could this belong to any other product?** — **if yes, it is not finished.**
+
 ### 2.97.7 Visual acceptance criterion — a gate, not brand prose
 
 Applied to the first high-fidelity prototypes (roadmap phase 3), before any production route is rewritten:
