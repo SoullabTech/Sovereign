@@ -472,6 +472,42 @@ depends on — and should probably become one of the most visible parts of Soull
 **This closes the last unresolved placement in the vocabulary spine, conditionally.** The ecosystem shell is
 architecturally frozen pending this walk.
 
+### MLX-R3 — GREEN (Kelly, 2026-08-25): doorway intent is session-scoped.
+
+> **A doorway selection may contextualize MAIA's opening within the current encounter. It creates no durable
+> member fact, no Recognition, no elemental state, and no personal-history event by default. Aggregate product
+> analytics, if authorized, are a separate instrumentation question.**
+
+A doorway click means only: ***"this is how I want to begin right now."*** It shapes MAIA's opening turn and
+**dies with the session**, unless the member later creates something genuinely worth retaining — by their own
+act, through Keeps.
+
+**Why `doorway_opened` is not persisted, despite existing.** The append-only event type makes persistence
+**cheap technically, but that does not make it right conceptually.** When someone taps *Understand a pattern*
+we know almost nothing durable about them — they may be curious, experimenting, or choosing the nearest
+available door. Persisting that into their encounter history **turns navigation behaviour into biographical
+material.**
+
+```
+   DOORWAY  —  "I chose this way in."
+        │
+        ├── Encounter context            ✅
+        ├── Recognition about me         ❌
+        ├── Elemental state              ❌
+        └── Durable personal history     ❌ by default
+```
+
+> **Do not use `living_encounter_events` merely because it is convenient.** If MLX later needs doorway
+> analytics, that is specified deliberately, under the analytics and privacy model — not smuggled in as an
+> encounter fact attached to a person's history.
+
+**Aggregate instrumentation is a legitimate but separate question.** *"Are 40% of new members choosing 'I
+don't know where to begin'?"* is valuable product knowledge. It is **not** a durable fact about any individual
+member, and it may not be obtained by writing one.
+
+**This keeps R4 honest.** Whether doorways recede must not rest on a hidden durable dossier of doorway
+choices. It rests on signals ruled in on their own terms.
+
 ### Standing design requirement — no cognitive cliff (Kelly, 2026-08-25)
 
 > **The landing page and MAIA House are two versions of the same world.** They are not designed separately.
@@ -1431,7 +1467,7 @@ opens**, not **what the member is dealing with**.
 **Prohibited in every one of these:** any statement about the member. Not *"it sounds like you're in
 transition."* The member has said nothing yet; there is nothing to reflect. (C1, C2.)
 
-### B.4 The doorway is a member act, not an inference
+### B.4 The doorway is a member act, not an inference  ·  **ruled by MLX-R3 (§0.1)**
 
 Modeled on `arrivalState`'s discipline:
 
