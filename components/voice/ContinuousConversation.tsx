@@ -17,6 +17,7 @@ import {
   isCaptureLossUnexpected,
   TRACK_MUTE_GRACE_MS,
   CAPTURE_HEARTBEAT_MS,
+  CAPTURE_RESTART_STALL_MS,
   CAPTURE_REASON_CODES,
   type CaptureLossCause,
 } from '@/lib/voice/micLiveness';
@@ -323,6 +324,16 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
    * what this whole path is for. Reset on any successful capture activity.
    */
   const selfHealAttemptedRef = useRef<boolean>(false);
+  /**
+   * When recognition ended while listening was still INTENDED, and no restart
+   * has become active since. 0 when nothing is outstanding.
+   *
+   * This is the clock for the failure mode the original watchdog could not
+   * see: recognition ends cleanly, the restart never arrives, and the member
+   * keeps talking to a mic that is simply over. Set on every onend that leaves
+   * listening intended; cleared by the next confirmed onstart.
+   */
+  const recognitionEndedAtRef = useRef<number>(0);
   const handleCaptureLossFnRef = useRef<(cause: CaptureLossCause) => void>();
   const attachTrackLossListenersFnRef = useRef<(stream: MediaStream) => void>();
   const reportVoiceStatusFnRef = useRef<(info: {
@@ -527,6 +538,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
       // will fire `never_armed` if audio never follows.
       captureArmedAtRef.current = Date.now();
       captureAudioOpenedRef.current = false;
+      recognitionEndedAtRef.current = 0; // a restart arrived — stall clock off
       markCaptureActivity();
       recognitionActiveRef.current = true; // Confirmed live (defensive: start paths also set this)
       setIsRecording(true);
@@ -734,6 +746,11 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
       logVoiceEvent('voice_recognition_ended');
       console.log('🏁 [onend] Recognition stopped');
       recognitionActiveRef.current = false; // Clear double-start guard
+      // 🩺 Start the restart-stall clock. Every path below that returns without
+      // restarting leaves this set, so the watchdog can catch the ones that
+      // return silently (recognition ended during TTS with no auto-resume;
+      // "conditions not met"). Cleared by the next confirmed onstart.
+      if (isListeningRef.current) recognitionEndedAtRef.current = Date.now();
       setIsRecording(false);
       isRecordingRef.current = false; // Update ref immediately
       onRecordingStateChange?.(false);
@@ -1113,6 +1130,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     captureArmedAtRef.current = 0;
     captureAudioOpenedRef.current = false;
     lastCaptureActivityAtRef.current = 0;
+    recognitionEndedAtRef.current = 0;
     isRestartingRef.current = false;
     restartInFlightRef.current = false;
 
@@ -1213,13 +1231,17 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     if (!isListening) return;
 
     const tick = () => {
+      // `recognitionActiveRef` is NO LONGER part of applicability. It used to
+      // be, and that was the defect: onend clears it as its first action, so
+      // the watchdog switched itself off at the exact moment a missing restart
+      // became possible. It is now passed through as a REGIME selector instead
+      // — live instance → measure production; no instance → measure the stall.
       const applicable =
         isListeningRef.current &&
         !isSpeakingRef.current &&
         !isProcessingRef.current &&
         !inputSuppressedRef.current &&
-        !isRestartingRef.current &&
-        recognitionActiveRef.current;
+        !isRestartingRef.current;
 
       const verdict = assessCaptureLiveness({
         now: Date.now(),
@@ -1227,6 +1249,8 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
         armedAt: captureArmedAtRef.current,
         audioOpened: captureAudioOpenedRef.current,
         applicable,
+        recognitionActive: recognitionActiveRef.current,
+        endedAt: recognitionEndedAtRef.current,
       });
 
       if (!verdict.dead || !verdict.cause) return;

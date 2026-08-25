@@ -84,6 +84,24 @@ export const CAPTURE_ARMING_SILENT_MS = 5_000;
  */
 export const TRACK_MUTE_GRACE_MS = 1_500;
 
+/**
+ * How long listening may remain INTENDED after recognition has ended, with no
+ * restart becoming active, before we call it a stall.
+ *
+ * This is the failure a tester hit on macOS Safari after 174 transcript results:
+ * recognition ended cleanly, once, and never came back. Capture was never
+ * "dead" in the sense the silent-death check looks for — it was over, and the
+ * restart that was supposed to follow never arrived.
+ *
+ * Calibration: the longest legitimate gap is the onend restart backoff, capped
+ * at 5s, plus the 600ms post-TTS auto-resume delay. Eight seconds clears both
+ * with margin. Time spent while MAIA is speaking or a turn is processing does
+ * NOT count toward it — those windows are gated out by the caller, because
+ * recognition is intentionally down there and a long reply must never be
+ * mistaken for a stall.
+ */
+export const CAPTURE_RESTART_STALL_MS = 8_000;
+
 /** Why capture stopped. Drives both the member-facing wording and telemetry. */
 export type CaptureLossCause =
   /** No event of any kind for CAPTURE_SILENT_DEATH_MS. The zombie. */
@@ -105,7 +123,9 @@ export type CaptureLossCause =
   /** Input device list changed underneath a live session. */
   | 'device_changed'
   /** Microphone permission was revoked mid-session. */
-  | 'permission_lost';
+  | 'permission_lost'
+  /** Recognition ended while listening was still intended, and never restarted. */
+  | 'restart_stall';
 
 /**
  * Canonical reason codes for telemetry and bug reports.
@@ -127,6 +147,7 @@ export const CAPTURE_REASON_CODES: Record<CaptureLossCause, string> = {
   restart_loop: 'RECOGNITION_RESTART_LOOP',
   abort_loop: 'RECOGNITION_ABORT_LOOP',
   inactivity: 'LISTENING_STOOD_DOWN',
+  restart_stall: 'RECOGNITION_RESTART_STALL',
 };
 
 export interface CaptureLivenessInput {
@@ -143,6 +164,22 @@ export interface CaptureLivenessInput {
    * legitimately torn down in those windows and silence means nothing.
    */
   applicable: boolean;
+  /**
+   * Is a recognition instance live right now (between `start()` and `onend`)?
+   *
+   * This splits the verdict into two regimes, and getting it wrong is what let
+   * a real failure through: when this is false the instance is GONE, so the
+   * silence checks below have nothing to measure — but that is exactly when a
+   * missing restart must be caught. An earlier version simply required this to
+   * be true, which made the watchdog switch itself off at the very moment the
+   * failure began.
+   */
+  recognitionActive: boolean;
+  /**
+   * When recognition ended while listening was still intended. 0 when no
+   * restart is outstanding. Only consulted while `recognitionActive` is false.
+   */
+  endedAt: number;
 }
 
 export interface CaptureLivenessVerdict {
@@ -160,12 +197,30 @@ export interface CaptureLivenessVerdict {
  * simulating a browser or advancing real time.
  */
 export function assessCaptureLiveness(input: CaptureLivenessInput): CaptureLivenessVerdict {
-  const { now, lastActivityAt, armedAt, audioOpened, applicable } = input;
+  const { now, lastActivityAt, armedAt, audioOpened, applicable, recognitionActive, endedAt } = input;
 
-  // Not listening, or in a window where teardown is expected: silence is
-  // meaningless here, and a false positive would interrupt a working session.
+  // Not listening, or in a window where teardown is expected (MAIA speaking, a
+  // turn processing, a restart already in flight): silence is meaningless here,
+  // and a false positive would interrupt a working session.
   if (!applicable) return { dead: false, silentForMs: 0 };
 
+  // ── Regime 2: recognition is GONE. ────────────────────────────────────────
+  // Listening is still intended (the caller's `applicable` gate proves it) but
+  // no instance is live. The silence checks below cannot help — there is no
+  // instance to be silent. What matters is whether the restart that should
+  // follow ever arrived. This is the regime an earlier version excluded by
+  // requiring an active instance, which switched the watchdog off exactly when
+  // the failure began.
+  if (!recognitionActive) {
+    if (endedAt <= 0) return { dead: false, silentForMs: 0 }; // nothing outstanding
+    const stalledForMs = now - endedAt;
+    if (stalledForMs >= CAPTURE_RESTART_STALL_MS) {
+      return { dead: true, cause: 'restart_stall', silentForMs: stalledForMs };
+    }
+    return { dead: false, silentForMs: Math.max(0, stalledForMs) };
+  }
+
+  // ── Regime 1: an instance is live. Measure whether it is producing. ───────
   // Never started: there is nothing to be dead. The start path owns this.
   if (armedAt <= 0) return { dead: false, silentForMs: 0 };
 
@@ -248,6 +303,11 @@ export function describeCaptureLoss(
       return (
         'Microphone permission was withdrawn, so MAIA stopped hearing you. ' +
         'Re-allow the mic for this site, then tap to resume.' + preserved
+      );
+    case 'restart_stall':
+      return (
+        'MAIA stopped listening and did not pick back up on its own. ' +
+        'Tap the mic to start listening again.' + preserved
       );
     case 'inactivity':
       return 'MAIA stopped listening after a long quiet stretch. Tap the mic when you want to keep going.' + preserved;
