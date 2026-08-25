@@ -21,6 +21,11 @@ import {
   type CaptureLossCause,
 } from '@/lib/voice/micLiveness';
 import { getContinuityBuffer } from '@/lib/voice/conversationContinuityBuffer';
+import {
+  readTailSnapshot,
+  shouldEmitThrottled,
+  type UtteranceSendTrigger,
+} from '@/lib/voice/utteranceTail';
 // import { Analytics } from "../../lib/analytics/supabaseAnalytics"; // Disabled for Vercel build
 
 // =============================================================================
@@ -357,6 +362,27 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
   const lastSentRef = useRef<string>("");
   const lastSentTimeRef = useRef<number>(0); // Track when we last sent a transcript
   const isCallingProcessRef = useRef(false); // CRITICAL: Prevent concurrent processAccumulatedTranscript calls
+  // ── V5 utterance-tail witness, continuous path — observation only ───────
+  // Same events and field names as the composer-mic witness (PR #1099), so one
+  // parser reads both capture paths. This path is the one that produced the
+  // r03jxcim trace: `voice_transcribe_result` is emitted only from here.
+  // Nothing below is branched on; these refs feed telemetry and nothing else.
+  const lastInterimAtRef = useRef<number>(0);
+  const lastFinalAtRef = useRef<number>(0);
+  const lastInterimCharsRef = useRef<number>(0);
+  const lastResultAtRef = useRef<number>(0);
+  const timerArmedAtRef = useRef<number>(0);
+  const interimTelemetryAtRef = useRef<number>(0);
+  const armTelemetryAtRef = useRef<number>(0);
+  // Correlates every event of one turn. Incremented at commit.
+  const turnCommitIdRef = useRef<number>(0);
+  // True between a commit and the next recognition start — the window in which
+  // a further result is ordering F (a trailing result arriving after commit).
+  const committedRef = useRef<boolean>(false);
+  const committedAtRef = useRef<number>(0);
+  // Set immediately before each processAccumulatedTranscript() call so the
+  // commit event can name its own cause without changing the function signature.
+  const sendTriggerRef = useRef<UtteranceSendTrigger>('other');
   const isRestartingRef = useRef(false);
   // True only while an onend auto-restart is *continuing the same utterance*.
   // iOS Safari effectively ignores `recognition.continuous`, so it fires onend
@@ -515,6 +541,10 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     });
 
     recognition.onstart = session.guard(gen, () => {
+      // 👁️ Close the ordering-F window: recognition has restarted, so any
+      // further result belongs to the next turn rather than trailing the
+      // committed one. Bounds the window so it cannot mislabel new speech.
+      committedRef.current = false;
       // Reset per-cycle flags before the new cycle begins. The no-speech
       // ACROSS-cycle counter is intentionally NOT reset here — it only resets
       // on a successful speech_started or on a user-driven stop.
@@ -591,6 +621,23 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
       });
       console.log('🎤 [onresult] FIRED - event:', event.results.length, 'results');
 
+      // 👁️ Ordering F: a result arrived after this turn was already committed.
+      // Emitted BEFORE the echo-suppression guards, because a trailing tail
+      // swallowed by suppression is exactly the case that would otherwise leave
+      // no trace at all. `inputSuppressed`/`maiaSpeaking` are reported rather
+      // than judged — echo and a genuine trailing tail are separated by the
+      // analyst reading msSinceCommit, not pre-filtered here.
+      if (committedRef.current) {
+        logVoiceEvent('voice_result_after_commit', {
+          turnCommitId: turnCommitIdRef.current,
+          msSinceCommit: committedAtRef.current ? Date.now() - committedAtRef.current : -1,
+          resultCount: event.results?.length ?? 0,
+          isFinal: event.results?.[event.results.length - 1]?.isFinal === true,
+          inputSuppressed: inputSuppressedRef.current,
+          maiaSpeaking: isSpeakingRef.current,
+        });
+      }
+
       // 🛡️ GUARD: If transcript is suppressed (MAIA speaking on web), ignore for processing
       // but allow the audio level loop to continue for barge-in detection
       if (inputSuppressedRef.current) {
@@ -633,11 +680,54 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
           } else {
             accumulatedTranscript.current = finalTranscript.trim();
           }
+          // 👁️ A final landed — the outstanding tail is resolved (NOT ordering C).
+          // `subsumedInterimCharCount` > 0 here is NORMAL: the final ordinarily
+          // commits the interim that previewed it. Only material outstanding at
+          // a COMMIT boundary indicates loss.
+          {
+            const finalAt = Date.now();
+            const subsumed = lastInterimCharsRef.current;
+            const sinceInterim = lastInterimAtRef.current > 0
+              ? Math.max(0, finalAt - lastInterimAtRef.current) : -1;
+            lastFinalAtRef.current = finalAt;
+            lastResultAtRef.current = finalAt;
+            lastInterimCharsRef.current = 0;
+            logVoiceEvent('voice_result_final', {
+              turnCommitId: turnCommitIdRef.current,
+              finalCharCount: accumulatedTranscript.current.length,
+              deltaCharCount: finalTranscript.trim().length,
+              subsumedInterimCharCount: subsumed,
+              msSinceLastInterim: sinceInterim,
+              resultIndex: event.resultIndex,
+              resultCount: event.results.length,
+            });
+          }
         } else if (interimTranscript) {
           console.log('📝 Got INTERIM transcript:', interimTranscript);
           // For interim, show accumulated finals + current interim
           // This gives live feedback while preserving finals
           const currentInterim = interimTranscript.trim();
+          // 👁️ The outstanding tail. Timestamps and counts update on EVERY
+          // interim; only the log line is throttled, so the snapshot read at a
+          // commit boundary is exact rather than throttle-quantized.
+          {
+            const interimAt = Date.now();
+            lastInterimAtRef.current = interimAt;
+            lastResultAtRef.current = interimAt;
+            lastInterimCharsRef.current = currentInterim.length;
+            if (shouldEmitThrottled(interimAt, interimTelemetryAtRef.current)) {
+              interimTelemetryAtRef.current = interimAt;
+              logVoiceEvent('voice_result_interim', {
+                turnCommitId: turnCommitIdRef.current,
+                interimCharCount: currentInterim.length,
+                finalCharCount: accumulatedTranscript.current.length,
+                msSinceLastFinal: lastFinalAtRef.current > 0
+                  ? Math.max(0, interimAt - lastFinalAtRef.current) : -1,
+                resultIndex: event.resultIndex,
+                resultCount: event.results.length,
+              });
+            }
+          }
           // Don't modify accumulatedTranscript for interim - just pass to callback
         }
 
@@ -652,9 +742,51 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
           clearTimeout(silenceTimerRef.current);
         }
 
+        // 👁️ Timer armed. On THIS path the timer is armed by a result of
+        // either kind but its callback commits accumulated FINALS alone — so
+        // armedByInterim=true with armedByFinal=false is the arming that
+        // cannot carry what armed it. Throttled: arming happens per result.
+        {
+          const armedAt = Date.now();
+          timerArmedAtRef.current = armedAt;
+          if (shouldEmitThrottled(armedAt, armTelemetryAtRef.current)) {
+            armTelemetryAtRef.current = armedAt;
+            logVoiceEvent('voice_silence_timer_armed', {
+              turnCommitId: turnCommitIdRef.current,
+              armedByFinal: finalTranscript.length > 0,
+              armedByInterim: finalTranscript.length === 0 && interimTranscript.length > 0,
+              interimCharCount: lastInterimCharsRef.current,
+              finalCharCount: accumulatedTranscript.current.length,
+              timerDeadlineMs: silenceThreshold,
+            });
+          }
+        }
+
         // Start new silence timer - use the configurable threshold
         console.log(`⏱️ Starting silence timer (${silenceThreshold}ms)`);
         silenceTimerRef.current = setTimeout(() => {
+          // 👁️ Witness FIRST — the state that PRODUCED the decision, before the
+          // decision consumes or clears anything. tailAtRisk=true here is
+          // ordering D in mechanical form.
+          {
+            const firedAt = Date.now();
+            const committable = accumulatedTranscript.current.trim();
+            logVoiceEvent('voice_silence_timer_fired', {
+              turnCommitId: turnCommitIdRef.current,
+              timerAgeMs: timerArmedAtRef.current ? firedAt - timerArmedAtRef.current : -1,
+              timerDeadlineMs: silenceThreshold,
+              committableCharCount: committable.length,
+              willCommit: !isProcessingRef.current && committable.length > 0,
+              ...readTailSnapshot({
+                now: firedAt,
+                lastInterimAt: lastInterimAtRef.current,
+                lastFinalAt: lastFinalAtRef.current,
+                lastInterimChars: lastInterimCharsRef.current,
+                finalChars: committable.length,
+              }),
+            });
+            sendTriggerRef.current = 'silence_timer';
+          }
           console.log('🔕 Silence detected - processing transcript');
           console.log('   isProcessingRef:', isProcessingRef.current);
           console.log('   accumulatedTranscript:', accumulatedTranscript.current);
@@ -1653,6 +1785,30 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
 
     // Send transcript
     console.log('📤 [ContinuousConversation] Sending transcript to parent:', transcript);
+    // 👁️ Commit: what actually left the client, past every dedup and echo guard,
+    // and what was still outstanding when it did. tailAtRisk=true on this row is
+    // observed speech left behind by this exact commit. Opens the ordering-F
+    // window: further results until the next recognition start are trailing.
+    {
+      const committedAt = Date.now();
+      turnCommitIdRef.current += 1;
+      committedRef.current = true;
+      committedAtRef.current = committedAt;
+      logVoiceEvent('voice_turn_committed', {
+        turnCommitId: turnCommitIdRef.current,
+        trigger: sendTriggerRef.current,
+        committedCharCount: transcript.length,
+        ...readTailSnapshot({
+          now: committedAt,
+          lastInterimAt: lastInterimAtRef.current,
+          lastFinalAt: lastFinalAtRef.current,
+          lastInterimChars: lastInterimCharsRef.current,
+          finalChars: transcript.length,
+        }),
+      });
+      // Don't let a stale label be inherited by an unrelated later call site.
+      sendTriggerRef.current = 'other';
+    }
     setMicState('SUBMITTING', 'processAccumulatedTranscript');
     lastTranscriptSubmittedAtRef.current = Date.now();
     onTranscript(transcript);
@@ -1783,6 +1939,21 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
           console.log('✅ [VAD] Natural completion detected after', silenceDuration, 'ms - sending to MAIA');
           silenceStartTimeRef.current = 0; // Reset to prevent duplicate triggers
           hasSpokenRef.current = false; // Reset for next turn
+          // 👁️ The other commit boundary. Recorded so a dropped tail can be
+          // attributed to VAD completion vs. the silence timer rather than guessed.
+          logVoiceEvent('voice_turn_commit_requested', {
+            turnCommitId: turnCommitIdRef.current,
+            trigger: 'vad',
+            timerDeadlineMs: adaptiveSilenceThreshold,
+            ...readTailSnapshot({
+              now,
+              lastInterimAt: lastInterimAtRef.current,
+              lastFinalAt: lastFinalAtRef.current,
+              lastInterimChars: lastInterimCharsRef.current,
+              finalChars: accumulatedTranscript.current.trim().length,
+            }),
+          });
+          sendTriggerRef.current = 'vad';
           if (!isProcessingRef.current) {
             processAccumulatedTranscript();
           }
