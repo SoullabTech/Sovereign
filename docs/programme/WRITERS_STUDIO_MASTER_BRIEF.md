@@ -10,17 +10,28 @@
 > on canonical here, independently of any candidate, for the same reason PR #1044 preserved the
 > Writer's Desk rulings: a governing document one force-push from disappearing is not custody.
 >
-> ## ⛔ Binding state — do not disturb
+> ## Programme state at Amendment 1
 >
 > ```text
-> WS-01 CANDIDATE   e92f532396705daaf6cd346445276a08a5957904
->                   feature/ws-01-source-custody-v2 — PINNED
-> SPECIFICATION     FROZEN v1.1
-> P0-M              PASS
-> P0-D              OWED — the only next WS-01 proof
-> A–H / G1 / felt   NOT REACHED
-> CANVAS FREEZE     REMAINS
+> PROGRAMME STATE AT AMENDMENT 1        recorded 2026-08-25
+>
+> CANONICAL BASE     9be736aa2
+> WS-01 CANDIDATE    e92f532396705daaf6cd346445276a08a5957904
+>                    feature/ws-01-source-custody-v2
+>                    PINNED at time of amendment
+> SPECIFICATION      FROZEN v1.1
+> P0-M               PASS
+> P0-D               OWED — only next proof at time of amendment
+> A–H / G1 / felt    NOT REACHED
+> CANVAS FREEZE      REMAINS
+> WS-02              CLOSED
 > ```
+>
+> ⚠️ **This block records the programme state at Amendment 1. It is not a permanently current
+> deployment or status record** — canonical advances the moment this amendment merges. Later
+> evidence and duly recorded programme decisions supersede the operational state above **without
+> requiring reinterpretation of this amendment.** For live state, read the evidence records and
+> the frozen specification, not this block.
 >
 > The roadmap in this brief is **programme context, not permission to begin a unit.** The
 > executable boundary is the pinned WS-01 candidate and P0-D only. Deployment, tests and a passing
