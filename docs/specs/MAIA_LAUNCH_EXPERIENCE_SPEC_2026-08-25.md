@@ -178,7 +178,7 @@ The three-part grammar this completes:
 
    MY LIFE            The life I am living and becoming
    MY CONTRIBUTION    What I am making, learning, developing and offering
-   MY PRACTICE        The people I am entrusted to serve
+   MY PRACTICE        The people, encounters and work you hold in service of others
 ```
 
 **Why this beat the more familiar option.** *Creative Work* would have bought immediate familiarity by
@@ -197,7 +197,7 @@ Practice* sound like the same thing. The ruled pair does not:
 | | |
 |---|---|
 | **My Contribution** | what I make and offer |
-| **My Practice** | my entrusted work with people |
+| **My Practice** | the people, encounters and work I hold in service of others |
 
 That is a constitutional distinction, not a labelling preference.
 
@@ -241,6 +241,20 @@ authored under Invariant 16 constraint after two prior attempts were rejected fo
 alternatives such as *"your unfolding life…"* drift back toward naming the member rather than the place. **Any
 new subtitle for Living Field passes the same test the label did**; elsewhere, promote what is already written.
 
+**What recedes, and what does not (clarification, Kelly 2026-08-25):**
+
+```
+   FIRST ARRIVAL                          LATER
+
+   Living Field                           Living Field
+   Your lived experience, patterns,
+   relationships and what is unfolding.
+```
+
+**The explanatory scaffolding recedes. The destination remains stable.** A subtitle becoming quiet must never
+mean a place becoming hard to find. *The system teaches its vocabulary instead of making the member decode it
+forever.*
+
 **The combination this achieves:** *the structure is recognizable; the destinations are ownable.* Soullab
 becomes neither an incomprehensible mystical system nor a generic productivity app.
 
@@ -265,7 +279,7 @@ becomes neither an incomprehensible mystical system nor a generic productivity a
    │   ├── Studios
    │   └── eligible contribution places
    │
-   └── MY PRACTICE                [role gated] the people and relationships entrusted to my care
+   └── MY PRACTICE                [role gated] the people, encounters and work you hold in service of others
        ├── People / Caseload
        ├── Sessions
        ├── Session Room
@@ -833,6 +847,130 @@ that a stranger must know what to do:
 
 **Gaps confirmed:** Search, Practices, Notifications have no routes. Profile and Account are two names for one
 function. Soul Portrait has routes but no registry entry. Relationships is off the rail (R2).
+
+---
+
+## 2.97 · Visual & Category Constraint — binding (Kelly, 2026-08-25)
+
+> **Soullab is not to be designed or positioned as a therapy platform, healthcare product,
+> practice-management application, generic wellness app, or AI chatbot. Those use cases may exist within it,
+> but none defines the whole.**
+>
+> The governing aesthetic is **modern, elemental, elegant, human and quietly futuristic.** The public and
+> authenticated experiences communicate **a living ecosystem for human life, consciousness, relationship,
+> creation and service.** Practitioner functionality must feel like **one sphere within that ecosystem — not
+> the product's identity.**
+
+**Why this is being recorded now.** Since the Ecosystem Standard (§2.95) some of the working language has
+drifted toward practice-management vocabulary. The correction is not to remove practitioners — they belong —
+but to stop one expression of the ecosystem from becoming its category.
+
+### 2.97.1 The category
+
+**Not** *"AI for therapists and their clients."* Closer to:
+
+> **A living ecosystem for human consciousness, relationship, creativity, growth — and those who accompany
+> others through those processes.**
+
+Which includes therapists, and equally: teachers · coaches · facilitators · guides · healers · spiritual
+directors · mentors · artists · writers · practitioners · leaders · creators · seekers · **ordinary people
+navigating life.**
+
+### 2.97.2 Visual grammar to refuse
+
+Patient portals · EHRs · appointment software · therapist directories · mental-health apps · clinical
+dashboards · pastel wellness branding · generic meditation apps · "client management" software.
+
+**Even when practitioner functionality exists underneath.**
+
+### 2.97.3 The five qualities
+
+| | |
+|---|---|
+| **Elemental** | Fire, Water, Earth, Air, Aether influence **atmosphere, motion, texture, spatial transitions, light, visual rhythm, subtle colour behaviour, interaction states** — not decorative icons. *The elements should feel inhabited, not illustrated.* |
+| **Human** | People, language, relationships, voice, handwriting, presence, lived experience. **No robots, neural-network imagery, holographic brains, or AI clichés.** |
+| **Futuristic, not sci-fi** | Fluidity, contextual interfaces, adaptive navigation, spatial depth, restrained motion, intelligence appearing where needed, interfaces growing quieter with familiarity. *The future should feel calmer than the present, not more technologically noisy.* |
+| **Elegant** | High visual restraint. Fewer things, given more meaning. Strong typography, generous spacing, purposeful surfaces. **No feature-card soup.** |
+| **Immersive** | The person has **entered Soullab**, not clicked through webpages. House, places, transitions, MAIA and the elemental field create spatial continuity. |
+
+**On the elements specifically:** five large buttons reading 🔥 FIRE · 💧 WATER · 🌍 EARTH · 🌬 AIR · ✨ AETHER
+is too literal and reads as a spiritual app. Instead the interface *expresses* them — Fire as emergence,
+direction, initiation, illumination; Water as depth, movement, emotional continuity; Earth as grounded
+surfaces, embodiment, stability; Air as openness, relational connection, language, perspective; Aether as
+space, integration, silence, the whole. The member gradually realizes: *oh — the elemental architecture is
+everywhere.* **Far more sophisticated than teaching the framework through icons**, and consistent with §7
+(the elemental layer stays underneath) and §A.6 (teaching after orientation).
+
+### 2.97.4 MAIA should not look like conventional AI
+
+Avoid the ubiquitous **big chatbot window + avatar + prompt suggestions.** MAIA converses conventionally where
+useful, but in the House she is **a presence in the environment**: sometimes conversation, sometimes a short
+invitation, sometimes continuity, sometimes a doorway, sometimes silence, sometimes *"something from yesterday
+may belong here."*
+
+> **The sophistication is that MAIA does not always demand the foreground.**
+
+This is the same requirement as §2.9's rejection clause, stated aesthetically: a threshold that is a chat box
+with links fails both.
+
+### 2.97.5 Vocabulary corrections
+
+| Prefer | Over | Note |
+|---|---|---|
+| People | Patients | |
+| Encounters | Appointments | |
+| Sessions | — | where genuinely appropriate |
+| Practice | Practice management | |
+| Notes / Observations | Clinical notes | unless actually clinical |
+| Relationship | Case | where jurisdiction allows |
+
+**`Caseload`** may remain an internal or profession-specific surface, but **must not become one of Soullab's
+defining public words.** (It is currently a route, `/caseload`, and appears in the §R5 spine under My Practice
+— acceptable internally, not as public vocabulary.)
+
+**Framing the helper side as vocation, not profession.** Not *"For therapists and practitioners"* but:
+
+> **For those who accompany others** — *if part of your life is helping, teaching, guiding, healing,
+> facilitating or creating spaces where others can grow, Soullab can become part of your practice too.*
+
+Actual practitioner capabilities are shown below that framing, not in place of it. **This amends §2.95.6's
+05c section heading.**
+
+### 2.97.6 The ecosystem reveal is spatial, not a card grid
+
+```
+                              MAIA
+                             AETHER
+                               ◌
+
+                         YOUR SOULLAB
+
+              MY LIFE                  MY CONTRIBUTION
+            Living Field                   Ideas
+           Relationships                   Wisdom
+              Journal                      Studios
+              Anchor
+           Soul Portrait
+
+                          MY PRACTICE
+                      for those who accompany
+
+                     People · Encounters
+                      Sessions · Co-Lab
+```
+
+Indicative, not literal. **It should feel like an ecology of interconnected places, not a software sitemap.**
+
+### 2.97.7 Visual acceptance criterion — a gate, not brand prose
+
+Applied to the first high-fidelity prototypes (roadmap phase 3), before any production route is rewritten:
+
+> ❌ **Fails** if the reaction is *"beautiful therapist software."*
+> ✅ **Passes** if the reaction is *"I haven't quite seen a digital place like this before — but somehow I
+> immediately know how to enter it."*
+
+Both halves are required. Unfamiliar-and-unenterable fails as surely as familiar-and-generic; that pairing is
+the same standard as §2.9.7 (*the familiar interface holds the unfamiliar depth*), measured on the prototype.
 
 ---
 
