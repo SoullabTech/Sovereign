@@ -617,7 +617,16 @@ function renderSpiral() {
 
   const C = 250, R0 = 76, STEP = 44;
   const rOf = i => R0 + i * STEP;
+  const LAY = (typeof JarvisSpiralLayout !== 'undefined') ? JarvisSpiralLayout : null;
   const byId = {};
+
+  // RING-LABEL EXCLUSION ZONE (founder ruling 2026-08-25): ring semantics win,
+  // nodes yield. Ring labels name the standing class, which is what makes the
+  // radial coordinate carry meaning; overprinting them makes the whole geometry
+  // ambiguous. A node yields ANGULARLY along its own ring. Its RADIUS is its
+  // standing and is never moved for legibility. See spiral-layout.js.
+  const bands = SP_RINGS.map((r, i) => LAY.ringLabelBand(C, rOf(i), r.key));
+
   const placed = sp.nodes.map((n, idx) => {
     const ring = spRingIndex(n.standing);
     const sector = Math.max(0, SP_PHEN.indexOf(n.phenomenon));
@@ -629,23 +638,11 @@ function renderSpiral() {
     const rr = rOf(ring);
     const perPeer = Math.min(30, (74 / (2 * Math.PI * rr)) * 360);
     const spread = peers.length > 1 ? (within - (peers.length - 1) / 2) * perPeer : 0;
-    const ang = (sector * 72 - 90 + spread) * Math.PI / 180;
-    // Labels sit RADIALLY OUTWARD of their mark and anchor by angle. Centred
-    // labels collided across adjacent sectors: 72 degrees at the inner radius is
-    // ~78px of arc against ~120px of text. Radial placement makes neighbouring
-    // sectors diverge instead of converge.
-    const cos = Math.cos(ang), sin = Math.sin(ang);
-    const anchor = cos > 0.35 ? 'start' : (cos < -0.35 ? 'end' : 'middle');
-    const pad = anchor === 'middle' ? 0 : 11;
-    const pt = { ...n, x: C + cos * rr, y: C + sin * rr, ring, idx,
-                 lx: C + cos * (rr + 4) + (anchor === 'start' ? pad : anchor === 'end' ? -pad : 0),
-                 // Radial anchoring separates ADJACENT SECTORS. Peers inside one
-                 // sector at the top/bottom both anchor 'middle' and land on the
-                 // same baseline, so they still need a vertical stagger.
-                 ly: C + sin * (rr + 4) + (anchor === 'middle'
-                       ? (sin < 0 ? -12 - (within % 2) * 14 : 17 + (within % 2) * 14)
-                       : 4 + (within % 2) * 13),
-                 anchor };
+    const ideal = sector * 72 - 90 + spread;
+    const text = n.label.length > 24 ? n.label.slice(0, 22) + '\u2026' : n.label;
+    const g = LAY.resolve(C, rr, ideal, within, text, bands);
+    const pt = { ...n, ring, idx, x: g.x, y: g.y, lx: g.lx, ly: g.ly,
+                 anchor: g.anchor, yieldedDeg: g.yieldedDeg, clears: g.clears };
     byId[n.id] = pt;
     return pt;
   });
@@ -660,7 +657,7 @@ function renderSpiral() {
 
   const rings = SP_RINGS.map((r, i) => `
     <circle class="sp-ring" cx="${C}" cy="${C}" r="${rOf(i)}"></circle>
-    <text class="sp-ring-lab" x="${C}" y="${C - rOf(i) + 10}" text-anchor="middle">${r.key}</text>`).join('');
+    <text class="sp-ring-lab" x="${C}" y="${C - rOf(i) + LAY.RING_LAB_INSET}" text-anchor="middle">${r.key}</text>`).join('');
   const spokes = SP_PHEN.map((ph, i) => {
     const a = (i * 72 - 90 + 36) * Math.PI / 180;
     const la = (i * 72 - 90) * Math.PI / 180, lr = rOf(SP_RINGS.length - 1) + 22;
