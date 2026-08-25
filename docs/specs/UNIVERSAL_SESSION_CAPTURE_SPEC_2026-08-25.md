@@ -42,24 +42,43 @@ most and may never manufacture Recognition."*
 A capture does not fit any of the four. It is not audio, not derived text, not an attribution guess, and not
 meaning-made-later. It is **a practitioner's authored observation, made in the room, in their own words.**
 
-**This spec proposes a fifth layer, and it sits at the top for authority:**
+**Ratified amendment (Kelly, 2026-08-25).** The first draft called Observation a fifth layer *"above
+Reflection."* **"Above" is withdrawn** — it implies epistemic superiority, which is not what is meant.
+Observation is **closer to source**, not more true. The ratified model is a chain of custody, not a ranking:
 
 ```
-   LAYER               AUTHORED BY        MAY BE CORRECTED BY      MAY BE ASSERTED AS
-   ─────               ───────────        ───────────────────      ──────────────────
- 0 Observation ★NEW    a human, in the    only its author          what that human observed
-   (Capture)           moment
- 1 Raw audio           the room           nothing                  ground truth of sound
- 2 Transcript          derivation         a human                  derived text
- 3 Attribution         inference          a human                  a guess, always
- 4 Reflection          MAIA / later self  a human                  meaning made later
+   CAPTURE           raw retained source — audio, transcript, attribution
+        │            (the Session Room's original layers 1–3 sit in this band)
+        ▼
+   OBSERVATION ★     human-authored noticing / marking / dictation about what occurred
+        │
+        ▼
+   REFLECTION        interpretation, meaning-making, synthesis
+        │
+        ▼
+   RECOGNITION       qualified pattern attribution
+        │
+        ▼
+   INTEGRATION /     how prior material responsibly re-enters relationship
+   RETURN
 ```
+
+The distinction this protects, in the practitioner's own material:
+
+> *"Client became angry when discussing her father."* — **Observation.**
+> *"The father complex is activating Water."* — **Recognition.**
+
+These are not the same epistemic object and must never be stored, displayed, or synthesized as if they were.
+That difference is cheap to hold now and impossible to reconstruct once AIN is working across thousands of
+captured encounters.
 
 Two consequences follow immediately and govern the whole design:
 
-- **A capture outranks a MAIA draft.** The draft is Reflection; the capture is Observation. A synthesis may
-  cite captures; it may never replace, rewrite, or absorb them.
-- **MAIA may never author a capture.** Nothing at layer 4 may write a row at layer 0. That is the exact
+- **A MAIA draft may never absorb an observation.** The draft is Reflection; the mark is Observation, one band
+  closer to source. A synthesis may cite observations; it may never replace, rewrite, or absorb them.
+  **Authorship and provenance survive every transformation** — this is the property the whole chain exists for.
+- **MAIA may organize observations; MAIA may never retroactively become their author.** Nothing at Reflection
+  may write a row at Observation. That is the exact
   upward-only violation the Direction of Authority exists to prevent — meaning manufactured at a higher layer
   and then presented as something the practitioner observed.
 
@@ -99,7 +118,7 @@ practitioner-marked only.** The proposal should not invent a new provenance voca
    Descript chapters and Patreon drafts. Naming the new object `Capture` guarantees confusion in code review
    forever. **This spec uses `EncounterMark`** (`lib/encounter/marks/`). Naming is open — §9 Q1.
 
-2. **`session_voice_notes` is not the foundation — and is a finding.** It stores `transcript TEXT NULL`
+2. **`session_voice_notes` is not the foundation — RED, legacy privacy debt (see §2.4).** It stores `transcript TEXT NULL`
    alongside `client_id` in plaintext, with no `_enc` columns. It predates the free-text PHI doctrine
    (Feb 2026 vs. the doctrine's Phase 2 work), so this is legacy rather than a regression. But under the
    doctrine — *"free-text that may reference a client is PHI unless explicitly exempted"* — **the new object
@@ -110,6 +129,27 @@ practitioner-marked only.** The proposal should not invent a new provenance voca
    no Stage A dual-write, and — instructively — it **refused to add a `visibility` column** because member
    sharing had not been ruled: *"encoding a column for it now would make the schema assert a policy that does
    not exist."* The proposal's `visibility: private | shareable` field falls under exactly that refusal. See §3.
+
+### 2.4 `session_voice_notes` — RED, and a separate unit
+
+**Classified (Kelly, 2026-08-25): RED — legacy privacy debt, separate remediation unit. NOT "Capture
+architecture blocked."** The difference matters: this must not derail the Capture programme, and it must not
+sit as a footnote either.
+
+A bounded remediation unit establishes, in order:
+
+1. whether the table is actually populated in production;
+2. what data category the rows contain;
+3. which runtime paths still write and read it;
+4. retention behaviour;
+5. encryption and storage controls around the database itself;
+6. migration and deletion implications;
+7. whether it should be retired into the new capture substrate at all.
+
+> **Do not casually migrate the contents into the new constitutional system merely because the new system is
+> cleaner. Legacy material needs custody first.**
+
+Nothing in §3 onward depends on the outcome.
 
 ---
 
@@ -173,13 +213,18 @@ sitting three feet from that person is:
 - **free text about an identified client** the moment it is transcribed — PHI by default;
 - **audible to the client**, which is a relational fact, not only a data fact.
 
-Three positions are defensible and the difference matters:
+Three positions are defensible and the difference matters. **USC-Q2 is ruled: P3.**
+
+> **MARK and SPEAK are constitutionally different acts.** MARK says *"something here matters."* SPEAK opens a
+> microphone in the presence of another human being and introduces new content. **MARK does not grant SPEAK
+> consent**, and no interface may let one imply the other.
+
 
 | Position | Claim | Consequence |
 |---|---|---|
 | **P1** | A practitioner's dictated observation is their own utterance, not a recording of the encounter. | Governed by PHI rules only; no `record` consent needed. |
 | **P2** | Any mic opened in the room is a media stream. | R-A1 applies in full; SPEAK is unavailable without client record-consent. |
-| **P3** (this spec's recommendation) | It is the practitioner's utterance **and** it opens a mic in a shared room. | SPEAK requires its own consent kind — `practitioner_dictation` — disclosed in the threshold's `text_snapshot`, plus: push-to-talk only (never ambient, never always-on), local Whisper transcription (already self-hosted), audio discarded on successful transcription by default, and a visible indicator on the practitioner's device while the mic is open. |
+| **P3** ✅ **RATIFIED (Kelly, 2026-08-25)** | It is the practitioner's utterance **and** it opens a mic in a shared room. | SPEAK requires its own consent kind — `practitioner_dictation` — disclosed in the threshold's `text_snapshot`, plus: push-to-talk only (never ambient, never always-on), local Whisper transcription (already self-hosted), audio discarded on successful transcription by default, and a visible indicator on the practitioner's device while the mic is open. |
 
 P3 costs one consent kind and a sentence at the threshold. P1 saves that and risks the exact thing the
 Session Room's threshold ruling exists to prevent: a second human recorded without an authored consent row.
@@ -308,7 +353,7 @@ Instead of an empty textarea after a fifty-minute session: **the practitioner's 
 - ❌ Three note systems (Watch notes / mobile notes / Session Room notes). One object, many surfaces — this is
   the proposal's best structural instinct and it should be held rigidly.
 - ❌ Ambient or always-on listening on any device. Push-to-talk only, on every surface, forever.
-- ❌ AI-generated captures. Layer 4 may not write layer 0 (§1).
+- ❌ AI-generated captures. Reflection may not write Observation (§1).
 - ❌ Automatic classification of a capture into insight / emotion / body / pattern without a practitioner act.
 - ❌ Any mark surface that renders when no session is active — it would have nowhere to land (R-M1) and would
   quietly become a general note-taking app, which is not what this is.
@@ -363,7 +408,7 @@ easier to write?* If it does not, the Watch will not save it.
 | **Q1** | Object name — `EncounterMark`? `SessionMark`? | `lib/capture` is taken by Capture Mode (§2.3). |
 | **Q2** | Which SPEAK consent position — P1, P2, or **P3** (§4)? | Determines whether a new consent kind, threshold language, and a `text_snapshot` change are in scope. Blocks the schema. |
 | **Q3** | How does a native Watch/phone extension authenticate, given the WebView's `x-member-id` posture? | No answer means no Watch, regardless of design. |
-| **Q4** | Does legacy `session_voice_notes` (plaintext transcript + `client_id`) need remediation? | Out of scope here, but it is a live PHI surface and this spec found it. |
+| ~~Q4~~ | *Resolved by classification (Kelly, 2026-08-25): RED — legacy privacy debt, separate remediation unit. Does **not** block Capture. See §2.4.* | — |
 | **Q5** | Do captures ever become client-visible? | Currently unruled and modelled as *no column* (§3.1). Same ruling as *Notes from Larry* in the Now What? door map. |
 
 ---

@@ -33,6 +33,83 @@ The architectural change is that **conversation becomes D, not A.**
 
 ---
 
+## 0.1 · Ratified rulings
+
+### MLX-Q1 — GREEN (Kelly, 2026-08-25): `/maia` is the canonical authenticated MAIA threshold.
+
+```
+   /maia  =  MAIA House / threshold
+                  │
+                  ├── orientation
+                  ├── continuity
+                  ├── doorways
+                  ├── direct conversation
+                  └── rooms / worlds
+```
+
+**The conceptual correction this carries:** *conversation is no longer synonymous with the route `/maia`.*
+Conversation becomes one thing the threshold opens onto, not the thing the route *is*.
+
+Three constraints ride with the ruling:
+
+1. **`/home` must not remain a competing MAIA arrival constitution.** It may redirect, alias, or serve a
+   broader account-shell purpose during migration if something genuinely still depends on it — but it may not
+   independently answer *"where do I begin?"*
+2. **Existing deep links are preserved, not broken.** Routes and query states that currently enter conversation
+   directly continue to work. The principle: **one default threshold, many intentional deep entrances.**
+3. **Migration behaviour is established before routing changes.** This is a constitution, not a routing
+   demolition.
+
+### The doorway ruling (affirmed)
+
+A doorway is **Encounter**, not Recognition. Clicking *Understand a pattern* may mean, at most:
+
+```
+   member intentionally entered through doorway X          ✅ context for MAIA's opening
+   member_spiral_state = WATER                             ❌ never
+```
+
+**It is not psychological evidence.** It may contextualize how MAIA opens; it may not become a claim about
+the person.
+
+### MLX-Q5 — RESOLVED (Kelly, 2026-08-25): continuity launches in layers.
+
+Four tiers with **different evidentiary requirements**, replacing one vague "MAIA remembers" bucket:
+
+```
+   KEPT       explicit continuity   — the person chose to retain it        ✅ launch primitive
+   RECENT     factual continuity    — where they have recently been        ✅ safe to show
+   CONTINUE   contextual continuity — resume eligible existing work        ✅ member gesture
+   DEEPER     recognition           — only where proven (FAST/CORE)        ⏸ not promised
+```
+
+The launch continuity claim narrows accordingly. **Not launchable as a universal claim:** *"You don't have to
+begin your life again from zero"* — it promises a universality the runtime cannot guarantee while DEEP breaks
+at `buildComprehensiveVoicePrompt`. **Launchable now:**
+
+> *When you've chosen to keep something, MAIA can help you return to it.*
+> *What matters doesn't have to disappear when the conversation ends.*
+
+The stronger line **graduates** when the full recall path passes the Failure Test. *We do not hold launch
+hostage to the entire memory frontier; we avoid promising more than the runtime reliably delivers.*
+
+### Standing design requirement — no cognitive cliff (Kelly, 2026-08-25)
+
+> **The landing page and MAIA House are two versions of the same world.** They are not designed separately.
+
+The public page and the authenticated product use the **same conceptual grammar** — the same doorway words,
+the same room names, the same continuity vocabulary (Kept / Recent / Continue). Entering the House must feel
+like **recognition**, not surprise. Any divergence between the two vocabularies is a defect in this spec, not
+a copy difference.
+
+### Standing constraint — do not replace working systems
+
+This programme changes **how people encounter** what exists. It reuses, without rewriting: arrival state,
+current Rooms, the House concepts, Keeps/atoms, existing conversation, consent gates, relationship
+infrastructure, and voice/text. **No giant "new MAIA UX" branch** — small slices, one at a time.
+
+---
+
 ## 1 · The correction the research pass needs
 
 The memo reads as if MAIA has no orientation architecture. It has a great deal — under different names, and
@@ -61,6 +138,78 @@ work and re-litigate settled rulings.
 
 Everything below is scoped to those three gaps. Where a memo idea duplicates shipped work, this spec says so
 and does not re-specify it.
+
+---
+
+## 1.5 · What a new member actually walks through today
+
+**This section is new evidence (audited 2026-08-25), and it changes the shape of Surface B.**
+
+`CLAUDE.md`'s documented onboarding chain is **stale**. It describes
+`/begin → /intro-maia → /intro-daimon → /test-elemental → /faq → /onboarding → /maia`. In the source today:
+
+| Documented | Reality |
+|---|---|
+| `/begin` | **deprecated 2026-05-16**, `redirect('/signin')` |
+| `/intro-maia`, `/intro-daimon` | **do not exist as routes** |
+| `/test-elemental` | **deprecated 2026-06-04**, `redirect('/signin')` |
+| canonical entry | **`/signup` (new) · `/signin` (returning)**, both `UnifiedAuth` |
+
+### The live flow
+
+```
+  /signup ──► email ──► 6-digit code ──► name ──► "Enter MAIA"      ← clean. 3 phases.
+                                                    │                  (or Google / Apple / biometric)
+                                                    ▼
+  /onboarding  ──►  CompleteWelcomeFlow, entered at step 2
+                          │
+                          ├─ step 2  ConsciousnessPreparation   ◄── 10-way self-classification
+                          ├─ step 3  BirthDataStep              ◄── birth date / time / place
+                          └─ step 4  SageTealWelcome            ◄── the five elements, named
+                                                    │
+                                                    ▼
+                                                  /maia
+```
+
+### The finding
+
+Before a new member has said one word to MAIA, they are asked to place themselves among **ten philosophical
+lenses**: Maslow · Frankl · Jung · Nietzsche · Hesse · Tolstoy · Brown · Somatic · Buddhist · Integral.
+
+That is the *exact inverse* of the thesis of this spec. It requires the member to understand our framework
+before we help them, and it asks for a self-concept vocabulary that Invariant 14 says we may not assume
+travels (*"Psyche & Shadow"*, *"Will & Transformation"*, *"Moral Conscience"* are not neutral descriptions of
+a person's situation — they are a tradition).
+
+**And the answer is never used.** `handleConsciousnessPreparationComplete` writes
+`localStorage.consciousnessPreparation` and **nothing in the codebase reads that key** — not MAIA's prompt,
+not the server, not `/api/members/progress`. Verified by search across `app/`, `lib/`, `components/`.
+
+> We ask a stranger to classify themselves ten ways, then discard the answer.
+
+Two smaller observations from the same walk:
+
+- **`BirthDataStep`** asks birth date/time/place. It is genuinely well-built — it has a real consent model
+  (`opted_in` / `declined`), it skips on future runs, and its skip affordance becomes *more* prominent on
+  save error. It is nonetheless a data ask standing before first value.
+- **`SageTealWelcome`** presents Fire · Water · Earth · Air · Aether with their questions — teaching the
+  elemental map at the threshold, which §7 of this spec argues against on constitutional grounds, not merely
+  stylistic ones.
+
+### What this changes
+
+Surface B is **not** "add an arrival ceremony." It is:
+
+> **Replace three framework screens with one doorway.**
+
+And it is unusually cheap to do, because the screen with the heaviest cognitive load has **no downstream
+dependency to break**. The doorway in §4 is a strictly smaller ask (one tap, human language, nothing retained)
+that produces *more* usable context than the ten-lens grid produces today — which is none.
+
+**Surface proliferation, noted for the ruling in §11 Q2:** the tree also carries `/welcome`, `/welcome-back`,
+`/welcome-flow`, `/beta-welcome`, `/beta-onboarding`, `/partner-welcome`, `/the-beginning`, and `/intro`.
+Several are redirects or partner variants; they have not been individually audited here. One threshold
+constitution (MLX-Q1) implies a disposition for each.
 
 ---
 
@@ -110,88 +259,157 @@ the new burden.
 
 ## 3 · Surface A — Public MAIA landing
 
-**Layer: Live surface, Designed restructure.** No copy below ships without the §10 claim pass.
+**Layer: Live surface, Designed restructure. Direction ratified by Kelly, 2026-08-25 — this section replaces
+the earlier seven-section simplification.**
 
-### A.1 The job
+### A.0 The ruling that reshapes this surface
 
-Fifteen seconds to: *what is this, why is it different, what happens if I press the button.*
+> **The landing page should not merely sell MAIA and send them into the product. It should be a compressed
+> experience of the product itself.**
 
-### A.2 Structure (desktop)
+A visitor should arrive at `Enter Soullab` already understanding the **grammar of the world**: *I arrive
+somewhere; MAIA helps orient me; I can talk about ordinary human things; there are deeper rooms; I can keep
+what matters; the relationship develops over time; I remain in control.* The transition into the House should
+then feel like **recognition rather than surprise**.
+
+This supersedes the earlier draft's instinct to cut the page down to seven sections. The correction: the
+problem was never *how much* the page said — it was that depth arrived **before** orientation and that the CTA
+handed the burden back. Everything may appear. It appears in **layers of increasing depth**.
+
+### A.1 The page spine
 
 ```
-┌──────────────────────────────────────────────────────────────────────┐
-│  SOULLAB                                   About · Research · Sign in│
-├──────────────────────────────────────────────────────────────────────┤
-│                                                                      │
-│                         ( holoflower, quiet )                        │
-│                                                                      │
-│         A different kind of intelligence for the life                │
-│                    you are actually living.                          │
-│                                                                      │
-│    MAIA helps you understand what you are experiencing, keep what     │
-│    matters, and find your own way forward.                           │
-│                                                                      │
-│              [  Meet MAIA  ]     See how it works ↓                  │
-│                                                                      │
-├──────────────────────────────────────────────────────────────────────┤
-│  WHAT BRINGS PEOPLE HERE                                             │
-│  ┌───────────────┐ ┌───────────────┐ ┌───────────────┐              │
-│  │ Life is       │ │ Something is  │ │ I'm trying to │              │
-│  │ changing      │ │ weighing on me│ │ make a        │              │
-│  │               │ │               │ │ decision      │              │
-│  └───────────────┘ └───────────────┘ └───────────────┘              │
-│  ┌───────────────┐ ┌───────────────┐ ┌───────────────┐              │
-│  │ Something     │ │ I want to     │ │ I'm making    │              │
-│  │ between me    │ │ understand    │ │ something     │              │
-│  │ and someone   │ │ myself        │ │ that matters  │              │
-│  └───────────────┘ └───────────────┘ └───────────────┘              │
-│                                                                      │
-├──────────────────────────────────────────────────────────────────────┤
-│  WHAT TALKING WITH MAIA IS LIKE                                      │
-│    [ Change ] [ A relationship ] [ Creative work ]   ← selectable    │
-│    ┌────────────────────────────────────────────────┐               │
-│    │ short, real, transcript-grounded exchange      │               │
-│    └────────────────────────────────────────────────┘               │
-│                                                                      │
-├──────────────────────────────────────────────────────────────────────┤
-│  A RELATIONSHIP THAT DEVELOPS WITH YOU                               │
-│    Today            Talk through what is happening.                  │
-│    Over time        Notice what keeps returning.                     │
-│    When you return  You do not begin your life again from zero.      │
-│                                                                      │
-│         MAIA remembers with consent. Never by stealth.               │
-│                                                                      │
-├──────────────────────────────────────────────────────────────────────┤
-│  A HOUSE, NOT A CHATBOT        ( holoflower with rooms around it )   │
-│                                                                      │
-├──────────────────────────────────────────────────────────────────────┤
-│  WHY MAIA IS DIFFERENT — four statements, not fifteen features       │
-├──────────────────────────────────────────────────────────────────────┤
-│  UNDERNEATH  AIN OS · Spiralogic · sovereign infrastructure ·        │
-│              consent architecture · research         ( collapsed )   │
-└──────────────────────────────────────────────────────────────────────┘
+  01  INVITATION          What is asking for your attention?
+  02  DOORWAYS            What can I bring to MAIA?
+  03  ARRIVAL             What happens when I enter?
+  04  CONVERSATION        What does MAIA actually feel like?
+  05  THE HOUSE           What exists beyond the conversation?      ◄ centrepiece
+  06  CONTINUITY / KEEPS  What develops over time?
+  07  RELATIONSHIPS       Can MAIA help with the people in my life?
+  08  KNOW YOURSELF       Journal · Soul Portrait · patterns
+  09  CREATE              Can I work and make things here?
+  10  ELEMENTS            What is the deeper map?
+  11  VOICE + TEXT        How do I interact?
+  12  CONSENT / PRIVACY   Can I trust this?
+  13  AIN / ARCHITECTURE  What makes it fundamentally different?
+  14  AFTER SIGNUP        Show me exactly where I'm going.
+  15  BEGIN               Enter Soullab.
 ```
 
-### A.3 Rules
+**The circle, not the funnel.** 01 and 15 ask the same question. A visitor who scrolls the whole page returns
+to where they started, now able to answer it.
 
-- **The six "what brings people here" cards are the same six doorways as Surface B and C.** One vocabulary
-  across public, arrival, and House. A member who clicks *"Life is changing"* on the landing page and then
-  signs in should meet that same door, in the same words.
-- **The architecture section moves below the experience**, not above it. AIN OS remains — as *evidence for the
-  promise*, not as a comprehension requirement.
-- **The demo exchanges must be real transcript material**, member-consented or founder-authored, never
-  synthesized "example" dialogue presented as representative. (Claim discipline: a fabricated exchange
-  presented as what MAIA does is capability inflation regardless of how accurate we believe it to be.)
-- **`Meet MAIA` replaces `Begin a conversation`.** The current CTA hands the orientation burden back at the
-  exact moment we have earned interest.
+### A.2 The rule that makes depth safe
 
-### A.4 What is removed from the current eleven-section landing
+> **A landing page that mirrors the journey thereby asserts the journey exists.**
 
-Not deleted — **demoted below the fold or moved to `/about`**: Portfolio, Past Sites, Book Announcement,
-Projects. These are Soullab-the-studio material; they compete with MAIA-the-product at the moment of decision.
-This is a recommendation, not a ruling — see §11 Q4.
+Each section inherits the claim layer of the capability it depicts. The spine above is fixed; **which sections
+ship at launch is gated**, section by section, by `MARKETING_CLAIM_DISCIPLINE.md`. The gate is not editorial
+taste — a section depicting an unbuilt room is capability inflation regardless of how carefully it is worded.
 
----
+| # | Section | Rests on | Layer | Launch disposition |
+|---|---|---|---|---|
+| 01 | Invitation | positioning only | **Live** | ✅ ship |
+| 02 | Doorways | the doorway set (§4) | **Designed** | ⚠️ ships **with** Surface B, not before |
+| 03 | Arrival | Surface B | **Designed** | ⚠️ same gate as 02 |
+| 04 | Conversation | live conversation | **Live** | ✅ ship — real transcript material only (A.4) |
+| 05 | The House | rooms that exist | **mixed** | ⚠️ **grid must show only live rooms** — see A.3 |
+| 06 | Continuity / Keeps | atoms, `return_preference` | **Live** | ✅ ship — this is the launch continuity primitive |
+| 07 | Relationships | `member_relationships`, `relationship_content`, `/relationships` | **Designed** | ⚠️ **off the member rail since 2026-07-05** — see A.3 |
+| 08 | Know yourself | Journal (live), Soul Portrait (`/soul-portrait/*` exists) | **mixed** | ⚠️ verify Soul Portrait reaches a member before depicting it |
+| 09 | Create | Ideas, Wisdom, Book/Vision Studio (audience-gated) | **mixed** | ⚠️ depict only what an ordinary member reaches |
+| 10 | Elements | conductor + hysteresis, `member_spiral_state` | **Live** | ✅ ship — **as description, never as "pick one"** |
+| 11 | Voice + text | live | **Live** | ✅ ship |
+| 12 | Consent / privacy | shipped consent gates | **Live** | ✅ ship — our strongest owned ground |
+| 13 | AIN / architecture | canon + infrastructure | **Live** (as description) | ✅ ship, collapsed by default |
+| 14 | After signup | **the actual post-signup flow** | **blocked** | ❌ see A.5 — this is the honesty test |
+| 15 | Begin | — | **Live** | ✅ ship |
+
+### A.3 The two sections that need a decision before they can be drawn
+
+**05 · The House — the centrepiece, and the highest-risk section on the page.**
+The proposed grid (`Relationships · Journal · Soul Portrait · Creation · Practices · Rooms`) asserts a member
+world. Against the canon and the tree:
+
+```
+   Journal          ✅ live, in the rail
+   Keeps            ✅ live (atoms)
+   Changes          ✅ live
+   Soul Portrait    ⚠️ routes exist (/soul-portrait/{generate,preview,view,[slug]}) — verify member reach
+   Relationships    ⚠️ substrate + page, OFF the rail since 2026-07-05
+   Practices        ❌ no route in the tree
+   Commitments      ❌ Vision — THE_HOUSE.md states plainly it does not exist
+   Becoming         ❌ Vision — same
+```
+
+**Rule: the House illustration renders only rooms a member can enter today.** Not greyed, not "coming soon" —
+absent, per the Now What? door-map precedent. The framing sentence *"MAIA is the host who knows the house"*
+is Live and excellent; *"MAIA knows the whole house"* remains ❌ while two of four canonical rooms are Vision.
+
+**07 · Relationships — the sharpest gap between the story and the runtime.**
+It is genuinely one of the strongest differentiators from generic AI, and it has real substrate
+(`member_relationships`, `relationship_content`, relationship memory Phase 1, a `/relationships` page with
+outer / inner / transpersonal realms, and a ratified `RELATIONSHIP_ROOM_CONSTITUTION`). But `maiaNav.ts`
+records why it left the rail:
+
+> *"removed from the rail 2026-07-05: both surfaced only a contextual panel with no process behind it.
+> Restore here once each is attached to an actual process."*
+
+A landing section inviting people to explore conflict, family patterns and intimacy, opening onto a room the
+House does not currently offer, fails the Failure Test. **Two honest paths:** (a) restore Relationships to the
+rail with a real process before launch — the substrate is there, this is the recommendation; or (b) keep the
+section in forward voice and do not depict a room. **Ruling needed — §11 Q2.**
+
+### A.4 Section 04 — show, don't claim
+
+Three or four selectable exchanges: *a relationship · a life transition · a decision · a creative problem.*
+This shows the quality of the relationship rather than describing it, and it carries one of the strongest
+onboarding messages we have:
+
+> **You don't need to know how to prompt an AI.**
+
+**Constraint:** real transcript material, member-consented or founder-authored. A synthesized exchange
+presented as representative is capability inflation no matter how accurate we believe it to be.
+
+### A.5 Section 14 is the honesty test for the entire launch
+
+Section 14 promises to *show exactly what happens after signup*:
+
+```
+   1  CREATE YOUR SOULLAB
+   2  ARRIVE IN MAIA HOUSE
+   3  CHOOSE WHAT NEEDS ATTENTION
+   4  TALK OR TYPE WITH MAIA
+   5  KEEP WHAT MATTERS
+   6  RETURN, EXPLORE, GO DEEPER
+```
+
+**Today, step 3 is a ten-way philosophical self-classification whose answer is discarded (§1.5), and steps 2
+and 3 do not exist in that order at all.** The diagram cannot be drawn honestly until Surface B ships.
+
+This is not a copy problem to write around — it is the **forcing function that orders the whole launch**. It
+independently confirms §12's sequencing, and for a stronger reason than "the landing should describe something
+real": *this specific section cannot be authored until the arrival it depicts exists.* Build B, then draw 14.
+
+### A.6 Elements (10) — teaching after orientation
+
+The elemental section describes **how experience moves**, not what the member is:
+
+> Fire — what wants to happen · Water — what you're feeling · Earth — what is real and embodied ·
+> Air — how you understand and relate · Aether — the larger pattern
+>
+> *MAIA learns to recognize these movements with you, rather than forcing you into a type.*
+
+That last clause is the whole constitutional load, and it is currently contradicted by the product: the live
+`SageTealWelcome` step teaches the five elements **at onboarding**, before the member has spoken (§1.5). The
+landing page's honest version of this section and Surface B's removal of that screen are **the same fix**.
+
+### A.7 What leaves the page
+
+The current `SoullabLanding` carries eleven sections including Portfolio, Past Sites, Book Announcement and
+Projects. None appear in the ratified spine. They are Soullab-the-studio material and compete with
+MAIA-the-product at the moment of decision. **Recommendation: move to `/about`**, preserved, not deleted.
+The ratified spine effectively answers the old Q4; it is retained in §11 only to confirm the disposition.
 
 ## 4 · Surface B — Guided Arrival
 
@@ -555,20 +773,29 @@ the payload onto Keeps, which is unambiguously live. **Recommendation: (c) for l
 
 ---
 
-## 11 · Rulings required before build
+## 11 · Rulings — status
 
-| # | Question | Why it blocks |
+### Resolved
+
+| # | Ruling | Disposition |
 |---|---|---|
-| **Q1** | Is `/maia` the single authenticated threshold, with `/home` absorbed and redirected? | Two homes cannot both be the threshold; the whole surface hangs on this. |
-| **Q2** | May a doorway choice ever persist beyond the session? | Persisted doorways become a Recognition-layer claim; needs its own consent surface (C1). Default in this spec: **no**. |
-| **Q3** | What is the recede rule for the doorway grid (§5.5), and is it member-visible? | Silent adaptation is a sovereignty problem; no adaptation is a burden problem. |
-| **Q4** | Does the public landing demote Portfolio / Past Sites / Book / Projects below MAIA? | Studio identity vs product clarity — a founder call, not a design one. |
-| **Q5** | Which continuity claim carries the launch payload (§10)? | Determines whether the DEEP wire is a launch blocker. |
+| **Q1** | `/maia` is the canonical authenticated threshold | ✅ **GREEN** (§0.1) — `/home` may not remain a competing arrival constitution; deep links preserved; migration behaviour established before routing changes |
+| **Q4** | Portfolio / Past Sites / Book / Projects demoted below MAIA | ✅ answered by the ratified spine (§A.1) — move to `/about`, preserved |
+| **Q5** | Which continuity claim carries the launch payload | ✅ **Kept / Recent / Continue / Deeper**, layered by evidence (§0.1) |
 
-**Runtime verifications required before any "Live" tag here is repeated outward:**
+### Open — the remaining MLX set
+
+| # | Question | What it changes |
+|---|---|---|
+| **R1** | **The three onboarding screens.** ConsciousnessPreparation (10 lenses, answer discarded), BirthDataStep, SageTealWelcome — what happens to each? | Defines Surface B's actual scope. This is the largest single UX change on the critical path. |
+| **R2** | **Relationships at launch.** Restore to the rail with a real process, or keep section 07 in forward voice with no room depicted? | Whether the landing page's strongest differentiator can be drawn as a place. |
+| **R3** | **Doorway persistence.** Session-scoped only, or recorded as a member-visible fact? | Whether a doorway is purely Encounter framing or becomes a stored trace. |
+| **R4** | **Doorway recede rule** (§5.5). What triggers it, and is it member-visible and reversible? | Whether orientation scaffolding becomes a permanent frame. |
+
+**Runtime verifications required before any "Live" tag in this document is repeated outward:**
 
 ```bash
-# Doorway/House substrate — what a returning member actually has
+# Continuity substrate — what a returning member actually has
 ssh soullab@minisforum 'docker exec maia-postgres psql -U soullab maia_consciousness -c \
   "SELECT count(*) FILTER (WHERE return_preference IS NOT NULL) AS atoms_with_pref, count(*) AS atoms FROM member_memory_atoms;"'
 
@@ -578,29 +805,94 @@ ssh soullab@minisforum 'docker logs maia-sovereign --since 24h 2>&1 | grep -E "c
 
 ---
 
-## 12 · Sequencing
+## 12 · Master roadmap (ratified 2026-08-25)
 
-**None of this touches production UI in this branch.** Order of work, each gated on the prior:
+| Phase | Work | Outcome | Launch-critical |
+|---|---|---|---|
+| **0** | Constitutional baseline — MLX + Capture specs | what we're building, what we may not violate | ✅ **done** |
+| **1** | Resolve rulings — MLX first, then Capture | architecture frozen enough to design | ◀ **here** (R1–R4) |
+| **2** | MLX-02 — one frozen target architecture: Landing → Arrival → House → MAIA → Return | one coherent member journey | ✅ |
+| **3** | Visual prototype — high-fidelity desktop + mobile journey | experience the product before touching production | ✅ |
+| **4** | Threshold testing with unfamiliar people | find confusion before coding it permanently | ✅ |
+| **5** | Build in slices | the new launch experience exists in runtime | ✅ |
+| **6** | Auth + journey hardening | nobody falls through the front door | ✅ |
+| **7** | Launch proof — full new-user and returning-user re-walk | GREEN / AMBER / RED decision | ✅ |
+| **8** | Capture system | Session Room + observation architecture | **parallel — must not delay launch** |
+| **9** | Deeper continuity — FAST/CORE/DEEP unification | richer return, more intelligent House | post-launch |
+| **10** | Native / Watch surfaces | ambient capture | later |
 
-1. **Ruling pass** on Q1–Q5 (§11). Nothing is built before Q1.
-2. **Doorway vocabulary lock** — one set of six words used on landing, arrival, and House. Voice review
-   against `docs/canon/SOULLAB_VOICE_DOCTRINE_DAOIST.md` and the opening-turn copy in §4.3.
-3. **Surface B (Guided Arrival)** first — it is additive, sits inside the existing `arrivalState` model, is
-   reversible, and is where a new member's experience is worst today.
-4. **Surface C (House threshold)** second, behind a flag, evidence-gated per the §5.4 matrix.
-5. **Surface A (public landing)** last — it should describe an experience that already exists, per claim
-   discipline. Restructuring the landing before B and C exist would be selling tomorrow's story as today's.
+### Phase 3 — the prototype is not bureaucracy
 
-**Growth-obligation answers** (required by `CLAUDE.md` for any capability increase):
+Individual screens can each look lovely while the journey remains confusing. The prototype covers **both full
+journeys, desktop and phone**:
+
+```
+   new visitor  → landing → signup → first arrival → House → doorway → MAIA → House → another room
+   returning    → sign in → House → Continue → MAIA → Keeps / room
+```
+
+The bar before anyone rewrites a production route: *"I understand what this world is."*
+
+### Phase 4 — the one test that matters
+
+Not *"do you like this design?"* but: **can someone who knows nothing about Soullab figure out what to do?**
+Unfamiliar people, no coaching, six questions:
+
+1. What do you think MAIA is?
+2. What could you use this for?
+3. What would you do first?
+4. What if you didn't know what you needed?
+5. What do you think MAIA remembers?
+6. Where would you go tomorrow to continue?
+
+Unanswerable questions are architecture defects, not copy defects.
+
+### Phase 5 — slice order
+
+Public landing → `/maia` House shell → first arrival → Doorways → contextual MAIA entry → returning states /
+Keeps → mobile → accessibility + performance → instrumentation. **One slice at a time.**
+
+### Phase 6 — auth is a launch gate, not backend housekeeping
+
+The best landing experience in the world loses people at `Enter Soullab → email code → confusion → wrong route
+→ wrong identity → blank MAIA`. Two journeys must be verified end to end as **launch acceptance**:
+
+```
+   LANDING → CREATE ACCOUNT → VERIFY → FIRST ARRIVAL → /maia → HOUSE → DOORWAY → MAIA
+   RETURNING → SIGN IN → /maia → RECOGNIZED RETURNING HOUSE STATE
+```
+
+---
+
+## 13 · The launch line
+
+**Not needed before launch:** full DEEP memory · Apple Watch capture · native universal capture · every Studio
+integrated into the House · perfect elemental inference · full relational geometry · every future room.
+
+**Needed:** a compelling public explanation · effortless signup/signin · a coherent `/maia` House · clear
+doorways · a graceful *"I don't know where to begin"* path · excellent voice/text conversation entry · honest
+continuity through Kept / Recent / Continue · solid mobile · verified consent and trust behaviour.
+
+**Version 1 of the House answers *where can I begin?*** The next evolution answers *where am I?*, and
+eventually *what seems to be moving in my life?* — informed by Keeps, patterns, relationships, projects,
+journal, Soul Portrait, changes, elemental movements, unfinished work.
+
+> **We earn that intelligence. We do not simulate it at launch.**
+
+---
+
+## 14 · Growth-obligation answers
+
+Required by `CLAUDE.md` for any capability increase.
 
 - *What uncertainty does this introduce, and how is it preserved?* — A doorway is the member's stated
-  intention, which may be wrong or provisional. Preserved by making it session-scoped, non-persisted, and
+  intention, which may be wrong or provisional. Preserved by keeping it session-scoped, non-persisted, and
   never reflected back as a fact about the member (§4.4).
-- *What provenance and ownership boundaries does this require?* — The two-channel rule (§6.2): the member
-  sees all of their own material; MAIA receives only what the existing consent gates permit.
-- *What new responsibility does this create?* — Suggesting entry points is a form of influence. The
-  responsibility is that doorways stay **situations, not framings of the person** (C4), and that the
-  scaffolding recedes rather than becoming a permanent frame around the member's own attention (C6).
+- *What provenance and ownership boundaries does this require?* — The two-channel rule (§6.2): the member sees
+  all of their own material; MAIA receives only what the existing consent gates permit.
+- *What new responsibility does this create?* — Suggesting entry points is a form of influence. Doorways must
+  stay **situations, not framings of the person** (C4), and the scaffolding must recede rather than becoming a
+  permanent frame around the member's own attention (C6).
 
 ---
 
