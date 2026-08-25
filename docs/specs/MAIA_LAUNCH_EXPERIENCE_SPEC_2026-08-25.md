@@ -508,6 +508,41 @@ member, and it may not be obtained by writing one.
 **This keeps R4 honest.** Whether doorways recede must not rest on a hidden durable dossier of doorway
 choices. It rests on signals ruled in on their own terms.
 
+### MLX-R4 — GREEN (Kelly, 2026-08-25): the member's world displaces the doorways.
+
+**No trigger. No counting. No new tracking.** The threshold has a **fixed order**, and the member's own
+material occupies it as it accumulates:
+
+```
+   THRESHOLD ORDER (fixed)          NEW MEMBER              ESTABLISHED MEMBER
+   ───────────────────────          ──────────              ──────────────────
+   1  Continue                      (nothing yet)           Continue ────────┐
+   2  Kept                          (nothing yet)           Kept             │ their world
+   3  Recent                        (nothing yet)           Recent ──────────┘
+   4  Doorways                      Doorways ← at top       Doorways ← below
+   5  I don't know where to begin   present                 present
+   6  Your Soullab                  short                   full
+```
+
+A member with nothing kept meets doorways first **because there is nothing above them.** A member with a rich
+world meets their world first, and the doorways move down the page — **they are never switched off.**
+
+> **The recede is a consequence of having a life here — not a decision the system makes about the member.**
+
+**Why this closes the question cleanly:**
+
+- **Consistent with R3** — requires no durable doorway record, no visit counting, no readiness inference.
+  The only inputs are material the member authored (Keeps) or plain fact (recent sessions).
+- **Consistent with R5b(ii)** — what changes is *position*, never *availability*. Explanatory scaffolding may
+  quieten; destinations stay stable and findable.
+- **Consistent with §2.9.6** — this is the *"here is what you can do"* → *"here is your world"* evolution,
+  implemented as arrangement rather than as adaptation.
+- **Nothing to announce, nothing to undo.** There is no moment where the House changes its mind about
+  someone, so there is no silent personalization to disclose and no restore affordance to design.
+
+**This is how the House evolves from "here's how to use Soullab" into "here is your Soullab" — by the member
+filling it, not by the system deciding they are ready.**
+
 ### Standing design requirement — no cognitive cliff (Kelly, 2026-08-25)
 
 > **The landing page and MAIA House are two versions of the same world.** They are not designed separately.
@@ -1584,15 +1619,13 @@ this strip is shorter for a new member than for an established one, and never co
 **Every row is evidence-gated.** No card renders from a *capability*; it renders from a *fact about this
 member*. This is the single most important implementation rule on this surface.
 
-### C.5 Adaptive disappearance (C6)
+### C.5 Adaptive disappearance (C6) — **ruled by MLX-R4 (§0.1)**
 
-The doorway grid is scaffolding. Proposed rule — **needs a ruling, §11 Q3**:
-
-> Once a member has crossed into speech on N consecutive visits without using a doorway, the grid collapses
-> behind a single quiet line — *"or choose a way in"* — and the composer takes the threshold.
-
-The recede must be **member-legible and reversible**, never a silent personalization. A one-line, one-tap
-restore. And the trigger is a member behavior count, not an inferred readiness score.
+The earlier draft here proposed a count-based trigger (*"N consecutive visits without using a doorway"*).
+**That is superseded and was foreclosed by R3** — it required a durable record of doorway non-use, which R3
+refuses. The ruled mechanism is the fixed threshold order in R4: the member's own material occupies the top as
+it accumulates, and the doorways move down rather than switching off. No counting, no trigger, no
+announcement.
 
 ---
 
