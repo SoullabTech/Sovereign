@@ -383,7 +383,10 @@ practitioner redesign* (launch swallowed by rebuilding practice-management softw
 
 *Meaning in the foreground, machinery available behind it.*
 
-### MLX-R2 — GREEN, gated (Kelly, 2026-08-25): verify, then restore Relationships to the rail.
+### MLX-R2 — GREEN, gated (Kelly, 2026-08-25): verify, then restore Relationships to the House under My Life.
+
+**Vocabulary correction (Kelly):** *restore* means **into the House under My Life** — it does **not** mean
+resurrecting the retired left rail as a design pattern. The rail is gone; the destination returns.
 
 **Placement:** `MY SOULLAB → MY LIFE → Relationships`, **conditional on the verification walk below.**
 
@@ -422,15 +425,49 @@ Under a real authenticated member on production, not a fixture:
 6. **Empty state** — a member with no relationships meets a real empty state, not a broken panel. This is
    what the 2026-07-05 removal was actually about.
 
+**The member journey to walk — no code changes:**
+
+```
+   House → Relationships → create or access a relationship → check-in → entry
+         → navigation → return to House
+```
+
+Checked at each step: authenticated access · empty state · creating a relationship · existing relationship
+state · check-in · entries and history · consent boundaries · **mobile behaviour** · return to House ·
+**no dead routes or misleading affordances.**
+
 **Outcomes:**
 
 - **Pass** → register in `maiaNav.ts` under My Life; landing section 07 may depict a room.
-- **Partial** → restore the personal field only; shared spaces stay out of launch; section 07 written to the
-  restored scope.
+- **Defects found** → **repair the smallest bounded defects first.** *Do not downgrade the whole concept
+  because a button or a route needs repair.*
 - **Fail** → section 07 reverts to forward voice, and the placement returns to the open list.
+
+**Why "personal field only" was rejected.** It sounds safer but would quietly amputate what makes the
+Relationships architecture significant. *Human relationships inherently involve another person, even when only
+one member is reflecting.* The consent boundary governs **what becomes shared or crosses jurisdictions** — it
+does not exist to prevent a member from having a rich personal relationship field. Collapsing Relationships
+into a private diary to avoid solving consent correctly is not a safe choice; it is a smaller product.
+
+**Why immediate restore was rejected.** It would make the prototype carry an assumption that has not earned
+its place. The walk is cheap enough to perform now: *one authenticated walk converts "reachable in source"
+into "real launch surface."*
 
 **Landing section 07 is gated on the same result** — it may not depict a room the walk has not confirmed
 (§A.3, and the Failure Test).
+
+**Why this matters beyond placement.** The four dimensions together are what keep Soullab from becoming
+another inward-facing self-improvement product:
+
+| | |
+|---|---|
+| **My Life** | myself in lived experience |
+| **My Contribution** | what moves from me into the world |
+| **My Practice** | where I accompany others |
+| **Relationships** | **where self and other actually meet** |
+
+Relationships sits structurally under My Life, but it carries the relational dimension the whole ecosystem
+depends on — and should probably become one of the most visible parts of Soullab.
 
 **This closes the last unresolved placement in the vocabulary spine, conditionally.** The ecosystem shell is
 architecturally frozen pending this walk.
