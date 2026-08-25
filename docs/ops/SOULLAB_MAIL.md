@@ -78,8 +78,10 @@ requiring evidence that names the recipient.
 ## Configuration
 
 ```
-EMAIL_PROVIDER=resend | memory     # default: resend
-RESEND_API_KEY=...                 # required by the resend provider
+EMAIL_PROVIDER=resend | memory            # default: resend
+RESEND_API_KEY=...                        # required by the resend provider
+EMAIL_LEDGER_FINGERPRINT_KEY=<64 hex>     # MAIL-02; distinct from auth/session secrets
+EMAIL_LEDGER_FINGERPRINT_KEY_VERSION=1    # bump on rotation
 ```
 
 Two refusals, both deliberate:
@@ -112,6 +114,64 @@ unconfigured) additionally emits a greppable emergency line:
 
 Purpose, lane, correlation id and idempotency key also travel with the message
 as provider tags, so the vendor dashboard segments the same way the logs do.
+
+## Delivery ledger (MAIL-02)
+
+Every attempt is recorded in `email_delivery_attempts`, opened **before** the
+provider call and settled after.
+
+> **The ledger observes sending; it does not authorize sending.**
+> No send path may consult it before calling a provider. A ledger that can gate
+> mail is a ledger that can take P0 authentication down. Enforced by
+> `lib/email/ledger/__tests__/observes-not-authorizes.test.ts`.
+
+**Two axes, never collapsed:**
+
+| Column | Answers |
+|---|---|
+| `state` | what do we **know** happened? |
+| `failure_class` | **why** did it fail? |
+
+`state` is `attempting` · `accepted` · `indeterminate` · `refused`. A row still
+`attempting` long after `created_at` is itself a finding: the process died between
+the provider call and the outcome write.
+
+| `SendFailureKind` | `state` |
+|---|---|
+| — (provider issued a message id) | `accepted` |
+| `no_message_id` | `indeterminate` — the vendor said nothing usable |
+| `exception` | `indeterminate` — a transport throw may have died *after* the provider acted |
+| everything else | `refused` — a known terminal non-send |
+
+`not_configured` records as `refused` (unambiguous, just not a vendor refusal);
+`failure_class` preserves the distinction.
+
+**Recipient attribution is keyed HMAC**, never a plain address and never an
+unsalted hash. `memberRef()` is right for member ids — a UUID has ~122 bits of
+entropy — and wrong for email addresses, whose practical space is small enough to
+invert an unsalted digest by dictionary attack. Requires
+`EMAIL_LEDGER_FINGERPRINT_KEY` (32+ bytes, distinct from auth/session secrets) and
+`EMAIL_LEDGER_FINGERPRINT_KEY_VERSION`. With no key, the fingerprint is `NULL` —
+never an unsalted fallback.
+
+**Writes are best-effort and can never fail a send.** The cost is that the ledger
+under-reports, hardest when the system is stressed, so dropped writes are counted
+out of band (`email_ledger_write_failures_total`) and every query returns it:
+
+```
+12,403 sends observed · 7 ledger writes lost     ← honest (isFloor: true)
+12,403 total sends                               ← not
+```
+
+**Retention:** recipient-level rows deleted after **90 days**, rolled up first into
+`email_delivery_monthly` (`month × purpose × lane × provider × state × count`,
+**no** fingerprint or member ref) which is kept **13 months**. Run
+`scripts/prune-email-ledger.ts` daily.
+
+**Still not suppression.** `idempotency_key` is recorded so repeats are *visible*
+(`repeatedIdempotencyKeys()`); nothing is blocked. That is MAIL-03, and it needs
+per-lane semantics — a generic `recipient + purpose` rule would suppress a
+legitimate second sign-in code and lock a member out.
 
 ## Volume guards
 

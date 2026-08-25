@@ -133,6 +133,9 @@ async function sendToAllBetaTesters() {
     try {
       const result = await sendEmail({
         purpose: 'broadcast:update',
+        triggerType: 'script',
+        triggerRef: 'send-beta-update-email',
+        campaignRef: 'beta-signin-fixed',
         from: 'Kelly @ Soullab <kelly@soullab.life>',
         to: tester.email,
         subject: 'MAIA Beta Update: Sign-in Fixed',

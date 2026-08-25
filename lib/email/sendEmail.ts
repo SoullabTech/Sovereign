@@ -36,6 +36,7 @@
 import { getEmailProvider } from './providers';
 import type { EmailProvider } from './providers/types';
 import { resolvePriority, type EmailPriority } from './purpose';
+import { openAttempt, settleAttempt, stateForFailure } from './ledger';
 import { memberRef } from '@/lib/privacy/memberRef';
 import { redactEmails } from '@/lib/privacy/redactEmails';
 
@@ -112,6 +113,17 @@ export interface SendEmailOptions {
    * a different credential.
    */
   provider?: EmailProvider;
+  /**
+   * What caused this send, for the delivery ledger: the route path, cron job,
+   * script or worker name. Optional — an unattributed send is still recorded,
+   * it is just harder to trace back to its origin.
+   */
+  triggerType?: 'route' | 'cron' | 'script' | 'worker';
+  triggerRef?: string;
+  /** Campaign identity for bulk traffic, so one blast is countable as one thing. */
+  campaignRef?: string;
+  /** Member id, when the recipient is a known member. Stored as memberRef(). */
+  memberId?: string;
 }
 
 export interface SendEmailResult {
@@ -421,6 +433,24 @@ export async function sendEmail(opts: SendEmailOptions): Promise<SendEmailResult
       })),
     ];
 
+    // LEDGER — opened BEFORE the provider call so a crash mid-send leaves
+    // evidence rather than nothing. Best-effort by construction: `openAttempt`
+    // swallows its own failures and returns null, and nothing below branches on
+    // the result. The ledger observes sending; it does not authorize it.
+    const attemptId = await openAttempt({
+      purpose: opts.purpose,
+      lane: priority,
+      provider: provider.name,
+      recipient: Array.isArray(opts.to) ? opts.to[0] : opts.to,
+      memberRef: opts.memberId ? memberRef(opts.memberId) : undefined,
+      idempotencyKey: opts.idempotencyKey,
+      correlationId: opts.correlationId,
+      triggerType: opts.triggerType,
+      triggerRef: opts.triggerRef,
+      campaignRef: opts.campaignRef,
+      metadata: opts.metadata,
+    });
+
     const outcome = await provider.send({
       from,
       to: opts.to,
@@ -441,6 +471,14 @@ export async function sendEmail(opts: SendEmailOptions): Promise<SendEmailResult
       // `providerCode` is the vendor's raw name, kept verbatim for operators;
       // `failureKind` is our classification, which is what callers branch on.
       const result = failure(kind, message, name, ctx);
+      // `stateForFailure` decides what we KNOW happened; `failure_class` records
+      // WHY. A transport exception is indeterminate, not refused — the provider
+      // may have acted before we lost the response.
+      await settleAttempt(attemptId, {
+        state: stateForFailure(kind),
+        failureClass: kind,
+        failureCode: name,
+      });
       logSend(opts.purpose, from, toLog, domain, result, trace);
       return result;
     }
@@ -452,6 +490,10 @@ export async function sendEmail(opts: SendEmailOptions): Promise<SendEmailResult
       provider: provider.name,
       priority,
     };
+    await settleAttempt(attemptId, {
+      state: 'accepted',
+      providerMessageId: outcome.providerMessageId,
+    });
     logSend(opts.purpose, from, toLog, domain, result, trace);
     return result;
   } catch (err) {

@@ -250,6 +250,8 @@ export async function notifyChannelMentions(
 
         const sent = await sendEmail({
           purpose: 'notify:mention',
+          triggerType: 'route',
+          triggerRef: 'team/notifyMentions',
           from: FROM,
           to: member.email,
           subject: `${senderName} mentioned you in #${channelName}`,
