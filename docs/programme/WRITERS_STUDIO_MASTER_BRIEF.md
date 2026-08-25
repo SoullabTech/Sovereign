@@ -748,3 +748,394 @@ WORK STRUCTURE → DEVELOPMENTAL CONTEXT → DEVELOPMENTAL EDITOR
 
 That is sequencing. **The Developmental Editor is required, not optional** — and it is one of the
 principal acceptance surfaces for whether MAIA genuinely understands a Work.
+
+---
+
+# Amendment 4 — Writer's Studio Core Capability Mandate (founder, 2026-08-24)
+
+**Status: RATIFIED. Binding programme scope.**
+
+## A4.0 — Purpose
+
+Ensure the full Writer's / Author Studio is built to fruition around **the actual life of a Work**.
+
+These capabilities are **core product requirements** — not optional enhancements, future
+inspiration, or descriptive language.
+
+The product promise:
+
+> A place to write, gather, remember, shape, and develop serious work with MAIA beside you —
+> while keeping the writer unmistakably in authorship.
+
+The Writer's Studio programme is **incomplete** until these capabilities are materially present in
+the member experience.
+
+⛔ **"Present" never means:**
+
+```text
+mentioned in a specification
+represented by an unused component
+implemented on an unmerged branch
+technically available but unreachable
+partially represented by a generic AI chat
+inferred from an adjacent feature
+```
+
+A capability counts only when its programme state accurately reflects reality **and** there is a
+credible path through `implementation → wiring → real member use → acceptance`.
+
+## A4.1 — Work-Centered Home
+
+The Studio begins with **the Work**, not with tools. A returning writer should immediately
+understand: what they are making · where they left it · what is currently alive · what material is
+feeding it · where meaningful work last occurred · how to continue.
+
+Works may include books, essays, courses, lectures, research projects, audio works, collections,
+and **projects whose eventual form is not yet known**.
+
+⛔ **Do not force a Work to declare its final expression at creation.** A Work may begin as:
+
+```text
+idea · scraps · notes · transcripts · research · fragments · questions
+```
+
+and become a book, essay, course, lecture, audio work, or something else later.
+
+## A4.2 — Living Manuscripts
+
+Serious long-form Work over time. Required: writing · revising · organizing · continuing ·
+navigation · reliable save · undo · recovery · manuscript-scale performance · focused-part editing ·
+manuscript-wide find · safe find/replace · meaningful return after leaving.
+
+The writer should be able to return tomorrow, next month, or next year and continue the same living
+Work. **Continuity is more than cursor position.** Studio should eventually restore: last meaningful
+writing location · current concern · unresolved structural question · active revision · recent
+recognition or decision.
+
+## A4.3 — Transcript & Material Intake
+
+The Studio must accept **the messy reality from which serious Work emerges**: conversations,
+recordings, transcripts, voice notes, research, PDFs, quotations, fragments, journal notes,
+interviews, previous drafts, images where appropriate, external source material.
+
+**Preserve provenance.** An arriving artifact remains distinguishable from extracted text,
+interpretation, and Work. ⛔ **Never silently transform an uploaded or gathered item into
+manuscript text.**
+
+## A4.4 — Materials must remain distinguishable from the Work
+
+**Binding authorship rule.** The Studio must distinguish, at the **data and interaction level**:
+
+```text
+SOURCE ARTIFACT · SOURCE TEXT · MATERIAL · FRAGMENT · NOTE · RESEARCH · TRANSCRIPT
+MAIA OBSERVATION · WRITER RECOGNITION · WRITER DECISION · WORK
+```
+
+⛔ **Do not rely only on visual styling to preserve these distinctions.**
+
+```text
+MAIA sees a relationship        ≠  the materials belong together
+MAIA detects a possible chapter ≠  a chapter exists
+a transcript contains useful language ≠ that language belongs in the manuscript
+```
+
+**Placement and belonging remain writer acts.**
+
+## A4.5 — MAIA as creative companion
+
+MAIA must become a meaningful participant beside the writer **without becoming the author**.
+
+| Stance | Meaning |
+|---|---|
+| **Reflect** | help the writer see what is present |
+| **Question** | open useful inquiry |
+| **Notice** | surface patterns, repetitions, absences, contradictions, tensions, emerging possibilities |
+| **Connect** | identify relationships across material and the Work |
+| **Gather** | retrieve relevant material **without silently adopting it** |
+| **Shape** | offer possible forms and structures |
+| **Develop** | deepen ideas, passages, characters, arguments, themes |
+| **Critique** | serious developmental and editorial perspective |
+| **Edit** | **only** when the writer explicitly requests textual intervention |
+
+⛔ The default must not be `analyze → generate replacement`. The governing interaction is:
+
+```text
+MAIA notices → writer encounters → conversation
+             → writer may recognize → writer may decide → Work may change
+```
+
+**Every arrow may stop.**
+
+## A4.6 — Developmental Editor
+
+A **core MAIA capability**, explicitly present in the cockpit until it is a functioning
+member-facing instrument. **It is not merely a manuscript critic.**
+
+It must support Works beginning from:
+
+```text
+STARTER CONCEPT · IDEA · SCRAPS · FRAGMENTS · PILES OF NOTES · TRANSCRIPTS
+RESEARCH · MATERIAL FIELD · EMERGING WORK · STRUCTURED WORK · MATURE MANUSCRIPT
+```
+
+Principal developmental stances: `DISCOVER · GATHER · SHAPE · DEVELOP · REVISE`
+
+**Before structure exists**, MAIA may explore the living idea, notice themes, surface questions,
+recognize recurring material, suggest relationships, and offer possible shapes. ⛔ **It may not
+silently declare those possibilities to be Work structure.**
+
+**Once authoritative Work Structure exists**, MAIA gains deeper lenses: continuity · reader
+knowledge · sequencing · chapter placement · structural development · abandoned threads ·
+whole-Work arc · repetition without advancement · contradictions · underdevelopment ·
+overdevelopment.
+
+Observations surface **with evidence**. For a passage:
+
+```text
+ORIGINAL · WHY IT WAS FLAGGED · CURRENT DEVELOPMENTAL FUNCTION · POSSIBLE ISSUE / OPPORTUNITY
+```
+
+Actions: `KEEP · DISCUSS · DEVELOP · REFRAME · MOVE · CUT`
+
+⛔ **"Rewrite the chapter" is not the default. No manuscript mutation without explicit writer
+adoption.**
+
+## A4.7 — Developmental Editor acceptance corpus
+
+Multiple **real** acceptance classes are maintained:
+
+| Class | Corpus | Proves |
+|---|---|---|
+| **A — Seed** | starter concept, early idea | opening possibility · useful questioning · **no premature outline or structure declaration** |
+| **B — Scraps** | fragments, notes, partial passages | noticing relationships · identifying possible currents · **no silent belonging decisions** |
+| **C — Material Field** | transcripts + notes + research + quotations + sources | gathering · clustering · provenance · emerging shapes · **no promotion into Work without writer action** |
+| **D — Mature Work** | Elemental Alchemy — Chapter 10 | the mature-manuscript developmental fixture |
+
+**Fixture D** tests: late-book temporal position · reintroduction of already-developed material ·
+structural subordination · continuity vs. reset · abandoned protagonist thread · arc integrity ·
+recurrence after Air · Aether being **lived** rather than merely described · synthesis vs.
+repetition · **restraint from rewriting the author**.
+
+For this fixture: **Maya is the protagonist.** Her lived developmental movement teaches the
+Spiralogic Process. Spiralogic **names and orients** what the reader has already encountered
+through her. Detect:
+
+```text
+Maya lives → movement becomes visible → reflection → light naming → return to Maya
+```
+
+versus the subordinating pattern:
+
+```text
+principle → explanation → Maya supplied as example
+```
+
+**Subordination is an editorial observation, not an automatic verdict. The writer rules.**
+
+## A4.8 — Memory with provenance
+
+MAIA must remember the Work **without flattening different kinds of knowing**. At minimum
+distinguish:
+
+```text
+source fact · writer-authored text · writer note · MAIA observation · MAIA suggestion
+writer recognition · writer decision · adopted Work change
+```
+
+The programme invariant remains:
+
+```text
+SOURCE / MATERIAL → MAIA MAY NOTICE → WRITER MAY RECOGNIZE
+                  → WRITER MAY DECIDE → WORK MAY CHANGE
+```
+
+⛔ **No automatic arrow. A MAIA suggestion repeated several times does not become something the
+writer believes.**
+
+## A4.9 — Structural perspective
+
+The writer must be able to step away from sentence-level writing and perceive the larger Work:
+parts · member-defined structural units · sequence · themes · motifs · patterns · gaps · tensions ·
+abandoned threads · length · repetition · possible alternate shapes.
+
+⛔ **Do not impose a universal `Part → Chapter → Section → Passage` schema.** A member may use
+movement, letter, session, argument, chapter, act, thread, part, or another self-defined unit.
+**The member confers structural meaning.**
+
+## A4.10 — Writer-controlled meaning
+
+MAIA may propose interpretations. **The writer decides** whether it resonates, whether it is true
+for this Work, whether it belongs, whether it should be remembered, whether it becomes structure,
+whether it changes the manuscript.
+
+Explicit ways to:
+
+```text
+keep as observation · discuss · recognize · make a decision · save as note
+adopt into Work · reject · leave unresolved
+```
+
+⛔ **Do not silently promote interpretation into authority.**
+
+## A4.11 — Draft & revision continuity
+
+Support **safe creative wandering**:
+
+```text
+original arrival → draft → revision → alternate possibility → writer decision → adopted state
+```
+
+Preserve: restore · history · compare · named snapshots · passage history where useful · manuscript
+history · MAIA-change provenance · reconnect recovery · conflict handling.
+
+> **A writer should not become conservative because the software makes experimentation dangerous.**
+
+## A4.12 — Multiple creative distances
+
+**Stances, not workflow stages.** The writer moves freely among:
+
+| Distance | Working at |
+|---|---|
+| **Close** | writing and revising |
+| **Near** | fragments, sources, research, gathered material |
+| **Middle** | structure, sequence, themes, chapter relationships |
+| **Far** | spatial / relational perspective on the whole Work |
+| **Outward** | possible expressions of the Work |
+
+⛔ **Do not turn these into `Step 1 → Step 2 → Step 3`. Creativity moves recursively.**
+
+## A4.13 — Expression & publishing support
+
+A Work may generate multiple outward expressions:
+
+```text
+WORK
+├── Book      ├── Essay    ├── Lecture
+├── Course    ├── Audio    ├── Workshop
+└── Other
+```
+
+**These are not merely export formats.** A lecture is not a book converted into bullets. A course
+is not chapters divided into lessons. Help the writer **re-express the underlying Work**
+appropriately for each medium.
+
+**Press remains downstream** for edition-making, pagination, rendering, publication, distribution.
+
+## A4.14 — Finished-looking is not finished
+
+⛔ **Never infer publication readiness merely because an artifact is polished.**
+
+```text
+drafting · developing · coherent · revising
+reader candidate · editorial candidate · publication candidate · author accepted
+```
+
+MAIA may notice unresolved issues. **MAIA may not declare the Work complete. Release remains a
+writer act.**
+
+## A4.15 — Human authorship must remain explicit
+
+These remain **human authorities**: recognition · meaning · belonging · structure acceptance ·
+creative decision · adoption · readiness · publication.
+
+**The Studio should make those boundaries visible rather than hiding them inside AI automation.**
+
+## A4.16 — Cockpit requirement
+
+Every capability above **must appear in the Writer's Studio operational cockpit until it is
+delivered**. ⛔ **Do not allow a capability to disappear merely because its specification exists.**
+
+For each capability record:
+
+```text
+STATE · EVIDENCE · DEPENDENCIES · CURRENT VERTICAL SLICE · REAL-WORK ACCEPTANCE · BLOCKER / NEXT
+```
+
+States must be **artifact-derived**:
+
+```text
+LIVE · PARTIAL · ZERO-CALLERS · IN ACCEPTANCE · BLOCKED · DESIGNED · ABSENT · UNVERIFIED / TO CENSUS
+```
+
+⛔ **Do not use hopeful roadmap language as implementation state.**
+
+## A4.17 — Programme entry rule (restates A3.1)
+
+A capability does not enter Writer's Studio merely because someone designed or coded it:
+
+```text
+authoritative programme entry + dependency chain + executable vertical slice
++ real-Work acceptance case + path to production
+```
+
+The recurring failure to prevent:
+
+```text
+great idea → great R&D → prototype → new architecture generation → ZERO CALLERS
+```
+
+**Jarvis owns carrying capabilities through to actual member use.**
+
+## A4.18 — Build-to-fruition rule
+
+Once WS-01 is accepted, the freeze is explicitly released, and the next build unit is authorized:
+**BUILD is the default.** Do not spend days repeatedly redesigning already-ratified capability.
+
+| | |
+|---|---|
+| **GREEN** | normal engineering decisions — proceed with proportionate tests and real use |
+| **AMBER** | briefly recorded, proceed when reversible |
+| **RED** | stop for Founder authority |
+
+⛔ **Blast radius overrides apparent simplicity.** Destructive, broad, cross-member, cross-project,
+production-data, irreversible, or difficult-to-reconstruct changes are **never GREEN**.
+
+## A4.19 — Real Work is the instrument
+
+⛔ **Do not rely solely on synthetic fixtures. Use actual creative material** — Elemental Alchemy as
+the long-manuscript test · Chapter 10 as mature developmental corpus · real transcripts for intake ·
+real scraps/notes for emergence · real revision episodes · real expression into lecture/course/audio.
+
+The core test:
+
+> **Can a writer actually develop serious Work here without having to manage the machinery?**
+
+## A4.20 — Definition of full fruition
+
+Writer's Studio is not substantially complete until a writer can:
+
+```text
+begin with only an idea
+↓ talk with MAIA about it
+↓ gather scraps, notes and transcripts
+↓ allow themes and possibilities to emerge
+↓ decide what belongs
+↓ let a Work take form without prematurely fixing its genre
+↓ write deeply
+↓ return without losing continuity
+↓ see the Work structurally
+↓ have MAIA develop it with them
+↓ remember observations, recognitions and decisions with provenance
+↓ reorganize safely
+↓ compare and restore versions
+↓ see patterns across the whole Work
+↓ move among close, structural and relational perspectives
+↓ develop appropriate outward expressions
+↓ personally decide when the Work is ready to leave the Studio
+```
+
+Throughout: **MAIA accompanies the Work. The writer authors it.**
+
+## A4.21 — The prohibition on partial success
+
+This capability set is **binding programme scope**.
+
+⛔ **Do not silently narrow Writer's Studio into a manuscript editor, an AI writing assistant, a
+publishing utility, or the Developmental Editor alone.**
+
+> **Jarvis is explicitly prohibited from declaring success if it builds only the
+> manuscript / editing portion while the gather, memory, structural, developmental, expression and
+> authorship capabilities remain absent.**
+
+Partial delivery is reported as partial delivery, against the census in the cockpit. A green suite,
+a shipped editor, and an accepted unit are **not** fruition.
