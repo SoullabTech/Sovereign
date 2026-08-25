@@ -47,6 +47,13 @@ export type VoiceDiagEvent =
   // (local maia-whisper, NOT OpenAI cloud). All four are observational —
   // no transcript content in telemetry, only durations/byte-counts/mime/error.
   | 'voice_fallback_recording_started'
+  // Capture-liveness events (silent-death detection, track loss, salvage).
+  // See lib/voice/micLiveness.ts — these fire when the capture path dies
+  // without the recognition object reporting anything.
+  | 'voice_status_surfaced'
+  | 'voice_transcript_salvaged'
+  | 'voice_capture_lost'
+  | 'voice_track_listeners_attached'
   // ── TTS playback witness ────────────────────────────────────────────────
   // Capture had telemetry; playback had none. That asymmetry is why a whole
   // tester session of "choppy, cut off, repeated the beginning" produced a
