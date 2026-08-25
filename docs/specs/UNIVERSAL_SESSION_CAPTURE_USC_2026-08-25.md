@@ -260,6 +260,30 @@ Apple restricts third-party Watch Action-button intents largely to workout/dive.
 
 ---
 
+## 7b. Programme status
+
+```
+PROMOTION      GREEN
+USC-04 CODE    BUILT
+USC-04 DB      GREEN
+USC-04 TESTS   GREEN   (44 automated: offline/idempotent path + contract pinning)
+USC-04 DEVICE  UNVERIFIED
+
+PR #1093       OPEN / WATCH
+MERGE          HOLD
+USC-05/06      HOLD
+#1085          UNTOUCHED
+```
+
+USC-04 is **not GREEN** until the device pass in `docs/ops/USC_04_DEVICE_ACCEPTANCE.md`
+is completed on real hardware. The DB and queue layers are proven; the surface they exist to
+serve is not. Merge gate for #1093 = that sheet, filled in and pasted into the PR.
+
+**Title-leak boundary (founder, 2026-08-25):** plaintext metadata can leak encrypted content
+as effectively as a plaintext body. The atom `title` therefore stays member-authored or derived
+only from non-content metadata. This generalizes beyond promotion — any future surface that
+labels, summarizes, or indexes a capture inherits the same constraint.
+
 ## 8. Verification state
 
 **Nothing here is verified in production.** Built on branch, typechecked. Per project
