@@ -27,7 +27,7 @@
 PROGRAMME          WRITER'S STUDIO R2
 MODE               WS-01 ACCEPTANCE
 BUILD MODE         CLOSED — Canvas / Phase 1 freeze BINDING
-BOUND CANONICAL    8fa03f48a
+BOUND CANONICAL    bd87d497f
 CURRENT UNIT       WS-01 Source Custody + Freeze Release
 CURRENT CANDIDATE  e92f532396705daaf6cd346445276a08a5957904
                    feature/ws-01-source-custody-v2  ·  PINNED, untouched
