@@ -65,8 +65,25 @@ const CARD_STYLE: React.CSSProperties = {
   border: '1px solid rgba(30, 58, 95, 0.5)',
   boxShadow: '0 8px 32px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04), inset 0 1px 0 rgba(30, 58, 95, 0.3)',
 };
+// Inputs are glass set INTO the card, not opaque panels sitting on top of it: a
+// translucent navy fill over the card's own blur, with an inset shadow so the
+// field reads as recessed rather than raised.
+//
+// The `autofill:` rules are the load-bearing part. The class above already said
+// bg-maia-navy-850, and the fields still rendered near-white the moment Chrome
+// filled them — the browser paints its own background for an autofilled input
+// and no ordinary `background` declaration wins. The only reliable override is
+// a huge inset box-shadow, with -webkit-text-fill-color for the text, because
+// `color` loses to autofill too. Without these, restyling the background does
+// nothing for the exact case a returning member sees: a remembered username
+// and password already in the fields.
 const INPUT_CLASS =
-  'w-full rounded-xl bg-maia-navy-850 border border-maia-navy-700 px-4 py-3 text-base text-white caret-white placeholder:text-slate-500 outline-none focus:border-maia-navy-600 transition-all';
+  'w-full rounded-xl bg-maia-navy-900/45 backdrop-blur-sm border border-maia-navy-700/60 px-4 py-3 text-base text-white caret-white placeholder:text-slate-500 outline-none ' +
+  'shadow-[inset_0_1px_2px_rgba(0,0,0,0.28)] ' +
+  'focus:border-maia-navy-600 focus:bg-maia-navy-900/60 transition-all ' +
+  'autofill:shadow-[inset_0_0_0_1000px_rgba(10,22,40,0.92)] ' +
+  'autofill:[-webkit-text-fill-color:#ffffff] autofill:[caret-color:#ffffff] ' +
+  'autofill:[transition:background-color_9999s_ease-in-out_0s]';
 const PRIMARY_BTN =
   'w-full rounded-xl bg-maia-navy-700 hover:bg-maia-navy-600 text-white px-4 py-3 font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg';
 const OUTLINE_BTN =
