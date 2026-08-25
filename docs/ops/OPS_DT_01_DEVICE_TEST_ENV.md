@@ -8,6 +8,13 @@
 > A reusable pre-merge environment for testing an exact branch/SHA against a real
 > device, with a database that can never reach production.
 
+**Terminology, because it governs what may be destroyed.** This environment's
+*relationship to production* is read-only — that is the property that matters and
+the one the isolation proof enforces. The environment **itself is intentionally
+mutable and disposable**: its database is meant to be migrated, dirtied, reset and
+rebuilt freely. "Read-only infrastructure" would be the wrong mental model and
+would make later reasoning about what may be wiped needlessly timid.
+
 This closes a structural hole: every future change that pairs a migration with
 real-device behavior needs this, and today there is nowhere to run it.
 
@@ -73,12 +80,38 @@ Further safety properties:
 Per the authorization, anything beyond adding an isolated host/service is
 reported, not performed. Three items need a human, and one needs a ruling.
 
-**a. DNS record (new, additive).** An `A` record for the chosen hostname →
-the LAN's public IP (`soullab.life` currently resolves to `32.219.7.166`).
-Additive; changes no existing record.
+**a. DNS record (new, additive).** An `A` record for the chosen hostname → the
+LAN's public IP. Additive; changes no existing record.
 
-**b. Router port-forward (new, additive).** Forward the chosen HTTPS port
-(default `8443`) → minisforum. Additive; production `80`/`443` untouched.
+```
+device-test.soullab.life   A → <WAN IP>   TTL 60–300
+```
+
+⚠️ **Verify the WAN IP before creating the record.** `32.219.7.166` is what
+`soullab.life` resolved to when this document was written — that is an
+*observation*, not a permanent fact. Confirm the router's current WAN IP matches
+before writing the record, and note whether the ISP address is static or dynamic.
+
+A dynamic address does not block the first proof, but it means the test hostname
+will eventually break silently. The follow-on, if so, is a small Route 53 DDNS
+updater — deliberately out of scope here. The short TTL keeps that cheap.
+
+**b. Router port-forward (new, additive).** Forward **only** `8443/TCP` →
+minisforum. Additive; production `80`/`443` untouched.
+
+```
+WAN :8443/TCP → MINISFORUM :8443/TCP → device-test Caddy
+                                          → device-test app
+                                             → private device-test Postgres
+```
+
+**Expose nothing else through this rule.** Specifically not: PostgreSQL (test or
+production), the Next app container directly, the Docker API, SSH, or the
+production Caddy. The app and database are reachable only from inside
+`maia-device-test-net`; the single forwarded port terminates at Caddy.
+
+Because the certificate uses DNS-01, **Let's Encrypt never needs inbound port
+80** — which is precisely why this design avoids contending with production.
 
 > **Why a non-standard port, and the ruling it avoids.** Let's Encrypt's HTTP-01
 > challenge needs port 80, which the production Caddy owns. Taking it would mean
@@ -144,6 +177,12 @@ inventory:
 }
 ```
 
+**c-bis. Handling the AWS key.** Keep it outside git (the blanket `.env*` rule
+already ensures this), present only in `.env.device-test` on the test host,
+file-permission restricted (`chmod 600`), and **never copied into production
+Caddy configuration**. Its one meaningful power is changing records in the
+Soullab hosted zone; keep it that way.
+
 **d. Test-only secrets.** `DEVICE_TEST_PHI_KEY` must **not** be the production
 PHI key. Capture content written here is synthetic and the environment is
 disposable; reusing the production key would defeat the isolation.
@@ -172,22 +211,49 @@ ANTHROPIC_API_KEY=                          # optional, for conversational surfa
 
 ## 4. Run order
 
+**Prove the environment before the branch exists anywhere on it.** The stack
+comes up EMPTY first and isolation is proven against that empty stack. Otherwise
+we would be assuming isolation because the compose file looks isolated, rather
+than demonstrating it.
+
+```
+empty OPS-DT stack → prove test DB identity → prove production identity differs
+→ sentinel written to test only → confirm sentinel absent from production
+→ remove sentinel → ONLY NOW deploy 2a4d59c
+```
+
 ```bash
-# 0. one-time: .env.device-test filled in, DNS + port-forward in place
-cp .env.device-test.sample .env.device-test && $EDITOR .env.device-test
+# 0. one-time: .env.device-test written (§3e), DNS + port-forward in place
 
-# 1. bring up the isolated stack (DB + app + TLS) at the frozen SHA
-scripts/device-test-up.sh 2a4d59c
+# 1. bring the stack up EMPTY — no branch, no migrations yet.
+#    Any SHA builds the image; the point is a running DB to prove against.
+scripts/device-test-up.sh $(git rev-parse --short origin/clean-main-no-secrets)
 
-# 2. PROVE ISOLATION BEFORE TRUSTING ANY RESULT
+# 2. PROVE ISOLATION NOW, on the empty stack — then STOP and report.
 scripts/verify-device-test-isolation.sh
 
-# 3. migrations — isolated DB only; refuses if step 2 did not pass
+# ── gate: do not continue until the proof passes and is reported ──
+
+# 3. only then deploy the frozen capture SHA
+scripts/device-test-up.sh 2a4d59c
+
+# 4. migrations — isolated DB only; refuses if the proof did not pass
 scripts/device-test-migrate.sh
 
-# 4. record the environment, then run the seven proofs
+# 5. record the environment, then run the seven proofs
 #    docs/ops/USC_04_DEVICE_ACCEPTANCE.md
 ```
+
+### Deploy the SHA, never a moving target
+
+Deploy exactly `2a4d59c` — not `latest`, not the branch tip, not a freshly
+rebased head. `device-test-up.sh` requires an explicit SHA and verifies it in the
+running container for this reason. It is what lets the final statement be precise:
+
+> `2a4d59c` passed repository CI, automated capture tests, migration proofs,
+> isolation proofs, and real-iPhone acceptance.
+
+Rebasing onto fresh canonical happens *after* that, under the invalidation rule.
 
 Step 2 is not a formality. It is read-only against production and checks
 identity, connection target, **network unreachability**, sentinel non-crossover,
