@@ -9,6 +9,7 @@ import { Paperclip, X, Copy, BookOpen, Clock, Mic, MicOff, Volume2, VolumeX, Mes
 // import { SimplifiedOrganicVoice, VoiceActivatedMaiaRef } from './ui/SimplifiedOrganicVoice'; // REPLACED with Whisper
 // import { WhisperVoiceRecognition } from './ui/WhisperVoiceRecognition'; // REPLACED with ContinuousConversation (uses browser Web Speech API)
 import { ContinuousConversation, ContinuousConversationRef } from './voice/ContinuousConversation';
+import { getContinuityBuffer } from '@/lib/voice/conversationContinuityBuffer';
 import { VoiceHUD } from './voice/VoiceHUD';
 import { VoiceInteractionBar } from './voice/VoiceInteractionBar';
 import { useStreamingVoice, type StreamingVoicePlaybackSignal } from '@/hooks/useStreamingVoice';
@@ -1037,6 +1038,38 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     }
     return false;
   });
+
+  // ==========================================================================
+  // 🧵 VOICE CONTINUITY BUFFER — Sanctuary gate + restore-after-interruption
+  // ==========================================================================
+  // A local, tab-scoped copy of the conversation so a broken capture path
+  // cannot cost the member their own words. It is NOT memory: nothing here is
+  // transmitted, enters a prompt, or forms a pattern. See
+  // lib/voice/conversationContinuityBuffer.ts.
+  //
+  // Sanctuary's boundary is absolute, so this is a purge and not merely a
+  // pause: entering Sanctuary destroys the buffered tail of the conversation
+  // that preceded it, synchronously.
+  useEffect(() => {
+    try { getContinuityBuffer().setEnabled(!isSanctuary); } catch { /* best-effort */ }
+  }, [isSanctuary]);
+
+  // On mount, hand back any utterance that was spoken but never sent — the
+  // case where the session dropped, or the tab was refreshed, before the
+  // member could submit. Restored as an editable draft, never auto-sent.
+  const continuityRestoredRef = useRef(false);
+  useEffect(() => {
+    if (continuityRestoredRef.current || isSanctuary) return;
+    continuityRestoredRef.current = true;
+    try {
+      const pending = getContinuityBuffer().getPending();
+      if (!pending?.text) return;
+      setDraftMessage((prev) => (prev.trim() ? prev : pending.text));
+      getContinuityBuffer().clearPending();
+      toast('Restored what you had said but not yet sent.', { duration: 7000, icon: '🧵' });
+      console.log(`🧵 [continuity] Restored ${pending.text.length} unsent chars from a prior session`);
+    } catch { /* best-effort */ }
+  }, [isSanctuary]);
 
   // 📌 "Keep this moment" — member-marked episodic moments (slice 2, 2026-07-13).
   // Keyed by message.id. Presence of an entry means that message is currently
@@ -10064,6 +10097,27 @@ I'm not sure what I'm feeling yet.`;
               setIsHandsFreeMode(false);
               toast('Hands-free paused — tap to talk', { duration: 2500 });
               console.log('🔄 [HandsFree] Auto-fallback to push-to-talk (backoff exhausted)');
+            }}
+            onVoiceStatus={({ level, cause, userMessage, recoverable }) => {
+              // ContinuousConversation is mounted inside `sr-only`, so its own
+              // status line and error banner are invisible. This is the only
+              // surface where a voice failure actually reaches the member —
+              // which is why a dead mic used to look exactly like a live one.
+              console.warn(`🎙️ [voice-status] ${level} ${cause} (recoverable=${recoverable})`);
+              if (level === 'info') return; // expected stand-down: don't interrupt
+              // Truthful UI: listening is over, so stop showing it as running.
+              setIsHandsFreeMode(false);
+              setIsListening(false);
+              toast(userMessage, { duration: 9000, icon: '🎙️' });
+            }}
+            onTranscriptSalvage={({ text, cause }) => {
+              // What the member said is the member's. A failure in our capture
+              // layer is not a licence to discard it. It returns as an editable
+              // draft — never auto-sent, because MAIA does not submit words the
+              // member did not choose to send.
+              console.log(`💾 [salvage] Restoring ${text.length} chars after ${cause}`);
+              setShowChatInterface(true);
+              setDraftMessage((prev) => (prev.trim() ? `${prev.trim()} ${text}` : text));
             }}
             onVoiceUnavailable={({ reason, userMessage }) => {
               // Bounded recovery from ContinuousConversation: a known platform
