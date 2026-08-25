@@ -179,9 +179,9 @@ h:`<div class="stack">
  <div class="eyebrow">Soullab</div>
  <div><h1 class="voice d1">What is asking for your&nbsp;attention?</h1>
   <p class="lede" style="margin-top:22px">MAIA is a relational intelligence for understanding your life, relationships, choices, patterns and creative work.</p></div>
- <div class="cta"><button class="btn" data-go="join">Meet MAIA</button><button class="btn ghost" data-go="join">See how it works</button></div>
+ <div class="cta"><button class="btn" data-go="join">Meet MAIA</button><button class="btn ghost" id="how">See how it works</button></div>
  <div class="spacer"></div>
- <div><div class="eyebrow">The page, in order</div>
+ <div id="overview"><div class="eyebrow">The page, in order</div>
   <div class="spine" style="margin-top:10px">
   ${[['01','Invitation','What is asking for your attention?'],['02','Doorways','What can I bring?'],['03','Arrival','What happens when I enter?'],['04','Conversation','What does MAIA feel like?'],['05','The House','What exists beyond conversation?'],['05b','For your life','Living Field · Journal · Relationships'],['05c','For those who accompany others','Encounters · Preparation · Notes'],['06','Continuity','Kept · Recent · Continue'],['10','Elements','What is the deeper map?'],['12','Consent','Remembered with consent. Never by stealth.'],['14','After signup','Show me exactly where I am going.'],['15','Begin','Enter Soullab.']]
   .map(([i,h,q])=>`<div class="sec"><span class="ix">${i}</span><div><div class="h">${h}</div><div class="q">${q}</div></div></div>`).join('')}
@@ -211,9 +211,9 @@ h:`<div class="stack">
   <p class="sub" style="margin-top:12px;max-width:42ch">You don't need to know what to ask, or how to use AI.</p></div>
  <div class="spacer"></div>
  <div class="doorlist">
-  ${['Something is on my mind','I\'m going through a change','I want to understand myself','I need clarity about a decision','Something in a relationship','I\'m making something'].map(t=>`<button class="door" data-go="maiaOpen">${t}</button>`).join('')}
+  ${[['Something is on my mind','mind'],["I'm going through a change",'change'],['I want to understand myself','self'],['I need clarity about a decision','decision'],['Something in a relationship','relation'],["I'm making something",'making']].map(([t,k])=>`<button class="door" data-go="maiaOpen" data-door="${k}">${t}</button>`).join('')}
  </div>
- <button class="dunno" data-go="maiaOpen">I don't know where to begin</button>
+ <button class="dunno" data-go="maiaOpen" data-door="dunno">I don't know where to begin</button>
 </div>`},
 
 maiaOpen:{j:'A',n:'MAIA opens',d:1,air:{lum:.30,cool:.42,drift:.22},crumb:'Surface D · <b>MAIA</b> — opened by the door',
@@ -227,19 +227,23 @@ h:`<div class="maia">
   <button class="home" data-go="houseNew">The House ⌂</button></div></div>`},
 
 houseNew:{j:'A',n:'House — new member',d:0,air:{lum:.31,cool:.30,drift:.4},crumb:'Surface C · <b>MAIA House</b> — S1, nothing kept yet',
-anno:'<b>Arrival, not a menu.</b> The greeting and the question hold the screen; the doorways arise beneath. A new member meets them first <i>because nothing sits above them</i> — not because the system judged they need help. Your Soullab is one quiet line: the world exists, and it does not shout.',
+anno:'<b>Arrival, not a menu.</b> The greeting and the question hold the screen; the doorways arise beneath. A new member meets them first <i>because nothing sits above them</i> — not because the system judged they need help. <b>The whole eligible world is already perceptible beneath</b>, quietly: landing and House are two versions of the same world, so the ecosystem cannot appear to collapse to My Life after entry.',
 h:`<div class="stack">
  <div class="eyebrow">Good afternoon, Kelly</div>
  <h2 class="voice d2">What is asking for your&nbsp;attention?</h2>
  <div class="doorlist" style="margin-top:6px">
-  ${['Talk it through','Find my next step','Understand a pattern','Something in a relationship','Make something','Know myself'].map(t=>`<button class="door" data-go="maiaOpen">${t}</button>`).join('')}
+  ${[['Talk it through','mind'],['Find my next step','next'],['Understand a pattern','pattern'],['Something in a relationship','relation'],['Make something','making'],['Know myself','self']].map(([t,k])=>`<button class="door" data-go="maiaOpen" data-door="${k}">${t}</button>`).join('')}
  </div>
- <button class="dunno" data-go="maiaOpen">I don't know where to begin</button>
+ <button class="dunno" data-go="maiaOpen" data-door="dunno">I don't know where to begin</button>
  <div class="spacer"></div>
- <div class="sph">
-  <div class="nm">Your Soullab · <b>My Life</b></div>
-  <div class="line"><button data-go="livingField">Living Field</button><span>·</span><button data-go="relationships">Relationships</button><span>·</span><button>Journal</button><span>·</span><button>Anchor</button></div>
-  <div class="ln">a place to gather and reflect on lived experience</div>
+ <div class="world">
+  <div class="eyebrow">Your Soullab</div>
+  <div class="sph"><div class="nm"><b>My Life</b></div>
+   <div class="line"><button data-go="livingField">Living Field</button><span>·</span><button data-go="relationships">Relationships</button><span>·</span><button>Journal</button><span>·</span><button>Anchor</button></div></div>
+  <div class="sph"><div class="nm"><b>My Contribution</b></div>
+   <div class="line"><button data-go="contribution">Ideas</button><span>·</span><button>Wisdom</button><span>·</span><button>Studios</button></div></div>
+  <div class="sph p"><div class="nm"><b>My Practice</b></div>
+   <div class="line"><button data-go="practice">People</button><span>·</span><button data-go="practice">Encounters</button><span>·</span><button data-go="practice">Preparation</button></div></div>
  </div>
 </div>`},
 
@@ -285,8 +289,8 @@ h:`<div class="stack tight">
  <div class="quiet">
   <div class="eyebrow">Begin somewhere new</div>
   <div class="doorlist" style="margin-top:7px">
-   ${['Talk it through','Understand a pattern','Find my next step','Make something'].map(t=>`<button class="door" data-go="maiaOpen">${t}</button>`).join('')}</div>
-  <button class="dunno" data-go="maiaOpen" style="margin-top:6px">I don't know where to begin</button>
+   ${[['Talk it through','mind'],['Understand a pattern','pattern'],['Find my next step','next'],['Make something','making']].map(([t,k])=>`<button class="door" data-go="maiaOpen" data-door="${k}">${t}</button>`).join('')}</div>
+  <button class="dunno" data-go="maiaOpen" data-door="dunno" style="margin-top:6px">I don't know where to begin</button>
  </div>
 </div>`},
 
@@ -319,7 +323,7 @@ h:`<div class="stack tight">
     <div class="mine">Your words</div></div>
   </div></div>
  <p class="note">This place holds what you have written. MAIA can think with you about a relationship in conversation — it does not write conclusions about it here.</p>
- <div class="cta"><button class="btn ghost" data-go="maiaOpen">Bring this into conversation</button></div>
+ <div class="cta"><button class="btn ghost" data-go="maiaOpen" data-door="relation">Bring this into conversation</button></div>
 </div>`},
 
 contribution:{j:'B',n:'My Contribution',d:1,air:{lum:.33,cool:.18,drift:.5},crumb:'<b>My Contribution</b>',
@@ -339,7 +343,7 @@ h:`<div class="stack">
 </div>`},
 
 practice:{j:'B',n:'My Practice',d:1,air:{lum:.25,cool:.66,drift:.14},crumb:'<b>My Practice</b> — accompaniment, not administration',
-anno:'<b>The R6 test.</b> Tomorrow\'s encounter and the preparation it invites hold the screen; administration is one line at the bottom. No caseload grid, no billing tiles. Capture, MARK/SPEAK and MAIA-drafted notes are phase 8 and appear nowhere — the Live subset already establishes a real place. <i>If a screenshot of this could be mistaken for practice-management software, it has failed.</i>',
+anno:'<b>The R6 test.</b> The person and what you are carrying into the encounter hold the screen — the time is a detail above the name, not the headline. <i>Calendar software says when someone arrives; Soullab says what you are carrying into the encounter.</i> Administration is one line at the bottom; administration is one line at the bottom. No caseload grid, no billing tiles. Capture, MARK/SPEAK and MAIA-drafted notes are phase 8 and appear nowhere — the Live subset already establishes a real place. <i>If a screenshot of this could be mistaken for practice-management software, it has failed.</i>',
 h:`<div class="stack tight">
  <div style="display:flex;justify-content:space-between;align-items:baseline;gap:16px">
   <div><div class="eyebrow">My Practice</div>
@@ -348,9 +352,10 @@ h:`<div class="stack tight">
  <div class="spacer"></div>
  <div><div class="eyebrow">Tomorrow</div>
   <button class="primary p" style="margin-top:9px">
-   <div class="voice" style="font-size:24px">Miriam · 10:00</div>
-   <div class="sub" style="margin-top:7px;max-width:44ch">Fourth encounter. Last time you noted a question you wanted to return to.</div>
-   <div class="sub" style="margin-top:12px;color:#9fb4cc">Prepare →</div></button></div>
+   <div class="sub" style="letter-spacing:.06em">Tomorrow · 10:00</div>
+   <div class="voice" style="font-size:27px;margin-top:5px">Miriam</div>
+   <div class="note" style="margin-top:11px;max-width:40ch;color:var(--ink-2)">Fourth encounter. Last time you noted a question you wanted to return to.</div>
+   <div class="sub" style="margin-top:14px;color:#9fb4cc">Prepare →</div></button></div>
  <div class="spacer"></div>
  <div class="sph p"><div class="line" style="font-size:18px">
   <button>People</button><span>·</span><button>Encounters</button><span>·</span><button>Notes</button></div>
@@ -360,6 +365,35 @@ h:`<div class="stack tight">
  <div class="util">Booking, calendar, agreements and billing live in <button>practice settings</button>.</div>
 </div>`}
 };
+
+
+/* Session-scoped door context (R3): frames MAIA's opening turn, dies with the
+   session, persists nothing. Each door has its own opening; none characterizes
+   the member, who has said nothing yet. */
+const DOORS={
+ 'mind':      {e:'Something is on my mind',        o:"Start wherever it is. It doesn't have to be organized."},
+ 'change':    {e:"I'm going through a change",     o:"What's changing?"},
+ 'self':      {e:'I want to understand myself',    o:"What's the part you keep circling?"},
+ 'decision':  {e:'I need clarity about a decision',o:'What are you deciding between?'},
+ 'relation':  {e:'Something in a relationship',    o:"Who is it, and what's happening between you?"},
+ 'making':    {e:"I'm making something",           o:'What are you working on?'},
+ 'next':      {e:'Find my next step',              o:"What's the next thing you can't see past?"},
+ 'pattern':   {e:'Something keeps repeating',      o:"We can start with whatever keeps returning. It doesn't have to make sense yet — what have you been noticing?",
+               reply:'The same argument with my brother, three times this month.', follow:"Three times. What's the moment it turns?"},
+ 'dunno':     {e:"I don't know where to begin",    o:"That's a fine place to start. What's been taking up room lately?"},
+ 'curious':   {e:"I'm just curious",               o:"Ask me anything you want. I'll tell you what I actually am."}
+};
+let door='pattern';
+function renderMaia(){
+ const d=DOORS[door]||DOORS.pattern;
+ document.getElementById('s-maiaOpen').innerHTML=`<div class="maia">
+  <div class="eyebrow">${d.e}</div>
+  <p class="utter">${d.o}</p>
+  ${d.reply?`<div class="said">${d.reply}</div><p class="utter" style="font-size:21px">${d.follow}</p>`:''}
+  <div class="composer"><span class="mic"><i></i></span><span class="cfield">Speak, or type instead</span>
+   <button class="home" data-go="${maiaHome}">The House &#8962;</button></div></div>`;
+}
+let maiaHome='houseNew';
 
 const order=Object.keys(S), screens=document.getElementById('screens');
 screens.innerHTML=order.map(k=>`<section class="screen" id="s-${k}">${S[k].h}</section>`).join('');
@@ -382,7 +416,11 @@ function go(k){
   document.getElementById('viewport').scrollTop=0;
   cur=k; air=S[k].air;
 }
-document.addEventListener('click',e=>{const t=e.target.closest('[data-go]');if(t)go(t.dataset.go);});
+document.addEventListener('click',e=>{
+  const t=e.target.closest('[data-go]'); if(!t)return;
+  if(t.dataset.door){door=t.dataset.door; maiaHome = (cur==='houseBack'||cur==='relationships'||cur==='contribution'||cur==='practice')?'houseBack':'houseNew'; renderMaia();}
+  go(t.dataset.go);
+});
 const dev=document.getElementById('device');
 tD.onclick=()=>{dev.classList.remove('phone');tD.setAttribute('aria-pressed','true');tP.setAttribute('aria-pressed','false');size();};
 tP.onclick=()=>{dev.classList.add('phone');tP.setAttribute('aria-pressed','true');tD.setAttribute('aria-pressed','false');size();};
@@ -416,5 +454,11 @@ function draw(){
   });
   requestAnimationFrame(draw);
 }
-size(); go('landing'); draw();
+document.addEventListener('click',e=>{
+  if(e.target.id!=='how')return;
+  const ov=document.getElementById('overview'); if(!ov)return;
+  ov.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion:reduce)').matches?'auto':'smooth',block:'start'});
+  ov.animate([{opacity:.35},{opacity:1}],{duration:700,easing:'ease-out'});
+});
+size(); renderMaia(); go('landing'); draw();
 </script>
