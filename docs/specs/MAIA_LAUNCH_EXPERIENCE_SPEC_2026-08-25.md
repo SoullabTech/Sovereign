@@ -561,6 +561,61 @@ has graduated. It quietens because **the member now has somewhere of their own t
 **This is how the House evolves from "here's how to use Soullab" into "here is your Soullab" — by the member
 filling it, not by the system deciding they are ready.**
 
+### MLX-R2 REVISED — GREEN at reduced scope (Kelly, 2026-08-25)
+
+> **Relationships returns under My Life as a member-authored place. System-authored durable relational
+> interpretation remains withheld until the declaration/authorship inversion identified by the Relationship
+> Room Constitution is remedied. In-session MAIA conversation does not itself authorize persisted relational
+> claims.**
+
+*The feature is not broken in the ordinary sense — **the authority model is unfinished.*** This is precisely
+what the gated walk existed to catch.
+
+| **Ships (member-authored)** | **Withheld (system-authored)** |
+|---|---|
+| My relationships | persisted `maia_reflection` |
+| My realms — outer · inner · transpersonal | system-authored interpretation |
+| My check-ins | relationship `pattern_hint` assigned as fact |
+| My entries | inferred `field_tone` / `dominant_pattern` |
+| My own descriptions and declarations | `suggested_movement` persisted as relational truth |
+| | any hidden relationship state the member cannot inspect or contest |
+
+**The distinction this preserves:**
+
+> **A member may bring a relationship to MAIA. MAIA does not thereby acquire authorship over the
+> relationship.**
+
+MAIA may still converse with the member about a relationship **in-session**. What it may not do is **silently
+convert that conversation into a durable authored description** of the relationship.
+
+**Why not remedy-first.** The declaration/remedy work does not go on the launch critical path unless the
+reduced member-authored version proves unusable. The relationship system is valuable now without solving every
+future relational-intelligence question, and remedy-first risks reopening a deep constitutional programme just
+as the architecture is ready to become experience.
+
+**Why not removal.** It would make My Life artificially thin. Relationships are not an optional specialist
+capability — they are **one of the primary dimensions of human life**, and substantial member-authored
+infrastructure already exists.
+
+> **Ship the layer that has earned authority. Defer the layer that hasn't.**
+
+**Implementation note for the build slice.** The check-in path currently persists `maia_reflection`,
+`pattern_hint`, `field_tone_snapshot` and `suggested_movement` into `relationship_entries`, and upserts
+`field_tone` into `relationship_field_state`. Reduced scope means **those writes do not happen and those
+fields are not displayed** — not merely that the UI hides them. *Legacy rows already carrying these values are
+a custody question, not a display question* (same class as the `session_voice_notes` remediation unit): they
+are not surfaced under reduced scope, and their disposition is decided separately.
+
+**Landing section 07 — claim scope.** May truthfully say Soullab gives members a place to hold important
+relationships, reflect on what is happening between themselves and another person, make check-ins, write and
+return to their own observations, and bring relationship questions into conversation with MAIA. **May not yet
+promise** that MAIA autonomously detects relational dynamics, determines field states, or tells members what a
+relationship means. *That richer story graduates later.*
+
+**Prototype label:** **Relationships** — *a place to reflect on the relationships that shape your life.*
+This fits the Design Canon better than a prematurely "smart" relationship dashboard: **the place begins with
+the human relationship itself, not with AI analysis.**
+
 ### Standing design requirement — no cognitive cliff (Kelly, 2026-08-25)
 
 > **The landing page and MAIA House are two versions of the same world.** They are not designed separately.

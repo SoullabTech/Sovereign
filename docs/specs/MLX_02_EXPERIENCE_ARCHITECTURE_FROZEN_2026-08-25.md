@@ -20,7 +20,7 @@
 | **Q4** | Portfolio · Past Sites · Book · Projects move to `/about`. | GREEN |
 | **Q5** | Continuity launches in layers: **Kept · Recent · Continue · Deeper**, each with its own evidentiary requirement. | GREEN |
 | **R1** | The doorway replaces the three onboarding screens. Post-signup = **Name → Doorway → MAIA**, under 60s. | GREEN |
-| **R2** | Relationships restores to the House under **My Life** — **executes on a passing verification walk.** | GREEN, gated |
+| **R2** | Relationships restores under **My Life**, **member-authored scope only**. System-authored durable relational interpretation withheld. | GREEN, reduced |
 | **R3** | Doorway intent is **session-scoped**. No durable member fact, no Recognition, no elemental state. | GREEN |
 | **R4** | The member's world **displaces** the doorways. Fixed threshold order; recession is **spatial, not eliminative**. | GREEN |
 | **R5a** | **Two spheres over the shipped spine** — My Soullab / My Practice. `Worlds`/`Rooms` retire as group headings. | GREEN |
@@ -48,7 +48,7 @@
    │   │   ├── Living Field      a place to gather and reflect on lived experience
    │   │   ├── Journal           expressive writing
    │   │   ├── Anchor            a quiet place to return
-   │   │   └── Relationships     [R2 GOVERNANCE-BLOCKED — see PREFLIGHT §1]  where self and other meet
+   │   │   └── Relationships     where self and other meet — MEMBER-AUTHORED SCOPE ONLY (R2 revised)
    │   │                         (Soul Portrait moved to My Practice — PREFLIGHT §2)
    │   │
    │   └── MY CONTRIBUTION       what I am learning, creating, developing and offering
@@ -216,10 +216,10 @@ invoicing · wholesale practitioner backend rewrite.
 
 ## 11 · Open items (do not block the freeze)
 
-1. **R2 is GOVERNANCE-BLOCKED, not walk-blocked** — `MLX_PREFLIGHT_VERIFICATION_2026-08-25.md` §1. The
-   Relationship Room Constitution (ratified 2026-08-14) states **build authority remains closed** and names an
-   unremedied authorship inversion, verified still present in code. A walk cannot clear this; a founder ruling
-   on paths A/B/C can.
+1. ~~R2 governance block~~ — **RESOLVED: reduced scope (R2 revised).** Relationships ships member-authored
+   only; the system-authored layer is withheld pending the constitution's remedy. Runtime walk still owed for
+   empty state, mobile and dead routes (`MLX_PREFLIGHT_VERIFICATION_2026-08-25.md` §3), but it no longer gates
+   MLX-03 composition.
 2. **Search does not exist.** A member accumulating Keeps and journal entries with no way to find anything is
    a platform that stops feeling like a place. Belongs in the phase 5 slice order.
 3. **Soul Portrait is practitioner-owner only** — resolved: it moves to My Practice and leaves the landing
