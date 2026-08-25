@@ -475,6 +475,141 @@ more here than they need to understand on their first day.*
 
 ---
 
+## 2.95 · The Ecosystem Standard — both sides of the work (binding, Kelly, 2026-08-25)
+
+**Constitutional, not implied.** Soullab is not designed only for an individual talking to MAIA. It is
+designed for **both sides of care, guidance, practice, teaching, facilitation and transformation** — those
+seeking help, those offering help, and the relational field between them.
+
+> **Soullab serves both the person living a life and the person entrusted with helping another person live
+> theirs. The system must support both without collapsing personal, practitioner, and shared relational
+> contexts.**
+
+> **A helper's tools must deepen presence and discernment — not replace judgment, manufacture certainty, or
+> turn another person's life into a dataset.**
+
+The second principle governs Session Capture, Observation, and every future practitioner intelligence, and it
+grows more load-bearing as those get more powerful.
+
+### 2.95.1 The ecosystem
+
+```
+                              SOULLAB
+                         RELATIONAL FIELD
+
+           PERSON                              HELPER
+             │                                   │
+           MAIA                            PRACTICE TOOLS
+             │                                   │
+        JOURNAL                            SESSION ROOM
+        KEEPS                              NOTES / CAPTURE
+        RELATIONSHIPS                      PREPARATION
+        SOUL PORTRAIT                      REFLECTION
+        ROOMS                              CONTINUITY
+             │                                   │
+             └───────────── AIN ─────────────────┘
+                             │
+                     consent + memory
+                             │
+                        relationship
+```
+
+Roles the architecture must hold **without collapsing them into one**: members · clients · patients where
+appropriate · seekers · students · practitioners · therapists · coaches · facilitators · spiritual directors ·
+healers · teachers · guides · educators.
+
+### 2.95.2 MAIA's two relational orientations — not two personas
+
+| | **Personal MAIA** | **Practice-facing MAIA** |
+|---|---|---|
+| Asks | *Help me understand my life.* | *Help me be more present, discerning, prepared and coherent in how I serve another person.* |
+| Intelligence | the same relational intelligence | the same relational intelligence |
+| Differs in | — | **permissions · context · duties · evidentiary boundaries** |
+
+**This distinction is crucial and must be structural, not tonal.** A second persona would be a costume; two
+orientations with different permissions and evidentiary duties is an architecture. It is also exactly where
+the Capture programme's five-band custody model (Capture → Observation → Reflection → Recognition →
+Integration) attaches: those bands *are* the practice-facing evidentiary boundary.
+
+### 2.95.3 The three contexts, and what already enforces them
+
+| Context | Whose | Enforcement that exists today |
+|---|---|---|
+| **Personal** | the member's own Soullab | `return_preference` / `surface_preference` consent gates; the two-channel rule (§6.2) |
+| **Practitioner** | the helper's working material | `practitioner_client_notes` — born encrypted, practitioner-private, and deliberately **no `visibility` column** because sharing is unruled |
+| **Shared / relational** | the consented encounter | `encounter_consent_events` + the R-A1 trigger; the Co-Lab boundary gate (31 checks) |
+
+**The sovereignty statement that follows, and that the public page may make:**
+
+> The practitioner is not given secret authority over a member's inner life. The member's personal Soullab
+> remains theirs. Shared and session material belongs to its own consented relational context.
+
+That sentence is **Live** — it describes gates that exist and are enforced — which is what makes it worth
+saying out loud rather than leaving as abstract principle.
+
+### 2.95.4 The House holds both spheres
+
+A practitioner is still a human being with a life. They must not be exiled from their personal Soullab into an
+unrelated admin dashboard; they simply carry an **additional sphere of responsibility**.
+
+```
+   MEMBER                          ELIGIBLE PRACTITIONER
+   HOUSE                           HOUSE
+   ├── Continue                    ├── My Soullab
+   ├── Doorways                    │   ├── MAIA · Keeps · Journal
+   ├── MAIA                        │   └── …their own world, unchanged
+   ├── Keeps · Journal             │
+   ├── Relationships               └── My Practice
+   ├── Soul Portrait                   ├── Clients / members
+   ├── Rooms                           ├── Session Room · Encounters
+   └── Practices                       ├── Preparation · Follow-up
+                                       ├── Notes / observations
+                                       └── Practice intelligence
+```
+
+**Mechanism already exists:** `maiaNav.ts` carries `audience` gating (currently `'founder'` on Pro Studio,
+Book Studio, Circles, Astrology, Lab Tools, Vision Studio), and practitioner surfaces exist as routes
+(`/practitioner`, `/caseload`, `/sessions`, `/studio`). *My Practice* is an extension of that gate into a
+named House branch — not new machinery.
+
+### 2.95.5 The public story changes scale
+
+Not *"an AI companion for self-development."* More accurately:
+
+> **A relational intelligence ecosystem for human development — and the people who help make it possible.**
+
+Or, humanly:
+
+> **Soullab supports the work we do within ourselves — and the work we do in service of one another.**
+
+**The landing narrative arc is amended** from `Me → MAIA` to:
+
+```
+   Me → My world → Other people → Those who help → The relational field → The deeper ecosystem
+```
+
+### 2.95.6 Amendment to the §A.1 spine
+
+The spine gains a **two-pathways movement**, placed after 05 (The House) so a visitor meets the world before
+being asked which side of it they are on:
+
+```
+   05  THE HOUSE            what exists beyond the conversation
+   05b FOR YOUR LIFE        MAIA · Keeps · Journal · Relationships · Soul Portrait · Rooms · Practices · Creation
+   05c FOR YOUR PRACTICE    Session Room · preparation · consensual capture · notes · reflection ·
+                            practitioner continuity · Practice Studio
+   05d ONE ECOSYSTEM        different relationships — plus the sovereignty statement (§2.95.3)
+```
+
+**Claim discipline on 05c.** Session Room, encounters and the consent threshold are Live; the Universal
+Session Capture enhancements (MARK/SPEAK, multi-surface capture) are **Designed and explicitly parallel to
+launch** (roadmap phase 8). So 05c may describe *preparation, encounters, notes, continuity and the consent
+architecture* as they exist today, and must not depict wrist-tap capture, watch surfaces, or MAIA-drafted
+session notes as available. **This is the one place where the two programmes touch the launch surface**, and
+the boundary must hold: the practice *story* ships at launch; the capture *capability* ships on its own track.
+
+---
+
 ## 3 · Surface A — Public MAIA landing
 
 **Layer: Live surface, Designed restructure. Direction ratified by Kelly, 2026-08-25 — this section replaces
