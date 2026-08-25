@@ -47,6 +47,13 @@ export type VoiceDiagEvent =
   // (local maia-whisper, NOT OpenAI cloud). All four are observational —
   // no transcript content in telemetry, only durations/byte-counts/mime/error.
   | 'voice_fallback_recording_started'
+  // Capture-liveness events (silent-death detection, track loss, salvage).
+  // See lib/voice/micLiveness.ts — these fire when the capture path dies
+  // without the recognition object reporting anything.
+  | 'voice_status_surfaced'
+  | 'voice_transcript_salvaged'
+  | 'voice_capture_lost'
+  | 'voice_track_listeners_attached'
   | 'voice_fallback_transcribe_sent'
   | 'voice_fallback_transcribe_result'
   | 'voice_fallback_failed'
