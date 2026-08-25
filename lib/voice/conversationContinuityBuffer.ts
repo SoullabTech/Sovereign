@@ -15,6 +15,21 @@
  * on mode changes — and it does not survive an unmount, a remount, or a tab
  * refresh. There is no second copy anywhere.
  *
+ * WHAT THIS CAN AND CANNOT PROMISE
+ * ---------------------------------
+ * Precisely: NO RECOGNIZED SPEECH IS LOST. Once the browser has produced text,
+ * that text survives a capture failure, a remount, and a tab refresh.
+ *
+ * It does NOT promise that no spoken thought is lost. It cannot. If recognition
+ * dies before emitting text — mid-sentence, in the seconds before the failure
+ * became observable — that audio never entered Soullab custody at all, because
+ * on this path we never possess audio. Claiming otherwise would be claiming a
+ * guarantee the architecture cannot make.
+ *
+ * Closing that remaining gap requires owning the audio stream (recorder →
+ * maia-whisper). That is the point at which first-party capture stops being
+ * only a sovereignty improvement and becomes a continuity requirement.
+ *
  * That is why detecting a dead mic, however fast, is not sufficient. Salvage at
  * the moment of detection only rescues losses we detect, at the instant we
  * detect them. It cannot help a remount, a refresh, a misclassified failure, or
@@ -110,7 +125,19 @@ export interface ContinuityState {
   updatedAt: number;
 }
 
-const EMPTY: ContinuityState = { pending: null, turns: [], updatedAt: 0 };
+/**
+ * A FRESH empty state on every call.
+ *
+ * Deliberately a factory, not a shared constant. A module-level `EMPTY` object
+ * spread shallowly (`{ ...EMPTY }`) hands every instance the SAME `turns`
+ * array, so the first `turns.push()` after a read-miss mutates module state
+ * that every other buffer then reads — turns leaking across contexts, and
+ * surviving a Sanctuary purge in memory even after storage was cleared.
+ * Caught by the cross-test contamination in this module's own tests.
+ */
+function emptyState(): ContinuityState {
+  return { pending: null, turns: [], updatedAt: 0 };
+}
 
 function resolveStorage(injected?: ContinuityStorage): ContinuityStorage | null {
   if (injected) return injected;
@@ -154,16 +181,16 @@ export class ConversationContinuityBuffer {
   }
 
   private read(): ContinuityState {
-    if (!this.storage) return { ...EMPTY };
+    if (!this.storage) return emptyState();
     try {
       const raw = this.storage.getItem(STORAGE_KEY);
-      if (!raw) return { ...EMPTY };
+      if (!raw) return emptyState();
       const parsed = JSON.parse(raw) as ContinuityState;
-      if (!parsed || typeof parsed !== 'object') return { ...EMPTY };
+      if (!parsed || typeof parsed !== 'object') return emptyState();
       // Expired: surrender it rather than hand back stale speech.
       if (!parsed.updatedAt || Date.now() - parsed.updatedAt > CONTINUITY_TTL_MS) {
         this.purge();
-        return { ...EMPTY };
+        return emptyState();
       }
       return {
         pending: parsed.pending ?? null,
@@ -171,7 +198,7 @@ export class ConversationContinuityBuffer {
         updatedAt: parsed.updatedAt,
       };
     } catch {
-      return { ...EMPTY };
+      return emptyState();
     }
   }
 
