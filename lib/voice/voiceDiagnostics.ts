@@ -83,6 +83,32 @@ export type VoiceDiagEvent =
   | 'voice_fallback_transcribe_sent'
   | 'voice_fallback_transcribe_result'
   | 'voice_fallback_failed'
+
+  // ── V5 utterance-tail witness ───────────────────────────────────────────
+  // The question: why do the ENDS of Jondi's utterances go missing?
+  //
+  // Six orderings could produce that symptom and they need different repairs:
+  //   A. capture actually dies              (already covered by micLiveness)
+  //   B. recognition ends prematurely
+  //   C. interim speech never becomes final
+  //   D. the silence timer fires while fresh interim speech exists
+  //   E. the turn commits before the trailing result arrives
+  //   F. a trailing result arrives AFTER commit and is discarded
+  //
+  // These events establish which ordering actually occurred. `charCount` is a
+  // STRUCTURAL witness only — it says recognized material grew or shrank, never
+  // which words were lost. No transcript text is ever emitted.
+  //
+  // `voice_result_after_commit` is the load-bearing one: if the browser hands us
+  // another result after we have already submitted the turn, that is F, and it
+  // must be OBSERVED rather than inferred from words a member reports missing.
+  | 'voice_result_interim'
+  | 'voice_result_final'
+  | 'voice_silence_timer_armed'
+  | 'voice_silence_timer_fired'
+  | 'voice_turn_commit_requested'
+  | 'voice_turn_committed'
+  | 'voice_result_after_commit'
   // Native iOS path (@capacitor-community/speech-recognition)
   // Naming follows "Observable state before interpreted meaning":
   // we report what the plugin emitted, not what we think it meant.
