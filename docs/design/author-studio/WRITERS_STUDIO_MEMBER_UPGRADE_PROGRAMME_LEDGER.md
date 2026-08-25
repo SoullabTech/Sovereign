@@ -1,8 +1,41 @@
 # Writer's Studio Member Upgrade — Programme Ledger
 
-> **The one durable state record for this programme.** Session narration is not state.
-> If a fact about programme state is not in this file, it is not established.
-> Update this file as part of the work it describes — never afterwards, never elsewhere.
+> ## ⚠️ SUPERSEDED AS LIVE STATE AUTHORITY — 2026-08-24
+>
+> **This file is a historical predecessor ledger. It is no longer the live programme-state
+> record, and it is no longer updated.**
+>
+> It records the state of the `WRITERS-STUDIO-MEMBER-UPGRADE-2026-08-14` programme and its
+> lane. That programme is the **same Writer's Studio lineage** as the current one — not a
+> different effort — and its contents are preserved as historical and custody evidence:
+> the #995 Canvas material, Writer's Desk, arrangement, Press Editor, return, and
+> member-facing convergence all originate here.
+>
+> Its live-state authority was superseded on 2026-08-24 by the canonical Writer's Studio
+> Master Brief, which establishes the current programme, reconciles the inherited
+> architecture, and ratifies WS-01–WS-07. The Master Brief is explicit that this programme
+> is not greenfield: existing researched, implemented, abandoned, superseded, partially
+> merged and uncalled work must be **reconciled rather than rediscovered**. This ledger is
+> part of what is reconciled.
+>
+> ```text
+> NORMATIVE AUTHORITY      docs/programme/WRITERS_STUDIO_MASTER_BRIEF.md
+> LIVE OPERATIONAL STATE   docs/programme/WRITERS_STUDIO_BUILD_GRAPH.md
+>                          the SINGLE live cockpit — there is no second board
+> CAPABILITY SPECIFICATION docs/programme/DEVELOPMENTAL_EDITOR_CAPABILITY.md
+> THIS FILE                historical predecessor evidence — frozen, not authoritative
+> ```
+>
+> Do not read live programme state from this file, and do not update it. Where it conflicts
+> with the Master Brief or the Build Graph, they govern.
+>
+> ---
+>
+> *Original banner, preserved for the record:*
+>
+> > **The one durable state record for this programme.** Session narration is not state.
+> > If a fact about programme state is not in this file, it is not established.
+> > Update this file as part of the work it describes — never afterwards, never elsewhere.
 
 ```text
 PROGRAM ............ WRITERS-STUDIO-MEMBER-UPGRADE-2026-08-14

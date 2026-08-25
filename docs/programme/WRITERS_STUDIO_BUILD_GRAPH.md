@@ -10,6 +10,25 @@
 
 **Verified against canonical `8fa03f48a`, 2026-08-24.**
 
+## Authority hierarchy
+
+```text
+NORMATIVE AUTHORITY      WRITERS_STUDIO_MASTER_BRIEF.md
+                         meaning · architecture · invariants · unit identities
+
+LIVE OPERATIONAL STATE   WRITERS_STUDIO_BUILD_GRAPH.md   ← this file
+                         the SINGLE cockpit. ⛔ There is no second board:
+                         two cockpits recreate the ambiguity one is for.
+
+CAPABILITY SPEC          DEVELOPMENTAL_EDITOR_CAPABILITY.md
+                         subordinate to the brief; not programme authority
+
+HISTORICAL / FROZEN      docs/design/author-studio/
+                         WRITERS_STUDIO_MEMBER_UPGRADE_PROGRAMME_LEDGER.md
+                         same Writer's Studio lineage, superseded as live
+                         authority; preserved as custody evidence
+```
+
 ## States
 
 ```text
