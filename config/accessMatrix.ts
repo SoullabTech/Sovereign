@@ -487,6 +487,18 @@ export const ACCESS_RULES: AccessRule[] = [
   // Sovereign API - all open to authenticated users (tier check temporarily disabled)
   { prefix: '/api/sovereign', minTier: 'free', notes: 'Sovereign features' },
 
+  // MAIA trajectory substrate - AUTH-01-D4B edge containment.
+  // These five handlers take member identity from caller-supplied `?memberId=` /
+  // `body.memberId` and carried NO accessMatrix rule, so permissive mode admitted
+  // ANONYMOUS callers to member-scoped reads and member-attributed writes.
+  // This rule closes the EDGE only. It deliberately does NOT decide whether
+  // `memberId` is authenticated member identity or an authorized service-selected
+  // subject - that question needs its own evidence (no in-repo caller exists).
+  // The trailing slash is deliberate: matchRule uses raw `startsWith`, so a bare
+  // '/api/maia/trajectory' would also capture a future sibling like
+  // '/api/maia/trajectoryX'.
+  { prefix: '/api/maia/trajectory/', minTier: 'free', notes: 'MAIA trajectory substrate - authenticated members only (AUTH-01-D4B)' },
+
   // Studio API - session room, bookings, scribe markers, live prompts
   { prefix: '/api/studio', minTier: 'free', notes: 'Studio API' },
 
