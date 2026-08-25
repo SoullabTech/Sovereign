@@ -262,13 +262,46 @@ non-crossover, and that production has not acquired `session_captures`.
 **It is built to refuse a false green.** Every inconclusive path scores as FAIL,
 never PASS:
 
-| Situation | Verdict |
-|---|---|
-| Production database unreadable | **FAIL** — "different from a value we could not obtain" is not evidence |
-| Test database unreadable | **FAIL** |
-| `node` unavailable to probe with | **FAIL** — cannot probe means cannot conclude |
-| Probe cannot reach even the test DB (positive control) | **FAIL** — a negative result from a broken probe proves nothing |
-| Production readable, identities differ, probe verified working, production unreachable | PASS |
+```
+PASS          positive evidence obtained
+FAIL          evidence contradicts isolation
+INCONCLUSIVE  a required observation could not be made
+
+NEVER: unknown / unreadable / unexecuted → PASS
+```
+
+**Both FAIL and INCONCLUSIVE exit non-zero.** A human-readable "INCONCLUSIVE"
+followed by exit `0` would be automation-dangerous — a wrapper would read the
+command as passing.
+
+| Situation | Verdict | Exit |
+|---|---|---|
+| Production identity unreadable | INCONCLUSIVE | 1 |
+| Test identity unreadable | INCONCLUSIVE | 1 |
+| `node` unavailable to probe with | INCONCLUSIVE | 1 |
+| Positive control fails (probe can't reach the test DB) | INCONCLUSIVE | 1 |
+| Sentinel could not be created, or production not queryable | INCONCLUSIVE | 1 |
+| Production postgres reachable from the test app | **FAIL** | 1 |
+| Sentinel appears in production | **FAIL** | 1 |
+| Test and production are the same database | **FAIL** | 1 |
+| `session_captures` already in production | **FAIL — investigate** | 1 |
+| All observations made, all evidence consistent with isolation | PASS | 0 |
+
+> **On `session_captures` already existing in production:** do **not** infer
+> leakage from OPS-DT-01. Stop and establish provenance — it may have arrived
+> through another canonical lane. Either way this proof can no longer establish
+> the expected clean baseline, and the script says so rather than guessing.
+
+`set -e` is deliberately **not** used. Every probe here is expected to fail in
+some scenario, and an early abort would skip later checks and suppress the final
+verdict — yielding a correct exit code for the wrong reason and an unreadable
+report. Every external call is guarded instead.
+
+**Verdict logic is proven, not asserted.** All four paths were exercised against
+a simulated estate: healthy → PASS/0; production reachable from the test app →
+FAIL/1; test and production sharing one database → FAIL/1; every observation
+impossible → INCONCLUSIVE/1. In each non-PASS case the script still reached and
+printed the final verdict block.
 
 The network check runs a **positive control first**: it confirms the probe can
 reach the test database before treating "production unreachable" as meaningful.

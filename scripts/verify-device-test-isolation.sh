@@ -2,19 +2,29 @@
 # ═══════════════════════════════════════════════════════════════════════════════
 # OPS-DT-01 — Independent database isolation proof
 # ═══════════════════════════════════════════════════════════════════════════════
-# Run this BEFORE deploying any branch into the device-test environment.
+# Run this on the EMPTY device-test stack, BEFORE any branch is deployed to it.
 #
-# Proves, without trusting configuration:
-#   1. the test DB identity differs from the production DB identity
-#   2. the app's connection string resolves ONLY to the test database
-#   3. the app container has no network route to production postgres
-#   4. a sentinel created in test never appears in production
-#   5. the sentinel is removed afterwards
+# Verdict vocabulary — the whole point of this script:
 #
-# Read-only against production throughout. It never writes to production; it only
+#   PASS          positive evidence obtained
+#   FAIL          evidence contradicts isolation
+#   INCONCLUSIVE  a required observation could not be made
+#
+#   NEVER: unknown / unreadable / unexecuted → PASS
+#
+# Both FAIL and INCONCLUSIVE exit non-zero. A human-readable "INCONCLUSIVE"
+# followed by exit 0 would be automation-dangerous: a wrapper would read the
+# command as passing.
+#
+# NOTE ON `set -e`: deliberately NOT used. Every probe here is expected to fail
+# in some scenarios, and an early abort would skip later checks and suppress the
+# final verdict — producing a correct exit code for the wrong reason and an
+# unreadable report. Every external call is guarded instead.
+#
+# This script is read-only against production. It never writes there; it only
 # looks for a sentinel that must be absent.
 # ═══════════════════════════════════════════════════════════════════════════════
-set -euo pipefail
+set -uo pipefail
 
 PROD_CONTAINER="${PROD_CONTAINER:-maia-postgres}"
 PROD_DB="${PROD_DB:-maia_consciousness}"
@@ -25,123 +35,164 @@ TEST_USER="${TEST_USER:-devicetest}"
 APP_CONTAINER="${APP_CONTAINER:-maia-device-test}"
 
 SENTINEL="ops_dt_01_sentinel_$(date +%s)"
-pass=0; fail=0
-ok(){ echo "  ✅ $1"; pass=$((pass+1)); }
-no(){ echo "  ❌ $1"; fail=$((fail+1)); }
+n_pass=0; n_fail=0; n_inconc=0
+NOTES=""
 
-echo "═══ OPS-DT-01 database isolation proof ═══"
+pass(){ printf '  %-42s %s\n' "$1" "PASS"; n_pass=$((n_pass+1)); }
+fail(){ printf '  %-42s %s\n' "$1" "FAIL"; n_fail=$((n_fail+1)); NOTES="$NOTES\n  FAIL: $2"; }
+inconc(){ printf '  %-42s %s\n' "$1" "INCONCLUSIVE"; n_inconc=$((n_inconc+1)); NOTES="$NOTES\n  INCONCLUSIVE: $2"; }
+
+# Guarded query helpers — never abort, return empty on failure.
+q_prod(){ docker exec "$PROD_CONTAINER" psql -U "$PROD_USER" -d "$PROD_DB" -tAc "$1" 2>/dev/null || true; }
+q_test(){ docker exec "$TEST_CONTAINER" psql -U "$TEST_USER" -d "$TEST_DB" -tAc "$1" 2>/dev/null || true; }
+
+echo "═══════════════════════════════════════════════════════════════"
+echo " OPS-DT-01 — DEVICE-TEST DATABASE ISOLATION PROOF"
+echo " $(date -u '+%Y-%m-%dT%H:%M:%SZ')"
+echo "═══════════════════════════════════════════════════════════════"
 echo
 
-# ── 1. Distinct database identity ────────────────────────────────────────────
-echo "1. Database identity"
-# An unreadable production database must FAIL, never pass. If we cannot read
-# production we have not proven the identities differ — we have proven nothing.
-# "Different from a value we could not obtain" is not evidence.
-PROD_ID=$(docker exec "$PROD_CONTAINER" psql -U "$PROD_USER" -d "$PROD_DB" -tAc \
-  "SELECT current_database()||'/'||system_identifier FROM pg_control_system();" 2>/dev/null || true)
-TEST_ID=$(docker exec "$TEST_CONTAINER" psql -U "$TEST_USER" -d "$TEST_DB" -tAc \
-  "SELECT current_database()||'/'||system_identifier FROM pg_control_system();" 2>/dev/null || true)
-echo "   production : ${PROD_ID:-<unreadable>}"
-echo "   device-test: ${TEST_ID:-<unreadable>}"
-
-if [ -z "$PROD_ID" ]; then
-  no "could not read the PRODUCTION database identity — INCONCLUSIVE, treated as FAIL"
-elif [ -z "$TEST_ID" ]; then
-  no "could not read the DEVICE-TEST database identity — INCONCLUSIVE, treated as FAIL"
-elif [ "$PROD_ID" = "$TEST_ID" ]; then
-  no "IDENTITIES MATCH — NOT ISOLATED"
-else
-  ok "identities differ (both read successfully)"
-fi
-echo
-
-# ── 2. App resolves only to the test database ────────────────────────────────
-echo "2. Application connection target"
-APP_DB=$(docker exec "$APP_CONTAINER" sh -c 'echo "$DATABASE_URL"' | sed 's/:[^:@]*@/:***@/')
-echo "   DATABASE_URL: $APP_DB"
-case "$APP_DB" in
-  *postgres-device-test:5432/maia_device_test*) ok "points at the isolated database" ;;
-  *) no "does NOT point at the isolated database" ;;
-esac
-echo
-
-# ── 3. No network route to production postgres ───────────────────────────────
-# The strongest check: even a wrong connection string cannot reach production,
-# because there is no path. Absence of DNS resolution is the proof.
-echo "3. Network reachability of production postgres"
-# A negative result only means something if the probe was CAPABLE of a positive
-# one. An earlier version shelled out to `getent`, which is absent from musl
-# images: command-not-found exited non-zero and was scored as "not reachable" —
-# a false PASS that would have certified isolation without testing anything.
-#
-# So: probe with node (always present in the app image) over real TCP, and run a
-# POSITIVE CONTROL first. If the control cannot reach the test database, the
-# probe is broken and the whole check is inconclusive rather than passing.
-probe() {
+# ── POSITIVE CONTROL ─────────────────────────────────────────────────────────
+# Prove the instrument works before treating failure-to-connect as evidence.
+echo "POSITIVE CONTROL"
+probe(){
   docker exec "$APP_CONTAINER" node -e '
     const net = require("net");
-    const [host, port] = [process.argv[1], Number(process.argv[2])];
     const s = new net.Socket();
     let done = false;
-    const finish = (code) => { if (!done) { done = true; s.destroy(); process.exit(code); } };
+    const finish = (c) => { if (!done) { done = true; s.destroy(); process.exit(c); } };
     s.setTimeout(4000);
     s.once("connect", () => finish(0));
     s.once("timeout", () => finish(1));
     s.once("error",   () => finish(1));
-    s.connect(port, host);
+    s.connect(Number(process.argv[2]), process.argv[1]);
   ' "$1" "$2" >/dev/null 2>&1
 }
 
+PROBE_OK=0
 if ! docker exec "$APP_CONTAINER" node -e 'process.exit(0)' >/dev/null 2>&1; then
-  no "node unavailable in the app container — cannot probe, INCONCLUSIVE, treated as FAIL"
-elif ! probe postgres-device-test 5432; then
-  no "POSITIVE CONTROL FAILED — the probe cannot reach even the test database, so a \
-negative result proves nothing. INCONCLUSIVE, treated as FAIL"
+  inconc "probe instrument available" "node unavailable in $APP_CONTAINER — cannot probe, so nothing about reachability can be concluded"
+elif probe postgres-device-test 5432; then
+  pass "test DB TCP reachable"; PROBE_OK=1
 else
-  echo "   positive control: test database reachable — probe is working"
-  reachable=""
+  inconc "test DB TCP reachable" "positive control failed — the probe cannot reach even the test database, so 'production unreachable' would prove nothing"
+fi
+echo
+
+# ── IDENTITY ─────────────────────────────────────────────────────────────────
+echo "IDENTITY"
+TEST_ID=$(q_test "SELECT current_database()||'/'||system_identifier FROM pg_control_system();")
+PROD_ID=$(q_prod "SELECT current_database()||'/'||system_identifier FROM pg_control_system();")
+
+[ -n "$TEST_ID" ] && pass "test DB identity obtained" \
+  || inconc "test DB identity obtained" "device-test database unreadable"
+[ -n "$PROD_ID" ] && pass "production DB identity obtained" \
+  || inconc "production DB identity obtained" "production unreadable — 'different from a value we could not obtain' is not evidence"
+
+if [ -n "$TEST_ID" ] && [ -n "$PROD_ID" ]; then
+  if [ "$TEST_ID" != "$PROD_ID" ]; then pass "identities differ"
+  else fail "identities differ" "TEST AND PRODUCTION ARE THE SAME DATABASE"; fi
+else
+  inconc "identities differ" "cannot compare — at least one identity unreadable"
+fi
+echo "    test: ${TEST_ID:-<unreadable>}"
+echo "    prod: ${PROD_ID:-<unreadable>}"
+echo
+
+# ── CONNECTION TARGET ────────────────────────────────────────────────────────
+echo "CONNECTION TARGET"
+APP_DB=$(docker exec "$APP_CONTAINER" sh -c 'echo "$DATABASE_URL"' 2>/dev/null || true)
+if [ -z "$APP_DB" ]; then
+  inconc "app DATABASE_URL readable" "could not read DATABASE_URL from $APP_CONTAINER"
+else
+  case "$APP_DB" in
+    *postgres-device-test:5432/maia_device_test*)
+      pass "app targets the isolated database" ;;
+    *) fail "app targets the isolated database" "DATABASE_URL does not point at the isolated database" ;;
+  esac
+  echo "    $(echo "$APP_DB" | sed 's/:[^:@]*@/:***@/')"
+fi
+echo
+
+# ── NETWORK ──────────────────────────────────────────────────────────────────
+echo "NETWORK"
+if [ "$PROBE_OK" -ne 1 ]; then
+  inconc "production postgres TCP unreachable" "probe not verified working — a negative result would be meaningless"
+else
+  REACHABLE=""
   for h in maia-postgres postgres; do
-    if probe "$h" 5432; then reachable="$reachable $h"; fi
+    probe "$h" 5432 && REACHABLE="$REACHABLE $h"
   done
-  if [ -n "$reachable" ]; then
-    no "PRODUCTION POSTGRES IS REACHABLE from the app container ($reachable) — topological isolation broken"
+  if [ -n "$REACHABLE" ]; then
+    fail "production postgres TCP unreachable" "PRODUCTION POSTGRES REACHABLE from the app container:$REACHABLE — topological isolation is broken"
   else
-    ok "production postgres unreachable over TCP from the app container (probe verified working)"
+    pass "production postgres TCP unreachable"
   fi
 fi
 echo
 
-# ── 4. Sentinel must not cross ───────────────────────────────────────────────
-echo "4. Sentinel crossover test"
-docker exec "$TEST_CONTAINER" psql -U "$TEST_USER" -d "$TEST_DB" -q -c \
-  "CREATE TABLE IF NOT EXISTS $SENTINEL (id int);" >/dev/null
-echo "   created $SENTINEL in device-test"
+# ── SENTINEL ─────────────────────────────────────────────────────────────────
+echo "SENTINEL"
+CREATED=$(q_test "CREATE TABLE IF NOT EXISTS $SENTINEL (id int); SELECT 'ok';")
+if [ -n "$CREATED" ]; then
+  pass "created in test"
+  SEEN=$(q_test "SELECT count(*) FROM information_schema.tables WHERE table_name='$SENTINEL';")
+  [ "$SEEN" = "1" ] && pass "visible in test" \
+    || inconc "visible in test" "sentinel not observable in the test database"
 
-FOUND=$(docker exec "$PROD_CONTAINER" psql -U "$PROD_USER" -d "$PROD_DB" -tAc \
-  "SELECT count(*) FROM information_schema.tables WHERE table_name = '$SENTINEL';" 2>/dev/null || echo "ERR")
-if [ "$FOUND" = "0" ]; then
-  ok "sentinel absent from production"
-elif [ "$FOUND" = "ERR" ]; then
-  no "could not read production to confirm absence (inconclusive — treat as FAIL)"
+  PROD_SEEN=$(q_prod "SELECT count(*) FROM information_schema.tables WHERE table_name='$SENTINEL';")
+  if [ -z "$PROD_SEEN" ]; then
+    inconc "absent from production" "could not query production to confirm absence"
+  elif [ "$PROD_SEEN" = "0" ]; then
+    pass "absent from production"
+  else
+    fail "absent from production" "SENTINEL FOUND IN PRODUCTION — environments are NOT isolated"
+  fi
+
+  DROPPED=$(q_test "DROP TABLE IF EXISTS $SENTINEL; SELECT 'ok';")
+  [ -n "$DROPPED" ] && pass "removed from test" \
+    || inconc "removed from test" "sentinel $SENTINEL may remain — remove it manually"
 else
-  no "SENTINEL FOUND IN PRODUCTION ($FOUND) — ENVIRONMENTS ARE NOT ISOLATED"
+  inconc "created in test" "could not create the sentinel; crossover was never tested"
+  inconc "visible in test" "sentinel never created"
+  inconc "absent from production" "sentinel never created"
+  inconc "removed from test" "sentinel never created"
 fi
-
-docker exec "$TEST_CONTAINER" psql -U "$TEST_USER" -d "$TEST_DB" -q -c \
-  "DROP TABLE IF EXISTS $SENTINEL;" >/dev/null
-echo "   removed $SENTINEL"
 echo
 
-# ── 5. Production capture tables must be untouched by this environment ───────
-echo "5. Production must not have acquired device-test schema"
-for t in session_captures; do
-  N=$(docker exec "$PROD_CONTAINER" psql -U "$PROD_USER" -d "$PROD_DB" -tAc \
-    "SELECT count(*) FROM information_schema.tables WHERE table_name='$t';" 2>/dev/null || echo "ERR")
-  if [ "$N" = "0" ]; then ok "production has no '$t' (branch migrations did not leak)"
-  else no "production HAS '$t' — a branch migration reached production"; fi
-done
+# ── MIGRATION BOUNDARY ───────────────────────────────────────────────────────
+echo "MIGRATION BOUNDARY"
+PROD_CAP=$(q_prod "SELECT count(*) FROM information_schema.tables WHERE table_name='session_captures';")
+if [ -z "$PROD_CAP" ]; then
+  inconc "production session_captures absent" "could not query production"
+elif [ "$PROD_CAP" = "0" ]; then
+  pass "production session_captures absent"
+else
+  fail "production session_captures absent" "session_captures EXISTS IN PRODUCTION — do NOT assume this leaked from OPS-DT-01; establish provenance first (it may have arrived via another canonical lane). Either way this proof can no longer establish the expected clean baseline."
+fi
 echo
 
-echo "═══ $pass passed · $fail failed ═══"
-[ "$fail" -eq 0 ] || { echo "ISOLATION NOT PROVEN — do not deploy a branch here."; exit 1; }
-echo "Isolation proven. Safe to deploy a branch into device-test."
+# ── VERDICT ──────────────────────────────────────────────────────────────────
+echo "═══════════════════════════════════════════════════════════════"
+printf ' %-42s %s\n' "checks passed" "$n_pass"
+printf ' %-42s %s\n' "checks failed" "$n_fail"
+printf ' %-42s %s\n' "checks inconclusive" "$n_inconc"
+[ -n "$NOTES" ] && { echo; echo " Detail:"; printf '%b\n' "$NOTES"; }
+echo
+
+if [ "$n_fail" -gt 0 ]; then
+  VERDICT="FAIL"; CODE=1
+elif [ "$n_inconc" -gt 0 ]; then
+  VERDICT="INCONCLUSIVE"; CODE=1
+else
+  VERDICT="PASS"; CODE=0
+fi
+printf ' %-42s %s\n' "FINAL VERDICT" "$VERDICT"
+printf ' %-42s %s\n' "exit code" "$CODE"
+echo "═══════════════════════════════════════════════════════════════"
+
+if [ "$CODE" -ne 0 ]; then
+  echo
+  echo "ISOLATION NOT PROVEN — do not deploy any branch to this stack."
+fi
+exit "$CODE"
