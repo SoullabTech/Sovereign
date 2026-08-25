@@ -54,10 +54,17 @@ export type VoiceDiagEvent =
   // playback path observable WITHOUT changing its behavior.
   //
   // The sequence that would mechanically prove the suspected replay bug:
-  //   playback_started    currentTimeMs ~0
-  //   playback_interrupted currentTimeMs > 0   ← audio was already audible
-  //   playback_retry      same chunkId
-  //   playback_started    currentTimeMs ~0     ← the head plays again
+  //   playback_started     chunk=X attempt=1 currentTimeMs ~0
+  //   playback_interrupted chunk=X AbortError currentTimeMs > 0  ← already audible
+  //   playback_retry       chunk=X
+  //   playback_resumed     chunk=X attempt=2 currentTimeMs ~0    ← the head plays again
+  //
+  // NOTE the fourth event is playback_RESUMED, not a second playback_started.
+  // StreamingAudioQueue emits `started` only on attempt 1 and `resumed` on every
+  // retry, so a replay is identified by a RESUMED at currentTimeMs ~0 following an
+  // INTERRUPTED at currentTimeMs > 0 for the same chunkId. Reading this sequence
+  // as "started ... started" would make the replay look like two separate chunks
+  // and hide the defect it was built to catch.
   //
   // Metadata is media-element state only. No transcript, no spoken text.
   | 'voice_playback_started'
