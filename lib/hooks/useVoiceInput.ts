@@ -96,6 +96,29 @@ export function useVoiceInput({
   const isNativeRef = useRef<boolean>(false);
   const recordingStartTimeRef = useRef<number>(0);
 
+  // ──────────────────────────────────────────────────────────────────────
+  // Callback identity stability.
+  //
+  // Every consumer passes these as inline arrow literals, so they are a NEW
+  // function on every render. They used to sit in the setup effect's dependency
+  // array, which meant the effect re-ran on EVERY RENDER and its cleanup called
+  // `recognition.abort()` on the live instance.
+  //
+  // While dictating, interim results update state, which re-renders, which
+  // aborted the very recognition object producing them — destroying voice input
+  // mid-sentence and surfacing "Voice recognition error: aborted" as if the
+  // member had done something wrong. The abort was real, and we caused it.
+  //
+  // Holding them in refs lets the effect depend only on actual CONFIGURATION,
+  // so the recognition object is built once and survives rendering.
+  // ──────────────────────────────────────────────────────────────────────
+  const onResultRef = useRef(onResult);
+  onResultRef.current = onResult;
+  const onErrorRef = useRef(onError);
+  onErrorRef.current = onError;
+  const onAutoStopRef = useRef(onAutoStop);
+  onAutoStopRef.current = onAutoStop;
+
   useEffect(() => {
     const isNative = Capacitor.isNativePlatform();
     isNativeRef.current = isNative;
@@ -179,7 +202,7 @@ export function useVoiceInput({
           const fullTranscript = (finalTranscriptRef.current + interimTranscript).trim();
           setTranscript(fullTranscript);
           setConfidence(currentConfidence);
-          onResult(fullTranscript, hasFinalResult);
+          onResultRef.current(fullTranscript, hasFinalResult);
 
           // Clear existing silence timeout
           if (silenceTimeoutRef.current) {
@@ -193,7 +216,7 @@ export function useVoiceInput({
               if (finalText.length >= minSpeechLengthChars) {
                 console.log(`🎤 Auto-stopping after ${silenceTimeoutMs}ms silence`);
                 recognition.stop();
-                onAutoStop?.(finalText);
+                onAutoStopRef.current?.(finalText);
               }
             }, silenceTimeoutMs);
           }
@@ -205,6 +228,28 @@ export function useVoiceInput({
         };
 
         recognition.onerror = (event) => {
+          // ──────────────────────────────────────────────────────────────
+          // Routine lifecycle events are NOT errors and must never be shown.
+          //
+          // `aborted` fires every single turn: we abort recognition while MAIA
+          // speaks, to stop her voice feeding back into the mic. Surfacing it
+          // put a red "Voice recognition error: aborted" under the message box
+          // during normal, healthy operation (reported repeatedly from macOS
+          // Safari). Crying wolf on an expected event is worse than silence —
+          // it teaches members that the error line means nothing, so the one
+          // message that DOES matter gets ignored too.
+          //
+          // `no-speech` is likewise routine in continuous mode: it is what the
+          // browser says after any ordinary pause for thought.
+          // ──────────────────────────────────────────────────────────────
+          const benign =
+            event.error === 'aborted' || (event.error === 'no-speech' && continuous);
+          if (benign) {
+            console.log(`[voice] Routine recognition event (${event.error}) — not surfaced`);
+            setIsRecording(false);
+            return;
+          }
+
           let errorMessage = 'Voice recognition error';
 
           switch (event.error) {
@@ -230,13 +275,15 @@ export function useVoiceInput({
               errorMessage = `Language "${language}" not supported.`;
               break;
             default:
-              errorMessage = `Voice recognition error: ${event.error}`;
+              // Never show a raw API error code to a member — it names an
+              // internal state they cannot act on. Say what it means for them.
+              errorMessage = 'Voice input stopped unexpectedly. Tap the mic to try again.';
           }
 
           console.error('Speech recognition error:', event.error);
           setError(errorMessage);
           setIsRecording(false);
-          onError?.(errorMessage);
+          onErrorRef.current?.(errorMessage);
         };
 
         recognition.onend = () => {
@@ -256,7 +303,9 @@ export function useVoiceInput({
         clearTimeout(timeoutRef.current);
       }
     };
-  }, [continuous, interimResults, language, onResult, onError]);
+  // Configuration only. Callbacks are reached through refs above — including
+  // them here rebuilt the recognition object on every render (see note above).
+  }, [continuous, interimResults, language]);
 
   // Request permission explicitly (for UI to call)
   const requestPermission = useCallback(async (): Promise<boolean> => {
