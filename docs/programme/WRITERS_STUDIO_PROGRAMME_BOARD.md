@@ -32,11 +32,16 @@ CURRENT UNIT       WS-01 Source Custody + Freeze Release
 CURRENT CANDIDATE  e92f532396705daaf6cd346445276a08a5957904
                    feature/ws-01-source-custody-v2  ·  PINNED, untouched
 NEXT EXECUTABLE    P0-D
-LAST UPDATED       2026-08-25
+LAST UPDATED       2026-08-24
 ```
 
 Writer's Studio mode reflects **this programme only**. Unrelated Jarvis incidents may sit ahead of
 it in the global work queue without becoming Writer's Studio state.
+
+> **Amendment 4 — Core Capability Mandate (2026-08-24)** is binding programme scope. Every capability
+> it mandates is censused below under **CAPABILITY MANDATE CENSUS**, and stays there until delivered.
+> ⛔ **A4.21:** success may not be declared while the gather, memory, structural, developmental,
+> expression and authorship rows read ABSENT — a shipped manuscript editor is not fruition.
 
 ## Release signal — read mechanically, never inferred
 
@@ -150,6 +155,47 @@ established until someone does.
 | Book Mode / manuscript-scale surfaces beyond Worktable | **UNVERIFIED** | capability census |
 | Press Editor handoff surface (WS-07) | **UNVERIFIED** | capability census |
 | Member-facing convergence inherited from the 2026-08-14 lane | **UNVERIFIED** | reconcile against predecessor ledger |
+
+## CAPABILITY MANDATE CENSUS (Amendment 4)
+
+Required by **A4.16**. Every mandated capability appears here **until it is delivered**. States are
+artifact-derived — read from canonical `bd87d497f` on 2026-08-24, never from a specification.
+
+⛔ **A4.21 — the prohibition on partial success.** Jarvis may not declare Writer's Studio successful
+while these rows read ABSENT. A shipped manuscript editor is not fruition.
+
+| A4 | Capability | State | Evidence on canonical | Dependency | Vertical slice | Real-Work acceptance | Blocker / next |
+|---|---|---|---|---|---|---|---|
+| 1 | Work-Centered Home | **PARTIAL** | `app/writers-studio/{page,HomeView,homeState,useLivingWorks}.tsx/ts` + 5 test files, route live | — | home answers A4.1's six questions | returning to a real Work | the six questions are **UNVERIFIED**; only presence is proven |
+| 1 | Formless Work — no genre at creation | **PARTIAL** | `20260801000002_living_work_title_optional`, `20260805000001_living_work_form_stage` — `form` nullable, `stage ∈ capturing/developing/writing/refining/sharing` | — | create a Work with no declared form | A · Seed | substrate present; **surface still presents the manuscript as the anchor** |
+| 2 | Living manuscripts — write / revise / continue | **PARTIAL** | `member_manuscripts` (14 files), `manuscript_sections` (9), `Worktable`/`WorkDrawer` live on the canvas route | — | — | Elemental Alchemy, 211pp | undo · recovery · manuscript-scale perf **UNVERIFIED** |
+| 2 | Manuscript-wide find · safe find/replace | **ABSENT** | `findInDraft` → **0 files**; no find/replace symbol on canonical | living manuscripts | — | Ch10 misplaced-copy search | authored on an unmerged branch only — A4.0 says that is not presence |
+| 2 | Return continuity beyond cursor position | **UNVERIFIED / TO CENSUS** | not censused | memory + provenance | — | return after a month | census before claiming either way |
+| 3 | Transcript & material intake | **PARTIAL** | `mammoth` (5), `pdf-parse` (8), `fileVault` (2), `api/book-studio/workbench/uploads/**` | — | — | real transcripts | recordings · voice notes · images **UNVERIFIED** |
+| 3 | Never silently transform an artifact into manuscript text | **IN ACCEPTANCE** | WS-01 candidate `e92f53239`; `manuscript_source_arrivals` → **0 files on canonical** | — | WS-01 | P0-D | **P0-D is the only executable proof** |
+| 4 | Materials distinguishable **at the data level** | **PARTIAL** | `living_work_materials`: `material_type`, `declared_by`, `relationship_sentence` — belonging is already a **declared writer act**, not a styling choice | source custody | — | C · Material field | full A4.4 vocabulary not enumerated against schema |
+| 5 | MAIA as creative companion — nine stances | **UNVERIFIED / TO CENSUS** | no Studio-scoped stance surface identified; `developmental` matches 337 files, none Studio-scoped | Work + material | — | all four classes | census what, if anything, already serves Reflect/Question/Notice/Connect |
+| 5 | `Edit` only on explicit request | **DESIGNED** | capability spec; no runtime | companion | — | D · Ch10 | ⛔ default must never be `analyze → generate replacement` |
+| 6 | **Developmental Editor** | **DESIGNED** | `DEVELOPMENTAL_EDITOR_CAPABILITY.md` carries the full genesis `STARTER CONCEPT → … → MATURE MANUSCRIPT` (L71) and all five stances; `DevelopmentalEditor` → **0 files** | canonical L58: Work Structure is a dependency of the **structure-aware lenses only** | — | A–D | remains on this board until member-facing |
+| 6 | Pre-structure stances — `DISCOVER · GATHER · SHAPE` | **DESIGNED** | canonical spec L79–L110: `DISCOVER · early GATHER` → *"no structure required"*, named **the first buildable slices**; no runtime | **none** — begins before structure | next after WS-01 | A · Seed, B · Scraps | where the A4.6 violation is *easiest*: no Work contradicts a premature declaration |
+| 6 | Structure-aware lenses — continuity · sequencing · arc | **BLOCKED** | no runtime | **requires** authoritative Work Structure | — | D · Ch10 | blocked on Work Structure, not on the editor |
+| 7 | Acceptance corpus A · Seed | **ABSENT** | not authored | — | — | — | author before claiming pre-structure capability |
+| 7 | Acceptance corpus B · Scraps | **ABSENT** | not authored | — | — | — | author |
+| 7 | Acceptance corpus C · Material field | **ABSENT** | not authored | — | — | — | author |
+| 7 | Acceptance corpus D · Ch10 mature Work | **DESIGNED** | canonical spec L117 — fixture is **`MATURE MANUSCRIPT` stance only**; L124 — *"nothing here rules on the authoritative Work"* | — | #1085 proof substrate | — | `fixture_referent` ≠ authoritative Work; the latter stays **UNRESOLVED** |
+| 8 | Memory with provenance — eight kinds of knowing | **UNVERIFIED / TO CENSUS** | schema vocabulary exists unevenly: `decision` 24 · `note` 18 · `transcript` 4 · `recognition` 3 · `observation` 1 | source custody | — | — | never censused as **one** provenance model |
+| 9 | Structural perspective — member-defined units | **ABSENT** | no member-defined structural-unit surface on canonical | Work Structure | — | Elemental Alchemy | ⛔ no universal `Part → Chapter → Section` schema |
+| 10 | Writer-controlled meaning — eight dispositions | **ABSENT** | no keep/discuss/recognize/decide/adopt/reject/unresolved surface | companion + memory | — | — | this is where interpretation silently becomes authority |
+| 11 | Draft & revision continuity | **ABSENT** | `manuscript_versions` / `version_history` → **0 files** | source custody | — | real revision episodes | ⛔ *"a writer should not become conservative because the software makes experimentation dangerous"* |
+| 12 | Creative distances — Close · Near · Middle · Far · Outward | **ZERO-CALLERS** | the Canvas cluster — see CANVAS SUBSTRATE above for per-module importer evidence; cluster is member-unreachable | — | WS-02 harvest | — | ⛔ never render as `Step 1 → 2 → 3` |
+| 13 | Expression & publishing support | **PARTIAL** | expressions are a separate table; `expression_type` open `TEXT`; `api/book-studio/render/epub` | Work | — | lecture / course / audio | ⛔ a lecture is not a book in bullets — re-expression, not export |
+| 14 | Finished-looking is not finished | **ABSENT** | the eight readiness states are not in schema | Work | — | — | ⛔ MAIA may notice; **release remains a writer act** |
+| 15 | Human authorship made **visible** | **UNVERIFIED / TO CENSUS** | not censused | all of the above | — | founder experience test | boundaries must be visible, not hidden inside automation |
+
+**Reading this table.** Eight ABSENT · four PARTIAL · four UNVERIFIED · five DESIGNED · one
+ZERO-CALLERS · one BLOCKED · one IN ACCEPTANCE. The delivered mass sits in **manuscript editing and
+intake**; the gather, memory, structural, developmental, expression and authorship capabilities are
+**overwhelmingly not built**. That is precisely the imbalance A4.21 forbids declaring as success.
 
 ## Advancing now
 
