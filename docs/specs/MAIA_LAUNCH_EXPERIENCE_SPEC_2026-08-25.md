@@ -345,10 +345,43 @@ enough to establish a real place.*
 Soullab rather than a coming-soon promise, so an eligible helper recognizes it after signup: *"there it is —
 this is the place I saw before joining."* That is precisely the landing-to-House continuity §0.1 requires.
 
-**Acceptance test (added to the ruling):**
+**The two layers, formally:**
 
-> **If a first screenshot of My Practice could plausibly be mistaken for therapist or practice-management
-> software, the redesign has failed the Soullab Design Canon.**
+| **My Practice — identity-bearing** | **Practice Administration — supporting utility** |
+|---|---|
+| People · Encounters · Preparation · Sessions · Notes/Observations · Co-Lab · Session Room | Booking · Calendar · Billing · Invoices · Agreements · Administrative caseload · Settings |
+| In the House. Previewable on the landing page. | Available where needed. **Not the identity.** |
+
+> **Accompaniment is the practice. Administration supports the practice.**
+
+`/studio` and `/practitioner` happen to mix the two. **MLX does not erase that machinery** — it changes what
+the member encounters first and what carries Soullab's identity.
+
+### What R6 puts on the launch critical path
+
+| **Required before launch** | **Not required before launch** |
+|---|---|
+| My Practice branch in the House | Rebuilding billing |
+| Role / audience gating | Rebuilding booking |
+| Accompaniment-oriented landing surface | Rebuilding invoicing |
+| People · Encounters · Preparation · Sessions · Live Notes/Observations · Co-Lab | Replacing every legacy practitioner route |
+| Mobile state | Universal Capture · Watch · MARK/SPEAK |
+| Visual compliance with the Design Canon | MAIA-authored session summaries |
+| Pathways into the existing administrative utilities | Wholesale practitioner backend rewrite |
+
+**This avoids both bad extremes:** *story-only* (an ecosystem promise with no actual place) and *full
+practitioner redesign* (launch swallowed by rebuilding practice-management software).
+
+**Acceptance test (part of the ruling):**
+
+> A practitioner entering My Practice should think: ***"this helps me hold the people and encounters I serve
+> with greater presence and continuity."*** They should not initially think *"this is my client-management
+> dashboard."* And when they need to bill someone or check a booking, those utilities are still easy to find.
+>
+> **If the first encounter with My Practice could reasonably be mistaken for therapy or practice-management
+> software, the surface fails the Soullab Visual & Category Standard.**
+
+*Meaning in the foreground, machinery available behind it.*
 
 ### Standing design requirement — no cognitive cliff (Kelly, 2026-08-25)
 
