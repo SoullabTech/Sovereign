@@ -254,6 +254,11 @@ This document changes only by: **(a)** a founder ruling recorded in MLX-01 and r
 walk outcome, or **(c)** a phase 3/4 finding that a ruled decision fails in practice — which is a *finding*,
 reported with evidence, not a unilateral redesign.
 
+> **COHORT FREEZE:** While MLX-04 threshold testing is active, prototype head `c137e44` is the fixed research
+> stimulus. Do not republish, modify, replace, or advance the artifact at the shared prototype URL until the
+> cohort is closed and synthesis is complete. Any accidental stimulus change invalidates cross-participant
+> comparison from that point and must be recorded.
+
 **Implementation does not re-open rulings.** A builder who believes a ruling is wrong raises it; they do not
 route around it.
 

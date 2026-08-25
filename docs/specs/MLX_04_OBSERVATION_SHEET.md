@@ -6,6 +6,8 @@ One per participant. Copy this file per session.
 ```
 PARTICIPANT ID  ______    DATE ____________    FACILITATOR ____________  NOTETAKER ____________
 
+STIMULUS HEAD   c137e44          □ confirmed at session start
+
 GROUP           □ A — new arrival        □ B — returning House
 ORDER FLAG      □ cold (first exposure)  □ ran the other scenario first — TAUGHT, discount accordingly
 DEVICE          □ own phone  □ own laptop  □ provided ______   SCREEN RECORDED  □ y  □ n
