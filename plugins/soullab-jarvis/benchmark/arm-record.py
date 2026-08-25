@@ -91,6 +91,25 @@ def sha256_file(p):
         return None
 
 
+def launcher_state():
+    """Bind the executable that actually launches the arm.
+
+    This machine carries mixed installations (~/.local/share/claude/versions/*
+    plus an app bundle at a different version), so "the CLI version" is not a
+    machine property -- it is a property of the binary on PATH at launch. A
+    version string is not identity: two builds can report the same version, so
+    the resolved file is hashed and byte identity is what cross-arm checks use.
+    """
+    path = sh("command -v claude || true")
+    real = os.path.realpath(path) if path else None
+    return {
+        "path": path or None,
+        "realpath": real,
+        "version": sh("claude --version 2>&1 || true") or None,
+        "sha256": sha256_file(real) if real and os.path.isfile(real) else None,
+    }
+
+
 def plugin_state(cache=PLUGIN_CACHE, registry=REGISTRY):
     """Observe plugin state on THIS machine, right now.
 
@@ -163,6 +182,7 @@ def cmd_capture(a):
         },
         "plugin": plugin_state(),
         "cli_version": sh("claude --version 2>&1 || true"),
+        "launcher": launcher_state(),
         "model": a.model,
         "task_id": a.task_id,
         "task_set_sha": sha256_file(task_set),
@@ -184,6 +204,8 @@ def cmd_capture(a):
     print(f"  arm={rec['arm']} task={rec['task_id']} plugin_present="
           f"{rec['plugin']['present_in_list']} head={rec['repo']['head'][:9]}")
     print(f"  status=PREFLIGHT  session_id=null")
+    lz = rec["launcher"]
+    print(f"  launcher={lz['version']}  sha256={(lz['sha256'] or '?')[:16]}…")
     print(f"\nNext: launch the arm by hand from {cwd}, then immediately:")
     print(f"  arm-record.py bind --record {out} --session-id <SESSION-ID>")
     return 0

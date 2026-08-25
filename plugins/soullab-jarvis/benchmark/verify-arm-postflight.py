@@ -56,7 +56,9 @@ def plugin(present, sha, dig):
 
 
 def record(d, arm, sid, present, launch="2026-08-24T18:00:00Z", cwd=CWD,
-           status="LAUNCHED", transcript=None, name=None):
+           status="LAUNCHED", transcript=None, name=None,
+           cli="2.1.241", model="claude-opus-5", launcher_sha="a"*64,
+           launcher_real="/versions/2.1.241"):
     r = {"schema": "arm-record/1", "status": status, "arm": arm, "session_id": sid,
          "transcript": transcript, "launch_timestamp": launch,
          "bound_at": launch, "cwd": cwd,
@@ -64,7 +66,9 @@ def record(d, arm, sid, present, launch="2026-08-24T18:00:00Z", cwd=CWD,
                   "detached": True, "clean": True},
          "plugin": plugin(present, "dfbdef18d361" if present else None,
                           "9006cff2" if present else "0000absent"),
-         "cli_version": "2.1.241 (Claude Code)", "model": "claude-opus-5",
+         "cli_version": f"{cli} (Claude Code)", "model": model,
+         "launcher": {"path": "/bin/claude", "realpath": launcher_real,
+                      "version": f"{cli} (Claude Code)", "sha256": launcher_sha},
          "task_id": "T1", "task_set_sha": "task5e7", "task_set_path": "/emit-task.py",
          "task_prompt_sha256": TASK_SHA, "task_prompt_len": len(TASK),
          "expected_prompt_source": "typed"}
@@ -76,12 +80,15 @@ def record(d, arm, sid, present, launch="2026-08-24T18:00:00Z", cwd=CWD,
 
 def transcript(d, sid, *, cwd=CWD, deliver="typed", turns=3,
                first_ts="2026-08-24T18:07:24Z", task_in_tool_result=False,
-               contaminate=False, name=None):
+               contaminate=False, name=None, version="2.1.241",
+               model="claude-opus-5"):
     """Synthetic transcript. deliver=None -> task never user-delivered."""
     lines = []
 
     def rec(**kw):
         kw.setdefault("sessionId", sid)
+        if version is not None:
+            kw.setdefault("version", version)
         kw.setdefault("cwd", cwd)
         kw.setdefault("timestamp", first_ts)
         lines.append(json.dumps(kw))
@@ -100,7 +107,7 @@ def transcript(d, sid, *, cwd=CWD, deliver="typed", turns=3,
         if contaminate and i == 0:
             content.append({"type": "tool_use", "id": "t9", "name": "Bash",
                             "input": {"command": "python3 measure-session.py --json x"}})
-        rec(type="assistant", message={"role": "assistant", "model": "claude-opus-5",
+        rec(type="assistant", message={"role": "assistant", "model": model,
                                        "content": content},
             timestamp="2026-08-24T18:10:00Z")
     p = os.path.join(d, name or f"{sid}.jsonl")
@@ -297,6 +304,97 @@ with open(reg2, "w") as f:
     json.dump({"version": 2, "plugins": {"context-mode@context-mode": [{}]}}, f)
 st2 = AR.plugin_state(cache=tree, registry=reg2)
 chk("absent plugin reports absent", st2["present_in_registry"], False)
+
+
+# ---------------------------------------------------------------- cli/model
+print("\n-- per-arm: CLI and model must match the record, fail closed --")
+rc, out = run(record(d, "B", SID_B, True, name="cli-ok.json"),
+              transcript(d, SID_B, name="cli-ok.jsonl"))
+chk("same CLI + same model -> ADMISSIBLE", rc, 0)
+chk_in("names the CLI gate", "record.cli == transcript.cli", out)
+chk_in("names the model gate", "record.model == transcript.model", out)
+
+rc, out = run(record(d, "B", SID_B, True, name="cli-drift.json", cli="2.1.241"),
+              transcript(d, SID_B, name="cli-drift.jsonl", version="2.1.243"))
+chk("record 2.1.241 / runtime 2.1.243 -> INADMISSIBLE", rc, 1)
+chk_in("reports what the arm actually ran", "arm actually ran 2.1.243", out)
+
+rc, out = run(record(d, "B", SID_B, True, name="model-drift.json", model="claude-opus-5"),
+              transcript(d, SID_B, name="model-drift.jsonl", model="claude-sonnet-5"))
+chk("model differs -> INADMISSIBLE", rc, 1)
+chk_in("names the model mismatch", "record.model == transcript.model", out)
+
+rc, out = run(record(d, "B", SID_B, True, name="cli-split.json"),
+              transcript(d, SID_B, name="cli-split.jsonl", version=None))
+chk("transcript stamps no version -> INADMISSIBLE", rc, 1)
+chk_in("refuses rather than assuming", "cli_version establishable", out)
+
+# a CLI that changed mid-arm
+tmid = transcript(d, SID_B, name="cli-mid.jsonl")
+with open(tmid) as f:
+    ls = f.read().splitlines()
+ls[-1] = json.dumps({**json.loads(ls[-1]), "version": "2.1.243"})
+with open(tmid, "w") as f:
+    f.write("\n".join(ls) + "\n")
+rc, out = run(record(d, "B", SID_B, True, name="cli-mid.json"), tmid)
+chk("CLI changed mid-arm -> INADMISSIBLE", rc, 1)
+chk_in("names the span", "single CLI across the arm", out)
+
+# ---------------------------------------------------------------- cross-arm
+print("\n-- cross-arm: a pair must share CLI, model and launcher bytes --")
+def cross(ra, rb):
+    r = subprocess.run([sys.executable, POSTFLIGHT, "--cross-check", ra, rb],
+                       capture_output=True, text=True, timeout=120)
+    return r.returncode, r.stdout + r.stderr
+
+recA1 = record(d, "A", SID_A, False, name="xA.json", cli="2.1.243",
+               launcher_sha="b"*64, launcher_real="/versions/2.1.243")
+recB1 = record(d, "B", SID_B, True, name="xB.json", cli="2.1.243",
+               launcher_sha="b"*64, launcher_real="/versions/2.1.243")
+rc, out = cross(recA1, recB1)
+chk("matched pair -> COMPARABLE", rc, 0)
+chk_in("verdict COMPARABLE", "PAIR: COMPARABLE", out)
+
+recB2 = record(d, "B", SID_B, True, name="xB2.json", cli="2.1.241",
+               launcher_sha="c"*64, launcher_real="/versions/2.1.241")
+rc, out = cross(recA1, recB2)
+chk("CLI differs across arms -> NOT COMPARABLE", rc, 1)
+chk_in("names cli_version", "A.cli_version == B.cli_version", out)
+
+recB3 = record(d, "B", SID_B, True, name="xB3.json", cli="2.1.243",
+               model="claude-sonnet-5", launcher_sha="b"*64)
+rc, out = cross(recA1, recB3)
+chk("model differs across arms -> NOT COMPARABLE", rc, 1)
+
+# same version string, different bytes: equivalence may not be inferred
+recB4 = record(d, "B", SID_B, True, name="xB4.json", cli="2.1.243",
+               launcher_sha="d"*64, launcher_real="/other/2.1.243")
+rc, out = cross(recA1, recB4)
+chk("same version, different launcher bytes -> NOT COMPARABLE", rc, 1)
+chk_in("refuses to infer from version strings",
+       "equivalence may not be inferred from version strings", out)
+
+# ------------------------------------------------- the repair is load-bearing
+print("\n-- load-bearing: OLD instrument accepts what the NEW one refuses --")
+FREEZE = "8235fdb885b0"
+old = os.path.join(d, "old-postflight.py")
+gp = subprocess.run(["git", "-C", HERE, "show",
+                     f"{FREEZE}:plugins/soullab-jarvis/benchmark/arm-postflight.py"],
+                    capture_output=True, text=True)
+chk("recovered the frozen instrument", gp.returncode, 0)
+with open(old, "w") as f:
+    f.write(gp.stdout)
+
+drift_rec = record(d, "B", SID_B, True, name="lb.json", cli="2.1.241")
+drift_tr = transcript(d, SID_B, name="lb.jsonl", version="2.1.243")
+oc = subprocess.run([sys.executable, old, "--record", drift_rec, "--transcript", drift_tr,
+                     "--freeze-seconds", "0", "--no-drift"],
+                    capture_output=True, text=True, timeout=300)
+chk("OLD postflight ACCEPTS 2.1.241-record / 2.1.243-runtime", oc.returncode, 0)
+chk_in("old verdict was ADMISSIBLE", "VERDICT: ADMISSIBLE", oc.stdout + oc.stderr)
+nc_rc, nc_out = run(drift_rec, drift_tr)
+chk("NEW postflight REFUSES the same case", nc_rc, 1)
+chk_in("new verdict INADMISSIBLE", "VERDICT: INADMISSIBLE", nc_out)
 
 
 print(f"\n{PASS} passed · {FAIL} failed")

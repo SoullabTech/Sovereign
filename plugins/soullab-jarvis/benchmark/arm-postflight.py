@@ -28,7 +28,7 @@ Usage:
 
 Exit: 0 ADMISSIBLE · 1 INADMISSIBLE · 2 instrument error
 """
-import argparse, hashlib, json, os, sys, time, datetime
+import argparse, hashlib, json, os, re, sys, time, datetime
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
@@ -83,6 +83,56 @@ def user_task_text(r):
     return None
 
 
+def semver(s):
+    """First dotted version in a string. '2.1.243 (Claude Code)' -> '2.1.243'."""
+    m = re.search(r"\d+\.\d+\.\d+", s or "")
+    return m.group(0) if m else None
+
+
+def cross_check(pa, pb):
+    """Refuse a pair whose arms did not run on the same CLI and model.
+
+    Added 2026-08-24 after the CLI auto-updated 2.1.241 -> 2.1.243 between the
+    Arm B capture and its launch. The previous instrument only PRINTED the
+    recorded cli_version and never compared it, so the pair would have differed
+    in two variables -- plugin AND CLI -- while being reported as differing in
+    one. Version strings are not identity: byte identity of the resolved
+    launcher is what establishes equivalence.
+    """
+    with open(pa) as f:
+        a = json.load(f)
+    with open(pb) as f:
+        b = json.load(f)
+    print(f"=== CROSS-ARM CHECK  {a.get('arm')} vs {b.get('arm')} ===")
+    bad = []
+
+    av, bv = semver(a.get("cli_version")), semver(b.get("cli_version"))
+    if av and bv and av == bv:
+        line("OK", "A.cli_version == B.cli_version", av)
+    else:
+        line("FAIL", "A.cli_version == B.cli_version", f"{av} vs {bv}"); bad.append(1)
+
+    if a.get("model") and a.get("model") == b.get("model"):
+        line("OK", "A.model == B.model", a.get("model"))
+    else:
+        line("FAIL", "A.model == B.model", f"{a.get('model')} vs {b.get('model')}"); bad.append(1)
+
+    la, lb = a.get("launcher") or {}, b.get("launcher") or {}
+    if la.get("sha256") and la.get("sha256") == lb.get("sha256"):
+        line("OK", "launcher byte-identical", la["sha256"][:16] + "…")
+    else:
+        line("FAIL", "launcher byte-identical",
+             f"{(la.get('sha256') or '<none>')[:12]}… vs {(lb.get('sha256') or '<none>')[:12]}…"
+             " — equivalence may not be inferred from version strings")
+        bad.append(1)
+    if la.get("realpath") != lb.get("realpath"):
+        line("WARN", "launcher path differs",
+             f"{la.get('realpath')} vs {lb.get('realpath')}")
+
+    print(f"\n=== PAIR: {'COMPARABLE' if not bad else 'NOT COMPARABLE'} ===")
+    return 0 if not bad else 1
+
+
 def frozen(path, seconds):
     """Long size+mtime freeze. A short probe is not proof a session closed."""
     def sample():
@@ -102,13 +152,20 @@ def frozen(path, seconds):
 def main():
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--record", required=True)
+    ap.add_argument("--record")
+    ap.add_argument("--cross-check", nargs=2, metavar=("A_RECORD", "B_RECORD"),
+                    help="refuse a pair whose arms differ in CLI, model or launcher")
     ap.add_argument("--transcript")
     ap.add_argument("--freeze-seconds", type=float, default=60.0)
     ap.add_argument("--drift-from", help="JSON file with a plugin_state dict "
                                          "(testing seam; default = observe this machine)")
     ap.add_argument("--no-drift", action="store_true")
     a = ap.parse_args()
+    if a.cross_check:
+        return cross_check(*a.cross_check)
+    if not a.record:
+        print("instrument error: --record is required")
+        return 2
 
     try:
         with open(a.record) as f:
@@ -221,12 +278,36 @@ def main():
     for k in ("entrypoint", "promptSource", "permissionMode", "effort", "mode"):
         seen = sorted({r[k] for r in recs if isinstance(r.get(k), str)})
         print(f"  {k:16}: {seen}")
+    # --- fail-closed: the arm must have RUN on the CLI and model the record claims.
+    # Read from the transcript, which stamps `version` on its records -- launch
+    # state, not machine state at postflight time.
+    tvers = sorted({r["version"] for r in recs if isinstance(r.get("version"), str)})
+    rec_v = semver(rec.get("cli_version"))
+    if len(tvers) > 1:
+        line("FAIL", "single CLI across the arm", f"transcript spans {tvers}")
+    elif not tvers:
+        line("FAIL", "cli_version establishable", "transcript stamps no version")
+    elif not rec_v:
+        line("FAIL", "cli_version establishable", f"record cli_version {rec.get('cli_version')!r}")
+    elif semver(tvers[0]) == rec_v:
+        line("OK", "record.cli == transcript.cli", rec_v)
+    else:
+        line("FAIL", "record.cli == transcript.cli",
+             f"record {rec_v}, arm actually ran {semver(tvers[0])}")
+
+    lv = semver((rec.get("launcher") or {}).get("version"))
+    if lv and rec_v and lv != rec_v:
+        line("FAIL", "record cli/launcher agree", f"cli {rec_v}, launcher {lv}")
+
     models = sorted({(r.get("message") or {}).get("model")
                      for r in recs if (r.get("message") or {}).get("model")})
-    if rec.get("model") and models and rec["model"] not in models:
-        line("WARN", "model matches record", f"transcript {models}, record {rec['model']}")
+    if not models:
+        line("FAIL", "model establishable", "transcript names no model")
+    elif rec.get("model") and models == [rec["model"]]:
+        line("OK", "record.model == transcript.model", rec["model"])
     else:
-        print(f"  {'model':16}: {models}  (record: {rec.get('model')})")
+        line("FAIL", "record.model == transcript.model",
+             f"transcript {models}, record {rec.get('model')}")
 
     exp = rec.get("expected_prompt_source")
     delivered = sorted({h[1] for h in hits if h[1]})
@@ -245,6 +326,9 @@ def main():
     for name, dig in (pl.get("tree_digests") or {}).items():
         print(f"  tree digest[{name:10}]: {dig}")
     print(f"  cli version         : {rec.get('cli_version')}")
+    _l = rec.get("launcher") or {}
+    print(f"  launcher            : {_l.get('realpath')}")
+    print(f"  launcher sha256     : {_l.get('sha256')}")
     print(f"  repo HEAD / tree    : {(rec.get('repo') or {}).get('head')} / "
           f"{(rec.get('repo') or {}).get('tree')}")
     print(f"  detached / clean    : {(rec.get('repo') or {}).get('detached')} / "
