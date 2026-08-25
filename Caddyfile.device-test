@@ -1,0 +1,56 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# OPS-DT-01 — Device Test Caddy (valid public TLS)
+# ═══════════════════════════════════════════════════════════════════════════════
+# Real Let's Encrypt certificate so an iPhone trusts this host with no profile
+# installation, no self-signed cert, and no device trust hacks. That matters
+# beyond convenience: microphone and SpeechRecognition require a secure context,
+# so USC-04 proof 6 cannot run without genuine TLS.
+#
+# Uses the DNS-01 challenge, NOT HTTP-01, so this stack never needs port 80 and
+# therefore never contends with the production Caddy. Production routing is
+# untouched.
+#
+# DNS-01 requires a Caddy build containing the DNS provider plugin. Set
+# DEVICE_TEST_CADDY_IMAGE to that build (see OPS_DT_01_DEVICE_TEST_ENV.md §3).
+# ═══════════════════════════════════════════════════════════════════════════════
+
+{$DEVICE_TEST_HOST}:{$DEVICE_TEST_HTTPS_PORT} {
+
+	tls {
+		dns cloudflare {$DEVICE_TEST_DNS_TOKEN}
+	}
+
+	# SSE / streaming endpoints — same handling as production so the surface
+	# under test behaves like the real thing.
+	@streaming {
+		path /api/voice/stream-conversation
+		path /api/*/stream*
+	}
+	handle @streaming {
+		reverse_proxy maia-device-test:3000 {
+			header_up Host {host}
+			header_up X-Real-IP {remote_host}
+			header_up X-Forwarded-For {remote_host}
+			header_up X-Forwarded-Proto https
+			flush_interval -1
+		}
+	}
+
+	reverse_proxy maia-device-test:3000 {
+		header_up Host {host}
+		header_up X-Real-IP {remote_host}
+		header_up X-Forwarded-For {remote_host}
+		header_up X-Forwarded-Proto https
+	}
+
+	# Loud environment identity. A tester inspecting any response must be able to
+	# tell instantly that this is not production.
+	header {
+		X-MAIA-Origin "caddy-device-test"
+		X-MAIA-Env "device-test"
+		# Keep this environment out of search indexes entirely.
+		X-Robots-Tag "noindex, nofollow"
+	}
+
+	encode gzip zstd
+}
