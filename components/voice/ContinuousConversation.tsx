@@ -23,6 +23,7 @@ import {
 import { getContinuityBuffer } from '@/lib/voice/conversationContinuityBuffer';
 import {
   readTailSnapshot,
+  measureTailOverlap,
   shouldEmitThrottled,
   type UtteranceSendTrigger,
 } from '@/lib/voice/utteranceTail';
@@ -383,6 +384,35 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
   // Set immediately before each processAccumulatedTranscript() call so the
   // commit event can name its own cause without changing the function signature.
   const sendTriggerRef = useRef<UtteranceSendTrigger>('other');
+  // ── VOICE-02A: recognition-epoch boundary ──────────────────────────────
+  // Safari terminates recognition while a nonempty interim tail is still
+  // outstanding (production trace 2026-08-25: ends 0.47s / 0.70s / 1.0s after
+  // the last interim, auto-restart ~306ms later). Finals survive the restart;
+  // the unfinalized tail is in no buffer. The 12s silence timer is NOT the
+  // immediate cause at these boundaries, so the timer-boundary witness alone
+  // would have been silent on this mechanism.
+  //
+  // `epoch` numbers each recognition instance so an analyst can ask the one
+  // question the raw trace cannot answer: was the tail LOST, or did Safari
+  // re-deliver overlapping words in the next epoch? That distinction decides
+  // whether salvage is needed and whether salvage would double-count.
+  const recognitionEpochRef = useRef<number>(0);
+  const epochFirstResultSeenRef = useRef<boolean>(false);
+  // Separate from firstResult: Safari commonly restarts as interim → interim →
+  // final. A single shared flag is consumed by the first INTERIM, so the final
+  // that actually carries the comparison would report firstResult=false and
+  // precedingEpochTailChars=0 — the comparison would silently never happen.
+  const epochFirstFinalSeenRef = useRef<boolean>(false);
+  // The tail TEXT the previous epoch ended holding. In memory only, for the
+  // duration of one restart seam — same class of holding as
+  // accumulatedTranscript. Never logged, never persisted; only the overlap
+  // COUNTS derived from it are emitted.
+  const lastInterimTextRef = useRef<string>('');
+  const epochEndedWithTailTextRef = useRef<string>('');
+  // The tail the PREVIOUS epoch ended holding, carried across the restart so
+  // the next epoch's first final can be compared against it.
+  const epochEndedWithTailCharsRef = useRef<number>(0);
+  const epochEndedAtRef = useRef<number>(0);
   const isRestartingRef = useRef(false);
   // True only while an onend auto-restart is *continuing the same utterance*.
   // iOS Safari effectively ignores `recognition.continuous`, so it fires onend
@@ -545,6 +575,12 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
       // further result belongs to the next turn rather than trailing the
       // committed one. Bounds the window so it cannot mislabel new speech.
       committedRef.current = false;
+      // 👁️ Open a new recognition epoch. Carried refs from the previous epoch
+      // are deliberately NOT cleared here — the next result must be able to
+      // report what the last epoch ended holding.
+      recognitionEpochRef.current += 1;
+      epochFirstResultSeenRef.current = false;
+      epochFirstFinalSeenRef.current = false;
       // Reset per-cycle flags before the new cycle begins. The no-speech
       // ACROSS-cycle counter is intentionally NOT reset here — it only resets
       // on a successful speech_started or on a user-driven stop.
@@ -692,7 +728,42 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
             lastFinalAtRef.current = finalAt;
             lastResultAtRef.current = finalAt;
             lastInterimCharsRef.current = 0;
+            lastInterimTextRef.current = '';
+            const firstInEpoch = !epochFirstResultSeenRef.current;
+            epochFirstResultSeenRef.current = true;
+            // 👁️ The lost-vs-redelivered test, keyed on the first FINAL of the
+            // epoch — NOT the first result. Safari commonly restarts as
+            // interim → interim → final; keying on the first result would let
+            // an interim consume the flag and the comparison would never run.
+            //
+            // Length alone cannot decide this: two unrelated utterances of
+            // similar length would read as re-delivered and suppress a repair
+            // that is actually needed. So we measure the real suffix→prefix
+            // overlap between the carried tail and this final. Counts only —
+            // the tail text never leaves memory.
+            const firstFinalInEpoch = !epochFirstFinalSeenRef.current;
+            epochFirstFinalSeenRef.current = true;
+            const carriedTail = firstFinalInEpoch ? epochEndedWithTailTextRef.current : '';
+            const overlap = firstFinalInEpoch
+              ? measureTailOverlap(carriedTail, finalTranscript.trim())
+              : { overlapChars: 0, overlapRatio: -1 };
+            const carriedTailChars = firstFinalInEpoch ? epochEndedWithTailCharsRef.current : 0;
+            const seamMs = firstFinalInEpoch && epochEndedAtRef.current
+              ? Date.now() - epochEndedAtRef.current : -1;
+            if (firstFinalInEpoch) {
+              // Compared — release the carry so a later epoch cannot reuse it.
+              epochEndedWithTailCharsRef.current = 0;
+              epochEndedWithTailTextRef.current = '';
+              epochEndedAtRef.current = 0;
+            }
             logVoiceEvent('voice_result_final', {
+              epoch: recognitionEpochRef.current,
+              firstResultInEpoch: firstInEpoch,
+              firstFinalInEpoch,
+              precedingEpochTailChars: carriedTailChars,
+              overlapChars: overlap.overlapChars,
+              overlapRatio: overlap.overlapRatio,
+              msSinceEpochEnd: seamMs,
               turnCommitId: turnCommitIdRef.current,
               finalCharCount: accumulatedTranscript.current.length,
               deltaCharCount: finalTranscript.trim().length,
@@ -715,9 +786,20 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
             lastInterimAtRef.current = interimAt;
             lastResultAtRef.current = interimAt;
             lastInterimCharsRef.current = currentInterim.length;
+            lastInterimTextRef.current = currentInterim;
             if (shouldEmitThrottled(interimAt, interimTelemetryAtRef.current)) {
               interimTelemetryAtRef.current = interimAt;
+              const firstInEpoch = !epochFirstResultSeenRef.current;
+              epochFirstResultSeenRef.current = true;
               logVoiceEvent('voice_result_interim', {
+                epoch: recognitionEpochRef.current,
+                firstResultInEpoch: firstInEpoch,
+                // NOT the comparison — that runs on the first FINAL. This is
+                // the carry still awaiting it, named apart so a parser cannot
+                // mistake an interim for the adjudicated result.
+                pendingEpochTailChars: epochEndedWithTailCharsRef.current,
+                msSinceEpochEnd: firstInEpoch && epochEndedAtRef.current
+                  ? Date.now() - epochEndedAtRef.current : -1,
                 turnCommitId: turnCommitIdRef.current,
                 interimCharCount: currentInterim.length,
                 finalCharCount: accumulatedTranscript.current.length,
@@ -863,7 +945,28 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     });
 
     recognition.onend = session.guard(gen, () => {
-      logVoiceEvent('voice_recognition_ended');
+      // 👁️ VOICE-02A — the recognition-epoch boundary, previously emitted with
+      // NO metadata at all. tailAtRisk=true here is Safari ending an epoch on
+      // an unfinalized tail: the demonstrated mechanism, not a hypothesis.
+      {
+        const endedAt = Date.now();
+        const tail = readTailSnapshot({
+          now: endedAt,
+          lastInterimAt: lastInterimAtRef.current,
+          lastFinalAt: lastFinalAtRef.current,
+          lastInterimChars: lastInterimCharsRef.current,
+          finalChars: accumulatedTranscript.current.trim().length,
+        });
+        epochEndedWithTailCharsRef.current = tail.tailAtRisk ? tail.interimCharCount : 0;
+        epochEndedWithTailTextRef.current = tail.tailAtRisk ? lastInterimTextRef.current : '';
+        epochEndedAtRef.current = endedAt;
+        logVoiceEvent('voice_recognition_ended', {
+          epoch: recognitionEpochRef.current,
+          turnCommitId: turnCommitIdRef.current,
+          epochAgeMs: recognitionStartTime.current ? endedAt - recognitionStartTime.current : -1,
+          ...tail,
+        });
+      }
       console.log('🏁 [onend] Recognition stopped');
       recognitionActiveRef.current = false; // Clear double-start guard
       setIsRecording(false);
