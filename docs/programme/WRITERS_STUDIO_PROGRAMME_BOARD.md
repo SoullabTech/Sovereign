@@ -4,6 +4,7 @@
 >
 > ```text
 > NORMATIVE AUTHORITY   docs/programme/WRITERS_STUDIO_MASTER_BRIEF.md
+> BUILD ORDER           docs/programme/WRITERS_STUDIO_MASTER_BRIEF.md  Amendment 5
 > CAPABILITY SPEC       docs/programme/DEVELOPMENTAL_EDITOR_CAPABILITY.md
 > UNIT DEFINITION       docs/programme/WS-01_SOURCE_CUSTODY_UNIT_DEFINITION.md
 > LIVE STATE (here)     docs/programme/WRITERS_STUDIO_PROGRAMME_BOARD.md
@@ -27,12 +28,12 @@
 PROGRAMME          WRITER'S STUDIO R2
 MODE               WS-01 ACCEPTANCE
 BUILD MODE         CLOSED — Canvas / Phase 1 freeze BINDING
-BOUND CANONICAL    8fa03f48a
+BOUND CANONICAL    66370a293  (origin/clean-main-no-secrets; 8fa03f48a is its ancestor)
 CURRENT UNIT       WS-01 Source Custody + Freeze Release
 CURRENT CANDIDATE  e92f532396705daaf6cd346445276a08a5957904
                    feature/ws-01-source-custody-v2  ·  PINNED, untouched
 NEXT EXECUTABLE    P0-D
-LAST UPDATED       2026-08-24
+LAST UPDATED       2026-08-25
 ```
 
 Writer's Studio mode reflects **this programme only**. Unrelated Jarvis incidents may sit ahead of
@@ -42,6 +43,19 @@ it in the global work queue without becoming Writer's Studio state.
 > it mandates is censused below under **CAPABILITY MANDATE CENSUS**, and stays there until delivered.
 > ⛔ **A4.21:** success may not be declared while the gather, memory, structural, developmental,
 > expression and authorship rows read ABSENT — a shipped manuscript editor is not fruition.
+
+> **Amendment 5 — The Execution Roadmap (2026-08-25)** ratifies the order in which the mandated
+> capabilities are delivered, and the method. It adds no capability, renumbers no unit, allocates no
+> `WS-08+`, and **does not release the freeze**. Read the build order in the brief, not here — this
+> board carries live state only. Amendment 5's honesty spine governs every row below:
+>
+> ```text
+> ABSENT → DESIGNED → PARTIAL → LIVE
+> ```
+>
+> ⛔ No capability becomes `LIVE` because there is a component, a branch, a proof script, or a
+> pretty screenshot. `ZERO-CALLERS`, `IN ACCEPTANCE` and `BLOCKED` all resolve to **not LIVE**;
+> `UNVERIFIED` resolves to **no claim either way**.
 
 ## Release signal — read mechanically, never inferred
 
@@ -205,6 +219,17 @@ WS-01 · P0-D — deploy candidate e92f53239, prove deployed identity,
 ```
 
 Everything else is **CLOSED** until WS-01 is accepted and the freeze releases.
+
+**After the release** the order is fixed by Amendment 5 §A5.2 — `WORK HOME → LIVING MANUSCRIPT →
+GATHER → MAIA COMPANION → MEMORY + PROVENANCE → DEVELOPMENTAL EDITOR → STRUCTURAL / WHOLE-WORK →
+REVISION → FIELD VIEW → EXPRESSION → PRESS`. Those are capability dependencies, not rigid steps;
+each still needs its own unit definition and authorization (A3.1 / A4.17). Method per §A5.5, one
+vertical slice at a time:
+
+```text
+inspect existing → harvest rather than rebuild → wire into the real Studio → test
+   → use it with real Work → fix what feels wrong → merge → update the cockpit → next slice
+```
 
 ## Board discipline
 

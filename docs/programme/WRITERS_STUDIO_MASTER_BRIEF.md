@@ -1139,3 +1139,290 @@ publishing utility, or the Developmental Editor alone.**
 
 Partial delivery is reported as partial delivery, against the census in the cockpit. A green suite,
 a shipped editor, and an accepted unit are **not** fruition.
+
+---
+
+# Amendment 5 — The Execution Roadmap (founder, 2026-08-25)
+
+> **The programme is done being designed. It is now executed.**
+>
+> This amendment adds no new capability, revokes nothing in Amendments 1–4, and renumbers no unit.
+> It fixes **the order in which the mandated capabilities are delivered**, and the method by which
+> each is delivered. Where A2.4 sketched a build sequence, this is that sequence ratified, ordered,
+> and made the standing instruction.
+
+## A5.0 — Status of this amendment
+
+Binding programme direction. It is **capability sequencing** (§25, *Capability sequencing — not
+unit numbering*), not a unit list, not an authorization to begin any unit, and not a renumbering.
+⛔ It creates no `WS-08+`. Each phase below still requires its own unit definition and founder
+authorization under A3.1 / A4.17 before it may begin.
+
+## A5.1 — Right now: close WS-01
+
+```text
+CANONICAL        66370a293   (origin/clean-main-no-secrets)
+WS-01 CANDIDATE  e92f53239   feature/ws-01-source-custody-v2 · PINNED, untouched
+NEXT ACT         P0-D — and nothing else
+BUILD MODE       CLOSED until WS-01 is accepted and the freeze is explicitly released
+```
+
+Execute **P0-D on the minisforum against the pinned candidate**, under the frozen walk
+specification. Then, in order, with no step skipped and no step anticipated:
+
+```text
+P0-D → walk A–H → founder felt gates → evidence record
+     → Founder Acceptance → merge / land WS-01
+     → EXPLICIT release of the Canvas / build freeze
+```
+
+⛔ **Nothing downstream of this amendment starts before that release.** The release is an act that
+appears on canonical, read mechanically. A green suite is not the release. A passing walk is not
+the release. This amendment being ratified is not the release.
+
+## A5.2 — The build order
+
+```text
+WS-01 CLOSE
+   ↓
+WORK HOME
+   ↓
+LIVING MANUSCRIPT
+   ↓
+GATHER / MATERIALS
+   ↓
+MAIA CREATIVE COMPANION
+   ↓
+MEMORY + PROVENANCE
+   ↓
+DEVELOPMENTAL EDITOR
+   ↓
+STRUCTURAL / WHOLE-WORK INTELLIGENCE
+   ↓
+REVISION / HISTORY
+   ↓
+FIELD VIEW
+   ↓
+EXPRESSION
+   ↓
+PRESS
+```
+
+**These are capability dependencies, not rigid user steps.** Once the foundational pieces exist,
+several of them should develop together. The arrows say what must exist before what — they do not
+forbid concurrent work, and they are not a member's journey.
+
+## A5.3 — The phases
+
+### 1 · Work Home — make the Studio genuinely Work-centered
+
+The first major product build once the freeze lifts. A member opens Writer's Studio and sees
+**their living Work**, not a generic editor and not a MAIA chat.
+
+Build: create / open / return to a Work · resume the exact *meaningful* location · recent Work ·
+current concern and last activity · a Work identity that can begin **before** the member knows
+whether it is a book, an essay, or a lecture · strong navigation between a Work and its
+surrounding materials.
+
+**Real-use acceptance.** Open *Elemental Alchemy*, leave, come back, and immediately know:
+*This is my Work. This is where I was. This is what I was doing.*
+
+### 2 · Living manuscript — finish the experience
+
+**Harvest the good #995 / Canvas work. Do not create another editor generation.**
+
+Build and wire: the canonical Writer Canvas · focused-part editing · whole-manuscript navigation ·
+member-authored structural units · outline · read mode · manuscript-wide find · safe find/replace ·
+autosave · undo · reconnect and conflict handling · long-manuscript performance · strong
+typography · keyboard ergonomics · remembered layout and navigation state.
+
+**And eliminate the `ZERO-CALLERS` condition.** This phase is finished when the Studio is pleasant
+enough that the founder actually wants to write a book in it.
+
+### 3 · Gather — the material world around the Work
+
+One of the largest missing pieces. A first-class place for voice recordings · transcripts ·
+interviews · notes · fragments · quotes · research · PDFs and source documents · previous writing ·
+questions · scraps.
+
+The crucial boundary:
+
+```text
+MATERIAL
+  ≠
+WORK
+```
+
+Imported material **retains its provenance**. MAIA may notice that something *might* belong in the
+Work. **Only the writer decides that it does.**
+
+### 4 · MAIA properly inside the creative process
+
+Not a chat pane beside the editor. MAIA becomes capable of
+**Reflect · Question · Notice · Connect · Gather · Shape · Develop**.
+
+What this sounds like:
+
+> *"You keep returning to this image in three different places."*
+> *"This transcript seems related to something you wrote six months ago."*
+> *"There may be two different arguments inside these notes."*
+> *"You haven't decided whether this belongs yet. Want to explore it?"*
+
+⛔ Not: *"I inserted it into Chapter 4."*
+
+### 5 · Memory with provenance
+
+Connect the Studio to the richer MAIA memory architecture, preserving the distinctions:
+
+```text
+source
+MAIA observation
+MAIA suggestion
+writer recognition
+writer decision
+adopted Work
+```
+
+Remember **the creative journey**, not conversation history. Returning to a Work eventually
+restores: what you were exploring · what MAIA noticed · what you recognized · decisions you made ·
+unresolved questions · material you were considering · changes you adopted.
+
+This is where Writer's Studio becomes substantially different from ordinary AI writing software.
+
+### 6 · The member-facing Developmental Editor
+
+The diagnostic / proof substrate in #1085 may eventually be harvested here. The **product** must
+work from:
+
+```text
+IDEA → SCRAPS → MATERIAL FIELD → EMERGING WORK → STRUCTURED WORK → MATURE MANUSCRIPT
+```
+
+with fluid stances **DISCOVER · GATHER · SHAPE · DEVELOP · REVISE**, and — once structure exists —
+the mature-work lenses: structure · continuity · arc · reader knowledge · sequencing · abandoned
+threads · underdevelopment · overdevelopment · recurrence · contradictions · voice · coherence ·
+deep patterns.
+
+The interaction remains:
+
+```text
+OBSERVATION → EVIDENCE → DISCUSSION → WRITER RECOGNITION → WRITER DECISION → OPTIONAL CHANGE
+```
+
+⛔ Not AI rewrites masquerading as developmental editing. Chapter 10 remains a powerful real
+acceptance fixture here.
+
+### 7 · Structural and whole-Work intelligence
+
+Give the writer **multiple distances** from the Work:
+
+```text
+CLOSE    the actual writing
+NEAR     materials and sources
+MIDDLE   structure, themes, sequences, gaps
+FAR      whole-Work / relational Field
+```
+
+Views capable of showing member-defined structure · recurring themes · motif distribution ·
+missing development · unresolved threads · relationships among sections · alternate shapes ·
+temporal and argument arcs. This is where Field View becomes useful — **as another way of
+perceiving the Work, not a decorative map.**
+
+### 8 · Serious revision continuity
+
+After the writing environment is trustworthy: snapshots · history · version comparison · alternate
+passages · restore · named revisions · passage provenance · safe experimentation · comparison of
+structural alternatives.
+
+> The writer should never avoid experimenting because they are afraid of losing something.
+
+### 9 · Expression
+
+Only once there is a real Work to express. A Work may become a **Book · Essay · Lecture · Course ·
+Audio · Workshop · Podcast · Other** — as **transformations of the underlying Work, not export
+buttons.** MAIA helps ask: *What is this Work when spoken? What does an audience need that a reader
+did not? What becomes experiential in a course?* **Press** then handles publication and
+edition-making downstream.
+
+### 10 · Professional polish
+
+Across all of the above, and **continuously — never a final "UI cleanup phase"**: excellent
+long-form UX · fast rendering at ~100k+ words · responsive layout · mobile where useful ·
+accessibility · keyboard workflows · robust autosave · strong empty / loading / error states · no
+cramped primitive drawers · no developer-tool feeling · beautiful but restrained visual hierarchy.
+
+## A5.4 — Reconciliation with the ratified unit identities
+
+Phases are capability, units are identity. **Neither renames the other.** This table exists so the
+next session does not invent a unit from a phase name, or build a surface beside an existing one.
+
+| A5 phase | Ratified unit identity (§25) | Note |
+|---|---|---|
+| WS-01 close | **WS-01** Source Custody + Freeze Release | in acceptance; P0-D owed |
+| 1 · Work Home | **WS-03** Work Home + Identity + Continuity | founder places this **first** after the freeze lifts |
+| 2 · Living manuscript | **WS-02** Canvas Convergence, then **WS-06** Professional Long-form UX | ⛔ harvest #995; **do not build a second Worktable beside the dead one** |
+| 3 · Gather / Materials | **WS-05** Materials / Desk — material half | placement stays a member act |
+| 4 · MAIA creative companion | **WS-05** — MAIA half | A4.5 nine stances |
+| 5 · Memory + provenance | *unit not yet allocated* | A4.8; derive when defined, never import a number |
+| 6 · Developmental Editor | *unit not yet allocated* | A4.6; pre-structure stances first, structure-aware lenses after **WS-04** |
+| 7 · Structural / whole-Work | **WS-04** Structure + Navigator + Manuscript stance, plus whole-Work work above it | A4.9, A4.12 |
+| 8 · Revision / history | *unit not yet allocated* | A4.11; A1.6 restore floor already rides with WS-01 |
+| 9 · Field View | *unit not yet allocated* | C2 — Field View, ⛔ **not** a fourth Canvas |
+| 10 · Expression → Press | **WS-07** Press Handoff + Legacy Retirement | re-expression, not export |
+| Polish | *cross-cutting* | not a phase; a standing obligation |
+
+**Ordering note, recorded rather than resolved.** §A5.2's one-line order places Field View between
+revision and expression; §A5.3's phase 7 places its usefulness alongside structural intelligence.
+This is not a contradiction to adjudicate — the founder states these are capability dependencies,
+not rigid steps, and that several should develop together once the foundations exist.
+
+## A5.5 — The method after WS-01
+
+Not another census of the whole programme. **One vertical slice at a time:**
+
+```text
+inspect existing → harvest rather than rebuild → wire into the real Studio → test
+   → use it with real Work → fix what feels wrong → merge → update the cockpit → next slice
+```
+
+This is A2.3's cadence with the cockpit update made explicit and non-optional: the board is
+updated **in the same commit as the work it describes**, and a slice is not finished until it is.
+
+## A5.6 — The board stays brutally honest
+
+```text
+ABSENT → DESIGNED → PARTIAL → LIVE
+```
+
+⛔ **No capability becomes `LIVE` because there is a component, a branch, a proof script, or a
+pretty screenshot.**
+
+This is the spine. The cockpit's additional states are refinements *between* these, not exceptions
+to them, and each resolves to a spine state for reporting:
+
+| Cockpit state | Resolves to | Because |
+|---|---|---|
+| `ZERO-CALLERS` | **not LIVE** | merged and unreachable is the exact failure this rule names |
+| `IN ACCEPTANCE` | **not LIVE** | under a frozen walk is not accepted |
+| `BLOCKED` | **not LIVE** | blocker named |
+| `UNVERIFIED` | **no claim either way** | absence of a census is not evidence of absence |
+
+## A5.7 — The milestone that matters
+
+The north star is **not** "Writer Studio v1." It is this experience:
+
+> You wake with an idea, speak it into the Studio, gather related scraps and transcripts, MAIA
+> remembers the Work and notices connections, you decide what matters, a shape emerges, you write,
+> step back to see the whole, developmentally work through it with MAIA, revise safely, return days
+> later without losing the thread, and eventually allow the same Work to become a book, lecture,
+> course, or audio piece.
+
+**MAIA accompanies. You author.**
+
+## A5.8 — What this amendment does not do
+
+- It does **not** release the freeze. Only the A5.1 sequence does, explicitly, on canonical.
+- It does **not** authorize any phase to begin. A3.1 / A4.17 entry still applies to each.
+- It does **not** allocate `WS-08+`, and no phase number is a unit number.
+- It does **not** relax A4.21. Partial delivery is still reported as partial delivery against the
+  cockpit census.
