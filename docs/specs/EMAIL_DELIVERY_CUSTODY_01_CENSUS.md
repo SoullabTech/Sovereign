@@ -129,7 +129,7 @@ Attribution of the 59,995 requires Resend → **Logs** / **Metrics**, filtered b
 source alone would be a hypothesis wearing the clothes of a finding.
 
 The `purpose` tag is the join key — but **only sends routed through `sendEmail` carry one.**
-The twenty-one bypassing call sites are exactly the ones hardest to attribute, which is the
+The 23 bypassing call sites are exactly the ones hardest to attribute, which is the
 same defect from the accounting side.
 
 ---
