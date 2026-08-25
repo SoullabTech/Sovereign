@@ -392,3 +392,81 @@ export async function getCapture(
   );
   return row ? rowToCapture(row) : null;
 }
+
+// ─── Promotion: capture → memory atom (registry pointer only) ────────────────
+
+/**
+ * Promote a capture into the member's portfolio memory.
+ *
+ * Ruling (founder, 2026-08-25): `member_memory_atoms` is used as a source
+ * REGISTRY, never a content copy.
+ *
+ *   promotion means  "MAIA is permitted to remember/reference this source"
+ *   promotion is NOT "copy this source into another memory table"
+ *
+ * The atom therefore stores `source_type='capture'`, `source_id=capture.id`,
+ * and `body = NULL`. Capture content is never decrypted here — it stays
+ * encrypted in `session_captures` and is resolved later through the authorized
+ * decrypt path.
+ *
+ * `title` is member-authored. It is NEVER derived from capture content: doing
+ * so would launder L1 ciphertext into a plaintext column by another route.
+ * When the member supplies no title, an L0-metadata-only label is used.
+ *
+ * Requires explicit member authority — a capture is never promoted merely
+ * because it exists.
+ */
+export async function promoteCapture(
+  captureId: string,
+  memberId: string,
+  opts: { title?: string } = {}
+): Promise<{ capture: Capture; atomId: string; alreadyPromoted: boolean }> {
+  const existing = await queryOne(
+    `SELECT id, session_id, captured_at, modality, capture_kind,
+            promoted_atom_id, promoted_at
+       FROM ${TABLE}
+      WHERE id = $1 AND member_id = $2`,
+    [captureId, memberId]
+  );
+  if (!existing) throw new Error('CAPTURE_NOT_FOUND');
+
+  // Idempotent: promoting twice returns the existing registry entry.
+  if (existing.promoted_atom_id) {
+    const current = await getCapture(captureId, memberId);
+    return {
+      capture: current!,
+      atomId: existing.promoted_atom_id,
+      alreadyPromoted: true,
+    };
+  }
+
+  // L0-only fallback label. Deliberately carries no capture content.
+  const capturedAt = existing.captured_at instanceof Date
+    ? existing.captured_at
+    : new Date(existing.captured_at);
+  const fallbackTitle =
+    `${existing.capture_kind ?? existing.modality} captured ` +
+    capturedAt.toISOString().slice(0, 16).replace('T', ' ');
+
+  const title = opts.title?.trim() || fallbackTitle;
+
+  const atom = await queryOne(
+    `INSERT INTO member_memory_atoms (member_id, source_type, source_id, title, body)
+     VALUES ($1, 'capture', $2, $3, NULL)
+     RETURNING id`,
+    [memberId, captureId, title]
+  );
+  if (!atom) throw new Error('PROMOTION_FAILED');
+
+  await query(
+    `UPDATE ${TABLE}
+        SET promoted_atom_id = $1, promoted_at = NOW()
+      WHERE id = $2 AND member_id = $3`,
+    [atom.id, captureId, memberId]
+  );
+
+  console.log(`[capture] promoted capture=${captureId} atom=${atom.id} (registry pointer, body NULL)`);
+
+  const updated = await getCapture(captureId, memberId);
+  return { capture: updated!, atomId: atom.id, alreadyPromoted: false };
+}

@@ -1,8 +1,9 @@
 # Universal Session Capture (USC)
 
 **Programme:** JARVIS-USC-01
-**Status:** USC-00 census complete · USC-01/02/03 built (branch, unverified in production)
+**Status:** USC-00 census complete · USC-01/02/03/04 built (branch, unverified in production)
 **Canonical at census:** `origin/clean-main-no-secrets` @ `950ea33`
+**Canonical at rebase:** `origin/clean-main-no-secrets` @ `14f426a` (re-verified; lane replayed onto it)
 **Ruling:** Founder, 2026-08-25 — capture serves *both* practitioners and solo members;
 Layer 1 substrate + Session Room convergence built now, mobile/watch specified not implemented.
 
@@ -142,7 +143,44 @@ convergence target.
 
 ## 6. Open decisions (require a ruling)
 
-### 6.1 Promotion collides with atom plaintext — **BLOCKED, not built**
+### 6.1 Promotion — **RULED 2026-08-25, built**
+
+> Capture promotion uses `member_memory_atoms` only as a source registry. Add
+> `source_type='capture'`, reference the canonical encrypted capture by `source_id`, keep
+> `body` NULL, and never decrypt/copy capture content into the atom.
+
+Promotion means *"MAIA is permitted to remember/reference this source"* — not *"copy this
+source into another memory table."* The atom is an index entry; the capture remains the source
+of truth.
+
+```
+encrypted capture
+    │
+    ├── raw content stays encrypted in session_captures   ← source of truth
+    │
+    └── member_memory_atom
+          source_type = 'capture'
+          source_id   = capture.id
+          body        = NULL
+```
+
+Implemented as `database/migrations/20260825000002_memory_atoms_capture_source.sql`
+(widens one CHECK by one value; no historical rewrite; rollback documented in the file) plus
+`promoteCapture()` and `POST /api/capture/[id]/promote`.
+
+**Stop-conditions checked before building:** `body` is nullable (not NOT NULL); `source_id` is
+a bare polymorphic UUID with no FK; `sourcing_discipline` is satisfied by a non-null
+`source_id`. None blocked registry-only atoms, so the unit proceeded rather than stopping.
+
+**No automatic promotion.** A capture existing is never authority to remember it. `title` is
+member-authored and is never derived from capture content — deriving it would launder L1
+content into a plaintext column by another route; the fallback label uses L0 metadata only.
+
+**Downstream safety:** `lib/maia/memoryAtomsLoader.ts` already forces `body → NULL` for every
+source type other than `spontaneous`/`practitioner_observation`, so a promoted capture surfaces
+to MAIA as title + provenance only, e.g. `- "Something shifted" — kept 2 hours ago`.
+
+### 6.1b Original collision (resolved, retained for lineage)
 
 The consent bridge capture → memory was designed but withheld. `member_memory_atoms.body` is
 **plaintext** and no PHI encryption wave covers it. Promoting a capture would decrypt L1
@@ -169,7 +207,9 @@ not settled by existing code.
 
 All surfaces are **clients of the contract above**. No device gets its own note architecture.
 
-### USC-04 — iPhone quick capture
+### USC-04 — iPhone quick capture — **BUILT**
+
+`components/capture/QuickCapture.tsx`, `lib/capture/captureQueue.ts`, `app/maia/capture`.
 
 | Gesture | Call |
 |---|---|
@@ -178,10 +218,18 @@ All surfaces are **clients of the contract above**. No device gets its own note 
 | Type | `{modality:'text', content}` |
 | Follow-up | `{modality:'task'}` |
 
-Session state banner polls `GET /api/capture/active-session`. Copy must name the destination
+Session state banner polls `GET /api/capture/active-session`. Copy names the destination
 ("Saved to *Morning session*" / "Saved to your captures") — the member always knows where a
-capture went. Offline: persist locally with a generated `clientCaptureId`, flush on reconnect;
-idempotency makes duplicate flushes harmless.
+capture went. Offline: the capture is written to local storage and acknowledged with a haptic
+*before* any network call; the queue flushes on reconnect and on foreground. Idempotency makes
+duplicate flushes harmless. A capture leaves the queue only on a definitive server outcome —
+transport failure keeps it queued, and a stuck queue is surfaced ("N waiting to sync") rather
+than hidden.
+
+SPEAK uses on-device speech recognition and sends a transcript. Audio upload and server-side
+Whisper transcription remain USC-07 — this unit deliberately does not open a second recording
+path ahead of that. Where recognition is unavailable the control disables itself rather than
+pretending to listen.
 
 ### USC-05 — Apple system surfaces
 
@@ -222,6 +270,11 @@ discipline: *declaration is not liveness; built ≠ wired; wired ≠ surfacing; 
 | Reachable | migration applied, `POST /api/capture` returns 201 under an authenticated member |
 | Wired | a capture appears in `GET /api/capture/timeline` beside markers |
 | Live | a capture from a non-web surface surfaces in Session Room under real use |
+
+Migrations `…000001` and `…000002` were executed against PostgreSQL 16 locally: apply,
+idempotent re-apply, data preserved, documented rollback replayed on a clone. Promotion proofs
+cover backward compatibility (all ten original source types still insert), registry-only atoms
+(`body IS NULL` accepted), no-plaintext-copy, and no historical rewrite.
 
 Only the third unlocks the marker-convergence gate in §5.
 
