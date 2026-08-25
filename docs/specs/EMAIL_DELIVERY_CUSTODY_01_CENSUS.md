@@ -190,7 +190,7 @@ Required envelope: `purpose`, non-PII actor reference where applicable, failure 
 provider code, retryability, observable result.
 
 **Open question for Phase 2:** whether `sendEmail`'s current contract is broad enough for all
-twenty-two callers, or whether the semantic split above should come first. Not assumed.
+all 24 callers, or whether the semantic split above should come first. Not assumed.
 
 ## Phase 3 — consolidation plan (not yet written)
 
