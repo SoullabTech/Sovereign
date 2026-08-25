@@ -9294,7 +9294,7 @@ I'm not sure what I'm feeling yet.`;
                           </div>
                         </div>
                       </div>
-                      <div className="text-lg sm:text-xl md:text-2xl leading-relaxed break-words text-dune-amber" style={{ fontFamily: 'Spectral, Georgia, serif' }}>
+                      <div className="text-lg sm:text-xl md:text-2xl leading-relaxed whitespace-pre-wrap break-words text-dune-amber" style={{ fontFamily: 'Spectral, Georgia, serif' }}>
                         {message.role === 'oracle' ? (
                           <FormattedMessage
                             text={message.text}
