@@ -54,10 +54,17 @@ export type VoiceDiagEvent =
   // playback path observable WITHOUT changing its behavior.
   //
   // The sequence that would mechanically prove the suspected replay bug:
-  //   playback_started    currentTimeMs ~0
-  //   playback_interrupted currentTimeMs > 0   ← audio was already audible
-  //   playback_retry      same chunkId
-  //   playback_started    currentTimeMs ~0     ← the head plays again
+  //   playback_started     chunkId=X attempt=1 currentTimeMs ~0
+  //   playback_interrupted chunkId=X errorName=AbortError currentTimeMs > 0
+  //                                                    ← audio was already audible
+  //   playback_retry       chunkId=X
+  //   playback_resumed     chunkId=X attempt=2 currentTimeMs ~0
+  //                                                    ← the head plays again
+  //
+  // NOTE the fourth event is playback_RESUMED, not a second playback_started:
+  // attemptPlay emits `started` only on attempt 1 and `resumed` thereafter. A
+  // witness parser watching for a repeated `started` would match nothing and
+  // wrongly clear the replay hypothesis.
   //
   // Metadata is media-element state only. No transcript, no spoken text.
   | 'voice_playback_started'
