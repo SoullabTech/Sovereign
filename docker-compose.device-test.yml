@@ -111,8 +111,11 @@ services:
     environment:
       DEVICE_TEST_HOST: ${DEVICE_TEST_HOST:?set DEVICE_TEST_HOST, e.g. device-test.soullab.life}
       DEVICE_TEST_HTTPS_PORT: ${DEVICE_TEST_HTTPS_PORT:-8443}
-      # DNS provider credential for the DNS-01 challenge.
-      DEVICE_TEST_DNS_TOKEN: ${DEVICE_TEST_DNS_TOKEN:-}
+      # Route 53 credentials for the DNS-01 challenge (standard AWS chain).
+      # Scope the IAM policy to this hosted zone only — see the ops doc §3c.
+      AWS_ACCESS_KEY_ID: ${DEVICE_TEST_AWS_ACCESS_KEY_ID:?set DEVICE_TEST_AWS_ACCESS_KEY_ID (Route 53, zone-scoped)}
+      AWS_SECRET_ACCESS_KEY: ${DEVICE_TEST_AWS_SECRET_ACCESS_KEY:?set DEVICE_TEST_AWS_SECRET_ACCESS_KEY}
+      AWS_REGION: ${DEVICE_TEST_AWS_REGION:-us-east-1}
     volumes:
       - ./Caddyfile.device-test:/etc/caddy/Caddyfile:ro
       - device_test_caddy_data:/data

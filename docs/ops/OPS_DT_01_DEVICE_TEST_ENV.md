@@ -1,6 +1,7 @@
 # OPS-DT-01 — Safe Real-Device Test Environment
 
 **Status:** Artifacts authored and validated locally · **NOT DEPLOYED**
+**Branch:** `claude/ops-dt-01-device-test-env` (separate lane; PR #1093 stays frozen at `2a4d59c`)
 **Authorized:** Founder, 2026-08-25
 **Blocks:** USC-04 iPhone acceptance → PR #1093 merge ruling
 
@@ -88,25 +89,60 @@ Additive; changes no existing record.
 > resolution*; it is not a "manual trust hack" and iOS treats it as a fully
 > trusted origin, so microphone and `SpeechRecognition` work.
 >
-> If you would rather have a clean `https://device-test.soullab.life` with no
-> port, that requires adding a site block to the **production** Caddy — a change
-> to shared production routing. **Not done. Your ruling.**
+> **Ruled 2026-08-25:** keep `:8443`; production Caddy is not touched during this
+> unit. A portless URL is explicitly deferred to a small routing unit *after* this
+> environment is proven — a pretty URL is not worth introducing a production-routing
+> dependency into the very unit whose purpose is isolation from production.
 
-**c. DNS API token.** DNS-01 needs a provider token scoped to DNS-edit on this
-zone only, plus a Caddy image containing that provider's plugin:
+**c. DNS provider — resolved: AWS Route 53.**
+
+The authoritative nameservers for `soullab.life` were queried directly:
+
+```
+ns-171.awsdns-21.com     ns-646.awsdns-16.net
+ns-1304.awsdns-35.org    ns-1566.awsdns-03.co.uk
+```
+
+`awsdns-*` across four TLDs is Route 53. An earlier draft named Cloudflare as a
+placeholder; that was never an implementation choice and has been replaced. **No
+Cloudflare module or credential is needed or should be requested.**
+
+> Note for the infrastructure record: this is DNS hosting only. It does not
+> contradict the project's "NOT EC2, no CDN/proxy middleman" stance — nothing is
+> hosted at AWS and no traffic is proxied through it. Route 53 answers name
+> queries; the LAN's public IP still terminates every connection.
+
+Build the Caddy image with the Route 53 plugin:
 
 ```bash
 docker build -t maia-caddy-dns:2 - <<'EOF'
 FROM caddy:2-builder AS builder
-RUN xcaddy build --with github.com/caddy-dns/cloudflare
+RUN xcaddy build --with github.com/caddy-dns/route53
 FROM caddy:2-alpine
 COPY --from=builder /usr/bin/caddy /usr/bin/caddy
 EOF
 ```
 
-`Caddyfile.device-test` currently names the `cloudflare` provider. **I do not
-know your DNS provider** — if it is not Cloudflare, both the plugin and the
-`tls { dns … }` directive need the matching provider name.
+**Minimal IAM policy.** Scope to the single hosted zone — this credential lives in
+a disposable test environment and must not be able to edit the rest of the zone
+inventory:
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    { "Effect": "Allow",
+      "Action": ["route53:GetChange"],
+      "Resource": "arn:aws:route53:::change/*" },
+    { "Effect": "Allow",
+      "Action": ["route53:ChangeResourceRecordSets", "route53:ListResourceRecordSets"],
+      "Resource": "arn:aws:route53:::hostedzone/<SOULLAB_LIFE_ZONE_ID>" },
+    { "Effect": "Allow",
+      "Action": ["route53:ListHostedZonesByName"],
+      "Resource": "*" }
+  ]
+}
+```
 
 **d. Test-only secrets.** `DEVICE_TEST_PHI_KEY` must **not** be the production
 PHI key. Capture content written here is synthetic and the environment is
@@ -123,8 +159,10 @@ than shipped as a `.sample` file that would have been silently ignored too.
 
 DEVICE_TEST_HOST=device-test.soullab.life   # publicly resolvable, valid TLS
 DEVICE_TEST_HTTPS_PORT=8443                 # dedicated; never contends with prod Caddy
-DEVICE_TEST_CADDY_IMAGE=maia-caddy-dns:2    # Caddy build with the DNS plugin (§3c)
-DEVICE_TEST_DNS_TOKEN=                      # scoped to DNS-edit on this zone ONLY
+DEVICE_TEST_CADDY_IMAGE=maia-caddy-dns:2    # Caddy build with the route53 plugin (§3c)
+DEVICE_TEST_AWS_ACCESS_KEY_ID=              # Route 53, scoped to this hosted zone ONLY
+DEVICE_TEST_AWS_SECRET_ACCESS_KEY=
+DEVICE_TEST_AWS_REGION=us-east-1
 DEVICE_TEST_DB_PASSWORD=                    # unrelated to production
 DEVICE_TEST_PHI_KEY=                        # TEST-ONLY: openssl rand -base64 32
 ANTHROPIC_API_KEY=                          # optional, for conversational surfaces

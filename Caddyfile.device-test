@@ -10,14 +10,20 @@
 # therefore never contends with the production Caddy. Production routing is
 # untouched.
 #
-# DNS-01 requires a Caddy build containing the DNS provider plugin. Set
-# DEVICE_TEST_CADDY_IMAGE to that build (see OPS_DT_01_DEVICE_TEST_ENV.md §3).
+# Provider: AWS Route 53 — confirmed authoritative for soullab.life
+# (ns-{171,646,1304,1566}.awsdns-*). Requires a Caddy build containing the
+# route53 plugin; see OPS_DT_01_DEVICE_TEST_ENV.md §3.
+#
+# Credentials come from the standard AWS chain (env vars on the container),
+# scoped to a single hosted zone — see §3c for the minimal IAM policy.
 # ═══════════════════════════════════════════════════════════════════════════════
 
 {$DEVICE_TEST_HOST}:{$DEVICE_TEST_HTTPS_PORT} {
 
 	tls {
-		dns cloudflare {$DEVICE_TEST_DNS_TOKEN}
+		dns route53 {
+			max_retries 10
+		}
 	}
 
 	# SSE / streaming endpoints — same handling as production so the surface
