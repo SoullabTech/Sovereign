@@ -13,8 +13,29 @@
 Not *"do you like this design?"* The question is whether someone who knows nothing can tell where they are,
 what they can do, and what would bring them back. **Behaviour is the evidence; opinion is the footnote.**
 
-**Participants:** 5–7 people not deeply familiar with Soullab. A mix is better than ideal customers.
-At least one who helps others professionally or vocationally, for the My Practice questions.
+### Run plan — 8 participants, split so first exposure stays cold
+
+| Group | n | First exposure |
+|---|---|---|
+| **A — new arrival** | 4 | public landing → join → doorway → MAIA → House |
+| **B — returning House** | 4 | cold open directly on the populated returning House |
+
+**Splitting the groups is preferable to running both journeys on everyone** — it removes the contamination
+problem in §1 entirely rather than managing it.
+
+**Mix to aim for:**
+
+- several ordinary prospective members with little or no AI expertise
+- several people comfortable with contemporary digital products
+- **2–3 helpers** — coach, therapist, teacher, facilitator, healer, guide — **especially in group B**, so My
+  Practice is actually tested
+- at least two people with strong visual or aesthetic sensitivity
+- **no Soullab insiders** if avoidable
+
+### We are not looking for statistical significance
+
+We are looking for **repeated cognitive failures**. Three unrelated people independently misunderstanding the
+same thing is far more meaningful than one person's preference about wording or typography.
 
 ---
 
@@ -71,6 +92,32 @@ permission. Have a second person take notes so the facilitator can watch hands.
 
 **Timings worth capturing:** time to first click · time to first doorway · time to reach the House ·
 number of backtracks · any dead-end scrolling.
+
+### Recording a hesitation — three columns, kept apart
+
+For every significant hesitation, capture these **separately**. Collapsing them is how an interpretation
+quietly becomes evidence.
+
+| | |
+|---|---|
+| **Observed behaviour** | what physically happened |
+| **Participant explanation** | what they said they thought was happening |
+| **Facilitator interpretation** | what we think caused it |
+
+```
+   OBSERVED
+   Paused 11 seconds on returning House, moved cursor over Kept twice, then clicked Recent.
+
+   PARTICIPANT
+   "I wasn't sure whether Kept meant saved conversations."
+
+   INTERPRETATION
+   Continuity vocabulary may not yet explain itself.
+```
+
+**This project has a great deal of beautiful theory behind it. The instrument exists so the humans can
+contradict the theory** — which they cannot do if our reading of their behaviour is written down as the
+behaviour itself.
 
 ---
 
@@ -162,6 +209,17 @@ requirement — and would be the most consequential findings this instrument can
 
 ---
 
+## 8.5 · Interim check after the first 2–3 sheets
+
+Send the first two or three completed sheets before running the rest. **Not to redesign from** — to check
+that the instrument is capturing the right evidence: are the three columns staying separate, are hesitations
+being timed, is the facilitator holding silence, are the questions producing answers or agreement.
+
+Correcting the instrument mid-run is legitimate. **Correcting the prototype mid-run is not** — every
+participant must meet the same build, or the set cannot be synthesized.
+
+---
+
 ## 9 · Synthesis — one pass, not five redesigns
 
 After all sessions, **one synthesis**. Classify every finding:
@@ -176,6 +234,31 @@ After all sessions, **one synthesis**. Classify every finding:
 **MLX-05 contains only the evidence-driven corrections.** Frozen architecture does not reopen because one
 person suggested a hamburger menu. A ruled decision changes only under §12 of MLX-02 — and a phase 4 finding
 qualifies **when it is a pattern with evidence**, not a preference.
+
+### Two classes of finding, kept distinct
+
+**Ordinary MLX-05 findings** — fixable inside the frozen architecture:
+
+> *"I didn't immediately understand Kept."* · *"I expected this word to do something slightly different."* ·
+> *"I overlooked My Contribution."*
+
+**Architecture-falsifying findings** — these challenge a ruled premise, not an execution:
+
+> *"I don't know how to get home."* → challenges Q1, the House as the single centre.
+> *"The thing I joined and the thing I arrived in feel unrelated."* → challenges the no-cognitive-cliff
+> requirement.
+
+If either becomes a pattern, **reopen MLX-02 under its explicit change-control provision** rather than quietly
+patching around the contradiction.
+
+### Division of labour
+
+| | |
+|---|---|
+| **Requires a person in the room** | recruiting, facilitating, observing, completing sheets |
+| **Can be done from the sheets** | synthesis, scoring, pattern analysis, change-control judgment, the MLX-05 specification |
+
+The sessions themselves cannot be run from inside this workspace. **The world has to answer us.**
 
 ---
 
