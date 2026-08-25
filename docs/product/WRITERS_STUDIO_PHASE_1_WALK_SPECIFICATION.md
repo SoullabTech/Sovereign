@@ -85,7 +85,7 @@ change of adjective.
 | Frozen by | Kelly (founder) — criteria authored by the founder, 2026-08-24; transcribed by Claude, who authored none of them |
 | Date | 2026-08-24 |
 | Reason | The 2026-08-02 audit left this frame stepless and unfrozen, so the freeze's own remedy ("re-run the complete walk from W1") had no referent. Phase 3A then established that the original acceptance question — *can a writer bring material in, preserve the original source, and create a working draft* — had been judged against the wrong referent: `manuscript_sections` is an immutable **interpretation**, not the arrival, and the arrival can already have been discarded. This version therefore adds the static precondition **P0 — Source custody** ahead of any member step. That is a correction to the *evidence* for a founder criterion present from the beginning, not a new criterion invented after implementation. |
-| Commit SHA of the frozen text | `PENDING_SEAL` — filled by the sealing commit; see §3.1 |
+| Commit SHA of the frozen text | `dd31548a51964547d8bf61bd959d59face2e2a85` — the freezing commit; sealed here per §3.1 |
 
 *Unfilled means unfrozen. An unfrozen specification cannot be executed.*
 
