@@ -540,6 +540,24 @@ world meets their world first, and the doorways move down the page — **they ar
 - **Nothing to announce, nothing to undo.** There is no moment where the House changes its mind about
   someone, so there is no silent personalization to disclose and no restore affordance to design.
 
+**Recession is spatial, not eliminative.** The doorways recede; they do not vanish. ***"I don't know where to
+begin" remains permanently available*** — even a member of ten years can wake up not knowing where to start.
+
+> **The architecture must not assume that expertise eliminates uncertainty.**
+
+**The developmental curve this completes:**
+
+```
+   At first        Soullab teaches me how to enter.
+   Then            Soullab begins to contain things that matter to me.
+   Eventually      I am no longer navigating Soullab's possibilities —
+                   I am returning to my own world.
+```
+
+*Adaptive disappearance now means something richer than hiding controls:* **scaffolding recedes when lived
+substance replaces the need for scaffolding.** The doorway does not quieten because Soullab decides the member
+has graduated. It quietens because **the member now has somewhere of their own to return to.**
+
 **This is how the House evolves from "here's how to use Soullab" into "here is your Soullab" — by the member
 filling it, not by the system deciding they are ready.**
 
