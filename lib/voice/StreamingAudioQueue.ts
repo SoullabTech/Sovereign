@@ -12,6 +12,7 @@
 import { VoiceFeedbackPrevention } from './voice-feedback-prevention';
 import { ensureAudioReady, getAudioStatus } from './ios-audio-session';
 import { pushVoiceDebug } from './voiceDebugBus';
+import { logVoiceEvent } from './voiceDiagnostics';
 
 export interface AudioQueueItem {
   audio: HTMLAudioElement;
@@ -102,6 +103,28 @@ export class StreamingAudioQueue {
    *
    * Key: ensureAudioReady() is called before EVERY attempt, not just first.
    */
+  /**
+   * Media-element state at a moment in time. Deliberately excludes anything
+   * derived from the spoken text: this is a witness for HOW playback behaved,
+   * never for WHAT was said.
+   *
+   * `currentTimeMs` is the load-bearing field. It is what separates "the retry
+   * replayed something already audible" from "nothing had been heard yet" —
+   * the whole question the AbortError path turns on.
+   */
+  private snapshot(audio: HTMLAudioElement, chunkId: number, attempt: number) {
+    return {
+      chunkId,
+      attempt,
+      currentTimeMs: Math.round((audio.currentTime || 0) * 1000),
+      durationMs: Number.isFinite(audio.duration) ? Math.round(audio.duration * 1000) : -1,
+      readyState: audio.readyState,
+      networkState: audio.networkState,
+      paused: audio.paused,
+      ended: audio.ended,
+    };
+  }
+
   private async attemptPlay(audio: HTMLAudioElement, retries = 3): Promise<boolean> {
     for (let attempt = 1; attempt <= retries; attempt++) {
       try {
@@ -113,11 +136,24 @@ export class StreamingAudioQueue {
         audio.setAttribute('playsinline', 'true');
         audio.setAttribute('webkit-playsinline', 'true');
 
+        const chunkId = this.chunksPlayed + 1;
+        // Sampled BEFORE play() resolves: a non-zero currentTime here means
+        // this element has already emitted audio, so this attempt is a REPLAY,
+        // not a first start.
+        const pre = this.snapshot(audio, chunkId, attempt);
         await audio.play();
+        logVoiceEvent(
+          attempt === 1 ? 'voice_playback_started' : 'voice_playback_resumed',
+          { ...pre, replayedAudible: attempt > 1 && pre.currentTimeMs === 0 },
+        );
         console.log(`✅ [StreamingQueue] Play succeeded on attempt ${attempt}`);
         return true;
       } catch (error: any) {
         const status = getAudioStatus();
+        logVoiceEvent('voice_playback_interrupted', {
+          ...this.snapshot(audio, this.chunksPlayed + 1, attempt),
+          errorName: error?.name ?? 'unknown',
+        });
         console.warn(`⚠️ [StreamingQueue] Play attempt ${attempt}/${retries} failed:`, {
           errorName: error.name,
           errorMessage: error.message,
@@ -130,11 +166,21 @@ export class StreamingAudioQueue {
           if (attempt < retries) {
             // Wait with exponential backoff before retry
             const delay = Math.min(100 * Math.pow(2, attempt - 1), 500);
+            logVoiceEvent('voice_playback_retry', {
+              ...this.snapshot(audio, this.chunksPlayed + 1, attempt),
+              errorName: error?.name ?? 'unknown',
+              delayMs: delay,
+            });
             console.log(`🔄 [StreamingQueue] Retrying in ${delay}ms...`);
             await new Promise(resolve => setTimeout(resolve, delay));
             // ensureAudioContextReady will be called again at top of loop
           } else {
             // Final attempt failed
+            logVoiceEvent('voice_playback_failed', {
+              ...this.snapshot(audio, this.chunksPlayed + 1, attempt),
+              errorName: error?.name ?? 'unknown',
+              reason: 'retries_exhausted',
+            });
             console.error(`❌ [StreamingQueue] All ${retries} play attempts failed`);
             if (typeof window !== 'undefined') {
               window.dispatchEvent(new CustomEvent('maya-audio-unlock-needed'));
@@ -142,6 +188,11 @@ export class StreamingAudioQueue {
           }
         } else {
           // Non-recoverable error - don't retry
+          logVoiceEvent('voice_playback_failed', {
+            ...this.snapshot(audio, this.chunksPlayed + 1, attempt),
+            errorName: error?.name ?? 'unknown',
+            reason: 'non_recoverable',
+          });
           console.error(`❌ [StreamingQueue] Non-recoverable error:`, error.name);
           break;
         }
@@ -265,6 +316,10 @@ export class StreamingAudioQueue {
       };
 
       item.audio.onended = () => {
+        // Closes the per-chunk trace. A chunk with started/resumed but no
+        // ended is as diagnostic as one that failed — absence of this event
+        // is how a stranded chunk becomes visible.
+        logVoiceEvent('voice_playback_ended', this.snapshot(item.audio, this.chunksPlayed + 1, 0));
         if (settled) return;
         const playedTime = item.audio.currentTime;
         const completionRatio = expectedDuration > 0 ? playedTime / expectedDuration : 1;
