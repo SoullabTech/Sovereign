@@ -1057,6 +1057,25 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   // On mount, hand back any utterance that was spoken but never sent — the
   // case where the session dropped, or the tab was refreshed, before the
   // member could submit. Restored as an editable draft, never auto-sent.
+  // Record MAIA's completed replies into the continuity buffer.
+  //
+  // Watches `messages` rather than each append site, so every path that adds an
+  // assistant turn is covered — no site can be added later and quietly miss it.
+  // Members reported losing MAIA's responses as the more painful half of an
+  // interrupted session ("I have lost a lot of what she said that was important
+  // feedback"), so preserving only the member's speech would preserve only half
+  // a conversation.
+  const lastBufferedReplyRef = useRef<string>('');
+  useEffect(() => {
+    if (isSanctuary) return;
+    const last = messages[messages.length - 1];
+    if (!last || last.role !== 'assistant') return;
+    const text = typeof last.content === 'string' ? last.content.trim() : '';
+    if (!text || text === lastBufferedReplyRef.current) return;
+    lastBufferedReplyRef.current = text;
+    try { getContinuityBuffer().recordMaiaReply(text); } catch { /* best-effort */ }
+  }, [messages, isSanctuary]);
+
   const continuityRestoredRef = useRef(false);
   useEffect(() => {
     if (continuityRestoredRef.current || isSanctuary) return;
