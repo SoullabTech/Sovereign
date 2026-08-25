@@ -1,6 +1,6 @@
 # Writer's Studio R2 — Master Operating Brief
 
-> **Persistent programme brief.** Authored by the founder, 2026-08-24, **amended 2026-08-25**
+> **Persistent programme brief.** Authored by the founder, 2026-08-24, **amended 2026-08-24**
 > (Amendment 1 — Product Constitution, at the end of this file). Transcribed here so a session can
 > be started with *"Read the Writer's Studio master brief; execute the currently authorized unit
 > only"* rather than reconstructing the architecture each time.
@@ -13,7 +13,7 @@
 > ## Programme state at Amendment 1
 >
 > ```text
-> PROGRAMME STATE AT AMENDMENT 1        recorded 2026-08-25
+> PROGRAMME STATE AT AMENDMENT 1        recorded 2026-08-24
 >
 > CANONICAL BASE     9be736aa2
 > WS-01 CANDIDATE    e92f532396705daaf6cd346445276a08a5957904
@@ -270,8 +270,8 @@ is not evidence of member reachability. **Always establish the referent.**
 
 ## 25–27. Units and conduct
 
-> **Amended 2026-08-25 (Amendment 1).** This section is *replaced*, not appended to. Two
-> provisional roadmaps circulated on 2026-08-24/25 renumbered WS-05, WS-06 and WS-07 to mean
+> **Amended 2026-08-24 (Amendment 1).** This section is *replaced*, not appended to. Two
+> provisional roadmaps circulated on 2026-08-24 renumbered WS-05, WS-06 and WS-07 to mean
 > different things. That is the failure this programme exists to prevent — several generations of
 > good design sitting on different mental models, settled by whichever document a session happens
 > to read. The ratified identities below stand.
@@ -412,7 +412,7 @@ Preserve that distinction through every layer of Writer's Studio.
 
 ---
 
-# Amendment 1 — Product Constitution (founder, 2026-08-25)
+# Amendment 1 — Product Constitution (founder, 2026-08-24)
 
 > **Binding on every Writer Studio unit.** Not a feature list: the rules every surface and
 > capability must satisfy. Where this amendment and the original text differ, this governs.
@@ -485,7 +485,7 @@ attributed to the writer through repetition.
 
 `docs/canon/CONSTITUTIONAL_DIRECTION_OF_AUTHORITY.md` already defines **Encounter → Reflection →
 Recognition → Living Field → Developmental Ecology**, with authority moving upward only. The
-Studio's use of those words is a **deliberate unification**, ruled 2026-08-25:
+Studio's use of those words is a **deliberate unification**, ruled 2026-08-24:
 
 - **Writer Recognition is an instance of constitutional Recognition** — but *only* when the writer
   explicitly recognizes or adopts. It inherits the same authority discipline. ⛔ Recognition is
