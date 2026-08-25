@@ -2,16 +2,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
-import { Resend } from 'resend';
-
-// Lazy-load Resend client to avoid build-time initialization
-function getResendClient() {
-  const apiKey = process.env.RESEND_API_KEY;
-  if (!apiKey) {
-    throw new Error('RESEND_API_KEY not configured');
-  }
-  return new Resend(apiKey);
-}
+import { sendEmail } from '@/lib/email/sendEmail';
 
 // Admin auth - requires LABTOOLS_SECRET environment variable
 const ADMIN_SECRET = process.env.LABTOOLS_SECRET;
@@ -328,22 +319,33 @@ async function sendGiftEmail(
       ? `${gifterName} sent you a gift — MAIA awaits`
       : `You've been gifted access to MAIA`;
 
-    const resend = getResendClient();
-    const result = await resend.emails.send({
+    const result = await sendEmail({
+      purpose: 'invite:gift',
       from: 'Soullab Gifts <gifts@soullab.life>',
       replyTo: 'kelly@soullab.life',
       to: recipientEmail,
       subject,
       html: generateGiftEmailHtml(recipientName, passkey, gifterName, personalMessage),
       text: generateGiftEmailText(recipientName, passkey, gifterName, personalMessage),
+      idempotencyKey: `invite:gift:${passkey}`,
       tags: [
         { name: 'campaign', value: 'gift-passkey' },
         { name: 'type', value: 'invitation' }
       ]
     });
 
-    console.log(`✨ Gift email sent to ${recipientName} (${recipientEmail}):`, result.data?.id);
-    return { success: true, id: result.data?.id };
+    // The provider REFUSES by resolving, not by throwing. The previous code
+    // returned `{ success: true }` unconditionally, so a quota refusal was
+    // recorded as a delivered gift and the recipient was never told.
+    if (!result.success) {
+      console.error(
+        `❌ Gift email refused for ${recipientName}: failureKind=${result.failureKind ?? 'unclassified'} providerCode=${result.providerCode ?? 'unnamed'}`
+      );
+      return { success: false, error: result.error };
+    }
+
+    console.log(`✨ Gift email sent to ${recipientName}:`, result.id);
+    return { success: true, id: result.id };
 
   } catch (error: any) {
     console.error(`❌ Failed to send gift email to ${recipientEmail}:`, error);

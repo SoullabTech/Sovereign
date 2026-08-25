@@ -6,32 +6,35 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { query, queryOne } from '@/lib/database/postgres';
 import { z } from 'zod';
-import { Resend } from 'resend';
+import { sendEmail } from '@/lib/email/sendEmail';
 
 const KELLY_EMAIL = 'kelly@soullab.life';
 const KELLY_PHONE = '+15044539009';
 const PROBLEM_EMAIL = 'problem@soullab.life';
-
-let resend: Resend | null = null;
-function getResend() {
-  if (!resend) resend = new Resend(process.env.RESEND_API_KEY);
-  return resend;
-}
 
 async function notifyKelly(category: string, categoryLabel: string, message: string, userName: string) {
   const from = userName || 'Anonymous';
   const preview = message.length > 160 ? message.substring(0, 157) + '...' : message;
   const recipient = category === 'problem' ? PROBLEM_EMAIL : KELLY_EMAIL;
 
-  // Email (fire-and-forget)
-  if (process.env.RESEND_API_KEY) {
-    getResend().emails.send({
-      from: 'MAIA Feedback <noreply@soullab.life>',
-      to: recipient,
-      subject: `[${categoryLabel}] from ${from}`,
-      html: `<p><strong>${categoryLabel}</strong> from <strong>${from}</strong></p><p>${message.replace(/\n/g, '<br>')}</p>`,
-    }).catch((e: unknown) => console.error('[Feedback] Email notify failed:', e));
-  }
+  // Email. Deliberately fire-and-forget: feedback submission must not fail
+  // because an internal notification did. But the OUTCOME is still inspected —
+  // `sendEmail` never throws, so a bare `.catch()` here would have logged
+  // nothing at all for a provider refusal.
+  void sendEmail({
+    purpose: 'feedback:submission',
+    from: 'MAIA Feedback <noreply@soullab.life>',
+    to: recipient,
+    subject: `[${categoryLabel}] from ${from}`,
+    html: `<p><strong>${categoryLabel}</strong> from <strong>${from}</strong></p><p>${message.replace(/\n/g, '<br>')}</p>`,
+    metadata: { category },
+  }).then((r) => {
+    if (!r.success) {
+      console.error(
+        `[Feedback] Email notify REFUSED failureKind=${r.failureKind ?? 'unclassified'} providerCode=${r.providerCode ?? 'unnamed'}`
+      );
+    }
+  });
 
   // SMS via Twilio (fire-and-forget)
   if (process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN && process.env.TWILIO_FROM_NUMBER) {

@@ -12,20 +12,9 @@
 import { config } from 'dotenv';
 config({ path: '.env.local' });
 
-import { Resend } from 'resend';
+import { sendEmail } from '../lib/email/sendEmail';
 import { query } from '../lib/db/postgres';
 
-// Lazy init to allow dry-run without API key
-let resend: Resend | null = null;
-function getResend(): Resend {
-  if (!resend) {
-    if (!process.env.RESEND_API_KEY) {
-      throw new Error('RESEND_API_KEY not found in .env.local');
-    }
-    resend = new Resend(process.env.RESEND_API_KEY);
-  }
-  return resend;
-}
 
 interface UnregisteredTester {
   name: string;
@@ -327,7 +316,8 @@ async function sendPasskeyReminders() {
       const rawDomain = recipient.split('@')[1] || 'unknown';
       const recipientDomain = rawDomain.replace(/\./g, '_');  // gmail.com → gmail_com
 
-      const result = await getResend().emails.send({
+      const result = await sendEmail({
+        purpose: 'auth:passkey-recovery',
         from: 'Kelly @ Soullab <kelly@soullab.life>',
         to: recipient,
         subject,
@@ -340,20 +330,14 @@ async function sendPasskeyReminders() {
         ]
       });
 
-      // Check for Resend error response (doesn't always throw)
-      const maybeError = (result as any)?.error;
-      if (maybeError) {
-        throw new Error(typeof maybeError === 'string' ? maybeError : JSON.stringify(maybeError));
+      // The vendor's response shape no longer has to be guessed at with three
+      // fallbacks and an `as any`: sendEmail returns one typed result, and a
+      // refusal is a refusal.
+      if (!result.success) {
+        throw new Error(`${result.failureKind ?? 'unclassified'}: ${result.error ?? 'send refused'}`);
       }
 
-      // Robust messageId extraction (Resend SDK response shapes vary)
-      const messageId =
-        (result as any)?.id ||
-        (result as any)?.data?.id ||
-        (result as any)?.data?.messageId ||
-        'unknown';
-
-      console.log(`✅ Sent to ${recipient} — id: ${messageId}`);
+      console.log(`✅ Sent to ${recipient} — id: ${result.id}`);
       sent++;
 
       // Rate limit: 500-900ms with jitter to avoid provider throttling

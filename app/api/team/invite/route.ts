@@ -1,16 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { query } from '@/lib/db/postgres';
-import { Resend } from 'resend';
+import { sendEmail } from '@/lib/email/sendEmail';
 import { resolveTeamIdForInviter, addMemberToTeam } from '@/lib/team/teamMembership';
 
 export const dynamic = 'force-dynamic';
 
 const FROM = 'Soullab <noreply@soullab.life>';
-
-function getResend() {
-  return new Resend(process.env.RESEND_API_KEY);
-}
 
 export async function POST(request: NextRequest) {
   const memberId = await getMemberIdFromRequest(request);
@@ -54,11 +50,12 @@ export async function POST(request: NextRequest) {
     const addedToTeam = teamId ? await addMemberToTeam(teamId, existingMemberId) : false;
 
     const signinUrl = `${appUrl}/signin`;
-    try {
-      await getResend().emails.send({
-        from: FROM,
-        to: normalizedEmail,
-        subject: `${inviterName} added you to the Soullab Co-lab`,
+    const existingSend = await sendEmail({
+      purpose: 'invite:team',
+      from: FROM,
+      to: normalizedEmail,
+      subject: `${inviterName} added you to the Soullab Co-lab`,
+      idempotencyKey: `invite:team:existing:${existingMemberId}`,
         html: `
           <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px;">
             <h2 style="color:#d4b896;">You're in the Soullab Co-lab</h2>
@@ -70,14 +67,23 @@ export async function POST(request: NextRequest) {
               Sign in to Soullab
             </a>
           </div>
-        `,
-      });
-    } catch (emailErr) {
-      console.error('[team/invite] Failed to send existing-member email:', emailErr);
-      // Non-fatal — the member was still added to the workspace.
+      `,
+    });
+    // Non-fatal — the member was still added to the workspace — but the
+    // refusal is REPORTED. `sendEmail` resolves on a provider refusal, so the
+    // try/catch this replaces could never have observed one.
+    if (!existingSend.success) {
+      console.error(
+        `[team/invite] existing-member email REFUSED failureKind=${existingSend.failureKind ?? 'unclassified'} providerCode=${existingSend.providerCode ?? 'unnamed'}`
+      );
     }
 
-    return NextResponse.json({ ok: true, alreadyMember: true, addedToTeam });
+    return NextResponse.json({
+      ok: true,
+      alreadyMember: true,
+      addedToTeam,
+      emailSent: existingSend.success,
+    });
   }
 
   // ── New person ─────────────────────────────────────────────────────
@@ -114,11 +120,12 @@ export async function POST(request: NextRequest) {
 
   const acceptUrl = `${appUrl}/team/invite/${token}`;
 
-  try {
-    await getResend().emails.send({
-      from: FROM,
-      to: normalizedEmail,
-      subject: `${inviterName} invited you to Soullab`,
+  const inviteSend = await sendEmail({
+    purpose: 'invite:team',
+    from: FROM,
+    to: normalizedEmail,
+    subject: `${inviterName} invited you to Soullab`,
+    idempotencyKey: `invite:team:${inviteId}`,
       html: `
         <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px;">
           <h2 style="color:#d4b896;">You're invited to Soullab</h2>
@@ -130,12 +137,16 @@ export async function POST(request: NextRequest) {
           </a>
           <p style="color:#999;font-size:12px;margin-top:24px;">Link expires in 7 days.</p>
         </div>
-      `,
-    });
-  } catch (emailErr) {
-    console.error('[team/invite] Failed to send invite email:', emailErr);
-    // Don't fail the request — invite is created, email just didn't send
+    `,
+  });
+  // The invite row is created regardless — but the caller is TOLD whether the
+  // invitation actually left, so an admin is not left believing someone was
+  // emailed when the provider refused.
+  if (!inviteSend.success) {
+    console.error(
+      `[team/invite] invite email REFUSED failureKind=${inviteSend.failureKind ?? 'unclassified'} providerCode=${inviteSend.providerCode ?? 'unnamed'}`
+    );
   }
 
-  return NextResponse.json({ ok: true, inviteId });
+  return NextResponse.json({ ok: true, inviteId, emailSent: inviteSend.success });
 }

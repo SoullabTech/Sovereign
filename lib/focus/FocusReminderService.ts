@@ -7,7 +7,7 @@
  * Philosophy: Gentle nudges, not nagging. Support, not surveillance.
  */
 
-import { Resend } from 'resend';
+import { sendEmail } from '@/lib/email/sendEmail';
 import { FocusScheduler, type FocusReminder } from './FocusScheduler';
 
 // ============================================================================
@@ -250,45 +250,40 @@ function generateGenericReminderEmail(reminder: FocusReminder): {
 // ============================================================================
 
 export class FocusReminderService {
-  private resend: Resend | null = null;
-
-  constructor() {
-    const apiKey = process.env.RESEND_API_KEY;
-    if (apiKey) {
-      this.resend = new Resend(apiKey);
-      console.log('[FocusReminder] Resend configured');
-    } else {
-      console.warn('[FocusReminder] RESEND_API_KEY not set - emails will not be sent');
-    }
-  }
+  // Provider configuration is no longer this service's concern: lib/email
+  // owns it, and reports `not_configured` as a classified failure rather than
+  // as a warning at construction time that nothing downstream could observe.
 
   /**
    * Send a single reminder email
    */
   async sendReminder(reminder: FocusReminder, recipientEmail: string): Promise<boolean> {
-    if (!this.resend) {
-      console.warn('[FocusReminder] Cannot send - Resend not configured');
-      return false;
-    }
-
     const { subject, html, text } = generateEmailContent(reminder);
 
     try {
-      const result = await this.resend.emails.send({
+      const result = await sendEmail({
+        purpose: 'reminder:focus',
         from: FROM_EMAIL,
         to: recipientEmail,
         subject,
         html,
         text,
+        // Identifies a duplicate reminder in the logs. It does NOT suppress one
+        // — that needs durable state this module does not have.
+        idempotencyKey: `reminder:focus:${reminder.id}`,
       });
 
-      if (result.data?.id) {
-        console.log(`[FocusReminder] Sent reminder ${reminder.id} to ${recipientEmail}`);
+      if (result.success) {
+        console.log(`[FocusReminder] Sent reminder ${reminder.id}`);
+        // Marked delivered ONLY on provider acceptance — otherwise a refused
+        // reminder is recorded as delivered and never retried.
         await FocusScheduler.markReminderDelivered(reminder.id);
         return true;
       }
 
-      console.error('[FocusReminder] Send failed - no message ID');
+      console.error(
+        `[FocusReminder] Send REFUSED for ${reminder.id}: failureKind=${result.failureKind ?? 'unclassified'} providerCode=${result.providerCode ?? 'unnamed'}`
+      );
       return false;
     } catch (error) {
       console.error('[FocusReminder] Send error:', error);

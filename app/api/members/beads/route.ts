@@ -2,17 +2,8 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
-import { Resend } from 'resend';
+import { sendEmail } from '@/lib/email/sendEmail';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
-
-// Lazy-load Resend client
-function getResendClient() {
-  const apiKey = process.env.RESEND_API_KEY;
-  if (!apiKey) {
-    throw new Error('RESEND_API_KEY not configured');
-  }
-  return new Resend(apiKey);
-}
 
 // Default beads for beta testers
 const DEFAULT_BEADS = 10;
@@ -339,16 +330,17 @@ export async function POST(request: NextRequest) {
     let emailError: string | undefined;
 
     try {
-      const resend = getResendClient();
       const subject = `${member.name} sent you a gift — MAIA awaits`;
 
-      const result = await resend.emails.send({
+      const result = await sendEmail({
+        purpose: 'invite:bead',
         from: 'Soullab Gifts <gifts@soullab.life>',
         replyTo: 'kelly@soullab.life',
         to: recipientEmail,
         subject,
         html: generateGiftEmailHtml(recipientName, passkey, member.name, personalMessage),
         text: generateGiftEmailText(recipientName, passkey, member.name, personalMessage),
+        idempotencyKey: `invite:bead:${passkey}`,
         tags: [
           { name: 'campaign', value: 'member-bead' },
           { name: 'type', value: 'invitation' },
@@ -356,7 +348,14 @@ export async function POST(request: NextRequest) {
         ],
       });
 
-      if (result.data?.id) {
+      // A bead is a spent, finite gift. Marking it sent when the provider
+      // refused would consume the member's bead and deliver nothing.
+      if (!result.success) {
+        emailError = result.error;
+        console.error(
+          `Bead email refused: failureKind=${result.failureKind ?? 'unclassified'} providerCode=${result.providerCode ?? 'unnamed'}`
+        );
+      } else {
         emailSent = true;
         await query(
           'UPDATE gift_passkeys SET email_sent_at = NOW() WHERE passkey = $1',

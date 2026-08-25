@@ -14,19 +14,9 @@
 import { config } from 'dotenv';
 config({ path: '.env.local' });
 
-import { Resend } from 'resend';
+import { sendEmail } from '../lib/email/sendEmail';
 import { ganeshaContacts, GaneshaContactManager } from '../lib/ganesha/contacts';
 
-let resend: Resend | null = null;
-function getResend(): Resend {
-  if (!resend) {
-    if (!process.env.RESEND_API_KEY) {
-      throw new Error('RESEND_API_KEY not found in .env.local');
-    }
-    resend = new Resend(process.env.RESEND_API_KEY);
-  }
-  return resend;
-}
 
 function generateEmailHtml(name: string, passkey: string): string {
   const firstName = name.split(' ')[0];
@@ -290,7 +280,8 @@ async function sendStewardInvitation() {
 
   for (const target of targets) {
     try {
-      const result = await getResend().emails.send({
+      const result = await sendEmail({
+        purpose: 'invite:steward',
         from: 'Kelly @ Soullab <kelly@soullab.life>',
         to: target.recipient,
         subject: 'Thank you for being here',
@@ -303,17 +294,11 @@ async function sendStewardInvitation() {
         ]
       });
 
-      const maybeError = (result as any)?.error;
-      if (maybeError) {
-        throw new Error(typeof maybeError === 'string' ? maybeError : JSON.stringify(maybeError));
+      if (!result.success) {
+        throw new Error(`${result.failureKind ?? 'unclassified'}: ${result.error ?? 'send refused'}`);
       }
 
-      const messageId =
-        (result as any)?.id ||
-        (result as any)?.data?.id ||
-        'unknown';
-
-      console.log(`✅ ${target.name} (${target.recipient}) — ${messageId}`);
+      console.log(`✅ ${target.name} — ${result.id}`);
       sent++;
 
       // Rate limit with jitter

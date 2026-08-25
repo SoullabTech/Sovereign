@@ -8,7 +8,7 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { Resend } from "resend";
+import { sendEmail } from "@/lib/email/sendEmail";
 
 export const runtime = "nodejs";
 
@@ -57,17 +57,26 @@ export async function POST(req: NextRequest) {
 
   const results: Record<string, boolean> = {};
 
-  // 1. Send email via Resend
+  // 1. Send email
   if (process.env.RESEND_API_KEY) {
     try {
-      const resend = new Resend(process.env.RESEND_API_KEY);
-      await resend.emails.send({
+      const sent = await sendEmail({
+        purpose: "build:alert",
         from: "MAIA Build Monitor <build@soullab.life>",
         to: DEV_EMAIL,
         subject: `[${payload.severity.toUpperCase()}] MAIA Build Alert`,
         html: formatAlertEmail(payload),
+        metadata: { severity: payload.severity },
       });
-      results.email = true;
+      // `sent.success` — not `true`. A provider refusal (quota, bad sender) is
+      // reported as a failed channel, so the alert fan-out cannot claim it
+      // reached someone it did not reach.
+      results.email = sent.success;
+      if (!sent.success) {
+        console.error(
+          `[BuildAlert] Email REFUSED failureKind=${sent.failureKind ?? "unclassified"} providerCode=${sent.providerCode ?? "unnamed"}`
+        );
+      }
     } catch (error) {
       console.error("[BuildAlert] Email failed:", error);
       results.email = false;
