@@ -1,0 +1,36 @@
+{
+  "work": "Elemental Alchemy — Chapter 10",
+  "doctrine": "elemental-alchemy-ch10",
+  "mode": "FIXTURE_ANALYSIS",
+  "objective": "Exercise and prove the Developmental Editor against a corpus whose developmental defects are known and visible.",
+
+  "fixture_referent": {
+    "label": "MANUSCRIPT / Living the Spiralogic Process",
+    "artifact": "docs/book-studio/ELEMENTAL_ALCHEMY_MANUSCRIPT.md",
+    "fromLine": 3492,
+    "toLine": 3816,
+    "status": "intentionally selected developmental-editor test corpus",
+    "selected_because": "It carries the known developmental defects — curriculum scaffolding, reintroduction, prospective residue, pitch register — in unusually visible form, which makes it a good acceptance corpus.",
+    "not_a_claim": "Selecting this fixture asserts NOTHING about which artifact is the authoritative Chapter 10. It is not thereby declared canonical."
+  },
+
+  "work_referent": {
+    "resolved": false,
+    "status": "UNRESOLVED / OUT OF SCOPE",
+    "note": "Manuscript custody is not decided here. Binding a Work referent is a separate founder act, required only if the editor is ever asked to MODIFY the book. Findings against the fixture are valid without it and are not provisional."
+  },
+
+  "protagonist_doctrine": {
+    "settled": true,
+    "ruling": "Maya is the protagonist for this fixture; her lived development teaches the Spiralogic Process. The dream is not an alternate protagonist for this test.",
+    "authority": "Founder",
+    "note": "Settled. Not to be re-asked."
+  },
+
+  "comparison_corpus": [
+    { "label": "MANUSCRIPT / Living the Spiralogic Process", "artifact": "docs/book-studio/ELEMENTAL_ALCHEMY_MANUSCRIPT.md", "fromLine": 3492, "toLine": 3816 },
+    { "label": "FROM_ORIGINAL_FULL / The Living Spiral", "artifact": "docs/book-studio/ELEMENTAL_ALCHEMY_FROM_ORIGINAL_FULL.md", "fromLine": 2114, "toLine": 2505 },
+    { "label": "REBUILT_COMPLETE_DRAFT / Chapter 10", "artifact": "docs/book-studio/ELEMENTAL_ALCHEMY_REBUILT_COMPLETE_DRAFT.md", "fromLine": 1299, "toLine": 1442 }
+  ],
+  "comparison_corpus_note": "Read as archaeology — how this chapter changed across drafts. NOT a candidate list for the Work, and not a ranking of canonicity."
+}

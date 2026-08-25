@@ -114,6 +114,73 @@ capability must not be scheduled as though it began there.
 
 ---
 
+# Implementation status
+
+```text
+DIAGNOSTIC / PROOF SUBSTRATE     EXISTS — scripts/writers-studio/**, 44/44 proven
+MEMBER-FACING CAPABILITY         NOT BUILT
+BOARD STATE                      DESIGNED  (unchanged — PARTIAL means member-reachable)
+```
+
+⛔ **Tooling no member can reach does not promote the row.** The substrate is non-runtime: it is
+grounding and evaluation for the capability, not the capability.
+
+What exists:
+
+- **executable doctrine** — the editorial standard as rules; every finding cites the rule it came
+  from, and a finding without a citation is a bug
+- **eleven deterministic diagnostics** — no model call, line-addressable, incl. `D11` subordination
+  as an `OBSERVATION` that never scores and never ranks
+- **a recovery lens** — differential observation of a predecessor source against a fixture,
+  reporting material lost downstream and tagging what it would repair
+- **referent discipline** — `REFERENT_MODE` / `requireWorkBinding`: reading a named fixture needs no
+  Work binding and its findings are not provisional; **modifying the Work refuses without one**
+- **discrimination proof** — each diagnostic shown able to stay silent *and* to fire, plus a
+  negative control: zero false losses across the fixture's own 324 lines
+
+What does not exist — and is the whole feature:
+
+```text
+open a real Work → choose Developmental Reading → MAIA reads chapter + Work context
+  → surfaces evidence-backed observations → the author discusses one
+  → MAIA develops it WITH the author → recognition / decision captured
+  → proposed change stays SEPARATE → the author adopts → the Work changes
+```
+
+Per Amendment 3 §A3.1 a specification is not a programme entry, and a substrate with no vertical
+slice is the zero-caller pattern in its next costume. When WS-01 releases BUILD MODE this becomes a
+vertical slice — **Discover and Gather first**, per the sequencing consequence above, not chapter
+reading.
+
+## The recognition principle
+
+> **Elemental recognition follows movement before vocabulary.**
+
+An element is recognised by what *happens* in a passage, not by whether the passage uses the
+element's name. A lens that searches only for `"aether"` is a concordance. A lens that recognises
+non-forcing, release of control, and reorganization from a larger field detects **phenomenology
+before terminology** — which is the intelligence this capability is for.
+
+⛔ **Observation only.** Movement may trigger recognition *for inspection*. It is never
+classification, and never adoption. The maturity ladder above is unaffected: a movement match does
+not raise what the Editor is allowed to assert.
+
+## Method boundary — what a recovery source may and may not do
+
+A predecessor source can show what was **lost or distorted downstream**. It does not thereby
+acquire doctrinal authority.
+
+Worked case — the fifth element, censused across five sources:
+
+- **Settled:** the specific *"Spirit: integrates and harmonizes all other elements"* formulation is
+  unsupported by the examined lineage. The Chapter 9 source uses Spirit as the **fire quadrant**;
+  `SPIRALOGIC_CANON_NOTES_v1.md` and `lib/maia/spiralogicReference.ts` contain the word zero times.
+- **Not settled:** the canonical *name* of the centre. The source says *soul*; the canon notes and
+  the runtime reference say *Aether*, a **held field, not a phase** — agreeing on structure,
+  disagreeing on label. Not resolved here.
+- **Scope:** the Chapter 10 lineage plus the two doctrine sources named. **Not** a ruling that the
+  Elemental Alchemy canon is settled.
+
 # Acceptance fixture — Chapter 10 (MATURE MANUSCRIPT stance only)
 
 > **One fixture at one maturity.** This exercises `DEVELOP`/`REVISE` against a mature manuscript.
@@ -160,7 +227,16 @@ replaced by the author's own turning point, with the thesis stated plainly and n
 language. A fourth Chapter 10 (`book-print-kdp-final`, 216 sections) is what is actually in
 production.
 
-**Developmental editing without a settled referent is the same class of error as calling an
-interpretation a source.** Which draft is the Work is a founder decision, and the fixture above
-names `ELEMENTAL_ALCHEMY_MANUSCRIPT` only because that is where the defect is richest — not
-because it is the Work.
+**Modifying the Work without a settled referent is the same class of error as calling an
+interpretation a source.** *Reading* a named fixture is not: findings against a corpus chosen
+because its defects are visible are valid on their own terms, and gating them on manuscript custody
+would imply the fixture was a candidate for the Work. It is not. The fixture names
+`ELEMENTAL_ALCHEMY_MANUSCRIPT` only because that is where the defect is richest.
+
+Which draft is the Work remains **UNRESOLVED / OUT OF SCOPE** — a founder act, required only when
+the editor is asked to change the book. `requireWorkBinding()` enforces exactly that asymmetry.
+
+A predecessor — Chapter 9, *"Living the Spiralogic Process"* — is held as a recovery source at
+`docs/book-studio/sources/SPIRALOGIC_CHAPTER_9_ORIGINAL.md` (founder-supplied,
+`member_supplied_text`). Neither it nor the production `book-print-kdp-final` is thereby a candidate
+for the Work either.
