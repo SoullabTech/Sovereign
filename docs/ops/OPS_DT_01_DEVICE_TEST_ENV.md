@@ -297,6 +297,19 @@ some scenario, and an early abort would skip later checks and suppress the final
 verdict — yielding a correct exit code for the wrong reason and an unreadable
 report. Every external call is guarded instead.
 
+### Capturing the proof as durable evidence
+
+Run the proof via `scripts/capture-isolation-evidence.sh`. It stamps the report
+with capture time, the OPS-DT script SHA, the canonical SHA, the SHA the running
+container actually reports, the deploy lane, the hostname, and the test database
+identity — then writes it to `docs/ops/evidence/`.
+
+Provenance is not ceremony here. During PR #1093 a `check_suite.completed` event
+arrived for a **stale** `head_sha` and would have read as proof for a newer head.
+A green isolation report that cannot be bound to a commit has the same defect.
+Any field that cannot be read is recorded as `<unreadable>` rather than left
+blank, so a gap in the evidence is visible instead of ambiguous.
+
 **Verdict logic is proven, not asserted.** All four paths were exercised against
 a simulated estate: healthy → PASS/0; production reachable from the test app →
 FAIL/1; test and production sharing one database → FAIL/1; every observation
