@@ -93,6 +93,33 @@ at `buildComprehensiveVoicePrompt`. **Launchable now:**
 The stronger line **graduates** when the full recall path passes the Failure Test. *We do not hold launch
 hostage to the entire memory frontier; we avoid promising more than the runtime reliably delivers.*
 
+### MLX-R1 — GREEN (Kelly, 2026-08-25): the three onboarding screens are replaced by the doorway.
+
+**Post-signup becomes:**
+
+```
+   NAME  ──►  DOORWAY  ──►  MAIA
+                            target: under 60 seconds to first meaningful interaction
+```
+
+Each existing screen is **relocated, not discarded** — the intellectual architecture is kept; it moves to
+where it actually has meaning:
+
+| Screen | Disposition |
+|---|---|
+| **ConsciousnessPreparation** (10 lenses) | **Remove.** Its answer goes to `localStorage` and nothing reads it — pure threshold burden. |
+| **BirthDataStep** | **Preserve the capability and its consent model; move it to the point of relevance** — Soul Portrait / Astrology. *Someone should give birth data because they want that experience, not as the price of meeting MAIA.* |
+| **SageTealWelcome** (five elements) | **Remove from mandatory onboarding.** Introduce the elements on the public landing page (§A.6) and again through optional, member-initiated discovery inside Soullab. *People should encounter Spiralogic progressively rather than pass a philosophy lesson before receiving value.* |
+
+**The principle this establishes:**
+
+> **Teach the world before signup. Orient the person after signup. Let MAIA provide the first value.**
+
+**Safeguard — the doorway must not become another questionnaire.** It asks *"What is asking for your
+attention?"*, offers several recognizable starting places plus *"I don't know where to begin"*, and then:
+**one tap, and MAIA starts.** Any addition that turns the doorway into a form violates this ruling rather
+than extending it.
+
 ### Standing design requirement — no cognitive cliff (Kelly, 2026-08-25)
 
 > **The landing page and MAIA House are two versions of the same world.** They are not designed separately.
@@ -413,7 +440,21 @@ The ratified spine effectively answers the old Q4; it is retained in §11 only t
 
 ## 4 · Surface B — Guided Arrival
 
-**Layer: Designed. Builds on Live `arrivalState` two-state model.**
+**Layer: Designed. Builds on the Live `arrivalState` two-state model. Scope set by MLX-R1 (§0.1): this
+surface *replaces* ConsciousnessPreparation, BirthDataStep and SageTealWelcome in the post-signup flow —
+it is not added in front of them.**
+
+```
+   TODAY                                    AFTER R1
+   ─────                                    ────────
+   signup                                   signup
+     └─ name                                  └─ name
+   /onboarding                              /maia
+     ├─ 10 philosophical lenses  ✗            └─ doorway  ──►  MAIA
+     ├─ birth date/time/place    → relocated
+     └─ five elements taught     → relocated       under 60 seconds
+   /maia
+```
 
 ### B.1 When it renders
 
