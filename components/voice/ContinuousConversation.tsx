@@ -383,6 +383,24 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
   // Set immediately before each processAccumulatedTranscript() call so the
   // commit event can name its own cause without changing the function signature.
   const sendTriggerRef = useRef<UtteranceSendTrigger>('other');
+  // ── VOICE-02A: recognition-epoch boundary ──────────────────────────────
+  // Safari terminates recognition while a nonempty interim tail is still
+  // outstanding (production trace 2026-08-25: ends 0.47s / 0.70s / 1.0s after
+  // the last interim, auto-restart ~306ms later). Finals survive the restart;
+  // the unfinalized tail is in no buffer. The 12s silence timer is NOT the
+  // immediate cause at these boundaries, so the timer-boundary witness alone
+  // would have been silent on this mechanism.
+  //
+  // `epoch` numbers each recognition instance so an analyst can ask the one
+  // question the raw trace cannot answer: was the tail LOST, or did Safari
+  // re-deliver overlapping words in the next epoch? That distinction decides
+  // whether salvage is needed and whether salvage would double-count.
+  const recognitionEpochRef = useRef<number>(0);
+  const epochFirstResultSeenRef = useRef<boolean>(false);
+  // The tail the PREVIOUS epoch ended holding, carried across the restart so
+  // the next epoch's first final can be compared against it.
+  const epochEndedWithTailCharsRef = useRef<number>(0);
+  const epochEndedAtRef = useRef<number>(0);
   const isRestartingRef = useRef(false);
   // True only while an onend auto-restart is *continuing the same utterance*.
   // iOS Safari effectively ignores `recognition.continuous`, so it fires onend
@@ -545,6 +563,11 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
       // further result belongs to the next turn rather than trailing the
       // committed one. Bounds the window so it cannot mislabel new speech.
       committedRef.current = false;
+      // 👁️ Open a new recognition epoch. Carried refs from the previous epoch
+      // are deliberately NOT cleared here — the next result must be able to
+      // report what the last epoch ended holding.
+      recognitionEpochRef.current += 1;
+      epochFirstResultSeenRef.current = false;
       // Reset per-cycle flags before the new cycle begins. The no-speech
       // ACROSS-cycle counter is intentionally NOT reset here — it only resets
       // on a successful speech_started or on a user-driven stop.
@@ -692,7 +715,19 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
             lastFinalAtRef.current = finalAt;
             lastResultAtRef.current = finalAt;
             lastInterimCharsRef.current = 0;
+            const firstInEpoch = !epochFirstResultSeenRef.current;
+            epochFirstResultSeenRef.current = true;
             logVoiceEvent('voice_result_final', {
+              epoch: recognitionEpochRef.current,
+              firstResultInEpoch: firstInEpoch,
+              // 👁️ The lost-vs-redelivered test. When firstResultInEpoch is
+              // true and precedingEpochTailChars > 0, compare deltaCharCount
+              // against it: a final that is materially LARGER than the words
+              // this epoch could have heard suggests Safari re-delivered the
+              // previous tail; one that is not suggests the tail is gone.
+              precedingEpochTailChars: firstInEpoch ? epochEndedWithTailCharsRef.current : 0,
+              msSinceEpochEnd: firstInEpoch && epochEndedAtRef.current
+                ? Date.now() - epochEndedAtRef.current : -1,
               turnCommitId: turnCommitIdRef.current,
               finalCharCount: accumulatedTranscript.current.length,
               deltaCharCount: finalTranscript.trim().length,
@@ -717,7 +752,14 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
             lastInterimCharsRef.current = currentInterim.length;
             if (shouldEmitThrottled(interimAt, interimTelemetryAtRef.current)) {
               interimTelemetryAtRef.current = interimAt;
+              const firstInEpoch = !epochFirstResultSeenRef.current;
+              epochFirstResultSeenRef.current = true;
               logVoiceEvent('voice_result_interim', {
+                epoch: recognitionEpochRef.current,
+                firstResultInEpoch: firstInEpoch,
+                precedingEpochTailChars: firstInEpoch ? epochEndedWithTailCharsRef.current : 0,
+                msSinceEpochEnd: firstInEpoch && epochEndedAtRef.current
+                  ? Date.now() - epochEndedAtRef.current : -1,
                 turnCommitId: turnCommitIdRef.current,
                 interimCharCount: currentInterim.length,
                 finalCharCount: accumulatedTranscript.current.length,
@@ -863,7 +905,27 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     });
 
     recognition.onend = session.guard(gen, () => {
-      logVoiceEvent('voice_recognition_ended');
+      // 👁️ VOICE-02A — the recognition-epoch boundary, previously emitted with
+      // NO metadata at all. tailAtRisk=true here is Safari ending an epoch on
+      // an unfinalized tail: the demonstrated mechanism, not a hypothesis.
+      {
+        const endedAt = Date.now();
+        const tail = readTailSnapshot({
+          now: endedAt,
+          lastInterimAt: lastInterimAtRef.current,
+          lastFinalAt: lastFinalAtRef.current,
+          lastInterimChars: lastInterimCharsRef.current,
+          finalChars: accumulatedTranscript.current.trim().length,
+        });
+        epochEndedWithTailCharsRef.current = tail.tailAtRisk ? tail.interimCharCount : 0;
+        epochEndedAtRef.current = endedAt;
+        logVoiceEvent('voice_recognition_ended', {
+          epoch: recognitionEpochRef.current,
+          turnCommitId: turnCommitIdRef.current,
+          epochAgeMs: recognitionStartTime.current ? endedAt - recognitionStartTime.current : -1,
+          ...tail,
+        });
+      }
       console.log('🏁 [onend] Recognition stopped');
       recognitionActiveRef.current = false; // Clear double-start guard
       setIsRecording(false);
