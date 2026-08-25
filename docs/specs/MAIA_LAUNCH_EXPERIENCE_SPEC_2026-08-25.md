@@ -295,6 +295,61 @@ pending count) but may move.
 
 **R5 is closed.** Vocabulary no longer blocks the shell.
 
+### MLX-R6 — GREEN (Kelly, 2026-08-25): My Practice ships — curated Live subset, redesigned.
+
+**The reasoning that closes it.** If the landing page says Soullab is for people living their lives *and*
+those who accompany others, and a practitioner joins to find no corresponding place, we recreate the exact
+threshold failure this programme exists to eliminate. But shipping the existing practitioner surfaces
+unchanged would violate the Design Canon on the day it is bound. **So: ship the practitioner sphere, curated
+around accompaniment rather than administration.**
+
+```
+   MY PRACTICE
+   For the people, encounters and work you hold in service of others.
+
+     People              The people you accompany.
+     Preparation         Arrive more fully prepared.
+     Sessions            Your encounters over time.
+     Encounters          What happened and what matters now.
+     Notes / Observations  What you noticed and chose to retain.
+     Co-Lab              Shared relational work.
+```
+
+Names and subtitles respect canonical language where it already exists (R5b(ii)); the shape above is
+conceptual.
+
+**The distinction that defines the sphere:**
+
+```
+   MY PRACTICE                        UTILITIES
+   ├── accompaniment                  booking
+   ├── relationship                   billing
+   ├── preparation                    agreements
+   ├── encounter                      administration
+   ├── observation                    scheduling
+   └── continuity
+```
+
+Billing, booking, agreements, administrative caseload tools, account mechanics and scheduling **remain
+accessible where needed — but behave like utilities, not like the meaning of the sphere.**
+
+> A therapist, coach, teacher, healer, facilitator, mentor or guide should enter My Practice and think
+> ***"this helps me be better with the people I serve"*** — not *"here is my client-management dashboard."*
+
+**The Phase 8 boundary holds.** Session Room, encounters, preparation and the consent threshold are **Live**
+and may ship. MARK / SPEAK / universal capture / MAIA-drafted notes are **Designed** and stay in roadmap
+phase 8. *Do not fabricate future capability to make My Practice look richer — the Live subset is already
+enough to establish a real place.*
+
+**Landing continuity achieved.** Section 05c can now truthfully preview My Practice as an actual part of
+Soullab rather than a coming-soon promise, so an eligible helper recognizes it after signup: *"there it is —
+this is the place I saw before joining."* That is precisely the landing-to-House continuity §0.1 requires.
+
+**Acceptance test (added to the ruling):**
+
+> **If a first screenshot of My Practice could plausibly be mistaken for therapist or practice-management
+> software, the redesign has failed the Soullab Design Canon.**
+
 ### Standing design requirement — no cognitive cliff (Kelly, 2026-08-25)
 
 > **The landing page and MAIA House are two versions of the same world.** They are not designed separately.
@@ -851,6 +906,11 @@ function. Soul Portrait has routes but no registry entry. Relationships is off t
 ---
 
 ## 2.97 · Visual & Category Constraint — binding (Kelly, 2026-08-25)
+
+> **Now canon.** These constraints were promoted to `docs/canon/SOULLAB_DESIGN_CANON.md` (`1690420`), a
+> governing aesthetic and experiential standard for every member-facing Soullab/MAIA surface, alongside
+> `INHABITABLE_ARCHITECTURE_STANDARD.md`. **The canon governs; this section is its application to the launch
+> surfaces.** Where they differ, canon wins.
 
 > **Soullab is not to be designed or positioned as a therapy platform, healthcare product,
 > practice-management application, generic wellness app, or AI chatbot. Those use cases may exist within it,
