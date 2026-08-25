@@ -600,3 +600,151 @@ know where the Work was alive?
 Fire · Water · Earth · Air · Aether may later become **optional interpretive lenses**, never
 imposed classifications. ⛔ Never let symbolic intelligence outrun basic writing usability: a
 conceptually beautiful lens over a primitive product is a worse failure than not having it.
+
+---
+
+# Amendment 2 — Operating mode: build to fruition (founder, 2026-08-24)
+
+> **Effective when WS-01 closes** — P0-D, the frozen walk, Founder Acceptance, merge, freeze
+> released. ⛔ Not before. Until then the pinned candidate and P0-D remain the only executable act.
+
+**The risk this amendment exists to remove:** governance becoming the product. What is wanted is a
+working Writer's Studio, not a perfect sequence of documents describing one.
+
+## A2.1 — The default inverts
+
+> **Default to building.** Stop only for a genuinely irreversible architectural decision, a
+> safety/custody violation, or a founder decision that cannot be inferred.
+
+⛔ Not every ambiguity deserves a memo, a branch, a ruling, or a day of archaeology.
+
+## A2.2 — Three responses, not one
+
+The programme's stop conditions were written for a lane that had lost its footing. They are now
+sorted, and only the third stops work:
+
+**1 · Decide and proceed** — ordinary engineering, no report needed: component naming · UI
+placement · CSS and layout · straightforward refactors · test implementation · reuse of existing
+components · normal performance work · minor responsive behaviour · small bug fixes inside the
+authorized unit.
+
+**2 · Report and continue** — say it in the unit report; do **not** open a proceeding: a discovery
+changed the problem · canonical moved under the work · an architectural assumption proved false ·
+a test caught a real regression · existing functionality was found · the implementation differs
+from the research. **These are findings, not permission requests.** Engineering integrity still
+requires naming them; it does not require halting for them.
+
+**3 · Stop and ask** — the small constitutional set: changing what counts as the Work · changing
+authorship or authority boundaries · destructive migrations · abandoning a ratified architecture ·
+redefining Recognition or Living Field · major privacy or consent changes · irreversible product
+direction · **and a binding freeze, which is never routed around.**
+
+## A2.3 — Cadence
+
+Each unit ends in a **visible, usable capability** — not another planning artifact.
+
+```text
+inspect existing work → choose the smallest coherent build → implement → test
+   → use it in the actual Studio → fix what feels wrong → merge → next
+```
+
+**Reuse before rebuilding.** #995's `CanvasShell`, easel, navigator and four papers, the prior
+Worktable and structure work, and abandoned-but-useful R&D are harvested, not re-invented.
+Documentation happens **alongside** the build, never instead of it.
+
+**The Studio is its own acceptance instrument.** Use it rather than theorising about whether it
+works.
+
+## A2.4 — Build sequence
+
+Finish WS-01 → harvest what exists (#995 and prior R&D) → make daily writing excellent (work-
+centered home · navigation · serious editor · structure rail · focused part editing · find/replace
+· autosave · meaningful resume · responsive) → Gather/Materials with provenance and explicit
+adoption → the creative distances (Write · Materials · Structure · Outline · Read · Compare ·
+Field) → MAIA useful inside the Work → memory and authorship provenance → professional revision →
+whole-Work intelligence → Expression and publishing.
+
+Unit identities come from §25 as reconciled; this is the order capability arrives.
+
+## A2.5 — Definition of full fruition
+
+Not substantially built until a person can actually do this, end to end:
+
+> Open Soullab → return to a living book → resume the exact place *and concern* they were working
+> on → speak a new idea → keep its original transcript as material → have MAIA notice connections
+> with older material → **inspect those connections without them being inserted** → explicitly
+> bring chosen material into the manuscript → reorganise chapters visually → write and revise
+> fluidly → ask MAIA to reflect on the whole work → compare an alternate version → restore
+> something changed yesterday → see themes and unresolved threads across the book → decide what
+> they recognise and what they reject → turn the Work toward a lecture or course → export the book.
+
+**If we cannot do that, we are not done.**
+
+> Enough designing the possibility of Writer's Studio. Build Writer's Studio.
+
+---
+
+# Amendment 3 — The programme entry rule and the build graph (founder, 2026-08-24)
+
+## A3.1 — A specification does not admit a feature
+
+> **A feature is not part of Writer's Studio merely because it has a specification.** It enters the
+> programme only when it has all five:
+>
+> 1. an authoritative **programme entry**
+> 2. an identified **dependency chain**
+> 3. an executable **vertical slice**
+> 4. a **real-Work acceptance case**
+> 5. a **path to production**
+
+This exists to break one historical pattern, which has now happened often enough to be a law of
+this repository rather than an accident:
+
+```text
+great idea → great R&D → prototype → another architecture generation → ZERO CALLERS
+```
+
+`components/canvas/CanvasShell.tsx`, `components/canvas/registry.ts` and the easel with its four
+papers are that pattern's current instance: **merged on canonical, zero importers, invisible to
+every member.** The Developmental Editor must not become the next one.
+
+⛔ **A specification living on an unmerged branch is not a programme entry.** Custody on canonical
+is the entry.
+
+## A3.2 — Jarvis owns the build graph
+
+`docs/programme/WRITERS_STUDIO_BUILD_GRAPH.md` is the operational cockpit. Every session must be
+able to say **which nodes exist, which are partial, which are blocked, which have zero callers, and
+which one it is advancing now.**
+
+Node states are **evidence** — set by reading canonical (file presence, importer count, live
+route), never by what a document says should be true. The graph is updated in the same commit as
+the work that changes it, never as a separate act of bookkeeping.
+
+> **Operational custody note (2026-08-25).** `WRITERS_STUDIO_BUILD_GRAPH.md`, named in §A3.2, was
+> subsequently consolidated into `WRITERS_STUDIO_PROGRAMME_BOARD.md` by programme ruling. The Board
+> is now the sole live cockpit. **This changes the artifact location only; the ratified substance of
+> §A3.2 is unchanged.**
+>
+> The ratified text above is preserved verbatim as the historical record of what was actually
+> ratified. Amendments are not rewritten after ratification — not even for a filename — because a
+> correction that small is exactly the precedent that makes larger ones look ordinary.
+
+## A3.3 — Jarvis carries capability to production
+
+Jarvis is responsible for the whole path — **programme → dependency → vertical slice → runtime
+proof** — not for the implementation of whichever feature was mentioned that day. A unit that ends
+in a merged branch nobody calls has not been delivered.
+
+## A3.4 — Dependency, not bureaucracy
+
+The Developmental Editor's Continuity lens cannot know what the reader has already encountered
+without authoritative Work Structure. So:
+
+```text
+WORK STRUCTURE → DEVELOPMENTAL CONTEXT → DEVELOPMENTAL EDITOR
+               → PROVENANCE / DECISIONS → SAFE EDIT ADOPTION
+```
+
+That is sequencing. **The Developmental Editor is required, not optional** — and it is one of the
+principal acceptance surfaces for whether MAIA genuinely understands a Work.
