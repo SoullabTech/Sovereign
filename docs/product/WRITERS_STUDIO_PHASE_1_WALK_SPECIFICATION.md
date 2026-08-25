@@ -115,7 +115,7 @@ version it froze.
 | Frozen by | Kelly (founder) — amendment authored by the founder, 2026-08-24; transcribed by Claude, who authored none of it |
 | Date | 2026-08-24 |
 | Reason | Run 001 judged P0 against canonical (FAIL). Run 002 judged it against an assembled candidate and passed it on a real PostgreSQL and a real file vault — but through the library code paths, on a local database, not on the deployed candidate. P0 is a **candidate** precondition, so the evidentiary referent must be exact: proving the mechanism is real is not the same as proving it is present in the environment the human walk will judge. v1.1 therefore splits P0 into **P0-M** (mechanism) and **P0-D** (deployed candidate witness), and P0 passes only when both do. This narrows nothing that was proven; it names what was not. |
-| Commit SHA of the frozen text | `PENDING_SEAL_V11` — filled by the sealing commit; see §3.1 |
+| Commit SHA of the frozen text | `e5f36d83ce4a449f5a59aab5c5bc75ec71cb6f87` — the v1.1 freezing commit; sealed here per §3.1 |
 
 ⛔ Per §3.3 this version **applies to subsequent runs only.** Evidence record 002 was judged
 against v1.0 and is not re-judged; its findings stand exactly as recorded.
