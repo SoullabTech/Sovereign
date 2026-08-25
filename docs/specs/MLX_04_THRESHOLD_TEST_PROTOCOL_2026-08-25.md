@@ -62,6 +62,32 @@ the returning-House test is exactly the one we cannot afford to contaminate.
 | **Scenario A — first arrival** | `…/artifact/54a43776-eac2-44a0-8e16-13469d2b6f30?bare=1` |
 | **Scenario B — returning member** | `…?bare=1&start=houseBack` |
 
+### Where the stimulus lives — and where it does not
+
+The prototype is a **published Artifact on claude.ai**. It is **not** a route on `soullab.life`, and must not
+become one: MLX-03 was specified as isolated from production routing precisely so it could never become a
+shipping surface. **There is nothing to deploy.** No minisforum build, no Docker image, no `GIT_COMMIT`
+provenance chain — those govern the product, not the research stimulus.
+
+`c137e44` is the **git commit of the source file**, not a deployable build. The relationship to verify is
+therefore *"does the published page carry the same bytes as that commit"*, not *"is that SHA live in
+production"*.
+
+**Provenance verified 2026-08-25:** the published artifact body and
+`docs/specs/prototypes/mlx-03-prototype.html` at `c137e44` are byte-identical — 34,257 bytes,
+sha256 `31d78fa8160bf09d…`. Re-verify by reading the artifact and diffing against
+`git show c137e44:docs/specs/prototypes/mlx-03-prototype.html`.
+
+### ⚠ Access — the one step still outstanding
+
+**Artifacts are private to their owner by default.** A participant opening the URL without access sees
+nothing. Before the first session, the artifact must be **shared from its own page's share menu** — this is a
+founder action in the browser; it cannot be done from this workspace.
+
+**Confirm before session 1:** open the participant URL in a private/incognito window, or on a device not
+signed in as the owner. If the landing page renders, the cohort can run. If it does not, no amount of
+protocol discipline will help.
+
 Their own device where possible — a real phone is better evidence than a borrowed laptop. Screen-record with
 permission. Have a second person take notes so the facilitator can watch hands.
 
