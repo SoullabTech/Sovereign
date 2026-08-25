@@ -10,8 +10,15 @@ signup. The volume question exposed a prior structural one.
 ## The finding
 
 `lib/email/sendEmail.ts` opens by calling itself *"the one place transactional email leaves
-the system."* **It is not.** Twenty-two files construct a Resend client directly; twenty-one
-of them bypass the central helper entirely.
+the system."* **It is not.**
+
+```
+N  24  direct Resend authorities
+M  23  bypass sendEmail
+K   1  confirmed silent-drop (lib/team/notifications.ts)
+```
+
+Counted mechanically — see **P1-CORRECTION** below.
 
 The consequence is not stylistic. `sendEmail` exists because Resend's `emails.send()` returns
 `{ data, error }` and **does not throw** on API failure — a caller that awaits it and assumes
@@ -28,7 +35,7 @@ The 60,000 sends are a symptom of (3). The architecture is the finding.
 
 ## Call-site census
 
-Twenty-two direct Resend authorities. `sends` = calls to `emails.send`; `loops` = iteration
+All 24, one path per row. `sends` = calls to `emails.send`; `loops` = iteration
 constructs; **silent-drop** = the file never references `.error` on the send result, so a
 resolved `{data:null,error}` is indistinguishable from success.
 
@@ -54,7 +61,10 @@ resolved `{data:null,error}` is indistinguishable from success.
 | `app/api/fields/nathan/message/route.ts` | 1 | 0 | to verify |
 | `app/api/studio/session-followup/send/route.ts` | — | — | to verify |
 | `app/api/build/alert/route.ts` | 1 | 0 | to verify |
-| `scripts/send-*.ts` (4 files) | 1 each | 1–3 | bulk operator scripts |
+| `scripts/send-beta-update-email.ts` | 1 | 1 | bulk operator script |
+| `scripts/send-maia-ready-email.ts` | 1 | 1 | bulk operator script |
+| `scripts/send-passkey-reminder.ts` | 1 | 3 | bulk operator script |
+| `scripts/send-steward-invitation.ts` | 1 | 3 | bulk operator script |
 
 `to verify` is honest, not dismissive: the classification above comes from a structural scan
 (does the file reference `.error` at all). Confirming each one requires reading its send path.
@@ -90,6 +100,17 @@ recipient address — it logs `practitionerPrefix` (see the note below).
 
 ### Remaining candidates, in order
 
+None of these is the cause. Their state is **capability**, not attribution:
+
+```
+NewsletterIntegration   HIGH-VOLUME CAPABLE
+session-reminders       REPEATED-SEND CAPABLE
+bulk scripts            BULK CAPABLE
+FocusReminderService    REPEATED-SEND CAPABLE
+
+59,995 attribution      UNRESOLVED
+```
+
 1. **`NewsletterIntegration`** — bulk by design, batches by awareness level with inter-batch
    delays "to avoid rate limiting". Highest fan-out per invocation.
 2. **`session-reminders`** — repeats every 10–15 min against due sessions.
@@ -119,6 +140,32 @@ same defect from the accounting side.
 truncated identifier is "a fragment of the source identifier, not a derivation of it" and is
 explicitly not the standard. This is a practitioner id rather than a member id, and it belongs
 to **AUTH-LOG-GUARD-01**, not here. Recorded, not fixed.
+
+---
+
+## P1-CORRECTION — the count
+
+The first draft of this census said *22 direct authorities, 21 bypassing*, while its own table
+enumerated 20 named files plus `scripts/send-*.ts (4 files)` — read literally, 24. The headline
+and the enumeration disagreed.
+
+Re-counted mechanically over `app/`, `lib/`, `scripts/`, `components/`:
+
+```
+grep -rlE "from 'resend'|require\('resend'\)|new Resend"
+```
+
+```
+N = 24   direct Resend authorities
+M = 23   bypass sendEmail
+K =  1   confirmed silent-drop
+```
+
+The original 22 came from a narrower pattern (`from 'resend'` alone, no `new Resend` or
+`require`). **24 is the number**; the table above now carries one path per row and matches it.
+
+`K = 1` is a floor, not a total: it counts only call sites read line-by-line and confirmed.
+Rows marked *to verify* may raise it.
 
 ---
 
@@ -165,3 +212,52 @@ members being able to join.
 
 **But the sequencing matters in one direction:** changing provider before finding the volume
 source would turn an expensive bug into a cheap bug rather than fixing it.
+
+---
+
+## Next evidence act — provider volume witness (account-side, not code)
+
+Not a blocker to signup restoration. Inspect or export enough Resend history to answer, where
+the provider exposes it:
+
+```
+date/time distribution
+volume by day / hour
+subject or template
+from address
+status
+tags / purpose where present
+```
+
+The **shape** may attribute the volume even where bypassing sends carry no `purpose`:
+
+| pattern | reading |
+|---|---|
+| giant isolated bursts | newsletter or operator run |
+| regular 10–15 minute cadence | reminders |
+| evenly distributed | many ordinary callers |
+| repeated identical destination/content | retry or loop |
+
+If the provider does not expose enough to decide, record **ATTRIBUTION UNRESOLVED** and move on.
+Do not manufacture certainty.
+
+## Phase 2's central design question
+
+> What is the smallest common delivery contract every email must obey, while leaving domain
+> semantics with the caller?
+
+Candidate invariants:
+
+```
+every send has a purpose
+every send returns a truthful outcome
+provider errors are classified
+failure cannot masquerade as success
+recipient PII never enters operational logs
+volume is attributable by purpose
+provider is replaceable
+domain semantics remain outside transport
+```
+
+The destination is not *"replace Resend."* It is to make email transport trustworthy enough
+that replacing Resend becomes boring.
