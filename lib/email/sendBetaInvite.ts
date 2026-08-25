@@ -63,6 +63,9 @@ export async function sendBetaInvite(invite: BetaInvite, template: string = 'bet
 
     const result = await sendEmail({
       purpose: 'invite:beta',
+      triggerType: 'script',
+      triggerRef: 'sendBetaInvite',
+      campaignRef: `beta-invite:${template}`,
       from: BETA_INVITE_SENDER,
       to: invite.email,
       subject: config.subject,

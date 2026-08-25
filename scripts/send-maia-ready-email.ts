@@ -152,6 +152,9 @@ async function sendToAllBetaTesters() {
     try {
       const result = await sendEmail({
         purpose: 'broadcast:update',
+        triggerType: 'script',
+        triggerRef: 'send-maia-ready-email',
+        campaignRef: 'maia-ready',
         from: 'Kelly @ Soullab <kelly@soullab.life>',
         to: tester.email,
         subject: 'MAIA is Ready for You 🌟',
