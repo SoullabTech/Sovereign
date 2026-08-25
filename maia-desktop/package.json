@@ -1,0 +1,14 @@
+{
+  "name": "maia-desktop",
+  "version": "0.0.1-d01",
+  "private": true,
+  "description": "MAIA Desktop Companion — canonical member-facing desktop tree. MAIA-D01 native voice witness shell; not yet the Companion.",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "electron .",
+    "test": "node --test 'test/*.test.mjs'"
+  },
+  "devDependencies": {
+    "electron": "^28.0.0"
+  }
+}

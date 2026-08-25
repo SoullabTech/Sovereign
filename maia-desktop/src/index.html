@@ -1,0 +1,25 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>MAIA Desktop — D01 native voice witness</title>
+<style>
+  :root { color-scheme: dark; }
+  body { margin:0; padding:24px; background:#14100E; color:#E8E0D8;
+         font:14px/1.6 ui-sans-serif,-apple-system,system-ui,sans-serif; }
+  h1 { font-size:15px; font-weight:600; letter-spacing:.02em; margin:0 0 4px; }
+  .sub { color:#8B8078; font-size:12px; margin-bottom:20px; }
+  button { background:#2A2320; color:#E8E0D8; border:1px solid #3D3430;
+           border-radius:6px; padding:8px 16px; font:inherit; cursor:pointer; }
+  button:disabled { opacity:.4; cursor:default; }
+  #state { margin:16px 0; padding:10px 12px; background:#1C1815;
+           border-radius:6px; font-variant-numeric:tabular-nums; color:#C9BFB5; }
+  #events { max-height:52vh; overflow:auto; border-top:1px solid #2A2320; padding-top:10px; }
+  .evt { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:11.5px;
+         color:#A89C92; padding:2px 0; }
+</style>
+<h1>MAIA Desktop — D01 native voice witness</h1>
+<div class="sub">Native-owned capture. No Web Speech API. Diagnostics carry structure, never transcript text.</div>
+<button id="start">Start listening</button>
+<button id="stop" disabled>Stop</button>
+<div id="state">idle</div>
+<div id="events"></div>
+<script src="renderer.js"></script>
