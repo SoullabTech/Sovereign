@@ -1,0 +1,181 @@
+{
+  "doctrine_id": "elemental-alchemy-ch10",
+  "title": "Elemental Alchemy — Chapter 10 developmental doctrine",
+  "authored_by": "founder",
+  "governing_principle": "The protagonist is the foreground. The framework is the map underneath the story.",
+  "recognition_principle": {
+    "name": "Elemental recognition follows movement before vocabulary",
+    "statement": "An element is recognised by what HAPPENS in a passage, not by whether the passage uses the element's name. A lens that searches only for 'aether' is a concordance; a lens that recognises non-forcing, release of control, and reorganization from a larger field can detect phenomenology before terminology.",
+    "constraint": "OBSERVATION ONLY — never automatic classification. A movement match is a reason to read the passage, never a ruling that the passage IS that element.",
+    "implemented_by": "element_signatures + recovery-lens.mjs"
+  },
+  "developmental_thesis": "You have now encountered the elements individually. This chapter lets us watch them move together in one life.",
+  "position": "terminal",
+  "position_note": "Chapter 10 is the last chapter before the Conclusion. The reader has already walked Fire through Aether in chapters 5-9.",
+  "protagonist": {
+    "name": "Maya",
+    "aliases": [
+      "Maya's",
+      "she",
+      "her"
+    ],
+    "primary": [
+      "Maya"
+    ]
+  },
+  "framework_terms": [
+    "Spiralogic Process",
+    "Spiralogic Model",
+    "the Spiralogic system",
+    "Spiralogic framework"
+  ],
+  "framework_density_per_1000_words": {
+    "warn": 4.0,
+    "fail": 7.0
+  },
+  "teaching_sequence": [
+    "experience",
+    "name",
+    "orient",
+    "return"
+  ],
+  "teaching_sequence_note": "Experience first -> name second -> brief orientation -> return to experience. A section that defines before it depicts inverts the doctrine.",
+  "elements": [
+    {
+      "key": "fire",
+      "question": "If",
+      "movement": "Something becomes possible."
+    },
+    {
+      "key": "water",
+      "question": "Why",
+      "movement": "She descends into what hurts and what matters."
+    },
+    {
+      "key": "earth",
+      "question": "How",
+      "movement": "She has to build something real."
+    },
+    {
+      "key": "air",
+      "question": "What",
+      "movement": "Private transformation becomes shareable."
+    },
+    {
+      "key": "aether",
+      "question": "—",
+      "movement": "The field holding it all. Shown, not described."
+    }
+  ],
+  "fifth_element_canonical": "Aether",
+  "fifth_element_conflicts": [
+    "Spirit"
+  ],
+  "states": [
+    "Activating",
+    "Amplifying",
+    "Actualizing"
+  ],
+  "phases": [
+    "Being",
+    "Balancing",
+    "Becoming"
+  ],
+  "heading_architecture": {
+    "max_visible_depth": 2,
+    "curriculum_scaffolding_patterns": [
+      "^Part\\s+\\d+",
+      "^Section\\s+\\d+"
+    ],
+    "reintroduction_patterns": [
+      "^Introduction\\b",
+      "^Overview\\b",
+      "significance of",
+      "^Understanding the Elements"
+    ],
+    "narrative_target": [
+      "When the Old Life No Longer Fits",
+      "Going Beneath the Surface",
+      "Giving the New Life a Body",
+      "Bringing It Into Relationship",
+      "The Still Point in the Turning",
+      "When the Spiral Turns Again"
+    ]
+  },
+  "prospective_patterns": [
+    "this first section of the book",
+    "now let us explore",
+    "each chapter that follows",
+    "we begin with fire",
+    "the chapters that follow",
+    "in the following chapters",
+    "we will follow (him|her|them|maya)",
+    "let us (now )?turn to",
+    "we (will|shall) explore each element"
+  ],
+  "pitch_register_patterns": [
+    "hundreds of clients",
+    "thousands of sessions",
+    "\\b\\d{2}\\+? years of",
+    "over the (past|last) \\d+ years",
+    "if this resonates with you",
+    "this model will be",
+    "incredibly helpful",
+    "i decided to share",
+    "fulfilled my (own )?need"
+  ],
+  "editorial_test": "Is this helping me experience the spiral through the protagonist, or stopping the story so the spiral can be explained?",
+  "success_condition": "By the end, the protagonist should barely need the words 'Spiralogic Process'. She should simply be living the spiral.",
+  "element_signatures": {
+    "_note": "Movement signatures, so a passage can be recognised as elemental by what HAPPENS in it, not by whether it uses the element's name. Aether especially: the doctrine asks for it to be shown, not described, and a shown Aether moment rarely says 'aether'.",
+    "aether": [
+      "\\blet go\\b",
+      "\\blet myself go\\b",
+      "\\bsurrender",
+      "\\bcould not (solve|plan|fix)\\b",
+      "\\bcouldn't (solve|plan|fix)\\b",
+      "\\bstopped (trying|forcing|holding)\\b",
+      "\\bnothing left (for|to) .{0,20}hold\\b",
+      "\\bdissolution\\b",
+      "\\bI chose to let go\\b",
+      "\\bwithout .{0,20}forcing\\b",
+      "\\bsynchronistic\\b",
+      "\\bsynchronicity\\b",
+      "\\bbelonging\\b",
+      "\\bstill point\\b",
+      "\\bsatori\\b",
+      "\\bzen\\b",
+      "\\bflow\\b",
+      "\\bno-mindedness\\b"
+    ],
+    "fire": [
+      "\\bvision\\b",
+      "\\binspir",
+      "\\bignite",
+      "\\bpossibilit"
+    ],
+    "water": [
+      "\\bgrief\\b",
+      "\\bwept\\b",
+      "\\blong(ing|ed)\\b",
+      "\\binner gold\\b",
+      "\\bfeel(ing)? nurtured\\b"
+    ],
+    "earth": [
+      "\\bplan\\b",
+      "\\bbuild\\b",
+      "\\bpractice\\b",
+      "\\borganiz"
+    ],
+    "air": [
+      "\\bcommunicat",
+      "\\brelate\\b",
+      "\\bspoke\\b",
+      "\\bconversation\\b",
+      "\\barguing\\b"
+    ]
+  },
+  "doctrine_principles": {
+    "spiral_recurrence": "A passage that carries three or more elements AND returns to an earlier one demonstrates recurrence rather than sequence. This is the hardest thing to teach and the easiest to lose."
+  }
+}
