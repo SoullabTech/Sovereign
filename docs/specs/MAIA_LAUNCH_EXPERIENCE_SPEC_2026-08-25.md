@@ -610,6 +610,71 @@ the boundary must hold: the practice *story* ships at launch; the capture *capab
 
 ---
 
+## 2.96 · Vocabulary audit — evidence for R5
+
+**The finding that reshapes this ruling:** `maiaNav.ts` **already separates member-facing label from route.**
+`label: 'Journal'` points at `/labtools/journal`; `label: 'Wisdom'` at `/wisdom-keepers/wisdom`; `label:
+'Keeps'` at `/maia/keep-capture`. The three-layer model R5 asks for is therefore **already de facto true in
+the architecture** — which means:
+
+> **Settling the member-facing vocabulary does not require renaming a single route, table, or component.**
+
+That dissolves most of the apparent cost of this ruling, and it directly satisfies the constraint *do not
+rename functioning architecture merely to make the new mockup tidy.* Legacy routes may stay exactly where
+they are.
+
+### The live inventory (read from `lib/navigation/maiaNav.ts`, 2026-08-25)
+
+The House renders three groups today: **Your Center · Worlds · Rooms**. Worlds carry an internal spine:
+
+```
+   MY LIFE   — "dimensions of the Personal Field (becoming)"     → Living Field · Journal · Anchor
+   MY WORK   — "dimensions of the Contribution Field (offering)" → Ideas · Wisdom
+```
+
+| Member-facing label | Canonical object | Route (legacy, may remain) | Tooltip in product |
+|---|---|---|---|
+| **MAIA** | centre of the House | `/maia` | *Return to center field* |
+| **Living Field** | World · life | `/maia/living-field` | *A place to gather and reflect on lived experience* |
+| **Journal** | World · life | `/labtools/journal` | *Expressive writing — one practice surface* |
+| **Anchor** | World · life | `/maia/anchor` | *A quiet place to return* |
+| **Ideas** | World · work | `/maia/ideas` | *Emerging thoughts and creative impulses* |
+| **Wisdom** | World · work | `/wisdom-keepers/wisdom` | *Sacred texts, learning, and collected knowledge* |
+| **Keeps** | boundary transition | `/maia/keep-capture` | *Moments you have held onto* |
+| **Co-lab** | boundary transition | `/team/for-you` | *Shared work and conversation* |
+| Pro Studio · Book Studio · Vision Studio · Circles · Astrology · Lab Tools · Community Library | boundary, `audience`-gated | various | — |
+| Account · Settings · Help · Voice · Feedback | utility | various | — |
+
+### Three competing spines now exist on paper
+
+| Spine | Source | Grouping |
+|---|---|---|
+| **A — shipped** | `maiaNav.ts` + `MaiaHouseSheet` | Your Center · Worlds (My Life / My Work) · Rooms |
+| **B — proposed shell** | §2.9.4 | House · MAIA · Your World · Explore · utilities |
+| **C — ecosystem** | §2.95.4 | My Soullab · My Practice |
+
+**These are not alternatives at the same altitude** — B and C can both be expressed as arrangements of A, or A
+can be superseded. That choice *is* R5. What may not happen is three spines coexisting: the landing page, the
+House, mobile, and the practitioner branch must resolve to one.
+
+### Names carrying the most risk for a newcomer
+
+Not because they are wrong — because they are **opaque on first encounter**, and this spec's whole thesis is
+that a stranger must know what to do:
+
+- **Living Field** — the label is constitutionally careful (it names the place and the activity, deliberately
+  avoiding "who you are becoming"), and that care must survive any rename.
+- **Anchor** — precise for a member who has used it, unreadable before that.
+- **Wisdom** — reads as a claim about content quality rather than a place.
+- **Co-lab** — an internal contraction.
+- **Worlds / Rooms** as *group headings* — Soullab-distinctive, but they are the top-level wayfinding words a
+  first-time member meets.
+
+**Gaps confirmed:** Search, Practices, Notifications have no routes. Profile and Account are two names for one
+function. Soul Portrait has routes but no registry entry. Relationships is off the rail (R2).
+
+---
+
 ## 3 · Surface A — Public MAIA landing
 
 **Layer: Live surface, Designed restructure. Direction ratified by Kelly, 2026-08-25 — this section replaces
