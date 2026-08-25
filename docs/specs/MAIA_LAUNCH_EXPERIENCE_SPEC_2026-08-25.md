@@ -269,7 +269,7 @@ becomes neither an incomprehensible mystical system nor a generic productivity a
    │   ├── Living Field
    │   ├── Journal
    │   ├── Anchor
-   │   ├── Relationships          ⚠️ placement pending R2
+   │   ├── Relationships          ⚠️ R2 GREEN — restores on a passing verification walk
    │   ├── Soul Portrait
    │   └── eligible personal places
    │
@@ -382,6 +382,58 @@ practitioner redesign* (launch swallowed by rebuilding practice-management softw
 > software, the surface fails the Soullab Visual & Category Standard.**
 
 *Meaning in the foreground, machinery available behind it.*
+
+### MLX-R2 — GREEN, gated (Kelly, 2026-08-25): verify, then restore Relationships to the rail.
+
+**Placement:** `MY SOULLAB → MY LIFE → Relationships`, **conditional on the verification walk below.**
+
+**Why this is re-registration, not new build.** The 2026-07-05 rail removal set its own restore condition —
+*"restore here once each is attached to an actual process."* That condition appears substantially met in
+source:
+
+| Evidence | |
+|---|---|
+| `/api/relationships` | create · list · `[id]` · `checkin` · `entries` |
+| `/api/maia/relational-navigation` | the Navigation Room endpoint |
+| `/api/relationship-spaces/[spaceId]/threshold` · `/consent` | shared, two-party, consent-gated surface |
+| `/relationships` | page organised by **outer · inner · transpersonal** realms |
+| `member_relationships`, `relationship_content` | migrations |
+| `RELATIONSHIP_ROOM_CONSTITUTION.md` | ratified canon |
+| `RELATIONAL_NAVIGATION_ROOM.md` | MVP spec with hard invariants — *no live sit-in, no recording, no real-time mediation* |
+
+**But reachable in source is not verified.** Nobody has walked it under an authenticated member. Per the
+project's own ladder — *built ≠ wired ≠ surfacing ≠ verified* — the restore is ruled GREEN and **executes only
+after the walk passes.**
+
+#### The verification walk — what must be proven
+
+Under a real authenticated member on production, not a fixture:
+
+1. **Create** a relationship in each realm (outer · inner · transpersonal); each persists and is listed.
+2. **Checkin** writes and returns; **entries** write and read back.
+3. **Navigation** — `/api/maia/relational-navigation` returns under authenticated load and honours its
+   hard invariants: no live sit-in, no recording, no real-time mediation, no transcript capture.
+4. **Constitutional read** — nothing in the returned surface characterizes the member or the other person.
+   Counts and questions are doors; characterizations are not (§C2). Third-party material stays inside its
+   own consent context.
+5. **Shared spaces** — `relationship-spaces` threshold and consent behave as specified, or the shared
+   surface is **explicitly deferred** and only the personal field restores. *The walk decides this; the
+   ruling does not presume it.*
+6. **Empty state** — a member with no relationships meets a real empty state, not a broken panel. This is
+   what the 2026-07-05 removal was actually about.
+
+**Outcomes:**
+
+- **Pass** → register in `maiaNav.ts` under My Life; landing section 07 may depict a room.
+- **Partial** → restore the personal field only; shared spaces stay out of launch; section 07 written to the
+  restored scope.
+- **Fail** → section 07 reverts to forward voice, and the placement returns to the open list.
+
+**Landing section 07 is gated on the same result** — it may not depict a room the walk has not confirmed
+(§A.3, and the Failure Test).
+
+**This closes the last unresolved placement in the vocabulary spine, conditionally.** The ecosystem shell is
+architecturally frozen pending this walk.
 
 ### Standing design requirement — no cognitive cliff (Kelly, 2026-08-25)
 
