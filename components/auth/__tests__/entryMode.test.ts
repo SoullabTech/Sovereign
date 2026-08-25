@@ -136,3 +136,28 @@ describe('a failed send never leaves /signup without a primary action', () => {
     expect(COMPONENT).not.toContain('sendBlocked ? outlineBtn : primaryBtn');
   });
 });
+
+// /signin opens straight onto a password form. Someone who arrives without an
+// account sees three doors they cannot open — password, biometric, email code —
+// and, before this, no exit. The mirror of /signup's "Already a member?" link.
+describe('/signin offers a way out for someone with no account', () => {
+  const passwordPhase = COMPONENT.slice(
+    COMPONENT.indexOf("key=\"password\""),
+    COMPONENT.indexOf("key=\"name\"")
+  );
+
+  it('offers new members a route in, from the password phase', () => {
+    expect(passwordPhase).toContain('New to Soullab?');
+  });
+
+  // /begin, not /signup: the onboarding invariant is a single entry point for
+  // new members. Asserted so a later edit cannot quietly reroute it.
+  it('routes them to the canonical entry point', () => {
+    expect(passwordPhase).toContain('href="/begin"');
+    expect(passwordPhase).not.toContain('href="/signup"');
+  });
+
+  it('is gated to signin — /signup already has its own footer', () => {
+    expect(COMPONENT).toMatch(/mode === 'signin' && \(\s*<p[^>]*>\s*New to Soullab\?/);
+  });
+});

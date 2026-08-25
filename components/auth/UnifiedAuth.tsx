@@ -552,6 +552,21 @@ function UnifiedAuthInner({ mode = 'signup' }: { mode?: AuthMode }) {
               <button type="button" onClick={() => { setPhase('email'); setError(''); }} disabled={isLoading} className={`${outlineBtn} mt-3`}>
                 Email me a sign-in code instead
               </button>
+
+              {/* The way out for someone who landed here without an account. /signin
+                  opens straight onto a password form, so without this a new person
+                  faces three doors they cannot open and no exit — the mirror of the
+                  "Already a member?" link /signup carries.
+
+                  Destination is /begin, not /signup: the onboarding invariant is a
+                  single entry point for new members (/begin → intro → induction →
+                  /maia). /signup is the email door for someone already headed in. */}
+              {mode === 'signin' && (
+                <p className="mt-6 text-xs text-slate-400/80 text-center">
+                  New to Soullab?{' '}
+                  <a href="/begin" className="text-amber-300/90 hover:text-amber-200 transition-colors">Begin Journey</a>
+                </p>
+              )}
             </motion.div>
           ) : phase === 'name' ? (
             <motion.div key="name" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
