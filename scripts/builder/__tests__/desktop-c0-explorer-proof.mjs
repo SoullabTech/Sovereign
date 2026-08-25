@@ -12,6 +12,7 @@ import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
+import { INVOKE_CHANNEL_NAMES } from './desktop-preload-allowlist.mjs';
 
 const require = createRequire(import.meta.url);
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -217,17 +218,15 @@ console.log('\n==================== H — no new authority ===================='
   // added so the installed app can be pointed at a checkout without Terminal.
   // Kept EXACT rather than relaxed to a subset check — the point of this guard
   // is that the IPC surface cannot widen unnoticed.
-  // JCR-PROOF-01 (2026-08-16) — NINE, reviewed, still EXACT. The two additions
-  // (`mechanism-status`, `run-work-unit`) are the founder-ruled C0→Builder wire.
-  // Kept as an exact list: a subset check would let the next widening through
-  // silently, which is the one thing this guard exists to prevent. That it went
-  // red on 029b7aa98 rather than passing quietly is the guard working.
-  report('preload exposes exactly the nine reviewed channels',
-    JSON.stringify(channels) === JSON.stringify([
-      'jarvis:capabilities', 'jarvis:choose-repo', 'jarvis:clear-repo',
-      'jarvis:governance-action', 'jarvis:mechanism-status', 'jarvis:repo-config',
-      'jarvis:run-work-unit', 'jarvis:status', 'jarvis:submit-task',
-    ]), channels.join(', '));
+  // JCR-PROOF-01 (2026-08-16) — NINE, reviewed, still EXACT.
+  // MAIA-D00A (2026-08-25) — TEN. `reveal-workspace` arrived with JOP-04 and is
+  // ratified there. The list itself no longer lives here: it was duplicated in
+  // this file and in jarvis-alpha-floor-proof.mjs, which is why the SAME widening
+  // went unaddressed in two places for a generation. Both proofs now assert
+  // against the single reviewed allow-list in desktop-preload-allowlist.mjs.
+  // Still EXACT, deliberately — a subset check is what lets the next one through.
+  report(`preload exposes exactly the ${INVOKE_CHANNEL_NAMES.length} ratified channels`,
+    JSON.stringify(channels) === JSON.stringify(INVOKE_CHANNEL_NAMES), channels.join(', '));
   report('the governance channel delegates to the governor, inventing no authority',
     code('main.js').includes('GOV.buildGovernanceArgv') && !/['"](recover|reconcile)['"]/.test(code('main.js')));
   report('no general IPC / shell bridge added', !preload.includes('exec') && !preload.includes('send('));

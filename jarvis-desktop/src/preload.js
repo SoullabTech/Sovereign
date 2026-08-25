@@ -31,6 +31,18 @@ contextBridge.exposeInMainWorld('jarvis', {
   // is read from the resolved binding inside main, so this cannot be used to
   // open an arbitrary location the renderer names. It reveals only what JARVIS
   // has already resolved and is already showing on Home.
+  //
+  // RATIFIED — MAIA-D00A, 2026-08-25. JOP-04 added this channel without
+  // re-reviewing the exact-list guard, so the guard went red (nine vs ten) and
+  // stayed red for a generation. It was reviewed against the five questions —
+  // required, authorized, minimal, main-validated, doctrine-compatible — and
+  // admitted. Four properties keep it minimal and are now ASSERTED, not merely
+  // asserted-in-prose: no argument crosses here; the handler declares no
+  // parameter; an unbound root short-circuits before shell is touched; and main
+  // reveals only (showItemInFolder), never openPath/openExternal. The reviewed
+  // allow-list for the whole bridge lives in
+  // scripts/builder/__tests__/desktop-preload-allowlist.mjs — the one place to
+  // come and argue for an eleventh channel.
   revealWorkspace: () => ipcRenderer.invoke('jarvis:reveal-workspace'),
   onRepoChanged: (fn) => {
     if (typeof fn !== 'function') return () => {};
