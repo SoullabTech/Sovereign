@@ -146,6 +146,24 @@ canvas#field{position:absolute;inset:0;width:100%;height:100%;pointer-events:non
       padding:14px 18px;font-size:12.5px;color:var(--ink-2);line-height:1.7;border-radius:0 9px 9px 0}
 .anno b{color:var(--ink);font-weight:500}
 .anno code{font-family:var(--sans);font-size:11.5px;color:var(--gold-soft)}
+
+/* ── ?bare=1 — test mode. The person meets Soullab cold: no rail, no
+   annotations, no device controls. Screens and interactions unchanged;
+   the viewport itself becomes the device, so responsiveness is real. ── */
+body.bare .rail,body.bare .anno,body.bare .bar{display:none}
+body.bare .shell{grid-template-columns:1fr}
+body.bare .stage{padding:0;gap:0}
+body.bare .device{max-width:none;border:0;border-radius:0;box-shadow:none}
+body.bare .viewport{height:100vh;perspective:1600px}
+@media(max-width:620px){
+  body.bare .screen{padding:34px 24px}
+  body.bare .doorlist{grid-template-columns:1fr}
+  body.bare .d1{font-size:31px}
+  body.bare .d2{font-size:25px}
+  body.bare .utter{font-size:20px}
+  body.bare .signals{gap:22px}
+  body.bare .sph .line,body.bare .sph .line button{font-size:16px}
+}
 @media(max-width:900px){.shell{grid-template-columns:1fr}.rail{position:static;height:auto;border-right:0;border-bottom:1px solid var(--hairline)}}
 </style>
 
@@ -394,6 +412,7 @@ function renderMaia(){
    <button class="home" data-go="${maiaHome}">The House &#8962;</button></div></div>`;
 }
 let maiaHome='houseNew';
+if(new URLSearchParams(location.search).get('start')==='houseBack')maiaHome='houseBack';
 
 const order=Object.keys(S), screens=document.getElementById('screens');
 screens.innerHTML=order.map(k=>`<section class="screen" id="s-${k}">${S[k].h}</section>`).join('');
@@ -460,5 +479,13 @@ document.addEventListener('click',e=>{
   ov.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion:reduce)').matches?'auto':'smooth',block:'start'});
   ov.animate([{opacity:.35},{opacity:1}],{duration:700,easing:'ease-out'});
 });
-size(); renderMaia(); go('landing'); draw();
+const params=new URLSearchParams(location.search);
+if(params.get('bare')==='1'){
+  document.body.classList.add('bare');
+  document.getElementById('device').classList.remove('phone'); // viewport IS the device
+}
+size(); renderMaia();
+const start=params.get('start');
+go(S[start]?start:'landing');
+draw();
 </script>
