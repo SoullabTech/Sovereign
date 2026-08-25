@@ -27,7 +27,7 @@
 PROGRAMME          WRITER'S STUDIO R2
 MODE               WS-01 ACCEPTANCE
 BUILD MODE         CLOSED — Canvas / Phase 1 freeze BINDING
-BOUND CANONICAL    bd87d497f
+BOUND CANONICAL    66370a293
 CURRENT UNIT       WS-01 Source Custody + Freeze Release
 CURRENT CANDIDATE  e92f532396705daaf6cd346445276a08a5957904
                    feature/ws-01-source-custody-v2  ·  PINNED, untouched
@@ -106,10 +106,10 @@ unbuilt while the unit list reads complete. They create no WS-08+.
 > The shell, the easel and the papers are **finished and unreachable**. WS-02 connects them.
 > ⛔ We do not build a second Worktable beside them.
 
-**Census method** — re-verified 2026-08-25 against canonical `bd87d497f`: grep for every import
+**Census method** — re-verified 2026-08-24 (Founder-local) against canonical `66370a293`: grep for every import
 path resolving to each module across `app/`, `components/`, `lib/`, excluding self-references.
 
-> **Evidence correction (2026-08-25).** This row previously read `0 importers` for `registry.ts`.
+> **Evidence correction (2026-08-24).** This row previously read `0 importers` for `registry.ts`.
 > That was wrong: `CanvasShell.tsx` imports its types. The **state is unchanged** — the cluster is
 > still ZERO-CALLERS, because its only importer is itself unreachable — but *"node states are
 > evidence"* means the evidence statement has to be right, not merely the conclusion. Corrected
