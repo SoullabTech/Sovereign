@@ -32,7 +32,7 @@ CURRENT UNIT       WS-01 Source Custody + Freeze Release
 CURRENT CANDIDATE  e92f532396705daaf6cd346445276a08a5957904
                    feature/ws-01-source-custody-v2  ·  PINNED, untouched
 NEXT EXECUTABLE    P0-D
-LAST UPDATED       2026-08-25
+LAST UPDATED       2026-08-24
 ```
 
 Writer's Studio mode reflects **this programme only**. Unrelated Jarvis incidents may sit ahead of
