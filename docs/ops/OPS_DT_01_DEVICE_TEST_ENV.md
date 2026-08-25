@@ -255,9 +255,26 @@ running container for this reason. It is what lets the final statement be precis
 
 Rebasing onto fresh canonical happens *after* that, under the invalidation rule.
 
-Step 2 is not a formality. It is read-only against production and checks
-identity, connection target, **network unreachability**, sentinel non-crossover,
-and that production has not acquired `session_captures`.
+The isolation proof is not a formality. It is read-only against production and
+checks identity, connection target, **network unreachability**, sentinel
+non-crossover, and that production has not acquired `session_captures`.
+
+**It is built to refuse a false green.** Every inconclusive path scores as FAIL,
+never PASS:
+
+| Situation | Verdict |
+|---|---|
+| Production database unreadable | **FAIL** — "different from a value we could not obtain" is not evidence |
+| Test database unreadable | **FAIL** |
+| `node` unavailable to probe with | **FAIL** — cannot probe means cannot conclude |
+| Probe cannot reach even the test DB (positive control) | **FAIL** — a negative result from a broken probe proves nothing |
+| Production readable, identities differ, probe verified working, production unreachable | PASS |
+
+The network check runs a **positive control first**: it confirms the probe can
+reach the test database before treating "production unreachable" as meaningful.
+An earlier draft shelled out to `getent`, which is absent from musl images —
+command-not-found exited non-zero and would have been scored as "not reachable",
+certifying isolation without testing anything.
 
 ---
 

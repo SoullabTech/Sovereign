@@ -34,13 +34,25 @@ echo
 
 # ── 1. Distinct database identity ────────────────────────────────────────────
 echo "1. Database identity"
+# An unreadable production database must FAIL, never pass. If we cannot read
+# production we have not proven the identities differ — we have proven nothing.
+# "Different from a value we could not obtain" is not evidence.
 PROD_ID=$(docker exec "$PROD_CONTAINER" psql -U "$PROD_USER" -d "$PROD_DB" -tAc \
-  "SELECT current_database()||'/'||system_identifier FROM pg_control_system();" 2>/dev/null || echo "UNREADABLE")
+  "SELECT current_database()||'/'||system_identifier FROM pg_control_system();" 2>/dev/null || true)
 TEST_ID=$(docker exec "$TEST_CONTAINER" psql -U "$TEST_USER" -d "$TEST_DB" -tAc \
-  "SELECT current_database()||'/'||system_identifier FROM pg_control_system();")
-echo "   production : $PROD_ID"
-echo "   device-test: $TEST_ID"
-[ "$PROD_ID" != "$TEST_ID" ] && ok "identities differ" || no "IDENTITIES MATCH — NOT ISOLATED"
+  "SELECT current_database()||'/'||system_identifier FROM pg_control_system();" 2>/dev/null || true)
+echo "   production : ${PROD_ID:-<unreadable>}"
+echo "   device-test: ${TEST_ID:-<unreadable>}"
+
+if [ -z "$PROD_ID" ]; then
+  no "could not read the PRODUCTION database identity — INCONCLUSIVE, treated as FAIL"
+elif [ -z "$TEST_ID" ]; then
+  no "could not read the DEVICE-TEST database identity — INCONCLUSIVE, treated as FAIL"
+elif [ "$PROD_ID" = "$TEST_ID" ]; then
+  no "IDENTITIES MATCH — NOT ISOLATED"
+else
+  ok "identities differ (both read successfully)"
+fi
 echo
 
 # ── 2. App resolves only to the test database ────────────────────────────────
@@ -57,10 +69,45 @@ echo
 # The strongest check: even a wrong connection string cannot reach production,
 # because there is no path. Absence of DNS resolution is the proof.
 echo "3. Network reachability of production postgres"
-if docker exec "$APP_CONTAINER" sh -c 'getent hosts postgres || getent hosts maia-postgres' >/dev/null 2>&1; then
-  no "production postgres IS RESOLVABLE from the app container — topological isolation broken"
+# A negative result only means something if the probe was CAPABLE of a positive
+# one. An earlier version shelled out to `getent`, which is absent from musl
+# images: command-not-found exited non-zero and was scored as "not reachable" —
+# a false PASS that would have certified isolation without testing anything.
+#
+# So: probe with node (always present in the app image) over real TCP, and run a
+# POSITIVE CONTROL first. If the control cannot reach the test database, the
+# probe is broken and the whole check is inconclusive rather than passing.
+probe() {
+  docker exec "$APP_CONTAINER" node -e '
+    const net = require("net");
+    const [host, port] = [process.argv[1], Number(process.argv[2])];
+    const s = new net.Socket();
+    let done = false;
+    const finish = (code) => { if (!done) { done = true; s.destroy(); process.exit(code); } };
+    s.setTimeout(4000);
+    s.once("connect", () => finish(0));
+    s.once("timeout", () => finish(1));
+    s.once("error",   () => finish(1));
+    s.connect(port, host);
+  ' "$1" "$2" >/dev/null 2>&1
+}
+
+if ! docker exec "$APP_CONTAINER" node -e 'process.exit(0)' >/dev/null 2>&1; then
+  no "node unavailable in the app container — cannot probe, INCONCLUSIVE, treated as FAIL"
+elif ! probe postgres-device-test 5432; then
+  no "POSITIVE CONTROL FAILED — the probe cannot reach even the test database, so a \
+negative result proves nothing. INCONCLUSIVE, treated as FAIL"
 else
-  ok "production postgres is not resolvable from the app container"
+  echo "   positive control: test database reachable — probe is working"
+  reachable=""
+  for h in maia-postgres postgres; do
+    if probe "$h" 5432; then reachable="$reachable $h"; fi
+  done
+  if [ -n "$reachable" ]; then
+    no "PRODUCTION POSTGRES IS REACHABLE from the app container ($reachable) — topological isolation broken"
+  else
+    ok "production postgres unreachable over TCP from the app container (probe verified working)"
+  fi
 fi
 echo
 
