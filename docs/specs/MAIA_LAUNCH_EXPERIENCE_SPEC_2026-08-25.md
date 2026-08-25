@@ -284,6 +284,197 @@ the new burden.
 
 ---
 
+## 2.9 · The Platform Standard — binding amendment (Kelly, 2026-08-25)
+
+> **MLX is not a landing-page redesign. It is the establishment of Soullab's recognizable platform
+> experience.**
+
+**Rejection clause.** Any implementation where `/maia` becomes *eight beautiful buttons + chat* fails this
+spec, however well executed. The failure mode to refuse:
+
+```
+   ✗   landing page → doorway → chat                    ← still an AI app
+   ✅  recognizable public platform → clear arrival
+       → living member home → MAIA embedded throughout a substantial world
+```
+
+**We are simplifying the threshold, not simplifying Soullab.** The destination must feel larger, richer and
+more substantial than the onboarding being removed. The feeling to produce is *"I joined something"*, not
+*"I opened another chatbot."*
+
+### 2.9.1 The product model
+
+```
+   SOULLAB
+   │
+   ├── PUBLIC PLATFORM                    └── MEMBER PLATFORM
+   │   ├── Landing / Home                     │
+   │   ├── What MAIA is                       ├── MAIA HOUSE
+   │   ├── Experiences / use cases            │   ├── Continue
+   │   ├── The House / platform overview      │   ├── Doorways
+   │   ├── Relationships                      │   ├── Recent
+   │   ├── Self / Soul Portrait               │   ├── Keeps
+   │   ├── Creation / Studios                 │   └── Your world
+   │   ├── Spiralogic / Elements              │
+   │   ├── Trust / Sovereignty                ├── MAIA · Relationships · Journal
+   │   ├── About / Research                   ├── Soul Portrait · Rooms / Worlds
+   │   └── Join / Sign in                     ├── Practices · Creative / Studios
+   │                                          ├── Keeps / History · Search
+   │                                          └── Profile · Settings / Privacy
+```
+
+*Not every member needs every destination on day one. But the world needs to visibly exist.*
+
+### 2.9.2 The tension this creates — and the rule that resolves it
+
+**"The world needs to visibly exist" and "gated doors are absent, never placeholdered" (§5.4, Now What?
+precedent) pull in opposite directions.** Both are correct. The resolution is that they govern *different
+surfaces*:
+
+| Surface | Rule |
+|---|---|
+| **Public platform** | May show the world **as designed**, because a visitor is being shown what Soullab *is*. Every section still carries its Live / Designed / Vision layer (§A.2) and may not imply a room is enterable today when it is not. |
+| **MAIA House** | Renders **only what this member can enter today.** No greyed tiles, no "coming soon". |
+
+And the constraint that keeps the second from hollowing out:
+
+> **Member-state gating is legitimate; capability gating is not.** A destination may be absent because *this
+> member* has nothing there yet. A destination that no member can enter may not render for anybody — on the
+> public page it is Designed or Vision copy, never a tile in the House.
+
+### 2.9.3 Vocabulary reconciliation — needed before the shell is built
+
+The "no cognitive cliff" requirement (§0.1) applies **internally** too: the landing page, the House, and the
+navigation registry must use **one vocabulary**. They currently do not. Audited against `lib/navigation/maiaNav.ts`:
+
+| Proposed shell name | Shipped registry | Status |
+|---|---|---|
+| Keeps | `keeps` | ✅ matches |
+| Journal | `journal` | ✅ matches |
+| MAIA | `maia` | ✅ matches |
+| Account / Settings / Help / Voice / Feedback | same | ✅ matches |
+| Relationships | *off the rail since 2026-07-05* | ⚠️ R2 |
+| Soul Portrait | routes exist, **not in the registry** | ⚠️ verify member reach |
+| Rooms / Worlds | registry has `living-field`, `anchor`, `ideas`, `wisdom` | ⚠️ **names differ** |
+| Studios | `studio` (Pro), `book-studio`, `vision-studio` — audience-gated | ⚠️ partial |
+| Practices | **no route** | ❌ does not exist |
+| Search | **no route** | ❌ does not exist |
+| Profile | `account` exists | ⚠️ same thing, two names — pick one |
+| Notifications | **no route** | ❌ does not exist |
+
+**Four shipped Worlds — Living Field, Anchor, Ideas, Wisdom — appear nowhere in the proposed tree.** They are
+live and reachable today. Either they carry these names into the shell, or the shell renames them; what they
+may not do is exist in the product under names the public page never mentions. **New ruling required — R5.**
+
+### 2.9.4 The stable shell
+
+Members of serious platforms learn quickly: *this is home · this is navigation · this is my account · this is
+how I get back · this is where my things live.* Soullab needs the equivalent — a **stable spatial grammar**, so
+the member does not rediscover Soullab on every page.
+
+```
+   SOULLAB              Home and identity, always in the same place
+
+   House                the threshold
+   MAIA                 the relational thread
+
+   Your World           Keeps · Journal · Relationships · Soul Portrait
+   Explore              Rooms · Practices · Studios
+   ─────────
+   Search · Profile · Settings
+```
+
+Exact words and order are subject to R5. The *existence of a persistent grammar* is not.
+
+### 2.9.5 MAIA is everywhere without being everything
+
+MAIA is the **connective presence, not the only screen.** She is available inside Relationships, Journal,
+Soul Portrait and the Studios — reflecting on what the member wrote, exploring what they are looking at,
+understanding the creative context — rather than being a destination that competes with them.
+
+```
+                       MAIA
+                    ↙   ↓   ↘
+      Relationships ← HOUSE → Journal
+            ↓                   ↓
+      Soul Portrait           Keeps
+            ↓                   ↓
+        Practices            Studios
+```
+
+This is also why the §5 threshold cannot be a chat screen with links: the House is where MAIA's presence and
+the member's world are held in the same frame.
+
+### 2.9.6 Progressive richness
+
+The platform gets **richer as the member becomes oriented** — the inverse curve to the doorways receding:
+
+```
+   EARLY                                    LATER
+   Doorways prominent                       Doorways quiet
+   "Here is what you can do"        ──►     "Here is your world"
+                                            Continue larger · Recent richer
+                                            Keeps meaningful · Relationships populated
+                                            Projects and Studios present
+```
+
+**This substantially answers R4 in principle** — the trigger is the member's world becoming populated, not an
+inferred readiness score. What remains open is the exact trigger and whether the shift is announced. R4 stays
+open on that narrower question only.
+
+### 2.9.7 Familiar interface, unfamiliar depth
+
+> **Borrow interaction conventions, not aesthetics.**
+
+Members must not learn poetic words for ordinary interface functions. Home, navigation, search, back, profile,
+settings, account, recent, saved, continue, help, privacy controls — **conventional**. House, Keeps, Rooms,
+Worlds, MAIA, Soul Portrait, Spiralogic, elemental movements — **distinctively Soullab**.
+
+*The familiar interface holds the unfamiliar depth.* Where the two collide (Profile vs Account, §2.9.3), the
+conventional word wins for the function and the Soullab word is reserved for the thing that is genuinely ours.
+
+### 2.9.8 The peripheral states are launch acceptance, not polish
+
+*A platform feels substantive because everything around the edges works.* This list is part of Phase 7's
+GREEN/AMBER/RED decision, not a follow-up backlog:
+
+| | Status |
+|---|---|
+| Profile & identity · Account settings · Privacy & consent | ✅ `account`, `settings` shipped |
+| Sign in / sign out · Account recovery | ✅ shipped (`UnifiedAuth`, recovery) |
+| Help / orientation · Feedback | ✅ in the registry |
+| History / recent activity | ⚠️ partial — `/home` gathering strip absorbs into the House (Q1) |
+| Navigation states · back behavior · consistent URLs | ⚠️ unaudited |
+| **Empty states · loading states · error states** | ⚠️ unaudited — and these carry the most weight for a new member |
+| Mobile navigation | ⚠️ §9 |
+| **Search** | ❌ **does not exist** |
+| Notifications (only where useful) | ❌ does not exist — may legitimately stay absent |
+| Membership / billing where applicable | ⚠️ subscription hooks exist; surface unaudited |
+
+**Search is the significant gap.** A member accumulating Keeps, journal entries and conversations with no way
+to find anything is a platform that stops feeling like a place. It belongs in the Phase 5 slice order.
+
+### 2.9.9 A recognizable visual world
+
+One coherent system — typography, spacing, surface hierarchy, imagery, Holoflower use, elemental signals,
+motion, iconography, cards and panels, voice surfaces, empty states, room headers, transitions.
+
+> **The standard: someone sees a screenshot with the logo cropped out and thinks — that's Soullab.**
+
+### 2.9.10 The launch surface, in order
+
+```
+   PUBLIC IDENTITY → PUBLIC PRODUCT OVERVIEW → JOIN / SIGN IN → ARRIVAL
+   → MAIA HOUSE → STABLE PLATFORM NAVIGATION → MAIA + MEMBER WORLD
+   → CONTINUITY → RETURN
+```
+
+*Soullab should feel like entering a coherent place — recognizable enough that people immediately know how to
+move around, distinctive enough that it could only be Soullab, and deep enough that they sense there is far
+more here than they need to understand on their first day.*
+
+---
+
 ## 3 · Surface A — Public MAIA landing
 
 **Layer: Live surface, Designed restructure. Direction ratified by Kelly, 2026-08-25 — this section replaces
@@ -591,9 +782,16 @@ homes; and the House is already the ruled navigation grammar. **This requires a 
 │              I don't know where to begin  →                          │
 │                                                                      │
 │   ─────────────────────────────────────────────────────────────     │
+│   YOUR SOULLAB                                                       │
+│   Journal · Keeps · Relationships · Soul Portrait · Rooms            │
+│                                                                      │
 │   ● Talk to MAIA      ○ Type instead        The House ⌂             │
 └──────────────────────────────────────────────────────────────────────┘
 ```
+
+**Per §2.9, the threshold shows the member's world even on a first visit** — the doorways answer *what can I
+do*, the Your Soullab strip answers *what is this place*. Only enterable destinations render (§2.9.2), so
+this strip is shorter for a new member than for an established one, and never contains a dead tile.
 
 ### C.3 Wireframe — first return (one prior session, nothing kept yet)
 
