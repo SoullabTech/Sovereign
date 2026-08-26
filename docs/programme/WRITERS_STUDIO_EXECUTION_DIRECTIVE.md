@@ -33,15 +33,26 @@ enters the other. Nothing crosses that line implicitly.
 ## The one lane
 
 ```text
-INTEGRATION BRANCH       claude/writers-studio-organization-wxpb7q
-INTEGRATION BRANCH TIP   18498204f   ← includes documentation commits
-PRODUCT CODE TIP         18498204f   ← last commit that changed product code
-CANONICAL                644d4f2c5
+INTEGRATION BRANCH   claude/writers-studio-organization-wxpb7q
+LIVE BRANCH TIP      RESOLVE FROM GIT — never cached here
+PRODUCT CODE TIP     18498204f   ← last commit that changed product code
+CANONICAL            644d4f2c5
 ```
 
-The two tips are named separately on purpose: "current SHA" is ambiguous the
-moment a documentation commit lands on top of the code, and a session that
-guesses wrong will diff against the wrong base.
+**The branch tip is deliberately absent.** A tracked file cannot hold the SHA
+of the commit that contains it: writing the SHA in changes the commit, which
+changes the SHA. Every "fix" produces a new wrong value. So resolve it, at
+session start, from the only thing that knows:
+
+```bash
+git fetch origin claude/writers-studio-organization-wxpb7q
+git rev-parse HEAD
+git rev-parse origin/claude/writers-studio-organization-wxpb7q
+```
+
+**Never take a live branch SHA from documentation.** `PRODUCT CODE TIP` is
+recorded because it does not have that problem — a later documentation commit
+does not change which commit last touched product code.
 
 **Rule of One.** One integration branch. One owner per capability. Before
 opening a branch: inspect canonical, inspect this lane, inspect other active
