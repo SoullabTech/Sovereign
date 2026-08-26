@@ -59,6 +59,45 @@ const ALLOWED_EVENTS = new Set([
   'meeting_audio_no_track',
   'meeting_audio_self_capture_blocked',
   'meeting_audio_blocked_feedback',
+
+  // ── VOICE-02B: receiver admission for the witness families ───────────────
+  // These 17 names were already defined in the VoiceDiagEvent union and were
+  // already being emitted by the client — but this allowlist did not admit
+  // them, so every one was dropped at the gate above and answered with the
+  // SAME 204 as an accepted event. The client could not tell, and neither
+  // could a reader of `docker logs`: the events simply never appeared.
+  //
+  // That is the failure mode this lane exists to refuse. A soak run against a
+  // build without these lines would have produced silence on exactly the
+  // questions #1098-#1101 were built to answer, and that silence would have
+  // read as "mechanism not observed" rather than "mechanism not observable".
+  //
+  // Admission only. No behavior change, no new event names, no metadata
+  // expansion, no persistence.
+
+  // Capture liveness (#1096) — mic/track/AudioContext death and salvage.
+  'voice_status_surfaced',
+  'voice_transcript_salvaged',
+  'voice_capture_lost',
+  'voice_track_listeners_attached',
+
+  // TTS playback witness (#1098) — StreamingAudioQueue media-element state.
+  'voice_playback_started',
+  'voice_playback_interrupted',
+  'voice_playback_retry',
+  'voice_playback_resumed',
+  'voice_playback_ended',
+  'voice_playback_failed',
+
+  // V5 utterance-tail witness (#1099 composer path, #1100 continuous path,
+  // #1101 recognition-epoch boundary).
+  'voice_result_interim',
+  'voice_result_final',
+  'voice_silence_timer_armed',
+  'voice_silence_timer_fired',
+  'voice_turn_commit_requested',
+  'voice_turn_committed',
+  'voice_result_after_commit',
 ] as const);
 
 type AllowedEvent = typeof ALLOWED_EVENTS extends Set<infer T> ? T : never;
