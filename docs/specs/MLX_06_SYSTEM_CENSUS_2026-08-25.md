@@ -3,6 +3,15 @@
 **Date:** 2026-08-25 · **Mode:** LOOK → TRACE → MAP → REPORT → **STOP**
 **No code modified. No implementation. MLX-03 stimulus untouched (`c137e44`).**
 
+> **CORRECTION (2026-08-26, from Unit 1A visual verification).** The Relationships row below originally read
+> *"not in the registry"*. **That was wrong.** It is registered in `lib/navigation/houseDestinations.ts` as
+> **`Relational Field`** under `group: 'life'`, carrying a founder ruling of 2026-08-10 that *"Relationship is
+> a HOUSE function — this is its canonical member-facing home"*, and it renders in the House today (observed).
+> The census checked `maiaNav.ts`, the older rail registry, and did not check `houseDestinations.ts`, the
+> House registry. Two consequences: **R2's "restore to the House" is already substantially done**, and the
+> same destination now carries two member-facing names — *Relationships* and *Relational Field* — which is an
+> R5 vocabulary item.
+
 **Evidence basis:** source tracing on branch `claude/maia-onboarding-orientation-djtoii`, plus feature-flag
 defaults. **Production runtime was not reachable from this session** (no `ssh`, `soullab.life` outside the
 egress allowlist), so **LIVE means "wired end-to-end in source with its flag default-on"**, not "verified
@@ -34,7 +43,7 @@ serving members." Anything requiring runtime proof is marked ⚠.
 | **Living Field** | **BUILT** | `/maia/living-field` (93L) | registry `group:'life'` | `living_encounters`, `living_encounter_events` | reachable, registered | thin page relative to substrate |
 | **Journal** | **LIVE** | `/labtools/journal` (21L) | `QuickJournalSheet`, deep-link | journal tables | capture sheet + deep link from `/maia` | label/route mismatch (`Journal` → `/labtools/…`) |
 | **Anchor** | **LIVE** | `/maia/anchor` (208L) | `lib/anchor/*` | `member_daily_anchors`, `surface_preference` | consent-gated ambient surfacing shipped | — |
-| **Relationships** | **BUILT, off the House** | `/relationships` (147L) | `app/relationships/page.tsx` | `/api/relationships` (+`checkin`,`entries`), `member_relationships` | outer/inner/transpersonal; auth + member-scoped | **not in the registry**; R2 reduced scope not yet applied — system-authored fields still written |
+| **Relationships** | **LIVE in the House** ⚠ | `/relationships` (147L) | `app/relationships/page.tsx`, registry entry `relationships` | `/api/relationships` (+`checkin`,`entries`), `member_relationships` | outer/inner/transpersonal; auth + member-scoped | R2 reduced scope not yet applied — system-authored fields still written |
 | **Desktop navigation** | **LIVE** | — | `MaiaShell` + `MaiaHouseSheet` | registry | House sheet is the navigation | no persistent spatial shell; drawer only |
 | **Mobile / PWA navigation** | **PARTIAL** | — | same components; `public/manifest.json` | — | Same sheet on mobile; `isNative` reachability classification exists | **no mobile-specific navigation**; no bottom nav component exists |
 | **Memory / continuity** | **LIVE** ⚠ | — | `memoryAtomsLoader`, `conversationalRecallBlock`, `memoryHealth`, `loadRecentAnchors` | live route `sovereign/app/maia/list` | atoms + conversational recall + anchors reach the prompt | DEEP tier still blocked at `buildComprehensiveVoicePrompt`; **no member-facing continuity surface** |

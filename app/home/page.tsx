@@ -41,17 +41,30 @@ async function getMemberForPortal() {
 async function getGatheringData(memberId: string) {
   const [sessionR, atomR] = await Promise.all([
     query(
+      // Sanctuary sessions never enter continuity (CLAUDE.md, Sanctuary
+      // invariants): they are useful in the moment, then gone. Offering one
+      // back as somewhere to return would be exactly the retention the mode
+      // exists to refuse.
       `SELECT id, created_at, message_count
        FROM maia_sessions
        WHERE member_id = $1
+         AND privacy_mode <> 'sanctuary'
        ORDER BY created_at DESC
        LIMIT 1`,
       [memberId]
     ),
     query(
+      // memory_scope is a strict containment hierarchy (migration
+      // 20260630000005). A practitioner's client- and encounter-scoped atoms
+      // are material about someone else, held in a different context; they are
+      // never personal-gathering material. status: 'archived' is defined as
+      // removed from active recall, and 'protected' (sacred_protected) is
+      // non-circulating — neither is ambient.
       `SELECT id, title, body, is_breakthrough, created_at
        FROM member_memory_atoms
        WHERE member_id = $1
+         AND memory_scope = 'personal'
+         AND status = 'active'
        ORDER BY created_at DESC
        LIMIT 1`,
       [memberId]
