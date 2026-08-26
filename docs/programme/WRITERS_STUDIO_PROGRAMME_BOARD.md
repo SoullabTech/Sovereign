@@ -29,7 +29,7 @@ MODE               WS-01 ACCEPTANCE
 BUILD MODE         CLOSED — Canvas / Phase 1 freeze BINDING
 BOUND CANONICAL    7f0dae9484a93a2146680e11a226111081bf4982
 CURRENT UNIT       WS-01 Source Custody + Freeze Release
-CURRENT CANDIDATE  4a551d3d13a27ec442252be7822865e0f2d31978
+CURRENT CANDIDATE  83efa86df3a27ec442252be7822865e0f2d31978
                    feature/ws-01-source-custody-v3  ·  PINNED / DEPLOYED
 NEXT EXECUTABLE    P0-D
 LAST UPDATED       2026-08-25
@@ -88,7 +88,7 @@ unbuilt while the unit list reads complete. They create no WS-08+.
 
 | Node | State | Evidence / next |
 |---|---|---|
-| WS-01 Source Custody | **IN ACCEPTANCE** | candidate `e92f53239`; P0-M PASS, P0-D owed. `lib/manuscript/source/**` is **not on canonical** — candidate only |
+| WS-01 Source Custody | **IN ACCEPTANCE** | candidate `83efa86df`; P0-M PASS, P0-D owed. `lib/manuscript/source/**` is **not on canonical** — candidate only |
 | Restore floor | **IN ACCEPTANCE** | required by frozen walk act **H**; rides with WS-01 |
 | Work Structure | **BLOCKED** | by WS-01. Contract ruled (Phase 3A); member-declared, no chapter schema |
 | #995 Harvest | **BLOCKED** | by Canvas freeze |
@@ -172,7 +172,7 @@ while these rows read ABSENT. A shipped manuscript editor is not fruition.
 | 2 | Manuscript-wide find · safe find/replace | **ABSENT** | `findInDraft` → **0 files**; no find/replace symbol on canonical | living manuscripts | — | Ch10 misplaced-copy search | authored on an unmerged branch only — A4.0 says that is not presence |
 | 2 | Return continuity beyond cursor position | **UNVERIFIED / TO CENSUS** | not censused | memory + provenance | — | return after a month | census before claiming either way |
 | 3 | Transcript & material intake | **PARTIAL** | `mammoth` (5), `pdf-parse` (8), `fileVault` (2), `api/book-studio/workbench/uploads/**` | — | — | real transcripts | recordings · voice notes · images **UNVERIFIED** |
-| 3 | Never silently transform an artifact into manuscript text | **IN ACCEPTANCE** | WS-01 candidate `e92f53239`; `manuscript_source_arrivals` → **0 files on canonical** | — | WS-01 | P0-D | **P0-D is the only executable proof** |
+| 3 | Never silently transform an artifact into manuscript text | **IN ACCEPTANCE** | WS-01 candidate `83efa86df`; `manuscript_source_arrivals` → **0 files on canonical** | — | WS-01 | P0-D | **P0-D is the only executable proof** |
 | 4 | Materials distinguishable **at the data level** | **PARTIAL** | `living_work_materials`: `material_type`, `declared_by`, `relationship_sentence` — belonging is already a **declared writer act**, not a styling choice | source custody | — | C · Material field | full A4.4 vocabulary not enumerated against schema |
 | 5 | MAIA as creative companion — nine stances | **UNVERIFIED / TO CENSUS** | no Studio-scoped stance surface identified; `developmental` matches 337 files, none Studio-scoped | Work + material | — | all four classes | census what, if anything, already serves Reflect/Question/Notice/Connect |
 | 5 | `Edit` only on explicit request | **DESIGNED** | capability spec; no runtime | companion | — | D · Ch10 | ⛔ default must never be `analyze → generate replacement` |
@@ -197,10 +197,23 @@ ZERO-CALLERS · one BLOCKED · one IN ACCEPTANCE. The delivered mass sits in **m
 intake**; the gather, memory, structural, developmental, expression and authorship capabilities are
 **overwhelmingly not built**. That is precisely the imbalance A4.21 forbids declaring as success.
 
+> **Candidate repinned 2026-08-25 — `83efa86df` (WS-01 v4).** The v3 candidate lost deployment
+> correspondence when another lane deployed over it, and the runtime subsequently reached canonical
+> through PR #1096 (reconcile) **without completing the frozen acceptance walk**. v4 is a fresh
+> candidate on canonical `7531a9290` with **zero runtime delta** — all ten WS-01 runtime files are
+> byte-identical to canonical — carrying the frozen **v1.1** walk unchanged by merge, so its seal
+> (`e5f36d83c`) remains a true ancestor. ⛔ **Ancestry is inherited; acceptance is not. This is not
+> retroactive acceptance of #1096.**
+>
+> **P0-M PASSED on v4** — 27 controls, 0 failures, real PostgreSQL + real vault + real migration,
+> negative leg included (vault bytes deleted → `verifyCustody` fails `artifact_missing`).
+> **P0-D remains UNEXECUTED** and is gated on an explicit exclusive deploy lease.
+> The Developmental Editor and every other row are unchanged — **WS-01 is not promoted.**
+
 ## Advancing now
 
 ```text
-WS-01 · P0-D — deploy candidate e92f53239, prove deployed identity,
+WS-01 · P0-D — deploy candidate 83efa86df, prove deployed identity,
                exercise the real ingest HTTP path, record, stop.
 ```
 
