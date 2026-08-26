@@ -193,6 +193,7 @@ import { WisdomCouncilPicker } from './wisdom/WisdomCouncilPicker';
 import { CurrentTeachingModal } from './wisdom/CurrentTeachingModal';
 import { consumeMaiaSeed, setReturnPath, getReturnPath, clearReturnPath, type ConsumedSeed } from '@/lib/maia/seedPrompt';
 import { generateWelcomeGreeting } from '@/lib/maia/welcomeGreeting';
+import { consumeArrivalContext } from '@/lib/maia/arrivalContext';
 import { ELDER_COUNCIL_TRADITIONS, type WisdomTradition } from '@/lib/consciousness/ElderCouncilService';
 import { ConversationStylePreference } from '@/lib/preferences/conversation-style-preference';
 import { detectJournalCommand } from '@/lib/services/conversationEssenceExtractor';
@@ -3332,6 +3333,24 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
 
     // Load soul-recognized greeting asynchronously
     (async () => {
+      // MLX-06 Unit 3 — what the member brought through Arrival, consumed ONCE.
+      // readArrivalContext validates shape and TTL; clearArrivalContext makes the
+      // opening unrepeatable, so a refresh does not replay first contact. Nothing
+      // here is persisted: the context frames this greeting and then is gone.
+      let arrivalContext: { attention: string; doorway: string } | undefined;
+      try {
+        const arrival = consumeArrivalContext();
+        if (arrival) {
+          arrivalContext = { attention: arrival.attention, doorway: arrival.doorway };
+          console.log('[MAIA] arrival context consumed', {
+            doorway: arrival.doorway,
+            broughtWords: arrival.attention.length > 0,   // never the words themselves
+          });
+        }
+      } catch {
+        /* first contact without a frame is still first contact */
+      }
+
       // Read onboarding context from sessionStorage for first contact
       let onboardingContext;
       try {
@@ -3397,6 +3416,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
           daysSinceLastVisit: computedDaysSinceLastVisit,
           daysActive: computedDaysSinceLastVisit > 0 ? 7 : 1,
           mode: realtimeMode, // 🎯 Pass mode for Talk/Care/Note aware greetings
+          arrivalContext, // What the member brought moments ago (session-scoped)
           onboardingContext, // Pass onboarding metadata for first contact
           returningContext, // Pass returning session metadata
         });

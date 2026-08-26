@@ -13,6 +13,8 @@ import {
   writeArrivalContext,
   readArrivalContext,
   clearArrivalContext,
+  consumeArrivalContext,
+  __resetArrivalConsumption,
   DOORWAYS,
   DOORWAY_UNSURE,
 } from '../arrivalContext';
@@ -83,5 +85,39 @@ describe('constitutional shape', () => {
     expect(readArrivalContext()).toBeNull();
     sessionStorage.setItem('maia_arrival_context', JSON.stringify({ attention: 'x' }));
     expect(readArrivalContext()).toBeNull();
+  });
+});
+
+
+describe('consumption is idempotent within a page load', () => {
+  /**
+   * REGRESSION. The greeting effect runs more than once. When consumption
+   * cleared storage on the first run, the second run found nothing and the
+   * default greeting overwrote MAIA's first contact — observed at runtime.
+   */
+  beforeEach(() => { sessionStorage.clear(); __resetArrivalConsumption(); });
+
+  it('returns the same context on every call in one page load', () => {
+    writeArrivalContext('the same argument with my brother', 'relation');
+    const first = consumeArrivalContext();
+    const second = consumeArrivalContext();
+    const third = consumeArrivalContext();
+    expect(first?.doorway).toBe('relation');
+    expect(second).toEqual(first);
+    expect(third).toEqual(first);
+  });
+
+  it('clears storage immediately, so a reload does not replay first contact', () => {
+    writeArrivalContext('something', 'mind');
+    consumeArrivalContext();
+    expect(sessionStorage.getItem('maia_arrival_context')).toBeNull();
+    __resetArrivalConsumption();            // a reload: fresh module, cache empty
+    expect(consumeArrivalContext()).toBeNull();
+  });
+
+  it('caches the absence too — no context stays no context', () => {
+    expect(consumeArrivalContext()).toBeNull();
+    writeArrivalContext('late arrival', 'mind');
+    expect(consumeArrivalContext()).toBeNull();
   });
 });

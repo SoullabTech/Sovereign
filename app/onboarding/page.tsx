@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { ArrivalThreshold } from '@/components/arrival/ArrivalThreshold';
 import type { DoorwayId } from '@/lib/maia/arrivalContext';
+import { recordFirstArrival } from '@/lib/maia/arrivalState';
 import { useRouter } from 'next/navigation';
 import { apiUrl } from '@/lib/http/apiBase';
 
@@ -129,6 +130,15 @@ export default function OnboardingPage() {
     const users = JSON.parse(localStorage.getItem('beta_users') || '{}');
     users[existingUsername] = updatedUser;
     localStorage.setItem('beta_users', JSON.stringify(users));
+
+    // Crossing this threshold IS the first crossing. Without recording it, the
+    // member meets the in-page Arrival ceremony again the moment they reach
+    // /maia — observed at runtime before this line existed: they were greeted
+    // "I'm here when you're ready" immediately after telling MAIA what was
+    // asking for their attention, and the opening never engaged what they
+    // brought. The marker is written exactly once and never cleared
+    // (lib/maia/arrivalState.ts); this is the member act it records.
+    recordFirstArrival();
 
     // The ruled spine ends at MAIA BEGINS. The arrival context the member just
     // gave is already in sessionStorage (session-scoped, per MLX-R3) and travels

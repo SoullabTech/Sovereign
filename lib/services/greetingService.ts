@@ -77,6 +77,15 @@ interface GreetingContext {
   daysActive?: number;
   relationshipEssence?: RelationshipEssence; // Platonic anamnesis - recollection
   mode?: 'dialogue' | 'counsel' | 'scribe'; // Talk/Care/Note mode
+  /**
+   * MLX-06 Unit 3 — what the member brought through Arrival, this session only.
+   * Session-scoped (MLX-R3): it shapes this opening and is never persisted,
+   * never becomes a memory atom, and never claims to be remembered.
+   */
+  arrivalContext?: {
+    attention: string;
+    doorway: string;
+  };
   onboardingContext?: { // First contact metadata
     isFirstContact: boolean;
     reason: string;
@@ -105,6 +114,15 @@ export class GreetingService {
     console.log('🎯 [GREETING] Mode detected:', context.mode);
 
     // 🎯 TALK MODE (dialogue): Use NLP-style presence greetings - no service language
+    // Arrival context outranks mode. The member told us what is asking for their
+    // attention seconds ago; a default conversational mode must not talk over
+    // that. Ordering matters here and was wrong once: placed after the mode
+    // check, this branch was unreachable, because mode defaults to 'dialogue'.
+    if (context.arrivalContext) {
+      console.log('🎯 [GREETING] Using Arrival first-contact greeting');
+      return this.getArrivalContactGreeting(context);
+    }
+
     if (context.mode === 'dialogue') {
       console.log('🎯 [GREETING] Using Talk mode presence greeting');
       return this.getTalkModeGreeting(context);
@@ -248,6 +266,59 @@ export class GreetingService {
    * When user comes through Facet Router onboarding flow
    * Uses metadata to create grounded, personalized first interaction
    */
+  /**
+   * First contact after Arrival.
+   *
+   * DOCTRINE (MLX-06 Unit 3). MAIA may make accurate contact with what the
+   * member brought, orient to the door they chose, and offer one invitation
+   * forward. MAIA may NOT diagnose, interpret, invent a feeling the member did
+   * not name, mechanically restate their text back at them, or imply it
+   * remembers anything — this is the first thing it has ever said to them.
+   *
+   * The failure mode this is written against:
+   *   "I hear that you're struggling with a recurring relational pattern and
+   *    seeking deeper insight..."   <- an intake summary, not a greeting.
+   *
+   * Note the deliberate divergence from getFirstContactGreeting below, which
+   * opens "I sense you're here for...". MAIA does not sense. The member said.
+   */
+  private static getArrivalContactGreeting(context: GreetingContext): string {
+    const { userName, arrivalContext } = context;
+    const hasName = userName && userName !== 'friend' && userName.trim() !== '';
+    const name = hasName ? userName : '';
+
+    const brought = (arrivalContext?.attention || '').trim();
+    const doorway = arrivalContext?.doorway || 'dunno';
+
+    // Light orientation only — tone and first invitation. Never a mode, never a
+    // persisted stance, never a claim about who the member is.
+    const DOORWAY_CONTACT: Record<string, { contact: string; invitation: string }> = {
+      mind:     { contact: 'You brought something that has been sitting with you.',
+                  invitation: 'Start wherever it is — it doesn\u2019t have to be organized.' },
+      change:   { contact: 'You brought something that is changing.',
+                  invitation: 'What is different now?' },
+      self:     { contact: 'You brought something about yourself you want to look at.',
+                  invitation: 'What is the part you keep circling?' },
+      decision: { contact: 'You brought something you are trying to decide.',
+                  invitation: 'What are you deciding between?' },
+      relation: { contact: 'You brought something happening between you and someone else.',
+                  invitation: 'Where does it seem to begin?' },
+      making:   { contact: 'You brought something you are making.',
+                  invitation: 'What are you working on?' },
+      dunno:    { contact: 'You came in without needing to name it first.',
+                  invitation: 'What has been taking up room lately?' },
+    };
+
+    const door = DOORWAY_CONTACT[doorway] ?? DOORWAY_CONTACT.dunno;
+
+    // With no words, the door alone frames the opening — we do not pretend to
+    // more contact than the member actually gave us.
+    const contact = brought ? door.contact : 'You are here.';
+
+    const opening = name ? `${name}, I\u2019m here.` : 'I\u2019m here.';
+    return `${opening} ${contact} ${door.invitation}`;
+  }
+
   private static getFirstContactGreeting(context: GreetingContext): string {
     const { userName, onboardingContext } = context;
     const { reason, feeling, partnerContext } = onboardingContext!;
@@ -758,6 +829,7 @@ export async function generateGreeting(context: Partial<GreetingContext>): Promi
     daysActive: context.daysActive,
     relationshipEssence, // Recollection (anamnesis)
     mode: context.mode, // Talk/Care/Note mode
+    arrivalContext: context.arrivalContext,
     onboardingContext: context.onboardingContext,
     returningContext: context.returningContext
   };

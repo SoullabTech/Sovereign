@@ -83,6 +83,36 @@ export function readArrivalContext(): ArrivalContext | null {
   }
 }
 
+/**
+ * Consume the arrival context idempotently for this page load.
+ *
+ * WHY THIS EXISTS: the greeting effect runs more than once (React re-invokes
+ * effects in development, and a re-mount can repeat it). Observed at runtime:
+ * the first run consumed the context and cleared storage, the second run found
+ * nothing and fell through to the default conversational greeting, which then
+ * overwrote MAIA's first contact. The member's own words lost a race.
+ *
+ * So: storage is cleared on the first call, and the value is held in module
+ * scope for the remainder of this page load. Every later call in the same load
+ * returns the same context instead of null. A reload starts a fresh module with
+ * an empty cache and already-cleared storage, so first contact still happens
+ * exactly once per arrival.
+ */
+let consumed: ArrivalContext | null | undefined;
+
+export function consumeArrivalContext(): ArrivalContext | null {
+  if (consumed !== undefined) return consumed;
+  const ctx = readArrivalContext();
+  consumed = ctx;
+  clearArrivalContext();
+  return ctx;
+}
+
+/** Test seam: forget this page load's consumption. */
+export function __resetArrivalConsumption(): void {
+  consumed = undefined;
+}
+
 /** Consumed once. The frame orients the opening; it does not persist behind it. */
 export function clearArrivalContext(): void {
   if (typeof window === 'undefined') return;
