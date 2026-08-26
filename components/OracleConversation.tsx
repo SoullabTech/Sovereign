@@ -194,6 +194,7 @@ import { CurrentTeachingModal } from './wisdom/CurrentTeachingModal';
 import { consumeMaiaSeed, setReturnPath, getReturnPath, clearReturnPath, type ConsumedSeed } from '@/lib/maia/seedPrompt';
 import { generateWelcomeGreeting } from '@/lib/maia/welcomeGreeting';
 import { consumeArrivalContext } from '@/lib/maia/arrivalContext';
+import { firstContactId, isMemberVisibleTurn } from '@/lib/maia/transcriptVisibility';
 import { ELDER_COUNCIL_TRADITIONS, type WisdomTradition } from '@/lib/consciousness/ElderCouncilService';
 import { ConversationStylePreference } from '@/lib/preferences/conversation-style-preference';
 import { detectJournalCommand } from '@/lib/services/conversationEssenceExtractor';
@@ -3437,7 +3438,10 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
 
       // Add greeting as first message
       const greetingMessage: ConversationMessage = {
-        id: `greeting-${Date.now()}`,
+        // A first contact that answers what the member brought at the threshold
+        // is a TURN, not a banner. Legacy greetings keep the filtered prefix, so
+        // nothing changes for members who did not just arrive.
+        id: firstContactId(Boolean(arrivalContext), Date.now()),
         role: 'oracle',
         text: greetingData.greeting,
         timestamp: new Date(),
@@ -9112,7 +9116,7 @@ I'm not sure what I'm feeling yet.`;
                 <div ref={messageContentIntrinsicRef} className="space-y-3">
                 {/* Show all messages with proper scrolling - filter out greeting messages (shown in centered UI instead) */}
                 {messages
-                  .filter(m => !m.id?.startsWith('greeting-'))
+                  .filter(isMemberVisibleTurn)
                   .map((message, index) => {
                     const handleCopyMessage = async () => {
                       const textToCopy = (message.text ?? message.content ?? '').replace(/\*[^*]*\*/g, '').replace(/\([^)]*\)/gi, '').trim();

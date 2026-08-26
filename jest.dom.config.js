@@ -11,8 +11,15 @@
  * environment cannot exercise at all. Leaving them to a browser walk alone
  * would make the most important behaviour in the editor non-repeatable.
  *
+ * SECOND SURFACE (MLX-06 Unit 3B). MAIA's first contact after Arrival has the
+ * same property: whether the member actually SEES it cannot be established in a
+ * `node` environment, and the transcript that owns it lives inside a
+ * 10,794-line component with 116 imports — too coupled to mount without mocking
+ * the product away. So the visibility seam is rendered here instead, under the
+ * same narrow discipline.
+ *
  * THE BOUNDARY, deliberately narrow:
- *   - this project matches ONLY `*.dom.test.tsx` under app/press/manuscript
+ *   - this project matches ONLY `*.dom.test.tsx` under the two paths below
  *   - the root config matches only `*.test.ts`, so it cannot see these files
  *   - the existing suites and their `node` environment are untouched, and the
  *     39-test baseline they establish must keep passing on its own config
@@ -26,7 +33,10 @@ const config = {
   preset: 'ts-jest',
   testEnvironment: 'jsdom',
   rootDir: __dirname,
-  testMatch: ['<rootDir>/app/press/manuscript/**/*.dom.test.tsx'],
+  testMatch: [
+    '<rootDir>/app/press/manuscript/**/*.dom.test.tsx',
+    '<rootDir>/components/maia/**/*.dom.test.tsx',
+  ],
   setupFilesAfterEnv: ['<rootDir>/app/press/manuscript/__tests__/domSetup.ts'],
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/$1',

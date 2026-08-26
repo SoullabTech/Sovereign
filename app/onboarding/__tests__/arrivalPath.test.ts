@@ -79,6 +79,19 @@ describe('invariants that must not move', () => {
   });
 });
 
+describe('the first contact can actually be seen (MLX-06 Unit 3B)', () => {
+  const oracle = strip(read('components/OracleConversation.tsx'));
+
+  it('gives a first contact that answers an arrival a visible turn id', () => {
+    expect(oracle).toMatch(/firstContactId\(Boolean\(arrivalContext\)/);
+  });
+
+  it('filters the transcript through the named, tested predicate', () => {
+    expect(oracle).toMatch(/\.filter\(isMemberVisibleTurn\)/);
+    expect(oracle).not.toMatch(/\.filter\(m => !m\.id\?\.startsWith\('greeting-'\)\)/);
+  });
+});
+
 describe('the arrival context stays session-scoped (MLX-R3)', () => {
   const ctx = strip(read('lib/maia/arrivalContext.ts'));
 
