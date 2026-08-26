@@ -88,6 +88,20 @@ export default function WritersStudioHome() {
     }
   };
 
+  /**
+   * Withdraw a work declaration. The manuscripts and materials that were
+   * declared into it keep their own homes — this removes the member's
+   * declaration, never their writing.
+   */
+  const onWithdraw = async (workId: string) => {
+    try {
+      const res = await apiFetch(`/api/sovereign/living-works/${workId}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error(`withdraw ${res.status}`);
+    } finally {
+      await refresh();
+    }
+  };
+
   const onAddToWork = async (manuscriptId: string, workId: string) => {
     try {
       await declare(workId, manuscriptId);
@@ -104,6 +118,7 @@ export default function WritersStudioHome() {
       onBegin={onBegin}
       onMakeWork={onMakeWork}
       onAddToWork={onAddToWork}
+      onWithdraw={onWithdraw}
     />
   );
 }

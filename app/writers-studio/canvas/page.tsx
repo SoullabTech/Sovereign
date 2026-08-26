@@ -17,49 +17,162 @@ import {
 import Worktable from './Worktable';
 import WorkDrawer from './WorkDrawer';
 import MaterialsDrawer from './MaterialsDrawer';
+import Companion from './Companion';
 
 /**
- * Writer Canvas — the room. v0.1 of the environment all Writer Studio entry
- * paths lead into.
+ * Writer Canvas — the room.
+ *
+ * WS-VISIBLE-01 (2026-08-26) turned the room from a textarea with folded
+ * spines into a working studio:
+ *
+ *   · Materials and Work are VISIBLE by default, in an open left rail. They
+ *     were previously behind vertical one-word labels, so a member had to
+ *     discover by clicking that the capability existed at all.
+ *   · MAIA is present in the room (Companion.tsx) instead of a hard-coded
+ *     placeholder sentence saying reflection would become available.
+ *   · The room states itself in the header: what is on the table, what feeds
+ *     it, where saving stands.
+ *
+ * What has NOT changed, deliberately: every honesty rule from v0.1 stands.
+ * The head of the room may unite Work and manuscript ONLY on the member's own
+ * declaration; nothing is inferred; a capability that does not exist is not
+ * drawn. Structure appears only where structure exists.
  *
  * Design authority: docs/design/author-studio/WRITER_CANVAS_ROOM_MAP_2026-08-05
- * .md as amended by the persona walk (A1–A6), built inside the boundary of
- * WRITER_CANVAS_V01_IMPLEMENTATION_BOUNDARY_2026-08-05.md — the room structure
- * with ONE real instrument (the Worktable writing surface). Everything else is
- * folded or absent, honestly.
- *
- * Three zones (builder names; they never appear on the walls):
- *   Study Wall — folded drawer spine on the left: Work · Materials ·
- *                Structure (only when the import carried sections) · History.
- *   Worktable  — the center. The draft, mid-motion. See Worktable.tsx.
- *   Window     — MAIA's folded presence on the right. v0.1 opens to one honest
- *                sentence and nothing else: no reflection endpoint exists on
- *                this surface, and a beautiful empty panel would be worse than
- *                a folded one.
- *
- * What this room deliberately does NOT claim:
- *   · that the manuscript belongs to the Work. Nothing writes
- *     living_work_expressions yet — so the head of the room names the thing
- *     ACTUALLY on the table (the manuscript), and the declared Work lives in
- *     the Work drawer, explicitly unlinked. The v0.1 shape (Work as headline,
- *     manuscript beneath it) read as belonging the moment a member had both:
- *     the persona walk's novelist found her book headlined by an unrelated
- *     work. Display may not draw a containment the data does not hold.
- *   · which of several Works the member returned to (arrivalWork declines to
- *     guess; so does this room).
- *   · any inferred state. The orientation line is authored facts only: the
- *     draft exists, it was last touched at a time.
+ * .md, as amended by the Writer's Studio Build Charter (§8 product doctrine,
+ * §9 design standard, §12 WS-VISIBLE-01).
  */
 
-type DrawerId = 'work' | 'materials' | 'structure' | 'history';
+type MobilePane = 'work' | 'materials' | 'maia' | 'history';
 type ListPhase = 'loading' | 'ready' | 'none' | 'unauthorized' | 'error';
 
 /** Same rule as Studio Home: return by identity, never by position. */
 const byIdentity = (href: string, manuscriptId: string) =>
   `${href}&m=${encodeURIComponent(manuscriptId)}`;
 
-const WINDOW_SENTENCE =
-  'Reflection with MAIA will become available when this Work can carry its context.';
+function RailSection({
+  label,
+  count,
+  children,
+  defaultOpen = true,
+}: {
+  label: string;
+  count?: number;
+  children: React.ReactNode;
+  defaultOpen?: boolean;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <section className="border-b" style={{ borderColor: PRESS.ruleSoft }}>
+      <button
+        onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+        className="w-full flex items-baseline gap-2 px-5 py-3.5 text-left"
+      >
+        <span className="text-[10.5px] tracking-[0.2em] uppercase opacity-45">{label}</span>
+        {typeof count === 'number' && count > 0 && (
+          <span className="text-[10.5px] opacity-30">{count}</span>
+        )}
+        <span className="flex-1" />
+        <span className="text-[10px] opacity-30">{open ? '−' : '+'}</span>
+      </button>
+      {open && <div className="px-5 pb-5">{children}</div>}
+    </section>
+  );
+}
+
+/**
+ * The writer names their own book.
+ *
+ * An imported manuscript is titled from the FILENAME it arrived as, so a book
+ * whose first page reads "Elemental Alchemy" shows up in the Studio as
+ * "book-print-kdp-final". The room does not guess a better title from the
+ * document — a title is an authoring act — so it gives the writer the pen.
+ */
+function ManuscriptName({
+  manuscriptId,
+  title,
+  onRenamed,
+}: {
+  manuscriptId: string;
+  title: string | null;
+  onRenamed: (title: string | null) => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [value, setValue] = useState(title ?? '');
+  const [busy, setBusy] = useState(false);
+  const [failed, setFailed] = useState(false);
+
+  const save = async () => {
+    setBusy(true);
+    setFailed(false);
+    try {
+      const res = await apiFetch(`/api/sovereign/manuscripts/${manuscriptId}/title`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title: value }),
+      });
+      if (!res.ok) {
+        setFailed(true);
+        return;
+      }
+      const data = await res.json();
+      onRenamed(typeof data.title === 'string' ? data.title : null);
+      setEditing(false);
+    } catch {
+      setFailed(true);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  if (!editing) {
+    return (
+      <button
+        onClick={() => {
+          setValue(title ?? '');
+          setEditing(true);
+        }}
+        className="text-[10.5px] tracking-[0.16em] uppercase opacity-30 hover:opacity-80"
+      >
+        rename
+      </button>
+    );
+  }
+
+  return (
+    <span className="flex items-baseline gap-2">
+      <input
+        value={value}
+        autoFocus
+        onChange={(e) => setValue(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') void save();
+          if (e.key === 'Escape') setEditing(false);
+        }}
+        placeholder="Its name, when you know it"
+        aria-label="Name this manuscript"
+        className="press-field bg-transparent border-b py-0.5 text-[15px] outline-none placeholder:opacity-35 min-w-[14rem]"
+        style={{ borderColor: PRESS.rule, fontFamily: SERIF, color: PRESS.text }}
+      />
+      <button
+        onClick={() => void save()}
+        disabled={busy}
+        className="text-[10.5px] tracking-[0.16em] uppercase opacity-60 hover:opacity-100 disabled:opacity-25"
+        style={{ color: PRESS.accent }}
+      >
+        {busy ? 'naming…' : 'name it'}
+      </button>
+      <button
+        onClick={() => setEditing(false)}
+        className="text-[10.5px] tracking-[0.16em] uppercase opacity-30 hover:opacity-70"
+      >
+        cancel
+      </button>
+      {failed && <span className="text-[11px] opacity-60">could not rename just now</span>}
+    </span>
+  );
+}
 
 export default function WriterCanvasPage() {
   const { phase: worksPhase, works, reload: reloadWorks } = useLivingWorks();
@@ -102,18 +215,18 @@ export default function WriterCanvasPage() {
       ? (manuscripts.find((m) => m.id === requested) ?? manuscripts[0] ?? null)
       : null;
 
-  const [drawer, setDrawer] = useState<DrawerId | null>(null);
-  const [windowOpen, setWindowOpen] = useState(false);
+  const [maiaOpen, setMaiaOpen] = useState(true);
+  const [mobilePane, setMobilePane] = useState<MobilePane>('maia');
   const [draftMeta, setDraftMeta] = useState<{
     updatedAt: string | null;
     revisionCount: number | null;
   } | null>(null);
 
-  // History drawer contents — read when opened, re-read after a kept version.
+  // Kept versions — read once the table is known, re-read after a keep.
   const [revisions, setRevisions] = useState<RevisionSummary[] | null>(null);
   const [historyKey, setHistoryKey] = useState(0);
   useEffect(() => {
-    if (drawer !== 'history' || !manuscript) return;
+    if (!manuscript) return;
     let cancelled = false;
     (async () => {
       const r = await loadRevisions(apiFetch, manuscript.id);
@@ -122,7 +235,7 @@ export default function WriterCanvasPage() {
     return () => {
       cancelled = true;
     };
-  }, [drawer, manuscript, historyKey]);
+  }, [manuscript, historyKey]);
 
   // ---- Signed out ---------------------------------------------------------
   if (listPhase === 'unauthorized') {
@@ -150,9 +263,7 @@ export default function WriterCanvasPage() {
   // member's own declaration — a living_work_expressions row they created —
   // and only when it is unambiguous (exactly one work declares this
   // manuscript; expressions may belong to several works by design, and the
-  // room does not guess between them). Without a declaration, v0.1-close
-  // honesty stands: the manuscript heads the room, the Work stays in its
-  // drawer, near but not claimed.
+  // room does not guess between them).
   const owningWorks = manuscript
     ? works.filter((w) =>
         w.expressions.some(
@@ -161,6 +272,7 @@ export default function WriterCanvasPage() {
       )
     : [];
   const unitedWork = owningWorks.length === 1 ? owningWorks[0] : null;
+  const railWork = unitedWork ?? (works.length === 1 ? works[0] : null);
   const manuscriptLabel = manuscript ? (manuscript.title ?? UNTITLED_EXPRESSION) : '';
 
   const headline = unitedWork
@@ -176,202 +288,168 @@ export default function WriterCanvasPage() {
       ? manuscript.title !== null
       : Boolean(work?.title);
 
-  // Structure exists only where structure exists: a single-section draft has
-  // no Structure drawer, and its absence is correct, not a gap.
-  const drawers: { id: DrawerId; label: string }[] = [
-    { id: 'work', label: 'Work' },
-    { id: 'materials', label: 'Materials' },
-    ...(manuscript && manuscript.sectionCount > 1
-      ? [{ id: 'structure' as DrawerId, label: 'Structure' }]
-      : []),
-    { id: 'history', label: 'History' },
-  ];
+  const materialCount = railWork?.materials.length ?? 0;
 
-  const drawerBody = (id: DrawerId) => {
-    switch (id) {
-      case 'work':
-        /* The anchor of the Study Wall (first slice): identity tended here,
-           the Shape declaration lives here. Everything member-authored. */
-        return (
-          <WorkDrawer
-            works={works}
-            unitedWork={unitedWork}
-            manuscript={manuscript ? { id: manuscript.id, title: manuscript.title } : null}
-            manuscriptLabel={manuscriptLabel}
-            onChanged={reloadWorks}
-          />
-        );
-      case 'materials':
-        /* Belongings: sentence first, thing second, home stated. The bring
-           gesture is the consent event; un-belonging deletes nothing. */
-        return (
-          <MaterialsDrawer
-            work={unitedWork ?? (works.length === 1 ? works[0] : null)}
-            manuscript={manuscript}
-            manuscripts={manuscripts}
-            onChanged={reloadWorks}
-          />
-        );
-      case 'structure':
-        return manuscript ? (
-          <>
-            <p className="text-[13px] leading-relaxed opacity-70 mb-3">
-              {manuscript.sectionCount} sections, carried in with your import.
-            </p>
-            <Link
-              href={byIdentity(SOURCE_HREF, manuscript.id)}
-              className="text-[13px] underline underline-offset-4 opacity-60 hover:opacity-90"
-            >
-              Read them in the Source
-            </Link>
-          </>
-        ) : null;
-      case 'history':
-        return (
-          <>
-            <p className="text-[12.5px] leading-relaxed opacity-50 mb-4">
-              Autosave holds your latest words continuously. Versions you keep are set down here,
-              and nothing is ever silently overwritten.
-            </p>
-            {revisions === null ? (
-              <p className="text-[13px] opacity-40">opening…</p>
-            ) : revisions.length === 0 ? (
-              <p className="text-[13px] opacity-55 leading-relaxed">
-                No kept versions yet. “Keep a version” at the table sets one down.
+  const workPanel = (
+    <WorkDrawer
+      works={works}
+      unitedWork={unitedWork}
+      manuscript={manuscript ? { id: manuscript.id, title: manuscript.title } : null}
+      manuscriptLabel={manuscriptLabel}
+      onChanged={reloadWorks}
+    />
+  );
+
+  const materialsPanel = (
+    <MaterialsDrawer
+      work={railWork}
+      manuscript={manuscript}
+      manuscripts={manuscripts}
+      onChanged={reloadWorks}
+    />
+  );
+
+  const historyPanel = (
+    <>
+      <p className="text-[12px] leading-relaxed opacity-45 mb-3">
+        Autosave holds your latest words continuously. Versions you keep are set down here, and
+        nothing is ever silently overwritten.
+      </p>
+      {revisions === null ? (
+        <p className="text-[13px] opacity-40">opening…</p>
+      ) : revisions.length === 0 ? (
+        <p className="text-[13px] opacity-55 leading-relaxed">
+          No kept versions yet. “Keep a version” at the table sets one down.
+        </p>
+      ) : (
+        <ul className="space-y-2">
+          {revisions.map((r) => (
+            <li key={r.revisionNumber} className="border px-3.5 py-2.5" style={{ borderColor: PRESS.ruleSoft }}>
+              <p className="text-[12.5px]">
+                Version {r.revisionNumber}
+                {r.note ? ` — ${r.note}` : ''}
               </p>
-            ) : (
-              <ul className="space-y-2.5">
-                {revisions.map((r) => (
-                  <li
-                    key={r.revisionNumber}
-                    className="border px-4 py-2.5"
-                    style={{ borderColor: PRESS.ruleSoft }}
-                  >
-                    <p className="text-[13px]">
-                      Version {r.revisionNumber}
-                      {r.note ? ` — ${r.note}` : ''}
-                    </p>
-                    <p className="text-[11.5px] opacity-45 mt-0.5">
-                      ~{pageEstimate(r.contentChars)} page
-                      {pageEstimate(r.contentChars) === 1 ? '' : 's'} · {formatWhen(r.createdAt)}
-                    </p>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </>
-        );
-    }
-  };
+              <p className="text-[11px] opacity-45 mt-0.5">
+                ~{pageEstimate(r.contentChars)} page{pageEstimate(r.contentChars) === 1 ? '' : 's'} ·{' '}
+                {formatWhen(r.createdAt)}
+              </p>
+            </li>
+          ))}
+        </ul>
+      )}
+    </>
+  );
 
-  const reflectionPanel = (
-    <div className="flex flex-col px-5 py-6">
-      <h2 className="text-[11px] tracking-[0.2em] uppercase opacity-40 mb-4">Reflection</h2>
-      <p className="text-[13.5px] leading-relaxed opacity-70 max-w-[16rem]">{WINDOW_SENTENCE}</p>
-      <button
-        onClick={() => setWindowOpen(false)}
-        className="mt-6 self-start text-[12px] opacity-45 hover:opacity-80 underline underline-offset-4"
+  const structurePanel = manuscript && manuscript.sectionCount > 1 && (
+    <RailSection label="Structure" count={manuscript.sectionCount} defaultOpen={false}>
+      <p className="text-[12.5px] leading-relaxed opacity-65 mb-2.5">
+        {manuscript.sectionCount} sections, carried in with your import.
+      </p>
+      <Link
+        href={byIdentity(SOURCE_HREF, manuscript.id)}
+        className="text-[12.5px] underline underline-offset-4 opacity-60 hover:opacity-90"
       >
-        fold away
-      </button>
-    </div>
+        Read them in the Source
+      </Link>
+    </RailSection>
+  );
+
+  const companion = (
+    <Companion
+      workId={railWork?.id ?? null}
+      manuscriptId={manuscript?.id ?? null}
+      roomKey={`${railWork?.id ?? '-'}:${manuscript?.id ?? '-'}`}
+    />
   );
 
   return (
     <div
-      className="min-h-screen flex flex-col"
+      className="h-screen flex flex-col overflow-hidden"
       style={{ background: PRESS.bg, color: PRESS.text, fontFamily: SERIF }}
     >
-      {/* ── The head of the room: what am I working on, and where am I. ── */}
-      <header className="px-6 md:px-10 pt-6 pb-5">
-        <Link
-          href="/writers-studio"
-          className="inline-block text-[11px] tracking-[0.2em] uppercase opacity-40 hover:opacity-75 mb-3"
-        >
-          ← Author Studio
-        </Link>
-        <p className="text-[12px] tracking-[0.25em] uppercase opacity-45 mb-1.5">Writer Canvas</p>
-        <h1
-          className="text-[24px] md:text-[27px] leading-snug"
-          style={{ fontFamily: SERIF, opacity: headlineNamed ? 1 : 0.75 }}
-        >
-          {headline}
-        </h1>
-        {/* The becoming — the member's one statement, in their words, shown
-            only when the member's declaration united work and table. */}
+      {/* ── The head of the room: what am I making, and where do I stand. ── */}
+      <header
+        className="px-5 md:px-8 pt-4 pb-3.5 border-b shrink-0"
+        style={{ borderColor: PRESS.rule }}
+      >
+        <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
+          <Link
+            href="/writers-studio"
+            className="text-[10.5px] tracking-[0.2em] uppercase opacity-35 hover:opacity-75"
+          >
+            ← Studio
+          </Link>
+          <h1
+            className="text-[21px] md:text-[24px] leading-tight"
+            style={{ fontFamily: SERIF, opacity: headlineNamed ? 1 : 0.75 }}
+          >
+            {headline}
+          </h1>
+          {manuscript && (
+            <ManuscriptName
+              manuscriptId={manuscript.id}
+              title={manuscript.title}
+              onRenamed={(t) =>
+                setManuscripts((list) =>
+                  list.map((m) => (m.id === manuscript.id ? { ...m, title: t } : m)),
+                )
+              }
+            />
+          )}
+          <span className="flex-1" />
+          {/* Orientation, not measurement: authored facts only. */}
+          <span className="text-[11.5px] opacity-45">
+            {draftMeta?.updatedAt ? `last touched ${formatWhen(draftMeta.updatedAt)}` : ''}
+          </span>
+        </div>
+
+        {/* The member's one statement, in their words — shown only when their
+            own declaration united work and table. */}
         {unitedWork?.purpose && (
           <p
-            className="text-[13px] leading-relaxed opacity-60 mt-1.5 max-w-md italic"
+            className="text-[13px] leading-relaxed opacity-55 mt-1 max-w-xl italic"
             style={{ fontFamily: SERIF }}
           >
             {unitedWork.purpose}
           </p>
         )}
-        {/* Orientation, not measurement: authored facts only. */}
-        {draftMeta && (
-          <p className="text-[12.5px] mt-1.5 italic" style={{ color: PRESS.accent, opacity: 0.85 }}>
-            drafting
-            {draftMeta.updatedAt ? ` · last touched ${formatWhen(draftMeta.updatedAt)}` : ''}
-          </p>
-        )}
-        {/* Legitimate now, and only now: the belonging is the member's own
-            declaration, so saying it is honest display, not drawn containment. */}
-        {unitedWork && manuscript && (
-          <p className="text-[13px] opacity-55 mt-2">
-            On the table: {manuscriptLabel} — a form of this work, declared by you.
-          </p>
-        )}
-        {/* Several manuscripts, arrived without naming one: say which rule
-            picked. A fact about the room, not a claim about the work. */}
-        {manuscript && manuscripts.length > 1 && !manuscripts.some((m) => m.id === requested) && (
-          <p className="text-[13px] opacity-50 mt-2">
-            The most recent of your {manuscripts.length} manuscripts is on the table.
-          </p>
-        )}
+
+        {/* What is actually on the table — a factual line, not a claim. */}
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1.5 text-[11.5px] opacity-45">
+          {unitedWork && manuscript && (
+            <span>On the table: {manuscriptLabel} — a form of this work, declared by you.</span>
+          )}
+          {manuscript && manuscripts.length > 1 && !manuscripts.some((m) => m.id === requested) && (
+            <span>The most recent of your {manuscripts.length} manuscripts is on the table.</span>
+          )}
+          {railWork && (
+            <span>
+              {materialCount === 0
+                ? 'Nothing brought in yet'
+                : `${materialCount} material${materialCount === 1 ? '' : 's'} feeding this work`}
+            </span>
+          )}
+        </div>
       </header>
 
-      <div
-        className="flex-1 flex flex-col md:flex-row min-h-0 border-t"
-        style={{ borderColor: PRESS.rule }}
-      >
-        {/* ── Study Wall: the folded spine. One drawer open at a time. ── */}
-        <nav
-          aria-label="This work"
-          className="flex md:flex-col md:w-12 shrink-0 border-b md:border-b-0 md:border-r px-3 md:px-0 md:pt-8 gap-1"
+      <div className="flex-1 flex min-h-0">
+        {/* ── Left rail: the work and what feeds it, OPEN. ────────────────── */}
+        <aside
+          className="hidden md:flex md:flex-col w-[17.5rem] shrink-0 border-r overflow-y-auto"
           style={{ borderColor: PRESS.ruleSoft }}
         >
-          {drawers.map((d) => {
-            const open = drawer === d.id;
-            return (
-              <button
-                key={d.id}
-                onClick={() => setDrawer(open ? null : d.id)}
-                aria-expanded={open}
-                className={`text-[10.5px] tracking-[0.15em] uppercase px-2.5 py-2.5 md:px-0 md:py-3 md:[writing-mode:vertical-rl] transition-opacity ${
-                  open ? 'opacity-100' : 'opacity-45 hover:opacity-80'
-                }`}
-                style={open ? { color: PRESS.accent } : undefined}
-              >
-                {d.label}
-              </button>
-            );
-          })}
-        </nav>
+          <RailSection label="Work">{workPanel}</RailSection>
+          <RailSection label="Materials" count={materialCount}>
+            {materialsPanel}
+          </RailSection>
+          {structurePanel}
+          <RailSection label="Versions" count={revisions?.length ?? 0} defaultOpen={false}>
+            {historyPanel}
+          </RailSection>
+        </aside>
 
-        {drawer && (
-          <aside
-            className="md:w-72 shrink-0 border-b md:border-b-0 md:border-r px-5 py-6 overflow-y-auto"
-            style={{ borderColor: PRESS.ruleSoft }}
-          >
-            <h2 className="text-[11px] tracking-[0.2em] uppercase opacity-40 mb-4">
-              {drawers.find((d) => d.id === drawer)?.label}
-            </h2>
-            {drawerBody(drawer)}
-          </aside>
-        )}
-
-        {/* ── Worktable: the center, always the largest thing. ── */}
-        <main className="flex-1 min-w-0 flex flex-col px-6 md:px-12 py-7">
+        {/* ── The worktable: the centre, always the largest thing. ────────── */}
+        <main className="flex-1 min-w-0 flex flex-col px-5 md:px-10 py-5 overflow-hidden">
           {listPhase === 'loading' && <p className="text-[14px] opacity-40">opening…</p>}
           {listPhase === 'error' && (
             <p className="text-[15px] opacity-70 max-w-md leading-relaxed">
@@ -381,7 +459,7 @@ export default function WriterCanvasPage() {
           )}
           {listPhase === 'none' && (
             <div className="max-w-md">
-              <p className="text-[16px] leading-relaxed opacity-75 mb-6">
+              <p className="text-[16px] leading-relaxed opacity-75 mb-5">
                 Nothing is on the table yet.
               </p>
               <p className="text-[14px] leading-relaxed opacity-55">
@@ -406,51 +484,57 @@ export default function WriterCanvasPage() {
           )}
         </main>
 
-        {/* ── Window: MAIA's folded presence. Opens only when invited, and in
-            v0.1 opens onto one honest sentence — never an empty panel
-            pretending to be a capability. ── */}
-        <aside
-          className={`hidden md:block shrink-0 border-l transition-all ${windowOpen ? 'w-80' : 'w-10'}`}
-          style={{ borderColor: PRESS.ruleSoft }}
-        >
-          {windowOpen ? (
-            reflectionPanel
-          ) : (
+        {/* ── MAIA: present in the room, not a folded promise. ────────────── */}
+        {maiaOpen ? (
+          <aside
+            className="hidden md:flex md:flex-col w-[21rem] shrink-0 border-l min-h-0"
+            style={{ borderColor: PRESS.ruleSoft }}
+          >
+            {companion}
             <button
-              onClick={() => setWindowOpen(true)}
-              aria-label="Reflection"
-              title="Reflection"
-              className="w-full flex justify-center pt-8 opacity-40 hover:opacity-80 transition-opacity"
-            >
-              <span
-                className="w-2 h-2 rounded-full border"
-                style={{ borderColor: PRESS.text }}
-              />
-            </button>
-          )}
-        </aside>
-      </div>
-
-      {/* The Window's mobile form: a quiet line under the field, same honesty. */}
-      <div className="md:hidden border-t px-6 py-4" style={{ borderColor: PRESS.ruleSoft }}>
-        {windowOpen ? (
-          <div>
-            <p className="text-[13px] leading-relaxed opacity-70 mb-2">{WINDOW_SENTENCE}</p>
-            <button
-              onClick={() => setWindowOpen(false)}
-              className="text-[12px] opacity-45 underline underline-offset-4"
+              onClick={() => setMaiaOpen(false)}
+              className="shrink-0 text-[10.5px] tracking-[0.16em] uppercase opacity-30 hover:opacity-70 py-2"
             >
               fold away
             </button>
-          </div>
+          </aside>
         ) : (
           <button
-            onClick={() => setWindowOpen(true)}
-            className="text-[11px] tracking-[0.2em] uppercase opacity-40"
+            onClick={() => setMaiaOpen(true)}
+            aria-label="Open MAIA"
+            className="hidden md:flex w-10 shrink-0 border-l items-start justify-center pt-6 opacity-40 hover:opacity-90"
+            style={{ borderColor: PRESS.ruleSoft }}
           >
-            Reflection
+            <span className="text-[10.5px] tracking-[0.2em] uppercase [writing-mode:vertical-rl]">
+              MAIA
+            </span>
           </button>
         )}
+      </div>
+
+      {/* ── Mobile: the same room, one pane at a time — named, not cryptic. ── */}
+      <div className="md:hidden border-t shrink-0" style={{ borderColor: PRESS.rule }}>
+        <div className="flex">
+          {(['maia', 'materials', 'work', 'history'] as MobilePane[]).map((p) => (
+            <button
+              key={p}
+              onClick={() => setMobilePane(p)}
+              className="flex-1 py-2.5 text-[10.5px] tracking-[0.16em] uppercase transition-opacity"
+              style={{
+                opacity: mobilePane === p ? 1 : 0.4,
+                color: mobilePane === p ? PRESS.accent : undefined,
+              }}
+            >
+              {p === 'maia' ? 'MAIA' : p === 'history' ? 'Versions' : p}
+            </button>
+          ))}
+        </div>
+        <div className="max-h-[52vh] overflow-y-auto border-t" style={{ borderColor: PRESS.ruleSoft }}>
+          {mobilePane === 'maia' && <div className="h-[52vh]">{companion}</div>}
+          {mobilePane === 'materials' && <div className="px-5 py-5">{materialsPanel}</div>}
+          {mobilePane === 'work' && <div className="px-5 py-5">{workPanel}</div>}
+          {mobilePane === 'history' && <div className="px-5 py-5">{historyPanel}</div>}
+        </div>
       </div>
     </div>
   );

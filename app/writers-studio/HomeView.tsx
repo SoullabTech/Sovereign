@@ -69,6 +69,8 @@ export interface HomeViewProps {
   onBegin: (title: string) => Promise<void>;
   onMakeWork: (manuscriptId: string, title: string | null) => Promise<void>;
   onAddToWork: (manuscriptId: string, workId: string) => Promise<void>;
+  /** Withdraw a declaration the member no longer wants on the shelf. */
+  onWithdraw: (workId: string) => Promise<void>;
 }
 
 export default function HomeView({
@@ -78,6 +80,7 @@ export default function HomeView({
   onBegin,
   onMakeWork,
   onAddToWork,
+  onWithdraw,
 }: HomeViewProps) {
   const [beginning, setBeginning] = useState(false);
   const [draftName, setDraftName] = useState('');
@@ -85,6 +88,7 @@ export default function HomeView({
   const [error, setError] = useState<string | null>(null);
   const [placing, setPlacing] = useState<string | null>(null);
   const [showAll, setShowAll] = useState(false);
+  const [withdrawing, setWithdrawing] = useState<string | null>(null);
 
   const byId = new Map(manuscripts.map((m) => [m.id, m]));
   const { kind, resume, shelf, feature, imported } = arrivalFor(works, manuscripts);
@@ -103,7 +107,21 @@ export default function HomeView({
   const workMeta = (work: LivingWork): string => {
     const id = manuscriptIdOf(work);
     const m = id ? byId.get(id) : undefined;
-    if (!m) return 'No writing yet';
+    if (!m) {
+      /* A work with no declared FORM is not an empty work. Saying "No writing
+         yet" over a work that may already hold materials — or whose writing
+         simply has not been declared here — reads as an empty shelf and was
+         the first thing that made the Studio look untended. Say what is
+         actually true of it instead. */
+      const mats = work.materials.length;
+      return [
+        work.form ?? null,
+        mats > 0 ? `${mats} material${mats === 1 ? '' : 's'}` : null,
+        'nothing declared as a form yet',
+      ]
+        .filter(Boolean)
+        .join(' · ');
+    }
     return [work.form ?? null, pagesLabel(m.charCount), whenWritten(m.lastWrittenAt)]
       .filter(Boolean)
       .join(' · ');
@@ -373,13 +391,51 @@ export default function HomeView({
                 </div>
                 <Cards>
                   {shelfCards.map((w) => (
-                    <Card
-                      key={w.id}
-                      href={canvasForManuscript(CANVAS_HREF, manuscriptIdOf(w))}
-                      title={w.title ?? 'Untitled work'}
-                      untitled={!w.title}
-                      meta={workMeta(w)}
-                    />
+                    <div key={w.id}>
+                      <Card
+                        href={canvasForManuscript(CANVAS_HREF, manuscriptIdOf(w))}
+                        title={w.title ?? 'Untitled work'}
+                        untitled={!w.title}
+                        meta={workMeta(w)}
+                      />
+                      {/* Withdrawing removes the DECLARATION, never the
+                          writing: a manuscript declared as a form of this work
+                          keeps its own home and stays in Your writing. The
+                          shelf is the member's to tend — a test or a duplicate
+                          declaration should not be permanent furniture. */}
+                      {withdrawing === w.id ? (
+                        <p className="mt-2 text-[12px] leading-relaxed opacity-60">
+                          Withdraw this declaration? Your writing is not deleted.{' '}
+                          <button
+                            disabled={busy}
+                            onClick={() =>
+                              void run(async () => {
+                                await onWithdraw(w.id);
+                                setWithdrawing(null);
+                              }, 'Could not withdraw that just now. Nothing was changed.')
+                            }
+                            className="underline underline-offset-4 opacity-90 hover:opacity-100"
+                            style={{ color: PRESS.accent }}
+                          >
+                            withdraw
+                          </button>{' '}
+                          ·{' '}
+                          <button
+                            onClick={() => setWithdrawing(null)}
+                            className="underline underline-offset-4 opacity-70 hover:opacity-100"
+                          >
+                            keep it
+                          </button>
+                        </p>
+                      ) : (
+                        <button
+                          onClick={() => setWithdrawing(w.id)}
+                          className="mt-2 text-[11.5px] opacity-30 hover:opacity-75 underline underline-offset-4"
+                        >
+                          withdraw this work
+                        </button>
+                      )}
+                    </div>
                   ))}
                 </Cards>
               </section>
