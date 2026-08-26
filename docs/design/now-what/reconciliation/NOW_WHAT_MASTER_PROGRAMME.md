@@ -9,8 +9,8 @@ Binding unless Kelly explicitly supersedes it.
 ## Sequence (binding)
 
 ```
-NW-D00 census ✅ → NW-R01 flourishing ✅ → NW-R02 coaching/change/boundary
-  → NW-D01 Larry doctrine → NW-D02 human journey → NW-D03 IA
+NW-D00 census ✅ → NW-R01 flourishing ✅ → NW-R02 boundary ✅ → NW-S01 qualified safety ✅
+  → NW-D01 Larry doctrine → NW-D01.5 relational architecture → NW-D02 human journey → NW-D03 IA
   → [FOUNDER IA RULING] → NW-D04 design doctrine → NW-D05 Figma
   → NW-D06 user evaluation → [FOUNDER PROTOTYPE APPROVAL]
   → NW-D07 architecture reconciliation → NW-D08+ bounded implementation
