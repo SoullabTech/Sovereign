@@ -61,11 +61,20 @@ Now What? conversational path and now narrower than it read.** The platform has 
 logging and a notification route in the practitioner lane. NW-I01 may have more to build on than
 R02 assumed.
 
-**And it raises a consent conflict R02 did not see**: practitioner messaging routes safety
+**⚠️ CORRECTED 2026-08-26 (NW-S01): the consent conflict below does not exist.** The
+practitioner lane's `urgency` field is `'Client self-selected: not_urgent, time_sensitive,
+safety_concern'` (`20260121_between_session_container.sql:139`) — a member-chosen label on a
+message the member deliberately sent. There is no system detection in that lane, so it is already
+compliant with the member-act rule. The paragraph below misread a member act as an automatic
+disclosure and should not be relied on. The genuinely open question is narrower and entirely
+greenfield: concerning content in **private reflection the member has not sent to anyone**. See
+`NOW_WHAT_SAFETY_CRISIS_REFERRAL_DISCLOSURE_RECONCILIATION.md`.
+
+~~**And it raises a consent conflict R02 did not see**~~: practitioner messaging routes safety
 concerns with *immediate notification*, while R02's proposed four properties require that a safety
 response reach **no one** without an explicit member act. Two lanes of the same platform would
-then hold opposite rules. **This must be reconciled — it is now the most consequential open safety
-question in the programme**, and it is a founder ruling, not an implementation detail.
+then hold opposite rules. ~~This must be reconciled — it is now the most consequential open safety question in the
+programme.~~ **Superseded: there is no conflict to reconcile.**
 
 ## Recommended disposition
 
