@@ -61,6 +61,7 @@ import {
   getPracticeFieldBySlug,
   formatFieldContextForRoom,
 } from '@/lib/practiceField/practiceFieldService';
+import { memberMayComposeField } from '@/lib/practiceField/compositionBoundary';
 import { composeProgramPositionBlock } from '@/lib/practiceField/programPositionService';
 import { composeLessonContext } from '@/lib/practiceField/programAuthoringService';
 
@@ -108,6 +109,7 @@ export interface ComposedRoomPrompt {
 async function resolveFieldBlock(
   fieldContext: unknown,
   roomTag: string,
+  memberId: string,
 ): Promise<{ block: string; provenance: RoomFieldProvenance | null }> {
   if (process.env.NOW_WHAT_FIELD_CONTEXT_ENABLED === '0') return { block: '', provenance: null };
   const slug =
@@ -117,6 +119,15 @@ async function resolveFieldBlock(
   try {
     if (slug) {
       const field = await getPracticeFieldBySlug(slug);
+      // NW-A02 repair 2 — the slug arrives in the REQUEST. Composing it without
+      // establishing that this member is authorized for this field let any
+      // authenticated member pull any practitioner's governing text into their
+      // own room prompt (NW-A01 F4). Refusal is the default.
+      const auth = await memberMayComposeField(memberId, field);
+      if (!auth.authorized) {
+        console.warn(`[${roomTag}/field] REFUSED — member not authorized for field`, { slug });
+        return { block: '', provenance: null };
+      }
       const block = formatFieldContextForRoom(field);
       if (block) {
         console.log(`[${roomTag}/field] composed`, { slug, source: 'request', blockChars: block.length });
@@ -255,7 +266,7 @@ export async function composeRoomTurnPrompt(opts: {
   const { roomPrompt, memberId, lastMemberMessage, fieldContext, program, roomTag, ephemeralSessionId } = opts;
   const presenceEnabled = process.env.NOW_WHAT_MAIA_PRESENCE_ENABLED === '1';
 
-  const { block: fieldBlock, provenance } = await resolveFieldBlock(fieldContext, roomTag);
+  const { block: fieldBlock, provenance } = await resolveFieldBlock(fieldContext, roomTag, memberId);
 
   // Program position (NOW_WHAT_PROGRAM_POSITION_SPEC + catalog spec): composed
   // strictly downstream of the field and only when the field composed —

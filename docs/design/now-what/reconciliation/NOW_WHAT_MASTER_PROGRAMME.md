@@ -1,5 +1,44 @@
 # NOW WHAT? — MASTER BUILD PROGRAMME
 
+## ⛔ THE ANTI-DRIFT LAW (founder, 2026-08-26 — supersedes the sequence below)
+
+> **Until the Jondi walk is complete, the default next action is UX.** Any newly discovered issue
+> is **recorded and deferred** unless it blocks the current journey or creates a security, privacy,
+> sovereignty, safety, or data-integrity risk.
+
+**The objective is no longer "finish Now What?"** It is: *get a beautiful, coherent,
+constitutionally sound Now What? experience in front of Jondi, then Larry, then a real client.*
+
+**Frozen — no new work**: doctrine investigations unless blocking · new rooms · feature ideation ·
+generalized architecture · community · themes · analytics · broad refactors. **No NW-A03.**
+
+**Active roadmap**:
+```
+NW-A02 ✅ close the composition seams  (LAST infrastructure unit)
+   ↓
+UX-01   see the real current journey — visual flow board, not a brief
+   ↓
+UX-02   design five coherent states
+   ↓
+UX-03   BUILD them — recompose before rebuilding
+   ↓
+DEPLOY  ← hard milestone: LIVE ON PRODUCTION, not authored/merged
+   ↓
+KELLY walk → JONDI hospitality walk → UX-04 evidence-driven refinement
+   ↓
+LARRY practitioner walk → FIRST CLIENT → innovation layer
+```
+
+**The five states** (the only surfaces in scope): Arrival · Today · Conversation · Keep ·
+Return. One designed object — same typography, spatial grammar, navigation, emotional register.
+
+**Deferred by the law, recorded and not lost**: NW-A01's remaining authority questions ·
+NW-D02 (hypothesis only) · Larry scope/referral (awaiting the sitting) · safety-content floor
+(awaiting sign-off) · the production Flourishing-vocabulary query (**UNKNOWN**).
+
+---
+
+
 **Canonical instruction for JARVIS and Claude Code.** Ratified by the founder 2026-08-26.
 Binding unless Kelly explicitly supersedes it.
 
