@@ -32,17 +32,38 @@ enters the other. Nothing crosses that line implicitly.
 
 ## The one lane
 
-| | |
-|---|---|
-| Integration branch | `claude/writers-studio-organization-wxpb7q` |
-| Current implementation | `fcf54c5cb` |
-| Canonical | `644d4f2c5` |
+```text
+INTEGRATION BRANCH       claude/writers-studio-organization-wxpb7q
+INTEGRATION BRANCH TIP   34b3fdc62   ← includes documentation commits
+PRODUCT CODE TIP         fcf54c5cb   ← last commit that changed product code
+CANONICAL                644d4f2c5
+```
+
+The two tips are named separately on purpose: "current SHA" is ambiguous the
+moment a documentation commit lands on top of the code, and a session that
+guesses wrong will diff against the wrong base.
 
 **Rule of One.** One integration branch. One owner per capability. Before
 opening a branch: inspect canonical, inspect this lane, inspect other active
 sessions. If another lane already owns the surface, converge with it — do not
 independently rebuild it. This lane exists because two sessions built the same
 room from opposite ends and neither knew.
+
+## Build is open; delivery is not
+
+```text
+BUILD MODE     OPEN    on the integration lane above
+DELIVERY MODE  CLOSED  until WS-01 ACCEPTED
+                       + production hold released
+                       + exact ship candidate verified
+```
+
+Founder ruling 2026-08-26, Master Brief **A2.0**. The WS-01 freeze protects
+**production**, not building: it blocks merge, deployment, and member-facing
+claims, and nothing else. No Studio code deploys until WS-01 accepts.
+
+⛔ **BUILT is not DELIVERED.** Nothing on this lane may be described to anyone
+as a capability the Studio has.
 
 ## The room
 

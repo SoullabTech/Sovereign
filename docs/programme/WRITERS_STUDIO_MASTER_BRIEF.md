@@ -608,6 +608,34 @@ conceptually beautiful lens over a primitive product is a worse failure than not
 > **Effective when WS-01 closes** — P0-D, the frozen walk, Founder Acceptance, merge, freeze
 > released. ⛔ Not before. Until then the pinned candidate and P0-D remain the only executable act.
 
+## A2.0 — Correction: what the freeze actually holds (founder ruling, 2026-08-26)
+
+The clause above was read as freezing *all* Writer's Studio work, which is not what
+WS-01 needs protected. WS-01 needs **production** protected. Ruling:
+
+> **Writer's Studio BUILD-ONLY work is authorized on the single integration lane
+> while WS-01 owns production.** The WS-01 freeze blocks Writer's Studio
+> **merge, deployment, and member-facing claims** — not isolated implementation
+> and testing on that lane. **No Studio code may deploy until WS-01 is accepted
+> and its production hold is released.**
+
+So two modes, and they are not the same gate:
+
+```text
+BUILD MODE     OPEN    on claude/writers-studio-organization-wxpb7q
+DELIVERY MODE  CLOSED  until WS-01 ACCEPTED
+                       + production hold released
+                       + exact ship candidate verified
+```
+
+⛔ The thing this preserves is the one that mattered: an acceptance witness owns
+production, and nothing races it. What it stops preserving is a freeze on
+*building*, which protected nothing and cost weeks.
+
+⛔ BUILT is not DELIVERED. Work on the lane may not be described to anyone —
+member, tester, or founder — as a capability the Studio has. It is a capability
+the Studio will have when it ships.
+
 **The risk this amendment exists to remove:** governance becoming the product. What is wanted is a
 working Writer's Studio, not a perfect sequence of documents describing one.
 

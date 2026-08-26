@@ -68,15 +68,22 @@ it in the global work queue without becoming Writer's Studio state.
 
 ## Release signal — read mechanically, never inferred
 
-BUILD MODE is closed until all three appear here, on canonical:
+Two modes, two gates. They were previously one clause, and a session could rationally
+read it either way (founder ruling 2026-08-26; Master Brief **A2.0**).
 
 ```text
-WS-01 ACCEPTED  +  CANVAS FREEZE RELEASED  +  NEXT BUILD UNIT AUTHORIZED
+BUILD MODE     may proceed on the single integration lane.
+
+DELIVERY MODE  remains CLOSED until:
+                 WS-01 ACCEPTED
+               + production hold released
+               + exact ship candidate verified
 ```
 
-A green suite is not a release signal. Session narration is not a release signal. If an accepted
-state requires a canonical merge, the foundation is not available for subsequent implementation
-until that accepted state is on canonical.
+A green suite is not a release signal. Session narration is not a release signal. A merged
+branch is not a release signal. If an accepted state requires a canonical merge, the
+foundation is not available for **delivery** until that accepted state is on canonical —
+though it remains available for continued building on the lane.
 
 ## Programme invariant — the authority chain
 
