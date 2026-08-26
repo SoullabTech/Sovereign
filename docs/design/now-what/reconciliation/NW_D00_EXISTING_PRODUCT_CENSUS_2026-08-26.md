@@ -327,6 +327,37 @@ Nothing new. The six retirements of 2026-08-05 were executed cleanly and are alr
 
 ---
 
+---
+
+## INPUTS RECEIVED DURING THIS UNIT (PARKED, NOT ACTED ON)
+
+Three founder directives arrived while NW-D00 was running. All are downstream of this unit;
+they are recorded here so they are not lost, and are **not** applied.
+
+**P1 — NW-F00 Figma ideal-state architecture** (five layers: master map · canonical flows ·
+full screen system incl. every state · design system · three prototype Home directions; 18-page
+file structure). → Eligible at **NW-D04/D05**. Sequencing conflict recorded at **C3**.
+
+**P2 — Simplicity as a hard constraint.** *"Make the surface simpler as the intelligence
+underneath becomes more sophisticated."* Three-layer rule (immediate · context · intelligence);
+four-question feature test; five canonical surfaces rather than eighteen; the open questions of
+whether **My Question** needs to remain a permanent destination and whether **flourishing**
+should be a perspective rather than a tab. → Governs **NW-D02/D03**. Census evidence bearing on
+it: **F1** (three noun-rooms are already filtered views of one table) and **C5** (the ontology
+ruling that would have to be overturned does not exist).
+
+**P3 — Palette direction: "more winter, Miami."** Cooler, lighter, coastal — against the
+environment's current warm register. Census evidence: the shipped palette is warm paper in light
+(`#f8f5ef`/`#f4f0e8`, ink `#29231c`) and warm charcoal in dark (`#211d18`/`#1b1815`), with bronze
+`#8a6a35` / `#c9a35e` as the single accent, ratified in the 2026-08-05 brand pass (the
+"Direction B" wordmark puts the question mark in bronze). A winter/Miami direction **replaces**
+that pass rather than refining it, and the bronze accent is load-bearing across `PaperRoom`,
+`ClientHome`, the shell and the brand board. → **NW-D04**, and it needs an explicit ruling that
+the 2026-08-05 brand pass is superseded. Note for that unit: the vision-reference disposition
+already ruled the light/dark register a *"pure rendering decision… carries no claims"* — so a
+palette change is doctrinally cheap, but not free in code.
+
+
 ## NEXT ELIGIBLE UNIT
 
 **NW-R01 — Flourishing Research Reconciliation**, per §XXVII.
