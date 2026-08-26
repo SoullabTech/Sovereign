@@ -57,6 +57,25 @@ export type HouseAudience = 'all' | 'founder';
 
 export type HouseGroup = 'center' | 'life' | 'work' | 'rooms' | 'utility';
 
+/**
+ * Member-facing names for the groups.
+ *
+ * The registry has always modelled 'life' as the Personal Field (becoming) and
+ * 'work' as the Contribution Field (offering). Those names lived only in code
+ * comments while the House rendered both under one "Worlds" heading. This is
+ * the single place the member-facing name is declared, so the sheet, and any
+ * future shell, cannot drift apart.
+ *
+ * 'work' is shown as "My Contribution", not "My Work": with My Practice as a
+ * sibling sphere, "work" is ambiguous between creative work and professional
+ * practice, and Wisdom does not belong under a word about producing things.
+ */
+export const HOUSE_GROUP_LABEL: Record<Exclude<HouseGroup, 'center' | 'utility'>, string> = {
+  life: 'My Life',
+  work: 'My Contribution',
+  rooms: 'Rooms',
+};
+
 export type ReturnBehavior = 'back-to-maia' | 'sheet-close' | 'web-bridge';
 
 export interface HouseDestination {

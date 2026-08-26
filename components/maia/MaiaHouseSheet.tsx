@@ -21,6 +21,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { apiUrl } from '@/lib/http/apiBase';
 import { motion, AnimatePresence } from 'framer-motion';
 import { DoorOpen, HelpCircle, User } from 'lucide-react';
 import {
@@ -31,6 +32,7 @@ import {
   type HouseDestination,
   type HouseDispatchContext,
   type HouseSheetId,
+  HOUSE_GROUP_LABEL,
 } from '@/lib/navigation/houseDestinations';
 import {
   badgeDelay,
@@ -63,6 +65,23 @@ interface MaiaHouseSheetProps {
 
 const SERIF = 'Spectral, Georgia, serif';
 
+interface Continuity {
+  continue: { sessionId: string; startedAt: string; lastActivityAt: string } | null;
+  kept: { id: string; title: string; isBreakthrough: boolean; createdAt: string }[];
+  keptTotal: number;
+}
+
+/** "Tuesday" for this week, else a date. The member's own clock, not a countdown. */
+function whenLabel(iso: string): string {
+  const then = new Date(iso);
+  if (Number.isNaN(then.getTime())) return '';
+  const days = Math.floor((Date.now() - then.getTime()) / 86_400_000);
+  if (days <= 0) return 'today';
+  if (days === 1) return 'yesterday';
+  if (days < 7) return then.toLocaleDateString(undefined, { weekday: 'long' });
+  return then.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+}
+
 export function MaiaHouseSheet({
   open,
   onClose,
@@ -74,6 +93,23 @@ export function MaiaHouseSheet({
   onOpenChanges,
 }: MaiaHouseSheetProps) {
   const router = useRouter();
+
+  // Continuity is read when the House opens, never on a timer. Failure is
+  // silent: the House opens whether or not the member's world can be read.
+  const [continuity, setContinuity] = useState<Continuity | null>(null);
+  useEffect(() => {
+    if (!open) return;
+    let cancelled = false;
+    fetch(apiUrl('/api/maia/house-continuity'), { credentials: 'include' })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (!cancelled && d?.success) {
+          setContinuity({ continue: d.continue ?? null, kept: d.kept ?? [], keptTotal: d.keptTotal ?? 0 });
+        }
+      })
+      .catch(() => { /* the House still opens */ });
+    return () => { cancelled = true; };
+  }, [open]);
 
   // Close on Escape — the House never traps you.
   useEffect(() => {
@@ -122,10 +158,13 @@ export function MaiaHouseSheet({
   const dests = getHouseDestinations(isFounder);
   const center = dests.find((d) => d.id === 'maia');
   const settings = dests.find((d) => d.id === 'settings');
-  const worlds = [
-    ...visibleInGroup(dests, 'life', isNative),
-    ...visibleInGroup(dests, 'work', isNative),
-  ];
+  // MLX-06 Unit 1 — the realm spine was always in the registry (group: 'life' |
+  // 'work', modelled as the Personal Field and the Contribution Field). It was
+  // being flattened into a single "Worlds" heading at render, so the member
+  // never saw the names. This surfaces what the data already knows; no route,
+  // no registry entry and no grouping changes.
+  const myLife = visibleInGroup(dests, 'life', isNative);
+  const myContribution = visibleInGroup(dests, 'work', isNative);
   const rooms = visibleInGroup(dests, 'rooms', isNative).filter(
     (d) => d.conditional !== 'colab' || showColab,
   );
@@ -222,6 +261,62 @@ export function MaiaHouseSheet({
             </div>
 
             <div className="px-1.5">
+              {/*
+                CONTINUITY — the member's own world, shown to the member.
+                Evidence-gated: every row renders from a fact about THIS member,
+                never from a capability. A member with nothing kept and no prior
+                conversation sees no block at all, not an empty promise.
+                Counts and questions only — the House opens doors, it does not
+                describe what is behind one (THE_HOUSE.md).
+              */}
+              {continuity && (continuity.continue || continuity.kept.length > 0) && (
+                <section className="mb-6">
+                  {continuity.continue && (
+                    <button
+                      type="button"
+                      onClick={() => { onClose(); router.push('/maia'); }}
+                      className={ROW}
+                    >
+                      <span className="min-w-0">
+                        <span className="block text-[10.5px] font-medium uppercase tracking-[0.22em] text-slate-500">
+                          Continue
+                        </span>
+                        <span className="mt-1 block text-[17px] leading-snug text-slate-100" style={{ fontFamily: SERIF }}>
+                          Your last conversation
+                        </span>
+                        <span className="mt-0.5 block text-[14px] leading-snug text-slate-500">
+                          {whenLabel(continuity.continue.lastActivityAt)}
+                        </span>
+                      </span>
+                    </button>
+                  )}
+
+                  {continuity.kept.length > 0 && (
+                    <div className="mt-2 px-4">
+                      <span className="block text-[10.5px] font-medium uppercase tracking-[0.22em] text-slate-500">
+                        Kept
+                      </span>
+                      <ul className="mt-1.5 flex flex-col gap-1">
+                        {continuity.kept.map((k) => (
+                          <li
+                            key={k.id}
+                            className="truncate text-[15px] leading-snug text-slate-300"
+                            style={{ fontFamily: SERIF }}
+                          >
+                            {k.title}
+                          </li>
+                        ))}
+                      </ul>
+                      <span className="mt-1.5 block text-[14px] leading-snug text-slate-500">
+                        {continuity.keptTotal === 1
+                          ? '1 thing you\u2019ve chosen not to lose'
+                          : `${continuity.keptTotal} things you\u2019ve chosen not to lose`}
+                      </span>
+                    </div>
+                  )}
+                </section>
+              )}
+
               {/* YOUR CENTER — where the member already is, and the way back. */}
               <section className="mb-6">
                 <GroupHeading>Your Center</GroupHeading>
@@ -243,8 +338,9 @@ export function MaiaHouseSheet({
                 </div>
               </section>
 
-              <Section title="Worlds" items={worlds} />
-              <Section title="Rooms" items={rooms} />
+              <Section title={HOUSE_GROUP_LABEL.life} items={myLife} />
+              <Section title={HOUSE_GROUP_LABEL.work} items={myContribution} />
+              <Section title={HOUSE_GROUP_LABEL.rooms} items={rooms} />
 
               {/* Below the line: the member's own account, not a place in MAIA. */}
               <div className="mx-4 mb-4 mt-1 border-t border-white/[0.07]" />
