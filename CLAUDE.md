@@ -1,5 +1,20 @@
 # MAIA-SOVEREIGN — SESSION ANCHOR (READ FIRST)
 
+## ⚠️ Writer's Studio work — read these three first
+
+Before touching Writer's Studio, read in this order:
+
+1. `docs/programme/WRITERS_STUDIO_EXECUTION_DIRECTIVE.md` — **owns the current
+   sequence**: the one integration lane, the current SHA, what is next.
+2. `docs/programme/WRITERS_STUDIO_MASTER_BRIEF.md` — product constitution.
+3. `docs/programme/WRITERS_STUDIO_PROGRAMME_BOARD.md` — observed state.
+
+Do not reconstruct the programme from conversation history. Do not open a
+competing implementation lane. The "Current priority thread" below is the
+MAIA-runtime thread and is **not** the Writer's Studio state — a Studio session
+that plans from it will plan from a stale era.
+
+
 ## What this project is
 
 MAIA-SOVEREIGN is a self-hosted, sovereign consciousness companion. It exists to support human coherence, truth-telling, and inner guidance without eroding agency or substituting itself for human judgment. It is not a generic chatbot, assistant, or authority. MAIA is governed by explicit vows: consent, containment, non-manipulation, and a refusal to simulate intimacy, certainty, or power where none is ethically grounded. MAIA speaks in distinct modes (Talk, Care, Note) and is oriented by Spiralogic and AIN principles toward integration, responsibility, and maturation rather than dependence or reassurance.
@@ -24,7 +39,7 @@ AIN is the broader ontological and architectural framework: a view of intelligen
 - **Sovereign API surface**: `app/api/sovereign/*` and related routes
 - **iOS / Capacitor pipeline**: `scripts/capacitor-patch-routes.sh`, `scripts/build-ios.sh`, `ios/*`
 - **Deployment & ops**: `docker-compose.production.yml`, `Caddyfile`, `scripts/deploy-production.sh`
-- **Writer's Studio programme**: `docs/programme/WRITERS_STUDIO_MASTER_BRIEF.md` — **read this before touching any Writer's Studio / Author Studio / Writer Canvas / Press surface.** Founder-directed programme brief (2026-08-24). Sessions execute *only* the currently authorized unit (WS-01 … WS-07). The Canvas implementation lane is under a **binding freeze**; the acceptance walk is frozen at `docs/product/WRITERS_STUDIO_PHASE_1_WALK_SPECIFICATION.md` v1.0 and its precondition **P0 Source Custody currently FAILS**.
+- **Writer's Studio programme**: start at `docs/programme/WRITERS_STUDIO_EXECUTION_DIRECTIVE.md` (current sequence, current SHA, the one integration lane), then `WRITERS_STUDIO_MASTER_BRIEF.md` (product constitution) and `WRITERS_STUDIO_PROGRAMME_BOARD.md` (observed state). **Read all three before touching any Writer's Studio / Author Studio / Writer Canvas / Press surface.** The acceptance walk is frozen at `docs/product/WRITERS_STUDIO_PHASE_1_WALK_SPECIFICATION.md` v1.1; P0-M passes and the P0-D file-backed leg passed on the deployed candidate — the pasted leg is outstanding, which is what still holds the production deploy. **Building on the integration lane is open; deploying is not.** Do not plan from this line alone: the directive is the current state.
 - **Canon**: `docs/canon/MAIA_CANON_v1.1.md`
 - **Oath**: `docs/canon/MAIA_OATH.md` — the irreducible standard
 - **Sovereignty Invariants**: `docs/canon/MAIA_SOVEREIGNTY_INVARIANTS.md` — relational constitution (constraints on relational power when the system works well enough that people start relating to it)

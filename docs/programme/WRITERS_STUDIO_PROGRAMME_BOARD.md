@@ -3,6 +3,7 @@
 > **The one live cockpit. Live operational state only — not a constitution, not a roadmap.**
 >
 > ```text
+> CURRENT SEQUENCE      docs/programme/WRITERS_STUDIO_EXECUTION_DIRECTIVE.md
 > NORMATIVE AUTHORITY   docs/programme/WRITERS_STUDIO_MASTER_BRIEF.md
 > CAPABILITY SPEC       docs/programme/DEVELOPMENTAL_EDITOR_CAPABILITY.md
 > UNIT DEFINITION       docs/programme/WS-01_SOURCE_CUSTODY_UNIT_DEFINITION.md
@@ -10,9 +11,10 @@
 > HISTORICAL EVIDENCE   docs/design/author-studio/WRITERS_STUDIO_MEMBER_UPGRADE_PROGRAMME_LEDGER.md
 > ```
 >
-> The **Master Brief** governs meaning, architecture, invariants and unit identity. This board
-> records **current execution state only**. Where they conflict, the Master Brief and duly
-> ratified unit/specification artifacts govern.
+> The **Master Brief** governs meaning, architecture, invariants and unit identity. The
+> **Execution Directive** owns what is being built now and in what order. This board records
+> **current execution state only**. Where they conflict, the Master Brief and duly ratified
+> unit/specification artifacts govern meaning; the Execution Directive governs sequence.
 >
 > There is **exactly one live cockpit**. The former `WRITERS_STUDIO_BUILD_GRAPH.md` was folded
 > into this file and removed — two cockpits diverge, and the divergence is invisible until it
@@ -25,15 +27,36 @@
 
 ```text
 PROGRAMME          WRITER'S STUDIO R2
-MODE               WS-01 ACCEPTANCE
-BUILD MODE         CLOSED — Canvas / Phase 1 freeze BINDING
-BOUND CANONICAL    7f0dae9484a93a2146680e11a226111081bf4982
+MODE               WS-01 ACCEPTANCE  ·  BUILD MODE OPEN on the visible Studio
+BUILD MODE         OPEN — building on the integration lane; DEPLOY still held
+BOUND CANONICAL    644d4f2c56d5a4683e9fa2017d84f76e2a4adf3a
 CURRENT UNIT       WS-01 Source Custody + Freeze Release
-CURRENT CANDIDATE  4a551d3d13a27ec442252be7822865e0f2d31978
-                   feature/ws-01-source-custody-v3  ·  PINNED / DEPLOYED
-NEXT EXECUTABLE    P0-D
-LAST UPDATED       2026-08-25
+CURRENT CANDIDATE  83efa86df  ·  DEPLOYED  ·  GIT_COMMIT verified
+INTEGRATION LANE   claude/writers-studio-organization-wxpb7q
+                   fcf54c5cb  ·  BUILT, NOT DEPLOYED
+NEXT EXECUTABLE    P0-D pasted arrival  →  WS-01 acceptance  →  ship the lane
+LAST UPDATED       2026-08-26
 ```
+
+### What changed since the previous board
+
+The freeze was a freeze on **the WS-01 candidate and on deploying**, not on
+building. Four units have been built on the single integration lane and none of
+them is deployed:
+
+| Unit | Was | Now |
+|---|---|---|
+| MAIA in the room | ABSENT member-facing | **BUILT** — real endpoint on the existing provider path, durable per-room thread, Sanctuary-aware |
+| Materials surface | PARTIAL substrate / weak surface | **BUILT** — open in the rail with counts, no longer behind a vertical label |
+| Structure map | PARTIAL | **BUILT** — real manuscript map, chapter doors narrow the writing frame |
+| Developmental Editor | DESIGNED, not member-facing | **BUILT (DE-01/DE-01A)** — five lenses, evidence-gated findings, frozen snapshot, writer dispositions |
+| Global find | built | **BUILT + surfaced**, with safe replace over shown hits only |
+| Versions | keep only | **BUILT** — keep, compare (line diff), restore |
+| Manuscript naming | absent | **BUILT** — the writer names their own book |
+
+⚠️ **BUILT is not DELIVERED.** Every row above is unreachable by any member
+until WS-01 accepts and the lane ships. Do not read this table as capability in
+production.
 
 Writer's Studio mode reflects **this programme only**. Unrelated Jarvis incidents may sit ahead of
 it in the global work queue without becoming Writer's Studio state.
