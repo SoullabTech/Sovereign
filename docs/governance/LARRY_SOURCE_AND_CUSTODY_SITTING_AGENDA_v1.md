@@ -145,6 +145,57 @@ Rationale: a client's experience is not Larry's to license. Only Larry teaching 
 
 ---
 
+## 4b. Scope, Boundaries, and Referral — "Where does your work end?"
+
+**Added 2026-08-26 (founder-authorized, from NW-D01-F5).** This section did not exist. Larry's
+professional scope, credentials, referral practice and obligations are **absent from the entire
+corpus** — no document in `docs/fields/larry/`, `docs/governance/`, or `docs/reviews/` addresses
+them, and sections 1–4 above do not ask.
+
+**Why it is load-bearing, not administrative.** Three open items downstream cannot close without
+it:
+- **NW-S01's imminent-danger exception** — the qualified clinical/legal review cannot determine
+  what duties attach without knowing Larry's professional standing.
+- **NW-R02-C2** — ICF makes referral an ethical obligation and the environment has no referral
+  capability; we do not know whether Larry holds an ICF credential, another, or none, so we do not
+  know which obligations are actually in force.
+- **The handoff boundary** — statable in principle, unpopulatable in practice, until his side of
+  it is known.
+
+⛔ **Ask, do not propose.** Do not read him a list of professional standards and ask him to
+confirm one; that is the leading-instrument error that compromised the Charter Workbook's domain
+answers (§0 of the Attachment A instrument). Capture his own language for where his work ends.
+
+- What is inside your coaching role?
+- What is outside it?
+- When someone brings you something beyond your remit, what do you actually do?
+- What professional credentials or standards govern your practice?
+- When do you refer? What tells you it is time?
+- Who do you refer to? Do you have people you send someone to?
+- What obligations do you carry that a client might not know about?
+- Has this come up? What happened? *(the generalized pattern only — never the case)*
+- **What do you want MAIA to do in those moments — and what do you want it never to do?**
+
+**The last question is the one this whole section exists for.** It is the only place in the
+programme where the practitioner gets to say what the software should do at the edge of his
+practice, and it should be asked in his words and recorded in them.
+
+**Capture discipline** — as §4:
+
+| Capture | Do not capture |
+|---|---|
+| his stated scope and its edges | any identifiable client story |
+| his referral practice as a practice | who he referred and when |
+| the credential or standard he names | our inference about what it requires |
+| his own words for what MAIA should do | our translation of them into policy |
+
+**Standing constraint (founder ruling, 2026-08-26)**: *Larry's duties are not automatically
+MAIA's duties.* Where he has a professional duty, the platform must **not obstruct it, not perform
+it, and not pretend to discharge it.** This section establishes what his duties are; it does not
+transfer them to the software.
+
+---
+
 ## 5. Attachment A completion sequence
 
 Run per item, in this order. An item with any unanswered field stays out.
