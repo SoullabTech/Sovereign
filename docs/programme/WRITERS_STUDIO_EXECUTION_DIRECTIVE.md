@@ -35,7 +35,7 @@ enters the other. Nothing crosses that line implicitly.
 ```text
 INTEGRATION BRANCH   claude/writers-studio-organization-wxpb7q
 LIVE BRANCH TIP      RESOLVE FROM GIT — never cached here
-PRODUCT CODE TIP     18498204f   ← last commit that changed product code
+PRODUCT CODE TIP     8d1c3bd0f   ← last commit that changed product code
 CANONICAL            644d4f2c5
 ```
 
@@ -139,15 +139,15 @@ importance, and importance is the writer's to assign.
 | 4 | **VERSIONS-01** — keep, compare, restore | built, undeployed |
 | 5 | **SHIP** — reconcile the lane to canonical, deploy, founder witness | waiting on 0 |
 | 6 | **GATHER-02** — documents, notes, transcripts, recordings, images, links, prior drafts, with provenance visible | built, undeployed |
-| 7 | **DE-02** — form-sensitive lenses, persistent findings, incremental re-analysis, cross-section synthesis | next to build |
-| 8 | **READER-01** — simulated reader lenses, labelled as perspective, never as human truth | |
+| 7 | **DE-02** — form-sensitive lenses, finding lineage, incremental re-analysis, material-aware reading | built, undeployed |
+| 8 | **READER-01** — simulated reader lenses, labelled as perspective, never as human truth | next to build |
 | 9 | **STRUCTURE-02** — member-defined structure, movement and threads, no universal chapter ontology | |
 | 10 | **MEMORY** — source → material → observation → recognition → decision → adopted change, inspectable end to end | |
 | 11 | **SAFE EDIT** — explicit request only: snapshot → proposal → diff → accept or reject | |
 | 12 | **EXPRESSION** — book → lecture, course, essay, audio. Genuine re-expression, not format conversion | |
 | 13 | **AUTHOR'S STUDIO HANDOFF** — the writer declares the manuscript ready | |
 
-Units 1–4 and 6 are **built and unshipped**. Merged code is not delivered. Until a
+Units 1–4, 6 and 7 are **built and unshipped**. Merged code is not delivered. Until a
 member can reach it in production, the state is *built*, not *done*.
 
 ## For every unit
