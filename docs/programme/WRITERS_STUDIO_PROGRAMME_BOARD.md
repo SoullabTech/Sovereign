@@ -140,7 +140,7 @@ unbuilt while the unit list reads complete. They create no WS-08+.
 
 | Node | State | Evidence / next |
 |---|---|---|
-| WS-01 Source Custody | **IN ACCEPTANCE** | pinned candidate `83efa86df` (v4; supersedes `4a551d3d1` as pin, which supersedes `e92f53239`). **P0-M re-run PASS on the v4 tree** `3d0a7116653c` — 28/28 witness controls + 23/23 unit tests, real PostgreSQL 16, real vault, real migration applied twice for idempotency. **P0-D never run**. ⚠️ `lib/manuscript/source/**` **is now on canonical** — imported by #1096 ahead of acceptance, byte-identical across all 10 files. Re-censused at `7531a9290` |
+| WS-01 Source Custody | **IN ACCEPTANCE** | pinned candidate `83efa86df` (v4; supersedes `4a551d3d1` as pin, which supersedes `e92f53239`). **P0-M re-run PASS on the v4 tree** `3d0a7116653c` — **27/27 witness controls** + 23/23 unit tests, real PostgreSQL 16.13, real vault. Migration idempotency proved **separately** — second application clean — which is evidence *around* the witness, **not** a 28th emitted witness control (the script emits 27; re-run to settle it). **P0-D never run**. ⚠️ `lib/manuscript/source/**` **is now on canonical** — imported by #1096 ahead of acceptance, byte-identical across all 10 files. Re-censused at `7531a9290` |
 | Restore floor | **IN ACCEPTANCE** | required by frozen walk act **H**; rides with WS-01 |
 | Work Structure | **BLOCKED** | by WS-01. Contract ruled (Phase 3A); member-declared, no chapter schema |
 | #995 Harvest | **BLOCKED** | by Canvas freeze |
