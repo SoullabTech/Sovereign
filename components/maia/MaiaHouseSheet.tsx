@@ -66,7 +66,7 @@ interface MaiaHouseSheetProps {
 const SERIF = 'Spectral, Georgia, serif';
 
 interface Continuity {
-  continue: { sessionId: string; startedAt: string; lastActivityAt: string } | null;
+  continue: { sessionId: string; startedAt: string; lastActivityAt: string; exchanges: number } | null;
   kept: { id: string; title: string; isBreakthrough: boolean; createdAt: string }[];
   keptTotal: number;
 }
@@ -286,13 +286,19 @@ export function MaiaHouseSheet({
                         </span>
                         <span className="mt-0.5 block text-[14px] leading-snug text-slate-500">
                           {whenLabel(continuity.continue.lastActivityAt)}
+                          {continuity.continue.exchanges > 0 &&
+                            ` \u00b7 ${continuity.continue.exchanges} exchange${continuity.continue.exchanges === 1 ? '' : 's'}`}
                         </span>
                       </span>
                     </button>
                   )}
 
                   {continuity.kept.length > 0 && (
-                    <div className="mt-2 px-4">
+                    <button
+                      type="button"
+                      onClick={() => { onClose(); router.push('/maia/keep-capture'); }}
+                      className="mt-2 block w-full rounded-2xl px-4 py-2 text-left transition-colors hover:bg-white/[0.04] focus-visible:bg-white/[0.06] focus-visible:outline-none"
+                    >
                       <span className="block text-[10.5px] font-medium uppercase tracking-[0.22em] text-slate-500">
                         Kept
                       </span>
@@ -312,7 +318,7 @@ export function MaiaHouseSheet({
                           ? '1 thing you\u2019ve chosen not to lose'
                           : `${continuity.keptTotal} things you\u2019ve chosen not to lose`}
                       </span>
-                    </div>
+                    </button>
                   )}
                 </section>
               )}

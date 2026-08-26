@@ -99,17 +99,69 @@ describe('evidence gating', () => {
 
   it('returns the member’s own titles verbatim when they exist', async () => {
     mockQuery
-      .mockResolvedValueOnce({ rows: [{ id: 's1', started_at: 'A', last_activity_at: 'B' }] } as any)
+      .mockResolvedValueOnce({
+        rows: [{ id: 's1', started_at: 'A', last_activity_at: 'B', message_count: 12 }],
+      } as any)
       .mockResolvedValueOnce({
         rows: [{ id: 'a1', title: 'the moment it turns', is_breakthrough: true, created_at: 'C' }],
       } as any)
       .mockResolvedValueOnce({ rows: [{ n: 7 }] } as any);
     const body = await (await GET()).json();
-    expect(body.continue).toEqual({ sessionId: 's1', startedAt: 'A', lastActivityAt: 'B' });
+    expect(body.continue).toEqual({
+      sessionId: 's1',
+      startedAt: 'A',
+      lastActivityAt: 'B',
+      exchanges: 12,
+    });
     expect(body.kept).toEqual([
       { id: 'a1', title: 'the moment it turns', isBreakthrough: true, createdAt: 'C' },
     ]);
     expect(body.keptTotal).toBe(7);
+  });
+});
+
+/**
+ * MLX-06 Unit 5. Continue must be re-enterable, not a history row. The only
+ * fact about the conversation this endpoint is willing to carry is how much of
+ * it there is — a count the member can check against their own memory. It is
+ * never a summary, a topic, a mood, or a characterization.
+ */
+describe('Unit 5 — Continue carries a count, never a characterization', () => {
+  it('selects message_count at the wire', async () => {
+    await GET();
+    const sessionQuery = sql().find((s) => s.includes('maia_sessions'))!;
+    expect(sessionQuery).toMatch(/message_count/);
+  });
+
+  it('reports the exchange count the session itself recorded', async () => {
+    mockQuery.mockResolvedValueOnce({
+      rows: [{ id: 's1', started_at: 'A', last_activity_at: 'B', message_count: 3 }],
+    } as any);
+    const body = await (await GET()).json();
+    expect(body.continue.exchanges).toBe(3);
+  });
+
+  it('reports zero rather than guessing when the session never counted', async () => {
+    mockQuery.mockResolvedValueOnce({
+      rows: [{ id: 's1', started_at: 'A', last_activity_at: 'B', message_count: null }],
+    } as any);
+    const body = await (await GET()).json();
+    expect(body.continue.exchanges).toBe(0);
+  });
+
+  it('carries no summary, topic, mood or title of the conversation', async () => {
+    mockQuery.mockResolvedValueOnce({
+      rows: [{ id: 's1', started_at: 'A', last_activity_at: 'B', message_count: 3 }],
+    } as any);
+    const body = await (await GET()).json();
+    expect(Object.keys(body.continue).sort()).toEqual([
+      'exchanges',
+      'lastActivityAt',
+      'sessionId',
+      'startedAt',
+    ]);
+    const sessionQuery = sql().find((s) => s.includes('maia_sessions'))!;
+    expect(sessionQuery).not.toMatch(/summary|topic|mood|sentiment|title/i);
   });
 });
 

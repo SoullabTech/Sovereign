@@ -43,7 +43,13 @@ export const dynamic = 'force-dynamic';
 
 export interface HouseContinuity {
   /** The single most recent non-sanctuary conversation, if one exists. */
-  continue: { sessionId: string; startedAt: string; lastActivityAt: string } | null;
+  continue: {
+    sessionId: string;
+    startedAt: string;
+    lastActivityAt: string;
+    /** Turns exchanged. A count, never a characterization of the conversation. */
+    exchanges: number;
+  } | null;
   /** What the member deliberately kept. Titles only — their own words. */
   kept: { id: string; title: string; isBreakthrough: boolean; createdAt: string }[];
   /** Total active personal atoms, for "3 things you've chosen not to lose". */
@@ -62,7 +68,7 @@ export async function GET() {
 
     const [sessionR, atomR, countR] = await Promise.all([
       query(
-        `SELECT id, started_at, last_activity_at
+        `SELECT id, started_at, last_activity_at, message_count
            FROM maia_sessions
           WHERE member_id = $1
             AND privacy_mode <> 'sanctuary'
@@ -93,7 +99,12 @@ export async function GET() {
     const s = sessionR.rows[0];
     const payload: HouseContinuity = {
       continue: s
-        ? { sessionId: String(s.id), startedAt: String(s.started_at), lastActivityAt: String(s.last_activity_at) }
+        ? {
+            sessionId: String(s.id),
+            startedAt: String(s.started_at),
+            lastActivityAt: String(s.last_activity_at),
+            exchanges: Number(s.message_count ?? 0),
+          }
         : null,
       kept: atomR.rows.map((r) => ({
         id: String(r.id),
