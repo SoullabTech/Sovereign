@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { apiFetch } from '@/lib/http/apiBase';
 import { PRESS, SERIF } from '../pressTheme';
@@ -18,6 +18,8 @@ import Worktable from './Worktable';
 import WorkDrawer from './WorkDrawer';
 import MaterialsDrawer from './MaterialsDrawer';
 import Companion from './Companion';
+import StructureRail from './StructureRail';
+import type { DeclaredPart, DraftMap } from './manuscriptMap';
 
 /**
  * Writer Canvas — the room.
@@ -222,6 +224,52 @@ export default function WriterCanvasPage() {
     revisionCount: number | null;
   } | null>(null);
 
+  // ---- Structure: the member's carried cuts ------------------------------
+  // Read once per manuscript, from the immutable Source. These are the parts
+  // the member confirmed at the import threshold — the system proposes none.
+  // The rail's live ranges come from the table (which holds the text); this
+  // read only supplies identity, order, and the member's own heading words.
+  const [parts, setParts] = useState<DeclaredPart[]>([]);
+  const [draftMap, setDraftMap] = useState<DraftMap | null>(null);
+  const [focusKey, setFocusKey] = useState<string | null>(null);
+  const manuscriptId = manuscript?.id ?? null;
+
+  useEffect(() => {
+    if (!manuscriptId) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await apiFetch(`/api/sovereign/manuscripts/${manuscriptId}`, { method: 'GET' });
+        if (cancelled || !res.ok) return;
+        const data = await res.json();
+        const rows: DeclaredPart[] = Array.isArray(data.sections)
+          ? data.sections.map((sec: { id: string; position: number; heading: string | null }) => ({
+              id: sec.id,
+              position: sec.position,
+              heading: sec.heading,
+            }))
+          : [];
+        if (!cancelled) setParts(rows);
+      } catch {
+        // The rail is an aid, not the work. A failed read leaves the whole
+        // manuscript on the table exactly as before — never an error page over
+        // a draft that loaded fine.
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [manuscriptId]);
+
+  // The frame belongs to the manuscript it was opened in.
+  useEffect(() => {
+    setFocusKey(null);
+    setDraftMap(null);
+  }, [manuscriptId]);
+
+  const handleMap = useCallback((m: DraftMap) => setDraftMap(m), []);
+  const handleFocusKey = useCallback((key: string | null) => setFocusKey(key), []);
+
   // Kept versions — read once the table is known, re-read after a keep.
   const [revisions, setRevisions] = useState<RevisionSummary[] | null>(null);
   const [historyKey, setHistoryKey] = useState(0);
@@ -340,17 +388,20 @@ export default function WriterCanvasPage() {
     </>
   );
 
+  /* The rail (S1): a map of the MANUSCRIPT, said so in its own header, never a
+     map of the Work. Doors narrow the table's frame; they do not move, split,
+     or rewrite anything. Open by default now — a member should not have to
+     click a vertical label to discover their book has chapters. */
   const structurePanel = manuscript && manuscript.sectionCount > 1 && (
-    <RailSection label="Structure" count={manuscript.sectionCount} defaultOpen={false}>
-      <p className="text-[12.5px] leading-relaxed opacity-65 mb-2.5">
-        {manuscript.sectionCount} sections, carried in with your import.
-      </p>
-      <Link
-        href={byIdentity(SOURCE_HREF, manuscript.id)}
-        className="text-[12.5px] underline underline-offset-4 opacity-60 hover:opacity-90"
-      >
-        Read them in the Source
-      </Link>
+    <RailSection label="Structure" count={manuscript.sectionCount}>
+      <StructureRail
+        expressionLabel={`${manuscriptLabel} — manuscript`}
+        parts={parts}
+        map={draftMap}
+        focusKey={focusKey}
+        onFocusKey={handleFocusKey}
+        sourceHref={byIdentity(SOURCE_HREF, manuscript.id)}
+      />
     </RailSection>
   );
 
@@ -478,6 +529,10 @@ export default function WriterCanvasPage() {
           {manuscript && (
             <Worktable
               manuscriptId={manuscript.id}
+              parts={parts}
+              focusKey={focusKey}
+              onMap={handleMap}
+              onFocusKey={handleFocusKey}
               onMeta={setDraftMeta}
               onCheckpointed={() => setHistoryKey((k) => k + 1)}
             />
