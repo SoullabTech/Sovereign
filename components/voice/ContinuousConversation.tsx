@@ -22,6 +22,13 @@ import {
 } from '@/lib/voice/micLiveness';
 import { getContinuityBuffer } from '@/lib/voice/conversationContinuityBuffer';
 import {
+  TURN_COMPLETE_RECOVERABLE,
+  shouldNormalizeToIdle,
+  restartPolicy,
+  staleLatchesToClearForTap,
+  type RestartSourceName,
+} from '@/lib/voice/restartAuthority';
+import {
   readTailSnapshot,
   measureTailOverlap,
   shouldEmitThrottled,
@@ -32,9 +39,18 @@ import {
 // =============================================================================
 // 🎙️ VOICE STATE MACHINE — Single authority for mic lifecycle
 // =============================================================================
-// Rule: ONLY requestRestart() can move from IDLE → ARMING → LISTENING.
-// Everything else (OracleConversation, StreamingVoice, etc.) emits events
-// that ContinuousConversation processes. No external code touches mic directly.
+// Rule: ONLY requestRestart() may INITIATE a new listening cycle. Every re-arm
+// path — user tap, maia_stopped_speaking, recognition_stopped, interruption_end,
+// foreground_resume — routes through it; it normalizes stale turn-complete state,
+// applies the HANDS_FREE/PUSH_TO_TALK policy once, and delegates to the
+// startListening lifecycle. Direct NativeSpeechRecognition.start() /
+// recognition.start() calls are permitted ONLY inside that lifecycle
+// (ensureFreshAndStart, startListening), never in orchestration or effects.
+//
+// This rule was false from the first commit until the P0 of 2026-08-26: the name
+// `requestRestart` appeared exactly once — in this comment — while five call
+// sites started recognition directly. It is now enforced by the code below and
+// by __tests__/restartAuthority.test.ts.
 
 export type ListeningMode = 'PUSH_TO_TALK' | 'HANDS_FREE' | 'OFF';
 
@@ -124,6 +140,31 @@ function authorityGuard(args: {
   console.log('🛡️ [AUTHORITY] ALLOWED', JSON.stringify({ ...snapshot, decision: 'allowed', block_reason: null }));
   return { allowed: true };
 }
+
+/**
+ * States a turn can legitimately END in, from which the mic must be recoverable.
+ *
+ * THE P0 THIS ENCODES. `authorityGuard` refuses every restart unless micState is
+ * IDLE or ERROR. Before this fix the post-TTS handler returned the mic to IDLE
+ * only from PLAYING_TTS:
+ *
+ *     if (micStateRef.current === 'PLAYING_TTS') setMicState('IDLE', ...)
+ *
+ * So a turn that ended in SUBMITTING or WAITING_FOR_TTS — MAIA answered from a
+ * path that never passed through PLAYING_TTS, or the TTS state was cleared by
+ * another handler first — left micState pinned at a value the guard rejects.
+ * Every subsequent restart was then blocked with `mic_state_SUBMITTING`,
+ * including an explicit user tap. That is "MAIA is dead after one round", on
+ * both PWA and iOS, and no amount of tapping recovers it.
+ *
+ * Normalization is therefore keyed on the SET of turn-complete states, not on
+ * one privileged predecessor. LISTENING and CAPTURING are deliberately absent:
+ * those mean capture is live and must never be stomped.
+ */
+// (the set itself now lives in lib/voice/restartAuthority.ts so it is testable)
+
+/** Sources permitted to request a new listening cycle. */
+export type RestartSource = RestartSourceName;
 
 export interface ContinuousConversationProps {
   onTranscript: (text: string) => void;
@@ -275,6 +316,9 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
   const micStateRef = useRef<MicState>('IDLE');
   const listeningModeRef = useRef<ListeningMode>('HANDS_FREE');
   const restartInFlightRef = useRef(false); // True while a restart setTimeout is pending
+  const restartRequestInFlightRef = useRef(false); // True while requestRestart() is deciding/starting
+  // Forward refs: the post-TTS effects run above where these are defined.
+  const normalizeTurnCompleteStateFnRef = useRef<(source: string) => void>();
   const backoffStepRef = useRef(0); // Current exponential backoff step (0 = no backoff)
   const recognitionActiveRef = useRef(false); // True between .start() and .onend — prevents double-start InvalidStateError
 
@@ -1720,11 +1764,16 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
       }
       // Track audio end for conversation-alive gate
       lastAudioEndAtRef.current = Date.now();
-      if (micStateRef.current === 'PLAYING_TTS') {
-        setMicState('IDLE', 'maia_stopped_speaking');
-        // Reset backoff when MAIA finishes a new turn — fresh set of attempts
-        backoffStepRef.current = 0;
-      }
+      // P0: normalize ANY recoverable turn-complete state, not only PLAYING_TTS.
+      // Keying this on one privileged predecessor is what pinned micState at
+      // SUBMITTING/WAITING_FOR_TTS and made every later restart — including a
+      // user tap — fail the authority guard for the rest of the session.
+      normalizeTurnCompleteStateFnRef.current?.('maia_stopped_speaking');
+      // Reset backoff when MAIA finishes a new turn — fresh set of attempts
+      backoffStepRef.current = 0;
+      // Continuation is decided in ONE place. In PUSH_TO_TALK requestRestart
+      // declines and waits for the tap; in HANDS_FREE it re-arms.
+      void requestRestartFnRef.current?.('maia_stopped_speaking');
     }
   }, [isSpeaking]);
 
@@ -1752,23 +1801,16 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
 
       console.log('🔄 [Native] MAIA stopped speaking - hands-free + recent speech, auto-restarting in 800ms...');
 
-      const restartTimer = setTimeout(async () => {
-        if (wantsContinuousConversationRef.current && handsFreeActiveRef.current && !isSpeakingRef.current && !isProcessingRef.current && nativeStatusRef.current !== 'started') {
-          try {
-            console.log('🎙️ [Native] Auto-restarting after MAIA speech (hands-free)...');
-            await NativeSpeechRecognition.start({
-              language: 'en-US',
-              maxResults: 3,
-              partialResults: true,
-              popup: false
-            });
-            console.log('✅ [Native] Auto-restart after speech successful');
-          } catch (e: any) {
-            console.warn('⚠️ [Native] Auto-restart failed:', e?.message || e);
-          }
-        } else {
-          console.log('🚫 [Native] Conditions changed or already started, skipping auto-restart');
+      const restartTimer = setTimeout(() => {
+        // P0: was a direct NativeSpeechRecognition.start() with its own private
+        // five-condition predicate — one of two re-arm gates that disagreed with
+        // each other and with the guard. It now asks the single authority, which
+        // re-reads state at call time and logs one canonical allowed/blocked line.
+        if (nativeStatusRef.current === 'started') {
+          console.log('🚫 [Native] Native recognition already started, skipping restart request');
+          return;
         }
+        void requestRestartFnRef.current?.('maia_stopped_speaking');
       }, 800);
 
       return () => clearTimeout(restartTimer);
@@ -2848,12 +2890,13 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
                       }, 3000);
 
                       console.log('🎙️ [Native] Restarting speech recognition (hands-free)...');
-                      await NativeSpeechRecognition.start({
-                        language: 'en-US',
-                        maxResults: 3,
-                        partialResults: true,
-                        popup: false
-                      });
+                      // P0: the second of the two competing re-arm paths. The
+                      // backoff, watchdog and restartGuard above have already made
+                      // the policy decision, so this delegates the START itself to
+                      // the single authority rather than reaching for the plugin —
+                      // forceOverride because re-running the guard here would now
+                      // see the restartInFlight this very block just set.
+                      await requestRestartFnRef.current?.('recognition_stopped', { forceOverride: true });
                       // start() resolved. That means the call was accepted, not
                       // that the microphone is live. State stays ARMING until
                       // the native event confirms it; the watchdog above is what
@@ -3129,6 +3172,107 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     }
   }, [initializeSpeechRecognition, initializeAudioMonitoring, onTranscript, onInterimTranscript, onRecordingStateChange, addDebug, ensureNativeSpeechReady]);
 
+  // ═══════════════════════════════════════════════════════════════════════
+  // 🎙️ requestRestart — THE single authority for TURN_COMPLETE → NEXT_LISTEN
+  // ═══════════════════════════════════════════════════════════════════════
+  // The file has declared since its first commit that "ONLY requestRestart()
+  // can move from IDLE → ARMING → LISTENING". That function did not exist: the
+  // name appeared exactly once, in the comment asserting the rule. Meanwhile
+  // five call sites started recognition directly, and two re-arm paths each
+  // decided "continue" from a DIFFERENT five-condition predicate. The invariant
+  // was documentation, enforced by nothing.
+  //
+  // This is that function. It does not talk to any recognition API itself —
+  // it decides, then delegates to the existing startListening lifecycle, so
+  // there remains exactly one place that touches the browser/native objects.
+
+  /**
+   * Return a stale turn-complete state to IDLE so the authority guard can admit
+   * a restart. Never disturbs live capture.
+   */
+  const normalizeTurnCompleteState = useCallback((source: string): void => {
+    const current = micStateRef.current;
+    if (!shouldNormalizeToIdle(current, isStartingRef.current)) return;
+    setMicState('IDLE', `normalize:${source}:from_${current}`);
+  }, [setMicState]);
+
+  const requestRestart = useCallback(async (
+    source: RestartSource,
+    opts?: { forceOverride?: boolean },
+  ): Promise<void> => {
+    const isUserTap = source === 'user_tap';
+
+    // Re-entrancy. One restart at a time, whatever asked for it.
+    if (restartRequestInFlightRef.current) {
+      console.log('🎙️ [RESTART] BLOCKED', JSON.stringify({ source, reason: 'request_in_flight' }));
+      return;
+    }
+
+    // An explicit gesture outranks continuation bookkeeping. Latches that
+    // survived a previous turn must not silently swallow a tap — that is the
+    // difference between "push-to-talk by design" and "the button is dead".
+    if (isUserTap) {
+      for (const latch of staleLatchesToClearForTap({
+        restartInFlight: restartInFlightRef.current,
+        isStarting: isStartingRef.current,
+        micState: micStateRef.current,
+      })) {
+        console.log(`🎙️ [RESTART] clearing stale ${latch} for user_tap`);
+        if (latch === 'restartInFlight') restartInFlightRef.current = false;
+        else isStartingRef.current = false;
+      }
+    }
+
+    // THE FIX. Normalize before the guard reads micState, so a turn that ended
+    // in SUBMITTING/WAITING_FOR_TTS is recoverable instead of permanently
+    // rejected as `mic_state_SUBMITTING`.
+    normalizeTurnCompleteState(source);
+
+    const policy = restartPolicy({
+      source,
+      handsFree: handsFreeActiveRef.current,
+      isSpeaking: isSpeakingRef.current,
+      isProcessing: isProcessingRef.current,
+      requestInFlight: false, // re-entrancy already handled above
+      forceOverride: opts?.forceOverride,
+    });
+    if (!policy.allowed) {
+      console.log('🎙️ [RESTART] BLOCKED', JSON.stringify({ source, reason: policy.reason }));
+      return;
+    }
+
+    const guard = authorityGuard({
+      source,
+      micState: micStateRef.current,
+      listeningMode: listeningModeRef.current,
+      restartInFlight: restartInFlightRef.current,
+      lastSpeechAt: lastSpeechHeardAtRef.current,
+      backoffStep: backoffStepRef.current,
+      isProcessing: isProcessingRef.current,
+    });
+    if (!guard.allowed && !opts?.forceOverride) {
+      console.log('🎙️ [RESTART] BLOCKED', JSON.stringify({ source, reason: guard.reason }));
+      return;
+    }
+
+    restartRequestInFlightRef.current = true;
+    console.log('🎙️ [RESTART] ALLOWED', JSON.stringify({ source, mic: micStateRef.current }));
+    try {
+      // The authority decision was made HERE, so the lifecycle is invoked with
+      // forceOverride: re-running the same guard inside startListening would
+      // now see restartInFlight and refuse the restart this function authorized.
+      await startListeningFnRef.current?.({ forceOverride: true });
+    } catch (e: any) {
+      console.warn('🎙️ [RESTART] startListening threw:', e?.message || e);
+    } finally {
+      restartRequestInFlightRef.current = false;
+    }
+  }, [normalizeTurnCompleteState]);
+
+  const requestRestartFnRef = useRef<(s: RestartSource, o?: { forceOverride?: boolean }) => void>();
+  requestRestartFnRef.current = requestRestart;
+  normalizeTurnCompleteStateFnRef.current = normalizeTurnCompleteState;
+
   // Stop listening
   // 🔥 FIX: userExitMode flag indicates user explicitly tapped holoflower to stop
   // When true, we clear wantsContinuousConversationRef so auto-restart won't trigger
@@ -3281,7 +3425,11 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
       stopListening();
     } else {
       console.log('▶️ [ContinuousConversation] Starting listening');
-      startListening();
+      // P0: an explicit gesture goes through the authority, which clears stale
+      // latches first. Previously a tap called startListening() directly and was
+      // silently refused by authorityGuard whenever micState was still pinned at
+      // a turn-complete value — the "tapping does nothing" half of the incident.
+      void requestRestartFnRef.current?.('user_tap');
     }
   }, [startListening, stopListening]);
 
@@ -3346,7 +3494,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
       setMicState('IDLE', 'ios_interruption_end');
       setTimeout(() => {
         if (micStateRef.current === 'IDLE' && !isSpeakingRef.current) {
-          startListeningFnRef.current?.();
+          void requestRestartFnRef.current?.('interruption_end');
         }
       }, 1000);
     } else {
@@ -3436,7 +3584,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
           setMicState('IDLE', 'app_foreground_resume');
           setTimeout(() => {
             if (micStateRef.current === 'IDLE' && !isSpeakingRef.current) {
-              startListeningFnRef.current?.();
+              void requestRestartFnRef.current?.('foreground_resume');
             }
           }, 800); // Slight delay for audio session to settle
         });
@@ -3451,7 +3599,12 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
 
   // Expose methods to parent via refs (avoids temporal dead zone)
   useImperativeHandle(ref, () => ({
-    startListening: (options?: { forceOverride?: boolean }) => startListeningFnRef.current?.(options),
+    // P0: the parent-facing handle is an external re-arm request, so it goes
+    // through the authority like every other one. Parents (OracleConversation,
+    // StreamingVoice) never reach the mic directly — that is the rule at the top
+    // of this file, and this was one of the seams that made it false.
+    startListening: (options?: { forceOverride?: boolean }) =>
+      void requestRestartFnRef.current?.('user_tap', options),
     stopListening: (options?: { userExitMode?: boolean }) => stopListeningFnRef.current?.(options),
     toggleListening: () => toggleListeningFnRef.current?.(),
     extendRecording: () => extendRecordingFnRef.current?.(),
