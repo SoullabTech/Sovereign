@@ -49,6 +49,33 @@ const ALLOWED_EVENTS = new Set([
   'ios_voice_result_empty',
   'ios_voice_error',
   'ios_voice_listening_stopped',
+  // ── Capture-liveness witness (lib/voice/micLiveness.ts) ─────────────────
+  // Fire when the capture path dies without the recognition object reporting
+  // anything — the silent-death case the older vocabulary could not express.
+  'voice_status_surfaced',
+  'voice_transcript_salvaged',
+  'voice_capture_lost',
+  'voice_track_listeners_attached',
+  // ── TTS playback witness (lib/voice/StreamingAudioQueue.ts) ─────────────
+  // Capture had telemetry; playback had none. Without these a whole session
+  // of "choppy, cut off, repeated the beginning" produces a silent log.
+  'voice_playback_started',
+  'voice_playback_interrupted',
+  'voice_playback_retry',
+  'voice_playback_resumed',
+  'voice_playback_ended',
+  'voice_playback_failed',
+  // ── V5 commit / silence-timer boundary ─────────────────────────────────
+  // lib/hooks/useVoiceInput.ts + components/voice/ContinuousConversation.tsx.
+  // Distinguishes "the timer never armed" from "it armed and the interim was
+  // not carried at fire time" — indistinguishable without these.
+  'voice_result_interim',
+  'voice_result_final',
+  'voice_silence_timer_armed',
+  'voice_silence_timer_fired',
+  'voice_turn_commit_requested',
+  'voice_turn_committed',
+  'voice_result_after_commit',
   // Add Meeting Audio — listening posture telemetry. Aggregate signal only,
   // used to determine whether the native desktop meeting-app gap is real
   // before considering a companion app. Doctrine: participation before
