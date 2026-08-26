@@ -49,6 +49,10 @@ interface Finding {
   lineage?: string;
   /** Carried from a reused pass rather than re-read. Evidence still re-located. */
   carried?: boolean;
+  /** Reader mode: the material holds this and the draft does not yet. */
+  onlyInMaterial?: boolean;
+  /** Reader mode: where the reader stood. Never a structure nobody declared. */
+  checkpointLabel?: string | null;
   evidence: Evidence[];
 }
 
@@ -71,9 +75,13 @@ interface Review {
   findings: Finding[];
 }
 
+type Mode = 'developmental' | 'reader';
+
 interface Props {
   manuscriptId: string;
   workId: string | null;
+  /** Which question this reading asks. Two modes, one machine. */
+  mode: Mode;
   /** Open a part of the manuscript — the evidence jump. */
   onOpenPart: (partLabel: string) => void;
   /** Hand a finding to MAIA with its evidence in context. */
@@ -90,6 +98,7 @@ const ANSWERS = [
 export default function DevelopmentalReview({
   manuscriptId,
   workId,
+  mode,
   onOpenPart,
   onDiscuss,
 }: Props) {
@@ -106,7 +115,7 @@ export default function DevelopmentalReview({
   const load = useCallback(async () => {
     try {
       const res = await apiFetch(
-        `/api/sovereign/studio/review?manuscriptId=${encodeURIComponent(manuscriptId)}`,
+        `/api/sovereign/studio/review?manuscriptId=${encodeURIComponent(manuscriptId)}&mode=${mode}`,
         { method: 'GET' },
       );
       if (!res.ok) return setPhase('error');
@@ -118,7 +127,7 @@ export default function DevelopmentalReview({
       setPhase('error');
       return null;
     }
-  }, [manuscriptId]);
+  }, [manuscriptId, mode]);
 
   useEffect(() => {
     void load();
@@ -174,7 +183,7 @@ export default function DevelopmentalReview({
       const res = await apiFetch('/api/sovereign/studio/review', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ manuscriptId, workId }),
+        body: JSON.stringify({ manuscriptId, workId, mode }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -225,24 +234,46 @@ export default function DevelopmentalReview({
     return (
       <div className="max-w-lg">
         <h2 className="text-[19px] mb-3" style={{ fontFamily: SERIF }}>
-          A developmental reading
+          {mode === 'reader' ? 'A reader’s pass' : 'A developmental reading'}
         </h2>
-        <p className="text-[14.5px] leading-[1.75] opacity-70 mb-4">
-          MAIA reads the whole Work and tells you what she sees — what it seems to be doing, what
-          recurs, where it may be asking for attention. She quotes the passages that made her
-          notice, so you can disagree with her reasoning and not just her conclusion.
-        </p>
-        <p className="text-[13px] leading-relaxed opacity-45 mb-6">
-          She does not rewrite anything, and she does not grade the Work. Nothing you have written
-          is changed by a reading.
-        </p>
+        {mode === 'reader' ? (
+          <>
+            <p className="text-[14.5px] leading-[1.75] opacity-70 mb-4">
+              MAIA reads the Work forward, the way a first reader must — stopping at points along
+              the way to ask what the Work has actually made available so far. What has been
+              established. What is named before there is ground for it. What was raised and not
+              yet returned to.
+            </p>
+            <p className="text-[13px] leading-relaxed opacity-45 mb-6">
+              She is not pretending to be a reader, and she will not tell you how one feels. She
+              can only say what the page has and has not supplied by a given point — and what she
+              is shown stops there, so a later chapter cannot quietly explain an earlier one.
+            </p>
+          </>
+        ) : (
+          <>
+            <p className="text-[14.5px] leading-[1.75] opacity-70 mb-4">
+              MAIA reads the whole Work and tells you what she sees — what it seems to be doing,
+              what recurs, where it may be asking for attention. She quotes the passages that made
+              her notice, so you can disagree with her reasoning and not just her conclusion.
+            </p>
+            <p className="text-[13px] leading-relaxed opacity-45 mb-6">
+              She does not rewrite anything, and she does not grade the Work. Nothing you have
+              written is changed by a reading.
+            </p>
+          </>
+        )}
         <button
           onClick={() => void begin()}
           disabled={starting}
           className="border px-5 py-2.5 text-[13.5px] transition-opacity hover:opacity-100 disabled:opacity-30"
           style={{ borderColor: PRESS.rule, color: PRESS.accent, opacity: 0.85 }}
         >
-          {starting ? 'opening…' : 'Ask MAIA to read the Work'}
+          {starting
+            ? 'opening…'
+            : mode === 'reader'
+              ? 'Ask MAIA to read it forward'
+              : 'Ask MAIA to read the Work'}
         </button>
         {refused && <p className="mt-4 text-[13px] leading-relaxed opacity-70">{refused}</p>}
       </div>
@@ -385,6 +416,23 @@ export default function DevelopmentalReview({
                       style={{ color: PRESS.accent }}
                     >
                       new
+                    </span>
+                  )}
+                  {/* Where the reader stood. A fact about position, never a
+                      structure the writer did not declare. */}
+                  {f.checkpointLabel && (
+                    <span className="text-[10px] tracking-[0.12em] uppercase opacity-40">
+                      {f.checkpointLabel}
+                    </span>
+                  )}
+                  {/* The single most useful thing a reader pass produces. */}
+                  {f.onlyInMaterial && (
+                    <span
+                      className="text-[10px] tracking-[0.12em] uppercase opacity-70"
+                      style={{ color: PRESS.accent }}
+                      title="Your material makes this clear; the draft has not yet made it available to a reader."
+                    >
+                      in your material, not the draft
                     </span>
                   )}
                   {f.disposition !== 'new' && (

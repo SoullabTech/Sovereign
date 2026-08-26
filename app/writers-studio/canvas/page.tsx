@@ -49,7 +49,7 @@ import type { DeclaredPart, DraftMap } from './manuscriptMap';
 
 type MobilePane = 'work' | 'materials' | 'maia' | 'history';
 /** What the writer is doing in the room. Modes change the CENTRE, not the room. */
-type Mode = 'write' | 'develop';
+type Mode = 'write' | 'develop' | 'reader';
 type ListPhase = 'loading' | 'ready' | 'none' | 'unauthorized' | 'error';
 
 /** Same rule as Studio Home: return by identity, never by position. */
@@ -430,7 +430,7 @@ export default function WriterCanvasPage() {
           </h1>
           {manuscript && (
             <span className="flex items-baseline gap-3">
-              {(['write', 'develop'] as Mode[]).map((m) => (
+              {(['write', 'develop', 'reader'] as Mode[]).map((m) => (
                 <button
                   key={m}
                   onClick={() => setMode(m)}
@@ -440,7 +440,7 @@ export default function WriterCanvasPage() {
                     color: mode === m ? PRESS.accent : undefined,
                   }}
                 >
-                  {m === 'write' ? 'Write' : 'Develop'}
+                  {m === 'write' ? 'Write' : m === 'develop' ? 'Develop' : 'Reader'}
                 </button>
               ))}
             </span>
@@ -535,10 +535,12 @@ export default function WriterCanvasPage() {
               </p>
             </div>
           )}
-          {manuscript && mode === 'develop' && (
+          {manuscript && mode !== 'write' && (
             <DevelopmentalReview
+              key={mode}
               manuscriptId={manuscript.id}
               workId={railWork?.id ?? null}
+              mode={mode === 'reader' ? 'reader' : 'developmental'}
               /* Evidence is a door: open the part it lives in, on the table. */
               onOpenPart={(partLabel) => {
                 /* Evidence names a part by the member's own heading words,

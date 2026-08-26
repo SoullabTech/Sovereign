@@ -35,6 +35,12 @@ import {
   type PartRange,
 } from '@/lib/studio/developmental/lenses';
 import {
+  buildReaderPrompt,
+  phenomenonById,
+  preparePrefix,
+  validateReaderFindings,
+} from '@/lib/studio/developmental/reader';
+import {
   carryFindings,
   lineageOf,
   noLongerObserved,
@@ -53,6 +59,7 @@ interface ReviewRow {
   overview: string | null;
   snapshot_content: string;
   supersedes_review_id: string | null;
+  mode: string;
 }
 
 /**
@@ -74,7 +81,7 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
   try {
     const found = await query<ReviewRow>(
       `SELECT id, manuscript_id, living_work_id, declared_form, status, overview,
-              snapshot_content, supersedes_review_id
+              snapshot_content, supersedes_review_id, mode
          FROM developmental_reviews
         WHERE id = $1 AND member_id = $2`,
       [id, memberId],
@@ -143,7 +150,14 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
 
       // Every pass is settled. The overview is the last act of the reading.
       if (!review.overview) {
-        const overview = await writeOverview(review, content);
+        // A reader reading has no whole-Work overview to write: its answer IS
+        // the checkpoint-by-checkpoint record of what was available where.
+        // Synthesising across checkpoints would quietly reintroduce the
+        // retrospective knowledge Law 2 exists to keep out.
+        const overview =
+          review.mode === 'reader'
+            ? 'This reading followed the Work forward, asking at each point what it had made available so far. What it found is below, in the order a reader would meet it.'
+            : await writeOverview(review, content);
         await query(
           `UPDATE developmental_reviews
               SET overview = $2, status = 'complete', completed_at = now()
@@ -166,6 +180,32 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
 
     // Parts, for deriving evidence reach. Read once per pass; cheap.
     const parts = await readPartRanges(review.manuscript_id, content);
+
+    // ── Reader mode: a different question, the same lifecycle. ───────────
+    if (review.mode === 'reader') {
+      const readerResult = await readAsReader({
+        review,
+        memberId,
+        pass,
+        content,
+        parts,
+      });
+      const leftNow = await query<{ remaining: string }>(
+        `SELECT count(*)::text AS remaining FROM developmental_review_passes
+          WHERE review_id = $1
+            AND (status = 'pending'
+                 OR (status = 'running' AND started_at < now() - ($2 || ' minutes')::interval))`,
+        [review.id, String(STALE_RUNNING_MINUTES)],
+      );
+      return NextResponse.json({
+        done: false,
+        remaining: Number(leftNow.rows[0].remaining),
+        lens,
+        lensLabel: phenomenonById(lens)?.label ?? lens,
+        segmentLabel: pass.segment_label,
+        dropped: readerResult.dropped,
+      });
+    }
 
     // DE-02 — the findings the previous reading made with this exact lens over
     // this exact text. Used to carry a reusable pass, and to give lineage to a
@@ -511,5 +551,144 @@ async function writeOverview(review: ReviewRow, content: string): Promise<string
   } catch (error) {
     console.error('[studio/review] overview failed', error);
     return null;
+  }
+}
+
+
+/**
+ * READER-01 — one phenomenon, at one checkpoint.
+ *
+ * The load-bearing move is what MAIA is GIVEN: the Work up to this checkpoint
+ * and nothing after it. She cannot cite a later passage to excuse an earlier
+ * ambiguity because she has not been shown one. Evidence is located inside
+ * that prefix and only there.
+ *
+ * Declared material is handed over in its own block, labelled as something the
+ * reader does not have. Its one purpose is to let MAIA tell the writer when
+ * the surrounding material makes something clear that the DRAFT has not — a
+ * claim about the draft, never about reader knowledge.
+ */
+async function readAsReader(params: {
+  review: ReviewRow;
+  memberId: string;
+  pass: {
+    id: string;
+    lens: string;
+    segment_index: number;
+    segment_label: string;
+    start_offset: number;
+    end_offset: number;
+  };
+  content: string;
+  parts: PartRange[];
+}): Promise<{ dropped: number }> {
+  const { review, memberId, pass, content, parts } = params;
+  const checkpoint = {
+    label: pass.segment_label,
+    offset: pass.end_offset,
+    index: pass.segment_index,
+  };
+
+  try {
+    const prepared = preparePrefix(content, checkpoint);
+    const materials = review.living_work_id ? await readMaterials(review.living_work_id) : [];
+    const workRow = review.living_work_id
+      ? await query<{ title: string | null }>(`SELECT title FROM living_works WHERE id = $1`, [
+          review.living_work_id,
+        ])
+      : null;
+
+    const result = await generateWithClaude({
+      systemPrompt: buildReaderPrompt({
+        phenomenon: pass.lens,
+        checkpointLabel: pass.segment_label,
+        workTitle: workRow?.rows[0]?.title ?? null,
+        declaredForm: review.declared_form,
+        elided: prepared.elided,
+        materials: materials.map((m) => ({
+          kind: m.kind,
+          label: m.label,
+          excerpt: m.excerpt ?? null,
+        })),
+      }),
+      userInput: prepared.text,
+      meta: { originRoute: 'studio/review/reader', mode: 'analysis' },
+    });
+
+    const parsed = parseJsonAnswer(result.text) as { findings?: unknown } | null;
+    // Located against the PREFIX, not the whole Work. A passage after the
+    // checkpoint is not something this reader has, so it cannot be evidence.
+    // preparePrefix may have elided the middle, so offsets are only trusted
+    // back into the whole Work when nothing was elided.
+    const gate = validateReaderFindings(
+      parsed?.findings ?? [],
+      prepared.text,
+      pass.lens,
+      0,
+    );
+
+    for (const [index, finding] of gate.findings.entries()) {
+      const reach = deriveReach(finding.evidence, parts);
+      const row = await query<{ id: string }>(
+        `INSERT INTO developmental_findings
+           (review_id, member_id, lens, title, observation, why, confidence,
+            reach, reach_basis, position, lineage, carried,
+            only_in_material, checkpoint_offset, checkpoint_label)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,'newly_observed',false,$11,$12,$13)
+         RETURNING id`,
+        [
+          review.id,
+          memberId,
+          finding.phenomenon,
+          finding.title,
+          finding.observation,
+          finding.why,
+          finding.confidence,
+          reach.reach,
+          reach.reachBasis,
+          pass.segment_index * 100 + index,
+          finding.onlyInMaterial,
+          checkpoint.offset,
+          checkpoint.label,
+        ],
+      );
+      for (const [i, ev] of finding.evidence.entries()) {
+        const part = parts.find((p) => ev.start >= p.start && ev.start < p.end);
+        await query(
+          `INSERT INTO developmental_finding_evidence
+             (finding_id, kind, start_offset, end_offset, quote, part_label, position)
+           VALUES ($1,'manuscript_passage',$2,$3,$4,$5,$6)`,
+          [row.rows[0].id, ev.start, ev.end, ev.quote, part?.label ?? null, i],
+        );
+      }
+    }
+
+    await query(
+      `UPDATE developmental_review_passes
+          SET status = 'done', dropped_count = $2, completed_at = now()
+        WHERE id = $1`,
+      [pass.id, gate.dropped.length],
+    );
+
+    console.log('[MAIA/studio] reader pass', {
+      memberIdPrefix: memberId.slice(0, 8),
+      reviewId: review.id,
+      phenomenon: pass.lens,
+      checkpoint: pass.segment_label,
+      found: gate.findings.length,
+      dropped: gate.dropped.length,
+      elided: prepared.elided,
+    });
+
+    return { dropped: gate.dropped.length };
+  } catch (error) {
+    console.error('[studio/review] reader pass failed', { pass: pass.id, error });
+    await query(
+      `UPDATE developmental_review_passes
+          SET status = 'failed', failure_reason = $2, completed_at = now()
+        WHERE id = $1`,
+      [pass.id, error instanceof Error ? error.message.slice(0, 300) : 'unknown'],
+    );
+    return { dropped: 0 };
   }
 }

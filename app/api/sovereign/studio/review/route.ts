@@ -18,6 +18,7 @@ import { query } from '@/lib/db/postgres';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { lensesFor, segment, type PartRange } from '@/lib/studio/developmental/lenses';
 import { planPasses, type PriorPass } from '@/lib/studio/developmental/incremental';
+import { checkpointsFor, READER_PHENOMENA } from '@/lib/studio/developmental/reader';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -77,6 +78,9 @@ export async function POST(request: NextRequest) {
   }
   const manuscriptId = typeof body.manuscriptId === 'string' ? body.manuscriptId : null;
   const workId = typeof body.workId === 'string' ? body.workId : null;
+  // Two modes of reading, one machine. 'developmental' asks what is happening
+  // in the Work; 'reader' asks what the Work has made available by a point.
+  const mode = body.mode === 'reader' ? 'reader' : 'developmental';
   if (!manuscriptId) {
     return NextResponse.json({ error: 'manuscriptId is required' }, { status: 400 });
   }
@@ -125,9 +129,10 @@ export async function POST(request: NextRequest) {
     const priorRow = await query<{ id: string }>(
       `SELECT id FROM developmental_reviews
         WHERE member_id = $1 AND manuscript_id = $2 AND status = 'complete'
+          AND mode = $3
         ORDER BY created_at DESC
         LIMIT 1`,
-      [memberId, manuscriptId],
+      [memberId, manuscriptId, mode],
     );
     const prior = priorRow.rows[0] ?? null;
 
@@ -139,8 +144,8 @@ export async function POST(request: NextRequest) {
     const review = await query<{ id: string }>(
       `INSERT INTO developmental_reviews
          (member_id, living_work_id, manuscript_id, draft_revision_id,
-          snapshot_content, content_hash, content_chars, declared_form, status)
-       VALUES ($1,$2::uuid,$3,$4,$5,$6,$7,$8,'reading')
+          snapshot_content, content_hash, content_chars, declared_form, status, mode)
+       VALUES ($1,$2::uuid,$3,$4,$5,$6,$7,$8,'reading',$9)
        RETURNING id`,
       [
         memberId,
@@ -151,6 +156,7 @@ export async function POST(request: NextRequest) {
         contentHash,
         content.length,
         declaredForm,
+        mode,
       ],
     );
     const reviewId = review.rows[0].id;
@@ -158,6 +164,57 @@ export async function POST(request: NextRequest) {
     // The plan, written down before any reading happens, so coverage is a
     // fact about rows rather than a claim.
     const parts = await readParts(manuscriptId, content);
+
+    // ── Reader mode: phenomena over checkpoints, each pass reading only the
+    // Work up to that point. Cumulative and position-bound (Law 2). ────────
+    if (mode === 'reader') {
+      const checkpoints = checkpointsFor(content.length, parts);
+      const values: string[] = [];
+      const params: unknown[] = [reviewId];
+      let n = 1;
+      for (const phenomenon of READER_PHENOMENA) {
+        for (const checkpoint of checkpoints) {
+          values.push(`($1,$${++n},$${++n},$${++n},$${++n},$${++n},$${++n})`);
+          params.push(
+            phenomenon.id,
+            checkpoint.index,
+            checkpoint.label,
+            // The range IS the prefix. A reader at chapter one has the Work
+            // from its first character to here, and nothing beyond.
+            0,
+            checkpoint.offset,
+            'pending',
+          );
+        }
+      }
+      await query(
+        `INSERT INTO developmental_review_passes
+           (review_id, lens, segment_index, segment_label, start_offset, end_offset, status)
+         VALUES ${values.join(',')}`,
+        params,
+      );
+
+      console.log('[MAIA/studio] reader reading opened', {
+        memberIdPrefix: memberId.slice(0, 8),
+        reviewId,
+        chars: content.length,
+        checkpoints: checkpoints.length,
+        passes: values.length,
+      });
+
+      return NextResponse.json({
+        reviewId,
+        mode,
+        chars: content.length,
+        checkpoints: checkpoints.length,
+        passes: values.length,
+        toRead: values.length,
+        reused: 0,
+        continues: null,
+        lenses: READER_PHENOMENA.map((p) => ({ id: p.id, label: p.label, blurb: p.blurb })),
+      });
+    }
+
     const segments = segment(content, parts);
     // The lenses this Work's declared form calls for. Universal five always;
     // a form's own lenses only where the writer declared one.
@@ -263,6 +320,7 @@ export async function GET(request: NextRequest) {
   if (!manuscriptId) {
     return NextResponse.json({ error: 'manuscriptId is required' }, { status: 400 });
   }
+  const mode = request.nextUrl.searchParams.get('mode') === 'reader' ? 'reader' : 'developmental';
 
   try {
     const review = await query<{
@@ -276,14 +334,15 @@ export async function GET(request: NextRequest) {
       completed_at: string | null;
       supersedes_review_id: string | null;
       reused_pass_count: number;
+      mode: string;
     }>(
       `SELECT id, status, overview, content_hash, content_chars, declared_form,
-              created_at, completed_at, supersedes_review_id, reused_pass_count
+              created_at, completed_at, supersedes_review_id, reused_pass_count, mode
          FROM developmental_reviews
-        WHERE member_id = $1 AND manuscript_id = $2
+        WHERE member_id = $1 AND manuscript_id = $2 AND mode = $3
         ORDER BY created_at DESC
         LIMIT 1`,
-      [memberId, manuscriptId],
+      [memberId, manuscriptId, mode],
     );
     if (review.rows.length === 0) return NextResponse.json({ review: null });
     const r = review.rows[0];
@@ -301,9 +360,11 @@ export async function GET(request: NextRequest) {
         disposition: string;
         lineage: string;
         carried: boolean;
+        only_in_material: boolean;
+        checkpoint_label: string | null;
       }>(
         `SELECT id, lens, title, observation, why, confidence, reach, reach_basis,
-                disposition, lineage, carried
+                disposition, lineage, carried, only_in_material, checkpoint_label
            FROM developmental_findings
           WHERE review_id = $1
           ORDER BY CASE reach WHEN 'wide' THEN 0 WHEN 'moderate' THEN 1 ELSE 2 END,
@@ -381,7 +442,12 @@ export async function GET(request: NextRequest) {
         overview: r.overview,
         // The lens set this Work's declared form calls for — the room must not
         // render a fixed five when a dissertation was read through eight.
-        lenses: lensesFor(r.declared_form).map((l) => ({
+        mode: r.mode,
+        // In reader mode the "lenses" are the five phenomena.
+        lenses: (r.mode === 'reader'
+          ? READER_PHENOMENA
+          : lensesFor(r.declared_form)
+        ).map((l) => ({
           id: l.id,
           label: l.label,
           blurb: l.blurb,
@@ -406,6 +472,8 @@ export async function GET(request: NextRequest) {
           disposition: f.disposition,
           lineage: f.lineage,
           carried: f.carried,
+          onlyInMaterial: f.only_in_material,
+          checkpointLabel: f.checkpoint_label,
           evidence: byFinding.get(f.id) ?? [],
         })),
       },
