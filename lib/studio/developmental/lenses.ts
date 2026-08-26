@@ -491,12 +491,21 @@ function asRank(value: unknown, fallback: 'high' | 'medium' | 'low') {
 /**
  * The gate. A finding survives only if it names a lens we asked for, says
  * something, and points at passages that are genuinely in the text MAIA read.
+ *
+ * ⚠️ `visibleText` is what the MODEL WAS GIVEN — one segment — not the whole
+ * manuscript. Validating against the whole snapshot let a quote that appears
+ * elsewhere in the book pass for a segment MAIA never saw, which quietly
+ * weakened the one promise this gate exists to keep. Offsets are translated
+ * back to snapshot coordinates by `visibleStart`, so stored evidence still
+ * indexes the frozen whole while the gate proves the quote came from the text
+ * actually read.
  */
 export function validateFindings(
   raw: unknown,
-  content: string,
+  visibleText: string,
   lens: LensId,
   parts: PartRange[] = [],
+  visibleStart = 0,
 ): ValidationResult {
   const list = Array.isArray(raw) ? raw : [];
   const findings: ValidFinding[] = [];
@@ -516,16 +525,20 @@ export function validateFindings(
     const seen = new Set<number>();
     for (const q of quotes) {
       if (typeof q !== 'string') continue;
-      const hit = locateQuote(content, q);
+      const hit = locateQuote(visibleText, q);
       // The same passage cited twice is one piece of evidence, not two.
       if (hit && !seen.has(hit.start)) {
         seen.add(hit.start);
-        located.push(hit);
+        located.push({
+          start: hit.start + visibleStart,
+          end: hit.end + visibleStart,
+          quote: hit.quote,
+        });
       }
     }
 
     if (located.length === 0) {
-      dropped.push({ title, reason: 'no quote could be located in the text' });
+      dropped.push({ title, reason: 'no quote could be located in the text MAIA read' });
       continue;
     }
 

@@ -41,6 +41,7 @@ describe('planPasses', () => {
   const priorFor = (segs: typeof segments): PriorPass[] =>
     LENSES.flatMap((lens) =>
       segs.map((s) => ({
+        id: `${lens}:${s.label}`,
         lens,
         segmentLabel: s.label,
         segmentHash: segmentHash(s.text),
@@ -225,5 +226,97 @@ describe('noLongerObserved — and emphatically not "resolved"', () => {
   it('a finding seen only under a different lens still counts as not seen', () => {
     const now = [{ lens: 'continuity', title: 'Air recurs', observation: 'a' }];
     expect(noLongerObserved(prior, now).map((f) => f.id)).toEqual(['f1', 'f2']);
+  });
+});
+
+// ── DE-02A ───────────────────────────────────────────────────────────────
+
+describe('reuse binds to one named prior pass', () => {
+  const A = seg('One', CH1, 0);
+  const B = seg('Two', CH2, 100);
+
+  const priorPasses = (segs: { label: string; text: string }[]): PriorPass[] =>
+    segs.map((sgm, i) => ({
+      id: `prior-${i}`,
+      lens: 'threads',
+      segmentLabel: sgm.label,
+      segmentHash: segmentHash(sgm.text),
+      status: 'done',
+    }));
+
+  it('names the exact prior pass a reused pass continues', () => {
+    const plan = planPasses(['threads'], [A, B], priorPasses([A, B]));
+    expect(plan.passes.map((p) => p.supersedesPassId)).toEqual(['prior-0', 'prior-1']);
+    expect(plan.passes.every((p) => p.action === 'reuse')).toBe(true);
+  });
+
+  it('consumes a prior pass at most ONCE across identical segments', () => {
+    // A Work that repeats a section verbatim. Without one-to-one both current
+    // passes would carry the same findings, and the copy would look like
+    // corroboration.
+    const twin = seg('Two', CH1, 100);
+    const plan = planPasses(['threads'], [A, twin], priorPasses([A]));
+    const consumed = plan.passes.map((p) => p.supersedesPassId).filter(Boolean);
+    expect(consumed).toEqual(['prior-0']);
+    expect(new Set(consumed).size).toBe(consumed.length);
+    expect(plan.reused).toBe(1);
+    expect(plan.toRead).toBe(1);
+  });
+
+  it('prefers the prior pass with the same label when two share a hash', () => {
+    const twin = seg('Two', CH1, 100);
+    const plan = planPasses(['threads'], [twin], priorPasses([A, twin]));
+    expect(plan.passes[0].supersedesPassId).toBe('prior-1');
+  });
+
+  it('names the prior pass for a CHANGED part too, so lineage survives an edit', () => {
+    const edited = seg('One', `${CH1} A new sentence.`, 0);
+    const plan = planPasses(['threads'], [edited], priorPasses([A]));
+    expect(plan.passes[0].action).toBe('read');
+    // Without this link every finding in an edited chapter would report as
+    // newly observed, and a writer could not tell a restatement from news.
+    expect(plan.passes[0].supersedesPassId).toBe('prior-0');
+  });
+
+  it('names nothing for a part the previous reading did not have', () => {
+    const plan = planPasses(['threads'], [seg('Three', CH3, 0)], priorPasses([A]));
+    expect(plan.passes[0].supersedesPassId).toBeNull();
+    expect(plan.passes[0].action).toBe('read');
+  });
+
+  it('never binds across lenses', () => {
+    const plan = planPasses(['continuity'], [A], priorPasses([A]));
+    expect(plan.passes[0].supersedesPassId).toBeNull();
+  });
+});
+
+describe('carryFindings preserves what MAIA actually said', () => {
+  it('carries why and confidence rather than manufacturing them', () => {
+    // No model ran, so she did not newly become "medium confidence".
+    const { carried } = carryFindings(
+      [
+        {
+          id: 'f1',
+          lens: 'threads',
+          title: 'Air recurs',
+          observation: 'It opens twice.',
+          why: 'Two openings do similar work.',
+          confidence: 'high',
+          quotes: [CH1],
+        },
+      ],
+      CH1,
+    );
+    expect(carried[0].why).toBe('Two openings do similar work.');
+    expect(carried[0].confidence).toBe('high');
+  });
+
+  it('falls back only where the prior reading recorded nothing', () => {
+    const { carried } = carryFindings(
+      [{ id: 'f1', lens: 'threads', title: 't', observation: 'o', quotes: [CH1] }],
+      CH1,
+    );
+    expect(carried[0].why).toBeNull();
+    expect(carried[0].confidence).toBe('medium');
   });
 });

@@ -36,6 +36,8 @@ export function segmentHash(text: string): string {
 }
 
 export interface PriorPass {
+  /** Identity. Reuse binds to THIS, so findings never cross a segment. */
+  id: string;
   lens: string;
   segmentLabel: string;
   segmentHash: string;
@@ -58,6 +60,19 @@ export interface PassPlan {
   end: number;
   /** 'read' — send it to MAIA. 'reuse' — carry the prior pass's findings. */
   action: 'read' | 'reuse';
+  /**
+   * The exact prior pass this one continues, or null.
+   *
+   * Structural identity, not a query. Deriving "which prior pass covered
+   * similar text" at carry time is how a Threads finding from chapter 9 ends
+   * up attached to chapter 2: its quote still exists somewhere in the book, so
+   * it re-locates and looks legitimate.
+   *
+   * Set for BOTH actions. On 'reuse' it is what gets carried; on 'read' it is
+   * what the new findings are given lineage against — an edited chapter whose
+   * prior pass was not named would report every finding as newly observed.
+   */
+  supersedesPassId: string | null;
 }
 
 export interface Plan {
@@ -69,23 +84,54 @@ export interface Plan {
 /**
  * What this reading actually has to do.
  *
- * A pass is reusable when the SAME LENS already read text with the SAME HASH
- * and that pass finished. Everything else is read. A first review has no prior
- * passes and therefore reads everything, which is the same code path.
+ * A pass is REUSABLE when the same lens already read text with the same hash
+ * and that pass finished — the text did not move, so re-reading would only
+ * produce different words for the same observation. Everything else is read.
+ *
+ * Either way the prior pass over the same part is NAMED, because that link is
+ * what lineage is computed against. A first review has no prior passes and
+ * reads everything, which is the same code path.
  */
 export function planPasses(
   lenses: readonly string[],
   segments: PlannedSegment[],
   prior: PriorPass[],
 ): Plan {
-  const done = new Set(
-    prior.filter((p) => p.status === 'done').map((p) => `${p.lens} ${p.segmentHash}`),
-  );
+  // Each completed prior pass may be consumed by AT MOST ONE current pass.
+  // A book that repeats a section verbatim has two segments with the same
+  // hash; matching on "a pass with this hash exists" would carry the same
+  // findings into both, and the duplicate would read as corroboration.
+  const available = new Map<string, PriorPass[]>();
+  for (const p of prior) {
+    if (p.status !== 'done') continue;
+    const list = available.get(p.lens) ?? [];
+    list.push(p);
+    available.set(p.lens, list);
+  }
 
   const passes: PassPlan[] = [];
   for (const lens of lenses) {
     segments.forEach((segment, index) => {
       const hash = segmentHash(segment.text);
+      const candidates = available.get(lens) ?? [];
+
+      // Content is the principal match. An exact hash means the text did not
+      // move, so the prior pass can be CARRIED rather than re-read.
+      let at = candidates.findIndex(
+        (c) => c.segmentHash === hash && c.segmentLabel === segment.label,
+      );
+      if (at === -1) at = candidates.findIndex((c) => c.segmentHash === hash);
+      const reusable = at !== -1;
+
+      // No hash match: the text changed. The prior pass over the SAME part is
+      // still what this one continues — that link is what gives a re-read
+      // finding its lineage. Without it every finding in an edited chapter
+      // would read as newly observed, and a writer could not tell an old
+      // observation restated from something MAIA had just noticed.
+      if (at === -1) at = candidates.findIndex((c) => c.segmentLabel === segment.label);
+
+      const matched = at === -1 ? null : candidates.splice(at, 1)[0];
+
       passes.push({
         lens,
         segmentIndex: index,
@@ -93,7 +139,8 @@ export function planPasses(
         segmentHash: hash,
         start: segment.start,
         end: segment.end,
-        action: done.has(`${lens} ${hash}`) ? 'reuse' : 'read',
+        action: reusable ? 'reuse' : 'read',
+        supersedesPassId: matched?.id ?? null,
       });
     });
   }
@@ -112,6 +159,9 @@ export interface PriorFinding {
   lens: string;
   title: string;
   observation: string;
+  /** What MAIA said made her notice, when she did. Carried, never re-made. */
+  why?: string | null;
+  confidence?: 'high' | 'medium' | 'low';
   /** Its evidence as it was quoted in the earlier snapshot. */
   quotes: string[];
 }
@@ -123,6 +173,13 @@ export interface CarriedFinding {
   lens: string;
   title: string;
   observation: string;
+  /**
+   * Carried verbatim. No model ran, so MAIA did not newly arrive at a
+   * confidence or a reason — manufacturing either would be new metadata on an
+   * unchanged observation.
+   */
+  why: string | null;
+  confidence: 'high' | 'medium' | 'low';
   /** Re-located against the NEW snapshot. Never the old offsets. */
   evidence: LocatedQuote[];
 }
@@ -173,6 +230,8 @@ export function carryFindings(prior: PriorFinding[], newContent: string): CarryR
       lens: finding.lens,
       title: finding.title,
       observation: finding.observation,
+      why: finding.why ?? null,
+      confidence: finding.confidence ?? 'medium',
       evidence: located.sort((a, b) => a.start - b.start),
     });
   }

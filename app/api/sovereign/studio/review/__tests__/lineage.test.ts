@@ -75,11 +75,19 @@ function db(opts: { reusable?: boolean; priorFindings?: unknown[]; workId?: stri
             start_offset: 0,
             end_offset: SNAPSHOT.length,
             segment_hash: 'hash-of-opening',
+            // The prior pass over this part is always named — that link is
+            // what lineage is computed against. Whether it is CARRIED depends
+            // on whether its hash matches, below.
+            supersedes_pass_id: 'prior-pass-1',
           },
         ],
       };
     }
-    if (s.includes('AS reusable')) return { rows: [{ reusable: opts.reusable === true }] };
+    if (s.startsWith('SELECT segment_hash FROM developmental_review_passes')) {
+      // Same hash = the text did not move = carry. Different = re-read, with
+      // the prior pass still named for lineage.
+      return { rows: [{ segment_hash: opts.reusable === true ? 'hash-of-opening' : 'older-hash' }] };
+    }
     if (s.includes('array_remove')) {
       return {
         rows: opts.priorFindings ?? [

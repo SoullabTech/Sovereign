@@ -117,6 +117,7 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
       start_offset: number;
       end_offset: number;
       segment_hash: string | null;
+      supersedes_pass_id: string | null;
     }>(
       `UPDATE developmental_review_passes
           SET status = 'running', started_at = now()
@@ -131,7 +132,7 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
            FOR UPDATE SKIP LOCKED
         )
       RETURNING id, lens, segment_index, segment_label, start_offset, end_offset,
-                segment_hash`,
+                segment_hash, supersedes_pass_id`,
       [review.id, String(STALE_RUNNING_MINUTES)],
     );
 
@@ -210,9 +211,24 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
     // DE-02 — the findings the previous reading made with this exact lens over
     // this exact text. Used to carry a reusable pass, and to give lineage to a
     // re-read one.
-    const prior = review.supersedes_review_id
-      ? await readPriorFindings(review.supersedes_review_id, lens, pass.segment_hash)
+    // DE-02A — the findings of the EXACT prior pass this one continues, or
+    // none. Filtering by lens alone put every Threads finding from every
+    // segment in scope, and their quotes still existed elsewhere in the book,
+    // so they re-located and were carried into the wrong pass.
+    const prior = pass.supersedes_pass_id
+      ? await readPriorFindings(pass.supersedes_pass_id)
       : [];
+    // Whether the named prior pass covered the SAME text. Equal hashes mean
+    // the segment did not move, so its findings can be carried; different
+    // hashes mean the part was edited, and the link exists only for lineage.
+    const priorPassHash = pass.supersedes_pass_id
+      ? (
+          await query<{ segment_hash: string | null }>(
+            `SELECT segment_hash FROM developmental_review_passes WHERE id = $1`,
+            [pass.supersedes_pass_id],
+          )
+        ).rows[0]?.segment_hash ?? null
+      : null;
 
     let dropped = 0;
     try {
@@ -228,7 +244,10 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
         carried: boolean;
       }[] = [];
 
-      const reusable = prior.length > 0 && (await isReusable(review.id, pass.id));
+      // Identity, not inference: the planner decided this one-to-one, and a
+      // pass is reusable exactly when the text it covers did not move.
+      const reusable =
+        pass.supersedes_pass_id !== null && pass.segment_hash === priorPassHash;
 
       if (reusable) {
         // Nothing in this text changed since MAIA read it, so re-reading would
@@ -241,8 +260,11 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
           lens,
           title: c.title,
           observation: c.observation,
-          why: null,
-          confidence: 'medium' as const,
+          // Carried verbatim. No model ran, so MAIA did not newly arrive at a
+          // reason or a confidence; manufacturing either would be new metadata
+          // on an unchanged observation.
+          why: c.why,
+          confidence: c.confidence,
           ...deriveReach(c.evidence, parts),
           evidence: c.evidence,
           carried: true,
@@ -280,7 +302,18 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
         });
 
         const parsed = parseJsonAnswer(result.text) as { findings?: unknown } | null;
-        const gate = validateFindings(parsed?.findings ?? [], content, lens, parts);
+        // ⚠️ Gated against the SEGMENT MAIA was given, not the whole snapshot.
+        // Validating against the whole book let a quote that appears elsewhere
+        // pass for a segment she never saw. Offsets are translated back to
+        // snapshot coordinates, so stored evidence still indexes the frozen
+        // whole while the gate proves the quote came from the text she read.
+        const gate = validateFindings(
+          parsed?.findings ?? [],
+          segmentText,
+          lens,
+          parts,
+          pass.start_offset,
+        );
         dropped = gate.dropped.length;
         produced = gate.findings.map((f) => ({ ...f, carried: false }));
       }
@@ -296,8 +329,8 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
           `INSERT INTO developmental_findings
              (review_id, member_id, lens, title, observation, why,
               confidence, reach, reach_basis, position, lineage,
-              ancestor_finding_id, carried)
-           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12::uuid,$13)
+              ancestor_finding_id, carried, review_pass_id)
+           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12::uuid,$13,$14)
            RETURNING id`,
           [
             review.id,
@@ -313,6 +346,7 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
             lineage,
             ancestorId,
             finding.carried,
+            pass.id,
           ],
         );
         const findingId = row.rows[0].id;
@@ -401,59 +435,40 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
 }
 
 /**
- * Is this pass one the plan marked reusable?
+ * What the prior PASS found. By id, so nothing can drift in.
  *
- * The plan is written down at open time as rows; this asks whether a completed
- * pass in the superseded reading covered the same lens over text with the same
- * hash. Deriving it here rather than trusting a flag means a pass cannot be
- * carried because of a stale column.
+ * The previous shape took (reviewId, lens, segmentHash) and then ignored the
+ * hash, which is how a chapter-9 finding came to be in scope while advancing
+ * chapter 2. There is no segment inference here any more — a finding belongs
+ * to a pass, and this reads that pass.
  */
-async function isReusable(reviewId: string, passId: string): Promise<boolean> {
-  const res = await query<{ reusable: boolean }>(
-    `SELECT EXISTS (
-       SELECT 1
-         FROM developmental_review_passes p
-         JOIN developmental_reviews r ON r.id = p.review_id
-         JOIN developmental_reviews cur ON cur.supersedes_review_id = r.id
-         JOIN developmental_review_passes me ON me.id = $2
-        WHERE cur.id = $1
-          AND p.status = 'done'
-          AND p.lens = me.lens
-          AND p.segment_hash IS NOT NULL
-          AND p.segment_hash = me.segment_hash
-     ) AS reusable`,
-    [reviewId, passId],
-  );
-  return res.rows[0]?.reusable === true;
-}
-
-/** What the previous reading found with this lens over text with this hash. */
-async function readPriorFindings(
-  priorReviewId: string,
-  lens: string,
-  segmentHash: string | null,
-): Promise<PriorFinding[]> {
-  if (!segmentHash) return [];
+async function readPriorFindings(priorPassId: string): Promise<PriorFinding[]> {
   const res = await query<{
     id: string;
     lens: string;
     title: string;
     observation: string;
+    why: string | null;
+    confidence: string;
     quotes: string[] | null;
   }>(
-    `SELECT f.id, f.lens, f.title, f.observation,
+    `SELECT f.id, f.lens, f.title, f.observation, f.why, f.confidence,
             array_remove(array_agg(e.quote ORDER BY e.position), NULL) AS quotes
        FROM developmental_findings f
        LEFT JOIN developmental_finding_evidence e ON e.finding_id = f.id
-      WHERE f.review_id = $1 AND f.lens = $2
-      GROUP BY f.id, f.lens, f.title, f.observation`,
-    [priorReviewId, lens],
+      WHERE f.review_pass_id = $1
+      GROUP BY f.id, f.lens, f.title, f.observation, f.why, f.confidence`,
+    [priorPassId],
   );
   return res.rows.map((r) => ({
     id: r.id,
     lens: r.lens,
     title: r.title,
     observation: r.observation,
+    why: r.why,
+    confidence: (r.confidence === 'high' || r.confidence === 'low'
+      ? r.confidence
+      : 'medium') as 'high' | 'medium' | 'low',
     quotes: r.quotes ?? [],
   }));
 }
@@ -633,8 +648,8 @@ async function readAsReader(params: {
         `INSERT INTO developmental_findings
            (review_id, member_id, lens, title, observation, why, confidence,
             reach, reach_basis, position, lineage, carried,
-            only_in_material, checkpoint_offset, checkpoint_label)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,'newly_observed',false,$11,$12,$13)
+            only_in_material, checkpoint_offset, checkpoint_label, review_pass_id)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,'newly_observed',false,$11,$12,$13,$14)
          RETURNING id`,
         [
           review.id,
@@ -650,6 +665,7 @@ async function readAsReader(params: {
           finding.onlyInMaterial,
           checkpoint.offset,
           checkpoint.label,
+          pass.id,
         ],
       );
       for (const [i, ev] of finding.evidence.entries()) {

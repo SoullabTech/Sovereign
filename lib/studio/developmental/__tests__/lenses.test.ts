@@ -460,3 +460,43 @@ describe('material-aware reading', () => {
     expect(materialExcerpt('   ')).toBeNull();
   });
 });
+
+// ── DE-02A ───────────────────────────────────────────────────────────────
+
+describe('the gate validates against what MAIA was GIVEN, not the whole book', () => {
+  const CH2 = 'The second chapter opens on the river at first light, quite alone.';
+  const CH9 = 'By the ninth chapter the river has become something else entirely.';
+  const BOOK = `${CH2}\n\n${'filler prose. '.repeat(50)}\n\n${CH9}`;
+
+  const finding = (quote: string) => [
+    { title: 'The river', observation: 'It recurs here.', quotes: [quote] },
+  ];
+
+  it('keeps a finding quoting the segment it was shown', () => {
+    const { findings } = validateFindings(finding(CH2), CH2, 'threads');
+    expect(findings).toHaveLength(1);
+  });
+
+  it('DROPS a quote that exists elsewhere in the book but not in this segment', () => {
+    // The control that the pre-DE-02A implementation fails: validating against
+    // the whole snapshot let a chapter-9 sentence evidence a chapter-2 pass.
+    const { findings, dropped } = validateFindings(finding(CH9), CH2, 'threads');
+    expect(findings).toHaveLength(0);
+    expect(dropped[0].reason).toContain('MAIA read');
+    // ...and it is genuinely present in the book, which is the whole point.
+    expect(BOOK).toContain(CH9);
+  });
+
+  it('translates a located offset into snapshot coordinates', () => {
+    const start = BOOK.indexOf(CH2);
+    const { findings } = validateFindings(finding(CH2), CH2, 'threads', [], start);
+    const ev = findings[0].evidence[0];
+    expect(BOOK.slice(ev.start, ev.end)).toBe(CH2);
+  });
+
+  it('leaves offsets alone when the visible text IS the whole snapshot', () => {
+    const { findings } = validateFindings(finding(CH2), BOOK, 'threads');
+    const ev = findings[0].evidence[0];
+    expect(ev.start).toBe(BOOK.indexOf(CH2));
+  });
+});

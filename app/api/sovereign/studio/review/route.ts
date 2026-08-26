@@ -226,13 +226,20 @@ export async function POST(request: NextRequest) {
     // index, and matching on index would re-read the whole book.
     const priorPasses: PriorPass[] = prior
       ? (
-          await query<{ lens: string; segment_label: string; segment_hash: string; status: string }>(
-            `SELECT lens, segment_label, segment_hash, status
+          await query<{
+            id: string;
+            lens: string;
+            segment_label: string;
+            segment_hash: string;
+            status: string;
+          }>(
+            `SELECT id, lens, segment_label, segment_hash, status
                FROM developmental_review_passes
               WHERE review_id = $1 AND segment_hash IS NOT NULL`,
             [prior.id],
           )
         ).rows.map((r) => ({
+          id: r.id,
           lens: r.lens,
           segmentLabel: r.segment_label,
           segmentHash: r.segment_hash,
@@ -250,7 +257,7 @@ export async function POST(request: NextRequest) {
     const params: unknown[] = [reviewId];
     let n = 1;
     for (const pass of plan.passes) {
-      values.push(`($1,$${++n},$${++n},$${++n},$${++n},$${++n},$${++n},$${++n})`);
+      values.push(`($1,$${++n},$${++n},$${++n},$${++n},$${++n},$${++n},$${++n},$${++n}::uuid)`);
       params.push(
         pass.lens,
         pass.segmentIndex,
@@ -262,12 +269,16 @@ export async function POST(request: NextRequest) {
         // prior findings instead of calling the model. Marking it 'pending'
         // keeps one code path and one place where a pass becomes 'done'.
         'pending',
+        // DE-02A: the EXACT prior pass this continues, decided by the planner
+        // one-to-one. Carrying reads that pass's findings and nothing else, so
+        // a finding can never cross a segment boundary.
+        pass.supersedesPassId,
       );
     }
     await query(
       `INSERT INTO developmental_review_passes
          (review_id, lens, segment_index, segment_label, start_offset, end_offset,
-          segment_hash, status)
+          segment_hash, status, supersedes_pass_id)
        VALUES ${values.join(',')}`,
       params,
     );
