@@ -4,12 +4,21 @@
 **Canonical start:** `5944bda` (MAIA-D00A) · trunk `0c4638a`
 
 ```
+LINEAGE
+  ea0dc0c   D01 native voice implementation
+     ↓
+  468b52e   D01 witness instrumentation   ← THE SHA TO WITNESS
+
 IMPLEMENTATION:  COMPLETE
-SOURCE/TEST:     GREEN — 52 assertions / 0 failures · 11 negative controls, all bite
+SOURCE/TEST:     GREEN — 55 assertions / 0 failures · 11 negative controls, all bite
 RUNTIME PROOF:   NONE — no Electron binary in this environment
 DEVICE WITNESS:  BLOCKED — macOS microphone required
 STATUS:          IMPLEMENTED · DEVICE WITNESS REQUIRED — NOT CLOSED
 ```
+
+⭐ **`468b52e` is not a new functional unit and not D02 work.** It is the same D01 voice
+architecture made empirically auditable — founder ruling, 2026-08-25. §11 records what it adds and,
+just as importantly, the exact limits of the assertions that guard it.
 
 ⛔ **This unit does not close here.** The founder's refinement is applied literally: SOURCE/TEST
 completion is not DEVICE proof, and the 2–5 minute monologue has been proven against a *synthesized*
@@ -288,3 +297,57 @@ even accidentally.
    simple for the witness; if IPC backpressure appears on device, batching is the repair.
 7. Frames cross the bridge as plain arrays, which copies. Acceptable for a witness; a
    transferable/shared buffer is the optimization if §7.5 shows it is needed.
+
+---
+
+## 11 · The witness apparatus (`468b52e`) — and the precise limits of its guards
+
+Added after the implementation was accepted, because `ea0dc0c` could only show diagnostics
+**transiently in the renderer**. §6 of the device-witness ruling requires the walk to be judged on
+*diagnostic evidence*, not on whether the final transcript "looks mostly right" — and a judgment
+read off a screen and recalled afterwards is the kind of witness this programme has already had to
+correct twice. That judgment needs a file.
+
+| Addition | What it does |
+|---|---|
+| `scripts/witness-env.mjs` | §1 environment record at execution time; every field observed or explicitly UNKNOWN; refuses to let a dirty tree pass unnamed |
+| evidence sink in `main.js` | forwards the emitted record verbatim + one number, into JSONL under `userData` |
+| `scripts/witness-verify.mjs` | judges the eleven §11 closure criteria mechanically from the event stream |
+
+⭐ **The verifier's load-bearing property: `UNWITNESSED` is not a pass.** A criterion the walk never
+exercised cannot close, and the script exits non-zero on it. A 20-second command-style test therefore
+cannot accidentally close D01 just because everything it happened to touch worked. Criterion 11 (no
+renderer authority expansion) reads `SEE SOURCE SUITE` rather than being quietly marked green by a
+script that cannot see it.
+
+Verified by four controls against synthesized walks: a complete walk passes · a **silent tail loss
+FAILs** · leaked transcript text FAILs · a short walk returns UNWITNESSED on four criteria.
+
+### 11.1 ⭐ The accepted claim, in its exact form
+
+> The evidence sink is outside the capture-**state-mutation** path. It executes **synchronously
+> during diagnostic emission**, but current source inspection shows it does not modify PCM/frame
+> handling, VAD, epoch/tail state, transcription, or preload bridge behavior.
+
+⛔ Do not restate this as *"the sink is completely off-path."* That is the weaker and less accurate
+claim. The sink runs inside the diagnostic emission that epoch transitions trigger; what it cannot do
+is **change** anything — it takes an already-emitted record, reads `voice.frames`, and writes.
+
+Verified by direct inspection at `468b52e`: zero code references to the sink in `epoch.js`, `vad.js`,
+`transcription.js`, `diagnostics.js`, `preload.js`, `renderer.js`, `capture-worklet.js` (the three
+textual hits in the pure core are prose). It is called **zero** times from the frame handler, so it
+writes on diagnostic events — a handful per epoch — and cannot contribute to the 128-sample IPC
+cadence the device walk is watching.
+
+### 11.2 ⚠️ The guard is LEXICAL — carried forward deliberately, not forgotten
+
+`test/d01-boundary.test.mjs` catches the sink **by name**. A future sink introduced into `epoch.js`
+or `vad.js` under a *different* name would not trip it.
+
+**It proves the current implementation shape. It is not a semantic guarantee.**
+
+This is the third generation of the same lesson — JOP-00 §4.1, MAIA-D00A §3.2, and now a guard this
+programme wrote itself. The correct response is not to distrust the assertion but to remember what
+class of thing it is: *absence from a lexical search is evidence about the search.* The current code
+is verified above by direct inspection, not only by the guard. Whoever extends this next inherits
+that obligation.
