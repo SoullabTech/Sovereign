@@ -29,8 +29,8 @@ MODE               WS-01 ACCEPTANCE
 BUILD MODE         CLOSED — Canvas / Phase 1 freeze BINDING
 BOUND CANONICAL    7531a92901afa59257baa17df60f755ee3014654
 CURRENT UNIT       WS-01 Source Custody + Freeze Release
-PINNED CANDIDATE   4a551d3d13a27ec442252be7822865e0f2d31978
-                   feature/ws-01-source-custody-v3
+PINNED CANDIDATE   83efa86df2e6b5d158bbf4d478061c29a5a8e409
+                   feature/ws-01-source-custody-v4
 RUNTIME            UNVERIFIED
 RUNTIME OBSERVED   never in this lineage — see the second-hand note below
 NEXT EXECUTABLE    P0-D — requires the EXACT pinned candidate deployed
@@ -48,7 +48,26 @@ it in the global work queue without becoming Writer's Studio state.
 > + `DEPLOY_LANE` off the running container — never inferred from a merge, a green suite, or a
 > prior board line.
 >
-> ⛔ **The pin means exact correspondence.** `GIT_COMMIT == 4a551d3d1`. *"The candidate is an
+> **Pin ruling, 2026-08-26 — the pin moved forward to v4.**
+>
+> ```text
+> 4a551d3d1   v3 historical candidate         SUPERSEDED AS PIN — evidence and history preserved
+> 7531a9290   current canonical               INTEGRATION AUTHORITY — not itself the candidate
+> 83efa86df   v4 assembled acceptance object  PINNED CANDIDATE — runtime == canonical, spec == Frozen v1.1
+> ```
+>
+> Not v3, because deploying it would roll production backward to prove code whose exact bytes are
+> already present in the forward-moving system. Not canonical, because #1096 was an integration
+> merge and naming it would let an unwalked merge become the accepted object retroactively —
+> and canonical carries the walk specification at `Draft`, which is not executable.
+>
+> **Acceptance begins only when a candidate is deliberately assembled, named, pinned, deployed and
+> witnessed under the pre-existing frozen standard.** v4 is that assembly: branched from exact
+> canonical, merged with the v3 lineage, **zero runtime delta**, three documentary paths entering
+> the tree. Merge rather than cherry-pick, so the v1.1 freezing commit `e5f36d83c` stays a genuine
+> ancestor and the seal remains true as written. ⛔ Ancestry is inherited; **acceptance is not**.
+>
+> ⛔ **The pin means exact correspondence.** `GIT_COMMIT == 83efa86df`. *"The candidate is an
 > ancestor of what is deployed"* does not satisfy it and may not be recorded as if it did.
 >
 > **Second-hand runtime note, recorded as second-hand.** The reconcile commit `5e46212bc` (#1096)
@@ -61,7 +80,7 @@ it in the global work queue without becoming Writer's Studio state.
 > ⚠️ **The WS-01 runtime substrate reached canonical ahead of its acceptance.** #1096
 > (`5e46212bc`, 2026-08-25) imported it to reconcile a production/canonical divergence. Re-censused
 > at `7531a9290` on 2026-08-26: all **10** WS-01 files are byte-identical between canonical and the
-> pinned candidate `4a551d3d1` — `lib/manuscript/source/{arrivals,custody,omission}.ts` + tests,
+> then-pinned v3 candidate `4a551d3d1` — `lib/manuscript/source/{arrivals,custody,omission}.ts` + tests,
 > `database/migrations/20260824000001_manuscript_source_custody.sql`,
 > `lib/manuscript/ingest/segment.ts`, `scripts/verify-ws01-source-custody.ts`,
 > `app/api/sovereign/manuscripts{,/ingest}/route.ts`, `app/press/manuscript/page.tsx`.
@@ -121,7 +140,7 @@ unbuilt while the unit list reads complete. They create no WS-08+.
 
 | Node | State | Evidence / next |
 |---|---|---|
-| WS-01 Source Custody | **IN ACCEPTANCE** | pinned candidate `4a551d3d1` (supersedes `e92f53239`, which is **not** an ancestor of it — a divergent re-seal, not a fast-forward); P0-M PASS, **P0-D never run**. ⚠️ `lib/manuscript/source/**` **is now on canonical** — imported by #1096 ahead of acceptance, byte-identical across all 10 files. Re-censused at `7531a9290` |
+| WS-01 Source Custody | **IN ACCEPTANCE** | pinned candidate `83efa86df` (v4; supersedes `4a551d3d1` as pin, which supersedes `e92f53239`). **P0-M re-run PASS on the v4 tree** `3d0a7116653c` — 28/28 witness controls + 23/23 unit tests, real PostgreSQL 16, real vault, real migration applied twice for idempotency. **P0-D never run**. ⚠️ `lib/manuscript/source/**` **is now on canonical** — imported by #1096 ahead of acceptance, byte-identical across all 10 files. Re-censused at `7531a9290` |
 | Restore floor | **IN ACCEPTANCE** | required by frozen walk act **H**; rides with WS-01 |
 | Work Structure | **BLOCKED** | by WS-01. Contract ruled (Phase 3A); member-declared, no chapter schema |
 | #995 Harvest | **BLOCKED** | by Canvas freeze |
@@ -205,7 +224,7 @@ while these rows read ABSENT. A shipped manuscript editor is not fruition.
 | 2 | Manuscript-wide find · safe find/replace | **ABSENT** | `findInDraft` → **0 files**; no find/replace symbol on canonical | living manuscripts | — | Ch10 misplaced-copy search | authored on an unmerged branch only — A4.0 says that is not presence |
 | 2 | Return continuity beyond cursor position | **UNVERIFIED / TO CENSUS** | not censused | memory + provenance | — | return after a month | census before claiming either way |
 | 3 | Transcript & material intake | **PARTIAL** | `mammoth` (5), `pdf-parse` (8), `fileVault` (2), `api/book-studio/workbench/uploads/**` | — | — | real transcripts | recordings · voice notes · images **UNVERIFIED** |
-| 3 | Never silently transform an artifact into manuscript text | **IN ACCEPTANCE** | WS-01 pinned candidate `4a551d3d1`; `manuscript_source_arrivals` → **5 files on canonical** (was 0; imported by #1096). Re-censused at `7531a9290`, 2026-08-26 | — | WS-01 | P0-D | **P0-D remains the only executable proof — presence on canonical is not it** |
+| 3 | Never silently transform an artifact into manuscript text | **IN ACCEPTANCE** | WS-01 pinned candidate `83efa86df` (v4); `manuscript_source_arrivals` → **5 files on canonical** (was 0; imported by #1096). Re-censused at `7531a9290`, 2026-08-26 | — | WS-01 | P0-D | **P0-D remains the only executable proof — presence on canonical is not it** |
 | 4 | Materials distinguishable **at the data level** | **PARTIAL** | `living_work_materials`: `material_type`, `declared_by`, `relationship_sentence` — belonging is already a **declared writer act**, not a styling choice | source custody | — | C · Material field | full A4.4 vocabulary not enumerated against schema |
 | 5 | MAIA as creative companion — nine stances | **UNVERIFIED / TO CENSUS** | no Studio-scoped stance surface identified; `developmental` matches 337 files, none Studio-scoped | Work + material | — | all four classes | census what, if anything, already serves Reflect/Question/Notice/Connect |
 | 5 | `Edit` only on explicit request | **DESIGNED** | capability spec; no runtime | companion | — | D · Ch10 | ⛔ default must never be `analyze → generate replacement` |
@@ -233,7 +252,7 @@ intake**; the gather, memory, structural, developmental, expression and authorsh
 ## Advancing now
 
 ```text
-WS-01 · P0-D — deploy the EXACT pinned candidate 4a551d3d1, prove deployed
+WS-01 · P0-D — deploy the EXACT pinned candidate 83efa86df, prove deployed
                identity (GIT_COMMIT + DEPLOY_LANE), exercise the real ingest
                HTTP path with two real authenticated member arrivals, capture
                raw server-side rows, record, stop.
