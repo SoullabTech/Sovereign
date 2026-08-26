@@ -9081,7 +9081,19 @@ I'm not sure what I'm feeling yet.`;
                   resting position of the transcript changes. */}
               {messages.length > 0 && (
                 <div
-                  className="pt-[10.5rem] md:pt-[12rem] min-h-full flex flex-col justify-end md:block md:min-h-0"
+                  className={`pt-[10.5rem] md:pt-[12rem] flex flex-col md:block md:min-h-0 ${
+                    // A running conversation rests against the composer, newest
+                    // turn nearest the hand — that is what justify-end and a
+                    // full-height box give. A FIRST turn has nothing beneath it,
+                    // so the same rule pinned MAIA's opening to the bottom of
+                    // the screen under a field of empty space, reading as
+                    // leftover rather than as the beginning of something.
+                    // With one turn the box stops stretching and the opening
+                    // rests where the eye already is, below the jewel.
+                    messages.filter(isMemberVisibleTurn).length <= 1
+                      ? 'justify-start'
+                      : 'min-h-full justify-end'
+                  }`}
                   /* MOBILE BOTTOM-ANCHOR (Issue 1, second mechanism — independent of
                      the scroll-resettle guard fix). Even a perfectly-working
                      scroll-to-bottom cannot move content down when

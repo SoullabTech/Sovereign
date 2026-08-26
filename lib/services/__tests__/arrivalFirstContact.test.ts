@@ -33,26 +33,81 @@ describe('the opening makes contact', () => {
 });
 
 describe('the doorway shapes the opening', () => {
-  const cases: [string, RegExp][] = [
-    ['relation', /between you and someone else.*Where does it seem to begin\?/s],
-    ['decision', /trying to decide.*What are you deciding between\?/s],
-    ['making', /making.*What are you working on\?/s],
-    ['change', /changing.*What is different now\?/s],
-    ['self', /about yourself.*keep circling\?/s],
-    ['mind', /sitting with you.*Start wherever it is/s],
+  /**
+   * Two registers per door. ELICITING asks for what has not been said;
+   * ADVANCING assumes it was said and asks for the next layer. Getting this
+   * wrong makes MAIA deaf — someone who wrote "whether to take the job in
+   * Lisbon" and is then asked "What are you deciding between?" has been asked
+   * to repeat themselves.
+   */
+  const advancing: [string, RegExp][] = [
+    ['relation', /Where does it seem to begin\?$/],
+    ['decision', /What’s pulling each way\?$/],
+    ['making', /Where is it right now\?$/],
+    ['change', /What’s different now\?$/],
+    ['self', /What keeps bringing you back to it\?$/],
+    ['mind', /How long has that been sitting there\?$/],
   ];
-  it.each(cases)('door %s produces its own contact and invitation', async (door, shape) => {
+  it.each(advancing)('door %s advances when the member brought words', async (door, shape) => {
     expect(await opening(BROUGHT, door)).toMatch(shape);
   });
 
+  const eliciting: [string, RegExp][] = [
+    ['relation', /Who is it, and what’s happening between you\?$/],
+    ['decision', /What are you deciding between\?$/],
+    ['making', /What are you working on\?$/],
+    ['change', /What’s changing\?$/],
+    ['self', /What’s the part you keep circling\?$/],
+    ['mind', /What’s on it\?$/],
+  ];
+  it.each(eliciting)('door %s elicits when they brought no words', async (door, shape) => {
+    expect(await opening('', door)).toMatch(shape);
+  });
+
+  it('never asks a member to repeat what they just wrote', async () => {
+    const g = await opening('whether to take the job in Lisbon', 'decision');
+    expect(g).not.toMatch(/What are you deciding between\?/);
+    expect(g).toMatch(/What’s pulling each way\?/);
+  });
+
   it('gives distinct openings for distinct doors', async () => {
-    const all = await Promise.all(['relation', 'decision', 'making', 'change', 'self', 'mind', 'dunno']
+    const all = await Promise.all(['relation','decision','making','change','self','mind','dunno']
       .map((d) => opening(BROUGHT, d)));
     expect(new Set(all).size).toBe(all.length);
   });
 
   it('falls back gracefully on an unknown door rather than throwing', async () => {
     expect(await opening(BROUGHT, 'not-a-door')).toMatch(/I’m here\./);
+  });
+});
+
+describe('the member’s own words are held, not described', () => {
+  it('echoes a short thought verbatim', async () => {
+    expect(await opening(BROUGHT, 'relation')).toContain(`“${BROUGHT}”`);
+  });
+
+  it('does not narrate the input back in the system’s vocabulary', async () => {
+    const g = await opening(BROUGHT, 'relation');
+    expect(g).not.toMatch(/You brought something/);
+  });
+
+  it('never transforms their words — no pronoun surgery, no paraphrase', async () => {
+    const g = await opening('the same argument with my brother', 'relation');
+    expect(g).toContain('my brother');
+    expect(g).not.toContain('your brother');
+  });
+
+  it('adds no punctuation inside the quote', async () => {
+    expect(await opening('whether to take the job in Lisbon', 'decision'))
+      .toContain('“whether to take the job in Lisbon”.');
+  });
+
+  it('leaves a long or multi-sentence disclosure unechoed rather than truncating it', async () => {
+    const long = 'My mother died in March. I went back to work after two weeks. I think I skipped something.';
+    const g = await opening(long, 'change');
+    expect(g).not.toContain('mother');
+    expect(g).not.toContain('…');
+    expect(g).toMatch(/^Ada, I’m here\. What’s different now\?$/);
   });
 });
 
@@ -70,12 +125,6 @@ describe('what the opening must never do', () => {
     }
   });
 
-  it('does not parrot the member’s own sentence back at them', async () => {
-    const g = await opening(BROUGHT, 'relation');
-    expect(g).not.toContain('brother');
-    expect(g).not.toContain(BROUGHT);
-  });
-
   it('does not invent a feeling the member never named', async () => {
     const g = await opening(BROUGHT, 'relation');
     expect(g).not.toMatch(/frustrat|anxious|angry|sad|overwhelmed|hurt/i);
@@ -85,8 +134,7 @@ describe('what the opening must never do', () => {
 describe('when the member brought no words', () => {
   it('claims no more contact than it was actually given', async () => {
     const g = await opening('', 'dunno');
-    expect(g).toMatch(/You are here\./);
-    expect(g).toMatch(/What has been taking up room lately\?/);
+    expect(g).toBe('Ada, I’m here. What’s been taking up room lately?');
   });
 
   it('still opens for someone with no name', async () => {
@@ -118,12 +166,12 @@ describe('without arrival context nothing changes', () => {
   it('falls through to the existing greeting path', async () => {
     const g = (await generateGreeting({ userName: 'Kelly', isFirstVisit: false, daysSinceLastVisit: 3 })).greeting;
     expect(g).toBeTruthy();
-    expect(g).not.toMatch(/You brought something/);
+    expect(g).not.toMatch(/I’m here\. “/);
   });
 
   it('leaves Talk mode in charge when no arrival context exists', async () => {
     const g = (await generateGreeting({ userName: 'Kelly', isFirstVisit: false, mode: 'dialogue' })).greeting;
-    expect(g).not.toMatch(/You brought something/);
+    expect(g).not.toMatch(/I’m here\. “/);
     expect(g).toBeTruthy();
   });
 });

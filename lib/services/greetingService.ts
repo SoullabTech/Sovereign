@@ -292,31 +292,65 @@ export class GreetingService {
 
     // Light orientation only — tone and first invitation. Never a mode, never a
     // persisted stance, never a claim about who the member is.
-    const DOORWAY_CONTACT: Record<string, { contact: string; invitation: string }> = {
-      mind:     { contact: 'You brought something that has been sitting with you.',
-                  invitation: 'Start wherever it is — it doesn\u2019t have to be organized.' },
-      change:   { contact: 'You brought something that is changing.',
-                  invitation: 'What is different now?' },
-      self:     { contact: 'You brought something about yourself you want to look at.',
-                  invitation: 'What is the part you keep circling?' },
-      decision: { contact: 'You brought something you are trying to decide.',
-                  invitation: 'What are you deciding between?' },
-      relation: { contact: 'You brought something happening between you and someone else.',
-                  invitation: 'Where does it seem to begin?' },
-      making:   { contact: 'You brought something you are making.',
-                  invitation: 'What are you working on?' },
-      dunno:    { contact: 'You came in without needing to name it first.',
-                  invitation: 'What has been taking up room lately?' },
+    // TWO QUESTIONS PER DOOR, and the difference is not decoration.
+    //
+    // An ELICITING question asks for what the member has not said yet. An
+    // ADVANCING question assumes they have already said it and asks for the
+    // next layer. Choosing wrongly makes MAIA deaf: someone who wrote
+    // "whether to take the job in Lisbon" and is then asked "What are you
+    // deciding between?" has just been asked to repeat themselves.
+    //
+    // A client-side template cannot tell whether a sentence answered a
+    // question — that needs comprehension. But it CAN tell whether the member
+    // brought words at all, and that single honest fact is enough to pick the
+    // right register.
+    const DOORWAY_QUESTION: Record<string, { eliciting: string; advancing: string }> = {
+      mind:     { eliciting: 'What\u2019s on it?',
+                  advancing:  'How long has that been sitting there?' },
+      change:   { eliciting: 'What\u2019s changing?',
+                  advancing:  'What\u2019s different now?' },
+      self:     { eliciting: 'What\u2019s the part you keep circling?',
+                  advancing:  'What keeps bringing you back to it?' },
+      decision: { eliciting: 'What are you deciding between?',
+                  advancing:  'What\u2019s pulling each way?' },
+      relation: { eliciting: 'Who is it, and what\u2019s happening between you?',
+                  advancing:  'Where does it seem to begin?' },
+      making:   { eliciting: 'What are you working on?',
+                  advancing:  'Where is it right now?' },
+      dunno:    { eliciting: 'What\u2019s been taking up room lately?',
+                  advancing:  'Where would you like to start?' },
     };
 
-    const door = DOORWAY_CONTACT[doorway] ?? DOORWAY_CONTACT.dunno;
+    // The member's own words, held rather than described.
+    //
+    // The first version said "You brought something happening between you and
+    // someone else" — seven variants of a routing layer narrating the input
+    // back. The member knows what they wrote; being told it in the system's
+    // vocabulary is a form receipt, not contact.
+    //
+    // Nor is the alternative to paraphrase. This template has no comprehension:
+    // turning "the same argument with my brother" into "...with your brother"
+    // is pronoun surgery on arbitrary text, which breaks on ordinary sentences
+    // and fakes an understanding that has not happened. Their words are echoed
+    // VERBATIM or not at all, with nothing added — not even punctuation.
+    //
+    // Echoed only when short enough to sit as one held line. Longer or
+    // multi-sentence input is left alone rather than truncated: MAIA opens with
+    // the question and lets the member say it in their own time.
+    const ECHO_MAX = 120;
+    const oneThought = brought.length > 0 && brought.length <= ECHO_MAX && !/[.!?]\s+\S/.test(brought);
+    // Their punctuation closes the quote when they gave some; otherwise the
+    // sentence period sits OUTSIDE it, so the line reads as prose without a
+    // mark being added to what they wrote.
+    const echo = oneThought
+      ? `\u201c${brought}\u201d${/[.!?\u2026]$/.test(brought) ? '' : '.'}`
+      : '';
 
-    // With no words, the door alone frames the opening — we do not pretend to
-    // more contact than the member actually gave us.
-    const contact = brought ? door.contact : 'You are here.';
+    const q = DOORWAY_QUESTION[doorway] ?? DOORWAY_QUESTION.dunno;
+    const question = brought.length > 0 ? q.advancing : q.eliciting;
 
     const opening = name ? `${name}, I\u2019m here.` : 'I\u2019m here.';
-    return `${opening} ${contact} ${door.invitation}`;
+    return [opening, echo, question].filter(Boolean).join(' ');
   }
 
   private static getFirstContactGreeting(context: GreetingContext): string {
