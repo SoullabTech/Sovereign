@@ -227,6 +227,104 @@ SHAs with one tree deserves the explanation rather than the ambiguity.
 
 ---
 
+## P0-D — the deployed-candidate witness
+
+Executed 2026-08-26 by the founder on minisforum, against the running container. Both legs
+witnessed on the same deployed candidate; the running identity was read before and after each
+window and did not move.
+
+```text
+RUNNING IDENTITY   GIT_COMMIT   83efa86df      (before AND after both windows)
+                   DEPLOY_LANE  deploy-lane
+```
+
+### Leg 1 — file-backed arrival (`artifact_extraction`)
+
+Arrived 2026-08-26 01:46:59Z, after the 01:44 deploy of this candidate; witnessed at ~01:50Z.
+
+```text
+claimed                t
+source_custody         source_custodied
+artifact_ref/hash/size present, all three
+verifyCustody          custodied=true   reason=artifact_recovered
+```
+
+`artifact_recovered` is the load-bearing word: the bytes were re-read from the vault and
+re-hashed at witness time, so what passed is that the original is genuinely **recoverable**, not
+merely that a row says so.
+
+### Leg 2 — pasted arrival (`member_supplied_text`)
+
+Arrived 2026-08-26 16:28:07Z through the member-facing import form at
+`/press/manuscript?import=1` — the textarea path, confirmed with **Import into Author Studio**
+and then **Save manuscript**. Manuscript `094d0a2a-e2fd-4e9e-8a91-26cf293acb0e` ("Transcription",
+~5 pages), which opened in the Writer Canvas and reported `saved`.
+
+```text
+source_kind            member_supplied_text
+artifact_ref           NULL
+artifact_hash          NULL
+artifact_size          NULL
+claimed                t
+source_custody         source_custodied
+verifyCustody          custodied=true   reason=member_supplied_text
+```
+
+All three artifact fields NULL is the whole point. A pasted arrival that carried artifact
+provenance would be the precise failure WS-01 exists to make impossible — text presented as an
+extracted file, so a later reader believes an original exists that never did. The CHECK
+constraint makes that row unwritable; this witness confirms the real path produces the honest one.
+
+### Raw rows as read
+
+```text
+     source_kind      | ref_null | hash_null | size_null | claimed |  source_custody  |          created_at
+----------------------+----------+-----------+-----------+---------+------------------+-------------------------------
+ artifact_extraction  | f        | f         | f         | f       |                  | 2026-08-25 15:47:44.142729+00
+ artifact_extraction  | f        | f         | f         | f       |                  | 2026-08-26 01:34:31.535763+00
+ artifact_extraction  | f        | f         | f         | t       | source_custodied | 2026-08-26 01:46:59.10073+00
+ member_supplied_text | t        | t         | t         | t       | source_custodied | 2026-08-26 16:28:07.472422+00
+```
+
+Rows 1 and 2 are **unclaimed** — recorded arrivals the member never confirmed into a manuscript.
+Not failures, and not counted: an arrival with no manuscript is a member who changed their mind.
+Reported here rather than filtered, because a future reader counting four rows and two passes
+deserves the reason.
+
+### One honest limit of the supporting witness
+
+The `scripts/verify-p0d.ts` inside the running container reported `arrivals found: 1`. It windows
+its read to roughly the last hour, so this run saw only the pasted arrival. That is why the raw
+SQL above is the authoritative read and the script is the `verifyCustody` confirmation — exactly
+as this record required in advance. The file-backed leg's `verifyCustody` result is the one
+captured at ~01:50Z, on this same candidate, and row 3 above confirms that binding still holds.
+
+A two-leg version of the script now travels with the ship candidate so a future witness does not
+depend on a run-time window and reports each leg by name.
+
+### The two legs were witnessed ~15 hours apart
+
+Deliberate and admissible: the requirement is both legs on the **exact deployed candidate**, not
+both within one sitting. `GIT_COMMIT` was verified as `83efa86df` at the start and end of each
+window, and no deploy occurred between them — the production hold held, which is what the hold is
+for.
+
+---
+
+## P0 verdict
+
+```text
+P0-M  MECHANISM        PASS   27/27 witness controls · 23/23 unit · both negative legs
+P0-D  DEPLOYED         PASS   both legs on 83efa86df, running identity verified either side
+P0    SOURCE CUSTODY   PASS
+```
+
+What arrived is preserved before anything interprets it, and the system cannot claim a provenance
+it does not have. That is the whole of P0, and it now holds on the deployed candidate rather than
+only in a test harness.
+
+---
+
 ## State after this run
 
 ```text
@@ -235,15 +333,18 @@ CANDIDATE              83efa86df2e6b5d158bbf4d478061c29a5a8e409
 CANDIDATE TREE         3d0a7116653c40b467317a998e278e081518a0ba
 CANDIDATE GATE         PASS
 P0-M  MECHANISM        PASS
-P0-D  DEPLOYED         NOT EXECUTED — deploy lease not established
-P0    SOURCE CUSTODY   NOT CLOSED
-MEMBER WALK A–H        NOT REACHED
-G1 / FINAL CRITERION   NOT REACHED
-FINAL VERDICT          NOT AVAILABLE
-FOUNDER ACCEPTANCE     UNAVAILABLE
-WS-01 STATE            IN ACCEPTANCE
-CANVAS FREEZE          BINDING
-DEPLOY                 HOLD
-MEMBER ACTS            HOLD
-EVIDENCE RECORD 003    OPEN / IN PROGRESS
+P0-D  DEPLOYED         PASS
+P0    SOURCE CUSTODY   PASS
+MEMBER WALK A–H        A–C REACHED (import form, confirm, save — the pasted leg walked them)
+G1 / FINAL CRITERION   AWAITING FOUNDER ACCEPTANCE
+FINAL VERDICT          AVAILABLE — P0 closed; acceptance is the founder's act, not this record's
+FOUNDER ACCEPTANCE     PENDING
+WS-01 STATE            IN ACCEPTANCE — P0 closed
+CANVAS FREEZE          BINDING until acceptance
+DEPLOY                 HOLD until acceptance
+MEMBER ACTS            HOLD until acceptance
+EVIDENCE RECORD 003    OPEN — closes on Founder Acceptance
 ```
+
+⛔ **This record does not accept WS-01.** Assembling evidence is not acceptance; P0 passing is not
+acceptance. Acceptance is an explicit founder act, and the deploy hold stands until it is given.
