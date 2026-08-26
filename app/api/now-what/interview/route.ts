@@ -7,7 +7,8 @@ export async function generateStaticParams() {
  * What Now? room — a live MAIA encounter (not a scripted Spiralogic flow).
  *
  * Every turn is a real model call that responds to the person's ACTUAL last
- * message first. The load-bearing instruction is RESPONSE_GRAMMAR: reflect what
+ * message first. The load-bearing instruction is the response grammar
+ * (lib/nowWhat/roomGrammar.ts): reflect what
  * they said → name the live tension → offer a choice of direction → only then,
  * optionally, a light elemental touch. Spiralogic shapes MAIA's attention
  * (PHASE_LENS, one quiet line held underneath); it must never replace it or
@@ -46,7 +47,8 @@ import { inferSpiralogicCell, type Element } from '@/lib/consciousness/spiralogi
 // writes the exchange — incompatible with this room's ephemeral, client-held,
 // no-write contract. Everything composed is read-only; MAIA_RUNTIME_PROMPT already
 // embeds the memory-canon guard.
-import { composeRoomTurnPrompt, cloudRegisterPinned } from '@/lib/maia/roomComposition';
+import { composeRoomTurnPrompt, composeConstitutionalFloor, cloudRegisterPinned } from '@/lib/maia/roomComposition';
+import { buildResponseGrammar } from '@/lib/nowWhat/roomGrammar';
 
 const MAX_TOKENS_TURN = 700;
 const MAX_TOKENS_PROPOSE = 1500;
@@ -82,26 +84,6 @@ Hard limits:
 - No lists, headings, or analysis. Speak as one warm, unhurried turn in plain language — a few sentences, not a wall of theory.
 Respond with only your next spoken turn.`.trim();
 
-// The load-bearing instruction. Spiralogic shapes MAIA's attention; it must never
-// replace it. This grammar keeps the person's actual words primary and the
-// elemental lens optional and last — the fix for phase-scripted, could-be-anyone
-// responses (see route header + PHASE_LENS below).
-const RESPONSE_GRAMMAR = `
-How you respond — this governs every turn, above everything else:
-
-Respond to THIS person's actual last message. Never reach for a prepared or generic question. Build your turn in this order, spoken as natural flowing speech (never a numbered list):
-
-1. Reflect what they actually said. Name the specific thing — in their own words or close to them. If they named two things at once, hold both.
-2. Name the live tension or need underneath it — what makes THIS moment particular for them. Stay tentative: "It sounds like...", "I'm noticing...".
-3. Offer a choice of direction and let them steer. Usually two: something practical (map the next concrete step) and something reflective (slow down and listen for what the moment is asking). Sometimes a creative angle or a specific next action fits better — or an outward one: where this wants to be lived, a person it involves, a conversation it's asking for. Offer it — do not decide for them.
-4. Only if it genuinely fits, and only after the above, you may add a light elemental or Spiralogic touch — as color, never as a label, never as the point. If it doesn't fit, leave it out entirely.
-
-Understanding repair — this OVERRIDES the order above:
-If they say they don't understand, ask what you mean, sound unsure, or push back — stop advancing. Do NOT ask a new question. Say what you meant again, plainly and in fewer words, grounded in what they just said, and check whether you're with them. Never re-ask a question they didn't answer.
-
-The test every turn must pass:
-Your reply must be impossible to send unchanged to a different person — it must refer to something THIS person actually said. If it could be shown to a hundred people as-is, it has failed; rewrite it until it belongs to this one conversation.`.trim();
-
 // Spiralogic as a quiet interpretive lens, not an agenda. One line per phase —
 // what MAIA is gently attending to underneath, never a script to read from.
 const PHASE_LENS: Record<string, string> = {
@@ -113,8 +95,12 @@ const PHASE_LENS: Record<string, string> = {
   water_3: "what they know that can't be taught directly — knowing that has to be lived into.",
 };
 
-function buildPhasePrompt(phase: string): string {
-  const lens = PHASE_LENS[phase];
+function buildPhasePrompt(phase: string, suppressSymbolicRegister = false): string {
+  // When the symbolic register is suppressed, the Spiralogic phase lens goes with
+  // it — the lens IS the register, held underneath. Suppressing step 4 while
+  // leaving the elemental lens in place would suppress the surface and keep the
+  // source (NW-I01; rationale at SYMBOLIC_TOUCH_STEP).
+  const lens = suppressSymbolicRegister ? undefined : PHASE_LENS[phase];
   const lensLine = lens
     ? `Quiet lens, held underneath — never the agenda: this room is gently attending to ${lens}`
     : 'Quiet lens, held underneath — never the agenda: stay with whatever is actually alive for them right now.';
@@ -122,7 +108,7 @@ function buildPhasePrompt(phase: string): string {
 
 ${TWELVE_DISCIPLINES}
 
-${RESPONSE_GRAMMAR}
+${buildResponseGrammar(suppressSymbolicRegister)}
 
 ${lensLine}
 
@@ -131,7 +117,7 @@ ${HARD_LIMITS}`;
 
 // Return visit: the participant previously committed to one practice. The room does
 // not begin again — it begins from what happened. Continuity, not conversation history.
-function buildReturnPrompt(practice: string): string {
+function buildReturnPrompt(practice: string, suppressSymbolicRegister = false): string {
   return `You are MAIA, in a live RETURN encounter in the What Now? room — a real conversation, not an assessment.
 
 Last time, this person chose one practice to actually live, in their own words:
@@ -143,7 +129,7 @@ Receive what actually happened — lived experience before analysis. Whether the
 
 ${TWELVE_DISCIPLINES}
 
-${RESPONSE_GRAMMAR}
+${buildResponseGrammar(suppressSymbolicRegister)}
 
 Quiet lens, held underneath — never the agenda: what the practice revealed as they lived it (or didn't).
 
@@ -341,6 +327,25 @@ export async function POST(request: NextRequest) {
       });
       systemPrompt = composed.systemPrompt;
       fieldComposed = composed.field;
+    } else {
+      // NW-I01 (2026-08-26) — closes NW-S01 bypass 1.
+      //
+      // Composition was previously guarded by `if (mode === 'turn')`, so the
+      // 'propose' path ran on PROPOSE_SYSTEM alone with NO constitutional floor
+      // composed at all — unconditionally, not flag-dependent. That is the
+      // product's most interpretively loaded operation: the moment MAIA offers
+      // back "the threads you heard returning", where "MAIA proposes, the
+      // member authors" is under the most pressure.
+      //
+      // 'propose' still does NOT take the full turn composition (presence,
+      // field, position, lesson): it is a thin JSON extractor and widening it
+      // would change what it sees, which is not this unit's business. It takes
+      // the floor and nothing else.
+      //
+      // Ordering is the same as the turn path — floor FIRST, PROPOSE_SYSTEM
+      // LAST — so its closing "Return ONLY valid JSON" instruction keeps the
+      // final word.
+      systemPrompt = composeConstitutionalFloor(systemPrompt);
     }
 
     let messages = history.map(t => ({ role: t.role, content: t.content }));

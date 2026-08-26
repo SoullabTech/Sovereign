@@ -217,6 +217,26 @@ async function assemblePresenceContext(
  * encounter) and must not pass through here. With presence off and no field,
  * the returned systemPrompt is exactly the room's own prompt, unchanged.
  */
+/**
+ * Compose the constitutional floor above a room's own prompt — nothing else.
+ *
+ * NW-I01 (2026-08-26). For call sites that must carry the floor but must NOT
+ * receive the full turn composition (presence, field, position, lesson): most
+ * immediately the interview route's `propose` mode, a thin JSON extractor that
+ * previously ran on its own string with no floor at all (NW-S01, bypass 1).
+ *
+ * SCOPE (founder ruling, NW-I01): this makes the floor structurally reliable.
+ * It does NOT invent or broaden the floor's substantive meaning — the content
+ * of MAIA_RUNTIME_PROMPT is unchanged by this unit, and the safety content it
+ * still lacks is blocked on qualified clinical review, not on this repair.
+ *
+ * Ordering matches `composeRoomTurnPrompt`: floor FIRST, the room's own grammar
+ * LAST, so a room's standing hard limits keep the final word.
+ */
+export function composeConstitutionalFloor(roomPrompt: string): string {
+  return [MAIA_RUNTIME_PROMPT, roomPrompt].filter(Boolean).join('\n\n');
+}
+
 export async function composeRoomTurnPrompt(opts: {
   /** The room's own Field Configuration (grammar + standing hard limits). */
   roomPrompt: string;
@@ -282,10 +302,16 @@ export async function composeRoomTurnPrompt(opts: {
     }
   }
 
-  if (!presenceEnabled && !fieldBlock) {
-    return { systemPrompt: roomPrompt, field: null };
-  }
-
+  // NW-I01 (2026-08-26): the constitutional floor composes UNCONDITIONALLY.
+  //
+  // This function previously short-circuited here when presence was flagged off
+  // and no field resolved, returning the room's own prompt alone — so
+  // MAIA_RUNTIME_PROMPT, the constitutional floor, was skippable by an env flag.
+  // A floor a flag can remove is not a floor (NW-S01, bypass 2).
+  //
+  // `presenceEnabled` still gates PRESENCE and nothing else. The two were
+  // conflated; they are now separate. When presence is off and no field
+  // resolves, the composition is [floor, roomPrompt] — never roomPrompt alone.
   const presence = presenceEnabled
     ? await assemblePresenceContext(memberId, lastMemberMessage, roomTag, ephemeralSessionId)
     : '';
@@ -296,5 +322,5 @@ export async function composeRoomTurnPrompt(opts: {
     systemPromptChars: systemPrompt.length,
     field: provenance?.slug ?? null,
   });
-  return { systemPrompt, field: provenance };
+  return { systemPrompt, field: provenance ?? null };
 }
