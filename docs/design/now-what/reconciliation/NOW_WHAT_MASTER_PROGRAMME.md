@@ -10,7 +10,8 @@ Binding unless Kelly explicitly supersedes it.
 
 ```
 NW-D00 census ✅ → NW-R01 flourishing ✅ → NW-R02 boundary ✅ → NW-S01 qualified safety ✅
-  → NW-D01 Larry doctrine → NW-D01.5 relational architecture → NW-D02 human journey → NW-D03 IA
+  → NW-I01 floor repair ✅ → NW-D01 Larry doctrine (OPEN — needs the custody sitting)
+  → NW-D01.5 relational architecture → NW-D02 human journey → NW-D03 IA
   → [FOUNDER IA RULING] → NW-D04 design doctrine → NW-D05 Figma
   → NW-D06 user evaluation → [FOUNDER PROTOTYPE APPROVAL]
   → NW-D07 architecture reconciliation → NW-D08+ bounded implementation
@@ -90,8 +91,12 @@ capability.
 - Shipped Home violates previously ruled gesture architecture (**NW-D00 F3**).
 - "What is alive now" is **already governed**: aliveness may be ordered only by member-authored
   facts (recovered ontology ruling, 2026-08-05).
-- The six flourishing domains are unvalidated practice doctrine — not attributable to a research
-  model or, on current evidence, to Larry (**NW-R01 F1/F2**).
+- The six flourishing domains **are Larry's own six** (NW-D01 F1, correcting NW-R01 F1) — but
+  unvalidated (the one attempt was a leading instrument) and unlicensed (agreement unsigned,
+  Attachment A nonexistent). `scripts/seed/seed-flourishing-field.ts` still declares the wrong
+  five including invented "Attention" (**NW-D01 F2**).
+- **Larry's professional scope, referral practice and obligations are absent from the entire
+  corpus** (**NW-D01 F5**) — this blocks NW-S01's exception and NW-R02-C2.
 - Safety/off-ramp inheritance is **not reliably composed** into the room path (**NW-R02**).
 - Most external frameworks belong in Layer 3, not Layer 1.
 - IA questions — collapsing rooms, splitting The Room, whether My Question is a destination —

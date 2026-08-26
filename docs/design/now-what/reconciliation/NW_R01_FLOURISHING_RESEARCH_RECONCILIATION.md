@@ -34,6 +34,31 @@ score**, and what genuinely belongs in Now What?.
 
 ---
 
+## ⚠️ CORRECTED BY NW-D01 (2026-08-26) — READ FIRST
+
+**The central finding of this unit is substantially wrong and should not be relied on as
+written.** NW-D01 established from `docs/reviews/LARRY_IP_CORPUS_INVENTORY_AUDIT_2026-08-03.md`
+§3a that the six shipped domains **are Larry's own six** — Relationships · Meaning and Purpose ·
+**Time Affluence** · Presence · **Health and Energy** · Contribution — all six matching what
+ships today.
+
+I measured them against VanderWeele and called them an *"unattributed hybrid"* that *"adds Time
+(no research pedigree)"*. That was the wrong yardstick: they were never meant to be VanderWeele,
+and "Time" is **Time Affluence, Larry's own dimension**. The audit also records that the drift it
+found (invented *"Attention"*, dropped Time Affluence and Health & Energy) was **repaired in the
+runtime path** on 2026-08-05.
+
+**What survives from this unit's finding:** the domains remain **unvalidated** (the one attempt —
+Charter Workbook PART III — was a leading instrument whose answers are compromised) and
+**unlicensed** (agreement unsigned, Attachment A nonexistent). R01-F2 (they ship as fixed
+architecture against ruling D-D) stands. The observation about material stability stands too, but
+as a **question for Larry about his own framework**, not as a defect.
+
+The framework reconciliation below (rulings on VanderWeele, Ryff, PERMA, SDT, Keyes, Capabilities,
+Diener) is unaffected — none of it depended on the domain provenance claim.
+
+---
+
 ## THE FINDING THAT DRIVES THIS UNIT
 
 Now What? **already ships a flourishing taxonomy**, and it is not any of the models under
@@ -319,8 +344,11 @@ against*, not what the member is shown.
 
 ## FINDINGS
 
-**R01-F1 — The shipped six domains are an unattributed hybrid with an encoded population
-assumption.** They are not VanderWeele, Ryff, or PERMA. They drop material stability, convert
+**R01-F1 — ⚠️ CORRECTED BY NW-D01 (see head of document). ~~The shipped six domains are an
+unattributed hybrid with an encoded population assumption.~~ They are Larry's own six. What
+stands: they are unvalidated and unlicensed.** Original text follows for the record.
+
+~~The shipped six domains are an unattributed hybrid with an encoded population assumption.~~** They are not VanderWeele, Ryff, or PERMA. They drop material stability, convert
 character & virtue into contribution, and add Time (no research pedigree, genuine practice
 wisdom). The omissions presuppose a materially secure member — which the founder's own
 repositioning now contradicts.
