@@ -3,8 +3,8 @@
  * Offline-capable consciousness computing with Matrix V2 assessment
  */
 
-const CONSCIOUSNESS_CACHE = 'consciousness-v3';
-const CONSCIOUSNESS_VERSION = '3.0.1'; // Non-GET bypass — Safari POST-body fix, Jul 29 2026
+const CONSCIOUSNESS_CACHE = 'consciousness-v4';
+const CONSCIOUSNESS_VERSION = '4.0.0'; // SA-02: network-first navigation + v4 cache bump (releases stale v3 shells) 2026-08-25. Non-GET bypass retained (Safari POST-body fix, v3.0.1 Jul 29 2026)
 
 // Core consciousness computing files
 const CONSCIOUSNESS_FILES = [
@@ -153,13 +153,24 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Handle main navigation requests
+  // Handle main navigation requests — NETWORK-FIRST (SA-02, 2026-08-25).
+  // The HTML shell must never be pinned across deploys: a stale cached document
+  // carries obsolete Server Action IDs that fail against the current server
+  // ("Failed to find Server Action"). Serve current network HTML when online;
+  // fall back to cache only when the network is unavailable (offline support).
   if (event.request.mode === 'navigate') {
     event.respondWith(
-      caches.match(event.request).then((response) => {
-        return response || fetch(event.request).catch(() => {
-          return caches.match('/');
-        });
+      fetch(event.request).then((networkResponse) => {
+        if (networkResponse && networkResponse.ok) {
+          const responseClone = networkResponse.clone();
+          caches.open(CONSCIOUSNESS_CACHE).then((cache) => {
+            cache.put(event.request, responseClone);
+          });
+        }
+        return networkResponse;
+      }).catch(() => {
+        // Offline only: fall back to the cached document, then the cached shell.
+        return caches.match(event.request).then((cached) => cached || caches.match('/'));
       })
     );
     return;
