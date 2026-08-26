@@ -11,7 +11,7 @@ Binding unless Kelly explicitly supersedes it.
 ```
 NW-D00 census ✅ → NW-R01 flourishing ✅ → NW-R02 boundary ✅ → NW-S01 qualified safety ✅
   → NW-I01 floor repair ✅ → NW-D01 Larry doctrine (OPEN — needs the custody sitting)
-  → NW-D01.5 relational architecture → NW-D02 human journey → NW-D03 IA
+  → NW-D01.5 vocabulary convergence ✅ → NW-D02 human journey (HYPOTHESIS ONLY) → NW-D03 IA
   → [FOUNDER IA RULING] → NW-D04 design doctrine → NW-D05 Figma
   → NW-D06 user evaluation → [FOUNDER PROTOTYPE APPROVAL]
   → NW-D07 architecture reconciliation → NW-D08+ bounded implementation
@@ -96,7 +96,12 @@ capability.
   Attachment A nonexistent). `scripts/seed/seed-flourishing-field.ts` still declares the wrong
   five including invented "Attention" (**NW-D01 F2**).
 - **Larry's professional scope, referral practice and obligations are absent from the entire
-  corpus** (**NW-D01 F5**) — this blocks NW-S01's exception and NW-R02-C2.
+  corpus** (**NW-D01 F5**) — this blocks NW-S01's exception and NW-R02-C2. A **Scope, Boundaries
+  and Referral** section (§4b) has been added to the custody sitting agenda to elicit them.
+- **NW-D02 may proceed as hypothesis only**: it may sketch *"if Larry ratifies X, the field
+  doctrine could compose like Y"*, and may **not** harden class-D material into canonical
+  prompts, runtime behavior, or safety policy.
+- **Production Flourishing-vocabulary state is UNKNOWN** and stays so until the real query runs.
 - Safety/off-ramp inheritance is **not reliably composed** into the room path (**NW-R02**).
 - Most external frameworks belong in Layer 3, not Layer 1.
 - IA questions — collapsing rooms, splitting The Room, whether My Question is a destination —
