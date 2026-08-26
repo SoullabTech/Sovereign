@@ -154,12 +154,18 @@ commitment ("I'll find better ways of offering platform development"), the membe
 "Reflect on what you are living", and My Work renders empty. The same guard governs My
 Coaching's second read (`coaching/page.tsx:107`). Home promises material the room cannot show.
 
-**F5 — The governing ontology document does not exist.**
-`docs/design/now-what/NOW_WHAT_ROOM_ONTOLOGY_CONSOLIDATION_2026-08-05.md` is cited as the
-authority by `lib/nowWhat/rooms.ts` and by **7 route files** (`field`, `work`, `coaching`,
-`cultivate`, `next`, `position`, `calendar`). It is not in the repository. The five-room
-ontology — including six room retirements — is enacted in code with no written ruling behind
-it. (Same defect class as the `WISDOM_IS_RECOVERED.md` citation noted in `CLAUDE.md`.)
+**F5 — CORRECTED (2026-08-26, post-recovery): the governing ontology document was orphaned by
+a branch split, not missing.**
+*Original finding, superseded*: ~~the governing ontology document does not exist.~~ That was read
+against a **shallow clone** (149 of 5,278 commits) and overstated the loss. On full history the
+document exists and has been **recovered**: the implementation (`ca8d1cac9`) merged to
+`clean-main-no-secrets`; the ruling (`95cfae2e8`, and a corrected 2026-08-09 version at
+`c42cfe4a3`) lived only on branches that never landed. There is no deletion commit. The document
+is restored to its cited path, so `rooms.ts` and the 7 route citations now resolve. The recovered
+ruling is substantial and load-bearing — it already ruled the "what is alive now" question on
+2026-08-05, and it exposes two places where the build went past its authorization (D-B enacted
+while open; D-D shipped as fixed architecture against a ruling that recommended a declinable
+offering). Full detail: `NW_D00_ONTOLOGY_CUSTODY_RECORD_2026-08-26.md`.
 
 **F6 — The Room's implementation lineage does not match the door's promise.**
 Home's fifth door reads *"The Room · A place to think · Think something through"* →
@@ -215,7 +221,12 @@ research reconciliation (R01, R02) and Larry doctrine (D01). Running NW-F00 next
 the interface before the human model and the Larry doctrine that are supposed to determine it —
 the exact inversion §II forbids. **Flagged, not resolved: sequencing is the founder's call.**
 
-**C4 — "What is alive now" vs. the adaptation boundary.**
+**C4 — RESOLVED by the recovery.** The 2026-08-05 ruling already settled this: *"five doors,
+aliveness-ordered by member-authored facts only."* The shipped Home renders in fixed source
+order and implements no aliveness ordering — a third departure from ruled ground alongside F3.
+Original framing retained below.
+
+**C4 (original) — "What is alive now" vs. the adaptation boundary.**
 The proposed Home centers *what is alive now*. The forbidden list includes *"You seem stuck"* —
 system-voiced findings about the person. These are reconcilable but not identical. Census note:
 the existing code already selects `questions[0]` from an ordering of
@@ -274,7 +285,7 @@ Nothing new. The six retirements of 2026-08-05 were executed cleanly and are alr
 
 | Question | Why unknown |
 |---|---|
-| **Does the Now What? conversation path inherit any MAIA safety/off-ramp layer?** | Safety modules exist in `lib/spiritual-support/*` and elsewhere in MAIA. The room posts to `/api/now-what/interview`. Whether that path reaches them was **not traced in this unit**. ABSENT would be an overstatement; ABSENT is accurate only for the Now What? namespace itself (F7). |
+| ~~**Does the Now What? conversation path inherit any MAIA safety/off-ramp layer?**~~ **RESOLVED — it does not.** See `NW_D00_SAFETY_INHERITANCE_TRACE_2026-08-26.md`: the constitutional floor is composed but conditionally (skipped when `NOW_WHAT_MAIA_PRESENCE_ENABLED !== '1'` and no field block), it carries no crisis/referral instruction, the provider layer has none, and MAIA's safety modules are not imported on this path. | Safety modules exist in `lib/spiritual-support/*` and elsewhere in MAIA. The room posts to `/api/now-what/interview`. Whether that path reaches them was **not traced in this unit**. ABSENT would be an overstatement; ABSENT is accurate only for the Now What? namespace itself (F7). |
 | **What Larry material is authorized for use** | Corpus inventory audited (2026-08-03); Attachment A instrument at `v0`, **unsigned**. Custody unestablished. §XXIII cannot be answered from the repo. |
 | **Whether members ever arrive with a `fieldContext`** | Determines whether F4 is universal or edge-case. Requires production traffic evidence, not code reading. |
 | **Whether five destinations match observed member need** | No user research exists in the record. The five-room ontology was ratified by design reasoning; its ruling document is missing (F5). |
