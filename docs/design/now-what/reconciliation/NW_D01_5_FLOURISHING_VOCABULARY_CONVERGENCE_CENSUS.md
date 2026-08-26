@@ -176,3 +176,74 @@ production database rather than seeded.
 3. **Run the §7 query.**
 
 ## STOP
+
+---
+
+# ADDENDUM — R1–R4 IMPLEMENTED (2026-08-26, founder-authorized)
+
+## Correction to §3 of this census
+
+**§3 said "one path". There were two.** The stale five appeared in `about_practice` **and** in
+`maia_guidance.preferred_language` (seed line ~70), and `maia_guidance` composes into the field
+block via `renderFieldGuidance()` alongside `about_practice`. Both are repaired.
+
+## What was done
+
+**R1 — one shared source.** `lib/nowWhat/flourishingDomains.ts` holds the canonical slugs, prose
+forms, a sentence builder, and `assertFlourishingVocabulary()`. The seed imports it, derives its
+domain sentence from it, and asserts at startup — so divergence is a crash, not a prompt. The
+module's header states the provenance limit in full: **convergence mechanism, not ratification.**
+
+**R2 — unratified doctrine out of prompt-bound content.** `about_practice` no longer asserts
+*"flourishing is not a destination — it is a practice"* nor describes Larry's framework. It is now
+plainly Soullab-authored demo scaffolding making no claim about any real practitioner. The demo
+field remains a demo field.
+
+**R3 — the witness test that did not exist.** `__tests__/now-what-flourishing-vocabulary.test.ts`
+(9 tests) parses the migration and asserts the shared constant matches the CHECK set **exactly**;
+pins the My Work room and the room's cultivate doors to the same set; bans the retired
+`attention` from every runtime-bearing declaration (comment-stripped, so historical notes are
+allowed); and asserts R2's exclusions.
+
+**R4 — the manifest annotated, not rewritten.** `docs/fields/FLOURISHING_FIELD_MANIFEST.md` gains
+a header marking it historical and pointing at the canonical source. Content untouched, preserved
+as evidence of the earlier validation pass.
+
+## Verification — including negative controls
+
+Tests passing is not evidence a test works. Three controls were run, each reverted:
+
+| Control | Result |
+|---|---|
+| Reintroduce the stale five into the seed | **2 tests fail** ✓ |
+| Diverge the shared constant from the CHECK set | **5 tests fail** ✓ |
+| Restore the class-D doctrine to `about_practice` | **1 test fails** ✓ |
+
+The instrument was shown capable of seeing the object before being trusted. Import resolution
+under `tsx` was also verified by executing a probe, not assumed.
+
+**Gates**: 30/30 tests across the three now-what suites · `typecheck` no regressions ·
+`check:no-supabase` clean. No member data, schema, migration, or Larry doctrine touched.
+
+## Flagged, NOT changed — needs a founder ruling
+
+`professional_practice` in the same seed still carries a class-D description of a **real named
+person**: *"Larry Closs — executive coach and consultant developing an approach that integrates
+executive leadership with positive psychology…"*, labelled *"(Demo declaration, pending Larry's
+own.)"* It composes into the prompt as *"The practitioner: …"*.
+
+R2 as authorized named `about_practice`. This is the same class of material in the same file
+reaching the same prompt. **Left unchanged because narrowing or widening the ruling is not mine
+to do** — but it should be ruled alongside the `about_practice` authority review below.
+
+## Recommended next unit (founder-proposed, 2026-08-26)
+
+**`about_practice` as an authority boundary.** The finding that outlives this repair: `about_practice`
+is a **prompt-composition side door around `corpusIsComposable()`**. That gate returns `false`
+unconditionally so unratified corpus cannot compose — and the *summary of* the corpus composes
+freely, as does `how_we_work_together`, `how_maia_supports`, `professional_practice`, and
+`maia_guidance`.
+
+Scope: **audit, do not change behavior.** What classes of material may enter each composing column
+· who may author them · what ratification gate, if any, should apply before they reach every room
+turn · why the corpus gate exists while its neighbours have none.
