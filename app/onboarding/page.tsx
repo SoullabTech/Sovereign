@@ -1,13 +1,15 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import CompleteWelcomeFlow from '@/components/onboarding/CompleteWelcomeFlow';
+import { ArrivalThreshold } from '@/components/arrival/ArrivalThreshold';
+import type { DoorwayId } from '@/lib/maia/arrivalContext';
 import { useRouter } from 'next/navigation';
 import { apiUrl } from '@/lib/http/apiBase';
 
 export default function OnboardingPage() {
   const router = useRouter();
   const [userName, setUserName] = useState<string>('Explorer');
+  const [crossing, setCrossing] = useState(false);
 
   useEffect(() => {
     // Get user name from localStorage
@@ -53,7 +55,18 @@ export default function OnboardingPage() {
     }
   }, [router]);
 
-  const handleComplete = async () => {
+  // MLX-06 Unit 2. The legacy first-run path (ten lenses -> birth data ->
+  // elemental lesson -> /choose) is replaced by the ruled threshold. The
+  // COMPLETION MECHANISM IS UNCHANGED: the same localStorage keys and the same
+  // canonical server call (POST /api/members/progress, which sets
+  // members.onboarded = true) still mark the member onboarded, so returning
+  // members bypass this surface exactly as before.
+  //
+  // What changed is only what the member is asked, and where they land: MAIA,
+  // which is where the ruled spine ends. /choose is no longer part of the
+  // first-run chain; it is left in place, unmodified.
+  const handleCross = async (_attention: string, _doorway: DoorwayId) => {
+    setCrossing(true);
     // Get existing user data - MUST have valid server-assigned ID
     const existingUser = localStorage.getItem('beta_user');
     let userId: string | null = null;
@@ -75,6 +88,7 @@ export default function OnboardingPage() {
     // CRITICAL: Don't proceed without valid server ID
     if (!userId) {
       console.error('[onboarding] Cannot complete - no valid server ID');
+      setCrossing(false);
       alert('Session expired. Please sign in again.');
       localStorage.removeItem('beta_user');
       router.push('/signin');
@@ -116,13 +130,17 @@ export default function OnboardingPage() {
     users[existingUsername] = updatedUser;
     localStorage.setItem('beta_users', JSON.stringify(users));
 
-    router.push('/choose');
+    // The ruled spine ends at MAIA BEGINS. The arrival context the member just
+    // gave is already in sessionStorage (session-scoped, per MLX-R3) and travels
+    // with them — it is never placed on the URL.
+    router.push('/maia');
   };
 
   return (
-    <CompleteWelcomeFlow
-      userName={userName}
-      onComplete={handleComplete}
+    <ArrivalThreshold
+      name={userName === 'Explorer' ? '' : userName}
+      busy={crossing}
+      onCross={handleCross}
     />
   );
 }
