@@ -21,6 +21,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
+/* A truncated UUID is still a fragment of the real identifier. memberRef
+   is a one-way hash: correlation across log lines without the id itself. */
+import { memberRef } from '@/lib/privacy/memberRef';
 import { generateWithClaude } from '@/lib/ai/claudeClient';
 import {
   buildLensPrompt,
@@ -412,7 +415,7 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
     const remaining = Number(left.rows[0].remaining);
 
     console.log('[MAIA/studio] review pass', {
-      memberIdPrefix: memberId.slice(0, 8),
+      member: memberRef(memberId),
       reviewId: review.id,
       lens,
       lensLabel: lensById(lens)?.label ?? lens,
@@ -687,7 +690,7 @@ async function readAsReader(params: {
     );
 
     console.log('[MAIA/studio] reader pass', {
-      memberIdPrefix: memberId.slice(0, 8),
+      member: memberRef(memberId),
       reviewId: review.id,
       phenomenon: pass.lens,
       checkpoint: pass.segment_label,

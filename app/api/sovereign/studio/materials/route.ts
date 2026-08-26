@@ -19,6 +19,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createHash } from 'crypto';
 import { query } from '@/lib/db/postgres';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
+/* A truncated UUID is still a fragment of the real identifier. memberRef
+   is a one-way hash: correlation across log lines without the id itself. */
+import { memberRef } from '@/lib/privacy/memberRef';
 import { writeVaultBytes } from '@/lib/storage/fileVault';
 import { parseUpload, UnsupportedUploadError } from '@/lib/manuscript/ingest/parseUpload';
 import {
@@ -213,7 +216,7 @@ async function bringFile(request: NextRequest, memberId: string) {
   );
 
   console.log('[MAIA/studio] material arrived', {
-    memberIdPrefix: memberId.slice(0, 8),
+    member: memberRef(memberId),
     kind,
     bytes: bytes.byteLength,
     extracted: extractedText !== null,
@@ -310,7 +313,7 @@ async function bringTyped(request: NextRequest, memberId: string) {
   );
 
   console.log('[MAIA/studio] material arrived', {
-    memberIdPrefix: memberId.slice(0, 8),
+    member: memberRef(memberId),
     kind,
     chars: text.length,
   });

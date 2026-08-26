@@ -16,6 +16,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createHash } from 'crypto';
 import { query } from '@/lib/db/postgres';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
+/* A truncated UUID is still a fragment of the real identifier. memberRef
+   is a one-way hash: correlation across log lines without the id itself. */
+import { memberRef } from '@/lib/privacy/memberRef';
 import { lensesFor, segment, type PartRange } from '@/lib/studio/developmental/lenses';
 import { planPasses, type PriorPass } from '@/lib/studio/developmental/incremental';
 import { checkpointsFor, READER_PHENOMENA } from '@/lib/studio/developmental/reader';
@@ -195,7 +198,7 @@ export async function POST(request: NextRequest) {
       );
 
       console.log('[MAIA/studio] reader reading opened', {
-        memberIdPrefix: memberId.slice(0, 8),
+        member: memberRef(memberId),
         reviewId,
         chars: content.length,
         checkpoints: checkpoints.length,
@@ -293,7 +296,7 @@ export async function POST(request: NextRequest) {
     }
 
     console.log('[MAIA/studio] developmental review opened', {
-      memberIdPrefix: memberId.slice(0, 8),
+      member: memberRef(memberId),
       reviewId,
       chars: content.length,
       segments: segments.length,
