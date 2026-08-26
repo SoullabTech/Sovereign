@@ -35,7 +35,8 @@ enters the other. Nothing crosses that line implicitly.
 ```text
 INTEGRATION BRANCH   claude/writers-studio-organization-wxpb7q
 LIVE BRANCH TIP      RESOLVE FROM GIT — never cached here
-PRODUCT CODE TIP     8b568c0bd   ← last commit that changed product code
+PRODUCT CODE TIP     cd8a95271   ← last commit that changed product code
+DEPLOYED TO PROD     cd8a95271   ← verified via printenv GIT_COMMIT
 CANONICAL            644d4f2c5
 ```
 
@@ -60,21 +61,40 @@ sessions. If another lane already owns the surface, converge with it — do not
 independently rebuild it. This lane exists because two sessions built the same
 room from opposite ends and neither knew.
 
-## Build is open; delivery is not
+## Build is open; delivery is released for this candidate
 
 ```text
-BUILD MODE     OPEN    on the integration lane above
-DELIVERY MODE  CLOSED  until WS-01 ACCEPTED
-                       + production hold released
-                       + exact ship candidate verified
+BUILD MODE     OPEN      on the integration lane above
+DELIVERY MODE  RELEASED  for cd8a95271 only
+                         P0-D both legs witnessed on 83efa86df
+                         production hold released by the founder
+                         deploy run by the founder, provenance verified
+LIVE IN PROD   cd8a95271  (2026-08-26)
 ```
 
 Founder ruling 2026-08-26, Master Brief **A2.0**. The WS-01 freeze protects
 **production**, not building: it blocks merge, deployment, and member-facing
-claims, and nothing else. No Studio code deploys until WS-01 accepts.
+claims, and nothing else.
 
-⛔ **BUILT is not DELIVERED.** Nothing on this lane may be described to anyone
-as a capability the Studio has.
+**What released it.** P0-D's outstanding pasted leg was witnessed on the
+deployed candidate (`83efa86df` read before and after, `member_supplied_text`
+arrival with `artifact_ref`/`artifact_hash`/`artifact_size` all NULL), which
+completed the P0 walk. The founder then ran the deploy himself:
+
+```bash
+scripts/deploy-production.sh deploy cd8a95271
+```
+
+6 migrations applied, provenance verified fail-closed
+(`GIT_COMMIT=cd8a95271 == asserted`), all smoke tests PASS.
+
+⛔ **Still true for everything not in `cd8a95271`.** BUILT is not DELIVERED.
+Release is per-candidate, not a standing lift: the next unit is undeployed the
+moment it is written.
+
+📌 **WS-01 formal acceptance is still the founder's act.** Evidence 003 records
+PASS; it does not accept. The record closes when he signs it, not when the
+deploy succeeds.
 
 ## The room
 
@@ -132,23 +152,25 @@ importance, and importance is the writer's to assign.
 
 | # | Unit | State |
 |---|---|---|
-| 0 | **WS-01** — close P0-D, release the production hold | **BLOCKING** — pasted arrival outstanding |
-| 1 | **WS-VISIBLE-01** — MAIA in the room, open rail, real Structure, rename | built, undeployed |
-| 2 | **DE-01 / DE-01A** — whole-Work Developmental Review, evidence-gated | built, undeployed |
-| 3 | **WS-PRO-01** — global find, safe replace, navigation | built, undeployed |
-| 4 | **VERSIONS-01** — keep, compare, restore | built, undeployed |
-| 5 | **SHIP** — reconcile the lane to canonical, deploy, founder witness | waiting on 0 |
-| 6 | **GATHER-02** — documents, notes, transcripts, recordings, images, links, prior drafts, with provenance visible | built, undeployed |
-| 7 | **DE-02** — form-sensitive lenses, finding lineage, incremental re-analysis, material-aware reading | built, undeployed |
-| 8 | **READER-01** — cumulative reader knowledge: what the Work has made available by a point. No personas, no deficit scores | built, undeployed |
+| 0 | **WS-01** — close P0-D, release the production hold | P0-D **both legs witnessed**; founder acceptance outstanding |
+| 1 | **WS-VISIBLE-01** — MAIA in the room, open rail, real Structure, rename | **DEPLOYED** `cd8a95271` |
+| 2 | **DE-01 / DE-01A** — whole-Work Developmental Review, evidence-gated | **DEPLOYED** `cd8a95271` |
+| 3 | **WS-PRO-01** — global find, safe replace, navigation | **DEPLOYED** `cd8a95271` |
+| 4 | **VERSIONS-01** — keep, compare, restore | **DEPLOYED** `cd8a95271` |
+| 5 | **SHIP** — reconcile the lane to canonical, deploy, founder witness | **DEPLOYED** — founder witness of the running room outstanding |
+| 6 | **GATHER-02** — documents, notes, transcripts, recordings, images, links, prior drafts, with provenance visible | **DEPLOYED** `cd8a95271` |
+| 7 | **DE-02** — form-sensitive lenses, finding lineage, incremental re-analysis, material-aware reading | **DEPLOYED** `cd8a95271` |
+| 8 | **READER-01** — cumulative reader knowledge: what the Work has made available by a point. No personas, no deficit scores | **DEPLOYED** `cd8a95271` |
 | 9 | **STRUCTURE-02** — member-defined structure, movement and threads, no universal chapter ontology | next to build |
 | 10 | **MEMORY** — source → material → observation → recognition → decision → adopted change, inspectable end to end | |
 | 11 | **SAFE EDIT** — explicit request only: snapshot → proposal → diff → accept or reject | |
 | 12 | **EXPRESSION** — book → lecture, course, essay, audio. Genuine re-expression, not format conversion | |
 | 13 | **AUTHOR'S STUDIO HANDOFF** — the writer declares the manuscript ready | |
 
-Units 1–4 and 6–8 are **built and unshipped**. Merged code is not delivered. Until a
-member can reach it in production, the state is *built*, not *done*.
+Units 1–4 and 6–8 are **reachable in production** on `cd8a95271`. That makes them
+*delivered*, not *done*: delivered means a member can reach the gesture. Done
+means the founder has used it and it survived. Unit 5's remaining act is the
+founder walking the live room and reporting what is wrong with it.
 
 ## For every unit
 

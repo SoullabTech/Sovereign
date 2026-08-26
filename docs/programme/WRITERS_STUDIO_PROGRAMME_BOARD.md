@@ -27,36 +27,47 @@
 
 ```text
 PROGRAMME          WRITER'S STUDIO R2
-MODE               WS-01 ACCEPTANCE  ·  BUILD MODE OPEN on the visible Studio
-BUILD MODE         OPEN — building on the integration lane; DEPLOY still held
+MODE               LIVE  ·  BUILD MODE OPEN on the visible Studio
+BUILD MODE         OPEN — building on the integration lane
+DEPLOY MODE        RELEASED for cd8a95271 only; every later commit is undeployed
 BOUND CANONICAL    644d4f2c56d5a4683e9fa2017d84f76e2a4adf3a
-CURRENT UNIT       WS-01 Source Custody + Freeze Release
-CURRENT CANDIDATE  83efa86df  ·  DEPLOYED  ·  GIT_COMMIT verified
+CURRENT UNIT       STRUCTURE-02 (next to build)
+WS-01 CANDIDATE    83efa86df  ·  P0-D BOTH LEGS WITNESSED  ·  acceptance outstanding
+LIVE IN PRODUCTION cd8a95271  ·  deployed by the founder 2026-08-26
+                   provenance verified — printenv GIT_COMMIT == cd8a95271
+                   6 migrations applied · all smoke tests PASS
 INTEGRATION LANE   claude/writers-studio-organization-wxpb7q
-                   fcf54c5cb  ·  BUILT, NOT DEPLOYED
-NEXT EXECUTABLE    P0-D pasted arrival  →  WS-01 acceptance  →  ship the lane
+NEXT EXECUTABLE    founder walks the live room  →  WS-01 acceptance  →  STRUCTURE-02
 LAST UPDATED       2026-08-26
 ```
 
 ### What changed since the previous board
 
 The freeze was a freeze on **the WS-01 candidate and on deploying**, not on
-building. Four units have been built on the single integration lane and none of
-them is deployed:
+building. Seven units were built on the single integration lane while it held.
+P0-D's pasted leg was then witnessed, the founder released the hold and ran the
+deploy himself — so every row below is now reachable in production on
+`cd8a95271`:
 
-| Unit | Was | Now |
+| Unit | Was | Now (live on `cd8a95271`) |
 |---|---|---|
-| MAIA in the room | ABSENT member-facing | **BUILT** — real endpoint on the existing provider path, durable per-room thread, Sanctuary-aware |
-| Materials surface | PARTIAL substrate / weak surface | **BUILT** — open in the rail with counts, no longer behind a vertical label |
-| Structure map | PARTIAL | **BUILT** — real manuscript map, chapter doors narrow the writing frame |
-| Developmental Editor | DESIGNED, not member-facing | **BUILT (DE-01/DE-01A)** — five lenses, evidence-gated findings, frozen snapshot, writer dispositions |
-| Global find | built | **BUILT + surfaced**, with safe replace over shown hits only |
-| Versions | keep only | **BUILT** — keep, compare (line diff), restore |
-| Manuscript naming | absent | **BUILT** — the writer names their own book |
+| MAIA in the room | ABSENT member-facing | **LIVE** — real endpoint on the existing provider path, durable per-room thread, Sanctuary-aware |
+| Materials surface | PARTIAL substrate / weak surface | **LIVE** — open in the rail with counts, no longer behind a vertical label |
+| Structure map | PARTIAL | **LIVE** — real manuscript map, chapter doors narrow the writing frame |
+| Developmental Editor | DESIGNED, not member-facing | **LIVE (DE-01/DE-01A + DE-02/DE-02A)** — five lenses, evidence-gated findings, frozen snapshot, writer dispositions |
+| Global find | built | **LIVE + surfaced**, with safe replace over shown hits only |
+| Versions | keep only | **LIVE** — keep, compare (line diff), restore |
+| Manuscript naming | absent | **LIVE** — the writer names their own book |
+| Materials intake (GATHER-02) | absent | **LIVE** — six kinds, provenance at the crossing, link-with-text refused |
+| Reader reading (READER-01) | absent | **LIVE** — five phenomena, prefix-bounded, reader-state claims refused |
 
-⚠️ **BUILT is not DELIVERED.** Every row above is unreachable by any member
-until WS-01 accepts and the lane ships. Do not read this table as capability in
-production.
+⚠️ **DELIVERED is not DONE.** Every row above is now *reachable* — a member can
+open it, perform the gesture, and have it persist. None of them has yet been
+walked by the founder in the running room. Reachable is the floor for a
+capability claim, not the proof of one.
+
+⚠️ **Release is per-candidate.** `cd8a95271` is deployed. Nothing committed
+after it is, and the deploy hold returns by default for the next unit.
 
 Writer's Studio mode reflects **this programme only**. Unrelated Jarvis incidents may sit ahead of
 it in the global work queue without becoming Writer's Studio state.
