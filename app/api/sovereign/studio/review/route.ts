@@ -16,7 +16,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createHash } from 'crypto';
 import { query } from '@/lib/db/postgres';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
-import { LENSES, segment, type PartRange } from '@/lib/studio/developmental/lenses';
+import { lensesFor, segment, type PartRange } from '@/lib/studio/developmental/lenses';
+import { planPasses, type PriorPass } from '@/lib/studio/developmental/incremental';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -118,6 +119,18 @@ export async function POST(request: NextRequest) {
 
     const contentHash = createHash('sha256').update(content, 'utf8').digest('hex');
 
+    // The reading this one continues, if there is one. Only a completed
+    // reading may be built on: carrying forward from a half-read review would
+    // present its gaps as coverage.
+    const priorRow = await query<{ id: string }>(
+      `SELECT id FROM developmental_reviews
+        WHERE member_id = $1 AND manuscript_id = $2 AND status = 'complete'
+        ORDER BY created_at DESC
+        LIMIT 1`,
+      [memberId, manuscriptId],
+    );
+    const prior = priorRow.rows[0] ?? null;
+
     // The snapshot is STORED, not referenced. Every pass reads from this row;
     // the live draft is consulted afterwards only to tell the writer their
     // draft has moved. Without this, a writer who kept working while MAIA read
@@ -146,28 +159,80 @@ export async function POST(request: NextRequest) {
     // fact about rows rather than a claim.
     const parts = await readParts(manuscriptId, content);
     const segments = segment(content, parts);
+    // The lenses this Work's declared form calls for. Universal five always;
+    // a form's own lenses only where the writer declared one.
+    const lenses = lensesFor(declaredForm);
+
+    // DE-02 — what actually has to be re-read. A pass is reusable when the
+    // same lens already read text with the same hash. Matching is on CONTENT,
+    // never on position: inserting a paragraph in chapter 2 shifts every later
+    // index, and matching on index would re-read the whole book.
+    const priorPasses: PriorPass[] = prior
+      ? (
+          await query<{ lens: string; segment_label: string; segment_hash: string; status: string }>(
+            `SELECT lens, segment_label, segment_hash, status
+               FROM developmental_review_passes
+              WHERE review_id = $1 AND segment_hash IS NOT NULL`,
+            [prior.id],
+          )
+        ).rows.map((r) => ({
+          lens: r.lens,
+          segmentLabel: r.segment_label,
+          segmentHash: r.segment_hash,
+          status: r.status,
+        }))
+      : [];
+
+    const plan = planPasses(
+      lenses.map((l) => l.id),
+      segments.map((seg) => ({ label: seg.label, start: seg.start, end: seg.end, text: seg.text })),
+      priorPasses,
+    );
+
     const values: string[] = [];
     const params: unknown[] = [reviewId];
     let n = 1;
-    for (const lens of LENSES) {
-      segments.forEach((seg, i) => {
-        values.push(`($1,$${++n},$${++n},$${++n},$${++n},$${++n})`);
-        params.push(lens.id, i, seg.label, seg.start, seg.end);
-      });
+    for (const pass of plan.passes) {
+      values.push(`($1,$${++n},$${++n},$${++n},$${++n},$${++n},$${++n},$${++n})`);
+      params.push(
+        pass.lens,
+        pass.segmentIndex,
+        pass.segmentLabel,
+        pass.start,
+        pass.end,
+        pass.segmentHash,
+        // A reusable pass still runs through /advance — it simply carries the
+        // prior findings instead of calling the model. Marking it 'pending'
+        // keeps one code path and one place where a pass becomes 'done'.
+        'pending',
+      );
     }
     await query(
       `INSERT INTO developmental_review_passes
-         (review_id, lens, segment_index, segment_label, start_offset, end_offset)
+         (review_id, lens, segment_index, segment_label, start_offset, end_offset,
+          segment_hash, status)
        VALUES ${values.join(',')}`,
       params,
     );
+
+    if (prior) {
+      await query(
+        `UPDATE developmental_reviews
+            SET supersedes_review_id = $2, reused_pass_count = $3
+          WHERE id = $1`,
+        [reviewId, prior.id, plan.reused],
+      );
+    }
 
     console.log('[MAIA/studio] developmental review opened', {
       memberIdPrefix: memberId.slice(0, 8),
       reviewId,
       chars: content.length,
       segments: segments.length,
-      passes: values.length,
+      passes: plan.passes.length,
+      toRead: plan.toRead,
+      reused: plan.reused,
+      lenses: lenses.length,
       declaredForm,
     });
 
@@ -175,8 +240,11 @@ export async function POST(request: NextRequest) {
       reviewId,
       chars: content.length,
       segments: segments.length,
-      passes: values.length,
-      lenses: LENSES.map((l) => ({ id: l.id, label: l.label, blurb: l.blurb })),
+      passes: plan.passes.length,
+      toRead: plan.toRead,
+      reused: plan.reused,
+      continues: prior?.id ?? null,
+      lenses: lenses.map((l) => ({ id: l.id, label: l.label, blurb: l.blurb })),
     });
   } catch (error) {
     console.error('[studio/review] open failed', error);
@@ -206,9 +274,11 @@ export async function GET(request: NextRequest) {
       declared_form: string | null;
       created_at: string;
       completed_at: string | null;
+      supersedes_review_id: string | null;
+      reused_pass_count: number;
     }>(
       `SELECT id, status, overview, content_hash, content_chars, declared_form,
-              created_at, completed_at
+              created_at, completed_at, supersedes_review_id, reused_pass_count
          FROM developmental_reviews
         WHERE member_id = $1 AND manuscript_id = $2
         ORDER BY created_at DESC
@@ -229,9 +299,11 @@ export async function GET(request: NextRequest) {
         reach: string;
         reach_basis: string | null;
         disposition: string;
+        lineage: string;
+        carried: boolean;
       }>(
         `SELECT id, lens, title, observation, why, confidence, reach, reach_basis,
-                disposition
+                disposition, lineage, carried
            FROM developmental_findings
           WHERE review_id = $1
           ORDER BY CASE reach WHEN 'wide' THEN 0 WHEN 'moderate' THEN 1 ELSE 2 END,
@@ -307,8 +379,17 @@ export async function GET(request: NextRequest) {
         id: r.id,
         status: r.status,
         overview: r.overview,
+        // The lens set this Work's declared form calls for — the room must not
+        // render a fixed five when a dissertation was read through eight.
+        lenses: lensesFor(r.declared_form).map((l) => ({
+          id: l.id,
+          label: l.label,
+          blurb: l.blurb,
+        })),
         chars: r.content_chars,
         declaredForm: r.declared_form,
+        continuesReviewId: r.supersedes_review_id,
+        reusedPassCount: r.reused_pass_count,
         createdAt: r.created_at,
         completedAt: r.completed_at,
         draftMovedSince: currentHash !== null && currentHash !== r.content_hash,
@@ -323,6 +404,8 @@ export async function GET(request: NextRequest) {
           reach: f.reach,
           reachBasis: f.reach_basis,
           disposition: f.disposition,
+          lineage: f.lineage,
+          carried: f.carried,
           evidence: byFinding.get(f.id) ?? [],
         })),
       },

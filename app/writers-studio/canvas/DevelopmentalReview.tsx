@@ -3,7 +3,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { apiFetch } from '@/lib/http/apiBase';
 import { PRESS, SERIF } from '../pressTheme';
-import { LENSES } from '@/lib/studio/developmental/lenses';
+/* The lens set is whatever the reading actually used — a dissertation is read
+   through more than the universal five, so the room may not hard-code them. */
+interface LensRef {
+  id: string;
+  label: string;
+  blurb: string;
+}
 
 /**
  * DE-01 — Developmental Review, in the room.
@@ -39,6 +45,10 @@ interface Finding {
   reach: string;
   reachBasis?: string | null;
   disposition: string;
+  /** How this relates to the last reading. Never a judgement about the Work. */
+  lineage?: string;
+  /** Carried from a reused pass rather than re-read. Evidence still re-located. */
+  carried?: boolean;
   evidence: Evidence[];
 }
 
@@ -46,6 +56,9 @@ interface Review {
   id: string;
   status: string;
   overview: string | null;
+  lenses: LensRef[];
+  continuesReviewId: string | null;
+  reusedPassCount: number;
   chars: number;
   declaredForm: string | null;
   draftMovedSince: boolean;
@@ -236,7 +249,9 @@ export default function DevelopmentalReview({
     );
   }
 
+  const lensSet: LensRef[] = review.lenses ?? [];
   const shown = lens ? review.findings.filter((f) => f.lens === lens) : review.findings;
+  const fresh = review.findings.filter((f) => f.lineage === 'newly_observed').length;
   const unresolved = review.findings.filter((f) => f.disposition === 'unresolved').length;
   const { done, failed, total } = review.coverage;
 
@@ -252,6 +267,11 @@ export default function DevelopmentalReview({
         </span>
         {unresolved > 0 && <span>{unresolved} unresolved</span>}
         {failed > 0 && <span>{failed} could not be read</span>}
+        {/* Facts about the reading, never a score. */}
+        {review.continuesReviewId && review.reusedPassCount > 0 && (
+          <span>{review.reusedPassCount} carried from your last reading</span>
+        )}
+        {review.continuesReviewId && fresh > 0 && <span>{fresh} newly noticed</span>}
         <span>{review.chars.toLocaleString()} characters</span>
         {progress && <span style={{ color: PRESS.accent }}>{progress}</span>}
         {!reading && done < total && (
@@ -293,7 +313,7 @@ export default function DevelopmentalReview({
         >
           All
         </button>
-        {LENSES.map((l) => {
+        {lensSet.map((l) => {
           const count = review.findings.filter((f) => f.lens === l.id).length;
           const cov = review.coverage.byLens[l.id];
           return (
@@ -337,7 +357,7 @@ export default function DevelopmentalReview({
                     className="text-[10px] tracking-[0.16em] uppercase"
                     style={{ color: PRESS.accent, opacity: 0.75 }}
                   >
-                    {LENSES.find((l) => l.id === f.lens)?.label ?? f.lens}
+                    {lensSet.find((l) => l.id === f.lens)?.label ?? f.lens}
                   </span>
                   {/* Reach, not importance. The arithmetic renders beside the
                       word so the label can never outrun what it measures. */}
@@ -351,6 +371,22 @@ export default function DevelopmentalReview({
                   <span className="text-[10px] tracking-[0.12em] uppercase opacity-30">
                     {f.reachBasis ?? `${f.evidence.length} passages`}
                   </span>
+                  {/* Lineage sits beside the disposition and never inside it:
+                      what MAIA noticed across readings is a different fact
+                      from what the writer answered. */}
+                  {f.lineage && f.lineage !== 'newly_observed' && (
+                    <span className="text-[10px] tracking-[0.12em] uppercase opacity-35">
+                      {f.lineage === 'persists' ? 'seen again' : 'changed since'}
+                    </span>
+                  )}
+                  {f.lineage === 'newly_observed' && review.continuesReviewId && (
+                    <span
+                      className="text-[10px] tracking-[0.12em] uppercase opacity-45"
+                      style={{ color: PRESS.accent }}
+                    >
+                      new
+                    </span>
+                  )}
                   {f.disposition !== 'new' && (
                     <span className="text-[10px] tracking-[0.12em] uppercase opacity-45">
                       {f.disposition}

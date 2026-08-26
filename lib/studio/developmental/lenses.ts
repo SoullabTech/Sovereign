@@ -48,10 +48,209 @@ export const LENSES = [
   },
 ] as const;
 
-export type LensId = (typeof LENSES)[number]['id'];
+export type UniversalLensId = (typeof LENSES)[number]['id'];
 
-export function lensById(id: string): (typeof LENSES)[number] | null {
-  return LENSES.find((l) => l.id === id) ?? null;
+export interface Lens {
+  id: string;
+  label: string;
+  blurb: string;
+  ask: string;
+}
+
+/**
+ * DE-02 - lenses that only make sense for the kind of Work this is.
+ *
+ * These are ADDITIONAL to the five universal lenses, never a replacement, and
+ * they appear only when the writer has declared a form. The refusal that
+ * governs the whole map: no lens looks for an inciting incident, a midpoint,
+ * or a beat unless the writer's own declared form is one those belong to. A
+ * book of elemental philosophy read against three-act structure produces
+ * confident nonsense, and confident nonsense is worse than silence.
+ *
+ * Every family here was named by the founder as a real audience: professional
+ * authors, nonfiction writers, doctoral writers, therapists, coaches,
+ * counsellors, healers, educators, spiritual directors, shamanic
+ * practitioners. Their Works are not novels with the serial numbers filed off.
+ */
+export const FORM_FAMILIES = [
+  'fiction',
+  'memoir',
+  'academic',
+  'practice',
+  'philosophy',
+  'nonfiction',
+] as const;
+
+export type FormFamily = (typeof FORM_FAMILIES)[number];
+
+export const FORM_LENSES: Record<FormFamily, Lens[]> = {
+  fiction: [
+    {
+      id: 'character',
+      label: 'Character',
+      blurb: 'Who is changing, and whether the Work lets them.',
+      ask: `Attend to the people. Who is changing, and where is that change actually on the page rather than asserted? Where does someone act against what has been established about them without the Work accounting for it?`,
+    },
+    {
+      id: 'scene',
+      label: 'Scene',
+      blurb: 'What each scene is for, and where one is doing no work.',
+      ask: `Attend to scene function: what each scene is FOR, and where one restates what an earlier scene already did. Where does the Work summarise something a reader needed to be present for, or dramatise something that needed one line?`,
+    },
+    {
+      id: 'stakes',
+      label: 'Stakes',
+      blurb: 'What is at risk, and whether a reader can feel it.',
+      ask: `Attend to consequence: what is at risk, for whom, and whether a reader has been given enough to care. Do not prescribe more conflict; say where consequence is present and where it thins.`,
+    },
+  ],
+  memoir: [
+    {
+      id: 'distance',
+      label: 'Distance',
+      blurb: 'Where the narrator stands relative to what happened.',
+      ask: `Attend to narrative distance: where the telling stands relative to the events. Where does the Work move between the person who lived it and the person telling it, and where does that movement serve or lose the reader?`,
+    },
+    {
+      id: 'scene_reflection',
+      label: 'Scene and reflection',
+      blurb: 'The rhythm between what happened and what it meant.',
+      ask: `Attend to the movement between scene and reflection. Where does the Work explain a meaning it has not yet let the reader arrive at, and where does it leave a scene without the reflection it seems to be asking for?`,
+    },
+    {
+      id: 'revealed_meaning',
+      label: 'Revealed meaning',
+      blurb: 'What the Work discovers, versus what it announces.',
+      ask: `Attend to how meaning arrives. Where is it discovered in the telling, and where is it announced in advance? Neither is wrong; say where each happens.`,
+    },
+  ],
+  academic: [
+    {
+      id: 'argument',
+      label: 'Argument',
+      blurb: 'What is being claimed, and whether it holds across the Work.',
+      ask: `Attend to the argument: what is being claimed, where each claim is made, and whether later sections rest on something established earlier or on something merely asserted. Name where a load-bearing claim is carrying more than it was given.`,
+    },
+    {
+      id: 'evidence',
+      label: 'Evidence',
+      blurb: 'The relationship between claim and support.',
+      ask: `Attend to the relationship between claim and evidence. Where does the Work assert something it earlier supported carefully, and where is support offered for something no reader would dispute?`,
+    },
+    {
+      id: 'scaffolding',
+      label: 'Scaffolding',
+      blurb: 'What the reader is assumed to already know.',
+      ask: `Attend to what the reader is assumed to know already. Where is a term used before it is established, and where is something explained that the Work has already established twice?`,
+    },
+  ],
+  practice: [
+    {
+      id: 'client_ground',
+      label: 'Ground',
+      blurb: 'Whether the practice is grounded in lived encounter.',
+      ask: `This Work comes out of practice with people. Attend to where it stays grounded in actual encounter and where it drifts into generality. Say where a claim about people would benefit from the ground the Work already has elsewhere.`,
+    },
+    {
+      id: 'care',
+      label: 'Care',
+      blurb: 'How the Work holds the people in it.',
+      ask: `Attend to how the Work holds the people it describes. Where does it protect them, where does it use them, and where might a reader who recognises themselves in a passage feel exposed rather than seen? This is an observation about the writing, not an ethical verdict.`,
+    },
+    {
+      id: 'transferability',
+      label: 'Transferability',
+      blurb: 'Whether a reader could actually do this.',
+      ask: `Attend to whether a reader could act on this. Where does the Work describe something as practice without giving a reader a way in, and where does it give instructions for something that needed only to be understood?`,
+    },
+  ],
+  philosophy: [
+    {
+      id: 'concept_experience',
+      label: 'Concept and experience',
+      blurb: 'The relation between what is taught and what is lived.',
+      ask: `Attend to the relationship between concept and lived experience. Where does the Work ground an idea in something a reader has felt, and where does it build on abstraction alone for a long stretch? Name the distance, not a rule about it.`,
+    },
+    {
+      id: 'language',
+      label: 'Language',
+      blurb: 'Where language opens meaning and where it closes it.',
+      ask: `Attend to language that OPENS meaning versus language that CLOSES it. Where does a formulation invite the reader to find something, and where does it hand down a conclusion? Both are legitimate; say where each happens.`,
+    },
+    {
+      id: 'claims',
+      label: 'Claims',
+      blurb: 'What the Work asserts about reality, and how it holds it.',
+      ask: `Attend to claims about how things are. Where does the Work hold one lightly, where does it assert one as established, and where would a sceptical but willing reader need more than they are given?`,
+    },
+  ],
+  nonfiction: [
+    {
+      id: 'promise',
+      label: 'Promise',
+      blurb: 'What the opening promises, and whether the Work keeps it.',
+      ask: `Attend to the central promise: what the opening tells a reader they will get, and whether the Work delivers it, changes it, or quietly abandons it. Quote where the promise is made and where it is or is not kept.`,
+    },
+    {
+      id: 'chapter_function',
+      label: 'Function',
+      blurb: 'What each part is for.',
+      ask: `Attend to what each part is FOR, in the reader's journey. Where does a part earn its place, and where is one doing work another already did?`,
+    },
+    {
+      id: 'grounding',
+      label: 'Grounding',
+      blurb: 'Where explanation outruns example.',
+      ask: `Attend to the balance between explanation and grounding. Where does the Work explain at length without returning a reader to something concrete, and where does an example carry an idea the Work has not yet named?`,
+    },
+  ],
+};
+
+/**
+ * Which family the writer's own word belongs to, or null.
+ *
+ * Null is a correct and common state. A Work whose form the writer has not
+ * declared gets the five universal lenses and nothing else - the system does
+ * NOT guess a family in order to have more to say.
+ */
+export function formFamily(declaredForm: string | null): FormFamily | null {
+  const form = (declaredForm ?? '').trim().toLowerCase();
+  if (!form) return null;
+  if (/(novel|fiction|story|novella|screenplay|short stor)/.test(form)) return 'fiction';
+  if (/(memoir|autobiograph|life writ|personal essay)/.test(form)) return 'memoir';
+  if (/(dissertation|thesis|academic|scholar|research|paper|monograph)/.test(form)) return 'academic';
+  if (/(therap|coach|counsel|clinical|practice|practitioner|heal|somatic|supervis)/.test(form)) {
+    return 'practice';
+  }
+  if (/(spiritual|philosoph|teaching|alchem|sacred|shaman|mystic|contemplat)/.test(form)) {
+    return 'philosophy';
+  }
+  if (/(guide|handbook|manual|nonfiction|non-fiction|workbook|curricul|course|book)/.test(form)) {
+    return 'nonfiction';
+  }
+  return null;
+}
+
+/**
+ * The lenses this reading will use: always the five universal ones, plus the
+ * form's own when the writer declared a form we recognise.
+ */
+export function lensesFor(declaredForm: string | null): Lens[] {
+  const family = formFamily(declaredForm);
+  const universal = LENSES.map((l) => ({ ...l }));
+  return family ? [...universal, ...FORM_LENSES[family]] : universal;
+}
+
+export type LensId = string;
+
+export function lensById(id: string): Lens | null {
+  const universal = LENSES.find((l) => l.id === id);
+  if (universal) return { ...universal };
+  for (const family of FORM_FAMILIES) {
+    const found = FORM_LENSES[family].find((l) => l.id === id);
+    if (found) return found;
+  }
+  return null;
 }
 
 /**
@@ -366,14 +565,37 @@ WHAT IS NOT A FINDING
 - A summary of what a section says.
 - Anything you cannot point at.
 
-NEVER invent, paraphrase, reconstruct, or compose a quote. Every quoted passage must appear WORD FOR WORD in the text given to you. A finding you cannot evidence should be left out.`;
+NEVER invent, paraphrase, reconstruct, or compose a quote. Every quoted passage must appear WORD FOR WORD in the text given to you. A finding you cannot evidence should be left out.
+
+STRUCTURE YOU WERE NOT GIVEN
+You may describe what is actually in front of you: "across the six parts represented in this draft". You may NOT speak of the Work's movements, acts, sections or definitive structure unless the writer declared them. "The second movement fails to resolve" asserts a shape nobody gave you, and a writer reading it will believe you saw one.
+
+MATERIAL IS NOT THE WORK
+Where you are given gathered material, it is context the writer declared belongs to this Work. It is not part of the manuscript. Never quote it as if it were the draft, never treat it as something the reader will see, and never suggest the Work is missing something merely because the material contains it.`;
+
+export interface MaterialContext {
+  kind: string;
+  label: string;
+  /** The writer's own words about how it belongs. */
+  sentence: string | null;
+  /**
+   * DE-02 - an excerpt of what the material actually says, present ONLY when
+   * the writer declared this material belongs to this Work. Gathering is not
+   * permission: a material sitting in the Studio unread by any Work is not
+   * context, and the route never loads its text.
+   */
+  excerpt?: string | null;
+}
+
+/** How much of any one material a lens is given. Context, never the corpus. */
+export const MATERIAL_EXCERPT_CHARS = 2500;
 
 export function buildLensPrompt(params: {
   lens: LensId;
   declaredForm: string | null;
   workTitle: string | null;
   workPurpose: string | null;
-  materials: { kind: string; label: string; sentence: string | null }[];
+  materials: MaterialContext[];
 }): string {
   const lens = lensById(params.lens);
   const lines = [READER_STANCE, '', `THIS READING'S LENS — ${lens?.label ?? params.lens}`, lens?.ask ?? ''];
@@ -388,9 +610,19 @@ export function buildLensPrompt(params: {
     lines.push(`In their own words, what they are making: "${params.workPurpose}"`);
   }
   if (params.materials.length > 0) {
-    lines.push('', 'Material the writer declared feeds this Work (context only — you were not given its contents):');
+    lines.push(
+      '',
+      'MATERIAL the writer declared feeds this Work. This is NOT the manuscript and no reader will see it:',
+    );
     for (const m of params.materials) {
       lines.push(`  - [${m.kind}] ${m.label}${m.sentence ? ` — they wrote: "${m.sentence}"` : ''}`);
+      // Present only where the writer declared this material belongs — see
+      // MaterialContext. Gathering alone never loads a material's text.
+      if (m.excerpt) {
+        lines.push('    <<<MATERIAL');
+        lines.push(`    ${m.excerpt.replace(/\n/g, '\n    ')}`);
+        lines.push('    MATERIAL>>>');
+      }
     }
   }
   lines.push(
@@ -404,6 +636,15 @@ export function buildLensPrompt(params: {
     'If this lens finds nothing worth the writer\'s attention, answer {"findings":[]}. That is a legitimate answer.',
   );
   return lines.join('\n');
+}
+
+export function materialExcerpt(text: string | null): string | null {
+  if (!text) return null;
+  const trimmed = text.trim();
+  if (!trimmed) return null;
+  return trimmed.length <= MATERIAL_EXCERPT_CHARS
+    ? trimmed
+    : `${trimmed.slice(0, MATERIAL_EXCERPT_CHARS)}…`;
 }
 
 export function buildOverviewPrompt(declaredForm: string | null): string {

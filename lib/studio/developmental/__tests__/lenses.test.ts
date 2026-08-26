@@ -1,6 +1,12 @@
 import {
   buildLensPrompt,
   deriveReach,
+  FORM_FAMILIES,
+  FORM_LENSES,
+  formFamily,
+  lensesFor,
+  materialExcerpt,
+  MATERIAL_EXCERPT_CHARS,
   buildOverviewPrompt,
   formGuidance,
   LENSES,
@@ -329,5 +335,128 @@ describe('deriveReach — a fact about evidence, never an importance', () => {
     );
     expect(findings[0].reach).toBe('narrow');
     expect(findings[0].reachBasis).toBe('1 passage across 1 part');
+  });
+});
+
+// ── DE-02 ────────────────────────────────────────────────────────────────
+
+describe('form-sensitive lenses — additional, never a replacement', () => {
+  it('gives an undeclared Work the five universal lenses and nothing else', () => {
+    expect(lensesFor(null).map((l) => l.id)).toEqual(LENSES.map((l) => l.id));
+    expect(lensesFor('  ')).toHaveLength(5);
+  });
+
+  it('never drops a universal lens for a declared form', () => {
+    for (const form of ['Novel', 'Memoir', 'PhD dissertation', 'Elemental philosophy']) {
+      const ids = lensesFor(form).map((l) => l.id);
+      for (const universal of LENSES) expect(ids).toContain(universal.id);
+    }
+  });
+
+  it('reads a dissertation for argument and evidence', () => {
+    const ids = lensesFor('PhD dissertation').map((l) => l.id);
+    expect(ids).toContain('argument');
+    expect(ids).toContain('evidence');
+  });
+
+  it('reads a therapist’s book for ground and care, not for plot', () => {
+    const ids = lensesFor('a book for therapists from my practice').map((l) => l.id);
+    expect(ids).toContain('client_ground');
+    expect(ids).toContain('care');
+    expect(ids).not.toContain('stakes');
+    expect(ids).not.toContain('scene');
+  });
+
+  it('reads philosophy for concept-and-experience, never for scenes', () => {
+    const ids = lensesFor('spiritual teaching').map((l) => l.id);
+    expect(ids).toContain('concept_experience');
+    expect(ids).toContain('language');
+    expect(ids).not.toContain('character');
+  });
+
+  it('only gives fiction its own lenses', () => {
+    const ids = lensesFor('Novel').map((l) => l.id);
+    expect(ids).toContain('character');
+    expect(ids).toContain('scene');
+  });
+
+  it('does not guess a family for an unfamiliar form', () => {
+    expect(formFamily('a grimoire for grief')).toBeNull();
+    expect(lensesFor('a grimoire for grief')).toHaveLength(5);
+  });
+
+  it('no form-specific lens ever asks for a beat sheet', () => {
+    for (const family of FORM_FAMILIES) {
+      for (const lens of FORM_LENSES[family]) {
+        expect(lens.ask).not.toMatch(/inciting incident|beat sheet|three-act|midpoint/i);
+      }
+    }
+  });
+
+  it('resolves a form lens by id, and still refuses one it does not offer', () => {
+    expect(lensById('argument')!.label).toBe('Argument');
+    expect(lensById('three_act')).toBeNull();
+  });
+});
+
+describe('the structure boundary — DE-02 may not assert a shape nobody declared', () => {
+  const prompt = buildLensPrompt({
+    lens: 'movement',
+    declaredForm: null,
+    workTitle: null,
+    workPurpose: null,
+    materials: [],
+  });
+
+  it('permits describing what is actually present', () => {
+    expect(prompt).toContain('across the six parts represented in this draft');
+  });
+
+  it('forbids speaking of movements or acts the writer did not declare', () => {
+    expect(prompt).toContain('You may NOT speak of the Work');
+    expect(prompt).toContain('asserts a shape nobody gave you');
+  });
+});
+
+describe('material-aware reading', () => {
+  const withMaterial = (excerpt: string | null) =>
+    buildLensPrompt({
+      lens: 'threads',
+      declaredForm: null,
+      workTitle: null,
+      workPurpose: null,
+      materials: [
+        { kind: 'transcript', label: 'Larry interview', sentence: 'the lived example', excerpt },
+      ],
+    });
+
+  it('marks material as not the manuscript', () => {
+    expect(withMaterial(null)).toContain('NOT the manuscript');
+    expect(withMaterial(null)).toContain('no reader will see it');
+  });
+
+  it('carries the writer’s own sentence about how it belongs', () => {
+    expect(withMaterial(null)).toContain('the lived example');
+  });
+
+  it('includes the excerpt inside its own markers when one is given', () => {
+    const p = withMaterial('we were talking about breath');
+    expect(p).toContain('<<<MATERIAL');
+    expect(p).toContain('we were talking about breath');
+  });
+
+  it('forbids treating the Work as deficient for lacking what material holds', () => {
+    expect(withMaterial(null)).toContain('never suggest the Work is missing something');
+  });
+
+  it('bounds an excerpt so a corpus cannot arrive as context', () => {
+    const long = 'x'.repeat(MATERIAL_EXCERPT_CHARS * 3);
+    const excerpt = materialExcerpt(long)!;
+    expect(excerpt.length).toBe(MATERIAL_EXCERPT_CHARS + 1);
+  });
+
+  it('has nothing to say about a material with no text', () => {
+    expect(materialExcerpt(null)).toBeNull();
+    expect(materialExcerpt('   ')).toBeNull();
   });
 });

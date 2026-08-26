@@ -25,12 +25,21 @@ import { generateWithClaude } from '@/lib/ai/claudeClient';
 import {
   buildLensPrompt,
   buildOverviewPrompt,
-  LENSES,
+  deriveReach,
+  lensById,
+  materialExcerpt,
   parseJsonAnswer,
   validateFindings,
   type LensId,
+  type MaterialContext,
   type PartRange,
 } from '@/lib/studio/developmental/lenses';
+import {
+  carryFindings,
+  lineageOf,
+  noLongerObserved,
+  type PriorFinding,
+} from '@/lib/studio/developmental/incremental';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -43,6 +52,7 @@ interface ReviewRow {
   status: string;
   overview: string | null;
   snapshot_content: string;
+  supersedes_review_id: string | null;
 }
 
 /**
@@ -64,7 +74,7 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
   try {
     const found = await query<ReviewRow>(
       `SELECT id, manuscript_id, living_work_id, declared_form, status, overview,
-              snapshot_content
+              snapshot_content, supersedes_review_id
          FROM developmental_reviews
         WHERE id = $1 AND member_id = $2`,
       [id, memberId],
@@ -99,6 +109,7 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
       segment_label: string;
       start_offset: number;
       end_offset: number;
+      segment_hash: string | null;
     }>(
       `UPDATE developmental_review_passes
           SET status = 'running', started_at = now()
@@ -112,7 +123,8 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
            LIMIT 1
            FOR UPDATE SKIP LOCKED
         )
-      RETURNING id, lens, segment_index, segment_label, start_offset, end_offset`,
+      RETURNING id, lens, segment_index, segment_label, start_offset, end_offset,
+                segment_hash`,
       [review.id, String(STALE_RUNNING_MINUTES)],
     );
 
@@ -155,42 +167,97 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
     // Parts, for deriving evidence reach. Read once per pass; cheap.
     const parts = await readPartRanges(review.manuscript_id, content);
 
+    // DE-02 — the findings the previous reading made with this exact lens over
+    // this exact text. Used to carry a reusable pass, and to give lineage to a
+    // re-read one.
+    const prior = review.supersedes_review_id
+      ? await readPriorFindings(review.supersedes_review_id, lens, pass.segment_hash)
+      : [];
+
     let dropped = 0;
     try {
-      const materials = review.living_work_id
-        ? await readMaterials(review.living_work_id)
-        : [];
-      const workRow = review.living_work_id
-        ? await query<{ title: string | null; purpose: string | null }>(
-            `SELECT title, purpose FROM living_works WHERE id = $1`,
-            [review.living_work_id],
-          )
-        : null;
+      let produced: {
+        lens: LensId;
+        title: string;
+        observation: string;
+        why: string | null;
+        confidence: 'high' | 'medium' | 'low';
+        reach: 'wide' | 'moderate' | 'narrow';
+        reachBasis: string;
+        evidence: { start: number; end: number; quote: string }[];
+        carried: boolean;
+      }[] = [];
 
-      const systemPrompt = buildLensPrompt({
-        lens,
-        declaredForm: review.declared_form,
-        workTitle: workRow?.rows[0]?.title ?? null,
-        workPurpose: workRow?.rows[0]?.purpose ?? null,
-        materials,
-      });
+      const reusable = prior.length > 0 && (await isReusable(review.id, pass.id));
 
-      const result = await generateWithClaude({
-        systemPrompt,
-        userInput: `PART: ${pass.segment_label}\n\n${segmentText}`,
-        meta: { originRoute: 'studio/review', mode: 'analysis' },
-      });
+      if (reusable) {
+        // Nothing in this text changed since MAIA read it, so re-reading would
+        // only produce slightly different words for the same observation —
+        // churn a writer cannot distinguish from real movement. Carry the
+        // findings, but RE-LOCATE their evidence: text inserted earlier moves
+        // every later passage, so offsets are never carried.
+        const carry = carryFindings(prior, content);
+        produced = carry.carried.map((c) => ({
+          lens,
+          title: c.title,
+          observation: c.observation,
+          why: null,
+          confidence: 'medium' as const,
+          ...deriveReach(c.evidence, parts),
+          evidence: c.evidence,
+          carried: true,
+        }));
+        if (carry.lost.length > 0) {
+          console.log('[MAIA/studio] carried findings lost their passages', {
+            reviewId: review.id,
+            lens,
+            lost: carry.lost.length,
+          });
+        }
+      } else {
+        const materials = review.living_work_id
+          ? await readMaterials(review.living_work_id)
+          : [];
+        const workRow = review.living_work_id
+          ? await query<{ title: string | null; purpose: string | null }>(
+              `SELECT title, purpose FROM living_works WHERE id = $1`,
+              [review.living_work_id],
+            )
+          : null;
 
-      const parsed = parseJsonAnswer(result.text) as { findings?: unknown } | null;
-      const gate = validateFindings(parsed?.findings ?? [], content, lens, parts);
-      dropped = gate.dropped.length;
+        const systemPrompt = buildLensPrompt({
+          lens,
+          declaredForm: review.declared_form,
+          workTitle: workRow?.rows[0]?.title ?? null,
+          workPurpose: workRow?.rows[0]?.purpose ?? null,
+          materials,
+        });
 
-      for (const [index, finding] of gate.findings.entries()) {
+        const result = await generateWithClaude({
+          systemPrompt,
+          userInput: `PART: ${pass.segment_label}\n\n${segmentText}`,
+          meta: { originRoute: 'studio/review', mode: 'analysis' },
+        });
+
+        const parsed = parseJsonAnswer(result.text) as { findings?: unknown } | null;
+        const gate = validateFindings(parsed?.findings ?? [], content, lens, parts);
+        dropped = gate.dropped.length;
+        produced = gate.findings.map((f) => ({ ...f, carried: false }));
+      }
+
+      for (const [index, finding] of produced.entries()) {
+        // How this relates to the last reading. A fact about readings, never a
+        // judgement about the Work, and never a disposition.
+        const { lineage, ancestorId } = lineageOf(
+          { lens, title: finding.title, observation: finding.observation },
+          prior,
+        );
         const row = await query<{ id: string }>(
           `INSERT INTO developmental_findings
              (review_id, member_id, lens, title, observation, why,
-              confidence, reach, reach_basis, position)
-           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+              confidence, reach, reach_basis, position, lineage,
+              ancestor_finding_id, carried)
+           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12::uuid,$13)
            RETURNING id`,
           [
             review.id,
@@ -203,6 +270,9 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
             finding.reach,
             finding.reachBasis,
             pass.segment_index * 100 + index,
+            lineage,
+            ancestorId,
+            finding.carried,
           ],
         );
         const findingId = row.rows[0].id;
@@ -217,7 +287,26 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
         }
       }
 
-      // Read, gated, and written. NOW it is done.
+      // ⛔ What the previous reading saw here and this one did not.
+      //
+      // Recorded as NO LONGER OBSERVED and nothing else. It is not resolution:
+      // the finding may have been addressed, the passage may have moved, or
+      // this reading may simply not have noticed. Only the writer resolves a
+      // finding, and `disposition` is deliberately untouched by this statement.
+      const gone = noLongerObserved(
+        prior,
+        produced.map((f) => ({ lens, title: f.title, observation: f.observation })),
+      );
+      if (gone.length > 0) {
+        await query(
+          `UPDATE developmental_findings
+              SET no_longer_observed_at = now(), no_longer_observed_in_review_id = $2
+            WHERE id = ANY($1::uuid[]) AND no_longer_observed_at IS NULL`,
+          [gone.map((g) => g.id), review.id],
+        );
+      }
+
+      // Read (or carried), gated, and written. NOW it is done.
       await query(
         `UPDATE developmental_review_passes
             SET status = 'done', dropped_count = $2, completed_at = now()
@@ -252,6 +341,7 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
       memberIdPrefix: memberId.slice(0, 8),
       reviewId: review.id,
       lens,
+      lensLabel: lensById(lens)?.label ?? lens,
       segment: pass.segment_label,
       dropped,
       remaining,
@@ -261,13 +351,71 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
       done: false,
       remaining,
       lens,
-      lensLabel: LENSES.find((l) => l.id === lens)?.label ?? lens,
+      lensLabel: lensById(lens)?.label ?? lens,
       segmentLabel: pass.segment_label,
     });
   } catch (error) {
     console.error('[studio/review] advance failed', error);
     return NextResponse.json({ error: 'The reading could not continue just now' }, { status: 500 });
   }
+}
+
+/**
+ * Is this pass one the plan marked reusable?
+ *
+ * The plan is written down at open time as rows; this asks whether a completed
+ * pass in the superseded reading covered the same lens over text with the same
+ * hash. Deriving it here rather than trusting a flag means a pass cannot be
+ * carried because of a stale column.
+ */
+async function isReusable(reviewId: string, passId: string): Promise<boolean> {
+  const res = await query<{ reusable: boolean }>(
+    `SELECT EXISTS (
+       SELECT 1
+         FROM developmental_review_passes p
+         JOIN developmental_reviews r ON r.id = p.review_id
+         JOIN developmental_reviews cur ON cur.supersedes_review_id = r.id
+         JOIN developmental_review_passes me ON me.id = $2
+        WHERE cur.id = $1
+          AND p.status = 'done'
+          AND p.lens = me.lens
+          AND p.segment_hash IS NOT NULL
+          AND p.segment_hash = me.segment_hash
+     ) AS reusable`,
+    [reviewId, passId],
+  );
+  return res.rows[0]?.reusable === true;
+}
+
+/** What the previous reading found with this lens over text with this hash. */
+async function readPriorFindings(
+  priorReviewId: string,
+  lens: string,
+  segmentHash: string | null,
+): Promise<PriorFinding[]> {
+  if (!segmentHash) return [];
+  const res = await query<{
+    id: string;
+    lens: string;
+    title: string;
+    observation: string;
+    quotes: string[] | null;
+  }>(
+    `SELECT f.id, f.lens, f.title, f.observation,
+            array_remove(array_agg(e.quote ORDER BY e.position), NULL) AS quotes
+       FROM developmental_findings f
+       LEFT JOIN developmental_finding_evidence e ON e.finding_id = f.id
+      WHERE f.review_id = $1 AND f.lens = $2
+      GROUP BY f.id, f.lens, f.title, f.observation`,
+    [priorReviewId, lens],
+  );
+  return res.rows.map((r) => ({
+    id: r.id,
+    lens: r.lens,
+    title: r.title,
+    observation: r.observation,
+    quotes: r.quotes ?? [],
+  }));
 }
 
 async function readPartRanges(manuscriptId: string, content: string): Promise<PartRange[]> {
@@ -291,14 +439,30 @@ async function readPartRanges(manuscriptId: string, content: string): Promise<Pa
   return ranges;
 }
 
-async function readMaterials(workId: string) {
+/**
+ * DE-02 — material MAIA is allowed to read.
+ *
+ * The join IS the permission. Only materials the writer DECLARED belong to
+ * this Work appear here, because only living_work_materials rows are selected.
+ * Gathering something into the Studio is not permission to treat it as context
+ * for a Work — a writer's private notes sitting in Materials are not read by a
+ * review of a book they never attached them to.
+ *
+ * Excerpts are bounded: this is context, not a corpus, and a lens given ten
+ * transcripts in full would read them instead of the manuscript.
+ */
+async function readMaterials(workId: string): Promise<MaterialContext[]> {
   const res = await query<{
     material_type: string;
     relationship_sentence: string | null;
     label: string | null;
+    kind: string | null;
+    extracted_text: string | null;
   }>(
     `SELECT lwm.material_type, lwm.relationship_sentence,
-            COALESCE(mm.title, sm.title) AS label
+            COALESCE(mm.title, sm.title) AS label,
+            sm.kind,
+            sm.extracted_text
        FROM living_work_materials lwm
        LEFT JOIN member_manuscripts mm
               ON lwm.material_type = 'manuscript' AND mm.id::text = lwm.material_id
@@ -309,9 +473,10 @@ async function readMaterials(workId: string) {
     [workId],
   );
   return res.rows.map((r) => ({
-    kind: r.material_type,
+    kind: r.kind ?? r.material_type,
     label: r.label ?? 'an unnamed material',
     sentence: r.relationship_sentence,
+    excerpt: materialExcerpt(r.extracted_text),
   }));
 }
 
