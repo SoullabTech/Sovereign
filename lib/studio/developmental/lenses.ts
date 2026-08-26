@@ -220,6 +220,11 @@ export interface RawFinding {
   observation?: unknown;
   why?: unknown;
   confidence?: unknown;
+  /**
+   * Kept in the shape only so an older or chattier model answer parses. It is
+   * read by nothing: importance is not MAIA's to assign, and reach is derived
+   * from the evidence instead.
+   */
   priority?: unknown;
   quotes?: unknown;
 }
@@ -231,41 +236,43 @@ export interface ValidFinding {
   why: string | null;
   /** MAIA's own stated uncertainty. Hers to say, and marked as hers. */
   confidence: 'high' | 'medium' | 'low';
-  /** DERIVED from reach and evidence density — never MAIA's opinion. */
-  priority: 'high' | 'medium' | 'low';
-  /** The inspectable arithmetic behind the priority, shown to the writer. */
-  priorityBasis: string;
+  /** How much of the Work the evidence spans. A fact, not an importance. */
+  reach: Reach;
+  /** The inspectable arithmetic behind the reach, shown to the writer. */
+  reachBasis: string;
   evidence: LocatedQuote[];
 }
 
+export type Reach = 'wide' | 'moderate' | 'narrow';
+
 /**
- * Priority is arithmetic, not judgement.
+ * Reach — how much of the Work the evidence spans. Arithmetic, and named for
+ * exactly what it measures.
  *
- * "High priority" must never mean "MAIA thinks this is bad" — that is an
- * objective status she has no authority to assign. So it is computed from two
- * facts the writer can check: REACH (how much of the Work the evidence spans)
- * and DENSITY (how many passages support it). A finding touching six parts
- * with eighteen passages is more load-bearing than one touching a paragraph,
- * whatever either of them is about.
+ * This was called "priority", which was a lie by vocabulary. A contradiction
+ * evidenced by a single passage may matter enormously; a harmless repeated
+ * phrase may span six chapters. Reach describes the evidence, not the
+ * importance — importance is the writer's to assign, and nothing here assigns
+ * it on their behalf.
  *
  * The basis string travels with it, so the label is always inspectable.
  */
-export function derivePriority(
+export function deriveReach(
   evidence: LocatedQuote[],
   parts: PartRange[],
-): { priority: 'high' | 'medium' | 'low'; priorityBasis: string } {
+): { reach: Reach; reachBasis: string } {
   const passages = evidence.length;
   const touched = new Set<string>();
   for (const e of evidence) {
     const part = parts.find((p) => e.start >= p.start && e.start < p.end);
     touched.add(part ? part.label : '—');
   }
-  const reach = touched.size;
-  const basis = `${passages} passage${passages === 1 ? '' : 's'} across ${reach} part${reach === 1 ? '' : 's'}`;
+  const spread = touched.size;
+  const basis = `${passages} passage${passages === 1 ? '' : 's'} across ${spread} part${spread === 1 ? '' : 's'}`;
 
-  if (reach >= 3 || passages >= 6) return { priority: 'high', priorityBasis: basis };
-  if (reach >= 2 || passages >= 3) return { priority: 'medium', priorityBasis: basis };
-  return { priority: 'low', priorityBasis: basis };
+  if (spread >= 3 || passages >= 6) return { reach: 'wide', reachBasis: basis };
+  if (spread >= 2 || passages >= 3) return { reach: 'moderate', reachBasis: basis };
+  return { reach: 'narrow', reachBasis: basis };
 }
 
 export interface ValidationResult {
@@ -330,8 +337,8 @@ export function validateFindings(
       observation,
       why: typeof f.why === 'string' && f.why.trim() ? f.why.trim() : null,
       confidence: asRank(f.confidence, 'medium'),
-      // Whatever MAIA said about priority is discarded here on purpose.
-      ...derivePriority(ordered, parts),
+      // Whatever MAIA said about importance is discarded here on purpose.
+      ...deriveReach(ordered, parts),
       evidence: ordered,
     });
   }
@@ -391,7 +398,7 @@ export function buildLensPrompt(params: {
     'ANSWER WITH JSON ONLY — no prose before or after, no code fence:',
     '{"findings":[{"title":"short, specific","observation":"what you notice","why":"what made you notice it","confidence":"high|medium|low","quotes":["a full sentence copied exactly from the text","another"]}]}',
     '',
-    'Do not rank the findings against each other and do not say which matters most — that is the writer\'s call, and how prominently a finding is shown is worked out from how much of the Work its evidence spans.',
+    'Do not rank the findings against each other and do not say which matters most — that is the writer\'s call. How much of the Work a finding spans is worked out from its evidence, not from your opinion.',
     '',
     'Between one and six findings. Fewer, better-evidenced findings beat more.',
     'If this lens finds nothing worth the writer\'s attention, answer {"findings":[]}. That is a legitimate answer.',

@@ -42,7 +42,16 @@ interface ReviewRow {
   declared_form: string | null;
   status: string;
   overview: string | null;
+  snapshot_content: string;
 }
+
+/**
+ * A pass claimed by a process that then died is stuck 'running' forever, and
+ * the review can never finish. After this long it is fair game again — long
+ * enough that a slow model call is never stolen mid-flight, short enough that
+ * a crash does not strand a reading.
+ */
+const STALE_RUNNING_MINUTES = 10;
 
 export async function POST(request: NextRequest, ctx: { params: Promise<{ id: string }> }) {
   if (process.env.CAPACITOR_BUILD) {
@@ -54,7 +63,8 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
 
   try {
     const found = await query<ReviewRow>(
-      `SELECT id, manuscript_id, living_work_id, declared_form, status, overview
+      `SELECT id, manuscript_id, living_work_id, declared_form, status, overview,
+              snapshot_content
          FROM developmental_reviews
         WHERE id = $1 AND member_id = $2`,
       [id, memberId],
@@ -65,19 +75,23 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
       return NextResponse.json({ done: true, remaining: 0 });
     }
 
-    // The snapshot. Read from the draft as it is now — the review's hash tells
-    // the room whether it has moved, and evidence offsets stay honest because
-    // they are recorded against what this pass actually read.
-    const draft = await query<{ content: string }>(
-      `SELECT content FROM manuscript_working_drafts
-        WHERE manuscript_id = $1 AND member_id = $2`,
-      [review.manuscript_id, memberId],
-    );
-    if (draft.rows.length === 0) return NextResponse.json({ error: 'Not found' }, { status: 404 });
-    const content = draft.rows[0].content;
+    // THE SNAPSHOT — the frozen text this review was opened on. Never the live
+    // draft. Reading the live draft here is what would let a review become a
+    // mixture of draft states, with segment offsets planned against text that
+    // has since been rewritten. The writer may keep working; this reading does
+    // not notice, and it should not.
+    const content = review.snapshot_content;
 
-    // Claim the next pending pass in one statement, so two tabs advancing the
-    // same review cannot read the same segment twice.
+    // Claim the next pass in one statement, so two tabs advancing the same
+    // review cannot read the same segment twice.
+    //
+    // The claim marks it RUNNING, not done. Claiming and reading are different
+    // events, and a container that dies between them must not leave coverage
+    // asserting MAIA read something she never saw. A pass becomes 'done' only
+    // after its findings have been through the evidence gate.
+    //
+    // A pass left running by a dead process is reclaimable after
+    // STALE_RUNNING_MINUTES, so a crash delays a reading rather than ending it.
     const claimed = await query<{
       id: string;
       lens: string;
@@ -87,19 +101,34 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
       end_offset: number;
     }>(
       `UPDATE developmental_review_passes
-          SET status = 'done', completed_at = now()
+          SET status = 'running', started_at = now()
         WHERE id = (
           SELECT id FROM developmental_review_passes
-           WHERE review_id = $1 AND status = 'pending'
+           WHERE review_id = $1
+             AND (status = 'pending'
+                  OR (status = 'running'
+                      AND started_at < now() - ($2 || ' minutes')::interval))
            ORDER BY segment_index ASC, lens ASC
            LIMIT 1
            FOR UPDATE SKIP LOCKED
         )
       RETURNING id, lens, segment_index, segment_label, start_offset, end_offset`,
-      [review.id],
+      [review.id, String(STALE_RUNNING_MINUTES)],
     );
 
     if (claimed.rows.length === 0) {
+      // Nothing claimable. That is not the same as finished: another tab may
+      // be mid-pass. Only settle the review when every pass has actually
+      // landed on done or failed.
+      const open = await query<{ open: string }>(
+        `SELECT count(*)::text AS open FROM developmental_review_passes
+          WHERE review_id = $1 AND status NOT IN ('done', 'failed')`,
+        [review.id],
+      );
+      if (Number(open.rows[0].open) > 0) {
+        return NextResponse.json({ done: false, remaining: 0, waiting: true });
+      }
+
       // Every pass is settled. The overview is the last act of the reading.
       if (!review.overview) {
         const overview = await writeOverview(review, content);
@@ -123,7 +152,7 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
     const lens = pass.lens as LensId;
     const segmentText = content.slice(pass.start_offset, pass.end_offset);
 
-    // Parts, for deriving priority from reach. Read once per pass; cheap.
+    // Parts, for deriving evidence reach. Read once per pass; cheap.
     const parts = await readPartRanges(review.manuscript_id, content);
 
     let dropped = 0;
@@ -160,7 +189,7 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
         const row = await query<{ id: string }>(
           `INSERT INTO developmental_findings
              (review_id, member_id, lens, title, observation, why,
-              confidence, priority, priority_basis, position)
+              confidence, reach, reach_basis, position)
            VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
            RETURNING id`,
           [
@@ -171,8 +200,8 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
             finding.observation,
             finding.why,
             finding.confidence,
-            finding.priority,
-            finding.priorityBasis,
+            finding.reach,
+            finding.reachBasis,
             pass.segment_index * 100 + index,
           ],
         );
@@ -188,8 +217,11 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
         }
       }
 
+      // Read, gated, and written. NOW it is done.
       await query(
-        `UPDATE developmental_review_passes SET dropped_count = $2 WHERE id = $1`,
+        `UPDATE developmental_review_passes
+            SET status = 'done', dropped_count = $2, completed_at = now()
+          WHERE id = $1`,
         [pass.id, dropped],
       );
     } catch (error) {
@@ -205,10 +237,14 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
       );
     }
 
+    // What is left to read: pending, plus anything a dead process abandoned.
+    // A pass another tab is actively running is not this caller's to count.
     const left = await query<{ remaining: string }>(
       `SELECT count(*)::text AS remaining FROM developmental_review_passes
-        WHERE review_id = $1 AND status = 'pending'`,
-      [review.id],
+        WHERE review_id = $1
+          AND (status = 'pending'
+               OR (status = 'running' AND started_at < now() - ($2 || ' minutes')::interval))`,
+      [review.id, String(STALE_RUNNING_MINUTES)],
     );
     const remaining = Number(left.rows[0].remaining);
 
@@ -287,7 +323,7 @@ async function writeOverview(review: ReviewRow, content: string): Promise<string
   const findings = await query<{ lens: string; title: string; observation: string }>(
     `SELECT lens, title, observation FROM developmental_findings
       WHERE review_id = $1
-      ORDER BY CASE priority WHEN 'high' THEN 0 WHEN 'medium' THEN 1 ELSE 2 END
+      ORDER BY CASE reach WHEN 'wide' THEN 0 WHEN 'moderate' THEN 1 ELSE 2 END
       LIMIT 40`,
     [review.id],
   );

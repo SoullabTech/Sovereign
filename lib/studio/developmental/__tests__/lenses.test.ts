@@ -1,6 +1,6 @@
 import {
   buildLensPrompt,
-  derivePriority,
+  deriveReach,
   buildOverviewPrompt,
   formGuidance,
   LENSES,
@@ -200,14 +200,18 @@ describe('validateFindings', () => {
     expect(findings[0].evidence[0].start).toBeLessThan(findings[0].evidence[1].start);
   });
 
-  it('falls back to medium rather than trusting an unknown rank', () => {
+  it('falls back to medium confidence rather than trusting an unknown rank', () => {
     const { findings } = validateFindings(
       [{ ...good, confidence: 'certain', priority: 'urgent' }],
       BOOK,
       'threads',
     );
     expect(findings[0].confidence).toBe('medium');
-    expect(findings[0].priority).toBe("low");
+  });
+
+  it('never carries a priority field through from the model', () => {
+    const { findings } = validateFindings([{ ...good, priority: 'urgent' }], BOOK, 'threads');
+    expect('priority' in findings[0]).toBe(false);
   });
 
   it('returns nothing for a non-list answer instead of throwing', () => {
@@ -270,7 +274,7 @@ describe('parseJsonAnswer', () => {
   });
 });
 
-describe('derivePriority — a label the writer can check, not a verdict', () => {
+describe('deriveReach — a fact about evidence, never an importance', () => {
   const PARTS = [
     { label: 'One', start: 0, end: 100 },
     { label: 'Two', start: 100, end: 200 },
@@ -279,30 +283,36 @@ describe('derivePriority — a label the writer can check, not a verdict', () =>
   ];
   const at = (start: number) => ({ start, end: start + 30, quote: 'x' });
 
-  it('calls a finding that spans three parts high', () => {
-    const { priority, priorityBasis } = derivePriority([at(10), at(110), at(210)], PARTS);
-    expect(priority).toBe('high');
-    expect(priorityBasis).toBe('3 passages across 3 parts');
+  it('calls evidence spanning three parts wide', () => {
+    const { reach, reachBasis } = deriveReach([at(10), at(110), at(210)], PARTS);
+    expect(reach).toBe('wide');
+    expect(reachBasis).toBe('3 passages across 3 parts');
   });
 
-  it('calls a dense finding inside one part high', () => {
+  it('calls dense evidence inside one part wide', () => {
     const many = [0, 10, 20, 30, 40, 50].map((n) => at(n));
-    expect(derivePriority(many, PARTS).priority).toBe('high');
+    expect(deriveReach(many, PARTS).reach).toBe('wide');
   });
 
-  it('calls a single passage in a single part low', () => {
-    expect(derivePriority([at(10)], PARTS).priority).toBe('low');
+  it('calls a single passage in a single part narrow', () => {
+    expect(deriveReach([at(10)], PARTS).reach).toBe('narrow');
   });
 
-  it('calls two parts medium', () => {
-    expect(derivePriority([at(10), at(110)], PARTS).priority).toBe('medium');
+  it('calls two parts moderate', () => {
+    expect(deriveReach([at(10), at(110)], PARTS).reach).toBe('moderate');
   });
 
   it('states the arithmetic so the label can be inspected', () => {
-    expect(derivePriority([at(10)], PARTS).priorityBasis).toBe('1 passage across 1 part');
+    expect(deriveReach([at(10)], PARTS).reachBasis).toBe('1 passage across 1 part');
   });
 
-  it('ignores whatever MAIA claimed the priority was', () => {
+  it('does not claim narrow reach means unimportant — it reports the span only', () => {
+    const { reach, reachBasis } = deriveReach([at(10)], PARTS);
+    expect(reach).toBe('narrow');
+    expect(reachBasis).not.toMatch(/priority|important|minor|low/i);
+  });
+
+  it('ignores whatever MAIA claimed the importance was', () => {
     const BOOK2 = 'Air is the unseen matrix in which all movement and thought arise.';
     const { findings } = validateFindings(
       [
@@ -317,7 +327,7 @@ describe('derivePriority — a label the writer can check, not a verdict', () =>
       'threads',
       [{ label: 'All', start: 0, end: BOOK2.length }],
     );
-    expect(findings[0].priority).toBe('low');
-    expect(findings[0].priorityBasis).toBe('1 passage across 1 part');
+    expect(findings[0].reach).toBe('narrow');
+    expect(findings[0].reachBasis).toBe('1 passage across 1 part');
   });
 });

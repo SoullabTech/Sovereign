@@ -118,17 +118,23 @@ export async function POST(request: NextRequest) {
 
     const contentHash = createHash('sha256').update(content, 'utf8').digest('hex');
 
+    // The snapshot is STORED, not referenced. Every pass reads from this row;
+    // the live draft is consulted afterwards only to tell the writer their
+    // draft has moved. Without this, a writer who kept working while MAIA read
+    // would get a review stitched from several draft states, with offsets
+    // planned against a text that no longer existed.
     const review = await query<{ id: string }>(
       `INSERT INTO developmental_reviews
          (member_id, living_work_id, manuscript_id, draft_revision_id,
-          content_hash, content_chars, declared_form, status)
-       VALUES ($1,$2::uuid,$3,$4,$5,$6,$7,'reading')
+          snapshot_content, content_hash, content_chars, declared_form, status)
+       VALUES ($1,$2::uuid,$3,$4,$5,$6,$7,$8,'reading')
        RETURNING id`,
       [
         memberId,
         workId,
         manuscriptId,
         draft.revision_count,
+        content,
         contentHash,
         content.length,
         declaredForm,
@@ -220,13 +226,15 @@ export async function GET(request: NextRequest) {
         observation: string;
         why: string | null;
         confidence: string;
-        priority: string;
+        reach: string;
+        reach_basis: string | null;
         disposition: string;
       }>(
-        `SELECT id, lens, title, observation, why, confidence, priority, disposition
+        `SELECT id, lens, title, observation, why, confidence, reach, reach_basis,
+                disposition
            FROM developmental_findings
           WHERE review_id = $1
-          ORDER BY CASE priority WHEN 'high' THEN 0 WHEN 'medium' THEN 1 ELSE 2 END,
+          ORDER BY CASE reach WHEN 'wide' THEN 0 WHEN 'moderate' THEN 1 ELSE 2 END,
                    position ASC`,
         [r.id],
       ),
@@ -268,7 +276,10 @@ export async function GET(request: NextRequest) {
       byFinding.set(e.finding_id, list);
     }
 
+    // Only 'done' counts as read. A pass that is running, pending, or failed
+    // has not been read, and coverage must not round any of them up.
     let done = 0;
+    let failed = 0;
     let total = 0;
     const byLens: Record<string, { done: number; total: number }> = {};
     for (const p of passes.rows) {
@@ -280,11 +291,13 @@ export async function GET(request: NextRequest) {
         done += count;
         byLens[p.lens].done += count;
       }
+      if (p.status === 'failed') failed += count;
     }
 
-    // Has the Work moved since MAIA read it? A yes does not invalidate the
-    // findings; it means a passage may no longer be where she saw it, and the
-    // room says so rather than scrolling the writer somewhere wrong.
+    // Has the Work moved since MAIA read it? The findings stay valid — they
+    // are anchored to the stored snapshot — but a passage may no longer be
+    // where it was in the live draft, and the room says so rather than
+    // scrolling the writer somewhere wrong.
     const currentHash = draft
       ? createHash('sha256').update(draft.content, 'utf8').digest('hex')
       : null;
@@ -299,7 +312,7 @@ export async function GET(request: NextRequest) {
         createdAt: r.created_at,
         completedAt: r.completed_at,
         draftMovedSince: currentHash !== null && currentHash !== r.content_hash,
-        coverage: { done, total, byLens },
+        coverage: { done, failed, total, byLens },
         findings: findings.rows.map((f) => ({
           id: f.id,
           lens: f.lens,
@@ -307,7 +320,8 @@ export async function GET(request: NextRequest) {
           observation: f.observation,
           why: f.why,
           confidence: f.confidence,
-          priority: f.priority,
+          reach: f.reach,
+          reachBasis: f.reach_basis,
           disposition: f.disposition,
           evidence: byFinding.get(f.id) ?? [],
         })),

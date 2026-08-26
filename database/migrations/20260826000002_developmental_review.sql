@@ -20,6 +20,9 @@
 --   Work            living_works (already exists, member-authored)
 --   Draft           manuscript_working_drafts (already exists)
 --   Observation     developmental_findings.observation — MAIA's, and marked so
+--   Significance    NOT STORED YET. How much a finding matters is the
+--                   writer's judgement, not a derived number; when it lands it
+--                   is a member-set column, never inferred from reach.
 --   Decision        developmental_findings.disposition — the WRITER's, and
 --                   never set by the system: default 'new' means MAIA said
 --                   something and the writer has not answered. Only a member
@@ -47,10 +50,23 @@ CREATE TABLE IF NOT EXISTS developmental_reviews (
   living_work_id   UUID REFERENCES living_works(id) ON DELETE CASCADE,
   manuscript_id    UUID NOT NULL,
 
-  -- The exact text this review read. Evidence offsets are into this.
-  draft_revision_id INTEGER,
+  -- THE SNAPSHOT. Not a reference to the draft — the text itself, frozen at
+  -- the moment the reading opened. Every pass reads from this column and every
+  -- evidence offset is an index into it.
+  --
+  -- Storing only a hash was the original design and it was wrong: /advance
+  -- re-read the live draft on every pass, so a writer who kept working while
+  -- MAIA read could produce a review stitched from several draft states, with
+  -- segment offsets planned against a text that no longer existed. A snapshot
+  -- that is not stored is not a snapshot.
+  --
+  -- Postgres TOASTs and compresses this out of line; a 200-page book is a few
+  -- hundred KB. Storage is the cheap problem here, correctness is not.
+  snapshot_content TEXT NOT NULL,
   content_hash     TEXT NOT NULL,
   content_chars    INTEGER NOT NULL,
+  -- The draft revision the snapshot was taken from, for the writer's orientation.
+  draft_revision_id INTEGER,
 
   -- The writer's own word for what this is, carried into the lenses so a
   -- memoir is not read against a three-act schema. NULL is a correct state
@@ -83,12 +99,17 @@ CREATE TABLE IF NOT EXISTS developmental_findings (
 
   confidence    TEXT NOT NULL DEFAULT 'medium'
                   CHECK (confidence IN ('high', 'medium', 'low')),
-  -- DERIVED from reach and evidence density, never from MAIA's opinion, and
-  -- never a statement about quality. priority_basis carries the arithmetic so
-  -- the label is inspectable wherever it renders.
-  priority      TEXT NOT NULL DEFAULT 'medium'
-                  CHECK (priority IN ('high', 'medium', 'low')),
-  priority_basis TEXT,
+  -- REACH — how much of the Work the evidence spans. Derived arithmetic, and
+  -- named for what it actually measures.
+  --
+  -- This was called 'priority' and that was a lie by vocabulary: a
+  -- contradiction evidenced by one passage may matter enormously, and a
+  -- harmless repeated phrase may span six chapters. Reach is a fact about
+  -- evidence; importance is the writer's to assign, and when that arrives it
+  -- will be a separate, member-set column — never this one.
+  reach         TEXT NOT NULL DEFAULT 'moderate'
+                  CHECK (reach IN ('wide', 'moderate', 'narrow')),
+  reach_basis   TEXT,
 
   -- The WRITER's answer. 'new' means MAIA spoke and the writer has not.
   disposition   TEXT NOT NULL DEFAULT 'new'
@@ -151,8 +172,19 @@ CREATE TABLE IF NOT EXISTS developmental_review_passes (
   segment_label  TEXT NOT NULL,
   start_offset   INTEGER NOT NULL,
   end_offset     INTEGER NOT NULL,
+  -- pending → running → done | failed.
+  --
+  -- 'running' exists because the claim and the reading are not the same event.
+  -- Marking a pass done at claim time meant a container that died mid-read
+  -- left coverage permanently asserting MAIA had read something she had not —
+  -- and the whole point of pass-level coverage is that it is a fact. A pass
+  -- becomes 'done' only after its findings have passed the evidence gate.
+  --
+  -- started_at lets a pass abandoned by a dead process be reclaimed rather
+  -- than stranding the review forever.
   status         TEXT NOT NULL DEFAULT 'pending'
-                   CHECK (status IN ('pending', 'done', 'failed')),
+                   CHECK (status IN ('pending', 'running', 'done', 'failed')),
+  started_at     TIMESTAMPTZ,
   -- Findings the evidence gate refused, kept as a count so a review that
   -- produced little can say so rather than looking like a quiet book.
   dropped_count  INTEGER NOT NULL DEFAULT 0,

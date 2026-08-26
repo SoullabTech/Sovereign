@@ -35,8 +35,9 @@ interface Finding {
   observation: string;
   why: string | null;
   confidence: string;
-  priority: string;
-  priorityBasis?: string | null;
+  /** How much of the Work the evidence spans. A fact — never an importance. */
+  reach: string;
+  reachBasis?: string | null;
   disposition: string;
   evidence: Evidence[];
 }
@@ -48,7 +49,12 @@ interface Review {
   chars: number;
   declaredForm: string | null;
   draftMovedSince: boolean;
-  coverage: { done: number; total: number; byLens: Record<string, { done: number; total: number }> };
+  coverage: {
+    done: number;
+    failed: number;
+    total: number;
+    byLens: Record<string, { done: number; total: number }>;
+  };
   findings: Finding[];
 }
 
@@ -126,6 +132,12 @@ export default function DevelopmentalReview({
           const data = await res.json();
           if (data.done) {
             setProgress(null);
+            await load();
+            return;
+          }
+          if (data.waiting) {
+            // Another tab holds the remaining passes. Say so; do not spin.
+            setProgress('Another window is reading this Work.');
             await load();
             return;
           }
@@ -226,7 +238,7 @@ export default function DevelopmentalReview({
 
   const shown = lens ? review.findings.filter((f) => f.lens === lens) : review.findings;
   const unresolved = review.findings.filter((f) => f.disposition === 'unresolved').length;
-  const { done, total } = review.coverage;
+  const { done, failed, total } = review.coverage;
 
   return (
     <div className="flex-1 min-h-0 overflow-y-auto pr-1">
@@ -239,6 +251,7 @@ export default function DevelopmentalReview({
           {review.findings.length} finding{review.findings.length === 1 ? '' : 's'}
         </span>
         {unresolved > 0 && <span>{unresolved} unresolved</span>}
+        {failed > 0 && <span>{failed} could not be read</span>}
         <span>{review.chars.toLocaleString()} characters</span>
         {progress && <span style={{ color: PRESS.accent }}>{progress}</span>}
         {!reading && done < total && (
@@ -326,12 +339,17 @@ export default function DevelopmentalReview({
                   >
                     {LENSES.find((l) => l.id === f.lens)?.label ?? f.lens}
                   </span>
-                  {/* The label is arithmetic, and it says so on hover. */}
-                  <span
-                    className="text-[10px] tracking-[0.12em] uppercase opacity-40"
-                    title={f.priorityBasis ?? undefined}
-                  >
-                    {f.priorityBasis ?? `${f.evidence.length} passages`}
+                  {/* Reach, not importance. The arithmetic renders beside the
+                      word so the label can never outrun what it measures. */}
+                  <span className="text-[10px] tracking-[0.12em] uppercase opacity-45">
+                    {f.reach === 'wide'
+                      ? 'Wide reach'
+                      : f.reach === 'narrow'
+                        ? 'Narrow reach'
+                        : 'Some reach'}
+                  </span>
+                  <span className="text-[10px] tracking-[0.12em] uppercase opacity-30">
+                    {f.reachBasis ?? `${f.evidence.length} passages`}
                   </span>
                   {f.disposition !== 'new' && (
                     <span className="text-[10px] tracking-[0.12em] uppercase opacity-45">
