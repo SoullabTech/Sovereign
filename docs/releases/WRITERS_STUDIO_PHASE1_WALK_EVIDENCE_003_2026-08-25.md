@@ -58,10 +58,19 @@ requirement.
 
 | Field | Value |
 |---|---|
-| Controls | **27 passed · 0 failed** |
-| Database | real PostgreSQL, migration applied from the candidate tree |
+| Witness controls | **27 passed · 0 failed** |
+| Unit suite | **23 passed · 0 failed** (`sourceCustody.test.ts`) |
+| Database | real **PostgreSQL 16.13**, migration applied from the candidate tree |
+| Migration idempotency | second application **CLEAN** — see note below |
 | Vault | real file vault |
 | Command | `WS01_WITNESS_CONFIRM=1 … scripts/verify-ws01-source-custody.ts` |
+
+> **On the control count.** The witness script emits **27** `PASS` controls. Migration idempotency
+> was proved *separately*, by applying `20260824000001_manuscript_source_custody.sql` a second time
+> to an already-migrated database and observing a clean result. That is evidence **around** the
+> witness, not a 28th emitted witness control. A parallel session's board entry reporting
+> `28/28 witness controls` is a counting error, not a competing empirical result — the instrument
+> was re-run to settle it, on PostgreSQL 16.13 with the migration double-applied, and returned 27.
 
 ### The negative leg — what makes the ruling load-bearing
 
