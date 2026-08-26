@@ -93,12 +93,19 @@ async function loadFacts(
       relationship_sentence: string | null;
       label: string | null;
     }>(
+      /* A material is whatever the writer gathered — a manuscript, or one of
+         the documents, notes, transcripts, recordings, images and links in the
+         Materials Studio. Resolve the label from whichever table holds it, so
+         MAIA names the thing rather than "an unnamed material". */
       `SELECT lwm.material_type, lwm.material_id, lwm.relationship_sentence,
-              mm.title AS label
+              COALESCE(mm.title, sm.title) AS label
          FROM living_work_materials lwm
          LEFT JOIN member_manuscripts mm
                 ON lwm.material_type = 'manuscript'
                AND mm.id::text = lwm.material_id
+         LEFT JOIN studio_materials sm
+                ON lwm.material_type = 'studio_material'
+               AND sm.id::text = lwm.material_id
         WHERE lwm.living_work_id = $1
         ORDER BY lwm.declared_at DESC`,
       [workId],

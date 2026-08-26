@@ -139,7 +139,8 @@ export function NextStepBuilder({
     };
 
     // Call backend to schedule/remind
-    let stewardship = null;
+    // Optional field: absent is `undefined`, not null.
+    let stewardship = undefined;
     try {
       const response = await fetch('/api/focus/next-step', {
         method: 'POST',

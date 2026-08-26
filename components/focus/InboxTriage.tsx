@@ -103,7 +103,8 @@ export function InboxTriage({ isOpen, onClose, onComplete, initialCapture = '', 
     };
 
     // Call the backend to actually place this somewhere
-    let stewardship = null;
+    // Optional field: absent is `undefined`, not null.
+    let stewardship = undefined;
     try {
       const response = await fetch('/api/focus/triage', {
         method: 'POST',

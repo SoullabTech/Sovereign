@@ -105,7 +105,11 @@ export function AvoidanceBreaker({
   const [copied, setCopied] = useState(false);
   const [gmailConnected, setGmailConnected] = useState(false);
   const [gmailEmail, setGmailEmail] = useState<string | null>(null);
-  const [latestStewardship, setLatestStewardship] = useState<AvoidanceResult['stewardship']>(null);
+  /* `stewardship` is an OPTIONAL field, so its type is `… | undefined` and
+     never includes null. Seeding with null typechecked only while these
+     components sat outside the ship program. */
+  const [latestStewardship, setLatestStewardship] =
+    useState<AvoidanceResult['stewardship']>(undefined);
   const [isSending, setIsSending] = useState(false);
   const [sendError, setSendError] = useState<string | null>(null);
   const [emailSent, setEmailSent] = useState(false);

@@ -297,10 +297,13 @@ async function readMaterials(workId: string) {
     relationship_sentence: string | null;
     label: string | null;
   }>(
-    `SELECT lwm.material_type, lwm.relationship_sentence, mm.title AS label
+    `SELECT lwm.material_type, lwm.relationship_sentence,
+            COALESCE(mm.title, sm.title) AS label
        FROM living_work_materials lwm
        LEFT JOIN member_manuscripts mm
               ON lwm.material_type = 'manuscript' AND mm.id::text = lwm.material_id
+       LEFT JOIN studio_materials sm
+              ON lwm.material_type = 'studio_material' AND sm.id::text = lwm.material_id
       WHERE lwm.living_work_id = $1
       ORDER BY lwm.declared_at DESC`,
     [workId],
