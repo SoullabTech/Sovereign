@@ -82,10 +82,14 @@ const FIELD_CONTENT = {
     'framework is offered as an invitation when the member reaches for it — never as ' +
     'unsolicited categorization. There are no flourishing scores, levels, or assessments, ' +
     'ever: recognition asks what became visible through living, not how flourishing someone is.',
+  // NW-A02 repair 4 (founder ruling 2026-08-26): this column is declared in
+  // 20260701000001_practice_fields.sql for "jurisdictional declarations
+  // (required for LIVE)" — not biography, method, or positioning. It carried an
+  // unratified prose description of a real named practitioner, which composed
+  // as "The practitioner: …". It no longer composes at all (see
+  // formatFieldContextForRoom), and the prose is removed rather than left inert.
   professional_practice:
-    'Larry Closs — executive coach and consultant developing an approach that integrates ' +
-    'executive leadership with positive psychology, serving leaders, facilitators, clients, ' +
-    'and students. (Demo declaration, pending Larry’s own.)',
+    'Demo practitioner profile — no jurisdictional declaration on file.',
   orientation_style: 'guided',
   maia_guidance: {
     // NW-D01.5 R1: derived from the ONE shared source, never restated here.
@@ -148,14 +152,21 @@ async function main() {
       `INSERT INTO practice_fields (
          practitioner_member_id, field_slug, welcome_message, about_practice,
          how_we_work_together, how_maia_supports, professional_practice,
-         orientation_style, maia_guidance
-       ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
+         orientation_style, maia_guidance,
+         -- NW-A02 repair 5: the demo field ratifies its OWN identity text.
+         -- That text is now plainly Soullab-authored demo scaffolding making no
+         -- claim about a real practitioner (NW-D01.5 R2), so ratifying it asserts
+         -- nothing on anyone's behalf. A real practitioner field ratifies by
+         -- their own act; unratified identity text does not compose.
+         identity_ratified_at
+       ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,NOW())
        ON CONFLICT (practitioner_member_id) DO UPDATE SET
          field_slug = EXCLUDED.field_slug,
          welcome_message = EXCLUDED.welcome_message,
          about_practice = EXCLUDED.about_practice,
          how_we_work_together = EXCLUDED.how_we_work_together,
          how_maia_supports = EXCLUDED.how_maia_supports,
+         identity_ratified_at = NOW(),
          professional_practice = EXCLUDED.professional_practice,
          orientation_style = EXCLUDED.orientation_style,
          maia_guidance = EXCLUDED.maia_guidance
