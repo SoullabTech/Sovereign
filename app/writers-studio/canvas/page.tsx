@@ -20,6 +20,7 @@ import MaterialsDrawer from './MaterialsDrawer';
 import Companion from './Companion';
 import StructureRail from './StructureRail';
 import DevelopmentalReview from './DevelopmentalReview';
+import VersionsPanel from './VersionsPanel';
 import type { DeclaredPart, DraftMap } from './manuscriptMap';
 
 /**
@@ -362,36 +363,20 @@ export default function WriterCanvasPage() {
     />
   );
 
-  const historyPanel = (
-    <>
-      <p className="text-[12px] leading-relaxed opacity-45 mb-3">
-        Autosave holds your latest words continuously. Versions you keep are set down here, and
-        nothing is ever silently overwritten.
-      </p>
-      {revisions === null ? (
-        <p className="text-[13px] opacity-40">opening…</p>
-      ) : revisions.length === 0 ? (
-        <p className="text-[13px] opacity-55 leading-relaxed">
-          No kept versions yet. “Keep a version” at the table sets one down.
-        </p>
-      ) : (
-        <ul className="space-y-2">
-          {revisions.map((r) => (
-            <li key={r.revisionNumber} className="border px-3.5 py-2.5" style={{ borderColor: PRESS.ruleSoft }}>
-              <p className="text-[12.5px]">
-                Version {r.revisionNumber}
-                {r.note ? ` — ${r.note}` : ''}
-              </p>
-              <p className="text-[11px] opacity-45 mt-0.5">
-                ~{pageEstimate(r.contentChars)} page{pageEstimate(r.contentChars) === 1 ? '' : 's'} ·{' '}
-                {formatWhen(r.createdAt)}
-              </p>
-            </li>
-          ))}
-        </ul>
-      )}
-    </>
-  );
+  /* A restore replaces the text on the table, so the table is remounted to
+     read it fresh — the exit guard flushes on unmount, so nothing in flight is
+     lost in the swap. */
+  const [tableKey, setTableKey] = useState(0);
+  const historyPanel = manuscript ? (
+    <VersionsPanel
+      manuscriptId={manuscript.id}
+      revisions={revisions}
+      onRestored={() => {
+        setHistoryKey((k) => k + 1);
+        setTableKey((k) => k + 1);
+      }}
+    />
+  ) : null;
 
   /* The rail (S1): a map of the MANUSCRIPT, said so in its own header, never a
      map of the Work. Doors narrow the table's frame; they do not move, split,
@@ -584,6 +569,7 @@ export default function WriterCanvasPage() {
           <div className={mode === 'write' ? 'flex-1 flex flex-col min-h-0' : 'hidden'}>
             {manuscript && (
               <Worktable
+                key={tableKey}
                 manuscriptId={manuscript.id}
                 parts={parts}
                 focusKey={focusKey}

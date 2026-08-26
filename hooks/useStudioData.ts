@@ -445,8 +445,12 @@ export function useBookings() {
     }
   }, []);
 
+  /* `status` is typed against Booking's own union rather than `string`: a bare
+     string widened the spread below and made the optimistic state update
+     unassignable to Booking[]. It also let a caller send a status the API
+     would reject, with nothing catching it here. */
   const updateBooking = useCallback(async (id: string, updates: {
-    status?: string;
+    status?: Booking['status'];
     practitionerNotes?: string;
   }) => {
     const response = await apiFetch('/api/studio/bookings', {

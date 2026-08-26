@@ -16,6 +16,7 @@ import {
   type DraftSaver,
   type SaverState,
 } from '../../press/manuscript/workingDraftClient';
+import { replaceRanges } from '@/lib/studio/manuscriptTools';
 import {
   findInDraft,
   frameAfterEdit,
@@ -258,6 +259,11 @@ export default function Worktable({
   // ---- Finding material across the whole manuscript -----------------------
   const [findOpen, setFindOpen] = useState(false);
   const [q, setQ] = useState('');
+  const [replacement, setReplacement] = useState('');
+  const [replaceOpen, setReplaceOpen] = useState(false);
+  const [confirmAll, setConfirmAll] = useState(false);
+  const [replacing, setReplacing] = useState(false);
+  const [replaced, setReplaced] = useState<string | null>(null);
   const found = useMemo(() => findInDraft(content, map, q), [content, map, q]);
   // A jump asks for a selection the field cannot make until it has re-rendered
   // around the new frame.
@@ -295,6 +301,95 @@ export default function Worktable({
     },
     [map, onFocusKey, focusKey],
   );
+
+  /**
+   * Replace — over the hits the writer was shown, never over the query.
+   *
+   * Two things make this safe rather than merely convenient:
+   *
+   *   1. A VERSION IS KEPT FIRST, always, and awaited. If the checkpoint does
+   *      not land, nothing is replaced. A writer who replaces 412 occurrences
+   *      and then wants them back must have somewhere to go back TO, and that
+   *      cannot be best-effort.
+   *
+   *   2. The edit is computed against the WHOLE document from ranges taken
+   *      from the whole document, then spliced back through the same saver as
+   *      any other edit. A narrowed frame narrows what is shown; it never
+   *      narrows what is saved.
+   */
+  const replaceHits = async (ranges: { start: number; end: number }[]) => {
+    if (replacing || phase !== 'ready' || ranges.length === 0) return;
+    setReplacing(true);
+    setReplaced(null);
+    try {
+      const before = contentRef.current;
+      // The undo point. Awaited, and a failure aborts the replace.
+      const kept = await checkpoint(`Before replacing ${ranges.length}`);
+      if (!kept) {
+        setReplaced('Nothing was replaced — the version could not be kept first.');
+        return;
+      }
+
+      let next: string;
+      try {
+        ({ next } = replaceRanges(before, ranges, replacement));
+      } catch {
+        // Overlapping or stale ranges. The draft moved under the search.
+        setReplaced('Nothing was replaced — those passages have moved. Search again.');
+        return;
+      }
+
+      setContent(next);
+      contentRef.current = next;
+      // The frame was resolved against the old text; re-resolve it against the
+      // new so the field keeps showing the part the writer is standing in.
+      if (focusKey) {
+        setFrame(frameForRegion(next, mapDraft(next, parts), focusKey));
+      }
+      setKept(false);
+      const saver = saverRef.current;
+      saver?.queue(next);
+      if (timerRef.current) clearTimeout(timerRef.current);
+      saver?.flush();
+      setReplaced(
+        `Replaced ${ranges.length} · a version was kept first, in Versions.`,
+      );
+      setConfirmAll(false);
+    } finally {
+      setReplacing(false);
+    }
+  };
+
+  /** Persist a checkpoint and report whether it actually landed. */
+  const checkpoint = async (note?: string): Promise<boolean> => {
+    const saver = saverRef.current;
+    if (!saver) return false;
+    await saver.beginExclusive();
+    const value = contentRef.current;
+    const res = await putDraft(apiFetch, manuscriptId, {
+      content: value,
+      checkpoint: true,
+      note,
+      baseRevisionId: baseRef.current,
+      idempotencyKey: newIdempotencyKey(),
+    });
+    if (res.kind === 'ok') {
+      if (res.revisionId !== null) baseRef.current = res.revisionId;
+      setUpdatedAt(res.updatedAt);
+      cbRef.current.onMeta?.({ updatedAt: res.updatedAt, revisionCount: res.revisionCount });
+      cbRef.current.onCheckpointed?.();
+      saver.endExclusive({ persisted: value });
+      return true;
+    }
+    if (res.kind === 'conflict') {
+      saver.endExclusive({ flushPending: false });
+      setPhase('conflict');
+      return false;
+    }
+    saver.endExclusive();
+    setSaveState('error');
+    return false;
+  };
 
   const keepVersion = async () => {
     const saver = saverRef.current;
@@ -471,6 +566,102 @@ export default function Worktable({
             className="w-full bg-transparent outline-none border-b pb-1.5 text-[14px]"
             style={{ borderColor: PRESS.ruleSoft, fontFamily: SERIF, color: PRESS.text }}
           />
+          {/* Replace stays folded until asked for: finding is the common act,
+              and a replacement field sitting open invites an edit nobody
+              intended. */}
+          {q.trim().length >= 2 && (
+            <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1 mt-2">
+              <button
+                onClick={() => {
+                  setReplaceOpen((o) => !o);
+                  setConfirmAll(false);
+                  setReplaced(null);
+                }}
+                className="text-[11px] tracking-[0.14em] uppercase opacity-45 hover:opacity-95"
+              >
+                {replaceOpen ? 'never mind' : 'Replace…'}
+              </button>
+              {replaced && <span className="text-[11.5px] opacity-60">{replaced}</span>}
+            </div>
+          )}
+
+          {replaceOpen && q.trim().length >= 2 && (
+            <div className="mt-2.5">
+              <input
+                value={replacement}
+                onChange={(e) => {
+                  setReplacement(e.target.value);
+                  setConfirmAll(false);
+                }}
+                placeholder="replace with…"
+                aria-label="Replace with"
+                className="w-full bg-transparent outline-none border-b pb-1.5 text-[14px]"
+                style={{ borderColor: PRESS.ruleSoft, fontFamily: SERIF, color: PRESS.text }}
+              />
+              {found.hits.length > 0 && (
+                <div className="mt-2.5">
+                  {found.truncated ? (
+                    /* Replacing "the first 200" would silently leave the rest.
+                       Say so and refuse, rather than half-doing it. */
+                    <p className="text-[11.5px] leading-relaxed opacity-55">
+                      There are more matches than are shown, so replacing all of them here would
+                      leave some behind. Narrow the phrase first.
+                    </p>
+                  ) : confirmAll ? (
+                    <div className="border px-3.5 py-2.5" style={{ borderColor: PRESS.ruleSoft }}>
+                      <p className="text-[12.5px] leading-relaxed opacity-70 mb-1">
+                        Replace {found.hits.length} occurrence
+                        {found.hits.length === 1 ? '' : 's'} of “{q.trim()}” with “
+                        {replacement}”?
+                      </p>
+                      {/* How the first one will actually read — a count alone
+                          is not enough to agree to. */}
+                      <p
+                        className="text-[12.5px] leading-relaxed opacity-50 mb-2"
+                        style={{ fontFamily: SERIF }}
+                      >
+                        {found.hits[0].before}
+                        <span style={{ color: PRESS.accent }}>{replacement}</span>
+                        {found.hits[0].after}
+                      </p>
+                      <p className="text-[11.5px] opacity-45 mb-2">
+                        A version is kept first, so this can be undone.
+                      </p>
+                      <div className="flex gap-4">
+                        <button
+                          disabled={replacing}
+                          onClick={() =>
+                            void replaceHits(
+                              found.hits.map((h) => ({ start: h.index, end: h.index + h.length })),
+                            )
+                          }
+                          className="text-[12px] underline underline-offset-4 opacity-80 hover:opacity-100 disabled:opacity-30"
+                          style={{ color: PRESS.accent }}
+                        >
+                          {replacing ? 'replacing…' : 'replace them'}
+                        </button>
+                        <button
+                          onClick={() => setConfirmAll(false)}
+                          className="text-[12px] opacity-45 hover:opacity-80"
+                        >
+                          not now
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <button
+                      disabled={replacing}
+                      onClick={() => setConfirmAll(true)}
+                      className="text-[11px] tracking-[0.14em] uppercase opacity-55 hover:opacity-95 disabled:opacity-30"
+                    >
+                      Replace all {found.hits.length}
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
           {q.trim().length >= 2 && (
             <div className="mt-3">
               <p className="text-[11.5px] opacity-45 mb-2">
@@ -501,6 +692,17 @@ export default function Worktable({
                         {h.clippedEnd && '…'}
                       </span>
                     </button>
+                    {replaceOpen && (
+                      <button
+                        disabled={replacing}
+                        onClick={() =>
+                          void replaceHits([{ start: h.index, end: h.index + h.length }])
+                        }
+                        className="text-[10.5px] tracking-[0.12em] uppercase opacity-35 hover:opacity-90 disabled:opacity-20 mt-0.5"
+                      >
+                        replace this one
+                      </button>
+                    )}
                   </li>
                 ))}
               </ul>
