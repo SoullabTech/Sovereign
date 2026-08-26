@@ -35,7 +35,7 @@ enters the other. Nothing crosses that line implicitly.
 ```text
 INTEGRATION BRANCH   claude/writers-studio-organization-wxpb7q
 LIVE BRANCH TIP      RESOLVE FROM GIT — never cached here
-PRODUCT CODE TIP     12f7a723d   ← last commit that changed product code
+PRODUCT CODE TIP     8b568c0bd   ← last commit that changed product code
 CANONICAL            644d4f2c5
 ```
 
