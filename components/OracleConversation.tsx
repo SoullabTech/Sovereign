@@ -3342,6 +3342,19 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
         const arrival = consumeArrivalContext();
         if (arrival) {
           arrivalContext = { attention: arrival.attention, doorway: arrival.doorway };
+
+          // MLX-06 Unit 3A — a member who just crossed Arrival has already
+          // activated. Without this they meet the generic pre-activation screen
+          // ("I'm here when you're ready") immediately after telling MAIA what
+          // was asking for their attention, and MAIA's answer to what they
+          // brought stays hidden until they act a second time. Observed at
+          // runtime: they spoke, and MAIA appeared not to have heard.
+          //
+          // This reveals the transcript only; it requires no model call, and it
+          // changes nothing for members arriving without Arrival context, for
+          // whom the welcome screen remains the activation threshold it has
+          // always been.
+          setHasActivated(true);
           console.log('[MAIA] arrival context consumed', {
             doorway: arrival.doorway,
             broughtWords: arrival.attention.length > 0,   // never the words themselves
@@ -3445,6 +3458,12 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       // returning deliberately from The House actually meets Arrival. Keying the
       // suppression to the flag silenced the transcript greeting for returning
       // members, whose surface is the greeting — it is the only welcome they get.
+      // Unit 3A instrumented this guard at runtime and confirmed it passes for a
+      // just-arrived member (sessionRestored false, shouldRenderArrival false),
+      // so the arrival greeting IS seeded into `messages`. What could not be
+      // shown in a headless local stack is the transcript itself: the voice-first
+      // surface never opened there, and a member's own sent message was equally
+      // unreachable — so the remaining gap is display, not this seed.
       if (!sessionRestoredRef.current && !shouldRenderArrival) {
         setMessages([greetingMessage]);
       }
