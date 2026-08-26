@@ -70,7 +70,7 @@ production. Cluster and vault destroyed after the run.
 
 | Step | Verdict | Notes |
 |---|---|---|
-| **P0-M — mechanism** | **`PASS`** | 28 witness controls + 23 unit tests, all passed. See below |
+| **P0-M — mechanism** | **`PASS`** | **27** witness controls + 23 unit tests, all passed. Migration idempotency is proven separately, not counted among the 27. See below |
 | **P0-D — deployed candidate** | **`NOT EXECUTED`** | Exclusive deploy lease not yet established |
 | **P0 — source custody** | **`NOT CLOSED`** | v1.1: P0 passes only when both P0-M and P0-D do |
 | A–H | `NOT REACHED` | The human walk has not been executed |
@@ -82,6 +82,12 @@ production. Cluster and vault destroyed after the run.
 
 Migration `20260824000001` applied to a real PostgreSQL 16.13 database, then **applied a second
 time and completed cleanly** — idempotent, as the repository's migration convention requires.
+
+⛔ **Migration idempotency is a separate proof.** It is not one of the 27 witness controls. The
+27 enumerate as: **11** file-backed · **2** negative leg · **8** pasted leg · **5** omission
+witness (1 lossless accounting + 4 line witnesses) · **1** fixture cleanup. The witness prints a
+final `P0 WITNESS: ALL CONTROLS PASSED` summary line, which is **not** a control — counting it is
+how this record briefly read 28.
 
 ### File-backed leg
 
