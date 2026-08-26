@@ -30,9 +30,24 @@ interface CompanionProps {
   manuscriptId: string | null;
   /** Re-open the room when the table changes underneath the panel. */
   roomKey: string;
+  /**
+   * A message handed to MAIA from elsewhere in the room — "Discuss" on a
+   * developmental finding sends the finding and its evidence, so she is
+   * already holding what the writer is pointing at. Identity-keyed so the
+   * same text can be sent twice deliberately, and never re-sent on a
+   * re-render.
+   */
+  handed?: { key: string; message: string } | null;
+  onHandled?: () => void;
 }
 
-export default function Companion({ workId, manuscriptId, roomKey }: CompanionProps) {
+export default function Companion({
+  workId,
+  manuscriptId,
+  roomKey,
+  handed,
+  onHandled,
+}: CompanionProps) {
   const [phase, setPhase] = useState<Phase>('loading');
   const [opening, setOpening] = useState<string>('');
   const [turns, setTurns] = useState<Turn[]>([]);
@@ -117,6 +132,19 @@ export default function Companion({ workId, manuscriptId, roomKey }: CompanionPr
     setDraft('');
     void speak({ message: value }, value);
   };
+
+  // Something was handed to MAIA from the room. Send it once.
+  const handledRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!handed || phase !== 'ready') return;
+    if (handledRef.current === handed.key) return;
+    handledRef.current = handed.key;
+    void speak({ message: handed.message }, handed.message);
+    onHandled?.();
+    // speak is stable enough for this one-shot; keying on handed.key is what
+    // prevents a re-send, not the dependency list.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [handed, phase]);
 
   if (phase === 'unavailable') {
     return (

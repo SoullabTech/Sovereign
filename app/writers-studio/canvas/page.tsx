@@ -19,6 +19,7 @@ import WorkDrawer from './WorkDrawer';
 import MaterialsDrawer from './MaterialsDrawer';
 import Companion from './Companion';
 import StructureRail from './StructureRail';
+import DevelopmentalReview from './DevelopmentalReview';
 import type { DeclaredPart, DraftMap } from './manuscriptMap';
 
 /**
@@ -46,6 +47,8 @@ import type { DeclaredPart, DraftMap } from './manuscriptMap';
  */
 
 type MobilePane = 'work' | 'materials' | 'maia' | 'history';
+/** What the writer is doing in the room. Modes change the CENTRE, not the room. */
+type Mode = 'write' | 'develop';
 type ListPhase = 'loading' | 'ready' | 'none' | 'unauthorized' | 'error';
 
 /** Same rule as Studio Home: return by identity, never by position. */
@@ -217,6 +220,8 @@ export default function WriterCanvasPage() {
       ? (manuscripts.find((m) => m.id === requested) ?? manuscripts[0] ?? null)
       : null;
 
+  const [mode, setMode] = useState<Mode>('write');
+  const [handed, setHanded] = useState<{ key: string; message: string } | null>(null);
   const [maiaOpen, setMaiaOpen] = useState(true);
   const [mobilePane, setMobilePane] = useState<MobilePane>('maia');
   const [draftMeta, setDraftMeta] = useState<{
@@ -410,6 +415,8 @@ export default function WriterCanvasPage() {
       workId={railWork?.id ?? null}
       manuscriptId={manuscript?.id ?? null}
       roomKey={`${railWork?.id ?? '-'}:${manuscript?.id ?? '-'}`}
+      handed={handed}
+      onHandled={() => setHanded(null)}
     />
   );
 
@@ -436,6 +443,23 @@ export default function WriterCanvasPage() {
           >
             {headline}
           </h1>
+          {manuscript && (
+            <span className="flex items-baseline gap-3">
+              {(['write', 'develop'] as Mode[]).map((m) => (
+                <button
+                  key={m}
+                  onClick={() => setMode(m)}
+                  className="text-[10.5px] tracking-[0.18em] uppercase transition-opacity"
+                  style={{
+                    opacity: mode === m ? 1 : 0.35,
+                    color: mode === m ? PRESS.accent : undefined,
+                  }}
+                >
+                  {m === 'write' ? 'Write' : 'Develop'}
+                </button>
+              ))}
+            </span>
+          )}
           {manuscript && (
             <ManuscriptName
               manuscriptId={manuscript.id}
@@ -526,17 +550,50 @@ export default function WriterCanvasPage() {
               </p>
             </div>
           )}
-          {manuscript && (
-            <Worktable
+          {manuscript && mode === 'develop' && (
+            <DevelopmentalReview
               manuscriptId={manuscript.id}
-              parts={parts}
-              focusKey={focusKey}
-              onMap={handleMap}
-              onFocusKey={handleFocusKey}
-              onMeta={setDraftMeta}
-              onCheckpointed={() => setHistoryKey((k) => k + 1)}
+              workId={railWork?.id ?? null}
+              /* Evidence is a door: open the part it lives in, on the table. */
+              onOpenPart={(partLabel) => {
+                /* Evidence names a part by the member's own heading words,
+                   which is exactly what the map keys regions by. */
+                const region = draftMap?.regions.find((r) => r.heading === partLabel);
+                if (region) setFocusKey(region.key);
+                setMode('write');
+              }}
+              /* Discuss hands MAIA the finding AND its passages, so she is
+                 already holding what the writer is pointing at. */
+              onDiscuss={(f) => {
+                const passages = f.evidence
+                  .filter((e) => e.quote)
+                  .map((e) => `${e.partLabel ? `[${e.partLabel}] ` : ''}"${e.quote}"`)
+                  .join('\n\n');
+                setHanded({
+                  key: `finding:${f.id}`,
+                  message: `About your finding "${f.title}" — you said: ${f.observation}${
+                    f.why ? ` (because ${f.why})` : ''
+                  }\n\nThe passages you pointed at:\n\n${passages}\n\nLet's talk about it.`,
+                });
+                if (!maiaOpen) setMaiaOpen(true);
+              }}
             />
           )}
+          {/* The table stays mounted while developing: unmounting it would
+              flush and tear down the draft session on every mode switch. */}
+          <div className={mode === 'write' ? 'flex-1 flex flex-col min-h-0' : 'hidden'}>
+            {manuscript && (
+              <Worktable
+                manuscriptId={manuscript.id}
+                parts={parts}
+                focusKey={focusKey}
+                onMap={handleMap}
+                onFocusKey={handleFocusKey}
+                onMeta={setDraftMeta}
+                onCheckpointed={() => setHistoryKey((k) => k + 1)}
+              />
+            )}
+          </div>
         </main>
 
         {/* ── MAIA: present in the room, not a folded promise. ────────────── */}
