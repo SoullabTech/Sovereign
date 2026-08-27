@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { FilePlus2, FolderInput, Loader2 } from 'lucide-react';
 import { PRESS, SERIF } from './pressTheme';
 import { CANVAS_HREF, IMPORT_HREF } from './studioMap';
-import { canvasForManuscript } from './canvasIdentity';
+import { canvasForManuscript, canvasHrefFor } from './canvasIdentity';
 import { arrivalFor, manuscriptIdOf } from './homeState';
 import type { CurrentManuscript } from './useCurrentManuscript';
 import type { LivingWork } from './useLivingWorks';
@@ -189,49 +189,81 @@ export default function HomeView({
 
   /* A card with weight: paper catching the lamp from above-left, a hairline
      that warms on hover, and the title at reading size. Not a table row. */
+  /**
+   * A card with weight — and, when there is no writing to open, NOT a link.
+   *
+   * `href` is null for a work that has no manuscript attached. Such a card is
+   * rendered as plain paper: visible, named, and inert. It may never link into
+   * the Canvas, because a Canvas URL with no identity in it opens whatever is
+   * most recent — which is how a 5-page transcript came to be on the table
+   * under another work's name on 2026-08-27 (DECISIONS.md D-010).
+   */
   const Card = ({
     href,
     title,
     meta,
     untitled,
   }: {
-    href: string;
+    href: string | null;
     title: string;
     meta: string;
     untitled?: boolean;
-  }) => (
-    <Link
-      href={href}
-      className="group relative block rounded-[3px] border p-6 min-h-[136px] overflow-hidden transition-all duration-200 [@media(hover:hover)]:hover:-translate-y-[2px]"
-      style={{
-        borderColor: PRESS.ruleSoft,
-        background:
-          'linear-gradient(158deg, rgba(255,243,222,0.062) 0%, rgba(255,243,222,0.022) 46%, rgba(0,0,0,0.16) 100%)',
-        boxShadow: '0 1px 0 rgba(255,240,214,0.05) inset, 0 12px 26px -18px rgba(0,0,0,0.9)',
-      }}
-    >
-      {/* Always faintly lit, brighter under a pointer — a touch device is
-          never shown less than a mouse. */}
-      <span
-        aria-hidden="true"
-        className="absolute left-0 top-0 h-full w-[2px] opacity-25 group-hover:opacity-100 transition-opacity"
-        style={{ background: PRESS.accent }}
-      />
-      {/* Identity comes from the writing's own facts — how long the title
-          runs, what form it took, how much of it there is, when it was last
-          written. Never decoration invented to make cards look different. */}
-      <span
-        className="block leading-[1.24] mb-2.5"
-        style={{
-          fontSize: title.length > 34 ? '18.5px' : title.length > 22 ? '20px' : '22px',
-          opacity: untitled ? 0.72 : 1,
-        }}
-      >
-        {title}
-      </span>
-      <span className="block text-[13px] opacity-50">{meta}</span>
-    </Link>
-  );
+  }) => {
+    const style = {
+      borderColor: PRESS.ruleSoft,
+      background:
+        'linear-gradient(158deg, rgba(255,243,222,0.062) 0%, rgba(255,243,222,0.022) 46%, rgba(0,0,0,0.16) 100%)',
+      boxShadow: '0 1px 0 rgba(255,240,214,0.05) inset, 0 12px 26px -18px rgba(0,0,0,0.9)',
+    };
+    const className =
+      'group relative block rounded-[3px] border p-6 min-h-[136px] overflow-hidden transition-all duration-200' +
+      (href ? ' [@media(hover:hover)]:hover:-translate-y-[2px]' : ' cursor-default');
+    const body = (
+      <>
+        {/* Always faintly lit, brighter under a pointer — a touch device is
+            never shown less than a mouse. An inert card stays unlit: the lamp
+            is an invitation to open, and there is nothing here to open. */}
+        <span
+          aria-hidden="true"
+          className={`absolute left-0 top-0 h-full w-[2px] transition-opacity ${
+            href ? 'opacity-25 group-hover:opacity-100' : 'opacity-10'
+          }`}
+          style={{ background: PRESS.accent }}
+        />
+        {/* Identity comes from the writing's own facts — how long the title
+            runs, what form it took, how much of it there is, when it was last
+            written. Never decoration invented to make cards look different. */}
+        <span
+          className="block leading-[1.24] mb-2.5"
+          style={{
+            fontSize: title.length > 34 ? '18.5px' : title.length > 22 ? '20px' : '22px',
+            opacity: untitled ? 0.72 : 1,
+          }}
+        >
+          {title}
+        </span>
+        <span className="block text-[13px] opacity-50">{meta}</span>
+        {!href && (
+          <span className="block mt-2 text-[12.5px] opacity-40">
+            No writing attached yet — nothing to open.
+          </span>
+        )}
+      </>
+    );
+
+    /* No href means no manuscript identity to send. Rendering a link here is
+       exactly the 2026-08-27 defect: the Canvas, asked for nothing, used to
+       put the most recent manuscript on the table under this card's name. */
+    return href ? (
+      <Link href={href} className={className} style={style}>
+        {body}
+      </Link>
+    ) : (
+      <div className={className} style={style}>
+        {body}
+      </div>
+    );
+  };
 
   const Cards = ({ children }: { children: React.ReactNode }) => (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-5">{children}</div>
@@ -342,13 +374,20 @@ export default function HomeView({
                   {resume.title ?? 'Your untitled work'}
                 </h1>
                 <p className="text-[14.5px] opacity-50 mb-8">{workMeta(resume)}</p>
-                <Link
-                  href={canvasForManuscript(CANVAS_HREF, manuscriptIdOf(resume))}
-                  className={`${FILLED} w-full sm:w-auto`}
-                  style={{ background: PRESS.accent, color: PRESS.ink }}
-                >
-                  Continue writing
-                </Link>
+                {canvasHrefFor(CANVAS_HREF, manuscriptIdOf(resume)) ? (
+                  <Link
+                    href={canvasForManuscript(CANVAS_HREF, manuscriptIdOf(resume) as string)}
+                    className={`${FILLED} w-full sm:w-auto`}
+                    style={{ background: PRESS.accent, color: PRESS.ink }}
+                  >
+                    Continue writing
+                  </Link>
+                ) : (
+                  <p className="text-[14px] leading-relaxed opacity-55 max-w-md">
+                    This work has no writing attached yet, so there is nothing to
+                    continue. Bring writing in and declare it a form of this work.
+                  </p>
+                )}
               </section>
             ) : feature ? (
               /* Writing exists that no Work has claimed. It is NOT recast as a
@@ -393,7 +432,7 @@ export default function HomeView({
                   {shelfCards.map((w) => (
                     <div key={w.id}>
                       <Card
-                        href={canvasForManuscript(CANVAS_HREF, manuscriptIdOf(w))}
+                        href={canvasHrefFor(CANVAS_HREF, manuscriptIdOf(w))}
                         title={w.title ?? 'Untitled work'}
                         untitled={!w.title}
                         meta={workMeta(w)}

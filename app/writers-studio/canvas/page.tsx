@@ -5,9 +5,9 @@ import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { apiFetch } from '@/lib/http/apiBase';
 import { PRESS, SERIF } from '../pressTheme';
-import { IMPORT_HREF, SOURCE_HREF } from '../studioMap';
+import { CANVAS_HREF, IMPORT_HREF, SOURCE_HREF } from '../studioMap';
 import { UNTITLED_EXPRESSION } from '../shellIdentity';
-import { CANVAS_MANUSCRIPT_PARAM } from '../canvasIdentity';
+import { CANVAS_MANUSCRIPT_PARAM, canvasForManuscript, selectManuscript } from '../canvasIdentity';
 import { arrivalWork, useLivingWorks } from '../useLivingWorks';
 import type { CurrentManuscript } from '../useCurrentManuscript';
 import {
@@ -56,7 +56,7 @@ type ListPhase = 'loading' | 'ready' | 'none' | 'unauthorized' | 'error';
 
 /** Same rule as Studio Home: return by identity, never by position. */
 const byIdentity = (href: string, manuscriptId: string) =>
-  `${href}&m=${encodeURIComponent(manuscriptId)}`;
+  canvasForManuscript(href, manuscriptId);
 
 function RailSection({
   label,
@@ -263,17 +263,24 @@ function WriterCanvas() {
    * one that was opened, with a grey sentence as the only signal. A writer
    * cannot tell that from their own work having been replaced.
    *
-   *   no id asked for   → the most recent is a reasonable place to land
-   *   id asked for, found   → open it
+   *   id asked for, found     → open it
    *   id asked for, NOT found → open NOTHING and say so
+   *   no id asked for         → open NOTHING and ask which writing
+   *
+   * The third case used to land on the most recent manuscript, and that is
+   * how the 2026-08-27 failure reached the founder: a work with no manuscript
+   * attached produced a Canvas URL carrying no id at all, and the room put a
+   * 5-page transcript on the table under that work's name. There is no longer
+   * any input to this room that opens a manuscript nobody named.
    *
    * Showing the wrong text under the right title is worse than showing none.
+   * The rule lives in ../canvasIdentity.ts and is imported, not restated.
    */
-  const asked = requested !== null;
-  const found = asked ? (manuscripts.find((m) => m.id === requested) ?? null) : null;
-  const missing = listPhase === 'ready' && asked && found === null;
+  const selection = selectManuscript(requested, manuscripts);
+  const missing = listPhase === 'ready' && selection.kind === 'missing';
+  const unnamed = listPhase === 'ready' && selection.kind === 'unnamed';
   const manuscript =
-    listPhase === 'ready' ? (asked ? found : (manuscripts[0] ?? null)) : null;
+    listPhase === 'ready' && selection.kind === 'found' ? selection.manuscript : null;
 
   const [mode, setMode] = useState<Mode>('write');
   const [handed, setHanded] = useState<{ key: string; message: string } | null>(null);
@@ -533,9 +540,6 @@ function WriterCanvas() {
           {unitedWork && manuscript && (
             <span>On the table: {manuscriptLabel} — a form of this work, declared by you.</span>
           )}
-          {manuscript && !asked && manuscripts.length > 1 && (
-            <span>The most recent of your {manuscripts.length} manuscripts is on the table.</span>
-          )}
           {railWork && (
             <span>
               {materialCount === 0
@@ -570,6 +574,29 @@ function WriterCanvas() {
               The Canvas could not be reached just now. Your work is not affected — please try
               again in a moment.
             </p>
+          )}
+          {unnamed && (
+            <div className="max-w-md">
+              <p className="text-[16px] leading-relaxed opacity-80 mb-4">
+                Which writing would you like on the table?
+              </p>
+              <p className="text-[14px] leading-relaxed opacity-55 mb-6">
+                Nothing was named on the way in, so the Studio has not opened
+                anything. It will not choose a manuscript on your behalf.
+              </p>
+              <ul className="space-y-2.5">
+                {manuscripts.map((m) => (
+                  <li key={m.id}>
+                    <Link
+                      href={canvasForManuscript(CANVAS_HREF, m.id)}
+                      className="text-[15px] underline underline-offset-4 opacity-85 hover:opacity-100"
+                    >
+                      {m.title ?? UNTITLED_EXPRESSION}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
           )}
           {missing && (
             <div className="max-w-md">

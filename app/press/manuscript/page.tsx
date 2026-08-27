@@ -152,6 +152,8 @@ function PressManuscriptRoom() {
   // W-2: load failure and "no manuscripts" are different facts about the world.
   const [listError, setListError] = useState(false);
   const [active, setActive] = useState<string | null>(null);
+  /** A manuscript id that was named on the way in and is not on the shelf. */
+  const [unresolved, setUnresolved] = useState<string | null>(null);
 
   const [title, setTitle] = useState('');
   const [sections, setSections] = useState<Section[]>([]);
@@ -278,10 +280,27 @@ function PressManuscriptRoom() {
          member-scoped server-side, so this cannot name another member's work;
          the check simply means an unknown or stale id falls back to the
          existing behaviour instead of opening nothing. */
-      const requested = list.some((m) => m.id === requestedManuscript)
-        ? requestedManuscript
-        : null;
-      setActive((cur) => cur ?? requested ?? (list.length > 0 ? list[0].id : null));
+      const named = requestedManuscript !== null;
+      const found = named && list.some((m) => m.id === requestedManuscript);
+
+      /* ── Identity custody (DECISIONS.md D-008 / D-010) ──────────────────
+         A named id that is not on the shelf may NOT fall back to list[0].
+         Substituting here produces the same failure the Canvas shipped on
+         2026-08-27: the wrong writing under the right name, with nothing
+         anywhere that says a substitution happened. An unresolvable name
+         opens nothing and leaves the member on the chooser. */
+      if (named && !found) {
+        setUnresolved(requestedManuscript);
+        setActive(null);
+        return;
+      }
+      setUnresolved(null);
+      /* A later `?m=` is a new request, not noise: honour it rather than
+         keeping whatever happens to be open. Only an unaddressed arrival
+         falls to the most recent, and only when nothing is open yet. */
+      setActive((cur) =>
+        found ? requestedManuscript : (cur ?? (list.length > 0 ? list[0].id : null)),
+      );
     } catch {
       // Never fall through to the upload screen — that asserts an emptiness we
       // have not established. We do not know what the writer has; say so.
@@ -289,7 +308,10 @@ function PressManuscriptRoom() {
     } finally {
       setLoading(false);
     }
-  }, []);
+    /* `requestedManuscript` is a real dependency: a change to `?m=` is a new
+       identity request, and a list read that ignores it would leave whatever
+       is open on screen under a URL naming something else. */
+  }, [requestedManuscript]);
 
   const loadDetail = useCallback(async (id: string) => {
     const res = await apiFetch(`/api/sovereign/manuscripts/${id}`, { method: 'GET' });
@@ -667,6 +689,20 @@ function PressManuscriptRoom() {
           >
             ← Author Studio
           </a>
+          {unresolved && (
+            <div className="mb-9 border-l-2 border-[#C9A227] pl-5">
+              <p className="text-[16px] leading-relaxed opacity-85 mb-2">
+                That manuscript is not on your shelf.
+              </p>
+              <p className="text-[14px] leading-relaxed opacity-60 mb-2">
+                Nothing was opened and nothing was changed. A different
+                manuscript will not be put in its place.
+              </p>
+              <p className="text-[12.5px] leading-relaxed opacity-40 font-mono break-all">
+                asked for: {unresolved}
+              </p>
+            </div>
+          )}
           <h1 className="text-3xl leading-snug mb-4">Import a manuscript</h1>
           <p className="text-[15px] leading-relaxed opacity-70 mb-3">
             Bring in a book you have already written. Paste it, or choose a file.

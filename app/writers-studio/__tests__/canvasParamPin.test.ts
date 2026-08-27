@@ -56,16 +56,45 @@ describe('Canvas manuscript parameter — pinned across an un-editable boundary'
     expect(value).toBe('ms-alchemy');
   });
 
-  it('the Canvas never substitutes a manuscript that was asked for', () => {
-    /* The predecessor of this test recorded the opposite — that the Canvas
-       DID fall back — as a defect held under glass. WS2-01 closed it, so the
-       guard is inverted: the fallback survives only for the case it was ever
-       right for (nothing asked for), and an asked-for id that is not on the
-       shelf must open nothing and say so.
+  it('the Canvas never substitutes a manuscript, named or unnamed', () => {
+    /* Two predecessors of this test recorded the opposite. The first pinned an
+       unconditional fallback to manuscripts[0]. The second kept the fallback
+       "for the case it was ever right for (nothing asked for)" — and that case
+       is how the 2026-08-27 failure reached the founder: a work with no
+       manuscript attached emitted a Canvas URL with no id, and the room put a
+       5-page transcript on the table under that work's name.
 
-       DECISIONS.md D-008: identity failure may never masquerade as
-       successful retrieval. */
-    expect(canvasSource).toMatch(/asked \? found : \(manuscripts\[0\] \?\? null\)/);
+       There is now no path through this room that opens a manuscript nobody
+       named. The rule lives in canvasIdentity.ts and is imported, not
+       restated, so it cannot drift from what Home builds.
+
+       DECISIONS.md D-008 + D-010. */
+    /* Comments name the old behaviour on purpose — the history is why this
+       rule exists. Only executable source is pinned. */
+    const code = canvasSource.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '');
+    expect(code).toContain('selectManuscript');
+    expect(code).not.toMatch(/manuscripts\[0\]/);
+    expect(code).not.toContain('most recent of your');
     expect(canvasSource).toContain('not on your shelf');
+    expect(canvasSource).toContain('Which writing would you like on the table?');
+  });
+
+  it('Studio Home cannot render a card that opens something it did not name', () => {
+    /* F-1: the live producer hole. `manuscriptIdOf(w)` is null for a work with
+       no manuscript, and the old builder answered a null id with a bare Canvas
+       URL — a link that looks like it opens this work and opens another. */
+    const homeSource = readFileSync(join(__dirname, '..', 'HomeView.tsx'), 'utf8');
+    expect(homeSource).toContain('canvasHrefFor');
+    expect(homeSource).not.toMatch(/canvasForManuscript\(CANVAS_HREF, manuscriptIdOf\(w\)\)/);
+    expect(homeSource).toContain('No writing attached yet');
+  });
+
+  it('the parameter name is never inlined outside the contract', () => {
+    /* F-4. The 2026-08-14 defect was a hand-written parameter name drifting
+       from the one the reader used. Every builder imports it now. */
+    for (const file of ['canvas/page.tsx', 'canvas/MaterialsDrawer.tsx', 'HomeView.tsx']) {
+      const source = readFileSync(join(__dirname, '..', file), 'utf8');
+      expect(source).not.toMatch(/[`'"]&m=|\?m=\$\{/);
+    }
   });
 });

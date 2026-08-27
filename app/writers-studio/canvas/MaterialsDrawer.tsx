@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { apiFetch } from '@/lib/http/apiBase';
 import { PRESS, SERIF } from '../pressTheme';
 import { SOURCE_HREF } from '../studioMap';
+import { canvasForManuscript } from '../canvasIdentity';
 import { formatWhen } from '../../press/manuscript/workingDraftClient';
 import { kindById, MATERIAL_KINDS, sizeLabel } from '@/lib/studio/materials/kinds';
 import type { CurrentManuscript } from '../useCurrentManuscript';
@@ -482,7 +483,7 @@ export default function MaterialsDrawer({
           <p className="text-[12px] opacity-55">
             The draft on the table came from your Source —{' '}
             <Link
-              href={`${SOURCE_HREF}&m=${encodeURIComponent(manuscript.id)}`}
+              href={canvasForManuscript(SOURCE_HREF, manuscript.id)}
               className="underline underline-offset-4 opacity-80 hover:opacity-100"
             >
               read it unchanged

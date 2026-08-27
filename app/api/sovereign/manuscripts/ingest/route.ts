@@ -30,7 +30,7 @@ export const maxDuration = 120; // large .docx/.pdf extraction can take a moment
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
-import { parseUpload, UnsupportedUploadError } from '@/lib/manuscript/ingest/parseUpload';
+import { detectFormat, parseUpload, UnsupportedUploadError } from '@/lib/manuscript/ingest/parseUpload';
 import { memberRef } from '@/lib/privacy/memberRef';
 import { recordArtifactArrival } from '@/lib/manuscript/source/arrivals';
 
@@ -84,9 +84,31 @@ export async function POST(request: NextRequest) {
       if (err instanceof UnsupportedUploadError) {
         return NextResponse.json({ error: err.message }, { status: 415 });
       }
-      console.error('[press/manuscripts/ingest] parse error:', err);
+
+      /* IMPORT-READ-01, 2026-08-27. This branch used to answer every failure
+         with "Try a .docx, .pdf, .txt, or .md" — including failures on a file
+         that WAS one of those. That tells the member their manuscript is the
+         problem when the reader is, which is the same misattribution the
+         Canvas made when it opened a substitute manuscript confidently: a
+         failure presenting itself as the member's mistake.
+
+         So: name the format we recognised, say the reading failed here, and
+         emit a greppable marker carrying the reason — never the content. */
+      const format = detectFormat(file.name, file.type);
+      const reason = err instanceof Error ? `${err.name}: ${err.message}` : 'unknown';
+      console.error(
+        `[MAIA/press] INGEST READ FAILURE { memberRef: ${memberRef(memberId)}, ` +
+          `format: ${format ?? 'unrecognised'}, bytes: ${file.size}, reason: ${reason} }`,
+      );
       return NextResponse.json(
-        { error: 'We could not read that file. Try a .docx, .pdf, .txt, or .md.' },
+        {
+          error: format
+            ? `We could not read this ${format === 'text' ? 'text' : format.toUpperCase()} file. ` +
+              'Your file looks like a supported type, so this is a fault on our side, not yours. ' +
+              'Nothing was saved, and the file is unchanged.'
+            : 'We could not read that file. Try a .docx, .pdf, .txt, or .md.',
+          reason,
+        },
         { status: 422 },
       );
     }
