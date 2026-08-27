@@ -20,7 +20,24 @@
 > costs a decision. The 2026-08-14 member-upgrade ledger is frozen historical predecessor
 > evidence within this same lineage, not a competing live-state source.
 >
-> > **Design reconciliation (2026-08-27).** The 2026-08-27 design source set was reconciled against
+> > **Founder ruling — WS2-00 (2026-08-27).**
+> ```text
+> SEMANTIC RECONCILIATION   COMPLETE
+> VISUAL RECONCILIATION     OPEN — awaiting the eight design images
+> WS2-01A  identity census / trace / proof design   MAY OPEN NOW · READ-ONLY
+> WS2-01B  identity repair                          HELD behind WS-01 acceptance
+> WS2-04   WITHDRAWN AS DUPLICATE UNIT ID — requirement maps into frozen WS-02
+> WS2-13   WITHDRAWN AS DUPLICATE UNIT ID — requirement maps into A2.5
+> WS2-07a  ARCHITECTURALLY READY · HELD BY CURRENT WS-01 ACCEPTANCE
+> WS2-08a  ARCHITECTURALLY READY · HELD BY CURRENT WS-01 ACCEPTANCE
+> app/book-studio   NO CLEANUP AUTHORIZED — route-by-route witness required first
+> ```
+> ⚠️ **A withdrawn identifier is not a withdrawn requirement.** Both capabilities remain fully
+> mandated under their existing identities.
+> ⛔ **ARCHITECTURALLY READY is not EXECUTION-ELIGIBLE.** A2.4 opens `Finish WS-01 →`; build mode is
+> CLOSED; `P0-D` is the declared next executable. No existing authority permits a concurrent lane.
+>
+> **Design reconciliation (2026-08-27).** The 2026-08-27 design source set was reconciled against
 > this board, the Master Brief and canonical. It is **census evidence, not a second cockpit** — it
 > creates no unit and re-sequences nothing. Two findings bear on live state: the fourteen
 > `studio`-ish route families are a **naming collision** (only four are this programme's;

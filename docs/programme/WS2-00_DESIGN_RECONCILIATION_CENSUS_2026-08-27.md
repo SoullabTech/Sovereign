@@ -15,6 +15,12 @@ one-live-cockpit rule stands: *"two cockpits diverge, and the divergence is invi
 a decision."* A `WRITERS_STUDIO_V2_ROADMAP` in `docs/architecture/` was proposed and **deliberately
 not authored** — it would have been that second cockpit.
 
+```text
+FOUNDER RULING — WS2-00 (2026-08-27)
+  SEMANTIC RECONCILIATION   COMPLETE
+  VISUAL RECONCILIATION     OPEN — awaiting the eight design images
+```
+
 ⚠️ **Design-source limitation, stated up front.** The eight screens were described to this session in
 **prose**, not supplied as images. Every design-intent statement below derives from the founder's
 five-field written description of 2026-08-27. Findings that depend on *visual* detail — layout,
@@ -97,10 +103,10 @@ not units; two need inputs this census lacks.**
 | Proposed | Verdict | Evidence |
 |---|---|---|
 | WS2-00 reconciliation | ⭐ **RENAME** → this census record. Not a build unit. | — |
-| WS2-01 work/manuscript/content identity | ⭐ **ACCEPT and PROMOTE** — this is a **prerequisite**, not a peer | A4.1: substrate makes Work the anchor; the surface still makes the manuscript the anchor. Fields 1, 3, 4 all read wrong until this is settled |
+| WS2-01 work/manuscript/content identity | ⭐ **ACCEPT, PROMOTE to prerequisite, and SPLIT** (ruling 3) — **01A** identity census / trace / proof design **MAY OPEN NOW, read-only**; **01B** identity repair **HELD** behind WS-01 acceptance | A4.1: substrate makes Work the anchor; the surface still makes the manuscript the anchor. Fields 1, 3, 4 all read wrong until this is settled. Waiting to *understand* it gains nothing; letting a code-changing unit in while build mode is CLOSED would muddy the custody this census defends |
 | WS2-02 visual/design system | ⚠️ **NEEDS IMAGES** — cannot be sized from prose. Note `app/book-studio/design-system` exists | — |
 | WS2-03 persistent shell + navigation | **ACCEPT, smaller than proposed** | `shellIdentity.ts` · `studioMap.ts` · `layout.tsx` already exist |
-| WS2-04 Writing / editor | ⛔ **REJECT AS NEW — it already exists as WS-02** | Board: `BUILD MODE CLOSED — Canvas / Phase 1 freeze BINDING`. Brief §11–13 already rules what to harvest and reject from PR #995. Opening WS2-04 would fork a frozen unit |
+| WS2-04 Writing / editor | ⛔ **WITHDRAWN AS A DUPLICATE UNIT ID** (ruling 4). ⚠️ The **requirement is not withdrawn** — it maps into the frozen **WS-02** | Board: `BUILD MODE CLOSED — Canvas / Phase 1 freeze BINDING`. Brief §11–13 already rules what to harvest and reject from PR #995. Opening WS2-04 would fork a frozen unit |
 | WS2-05 Work Home | **ACCEPT** — depends on WS2-01 | A4.1 PARTIAL |
 | WS2-06 Materials Studio | **ACCEPT** — ⛔ **gated on WS-01**, the current unit, at P0-D | A4.3 IN ACCEPTANCE |
 | WS2-07 Structure + versions | ⭐ **SPLIT** — they are not one unit | A4.9 (Work Structure) is a **dependency of** the structure-aware lenses; A4.11 (restore floor, A1.6) is **independent** and buildable now |
@@ -109,11 +115,16 @@ not units; two need inputs this census lacks.**
 | WS2-10 supporting tools | ⛔ **REJECT as a unit** — a bucket, and A1.9 rules on some of its contents | — |
 | WS2-11 Publish / export / share-review | **ACCEPT, late** | A4.13 PARTIAL; ⛔ *"a lecture is not a book in bullets"* — re-expression, not export |
 | WS2-12 integration / permissions / migrations / regression | ⛔ **NOT A UNIT** — a **gate on every unit** | Co-Lab Release Gate already binding at 31/31 |
-| WS2-13 production experiential acceptance | ⛔ **REJECT AS NEW — it is A1.10 + A2.5** | The founder experience test and the definition of full fruition already exist in custody |
+| WS2-13 production experiential acceptance | ⛔ **WITHDRAWN AS A DUPLICATE UNIT ID** (ruling 4). ⚠️ The **requirement is not withdrawn** — it maps into existing **A2.5** (with A1.10) | The founder experience test and the definition of full fruition already exist in custody |
 
-⭐ **The decomposition's main error is that it re-proposes two units the programme already has**
-(WS2-04 = WS-02; WS2-13 = A2.5), which is precisely how a second cockpit forms — not by declaring
-one, but by renaming existing units until the old names stop being used.
+⭐ **The decomposition's main error is SEMANTIC DUPLICATION, not documentary duplication.** It
+re-proposes two units the programme already has (WS2-04 = WS-02; WS2-13 = A2.5). That is how a second
+cockpit actually forms — not by declaring one, but by giving governed work new names until two
+lineages describe the same thing and the old names stop being used.
+
+⚠️ **Withdrawing an identifier is not withdrawing a requirement.** Both capabilities remain fully
+mandated under their existing identities. A future session reading only the withdrawal must not
+conclude the work was dropped.
 
 ---
 
@@ -136,8 +147,25 @@ FROZEN:   WS-02 Canvas convergence — freeze BINDING, do not fork as WS2-04
 GATE:     Co-Lab Release Gate 31/31 · A4.21 prohibition on partial success
 ```
 
-**Runnable in parallel today:** WS2-07a (versions) and WS2-08a (pre-structure stances). Neither
-depends on Work Structure, on the Canvas freeze, or on each other.
+### ⛔ Readiness language — corrected on founder review, 2026-08-27
+
+An earlier draft of this file said WS2-07a and WS2-08a were *"runnable in parallel today."* **That was
+wrong, and wrong in the specific way this census exists to prevent:** it quietly overrode the freeze
+the same document had just correctly preserved.
+
+```text
+WS2-07a   ARCHITECTURALLY READY · HELD BY CURRENT WS-01 ACCEPTANCE
+WS2-08a   ARCHITECTURALLY READY · HELD BY CURRENT WS-01 ACCEPTANCE
+```
+
+**Architecturally unblocked ≠ programme-eligible.** The distinction is load-bearing, and existing
+authority settles it rather than leaving it to caution:
+
+- **A2.4 build sequence** opens with **`Finish WS-01 →`**. The arrow is an order, not a list.
+- The board reads `BUILD MODE CLOSED — Canvas / Phase 1 freeze BINDING` with `NEXT EXECUTABLE P0-D`.
+
+⭐ **No existing programme authority permits a concurrent lane while WS-01 acceptance is open.**
+Checked, not assumed — A2.4 and A3.4 were read for a concurrency permission and neither grants one.
 
 **Highest risk, in order:**
 1. **WS2-07b Work Structure** — A1.5 warns *"examples are not schema"*; the board forbids a universal
@@ -148,6 +176,44 @@ depends on Work Structure, on the Canvas freeze, or on each other.
 
 **What blocks experiential acceptance right now:** **A4.21.** Success may not be declared while the
 gather, memory, structural, developmental, expression and authorship rows read ABSENT — and they do.
+
+---
+
+## 4A · ⛔ `app/book-studio` — replacement-witness scaffold (ruling 2: NO cleanup authorized)
+
+§21 permits legacy cleanup **only after replacements are witnessed**. Predecessor lineage is not dead
+code. The table below is the read-only evidence available now; the three right-hand columns are
+**deliberately unfilled** — they require a witness, not an inference.
+
+⭐ **Premise-changing finding.** `app/book-studio` touches **neither `living_works` nor
+`member_manuscripts`** — 0 files each. Its APIs write to **`workbench_uploads` (11)** and
+**`workbench_tables` (7)**. So this is **not a predecessor on the canonical substrate; it is a
+parallel lineage on different tables.**
+
+⛔ That reframes the cleanup question entirely. It is not *"which route replaces which"* — it is
+**"does this data have a home in the canonical model at all?"** A route-by-route retirement that
+ignored the substrate split would strand member data in tables nothing canonical reads.
+
+| Route | pages | api files | inbound refs (outside book-studio) | intended capability | canonical replacement | replacement proven? | member data dependency | disposition |
+|---|---:|---:|---:|---|---|---|---|---|
+| `workbench` | 1 | **6** | **11** | gather / upload / tables | — | ⛔ NOT WITNESSED | ⚠️ **`workbench_uploads` · `workbench_tables`** | **HOLD** |
+| `drafts` | 1 | 2 | 6 | draft management | — | ⛔ NOT WITNESSED | to census | HOLD |
+| `render` | 1 | 2 | 5 | epub / render | A4.13 expression (PARTIAL) | ⛔ NOT WITNESSED | to census | HOLD |
+| `read` | 1 | 0 | 3 | reading surface | — | ⛔ NOT WITNESSED | to census | HOLD |
+| `book` | 1 | 0 | 1 | book view | — | ⛔ NOT WITNESSED | to census | HOLD |
+| `canvas` | 1 | 0 | 1 | canvas | ⚠️ **frozen WS-02** | ⛔ frozen — cannot be witnessed yet | to census | **HOLD (freeze)** |
+| `illustrations` | 1 | 0 | **0** | illustrations | — | ⛔ NOT WITNESSED | to census | HOLD — 0 refs is *not* proof of death |
+| `passages` | 1 | 0 | **0** | passages | — | ⛔ NOT WITNESSED | to census | HOLD |
+| `ready-to-write` | 1 | 0 | **0** | readiness | A4.14 (ABSENT) | ⛔ NOT WITNESSED | to census | HOLD |
+| `design-system` | 1 | 0 | **0** | design tokens | ⚠️ **NEEDS IMAGES** — bears on WS2-02 | ⛔ NOT WITNESSED | none likely | HOLD |
+
+⚠️ **Zero inbound references is not a replacement witness.** Four routes have no callers outside
+their own tree. That makes them *candidates* for the question, never answers to it — a member can
+reach a route by URL, and §21's bar is a witnessed replacement, not an absent link.
+
+⛔ **No route on this table is authorized for deletion, redirect, or migration.** `app/press/studio`
+remains the only cleanly retired route in the lineage, because it carries a real `redirect()` to the
+canonical surface — that is what a witnessed replacement looks like.
 
 ---
 
