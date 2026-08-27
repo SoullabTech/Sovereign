@@ -26,6 +26,10 @@ const { encodeWav } = require('./voice/wav');
 const TRANSCRIBE_PATH = '/api/voice/transcribe-simple';
 const MAIA_PATH = '/api/sovereign/app/maia/list';
 
+// Below the 512 KB boundary the device walk measured, with headroom for
+// multipart framing. At 16 kHz mono this is roughly 15 seconds of speech.
+const TRANSPORT_CEILING_BYTES = 460 * 1024;
+
 /**
  * Human-readable meaning for the failures this path actually produces, so the
  * surface never shows a bare status code to someone who just spoke.
@@ -65,9 +69,45 @@ async function readErrorBody(res) {
 function createConversation({ session, diagnostics, sessionId }) {
   let convId = sessionId;
 
+  // The device walk (2026-08-27) produced `chars=0` on a request that had
+  // succeeded, and there was no way to tell whether the mic had captured
+  // near-silence or whether the failure was downstream. Level is structure, not
+  // content — it says how loud, never what was said — so it belongs in
+  // diagnostics and answers that question the next time it is asked.
+  function level(samples) {
+    let peak = 0, sum = 0;
+    for (let i = 0; i < samples.length; i++) {
+      const v = samples[i]; const a = v < 0 ? -v : v;
+      if (a > peak) peak = a;
+      sum += v * v;
+    }
+    const rms = samples.length ? Math.sqrt(sum / samples.length) : 0;
+    return { peakX1000: Math.round(peak * 1000), rmsX1000: Math.round(rms * 1000) };
+  }
+
   async function transcribe(samples, sampleRate) {
     const wav = encodeWav(samples, sampleRate);
-    diagnostics.emit('voice_transcribe_sent', { bytes: wav.byteLength });
+    const { peakX1000, rmsX1000 } = level(samples);
+    diagnostics.emit('voice_transcribe_sent', {
+      bytes: wav.byteLength,
+      seconds: Math.round((samples.length / (sampleRate || 1)) * 10) / 10,
+      peakX1000,
+      rmsX1000,
+    });
+
+    // ⛔ Observed ceiling, not a guess: on 2026-08-27 bodies of 527148 bytes and
+    // above were rejected by Next's own /_error page — upstream of the route
+    // handler, so no application code ran. Refusing here with a plain sentence
+    // is better than handing the member a framework stack trace. This is a
+    // CLIENT-SIDE accommodation of a SERVER-SIDE limit; the limit itself is a
+    // recorded finding and is not worked around by weakening anything.
+    if (wav.byteLength > TRANSPORT_CEILING_BYTES) {
+      diagnostics.emit('voice_transcribe_error', { errorName: 'too_large', source: 'client' });
+      return {
+        ok: false,
+        error: `That turn was longer than the server currently accepts (${Math.round(wav.byteLength / 1024)} KB > ${TRANSPORT_CEILING_BYTES / 1024} KB). Shorter turns work; the server-side limit is a known open item.`,
+      };
+    }
 
     const form = new FormData();
     // Content-Type is deliberately NOT set — the route rejects a manually set
@@ -122,4 +162,4 @@ function createConversation({ session, diagnostics, sessionId }) {
   return { transcribe, ask, conversationId: () => convId, TRANSCRIBE_PATH, MAIA_PATH };
 }
 
-module.exports = { createConversation, explain, readErrorBody, TRANSCRIBE_PATH, MAIA_PATH };
+module.exports = { createConversation, explain, readErrorBody, TRANSCRIBE_PATH, MAIA_PATH, TRANSPORT_CEILING_BYTES };

@@ -10,12 +10,46 @@
 
 'use strict';
 
+// Whisper resamples everything to 16 kHz internally, so sending 48 kHz means
+// sending three times the bytes for accuracy the model cannot use. The device
+// walk (2026-08-27) made that concrete: bodies over ~512 KB were rejected
+// upstream of the route, and at 48 kHz a 5-second turn is already 480 KB.
+const WHISPER_RATE = 16000;
+
+/**
+ * Decimate by averaging over the source window. A point-sampling resampler
+ * aliases speech harmonics down into the formant range — a box average over the
+ * window is a crude low-pass, which is the cheapest thing that is not wrong.
+ *
+ * @param {ArrayLike<number>} samples
+ * @param {number} from source rate
+ * @param {number} to target rate
+ * @returns {Float32Array}
+ */
+function resample(samples, from, to) {
+  if (!from || !to || from === to || from < to) return Float32Array.from(samples);
+  const ratio = from / to;
+  const out = new Float32Array(Math.floor(samples.length / ratio));
+  for (let i = 0; i < out.length; i++) {
+    const start = Math.floor(i * ratio);
+    const end = Math.min(samples.length, Math.floor((i + 1) * ratio));
+    let sum = 0;
+    for (let j = start; j < end; j++) sum += samples[j];
+    out[i] = end > start ? sum / (end - start) : 0;
+  }
+  return out;
+}
+
 /**
  * @param {Float32Array|number[]} samples mono, nominally [-1, 1]
  * @param {number} sampleRate
+ * @param {{targetRate?: number}} [opts]
  * @returns {Uint8Array} a complete RIFF/WAVE file
  */
-function encodeWav(samples, sampleRate) {
+function encodeWav(input, inputRate, opts = {}) {
+  const targetRate = opts.targetRate === undefined ? WHISPER_RATE : opts.targetRate;
+  const samples = resample(input, inputRate, targetRate);
+  const sampleRate = inputRate > targetRate ? targetRate : inputRate;
   const n = samples.length;
   const bytes = new Uint8Array(44 + n * 2);
   const view = new DataView(bytes.buffer);
@@ -47,4 +81,4 @@ function encodeWav(samples, sampleRate) {
   return bytes;
 }
 
-module.exports = { encodeWav };
+module.exports = { encodeWav, resample, WHISPER_RATE };
