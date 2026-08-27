@@ -120,77 +120,103 @@ occasional pathological spikes?
 That last row matters most: it would mean every hour spent on the synthesizer
 was spent in the wrong place.
 
-## A5 — Listen to Alloy again
+## A5 — Voice identity / quality
 
-**The presumption is KEEP, not replace.**
+### Correction, 2026-08-27
 
-Alloy is the reference voice. It was previously experienced as *"almost
-perfect"* in a correctly-routed state (Kelly's observation; not reproduced by
-the authoring agent). Nothing since has established a better voice for MAIA —
-only that the current experience is wrong while three known defects are
-present. Remove those first, then listen again.
+**Previous assumption:** Kokoro `af_kore` could serve as a perceptual
+equivalent of OpenAI Alloy under the same MAIA voice identity.
 
-```
-FIX ALLOY
-  → prove correct routing
-  → fix code-speak
-  → fix mic/turn reliability
-  → measure and reduce latency
-  → listen to Alloy again
-  → KEEP ALLOY if it feels right
-```
-
-⚠️ **Unresolved and load-bearing: which Alloy was the good baseline?**
+**Current evidence:**
 
 ```
-OpenAI alloy      cloud implementation — NOT reachable under current canon
-Kokoro af_kore    local realization of maia_core, labelled "alloy" upstream
+ROUTING
+  maia_core → af_kore under sovereign/local policy
+  STRUCTURALLY CORRECT
+
+MEMBER WITNESS
+  af_kore is materially more robotic / not perceptually equivalent
+  to the prior Alloy experience
+  PERCEPTUAL-EQUIVALENCE ASSUMPTION FALSIFIED
+
+HISTORICAL RECONCILIATION
+  the "almost perfect" MAIA voice heard before today's sovereignty
+  change was OpenAI Alloy, not Kokoro af_kore
 ```
 
-The discriminator is timing: before #1113 shipped on 2026-08-27, cloud led and
-the voice heard would have been OpenAI's. After it, only Kokoro is reachable.
-If the good baseline was the cloud one, "restore Alloy" and "do not reverse the
-canon" are in direct conflict and the roadmap must say so rather than assume
-the local voice will arrive there. **Resolve before A5 runs.**
+**State:** OPEN PRODUCT / CANON QUESTION. Not a routing bug.
 
-## A6 — Audition, only if Alloy still sounds wrong
-
-Not a default stage. Reached only if A1–A4 are complete and the voice is still
-wrong.
+**Candidate paths — none selected:**
 
 ```
-Alloy  vs  Kokoro af_sarah  vs  Kokoro af_kore  vs  any clearly stronger candidate
+A. make a local Kokoro voice good enough to be MAIA
+   (af_kore / af_sarah / other qualified local voice)
+B. explicitly re-authorize cloud voice choice
+   (canon amendment; member speech text leaves the machine)
+C. qualify a stronger sovereign local model
+   (CSM / Orpheus class; research only until proven)
 ```
 
-`af_sarah` is worth remembering specifically: heard directly, it was described
-as *"a different woman voice and I liked it"* (Kelly's observation). It is
-already a first-class identity in the codebase —
+`af_sarah` is a genuine alternate — heard directly and liked (Kelly's
+observation, not reproduced by the authoring agent) — and is already a
+first-class identity, so comparing it costs a preference change rather than new
+plumbing:
 
 ```
 maia_warm · "Maia (Warm)" · kokoro af_sarah · openai shimmer
-"Soft edge. Holds silence well. For when you need room."
 ```
 
-— so comparing it costs a preference change, not new plumbing.
-
-`af_kore` is not sacred. It was chosen as the sovereign default mapped from
-alloy, never established as perceptually superior.
-
-**Research candidates, not production-proven:** CSM-1B, Orpheus. Neither is a
-demonstrated Alloy replacement and neither should enter an audition as though
-it were.
-
-Audition passages must expose what matters — tenderness, directness, humour,
-contemplative depth, one long complex sentence, one short intimate answer,
-difficult emotional material, ordinary practical guidance. Judge on presence,
-warmth, intelligence, natural cadence, embodiedness, emotional range, absence
-of "AI announcer" quality, and recognizability as MAIA. Not generic voice
-quality.
+`af_kore` is not sacred: chosen as the sovereign default mapped from alloy,
+never established as perceptually superior.
 
 **Engineering measurement does not overrule this stage.** Routing was verified
-correct while the lived result was still wrong; the proof closed one hypothesis
-and did not overrule the experience. The converse also holds: a voice that
-measures well and sounds wrong has not passed.
+correct while the lived result was still wrong. The converse also holds: a
+voice that measures well and sounds wrong has not passed.
+
+## A6 — Provider / sovereignty decision
+
+**Was:** a contingency if Kokoro could not meet the quality bar.
+
+**Now:** a LIVE DECISION, intentionally deferred until A1–A4 evidence exists.
+
+**Reason:** restoring the previously preferred Alloy experience currently means
+restoring OpenAI synthesis, which conflicts with today's local-default
+sovereignty canon unless that canon is explicitly amended.
+
+⚠️ **Do not treat "Alloy" as provider-neutral in future roadmap language.**
+Distinguish:
+
+```
+voice identity / desired perceptual character
+        from
+synthesis provider / data boundary
+```
+
+Audition passages, when A5 runs, must expose what matters — tenderness,
+directness, humour, contemplative depth, one long complex sentence, one short
+intimate answer, difficult emotional material, ordinary practical guidance.
+Judge on presence, warmth, intelligence, natural cadence, embodiedness,
+emotional range, absence of "AI announcer" quality, recognizability as MAIA.
+Not generic voice quality.
+
+---
+
+## What today's work did and did not cause
+
+A distinction to preserve, because it decides where repair effort belongs:
+
+**Today's sovereignty work did NOT create the sanitizer or mic defects.** It
+changed the dominant voice path, and thereby exposed pre-existing Kokoro-path
+defects continuously instead of rarely.
+
+| Symptom | Caused by today? | Mechanism |
+|---|---|---|
+| Voice sounds different / robotic | **Yes — intended** | `c92667e`/`bc46085` made local TTS the production authority; `auto` and `cloud` no longer lead to OpenAI |
+| MAIA speaks code aloud | **Exposed, not created** | SSML is generated for Kokoro only; the OpenAI path passes `text` and never SSML. The bypass could only fire on the Kokoro path, which went from rare fallback to every turn |
+| ~7s wait for first audio | **Exposed, not created** | same: Kokoro synthesis cost went from occasionally felt to universally felt. Whether it was always this slow is unmeasured |
+| Mic dies after MAIA speaks | **No evidence** | the rapid-end guard predates today's work; not attributed |
+
+---
 
 ## A7 — Device acceptance
 
