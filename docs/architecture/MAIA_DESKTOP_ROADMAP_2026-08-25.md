@@ -1,6 +1,8 @@
 # MAIA Desktop Companion — Roadmap to a full functioning Desktop MAIA
 
-**Date:** 2026-08-25 · **Status:** programme reference · **Position:** D01 open on device evidence
+**Date:** 2026-08-25 · **Status:** programme reference
+**Position:** D01/D03 device-witnessed 2026-08-27 · D04 partially proven · D02 next
+**Position last updated:** 2026-08-27 after the conversation device walk
 **Supersedes nothing.** This refines the founder's original D00–D30 programme with what the
 MAIA-D00 census, MAIA-D00A, and MAIA-D01 actually established. Where the census changed a unit's
 size or sequence, that is marked ⭐.
@@ -12,12 +14,48 @@ size or sequence, that is marked ⭐.
 ```
 MAIA-D00    ✅ CLOSED    canonical reconciliation
 MAIA-D00A   ✅ CLOSED    preload boundary reconciliation
-MAIA-D01    ◑  OPEN      implemented · device witness required   ← HERE
-MAIA-D02+   ○  not eligible
+MAIA-D01    ✅ WITNESSED native capture → transcript, on a real Mac, 2026-08-27
+MAIA-D03    ✅ WITNESSED authenticated transport into the live MAIA routes
+MAIA-D04    ◑  PARTIAL   same member + same substrate proven; same CONVERSATION not
+MAIA-D02    ◑  OPEN      reliability — one server defect fixed in source, undeployed  ← HERE
+MAIA-D05+   ○  not eligible
 ```
 
-One sentence of honest state: **a native voice state machine exists and is provably correct;
-nothing has heard a human being.**
+⭐ **The unit boundary between D01 and D03 dissolved on contact with the device.** They could not be
+witnessed separately: `/api/voice/transcribe-simple` requires member identity, so native
+transcription was never independently acceptable. They closed together, in one walk.
+
+One sentence of honest state, superseding the previous one:
+**MAIA has heard a human being, answered, and been answered — repeatedly, on a Mac, into the same
+member's substrate; what has not been proven is that a Desktop conversation is the SAME conversation
+as an iPhone one.**
+
+### 0.1 What the 2026-08-27 walk actually established
+
+Production runtime evidence, from `docker logs maia-sovereign` during Desktop turns:
+
+```
+sessionId: 'desktop-1787848078168'
+✅ [TurnsStore] Persisted exchange for 88099bb1977c
+📊 [MemoryAudit] Recorded 5 memory uses
+💫 [ANAMNESIS] Essence loaded from PostgreSQL (1745 encounters): ce284751-…
+🧠 [CorpusCallosum] Logged 6 elemental agent runs
+✅ MAIA FAST response complete: 4587ms | 32 chars + audio
+```
+
+That is not a Desktop-shaped MAIA. It is **the** MAIA: the founder's own member id, 1745 prior
+encounters loaded, five memory uses recorded, the Corpus Callosum substrate firing, the FAST profile
+on the live route. A Desktop turn is a turn in the member's existing realm — which is the whole
+point of the programme (§VII).
+
+**And the precise gap.** `sessionId` is `desktop-<launch timestamp>` — a NEW conversation per launch.
+So D04's *member* continuity is proven and its *conversation* continuity is not. Speaking on iPhone
+and continuing on Desktop remains unwitnessed. That is exactly D04, and it is still the load-bearing
+unit.
+
+⛔ Not yet witnessed at all: MAIA speaking aloud (the route returns no audio — a Kokoro/server-side
+question, not a Desktop one), which is D05, and which still has the openai-tts canon conflict
+upstream of it per §2.3.
 
 ---
 
