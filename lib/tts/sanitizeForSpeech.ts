@@ -69,6 +69,33 @@ export function sanitizeForSpeech(input: string): string {
   // Remove any orphan fence lines left by malformed/incomplete markdown.
   text = text.replace(/^\s*(?:```|~~~)[^\n]*$/gm, ' ');
 
+  // ── VOICE-TTS-LEAK-01A ──────────────────────────────────────────────────
+  //
+  // An UNTERMINATED fence and everything after it. Streaming produces this
+  // routinely: the response is chunked by sentence, so a chunk can open a
+  // fence whose closing delimiter lands in a later chunk — and the paired
+  // rules above cannot match what has no closing half yet.
+  //
+  // Verified against the merged #1115 behaviour before this rule existed:
+  //   "Here it is: ```js\nconst secret = 1;"  ->  "Here it is: ```js const secret = 1;"
+  // Both the delimiter and the code body were spoken. The orphan-fence rule
+  // above does not catch it, because that fence is not alone on its line.
+  //
+  // The tail is dropped rather than trimmed to the fence: everything after an
+  // opening delimiter is code until proven otherwise, and speaking it is the
+  // failure being prevented.
+  text = text.replace(/(?:```|~~~)[\s\S]*$/g, ' ');
+
+  // Indented code blocks — four or more leading spaces, or a tab. Markdown's
+  // other way of writing code, and #1115 handled only the fenced form:
+  //   "Run it:\n\n    rm -rf /tmp/cache\n\nDone."  ->  "Run it: rm -rf /tmp/cache Done."
+  //
+  // ⛔ Requires a blank line before the block, which is what markdown itself
+  // requires. Without that guard this rule would eat ordinary wrapped prose
+  // that happens to be indented — and over-stripping MAIA's speech is the
+  // worse defect: silence heard as composure.
+  text = text.replace(/(\n[ \t]*\n)(?:(?:[ ]{4,}|\t)[^\n]*\n?)+/g, '$1');
+
   // Whole/standalone JSON artifacts only. Do NOT delete arbitrary {...} or [...]
   // because those forms can be legitimate human prose.
   text = stripStandaloneJsonLines(text);
