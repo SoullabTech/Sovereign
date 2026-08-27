@@ -214,12 +214,27 @@ export default function WriterCanvasPage() {
     };
   }, []);
 
-  // By identity when asked; most recent otherwise — degrading, not stranding,
-  // when the asked-for id is gone.
+  /**
+   * Which manuscript is on the table.
+   *
+   * ⚠️ NEVER SUBSTITUTE. An earlier version fell back to the most recent
+   * manuscript when the requested id was not in the list — "degrading, not
+   * stranding". Production disproved that reading on 2026-08-27: opening one
+   * manuscript showed a DIFFERENT manuscript's draft, under the title of the
+   * one that was opened, with a grey sentence as the only signal. A writer
+   * cannot tell that from their own work having been replaced.
+   *
+   *   no id asked for   → the most recent is a reasonable place to land
+   *   id asked for, found   → open it
+   *   id asked for, NOT found → open NOTHING and say so
+   *
+   * Showing the wrong text under the right title is worse than showing none.
+   */
+  const asked = requested !== null;
+  const found = asked ? (manuscripts.find((m) => m.id === requested) ?? null) : null;
+  const missing = listPhase === 'ready' && asked && found === null;
   const manuscript =
-    listPhase === 'ready'
-      ? (manuscripts.find((m) => m.id === requested) ?? manuscripts[0] ?? null)
-      : null;
+    listPhase === 'ready' ? (asked ? found : (manuscripts[0] ?? null)) : null;
 
   const [mode, setMode] = useState<Mode>('write');
   const [handed, setHanded] = useState<{ key: string; message: string } | null>(null);
@@ -479,7 +494,7 @@ export default function WriterCanvasPage() {
           {unitedWork && manuscript && (
             <span>On the table: {manuscriptLabel} — a form of this work, declared by you.</span>
           )}
-          {manuscript && manuscripts.length > 1 && !manuscripts.some((m) => m.id === requested) && (
+          {manuscript && !asked && manuscripts.length > 1 && (
             <span>The most recent of your {manuscripts.length} manuscripts is on the table.</span>
           )}
           {railWork && (
@@ -516,6 +531,27 @@ export default function WriterCanvasPage() {
               The Canvas could not be reached just now. Your work is not affected — please try
               again in a moment.
             </p>
+          )}
+          {missing && (
+            <div className="max-w-md">
+              <p className="text-[16px] leading-relaxed opacity-80 mb-4">
+                That manuscript is not on your shelf.
+              </p>
+              <p className="text-[14px] leading-relaxed opacity-55 mb-5">
+                Nothing has been opened, and nothing has been changed. The Studio
+                will not put a different manuscript on the table in its place —
+                the wrong writing under the right name is worse than none.
+              </p>
+              <p className="text-[13px] leading-relaxed opacity-40 mb-5 font-mono break-all">
+                asked for: {requested}
+              </p>
+              <p className="text-[14px] leading-relaxed opacity-55">
+                <Link href="/writers-studio" className="underline underline-offset-4 opacity-90">
+                  Studio Home
+                </Link>{' '}
+                has everything you have written.
+              </p>
+            </div>
           )}
           {listPhase === 'none' && (
             <div className="max-w-md">
