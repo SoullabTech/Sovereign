@@ -322,3 +322,70 @@ contains none, so the report belongs to a different turn.
 repair would be guess-driven, and this document already records five wrong
 diagnoses made ahead of measurement. Reopen when a concrete turn or time is
 available.
+
+---
+
+# VOICE-FAILURE-EATS-THE-TURN  (high priority)
+
+Found while running VOICE-SOVEREIGNTY-01 Runtime C. Not what the test was
+looking for, and more serious than what it was looking for.
+
+## What happened
+
+```
+21:31:17  assistant  "I hear you, Kelly. I'm right here."   Kokoro up   → PERSISTED
+21:31:45  docker stop maia-kokoro-tts
+21:35:44  Runtime C window opens
+          3× [tts.attempt] provider:"kokoro" reason:"sovereign_primary"
+          3× [tts-router] Kokoro failed (kokoro_error): fetch failed
+          3× CloudVoiceForbidden — gate refused the OpenAI escape
+          conversation_turns rows in window: ZERO
+21:40ish  docker start maia-kokoro-tts
+```
+
+A turn occurred. Three `[tts.attempt]` lines mean MAIA generated text and the
+synthesizer was called on it. It left no row.
+
+## Why this is established rather than inferred
+
+Three explanations were possible for zero rows, and one query separated them:
+
+- **Wrong window** — ruled out. `SHOW TimeZone` → `Etc/UTC`, and `db_now`
+  matched wall clock. The window was in the right frame.
+- **Write path down** — ruled out. Two turns at 21:30:31 and 21:31:17 wrote
+  normally, minutes before the stop, and the earlier 21:20 turn logged
+  `[apiFetch] POST /api/conversation/turns` + `Synced exchange to sovereign
+  database` client-side.
+- **The turn genuinely was not persisted** — what remains.
+
+## The open half, and why it decides the repair
+
+Whether the member SAW the text is not in any log or table. It splits the
+defect in two, and the repairs differ:
+
+- **Text appeared but was not persisted** → persistence is coupled to TTS
+  success. A member whose voice engine is down keeps talking and MAIA
+  remembers none of it. Silent memory loss.
+- **Text never appeared** → the turn collapses entirely on TTS failure, and the
+  canon's "local unavailable → text response + truthful voice-unavailable
+  state" clause is not implemented at all.
+
+Both fail Runtime C's "MAIA text arrives" criterion.
+
+⛔ Not diagnosed further here. This document already records five diagnoses
+made ahead of measurement, every one wrong. The eyewitness answer is one
+question away and settles it.
+
+## Why it outranks D02A
+
+False listening wastes a member's breath. This loses what they actually said.
+
+And it is the same **silent-success class** for the third time today — after
+D02A's LISTENING-with-no-audio-frames, and after three Runtime C windows whose
+empty greps read as evidence and were not. The system reported nothing wrong.
+It simply did not keep anything.
+
+For a project whose memory is the thing that makes it more than a chatbot,
+losing a turn without saying so is the worst shape a failure can take: it
+cannot be noticed at the moment it happens, only later, as an absence the
+member will experience as being forgotten.
