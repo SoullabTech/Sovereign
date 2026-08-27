@@ -126,7 +126,24 @@ export type VoiceDiagEvent =
   | 'ios_voice_final_result_received'
   | 'ios_voice_result_empty'
   | 'ios_voice_error'
-  | 'ios_voice_listening_stopped';
+  | 'ios_voice_listening_stopped'
+
+  // ── VOICE-CAPTURE-01B-OBS dispatch provenance ───────────────────────────
+  // `processAccumulatedTranscript` is one of EIGHT `onTranscript(...)` call
+  // sites in ContinuousConversation, and the only one behind the two dedup
+  // guards. So a duplicate turn can be produced by a boundary those guards
+  // never see, and no amount of window-tuning on the guarded path would
+  // suppress it. These two events name the boundary instead of guessing:
+  //
+  //   voice_dedup_blocked        a guard fired (exact | fuzzy)
+  //   voice_transcript_dispatched a turn crossed a send boundary
+  //
+  // Read together they separate three orderings that are indistinguishable
+  // today: dedup worked · same path duplicated outside the window · two
+  // competing paths each dispatched. Observational only — nothing branches
+  // on `sameAsPrevious`. Counts and booleans; no transcript text.
+  | 'voice_dedup_blocked'
+  | 'voice_transcript_dispatched';
 
 type Meta = Record<string, string | number | boolean | null>;
 

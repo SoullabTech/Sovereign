@@ -22,6 +22,12 @@ import {
 } from '@/lib/voice/micLiveness';
 import { getContinuityBuffer } from '@/lib/voice/conversationContinuityBuffer';
 import {
+  recordDispatch,
+  resetDispatchProvenance,
+  type TranscriptDispatchSource,
+  type TranscriptDispatchTrigger,
+} from '@/lib/voice/dispatchProvenance';
+import {
   TURN_COMPLETE_RECOVERABLE,
   shouldNormalizeToIdle,
   restartPolicy,
@@ -242,6 +248,35 @@ export interface ContinuousConversationRef {
   isHandsFree: boolean;
   micState: MicState;
   listeningMode: ListeningMode;
+}
+
+/**
+ * VOICE-CAPTURE-01B-OBS — emit a provenance witness for one transcript
+ * dispatch. MUST be called immediately before the `onTranscript(...)` it
+ * describes, never after: if the callback throws, the evidence that a
+ * dispatch was attempted has to survive.
+ *
+ * Module-level rather than a `useCallback` on purpose — it closes over
+ * nothing, so it cannot go stale, cannot churn a dependency array, and cannot
+ * be accidentally reordered into a temporal dead zone by a later edit.
+ *
+ * Purely observational: it returns void and no caller branches on it.
+ */
+function witnessDispatch(
+  source: TranscriptDispatchSource,
+  trigger: TranscriptDispatchTrigger,
+  transcript: string,
+  epoch: number,
+  turnCommitId: number,
+): void {
+  const provenance = recordDispatch(transcript, Date.now());
+  logVoiceEvent('voice_transcript_dispatched', {
+    ...provenance,
+    source,
+    trigger,
+    epoch,
+    turnCommitId,
+  });
 }
 
 export const ContinuousConversation = forwardRef<ContinuousConversationRef, ContinuousConversationProps>((props, ref) => {
@@ -1099,6 +1134,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
                   `✅ [fallback] Transcript received (${result.transcript.length} chars, ` +
                   `${result.durationMs}ms, ${result.bytes} bytes) — feeding to conversation`
                 );
+                witnessDispatch('fallback', 'fallback', result.transcript, recognitionEpochRef.current, turnCommitIdRef.current);
                 onTranscript(result.transcript);
                 return;
               }
@@ -1873,6 +1909,17 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     // Check 1: Exact match within last 2 seconds
     if (normalizedTranscript === lastSentNormalized && (now - lastSentTimeRef.current) < 2000) {
       console.log('🚫 [DEDUP] Blocked duplicate transcript:', transcript);
+      // VOICE-CAPTURE-01B-OBS: make the suppression server-visible. Until this
+      // event existed, a working dedup and a dedup that never ran produced the
+      // same (empty) log, so "the guard fired" could only be witnessed by a
+      // human watching a browser console on the device.
+      logVoiceEvent('voice_dedup_blocked', {
+        dedupKind: 'exact',
+        charCount: transcript.length,
+        msSinceLastSend: now - lastSentTimeRef.current,
+        epoch: recognitionEpochRef.current,
+        turnCommitId: turnCommitIdRef.current,
+      });
       accumulatedTranscript.current = ""; // Clear duplicate
       // Release the concurrency latch taken at the top of this function. Every
       // other early return does; this one did not, so the FIRST time this guard
@@ -1889,6 +1936,17 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
         : 0;
       if (similarity > 0.9) {
         console.log('🚫 [DEDUP] Blocked similar transcript (similarity:', similarity, '):', transcript);
+        // VOICE-CAPTURE-01B-OBS. `similarity` is carried only for the fuzzy
+        // kind — it is the number that decided this branch, and without it a
+        // near-miss at 0.91 is indistinguishable in the log from an exact hit.
+        logVoiceEvent('voice_dedup_blocked', {
+          dedupKind: 'fuzzy',
+          charCount: transcript.length,
+          msSinceLastSend: now - lastSentTimeRef.current,
+          similarity: Number(similarity.toFixed(3)),
+          epoch: recognitionEpochRef.current,
+          turnCommitId: turnCommitIdRef.current,
+        });
         accumulatedTranscript.current = ""; // Clear duplicate
         isCallingProcessRef.current = false;
         return;
@@ -1935,6 +1993,9 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
 
     // Send transcript
     console.log('📤 [ContinuousConversation] Sending transcript to parent:', transcript);
+    // Captured BEFORE the commit block below, which resets sendTriggerRef to
+    // 'other' so a stale label cannot be inherited by an unrelated call site.
+    const dispatchTrigger: TranscriptDispatchTrigger = sendTriggerRef.current;
     // 👁️ Commit: what actually left the client, past every dedup and echo guard,
     // and what was still outstanding when it did. tailAtRisk=true on this row is
     // observed speech left behind by this exact commit. Opens the ordering-F
@@ -1961,6 +2022,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     }
     setMicState('SUBMITTING', 'processAccumulatedTranscript');
     lastTranscriptSubmittedAtRef.current = Date.now();
+    witnessDispatch('process_accumulated', dispatchTrigger, transcript, recognitionEpochRef.current, turnCommitIdRef.current);
     onTranscript(transcript);
     console.log('✅ [ContinuousConversation] onTranscript callback completed');
 
@@ -2188,6 +2250,10 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
       // recognition error.
       attachTrackLossListenersFnRef.current?.(stream);
       resetVoiceSession();
+      // Same lifetime as the session token: otherwise `sameAsPrevious` would
+      // compare the first utterance of this engagement against the last of the
+      // previous one and report a duplicate across a boundary that has none.
+      resetDispatchProvenance();
       logVoiceEvent('voice_mic_granted', {
         audioTracks: stream.getAudioTracks().length,
         trackLabel: stream.getAudioTracks()[0]?.label?.slice(0, 80) ?? '',
@@ -2467,6 +2533,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
               addDebug(`✅ fallback succeeded: ${result.transcript.length} chars`);
               console.log(`✅ [Android fallback] Transcript: ${result.transcript.length} chars, ${result.durationMs}ms`);
               isProcessingRef.current = true;
+              witnessDispatch('android_fallback', 'fallback', result.transcript, recognitionEpochRef.current, turnCommitIdRef.current);
               onTranscript(result.transcript);
               return true;
             }
@@ -2600,6 +2667,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
                 isProcessingRef.current = true;
                 setIsRecording(false);
                 isRecordingRef.current = false;
+                witnessDispatch('native_silence', 'silence_timer', finalTranscript, recognitionEpochRef.current, turnCommitIdRef.current);
                 onTranscript(finalTranscript);
                 // Stop native recognition
                 NativeSpeechRecognition.stop().catch(() => {});
@@ -2697,6 +2765,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
                   isProcessingRef.current = true;
                   setIsRecording(false);
                   isRecordingRef.current = false;
+                  witnessDispatch('native_audio_silence', 'silence_timer', finalTranscript, recognitionEpochRef.current, turnCommitIdRef.current);
                   onTranscript(finalTranscript);
                 }
                 nativeSilenceTimerRef.current = null;
@@ -2754,6 +2823,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
               accumulatedTranscript.current = '';
               setIsRecording(false);
               isRecordingRef.current = false;
+              witnessDispatch('native_stop', 'native_stop', finalTranscript, recognitionEpochRef.current, turnCommitIdRef.current);
               onTranscript(finalTranscript);
             }
 
@@ -3082,6 +3152,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
             console.log(`✅ [web whisper] Transcript: ${result.transcript.length} chars, ${result.durationMs}ms`);
             addDebug(`✅ web whisper: ${result.transcript.length} chars`);
             isProcessingRef.current = true;
+            witnessDispatch('web_whisper', 'fallback', result.transcript, recognitionEpochRef.current, turnCommitIdRef.current);
             onTranscript(result.transcript);
           } else {
             console.warn(`❌ [web whisper] Failed: ${result.reason}`);
@@ -3305,6 +3376,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
         isProcessingRef.current = true;
         setIsRecording(false);
         onRecordingStateChange?.(false);
+        witnessDispatch('manual_stop', 'manual', finalTranscript, recognitionEpochRef.current, turnCommitIdRef.current);
         onTranscript(finalTranscript);
       }
       accumulatedTranscript.current = '';
