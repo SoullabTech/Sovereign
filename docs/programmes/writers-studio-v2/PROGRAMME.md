@@ -107,6 +107,11 @@ shipped.
 | **WS2-12** | Integration | Migrations, regression suite, permissions, responsive behavior |
 | **WS2-13** | Production walk | Deploy exact proven lineage; real-member experiential acceptance |
 
+**Deployment is per room, from WS2-03 onward — see D-012.** WS2-13 is final
+acceptance, not first contact. The Studio goes live once WS2-02 + WS2-03 pass,
+with core capability preserved, and each vertical room deploys as it finishes.
+Exact lineage and both-ways verification apply to every one of those deploys.
+
 Dependency order is real. WS2-02 and WS2-03 gate everything from WS2-04 onward:
 **after WS2-03 lands, every change has to land inside the new Studio
 architecture.** No further sophistication added to a room that is coming down.
