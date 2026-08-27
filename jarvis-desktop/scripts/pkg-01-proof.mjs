@@ -134,23 +134,48 @@ if (fs.existsSync(INSTALLED)) {
 }
 
 phase('4-7, 15  launch OUTSIDE the checkout and interrogate the packaged path');
-// Launched from a directory that is NOT inside any checkout, so a dev-mode
-// upward walk could not succeed even if the packaged branch wrongly attempted
-// one. JARVIS_REPO_ROOT is deliberately NOT set: the point is to see what the
-// installed app resolves on its own.
-const launchDir = fs.mkdtempSync(path.join(os.tmpdir(), 'pkg01-'));
+// DEFECT FOUND ON THE FIRST REAL RUN (2026-08-27). This step used to set a temp
+// cwd and then tell the founder to `open -a <dist path>`. That control was
+// hollow: `open -a` ignores the working directory, and the bundle itself still
+// sat inside dist/ — which is inside the checkout. So "launched outside the
+// checkout" was asserted while the artifact was demonstrably inside one.
+//
+// The artifact is now COPIED out, with `ditto` (which preserves the bundle's
+// signature and extended attributes; `cp -r` does not), and the copy is proven
+// to be outside any git repository before it is launched. That is the condition
+// the packaged resolution path is supposed to face: no checkout above it,
+// nothing for an upward walk to find.
 const bin = path.join(APP_PATH, 'Contents', 'MacOS', 'JARVIS');
 report('the packaged executable is present', fs.existsSync(bin), bin);
 
-console.log(`\n      Launch it yourself, from a shell whose cwd is ${launchDir}:`);
-console.log(`        cd ${launchDir} && open -a "${APP_PATH}"`);
+const stageRoot = fs.mkdtempSync(path.join(os.homedir(), 'pkg01-stage-'));
+const STAGED = path.join(stageRoot, 'JARVIS.app');
+sh('ditto', [APP_PATH, STAGED]);
+report('the artifact was copied out of the checkout', fs.existsSync(STAGED), STAGED);
+
+const insideRepo = (() => {
+  try { sh('git', ['rev-parse', '--show-toplevel'], { cwd: stageRoot, stdio: ['ignore', 'pipe', 'ignore'] }); return true; }
+  catch { return false; }
+})();
+report('the staged copy is outside ANY git checkout', !insideRepo,
+  `${stageRoot} resolves inside a repository; an upward walk could still find one`);
+
+// A signature broken by the copy would make Gatekeeper refuse the launch, and
+// that refusal would read as a JARVIS defect rather than a copy defect.
+const sigOk = (() => { try { sh('codesign', ['--verify', '--deep', '--strict', STAGED]); return true; } catch { return false; } })();
+report('the staged copy still verifies as signed', sigOk, 'the copy broke the signature — Gatekeeper will refuse it');
+provenance.staged_launch_path = STAGED;
+
+console.log(`\n      Launch THE STAGED COPY — not the one in dist/:`);
+console.log(`        open -a "${STAGED}"`);
 console.log('      Then confirm on screen, and record each answer:');
 const OBSERVE = [
-  ['5   the title bar names a build (not "running from source")', 'artifact identity is READY, not UNVERIFIED'],
+  ['5   the title bar names a build (not "running from source")', `artifact identity READY, stamp ${provenance.app_build_sha || '(missing)'}`],
+  ['5   app.isPackaged is true — Preferences shows a packaged binding, not a dev walk', 'resolution reads ENV / CONFIG / DEFAULT, never WALK'],
   ['6   Home shows a bound workspace, or NEEDS_SETUP with a reason', 'never a bare UNKNOWN'],
   ['6   System shows the store reachable', 'run history is not "UNAVAILABLE"'],
   ['7   no subsystem reads UNKNOWN without a stated why', 'each row names what was not observed, and why'],
-  ['15  Home/System report the build SHA matching the stamp above', provenance.app_build_sha || '(stamp missing)'],
+  ['15  the reported build SHA matches the stamp above', provenance.app_build_sha || '(stamp missing)'],
 ];
 for (const [step, expected] of OBSERVE) console.log(`        [ ] ${step}\n              expect: ${expected}`);
 
@@ -174,7 +199,7 @@ for (const [step, expected] of WALK) console.log(`        [ ] ${step}\n         
 const out = path.join(DESKTOP, 'dist', 'pkg-01-provenance.json');
 fs.writeFileSync(out, JSON.stringify(provenance, null, 2));
 console.log(`\n      provenance written: ${out}`);
-console.log(`      launch dir (outside any checkout): ${launchDir}`);
+console.log(`      staged artifact (outside any checkout): ${provenance.staged_launch_path || '(not staged)'}`);
 
 console.log(`\n${failures === 0 ? 'AUTOMATED CHECKS PASS' : `${failures} AUTOMATED CHECKS FAILED`}`);
 console.log('PKG-01 is NOT complete until the human walk above is recorded.\n');
