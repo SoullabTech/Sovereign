@@ -151,3 +151,31 @@ export function sanitizeSpeechInput(input: string): string {
     ? sanitizeSsmlForSpeech(input)
     : sanitizeForSpeech(input);
 }
+
+/**
+ * Provider-boundary helper for synthesis engines that CANNOT interpret SSML.
+ *
+ * VOICE-TTS-SSML-01: Kokoro-FastAPI (ghcr.io/remsky/kokoro-fastapi-cpu:v0.2.2)
+ * does not parse SSML — it speaks the markup aloud, so a member hears
+ * "speak", "prosody rate equals 108 percent", "break time equals 120 MS".
+ * Preserving approved SSML tags is correct for a provider that reads them and
+ * a defect for one that does not, so the decision belongs to the provider
+ * contract rather than to the shared sanitizer.
+ *
+ * Text nodes get exactly the same treatment as in SSML mode; only the tags are
+ * flattened away. Entities are decoded back to their characters so ordinary
+ * prose ("R&D", "if x < 10") survives as speech rather than being deleted.
+ */
+export function sanitizeSpeechInputPlain(input: string): string {
+  if (!input) return '';
+
+  if (!/<speak\b/i.test(input)) return sanitizeForSpeech(input);
+
+  const flattened = sanitizeSsmlForSpeech(input)
+    .replace(/&nbsp;/gi, ' ')
+    // A tag boundary is a word boundary: <break/> between sentences must not
+    // fuse the words on either side of it.
+    .replace(/<[^>]+>/g, ' ');
+
+  return decodeXmlText(flattened).replace(/\s+/g, ' ').trim();
+}
