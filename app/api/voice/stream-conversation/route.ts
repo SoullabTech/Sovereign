@@ -1147,6 +1147,14 @@ export async function POST(req: NextRequest) {
           }
         }
 
+        // TIME-TO-FIRST-WORD ATTRIBUTION (observational only; no behavior change).
+        // `llm_starting` is marked well before the model is actually called: the
+        // cross-session MemoryBundle build is awaited in between. Without this mark
+        // the whole `llm_starting -> llm_first_chunk` gap (4,070ms in the 19a2f166
+        // trace) is unattributed between memory composition and model prefill, and
+        // any tuning would be guesswork about which half to touch.
+        timer.mark('memory_bundle_done');
+
         const voiceSystemPrompt =
           [
             councilPromptSection,
@@ -1162,6 +1170,25 @@ export async function POST(req: NextRequest) {
           console.log(`🏛️ [Voice Council] ${councilResolution.guide.archetypeName} | ${councilResolution.source}`);
         }
         // ─────────────────────────────────────────────────────────────────
+
+        // Prompt weight, in characters only — never content. A prefill-dominated
+        // profile (long time-to-first-word, short total generation) points at prompt
+        // size; this is the number that would confirm or refute that reading.
+        const historyChars = (conversationHistory || []).reduce(
+          (n: number, m: any) => n + (m?.content?.length || 0),
+          0,
+        );
+        console.log(
+          `[voice:prompt_weight:${turnId}] ` +
+          `system=${voiceSystemPrompt?.length ?? 0} ` +
+          `council=${councilPromptSection?.length ?? 0} ` +
+          `astrology=${identityContext?.astrologyAddendum?.length ?? 0} ` +
+          `memory=${voiceMemoryContext.length} ` +
+          `history=${historyChars} ` +
+          `historyMsgs=${conversationHistory?.length ?? 0} ` +
+          `input=${message?.length ?? 0}`
+        );
+        timer.mark('llm_request_sent');
 
         // Stream sentences from Claude
         for await (const chunk of claudeService.generateOracleResponseStreaming(
