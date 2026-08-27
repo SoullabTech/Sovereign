@@ -22,6 +22,7 @@
  */
 
 import { resolveVoicePreference } from '@/lib/tts/cloudVoicePolicy';
+import { sanitizeForSpeech } from '@/lib/tts/sanitizeForSpeech';
 import { NextRequest } from 'next/server';
 import os from 'os';
 import { getClaudeService } from '@/lib/services/ClaudeService';
@@ -318,29 +319,23 @@ async function synthesizeWithFallback(
  * Removes metadata blocks, JSON fragments, and other non-speakable content.
  * Defense-in-depth: even if ClaudeService filters, this guarantees clean input.
  */
+/**
+ * VOICE-TTS-LEAK-01 — delegates to the shared speech authority.
+ *
+ * This used to hold the rules inline. It removed metadata and JSON but had no
+ * rule for code fences, backticks, headings, emphasis or links, so on
+ * 2026-08-27 MAIA read fenced code aloud to a member on the healthy Kokoro
+ * path. It also deleted ANY brace- or bracket-delimited span, which silently
+ * ate ordinary prose like "[the old house]".
+ *
+ * Both are fixed in `lib/tts/sanitizeForSpeech.ts`. The name is kept here so
+ * the two call sites below read unchanged, and so a future speech path has one
+ * obvious thing to import rather than a local helper to copy.
+ */
 function sanitizeForTts(input: string): string {
-  if (!input) return '';
-
-  let s = input;
-
-  // Remove full metadata blocks
-  s = s.replace(/---SOUL_METADATA---[\s\S]*?---END_METADATA---/g, '');
-
-  // Remove JSON objects that sometimes leak as "sentences"
-  s = s.replace(/\{[\s\S]*?\}/g, '');
-
-  // Remove JSON arrays
-  s = s.replace(/\[[\s\S]*?\]/g, '');
-
-  // Remove orphan JSON fragments at start/end
-  s = s.replace(/^[\s\d,}\]]+/, '');
-  s = s.replace(/[\s\d,{\[]+$/, '');
-
-  // Collapse whitespace and trim
-  s = s.replace(/\s+/g, ' ').trim();
-
-  return s;
+  return sanitizeForSpeech(input);
 }
+
 
 /**
  * Convert PCM audio to WAV format for browser playback.

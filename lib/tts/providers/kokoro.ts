@@ -10,6 +10,8 @@
  * Env override: KOKORO_TTS_URL
  */
 
+import { sanitizeSpeechInput } from '../sanitizeForSpeech';
+
 const KOKORO_DEFAULT_URL = 'http://localhost:8880';
 
 function getKokoroUrl(): string {
@@ -63,6 +65,10 @@ export interface KokoroSynthesisParams {
 /**
  * Synthesize speech via Kokoro's OpenAI-compatible endpoint.
  * Returns raw audio buffer, same shape as OpenAI TTS response.
+ *
+ * VOICE-TTS-LEAK-01: sanitization is enforced HERE at the provider boundary.
+ * Routes may shape text or SSML, but neither representation may bypass the
+ * speech sanitizer before Kokoro receives it.
  */
 export async function synthesize(params: KokoroSynthesisParams): Promise<{
   audioBuffer: Buffer;
@@ -78,12 +84,32 @@ export async function synthesize(params: KokoroSynthesisParams): Promise<{
 
   const url = `${getKokoroUrl()}/v1/audio/speech`;
   const resolvedVoice = resolveVoice(voice);
+  const safeInput = sanitizeSpeechInput(text);
+
+  // A response containing only removed presentation artifacts should not become
+  // an empty/silent synthesis request.
+  const speakable = safeInput
+    .replace(/<[^>]+>/g, '')
+    .replace(/&(?:nbsp|amp|lt|gt|quot|apos);/gi, '')
+    .trim();
+  if (!speakable) {
+    throw new Error('Kokoro TTS input empty after speech sanitization');
+  }
+
+  if (safeInput !== text) {
+    console.info('[tts.sanitize]', JSON.stringify({
+      provider: 'kokoro',
+      ssml: /<speak\b/i.test(text),
+      originalChars: text.length,
+      sanitizedChars: safeInput.length,
+    }));
+  }
 
   const response = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      input: text,
+      input: safeInput,
       voice: resolvedVoice,
       model: 'kokoro',
       response_format: format,
