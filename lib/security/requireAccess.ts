@@ -40,47 +40,59 @@ export interface AccessContext {
  * Mirrors middleware logic for consistency
  */
 export function getAccessContext(req: NextRequest): AccessContext {
-  // Check authentication
+  // NO REQUEST HEADER IS AN AUTHORITY HERE. (AUTH-BOUNDARY-01)
+  //
+  // This function previously read, in order of preference:
+  //
+  //   x-access-tier / x-access-roles   ← "prefer header set by middleware"
+  //   maia_tier / maia_roles cookies
+  //   x-maia-tier / x-maia-roles       ← client headers
+  //
+  // The first pair was the sharpest vector. `x-access-*` are stamped by
+  // middleware onto the RESPONSE (`NextResponse.next()` without
+  // `{ request: { headers } }`), so they never arrive on a request from
+  // middleware at all — the only way one appears here is if the caller sent it,
+  // and it was preferred above every other source. The preserved Caddy
+  // containment stripped `X-Maia-Roles`/`X-Maia-Tier` and never touched
+  // `x-access-*`, so the edge would not have covered this even while enforced.
+  //
+  // `authenticated` was likewise satisfied by a bare `x-member-id` of any value,
+  // and `memberId` was taken from that header directly — the impersonation
+  // pattern `lib/auth/getMemberFromRequest.ts` documents as fixed.
+  //
+  // This module has ZERO callers today (verified: no `route.ts` imports
+  // `security/requireAccess`). It is hardened rather than deleted so that
+  // adopting it later cannot silently reintroduce the vector, and so the
+  // deletion decision stays the founder's.
+  //
+  // What remains is cookie-derived: `maia_session`, `maia_tier` and `maia_roles`
+  // are issued server-side from the member record at login. That is strictly
+  // better than a header, and still NOT sufficient — `httpOnly` constrains
+  // browser JS, not a non-browser client sending its own `Cookie:` line. Signing
+  // the context is the remaining half of this repair and is not done here.
   const sessionCookie = req.cookies.get('maia_session')?.value;
-  const memberIdHeader = req.headers.get('x-member-id');
   const memberIdCookie = req.cookies.get('maia_member_id')?.value;
 
-  const authenticated = Boolean(sessionCookie || memberIdHeader);
-  const memberId = memberIdHeader || memberIdCookie || null;
+  const authenticated = Boolean(sessionCookie);
+  const memberId = memberIdCookie || null;
 
-  // Get tier
+  // Get tier — server-issued cookie only.
   let tier: Tier = 'free';
   const tierCookie = req.cookies.get('maia_tier')?.value as Tier | undefined;
-  const tierHeader = req.headers.get('x-maia-tier') as Tier | undefined;
-  // Prefer header set by middleware
-  const tierFromMiddleware = req.headers.get('x-access-tier') as Tier | undefined;
-
-  if (tierFromMiddleware && ['free', 'personal', 'pro'].includes(tierFromMiddleware)) {
-    tier = tierFromMiddleware;
-  } else if (tierCookie && ['free', 'personal', 'pro'].includes(tierCookie)) {
+  if (tierCookie && ['free', 'personal', 'pro'].includes(tierCookie)) {
     tier = tierCookie;
-  } else if (tierHeader && ['free', 'personal', 'pro'].includes(tierHeader)) {
-    tier = tierHeader;
   }
 
-  // Get roles
+  // Get roles — server-issued cookie only.
   let roles: Role[] = ['member'];
   const rolesCookie = req.cookies.get('maia_roles')?.value;
-  const rolesHeader = req.headers.get('x-maia-roles');
-  // Prefer header set by middleware
-  const rolesFromMiddleware = req.headers.get('x-access-roles');
-
-  if (rolesFromMiddleware) {
-    roles = rolesFromMiddleware.split(',').filter(Boolean) as Role[];
-  } else if (rolesCookie) {
+  if (rolesCookie) {
     try {
       const parsed = JSON.parse(rolesCookie);
       if (Array.isArray(parsed)) roles = parsed as Role[];
     } catch {
       // Invalid JSON
     }
-  } else if (rolesHeader) {
-    roles = rolesHeader.split(',').map((r) => r.trim()) as Role[];
   }
 
   return { authenticated, memberId, tier, roles };

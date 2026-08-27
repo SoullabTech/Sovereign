@@ -36,11 +36,20 @@ function getUserTier(req: NextRequest): Tier {
     return tierCookie;
   }
 
-  // Option 2: Header-based (for API routes)
-  const tierHeader = req.headers.get('x-maia-tier') as Tier | undefined;
-  if (tierHeader && ['free', 'personal', 'pro'].includes(tierHeader)) {
-    return tierHeader;
-  }
+  // NO HEADER SOURCE. `x-maia-tier` used to be read here as "Option 2, for API
+  // routes". Nothing server-side ever sets it — `setSessionCookies.ts` and every
+  // OAuth callback issue the `maia_tier` COOKIE from the member record — so the
+  // only thing that could ever populate that header was the caller. It was a
+  // client-declared entitlement being read as an entitlement.
+  //
+  // Removing it costs no legitimate path (AUTH-BOUNDARY-01 census: zero
+  // server-side writers) and closes the header half of the tier vector.
+  //
+  // The cookie above is NOT yet a trustworthy authority either: `httpOnly` stops
+  // browser JS, not a non-browser client sending `Cookie: maia_tier=pro`. That
+  // half needs a signed context and is named as such in the unit report — it is
+  // not fixed here, and this comment exists so the header removal is not
+  // mistaken for the whole repair.
 
   // Default: free tier
   return 'free';
@@ -63,11 +72,26 @@ function getUserRoles(req: NextRequest): Role[] {
     }
   }
 
-  // Option 2: Header-based (comma-separated)
-  const rolesHeader = req.headers.get('x-maia-roles');
-  if (rolesHeader) {
-    return rolesHeader.split(',').map((r) => r.trim()) as Role[];
-  }
+  // NO HEADER SOURCE. `x-maia-roles` used to be read here, comma-separated, and
+  // fed straight into `checkAccess()`. The access matrix gates `/admin`,
+  // `/founder`, `/api/founder`, `/steward`, `/labtools/admin`, `/caseload`,
+  // `/supervision`, `/partners/`, `/api/practitioner/*`, `/api/stellium`,
+  // `/api/notifications` and the commons review queue on `rolesAnyOf` — so a
+  // caller supplying `x-maia-roles: admin` satisfied every one of those gates at
+  // this layer. Nothing server-side has ever set that header.
+  //
+  // The edge never covered this either: the preserved Caddy containment
+  // (EDGE-SECURITY-CUSTODY-01) deleted `X-Maia-Roles` and `X-Maia-Tier`, but it
+  // has not been enforced since 2026-08-25T18:38:38Z — and it never stripped
+  // `x-access-roles`, the other request-read spelling. Header stripping is
+  // defence in depth; this function must be correct without it.
+  //
+  // Removing it costs no legitimate path (AUTH-BOUNDARY-01 census: zero
+  // server-side writers; roles reach a real session via the `maia_roles` cookie
+  // issued from the member record at login).
+  //
+  // The cookie above is not yet trustworthy either — see `getUserTier`. Signing
+  // the context is the remaining half and is NOT done here.
 
   // Default: member role (basic authenticated user)
   return ['member'];
@@ -83,17 +107,36 @@ function isAuthenticated(req: NextRequest): boolean {
   const sessionCookie = req.cookies.get('maia_session')?.value;
   if (sessionCookie) return true;
 
-  // Option 2: Member ID header (for API routes)
-  const memberIdHeader = req.headers.get('x-member-id');
-  if (memberIdHeader) return true;
+  // AN IDENTIFIER IS NOT A CREDENTIAL.
+  //
+  // `x-member-id` used to return true here for ANY value, and `?_m` did the same
+  // as a query param. Member UUIDs are handed to clients routinely (e.g. as
+  // `senderId`), so that made "authenticated" mean "knows a member id" — which
+  // is the impersonation class `lib/auth/getMemberFromRequest.ts:19-27` documents
+  // as fixed at the resolver. The gate contradicted the resolver; a request the
+  // resolver would refuse to identify still passed the gate.
+  //
+  // `apiFetch` already stopped relying on it (`lib/http/apiBase.ts:647`,
+  // "x-member-id alone is no longer accepted"), so nothing legitimate needs it:
+  // a client with a real session sends `x-session-token`. A client with only
+  // `x-member-id` now gets its denial here instead of two layers later — the
+  // same outcome, earlier and honest.
+  //
+  // What remains below are CREDENTIALS, not identifiers. Middleware runs on the
+  // Edge runtime and cannot reach Postgres, so it cannot validate them; presence
+  // is all it can see. That is why this function is named for routing and must
+  // never be treated as proof — `x-access-authed` has no consumers outside this
+  // file, and identity is derived from `auth_sessions` downstream.
 
-  // Option 3: Session token header (Safari/iOS header-based auth)
+  // Session token header (Safari/iOS header-based auth — unvalidated here).
   const sessionTokenHeader = req.headers.get('x-session-token');
   if (sessionTokenHeader) return true;
 
-  // Option 4: Token or memberId as query param (for EventSource/SSE — can't send headers)
+  // Token as query param (EventSource/SSE cannot send headers — unvalidated
+  // here, validated by `getMemberIdFromSessionToken`). `_m` is deliberately NOT
+  // accepted: the resolver has never honoured it, only this gate did.
   const url = new URL(req.url);
-  if (url.searchParams.get('_t') || url.searchParams.get('_m')) return true;
+  if (url.searchParams.get('_t')) return true;
 
   return false;
 }
