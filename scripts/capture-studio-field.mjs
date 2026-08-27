@@ -230,16 +230,55 @@ const browser = await puppeteer.launch({
   args: [
     '--no-sandbox',
     '--disable-dev-shm-usage',
+    /* A persistent profile means Chrome runs its first-run and default-browser
+       flows, which open and close tabs underneath the automation. That is what
+       detached the navigating frame. */
+    '--no-first-run',
+    '--no-default-browser-check',
+    '--disable-session-crashed-bubble',
+    '--hide-crash-restore-bubble',
     `--window-size=${VIEWPORT.width},${VIEWPORT.height}`,
   ],
 });
 try {
-  const page = await browser.newPage();
+  /* Reuse the page Chrome already opened rather than adding one.
+     `browser.newPage()` races Chrome's own startup tabs when a profile is
+     restored — the new page is created, Chrome tidies up its startup state,
+     and the page we are mid-navigation on is the one that gets closed. That is
+     exactly "Navigating frame was detached". */
+  const existing = await browser.pages();
+  const page = existing.find((p) => !p.isClosed()) ?? (await browser.newPage());
+  await page.bringToFront().catch(() => {});
   await page.setViewport(VIEWPORT);
   const url = targetUrl();
   console.log(`[capture] ${url} at ${VIEWPORT.width}×${VIEWPORT.height}@${VIEWPORT.deviceScaleFactor}x`);
+  /**
+   * Navigate, tolerating one detachment.
+   *
+   * A profile-restoring Chrome can close the page out from under the first
+   * navigation. That is a startup race, not a fact about the app, so it is
+   * retried once on a fresh page rather than reported as a failure — and only
+   * once, so a genuinely broken page still fails instead of looping.
+   */
+  async function navigate(target) {
+    try {
+      return await target.goto(url, { waitUntil: 'networkidle0', timeout: 60_000 });
+    } catch (err) {
+      const m = err instanceof Error ? err.message : String(err);
+      if (/detached|Target closed|Session closed/i.test(m)) {
+        console.log('[capture] the page was closed during startup — retrying once.');
+        const fresh = await browser.newPage();
+        await fresh.setViewport(VIEWPORT);
+        page2 = fresh;
+        return await fresh.goto(url, { waitUntil: 'networkidle0', timeout: 60_000 });
+      }
+      throw err;
+    }
+  }
+
+  let page2 = page;
   try {
-    await page.goto(url, { waitUntil: 'networkidle0', timeout: 60_000 });
+    await navigate(page);
   } catch (err) {
     /* The commonest failure by far is "the app is not running". Say that,
        rather than a stack trace out of the CDP layer. */
@@ -261,10 +300,10 @@ try {
     console.log('[capture] Sign in there if you are not already, then press Enter here.');
     console.log('[capture] This is a one-time step — later captures reuse the session.');
     await new Promise((resolve) => process.stdin.once('data', resolve));
-    await page.reload({ waitUntil: 'networkidle0', timeout: 60_000 });
+    await page2.reload({ waitUntil: 'networkidle0', timeout: 60_000 });
   }
 
-  const signedOut = await page.evaluate(() =>
+  const signedOut = await page2.evaluate(() =>
     document.body.innerText.includes('opens only to you'),
   );
   if (signedOut) {
@@ -277,14 +316,14 @@ try {
   }
   /* The Studio loads its manuscript after mount. A capture taken before that
      photographs a loading state and calls it the field. */
-  await page.waitForFunction(() => !document.body.innerText.includes('reading the draft'), {
+  await page2.waitForFunction(() => !document.body.innerText.includes('reading the draft'), {
     timeout: 30_000,
   }).catch(() => console.warn('[capture] draft-ready probe timed out — capturing anyway'));
   /* The viewport is the contract. Two captures are comparable only because it
      cannot vary between them, so it is verified rather than trusted — a
      silently smaller one would drop a breakpoint and send the divergence pass
      hunting a layout bug that is really a window size. */
-  const actual = await page.evaluate(() => ({
+  const actual = await page2.evaluate(() => ({
     w: window.innerWidth,
     h: window.innerHeight,
     dpr: window.devicePixelRatio,
@@ -299,7 +338,7 @@ try {
   }
   console.log(`[capture] viewport verified ${actual.w}×${actual.h}@${actual.dpr}x`);
 
-  await page.screenshot({ path: out });
+  await page2.screenshot({ path: out });
   console.log(`[capture:ok] ${out}`);
 } finally {
   await browser.close();
