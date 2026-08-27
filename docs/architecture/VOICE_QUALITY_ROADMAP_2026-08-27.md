@@ -120,43 +120,77 @@ occasional pathological spikes?
 That last row matters most: it would mean every hour spent on the synthesizer
 was spent in the wrong place.
 
-## A5 — Perceptual tuning
+## A5 — Listen to Alloy again
 
-**Establishes:** whether the voice is acceptable as MAIA.
-**Engineering measurements do not overrule this stage.**
+**The presumption is KEEP, not replace.**
 
-The question is *does this sound like MAIA* — not *did we route correctly*. We
-already learned those come apart: routing was verified correct while the lived
-result was still wrong.
+Alloy is the reference voice. It was previously experienced as *"almost
+perfect"* in a correctly-routed state (Kelly's observation; not reproduced by
+the authoring agent). Nothing since has established a better voice for MAIA —
+only that the current experience is wrong while three known defects are
+present. Remove those first, then listen again.
 
-Audition a small controlled set on the same MAIA passages: current voice as-is;
-the same voice with cadence/prosody/speed adjustments; the best alternative
-sovereign voice; the second-best.
+```
+FIX ALLOY
+  → prove correct routing
+  → fix code-speak
+  → fix mic/turn reliability
+  → measure and reduce latency
+  → listen to Alloy again
+  → KEEP ALLOY if it feels right
+```
 
-Passages must expose what actually matters — tenderness, directness, humour,
+⚠️ **Unresolved and load-bearing: which Alloy was the good baseline?**
+
+```
+OpenAI alloy      cloud implementation — NOT reachable under current canon
+Kokoro af_kore    local realization of maia_core, labelled "alloy" upstream
+```
+
+The discriminator is timing: before #1113 shipped on 2026-08-27, cloud led and
+the voice heard would have been OpenAI's. After it, only Kokoro is reachable.
+If the good baseline was the cloud one, "restore Alloy" and "do not reverse the
+canon" are in direct conflict and the roadmap must say so rather than assume
+the local voice will arrive there. **Resolve before A5 runs.**
+
+## A6 — Audition, only if Alloy still sounds wrong
+
+Not a default stage. Reached only if A1–A4 are complete and the voice is still
+wrong.
+
+```
+Alloy  vs  Kokoro af_sarah  vs  Kokoro af_kore  vs  any clearly stronger candidate
+```
+
+`af_sarah` is worth remembering specifically: heard directly, it was described
+as *"a different woman voice and I liked it"* (Kelly's observation). It is
+already a first-class identity in the codebase —
+
+```
+maia_warm · "Maia (Warm)" · kokoro af_sarah · openai shimmer
+"Soft edge. Holds silence well. For when you need room."
+```
+
+— so comparing it costs a preference change, not new plumbing.
+
+`af_kore` is not sacred. It was chosen as the sovereign default mapped from
+alloy, never established as perceptually superior.
+
+**Research candidates, not production-proven:** CSM-1B, Orpheus. Neither is a
+demonstrated Alloy replacement and neither should enter an audition as though
+it were.
+
+Audition passages must expose what matters — tenderness, directness, humour,
 contemplative depth, one long complex sentence, one short intimate answer,
-difficult emotional material, ordinary practical guidance.
+difficult emotional material, ordinary practical guidance. Judge on presence,
+warmth, intelligence, natural cadence, embodiedness, emotional range, absence
+of "AI announcer" quality, and recognizability as MAIA. Not generic voice
+quality.
 
-Judge on: presence, warmth, intelligence, natural cadence, embodiedness,
-emotional range, absence of "AI announcer" quality, recognizability as MAIA.
-Not generic voice quality.
-
-## A6 — Voice canon decision
-
-Reached only if A4 and A5 both fail.
-
-```
-correct speech?        no → fix correctness
-reliable conversation? no → fix turn lifecycle
-fast enough?           no → fix the measured cause
-sounds right?          yes → it stays
-                       no  → audition, then choose deliberately
-```
-
-Do not replace the voice because of one 7-second turn. Do not canonize
-`af_kore` because the router says it is correct. If this branch is reached,
-decide separately whether the identity keeps its name while the synthesizer
-changes, or whether the identity itself changes.
+**Engineering measurement does not overrule this stage.** Routing was verified
+correct while the lived result was still wrong; the proof closed one hypothesis
+and did not overrule the experience. The converse also holds: a voice that
+measures well and sounds wrong has not passed.
 
 ## A7 — Device acceptance
 
