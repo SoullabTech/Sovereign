@@ -144,12 +144,27 @@ const headful = rest.includes('--headful');
  */
 const PROFILE_DIR = '.capture-profile';
 
+/**
+ * `defaultViewport: null` makes the headful window usable to sign in with — but
+ * it also hands the viewport to the OS window, and the viewport IS the capture
+ * contract. A window the operating system decided to make 1280 wide would drop
+ * the xl: breakpoint, Materials would vanish from the capture, and the pass
+ * would spend its time on a divergence that only ever existed in the window
+ * manager.
+ *
+ * So the window is asked for the contract's size too, and the viewport is
+ * asserted after navigation rather than assumed.
+ */
 const browser = await puppeteer.launch({
   executablePath: browser0.path,
   headless: !headful,
   userDataDir: PROFILE_DIR,
-  defaultViewport: null,
-  args: ['--no-sandbox', '--disable-dev-shm-usage'],
+  defaultViewport: headful ? null : VIEWPORT,
+  args: [
+    '--no-sandbox',
+    '--disable-dev-shm-usage',
+    `--window-size=${VIEWPORT.width},${VIEWPORT.height}`,
+  ],
 });
 try {
   const page = await browser.newPage();
@@ -198,6 +213,25 @@ try {
   await page.waitForFunction(() => !document.body.innerText.includes('reading the draft'), {
     timeout: 30_000,
   }).catch(() => console.warn('[capture] draft-ready probe timed out — capturing anyway'));
+  /* The viewport is the contract. Two captures are comparable only because it
+     cannot vary between them, so it is verified rather than trusted — a
+     silently smaller one would drop a breakpoint and send the divergence pass
+     hunting a layout bug that is really a window size. */
+  const actual = await page.evaluate(() => ({
+    w: window.innerWidth,
+    h: window.innerHeight,
+    dpr: window.devicePixelRatio,
+  }));
+  if (actual.w !== VIEWPORT.width || actual.h !== VIEWPORT.height) {
+    console.error(
+      `[capture] Viewport is ${actual.w}×${actual.h}, not the contract's ` +
+        `${VIEWPORT.width}×${VIEWPORT.height}. Refusing to capture: an image at the`,
+    );
+    console.error('[capture] wrong width is not comparable with the reference.');
+    process.exit(1);
+  }
+  console.log(`[capture] viewport verified ${actual.w}×${actual.h}@${actual.dpr}x`);
+
   await page.screenshot({ path: out });
   console.log(`[capture:ok] ${out}`);
 } finally {
