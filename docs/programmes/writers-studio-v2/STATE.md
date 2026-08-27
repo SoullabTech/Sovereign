@@ -8,11 +8,13 @@ PROGRAMME       WRITERS-STUDIO-V2 · ACTIVE
 LANE            claude/writers-studio-organization-wxpb7q
 CANONICAL       644d4f2c5
 
-PRODUCTION      c9b0574db  deployed 2026-08-27 · printenv GIT_COMMIT confirms
-                artifact leg pending: the canvas client chunk was
-                page-fbd9167f5560c402.js at 1feec9b1d — a DIFFERENT hash now
-                proves the reactive read is in the image (D-007)
-                predecessor 1feec9b1d was verified two ways (refusal-panel
+PRODUCTION      c9b0574db  deployed 2026-08-27 · VERIFIED TWO WAYS (D-007)
+                  env var  — printenv GIT_COMMIT == c9b0574db
+                  artifact — canvas client chunk page-5548396c41e9eeee.js,
+                             was page-fbd9167f5560c402.js at 1feec9b1d;
+                             the chunk was rebuilt, so the reactive read is
+                             in the running image and not only in the stamp
+                predecessor 1feec9b1d was also verified two ways (refusal-panel
                 string present in both client chunk and server render)
 
 CURRENT         WS2-00 — product contract
@@ -27,10 +29,12 @@ READY           WS2-01 — work/manuscript/content identity
                   1feec9b1d  mount-time re-read — INEFFECTIVE, wrong mechanism
                   c9b0574db  read the URL reactively (useSearchParams), so the
                              click path and the direct path behave identically
-                             DEPLOYED; click path NOT YET WALKED
-                remaining: deploy + re-walk the chain on the CLICK path;
-                then audit every other read path (owner → work → manuscript →
-                section → content) and make D-008 a regression test
+                             LIVE AND VERIFIED IN THE IMAGE; behaviour on the
+                             click path NOT YET WALKED — deployed ≠ observed
+                remaining: walk the chain on the CLICK path for two
+                distinct writings; then audit every other read path
+                (owner → work → manuscript → section → content) and make
+                D-008 a regression test
 
 BLOCKED         WS2-04 — editor storage decision (rich text format + migration)
 
