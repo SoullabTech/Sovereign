@@ -79,9 +79,24 @@ when the member speaks elsewhere never re-reads. A companion whose view of the
 conversation goes stale the moment the member picks up their phone is a
 snapshot, not a companion. That is the next D04 increment.
 
-⛔ Also unresolved and outside this programme: two member accounts exist for
-one person (§0.0.1). The iPhone PWA is a different member record, so continuity
-with the phone specifically remains untested until that is settled.
+⭐ **Confirmed a second, independent way.** A direct query showed Desktop's
+displayed turn living in `session_1787834660422` under `ce284751` — a thread
+created by the browser, not by Desktop. So the witness rests on database
+evidence, not only on reading the screen.
+
+⛔ **iOS is NOT part of this witness.** The iPhone was signed in as a second
+member record (`49ae4717` / `soullab13cab`, 267 turns against Kelly's 27,305 —
+a test account). After signing it into `Kelly`, no phone turn has yet appeared
+in `conversation_turns`, so iOS→Desktop continuity is UNTESTED, not failing.
+The signal to watch for is a NEW `session_` id under `ce284751`: the phone keeps
+its own id in its own localStorage, so it cannot reuse the browser's.
+
+⛔ **And iOS↔PWA cannot work by any current mechanism.** Only Desktop performs
+the server-side adoption read. Web and iOS each mint a per-device, per-day id in
+localStorage and never ask the server what conversation the member is in.
+Porting the adoption read into the web client is the unit that would close
+that — the same read, applied to `app/maia/page.tsx` — but it changes behaviour
+for every member on every device and is a platform change, not a Desktop one.
 
 ### 0.0.1 The route to that witness — three wrong turns, kept
 
