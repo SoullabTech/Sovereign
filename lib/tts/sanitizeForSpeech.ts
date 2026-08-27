@@ -107,7 +107,15 @@ export function sanitizeSsmlForSpeech(input: string): string {
       if (part.startsWith('<')) {
         return ALLOWED_SSML_TAG.test(part) ? part : '';
       }
-      return sanitizeForSpeech(part);
+
+      const cleaned = sanitizeForSpeech(part);
+      if (!cleaned) return '';
+
+      // Preserve only boundary whitespace so adjacent SSML tags do not glue
+      // ordinary words together after sanitization.
+      const leadingSpace = /^\s/.test(part) ? ' ' : '';
+      const trailingSpace = /\s$/.test(part) ? ' ' : '';
+      return `${leadingSpace}${cleaned}${trailingSpace}`;
     })
     .join('');
 
