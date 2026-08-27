@@ -1,24 +1,76 @@
 # MAIA Desktop Companion — Roadmap to a full functioning Desktop MAIA
 
 **Date:** 2026-08-25 · **Status:** programme reference
-**Position:** D01/D03 device-witnessed · nine-turn walk clean · D04 partially proven · D02 active
-**Position last updated:** 2026-08-27 after the conversation device walk
+**Position:** Desktop tree is CANONICAL · D02A in PR · D04 partial · D05 unblocked
+**Position last updated:** 2026-08-27 late, after the reconciliation landing (STATUS CORRECTION)
 **Supersedes nothing.** This refines the founder's original D00–D30 programme with what the
 MAIA-D00 census, MAIA-D00A, and MAIA-D01 actually established. Where the census changed a unit's
 size or sequence, that is marked ⭐.
 
 ---
 
+## ⭐ THE GOVERNING SENTENCE
+
+> **The Companion is one MAIA realm across surfaces; Desktop must join and remain in the member's
+> canonical identity, conversation, memory, Work, and permissions rather than creating a parallel
+> Desktop state.**
+
+Every unit below is subordinate to that sentence. A Desktop feature that works beautifully and holds
+its own copy of anything the realm already owns has failed, however well it runs.
+
+---
+
 ## 0 · Where we actually are
+
+⭐ **STATUS CORRECTION 2026-08-27 (late).** Desktop is **no longer branch-only**. The programme was
+reconciled onto canonical through PR #1119 (merge `626706eee`), so `maia-desktop/` is now part of
+the main tree and later work branches from canonical rather than from a long-lived programme branch.
+The reconciliation was a selective replay, not a wholesale merge: four Writer's Studio commits were
+excluded from the graph entirely, and one commit already on canonical under a different SHA was not
+replayed. See `docs/ops/DESKTOP_RECONCILIATION_CENSUS_2026-08-27.md`.
+
+### 0.A Current programme state — the 9-part sequence
+
+```
+1  Desktop reconciliation     ✅ DONE       census 938988c26 → merged 626706eee
+2  D02A false listening       ◑  IN PR      #1121 — frame receipt is the authority
+3  D04 live continuity        ◑  PARTIAL    launch-time adoption only (see 0.B)
+4  D05 native playback        ○  UNBLOCKED  canon settled; consume the canonical path
+5  D06 turn coordination      ○  known acoustic-echo defect waiting (§0.0.2)
+6  D07 companion UX           ○
+7  Platform presence          ○  House · history · Settings · Astrology · Now What? ·
+                                 Work/Writer's Studio · Session Room · practitioner surfaces
+8  Native Desktop powers      ○  quick capture · files · session listening · menu bar ·
+                                 notifications · multi-window · background presence
+9  Packaging / sign / update  ○  deliberately last — until the thing is worth installing
+```
+
+### 0.B D04 — what is proven and what is open
+
+```
+PROVEN
+  launch-time adoption of an existing same-member conversation
+
+OPEN
+  an already-open Desktop does not re-read or adopt live thread changes
+  iOS → Desktop not yet witnessed
+  iOS ↔ PWA continuity mechanism not yet established
+```
+
+⛔ That distinction is load-bearing and must not be softened in planning. Desktop joins the thread
+**once, at launch**. That is continuity as a snapshot, not continuity as a field, and the founder's
+acceptance bar is the field: *phone → iOS app → PWA → desktop app, continuous.*
+
+### 0.C Historical unit state (2026-08-27 walk)
 
 ```
 MAIA-D00    ✅ CLOSED    canonical reconciliation
 MAIA-D00A   ✅ CLOSED    preload boundary reconciliation
 MAIA-D01    ✅ WITNESSED native capture → transcript, on a real Mac, 2026-08-27
 MAIA-D03    ✅ WITNESSED authenticated transport into the live MAIA routes
-MAIA-D04    ◑  PARTIAL   same member + same substrate proven; same CONVERSATION not
-MAIA-D02    ◑  OPEN      reliability — the transport defect is fixed and witnessed  ← HERE
-MAIA-D05+   ○  not eligible
+MAIA-D04    ◑  PARTIAL   launch-time adoption proven; live re-adoption not
+MAIA-D02    ◑  OPEN      reliability — device churn, restarts, long sessions
+MAIA-D02A   ◑  IN PR     false listening / capture liveness — #1121
 ```
 
 ⭐ **The unit boundary between D01 and D03 dissolved on contact with the device.** They could not be
@@ -222,6 +274,26 @@ upstream of it per §2.3.
 
 ## 1 · The critical path — what actually makes Desktop MAIA real
 
+⭐ **SUPERSEDED 2026-08-27 (late).** The sixteen-unit presentation below is **no longer the planning
+surface**. The founder's lane ruling of 2026-08-27 replaced it with the 9-part programme sequence in
+§0.A, and narrowed what belongs to this lane at all:
+
+```
+IN LANE     D02 · D04 · D05 · D06 · D07 · realm continuity · memory integrity ·
+            House/platform surfaces · Desktop reconciliation · packaging (later)
+
+OUT OF LANE repository-wide TTS sanitizer work · global provider policy ·
+            web/PWA voice defects · provider-wide logging · generic voice
+            infrastructure unless it directly blocks Desktop
+```
+
+The governing test: *if a change does not materially improve the Companion Desktop app or unblock its
+path to full MAIA, it belongs in another lane.*
+
+The unit identifiers below are **retained as historical references** — they are how D01, D03, D17A
+and the rest are named in the ops records and commit history, and renaming them would break that
+trail. Read the list as a glossary, not as a sequence.
+
 **Sixteen units, not thirty.** Everything else in the programme either hardens these or is a separate
 product that happens to run in the same window.
 
@@ -282,17 +354,95 @@ the product it claims to be.
 **D17A — Packaging Target Correction** must land before D18 and must not be folded into any voice
 unit. Recorded in `electron/STATUS.md` where someone will hit it.
 
-### 2.3 D05 has an unresolved canon conflict upstream of it
+### 2.3 D05's canon conflict — ✅ RESOLVED 2026-08-27, D05 IS UNBLOCKED
 
-`app/api/voice/openai-tts` exists against the project rule *"Never use OpenAI or other cloud AI
-providers."* `local-tts` also exists. **D05 cannot begin until that disposition is settled** — it
-determines whether native playback has a sovereign source at all.
+⭐ **STATUS CORRECTION.** This section previously read *"D05 cannot begin until that disposition is
+settled."* It is settled, and leaving that sentence in place would keep generating plans that gate a
+unit which is now free to start.
+
+The founder ruled on cloud voice on 2026-08-27 and both units shipped:
+
+```
+VOICE-SOVEREIGNTY-01  merged 37bbf0c23 · DEPLOYED · runtime-witnessed
+VOICE-SOVEREIGNTY-02  merged cc1f1ea10
+```
+
+The canonical voice authority is now:
+
+```
+LOCAL is authoritative.
+
+Cloud is available ONLY under BOTH:
+  · explicit future re-permission        (MAIA_ALLOW_CLOUD_VOICE=1)
+  · an explicit member `cloud` preference
+
+  auto  → local, in every flag state. The absence of a choice is not
+          consent to leave the local machine.
+
+Chosen cloud, unavailable → local if healthy → otherwise text.
+Never silence, and never a different unconsented cloud provider.
+```
+
+⛔ **D05's rule follows directly: Desktop must CONSUME the canonical voice path and never invent its
+own TTS policy.** No Desktop-specific provider, no Desktop-specific Alloy path, no Desktop-local
+fallback ladder. Whatever the voice lane establishes as the sovereign decision, Desktop plays.
+
+Runtime C of VOICE-SOVEREIGNTY-01 was witnessed on the server side — Kokoro down, the fallback path
+reached, `CloudVoiceForbidden` refusing it, zero OpenAI attempts. Two eyewitness items remain
+unrecorded and are noted in `docs/ops/PRODUCTION_LOG_FINDINGS_2026-08-27.md`; neither gates D05.
 
 ### 2.4 Session Room is a product, not a phase
 
 D10–D12 (session listening, transcript, → Realm) is the largest body of work in the original list and
 is **not on the V1 critical path**. It ships when D10–D12 are independently complete and
 release-ready, or it ships after V1. Treating it as a V1 phase is how V1 slips a quarter.
+
+### 2.4A ⭐ D02A — false listening, and the invariant it establishes
+
+**Added 2026-08-27 (late).** Not in the original D00–D30 list. Found during a Runtime C walk and
+opened as its own unit because it is a truthfulness defect, not a reliability one.
+
+Desktop declared `Listening…` and lit the live dot the moment the worklet was **connected**, with no
+independent proof that a single audio frame had ever arrived. A worklet that connects and then emits
+nothing left that state on screen indefinitely while the member kept talking into nothing.
+
+Desktop was **worse than the PWA**, not equal to it. The PWA detects the condition and logs it
+(`silent_death` / `NO_AUDIO_FRAMES`) and merely fails to change what is shown. Desktop had no
+detector at all, and its two existing loss signals — `track_ended` and `track_muted` — reached main
+and changed nothing the member could see. Three ways to lose the microphone, zero visible
+consequences.
+
+The state contract:
+
+```
+IDLE         not capturing
+STARTING     worklet connected, WAITING FOR THE FIRST REAL FRAME
+LISTENING    recent audio frames positively observed
+RECOVERING   expected frames stopped arriving; one rebuild in flight
+UNAVAILABLE  bounded recovery failed — the member is told
+```
+
+⭐ **THE INVARIANT, and it governs all later Desktop work:**
+
+> **Frame receipt — not AudioWorklet connection — is the authority for "Listening".**
+
+`STARTING` must stay distinct from `LISTENING`; only frame arrival may promote a session; "worklet
+connected" must never again mean "listening". This is enforced structurally rather than by
+discipline: two negative controls fail the Desktop suite if it decays — disabling the liveness timer
+fails ~7 tests, and claiming `LISTENING` at connect time fails ~2.
+
+Why the detector is safe to build at all: the worklet posts a block every 2.67 ms and **silence is
+still blocks**, so the absence of frames never means the member went quiet — it means the graph is
+dead. The detector therefore never guesses at a speech threshold and cannot mistake a pause for a
+failure. The near-silence gate in `conversation.js` judges *content*; this one only asks whether audio
+is arriving at all.
+
+Liveness lives in **main**, beside the epoch machine, and rides the already-ratified
+`maia:voice-state-changed` snapshot. **No new IPC channel was opened** — the preload doctrine requires
+an added channel to argue for itself, and this one did not need to exist.
+
+**PWA false-listening is a related finding and is NOT this lane's** — separate voice/web lane, by
+founder ruling. Keeping it out is what stops this becoming a cross-platform voice project.
 
 ### 2.5 The hard part is D01–D02, and it is hard for an unusual reason
 
