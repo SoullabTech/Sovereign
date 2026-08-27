@@ -96,6 +96,16 @@ describe('Canvas manuscript parameter — pinned across an un-editable boundary'
       const source = readFileSync(join(__dirname, '..', file), 'utf8');
       expect(source).not.toMatch(/[`'"]&m=|\?m=\$\{/);
     }
+    /* WS2-01B — the Press room hand-wrote `?m=${id}` on the one navigation
+       that matters most: the redirect a member rides at the end of an import,
+       into the Canvas, holding the book they just carried in. It was outside
+       the three files this pin listed, which is how F-4 survived F-4. */
+    const press = readFileSync(
+      join(__dirname, '..', '..', 'press', 'manuscript', 'page.tsx'),
+      'utf8',
+    );
+    expect(press).not.toMatch(/[`'"]&m=|\?m=\$\{/);
+    expect(press).toContain('canvasForManuscript(CANVAS_HREF, data.id)');
   });
 });
 

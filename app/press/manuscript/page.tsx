@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import { loadLastTab, saveLastTab } from './returningState';
 import { apiFetch } from '@/lib/http/apiBase';
 import { CANVAS_HREF } from '../../writers-studio/studioMap';
+import { canvasForManuscript } from '../../writers-studio/canvasIdentity';
 import WorkingDraftEditor from './WorkingDraftEditor';
 
 /**
@@ -228,6 +229,8 @@ function PressManuscriptRoom() {
   };
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState(false);
+  /** What the Press actually said, when it said something worth repeating. */
+  const [saveMessage, setSaveMessage] = useState<string | null>(null);
   const [warnings, setWarnings] = useState<string[]>([]);
   const [ingesting, setIngesting] = useState(false);
   /* WS-01 — the identity of the arrival taken into custody at ingest. Held so
@@ -350,6 +353,8 @@ function PressManuscriptRoom() {
   const requestPreview = async () => {
     if (!draftTitle.trim() || !draftText.trim()) return;
     setSaveError(false);
+    setSaveMessage(null);
+    setWarnings([]);
     setSaving(true);
     try {
       const res = await apiFetch('/api/sovereign/manuscripts', {
@@ -357,10 +362,29 @@ function PressManuscriptRoom() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ title: draftTitle, text: draftText }),
       });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        /* WS2-01B, 2026-08-27 — this branch used to `throw` into a catch whose
+           only act was setPreview(null). saveError was reset to false three
+           lines above and never set true on this path, and the one place it
+           renders is inside the confirm-cuts panel the member has not reached
+           yet. So a refused preview showed NOTHING: the member pressed the
+           button and the room did not move. That is indistinguishable from
+           "importing is broken", and it is how an import failure reaches a
+           writer with no message and no log line to match it against. */
+        setWarnings([
+          data.error ||
+            `We could not read the cuts in that text (HTTP ${res.status}). ` +
+              'Nothing was saved, and your text is unchanged.',
+        ]);
+        setPreview(null);
+        return;
+      }
       setPreview(data.preview ?? null);
     } catch {
+      setWarnings([
+        'We could not reach the Press to read your cuts. Nothing was saved, and your text is unchanged.',
+      ]);
       setPreview(null);
     } finally {
       setSaving(false);
@@ -385,8 +409,14 @@ function PressManuscriptRoom() {
             : { confirmedText: draftText }),
         }),
       });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        /* The server's own words. "too many sections (max 400)" is something a
+           member can act on; "Could not save" is not. */
+        setSaveMessage(data.error || `Could not save (HTTP ${res.status}).`);
+        setSaveError(true);
+        return;
+      }
       setPreview(null);
       setDraftText('');
       setSourceArrivalId(null);
@@ -397,9 +427,10 @@ function PressManuscriptRoom() {
       // identity, with the new draft on the table. The 2026-08-05 persona
       // walk found imports still ending in this room's seven-tab workbench:
       // the environment existed, but its main entry path predated it.
-      window.location.href = `${CANVAS_HREF}?m=${encodeURIComponent(data.id)}`;
+      window.location.href = canvasForManuscript(CANVAS_HREF, data.id);
     } catch {
       // Preview is preserved so the member can retry the save.
+      setSaveMessage(null);
       setSaveError(true);
     } finally {
       setSaving(false);
@@ -871,7 +902,9 @@ function PressManuscriptRoom() {
                 ))}
               </div>
               {saveError && (
-                <p className="text-[13px] opacity-70 mb-4">Could not save. Please try again.</p>
+                <p className="text-[13px] opacity-70 mb-4">
+                  {saveMessage ?? 'Could not save. Please try again.'}
+                </p>
               )}
               <div className="flex gap-4">
                 <button

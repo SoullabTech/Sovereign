@@ -154,8 +154,23 @@ WS2-01B FINDING, 2026-08-27 — D-009, third instance, second in one file:
                 book they already had. Now observed reactively, latched as
                 state, still spent on a successful save. Pinned from the
                 Studio side, which owns the link.
-                NOT proof this was the only path. The refusal instrumentation
-                stands until a real attempt names its own exit.
+                It was not the only path. Three more, same class — a failure
+                that reaches the member as nothing at all:
+                  · requestPreview threw into a catch whose only act was
+                    setPreview(null). saveError is reset false three lines
+                    above and never set true there, and the one place it
+                    renders is inside the confirm-cuts panel the member has
+                    not reached yet. A refused preview showed NOTHING — the
+                    button was pressed and the room did not move.
+                  · the save step answered "Could not save. Please try again."
+                    over the server's own words. "too many sections (max 400)"
+                    is actionable; the generic line is not.
+                  · the import's closing redirect into the Canvas hand-wrote
+                    `?m=${id}` — F-4, in the one navigation that matters most,
+                    in a file the F-4 pin did not list. That is how F-4
+                    survived F-4. The pin now covers it.
+                The refusal instrumentation stands until a real attempt names
+                its own exit.
 
 DEPLOY          HOLD — one candidate, not three
                 A + B + C ship together. C alone gives no verification path
