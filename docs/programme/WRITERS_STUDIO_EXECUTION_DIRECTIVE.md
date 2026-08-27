@@ -35,8 +35,8 @@ enters the other. Nothing crosses that line implicitly.
 ```text
 INTEGRATION BRANCH   claude/writers-studio-organization-wxpb7q
 LIVE BRANCH TIP      RESOLVE FROM GIT — never cached here
-PRODUCT CODE TIP     cd8a95271   ← last commit that changed product code
-DEPLOYED TO PROD     cd8a95271   ← verified via printenv GIT_COMMIT
+PRODUCT CODE TIP     59ed6dac6   ← last commit that changed product code
+DEPLOYED TO PROD     59ed6dac6   ← verified via BUILT ROUTES + printenv GIT_COMMIT
 CANONICAL            644d4f2c5
 ```
 
@@ -69,7 +69,7 @@ DELIVERY MODE  RELEASED  for cd8a95271 only
                          P0-D both legs witnessed on 83efa86df
                          production hold released by the founder
                          deploy run by the founder, provenance verified
-LIVE IN PROD   cd8a95271  (2026-08-26)
+LIVE IN PROD   59ed6dac6  (2026-08-27)  verified by BUILT ROUTES, not GIT_COMMIT alone
 ```
 
 Founder ruling 2026-08-26, Master Brief **A2.0**. The WS-01 freeze protects
@@ -273,6 +273,29 @@ supplies.
 Which makes the walk's real question larger than a context window:
 
 > **What kind of presence does writing actually require?**
+
+### Verifying a deploy — GIT_COMMIT is not enough
+
+Learned 2026-08-27 at cost. `GIT_COMMIT` is an env var stamped from the SHA the
+deploy was *told* to build. It proves the deploy obeyed its instruction. It
+cannot detect a **later, legitimate deploy of a different commit** — which is
+exactly what happened when a canonical deploy (PR #1105) replaced the Studio
+room eight minutes after it went live, and the room looked unchanged for hours
+while the programme docs said seven units were live.
+
+Verify the ARTIFACT, not the label:
+
+```bash
+docker exec maia-sovereign sh -c 'echo GIT_COMMIT=$GIT_COMMIT; \
+  ls /app/.next/server/app/api/sovereign/studio/'
+```
+
+Must print the SHA **and** list `companion`, `materials`, `review`.
+
+Structural note, unfixed: two lanes deploy to one production and neither can see
+the other. Until the Studio lane merges to canonical, any canonical deploy drops
+it. Candidate fix — refuse or warn when the live SHA is not an ancestor of the
+one being deployed.
 
 ### Readiness
 

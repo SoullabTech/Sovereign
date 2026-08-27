@@ -33,9 +33,12 @@ DEPLOY MODE        RELEASED for cd8a95271 only; every later commit is undeployed
 BOUND CANONICAL    644d4f2c56d5a4683e9fa2017d84f76e2a4adf3a
 CURRENT UNIT       NONE — build held pending the founder's walk of the live room
 WS-01 CANDIDATE    83efa86df  ·  P0-D BOTH LEGS WITNESSED  ·  acceptance outstanding
-LIVE IN PRODUCTION cd8a95271  ·  deployed by the founder 2026-08-26
-                   provenance verified — printenv GIT_COMMIT == cd8a95271
-                   6 migrations applied · all smoke tests PASS
+LIVE IN PRODUCTION 59ed6dac6  ·  deployed by the founder 2026-08-27
+                   Studio lane + voice/p0-restart-authority (PR #1105), reconciled
+                   VERIFIED TWO WAYS — printenv GIT_COMMIT == 59ed6dac6 AND
+                   /app/.next/server/app/api/sovereign/studio/ lists
+                   companion · materials · review  (the CODE, not the label)
+                   all smoke tests PASS · Co-Lab 33/33
 INTEGRATION LANE   claude/writers-studio-organization-wxpb7q
 NEXT EXECUTABLE    founder walks the live room  →  WS-01 acceptance  →  STRUCTURE-02
 LAST UPDATED       2026-08-26
