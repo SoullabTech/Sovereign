@@ -904,8 +904,13 @@ function evidenceCurrencyRow(e) {
       <div class="row"><span class="label">Head is now</span><span class="kv">${e.base_drift.current_base}</span></div>
       <div class="errors"><div>Reconciliation required before this can be treated as current: re-verify against the current head, or close the run as historical.</div></div>`;
   }
+  if (e.currency === 'UNCONFIRMED') {
+    return `<div class="row"><span class="label">Evidence currency</span><span class="state UNKNOWN">UNCONFIRMED — the ingestion bracket never closed</span></div>`;
+  }
   if (e.currency === 'UNVERIFIED') {
-    return `<div class="row"><span class="label">Evidence currency</span><span class="state UNKNOWN">UNVERIFIED — the head could not be read</span></div>`;
+    return `<div class="row"><span class="label">Evidence currency</span><span class="state UNKNOWN">UNVERIFIED — commit identity could not be established</span></div>
+      ${e.currency_reason ? `<div class="row"><span class="label">Why</span><span style="text-align:right;max-width:420px">${e.currency_reason}</span></div>` : ''}
+      ${e.ingestion_race ? `<div class="errors"><div>The head moved during ingestion (${e.ingestion_race.base_before} → ${e.ingestion_race.base_after}). The evidence is preserved but cannot be given current standing.</div></div>` : ''}`;
   }
   if (e.currency === 'CURRENT') {
     return `<div class="row"><span class="label">Evidence currency</span><span class="state AVAILABLE">CURRENT — base ${e.base_sha || '—'}</span></div>`;

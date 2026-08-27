@@ -43,6 +43,7 @@ const RUNS = require(path.join(DESKTOP, 'src', 'task-runs.js'));
 const PS = require(path.join(DESKTOP, 'src', 'programme-state.js'));
 const PACKET = require(path.join(DESKTOP, 'src', 'execution-packet.js'));
 const RECEIPT = require(path.join(DESKTOP, 'src', 'evidence-receipt.js'));
+const SHA = require(path.join(DESKTOP, 'src', 'sha-resolve.js'));
 
 let failures = 0;
 const report = (name, ok, extra) => {
@@ -60,6 +61,8 @@ git('config', 'user.name', 'proof');
 git('commit', '-q', '--allow-empty', '-m', 'A');
 const BASE_A_FULL = git('rev-parse', 'HEAD');
 const BASE_A = git('rev-parse', '--short', 'HEAD');
+
+const resolve = SHA.makeResolver(GITREPO);
 
 const TASK = { description: 'Wire the duplication mechanism for VOICE-CAPTURE-01B-OBS' };
 const DECISION = {
@@ -141,12 +144,12 @@ const VALID = {
   next_boundary: 'VOICE-CAPTURE-01C — telemetry after merge',
   programme_state: { state: 'HOLD', blockers: [{ id: 'check:build', condition: "Required check 'build' is still in progress.", kind: 'PREREQUISITE' }], observations: [], adjudications: [] },
 };
-const codes = (r) => RECEIPT.validateReceipt(r, issued).violations.map((v) => v.code);
+const codes = (r) => RECEIPT.validateReceipt(r, issued, { resolve }).violations.map((v) => v.code);
 const CORRUPTIONS = [
   ['no non_claim', (() => { const { non_claim, ...r } = VALID; return r; })(), 'MISSING_REQUIRED_FIELD'],
   ['empty non_claim', { ...VALID, non_claim: '   ' }, 'MISSING_REQUIRED_FIELD'],
   ['no base_sha', (() => { const { base_sha, ...r } = VALID; return r; })(), 'MISSING_BASE_SHA'],
-  ['base_sha from another tree', { ...VALID, base_sha: 'deadbee1234' }, 'BASE_MISMATCH'],
+  ['base_sha naming a ref, not a commit', { ...VALID, base_sha: 'main' }, 'BASE_SHA_MALFORMED'],
   ['observation with no freshness', { ...VALID, observations: [{ field: 'production_sha', value: '64c2b7c07' }] }, 'OBSERVATION_WITHOUT_FRESHNESS'],
   ['CARRIED with no value', { ...VALID, observations: [{ field: 'p', value: null, freshness: 'CARRIED' }] }, 'CARRIED_WITHOUT_VALUE'],
   ['HOLD with no blockers', { ...VALID, programme_state: { state: 'HOLD', blockers: [] } }, 'PROGRAMME_STATE:HOLD_WITHOUT_BLOCKER'],
@@ -155,7 +158,7 @@ const CORRUPTIONS = [
 ];
 for (const [label, bad, expect] of CORRUPTIONS) {
   report(`corrupt receipt refused — ${label}`, codes(bad).includes(expect), codes(bad).join(', '));
-  const applied = RECEIPT.applyReceipt(issued, bad);
+  const applied = RECEIPT.applyReceipt(issued, bad, { resolve });
   report(`  …and nothing was applied — ${label}`,
     !applied.ok && applied.run.evidence === undefined && !applied.run.evidence_received);
 }
@@ -169,20 +172,26 @@ git('commit', '-q', '--allow-empty', '-m', 'B');
 const BASE_B = git('rev-parse', '--short', 'HEAD');
 report('the tree really moved', BASE_B !== BASE_A, `${BASE_A} -> ${BASE_B}`);
 
-const drifted = RECEIPT.applyReceipt(issued, VALID, { at: '2026-08-27T12:00:00Z', current_base: BASE_B });
+const drifted0 = RECEIPT.applyReceipt(issued, VALID, { at: '2026-08-27T12:00:00Z', current_base: BASE_B, resolve });
+const drifted = { ...drifted0, run: RECEIPT.confirmCurrency(drifted0.run, { base_before: BASE_B, base_after: BASE_B, resolve }) };
+drifted.ok = drifted0.ok; drifted.violations = drifted0.violations;
 report('the receipt is still ACCEPTED — the work was really done', drifted.ok, JSON.stringify(drifted.violations));
 report('but it is NOT current evidence about the tree', drifted.run.evidence.currency === 'HISTORICAL', drifted.run.evidence.currency);
 report('it names the base it IS evidence about', drifted.run.evidence.base_drift.issued_against === BASE_A);
 report('and the base it is NOT evidence about', drifted.run.evidence.base_drift.current_base === BASE_B);
-report('a full-SHA receipt matches a short-SHA packet base (no false drift)',
-  RECEIPT.shaEq(BASE_A_FULL, BASE_A));
+report('identity is RESOLVED, not prefix-matched: full SHA == short SHA',
+  SHA.compareIdentity(BASE_A_FULL, BASE_A, resolve).verdict === 'SAME');
+report('an unresolvable abbreviation is UNKNOWN, never assumed same',
+  SHA.compareIdentity('deadbeef', BASE_A, resolve).verdict === 'UNKNOWN');
+report('a ref name is refused as a base identity',
+  SHA.makeResolver(GITREPO)('main').outcome === 'MALFORMED');
 const recon = RECEIPT.reconciliationBlockers(drifted.run, PS);
 report('drift raises a CONCRETE reconciliation blocker', recon.length === 1 && PS.isConcreteCondition(recon[0].condition), JSON.stringify(recon));
 report('the summary cannot be read without its base', /EVIDENCE ABOUT .*NOT THE CURRENT HEAD/.test(RECEIPT.describeEvidence(drifted.run).summary));
 const heldByDrift = PS.deriveProgrammeState({ unit: pkt.unit, blockers: recon });
 report('the programme cannot advance on historical evidence', heldByDrift.state === 'HOLD' && PS.isConsistent(heldByDrift), heldByDrift.why);
 report('an unreadable head is UNVERIFIED, never assumed current',
-  RECEIPT.applyReceipt(issued, VALID, { current_base: null }).run.evidence.currency === 'UNVERIFIED');
+  RECEIPT.applyReceipt(issued, VALID, { current_base: null, resolve }).run.evidence.currency === 'UNVERIFIED');
 await RUNS.saveRun(REPO_ROOT, drifted.run, 'evidence_received');
 report('the drift verdict survives to disk',
   (await RUNS.getRun(REPO_ROOT, RUN_ID)).run.evidence.currency === 'HISTORICAL');
@@ -192,7 +201,10 @@ phase('6  ingest a receipt whose base IS current');
 const r2 = await RUNS.openRun(REPO_ROOT, { task: { description: 'second unit' }, decision: DECISION, capabilityNames: ['ReadFile'] });
 r2.run.handoff = { issued_at: new Date().toISOString(), bases: { candidate_sha: BASE_B }, unit: 'VOICE-CAPTURE-01C' };
 RUNS.transition(r2.store, r2.run, RUNS.STATE.ROUTED_NOT_EXECUTED, {});
-const clean = RECEIPT.applyReceipt(r2.run, { ...VALID, run_id: r2.run.run_id, base_sha: BASE_B }, { current_base: BASE_B });
+const clean0 = RECEIPT.applyReceipt(r2.run, { ...VALID, run_id: r2.run.run_id, base_sha: BASE_B }, { current_base: BASE_B, resolve });
+report('provisional currency is never displayed as settled',
+  clean0.run.evidence.currency_confirmed === false && RECEIPT.describeEvidence(clean0.run).currency === 'UNCONFIRMED');
+const clean = { ok: clean0.ok, run: RECEIPT.confirmCurrency(clean0.run, { base_before: BASE_B, base_after: BASE_B, resolve }) };
 report('a receipt on the current base ingests as CURRENT', clean.ok && clean.run.evidence.currency === 'CURRENT');
 report('and raises no reconciliation blocker', RECEIPT.reconciliationBlockers(clean.run, PS).length === 0);
 report("the console's own history is not rewritten by the worker", clean.run.state === RUNS.STATE.ROUTED_NOT_EXECUTED);

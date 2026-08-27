@@ -24,6 +24,7 @@ const RUNS = require('./task-runs.js');
 const PS = require('./programme-state.js');
 const PACKET = require('./execution-packet.js');
 const RECEIPT = require('./evidence-receipt.js');
+const SHA = require('./sha-resolve.js');
 
 // ---------------------------------------------------------------------------
 // Instance identity.
@@ -1043,26 +1044,42 @@ ipcMain.handle('jarvis:ingest-receipt', async (_evt, req) => {
     source = r.path;
   }
 
-  // JARVIS-STAB-06 — the head is re-read HERE, at ingestion, because that is
-  // when the question "is this evidence still about the current tree?" is
-  // actually being asked. Reusing the value read at handoff would answer it
-  // with a fact from before the interval in question.
-  const nowSub = readSubstrateVersion(root);
-  const current_base = nowSub.git_connected ? nowSub.head : null;
+  // ── JARVIS-STAB-07 — the ingestion bracket ────────────────────────────────
+  //
+  // The head is re-read HERE, at ingestion, because that is when the question
+  // "is this evidence still about the current tree?" is actually being asked;
+  // the value read at handoff predates the interval in question.
+  //
+  // And it is read TWICE, around the write. If the tree moves inside that
+  // window, a receipt could otherwise persist as CURRENT for a base that
+  // stopped being current during the very operation recording it. H1 → persist
+  // → H2, and confirmCurrency() can only ever downgrade.
+  //
+  // Identity is resolved against the repository rather than compared by prefix:
+  // seven hex characters are a presentation convenience, not a commit id.
+  const resolve = SHA.makeResolver(root, { env: childEnv(process.env).env });
+  const headNow = () => { const g = readSubstrateVersion(root); return g.git_connected ? g.head : null; };
+  const base_before = headNow();
 
-  const applied = RECEIPT.applyReceipt(found.run, receipt, { at: new Date().toISOString(), current_base });
+  const applied = RECEIPT.applyReceipt(found.run, receipt, { at: new Date().toISOString(), current_base: base_before, resolve });
   if (!applied.ok) {
     return { ok: false, reason: 'receipt refused — it was not applied', violations: applied.violations, run: found.run, source };
   }
-  const saved = await RUNS.saveRun(root, applied.run, 'evidence_received');
-  if (!saved.ok) return { ok: false, reason: saved.reason, violations: [], run: found.run, source };
+  // Persisted provisionally: the record on disk reads UNCONFIRMED until the
+  // bracket closes, so a concurrent reader can never catch an unearned CURRENT.
+  const provisional = await RUNS.saveRun(root, applied.run, 'evidence_received');
+  if (!provisional.ok) return { ok: false, reason: provisional.reason, violations: [], run: found.run, source };
+
+  const confirmed = RECEIPT.confirmCurrency(applied.run, { base_before, base_after: headNow(), resolve });
+  const saved = await RUNS.saveRun(root, confirmed, 'currency_confirmed');
+  if (!saved.ok) return { ok: false, reason: saved.reason, violations: [], run: applied.run, source };
   return {
-    ok: true, reason: null, violations: [], run: applied.run,
-    evidence: RECEIPT.describeEvidence(applied.run),
+    ok: true, reason: null, violations: [], run: confirmed,
+    evidence: RECEIPT.describeEvidence(confirmed),
     // Drift does not fail the ingestion — the evidence is real — but it MUST
     // reach the cockpit as a blocker so the programme cannot advance on
     // historical evidence as though it were current.
-    reconciliation: RECEIPT.reconciliationBlockers(applied.run, PS),
+    reconciliation: RECEIPT.reconciliationBlockers(confirmed, PS),
     source,
   };
 });

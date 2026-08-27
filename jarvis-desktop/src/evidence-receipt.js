@@ -35,32 +35,40 @@
 'use strict';
 
 (function (root, factory) {
+  const cjs = typeof module === 'object' && module.exports;
   const api = factory(
-    typeof module === 'object' && module.exports ? require('./programme-state.js') : root.JarvisProgrammeState,
+    cjs ? require('./programme-state.js') : root.JarvisProgrammeState,
+    // Resolution is main-process only (it shells out to git). The renderer never
+    // resolves identity itself — it displays the verdict main reached.
+    cjs ? require('./sha-resolve.js').compareIdentity : null,
   );
-  if (typeof module === 'object' && module.exports) module.exports = api;
+  if (cjs) module.exports = api;
   else root.JarvisEvidenceReceipt = api;
-})(typeof globalThis !== 'undefined' ? globalThis : this, function (PS) {
+})(typeof globalThis !== 'undefined' ? globalThis : this, function (PS, compareIdentity) {
 
 const REQUIRED_FIELDS = Object.freeze(['run_id', 'claim', 'non_claim']);
 
 const isNonEmptyString = (x) => typeof x === 'string' && x.trim().length > 0;
 
 /**
- * SHA equality across abbreviation widths.
+ * Identity comparison, delegated.
  *
- * A packet may carry a short SHA while a worker reports the full 40, or the
- * reverse. Comparing them as strings would report drift on every handoff, and
- * an alarm that fires constantly is an alarm that gets switched off — so
- * prefix-equality is the correct comparison, with a floor of 7 characters
- * because shorter is not an identification.
+ * STAB-06 compared bases by prefix. That stopped false drift but promoted an
+ * abbreviation to an identity, which seven hex characters are not. Identity is
+ * now resolved against the repository (sha-resolve.js) to canonical 40-char
+ * object ids, and this module never decides sameness itself.
+ *
+ * Three verdicts, never two. UNKNOWN — the abbreviation was ambiguous, or the
+ * repository could not be read — is carried as its own answer. Collapsing it
+ * into SAME would reinstate the assumption being removed; collapsing it into
+ * DIFFERENT would refuse a worker's real evidence over a repository we simply
+ * could not read.
  */
-function shaEq(a, b) {
-  if (!isNonEmptyString(a) || !isNonEmptyString(b)) return false;
-  const x = a.trim().toLowerCase();
-  const y = b.trim().toLowerCase();
-  if (x.length < 7 || y.length < 7) return x === y;
-  return x.startsWith(y) || y.startsWith(x);
+function identity(a, b, resolve) {
+  if (typeof resolve !== 'function') {
+    return { verdict: 'UNKNOWN', reason: 'no commit resolver was supplied; identity cannot be established' };
+  }
+  return compareIdentity(a, b, resolve);
 }
 
 /**
@@ -70,7 +78,7 @@ function shaEq(a, b) {
  * @param {object|null} run the durable run record, or null if not found
  * @returns {{ok: boolean, violations: Array<{code, detail}>}}
  */
-function validateReceipt(receipt, run) {
+function validateReceipt(receipt, run, opts = {}) {
   const v = [];
   if (!receipt || typeof receipt !== 'object' || Array.isArray(receipt)) {
     return { ok: false, violations: [{ code: 'NOT_A_RECEIPT', detail: 'receipt is absent or not a JSON object' }] };
@@ -102,17 +110,20 @@ function validateReceipt(receipt, run) {
     v.push({ code: 'RUN_MISMATCH', detail: `receipt names ${receipt.run_id} but was matched to ${run.run_id}` });
   }
 
-  // ── JARVIS-STAB-06 — base lineage ─────────────────────────────────────────
+  // ── JARVIS-STAB-06/07 — base lineage, by IDENTITY ─────────────────────────
   //
   // The packet named the base the work was to be done against. If the worker
-  // reports having worked from a DIFFERENT base, this receipt is not evidence
-  // about the run that issued the packet — it is evidence about some other
-  // state of the tree, and accepting it would silently answer a question nobody
-  // asked. That is refused.
+  // reports a DIFFERENT commit, this receipt is not evidence about the run that
+  // issued the packet, and it is refused.
+  //
+  // The refusal fires only on an ESTABLISHED difference. An abbreviation we
+  // could not resolve is not a mismatch — it is an unknown, and refusing a
+  // worker's real evidence because this end could not read the repository would
+  // be the console blaming the world for its own blindness. Unknown lineage is
+  // carried into currency instead, where it becomes UNVERIFIED and a blocker.
   //
   // The requirement arises from the handoff, not from the receipt: a run that
-  // never issued a packet has no base to be checked against, and demanding one
-  // there would be ceremony.
+  // never issued a packet has no base to be checked against.
   const issuedBase = run && run.handoff && run.handoff.bases ? run.handoff.bases.candidate_sha : null;
   if (issuedBase) {
     if (!isNonEmptyString(receipt.base_sha)) {
@@ -121,12 +132,27 @@ function validateReceipt(receipt, run) {
         detail: `the handoff packet named base ${issuedBase}; the receipt must state the base_sha it `
               + 'actually worked from, or there is no way to tell what state of the tree this evidence describes',
       });
-    } else if (!shaEq(receipt.base_sha, issuedBase)) {
-      v.push({
-        code: 'BASE_MISMATCH',
-        detail: `receipt reports base ${receipt.base_sha} but the packet was issued against ${issuedBase}. `
-              + 'This is evidence about a different tree state than the one this run asked about.',
-      });
+    } else {
+      const id = identity(receipt.base_sha, issuedBase, opts.resolve);
+      // MALFORMED is a receipt defect, not an epistemic unknown. "main",
+      // "HEAD~2" or prose in base_sha means the worker returned the wrong KIND
+      // of value — and a moving ref would silently re-point this evidence every
+      // time the branch advanced. That is refused, unlike an abbreviation we
+      // merely could not resolve.
+      if (id.left && id.left.outcome === 'MALFORMED') {
+        v.push({
+          code: 'BASE_SHA_MALFORMED',
+          detail: `base_sha ${JSON.stringify(receipt.base_sha)} is not a commit object id. ${id.left.reason}`,
+        });
+      } else if (id.verdict === 'DIFFERENT') {
+        v.push({
+          code: 'BASE_MISMATCH',
+          detail: `receipt reports base ${receipt.base_sha} (${id.left.full}) but the packet was issued `
+                + `against ${issuedBase} (${id.right.full}). This is evidence about a different tree state `
+                + 'than the one this run asked about.',
+        });
+      }
+      // SAME → lineage established. UNKNOWN → not a violation; see currency.
     }
   }
 
@@ -176,41 +202,56 @@ function validateReceipt(receipt, run) {
  * console observed — the two stay separable, and a later reader can always tell
  * which facts the console established and which the worker asserted.
  */
-function applyReceipt(run, receipt, { at = null, current_base = null } = {}) {
-  const check = validateReceipt(receipt, run);
+function applyReceipt(run, receipt, opts = {}) {
+  const at = opts.at || null;
+  const check = validateReceipt(receipt, run, opts);
   if (!check.ok) {
     return { ok: false, violations: check.violations, run };
   }
 
-  // ── JARVIS-STAB-06 — currency, decided separately from validity ───────────
+  // ── JARVIS-STAB-06/07 — currency, decided separately from validity ────────
   //
   // BASE_MISMATCH above is the worker's error. THIS is the world moving: the
   // packet was issued against a base that is no longer the current head. The
   // receipt is still perfectly good evidence — about the base it was produced
   // against. What it is NOT is a current statement about the tree as it stands
-  // now, and the difference is the whole point.
+  // now, and that difference is the whole point. Promotion is the failure mode:
+  // it is how "tests passed" survives a rebase and becomes "tests pass".
   //
-  // So the evidence is PRESERVED and SCOPED rather than either discarded or
-  // silently promoted. Promotion is the failure mode: it is how "tests passed"
-  // survives a rebase and becomes "tests pass".
+  // PROVISIONAL. The classification below is computed from the head read BEFORE
+  // ingestion, so it cannot yet be trusted: the tree may move while this record
+  // is being written. It is therefore stamped `currency_confirmed: false`, and
+  // confirmCurrency() below closes the bracket. A reader who catches the record
+  // mid-flight sees UNCONFIRMED, never an unearned CURRENT.
   const issuedBase = run && run.handoff && run.handoff.bases ? run.handoff.bases.candidate_sha : null;
   let currency = 'NOT_APPLICABLE';   // no packet was ever issued; no base to be current against
+  let currency_reason = 'no handoff packet was issued for this run, so it has no base to be current against';
   let base_drift = null;
   if (issuedBase) {
-    if (!isNonEmptyString(current_base)) {
-      // We could not read the head. That is not "current" — it is unknown, and
-      // saying so is the same discipline invariant 3 applies to every value.
+    const lineage = identity(receipt.base_sha, issuedBase, opts.resolve);
+    if (lineage.verdict === 'UNKNOWN') {
+      // We could not establish that the worker's base IS the issued base. That
+      // is not a refusal, but it is certainly not currency.
       currency = 'UNVERIFIED';
-    } else if (shaEq(issuedBase, current_base)) {
-      currency = 'CURRENT';
+      currency_reason = `commit identity could not be established: ${lineage.reason}`;
     } else {
-      currency = 'HISTORICAL';
-      base_drift = {
-        issued_against: issuedBase,
-        current_base,
-        detail: `the head moved from ${issuedBase} to ${current_base} between handoff and return; `
-              + 'this evidence describes the base it was produced against, not the current tree',
-      };
+      const moved = identity(issuedBase, opts.current_base, opts.resolve);
+      if (moved.verdict === 'SAME') {
+        currency = 'CURRENT';
+        currency_reason = `the issued base ${issuedBase} is still the head`;
+      } else if (moved.verdict === 'DIFFERENT') {
+        currency = 'HISTORICAL';
+        currency_reason = 'the head moved between handoff and return';
+        base_drift = {
+          issued_against: issuedBase,
+          current_base: opts.current_base,
+          detail: `the head moved from ${issuedBase} to ${opts.current_base} between handoff and return; `
+                + 'this evidence describes the base it was produced against, not the current tree',
+        };
+      } else {
+        currency = 'UNVERIFIED';
+        currency_reason = `the current head could not be identified: ${moved.reason}`;
+      }
     }
   }
 
@@ -233,6 +274,11 @@ function applyReceipt(run, receipt, { at = null, current_base = null } = {}) {
       // travels with an observation: a consumer must not be able to read the
       // value without also reading what it is a statement about.
       currency,
+      currency_reason,
+      // Closed by confirmCurrency() once the ingestion bracket is complete.
+      // Until then no consumer may read this classification as settled.
+      currency_confirmed: false,
+      ingestion_race: null,
       base_drift,
     },
     // Deliberately NOT set to COMPLETED. The run's own state describes what THIS
@@ -242,6 +288,63 @@ function applyReceipt(run, receipt, { at = null, current_base = null } = {}) {
     evidence_received: true,
   };
   return { ok: true, violations: [], run: next };
+}
+
+/**
+ * JARVIS-STAB-07 — close the ingestion bracket.
+ *
+ * There is a window between reading the head and finishing the write. If the
+ * tree moves inside it, a receipt can be persisted as CURRENT for a base that
+ * stopped being current during the very operation that recorded it. The window
+ * is milliseconds, which is exactly why it would never be caught by hand.
+ *
+ *   H1 = head before ingestion   →  applyReceipt() classifies provisionally
+ *   ...atomic persist...
+ *   H2 = head after ingestion    →  confirmCurrency() closes the bracket
+ *
+ * H1 == H2 → the interval contained no lineage change; the classification
+ *            stands and is marked confirmed.
+ * H1 != H2 → the interval crossed one. The worker's evidence is NOT refused —
+ *            the work really happened, and the repository moving during
+ *            ingestion is not the worker's fault. It is preserved, and denied
+ *            current standing: already-HISTORICAL stays HISTORICAL, anything
+ *            else drops to UNVERIFIED, and either way a reconciliation blocker
+ *            is raised.
+ *
+ * Confirmation only ever DOWNGRADES. There is deliberately no path by which
+ * closing the bracket upgrades an evidence record to CURRENT.
+ */
+function confirmCurrency(run, { base_before, base_after, resolve } = {}) {
+  const e = run && run.evidence;
+  if (!e) return run;
+  if (e.currency === 'NOT_APPLICABLE') {
+    return { ...run, evidence: { ...e, currency_confirmed: true } };
+  }
+
+  const stable = identity(base_before, base_after, resolve);
+  if (stable.verdict === 'SAME') {
+    return { ...run, evidence: { ...e, currency_confirmed: true } };
+  }
+
+  const race = {
+    base_before: base_before ?? null,
+    base_after: base_after ?? null,
+    verdict: stable.verdict,
+    detail: stable.verdict === 'DIFFERENT'
+      ? `the head moved from ${base_before} to ${base_after} DURING ingestion; the currency classification `
+        + 'was computed against a head that stopped being current while this record was being written'
+      : `the head could not be compared across the ingestion interval: ${stable.reason}`,
+  };
+  return {
+    ...run,
+    evidence: {
+      ...e,
+      currency: e.currency === 'HISTORICAL' ? 'HISTORICAL' : 'UNVERIFIED',
+      currency_reason: race.detail,
+      currency_confirmed: true,
+      ingestion_race: race,
+    },
+  };
 }
 
 /**
@@ -262,7 +365,12 @@ function describeEvidence(run) {
     claim: e.claim,
     non_claim: e.non_claim,
     observations: (e.observations || []).map((o) => PS.describeObservation(o)),
-    currency: e.currency || 'NOT_APPLICABLE',
+    // An unconfirmed classification is displayed as UNCONFIRMED, never as the
+    // provisional value it happens to hold. The bracket is not closed yet.
+    currency: e.currency_confirmed === false ? 'UNCONFIRMED' : (e.currency || 'NOT_APPLICABLE'),
+    currency_reason: e.currency_reason || null,
+    currency_confirmed: e.currency_confirmed !== false,
+    ingestion_race: e.ingestion_race || null,
     base_sha: e.base_sha || null,
     base_drift: e.base_drift || null,
     proposed_next: e.next_boundary
@@ -270,9 +378,13 @@ function describeEvidence(run) {
       : null,
     // The claim is never rendered without its bound, and — once a base has
     // drifted — never without the tree state it is a statement about.
-    summary: e.currency === 'HISTORICAL'
+    summary: e.currency === 'HISTORICAL' && e.base_drift
       ? `[EVIDENCE ABOUT ${e.base_drift.issued_against}, NOT THE CURRENT HEAD] ${e.claim} — NOT established: ${e.non_claim}`
-      : `${e.claim} — NOT established: ${e.non_claim}`,
+      : e.currency_confirmed === false
+        ? `[CURRENCY UNCONFIRMED] ${e.claim} — NOT established: ${e.non_claim}`
+        : e.currency === 'UNVERIFIED'
+          ? `[CURRENCY UNVERIFIED — ${e.currency_reason}] ${e.claim} — NOT established: ${e.non_claim}`
+          : `${e.claim} — NOT established: ${e.non_claim}`,
   };
 }
 
@@ -297,13 +409,26 @@ function reconciliationBlockers(run, PSMod) {
       { kind: B.KIND.INDETERMINATE, detail: e.base_drift.detail,
         resolves_when: 'the work is re-verified against the current head, or the run is closed as historical' })];
   }
+  if (e.currency_confirmed === false) {
+    return [B.blocker('evidence:currency_unconfirmed',
+      'The ingestion bracket for this evidence was never closed, so its currency classification is not settled.',
+      { kind: B.KIND.UNOBSERVED, resolves_when: 'the head is re-read after ingestion and the bracket is closed' })];
+  }
+  if (e.ingestion_race) {
+    return [B.blocker('evidence:ingestion_race',
+      `The head changed during ingestion of this evidence (${e.ingestion_race.base_before} → ${e.ingestion_race.base_after}), `
+      + 'so it cannot be given current standing.',
+      { kind: B.KIND.INDETERMINATE, detail: e.ingestion_race.detail,
+        resolves_when: 'the work is re-verified against a head that holds still for the length of an ingestion' })];
+  }
   if (e.currency === 'UNVERIFIED') {
     return [B.blocker('evidence:currency_unverified',
-      'The current head could not be read, so it is unknown whether this evidence still describes the tree.',
-      { kind: B.KIND.UNOBSERVED, resolves_when: 'the head is readable and compared against the issued base' })];
+      `Commit identity could not be established for this evidence, so it is unknown whether it still describes the tree.`,
+      { kind: B.KIND.UNOBSERVED, detail: e.currency_reason || null,
+        resolves_when: 'the base and head resolve to canonical commit ids that can be compared' })];
   }
   return [];
 }
 
-  return { REQUIRED_FIELDS, shaEq, validateReceipt, applyReceipt, describeEvidence, reconciliationBlockers };
+  return { REQUIRED_FIELDS, identity, validateReceipt, confirmCurrency, applyReceipt, describeEvidence, reconciliationBlockers };
 });
