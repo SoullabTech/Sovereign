@@ -186,11 +186,31 @@ export default function WriterCanvasPage() {
 
   const [listPhase, setListPhase] = useState<ListPhase>('loading');
   const [manuscripts, setManuscripts] = useState<CurrentManuscript[]>([]);
-  // Read once, synchronously on the client, so the table never swaps its
-  // manuscript after mounting (the exit guard would flush a draft mid-swap).
-  const [requested] = useState<string | null>(() =>
-    typeof window === 'undefined' ? null : new URLSearchParams(window.location.search).get('m'),
-  );
+  /**
+   * Which manuscript the URL asked for.
+   *
+   * Read synchronously so the table never swaps its manuscript after the draft
+   * is on it (the exit guard would flush mid-swap). But a synchronous read is
+   * not enough on its own: this route is statically prerendered, and on 2026-08-27
+   * production opened the most-recent manuscript for EVERY `?m=` — two different
+   * ids, same wrong manuscript — which is the signature of this initializer
+   * returning null on the client.
+   *
+   * So it is also re-read once on mount, and only ever null -> value. That
+   * cannot swap a loaded manuscript: the list is still fetching at that point,
+   * so nothing is on the table yet.
+   */
+  const readAsked = () =>
+    typeof window === 'undefined' ? null : new URLSearchParams(window.location.search).get('m');
+  const [requested, setRequested] = useState<string | null>(readAsked);
+  useEffect(() => {
+    if (requested === null) {
+      const late = readAsked();
+      if (late !== null) setRequested(late);
+    }
+    // Mount only. Never re-runs, so a loaded manuscript can never be swapped.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
