@@ -230,3 +230,25 @@ nothing, so a member-visible failure left the system with no memory of failing.
 Any surface that can refuse a member's work must name the refusal in the record —
 status and reason, counts only, never the member's content. Silence in the log is
 never evidence about what happened; it is only evidence that we did not look.
+
+## D-015 — The stamp is not the code
+
+**Settled 2026-08-27 (WS2-01 candidate deploy).**
+
+`GIT_COMMIT` is a build-arg consumed in the Dockerfile's **runner** stage. It
+re-stamps the container on every deploy *even when every builder layer is a
+cache hit* — including `COPY . .` and `npm run build`. So a deploy whose log
+reads all-`CACHED` can report the correct SHA while running older code, and
+`printenv GIT_COMMIT` will not tell you.
+
+**`GIT_COMMIT` proves the stamp. Artifact inspection proves the code.**
+
+The artifact leg of D-007 is therefore not optional garnish on a verified env
+var; on an all-cached build it is the only leg carrying weight. Prove it with a
+string that exists **only** in the candidate — new UI copy is ideal — found in
+both the client chunk and the server bundle, corroborated by a moved chunk hash
+on a route the candidate touched.
+
+This deploy's cache hits turned out benign: a second run of the same deploy.
+That was *established* by the grep, not assumed from the stamp. The distinction
+between those two is the whole decision.

@@ -217,6 +217,21 @@ curl -k https://soullab.life/api/health
   ```
   `Created` must show a timestamp under a minute old. `hostname -I` must show `192.168.0.104` as the LAN IP; if it shows anything else, the router's port-forward is pointing at a stale IP and external/iOS traffic will silently fail (see the LAN IP drift trap above). `/api/health` must return fresh JSON with `uptime` near zero. `printenv GIT_COMMIT` must return the short SHA you deployed.
 
+  **`GIT_COMMIT` proves the STAMP. Artifact inspection proves the CODE.** (Learned 2026-08-27, WS2-01 candidate deploy.) The build-arg is consumed in the **runner** stage, so it re-stamps the container on every deploy *even when every builder layer is a cache hit* — including `COPY . .` and `npm run build`. A deploy whose log reads all-`CACHED` can therefore report the correct SHA while running older code, and `printenv GIT_COMMIT` will not tell you. Whenever the build log is all-cached, verify the code itself before believing the deploy:
+
+```bash
+# Pick a string that exists ONLY in the candidate — new UI copy is ideal —
+# and confirm it reached BOTH the client chunk and the server bundle.
+ssh soullab@minisforum 'docker exec maia-sovereign sh -c \
+  "grep -rl \"<a string only this candidate contains>\" /app/.next | head -3"'
+
+# Corroborate with a chunk-hash change on a route the candidate touched:
+ssh soullab@minisforum 'docker exec maia-sovereign sh -c \
+  "ls /app/.next/static/chunks/app/<route>/"'
+```
+
+  A hit in the client chunk *and* the server bundle, plus a moved chunk hash, is the artifact leg of D-007. A matching env var is not.
+
   **Diagnostic — `GIT_COMMIT=unknown` does NOT imply missing provenance wiring.** The chain is already complete: Dockerfile (`ENV GIT_COMMIT=${GIT_COMMIT}`) ← compose (`build.args.GIT_COMMIT`) ← deploy (`scripts/deploy-production.sh` exports it; the quick command must prefix it). `unknown` means the deploy route *bypassed* that chain — almost always the quick command run **without** the `GIT_COMMIT=$(git rev-parse --short HEAD)` prefix. So if you see `unknown`, first verify **which deploy path was used** before suspecting the build-arg wiring.
 - CI deploys are disabled (self-hosted runner not yet configured).
 - **Common deploy mistake**: rebuilding on the Mac Studio instead of minisforum. The local stack will report healthy and `Created` will update, but the public soullab.life traffic continues hitting minisforum's old container. Always verify with the minisforum-side `Created` check above, not just the local one.
