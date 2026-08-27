@@ -69,6 +69,11 @@ contextBridge.exposeInMainWorld('maia', {
     ipcRenderer.on('maia:audio', handler);
     return () => ipcRenderer.removeListener('maia:audio', handler);
   },
+  onThread: (fn) => {
+    const handler = (_e, payload) => fn(payload);
+    ipcRenderer.on('maia:thread', handler);
+    return () => ipcRenderer.removeListener('maia:thread', handler);
+  },
   onAuth: (fn) => {
     if (typeof fn !== 'function') return () => {};
     const handler = (_evt, payload) => fn(payload);

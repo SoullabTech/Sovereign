@@ -169,6 +169,18 @@ window.addEventListener('DOMContentLoaded', async () => {
   window.maia.onAuth(showSignedIn);
   window.maia.onAudio(play);
 
+  // ⭐ D04. Desktop opens on the member's existing thread, so the first thing
+  // they see is what was actually said — on whichever surface they said it.
+  window.maia.onThread((t) => {
+    if (!t) return;
+    if (t.error) { setState(`Could not reach your conversation — ${t.error}`, true); return; }
+    if (!t.resumed) return;                 // no history anywhere: this IS the first
+    for (const turn of t.turns || []) {
+      addTurn(turn.role === 'assistant' ? 'maia' : 'member', turn.content);
+    }
+    setState('Picking up where you left off.');
+  });
+
   window.maia.onTurn((t) => {
     if (t.phase === 'transcribing') setState('Hearing you…');
     else if (t.phase === 'heard') { addTurn('member', t.member); setState('…'); }
