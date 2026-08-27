@@ -29,7 +29,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import crypto from 'node:crypto';
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -50,7 +50,17 @@ const NO_SIGN = argv.includes('--no-sign');
 let failures = 0;
 const report = (n, ok, extra) => { if (!ok) failures++; console.log(`${ok ? 'PASS' : 'FAIL'}  ${n}${extra && !ok ? `\n        ${extra}` : ''}`); };
 const phase = (n) => console.log(`\n── ${n} ${'─'.repeat(Math.max(0, 58 - n.length))}`);
-const sh = (cmd, args, opts = {}) => execFileSync(cmd, args, { encoding: 'utf8', ...opts }).trim();
+// DEFECT FOUND ON THE THIRD REAL RUN (2026-08-27). With `stdio: 'inherit'` for
+// stdout, execFileSync returns null rather than a string — so `.trim()` threw on
+// the SUCCESS path, the surrounding catch caught it, and a build that had in
+// fact produced a valid signed artifact was reported `FAIL npm run pack
+// completed`. A harness that reports failure for work that succeeded is worse
+// than one that reports nothing: it sends the founder to debug a build that
+// was never broken.
+const sh = (cmd, args, opts = {}) => {
+  const out = execFileSync(cmd, args, { encoding: 'utf8', ...opts });
+  return typeof out === 'string' ? out.trim() : '';
+};
 
 if (process.platform !== 'darwin') {
   console.log(`REFUSED  PKG-01 proves the packaged macOS path; this is ${process.platform}.`);
@@ -104,31 +114,70 @@ const APP_PATH = (() => {
   return path.join(DESKTOP, 'dist', 'mac-arm64', 'JARVIS.app');
 })();
 if (!SKIP_BUILD) {
-  // A TIMEOUT, because this step can BLOCK rather than fail.
+  // A TIMEOUT, because this step can BLOCK rather than fail, and a build that
+  // never exits is indistinguishable from a slow one.
   //
-  // Observed on the first two real runs (2026-08-27): output stopped dead at
-  // electron-builder's `signing` line. codesign reaching a private key in the
-  // login keychain can raise a GUI authorization dialog, and if nobody clicks
-  // it the build waits forever with no further output. Without a bound, that is
-  // indistinguishable from a slow build — the founder is left watching a
-  // terminal that will never move, with nothing naming the cause.
-  const env = NO_SIGN ? { ...process.env, CSC_IDENTITY_AUTO_DISCOVERY: 'false' } : process.env;
-  provenance.signed = !NO_SIGN;
+  // CORRECTION (2026-08-27): the first two runs appeared to stop dead at the
+  // `signing` line, and this bound was added on the hypothesis that codesign was
+  // waiting on a keychain dialog. That hypothesis was WRONG. The identity is in
+  // the keychain, signing succeeds, and the build finishes in about a minute —
+  // the third run proved it by producing a valid signed artifact. Those two
+  // transcripts were almost certainly truncated, not blocked. The bound is kept
+  // because an unbounded build step is still worth bounding; it is no longer
+  // evidence of anything about signing.
+  //
+  // DEFECT FOUND ON THE SAME RUN (2026-08-27). `--no-sign` did not disable
+  // signing. CSC_IDENTITY_AUTO_DISCOVERY only suppresses DISCOVERY; package.json
+  // names build.mac.identity explicitly, so electron-builder signed anyway —
+  // the transcript shows `signing … identity=42E2C8D8…` under the flag — while
+  // provenance recorded `signed: false`. The flag lied in the record. It now
+  // overrides the pinned identity directly, which is the only thing that
+  // actually turns signing off.
+  const buildArgs = NO_SIGN
+    ? ['exec', '--', 'electron-builder', '--mac', '--dir', '--config.mac.identity=null']
+    : ['run', 'pack'];
+  if (NO_SIGN) sh('npm', ['run', 'stamp'], { cwd: DESKTOP, stdio: ['ignore', 'inherit', 'inherit'] });
+  provenance.build_command = NO_SIGN ? `npm ${buildArgs.join(' ')}` : 'npm run pack';
   try {
-    sh('npm', ['run', 'pack'], { cwd: DESKTOP, stdio: ['ignore', 'inherit', 'inherit'], env, timeout: 8 * 60 * 1000 });
-    report('npm run pack completed', true);
+    sh('npm', buildArgs, { cwd: DESKTOP, stdio: ['ignore', 'inherit', 'inherit'], timeout: 8 * 60 * 1000 });
+    report('the build completed', true);
   } catch (e) {
     const timedOut = e.signal === 'SIGTERM' || /ETIMEDOUT|timed out/i.test(String(e.message));
-    report('npm run pack completed', false, timedOut
-      ? 'the build BLOCKED (8 min, no exit). If it stopped at the `signing` line, codesign is almost '
-        + 'certainly waiting on a keychain authorization dialog — look for it behind other windows and '
-        + 'choose "Always Allow". If no dialog appears, re-run with --no-sign: an ad-hoc signed build '
-        + 'still launches locally and still proves the packaged path.'
+    report('the build completed', false, timedOut
+      ? 'the build BLOCKED (8 min, no exit). This has not been observed to actually happen — signing '
+        + 'completes in about a minute on this machine. Check for a GUI dialog behind other windows, and '
+        + 'if none is there, re-run with --no-sign to take signing out of the picture entirely: an '
+        + 'unsigned build still launches locally and still proves the packaged path.'
       : String(e.message).slice(0, 300));
   }
 }
 report('the macOS artifact exists', fs.existsSync(APP_PATH), APP_PATH);
 if (!fs.existsSync(APP_PATH)) { console.log('\nCannot continue without an artifact.\n'); process.exit(1); }
+
+// The signature is OBSERVED on the artifact, never inferred from the flag that
+// was passed. `--no-sign` previously set provenance.signed = false while the
+// build signed anyway; a provenance record that reports an intention rather
+// than a fact is not provenance. If the bundle cannot be read, the record says
+// so — it does not guess.
+// codesign reports to stderr, so read it there rather than through the helper.
+provenance.signature = (() => {
+  const r = spawnSync('codesign', ['-dvv', APP_PATH], { encoding: 'utf8' });
+  const text = `${r.stdout || ''}${r.stderr || ''}`;
+  if (r.status !== 0) {
+    if (/not signed/i.test(text)) return { observed: 'unsigned' };
+    return { observed: 'unknown', detail: text.trim().slice(0, 200) };
+  }
+  const authority = (text.match(/^Authority=(.*)$/m) || [])[1] || null;
+  const adhoc = /\bSignature=adhoc\b/.test(text) || (!authority && /Signature/i.test(text));
+  if (adhoc) return { observed: 'ad-hoc', authority: null };
+  if (authority) return { observed: 'identity', authority };
+  return { observed: 'unknown', detail: text.trim().slice(0, 200) };
+})();
+provenance.signed = provenance.signature.observed === 'identity';
+report('the artifact signature was observed, not assumed', provenance.signature.observed !== 'unknown',
+  provenance.signature.detail || 'codesign did not describe the bundle');
+console.log(`      signature: ${provenance.signature.observed}${provenance.signature.authority ? ` · ${provenance.signature.authority}` : ''}`
+  + (NO_SIGN && provenance.signed ? '   ← --no-sign was passed but the artifact IS signed; the flag did not take' : ''));
 
 // Digest the executable payload, not the bundle directory: mtimes and extended
 // attributes change on every copy, and a digest that changes when nothing did
@@ -191,8 +240,8 @@ report('the staged copy is outside ANY git checkout', !insideRepo,
 // Ad-hoc signatures do not survive --strict verification the way a real
 // identity does, and failing the run for that would punish the escape hatch.
 const sigOk = (() => { try { sh('codesign', ['--verify', '--deep', '--strict', STAGED]); return true; } catch { return false; } })();
-if (provenance.signed === false) {
-  console.log(`      signature: ad-hoc (--no-sign). Gatekeeper may need a right-click → Open the first time.`);
+if (provenance.signature.observed !== 'identity') {
+  console.log(`      signature: ${provenance.signature.observed} — Gatekeeper may need a right-click → Open the first time.`);
 } else {
   report('the staged copy still verifies as signed', sigOk, 'the copy broke the signature — Gatekeeper will refuse it');
 }

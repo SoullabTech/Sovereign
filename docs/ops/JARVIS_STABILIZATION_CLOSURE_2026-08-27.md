@@ -121,3 +121,37 @@ packaging changed afterwards, and why.
 `PKG-01 — PACKAGED macOS JARVIS PROOF`. Harness:
 `jarvis-desktop/scripts/pkg-01-proof.mjs`. It does not change JARVIS behavior;
 it proves the stabilized behavior survives the packaged path.
+
+### PKG-01 harness lineage (packaging lane — `5237a92` does not move)
+
+The harness is packaging-lane work. None of these SHAs touch application code,
+and none of them is a stabilization successor.
+
+| SHA | What it corrected |
+|---|---|
+| `c4c30f5` | portability (`dist/mac` vs `mac-arm64`), signing-identity precheck |
+| `31446cf` | step 4 was a hollow control — `open -a` ignores cwd and the bundle sat inside the checkout; now `ditto`-copied out and proven outside any repo |
+| `105b64b` | bounded the build step |
+| this commit | two harness defects that misreported a build which had in fact succeeded |
+
+**Two corrections worth keeping, because both are the failure this programme
+exists to refuse — a record that reports an intention rather than a fact:**
+
+1. **A successful build was reported `FAIL`.** `sh()` called `.trim()` on the
+   return of `execFileSync`, which is `null` when stdout is inherited. The throw
+   landed on the *success* path and the catch reported a build failure. Every
+   downstream assertion passed against a valid signed artifact while the summary
+   said the build had failed.
+2. **`--no-sign` did not disable signing.** `CSC_IDENTITY_AUTO_DISCOVERY=false`
+   suppresses discovery only; `package.json` names `build.mac.identity`
+   explicitly, so electron-builder signed anyway — and `provenance.signed` was
+   set from the *flag*, recording `false` about an artifact that was signed. The
+   flag now overrides the pinned identity, and `provenance.signature` is read off
+   the artifact with `codesign -dvv` rather than inferred from what was asked for.
+
+**Withdrawn hypothesis.** The first two runs appeared to stop at the `signing`
+line and were diagnosed as codesign blocking on a keychain dialog. That was
+wrong. The identity is in the keychain, signing succeeds, and the build finishes
+in about a minute. Those transcripts were truncated, not blocked. The timeout
+added on that hypothesis is retained on its own merits and is not evidence about
+signing.
