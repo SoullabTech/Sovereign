@@ -152,3 +152,87 @@ describe('sanitizeSpeechInput', () => {
     expect(output).toContain('Use git status.');
   });
 });
+
+// ═══════════════════════════════════════════════════════════════
+// VOICE-TTS-LEAK-01A — two gaps found in the merged #1115 behaviour
+//
+// Each was verified by running #1115's own code before these rules existed,
+// not by reading it. The "before" strings below are what it actually spoke.
+// ═══════════════════════════════════════════════════════════════
+
+describe('sanitizeForSpeech — VOICE-TTS-LEAK-01A', () => {
+  describe('unterminated fenced block', () => {
+    // Streaming produces this routinely: the response is chunked by sentence,
+    // so a chunk can open a fence whose closing delimiter lands in a later
+    // chunk. The paired ```…``` rule cannot match a half that has not arrived.
+    it('⭐ drops an unterminated fence and everything after it', () => {
+      // #1115 spoke: "Here it is: ```js const secret = 1;"
+      const out = sanitizeForSpeech('Here it is: ```js\nconst secret = 1;');
+      expect(out).not.toMatch(/```/);
+      expect(out).not.toMatch(/const secret/);
+      expect(out).toContain('Here it is');
+    });
+
+    it('handles the tilde form too', () => {
+      const out = sanitizeForSpeech('Look: ~~~python\nimport os\nos.system("rm")');
+      expect(out).not.toMatch(/~~~|import os|rm/);
+      expect(out).toContain('Look');
+    });
+
+    it('an unterminated fence mid-paragraph takes only the tail', () => {
+      const out = sanitizeForSpeech('First sentence. Second one. ```sh\nsudo reboot');
+      expect(out).toContain('First sentence');
+      expect(out).toContain('Second one');
+      expect(out).not.toMatch(/sudo reboot|```/);
+    });
+  });
+
+  describe('indented code block', () => {
+    it('⭐ drops a four-space indented block', () => {
+      // #1115 spoke: "Run it: rm -rf /tmp/cache Done."
+      const out = sanitizeForSpeech('Run it:\n\n    rm -rf /tmp/cache\n\nDone.');
+      expect(out).not.toMatch(/rm -rf/);
+      expect(out).toContain('Run it');
+      expect(out).toContain('Done');
+    });
+
+    it('drops a tab-indented block', () => {
+      const out = sanitizeForSpeech('Try:\n\n\tDROP TABLE members;\n\nThat is all.');
+      expect(out).not.toMatch(/DROP TABLE/);
+      expect(out).toContain('That is all');
+    });
+
+    it('drops a multi-line indented block entirely', () => {
+      const out = sanitizeForSpeech('Steps:\n\n    one();\n    two();\n    three();\n\nOK.');
+      expect(out).not.toMatch(/one\(\)|two\(\)|three\(\)/);
+      expect(out).toContain('OK');
+    });
+  });
+
+  describe('the guard against over-stripping', () => {
+    // Over-stripping MAIA's speech is the worse defect: silence heard as
+    // composure. The indented-block rule therefore requires a preceding blank
+    // line, which is what markdown itself requires of an indented block.
+    it('⭐ indented continuation prose with no blank line before it survives', () => {
+      const out = sanitizeForSpeech('A thought\n    that continues indented.');
+      expect(out).toContain('that continues indented');
+    });
+
+    it('⭐ ordinary speech is untouched by both new rules', () => {
+      const plain = "I hear you. That sounds heavy, and I don't think you're wrong.";
+      expect(sanitizeForSpeech(plain)).toBe(plain);
+    });
+
+    it('a lone backtick pair is still inline code, not a fence', () => {
+      expect(sanitizeForSpeech('The voice is `af_kore` today.'))
+        .toBe('The voice is af_kore today.');
+    });
+  });
+
+  describe('#1115 behaviour is preserved', () => {
+    it('a normal fenced block is still dropped', () => {
+      expect(sanitizeForSpeech('Try:\n```bash\ndocker compose up\n```\nok'))
+        .toBe('Try: ok');
+    });
+  });
+});
