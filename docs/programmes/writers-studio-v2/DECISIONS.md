@@ -129,6 +129,14 @@ D-008 constrains the consumer: a named-but-unavailable identity must fail
 explicitly and render zero substitute content. D-010 constrains the producer:
 a control that cannot name what it claims to open must not open anything.
 
+Together they close both directions of the failure, and neither is sufficient
+alone:
+
+```text
+producer  may not lose or invent identity
+consumer  may not compensate for lost or invalid identity
+```
+
 This is where the defect actually lives. The audit established that data
 ownership is sound — every manuscript route gates on `member_id` and 404s
 without leaking existence. What failed was **client identity custody**: the
