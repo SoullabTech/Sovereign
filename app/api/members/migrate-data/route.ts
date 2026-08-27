@@ -10,6 +10,7 @@ export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
+import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 
 // Tables that contain user data to migrate
 // Ordered by importance for user experience
@@ -73,8 +74,60 @@ const TABLES_TO_MIGRATE = [
   'bardic_cues',
 ];
 
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/**
+ * AUTH-BOUNDARY-04A — the authorization contract for migration.
+ *
+ * WHAT THIS ROUTE DOES, so the contract is judged against the real blast radius:
+ * it runs `UPDATE <table> SET user_id = $new WHERE user_id = $old` across ~30
+ * tables — conversation turns, journals, consciousness traces, soul patterns,
+ * breakthrough moments, field records. It does not copy. It MOVES. The source
+ * loses everything the destination gains.
+ *
+ * Before this, both ids came from the request body with no session resolution
+ * and no ACCESS_RULES entry, so any unauthenticated caller could move any
+ * member's entire corpus to an id they controlled. That is a cross-account
+ * transfer AND destruction primitive, not merely a read.
+ *
+ * THE CONTRACT, which is deliberately stricter than ordinary self-service:
+ *
+ *   1. The caller must hold a verified session. No session, no migration.
+ *   2. The DESTINATION must be the caller. You may migrate INTO yourself and
+ *      nowhere else — so the request can never hand your data to a third party,
+ *      and can never be aimed at someone else's account.
+ *   3. The SOURCE must not be an existing member. The legitimate case is an
+ *      anonymous local `explorerId` being linked to a new account; a source that
+ *      is itself a member account means someone is trying to drain a real
+ *      person, and is refused even when the destination is the caller.
+ *
+ * Rules 2 and 3 together mean the only reachable operation is "pull anonymous
+ * data into my own account". Every cross-member direction is closed.
+ *
+ * RESIDUAL RISK, named rather than hidden: an attacker who learns a victim's
+ * local explorer id could still claim that anonymous data as their own. Explorer
+ * ids are device-local and not exposed the way member UUIDs are, so this is far
+ * narrower than what it replaces — but it is not zero, and closing it needs a
+ * claim token issued at registration. That is a separate decision, not something
+ * to assume here.
+ */
+async function isExistingMember(id: string): Promise<boolean> {
+  // A non-UUID cannot be a member id, and passing one to a uuid column errors.
+  if (!UUID_RE.test(id)) return false;
+  const r = await query('SELECT id FROM members WHERE id = $1', [id]);
+  return r.rows.length > 0;
+}
+
 export async function POST(request: NextRequest) {
   try {
+    // 1. Verified caller. The request may name a SOURCE; it may never name who
+    //    is asking, and it may never name a destination other than itself.
+    const callerId = await getMemberIdFromRequest(request);
+    if (!callerId) {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    }
+
     const body = await request.json();
     const { oldUserId, newUserId } = body;
 
@@ -89,6 +142,25 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: 'Old and new user IDs are the same' },
         { status: 400 }
+      );
+    }
+
+    // 2. Destination must BE the caller.
+    if (newUserId !== callerId) {
+      console.warn('[DataMigration] REFUSED: destination is not the caller (possible cross-account transfer attempt)');
+      return NextResponse.json(
+        { error: 'You may only migrate data into your own account' },
+        { status: 403 }
+      );
+    }
+
+    // 3. Source must not be a member account. Draining a real person is refused
+    //    even when the destination is the caller's own account.
+    if (await isExistingMember(oldUserId)) {
+      console.warn('[DataMigration] REFUSED: source is an existing member account');
+      return NextResponse.json(
+        { error: 'The source is not eligible for migration' },
+        { status: 403 }
       );
     }
 
@@ -161,6 +233,15 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ stub: true });
   }
   try {
+    // The preview was an unauthenticated CENSUS ORACLE: name any user id and
+    // learn their row counts across ~30 tables. Same contract as POST, minus the
+    // destination (there isn't one): verified caller, and a source that is either
+    // the caller themselves or a non-member id.
+    const callerId = await getMemberIdFromRequest(request);
+    if (!callerId) {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    }
+
     const { searchParams } = new URL(request.url);
     const oldUserId = searchParams.get('oldUserId');
 
@@ -171,7 +252,15 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    console.log(`[DataMigration] Previewing migration for ${oldUserId}`);
+    if (oldUserId !== callerId && await isExistingMember(oldUserId)) {
+      console.warn('[DataMigration] REFUSED preview: source is another member account');
+      return NextResponse.json(
+        { error: 'The source is not eligible for migration' },
+        { status: 403 }
+      );
+    }
+
+    console.log(`[DataMigration] Previewing migration for a source owned by the caller`);
 
     const preview: { table: string; count: number }[] = [];
     let totalCount = 0;
