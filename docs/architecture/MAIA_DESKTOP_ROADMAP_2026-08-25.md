@@ -43,7 +43,49 @@ hallucination (`peakX1000=127 rmsX1000=8` against a normal ~1000/70), and input
 is clipping (`peakX1000` above 1000). Detail:
 `docs/ops/TRANSCRIBE_BODY_DISTURBED_2026-08-27.md` §7.
 
-### 0.0.1 D04 — ⛔ RETRACTED. NOT witnessed cross-device.
+### 0.0.0 D04 — ✅ WITNESSED CROSS-SURFACE 2026-08-27 (late)
+
+Desktop was quit and relaunched with nothing typed and nothing spoken. It
+opened on a conversation created in the **browser PWA**, under the same member
+id, and rendered it correctly attributed:
+
+> "That feeling of \"close\" is worth trusting. You've been in this long enough
+> to know the difference between close and wishful thinking…"
+
+⭐ **The discriminator is punctuation, and it is the same test that exposed the
+earlier false positive — applied honestly in the other direction.** Acoustic
+capture always drifts: on the failed attempt the em-dash became a period, a
+comma appeared, the emoji vanished. Here the text is character-identical across
+both windows — curly quotes intact, the em-dash in the preceding turn intact.
+Whisper does not reproduce typography. This is a database read.
+
+Desktop was not listening and the browser was not speaking. So:
+
+```
+member speaks in the browser PWA
+        ↓
+Desktop launched, nothing typed, nothing spoken
+        ↓
+Desktop opens on that conversation
+```
+
+**D04's mechanism is witnessed: Desktop joins the member's existing thread
+across surfaces.** It is the same MAIA, the same member, and now the same
+conversation.
+
+⛔ What is still NOT witnessed, and is a real limitation rather than a caveat:
+adoption runs at startup and after sign-in only. A Desktop window already open
+when the member speaks elsewhere never re-reads. A companion whose view of the
+conversation goes stale the moment the member picks up their phone is a
+snapshot, not a companion. That is the next D04 increment.
+
+⛔ Also unresolved and outside this programme: two member accounts exist for
+one person (§0.0.1). The iPhone PWA is a different member record, so continuity
+with the phone specifically remains untested until that is settled.
+
+### 0.0.1 The route to that witness — three wrong turns, kept
+
+⛔ **RETRACTED intermediate claim. NOT witnessed cross-device (first attempt).**
 
 **An earlier revision of this section claimed D04 was witnessed cross-device on
 2026-08-27. That claim was wrong and is withdrawn.**
