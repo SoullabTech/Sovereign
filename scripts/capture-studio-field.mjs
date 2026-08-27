@@ -21,12 +21,18 @@
  * Fields and their routes are declared below so the capture cannot drift from
  * what acceptance compares against.
  *
- * Requires the app to be RUNNING and reachable at --url. This is why the
- * capture does not happen in a remote Claude Code session: that container has
+ * The app must be reachable at --url. Pass `--serve` and this script starts it,
+ * waits for it, captures, and shuts it down again — one command, one terminal.
+ * Three separate capture attempts were lost to a dev server that had been
+ * stopped before the capture ran, which is a coordination problem the tool
+ * should not have handed to a person in the first place.
+ *
+ * None of this can happen in a remote Claude Code session: that container has
  * no database and no env files, so there is nothing to point a browser at. Run
- * it where the stack runs — the dev machine, or against production.
+ * it where the stack runs.
  */
 import puppeteer from 'puppeteer';
+import { spawn } from 'node:child_process';
 import { existsSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 
@@ -126,6 +132,59 @@ function resolveBrowser() {
   process.exit(1);
 }
 
+const serve = rest.includes('--serve');
+
+/** Is something already answering there? Then do not start a second one. */
+async function alreadyUp(origin) {
+  try {
+    await fetch(origin, { signal: AbortSignal.timeout(1500) });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Start the dev server and wait for it to answer.
+ *
+ * Detached so the whole process group can be killed afterwards — `npm run dev`
+ * spawns next, and killing only npm leaves the server holding the port, which
+ * would break the NEXT capture in a way that looks like this one succeeded.
+ */
+async function startServer(origin) {
+  console.log('[capture] starting the app (--serve) ...');
+  const child = spawn('npm', ['run', 'dev'], { detached: true, stdio: 'pipe' });
+  let out = '';
+  child.stdout.on('data', (d) => {
+    out += d.toString();
+  });
+  child.stderr.on('data', (d) => {
+    out += d.toString();
+  });
+
+  const deadline = Date.now() + 120_000;
+  while (Date.now() < deadline) {
+    await new Promise((r) => setTimeout(r, 1000));
+    if (await alreadyUp(origin)) {
+      console.log('[capture] app is up.');
+      return child;
+    }
+    if (child.exitCode !== null) {
+      console.error(`[capture] The app exited before it was ready (code ${child.exitCode}).`);
+      console.error(out.split('\n').slice(-25).join('\n'));
+      process.exit(1);
+    }
+  }
+  console.error('[capture] The app did not become ready within 120s. Last output:');
+  console.error(out.split('\n').slice(-25).join('\n'));
+  try {
+    process.kill(-child.pid, 'SIGTERM');
+  } catch {
+    /* already gone */
+  }
+  process.exit(1);
+}
+
 const browser0 = resolveBrowser();
 console.log(`[capture] browser: ${browser0.path}  (${browser0.how})`);
 
@@ -155,6 +214,14 @@ const PROFILE_DIR = '.capture-profile';
  * So the window is asked for the contract's size too, and the viewport is
  * asserted after navigation rather than assumed.
  */
+const origin = new URL(targetUrl()).origin;
+let server = null;
+if (serve && !(await alreadyUp(origin))) {
+  server = await startServer(origin);
+} else if (serve) {
+  console.log('[capture] something is already serving there — using it, not starting another.');
+}
+
 const browser = await puppeteer.launch({
   executablePath: browser0.path,
   headless: !headful,
@@ -236,4 +303,15 @@ try {
   console.log(`[capture:ok] ${out}`);
 } finally {
   await browser.close();
+  if (server) {
+    console.log('[capture] stopping the app it started.');
+    try {
+      /* The whole group: `npm run dev` spawns next, and killing only npm
+         leaves the server holding the port — which would break the next
+         capture in a way that looks like this one succeeded. */
+      process.kill(-server.pid, 'SIGTERM');
+    } catch {
+      /* already gone */
+    }
+  }
 }
