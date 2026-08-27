@@ -33,7 +33,10 @@
 > app/book-studio   PARALLEL LINEAGE · NO CLEANUP AUTHORIZED
 >                   data-home question UNRESOLVED
 >                   no redirect / deletion / migration authorized
-> workbench         LIVE EDGE · custody census required BEFORE any retirement ruling
+> workbench         LIVE EDGE · custody census DONE 2026-08-27 — see WS2-00 §4B
+>                   NOT a book-studio route: cross-cutting member capture substrate
+>                   member-held data + host filesystem + SANCTUARY BOUNDARY in schema
+>                   graduate.ts seam EXISTS, points into book-studio — a WS2 design question
 > ```
 > ⛔ **`book-studio` retirement requires a DATA-CUSTODY decision, not merely route-replacement
 > evidence** (founder ruling, 2026-08-27). It is not a predecessor on canonical Writer's Studio

@@ -221,6 +221,70 @@ canonical surface — that is what a witnessed replacement looks like.
 
 ---
 
+## 4B · ⭐ `workbench` custody census — authorized read-only, 2026-08-27
+
+Required by the board **before** any retirement ruling. Performed read-only. **It changes the
+premise a third time.**
+
+### ⛔ `workbench` is not a `book-studio` route. It is a cross-cutting member capture substrate.
+
+| Evidence | Finding |
+|---|---|
+| `app/maia/workbench/page.tsx` | ⭐ **A member-facing route OUTSIDE book-studio**, `force-dynamic`, auth-gated (`redirect('/signin?next=/maia/workbench')`) |
+| `lib/workbench/` | A library, not a route helper: `arrange · sanctuary · graduate · sources/{uploaded,keep,types}` |
+| `workbench_uploads.arranger_id` | `REFERENCES members(id) ON DELETE CASCADE` — **member-held data, by definition** |
+| storage | ⛔ **Host filesystem**: `uploads/workbench/<arranger_id>/<id>/{original.<ext>, draft.txt, reviewed.txt}` |
+| `sources/keep.ts` | Reads the **atoms** surface, honouring `return_preference` and `posture_at_creation` |
+
+⭐ **The schema enforces sovereignty invariants at the schema layer** (migration
+`20260522000003_workbench_v0.sql`), and they are not decorative:
+
+- **Sanctuary uploads excluded from Shelf queries** — belt-and-suspenders, in the FTS index *and* in
+  `lib/workbench/sanctuary.ts`
+- **Cards are pointers, not copies** — layout JSON stores `{source, ref}`; content resolved at read
+- **Review before indexing** — the FTS index references `transcription_reviewed` only; drafts never
+  reach the Shelf
+- **Hard delete by design** — no soft-delete column
+
+⛔ **Retiring this would be retiring a Sanctuary boundary.** That is not housekeeping under any
+reading of §21.
+
+### ⭐ The data-home question has an answer, and it is not "nowhere"
+
+`lib/workbench/graduate.ts` is the **structural seam** the programme already built:
+
+> *"The graduation pipe is the structural seam between the Workbench (arrangement) and Book Studio
+> (form). Graduate only when this wants form."*
+
+`graduateGroup()` resolves each card through its source adapter, assembles a draft in the arranger's
+order, **skips Sanctuary captures**, and writes to disk.
+
+⚠️ **But it graduates into Book Studio — the lineage under retirement question.** So the seam exists
+and points at the surface whose disposition is unresolved. That is the actual custody problem, and it
+is a *design* question, not a cleanup one: **where should arranged material graduate to once
+`living_works` is the canonical Work substrate?**
+
+### Revised disposition
+
+```text
+app/book-studio/workbench    A VIEW onto the substrate — disposition follows the substrate decision
+lib/workbench/**             SUBSTRATE — member data, Sanctuary boundary, cross-surface adapters
+app/maia/workbench           MEMBER-FACING — outside book-studio entirely
+workbench_uploads/_tables    MEMBER-HELD DATA + host filesystem artifacts
+graduate.ts                  THE SEAM — exists, and currently points into book-studio
+```
+
+⛔ **Nothing here is authorized for retirement, and the earlier framing was too small.** The question
+is not *"does workbench data have a home"* — it has one. The question is **where the graduation seam
+should point after the canonical substrate settles**, which is a WS2 design decision gated behind
+WS-01, not a cleanup ruling.
+
+⭐ This also **strengthens the design reconciliation**: the Materials Studio field's *gather → arrange
+→ relate-to-work* intent is not unbuilt. A real, Sanctuary-respecting, pointer-not-copy arrangement
+substrate exists — pointed at the wrong destination. That is **REHOME**, not **BUILD**.
+
+---
+
 ## 5 · Founder decisions genuinely required
 
 1. **The eight images.** WS2-02 cannot be sized from prose, and any visual finding here is provisional.
