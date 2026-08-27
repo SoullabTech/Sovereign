@@ -10,7 +10,7 @@
  * Env override: KOKORO_TTS_URL
  */
 
-import { sanitizeSpeechInput } from '../sanitizeForSpeech';
+import { sanitizeSpeechInputPlain } from '../sanitizeForSpeech';
 
 const KOKORO_DEFAULT_URL = 'http://localhost:8880';
 
@@ -69,6 +69,11 @@ export interface KokoroSynthesisParams {
  * VOICE-TTS-LEAK-01: sanitization is enforced HERE at the provider boundary.
  * Routes may shape text or SSML, but neither representation may bypass the
  * speech sanitizer before Kokoro receives it.
+ *
+ * VOICE-TTS-SSML-01: Kokoro does not interpret SSML — it reads the markup
+ * aloud. This provider therefore synthesizes PLAIN TEXT ONLY. Tags are
+ * flattened here rather than upstream so no caller can reintroduce them by
+ * choosing a different input representation.
  */
 export async function synthesize(params: KokoroSynthesisParams): Promise<{
   audioBuffer: Buffer;
@@ -84,15 +89,11 @@ export async function synthesize(params: KokoroSynthesisParams): Promise<{
 
   const url = `${getKokoroUrl()}/v1/audio/speech`;
   const resolvedVoice = resolveVoice(voice);
-  const safeInput = sanitizeSpeechInput(text);
+  const safeInput = sanitizeSpeechInputPlain(text);
 
   // A response containing only removed presentation artifacts should not become
   // an empty/silent synthesis request.
-  const speakable = safeInput
-    .replace(/<[^>]+>/g, '')
-    .replace(/&(?:nbsp|amp|lt|gt|quot|apos);/gi, '')
-    .trim();
-  if (!speakable) {
+  if (!safeInput) {
     throw new Error('Kokoro TTS input empty after speech sanitization');
   }
 
