@@ -86,6 +86,13 @@ const ALLOWED_EVENTS = new Set([
   'meeting_audio_no_track',
   'meeting_audio_self_capture_blocked',
   'meeting_audio_blocked_feedback',
+  // ── VOICE-CAPTURE-01B-OBS dispatch provenance ─────────────────────────
+  // components/voice/ContinuousConversation.tsx. Distinguishes "the dedup
+  // guard suppressed it" from "a second, unguarded send boundary dispatched
+  // the same utterance" — the census found 8 onTranscript call sites and
+  // only 1 behind the guards. Metadata is counts/booleans only.
+  'voice_dedup_blocked',
+  'voice_transcript_dispatched',
 ] as const);
 
 type AllowedEvent = typeof ALLOWED_EVENTS extends Set<infer T> ? T : never;
