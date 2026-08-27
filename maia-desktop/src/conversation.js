@@ -36,7 +36,30 @@ function explain(status, body) {
   if (status === 413) return 'That was too long to send in one piece.';
   if (status === 415) return 'The audio was not accepted as a file upload.';
   if (status === 404) return 'That endpoint is not available on this server.';
-  return (body && body.error) || `Request failed (${status}).`;
+  // ⭐ The route explains its own failures — `error` plus a `details` field
+  // carrying the upstream message. Showing a bare status code when the server
+  // told us why is a diagnostic loss, and it cost a device walk (2026-08-27).
+  if (body && body.error) {
+    return body.details ? `${body.error} — ${String(body.details).slice(0, 300)}` : body.error;
+  }
+  // Not JSON at all: an error page from the proxy or the framework rather than
+  // from the route. Say so, and carry a readable fragment of whatever it was.
+  if (body && body.__raw) return `Request failed (${status}). Server said: ${body.__raw}`;
+  return `Request failed (${status}).`;
+}
+
+/**
+ * Read an error body without assuming it is JSON. A non-JSON body is itself
+ * evidence — it means the response did not come from the route handler — so it
+ * is preserved as `__raw` rather than discarded.
+ */
+async function readErrorBody(res) {
+  if (!res) return null;
+  let text = '';
+  try { text = await res.text(); } catch { return null; }
+  if (!text) return null;
+  try { return JSON.parse(text); } catch { /* fall through */ }
+  return { __raw: text.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 300) };
 }
 
 function createConversation({ session, diagnostics, sessionId }) {
@@ -53,10 +76,15 @@ function createConversation({ session, diagnostics, sessionId }) {
 
     const out = await session.authedFetch(TRANSCRIBE_PATH, { method: 'POST', body: form });
     if (!out.ok) {
-      let body = null;
-      try { body = out.res ? await out.res.json() : null; } catch { /* not JSON */ }
+      const body = await readErrorBody(out.res);
       const message = out.error || explain(out.status, body);
-      diagnostics.emit('voice_transcribe_error', { errorName: `http_${out.status || 0}` });
+      // The event carries the shape of the failure, never the server's prose —
+      // `details` can quote upstream output and telemetry is not the place for
+      // it. The member-facing surface gets the full message instead.
+      diagnostics.emit('voice_transcribe_error', {
+        errorName: `http_${out.status || 0}`,
+        source: body && body.__raw ? 'non_route' : 'route',
+      });
       return { ok: false, error: message };
     }
 
@@ -77,8 +105,7 @@ function createConversation({ session, diagnostics, sessionId }) {
       }),
     });
     if (!out.ok) {
-      let body = null;
-      try { body = out.res ? await out.res.json() : null; } catch { /* not JSON */ }
+      const body = await readErrorBody(out.res);
       return { ok: false, error: out.error || explain(out.status, body) };
     }
 
@@ -95,4 +122,4 @@ function createConversation({ session, diagnostics, sessionId }) {
   return { transcribe, ask, conversationId: () => convId, TRANSCRIBE_PATH, MAIA_PATH };
 }
 
-module.exports = { createConversation, explain, TRANSCRIBE_PATH, MAIA_PATH };
+module.exports = { createConversation, explain, readErrorBody, TRANSCRIBE_PATH, MAIA_PATH };
