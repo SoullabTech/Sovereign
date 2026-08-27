@@ -10,6 +10,13 @@
  *   OPENAI FALLBACK    FORBIDDEN
  *   LOCAL UNAVAILABLE  text response + truthful voice-unavailable state
  *
+ * Founder canon ruling, 2026-08-27 (SECOND PASS) — what re-permission means:
+ *
+ *   MAIA_ALLOW_CLOUD_VOICE=1 permits cloud voice to HONOUR AN EXPLICIT MEMBER
+ *   CHOICE. It does NOT restore OpenAI as the automatic preferred provider.
+ *   `auto` remains sovereign-local even when cloud is technically available.
+ *   See `resolveVoicePreference` below for the full matrix.
+ *
  * ── WHY THIS MODULE EXISTS RATHER THAN SIX EDITS ────────────────────────────
  *
  * The production log showed `[tts.attempt] provider:"openai" reason:"auto/cloud
@@ -66,25 +73,60 @@ export function assertCloudVoiceAllowed(reason: string): void {
 /**
  * What a member's stored preference resolves to under the canon.
  *
- * ⭐ The stored value is NEVER rewritten. A member who chose "cloud" still has
- * "cloud" in their settings; it simply does not resolve to a cloud provider
- * today. Silently editing member data to match a policy change would be the
- * system deciding what they meant.
+ * ── THE MATRIX ──────────────────────────────────────────────────────────────
  *
- * ⭐ A stored "cloud" preference resolves to LOCAL, not to silence. The canon
- * names LOCAL as the DEFAULT, and cloud as unavailable — so a member whose
- * choice is unavailable falls to the default like anyone who never chose.
- * Serving silence would punish them for selecting an option the system offered.
+ *   MAIA_ALLOW_CLOUD_VOICE unset/0        MAIA_ALLOW_CLOUD_VOICE=1
+ *   (current canon)                       (explicit re-permission)
+ *
+ *     cloud  ->  local                      cloud  ->  cloud
+ *     auto   ->  local                      auto   ->  local
+ *     local  ->  local                      local  ->  local
+ *     unset  ->  local                      unset  ->  local
+ *
+ * ⭐ Founder ruling, 2026-08-27 (second pass). The flag means "cloud voice is
+ * permitted to HONOUR AN EXPLICIT MEMBER CHOICE" — it does NOT mean "OpenAI
+ * becomes the automatic preferred provider again."
+ *
+ * `auto` stays sovereign-local even when cloud is technically available. That
+ * one row is the whole ruling: `auto` is the absence of a choice, and the
+ * absence of a choice must never be read as consent to leave the local machine.
+ * The original violation was precisely an `auto`-shaped default reaching the
+ * cloud, so re-permission must not restore it by the back door.
+ *
+ * ⭐ `cloud` means an explicit member request, never an availability-driven
+ * default. Availability decides whether a choice can be served; it never
+ * decides what the choice was.
+ *
+ * ── WHEN THE CHOSEN CLOUD PROVIDER IS UNAVAILABLE ───────────────────────────
+ *
+ *     cloud preference + cloud unavailable  ->  local, if local is healthy
+ *                                           ->  otherwise text
+ *
+ * Not silence, and not some other unconsented cloud provider. Consent to one
+ * named provider is not consent to the category.
+ *
+ * ⭐ The stored value is NEVER rewritten. A member who chose "cloud" still has
+ * "cloud" in their settings even while it resolves local. Silently editing
+ * member data to match a policy change would be the system deciding what they
+ * meant.
  */
 export function resolveVoicePreference(stored: string | null | undefined): {
-  effective: 'local';
+  /** What the request should actually route to. */
+  effective: 'local' | 'cloud';
+  /** Exactly what the member stored, unmodified. */
   stored: string;
+  /** Member asked for cloud, and the canon cannot serve it today. */
   cloudRequestedButUnavailable: boolean;
 } {
   const s = (stored || 'auto').toLowerCase();
+  const explicitCloud = s === 'cloud';
+  const permitted = cloudVoicePermitted();
+
   return {
-    effective: 'local',
+    // ⛔ ONLY an explicit stored "cloud" reaches cloud, and only under explicit
+    // re-permission. "auto" is deliberately absent from this condition.
+    effective: explicitCloud && permitted ? 'cloud' : 'local',
     stored: s,
-    cloudRequestedButUnavailable: s === 'cloud' && !cloudVoicePermitted(),
+    cloudRequestedButUnavailable: explicitCloud && !permitted,
   };
 }

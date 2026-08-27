@@ -19,6 +19,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireMemberId } from '@/lib/auth/session';
 import * as ttsRouter from '@/lib/tts/ttsRouter';
 import { synthesizeSpeech } from '@/lib/tts/openaiTts';
+import { resolveVoicePreference } from '@/lib/tts/cloudVoicePolicy';
 import crypto from 'crypto';
 import fs from 'fs/promises';
 import path from 'path';
@@ -117,17 +118,37 @@ export async function POST(req: NextRequest) {
       );
     }
   } else {
-    // ── "auto" or "cloud" → OpenAI Alloy leads ──
-    if (!process.env.OPENAI_API_KEY || process.env.DISABLE_OPENAI_COMPLETELY === 'true') {
-      // No API key or cloud disabled — try Kokoro as last resort (auto only)
-      if (providerPref === 'cloud') {
-        return NextResponse.json(
-          { error: 'Cloud voice is disabled or unconfigured.' },
-          { status: 503 },
-        );
+    // ── VOICE-SOVEREIGNTY-02: this route bypassed the policy entirely ──
+    //
+    // `synthesizeSpeech` is imported directly from `lib/tts/openaiTts`, so it
+    // never passes through `ttsRouter` and never hits `assertCloudVoiceAllowed`.
+    // The constructor guard added in VOICE-SOVEREIGNTY-01 therefore did not
+    // reach here: on 37bbf0c23 an `auto` member playing a voice preview still
+    // executed OpenAI TTS, while the canon said local. The gate is a choke
+    // point only for paths that go through it.
+    //
+    // The same single question is asked here as in stream-conversation, from
+    // the same resolver. Preview is a member-facing voice surface, so the
+    // matrix must be true of it too.
+    const previewPref = resolveVoicePreference(providerPref);
+    const cloudUsable = previewPref.effective === 'cloud'
+      && !!process.env.OPENAI_API_KEY
+      && process.env.DISABLE_OPENAI_COMPLETELY !== 'true';
+
+    if (!cloudUsable) {
+      // ⛔ No 503 for a cloud member any more. The ruling is explicit:
+      //   cloud preference + cloud unavailable -> local if local is healthy.
+      // Refusing to preview anything because the chosen provider is unavailable
+      // is the silence case wearing a status code.
+      if (previewPref.cloudRequestedButUnavailable) {
+        console.info('[tts.policy]', JSON.stringify({
+          path: 'preview',
+          storedPreference: previewPref.stored,
+          effective: previewPref.effective,
+          note: 'cloud voice unavailable under current sovereignty policy; member preference preserved',
+        }));
       }
-      // "auto" without API key → fall back to Kokoro
-      console.info('[tts.attempt]', JSON.stringify({ path: 'preview', provider: 'kokoro', voice, reason: 'no_openai_key_fallback' }));
+      console.info('[tts.attempt]', JSON.stringify({ path: 'preview', provider: 'kokoro', voice, reason: 'sovereign_primary' }));
       try {
         const result = await ttsRouter.synthesize({ text, voice, format: 'mp3', speed, ttsProviderPref: 'auto' });
         audioBuffer = result.audioBuffer;
@@ -138,19 +159,15 @@ export async function POST(req: NextRequest) {
         );
       }
     } else {
-      console.info('[tts.attempt]', JSON.stringify({ path: 'preview', provider: 'openai', voice, reason: 'auto/cloud lead' }));
+      console.info('[tts.attempt]', JSON.stringify({ path: 'preview', provider: 'openai', voice, reason: 'member_chose_cloud' }));
       try {
         const speech = await synthesizeSpeech({ text, voice, format: 'mp3', speed });
         audioBuffer = Buffer.from(await speech.arrayBuffer());
       } catch (err: any) {
-        // OpenAI failed — if "cloud", no fallback
-        if (providerPref === 'cloud') {
-          return NextResponse.json(
-            { error: 'Cloud TTS failed', detail: err?.message },
-            { status: 503 },
-          );
-        }
-        // "auto" → try Kokoro as fallback
+        // ⛔ Deliberately NO early 503 for a cloud member. Only an explicit
+        // `cloud` preference can reach this branch at all, and the ruling says
+        // that member falls to local when their provider is unavailable — the
+        // same rule as stream-conversation, so the two surfaces cannot drift.
         console.info('[tts.attempt]', JSON.stringify({ path: 'preview', provider: 'kokoro', voice, reason: 'openai_fallback' }));
         try {
           const result = await ttsRouter.synthesize({ text, voice, format: 'mp3', speed, ttsProviderPref: 'auto' });
