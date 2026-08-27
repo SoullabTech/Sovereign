@@ -11,102 +11,102 @@
 import { NextRequest, NextResponse } from 'next/server';
 import {
   checkAccess,
-  type Tier,
-  type Role,
+  matchRule,
+  hasRequiredRole,
 } from './config/accessMatrix';
-// NOTE: getEntitlements uses Node.js postgres driver, can't run in Edge runtime
-// Entitlements are checked in route handlers, not middleware
+import { stripClientIdentityAssertions } from './lib/auth/identityAssertions';
+import { deriveVerifiedAccess, type VerifiedAccess } from './lib/auth/verifiedAccess';
+// NOTE: entitlements are still checked in route handlers, not here — they are a
+// commercial concern with their own surface, not part of the trust boundary.
 
 // =============================================================================
-// AUTH EXTRACTION - Replace with your actual auth implementation
+// AUTH EXTRACTION — SERVER-DERIVED, AUTHORITATIVE
+//
+// AUTH-BOUNDARY-01B. This middleware runs in the NODE runtime (see the `config`
+// export at the bottom), which Next.js 15.5 made stable. That removes the
+// constraint the 01A pass wrote around: the boundary CAN reach postgres, so it
+// can validate a session instead of forwarding an advisory guess.
+//
+// The invariant:
+//
+//     Client-supplied identity / role / tier headers AND COOKIES are never
+//     authentication. Every input to checkAccess() comes from a validated
+//     session and the members row it names.
+//
+// What 01A left standing and this pass removes: `getUserTier()` and
+// `getUserRoles()` read `maia_tier` / `maia_roles` cookies and fed them
+// straight into checkAccess(). HttpOnly stops a browser PAGE from scripting
+// them; it does nothing about a raw HTTP caller, who sets a Cookie header as
+// easily as any other. Those functions are gone. Nothing about a request is
+// trusted now except a session token that resolves in `auth_sessions`.
 // =============================================================================
 
 /**
- * Extract user's subscription tier from request
+ * The unverified member-id claim, for log correlation ONLY.
  *
- * TODO: Replace with actual implementation that reads from:
- * - Cookie set at login after Stripe subscription check
- * - Or JWT claim containing tier
- * - Or server-side session lookup
+ * Kept because a request that fails validation still deserves a breadcrumb, and
+ * the claim is the only identifier such a request carries. Never an input to a
+ * decision — `verified.memberId` is the answer to "who is this".
  */
-function getUserTier(req: NextRequest): Tier {
-  // Option 1: Cookie-based (recommended)
-  const tierCookie = req.cookies.get('maia_tier')?.value as Tier | undefined;
-  if (tierCookie && ['free', 'personal', 'pro'].includes(tierCookie)) {
-    return tierCookie;
-  }
-
-  // Option 2: Header-based (for API routes)
-  const tierHeader = req.headers.get('x-maia-tier') as Tier | undefined;
-  if (tierHeader && ['free', 'personal', 'pro'].includes(tierHeader)) {
-    return tierHeader;
-  }
-
-  // Default: free tier
-  return 'free';
-}
-
-/**
- * Extract user's roles from request
- *
- * TODO: Replace with actual implementation
- */
-function getUserRoles(req: NextRequest): Role[] {
-  // Option 1: Cookie-based (JSON array)
-  const rolesCookie = req.cookies.get('maia_roles')?.value;
-  if (rolesCookie) {
-    try {
-      const parsed = JSON.parse(rolesCookie);
-      if (Array.isArray(parsed)) return parsed as Role[];
-    } catch {
-      // Invalid JSON, ignore
-    }
-  }
-
-  // Option 2: Header-based (comma-separated)
-  const rolesHeader = req.headers.get('x-maia-roles');
-  if (rolesHeader) {
-    return rolesHeader.split(',').map((r) => r.trim()) as Role[];
-  }
-
-  // Default: member role (basic authenticated user)
-  return ['member'];
-}
-
-/**
- * Check if user is authenticated
- *
- * TODO: Replace with actual implementation
- */
-function isAuthenticated(req: NextRequest): boolean {
-  // Option 1: Session cookie
-  const sessionCookie = req.cookies.get('maia_session')?.value;
-  if (sessionCookie) return true;
-
-  // Option 2: Member ID header (for API routes)
-  const memberIdHeader = req.headers.get('x-member-id');
-  if (memberIdHeader) return true;
-
-  // Option 3: Session token header (Safari/iOS header-based auth)
-  const sessionTokenHeader = req.headers.get('x-session-token');
-  if (sessionTokenHeader) return true;
-
-  // Option 4: Token or memberId as query param (for EventSource/SSE — can't send headers)
-  const url = new URL(req.url);
-  if (url.searchParams.get('_t') || url.searchParams.get('_m')) return true;
-
-  return false;
-}
-
-/**
- * Get member ID for logging/debugging
- */
-function getMemberId(req: NextRequest): string | null {
+function getMemberIdClaim(req: NextRequest): string | null {
   return (
     req.cookies.get('maia_member_id')?.value ||
     req.headers.get('x-member-id') ||
     null
   );
+}
+
+/**
+ * The forwarded access context, derived ONLY from a validated session.
+ *
+ * Every value here survived `deriveVerifiedAccess`: the tier and roles are
+ * columns on the `members` row that an unrevoked, unexpired `auth_sessions`
+ * token named. No cookie and no header contributed.
+ */
+function derivedContext(verified: VerifiedAccess): Record<string, string> {
+  return {
+    'x-access-authed': String(verified.authenticated),
+    'x-access-tier': verified.tier,
+    'x-access-roles': verified.roles.join(','),
+    ...(verified.memberId ? { 'x-access-member-id': verified.memberId } : {}),
+  };
+}
+
+// =============================================================================
+// SANITIZED FORWARDING
+// =============================================================================
+
+/**
+ * Forward a request downstream with every client-supplied identity, role, and
+ * tier assertion stripped.
+ *
+ * THE BUG THIS FIXES. Until AUTH-BOUNDARY-01 the middleware set its derived
+ * context with `response.headers.set('x-access-roles', ...)` on a plain
+ * `NextResponse.next()`. Those are RESPONSE headers: they travel to the
+ * browser, and a route handler never sees them. So a handler reading
+ * `req.headers.get('x-access-roles')` was not reading the middleware's answer —
+ * it was reading whatever the CALLER sent. The most-trusted name in the guard
+ * resolved to the least-trusted source in the system.
+ *
+ * Both halves are repaired here: inbound copies are deleted, and our derived
+ * values are written onto the forwarded REQUEST via `NextResponse.next({
+ * request: { headers } })`, which is the only form Next.js propagates to
+ * handlers. A handler now reads our answer or nothing at all.
+ *
+ * @param derived context to attach to the forwarded request; omit for paths
+ *        that grant no context (early returns, rejections, bypasses).
+ */
+function forwardSanitized(
+  req: NextRequest,
+  derived?: Record<string, string>,
+): NextResponse {
+  const headers = stripClientIdentityAssertions(req.headers);
+  if (derived) {
+    for (const [name, value] of Object.entries(derived)) {
+      headers.set(name, value);
+    }
+  }
+  return NextResponse.next({ request: { headers } });
 }
 
 // =============================================================================
@@ -132,7 +132,9 @@ export async function middleware(req: NextRequest) {
     if (!isStaticAsset && !pathname.startsWith('/fields/') && !pathname.startsWith('/api/')) {
       url.pathname = pathname === '/' ? `/fields/${masterSlug}` : `/fields/${masterSlug}${pathname}`;
     }
-    return NextResponse.rewrite(url);
+    return NextResponse.rewrite(url, {
+      request: { headers: stripClientIdentityAssertions(req.headers) },
+    });
   }
 
   // ---------------------------------------------------------------------
@@ -170,11 +172,15 @@ export async function middleware(req: NextRequest) {
   // ---------------------------------------------------------------------
   const isDev = process.env.NODE_ENV === 'development';
   if (isDev && (pathname.startsWith('/api/stellium') || pathname.startsWith('/api/notifications'))) {
-    const response = NextResponse.next();
-    response.headers.set('x-access-tier', 'pro');
-    response.headers.set('x-access-roles', 'practitioner');
-    response.headers.set('x-access-authed', 'true');
-    return response;
+    // Dev-only convenience. Now written onto the forwarded REQUEST (where a
+    // handler can actually read it) instead of the response (where it was
+    // inert). Still gated on NODE_ENV === 'development', so production is
+    // unaffected either way.
+    return forwardSanitized(req, {
+      'x-access-tier': 'pro',
+      'x-access-roles': 'practitioner',
+      'x-access-authed': 'true',
+    });
   }
 
   // ---------------------------------------------------------------------
@@ -185,7 +191,7 @@ export async function middleware(req: NextRequest) {
   if (req.method === 'OPTIONS') {
     if (pathname.startsWith('/api/')) {
       // Let the route handler's OPTIONS respond with correct CORS headers
-      return NextResponse.next();
+      return forwardSanitized(req);
     }
     return new NextResponse(null, { status: 204 });
   }
@@ -201,7 +207,10 @@ export async function middleware(req: NextRequest) {
     pathname.startsWith('/fonts') ||
     pathname.includes('.') // Skip files with extensions (.css, .js, .png, etc.)
   ) {
-    return NextResponse.next();
+    // `pathname.includes('.')` is broad enough to match a real route, so this
+    // fast path strips assertions too rather than assuming it only ever serves
+    // static files.
+    return forwardSanitized(req);
   }
 
   // ---------------------------------------------------------------------
@@ -210,7 +219,10 @@ export async function middleware(req: NextRequest) {
   // write. See app/open/session-room + app/api/open/session-room.
   // ---------------------------------------------------------------------
   if (pathname.startsWith('/open/') || pathname.startsWith('/api/open/')) {
-    return NextResponse.next();
+    // Public transport surface — no auth, and therefore no inherited identity.
+    // Stripping matters MORE here, not less: this is the one prefix that skips
+    // every check below, so an unstripped assertion would ride straight through.
+    return forwardSanitized(req);
   }
 
   // ---------------------------------------------------------------------
@@ -220,14 +232,42 @@ export async function middleware(req: NextRequest) {
   const rid = Math.random().toString(36).substring(2, 10);
 
   // ---------------------------------------------------------------------
-  // Extract auth context
+  // Public routes: answered without touching the database
+  //
+  // A public rule is allowed by checkAccess() regardless of identity, so
+  // validating a session here would be pure cost on the hottest paths. The
+  // request is still SANITIZED — a public route is exactly where an unstripped
+  // assertion would ride through untouched.
   // ---------------------------------------------------------------------
-  const authed = isAuthenticated(req);
-  const tier = authed ? getUserTier(req) : 'free';
-  const roles = authed ? getUserRoles(req) : [];
+  const preRule = matchRule(pathname);
+  if (preRule?.public) {
+    return forwardSanitized(req);
+  }
 
   // ---------------------------------------------------------------------
-  // Check access
+  // Extract auth context — SERVER-DERIVED
+  //
+  // `deriveVerifiedAccess` validates the session token against `auth_sessions`
+  // (unrevoked, unexpired) and reads tier/roles from the `members` row it
+  // names. An invalid, expired, or revoked token is UNAUTHENTICATED here, at
+  // the real boundary — not merely "a credential was presented".
+  //
+  // Cost: one indexed query per non-public request that actually carries a
+  // credential. A request with no credential short-circuits before the query.
+  // ---------------------------------------------------------------------
+  const verified = await deriveVerifiedAccess(req);
+  const { authenticated: authed, tier, roles } = verified;
+
+  if (!authed && verified.reason && verified.reason !== 'no_credential') {
+    // A credential was presented and REFUSED. Distinct from anonymous, and
+    // worth a line: this is what a stolen, stale, or forged token looks like.
+    console.warn(
+      `[Middleware] credential refused (${verified.reason}) for ${pathname} claim=${getMemberIdClaim(req) ?? 'none'} rid=${rid}`,
+    );
+  }
+
+  // ---------------------------------------------------------------------
+  // Check access — every input below is server-derived
   // ---------------------------------------------------------------------
   const { allowed, reason, rule } = checkAccess(pathname, tier, roles, authed);
 
@@ -275,10 +315,10 @@ export async function middleware(req: NextRequest) {
         if (isCapacitorRequest) {
           // Let page load - client-side will check auth via localStorage
           console.log(`[Middleware] Allowing unauthenticated page load for Capacitor: ${pathname} (WKWebView=${isIOSWebView})`);
-          const response = NextResponse.next();
-          response.headers.set('x-access-authed', 'false');
-          response.headers.set('x-access-capacitor-bypass', 'true');
-          return response;
+          return forwardSanitized(req, {
+            'x-access-authed': 'false',
+            'x-access-capacitor-bypass': 'true',
+          });
         }
 
         // Page routes redirect to sign in with incident stamp.
@@ -301,11 +341,38 @@ export async function middleware(req: NextRequest) {
         url.searchParams.set('rid', rid);
         return NextResponse.redirect(url);
 
-      case 'insufficient-tier':
-        // For now, just allow access - tier gates disabled during development
-        // TODO: Re-enable tier gating when membership page is ready
+      case 'insufficient-tier': {
+        // Commercial tier gating stays disabled during development — but that
+        // is a decision about BILLING, and it must never silently disable an
+        // independent ROLE requirement.
+        //
+        // THE BYPASS THIS REPAIRS. checkAccess() tests tier before roles and
+        // returns on the first failure, so a rule carrying both (e.g.
+        // `/admin` — minTier 'pro', rolesAnyOf ['admin']) reported
+        // 'insufficient-tier' for an ordinary free member and this branch
+        // forwarded the request. The admin check was never evaluated. Sixteen
+        // rules in the matrix carry both constraints; every one of them was
+        // role-unenforced here.
+        //
+        // The role condition is orthogonal to the tier condition, so it is
+        // evaluated on its own before the tier waiver applies.
+        if (rule?.rolesAnyOf && !hasRequiredRole(roles, rule.rolesAnyOf)) {
+          console.warn(
+            `[Middleware] Tier gate waived but ROLE still required for ${pathname} (need: ${rule.rolesAnyOf.join('|')}) rid=${rid}`,
+          );
+          return new NextResponse(
+            JSON.stringify({
+              error: 'Forbidden',
+              message: 'You do not have permission to access this resource.',
+              requiredRoles: rule.rolesAnyOf,
+              rid,
+            }),
+            { status: 403, headers: { 'Content-Type': 'application/json' } },
+          );
+        }
         console.log(`[Middleware] Tier gate bypassed for ${pathname} (required: ${rule?.minTier})`);
-        return NextResponse.next();
+        return forwardSanitized(req, derivedContext(verified));
+      }
 
       case 'missing-role':
         // 403 Forbidden - user is authed but lacks role
@@ -346,20 +413,24 @@ export async function middleware(req: NextRequest) {
   // ---------------------------------------------------------------------
   // Access granted - add context headers for downstream use
   // ---------------------------------------------------------------------
-  const response = NextResponse.next();
-
-  // Add headers that route handlers can use (avoids re-parsing cookies)
-  response.headers.set('x-access-tier', tier);
-  response.headers.set('x-access-roles', roles.join(','));
-  response.headers.set('x-access-authed', String(authed));
+  // Derived context, written onto the forwarded REQUEST so handlers actually
+  // receive it — with the caller's own copies of these names stripped first,
+  // so a handler reads our answer or nothing.
+  //
+  // These values are now AUTHORITATIVE. `x-access-authed` means a session token
+  // resolved in `auth_sessions`; `x-access-tier` and `x-access-roles` are
+  // columns on the `members` row that session named. A handler may rely on
+  // them — which is why 01A deliberately did not activate this channel while
+  // its inputs were still cookie-derived.
+  const derived: Record<string, string> = derivedContext(verified);
 
   if (rule) {
-    response.headers.set('x-access-rule', rule.prefix || rule.exact || 'regex');
+    derived['x-access-rule'] = rule.prefix || rule.exact || 'regex';
   }
 
   // Flag unmapped routes (Mode A allows them but we want visibility)
   if (reason === 'no-rule-match') {
-    response.headers.set('x-access-unmapped', '1');
+    derived['x-access-unmapped'] = '1';
     // In development, also log for discovery
     if (process.env.NODE_ENV !== 'production') {
       console.warn(`[Middleware] Unmapped route allowed (Mode A): ${pathname}`);
@@ -370,9 +441,12 @@ export async function middleware(req: NextRequest) {
   // driver requires Node.js runtime. Route handlers call getEntitlements directly.
   // This is intentional - entitlement checks happen at the route level.
 
+  const response = forwardSanitized(req, derived);
+
   // Belt-and-suspenders: ensure mic/camera permissions for /field/* routes.
   // Caddy sets these domain-wide; this mirrors that at the Next.js layer so
   // the policy is present even during local dev or if Caddy config drifts.
+  // (A genuine RESPONSE header — unlike the access context above.)
   if (pathname.startsWith('/field')) {
     response.headers.set(
       'Permissions-Policy',
@@ -388,6 +462,18 @@ export async function middleware(req: NextRequest) {
 // =============================================================================
 
 export const config = {
+  // NODE RUNTIME — AUTH-BOUNDARY-01B.
+  //
+  // Stable as of Next.js 15.5 (this repo is on ^15.5.11). It is what lets the
+  // middleware call `deriveVerifiedAccess`, which needs the postgres driver.
+  //
+  // This is the difference between a boundary that GUESSES and one that KNOWS.
+  // On the Edge runtime the central access matrix could only be fed cookie
+  // claims, and every protected handler had to independently remember to
+  // re-validate. Here the matrix is fed verified facts, so it can stay the
+  // single policy mechanism it was designed to be.
+  runtime: 'nodejs',
+
   // Apply to all routes except static files
   matcher: [
     /*

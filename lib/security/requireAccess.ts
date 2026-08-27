@@ -1,17 +1,37 @@
 /**
  * Server-Side Access Guard - Defense in Depth
  *
- * Use this in API routes as a secondary check.
- * Middleware handles page routes; this handles API routes.
+ * ⚠️ AUTH-BOUNDARY-01 — READ BEFORE USING THIS MODULE.
  *
- * Usage:
- *   import { requireAccess, requireTier, requireRole } from '@/lib/security/requireAccess';
+ * This module has NO importers anywhere in the repository. It is retained
+ * because its shape (requireTier / requireRole / requireAdmin) is the ergonomic
+ * one for route guards, but as written it was a loaded gun: `getAccessContext`
+ * read `x-access-tier` / `x-access-roles` from the REQUEST and commented
+ * "Prefer header set by middleware". The middleware never set those on the
+ * request — it set them on the RESPONSE, which handlers never see. So the
+ * branch labelled most-trusted resolved to a raw client assertion, and
+ * `requireAdmin(req)` would have returned ok for `curl -H 'x-access-roles: admin'`.
+ *
+ * Nothing shipped that vector, because nothing imported this file. The header
+ * trust is removed anyway — a latent landmine is still a landmine, and the next
+ * person to reach for these helpers would have inherited it silently.
+ *
+ * WHAT THIS MODULE CAN AND CANNOT DO NOW. `getAccessContext` is SYNCHRONOUS and
+ * therefore cannot validate a session against the database. It has been reduced
+ * to what a synchronous read can honestly support: server-set cookies only, and
+ * a documented refusal to grant on any client-supplied header.
+ *
+ * For an ACTUAL authorization decision, use the Node-runtime derivation:
+ *
+ *   import { deriveVerifiedAccess } from '@/lib/auth/verifiedAccess';
  *
  *   export async function GET(req: NextRequest) {
- *     const access = requireAccess(req);
- *     if (!access.ok) return access.response;
- *     // ... handler logic
+ *     const access = await deriveVerifiedAccess(req);
+ *     if (!access.authenticated) return new NextResponse(null, { status: 401 });
+ *     if (!access.roles.includes('admin')) return new NextResponse(null, { status: 403 });
  *   }
+ *
+ * That path validates `auth_sessions` and reads roles/tier from `members`.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -40,47 +60,38 @@ export interface AccessContext {
  * Mirrors middleware logic for consistency
  */
 export function getAccessContext(req: NextRequest): AccessContext {
-  // Check authentication
+  // AUTHENTICATION — credential presence only, and only a real credential.
+  // `x-member-id` was accepted here as proof of identity; naming a member is
+  // not being one, and member UUIDs are exposed to clients. Removed.
   const sessionCookie = req.cookies.get('maia_session')?.value;
-  const memberIdHeader = req.headers.get('x-member-id');
-  const memberIdCookie = req.cookies.get('maia_member_id')?.value;
+  const sessionTokenHeader = req.headers.get('x-session-token');
+  const authenticated = Boolean(sessionCookie || sessionTokenHeader);
 
-  const authenticated = Boolean(sessionCookie || memberIdHeader);
-  const memberId = memberIdHeader || memberIdCookie || null;
+  // IDENTITY — the cookie is server-set (HttpOnly); the header is a claim we no
+  // longer honour. Null unless a credential was presented at all, so an
+  // unauthenticated caller cannot surface an identity here.
+  const memberId = authenticated ? req.cookies.get('maia_member_id')?.value ?? null : null;
 
-  // Get tier
+  // TIER / ROLES — server-set cookies only. The `x-maia-*` and `x-access-*`
+  // header branches are gone: the first were plain client assertions, and the
+  // second were client assertions wearing the middleware's name (see the module
+  // header). A synchronous function cannot do better than this, which is why it
+  // must not be used for privileged decisions.
   let tier: Tier = 'free';
   const tierCookie = req.cookies.get('maia_tier')?.value as Tier | undefined;
-  const tierHeader = req.headers.get('x-maia-tier') as Tier | undefined;
-  // Prefer header set by middleware
-  const tierFromMiddleware = req.headers.get('x-access-tier') as Tier | undefined;
-
-  if (tierFromMiddleware && ['free', 'personal', 'pro'].includes(tierFromMiddleware)) {
-    tier = tierFromMiddleware;
-  } else if (tierCookie && ['free', 'personal', 'pro'].includes(tierCookie)) {
+  if (tierCookie && ['free', 'personal', 'pro'].includes(tierCookie)) {
     tier = tierCookie;
-  } else if (tierHeader && ['free', 'personal', 'pro'].includes(tierHeader)) {
-    tier = tierHeader;
   }
 
-  // Get roles
-  let roles: Role[] = ['member'];
+  let roles: Role[] = authenticated ? ['member'] : [];
   const rolesCookie = req.cookies.get('maia_roles')?.value;
-  const rolesHeader = req.headers.get('x-maia-roles');
-  // Prefer header set by middleware
-  const rolesFromMiddleware = req.headers.get('x-access-roles');
-
-  if (rolesFromMiddleware) {
-    roles = rolesFromMiddleware.split(',').filter(Boolean) as Role[];
-  } else if (rolesCookie) {
+  if (authenticated && rolesCookie) {
     try {
       const parsed = JSON.parse(rolesCookie);
       if (Array.isArray(parsed)) roles = parsed as Role[];
     } catch {
-      // Invalid JSON
+      // Invalid JSON — keep the least-privilege default.
     }
-  } else if (rolesHeader) {
-    roles = rolesHeader.split(',').map((r) => r.trim()) as Role[];
   }
 
   return { authenticated, memberId, tier, roles };
