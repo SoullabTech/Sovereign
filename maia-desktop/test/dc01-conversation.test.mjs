@@ -22,7 +22,7 @@ const strip = (f) => readFileSync(path.join(srcDir, f), 'utf8')
 const mainJs = strip('main.js');
 const { encodeWav, resample } = require('../src/voice/wav.js');
 const { createUtteranceBuffer } = require('../src/voice/utterance.js');
-const { createConversation, explain, readErrorBody } = require('../src/conversation.js');
+const { createConversation, explain, readErrorBody, multipartWav, BOUNDARY } = require('../src/conversation.js');
 const { createSession } = require('../src/session.js');
 
 // ── ⭐ the class E regression ───────────────────────────────────────────────
@@ -393,4 +393,54 @@ test('the level of a sent utterance is measured, so an empty transcript is diagn
   assert.ok(sent.peakX1000 > 400 && sent.peakX1000 <= 1000, `peak not measured (${sent.peakX1000})`);
   assert.ok(sent.rmsX1000 > 0, 'rms not measured — silence and speech remain indistinguishable');
   assert.ok(sent.seconds > 0, 'duration not measured');
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// The failing requests were absent from the server log entirely while a 1.4 MB
+// request succeeded — dropped between the app and the handler, intermittently,
+// biased toward larger bodies. Node's fetch streams a FormData body with
+// chunked transfer-encoding and no Content-Length; a browser never does, which
+// is why every other client of this route works.
+// ─────────────────────────────────────────────────────────────────────────────
+
+test('the multipart envelope is one contiguous buffer, so Content-Length is known', () => {
+  const wav = encodeWav(new Float32Array(1600), 16000);
+  const body = multipartWav(wav, 'utterance.wav');
+  assert.ok(Buffer.isBuffer(body), 'the body is not a buffer — fetch will stream it without a length');
+  const head = body.subarray(0, 200).toString('utf8');
+  assert.ok(head.startsWith(`--${BOUNDARY}\r\n`), 'the multipart preamble is malformed');
+  assert.ok(head.includes('name="file"'), 'the route reads formData.get("file") — the field name must be file');
+  assert.ok(head.includes('filename="utterance.wav"'), 'a missing filename makes the route substitute one');
+  assert.ok(body.subarray(-Buffer.byteLength(`\r\n--${BOUNDARY}--\r\n`)).toString('utf8') === `\r\n--${BOUNDARY}--\r\n`,
+    'the closing boundary is missing — the server will see a truncated part');
+});
+
+test('the WAV survives the envelope byte for byte', () => {
+  const wav = encodeWav(Float32Array.from({ length: 320 }, (_, i) => Math.sin(i / 4) * 0.5), 16000);
+  const body = multipartWav(wav, 'utterance.wav');
+  const start = body.indexOf(Buffer.from('\r\n\r\n')) + 4;
+  const carried = body.subarray(start, start + wav.byteLength);
+  assert.ok(carried.equals(Buffer.from(wav.buffer, wav.byteOffset, wav.byteLength)),
+    'the audio was altered in transit — RIFF header or samples corrupted');
+});
+
+test('the request declares multipart with the same boundary it wrote', async () => {
+  const seen = [];
+  const conv = createConversation({
+    session: { authedFetch: async (p, init) => { seen.push(init); return { ok: true, status: 200, res: { json: async () => ({ transcription: 'x' }) } }; } },
+    diagnostics: { emit: () => {} },
+    sessionId: 'x',
+  });
+  await conv.transcribe(new Float32Array(1600), 16000);
+  const ct = seen[0].headers['Content-Type'];
+  assert.ok(/^multipart\/form-data; boundary=/.test(ct), `the route rejects a non-multipart content type (${ct})`);
+  assert.ok(ct.endsWith(BOUNDARY), 'the declared boundary does not match the one in the body');
+  assert.ok(!(seen[0].body instanceof FormData), 'still sending a streaming FormData body');
+});
+
+test('the retry reuses the same buffer rather than rebuilding it', () => {
+  const src = strip('conversation.js');
+  assert.ok(!/retryForm/.test(src), 'the retry builds a second envelope — they can diverge');
+  const retry = /if \(!out\.ok && out\.status >= 500[\s\S]*?\n    \}/.exec(src)[0];
+  assert.ok(/body: payload/.test(retry), 'the retry does not send the same bytes as the first attempt');
 });
