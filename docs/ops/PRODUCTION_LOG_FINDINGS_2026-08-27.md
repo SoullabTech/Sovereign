@@ -123,3 +123,121 @@ Not a Desktop defect. Desktop reads `conversation_turns`; it does not write it.
 The thread-adoption behaviour investigated alongside these findings was working
 correctly the whole time — it was reading a table that, in that window, had
 stopped receiving rows.
+
+---
+
+# VOICE-SOVEREIGNTY-01 — runtime acceptance
+
+Deployed SHA `37bbf0c23` (merge of PR #1113), provenance verified at the
+container: `docker exec maia-sovereign printenv GIT_COMMIT` → `37bbf0c23`.
+
+Finding §0 of this document recorded the violation: `[tts.attempt]
+provider:"openai" voice:"alloy" reason:"auto/cloud lead"` on ordinary member
+turns while Kokoro was healthy. This section records whether the deployed unit
+ended it, under the acceptance conditions the founder ruling set (A / B / C).
+
+## A + B — PASS (witnessed together)
+
+A and B were satisfiable in a single walk because the founder's own account is
+the cloud-preference case. `member_voice_preferences` at the time of the walk:
+
+```
+              member_id               | tts_provider
+--------------------------------------+--------------
+ 17a14614-2bda-44b2-b282-fb1a67cff097 | auto
+ 3946706a-3082-47e6-8d72-b627a8f22b55 | auto
+ 826ca5fd-455d-4204-9bf4-88926f7de999 | auto
+ ce284751-e457-42f6-89b6-bc07d0876682 | cloud
+```
+
+`ce284751` is the founder's primary member record (27,305 conversation turns).
+Its stored preference is `cloud` — the exact input that produced the violation.
+
+Four consecutive spoken turns, each emitting the same three lines:
+
+```
+[tts.resolve] {"path":"stream-conversation","ttsProviderPref":"cloud",
+               "openaiVoice":"alloy","kokoroVoice":"af_kore","localEnabled":true}
+[tts.policy]  {"storedPreference":"cloud","effective":"local",
+               "note":"cloud voice unavailable under current sovereignty policy;
+                       member preference preserved"}
+[tts.attempt] {"provider":"kokoro","voice":"af_kore","reason":"sovereign_primary"}
+```
+
+`provider:"openai"` appeared zero times across the window.
+
+Three things in that trace are load-bearing, and each was a design decision
+rather than a side effect:
+
+1. **`effective:"local"` under `storedPreference:"cloud"`.** The preference that
+   used to route cloud now resolves local. This is the violation closing.
+2. **`reason:"sovereign_primary"`, not `openai_fallback`.** Local is not
+   catching a cloud failure; local is the authority. The log distinguishes the
+   two, so a future regression to fallback-shaped behaviour is visible.
+3. **The DB still reads `cloud`.** Re-querying after the walk shows the stored
+   value unchanged. The system did not rewrite the member's choice to make
+   itself internally consistent. A policy change is not consent to edit what
+   someone said they wanted.
+
+### Note on reading these logs
+
+`[tts.policy]` fires **only** when the stored preference is literally `cloud`
+(`resolveVoicePreference` sets `cloudRequestedButUnavailable` on that value
+alone). For an `auto` or unset member it never fires, and its absence means
+nothing. The unconditional entry marker is `[tts.resolve]`; if that is missing,
+no server-side synthesis ran at all and the window proves neither pass nor fail.
+
+Two earlier acceptance attempts produced empty greps that were misread as
+evidence. Both were window errors, not results.
+
+## C — NOT YET RUN
+
+Two attempts have failed to produce a valid C window, both the same way: `docker
+stop maia-kokoro-tts` and `docker start maia-kokoro-tts` executed back to back
+with no turn spoken between them, and a `--since` window wide enough to reach
+back past the stop and re-capture healthy pre-stop turns. The second attempt's
+output showed Kokoro apparently succeeding while stopped — which is the
+signature of that error, not of a passing test.
+
+C requires a turn spoken **while** `maia-kokoro-tts` is down, and a log window
+that begins **after** the stop.
+
+Expected on pass:
+
+- `[tts.resolve]` present, `[tts.attempt] provider:"kokoro"` present and failing
+- `provider:"openai"` absent
+- MAIA's text still arrives
+- the voice-unavailable state shown to the member is truthful
+
+`CloudVoiceForbidden` may or may not appear, and its absence is **not** a
+failure. Because `cloudVoicePermitted()` is false, `openaiDisabled` is already
+true in `stream-conversation`, so that route never enters the OpenAI block to
+begin with; the throw fires only if `ttsRouter` internally attempts to construct
+`TTSFallbackToOpenAI`. Refusing to reach the gate and being stopped by the gate
+are both passes. This is the same reading error as `[tts.policy]` above, and is
+written down here so it is not made a third time.
+
+## Status
+
+`VOICE-SOVEREIGNTY-01` is **STATIC + TEST + RUNTIME(A,B)**. It is not yet
+RUNTIME-proven; the ruling requires A **and** B **and** C.
+
+## Scope boundary — a second violation, not covered
+
+`app/api/voice/preview/route.ts:141` imports `synthesizeSpeech` from
+`lib/tts/openaiTts` **directly**, bypassing `ttsRouter` and therefore bypassing
+`assertCloudVoiceAllowed`. On `37bbf0c23` today, a member on `auto` or `cloud`
+who plays a voice preview in settings still executes OpenAI TTS:
+
+```
+[tts.attempt] {"path":"preview","provider":"openai","reason":"auto/cloud lead"}
+```
+
+PR #1113's body stated that legacy OpenAI-TTS call sites exist outside the
+resolver and are out of scope, and the founder explicitly accepted that
+boundary. This is that boundary made specific. It is recorded here because
+"the production resolver violation is closed" is true of the conversation path
+and only of the conversation path — it is not a repository-wide claim that no
+OpenAI TTS can execute.
+
+Candidate second unit. Not opened; awaiting a ruling.
