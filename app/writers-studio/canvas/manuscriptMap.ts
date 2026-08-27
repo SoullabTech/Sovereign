@@ -61,6 +61,18 @@ export interface DraftMap {
    * the living text, and only the member can resolve that.
    */
   adrift: DeclaredPart[];
+  /**
+   * Parts the member carried WITHOUT a heading, once the draft is already past
+   * its opening. They are not adrift — nothing went missing, their words are in
+   * the draft — but they have no line to anchor to, so they cannot be a door.
+   *
+   * Kept apart from `adrift` because saying "no longer in your draft" about
+   * text that IS in the draft is a false statement about the member's own book,
+   * and the front matter of every imported manuscript arrives unnamed. The
+   * leading unnamed part is not reported at all: it is exactly the opening
+   * region, and it already has a door.
+   */
+  unnamed: DeclaredPart[];
 }
 
 /** Bounds of the line containing `at`, as [start, end) excluding the newline. */
@@ -105,14 +117,17 @@ export function mapDraft(content: string, parts: DeclaredPart[]): DraftMap {
 
   const located: { part: DeclaredPart; start: number }[] = [];
   const adrift: DeclaredPart[] = [];
+  const unnamed: DeclaredPart[] = [];
 
   let cursor = 0;
   for (const part of declared) {
     const heading = part.heading?.trim();
     // An unnamed part has no line to anchor to. That is not a failure of the
     // draft — it is a part the member never named — but it cannot be a door.
+    // Before the first located heading it IS the opening region, which already
+    // has a door; only later ones are worth naming as doorless.
     if (!heading) {
-      adrift.push(part);
+      if (located.length > 0) unnamed.push(part);
       continue;
     }
     const start = findHeadingLine(content, heading, cursor);
@@ -135,7 +150,7 @@ export function mapDraft(content: string, parts: DeclaredPart[]): DraftMap {
       start: 0,
       end: content.length,
     });
-    return { regions, adrift };
+    return { regions, adrift, unnamed };
   }
 
   if (located[0].start > 0) {
@@ -157,7 +172,7 @@ export function mapDraft(content: string, parts: DeclaredPart[]): DraftMap {
     });
   });
 
-  return { regions, adrift };
+  return { regions, adrift, unnamed };
 }
 
 export function regionByKey(map: DraftMap, key: string | null): DraftRegion | null {

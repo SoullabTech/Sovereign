@@ -41,13 +41,46 @@ function titleFromFilename(filename: string): string {
   return filename.replace(/\.[a-z0-9]+$/i, '').trim();
 }
 
+/**
+ * Refuse an upload out loud.
+ *
+ * IMPORT-READ-01, 2026-08-27 — why this exists.
+ *
+ * A member reported that his book would no longer import. Thirty minutes of
+ * production logs were then searched for any trace of the attempt and came back
+ * empty, and that emptiness was read as evidence the request never reached this
+ * route. It was not evidence of anything: of this handler's exit paths, only
+ * three said a word. Unauthorized, no-file, empty-file, too-large, unreadable
+ * body and over-long text all returned a message to the screen and nothing to
+ * the record — so a failure the member could see left the system with no memory
+ * of having failed.
+ *
+ * Every refusal now names itself, in counts and reasons only. Never a filename,
+ * never a byte of the manuscript: the member's words are not diagnostics.
+ */
+function refuse(
+  status: number,
+  error: string,
+  reason: string,
+  ctx: { memberId?: string | null; bytes?: number; format?: string | null } = {},
+): NextResponse {
+  const who = ctx.memberId ? memberRef(ctx.memberId) : 'anonymous';
+  console.warn(
+    `[MAIA/press] INGEST REFUSED { memberRef: ${who}, status: ${status}, ` +
+      `reason: ${reason}, bytes: ${ctx.bytes ?? 'unknown'}, format: ${ctx.format ?? 'unknown'} }`,
+  );
+  return NextResponse.json({ error, reason }, { status });
+}
+
 export async function POST(request: NextRequest) {
   if (process.env.CAPACITOR_BUILD) {
     return NextResponse.json({ error: 'Not available in static build' }, { status: 501 });
   }
   try {
     const memberId = await getMemberIdFromRequest(request);
-    if (!memberId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!memberId) {
+      return refuse(401, 'Please sign in and try the import again.', 'no-member-credential');
+    }
 
     let form: FormData;
     try {
@@ -58,22 +91,33 @@ export async function POST(request: NextRequest) {
       // experimental.middlewareClientMaxBodySize in next.config.js). Saying
       // "expected a file" sent members looking for a mistake they had not made.
       // Stay neutral about the cause and name the one thing they can act on.
-      return NextResponse.json(
-        { error: 'The upload could not be read. Confirm the file is under 25 MB and try again.' },
-        { status: 400 },
+      return refuse(
+        400,
+        'The upload could not be read. Confirm the file is under 25 MB and try again.',
+        'form-data-unreadable',
+        { memberId, bytes: Number(request.headers.get('content-length')) || undefined },
       );
     }
 
     const file = form.get('file');
     if (!(file instanceof File)) {
-      return NextResponse.json({ error: 'No file provided' }, { status: 400 });
+      return refuse(400, 'No file provided', 'no-file-field', { memberId });
     }
     if (file.size === 0) {
-      return NextResponse.json({ error: 'File is empty' }, { status: 400 });
+      return refuse(400, 'File is empty', 'zero-bytes', { memberId });
     }
     if (file.size > MAX_FILE_BYTES) {
-      return NextResponse.json({ error: 'File too large (25 MB max)' }, { status: 413 });
+      return refuse(413, 'File too large (25 MB max)', 'over-file-cap', {
+        memberId,
+        bytes: file.size,
+      });
     }
+
+    // The attempt itself, recorded before any reading is tried. Counts only.
+    console.log(
+      `[MAIA/press] INGEST ARRIVED { memberRef: ${memberRef(memberId)}, ` +
+        `bytes: ${file.size}, format: ${detectFormat(file.name, file.type) ?? 'unrecognised'} }`,
+    );
 
     const buffer = Buffer.from(await file.arrayBuffer());
 
@@ -82,7 +126,11 @@ export async function POST(request: NextRequest) {
       result = await parseUpload(buffer, file.name, file.type);
     } catch (err) {
       if (err instanceof UnsupportedUploadError) {
-        return NextResponse.json({ error: err.message }, { status: 415 });
+        return refuse(415, err.message, 'unsupported-format', {
+          memberId,
+          bytes: file.size,
+          format: detectFormat(file.name, file.type),
+        });
       }
 
       /* IMPORT-READ-01, 2026-08-27. This branch used to answer every failure
@@ -114,7 +162,11 @@ export async function POST(request: NextRequest) {
     }
 
     if (result.text.length > MAX_TEXT_CHARS) {
-      return NextResponse.json({ error: 'Manuscript too large (2MB of text max)' }, { status: 413 });
+      return refuse(413, 'Manuscript too large (2MB of text max)', 'over-text-cap', {
+        memberId,
+        bytes: result.text.length,
+        format: result.format,
+      });
     }
 
     // Log marker: counts only, never content.
@@ -138,10 +190,12 @@ export async function POST(request: NextRequest) {
       });
       sourceArrivalId = arrival.id;
     } catch (err) {
-      console.error('[press/manuscripts/ingest] source custody failed', err);
-      return NextResponse.json(
-        { error: 'We could not take custody of that file. Nothing was saved — please try again.' },
-        { status: 500 },
+      console.error('[MAIA/press] INGEST CUSTODY FAILURE', err);
+      return refuse(
+        500,
+        'We could not take custody of that file. Nothing was saved — please try again.',
+        err instanceof Error ? `${err.name}: ${err.message}` : 'unknown',
+        { memberId, bytes: buffer.byteLength, format: result.format },
       );
     }
 
@@ -159,7 +213,13 @@ export async function POST(request: NextRequest) {
       sourceArrivalId,
     });
   } catch (err) {
-    console.error('[press/manuscripts/ingest] POST error:', err);
-    return NextResponse.json({ error: 'Failed to read file' }, { status: 500 });
+    console.error('[MAIA/press] INGEST UNHANDLED', err);
+    return NextResponse.json(
+      {
+        error: 'Something failed on our side while reading that file. Nothing was saved.',
+        reason: err instanceof Error ? `${err.name}: ${err.message}` : 'unknown',
+      },
+      { status: 500 },
+    );
   }
 }

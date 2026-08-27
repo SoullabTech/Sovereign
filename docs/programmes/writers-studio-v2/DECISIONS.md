@@ -193,3 +193,40 @@ is the same gate, applied more times.
 
 WS2-13 keeps its meaning: the real-member experiential walk over the whole
 environment, which no per-room deployment can substitute for.
+
+## D-013 — Cut at the strongest heading level the document declares
+
+**Settled 2026-08-27 (WS2-01C).**
+
+Segmentation stays mechanical and stays refusing to infer structure. But a
+document that uses `#` for its chapters and ALL-CAPS for its subheads has
+*already declared* two levels, and reading both as one level is not neutrality —
+it is a decision, and it was the wrong one. A 212-page book came back as a
+hundred-plus one-page fragments with no chapters in it.
+
+So: **cut at the strongest heading level the document actually uses**, skipping a
+level only where it would yield a single section. Subheads are carried verbatim
+inside the chapter they belong to. Nothing is invented, nothing is dropped, and
+the member still confirms or redraws the cuts before anything is saved.
+
+Two corollaries, both load-bearing:
+
+- **A cap limits doors, never text.** `MAX_SECTIONS` stops us building more
+  parts; it must never stop us keeping the member's words. The remainder is
+  absorbed into the last section, verbatim and in order.
+- **Unnamed is not missing.** A part carried without a heading has no line to
+  make a door of. That is not drift, and saying "no longer in your draft" about
+  text that is in the draft is a false statement about the member's own book.
+  The leading unnamed part *is* the opening region and is not reported at all.
+
+## D-014 — A refusal that leaves no record is not instrumented
+
+**Settled 2026-08-27 (WS2-01B).**
+
+Absence of logs was read as evidence that a request never arrived. It was not:
+most of the ingest route's exit paths answered the screen and told the record
+nothing, so a member-visible failure left the system with no memory of failing.
+
+Any surface that can refuse a member's work must name the refusal in the record —
+status and reason, counts only, never the member's content. Silence in the log is
+never evidence about what happened; it is only evidence that we did not look.

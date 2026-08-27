@@ -53,6 +53,7 @@ export default function StructureRail({
 
   const regions = map?.regions ?? [];
   const adrift = map?.adrift ?? [];
+  const unnamed = map?.unnamed ?? [];
 
   const needle = filter.trim().toLowerCase();
   const shown = useMemo(
@@ -150,10 +151,31 @@ export default function StructureRail({
               <ul className="space-y-1">
                 {adrift.map((p) => (
                   <li key={p.id} className="text-[12.5px] opacity-55">
-                    {p.heading ?? `Part ${p.position} — carried without a name`}
+                    {p.heading}
                   </li>
                 ))}
               </ul>
+            </div>
+          )}
+
+          {/* WS2-01C — a part carried without a heading is NOT missing. Its
+              words are in the draft; it simply has no line to make a door of.
+              The rail used to file these under "Not found in the draft", which
+              told the member their own front matter had gone — the leading
+              unnamed part is now the opening region and is not listed at all,
+              and any later one is described for what it is. */}
+          {unnamed.length > 0 && (
+            <div className="mt-5 pt-3 border-t" style={{ borderColor: PRESS.ruleSoft }}>
+              <p className="text-[11px] tracking-[0.12em] uppercase opacity-40 mb-2">
+                Carried without a heading
+              </p>
+              <p className="text-[11.5px] leading-relaxed opacity-45">
+                {unnamed.length === 1 ? 'One part' : `${unnamed.length} parts`} arrived with no
+                heading line, so {unnamed.length === 1 ? 'it has' : 'they have'} no door of{' '}
+                {unnamed.length === 1 ? 'its' : 'their'} own. The words are in the draft, inside the
+                part above. Give {unnamed.length === 1 ? 'it' : 'them'} a heading line and{' '}
+                {unnamed.length === 1 ? 'it appears' : 'they appear'} here.
+              </p>
             </div>
           )}
 

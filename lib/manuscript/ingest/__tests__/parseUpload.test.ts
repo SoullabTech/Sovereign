@@ -58,10 +58,17 @@ describe('parseUpload', () => {
     // mammoth artifacts stripped (nav anchors, backslash-escaped punctuation)
     expect(r.text).not.toContain('<a id=');
     expect(r.text).not.toMatch(/\\\./);
-    // and it feeds the sectioner into real chapters
+    /* And it feeds the sectioner into real CHAPTERS — not into every
+       heading-shaped line in the file. WS2-01C: this assertion used to accept
+       three sections, which is the subhead "A Quieter Passage" standing as a
+       peer of the two chapters. On a print manuscript that same promotion
+       produced a hundred-plus one-page fragments. The document declares `#`
+       for its chapters and `##` for a passage inside one; the cut follows the
+       document. */
     const sections = segment(r.text);
-    expect(sections.length).toBeGreaterThanOrEqual(3);
-    expect(sections.some((s) => s.heading === 'Chapter One')).toBe(true);
+    expect(sections.map((s) => s.heading)).toEqual(['Chapter One', 'Chapter Two']);
+    expect(sections[0].body).toContain('A Quieter Passage');
+    expect(sections[0].body).toContain('truest sentences in the margins');
   });
 
   it('warns (never fabricates) when a PDF has no text layer (scanned)', async () => {

@@ -109,20 +109,52 @@ ROOT CAUSE      RESOLVED 2026-08-27 — and NOT what was inferred.
                 Recorded because a fix that works for the wrong reason is a
                 defect waiting to return (D-009).
 
-NEXT ACTION     0. deploy eb89917ec, then: click a work → it opens THAT work
-                   or refuses; a work with no writing is inert and says so;
-                   and read the INGEST READ FAILURE marker for IMPORT-READ-01
-                1. founder: commit the 8 reference screens to reference/  → closes WS2-00
-                2. founder: capture the resolution chain for TWO distinct
-                   writings ON THE CLICK PATH (the path that was broken —
-                   the direct-load probe already passed at 1feec9b1d).
-                   Deliberately choose one that is NOT manuscripts[0].
-                   Decisive assertion:  A ≠ B
-                                        asked_A === returned_A === rendered_A
-                                        asked_B === returned_B === rendered_B
+WS2-01C ROOT CAUSE, 2026-08-27 — found in code, not on a screen:
+                lib/manuscript/ingest/segment.ts cut at EVERY heading-shaped
+                line, flat. A print manuscript is full of capitalised lines
+                that are not chapters — subheads, front matter, appendix
+                labels — so a 212-page book arrived as a hundred-plus parts,
+                each "~1 page", and "Chapter 10: The Living Spiral" held
+                nothing but its own epigraph because the chapter's first
+                subhead cut immediately after it. The mapper was innocent:
+                every region it drew was the true size of the section it was
+                given. Two further defects fell out of the same read —
+                the MAX_SECTIONS loop TRUNCATED the manuscript instead of
+                absorbing the remainder, and an unnamed part (the preamble
+                every import produces) was filed under "NOT FOUND IN THE
+                DRAFT" — a false statement about text that is in the draft.
+
+                FIX: cut at the strongest heading level the document itself
+                declares (markdown depth · "Chapter N" · ALL-CAPS), skipping
+                a level only when it would produce one section. Nothing is
+                inferred; subheads are carried verbatim inside their chapter.
+
+WS2-01B NOTE    my earlier reading — "zero ingest log lines, therefore the
+                request never reached the route" — was not supported. Of the
+                ingest route's exit paths, only three logged anything: 401,
+                400, 413 and over-text-cap all answered the screen and told
+                the record nothing. Every refusal now names itself
+                (INGEST ARRIVED / INGEST REFUSED, counts and reasons only),
+                so the next attempt is self-diagnosing. Root cause still OPEN.
+
+OPEN (cont.)    WS2-01A identity custody     LIVE (0d66a5a27), proof required
+                WS2-01B import intake        OPEN — instrumented, not fixed
+                WS2-01C section mapping      FIXED in lane, undeployed
+                  ⚠ the cut happens at IMPORT. Manuscripts already saved
+                    carry their old cuts until re-imported — including
+                    book-print-kdp-final. So WS2-01C is not visible to the
+                    founder until WS2-01B is fixed.
+
+NEXT ACTION     1. CC: root-cause IMPORT-READ-01 (WS2-01B) — the one thing
+                   blocking the founder from seeing WS2-01C at all
+                2. deploy A+C together, verify two ways (D-007)
+                3. founder: import book-print-kdp-final again; the rail must
+                   show chapters, each ending immediately before the next
+                4. founder: commit the 8 reference screens to reference/
+                   → closes WS2-00
+                5. founder: click-path witness for TWO distinct writings
+                   A ≠ B · asked === returned === rendered, both
                    (ACCEPTANCE.md § WS2-01 — screen alone is not acceptance)
-                3. CC: owner → work → manuscript → section → content audit
-                   across every read path, then pin D-008 as a regression test
 
 HOLD            WS2-02 · WS2-03 · companion 404 (quarantined for WS2 outcomes)
 

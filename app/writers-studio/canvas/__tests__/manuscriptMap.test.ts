@@ -73,9 +73,25 @@ describe('mapDraft — locating carried cuts', () => {
     expect(map.adrift).toHaveLength(1);
   });
 
-  it('treats an unnamed carried part as adrift — it has no line to be a door to', () => {
+  /* WS2-01C, 2026-08-27. An unnamed part has no line to be a door to — but it
+     is NOT adrift. Nothing went missing: its words are in the draft, inside the
+     region above it. Filing it under "not found in the draft" told a member
+     their own front matter had gone. The two facts are now reported apart. */
+  it('an unnamed carried part has no door, and is not called missing', () => {
     const map = mapDraft(draft, parts('Front Matter', null, 'Chapter Two'));
-    expect(map.adrift.map((p) => p.position)).toEqual([2]);
+    expect(map.adrift).toHaveLength(0);
+    expect(map.unnamed.map((p) => p.position)).toEqual([2]);
+  });
+
+  it('the leading unnamed part is the opening region, and is not reported at all', () => {
+    /* Every imported manuscript with front matter arrives with exactly this
+       shape: a preamble section carried without a heading. It already has a
+       door — "Opening pages" — so naming it a second time as a problem is a
+       false statement about the member's own book. */
+    const map = mapDraft(draft, parts(null, 'Chapter One', 'Chapter Two'));
+    expect(map.adrift).toHaveLength(0);
+    expect(map.unnamed).toHaveLength(0);
+    expect(map.regions[0].key).toBe(OPENING_KEY);
   });
 
   it('resolves a repeated heading forward, in declared order', () => {
