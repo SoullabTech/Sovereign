@@ -32,6 +32,23 @@ function stripStandaloneJsonLines(input: string): string {
     .join('\n');
 }
 
+function decodeXmlText(input: string): string {
+  return input
+    .replace(/&quot;/gi, '"')
+    .replace(/&apos;/gi, "'")
+    .replace(/&lt;/gi, '<')
+    .replace(/&gt;/gi, '>')
+    .replace(/&amp;/gi, '&');
+}
+
+function escapeXmlText(input: string): string {
+  return input
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
 /**
  * Remove non-speakable presentation syntax while preserving semantic prose.
  */
@@ -46,6 +63,8 @@ export function sanitizeForSpeech(input: string): string {
   // Code blocks are implementation artifacts, not conversational speech.
   text = text.replace(/```[\s\S]*?```/g, ' ');
   text = text.replace(/~~~[\s\S]*?~~~/g, ' ');
+  text = text.replace(/<pre\b[^>]*>[\s\S]*?<\/pre>/gi, ' ');
+  text = text.replace(/<code\b[^>]*>[\s\S]*?<\/code>/gi, ' ');
 
   // Remove any orphan fence lines left by malformed/incomplete markdown.
   text = text.replace(/^\s*(?:```|~~~)[^\n]*$/gm, ' ');
@@ -108,14 +127,14 @@ export function sanitizeSsmlForSpeech(input: string): string {
         return ALLOWED_SSML_TAG.test(part) ? part : '';
       }
 
-      const cleaned = sanitizeForSpeech(part);
+      // generateSSML escapes model text before embedding it. Decode only the
+      // text node, sanitize the human content, then re-escape for valid SSML.
+      const cleaned = sanitizeForSpeech(decodeXmlText(part));
       if (!cleaned) return '';
 
-      // Preserve only boundary whitespace so adjacent SSML tags do not glue
-      // ordinary words together after sanitization.
       const leadingSpace = /^\s/.test(part) ? ' ' : '';
       const trailingSpace = /\s$/.test(part) ? ' ' : '';
-      return `${leadingSpace}${cleaned}${trailingSpace}`;
+      return `${leadingSpace}${escapeXmlText(cleaned)}${trailingSpace}`;
     })
     .join('');
 
