@@ -20,25 +20,45 @@ CURRENT         WS2-00 — product contract
                 (DESIGN-CONTRACT.md §0 / DECISIONS.md D-006)
 
 READY           WS2-01 — work/manuscript/content identity
-                fix IS in production and verified present; BEHAVIOUR NOT YET
-                OBSERVED, and acceptance requires the chain, not the screen
-                (ACCEPTANCE.md § WS2-01 · D-008 · D-009):
                   90f447cd8  refuse to substitute a manuscript not asked for
-                  1feec9b1d  read the asked-for id reliably; self-diagnose on failure
-                remaining: full chain audit — owner → work → manuscript →
-                section → content, every read path, no silent fallback anywhere
+                             ✅ PROVEN IN PRODUCTION — negative probe passed:
+                             bogus id → explicit refusal naming the id → ZERO
+                             substitute content. D-008 holds on that path.
+                  1feec9b1d  mount-time re-read — INEFFECTIVE, wrong mechanism
+                  (pending)  read the URL reactively (useSearchParams), so the
+                             click path and the direct path behave identically
+                remaining: deploy + re-walk the chain on the CLICK path;
+                then audit every other read path (owner → work → manuscript →
+                section → content) and make D-008 a regression test
 
 BLOCKED         WS2-04 — editor storage decision (rich text format + migration)
 
 ACCEPTED        none
 
-UNRESOLVED      root cause of transcript substitution.
-                The two commits above are a strong inference from evidence
-                (two distinct ?m= ids, one identical wrong result, fallback
-                sentence rendering both times), NOT a proof. The fix is deployed;
-                the screen has not yet been read. Three outcomes are open:
-                correct manuscript / explicit "not on your shelf" refusal naming
-                the asked-for id / still the wrong text.
+ROOT CAUSE      RESOLVED 2026-08-27 — and NOT what was inferred.
+                Observed, not deduced: the console chain showed
+                  asked    == dca75052…      returned == dca75052…
+                  API resolution CORRECT, title correct, and yet the page had
+                  fetched 094d0a2a… and printed the no-id fallback sentence.
+                The page never asked the API for the id in the URL.
+
+                Cause: every entry into the Canvas is a CLIENT-SIDE navigation
+                (router.push from Studio Home, <Link> from HomeView), so `?m=`
+                was not on window.location when the mount-time read ran. The
+                read returned null, `asked` was false, and the room fell back
+                to manuscripts[0] — the most recent — under the title of
+                whatever was clicked.
+
+                This is why the negative probe PASSED while clicking failed:
+                a DIRECT load has the param in hand at mount; a CLICK does
+                not. Same code, two paths, one of them blind.
+
+                My earlier inference — "statically prerendered, so the
+                initializer returns null" — named the right symptom and the
+                wrong mechanism, and the mount-only re-read I added to fix it
+                could not work, because the param arrives after mount.
+                Recorded because a fix that works for the wrong reason is a
+                defect waiting to return (D-009).
 
 NEXT ACTION     1. founder: commit the 8 reference screens to reference/  → closes WS2-00
                 2. founder: capture the resolution chain for TWO distinct

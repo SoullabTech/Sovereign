@@ -1,11 +1,13 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { Suspense, useCallback, useEffect, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { apiFetch } from '@/lib/http/apiBase';
 import { PRESS, SERIF } from '../pressTheme';
 import { IMPORT_HREF, SOURCE_HREF } from '../studioMap';
 import { UNTITLED_EXPRESSION } from '../shellIdentity';
+import { CANVAS_MANUSCRIPT_PARAM } from '../canvasIdentity';
 import { arrivalWork, useLivingWorks } from '../useLivingWorks';
 import type { CurrentManuscript } from '../useCurrentManuscript';
 import {
@@ -180,37 +182,54 @@ function ManuscriptName({
   );
 }
 
+/**
+ * The room reads the URL, and keeps reading it.
+ *
+ * Wrapped in Suspense because `useSearchParams` requires it on a statically
+ * prerendered route. The fallback is deliberately empty: a half-drawn room
+ * that later fills with a manuscript is worse than a beat of nothing.
+ */
 export default function WriterCanvasPage() {
+  return (
+    <Suspense fallback={null}>
+      <WriterCanvas />
+    </Suspense>
+  );
+}
+
+function WriterCanvas() {
   const { phase: worksPhase, works, reload: reloadWorks } = useLivingWorks();
   const work = arrivalWork(worksPhase, works);
 
   const [listPhase, setListPhase] = useState<ListPhase>('loading');
   const [manuscripts, setManuscripts] = useState<CurrentManuscript[]>([]);
   /**
-   * Which manuscript the URL asked for.
+   * Which manuscript the URL asked for — read reactively, from the URL itself.
    *
-   * Read synchronously so the table never swaps its manuscript after the draft
-   * is on it (the exit guard would flush mid-swap). But a synchronous read is
-   * not enough on its own: this route is statically prerendered, and on 2026-08-27
-   * production opened the most-recent manuscript for EVERY `?m=` — two different
-   * ids, same wrong manuscript — which is the signature of this initializer
-   * returning null on the client.
+   * ── Why this is not a useState initializer ────────────────────────────────
+   * It was, until 2026-08-27, and production disproved it. Every entry into
+   * this room is a CLIENT-SIDE navigation — `router.push` from Studio Home,
+   * `<Link>` from HomeView — so the `?m=` value is not reliably on
+   * `window.location` at the moment this component first reads it. A read
+   * taken once at mount therefore returned null, `asked` was false, and the
+   * room fell back to `manuscripts[0]`: the most recent manuscript, opened
+   * under whatever the writer had actually clicked.
    *
-   * So it is also re-read once on mount, and only ever null -> value. That
-   * cannot swap a loaded manuscript: the list is still fetching at that point,
-   * so nothing is on the table yet.
+   * That is why a DIRECT load of `?m=<bogus>` correctly refused while a
+   * CLICKED manuscript silently opened the wrong one. Same code, two paths,
+   * and only one of them had the parameter in hand at mount.
+   *
+   * `useSearchParams` is bound to the router rather than to the mount, so it
+   * is correct on both paths and stays correct when the writer moves between
+   * manuscripts without leaving the room.
+   *
+   * This does NOT reintroduce silent substitution. The URL is the writer's
+   * request, not a guess: the room shows what was asked for, or it refuses
+   * and says so. What it may never do is show something the URL did not ask
+   * for — see the selection rule below.
    */
-  const readAsked = () =>
-    typeof window === 'undefined' ? null : new URLSearchParams(window.location.search).get('m');
-  const [requested, setRequested] = useState<string | null>(readAsked);
-  useEffect(() => {
-    if (requested === null) {
-      const late = readAsked();
-      if (late !== null) setRequested(late);
-    }
-    // Mount only. Never re-runs, so a loaded manuscript can never be swapped.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const searchParams = useSearchParams();
+  const requested = searchParams?.get(CANVAS_MANUSCRIPT_PARAM) ?? null;
 
   useEffect(() => {
     let cancelled = false;
