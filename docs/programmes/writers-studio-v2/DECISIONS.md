@@ -115,3 +115,47 @@ resolution chain (`ACCEPTANCE.md` § WS2-01) plus the nonexistent-id probe. Root
 cause stays UNRESOLVED in `STATE.md` until the chain itself is observed —
 closing a defect and explaining it are separate acts, and only one of them has
 happened.
+
+### D-010 · Identity custody at the emitting control
+**2026-08-27 · founder**
+
+The six findings of `WS2-01-READ-PATH-AUDIT.md` are one rule:
+
+> A control that claims to open a particular writing must either emit that
+> writing's exact identity or refuse to open. **Absence, loss, and invalidity
+> must never collapse into "open something else."**
+
+D-008 constrains the consumer: a named-but-unavailable identity must fail
+explicitly and render zero substitute content. D-010 constrains the producer:
+a control that cannot name what it claims to open must not open anything.
+
+This is where the defect actually lives. The audit established that data
+ownership is sound — every manuscript route gates on `member_id` and 404s
+without leaking existence. What failed was **client identity custody**: the
+moment a control decides what identity to hand forward. F-1 is the live
+violation; F-2 and F-3 are why the contract did not prevent it; F-4 is how the
+original parameter-drift class recurs; F-5 is the same weakness in the
+predecessor Press path.
+
+Design test for any new control that opens a writing: *can this emit a URL it
+believes names something, when it does not?* If yes, it is F-3 again.
+
+### D-011 · The legacy Press manuscript route is inside WS2-01
+**2026-08-27 · Claude Code, adjudicating under D-010**
+
+F-5 is admitted into WS2-01 rather than transferred.
+
+The test the founder set is whether the legacy Press route is an active ingress
+to the same writing identity system. It is, and by the Studio's own hand: the
+Canvas emits `SOURCE_HREF` (`canvas/page.tsx:447`) and the Materials drawer
+emits it again (`MaterialsDrawer.tsx:485`), both carrying `&m=`. It reads the
+same parameter and resolves against the same manuscripts. The Studio is
+therefore a producer of that ingress, and D-010 binds producers.
+
+Transferring F-5 would require severing those two links — itself a Studio
+change of the same size as the fix. Repairing custody in place is containment,
+not extension, and does not violate the standing instruction not to extend the
+old Press shell: nothing new is built there, a substitution is removed.
+
+If the founder prefers severance, that is a one-line disposition and F-5
+becomes a WS2-02/03 concern. Left as-is is the one option D-010 forbids.
