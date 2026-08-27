@@ -137,24 +137,48 @@ WS2-01B NOTE    my earlier reading — "zero ingest log lines, therefore the
                 (INGEST ARRIVED / INGEST REFUSED, counts and reasons only),
                 so the next attempt is self-diagnosing. Root cause still OPEN.
 
-OPEN (cont.)    WS2-01A identity custody     LIVE (0d66a5a27), proof required
-                WS2-01B import intake        OPEN — instrumented, not fixed
-                WS2-01C section mapping      FIXED in lane, undeployed
-                  ⚠ the cut happens at IMPORT. Manuscripts already saved
-                    carry their old cuts until re-imported — including
-                    book-print-kdp-final. So WS2-01C is not visible to the
-                    founder until WS2-01B is fixed.
+OPEN (cont.)    WS2-01A identity custody     LIVE (0d66a5a27) · proof required
+                WS2-01B import intake        ONE PATH FIXED in lane
+                WS2-01C section mapping      FIXED in lane
+                  ⚠ C takes effect at IMPORT only. Manuscripts already saved
+                    keep their old cuts until re-imported — including
+                    book-print-kdp-final. C is invisible until B works.
 
-NEXT ACTION     1. CC: root-cause IMPORT-READ-01 (WS2-01B) — the one thing
-                   blocking the founder from seeing WS2-01C at all
-                2. deploy A+C together, verify two ways (D-007)
-                3. founder: import book-print-kdp-final again; the rail must
-                   show chapters, each ending immediately before the next
-                4. founder: commit the 8 reference screens to reference/
+WS2-01B FINDING, 2026-08-27 — D-009, third instance, second in one file:
+                "Import writing" is a deep link (/press/manuscript?import=1).
+                The Press room read that parameter in a LAZY useState
+                initializer — a mount-time read. Forty lines above it, the
+                same file explains at length why a mount-time read of the URL
+                is wrong on a client-side navigation. So `importing` stayed
+                false and the link delivered the member into the Room around a
+                book they already had. Now observed reactively, latched as
+                state, still spent on a successful save. Pinned from the
+                Studio side, which owns the link.
+                NOT proof this was the only path. The refusal instrumentation
+                stands until a real attempt names its own exit.
+
+DEPLOY          HOLD — one candidate, not three
+                A + B + C ship together. C alone gives no verification path
+                and would force a second deploy immediately after.
+
+WITNESS         one walk proves all three (founder, after the single deploy):
+                1. import book-print-kdp-final again
+                2. open it from Studio Home
+                3. title and manuscript are the ones clicked          → A
+                4. click Chapter 10
+                5. it holds the chapter BODY, subheads included —
+                   not a one-page fragment                            → C
+                6. spot-check one earlier and one later chapter       → C
+                (the import completing at all is B)
+
+NEXT ACTION     1. CC: exhaust WS2-01B — the caps chain, the save step, and
+                   anything else that can refuse an import
+                2. assemble A+B+C as one candidate; typecheck + suites +
+                   Co-Lab gate green before it is named
+                3. deploy once, verify two ways (D-007)
+                4. founder: the six-step walk above
+                5. founder: commit the 8 reference screens to reference/
                    → closes WS2-00
-                5. founder: click-path witness for TWO distinct writings
-                   A ≠ B · asked === returned === rendered, both
-                   (ACCEPTANCE.md § WS2-01 — screen alone is not acceptance)
 
 HOLD            WS2-02 · WS2-03 · companion 404 (quarantined for WS2 outcomes)
 

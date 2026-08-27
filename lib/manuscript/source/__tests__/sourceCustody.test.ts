@@ -7,7 +7,7 @@ import {
   hashText,
 } from '../custody';
 import { detectOmission } from '../omission';
-import { segment } from '../../ingest/segment';
+import { segment, MAX_SECTIONS } from '../../ingest/segment';
 
 /**
  * WS-01 exit evidence. Each control is written so that a WRONG implementation
@@ -242,5 +242,78 @@ describe('Control 4 — consecutive headings: the live defect, reproduced', () =
     const sections = segment(trailing);
     expect(detectOmission(trailing, sections).lossless).toBe(true);
     for (const s of sections) expect(s.body.trim().length).toBeGreaterThan(0);
+  });
+});
+
+/**
+ * WS2-01C — the new cutting rule must not become a new omission.
+ *
+ * segment() now cuts only at the strongest heading level the document declares,
+ * so subheads live INSIDE the chapter they belong to rather than standing as
+ * peers of it. That is a change to structure, and it must be provably not a
+ * change to content: every line the member sent must still be accounted for, in
+ * order. The MAX_SECTIONS absorb path is checked here too, because a cap that
+ * quietly dropped the tail of a book is exactly the failure this control exists
+ * to catch.
+ */
+describe('segmentation stays lossless under the strongest-level rule', () => {
+  const printBook = [
+    'ELEMENTAL ALCHEMY',
+    'A book about the five elements.',
+    '',
+    'Chapter 10: The Living Spiral',
+    '',
+    '"Human beings can be transformed." — Wayne Teasdale',
+    '',
+    'THE ALCHEMICAL PROPERTIES OF AETHER',
+    '',
+    'Aether is the fifth element, and the least spoken of.',
+    '',
+    'RETURN TO FLOW',
+    '',
+    'The spiral returns, but never to the same place.',
+    '',
+    'Chapter 11: The Conclusion',
+    '',
+    'INTEGRATED REFLECTION',
+    '',
+    'What was carried forward, and what was set down.',
+  ].join('\n');
+
+  it('accounts for every arriving line of a print manuscript', () => {
+    const report = detectOmission(printBook, segment(printBook));
+    expect(report.missing).toEqual([]);
+    expect(report.lossless).toBe(true);
+  });
+
+  it('the subheads are inside the chapters, and still accounted for', () => {
+    const cuts = segment(printBook);
+    /* Three cuts: the front matter, then the two chapters. The book's title
+       line is ALL-CAPS, which is the WEAKEST level this document declares, so
+       it is not a chapter — it falls into the unnamed preamble, which is the
+       opening region and has its own door. The subheads land inside the
+       chapter they belong to, which is the whole point of the rule. */
+    expect(cuts.map((s) => s.heading)).toEqual([
+      null,
+      'Chapter 10: The Living Spiral',
+      'Chapter 11: The Conclusion',
+    ]);
+    expect(cuts[0].body).toContain('ELEMENTAL ALCHEMY');
+    expect(cuts[1].body).toContain('THE ALCHEMICAL PROPERTIES OF AETHER');
+    expect(cuts[1].body).toContain('RETURN TO FLOW');
+    expect(cuts[1].body).not.toContain('Chapter 11');
+    expect(cuts[2].body).toContain('INTEGRATED REFLECTION');
+    expect(detectOmission(printBook, cuts).lossless).toBe(true);
+  });
+
+  it('the section cap absorbs the tail rather than omitting it', () => {
+    const lines: string[] = [];
+    for (let i = 0; i < MAX_SECTIONS + 40; i++) {
+      lines.push(`Chapter ${i} marker`, '', `body of chapter ${i}`, '');
+    }
+    const text = lines.join('\n');
+    const report = detectOmission(text, segment(text));
+    expect(report.missing).toEqual([]);
+    expect(report.lossless).toBe(true);
   });
 });
