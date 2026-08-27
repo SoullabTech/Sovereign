@@ -30,102 +30,141 @@ cause of another.
 
 ---
 
-## Stage 1 — Correctness: Kokoro never speaks code
+## The goal, stated narrowly
 
-**Owner:** PR #1115 (head `8be9e648`).
-**Acceptance:** Kokoro cannot receive unsanitized MAIA speech, whichever
-upstream representation supplied it — plain text or SSML.
+Not "make TTS work." Restore MAIA's voice so she sounds like herself again:
+**correct words, uninterrupted delivery, fast enough to feel conversational,
+and perceptually right.**
 
-The enforcement point is the Kokoro provider, because it is the last boundary
-both representations pass through. The route pass is a non-destructive,
-idempotent shim delegating to the shared sanitizer; it survives only so that
-non-Kokoro paths (cloud, PersonaPlex) are not left raw, and disappears once
-every synthesizer boundary enforces the invariant itself.
-
-Gate: required CI green, fresh canonical read immediately before merge.
-
-## Stage 2 — Reliability: one benign abort cannot end a conversation
-
-**Ready:** rapid-end policy + `ContinuousConversation` integration, to be
-rebranched alone from post-#1115 canonical.
-
-**Root cause:** the same handler already tolerated ten rapid *restarts* before
-declaring a loop, while the *abort* path declared one on the first occurrence.
-That asymmetry was the defect. Restarting the mic the instant MAIA stops
-speaking is exactly what produces a benign rapid abort, so the most ordinary
-moment in a conversation was the one most likely to end it.
-
-**Acceptance:** a single sub-500ms end recovers with a fresh instance; three
-consecutive ones still stop and tell the member.
-
-**Explicitly not in scope:** the second restart authority
-(`OracleConversation.tsx` schedules its own `startListening` 300ms after
-playback). The mic-state guard is observed to block it and it was never shown
-to be causal. The soak gets first refusal on that hypothesis.
-
-## Stage 3 — Measurement: the soak
-
-A natural 20-minute conversation after Stages 1 and 2 deploy.
-
-**No new instrumentation required.** The `[voice:server_timing]` header already
-emits `tts_N_requested`, `tts_N_done` and `all_tts_done` per turn, so the
-synthesis distribution comes for free.
-
-Acceptance:
+### Identity is not implementation
 
 ```
-no spoken code or markup
-mic resumes after every MAIA turn
-a single 302ms rapid end recovers
-no unexplained RECOGNITION_ABORT_LOOP
-no silent post-TTS mic death
-Kokoro sovereignty intact (zero provider:"openai")
+VOICE IDENTITY        what MAIA sounds like, and is called
+IMPLEMENTATION        kokoro / af_kore / openai / a future model
 ```
 
-Collected alongside: per-turn synthesis time, chunk count, chunk size.
+`lib/voice/sovereignVoices.ts` already encodes this: an entry has an `id` and
+`label` (identity) plus per-provider realizations (`kokoro`, `openai`). The
+underlying synthesizer can therefore improve without MAIA becoming a different
+person each time the stack changes.
 
-## Stage 4 — Kokoro performance
+⚠️ **Naming hazard, unresolved.** In the code the identity is `maia_core`
+("Maia (Kore)") and **`alloy` is the name of the OpenAI implementation**.
+Informally "Alloy" has been used to mean the identity. Those are inverses and
+cannot both stand — pick one and record it here and in `sovereignVoices.ts`.
+Using an implementation's name for the identity is the drift this separation
+exists to prevent.
 
-Not started, and deliberately not designed from `n=1`. One 6.9s turn proves
-something is wrong; it cannot distinguish steady state from an outlier.
+---
 
-**Already eliminated** from the existing turn: chunk serialization. Two chunks
-requested at 1375ms, first done at 8286ms, all done at 8288ms — the chunks
-synthesize in parallel, so 6,911ms is one chunk's own cost, not accumulation.
+## A1 — Speech correctness
 
-Hypotheses, each with a cheap discriminator the soak mostly answers:
+**Establishes:** MAIA never speaks code, markdown or system debris.
+**Change:** merge #1115, then rebuild from fresh canonical.
 
-| Hypothesis | Discriminator |
-|---|---|
-| Cold start / model load per request | turn 1 slow, turns 4–12 fast → warm-up, not architecture |
-| No resident model | synthesis time flat and high regardless of text length |
-| Chunk size superlinear | plot synthesis ms against input chars |
-| CPU-only execution | container inspect; GPU availability on minisforum |
-| Host CPU contention | whisper / RLM / postgres load during the same window |
-| Per-request connection overhead | fixed floor even on very short input |
+```
+#1115 → CI green → merge → re-read canonical SHA → rebuild 463954b from it
+```
 
-Order: read the soak distribution first, then test only the hypotheses it
-leaves standing.
+Do not carry the mixed branch forward. Correctness lands before the voice
+itself is judged, so no aesthetic verdict is contaminated by debris.
 
-## Stage 5 — Voice-quality audition
+## A2 — Voice reliability
 
-`af_kore` was selected as the Kokoro analogue of `alloy` — a mapping decision,
-not a listening decision. It is not sacred.
+**Establishes:** the turn lifecycle survives real conversation.
+**Change:** rebranch `463954b` (VOICE-ABORT-01) alone.
 
-Audition the qualified local voices by ear against MAIA's actual register, on
-real conversational text rather than sample sentences. `SOVEREIGN_VOICES`
-already carries the candidate set and per-element mappings.
+This is transport and coordination quality, not aesthetics. A conversation
+cannot feel relational if the microphone dies. Acceptance must include the
+hard cases, not just clean turns:
 
-The member's ear is the instrument here. Routing was confirmed correct while
-the result was still experienced as wrong; that is a perceptual finding, and it
-outranks the code being right.
+```
+long reflective speech          soft sentence endings
+pauses mid-sentence             self-correction
+rapid follow-up                 MAIA speaking as the next turn becomes available
+no stuck listening              no dropped tail            no duplicated turn
+```
 
-## Stage 6 — Canon decision, contingent only
+## A3 — Latency measurement
 
-Reached **only** if Stages 4 and 5 establish that local voice cannot meet the
-bar. If so, the change is authored as an explicit canon amendment with its
-reasoning recorded — never as a quiet gate edit, and never as the path of least
-resistance from a slow afternoon.
+**Establishes:** the real distribution, not one bad turn.
+**Change:** none. A 20-minute natural soak; no new instrumentation.
+
+Already discriminating, from the one turn in hand:
+
+```
+chunks requested   ~1375 ms
+first complete     ~8286 ms
+all complete       ~8288 ms
+```
+
+Chunks synthesize concurrently — **serialization is falsified.** The ~6.9s is
+one chunk's own cost.
+
+Capture per turn: TTS request time, first completion, all completion, chunk
+count and size, and turn number in session. Then ask: is only the first turn
+slow, is every turn slow, does latency scale with text length, are there
+occasional pathological spikes?
+
+## A4 — Performance repair
+
+**Change only the mechanism A3 proves.** The outcomes diverge sharply:
+
+| A3 shows | Diagnosis | Repair |
+|---|---|---|
+| Turn 1 slow, later turns fast | cold start | warm the pipeline while the member speaks their first utterance — small fix, no rewrite |
+| Every turn ~6–7s | steady-state synthesis cost | profile request → preprocessing → inference → waveform → encoding → transport → playback; find where the six seconds lives |
+| Only long chunks slow | chunk sizing | progressive playback and chunk strategy, not provider replacement |
+| Synthesis fast, audio late | downstream | buffering / transport / playback coordination — **not Kokoro at all** |
+
+That last row matters most: it would mean every hour spent on the synthesizer
+was spent in the wrong place.
+
+## A5 — Perceptual tuning
+
+**Establishes:** whether the voice is acceptable as MAIA.
+**Engineering measurements do not overrule this stage.**
+
+The question is *does this sound like MAIA* — not *did we route correctly*. We
+already learned those come apart: routing was verified correct while the lived
+result was still wrong.
+
+Audition a small controlled set on the same MAIA passages: current voice as-is;
+the same voice with cadence/prosody/speed adjustments; the best alternative
+sovereign voice; the second-best.
+
+Passages must expose what actually matters — tenderness, directness, humour,
+contemplative depth, one long complex sentence, one short intimate answer,
+difficult emotional material, ordinary practical guidance.
+
+Judge on: presence, warmth, intelligence, natural cadence, embodiedness,
+emotional range, absence of "AI announcer" quality, recognizability as MAIA.
+Not generic voice quality.
+
+## A6 — Voice canon decision
+
+Reached only if A4 and A5 both fail.
+
+```
+correct speech?        no → fix correctness
+reliable conversation? no → fix turn lifecycle
+fast enough?           no → fix the measured cause
+sounds right?          yes → it stays
+                       no  → audition, then choose deliberately
+```
+
+Do not replace the voice because of one 7-second turn. Do not canonize
+`af_kore` because the router says it is correct. If this branch is reached,
+decide separately whether the identity keeps its name while the synthesizer
+changes, or whether the identity itself changes.
+
+## A7 — Device acceptance
+
+**Establishes:** the same voice on every surface a member reaches from.
+
+Real-device walks on PWA, Safari/iPhone, and native/desktop. Note the standing
+constraint: iOS ships a frozen Capacitor bundle, so a native check requires a
+fresh TestFlight build from the SHA under test — a web deploy does not reach it.
 
 ---
 
