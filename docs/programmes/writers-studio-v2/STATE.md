@@ -21,7 +21,13 @@ CURRENT         WS2-00 — product contract
                 BLOCKED on the reference images reaching the repository
                 (DESIGN-CONTRACT.md §0 / DECISIONS.md D-006)
 
-READY           WS2-01 — work/manuscript/content identity
+OPEN            WS2-01 — work/manuscript/content identity
+                  deployed artifact          PASS
+                  negative identity probe    PASS
+                  two-writing click witness  REQUIRED
+                  full read-path audit       REQUIRED  (inside the unit)
+                  regression pin             REQUIRED
+
                   90f447cd8  refuse to substitute a manuscript not asked for
                              ✅ PROVEN IN PRODUCTION — negative probe passed:
                              bogus id → explicit refusal naming the id → ZERO
@@ -31,10 +37,10 @@ READY           WS2-01 — work/manuscript/content identity
                              click path and the direct path behave identically
                              LIVE AND VERIFIED IN THE IMAGE; behaviour on the
                              click path NOT YET WALKED — deployed ≠ observed
-                remaining: walk the chain on the CLICK path for two
-                distinct writings; then audit every other read path
-                (owner → work → manuscript → section → content) and make
-                D-008 a regression test
+                The click witness proves the observed defect is gone.
+                The read-path audit establishes the unit's identity
+                invariant. The regression pin is the durable closure.
+                All three are inside WS2-01; none of them follows it.
 
 BLOCKED         WS2-04 — editor storage decision (rich text format + migration)
 
@@ -68,10 +74,16 @@ ROOT CAUSE      RESOLVED 2026-08-27 — and NOT what was inferred.
 NEXT ACTION     1. founder: commit the 8 reference screens to reference/  → closes WS2-00
                 2. founder: capture the resolution chain for TWO distinct
                    writings ON THE CLICK PATH (the path that was broken —
-                   the direct-load probe already passed at 1feec9b1d)
+                   the direct-load probe already passed at 1feec9b1d).
+                   Deliberately choose one that is NOT manuscripts[0].
+                   Decisive assertion:  A ≠ B
+                                        asked_A === returned_A === rendered_A
+                                        asked_B === returned_B === rendered_B
                    (ACCEPTANCE.md § WS2-01 — screen alone is not acceptance)
-                3. on that evidence, audit every remaining read path and make
-                   the D-008 invariant a regression test
+                3. CC: owner → work → manuscript → section → content audit
+                   across every read path, then pin D-008 as a regression test
+
+HOLD            WS2-02 · WS2-03 · companion 404 (quarantined for WS2 outcomes)
 
 CARRIED FORWARD WS-01 formal acceptance still outstanding (founder's act)
                 STRUCTURE-02 held; redefinition carries into WS2-07 (D-005)
