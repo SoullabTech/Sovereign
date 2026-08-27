@@ -9,11 +9,23 @@ question is a data-model defect and travels on its own.
 
 | Tables | Surfaced | Evidence | Status |
 |---|---|---|---|
-| `relationship_essence` / `relationship_essences` | 2026-08-27, during the AUTH-BIOMETRIC-01 member census | One member carried exactly one row in **each**. Singular/plural pair, same member id, same shape. | RECORDED — not investigated |
+| `relationship_essence` / `relationship_essences` | 2026-08-27, during the AUTH-BIOMETRIC-01 member census | **Two** unrelated members each carry exactly one row in **each** table (a beta tester and the `isolation_test_exp` fixture). Singular/plural pair, same shape. | RECORDED — not investigated |
 
 Prior art, same class, already on the cleanup list in `CLAUDE.md`: duplicate
 `SemanticMemoryService` (`consciousness/` vs `memory/`) — pick one, delete the
 other.
+
+## What the second observation settles
+
+The first sighting was one member with a row in each table, which is equally
+consistent with "one table is an abandoned first attempt that still holds old
+rows." The second member — written months apart, on a different code path —
+rules that out. **Both tables are live write targets.**
+
+That changes the class of work. Consolidating them is not a cleanup; it is a
+data merge, and it needs the divergence answered first: where the two rows for
+one member disagree, which is correct? A cleanup can be done by whoever notices.
+A merge needs someone to decide what is true.
 
 ## Before consolidating any pair
 
