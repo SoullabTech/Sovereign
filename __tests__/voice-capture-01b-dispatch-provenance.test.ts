@@ -102,23 +102,43 @@ describe('VOICE-CAPTURE-01B-OBS — every send boundary is witnessed', () => {
     expect(invocationLineNumbers().length).toBeGreaterThanOrEqual(8);
   });
 
-  it('precedes EVERY onTranscript invocation with a witnessDispatch call', () => {
+  it('precedes EVERY onTranscript invocation with its OWN witnessDispatch', () => {
     const unwitnessed: string[] = [];
+    // One witness may serve exactly one boundary. A pure "is there a witness
+    // within six lines" check is weaker than the contract it claims to
+    // enforce: two invocations close together could both look backward and
+    // find the SAME witness line, and both pass while one boundary is in
+    // truth unwitnessed. That is the CASE 3 blind spot in miniature — a
+    // duplicate produced by the unwitnessed site would appear in the log as a
+    // single dispatch and read as "dedup worked."
+    const usedWitnessLines = new Set<number>();
 
-    for (const lineNo of invocationLineNumbers()) {
-      // The witness must be immediately before. Allow a small lookback so a
-      // formatter wrapping the witness call across lines does not fail this,
-      // but not so much that an unrelated earlier witness could satisfy it.
-      const window = lines.slice(Math.max(0, lineNo - 6), lineNo).join('\n');
-      if (!window.includes('witnessDispatch(')) {
+    const invocations = invocationLineNumbers();
+    for (const lineNo of invocations) {
+      // Walk backward to the NEAREST witness. The six-line lookback allows a
+      // formatter to wrap the witness call across lines without failing this,
+      // while staying too short for an unrelated earlier witness to reach.
+      let witnessLine = -1;
+      for (let i = lineNo - 1; i >= Math.max(0, lineNo - 6); i--) {
+        if (lines[i].includes('witnessDispatch(')) {
+          witnessLine = i;
+          break;
+        }
+      }
+
+      if (witnessLine === -1 || usedWitnessLines.has(witnessLine)) {
+        // Failure names the offending call site rather than an opaque count,
+        // so whoever adds the ninth send path is told exactly where its
+        // witness goes — and is told when they have borrowed someone else's.
         unwitnessed.push(`line ${lineNo + 1}: ${lines[lineNo].trim()}`);
+      } else {
+        usedWitnessLines.add(witnessLine);
       }
     }
 
-    // Failure names the offending call site rather than an opaque count, so
-    // whoever adds the ninth send path is told exactly where to put its
-    // witness.
     expect(unwitnessed).toEqual([]);
+    // The bijection, stated directly: one live boundary ↔ one distinct witness.
+    expect(usedWitnessLines.size).toBe(invocations.length);
   });
 
   it('witnesses each boundary with a distinct source label', () => {
