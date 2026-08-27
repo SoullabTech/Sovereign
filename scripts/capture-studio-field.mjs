@@ -17,7 +17,7 @@
  * it where the stack runs — the dev machine, or against production.
  */
 import puppeteer from 'puppeteer';
-import { mkdirSync } from 'node:fs';
+import { existsSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 
 /** The reference viewport. Every reference image was composed at this width. */
@@ -47,8 +47,57 @@ const outDir = 'docs/design/writer-studio/implementations';
 mkdirSync(outDir, { recursive: true });
 const out = join(outDir, `${field}-${sha}.png`);
 
+/**
+ * Find a browser to drive.
+ *
+ * The first version of this script hard-coded /opt/pw-browsers/chromium — the
+ * path inside a remote Claude Code container, which is exactly where this
+ * script CANNOT run. On the machine that actually has the stack, that path does
+ * not exist and the capture died on it.
+ *
+ * So: an explicit override first, then whatever puppeteer downloaded for
+ * itself, then the browsers a developer machine actually has. If none resolve,
+ * say which were tried rather than failing on one guess.
+ */
+function resolveBrowser() {
+  if (process.env.CHROMIUM_PATH) return { path: process.env.CHROMIUM_PATH, how: 'CHROMIUM_PATH' };
+
+  // puppeteer's own download, when the package manages a browser for us.
+  try {
+    const p = puppeteer.executablePath();
+    if (p && existsSync(p)) return { path: p, how: 'puppeteer bundled' };
+  } catch {
+    /* puppeteer-core, or no browser downloaded — fall through to the system. */
+  }
+
+  const candidates = [
+    '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+    '/Applications/Chromium.app/Contents/MacOS/Chromium',
+    '/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge',
+    '/opt/pw-browsers/chromium',
+    '/usr/bin/chromium',
+    '/usr/bin/chromium-browser',
+    '/usr/bin/google-chrome',
+  ];
+  const found = candidates.find((c) => existsSync(c));
+  if (found) return { path: found, how: 'system browser' };
+
+  console.error('[capture] No browser found. Tried, in order:');
+  console.error('  $CHROMIUM_PATH (unset)');
+  console.error('  puppeteer.executablePath() — no downloaded browser');
+  for (const c of candidates) console.error(`  ${c}`);
+  console.error('');
+  console.error('Fix with either:');
+  console.error('  npx puppeteer browsers install chrome');
+  console.error('  CHROMIUM_PATH="/path/to/your/browser" node scripts/capture-studio-field.mjs ...');
+  process.exit(1);
+}
+
+const browser0 = resolveBrowser();
+console.log(`[capture] browser: ${browser0.path}  (${browser0.how})`);
+
 const browser = await puppeteer.launch({
-  executablePath: process.env.CHROMIUM_PATH || '/opt/pw-browsers/chromium',
+  executablePath: browser0.path,
   headless: true,
   args: ['--no-sandbox', '--disable-dev-shm-usage'],
 });
