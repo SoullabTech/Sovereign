@@ -66,8 +66,48 @@ async function startListening() {
   await audioCtx.audioWorklet.addModule('capture-worklet.js');
   const src = audioCtx.createMediaStreamSource(stream);
   node = new AudioWorkletNode(audioCtx, 'maia-capture');
-  const frameMs = (128 / audioCtx.sampleRate) * 1000;
-  node.port.onmessage = (evt) => window.maia.voiceFrame(Array.from(evt.data), frameMs);
+
+  // ⭐ BATCHED (device walk 2026-08-27). The worklet emits a 128-sample block
+  // every 2.67 ms — 375 a second. Sending each one as its own ipcRenderer
+  // .invoke(), carrying a plain Array, saturated the renderer thread and dropped
+  // most of them: a long utterance arrived as ~3.8 s of fragments and Whisper
+  // returned an empty transcript. Blocks are accumulated and sent as Float32Array.
+  //
+  // ⛔ BACKPRESSURE MUST NOT DROP AUDIO. While a send is in flight, blocks keep
+  // accumulating — the batch grows, nothing is discarded. This is the same rule
+  // the epoch machine holds one layer down: audio is never silently lost to make
+  // the plumbing easier.
+  const rate = audioCtx.sampleRate;
+  const BATCH = Math.round(rate * 0.06);       // ~60 ms per send, ~17 sends/sec
+  const MAX_BATCH = 32768;                     // main rejects frames above 65536
+  let pending = [];
+  let pendingLen = 0;
+  let inFlight = false;
+
+  const drain = () => {
+    if (inFlight || pendingLen < BATCH) return;
+    const take = Math.min(pendingLen, MAX_BATCH);
+    const batch = new Float32Array(take);
+    let off = 0;
+    while (off < take) {
+      const head = pending[0];
+      const room = take - off;
+      if (head.length <= room) { batch.set(head, off); off += head.length; pending.shift(); }
+      else { batch.set(head.subarray(0, room), off); pending[0] = head.subarray(room); off += room; }
+    }
+    pendingLen -= take;
+    inFlight = true;
+    window.maia.voiceFrame(batch, (take / rate) * 1000)
+      .catch(() => {})
+      .finally(() => { inFlight = false; drain(); });
+  };
+
+  node.port.onmessage = (evt) => {
+    if (!listening) return;
+    pending.push(evt.data);
+    pendingLen += evt.data.length;
+    drain();
+  };
   src.connect(node);
 
   listening = true;

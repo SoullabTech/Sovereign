@@ -20,7 +20,7 @@ const strip = (f) => readFileSync(path.join(srcDir, f), 'utf8')
   .split('\n').map((l) => l.replace(/(^|[^:'"`])\/\/.*$/, '$1')).join('\n');
 
 const mainJs = strip('main.js');
-const { encodeWav } = require('../src/voice/wav.js');
+const { encodeWav, resample } = require('../src/voice/wav.js');
 const { createUtteranceBuffer } = require('../src/voice/utterance.js');
 const { createConversation, explain, readErrorBody } = require('../src/conversation.js');
 const { createSession } = require('../src/session.js');
@@ -269,4 +269,83 @@ test('the surface uses the canonical Soullab tokens, not a Desktop palette', () 
   const body = css.slice(css.indexOf('}', css.indexOf(':root')) + 1);
   const strays = body.match(/#[0-9A-Fa-f]{3,8}\b/g) || [];
   assert.deepEqual(strays, [], `raw colours outside the token block: ${strays.join(', ')}`);
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// DEVICE WALK 2026-08-27, second pass. Turns landed, then degraded: transcripts
+// came back empty, and once as a looping Arabic hallucination — Whisper's
+// signature for fragmented audio. The cause was the frame path, not the model.
+// ─────────────────────────────────────────────────────────────────────────────
+
+test('audio is sent to Whisper at 16 kHz, not at the capture rate', () => {
+  const a = new Float32Array(48000);
+  for (let i = 0; i < a.length; i++) a[i] = Math.sin((2 * Math.PI * 440 * i) / 48000) * 0.5;
+  const wav = encodeWav(a, 48000);
+  const dv = new DataView(wav.buffer, wav.byteOffset, wav.byteLength);
+  assert.equal(dv.getUint32(24, true), 16000, 'the WAV header does not declare 16 kHz');
+  assert.equal(dv.getUint32(40, true) / 2, 16000, 'one second did not decimate to one second of samples');
+  assert.ok(wav.byteLength < 40000, `48 kHz payload was not reduced (${wav.byteLength} bytes)`);
+});
+
+test('decimation averages the source window rather than point-sampling', () => {
+  // A ramp: a point sampler takes every third value; an averaging decimator
+  // returns the window mean, which for a ramp sits between them.
+  const ramp = Float32Array.from({ length: 9 }, (_, i) => i / 9);
+  const out = resample(ramp, 3, 1);
+  assert.equal(out.length, 3);
+  assert.ok(Math.abs(out[0] - (0 + 1 / 9 + 2 / 9) / 3) < 1e-6, 'the decimator is point-sampling — speech will alias');
+});
+
+test('upsampling is refused rather than faked', () => {
+  const a = Float32Array.from([0, 0.5, -0.5]);
+  assert.equal(resample(a, 16000, 48000).length, 3, 'samples were invented to hit a higher rate');
+});
+
+test('the renderer batches frames instead of one IPC round trip per block', () => {
+  const r = readFileSync(path.join(srcDir, 'renderer.js'), 'utf8');
+  assert.ok(!/onmessage\s*=\s*\(evt\)\s*=>\s*window\.maia\.voiceFrame\(Array\.from/.test(r),
+    'every 128-sample block is still its own invoke() — this is the drop');
+  assert.ok(/pendingLen\s*\+=/.test(r) && /inFlight/.test(r),
+    'there is no batching with backpressure in the frame path');
+});
+
+test('backpressure accumulates audio and never discards it', () => {
+  const r = strip('renderer.js');
+  const drain = /const drain = \(\) => \{[\s\S]*?\n  \};/.exec(r)[0];
+  assert.ok(/if \(inFlight \|\| pendingLen < BATCH\) return;/.test(drain),
+    'a send in flight does not defer — frames will overlap or be lost');
+  const onmessage = /node\.port\.onmessage = \(evt\) => \{[\s\S]*?\n  \};/.exec(r)[0];
+  assert.ok(/pending\.push\(evt\.data\)/.test(onmessage),
+    'blocks are not retained while a send is in flight — this drops audio');
+  assert.ok(!/pending\s*=\s*\[\]\s*;?\s*(\/\/.*)?$/m.test(onmessage),
+    'the pending buffer is cleared on receipt — audio is being thrown away');
+});
+
+test('a body over the measured transport ceiling is refused in plain language', async () => {
+  const conv = createConversation({
+    session: { authedFetch: async () => { throw new Error('must not reach the network'); } },
+    diagnostics: { emit: () => {} },
+    sessionId: 'x',
+  });
+  const huge = new Float32Array(16000 * 60); // 60s at 16k ≈ 1.9 MB
+  const out = await conv.transcribe(huge, 16000);
+  assert.equal(out.ok, false);
+  assert.ok(/longer than the server currently accepts/.test(out.error),
+    'an oversized body is sent anyway and the member gets a framework stack trace');
+});
+
+test('the level of a sent utterance is measured, so an empty transcript is diagnosable', async () => {
+  const events = [];
+  const conv = createConversation({
+    session: { authedFetch: async () => ({ ok: true, status: 200, res: { json: async () => ({ transcription: 'x' }) } }) },
+    diagnostics: { emit: (n, m) => events.push([n, m]) },
+    sessionId: 'x',
+  });
+  const a = new Float32Array(16000);
+  for (let i = 0; i < a.length; i++) a[i] = Math.sin((2 * Math.PI * 440 * i) / 16000) * 0.5;
+  await conv.transcribe(a, 16000);
+  const sent = events.find(([n]) => n === 'voice_transcribe_sent')[1];
+  assert.ok(sent.peakX1000 > 400 && sent.peakX1000 <= 1000, `peak not measured (${sent.peakX1000})`);
+  assert.ok(sent.rmsX1000 > 0, 'rms not measured — silence and speech remain indistinguishable');
+  assert.ok(sent.seconds > 0, 'duration not measured');
 });
