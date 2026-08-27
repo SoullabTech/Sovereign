@@ -25,16 +25,30 @@ OPEN            WS2-01 — work/manuscript/content identity
                   deployed artifact            PASS
                   negative identity probe      PASS
                   full read-path audit         PASS  (1f836d1a7)
-                  observed click defect        WITNESS REQUIRED
-                  F-1 fixed                    REQUIRED
-                  F-2/F-3 contract corrected   REQUIRED
-                  F-4 drift points pinned      REQUIRED
-                  F-5 (legacy Press ingress)   REQUIRED — admitted, D-011
-                  D-008 regression pin         REQUIRED
+                  observed click defect        WITNESSED — FAILED
+                  F-1 fixed                    eb89917ec · undeployed
+                  F-2/F-3 contract corrected   eb89917ec · undeployed
+                  F-4 drift points pinned      eb89917ec · undeployed
+                  F-5 (legacy Press ingress)   eb89917ec · undeployed
+                  D-008/D-010 regression pin   eb89917ec · undeployed
+                  production proof             REQUIRED
 
-                A clean two-click witness no longer closes this unit. It
-                establishes that the OBSERVED instance is gone; F-1 is
-                proven live by audit independently of any click.
+                WITNESS RESULT, 2026-08-27, founder, on c9b0574db:
+                clicking a work opened "Transcription" under the line
+                "The most recent of your 4 manuscripts is on the table."
+                That sentence renders ONLY on the no-id path, so the URL
+                carried no `?m=` at all. This is F-1 — the producer emitting
+                a bare href — not a failure of c9b0574db's reactive read.
+
+                One failure was enough; no second click was collected.
+
+IMPORT-READ-01  OPEN — supported manuscript upload cannot be read in
+                production. DOCX and text both round-trip correctly in the
+                repo, and the image copies full node_modules, so this is
+                environment- or file-specific. The 422 no longer blames the
+                member's file; it names the recognised format and emits
+                `[MAIA/press] INGEST READ FAILURE { … reason: … }`.
+                Next step is that log line, not another upload.
 
                   90f447cd8  refuse to substitute a manuscript not asked for
                              ✅ PROVEN IN PRODUCTION — negative probe passed:
@@ -87,7 +101,10 @@ ROOT CAUSE      RESOLVED 2026-08-27 — and NOT what was inferred.
                 Recorded because a fix that works for the wrong reason is a
                 defect waiting to return (D-009).
 
-NEXT ACTION     1. founder: commit the 8 reference screens to reference/  → closes WS2-00
+NEXT ACTION     0. deploy eb89917ec, then: click a work → it opens THAT work
+                   or refuses; a work with no writing is inert and says so;
+                   and read the INGEST READ FAILURE marker for IMPORT-READ-01
+                1. founder: commit the 8 reference screens to reference/  → closes WS2-00
                 2. founder: capture the resolution chain for TWO distinct
                    writings ON THE CLICK PATH (the path that was broken —
                    the direct-load probe already passed at 1feec9b1d).
