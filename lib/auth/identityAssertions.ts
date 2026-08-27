@@ -40,6 +40,7 @@ export const CLIENT_ASSERTABLE_IDENTITY_HEADERS: readonly string[] = [
   'x-access-authed',
   'x-access-tier',
   'x-access-roles',
+  'x-access-member-id',
   'x-access-rule',
   'x-access-unmapped',
   'x-access-capacitor-bypass',
