@@ -22,7 +22,7 @@ const strip = (f) => readFileSync(path.join(srcDir, f), 'utf8')
 const mainJs = strip('main.js');
 const { encodeWav } = require('../src/voice/wav.js');
 const { createUtteranceBuffer } = require('../src/voice/utterance.js');
-const { createConversation, explain } = require('../src/conversation.js');
+const { createConversation, explain, readErrorBody } = require('../src/conversation.js');
 const { createSession } = require('../src/session.js');
 
 // ── ⭐ the class E regression ───────────────────────────────────────────────
@@ -219,4 +219,54 @@ test('diagnostics are behind a toggle — the instrument is no longer the interf
   const html = readFileSync(path.join(srcDir, 'index.html'), 'utf8');
   assert.ok(/#log\s*\{[^}]*display:\s*none/.test(html), 'the diagnostic log is visible by default');
   assert.ok(html.includes('id="toggle"'), 'no disclosure control for diagnostics');
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// DEVICE WALK 2026-08-27 — the surface showed `Request failed (500)` while the
+// route was returning `{ error, details }` explaining exactly what went wrong.
+// A failure that can explain itself and does not is a diagnostic loss, and this
+// one cost a walk. These assertions keep the explanation reaching the member.
+// ─────────────────────────────────────────────────────────────────────────────
+
+test('a route error surfaces the server’s own explanation, not a bare status', () => {
+  const msg = explain(500, { error: 'Local Faster-Whisper transcription failed', details: 'connect ECONNREFUSED' });
+  assert.ok(msg.includes('Local Faster-Whisper transcription failed'), 'the route’s error is dropped');
+  assert.ok(msg.includes('ECONNREFUSED'), 'the route’s details are dropped — this is the loss the walk found');
+});
+
+test('a non-JSON error body is preserved as evidence, not discarded', async () => {
+  const res = { text: async () => '<html><body>502 Bad Gateway</body></html>' };
+  const body = await readErrorBody(res);
+  assert.ok(body && body.__raw, 'a non-JSON body was thrown away');
+  assert.ok(!body.__raw.includes('<'), 'markup was not stripped before display');
+  assert.ok(explain(502, body).includes('502 Bad Gateway'), 'the proxy’s message never reaches the surface');
+});
+
+test('a non-JSON error is distinguishable from a route error in diagnostics', () => {
+  // strip(): the assertion is about code, not about the comment that explains
+  // why the code is that way — that comment necessarily names `details`.
+  const src = strip('conversation.js');
+  const handler = /if \(!out\.ok\) \{[\s\S]*?voice_transcribe_error[\s\S]*?\}\);/.exec(src)[0];
+  assert.ok(/source:\s*body && body\.__raw \? 'non_route' : 'route'/.test(handler),
+    'the event cannot distinguish a route failure from a proxy/framework failure');
+  assert.ok(!/details/.test(handler), 'upstream prose is being written into telemetry');
+});
+
+test('the surface uses the canonical Soullab tokens, not a Desktop palette', () => {
+  const html = readFileSync(path.join(srcDir, 'index.html'), 'utf8');
+  const css = /<style>[\s\S]*?<\/style>/.exec(html)[0];
+  // The canonical values, from app/globals.css :root.
+  for (const [token, value] of [
+    ['--sl-bg-canvas', '#0A1628'],
+    ['--sl-text-primary', '#F5F7FB'],
+    ['--sl-accent-primary', '#B8860B'],
+    ['--sl-accent-soft', '#D4AF37'],
+  ]) {
+    assert.ok(css.includes(`${token}: ${value}`), `${token} has drifted from app/globals.css`);
+  }
+  // Every colour outside the token block must be a var() reference — a raw hex
+  // in a rule is a second palette forming.
+  const body = css.slice(css.indexOf('}', css.indexOf(':root')) + 1);
+  const strays = body.match(/#[0-9A-Fa-f]{3,8}\b/g) || [];
+  assert.deepEqual(strays, [], `raw colours outside the token block: ${strays.join(', ')}`);
 });
