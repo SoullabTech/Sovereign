@@ -25,6 +25,12 @@ const { encodeWav } = require('./voice/wav');
 
 const TRANSCRIBE_PATH = '/api/voice/transcribe-simple';
 const MAIA_PATH = '/api/sovereign/app/maia/list';
+// ⭐ D04. The member's existing thread, from the server rather than from this
+// device. GET with no sessionId returns their last 50 turns across ALL
+// surfaces, newest first, each carrying its session_id — so the thread the
+// member was last in on iPhone or web is simply readable. Passing a sessionId
+// returns that thread in order.
+const TURNS_PATH = '/api/conversation/turns';
 
 // ⛔ RETRACTED 2026-08-27. A TRANSPORT_CEILING_BYTES of 460 KB used to live
 // here, on the reasoning that bodies over ~512 KB were rejected. The server log
@@ -113,6 +119,61 @@ const MULTIPART_HEADERS = Object.freeze({
 
 function createConversation({ session, diagnostics, sessionId }) {
   let convId = sessionId;
+  let resumed = false;
+
+  /**
+   * ⭐ D04 — ADOPT THE MEMBER'S THREAD, DO NOT MINT ONE.
+   *
+   * Desktop used to open `desktop-<launch timestamp>`, which gave the member
+   * continuity (same identity, same memory, same realm) but not THREAD
+   * continuity: every launch started a conversation that existed nowhere else.
+   * That is a Desktop-only conversation lineage, and the programme's invariant
+   * — one MAIA realm, many surfaces — forbids exactly that.
+   *
+   * The fix is a read, not a design. `conversation_turns` already holds every
+   * surface's turns against one member id, and the route already scopes by the
+   * authenticated member. So Desktop asks the server which conversation the
+   * member is in and joins it.
+   *
+   * ⛔ Falls back to the passed id ONLY when the member has no history at all
+   * — a genuinely new member, where there is no thread to join. Never on an
+   * error: a failed lookup must not silently fork the conversation, so it
+   * reports and leaves the caller to decide.
+   *
+   * @returns {Promise<{ok: boolean, sessionId?: string, resumed?: boolean, error?: string}>}
+   */
+  async function adoptMemberThread() {
+    const out = await session.authedFetch(TURNS_PATH, { method: 'GET' });
+    if (!out.ok) {
+      const body = await readErrorBody(out.res);
+      return { ok: false, error: out.error || explain(out.status, body) };
+    }
+    let data = null;
+    try { data = await out.res.json(); } catch { /* not JSON */ }
+    const messages = (data && Array.isArray(data.messages)) ? data.messages : [];
+    // Newest first, so the first row carrying a session id is the live thread.
+    const latest = messages.find((m) => m && typeof m.sessionId === 'string' && m.sessionId.trim());
+    if (!latest) {
+      // No history: this member has no thread anywhere. Keeping the minted id
+      // is correct here — it is the FIRST conversation, not a second one.
+      return { ok: true, sessionId: convId, resumed: false };
+    }
+    convId = latest.sessionId.trim();
+    resumed = true;
+    return { ok: true, sessionId: convId, resumed: true };
+  }
+
+  /** The adopted thread in order, so Desktop opens on what was actually said. */
+  async function history(limit = 20) {
+    const out = await session.authedFetch(
+      `${TURNS_PATH}?sessionId=${encodeURIComponent(convId)}`, { method: 'GET' });
+    if (!out.ok) return { ok: false, turns: [] };
+    let data = null;
+    try { data = await out.res.json(); } catch { /* not JSON */ }
+    const rows = (data && Array.isArray(data.messages)) ? data.messages : [];
+    // Ascending from the route; the tail is the part a member recognises.
+    return { ok: true, turns: rows.slice(-limit).map((m) => ({ role: m.role, content: m.content })) };
+  }
 
   // The device walk (2026-08-27) produced `chars=0` on a request that had
   // succeeded, and there was no way to tell whether the mic had captured
@@ -224,7 +285,11 @@ function createConversation({ session, diagnostics, sessionId }) {
     return { ok: true, text, audio };
   }
 
-  return { transcribe, ask, conversationId: () => convId, TRANSCRIBE_PATH, MAIA_PATH };
+  return {
+    transcribe, ask, adoptMemberThread, history,
+    conversationId: () => convId, isResumed: () => resumed,
+    TRANSCRIBE_PATH, MAIA_PATH, TURNS_PATH,
+  };
 }
 
-module.exports = { createConversation, explain, readErrorBody, multipartWav, BOUNDARY, TRANSCRIBE_PATH, MAIA_PATH };
+module.exports = { createConversation, explain, readErrorBody, multipartWav, BOUNDARY, TRANSCRIBE_PATH, MAIA_PATH, TURNS_PATH };

@@ -258,6 +258,30 @@ async function runTurn() {
   }
 }
 
+
+// ── D04 — join the member's thread, do not open a new one ───────────────────
+//
+// Called after sign-in and at startup for a restored session. The adoption is
+// a read against the server's own record of the member's conversations, so
+// Desktop lands in whatever thread they were last in — on iPhone, on web, or
+// here. `desktop-<timestamp>` survives only as the id for a member who has no
+// history anywhere, where it is the FIRST conversation rather than a second.
+async function joinMemberThread() {
+  if (!conversation) return;
+  const out = await conversation.adoptMemberThread();
+  if (!out.ok) {
+    // ⛔ A failed lookup must never silently fork the conversation. Say so.
+    broadcast('maia:thread', { resumed: false, error: out.error });
+    return;
+  }
+  const h = out.resumed ? await conversation.history() : { turns: [] };
+  broadcast('maia:thread', {
+    resumed: out.resumed,
+    conversationId: out.sessionId,
+    turns: h.turns,
+  });
+}
+
 // ── auth IPC — the token never crosses the bridge ───────────────────────────
 
 ipcMain.handle('maia:sign-in', async (_evt, payload) => {
@@ -271,6 +295,7 @@ ipcMain.handle('maia:sign-in', async (_evt, payload) => {
       diagnostics: { emit: (e, m) => broadcast('maia:voice-event', { event: e, surface: 'desktop', at: Date.now(), ...m }) },
       sessionId: `desktop-${Date.now()}`,
     });
+    void joinMemberThread();
   }
   broadcast('maia:auth', memberSession.state());
   return out;
@@ -322,6 +347,10 @@ app.whenReady().then(() => {
   }
 
   createWindow();
+  // After the window exists, so the restored thread has somewhere to land.
+  if (memberSession.state().signedIn) {
+    mainWindow.webContents.once('did-finish-load', () => { void joinMemberThread(); });
+  }
 });
 
 app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });

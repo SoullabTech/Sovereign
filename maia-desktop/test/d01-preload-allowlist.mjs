@@ -42,6 +42,8 @@ export const RATIFIED_PUSH_CHANNELS = [
     purpose: 'Diagnostic events, outward only. Privacy-safe by construction — the emitter refuses non-allowlisted string metadata.' },
   { channel: 'maia:voice-state-changed', ratified_in: 'MAIA-D01',
     purpose: 'Voice state snapshot, outward only.' },
+  { channel: 'maia:thread', ratified_in: 'MAIA-D04',
+    purpose: 'Which conversation Desktop joined, outward only: whether a thread was resumed, its id, and the tail of its turns so the member opens on what was actually said. The turns are the member\'s own words and MAIA\'s, already theirs on every other surface — they go to the surface, never to telemetry. An adoption failure is reported here too, because a silent failure would fork the conversation.' },
 ];
 
 export const INVOKE_CHANNEL_NAMES = RATIFIED_INVOKE_CHANNELS.map((c) => c.channel).sort();
