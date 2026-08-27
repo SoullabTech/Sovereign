@@ -276,12 +276,18 @@ async function readReceipt(root, runId) {
   }
 }
 
-/** Persist a run record the caller has already validated and updated. */
-async function saveRun(root, run) {
+/**
+ * Persist a run record the caller has already validated and updated.
+ *
+ * The event kind is named by the caller rather than assumed, so the append-only
+ * log distinguishes a handoff from an ingestion — a log where every write says
+ * the same thing cannot reconstruct a lifecycle.
+ */
+async function saveRun(root, run, kind = 'updated') {
   const s = await loadStore(root);
   if (!s.ok) return { ok: false, reason: s.reason };
   s.store.saveRun(run);
-  s.store.appendEvent({ run_id: run.run_id, surface: SURFACE, kind: 'evidence_received' });
+  s.store.appendEvent({ run_id: run.run_id, surface: SURFACE, kind });
   return { ok: true, reason: null };
 }
 

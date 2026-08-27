@@ -120,6 +120,7 @@ function buildPacket({
  */
 const RETURN_FORMAT = Object.freeze({
   run_id: 'the run_id from this packet, verbatim',
+  base_sha: 'the SHA this work was based on — MUST match the CANDIDATE SHA in this packet',
   branch: 'branch the work landed on',
   candidate_sha: 'head SHA produced, or null if nothing was pushed',
   diff_summary: 'files changed and why — not the diff body',

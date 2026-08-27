@@ -891,6 +891,28 @@ function spInspectEdge(sp, from, to) {
 // again. Everything here is read from the canonical store; nothing is held in
 // this window, so it reads the same after a quit as it did before one.
 // ---------------------------------------------------------------------------
+// JARVIS-STAB-06 — evidence currency, shown FIRST.
+//
+// Drift has to be the first thing read about a piece of evidence, not a detail
+// below the claim. A founder who reads "tests: 12 passed" and only afterwards
+// learns it was measured against a head that has since moved has already formed
+// the wrong belief — the ordering here is the point, not decoration.
+function evidenceCurrencyRow(e) {
+  if (e.currency === 'HISTORICAL') {
+    return `<div class="row"><span class="label">Evidence currency</span><span class="state UNAVAILABLE">HISTORICAL — NOT ABOUT THE CURRENT HEAD</span></div>
+      <div class="row"><span class="label">Produced against</span><span class="kv">${e.base_drift.issued_against}</span></div>
+      <div class="row"><span class="label">Head is now</span><span class="kv">${e.base_drift.current_base}</span></div>
+      <div class="errors"><div>Reconciliation required before this can be treated as current: re-verify against the current head, or close the run as historical.</div></div>`;
+  }
+  if (e.currency === 'UNVERIFIED') {
+    return `<div class="row"><span class="label">Evidence currency</span><span class="state UNKNOWN">UNVERIFIED — the head could not be read</span></div>`;
+  }
+  if (e.currency === 'CURRENT') {
+    return `<div class="row"><span class="label">Evidence currency</span><span class="state AVAILABLE">CURRENT — base ${e.base_sha || '—'}</span></div>`;
+  }
+  return '';
+}
+
 async function renderRuns() {
   $main.innerHTML = '<div class="card"><p class="hint">Reading durable run history…</p></div>';
   const r = await window.jarvis.listRuns({ limit: 50 });
@@ -915,7 +937,8 @@ async function renderRuns() {
       <div class="row"><span class="label">Opened</span><span class="kv">${run.created_at}</span></div>
       <div class="row"><span class="label">Task</span><span style="text-align:right;max-width:420px">${
         (run.task && (run.task.description || run.task.prompt || run.task.capability) || '—').toString().slice(0, 240)}</span></div>
-      ${e ? `<div class="row"><span class="label">Claim</span><span style="text-align:right;max-width:420px">${e.claim}</span></div>
+      ${e ? `${evidenceCurrencyRow(e)}
+             <div class="row"><span class="label">Claim</span><span style="text-align:right;max-width:420px">${e.claim}</span></div>
              <div class="row"><span class="label">NOT established</span><span style="text-align:right;max-width:420px">${e.non_claim}</span></div>
              ${e.pr ? `<div class="row"><span class="label">PR</span><span class="kv">${e.pr}</span></div>` : ''}`
           : `<div class="row"><span class="label">Evidence</span><span class="state UNKNOWN">NONE RETURNED</span></div>`}

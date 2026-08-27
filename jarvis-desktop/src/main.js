@@ -989,6 +989,26 @@ ipcMain.handle('jarvis:handoff-packet', async (_evt, req) => {
   });
   const text = PACKET.renderPacket(packet);
   const written = await RUNS.writeHandoffPacket(root, runId, text);
+
+  // JARVIS-STAB-06 — record WHAT BASE this packet was issued against.
+  //
+  // Without this the returning receipt has nothing to be checked against, and
+  // evidence produced against one head would ingest silently as a statement
+  // about another. Recorded at issue time because that is the only moment the
+  // base is knowable; recovering it later from the packet text would be
+  // reconstruction, which is the thing this programme removes.
+  found.run.handoff = {
+    issued_at: new Date().toISOString(),
+    receipt_path: rp.path,
+    packet_path: written.path,
+    unit: packet.unit,
+    bases: {
+      canonical_sha: packet.canonical_sha.value,
+      production_sha: packet.production_sha.value,
+      candidate_sha: packet.candidate_sha.value,
+    },
+  };
+  await RUNS.saveRun(root, found.run, 'handoff_issued');
   try { clipboard.writeText(text); } catch { /* a clipboard failure must not lose the file */ }
   return { ok: written.ok, reason: written.reason, packet, text, path: written.path, copied_to_clipboard: true };
 });
@@ -1023,13 +1043,28 @@ ipcMain.handle('jarvis:ingest-receipt', async (_evt, req) => {
     source = r.path;
   }
 
-  const applied = RECEIPT.applyReceipt(found.run, receipt, { at: new Date().toISOString() });
+  // JARVIS-STAB-06 — the head is re-read HERE, at ingestion, because that is
+  // when the question "is this evidence still about the current tree?" is
+  // actually being asked. Reusing the value read at handoff would answer it
+  // with a fact from before the interval in question.
+  const nowSub = readSubstrateVersion(root);
+  const current_base = nowSub.git_connected ? nowSub.head : null;
+
+  const applied = RECEIPT.applyReceipt(found.run, receipt, { at: new Date().toISOString(), current_base });
   if (!applied.ok) {
     return { ok: false, reason: 'receipt refused — it was not applied', violations: applied.violations, run: found.run, source };
   }
-  const saved = await RUNS.saveRun(root, applied.run);
+  const saved = await RUNS.saveRun(root, applied.run, 'evidence_received');
   if (!saved.ok) return { ok: false, reason: saved.reason, violations: [], run: found.run, source };
-  return { ok: true, reason: null, violations: [], run: applied.run, evidence: RECEIPT.describeEvidence(applied.run), source };
+  return {
+    ok: true, reason: null, violations: [], run: applied.run,
+    evidence: RECEIPT.describeEvidence(applied.run),
+    // Drift does not fail the ingestion — the evidence is real — but it MUST
+    // reach the cockpit as a blocker so the programme cannot advance on
+    // historical evidence as though it were current.
+    reconciliation: RECEIPT.reconciliationBlockers(applied.run, PS),
+    source,
+  };
 });
 
 // ---------------------------------------------------------------------------
