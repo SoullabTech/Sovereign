@@ -145,7 +145,10 @@ export const BOUNDARY_DISPOSITIONS: Record<string, BoundaryDisposition> = {
     destinationId: 'astrology',
     authorization: 'open',
     interimAudience: 'all',
-    rationale: 'Member-facing web environment.',
+    // Not a web environment since 2ef2d40 — /astrology is a reconciled native
+    // room. Disposition governs who may enter, not transport, so only the
+    // wording was stale; the House still offers this door to every member.
+    rationale: 'Member-facing room, native on iOS and web alike.',
   },
   keeps: {
     disposition: 'offered',
