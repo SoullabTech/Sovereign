@@ -8,6 +8,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { apiFetch, getValidMemberId } from '@/lib/http/apiBase'
+import { ReturnToMaia } from '@/components/navigation/ReturnToMaia'
 import { PersonalLivingFieldDashboard } from '@/components/maia/living-field/PersonalLivingFieldDashboard'
 import type {
   LivingField,
@@ -22,6 +23,31 @@ interface LivingFieldData {
   spiral_state: SpiralState | null
   active_spirals: PersonalSpiral[]
   recent_states: PersonalState[]
+}
+
+/**
+ * The room before the room.
+ *
+ * MLX-06 Unit 6A. This page returns early three times — loading, signed out,
+ * and load-failed — and the dashboard that carries the way out renders in none
+ * of them. A member whose Living Field could not be read met a dead end whose
+ * own copy told them to "try returning" while offering nothing to return with.
+ * The source-shape return guard could not see it: the affordance IS in the
+ * page's import closure, just not in the branch the member met.
+ *
+ * So the way out lives in the antechamber too. Same component, same
+ * destination, same accessible name as the dashboard's — a member should not
+ * have to notice which branch they landed in.
+ */
+function Antechamber({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="min-h-screen bg-stone-950">
+      <div className="mx-auto max-w-4xl px-4 py-10">
+        <ReturnToMaia className="text-stone-500 hover:text-stone-300 text-sm" />
+      </div>
+      <div className="flex items-center justify-center px-4 pb-24">{children}</div>
+    </div>
+  )
 }
 
 export default function LivingFieldPage() {
@@ -51,15 +77,15 @@ export default function LivingFieldPage() {
 
   if (!authChecked || loading) {
     return (
-      <div className="min-h-screen bg-stone-950 flex items-center justify-center">
+      <Antechamber>
         <p className="text-stone-600 text-sm font-light">Opening your Living Field…</p>
-      </div>
+      </Antechamber>
     )
   }
 
   if (!memberId) {
     return (
-      <div className="min-h-screen bg-stone-950 flex items-center justify-center">
+      <Antechamber>
         <div className="text-center space-y-3">
           <p className="text-stone-400 text-sm">Sign in to enter your Living Field.</p>
           <Link
@@ -69,15 +95,15 @@ export default function LivingFieldPage() {
             Sign in →
           </Link>
         </div>
-      </div>
+      </Antechamber>
     )
   }
 
   if (failed || !data) {
     return (
-      <div className="min-h-screen bg-stone-950 flex items-center justify-center">
+      <Antechamber>
         <p className="text-stone-400 text-sm">Something went quiet. Try returning in a moment.</p>
-      </div>
+      </Antechamber>
     )
   }
 

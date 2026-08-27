@@ -268,3 +268,83 @@ describe('every room a member can enter has a way back to MAIA', () => {
     });
   }
 });
+
+/**
+ * MLX-06 Unit 6A — the blind spot named at the top of this file, closed as far
+ * as a source-shape guard can close it.
+ *
+ * The closure walk above asks whether a way out exists ANYWHERE in a room's
+ * imports. Living Field satisfied that and still stranded the member: the
+ * affordance lived in the dashboard, and the page returned early three times —
+ * loading, signed out, load-failed — before the dashboard ever rendered. A
+ * member whose field could not be read met a dead end whose own copy said "try
+ * returning" with nothing to return with.
+ *
+ * The rule this encodes: a page that CHOOSES between several whole-screen
+ * returns must carry the way out in every one of them. A page with a single
+ * return delegates to a component, and the closure walk already covers that.
+ *
+ * Still not proven here: visibility, touch size, occlusion. The browser walk
+ * remains the acceptance test — this only makes the branch case non-silent.
+ */
+describe('every BRANCH a member can land on carries the way out', () => {
+  /** Whole-screen `return (…)` blocks at the top level of a page component. */
+  function returnBranches(source: string): string[] {
+    const src = code(source);
+    const out: string[] = [];
+    const re = /\breturn\s*\(/g;
+    let m: RegExpExecArray | null;
+    while ((m = re.exec(src))) {
+      let depth = 0;
+      let i = m.index + m[0].length - 1;
+      for (; i < src.length; i++) {
+        if (src[i] === '(') depth += 1;
+        else if (src[i] === ')') {
+          depth -= 1;
+          if (depth === 0) break;
+        }
+      }
+      const body = src.slice(m.index, i + 1);
+      // Only whole-screen branches — a `return (` inside a .map() callback is
+      // a list item, not a screen the member can land on.
+      if (/min-h-screen/.test(body)) out.push(body);
+    }
+    return out;
+  }
+
+  it('the branch detector finds the shape it was written for', () => {
+    const two = `
+      if (loading) { return (<div className="min-h-screen">…</div>) }
+      return (<div className="min-h-screen"><ReturnToMaia /></div>)
+    `;
+    expect(returnBranches(two)).toHaveLength(2);
+    // A list item is not a screen.
+    expect(returnBranches('items.map(i => { return (<li>{i}</li>) })')).toHaveLength(0);
+  });
+
+  for (const d of destinationsRequiringReturn()) {
+    const route = d.route!;
+
+    it(`${d.label} (${route}) leaves no branch without one`, () => {
+      const page = pageFor(route)!;
+      // A SEGMENT LAYOUT carries the return for every branch by construction —
+      // /astrology gets its way back from app/astrology/layout.tsx, which wraps
+      // whatever the page returns. Only rooms whose way out lives in the page's
+      // own closure can lose it down a branch.
+      const heldByLayout = ancestorLayouts(page).some((f) =>
+        importClosure([f]).some((g) => navigatesToMaia(read(g), g)),
+      );
+      if (heldByLayout) return;
+
+      const source = read(page);
+      const branches = returnBranches(source);
+      // Single-branch pages delegate; the closure walk above is their guard.
+      if (branches.length < 2) return;
+      const naked = branches.filter((b) => !navigatesToMaia(b, page));
+      expect({ route, branchesWithoutAWayOut: naked.length }).toEqual({
+        route,
+        branchesWithoutAWayOut: 0,
+      });
+    });
+  }
+});
