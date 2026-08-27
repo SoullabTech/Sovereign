@@ -167,6 +167,24 @@ function navigatesToMaia(source: string, rel = ''): boolean {
   return (
     // The shared affordance, actually rendered (not merely imported).
     /<\s*ReturnToMaia[\s/>]/.test(src) ||
+    /*
+     * The House itself, mounted. Its "Your Center" row IS MAIA, dispatched
+     * through the registry, so a surface that mounts the House has given the
+     * member a way home as surely as one that renders the link.
+     *
+     * Added in MLX-06 Unit 7A, and only because that unit removed the literal
+     * `router.push('/maia')` the House sheet used to carry: the Continue row
+     * now dispatches through `dispatchHouseDestination` so it can honour
+     * platform reachability. The navigation did not go away; this detector
+     * could no longer see it, and /astrology — which gets its way out from
+     * MaiaBoundaryLayout mounting the House — started failing. Recognising the
+     * sheet keeps the guard measuring the behaviour rather than the spelling.
+     *
+     * Not vacuous: exactly two files in the tree mount it, both of them shells
+     * whose whole job is to provide navigation. The negative control below
+     * still fails every room whose own fix is reverted.
+     */
+    /<\s*MaiaHouseSheet[\s/>]/.test(src) ||
     // router.push('/maia') · router.replace('/maia')
     new RegExp(`\\.(push|replace)\\s*\\(\\s*${q}`).test(src) ||
     // href="/maia" · href={'/maia'}

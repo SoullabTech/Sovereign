@@ -169,6 +169,31 @@ export function MaiaHouseSheet({
     (d) => d.conditional !== 'colab' || showColab,
   );
 
+  /*
+   * CONTINUITY TARGETS RESOLVE THROUGH THE REGISTRY (MLX-06 Unit 7A).
+   *
+   * The continuity block below is built from the member's own material rather
+   * than from the destination list, so it is the one place in the House that
+   * can offer a door the platform does not have. It did: Unit 5 wired Kept to
+   * `router.push('/maia/keep-capture')` directly, which bypasses reachability
+   * entirely. Keeps is `nativeReady: false`, so on the native build the House
+   * withholds it from My Contribution — while the Kept block two inches above
+   * would still have offered it, landing the member on a route that is in
+   * neither the runtime allowlist nor the Capacitor bundle.
+   *
+   * So these rows now resolve to their canonical destination, classify for the
+   * platform, and dispatch through the same function every other row uses. A
+   * hidden destination is withheld exactly as `visibleInGroup` withholds a
+   * room: no fallback, no web bridge the registry did not ask for, no
+   * native-only special case. One policy, one dispatcher.
+   */
+  const reachable = (d?: HouseDestination) =>
+    Boolean(d) && classifyReachability(d!, isNative) !== 'hidden';
+
+  const keepsDest = dests.find((d) => d.id === 'keeps');
+  const showContinue = Boolean(continuity?.continue) && reachable(center);
+  const showKept = Boolean(continuity?.kept.length) && reachable(keepsDest);
+
   const WebHint = () => (
     <span className="ml-2 align-middle text-[11px] font-medium uppercase tracking-[0.14em] text-slate-500">
       web&nbsp;↗
@@ -269,12 +294,12 @@ export function MaiaHouseSheet({
                 Counts and questions only — the House opens doors, it does not
                 describe what is behind one (THE_HOUSE.md).
               */}
-              {continuity && (continuity.continue || continuity.kept.length > 0) && (
+              {continuity && (showContinue || showKept) && (
                 <section className="mb-6">
-                  {continuity.continue && (
+                  {showContinue && continuity.continue && (
                     <button
                       type="button"
-                      onClick={() => { onClose(); router.push('/maia'); }}
+                      onClick={() => go(center!)}
                       className={ROW}
                     >
                       <span className="min-w-0">
@@ -293,10 +318,10 @@ export function MaiaHouseSheet({
                     </button>
                   )}
 
-                  {continuity.kept.length > 0 && (
+                  {showKept && (
                     <button
                       type="button"
-                      onClick={() => { onClose(); router.push('/maia/keep-capture'); }}
+                      onClick={() => go(keepsDest!)}
                       className="mt-2 block w-full rounded-2xl px-4 py-2 text-left transition-colors hover:bg-white/[0.04] focus-visible:bg-white/[0.06] focus-visible:outline-none"
                     >
                       <span className="block text-[10.5px] font-medium uppercase tracking-[0.22em] text-slate-500">
