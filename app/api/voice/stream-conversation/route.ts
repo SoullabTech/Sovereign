@@ -21,7 +21,7 @@
  * The user hears MAIA begin speaking while she's still thinking.
  */
 
-import { cloudVoicePermitted, resolveVoicePreference } from '@/lib/tts/cloudVoicePolicy';
+import { resolveVoicePreference } from '@/lib/tts/cloudVoicePolicy';
 import { NextRequest } from 'next/server';
 import os from 'os';
 import { getClaudeService } from '@/lib/services/ClaudeService';
@@ -227,12 +227,24 @@ async function synthesizeWithFallback(
   // preference for the cloud over an available sovereign path, against
   // CLAUDE.md's "Voice: Local TTS/STT or browser APIs only."
   //
-  // Now: auto, cloud and unset all resolve to local. The pre-existing
-  // DISABLE_OPENAI_COMPLETELY / missing-key conditions are kept as-is rather
-  // than replaced — the ruling declined that flag as the repair, and removing
-  // it here would quietly widen this unit.
+  // Under the current canon (MAIA_ALLOW_CLOUD_VOICE unset) auto, cloud and
+  // unset all still resolve to local — nothing below changes that. The
+  // pre-existing DISABLE_OPENAI_COMPLETELY / missing-key conditions are kept
+  // as-is rather than replaced; the ruling declined that flag as the repair.
+  // ⭐ VOICE-SOVEREIGNTY-02 (founder ruling 2026-08-27, second pass).
+  //
+  // The single question this route asks is `voicePref.effective`, and the whole
+  // matrix lives in `resolveVoicePreference`. This route does not re-derive it.
+  //
+  // ⛔ `auto` is NOT in the cloud condition, deliberately and permanently.
+  // `auto` is the absence of a choice, and the absence of a choice is not
+  // consent to leave the local machine — that `auto`-shaped default reaching
+  // OpenAI is the exact violation this lineage exists to close. Under
+  // re-permission the flag honours an explicit `cloud`; it does not restore a
+  // preferred provider.
   const voicePref = resolveVoicePreference(memberProvider);
-  const openaiDisabled = !cloudVoicePermitted()
+  const memberChoseCloud = voicePref.effective === 'cloud';
+  const openaiDisabled = !memberChoseCloud
     || process.env.DISABLE_OPENAI_COMPLETELY === 'true'
     || !process.env.OPENAI_API_KEY;
 
@@ -248,11 +260,16 @@ async function synthesizeWithFallback(
   }
 
   if (!openaiDisabled) {
-    // ── "auto" or "cloud" → OpenAI Alloy leads ──
+    // ── EXPLICIT `cloud` preference, under explicit re-permission → Alloy ──
+    // Unreachable while MAIA_ALLOW_CLOUD_VOICE is unset. Never reachable by an
+    // `auto` member in any flag state.
     const elementFallback = elementKey ? resolveOpenAIVoice(elementKey) : null;
     const finalOpenaiVoice = openaiVoice ?? elementFallback ?? 'alloy';
 
-    console.info('[tts.attempt]', JSON.stringify({ provider: 'openai', voice: finalOpenaiVoice, reason: 'auto/cloud lead' }));
+    // `reason` no longer says "auto/cloud lead" — auto can no longer be here,
+    // and the log line is the thing an auditor greps. It must not describe a
+    // route the canon has closed.
+    console.info('[tts.attempt]', JSON.stringify({ provider: 'openai', voice: finalOpenaiVoice, reason: 'member_chose_cloud' }));
     try {
       const response = await synthesizeSpeech({
         text,
@@ -264,15 +281,17 @@ async function synthesizeWithFallback(
       return { audio: buffer.toString('base64'), format: 'mp3', source: 'openai' };
     } catch (e) {
       console.error(`[TTS] OpenAI failed: ${e instanceof Error ? e.message : e}`);
-      // If member explicitly chose "cloud", don't fall back to Kokoro
-      if (memberProvider === 'cloud') return null;
+      // ⛔ Deliberately NO `return null` here. The founder ruling is explicit:
+      //
+      //   cloud preference + cloud unavailable -> local, if local is healthy
+      //                                        -> otherwise text
+      //
+      // Not silence. A member who chose the cloud and cannot be served it falls
+      // to the default like anyone who never chose; punishing them with silence
+      // for selecting an option the system itself offered is not sovereignty.
+      // Falling through to Kokoro is what "Kokoro for offline" means.
     }
   }
-  // ⛔ A stored `cloud` preference no longer returns null. The canon names LOCAL
-  // as the DEFAULT and cloud as unavailable, so a member whose choice cannot be
-  // served falls to the default like anyone who never chose. Serving silence
-  // would punish them for selecting an option the system itself offered.
-  // If local then fails, the caller gets text and a truthful unavailable state.
 
   // ── Kokoro path: primary when OpenAI disabled, fallback otherwise ──
   console.info('[tts.attempt]', JSON.stringify({ provider: 'kokoro', voice: kokoroVoice, reason: openaiDisabled ? 'sovereign_primary' : 'openai_fallback' }));

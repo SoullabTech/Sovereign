@@ -366,6 +366,15 @@ describe('ttsRouter sovereignty invariants', () => {
     // it cannot be constructed under the canon. These tests therefore describe
     // behaviour that exists only when cloud voice has been deliberately
     // re-permitted, and say so by setting the flag.
+    //
+    // AMENDED 2026-08-27 — VOICE-SOVEREIGNTY-02. These tests used to set the
+    // flag and construct with no member preference, because under the first
+    // ruling permission was the whole condition. It no longer is: the flag
+    // permits cloud voice to honour an EXPLICIT member choice, so these now
+    // pass 'cloud' as well. The old form is not merely stale — it asserted
+    // that a permitted-but-unchosen construction succeeds, which is precisely
+    // the auto-shaped back door the second ruling closed. Amended, not
+    // deleted; the assertions about isFallback / reason / name are unchanged.
     const permitCloud = () => { process.env.MAIA_ALLOW_CLOUD_VOICE = '1'; };
     const restoreCanon = () => { delete process.env.MAIA_ALLOW_CLOUD_VOICE; };
 
@@ -373,12 +382,12 @@ describe('ttsRouter sovereignty invariants', () => {
       permitCloud();
       const { TTSFallbackToOpenAI } = require('../ttsRouter');
 
-      const fallback = new TTSFallbackToOpenAI(true, 'kokoro_timeout');
+      const fallback = new TTSFallbackToOpenAI(true, 'kokoro_timeout', undefined, 'cloud');
       expect(fallback.isFallback).toBe(true);
       expect(fallback.reason).toBe('kokoro_timeout');
       expect(fallback.name).toBe('TTSFallbackToOpenAI');
 
-      const primary = new TTSFallbackToOpenAI(false, 'openai_primary');
+      const primary = new TTSFallbackToOpenAI(false, 'openai_primary', undefined, 'cloud');
       expect(primary.isFallback).toBe(false);
       expect(primary.reason).toBe('openai_primary');
       restoreCanon();
@@ -387,7 +396,7 @@ describe('ttsRouter sovereignty invariants', () => {
     it('defaults reason to "unknown" when not provided (only when cloud is permitted)', () => {
       permitCloud();
       const { TTSFallbackToOpenAI } = require('../ttsRouter');
-      const sentinel = new TTSFallbackToOpenAI(true);
+      const sentinel = new TTSFallbackToOpenAI(true, undefined, undefined, 'cloud');
       expect(sentinel.reason).toBe('unknown');
       restoreCanon();
     });
@@ -809,5 +818,110 @@ describe('consent matrix — the constitutional test', () => {
 
     // The combination: fallback needed + consent denied = fail closed.
     // This is where the API route returns 503 — not cloud audio.
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════
+// VOICE-SOVEREIGNTY-02 — the re-permission matrix
+//
+// Founder ruling 2026-08-27 (second pass): MAIA_ALLOW_CLOUD_VOICE=1 permits
+// cloud voice to HONOUR AN EXPLICIT MEMBER CHOICE. It does not restore OpenAI
+// as the automatic preferred provider.
+//
+//   flag unset/0            flag = 1
+//     cloud -> local          cloud -> cloud
+//     auto  -> local          auto  -> local
+//     local -> local          local -> local
+//     unset -> local          unset -> local
+// ═══════════════════════════════════════════════════════════════
+
+describe('VOICE-SOVEREIGNTY-02 re-permission matrix', () => {
+  const permitCloud = () => { process.env.MAIA_ALLOW_CLOUD_VOICE = '1'; };
+  const restoreCanon = () => { delete process.env.MAIA_ALLOW_CLOUD_VOICE; };
+
+  afterEach(() => { restoreCanon(); jest.resetModules(); });
+
+  describe('resolveVoicePreference — the full cross-product', () => {
+    // [stored, flagOn, expectedEffective]
+    const MATRIX: Array<[string | null | undefined, boolean, 'local' | 'cloud']> = [
+      ['cloud', false, 'local'],
+      ['auto', false, 'local'],
+      ['local', false, 'local'],
+      [undefined, false, 'local'],
+      [null, false, 'local'],
+      ['cloud', true, 'cloud'],
+      ['auto', true, 'local'],
+      ['local', true, 'local'],
+      [undefined, true, 'local'],
+      [null, true, 'local'],
+    ];
+
+    it.each(MATRIX)('stored=%s flagOn=%s -> %s', (stored, flagOn, expected) => {
+      if (flagOn) permitCloud(); else restoreCanon();
+      jest.resetModules();
+      const { resolveVoicePreference } = require('../cloudVoicePolicy');
+      expect(resolveVoicePreference(stored).effective).toBe(expected);
+    });
+
+    it('⭐ THE RULING: auto stays local even when cloud is fully permitted', () => {
+      // This single row is the entire second-pass ruling. `auto` is the
+      // ABSENCE of a choice, and the absence of a choice must never be read as
+      // consent to leave the local machine. The original violation was an
+      // auto-shaped default reaching the cloud; re-permission must not restore
+      // it. If this assertion is ever relaxed, the ruling is gone.
+      permitCloud();
+      jest.resetModules();
+      const { resolveVoicePreference } = require('../cloudVoicePolicy');
+      expect(resolveVoicePreference('auto').effective).toBe('local');
+      expect(resolveVoicePreference(undefined).effective).toBe('local');
+    });
+
+    it('the stored value is never rewritten, in any flag state', () => {
+      for (const flagOn of [false, true]) {
+        if (flagOn) permitCloud(); else restoreCanon();
+        jest.resetModules();
+        const { resolveVoicePreference } = require('../cloudVoicePolicy');
+        expect(resolveVoicePreference('cloud').stored).toBe('cloud');
+      }
+    });
+  });
+
+  describe('router gate — permitted is not the same as chosen', () => {
+    it('⭐ flag ON + auto member: router still refuses OpenAI', () => {
+      // The gap this unit closed. Before it, flipping the flag re-opened the
+      // router's INTERNAL fallback to every caller, so an auto member whose
+      // Kokoro was down reached OpenAI through a path nobody was watching.
+      permitCloud();
+      jest.resetModules();
+      const { TTSFallbackToOpenAI } = require('../ttsRouter');
+      expect(() => new TTSFallbackToOpenAI(true, 'kokoro_timeout', undefined, 'auto'))
+        .toThrow(/CloudVoiceForbidden|sovereignty policy/);
+    });
+
+    it('⭐ flag ON + explicit cloud member: router permits', () => {
+      permitCloud();
+      jest.resetModules();
+      const { TTSFallbackToOpenAI } = require('../ttsRouter');
+      expect(() => new TTSFallbackToOpenAI(true, 'kokoro_timeout', undefined, 'cloud'))
+        .not.toThrow();
+    });
+
+    it('flag OFF + explicit cloud member: router refuses (current canon)', () => {
+      restoreCanon();
+      jest.resetModules();
+      const { TTSFallbackToOpenAI } = require('../ttsRouter');
+      expect(() => new TTSFallbackToOpenAI(true, 'kokoro_timeout', undefined, 'cloud'))
+        .toThrow(/CloudVoiceForbidden|sovereignty policy/);
+    });
+
+    it('⭐ omitting the preference REFUSES — fail-closed by construction', () => {
+      // A seventh escape added later that forgets the argument must inherit
+      // the refusal. Permission can never be reached by omission.
+      permitCloud();
+      jest.resetModules();
+      const { TTSFallbackToOpenAI } = require('../ttsRouter');
+      expect(() => new TTSFallbackToOpenAI(true, 'new_escape_someone_added'))
+        .toThrow(/CloudVoiceForbidden|sovereignty policy/);
+    });
   });
 });

@@ -21,7 +21,7 @@
  *   KOKORO_TTS_URL — Kokoro endpoint (default: http://localhost:8880)
  */
 
-import { assertCloudVoiceAllowed } from './cloudVoicePolicy';
+import { assertCloudVoiceAllowed, resolveVoicePreference, CloudVoiceForbidden } from './cloudVoicePolicy';
 import * as kokoro from './providers/kokoro';
 import * as sesame from './providers/sesame';
 import * as personaplex from './providers/personaplex';
@@ -201,7 +201,7 @@ export async function synthesize(params: TTSRequest): Promise<TTSResult> {
 
     if (archetypeResolution.provider === 'openai') {
       const reason = `archetype_openai:${params.voiceArchetype}:${archetypeResolution.voice}`;
-      throw new TTSFallbackToOpenAI(false, reason, archetypeResolution.voice);
+      throw new TTSFallbackToOpenAI(false, reason, archetypeResolution.voice, params.ttsProviderPref);
     }
   }
 
@@ -220,7 +220,7 @@ export async function synthesize(params: TTSRequest): Promise<TTSResult> {
       voiceArchetype: archetype,
       memberPref,
     });
-    throw new TTSFallbackToOpenAI(false, 'maia_default_guardrail', resolveArchetypeVoice(archetype).voice);
+    throw new TTSFallbackToOpenAI(false, 'maia_default_guardrail', resolveArchetypeVoice(archetype).voice, params.ttsProviderPref);
   }
 
   // Try primary
@@ -260,7 +260,7 @@ export async function synthesize(params: TTSRequest): Promise<TTSResult> {
         : 'kokoro_error';
       console.warn(`[tts-router] Kokoro failed (${reason}), falling back to OpenAI: ${err.message}`);
       // Fall through to OpenAI with reason
-      throw new TTSFallbackToOpenAI(true, reason);
+      throw new TTSFallbackToOpenAI(true, reason, undefined, params.ttsProviderPref);
     }
   }
 
@@ -307,7 +307,7 @@ export async function synthesize(params: TTSRequest): Promise<TTSResult> {
       } catch (kokoroErr: any) {
         const kokoroReason = kokoroErr.message?.includes('ECONNREFUSED') ? 'kokoro_unreachable' : 'kokoro_error';
         console.warn(`[tts-router] Kokoro also failed (${kokoroReason}), falling back to OpenAI`);
-        throw new TTSFallbackToOpenAI(true, `${reason}_${kokoroReason}`);
+        throw new TTSFallbackToOpenAI(true, `${reason}_${kokoroReason}`, undefined, params.ttsProviderPref);
       }
     }
   }
@@ -335,7 +335,7 @@ export async function synthesize(params: TTSRequest): Promise<TTSResult> {
         : err?.message?.includes('ECONNREFUSED') ? 'pplex_unreachable'
         : 'pplex_error';
       console.warn(`[tts-router] PersonaPlex failed (${reason}), falling back to OpenAI: ${err?.message}`);
-      throw new TTSFallbackToOpenAI(true, reason);
+      throw new TTSFallbackToOpenAI(true, reason, undefined, params.ttsProviderPref);
     }
   }
 
@@ -349,7 +349,7 @@ export async function synthesize(params: TTSRequest): Promise<TTSResult> {
     element: params.voiceHint?.element,
     memberPref,
   });
-  throw new TTSFallbackToOpenAI(false, 'openai_primary');
+  throw new TTSFallbackToOpenAI(false, 'openai_primary', undefined, params.ttsProviderPref);
 }
 
 /**
@@ -363,18 +363,46 @@ export class TTSFallbackToOpenAI extends Error {
   /** Specific OpenAI voice to use (when archetype routes to OpenAI by design) */
   public readonly voice?: string;
 
-  constructor(isFallback: boolean, reason: string = 'unknown', voice?: string) {
+  constructor(
+    isFallback: boolean,
+    reason: string = 'unknown',
+    voice?: string,
+    /**
+     * The member's stored TTS preference for THIS request.
+     *
+     * ⛔ Defaults to 'auto', which is REFUSED. Fail-closed is the point: a
+     * seventh escape added later that forgets to pass the preference gets the
+     * refusal, not the exemption. Permission must be supplied deliberately;
+     * it can never be arrived at by omission.
+     */
+    memberPref?: string | null,
+  ) {
     // ⭐ VOICE-SOVEREIGNTY-01. THE choke point. This router has six separate
     // escapes to OpenAI, and repairing each individually is discipline — which
     // is exactly what drifted and put `provider:"openai"` on ordinary member
     // turns while Kokoro was healthy. Refusing here means every escape, and
     // every escape added later, inherits the refusal without anyone having to
     // remember. Under the canon this constructor cannot complete.
+    //
+    // ⭐ VOICE-SOVEREIGNTY-02 (founder ruling, second pass). The flag alone is
+    // no longer sufficient. `MAIA_ALLOW_CLOUD_VOICE=1` permits cloud voice to
+    // HONOUR AN EXPLICIT MEMBER CHOICE — it does not re-open the router to
+    // everyone. Without this, flipping the flag would let an `auto` member
+    // whose Kokoro is down reach OpenAI through the router's internal
+    // fallback: the original `auto`-shaped default, restored by the back door
+    // through a path nobody was looking at. Both conditions must hold.
     super('Falling back to OpenAI TTS');
     this.name = 'TTSFallbackToOpenAI';
     this.isFallback = isFallback;
     this.reason = reason;
     this.voice = voice;
+
+    const pref = resolveVoicePreference(memberPref);
+    if (pref.effective !== 'cloud') {
+      // Permitted-but-not-chosen is refused with the same error as
+      // not-permitted. The member did not ask to leave the local machine.
+      throw new CloudVoiceForbidden(`ttsRouter:${reason}:pref=${pref.stored}`);
+    }
     assertCloudVoiceAllowed(`ttsRouter:${reason}`);
   }
 }
