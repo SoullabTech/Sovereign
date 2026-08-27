@@ -10,11 +10,10 @@
 
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { Home } from 'lucide-react';
 import { MaiaTopBar } from './MaiaTopBar';
-import { MaiaLeftRail } from './MaiaLeftRail';
 import { MaiaRightPanelHost } from './MaiaRightPanelHost';
 import { MaiaHouseSheet } from './MaiaHouseSheet';
+import { MaiaHouseDoorway } from './MaiaHouseDoorway';
 import { useVoiceState } from '@/lib/maia/voiceStateContext';
 import { useSession } from '@/lib/hooks/useSession';
 import { onVoiceNavigate } from '@/lib/maia/voiceNavigationBridge';
@@ -303,74 +302,18 @@ export function MaiaShell({
         {children}
       </main>
 
-      {/* The House — THE doorway. Now the only permanent navigation on the
+      {/* The House — THE doorway. The only permanent navigation on the
           conversation surface: MAIA, and one way into the places.
 
-          GEOMETRY IS LOAD-BEARING. This must render at the SAME box as the
-          Arrival composition's doorway, because Arrival and conversation swap
-          beneath a member who should never have to re-find the way out. The
-          container mirrors MaiaArrivalField's header exactly — h-[54px],
-          px-4 md:px-6 — and the button mirrors its button — -ml-1, h-11, px-2,
-          no pill. That yields an identical box in both states:
-
-              desktop  x=20  y=5  114x44
-              mobile   x=12  y=5  114x44
-
-          A previous pass placed this at `left-3 top-14` and asserted in a
-          comment that it matched Arrival. It did not: measured, it sat at
-          (12,56) 124x44 — a 51px jump and a 10px width change every time
-          Arrival gave way to conversation. Do not re-anchor this to the top bar
-          height or to a `top-*` offset; anchor it to the same header box, and
-          verify by measuring the bounding box in both states, not by reading
-          this comment.
+          The box lives in MaiaHouseDoorway, which is also what the boundary
+          rooms mount on mobile. One House, one renderer, one doorway — enforced
+          by the component rather than by a comment, because a hand-copied box
+          is how the doorway drifted last time.
 
           Hidden while Arrival is on screen — Arrival carries its own doorway at
-          these coordinates. One House, one renderer, one doorway. */}
+          these coordinates. */}
       {!arrivalMode && (
-        <div
-          className="pointer-events-none fixed inset-x-0 top-0 z-[85] flex h-[54px] items-center px-4 md:px-6"
-          style={{
-            // Founder device walk 2026-07-27: with no safe-area inset this band
-            // centered the doorway ~27px from the physical top — inside the
-            // status-bar/Dynamic-Island zone, where iOS never delivers touches
-            // to the WebView. The doorway wasn't broken; it was unreachable.
-            // Same expression as MaiaTopBar and as MaiaArrivalField's header
-            // (the box-parity twin below in this comment's sense): the two
-            // doorway renderers must keep identical boxes across the
-            // Arrival ⇄ conversation swap.
-            paddingTop: 'calc(max(env(safe-area-inset-top), 0px) + 6px)',
-          }}
-        >
-          <button
-            onClick={() => setHouseOpen(true)}
-            className={`
-              group pointer-events-auto -ml-1 flex h-11 min-w-[44px] items-center gap-2 rounded-full px-2
-              text-[rgba(201,165,78,0.75)] transition-colors hover:text-[#c9a54e] focus:outline-none
-              ${calmMode && !calmCeiling ? 'opacity-60 hover:opacity-100' : 'opacity-100'}
-            `}
-            title="The House — your places and practices"
-            aria-label="Open The House"
-          >
-            <Home className="h-[18px] w-[18px] shrink-0" strokeWidth={1.5} />
-            {/* The label is revealed, not removed. The icon alone is the resting
-                state — after a few uses a doorway does not need to say its own
-                name, and the permanent label was the widest thing in the bar,
-                which is what crowded MAIA off small screens.
-
-                Revealed on hover AND on keyboard focus: hover-only would hide
-                the name from anyone navigating by keyboard, who needs it most.
-                Width animates rather than the label appearing/disappearing, so
-                nothing beside it jumps. `aria-label` on the button carries the
-                name unconditionally, so screen readers never depend on hover. */}
-            <span
-              className="max-w-0 overflow-hidden whitespace-nowrap text-[15px] leading-none opacity-0 transition-all duration-300 group-hover:max-w-[8rem] group-hover:opacity-100 group-focus-visible:max-w-[8rem] group-focus-visible:opacity-100"
-              style={{ fontFamily: 'Spectral, Georgia, serif' }}
-              aria-hidden="true"
-            >
-              The House
-            </span>
-          </button>
-        </div>
+        <MaiaHouseDoorway onOpen={() => setHouseOpen(true)} dimmed={calmMode && !calmCeiling} />
       )}
 
       <MaiaHouseSheet

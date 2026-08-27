@@ -290,7 +290,7 @@ export default function StudioLayout({
   // Show loading while checking practitioner status
   if (checkingPractitioner && !isCreatePage) {
     return (
-      <MaiaBoundaryLayout boundary="studio" railRecede>
+      <MaiaBoundaryLayout boundary="studio" railRecede ownsMobileNav>
       <div className="min-h-screen bg-[#1a1a2e] flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <Loader2 className="w-8 h-8 text-amber-400 animate-spin" />
@@ -304,7 +304,7 @@ export default function StudioLayout({
   // Create page gets minimal layout (no sidebar)
   if (isCreatePage) {
     return (
-      <MaiaBoundaryLayout boundary="studio" railRecede>
+      <MaiaBoundaryLayout boundary="studio" railRecede ownsMobileNav>
       <div className="min-h-screen bg-[#1a1a2e]">
         {children}
       </div>
@@ -417,7 +417,7 @@ export default function StudioLayout({
   // ─── MOBILE LAYOUT ────────────────────────────────────────
   if (isMobile) {
     return (
-      <MaiaBoundaryLayout boundary="studio" railRecede>
+      <MaiaBoundaryLayout boundary="studio" railRecede ownsMobileNav>
       <TeamContextProvider initialStudioMode={initialStudioMode}>
       <StudioModeWatcher onModeChange={handleModeChange} />
       <RecordingContextProvider>
@@ -465,8 +465,11 @@ export default function StudioLayout({
                 animate={{ x: 0 }}
                 exit={{ x: -280 }}
                 transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-                className="absolute top-0 h-full w-[280px] bg-[#16162a] border-r border-slate-800/50 flex flex-col"
-                style={{ left: RAIL_WIDTH_PX, maxWidth: `calc(100vw - ${RAIL_WIDTH_PX}px - 8px)` }}
+                // The MAIA rail is desktop-only (MaiaBoundaryLayout), so on a
+                // phone this drawer starts at the edge. It used to be inset by
+                // the rail width, which is now 56px of nothing.
+                className="absolute top-0 left-0 h-full w-[280px] bg-[#16162a] border-r border-slate-800/50 flex flex-col"
+                style={{ maxWidth: 'calc(100vw - 8px)' }}
               >
                 {/* Drawer header */}
                 <div className="p-4 border-b border-slate-800/50">
@@ -568,7 +571,7 @@ export default function StudioLayout({
 
   // ─── DESKTOP LAYOUT ───────────────────────────────────────
   return (
-    <MaiaBoundaryLayout boundary="studio" railRecede>
+    <MaiaBoundaryLayout boundary="studio" railRecede ownsMobileNav>
     <TeamContextProvider initialStudioMode={initialStudioMode}>
     <StudioModeWatcher onModeChange={handleModeChange} />
     <RecordingContextProvider>
