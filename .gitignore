@@ -462,3 +462,6 @@ scripts/eval/reports/
 # broad `git add -A` away from entering history permanently.
 jarvis-ci-proof-*/
 .jarvis/
+
+# Capture browser profile — holds a real signed-in session. Never commit.
+.capture-profile/

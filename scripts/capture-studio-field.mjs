@@ -6,7 +6,12 @@
  * read as the same product; that comparison needs a screenshot taken at the
  * SAME viewport, by a command anyone can run the same way twice.
  *
- *   node scripts/capture-studio-field.mjs <field> [--m=<manuscriptId>] [--url=<origin>] [--sha=<sha>]
+ *   node scripts/capture-studio-field.mjs <field> [--m=<manuscriptId>] [--url=<origin>] [--sha=<sha>] [--headful]
+ *
+ * --headful opens a real window against a PERSISTENT profile and waits for you
+ * to press Enter. Sign in once; every later capture reuses that session, so the
+ * remaining fields are one command each. The profile lives in .capture-profile/
+ * and is gitignored — it holds a real login.
  *
  * --url is an ORIGIN (http://localhost:3000). The route comes from the field.
  * Pass a full URL instead and it is used verbatim — the first version appended
@@ -124,9 +129,26 @@ function resolveBrowser() {
 const browser0 = resolveBrowser();
 console.log(`[capture] browser: ${browser0.path}  (${browser0.how})`);
 
+const headful = rest.includes('--headful');
+
+/**
+ * A persistent profile is what makes this usable more than once.
+ *
+ * Headless Chrome starts with an empty profile every run, so it arrives at the
+ * Studio signed out — and the Studio, correctly, shows its signed-out panel
+ * rather than someone's manuscript. Capturing that and comparing it to the
+ * reference would be comparing the wrong screen.
+ *
+ * So the session is kept. `--headful` once to sign in, then every capture after
+ * it is headless and silent.
+ */
+const PROFILE_DIR = '.capture-profile';
+
 const browser = await puppeteer.launch({
   executablePath: browser0.path,
-  headless: true,
+  headless: !headful,
+  userDataDir: PROFILE_DIR,
+  defaultViewport: null,
   args: ['--no-sandbox', '--disable-dev-shm-usage'],
 });
 try {
@@ -151,6 +173,15 @@ try {
 
   /* A capture of the signed-out panel is not a capture of the field, and it
      looks enough like a real screen to be mistaken for one. Refuse it. */
+  if (headful) {
+    console.log('');
+    console.log('[capture] A window is open against the persistent profile.');
+    console.log('[capture] Sign in there if you are not already, then press Enter here.');
+    console.log('[capture] This is a one-time step — later captures reuse the session.');
+    await new Promise((resolve) => process.stdin.once('data', resolve));
+    await page.reload({ waitUntil: 'networkidle0', timeout: 60_000 });
+  }
+
   const signedOut = await page.evaluate(() =>
     document.body.innerText.includes('opens only to you'),
   );
@@ -158,7 +189,8 @@ try {
     console.error('[capture] The Studio is showing its signed-out panel — this browser has no');
     console.error('[capture] session, so the capture would not be of the field. Sign in with a');
     console.error('[capture] profile this run can use, or capture with CHROMIUM_PATH pointed at');
-    console.error('[capture] a browser that is already signed in.');
+    console.error('[capture] Sign in once with:');
+    console.error(`[capture]   node scripts/capture-studio-field.mjs ${field} --headful`);
     process.exit(1);
   }
   /* The Studio loads its manuscript after mount. A capture taken before that
