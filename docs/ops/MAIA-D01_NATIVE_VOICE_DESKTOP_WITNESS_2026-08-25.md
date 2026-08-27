@@ -11,10 +11,51 @@ LINEAGE
 
 IMPLEMENTATION:  COMPLETE
 SOURCE/TEST:     GREEN — 55 assertions / 0 failures · 11 negative controls, all bite
-RUNTIME PROOF:   NONE — no Electron binary in this environment
-DEVICE WITNESS:  BLOCKED — macOS microphone required
-STATUS:          IMPLEMENTED · DEVICE WITNESS REQUIRED — NOT CLOSED
+RUNTIME PROOF:   ⭐ OBTAINED 2026-08-27 — the shell launches on macOS
+DEVICE WITNESS:  ⭐ PARTIAL 2026-08-27 — capture chain proven; class E defect found
+STATUS:          SUPERSEDED by DESKTOP-CONVERSATION-01
 ```
+
+## ⭐ First device walk — 2026-08-27, Kelly's Mac Studio
+
+```
+voice_listening_started  at=1787844577559  epochId=1
+voice_mic_granted        at=1787844577983  epochId=1
+voice_audio_started      at=1787844578003  epochId=1
+voice_speech_started     at=1787844578716  epochId=1
+```
+
+**Four of six links proven on hardware, first attempt:**
+
+```
+mic permission → getUserMedia → AudioWorklet → PCM frames → bridge → main → VAD   ✓
+                                                            transcription          ✗
+```
+
+`voice_speech_started` fires only after three consecutive frames above the RMS threshold — positive
+evidence of **real human speech in real PCM crossing the bridge**. ⭐ The VAD thresholds, named in
+§7.3 as *"the single most likely thing to need adjustment,"* **acknowledged real speech unmodified.**
+
+### ⛔ DEFECT — class E, transcription transport
+
+`main.js` constructed the transcription client and **nothing ever called it.** The frame handler ran
+VAD, updated epoch state, and returned; no audio buffered, nothing dispatched. Hence `finals 0` and
+no tail to test.
+
+⭐ **The walk found what 55 green assertions did not.** Every proof covered a COMPONENT in isolation;
+none proved the assembled path dispatches audio at all. SOURCE ≠ RUNTIME, biting its own author.
+Repaired in DESKTOP-CONVERSATION-01, with `CLASS E REGRESSION` standing guard and a negative control
+that replays this exact defect.
+
+### ⭐ PREMISE-CHANGING — D01 and D03 are coupled in the real system
+
+`/api/voice/transcribe-simple` requires an authenticated member (401 without a session) and sits
+behind `ALLOW_AUDIO_TRANSCRIPTION`. **Even with dispatch wired, it would have 401'd.**
+
+⛔ **Native transcription cannot be accepted independently of authenticated transport, because the
+production transcription endpoint requires member identity.** The roadmap treated D01 → D02 → D03 as
+sequential; they are not separable. Only the device walk could have shown this — which is why the
+unit boundary was dissolved rather than defended.
 
 ⭐ **`468b52e` is not a new functional unit and not D02 work.** It is the same D01 voice
 architecture made empirically auditable — founder ruling, 2026-08-25. §11 records what it adds and,
