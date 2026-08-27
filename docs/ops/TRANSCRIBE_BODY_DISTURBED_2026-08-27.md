@@ -2,8 +2,9 @@
 
 **Found** 2026-08-27, during the MAIA Desktop device walk.
 **Deployed commit at time of finding** `04f621bf9` (`deploy-lane`).
-**Status** ROOT CAUSE IDENTIFIED · FIX NOT APPLIED — requires a founder decision
-and a governed deploy.
+**Status** ROOT CAUSE IDENTIFIED · FIX APPLIED IN SOURCE, NOT YET DEPLOYED.
+Founder ruling 2026-08-27: option A (exclude the route from the middleware
+matcher). Awaiting a governed deploy.
 
 ---
 
@@ -100,12 +101,30 @@ ingest. If any of them intermittently 500s on large inputs, it is probably this.
 
 ## 5. Candidate fixes — NOT applied, founder decision required
 
-**A. Exclude the route from the middleware matcher.**
+**A. Exclude the route from the middleware matcher.** ⭐ CHOSEN AND APPLIED.
 Narrowest change; removes the buffering path entirely for this route.
-⚠️ Security posture change: `checkAccess` in middleware currently returns 401
-JSON for unauthenticated `/api/*`. The route does its own authentication —
-`getMemberIdFromRequest` → 401 — so the boundary is still enforced, but a
-defence-in-depth layer is removed. That is a call for Kelly, not for me.
+
+⚠️ CORRECTION to this document's first draft. It claimed the exclusion would
+cost a defence-in-depth layer, because `checkAccess` returns 401 JSON for
+unauthenticated `/api/*`. **That was wrong, and it was asserted without being
+checked.** The 401 branch only fires when a rule denies the path. Verified
+against the real matcher:
+
+```
+matchRule('/api/voice/transcribe-simple')  →  null   (no rule; unmapped)
+getAccessMode()                            →  'permissive'
+```
+
+No rule in `config/accessMatrix.ts` matches `/api/voice/*`, and an unmapped
+path under `permissive` is ALLOWED. Middleware was already waving this route
+through without authenticating it. **The exclusion costs nothing.**
+
+The route's own protections are untouched: `getMemberIdFromRequest` → 401, the
+`ALLOW_AUDIO_TRANSCRIPTION` / `ALLOW_AUDIO_UPLOADS` gate, the multipart guard,
+the 25 MB cap, and local-Whisper-only transport.
+
+Scope is one path, not `/api/voice/*` — a namespace exclusion would silently
+remove future routes from the matcher as they are added.
 
 **B. Upgrade / patch Next.**
 The failure is in framework code (`fromNodeNextRequest`). If a fixed release
@@ -122,10 +141,48 @@ range without a server change.
 client, and it would impose a ~8-second speech limit that no member should ever
 meet. It is a fallback if A and B are both unavailable, not a resolution.
 
+## 5a. The fix, and its proof
+
+`middleware.ts` — matcher only:
+
+```diff
+- '/((?!_next/static|_next/image|favicon.ico).*)',
++ '/((?!_next/static|_next/image|favicon.ico|api/voice/transcribe-simple).*)',
+```
+
+`__tests__/middleware-transcribe-exclusion.test.ts` asserts five things, two of
+which are the *premise* rather than the change — so if the premise stops
+holding, the test fails instead of the exclusion quietly becoming a hole:
+
+1. middleware does not run on the transcription route
+2. middleware still runs on `/api/voice/transcribe`, `/api/voice/openai-tts`,
+   `/api/sovereign/*`, `/api/members/signin`, `/api/studio/*`, `/maia`, `/`
+3. exactly one path is excluded, not the `/api/voice` namespace
+4. PREMISE — `matchRule` returns null for this path and the mode is permissive
+5. PREMISE — the route still authenticates itself and keeps every gate
+
+Negative controls, both bite:
+
+- pre-fix matcher restored → (1) fails; the request is intercepted
+- exclusion widened to `/api/voice` → (2) and (3) fail
+
+⚠️ EVIDENCE CLASS. This is a STATIC proof of the matcher and the premise. Jest
+could not be run in the authoring environment (no `node_modules`), so the
+assertions were executed through an equivalent standalone harness; the jest
+suite itself has not been run. And no static test can show a multipart POST
+arriving at the handler with `x-session-token` intact — that is RUNTIME
+evidence and it comes from the device walk after deploy, not from here.
+
 ## 6. What Desktop does today
 
 Nothing that hides this. A 5xx whose body is not the route's own JSON is retried
-exactly once — `maia-desktop/src/conversation.js` — and if it fails again the
-member is shown the server's actual message rather than a bare status code. The
-retry is labelled a mitigation in the source, with the condition under which it
-must be removed.
+up to three attempts total — `maia-desktop/src/conversation.js` — because the
+failure measured close to a coin flip and one retry still lost about a quarter
+of turns. After three the member is shown the server's actual message rather
+than a bare status code. Never on a 4xx, and never on a 5xx the route itself
+answered.
+
+The retry is labelled a mitigation in the source, with the condition under which
+it must be removed: it is safe only because a failed transcription stores
+nothing and forms no memory, and it comes out when this fix is deployed and
+proven on device.

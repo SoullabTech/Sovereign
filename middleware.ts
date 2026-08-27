@@ -395,7 +395,38 @@ export const config = {
      * - _next/static (static files)
      * - _next/image (image optimization)
      * - favicon.ico (favicon file)
+     * - api/voice/transcribe-simple (see below)
      */
-    '/((?!_next/static|_next/image|favicon.ico).*)',
+    '/((?!_next/static|_next/image|favicon.ico|api/voice/transcribe-simple).*)',
   ],
 };
+
+/*
+ * ── WHY /api/voice/transcribe-simple IS EXCLUDED ────────────────────────────
+ *
+ * Because the matcher matched it, Next buffered the request body so middleware
+ * could run and then rebuilt a Request for the route handler from the same Node
+ * stream. When that stream was already consumed, construction threw:
+ *
+ *   ⨯ TypeError: Response body object should not be disturbed or locked
+ *       at l.fromNodeNextRequest (...)
+ *       at F (.next/server/app/api/voice/transcribe-simple/route.js:20:5340)
+ *
+ * That throws BEFORE any application code runs — the route's own logging never
+ * appears, authentication is never reached, Whisper is never called. Roughly
+ * half of multipart audio POSTs failed this way, largely independent of size.
+ * Full measurement: docs/ops/TRANSCRIBE_BODY_DISTURBED_2026-08-27.md.
+ *
+ * ⭐ NO AUTHENTICATION IS LOST. Verified, not assumed: no rule in
+ * config/accessMatrix.ts matches /api/voice/*, so checkAccess() classifies it
+ * `no-rule-match`, and production runs the default permissive mode where an
+ * unmapped path is ALLOWED. Middleware was already waving this route through.
+ * The route authenticates itself — getMemberIdFromRequest() → 401 — and that is
+ * unchanged, as are the ALLOW_AUDIO_TRANSCRIPTION gate, the multipart guard,
+ * the 25 MB cap, and the local-Whisper-only transport.
+ *
+ * ⛔ SCOPE: this one path only. Not /api/voice/*, which would silently remove
+ * future routes from the matcher as they are added. If a rule for this path is
+ * ever added to the access matrix, this exclusion must be revisited — the
+ * regression test asserts the premise, so it will fail rather than rot.
+ */
