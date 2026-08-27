@@ -2,9 +2,10 @@
 
 **Found** 2026-08-27, during the MAIA Desktop device walk.
 **Deployed commit at time of finding** `04f621bf9` (`deploy-lane`).
-**Status** ROOT CAUSE IDENTIFIED · FIX APPLIED IN SOURCE, NOT YET DEPLOYED.
-Founder ruling 2026-08-27: option A (exclude the route from the middleware
-matcher). Awaiting a governed deploy.
+**Status** ✅ RESOLVED — fixed, deployed, and witnessed on device 2026-08-27.
+Founder ruling: option A (exclude the route from the middleware matcher).
+Merged as PR #1111; deployed as `92bc2a9df` with provenance verified
+(`[deploy-ctx:ok] GIT_COMMIT=92bc2a9df == asserted`).
 
 ---
 
@@ -186,3 +187,75 @@ The retry is labelled a mitigation in the source, with the condition under which
 it must be removed: it is safe only because a failed transcription stores
 nothing and forms no memory, and it comes out when this fix is deployed and
 proven on device.
+
+
+---
+
+## 7 · RUNTIME WITNESS — the evidence class the static proof could not supply
+
+Device walk, 2026-08-27, after `92bc2a9df` went live. Nine consecutive spoken
+turns on a Mac, no Terminal touched.
+
+**Zero failures. Zero retries.** Every `voice_transcribe_sent` is followed by a
+`voice_transcribe_result`; `errorName=http_500 source=non_route` does not appear
+once, and neither does `source=retry`.
+
+| bytes  | seconds | result |
+|--------|---------|--------|
+| 914816 | 28.6    | 200 · 80 chars |
+| 661254 | 20.7    | 200 · 265 chars |
+| 520820 | 16.3    | 200 · 102 chars |
+| 505216 | 15.8    | 200 · 73 chars |
+| 403792 | 12.6    | 200 · 128 chars |
+| 390138 | 12.2    | 200 · 89 chars |
+| 351128 | 11.0    | 200 · 56 chars |
+| 345278 | 10.8    | 200 · 34 chars |
+| 284812 |  8.9    | 200 · 58 chars |
+
+Before the fix, a 20-second turn failed roughly half the time and 583236 bytes
+failed twice in a row. After it, 914816 bytes at 28.6 seconds — larger and
+longer than anything that had ever succeeded — went through on the first
+attempt.
+
+⭐ The prediction was stated in advance and was falsifiable: *the 500s should
+stop entirely, not become rarer; if they persist, the matcher was not the cause
+either.* They stopped entirely. That matters because three earlier explanations
+(a size limit, a duration limit, a missing `Content-Length`) were each
+consistent with the data available when proposed and each was wrong; this one
+was the first to make a prediction that could have failed.
+
+### 7.1 A new finding the walk surfaced
+
+One turn produced a looping Whisper hallucination — a single phrase repeated
+thirty-plus times. Its diagnostics identify it immediately:
+
+```
+voice_transcribe_sent bytes=661254 seconds=20.7 peakX1000=127 rmsX1000=8
+```
+
+`peak 127 / rms 8` against a normal speech reading of `peak ~1000 / rms 70–100`.
+That turn was ~20 seconds of near-silence, and Whisper's multilingual `base`
+model hallucinates repeated phrases when given one. **Not a transport defect and
+not a language-detection fault** — the model behaving as it does on empty input.
+
+This is exactly what the `peak`/`rms` fields were added for. Before them the
+turn would have been indistinguishable from a transcription failure. Belongs to
+D02 (voice reliability): a near-silent epoch should probably not be dispatched
+at all.
+
+### 7.2 A second observation, unactioned
+
+`peakX1000` reads 1002–1005 on most turns — above 1.0, meaning the input is
+clipping before `encodeWav` clamps it. Input gain is hot. Recorded, not fixed;
+it is a D02 item and no transcript has yet been visibly harmed by it.
+
+### 7.3 The retry mitigation — its removal condition is now met
+
+`maia-desktop/src/conversation.js` carries a three-attempt retry labelled a
+mitigation, with a written condition: *it comes out when the server is fixed.*
+The server is fixed and the walk shows the retry never firing.
+
+⛔ Not removed in this pass, and not silently kept either. One walk is runtime
+evidence, not longitudinal evidence, and the retry is narrow, bounded and inert
+when the path is healthy. Flagged as an open decision so the condition is
+honoured deliberately rather than forgotten.
