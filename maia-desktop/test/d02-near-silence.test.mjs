@@ -96,3 +96,19 @@ test('a loud transient alone does not open the gate, and does not close it', asy
   assert.equal(sent.length, 1, 'a single transient was treated as speech-free and dropped');
   assert.ok(SILENCE_PEAK_X1000 > 0);
 });
+
+test('the transcribe path actually USES the invisible-character filter', async () => {
+  // NC-23 caught this: asserting visibleText() directly passes even when
+  // transcribe() stops calling it. The guard has to bite on the real path.
+  const events = [];
+  const conv = createConversation({
+    session: { authedFetch: async () => ({ ok: true, status: 200, res: { json: async () => ({ transcription: '‎‎‏﻿  ​' }) } }) },
+    diagnostics: { emit: (n, m) => events.push([n, m]) },
+    sessionId: 'x',
+  });
+  const out = await conv.transcribe(at(16000, 0.3), 16000);
+  assert.equal(out.ok, true);
+  assert.equal(out.text, '', 'an invisible-only transcript reached MAIA as if it were speech');
+  const result = events.find(([n]) => n === 'voice_transcribe_result')[1];
+  assert.equal(result.chars, 0, `chars reported ${result.chars} for a transcript with nothing in it`);
+});
