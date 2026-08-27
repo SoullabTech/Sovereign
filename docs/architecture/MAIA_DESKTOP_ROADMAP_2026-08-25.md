@@ -68,24 +68,44 @@ surfacing; surfacing ≠ verified* — committed in the record itself.
 **NOT established:** that the thread it resumes is the member's most recent
 across surfaces.
 
-Two candidate causes, unresolved:
+#### RESOLVED — the cause was two member accounts, not a Desktop defect
 
-1. **Identity mismatch.** The production log shows two identifiers for the same
-   member — `Persisted exchange for 88099bb1977c` and
-   `ANAMNESIS … ce284751-e457-42f6-89b6-bc07d0876682`. If PWA and Desktop turns
-   land under different `conversation_turns.user_id` values, neither surface can
-   ever see the other's threads and D04 needs a different mechanism.
-2. **Adoption is launch-only.** It runs at startup and after sign-in, so a
-   Desktop window already open when the member speaks elsewhere never re-reads.
-   That is a real design limitation regardless of cause 1 — a companion whose
-   view of the conversation goes stale the moment you pick up your phone.
-
-Settled by one query, not by another walk:
-
-```sql
-SELECT session_id, user_id, role, left(content, 40) AS snippet, created_at
-FROM conversation_turns ORDER BY created_at DESC LIMIT 12;
 ```
+Desktop  desktop-1787849086266  user_id ce284751-e457-42f6-89b6-bc07d0876682
+iPhone   session_1787848849575  user_id 49ae4717-2b3a-4189-b25d-2bef95b1a45a
+```
+
+The iPhone PWA is authenticated as a **different member record**. No thread
+adoption can cross that boundary, and none should — the boundary is correct.
+
+⭐ So the D04 code did the right thing. For `ce284751`, the most recent thread
+genuinely was `desktop-1787849086266`, and it resumed exactly that. The
+retraction above was right about the evidence and wrong about the cause; both
+are left standing, because a record that quietly deletes its own wrong turns
+teaches nothing.
+
+**The available witness.** The same query shows a `session_`-prefixed thread —
+minted by a WEB surface — under the Desktop member id:
+
+```
+18:14  session_1787834660422  ce284751…  "hi Maya can you hear me"
+```
+
+Relaunching Desktop should open on that conversation, which Desktop never
+created. That is same-member cross-surface continuity and it is testable now.
+
+**A separate finding, outside this programme.** Two member accounts exist for
+one person. CLAUDE.md's onboarding invariant states email-uniqueness prevents
+account forking. Memory, anamnesis and atoms are all keyed to member id, so the
+iPhone has been accumulating a separate history. Named here because the Desktop
+walk surfaced it; the disposition is not a Desktop decision.
+
+#### Still true regardless: adoption is launch-only
+
+It runs at startup and after sign-in, so a Desktop window already open when the
+member speaks elsewhere never re-reads. A companion whose view of the
+conversation goes stale the moment the member picks up their phone is wrong,
+and this was not caused by the account split.
 
 ⛔ Still day-scoped, and that is inherited, not introduced. Web and iOS mint
 their sessionId in localStorage with daily rotation
