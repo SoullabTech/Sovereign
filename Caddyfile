@@ -5,6 +5,100 @@
 # Replace {$DOMAIN} with your actual domain, or set DOMAIN env var
 # ═══════════════════════════════════════════════════════════════════════════════
 
+# ═══════════════════════════════════════════════════════════════════════════════
+# EDGE-EMERGENCY-01 — TEMPORARY CONTAINMENT, NOT A FIX
+# ═══════════════════════════════════════════════════════════════════════════════
+# Four routes derive cross-account authority from request-controlled input with
+# no session resolution. Each deny below is a COMPENSATING CONTROL for a defect
+# that still exists in the application. None of them repairs anything.
+#
+# This snippet previously existed only as an uncommitted modification on the
+# production host. A `git stash push` at 2026-08-25 16:37:17Z removed it from the
+# working tree; the Caddy container restarted at 2026-08-25T18:38:38Z and loaded
+# canonical without it. The four surfaces below were therefore unprotected from
+# that instant until this patch is deployed. The bytes were recovered from
+# stash@{0} under EDGE-SECURITY-CUSTODY-01 (sha 35bbd769…, 37,396 B) — that
+# incident is why this now lives in canonical source instead of on one host.
+#
+# REMOVAL CONTRACT — per deny, never all-or-nothing. A deny may be retired only
+# when its own AUTH-BOUNDARY-04 repair has passed AND a direct hostile request,
+# with this deny inactive for that route, is rejected by the APPLICATION.
+# Removing one on the strength of a source-side change alone is not permitted.
+(deny_disabled_routes) {
+    # 04A · /api/members/migrate-data — accepts caller-chosen SOURCE and
+    # DESTINATION member ids with no session resolution, and has no ACCESS_RULES
+    # entry, so the Mode A unmapped-route default lets it through middleware.
+    # An unauthenticated cross-account data-transfer primitive.
+    # Denying it BREAKS server-to-server onboarding linkage from
+    # /api/members/register-local — an accepted, deliberate consequence.
+    # RETIRE WHEN: 04A proves a verified caller, authorized for BOTH source and
+    # destination, is required.
+    @disabled_routes path /api/members/migrate-data /api/members/migrate-data/
+    handle @disabled_routes {
+        respond "Endpoint disabled" 403 {
+            close
+        }
+    }
+
+    # 04C · /api/stellium/clients/* DELETE — authorizes on a caller-supplied
+    # ?practitionerId= with no session resolution, then permanently deletes a
+    # client record belonging to a practitioner (third-party PII; 13 rows in
+    # production). No in-repo UI invokes deletion, so denying it disrupts no live
+    # workflow. Reads are unaffected.
+    # RETIRE WHEN: 04C proves a verified practitioner plus a real
+    # practitioner↔client relationship is required. The request may name the
+    # target client; it may never name the practitioner.
+    @stellium_client_delete {
+        path /api/stellium/clients/*
+        method DELETE
+    }
+    handle @stellium_client_delete {
+        respond "Endpoint disabled" 403 {
+            close
+        }
+    }
+
+    # 04D · /api/commons/contributions mutations — authorize on a caller-supplied
+    # memberId/curatorId rather than a verified session actor; PUT/DELETE compare
+    # `created_by !== memberId` where memberId comes from the body or query. The
+    # family is unpopulated (commons_contributions = 0 rows), so denying mutation
+    # disrupts no live use — but the first contribution would be vulnerable with
+    # no new deployment. Reads stay open; the public browse surface is unaffected.
+    # RETIRE WHEN: 04D proves route-level authorization independently. The matrix
+    # rules on this path pair minTier with rolesAnyOf, which AUTH-MATRIX-01 shows
+    # can short-circuit through the insufficient-tier bypass — so fixing the
+    # matrix alone is NOT sufficient evidence.
+    @commons_mutation {
+        path /api/commons/contributions /api/commons/contributions/*
+        method POST PUT PATCH DELETE
+    }
+    handle @commons_mutation {
+        respond "Endpoint disabled" 403 {
+            close
+        }
+    }
+
+    # 04B · /api/conversations/export — takes the subject identity from caller
+    # input (?userId= on GET, body.userId on POST) and queries on it directly,
+    # with no session resolution and no middleware gate. Any caller could name any
+    # member. It is currently non-disclosing ONLY because it reads
+    # `conversation_messages`, a table absent from production, so it 500s — that
+    # is accidental non-functionality, not a boundary, and it does leak internal
+    # schema error text in `details`. Repointing it at the live store
+    # (conversation_turns, 39,956 rows) would make it an unauthenticated
+    # cross-member conversation dump with no control removed.
+    # RETIRE WHEN: 04B proves a verified caller exporting their OWN conversations,
+    # or a separately authorized export contract. Do NOT retire on the strength of
+    # the route being deleted in source — the deployed artifact must independently
+    # prove it absent.
+    @conversations_export path /api/conversations/export /api/conversations/export/
+    handle @conversations_export {
+        respond "Endpoint disabled" 403 {
+            close
+        }
+    }
+}
+
 # Local development - no TLS
 :80 {
     @streaming {
