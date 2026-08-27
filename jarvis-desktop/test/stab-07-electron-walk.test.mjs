@@ -110,6 +110,16 @@ if (walk && walk.run_id) {
   else { report('the relaunch harness produced results', false); }
 } else { report('relaunch could not run — the first walk produced no run_id', false); }
 
+phase('B2  the founder click path — real DOM, real bridge');
+{
+  // Its own store. The walk and the relaunch deliberately SHARE one (that is the
+  // continuity claim); the click path must not, or an assertion could match a
+  // run this click never touched.
+  const clicks = launch('click-path.js', path.join(TMP, 'clicks.json'), { AIN_DELEGATION_HOME: path.join(TMP, 'ain-clicks') });
+  if (clicks) { for (const r of clicks.results) report(r.name, r.ok, r.detail); }
+  else { report('the click-path harness produced results', false); }
+}
+
 // ── the preload surface, checked statically ─────────────────────────────────
 // The walk proves main registers the reviewed channels. This proves the RENDERER
 // can reach no others, and holds no filesystem or shell of its own. The

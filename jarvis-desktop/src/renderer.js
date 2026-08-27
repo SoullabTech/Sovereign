@@ -936,12 +936,15 @@ async function renderRuns() {
 
   const rows = r.runs.map((run) => {
     const e = run.evidence;
-    return `<div class="card">
+    return `<div class="card" id="run-${run.run_id}">
       <div class="row"><span class="label">${run.run_id}</span><span class="lane-badge ${run.lane || 'C3'}">${run.lane || 'REJECTED'}</span></div>
       <div class="row"><span class="label">State</span><span class="kv">${run.state}${run.failure_class ? ` — ${run.failure_class}` : ''}</span></div>
       <div class="row"><span class="label">Opened</span><span class="kv">${run.created_at}</span></div>
       <div class="row"><span class="label">Task</span><span style="text-align:right;max-width:420px">${
         (run.task && (run.task.description || run.task.prompt || run.task.capability) || '—').toString().slice(0, 240)}</span></div>
+      ${!e && run.handoff ? `<div class="row"><span class="label">Handoff</span><span class="kv">issued ${run.handoff.issued_at || ''}</span></div>
+             <button id="ingest-${run.run_id}" data-run="${run.run_id}" class="ingest">Check for returned evidence</button>
+             <div id="ingest-out-${run.run_id}"></div>` : ''}
       ${e ? `${evidenceCurrencyRow(e)}
              <div class="row"><span class="label">Claim</span><span style="text-align:right;max-width:420px">${e.claim}</span></div>
              <div class="row"><span class="label">NOT established</span><span style="text-align:right;max-width:420px">${e.non_claim}</span></div>
@@ -954,6 +957,45 @@ async function renderRuns() {
       <div class="row"><span class="label">Recorded runs</span><span class="kv">${r.total}</span></div>
       ${det}
     </div>${rows || '<div class="card"><p class="hint">No runs recorded yet.</p></div>'}`;
+
+  // JARVIS-STAB-04 — the founder's path for evidence coming back.
+  //
+  // `ingestReceipt` was on the preload bridge from the start but nothing in the
+  // renderer ever called it: evidence could only be ingested by something that
+  // was not the application. A capability reachable only by a developer is not
+  // a capability the console has — found by the click-path proof, which is
+  // exactly the boundary an in-process IPC walk cannot see.
+  $main.querySelectorAll('button.ingest').forEach((btn) => {
+    btn.addEventListener('click', () => ingestFor(btn.dataset.run));
+  });
+}
+
+async function ingestFor(runId) {
+  const btn = document.getElementById(`ingest-${runId}`);
+  const out = document.getElementById(`ingest-out-${runId}`);
+  // Clear first. A refusal left over from the previous attempt sitting beside a
+  // fresh one is indistinguishable from the new attempt having failed the same
+  // way — the founder would read a stale verdict as a current one.
+  out.innerHTML = '';
+  btn.disabled = true; btn.textContent = 'Reading receipt…';
+  const r = await window.jarvis.ingestReceipt({ run_id: runId });
+  btn.disabled = false; btn.textContent = 'Check for returned evidence';
+
+  if (!r.ok) {
+    // A refusal is shown AS a refusal, with the violations that caused it. The
+    // founder must be able to see why a receipt was not accepted — "nothing
+    // happened" would be indistinguishable from a bug in the console.
+    out.innerHTML = r.awaiting
+      ? `<div class="hint">No evidence has returned yet. Expected at ${r.awaiting}</div>`
+      : `<div class="errors"><div>${r.reason}</div>${(r.violations || []).map((v) => `<div>${v.code} — ${v.detail}</div>`).join('')}</div>`;
+    return;
+  }
+  // Reconciliation blockers are surfaced at the moment of ingestion, not left
+  // for the founder to find later on a screen they might not open.
+  if (r.reconciliation && r.reconciliation.length) {
+    out.innerHTML = `<div class="errors">${r.reconciliation.map((b) => `<div>${b.condition}</div>`).join('')}</div>`;
+  }
+  await renderRuns();
 }
 
 function render() {
