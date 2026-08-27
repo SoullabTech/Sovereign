@@ -17,15 +17,29 @@ Every row a script wrote is, to the system, that member's own activity.
 
 ## Evidence (production, 2026-08-27)
 
-Unrevoked sessions whose user agent is not a browser:
+Unrevoked non-browser sessions, split by whether they are actually usable.
+`validateSession` requires `revoked = FALSE` **and** `expires_at > NOW()`;
+sessions default to 30 days. Only the first column is a security number.
 
 ```
-node             23 sessions   4 members   2026-03-15 → 2026-08-27 (still minting)
-(null or empty)  11 sessions  10 members   ← widest member spread
-Bun/1.3.2         4 sessions   2 members
-curl/8.7.1        2 sessions   2 members
-curl/7.88.1       1 session    1 member
+                        usable   expired   members
+node                         2        21         4
+App/2513 (iOS, a member)     1         0         1
+(null user agent)            0        11        10
+Bun/1.3.2                    0         4         2
+curl/8.7.1 + 7.88.1          0         3         3
+Dalvik (Android)             0         7         2
+App/750, App/2501 (iOS)      0         4         4
 ```
+
+**The real surface is two `node` sessions.** The 44 unrevoked non-browser rows
+reduce to 3 usable, one of which is a member on the iOS app. The rest is
+untidiness, not exposure — including the `Bun/1.3.2` session revoked on a beta
+tester, which had expired eleven days earlier.
+
+This correction matters more than the finding. The first pass here counted
+`revoked = FALSE` as "live credential" and reported a fleet of them across ten
+accounts. Adding one predicate the auth code already enforced cut it to two.
 
 Two already revoked on the confirmed rows: a `Bun/1.3.2` session on a beta
 tester (`bfafb928…`, one-shot, LAN IP), and both sessions on the fixture member
@@ -36,6 +50,20 @@ That last detail is the one that makes this structural rather than housekeeping:
 the practice is not only borrowing real members' identities, it is
 **accumulating principals** — a fixture created for one test became a standing
 credential holder.
+
+The `members` table holds at least nine synthetic rows: `isolation_test_exp`
+and `_2` … `_8` (2026-06-24), and `a1-synthetic-witness-20260812T224213Z`. Two
+generators, neither referenced anywhere in the repo.
+
+It also holds **`maia_bot`** (2026-03-20) — a service principal that already
+exists, implemented as a member. That is the defect and its precedent in one
+row: the convention is established, not accidental, so a repair replaces a
+convention rather than introducing a concept.
+
+Not synthetic, caught by the same emailless predicate and listed here so a later
+sweep does not mistake them: `jeremy` (2026-02-10), and the null-agent sessions
+belonging to `nathan` and `Tara` (2026-01-24), which predate user-agent capture
+and are ordinary early sign-ins.
 
 ## Attribution damage, observed
 
@@ -79,6 +107,10 @@ Two filters here silently excluded rows they appeared to cover:
 - `user_agent NOT ILIKE 'Mozilla%'` dropped every NULL-agent session, because
   `NULL NOT ILIKE …` is NULL, not TRUE. It reported one session for a member
   that had two, and hid the 11-session / 10-member null class entirely.
+- `revoked = FALSE` was read as "usable," omitting the `expires_at > NOW()` half
+  that `validateSession` enforces. That inflated a two-session finding into a
+  fleet. **Reproduce the predicate the code actually uses; do not approximate
+  it.** An inflated security number spends attention that a real one needs.
 - An earlier route census matched on syntax rather than behavior and missed the
   same class of defect expressed differently.
 
@@ -88,8 +120,8 @@ that isn't true.
 
 ## Open reads (all non-destructive)
 
-- Per-row detail on the 11 null-agent sessions: `one_shot = (last_active_at =
-  created_at)` plus IP separates residue from a person on an unfingerprinted
-  client. Revoking the latter is a real lockout.
-- What creates `node` sessions, and whether any is in flight.
+- The two usable `node` sessions: whose accounts, and is either in flight? A
+  job may depend on one. This is the only item with a live security bearing.
+- What creates `node` sessions at all — 23 exist and the newest is 2026-08-27.
+- Whether anything counts `members` rows for a metric, given nine are synthetic.
 - Whether `living_field_affinities` aggregates across members.
