@@ -43,12 +43,49 @@ hallucination (`peakX1000=127 rmsX1000=8` against a normal ~1000/70), and input
 is clipping (`peakX1000` above 1000). Detail:
 `docs/ops/TRANSCRIBE_BODY_DISTURBED_2026-08-27.md` §7.
 
-### 0.0.1 D04 — WITNESSED cross-device 2026-08-27
+### 0.0.1 D04 — ⛔ RETRACTED. NOT witnessed cross-device.
 
-Spoken to MAIA in the PWA on iPhone, then launched Desktop. Desktop opened on
-that thread: status line "Picking up where you left off", the phone exchange
-rendered, correctly attributed. Desktop joins the member's conversation rather
-than minting `desktop-<timestamp>`. D04's mechanism is witnessed.
+**An earlier revision of this section claimed D04 was witnessed cross-device on
+2026-08-27. That claim was wrong and is withdrawn.**
+
+What actually happened: after speaking to MAIA in the PWA on iPhone, Desktop
+launched, showed "Picking up where you left off", and rendered a thread. But
+the restored turns were the *"Able to move to the back of the screen"* loop and
+MAIA's reply to it — both from the earlier **Desktop** session. Desktop adopted
+its own previous thread.
+
+The phone's words did appear in the window, which is what produced the false
+positive, but they arrived **acoustically**: the iPhone spoke MAIA's reply
+aloud and the Mac's microphone transcribed it (§0.0.2). Punctuation gives it
+away — the em-dash became a period, a comma appeared, the emoji vanished.
+
+⛔ The failure of reasoning is worth more than the failure of the feature:
+"it resumed something" was allowed to stand in for "it resumed the right
+thing." That is the collapse this project's own doctrine names — *wired ≠
+surfacing; surfacing ≠ verified* — committed in the record itself.
+
+**Established:** adoption runs, reads the server, and resumes a real thread.
+**NOT established:** that the thread it resumes is the member's most recent
+across surfaces.
+
+Two candidate causes, unresolved:
+
+1. **Identity mismatch.** The production log shows two identifiers for the same
+   member — `Persisted exchange for 88099bb1977c` and
+   `ANAMNESIS … ce284751-e457-42f6-89b6-bc07d0876682`. If PWA and Desktop turns
+   land under different `conversation_turns.user_id` values, neither surface can
+   ever see the other's threads and D04 needs a different mechanism.
+2. **Adoption is launch-only.** It runs at startup and after sign-in, so a
+   Desktop window already open when the member speaks elsewhere never re-reads.
+   That is a real design limitation regardless of cause 1 — a companion whose
+   view of the conversation goes stale the moment you pick up your phone.
+
+Settled by one query, not by another walk:
+
+```sql
+SELECT session_id, user_id, role, left(content, 40) AS snippet, created_at
+FROM conversation_turns ORDER BY created_at DESC LIMIT 12;
+```
 
 ⛔ Still day-scoped, and that is inherited, not introduced. Web and iOS mint
 their sessionId in localStorage with daily rotation
