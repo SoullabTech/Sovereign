@@ -38,6 +38,7 @@ const { createVad } = require('./voice/vad');
 const { createUtteranceBuffer } = require('./voice/utterance');
 const { createSession } = require('./session');
 const { createConversation } = require('./conversation');
+const { createCaptureLiveness } = require('./capture-liveness');
 
 // Separate userData for a dev launch, so a development instance can never read
 // or corrupt an installed instance's state. (jarvis-desktop precedent.)
@@ -113,15 +114,69 @@ function newVoiceSession() {
   const vad = createVad();
   const utterance = createUtteranceBuffer();
 
-  return { diagnostics, epoch, vad, utterance, draft, frames: 0, sampleRate: 48000 };
+  // ⭐ MAIA-D02A. Liveness lives in MAIN, not the renderer, for the same reason
+  // every other voice decision does: main sees every frame, and a policy that
+  // lives in a `<script>` tag cannot be tested without a microphone.
+  const liveness = createCaptureLiveness();
+
+  return { diagnostics, epoch, vad, utterance, draft, liveness, frames: 0, sampleRate: 48000 };
 }
 
 function voiceStateSnapshot() {
-  if (!voice) return { active: false };
-  return { active: true, ...voice.epoch.snapshot(), vad: voice.vad.state(), draft: voice.draft.length };
+  if (!voice) return { active: false, capture: { state: 'idle', cause: null } };
+  return {
+    active: true,
+    ...voice.epoch.snapshot(),
+    vad: voice.vad.state(),
+    draft: voice.draft.length,
+    // ⭐ MAIA-D02A. The surface may present "Listening…" only when
+    // `capture.state === 'listening'`. Carried on the already-ratified
+    // `maia:voice-state-changed` channel rather than a new one — the preload
+    // doctrine says an added channel must argue for itself, and this one does
+    // not need to: the snapshot already exists and already reaches the surface.
+    capture: {
+      state: voice.liveness.state,
+      cause: voice.liveness.cause,
+      recoveriesUsed: voice.liveness.recoveriesUsed,
+    },
+  };
 }
 
 function pushState() { broadcast('maia:voice-state-changed', voiceStateSnapshot()); }
+
+// ── MAIA-D02A: the capture watchdog ─────────────────────────────────────────
+//
+// The worklet posts a block every 2.67 ms, and silence is still blocks. So the
+// absence of frames is never "the member went quiet" — it is the capture graph
+// having died without saying so. That is what the interface was concealing when
+// it held "Listening…" for sixteen seconds against zero audio.
+//
+// ⛔ The tick is not the event. `check()` returns null while healthy, so this
+// pushes state only on a real transition — a watchdog that broadcast every
+// second would be its own kind of noise.
+let captureWatchdog = null;
+
+function startCaptureWatchdog() {
+  stopCaptureWatchdog();
+  captureWatchdog = setInterval(() => {
+    if (!voice) return stopCaptureWatchdog();
+    const t = voice.liveness.check();
+    if (!t) return;
+    // The epoch machine already knows how to record a capture boundary; this
+    // reuses it rather than inventing a second notion of "lost".
+    voice.epoch.captureLost(t.cause);
+    voice.diagnostics.emit('voice_capture_lost', {
+      cause: t.cause,
+      source: 'watchdog',
+    });
+    pushState();
+  }, 1000);
+  if (captureWatchdog.unref) captureWatchdog.unref();
+}
+
+function stopCaptureWatchdog() {
+  if (captureWatchdog) { clearInterval(captureWatchdog); captureWatchdog = null; }
+}
 
 // ── IPC — every handler validates in MAIN; nothing is taken on trust ────────
 
@@ -136,6 +191,8 @@ ipcMain.handle('maia:voice-start', async (_evt, payload) => {
   const sr = Number(payload && payload.sampleRate);
   voice.sampleRate = Number.isFinite(sr) && sr >= 8000 && sr <= 192000 ? Math.round(sr) : 48000;
   voice.epoch.startEpoch();
+  voice.liveness.arm();
+  startCaptureWatchdog();
   pushState();
   return { ok: true };
 });
@@ -169,6 +226,10 @@ ipcMain.handle('maia:voice-frame', async (_evt, payload) => {
 
   voice.frames += 1;
 
+  // ⭐ MAIA-D02A. Audio is arriving, so the capture graph is alive. If a loss
+  // was detected and a rebuild was in flight, this is the proof it worked.
+  if (voice.liveness.noteFrame()) pushState();
+
   // ⭐ CLASS E REPAIR (device walk 2026-08-27). The buffer used to not exist:
   // the VAD ran and every sample was dropped, so transcription was unreachable.
   // Frames accumulate CONTINUOUSLY — not from `speech_started` — because the VAD
@@ -194,12 +255,18 @@ ipcMain.handle('maia:voice-capture-lost', async (_evt, payload) => {
   const cause = payload && typeof payload.cause === 'string'
     ? payload.cause.slice(0, 64) : 'unknown';
   const tail = voice.epoch.captureLost(cause);
+  // ⭐ MAIA-D02A. `track_ended` and `track_muted` used to reach main and change
+  // nothing the member could see. Routing them through the same state machine
+  // as silent death means all three losses produce the same visible truth.
+  voice.liveness.lost(cause);
   pushState();
   return { ok: true, tail };
 });
 
 ipcMain.handle('maia:voice-stop', async () => {
   if (!voice) return { ok: false, reason: 'no capture session' };
+  voice.liveness.disarm();
+  stopCaptureWatchdog();
   const tail = voice.epoch.userStop();
   const text = voice.epoch.commit();
   const snapshot = voiceStateSnapshot();

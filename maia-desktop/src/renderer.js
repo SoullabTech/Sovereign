@@ -14,11 +14,60 @@
 
 const $ = (id) => document.getElementById(id);
 let audioCtx = null, stream = null, node = null, listening = false;
+
+// ⭐ MAIA-D02A. `listening` above means "the renderer opened a capture graph".
+// It does NOT mean audio is arriving, and conflating the two is exactly how the
+// interface came to say "Listening…" for sixteen seconds against zero frames.
+// MAIN is authoritative about liveness; this mirrors what main reports.
+let captureState = 'idle';        // idle | starting | listening | recovering | unavailable
+let captureCause = null;
+let rebuilding = false;
 let player = null;
 
 function setState(text, isError) {
   $('state').textContent = text;
   $('state').className = 'state' + (isError ? ' err' : '');
+}
+
+/**
+ * ⭐ The resting label, in ONE place.
+ *
+ * The acceptance condition for MAIA-D02A is a claim about what the member may
+ * be shown, so it is expressed once here rather than at each of the call sites
+ * that previously wrote `listening ? 'Listening…' : …` from the renderer's own
+ * belief.
+ *
+ * ⛔ "Listening…" is reachable ONLY from captureState === 'listening'.
+ */
+function restingLabel() {
+  if (!listening) return { text: 'Ready when you are.', err: false };
+  switch (captureState) {
+    case 'listening':
+      return { text: 'Listening…', err: false };
+    case 'starting':
+      // ⭐ The worklet is connected and no frame has arrived yet. That is NOT
+      // listening, and saying so would be the exact defect this unit closes.
+      return { text: 'Opening the microphone…', err: false };
+    case 'recovering':
+      return { text: 'Lost the microphone — reconnecting…', err: false };
+    case 'unavailable': {
+      // Truthful failure: names what stopped, never claims to be hearing them,
+      // and says what would get it back.
+      const why = captureCause === 'track_muted' ? 'your microphone is muted'
+        : captureCause === 'track_ended' ? 'your microphone was disconnected'
+        : captureCause === 'never_started' ? 'no audio ever reached MAIA'
+        : 'audio stopped arriving';
+      return { text: `MAIA cannot hear you — ${why}. Press Stop, then Start listening.`, err: true };
+    }
+    default:
+      return { text: 'Ready when you are.', err: false };
+  }
+}
+
+function showResting() {
+  const s = restingLabel();
+  setState(s.text, s.err);
+  $('dot').classList.toggle('live', listening && captureState === 'listening');
 }
 
 function addTurn(who, body) {
@@ -57,6 +106,40 @@ async function startListening() {
     return;
   }
   await window.maia.voiceMicResult(true, null);
+
+  // ⛔ Set BEFORE the graph is built. `node.port.onmessage` drops frames while
+  // this is false, so building first would discard the opening blocks of the
+  // member's first utterance — the same class of loss the batching fix closed.
+  listening = true;
+
+  await buildCaptureGraph();
+
+  $('talk').textContent = 'Stop';
+  // ⛔ Deliberately NOT 'Listening…' and NOT a live dot. The graph is connected;
+  // no frame has arrived yet. Main says when audio is actually flowing, and
+  // `showResting()` is the only thing allowed to make that claim.
+  captureState = 'starting';
+  captureCause = null;
+  showResting();
+}
+
+/**
+ * Acquire the microphone and wire the worklet.
+ *
+ * ⭐ MAIA-D02A extracted this from `startListening` so a rebuild can reuse it.
+ * ⛔ It deliberately does NOT call `voiceStart`: on a recovery the session in
+ * main is still open, and re-opening it would discard the epoch and the draft —
+ * losing words the member already said in order to fix the microphone.
+ */
+async function openCaptureGraph() {
+  stream = await navigator.mediaDevices.getUserMedia({
+    audio: { echoCancellation: true, noiseSuppression: true, channelCount: 1 },
+  });
+  audioCtx = new AudioContext();
+  await buildCaptureGraph();
+}
+
+async function buildCaptureGraph() {
 
   for (const track of stream.getAudioTracks()) {
     track.addEventListener('ended', () => window.maia.voiceCaptureLost('track_ended'));
@@ -109,15 +192,13 @@ async function startListening() {
     drain();
   };
   src.connect(node);
-
-  listening = true;
-  $('dot').classList.add('live');
-  $('talk').textContent = 'Stop';
-  setState('Listening…');
 }
 
 async function stopListening() {
   listening = false;
+  captureState = 'idle';
+  captureCause = null;
+  rebuilding = false;
   if (node) { node.port.onmessage = null; node.disconnect(); node = null; }
   if (audioCtx) { await audioCtx.close().catch(() => {}); audioCtx = null; }
   if (stream) { stream.getTracks().forEach((t) => t.stop()); stream = null; }
@@ -125,6 +206,32 @@ async function stopListening() {
   $('dot').classList.remove('live');
   $('talk').textContent = 'Start listening';
   setState('Ready when you are.');
+}
+
+/**
+ * Bounded recovery: rebuild the capture graph once, in place.
+ *
+ * ⛔ Does NOT close the voice session in main. The epoch, the draft and any
+ * salvaged words survive — a dropped microphone must not also cost the member
+ * what they had already said.
+ *
+ * If this succeeds, frames resume, main sees them and reports `listening` again.
+ * If it does not, main's watchdog finds the next window still empty and moves to
+ * `dead`, and `showResting()` tells the member the truth. Either way the surface
+ * never returns to "Listening…" on the strength of this function having run —
+ * only actual audio can do that.
+ */
+async function rebuildCapture() {
+  try {
+    if (node) { node.port.onmessage = null; node.disconnect(); node = null; }
+    if (stream) { stream.getTracks().forEach((t) => t.stop()); stream = null; }
+    if (audioCtx) { await audioCtx.close().catch(() => {}); audioCtx = null; }
+    if (!listening) return;              // the member stopped while we were trying
+    await openCaptureGraph();
+  } catch {
+    // Swallowed on purpose: the watchdog is the authority on whether this
+    // worked. A thrown error here must not become a second, competing verdict.
+  }
 }
 
 // ── MAIA's voice ────────────────────────────────────────────────────────────
@@ -185,10 +292,31 @@ window.addEventListener('DOMContentLoaded', async () => {
     if (t.phase === 'transcribing') setState('Hearing you…');
     else if (t.phase === 'heard') { addTurn('member', t.member); setState('…'); }
     else if (t.phase === 'thinking') setState('MAIA is with it…');
-    else if (t.phase === 'answered') { addTurn('maia', t.maia); setState(listening ? 'Listening…' : 'Ready when you are.'); }
+    else if (t.phase === 'answered') { addTurn('maia', t.maia); showResting(); }
     else if (t.phase === 'no-voice') setState("MAIA answered in text — her voice isn't enabled on the server.");
     else if (t.phase === 'error') setState(t.error, true);
-    else if (t.phase === 'idle') setState(listening ? 'Listening…' : 'Ready when you are.');
+    else if (t.phase === 'idle') showResting();
+  });
+
+  // ⭐ MAIA-D02A. Main is authoritative about whether audio is arriving; this
+  // is the surface obeying it. Rides the already-ratified
+  // `maia:voice-state-changed` channel — no new bridge was opened for this.
+  window.maia.onVoiceState((snap) => {
+    const cap = (snap && snap.capture) || { state: 'idle', cause: null };
+    const was = captureState;
+    captureState = cap.state;
+    captureCause = cap.cause;
+
+    if (!listening) return;
+    showResting();                       // detect → change the visible state, first
+
+    // → attempt bounded recovery. Main has already spent the budget by putting
+    //   us in `recovering`; the renderer's job is the part only it can do,
+    //   because only it may call getUserMedia.
+    if (captureState === 'recovering' && was !== 'recovering' && !rebuilding) {
+      rebuilding = true;
+      rebuildCapture().finally(() => { rebuilding = false; });
+    }
   });
 
   window.maia.onVoiceEvent((e) => {
