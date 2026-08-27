@@ -3,19 +3,36 @@
 **Status: COMPLETE.** Founder ruling 2026-08-27.
 
 ```
-PINNED CANDIDATE   e73d9d4     (stabilization as ruled complete)
-SUCCESSOR          this commit (click-path proof + STAB-04 founder path)
-BRANCH             claude/jarvis-app-stabilization-1jwcen
-PROOF              265 assertions, 0 failed
-DEPLOYMENT         NOT PERFORMED
-LANE A             UNTOUCHED
-PRODUCTION         64c2b7c07 — CARRIED, not re-read
+e73d9d4   SUPERSEDED STABILIZATION BASELINE
+          module / store / lineage / Electron integration proved
+          GAP: receipt ingestion had no founder application path
+
+5237a92   STABILIZATION-COMPLETE CANDIDATE  —  DO NOT MOVE
+          e73d9d4 + real founder click path + UI correctness repairs
+          265 assertions / 0 failed
+          RESIDUAL: packaged macOS application only
+
+BRANCH      claude/jarvis-app-stabilization-1jwcen
+DEPLOYMENT  NOT AUTHORIZED / NOT PERFORMED
+LANE A      UNTOUCHED
+PRODUCTION  64c2b7c07 — CARRIED, not re-read
 ```
 
-> **Tag not created.** `git tag jarvis-stabilization-complete e73d9d4` was
-> attempted and **refused with HTTP 403** — this session's credentials permit
-> branch pushes, not tag creation. The pin is therefore a record, not a ref.
-> Create the tag locally to make it structural.
+**Why the completeness label sits at `5237a92`, not `e73d9d4`.** STAB-04 claimed
+evidence could return to JARVIS. At `e73d9d4` that was true as an *internal*
+capability and false as an *application* capability: the founder could issue work
+but could not complete the return loop from JARVIS itself. `e73d9d4` is preserved
+because it shows exactly what the final proving walk discovered.
+
+> **Tags could not be pushed.** `git push origin refs/tags/…` was attempted and
+> refused with **HTTP 403** — this session's credentials permit branch pushes,
+> not tag creation. Create them locally; the second is the important pin:
+>
+> ```bash
+> git tag -a stabilization-electron-baseline e73d9d4 -m "pre-click-path baseline"
+> git tag -a jarvis-stabilization-complete   5237a92 -m "stabilization complete"
+> git push origin --tags
+> ```
 
 ## What was stabilized
 
@@ -85,6 +102,19 @@ is a `PKG-01` defect. If it reveals **receipt lineage can incorrectly become
 CURRENT**, stabilization was incomplete and the relevant invariant reopens.
 Packaging fixes do not get merged back into "stabilization" because the packaged
 app exposed a bug.
+
+## Lineage discipline for what follows
+
+If PKG-01 exposes an `app.isPackaged` path defect, **`5237a92` does not move.**
+It remains the stabilization-complete baseline; the fix becomes a packaging
+successor:
+
+```
+5237a92  →  PKG defect discovered  →  <new SHA>  →  PKG-01 candidate
+```
+
+So that six months from now JARVIS can answer what was stabilized, what
+packaging changed afterwards, and why.
 
 ## Next unit
 

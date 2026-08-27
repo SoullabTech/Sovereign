@@ -74,7 +74,29 @@ const provenance = {
 console.log(`      source ${sourceSha.slice(0, 9)} · lock ${lockDigest} · node ${process.version}`);
 
 phase('3  produce the artifact');
-const APP_PATH = path.join(DESKTOP, 'dist', 'mac-arm64', 'JARVIS.app');
+// package.json pins a specific Apple Development identity. If that certificate
+// is not in this machine's keychain, electron-builder fails during signing —
+// a failure about credentials, not about JARVIS, and worth naming BEFORE the
+// build rather than reading it out of a stack trace afterwards.
+try {
+  const identity = JSON.parse(fs.readFileSync(path.join(DESKTOP, 'package.json'), 'utf8')).build?.mac?.identity;
+  if (identity) {
+    const found = (() => { try { return sh('security', ['find-identity', '-v', '-p', 'codesigning']).includes(identity); } catch { return false; } })();
+    report(`the pinned signing identity is in the keychain (${identity})`, found,
+      'electron-builder will fail at the signing step; install the certificate, or set build.mac.identity to null for an unsigned local proof');
+  }
+} catch { /* a missing identity block is not itself a failure */ }
+
+// electron-builder emits dist/mac-arm64 on Apple silicon and dist/mac on Intel.
+// Hardcoding one would fail on the other machine for a reason that has nothing
+// to do with what this proof is about.
+const APP_PATH = (() => {
+  for (const d of ['mac-arm64', 'mac', 'mac-universal']) {
+    const c = path.join(DESKTOP, 'dist', d, 'JARVIS.app');
+    if (fs.existsSync(c)) return c;
+  }
+  return path.join(DESKTOP, 'dist', 'mac-arm64', 'JARVIS.app');
+})();
 if (!SKIP_BUILD) {
   try { sh('npm', ['run', 'pack'], { cwd: DESKTOP, stdio: ['ignore', 'inherit', 'inherit'] }); }
   catch (e) { report('npm run pack succeeded', false, String(e.message).slice(0, 300)); }
