@@ -74,6 +74,49 @@ The env var proves what the deploy was told to build. The built routes prove
 what is actually in the image. A deploy is verified when both agree with the
 commit under test. See `DECISIONS.md` §D-007.
 
+## WS2-01 — the identity chain protocol
+
+The screen alone does not constitute acceptance. A correct render can be
+produced by a correct fix or by luck, and the two are indistinguishable from
+the outside (`DECISIONS.md` D-009).
+
+### Part 1 — capture the chain, for at least two distinct writings
+
+```text
+card/work selected
+      ↓
+requested manuscript id
+      ↓
+API-returned manuscript id
+      ↓
+section/content source
+      ↓
+rendered writing
+```
+
+Every link recorded with its actual value, not "correct". Two distinct
+writings, because a single writing cannot distinguish a working resolver from
+a resolver that always returns that one.
+
+### Part 2 — the negative probe
+
+Deliberately request a manuscript id that does not exist, and establish:
+
+```text
+requested nonexistent id
+      → explicit failure, naming the asked-for id
+      → ZERO substitute manuscript content rendered
+```
+
+Part 2 is the permanent invariant (`DECISIONS.md` D-008), not a one-time
+check. It belongs in the regression suite at WS2-12 and is re-run at WS2-13.
+
+### What WS2-01 acceptance does and does not settle
+
+Passing both parts closes the defect. It does **not** resolve root cause.
+`STATE.md` keeps root cause UNRESOLVED until the captured chain shows *where*
+the identity was lost — the fix and the explanation are separate acts.
+
 ## Programme acceptance — WS2-13
 
 The programme is not complete when thirteen units each pass. It is complete when

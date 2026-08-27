@@ -84,3 +84,34 @@ deploy of a different commit replacing the image. Verify both ways: the env var
 Open structural problem, named and unfixed: two lanes deploy to one production
 and neither can see the other. Candidate repair — warn when the live SHA is not
 an ancestor of the deploy target. Not built.
+
+### D-008 · Identity failure may never masquerade as successful retrieval
+**2026-08-27 · founder**
+
+The defect WS2-01 exists to close was not "wrong text appeared". It was a
+failed identity resolution that presented itself as a successful retrieval —
+the room rendered confidently under the right title with the wrong content.
+
+Permanent invariant, applying to every read path in the Studio, forever:
+
+```text
+requested nonexistent id → explicit failure → ZERO substitute content rendered
+```
+
+Zero is literal. Not a fallback, not the most recent, not an empty-looking
+placeholder that is actually another member's or another work's material. A
+resolution that cannot complete opens an explicit state naming what was asked
+for.
+
+### D-009 · A passing screen closes the defect; it does not prove the cause
+**2026-08-27 · founder**
+
+`90f447cd8` and `1feec9b1d` may eliminate the observed failure. A correct
+result after deployment proves the defect is closed. It does not retroactively
+prove which hypothesis caused it.
+
+So WS2-01 acceptance does not rest on the screen. It rests on the captured
+resolution chain (`ACCEPTANCE.md` § WS2-01) plus the nonexistent-id probe. Root
+cause stays UNRESOLVED in `STATE.md` until the chain itself is observed —
+closing a defect and explaining it are separate acts, and only one of them has
+happened.
