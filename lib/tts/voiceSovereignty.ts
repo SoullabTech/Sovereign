@@ -93,6 +93,30 @@ export function logFallbackEvent(evt: FallbackEvent): void {
  *
  * Per-request override: if request includes `x-voice-local-only: 1`,
  * cloud is denied regardless of settings.
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ * ⭐ STATUS CHANGE — 2026-08-27, VOICE-SOVEREIGNTY-01.
+ *
+ *   WAS:  consent → present authority to route cloud
+ *   NOW:  RECORDED CONSENT / PREFERENCE WITHOUT ROUTING AUTHORITY
+ *
+ * ⛔ `allowed === true` MUST NOT cause OpenAI TTS to execute. Consent-matrix
+ * ROW 3 — local down + cloud allowed → cloud with disclosure — was retired:
+ * voice continuity does not outrank sovereignty, and disclosure is not
+ * sufficient authority to transmit MAIA voice generation to a prohibited cloud
+ * provider.
+ *
+ * This function is deliberately NOT deleted. It carries real architectural
+ * history and would be the lever if a deliberately permitted provider is ever
+ * ratified. But re-permission requires an explicit canon decision and the flag
+ * in `lib/tts/cloudVoicePolicy.ts` — the surviving infrastructure cannot
+ * reactivate cloud routing by itself, and a test asserts exactly that
+ * (ROW 3b in the constitutional suite).
+ *
+ * The "Default: allowed (sovereignty-pragmatic)" line above is left as written
+ * because it was accurate when written. It describes what this function
+ * returns; it no longer describes what the system does with the answer.
+ * ─────────────────────────────────────────────────────────────────────────────
  */
 export async function checkCloudConsent(opts: {
   memberId?: string;
