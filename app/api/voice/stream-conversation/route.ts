@@ -199,9 +199,12 @@ async function synthesizeWithFallback(
   if (memberProvider === 'local') {
     console.info('[tts.attempt]', JSON.stringify({ provider: 'kokoro', voice: kokoroVoice, reason: 'member_chose_local' }));
     try {
-      // Prefer SSML input when available — Kokoro-FastAPI supports SSML for
-      // precise pause/rate/emphasis control without text-shaping tricks.
-      const kokoroInput = options.ssml ?? text;
+      // VOICE-TTS-SSML-01: Kokoro-FastAPI does NOT interpret SSML — it speaks
+      // the markup aloud ("speak", "prosody rate equals 108 percent", "break
+      // time equals 120 MS"). The earlier "Kokoro supports SSML" claim was an
+      // untested assumption. Send the shaped plain text; prosody architecture
+      // is untouched and still applies to any provider that reads SSML.
+      const kokoroInput = text;
       const result = await ttsRouter.synthesize({
         text: kokoroInput,
         voice: kokoroVoice,
@@ -211,7 +214,7 @@ async function synthesizeWithFallback(
         ttsProviderPref: 'local',
       });
       const audio = result.audioBuffer.toString('base64');
-      const label = options.ssml ? 'ssml' : 'plain';
+      const label = options.ssml ? 'plain_ssml_discarded' : 'plain';
       console.log(`[TTS] provider=kokoro member_choice=local input=${label} ${result.audioBuffer.length}B MP3`);
       return { audio, format: 'mp3', source: 'kokoro' };
     } catch (err) {
@@ -297,7 +300,8 @@ async function synthesizeWithFallback(
   // ── Kokoro path: primary when OpenAI disabled, fallback otherwise ──
   console.info('[tts.attempt]', JSON.stringify({ provider: 'kokoro', voice: kokoroVoice, reason: openaiDisabled ? 'sovereign_primary' : 'openai_fallback' }));
   try {
-    const kokoroInput = options.ssml ?? text;
+    // VOICE-TTS-SSML-01: plain text only — see the member-choice branch above.
+    const kokoroInput = text;
     const result = await ttsRouter.synthesize({
       text: kokoroInput,
       voice: kokoroVoice,
