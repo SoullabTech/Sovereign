@@ -6,6 +6,7 @@ import { loadLastTab, saveLastTab } from './returningState';
 import { apiFetch } from '@/lib/http/apiBase';
 import { CANVAS_HREF } from '../../writers-studio/studioMap';
 import { canvasForManuscript } from '../../writers-studio/canvasIdentity';
+import { intakeMessage } from '@/lib/manuscript/ingest/intakeReason';
 import WorkingDraftEditor from './WorkingDraftEditor';
 
 /**
@@ -372,19 +373,13 @@ function PressManuscriptRoom() {
            button and the room did not move. That is indistinguishable from
            "importing is broken", and it is how an import failure reaches a
            writer with no message and no log line to match it against. */
-        setWarnings([
-          data.error ||
-            `We could not read the cuts in that text (HTTP ${res.status}). ` +
-              'Nothing was saved, and your text is unchanged.',
-        ]);
+        setWarnings([intakeMessage('cuts', res.status, data)]);
         setPreview(null);
         return;
       }
       setPreview(data.preview ?? null);
     } catch {
-      setWarnings([
-        'We could not reach the Press to read your cuts. Nothing was saved, and your text is unchanged.',
-      ]);
+      setWarnings([intakeMessage('cuts', 0)]);
       setPreview(null);
     } finally {
       setSaving(false);
@@ -413,7 +408,7 @@ function PressManuscriptRoom() {
       if (!res.ok) {
         /* The server's own words. "too many sections (max 400)" is something a
            member can act on; "Could not save" is not. */
-        setSaveMessage(data.error || `Could not save (HTTP ${res.status}).`);
+        setSaveMessage(intakeMessage('save', res.status, data));
         setSaveError(true);
         return;
       }
@@ -430,7 +425,7 @@ function PressManuscriptRoom() {
       window.location.href = canvasForManuscript(CANVAS_HREF, data.id);
     } catch {
       // Preview is preserved so the member can retry the save.
-      setSaveMessage(null);
+      setSaveMessage(intakeMessage('save', 0));
       setSaveError(true);
     } finally {
       setSaving(false);
@@ -471,7 +466,7 @@ function PressManuscriptRoom() {
       }
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setWarnings([data.error || 'We could not read that file. Try a .docx, .pdf, .txt, or .md.']);
+        setWarnings([intakeMessage('read', res.status, data)]);
         return;
       }
       setDraftText(data.text || '');
@@ -479,7 +474,7 @@ function PressManuscriptRoom() {
       setWarnings(Array.isArray(data.warnings) ? data.warnings : []);
       if (!draftTitle.trim() && data.title) setDraftTitle(data.title);
     } catch {
-      setWarnings(['We could not read that file. Please try again.']);
+      setWarnings([intakeMessage('read', 0)]);
     } finally {
       setIngesting(false);
     }
@@ -903,7 +898,7 @@ function PressManuscriptRoom() {
               </div>
               {saveError && (
                 <p className="text-[13px] opacity-70 mb-4">
-                  {saveMessage ?? 'Could not save. Please try again.'}
+                  {saveMessage ?? intakeMessage('save', 0)}
                 </p>
               )}
               <div className="flex gap-4">
