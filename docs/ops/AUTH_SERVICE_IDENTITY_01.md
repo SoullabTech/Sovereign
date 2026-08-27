@@ -51,9 +51,27 @@ the practice is not only borrowing real members' identities, it is
 **accumulating principals** — a fixture created for one test became a standing
 credential holder.
 
-The `members` table holds at least nine synthetic rows: `isolation_test_exp`
-and `_2` … `_8` (2026-06-24), and `a1-synthetic-witness-20260812T224213Z`. Two
-generators, neither referenced anywhere in the repo.
+The `members` table holds at least ten synthetic rows, from three generators:
+`isolation_test_exp` and `_2` … `_8` (2026-06-24),
+`a1-synthetic-witness-20260812T224213Z` (2026-08-12), and
+`fieldwalk_proof3_20260731` (2026-07-31). None is referenced anywhere in the
+repo.
+
+"At least" is load-bearing. The first census matched usernames against
+`test|synthetic|fixture|witness|_exp` and missed `fieldwalk_proof3` entirely —
+wrong name, and it carries an email so the emailless predicate missed it too.
+**A name-pattern census of synthetic members is structurally under-inclusive**:
+it can only find the conventions you already know. The behavioural definition
+does not have that failure mode — a member that has sessions but has never had
+a browser session:
+
+```sql
+SELECT m.username, m.created_at::date, count(s.id) AS sessions
+FROM members m JOIN auth_sessions s ON s.member_id = m.id
+GROUP BY 1,2
+HAVING count(s.id) FILTER (WHERE s.user_agent ILIKE 'Mozilla%') = 0
+ORDER BY 2;
+```
 
 It also holds **`maia_bot`** (2026-03-20) — a service principal that already
 exists, implemented as a member. That is the defect and its precedent in one
@@ -120,8 +138,11 @@ that isn't true.
 
 ## Open reads (all non-destructive)
 
-- The two usable `node` sessions: whose accounts, and is either in flight? A
-  job may depend on one. This is the only item with a live security bearing.
-- What creates `node` sessions at all — 23 exist and the newest is 2026-08-27.
+- ~~The two usable `node` sessions~~ RESOLVED 2026-08-27. Neither was tooling
+  on a tester's account: `fieldwalk_proof3_20260731` (a synthetic member,
+  127.0.0.1, one-shot) and `Kelly` (the founder's own account, from the Mac
+  Studio, one-shot). "Scripts still minting sessions today" was the founder's
+  own tooling authenticating as the founder. Both one-shot, neither in flight.
+- What creates `node` sessions at all — 23 exist across 4 members.
 - Whether anything counts `members` rows for a metric, given nine are synthetic.
 - Whether `living_field_affinities` aggregates across members.
