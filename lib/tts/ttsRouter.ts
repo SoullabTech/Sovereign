@@ -21,6 +21,7 @@
  *   KOKORO_TTS_URL — Kokoro endpoint (default: http://localhost:8880)
  */
 
+import { assertCloudVoiceAllowed } from './cloudVoicePolicy';
 import * as kokoro from './providers/kokoro';
 import * as sesame from './providers/sesame';
 import * as personaplex from './providers/personaplex';
@@ -363,11 +364,18 @@ export class TTSFallbackToOpenAI extends Error {
   public readonly voice?: string;
 
   constructor(isFallback: boolean, reason: string = 'unknown', voice?: string) {
+    // ⭐ VOICE-SOVEREIGNTY-01. THE choke point. This router has six separate
+    // escapes to OpenAI, and repairing each individually is discipline — which
+    // is exactly what drifted and put `provider:"openai"` on ordinary member
+    // turns while Kokoro was healthy. Refusing here means every escape, and
+    // every escape added later, inherits the refusal without anyone having to
+    // remember. Under the canon this constructor cannot complete.
     super('Falling back to OpenAI TTS');
     this.name = 'TTSFallbackToOpenAI';
     this.isFallback = isFallback;
     this.reason = reason;
     this.voice = voice;
+    assertCloudVoiceAllowed(`ttsRouter:${reason}`);
   }
 }
 

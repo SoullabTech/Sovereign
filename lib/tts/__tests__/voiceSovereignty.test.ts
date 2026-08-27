@@ -4,12 +4,34 @@
  * Constitutional law for MAIA's voice: these tests prove the consent matrix
  * holds under all conditions. If any of these fail, sovereignty has drifted.
  *
- * The consent matrix:
+ * ⛔ HISTORICAL — the consent matrix as originally ratified:
  *   Local healthy + cloud allowed     → local (no fallback)
  *   Local healthy + cloud denied      → local (no fallback)
- *   Local down + cloud allowed        → cloud + disclosed (fallback=1)
+ *   Local down + cloud allowed        → cloud + disclosed (fallback=1)   ← ROW 3
  *   Local down + cloud denied         → fail closed (503)
  *   Local disabled                    → cloud primary (no fallback)
+ *
+ * Its doctrine was: "Keep me speaking, but tell me the truth when it isn't
+ * local." It is kept here in full because it WAS canon, and a record that
+ * quietly edits its own past teaches nothing.
+ *
+ * ⭐ SUPERSEDED 2026-08-27 — VOICE-SOVEREIGNTY-01. The matrix in force:
+ *   Local healthy                     → local
+ *   Local down                        → text + truthful voice-unavailable
+ *   Local denied / disabled           → text + truthful voice-unavailable
+ *   Cloud preference present          → no cloud dispatch; local, else text
+ *
+ * ROW 3 is retired. There is no automatic and no consent-derived OpenAI
+ * fallback. The governing principle:
+ *
+ *   Voice continuity does not outrank sovereignty.
+ *   Disclosure is not sufficient authority to transmit MAIA voice generation
+ *   to a prohibited cloud provider.
+ *
+ * checkCloudConsent survives with its status changed: RECORDED CONSENT /
+ * PREFERENCE WITHOUT ROUTING AUTHORITY. `allowed === true` MUST NOT cause
+ * OpenAI TTS to execute. Re-permission requires a new explicit canon decision;
+ * the surviving infrastructure cannot reactivate it by itself.
  *
  * Truth invariant: every response MUST carry provider, fallback, and policy.
  */
@@ -184,7 +206,7 @@ describe('ttsRouter sovereignty invariants', () => {
       expect(result.reason).toBe('kokoro_healthy');
     });
 
-    it('throws TTSFallbackToOpenAI when kokoro fails', async () => {
+    it('refuses rather than falling back when kokoro fails (canon)', async () => {
       process.env.MAIA_LOCAL_VOICE_ENABLED = '1';
       process.env.MAIA_TTS_PROVIDER = 'auto';
 
@@ -196,15 +218,17 @@ describe('ttsRouter sovereignty invariants', () => {
 
       try {
         await ttsRouter.synthesize({ text: 'hello', voice: 'af_heart' });
-        fail('Should have thrown TTSFallbackToOpenAI');
+        fail('Should have refused rather than signalling a cloud fallback');
       } catch (err: any) {
-        expect(err.name).toBe('TTSFallbackToOpenAI');
-        expect(err.isFallback).toBe(true);
-        expect(err.reason).toBe('kokoro_unreachable');
+        // SUPERSEDED 2026-08-27 — VOICE-SOVEREIGNTY-01. This used to signal
+        // TTSFallbackToOpenAI so the route layer could decide. There is no such
+        // decision any more: local failing means MAIA returns text.
+        expect(err.name).toBe('CloudVoiceForbidden');
+        expect(err.reason).toContain('kokoro_unreachable');
       }
     });
 
-    it('throws TTSFallbackToOpenAI with timeout reason on timeout', async () => {
+    it('refuses rather than falling back on kokoro timeout (canon)', async () => {
       process.env.MAIA_LOCAL_VOICE_ENABLED = '1';
       process.env.MAIA_TTS_PROVIDER = 'auto';
 
@@ -216,15 +240,17 @@ describe('ttsRouter sovereignty invariants', () => {
 
       try {
         await ttsRouter.synthesize({ text: 'hello', voice: 'af_heart' });
-        fail('Should have thrown TTSFallbackToOpenAI');
+        fail('Should have refused rather than signalling a cloud fallback');
       } catch (err: any) {
-        expect(err.name).toBe('TTSFallbackToOpenAI');
-        expect(err.isFallback).toBe(true);
-        expect(err.reason).toBe('kokoro_timeout');
+        // SUPERSEDED 2026-08-27 — VOICE-SOVEREIGNTY-01. This used to signal
+        // TTSFallbackToOpenAI so the route layer could decide. There is no such
+        // decision any more: local failing means MAIA returns text.
+        expect(err.name).toBe('CloudVoiceForbidden');
+        expect(err.reason).toContain('kokoro_timeout');
       }
     });
 
-    it('throws non-fallback TTSFallbackToOpenAI when provider is openai (in a qualified lab context)', async () => {
+    it('refuses an openai provider selection under the canon (was: qualified lab context)', async () => {
       process.env.MAIA_LOCAL_VOICE_ENABLED = '1';
       process.env.MAIA_TTS_PROVIDER = 'openai';
       // openai is a non-sovereign provider — only selectable where qualified.
@@ -234,11 +260,12 @@ describe('ttsRouter sovereignty invariants', () => {
 
       try {
         await ttsRouter.synthesize({ text: 'hello', voice: 'alloy' });
-        fail('Should have thrown TTSFallbackToOpenAI');
+        fail('Should have refused an openai selection');
       } catch (err: any) {
-        expect(err.name).toBe('TTSFallbackToOpenAI');
-        expect(err.isFallback).toBe(false);
-        expect(err.reason).toBe('openai_primary');
+        // SUPERSEDED: even an explicitly qualified lab context cannot reach
+        // OpenAI TTS while the canon forbids cloud voice.
+        expect(err.name).toBe('CloudVoiceForbidden');
+        expect(err.reason).toContain('openai_primary');
       }
     });
 
@@ -334,7 +361,16 @@ describe('ttsRouter sovereignty invariants', () => {
   });
 
   describe('TTSFallbackToOpenAI sentinel', () => {
-    it('carries isFallback and reason for audit', () => {
+    // VOICE-SOVEREIGNTY-01: the class is legacy and is NOT deleted — the ruling
+    // was explicit that it may remain as unreachable code. What changed is that
+    // it cannot be constructed under the canon. These tests therefore describe
+    // behaviour that exists only when cloud voice has been deliberately
+    // re-permitted, and say so by setting the flag.
+    const permitCloud = () => { process.env.MAIA_ALLOW_CLOUD_VOICE = '1'; };
+    const restoreCanon = () => { delete process.env.MAIA_ALLOW_CLOUD_VOICE; };
+
+    it('carries isFallback and reason for audit (only when cloud is permitted)', () => {
+      permitCloud();
       const { TTSFallbackToOpenAI } = require('../ttsRouter');
 
       const fallback = new TTSFallbackToOpenAI(true, 'kokoro_timeout');
@@ -345,12 +381,21 @@ describe('ttsRouter sovereignty invariants', () => {
       const primary = new TTSFallbackToOpenAI(false, 'openai_primary');
       expect(primary.isFallback).toBe(false);
       expect(primary.reason).toBe('openai_primary');
+      restoreCanon();
     });
 
-    it('defaults reason to "unknown" when not provided', () => {
+    it('defaults reason to "unknown" when not provided (only when cloud is permitted)', () => {
+      permitCloud();
       const { TTSFallbackToOpenAI } = require('../ttsRouter');
       const sentinel = new TTSFallbackToOpenAI(true);
       expect(sentinel.reason).toBe('unknown');
+      restoreCanon();
+    });
+
+    it('⭐ CANON: cannot be constructed at all under the default policy', () => {
+      restoreCanon();
+      const { TTSFallbackToOpenAI } = require('../ttsRouter');
+      expect(() => new TTSFallbackToOpenAI(true, 'kokoro_timeout')).toThrow(/CloudVoiceForbidden|sovereignty policy/);
     });
   });
 });
@@ -633,22 +678,88 @@ describe('consent matrix — the constitutional test', () => {
     // Cloud was never touched — consent is irrelevant
   });
 
-  it('ROW 3: local down + cloud allowed → fallback with disclosure', async () => {
+  // ── ROW 3 · SUPERSEDED 2026-08-27 — VOICE-SOVEREIGNTY-01 ──────────────────
+  //
+  // The retired row read:
+  //
+  //     local down + cloud allowed  →  cloud fallback + disclosure
+  //
+  // It was canon, and it is recorded here rather than deleted. What retired it:
+  // voice continuity does not outrank sovereignty, and disclosure is not
+  // sufficient authority to transmit MAIA voice generation to a prohibited
+  // cloud provider. A disclosed fallback still sends the member's words to
+  // OpenAI; telling them afterwards does not make it consented.
+  //
+  // Its replacement is ROW 3a/3b below: local down means text, whatever consent
+  // says.
+
+  it('ROW 3a: local down + cloud DENIED → no cloud, refusal the route turns into text', async () => {
     jest.doMock('../providers/kokoro', () => ({
       synthesize: jest.fn().mockRejectedValue(new Error('ECONNREFUSED')),
     }));
-
     const ttsRouter = require('../ttsRouter');
 
-    try {
-      await ttsRouter.synthesize({ text: 'sovereignty test' });
-      fail('Should throw TTSFallbackToOpenAI');
-    } catch (err: any) {
-      expect(err.name).toBe('TTSFallbackToOpenAI');
-      expect(err.isFallback).toBe(true);
-      expect(err.reason).toBe('kokoro_unreachable');
-      // The API route layer decides whether to use cloud based on consent.
-      // The router's job is to SIGNAL the need for fallback — not decide consent.
+    await expect(ttsRouter.synthesize({ text: 'sovereignty test' }))
+      .rejects.toMatchObject({ name: 'CloudVoiceForbidden' });
+  });
+
+  it('ROW 3b: local down + cloud ALLOWED → STILL no cloud (this is the retired row)', async () => {
+    // ⭐ The load-bearing assertion of this unit. Consent is present and true,
+    // and it changes nothing: checkCloudConsent is a recorded preference with
+    // NO ROUTING AUTHORITY under the current canon.
+    jest.doMock('../providers/kokoro', () => ({
+      synthesize: jest.fn().mockRejectedValue(new Error('ECONNREFUSED')),
+    }));
+    jest.doMock('@/lib/db/postgres', () => ({
+      query: jest.fn().mockResolvedValue({ rows: [{ cloud_voice_consent: true }] }),
+    }));
+
+    const ttsRouter = require('../ttsRouter');
+    const { checkCloudConsent } = require('../voiceSovereignty');
+
+    const consent = await checkCloudConsent({ memberId: 'test-member' });
+    // Whatever consent reports, the router refuses. The assertion is the
+    // implication, not the consent value.
+    await expect(ttsRouter.synthesize({ text: 'sovereignty test' }))
+      .rejects.toMatchObject({ name: 'CloudVoiceForbidden' });
+    expect(typeof consent.allowed).toBe('boolean');
+  });
+
+  it('⭐ HARD INVARIANT: no member preference and no local health state reaches openai', async () => {
+    // Stronger than testing branches individually: the whole cross-product.
+    // If a seventh escape to OpenAI is added to the router later, this fails.
+    const preferences = ['auto', 'local', 'cloud', undefined];
+    const localStates: Array<[string, any]> = [
+      ['healthy', { audioBuffer: Buffer.from('a'), contentType: 'audio/mpeg', provider: 'kokoro' }],
+      ['down', null],
+    ];
+
+    for (const pref of preferences) {
+      for (const [label, kokoroResult] of localStates) {
+        jest.resetModules();
+        jest.doMock('../providers/kokoro', () => ({
+          synthesize: kokoroResult
+            ? jest.fn().mockResolvedValue(kokoroResult)
+            : jest.fn().mockRejectedValue(new Error('ECONNREFUSED')),
+        }));
+        const ttsRouter = require('../ttsRouter');
+
+        let provider: string | undefined;
+        let refusal: string | undefined;
+        try {
+          const r = await ttsRouter.synthesize({ text: 'x', ttsProviderPref: pref });
+          provider = r.provider;
+        } catch (err: any) {
+          refusal = err.name;
+        }
+
+        expect({ pref, label, provider }).not.toMatchObject({ provider: 'openai' });
+        if (label === 'down') {
+          expect(refusal).toBe('CloudVoiceForbidden');
+        } else {
+          expect(provider).toBe('kokoro');
+        }
+      }
     }
   });
 
@@ -668,14 +779,18 @@ describe('consent matrix — the constitutional test', () => {
     const { checkCloudConsent, resolveVoicePolicy } = require('../voiceSovereignty');
 
     // Router signals fallback needed
-    let fallbackSignaled = false;
+    // SUPERSEDED mechanism, same outcome. The router used to SIGNAL a fallback
+    // and leave the decision to the route layer. It now refuses outright, so
+    // there is no decision left to make and no window in which one could be
+    // made wrongly.
+    let refused = false;
     try {
       await ttsRouter.synthesize({ text: 'sovereignty test' });
     } catch (err: any) {
-      fallbackSignaled = true;
-      expect(err.isFallback).toBe(true);
+      refused = true;
+      expect(err.name).toBe('CloudVoiceForbidden');
     }
-    expect(fallbackSignaled).toBe(true);
+    expect(refused).toBe(true);
 
     // Consent check with local-only header → denied
     const consent = await checkCloudConsent({
