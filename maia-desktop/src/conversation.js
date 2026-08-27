@@ -215,6 +215,30 @@ function createConversation({ session, diagnostics, sessionId }) {
     return { ok: true, sessionId: convId, resumed: true };
   }
 
+  /**
+   * ⭐ MAIA-D04A. What the server currently considers this member's thread —
+   * WITHOUT adopting it.
+   *
+   * `adoptMemberThread()` mutates `convId` as a side effect of looking, which
+   * is right at sign-in and wrong on a timer: polling with it would adopt
+   * merely by asking, and the decision about whether to adopt belongs to
+   * `thread-watch`, not to the act of reading.
+   *
+   * ⛔ Read-only. Nothing here assigns to `convId` or `resumed`.
+   */
+  async function canonicalThreadId() {
+    const out = await session.authedFetch(TURNS_PATH, { method: 'GET' });
+    if (!out.ok) {
+      const body = await readErrorBody(out.res);
+      return { ok: false, error: out.error || explain(out.status, body) };
+    }
+    let data = null;
+    try { data = await out.res.json(); } catch { /* not JSON */ }
+    const messages = (data && Array.isArray(data.messages)) ? data.messages : [];
+    const latest = messages.find((m) => m && typeof m.sessionId === 'string' && m.sessionId.trim());
+    return { ok: true, sessionId: latest ? latest.sessionId.trim() : null };
+  }
+
   /** The adopted thread in order, so Desktop opens on what was actually said. */
   async function history(limit = 20) {
     const out = await session.authedFetch(
@@ -352,7 +376,7 @@ function createConversation({ session, diagnostics, sessionId }) {
   }
 
   return {
-    transcribe, ask, adoptMemberThread, history,
+    transcribe, ask, adoptMemberThread, canonicalThreadId, history,
     conversationId: () => convId, isResumed: () => resumed,
     TRANSCRIBE_PATH, MAIA_PATH, TURNS_PATH,
   };
