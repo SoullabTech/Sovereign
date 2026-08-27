@@ -1,7 +1,7 @@
 # MAIA Desktop Companion — Roadmap to a full functioning Desktop MAIA
 
 **Date:** 2026-08-25 · **Status:** programme reference
-**Position:** D01/D03 device-witnessed 2026-08-27 · D04 partially proven · D02 next
+**Position:** D01/D03 device-witnessed · nine-turn walk clean · D04 partially proven · D02 active
 **Position last updated:** 2026-08-27 after the conversation device walk
 **Supersedes nothing.** This refines the founder's original D00–D30 programme with what the
 MAIA-D00 census, MAIA-D00A, and MAIA-D01 actually established. Where the census changed a unit's
@@ -17,7 +17,7 @@ MAIA-D00A   ✅ CLOSED    preload boundary reconciliation
 MAIA-D01    ✅ WITNESSED native capture → transcript, on a real Mac, 2026-08-27
 MAIA-D03    ✅ WITNESSED authenticated transport into the live MAIA routes
 MAIA-D04    ◑  PARTIAL   same member + same substrate proven; same CONVERSATION not
-MAIA-D02    ◑  OPEN      reliability — one server defect fixed in source, undeployed  ← HERE
+MAIA-D02    ◑  OPEN      reliability — the transport defect is fixed and witnessed  ← HERE
 MAIA-D05+   ○  not eligible
 ```
 
@@ -29,6 +29,19 @@ One sentence of honest state, superseding the previous one:
 **MAIA has heard a human being, answered, and been answered — repeatedly, on a Mac, into the same
 member's substrate; what has not been proven is that a Desktop conversation is the SAME conversation
 as an iPhone one.**
+
+### 0.0 Acceptance walk — PASSED 2026-08-27
+
+Nine consecutive spoken turns on a Mac, no Terminal touched, zero transcription
+failures and zero retries — including 914816 bytes at 28.6 seconds, larger and
+longer than anything that had ever succeeded before the middleware fix
+(`92bc2a9df`). The DESKTOP-CONVERSATION-01 acceptance was five; it did nine.
+
+Two defects the walk surfaced, both D02, neither blocking: a ~20-second
+near-silent epoch was dispatched and came back as a looping Whisper
+hallucination (`peakX1000=127 rmsX1000=8` against a normal ~1000/70), and input
+is clipping (`peakX1000` above 1000). Detail:
+`docs/ops/TRANSCRIBE_BODY_DISTURBED_2026-08-27.md` §7.
 
 ### 0.1 What the 2026-08-27 walk actually established
 
