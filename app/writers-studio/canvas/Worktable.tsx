@@ -58,6 +58,19 @@ import {
 
 type Phase = 'loading' | 'ready' | 'no-source' | 'unauthorized' | 'error' | 'conflict';
 
+/**
+ * Words, counted the way a writer counts them: runs of non-whitespace.
+ *
+ * Deliberately not a word-character regex — a manuscript is full of em-dashes,
+ * ellipses, quoted fragments and names with apostrophes, and a count that
+ * disagrees with the writer's own is worse than no count. This one is boring
+ * and matches what a word processor reports closely enough to be trusted.
+ */
+function countWords(text: string): number {
+  const t = text.trim();
+  return t.length === 0 ? 0 : t.split(/\s+/).length;
+}
+
 interface WorktableProps {
   manuscriptId: string;
   /** The parts the member carried in. Stable identity — see mapDraft. */
@@ -69,7 +82,18 @@ interface WorktableProps {
   /** The table can move the frame itself (a find result is a door too). */
   onFocusKey?: (key: string | null) => void;
   /** Authored draft facts for the room's orientation line. Facts only. */
-  onMeta?: (meta: { updatedAt: string | null; revisionCount: number | null }) => void;
+  onMeta?: (meta: {
+    updatedAt: string | null;
+    revisionCount: number | null;
+    /**
+     * Words in the WHOLE draft, never the framed part. The shell shows this
+     * beside the work's name, and a count that shrank when the writer narrowed
+     * to one chapter would read as text lost. Counted here because the table is
+     * the only thing that holds the content — the room deliberately does not,
+     * so a keystroke never crosses a component boundary.
+     */
+    words: number;
+  }) => void;
   /** A version was kept; the History drawer re-reads. */
   onCheckpointed?: () => void;
 }
@@ -118,7 +142,11 @@ export default function Worktable({
           if (meta.revisionId !== null) baseRef.current = meta.revisionId;
           if (cancelled) return;
           setUpdatedAt(meta.updatedAt);
-          cbRef.current.onMeta?.({ updatedAt: meta.updatedAt, revisionCount: meta.revisionCount });
+          cbRef.current.onMeta?.({
+            updatedAt: meta.updatedAt,
+            revisionCount: meta.revisionCount,
+            words: countWords(contentRef.current),
+          });
         },
         onConflict: () => {
           // Not retryable (see workingDraftClient): the draft moved elsewhere,
@@ -145,7 +173,11 @@ export default function Worktable({
       setContent(r.content);
       setUpdatedAt(r.updatedAt ?? null);
       setPhase('ready');
-      cbRef.current.onMeta?.({ updatedAt: r.updatedAt ?? null, revisionCount: r.revisionCount });
+      cbRef.current.onMeta?.({
+        updatedAt: r.updatedAt ?? null,
+        revisionCount: r.revisionCount,
+        words: countWords(r.content ?? contentRef.current),
+      });
     };
 
     (async () => {
@@ -376,7 +408,11 @@ export default function Worktable({
     if (res.kind === 'ok') {
       if (res.revisionId !== null) baseRef.current = res.revisionId;
       setUpdatedAt(res.updatedAt);
-      cbRef.current.onMeta?.({ updatedAt: res.updatedAt, revisionCount: res.revisionCount });
+      cbRef.current.onMeta?.({
+        updatedAt: res.updatedAt,
+        revisionCount: res.revisionCount,
+        words: countWords(contentRef.current),
+      });
       cbRef.current.onCheckpointed?.();
       saver.endExclusive({ persisted: value });
       return true;
@@ -411,7 +447,11 @@ export default function Worktable({
         if (res.revisionId !== null) baseRef.current = res.revisionId;
         setUpdatedAt(res.updatedAt);
         setKept(true);
-        cbRef.current.onMeta?.({ updatedAt: res.updatedAt, revisionCount: res.revisionCount });
+        cbRef.current.onMeta?.({
+        updatedAt: res.updatedAt,
+        revisionCount: res.revisionCount,
+        words: countWords(contentRef.current),
+      });
         cbRef.current.onCheckpointed?.();
         saver.endExclusive({ persisted: value });
       } else if (res.kind === 'conflict') {
