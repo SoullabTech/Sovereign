@@ -252,3 +252,38 @@ on a route the candidate touched.
 This deploy's cache hits turned out benign: a second run of the same deploy.
 That was *established* by the grep, not assumed from the stamp. The distinction
 between those two is the whole decision.
+
+## D-016 — Visual convergence may never erase capability
+
+**Settled 2026-08-27 (WS2-01).**
+
+The rebuild judges itself against images. That is deliberate — a functional test
+cannot tell you the manuscript stopped being the main event — but it introduces
+a failure mode the old process did not have: a repair that improves the
+screenshot and costs the writer something real.
+
+**Any repair that moves the capture closer to the reference while weakening one
+of these is a FAIL, and the divergence stays unrepaired until a repair exists
+that does not cost it:**
+
+```text
+manuscript continuity     the draft is one document; a narrowed frame is
+                          never a narrowed save
+Materials ≠ Work          a material is not the work, and the distinction
+                          survives every layout
+Versions                  kept versions remain reachable and restorable
+MAIA companionship        MAIA stays adjacent to the writing, not folded
+                          behind a tab or reduced to a strip
+authorship boundaries     MAIA notices; the writer adjudicates. No score, no
+                          grade, no ranking presented as measurement
+```
+
+This is not a tiebreak between design and function. The reference images were
+drawn from a product whose whole argument is those five things; a version of the
+field that looks like 04 and has lost one of them is further from the designed
+product, not closer, however well the pixels agree.
+
+The practical form: when a divergence can only be closed by weakening one of the
+five, the divergence is **recorded as accepted** with the reason, and the
+implementation keeps the capability. An accepted divergence is a decision, not a
+defect left lying around.
