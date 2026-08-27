@@ -241,3 +241,84 @@ and only of the conversation path — it is not a repository-wide claim that no
 OpenAI TTS can execute.
 
 Candidate second unit. Not opened; awaiting a ruling.
+
+---
+
+# Desktop findings — 2026-08-27 PWA console walk
+
+Both surfaced in a browser console capture during a VOICE-SOVEREIGNTY-01
+Runtime C attempt. Neither bears on the sovereignty verdict, and neither is
+allowed to: C lives or dies on server-side provider attribution alone.
+
+## D02A — FALSE LISTENING STATE  (high priority)
+
+Observed, verbatim from the console:
+
+```
+[liveness] Capture silent for 16s (silent_death) — mic said "listening" and was not.
+[liveness] Capture loss detected: silent_death (NO_AUDIO_FRAMES)
+voice_capture_lost { cause: 'silent_death', reasonCode: 'NO_AUDIO_FRAMES',
+                     session: 'iwaij27x', ua: '...Chrome/151.0.0.0 Safari/537.36' }
+[voice-status] error NO_AUDIO_FRAMES (recoverable=true)
+```
+
+The mic state machine held `LISTENING` for sixteen seconds while producing zero
+audio frames. The UI told the member it was hearing them; it was not.
+
+This is the **silent-success class** — the same failure shape as a green log
+line that proves nothing, and the same shape as the three voided Runtime C
+windows above. A system that reports a state it is not in is worse than one
+that reports failure, because it spends the member's trust to do it.
+
+### Acceptance
+
+The UI may never continue presenting "hearing" or "listening" once capture
+liveness has crossed the silent-death threshold.
+
+Required behaviour, in order:
+
+```
+detect
+  → change the visible state
+  → attempt bounded recovery
+  → if recovery fails, tell the member truthfully
+```
+
+Note that the detector already exists and already fired — `[liveness]` named
+the condition correctly and `recoverable=true` was set. What did not happen is
+the visible state changing to match. So this is not a detection gap; it is a
+gap between what the system knows and what it shows. That is the narrower and
+more tractable repair, and it is also the more serious defect: the system was
+not confused, it was silent.
+
+## IDENTITY-BOOT-RACE  (lower priority)
+
+```
+/api/relationship-essence?soulSignature=soul_guest → 403
+[ANAMNESIS] Failed to load essence, continuing as first encounter
+...moments later...
+[ANAMNESIS] Essence loaded via API (1790 encounters)
+[GREETING] Recollection greeting for Kelly (1790 encounters)
+[Identity] Healing from explorerId: ce284751...
+```
+
+The essence request fires under `soul_guest` before authenticated identity
+resolves, takes a 403, and falls back to first-encounter. The authenticated
+essence then loads and the greeting corrects itself.
+
+Self-correcting here, so it is lower priority than D02A. But the failure mode
+is not cosmetic: on a slow load the first-encounter greeting can win the race
+and a member with 1790 encounters is met as a stranger. Being forgotten by
+something that has known you for 1790 encounters is a sovereignty-adjacent
+harm, not a rendering bug — it just happens to be rare rather than wrong.
+
+## Not investigated — "code spoken aloud"
+
+A report that MAIA read code aloud in the robot voice. The turn captured in
+this walk had the response text *"Hi — I'm here. Both of them landed."*, which
+contains none, so the report belongs to a different turn.
+
+⛔ Deliberately not chased. Without a timestamp or identifiable turn, any
+repair would be guess-driven, and this document already records five wrong
+diagnoses made ahead of measurement. Reopen when a concrete turn or time is
+available.
