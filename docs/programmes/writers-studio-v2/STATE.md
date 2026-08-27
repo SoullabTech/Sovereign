@@ -8,7 +8,15 @@ PROGRAMME       WRITERS-STUDIO-V2 · ACTIVE
 LANE            claude/writers-studio-organization-wxpb7q
 CANONICAL       644d4f2c5
 
-PRODUCTION      c9b0574db  deployed 2026-08-27 · VERIFIED TWO WAYS (D-007)
+PRODUCTION      0d66a5a27  deployed 2026-08-27 · VERIFIED TWO WAYS (D-007)
+                  env var  — GIT_COMMIT == 0d66a5a27 (gate-verified at swap)
+                  artifact — /writers-studio/canvas grew 8 kB → 19.9 kB and
+                             /writers-studio 5.47 → 6.01 kB in the build
+                             manifest: the refusal states, the "which writing"
+                             chooser and the inert cards are in the image
+                contains eb89917ec — the five custody fixes and the pin
+
+PREDECESSOR     c9b0574db  deployed 2026-08-27 · VERIFIED TWO WAYS (D-007)
                   env var  — printenv GIT_COMMIT == c9b0574db
                   artifact — canvas client chunk page-5548396c41e9eeee.js,
                              was page-fbd9167f5560c402.js at 1feec9b1d;
@@ -26,12 +34,12 @@ OPEN            WS2-01 — work/manuscript/content identity
                   negative identity probe      PASS
                   full read-path audit         PASS  (1f836d1a7)
                   observed click defect        WITNESSED — FAILED
-                  F-1 fixed                    eb89917ec · undeployed
-                  F-2/F-3 contract corrected   eb89917ec · undeployed
-                  F-4 drift points pinned      eb89917ec · undeployed
-                  F-5 (legacy Press ingress)   eb89917ec · undeployed
-                  D-008/D-010 regression pin   eb89917ec · undeployed
-                  production proof             REQUIRED
+                  F-1 fixed                    LIVE (0d66a5a27)
+                  F-2/F-3 contract corrected   LIVE (0d66a5a27)
+                  F-4 drift points pinned      LIVE (0d66a5a27)
+                  F-5 (legacy Press ingress)   LIVE (0d66a5a27)
+                  D-008/D-010 regression pin   LIVE (0d66a5a27)
+                  production proof             REQUIRED — one click, one import
 
                 WITNESS RESULT, 2026-08-27, founder, on c9b0574db:
                 clicking a work opened "Transcription" under the line
