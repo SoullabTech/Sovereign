@@ -128,9 +128,23 @@ export function recordDispatch(transcript: string, now: number): DispatchProvena
 }
 
 /**
- * Clear the comparison state. Called when a new mic engagement begins, beside
- * `resetVoiceSession()` — otherwise `sameAsPrevious` would compare across two
- * unrelated conversations and report a false duplicate.
+ * Clear the comparison state.
+ *
+ * LIFETIME: one deliberate voice-conversation engagement — NOT one microphone
+ * stream, and not the browser process.
+ *
+ * This was originally called beside `resetVoiceSession()` on every successful
+ * `getUserMedia`. Production at 92bc2a9df disproved that scope: six
+ * consecutive hands-free turns each re-acquired the mic and each reported
+ * `dispatchId=1, msSincePrevious=-1`, so a duplicate that reappeared across a
+ * re-acquisition boundary could never be seen. The design assumed
+ * "mic engagement ~ conversation"; production says "mic engagement ~ utterance".
+ *
+ * Callers are now the engagement boundaries in `ContinuousConversation.tsx`:
+ * component mount, component unmount, and explicit `userExitMode` exit. The
+ * reset still matters at those points — without it a later engagement whose
+ * first phrase happens to repeat the last of a previous one would report a
+ * duplicate across a boundary that has none.
  */
 export function resetDispatchProvenance(): void {
   dispatchCounter = 0;

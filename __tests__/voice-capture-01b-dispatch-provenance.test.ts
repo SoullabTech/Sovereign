@@ -255,12 +255,113 @@ describe('dispatchProvenance — the comparison itself', () => {
     expect(recordDispatch('', 1_100).sameAsPrevious).toBe(false);
   });
 
-  it('clears comparison state across mic engagements', () => {
+  it('clears comparison state when the engagement ends', () => {
     recordDispatch('same words', 1_000);
     resetDispatchProvenance();
     const afterReset = recordDispatch('same words', 2_000);
     expect(afterReset.dispatchId).toBe(1);
     expect(afterReset.sameAsPrevious).toBe(false);
     expect(afterReset.msSincePrevious).toBe(-1);
+  });
+});
+
+describe('VOICE-CAPTURE-01B-OBS-LIFETIME — the comparator outlives the microphone', () => {
+  /**
+   * WHY THIS BLOCK EXISTS
+   * ---------------------
+   * The instrument shipped at 92bc2a9df reset its comparison state on every
+   * successful `getUserMedia`. Production then showed what a mic engagement
+   * actually is: six consecutive hands-free turns, six mic acquisitions, six
+   * distinct session ids, and `dispatchId=1, msSincePrevious=-1` on all six.
+   *
+   * `sameAsPrevious` therefore could not become true across utterances, and
+   * its absence read as "no duplicate" — the same inversion the bijection
+   * assertion prevents at the code level, one layer down at the state level.
+   *
+   * These assertions pin the LIFETIME, not the arithmetic. Restoring
+   * `resetDispatchProvenance()` beside `getUserMedia` must fail the first one.
+   */
+
+  /** The `getUserMedia` success path, from the session reset to the grant log. */
+  function micAcquisitionBlock(): string {
+    const from = source.indexOf('resetVoiceSession();');
+    const to = source.indexOf("logVoiceEvent('voice_mic_granted'", from);
+    expect(from).toBeGreaterThan(-1);
+    expect(to).toBeGreaterThan(from);
+    return source.slice(from, to);
+  }
+
+  it('does NOT reset provenance when the mic is re-acquired', () => {
+    // The negative control for this whole unit.
+    expect(micAcquisitionBlock()).not.toContain('resetDispatchProvenance()');
+  });
+
+  it('still resets the voice session on mic acquisition — that scope is unchanged', () => {
+    // The repair narrows ONE lifetime. It must not quietly widen another.
+    expect(micAcquisitionBlock()).toContain('resetVoiceSession();');
+  });
+
+  it('resets provenance on explicit userExitMode, AFTER the manual_stop dispatch', () => {
+    const exitReset = source.indexOf('if (options?.userExitMode) {\n      // Explicit exit closes the engagement');
+    const manualStop = source.indexOf("witnessDispatch('manual_stop'");
+    expect(exitReset).toBeGreaterThan(-1);
+    expect(manualStop).toBeGreaterThan(-1);
+    // Ordering is the assertion. Resetting before the flush would report the
+    // engagement's final utterance as a first dispatch and lose the comparison
+    // that matters most — the one against the turn immediately before it.
+    expect(exitReset).toBeGreaterThan(manualStop);
+  });
+
+  it('resets provenance on component mount AND unmount', () => {
+    const at = source.indexOf('    // A fresh engagement starts with no previous utterance');
+    expect(at).toBeGreaterThan(-1);
+    const effect = source.slice(at, source.indexOf('}, []);', at));
+    const returnAt = effect.indexOf('return () => {');
+    expect(returnAt).toBeGreaterThan(-1);
+    // One before the teardown closure (mount), one inside it (unmount).
+    expect(effect.slice(0, returnAt)).toContain('resetDispatchProvenance();');
+    expect(effect.slice(returnAt)).toContain('resetDispatchProvenance();');
+  });
+
+  it('keeps exactly three reset call sites — engagement boundaries only', () => {
+    const sites = source.match(/resetDispatchProvenance\(\)/g) ?? [];
+    // mount · unmount · explicit exit. A fourth means a new lifetime was
+    // introduced without a decision about what it is scoped to.
+    expect(sites).toHaveLength(3);
+  });
+});
+
+describe('dispatchProvenance — a duplicate now survives mic re-acquisition', () => {
+  beforeEach(() => resetDispatchProvenance());
+
+  it('reports sameAsPrevious=true across turns with no reset between them', () => {
+    // Exactly the shape production could not express: two hands-free turns,
+    // a mic re-acquisition between them, the same words both times.
+    const first = recordDispatch('can you hear me', 1_000);
+    // ...mic torn down and re-acquired here; the comparator no longer cares...
+    const second = recordDispatch('can you hear me', 21_000);
+
+    expect(first.dispatchId).toBe(1);
+    expect(first.msSincePrevious).toBe(-1);
+
+    expect(second.dispatchId).toBe(2);
+    expect(second.sameAsPrevious).toBe(true);
+    expect(second.msSincePrevious).toBe(20_000);
+  });
+
+  it('numbers a multi-turn engagement 1..N instead of 1,1,1', () => {
+    // The acceptance shape for the PWA witness that follows this unit.
+    const ids = ['one', 'two', 'three', 'four', 'five', 'six']
+      .map((t, i) => recordDispatch(t, 1_000 * i).dispatchId);
+    expect(ids).toEqual([1, 2, 3, 4, 5, 6]);
+  });
+
+  it('a new engagement does NOT inherit the previous one\'s last utterance', () => {
+    recordDispatch('good morning', 1_000);
+    resetDispatchProvenance(); // engagement boundary: exit / unmount / mount
+    const opener = recordDispatch('good morning', 90_000);
+    expect(opener.dispatchId).toBe(1);
+    expect(opener.sameAsPrevious).toBe(false);
+    expect(opener.msSincePrevious).toBe(-1);
   });
 });
