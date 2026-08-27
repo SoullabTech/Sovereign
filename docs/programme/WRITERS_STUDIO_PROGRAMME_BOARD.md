@@ -7,6 +7,7 @@
 > CAPABILITY SPEC       docs/programme/DEVELOPMENTAL_EDITOR_CAPABILITY.md
 > UNIT DEFINITION       docs/programme/WS-01_SOURCE_CUSTODY_UNIT_DEFINITION.md
 > LIVE STATE (here)     docs/programme/WRITERS_STUDIO_PROGRAMME_BOARD.md
+> DESIGN RECONCILIATION docs/programme/WS2-00_DESIGN_RECONCILIATION_CENSUS_2026-08-27.md
 > HISTORICAL EVIDENCE   docs/design/author-studio/WRITERS_STUDIO_MEMBER_UPGRADE_PROGRAMME_LEDGER.md
 > ```
 >
@@ -19,7 +20,14 @@
 > costs a decision. The 2026-08-14 member-upgrade ledger is frozen historical predecessor
 > evidence within this same lineage, not a competing live-state source.
 >
-> ⛔ **Node states are evidence, not intention.** A state is set by reading canonical — file
+> > **Design reconciliation (2026-08-27).** The 2026-08-27 design source set was reconciled against
+> this board, the Master Brief and canonical. It is **census evidence, not a second cockpit** — it
+> creates no unit and re-sequences nothing. Two findings bear on live state: the fourteen
+> `studio`-ish route families are a **naming collision** (only four are this programme's;
+> `app/studio` at 61 pages is Co-Lab), and the designs **express A4 capabilities rather than adding
+> to them**, so the Capability Mandate Census below does not need re-founding.
+
+⛔ **Node states are evidence, not intention.** A state is set by reading canonical — file
 > presence, importer count, live route — never by what a document says should be true. Update it
 > in the same commit as the work that changes it.
 
