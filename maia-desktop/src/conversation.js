@@ -71,6 +71,41 @@ async function readErrorBody(res) {
   return { __raw: text.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 300) };
 }
 
+
+// ── multipart with a known length ────────────────────────────────────────────
+//
+// ⭐ Node's fetch streams a FormData/Blob body with chunked transfer-encoding
+// and no Content-Length once it is large enough not to buffer. A browser always
+// sends Content-Length for FormData — which is why every existing client of
+// this route works and Desktop alone was seeing intermittent failures that
+// never reached the handler (server log, 2026-08-27: the failing requests are
+// absent from it entirely, while 1455660 bytes succeeded).
+//
+// middleware.ts matches every API route and buffers the request body before the
+// handler runs. A body of unknown length is the thing that distinguishes our
+// requests from every request this route has served in production.
+//
+// So the multipart envelope is built here as one contiguous buffer. fetch sets
+// Content-Length from it because the length is known. Nothing about the request
+// the server sees changes otherwise — same field name, same filename, same
+// content type.
+const BOUNDARY = 'maiadesktop6f1a2b3c4d5e';
+
+function multipartWav(wav, filename) {
+  const head = Buffer.from(
+    `--${BOUNDARY}\r\n` +
+    `Content-Disposition: form-data; name="file"; filename="${filename}"\r\n` +
+    'Content-Type: audio/wav\r\n\r\n',
+    'utf8',
+  );
+  const tail = Buffer.from(`\r\n--${BOUNDARY}--\r\n`, 'utf8');
+  return Buffer.concat([head, Buffer.from(wav.buffer, wav.byteOffset, wav.byteLength), tail]);
+}
+
+const MULTIPART_HEADERS = Object.freeze({
+  'Content-Type': `multipart/form-data; boundary=${BOUNDARY}`,
+});
+
 function createConversation({ session, diagnostics, sessionId }) {
   let convId = sessionId;
 
@@ -101,12 +136,11 @@ function createConversation({ session, diagnostics, sessionId }) {
     });
 
 
-    const form = new FormData();
-    // Content-Type is deliberately NOT set — the route rejects a manually set
-    // one, and fetch must be left to write the multipart boundary itself.
-    form.append('file', new Blob([wav], { type: 'audio/wav' }), 'utterance.wav');
+    const payload = multipartWav(wav, 'utterance.wav');
 
-    let out = await session.authedFetch(TRANSCRIBE_PATH, { method: 'POST', body: form });
+    let out = await session.authedFetch(TRANSCRIBE_PATH, {
+      method: 'POST', headers: MULTIPART_HEADERS, body: payload,
+    });
     let body = out.ok ? null : await readErrorBody(out.res);
 
     // ⭐ ONE RETRY, and only for a failure that never reached the route.
@@ -122,9 +156,9 @@ function createConversation({ session, diagnostics, sessionId }) {
     // nothing and forms no memory. If that ever stops being true, this must go.
     if (!out.ok && out.status >= 500 && body && body.__raw) {
       diagnostics.emit('voice_transcribe_sent', { bytes: wav.byteLength, source: 'retry' });
-      const retryForm = new FormData();
-      retryForm.append('file', new Blob([wav], { type: 'audio/wav' }), 'utterance.wav');
-      out = await session.authedFetch(TRANSCRIBE_PATH, { method: 'POST', body: retryForm });
+      out = await session.authedFetch(TRANSCRIBE_PATH, {
+        method: 'POST', headers: MULTIPART_HEADERS, body: payload,
+      });
       body = out.ok ? null : await readErrorBody(out.res);
     }
 
@@ -174,4 +208,4 @@ function createConversation({ session, diagnostics, sessionId }) {
   return { transcribe, ask, conversationId: () => convId, TRANSCRIBE_PATH, MAIA_PATH };
 }
 
-module.exports = { createConversation, explain, readErrorBody, TRANSCRIBE_PATH, MAIA_PATH };
+module.exports = { createConversation, explain, readErrorBody, multipartWav, BOUNDARY, TRANSCRIBE_PATH, MAIA_PATH };
