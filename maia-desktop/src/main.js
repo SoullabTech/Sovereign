@@ -39,6 +39,7 @@ const { createUtteranceBuffer } = require('./voice/utterance');
 const { createSession } = require('./session');
 const { createConversation } = require('./conversation');
 const { createCaptureLiveness } = require('./capture-liveness');
+const { createThreadWatch } = require('./thread-watch');
 
 // Separate userData for a dev launch, so a development instance can never read
 // or corrupt an installed instance's state. (jarvis-desktop precedent.)
@@ -155,6 +156,7 @@ function pushState() { broadcast('maia:voice-state-changed', voiceStateSnapshot(
 // pushes state only on a real transition — a watchdog that broadcast every
 // second would be its own kind of noise.
 let captureWatchdog = null;
+const threadWatch = createThreadWatch();
 
 function startCaptureWatchdog() {
   stopCaptureWatchdog();
@@ -347,6 +349,88 @@ async function joinMemberThread() {
     conversationId: out.sessionId,
     turns: h.turns,
   });
+
+  // ⭐ MAIA-D04A. Adoption is no longer a one-time act at sign-in. From here
+  // the window keeps watching, so a conversation continued on another surface
+  // is joined without a relaunch.
+  threadWatch.start(currentMemberId(), out.sessionId);
+  startThreadWatch();
+}
+
+// ── MAIA-D04A — live re-adoption ────────────────────────────────────────────
+//
+// D04 made Desktop join the member's thread at launch. This makes it STAY
+// joined: an open window notices that the canonical conversation moved and
+// conforms to it.
+//
+// The server is authority throughout:
+//   member identity → canonical conversation → Desktop observes → reconciles
+// Desktop never pushes a thread state outward and holds none of its own.
+const THREAD_POLL_MS = 15000;
+let threadPoll = null;
+
+/**
+ * Who is signed in right now.
+ *
+ * ⭐ `username`, not `name`. The session's `member.name` is a DISPLAY name —
+ * two members can share one, and a display name is not an identity to gate
+ * adoption on. `username` is what the member authenticated as and is unique by
+ * the members contract.
+ *
+ * Returns null when nobody is signed in, which makes every observation
+ * `member_mismatch` and therefore inert. Failing closed is the right default
+ * for a guard whose job is to prevent one person's conversation appearing in
+ * another person's window.
+ */
+function currentMemberId() {
+  const st = memberSession && memberSession.state();
+  if (!st || !st.signedIn || !st.member) return null;
+  return st.member.username || null;
+}
+
+function startThreadWatch() {
+  stopThreadWatch();
+  threadPoll = setInterval(() => { void pollCanonicalThread(); }, THREAD_POLL_MS);
+  if (threadPoll.unref) threadPoll.unref();
+}
+
+function stopThreadWatch() {
+  if (threadPoll) { clearInterval(threadPoll); threadPoll = null; }
+}
+
+async function pollCanonicalThread() {
+  if (!conversation || !threadWatch.isWatching) return;
+
+  const peek = await conversation.canonicalThreadId();
+  // ⛔ A failed read is NOT an instruction to abandon the thread we hold. The
+  // network being down must never fork the member's conversation, so a failure
+  // is silent here and simply retried on the next tick.
+  if (!peek.ok) return;
+
+  const decision = threadWatch.observe({
+    memberId: currentMemberId(),
+    canonicalId: peek.sessionId,
+    turnInFlight: turnBusy,
+  });
+
+  if (decision.action !== 'adopt') return;   // ignore and defer are both quiet
+
+  // Re-adopt through the SAME path used at sign-in. There is one adoption
+  // implementation and this is it — a second one would be free to drift.
+  const out = await conversation.adoptMemberThread();
+  if (!out.ok) return;                        // watch keeps the old id; retries
+
+  const h = await conversation.history();
+  threadWatch.noteAdopted(out.sessionId);
+  broadcast('maia:thread', {
+    resumed: true,
+    conversationId: out.sessionId,
+    turns: h.turns,
+    // Lets the surface say something true about WHY the thread changed under
+    // them, rather than silently redrawing.
+    rejoined: true,
+    from: decision.from || null,
+  });
 }
 
 // ── auth IPC — the token never crosses the bridge ───────────────────────────
@@ -371,6 +455,10 @@ ipcMain.handle('maia:sign-in', async (_evt, payload) => {
 ipcMain.handle('maia:sign-out', async () => {
   memberSession.signOut();
   conversation = null;
+  // ⛔ The watch dies with the session. Nothing may adopt on behalf of someone
+  // who is no longer signed in.
+  threadWatch.stop();
+  stopThreadWatch();
   broadcast('maia:auth', memberSession.state());
   return { ok: true };
 });

@@ -282,10 +282,20 @@ window.addEventListener('DOMContentLoaded', async () => {
     if (!t) return;
     if (t.error) { setState(`Could not reach your conversation — ${t.error}`, true); return; }
     if (!t.resumed) return;                 // no history anywhere: this IS the first
+
+    // ⭐ MAIA-D04A. A live rejoin replaces what is on screen, so the surface is
+    // cleared first. Appending would splice two threads into one transcript
+    // that never happened — the member would read a conversation nobody had.
+    if (t.rejoined) $('main').innerHTML = '';
+
     for (const turn of t.turns || []) {
       addTurn(turn.role === 'assistant' ? 'maia' : 'member', turn.content);
     }
-    setState('Picking up where you left off.');
+    // ⛔ Never a silent redraw. If the thread changed underneath the member
+    // while they were looking at it, they are told that it did.
+    setState(t.rejoined
+      ? 'Caught up — you continued this somewhere else.'
+      : 'Picking up where you left off.');
   });
 
   window.maia.onTurn((t) => {
