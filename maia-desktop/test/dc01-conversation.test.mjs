@@ -1,0 +1,222 @@
+// DESKTOP-CONVERSATION-01 — the assembled path.
+//
+// ⭐ The first assertion here is the one that would have caught the class E
+// defect the 2026-08-27 device walk found. Fifty-five green assertions did not,
+// because every one of them proved a COMPONENT in isolation and none proved the
+// assembled path dispatches audio at all. That gap is what this file closes.
+
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { createRequire } from 'node:module';
+
+const require = createRequire(import.meta.url);
+const here = path.dirname(fileURLToPath(import.meta.url));
+const srcDir = path.join(here, '..', 'src');
+const strip = (f) => readFileSync(path.join(srcDir, f), 'utf8')
+  .replace(/\/\*[\s\S]*?\*\//g, '')
+  .split('\n').map((l) => l.replace(/(^|[^:'"`])\/\/.*$/, '$1')).join('\n');
+
+const mainJs = strip('main.js');
+const { encodeWav } = require('../src/voice/wav.js');
+const { createUtteranceBuffer } = require('../src/voice/utterance.js');
+const { createConversation, explain } = require('../src/conversation.js');
+const { createSession } = require('../src/session.js');
+
+// ── ⭐ the class E regression ───────────────────────────────────────────────
+
+test('CLASS E REGRESSION — the frame handler buffers audio and dispatches a turn', () => {
+  const handler = /ipcMain\.handle\('maia:voice-frame'[\s\S]*?\n\}\);/.exec(mainJs)[0];
+  assert.ok(handler.includes('utterance.push'),
+    'frames are not buffered — audio is being dropped, which is the class E defect');
+  assert.ok(/utterance_boundary[\s\S]*?runTurn\(\)/.test(handler),
+    'an utterance boundary does not dispatch a turn — transcription is unreachable');
+});
+
+test('the turn loop actually calls transcribe AND ask — not one without the other', () => {
+  const turn = /async function runTurn\(\)[\s\S]*?\n\}/.exec(mainJs)[0];
+  assert.ok(turn.includes('conversation.transcribe('), 'never transcribes');
+  assert.ok(turn.includes('conversation.ask('), 'never asks MAIA — stops at "transcription works"');
+  assert.ok(turn.includes("'maia:audio'") || turn.includes('maia:audio'), 'never emits audio');
+});
+
+test('a boundary does NOT end the epoch — a pause is still not a finished thought', () => {
+  const handler = /ipcMain\.handle\('maia:voice-frame'[\s\S]*?\n\}\);/.exec(mainJs)[0];
+  assert.ok(!/endEpoch|userStop/.test(handler), 'an utterance boundary tore down capture');
+});
+
+// ── audio format ────────────────────────────────────────────────────────────
+
+test('WAV header is well-formed and declares the real sample rate', () => {
+  const wav = encodeWav(new Float32Array(1600), 16000);
+  const dv = new DataView(wav.buffer);
+  assert.equal(String.fromCharCode(...wav.subarray(0, 4)), 'RIFF');
+  assert.equal(String.fromCharCode(...wav.subarray(8, 12)), 'WAVE');
+  assert.equal(dv.getUint16(22, true), 1, 'must be mono');
+  assert.equal(dv.getUint32(24, true), 16000, 'sample rate must be the real one');
+  assert.equal(dv.getUint16(34, true), 16, 'must be 16-bit');
+  assert.equal(wav.length, 44 + 1600 * 2);
+});
+
+test('out-of-range samples clamp instead of wrapping to the opposite sign', () => {
+  const wav = encodeWav(Float32Array.from([1.8, -1.8]), 16000);
+  const dv = new DataView(wav.buffer);
+  assert.equal(dv.getInt16(44, true), 32767, 'positive overflow wrapped — audible as a click');
+  assert.equal(dv.getInt16(46, true), -32768, 'negative overflow wrapped');
+});
+
+// ── the audio tail rule ─────────────────────────────────────────────────────
+
+test('take() is the only way to empty the buffer, and it returns what it removed', () => {
+  const b = createUtteranceBuffer({ minSamples: 10 });
+  b.push(Float32Array.from([0.5, 0.5, 0.5, 0.5, 0.5]));
+  b.push(Float32Array.from([0.5, 0.5, 0.5, 0.5, 0.5, 0.5]));
+  const got = b.take();
+  assert.equal(got.sampleCount, 11);
+  assert.equal(got.samples.length, 11);
+  assert.equal(b.size(), 0);
+  assert.equal(b.take(), null, 'a second take must not resurrect audio');
+});
+
+test('below the floor, take() returns null and KEEPS the audio rather than discarding it', () => {
+  const b = createUtteranceBuffer({ minSamples: 100 });
+  b.push(new Float32Array(50));
+  assert.equal(b.take(), null);
+  assert.equal(b.size(), 50, 'a sub-threshold take silently dropped the member\'s audio');
+});
+
+test('over the ceiling, dropped samples are COUNTED, never silently discarded', () => {
+  const b = createUtteranceBuffer({ maxSamples: 100, minSamples: 1 });
+  for (let i = 0; i < 5; i++) b.push(new Float32Array(40));
+  const got = b.take();
+  assert.ok(got.droppedSamples > 0, 'overflow was silent');
+  assert.equal(got.droppedSamples + got.sampleCount, 200, 'the accounting does not add up');
+});
+
+// ── identity ────────────────────────────────────────────────────────────────
+
+test('the session sends x-session-token and NEVER x-member-id', async () => {
+  const seen = [];
+  const s = createSession({
+    app: { getPath: () => '/nonexistent-for-test' },
+    safeStorage: { isEncryptionAvailable: () => false },
+    fetchImpl: async (url, init) => {
+      seen.push({ url, headers: init.headers || {} });
+      if (url.includes('signin')) return { ok: true, status: 200, json: async () => ({ success: true, token: 'T', member: { name: 'K' } }) };
+      return { ok: true, status: 200, json: async () => ({}) };
+    },
+  });
+  await s.signIn('kelly', 'pw');
+  await s.authedFetch('/api/anything', { method: 'POST' });
+  const call = seen[1];
+  assert.equal(call.headers['x-session-token'], 'T');
+  assert.ok(!('x-member-id' in call.headers), 'sent a bare identity claim the server must reject');
+});
+
+test('the token is NEVER exposed through state()', async () => {
+  const s = createSession({
+    app: { getPath: () => '/nonexistent-for-test' },
+    safeStorage: { isEncryptionAvailable: () => false },
+    fetchImpl: async () => ({ ok: true, status: 200, json: async () => ({ success: true, token: 'SECRET-TOKEN', member: { name: 'K' } }) }),
+  });
+  await s.signIn('kelly', 'pw');
+  assert.ok(!JSON.stringify(s.state()).includes('SECRET-TOKEN'), 'the token leaked to the renderer');
+  assert.equal(s.state().signedIn, true);
+});
+
+test('a 401 REFUSES and clears the session — it never degrades to anonymous', async () => {
+  let calls = 0;
+  const s = createSession({
+    app: { getPath: () => '/nonexistent-for-test' },
+    safeStorage: { isEncryptionAvailable: () => false },
+    fetchImpl: async () => {
+      calls++;
+      if (calls === 1) return { ok: true, status: 200, json: async () => ({ success: true, token: 'T', member: {} }) };
+      return { ok: false, status: 401, json: async () => ({ error: 'Unauthorized' }) };
+    },
+  });
+  await s.signIn('kelly', 'pw');
+  const out = await s.authedFetch('/api/anything');
+  assert.equal(out.ok, false);
+  assert.equal(out.status, 401);
+  assert.equal(s.state().signedIn, false, 'an expired session survived — MAIA would become a stranger mid-conversation');
+});
+
+test('preload never exposes the token, only whether one exists', () => {
+  const preload = strip('preload.js');
+  const exposed = preload.slice(preload.indexOf('exposeInMainWorld'));
+  for (const banned of ['token', 'sessionToken', 'password:']) {
+    assert.ok(!exposed.includes(banned), `preload exposes ${banned} to the renderer`);
+  }
+  assert.ok(exposed.includes('getAuth'), 'renderer cannot ask whether it is signed in');
+});
+
+test('speaking requires a signed-in member', () => {
+  const h = /ipcMain\.handle\('maia:voice-start'[\s\S]*?\n\}\);/.exec(mainJs)[0];
+  assert.ok(/signedIn/.test(h), 'capture can start without a verified member');
+});
+
+// ── routes + sovereignty ────────────────────────────────────────────────────
+
+test('conversation uses the LIVE routes, not Desktop-specific ones', () => {
+  const c = strip('conversation.js');
+  assert.ok(c.includes("'/api/voice/transcribe-simple'"));
+  assert.ok(c.includes("'/api/sovereign/app/maia/list'"));
+});
+
+test('Desktop never reaches for openai-tts — the canon conflict stays unresolved, not silently resolved', () => {
+  for (const f of ['conversation.js', 'main.js', 'session.js', 'renderer.js']) {
+    assert.ok(!/openai-tts|openai\.com/.test(strip(f)), `${f} routes voice through OpenAI`);
+  }
+});
+
+test('sample rate is clamped in MAIN so the WAV header cannot lie', () => {
+  const h = /ipcMain\.handle\('maia:voice-start'[\s\S]*?\n\}\);/.exec(mainJs)[0];
+  assert.ok(h.includes('8000') && h.includes('192000'), 'sample rate is unbounded');
+  assert.ok(h.includes('voice.sampleRate ='), 'sample rate is never recorded');
+});
+
+test('the transcription gate is reported, never bypassed', () => {
+  assert.ok(explain(410).includes('ALLOW_AUDIO_TRANSCRIPTION'),
+    'a disabled gate would surface as an opaque failure');
+  assert.equal(explain(401), 'Session expired — please sign in again.');
+});
+
+test('conversation reports failures instead of going quiet', async () => {
+  const events = [];
+  const conv = createConversation({
+    session: { authedFetch: async () => ({ ok: false, status: 410, res: { json: async () => ({}) } }) },
+    diagnostics: { emit: (e) => events.push(e) },
+    sessionId: 's1',
+  });
+  const out = await conv.transcribe(new Float32Array(1600), 16000);
+  assert.equal(out.ok, false);
+  assert.ok(out.error.includes('ALLOW_AUDIO_TRANSCRIPTION'));
+  assert.ok(events.includes('voice_transcribe_error'));
+});
+
+test('MAIA text reaches the surface but never telemetry', async () => {
+  const events = [];
+  const conv = createConversation({
+    session: { authedFetch: async () => ({ ok: true, status: 200, res: { json: async () => ({ message: 'what is asking to be said', audio: { audioBase64: 'AAA', format: 'mp3' } }) } }) },
+    diagnostics: { emit: (e, m) => events.push({ e, m }) },
+    sessionId: 's1',
+  });
+  const out = await conv.ask('hello');
+  assert.equal(out.text, 'what is asking to be said');
+  assert.equal(out.audio.base64, 'AAA');
+  assert.ok(!JSON.stringify(events).includes('asking to be said'), 'MAIA\'s words leaked into telemetry');
+});
+
+test('the surface renders member text with textContent, never innerHTML', () => {
+  const r = strip('renderer.js');
+  assert.ok(r.includes('b.textContent = body'), 'turn bodies must not be injected as HTML');
+});
+
+test('diagnostics are behind a toggle — the instrument is no longer the interface', () => {
+  const html = readFileSync(path.join(srcDir, 'index.html'), 'utf8');
+  assert.ok(/#log\s*\{[^}]*display:\s*none/.test(html), 'the diagnostic log is visible by default');
+  assert.ok(html.includes('id="toggle"'), 'no disclosure control for diagnostics');
+});

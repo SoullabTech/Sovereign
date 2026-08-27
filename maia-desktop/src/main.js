@@ -28,14 +28,16 @@
 
 'use strict';
 
-const { app, BrowserWindow, ipcMain, session } = require('electron');
+const { app, BrowserWindow, ipcMain, session, safeStorage } = require('electron');
 const path = require('node:path');
 const fs = require('node:fs');
 
 const { createDiagnostics } = require('./voice/diagnostics');
 const { createEpochState, EPOCH_END_REASONS } = require('./voice/epoch');
 const { createVad } = require('./voice/vad');
-const { createTranscriptionClient } = require('./voice/transcription');
+const { createUtteranceBuffer } = require('./voice/utterance');
+const { createSession } = require('./session');
+const { createConversation } = require('./conversation');
 
 // Separate userData for a dev launch, so a development instance can never read
 // or corrupt an installed instance's state. (jarvis-desktop precedent.)
@@ -44,9 +46,12 @@ if (!app.isPackaged) {
 }
 
 let mainWindow = null;
+let memberSession = null; // member session — survives capture start/stop
+let conversation = null; // one continuity for this run
 
 // ── voice session, owned entirely by main ───────────────────────────────────
 let voice = null;
+let turnBusy = false;
 
 function broadcast(channel, payload) {
   for (const w of BrowserWindow.getAllWindows()) {
@@ -106,14 +111,9 @@ function newVoiceSession() {
   });
 
   const vad = createVad();
-  const transcription = createTranscriptionClient({
-    fetchImpl: (url, init) => fetch(url, init),
-    diagnostics,
-    endpoint: process.env.MAIA_TRANSCRIBE_URL || 'http://127.0.0.1:3000/api/voice/transcribe-simple',
-    sleep: (ms) => new Promise((r) => setTimeout(r, ms)),
-  });
+  const utterance = createUtteranceBuffer();
 
-  return { diagnostics, epoch, vad, transcription, draft, frames: 0 };
+  return { diagnostics, epoch, vad, utterance, draft, frames: 0, sampleRate: 48000 };
 }
 
 function voiceStateSnapshot() {
@@ -125,9 +125,16 @@ function pushState() { broadcast('maia:voice-state-changed', voiceStateSnapshot(
 
 // ── IPC — every handler validates in MAIN; nothing is taken on trust ────────
 
-ipcMain.handle('maia:voice-start', async () => {
+ipcMain.handle('maia:voice-start', async (_evt, payload) => {
   if (voice) return { ok: false, reason: 'already capturing' };
+  if (!memberSession || !memberSession.state().signedIn) {
+    return { ok: false, reason: 'sign in before speaking' };
+  }
   voice = newVoiceSession();
+  // Clamped in MAIN. A wrong sample rate produces a WAV header that lies, and
+  // Whisper would transcribe a chipmunk or a drawl rather than the member.
+  const sr = Number(payload && payload.sampleRate);
+  voice.sampleRate = Number.isFinite(sr) && sr >= 8000 && sr <= 192000 ? Math.round(sr) : 48000;
   voice.epoch.startEpoch();
   pushState();
   return { ok: true };
@@ -161,11 +168,23 @@ ipcMain.handle('maia:voice-frame', async (_evt, payload) => {
   const frameMs = Math.max(1, Math.min(1000, Number(payload.frameMs) || 20));
 
   voice.frames += 1;
-  for (const t of voice.vad.push(raw, frameMs)) {
+
+  // ⭐ CLASS E REPAIR (device walk 2026-08-27). The buffer used to not exist:
+  // the VAD ran and every sample was dropped, so transcription was unreachable.
+  // Frames accumulate CONTINUOUSLY — not from `speech_started` — because the VAD
+  // needs consecutive frames to confirm speech, so starting the buffer at the
+  // acknowledgement would clip the first syllable of every utterance.
+  const frame = raw instanceof Float32Array ? raw : Float32Array.from(raw);
+  voice.utterance.push(frame);
+
+  for (const t of voice.vad.push(frame, frameMs)) {
     if (t === 'audio_started') voice.epoch.audioStarted();
     else if (t === 'speech_started') voice.epoch.speechStarted();
-    // 'utterance_boundary' / 'long_pause' / 'speech_ended' deliberately do NOT
-    // end the epoch. A pause is not a finished thought (§XII).
+    else if (t === 'utterance_boundary') {
+      // An utterance ended, so a final may be requested. This still does NOT end
+      // the epoch — capture keeps running through the pause (§XII).
+      void runTurn();
+    }
   }
   return { ok: true };
 });
@@ -200,6 +219,72 @@ ipcMain.handle('maia:status', async () => ({
   build: process.env.MAIA_DESKTOP_BUILD_SHA || 'UNSTAMPED',
 }));
 
+// ── the turn: transcript → MAIA → audible answer ────────────────────────────
+//
+// The acceptance for DESKTOP-CONVERSATION-01 is back-and-forth conversation, so
+// this is the loop that matters. Every failure is surfaced to the member in
+// words rather than swallowed — a companion that goes quiet after you speak is
+// the failure mode this whole programme exists to avoid.
+async function runTurn() {
+  if (!voice || turnBusy || !conversation) return;
+  const taken = voice.utterance.take();
+  if (!taken) return;                    // silence or a cough, not an utterance
+  turnBusy = true;
+  try {
+    broadcast('maia:turn', { phase: 'transcribing' });
+
+    const t = await conversation.transcribe(taken.samples, voice.sampleRate);
+    if (!t.ok) { broadcast('maia:turn', { phase: 'error', error: t.error }); return; }
+
+    const said = (t.text || '').trim();
+    if (!said) { broadcast('maia:turn', { phase: 'idle' }); return; }
+
+    // The transcript is a FINAL for the epoch — the tail invariant now has real
+    // material to protect, which on the first walk it never did.
+    voice.epoch.final(said, `utt-${Date.now()}`);
+    broadcast('maia:turn', { phase: 'heard', member: said });
+
+    broadcast('maia:turn', { phase: 'thinking' });
+    const a = await conversation.ask(said);
+    if (!a.ok) { broadcast('maia:turn', { phase: 'error', error: a.error }); return; }
+
+    broadcast('maia:turn', { phase: 'answered', maia: a.text });
+    if (a.audio) broadcast('maia:audio', a.audio);
+    else broadcast('maia:turn', { phase: 'no-voice' });
+  } catch (e) {
+    broadcast('maia:turn', { phase: 'error', error: (e && e.message) || 'turn failed' });
+  } finally {
+    turnBusy = false;
+  }
+}
+
+// ── auth IPC — the token never crosses the bridge ───────────────────────────
+
+ipcMain.handle('maia:sign-in', async (_evt, payload) => {
+  const username = typeof payload?.username === 'string' ? payload.username.slice(0, 200) : '';
+  const password = typeof payload?.password === 'string' ? payload.password.slice(0, 400) : '';
+  if (!username || !password) return { ok: false, error: 'username and password are required' };
+  const out = await memberSession.signIn(username, password);
+  if (out.ok) {
+    conversation = createConversation({
+      session: memberSession,
+      diagnostics: { emit: (e, m) => broadcast('maia:voice-event', { event: e, surface: 'desktop', at: Date.now(), ...m }) },
+      sessionId: `desktop-${Date.now()}`,
+    });
+  }
+  broadcast('maia:auth', memberSession.state());
+  return out;
+});
+
+ipcMain.handle('maia:sign-out', async () => {
+  memberSession.signOut();
+  conversation = null;
+  broadcast('maia:auth', memberSession.state());
+  return { ok: true };
+});
+
+ipcMain.handle('maia:auth-state', async () => memberSession.state());
+
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 900,
@@ -226,6 +311,15 @@ app.whenReady().then(() => {
   });
   session.defaultSession.setPermissionCheckHandler((_wc, permission) =>
     permission === 'media' || permission === 'audioCapture');
+
+  memberSession = createSession({ app, safeStorage });
+  if (memberSession.state().signedIn) {
+    conversation = createConversation({
+      session: memberSession,
+      diagnostics: { emit: (e, m) => broadcast('maia:voice-event', { event: e, surface: 'desktop', at: Date.now(), ...m }) },
+      sessionId: `desktop-${Date.now()}`,
+    });
+  }
 
   createWindow();
 });

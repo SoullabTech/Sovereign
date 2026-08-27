@@ -26,7 +26,9 @@ contextBridge.exposeInMainWorld('maia', {
   // Frames only. The renderer cannot name a device, an endpoint, or an epoch:
   // main assigns and owns all three, so a buggy or compromised renderer cannot
   // redirect capture or forge an epoch boundary.
-  voiceStart: () => ipcRenderer.invoke('maia:voice-start'),
+  // The renderer reports the AudioContext's real sample rate; main clamps it.
+  // Without it the WAV header would lie and Whisper would hear the wrong voice.
+  voiceStart: (sampleRate) => ipcRenderer.invoke('maia:voice-start', { sampleRate }),
   voiceStop: () => ipcRenderer.invoke('maia:voice-stop'),
   voiceFrame: (samples, frameMs) => ipcRenderer.invoke('maia:voice-frame', { samples, frameMs }),
   // The renderer OBSERVES getUserMedia resolving; it does not get to assert that
@@ -39,6 +41,14 @@ contextBridge.exposeInMainWorld('maia', {
   getVoiceState: () => ipcRenderer.invoke('maia:voice-state'),
   getStatus: () => ipcRenderer.invoke('maia:status'),
 
+  // ── member session ────────────────────────────────────────────────────────
+  // ⛔ The token itself NEVER crosses this bridge. `getAuth` returns whether a
+  // session exists and whose it is — never the credential. A renderer that
+  // could read the token could exfiltrate it.
+  signIn: (username, password) => ipcRenderer.invoke('maia:sign-in', { username, password }),
+  signOut: () => ipcRenderer.invoke('maia:sign-out'),
+  getAuth: () => ipcRenderer.invoke('maia:auth-state'),
+
   // ── main → renderer ───────────────────────────────────────────────────────
   // Outward only; nothing crosses inward on these.
   onVoiceEvent: (fn) => {
@@ -46,6 +56,24 @@ contextBridge.exposeInMainWorld('maia', {
     const handler = (_evt, payload) => fn(payload);
     ipcRenderer.on('maia:voice-event', handler);
     return () => ipcRenderer.removeListener('maia:voice-event', handler);
+  },
+  onTurn: (fn) => {
+    if (typeof fn !== 'function') return () => {};
+    const handler = (_evt, payload) => fn(payload);
+    ipcRenderer.on('maia:turn', handler);
+    return () => ipcRenderer.removeListener('maia:turn', handler);
+  },
+  onAudio: (fn) => {
+    if (typeof fn !== 'function') return () => {};
+    const handler = (_evt, payload) => fn(payload);
+    ipcRenderer.on('maia:audio', handler);
+    return () => ipcRenderer.removeListener('maia:audio', handler);
+  },
+  onAuth: (fn) => {
+    if (typeof fn !== 'function') return () => {};
+    const handler = (_evt, payload) => fn(payload);
+    ipcRenderer.on('maia:auth', handler);
+    return () => ipcRenderer.removeListener('maia:auth', handler);
   },
   onVoiceState: (fn) => {
     if (typeof fn !== 'function') return () => {};
