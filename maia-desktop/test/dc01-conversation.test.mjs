@@ -339,7 +339,7 @@ test('there is no client-side size ceiling — the server log disproved it', asy
   assert.equal(sent.length, 1, 'the request was not actually sent');
 });
 
-test('a 5xx that never reached the route is retried exactly once', async () => {
+test('a 5xx that never reached the route is retried', async () => {
   const attempts = [];
   const conv = createConversation({
     session: {
@@ -359,7 +359,7 @@ test('a 5xx that never reached the route is retried exactly once', async () => {
   assert.deepEqual([out.ok, out.text], [true, 'heard you']);
 });
 
-test('the retry is narrow — never on 4xx, and never more than once', async () => {
+test('the retry is narrow — never on 4xx, and bounded on 5xx', async () => {
   const attempts = [];
   const mk = (status, bodyText) => createConversation({
     session: { authedFetch: async () => { attempts.push(status); return { ok: false, status, res: { text: async () => bodyText } }; } },
@@ -373,7 +373,7 @@ test('the retry is narrow — never on 4xx, and never more than once', async () 
 
   attempts.length = 0;
   await mk(500, '<html>An error 500</html>').transcribe(new Float32Array(160), 16000);
-  assert.equal(attempts.length, 2, 'a persistent 5xx retried more or less than once');
+  assert.equal(attempts.length, 3, 'a persistent 5xx did not stop at the attempt bound');
 
   attempts.length = 0;
   await mk(500, JSON.stringify({ error: 'Local Faster-Whisper transcription failed' })).transcribe(new Float32Array(160), 16000);
@@ -441,6 +441,9 @@ test('the request declares multipart with the same boundary it wrote', async () 
 test('the retry reuses the same buffer rather than rebuilding it', () => {
   const src = strip('conversation.js');
   assert.ok(!/retryForm/.test(src), 'the retry builds a second envelope — they can diverge');
-  const retry = /if \(!out\.ok && out\.status >= 500[\s\S]*?\n    \}/.exec(src)[0];
+  const retry = /for \(let attempt = 1[\s\S]*?\n    \}/.exec(src)[0];
   assert.ok(/body: payload/.test(retry), 'the retry does not send the same bytes as the first attempt');
+  assert.ok(/attempt <= MAX_TRANSCRIBE_ATTEMPTS - 1/.test(retry), 'the retry loop is not bounded by the attempt cap');
+  assert.ok(/out\.ok \|\| out\.status < 500 \|\| !body \|\| !body\.__raw/.test(retry),
+    'the loop does not stop on success, on a 4xx, or on a failure the route itself answered');
 });
