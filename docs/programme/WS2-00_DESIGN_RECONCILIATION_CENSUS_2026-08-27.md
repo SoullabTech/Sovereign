@@ -190,6 +190,10 @@ code. The table below is the read-only evidence available now; the three right-h
 **`workbench_tables` (7)**. So this is **not a predecessor on the canonical substrate; it is a
 parallel lineage on different tables.**
 
+⭐ **Founder ruling, 2026-08-27:** retirement therefore requires a **data-custody decision**, not
+merely route-replacement evidence. `workbench` is the **LIVE EDGE** — a custody census is required
+**before** any retirement ruling can be made about it.
+
 ⛔ That reframes the cleanup question entirely. It is not *"which route replaces which"* — it is
 **"does this data have a home in the canonical model at all?"** A route-by-route retirement that
 ignored the substrate split would strand member data in tables nothing canonical reads.

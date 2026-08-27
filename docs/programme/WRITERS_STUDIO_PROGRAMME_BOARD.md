@@ -30,8 +30,19 @@
 > WS2-13   WITHDRAWN AS DUPLICATE UNIT ID — requirement maps into A2.5
 > WS2-07a  ARCHITECTURALLY READY · HELD BY CURRENT WS-01 ACCEPTANCE
 > WS2-08a  ARCHITECTURALLY READY · HELD BY CURRENT WS-01 ACCEPTANCE
-> app/book-studio   NO CLEANUP AUTHORIZED — route-by-route witness required first
+> app/book-studio   PARALLEL LINEAGE · NO CLEANUP AUTHORIZED
+>                   data-home question UNRESOLVED
+>                   no redirect / deletion / migration authorized
+> workbench         LIVE EDGE · custody census required BEFORE any retirement ruling
 > ```
+> ⛔ **`book-studio` retirement requires a DATA-CUSTODY decision, not merely route-replacement
+> evidence** (founder ruling, 2026-08-27). It is not a predecessor on canonical Writer's Studio
+> storage: it writes to `workbench_uploads` / `workbench_tables` and touches neither `living_works`
+> nor `member_manuscripts`. A retirement that satisfied §21's replacement witness perfectly could
+> still strand member-held data in tables nothing canonical reads.
+> ⛔ **Zero inbound references never authorizes retirement.** URL reachability and member-held data
+> still count. `app/press/studio` is qualitatively different — an actual `redirect()` establishes its
+> replacement.
 > ⚠️ **A withdrawn identifier is not a withdrawn requirement.** Both capabilities remain fully
 > mandated under their existing identities.
 > ⛔ **ARCHITECTURALLY READY is not EXECUTION-ELIGIBLE.** A2.4 opens `Finish WS-01 →`; build mode is
