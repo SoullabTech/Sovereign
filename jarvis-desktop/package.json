@@ -5,6 +5,7 @@
   "main": "src/main.js",
   "private": true,
   "scripts": {
+    "test": "for f in test/*.test.mjs; do echo \"\u2500\u2500 $f\"; node \"$f\" || exit 1; done",
     "start": "electron .",
     "pack": "npm run stamp && electron-builder --mac --dir",
     "install:app": "npm run pack && rm -rf /Applications/JARVIS.app && ditto dist/mac-arm64/JARVIS.app /Applications/JARVIS.app && echo 'installed -> /Applications/JARVIS.app'",

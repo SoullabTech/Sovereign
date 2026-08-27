@@ -3,7 +3,7 @@
 // read or invoked via the same code paths terminal execution uses. No
 // business logic is duplicated here, and no arbitrary shell execution is
 // exposed to the renderer.
-const { app, BrowserWindow, ipcMain, dialog, Menu, shell } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, Menu, shell, clipboard } = require('electron');
 const { execFileSync } = require('node:child_process');
 const path = require('node:path');
 const fs = require('node:fs');
@@ -18,6 +18,12 @@ const MECH = require('./builder-mechanism.js');
 // from the worker's self-report. The verifier itself stays in scripts/builder —
 // a Desktop-local copy would fork it and defeat the containment.
 const { decideCorrectness } = require('./correctness');
+// JARVIS-STAB-01..04 — run custody, programme state, and the C3 handoff loop.
+// All four are pure or store-backed; none of them adds execution authority.
+const RUNS = require('./task-runs.js');
+const PS = require('./programme-state.js');
+const PACKET = require('./execution-packet.js');
+const RECEIPT = require('./evidence-receipt.js');
 
 // ---------------------------------------------------------------------------
 // Instance identity.
@@ -460,6 +466,11 @@ app.whenReady().then(async () => {
   buildMenu();
   createWindow();
   await ensureBindingOnFirstRun();
+  // JARVIS-STAB-01 — a run left in flight by a closed window was never finished.
+  // Reconciled once at launch so history never shows a run claiming to be
+  // executing inside a process that no longer exists. Best-effort: a store that
+  // cannot be reached must not stop the app from opening.
+  try { await RUNS.reconcileOnLaunch(currentRoot()); } catch { /* custody is reported on the surface, not fatal here */ }
 });
 app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });
 app.on('activate', () => { if (BrowserWindow.getAllWindows().length === 0) createWindow(); });
@@ -732,7 +743,34 @@ ipcMain.handle('jarvis:submit-task', async (_evt, task) => {
   const { route } = await import(`file://${routerPath}?t=${Date.now()}`);
   const decision = route(task);
 
+  // JARVIS-STAB-01 — custody is opened BEFORE anything is attempted, so a crash
+  // during a 30-second C1 call leaves a reconcilable in-flight run rather than
+  // no trace that the founder ever asked. The registry names feed the routing
+  // fingerprint (STAB-02); failing to read them costs fingerprint coverage, not
+  // the run, so it is caught and reported rather than aborting the submission.
+  let capabilityNames = null;
+  try {
+    const det = await import(`file://${detPath}?t=${Date.now()}`);
+    capabilityNames = Object.keys(det.CAPABILITIES || {});
+  } catch { capabilityNames = null; }
+
+  const opened = await RUNS.openRun(currentRoot(), {
+    task, decision, capabilityNames,
+    app_build_sha: (readBuildInfo() || {}).app_build_sha || null,
+  });
+  const store = opened.store;
+  const run = opened.run;
+  // A run that could not be recorded is reported as UNCUSTODIED rather than
+  // silently proceeding as before. Ephemeral was the defect; ephemeral-and-
+  // unlabelled would be the same defect with a new module in front of it.
+  const custody = opened.custody
+    ? { recorded: true, run_id: run.run_id, reason: null }
+    : { recorded: false, run_id: null, reason: opened.reason };
+
   const response = {
+    run_id: custody.run_id,
+    custody,
+    routing_fingerprint: opened.custody ? run.routing_fingerprint : null,
     task: task,
     execution_lane: decision.execution_lane,
     cost_class: decision.cost_class,
@@ -743,9 +781,15 @@ ipcMain.handle('jarvis:submit-task', async (_evt, task) => {
     verification: null,
   };
 
-  if (decision.status === 'rejected_oversized') return response;
+  const mark = (state, patch) => { if (store && run) RUNS.transition(store, run, state, patch); };
+
+  if (decision.status === 'rejected_oversized') {
+    mark(RUNS.STATE.REJECTED_OVERSIZED, {});
+    return response;
+  }
 
   if (decision.execution_lane === 'C0') {
+    mark(RUNS.STATE.EXECUTING, {});
     try {
       const { runCapability } = await import(`file://${detPath}?t=${Date.now()}`);
       const r = runCapability(task.capability, task.args || {}, currentRoot());
@@ -760,11 +804,14 @@ ipcMain.handle('jarvis:submit-task', async (_evt, task) => {
       // (proven in the live Route A proof — a separate code path re-derives
       // the same fact). "Verification: PASS" is warranted here.
       response.verification = { kind: 'result', label: 'Verification', checked: 'capability registered + exit_code present', pass: typeof r.exit_code === 'number' };
+      mark(RUNS.STATE.COMPLETED, { result: response.result, verification: response.verification });
     } catch (e) {
       response.status = 'failed';
       response.result = { error: e.message };
+      mark(RUNS.STATE.FAILED, { result: response.result });
     }
   } else if (decision.execution_lane === 'C1') {
+    mark(RUNS.STATE.EXECUTING, {});
     try {
       // ── canonical evidence substrate ───────────────────────────────────────
       // Imported, never reimplemented. materializePacket() builds the ONLY
@@ -846,16 +893,143 @@ ipcMain.handle('jarvis:submit-task', async (_evt, task) => {
         fragments_offered: fragments.length,
         evidence,
       };
+      mark(RUNS.STATE.COMPLETED, { result: response.result, verification: response.verification });
     } catch (e) {
       response.status = 'failed';
       response.result = { error: e.message };
+      mark(RUNS.STATE.FAILED, { result: response.result });
     }
   } else if (decision.execution_lane === 'C3') {
     response.status = 'routed_not_executed';
-    response.result = { note: 'C3 selected. Desktop Alpha does not auto-invoke Claude — that would exercise founder identity / widen permissions without an active founder-driven session (§8). Open a Claude Code session to execute this task.' };
+    // AUTHORITY UNCHANGED. Desktop still does not invoke Claude — §8 stands, and
+    // nothing below executes anything. What changed (JARVIS-STAB-03) is that the
+    // lane no longer TERMINATES in prose telling the founder to go reconstruct
+    // the context by hand: the run is under custody, a handoff packet can be
+    // produced from it in one act, and the evidence has an agreed way back.
+    response.result = {
+      note: 'C3 selected. Desktop Alpha does not auto-invoke Claude — that would exercise founder identity / widen permissions without an active founder-driven session (§8).',
+      handoff: custody.recorded
+        ? `Use OPEN IN CLAUDE CODE to write the execution packet for ${custody.run_id}.`
+        : `No handoff packet can be produced: this run is UNCUSTODIED (${custody.reason}).`,
+    };
+    mark(RUNS.STATE.ROUTED_NOT_EXECUTED, { result: response.result });
   }
 
   return response;
+});
+
+// ---------------------------------------------------------------------------
+// JARVIS-STAB-01 — durable run history.
+//
+// Read-only. Serves ONLY router-surface runs (task-runs.js filters), and carries
+// the determinism audit (STAB-02) computed from that same durable history rather
+// than asserted. An empty history reports UNVERIFIED, not "deterministic".
+// ---------------------------------------------------------------------------
+ipcMain.handle('jarvis:list-runs', async (_evt, opts) => {
+  const o = opts && typeof opts === 'object' ? opts : {};
+  const limit = Number.isInteger(o.limit) ? Math.min(Math.max(o.limit, 1), 200) : 25;
+  return RUNS.listRuns(currentRoot(), { limit, offset: Number.isInteger(o.offset) ? Math.max(o.offset, 0) : 0 });
+});
+
+// ---------------------------------------------------------------------------
+// JARVIS-STAB-03 — produce the execution packet for a run.
+//
+// This writes a file and fills the clipboard. It does NOT execute, spawn, or
+// authenticate anything: the founder still opens the session. The act it
+// replaces is not "running Claude" — it is the founder retyping the run's
+// context from memory, which is the reconstruction burden the programme exists
+// to remove.
+//
+// Every SHA is passed through programme-state's observation constructors, so a
+// base that was not re-read this run travels as CARRIED-with-provenance and can
+// never present to the worker as freshly current.
+// ---------------------------------------------------------------------------
+ipcMain.handle('jarvis:handoff-packet', async (_evt, req) => {
+  const root = currentRoot();
+  const runId = req && typeof req.run_id === 'string' ? req.run_id : null;
+  if (!runId) return { ok: false, reason: 'run_id is required', packet: null, text: null, path: null };
+
+  const found = await RUNS.getRun(root, runId);
+  if (!found.custody) return { ok: false, reason: found.reason, packet: null, text: null, path: null };
+  if (!found.run) return { ok: false, reason: `no router run '${runId}' in durable history`, packet: null, text: null, path: null };
+
+  // The candidate SHA is read from the bound checkout NOW, so it is genuinely
+  // FRESH. Canonical and production are not read here — this console has no
+  // authority to speak for either — so they travel as whatever the caller last
+  // verified, marked accordingly, or as NEVER_OBSERVED.
+  const sub = readSubstrateVersion(root);
+  const candidate = sub.git_connected
+    ? PS.observed('candidate_sha', sub.head, { at: new Date().toISOString(), by: `git HEAD on ${root}` })
+    : PS.carried('candidate_sha', null);
+
+  const prior = (req && req.bases) || {};
+  const rehydrate = (field) => {
+    const b = prior[field];
+    // A base supplied by the caller is treated as a PRIOR observation and
+    // carried — never restamped as fresh. Restamping is exactly how a stale
+    // canonical would reach a worker wearing a current marker.
+    return b && b.value ? PS.carried(field, b) : PS.carried(field, null);
+  };
+
+  const rp = await RUNS.receiptPath(root, runId);
+  const packet = PACKET.buildPacket({
+    run_id: runId,
+    unit: (req && req.unit) || null,
+    task: found.run.task,
+    lane: found.run.lane,
+    reason: found.run.reason,
+    canonical_sha: rehydrate('canonical_sha'),
+    production_sha: rehydrate('production_sha'),
+    candidate_sha: candidate,
+    allowed: (req && req.allowed) || [],
+    forbidden: (req && req.forbidden) || [],
+    acceptance: (req && req.acceptance) || [],
+    stop_condition: (req && req.stop_condition) || null,
+    receipt_path: rp.path,
+  });
+  const text = PACKET.renderPacket(packet);
+  const written = await RUNS.writeHandoffPacket(root, runId, text);
+  try { clipboard.writeText(text); } catch { /* a clipboard failure must not lose the file */ }
+  return { ok: written.ok, reason: written.reason, packet, text, path: written.path, copied_to_clipboard: true };
+});
+
+// ---------------------------------------------------------------------------
+// JARVIS-STAB-04 — ingest the evidence a worker returned.
+//
+// The receipt is EVIDENCE FROM OUTSIDE and is validated as such. A receipt that
+// fails validation is refused WHOLE and its violations are returned for display:
+// a half-applied receipt leaves a record that is neither the old state nor the
+// reported one. Ingestion never advances the run's own state — what this console
+// did (routed, did not execute) stays true regardless of what came back.
+// ---------------------------------------------------------------------------
+ipcMain.handle('jarvis:ingest-receipt', async (_evt, req) => {
+  const root = currentRoot();
+  const runId = req && typeof req.run_id === 'string' ? req.run_id : null;
+  if (!runId) return { ok: false, reason: 'run_id is required', violations: [], run: null };
+
+  const found = await RUNS.getRun(root, runId);
+  if (!found.custody) return { ok: false, reason: found.reason, violations: [], run: null };
+
+  // An inline receipt is accepted for paste-back; otherwise the agreed drop file
+  // is read. Both go through identical validation — a pasted receipt is not more
+  // trusted than a written one.
+  let receipt = req && req.receipt ? req.receipt : null;
+  let source = 'inline';
+  if (!receipt) {
+    const r = await RUNS.readReceipt(root, runId);
+    if (!r.ok) return { ok: false, reason: r.reason, violations: [], run: null };
+    if (!r.receipt) return { ok: false, reason: `no evidence has returned yet — expected a receipt at ${r.path}`, violations: [], run: found.run, awaiting: r.path };
+    receipt = r.receipt;
+    source = r.path;
+  }
+
+  const applied = RECEIPT.applyReceipt(found.run, receipt, { at: new Date().toISOString() });
+  if (!applied.ok) {
+    return { ok: false, reason: 'receipt refused — it was not applied', violations: applied.violations, run: found.run, source };
+  }
+  const saved = await RUNS.saveRun(root, applied.run);
+  if (!saved.ok) return { ok: false, reason: saved.reason, violations: [], run: found.run, source };
+  return { ok: true, reason: null, violations: [], run: applied.run, evidence: RECEIPT.describeEvidence(applied.run), source };
 });
 
 // ---------------------------------------------------------------------------

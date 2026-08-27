@@ -23,6 +23,20 @@ contextBridge.exposeInMainWorld('jarvis', {
   getMechanismStatus: () => ipcRenderer.invoke('jarvis:mechanism-status'),
   runWorkUnit: (packet) => ipcRenderer.invoke('jarvis:run-work-unit', { packet }),
 
+  // JARVIS-STAB-01..04 — run custody and the C3 handoff loop.
+  //
+  // Four narrow verbs, and none of them widens authority: `listRuns` and
+  // `handoffPacket` are reads plus a file write, `ingestReceipt` validates
+  // evidence that arrived from outside. Nothing here executes, spawns, or
+  // authenticates — C3 remains routed-not-executed, decided in main.
+  //
+  // Deliberately four separate verbs rather than one overloaded channel: the
+  // point of this surface is that it can be REVIEWED, and an argument-switched
+  // channel hides what it can do behind a payload.
+  listRuns: (opts) => ipcRenderer.invoke('jarvis:list-runs', opts || {}),
+  handoffPacket: (req) => ipcRenderer.invoke('jarvis:handoff-packet', req || {}),
+  ingestReceipt: (req) => ipcRenderer.invoke('jarvis:ingest-receipt', req || {}),
+
   getRepoConfig: () => ipcRenderer.invoke('jarvis:repo-config'),
   chooseRepo: () => ipcRenderer.invoke('jarvis:choose-repo'),
   clearRepo: () => ipcRenderer.invoke('jarvis:clear-repo'),

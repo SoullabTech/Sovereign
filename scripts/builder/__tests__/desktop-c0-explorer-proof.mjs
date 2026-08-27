@@ -222,11 +222,29 @@ console.log('\n==================== H — no new authority ===================='
   // Kept as an exact list: a subset check would let the next widening through
   // silently, which is the one thing this guard exists to prevent. That it went
   // red on 029b7aa98 rather than passing quietly is the guard working.
-  report('preload exposes exactly the nine reviewed channels',
+  // JARVIS-STAB (2026-08-27) — THIRTEEN, reviewed, still EXACT.
+  //
+  // Two separate widenings are blessed here, and they are not the same kind:
+  //
+  //   `jarvis:reveal-workspace` had already landed and was never added to this
+  //   list, so this guard was RED before the STAB work began. It is recorded
+  //   now rather than quietly folded in: the guard caught a real unreviewed
+  //   widening and sat red until someone looked, which is the guard working.
+  //
+  //   `jarvis:list-runs`, `jarvis:handoff-packet`, `jarvis:ingest-receipt` are
+  //   the STAB-01/03/04 custody loop. None adds execution authority — two are
+  //   reads plus a file write, the third validates evidence arriving from
+  //   outside. C3 remains routed-not-executed, asserted separately below.
+  //
+  // Kept as an exact list rather than a subset check, for the original reason:
+  // a subset check lets the next widening through silently.
+  report('preload exposes exactly the thirteen reviewed channels',
     JSON.stringify(channels) === JSON.stringify([
       'jarvis:capabilities', 'jarvis:choose-repo', 'jarvis:clear-repo',
-      'jarvis:governance-action', 'jarvis:mechanism-status', 'jarvis:repo-config',
-      'jarvis:run-work-unit', 'jarvis:status', 'jarvis:submit-task',
+      'jarvis:governance-action', 'jarvis:handoff-packet', 'jarvis:ingest-receipt',
+      'jarvis:list-runs', 'jarvis:mechanism-status', 'jarvis:repo-config',
+      'jarvis:reveal-workspace', 'jarvis:run-work-unit', 'jarvis:status',
+      'jarvis:submit-task',
     ]), channels.join(', '));
   report('the governance channel delegates to the governor, inventing no authority',
     code('main.js').includes('GOV.buildGovernanceArgv') && !/['"](recover|reconcile)['"]/.test(code('main.js')));

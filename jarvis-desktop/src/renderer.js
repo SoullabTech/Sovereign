@@ -315,7 +315,7 @@ const PROV = window.JarvisProvenance;
 const LANE_HELP = {
   c0: '<strong>Deterministic capability.</strong> Choose a registered operation and provide its arguments. No model runs; the result is produced by the same registry the terminal uses.',
   c1: '<strong>Small local task.</strong> Give JARVIS a bounded read-only reasoning task. It runs on the local worker (qwen2.5:7b) and is capped at 4000 input characters — oversized packets are refused, not escalated. Execution is verified; the answer’s correctness is not.',
-  c3: '<strong>Needs real reasoning.</strong> The router will select C3 and explain why, but Desktop Alpha does not invoke Claude — doing so would exercise founder identity without an active founder-driven session. The task is routed and shown to you; execution means opening a Claude Code session.',
+  c3: '<strong>Needs real reasoning.</strong> The router will select C3 and explain why. Desktop still does not invoke Claude — doing so would exercise founder identity without an active founder-driven session. What it does now is hand the work over intact: the run is recorded, and <em>Open in Claude Code</em> writes a full execution packet (run id, unit, base SHAs with their freshness, bounds, acceptance, stop condition, return format) to disk and clipboard. Execution is still yours to start; reconstructing the context is not.',
 };
 
 let capManifest = [];
@@ -346,6 +346,16 @@ function renderWork() {
       </div>
       <div id="c3-fields" style="display:none">
         <textarea id="description" rows="3" placeholder="Describe the task — router will select C3."></textarea>
+        <!-- JARVIS-STAB-03. These are the packet's BOUNDS, and they are collected
+             here rather than typed into a Claude session later, because a bound
+             that lives only in a conversation is not a bound. Optional fields,
+             but the packet reports an unbounded unit as a defect in itself. -->
+        <div class="hint" style="margin-top:10px">Handoff bounds (travel with the packet)</div>
+        <input type="text" id="ho-unit" placeholder="Active unit — e.g. VOICE-CAPTURE-01B-OBS">
+        <input type="text" id="ho-allowed" placeholder="Allowed files / surfaces (comma-separated)">
+        <input type="text" id="ho-forbidden" placeholder="Forbidden changes (comma-separated)">
+        <input type="text" id="ho-acceptance" placeholder="Acceptance (comma-separated)">
+        <input type="text" id="ho-stop" placeholder="Stop condition">
       </div>
       <button class="primary" id="submit">Submit</button>
       <div id="local-errors"></div>
@@ -518,10 +528,33 @@ function renderResult(res) {
       </div>`
     : '';
 
+  // JARVIS-STAB-01 — custody is shown, and its ABSENCE is shown too. A run that
+  // could not be recorded must read as uncustodied, not as an ordinary result.
+  const custody = res.custody || { recorded: false, reason: 'this build did not record the run' };
+  const custodyRow = custody.recorded
+    ? `<div class="row"><span class="label">Run ID</span><span class="kv">${res.run_id}</span></div>
+       <div class="row"><span class="label">Custody</span><span class="state AVAILABLE">RECORDED — survives quit</span></div>`
+    : `<div class="row"><span class="label">Custody</span><span class="state UNAVAILABLE">NOT RECORDED</span></div>
+       <div class="row"><span class="label">Why</span><span style="text-align:right;max-width:400px">${custody.reason} — this result will be lost when the window closes.</span></div>`;
+
+  // JARVIS-STAB-03 — the C3 lane ends in ONE act, not a paragraph telling the
+  // founder to go do it themselves. This still does not invoke Claude.
+  const handoff = (res.status === 'routed_not_executed' && custody.recorded)
+    ? `<div class="card">
+         <h3>Execution handoff</h3>
+         <div class="hint">Desktop does not invoke Claude. This writes the full execution packet —
+           run id, unit, base SHAs with their freshness, task, bounds, acceptance, stop condition and
+           return format — to disk and to your clipboard, so nothing has to be reconstructed by hand.</div>
+         <button class="primary" id="open-in-cc" style="margin-top:10px">Open in Claude Code</button>
+         <div id="handoff-out"></div>
+       </div>`
+    : '';
+
   document.getElementById('result').innerHTML = `
     ${invocation}
     <div class="card">
       <h3>Result</h3>
+      ${custodyRow}
       <div class="row"><span class="label">Selected lane</span><span class="lane-badge ${laneClass}">${res.execution_lane || 'REJECTED'}</span></div>
       <div class="row"><span class="label">Cost class</span><span>${res.cost_class || '—'}</span></div>
       <div class="row"><span class="label">Status</span><span>${res.status}</span></div>
@@ -532,7 +565,38 @@ function renderResult(res) {
       <h3 style="margin-top:14px">Raw result</h3>
       <pre>${JSON.stringify(res.result, null, 2)}</pre>
     </div>
+    ${handoff}
   `;
+
+  const ho = document.getElementById('open-in-cc');
+  if (ho) ho.addEventListener('click', () => produceHandoff(res.run_id));
+}
+
+const csv = (id) => (document.getElementById(id)?.value || '')
+  .split(',').map((x) => x.trim()).filter(Boolean);
+
+async function produceHandoff(runId) {
+  const btn = document.getElementById('open-in-cc');
+  const out = document.getElementById('handoff-out');
+  btn.disabled = true; btn.textContent = 'Writing packet…';
+  const r = await window.jarvis.handoffPacket({
+    run_id: runId,
+    unit: (document.getElementById('ho-unit')?.value || '').trim() || null,
+    allowed: csv('ho-allowed'),
+    forbidden: csv('ho-forbidden'),
+    acceptance: csv('ho-acceptance'),
+    stop_condition: (document.getElementById('ho-stop')?.value || '').trim() || null,
+  });
+  btn.disabled = false; btn.textContent = 'Open in Claude Code';
+  if (!r.ok) { out.innerHTML = `<div class="errors"><div>${r.reason}</div></div>`; return; }
+  // The unverified bases are surfaced HERE, at the moment of handoff, because
+  // that is when acting on a stale base actually becomes possible.
+  const stale = (r.packet.unverified_bases || []);
+  out.innerHTML = `
+    <div class="row"><span class="label">Packet</span><span class="kv">${r.path}</span></div>
+    <div class="row"><span class="label">Clipboard</span><span class="state AVAILABLE">COPIED</span></div>
+    ${stale.length ? `<div class="row"><span class="label">Re-verify before acting</span><span class="state UNKNOWN">${stale.map(u => u.field).join(', ')}</span></div>` : ''}
+    <pre>${r.text.replace(/</g, '&lt;')}</pre>`;
 }
 
 function renderSystem() {
@@ -820,9 +884,54 @@ function spInspectEdge(sp, from, to) {
   host.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
 }
 
+// ---------------------------------------------------------------------------
+// JARVIS-STAB-01 — durable run history.
+//
+// The screen that answers "what did I ask, and what came back" without asking
+// again. Everything here is read from the canonical store; nothing is held in
+// this window, so it reads the same after a quit as it did before one.
+// ---------------------------------------------------------------------------
+async function renderRuns() {
+  $main.innerHTML = '<div class="card"><p class="hint">Reading durable run history…</p></div>';
+  const r = await window.jarvis.listRuns({ limit: 50 });
+  if (!r.custody) {
+    $main.innerHTML = `<div class="card"><h3>Runs</h3>
+      <div class="errors"><div>Run history is UNAVAILABLE — ${r.reason}</div></div>
+      <div class="hint">Tasks submitted while custody is unavailable are not recorded and do not survive quitting.</div></div>`;
+    return;
+  }
+  const d = r.determinism || { deterministic: true, basis: 'not computed', violations: [] };
+  const det = d.violations.length
+    ? `<div class="row"><span class="label">Routing determinism</span><span class="state UNAVAILABLE">DRIFT OBSERVED</span></div>
+       <div class="errors">${d.violations.map(v => `<div>fingerprint ${v.fingerprint} produced lanes ${v.lanes.join(' / ')} across runs ${v.runs.join(', ')}</div>`).join('')}</div>`
+    : `<div class="row"><span class="label">Routing determinism</span><span class="state ${/UNVERIFIED/.test(d.basis) ? 'UNKNOWN' : 'AVAILABLE'}">${/UNVERIFIED/.test(d.basis) ? 'UNVERIFIED' : 'NO DRIFT OBSERVED'}</span></div>
+       <div class="row"><span class="label">Basis</span><span style="text-align:right;max-width:420px">${d.basis}</span></div>`;
+
+  const rows = r.runs.map((run) => {
+    const e = run.evidence;
+    return `<div class="card">
+      <div class="row"><span class="label">${run.run_id}</span><span class="lane-badge ${run.lane || 'C3'}">${run.lane || 'REJECTED'}</span></div>
+      <div class="row"><span class="label">State</span><span class="kv">${run.state}${run.failure_class ? ` — ${run.failure_class}` : ''}</span></div>
+      <div class="row"><span class="label">Opened</span><span class="kv">${run.created_at}</span></div>
+      <div class="row"><span class="label">Task</span><span style="text-align:right;max-width:420px">${
+        (run.task && (run.task.description || run.task.prompt || run.task.capability) || '—').toString().slice(0, 240)}</span></div>
+      ${e ? `<div class="row"><span class="label">Claim</span><span style="text-align:right;max-width:420px">${e.claim}</span></div>
+             <div class="row"><span class="label">NOT established</span><span style="text-align:right;max-width:420px">${e.non_claim}</span></div>
+             ${e.pr ? `<div class="row"><span class="label">PR</span><span class="kv">${e.pr}</span></div>` : ''}`
+          : `<div class="row"><span class="label">Evidence</span><span class="state UNKNOWN">NONE RETURNED</span></div>`}
+    </div>`;
+  }).join('');
+
+  $main.innerHTML = `<div class="card"><h3>Durable run history</h3>
+      <div class="row"><span class="label">Recorded runs</span><span class="kv">${r.total}</span></div>
+      ${det}
+    </div>${rows || '<div class="card"><p class="hint">No runs recorded yet.</p></div>'}`;
+}
+
 function render() {
   if (currentView === 'home') renderHome();
   else if (currentView === 'work') renderWork();
+  else if (currentView === 'runs') renderRuns();
   else if (currentView === 'system') renderSystem();
   else if (currentView === 'spiral') renderSpiral();
 }
@@ -831,5 +940,8 @@ function render() {
   render();
   await Promise.all([refreshStatus(), loadCapabilities()]);
   render();
-  setInterval(async () => { await refreshStatus(); if (currentView !== 'work') render(); }, 15000);
+  // Work and Runs are excluded from the poll: re-rendering Work would discard a
+  // half-typed task, and re-rendering Runs would scroll a founder's place away
+  // while they are reading history.
+  setInterval(async () => { await refreshStatus(); if (currentView !== 'work' && currentView !== 'runs') render(); }, 15000);
 })();
