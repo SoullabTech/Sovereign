@@ -1874,6 +1874,11 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     if (normalizedTranscript === lastSentNormalized && (now - lastSentTimeRef.current) < 2000) {
       console.log('🚫 [DEDUP] Blocked duplicate transcript:', transcript);
       accumulatedTranscript.current = ""; // Clear duplicate
+      // Release the concurrency latch taken at the top of this function. Every
+      // other early return does; this one did not, so the FIRST time this guard
+      // fired, `isCallingProcessRef` stayed true and the guard at the top
+      // silently blocked every later turn for the life of the session.
+      isCallingProcessRef.current = false;
       return;
     }
 
