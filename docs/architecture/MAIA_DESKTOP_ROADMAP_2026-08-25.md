@@ -43,6 +43,40 @@ hallucination (`peakX1000=127 rmsX1000=8` against a normal ~1000/70), and input
 is clipping (`peakX1000` above 1000). Detail:
 `docs/ops/TRANSCRIBE_BODY_DISTURBED_2026-08-27.md` §7.
 
+### 0.0.1 D04 — WITNESSED cross-device 2026-08-27
+
+Spoken to MAIA in the PWA on iPhone, then launched Desktop. Desktop opened on
+that thread: status line "Picking up where you left off", the phone exchange
+rendered, correctly attributed. Desktop joins the member's conversation rather
+than minting `desktop-<timestamp>`. D04's mechanism is witnessed.
+
+⛔ Still day-scoped, and that is inherited, not introduced. Web and iOS mint
+their sessionId in localStorage with daily rotation
+(`lib/maia/presence/conversationIdentity.ts`), so "the same conversation" was
+never available to any surface pair before this. Desktop reading the server's
+record is strictly better than what any surface did, and it does not remove the
+daily boundary. Removing that is a separate, larger question.
+
+### 0.0.2 ⚠️ NEW DEFECT — cross-device acoustic echo (D06)
+
+During the D04 walk the iPhone spoke MAIA's reply aloud, the Mac's microphone
+captured it, and Desktop transcribed it as the member's own speech. Diagnosed
+from the text rather than assumed: the em-dash became a period, a comma
+appeared, the emoji vanished — the signature of transcription, not of a
+database read.
+
+`getUserMedia` already sets `echoCancellation: true`, but that cancels only
+THIS machine's output. Another device's speaker is just sound in the room.
+
+⭐ This stops being device-specific the moment D05 lands: Desktop speaking
+aloud into its own microphone is the same loop, and there the built-in AEC does
+apply. So D05 and D06 are coupled — native playback should not ship without
+the turn coordination that keeps MAIA's voice out of the member's transcript.
+
+⭐ Worth recording as system behaviour, not just as a defect: MAIA caught the
+misattribution herself, unprompted — "That message reads like something I said
+to you — not something you sent to me." Nothing designed that.
+
 ### 0.1 What the 2026-08-27 walk actually established
 
 Production runtime evidence, from `docker logs maia-sovereign` during Desktop turns:
