@@ -40,6 +40,12 @@ const argv = process.argv.slice(2);
 const arg = (n, d = null) => { const i = argv.indexOf(n); return i >= 0 ? argv[i + 1] : d; };
 const BUILD_FROM = arg('--build-from');
 const SKIP_BUILD = argv.includes('--skip-build');
+// Signing is not what PKG-01 is proving. It is here because an UNSIGNED bundle
+// can be refused by Gatekeeper, and that refusal would read as a JARVIS defect.
+// When the keychain will not authorize non-interactively, an ad-hoc signed
+// build still launches locally and still proves the packaged path — so the
+// escape hatch exists, and the provenance records which was used.
+const NO_SIGN = argv.includes('--no-sign');
 
 let failures = 0;
 const report = (n, ok, extra) => { if (!ok) failures++; console.log(`${ok ? 'PASS' : 'FAIL'}  ${n}${extra && !ok ? `\n        ${extra}` : ''}`); };
@@ -98,8 +104,28 @@ const APP_PATH = (() => {
   return path.join(DESKTOP, 'dist', 'mac-arm64', 'JARVIS.app');
 })();
 if (!SKIP_BUILD) {
-  try { sh('npm', ['run', 'pack'], { cwd: DESKTOP, stdio: ['ignore', 'inherit', 'inherit'] }); }
-  catch (e) { report('npm run pack succeeded', false, String(e.message).slice(0, 300)); }
+  // A TIMEOUT, because this step can BLOCK rather than fail.
+  //
+  // Observed on the first two real runs (2026-08-27): output stopped dead at
+  // electron-builder's `signing` line. codesign reaching a private key in the
+  // login keychain can raise a GUI authorization dialog, and if nobody clicks
+  // it the build waits forever with no further output. Without a bound, that is
+  // indistinguishable from a slow build — the founder is left watching a
+  // terminal that will never move, with nothing naming the cause.
+  const env = NO_SIGN ? { ...process.env, CSC_IDENTITY_AUTO_DISCOVERY: 'false' } : process.env;
+  provenance.signed = !NO_SIGN;
+  try {
+    sh('npm', ['run', 'pack'], { cwd: DESKTOP, stdio: ['ignore', 'inherit', 'inherit'], env, timeout: 8 * 60 * 1000 });
+    report('npm run pack completed', true);
+  } catch (e) {
+    const timedOut = e.signal === 'SIGTERM' || /ETIMEDOUT|timed out/i.test(String(e.message));
+    report('npm run pack completed', false, timedOut
+      ? 'the build BLOCKED (8 min, no exit). If it stopped at the `signing` line, codesign is almost '
+        + 'certainly waiting on a keychain authorization dialog — look for it behind other windows and '
+        + 'choose "Always Allow". If no dialog appears, re-run with --no-sign: an ad-hoc signed build '
+        + 'still launches locally and still proves the packaged path.'
+      : String(e.message).slice(0, 300));
+  }
 }
 report('the macOS artifact exists', fs.existsSync(APP_PATH), APP_PATH);
 if (!fs.existsSync(APP_PATH)) { console.log('\nCannot continue without an artifact.\n'); process.exit(1); }
@@ -162,8 +188,14 @@ report('the staged copy is outside ANY git checkout', !insideRepo,
 
 // A signature broken by the copy would make Gatekeeper refuse the launch, and
 // that refusal would read as a JARVIS defect rather than a copy defect.
+// Ad-hoc signatures do not survive --strict verification the way a real
+// identity does, and failing the run for that would punish the escape hatch.
 const sigOk = (() => { try { sh('codesign', ['--verify', '--deep', '--strict', STAGED]); return true; } catch { return false; } })();
-report('the staged copy still verifies as signed', sigOk, 'the copy broke the signature — Gatekeeper will refuse it');
+if (provenance.signed === false) {
+  console.log(`      signature: ad-hoc (--no-sign). Gatekeeper may need a right-click → Open the first time.`);
+} else {
+  report('the staged copy still verifies as signed', sigOk, 'the copy broke the signature — Gatekeeper will refuse it');
+}
 provenance.staged_launch_path = STAGED;
 
 console.log(`\n      Launch THE STAGED COPY — not the one in dist/:`);
