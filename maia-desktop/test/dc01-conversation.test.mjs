@@ -20,6 +20,13 @@ const strip = (f) => readFileSync(path.join(srcDir, f), 'utf8')
   .split('\n').map((l) => l.replace(/(^|[^:'"`])\/\/.*$/, '$1')).join('\n');
 
 const mainJs = strip('main.js');
+
+/**
+ * Speech-level mono audio. Zero-filled arrays now read as near-silence and are
+ * gated before dispatch (D02), which is correct — so a fixture that means
+ * "the member spoke" has to actually carry signal.
+ */
+const speech = (n) => Float32Array.from({ length: n }, (_, i) => Math.sin(i / 3) * 0.5);
 const { encodeWav, resample } = require('../src/voice/wav.js');
 const { createUtteranceBuffer } = require('../src/voice/utterance.js');
 const { createConversation, explain, readErrorBody, multipartWav, BOUNDARY } = require('../src/conversation.js');
@@ -191,7 +198,7 @@ test('conversation reports failures instead of going quiet', async () => {
     diagnostics: { emit: (e) => events.push(e) },
     sessionId: 's1',
   });
-  const out = await conv.transcribe(new Float32Array(1600), 16000);
+  const out = await conv.transcribe(speech(1600), 16000);
   assert.equal(out.ok, false);
   assert.ok(out.error.includes('ALLOW_AUDIO_TRANSCRIPTION'));
   assert.ok(events.includes('voice_transcribe_error'));
@@ -246,7 +253,10 @@ test('a non-JSON error is distinguishable from a route error in diagnostics', ()
   // strip(): the assertion is about code, not about the comment that explains
   // why the code is that way — that comment necessarily names `details`.
   const src = strip('conversation.js');
-  const handler = /if \(!out\.ok\) \{[\s\S]*?voice_transcribe_error[\s\S]*?\}\);/.exec(src)[0];
+  // Anchored on the http_ error emission specifically. D04 introduced an
+  // earlier `if (!out.ok)` in adoptMemberThread, and a lazy match from the
+  // first one reaches the wrong block — a stale instrument, not a real defect.
+  const handler = /diagnostics\.emit\('voice_transcribe_error', \{\s*errorName: `http_[\s\S]*?\}\);/.exec(src)[0];
   assert.ok(/source:\s*body && body\.__raw \? 'non_route' : 'route'/.test(handler),
     'the event cannot distinguish a route failure from a proxy/framework failure');
   assert.ok(!/details/.test(handler), 'upstream prose is being written into telemetry');
@@ -333,7 +343,7 @@ test('there is no client-side size ceiling — the server log disproved it', asy
     diagnostics: { emit: () => {} },
     sessionId: 'x',
   });
-  const big = new Float32Array(16000 * 60); // ~1.9 MB — comfortably over the old guard
+  const big = speech(16000 * 60); // ~1.9 MB — comfortably over the old guard
   const out = await conv.transcribe(big, 16000);
   assert.equal(out.ok, true, 'a large turn is still being refused locally');
   assert.equal(sent.length, 1, 'the request was not actually sent');
@@ -354,7 +364,7 @@ test('a 5xx that never reached the route is retried', async () => {
     diagnostics: { emit: () => {} },
     sessionId: 'x',
   });
-  const out = await conv.transcribe(new Float32Array(1600), 16000);
+  const out = await conv.transcribe(speech(1600), 16000);
   assert.equal(attempts.length, 2, 'the request was not retried');
   assert.deepEqual([out.ok, out.text], [true, 'heard you']);
 });
@@ -368,15 +378,15 @@ test('the retry is narrow — never on 4xx, and bounded on 5xx', async () => {
   });
 
   attempts.length = 0;
-  await mk(413, '<html>too large</html>').transcribe(new Float32Array(160), 16000);
+  await mk(413, '<html>too large</html>').transcribe(speech(160), 16000);
   assert.equal(attempts.length, 1, 'a 4xx was retried — the client is repeating a refusal');
 
   attempts.length = 0;
-  await mk(500, '<html>An error 500</html>').transcribe(new Float32Array(160), 16000);
+  await mk(500, '<html>An error 500</html>').transcribe(speech(160), 16000);
   assert.equal(attempts.length, 3, 'a persistent 5xx did not stop at the attempt bound');
 
   attempts.length = 0;
-  await mk(500, JSON.stringify({ error: 'Local Faster-Whisper transcription failed' })).transcribe(new Float32Array(160), 16000);
+  await mk(500, JSON.stringify({ error: 'Local Faster-Whisper transcription failed' })).transcribe(speech(160), 16000);
   assert.equal(attempts.length, 1, 'a 5xx from the route itself was retried — the route already answered');
 });
 test('the level of a sent utterance is measured, so an empty transcript is diagnosable', async () => {
@@ -431,7 +441,7 @@ test('the request declares multipart with the same boundary it wrote', async () 
     diagnostics: { emit: () => {} },
     sessionId: 'x',
   });
-  await conv.transcribe(new Float32Array(1600), 16000);
+  await conv.transcribe(speech(1600), 16000);
   const ct = seen[0].headers['Content-Type'];
   assert.ok(/^multipart\/form-data; boundary=/.test(ct), `the route rejects a non-multipart content type (${ct})`);
   assert.ok(ct.endsWith(BOUNDARY), 'the declared boundary does not match the one in the body');
