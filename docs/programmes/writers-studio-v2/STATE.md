@@ -25,7 +25,29 @@ PREDECESSOR     c9b0574db  deployed 2026-08-27 · VERIFIED TWO WAYS (D-007)
                 predecessor 1feec9b1d was also verified two ways (refusal-panel
                 string present in both client chunk and server render)
 
-CURRENT         WS2-00 — product contract
+WS2-00          CLOSED 2026-08-27. Reference screens under repository custody
+                in 1493c28c0; DESIGN-CONTRACT.md is FROZEN, not DERIVED.
+                  · filenames recorded against screens, verified by READING
+                    the images rather than trusting the names
+                  · 04-writing-field-wide.png confirmed CANONICAL for WS-WRITE
+                  · 06 and 07 are byte-identical duplicates of 03 (one md5,
+                    three copies) — SIX distinct references, not eight
+                  · capture contract confirmed: capture-studio-field.mjs,
+                    1680x1050@2x fixed inside the script, waits for the draft
+                  · a description of 04 earlier in this programme was WRONG —
+                    the bottom Materials strip is 08. Corrected in place.
+
+⚠ PRODUCTION REGRESSED FOR THIS PROGRAMME
+                production is now 92bc2a9df (clean-main-no-secrets, PR #1111
+                transcribe middleware). cc3ef9cbe is NOT an ancestor of it —
+                verified, not assumed. A + B + C are NO LONGER LIVE.
+                The WS2-01 acceptance walk cannot be run against production
+                until the candidate is redeployed or merged to the deploy lane.
+                Nothing was lost: the work is on this branch. But the walk is
+                blocked, and a walk run now would test a build without the
+                fixes and read as a regression that isn't one.
+
+CURRENT         WS2-01 — shell + WS-WRITE (the charter's first build unit)
                 BLOCKED on the reference images reaching the repository
                 (DESIGN-CONTRACT.md §0 / DECISIONS.md D-006)
 

@@ -1,43 +1,72 @@
 # WRITERS-STUDIO-V2 — Design Contract
 
-**Status: DERIVED — not yet frozen.** See §0. This file becomes normative the
-moment the reference images land in `reference/`.
+**Status: FROZEN.** The reference screens are under repository custody as of
+commit `1493c28c0`. §1–§3 below are now normative: a unit's visual acceptance
+compares against an image, not against a description.
 
 ---
 
-## §0 — The frozen references are not in the repository yet
+## §0 — The frozen references
 
-The eight reference screens were shared as images in a Claude Code conversation.
-Images pasted into a conversation do not persist to the repository, and this
-programme's first rule is that its state may not live in a disposable context.
+`docs/design/writer-studio/references/`, committed 2026-08-27 in `1493c28c0`.
 
-**A design contract whose source material exists only in chat is not frozen.**
+| File | Screen | Unit |
+|---|---|---|
+| `01-work-home.png` | Work Home | WS-HOME |
+| `02-structure-versions.png` | Structure & Versions | WS-STRUCTURE |
+| `03-developmental-review.png` | Developmental Review | WS-DEVELOP |
+| `04-writing-field-wide.png` | Writing Field — **CANONICAL for WS-WRITE** | WS-WRITE |
+| `05-materials-studio.png` | Materials Studio | WS-GATHER |
+| `08-writing-field-compact.png` | Writing Field, second architecture | WS-WRITE |
 
-### Required to close WS2-00
+**`06-` and `07-` are byte-identical duplicates of `03-`** (md5
+`fb60a0e02a3fac7e54c8d90508127097`, all three). There are **six distinct
+references, not eight**. They are kept as committed rather than deleted — the
+pack is the founder's artifact — but no unit may treat them as variants
+carrying additional information. Verified by checksum, not by filename.
 
-Drop the reference screens into:
+### §0.1 — What 04 and 08 actually differ on
+
+Recorded because the difference is architectural, and because an earlier
+description of it in this programme was wrong.
+
+`04-writing-field-wide.png` (canonical) carries the **five-mode top
+navigation** — WRITE · DEVELOP · EXPLORE · REVIEW · PUBLISH — a left rail
+split WORK SPACE / MAIA / TOOLS, MAIA adjacent to the manuscript, **Materials
+as a right rail**, and a bottom band holding Versions, Outline/Threads/
+Timeline/Word Web, Goals and Statistics.
+
+`08-writing-field-compact.png` has **no five-mode nav**. Its left rail is a
+flat field list (Writing · Materials · Structure · Versions · Developmental
+Review · Reader Lenses · Notes · Goals · Export), the editor carries a
+formatting toolbar with find-in-chapter and Focus, **Materials runs as a
+horizontal strip along the bottom**, and — importantly — MAIA's insights carry
+the **disposition controls** (Discuss / Keep / Unresolved / Dismiss) inline.
+
+04 is canonical because the five-mode navigation is the shell the whole
+programme is built around; only 04 shows it. What 08 contributes and 04 does
+not is the disposition row inside MAIA, which is the same member-adjudicates
+rule WS-DEVELOP is built on, appearing in the writing field. Both facts carry
+forward.
+
+## §0.2 — The capture contract
+
+Confirmed, and binding on every visual acceptance:
 
 ```text
-docs/programmes/writers-studio-v2/reference/
-    01-work-home.png
-    02-write.png
-    03-materials.png
-    04-structure.png
-    05-developmental-review.png
-    06-maia.png
-    07-goals-statistics.png
-    08-publish.png
+script     scripts/capture-studio-field.mjs
+viewport   1680 × 1050 @2x, fixed INSIDE the script, never passed per run
+wait       for the draft to load — a capture taken early photographs a
+           loading state and calls it the field
+output     docs/design/writer-studio/implementations/<field>-<sha>.png
 ```
 
-Filenames are a proposal — name them for what they show. Then this file records
-the actual filename against each screen and drops the DERIVED marker.
-
-Until then, §1–§3 below are **my written reading of what was shown**, useful for
-planning and insufficient for acceptance. No unit from WS2-02 onward may claim
-visual acceptance against a description. Acceptance compares against an image.
+Two captures are comparable only because the viewport cannot vary between
+them. A remote Claude Code session cannot capture — no database, no env files,
+nothing for a browser to point at — but it can read both PNGs from the
+repository and do the comparison.
 
 ---
-
 ## §1 — The five modes
 
 One environment, not five applications.

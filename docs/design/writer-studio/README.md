@@ -17,22 +17,40 @@ docs/design/writer-studio/
 
 ## Manifest — which image specifies which field
 
-| File | Field | Unit |
+Committed 2026-08-27 in `1493c28c0`. Contents verified by reading the images,
+not inferred from the filenames.
+
+| File | Screen | Unit |
 |---|---|---|
 | `references/01-work-home.png` | Work Home | WS-HOME |
 | `references/02-structure-versions.png` | Structure & Versions | WS-STRUCTURE |
 | `references/03-developmental-review.png` | Developmental Review | WS-DEVELOP |
-| `references/04-writing-field-wide.png` | Writing Field | **WS-WRITE — canonical** |
+| `references/04-writing-field-wide.png` | Writing Field — **CANONICAL** | WS-WRITE |
 | `references/05-materials-studio.png` | Materials Studio | WS-GATHER |
-| `references/06-developmental-review-alt.png` | variant | WS-DEVELOP |
-| `references/07-developmental-review-alt2.png` | variant | WS-DEVELOP |
-| `references/08-writing-field-compact.png` | variant | WS-WRITE |
+| `references/08-writing-field-compact.png` | Writing Field, second architecture | WS-WRITE |
 
-`04` is canonical for WS-WRITE: the Materials strip along the bottom makes
-source material proximate without confusing it with manuscript. Among the
-Developmental Review images, the canonical one is whichever shows the finding
-disposition controls (Discuss / Keep / Unresolved / Dismiss) — that row is the
-field's whole argument, that the writer adjudicates and MAIA does not.
+**`06-` and `07-` are byte-identical to `03-`** — same md5, three copies of one
+image. Six distinct references, not eight. Kept as committed; no unit may read
+them as variants carrying extra information.
+
+### 04 vs 08 — and a correction
+
+An earlier note in this programme said 04 was canonical because it puts the
+Materials strip along the bottom. **That was wrong, and it described 08.**
+
+- **04 (canonical)** — five-mode top nav (WRITE · DEVELOP · EXPLORE · REVIEW ·
+  PUBLISH), left rail split WORK SPACE / MAIA / TOOLS, MAIA adjacent to the
+  manuscript, **Materials as a right rail**, bottom band with Versions,
+  Outline/Threads/Timeline/Word Web, Goals, Statistics.
+- **08** — no five-mode nav; flat left rail of fields; editor toolbar with
+  find-in-chapter and Focus; **Materials as a horizontal strip along the
+  bottom**; and MAIA's insights carry inline **disposition controls**
+  (Discuss / Keep / Unresolved / Dismiss).
+
+04 is canonical because the five-mode navigation is the shell the programme is
+built around, and only 04 shows it. What 08 contributes is the disposition row
+inside MAIA — the member-adjudicates rule appearing in the writing field, not
+only in Developmental Review. Both carry forward.
 
 ## The build loop
 
