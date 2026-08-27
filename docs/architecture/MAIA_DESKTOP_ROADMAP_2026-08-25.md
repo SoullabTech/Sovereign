@@ -23,7 +23,7 @@ nothing has heard a human being.**
 
 ## 1 · The critical path — what actually makes Desktop MAIA real
 
-Twelve units, not thirty. Everything else in the programme either hardens these or is a separate
+**Sixteen units, not thirty.** Everything else in the programme either hardens these or is a separate
 product that happens to run in the same window.
 
 ```
@@ -44,6 +44,10 @@ D27  founder proving walk    the whole journey, on the installed app
 D28  small trusted beta
 D30  V1
 ```
+
+*(Sixteen IDs, sixteen units — nothing is collapsed or composite. An earlier draft of this file said
+"twelve" above a list of sixteen; corrected 2026-08-25 on founder review. Programme custody should be
+arithmetically boring: a future session must never have to infer why the count and the list disagree.)*
 
 ⭐⭐ **D04 is the load-bearing unit of the entire programme.** Everything before it builds a
 *voice-capable desktop app* — a category that already exists and that nobody needs another of. D04 is
@@ -143,6 +147,30 @@ menu-bar companion · global invocation · calendar context.
 
 ⛔ Do not delay V1 to include every Soullab function. The failure mode is a Desktop app that does
 everything except feel like MAIA.
+
+---
+
+## 4A · ⭐ Programme separation — this document governs ONE programme
+
+**Founder ruling, 2026-08-25.** Three distinct programmes exist. They may share infrastructure.
+**None silently absorbs the others.**
+
+```text
+MAIA-DESKTOP         native companion · voice · same-MAIA continuity   ← THIS DOCUMENT
+JARVIS-DESKTOP       founder operating surface for JARVIS
+WRITERS-STUDIO-V2    Soullab writing environment
+```
+
+⛔ **Writer's Studio does not wait behind D01–D30.** Nothing in this roadmap gates it, and no unit ID
+here (D-anything) may be used to sequence Writer's Studio work. Its custody is its own —
+`docs/programme/WRITERS_STUDIO_MASTER_BRIEF.md` (normative) and
+`docs/programme/WRITERS_STUDIO_PROGRAMME_BOARD.md` (the one live cockpit).
+
+⛔ **JARVIS-DESKTOP is a separate repair programme** (JOP lineage) and is **not a dependency** for
+MAIA Desktop development. `jarvis-desktop/` supplies architectural precedent only.
+
+Scope note for future sessions: a census performed for one programme is evidence for that programme.
+It does not confer authority to re-sequence another.
 
 ---
 
