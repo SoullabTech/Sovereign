@@ -27,6 +27,7 @@ import {
   type TranscriptDispatchSource,
   type TranscriptDispatchTrigger,
 } from '@/lib/voice/dispatchProvenance';
+import { classifyRecognitionEnd, RAPID_END_LOOP_THRESHOLD } from '@/lib/voice/rapidEndPolicy';
 import {
   TURN_COMPLETE_RECOVERABLE,
   shouldNormalizeToIdle,
@@ -505,6 +506,12 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
   const consecutiveRestartCount = useRef<number>(0);
   const lastRestartTime = useRef<number>(0);
   const recognitionStartTime = useRef<number>(0);
+  // VOICE-ABORT-01. Counts CONSECUTIVE sub-500ms recognition ends. A single
+  // rapid abort is not a loop — it is the ordinary cost of restarting the mic
+  // the instant MAIA stops speaking, and Chrome invalidates such an instance
+  // routinely. Only a run of them is a loop. Reset whenever an epoch survives
+  // the rapid window.
+  const consecutiveRapidEndCount = useRef<number>(0);
 
   // Android Chrome bounded-recovery tracking (PR for Tara's observed failure mode).
   // Per-cycle: did audio_started fire? did speech_started fire? Set on the
@@ -1189,11 +1196,41 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
           session.markForRecreate('quick_abort_during_tts');
           return;
         }
-        console.log('🚨 [onend] Recognition ended too quickly after start (' + timeSinceStart + 'ms) - possible infinite abort loop, stopping');
-        // Was a SILENT stop: listening went false with no message and no
-        // salvage, so the member kept talking to a mic that had given up.
-        handleCaptureLossFnRef.current?.('abort_loop');
-        return;
+        // VOICE-ABORT-01. This used to call handleCaptureLoss('abort_loop') on
+        // the FIRST sub-500ms end, killing the microphone permanently and
+        // ending the conversation. Production on 2026-08-27 showed the chain:
+        // MAIA stops speaking → mic restarts → the instance is invalidated
+        // ~302ms later → onend → "possible infinite abort loop" → MicState
+        // ERROR. One abort, and the member is talking to a dead mic.
+        //
+        // A loop is a RUN of rapid ends, not one. The restart guard 80 lines
+        // below already knew this — it allows ten rapid restarts before
+        // blocking. This path simply never counted, and the asymmetry was the
+        // defect. Below threshold we fall THROUGH to that restart path, which
+        // creates a fresh instance (the aborted one is unusable) and carries
+        // its own loop protection and backoff, so nothing here needs to
+        // duplicate either.
+        const rapid = classifyRecognitionEnd({
+          epochAgeMs: timeSinceStart,
+          consecutiveRapidEnds: consecutiveRapidEndCount.current,
+        });
+        consecutiveRapidEndCount.current = rapid.nextCount;
+        if (rapid.decision === 'abort_loop') {
+          console.log('🚨 [onend] ' + rapid.nextCount + ' consecutive rapid ends (' + timeSinceStart + 'ms) - abort loop, stopping');
+          // Still never a silent stop: the member is told and unsent audio is salvaged.
+          handleCaptureLossFnRef.current?.('abort_loop');
+          return;
+        }
+        console.log('↻ [onend] Rapid end ' + rapid.nextCount + '/' + RAPID_END_LOOP_THRESHOLD + ' (' + timeSinceStart + 'ms) - recreating and continuing');
+        // Chrome silently fails onresult if a previously-aborted object is
+        // restarted, so the next start must build a new one.
+        session.markForRecreate('rapid_end_recovery');
+        // deliberate fall-through to the restart path below
+      } else if (recognitionStartTime.current > 0) {
+        // The epoch survived the rapid window, so whatever caused the previous
+        // rapid end did not persist. Anything else would let unrelated aborts
+        // minutes apart accumulate into a false loop.
+        consecutiveRapidEndCount.current = 0;
       }
 
       // 🔥 FIX: If MAIA is currently speaking (or input is suppressed for duplex),
