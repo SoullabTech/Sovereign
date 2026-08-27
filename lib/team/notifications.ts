@@ -2,14 +2,33 @@
 // All sends are fire-and-forget. Never throws. Never blocks message delivery.
 
 import { query } from '@/lib/db/postgres';
-import { Resend } from 'resend';
+import { sendEmail } from '@/lib/email/sendEmail';
+
+/** Ceiling on mention notifications from one message. Exceeding it logs loudly. */
+const MAX_MENTION_FANOUT = 25;
+
+/** Failures that mean every remaining send would fail too. */
+const TRANSPORT_WIDE_FAILURES = new Set<string>([
+  'quota_exceeded', 'provider_auth', 'provider_config', 'not_configured',
+]);
+
+/**
+ * Team notifications stay non-fatal — a refused notification must never break
+ * the message that triggered it. But `catch {}` around a provider that reports
+ * refusals by RESOLVING recorded nothing at all, so an outage in this lane was
+ * completely invisible. Non-fatal is not the same as unobserved.
+ */
+async function reportIfRefused(
+  purpose: string,
+  result: { success: boolean; failureKind?: string; providerCode?: string }
+): Promise<void> {
+  if (result.success) return;
+  console.error(
+    `[team/notify] ${purpose} REFUSED failureKind=${result.failureKind ?? 'unclassified'} providerCode=${result.providerCode ?? 'unnamed'}`
+  );
+}
 import { resolveNotificationPreference } from '@/lib/team/notificationPreferences';
 
-function getResendClient(): Resend {
-  const key = process.env.RESEND_API_KEY;
-  if (!key) throw new Error('RESEND_API_KEY not set');
-  return new Resend(key);
-}
 
 // soullab.life is the verified Resend domain (reminders@soullab.life ships today).
 // The previous onboarding@resend.dev sandbox sender only delivers to the Resend
@@ -69,8 +88,8 @@ export async function notifyDMRecipient(
     const senderName = sender?.name || sender?.username || 'Someone';
     const recipientName = recipient.name || recipient.username;
 
-    const resend = getResendClient();
-    await resend.emails.send({
+    await reportIfRefused('notify:dm', await sendEmail({
+      purpose: 'notify:dm',
       from: FROM,
       to: recipient.email,
       subject: `New message from ${senderName} on SoulComms`,
@@ -82,7 +101,7 @@ export async function notifyDMRecipient(
         ${manageFooterHtml()}
       `,
       text: `Hi ${recipientName},\n\n${senderName} sent you a message on SoulComms.\n\nOpen SoulComms: https://soullab.life/team${manageFooterText()}`,
-    });
+    }));
   } catch {
     // Silent — never surface notification errors to callers
   }
@@ -139,8 +158,8 @@ export async function notifyThreadReply(
     const channelName = channelData.rows[0]?.name ?? 'unknown';
 
     const recipientName = recipient.name || recipient.username;
-    const resend = getResendClient();
-    await resend.emails.send({
+    await reportIfRefused('notify:channel', await sendEmail({
+      purpose: 'notify:channel',
       from: FROM,
       to: recipient.email,
       subject: `${senderName} replied to your message in #${channelName}`,
@@ -152,7 +171,7 @@ export async function notifyThreadReply(
         ${manageFooterHtml()}
       `,
       text: `Hi ${recipientName},\n\n${senderName} replied to your message in #${channelName}.\n\nOpen SoulComms: https://soullab.life/team${manageFooterText()}`,
-    });
+    }));
   } catch {
     // Silent — never surface notification errors to callers
   }
@@ -196,9 +215,24 @@ export async function notifyChannelMentions(
     const sender = senderData.rows[0];
     const senderName = sender?.name || sender?.username || 'Someone';
 
-    const resend = getResendClient();
+    // VOLUME GUARD. This is the only unbounded per-recipient email fan-out in
+    // the system: one chat message with N mentions sends N emails, and nothing
+    // upstream bounds N. A ceiling here is what stops a single crafted or
+    // scripted message from becoming a mass send.
+    //
+    // Deduplicated first: `@alice @alice @alice` is one person, and was three
+    // emails.
+    const unique = [...new Set(usernames)];
+    const targets = unique.slice(0, MAX_MENTION_FANOUT);
+    if (unique.length > targets.length) {
+      // NO SILENT CAP.
+      console.warn(
+        `[team/notify] mention fan-out of ${unique.length} exceeds MAX_MENTION_FANOUT=${MAX_MENTION_FANOUT}; ` +
+          `notifying ${targets.length}, DROPPING ${unique.length - targets.length}.`
+      );
+    }
 
-    for (const username of usernames) {
+    for (const username of targets) {
       try {
         const memberData = await query<{ id: string; email: string | null; name: string | null; username: string }>(
           `SELECT id, email, name, username FROM members WHERE username = $1`,
@@ -214,7 +248,10 @@ export async function notifyChannelMentions(
 
         const recipientName = member.name || member.username;
 
-        await resend.emails.send({
+        const sent = await sendEmail({
+          purpose: 'notify:mention',
+          triggerType: 'route',
+          triggerRef: 'team/notifyMentions',
           from: FROM,
           to: member.email,
           subject: `${senderName} mentioned you in #${channelName}`,
@@ -227,6 +264,17 @@ export async function notifyChannelMentions(
           `,
           text: `Hi ${recipientName},\n\n${senderName} mentioned you in #${channelName}.\n\nOpen SoulComms: https://soullab.life/team${manageFooterText()}`,
         });
+
+        await reportIfRefused('notify:mention', sent);
+
+        // A transport-wide refusal fails for every remaining mention too.
+        // Continuing would hammer a provider that is refusing everything.
+        if (!sent.success && TRANSPORT_WIDE_FAILURES.has(sent.failureKind ?? '')) {
+          console.error(
+            `[team/notify] ABORTING mention fan-out — failureKind=${sent.failureKind} is transport-wide.`
+          );
+          break;
+        }
       } catch {
         // Per-mention failure is silent — continue to next mention
       }

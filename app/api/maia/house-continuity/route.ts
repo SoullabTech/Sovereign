@@ -38,6 +38,7 @@
 import { NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
 import { getCurrentSession } from '@/lib/auth/serverSessions';
+import { memberRef } from '@/lib/privacy/memberRef';
 
 export const dynamic = 'force-dynamic';
 
@@ -116,8 +117,11 @@ export async function GET() {
     };
 
     // Counts and flags only — never titles or bodies (free-text PHI doctrine).
+    // The member is referenced by a one-way correlatable token, never a slice
+    // of the id: a truncated UUID is a fragment of the real identifier, not a
+    // derivation of it (lib/privacy/memberRef.ts).
     console.log('[MAIA/house] continuity', {
-      memberIdPrefix: memberId.slice(0, 8),
+      member: memberRef(memberId),
       hasContinue: payload.continue !== null,
       keptShown: payload.kept.length,
       keptTotal: payload.keptTotal,

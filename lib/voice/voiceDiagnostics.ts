@@ -47,9 +47,68 @@ export type VoiceDiagEvent =
   // (local maia-whisper, NOT OpenAI cloud). All four are observational —
   // no transcript content in telemetry, only durations/byte-counts/mime/error.
   | 'voice_fallback_recording_started'
+  // Capture-liveness events (silent-death detection, track loss, salvage).
+  // See lib/voice/micLiveness.ts — these fire when the capture path dies
+  // without the recognition object reporting anything.
+  | 'voice_status_surfaced'
+  | 'voice_transcript_salvaged'
+  | 'voice_capture_lost'
+  | 'voice_track_listeners_attached'
+  // ── TTS playback witness ────────────────────────────────────────────────
+  // Capture had telemetry; playback had none. That asymmetry is why a whole
+  // tester session of "choppy, cut off, repeated the beginning" produced a
+  // silent log while the capture stream stayed legible. These events make the
+  // playback path observable WITHOUT changing its behavior.
+  //
+  // The sequence that would mechanically prove the suspected replay bug:
+  //   playback_started     chunk=X attempt=1 currentTimeMs ~0
+  //   playback_interrupted chunk=X AbortError currentTimeMs > 0  ← already audible
+  //   playback_retry       chunk=X
+  //   playback_resumed     chunk=X attempt=2 currentTimeMs ~0    ← the head plays again
+  //
+  // NOTE the fourth event is playback_RESUMED, not a second playback_started.
+  // StreamingAudioQueue emits `started` only on attempt 1 and `resumed` on every
+  // retry, so a replay is identified by a RESUMED at currentTimeMs ~0 following an
+  // INTERRUPTED at currentTimeMs > 0 for the same chunkId. Reading this sequence
+  // as "started ... started" would make the replay look like two separate chunks
+  // and hide the defect it was built to catch.
+  //
+  // Metadata is media-element state only. No transcript, no spoken text.
+  | 'voice_playback_started'
+  | 'voice_playback_interrupted'
+  | 'voice_playback_retry'
+  | 'voice_playback_resumed'
+  | 'voice_playback_ended'
+  | 'voice_playback_failed'
   | 'voice_fallback_transcribe_sent'
   | 'voice_fallback_transcribe_result'
   | 'voice_fallback_failed'
+
+  // ── V5 utterance-tail witness ───────────────────────────────────────────
+  // The question: why do the ENDS of Jondi's utterances go missing?
+  //
+  // Six orderings could produce that symptom and they need different repairs:
+  //   A. capture actually dies              (already covered by micLiveness)
+  //   B. recognition ends prematurely
+  //   C. interim speech never becomes final
+  //   D. the silence timer fires while fresh interim speech exists
+  //   E. the turn commits before the trailing result arrives
+  //   F. a trailing result arrives AFTER commit and is discarded
+  //
+  // These events establish which ordering actually occurred. `charCount` is a
+  // STRUCTURAL witness only — it says recognized material grew or shrank, never
+  // which words were lost. No transcript text is ever emitted.
+  //
+  // `voice_result_after_commit` is the load-bearing one: if the browser hands us
+  // another result after we have already submitted the turn, that is F, and it
+  // must be OBSERVED rather than inferred from words a member reports missing.
+  | 'voice_result_interim'
+  | 'voice_result_final'
+  | 'voice_silence_timer_armed'
+  | 'voice_silence_timer_fired'
+  | 'voice_turn_commit_requested'
+  | 'voice_turn_committed'
+  | 'voice_result_after_commit'
   // Native iOS path (@capacitor-community/speech-recognition)
   // Naming follows "Observable state before interpreted meaning":
   // we report what the plugin emitted, not what we think it meant.

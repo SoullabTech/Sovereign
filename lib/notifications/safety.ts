@@ -11,7 +11,7 @@
  * - This protects practitioners from accidental PHI exposure via email
  */
 
-import { Resend } from 'resend';
+import { sendEmail } from '@/lib/email/sendEmail';
 import { query } from '@/lib/db/postgres';
 import { resolveMemberDisplayName } from '@/lib/stellium/clients';
 
@@ -19,15 +19,6 @@ import { resolveMemberDisplayName } from '@/lib/stellium/clients';
 const INCLUDE_PREVIEW = process.env.SAFETY_EMAIL_INCLUDE_PREVIEW === 'true';
 const PREVIEW_MAX_LENGTH = 120; // Hard cap if preview is enabled
 
-// Lazy-load Resend client
-function getResendClient(): Resend | null {
-  const apiKey = process.env.RESEND_API_KEY;
-  if (!apiKey) {
-    console.warn('RESEND_API_KEY not configured - safety notifications will be skipped');
-    return null;
-  }
-  return new Resend(apiKey);
-}
 
 export interface SafetyNotificationParams {
   practitionerId: string;
@@ -263,14 +254,6 @@ export async function sendSafetyConcernNotification(
       return { success: false, error: 'Practitioner has no email address' };
     }
 
-    // Get Resend client
-    const resend = getResendClient();
-    if (!resend) {
-      console.warn('Resend not configured - skipping safety notification');
-      if (logId) await updateSafetyLogEmailStatus(logId, 'failed', 'Email service not configured');
-      return { success: false, error: 'Email service not configured' };
-    }
-
     // Build view URL (requires sign-in)
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://soullab.ai';
     const viewUrl = `${baseUrl}/stellium/messages?client=${clientId}`;
@@ -284,20 +267,23 @@ export async function sendSafetyConcernNotification(
     );
 
     // Send email
-    const result = await resend.emails.send({
+    const result = await sendEmail({
+      purpose: 'notify:safety',
       from: 'Stellium <notifications@soullab.ai>',
       to: practitionerEmail,
       subject: `Safety Concern: ${clientName} needs attention`,
       html,
     });
 
-    if (result.error) {
-      console.error('Failed to send safety notification:', result.error);
-      if (logId) await updateSafetyLogEmailStatus(logId, 'failed', result.error.message);
-      return { success: false, error: result.error.message };
+    if (!result.success) {
+      console.error(
+        `Safety notification REFUSED: failureKind=${result.failureKind ?? 'unclassified'} providerCode=${result.providerCode ?? 'unnamed'}`
+      );
+      if (logId) await updateSafetyLogEmailStatus(logId, 'failed', result.error ?? 'Send refused');
+      return { success: false, error: result.error };
     }
 
-    console.log(`Safety notification sent to ${practitionerEmail} for message ${messageId}`);
+    console.log(`Safety notification sent for message ${messageId}`);
     if (logId) await updateSafetyLogEmailStatus(logId, 'sent');
     return { success: true };
   } catch (error) {

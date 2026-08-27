@@ -11,14 +11,46 @@ import { getFeatureFlag } from '@/lib/features/flags';
 import { logVoiceEvent, resetVoiceSession } from '@/lib/voice/voiceDiagnostics';
 import { pushVoiceDebug } from '@/lib/voice/voiceDebugBus';
 import { WebSpeechRecognitionSession, classifyRecognitionError } from '@/lib/voice/webSpeechLifecycle';
+import {
+  assessCaptureLiveness,
+  describeCaptureLoss,
+  isCaptureLossUnexpected,
+  TRACK_MUTE_GRACE_MS,
+  CAPTURE_HEARTBEAT_MS,
+  CAPTURE_REASON_CODES,
+  type CaptureLossCause,
+} from '@/lib/voice/micLiveness';
+import { getContinuityBuffer } from '@/lib/voice/conversationContinuityBuffer';
+import {
+  TURN_COMPLETE_RECOVERABLE,
+  shouldNormalizeToIdle,
+  restartPolicy,
+  staleLatchesToClearForTap,
+  type RestartSourceName,
+} from '@/lib/voice/restartAuthority';
+import {
+  readTailSnapshot,
+  measureTailOverlap,
+  shouldEmitThrottled,
+  type UtteranceSendTrigger,
+} from '@/lib/voice/utteranceTail';
 // import { Analytics } from "../../lib/analytics/supabaseAnalytics"; // Disabled for Vercel build
 
 // =============================================================================
 // 🎙️ VOICE STATE MACHINE — Single authority for mic lifecycle
 // =============================================================================
-// Rule: ONLY requestRestart() can move from IDLE → ARMING → LISTENING.
-// Everything else (OracleConversation, StreamingVoice, etc.) emits events
-// that ContinuousConversation processes. No external code touches mic directly.
+// Rule: ONLY requestRestart() may INITIATE a new listening cycle. Every re-arm
+// path — user tap, maia_stopped_speaking, recognition_stopped, interruption_end,
+// foreground_resume — routes through it; it normalizes stale turn-complete state,
+// applies the HANDS_FREE/PUSH_TO_TALK policy once, and delegates to the
+// startListening lifecycle. Direct NativeSpeechRecognition.start() /
+// recognition.start() calls are permitted ONLY inside that lifecycle
+// (ensureFreshAndStart, startListening), never in orchestration or effects.
+//
+// This rule was false from the first commit until the P0 of 2026-08-26: the name
+// `requestRestart` appeared exactly once — in this comment — while five call
+// sites started recognition directly. It is now enforced by the code below and
+// by __tests__/restartAuthority.test.ts.
 
 export type ListeningMode = 'PUSH_TO_TALK' | 'HANDS_FREE' | 'OFF';
 
@@ -109,6 +141,31 @@ function authorityGuard(args: {
   return { allowed: true };
 }
 
+/**
+ * States a turn can legitimately END in, from which the mic must be recoverable.
+ *
+ * THE P0 THIS ENCODES. `authorityGuard` refuses every restart unless micState is
+ * IDLE or ERROR. Before this fix the post-TTS handler returned the mic to IDLE
+ * only from PLAYING_TTS:
+ *
+ *     if (micStateRef.current === 'PLAYING_TTS') setMicState('IDLE', ...)
+ *
+ * So a turn that ended in SUBMITTING or WAITING_FOR_TTS — MAIA answered from a
+ * path that never passed through PLAYING_TTS, or the TTS state was cleared by
+ * another handler first — left micState pinned at a value the guard rejects.
+ * Every subsequent restart was then blocked with `mic_state_SUBMITTING`,
+ * including an explicit user tap. That is "MAIA is dead after one round", on
+ * both PWA and iOS, and no amount of tapping recovers it.
+ *
+ * Normalization is therefore keyed on the SET of turn-complete states, not on
+ * one privileged predecessor. LISTENING and CAPTURING are deliberately absent:
+ * those mean capture is live and must never be stomped.
+ */
+// (the set itself now lives in lib/voice/restartAuthority.ts so it is testable)
+
+/** Sources permitted to request a new listening cycle. */
+export type RestartSource = RestartSourceName;
+
 export interface ContinuousConversationProps {
   onTranscript: (text: string) => void;
   onInterimTranscript?: (text: string) => void;
@@ -139,6 +196,35 @@ export interface ContinuousConversationProps {
    * transient errors or normal end-of-speech.
    */
   onVoiceUnavailable?: (info: { reason: string; userMessage: string }) => void;
+  /**
+   * Called whenever voice capture changes in a way the member must SEE.
+   *
+   * This component is mounted inside an `sr-only` wrapper by OracleConversation,
+   * so its own status line and error banner are visually hidden. Before this
+   * callback existed, every voice failure message it produced was rendered to
+   * nobody — which is the mechanical reason a dead mic looked like a live one.
+   * The parent is the only surface that can actually show the member anything.
+   *
+   * `recoverable` means tapping the mic is expected to work. `cause` is the
+   * machine-readable reason for telemetry; `userMessage` is the wording to show.
+   */
+  onVoiceStatus?: (info: {
+    level: 'info' | 'warning' | 'error';
+    cause: string;
+    userMessage: string;
+    recoverable: boolean;
+  }) => void;
+  /**
+   * Called with speech that was transcribed but never submitted, when voice
+   * capture is lost mid-utterance.
+   *
+   * Sovereignty: what the member said is the member's. A failure in our capture
+   * layer is not a licence to discard it. The parent puts this back in the
+   * message box as an editable draft, so the member decides whether to send,
+   * edit, or drop it — MAIA never auto-submits words the member did not choose
+   * to send, and never silently loses them either.
+   */
+  onTranscriptSalvage?: (info: { text: string; cause: string }) => void;
 }
 
 export interface ContinuousConversationRef {
@@ -170,6 +256,8 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     silenceThreshold = 12000, // 12s to capture full thoughts - extra generous for reflecting on MAIA's words
     vadSensitivity = 0.3,
     onInterrupt,
+    onVoiceStatus,
+    onTranscriptSalvage,
     interruptEnabled = true,
     interruptDebounceMs = 200,
     interruptThresholdMultiplier = 1.2,
@@ -228,6 +316,9 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
   const micStateRef = useRef<MicState>('IDLE');
   const listeningModeRef = useRef<ListeningMode>('HANDS_FREE');
   const restartInFlightRef = useRef(false); // True while a restart setTimeout is pending
+  const restartRequestInFlightRef = useRef(false); // True while requestRestart() is deciding/starting
+  // Forward refs: the post-TTS effects run above where these are defined.
+  const normalizeTurnCompleteStateFnRef = useRef<(source: string) => void>();
   const backoffStepRef = useRef(0); // Current exponential backoff step (0 = no backoff)
   const recognitionActiveRef = useRef(false); // True between .start() and .onend — prevents double-start InvalidStateError
 
@@ -255,6 +346,47 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
   const discardRecognitionFnRef = useRef<(reason: string) => void>();
   const handleWebDeviceChangeFnRef = useRef<() => void>();
 
+  // ==========================================================================
+  // 🩺 CAPTURE LIVENESS — detect the mic dying without saying anything
+  // ==========================================================================
+  // The lifecycle session above handles failures recognition REPORTS. These
+  // refs handle the failure it does not: the instance stays nominally alive
+  // while audio silently stops arriving (zombie recognition), or another
+  // application takes the input track (the Zoom case — no `devicechange`
+  // fires, because the device list never changed). Both look identical from
+  // the outside: a lit mic button and an absence of events. Only a watchdog
+  // measuring that absence can see them. See lib/voice/micLiveness.ts.
+  /** Timestamp of the last event of any kind from the live recognition object. */
+  const lastCaptureActivityAtRef = useRef<number>(0);
+  /** Timestamp of the last `onstart`. 0 when no instance is armed. */
+  const captureArmedAtRef = useRef<number>(0);
+  /** Has `onaudiostart` fired for the currently armed instance? */
+  const captureAudioOpenedRef = useRef<boolean>(false);
+  const livenessTimerRef = useRef<NodeJS.Timeout | null>(null);
+  /** Pending confirmation that a track `mute` is sustained, not transient. */
+  const trackMuteTimerRef = useRef<NodeJS.Timeout | null>(null);
+  /** Audio track listeners, kept so they can be detached with the stream. */
+  const trackListenerCleanupRef = useRef<(() => void) | null>(null);
+  /**
+   * One silent self-heal per loss, then we stop and tell the member.
+   * Retrying forever is how a dead mic keeps looking alive — the opposite of
+   * what this whole path is for. Reset on any successful capture activity.
+   */
+  const selfHealAttemptedRef = useRef<boolean>(false);
+  const handleCaptureLossFnRef = useRef<(cause: CaptureLossCause) => void>();
+  const attachTrackLossListenersFnRef = useRef<(stream: MediaStream) => void>();
+  const reportVoiceStatusFnRef = useRef<(info: {
+    level: 'info' | 'warning' | 'error'; cause: string; userMessage: string; recoverable: boolean;
+  }) => void>();
+  const salvageTranscriptFnRef = useRef<(cause: string) => boolean>();
+
+  /** Stamp capture activity: the pipeline is demonstrably alive right now. */
+  const markCaptureActivity = useCallback((audioOpened?: boolean) => {
+    lastCaptureActivityAtRef.current = Date.now();
+    if (audioOpened) captureAudioOpenedRef.current = true;
+    selfHealAttemptedRef.current = false;
+  }, []);
+
   // Convenience aliases (kept for backward compat with existing code)
   const handsFreeActiveRef = useRef(true);
   const lastSpeechHeardAtRef = useRef<number>(0);
@@ -275,6 +407,56 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
   const lastSentRef = useRef<string>("");
   const lastSentTimeRef = useRef<number>(0); // Track when we last sent a transcript
   const isCallingProcessRef = useRef(false); // CRITICAL: Prevent concurrent processAccumulatedTranscript calls
+  // ── V5 utterance-tail witness, continuous path — observation only ───────
+  // Same events and field names as the composer-mic witness (PR #1099), so one
+  // parser reads both capture paths. This path is the one that produced the
+  // r03jxcim trace: `voice_transcribe_result` is emitted only from here.
+  // Nothing below is branched on; these refs feed telemetry and nothing else.
+  const lastInterimAtRef = useRef<number>(0);
+  const lastFinalAtRef = useRef<number>(0);
+  const lastInterimCharsRef = useRef<number>(0);
+  const lastResultAtRef = useRef<number>(0);
+  const timerArmedAtRef = useRef<number>(0);
+  const interimTelemetryAtRef = useRef<number>(0);
+  const armTelemetryAtRef = useRef<number>(0);
+  // Correlates every event of one turn. Incremented at commit.
+  const turnCommitIdRef = useRef<number>(0);
+  // True between a commit and the next recognition start — the window in which
+  // a further result is ordering F (a trailing result arriving after commit).
+  const committedRef = useRef<boolean>(false);
+  const committedAtRef = useRef<number>(0);
+  // Set immediately before each processAccumulatedTranscript() call so the
+  // commit event can name its own cause without changing the function signature.
+  const sendTriggerRef = useRef<UtteranceSendTrigger>('other');
+  // ── VOICE-02A: recognition-epoch boundary ──────────────────────────────
+  // Safari terminates recognition while a nonempty interim tail is still
+  // outstanding (production trace 2026-08-25: ends 0.47s / 0.70s / 1.0s after
+  // the last interim, auto-restart ~306ms later). Finals survive the restart;
+  // the unfinalized tail is in no buffer. The 12s silence timer is NOT the
+  // immediate cause at these boundaries, so the timer-boundary witness alone
+  // would have been silent on this mechanism.
+  //
+  // `epoch` numbers each recognition instance so an analyst can ask the one
+  // question the raw trace cannot answer: was the tail LOST, or did Safari
+  // re-deliver overlapping words in the next epoch? That distinction decides
+  // whether salvage is needed and whether salvage would double-count.
+  const recognitionEpochRef = useRef<number>(0);
+  const epochFirstResultSeenRef = useRef<boolean>(false);
+  // Separate from firstResult: Safari commonly restarts as interim → interim →
+  // final. A single shared flag is consumed by the first INTERIM, so the final
+  // that actually carries the comparison would report firstResult=false and
+  // precedingEpochTailChars=0 — the comparison would silently never happen.
+  const epochFirstFinalSeenRef = useRef<boolean>(false);
+  // The tail TEXT the previous epoch ended holding. In memory only, for the
+  // duration of one restart seam — same class of holding as
+  // accumulatedTranscript. Never logged, never persisted; only the overlap
+  // COUNTS derived from it are emitted.
+  const lastInterimTextRef = useRef<string>('');
+  const epochEndedWithTailTextRef = useRef<string>('');
+  // The tail the PREVIOUS epoch ended holding, carried across the restart so
+  // the next epoch's first final can be compared against it.
+  const epochEndedWithTailCharsRef = useRef<number>(0);
+  const epochEndedAtRef = useRef<number>(0);
   const isRestartingRef = useRef(false);
   // True only while an onend auto-restart is *continuing the same utterance*.
   // iOS Safari effectively ignores `recognition.continuous`, so it fires onend
@@ -317,6 +499,14 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
   const hasTriggeredInterruptRef = useRef(false); // Prevent multiple interrupt triggers per MAIA turn
   const onInterruptRef = useRef(onInterrupt); // Ref to avoid stale closure
   onInterruptRef.current = onInterrupt;
+
+  // Parent callbacks reached from watchdog timers and recognition handlers.
+  // Held in refs for the same reason as onInterruptRef: these fire from
+  // closures created once per instance and must never see a stale prop.
+  const onVoiceStatusRef = useRef(onVoiceStatus);
+  onVoiceStatusRef.current = onVoiceStatus;
+  const onTranscriptSalvageRef = useRef(onTranscriptSalvage);
+  onTranscriptSalvageRef.current = onTranscriptSalvage;
 
   // 🎤 PWA DUPLEX: Suppress transcript processing while MAIA speaks (but keep mic hot for barge-in)
   const inputSuppressedRef = useRef(false);
@@ -409,6 +599,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     // voice_audio_started is the first observable signal of that failure mode.
     recognition.onaudiostart = session.guard(gen, () => {
       audioStartedThisCycleRef.current = true;
+      markCaptureActivity(true); // 🩺 audio is actually open — the watchdog's strongest proof of life
       logVoiceEvent('voice_audio_started');
     });
 
@@ -419,10 +610,21 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     recognition.onspeechstart = session.guard(gen, () => {
       speechStartedThisCycleRef.current = true;
       noSpeechCycleCountRef.current = 0;
+      markCaptureActivity(true); // 🩺
       logVoiceEvent('voice_speech_started');
     });
 
     recognition.onstart = session.guard(gen, () => {
+      // 👁️ Close the ordering-F window: recognition has restarted, so any
+      // further result belongs to the next turn rather than trailing the
+      // committed one. Bounds the window so it cannot mislabel new speech.
+      committedRef.current = false;
+      // 👁️ Open a new recognition epoch. Carried refs from the previous epoch
+      // are deliberately NOT cleared here — the next result must be able to
+      // report what the last epoch ended holding.
+      recognitionEpochRef.current += 1;
+      epochFirstResultSeenRef.current = false;
+      epochFirstFinalSeenRef.current = false;
       // Reset per-cycle flags before the new cycle begins. The no-speech
       // ACROSS-cycle counter is intentionally NOT reset here — it only resets
       // on a successful speech_started or on a user-driven stop.
@@ -430,6 +632,12 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
       speechStartedThisCycleRef.current = false;
       logVoiceEvent('voice_listening_started');
       recognitionStartTime.current = Date.now(); // Track when recognition actually started
+      // 🩺 A new instance is armed. Audio has NOT opened yet — that is what
+      // onaudiostart proves — so the watchdog starts measuring from here and
+      // will fire `never_armed` if audio never follows.
+      captureArmedAtRef.current = Date.now();
+      captureAudioOpenedRef.current = false;
+      markCaptureActivity();
       recognitionActiveRef.current = true; // Confirmed live (defensive: start paths also set this)
       setIsRecording(true);
       isRecordingRef.current = true; // Update ref immediately
@@ -486,11 +694,29 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     });
 
     recognition.onresult = session.guard(gen, (event: any) => {
+      markCaptureActivity(true); // 🩺 results are arriving — capture is unambiguously alive
       logVoiceEvent('voice_transcribe_result', {
         resultCount: event.results?.length ?? 0,
         isFinal: event.results?.[event.results.length - 1]?.isFinal === true,
       });
       console.log('🎤 [onresult] FIRED - event:', event.results.length, 'results');
+
+      // 👁️ Ordering F: a result arrived after this turn was already committed.
+      // Emitted BEFORE the echo-suppression guards, because a trailing tail
+      // swallowed by suppression is exactly the case that would otherwise leave
+      // no trace at all. `inputSuppressed`/`maiaSpeaking` are reported rather
+      // than judged — echo and a genuine trailing tail are separated by the
+      // analyst reading msSinceCommit, not pre-filtered here.
+      if (committedRef.current) {
+        logVoiceEvent('voice_result_after_commit', {
+          turnCommitId: turnCommitIdRef.current,
+          msSinceCommit: committedAtRef.current ? Date.now() - committedAtRef.current : -1,
+          resultCount: event.results?.length ?? 0,
+          isFinal: event.results?.[event.results.length - 1]?.isFinal === true,
+          inputSuppressed: inputSuppressedRef.current,
+          maiaSpeaking: isSpeakingRef.current,
+        });
+      }
 
       // 🛡️ GUARD: If transcript is suppressed (MAIA speaking on web), ignore for processing
       // but allow the audio level loop to continue for barge-in detection
@@ -534,24 +760,159 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
           } else {
             accumulatedTranscript.current = finalTranscript.trim();
           }
+          // 👁️ A final landed — the outstanding tail is resolved (NOT ordering C).
+          // `subsumedInterimCharCount` > 0 here is NORMAL: the final ordinarily
+          // commits the interim that previewed it. Only material outstanding at
+          // a COMMIT boundary indicates loss.
+          {
+            const finalAt = Date.now();
+            const subsumed = lastInterimCharsRef.current;
+            const sinceInterim = lastInterimAtRef.current > 0
+              ? Math.max(0, finalAt - lastInterimAtRef.current) : -1;
+            lastFinalAtRef.current = finalAt;
+            lastResultAtRef.current = finalAt;
+            lastInterimCharsRef.current = 0;
+            lastInterimTextRef.current = '';
+            const firstInEpoch = !epochFirstResultSeenRef.current;
+            epochFirstResultSeenRef.current = true;
+            // 👁️ The lost-vs-redelivered test, keyed on the first FINAL of the
+            // epoch — NOT the first result. Safari commonly restarts as
+            // interim → interim → final; keying on the first result would let
+            // an interim consume the flag and the comparison would never run.
+            //
+            // Length alone cannot decide this: two unrelated utterances of
+            // similar length would read as re-delivered and suppress a repair
+            // that is actually needed. So we measure the real suffix→prefix
+            // overlap between the carried tail and this final. Counts only —
+            // the tail text never leaves memory.
+            const firstFinalInEpoch = !epochFirstFinalSeenRef.current;
+            epochFirstFinalSeenRef.current = true;
+            const carriedTail = firstFinalInEpoch ? epochEndedWithTailTextRef.current : '';
+            const overlap = firstFinalInEpoch
+              ? measureTailOverlap(carriedTail, finalTranscript.trim())
+              : { overlapChars: 0, overlapRatio: -1 };
+            const carriedTailChars = firstFinalInEpoch ? epochEndedWithTailCharsRef.current : 0;
+            const seamMs = firstFinalInEpoch && epochEndedAtRef.current
+              ? Date.now() - epochEndedAtRef.current : -1;
+            if (firstFinalInEpoch) {
+              // Compared — release the carry so a later epoch cannot reuse it.
+              epochEndedWithTailCharsRef.current = 0;
+              epochEndedWithTailTextRef.current = '';
+              epochEndedAtRef.current = 0;
+            }
+            logVoiceEvent('voice_result_final', {
+              epoch: recognitionEpochRef.current,
+              firstResultInEpoch: firstInEpoch,
+              firstFinalInEpoch,
+              precedingEpochTailChars: carriedTailChars,
+              overlapChars: overlap.overlapChars,
+              overlapRatio: overlap.overlapRatio,
+              msSinceEpochEnd: seamMs,
+              turnCommitId: turnCommitIdRef.current,
+              finalCharCount: accumulatedTranscript.current.length,
+              deltaCharCount: finalTranscript.trim().length,
+              subsumedInterimCharCount: subsumed,
+              msSinceLastInterim: sinceInterim,
+              resultIndex: event.resultIndex,
+              resultCount: event.results.length,
+            });
+          }
         } else if (interimTranscript) {
           console.log('📝 Got INTERIM transcript:', interimTranscript);
           // For interim, show accumulated finals + current interim
           // This gives live feedback while preserving finals
           const currentInterim = interimTranscript.trim();
+          // 👁️ The outstanding tail. Timestamps and counts update on EVERY
+          // interim; only the log line is throttled, so the snapshot read at a
+          // commit boundary is exact rather than throttle-quantized.
+          {
+            const interimAt = Date.now();
+            lastInterimAtRef.current = interimAt;
+            lastResultAtRef.current = interimAt;
+            lastInterimCharsRef.current = currentInterim.length;
+            lastInterimTextRef.current = currentInterim;
+            if (shouldEmitThrottled(interimAt, interimTelemetryAtRef.current)) {
+              interimTelemetryAtRef.current = interimAt;
+              const firstInEpoch = !epochFirstResultSeenRef.current;
+              epochFirstResultSeenRef.current = true;
+              logVoiceEvent('voice_result_interim', {
+                epoch: recognitionEpochRef.current,
+                firstResultInEpoch: firstInEpoch,
+                // NOT the comparison — that runs on the first FINAL. This is
+                // the carry still awaiting it, named apart so a parser cannot
+                // mistake an interim for the adjudicated result.
+                pendingEpochTailChars: epochEndedWithTailCharsRef.current,
+                msSinceEpochEnd: firstInEpoch && epochEndedAtRef.current
+                  ? Date.now() - epochEndedAtRef.current : -1,
+                turnCommitId: turnCommitIdRef.current,
+                interimCharCount: currentInterim.length,
+                finalCharCount: accumulatedTranscript.current.length,
+                msSinceLastFinal: lastFinalAtRef.current > 0
+                  ? Math.max(0, interimAt - lastFinalAtRef.current) : -1,
+                resultIndex: event.resultIndex,
+                resultCount: event.results.length,
+              });
+            }
+          }
           // Don't modify accumulatedTranscript for interim - just pass to callback
         }
 
         console.log('📊 Accumulated so far:', accumulatedTranscript.current);
+        // 🧵 Mirror into the continuity buffer as we go, so the buffer is
+        // already current when capture dies. The failure path then does no
+        // work that could itself fail.
+        try { getContinuityBuffer().recordPending(accumulatedTranscript.current); } catch { /* best-effort */ }
 
         // Reset silence timer on speech
         if (silenceTimerRef.current) {
           clearTimeout(silenceTimerRef.current);
         }
 
+        // 👁️ Timer armed. On THIS path the timer is armed by a result of
+        // either kind but its callback commits accumulated FINALS alone — so
+        // armedByInterim=true with armedByFinal=false is the arming that
+        // cannot carry what armed it. Throttled: arming happens per result.
+        {
+          const armedAt = Date.now();
+          timerArmedAtRef.current = armedAt;
+          if (shouldEmitThrottled(armedAt, armTelemetryAtRef.current)) {
+            armTelemetryAtRef.current = armedAt;
+            logVoiceEvent('voice_silence_timer_armed', {
+              turnCommitId: turnCommitIdRef.current,
+              armedByFinal: finalTranscript.length > 0,
+              armedByInterim: finalTranscript.length === 0 && interimTranscript.length > 0,
+              interimCharCount: lastInterimCharsRef.current,
+              finalCharCount: accumulatedTranscript.current.length,
+              timerDeadlineMs: silenceThreshold,
+            });
+          }
+        }
+
         // Start new silence timer - use the configurable threshold
         console.log(`⏱️ Starting silence timer (${silenceThreshold}ms)`);
         silenceTimerRef.current = setTimeout(() => {
+          // 👁️ Witness FIRST — the state that PRODUCED the decision, before the
+          // decision consumes or clears anything. tailAtRisk=true here is
+          // ordering D in mechanical form.
+          {
+            const firedAt = Date.now();
+            const committable = accumulatedTranscript.current.trim();
+            logVoiceEvent('voice_silence_timer_fired', {
+              turnCommitId: turnCommitIdRef.current,
+              timerAgeMs: timerArmedAtRef.current ? firedAt - timerArmedAtRef.current : -1,
+              timerDeadlineMs: silenceThreshold,
+              committableCharCount: committable.length,
+              willCommit: !isProcessingRef.current && committable.length > 0,
+              ...readTailSnapshot({
+                now: firedAt,
+                lastInterimAt: lastInterimAtRef.current,
+                lastFinalAt: lastFinalAtRef.current,
+                lastInterimChars: lastInterimCharsRef.current,
+                finalChars: committable.length,
+              }),
+            });
+            sendTriggerRef.current = 'silence_timer';
+          }
           console.log('🔕 Silence detected - processing transcript');
           console.log('   isProcessingRef:', isProcessingRef.current);
           console.log('   accumulatedTranscript:', accumulatedTranscript.current);
@@ -628,7 +989,28 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     });
 
     recognition.onend = session.guard(gen, () => {
-      logVoiceEvent('voice_recognition_ended');
+      // 👁️ VOICE-02A — the recognition-epoch boundary, previously emitted with
+      // NO metadata at all. tailAtRisk=true here is Safari ending an epoch on
+      // an unfinalized tail: the demonstrated mechanism, not a hypothesis.
+      {
+        const endedAt = Date.now();
+        const tail = readTailSnapshot({
+          now: endedAt,
+          lastInterimAt: lastInterimAtRef.current,
+          lastFinalAt: lastFinalAtRef.current,
+          lastInterimChars: lastInterimCharsRef.current,
+          finalChars: accumulatedTranscript.current.trim().length,
+        });
+        epochEndedWithTailCharsRef.current = tail.tailAtRisk ? tail.interimCharCount : 0;
+        epochEndedWithTailTextRef.current = tail.tailAtRisk ? lastInterimTextRef.current : '';
+        epochEndedAtRef.current = endedAt;
+        logVoiceEvent('voice_recognition_ended', {
+          epoch: recognitionEpochRef.current,
+          turnCommitId: turnCommitIdRef.current,
+          epochAgeMs: recognitionStartTime.current ? endedAt - recognitionStartTime.current : -1,
+          ...tail,
+        });
+      }
       console.log('🏁 [onend] Recognition stopped');
       recognitionActiveRef.current = false; // Clear double-start guard
       setIsRecording(false);
@@ -772,8 +1154,9 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
           return;
         }
         console.log('🚨 [onend] Recognition ended too quickly after start (' + timeSinceStart + 'ms) - possible infinite abort loop, stopping');
-        setIsListening(false);
-        isListeningRef.current = false;
+        // Was a SILENT stop: listening went false with no message and no
+        // salvage, so the member kept talking to a mic that had given up.
+        handleCaptureLossFnRef.current?.('abort_loop');
         return;
       }
 
@@ -807,9 +1190,10 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
       if (!hasRecentActivity && !hasAccumulatedTranscript && !persistentListeningRef.current) {
         console.log('🔕 [onend] No recent activity (' + (hasEverSpoken ? Math.round(timeSinceLastSpeech/1000) + 's since speech' : 'never spoke') + ', ' + (lastAudioEndAtRef.current > 0 ? Math.round(timeSinceLastAudioEnd/1000) + 's since MAIA' : 'no MAIA audio') + ') - stopping');
         console.log('   (User can tap mic to restart when ready to speak)');
-        setIsListening(false);
-        isListeningRef.current = false;
-        onRecordingStateChange?.(false);
+        // Expected stand-down, but it was still silent — the mic simply stopped
+        // being live with nothing said about it. Report it (quietly: this cause
+        // is classified as expected) and salvage anything unsent.
+        handleCaptureLossFnRef.current?.('inactivity');
         return;
       }
 
@@ -841,8 +1225,8 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
         // Only stop if we have RAPID consecutive restarts (true infinite loop)
         if (consecutiveRestartCount.current >= 10) { // Allow 10 rapid restart attempts before blocking
           console.log('🛑 [onend] Preventing restart loop (' + consecutiveRestartCount.current + ' rapid restarts), stopping voice recognition');
-          setIsListening(false);
-          isListeningRef.current = false;
+          // Was a SILENT stop. The loop guard is correct; hiding it was not.
+          handleCaptureLossFnRef.current?.('restart_loop');
           return;
         }
 
@@ -920,6 +1304,259 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     recognitionActiveRef.current = false;
   }, [getWebSession]);
 
+  // ==========================================================================
+  // 🗣️ TELLING THE MEMBER — the surface that is actually visible
+  // ==========================================================================
+
+  /**
+   * Surface a voice condition. Sets the local banner AND pushes it to the
+   * parent, because this component is mounted `sr-only` and its own banner is
+   * invisible on the web path. Local-only reporting is how a broken mic stayed
+   * silent; every message must leave this component to count as delivered.
+   */
+  const reportVoiceStatus = useCallback((info: {
+    level: 'info' | 'warning' | 'error';
+    cause: string;
+    userMessage: string;
+    recoverable: boolean;
+  }) => {
+    setVoiceError(info.userMessage);
+    logVoiceEvent('voice_status_surfaced', {
+      level: info.level,
+      cause: info.cause,
+      recoverable: info.recoverable,
+    });
+    onVoiceStatusRef.current?.(info);
+  }, []);
+
+  /**
+   * Hand back speech that was transcribed but never submitted.
+   *
+   * Called on every path where capture is lost mid-utterance. Clears the
+   * accumulator so the same words cannot also be replayed into a later turn —
+   * salvaged text belongs to the member's draft now, not to MAIA's next input.
+   * Returns whether anything was actually salvaged, so the message shown can
+   * truthfully say so.
+   */
+  const salvageTranscript = useCallback((cause: string): boolean => {
+    // Prefer the live accumulator; fall back to the continuity buffer, which
+    // survives the restarts and remounts that clear the accumulator. Without
+    // the fallback, a loss detected just after a restart would salvage nothing.
+    let text = accumulatedTranscript.current.trim();
+    if (!text) {
+      try { text = getContinuityBuffer().getPending()?.text?.trim() ?? ''; } catch { text = ''; }
+    }
+    if (!text) return false;
+    accumulatedTranscript.current = '';
+    try { getContinuityBuffer().clearPending(); } catch { /* best-effort */ }
+    logVoiceEvent('voice_transcript_salvaged', { cause, chars: text.length });
+    console.log(`💾 [salvage] Preserving ${text.length} chars lost to ${cause}`);
+    onTranscriptSalvageRef.current?.({ text, cause });
+    return true;
+  }, []);
+
+  /**
+   * A capture loss was detected. Stop cleanly, preserve, and say so.
+   *
+   * Order matters: salvage BEFORE teardown, because teardown paths clear
+   * component state and a later restart's `onstart` would wipe the accumulator.
+   * The member's words are rescued first; everything else is bookkeeping.
+   *
+   * Recovery is deliberately member-initiated. We attempt no silent retry here:
+   * the entire defect being fixed is a mic that kept *looking* alive while
+   * failing, and an invisible auto-retry would recreate exactly that. The
+   * member taps to resume, and knows what state they are in.
+   */
+  const handleCaptureLoss = useCallback((cause: CaptureLossCause) => {
+    // Idempotent: the watchdog, a track event, and onend can all observe the
+    // same death within milliseconds of each other.
+    if (!isListeningRef.current && !isRecordingRef.current && micStateRef.current !== 'LISTENING') {
+      return;
+    }
+
+    const reasonCode = CAPTURE_REASON_CODES[cause] ?? 'UNKNOWN_VOICE_STALL';
+    console.warn(`🩺 [liveness] Capture loss detected: ${cause} (${reasonCode})`);
+    logVoiceEvent('voice_capture_lost', { cause, reasonCode });
+
+    const preserved = salvageTranscript(cause);
+
+    // Stop the watchdog and any pending mute confirmation.
+    if (livenessTimerRef.current) { clearInterval(livenessTimerRef.current); livenessTimerRef.current = null; }
+    if (trackMuteTimerRef.current) { clearTimeout(trackMuteTimerRef.current); trackMuteTimerRef.current = null; }
+    if (recognitionTimeoutRef.current) { clearTimeout(recognitionTimeoutRef.current); recognitionTimeoutRef.current = null; }
+    if (silenceTimerRef.current) { clearTimeout(silenceTimerRef.current); silenceTimerRef.current = null; }
+
+    // Tear the dead instance down. It is never reused.
+    discardRecognitionFnRef.current?.(`capture_loss_${cause}`);
+
+    captureArmedAtRef.current = 0;
+    captureAudioOpenedRef.current = false;
+    lastCaptureActivityAtRef.current = 0;
+    isRestartingRef.current = false;
+    restartInFlightRef.current = false;
+
+    // Truthful UI: listening is OFF, and it says so.
+    setIsListening(false);
+    isListeningRef.current = false;
+    setIsRecording(false);
+    isRecordingRef.current = false;
+    wantsContinuousConversationRef.current = false;
+    onRecordingStateChange?.(false);
+    setAudioLevel(0);
+    // ERROR (not IDLE) so authorityGuard still admits an explicit user tap,
+    // while no automatic path can quietly re-arm behind the member's back.
+    setMicState('ERROR', `capture_loss_${cause}`);
+
+    reportVoiceStatus({
+      level: isCaptureLossUnexpected(cause) ? 'error' : 'info',
+      cause: reasonCode,
+      userMessage: describeCaptureLoss(cause, { transcriptPreserved: preserved }),
+      recoverable: true,
+    });
+  }, [salvageTranscript, reportVoiceStatus, onRecordingStateChange, setMicState]);
+
+  /**
+   * Attach loss listeners to the live microphone track.
+   *
+   * This is the ONLY way to see another application taking the input. A
+   * `MediaStreamTrack` going `muted` or `ended` fires no `devicechange` (the
+   * device list did not change) and produces no recognition error (the object
+   * never learns about it). Without these two listeners, an app-level mic
+   * seizure is completely invisible to us — which is exactly how a member ends
+   * up talking to a dead mic for ten minutes.
+   */
+  const attachTrackLossListeners = useCallback((stream: MediaStream) => {
+    trackListenerCleanupRef.current?.();
+    trackListenerCleanupRef.current = null;
+
+    const track = stream.getAudioTracks()[0];
+    if (!track) return;
+
+    const onEnded = () => {
+      console.warn('🔌 [track] Audio track ended — input device gone');
+      handleCaptureLossFnRef.current?.('track_ended');
+    };
+
+    const onMute = () => {
+      // Browsers emit brief, self-correcting mutes around device negotiation.
+      // Only a mute that PERSISTS means another process holds the input, so we
+      // confirm before interrupting the member over a transient blip.
+      if (trackMuteTimerRef.current) clearTimeout(trackMuteTimerRef.current);
+      trackMuteTimerRef.current = setTimeout(() => {
+        trackMuteTimerRef.current = null;
+        if (track.muted && (isListeningRef.current || isRecordingRef.current)) {
+          console.warn('🔇 [track] Audio track muted and stayed muted — another app holds the mic');
+          handleCaptureLossFnRef.current?.('track_muted');
+        }
+      }, TRACK_MUTE_GRACE_MS);
+    };
+
+    const onUnmute = () => {
+      // Recovered before the grace window elapsed: cancel, say nothing.
+      if (trackMuteTimerRef.current) {
+        clearTimeout(trackMuteTimerRef.current);
+        trackMuteTimerRef.current = null;
+      }
+    };
+
+    track.addEventListener('ended', onEnded);
+    track.addEventListener('mute', onMute);
+    track.addEventListener('unmute', onUnmute);
+    logVoiceEvent('voice_track_listeners_attached');
+
+    trackListenerCleanupRef.current = () => {
+      try {
+        track.removeEventListener('ended', onEnded);
+        track.removeEventListener('mute', onMute);
+        track.removeEventListener('unmute', onUnmute);
+      } catch { /* track already torn down */ }
+      if (trackMuteTimerRef.current) {
+        clearTimeout(trackMuteTimerRef.current);
+        trackMuteTimerRef.current = null;
+      }
+    };
+  }, []);
+
+  /**
+   * The watchdog: the only observer that can see recognition go quiet.
+   *
+   * Runs on a 2s tick while the web path claims to be listening. It measures
+   * ABSENCE — no onstart, onaudiostart, onspeechstart, or onresult — because a
+   * zombie recognition object emits nothing to react to. Deliberately inert
+   * while MAIA speaks, while a turn is processing, and while a restart is in
+   * flight: recognition is legitimately torn down in those windows, and a false
+   * positive there would interrupt a working conversation.
+   */
+  useEffect(() => {
+    if (useNativeSpeechRef.current) return;   // native path has its own ARMING watchdog
+    if (!isListening) return;
+
+    const tick = () => {
+      const applicable =
+        isListeningRef.current &&
+        !isSpeakingRef.current &&
+        !isProcessingRef.current &&
+        !inputSuppressedRef.current &&
+        !isRestartingRef.current &&
+        recognitionActiveRef.current;
+
+      const verdict = assessCaptureLiveness({
+        now: Date.now(),
+        lastActivityAt: lastCaptureActivityAtRef.current,
+        armedAt: captureArmedAtRef.current,
+        audioOpened: captureAudioOpenedRef.current,
+        applicable,
+      });
+
+      if (!verdict.dead || !verdict.cause) return;
+
+      console.warn(
+        `🩺 [liveness] Capture silent for ${Math.round(verdict.silentForMs / 1000)}s ` +
+        `(${verdict.cause}) — mic said "listening" and was not.`
+      );
+      handleCaptureLossFnRef.current?.(verdict.cause);
+    };
+
+    // Failure boundaries that produce no recognition error and no track event.
+    // Safari can put an AudioContext into `interrupted` — a state neither
+    // `running` nor `suspended` — and a backgrounded tab can have capture
+    // throttled out from under it. Both are checked against the same verdict
+    // path so every route ends in one honest, reported stop.
+    const inspectAudioContext = () => {
+      const ctx = audioContextRef.current;
+      if (!ctx || !isListeningRef.current) return;
+      const state = ctx.state as string;
+      if (state === 'interrupted' || state === 'closed') {
+        console.warn(`🎛️ [audioContext] state=${state} while listening`);
+        handleCaptureLossFnRef.current?.('audio_context_interrupted');
+      }
+    };
+    const inspectOnVisible = () => {
+      // Returning to a foregrounded tab is the moment a member looks at the
+      // screen. If capture died while hidden, say so now rather than letting
+      // them start talking into it.
+      if (typeof document !== 'undefined' && document.visibilityState === 'visible') tick();
+    };
+
+    const ctx = audioContextRef.current;
+    ctx?.addEventListener?.('statechange', inspectAudioContext);
+    if (typeof document !== 'undefined') {
+      document.addEventListener('visibilitychange', inspectOnVisible);
+    }
+
+    livenessTimerRef.current = setInterval(tick, CAPTURE_HEARTBEAT_MS);
+    return () => {
+      ctx?.removeEventListener?.('statechange', inspectAudioContext);
+      if (typeof document !== 'undefined') {
+        document.removeEventListener('visibilitychange', inspectOnVisible);
+      }
+      if (livenessTimerRef.current) {
+        clearInterval(livenessTimerRef.current);
+        livenessTimerRef.current = null;
+      }
+    };
+  }, [isListening]);
+
   /**
    * The ONE web-path start gate. Consults the lifecycle session:
    *  - if the previous instance errored, aborted unexpectedly, was suspended
@@ -938,7 +1575,11 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
       setIsRecording(false);
       isRecordingRef.current = false;
       onRecordingStateChange?.(false);
-      setVoiceError(message);
+      // Was setVoiceError only — invisible, because this component renders
+      // inside an sr-only wrapper. Route it to the parent so it is actually seen.
+      reportVoiceStatusFnRef.current?.({
+        level: 'error', cause: tag, userMessage: message, recoverable: true,
+      });
       setMicState('ERROR', tag); // authorityGuard allows user-tap starts from ERROR
     };
 
@@ -994,6 +1635,8 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     if (!wasActive) return; // idle: next start builds fresh anyway
 
     // The mic stream + analyser are bound to the old device — tear them down.
+    trackListenerCleanupRef.current?.();
+    trackListenerCleanupRef.current = null;
     if (micStreamRef.current) {
       micStreamRef.current.getTracks().forEach(track => track.stop());
       micStreamRef.current = null;
@@ -1011,7 +1654,13 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     wantsContinuousConversationRef.current = false;
     onRecordingStateChange?.(false);
     setAudioLevel(0);
-    setVoiceError('Your audio device changed. Tap the mic to reconnect.');
+    salvageTranscriptFnRef.current?.('devicechange');
+    reportVoiceStatusFnRef.current?.({
+      level: 'warning',
+      cause: 'devicechange',
+      userMessage: 'Your audio device changed, so MAIA stopped hearing you. Tap the mic to reconnect.',
+      recoverable: true,
+    });
     setMicState('IDLE', 'devicechange');
   }, [onRecordingStateChange, setMicState]);
 
@@ -1020,7 +1669,11 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     ensureFreshAndStartFnRef.current = ensureFreshAndStart;
     discardRecognitionFnRef.current = discardRecognition;
     handleWebDeviceChangeFnRef.current = handleWebDeviceChange;
-  }, [ensureFreshAndStart, discardRecognition, handleWebDeviceChange]);
+    handleCaptureLossFnRef.current = handleCaptureLoss;
+    attachTrackLossListenersFnRef.current = attachTrackLossListeners;
+    reportVoiceStatusFnRef.current = reportVoiceStatus;
+    salvageTranscriptFnRef.current = salvageTranscript;
+  }, [ensureFreshAndStart, discardRecognition, handleWebDeviceChange, handleCaptureLoss, attachTrackLossListeners, reportVoiceStatus, salvageTranscript]);
 
   // Sync props and state to refs to avoid stale closures in recognition callbacks
   // 🔥 CRITICAL: Sync isSpeaking SYNCHRONOUSLY (not in useEffect) to prevent race conditions
@@ -1111,11 +1764,16 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
       }
       // Track audio end for conversation-alive gate
       lastAudioEndAtRef.current = Date.now();
-      if (micStateRef.current === 'PLAYING_TTS') {
-        setMicState('IDLE', 'maia_stopped_speaking');
-        // Reset backoff when MAIA finishes a new turn — fresh set of attempts
-        backoffStepRef.current = 0;
-      }
+      // P0: normalize ANY recoverable turn-complete state, not only PLAYING_TTS.
+      // Keying this on one privileged predecessor is what pinned micState at
+      // SUBMITTING/WAITING_FOR_TTS and made every later restart — including a
+      // user tap — fail the authority guard for the rest of the session.
+      normalizeTurnCompleteStateFnRef.current?.('maia_stopped_speaking');
+      // Reset backoff when MAIA finishes a new turn — fresh set of attempts
+      backoffStepRef.current = 0;
+      // Continuation is decided in ONE place. In PUSH_TO_TALK requestRestart
+      // declines and waits for the tap; in HANDS_FREE it re-arms.
+      void requestRestartFnRef.current?.('maia_stopped_speaking');
     }
   }, [isSpeaking]);
 
@@ -1143,23 +1801,16 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
 
       console.log('🔄 [Native] MAIA stopped speaking - hands-free + recent speech, auto-restarting in 800ms...');
 
-      const restartTimer = setTimeout(async () => {
-        if (wantsContinuousConversationRef.current && handsFreeActiveRef.current && !isSpeakingRef.current && !isProcessingRef.current && nativeStatusRef.current !== 'started') {
-          try {
-            console.log('🎙️ [Native] Auto-restarting after MAIA speech (hands-free)...');
-            await NativeSpeechRecognition.start({
-              language: 'en-US',
-              maxResults: 3,
-              partialResults: true,
-              popup: false
-            });
-            console.log('✅ [Native] Auto-restart after speech successful');
-          } catch (e: any) {
-            console.warn('⚠️ [Native] Auto-restart failed:', e?.message || e);
-          }
-        } else {
-          console.log('🚫 [Native] Conditions changed or already started, skipping auto-restart');
+      const restartTimer = setTimeout(() => {
+        // P0: was a direct NativeSpeechRecognition.start() with its own private
+        // five-condition predicate — one of two re-arm gates that disagreed with
+        // each other and with the guard. It now asks the single authority, which
+        // re-reads state at call time and logs one canonical allowed/blocked line.
+        if (nativeStatusRef.current === 'started') {
+          console.log('🚫 [Native] Native recognition already started, skipping restart request');
+          return;
         }
+        void requestRestartFnRef.current?.('maia_stopped_speaking');
       }, 800);
 
       return () => clearTimeout(restartTimer);
@@ -1267,6 +1918,10 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     // CRITICAL: Clear accumulated transcript IMMEDIATELY to prevent double-send
     accumulatedTranscript.current = "";
     continuationRestartRef.current = false; // turn submitted — next start is a fresh turn
+    // 🧵 The turn is genuinely sent: move it out of pending into the continuity
+    // log, so a later loss cannot hand it back as an unsent draft and cause the
+    // member to send the same thing twice.
+    try { getContinuityBuffer().recordSubmitted(transcript); } catch { /* best-effort */ }
 
     // Stop recognition while processing
     if (recognitionRef.current) {
@@ -1275,6 +1930,30 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
 
     // Send transcript
     console.log('📤 [ContinuousConversation] Sending transcript to parent:', transcript);
+    // 👁️ Commit: what actually left the client, past every dedup and echo guard,
+    // and what was still outstanding when it did. tailAtRisk=true on this row is
+    // observed speech left behind by this exact commit. Opens the ordering-F
+    // window: further results until the next recognition start are trailing.
+    {
+      const committedAt = Date.now();
+      turnCommitIdRef.current += 1;
+      committedRef.current = true;
+      committedAtRef.current = committedAt;
+      logVoiceEvent('voice_turn_committed', {
+        turnCommitId: turnCommitIdRef.current,
+        trigger: sendTriggerRef.current,
+        committedCharCount: transcript.length,
+        ...readTailSnapshot({
+          now: committedAt,
+          lastInterimAt: lastInterimAtRef.current,
+          lastFinalAt: lastFinalAtRef.current,
+          lastInterimChars: lastInterimCharsRef.current,
+          finalChars: transcript.length,
+        }),
+      });
+      // Don't let a stale label be inherited by an unrelated later call site.
+      sendTriggerRef.current = 'other';
+    }
     setMicState('SUBMITTING', 'processAccumulatedTranscript');
     lastTranscriptSubmittedAtRef.current = Date.now();
     onTranscript(transcript);
@@ -1405,6 +2084,21 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
           console.log('✅ [VAD] Natural completion detected after', silenceDuration, 'ms - sending to MAIA');
           silenceStartTimeRef.current = 0; // Reset to prevent duplicate triggers
           hasSpokenRef.current = false; // Reset for next turn
+          // 👁️ The other commit boundary. Recorded so a dropped tail can be
+          // attributed to VAD completion vs. the silence timer rather than guessed.
+          logVoiceEvent('voice_turn_commit_requested', {
+            turnCommitId: turnCommitIdRef.current,
+            trigger: 'vad',
+            timerDeadlineMs: adaptiveSilenceThreshold,
+            ...readTailSnapshot({
+              now,
+              lastInterimAt: lastInterimAtRef.current,
+              lastFinalAt: lastFinalAtRef.current,
+              lastInterimChars: lastInterimCharsRef.current,
+              finalChars: accumulatedTranscript.current.trim().length,
+            }),
+          });
+          sendTriggerRef.current = 'vad';
           if (!isProcessingRef.current) {
             processAccumulatedTranscript();
           }
@@ -1484,6 +2178,10 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
       }
 
       micStreamRef.current = stream;
+      // 🩺 Watch the track itself. This is the only signal that another app
+      // (or the OS) has taken the input — it produces no devicechange and no
+      // recognition error.
+      attachTrackLossListenersFnRef.current?.(stream);
       resetVoiceSession();
       logVoiceEvent('voice_mic_granted', {
         audioTracks: stream.getAudioTracks().length,
@@ -2192,12 +2890,13 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
                       }, 3000);
 
                       console.log('🎙️ [Native] Restarting speech recognition (hands-free)...');
-                      await NativeSpeechRecognition.start({
-                        language: 'en-US',
-                        maxResults: 3,
-                        partialResults: true,
-                        popup: false
-                      });
+                      // P0: the second of the two competing re-arm paths. The
+                      // backoff, watchdog and restartGuard above have already made
+                      // the policy decision, so this delegates the START itself to
+                      // the single authority rather than reaching for the plugin —
+                      // forceOverride because re-running the guard here would now
+                      // see the restartInFlight this very block just set.
+                      await requestRestartFnRef.current?.('recognition_stopped', { forceOverride: true });
                       // start() resolved. That means the call was accepted, not
                       // that the microphone is live. State stays ARMING until
                       // the native event confirms it; the watchdog above is what
@@ -2473,6 +3172,107 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     }
   }, [initializeSpeechRecognition, initializeAudioMonitoring, onTranscript, onInterimTranscript, onRecordingStateChange, addDebug, ensureNativeSpeechReady]);
 
+  // ═══════════════════════════════════════════════════════════════════════
+  // 🎙️ requestRestart — THE single authority for TURN_COMPLETE → NEXT_LISTEN
+  // ═══════════════════════════════════════════════════════════════════════
+  // The file has declared since its first commit that "ONLY requestRestart()
+  // can move from IDLE → ARMING → LISTENING". That function did not exist: the
+  // name appeared exactly once, in the comment asserting the rule. Meanwhile
+  // five call sites started recognition directly, and two re-arm paths each
+  // decided "continue" from a DIFFERENT five-condition predicate. The invariant
+  // was documentation, enforced by nothing.
+  //
+  // This is that function. It does not talk to any recognition API itself —
+  // it decides, then delegates to the existing startListening lifecycle, so
+  // there remains exactly one place that touches the browser/native objects.
+
+  /**
+   * Return a stale turn-complete state to IDLE so the authority guard can admit
+   * a restart. Never disturbs live capture.
+   */
+  const normalizeTurnCompleteState = useCallback((source: string): void => {
+    const current = micStateRef.current;
+    if (!shouldNormalizeToIdle(current, isStartingRef.current)) return;
+    setMicState('IDLE', `normalize:${source}:from_${current}`);
+  }, [setMicState]);
+
+  const requestRestart = useCallback(async (
+    source: RestartSource,
+    opts?: { forceOverride?: boolean },
+  ): Promise<void> => {
+    const isUserTap = source === 'user_tap';
+
+    // Re-entrancy. One restart at a time, whatever asked for it.
+    if (restartRequestInFlightRef.current) {
+      console.log('🎙️ [RESTART] BLOCKED', JSON.stringify({ source, reason: 'request_in_flight' }));
+      return;
+    }
+
+    // An explicit gesture outranks continuation bookkeeping. Latches that
+    // survived a previous turn must not silently swallow a tap — that is the
+    // difference between "push-to-talk by design" and "the button is dead".
+    if (isUserTap) {
+      for (const latch of staleLatchesToClearForTap({
+        restartInFlight: restartInFlightRef.current,
+        isStarting: isStartingRef.current,
+        micState: micStateRef.current,
+      })) {
+        console.log(`🎙️ [RESTART] clearing stale ${latch} for user_tap`);
+        if (latch === 'restartInFlight') restartInFlightRef.current = false;
+        else isStartingRef.current = false;
+      }
+    }
+
+    // THE FIX. Normalize before the guard reads micState, so a turn that ended
+    // in SUBMITTING/WAITING_FOR_TTS is recoverable instead of permanently
+    // rejected as `mic_state_SUBMITTING`.
+    normalizeTurnCompleteState(source);
+
+    const policy = restartPolicy({
+      source,
+      handsFree: handsFreeActiveRef.current,
+      isSpeaking: isSpeakingRef.current,
+      isProcessing: isProcessingRef.current,
+      requestInFlight: false, // re-entrancy already handled above
+      forceOverride: opts?.forceOverride,
+    });
+    if (!policy.allowed) {
+      console.log('🎙️ [RESTART] BLOCKED', JSON.stringify({ source, reason: policy.reason }));
+      return;
+    }
+
+    const guard = authorityGuard({
+      source,
+      micState: micStateRef.current,
+      listeningMode: listeningModeRef.current,
+      restartInFlight: restartInFlightRef.current,
+      lastSpeechAt: lastSpeechHeardAtRef.current,
+      backoffStep: backoffStepRef.current,
+      isProcessing: isProcessingRef.current,
+    });
+    if (!guard.allowed && !opts?.forceOverride) {
+      console.log('🎙️ [RESTART] BLOCKED', JSON.stringify({ source, reason: guard.reason }));
+      return;
+    }
+
+    restartRequestInFlightRef.current = true;
+    console.log('🎙️ [RESTART] ALLOWED', JSON.stringify({ source, mic: micStateRef.current }));
+    try {
+      // The authority decision was made HERE, so the lifecycle is invoked with
+      // forceOverride: re-running the same guard inside startListening would
+      // now see restartInFlight and refuse the restart this function authorized.
+      await startListeningFnRef.current?.({ forceOverride: true });
+    } catch (e: any) {
+      console.warn('🎙️ [RESTART] startListening threw:', e?.message || e);
+    } finally {
+      restartRequestInFlightRef.current = false;
+    }
+  }, [normalizeTurnCompleteState]);
+
+  const requestRestartFnRef = useRef<(s: RestartSource, o?: { forceOverride?: boolean }) => void>();
+  requestRestartFnRef.current = requestRestart;
+  normalizeTurnCompleteStateFnRef.current = normalizeTurnCompleteState;
+
   // Stop listening
   // 🔥 FIX: userExitMode flag indicates user explicitly tapped holoflower to stop
   // When true, we clear wantsContinuousConversationRef so auto-restart won't trigger
@@ -2589,6 +3389,8 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     }
 
     // Stop audio monitoring
+    trackListenerCleanupRef.current?.();
+    trackListenerCleanupRef.current = null;
     if (micStreamRef.current) {
       micStreamRef.current.getTracks().forEach(track => track.stop());
       micStreamRef.current = null;
@@ -2623,7 +3425,11 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
       stopListening();
     } else {
       console.log('▶️ [ContinuousConversation] Starting listening');
-      startListening();
+      // P0: an explicit gesture goes through the authority, which clears stale
+      // latches first. Previously a tap called startListening() directly and was
+      // silently refused by authorityGuard whenever micState was still pinned at
+      // a turn-complete value — the "tapping does nothing" half of the incident.
+      void requestRestartFnRef.current?.('user_tap');
     }
   }, [startListening, stopListening]);
 
@@ -2688,7 +3494,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
       setMicState('IDLE', 'ios_interruption_end');
       setTimeout(() => {
         if (micStateRef.current === 'IDLE' && !isSpeakingRef.current) {
-          startListeningFnRef.current?.();
+          void requestRestartFnRef.current?.('interruption_end');
         }
       }, 1000);
     } else {
@@ -2778,7 +3584,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
           setMicState('IDLE', 'app_foreground_resume');
           setTimeout(() => {
             if (micStateRef.current === 'IDLE' && !isSpeakingRef.current) {
-              startListeningFnRef.current?.();
+              void requestRestartFnRef.current?.('foreground_resume');
             }
           }, 800); // Slight delay for audio session to settle
         });
@@ -2793,7 +3599,12 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
 
   // Expose methods to parent via refs (avoids temporal dead zone)
   useImperativeHandle(ref, () => ({
-    startListening: (options?: { forceOverride?: boolean }) => startListeningFnRef.current?.(options),
+    // P0: the parent-facing handle is an external re-arm request, so it goes
+    // through the authority like every other one. Parents (OracleConversation,
+    // StreamingVoice) never reach the mic directly — that is the rule at the top
+    // of this file, and this was one of the seams that made it false.
+    startListening: (options?: { forceOverride?: boolean }) =>
+      void requestRestartFnRef.current?.('user_tap', options),
     stopListening: (options?: { userExitMode?: boolean }) => stopListeningFnRef.current?.(options),
     toggleListening: () => toggleListeningFnRef.current?.(),
     extendRecording: () => extendRecordingFnRef.current?.(),

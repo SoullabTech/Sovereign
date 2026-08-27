@@ -16,6 +16,7 @@ import { SendFollowupRequestSchema, type SendFollowupRequest } from '@/lib/studi
 import { loadSessionData } from '@/lib/studio/followups/sessionDataLoader';
 import { generateParentUpdateHtml } from '@/lib/studio/followups/emailTemplate';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
+import { sendEmail } from '@/lib/email/sendEmail';
 
 export const runtime = 'nodejs';
 
@@ -96,23 +97,34 @@ export async function POST(req: NextRequest) {
         sessionDate,
       });
 
-      try {
-        // Lazy-load Resend (same pattern as notifications/email route)
-        const { Resend } = await import('resend');
-        const resend = new Resend(process.env.RESEND_API_KEY);
+      const emailResult = await sendEmail({
+        purpose: 'practitioner:session-followup',
+        from: `${input.practitionerName} via SoulLab <updates@soullab.life>`,
+        to: input.recipientEmail,
+        subject: `Session update for ${input.clientName}`,
+        html,
+      });
 
-        const emailResult = await resend.emails.send({
-          from: `${input.practitionerName} via SoulLab <updates@soullab.life>`,
-          to: input.recipientEmail,
-          subject: `Session update for ${input.clientName}`,
-          html,
+      // This send was reached by a DYNAMIC vendor import (an inline
+      // `await import(...)` of the SDK), which the static-import census did not
+      // see. It carried the same defect as the
+      // rest: `emailResult.data?.id` was read without ever inspecting
+      // `emailResult.error`, so a refused update was recorded as sent — and the
+      // artifact below was then marked `sent_at = NOW()` for mail that never
+      // left, with `consent_confirmed = true` beside it.
+      if (!emailResult.success) {
+        console.error(
+          `[session-followup/send] Email REFUSED failureKind=${emailResult.failureKind ?? 'unclassified'} providerCode=${emailResult.providerCode ?? 'unnamed'}`
+        );
+        return json(502, {
+          error: emailResult.retryable
+            ? 'Email delivery failed. Draft is saved — you can retry.'
+            : 'Email delivery failed. Draft is saved — please check the delivery settings.',
+          retryable: emailResult.retryable === true,
         });
-
-        messageId = emailResult.data?.id ?? null;
-      } catch (emailError) {
-        console.error('[session-followup/send] Email delivery failed:', emailError);
-        return json(502, { error: 'Email delivery failed. Draft is saved — you can retry.' });
       }
+
+      messageId = emailResult.id ?? null;
     }
 
     // Update artifact with sent state

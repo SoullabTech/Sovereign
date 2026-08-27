@@ -33,7 +33,10 @@
  *   if (!r.success) { ... }   // never silently assume success
  */
 
-import { Resend, type CreateEmailOptions } from 'resend';
+import { getEmailProvider } from './providers';
+import type { EmailProvider } from './providers/types';
+import { resolvePriority, type EmailPriority } from './purpose';
+import { openAttempt, settleAttempt, stateForFailure } from './ledger';
 import { memberRef } from '@/lib/privacy/memberRef';
 import { redactEmails } from '@/lib/privacy/redactEmails';
 
@@ -72,16 +75,65 @@ export interface SendEmailOptions {
   headers?: Record<string, string>;
   tags?: Array<{ name: string; value: string }>;
   /**
-   * Required label for logs/telemetry, e.g. 'auth:magic-link', 'invite:beta',
-   * 'team:dm', 'reminder:session', 'portal:booking'. Keeps every send traceable.
+   * Required classification, e.g. 'auth:magic-link', 'invite:beta',
+   * 'reminder:session', 'portal:booking'. Keeps every send traceable AND
+   * determines the delivery lane (see lib/email/purpose.ts).
+   *
+   * Typed as `string` deliberately: every existing caller keeps working, and an
+   * unregistered purpose resolves to the P2 lane rather than being rejected.
+   * Registered purposes (EmailPurpose) are the ones with a declared lane.
    */
   purpose: string;
+  /**
+   * Override the lane resolved from `purpose`. Rarely needed — prefer
+   * registering the purpose. Present so a caller with genuinely mixed traffic
+   * under one purpose can still classify correctly.
+   */
+  priority?: EmailPriority;
+  /**
+   * Ties this send to the request/operation that caused it, so a delivery
+   * failure can be traced back to the member action that triggered it.
+   */
+  correlationId?: string;
+  /**
+   * Logical identity of the message, e.g. `AUTH_CODE:<token-id>`. Carried into
+   * provider tags and logs so duplicate sends are IDENTIFIABLE.
+   *
+   * NOT yet a suppression key: nothing in this module drops a second send with
+   * the same key. Deduplication requires durable state (the ledger), and
+   * claiming it before that exists would be worse than not having it —
+   * an auth code silently suppressed is a member locked out.
+   */
+  idempotencyKey?: string;
+  /** Free-form operational labels. Never put member content here. */
+  metadata?: Record<string, string>;
+  /**
+   * Send through a specific provider instead of the configured one. Used by
+   * practitioner bring-your-own-key routing, which needs the same adapter with
+   * a different credential.
+   */
+  provider?: EmailProvider;
+  /**
+   * What caused this send, for the delivery ledger: the route path, cron job,
+   * script or worker name. Optional — an unattributed send is still recorded,
+   * it is just harder to trace back to its origin.
+   */
+  triggerType?: 'route' | 'cron' | 'script' | 'worker';
+  triggerRef?: string;
+  /** Campaign identity for bulk traffic, so one blast is countable as one thing. */
+  campaignRef?: string;
+  /** Member id, when the recipient is a known member. Stored as memberRef(). */
+  memberId?: string;
 }
 
 export interface SendEmailResult {
   success: boolean;
-  /** Resend message id on success. */
+  /** Provider-issued message id on success. */
   id?: string;
+  /** Which provider handled this attempt: 'resend' | 'memory' | ... */
+  provider?: string;
+  /** The lane this send was classified into. Present on success and failure. */
+  priority?: EmailPriority;
   /** Human-readable error on failure. */
   error?: string;
   /**
@@ -141,20 +193,6 @@ export type SendFailureKind =
   | 'provider_error'     // refused or failed for a reason we cannot attribute
   | 'not_configured'     // no API key in this environment
   | 'exception';         // transport threw (network, DNS, timeout)
-
-// ============================================================================
-// MANAGED RESEND CLIENT (singleton)
-// ============================================================================
-
-let managedResend: Resend | null = null;
-
-function getManagedResend(): Resend | null {
-  if (managedResend) return managedResend;
-  const apiKey = process.env.RESEND_API_KEY;
-  if (!apiKey) return null;
-  managedResend = new Resend(apiKey);
-  return managedResend;
-}
 
 // ============================================================================
 // HELPERS
@@ -264,7 +302,12 @@ const TRANSPORT_WIDE: ReadonlySet<SendFailureKind> = new Set<SendFailureKind>([
   'quota_exceeded', 'provider_auth', 'provider_config', 'not_configured',
 ]);
 
-function failure(kind: SendFailureKind, error: string, providerCode?: string): SendEmailResult {
+function failure(
+  kind: SendFailureKind,
+  error: string,
+  providerCode?: string,
+  context?: { provider?: string; priority?: EmailPriority }
+): SendEmailResult {
   const policy = FAILURE_POLICY[kind];
   return {
     success: false,
@@ -274,6 +317,8 @@ function failure(kind: SendFailureKind, error: string, providerCode?: string): S
     failureKind: kind,
     retryable: policy.retryable,
     ourFault: policy.ourFault,
+    ...(context?.provider ? { provider: context.provider } : {}),
+    ...(context?.priority ? { priority: context.priority } : {}),
   };
 }
 
@@ -282,7 +327,8 @@ function logSend(
   from: string,
   to: string,
   domain: string,
-  result: SendEmailResult
+  result: SendEmailResult,
+  trace?: { correlationId?: string; idempotencyKey?: string }
 ): void {
   // Structural metadata only — never log subject or body (Sanctuary: minimal
   // metadata, never content).
@@ -302,6 +348,10 @@ function logSend(
   // needs, and it was already being logged as its own field.
   const line = {
     purpose,
+    ...(result.priority ? { priority: result.priority } : {}),
+    ...(result.provider ? { provider: result.provider } : {}),
+    ...(trace?.correlationId ? { correlationId: trace.correlationId } : {}),
+    ...(trace?.idempotencyKey ? { idempotencyKey: trace.idempotencyKey } : {}),
     from,
     toRef: memberRef(to),
     domain,
@@ -343,18 +393,65 @@ export async function sendEmail(opts: SendEmailOptions): Promise<SendEmailResult
   const from = opts.from ?? SENDERS.default;
   const toLog = Array.isArray(opts.to) ? opts.to.join(', ') : opts.to;
   const domain = domainOf(opts.to);
+  const priority = opts.priority ?? resolvePriority(opts.purpose);
+  const trace = { correlationId: opts.correlationId, idempotencyKey: opts.idempotencyKey };
 
-  const resend = getManagedResend();
-  if (!resend) {
-    const result = failure('not_configured', 'RESEND_API_KEY not configured');
-    logSend(opts.purpose, from, toLog, domain, result);
+  // Provider resolution can itself refuse (unknown EMAIL_PROVIDER, capture
+  // transport in production). That refusal is a configuration failure, not an
+  // unhandled crash in whatever route happened to be sending.
+  let provider: EmailProvider;
+  try {
+    provider = opts.provider ?? getEmailProvider();
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Email provider is not configured';
+    const result = failure('not_configured', message, 'provider_selection', { priority });
+    logSend(opts.purpose, from, toLog, domain, result, trace);
+    return result;
+  }
+
+  const ctx = { provider: provider.name, priority };
+
+  if (!provider.isConfigured()) {
+    const result = failure('not_configured', `${provider.name} provider is not configured`, undefined, ctx);
+    logSend(opts.purpose, from, toLog, domain, result, trace);
     return result;
   }
 
   try {
-    // Resend's CreateEmailOptions is a RequireAtLeastOne<html|text|react>
-    // union; callers always pass html and/or text, so cast through it.
-    const payload = {
+    // Purpose, lane and correlation travel WITH the message as provider tags,
+    // so the vendor's own dashboard segments the same way our logs do and an
+    // operator does not have to correlate two vocabularies during an incident.
+    const tags = [
+      ...(opts.tags ?? []),
+      { name: 'purpose', value: tagSafe(opts.purpose) },
+      { name: 'priority', value: priority },
+      ...(opts.correlationId ? [{ name: 'correlation_id', value: tagSafe(opts.correlationId) }] : []),
+      ...(opts.idempotencyKey ? [{ name: 'idempotency_key', value: tagSafe(opts.idempotencyKey) }] : []),
+      ...Object.entries(opts.metadata ?? {}).map(([name, value]) => ({
+        name: tagSafe(name),
+        value: tagSafe(value),
+      })),
+    ];
+
+    // LEDGER — opened BEFORE the provider call so a crash mid-send leaves
+    // evidence rather than nothing. Best-effort by construction: `openAttempt`
+    // swallows its own failures and returns null, and nothing below branches on
+    // the result. The ledger observes sending; it does not authorize it.
+    const attemptId = await openAttempt({
+      purpose: opts.purpose,
+      lane: priority,
+      provider: provider.name,
+      recipient: Array.isArray(opts.to) ? opts.to[0] : opts.to,
+      memberRef: opts.memberId ? memberRef(opts.memberId) : undefined,
+      idempotencyKey: opts.idempotencyKey,
+      correlationId: opts.correlationId,
+      triggerType: opts.triggerType,
+      triggerRef: opts.triggerRef,
+      campaignRef: opts.campaignRef,
+      metadata: opts.metadata,
+    });
+
+    const outcome = await provider.send({
       from,
       to: opts.to,
       subject: opts.subject,
@@ -362,43 +459,57 @@ export async function sendEmail(opts: SendEmailOptions): Promise<SendEmailResult
       text: opts.text,
       replyTo: opts.replyTo,
       headers: opts.headers,
-      tags: opts.tags,
-    } as CreateEmailOptions;
+      tags,
+    });
 
-    const { data, error } = await resend.emails.send(payload);
-
-    // THE LOAD-BEARING CHECK. Resend RESOLVES — it does not throw — when the
-    // API rejects a send (429 quota, unverified sender, bad key, bad
-    // recipient). Awaiting without reading `error` reports success for mail
-    // that never left.
-    if (error) {
-      const { kind, name, message } = classifyProviderError(error);
-      // `providerCode` is the provider's raw name, kept verbatim for operators;
+    // THE LOAD-BEARING CHECK, now stated at the boundary rather than inside one
+    // vendor's SDK contract. A provider reports acceptance ONLY when the vendor
+    // took responsibility and issued an id. Everything else is a refusal, and a
+    // refusal is never reported to a caller as a send.
+    if (!outcome.accepted) {
+      const { kind, name, message } = classifyProviderError(outcome.rawError);
+      // `providerCode` is the vendor's raw name, kept verbatim for operators;
       // `failureKind` is our classification, which is what callers branch on.
-      const result = failure(kind, message, name);
-      logSend(opts.purpose, from, toLog, domain, result);
-      return result;
-    }
-
-    // No error AND no message id: the provider did not accept the send. An
-    // unidentifiable send is a failure, not an invented success.
-    if (!data?.id) {
-      const result = failure('provider_error', 'Provider returned no message id');
-      logSend(opts.purpose, from, toLog, domain, result);
+      const result = failure(kind, message, name, ctx);
+      // `stateForFailure` decides what we KNOW happened; `failure_class` records
+      // WHY. A transport exception is indeterminate, not refused — the provider
+      // may have acted before we lost the response.
+      await settleAttempt(attemptId, {
+        state: stateForFailure(kind),
+        failureClass: kind,
+        failureCode: name,
+      });
+      logSend(opts.purpose, from, toLog, domain, result, trace);
       return result;
     }
 
     const result: SendEmailResult = {
       success: true,
-      id: data.id,
+      id: outcome.providerMessageId,
       status: 'sent',
+      provider: provider.name,
+      priority,
     };
-    logSend(opts.purpose, from, toLog, domain, result);
+    await settleAttempt(attemptId, {
+      state: 'accepted',
+      providerMessageId: outcome.providerMessageId,
+    });
+    logSend(opts.purpose, from, toLog, domain, result, trace);
     return result;
   } catch (err) {
     const { name, message } = classifyProviderError(err);
-    const result = failure('exception', message, name);
-    logSend(opts.purpose, from, toLog, domain, result);
+    const result = failure('exception', message, name, ctx);
+    logSend(opts.purpose, from, toLog, domain, result, trace);
     return result;
   }
+}
+
+/**
+ * Provider tags are a constrained namespace (Resend: ASCII letters, digits,
+ * underscore, dash). A purpose like `auth:magic-link` would be rejected
+ * verbatim, and a rejected TAG fails the whole send — turning observability
+ * into an outage. Normalise rather than risk that.
+ */
+function tagSafe(value: string): string {
+  return value.replace(/[^A-Za-z0-9_-]/g, '_').slice(0, 256) || 'unspecified';
 }

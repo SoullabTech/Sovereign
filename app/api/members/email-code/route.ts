@@ -164,6 +164,8 @@ export async function POST(request: NextRequest) {
     // using it.
     const sendResult = await sendEmail({
       purpose: 'auth:email-code',
+      triggerType: 'route',
+      triggerRef: '/api/members/email-code',
       from: SENDERS.noreply,
       to: normalizedEmail,
       subject: `Your Soullab code: ${code}`,

@@ -5,7 +5,7 @@
  * Built on existing Soullab Resend infrastructure
  */
 
-import { Resend } from 'resend';
+import { sendEmail } from '@/lib/email/sendEmail';
 import { readFileSync } from 'fs';
 import { join } from 'path';
 
@@ -84,24 +84,36 @@ export class GaneshaEmailService {
         };
       }
 
-      // Send via Resend
-      const result = await this.resend.emails.send({
+      const result = await sendEmail({
+        purpose: 'broadcast:announcement',
         from: 'Kelly Nezat <kelly@soullab.life>',
         to: recipients.map(r => r.email),
         subject: template.subject,
         html: template.htmlContent,
         text: template.textContent,
+        idempotencyKey: `broadcast:${campaign.templateId}`,
+        metadata: { templateId: campaign.templateId, recipientCount: String(recipients.length) },
       });
 
-      console.log('🚀 [Ganesha Email] Consciousness message delivered!', {
+      // 'delivered!' was logged, and `success: true` returned, without ever
+      // reading the provider's error. A refused campaign reported every
+      // recipient as reached.
+      if (!result.success) {
+        console.error(
+          `❌ [Ganesha Email] REFUSED failureKind=${result.failureKind ?? 'unclassified'} providerCode=${result.providerCode ?? 'unnamed'}`
+        );
+        return { success: false, error: result.error, recipients: 0 };
+      }
+
+      console.log('🚀 [Ganesha Email] Campaign accepted by provider', {
         templateId: campaign.templateId,
         recipients: recipients.length,
-        messageId: result.data?.id
+        messageId: result.id
       });
 
       return {
         success: true,
-        messageId: result.data?.id,
+        messageId: result.id,
         recipients: recipients.length
       };
 

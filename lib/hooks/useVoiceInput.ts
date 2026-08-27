@@ -1,6 +1,31 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { getFeatureFlag } from '@/lib/features/flags';
+import { logVoiceEvent, type VoiceDiagEvent } from '@/lib/voice/voiceDiagnostics';
+
+/** Matches the telemetry sink's own metadata shape exactly. */
+type V5Meta = Record<string, string | number | boolean | null>;
+
+/**
+ * V5 witness emitter — structurally unable to become the defect.
+ *
+ * `logVoiceEvent` is already throw-safe internally, but this hook sits directly
+ * in the recognition and turn-finalization path: if telemetry could throw HERE,
+ * an instrument added to explain lost speech would itself destroy a turn. That
+ * is the bffa557a lesson — a repair that made field behavior worse. So every
+ * emit is wrapped, and the negative-control test mocks logVoiceEvent to throw on
+ * every call and asserts recognition and finalization behave identically.
+ *
+ * Nothing downstream reads the return value; there is no branch on telemetry.
+ */
+function emitV5(event: VoiceDiagEvent, metadata: V5Meta): void {
+  try {
+    logVoiceEvent(event, metadata);
+  } catch {
+    // Never. An instrument that can break the thing it observes is not an
+    // instrument.
+  }
+}
 // Native recorder for iOS (bypasses WKWebView audio issues)
 import {
   isNativeApp,
@@ -96,6 +121,54 @@ export function useVoiceInput({
   const isNativeRef = useRef<boolean>(false);
   const recordingStartTimeRef = useRef<number>(0);
 
+  // ── V5 witness state ──────────────────────────────────────────────────
+  // Observation only. NOTHING in the recognition or commit path branches on
+  // any of these; they are written and read exclusively by emitV5 call sites.
+  const lastResultAtRef = useRef<number>(0);
+  const lastInterimAtRef = useRef<number>(0);
+  const lastFinalAtRef = useRef<number>(0);
+  // The timer closure cannot see `interimTranscript` — it is a local `let`
+  // inside onresult. This ref is how the FIRED event can report whether fresh
+  // interim speech existed at the moment the turn committed, which is the
+  // difference between ordering C/D and ordering E/F.
+  const lastInterimCharsRef = useRef<number>(0);
+  const timerArmedAtRef = useRef<number>(0);
+  const timerDeadlineAtRef = useRef<number>(0);
+  const turnCommitIdRef = useRef<number>(0);
+  const committedRef = useRef<boolean>(false);
+
+  // The recognition handlers are built ONCE at setup, so reading `isRecording`
+  // or `isTranscribing` inside them would report the values captured at build
+  // time — permanently false, and misleading telemetry is worse than none.
+  // Mirrored at render, matching the callback-ref convention already used below.
+  const isRecordingRef = useRef<boolean>(false);
+  const isTranscribingRef = useRef<boolean>(false);
+  isRecordingRef.current = isRecording;
+  isTranscribingRef.current = isTranscribing;
+
+  // ──────────────────────────────────────────────────────────────────────
+  // Callback identity stability.
+  //
+  // Every consumer passes these as inline arrow literals, so they are a NEW
+  // function on every render. They used to sit in the setup effect's dependency
+  // array, which meant the effect re-ran on EVERY RENDER and its cleanup called
+  // `recognition.abort()` on the live instance.
+  //
+  // While dictating, interim results update state, which re-renders, which
+  // aborted the very recognition object producing them — destroying voice input
+  // mid-sentence and surfacing "Voice recognition error: aborted" as if the
+  // member had done something wrong. The abort was real, and we caused it.
+  //
+  // Holding them in refs lets the effect depend only on actual CONFIGURATION,
+  // so the recognition object is built once and survives rendering.
+  // ──────────────────────────────────────────────────────────────────────
+  const onResultRef = useRef(onResult);
+  onResultRef.current = onResult;
+  const onErrorRef = useRef(onError);
+  onErrorRef.current = onError;
+  const onAutoStopRef = useRef(onAutoStop);
+  onAutoStopRef.current = onAutoStop;
+
   useEffect(() => {
     const isNative = Capacitor.isNativePlatform();
     isNativeRef.current = isNative;
@@ -150,6 +223,12 @@ export function useVoiceInput({
           setIsRecording(true);
           setError(null);
           console.log('Voice recognition started');
+          // Witness state resets with the session so `resultAfterCommit` cannot
+          // leak across turns. Observation only.
+          committedRef.current = false;
+          lastInterimCharsRef.current = 0;
+          timerArmedAtRef.current = 0;
+          timerDeadlineAtRef.current = 0;
         };
 
         recognition.onresult = (event) => {
@@ -179,7 +258,44 @@ export function useVoiceInput({
           const fullTranscript = (finalTranscriptRef.current + interimTranscript).trim();
           setTranscript(fullTranscript);
           setConfidence(currentConfidence);
-          onResult(fullTranscript, hasFinalResult);
+          onResultRef.current(fullTranscript, hasFinalResult);
+
+          // ── V5 witness ──────────────────────────────────────────────────
+          // Emitted AFTER the existing handling so nothing above can be delayed
+          // by telemetry. Pure reads and ref writes; no branch below depends on
+          // any of it.
+          {
+            const now = Date.now();
+            const base: V5Meta = {
+              resultIndex: event.resultIndex,
+              resultCount: event.results.length,
+              interimCharCount: interimTranscript.length,
+              finalCharCount: finalTranscriptRef.current.length,
+              msSinceLastResult: lastResultAtRef.current ? now - lastResultAtRef.current : -1,
+              msSinceLastInterim: lastInterimAtRef.current ? now - lastInterimAtRef.current : -1,
+              msSinceLastFinal: lastFinalAtRef.current ? now - lastFinalAtRef.current : -1,
+              timerAgeMs: timerArmedAtRef.current ? now - timerArmedAtRef.current : -1,
+              timerDeadlineMs: timerDeadlineAtRef.current ? timerDeadlineAtRef.current - now : -1,
+              recognitionActive: recognitionRef.current !== null,
+              speechActive: interimTranscript.length > 0,
+              isListening: isRecordingRef.current,
+              isProcessing: isTranscribingRef.current,
+              turnCommitId: turnCommitIdRef.current,
+              resultAfterCommit: committedRef.current,
+            };
+
+            // Ordering F: the browser handed us a result AFTER we submitted the
+            // turn. Observed, never inferred from words a member reports missing.
+            if (committedRef.current) emitV5('voice_result_after_commit', base);
+
+            if (hasFinalResult) emitV5('voice_result_final', base);
+            if (interimTranscript.length > 0) emitV5('voice_result_interim', base);
+
+            lastResultAtRef.current = now;
+            if (hasFinalResult) lastFinalAtRef.current = now;
+            if (interimTranscript.length > 0) lastInterimAtRef.current = now;
+            lastInterimCharsRef.current = interimTranscript.length;
+          }
 
           // Clear existing silence timeout
           if (silenceTimeoutRef.current) {
@@ -188,12 +304,69 @@ export function useVoiceInput({
 
           // Set new silence timeout for auto-stop
           if (continuous && (hasFinalResult || interimTranscript)) {
+            // ── V5 witness: ARMED ────────────────────────────────────────
+            // Note what arms this and what commits it: the condition includes
+            // `interimTranscript`, but the callback below submits
+            // `finalTranscriptRef` ALONE. Interim speech can therefore arm a
+            // timer that will not carry it. Whether that actually costs a
+            // member their words is what the FIRED event is here to establish
+            // — this unit observes it, it does not change it.
+            timerArmedAtRef.current = Date.now();
+            timerDeadlineAtRef.current = timerArmedAtRef.current + silenceTimeoutMs;
+            emitV5('voice_silence_timer_armed', {
+              armedByFinal: hasFinalResult,
+              armedByInterim: interimTranscript.length > 0,
+              interimCharCount: interimTranscript.length,
+              finalCharCount: finalTranscriptRef.current.length,
+              silenceTimeoutMs,
+              timerDeadlineMs: silenceTimeoutMs,
+              turnCommitId: turnCommitIdRef.current,
+            });
+
             silenceTimeoutRef.current = setTimeout(() => {
               const finalText = finalTranscriptRef.current.trim();
+
+              // ── V5 witness: FIRED ──────────────────────────────────────
+              // `interimCharCountAtFire` is the whole point. The timer closure
+              // cannot see `interimTranscript` (a local `let` in onresult), so
+              // without this ref there is no way to tell ordering D — timer
+              // fired while fresh interim speech existed — from a clean commit.
+              const firedAt = Date.now();
+              emitV5('voice_silence_timer_fired', {
+                timerAgeMs: timerArmedAtRef.current ? firedAt - timerArmedAtRef.current : -1,
+                interimCharCountAtFire: lastInterimCharsRef.current,
+                finalCharCount: finalTranscriptRef.current.length,
+                committableCharCount: finalText.length,
+                minSpeechLengthChars,
+                willCommit: finalText.length >= minSpeechLengthChars,
+                msSinceLastInterim: lastInterimAtRef.current ? firedAt - lastInterimAtRef.current : -1,
+                msSinceLastFinal: lastFinalAtRef.current ? firedAt - lastFinalAtRef.current : -1,
+                turnCommitId: turnCommitIdRef.current,
+              });
+
               if (finalText.length >= minSpeechLengthChars) {
+                emitV5('voice_turn_commit_requested', {
+                  turnCommitId: turnCommitIdRef.current + 1,
+                  finalCharCount: finalText.length,
+                  interimCharCountAtCommit: lastInterimCharsRef.current,
+                  recognitionActive: recognitionRef.current !== null,
+                  isListening: isRecordingRef.current,
+                });
+
                 console.log(`🎤 Auto-stopping after ${silenceTimeoutMs}ms silence`);
                 recognition.stop();
-                onAutoStop?.(finalText);
+                onAutoStopRef.current?.(finalText);
+
+                // Set AFTER the real work, so a throw in telemetry could never
+                // sit between stop() and the submit callback.
+                turnCommitIdRef.current += 1;
+                committedRef.current = true;
+                emitV5('voice_turn_committed', {
+                  turnCommitId: turnCommitIdRef.current,
+                  finalCharCount: finalText.length,
+                  interimCharCountAtCommit: lastInterimCharsRef.current,
+                  commitLatencyMs: Date.now() - firedAt,
+                });
               }
             }, silenceTimeoutMs);
           }
@@ -205,6 +378,28 @@ export function useVoiceInput({
         };
 
         recognition.onerror = (event) => {
+          // ──────────────────────────────────────────────────────────────
+          // Routine lifecycle events are NOT errors and must never be shown.
+          //
+          // `aborted` fires every single turn: we abort recognition while MAIA
+          // speaks, to stop her voice feeding back into the mic. Surfacing it
+          // put a red "Voice recognition error: aborted" under the message box
+          // during normal, healthy operation (reported repeatedly from macOS
+          // Safari). Crying wolf on an expected event is worse than silence —
+          // it teaches members that the error line means nothing, so the one
+          // message that DOES matter gets ignored too.
+          //
+          // `no-speech` is likewise routine in continuous mode: it is what the
+          // browser says after any ordinary pause for thought.
+          // ──────────────────────────────────────────────────────────────
+          const benign =
+            event.error === 'aborted' || (event.error === 'no-speech' && continuous);
+          if (benign) {
+            console.log(`[voice] Routine recognition event (${event.error}) — not surfaced`);
+            setIsRecording(false);
+            return;
+          }
+
           let errorMessage = 'Voice recognition error';
 
           switch (event.error) {
@@ -230,13 +425,15 @@ export function useVoiceInput({
               errorMessage = `Language "${language}" not supported.`;
               break;
             default:
-              errorMessage = `Voice recognition error: ${event.error}`;
+              // Never show a raw API error code to a member — it names an
+              // internal state they cannot act on. Say what it means for them.
+              errorMessage = 'Voice input stopped unexpectedly. Tap the mic to try again.';
           }
 
           console.error('Speech recognition error:', event.error);
           setError(errorMessage);
           setIsRecording(false);
-          onError?.(errorMessage);
+          onErrorRef.current?.(errorMessage);
         };
 
         recognition.onend = () => {
@@ -256,7 +453,9 @@ export function useVoiceInput({
         clearTimeout(timeoutRef.current);
       }
     };
-  }, [continuous, interimResults, language, onResult, onError]);
+  // Configuration only. Callbacks are reached through refs above — including
+  // them here rebuilt the recognition object on every render (see note above).
+  }, [continuous, interimResults, language]);
 
   // Request permission explicitly (for UI to call)
   const requestPermission = useCallback(async (): Promise<boolean> => {

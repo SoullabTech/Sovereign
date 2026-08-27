@@ -13,7 +13,8 @@
  *   3. Otherwise → use platform RESEND_API_KEY (managed)
  */
 
-import { Resend } from 'resend';
+import { ResendProvider } from '@/lib/email/providers';
+import { classifyProviderError } from '@/lib/email/sendEmail';
 import {
   getEmailIntegration,
   updateIntegrationStatus,
@@ -42,21 +43,24 @@ export interface EmailResult {
 }
 
 // ============================================================================
-// MANAGED (PLATFORM) RESEND CLIENT
+// MANAGED (PLATFORM) PROVIDER
 // ============================================================================
 
-let managedResend: Resend | null = null;
+/**
+ * The platform's own provider instance. Practitioner bring-your-own keys get
+ * their own instance of the SAME adapter (see sendViaBYO) — a practitioner's
+ * credential must never be able to change WHICH vendor code path runs, only
+ * which account it bills to.
+ */
+let managedProvider: ResendProvider | null = null;
 
-function getManagedResend(): Resend | null {
-  if (!managedResend) {
-    const apiKey = process.env.RESEND_API_KEY;
-    if (!apiKey) {
-      console.warn('[EmailRouter] RESEND_API_KEY not configured');
-      return null;
-    }
-    managedResend = new Resend(apiKey);
+function getManagedProvider(): ResendProvider | null {
+  if (!managedProvider) managedProvider = new ResendProvider();
+  if (!managedProvider.isConfigured()) {
+    console.warn('[EmailRouter] managed email provider is not configured');
+    return null;
   }
-  return managedResend;
+  return managedProvider;
 }
 
 // ============================================================================
@@ -107,7 +111,7 @@ export class EmailRouter {
     payload: EmailPayload,
     config: ResendEmailConfig
   ): Promise<EmailResult> {
-    const resend = new Resend(config.apiKey);
+    const provider = new ResendProvider(config.apiKey);
 
     // Build from address
     const from = config.fromName
@@ -115,7 +119,7 @@ export class EmailRouter {
       : config.fromEmail;
 
     try {
-      const result = await resend.emails.send({
+      const result = await provider.send({
         from,
         to: payload.toName ? `${payload.toName} <${payload.to}>` : payload.to,
         subject: payload.subject,
@@ -125,17 +129,18 @@ export class EmailRouter {
         tags: payload.tags,
       });
 
-      if (result.error) {
+      if (!result.accepted) {
+        const { message } = classifyProviderError(result.rawError);
         // Update status to error
         await updateIntegrationStatus(
           this.practitionerId,
           'email',
           'error',
-          result.error.message
+          message
         );
         return {
           success: false,
-          error: result.error.message,
+          error: message,
           provider: 'resend',
         };
       }
@@ -145,7 +150,7 @@ export class EmailRouter {
 
       return {
         success: true,
-        id: result.data?.id,
+        id: result.providerMessageId,
         provider: 'resend',
       };
     } catch (err) {
@@ -179,8 +184,8 @@ export class EmailRouter {
       replyTo?: string;
     }
   ): Promise<EmailResult> {
-    const resend = getManagedResend();
-    if (!resend) {
+    const provider = getManagedProvider();
+    if (!provider) {
       return {
         success: false,
         error: 'Email service not configured',
@@ -191,7 +196,7 @@ export class EmailRouter {
     const from = `${defaults.fromName} <${defaults.fromEmail}>`;
 
     try {
-      const result = await resend.emails.send({
+      const result = await provider.send({
         from,
         to: payload.toName ? `${payload.toName} <${payload.to}>` : payload.to,
         subject: payload.subject,
@@ -201,17 +206,18 @@ export class EmailRouter {
         tags: payload.tags,
       });
 
-      if (result.error) {
+      if (!result.accepted) {
+        const { message } = classifyProviderError(result.rawError);
         return {
           success: false,
-          error: result.error.message,
+          error: message,
           provider: 'managed',
         };
       }
 
       return {
         success: true,
-        id: result.data?.id,
+        id: result.providerMessageId,
         provider: 'managed',
       };
     } catch (err) {

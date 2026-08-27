@@ -3,10 +3,14 @@
  * Run with: npx tsx scripts/send-beta-update-email.ts
  */
 
-import { Resend } from 'resend';
+import { sendEmail } from '../lib/email/sendEmail';
+
+/** Failures that mean every remaining recipient in this run would fail too. */
+const TRANSPORT_WIDE_FAILURES = new Set<string>([
+  'quota_exceeded', 'provider_auth', 'provider_config', 'not_configured',
+]);
 import { GaneshaContactManager } from '../lib/ganesha/contacts';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
 
 const emailHtml = `
 <!DOCTYPE html>
@@ -127,7 +131,11 @@ async function sendToAllBetaTesters() {
 
   for (const tester of betaTesters) {
     try {
-      const result = await resend.emails.send({
+      const result = await sendEmail({
+        purpose: 'broadcast:update',
+        triggerType: 'script',
+        triggerRef: 'send-beta-update-email',
+        campaignRef: 'beta-signin-fixed',
         from: 'Kelly @ Soullab <kelly@soullab.life>',
         to: tester.email,
         subject: 'MAIA Beta Update: Sign-in Fixed',
@@ -139,7 +147,21 @@ async function sendToAllBetaTesters() {
         ]
       });
 
-      console.log(`✅ Sent to ${tester.name} (${tester.email})`);
+      // The vendor REFUSES by resolving, so this loop counted refusals as
+      // sends: a blast against an exhausted quota reported 100% delivered.
+      if (!result.success) {
+        console.error(
+          `❌ REFUSED for ${tester.name}: failureKind=${result.failureKind ?? 'unclassified'} providerCode=${result.providerCode ?? 'unnamed'}`
+        );
+        failed++;
+        if (TRANSPORT_WIDE_FAILURES.has(result.failureKind ?? '')) {
+          console.error(`⛔ ABORTING — ${result.failureKind} is transport-wide; remaining recipients not attempted.`);
+          break;
+        }
+        continue;
+      }
+
+      console.log(`✅ Sent to ${tester.name}`);
       sent++;
 
       // Rate limit: wait 500ms between emails
