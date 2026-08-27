@@ -215,7 +215,31 @@ EVIDENCE LABEL  the intake-refusal proof is CONTRACT-LEVEL. intakeMessage is
                 defects are fixed and any one could explain what was seen.
                 A successful deploy does not adjudicate which mattered.
 
-DEPLOY          CLEARED TO DEPLOY — founder's act. One candidate, not three.
+PRODUCTION      cc3ef9cbe  deployed 2026-08-27 · VERIFIED THREE WAYS (D-007)
+                  env var  — GIT_COMMIT == cc3ef9cbe (gate-verified at swap)
+                  lane     — DEPLOY_LANE == deploy-lane
+                  artifact — three strings that exist ONLY in this candidate,
+                             found in BOTH client chunks and server bundles:
+                               "Carried without a heading"     → WS2-01C rail
+                               "reading the cuts in that text" → WS2-01B intake
+                               "not on your shelf"             → WS2-01A refusal
+                             and the canvas client chunk moved
+                               page-5548396c41e9eeee.js  (c9b0574db)
+                             → page-aa2819994ea12707.js  (cc3ef9cbe)
+
+                ⚠ WHY THE ARTIFACT LEG EARNED ITS KEEP HERE. Every builder
+                layer in the deploy log reported CACHED, including `COPY . .`
+                and `npm run build`. GIT_COMMIT is a build-arg consumed in the
+                RUNNER stage, so it stamps the container without busting the
+                builder cache: printenv proves the STAMP, never the CODE. The
+                cache hits turned out benign — a second run of the same deploy
+                — but that was established by the artifact grep, not assumed
+                from the stamp. Carry this forward: on any deploy whose build
+                log is all-CACHED, the env var alone is not evidence.
+
+PREDECESSOR     0d66a5a27  (A only) · c9b0574db · 1feec9b1d — all verified two ways
+
+DEPLOY          DONE — cc3ef9cbe. One candidate, not three.
                 A + B + C ship together; C alone gives no verification path
                 and would force a second deploy immediately after.
                   ssh soullab@minisforum 'cd ~/MAIA-SOVEREIGN \
