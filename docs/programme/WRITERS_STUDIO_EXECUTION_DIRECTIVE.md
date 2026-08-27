@@ -161,7 +161,7 @@ importance, and importance is the writer's to assign.
 | 6 | **GATHER-02** — documents, notes, transcripts, recordings, images, links, prior drafts, with provenance visible | **DEPLOYED** `cd8a95271` |
 | 7 | **DE-02** — form-sensitive lenses, finding lineage, incremental re-analysis, material-aware reading | **DEPLOYED** `cd8a95271` |
 | 8 | **READER-01** — cumulative reader knowledge: what the Work has made available by a point. No personas, no deficit scores | **DEPLOYED** `cd8a95271` |
-| 9 | **STRUCTURE-02** — member-defined structure, movement and threads, no universal chapter ontology | ⛔ **HELD** until the founder's walk |
+| 9 | **STRUCTURE-02** — member-defined structure as **MAIA's attentional architecture**, not an organizing feature. Movements and threads, no universal chapter ontology | ⛔ **HELD** until the founder's walk |
 | 10 | **MEMORY** — source → material → observation → recognition → decision → adopted change, inspectable end to end | |
 | 11 | **SAFE EDIT** — explicit request only: snapshot → proposal → diff → accept or reject | |
 | 12 | **EXPRESSION** — book → lecture, course, essay, audio. Genuine re-expression, not format conversion | |
@@ -254,9 +254,21 @@ omniscient assistant hovering over the manuscript, continuously interpreting,
 rather than a companion whose attention has shape and locality. Context-rich is
 not the same as present.
 
-The eventual answer likely belongs to **STRUCTURE-02**: MAIA knows where the
-writer is, what movement they are inside, what nearby material is active, and
-what history is relevant — *situated*, not indiscriminate ingestion every turn.
+The eventual answer likely belongs to **STRUCTURE-02**, whose definition this
+changes. It is no longer an organizational feature. It is part of **MAIA's
+attentional architecture** — the mechanism by which structure determines:
+
+- where MAIA's attention is currently located
+- what material is proximal
+- what prior observations are relevant
+- what revision history belongs to the present moment
+- **and what should remain outside attention**
+
+That last line is not a footnote. **Situated intelligence requires not only
+access, but exclusion.** A companion given everything has attention with no
+shape, and attention with no shape is not attention. Whatever STRUCTURE-02
+eventually becomes, it is judged on what it withholds as much as on what it
+supplies.
 
 Which makes the walk's real question larger than a context window:
 
