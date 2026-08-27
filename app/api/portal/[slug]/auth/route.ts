@@ -11,6 +11,7 @@ export async function generateStaticParams() { return []; }
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
 import { cookies } from 'next/headers';
+import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 
 export async function GET(
   request: NextRequest,
@@ -57,13 +58,19 @@ export async function GET(
 
     // Get session from cookies or headers
     const cookieStore = await cookies();
-    const sessionToken = cookieStore.get('session_token')?.value;
-    const memberId = cookieStore.get('member_id')?.value;
-
-    // Also check localStorage sync (sent as header)
-    const authHeader = request.headers.get('x-member-id');
-
-    const effectiveMemberId = memberId || authHeader;
+    // AUTH-BOUNDARY-02 — caller identity from a verified session only.
+    //
+    // This previously resolved the caller as `member_id` cookie || `x-member-id`
+    // header. Both are client-authored, and neither was validated against any
+    // session record — the `session_token` cookie was read and never used. The
+    // ownership check further down (`practitioner.member_id !== caller`) was
+    // therefore comparing the practitioner's owner against a value the caller
+    // had just chosen, so naming a practitioner's member id returned that
+    // practitioner's profile, including their name and email.
+    //
+    // The ownership comparison itself is correct and is left untouched: this
+    // repairs who the caller IS, not what they may reach.
+    const effectiveMemberId = await getMemberIdFromRequest(request);
 
     if (!effectiveMemberId) {
       return NextResponse.json(

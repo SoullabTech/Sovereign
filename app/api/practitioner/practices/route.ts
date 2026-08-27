@@ -11,33 +11,27 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
 import { getMemberIdIfAuthenticated } from '@/lib/auth/session';
-import { headers } from 'next/headers';
 
-const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /**
  * Get member ID from session (preferred) or x-member-id header (fallback).
  * Returns null if neither is available/valid.
  */
 async function getMemberIdWithFallback(): Promise<string | null> {
-  // Try session auth first (cookie or x-session-token)
-  const sessionMemberId = await getMemberIdIfAuthenticated();
-  if (sessionMemberId) {
-    return sessionMemberId;
-  }
-
-  // Fallback: x-member-id header (for beta/local development)
-  const headerStore = await headers();
-  const headerMemberId = headerStore.get('x-member-id');
-  if (headerMemberId && UUID_REGEX.test(headerMemberId)) {
-    // Verify member exists
-    const result = await query('SELECT id FROM members WHERE id = $1', [headerMemberId]);
-    if (result.rows.length > 0) {
-      return headerMemberId;
-    }
-  }
-
-  return null;
+  // AUTH-BOUNDARY-02 — THE FALLBACK IS GONE, and the name is kept only so no
+  // call site changes in this repair.
+  //
+  // The removed branch read `x-member-id`, checked the UUID shape, confirmed the
+  // member EXISTED, and returned it as the caller. Its comment said "for
+  // beta/local development", but nothing scoped it to development: it ran in
+  // production, on every request, and it is the same existence-check
+  // impersonation that `lib/auth/getMemberFromRequest.ts:19-27` documents as
+  // fixed. A UUID regex constrains the SHAPE of the claim, never its truth.
+  //
+  // Session auth was already tried first, so a member with a real session is
+  // unaffected — the only caller this refuses is one who had no session and was
+  // relying on naming a member id.
+  return getMemberIdIfAuthenticated();
 }
 
 export async function GET() {

@@ -9,6 +9,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
+import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import {
   checkForUpgradePrompt,
   recordPromptShown,
@@ -22,7 +23,11 @@ import {
 
 export async function GET(request: NextRequest) {
   try {
-    const memberId = request.headers.get('x-member-id');
+    // AUTH-BOUNDARY-02: caller identity from a verified session, never from a
+    // header. This route reads the caller's own tier and records prompt
+    // responses against them, so a forged `x-member-id` chose whose pricing
+    // state was read and written.
+    const memberId = await getMemberIdFromRequest(request);
     if (!memberId) {
       return NextResponse.json({ prompt: null }, { status: 200 });
     }
@@ -91,7 +96,11 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const memberId = request.headers.get('x-member-id');
+    // AUTH-BOUNDARY-02: caller identity from a verified session, never from a
+    // header. This route reads the caller's own tier and records prompt
+    // responses against them, so a forged `x-member-id` chose whose pricing
+    // state was read and written.
+    const memberId = await getMemberIdFromRequest(request);
     if (!memberId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }

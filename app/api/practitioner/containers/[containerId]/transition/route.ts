@@ -14,12 +14,25 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
+import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 
+/**
+ * AUTH-BOUNDARY-02 — caller identity comes from a verified credential.
+ *
+ * This used to read `x-member-id`, confirm the id EXISTED in `members`, and
+ * return it as the caller. Existence is not authentication: member UUIDs are
+ * handed to clients routinely, so any caller could name a member and become
+ * them. The ownership check below was then asked the wrong question — not
+ * "does the caller own this practice" but "does the named member own it".
+ *
+ * `getMemberIdFromRequest` validates a session against `auth_sessions` and
+ * rejects an `x-member-id` that disagrees with it. The shape of this function is
+ * unchanged so every call site and every ownership check below is untouched:
+ * this repairs caller provenance only, not authorization.
+ */
 async function getMemberFromRequest(request: NextRequest): Promise<{ id: string } | null> {
-  const memberId = request.headers.get('x-member-id');
-  if (!memberId) return null;
-  const result = await query('SELECT id FROM members WHERE id = $1', [memberId]);
-  return result.rows.length > 0 ? { id: memberId } : null;
+  const memberId = await getMemberIdFromRequest(request);
+  return memberId ? { id: memberId } : null;
 }
 
 async function verifyContainerAccess(containerId: string, memberId: string): Promise<boolean> {
