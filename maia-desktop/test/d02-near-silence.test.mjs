@@ -1,0 +1,114 @@
+// MAIA-D02 — the near-silence dispatch gate.
+//
+// On the long walk of 2026-08-27, MAIA received a Whisper hallucination — one
+// phrase repeated thirty times, produced from twenty seconds of room tone — and
+// answered it as speech: "that's not a thought, that's something trying to
+// break through." She offered interpretation of words the member never said.
+// These assertions keep that from reaching her, and keep the gate honest about
+// the two ways it could itself go wrong: discarding real speech, or discarding
+// anything silently.
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { createRequire } from 'node:module';
+
+const require = createRequire(import.meta.url);
+const { createConversation, SILENCE_RMS_X1000, SILENCE_PEAK_X1000, visibleText } = require('../src/conversation.js');
+
+/** Mono audio at a chosen amplitude, so a fixture can state its own level. */
+const at = (n, amp) => Float32Array.from({ length: n }, (_, i) => Math.sin(i / 3) * amp);
+
+function mk() {
+  const sent = [];
+  const events = [];
+  const conv = createConversation({
+    session: { authedFetch: async (p) => { sent.push(p); return { ok: true, status: 200, res: { json: async () => ({ transcription: 'x' }) } }; } },
+    diagnostics: { emit: (n, m) => events.push([n, m]) },
+    sessionId: 'x',
+  });
+  return { conv, sent, events };
+}
+
+test('room tone is not dispatched — the hallucination never reaches MAIA', async () => {
+  const { conv, sent } = mk();
+  // The actual failing turn: peakX1000=127 rmsX1000=8.
+  const out = await conv.transcribe(at(16000 * 20, 0.008), 16000);
+  assert.equal(out.ok, false);
+  assert.equal(out.gated, true);
+  assert.deepEqual(sent, [], 'near-silence was still sent to Whisper');
+});
+
+test('the gate is NEVER silent — the member is told in words', async () => {
+  const { conv, events } = mk();
+  const out = await conv.transcribe(at(1600, 0.008), 16000);
+  assert.match(out.error, /near-silence/i, 'the member is not told why nothing happened');
+  assert.match(out.error, /say it again/i, 'the member is not told what to do');
+  assert.ok(events.some(([n, m]) => n === 'voice_transcribe_error' && m.errorName === 'near_silence'),
+    'the gate leaves no diagnostic trace');
+  // Level is still reported, so a mis-tuned threshold is visible rather than invisible.
+  assert.ok(events.some(([n, m]) => n === 'voice_transcribe_sent' && m.rmsX1000 !== undefined),
+    'a gated turn reports no level — the threshold could not be re-tuned from the field');
+});
+
+test('⛔ the threshold sits BELOW the observed gap, erring toward sending', () => {
+  // Walk data: bad turns ran rms 7–33, good turns 54–148. A cut at 40 would
+  // separate them perfectly and would be wrong — quiet real speech is a far
+  // worse loss than an occasional hallucination, per the tail invariant.
+  assert.ok(SILENCE_RMS_X1000 <= 20,
+    `threshold ${SILENCE_RMS_X1000} is inside the ambiguous band — it will discard real speech`);
+});
+
+test('quiet but real speech is still sent — every level observed to carry words', async () => {
+  // The second walk produced real transcripts at rms 19, 24, 32 and 42. A cut
+  // at the "clean gap" of 40 would have discarded three of the four. Each is
+  // asserted individually so a future tightening cannot pass by averaging.
+  for (const [amp, label] of [[0.027, 'rms~19 · 39 chars'], [0.034, 'rms~24 · 126 chars'],
+                              [0.045, 'rms~32 · 56 chars'], [0.06, 'rms~42 · 95 chars']]) {
+    const { conv, sent } = mk();
+    const out = await conv.transcribe(at(16000, amp), 16000);
+    assert.equal(out.ok, true, `discarded real speech at ${label} — the tail invariant is broken`);
+    assert.equal(sent.length, 1, `nothing was sent at ${label}`);
+  }
+});
+
+test('the threshold clears the quietest real speech observed, with margin', () => {
+  // Loudest confirmed room tone: 9. Quietest confirmed real speech: 19.
+  assert.ok(SILENCE_RMS_X1000 > 9, 'the gate no longer catches confirmed room tone');
+  assert.ok(SILENCE_RMS_X1000 < 19 - 3, 'the gate sits too close to real speech observed in the field');
+});
+
+test('a transcript of only invisible characters is not a turn', () => {
+  // Whisper's other hallucination shape: zero-width and bidi formatting marks.
+  // `.trim()` leaves them, so the transcript passed the empty check and reached
+  // MAIA, who answered "nothing readable on my end". She should not be asked.
+  assert.equal(visibleText('\u200E\u200E\u200F\u202A\uFEFF   \u200B'), '');
+  assert.equal(visibleText('  hello  '), 'hello', 'real text was damaged by the filter');
+  assert.equal(visibleText('caf\u00E9 — naïve'), 'caf\u00E9 — naïve', 'accents or dashes were stripped');
+  assert.equal(visibleText(null), '');
+});
+
+test('a loud transient alone does not open the gate, and does not close it', async () => {
+  // Either signal alone is ambiguous: a door slam lifts peak without rms;
+  // distant speech lifts rms without peak. Both must be low to gate.
+  const { conv, sent } = mk();
+  const quiet = at(16000, 0.005);
+  quiet[0] = 0.9;                       // one loud sample: peak high, rms still tiny
+  await conv.transcribe(quiet, 16000);
+  assert.equal(sent.length, 1, 'a single transient was treated as speech-free and dropped');
+  assert.ok(SILENCE_PEAK_X1000 > 0);
+});
+
+test('the transcribe path actually USES the invisible-character filter', async () => {
+  // NC-23 caught this: asserting visibleText() directly passes even when
+  // transcribe() stops calling it. The guard has to bite on the real path.
+  const events = [];
+  const conv = createConversation({
+    session: { authedFetch: async () => ({ ok: true, status: 200, res: { json: async () => ({ transcription: '‎‎‏﻿  ​' }) } }) },
+    diagnostics: { emit: (n, m) => events.push([n, m]) },
+    sessionId: 'x',
+  });
+  const out = await conv.transcribe(at(16000, 0.3), 16000);
+  assert.equal(out.ok, true);
+  assert.equal(out.text, '', 'an invisible-only transcript reached MAIA as if it were speech');
+  const result = events.find(([n]) => n === 'voice_transcribe_result')[1];
+  assert.equal(result.chars, 0, `chars reported ${result.chars} for a transcript with nothing in it`);
+});

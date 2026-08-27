@@ -9,12 +9,15 @@ import { readFileSync, readdirSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
+import { RATIFIED_INVOKE_CHANNELS, INVOKE_CHANNEL_NAMES, PUSH_CHANNEL_NAMES } from './desktop-preload-allowlist.mjs';
 
 const require = createRequire(import.meta.url);
 const here = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(here, '..', '..', '..');
 const src = path.join(repoRoot, 'jarvis-desktop', 'src');
 const GOV = require(path.join(src, 'governance.js'));
+// MAIA-D00A: the ratified channel allow-list lives in ONE place now, with the
+// review that authorized each channel. See desktop-preload-allowlist.mjs.
 const PROV = require(path.join(src, 'provenance.js'));
 
 function code(file) {
@@ -78,8 +81,22 @@ console.log('==================== F2 — governed action, no new authority =====
   // The real property: the governance path composes NOTHING itself — it runs
   // the argv GOV built, and main.js carries no governance verb of its own.
   const govHandler = /ipcMain\.handle\('jarvis:governance-action'[\s\S]*$/.exec(mainJs)[0];
+  // MAIA-D00A instrument repair. This assertion previously matched the literal
+  // string `execFileSync('node', built.argv`. JOP-04b deliberately replaced the
+  // bare command name with a RESOLVED node path — "name the builder's node, not
+  // Electron's" — so the assertion went red while the property it cares about
+  // (argv is GOV-composed and passed through unmodified) never stopped holding.
+  // The token was stale, not the boundary. Repaired to test the property, and
+  // TIGHTENED while we are here: the old form would have accepted the bare,
+  // PATH-dependent `'node'`; the new second assertion forbids any string-literal
+  // executable in this handler outright.
+  const govArgvCall = /execFileSync\(\s*([A-Za-z0-9_.]+)\s*,\s*built\.argv\b/.exec(govHandler);
   report('governance path runs GOV-composed argv, never a hand-built command',
-    govHandler.includes('GOV.buildGovernanceArgv') && govHandler.includes('execFileSync(\'node\', built.argv'));
+    govHandler.includes('GOV.buildGovernanceArgv') && !!govArgvCall,
+    govArgvCall ? `built.argv passed unmodified to ${govArgvCall[1]}` : 'no execFileSync(<node>, built.argv)');
+  report('the governance executable is a resolved node path, never a bare command name',
+    !!govArgvCall && govArgvCall[1].endsWith('.path') && !/execFileSync\(\s*['"]/.test(govHandler),
+    govArgvCall ? govArgvCall[1] : 'none');
   report('main.js contains no governance verb string of its own',
     !/['"](recover|reconcile)['"]/.test(mainJs), 'no inline verbs');
   report('main.js never rewrites a non-zero exit into success',
@@ -229,11 +246,26 @@ console.log('\n=========== B — repo-root authority: conflict must not read cle
   // carry the field so an absent key can never be read as "no conflict".
   const mainJs = code('main.js');
   report('resolver passes conflictingConfigRoot into provenance', /conflictingConfigRoot: RESOLVED\.conflictingConfigRoot/.test(mainJs));
-  const resolverLiterals = (mainJs.match(/\{[^{}]*\bresolution:[^{}]*\}/g) || [])
+  // MAIA-D00A instrument repair. The old selector took every {..root..resolution..}
+  // literal, which also swept in the jarvis:status PAYLOAD — a CONSUMER that
+  // merely reads RESOLVED.resolution and has no business declaring a resolver
+  // field. One false positive, and the guard read as a boundary defect that did
+  // not exist. Discriminate by vocabulary instead: a resolver return WRITES a
+  // PROV.RESOLUTION.* constant; a consumer READS RESOLVED.resolution. This is
+  // not a loosening — any genuinely new resolver return must assign the same
+  // constant vocabulary, so it is still selected and still has to declare the
+  // field. And the partition below closes the gap the old form left open: no
+  // THIRD kind of {root, resolution} literal can now appear unclassified.
+  const rootResolutionLiterals = (mainJs.match(/\{[^{}]*\bresolution:[^{}]*\}/g) || [])
     .filter(l => /\broot:/.test(l));
+  const resolverLiterals = rootResolutionLiterals.filter(l => /\bresolution:\s*PROV\.RESOLUTION\./.test(l));
+  const consumerLiterals = rootResolutionLiterals.filter(l => /\bresolution:\s*RESOLVED\.resolution\b/.test(l));
   report('every resolver return declares conflictingConfigRoot',
     resolverLiterals.length >= 5 && resolverLiterals.every(l => l.includes('conflictingConfigRoot')),
     `${resolverLiterals.length} resolver literal(s)`);
+  report('every {root, resolution} literal is either a resolver return or a RESOLVED consumer',
+    resolverLiterals.length + consumerLiterals.length === rootResolutionLiterals.length,
+    `${resolverLiterals.length} resolver + ${consumerLiterals.length} consumer / ${rootResolutionLiterals.length} total`);
   report('the Preferences surface still carries the conflict as a problem',
     /problem: RESOLVED\.configProblem/.test(mainJs));
   report('precedence unchanged — env is still tested before saved config',
@@ -300,32 +332,38 @@ console.log('\n==================== exclusions the ruling required =============
   // subset-check would let the next addition through silently. Note also that
   // none of the three lets the renderer SET a path — chooseRepo runs the native
   // dialog in main, so validation and persistence never cross the bridge.
-  // JCR-PROOF-01 (2026-08-16) — the list is NINE, reviewed, and still EXACT.
-  //
-  // The guard caught a real widening and that fact is preserved, not erased:
-  // Alpha Floor added `mechanism-status` and `run-work-unit` for the C0→Builder
-  // wire and did not update its own guard, so this assertion has been red on
-  // 029b7aa98 itself. Both additions are authorized — they are the wire the
-  // founder ruled on — and each is named below so the next addition still has
-  // to come here and argue for itself. Deliberately NOT loosened to
-  // "at least these": a subset check lets the next one through silently.
-  report('preload exposes exactly the nine reviewed channels',
-    JSON.stringify(channels) === JSON.stringify([
-      'jarvis:capabilities',       // read: capability registry
-      'jarvis:choose-repo',        // native picker; renderer cannot SET a path
-      'jarvis:clear-repo',         // unbind
-      'jarvis:governance-action',  // runs the governor's own CLI, invents nothing
-      'jarvis:mechanism-status',   // read: is the bound repo carrying the mechanism
-      'jarvis:repo-config',        // read: current binding
-      'jarvis:run-work-unit',      // the governed local-native wire (C0→Builder)
-      'jarvis:status',             // read: runtime status
-      'jarvis:submit-task',        // routed submission; C3 is NOT executed
-    ]), channels.join(', '));
+  // JCR-PROOF-01 (2026-08-16) — the list was NINE, reviewed, and EXACT.
+  // MAIA-D00A (2026-08-25) — it is now TEN. `reveal-workspace` was added by
+  // JOP-04 without re-review; this unit reviewed it against the five questions
+  // (required · authorized · minimal · main-validated · doctrine-compatible),
+  // ratified it, and moved the whole list into desktop-preload-allowlist.mjs so
+  // there is exactly ONE place to come and argue for the next addition. The
+  // list stays EXACT and is NOT relaxed to a subset check: a subset check is
+  // precisely what would let the eleventh channel through silently.
+  report(`preload exposes exactly the ${INVOKE_CHANNEL_NAMES.length} ratified channels`,
+    JSON.stringify(channels) === JSON.stringify(INVOKE_CHANNEL_NAMES), channels.join(', '));
+  report('every ratified channel carries a documented purpose and a naming ruling',
+    RATIFIED_INVOKE_CHANNELS.every(c => typeof c.purpose === 'string' && c.purpose.length > 40
+      && typeof c.ratified_in === 'string' && c.ratified_in.length > 0),
+    `${RATIFIED_INVOKE_CHANNELS.length} entries`);
+
+  // MAIA-D00A hardening — the three properties that make `reveal-workspace`
+  // minimal are now ASSERTED rather than merely argued in a comment.
+  report('revealWorkspace forwards no argument across the bridge',
+    /revealWorkspace:\s*\(\)\s*=>\s*ipcRenderer\.invoke\('jarvis:reveal-workspace'\)/.test(preload));
+  const revealHandler = /ipcMain\.handle\('jarvis:reveal-workspace',[\s\S]*?\n\}\);/.exec(code('main.js'))[0];
+  report('the reveal handler declares no parameter, so no renderer value can reach it',
+    /ipcMain\.handle\('jarvis:reveal-workspace',\s*async\s*\(\s*\)\s*=>/.test(revealHandler));
+  report('the reveal handler short-circuits an unbound root before touching shell',
+    revealHandler.indexOf('revealed: false') < revealHandler.indexOf('shell.showItemInFolder'));
+  report('main.js reveals only — it never opens or executes a path',
+    !/shell\.openPath\s*\(/.test(code('main.js')) && !/shell\.openExternal\s*\(/.test(code('main.js')));
+
   // The original guard only counted invoke() channels, so a push channel could
   // have been added without it noticing. Pin those too.
   const pushed = [...preload.matchAll(/ipcRenderer\.on\('([^']+)'/g)].map(m => m[1]).sort();
-  report('preload subscribes to exactly one push channel',
-    JSON.stringify(pushed) === JSON.stringify(['jarvis:repo-changed']), pushed.join(', '));
+  report(`preload subscribes to exactly the ${PUSH_CHANNEL_NAMES.length} ratified push channel(s)`,
+    JSON.stringify(pushed) === JSON.stringify(PUSH_CHANNEL_NAMES), pushed.join(', '));
   report('F4 capability surface untouched', code('capability-form.js').includes('validateSubmission'));
   report('no week-long acceptance is asserted anywhere', !all.includes('seven days') && !all.includes('Alpha passed'));
 }
