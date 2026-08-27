@@ -46,17 +46,42 @@ const TURNS_PATH = '/api/conversation/turns';
 //     rms  7  8  9 14 16 16 18 23 28 30 33   loops, fragments, invented text
 //     rms 54 70 72 76 77 86 87 99 139 148    accurate transcription
 //
-// ⛔ THE THRESHOLD IS DELIBERATELY BELOW THE GAP. The data separates cleanly
-// around 40, and 40 would be the tempting choice. It is the wrong one: the tail
-// invariant says a member's speech is never silently discarded, and quiet real
-// speech near the boundary is a far worse loss than an occasional hallucination
-// getting through. So the cut is at 15 — it catches only what is unambiguously
-// room tone, and errs toward sending.
+// ⛔ THE THRESHOLD IS DELIBERATELY BELOW THE GAP. The first walk separated
+// cleanly around 40 and 40 was the tempting choice. A second walk settled it:
+//
+//     rms 19 → 39 chars    rms 24 → 126 chars
+//     rms 32 → 56 chars    rms 42 →  95 chars
+//
+// all four genuine speech. A cut at 40 would have discarded three of them. The
+// tail invariant says a member's speech is never silently discarded, and quiet
+// real speech is a far worse loss than an occasional hallucination getting
+// through — so the gap in the first sample was not a boundary, it was an
+// artifact of that sample.
+//
+// The cut is 12: below the quietest real speech observed (19) with margin, and
+// above the loudest confirmed room tone (9) with margin. It moves DOWN on new
+// evidence of quiet speech; it does not move up to catch more hallucinations.
 //
 // ⛔ AND IT IS NEVER SILENT. A gated turn is reported to the member in words.
 // Discarding audio without saying so is the exact failure the epoch machine one
 // layer down exists to prevent; this gate does not get an exemption from it.
-const SILENCE_RMS_X1000 = 15;
+// A second hallucination shape, seen on the same walk: instead of a repeated
+// phrase, Whisper emitted a run of INVISIBLE characters — zero-width spaces and
+// bidi formatting marks. `.trim()` does not remove those, so the transcript
+// passed the "is it empty?" check and reached MAIA, who answered "that one came
+// through as noise — nothing readable on my end." She was right, and she should
+// never have been asked.
+//
+// This is a separate layer from the level gate below and both are needed: the
+// level gate cannot see the transcript, and this cannot see the audio.
+const INVISIBLE = /[\u00AD\u061C\u180E\u200B-\u200F\u202A-\u202E\u2060-\u2064\u2066-\u206F\uFEFF]/g;
+
+/** The transcript with zero-width and directional marks removed. */
+function visibleText(text) {
+  return String(text || '').replace(INVISIBLE, '').trim();
+}
+
+const SILENCE_RMS_X1000 = 12;
 const SILENCE_PEAK_X1000 = 350;
 
 // ⛔ RETRACTED 2026-08-27. A TRANSPORT_CEILING_BYTES of 460 KB used to live
@@ -293,8 +318,11 @@ function createConversation({ session, diagnostics, sessionId }) {
     }
 
     const data = await out.res.json();
-    const text = (data && data.transcription) || '';
-    diagnostics.emit('voice_transcribe_result', { chars: text.trim().length });
+    // ⭐ Visible characters only. A transcript of nothing but formatting marks is
+    // not something the member said, and `chars` must count what MAIA would
+    // actually receive — otherwise the diagnostics report a turn that isn't one.
+    const text = visibleText(data && data.transcription);
+    diagnostics.emit('voice_transcribe_result', { chars: text.length });
     return { ok: true, text };
   }
 
@@ -333,5 +361,5 @@ function createConversation({ session, diagnostics, sessionId }) {
 module.exports = {
   createConversation, explain, readErrorBody, multipartWav, BOUNDARY,
   TRANSCRIBE_PATH, MAIA_PATH, TURNS_PATH,
-  SILENCE_RMS_X1000, SILENCE_PEAK_X1000,
+  SILENCE_RMS_X1000, SILENCE_PEAK_X1000, visibleText,
 };

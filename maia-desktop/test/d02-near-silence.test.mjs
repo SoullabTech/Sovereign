@@ -12,7 +12,7 @@ import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
 
 const require = createRequire(import.meta.url);
-const { createConversation, SILENCE_RMS_X1000, SILENCE_PEAK_X1000 } = require('../src/conversation.js');
+const { createConversation, SILENCE_RMS_X1000, SILENCE_PEAK_X1000, visibleText } = require('../src/conversation.js');
 
 /** Mono audio at a chosen amplitude, so a fixture can state its own level. */
 const at = (n, amp) => Float32Array.from({ length: n }, (_, i) => Math.sin(i / 3) * amp);
@@ -57,12 +57,33 @@ test('⛔ the threshold sits BELOW the observed gap, erring toward sending', () 
     `threshold ${SILENCE_RMS_X1000} is inside the ambiguous band — it will discard real speech`);
 });
 
-test('quiet but real speech is still sent', async () => {
-  const { conv, sent } = mk();
-  // rms ~33: garbage on the walk, but inside the ambiguous band — must pass.
-  const out = await conv.transcribe(at(16000, 0.047), 16000);
-  assert.equal(out.ok, true, 'quiet speech was discarded — this is the tail invariant broken');
-  assert.equal(sent.length, 1);
+test('quiet but real speech is still sent — every level observed to carry words', async () => {
+  // The second walk produced real transcripts at rms 19, 24, 32 and 42. A cut
+  // at the "clean gap" of 40 would have discarded three of the four. Each is
+  // asserted individually so a future tightening cannot pass by averaging.
+  for (const [amp, label] of [[0.027, 'rms~19 · 39 chars'], [0.034, 'rms~24 · 126 chars'],
+                              [0.045, 'rms~32 · 56 chars'], [0.06, 'rms~42 · 95 chars']]) {
+    const { conv, sent } = mk();
+    const out = await conv.transcribe(at(16000, amp), 16000);
+    assert.equal(out.ok, true, `discarded real speech at ${label} — the tail invariant is broken`);
+    assert.equal(sent.length, 1, `nothing was sent at ${label}`);
+  }
+});
+
+test('the threshold clears the quietest real speech observed, with margin', () => {
+  // Loudest confirmed room tone: 9. Quietest confirmed real speech: 19.
+  assert.ok(SILENCE_RMS_X1000 > 9, 'the gate no longer catches confirmed room tone');
+  assert.ok(SILENCE_RMS_X1000 < 19 - 3, 'the gate sits too close to real speech observed in the field');
+});
+
+test('a transcript of only invisible characters is not a turn', () => {
+  // Whisper's other hallucination shape: zero-width and bidi formatting marks.
+  // `.trim()` leaves them, so the transcript passed the empty check and reached
+  // MAIA, who answered "nothing readable on my end". She should not be asked.
+  assert.equal(visibleText('\u200E\u200E\u200F\u202A\uFEFF   \u200B'), '');
+  assert.equal(visibleText('  hello  '), 'hello', 'real text was damaged by the filter');
+  assert.equal(visibleText('caf\u00E9 — naïve'), 'caf\u00E9 — naïve', 'accents or dashes were stripped');
+  assert.equal(visibleText(null), '');
 });
 
 test('a loud transient alone does not open the gate, and does not close it', async () => {
