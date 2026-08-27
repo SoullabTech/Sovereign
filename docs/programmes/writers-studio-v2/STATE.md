@@ -22,11 +22,19 @@ CURRENT         WS2-00 — product contract
                 (DESIGN-CONTRACT.md §0 / DECISIONS.md D-006)
 
 OPEN            WS2-01 — work/manuscript/content identity
-                  deployed artifact          PASS
-                  negative identity probe    PASS
-                  two-writing click witness  REQUIRED
-                  full read-path audit       REQUIRED  (inside the unit)
-                  regression pin             REQUIRED
+                  deployed artifact            PASS
+                  negative identity probe      PASS
+                  full read-path audit         PASS  (1f836d1a7)
+                  observed click defect        WITNESS REQUIRED
+                  F-1 fixed                    REQUIRED
+                  F-2/F-3 contract corrected   REQUIRED
+                  F-4 drift points pinned      REQUIRED
+                  F-5 (legacy Press ingress)   REQUIRED — admitted, D-011
+                  D-008 regression pin         REQUIRED
+
+                A clean two-click witness no longer closes this unit. It
+                establishes that the OBSERVED instance is gone; F-1 is
+                proven live by audit independently of any click.
 
                   90f447cd8  refuse to substitute a manuscript not asked for
                              ✅ PROVEN IN PRODUCTION — negative probe passed:
@@ -37,10 +45,18 @@ OPEN            WS2-01 — work/manuscript/content identity
                              click path and the direct path behave identically
                              LIVE AND VERIFIED IN THE IMAGE; behaviour on the
                              click path NOT YET WALKED — deployed ≠ observed
-                The click witness proves the observed defect is gone.
-                The read-path audit establishes the unit's identity
-                invariant. The regression pin is the durable closure.
-                All three are inside WS2-01; none of them follows it.
+                Governing rule is D-010 — identity custody at the emitting
+                control: a control that claims to open a particular writing
+                must either emit that writing's exact identity or refuse to
+                open. Absence, loss and invalidity must never collapse into
+                "open something else."
+
+                D-008 binds the consumer, D-010 binds the producer. The audit
+                (WS2-01-READ-PATH-AUDIT.md) located the defect class: data
+                ownership is sound; client identity custody is not.
+
+                Fixes are held until the witness is walked, so the click path
+                being measured does not move mid-measurement.
 
 BLOCKED         WS2-04 — editor storage decision (rich text format + migration)
 
