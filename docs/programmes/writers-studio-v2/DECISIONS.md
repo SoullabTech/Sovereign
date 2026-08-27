@@ -167,3 +167,29 @@ old Press shell: nothing new is built there, a substitution is removed.
 
 If the founder prefers severance, that is a one-line disposition and F-5
 becomes a WS2-02/03 concern. Left as-is is the one option D-010 forbids.
+
+### D-012 · Deploy per room, starting at WS2-03 — not once at WS2-13
+**2026-08-27 · founder**
+
+WS2-13 is the *final acceptance* unit, not the first deployment. The
+redesigned Studio goes to production as soon as **WS2-02 + WS2-03** pass their
+own acceptance, with core capability preserved underneath, and every vertical
+room after that deploys as it finishes:
+
+```text
+design system → shell → DEPLOY → WRITE → DEPLOY → MATERIALS → DEPLOY
+→ STRUCTURE → DEPLOY → REVIEW → DEPLOY → …
+```
+
+The failure this corrects is procedural: the old process repeatedly built a
+large amount of code before the founder could feel the product, so correction
+arrived after the cost was sunk. A room he can enter is worth more than a
+branch he is told about.
+
+What does NOT relax. Each deployment still carries exact lineage
+(`IMMUTABLE_SHA_DEPLOY.md`), both-ways verification (D-007), and its unit's
+acceptance evidence. Deploying more often is not deploying more loosely — it
+is the same gate, applied more times.
+
+WS2-13 keeps its meaning: the real-member experiential walk over the whole
+environment, which no per-room deployment can substitute for.
