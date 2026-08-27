@@ -1,5 +1,20 @@
 # Writer's Studio — Programme Board
 
+> ## ⛔ SUPERSEDED FOR SEQUENCE — 2026-08-27
+>
+> Writer's Studio is now governed by **WRITERS-STUDIO-V2**:
+> `docs/programmes/writers-studio-v2/` — start at `STATE.md`, then `PROGRAMME.md`.
+>
+> This file no longer owns what gets built next. It is retained for history and
+> for two holdings that carry forward into the new programme:
+>
+> - **WS-01 formal acceptance** is still outstanding — the founder's act.
+> - **STRUCTURE-02** is still held, and its redefinition as MAIA's *attentional
+>   architecture* — including exclusion — carries into **WS2-07**.
+>
+> `SHELL-01` is withdrawn as a standalone unit; its intent is absorbed by
+> WS2-02 + WS2-03. Do not start any unit from this file.
+
 > **The one live cockpit. Live operational state only — not a constitution, not a roadmap.**
 >
 > ```text

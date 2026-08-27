@@ -1,18 +1,36 @@
 # MAIA-SOVEREIGN — SESSION ANCHOR (READ FIRST)
 
-## ⚠️ Writer's Studio work — read these three first
+## ⚠️ Writer's Studio work — read the programme cockpit first
 
-Before touching Writer's Studio, read in this order:
+Writer's Studio is now governed by a standing programme, **WRITERS-STUDIO-V2**.
+Read, in this order, before touching any Studio surface:
 
-1. `docs/programme/WRITERS_STUDIO_EXECUTION_DIRECTIVE.md` — **owns the current
-   sequence**: the one integration lane, the current SHA, what is next.
-2. `docs/programme/WRITERS_STUDIO_MASTER_BRIEF.md` — product constitution.
-3. `docs/programme/WRITERS_STUDIO_PROGRAMME_BOARD.md` — observed state.
+1. `docs/programmes/writers-studio-v2/STATE.md` — where the programme actually
+   is. Short by design. **This is what you reconstruct from — never the
+   conversation.**
+2. `docs/programmes/writers-studio-v2/PROGRAMME.md` — the parent object: the 13
+   units, their order, what must be preserved, what must not happen.
+3. `docs/programmes/writers-studio-v2/DESIGN-CONTRACT.md` — the frozen design
+   source. Currently DERIVED, not frozen: the reference images are not yet in
+   the repository (§0), and that blocks WS2-00.
+4. `docs/programmes/writers-studio-v2/DECISIONS.md` — settled matters. Do not
+   re-litigate them.
+5. `docs/programmes/writers-studio-v2/CAPABILITY-MAP.md` — what already exists
+   and must survive the rebuild.
+6. `docs/programmes/writers-studio-v2/ACCEPTANCE.md` — how a unit is proved
+   finished.
 
-Do not reconstruct the programme from conversation history. Do not open a
-competing implementation lane. The "Current priority thread" below is the
-MAIA-runtime thread and is **not** the Writer's Studio state — a Studio session
-that plans from it will plan from a stale era.
+`docs/programme/WRITERS_STUDIO_MASTER_BRIEF.md` remains the product
+constitution and is not superseded. The R2 artifacts
+(`WRITERS_STUDIO_EXECUTION_DIRECTIVE.md`, `WRITERS_STUDIO_PROGRAMME_BOARD.md`)
+are **superseded for sequence** — read them for history and for the two holdings
+that carry forward (WS-01 acceptance outstanding; STRUCTURE-02 held and
+redefined as attentional architecture), not for what to build next.
+
+Do not open a competing implementation lane. Do not continue extending the old
+Press shell. The "Current priority thread" below is the MAIA-runtime thread and
+is **not** the Writer's Studio state.
+
 
 
 ## What this project is
