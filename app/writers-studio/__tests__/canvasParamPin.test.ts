@@ -98,3 +98,38 @@ describe('Canvas manuscript parameter — pinned across an un-editable boundary'
     }
   });
 });
+
+/**
+ * The same rule, one room over.
+ *
+ * WS2-01B — "Import writing" on Studio Home is a deep link into the Press room
+ * (`/press/manuscript?import=1`). That room read the parameter in a lazy
+ * useState initializer, which is a mount-time read: frozen false on a
+ * client-side navigation, so the link delivered the member into the Room around
+ * a book they already had and importing looked broken. Third instance of D-009,
+ * second in that file — pinned here because Studio Home owns the link.
+ */
+describe('Import deep link — the parameter is observed, not frozen at mount', () => {
+  const pressSource = readFileSync(
+    join(__dirname, '..', '..', 'press', 'manuscript', 'page.tsx'),
+    'utf8',
+  );
+
+  it('Studio Home sends the intent explicitly', () => {
+    const map = readFileSync(join(__dirname, '..', 'studioMap.ts'), 'utf8');
+    expect(map).toContain("IMPORT_HREF = '/press/manuscript?import=1'");
+  });
+
+  it('the Press room never freezes that parameter in a useState initializer', () => {
+    const code = pressSource
+      .replace(/\/\*[\s\S]*?\*\//g, '')
+      .replace(/\/\/.*$/gm, '');
+    expect(code).not.toMatch(/useState\(\(\)\s*=>\s*searchParams/);
+    expect(code).toContain("searchParams?.get('import') === '1'");
+    expect(code).toMatch(/useEffect\(\s*\(\)\s*=>\s*\{\s*if \(importRequested\) setImporting\(true\)/);
+  });
+
+  it('the intent can still be spent — a saved import does not pin the member', () => {
+    expect(pressSource).toContain('setImporting(false)');
+  });
+});

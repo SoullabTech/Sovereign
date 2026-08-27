@@ -145,8 +145,24 @@ function PressManuscriptRoom() {
    * Held as state, not read live: after a successful save the intent is spent
    * and must clear, otherwise the URL would pin the member on the import form
    * forever.
+   *
+   * WS2-01B, 2026-08-27 — but a lazy useState initializer is a MOUNT-TIME read,
+   * and the docblock forty lines above this one says exactly why a mount-time
+   * read of the URL is wrong: on a client-side navigation the destination's
+   * parameters are not necessarily in hand at first render. Frozen at mount,
+   * `importing` stayed false, "Import writing" delivered the member into the
+   * Room around a book they already had, and importing looked broken — the
+   * third instance of D-009 in this codebase, the second in this file.
+   *
+   * So the intent is OBSERVED reactively and HELD as state. It latches open
+   * whenever the parameter arrives, at mount or after it; the member can still
+   * close it, and a successful save still spends it.
    */
-  const [importing, setImporting] = useState(() => searchParams?.get('import') === '1');
+  const importRequested = searchParams?.get('import') === '1';
+  const [importing, setImporting] = useState(false);
+  useEffect(() => {
+    if (importRequested) setImporting(true);
+  }, [importRequested]);
   const [loading, setLoading] = useState(true);
   const [unauthorized, setUnauthorized] = useState(false);
   // W-2: load failure and "no manuscripts" are different facts about the world.
