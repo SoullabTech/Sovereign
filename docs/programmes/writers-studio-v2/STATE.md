@@ -8,12 +8,12 @@ PROGRAMME       WRITERS-STUDIO-V2 · ACTIVE
 LANE            claude/writers-studio-organization-wxpb7q
 CANONICAL       644d4f2c5
 
-PRODUCTION      1feec9b1d  deployed + VERIFIED TWO WAYS 2026-08-27
-                printenv GIT_COMMIT == 1feec9b1d, and the refusal-panel string
-                is present in the built artifacts:
-                  /app/.next/static/chunks/app/writers-studio/canvas/page-fbd9167f5560c402.js
-                  /app/.next/server/app/writers-studio/canvas/page.js
-                the CODE is in the image, not merely the label (D-007)
+PRODUCTION      c9b0574db  deployed 2026-08-27 · printenv GIT_COMMIT confirms
+                artifact leg pending: the canvas client chunk was
+                page-fbd9167f5560c402.js at 1feec9b1d — a DIFFERENT hash now
+                proves the reactive read is in the image (D-007)
+                predecessor 1feec9b1d was verified two ways (refusal-panel
+                string present in both client chunk and server render)
 
 CURRENT         WS2-00 — product contract
                 BLOCKED on the reference images reaching the repository
@@ -25,8 +25,9 @@ READY           WS2-01 — work/manuscript/content identity
                              bogus id → explicit refusal naming the id → ZERO
                              substitute content. D-008 holds on that path.
                   1feec9b1d  mount-time re-read — INEFFECTIVE, wrong mechanism
-                  (pending)  read the URL reactively (useSearchParams), so the
+                  c9b0574db  read the URL reactively (useSearchParams), so the
                              click path and the direct path behave identically
+                             DEPLOYED; click path NOT YET WALKED
                 remaining: deploy + re-walk the chain on the CLICK path;
                 then audit every other read path (owner → work → manuscript →
                 section → content) and make D-008 a regression test
@@ -62,7 +63,8 @@ ROOT CAUSE      RESOLVED 2026-08-27 — and NOT what was inferred.
 
 NEXT ACTION     1. founder: commit the 8 reference screens to reference/  → closes WS2-00
                 2. founder: capture the resolution chain for TWO distinct
-                   writings, then run the nonexistent-id probe
+                   writings ON THE CLICK PATH (the path that was broken —
+                   the direct-load probe already passed at 1feec9b1d)
                    (ACCEPTANCE.md § WS2-01 — screen alone is not acceptance)
                 3. on that evidence, audit every remaining read path and make
                    the D-008 invariant a regression test
