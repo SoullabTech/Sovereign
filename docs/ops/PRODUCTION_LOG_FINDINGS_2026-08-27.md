@@ -31,6 +31,40 @@ Not diagnosed further: whether the quota is a plan ceiling reached legitimately
 or a send loop consuming it. Both are worth checking before it is simply
 raised.
 
+## 0 · ⚠️ MAIA's voice is going through OpenAI in production
+
+```
+[tts.resolve] {"path":"stream-conversation","ttsProviderPref":"cloud",
+               "openaiVoice":"alloy","kokoroVoice":"af_kore","localEnabled":true}
+[tts.attempt] {"provider":"openai","voice":"alloy","reason":"auto/cloud lead"}
+🔊 [openai-tts] request { model: 'tts-1', voice: 'alloy', hasApiKey: true }
+🔊 [Audio] Sentence 0: 35712B MP3 via openai
+```
+
+**Not a bug — designed behaviour.** `app/api/voice/stream-conversation/route.ts`
+routes `member_choice=local` to Kokoro with no fallback, and everything else —
+`auto` or `cloud` — to *"OpenAI Alloy leads."* Kokoro is healthy and available
+(`af_kore`, `localEnabled: true`); it simply is not selected.
+
+Against the project invariant in CLAUDE.md:
+
+> Never use OpenAI or other cloud AI providers.
+> Voice: Local TTS/STT or browser APIs only.
+
+A sovereignty gate already exists — `DISABLE_OPENAI_COMPLETELY=true`, or the
+absence of `OPENAI_API_KEY` — and is currently OFF (`hasApiKey: true`,
+`keyLength: 164`).
+
+⭐ **This is the openai-tts canon conflict (MAIA-D00 §5.4) that MAIA-D05 has
+been held behind, and it is no longer hypothetical.** It is live, on the default
+path, for the founder's own member record. D05 was blocked on "decide the
+canonical voice path first"; the decision is more urgent than the unit, because
+the web and voice surfaces are already resolving it in one direction by default.
+
+⛔ NOT CHANGED. Turning the gate on silences MAIA wherever a member has not
+chosen local, and the member-choice mechanism is real and deliberate. This is a
+canon decision, not an ops toggle.
+
 ## 2 · A prefixed id reaching a UUID column
 
 ```
@@ -41,11 +75,25 @@ raised.
 Something passes `voice-<uuid>` where a `uuid` is expected, so the query fails
 outright. The value is a UUID with a `voice-` prefix on it.
 
-⛔ NOT ROOTED. Two sites mint `voice-${Date.now()}` —
-`lib/voice/MaiaRealtimeWebRTC.ts:522` and `app/api/voice/persist/route.ts:90` —
-but those produce `voice-<timestamp>`, not `voice-<uuid>`. **The failing value
-comes from somewhere else, and that somewhere was not found.** Recorded with
-the search that failed so the next person does not repeat it.
+⭐ **ROOTED, and already known.** The consumers are
+`lib/learning/conversationTurnService.ts` (`INSERT INTO maia_conversation_turns`,
+reached via `🎓 [TRAINING] logTurn`) and `[field-monitor]`, which reports it as
+`Telemetry failed (non-critical)`.
+
+⭐ **A tripwire for this already exists** at
+`app/api/voice/stream-conversation/route.ts:1143`:
+
+> R4 TRIPWIRE: if this ever reports a uuid cast failure on a `voice-` prefixed
+> session id, the UUID defect has become load-bearing for restoration and must
+> stop being separately bounded.
+
+It sits on the `MemoryBundleService.build` catch. **It has not tripped** — the
+failures are in training capture and telemetry, not in memory restoration. So
+this is a known, bounded defect behaving as bounded, not a regression.
+
+What it costs while it stands: training turns and field telemetry are silently
+not recorded for `voice-`-prefixed sessions. Conversation turns themselves are
+unaffected (`conversation_turns` count 41264, healthy).
 
 ## 3 · A gap in `conversation_turns`, unexplained
 
