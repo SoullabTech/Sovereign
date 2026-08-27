@@ -161,7 +161,7 @@ importance, and importance is the writer's to assign.
 | 6 | **GATHER-02** — documents, notes, transcripts, recordings, images, links, prior drafts, with provenance visible | **DEPLOYED** `cd8a95271` |
 | 7 | **DE-02** — form-sensitive lenses, finding lineage, incremental re-analysis, material-aware reading | **DEPLOYED** `cd8a95271` |
 | 8 | **READER-01** — cumulative reader knowledge: what the Work has made available by a point. No personas, no deficit scores | **DEPLOYED** `cd8a95271` |
-| 9 | **STRUCTURE-02** — member-defined structure, movement and threads, no universal chapter ontology | next to build |
+| 9 | **STRUCTURE-02** — member-defined structure, movement and threads, no universal chapter ontology | ⛔ **HELD** until the founder's walk |
 | 10 | **MEMORY** — source → material → observation → recognition → decision → adopted change, inspectable end to end | |
 | 11 | **SAFE EDIT** — explicit request only: snapshot → proposal → diff → accept or reject | |
 | 12 | **EXPRESSION** — book → lecture, course, essay, audio. Genuine re-expression, not format conversion | |
@@ -171,6 +171,70 @@ Units 1–4 and 6–8 are **reachable in production** on `cd8a95271`. That makes
 *delivered*, not *done*: delivered means a member can reach the gesture. Done
 means the founder has used it and it survived. Unit 5's remaining act is the
 founder walking the live room and reporting what is wrong with it.
+
+## The walk gate — before any further build
+
+Founder ruling 2026-08-26, after the deploy. **STRUCTURE-02 is closed until the
+founder has used the live room as a writer**, with real writing, not as a
+systematic test of seven capabilities.
+
+The reason is not ceremony. Member-defined movements and threads could deepen
+the Studio considerably — but only in response to the actual phenomenology of
+*this* room. Designing another conceptual layer before the room has been felt
+elaborates a container nobody has yet inhabited.
+
+The four questions carried into the walk:
+
+1. **Does this feel like a place to write?** Not "does the feature work" — does
+   the room gather attention around the work?
+2. **Where is MAIA?** Within the creative field — aware of manuscript,
+   materials, structure, history — or another application occupying the
+   right-hand column?
+3. **Does Materials preserve relationship?** Does *"How does it belong?"* invite
+   the material's living relation to the work, or read as metadata entry?
+4. **Can you move without thinking about the software?** manuscript → material →
+   MAIA → structure → revision → back into prose as one continuous movement.
+
+The fourth is the deepest acceptance criterion, because the seven deployed units
+are not seven features. They are the first form of one architecture:
+
+```text
+material → attention → meaning → structure → expression → revision → reception
+```
+
+MAIA belongs inside that movement, not beside it.
+
+### Three legitimate outcomes, and only three
+
+| | Outcome | Consequence |
+|---|---|---|
+| **A** | **Accept WS-01** — the room coheres | Sign Evidence 003; STRUCTURE-02 opens |
+| **B** | **Accept with bounded corrections** — architecture right, specific experiential fractures | Repair *without expanding scope*, then accept |
+| **C** | **Do not accept** — something foundational about the room is wrong | STRUCTURE-02 stays closed; more structure would only elaborate the wrong container |
+
+### Quarantined from this judgment
+
+**CADDY-CUSTODY-01** and the **Resend quota / `auth:email-code`** failure are
+open and both need fixing. Neither is evidence about whether the creative
+architecture works, and neither may be cited in outcome A, B or C. Separate
+lanes, separate judgments.
+
+### Known before the walk — do not count it twice
+
+Established by reading `lib/studio/companionStance.ts` on the deployed
+candidate, not by using the room. `RoomFacts` — everything MAIA is given each
+turn — carries the Work's identity, the declared materials, the manuscript
+title, the draft length, and **the first 6,000 characters of the draft**.
+
+It does not carry structure, revision history, the writer's current position in
+the draft, or MAIA's own prior Developmental Review findings. So a writer
+working in chapter nine is discussed by a companion reading chapter one.
+
+Against question 2 this is a partial, structural answer: MAIA is **beside** the
+movement, not inside it — and provably so, before anyone walks the room. If the
+walk produces "she doesn't seem to know where I am", that is this, already
+characterized. It is a bounded correction (outcome **B**), not a new discovery,
+and it is not STRUCTURE-02.
 
 ## For every unit
 

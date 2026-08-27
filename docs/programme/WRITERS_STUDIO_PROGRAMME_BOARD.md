@@ -31,7 +31,7 @@ MODE               LIVE  ·  BUILD MODE OPEN on the visible Studio
 BUILD MODE         OPEN — building on the integration lane
 DEPLOY MODE        RELEASED for cd8a95271 only; every later commit is undeployed
 BOUND CANONICAL    644d4f2c56d5a4683e9fa2017d84f76e2a4adf3a
-CURRENT UNIT       STRUCTURE-02 (next to build)
+CURRENT UNIT       NONE — build held pending the founder's walk of the live room
 WS-01 CANDIDATE    83efa86df  ·  P0-D BOTH LEGS WITNESSED  ·  acceptance outstanding
 LIVE IN PRODUCTION cd8a95271  ·  deployed by the founder 2026-08-26
                    provenance verified — printenv GIT_COMMIT == cd8a95271
