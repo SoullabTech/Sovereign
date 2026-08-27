@@ -14,6 +14,11 @@ import {
   type Tier,
   type Role,
 } from './config/accessMatrix';
+import {
+  ACCESS_CONTEXT_COOKIE,
+  verifyAccessContext,
+  compatWindowOpen,
+} from './lib/auth/accessContext';
 // NOTE: getEntitlements uses Node.js postgres driver, can't run in Edge runtime
 // Entitlements are checked in route handlers, not middleware
 
@@ -29,8 +34,10 @@ import {
  * - Or JWT claim containing tier
  * - Or server-side session lookup
  */
-function getUserTier(req: NextRequest): Tier {
-  // Option 1: Cookie-based (recommended)
+function compatTierFromCookie(req: NextRequest): Tier {
+  // COMPATIBILITY PATH ONLY (AUTH-BOUNDARY-01B). The authority is the signed
+  // context verified in `resolveGrant()`. This unsigned cookie is honoured only
+  // while the bounded compatibility window is open, and every such use is logged.
   const tierCookie = req.cookies.get('maia_tier')?.value as Tier | undefined;
   if (tierCookie && ['free', 'personal', 'pro'].includes(tierCookie)) {
     return tierCookie;
@@ -60,8 +67,8 @@ function getUserTier(req: NextRequest): Tier {
  *
  * TODO: Replace with actual implementation
  */
-function getUserRoles(req: NextRequest): Role[] {
-  // Option 1: Cookie-based (JSON array)
+function compatRolesFromCookie(req: NextRequest): Role[] {
+  // COMPATIBILITY PATH ONLY (AUTH-BOUNDARY-01B) — see `compatTierFromCookie`.
   const rolesCookie = req.cookies.get('maia_roles')?.value;
   if (rolesCookie) {
     try {
@@ -139,6 +146,58 @@ function isAuthenticated(req: NextRequest): boolean {
   if (url.searchParams.get('_t')) return true;
 
   return false;
+}
+
+/**
+ * Resolve the grant (tier + roles) middleware will hand to `checkAccess()`.
+ *
+ * PRECEDENCE, and why it is this way:
+ *
+ *   1. VERIFIED signed context (`maia_ctx`). The only cryptographically bound
+ *      source. Issued server-side at login from the session and member record.
+ *   2. Unsigned cookies, ONLY while the compatibility window is open. Sessions
+ *      that predate AUTH-BOUNDARY-01B carry no `maia_ctx`; failing them closed
+ *      on day one would strip every existing practitioner, steward and admin of
+ *      role-gated access until re-login — repairing the boundary by removing
+ *      capability, which this unit is not permitted to do. Each use is logged so
+ *      the window's cost is measurable rather than assumed.
+ *   3. After the window closes: `['member']` / `'free'`. Authentication is
+ *      untouched; only ELEVATED roles are withdrawn. A forged
+ *      `Cookie: maia_roles=["admin"]` then buys nothing.
+ *
+ * A tampered, expired or wrong-version context does NOT silently fall through to
+ * the compat path as if it were absent — it is logged distinctly, because
+ * "someone sent us a broken signature" and "this session is simply old" are
+ * different events and must not be summed into one number.
+ */
+async function resolveGrant(
+  req: NextRequest
+): Promise<{ tier: Tier; roles: Role[]; source: 'signed' | 'compat' | 'closed' }> {
+  const verified = await verifyAccessContext(req.cookies.get(ACCESS_CONTEXT_COOKIE)?.value);
+
+  if (verified.ok) {
+    const tier = (['free', 'personal', 'pro'].includes(verified.payload.tier)
+      ? verified.payload.tier
+      : 'free') as Tier;
+    return { tier, roles: verified.payload.roles as Role[], source: 'signed' };
+  }
+
+  if (verified.reason !== 'absent') {
+    // Present but not honoured. Never quietly treated as "no context".
+    console.warn(`[auth/context] rejected signed context: ${verified.reason}`);
+  }
+
+  if (compatWindowOpen()) {
+    console.log(
+      `[auth/context] COMPAT grant (unsigned cookies) reason=${verified.reason} path=${req.nextUrl.pathname}`
+    );
+    return { tier: compatTierFromCookie(req), roles: compatRolesFromCookie(req), source: 'compat' };
+  }
+
+  console.warn(
+    `[auth/context] compatibility window CLOSED — withholding elevated roles reason=${verified.reason} path=${req.nextUrl.pathname}`
+  );
+  return { tier: 'free', roles: ['member'] as Role[], source: 'closed' };
 }
 
 /**
@@ -266,8 +325,11 @@ export async function middleware(req: NextRequest) {
   // Extract auth context
   // ---------------------------------------------------------------------
   const authed = isAuthenticated(req);
-  const tier = authed ? getUserTier(req) : 'free';
-  const roles = authed ? getUserRoles(req) : [];
+  const grant = authed
+    ? await resolveGrant(req)
+    : { tier: 'free' as Tier, roles: [] as Role[], source: 'closed' as const };
+  const tier = grant.tier;
+  const roles = grant.roles;
 
   // ---------------------------------------------------------------------
   // Check access

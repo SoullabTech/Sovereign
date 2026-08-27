@@ -27,6 +27,7 @@ import {
 import { createSession } from '@/lib/auth/serverSessions';
 import { getNextOnboardingStep } from '@/lib/onboarding/state';
 import { trackOnboarding } from '@/lib/onboarding/telemetry';
+import { ACCESS_CONTEXT_COOKIE, signAccessContext } from '@/lib/auth/accessContext';
 
 const ENDPOINT = '/api/members/magic-link';
 
@@ -386,6 +387,18 @@ export async function GET(request: NextRequest) {
         response.cookies.set('maia_member_id', String(memberId), cookieOpts);
         response.cookies.set('maia_tier', String(record.tier || 'free'), cookieOpts);
         response.cookies.set('maia_roles', JSON.stringify(record.roles || ['member']), cookieOpts);
+
+        // Signed access context (AUTH-BOUNDARY-01B). The cookies above are
+        // server-issued but not server-verified on arrival; this one is signed so
+        // the Edge gate can distinguish a grant the server made from one a caller
+        // wrote. Best-effort: no secret configured -> null, and middleware falls
+        // through to the bounded compatibility path. Sign-in never fails over it.
+        const signedAccessCtx = await signAccessContext({
+          sub: String(String(memberId)),
+          roles: (record.roles || ['member']) as string[],
+          tier: String(String(record.tier || 'free')),
+        });
+        if (signedAccessCtx) response.cookies.set(ACCESS_CONTEXT_COOKIE, signedAccessCtx, cookieOpts);
         trackOnboarding({ event: 'session_created', memberId: memberId as string, path: 'magic-link' });
         console.log(`[MAGIC-LINK] Session created for: ${record.username}`);
       } catch (sessionErr) {

@@ -18,6 +18,7 @@ import { betaConfig, validatePassword, validateEmail } from '@/lib/auth/betaConf
 import crypto from 'crypto';
 import { hashPassword } from '@/lib/auth/passwordUtils';
 import { createSession } from '@/lib/auth/serverSessions';
+import { ACCESS_CONTEXT_COOKIE, signAccessContext } from '@/lib/auth/accessContext';
 
 export async function POST(request: NextRequest) {
   // Static export: return stub response during pre-rendering
@@ -161,6 +162,18 @@ export async function POST(request: NextRequest) {
       response.cookies.set('maia_member_id', memberId, cookieOpts);
       response.cookies.set('maia_tier', 'free', cookieOpts);
       response.cookies.set('maia_roles', JSON.stringify(['member']), cookieOpts);
+
+      // Signed access context (AUTH-BOUNDARY-01B). The cookies above are
+      // server-issued but not server-verified on arrival; this one is signed so
+      // the Edge gate can distinguish a grant the server made from one a caller
+      // wrote. Best-effort: no secret configured -> null, and middleware falls
+      // through to the bounded compatibility path. Sign-in never fails over it.
+      const signedAccessCtx = await signAccessContext({
+        sub: String(memberId),
+        roles: (['member']) as string[],
+        tier: String('free'),
+      });
+      if (signedAccessCtx) response.cookies.set(ACCESS_CONTEXT_COOKIE, signedAccessCtx, cookieOpts);
       return response;
     } catch (sessionErr) {
       console.error('[RegisterLocal] Session creation failed (non-fatal):', sessionErr);

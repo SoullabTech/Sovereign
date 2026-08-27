@@ -12,6 +12,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { query } from '@/lib/db/postgres';
+import { ACCESS_CONTEXT_COOKIE, signAccessContext } from '@/lib/auth/accessContext';
 
 interface SessionRow {
   member_id: string;
@@ -104,7 +105,24 @@ export async function GET(request: NextRequest) {
       expires: expiresAt,
     });
 
-    console.log(`[RefreshRedirect] Refreshed cookies for member ${member.id}: tier=${member.tier} roles=${member.roles.join(',')}`);
+    // Signed access context (AUTH-BOUNDARY-01B). This route exists precisely to
+    // re-derive tier/roles from the member record, so it is also the natural
+    // place for an existing unsigned session to acquire a signed context without
+    // re-authenticating — the migration path out of the compat window.
+    const signedCtx = await signAccessContext({
+      sub: member.id,
+      roles: member.roles,
+      tier: member.tier,
+    });
+    if (signedCtx) {
+      response.cookies.set(ACCESS_CONTEXT_COOKIE, signedCtx, {
+        ...COOKIE_OPTIONS,
+        httpOnly: true,
+        expires: expiresAt,
+      });
+    }
+
+    console.log(`[RefreshRedirect] Refreshed cookies for member ${member.id}: tier=${member.tier} roles=${member.roles.join(',')} signedCtx=${signedCtx ? 'issued' : 'none'}`);
 
     return response;
   } catch (error) {

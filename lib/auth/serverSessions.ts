@@ -12,6 +12,7 @@
 import { query } from '@/lib/db/postgres';
 import { generateSecureToken } from './passwordUtils';
 import { cookies } from 'next/headers';
+import { ACCESS_CONTEXT_COOKIE, signAccessContext } from './accessContext';
 
 const SESSION_COOKIE_NAME = 'maia_session';
 const SESSION_DURATION_DAYS = 30;
@@ -263,6 +264,29 @@ export async function setAccessCookies(
     ...cookieOptions,
     httpOnly: true,
   });
+
+  // SIGNED ACCESS CONTEXT (AUTH-BOUNDARY-01B).
+  //
+  // The three cookies above are server-issued but not server-verified on
+  // arrival — `httpOnly` stops browser JS, not a client sending its own
+  // `Cookie:` line. This one is HMAC-signed, so middleware can tell a grant the
+  // server actually made from one a caller wrote. The plain cookies stay for the
+  // compatibility window and for readers that are not the access gate.
+  //
+  // Issuance is best-effort by design: with no `AUTH_CONTEXT_SECRET` configured,
+  // `signAccessContext` returns null and logs, and middleware falls through to
+  // the bounded compat path. Sign-in must not fail because a secret is missing.
+  const signed = await signAccessContext({
+    sub: memberId,
+    roles: roles?.length ? roles : ['member'],
+    tier: tier || 'free',
+  });
+  if (signed) {
+    cookieStore.set(ACCESS_CONTEXT_COOKIE, signed, {
+      ...cookieOptions,
+      httpOnly: true,
+    });
+  }
 }
 
 /**

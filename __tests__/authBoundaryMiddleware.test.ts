@@ -114,3 +114,96 @@ describe('AUTH-BOUNDARY-01 · legitimate server-issued context still works', () 
     expect(status).not.toBe(403);
   });
 });
+
+/**
+ * AUTH-BOUNDARY-01B — the gate-level half.
+ *
+ * 01A proved headers carry no authority. These cases prove the remaining
+ * vector: an unsigned COOKIE. `httpOnly` is irrelevant to a non-browser client,
+ * so `Cookie: maia_roles=["admin"]` was, until now, a complete forgery of an
+ * admin grant. The signed context is what separates a grant the server made
+ * from one a caller wrote.
+ *
+ * The compatibility window is exercised in BOTH states deliberately: open, to
+ * show existing sessions keep every capability they had (the unit is not allowed
+ * to repair by removing access); closed, to show the forgery actually dies.
+ */
+import { signAccessContext } from '@/lib/auth/accessContext';
+
+const CTX_SECRET = 'middleware-test-secret-at-least-32-chars!';
+const FORGED_ADMIN_COOKIES = `maia_session=x; maia_roles=${encodeURIComponent('["admin"]')}; maia_tier=pro`;
+
+describe('AUTH-BOUNDARY-01B · unsigned cookies are not a grant once the window closes', () => {
+  beforeEach(() => {
+    process.env.AUTH_CONTEXT_SECRET = CTX_SECRET;
+  });
+  afterEach(() => {
+    delete process.env.AUTH_CONTEXT_COMPAT_UNTIL;
+  });
+
+  it('COMPAT OPEN: an existing unsigned session keeps its role-gated access', async () => {
+    // No capability regression. This is the case that makes the migration humane.
+    process.env.AUTH_CONTEXT_COMPAT_UNTIL = '2099-01-01T00:00:00Z';
+    const status = await statusOf(request(ROLE_GATED, { cookie: FORGED_ADMIN_COOKIES }));
+    expect(status).not.toBe(401);
+    expect(status).not.toBe(403);
+  });
+
+  it('COMPAT CLOSED: a forged maia_roles cookie no longer grants admin', async () => {
+    process.env.AUTH_CONTEXT_COMPAT_UNTIL = '2000-01-01T00:00:00Z';
+    expect(await statusOf(request(ROLE_GATED, { cookie: FORGED_ADMIN_COOKIES }))).toBe(403);
+  });
+
+  it('COMPAT CLOSED: a forged maia_tier cookie no longer grants a tier', async () => {
+    process.env.AUTH_CONTEXT_COMPAT_UNTIL = '2000-01-01T00:00:00Z';
+    const status = await statusOf(
+      request(ROLE_GATED, { cookie: 'maia_session=x; maia_tier=founder' })
+    );
+    expect(status).not.toBe(200);
+  });
+
+  it('COMPAT CLOSED: maia_member_id for another member grants nothing', async () => {
+    process.env.AUTH_CONTEXT_COMPAT_UNTIL = '2000-01-01T00:00:00Z';
+    const status = await statusOf(
+      request(ROLE_GATED, { cookie: `maia_session=x; maia_member_id=${KNOWN_MEMBER_ID}` })
+    );
+    expect(status).toBe(403);
+  });
+
+  it('COMPAT CLOSED: a VERIFIED signed context still grants admin', async () => {
+    // The whole point: capability survives, forgery does not.
+    process.env.AUTH_CONTEXT_COMPAT_UNTIL = '2000-01-01T00:00:00Z';
+    const ctx = await signAccessContext({ sub: KNOWN_MEMBER_ID, roles: ['admin'], tier: 'pro' });
+    expect(ctx).toBeTruthy();
+    const status = await statusOf(request(ROLE_GATED, { cookie: `maia_session=x; maia_ctx=${ctx}` }));
+    expect(status).not.toBe(401);
+    expect(status).not.toBe(403);
+  });
+
+  it('COMPAT CLOSED: a tampered signed context grants nothing', async () => {
+    process.env.AUTH_CONTEXT_COMPAT_UNTIL = '2000-01-01T00:00:00Z';
+    const ctx = (await signAccessContext({ sub: KNOWN_MEMBER_ID, roles: ['member'], tier: 'free' }))!;
+    const [body, sig] = ctx.split('.');
+    const payload = JSON.parse(Buffer.from(body, 'base64url').toString('utf8'));
+    payload.roles = ['admin'];
+    const forged = `${Buffer.from(JSON.stringify(payload)).toString('base64url')}.${sig}`;
+    expect(await statusOf(request(ROLE_GATED, { cookie: `maia_session=x; maia_ctx=${forged}` }))).toBe(403);
+  });
+
+  it('COMPAT CLOSED: an expired signed context grants nothing', async () => {
+    process.env.AUTH_CONTEXT_COMPAT_UNTIL = '2000-01-01T00:00:00Z';
+    const ctx = await signAccessContext({ sub: KNOWN_MEMBER_ID, roles: ['admin'], tier: 'pro', ttlSeconds: -1 });
+    expect(await statusOf(request(ROLE_GATED, { cookie: `maia_session=x; maia_ctx=${ctx}` }))).toBe(403);
+  });
+
+  it('COMPAT OPEN: a signed context still outranks the unsigned cookies beside it', async () => {
+    // Precedence, not merge: the verified grant wins even while compat is live,
+    // so a forged cookie cannot top up a real context.
+    process.env.AUTH_CONTEXT_COMPAT_UNTIL = '2099-01-01T00:00:00Z';
+    const ctx = await signAccessContext({ sub: KNOWN_MEMBER_ID, roles: ['member'], tier: 'free' });
+    const status = await statusOf(
+      request(ROLE_GATED, { cookie: `maia_session=x; maia_ctx=${ctx}; maia_roles=${encodeURIComponent('["admin"]')}` })
+    );
+    expect(status).toBe(403);
+  });
+});

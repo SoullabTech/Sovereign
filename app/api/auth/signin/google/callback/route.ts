@@ -18,6 +18,7 @@ import crypto from 'crypto';
 import { cookies } from 'next/headers';
 import { query } from '@/lib/db/postgres';
 import { createSession, setSessionCookie } from '@/lib/auth/serverSessions';
+import { ACCESS_CONTEXT_COOKIE, signAccessContext } from '@/lib/auth/accessContext';
 
 // Safe query wrapper
 async function safeQuery(
@@ -258,6 +259,26 @@ export async function GET(req: NextRequest) {
       path: '/',
       expires: session.expiresAt
     });
+
+    // Signed access context (AUTH-BOUNDARY-01B). The cookies above are
+    // server-issued but not server-verified on arrival; this one is signed so
+    // the Edge gate can distinguish a grant the server made from one a caller
+    // wrote. Best-effort: no secret configured -> null, and middleware falls
+    // through to the bounded compatibility path. Sign-in never fails over it.
+    const signedAccessCtx = await signAccessContext({
+      sub: String(memberId),
+      roles: (roles) as string[],
+      tier: String(accessTier),
+    });
+    if (signedAccessCtx) {
+      cookieStore.set(ACCESS_CONTEXT_COOKIE, signedAccessCtx, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        path: '/',
+        expires: session.expiresAt
+      });
+    }
 
     console.log(`[OAUTH] Session created for ${memberId} (tier: ${accessTier}, roles: ${roles.join(',')})`);
 

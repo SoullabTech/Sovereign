@@ -23,6 +23,7 @@ import {
   getClientIP,
   buildRateLimitHeaders
 } from '@/lib/auth/rateLimiter';
+import { ACCESS_CONTEXT_COOKIE, signAccessContext } from '@/lib/auth/accessContext';
 
 const ENDPOINT = '/api/members/register-email';
 
@@ -141,6 +142,18 @@ export async function POST(request: NextRequest) {
       response.cookies.set('maia_member_id', String(member.id), cookieOpts);
       response.cookies.set('maia_tier', 'free', cookieOpts);
       response.cookies.set('maia_roles', JSON.stringify(['member']), cookieOpts);
+
+      // Signed access context (AUTH-BOUNDARY-01B). The cookies above are
+      // server-issued but not server-verified on arrival; this one is signed so
+      // the Edge gate can distinguish a grant the server made from one a caller
+      // wrote. Best-effort: no secret configured -> null, and middleware falls
+      // through to the bounded compatibility path. Sign-in never fails over it.
+      const signedAccessCtx = await signAccessContext({
+        sub: String(String(member.id)),
+        roles: (['member']) as string[],
+        tier: String('free'),
+      });
+      if (signedAccessCtx) response.cookies.set(ACCESS_CONTEXT_COOKIE, signedAccessCtx, cookieOpts);
       trackOnboarding({ event: 'session_created', memberId: String(member.id), email: normalizedEmail, path: 'register-email' });
       console.log(`[register-email] Session created for: ${cleanUsername}`);
     } catch (sessionErr) {

@@ -26,6 +26,7 @@ import {
 import { createSession } from '@/lib/auth/serverSessions';
 import { getNextOnboardingStep } from '@/lib/onboarding/state';
 import { trackOnboarding } from '@/lib/onboarding/telemetry';
+import { ACCESS_CONTEXT_COOKIE, signAccessContext } from '@/lib/auth/accessContext';
 
 const ENDPOINT = '/api/members/email-code/verify';
 const MAX_ATTEMPTS = 5;
@@ -195,6 +196,18 @@ export async function POST(request: NextRequest) {
     response.cookies.set('maia_member_id', String(memberId), cookieOpts);
     response.cookies.set('maia_tier', String(record.tier || 'free'), cookieOpts);
     response.cookies.set('maia_roles', JSON.stringify(record.roles || ['member']), cookieOpts);
+
+    // Signed access context (AUTH-BOUNDARY-01B). The four cookies above are
+    // server-issued but not server-verified on arrival; this one is HMAC-signed
+    // so the Edge gate can tell a grant the server made from one a caller wrote.
+    // Best-effort: a missing secret returns null and logs, and middleware falls
+    // through to the bounded compat path — sign-in never fails over this.
+    const signedCtx = await signAccessContext({
+      sub: String(memberId),
+      roles: (record.roles as string[]) || ['member'],
+      tier: String(record.tier || 'free'),
+    });
+    if (signedCtx) response.cookies.set(ACCESS_CONTEXT_COOKIE, signedCtx, cookieOpts);
     trackOnboarding({ event: 'session_created', memberId, path: ENDPOINT });
     console.log(`[EMAIL-CODE/verify] Session created for existing member: ${record.username}`);
 

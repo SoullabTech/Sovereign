@@ -17,6 +17,7 @@ import { cookies } from 'next/headers';
 import { query } from '@/lib/db/postgres';
 import type { Tier, Role } from '@/config/accessMatrix';
 import { resolveMemberDisplayName } from '@/lib/stellium/clients';
+import { ACCESS_CONTEXT_COOKIE, signAccessContext } from '@/lib/auth/accessContext';
 
 interface SessionRow {
   member_id: string;
@@ -180,6 +181,22 @@ export async function POST() {
     });
 
     cookieStore.set('maia_roles', JSON.stringify(member.roles), {
+      ...COOKIE_OPTIONS,
+      httpOnly: true,
+      expires: expiresAt,
+    });
+
+    // Signed access context (AUTH-BOUNDARY-01B). The cookies above are
+    // server-issued but not server-verified on arrival; this one is signed so
+    // the Edge gate can distinguish a grant the server made from one a caller
+    // wrote. Best-effort: no secret configured -> null, and middleware falls
+    // through to the bounded compatibility path. Sign-in never fails over it.
+    const signedAccessCtx = await signAccessContext({
+      sub: String(member.id),
+      roles: (member.roles) as string[],
+      tier: String(member.tier),
+    });
+    if (signedAccessCtx) cookieStore.set(ACCESS_CONTEXT_COOKIE, signedAccessCtx, {
       ...COOKIE_OPTIONS,
       httpOnly: true,
       expires: expiresAt,

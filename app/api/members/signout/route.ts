@@ -8,6 +8,7 @@ export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { query } from '@/lib/db/postgres';
+import { ACCESS_CONTEXT_COOKIE } from '@/lib/auth/accessContext';
 
 const COOKIE_OPTIONS = {
   secure: process.env.NODE_ENV === 'production',
@@ -40,6 +41,11 @@ export async function POST() {
     cookieStore.set('maia_member_id', '', { ...clearOptions, httpOnly: true });
     cookieStore.set('maia_tier', '', { ...clearOptions, httpOnly: true });
     cookieStore.set('maia_roles', '', { ...clearOptions, httpOnly: true });
+    // MUST be cleared with the rest. A signed access context is valid until its
+    // own `exp` regardless of session state (see the revocation note in
+    // lib/auth/accessContext.ts), so leaving it behind on sign-out would let the
+    // grant outlive the logout it was issued under.
+    cookieStore.set(ACCESS_CONTEXT_COOKIE, '', { ...clearOptions, httpOnly: true });
 
     return NextResponse.json({ success: true });
   } catch (error) {
