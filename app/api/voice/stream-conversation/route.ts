@@ -22,6 +22,7 @@
  */
 
 import { resolveVoicePreference } from '@/lib/tts/cloudVoicePolicy';
+import { sanitizeForTts } from '@/lib/tts/sanitizeForTts';
 import { NextRequest } from 'next/server';
 import os from 'os';
 import { getClaudeService } from '@/lib/services/ClaudeService';
@@ -313,34 +314,6 @@ async function synthesizeWithFallback(
   }
 }
 
-/**
- * Sanitize text before sending to TTS.
- * Removes metadata blocks, JSON fragments, and other non-speakable content.
- * Defense-in-depth: even if ClaudeService filters, this guarantees clean input.
- */
-function sanitizeForTts(input: string): string {
-  if (!input) return '';
-
-  let s = input;
-
-  // Remove full metadata blocks
-  s = s.replace(/---SOUL_METADATA---[\s\S]*?---END_METADATA---/g, '');
-
-  // Remove JSON objects that sometimes leak as "sentences"
-  s = s.replace(/\{[\s\S]*?\}/g, '');
-
-  // Remove JSON arrays
-  s = s.replace(/\[[\s\S]*?\]/g, '');
-
-  // Remove orphan JSON fragments at start/end
-  s = s.replace(/^[\s\d,}\]]+/, '');
-  s = s.replace(/[\s\d,{\[]+$/, '');
-
-  // Collapse whitespace and trim
-  s = s.replace(/\s+/g, ' ').trim();
-
-  return s;
-}
 
 /**
  * Convert PCM audio to WAV format for browser playback.
