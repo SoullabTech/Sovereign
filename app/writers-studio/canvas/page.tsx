@@ -322,6 +322,23 @@ function WriterCanvas() {
     };
   }, [manuscript, historyKey]);
 
+  /* A restore replaces the text on the table, so the table is remounted to
+     read it fresh — the exit guard flushes on unmount, so nothing in flight is
+     lost in the swap.
+
+     ── Why this sits ABOVE the signed-out return ─────────────────────────────
+     It used to sit below it, which made it a CONDITIONAL HOOK: on the first
+     render listPhase is 'loading' so every hook runs, and the moment the list
+     comes back 401 the early return fires and this one does not — React counts
+     fewer hooks than last time and the whole room throws to the error boundary.
+
+     It never surfaced because a signed-in browser never takes that path. A
+     capture browser has no session, so it took it immediately, and the Studio
+     showed "Something Went Wrong" where it should have shown "sign in to
+     enter". A member whose session expired mid-session would have seen exactly
+     the same thing. Every hook now runs before any return. */
+  const [tableKey, setTableKey] = useState(0);
+
   // ---- Signed out ---------------------------------------------------------
   if (listPhase === 'unauthorized') {
     return (
@@ -384,10 +401,6 @@ function WriterCanvas() {
     />
   );
 
-  /* A restore replaces the text on the table, so the table is remounted to
-     read it fresh — the exit guard flushes on unmount, so nothing in flight is
-     lost in the swap. */
-  const [tableKey, setTableKey] = useState(0);
   const historyPanel = manuscript ? (
     <VersionsPanel
       manuscriptId={manuscript.id}

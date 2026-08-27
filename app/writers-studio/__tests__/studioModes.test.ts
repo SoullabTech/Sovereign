@@ -137,3 +137,52 @@ describe('the room reads the mode reactively', () => {
     expect(modeById('write')?.realized).toBe(true);
   });
 });
+
+/**
+ * Every hook before every return.
+ *
+ * The Canvas declared a useState BELOW its signed-out early return. On the
+ * first render listPhase is 'loading' so all hooks ran; the moment the
+ * manuscript list came back 401 the early return fired, that hook did not, and
+ * React threw the whole room to the error boundary — "Something Went Wrong"
+ * where the Studio should have said "sign in to enter".
+ *
+ * It never surfaced in use because a signed-in browser never takes that path.
+ * The first capture browser had no session and took it immediately. A member
+ * whose session expired mid-session would have hit the same wall.
+ */
+describe('the room declares every hook before any return', () => {
+  const room = readFileSync(join(__dirname, '..', 'canvas', 'page.tsx'), 'utf8');
+
+  it('no hook is declared after the first early return', () => {
+    /* Scoped to WriterCanvas — the helper components above it have their own
+       hooks and their own returns, and mixing them in would make this pass or
+       fail for the wrong reason. */
+    const body = room.slice(room.indexOf('function WriterCanvas()'));
+    expect(body.length).toBeGreaterThan(0);
+
+    /* An early return of JSX is `return (` at four spaces with the element on
+       the next line. The trailing newline matters: without it this also matches
+       `return () => {`, the cleanup of every useEffect in the file, and the
+       guard fires on hooks that are perfectly legal. */
+    const earlyReturn = body.search(/\n {4}return \(\n/);
+    expect(earlyReturn).toBeGreaterThan(0);
+
+    const after = body.slice(earlyReturn);
+    const hookAfterReturn =
+      /\n {2}const \[[^\]]+\] = useState|\n {2}use(Effect|Callback|Memo)\(/.exec(after);
+    if (hookAfterReturn) {
+      throw new Error(
+        `A hook is declared after an early return:${hookAfterReturn[0]}\n` +
+          'React counts hooks per render. On the render where the early return ' +
+          'fires, this one does not run, the count drops, and the whole room ' +
+          'throws to the error boundary.',
+      );
+    }
+  });
+
+  it('the signed-out path renders a sign-in invitation, not a crash', () => {
+    expect(room).toContain('opens only to you');
+    expect(room).toContain('/signin');
+  });
+});
