@@ -130,7 +130,10 @@ export async function POST(req: NextRequest) {
     // The same single question is asked here as in stream-conversation, from
     // the same resolver. Preview is a member-facing voice surface, so the
     // matrix must be true of it too.
-    const previewPref = resolveVoicePreference(providerPref);
+    // A settings-page voice preview is never a Sanctuary turn: it synthesizes a
+    // fixed sample line, not anything the member said. Declared explicitly
+    // rather than defaulted, because the resolver requires an answer.
+    const previewPref = resolveVoicePreference(providerPref, { sanctuary: false });
     const cloudUsable = previewPref.effective === 'cloud'
       && !!process.env.OPENAI_API_KEY
       && process.env.DISABLE_OPENAI_COMPLETELY !== 'true';

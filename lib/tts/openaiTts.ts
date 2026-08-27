@@ -2,6 +2,8 @@
 
 import OpenAI from 'openai';
 
+import { sanitizeSpeechInputPlain } from './sanitizeForSpeech';
+
 const DEFAULT_TTS_MODEL = process.env.OPENAI_TTS_MODEL || 'tts-1';
 
 // Lazy initialization to avoid build-time errors when OPENAI_API_KEY is not set
@@ -18,6 +20,20 @@ function getOpenAI() {
 /**
  * The ONLY allowed OpenAI usage in this project: text-to-speech.
  * No chat, no completions, no embeddings, no reasoning.
+ *
+ * VOICE-TTS-LEAK-02: speech sanitization is enforced HERE at the provider
+ * boundary, not trusted to callers.
+ *
+ * Kokoro has had a boundary invariant since VOICE-TTS-LEAK-01; OpenAI had only
+ * a convention that happened to hold at the two call sites that existed. That
+ * asymmetry was tolerable while cloud was a rare fallback. Under the
+ * Alloy-primary amendment it would make the PRIMARY provider the unprotected
+ * one — the inverse of what the SSML failure taught — so it is closed first.
+ *
+ * OpenAI TTS does not interpret SSML either: it would read the markup aloud
+ * exactly as Kokoro did. Both providers therefore take the same plain-text
+ * contract, and no caller can reintroduce markup by choosing a different input
+ * representation.
  */
 export async function synthesizeSpeech(params: {
   text: string;
@@ -28,10 +44,27 @@ export async function synthesizeSpeech(params: {
 }) {
   const { text, voice = 'alloy', format = 'mp3', speed = 1.0, model } = params;
 
+  const safeInput = sanitizeSpeechInputPlain(text);
+
+  // A response containing only removed presentation artifacts must not become
+  // an empty synthesis request — and must not leave the machine as one either.
+  if (!safeInput) {
+    throw new Error('OpenAI TTS input empty after speech sanitization');
+  }
+
+  if (safeInput !== text) {
+    console.info('[tts.sanitize]', JSON.stringify({
+      provider: 'openai',
+      ssml: /<speak\b/i.test(text),
+      originalChars: text.length,
+      sanitizedChars: safeInput.length,
+    }));
+  }
+
   console.log('🔊 [openai-tts] request', {
     model: model || DEFAULT_TTS_MODEL,
     voice,
-    inputLength: text?.length ?? 0,
+    inputLength: safeInput.length,
     hasApiKey: Boolean(process.env.OPENAI_API_KEY),
     keyLength: process.env.OPENAI_API_KEY?.length || 0,
   });
@@ -44,7 +77,7 @@ export async function synthesizeSpeech(params: {
   const response = await getOpenAI().audio.speech.create(
     {
       model: model || DEFAULT_TTS_MODEL,
-      input: text,
+      input: safeInput,
       voice: voice as any,
       response_format: format,
       speed: speed,

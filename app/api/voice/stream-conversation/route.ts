@@ -195,9 +195,48 @@ async function synthesizeWithFallback(
     localEnabled: process.env.MAIA_LOCAL_VOICE_ENABLED === '1',
   }));
 
-  // ── Member chose "local" → Kokoro only, no cloud fallback ──
-  if (memberProvider === 'local') {
-    console.info('[tts.attempt]', JSON.stringify({ provider: 'kokoro', voice: kokoroVoice, reason: 'member_chose_local' }));
+  // ⭐ VOICE-SOVEREIGNTY-03 (founder canon ruling 2026-08-27, THIRD PASS).
+  //
+  // The single question this route asks is `voicePref.effective`, and the whole
+  // matrix lives in `resolveVoicePreference`. This route does not re-derive it.
+  //
+  //   auto/unset -> Alloy   |   cloud -> Alloy   |   local -> Kokoro only
+  //   SANCTUARY  -> Kokoro, always, no cloud path and no cloud fallback
+  //
+  // Sanctuary is passed as required context rather than checked here, so a
+  // future branch cannot forget it: the resolver will not compile without it.
+  const voicePref = resolveVoicePreference(memberProvider, { sanctuary: options.sanctuary });
+
+  if (voicePref.sanctuaryForcedLocal) {
+    // ⭐ Auditable, and content-free. Sanctuary is a promise made in UI copy —
+    // "This session won't be remembered. Speak freely." A promise that bends
+    // under a provider preference was never a promise.
+    console.info('[tts.policy]', JSON.stringify({
+      path: 'stream-conversation',
+      storedPreference: voicePref.stored,
+      effective: 'local',
+      note: 'sanctuary session — cloud synthesis forbidden, no cloud fallback',
+    }));
+  } else if (voicePref.cloudRequestedButUnavailable) {
+    // ⭐ Truthful, and the stored preference is left exactly as the member set
+    // it. Rewriting `cloud` to `local` in their settings would be the system
+    // deciding what they meant.
+    console.info('[tts.policy]', JSON.stringify({
+      path: 'stream-conversation',
+      storedPreference: voicePref.stored,
+      effective: voicePref.effective,
+      note: 'cloud voice unavailable; member preference preserved',
+    }));
+  }
+
+  // ── Local-only: explicit `local`, Sanctuary, or cloud killed → no fallback ──
+  if (voicePref.effective === 'local') {
+    const localReason = voicePref.sanctuaryForcedLocal
+      ? 'sanctuary_forced_local'
+      : voicePref.stored === 'local' || voicePref.stored === 'kokoro'
+        ? 'member_chose_local'
+        : 'cloud_unavailable';
+    console.info('[tts.attempt]', JSON.stringify({ provider: 'kokoro', voice: kokoroVoice, reason: localReason }));
     try {
       // VOICE-TTS-SSML-01: Kokoro-FastAPI does NOT interpret SSML — it speaks
       // the markup aloud ("speak", "prosody rate equals 108 percent", "break
@@ -223,57 +262,31 @@ async function synthesizeWithFallback(
     }
   }
 
-  // ── VOICE-SOVEREIGNTY-01: local TTS is the production authority ──
+  // ── Cloud path: Alloy is the preferred conversational voice ──
   //
-  // Founder canon ruling 2026-08-27. This block used to read "auto or cloud →
-  // OpenAI Alloy leads", which put `provider:"openai"` on ordinary member turns
-  // while Kokoro was healthy and available — not a failover, a deliberate
-  // preference for the cloud over an available sovereign path, against
-  // CLAUDE.md's "Voice: Local TTS/STT or browser APIs only."
+  // ⭐ THE AMENDMENT (third pass). Earlier passes routed `auto` to local
+  // because an `auto`-shaped default had drifted into the cloud without anyone
+  // deciding it should. This pass decides it: Alloy is preferred on direct
+  // comparative member experience, and local/open-source is the strategic
+  // replacement path that must genuinely match or exceed it before promotion.
   //
-  // Under the current canon (MAIA_ALLOW_CLOUD_VOICE unset) auto, cloud and
-  // unset all still resolve to local — nothing below changes that. The
-  // pre-existing DISABLE_OPENAI_COMPLETELY / missing-key conditions are kept
-  // as-is rather than replaced; the ruling declined that flag as the repair.
-  // ⭐ VOICE-SOVEREIGNTY-02 (founder ruling 2026-08-27, second pass).
+  // What made the earlier drift illegitimate was that nobody chose it. What
+  // makes this legitimate is Sanctuary's floor above, the member's explicit
+  // `local`, disclosure, and a kill switch — not the routing being different.
   //
-  // The single question this route asks is `voicePref.effective`, and the whole
-  // matrix lives in `resolveVoicePreference`. This route does not re-derive it.
-  //
-  // ⛔ `auto` is NOT in the cloud condition, deliberately and permanently.
-  // `auto` is the absence of a choice, and the absence of a choice is not
-  // consent to leave the local machine — that `auto`-shaped default reaching
-  // OpenAI is the exact violation this lineage exists to close. Under
-  // re-permission the flag honours an explicit `cloud`; it does not restore a
-  // preferred provider.
-  const voicePref = resolveVoicePreference(memberProvider);
-  const memberChoseCloud = voicePref.effective === 'cloud';
-  const openaiDisabled = !memberChoseCloud
-    || process.env.DISABLE_OPENAI_COMPLETELY === 'true'
-    || !process.env.OPENAI_API_KEY;
-
-  if (voicePref.cloudRequestedButUnavailable) {
-    // ⭐ Truthful, and the stored preference is left exactly as the member set
-    // it. Rewriting `cloud` to `local` in their settings would be the system
-    // deciding what they meant.
-    console.info('[tts.policy]', JSON.stringify({
-      storedPreference: voicePref.stored,
-      effective: voicePref.effective,
-      note: 'cloud voice unavailable under current sovereignty policy; member preference preserved',
-    }));
-  }
-
-  if (!openaiDisabled) {
-    // ── EXPLICIT `cloud` preference, under explicit re-permission → Alloy ──
-    // Unreachable while MAIA_ALLOW_CLOUD_VOICE is unset. Never reachable by an
-    // `auto` member in any flag state.
+  // ⛔ Unreachable in Sanctuary: that branch has already returned.
+  {
     const elementFallback = elementKey ? resolveOpenAIVoice(elementKey) : null;
     const finalOpenaiVoice = openaiVoice ?? elementFallback ?? 'alloy';
 
-    // `reason` no longer says "auto/cloud lead" — auto can no longer be here,
-    // and the log line is the thing an auditor greps. It must not describe a
-    // route the canon has closed.
-    console.info('[tts.attempt]', JSON.stringify({ provider: 'openai', voice: finalOpenaiVoice, reason: 'member_chose_cloud' }));
+    // `reason` distinguishes a member who asked for cloud from one served it
+    // by the canon. The log line is the thing an auditor greps; it must not
+    // describe consent that was never given.
+    console.info('[tts.attempt]', JSON.stringify({
+      provider: 'openai',
+      voice: finalOpenaiVoice,
+      reason: voicePref.stored === 'cloud' ? 'member_chose_cloud' : 'canon_primary',
+    }));
     try {
       const response = await synthesizeSpeech({
         text,
@@ -298,7 +311,9 @@ async function synthesizeWithFallback(
   }
 
   // ── Kokoro path: primary when OpenAI disabled, fallback otherwise ──
-  console.info('[tts.attempt]', JSON.stringify({ provider: 'kokoro', voice: kokoroVoice, reason: openaiDisabled ? 'sovereign_primary' : 'openai_fallback' }));
+  // ⭐ Ordinary sessions fall back to Kokoro when Alloy fails. Sanctuary and
+  // explicit-local never arrive here — they returned from the branch above.
+  console.info('[tts.attempt]', JSON.stringify({ provider: 'kokoro', voice: kokoroVoice, reason: 'openai_fallback' }));
   try {
     // VOICE-TTS-SSML-01: plain text only — see the member-choice branch above.
     const kokoroInput = text;
@@ -525,8 +540,26 @@ async function synthesizeSentence(
   voice: string = 'maia_core',
   speed: number = 1.0,
   element?: string | null,
+  /**
+   * ⛔ REQUIRED, and required on purpose. This helper is currently
+   * unreferenced, but it holds two direct `synthesizeSpeech` calls that were
+   * gated only by DISABLE_OPENAI_COMPLETELY / API key — no member preference
+   * and no Sanctuary signal. A future caller wiring it up would have shipped a
+   * Sanctuary leak without touching any file that looks like policy.
+   *
+   * Making the context required means that caller cannot compile until it has
+   * answered "is this Sanctuary?", and the resolver below decides the rest.
+   */
+  context?: VoiceRequestContext,
 ): Promise<{ audio: string; format: string } | null> {
   const elementKey = (element ?? '').toLowerCase() as Element;
+
+  // Fail-closed on omission: an undeclared context is treated as Sanctuary.
+  const sentencePref = resolveVoicePreference(
+    context ? null : 'local',
+    context ?? { sanctuary: true },
+  );
+  const cloudAllowedHere = sentencePref.effective === 'cloud';
 
   // ── Resolve sovereign voice IDs before passing to any provider ──
   const VALID_OPENAI = new Set(['nova', 'shimmer', 'echo', 'onyx', 'fable', 'alloy', 'ash', 'sage', 'coral']);

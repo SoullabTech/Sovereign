@@ -21,7 +21,12 @@
  *   KOKORO_TTS_URL — Kokoro endpoint (default: http://localhost:8880)
  */
 
-import { assertCloudVoiceAllowed, resolveVoicePreference, CloudVoiceForbidden } from './cloudVoicePolicy';
+import {
+  assertCloudVoiceAllowed,
+  resolveVoicePreference,
+  CloudVoiceForbidden,
+  type VoiceRequestContext,
+} from './cloudVoicePolicy';
 import * as kokoro from './providers/kokoro';
 import * as sesame from './providers/sesame';
 import * as personaplex from './providers/personaplex';
@@ -370,12 +375,26 @@ export class TTSFallbackToOpenAI extends Error {
     /**
      * The member's stored TTS preference for THIS request.
      *
-     * ⛔ Defaults to 'auto', which is REFUSED. Fail-closed is the point: a
-     * seventh escape added later that forgets to pass the preference gets the
-     * refusal, not the exemption. Permission must be supplied deliberately;
-     * it can never be arrived at by omission.
+     * Under the third-pass canon 'auto' resolves to cloud, so this parameter
+     * is no longer where fail-closed lives — see `context` below.
      */
     memberPref?: string | null,
+    /**
+     * Session context for THIS request.
+     *
+     * ⛔ Defaults to `{ sanctuary: true }`, which is REFUSED. Fail-closed is
+     * the point, and the amendment MOVED it here: `memberPref` used to default
+     * to 'auto' and 'auto' used to be refused, so omission failed safe. Now
+     * 'auto' is the cloud-preferring default, and that same omission would
+     * fail OPEN — a seventh escape added later, forgetting to pass context,
+     * would quietly gain cloud access it never declared.
+     *
+     * Defaulting to Sanctuary restores the property: an escape that does not
+     * say what kind of session it belongs to is treated as the most protected
+     * kind, and refused. Permission must be supplied deliberately; it can
+     * never be arrived at by omission.
+     */
+    context: VoiceRequestContext = { sanctuary: true },
   ) {
     // ⭐ VOICE-SOVEREIGNTY-01. THE choke point. This router has six separate
     // escapes to OpenAI, and repairing each individually is discipline — which
@@ -397,10 +416,17 @@ export class TTSFallbackToOpenAI extends Error {
     this.reason = reason;
     this.voice = voice;
 
-    const pref = resolveVoicePreference(memberPref);
+    const pref = resolveVoicePreference(memberPref, context);
+    if (pref.sanctuaryForcedLocal) {
+      // ⭐ THE ONE ROW WITH NO ESCAPE. Sanctuary never reaches a cloud
+      // provider — not by preference, not by outage, not by flag, and not
+      // through this router's internal fallback. Refused before anything else
+      // is considered.
+      throw new CloudVoiceForbidden(`ttsRouter:${reason}:sanctuary`);
+    }
     if (pref.effective !== 'cloud') {
-      // Permitted-but-not-chosen is refused with the same error as
-      // not-permitted. The member did not ask to leave the local machine.
+      // An explicit `local` member is not overridden by availability. The
+      // member asked to stay on the machine.
       throw new CloudVoiceForbidden(`ttsRouter:${reason}:pref=${pref.stored}`);
     }
     assertCloudVoiceAllowed(`ttsRouter:${reason}`);
