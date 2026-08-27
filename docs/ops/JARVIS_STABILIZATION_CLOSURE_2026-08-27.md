@@ -155,3 +155,31 @@ wrong. The identity is in the keychain, signing succeeds, and the build finishes
 in about a minute. Those transcripts were truncated, not blocked. The timeout
 added on that hypothesis is retained on its own merits and is not evidence about
 signing.
+
+### Two facts, never collapsed
+
+An artifact built from a packaging-lane commit does not carry that commit's
+*behavior* — it carries the frozen baseline's. Both facts are true at once, and
+the harness now records both plus the evidence that reconciles them:
+
+```
+BUILD SOURCE           <the commit actually built>
+APPLICATION BASELINE   5237a92
+APPLICATION DIFF       empty
+```
+
+`APPLICATION DIFF` is **computed**, not asserted: the harness diffs the packed
+payload (`jarvis-desktop/src/**` and `package.json` — exactly what
+`build.files` includes) between the baseline and the build source. A packaging
+commit that quietly touched application code fails there instead of shipping
+under the baseline's name. The baseline is resolved to a full object id first,
+per STAB-07 — an abbreviation is not an identity — and an unresolvable baseline
+reports `UNKNOWN`, never a pass.
+
+### Signing scope
+
+`signature: identity · Apple Development: …` means the bundle is code-signed
+well enough to launch on that machine for this proof. It is **not** distribution
+signing and **not** notarization. Those belong to a later signing/release unit,
+and `provenance.signature.scope` says so in the record so the field cannot be
+read as more than it is.

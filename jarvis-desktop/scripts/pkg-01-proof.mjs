@@ -47,6 +47,12 @@ const SKIP_BUILD = argv.includes('--skip-build');
 // escape hatch exists, and the provenance records which was used.
 const NO_SIGN = argv.includes('--no-sign');
 
+// The application payload is frozen at the STABILIZATION-COMPLETE BASELINE.
+// The harness lives in the packaging lane and moves independently, so the SHA
+// that BUILT an artifact is routinely not the SHA that defines its BEHAVIOR.
+// Both facts are true at once and neither substitutes for the other.
+const APPLICATION_BASELINE = arg('--baseline', '5237a92');
+
 let failures = 0;
 const report = (n, ok, extra) => { if (!ok) failures++; console.log(`${ok ? 'PASS' : 'FAIL'}  ${n}${extra && !ok ? `\n        ${extra}` : ''}`); };
 const phase = (n) => console.log(`\n── ${n} ${'─'.repeat(Math.max(0, 58 - n.length))}`);
@@ -88,6 +94,53 @@ const provenance = {
   built_at: new Date().toISOString(),
 };
 console.log(`      source ${sourceSha.slice(0, 9)} · lock ${lockDigest} · node ${process.version}`);
+
+// TWO FACTS, NEVER COLLAPSED (founder directive, 2026-08-27):
+//
+//   BUILD SOURCE          the commit this artifact was actually built from
+//   APPLICATION BASELINE  the commit that froze the behavior being proven
+//   APPLICATION DIFF      whether the packed payload differs between them
+//
+// Recording only the build source would tell a future reader that this artifact
+// came from a packaging commit, with nothing to say the behavior inside it is
+// the frozen one. Recording only the baseline would misname where the bytes
+// came from. The diff is what makes the pair honest — and it is COMPUTED, not
+// asserted, so a packaging commit that quietly touched application code fails
+// here instead of shipping under the baseline's name.
+//
+// An abbreviation is not an identity (STAB-07), so the baseline is resolved.
+const baseline = (() => {
+  try {
+    return { outcome: 'RESOLVED', sha: sh('git', ['rev-parse', '--verify', '--end-of-options', `${APPLICATION_BASELINE}^{commit}`],
+      { cwd: SOVEREIGN, stdio: ['ignore', 'pipe', 'ignore'] }) };
+  } catch { return { outcome: 'UNKNOWN', sha: null }; }
+})();
+provenance.application_baseline = APPLICATION_BASELINE;
+provenance.application_baseline_resolved = baseline.sha;
+
+// The packed payload is exactly what electron-builder includes: build.files is
+// ["src/**/*"], plus package.json, which it always packs. Diffing the whole
+// repository would fail on harness and docs commits that cannot reach the app.
+const PAYLOAD = ['jarvis-desktop/src', 'jarvis-desktop/package.json'];
+if (baseline.outcome !== 'RESOLVED') {
+  provenance.application_diff = 'UNKNOWN';
+  report(`the application baseline resolves (${APPLICATION_BASELINE})`, false,
+    'the baseline commit is not in this checkout; the artifact cannot be tied to a frozen behavior');
+} else if (baseline.sha === sourceSha) {
+  provenance.application_diff = 'empty';
+  console.log(`      build source IS the application baseline`);
+} else {
+  const changed = sh('git', ['diff', '--name-only', `${baseline.sha}..${sourceSha}`, '--', ...PAYLOAD],
+    { cwd: SOVEREIGN, stdio: ['ignore', 'pipe', 'ignore'] }).split('\n').filter(Boolean);
+  provenance.application_diff = changed.length ? changed : 'empty';
+  report('the packed payload is unchanged from the application baseline', changed.length === 0,
+    `${changed.length} payload file(s) differ from ${APPLICATION_BASELINE} — this artifact does NOT carry the frozen behavior:\n        `
+      + changed.join('\n        '));
+}
+console.log(`      BUILD SOURCE         ${sourceSha.slice(0, 9)}`);
+console.log(`      APPLICATION BASELINE ${APPLICATION_BASELINE}${baseline.sha ? ` (${baseline.sha.slice(0, 9)})` : '  UNRESOLVED'}`);
+console.log(`      APPLICATION DIFF     ${Array.isArray(provenance.application_diff)
+  ? provenance.application_diff.join('\n                           ') : provenance.application_diff}`);
 
 phase('3  produce the artifact');
 // package.json pins a specific Apple Development identity. If that certificate
@@ -174,9 +227,15 @@ provenance.signature = (() => {
   return { observed: 'unknown', detail: text.trim().slice(0, 200) };
 })();
 provenance.signed = provenance.signature.observed === 'identity';
+// SCOPE. A development identity proves the bundle is code-signed well enough to
+// launch on THIS machine for THIS proof. It is not distribution signing and it
+// is not notarization — those belong to a later signing/release unit, and this
+// record must not be readable as if they were done.
+provenance.signature.scope = 'local-proof — development signing only; NOT distribution-signed, NOT notarized';
 report('the artifact signature was observed, not assumed', provenance.signature.observed !== 'unknown',
   provenance.signature.detail || 'codesign did not describe the bundle');
 console.log(`      signature: ${provenance.signature.observed}${provenance.signature.authority ? ` · ${provenance.signature.authority}` : ''}`
+  + `\n      scope:     local proof only — not distribution-signed, not notarized`
   + (NO_SIGN && provenance.signed ? '   ← --no-sign was passed but the artifact IS signed; the flag did not take' : ''));
 
 // Digest the executable payload, not the bundle directory: mtimes and extended
