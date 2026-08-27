@@ -2250,10 +2250,16 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
       // recognition error.
       attachTrackLossListenersFnRef.current?.(stream);
       resetVoiceSession();
-      // Same lifetime as the session token: otherwise `sameAsPrevious` would
-      // compare the first utterance of this engagement against the last of the
-      // previous one and report a duplicate across a boundary that has none.
-      resetDispatchProvenance();
+      // Dispatch provenance is deliberately NOT reset here. getUserMedia is
+      // re-acquired on every hands-free turn: production at 92bc2a9df showed
+      // six consecutive turns each reporting dispatchId=1, msSincePrevious=-1
+      // and six distinct session ids (2026-08-27). Resetting on mic
+      // acquisition gave the witness a SHORTER lifetime than the duplicate it
+      // exists to catch — any repeat reappearing across the re-acquisition
+      // boundary was structurally invisible, and its absence read as "no
+      // duplicate". The comparator is scoped to one deliberate voice
+      // engagement instead: see the mount/unmount effect and the
+      // `userExitMode` branch of `stopListening`.
       logVoiceEvent('voice_mic_granted', {
         audioTracks: stream.getAudioTracks().length,
         trackLabel: stream.getAudioTracks()[0]?.label?.slice(0, 80) ?? '',
@@ -3381,6 +3387,13 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
       }
       accumulatedTranscript.current = '';
     }
+    if (options?.userExitMode) {
+      // Explicit exit closes the engagement the comparator is scoped to.
+      // Ordering is load-bearing: this runs AFTER the accumulated flush above,
+      // so that final `manual_stop` dispatch is still compared against the
+      // engagement it belongs to rather than being reported as a first.
+      resetDispatchProvenance();
+    }
     continuationRestartRef.current = false; // manual stop ends any continuation
 
     setIsListening(false);
@@ -3741,12 +3754,19 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
 
   // Cleanup on unmount
   useEffect(() => {
+    // A fresh engagement starts with no previous utterance to be the same as.
+    resetDispatchProvenance();
     return () => {
       stopListening();
       // Full lifecycle teardown: discards any remaining recognition instance
       // (handlers detached — no restart can fire post-unmount) and removes the
       // devicechange listener.
       webSessionRef.current?.dispose();
+      // Module-local comparison state outlives this component. Clearing it
+      // stops a LATER engagement from comparing its first utterance against
+      // the last of this one and manufacturing a duplicate across a boundary
+      // that has none.
+      resetDispatchProvenance();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Empty deps - only run on mount/unmount
