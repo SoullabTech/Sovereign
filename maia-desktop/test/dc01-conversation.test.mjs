@@ -321,19 +321,64 @@ test('backpressure accumulates audio and never discards it', () => {
     'the pending buffer is cleared on receipt — audio is being thrown away');
 });
 
-test('a body over the measured transport ceiling is refused in plain language', async () => {
+test('there is no client-side size ceiling — the server log disproved it', async () => {
+  // 861996 bytes → 200 → 339 chars, and 1455660 bytes → 200 → 75 chars, both
+  // reaching the route normally. A guard justified by a disproven measurement
+  // would refuse turns that work.
+  const src = strip('conversation.js');
+  assert.ok(!/TRANSPORT_CEILING_BYTES/.test(src), 'the retracted size ceiling is still in the code');
+  const sent = [];
   const conv = createConversation({
-    session: { authedFetch: async () => { throw new Error('must not reach the network'); } },
+    session: { authedFetch: async () => { sent.push(1); return { ok: true, status: 200, res: { json: async () => ({ transcription: 'ok' }) } }; } },
     diagnostics: { emit: () => {} },
     sessionId: 'x',
   });
-  const huge = new Float32Array(16000 * 60); // 60s at 16k ≈ 1.9 MB
-  const out = await conv.transcribe(huge, 16000);
-  assert.equal(out.ok, false);
-  assert.ok(/longer than the server currently accepts/.test(out.error),
-    'an oversized body is sent anyway and the member gets a framework stack trace');
+  const big = new Float32Array(16000 * 60); // ~1.9 MB — comfortably over the old guard
+  const out = await conv.transcribe(big, 16000);
+  assert.equal(out.ok, true, 'a large turn is still being refused locally');
+  assert.equal(sent.length, 1, 'the request was not actually sent');
 });
 
+test('a 5xx that never reached the route is retried exactly once', async () => {
+  const attempts = [];
+  const conv = createConversation({
+    session: {
+      authedFetch: async () => {
+        attempts.push(1);
+        if (attempts.length === 1) {
+          return { ok: false, status: 500, res: { text: async () => '<html>An error 500 occurred on server</html>' } };
+        }
+        return { ok: true, status: 200, res: { json: async () => ({ transcription: 'heard you' }) } };
+      },
+    },
+    diagnostics: { emit: () => {} },
+    sessionId: 'x',
+  });
+  const out = await conv.transcribe(new Float32Array(1600), 16000);
+  assert.equal(attempts.length, 2, 'the request was not retried');
+  assert.deepEqual([out.ok, out.text], [true, 'heard you']);
+});
+
+test('the retry is narrow — never on 4xx, and never more than once', async () => {
+  const attempts = [];
+  const mk = (status, bodyText) => createConversation({
+    session: { authedFetch: async () => { attempts.push(status); return { ok: false, status, res: { text: async () => bodyText } }; } },
+    diagnostics: { emit: () => {} },
+    sessionId: 'x',
+  });
+
+  attempts.length = 0;
+  await mk(413, '<html>too large</html>').transcribe(new Float32Array(160), 16000);
+  assert.equal(attempts.length, 1, 'a 4xx was retried — the client is repeating a refusal');
+
+  attempts.length = 0;
+  await mk(500, '<html>An error 500</html>').transcribe(new Float32Array(160), 16000);
+  assert.equal(attempts.length, 2, 'a persistent 5xx retried more or less than once');
+
+  attempts.length = 0;
+  await mk(500, JSON.stringify({ error: 'Local Faster-Whisper transcription failed' })).transcribe(new Float32Array(160), 16000);
+  assert.equal(attempts.length, 1, 'a 5xx from the route itself was retried — the route already answered');
+});
 test('the level of a sent utterance is measured, so an empty transcript is diagnosable', async () => {
   const events = [];
   const conv = createConversation({

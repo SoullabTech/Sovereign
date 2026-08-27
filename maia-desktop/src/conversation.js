@@ -26,9 +26,14 @@ const { encodeWav } = require('./voice/wav');
 const TRANSCRIBE_PATH = '/api/voice/transcribe-simple';
 const MAIA_PATH = '/api/sovereign/app/maia/list';
 
-// Below the 512 KB boundary the device walk measured, with headroom for
-// multipart framing. At 16 kHz mono this is roughly 15 seconds of speech.
-const TRANSPORT_CEILING_BYTES = 460 * 1024;
+// ⛔ RETRACTED 2026-08-27. A TRANSPORT_CEILING_BYTES of 460 KB used to live
+// here, on the reasoning that bodies over ~512 KB were rejected. The server log
+// disproved it outright: 861996 bytes returned 339 chars and 1455660 bytes
+// returned 75 chars, both HTTP 200, both reaching the route and Whisper
+// normally. There is no size limit and no duration limit. The guard is gone
+// rather than left in place "just in case" — a limit justified by a disproven
+// measurement would silently refuse turns the server handles fine, and would
+// outlive everyone's memory of why it was added.
 
 /**
  * Human-readable meaning for the failures this path actually produces, so the
@@ -95,28 +100,35 @@ function createConversation({ session, diagnostics, sessionId }) {
       rmsX1000,
     });
 
-    // ⛔ Observed ceiling, not a guess: on 2026-08-27 bodies of 527148 bytes and
-    // above were rejected by Next's own /_error page — upstream of the route
-    // handler, so no application code ran. Refusing here with a plain sentence
-    // is better than handing the member a framework stack trace. This is a
-    // CLIENT-SIDE accommodation of a SERVER-SIDE limit; the limit itself is a
-    // recorded finding and is not worked around by weakening anything.
-    if (wav.byteLength > TRANSPORT_CEILING_BYTES) {
-      diagnostics.emit('voice_transcribe_error', { errorName: 'too_large', source: 'client' });
-      return {
-        ok: false,
-        error: `That turn was longer than the server currently accepts (${Math.round(wav.byteLength / 1024)} KB > ${TRANSPORT_CEILING_BYTES / 1024} KB). Shorter turns work; the server-side limit is a known open item.`,
-      };
-    }
 
     const form = new FormData();
     // Content-Type is deliberately NOT set — the route rejects a manually set
     // one, and fetch must be left to write the multipart boundary itself.
     form.append('file', new Blob([wav], { type: 'audio/wav' }), 'utterance.wav');
 
-    const out = await session.authedFetch(TRANSCRIBE_PATH, { method: 'POST', body: form });
+    let out = await session.authedFetch(TRANSCRIBE_PATH, { method: 'POST', body: form });
+    let body = out.ok ? null : await readErrorBody(out.res);
+
+    // ⭐ ONE RETRY, and only for a failure that never reached the route.
+    //
+    // The server log (2026-08-27) showed every request it received succeeding,
+    // including 1.4 MB ones, while the app was being handed Next's /_error page
+    // for requests that appear nowhere in that log. Whatever drops them sits
+    // between the two and is not yet understood — so this is an admitted
+    // MITIGATION, not a fix, and it is deliberately narrow: only a 5xx whose
+    // body is not the route's own JSON, only once, never on 4xx.
+    //
+    // Retrying is safe here specifically because a failed transcription stores
+    // nothing and forms no memory. If that ever stops being true, this must go.
+    if (!out.ok && out.status >= 500 && body && body.__raw) {
+      diagnostics.emit('voice_transcribe_sent', { bytes: wav.byteLength, source: 'retry' });
+      const retryForm = new FormData();
+      retryForm.append('file', new Blob([wav], { type: 'audio/wav' }), 'utterance.wav');
+      out = await session.authedFetch(TRANSCRIBE_PATH, { method: 'POST', body: retryForm });
+      body = out.ok ? null : await readErrorBody(out.res);
+    }
+
     if (!out.ok) {
-      const body = await readErrorBody(out.res);
       const message = out.error || explain(out.status, body);
       // The event carries the shape of the failure, never the server's prose —
       // `details` can quote upstream output and telemetry is not the place for
@@ -162,4 +174,4 @@ function createConversation({ session, diagnostics, sessionId }) {
   return { transcribe, ask, conversationId: () => convId, TRANSCRIBE_PATH, MAIA_PATH };
 }
 
-module.exports = { createConversation, explain, readErrorBody, TRANSCRIBE_PATH, MAIA_PATH, TRANSPORT_CEILING_BYTES };
+module.exports = { createConversation, explain, readErrorBody, TRANSCRIBE_PATH, MAIA_PATH };
