@@ -417,14 +417,26 @@ See: `docs/bridge-d-verification.md` for full verification guide.
 
 ## Co-Lab Release Gate (MANDATORY before tester invites)
 
-**No invite unless `verify-colab-boundaries.ts` passes 31/31 in production.**
+**No invite unless the Co-Lab boundary verifier passes 31/31 in production.**
 
 Run inside the container on minisforum:
 ```bash
-docker exec maia-sovereign sh -c 'DATABASE_URL="$DATABASE_URL" npx tsx scripts/verify-colab-boundaries.ts'
+# Preferred — the gate wrapper. Enforces the real invariant: passed >= 31 AND
+# 0 failed AND 0 warned AND exit 0, so a verifier that silently DROPS checks
+# blocks too. Bare `docker exec` only prints numbers; it enforces nothing.
+ssh soullab@minisforum 'cd ~/MAIA-SOVEREIGN && scripts/pre-deploy-gate.sh colab'
+
+# The verifier alone, if you want to read the matrix:
+docker exec maia-sovereign sh -c 'DATABASE_URL="$DATABASE_URL" npx tsx scripts/verify-constitution-colab.ts'
 ```
 
 Pass condition: `31 passed · 0 failed · 0 warned`
+
+⚠️ The script was renamed to `verify-constitution-colab.ts`; the old name
+`verify-colab-boundaries.ts` **does not exist** and fails with ERR_MODULE_NOT_FOUND.
+`pre-deploy-gate.sh` always used the correct name, so the deploy-path gate has
+been real throughout — only this documented manual command was stale (found
+2026-08-27, WS2-01 candidate gate).
 
 This gate runs automatically as part of `scripts/deploy-production.sh` smoke tests. It must also be run manually before any tester wave. See `docs/ops/COLAB_RELEASE_GATE.md` for the full gate specification — what it checks, which surfaces trigger it, and how to add new checks when new scoped surfaces ship.
 

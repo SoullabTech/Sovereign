@@ -6,8 +6,11 @@
  * assumed. Each check emits PASS / FAIL / WARN.
  *
  * Usage:
- *   npx tsx scripts/verify-colab-boundaries.ts
- *   DATABASE_URL=postgres://... npx tsx scripts/verify-colab-boundaries.ts
+ *   npx tsx scripts/verify-constitution-colab.ts
+ *   DATABASE_URL=postgres://... npx tsx scripts/verify-constitution-colab.ts
+ *
+ * Prefer `scripts/pre-deploy-gate.sh colab`, which enforces the invariant
+ * (>= 31 passed, 0 failed, 0 warned, exit 0) rather than only printing it.
  *
  * What it proves:
  *   1. Every principal lands in their OWN Co-Lab, not someone else's.
