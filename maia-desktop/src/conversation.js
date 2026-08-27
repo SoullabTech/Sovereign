@@ -32,6 +32,33 @@ const MAIA_PATH = '/api/sovereign/app/maia/list';
 // returns that thread in order.
 const TURNS_PATH = '/api/conversation/turns';
 
+// ── D02 · the near-silence gate ─────────────────────────────────────────────
+//
+// Whisper's multilingual `base` model hallucinates on near-silence, and it does
+// not hallucinate quietly — it emits a phrase repeated thirty or a hundred
+// times. On the 2026-08-27 long walk MAIA received one such loop and answered
+// it as if it were speech: "that's not a thought, that's something trying to
+// break through." She offered depth-psychological framing about words the
+// member never said. That is a sovereignty defect, not only a reliability one.
+//
+// The level fields make it separable. Every turn from that walk, by rms:
+//
+//     rms  7  8  9 14 16 16 18 23 28 30 33   loops, fragments, invented text
+//     rms 54 70 72 76 77 86 87 99 139 148    accurate transcription
+//
+// ⛔ THE THRESHOLD IS DELIBERATELY BELOW THE GAP. The data separates cleanly
+// around 40, and 40 would be the tempting choice. It is the wrong one: the tail
+// invariant says a member's speech is never silently discarded, and quiet real
+// speech near the boundary is a far worse loss than an occasional hallucination
+// getting through. So the cut is at 15 — it catches only what is unambiguously
+// room tone, and errs toward sending.
+//
+// ⛔ AND IT IS NEVER SILENT. A gated turn is reported to the member in words.
+// Discarding audio without saying so is the exact failure the epoch machine one
+// layer down exists to prevent; this gate does not get an exemption from it.
+const SILENCE_RMS_X1000 = 15;
+const SILENCE_PEAK_X1000 = 350;
+
 // ⛔ RETRACTED 2026-08-27. A TRANSPORT_CEILING_BYTES of 460 KB used to live
 // here, on the reasoning that bodies over ~512 KB were rejected. The server log
 // disproved it outright: 861996 bytes returned 339 chars and 1455660 bytes
@@ -201,6 +228,17 @@ function createConversation({ session, diagnostics, sessionId }) {
       rmsX1000,
     });
 
+    // Both must be low. Either alone is ambiguous — a single door slam lifts
+    // peak without lifting rms, and distant speech lifts rms without peak.
+    if (rmsX1000 < SILENCE_RMS_X1000 && peakX1000 < SILENCE_PEAK_X1000) {
+      diagnostics.emit('voice_transcribe_error', { errorName: 'near_silence', source: 'client' });
+      return {
+        ok: false,
+        gated: true,
+        error: 'That came through as near-silence, so I didn\'t send it — nothing was transcribed. Say it again when you\'re ready.',
+      };
+    }
+
 
     const payload = multipartWav(wav, 'utterance.wav');
 
@@ -292,4 +330,8 @@ function createConversation({ session, diagnostics, sessionId }) {
   };
 }
 
-module.exports = { createConversation, explain, readErrorBody, multipartWav, BOUNDARY, TRANSCRIBE_PATH, MAIA_PATH, TURNS_PATH };
+module.exports = {
+  createConversation, explain, readErrorBody, multipartWav, BOUNDARY,
+  TRANSCRIBE_PATH, MAIA_PATH, TURNS_PATH,
+  SILENCE_RMS_X1000, SILENCE_PEAK_X1000,
+};
