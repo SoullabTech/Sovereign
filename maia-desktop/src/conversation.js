@@ -91,6 +91,11 @@ async function readErrorBody(res) {
 // content type.
 const BOUNDARY = 'maiadesktop6f1a2b3c4d5e';
 
+// Total attempts per turn, initial included. See the retry comment below.
+const MAX_TRANSCRIBE_ATTEMPTS = 3;
+const RETRY_DELAY_MS = 250;
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
 function multipartWav(wav, filename) {
   const head = Buffer.from(
     `--${BOUNDARY}\r\n` +
@@ -143,18 +148,32 @@ function createConversation({ session, diagnostics, sessionId }) {
     });
     let body = out.ok ? null : await readErrorBody(out.res);
 
-    // ⭐ ONE RETRY, and only for a failure that never reached the route.
+    // ⭐ BOUNDED RETRY, and only for a failure that never reached the route.
     //
-    // The server log (2026-08-27) showed every request it received succeeding,
-    // including 1.4 MB ones, while the app was being handed Next's /_error page
-    // for requests that appear nowhere in that log. Whatever drops them sits
-    // between the two and is not yet understood — so this is an admitted
-    // MITIGATION, not a fix, and it is deliberately narrow: only a 5xx whose
-    // body is not the route's own JSON, only once, never on 4xx.
+    // Root cause is known and is server-side: Next throws
+    //   TypeError: Response body object should not be disturbed or locked
+    // from fromNodeNextRequest — while CONSTRUCTING the Request, before any
+    // application code runs. See docs/ops/TRANSCRIBE_BODY_DISTURBED_2026-08-27.md.
     //
-    // Retrying is safe here specifically because a failed transcription stores
-    // nothing and forms no memory. If that ever stops being true, this must go.
-    if (!out.ok && out.status >= 500 && body && body.__raw) {
+    // The device walk showed it is close to a coin flip and largely independent
+    // of size: 540324 bytes succeeded first try, 741224 succeeded on the retry,
+    // 583236 failed twice, and 234100 — a small one — also failed twice. Against
+    // a ~50% race, one retry leaves roughly a quarter of turns dead. Three
+    // attempts leaves about an eighth.
+    //
+    // ⛔ Still bounded, and bounded for the same reason as before: a persistent
+    // failure is information, and a loop that hides it turns a real defect into
+    // an app that is merely slow and undiagnosable. Three attempts, then the
+    // member is told the truth.
+    //
+    // ⛔ This is a MITIGATION of a server defect, not its fix, and it is safe
+    // only because a failed transcription stores nothing and forms no memory.
+    // It comes out when the server is fixed.
+    for (let attempt = 1; attempt <= MAX_TRANSCRIBE_ATTEMPTS - 1; attempt++) {
+      if (out.ok || out.status < 500 || !body || !body.__raw) break;
+      // A short pause: the race is in per-request setup, so an immediate resend
+      // is more likely to land in the same state than one a moment later.
+      await sleep(RETRY_DELAY_MS * attempt);
       diagnostics.emit('voice_transcribe_sent', { bytes: wav.byteLength, source: 'retry' });
       out = await session.authedFetch(TRANSCRIBE_PATH, {
         method: 'POST', headers: MULTIPART_HEADERS, body: payload,
