@@ -456,3 +456,9 @@ scripts/eval/reports/
 
 # Walk probe snapshots (scripts/walk/*) — local evidence, never committed
 .walk/
+
+# Jarvis CI proof scratch directories — per-run artifacts, never source.
+# 72 of these were sitting untracked in the working tree on 2026-08-27, one
+# broad `git add -A` away from entering history permanently.
+jarvis-ci-proof-*/
+.jarvis/

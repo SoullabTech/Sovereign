@@ -6,7 +6,12 @@
  * read as the same product; that comparison needs a screenshot taken at the
  * SAME viewport, by a command anyone can run the same way twice.
  *
- *   node scripts/capture-studio-field.mjs <field> [--url=http://localhost:3000] [--sha=<sha>]
+ *   node scripts/capture-studio-field.mjs <field> [--m=<manuscriptId>] [--url=<origin>] [--sha=<sha>]
+ *
+ * --url is an ORIGIN (http://localhost:3000). The route comes from the field.
+ * Pass a full URL instead and it is used verbatim — the first version appended
+ * its route to whatever it was given, so a complete URL became
+ * ".../canvas?m=xyz/writers-studio/canvas" and the capture died on a 404.
  *
  * Fields and their routes are declared below so the capture cannot drift from
  * what acceptance compares against.
@@ -41,8 +46,31 @@ if (!field || !FIELDS[field]) {
   process.exit(1);
 }
 
-const base = arg('url', 'http://localhost:3000').replace(/\/+$/, '');
+const urlArg = arg('url', 'http://localhost:3000').replace(/\/+$/, '');
+const manuscript = arg('m', '') || arg('manuscript', '');
 const sha = arg('sha', 'working');
+
+/**
+ * Build the target.
+ *
+ * If --url already names a path, it IS the target — appending the field's route
+ * to it is how this script produced ".../canvas?m=xyz/writers-studio/canvas"
+ * and failed. Otherwise treat it as an origin and add the field's route.
+ */
+function targetUrl() {
+  let u;
+  try {
+    u = new URL(urlArg);
+  } catch {
+    console.error(`[capture] --url is not a URL: ${urlArg}`);
+    process.exit(1);
+  }
+  const hasPath = u.pathname && u.pathname !== '/';
+  if (hasPath) return u.toString();
+  const withRoute = new URL(FIELDS[field], u.origin);
+  if (manuscript) withRoute.searchParams.set('m', manuscript);
+  return withRoute.toString();
+}
 const outDir = 'docs/design/writer-studio/implementations';
 mkdirSync(outDir, { recursive: true });
 const out = join(outDir, `${field}-${sha}.png`);
@@ -104,9 +132,35 @@ const browser = await puppeteer.launch({
 try {
   const page = await browser.newPage();
   await page.setViewport(VIEWPORT);
-  const url = `${base}${FIELDS[field]}`;
+  const url = targetUrl();
   console.log(`[capture] ${url} at ${VIEWPORT.width}×${VIEWPORT.height}@${VIEWPORT.deviceScaleFactor}x`);
-  await page.goto(url, { waitUntil: 'networkidle0', timeout: 60_000 });
+  try {
+    await page.goto(url, { waitUntil: 'networkidle0', timeout: 60_000 });
+  } catch (err) {
+    /* The commonest failure by far is "the app is not running". Say that,
+       rather than a stack trace out of the CDP layer. */
+    const msg = err instanceof Error ? err.message : String(err);
+    if (/ERR_CONNECTION_REFUSED/.test(msg)) {
+      console.error(`[capture] Nothing is listening at ${new URL(url).origin}.`);
+      console.error('[capture] Start the app first, in its own terminal:');
+      console.error('[capture]   npm run dev');
+      process.exit(1);
+    }
+    throw err;
+  }
+
+  /* A capture of the signed-out panel is not a capture of the field, and it
+     looks enough like a real screen to be mistaken for one. Refuse it. */
+  const signedOut = await page.evaluate(() =>
+    document.body.innerText.includes('opens only to you'),
+  );
+  if (signedOut) {
+    console.error('[capture] The Studio is showing its signed-out panel — this browser has no');
+    console.error('[capture] session, so the capture would not be of the field. Sign in with a');
+    console.error('[capture] profile this run can use, or capture with CHROMIUM_PATH pointed at');
+    console.error('[capture] a browser that is already signed in.');
+    process.exit(1);
+  }
   /* The Studio loads its manuscript after mount. A capture taken before that
      photographs a loading state and calls it the field. */
   await page.waitForFunction(() => !document.body.innerText.includes('reading the draft'), {
