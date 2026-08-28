@@ -328,6 +328,58 @@ try {
     throw err;
   }
 
+  /**
+   * What the room ACTUALLY rendered. Three outcomes, never conflated.
+   *
+   * This used to be one boolean — "is the signed-out panel showing?" — and a
+   * boolean cannot tell the two failures apart. If the Canvas threw to the
+   * error boundary, that text is absent, the boolean reads false, and the
+   * harness walks straight past it and photographs the crash under a
+   * `[capture:ok]` line. A crash would have been filed as the field.
+   *
+   * That is the worst shape a witness can take: plausible evidence is more
+   * dangerous than obvious failure when provenance is uncertain. So the state
+   * is classified, and each class is said out loud.
+   */
+  const ROOM_CRASH = 'Something Went Wrong'; // app/error.tsx · app/global-error.tsx
+  const ROOM_SIGNED_OUT = 'opens only to you'; // app/writers-studio/canvas/page.tsx
+  async function readRoomState(target) {
+    return await target.evaluate(
+      (crash, out) => {
+        const t = document.body.innerText;
+        if (t.includes(crash)) return 'crash';
+        if (t.includes(out)) return 'signed-out';
+        return 'field';
+      },
+      ROOM_CRASH,
+      ROOM_SIGNED_OUT,
+    );
+  }
+
+  /**
+   * Witness 1 — observed on the FIRST load, before any sign-in.
+   *
+   * The proof `ac02a22ba` needs is not "the harness stopped because it was
+   * signed out". It is the whole chain:
+   *
+   *   fresh browser
+   *     -> WriterCanvas reaches its unauthorized state
+   *     -> the intended sign-in invitation renders
+   *     -> no React error boundary
+   *
+   * A generic stop before rendering witnesses nothing. This runs before the
+   * headful sign-in prompt precisely so the pre-session render is seen, whether
+   * or not the run goes on to capture afterwards.
+   */
+  const firstLoad = await readRoomState(page2);
+  if (firstLoad === 'signed-out') {
+    console.log('[witness-1] PASS  unauthorized -> sign-in invitation rendered, no error boundary');
+  } else if (firstLoad === 'crash') {
+    console.log('[witness-1] FAIL  the error boundary rendered on first load, not the invitation.');
+  } else {
+    console.log('[witness-1] n/a   this profile already held a session; the room opened to the field.');
+  }
+
   /* A capture of the signed-out panel is not a capture of the field, and it
      looks enough like a real screen to be mistaken for one. Refuse it. */
   if (headful) {
@@ -339,10 +391,15 @@ try {
     await page2.reload({ waitUntil: 'networkidle0', timeout: 60_000 });
   }
 
-  const signedOut = await page2.evaluate(() =>
-    document.body.innerText.includes('opens only to you'),
-  );
-  if (signedOut) {
+  const state = await readRoomState(page2);
+  if (state === 'crash') {
+    console.error('[capture] The room threw to the error boundary. This is NOT a capture');
+    console.error('[capture] failure — it is the field failing, and it must not be filed as');
+    console.error('[capture] an image. Refusing.');
+    console.error('[capture] Read the app terminal for the thrown error before anything else.');
+    process.exit(1);
+  }
+  if (state === 'signed-out') {
     console.error('[capture] The Studio is showing its signed-out panel — this browser has no');
     console.error('[capture] session, so the capture would not be of the field. Sign in with a');
     console.error('[capture] profile this run can use, or capture with CHROMIUM_PATH pointed at');

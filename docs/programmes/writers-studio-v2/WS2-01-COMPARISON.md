@@ -73,6 +73,33 @@ whose session expires mid-session takes that exact path.
 
 **STRUCTURALLY FIXED ≠ RUNTIME RE-WITNESSED.**
 
+### What Witness 1 has to observe (founder, 2026-08-28)
+
+Not "the harness stopped because it was signed out". The whole chain:
+
+```text
+fresh browser
+  → WriterCanvas reaches its unauthorized state
+  → the intended sign-in invitation renders
+  → no React error boundary
+```
+
+A generic stop before rendering witnesses nothing.
+
+The harness could not produce that, and its gap ran the wrong way. It asked one
+boolean — is the invitation copy present? On a crash that copy is absent, the
+boolean read false, and the run walked past the error boundary, verified the
+viewport, and photographed `app/error.tsx` under a `[capture:ok]` line. Pass 1
+would then have scored ten dimensions against a picture of the crash.
+
+So the harness now classifies what rendered — `crash` · `signed-out` · `field` —
+reports the first load as `[witness-1] PASS/FAIL/n/a` before the headful sign-in
+pause, and refuses a `crash` outright rather than capturing it. Pinned by
+`app/writers-studio/__tests__/captureWitness.test.ts`.
+
+This changes how the field is OBSERVED, never the field. No component, route or
+substrate file is touched, so `ac02a22ba` remains the code under test.
+
 ## What SHA the evidence belongs to
 
 A capture is named for HEAD, because HEAD is the tree that rendered it. That is
