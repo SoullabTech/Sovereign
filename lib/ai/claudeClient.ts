@@ -5,6 +5,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import { logStancePre, logStancePost } from '../sovereign/stanceReanchor';
 import { AIN_INTEGRATIVE_ALCHEMY_SENTINEL } from './prompts/ainIntegrativeAlchemy';
 import { logVoiceTierTelemetry } from '../db/voiceTierTelemetry';
+import { describeImagesForLog, type MaiaImageAttachment } from './vision';
 import type { TextResult, ProviderMeta } from './types';
 
 // Model configuration
@@ -89,6 +90,13 @@ export interface ClaudeChatParams {
   systemPrompt: string;
   userInput: string;
   meta?: Record<string, unknown>;
+  /**
+   * Images the member attached to THIS turn (see lib/ai/vision.ts). Passed as
+   * an explicit field rather than through `meta` so the bytes have one
+   * greppable path and never leak into prompt-composition or telemetry that
+   * walks the meta bag. Turn-scoped: nothing here is persisted.
+   */
+  images?: MaiaImageAttachment[];
 }
 
 // Lazy-initialized client
@@ -115,7 +123,7 @@ export async function generateWithClaude(
   params: ClaudeChatParams,
 ): Promise<TextResult> {
   const t0 = Date.now();
-  const { systemPrompt, userInput, meta } = params;
+  const { systemPrompt, userInput, meta, images } = params;
 
   const client = getAnthropicClient();
   if (!client) {
@@ -146,13 +154,40 @@ export async function generateWithClaude(
   try {
     console.log(`🧠 Calling Claude (${selection.model})...`);
 
+    // 👁️ VISION: when the member attached images to this turn, the user message
+    // becomes a content-block array — image blocks first, then their words, which
+    // is the ordering Anthropic recommends for image-plus-question turns. With no
+    // attachments the payload is the plain string it has always been, so every
+    // existing turn is byte-identical to before.
+    const userContent = images && images.length > 0
+      ? [
+          ...images.map(img => ({
+            type: 'image' as const,
+            source: {
+              type: 'base64' as const,
+              media_type: img.mediaType,
+              data: img.data,
+            },
+          })),
+          { type: 'text' as const, text: userInput },
+        ]
+      : userInput;
+
+    if (images && images.length > 0) {
+      // Content-free: counts and types only, never the bytes.
+      console.log('👁️ [MAIA] vision-attached', {
+        model: selection.model,
+        ...describeImagesForLog(images),
+      });
+    }
+
     const message = await client.messages.create({
       model: selection.model,
       max_tokens: CLAUDE_MAX_TOKENS,
       temperature: CLAUDE_TEMPERATURE,
       system: systemPrompt,
       messages: [
-        { role: 'user', content: userInput }
+        { role: 'user', content: userContent }
       ],
     });
 

@@ -6,6 +6,8 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Paperclip, X, Copy, BookOpen, Clock, Mic, MicOff, Volume2, VolumeX, MessageCircle, Eye, EyeOff, CornerUpLeft, Send, Phone, Loader2, CheckCircle, Users, Bookmark } from 'lucide-react';
+import { prepareImagesForMaia, composeAttachmentPrompt } from '@/lib/maia/vision/prepareImages';
+import type { MaiaImageAttachment } from '@/lib/ai/vision';
 // import { SimplifiedOrganicVoice, VoiceActivatedMaiaRef } from './ui/SimplifiedOrganicVoice'; // REPLACED with Whisper
 // import { WhisperVoiceRecognition } from './ui/WhisperVoiceRecognition'; // REPLACED with ContinuousConversation (uses browser Web Speech API)
 import { ContinuousConversation, ContinuousConversationRef } from './voice/ContinuousConversation';
@@ -4843,13 +4845,39 @@ I'm not sure what I'm feeling yet.`;
     // Process attachments first if any
     let messageText = text;
     let fileContents: string[] = [];
+    // 👁️ Images MAIA will actually see on this turn. Sent alongside the message
+    // on the request body — NOT interpolated into the text. Until 2026-08-28 the
+    // filename was all that travelled, which is why a tester was told MAIA could
+    // "only see the file name": that was a true report of what she received.
+    let visionImages: MaiaImageAttachment[] = [];
 
     if (attachments && attachments.length > 0) {
-      const fileNames = attachments.map(f => f.name).join(', ');
-      messageText = `${text}\n\n[Files attached: ${fileNames}]`;
+      const prepared = await prepareImagesForMaia(attachments);
+      visionImages = prepared.images;
+
+      // A picture that could not be prepared is named, not swallowed. The
+      // member's words still send either way.
+      for (const failure of prepared.failures) {
+        toast(failure.message, { duration: 6000 });
+      }
+
+      if (visionImages.length > 0) {
+        const label = visionImages.length === 1
+          ? (visionImages[0].name || 'image')
+          : `${visionImages.length} images`;
+        // Placeholder for the member's own transcript only. MAIA reads the real
+        // image from the content blocks, not from this line.
+        messageText = `${text}\n\n[Attached: ${label}]`;
+      }
+
+      const otherFiles = prepared.nonImages;
+      if (otherFiles.length > 0) {
+        const fileNames = otherFiles.map(f => f.name).join(', ');
+        messageText = `${messageText}\n\n[Files attached: ${fileNames}]`;
+      }
 
       // Read text-based file contents
-      for (const file of attachments) {
+      for (const file of otherFiles) {
         if (file.type.startsWith('text/') ||
             file.name.endsWith('.txt') ||
             file.name.endsWith('.md') ||
@@ -5250,6 +5278,11 @@ I'm not sure what I'm feeling yet.`;
           method: 'POST',
           body: JSON.stringify({
           message: cleanedText,
+          // 👁️ The images themselves, base64, alongside the text — this is what
+          // makes MAIA able to see rather than merely be told a filename. They
+          // are turn-scoped: the server passes them to the model call and does
+          // not persist them, and they are not kept in client message state.
+          ...(visionImages.length > 0 ? { images: visionImages } : {}),
           userId: userId || 'anonymous',
           userName: userName || 'Friend',
           sessionId,
@@ -9877,8 +9910,8 @@ I'm not sure what I'm feeling yet.`;
                       console.log('🔊 Voice responses toggled:', newValue ? 'ON' : 'OFF');
                     }}
                     onFileUpload={(files) => {
-                      const fileNames = files.map(f => f.name).join(', ');
-                      handleTextMessage(`Please analyze these files: ${fileNames}`, files);
+                      handleTextMessage(composeAttachmentPrompt(files, draftMessage), files);
+                      setDraftMessage('');
                     }}
                     onDownloadConversation={handleDownloadConversation}
                     onOpenPromptPicker={() => setShowPromptPicker(true)}
@@ -10139,18 +10172,20 @@ I'm not sure what I'm feeling yet.`;
         </div>
       )}
 
-      {/* Hidden File Upload Input */}
+      {/* Hidden File Upload Input.
+          👁️ `accept` lists explicit image types rather than "*": on iOS that is
+          what makes the photo picker hand back a decodable picture, and it shows
+          the member up front what MAIA can actually take. */}
       <input
         type="file"
         id="maiaFileUpload"
         className="hidden"
         multiple
-        accept="*"
+        accept="image/*,application/pdf,.txt,.md,.json,.csv,.doc,.docx"
         onChange={(e) => {
           const files = Array.from(e.target.files || []);
           if (files.length > 0) {
-            const fileNames = files.map(f => f.name).join(', ');
-            handleTextMessage(`Please analyze these files: ${fileNames}`, files);
+            handleTextMessage(composeAttachmentPrompt(files), files);
             e.target.value = ''; // Reset input
           }
         }}

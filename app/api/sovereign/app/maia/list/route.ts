@@ -86,6 +86,7 @@ export async function OPTIONS(req: NextRequest) {
     headers: getCorsHeaders(req),
   });
 }
+import { normalizeImageAttachments, describeImagesForLog } from '@/lib/ai/vision';
 import { getMaiaResponse } from '@/lib/sovereign/maiaService';
 // F1 durable turn acceptance (audit 2026-08-10): this route is the serving
 // boundary that ACCEPTS a member utterance, so it is where the utterance must
@@ -286,7 +287,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await withTimeoutLabeled('req.json', req.json().catch(() => ({})), 2000, start);
-    const { sessionId, message, includeAudio, voiceProfile, userId: bodyUserId, timezone: rawTimezone, conversationId: bodyConversationId, exchangeId: clientExchangeId, ...meta } = body as {
+    const { sessionId, message, includeAudio, voiceProfile, userId: bodyUserId, timezone: rawTimezone, conversationId: bodyConversationId, exchangeId: clientExchangeId, images: rawImages, ...meta } = body as {
       sessionId?: string;
       message?: string;
       includeAudio?: boolean;
@@ -299,6 +300,12 @@ export async function POST(req: NextRequest) {
       // client's own later pair write — which then dedupes instead of doubling.
       // Destructured out of `meta` deliberately: it is plumbing, not prompt context.
       exchangeId?: string;
+      // 👁️ Images the member attached to this turn. Destructured OUT of the meta
+      // rest-spread deliberately: meta is client-controlled and reaches prompt
+      // composition and telemetry, and image bytes must reach neither. They travel
+      // on getMaiaResponse's own `images` field instead. Turn-scoped — nothing here
+      // is written to conversation_turns, atoms, or any memory layer.
+      images?: unknown;
       [key: string]: unknown;
     };
 
@@ -324,6 +331,25 @@ export async function POST(req: NextRequest) {
 
     // Validate and sanitize timezone (default to UTC if invalid)
     const timezone = (rawTimezone && isValidTimeZone(rawTimezone)) ? rawTimezone : 'UTC';
+
+    // 👁️ VISION (2026-08-28): turn the member's attached images into something
+    // MAIA can actually look at. Before this, an attachment reached her as its
+    // filename only — the client appended "[Files attached: IMG_0421.HEIC]" and
+    // dropped the bytes, so her honest answer was that she could see a file name.
+    //
+    // Boundary responsibilities, per the growth-obligation check (CLAUDE.md):
+    //  · ceilings enforced HERE, not trusted from the client;
+    //  · nothing derived from the image is stored — no caption, tag, or embedding;
+    //  · the bytes are turn-scoped and never enter `meta`, memory, or telemetry;
+    //  · a refused attachment is REPORTED back, never silently dropped.
+    const { images: visionImages, rejections: imageRejections } = normalizeImageAttachments(rawImages);
+    if (visionImages.length > 0 || imageRejections.length > 0) {
+      console.log('👁️ [MAIA] vision-received', {
+        rid: requestId,
+        accepted: describeImagesForLog(visionImages),
+        rejected: imageRejections.map(r => r.reason),
+      });
+    }
 
     console.log(`[MAIA step] body parsed rid=${requestId} dt=${msSince(start)}ms`);
 
@@ -1193,6 +1219,9 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
         // pre-existing mislabel left untouched by this diagnostic — which is exactly
         // why attribution must come from this explicit literal instead.
         originRoute: '/api/sovereign/app/maia/list',
+        // 👁️ Validated at this boundary (media-type allowlist, per-image byte
+        // ceiling, per-turn count ceiling) regardless of what the client claims.
+        images: visionImages,
         meta: {
           // 🔒 PROMPT-AUTHORITY INVARIANT (PBR-001, 2026-08-12)
           //
@@ -1596,6 +1625,18 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
         } : undefined,
       },
     };
+
+    // 👁️ VISION: report what actually reached her. `seen` is the count of images
+    // this turn carried into the model call; `rejected` names attachments the
+    // boundary refused and why. A refused image must be visible to the member —
+    // silent loss is how "she can only see the file name" happened in the first
+    // place. Counts and reasons only: no bytes travel back.
+    if (visionImages.length > 0 || imageRejections.length > 0) {
+      responseData.attachments = {
+        seen: visionImages.length,
+        rejected: imageRejections.map(r => ({ name: r.name, reason: r.reason })),
+      };
+    }
 
     // 🐛 Debug block: requires explicit ?debug=1 (dev: no key, prod: needs key)
     const debugRequested = req.nextUrl.searchParams.get('debug') === '1';

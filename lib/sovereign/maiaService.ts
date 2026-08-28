@@ -4,6 +4,7 @@ import { incrementTurnCount, addConversationExchange, getConversationHistory } f
 import { buildMaiaWisePrompt, buildMaiaComprehensivePrompt, sanitizeMaiaOutput, MaiaContext } from './maiaVoice';
 import { PLATFORM_KNOWLEDGE_ADDENDUM } from './platformKnowledge';
 import { generateText, type ProviderMeta } from '../ai/modelService';
+import { describeImagesForLog, type MaiaImageAttachment } from '../ai/vision';
 import { consciousnessOrchestrator } from '../orchestration/consciousness-orchestrator';
 import { consciousnessWrapper, type ConsciousnessContext } from '../consciousness/consciousness-layer-wrapper';
 import { elementalRouter } from '../consciousness/elemental-context-router';
@@ -597,6 +598,11 @@ type MaiaRequest = {
   };
   includeAudio?: boolean;
   voiceProfile?: 'default' | 'intimate' | 'wise' | 'grounded';
+  // 👁️ Images the member attached to THIS turn (lib/ai/vision.ts). Explicit
+  // field, not a meta key: the bytes are turn-scoped and must never be written,
+  // recalled, or composed into a prompt block. getMaiaResponse forwards them to
+  // the path handlers, which hand them to generateText and nowhere else.
+  images?: MaiaImageAttachment[];
   // Route/profile tracing for corpus callosum filtering
   originRoute?: string;              // e.g. '/api/sovereign/app/maia', '/api/between/chat'
   processingProfileOverride?: string; // Override computed profile (e.g. 'BETWEEN')
@@ -711,7 +717,11 @@ async function fastPathResponse(
   input: string,
   conversationHistory: any[],
   meta: Record<string, unknown>,
-  mindContext?: MindContext
+  mindContext?: MindContext,
+  // 👁️ Turn-scoped image attachments. Threaded as a parameter rather than a
+  // meta key so the bytes cannot be picked up by anything that walks `meta`
+  // (prompt composition, context-inventory telemetry, persistence).
+  images?: MaiaImageAttachment[]
 ): Promise<{ response: string; provider: ProviderMeta }> {
   console.log(`⚡ FAST PATH: Simple response with core MAIA voice`);
 
@@ -1472,6 +1482,7 @@ Current context: Simple conversation turn - respond naturally and warmly.`;
   const { text: response, provider } = await generateText({
     systemPrompt: baseSystemPrompt,
     userInput: contextPrompt,
+    images,
     meta: {
       ...meta,
       currentUserMessage: input, // Raw user input for routing (not full context)
@@ -1514,7 +1525,11 @@ async function corePathResponse(
   input: string,
   conversationHistory: any[],
   meta: Record<string, unknown>,
-  mindContext?: MindContext
+  mindContext?: MindContext,
+  // 👁️ Turn-scoped image attachments. Threaded as a parameter rather than a
+  // meta key so the bytes cannot be picked up by anything that walks `meta`
+  // (prompt composition, context-inventory telemetry, persistence).
+  images?: MaiaImageAttachment[]
 ): Promise<{ response: string; provider: ProviderMeta }> {
   console.log(`🎯 CORE PATH: Normal MAIA conversation with light awareness`);
   const coreT0 = Date.now();
@@ -1879,6 +1894,7 @@ The current user has not provided their name. Address them as "friend" or "there
   const { text: response, provider: coreProvider } = await generateText({
     systemPrompt: adaptivePrompt,
     userInput: input,
+    images,
     meta: {
       ...meta,
       currentUserMessage: input, // Raw user input for routing (consistent with FAST path)
@@ -1918,6 +1934,9 @@ The current user has not provided their name. Address them as "friend" or "there
       const { text } = await generateText({
         systemPrompt: repairedPrompt,
         userInput: input,
+        // The repair regenerates the same turn — it must see what the first
+        // pass saw, or the repaired answer describes an image it never got.
+        images,
         meta: {
           ...meta,
           currentUserMessage: input,
@@ -1949,9 +1968,24 @@ async function deepPathResponse(
   input: string,
   conversationHistory: any[],
   meta: Record<string, unknown>,
-  mindContext?: MindContext
+  mindContext?: MindContext,
+  // 👁️ Turn-scoped image attachments. Threaded as a parameter rather than a
+  // meta key so the bytes cannot be picked up by anything that walks `meta`
+  // (prompt composition, context-inventory telemetry, persistence).
+  images?: MaiaImageAttachment[]
 ): Promise<{ response: string; consciousnessData?: any; socraticValidation?: any; provider?: ProviderMeta }> {
   console.log(`🧠 DEEP PATH: Full consciousness orchestration + Claude consultation activated`);
+
+  // 👁️ DEEP is structurally image-blind: its primary generation is the local
+  // consciousness wrapper and the Opus consultation lane, neither of which takes
+  // image blocks. getMaiaResponse therefore downgrades image turns to CORE before
+  // reaching here, so this branch should be unreachable. If it ever fires, the
+  // downgrade has regressed — say nothing about the image rather than guess.
+  if (images && images.length > 0) {
+    console.warn('👁️ [MAIA] vision-reached-deep — images cannot be seen on this path', {
+      ...describeImagesForLog(images),
+    });
+  }
 
   // 🧬 CONSCIOUSNESS POLICY (full depth for DEEP path)
   const userId = (meta as any).userId;
@@ -2554,7 +2588,7 @@ function finalizeMemberFacingText(
 }
 
 export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
-  const { sessionId, input, meta = {}, includeAudio = false, voiceProfile, originRoute, processingProfileOverride } = req;
+  const { sessionId, input, meta = {}, includeAudio = false, voiceProfile, originRoute, processingProfileOverride, images } = req;
   const startTime = Date.now();
   // SANCTUARY (S1): per-turn posture, resolved once for this request and
   // passed to every content writer (turns store, corpus callosum trace).
@@ -2982,7 +3016,31 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
       sessionId: userId ? undefined : sessionId, // Fallback to sessionId if no userId
       // NOTE: atlasContext removed - not yet in router interface (future: elemental routing)
     });
-    const processingProfile = routerResult.profile;
+    let processingProfile = routerResult.profile;
+
+    // 👁️ VISION TIER CONSTRAINT (2026-08-28)
+    //
+    // FAST and CORE generate through generateText(), which is the only path that
+    // can carry image blocks to Claude. DEEP's primary generation runs through
+    // the local consciousness wrapper and the Opus consultation lane, neither of
+    // which accepts images — the same addenda-channel divergence documented in
+    // docs/architecture/ADDENDA_CHANNEL_DIVERGENCE_2026-05-24.md §II.B, hitting a
+    // new payload.
+    //
+    // So a DEEP turn carrying images is served at CORE instead. The alternative —
+    // letting it run DEEP — would produce MAIA's most confident register applied
+    // to an image she never received. Losing depth-orchestration on an image turn
+    // is a bounded cost; answering as if she had looked is a vow violation.
+    // Lifting this requires image support in the DEEP lane, not a flag.
+    if (images && images.length > 0 && processingProfile === 'DEEP') {
+      console.log('👁️ [MAIA] vision-tier-downgrade', {
+        from: 'DEEP',
+        to: 'CORE',
+        reason: 'deep-lane-cannot-carry-images',
+        ...describeImagesForLog(images),
+      });
+      processingProfile = 'CORE';
+    }
 
     // Attach cognitive profile to meta for downstream services
     if (routerResult.meta?.cognitiveProfile) {
@@ -3153,7 +3211,7 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
     // Route to appropriate processing path (with optional MindContext for PFI integration)
     switch (processingProfile) {
       case 'FAST': {
-        const fastResult = await fastPathResponse(sessionId, input, conversationHistory, meta, mindContext);
+        const fastResult = await fastPathResponse(sessionId, input, conversationHistory, meta, mindContext, images);
         rawResponse = fastResult.response;
         provider = fastResult.provider;
         // Log PFI telemetry if mind state was generated
@@ -3164,7 +3222,7 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
       }
 
       case 'CORE': {
-        const coreResult = await corePathResponse(sessionId, input, conversationHistory, meta, mindContext);
+        const coreResult = await corePathResponse(sessionId, input, conversationHistory, meta, mindContext, images);
         rawResponse = coreResult.response;
         provider = coreResult.provider;
         // Log PFI telemetry if mind state was generated
@@ -3175,7 +3233,7 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
       }
 
       case 'DEEP': {
-        const deepResult = await deepPathResponse(sessionId, input, conversationHistory, meta, mindContext);
+        const deepResult = await deepPathResponse(sessionId, input, conversationHistory, meta, mindContext, images);
         rawResponse = deepResult.response;
         consciousnessData = deepResult.consciousnessData;
         provider = deepResult.provider; // May be undefined for DEEP path
@@ -3188,7 +3246,7 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
 
       default: {
         // Fallback to FAST
-        const fallbackResult = await fastPathResponse(sessionId, input, conversationHistory, meta, mindContext);
+        const fallbackResult = await fastPathResponse(sessionId, input, conversationHistory, meta, mindContext, images);
         rawResponse = fallbackResult.response;
         provider = fallbackResult.provider;
         if (mindContext?.pfiMindState) {

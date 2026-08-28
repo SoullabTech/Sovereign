@@ -4,6 +4,7 @@ import { generateWithClaude, checkClaudeHealth } from './claudeClient';
 import { generateWithKimi, checkKimiHealth, isKimiAvailable } from './kimiClient';
 import { generateWithMultipleEngines, OrchestrationType } from './multiEngineOrchestrator';
 import { generateTextWithSovereignty } from './sovereignRouter';
+import { buildNoVisionFallbackNote, type MaiaImageAttachment } from './vision';
 import type { TextResult, ProviderMeta, InferenceMode } from './types';
 
 // Phase 1: Sovereign inference mode — unset/empty = zero behavior change
@@ -66,6 +67,38 @@ export interface TextRequest {
   systemPrompt: string;
   userInput: string;
   meta?: Record<string, unknown>;
+  /**
+   * 👁️ Images the member attached to this turn (lib/ai/vision.ts).
+   *
+   * Only Claude can currently see them. Every other lane in this gateway —
+   * Kimi, multi-engine, local Ollama, the sovereign router — is text-only, so
+   * each one is handed `buildNoVisionFallbackNote()` instead: MAIA is told the
+   * images exist and that she did NOT receive them, and to say so rather than
+   * improvise. A capability that silently degrades into confident description
+   * would be a non-manipulation failure, not a graceful fallback.
+   */
+  images?: MaiaImageAttachment[];
+}
+
+/** True when this turn carries images the calling lane cannot actually see. */
+function hasUnseenImages(req: TextRequest): boolean {
+  return Array.isArray(req.images) && req.images.length > 0;
+}
+
+/**
+ * Return a copy of the request with the no-vision notice appended to the system
+ * prompt, for lanes that cannot accept image blocks. The images themselves are
+ * dropped from the copy — nothing downstream should carry bytes it cannot use.
+ */
+function withNoVisionNotice(req: TextRequest): TextRequest {
+  if (!hasUnseenImages(req)) return req;
+  const count = req.images!.length;
+  console.warn('👁️ [MAIA] vision-unavailable — provider cannot see attachments', { count });
+  const { images: _dropped, ...rest } = req;
+  return {
+    ...rest,
+    systemPrompt: `${req.systemPrompt}\n${buildNoVisionFallbackNote(count)}`,
+  };
 }
 
 /**
@@ -81,7 +114,9 @@ export async function generateText(req: TextRequest): Promise<TextResult> {
   // If set, hand off to sovereignRouter and return; existing logic below is bypassed.
   // t0 passed so the router can log accurate end-to-end latency.
   if (MAIA_INFERENCE_MODE) {
-    return generateTextWithSovereignty(req, MAIA_INFERENCE_MODE, t0);
+    // The sovereign router's lanes are text-only; degrade honestly rather than
+    // letting MAIA answer as though she had seen the attachment.
+    return generateTextWithSovereignty(withNoVisionNotice(req), MAIA_INFERENCE_MODE, t0);
   }
   // ────────────────────────────────────────────────────────────────────────
 
@@ -97,11 +132,12 @@ export async function generateText(req: TextRequest): Promise<TextResult> {
     const orchestrationType = (req.meta?.orchestrationType as OrchestrationType) || MAIA_ORCHESTRATION_TYPE;
     const elementalLayer = req.meta?.elementalLayer as string;
 
+    const multiEngineReq = withNoVisionNotice(req);
     const multiEngineResponse = await generateWithMultipleEngines(
       {
-        systemPrompt: req.systemPrompt,
-        userInput: req.userInput,
-        meta: req.meta,
+        systemPrompt: multiEngineReq.systemPrompt,
+        userInput: multiEngineReq.userInput,
+        meta: multiEngineReq.meta,
       },
       orchestrationType,
       elementalLayer
@@ -130,10 +166,11 @@ export async function generateText(req: TextRequest): Promise<TextResult> {
     } else {
       console.log('🌙 Using Kimi (Moonshot) for backstage task');
       try {
+        const kimiReq = withNoVisionNotice(req);
         const kimiResult = await generateWithKimi({
-          systemPrompt: req.systemPrompt,
-          userInput: req.userInput,
-          meta: req.meta,
+          systemPrompt: kimiReq.systemPrompt,
+          userInput: kimiReq.userInput,
+          meta: kimiReq.meta,
           thinkingMode: req.meta?.thinkingMode !== false, // Default to thinking mode
         });
         logTokenUsageLine({ provider: 'moonshot', model: kimiResult.provider?.model, t0, usage: kimiResult.provider?.usage, routeTag: 'modelService.generateText' });
@@ -159,6 +196,8 @@ export async function generateText(req: TextRequest): Promise<TextResult> {
         systemPrompt: req.systemPrompt,
         userInput: req.userInput,
         meta: req.meta,
+        // 👁️ The only lane in this gateway that can actually look.
+        images: req.images,
       });
       logTokenUsageLine({ provider: 'anthropic', model: claudeResult.provider?.model, t0, usage: claudeResult.provider?.usage, routeTag: 'modelService.generateText' });
       return claudeResult;
@@ -184,10 +223,11 @@ export async function generateText(req: TextRequest): Promise<TextResult> {
 
   // Fallback: local Ollama/DeepSeek
   console.log('🔮 Using local model (Ollama/DeepSeek)');
+  const localReq = withNoVisionNotice(req);
   const localResult = await generateWithLocalModel({
-    systemPrompt: req.systemPrompt,
-    userInput: req.userInput,
-    meta: req.meta,
+    systemPrompt: localReq.systemPrompt,
+    userInput: localReq.userInput,
+    meta: localReq.meta,
   });
   logTokenUsageLine({ provider: localResult.provider?.provider ?? 'ollama', model: localResult.provider?.model, t0, usage: localResult.provider?.usage, routeTag: 'modelService.generateText' });
   return localResult;
