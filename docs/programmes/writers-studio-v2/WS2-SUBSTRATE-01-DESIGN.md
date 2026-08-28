@@ -750,9 +750,11 @@ and it would have named an installed-but-unlocked guard had one been present.
 
 - **Not production.** Local dev PostgreSQL only. The candidate has not been
   applied to minisforum and must not be, ahead of a deploy ruling.
-- **Not Co-Lab.** That gate was green (33 · 0 · 0) on an earlier head; per D-013
-  acceptance is re-measured at the current referent, so it is re-run against
-  whatever finally ships.
+- **Not Co-Lab** — see the applicability correction below, which supersedes the
+  line that stood here. It read: *"That gate was green (33 · 0 · 0) on an earlier
+  head; per D-013 acceptance is re-measured at the current referent, so it is
+  re-run against whatever finally ships."* That was wrong about which gate
+  applies, not merely about when to run it.
 - **Not the routes under real concurrency.** The probe races the SQL directly,
   which is the invariant's home. The 409 path is proved by unit test, not by a
   live two-request race.
@@ -764,3 +766,88 @@ disposable-database path (`pg_dump -s` into `ws2_probe`) aborts on version
 mismatch and produces an empty schema. Both `postgresql@14` and `postgresql@17`
 are installed under Homebrew; `@14` wins the PATH. Anything that snapshots
 schema will hit this until the PATH prefers `@17`.
+
+
+---
+
+# CO-LAB APPLICABILITY CORRECTION — R2
+
+**Founder ruling, 2026-08-28.** The gate's CLASSIFICATION changed, not its
+execution status.
+
+Earlier R2 evidence listed an exact-head Co-Lab rerun as outstanding under
+D-013. Inspection established that `scripts/verify-constitution-colab.ts` is
+**byte-identical** between base `d332935ae` and candidate `46157b9b0`, reads
+thirteen tables with **no `living_work*` dependency**, and cannot observe R2's
+table or trigger. The verifier is also intentionally production-data-dependent
+on established member principals.
+
+Therefore pre-merge Co-Lab is **NOT APPLICABLE** to R2 — not unrun, not
+blocked, not waived. **No synthetic principals will be created to manufacture a
+result.** Production Co-Lab remains a post-deploy constitutional non-regression
+gate, not proof of the R2 invariant.
+
+## The observable intersection is empty
+
+```text
+verifier at base and head    byte-identical (0 bytes differ)
+verifier reads               members · studio_people · studio_teams ·
+                             studio_team_members · team_dm_threads ·
+                             team_dm_members · sessions · encounters ·
+                             member_memory_atoms · practitioners ·
+                             practitioner_clients · practitioner_files ·
+                             practitioner_client_notes
+R2 changes                   living_work_material_considerations (new)
+                             + a trigger on living_work_materials
+observable intersection      ∅
+```
+
+**The missing local principals were not the decisive fact.** That alone would
+be an environment problem, fixable by seeding. The decisive fact is that the
+verifier cannot observe R2 at all — so manufactured principals would be worse
+than useless: a green result with **no causal relationship to the candidate**.
+
+## How D-013 is to be read
+
+> **Re-measure applicable acceptance evidence at the current referent** — not
+> "execute every named verifier whether or not it can observe the change."
+
+Establishing non-applicability **by reading the verifier** is itself the correct
+gate adjudication, and is recorded as such rather than as a skipped step.
+
+## What deploy-time Co-Lab does and does not prove
+
+It stays required at deployment. It is a **constitutional non-regression
+sentinel after migration**, not an R2 functional acceptance test:
+
+```text
+R2-specific proof   the migration applies · the material-relationship-conflict
+                    invariant behaves correctly
+                    → established by the differential PostgreSQL race, 25/25
+
+Co-Lab              existing member/team/practitioner isolation still holds ·
+                    no collateral constitutional boundary regression
+                    → a post-deploy 33 · 0 · 0 proves THIS, and does not
+                      prove R2's new invariant
+```
+
+Recording a post-deploy Co-Lab green as evidence *for* R2 would be the same
+category error the artifact leg of D-007 exists to prevent.
+
+## R2 status after this correction
+
+```text
+R2 candidate            46157b9b0 · 8 files · isolated
+architecture            PASS
+living-works tests      PASS · 63/63
+migration               PASS
+DB race witness         PASS · differential 25/25
+typecheck               BASELINE FAIL · no R2 regression
+check:no-supabase       PASS
+Co-Lab pre-merge        N/A — no observable intersection with R2
+                        fabricated seeds REFUSED
+
+IMPLEMENTATION ACCEPTANCE   COMPLETE
+PR #1143                    awaiting normal review/merge authority
+deploy                      NOT AUTHORIZED
+```

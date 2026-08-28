@@ -53,7 +53,19 @@ WS2-SUBSTRATE-01
                                    the same probe failed 25/25 against the
                                    unlocked guard minutes before, so it is
                                    known capable of failing. Local dev DB only
-                                   — NOT production, NOT Co-Lab.
+                                   — NOT production.
+                  R2 CO-LAB        N/A pre-merge, NOT unrun. The verifier is
+                                   byte-identical at base and head, reads 13
+                                   tables with no living_work* dependency, and
+                                   cannot observe R2's table or trigger.
+                                   Synthetic principals REFUSED — a green with
+                                   no causal relation to the candidate is worse
+                                   than no result. Production Co-Lab stays a
+                                   POST-DEPLOY non-regression sentinel, never
+                                   proof of the R2 invariant.
+                  R2 ACCEPTANCE    IMPLEMENTATION COMPLETE. PR #1143 awaits
+                                   normal review/merge authority. Deploy NOT
+                                   authorized.
                   R3 companion FK  OPTION B: FK ON DELETE SET NULL + a
                                    BEFORE DELETE guard refusing a delete that
                                    would leave a manuscript-only turn homeless.
