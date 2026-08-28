@@ -1,44 +1,55 @@
 'use client';
 
 /**
- * Now What? — Client Home: the orientation field (five-room ontology,
- * ratified + built 2026-08-05; NOW_WHAT_ROOM_ONTOLOGY_CONSOLIDATION doc).
+ * Now What? — Client Home: RETURNING HOME (NW-V1-CLIENT-01, phone-first).
  *
- * "Every doorway makes a promise; every promise deserves its own room."
- * Standing test: two rooms cannot exist merely because they use different
- * nouns if they invoke the same human gesture.
+ * Recomposed from the frozen prototype `docs/design/now-what/v1/prototypes/
+ * 01-returning-home.png` on the design branch. This is a RECOMPOSITION of acts
+ * the member already made — not a new surface, not a new read, not a new
+ * subsystem. The route, the API call and the substrate are unchanged.
  *
- * The home is not where everything happens. It answers ONE question:
- * "What part of my life and development do I want to enter right now?"
- * Five doors — four noun-rooms that hold, one verb-room that works — plus
- * time as the quiet continuity line, the daily thought as ambient
- * orientation, and the trust boundary stated once.
+ * ── WHAT THE FIRST VIEWPORT HOLDS, IN ORDER ──────────────────────────────
+ *   1. YOU WERE CARRYING   the member's own words, largest thing on screen
+ *   2. YOU CHOSE           their explicit move, when one exists
+ *   3. What happened since? the one invitation
+ *   4. Tell MAIA…          the affordance that carries them into the Room
  *
- * Doors and their rooms:
- *   My Question → /now-what/questions       (what you are wrestling with)
- *   My Work     → /now-what/work            (what you are living and cultivating)
- *   My Coaching → /now-what/coaching        (the human relationship; holds programs + calendar)
- *   My Story    → /now-what/field           (becoming over time)
- *   The Room    → /now-what/room?entry=think (think something through)
- *   upcoming line → /now-what/coaching      (the date serves the relationship)
+ * Nothing above the fold but her words, her choice, and the invitation.
  *
- * WHAT THIS SURFACE STILL REFUSES (structural, unchanged):
+ * ── WHAT HAD TO GIVE, AND WHY ────────────────────────────────────────────
+ * The greeting ("Welcome back, ___"), the coach tagline, the subtitle stack
+ * and the upcoming-conversation line all preceded continuity and pushed it
+ * below the fold on a phone. They are gone from the first viewport. The
+ * wordmark survives as chrome. The next conversation is not lost — it is
+ * carried on the My Coaching line at the base, where it belongs to the
+ * relationship rather than competing with the return.
+ *
+ * ── WHAT IS REFUSED HERE (structural, unchanged) ─────────────────────────
  *   - No score, streak, ranking, progress bar, completion count, metric.
- *   - No system-voiced finding; door lines are the member's words or plain
- *     facts about their own acts, attributed.
- *   - No computed suggestion; all invitations are static strings.
+ *   - No system-voiced finding; every line is the member's words or a plain
+ *     fact about their own act, attributed.
+ *   - No computed suggestion, no "you probably need this next". The selection
+ *     rule is stated in full in lib/nowWhat/carriedThread.ts and reads nothing
+ *     but the timestamp of the member's own keeping gesture.
  *   - Kept, not "recent" (E-2). Bring-forward vocabulary only.
- *   - Honest absence: doors whose substrate is empty speak plainly; gated
- *     capabilities do not render at all.
+ *   - Honest absence: with nothing kept, no hero is manufactured.
+ *
+ * ── PRESERVED BELOW THE FOLD (retire presentation ≠ retire capability) ────
+ * The rooms, the daily thought and the trust boundary all remain, demoted to
+ * base chrome. Every route that existed before this recomposition is still
+ * one tap away.
  *
  * Data: ONE member-scoped composition call. Opening this surface writes
  * nothing.
  */
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { apiFetch } from '@/lib/http/apiBase';
 import { NowWhatThreshold, useMemberSession } from '@/components/now-what/NowWhatShell';
 import { RoomTrustCopy } from '@/components/now-what/RoomTrustCopy';
+import { selectCarriedThread, selectChosenMove, selectPriorAct } from '@/lib/nowWhat/carriedThread';
+import { LIVED_DRAFT_KEY } from '@/lib/nowWhat/livedDraft';
 
 import { NW_PALETTE_CSS, NW_PALETTE_DARK_CSS } from '@/components/now-what/PaperRoom';
 
@@ -53,6 +64,7 @@ const RULE = 'var(--nw-rule)';
 interface HomeThread {
   id: string; title: string; content: string | null; authorship: string;
   keptAt: string; sharedWithCoach: boolean; sessionRef: string | null;
+  respondsToThreadId?: string | null;
 }
 interface JourneyRow {
   programSlug: string; programTitle: string | null; focalPoint: string;
@@ -80,7 +92,9 @@ function whenLabel(iso: string): string {
 /*
  * A daily thought — ancient wisdom and modern depth, one voice per day.
  * Curated, attributed, rotated deterministically by date: a contemplative
- * companion, never an engagement mechanic.
+ * companion, never an engagement mechanic. Base chrome in V1: it sits below
+ * the rooms, well outside the first viewport, so it can never compete with
+ * the member's own words for the serif register.
  */
 const QUOTES: { text: string; who: string }[] = [
   { text: 'Very little is needed to make a happy life; it is all within yourself, in your way of thinking.', who: 'Marcus Aurelius' },
@@ -107,6 +121,8 @@ function quoteOfTheDay(): { text: string; who: string } {
 /**
  * One door — a sentence, not a card (UX-02). It states where it goes and what
  * the member will meet; it does not compete with its neighbours for the eye.
+ * In V1 these are base chrome: the rooms stay one tap away without entering
+ * the return's first viewport.
  */
 function Door({
   href, name, meaning, line,
@@ -136,26 +152,29 @@ function keptWhen(iso: string | null | undefined): string {
   return ` on ${d.toLocaleDateString(undefined, { month: 'long', day: 'numeric' })}`;
 }
 
-// ── The orientation field ────────────────────────────────────────────────
+/**
+ * WHAT SHE WAS CARRYING — her words, attributed to her own act. The largest
+ * thing on the screen, and the first. Nothing here is authored by the system:
+ * the title is what she wrote, and the line beneath states when she kept it.
+ */
+function Carried({ thread }: { thread: HomeThread }) {
+  return (
+    <>
+      <p className="nwh-label">You were carrying</p>
+      <p className="nwh-carry-line">&ldquo;{thread.title}&rdquo;</p>
+      <p className="nwh-prov">You kept this{keptWhen(thread.keptAt)}.</p>
+    </>
+  );
+}
+
+// ── Returning home ───────────────────────────────────────────────────────
 
 export default function ClientHome({ fieldContext }: { fieldContext?: string }) {
   const session = useMemberSession();
+  const router = useRouter();
   const [data, setData] = useState<HomePayload | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [name, setName] = useState<string | null>(null);
-
-  // Session fact only: the member's own stored session, never an inference.
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem('beta_user');
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        if (parsed?.name && typeof parsed.name === 'string') setName(parsed.name.split(' ')[0]);
-      }
-    } catch {
-      /* a missing name is not an error — the field greets plainly */
-    }
-  }, []);
+  const [opening, setOpening] = useState('');
 
   useEffect(() => {
     if (session !== 'in') return;
@@ -190,108 +209,147 @@ export default function ClientHome({ fieldContext }: { fieldContext?: string }) 
   }
 
   const coachName = data?.coachName ?? null;
-  const coachFirst = coachName ? coachName.split(' ')[0] : null;
   const shared = data?.shared ?? [];
   const daily = quoteOfTheDay();
   const nextConversation = data?.upcoming?.[0] ?? null;
-  const livingQuestion = data?.questions?.[0] ?? null;
-  const livingCommitment = data?.commitments?.[0] ?? null;
-  const focal = data?.journey?.[0] ?? null;
 
-  /* Door lines: the member's own words when they exist; plain invitations
-     when they don't. Never manufactured content. */
-  const questionLine = livingQuestion
-    ? `“${livingQuestion.title}”`
-    : focal
-      ? focal.focalPoint
-      : 'What are you working through today? What you name gathers here, in your words.';
-  const livingLine = livingCommitment
-    ? livingCommitment.title
-    : 'What you choose to live — created by you, never assigned.';
+  /*
+   * Where she left things. The whole rule lives in lib/nowWhat/carriedThread.ts
+   * and is stated there in full: the last thing she kept, and the last thing
+   * she chose. Recency of HER OWN gesture — never a relevance model, never
+   * inference over content, never activity or calendar signal.
+   */
+  const livingQuestion = selectCarriedThread<HomeThread>(data);
+  const livingCommitment = selectChosenMove<HomeThread>(data);
+  /* The act a lived return answers — carried into the Room so it knows what
+     it is returning to, and so what she keeps stays related to it. */
+  const priorAct = selectPriorAct<HomeThread>(data);
+
+  /*
+   * Into the Room through the existing lived doorway. No new route, no new
+   * room. Her opening words travel in sessionStorage, never in the URL; the
+   * prior act travels as an opaque id the Room re-resolves member-scoped.
+   */
+  function enterLived() {
+    const draft = opening.trim();
+    if (draft) {
+      try { sessionStorage.setItem(LIVED_DRAFT_KEY, draft); } catch { /* a lost draft is not an error */ }
+    }
+    const thread = priorAct ? `&thread=${encodeURIComponent(priorAct.id)}` : '';
+    router.push(`${roomHref}${amp}entry=lived${thread}`);
+  }
+
+  /* The chosen move now has its own place in the first viewport, so this door
+     no longer repeats it back a second time further down the same screen —
+     found by rendering, where the duplication read as two claims about one
+     act rather than one act stated once. */
+  const livingLine = 'What you choose to live — created by you, never assigned.';
   const coachingLine = coachName
-    ? `${coachName}${shared.length > 0 ? ` — ${shared.length === 1 ? 'one piece' : `${shared.length} pieces`} brought forward` : ''}${nextConversation ? `, next conversation ${whenLabel(nextConversation.start).split(' · ')[0]}` : ''}.`
+    ? `${coachName}${shared.length > 0 ? ` — ${shared.length === 1 ? 'one piece' : `${shared.length} pieces`} brought forward` : ''}${nextConversation ? `, next conversation ${whenLabel(nextConversation.start)}` : ''}.`
     : 'The human relationship this environment extends.';
 
   return (
     <div className="nwh-root">
       <div className="nwh-frame">
-        {/* Quiet header — wordmark is the place's name; Home is the location. */}
+        {/* ── THE FIRST VIEWPORT ─────────────────────────────────────────
+              Found by rendering at 390×844, not by reading the CSS: with a
+              short carried thread the base chrome rode up into the fold and
+              the screen read as a menu with a quote on top. Margins would fix
+              that for ONE length of her words and break for the next, so the
+              rule is structural instead — this block occupies the viewport,
+              and everything after it is genuinely below the fold at any
+              content length. ── */}
+        <div className="nwh-first">
+        {/* Chrome only. The wordmark names the place; on Home it is not a link
+            to anywhere, because this is already where it would go. */}
         <div className="nwh-top">
-          <a className="nwh-wordmark" href={`/now-what/map${ctx}`}>
+          <span className="nwh-wordmark">
             Now What<span className="nwh-wordmark-q">?</span>
-          </a>
-          <span className="nwh-loc">Home</span>
+          </span>
+          <span aria-hidden className="nwh-mark" />
         </div>
 
         {error && (
           <p role="alert" className="nwh-error">{error}</p>
         )}
 
-        {/* ── Arrival — whose environment, then the person, then time ── */}
-        <div className="nwh-arrive">
-          {coachName && <p className="nwh-brand">{coachName} · Executive Coaching</p>}
-          <h1 className="nwh-h1">{name ? `Welcome back, ${name}.` : 'Welcome back.'}</h1>
-          <p className="nwh-subtitle">
-            A private space for what comes next — your life, your meaning,
-            your flourishing as a human being.
-          </p>
-          {nextConversation && (
-            <a className="nwh-upcomingline" href={`/now-what/coaching${ctx}`}>
-              Next conversation{coachFirst ? ` with ${coachFirst}` : ''} —{' '}
-              <b>{whenLabel(nextConversation.start)}</b>
-            </a>
+        {/* ── 1 + 2. Her words, then her choice. The compositional centre and
+              the first thing in the viewport. A hairline rail, not a box —
+              the eye lands on what she wrote, not on a container. ── */}
+        <section className="nwh-carry" aria-label="Where you left things">
+          {livingQuestion ? (
+            <Carried thread={livingQuestion} />
+          ) : (
+            <>
+              <p className="nwh-label">Where to begin</p>
+              <p className="nwh-carry-line nwh-carry-plain">
+                Nothing is waiting for you yet. That is a fine place to start.
+              </p>
+              <a className="nwh-primary" href={`${roomHref}${amp}entry=think`}>
+                Think something through &rarr;
+              </a>
+            </>
           )}
-        </div>
 
-        {/* ── UX-02: what you were carrying → where you are now → what might be next.
-              The environment's own gesture architecture rules "one primary gesture
-              per screen" and "doors are sentences, not buttons-in-grids"; five
-              equal cards were a regression against it.
+          {livingCommitment && (
+            <div className="nwh-chose">
+              <p className="nwh-label">You chose</p>
+              <p className="nwh-chose-line">{livingCommitment.title}</p>
+            </div>
+          )}
+        </section>
 
-              The primary is NOT hard-coded prominence. It is derived from the
-              member's own carried thread — so this screen and the Return screen
-              become coherent through continuity rather than through styling. When
-              nothing is carried yet, no hero is manufactured: The Room takes the
-              primary, because that is the only gesture available to someone with
-              nothing kept. Every other room stays one click away. ── */}
-        {livingQuestion ? (
-          <section className="nwh-carry" aria-label="What you are carrying">
-            <p className="nwh-label">What you are carrying</p>
-            <p className="nwh-carry-line">&ldquo;{livingQuestion.title}&rdquo;</p>
-            <p className="nwh-prov">You kept this{keptWhen(livingQuestion.keptAt)}.</p>
-            <a className="nwh-primary" href={`/now-what/questions${ctx}`}>
-              Continue thinking &rarr;
-            </a>
-          </section>
-        ) : (
-          <section className="nwh-carry" aria-label="Where to begin">
-            <p className="nwh-label">Where to begin</p>
-            <p className="nwh-carry-line nwh-carry-plain">
-              Nothing is waiting for you yet. That is a fine place to start.
-            </p>
-            <a className="nwh-primary" href={`${roomHref}${amp}entry=think`}>
-              Think something through &rarr;
-            </a>
+        {/* ── 3 + 4. One invitation, one affordance. This is the only primary
+              gesture on the screen. It enters the EXISTING room through the
+              existing lived doorway — nothing new is created here. ── */}
+        {(livingQuestion || livingCommitment) && (
+          <section className="nwh-return" aria-label="What happened since">
+            <h1 className="nwh-ask">What happened since?</h1>
+            <form
+              className="nwh-tell"
+              onSubmit={(e) => { e.preventDefault(); enterLived(); }}
+            >
+              <input
+                className="nwh-tell-input"
+                type="text"
+                value={opening}
+                onChange={(e) => setOpening(e.target.value)}
+                placeholder="Tell MAIA…"
+                aria-label="Tell MAIA what happened since"
+                autoComplete="off"
+              />
+              <button
+                type="button"
+                className="nwh-tell-voice"
+                onClick={enterLived}
+                aria-label="Speak instead — opens the room, where you can dictate"
+                title="Speak instead"
+              >
+                <svg width="15" height="20" viewBox="0 0 15 20" aria-hidden focusable="false">
+                  <rect x="5" y="1" width="5" height="10" rx="2.5" fill="none" stroke="currentColor" strokeWidth="1.2" />
+                  <path d="M1.6 9.2a5.9 5.9 0 0 0 11.8 0M7.5 15.1V19" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+                </svg>
+              </button>
+            </form>
           </section>
         )}
 
-        {/* Doors as sentences — stacked, hairline-separated, never competing
-            side by side. Each states where it goes in the member's terms. */}
+        </div>
+
+        {/* ── Base chrome. Everything below this rule is out of the first
+              viewport by design: the rooms stay reachable, demoted, never
+              competing with the return. Retire presentation, not capability. ── */}
         <nav className="nwh-doors" aria-label="Your rooms">
-          {livingQuestion && (
-            <Door href={`${roomHref}${amp}entry=think`} name="The Room"
-                  meaning="A place to think" line="Clarify a decision, explore a tension, listen to yourself think." />
-          )}
+          <Door href={`/now-what/questions${ctx}`} name="My Question"
+                meaning="What you are wrestling with" line="Continue thinking about what you named — in your own words." />
           <Door href={`/now-what/work${ctx}`} name="My Work"
                 meaning="What you are living and cultivating" line={livingLine} />
           <Door href={`/now-what/coaching${ctx}`} name="My Coaching"
                 meaning="The human relationship" line={coachingLine} />
           <Door href={`/now-what/field${ctx}`} name="My Story"
                 meaning="Becoming over time" line="Turning points, realizations, chapters — in your own words." />
-          {!livingQuestion && (
-            <Door href={`/now-what/questions${ctx}`} name="My Question"
-                  meaning="What you are wrestling with" line={questionLine} />
-          )}
+          <Door href={`${roomHref}${amp}entry=think`} name="The Room"
+                meaning="A place to think" line="Clarify a decision, explore a tension, listen to yourself think." />
         </nav>
 
         {/* ── A daily thought — ambient orientation, in its author's voice ── */}
@@ -325,49 +383,48 @@ export default function ClientHome({ fieldContext }: { fieldContext?: string }) 
             linear-gradient(var(--nw-bg-1), var(--nw-bg-2));
           -webkit-font-smoothing: antialiased;
         }
-        .nwh-frame { max-width: 46rem; margin: 0 auto; padding: 26px 40px 80px; }
-        .nwh-top { display: flex; justify-content: space-between; align-items: baseline; }
+        /* Phone first: 20px gutters, and the frame only widens on larger
+           screens. Desktop expands the same composition; it never becomes a
+           different one. */
+        .nwh-frame { max-width: 46rem; margin: 0 auto; padding: 18px 20px 72px; }
+        /* The return owns the first screen. svh so mobile browser chrome
+           cannot push the rooms up into it; vh is the fallback. */
+        .nwh-first {
+          min-height: calc(100vh - 90px);
+          min-height: calc(100svh - 90px);
+          display: flex; flex-direction: column;
+        }
+        .nwh-top { display: flex; justify-content: space-between; align-items: center; }
         /* Direction B wordmark (brand pass 2026-08-05): words in ink, the
-           question mark in bronze — a question, not a label. */
+           question mark in bronze — a question, not a label. Reduced to 9px
+           chrome so continuity, not branding, owns the first viewport. */
         .nwh-wordmark {
-          font-size: 13px; letter-spacing: 0.35em; text-transform: uppercase;
-          color: ${INK}; text-decoration: none;
+          font-size: 9px; letter-spacing: 0.42em; text-transform: uppercase;
+          color: ${INK_SOFT}; text-decoration: none;
         }
         .nwh-wordmark-q { color: ${BRONZE}; }
-        .nwh-loc { font-size: 12px; color: ${INK_FAINT}; font-weight: 300; }
-        .nwh-error { margin-top: 24px; color: #8c2f22; font-size: 14px; font-weight: 300; }
-
-        .nwh-arrive { margin-top: 40px; text-align: center; }
-        .nwh-brand { font-size: 11px; letter-spacing: 0.4em; text-transform: uppercase; color: ${INK_FAINT}; }
-        .nwh-h1 {
-          font-family: ${SERIF};
-          font-size: clamp(30px, 4vw, 38px); font-weight: 400; margin-top: 14px;
+        .nwh-mark {
+          width: 22px; height: 22px; border-radius: 50%;
+          border: 1px solid ${BRONZE}; opacity: 0.5; flex: none;
         }
-        .nwh-subtitle { font-size: 16px; font-weight: 300; color: ${INK_SOFT}; margin-top: 8px; }
-        .nwh-upcomingline {
-          display: inline-block; margin-top: 18px; font-size: 13.5px; font-weight: 300;
-          color: ${INK_FAINT}; text-decoration: none;
-        }
-        .nwh-upcomingline b { font-family: ${SERIF}; font-weight: 400; color: ${INK_SOFT}; }
-        .nwh-upcomingline:hover b { color: ${BRONZE}; }
+        .nwh-error { margin-top: 20px; color: #8c2f22; font-size: 14px; font-weight: 300; }
 
-        /* ── What you are carrying: the compositional centre. A hairline rail,
-              not a box — the eye lands on her words, not on a container. ── */
+        /* ── What she was carrying: her words, largest on the screen. ── */
         .nwh-carry {
-          margin-top: 44px; padding-left: 22px;
+          margin-top: 30px; padding-left: 18px;
           border-left: 2px solid ${BRONZE};
         }
         .nwh-label {
-          font-size: 10.5px; letter-spacing: 0.28em; text-transform: uppercase;
+          font-size: 10px; letter-spacing: 0.28em; text-transform: uppercase;
           color: ${INK_FAINT}; margin: 0;
         }
         .nwh-carry-line {
           font-family: ${SERIF}; font-style: italic;
-          font-size: clamp(21px, 3.1vw, 27px); line-height: 1.42;
+          font-size: clamp(23px, 6.4vw, 30px); line-height: 1.36;
           color: ${INK}; margin: 12px 0 0; max-width: 34rem;
         }
-        .nwh-carry-plain { font-style: normal; font-size: clamp(19px, 2.6vw, 23px); color: ${INK_SOFT}; }
-        .nwh-prov { font-size: 12.5px; font-weight: 300; color: ${INK_FAINT}; margin: 10px 0 0; }
+        .nwh-carry-plain { font-style: normal; font-size: clamp(19px, 5vw, 23px); color: ${INK_SOFT}; }
+        .nwh-prov { font-size: 13px; font-weight: 300; color: ${INK_FAINT}; margin: 10px 0 0; }
         .nwh-primary {
           display: inline-block; margin-top: 18px; font-size: 15px;
           color: ${BRONZE}; text-decoration: none;
@@ -376,46 +433,84 @@ export default function ClientHome({ fieldContext }: { fieldContext?: string }) 
         }
         .nwh-primary:hover, .nwh-primary:focus-visible { border-bottom-color: ${BRONZE}; }
 
+        /* Her explicit move — stated plainly, never styled as an achievement. */
+        .nwh-chose { margin-top: 26px; }
+        .nwh-chose-line {
+          font-family: ${SERIF}; font-size: clamp(18px, 4.8vw, 21px); line-height: 1.45;
+          color: ${INK_SOFT}; margin: 10px 0 0; max-width: 34rem;
+        }
+
+        /* ── The one invitation, and the one affordance. ── */
+        .nwh-return { margin-top: 30px; padding-left: 20px; }
+        .nwh-ask {
+          font-family: ${SERIF}; font-weight: 400;
+          font-size: clamp(19px, 5vw, 22px); line-height: 1.4;
+          color: ${INK}; margin: 0;
+        }
+        .nwh-tell {
+          display: flex; align-items: center; gap: 12px;
+          margin-top: 20px; border-bottom: 1px solid ${RULE};
+        }
+        .nwh-tell-input {
+          flex: 1 1 auto; min-width: 0; background: transparent; border: 0;
+          font-family: ${SERIF}; font-size: 17px; color: ${INK};
+          padding: 10px 0 12px;
+        }
+        .nwh-tell-input::placeholder { color: ${INK_FAINT}; }
+        .nwh-tell-input:focus { outline: none; }
+        .nwh-tell:focus-within { border-bottom-color: ${BRONZE}; }
+        /* 44px touch target — thumb reach is a requirement, not a nicety. */
+        .nwh-tell-voice {
+          flex: none; display: inline-flex; align-items: center; justify-content: center;
+          width: 44px; height: 44px; margin-right: -10px;
+          background: transparent; border: 0; cursor: pointer;
+          color: ${INK_FAINT}; transition: color .18s ease;
+        }
+        .nwh-tell-voice:hover, .nwh-tell-voice:focus-visible { color: ${BRONZE}; }
+
         /* ── Doors as sentences: stacked, hairline-separated. Two doors never sit
-              side by side competing. Motion is settling, not attracting. ── */
+              side by side competing. Motion is settling, not attracting. In V1
+              they are base chrome, below the fold. ── */
         .nwh-doors { margin-top: 40px; display: flex; flex-direction: column; }
         .nwh-door {
-          display: block; text-decoration: none; color: ${INK};
-          padding: 17px 0; border-top: 1px solid ${RULE};
+          display: block; text-decoration: none; color: ${INK_SOFT};
+          padding: 14px 0; border-top: 1px solid ${RULE};
           transition: color .18s ease;
         }
         .nwh-doors .nwh-door:last-child { border-bottom: 1px solid ${RULE}; }
-        .nwh-dhead { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
-        .nwh-dname { font-family: ${SERIF}; font-size: 17.5px; }
+        .nwh-dhead { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+        .nwh-dname { font-family: ${SERIF}; font-size: 15px; }
         .nwh-dmean {
-          font-size: 10.5px; letter-spacing: 0.22em; text-transform: uppercase;
+          font-size: 9.5px; letter-spacing: 0.22em; text-transform: uppercase;
           color: ${INK_FAINT};
         }
         .nwh-dline {
-          display: block; font-size: 13.5px; font-weight: 300; color: ${INK_SOFT};
-          line-height: 1.6; margin-top: 6px; max-width: 44rem;
+          display: block; font-size: 12.5px; font-weight: 300; color: ${INK_FAINT};
+          line-height: 1.55; margin-top: 4px; max-width: 44rem;
         }
         .nwh-door:hover .nwh-dname, .nwh-door:focus-visible .nwh-dname { color: ${BRONZE}; }
         .nwh-door:focus-visible { outline: 2px solid ${BRONZE}; outline-offset: 4px; }
 
-        .nwh-quote { margin-top: 44px; text-align: center; padding: 0 26px; }
+        .nwh-quote { margin-top: 40px; text-align: center; padding: 0 8px; }
         .nwh-quote-text {
-          font-family: ${SERIF}; font-size: 18px; font-style: italic;
-          color: ${INK_SOFT}; line-height: 1.6; max-width: 44rem; margin: 0 auto;
+          font-family: ${SERIF}; font-size: 15.5px; font-style: italic;
+          color: ${INK_FAINT}; line-height: 1.6; max-width: 44rem; margin: 0 auto;
         }
-        .nwh-quote-who { font-size: 12.5px; font-weight: 300; color: ${INK_FAINT}; margin-top: 10px; }
+        .nwh-quote-who { font-size: 11.5px; font-weight: 300; color: ${INK_FAINT}; margin-top: 8px; }
 
         .nwh-trust {
-          margin-top: 40px; border: 1px dashed ${RULE}; border-radius: 16px; padding: 22px 28px;
+          margin-top: 36px; border: 1px dashed ${RULE}; border-radius: 16px; padding: 20px 22px;
         }
         .nwh-trust, .nwh-trust * { color: ${INK_SOFT} !important; border-color: rgba(90,76,58,0.25); }
         .nwh-trust [class*="bg-"] { background: rgba(90,76,58,0.05) !important; }
 
-        @media (max-width: 920px) {
-          .nwh-frame { padding: 22px 22px 72px; }
+        @media (min-width: 640px) {
+          .nwh-frame { padding: 26px 40px 80px; }
+          .nwh-carry { padding-left: 22px; }
+          .nwh-return { padding-left: 24px; }
         }
         @media (prefers-reduced-motion: reduce) {
-          .nwh-primary, .nwh-door { transition: none; }
+          .nwh-primary, .nwh-door, .nwh-tell-voice { transition: none; }
         }
       `}</style>
     </div>

@@ -34,6 +34,7 @@
 import { useState, useRef, useEffect, type CSSProperties } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { apiFetch } from '@/lib/http/apiBase';
+import { LIVED_DRAFT_KEY } from '@/lib/nowWhat/livedDraft';
 import { SERIF as NW_SERIF } from '@/components/now-what/PaperRoom';
 import { RoomHoloflower, type RoomMotionState, type SpiralElement } from '@/components/maia/vision-studio/RoomHoloflower';
 import { RoomTrustCopy } from '@/components/now-what/RoomTrustCopy';
@@ -277,9 +278,20 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext, program, entry, en
   // Now What? loop state. priorPractice = the practice committed on a previous visit
   // (drives the Return branch); practiceDraft/offeringDraft = this visit's commitments.
   const [priorPractice, setPriorPractice] = useState<string | null>(null);
-  // The carried question's title for entry=question — resolved member-scoped
-  // from the room's own thread load, never from the URL.
+  // The carried act's title for entry=question / entry=lived — resolved
+  // member-scoped from the room's own thread load, never from the URL. An id
+  // that is not this member's simply resolves to nothing.
   const [entryThreadTitle, setEntryThreadTitle] = useState<string | null>(null);
+  // Which KIND of act she is returning to. 'practice' = a move she chose to
+  // live; anything else = a thread she was carrying. It decides how the
+  // threshold names her act, and MAIA is told the same thing — naming the
+  // wrong act would be the system authoring her history.
+  const [entryThreadKind, setEntryThreadKind] = useState<string | null>(null);
+  // Resolution of the entry act is complete (found or not). The welcome must
+  // never flash ahead of it — a returning member seeing "Welcome, come in" for
+  // a beat is the room forgetting her, which is the whole failure V1 exists to
+  // fix. Starts true when there is no id to resolve.
+  const [entryActChecked, setEntryActChecked] = useState<boolean>(!entryThread);
   const [arrivalAnswer, setArrivalAnswer] = useState('');
   const [practiceDraft, setPracticeDraft] = useState('');
   const [sharePractice, setSharePractice] = useState(false);
@@ -380,13 +392,6 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext, program, entry, en
           const threads: { id?: string; title: string; spiralogic_phase: string | null }[] = json?.threads ?? [];
           const practice = threads.find(t => t.spiralogic_phase === 'practice');
           if (practice && !cancelled) setPriorPractice(practice.title);
-          // Entry=question: surface the member's own carried question at the
-          // threshold. Member-scoped resolution — an id that isn't theirs
-          // simply resolves to nothing.
-          if (entryThread && !cancelled) {
-            const carried = threads.find(t => t.id === entryThread);
-            if (carried) setEntryThreadTitle(carried.title);
-          }
           // Arrival payload (program position) rides the same load — null when
           // the field declares no anchoring; the line simply does not render.
           if (json?.arrival && !cancelled) setProgramArrival(json.arrival);
@@ -399,6 +404,63 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext, program, entry, en
     })();
     return () => { cancelled = true; };
   }, [nowWhat, fieldContext, program]);
+
+  /*
+   * The act she is returning to (NW-V1-CLIENT-01).
+   *
+   * Runs whenever the URL carries a thread id, WITH OR WITHOUT a fieldContext
+   * — Home's lived doorway has no field context, and the return has to work
+   * from there. Deliberately separate from the return-detection effect above:
+   * that one drives `priorPractice` and the generic room's arrival, and
+   * widening it would change the room for members who never came through this
+   * doorway.
+   *
+   * Member-scoped by construction: the id is resolved against THIS member's
+   * own threads. A forwarded or guessed id resolves to nothing and the room
+   * simply opens without a named prior act. The title never rides the URL.
+   */
+  useEffect(() => {
+    if (!entryThread) { setEntryActChecked(true); return; }
+    let cancelled = false;
+    (async () => {
+      try {
+        const ctxParam = fieldContext ? `?fieldContext=${encodeURIComponent(fieldContext)}` : '';
+        const res = await apiFetch(`/api/now-what/field-note${ctxParam}`);
+        if (!res.ok) return;
+        const json = await res.json().catch(() => ({}));
+        const threads: { id?: string; title: string; spiralogic_phase: string | null }[] = json?.threads ?? [];
+        const carried = threads.find(t => t.id === entryThread);
+        if (carried && !cancelled) {
+          setEntryThreadTitle(carried.title);
+          setEntryThreadKind(carried.spiralogic_phase ?? null);
+        }
+      } catch {
+        // Quiet fallback: the room opens without naming a prior act, which is
+        // honest — better than asserting a relation we could not verify.
+      } finally {
+        if (!cancelled) setEntryActChecked(true);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [entryThread, fieldContext]);
+
+  /*
+   * Her opening words, handed over from Home through sessionStorage (never the
+   * URL). Read once and cleared. This carries a DRAFT, not a submission — she
+   * still presses Begin herself, so the authorship gesture stays hers.
+   */
+  useEffect(() => {
+    if (entry !== 'lived') return;
+    try {
+      const draft = sessionStorage.getItem(LIVED_DRAFT_KEY);
+      if (draft) {
+        sessionStorage.removeItem(LIVED_DRAFT_KEY);
+        setArrivalAnswer(prev => (prev ? prev : draft));
+      }
+    } catch {
+      // Storage unavailable: she simply types her opening here instead.
+    }
+  }, [entry]);
 
   // Re-resolve the arrival payload for an engagement named at the generic door.
   async function loadArrivalFor(programSlug: string) {
@@ -480,6 +542,28 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext, program, entry, en
     }
   }
 
+  /*
+   * The prior member act this visit is answering, and its kind.
+   *
+   * `entryThreadTitle` is the act she arrived carrying (resolved member-scoped
+   * from her own threads). `priorPractice` is the generic room's own return
+   * detection. The entry act wins when present, because she named it by
+   * walking through that doorway.
+   */
+  const returningTo = entryThreadTitle ?? priorPractice;
+  const returningToKind: 'practice' | 'carried' =
+    entryThreadTitle ? (entryThreadKind === 'practice' ? 'practice' : 'carried') : 'practice';
+  /*
+   * THE RELATION (NW-V1-CLIENT-01) — the one new behavior in V1.
+   *
+   * Present only when she came back through the lived doorway carrying one of
+   * her own acts. It rides her explicit keep gesture so the update she keeps
+   * stays related to the act it answers. It is NOT sent for any other entry,
+   * so an unrelated session can never acquire a false link, and it is never
+   * sent on its own — only alongside a keep the member actually made.
+   */
+  const respondsToThreadId = entry === 'lived' && entryThreadTitle ? entryThread ?? null : null;
+
   async function callInterview(history: Turn[], mode: 'turn' | 'propose') {
     const res = await apiFetch('/api/now-what/interview', {
       method: 'POST',
@@ -494,7 +578,7 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext, program, entry, en
         // Today's program (door-entered or member-named): scopes the position
         // block only — the whole field stays composed either way.
         ...(todayProgram ? { program: todayProgram } : {}),
-        ...(priorPractice ? { returningPractice: priorPractice } : {}),
+        ...(returningTo ? { returningPractice: returningTo, returningActKind: returningToKind } : {}),
       }),
     });
     const json = await res.json().catch(() => ({}));
@@ -724,6 +808,10 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext, program, entry, en
           // so what they keep from this session places itself in that
           // dimension's area of the Flourishing Field.
           ...(entryDimension ? { dimension: entryDimension } : {}),
+          // What she keeps here stays related to the act she came back to.
+          // Provenance between two of her own acts — never an outcome, a
+          // result, or a completion signal.
+          ...(respondsToThreadId ? { respondsToThreadId } : {}),
         }),
       });
       const json = await res.json().catch(() => ({}));
@@ -750,6 +838,7 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext, program, entry, en
         spiralogicPhase: tag,
         fieldContext: fieldContext ?? null,
         ...(entryDimension ? { dimension: entryDimension } : {}),
+        ...(respondsToThreadId ? { respondsToThreadId } : {}),
       }),
     });
     const json = await res.json().catch(() => ({}));
@@ -844,7 +933,7 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext, program, entry, en
   if (roomPhase === 'arrival' && nowWhat) {
     // Hold a quiet beat while return-detection resolves, so a returning member
     // never sees the first-visit welcome flash ahead of the return prompt.
-    if (fieldContext && !returnChecked) {
+    if ((fieldContext && !returnChecked) || !entryActChecked) {
       return (
         <div className="relative min-h-[92vh] flex items-center justify-center px-6 overflow-hidden">
           <div aria-hidden className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_55%_45%_at_50%_38%,rgba(196,164,110,0.08),transparent_65%)]" />
@@ -853,11 +942,19 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext, program, entry, en
       );
     }
     const returning = priorPractice !== null;
+    /*
+     * She walked back in carrying one of her own acts. That is a return, and
+     * it is a return even when the field-context-scoped detection above has
+     * nothing to say — Home's lived doorway carries no field context. Greeting
+     * her with the first-visit welcome here would be the room forgetting the
+     * very thing she came back to continue.
+     */
+    const arrivedCarrying = entryThreadTitle !== null;
 
     // First visit: Larry's welcome. "Come in" is a threshold, not a wall — the
     // welcome orients and invites; it never measures, and authorship of meaning
     // stays with the member ("the growth you recognize in your own life").
-    if (!returning && !entered) {
+    if (!returning && !arrivedCarrying && !entered) {
       return (
         <div key="nw-welcome" className="relative min-h-[92vh] flex items-center justify-center px-6 py-16 overflow-hidden">
           <style>{NW_FADE_KEYFRAMES}</style>
@@ -894,16 +991,28 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext, program, entry, en
     }
 
     return (
-      <div key="nw-arrival" className="relative min-h-[92vh] flex items-center justify-center px-6 py-16 overflow-hidden">
+      <div key="nw-arrival" className={`relative min-h-[92vh] flex justify-center px-6 overflow-hidden ${
+        entry === 'lived' ? 'items-start pt-10 pb-16' : 'items-center py-16'
+      }`}>
         <style>{NW_FADE_KEYFRAMES}</style>
         <div aria-hidden className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_55%_45%_at_50%_38%,rgba(196,164,110,0.08),transparent_65%)]" />
         <div className="relative w-full max-w-xl space-y-10">
-          <div style={fadeUpStyle(0)} className="flex justify-center">
-            <RoomHoloflower mono motionState="idle" proposedElement={null} confirmedElements={[]} size={Math.max(mandalaSize, 170)} />
-          </div>
-          <p style={fadeUpStyle(0.2)} className="text-center text-sm uppercase tracking-[0.4em] text-[#c9a35e]">
-            Now What?
-          </p>
+          {/* The room's arrival ornament, and the wordmark the shell already
+              shows above it. On a LIVED RETURN both step aside: found by
+              rendering at 390×844, where together they pushed the act she came
+              back to below the middle of the phone, so the first thing she met
+              was decoration instead of her own choice. Every other doorway
+              keeps the mandala arrival unchanged. */}
+          {entry !== 'lived' && (
+            <>
+              <div style={fadeUpStyle(0)} className="flex justify-center">
+                <RoomHoloflower mono motionState="idle" proposedElement={null} confirmedElements={[]} size={Math.max(mandalaSize, 170)} />
+              </div>
+              <p style={fadeUpStyle(0.2)} className="text-center text-sm uppercase tracking-[0.4em] text-[#c9a35e]">
+                Now What?
+              </p>
+            </>
+          )}
 
           {/* — The room shows its anchoring instead of asking to be trusted.
               Three outcomes: confirm (writes), correct in own words (writes,
@@ -1065,17 +1174,24 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext, program, entry, en
               </p>
             </div>
           ) : entry === 'lived' ? (
-            <div style={fadeUpStyle(0.4)} className="space-y-5 text-center">
-              {priorPractice ? (
+            /* The lived return (NW-V1-CLIENT-01, prototype 02-the-room).
+               Her act is STATED, not re-asked — the room already knows what
+               she is coming back to, and says so in the same words Home used
+               so the two screens read as one place. Left-aligned, matching the
+               frozen prototype; every other doorway keeps its own centred
+               threshold. */
+            <div style={fadeUpStyle(0.4)} className="space-y-4 text-left">
+              {returningTo ? (
                 <>
-                  <p className="text-slate-500 text-sm font-light">What you are living —</p>
-                  <p style={SERIF} className="text-slate-300 text-xl font-light italic leading-relaxed">
-                    {priorPractice}
+                  <p className="text-slate-500 text-[11px] tracking-[0.28em] uppercase font-light">
+                    {returningToKind === 'practice' ? 'You chose' : 'You were carrying'}
                   </p>
-                  <p style={SERIF} className="text-slate-100 text-3xl sm:text-4xl font-light leading-snug">
+                  <p style={SERIF} className="text-slate-300 text-xl font-light leading-relaxed">
+                    {returningTo}
+                  </p>
+                  <p style={SERIF} className="text-slate-100 text-3xl sm:text-4xl font-light leading-snug pt-6">
                     What happened?
                   </p>
-                  <p className="text-slate-500 text-sm font-light">What is life showing you?</p>
                 </>
               ) : (
                 <>
@@ -1125,7 +1241,9 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext, program, entry, en
           <div style={fadeUpStyle(0.65)} className="space-y-8">
             <textarea
               aria-label={returning ? 'What actually happened' : 'Where your attention is right now'}
-              className="w-full bg-transparent border-b border-slate-600/70 text-slate-100 text-lg font-light leading-relaxed resize-none focus:outline-none focus:border-[#c9a35e]/50 placeholder:text-slate-600 py-3 text-center transition-colors"
+              className={`w-full bg-transparent border-b border-slate-600/70 text-slate-100 text-lg font-light leading-relaxed resize-none focus:outline-none focus:border-[#c9a35e]/50 placeholder:text-slate-600 py-3 transition-colors ${
+                entry === 'lived' ? 'text-left' : 'text-center'
+              }`}
               rows={2}
               placeholder={
                 entry === 'lived' || (returning && !entry)
@@ -1141,7 +1259,7 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext, program, entry, en
                 }
               }}
             />
-            <div className="text-center">
+            <div className={entry === 'lived' ? 'text-left' : 'text-center'}>
               <button
                 onClick={beginFromThreshold}
                 disabled={!arrivalAnswer.trim() || working}
@@ -1569,10 +1687,15 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext, program, entry, en
                           onClick={() => setRevising(r => ({ ...r, [t.title]: t.title }))}
                           className="text-slate-500 hover:text-slate-300 underline underline-offset-2"
                         >revise</button>
+                        {/* The visible word now matches the decision the
+                            ledger actually records ('discard') and the word
+                            the frozen prototype shows. Mechanics unchanged:
+                            a discard writes no thread, so it can never carry
+                            a relation to a prior act. */}
                         <button
                           onClick={() => setRevising(r => ({ ...r, [t.title]: '' }))}
                           className="text-slate-600 hover:text-slate-400 underline underline-offset-2"
-                        >leave</button>
+                        >discard</button>
                       </>
                     )}
                     {kept && <span className="text-slate-500 italic">kept</span>}
