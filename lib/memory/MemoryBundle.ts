@@ -40,11 +40,35 @@ export interface RelationshipSnapshot {
   integrationRate: number;        // % of breakthroughs marked integrated
 }
 
+/**
+ * One ranked candidate, as the existing pipeline already adjudicated it.
+ *
+ * M1.5 (observability only): this is DERIVED from `deduplicate(rankCandidates(...))`
+ * and the existing `slice(0, maxBullets)` — it introduces no ranking, no
+ * threshold, and no selection rule. `rank` is the candidate's index in the
+ * already-ordered deduped list; `selected` is whether that index survived the
+ * existing cutoff. Removing this field would change what is REPORTED and
+ * nothing about what is CHOSEN.
+ *
+ * Deliberately carries no memory body — identifiers, provenance, score and
+ * state are enough to reconstruct the decision without logging private content.
+ */
+export interface MemorySelectionTraceEntry {
+  id: string;
+  source: 'turn' | 'developmental' | 'insight' | 'breakthrough';
+  score: number | null;
+  rank: number;
+  selected: boolean;
+}
+
 export interface MemoryBundle {
   // Compressed content for prompt injection
   recentContinuity: string;       // "Last session summary"
   memoryBullets: MemoryBullet[];  // Ranked, compressed memories
   relationshipSnapshot: RelationshipSnapshot;
+
+  /** Observability only — see MemorySelectionTraceEntry. Never influences selection. */
+  selectionTrace: MemorySelectionTraceEntry[];
 
   // Metadata for debugging/logging
   retrievalStats: {
@@ -133,6 +157,18 @@ export const MemoryBundleService = {
     // Compress into memory bullets
     const memoryBullets = topBullets.map(c => this.compress(c));
 
+    // M1.5 OBSERVABILITY — read AFTER the cutoff above, never before it.
+    // `deduped` is already ordered; `topBullets` is already chosen. This only
+    // names what happened. It must stay below both so it cannot be mistaken
+    // for an input to either.
+    const selectionTrace: MemorySelectionTraceEntry[] = deduped.map((c, index) => ({
+      id: c.id,
+      source: c.source,
+      score: typeof c.compositeScore === 'number' ? c.compositeScore : null,
+      rank: index,
+      selected: index < maxBullets,
+    }));
+
     // Build recent continuity summary
     const recentContinuity = this.buildContinuitySummary(recentTurns);
 
@@ -149,6 +185,7 @@ export const MemoryBundleService = {
       recentContinuity,
       memoryBullets,
       relationshipSnapshot,
+      selectionTrace,
       retrievalStats: {
         turnsRetrieved: recentTurns.length,
         turnsSameSession,

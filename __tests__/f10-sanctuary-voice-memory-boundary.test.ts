@@ -83,7 +83,10 @@ describe('F10 · Sanctuary control — retrieval is not invoked', () => {
 
   it('routes memory into voiceSystemPrompt only through voiceMemoryContext, which empty-filters out', () => {
     const bare = code(src);
-    const start = bare.indexOf('const voiceSystemPrompt');
+    // M1.5 split the inline array into a named `voicePromptParts` so prompt
+    // inclusion could be witnessed at the insertion site. Same contributors,
+    // same filter, same join — the span moved, the contract did not.
+    const start = bare.indexOf('const voicePromptParts');
     expect(start).toBeGreaterThan(-1);
     const composition = bare.slice(start, bare.indexOf('undefined;', start));
 

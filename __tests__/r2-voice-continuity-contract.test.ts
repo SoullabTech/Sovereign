@@ -87,10 +87,18 @@ describe('R2 · voice receives the same continuity substrate as text MAIA', () =
   it('puts the memory context INTO the model prompt, not merely into a variable', () => {
     // The failure mode we are guarding against is a loader that runs and whose
     // output never reaches the model.
-    const composition = voiceRoute.match(/const voiceSystemPrompt\s*=\s*\[([\s\S]*?)\]/);
+    // M1.5 renamed the composed array to `voicePromptParts` (same contributors,
+    // same filter, same join) so that inclusion could be witnessed rather than
+    // assumed. The pin follows the array; the assertions are unchanged.
+    const composition = voiceRoute.match(/const voicePromptParts\s*=\s*\[([\s\S]*?)\]/);
     expect(composition).not.toBeNull();
     expect(composition![1]).toMatch(/voiceMemoryContext/);
     expect(composition![1]).toMatch(/MEMORY_CANON_GUARD_PROMPT/);
+
+    // Stronger than the original pin, and what it was actually reaching for:
+    // the route now derives a composition-time boolean at the insertion site,
+    // so "in a variable" and "in the model prompt" are separately observable.
+    expect(voiceRoute).toMatch(/voicePromptParts\.includes\(voiceMemoryContext\)/);
   });
 
   it('requests cross-session scope — voice must not be session-local', () => {
