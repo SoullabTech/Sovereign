@@ -367,3 +367,50 @@ first, since it is already canonical-based, and replay MEMBER-SCOPE-01 onto it.
 
 It does **not** touch `lib/settings/accountSettings.ts`, so there is no
 collision with the session-provenance or init-gate work at the library layer.
+
+
+---
+
+## 8. Integration ruling — one provenance invariant, one vocabulary
+
+The two frozen provenance units solve opposite sides of the same boundary:
+
+```
+WRITE-SAFETY-01   may this value be WRITTEN as member-authored?
+                  mechanism: block unsafe snapshot/spread writes
+
+MEMBER-SCOPE-01   may this value be READ as belonging to this member?
+                  mechanism: ownership provenance stamp
+```
+
+Both were locally correct, which is exactly why the integration must not
+preserve both names. The binding invariant:
+
+> **A default may only be read or written as this member's preference when its
+> provenance is established.**
+
+Everything else hangs off that. At the MEMBER-SCOPE replay the naming decision
+is to be made explicitly, not left to whichever branch merged first — either:
+
+* `hydrated` becomes merely UI lifecycle state and ownership provenance is the
+  trust concept; **or**
+* the ownership stamp is expressed through one canonical helper that both write
+  and read paths consult.
+
+What is not acceptable is two coexisting definitions of "member-authored"
+drifting apart.
+
+### Sequence
+
+```
+1  land a578704d8            canonical-based, one commit, bounded
+2  replay MEMBER-SCOPE-01    onto the new canonical; reconcile
+                             AccountSettings.tsx deliberately; adopt ONE
+                             provenance vocabulary
+3  f95705d stays frozen      design donor only; replay gate semantics later
+                             from clean canonical
+```
+
+`a578704d8` is the reference lineage shape for that eventual gate replay: one
+bounded commit directly on the then-current canonical, with no rejected
+semantic ancestry underneath it.
