@@ -150,6 +150,67 @@ export function resetAccountSettings(): AccountSettings {
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
+ * The LIVE session settings key. Not a new authority — this is the same
+ * `maia_settings` that Quick Settings already writes and that
+ * OracleConversation already reads into `isSanctuary`. Named here only so the
+ * seeding below and its tests refer to one spelling.
+ */
+export const LIVE_SESSION_SETTINGS_KEY = 'maia_settings';
+
+/**
+ * SANCTUARY-SETTINGS-DISCONNECT-01 — seed the LIVE Sanctuary authority from the
+ * member's account default, at a new-session boundary only.
+ *
+ * THE DEFECT THIS CLOSES. `getInitialSessionSettings()` maps
+ * `defaultMemoryMode === 'sanctuary'` correctly, but Quick Settings consumes
+ * that mapping only when `maia_settings` does not yet exist. Once it exists —
+ * which is to say after the member's first ever visit — a new session inherited
+ * whatever the browser happened to be holding. Intended new-session
+ * initialization, implemented as first-browser-initialization. A member could
+ * set Default Memory Mode to Sanctuary, see it selected in MAIA Settings, and
+ * begin a new session in Continuity.
+ *
+ * WHY ONLY AT THE BOUNDARY. A default has authority over beginnings; a live
+ * setting has authority over the encounter already underway. Continuously
+ * syncing the default into an active session would let a Settings change
+ * silently revoke consent the member gave mid-conversation via Quick Settings
+ * or voice command. Callers must therefore invoke this ONLY when
+ * `getOrCreateMaiaSessionId().isNew === true`.
+ *
+ * WHY ONLY `sanctuary`. The rest of the live settings keep their own semantics
+ * and are deliberately untouched. This writes one field into an authority that
+ * already exists; it does not introduce a second source of truth for whether
+ * Sanctuary is active. The enforcement chain is unchanged:
+ *   account default → (new session only) → maia_settings.sanctuary → isSanctuary
+ *   → turn settings → retrieval / persistence suppression
+ *
+ * Dispatches `maia-settings-changed` so an already-mounted conversation picks
+ * the value up live, exactly as a Quick Settings toggle does.
+ *
+ * @returns the seeded Sanctuary value, or null if it could not be applied.
+ */
+export function seedLiveSanctuaryForNewSession(): boolean | null {
+  if (typeof window === 'undefined') return null;
+
+  try {
+    const sanctuary = getAccountSettings().defaultMemoryMode === 'sanctuary';
+
+    // Preserve whatever else the live settings hold; only the Sanctuary field
+    // is governed by the account default at a session boundary.
+    const stored = localStorage.getItem(LIVE_SESSION_SETTINGS_KEY);
+    const base = stored ? JSON.parse(stored) : getInitialSessionSettings();
+    const next = { ...base, sanctuary };
+
+    localStorage.setItem(LIVE_SESSION_SETTINGS_KEY, JSON.stringify(next));
+    window.dispatchEvent(new CustomEvent('maia-settings-changed', { detail: next }));
+    return sanctuary;
+  } catch (e) {
+    console.error('[AccountSettings] Failed to seed session Sanctuary:', e);
+    return null;
+  }
+}
+
+/**
  * Get initial session settings based on account defaults
  * Called when a new chat/session is created
  */
