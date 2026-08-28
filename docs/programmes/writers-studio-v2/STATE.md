@@ -47,8 +47,32 @@ WS2-02          HELD on four predicates. HELD is not "next".
 
 WS2-03          HELD behind the same four rulings.
 
-NEXT UNIT       a small architecture-definition unit resolving A–D in words and
-                types. NOT design-system implementation.
+NEXT UNIT       WS2-ARCHITECTURE-DEFINITION.md — DRAFTED 2026-08-28, awaiting
+                founder review. Binds A–D in words and types. No code, no
+                migration, no UI.
+                The hold is NOT "we do not know the architecture." The
+                reference pack already carries it — verified by reading 04 and
+                05, not their filenames. The hold is: write down the
+                architecture the pack already implies, so implementation
+                cannot accidentally simplify it.
+
+SUBSTRATE       three facts WS2-02/03 must be planned around. Read from the
+                migrations, not assumed:
+                  1 member_manuscripts has NO work_id / living_work_id.
+                    The Work↔Manuscript edge DOES NOT EXIST. Persistent work
+                    context cannot be built correctly without it.
+                    (Work↔Material DOES exist — living_work_materials, and it
+                    is already a declared writer act.)
+                  2 member_manuscripts.provenance is
+                    CHECK (provenance = 'member_uploaded') — ONE permitted
+                    value. It is a constant, not a model. Meanwhile 05 already
+                    draws a Provenance tab. Design is AHEAD of substrate.
+                  3 studio_companion_turns ALREADY carries living_work_id +
+                    manuscript_id with a CHECK refusing a homeless turn —
+                    better than the audit assumed. But no adoption state, and
+                    manuscript_id has no FK.
+                Whether these are repaired inside WS2-02/03 or in a preceding
+                migration unit is a founder decision, NOT TAKEN.
 
 PRODUCTION      0d66a5a27  deployed 2026-08-27 · VERIFIED TWO WAYS (D-007)
                   env var  — GIT_COMMIT == 0d66a5a27 (gate-verified at swap)
