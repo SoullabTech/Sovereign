@@ -97,3 +97,26 @@ describe('--serve refuses a server it did not start', () => {
     expect(harness).toContain('Or drop --serve to vouch for that server yourself.');
   });
 });
+
+/**
+ * OBSERVATION-PROVENANCE-01 clause 4 — the filename is observed, not requested.
+ *
+ * `--sha` was written into the output name on trust, which makes the caller's
+ * typing the evidence. A dirty tree is the sharper case: the render is
+ * `<sha> + uncommitted diff` while the name claims a clean commit.
+ */
+describe('the capture is named for the tree that rendered it', () => {
+  it('reads HEAD itself rather than trusting --sha', () => {
+    expect(harness).toContain("run(['rev-parse', '--short', 'HEAD'])");
+    expect(harness).toContain('const observed = observedTree()');
+  });
+
+  it('refuses a --sha that disagrees with the tree', () => {
+    expect(harness).toMatch(/would assert provenance the render does not have/);
+  });
+
+  it('marks a dirty tree in the name instead of hiding it', () => {
+    expect(harness).toContain("`${head}-dirty`");
+    expect(harness).toContain('committed code PLUS uncommitted changes');
+  });
+});

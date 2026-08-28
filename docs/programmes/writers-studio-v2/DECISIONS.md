@@ -287,3 +287,63 @@ The practical form: when a divergence can only be closed by weakening one of the
 five, the divergence is **recorded as accepted** with the reason, and the
 implementation keeps the capability. An accepted divergence is a decision, not a
 defect left lying around.
+
+## D-017 — OBSERVATION-PROVENANCE-01
+
+Founder, 2026-08-28. Generalizes D-015 beyond deploys, to every instrument this
+programme uses to produce evidence.
+
+> A witness is only valid if the artifact proves the provenance of the thing it
+> actually observed.
+
+```text
+OBSERVATION-PROVENANCE-01
+
+Before accepting any witness artifact:
+1. identify the exact subject under observation;
+2. prove the runtime/process came from the intended tree/build;
+3. prove the visible surface is the intended authenticated/product state;
+4. bind the artifact name/metadata to observed provenance, not requested
+   provenance;
+5. fail closed when any of those cannot be established.
+```
+
+### Why it is a rule and not an observation
+
+Four instances inside one week, all of which returned success while answering a
+different question than the one being asked:
+
+```text
+fresh SHA stamp on cached code            D-015 · the runner stage re-stamps
+signed-out surface photographed as field  refused by the harness
+error boundary photographed as field      refused by the harness
+borrowed server named as the current tree  refused by the harness
+```
+
+None of these failed. That is the whole difficulty: a failing instrument is
+self-announcing, and each of these would have deposited a plausible artifact
+into the record. **Plausible evidence is more dangerous than obvious failure
+when provenance is uncertain.**
+
+### Where the capture harness stands against it
+
+Honest scorecard, so the rule is not credited with more enforcement than exists:
+
+```text
+1  subject named          YES  field + manuscript are explicit arguments
+2  runtime from the tree  YES  --serve starts it; a borrowed server is refused
+3  intended surface       YES  crash · signed-out · field classified; two refused
+4  name from observed     YES  the script reads HEAD; --sha that disagrees is
+                               refused; a dirty tree is named -dirty
+5  fail closed            YES  every one of the above exits before capturing
+```
+
+Clause 4 was the last to close, and it closed only because writing the rule down
+exposed it: `--sha=$(git rev-parse --short HEAD)` is the caller asserting a
+tree, not the instrument observing one. The script now reads the tree itself.
+
+### What this does not license
+
+The rule governs instruments, never the field. Nothing here authorizes changing
+a Writer's Studio component, route, or substrate to make a witness easier to
+obtain. Where the two conflict, D-016 governs and the witness gets harder.

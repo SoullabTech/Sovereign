@@ -39,7 +39,7 @@
  * requirements, and the earlier version of this comment collapsed them.
  */
 import puppeteer from 'puppeteer';
-import { spawn } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 
@@ -66,7 +66,42 @@ if (!field || !FIELDS[field]) {
 
 const urlArg = arg('url', 'http://localhost:3000').replace(/\/+$/, '');
 const manuscript = arg('m', '') || arg('manuscript', '');
-const sha = arg('sha', 'working');
+/**
+ * The name is bound to OBSERVED provenance, not requested provenance.
+ *
+ * OBSERVATION-PROVENANCE-01 clause 4. `--sha` used to be taken on trust and
+ * written straight into the filename, which makes the caller's typing the
+ * evidence. Two ways that goes wrong: a pasted value that is not this tree, and
+ * a dirty working tree — where the render came from `<sha> + uncommitted diff`
+ * while the name claims a clean commit.
+ *
+ * So the script reads the tree itself, marks it `-dirty` when it is, and
+ * refuses a `--sha` that disagrees rather than honouring it.
+ */
+function observedTree() {
+  const run = (args) => {
+    const r = spawnSync('git', args, { encoding: 'utf8' });
+    return r.status === 0 ? r.stdout.trim() : null;
+  };
+  const head = run(['rev-parse', '--short', 'HEAD']);
+  if (!head) return null;
+  const dirt = run(['status', '--porcelain']);
+  return dirt ? `${head}-dirty` : head;
+}
+
+const observed = observedTree();
+const shaArg = arg('sha', '');
+if (shaArg && observed && shaArg !== observed && `${shaArg}-dirty` !== observed) {
+  console.error(`[capture] --sha says ${shaArg}, but this tree is ${observed}.`);
+  console.error('[capture] The filename would assert provenance the render does not have.');
+  console.error('[capture] Drop --sha and let the script read the tree.');
+  process.exit(1);
+}
+const sha = observed ?? shaArg ?? 'working';
+if (observed?.endsWith('-dirty')) {
+  console.warn(`[capture] working tree is dirty — naming the capture ${observed}.`);
+  console.warn('[capture] The image is of committed code PLUS uncommitted changes.');
+}
 
 /**
  * Build the target.
