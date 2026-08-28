@@ -372,10 +372,16 @@ let threadPoll = null;
 /**
  * Who is signed in right now.
  *
- * ⭐ `username`, not `name`. The session's `member.name` is a DISPLAY name —
- * two members can share one, and a display name is not an identity to gate
- * adoption on. `username` is what the member authenticated as and is unique by
- * the members contract.
+ * ⭐ DESKTOP-IDENTITY-CARRY-01. The canonical `memberId` from the sign-in
+ * response, when there is one. Until this unit the session discarded it, so
+ * this guard had to fall back to `username` — unique by the members contract,
+ * but a login handle rather than the identity the server actually resolves.
+ * Never `member.name`: a DISPLAY name can be shared by two people and is not
+ * something to gate one person's conversation on.
+ *
+ * The `username` fallback stays for a `session.bin` written before this unit,
+ * where no member id was stored. Both values are stable and unique for the life
+ * of a run, so the guard's semantics — same member or not — are unchanged.
  *
  * Returns null when nobody is signed in, which makes every observation
  * `member_mismatch` and therefore inert. Failing closed is the right default
@@ -385,7 +391,7 @@ let threadPoll = null;
 function currentMemberId() {
   const st = memberSession && memberSession.state();
   if (!st || !st.signedIn || !st.member) return null;
-  return st.member.username || null;
+  return memberSession.memberId() || st.member.username || null;
 }
 
 function startThreadWatch() {
