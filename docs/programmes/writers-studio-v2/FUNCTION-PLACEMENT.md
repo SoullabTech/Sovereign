@@ -3,8 +3,8 @@
 Every function the Studio has, placed in the five-mode architecture.
 
 Companion to `DESIGN-CONTRACT.md`. That file governs how a room **looks** and is
-DERIVED until the reference images land. This file governs where each function
-**lives**, and it does not depend on the images at all.
+**FROZEN** — the reference pack landed in `1493c28c0`. This file governs where
+each function **lives**, and it never depended on the images at all.
 
 Resolved from `CAPABILITY-MAP.md` and the repository on 2026-08-27.
 
@@ -16,13 +16,15 @@ Resolved from `CAPABILITY-MAP.md` and the repository on 2026-08-27.
 moves it, and what happens to the functions that do not exist yet.
 
 **Does not settle:** composition, hierarchy, density, typography — anything a
-screenshot would decide. Those wait on `reference/` (DESIGN-CONTRACT §0). A unit
-may be *planned* and *built* against this file; it may not claim **visual**
-acceptance against it.
+screenshot would decide. Those are settled by the frozen pack
+(`DESIGN-CONTRACT.md` §0). A unit may be *planned* and *built* against this
+file; it may not claim **visual** acceptance against it — visual acceptance
+compares against an image.
 
-So the answer to "can you design around the examples, all of the functions" is:
-yes for all of the functions, from the written reading; no for the examples
-themselves, until the eight screens are under repository custody.
+**Corrected 2026-08-28.** This section previously said composition waited on the
+images arriving. They arrived in `1493c28c0` on 2026-08-27. Placement and
+composition are now both resolvable; they remain resolvable from *different*
+documents, which is why this file and the Design Contract stay separate.
 
 ---
 
@@ -193,14 +195,23 @@ assigns the importance. This survives every unit; it is not a WS2-08 detail.
 
 ## §5 — What is still missing to design the rooms themselves
 
-1. The eight reference screens in `reference/` — blocks WS2-00, and blocks
-   visual acceptance for every unit from WS2-02 onward.
-2. `studio/companion` returning 200 in production — MAIA is a shell region, so
-   its 404 degrades all five modes, not one.
+1. ~~The eight reference screens.~~ **RESOLVED** — in custody at
+   `docs/design/writer-studio/references/` since `1493c28c0`. WS2-00 CLOSED.
+2. `studio/companion` returning 200 in production — MAIA is present in all five
+   modes, so its 404 degrades all of them, not one. **Still open.**
+3. **A–D of the WS2-02 hold** (`WS2-02-03-AUTHORITY-AUDIT.md`) — object model,
+   MAIA relationship, provenance architecture, ontology crosswalk. Added
+   2026-08-28. These do not block *specification* against this file; they block
+   WS2-02 from beginning.
 
-Neither blocks WS2-02's design system or WS2-03's shell from being **specified**
-against this file. Both block them from being **accepted**.
+None of these blocks WS2-02's design system or WS2-03's shell from being
+**specified** against this file. (2) blocks them from being **accepted**; (3)
+blocks them from being **started**.
+
+⚠ **This file's §2 owners are Functional Owners, not Modes.** Seven owners
+against five modes is not a defect in either list — see the audit's Finding D
+and the crosswalk. Do not reconcile them by deleting from one.
 
 ---
 
-LAST UPDATED 2026-08-27
+LAST UPDATED 2026-08-28

@@ -6,7 +6,49 @@
 ```text
 PROGRAMME       WRITERS-STUDIO-V2 · ACTIVE
 LANE            claude/writers-studio-organization-wxpb7q
+                ONE LANE. Consolidated 2026-08-28. A Writer's Studio document
+                that exists on another branch and not on this one is NOT
+                governing.
+LANE HEAD       eeb0cbba6  before this reconciliation commit
 CANONICAL       644d4f2c5
+
+GOVERNING SET   seven documents, jointly controlling. None overrides another.
+                  DESIGN-CONTRACT.md              FROZEN
+                  CAPABILITY-COVENANT.md          BINDING
+                  DESIGN-DEVELOPMENT-PROTOCOL.md  BINDING
+                  WS2-02-03-AUTHORITY-AUDIT.md    ACTIVE PRE-BUILD HOLD
+                  PROGRAMME.md · CAPABILITY-MAP.md · ACCEPTANCE.md
+                An implementation is acceptable only when it conforms to the
+                frozen design language, preserves the covenant, AND was
+                developed under the protocol.
+                  visual fidelity      cannot justify capability loss
+                  legacy capability    cannot justify abandoning the composition
+                  implementation convenience cannot silently alter meaning
+                Arrived by three authorized cherry-picks (407d2f543, 4e73182a6,
+                eeb0cbba6), each recording its source with -x. No other lane's
+                ancestry was merged.
+
+WS2-02          HELD on four predicates. HELD is not "next".
+                  A  OBJECT MODEL      Work / Manuscript / Material distinct
+                  B  MAIA RELATIONSHIP MAIA Exchange belongs to a Work without
+                                       becoming manuscript content
+                  C  PROVENANCE        exists architecturally NOW; presentation
+                                       may wait for WS2-06
+                  D  ONTOLOGY          Mode ≠ Creative Distance ≠ Functional
+                                       Owner; navigation may privilege
+                                       distances, never collapse or hide them
+                A/B/C/D are all RULED (founder, 2026-08-28). The rulings state
+                what must be BOUND; the binding is the act that lifts the hold.
+                Governing line on C: **provenance presentation may remain
+                WS2-06; provenance architecture may not.**
+                "MAIA region" is retired as an architectural definition — a
+                region is presentation. The architecture needs
+                MAIA-in-relation-to-a-Work.
+
+WS2-03          HELD behind the same four rulings.
+
+NEXT UNIT       a small architecture-definition unit resolving A–D in words and
+                types. NOT design-system implementation.
 
 PRODUCTION      0d66a5a27  deployed 2026-08-27 · VERIFIED TWO WAYS (D-007)
                   env var  — GIT_COMMIT == 0d66a5a27 (gate-verified at swap)
@@ -47,9 +89,25 @@ WS2-00          CLOSED 2026-08-27. Reference screens under repository custody
                 blocked, and a walk run now would test a build without the
                 fixes and read as a regression that isn't one.
 
-CURRENT         WS2-01 — shell + WS-WRITE (the charter's first build unit)
-                BLOCKED on the reference images reaching the repository
-                (DESIGN-CONTRACT.md §0 / DECISIONS.md D-006)
+CURRENT         WS2-01 — identity / content correctness
+                Corrected 2026-08-28: this line previously said WS2-01 was
+                blocked on the reference images reaching the repository, while
+                the WS2-00 entry above recorded them IN CUSTODY. The declared
+                reconstruction point was arguing with itself. The images landed
+                in 1493c28c0; D-006 is satisfied; nothing is blocked on them.
+
+                WS2-01 acceptance recovery is still OUTSTANDING wherever
+                runtime/Mac evidence is required. Source and candidate work is
+                complete on this lane; that is NOT acceptance. Do not report
+                WS2-01 accepted because the code exists.
+                  Phase 0  capture recovery      requires the Mac
+                  Phase 3  deploy the candidate  requires Mac/runtime
+                  Phase 4  production probes     requires runtime
+                  Phase 5  member walk           requires the founder
+                  Phase 6  adjudication          can be done from the repo
+                A remote Claude Code session cannot produce Phases 0/3/4/5 — no
+                database, no env files, no member session, no deploy host — and
+                must not hand back provenance it did not observe (D-017).
 
 OPEN            WS2-01 — work/manuscript/content identity
                   deployed artifact            PASS
@@ -302,5 +360,5 @@ CARRIED FORWARD WS-01 formal acceptance still outstanding (founder's act)
 
 QUARANTINED     CADDY-CUSTODY-01 · Resend/auth:email-code · dependency audit debt
 
-LAST UPDATED    2026-08-27
+LAST UPDATED    2026-08-28
 ```

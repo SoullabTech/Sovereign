@@ -3,6 +3,7 @@
 **Pass type**: plans only. **No code changed. No implementation begun.**
 **Audited against**: `DESIGN-CONTRACT.md` · `CAPABILITY-COVENANT.md` ·
 `DESIGN-DEVELOPMENT-PROTOCOL.md` · Creative-Distance Integrity (Protocol §19).
+**Finding D and the ontology crosswalk added 2026-08-28 by founder ruling.**
 **Source of the plans**: `PROGRAMME.md` on `claude/writers-studio-organization-wxpb7q`.
 
 | Unit | Planned scope, verbatim |
@@ -29,7 +30,7 @@
 
 ---
 
-## The three that need adjudication before implementation
+## The four that need adjudication before implementation
 
 ### 🔴 A — "Persistent work context" does not name its object model
 
@@ -74,6 +75,97 @@ capability underneath and postpone the presentation" for a distinction that was 
 **Required**: either move the provenance *model* (not its UI) into WS2-03, or record a founder
 ruling that WS2-06 retrofit is accepted with its cost stated.
 
+### 🔴 D — Mode, Creative Distance and Functional Owner are three ontologies, not one
+
+**Founder ruling, 2026-08-28.** Raised as a fourth finding after A/B/C; ruled
+in the same pass. It is more important than a navigation naming issue.
+
+Three different sets are live in this programme, and none is a relabeling of
+another:
+
+```text
+MODES (5)              WRITE · DEVELOP · EXPLORE · REVIEW · PUBLISH
+                       DESIGN-CONTRACT §1
+
+CREATIVE DISTANCES (6) Work · Close · Material · Structural · Relational ·
+                       Expressive        PROTOCOL §19
+
+FUNCTIONAL OWNERS (7)  WRITE · EXPLORE · MATERIALS · STRUCTURE ·
+                       DEVELOP/REVIEW · MAIA · PUBLISH
+                       FUNCTION-PLACEMENT §2
+```
+
+**They are not supposed to be the same set.** The mistake would be forcing them
+into one taxonomy because the shell needs navigation.
+
+> ### Mode ≠ Creative Distance ≠ Functional Owner
+
+```text
+MODE
+  a member-facing aperture/composition
+  answers: "how am I entering the Studio right now?"
+
+CREATIVE DISTANCE
+  a relationship to the Work
+  answers: "from what distance am I encountering the Work?"
+
+FUNCTIONAL OWNER
+  architectural custody of logic/state
+  answers: "where does this capability's source of truth live?"
+```
+
+A member can occupy one mode while moving among several distances, and a
+functional owner can surface through several modes. That resolves the apparent
+mismatch instead of forcing one list to absorb the others.
+
+#### The discriminating case
+
+`DEVELOP / REVIEW` is why the sets cannot be merged. A developmental review is
+simultaneously **Structural** (seeing form, continuity, movement, gaps) and
+**Relational** (thinking with MAIA about what is being seen). So DEVELOP cannot
+be defined as "the Structural distance." Likewise: WRITE privileges Close but
+Material and Relational may remain present; EXPLORE privileges Work but Material
+and Relational may be active; PUBLISH privileges Expressive but is not identical
+to Expression as a human relationship. MATERIALS and STRUCTURE are
+owners/domains, not necessarily top-level modes. MAIA is a relational
+presence/owner, **not a destination that must become a sixth mode.**
+
+#### The shell rules
+
+> **A mode may privilege one or more creative distances. It may not monopolize
+> them.**
+>
+> **A creative distance must remain reachable without forcing the member into a
+> separate application-like world.**
+
+That is the exact protection Protocol §19 exists to create.
+
+#### The frozen crosswalk
+
+**These tables are not UI navigation. They are anti-collapse architecture.**
+
+| Mode | Primary distance(s) | Common secondary distances |
+|---|---|---|
+| **EXPLORE** | Work | Material, Structural, Relational |
+| **WRITE** | Close | Material, Structural, Relational |
+| **DEVELOP** | Structural + Relational | Work, Material |
+| **REVIEW** | Relational + Structural | Close, Work |
+| **PUBLISH** | Expressive | Work, Close, Structural |
+
+| Functional owner | May surface through |
+|---|---|
+| Manuscript / WRITE | WRITE, DEVELOP, REVIEW, PUBLISH |
+| Materials | EXPLORE, WRITE, DEVELOP |
+| Structure | WRITE, DEVELOP, REVIEW, PUBLISH |
+| MAIA | all modes |
+| Versions | WRITE, DEVELOP/STRUCTURE |
+| Review / findings | DEVELOP, REVIEW |
+| Export / assembly | PUBLISH |
+
+**Required before WS2-02**: the crosswalk is bound in the controlling
+architecture, and navigation is specified against it — not against whichever
+single taxonomy is most convenient to implement.
+
 ## Two flags — downstream, but set here
 
 - **WS2-07 STRUCTURE reads "structure map, outline, movements…"** Protocol §18 forbids collapsing
@@ -95,8 +187,30 @@ referent**, never inherited from a prior room's deploy.
 
 ## Disposition
 
-**WS2-02 may not begin until A, B and C are adjudicated.** All three are architectural, all three
-are cheap to settle now in words, and all three become expensive after the shell exists. None is a
+**WS2-02 may not begin until A, B, C and D are adjudicated.** All four are architectural, all four
+are cheap to settle now in words, and all four become expensive after the shell exists. None is a
 design-taste question.
+
+The four predicates of the hold:
+
+```text
+A  OBJECT MODEL
+   Work / Manuscript / Material must be distinct.
+B  MAIA RELATIONSHIP
+   MAIA Exchange belongs to a Work without becoming manuscript content.
+C  PROVENANCE
+   provenance/adoption exists architecturally now;
+   presentation may wait until WS2-06.
+D  ONTOLOGY CROSSWALK
+   Mode ≠ Creative Distance ≠ Functional Owner.
+   Shell/navigation may privilege distances but may not collapse or hide them.
+```
+
+A, B and C were ruled on 2026-08-28 (the minimum object model; *provenance
+presentation may remain WS2-06, provenance architecture may not*; "MAIA region"
+retired as an architectural definition in favour of MAIA-in-relation-to-a-Work).
+D is ruled above. **The rulings state what must be bound; the binding is the act
+that lifts the hold.** The next unit is a small architecture-definition unit
+that resolves A–D in words and types, before any design-system implementation.
 
 **No code was changed in this pass.**

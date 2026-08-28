@@ -14,20 +14,35 @@ NEW                nothing underneath it
 
 ---
 
-## §0 — The reference images are still not under repository custody
+## §0 — The reference images are under repository custody
 
-They have now been shown, twice, in conversation. They are still not in
-`reference/`. DESIGN-CONTRACT §0 is unchanged and WS2-00 stays blocked: a design
-contract whose source material exists only in chat is not frozen, and visual
-acceptance compares against an image, not against my description of one.
+**Corrected 2026-08-28.** This section previously stated the opposite. The pack
+landed in `1493c28c0` (2026-08-27) at `docs/design/writer-studio/references/`,
+`DESIGN-CONTRACT.md` §0 is **FROZEN**, and **WS2-00 is CLOSED**. The earlier
+text was accurate when written and stale thereafter; it is replaced rather than
+annotated, because a reconstruction source that argues with itself is worse than
+one that is merely out of date.
 
-This map does not depend on that. Placement and capability are resolvable from
-the repository; composition is not.
+```text
+reference pack        IN CUSTODY
+custody commit        1493c28c0
+DESIGN-CONTRACT       FROZEN
+WS2-00                CLOSED
+canonical WS-WRITE    04-writing-field-wide.png
+03 / 06 / 07          one duplicated reference state (md5-verified)
+```
 
-Two of the supplied images are variants of fields already shown. Treated as
-canonical: the **Writing Field with the Materials strip along the bottom** (it
-makes source material proximate without confusing it with manuscript), and the
-**Developmental Review with the finding-disposition controls visible**.
+This map never depended on custody: placement and capability are resolvable from
+the repository; composition is not. What changes is that composition is now
+resolvable too — visual acceptance compares against an image.
+
+The canonical readings recorded here stand, with one correction carried from
+DESIGN-CONTRACT §0.1: the **Writing Field with the Materials strip along the
+bottom** is `08-writing-field-compact.png`, and it is the **secondary**
+reference. `04-writing-field-wide.png` is canonical for WS-WRITE because only 04
+carries the five-mode navigation the whole programme is built around. The
+**Developmental Review with finding-disposition controls visible** stands as
+read.
 
 ---
 
