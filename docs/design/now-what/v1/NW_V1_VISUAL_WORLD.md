@@ -105,6 +105,50 @@ material never taken into custody. **This may be that artifact.**
 
 ---
 
+## MOBILE-FIRST V1 INVARIANT (founder ruling, 2026-08-28)
+
+> **Now What? is designed mobile-first for Larry and his clients. Desktop is the expansion of the
+> mobile experience, not the source layout squeezed down.**
+
+**Not a responsive requirement to satisfy later — a design invariant that governs every surface
+from the first sketch.** For every proposed surface, the **mobile composition is produced first**,
+and tablet/desktop derived from it.
+
+Core V1 must remain fully usable on a phone with: one-handed navigation · one dominant action at a
+time · **no required multi-column layouts** · no horizontal tables · minimal persistent navigation ·
+readable typography without zoom · clear voice/text interaction · **continuity visible without
+drilling through menus**.
+
+| Member priority | Larry priority |
+|---|---|
+| Home · Room · What I'm Carrying · My Story | Today · Client · Session context · Follow-up |
+
+Desktop may show more simultaneous context. It **must not introduce a different mental model.**
+
+> **DESIGN TEST — if the experience is beautiful on desktop but cumbersome on Larry's phone, it
+> fails V1.**
+
+### What this rules out immediately, and what it confirms
+
+- **Dashboard grids are now structurally excluded**, not merely discouraged. UX-02 removed the
+  five-card grid on composition grounds; mobile-first removes the *possibility* of its return.
+- **"What I'm Carrying" is a vertical stream**, which is what it wanted to be anyway — its four
+  categories are a sequence in time (matters → considering → chose → happened), and a stream reads
+  that natively where a grid does not.
+- **The Room already passes.** It is single-column, centred, one composer, one action — the closest
+  surface in the product to mobile-native. Its voice affordance stops being a desktop extra and
+  becomes **a first-class mobile interaction**.
+- **Larry's practitioner view is Today → person → context → session, not tables.** This is the
+  sharpest consequence: the existing practitioner substrate exposes client *lists*, and a list on a
+  phone is a table waiting to happen. His view must be a sequence of people, not a grid of rows.
+- **The 46rem measure stands**, since it was already a single-column reading width — but on phone
+  it is the *only* column, so the hierarchy inside it has to carry everything.
+- **Continuity in the first viewport** is the hardest constraint. "Where you left things" must be
+  above the fold on a phone, which means the greeting, the coach line, and the wordmark cannot all
+  precede it. **Something in the current arrival stack has to give.**
+
+---
+
 ## B · EXISTING SURFACE AUDIT
 
 **`RETIRE PRESENTATION ≠ RETIRE CAPABILITY`.** Nothing below is deleted; "HIDE FOR V1" means the
@@ -202,12 +246,17 @@ bronze wash; bronze `#c9a35e` as the single accent. **Surfaces** — hairlines, 
 removed the card grid and it should not return under nicer typography. **MAIA** — present in the
 Room, quiet elsewhere; never a docked panel. **Mobile** — primary, not compressed desktop.
 
-## G · FIRST THREE MOCKUP TARGETS
+## G · FIRST THREE MOCKUP TARGETS — **iPhone, not desktop**
 
-1. **Returning Home** — the one that proves the whole thesis: her words first, the provenance line
-   beneath, one action.
-2. **The Room** — already closest to right; the target is atmosphere, not restructuring.
-3. **What I'm Carrying** — four categories, member acts only, no inference.
+Per the mobile-first invariant, all three are drawn at phone width first. Desktop expansion comes
+only after the mobile composition feels right.
+
+1. **Returning Home — iPhone.** The one that proves the thesis: her words first, provenance line
+   beneath, one action — **all inside the first viewport.**
+2. **The Room — iPhone.** Already closest to right; the target is atmosphere and one-handed reach,
+   not restructuring. Voice as a first-class control.
+3. **What I'm Carrying — iPhone.** Four categories as a vertical stream, member acts only, no
+   inference.
 
 **Not implemented.**
 
