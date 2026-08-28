@@ -539,7 +539,25 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
    */
   const sendMessage = useCallback(async (
     message: string,
-    conversationHistory?: Array<{ role: string; content: string }>
+    conversationHistory: Array<{ role: string; content: string }> | undefined,
+    // F10-SANCTUARY-WIRE-01. REQUIRED, and an argument rather than a hook option.
+    //
+    // This hook omitted `sanctuary` entirely. The route destructures it from the
+    // body as `sanctuary = false` (stream-conversation/route.ts:621), so a
+    // Sanctuary turn arrived indistinguishable from an ordinary one: retrieval
+    // ran, memory reached the prompt, and the turn was persisted. Witnessed in
+    // production on turn 4fde4e90-4f09-4ff7-8021-d30cc94887d8.
+    //
+    // Why an argument and not an option: `sendMessage` is a useCallback with a
+    // 17-entry dependency array. A hook option would make this boundary depend
+    // on that array staying correct, and a missed entry would ship a stale
+    // `false` — the same defect again, silently. As an argument it is read at
+    // dispatch, from the caller's live state, with nothing memoized in between.
+    //
+    // Why required and not optional: a caller that forgets it must fail to
+    // compile, not quietly send `false`. There is no safe default here — the
+    // absent value is what caused the breach.
+    sanctuary: boolean,
   ) => {
     // ─── TURN START ───
     turnIdRef.current = crypto.randomUUID();
@@ -634,6 +652,12 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
           archetype,     // MAIA's presence/archetype mode
           conversationMode, // Conversation style
           memoryDepth,   // Memory retrieval depth
+          // F10-SANCTUARY-WIRE-01: the Sanctuary boundary must cross the wire.
+          // Its absence here is what let a Sanctuary turn retrieve memory and be
+          // persisted. Never make this conditional or omit it when false — the
+          // route's `sanctuary = false` default cannot distinguish "not in
+          // Sanctuary" from "the client forgot to say".
+          sanctuary,
         }),
         signal: abortControllerRef.current.signal,
       });
