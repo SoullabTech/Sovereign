@@ -44,6 +44,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query, transaction } from '@/lib/db/postgres';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { memberRef } from '@/lib/privacy/memberRef';
+import {
+  isMaterialRelationshipConflict,
+  MATERIAL_RELATIONSHIP_CONFLICT_MESSAGE,
+} from '@/lib/livingWork/materialRelationship';
 
 const MAX_TYPE_CHARS = 80;
 const STATES = new Set(['maybe', 'not_now']);
@@ -173,6 +177,18 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
       withdrewBelonging,
     });
   } catch (error) {
+    /* Two simultaneous contradictory acts on the same pair serialize at the
+       database, and one of them loses. That is a real member outcome, not a
+       fault: 409, in words, and no retry that silently picks a winner. */
+    if (isMaterialRelationshipConflict(error)) {
+      console.warn(
+        `[MAIA/press] material relationship conflict { workId: ${id}, on: 'consider' }`
+      );
+      return NextResponse.json(
+        { error: MATERIAL_RELATIONSHIP_CONFLICT_MESSAGE },
+        { status: 409 }
+      );
+    }
     console.error('[living-works/considerations] consider failed', error);
     return NextResponse.json({ error: 'Could not record that' }, { status: 500 });
   }

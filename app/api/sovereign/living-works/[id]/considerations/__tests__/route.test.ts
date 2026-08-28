@@ -240,3 +240,54 @@ describe('DELETE — withdrawing the consideration', () => {
     expect(mockQuery).not.toHaveBeenCalled();
   });
 });
+
+
+describe('POST — a lost race is a 409, never a 500', () => {
+  /* Once the pair lock serializes two contradictory member acts, one of them
+     legitimately loses. That is a real outcome and must reach the member in
+     words (D-014), not as "Something went wrong". */
+  function conflict() {
+    const e = new Error(
+      'material_relationship_conflict: this material already belongs to that work.'
+    ) as Error & { code?: string };
+    e.code = '23001'; // restrict_violation
+    return e;
+  }
+
+  it('answers 409 with an actionable message when the guard refuses', async () => {
+    mockAuth.mockResolvedValue(MEMBER);
+    ownsBoth();
+    mockTx.mockRejectedValue(conflict());
+    const res = await POST(req('POST', { ...pair, state: 'maybe' }), ctx);
+    expect(res.status).toBe(409);
+    await expect(res.json()).resolves.toEqual({
+      error: 'That relationship changed while you were acting. Refresh it and choose again.',
+    });
+  });
+
+  it('does NOT retry and pick a winner — one attempt, then the refusal', async () => {
+    mockAuth.mockResolvedValue(MEMBER);
+    ownsBoth();
+    mockTx.mockRejectedValue(conflict());
+    await POST(req('POST', { ...pair, state: 'maybe' }), ctx);
+    expect(mockTx).toHaveBeenCalledTimes(1);
+  });
+
+  it('still answers 500 for an unrelated failure — the 409 is specific', async () => {
+    mockAuth.mockResolvedValue(MEMBER);
+    ownsBoth();
+    mockTx.mockRejectedValue(new Error('connection terminated'));
+    const res = await POST(req('POST', { ...pair, state: 'maybe' }), ctx);
+    expect(res.status).toBe(500);
+  });
+
+  it('does not treat a bare restrict_violation from elsewhere as this conflict', async () => {
+    mockAuth.mockResolvedValue(MEMBER);
+    ownsBoth();
+    const other = new Error('some other restriction') as Error & { code?: string };
+    other.code = '23001';
+    mockTx.mockRejectedValue(other);
+    const res = await POST(req('POST', { ...pair, state: 'maybe' }), ctx);
+    expect(res.status).toBe(500);
+  });
+});

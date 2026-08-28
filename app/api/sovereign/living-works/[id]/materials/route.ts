@@ -24,6 +24,10 @@ import { query, transaction } from '@/lib/db/postgres';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { normalizeSentence, refuseBelonging } from '@/lib/livingWork/domain';
 import { memberRef } from '@/lib/privacy/memberRef';
+import {
+  isMaterialRelationshipConflict,
+  MATERIAL_RELATIONSHIP_CONFLICT_MESSAGE,
+} from '@/lib/livingWork/materialRelationship';
 
 const MAX_TYPE_CHARS = 80;
 const MAX_SENTENCE_CHARS = 2000;
@@ -175,6 +179,18 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
       { status: created ? 201 : 200 }
     );
   } catch (error) {
+    /* Same live path as the considerations route: a simultaneous consideration
+       for this pair won the lock, so this declaration is refused rather than
+       committed beside it. The member is told, and chooses again. */
+    if (isMaterialRelationshipConflict(error)) {
+      console.warn(
+        `[MAIA/press] material relationship conflict { workId: ${id}, on: 'bring' }`
+      );
+      return NextResponse.json(
+        { error: MATERIAL_RELATIONSHIP_CONFLICT_MESSAGE },
+        { status: 409 }
+      );
+    }
     console.error('[living-works/materials] bring failed', error);
     return NextResponse.json({ error: 'Could not bring that in' }, { status: 500 });
   }
