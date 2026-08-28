@@ -537,3 +537,60 @@ and D-019, than the convenient column would have been.
 **The census standard that caught it:** the earlier read tested for a column,
 found none, and concluded absence. Absence of the shape you expected is not
 absence of the thing. Census the relation, not the column.
+
+## D-023 — Artifact before assertion
+
+**Founder, 2026-08-28.** Drawn from two corrections in one session, both of
+which made the architecture more coherent once the artifact was allowed to
+contradict the expectation.
+
+> **Artifact-before-assertion.** Before declaring an architectural capability
+> absent, a migration necessary, or a gate outstanding, **inspect the
+> implementation artifact that would actually establish or falsify the claim.**
+> Names, task descriptions, programme state, and previous summaries are
+> navigation aids, not evidence.
+
+> **Applicability precedes execution.** Before running a gate, establish that
+> the gate **can observe the candidate**, and that its required environment is
+> legitimate for the evidence being claimed.
+
+### The order of operations
+
+```text
+WRONG   name / expectation → inference → recommendation → artifact check
+RIGHT   artifact → observation → interpretation → recommendation
+```
+
+### The two instances
+
+**Work↔Manuscript (D-022).** A census tested for a `work_id` column, found
+none, and concluded the edge was absent. Reading the relational model revealed
+`living_work_expressions` — a better, member-authored declaration edge that had
+existed since 2026-08-01, with `declared_by`/`declared_at`, no automatic
+placement, and consumer-side ambiguity refusal. The programme came within one
+authorization of replacing something stronger with a `work_id` column, which is
+weaker precisely because a column can be backfilled by inference.
+
+**Co-Lab applicability (R2).** Programme language said a gate was outstanding.
+Reading `verify-constitution-colab.ts` established that it is byte-identical at
+base and candidate, queries thirteen tables with no `living_work*` dependency,
+and cannot observe R2's table or trigger at all. The gate was never applicable —
+and had the missing local principals been treated as the problem, seeding them
+would have produced a green with no causal relationship to the candidate.
+
+### Why this is a rule and not an observation
+
+Both failures were assertions that survived only until someone looked
+underneath. Neither was caused by poor reasoning; both were caused by reasoning
+in the wrong order. A capability inferred absent gets scheduled as work. A gate
+inferred outstanding gets chased, and its environment gets manufactured to make
+it runnable.
+
+**The repository gets the last word over our story about the repository.**
+
+### What this does not license
+
+It does not license reading code in place of running the thing. An artifact read
+establishes what exists and what a gate can see; it does not establish behaviour
+under load, in production, or in a member's hands. D-007, D-013 and D-015 stand
+unchanged: deployed ≠ observed, and the stamp is not the code.
