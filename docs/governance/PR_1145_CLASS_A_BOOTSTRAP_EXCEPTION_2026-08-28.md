@@ -1,8 +1,12 @@
 # 2026-08-28 — PR #1145 Class A Bootstrap Phase 1 exception
 
-**Status:** OPEN — one of two required acts recorded.
+**Status:** CLOSED — both required acts recorded (Act A 2026-08-28, Act B 2026-08-28).
 **Object:** NW-V1-CLIENT-01 — consequential return.
-**Disposition:** canonical KEEP · not reverted · deployment BLOCKED until both acts exist.
+**Disposition:** canonical KEEP · not reverted · deployment eligibility RESTORED.
+
+> **CLASS A BOOTSTRAP EXCEPTION — CLOSED.** Closed means both acts the exception
+> required now exist. It does **not** mean the normal Class A gate ran, and the
+> paragraph below governs how this record may ever be summarized.
 
 > **This is not a Class A PASS.** The normal Class A Council gate was unavailable.
 > The correct name for this disposition is
@@ -99,28 +103,70 @@ authored by the Founder-Steward and recorded here in the founder's own words.
 
 ---
 
-## ACT B — MENTOR VERIFICATION · OUTSTANDING
+## ACT B — MENTOR VERIFICATION · RECORDED
 
-**Required from:** `SoullabCovenant` (Bootstrap Mentor / Release Steward).
-**Status: NOT PERFORMED.**
+**Performed by:** `SoullabCovenant` (Bootstrap Mentor / Release Steward), GitHub
+user id `297414131`.
+**Date:** 2026-08-28.
+**Evidence:** PR #1145 comment
+[`5458827684`](https://github.com/SoullabTech/Sovereign/pull/1145#issuecomment-5458827684),
+posted 2026-08-28T23:29:58Z. Authorship was confirmed against the GitHub author
+field (`user.login`), not against text inside the comment claiming an identity.
+The comment names both pinned SHAs in full.
 
-This act cannot be produced by the Founder-Steward's account, and was not.
+Why this act could not be shortcut — retained because it is the reason the
+exception existed at all: this act cannot be produced by the Founder-Steward's
+account, and was not.
 `SoullabCovenant` exists precisely to be *a governance identity distinct from
 the author*; a verification issued from `Soullab` would impersonate it and
 destroy the only property it supplies. It must be performed by whoever controls
 that identity.
 
-When performed, it must verify **the same pinned SHAs** and confirm:
+It verified **the same pinned SHAs** and confirmed each required item:
 
-- [ ] the migration is additive and nullable
-- [ ] relation semantics are narrow
-- [ ] negative controls cover composition and propagation
-- [ ] privacy default remains false
-- [ ] rollback disposition is truthful
-- [ ] no downstream progress/outcome interpretation is introduced
+- [x] the migration is additive and nullable
+- [x] relation semantics are narrow
+- [x] negative controls cover composition and propagation
+- [x] privacy default remains false
+- [x] rollback disposition is truthful
+- [x] no downstream progress/outcome interpretation is introduced
 
-and must state that **`SoullabCovenant` is a Bootstrap Mentor / governance
-identity and is NOT being represented as independent Council review.**
+and it stated the required limitation in its own words: *"This is post-merge
+Mentor verification under Bootstrap Phase 1. It is not Council approval, not
+independent two-person review, and not a claim that the normal Class A gate ran
+before merge."*
+
+---
+
+## CUSTODY — `SoullabCovenant` OPERATIONAL AVAILABILITY
+
+Act B was blocked for a time not by disagreement but by access: the identity was
+valid and correctly permissioned, and no one had confirmed it was reachable.
+Successful authentication is the evidence of custody, so custody is recorded
+here as of the date the Mentor act actually posted.
+
+```
+SoullabCovenant operational custody
+
+status              VERIFIED
+custodian           Founder
+access method       dedicated GitHub account
+credential class    managed secure credential store
+recovery path       verified account-recovery channel
+last verified       2026-08-28
+secret material     NOT RECORDED IN REPOSITORY
+```
+
+No credential value, storage path, or recovery detail is recorded in this
+repository. This block exists to tell a future session one fact — *this identity
+is operational and someone knows how to reach it* — without creating a map to
+the secret.
+
+**Scope.** This records custody for the act above. The systemic question — that
+the 2026-07-03 remediation *"confirm `SoullabCovenant` is operationally available
+before the next Class-A/B crossing"* was never discharged, and that #1145
+reproduced the same access failure — is governance-reconciliation evidence and
+belongs to #1147, not to this object-specific cure.
 
 ---
 
@@ -132,13 +178,14 @@ reason                    Guardian Circle not yet appointed
 merged under              Class B
 correct classification    Class A
 founder ratification      RECORDED — Act A above (founder directive 2026-08-28)
-mentor verification       OUTSTANDING — Act B, awaits SoullabCovenant
+mentor verification       RECORDED — Act B above (comment 5458827684)
 Council votes             NOT AVAILABLE
 independent review        NOT CLAIMED
 timing defect             PERMANENTLY RECORDED
 canonical disposition     KEEP
 exception precedent       NO — Bootstrap-specific
-deployment eligibility    NOT RESTORED — requires Act A + Act B
+deployment eligibility    RESTORED — Act A + Act B both recorded
+exception status          CLASS A BOOTSTRAP EXCEPTION — CLOSED
 ```
 
 **Not precedent.** This exception is specific to Bootstrap Phase 1 and to the
