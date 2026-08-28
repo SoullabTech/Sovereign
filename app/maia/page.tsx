@@ -16,6 +16,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { OracleConversation } from '@/components/OracleConversation';
 import { getOrCreateMaiaSessionId } from '@/lib/maia/presence/conversationIdentity';
+import { ensureSessionSanctuary } from '@/lib/settings/accountSettings';
 import { placeFromPathname } from '@/lib/maia/presence/place';
 import { processUltimateMAIAConsciousnessSession } from '@/lib/consciousness-computing/ultimate-consciousness-system';
 import { ClaudeCodePresence } from '@/components/ui/ClaudeCodePresence';
@@ -530,6 +531,13 @@ function MAIAPageContent() {
       // can never mint competing sessions. Daily rotation semantics unchanged.
       const priorSessionId = localStorage.getItem('maia_session_id');
       const identity = getOrCreateMaiaSessionId();
+      // Establish the live Sanctuary boundary for whichever session that
+      // resolved to. Idempotent and provenance-driven, not `isNew`-driven —
+      // this page is not guaranteed to be the code that first crosses the
+      // boundary (MaiaPresence and /field/talk cross it too), so the seed must
+      // not depend on arriving first. Policy lives in the helper; no Sanctuary
+      // logic is duplicated here.
+      if (identity) ensureSessionSanctuary(identity.sessionId);
       if (identity && !identity.isNew) {
         setSessionId(identity.sessionId);
         console.log('💫 [MAIA] Restored session:', identity.sessionId);

@@ -35,6 +35,7 @@ import dynamic from 'next/dynamic';
 import { usePathname } from 'next/navigation';
 import { getValidMemberId } from '@/lib/http/apiBase';
 import { getOrCreateMaiaSessionId } from '@/lib/maia/presence/conversationIdentity';
+import { ensureSessionSanctuary } from '@/lib/settings/accountSettings';
 import {
   type MaiaPlaceContext,
   isFullConversationRoute,
@@ -116,7 +117,13 @@ export function MaiaPresence({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!hasMember) return;
     const identity = getOrCreateMaiaSessionId();
-    if (identity) setSessionId(identity.sessionId);
+    if (identity) {
+      setSessionId(identity.sessionId);
+      // The sheet can mint the day's session before /maia ever mounts. Same
+      // idempotent helper, same single policy — it discarded `isNew` here, so
+      // without this the boundary went uncrossed whenever presence arrived first.
+      ensureSessionSanctuary(identity.sessionId);
+    }
   }, [hasMember]);
 
   const governedRoom = resolveGovernedRoom(pathname);

@@ -184,6 +184,14 @@ export function getInitialSessionSettings() {
 
 const SESSION_STORAGE_KEY = 'maia_settings';
 
+/**
+ * Provenance only: which canonical session the live `sanctuary` value belongs
+ * to. It never answers *whether* Sanctuary is on — `sanctuary` remains the
+ * single live authority. It answers only whether that authority is this
+ * session's, which is what tells a reload (preserve the member's override)
+ * apart from a genuinely new session (consume the default again).
+ */
+
 /** Read the live session Sanctuary flag. */
 export function getSessionSanctuary(): boolean {
   if (typeof window === 'undefined') return false;
@@ -205,6 +213,9 @@ export function getSessionSanctuary(): boolean {
  * consent, so callers must only do it on an explicit member act. Nothing here
  * is retroactive either way: turns taken inside Sanctuary were never persisted,
  * and leaving Sanctuary cannot reach back for them (Sanctuary invariant 6).
+ *
+ * Read-modify-write, so the session's provenance stamp survives: an override
+ * belongs to the session it was made in, and must not look like a new one.
  */
 export function setSessionSanctuary(enabled: boolean): void {
   if (typeof window === 'undefined') return;
@@ -219,5 +230,53 @@ export function setSessionSanctuary(enabled: boolean): void {
     );
   } catch (e) {
     console.error('[AccountSettings] Failed to set session sanctuary flag:', e);
+  }
+}
+
+/**
+ * The ONE place a new session consumes the member's default.
+ *
+ * Idempotent by construction: it compares the caller's canonical sessionId
+ * against the provenance stamp rather than asking which component happened to
+ * mint the session first. `getOrCreateMaiaSessionId()` is crossed at three
+ * sites — /maia, the MaiaPresence sheet, /field/talk — and only one of them
+ * ever read `isNew`. Hanging the seed off any single site would stay
+ * timing-dependent; a stamp comparison does not care who arrives first, or how
+ * many times.
+ *
+ * Returns the live Sanctuary value in force for `currentSessionId`.
+ */
+export function ensureSessionSanctuary(currentSessionId: string): boolean {
+  if (typeof window === 'undefined') return false;
+
+  // No canonical session means no boundary to enforce. Report the live value
+  // untouched rather than seeding against an id we cannot stamp.
+  if (!currentSessionId) return getSessionSanctuary();
+
+  try {
+    const saved = localStorage.getItem(SESSION_STORAGE_KEY);
+    const settings = saved ? JSON.parse(saved) : {};
+
+    // Same session — the member's override stands, reload or not.
+    if (settings.sessionId === currentSessionId) {
+      return settings.sanctuary === true;
+    }
+
+    // Different or absent provenance: whatever `sanctuary` holds is residue
+    // from a previous session (or from before provenance existed) and has no
+    // authority here. Seed from the default in both directions — stale
+    // Sanctuary must not survive a Continuity default any more than stale
+    // Continuity may survive a Sanctuary one.
+    const seeded = getAccountSettings().defaultMemoryMode === 'sanctuary';
+    settings.sanctuary = seeded;
+    settings.sessionId = currentSessionId;
+    localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(settings));
+    window.dispatchEvent(
+      new CustomEvent('maia-settings-changed', { detail: settings })
+    );
+    return seeded;
+  } catch (e) {
+    console.error('[AccountSettings] Failed to establish session sanctuary:', e);
+    return getSessionSanctuary();
   }
 }

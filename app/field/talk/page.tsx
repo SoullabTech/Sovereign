@@ -20,6 +20,8 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { OracleConversation } from '@/components/OracleConversation';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { apiFetch, clearAuthState } from '@/lib/http/apiBase';
+import { getOrCreateMaiaSessionId } from '@/lib/maia/presence/conversationIdentity';
+import { ensureSessionSanctuary } from '@/lib/settings/accountSettings';
 import { advanceEnergyState, loadEnergyContext, type FieldEnergyState } from '@/lib/field/energyState';
 
 // ---------------------------------------------------------------------------
@@ -247,28 +249,32 @@ function FieldTalkContent() {
       // Load user data from localStorage only (no API call on Field boot)
       const userData = await getFieldUserData();
 
-      // Session management — daily reset mirrors /maia
+      // Session management — through the canonical identity module rather than
+      // a second hand-rolled copy of the same daily-rotation scheme. This is the
+      // smallest de-duplication that lets Sanctuary policy live in ONE place:
+      // while this surface minted sessions on its own keys, the boundary helper
+      // could not be given a canonical id to stamp. Semantics are unchanged —
+      // same two localStorage keys, same calendar-day rotation, same
+      // `session_<ms>` id shape.
       const existingSessionId = localStorage.getItem('maia_session_id');
-      const lastSessionDate = localStorage.getItem('maia_session_date');
-      const todayDate = new Date().toDateString();
-      const isNewDay = lastSessionDate !== todayDate;
+      const identity = getOrCreateMaiaSessionId();
+      const activeSessionId = identity?.sessionId ?? `session_${Date.now()}`;
+      // Establish the live Sanctuary boundary for this session. Idempotent, so
+      // it is safe whether Field, /maia or the presence sheet arrived first.
+      ensureSessionSanctuary(activeSessionId);
 
-      let activeSessionId: string;
-      if (existingSessionId && !isNewDay) {
-        activeSessionId = existingSessionId;
+      if (identity && !identity.isNew) {
         console.log('[Field] Restored session:', activeSessionId);
         // Non-blocking touch
         apiFetch('/api/maia/session/start', {
           method: 'POST',
           body: JSON.stringify({
-            sessionId: existingSessionId,
+            sessionId: activeSessionId,
             memberId: userData.id,
           }),
         }).catch(() => {});
       } else {
-        activeSessionId = `session_${Date.now()}`;
-        localStorage.setItem('maia_session_id', activeSessionId);
-        localStorage.setItem('maia_session_date', todayDate);
+        // getOrCreateMaiaSessionId() already persisted the id and its date.
         console.log('[Field] Created new session:', activeSessionId);
 
         // Non-blocking session registration
@@ -282,7 +288,7 @@ function FieldTalkContent() {
           }),
         }).catch(() => {});
 
-        if (existingSessionId) {
+        if (existingSessionId && existingSessionId !== activeSessionId) {
           localStorage.removeItem(`maia_conversation_${existingSessionId}`);
         }
       }

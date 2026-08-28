@@ -1,6 +1,7 @@
 # SANCTUARY-SETTINGS-DISCONNECT-01 — new-session boundary trace
 
-**Status:** trace complete, implementation NOT started. Awaiting adjudication.
+**Status:** boundary implemented via `sessionId` provenance (Kelly ruling
+2026-08-28). Member-scope question in §3 remains OPEN.
 **Branch:** `claude/sanctuary-button-state-issue-872q0a`
 **Supersedes the semantics attempted in:** `188abf5` (default→live coupling, reverted)
 
@@ -71,22 +72,55 @@ default = Continuity,  live override = Sanctuary,  new session → stale Sanctua
 Neither is fixed by anything on this branch. The branch only added a member-
 controlled exit from the second case once it has already happened.
 
-**Open question for the seed design:** distinguishing "member explicitly
-overrode for this session" from "seeded from the default" requires
-provenance the flag does not carry. Without it, a seed at the boundary
-cannot tell an override it should discard from a default it should re-apply
-— it can only overwrite unconditionally. That is a design decision, not an
-implementation detail, which is why implementation stopped here.
+**RESOLVED** by adding provenance to the existing state rather than a second
+authority:
+
+```
+maia_settings.sanctuary   ← still the ONLY live Sanctuary authority
+maia_settings.sessionId   ← provenance only: which session owns that value
+```
+
+`sessionId` never answers whether Sanctuary is on, only whether the live
+value belongs to this session. `ensureSessionSanctuary(currentSessionId)` in
+`lib/settings/accountSettings.ts` is the one place a new session consumes the
+default; matching provenance preserves the override, differing or absent
+provenance reseeds and re-stamps. Because it compares a stamp rather than
+asking who minted first, it is idempotent and order-independent — which is
+what makes the three crossing sites safe to wire without duplicating policy.
+
+18 falsification tests in `lib/settings/__tests__/sessionSanctuary.test.ts`.
+Mutation-checked: deleting the provenance comparison fails 8 of them.
 
 ---
 
 ## 3. Adjacent finding — sign-out leak (not fixed here)
 
 `clearAuthState()` (`lib/http/apiBase.ts:354`) clears `maia_session_id` and
-`maia_session_date` but **not** `maia_settings`. Sign out, sign in as a
-different member on the same device: the previous member's live Sanctuary
-flag is inherited. Same defect class, different surface. Recorded, not
-touched.
+`maia_session_date` but neither `maia_settings` nor `maia_account_settings`.
+
+**Partly mitigated.** Because sign-out clears the canonical session keys, the
+next member gets a new sessionId, mismatches the stale provenance, and is
+reseeded. The previous member's *live flag* can no longer be inherited.
+
+**Not solved: the default it reseeds from is still the previous member's.**
+Read-only trace of `maia_account_settings`:
+
+| Direction | Status |
+|---|---|
+| Local → server | `updateMaiaSetting` writes localStorage **and** `PUT /api/members/settings` → `default_memory_mode` |
+| Server → local | **never happens.** `GET /api/members/settings` does return `maia.defaultMemoryMode`, but its only consumer (`AccountSettings.tsx:351`) destructures `notifications` and `privacy` and discards the `maia` block. `saveAccountSettings()` is called from exactly two local edit handlers; nothing hydrates it from the server, ever. |
+| Cleared on sign-out | No |
+
+So the default is per-device, not per-member. The seed is correct with respect
+to the *session* boundary and unverified with respect to *member identity*.
+
+Risk is asymmetric and the unsafe direction is real: member A leaves
+`defaultMemoryMode: 'continuity'` on the device, member B — whose stored
+default is Sanctuary — signs in, and B's session is seeded Continuity. B's
+chosen Sanctuary default is silently not applied. Do not claim member-scoped
+defaults until the server value is actually read back.
+
+Recorded as **SANCTUARY-MEMBER-SCOPE-01**, open.
 
 ---
 
