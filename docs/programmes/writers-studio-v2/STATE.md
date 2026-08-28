@@ -47,6 +47,13 @@ WS2-SUBSTRATE-01
                   R2 material↔Work ONE table. maybe | not_now ONLY.
                                    Belongs = the declaration row's existence,
                                    never a state in the enum.
+                  R2 GATE          PASS — concurrency probe, founder-run
+                                   2026-08-28 on ecdc2b61f, 25/25 rounds,
+                                   exactly one winner each time. DIFFERENTIAL:
+                                   the same probe failed 25/25 against the
+                                   unlocked guard minutes before, so it is
+                                   known capable of failing. Local dev DB only
+                                   — NOT production, NOT Co-Lab.
                   R3 companion FK  OPTION B: FK ON DELETE SET NULL + a
                                    BEFORE DELETE guard refusing a delete that
                                    would leave a manuscript-only turn homeless.

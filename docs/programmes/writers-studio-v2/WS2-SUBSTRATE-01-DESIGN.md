@@ -704,3 +704,63 @@ STATUS   REPAIR 3 migration HELD until (1) and (2) come back
 ```
 
 **CHANGE: NONE.**
+
+
+---
+
+# EVIDENCE — R2 concurrency gate
+
+**PASS.** Founder-run, 2026-08-28, Kelly's Mac Studio.
+
+```text
+candidate     ecdc2b61f
+probe         scripts/verify-ws2-substrate-01-concurrency.ts
+database      local dev maia_consciousness (PostgreSQL 17.7), candidate applied
+result        PASS — 25 rounds, exactly one winner each time.
+              Belongs and consideration never coexisted.
+```
+
+## Why this is a differential result, not an agreement
+
+The same probe, against the same database, **failed 25 of 25 rounds** minutes
+earlier with `Belongs AND consideration coexist (declarations=1,
+considerations=1)`. Between the two runs nothing changed but the installed
+guard: the malformed `4fb520f9c` migration had put the OLD unlocked function
+into that database, and `ecdc2b61f` replaced it with the locked one.
+
+So the probe is not a test that passes because the system passes. It is a test
+that **distinguishes a locked guard from a raceable one**, and it has now been
+observed doing both. A probe that has never failed against a known-bad artifact
+has not been shown to be capable of failing.
+
+## What was actually witnessed
+
+```text
+exactly one COMMIT and one refusal per round     25/25
+the refusal carried 23001 + material_relationship_conflict:   25/25
+no round left rows in both tables                25/25
+no round lost both writes                        25/25
+```
+
+The precondition check also earned its place: on a schema-less `ws2_probe`
+database it refused by name rather than failing on a generic missing relation,
+and it would have named an installed-but-unlocked guard had one been present.
+
+## What this does NOT establish
+
+- **Not production.** Local dev PostgreSQL only. The candidate has not been
+  applied to minisforum and must not be, ahead of a deploy ruling.
+- **Not Co-Lab.** That gate was green (33 · 0 · 0) on an earlier head; per D-013
+  acceptance is re-measured at the current referent, so it is re-run against
+  whatever finally ships.
+- **Not the routes under real concurrency.** The probe races the SQL directly,
+  which is the invariant's home. The 409 path is proved by unit test, not by a
+  live two-request race.
+
+## Environment note, unrelated to R2
+
+`pg_dump` on that machine is 14.19 against a 17.7 server, so the
+disposable-database path (`pg_dump -s` into `ws2_probe`) aborts on version
+mismatch and produces an empty schema. Both `postgresql@14` and `postgresql@17`
+are installed under Homebrew; `@14` wins the PATH. Anything that snapshots
+schema will hit this until the PATH prefers `@17`.
