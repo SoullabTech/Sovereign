@@ -3,6 +3,27 @@
 **Status**: authored 2026-08-28, founder-directed. Sits **alongside** `DESIGN-CONTRACT.md`.
 **Standing**: binding on every WS2 unit from WS2-02 onward.
 
+> ### Writer's Studio Design Authority
+>
+> Writer's Studio development is governed jointly by:
+>
+> **`DESIGN-CONTRACT.md`** — form and experiential composition
+> **`CAPABILITY-COVENANT.md`** — required capabilities and conceptual distinctions
+> **`DESIGN-DEVELOPMENT-PROTOCOL.md`** — method of implementation and preservation
+>
+> The eight reference images under `/references` constitute the frozen visual evidence for the
+> Design Contract: `01-work-home` · `02-structure-versions` · `03-developmental-review` ·
+> `04-writing-field-wide` · `05-materials-studio` · `06-developmental-review-alt` ·
+> `07-developmental-review-alt2` · `08-writing-field-compact`.
+>
+> **No one document overrides the others.** An implementation is acceptable only when it
+> (1) conforms to the frozen design language, (2) preserves the Capability Covenant, and
+> (3) was developed according to the Design Development Protocol.
+>
+> **Visual fidelity cannot justify capability loss.**
+> **Legacy capability cannot justify abandoning the new composition.**
+> **Implementation convenience cannot silently alter product meaning.**
+
 > **The distinction that makes this a separate document.**
 > `DESIGN-CONTRACT.md` (FROZEN) governs **how Writer's Studio feels**.
 > This covenant governs **what Writer's Studio must remain capable of becoming**.

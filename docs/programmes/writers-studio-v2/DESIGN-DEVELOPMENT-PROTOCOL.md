@@ -3,6 +3,27 @@
 **Status**: authored 2026-08-28, founder-directed. **Controlling before WS2-02 begins.**
 **Operates with**: `DESIGN-CONTRACT.md` (FROZEN) and `CAPABILITY-COVENANT.md`.
 
+> ### Writer's Studio Design Authority
+>
+> Writer's Studio development is governed jointly by:
+>
+> **`DESIGN-CONTRACT.md`** — form and experiential composition
+> **`CAPABILITY-COVENANT.md`** — required capabilities and conceptual distinctions
+> **`DESIGN-DEVELOPMENT-PROTOCOL.md`** — method of implementation and preservation
+>
+> The eight reference images under `/references` constitute the frozen visual evidence for the
+> Design Contract: `01-work-home` · `02-structure-versions` · `03-developmental-review` ·
+> `04-writing-field-wide` · `05-materials-studio` · `06-developmental-review-alt` ·
+> `07-developmental-review-alt2` · `08-writing-field-compact`.
+>
+> **No one document overrides the others.** An implementation is acceptable only when it
+> (1) conforms to the frozen design language, (2) preserves the Capability Covenant, and
+> (3) was developed according to the Design Development Protocol.
+>
+> **Visual fidelity cannot justify capability loss.**
+> **Legacy capability cannot justify abandoning the new composition.**
+> **Implementation convenience cannot silently alter product meaning.**
+
 > `DESIGN-CONTRACT.md` → what it should **look and feel** like.
 > `CAPABILITY-COVENANT.md` → what it must **continue to be able to do**.
 > **This protocol** → **how we are permitted to get from here to there.**
@@ -186,6 +207,51 @@ memory → generic context · versions → autosave history · structure → out
 publishing · writer recognition → AI inference.
 
 **Those distinctions are product architecture.**
+
+---
+
+## 19 · Creative-distance integrity
+
+**The fourth design test**, beyond visual fidelity, functionality and provenance.
+
+Every design unit declares which creative distance it primarily serves:
+
+| Distance | Human activity |
+|---|---|
+| **Work** | returning to the thing I am making |
+| **Close** | writing and revising actual language |
+| **Material** | encountering what may feed the Work |
+| **Structural** | seeing pattern, shape, sequence, gaps |
+| **Relational** | thinking with MAIA |
+| **Expressive** | considering how the Work meets the world |
+
+**These are not six applications and not six workflow stages. They are six ways of standing in
+relation to one Work.**
+
+> **A surface may privilege one creative distance, but it must not sever the writer from the
+> others. Movement between distances should feel like changing perspective on the same Work, not
+> leaving one application and entering another.**
+
+This is the grammar already visible in the frozen pack, and reading it correctly is what keeps
+each screen from degenerating into its nearest conventional equivalent:
+
+- **`04-writing-field-wide`** is not "a nice editor layout." Its design proposition is
+  **foreground/background** — writing holds perceptual primacy while MAIA and the surrounding
+  intelligence stay available without competing with it.
+- **`05-materials-studio`** must not become a generic asset manager. It is **a different distance
+  from the same Work**.
+- **`02-structure-versions`** must not degenerate into a conventional outline sidebar because that
+  is easy to implement. It is the writer standing **far enough away from the sentences to perceive
+  the shape of the whole**.
+
+### The architecture underneath the eight images
+
+The pack is not eight screens to copy. It is glimpses of one coherent environment:
+
+> **Work** is the center · **Manuscript** is authored expression within the Work · **Material**
+> surrounds and feeds it · **Structure** reveals its larger form · **Memory** carries continuity ·
+> **MAIA** participates in relation to it · **Expression** lets it travel outward · **the writer**
+> retains authority across all of it.
 
 ---
 
