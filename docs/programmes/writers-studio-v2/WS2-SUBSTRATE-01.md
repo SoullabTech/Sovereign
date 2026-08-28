@@ -16,8 +16,12 @@ that unit is RELEASED and proceeds in parallel.
 
 The reference pack is **ahead of the substrate**. It draws provenance, drawn
 adoption controls, and a Work that owns its manuscripts. The tables underneath
-express none of those. Implementation must **bring the substrate up to the
-design — never simplify the design down to today's tables** (D-018).
+express **some of them**. Work↔Manuscript is already expressed, and expressed
+well — as a member declaration (D-022). Provenance and adoption are the thin
+ones: the pack draws a Provenance tab and adoption controls the tables cannot
+carry. Implementation must **bring those up to the design — never simplify the
+design down to today's tables** (D-018), and never simplify what is already
+right down to something more convenient.
 
 WS2-02/03 are entitled to a substrate that already tells the truth. If the
 repairs happen inside them, presentation and object-model work entangle, and it
@@ -173,7 +177,9 @@ permanent.
 
 It also means the acceptance criterion "no Work invented on a member's behalf"
 is checkable rather than aspirational: after the migration, every
-Work↔Manuscript row is either NULL or traceable to a member act.
+existing declaration row is traceable to a member act, and unassigned means no
+declaration row exists. **No membership row can be NULL** — a declaration row's
+fields are all real assertions.
 
 ## Out of scope — explicitly
 
@@ -182,7 +188,7 @@ Work↔Manuscript row is either NULL or traceable to a member act.
 - Any UI, component, route or design-system work. That is WS2-02/03.
 - Provenance *presentation* — remains WS2-06 (D-018).
 - Rich-text storage format — remains WS2-04, still BLOCKED.
-- Structure, findings, versions or goals modelling beyond what repairs 1–4
+- Structure, findings, versions or goals modelling beyond what repairs 1–3
   require.
 
 ## Constraints
@@ -218,9 +224,10 @@ Work↔Manuscript row is either NULL or traceable to a member act.
 
 ## What this unit does not settle
 
-Whether WS2-02 begins immediately on completion. WS2-02/03 remain held behind
-**substrate truth** — this unit's completion is what lifts that specific hold,
-and the A–D binding review is separate.
+**Nothing about WS2-02's start.** Since D-022, WS2-02 is **RELEASED** and runs
+as its own bounded lane; this unit does not gate it. WS2-03 is **per-portion
+gated** — the Work-context work may begin, and only the parts needing richer
+provenance or durable adoption wait on repairs 1 and 2.
 
 ---
 
