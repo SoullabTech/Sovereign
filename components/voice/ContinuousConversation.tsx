@@ -20,6 +20,10 @@ import {
   CAPTURE_REASON_CODES,
   type CaptureLossCause,
 } from '@/lib/voice/micLiveness';
+import {
+  buildCaptureForensics,
+  ANALYSER_PEAK_WINDOW_MS,
+} from '@/lib/voice/captureForensics';
 import { getContinuityBuffer } from '@/lib/voice/conversationContinuityBuffer';
 import {
   recordDispatch,
@@ -423,6 +427,48 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     selfHealAttemptedRef.current = false;
   }, []);
 
+  // ==========================================================================
+  // 🔬 CAPTURE FORENSICS — VOICE-CAPTURE-NO-AUDIO-01A (observation only)
+  // ==========================================================================
+  // The watchdog above can say capture died. It cannot say why, and the
+  // production trace is the same every time: onstart/onaudiostart/onspeechstart
+  // fire, then nothing — no result, no error (and onerror IS wired to
+  // telemetry, so that absence is evidence), no end — until silent_death.
+  //
+  // Every surviving hypothesis fits that trace equally well. The refs below
+  // exist so the NEXT occurrence discriminates between them by itself, using
+  // the witness that was already running and never read: this component's own
+  // AnalyserNode, bound to the same MediaStream the recognizer holds. Analyser
+  // still seeing voice while recognition is quiet ⇒ the audio arrived and the
+  // recognition pipeline is the corpse. Analyser equally silent ⇒ the failure
+  // is upstream of both. See lib/voice/captureForensics.ts.
+  //
+  // NOTHING BRANCHES ON ANY OF THIS. These refs are written by the existing
+  // handlers and read once, at the moment of loss, into telemetry. No
+  // threshold here can alter restart policy, recovery, or member-facing state.
+  /** Per-boundary lifecycle stamps. `captureArmedAtRef` is zeroed on loss; these are not. */
+  const lastOnStartAtRef = useRef<number>(0);
+  const lastAudioStartAtRef = useRef<number>(0);
+  const lastSpeechStartAtRef = useRef<number>(0);
+  const lastErrorAtRef = useRef<number>(0);
+  const lastEndAtRef = useRef<number>(0);
+  /** When the rAF level loop last completed a tick — separates "stalled" from "silent". */
+  const analyserLastTickAtRef = useRef<number>(0);
+  /** When the analysed level last crossed the VAD threshold. */
+  const analyserLastVoiceAtRef = useRef<number>(0);
+  /** Ticks since the loop started. Distinguishes "never ran" from "ran then stopped". */
+  const analyserTicksRef = useRef<number>(0);
+  /**
+   * Rolling peak. Two windows, not one: a loss landing just after a window
+   * boundary would otherwise report a peak of zero for a mic that was working
+   * a second earlier, which is precisely the wrong answer.
+   */
+  const analyserPeakRef = useRef<{ startedAt: number; peak: number; prevPeak: number }>({
+    startedAt: 0, peak: 0, prevPeak: 0,
+  });
+  /** Last observed visibility transition — a backgrounded tab throttles rAF. */
+  const lastVisibilityChangeAtRef = useRef<number>(0);
+
   // Convenience aliases (kept for backward compat with existing code)
   const handsFreeActiveRef = useRef(true);
   const lastSpeechHeardAtRef = useRef<number>(0);
@@ -641,6 +687,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     // voice_audio_started is the first observable signal of that failure mode.
     recognition.onaudiostart = session.guard(gen, () => {
       audioStartedThisCycleRef.current = true;
+      lastAudioStartAtRef.current = Date.now(); // 🔬 forensics
       markCaptureActivity(true); // 🩺 audio is actually open — the watchdog's strongest proof of life
       logVoiceEvent('voice_audio_started');
     });
@@ -652,6 +699,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     recognition.onspeechstart = session.guard(gen, () => {
       speechStartedThisCycleRef.current = true;
       noSpeechCycleCountRef.current = 0;
+      lastSpeechStartAtRef.current = Date.now(); // 🔬 forensics
       markCaptureActivity(true); // 🩺
       logVoiceEvent('voice_speech_started');
     });
@@ -678,6 +726,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
       // onaudiostart proves — so the watchdog starts measuring from here and
       // will fire `never_armed` if audio never follows.
       captureArmedAtRef.current = Date.now();
+      lastOnStartAtRef.current = captureArmedAtRef.current; // 🔬 forensics
       captureAudioOpenedRef.current = false;
       markCaptureActivity();
       recognitionActiveRef.current = true; // Confirmed live (defensive: start paths also set this)
@@ -982,6 +1031,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
 
     recognition.onerror = session.guard(gen, (event: any) => {
       const errorCode = String(event?.error || 'unknown');
+      lastErrorAtRef.current = Date.now(); // 🔬 forensics
       logVoiceEvent('voice_transcribe_error', { error: errorCode });
       // Only log critical errors (not no-speech or aborted, which are common)
       if (errorCode !== 'no-speech' && errorCode !== 'aborted') {
@@ -1036,6 +1086,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
       // an unfinalized tail: the demonstrated mechanism, not a hypothesis.
       {
         const endedAt = Date.now();
+        lastEndAtRef.current = endedAt; // 🔬 forensics
         const tail = readTailSnapshot({
           now: endedAt,
           lastInterimAt: lastInterimAtRef.current,
@@ -1440,6 +1491,69 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
    * failing, and an invisible auto-retry would recreate exactly that. The
    * member taps to resume, and knows what state they are in.
    */
+  /**
+   * 🔬 Read every structural witness at the moment of loss.
+   *
+   * Called once per capture loss, immediately before the teardown below zeroes
+   * the liveness refs — order matters, and is the reason this is a function
+   * rather than something assembled inside the telemetry call.
+   *
+   * Refs only, so it is stable and cannot go stale. No transcript, no device
+   * label (labels carry people's names); device identity is a truncated id.
+   */
+  const snapshotCaptureForensics = useCallback((silentForMs: number) => {
+    const now = Date.now();
+    const session = webSessionRef.current;
+    const track = micStreamRef.current?.getAudioTracks?.()[0] ?? null;
+    const settings = (() => {
+      try { return track?.getSettings?.() ?? null; } catch { return null; }
+    })();
+    const peak = analyserPeakRef.current;
+
+    return buildCaptureForensics({
+      now,
+
+      generation: session?.currentGeneration ?? -1,
+      sessionState: session?.state ?? 'none',
+      shouldRecreate: session?.shouldRecreate ?? false,
+      recognitionActive: recognitionActiveRef.current,
+      audioOpened: captureAudioOpenedRef.current,
+      onStartAt: lastOnStartAtRef.current,
+      onAudioStartAt: lastAudioStartAtRef.current,
+      onSpeechStartAt: lastSpeechStartAtRef.current,
+      onResultAt: lastResultAtRef.current,
+      onErrorAt: lastErrorAtRef.current,
+      onEndAt: lastEndAtRef.current,
+
+      trackCount: micStreamRef.current?.getAudioTracks?.().length ?? 0,
+      trackReadyState: track ? String(track.readyState) : null,
+      trackEnabled: track ? !!track.enabled : null,
+      trackMuted: track ? !!track.muted : null,
+      trackDeviceIdPrefix: settings?.deviceId ? String(settings.deviceId).slice(0, 8) : null,
+
+      analyserPresent: !!analyserRef.current,
+      audioContextState: audioContextRef.current ? String(audioContextRef.current.state) : null,
+      analyserLoopRunning: audioLoopRunningRef.current,
+      analyserLevel: audioLevelRef.current,
+      analyserLastTickAt: analyserLastTickAtRef.current,
+      analyserLastVoiceAt: analyserLastVoiceAtRef.current,
+      analyserPeakCurrent: peak.peak,
+      analyserPeakPrevious: peak.prevPeak,
+      analyserTicks: analyserTicksRef.current,
+
+      silentForMs,
+      micState: micStateRef.current,
+      listeningMode: listeningModeRef.current,
+      isListening: isListeningRef.current,
+      isRecording: isRecordingRef.current,
+      isSpeaking: isSpeakingRef.current,
+      isProcessing: isProcessingRef.current,
+      restartInFlight: restartInFlightRef.current || isRestartingRef.current,
+      pageHidden: typeof document !== 'undefined' && document.visibilityState === 'hidden',
+      lastVisibilityChangeAt: lastVisibilityChangeAtRef.current,
+    });
+  }, []);
+
   const handleCaptureLoss = useCallback((cause: CaptureLossCause) => {
     // Idempotent: the watchdog, a track event, and onend can all observe the
     // same death within milliseconds of each other.
@@ -1449,7 +1563,18 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
 
     const reasonCode = CAPTURE_REASON_CODES[cause] ?? 'UNKNOWN_VOICE_STALL';
     console.warn(`🩺 [liveness] Capture loss detected: ${cause} (${reasonCode})`);
-    logVoiceEvent('voice_capture_lost', { cause, reasonCode });
+    // 🔬 VOICE-CAPTURE-NO-AUDIO-01A — snapshot BEFORE the teardown below zeroes
+    // the liveness refs. Attached to the existing event rather than emitted as
+    // a second one so the forensics can never arrive without the loss, or the
+    // loss without its forensics.
+    const lastProofOfLife = Math.max(lastCaptureActivityAtRef.current, captureArmedAtRef.current);
+    const forensics = snapshotCaptureForensics(
+      // 0 when nothing was ever armed — reporting `Date.now()` there would read
+      // as a 57-year silence rather than "no session to be silent in".
+      lastProofOfLife > 0 ? Math.max(0, Date.now() - lastProofOfLife) : 0,
+    );
+    console.warn('🔬 [forensics]', forensics);
+    logVoiceEvent('voice_capture_lost', { cause, reasonCode, ...forensics });
 
     const preserved = salvageTranscript(cause);
 
@@ -1486,7 +1611,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
       userMessage: describeCaptureLoss(cause, { transcriptPreserved: preserved }),
       recoverable: true,
     });
-  }, [salvageTranscript, reportVoiceStatus, onRecordingStateChange, setMicState]);
+  }, [salvageTranscript, reportVoiceStatus, onRecordingStateChange, setMicState, snapshotCaptureForensics]);
 
   /**
    * Attach loss listeners to the live microphone track.
@@ -1605,6 +1730,11 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
       }
     };
     const inspectOnVisible = () => {
+      // 🔬 Stamp every transition, not just the visible one: a backgrounded tab
+      // throttles requestAnimationFrame, which would make the analyser witness
+      // read `analyser_stalled` for a reason that has nothing to do with the
+      // microphone. Forensics must be able to say so.
+      lastVisibilityChangeAtRef.current = Date.now();
       // Returning to a foregrounded tab is the moment a member looks at the
       // screen. If capture died while hidden, say so now rather than letting
       // them start talking into it.
@@ -2096,6 +2226,11 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     }
 
     audioLoopRunningRef.current = true;
+    // 🔬 Forensic counters are per-loop-run: `analyserTicks: 0` at a loss then
+    // means "this run never ticked", which is a different failure from a run
+    // that ticked and stopped. Level history is deliberately NOT cleared.
+    analyserTicksRef.current = 0;
+    analyserPeakRef.current = { startedAt: 0, peak: 0, prevPeak: 0 };
     console.log('🔊 [AudioLoop] Starting audio level monitoring loop');
     let debugCounter = 0;
 
@@ -2124,6 +2259,30 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
 
       // Throttle state updates to 10fps (every 100ms) instead of 60fps
       const now = Date.now();
+
+      // 🔬 VOICE-CAPTURE-NO-AUDIO-01A — local audio witness (observation only).
+      // This loop is the ONLY thing in the component that can say whether audio
+      // was still arriving while recognition went quiet. Recording that here
+      // costs three assignments per frame and turns the next silent death from
+      // "no result, no error, no end" into an answerable question. Nothing
+      // below reads these — see lib/voice/captureForensics.ts.
+      analyserLastTickAtRef.current = now;
+      analyserTicksRef.current++;
+      if (normalizedLevel > vadSensitivity) analyserLastVoiceAtRef.current = now;
+      {
+        const w = analyserPeakRef.current;
+        if (w.startedAt === 0) w.startedAt = now;
+        else if (now - w.startedAt >= ANALYSER_PEAK_WINDOW_MS) {
+          // Keep the closing window's peak: a loss landing just after a
+          // boundary would otherwise report zero for a mic that worked a
+          // second ago.
+          w.prevPeak = w.peak;
+          w.peak = 0;
+          w.startedAt = now;
+        }
+        if (normalizedLevel > w.peak) w.peak = normalizedLevel;
+      }
+
       if (now - lastAudioLevelUpdate.current > 100) {
         setAudioLevel(normalizedLevel);
         lastAudioLevelUpdate.current = now;
