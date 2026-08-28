@@ -30,6 +30,16 @@ import { fileURLToPath } from 'node:url';
 
 const APP_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
 
+import {
+  FLOURISHING_DOMAIN_SLUGS,
+  flourishingDomainSentenceList,
+  assertFlourishingVocabulary,
+} from '../../lib/nowWhat/flourishingDomains.js';
+
+// NW-D01.5 R1: fail loudly at startup rather than composing a vocabulary the
+// database would reject. Drift becomes a crash, not a prompt.
+assertFlourishingVocabulary(FLOURISHING_DOMAIN_SLUGS);
+
 const PROD_MARKERS = ['soullab.life', '192.168.0.104', 'minisforum'];
 
 const DEMO_USERNAME = 'larry.demo';
@@ -39,14 +49,26 @@ const FIELD_CONTENT = {
   welcome_message:
     'Welcome. This room holds your Now What? practice between our conversations — ' +
     'a place to keep the thread alive, in your own words.',
+  // NW-D01.5 R2 (2026-08-26): this column composes DIRECTLY into MAIA's system
+  // prompt (practiceFieldService.formatFieldContextForRoom line ~292), and it
+  // does so OUTSIDE the corpus gate — `corpusIsComposable()` returns false
+  // unconditionally, but `about_practice` bypasses it entirely.
+  //
+  // It previously asserted Larry's central claim ("flourishing is not a
+  // destination — it is a practice") and described his framework. Both are
+  // class-D material (Soullab-derived from a talk corpus that is NOT held),
+  // unratified, and unlicensed — the Materials Agreement is unsigned and
+  // Attachment A does not exist. Placing them here put unratified practitioner
+  // doctrine into every room turn of any field this seeds.
+  //
+  // The demo field stays a demo field. It no longer makes a claim about Larry's
+  // practice. When Larry authors his own field, that act replaces this text.
   about_practice:
-    "Larry Closs's Now What? practice rests on one central claim: flourishing is not a " +
-    'destination — it is a practice. The work integrates executive leadership with positive ' +
-    'psychology, cultivated across five practice domains: attention, relationships, meaning, ' +
-    'contribution, and presence. Larry works with leaders, facilitators, clients, and students ' +
-    'through coaching, workshops, and cohort work. ' +
-    '(Demo field — authored by Kelly Nezat from Larry’s Now What? materials, 2026-07-10, ' +
-    'pending Larry’s own authoring act.)',
+    'Demo practice field for the Now What? room. This text is Soullab-authored ' +
+    'scaffolding for development and walkthroughs — it makes no claim about any ' +
+    "real practitioner's method, framework, or teaching. Practitioner-authored " +
+    'content enters only through the practitioner’s own authoring act, under a ' +
+    'signed materials agreement and an itemised inventory.',
   how_we_work_together:
     'The atomic unit of this work is the practice loop, not the session: an encounter with ' +
     'Larry → the person chooses one practice (one domain, one experiment) → lives it between ' +
@@ -60,15 +82,21 @@ const FIELD_CONTENT = {
     'framework is offered as an invitation when the member reaches for it — never as ' +
     'unsolicited categorization. There are no flourishing scores, levels, or assessments, ' +
     'ever: recognition asks what became visible through living, not how flourishing someone is.',
+  // NW-A02 repair 4 (founder ruling 2026-08-26): this column is declared in
+  // 20260701000001_practice_fields.sql for "jurisdictional declarations
+  // (required for LIVE)" — not biography, method, or positioning. It carried an
+  // unratified prose description of a real named practitioner, which composed
+  // as "The practitioner: …". It no longer composes at all (see
+  // formatFieldContextForRoom), and the prose is removed rather than left inert.
   professional_practice:
-    'Larry Closs — executive coach and consultant developing an approach that integrates ' +
-    'executive leadership with positive psychology, serving leaders, facilitators, clients, ' +
-    'and students. (Demo declaration, pending Larry’s own.)',
+    'Demo practitioner profile — no jurisdictional declaration on file.',
   orientation_style: 'guided',
   maia_guidance: {
+    // NW-D01.5 R1: derived from the ONE shared source, never restated here.
+    // This previously named five domains including an invented "attention".
     preferred_language:
-      'flourishing-practice vocabulary — the five domains (attention, relationships, meaning, ' +
-      'contribution, presence) as lenses the member may pick up, never labels applied to them',
+      `flourishing-practice vocabulary — the six domains (${flourishingDomainSentenceList()}) ` +
+      'as lenses the member may pick up, never labels applied to them',
     boundaries: [
       'never assign a domain to what the member shares — offer the lens only when they reach for it',
       "no flourishing scores, levels, profiles, or 'you're strongest in…' statements",
@@ -124,14 +152,21 @@ async function main() {
       `INSERT INTO practice_fields (
          practitioner_member_id, field_slug, welcome_message, about_practice,
          how_we_work_together, how_maia_supports, professional_practice,
-         orientation_style, maia_guidance
-       ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
+         orientation_style, maia_guidance,
+         -- NW-A02 repair 5: the demo field ratifies its OWN identity text.
+         -- That text is now plainly Soullab-authored demo scaffolding making no
+         -- claim about a real practitioner (NW-D01.5 R2), so ratifying it asserts
+         -- nothing on anyone's behalf. A real practitioner field ratifies by
+         -- their own act; unratified identity text does not compose.
+         identity_ratified_at
+       ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,NOW())
        ON CONFLICT (practitioner_member_id) DO UPDATE SET
          field_slug = EXCLUDED.field_slug,
          welcome_message = EXCLUDED.welcome_message,
          about_practice = EXCLUDED.about_practice,
          how_we_work_together = EXCLUDED.how_we_work_together,
          how_maia_supports = EXCLUDED.how_maia_supports,
+         identity_ratified_at = NOW(),
          professional_practice = EXCLUDED.professional_practice,
          orientation_style = EXCLUDED.orientation_style,
          maia_guidance = EXCLUDED.maia_guidance

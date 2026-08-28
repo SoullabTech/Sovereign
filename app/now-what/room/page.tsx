@@ -23,6 +23,7 @@
 import { useSearchParams } from 'next/navigation';
 import { Suspense } from 'react';
 import { NowWhatRoom } from '@/components/now-what/NowWhatRoom';
+import { NowWhatSurface } from '@/components/now-what/NowWhatSurface';
 import { NowWhatShell, NowWhatThreshold, useMemberSession } from '@/components/now-what/NowWhatShell';
 
 function NowWhatRoomInner() {
@@ -37,7 +38,7 @@ function NowWhatRoomInner() {
   const session = useMemberSession();
 
   return (
-    <div className="min-h-screen bg-[#1f1b16] text-slate-200">
+    <NowWhatSurface>
       {session === 'out' && (
         // The threshold: sign-in met at the door, in the field's register —
         // not as a red API error inside a room that half-opened.
@@ -61,16 +62,16 @@ function NowWhatRoomInner() {
           />
         </>
       )}
-    </div>
+    </NowWhatSurface>
   );
 }
 
 export default function NowWhatRoomPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-[#1f1b16] flex items-center justify-center">
+      <NowWhatSurface className="flex items-center justify-center">
         <p className="text-slate-500 text-sm font-light">Opening the room…</p>
-      </div>
+      </NowWhatSurface>
     }>
       <NowWhatRoomInner />
     </Suspense>

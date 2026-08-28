@@ -97,6 +97,11 @@ export interface PracticeField {
 
   // State — CONTAINMENT. "May this go live?" An explicit governance act, never computed.
   // Independent of readiness: a field may be ready AND contained, and must then stay non-live.
+  /** NW-A02: identity-layer ratification. NULL = unratified; about_practice and
+   *  how_we_work_together do not compose. Absence is not permission. */
+  identity_ratified_at: string | null;
+  identity_ratified_by: string | null;
+
   containment_status: ContainmentStatus;
   /** Whose act imposed this — and therefore whose act may lift it. NULL when not contained. */
   containment_kind: ContainmentKind | null;

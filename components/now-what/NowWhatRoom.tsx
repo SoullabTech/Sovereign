@@ -34,6 +34,7 @@
 import { useState, useRef, useEffect, type CSSProperties } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { apiFetch } from '@/lib/http/apiBase';
+import { SERIF as NW_SERIF } from '@/components/now-what/PaperRoom';
 import { RoomHoloflower, type RoomMotionState, type SpiralElement } from '@/components/maia/vision-studio/RoomHoloflower';
 import { RoomTrustCopy } from '@/components/now-what/RoomTrustCopy';
 
@@ -45,7 +46,10 @@ import { RoomTrustCopy } from '@/components/now-what/RoomTrustCopy';
 // than framer-motion: CSS is clock-based, so it completes correctly even in
 // rAF-throttled background tabs (framer's ticks freeze there, leaving the
 // threshold stuck at opacity 0).
-const SERIF = { fontFamily: "ui-serif, 'New York', Georgia, 'Times New Roman', serif" } as const;
+// UX-02: one serif for the environment. This re-declared its own stack, so the
+// Room rendered a different face from Home on consecutive screens. The room keeps
+// its own scale and composition — only the FACE is shared.
+const SERIF = { fontFamily: NW_SERIF } as const;
 const fadeUpStyle = (delay: number): CSSProperties => ({
   opacity: 0,
   animation: `nwFadeUp 0.9s cubic-bezier(0.22, 1, 0.36, 1) ${delay}s forwards`,
@@ -57,7 +61,14 @@ interface Turn { role: Role; content: string; }
 type ThreadKind = 'theme' | 'question' | 'practice' | 'open';
 interface ProposedThread { title: string; reflection: string; groundedIn: string; kind?: ThreadKind; }
 type Decision = 'keep' | 'revise' | 'discard' | 'split';
-interface AuthoredThread { title: string; origin: 'maia_proposed' | 'member_authored'; }
+interface AuthoredThread {
+  title: string;
+  origin: 'maia_proposed' | 'member_authored';
+  /** UX-02: local UI state only, so the post-keep confirmation can name the room
+   *  the thread actually went to. `kind` already travels in CarryPayload — this
+   *  adds no persistence and changes no payload. */
+  kind?: ThreadKind;
+}
 interface CarryPayload {
   proposals: { title: string; decision: Decision; revisedTitle?: string; children?: string[]; shareWithPractitioner?: boolean; kind?: ThreadKind }[];
   created: { title: string; shareWithPractitioner: boolean; kind?: 'question' }[];
@@ -102,7 +113,7 @@ It isn't an assessment.
 
 It isn't a process of gathering information about you.
 
-Think of this as the beginning of a Living Field.
+Think of this as the beginning of your own rooms — a place your work keeps living between conversations.
 
 Everything we explore here becomes part of a shared developmental context that continues to support the work over time.
 
@@ -136,7 +147,7 @@ The field will remember the work.
 
 You remain the author of its meaning.
 
-One thing to name clearly: Kelly can accompany this field as your facilitating practitioner. What you author here is yours and enters your own Living Field — private by default. Sharing any thread with Kelly is a separate choice you make thread by thread; nothing is shared unless you choose it. Never the conversation, never a record of who you are — only what you explicitly choose to share.
+One thing to name clearly: Kelly can accompany this field as your facilitating practitioner. What you author here is yours and goes to your own rooms — private by default. Sharing any thread with Kelly is a separate choice you make thread by thread; nothing is shared unless you choose it. Never the conversation, never a record of who you are — only what you explicitly choose to share.
 
 This is an early beta, and part of what you are helping us learn is how this kind of field can support your own recognition without turning you into a profile.`;
 
@@ -219,6 +230,30 @@ interface ProgramArrivalPayload {
  * client experience lives in its own namespace and does not modify framework
  * surfaces. It may earn its way into shared architecture through observation.
  */
+
+/**
+ * UX-02 correction 05 — one member-facing vocabulary for where a keep lands.
+ *
+ * The same destination was called three different things on three surfaces:
+ * "your Living Field" in the room's copy, "your field" on the exit link, and
+ * "My Story" / "My Question" on the doors the member actually clicks. A member
+ * cannot follow a place that changes its name. These map a kept thread's kind
+ * to the door name and route Home already uses — no new destination, no routing
+ * change, no new room.
+ */
+function keptRoomName(kind?: string | null): string {
+  if (kind === 'question') return 'My Question';
+  if (kind === 'practice') return 'My Work';
+  return 'My Story';
+}
+
+function keptRoomHref(threads: { kind?: string | null }[]): string {
+  const kind = threads[0]?.kind;
+  if (kind === 'question') return '/now-what/questions';
+  if (kind === 'practice') return '/now-what/work';
+  return '/now-what/field';
+}
+
 export function NowWhatRoom({ phase = 'fire_1', fieldContext, program, entry, entryThread, entryDimension }: Props) {
   const nowWhat = true;
   const [roomPhase, setRoomPhase] = useState<RoomPhase>('arrival');
@@ -754,9 +789,9 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext, program, entry, en
 
   function handleDecision(thread: ProposedThread, decision: Decision, revisedTitle?: string) {
     if (decision === 'keep') {
-      setAuthored(prev => [...prev, { title: thread.title, origin: 'maia_proposed' }]);
+      setAuthored(prev => [...prev, { title: thread.title, origin: 'maia_proposed', kind: thread.kind }]);
     } else if (decision === 'revise' && revisedTitle) {
-      setAuthored(prev => [...prev, { title: revisedTitle, origin: 'member_authored' }]);
+      setAuthored(prev => [...prev, { title: revisedTitle, origin: 'member_authored', kind: thread.kind }]);
     }
   }
 
@@ -1400,21 +1435,35 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext, program, entry, en
             </p>
           </div>
         )}
-        {(authored.length > 0 || !savedPractice) && (
+        {/* UX-02 correction 04 — the keep succeeded, but its arrival was not
+            perceptible: the member was told her words "entered your field", a
+            place bearing a name no screen had shown her, and the count came
+            before the words. Her own sentence is the confirmation; the room it
+            went to is named as she will meet it on Home. No persistence,
+            payload, or route is changed — only what she is shown afterwards. */}
+        {authored.length === 0 && !savedPractice && (
           <p className="text-slate-300 font-light text-base leading-relaxed">
-            {authored.length > 0
-              ? `${authored.length} thread${authored.length === 1 ? '' : 's'} carried into your field.`
-              : 'Nothing carried — that is a faithful outcome too.'}
+            Nothing carried — that is a faithful outcome too.
           </p>
         )}
         {authored.length > 0 && (
-          <ul className="space-y-2">
-            {authored.map((t, i) => (
-              <li key={i} className="text-slate-400 text-sm font-light border-l-2 border-slate-700 pl-3">
-                {t.title}
-              </li>
-            ))}
-          </ul>
+          <div className="space-y-3">
+            <p className="text-slate-500 text-xs uppercase tracking-widest">
+              {authored.length === 1 ? 'Kept' : `Kept · ${authored.length}`}
+            </p>
+            <ul className="space-y-3">
+              {authored.map((t, i) => (
+                <li key={i} className="border-l-2 border-slate-600 pl-4">
+                  <p style={SERIF} className="text-slate-200 text-base font-light leading-relaxed">
+                    {t.title}
+                  </p>
+                  <p className="text-slate-500 text-xs font-light mt-1">
+                    It&apos;s in {keptRoomName(t.kind)}.
+                  </p>
+                </li>
+              ))}
+            </ul>
+          </div>
         )}
         {/* The off-ramp is the room's telos: the exit door leads OUT — into the
             member's own field and back into their life — never back into more
@@ -1424,10 +1473,10 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext, program, entry, en
         </p>
         <div className="flex items-center gap-6">
           <a
-            href={`/now-what/field${fieldContext ? `?fieldContext=${encodeURIComponent(fieldContext)}` : ''}`}
+            href={`${keptRoomHref(authored)}${fieldContext ? `?fieldContext=${encodeURIComponent(fieldContext)}` : ''}`}
             className="text-[#c9a35e] hover:text-[#fff2ab] text-base underline underline-offset-4 transition-colors"
           >
-            See your field
+            Go to {keptRoomName(authored[0]?.kind)}
           </a>
           <button
             type="button"
@@ -1597,7 +1646,7 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext, program, entry, en
         {error && <p role="alert" className="text-red-400 text-xs">{error}</p>}
 
         <div className="border-t border-slate-900 pt-4 text-slate-600 text-xs font-light leading-relaxed space-y-1">
-          <p>What you keep enters your own Living Field — private by default.</p>
+          <p>What you keep is yours — it goes to your own rooms, private by default.</p>
           <p>Sharing a thread with your practitioner is a separate choice, per thread; nothing is shared unless you check it.</p>
           <p>Only what you authored or affirmed. Not a record of this conversation. Nothing the system concluded about you.</p>
         </div>

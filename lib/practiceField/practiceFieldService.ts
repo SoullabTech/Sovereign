@@ -18,6 +18,11 @@ import {
   type PracticeFieldStatus,
 } from '@/lib/types/practiceField';
 import { validateFieldGuidance, renderFieldGuidance } from '@/lib/practiceField/fieldGuidance';
+import {
+  isContained,
+  identityIsRatified,
+  composableMaiaSupport,
+} from '@/lib/practiceField/compositionBoundary';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // READ
@@ -287,12 +292,36 @@ export function corpusIsComposable(_field: PracticeField): boolean {
 
 export function formatFieldContextForRoom(field: PracticeField | null): string {
   if (!field) return '';
+
+  // NW-A02 repair 1 — an actively contained field composes NOTHING. Containment
+  // previously governed only LIVE status (invitations, readiness), so a field an
+  // explicit governance act was holding shut still reached MAIA's prompt for
+  // anyone who knew its slug. Containment now means contained.
+  if (isContained(field)) return '';
+
   const composableCorpus = corpusIsComposable(field) ? field.active_field_content : null;
   const sections: string[] = [];
-  if (field.about_practice) sections.push(`About this practice: ${field.about_practice}`);
-  if (field.how_we_work_together) sections.push(`How this practice works: ${field.how_we_work_together}`);
-  if (field.how_maia_supports) sections.push(`How you (MAIA) support it here: ${field.how_maia_supports}`);
-  if (field.professional_practice) sections.push(`The practitioner: ${field.professional_practice}`);
+
+  // NW-A02 repair 5 — identity self-description composes only once the
+  // practitioner has ratified it as their own. Unratified text may exist in the
+  // row; it does not govern the model. Absence is not permission.
+  if (identityIsRatified(field)) {
+    if (field.about_practice) sections.push(`About this practice: ${field.about_practice}`);
+    if (field.how_we_work_together) sections.push(`How this practice works: ${field.how_we_work_together}`);
+  }
+
+  // NW-A02 repair 3 — `how_maia_supports` is prose instructing MAIA, so it takes
+  // the same narrow-only test `maia_guidance` takes. Two channels carried the
+  // same authority and only one was governed; anything the guidance validator
+  // rejects can no longer be written in prose here instead.
+  const maiaSupport = composableMaiaSupport(field.how_maia_supports);
+  if (maiaSupport) sections.push(`How you (MAIA) support it here: ${maiaSupport}`);
+
+  // NW-A02 repair 4 — `professional_practice` no longer composes. The base
+  // migration declares it for "jurisdictional declarations (required for LIVE)";
+  // it has been carrying practitioner prose instead. It returns to composition
+  // when it carries a ratified jurisdictional declaration, which is a separate
+  // authorized act, not this unit's business.
   const guidance = renderFieldGuidance(field.maia_guidance ?? null);
   if (sections.length === 0 && !guidance && !composableCorpus) return '';
 

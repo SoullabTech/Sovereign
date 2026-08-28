@@ -1,5 +1,20 @@
 # Flourishing Field Manifest
 
+> ⚠️ **HISTORICAL — NOT A VOCABULARY SOURCE** (annotation added 2026-08-26, NW-D01.5 R4)
+>
+> This document is dated **2026-06-28** and **predates the 2026-08-03 corpus-audit correction**.
+> It uses **"attention"** as a flourishing domain. *"Attention" is not one of Larry's domains* —
+> it was invented in an earlier derivation that also dropped **Time Affluence** and **Health and
+> Energy** (see `docs/reviews/LARRY_IP_CORPUS_INVENTORY_AUDIT_2026-08-03.md` §3a).
+>
+> **The canonical vocabulary lives in `lib/nowWhat/flourishingDomains.ts`**, enforced by the CHECK
+> constraint in `database/migrations/20260805200001_flourishing_dimension.sql`.
+>
+> **The content below is deliberately unchanged.** It is preserved as evidence of an earlier
+> validation pass — a record of what the OS-validation draft actually tested, which is exactly the
+> kind of provenance this project keeps. Read it as history, never as current authority, and do
+> not re-derive vocabulary from it.
+
 **Version:** 0.1 (OS validation draft)
 **Date:** 2026-06-28
 **Author:** Kelly Nezat + AIN OS validation pass
