@@ -191,6 +191,38 @@ Where a reference screen shows such a number, the implementation ships **what
 MAIA actually noticed, with the passage it noticed it in** — and the writer
 assigns the importance. This survives every unit; it is not a WS2-08 detail.
 
+### The distinction, stated precisely — added 2026-08-28
+
+"No scores" is too crude a rule and will cause overcorrection. The actual
+principle:
+
+> **Quantification is permitted when it measures progress against a
+> member-declared target. Prohibited scoring is MAIA-generated evaluative
+> judgment about the quality, health, cohesion or movement of the Work.**
+>
+> The failure mode is not *numbers*. It is **machine-authored judgment
+> masquerading as objective measurement.**
+
+Two readings from `04-writing-field-wide.png` show both sides in one screen:
+
+```text
+PERMITTED   GOALS band — 82% · 60% · 75% · 30%
+            progress against targets the writer declared
+            ("Finish first complete draft", "Integrate interviews")
+
+PERMITTED   DEVELOPMENTAL INSIGHTS — typed and evidence-linked:
+            THEME / STRUCTURE / CONTINUITY, each with "3 passages",
+            "2 suggestions", "4 passages". A COUNT OF EVIDENCE, never
+            a grade. D-003 is satisfied IN the reference, not imposed
+            on it.
+
+REFUSED     86% Movement Health · 76% Overall Cohesion ·
+            "Coherence: Strong" · "High Priority"
+            MAIA's judgment wearing the costume of measurement
+```
+
+Do not strip the first two while removing the third.
+
 ---
 
 ## §5 — What is still missing to design the rooms themselves

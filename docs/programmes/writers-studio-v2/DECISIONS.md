@@ -347,3 +347,106 @@ tree, not the instrument observing one. The script now reads the tree itself.
 The rule governs instruments, never the field. Nothing here authorizes changing
 a Writer's Studio component, route, or substrate to make a witness easier to
 obtain. Where the two conflict, D-016 governs and the witness gets harder.
+
+## D-018 — The Writer's Studio object model follows the reference pack
+
+**Founder, 2026-08-28.** Settles audit finding A and the object-model half of C.
+
+The Work is the **primary persistent context**. Manuscripts and Materials relate
+to a Work **explicitly**, not by inference through member ownership. Provenance
+and member adoption/disposition are **architectural data, not decorative UI
+state**.
+
+```text
+WORK            the persistent creative center
+MANUSCRIPT      authored expression BELONGING TO a Work
+MATERIAL        source/input RELATED TO a Work, not authored Work
+MAIA EXCHANGE   relational activity belonging to a Work; may reference
+                Manuscript, Material, Structure or findings WITHOUT
+                becoming manuscript
+```
+
+> A Work can contain or relate to many Manuscripts and Materials. **A Manuscript
+> is not the Work. Material is not Manuscript merely because it was imported,
+> retrieved, summarized, displayed, or discussed.**
+
+**The evidence is the pack, not an abstraction.** `05-materials-studio.png`
+states the domain along its bottom edge — *Source: where it came from · Material:
+what you've gathered · Work: what you're creating* — and puts a six-value
+`RELATIONSHIP TO WORK` control on the material (`Core Material · Supporting ·
+Background · Reference · Peripheral · Exclude`). A Material relates to a Work
+without becoming it, as a control, in the frozen reference.
+
+**Sequencing, carried from the C ruling:** provenance *presentation* may remain
+WS2-06. Provenance *architecture* may not. The reference pack already draws a
+`Provenance` tab and an "Imported from" record; the substrate permits one
+provenance value. The design is ahead of the substrate, and implementation
+brings the substrate up to the design — never the reverse.
+
+## D-019 — MAIA is a relational mode, not a content owner
+
+**Founder, 2026-08-28.** Settles audit finding B, on stronger evidence than the
+abstract statement of it.
+
+The Studio chrome's separation is **normative**:
+
+```text
+WORK SPACE    Home · Manuscript · Materials · Structure · Notes ·
+              Versions · Goals
+MAIA          Conversations · Discover · Insights · Suggestions
+TOOLS         Find/Replace · Statistics · Timeline · Word Web · Export
+```
+
+Read from `04-writing-field-wide.png` on 2026-08-28. **The chrome itself carries
+the ontology**: MAIA is not filed as one owner among seven in a list — it is
+given its own band. That is why "MAIA region" is retired as an *architectural*
+definition. A region is presentation; the architecture is
+MAIA-in-relation-to-a-Work.
+
+MAIA may converse, surface evidence, insights and suggestions. But:
+
+> **Member material remains distinguishable from MAIA interpretation, and
+> adoption into the Work requires an explicit member act.**
+
+The act is drawn in the pack already — `Belongs to Air · Maybe · Not now` in
+`05`, `Discuss / Keep / Unresolved / Dismiss` inline in `08`. These are **not
+merely UI states**; they require persisted disposition (see WS2-SUBSTRATE-01).
+
+Repeated retrieval or repeated suggestion never substitutes for the act. No
+passage of time converts a proposal into authorship.
+
+## D-020 — One lane
+
+**Founder, 2026-08-28.** Writer's Studio work is consolidated to
+`claude/writers-studio-organization-wxpb7q`. The governing documents reached it
+by three authorized cherry-picks (`407d2f543`, `4e73182a6`, `eeb0cbba6`), each
+recording its source with `-x`; no other lane's ancestry was merged.
+
+There is no second Writer's Studio lane. **A document that exists on another
+branch and not on this one is not governing.**
+
+## D-021 — Substrate repair precedes the design system
+
+**Founder, 2026-08-28.** The object-model repairs do not happen inside
+WS2-02/03.
+
+WS2-02/03 must be allowed to implement the Studio **against a substrate that
+already tells the truth.** Otherwise presentation work and object-model repair
+become entangled, and it later becomes impossible to distinguish *"the UI chose
+this"* from *"the data model forced this."*
+
+```text
+WS2-00              reference/design grammar settled
+   ↓
+WS2-SUBSTRATE-01    make the object model capable of expressing that grammar
+   ↓
+WS2-02              design system
+WS2-03              shell + persistent work context
+```
+
+**Work↔Manuscript is the load-bearing repair.** Without it, "persistent work
+context" is **semantically false**: the system can know whose manuscript it is,
+but not which Work it belongs to.
+
+The unit creates **exactly enough substrate for the already-settled architecture
+to be representable without loss.** It does not invent the full future schema.

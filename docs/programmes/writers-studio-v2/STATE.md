@@ -28,7 +28,31 @@ GOVERNING SET   seven documents, jointly controlling. None overrides another.
                 eeb0cbba6), each recording its source with -x. No other lane's
                 ancestry was merged.
 
-WS2-02          HELD on four predicates. HELD is not "next".
+FROZEN STATE    founder, 2026-08-28
+                  WS2-00              CLOSED
+                  D-017               SATISFIED by image reading
+                  D-018 / D-019       RECORDED
+                  WS2-SUBSTRATE-01    NEXT · bounded migration/object-model
+                                      repair · DEFINED, NOT STARTED
+                  WS2-02 / WS2-03     HELD behind substrate truth
+
+WS2-SUBSTRATE-01
+                Authorized 2026-08-28 (D-021). Stands between WS2-00 and
+                WS2-02 so the design units implement against a substrate that
+                already tells the truth. Four repairs, no more:
+                  1 Work↔Manuscript as a real persisted relation  LOAD-BEARING
+                  2 a real provenance model, incl. imported-source identity,
+                    replacing the one-value placeholder
+                  3 persisted adoption/disposition — Belongs/Maybe/Not now
+                    and Discuss/Keep/Unresolved/Dismiss are NOT UI states
+                  4 referential integrity on
+                    studio_companion_turns.manuscript_id
+                It does NOT invent the full future schema. Exactly enough for
+                the settled architecture to be representable without loss.
+                Packet: WS2-SUBSTRATE-01.md
+
+WS2-02          HELD on four predicates AND behind WS2-SUBSTRATE-01.
+                HELD is not "next".
                   A  OBJECT MODEL      Work / Manuscript / Material distinct
                   B  MAIA RELATIONSHIP MAIA Exchange belongs to a Work without
                                        becoming manuscript content
@@ -45,7 +69,10 @@ WS2-02          HELD on four predicates. HELD is not "next".
                 region is presentation. The architecture needs
                 MAIA-in-relation-to-a-Work.
 
-WS2-03          HELD behind the same four rulings.
+WS2-03          HELD behind the same four rulings AND behind
+                WS2-SUBSTRATE-01. "Persistent work context" is semantically
+                false until repair 1 lands: the system can know whose
+                manuscript it is, but not which Work it belongs to.
 
 NEXT UNIT       WS2-ARCHITECTURE-DEFINITION.md — DRAFTED 2026-08-28, awaiting
                 founder review. Binds A–D in words and types. No code, no
