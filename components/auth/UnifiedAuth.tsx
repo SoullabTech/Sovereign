@@ -658,7 +658,12 @@ function UnifiedAuthInner({ mode = 'signup' }: { mode?: AuthMode }) {
                 <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Your name" autoFocus className={inputCls} />
                 <button type="submit" disabled={isLoading} className={primaryBtn}>{isLoading ? 'Entering…' : 'Enter MAIA'}</button>
               </form>
-              <p className="mt-4 text-xs text-slate-500/80 text-center leading-relaxed">You’ll return with an emailed code{bioAvailable ? ` or ${biometricLabel}` : ''} — no password needed.</p>
+              {/* Was: "an emailed code{bioAvailable ? ` or ${biometricLabel}`}". That
+                  promised biometric return from device CAPABILITY, but the passkey
+                  registration below is optional and cancellable — so the sentence could
+                  be false by the time the member acts on it. Same semantic collapse
+                  AUTH-BIOMETRIC-01B repairs, spoken as copy rather than as a button. */}
+              <p className="mt-4 text-xs text-slate-500/80 text-center leading-relaxed">You’ll return with an emailed code — no password needed.</p>
             </motion.div>
           ) : phase === 'code' ? (
             <motion.div key="code" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-center">
