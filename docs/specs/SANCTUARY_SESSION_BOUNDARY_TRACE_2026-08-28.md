@@ -288,7 +288,7 @@ runtime witness is required regardless of any source-level wiring test.
 
 ```
 1  DEFAULT-RESOLVE-01
-2  SETTINGS-WRITE-SAFETY-01          ← not yet specified in this record
+2  SETTINGS-WRITE-SAFETY-01          ← specified; candidate a578704d8 (§7)
 3  MEMBER-SCOPE-01
 4  DISCONNECT/V3 semantic replay
    → these canonicalize the prerequisite layers
@@ -312,3 +312,58 @@ Add at replay time, absent from `f95705d`:
 * a wiring proof that pins the three real call sites and cannot be satisfied by
   comments or prose
 * the runtime witness (Mac-only; unavailable in the remote container)
+
+
+---
+
+## 7. SANCTUARY-SETTINGS-WRITE-SAFETY-01 — specified, candidate verified
+
+**Contract:** the settings UI must not silently revoke or overwrite a
+Sanctuary/default boundary it does not own. Two destructive write classes:
+
+**A — AccountSettings provenance safety.** An un-hydrated or failed-hydration UI
+state must not persist a synthetic `defaultMemoryMode: 'continuity'` as though
+the member chose it. Successful hydration preserves the real member default; an
+explicit member change may persist the selected value. Applies to direct
+account-setting writes *and* nested-setting writes travelling the same
+snapshot/spread path.
+
+**B — MaiaSettingsPanel preservation.** Resetting unrelated settings and saving
+must leave `maia_settings.sanctuary` exactly as it was — `true` stays `true`,
+`false` stays `false`, absent stays absent.
+
+**Does not own:** default resolution · member identity/provenance · session
+initialization · dispatch gating · conversation identity · F10 · voice · Keep ·
+historical remediation.
+
+### Candidate
+
+```
+HEAD    a578704d8   branch claude/sanctuary-settings-write-safety-01
+BASE    15a34c319   canonical
+STATUS  PASS candidate · frozen
+```
+
+Verified from this session (the reference was not taken on faith):
+
+* the ref exists — `refs/heads/claude/sanctuary-settings-write-safety-01`
+* it is **exactly one commit on canonical**, with `15a34c3` confirmed as its
+  parent. This is the shape `f95705d` should have had, and the contrast is the
+  whole lesson of §6.
+* its scope matches the contract: `components/account/AccountSettings.tsx`
+  (class A, guarding both `updateMaiaSetting` and `updateNestedMaiaSetting`),
+  `components/MaiaSettingsPanel.tsx` (class B), a new
+  `lib/settings/settingsWriteSafety.ts`, and its own test.
+
+### Replay collision to expect
+
+`components/account/AccountSettings.tsx` is touched by both this candidate and
+the frozen MEMBER-SCOPE-01 work, in the *same* functions — `updateMaiaSetting`
+and `updateNestedMaiaSetting`. The two guards are complementary rather than
+contradictory (this one refuses to write an unowned default; MEMBER-SCOPE-01
+refuses to *read* one as the member's), but they will not merge textually
+without a deliberate reconciliation. Sequence accordingly: land this unit
+first, since it is already canonical-based, and replay MEMBER-SCOPE-01 onto it.
+
+It does **not** touch `lib/settings/accountSettings.ts`, so there is no
+collision with the session-provenance or init-gate work at the library layer.
