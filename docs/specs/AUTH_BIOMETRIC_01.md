@@ -1,6 +1,7 @@
 # AUTH-BIOMETRIC-01 — unify biometric enrollment semantics across web and native
 
-**Status:** OPEN — census complete, convergence not authorized
+**Status:** B IMPLEMENTED — A not authorized
+**Ruled:** 2026-08-27 — B first (truthful UI distinction); A becomes its own architecture unit
 **Opened:** 2026-08-27
 **Class:** cross-surface identity inconsistency (not a UI defect)
 **Scope discipline:** auth and identity only. No migration, no deletion, no store
@@ -100,16 +101,49 @@ no new trust surface. Does not remove the underlying split — it stops the spli
 from lying.
 
 B is the smaller correct step and does not foreclose A. A is the destination.
-My recommendation is B now, A specified separately, because B can be proven with
-existing data and A cannot ship without an attestation design.
+
+**Ruled 2026-08-27: B, implemented here.** A is a separate architecture unit —
+it needs an attestation / credential-registration model, recovery semantics,
+device lifecycle, and an explicit relationship between native identity and the
+sovereign account. It must not emerge from changing a capability flag.
+
+### What B shipped
+
+`lib/auth/webBiometricOffer.ts` — a pure decision over two facts that were
+being conflated:
+
+```
+CAPABILITY  this device can perform a ceremony   (browserSupportsWebAuthn)
+ENROLLMENT  this member has a web credential     (members.has_webauthn)
+```
+
+Both required. `unknown` enrollment falls back to device-local evidence of a
+prior ceremony, never to capability. Fails closed everywhere else — offering a
+path that cannot succeed is the defect; withholding one that could have is
+recoverable, since password, code and OAuth share the screen.
+
+`components/auth/UnifiedAuth.tsx` — the live surface (not `SignInCard`). Gates
+the button on the decision, looks enrollment up from the entered email, and when
+it withholds from a capable device it says why, naming Account → Security rather
+than implying the member erred. Native (Capacitor) sign-in is untouched: it
+verifies against `trusted_devices`, where enrollment is real.
+
+`app/api/auth/webauthn/authenticate/verify/route.ts:145` — `member.has_webauthn
+|| true` was unconditional. Now `=== true`. The sign-in surface reads enrollment
+state, so it had to stop lying.
+
+`app/api/members/lookup-email/route.ts` — rate-limited. It answers "does this
+address exist, can it use a passkey" unauthenticated, and B makes the sign-in
+page call it on every email entry. Metering the volume this change invites
+belongs to this change, not a later cleanup.
 
 ## 6. Goals (as scoped)
 
 1. Census both stores and both enrollment flows. **[done — §2]**
-2. Identify the canonical credential source. **[open — §5]**
-3. Decide: native bootstraps WebAuthn, or the UI distinguishes honestly. **[open — §5]**
+2. Identify the canonical credential source. **[deferred to A]**
+3. Decide: native bootstraps WebAuthn, or the UI distinguishes honestly. **[ruled — B]**
 4. Stop the web button offering a path that cannot succeed for a natively
-   enrolled member. **[blocked on 3]**
+   enrolled member. **[done — B]**
 5. Preserve every working credential. **[binding constraint]**
 6. No migration, no deletion, until the convergence plan is explicit. **[binding constraint]**
 
@@ -134,7 +168,11 @@ current code first:
 - `relationship_essence` / `relationship_essences` duplicate-table smell.
   Recorded separately (`docs/ops/SCHEMA_DUPLICATE_SMELLS.md`). Different class
   of defect; it does not enter this unit.
-- The Resend delivery outage. Concurrent, unrelated, account-side.
+- The Resend delivery outage. Concurrent, unrelated, account-side — resolved
+  2026-08-27 by enabling pay-as-you-go; no code change was required. Noted only
+  because it shared a screen with this defect and masked it: a member hitting
+  the biometric split saw the outage banner and concluded the whole account was
+  broken.
 - AUTH-BIOMETRY-01 (`deviceId` entropy / replay, in
   `AUTH_BOUNDARY_PARKED_FINDINGS.md`) stays parked. It concerns whether the
   native store's binding is *strong*; this unit concerns whether the two stores

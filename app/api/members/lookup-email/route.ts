@@ -10,9 +10,25 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
+import { checkRateLimit, getClientIP, buildRateLimitHeaders } from '@/lib/auth/rateLimiter';
+
+const ENDPOINT = '/api/members/lookup-email';
 
 export async function POST(request: NextRequest) {
   try {
+    // This route answers "does this address exist, and can it use a passkey" to
+    // an unauthenticated caller — an account-existence oracle by design, needed
+    // to branch the sign-in surface. It was unmetered. AUTH-BIOMETRIC-01B makes
+    // the sign-in page call it on every email entry, so the volume it invites
+    // goes up; a limit is part of that change rather than a later cleanup.
+    const rate = await checkRateLimit(getClientIP(request), 'ip', ENDPOINT);
+    if (!rate.allowed) {
+      return NextResponse.json(
+        { error: 'Too many lookups. Please try again shortly.' },
+        { status: 429, headers: buildRateLimitHeaders(rate) }
+      );
+    }
+
     const { email } = await request.json();
     if (!email || !email.includes('@')) {
       return NextResponse.json({ error: 'Valid email required' }, { status: 400 });

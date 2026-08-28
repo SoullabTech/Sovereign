@@ -28,6 +28,13 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Holoflower } from '@/components/ui/Holoflower';
 import { biometricAuth } from '@/lib/auth/biometricAuth';
+import {
+  shouldOfferWebBiometric,
+  webBiometricNotice,
+  readLocalPasskeyEvidence,
+  markLocalPasskeyEvidence,
+  type WebEnrollment,
+} from '@/lib/auth/webBiometricOffer';
 import { unifiedBiometry } from '@/lib/auth/unifiedBiometry';
 import { deviceTrust } from '@/lib/auth/deviceTrust';
 import { apiUrl, apiFetch } from '@/lib/http/apiBase';
@@ -95,6 +102,10 @@ function UnifiedAuthInner() {
   const [isLoading, setIsLoading] = useState(false);
   const [bioAvailable, setBioAvailable] = useState(false);
   const [bioPlatformAvailable, setBioPlatformAvailable] = useState(false);
+  // AUTH-BIOMETRIC-01B. Capability (above) and enrollment (below) are separate
+  // facts; the button requires both. See lib/auth/webBiometricOffer.ts.
+  const [webEnrollment, setWebEnrollment] = useState<WebEnrollment>('unknown');
+  const [localPasskey, setLocalPasskey] = useState(false);
   const arrivalSignin = isFeatureEnabled('arrivalSignin'); // Arrival remodel — fully transitioned (default on; flag is a kill-switch). Presentation only.
   // Arrival remodel — navy cosmos + subtle plum atmosphere; the controls stay the original navy (plum reverted per brand
   // direction 2026-07-22: navy foundation, plum only as the bloom). Only card + field + holoflower + copy differ. Presentation only.
@@ -129,6 +140,37 @@ function UnifiedAuthInner() {
       }
     })();
   }, [nativeBiometryEnabled]);
+
+  // Device-local evidence of a prior WebAuthn ceremony. Stands in for enrollment
+  // only while nobody is identified — see webBiometricOffer.ts.
+  useEffect(() => { setLocalPasskey(readLocalPasskeyEvidence()); }, []);
+
+  // Enrollment lookup. `has_webauthn` is what the WEB store knows; a member
+  // enrolled only in the iOS app (trusted_devices) comes back 'not-enrolled',
+  // which is the whole point. Native sign-in never consults this.
+  useEffect(() => {
+    if (Capacitor.isNativePlatform() && nativeBiometryEnabled) return;
+    const addr = email.trim();
+    if (!addr.includes('@')) { setWebEnrollment('unknown'); return; }
+    let cancelled = false;
+    const t = setTimeout(() => {
+      fetch('/api/members/lookup-email', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ email: addr }),
+      })
+        .then((r) => (r.ok ? r.json() : null))
+        .then((d) => {
+          if (cancelled) return;
+          // An unknown address tells us nothing about a credential, so it stays
+          // 'unknown' rather than 'not-enrolled' — the notice would be a lie.
+          if (!d || d.exists !== true) { setWebEnrollment('unknown'); return; }
+          setWebEnrollment(d.hasWebauthn === true ? 'enrolled' : 'not-enrolled');
+        })
+        .catch(() => { if (!cancelled) setWebEnrollment('unknown'); });
+    }, 450);
+    return () => { cancelled = true; clearTimeout(t); };
+  }, [email, nativeBiometryEnabled]);
 
   // Silent, server-confirmed authed redirect (web only). Uses whoami, NOT
   // localStorage — so a stale beta_user never bounces a real visitor away.
@@ -257,13 +299,25 @@ function UnifiedAuthInner() {
         preferredName: name || data.member.name, onboarded: !!data.member.onboarded,
       });
       await trustThisDevice();
-      if (bioAvailable && bioPlatformAvailable) { try { await biometricAuth.register(); } catch { /* optional */ } }
+      if (bioAvailable && bioPlatformAvailable) { try { await biometricAuth.register(); markLocalPasskeyEvidence(); } catch { /* optional */ } }
       window.location.assign(data.member.onboarded ? `/maia?ts=${Date.now()}` : '/onboarding');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not complete signup. Please try again.');
       setIsLoading(false);
     }
   }
+
+  // Native biometry verifies against trusted_devices, where enrollment is real,
+  // so it keeps its own gate. Only the web decision changes here.
+  const nativeBioPath = Capacitor.isNativePlatform() && nativeBiometryEnabled;
+  const offerInput = {
+    capabilityAvailable: bioAvailable,
+    platformAvailable: bioPlatformAvailable,
+    enrollment: webEnrollment,
+    localPasskeyEvidence: localPasskey,
+  };
+  const offerBiometric = nativeBioPath ? bioAvailable : shouldOfferWebBiometric(offerInput);
+  const biometricNotice = nativeBioPath ? null : webBiometricNotice(offerInput);
 
   // ── Biometric return ─────────────────────────────────────────────────────
   async function continueWithBiometric() {
@@ -283,7 +337,7 @@ function UnifiedAuthInner() {
         const code = res?.code;
         console.log(`[WebAuthn] biometric result: failed code=${code || 'none'} error=${res?.error || 'none'}`);
         let msg = res?.error || 'Let’s try another way.';
-        if (code === 'CREDENTIAL_NOT_FOUND') msg = 'No Face ID set up here yet — enter your email and we’ll send a code.';
+        if (code === 'CREDENTIAL_NOT_FOUND') msg = 'No passkey is set up for this browser yet — continue with your email code or your password, then turn on Face ID under Account → Security.';
         else if (code === 'DEVICE_NOT_TRUSTED' || code === 'NO_MEMBER_ID') msg = 'This device isn’t set up yet — continue with your email.';
         else if (code === 'USER_CANCELLED' || code === 'BIOMETRY_FAILED') msg = 'Cancelled. Tap again when you’re ready.';
         setError(msg);
@@ -291,6 +345,7 @@ function UnifiedAuthInner() {
         return;
       }
       if (res.member) {
+        if (!useNative) markLocalPasskeyEvidence();
         storeSession({
           id: res.member.id, username: res.member.username, name: res.member.name,
           preferredName: res.member.preferredName, onboarded: res.member.onboarded,
@@ -474,10 +529,17 @@ function UnifiedAuthInner() {
                 <button type="submit" disabled={isLoading || !email} className={primaryBtn}>{isLoading ? 'Sending…' : 'Continue'}</button>
               </form>
 
-              {bioAvailable && (
+              {offerBiometric && (
                 <button type="button" onClick={continueWithBiometric} disabled={isLoading} className={`${outlineBtn} mt-3`}>
                   Continue with {biometricLabel}
                 </button>
+              )}
+
+              {/* Withheld, and said so. A capable device with no web credential
+                  used to get a button that could not succeed — the member read
+                  the opaque failure as the account forgetting them. */}
+              {!offerBiometric && biometricNotice && (
+                <p className="mt-3 text-xs text-slate-400/80 leading-relaxed text-center">{biometricNotice}</p>
               )}
 
               {/* Username + password is a peer sign-in path, not a footnote. It used to be a
