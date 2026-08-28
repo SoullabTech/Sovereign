@@ -4545,6 +4545,33 @@ I'm not sure what I'm feeling yet.`;
   const handleCaptureSpirit = useCallback(async () => {
     console.log('✨ [Capsule] handleCaptureSpirit called', { userId, messageCount: messages.length });
 
+    // 🛡️ SANCTUARY ABSOLUTE BOUNDARY — guard at the source, not at the button.
+    // Opening this panel is NOT a neutral, reversible act: the flow POSTs the
+    // last 16 turns to /api/capsules/from-chat-window, which distills them and
+    // calls createCapsule() — an INSERT INTO reflection_capsules that lands
+    // BEFORE the member confirms anything in the panel. So "the panel opens for
+    // the member to choose" is true of the UI and false of the substrate.
+    //
+    // The `!isSanctuary` render guard on the persistent bookmark hid the
+    // BUTTON, but four other callers reach this handler and none of them
+    // checked Sanctuary: the `open_reflection` doorway card
+    // (handleDoorwayAction), the SacredLabDrawer `capture-spirit` action, the
+    // `labAction` window event, and detectJournalCommand() on typed input
+    // ("capture this", "journal this", …). Any of those would have written
+    // Sanctuary content to disk.
+    //
+    // CLAUDE.md Sanctuary invariant 6 is absolute: nothing from a Sanctuary
+    // session may be saved, extracted, inferred, or converted into long-term
+    // memory "under any circumstances, including by user request during the
+    // session." That makes this a refusal, not a confirmation prompt — there is
+    // no consent gesture available inside Sanctuary that could authorize it.
+    if (isSanctuary) {
+      pushVoiceDebug('Capture refused · Sanctuary');
+      toast.error('Sanctuary — this conversation is not being kept');
+      console.warn('🛡️ [Capsule] Capture refused: Sanctuary session');
+      return;
+    }
+
     if (!userId) {
       // Surface WHY Capture "did not open" to the on-device trace, not just console.
       pushVoiceDebug('Capture blocked · member:n (userId not resolved)');
@@ -4615,7 +4642,11 @@ I'm not sure what I'm feeling yet.`;
       setShowCaptureSuggestion(false);
       setCaptureSuggestionDismissed(true);
     }
-  }, [userId, messages, sessionId]);
+    // isSanctuary is a dependency, not an incidental read: handleCaptureSpiritRef
+    // is what the doorway / labAction callers invoke, so a stale closure here
+    // would let a capture fire against a Sanctuary session entered after the
+    // last memoization.
+  }, [userId, messages, sessionId, isSanctuary]);
 
   // Keep ref updated for event dispatch
   useEffect(() => {
