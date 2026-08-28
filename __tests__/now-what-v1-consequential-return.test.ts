@@ -24,8 +24,8 @@ jest.mock('@/lib/db/postgres', () => ({ query: (...a: unknown[]) => mockQuery(..
 import fs from 'fs';
 import path from 'path';
 import {
-  selectCarriedThread,
-  selectChosenMove,
+  selectReturnAnchor,
+  selectRecordedRelation,
   selectPriorAct,
 } from '@/lib/nowWhat/carriedThread';
 import { resolveRespondsTo } from '@/lib/nowWhat/livedRelation';
@@ -42,57 +42,50 @@ const NOTE_API = 'app/api/now-what/field-note/route.ts';
 const INTERVIEW_API = 'app/api/now-what/interview/route.ts';
 const MIGRATION = 'database/migrations/20260828000002_field_note_responds_to.sql';
 
-const t = (id: string, keptAt: string, title = id) => ({ id, title, keptAt });
+const t = (id: string, keptAt: string, title = id, respondsToThreadId: string | null = null) =>
+  ({ id, title, keptAt, respondsToThreadId });
 
 beforeEach(() => mockQuery.mockReset());
 
 // ── A · RETURN SELECTION ─────────────────────────────────────────────────
 
-describe('A — return selection: the member is the source of what is shown', () => {
-  it('carries the most recent KEEP, comparing across kinds by her own gesture', () => {
-    const picked = selectCarriedThread({
+describe('A — return selection: ONE act, and the member is its source', () => {
+  it('anchors on the most recent KEEP, comparing across kinds by her own gesture', () => {
+    const a = selectReturnAnchor({
       questions: [t('q', '2026-08-20T10:00:00Z')],
       decisions: [t('d', '2026-08-25T10:00:00Z')],
       reflections: [t('r', '2026-08-22T10:00:00Z')],
     });
-    expect(picked?.id).toBe('d');
+    expect(a?.act.id).toBe('d');
+    expect(a?.kind).toBe('carried');
   });
 
-  it('never puts a chosen move in the carried slot — the two slots are distinct', () => {
-    const source = {
-      questions: [t('q', '2026-08-20T10:00:00Z')],
-      commitments: [t('c', '2026-08-27T10:00:00Z')],
-    };
-    expect(selectCarriedThread(source)?.id).toBe('q');
-    expect(selectChosenMove(source)?.id).toBe('c');
+  it('labels the anchor by what the act IS, not by the slot it landed in', () => {
+    expect(selectReturnAnchor({ commitments: [t('c', '2026-08-27T10:00:00Z')] })?.kind).toBe('chose');
+    expect(selectReturnAnchor({ questions: [t('q', '2026-08-27T10:00:00Z')] })?.kind).toBe('carried');
   });
 
-  it('a lived return answers the chosen move when there is one', () => {
-    expect(
-      selectPriorAct({
-        questions: [t('q', '2026-08-26T10:00:00Z')],
-        commitments: [t('c', '2026-08-20T10:00:00Z')],
-      })?.id,
-    ).toBe('c');
-  });
-
-  it('falls back to the carried thread when she chose nothing', () => {
-    expect(selectPriorAct({ questions: [t('q', '2026-08-26T10:00:00Z')] })?.id).toBe('q');
+  it('a tie goes to the chosen move — a stated rule, not an accident of order', () => {
+    // One room session writes both keeps at the same instant.
+    const at = '2026-08-27T10:00:00Z';
+    const a = selectReturnAnchor({ reflections: [t('r', at)], commitments: [t('c', at)] });
+    expect(a?.act.id).toBe('c');
+    expect(a?.kind).toBe('chose');
   });
 
   it('manufactures nothing from an empty or absent field', () => {
-    expect(selectCarriedThread({})).toBeNull();
-    expect(selectChosenMove({})).toBeNull();
+    expect(selectReturnAnchor({})).toBeNull();
+    expect(selectReturnAnchor(null)).toBeNull();
     expect(selectPriorAct(null)).toBeNull();
-    expect(selectCarriedThread({ questions: [] })).toBeNull();
+    expect(selectReturnAnchor({ questions: [] })).toBeNull();
   });
 
   it('an unparseable keep time never wins — a bad row cannot become the anchor', () => {
     expect(
-      selectCarriedThread({
+      selectReturnAnchor({
         questions: [t('bad', 'not-a-date')],
         decisions: [t('good', '2020-01-01T00:00:00Z')],
-      })?.id,
+      })?.act.id,
     ).toBe('good');
   });
 
@@ -109,8 +102,8 @@ describe('A — return selection: the member is the source of what is shown', ()
   it('Home derives what it shows from that rule, not from its own logic', () => {
     const home = read(HOME);
     expect(home).toContain("from '@/lib/nowWhat/carriedThread'");
-    expect(home).toContain('selectCarriedThread');
-    expect(home).toContain('selectChosenMove');
+    expect(home).toContain('selectReturnAnchor');
+    expect(home).toContain('selectRecordedRelation');
   });
 
   it('no cross-member leakage: every Home thread read is member-scoped', () => {
@@ -119,6 +112,96 @@ describe('A — return selection: the member is the source of what is shown', ()
     expect(api).toContain('FROM member_field_note_threads');
     expect(api).toMatch(/FROM member_field_note_threads[\s\S]{0,200}WHERE member_id = \$1/);
     expect(api).toMatch(/if \(!memberId\)[\s\S]{0,120}401/);
+  });
+});
+
+// ── A2 · NEGATIVE CONTROLS: the composition must not invent a relationship ──
+//
+// Provenance of the parts does not guarantee provenance of the composition.
+// Two true member acts placed together can assert a third thing that is false:
+// that one answers the other. These four are the guard on that.
+
+describe('A2 — adjacency must never manufacture a relationship', () => {
+  const CARRIED = t('q-role', '2026-08-27T10:00:00Z', 'Should I leave my role?');
+  const CHOICE = t('p-sister', '2026-08-25T10:00:00Z', 'Call my sister this weekend.');
+
+  it('1 · newer carried thread + older unrelated choice → NOT composed as a pair', () => {
+    const source = { questions: [CARRIED], commitments: [CHOICE] };
+    const anchor = selectReturnAnchor(source);
+    expect(anchor?.act.id).toBe('q-role');
+    expect(anchor?.kind).toBe('carried');
+    // The unrelated choice does not ride along beside it.
+    expect(selectRecordedRelation(anchor, source)).toBeNull();
+  });
+
+  it('2 · newer choice + older unrelated carried thread → anchor may be the choice, but it implies nothing', () => {
+    const source = {
+      questions: [t('q-old', '2026-08-20T10:00:00Z', 'Should I leave my role?')],
+      commitments: [t('p-new', '2026-08-27T10:00:00Z', 'Call my sister this weekend.')],
+    };
+    const anchor = selectReturnAnchor(source);
+    expect(anchor?.act.id).toBe('p-new');
+    expect(anchor?.kind).toBe('chose');
+    // Nothing states that the choice answers the question, because nothing does.
+    expect(selectRecordedRelation(anchor, source)).toBeNull();
+  });
+
+  it('3 · the lived doorway carries the act she can SEE — same act, not a second rule', () => {
+    for (const source of [
+      { questions: [CARRIED], commitments: [CHOICE] },
+      { commitments: [t('p-new', '2026-08-28T10:00:00Z')], reflections: [t('r', '2026-08-27T10:00:00Z')] },
+      { reflections: [t('r-only', '2026-08-01T10:00:00Z')] },
+    ]) {
+      expect(selectPriorAct(source)?.id).toBe(selectReturnAnchor(source)?.act.id);
+    }
+  });
+
+  it('4 · two independently true acts are related ONLY when the record says so', () => {
+    const source = { questions: [CARRIED], commitments: [CHOICE] };
+    // Adjacent, both true, no recorded relation → nothing shown beside the anchor.
+    expect(selectRecordedRelation(selectReturnAnchor(source), source)).toBeNull();
+
+    // Now the member actually made the relation, through the lived doorway.
+    const lived = t('lived', '2026-08-28T10:00:00Z', 'We talked. He was relieved.', 'p-sister');
+    const answered = { reflections: [lived], commitments: [CHOICE] };
+    const anchor = selectReturnAnchor(answered);
+    expect(anchor?.act.id).toBe('lived');
+    expect(selectRecordedRelation(anchor, answered)?.id).toBe('p-sister');
+  });
+
+  it('a recorded relation to an act that is gone shows nothing, not a guess', () => {
+    // Released or discarded acts never reach the Home read.
+    const lived = t('lived', '2026-08-28T10:00:00Z', 'We talked.', 'p-gone');
+    const source = { reflections: [lived], commitments: [CHOICE] };
+    expect(selectRecordedRelation(selectReturnAnchor(source), source)).toBeNull();
+  });
+
+  it('an act pointing at itself is not a relationship', () => {
+    const selfRef = t('self', '2026-08-28T10:00:00Z', 'x', 'self');
+    const source = { reflections: [selfRef] };
+    expect(selectRecordedRelation(selectReturnAnchor(source), source)).toBeNull();
+  });
+
+  it('relationship is never inferred — the rule names every basis it refuses', () => {
+    const src = read('lib/nowWhat/carriedThread.ts');
+    for (const refused of ['recency', 'category', 'similarity', 'sequence']) {
+      expect(src.toLowerCase()).toContain(refused);
+    }
+    // The ONLY basis in the code is the recorded relation.
+    expect(src).toContain('respondsToThreadId');
+  });
+
+  it('Home renders ONE act, and any second act only as a stated relation', () => {
+    const home = read(HOME);
+    // One anchor conditional, one label decision, no independent second slot.
+    expect((home.match(/\{anchor \?/g) ?? []).length).toBe(1);
+    expect(home).toMatch(/chose \? 'You chose' : 'You were carrying'/);
+    expect(home).toContain('You wrote this in answer to');
+    // The old independently-selected pair is gone.
+    expect(home).not.toContain('livingCommitment');
+    expect(home).not.toContain('selectChosenMove');
+    // The second act is gated on the record, never on presence.
+    expect(home).toMatch(/\{answers && \(/);
   });
 });
 
@@ -141,7 +224,7 @@ describe('B — lived entry: the existing room, entered knowing what it returns 
   });
 
   it('the prior act rides as an opaque id — her words never enter the URL', () => {
-    expect(home).toMatch(/thread=\$\{encodeURIComponent\(priorAct\.id\)\}/);
+    expect(home).toMatch(/thread=\$\{encodeURIComponent\(anchor\.act\.id\)\}/);
     // The draft is handed over out-of-band, not in the query string.
     expect(home).toContain('LIVED_DRAFT_KEY');
     expect(home).toContain('sessionStorage.setItem');

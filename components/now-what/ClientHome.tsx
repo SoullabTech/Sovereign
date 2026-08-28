@@ -9,12 +9,23 @@
  * subsystem. The route, the API call and the substrate are unchanged.
  *
  * ── WHAT THE FIRST VIEWPORT HOLDS, IN ORDER ──────────────────────────────
- *   1. YOU WERE CARRYING   the member's own words, largest thing on screen
- *   2. YOU CHOSE           their explicit move, when one exists
- *   3. What happened since? the one invitation
- *   4. Tell MAIA…          the affordance that carries them into the Room
+ *   1. ONE act of hers      labelled by what it is — YOU WERE CARRYING for a
+ *                           question, decision or reflection; YOU CHOSE for a
+ *                           move she chose to live. Her words, largest thing
+ *                           on the screen.
+ *   2. What happened since? the one invitation, referring to that same act
+ *   3. Tell MAIA…           the affordance that carries her into the Room
  *
- * Nothing above the fold but her words, her choice, and the invitation.
+ * Nothing above the fold but her act and the invitation.
+ *
+ * ── ONE ACT, NOT TWO ─────────────────────────────────────────────────────
+ * An earlier cut showed the latest carried thread AND the latest chosen move
+ * stacked together. Both lines were true; the stack was not. Placing an
+ * unrelated question above an unrelated choice implies the choice answers the
+ * question, and the record establishes no such thing — the interface
+ * authoring a relationship the member never made. A second act appears here
+ * ONLY when `respondsToThreadId` already records the relation. The rule and
+ * the reasoning live in lib/nowWhat/carriedThread.ts.
  *
  * ── WHAT HAD TO GIVE, AND WHY ────────────────────────────────────────────
  * The greeting ("Welcome back, ___"), the coach tagline, the subtitle stack
@@ -48,7 +59,11 @@ import { useRouter } from 'next/navigation';
 import { apiFetch } from '@/lib/http/apiBase';
 import { NowWhatThreshold, useMemberSession } from '@/components/now-what/NowWhatShell';
 import { RoomTrustCopy } from '@/components/now-what/RoomTrustCopy';
-import { selectCarriedThread, selectChosenMove, selectPriorAct } from '@/lib/nowWhat/carriedThread';
+import {
+  selectReturnAnchor,
+  selectRecordedRelation,
+  type ReturnAnchor,
+} from '@/lib/nowWhat/carriedThread';
 import { LIVED_DRAFT_KEY } from '@/lib/nowWhat/livedDraft';
 
 import { NW_PALETTE_CSS, NW_PALETTE_DARK_CSS } from '@/components/now-what/PaperRoom';
@@ -153,16 +168,30 @@ function keptWhen(iso: string | null | undefined): string {
 }
 
 /**
- * WHAT SHE WAS CARRYING — her words, attributed to her own act. The largest
- * thing on the screen, and the first. Nothing here is authored by the system:
- * the title is what she wrote, and the line beneath states when she kept it.
+ * WHERE SHE LEFT THINGS — one act of hers, labelled by what it actually is,
+ * attributed to her own gesture. The largest thing on the screen, and the
+ * first. Nothing here is authored by the system: the title is what she wrote,
+ * and the line beneath states when she kept it.
+ *
+ * `answers` renders only when the RECORD says this act was written in answer
+ * to that one. It is the single case where two acts may appear together, and
+ * it is stated as the relation it is — never as two facts left adjacent for
+ * the reader to connect.
  */
-function Carried({ thread }: { thread: HomeThread }) {
+function Anchor({ anchor, answers }: { anchor: ReturnAnchor<HomeThread>; answers: HomeThread | null }) {
+  const chose = anchor.kind === 'chose';
   return (
     <>
-      <p className="nwh-label">You were carrying</p>
-      <p className="nwh-carry-line">&ldquo;{thread.title}&rdquo;</p>
-      <p className="nwh-prov">You kept this{keptWhen(thread.keptAt)}.</p>
+      <p className="nwh-label">{chose ? 'You chose' : 'You were carrying'}</p>
+      <p className={`nwh-carry-line${chose ? ' nwh-carry-chose' : ''}`}>
+        {chose ? anchor.act.title : <>&ldquo;{anchor.act.title}&rdquo;</>}
+      </p>
+      <p className="nwh-prov">You kept this{keptWhen(anchor.act.keptAt)}.</p>
+      {answers && (
+        <p className="nwh-answers">
+          You wrote this in answer to &ldquo;{answers.title}&rdquo;
+        </p>
+      )}
     </>
   );
 }
@@ -214,16 +243,17 @@ export default function ClientHome({ fieldContext }: { fieldContext?: string }) 
   const nextConversation = data?.upcoming?.[0] ?? null;
 
   /*
-   * Where she left things. The whole rule lives in lib/nowWhat/carriedThread.ts
-   * and is stated there in full: the last thing she kept, and the last thing
-   * she chose. Recency of HER OWN gesture — never a relevance model, never
-   * inference over content, never activity or calendar signal.
+   * Where she left things: ONE act. The whole rule lives in
+   * lib/nowWhat/carriedThread.ts and is stated there in full — the last thing
+   * she kept, labelled by what it is. Recency of HER OWN gesture; never a
+   * relevance model, never inference over content, never activity or calendar
+   * signal.
+   *
+   * `answers` is the only second act this screen may show, and only because
+   * the record already holds the relation.
    */
-  const livingQuestion = selectCarriedThread<HomeThread>(data);
-  const livingCommitment = selectChosenMove<HomeThread>(data);
-  /* The act a lived return answers — carried into the Room so it knows what
-     it is returning to, and so what she keeps stays related to it. */
-  const priorAct = selectPriorAct<HomeThread>(data);
+  const anchor = selectReturnAnchor<HomeThread>(data);
+  const answers = selectRecordedRelation<HomeThread>(anchor, data);
 
   /*
    * Into the Room through the existing lived doorway. No new route, no new
@@ -235,7 +265,10 @@ export default function ClientHome({ fieldContext }: { fieldContext?: string }) 
     if (draft) {
       try { sessionStorage.setItem(LIVED_DRAFT_KEY, draft); } catch { /* a lost draft is not an error */ }
     }
-    const thread = priorAct ? `&thread=${encodeURIComponent(priorAct.id)}` : '';
+    /* The room is told about the act she can SEE, and only that one. The
+       anchor is the single source for both, so the screen and the record
+       cannot disagree about what she came back to. */
+    const thread = anchor ? `&thread=${encodeURIComponent(anchor.act.id)}` : '';
     router.push(`${roomHref}${amp}entry=lived${thread}`);
   }
 
@@ -277,8 +310,8 @@ export default function ClientHome({ fieldContext }: { fieldContext?: string }) 
               the first thing in the viewport. A hairline rail, not a box —
               the eye lands on what she wrote, not on a container. ── */}
         <section className="nwh-carry" aria-label="Where you left things">
-          {livingQuestion ? (
-            <Carried thread={livingQuestion} />
+          {anchor ? (
+            <Anchor anchor={anchor} answers={answers} />
           ) : (
             <>
               <p className="nwh-label">Where to begin</p>
@@ -290,19 +323,12 @@ export default function ClientHome({ fieldContext }: { fieldContext?: string }) 
               </a>
             </>
           )}
-
-          {livingCommitment && (
-            <div className="nwh-chose">
-              <p className="nwh-label">You chose</p>
-              <p className="nwh-chose-line">{livingCommitment.title}</p>
-            </div>
-          )}
         </section>
 
         {/* ── 3 + 4. One invitation, one affordance. This is the only primary
               gesture on the screen. It enters the EXISTING room through the
               existing lived doorway — nothing new is created here. ── */}
-        {(livingQuestion || livingCommitment) && (
+        {anchor && (
           <section className="nwh-return" aria-label="What happened since">
             <h1 className="nwh-ask">What happened since?</h1>
             <form
@@ -433,11 +459,15 @@ export default function ClientHome({ fieldContext }: { fieldContext?: string }) 
         }
         .nwh-primary:hover, .nwh-primary:focus-visible { border-bottom-color: ${BRONZE}; }
 
-        /* Her explicit move — stated plainly, never styled as an achievement. */
-        .nwh-chose { margin-top: 26px; }
-        .nwh-chose-line {
-          font-family: ${SERIF}; font-size: clamp(18px, 4.8vw, 21px); line-height: 1.45;
-          color: ${INK_SOFT}; margin: 10px 0 0; max-width: 34rem;
+        /* A move she chose reads plainly, never in the quoted register and
+           never styled as an achievement. */
+        .nwh-carry-chose { font-style: normal; }
+        /* The recorded relation — quiet, and only ever rendered from the
+           record. It states the link; it never leaves two acts adjacent for
+           the reader to infer one. */
+        .nwh-answers {
+          font-size: 13px; font-weight: 300; font-style: italic;
+          color: ${INK_FAINT}; margin: 14px 0 0; line-height: 1.5; max-width: 34rem;
         }
 
         /* ── The one invitation, and the one affordance. ── */

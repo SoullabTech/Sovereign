@@ -33,10 +33,49 @@ seeded member acts  a kept question  · "I know I don't want the next chapter…
 
 ---
 
+## The return composition — one act
+
+Founder review of `e89465b7b` found a semantic defect and it is repaired here.
+
+That cut selected the latest carried thread and the latest chosen move
+**independently** and stacked them. Each line was a true member act; the stack
+was not. It composed
+
+```
+YOU WERE CARRYING   "Should I leave my role?"        (kept Tuesday)
+YOU CHOSE           "Call my sister this weekend."   (kept Thursday)
+What happened since?
+```
+
+which asserts that the choice answers the question, when the record holds no
+such relationship. This is the relational form of the "bracing for" failure,
+and more dangerous than the sentence-level version because each half survives
+inspection on its own.
+
+> **Provenance of the parts does not guarantee provenance of the composition.**
+
+The Home now shows **one** act — the member's most recent keep, labelled by
+what it actually is — and "What happened since?" refers to that same visible
+act, which is also the act sent to the room. A second act appears **only** when
+`responds_to_thread_id` already records the relation, and then it is stated as
+the relation ("You wrote this in answer to …"), never left adjacent for the
+reader to infer. Relationship is never inferred from recency, category,
+textual similarity, sequence, or MAIA's judgement.
+
+Four negative controls guard it, in
+`__tests__/now-what-v1-consequential-return.test.ts` § A2.
+
+`01-client-home-implemented.png` therefore shows one act where the frozen
+prototype shows two. That is a founder ruling superseding the prototype on this
+point, not a fidelity loss — and it makes the phone Home cleaner.
+
+---
+
 ## The loop, walked in the browser
 
 ```
-HOME              her words, her choice, "What happened since?"
+HOME              ONE act — "YOU CHOSE · Talk with David before Friday.
+                  You kept this on Tuesday." — then "What happened since?"
   ↓ typed into "Tell MAIA…", pressed enter
 ROOM              /now-what/room?entry=lived&thread=<prior act id>
                   states "YOU CHOSE · Talk with David before Friday. / What happened?"
@@ -46,8 +85,12 @@ RECORD            the kept update carries responds_to_thread_id = the prior act
   ↓ returned
 HOME              now reads "YOU WERE CARRYING · 'We talked. It went differently
                   than I expected — he was relieved, not disappointed.'
-                  You kept this today."
+                  You kept this today.
+                  You wrote this in answer to 'Talk with David before Friday.'"
 ```
+
+That last line is the ONE case where two acts appear together, and it appears
+because the record holds the relation the member herself made.
 
 Verified in that walk: the draft crossed in `sessionStorage` (not the URL), and
 `sessionStorage` was cleared on arrival. She still pressed send herself.
@@ -120,6 +163,9 @@ These were invisible in the source and appeared only in pixels.
    a surface CLIENT-01 is explicitly scoped not to build, and pointing it at
    `/now-what/questions` would promise a room that does not exist under that
    name — the naming break UX-02 closed.
-3. **The prototype's top-right ring is decorative here.** It carries no label in
+3. **Home shows one act where the prototype shows two** — see *The return
+   composition* above. Founder ruling, 2026-08-28, superseding the prototype on
+   this point.
+4. **The prototype's top-right ring is decorative here.** It carries no label in
    the prototype; giving it a destination would be inventing a meaning the
    design did not state.
