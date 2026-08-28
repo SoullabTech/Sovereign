@@ -389,3 +389,123 @@ For a project whose memory is the thing that makes it more than a chatbot,
 losing a turn without saying so is the worst shape a failure can take: it
 cannot be noticed at the moment it happens, only later, as an absence the
 member will experience as being forgotten.
+
+---
+
+# TURN-DURABILITY-01 — a visible exchange that canonical history does not have
+
+**Status: RECORDED · cause OPEN · upstream blocker**
+
+Recorded 2026-08-28 ~00:50Z, during an attempted D04A runtime witness. The
+witness was stopped rather than reinterpreted — see *Why this stops D04A* below.
+
+## Observed fact, stated as observed
+
+A completed member ↔ MAIA exchange was rendered in the browser at
+`soullab.life/maia` under a signed-in member: the member's message and MAIA's
+reply, both displayed.
+
+## Canonical fact
+
+`conversation_turns` for `ce284751-e457-42f6-89b6-bc07d0876682` did not advance.
+At 00:50Z the newest persisted row for that member was still
+`session_1787866253247`, `count 6`, `max 2026-08-27 22:41:26` — over two hours
+old, and identical to the reading taken before the browser exchange happened.
+
+⛔ **This is deliberately NOT yet called turn loss.** "Visible turn ≠ durable
+turn" is what was observed. Whether the turn was lost, refused, or written
+somewhere else is exactly what remains open.
+
+## Cause set — none excluded, none established
+
+    A1  the store call threw; route caught and continued
+    A2  identity did not qualify as a recognized user
+    A3  Sanctuary posture excluded the write at the route gate
+    A4  ON CONFLICT (exchange_id, seq) DO NOTHING swallowed the insert
+    B   the turn persisted under a DIFFERENT user_id (identity split)
+
+B is adjudicated by the database probe and is checked first, because it is
+answered by a fact rather than by a log.
+
+## Two structural results, established by reading the code
+
+**A4 is real, and `durable=true` does not mean a row exists.**
+`TurnsStore.addExchangeTurn` (`lib/memory/stores/TurnsStore.ts:214-228`) issues
+`INSERT ... ON CONFLICT (exchange_id, seq) WHERE exchange_id IS NOT NULL DO
+NOTHING` and then `return true` — unconditionally, with no `rowCount` check.
+The log line `🧱 [MAIA/durability] ... durable=true` therefore means *the
+statement did not throw*, not *a row was added*.
+
+**On this route, `durable=false` is unreachable — so it would be a new defect.**
+`TurnPosture.resolve()` always returns a real instance
+(`lib/sanctuary/turnPosture.ts:42-48`), frozen at construction (`:33`). The
+route creates that posture and calls the store only inside
+`if (isRecognizedUser && !isSanctuary)` (`app/api/sovereign/app/maia/list/route.ts:398`).
+Inside that block `posture instanceof TurnPosture` is true and
+`posture.sanctuary` is false, so `contentWritable()` (`turnPosture.ts:58-76`)
+returns true. `Provenance.mint()` (`lib/provenance/provenance.ts:109,115`) tests
+the *identical two predicates*, so it cannot refuse after `contentWritable`
+passed. Both refusal returns in `addExchangeTurn` are therefore dead on this
+path.
+
+## Frozen discriminator
+
+    🧱 durable=true            → store call completed
+                                 row inserted OR A4 conflict swallow
+
+    ❌ NOT durable             → A1, the write threw
+
+    no durability line at all  → A2 identity did not qualify
+                                 OR A3 route-level Sanctuary exclusion
+                                 OR the request never traversed this
+                                    serving boundary at all
+
+    🧱 durable=false           → NEW DEFECT, invariant violation
+                                 (unreachable per the analysis above)
+
+    [SANCTUARY] refusal from
+    this addExchangeTurn path  → NEW DEFECT, route/store posture disagreement
+
+    grep -c . == 0             → LOG EVIDENCE UNAVAILABLE
+                                 classify nothing from log silence
+
+⭐ The `grep -c .` control is not optional. Three log probes against
+`maia-sovereign` earlier the same day returned zero for windows where a turn
+provably persisted. Log silence on this container has already been mistaken for
+evidence once, and must not be again.
+
+## Next evidence — two probes, in this order
+
+    1. cross-user metadata probe   adjudicates B before any log cause
+    2. controlled log probe        partitions A1 / A2 / A3 / A4
+
+Neither has been run. Until they are, every entry above is a structure, not a
+diagnosis.
+
+## Precedent — this is the same class as finding 3
+
+Finding **3 · A gap in `conversation_turns`, unexplained** records the same
+shape on 2026-08-27: a browser session minted at ~18:33 that left *no rows at
+all*, while conversation was visibly happening. That finding closed with the
+instruction for exactly this moment:
+
+> If the gap recurs, the thing to capture is a live turn's log at the moment it
+> fails, not the shape of the gap afterwards.
+
+It has recurred. The two probes above are that capture, and the reason no cause
+is named here.
+
+## Why this stops D04A
+
+D04A watches for the member's canonical thread to change and adopts it. It reads
+`/api/conversation/turns`, which reads `conversation_turns`. If turns are not
+reaching that table, the canonical thread never changes, and Desktop's correct
+behaviour is to do nothing.
+
+So every further D04A run would be testing a downstream observer against an
+upstream state that never moved — and would produce another null indistinguishable
+from a failure. Desktop is **not implicated** by this finding, and remains
+untouched.
+
+    D04A                 RUNTIME OPEN · witness VOID · Desktop not implicated
+    TURN-DURABILITY-01   RECORDED · cause OPEN · awaiting probes 1 and 2
