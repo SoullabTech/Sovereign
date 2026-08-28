@@ -33,6 +33,29 @@
 
 export type StudioAvailability = 'available' | 'later';
 
+/**
+ * WS2-02 — the three regions of the Studio, and why they are three.
+ *
+ * The reference grammar keeps three kinds of thing apart because collapsing
+ * them is the failure this product is most likely to commit:
+ *
+ *   work    The member's material and the rooms that hold it. The Work is the
+ *           primary context — everything else is addressed TO it.
+ *
+ *   maia    Relational offerings. MAIA is **not another content owner**: she
+ *           does not hold a region of the member's material, she speaks about
+ *           it. Nothing under this region may author, own, or score the work.
+ *           See maiaOffering.ts for that constraint, made executable.
+ *
+ *   tools   Instruments. **Not relational participants** — a tool operates on
+ *           the work and says nothing about it. Find/Replace has no opinion.
+ *
+ * A destination's region is a structural fact, not a rendering hint. It is
+ * what stops Insights from drifting into being a room that owns material, and
+ * what stops Statistics from drifting into being a judgement.
+ */
+export type StudioRegion = 'work' | 'maia' | 'tools';
+
 export interface StudioDestination {
   id: string;
   label: string;
@@ -54,6 +77,8 @@ export interface StudioDestination {
 
 export interface StudioGroup {
   id: string;
+  /** Which of the three regions this group belongs to. See StudioRegion. */
+  region: StudioRegion;
   /** Omitted for the first group — the shell does not label the obvious. */
   label?: string;
   destinations: StudioDestination[];
@@ -87,6 +112,7 @@ export const CANVAS_HREF = '/writers-studio/canvas';
 export const STUDIO_MAP: StudioGroup[] = [
   {
     id: 'home',
+    region: 'work',
     destinations: [
       {
         id: 'studio-home',
@@ -98,6 +124,7 @@ export const STUDIO_MAP: StudioGroup[] = [
   },
   {
     id: 'current-book',
+    region: 'work',
     /* "Current Writing", not "Current Book" (Kelly, 2026-08-05): writing is
        the practice; a book is one thing writing may become. The id stays —
        it is an implementation key, not member-facing vocabulary. */
@@ -131,6 +158,7 @@ export const STUDIO_MAP: StudioGroup[] = [
   },
   {
     id: 'threshold',
+    region: 'work',
     destinations: [
       {
         id: 'import',
@@ -139,6 +167,81 @@ export const STUDIO_MAP: StudioGroup[] = [
         availability: 'available',
         href: IMPORT_HREF,
       },
+    ],
+  },
+
+  /* ── WS2-02 · the rest of the WORK region ──────────────────────────────
+     These are places the reference grammar settles, and that the substrate
+     does not yet reach as destinations. Availability below is grounded in a
+     read of the code, not in the programme description:
+
+       Materials  MaterialsDrawer.tsx + living-works/[id]/materials exist, but
+                  only as a drawer INSIDE the Canvas. There is no room to send
+                  a member to, so this is not a destination yet.
+       Structure  Same shape — a conditional Canvas drawer, no room.
+       Versions   manuscripts/[id]/draft/revisions exists as substrate with no
+                  member-facing surface. Substrate is not a destination.
+       Notes      No substrate found.
+       Goals      No substrate found. `writing_goal` appears nowhere.
+
+     They are carried here so the grammar is whole and later slices have a
+     settled place to land in — NOT so the member is shown them. See
+     visibleDestinations: a 'later' destination never reaches a screen. */
+  {
+    id: 'work-later',
+    region: 'work',
+    destinations: [
+      { id: 'materials', label: 'Materials', availability: 'later' },
+      { id: 'structure', label: 'Structure', availability: 'later' },
+      { id: 'notes', label: 'Notes', availability: 'later' },
+      { id: 'versions', label: 'Versions', availability: 'later' },
+      { id: 'goals', label: 'Goals', availability: 'later' },
+    ],
+  },
+
+  /* ── WS2-02 · MAIA ─────────────────────────────────────────────────────
+     Offerings, not holdings. Conversations is real: /maia is the built
+     conversational surface. Discover / Insights / Suggestions have no
+     substrate — no route, no table, no service. */
+  {
+    id: 'maia',
+    region: 'maia',
+    label: 'MAIA',
+    destinations: [
+      {
+        id: 'conversations',
+        label: 'Conversations',
+        note: 'Where you and MAIA talk.',
+        availability: 'available',
+        href: '/maia',
+      },
+      { id: 'discover', label: 'Discover', availability: 'later' },
+      { id: 'insights', label: 'Insights', availability: 'later' },
+      { id: 'suggestions', label: 'Suggestions', availability: 'later' },
+    ],
+  },
+
+  /* ── WS2-02 · TOOLS ────────────────────────────────────────────────────
+     Export is real — /press/manuscript carries an export tab. The other four
+     were searched for and are absent: no find-replace, no writer-scoped
+     statistics, no timeline, no word-web. */
+  {
+    id: 'tools',
+    region: 'tools',
+    label: 'Tools',
+    destinations: [
+      {
+        id: 'export',
+        label: 'Export',
+        note: 'Take your writing out.',
+        availability: 'available',
+        href: '/press/manuscript?tab=export',
+        requiresManuscript: true,
+      },
+      { id: 'find-replace', label: 'Find/Replace', availability: 'later' },
+      { id: 'statistics', label: 'Statistics', availability: 'later' },
+      { id: 'timeline', label: 'Timeline', availability: 'later' },
+      { id: 'word-web', label: 'Word Web', availability: 'later' },
     ],
   },
 ];
@@ -163,7 +266,31 @@ export function assertStudioMapHonest(map: StudioGroup[] = STUDIO_MAP): void {
   }
 }
 
-/** Destinations the member can actually act on right now. */
+/**
+ * Destinations the member can actually act on right now.
+ *
+ * NO ROADMAP LEAKAGE — where the rule now lives (WS2-02).
+ *
+ * The rule is unchanged: *a product reveals capability, not construction
+ * status.* An author arriving to write must not read a list of things the room
+ * cannot do before reaching the one it can.
+ *
+ * What changed is where it is enforced. Before WS2-02 the rule was kept by
+ * holding the map itself empty of unbuilt destinations — the map could not
+ * leak a roadmap because it had no roadmap in it. That worked while the map
+ * was five destinations, and it stops working now that the settled grammar
+ * names sixteen: keeping the map bare would mean deleting settled architecture
+ * to fit today's substrate, which is the one thing WS2-02 may not do.
+ *
+ * So the grammar is whole in STUDIO_MAP, and the rule is enforced here, at the
+ * boundary the member actually meets: `later` destinations are dropped, not
+ * disabled, not greyed, not labelled "coming soon". Nothing downstream has to
+ * remember to filter them, because nothing downstream ever receives them.
+ *
+ * This is strictly stronger than the old arrangement. The old test could only
+ * assert that the map happened to be bare; this function guarantees the member
+ * sees no unbuilt destination no matter what the map later carries.
+ */
 export function visibleDestinations(
   hasManuscript: boolean,
   map: StudioGroup[] = STUDIO_MAP,
@@ -171,7 +298,10 @@ export function visibleDestinations(
   return map
     .map((g) => ({
       ...g,
-      destinations: g.destinations.filter((d) => !d.requiresManuscript || hasManuscript),
+      destinations: g.destinations.filter(
+        (d) =>
+          d.availability === 'available' && (!d.requiresManuscript || hasManuscript),
+      ),
     }))
     .filter((g) => g.destinations.length > 0);
 }
