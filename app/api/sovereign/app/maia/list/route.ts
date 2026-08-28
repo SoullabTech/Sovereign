@@ -7,6 +7,7 @@ export const dynamic = 'force-dynamic';
  * Do not infer these deeper in the stack.
  */
 import { NextRequest, NextResponse } from 'next/server';
+import { toAudioResponsePayload } from '@/lib/voice/audioResponsePayload';
 import { observeRelationalContent } from '@/lib/consciousness/relationalObserver';
 import { detectRelationalSignal } from '@/lib/relationships/detectRelationalSignal';
 import { persistDetectedSignal } from '@/lib/relationships/relationshipSignalService';
@@ -1615,15 +1616,14 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
       };
     }
 
-    // Add audio data if synthesis was successful
-    if (orchestratorResult.audio) {
-      responseData.audio = {
-        audioBase64: orchestratorResult.audio.audioBase64,
-        audioUrl: orchestratorResult.audio.audioUrl,
-        voiceProfile: orchestratorResult.audio.voiceProfile,
-        format: orchestratorResult.audio.format,
-        synthesisTimeMs: orchestratorResult.audio.synthesisTimeMs
-      };
+    // Add audio data if synthesis was successful.
+    // DESKTOP-VOICE-SHAPE-01: getMaiaResponse returns `audio` as a raw Buffer
+    // (synthesizeMaiaVoice's contract). Reading `.audioBase64` off it yielded
+    // undefined for every field and put `"audio": {}` on the wire, which reads
+    // as "voice unavailable" to every client. Normalize at the boundary.
+    const audioPayload = toAudioResponsePayload(orchestratorResult.audio);
+    if (audioPayload) {
+      responseData.audio = audioPayload;
     }
 
     // 🛡️ CANON v1.1: Provenance headers for all assistant text responses
