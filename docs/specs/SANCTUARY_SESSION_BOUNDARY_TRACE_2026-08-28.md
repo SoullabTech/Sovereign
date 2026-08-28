@@ -1,7 +1,14 @@
 # SANCTUARY-SETTINGS-DISCONNECT-01 — new-session boundary trace
 
-**Status:** session provenance CLOSED. Member-scoped default CLOSED (§3).
-Residual named in §3.1.
+**Status:** session provenance CLOSED. Cross-member attribution CLOSED (§3).
+Fail-closed initialization NOT closed — see §5, `SANCTUARY-INIT-GATE-01`.
+
+| Unit | Question it answers | State |
+|---|---|---|
+| SANCTUARY-SETTINGS-DISCONNECT-01 | when does a new session consume the default? | closed |
+| SANCTUARY-MEMBER-SCOPE-01 | whose preference is this? | closed |
+| SANCTUARY-DEFAULT-RESOLVE-01 | what does the authoritative source say? | open |
+| SANCTUARY-INIT-GATE-01 | may a turn begin before we know? | open |
 **Branch:** `claude/sanctuary-button-state-issue-872q0a`
 **Supersedes the semantics attempted in:** `188abf5` (default→live coupling, reverted)
 
@@ -150,6 +157,17 @@ of it.
 exact two-member sequence in both directions. Mutation-checked: removing the
 ownership gate fails 6; adopting an unresolved server value fails 2.
 
+### Green gates for this candidate
+
+`lib/settings` + `lib/maia/presence`: **42/42, 3 suites.**
+`lib/sovereign/__tests__` excluding `presenceMode.test.ts`: **89/89, 3 suites.**
+
+`lib/sovereign/__tests__/presenceMode.test.ts` has one failure
+("should be called after sanitization, before voice synthesis"). Verified
+**pre-existing** by re-running it on a stashed clean tree. It is recorded here
+as pre-existing and is **excluded from this candidate's green gates** — it is
+not evidence for or against this work.
+
 ### 3.1 Residual — first-load window when hydration fails
 
 If hydration cannot resolve (offline, 500) on the first load after a member
@@ -162,3 +180,58 @@ Closing this properly needs the seed to be *deferrable* rather than
 default-to-system, which means `ensureSessionSanctuary` gaining a "cannot
 establish yet" state. That was explicitly out of bounds for this unit
 (no changes to `ensureSessionSanctuary`). Recorded, not claimed as fixed.
+
+---
+
+## 5. SANCTUARY-INIT-GATE-01 — read-only trace (not implemented)
+
+The residual in §3.1 is no longer a member-scope defect: no member's value
+leaks into another's session. It is the remaining **privacy** failure — an
+unresolvable default is translated into Continuity rather than admitted as
+unknown.
+
+The fix cannot be a better guess. `ensureSessionSanctuary()` currently returns
+`boolean`, which has no room to say *"I do not yet know."* The next unit needs:
+
+```
+established-sanctuary
+established-continuity
+unresolved                ← new
+```
+
+and a rule that `unresolved` blocks a turn from beginning rather than
+resolving to a value:
+
+```
+unresolved            → no text dispatch, no voice dispatch, retry
+authoritative failure → establish Sanctuary, then permit dispatch
+```
+
+### Sites a gate would have to cover
+
+Two entry points begin a turn, in `components/OracleConversation.tsx`:
+
+| Entry | Line | Notes |
+|---|---|---|
+| `handleTextMessage` | 4870 | text composer; also the fallback voice path's delegate |
+| `handleVoiceTranscript` | 6638 | streaming leg returns at 7263 without reaching `handleTextMessage` |
+
+Three sites carry the boundary once a turn is under way:
+
+| Site | Line | Kind |
+|---|---|---|
+| `sanctuary: isSanctuary` in the sovereign request body | 5385 | wire, inside `handleTextMessage` |
+| `sendStreamingMessage(…, isSanctuary)` | 7255 | wire, streaming voice leg |
+| `isSanctuary` in the turns-persistence POST | 3205 | **write** — a `useEffect` on `messages`, not inside either entry point |
+
+The third is the one to think hardest about: it is a message-driven effect, so
+gating only the two entry points would still leave a persistence path that runs
+whenever `messages` changes. Any gate that admits `unresolved` has to account
+for it, or an unresolved turn could still be written.
+
+### Not started
+
+This branch is held at `1ef523f` as a candidate for the two closed units and is
+deliberately **not** broadened to cover initialization. `SANCTUARY-INIT-GATE-01`
+changes `ensureSessionSanctuary`'s contract and touches turn dispatch, so it
+belongs in its own unit on its own branch, with its own authorization.
