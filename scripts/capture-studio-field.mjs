@@ -403,16 +403,29 @@ try {
    */
   const ROOM_CRASH = 'Something Went Wrong'; // app/error.tsx · app/global-error.tsx
   const ROOM_SIGNED_OUT = 'opens only to you'; // app/writers-studio/canvas/page.tsx
+  /* Signed in, but not looking at a manuscript. Both are the room behaving
+     CORRECTLY — the custody refusal of WS2-01A, and the empty shelf — and
+     neither is the writing field. Added 2026-08-28, after a run that asked for
+     a manuscript id belonging to no member on that machine: the classifier saw
+     neither a crash nor the signed-out panel, called it `field`, and was about
+     to deposit a picture of a refusal panel under the field's name.
+     OBSERVATION-PROVENANCE-01 clause 3. */
+  const ROOM_MISSING = 'That manuscript is not on your shelf';
+  const ROOM_EMPTY = 'Nothing is on the table yet';
   async function readRoomState(target) {
     return await target.evaluate(
-      (crash, out) => {
+      (crash, out, missing, empty) => {
         const t = document.body.innerText;
         if (t.includes(crash)) return 'crash';
         if (t.includes(out)) return 'signed-out';
+        if (t.includes(missing)) return 'missing';
+        if (t.includes(empty)) return 'empty';
         return 'field';
       },
       ROOM_CRASH,
       ROOM_SIGNED_OUT,
+      ROOM_MISSING,
+      ROOM_EMPTY,
     );
   }
 
@@ -457,6 +470,20 @@ try {
     console.error('[capture] failure — it is the field failing, and it must not be filed as');
     console.error('[capture] an image. Refusing.');
     console.error('[capture] Read the app terminal for the thrown error before anything else.');
+    process.exit(1);
+  }
+  if (state === 'missing') {
+    console.error('[capture] The room is refusing the manuscript you asked for — it is not');
+    console.error('[capture] on this member\'s shelf. That refusal is CORRECT behaviour, and it');
+    console.error('[capture] is not the writing field. Capturing it would file a refusal panel');
+    console.error('[capture] under the field\'s name.');
+    console.error('[capture] Find a real id while signed in:');
+    console.error(`[capture]   ${new URL(url).origin}/api/sovereign/manuscripts`);
+    process.exit(1);
+  }
+  if (state === 'empty') {
+    console.error('[capture] Nothing is on this member\'s shelf, so there is no field to');
+    console.error('[capture] photograph. Import or start a work first.');
     process.exit(1);
   }
   if (state === 'signed-out') {

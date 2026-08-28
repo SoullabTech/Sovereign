@@ -120,3 +120,33 @@ describe('the capture is named for the tree that rendered it', () => {
     expect(harness).toContain('committed code PLUS uncommitted changes');
   });
 });
+
+/**
+ * Signed in is not the same as looking at the work.
+ *
+ * A run asked for a manuscript id belonging to no member on that machine. The
+ * room did the right thing — WS2-01A's custody refusal, "That manuscript is not
+ * on your shelf" — and the classifier, seeing neither a crash nor the signed-out
+ * panel, called it `field`. It was about to write a picture of a refusal panel
+ * to writing-field-<sha>.png. OBSERVATION-PROVENANCE-01 clause 3.
+ */
+describe('a room that is signed in but holds no work is not the field', () => {
+  it('classifies the custody refusal and the empty shelf separately', () => {
+    expect(harness).toContain("return 'missing'");
+    expect(harness).toContain("return 'empty'");
+  });
+
+  it('probes the copy the room actually renders', () => {
+    const room = readFileSync(join(__dirname, '..', 'canvas', 'page.tsx'), 'utf8');
+    for (const probe of ['That manuscript is not on your shelf', 'Nothing is on the table yet']) {
+      expect(harness).toContain(probe);
+      expect(room).toContain(probe);
+    }
+  });
+
+  it('refuses both, and points at where a real id comes from', () => {
+    expect(harness).toContain('/api/sovereign/manuscripts');
+    const branch = harness.slice(harness.indexOf("if (state === 'missing')"));
+    expect(branch.indexOf('process.exit(1)')).toBeLessThan(branch.indexOf('page2.screenshot'));
+  });
+});
