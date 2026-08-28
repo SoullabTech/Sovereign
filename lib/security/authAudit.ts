@@ -24,11 +24,83 @@ export type AuthAction =
 
 export interface AuthAuditEntry {
   action: AuthAction;
-  memberId?: string | null;      // UUID - stored in resource_id
+  memberId?: string | null;      // UUID - stored in resource_id (the object acted upon)
   resourceType?: string;
   result: 'success' | 'failure';
   errorMessage?: string;
   metadata?: Record<string, unknown>;  // Structured context (hashes, hints, reasons)
+
+  /**
+   * The ACTOR, when the caller has actually established who they are — a
+   * verified session, a completed ceremony. Stored in `user_id`.
+   *
+   * Distinct from `memberId`, which names the object acted upon. On a sign-in
+   * attempt those differ: nobody is established yet, so `actorId` is absent
+   * while `memberId` may name the account being attempted. Do NOT pass
+   * `memberId` here to fill the column — a synthesized attribution is worse
+   * than an absent one.
+   */
+  actorId?: string | null;
+
+  /**
+   * Tri-state, and deliberately not defaulted:
+   *   true      a defined consent check occurred and passed
+   *   false     a defined consent check occurred and failed
+   *   undefined this path did not establish consent status → stored NULL
+   *
+   * Every insert previously hardcoded `true`, so every row asserted a check
+   * nothing had performed. Unknown must never become true, and must not become
+   * false either.
+   */
+  consentVerified?: boolean;
+}
+
+export interface AuthAuditResult {
+  /**
+   * Whether the row reached the database. `false` is a real answer, not an
+   * error: the auth operation continues either way. What must never happen is
+   * a failed write being indistinguishable from a successful one.
+   */
+  persisted: boolean;
+}
+
+/** Stable, greppable marker. Do not reword — dashboards and log queries key on it. */
+export const AUDIT_PERSIST_FAILED_MARKER = '[AUTH_AUDIT] persist_failed';
+
+/**
+ * Process-local count of audit writes that did not persist, since boot.
+ *
+ * Deliberately in-process rather than a database row: the failure this counts
+ * is most often the database being unreachable, and an observability channel
+ * that shares the failure mode of the thing it observes reports nothing exactly
+ * when it matters. Cheap, non-recursive, and survives the case it exists for.
+ */
+let auditPersistFailures = 0;
+export function getAuditPersistFailureCount(): number {
+  return auditPersistFailures;
+}
+export function __resetAuditPersistFailureCount(): void {
+  auditPersistFailures = 0;
+}
+
+/**
+ * Reduce a thrown value to a coarse category safe to log.
+ *
+ * Raw database errors carry SQL text, parameter values and constraint details.
+ * None of that may reach a log line that exists to describe a failure to record
+ * an authentication event.
+ */
+function failureCategory(error: unknown): string {
+  const code = (error as { code?: string } | null)?.code;
+  if (typeof code === 'string' && /^[0-9A-Z]{5}$/.test(code)) {
+    if (code === '42P01') return 'undefined_table';
+    if (code === '42703') return 'undefined_column';
+    if (code === '23505') return 'unique_violation';
+    if (code.startsWith('08')) return 'connection_error';
+    if (code.startsWith('53')) return 'insufficient_resources';
+    return `sqlstate_${code}`;
+  }
+  return 'unknown';
 }
 
 // UUID v4 pattern validator
@@ -69,12 +141,15 @@ export function redactPasscode(passcode: string): string {
 export async function logAuthEvent(
   entry: AuthAuditEntry,
   request: NextRequest
-): Promise<void> {
+): Promise<AuthAuditResult> {
   try {
     const { ip, userAgent } = extractRequestInfo(request);
 
     // Only pass UUID to resource_id column
     const resourceIdUuid = isUuid(entry.memberId) ? entry.memberId : null;
+    // The actor is populated only where the caller established it. Never
+    // backfilled from resourceIdUuid — see AuthAuditEntry.actorId.
+    const actorIdUuid = isUuid(entry.actorId) ? entry.actorId : null;
 
     await query(
       `INSERT INTO audit_logs (
@@ -90,7 +165,7 @@ export async function logAuthEvent(
         phi_accessed,
         consent_verified
       ) VALUES (
-        NULL,
+        $9,
         $1,
         $2,
         $3,
@@ -100,7 +175,7 @@ export async function logAuthEvent(
         $7,
         $8,
         false,
-        true
+        $10
       )`,
       [
         entry.action,
@@ -111,10 +186,24 @@ export async function logAuthEvent(
         entry.result,
         entry.errorMessage || null,
         entry.metadata ? JSON.stringify(entry.metadata) : '{}',
+        actorIdUuid,
+        // undefined → NULL. Unknown consent status stays unknown.
+        entry.consentVerified === undefined ? null : entry.consentVerified,
       ]
     );
+    return { persisted: true };
   } catch (error) {
-    // Log but don't fail the auth operation
-    console.error('[AUTH_AUDIT] Failed to log auth event:', error);
+    // The audit write failed. The AUTH OPERATION MUST STILL SUCCEED — audit
+    // durability and authentication availability have different failure
+    // semantics, and turning one into the other to make it visible would trade
+    // a silent gap for an outage. What changes here is that the failure is no
+    // longer silent: it is counted, it emits a stable marker, and the caller
+    // receives `persisted: false` instead of a resolved promise that looks
+    // exactly like success.
+    auditPersistFailures += 1;
+    console.error(
+      `${AUDIT_PERSIST_FAILED_MARKER} action=${entry.action} resource_type=${entry.resourceType || 'member'} category=${failureCategory(error)} failures_since_boot=${auditPersistFailures}`
+    );
+    return { persisted: false };
   }
 }
