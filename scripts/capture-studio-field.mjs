@@ -486,6 +486,37 @@ try {
     console.error('[capture] photograph. Import or start a work first.');
     process.exit(1);
   }
+  /**
+   * The positive gate. OBSERVATION-PROVENANCE-01 clause 3, done properly.
+   *
+   * The four probes above name the states we have actually seen, and they give
+   * good messages. But enumerating bad states never terminates: each new one
+   * (a 500 from the manuscripts route, a maintenance page, a route that moves)
+   * reads as `field` because it is merely *not* the others. That is how a
+   * refusal panel nearly entered the record, and it would have happened again
+   * with the DB down.
+   *
+   * So the field must PROVE itself: the centre column has to hold enough text
+   * to be a manuscript. This is also exactly the acceptance clause — "real
+   * manuscript text present" — rather than a proxy for it. A field capture with
+   * three sentences in the middle cannot be scored for manuscript dominance,
+   * typography scale or panel rhythm anyway, so an image that fails this gate
+   * was never going to be admissible evidence.
+   */
+  const MIN_CENTRE_CHARS = 400;
+  const centre = await page2.evaluate(
+    () => document.querySelector('main')?.innerText.trim().length ?? 0,
+  );
+  if (state === 'field' && centre < MIN_CENTRE_CHARS) {
+    console.error(`[capture] The centre column holds ${centre} characters.`);
+    console.error('[capture] That is not a manuscript, so this is not a field capture — whatever');
+    console.error('[capture] the room is showing, it is not the work. Refusing before the');
+    console.error('[capture] screenshot rather than filing it under the field\'s name.');
+    console.error('[capture] Check the room in the browser, and check that the app can reach');
+    console.error('[capture] its database — a 500 from /api/sovereign/manuscripts lands here.');
+    process.exit(1);
+  }
+
   if (state === 'signed-out') {
     console.error('[capture] The Studio is showing its signed-out panel — this browser has no');
     console.error('[capture] session, so the capture would not be of the field. Sign in with a');

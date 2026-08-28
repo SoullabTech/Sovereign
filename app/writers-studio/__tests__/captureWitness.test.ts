@@ -150,3 +150,26 @@ describe('a room that is signed in but holds no work is not the field', () => {
     expect(branch.indexOf('process.exit(1)')).toBeLessThan(branch.indexOf('page2.screenshot'));
   });
 });
+
+/**
+ * Enumerating bad states never terminates.
+ *
+ * Four probes named four states we had seen. The fifth — a 500 from the
+ * manuscripts route with the database down — reads as `field` because it is
+ * merely not the others. Clause 3 asks for positive proof of the intended
+ * surface, so the field proves itself: the centre column must hold enough text
+ * to be a manuscript. That is the acceptance clause itself, not a proxy for it.
+ */
+describe('the field proves itself rather than being whatever is left over', () => {
+  it('measures the centre column and refuses a thin one', () => {
+    expect(harness).toContain('MIN_CENTRE_CHARS');
+    expect(harness).toContain("document.querySelector('main')");
+    const gate = harness.slice(harness.indexOf("state === 'field' && centre <"));
+    expect(gate.length).toBeGreaterThan(0);
+    expect(gate.indexOf('process.exit(1)')).toBeLessThan(gate.indexOf('page2.screenshot'));
+  });
+
+  it('says the count, so a false refusal is diagnosable rather than mysterious', () => {
+    expect(harness).toMatch(/holds \$\{centre\} characters/);
+  });
+});
