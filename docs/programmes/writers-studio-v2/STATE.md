@@ -39,16 +39,32 @@ FROZEN STATE    founder, 2026-08-28
                                       per-portion gate on provenance/adoption
 
 WS2-SUBSTRATE-01
-                OPEN · NOT STARTED · no longer gates WS2-02. THREE repairs
-                after the census (D-022):
-                  1 the missing provenance DIMENSIONS — keep the entry-method
-                    field, add originator/kind/source/authority beside it
-                  2 persisted adoption/disposition. Do NOT assume
-                    Belongs/Maybe/Not now and Discuss/Keep/Unresolved/Dismiss
-                    are one enum; prove the semantics before sharing storage
-                  3 FK on studio_companion_turns.manuscript_id
-                INVARIANT IT MAY NOT BREAK: the Work↔Manuscript declaration.
+                DESIGNED + ADJUDICATED 2026-08-28. Read-only census complete;
+                all three open questions ruled. The unit is now TINY.
+                  R1 provenance    NO MIGRATION NOW. Already modelled for every
+                                   object a route can produce. Reopens when
+                                   MAIA-proposed text can enter a manuscript.
+                  R2 material↔Work ONE table. maybe | not_now ONLY.
+                                   Belongs = the declaration row's existence,
+                                   never a state in the enum.
+                  R3 companion FK  OPTION B: FK ON DELETE SET NULL + a
+                                   BEFORE DELETE guard refusing a delete that
+                                   would leave a manuscript-only turn homeless.
+                                   NOT CASCADE, and the has-room CHECK is NOT
+                                   relaxed. HELD on production census.
+                  FINDINGS         seven-state disposition PRESERVED, untouched.
+                                   Dismiss is NOT rejected; Keep collides with
+                                   manuscript_keeps. Both → WS2-08.
+                No backfill. No provenance framework. No findings migration.
+                No Work↔Manuscript migration. DOES NOT GATE WS2-02.
                 Packet: WS2-SUBSTRATE-01.md
+                Design + candidate SQL: WS2-SUBSTRATE-01-DESIGN.md
+
+MAC/RUNTIME     required before the R3 migration is written — needs a database:
+                  1 turns naming a manuscript that no longer exists
+                  2 manuscripts that become undeletable under option B
+                  3 shape of manuscript-only companion history
+                Exact SQL in WS2-SUBSTRATE-01-DESIGN. R2 is NOT blocked by it.
 
 WS2-02          RELEASED 2026-08-28. The central structural relation the shell
                 depends on is already real, so the design system no longer

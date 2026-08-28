@@ -425,3 +425,282 @@ ALTER TABLE studio_companion_turns
 ---
 
 LAST UPDATED 2026-08-28
+
+---
+
+# ADJUDICATION — founder, 2026-08-28
+
+All three open questions ruled. **The unit is now tiny.**
+
+```text
+INVARIANT   Work↔Manuscript      PRESERVED · no change
+REPAIR 1    provenance           CENSUS COMPLETE · NO MIGRATION NOW
+REPAIR 2    material↔Work        ONE new table · Maybe / Not now only
+FINDINGS    seven-state          PRESERVE · Keep/Dismiss → WS2-08
+REPAIR 3    companion FK         OPTION B RULED · census required
+```
+
+No backfill. No provenance framework. No findings migration. No Work↔Manuscript
+migration. **And none of this gates WS2-02.**
+
+## Ruling 1 — Repair 3 takes option B
+
+Both invariants are preserved rather than traded:
+
+```text
+conversation history is relational evidence
+AND
+a companion turn must still have a room
+```
+
+`CASCADE` is out — deleting a manuscript may not erase a conversation that
+happened. **Relaxing the has-room CHECK globally is also out**: it converts a
+deliberately structural guarantee into "usually true."
+
+```text
+FK manuscript_id → member_manuscripts(id) ON DELETE SET NULL
+
+BEFORE DELETE on member_manuscripts
+  if any studio_companion_turn has
+      manuscript_id = the deleted manuscript
+      AND living_work_id IS NULL
+  → RESTRICT · refuse the deletion
+  otherwise
+  → deletion proceeds; the FK nulls manuscript_id;
+    living_work_id keeps the turn situated
+```
+
+**Do not auto-attach a Living Work to save the delete.** If the turn is
+manuscript-only, the truthful answer is that the manuscript cannot currently be
+deleted without also resolving what happens to its relational history. Inventing
+a Work to make a delete succeed is the same act D-022 was written against.
+
+## Ruling 2 — Repair 1 defers; the generic layer is not built
+
+The census changed this materially. Reachable objects already carry substantial
+truthful provenance: manuscript entry method · manuscript source arrivals ·
+material artifact/source custody · member-authored Work relationships · MAIA
+turn authorship · finding authorship and disposition.
+
+```text
+REPAIR 1 — PROVENANCE
+
+STATUS
+  CENSUSED · NO MIGRATION REQUIRED NOW
+
+PRESERVE
+  member_manuscripts.provenance as ENTRY METHOD
+  manuscript_source_arrivals
+  studio_materials source custody
+  declaration provenance (declared_by / declared_at)
+  finding / MAIA authorship
+
+REOPEN TRIGGER — the first reachable product path where
+  · originator can vary for the same object kind
+  · MAIA/source language can be adopted into manuscript
+  · one object must durably name another as its origin
+  · authority cannot be represented by the object's existing domain model
+```
+
+The path that triggers it is `MAIA proposes text → writer adopts it → that
+language enters Manuscript`. **No such route exists today.**
+
+> This is not postponing provenance. The provenance the product needs today is
+> already mostly modelled, and this refuses to invent tomorrow's object model
+> early.
+
+No provenance JSONB catch-all, now or at reopen.
+
+## Ruling 3 — no eighth finding disposition
+
+The seven-state model stands unaltered. It already separates MAIA observation,
+writer disposition, and actual manuscript change. **Do not distort it because a
+reference screen says "Dismiss."**
+
+`Dismiss` has at least two possible meanings on **different axes**:
+
+```text
+REJECT    "I disagree with this finding."          → authority / disposition
+DISMISS   "I don't want this in my attention now."  → attentional / presentation
+```
+
+```text
+FINDING DISPOSITION   PRESERVE the seven states · NO schema change here
+KEEP                  overloaded (manuscript_keeps already means something
+                      else) · WS2-08 product ruling required
+DISMISS               do NOT map automatically to rejected
+                      do NOT add an eighth state
+                      WS2-08 resolves: authority act vs attentional act
+```
+
+If it is attentional, it does not belong in `disposition` at all — it belongs in
+a separate surfacing model, persisted if "don't show me this again" is intended,
+session-local if it merely closes a panel. **Authority and attention may not
+collapse into one column.**
+
+---
+
+# CANDIDATE SQL — PREPARED, NOT EXECUTED
+
+**No migration file has been created.** This is the design, held here until the
+production census returns.
+
+## Candidate A — material↔Work consideration
+
+`Belongs` is **not** a state in this enum. Belonging is represented by the
+existence of a `living_work_materials` declaration row. Putting `maybe` on that
+row would mean *"this belongs, but maybe"*, which is nonsense.
+
+```sql
+-- ROLLBACK: DROP TABLE IF EXISTS living_work_material_considerations;
+
+-- A member CONSIDERED a material for a Work and did not declare belonging.
+-- Sibling of living_work_materials, deliberately separate: that table's row IS
+-- the declaration of belonging, so an unresolved state cannot live on it.
+--
+-- Absence of a row here AND in living_work_materials = never considered.
+-- That is the truthful default for every existing material; nothing is
+-- backfilled.
+CREATE TABLE IF NOT EXISTS living_work_material_considerations (
+  id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  living_work_id   UUID NOT NULL REFERENCES living_works(id) ON DELETE CASCADE,
+
+  -- Mirrors living_work_materials' polymorphic pair exactly, including its
+  -- TEXT material_id. Diverging here would create two addressing schemes for
+  -- the same material.
+  material_type    TEXT NOT NULL,
+  material_id      TEXT NOT NULL,
+
+  -- Two states, and neither asserts belonging.
+  --   maybe    considered; the member has not resolved it
+  --   not_now  considered and declined or deferred — a real answer,
+  --            not an absence
+  state            TEXT NOT NULL CHECK (state IN ('maybe', 'not_now')),
+
+  -- The row is a member act. It cannot be written without saying who and when
+  -- — the same grammar as living_work_expressions, whose declared_by carries a
+  -- real FK. (living_work_materials.declared_by does NOT; the stronger form is
+  -- followed here deliberately.)
+  acted_by         UUID NOT NULL REFERENCES members(id) ON DELETE RESTRICT,
+  acted_at         TIMESTAMPTZ NOT NULL DEFAULT now(),
+
+  UNIQUE (living_work_id, material_type, material_id)
+);
+
+CREATE INDEX IF NOT EXISTS living_work_material_considerations_work_idx
+  ON living_work_material_considerations (living_work_id, acted_at DESC);
+```
+
+**Open for the migration candidate, not decided here:** whether a declaration
+and a consideration may coexist for the same pair (declaring belonging probably
+clears the consideration), and whether `state` transitions keep history. Both
+are member-semantics questions.
+
+## Candidate B — companion FK + delete guard
+
+```sql
+-- ROLLBACK:
+--   DROP TRIGGER IF EXISTS member_manuscripts_companion_guard ON member_manuscripts;
+--   DROP FUNCTION IF EXISTS refuse_delete_orphaning_companion_turn();
+--   ALTER TABLE studio_companion_turns
+--     DROP CONSTRAINT IF EXISTS studio_companion_turns_manuscript_fk;
+
+-- NOT VALID first: no long lock, and any pre-existing invalid rows are
+-- adjudicated rather than silently blocking or being repaired.
+ALTER TABLE studio_companion_turns
+  ADD CONSTRAINT studio_companion_turns_manuscript_fk
+  FOREIGN KEY (manuscript_id) REFERENCES member_manuscripts(id)
+  ON DELETE SET NULL
+  NOT VALID;
+
+-- Run only after the census resolves any non-resolving rows:
+-- ALTER TABLE studio_companion_turns
+--   VALIDATE CONSTRAINT studio_companion_turns_manuscript_fk;
+
+-- Option B's second half. The FK alone would null manuscript_id and leave a
+-- manuscript-only turn homeless, breaking studio_companion_turns_has_room at
+-- delete time. This refuses the delete instead of weakening the CHECK.
+--
+-- BEFORE DELETE on the referenced table fires ahead of the FK's RI action.
+CREATE OR REPLACE FUNCTION refuse_delete_orphaning_companion_turn()
+RETURNS TRIGGER AS $$
+DECLARE
+  homeless_count INTEGER;
+BEGIN
+  SELECT count(*) INTO homeless_count
+    FROM studio_companion_turns
+   WHERE manuscript_id = OLD.id
+     AND living_work_id IS NULL;
+
+  IF homeless_count > 0 THEN
+    RAISE EXCEPTION
+      'Cannot delete manuscript %: % companion turn(s) belong to it and to no '
+      'Living Work. Deleting it would leave that conversation with no room. '
+      'Declare the work these turns belong to, or resolve the conversation '
+      'history first.',
+      OLD.id, homeless_count
+      USING ERRCODE = 'foreign_key_violation';
+  END IF;
+
+  RETURN OLD;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS member_manuscripts_companion_guard ON member_manuscripts;
+CREATE TRIGGER member_manuscripts_companion_guard
+  BEFORE DELETE ON member_manuscripts
+  FOR EACH ROW
+  EXECUTE FUNCTION refuse_delete_orphaning_companion_turn();
+```
+
+⚠ **The refusal must reach the member as words, not a 500.** Any route that
+deletes a manuscript will now receive a `foreign_key_violation` it does not
+handle today. That handling is part of the migration candidate, per D-014 — a
+refusal that leaves no record, or that reaches the member as a generic error, is
+not instrumented.
+
+---
+
+# REQUIRED BEFORE THE MIGRATION IS WRITTEN
+
+**Mac/runtime lane. Cannot be run from a remote container** — no database.
+
+```sql
+-- 1. Do any turns name a manuscript that no longer exists?
+--    Non-zero blocks VALIDATE CONSTRAINT and needs adjudication, never a
+--    silent repair.
+SELECT count(*) AS non_resolving
+  FROM studio_companion_turns t
+  LEFT JOIN member_manuscripts m ON m.id = t.manuscript_id
+ WHERE t.manuscript_id IS NOT NULL
+   AND m.id IS NULL;
+
+-- 2. How many manuscripts would become undeletable under option B?
+SELECT count(DISTINCT t.manuscript_id) AS manuscripts_guarded,
+       count(*)                        AS manuscript_only_turns
+  FROM studio_companion_turns t
+ WHERE t.manuscript_id IS NOT NULL
+   AND t.living_work_id IS NULL;
+
+-- 3. Shape check: how much companion history is manuscript-only at all?
+SELECT living_work_id IS NULL AS no_work,
+       manuscript_id  IS NULL AS no_manuscript,
+       count(*)
+  FROM studio_companion_turns
+ GROUP BY 1, 2;
+```
+
+Run on minisforum inside the container:
+
+```bash
+ssh soullab@minisforum 'docker exec maia-postgres \
+  psql -U soullab maia_consciousness -c "<query>"'
+```
+
+```text
+RETURN   counts + the exact proposed migration
+STATUS   REPAIR 3 migration HELD until (1) and (2) come back
+         REPAIR 2 candidate A is not blocked by the census
+```
+
+**CHANGE: NONE.**

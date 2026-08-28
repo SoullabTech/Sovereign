@@ -45,71 +45,92 @@ three repairs below may weaken it, and the acceptance walk verifies it survives.
 > belongs somewhere; a person declares it, and the architecture remembers who
 > and when.** Do not "simplify" toward the column.
 
-## Scope — exactly three repairs
-
-### 1 · The missing provenance dimensions
-
-```sql
--- today, and it is TRUTHFUL as far as it goes
-CHECK (provenance IN ('member_uploaded', 'member_written'))
-```
-
-**Do not replace this field.** It answers *how did this manuscript enter the
-Studio?* and answers it well — set once at creation by the gesture the member
-actually performed, never inferred.
-
-The repair is to **stop it being overloaded** and to add the dimensions that have
-nowhere to live. Entry method is one of five axes
-(WS2-ARCHITECTURE-DEFINITION §3):
+## Scope — adjudicated 2026-08-28, and now tiny
 
 ```text
-originator        writer · MAIA · imported source
-kind              manuscript text · material · observation · proposal · decision
-source            transcript X · chapter Y · MAIA exchange Z
-entry method      EXISTS — member_uploaded · member_written
-authority         unreviewed · recognized · adopted · rejected
+REPAIR 1  provenance      CENSUSED · NO MIGRATION NOW · reopen on trigger
+REPAIR 2  material↔Work   ONE new table · Maybe / Not now only
+REPAIR 3  companion FK    OPTION B RULED · production census required
+FINDINGS  seven-state     PRESERVE · Keep/Dismiss deferred to WS2-08
 ```
 
-`05` renders a `Provenance` tab and an "Imported from: Zoom Recording" record, so
-the target grammar is drawn. **Provenance persists; salience does not** (Protocol
-§9) — add no stored relevance, importance or quality field.
+Design and candidate SQL: `WS2-SUBSTRATE-01-DESIGN.md`.
+**No backfill. No provenance framework. No findings migration. No
+Work↔Manuscript migration. This unit does not gate WS2-02.**
 
-### 2 · Persisted adoption / disposition
+### REPAIR 1 · Provenance — no migration now
 
-Enough to represent, without pretending these are merely UI states:
+The census found provenance already modelled for every object a route can
+currently produce: manuscript entry method, source arrivals, material artifact
+custody, declaration provenance, MAIA turn authorship, finding authorship.
+
+**Preserve all of it. Add nothing.** The missing generic axes — variable
+`originator`, semantic `kind`, cross-object `origin_ref`, authority on
+manuscript text — belong to objects no route can produce today.
+
+**Reopen trigger:** the first reachable path where originator can vary for the
+same object kind · MAIA/source language can be adopted into manuscript · one
+object must durably name another as its origin · authority cannot be
+represented by the object's existing domain model. In practice: *MAIA proposes
+text → writer adopts → that language enters the Manuscript.*
+
+No provenance JSONB catch-all, now or at reopen.
+
+### REPAIR 2 · Material↔Work consideration
 
 ```text
-material → work      Belongs · Maybe · Not now              (drawn in 05)
-MAIA companion       Discuss · Keep · Unresolved · Dismiss  (drawn in 08)
+no row anywhere                        untouched / never considered
+consideration row, state = maybe       considered, unresolved
+consideration row, state = not_now     considered, declined or deferred
+living_work_materials row exists       BELONGS
 ```
 
-⚠ **Do not assume these are one enum.** They may be different acts at different
-layers. The read-only design must **prove the semantic model before sharing
-storage**.
+**`Belongs` is not a state in the enum.** Belonging is the existence of the
+declaration row. Putting `maybe` on that row would mean *"this belongs, but
+maybe"* — nonsense, and the collapse D-022 taught.
 
-⚠ **And do not assume nothing is persisted today.** The repository already has
-member-declared relationship acts of exactly this family —
-`living_work_expressions` and `living_work_materials`, both with
-`declared_by`/`declared_at`, and `living_work_materials` additionally carrying a
-`relationship_sentence`. The accurate question is:
+Separate table, carrying actor and timestamp in the same grammar the sibling
+declaration tables use.
 
-> **Which parts of the drawn disposition semantics already have durable member
-> acts, and which states are genuinely missing?**
+⚠ Out of scope: `05`'s six-value **RELATIONSHIP TO WORK** (`Core Material ·
+Supporting · Background · Reference · Peripheral · Exclude`) is a *second,
+distinct* control. Nearest substrate today is
+`living_work_materials.relationship_sentence`, free text. Enum-or-prose is a
+product decision, not taken here.
 
-`Belongs` may already map to the *existence* of a declared relationship. `Maybe`
-and `Not now` probably require new durable semantics — a *considered and not yet
-resolved* state is not the same as no row.
+### REPAIR 3 · Companion FK — option B
 
-Every writer-authoritative transition needs **actor · timestamp · previous/new
-state where useful**. There is no MAIA self-adoption, and no accumulation of
-suggestions that becomes adoption by repetition (D-019).
+```text
+FK manuscript_id → member_manuscripts(id) ON DELETE SET NULL
++ BEFORE DELETE guard on member_manuscripts:
+    refuse when a turn has that manuscript AND living_work_id IS NULL
+```
 
-### 3 · Referential integrity on `studio_companion_turns.manuscript_id`
+Both invariants preserved rather than traded: **conversation history is
+relational evidence** AND **a turn must still have a room**. CASCADE is refused
+— deleting a manuscript may not erase a conversation that happened. Globally
+relaxing the has-room CHECK is refused — it turns a structural guarantee into
+"usually true."
 
-`living_work_id` has a foreign key; `manuscript_id` is a bare `UUID` with none.
-An exchange can name a manuscript that does not exist — the identity-custody
-class D-010 governs. Repaired while this seam is open, together with its
-relationship to the existing homeless-turn CHECK.
+**Do not auto-attach a Living Work to save a delete.** If the turn is
+manuscript-only, the truthful answer is that the manuscript cannot be deleted
+until its relational history is resolved.
+
+⚠ The refusal must reach the member as words, not a 500 (D-014).
+
+**HELD** on the production invalid-row census — it needs a database and cannot
+run from a remote container.
+
+### FINDINGS · No eighth disposition
+
+The seven states stand unaltered: `new · discussed · recognized · adopted ·
+rejected · unresolved · resolved`. They already separate MAIA observation,
+writer disposition, and manuscript change.
+
+`Dismiss` is **not** mapped to `rejected`. *"I disagree"* is authority; *"not in
+my attention now"* is attentional, and they are different axes. `Keep` collides
+with `manuscript_keeps`. Both resolve in **WS2-08** as product semantics.
+**Authority and attention may not collapse into one column.**
 
 ## Legacy Work-association transition rule
 
