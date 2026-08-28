@@ -215,3 +215,53 @@ describe('DELETE /living-works/[id]/materials — no longer feeds this work', ()
     expect(res.status).toBe(404);
   });
 });
+
+
+describe('POST /materials — a lost race is a 409, never a 500', () => {
+  function conflict() {
+    const e = new Error(
+      'material_relationship_conflict: this material is under consideration for that work.'
+    ) as Error & { code?: string };
+    e.code = '23001'; // restrict_violation
+    return e;
+  }
+
+  it('answers 409 when a simultaneous consideration won the lock', async () => {
+    mockAuth.mockResolvedValue(MEMBER);
+    mockQuery
+      .mockResolvedValueOnce({ rows: [{ id: WORK, member_id: MEMBER }], rowCount: 1 })
+      .mockResolvedValueOnce({ rows: [{ id: THING }], rowCount: 1 });
+    mockTx.mockRejectedValue(conflict());
+    const res = await POST(
+      jsonRequest('POST', { materialType: 'manuscript', materialId: THING }),
+      ctx
+    );
+    expect(res.status).toBe(409);
+    await expect(res.json()).resolves.toEqual({
+      error: 'That relationship changed while you were acting. Refresh it and choose again.',
+    });
+  });
+
+  it('does not retry to force the declaration through', async () => {
+    mockAuth.mockResolvedValue(MEMBER);
+    mockQuery
+      .mockResolvedValueOnce({ rows: [{ id: WORK, member_id: MEMBER }], rowCount: 1 })
+      .mockResolvedValueOnce({ rows: [{ id: THING }], rowCount: 1 });
+    mockTx.mockRejectedValue(conflict());
+    await POST(jsonRequest('POST', { materialType: 'manuscript', materialId: THING }), ctx);
+    expect(mockTx).toHaveBeenCalledTimes(1);
+  });
+
+  it('an unrelated failure is still a 500', async () => {
+    mockAuth.mockResolvedValue(MEMBER);
+    mockQuery
+      .mockResolvedValueOnce({ rows: [{ id: WORK, member_id: MEMBER }], rowCount: 1 })
+      .mockResolvedValueOnce({ rows: [{ id: THING }], rowCount: 1 });
+    mockTx.mockRejectedValue(new Error('connection terminated'));
+    const res = await POST(
+      jsonRequest('POST', { materialType: 'manuscript', materialId: THING }),
+      ctx
+    );
+    expect(res.status).toBe(500);
+  });
+});
