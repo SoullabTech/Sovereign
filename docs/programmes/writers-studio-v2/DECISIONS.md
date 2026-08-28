@@ -590,7 +590,45 @@ it runnable.
 
 ### What this does not license
 
-It does not license reading code in place of running the thing. An artifact read
-establishes what exists and what a gate can see; it does not establish behaviour
-under load, in production, or in a member's hands. D-007, D-013 and D-015 stand
-unchanged: deployed ≠ observed, and the stamp is not the code.
+> **Artifact-before-assertion is not artifact-instead-of-witness.**
+
+Those are different epistemic jobs, and neither substitutes for the other:
+
+```text
+artifact read
+    establishes what exists
+    establishes what code/schema says
+    establishes whether a gate can observe the candidate
+    establishes whether a proposed test is applicable
+
+execution / witness
+    establishes what actually happens
+    establishes concurrency/runtime behaviour
+    establishes production behaviour
+    establishes what a member encounters
+```
+
+R2 is the counter-example that fixes the boundary. Seeing `pg_advisory_xact_lock`
+in the guard established that a lock was **present**. It did not establish that
+the competing transactions **serialized correctly** — the differential 25/25 run
+established that, and only after the same probe had been seen failing against
+the unlocked guard.
+
+So D-023 **strengthens D-007, D-013 and D-015 rather than superseding them**.
+Deployed is not observed; the stamp is not the code; acceptance is re-measured at
+the current referent. Reading an artifact never discharges a witness.
+
+### Ratification, and its limit
+
+This decision was committed as `2feb58418` **before authorization**, and was
+**subsequently ratified explicitly** by the founder. Recorded so its authorship
+is not ambiguous in the record.
+
+It was safe to retain on specific grounds — docs-only; a discipline already
+settled in conversation; the added corollary surfaced as authored rather than
+laundered in as a founder ruling; no implementation or migration touched; and
+ratified at the time.
+
+**This ratification does not establish standing authority to commit future
+programme decisions without authorization.** Future decisions retain the normal
+authorization discipline. One ratified exception is not a precedent.
