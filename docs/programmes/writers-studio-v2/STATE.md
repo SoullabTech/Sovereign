@@ -32,27 +32,30 @@ FROZEN STATE    founder, 2026-08-28
                   WS2-00              CLOSED
                   D-017               SATISFIED by image reading
                   D-018 / D-019       RECORDED
-                  WS2-SUBSTRATE-01    NEXT · bounded migration/object-model
-                                      repair · DEFINED, NOT STARTED
-                  WS2-02 / WS2-03     HELD behind substrate truth
+                  Work↔Manuscript     BUILT · census-confirmed (D-022)
+                  WS2-02              RELEASED
+                  WS2-SUBSTRATE-01    OPEN · 3 bounded repairs
+                  WS2-03              not blocked by Work context;
+                                      per-portion gate on provenance/adoption
 
 WS2-SUBSTRATE-01
-                Authorized 2026-08-28 (D-021). Stands between WS2-00 and
-                WS2-02 so the design units implement against a substrate that
-                already tells the truth. Four repairs, no more:
-                  1 Work↔Manuscript as a real persisted relation  LOAD-BEARING
-                  2 a real provenance model, incl. imported-source identity,
-                    replacing the one-value placeholder
-                  3 persisted adoption/disposition — Belongs/Maybe/Not now
-                    and Discuss/Keep/Unresolved/Dismiss are NOT UI states
-                  4 referential integrity on
-                    studio_companion_turns.manuscript_id
-                It does NOT invent the full future schema. Exactly enough for
-                the settled architecture to be representable without loss.
+                OPEN · NOT STARTED · no longer gates WS2-02. THREE repairs
+                after the census (D-022):
+                  1 the missing provenance DIMENSIONS — keep the entry-method
+                    field, add originator/kind/source/authority beside it
+                  2 persisted adoption/disposition. Do NOT assume
+                    Belongs/Maybe/Not now and Discuss/Keep/Unresolved/Dismiss
+                    are one enum; prove the semantics before sharing storage
+                  3 FK on studio_companion_turns.manuscript_id
+                INVARIANT IT MAY NOT BREAK: the Work↔Manuscript declaration.
                 Packet: WS2-SUBSTRATE-01.md
 
-WS2-02          HELD on four predicates AND behind WS2-SUBSTRATE-01.
-                HELD is not "next".
+WS2-02          RELEASED 2026-08-28. The central structural relation the shell
+                depends on is already real, so the design system no longer
+                waits on the substrate unit. WS2-02 and WS2-SUBSTRATE-01
+                proceed as SEPARATE BOUNDED UNITS.
+                A–D remain binding on it; released from the HOLD, not from
+                the architecture.
                   A  OBJECT MODEL      Work / Manuscript / Material distinct
                   B  MAIA RELATIONSHIP MAIA Exchange belongs to a Work without
                                        becoming manuscript content
@@ -69,10 +72,15 @@ WS2-02          HELD on four predicates AND behind WS2-SUBSTRATE-01.
                 region is presentation. The architecture needs
                 MAIA-in-relation-to-a-Work.
 
-WS2-03          HELD behind the same four rulings AND behind
-                WS2-SUBSTRATE-01. "Persistent work context" is semantically
-                false until repair 1 lands: the system can know whose
-                manuscript it is, but not which Work it belongs to.
+WS2-03          NOT semantically blocked. The declaration mechanism exists and
+                is already consumed correctly, so persistent Work context may
+                begin. The gate is per-portion, not per-room: any PART of
+                WS2-03 depending on richer provenance or durable adoption
+                waits for that repair — the whole room does not.
+                Shell contract, already substantially present in the Canvas:
+                  0 declaring works   manuscript valid · no Work context claimed
+                  1 declaring work    Work context may unite with manuscript
+                  2+ declaring works  ambiguous · the shell does not choose
 
 A–D BINDING     REVIEW: PASS · ACCEPTED — founder, 2026-08-28, reviewed at
                 c6d20703e (the binding itself, not a summary of it).
@@ -97,23 +105,38 @@ NEXT UNIT       WS2-SUBSTRATE-01 — DEFINED, NOT STARTED.
                 architecture the pack already implies, so implementation
                 cannot accidentally simplify it.
 
-SUBSTRATE       three facts WS2-02/03 must be planned around. Read from the
-                migrations, not assumed:
-                  1 member_manuscripts has NO work_id / living_work_id.
-                    The Work↔Manuscript edge DOES NOT EXIST. Persistent work
-                    context cannot be built correctly without it.
-                    (Work↔Material DOES exist — living_work_materials, and it
-                    is already a declared writer act.)
-                  2 member_manuscripts.provenance is
-                    CHECK (provenance = 'member_uploaded') — ONE permitted
-                    value. It is a constant, not a model. Meanwhile 05 already
-                    draws a Provenance tab. Design is AHEAD of substrate.
-                  3 studio_companion_turns ALREADY carries living_work_id +
-                    manuscript_id with a CHECK refusing a homeless turn —
-                    better than the audit assumed. But no adoption state, and
-                    manuscript_id has no FK.
-                RULED — D-021: repaired in a PRECEDING unit,
-                WS2-SUBSTRATE-01, never inside WS2-02/03.
+SUBSTRATE       CENSUSED 2026-08-28 from the migrations and their callers.
+                One earlier claim was WRONG and is corrected here (D-022):
+
+                  1 Work↔Manuscript EXISTS. living_work_expressions —
+                    declared_by + declared_at, FK to living_works, UNIQUE per
+                    (work, type, expression). A member DECLARATION, not a
+                    column. Writer: POST /api/sovereign/living-works/[id]/
+                    expressions ("a member act, never a side effect"; refuses
+                    system placement; ownership checked both ends).
+                    Consumer: the Canvas UNITE RULE (2026-08-05) — unites only
+                    when EXACTLY ONE work declares the manuscript; zero or
+                    several are left unresolved, never guessed.
+                    Many-to-many is DELIBERATE and documented in the schema.
+                    ⚠ The earlier "the edge DOES NOT EXIST" came from testing
+                    for a work_id COLUMN. Absence of the expected shape is not
+                    absence of the thing. Census the relation, not the column.
+
+                  2 member_manuscripts.provenance permits TWO values —
+                    ('member_uploaded','member_written'), widened 2026-08-02.
+                    It TRUTHFULLY records ENTRY METHOD and is kept. What is
+                    missing is the other four axes: originator, kind, source,
+                    authority. Do not overload the field; add beside it.
+                    ⚠ Earlier text called it a one-value constant. Wrong.
+
+                  3 studio_companion_turns carries living_work_id +
+                    manuscript_id with a CHECK refusing a homeless turn.
+                    manuscript_id still has NO FK.
+
+                  4 Disposition: living_work_expressions and
+                    living_work_materials are durable member acts already.
+                    The open question is which drawn states they cover and
+                    which are genuinely missing — not "nothing is persisted."
 
 PRODUCTION      0d66a5a27  deployed 2026-08-27 · VERIFIED TWO WAYS (D-007)
                   env var  — GIT_COMMIT == 0d66a5a27 (gate-verified at swap)

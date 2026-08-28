@@ -219,19 +219,47 @@ living_work_materials       Work↔Material   EXISTS  a DECLARED relation:
                                                     declared_by, declared_at
 ```
 
-🔴 **The gap, stated exactly.** `member_manuscripts` has **no `work_id` and no
-`living_work_id`.** A manuscript references `member_id` and nothing else. There
-is no way in the schema to say *this manuscript belongs to this Work.*
+✅ **CORRECTED 2026-08-28 by census (D-022). The earlier text here was wrong.**
+
+It read: *"the Work↔Manuscript edge DOES NOT EXIST."* That conclusion came from
+testing for a `work_id` column on `member_manuscripts`, finding none, and
+inferring absence. **Absence of the expected shape is not absence of the thing.**
 
 ```text
-Work ↔ Material      edge EXISTS, and it is already a writer act
-Work ↔ Manuscript    edge DOES NOT EXIST
+living_work_expressions            Work ↔ Manuscript      EXISTS
+  living_work_id    FK → living_works, ON DELETE CASCADE
+  expression_type   TEXT   (the route accepts only 'manuscript')
+  expression_id     UUID
+  declared_by       FK → members, NOT NULL
+  declared_at       TIMESTAMPTZ NOT NULL
+  UNIQUE (living_work_id, expression_type, expression_id)
 ```
 
-So the collapse Binding A forbids is not hypothetical and not merely a UI risk:
-it is the current shape of the data. Every "which Work am I in" question that
-WS2-03's persistent work context must answer is, today, unanswerable for
-manuscripts.
+Both edges exist, and **both are member declarations of the same grammar**:
+
+```text
+Work ↔ Material      living_work_materials     declared_by · declared_at
+Work ↔ Manuscript    living_work_expressions   declared_by · declared_at
+```
+
+It has a writer — `POST /api/sovereign/living-works/[id]/expressions`, *"a
+member act, never a side effect"*, refusing system placement, "seems related",
+bulk adopt, and foreign ids on either end — and a consumer: the Canvas **unite
+rule** (ruled 2026-08-05) unites Work and manuscript **only when exactly one
+Work declares that manuscript**, because *"expressions may belong to several
+works by design, and the room does not guess between them."*
+
+**Cardinality is already ruled**, in the schema's own comment: not unique on
+`(expression_type, expression_id)` alone, because *"an expression MAY belong to
+more than one Living Work… preservation of optionality, not an omission. A
+relational constraint here would decide a constitutional question by accident."*
+
+**This is stronger than the column would have been.** A `work_id` column makes
+belonging a *property of the manuscript*, and a property can be backfilled by
+inference. A declaration row **structurally cannot be written without an actor
+and a date**. The system does not discover that an expression belongs somewhere;
+a person declares a relationship, and the architecture remembers who and when.
+That is D-018 and D-019 already expressed in the substrate.
 
 ⚠ Secondary: `living_work_materials.material_type/material_id` is a polymorphic
 `TEXT` pair, not a foreign key to `studio_materials`. The edge exists but is not
@@ -323,9 +351,24 @@ member_manuscripts.provenance
   CHECK (provenance = 'member_uploaded')
 ```
 
-🔴 **This is a constant, not a model.** Exactly one value is permitted. The
-column is named provenance and cannot express origin. Any of the five questions
-above asked of a manuscript today returns the same answer by constraint.
+```sql
+-- widened 2026-08-02, migration 20260802000001
+CHECK (provenance IN ('member_uploaded', 'member_written'))
+```
+
+⚠ **CORRECTED 2026-08-28.** The earlier text called this "a constant, not a
+model" and said exactly one value was permitted. **Two are** — the constraint was
+widened on 2026-08-02, with a stated reason: *"a blank page was not uploaded."*
+
+The accurate finding is narrower and more useful: the column **truthfully records
+entry method** — how the manuscript entered the Studio — and does so well. Its
+own comment: *"Never inferred; set once at creation by the gesture the member
+actually performed."*
+
+What it does not carry is the rest of the model. Entry method is **one of five
+axes**. Originator, kind, source reference and authority/adoption have nowhere to
+live. **The repair is not to replace this field** — it is to stop it being
+overloaded, and to add the missing dimensions beside it.
 
 ```text
 studio_materials     artifact_hash · original_filename · source_url ·

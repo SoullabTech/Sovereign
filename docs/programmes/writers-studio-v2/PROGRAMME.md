@@ -94,7 +94,7 @@ shipped.
 |---|---|---|
 | **WS2-00** | Product contract | Reference screens become canonical; five modes and shared architecture defined |
 | **WS2-01** | Identity / content correctness | Correct work→manuscript→section→content resolution everywhere; no substitution, no silent fallback |
-| **WS2-SUBSTRATE-01** | Object-model repair | Work↔Manuscript persisted; real provenance model; adoption/disposition state; companion FK. Authorized 2026-08-28 (D-021) — see `WS2-SUBSTRATE-01.md` |
+| **WS2-SUBSTRATE-01** | Object-model repair | Provenance dimensions; adoption/disposition persistence; companion manuscript FK. Work↔Manuscript already exists as a member declaration and is an invariant, not a repair (D-022). Runs in parallel with WS2-02 — see `WS2-SUBSTRATE-01.md` |
 | **WS2-02** | Studio design system | Typography, spacing, surfaces, gold treatment, navigation, panels, states, responsive rules |
 | **WS2-03** | Studio shell | New application shell, persistent work context, navigation, MAIA region |
 | **WS2-04** | WRITE | Chapter editor, manuscript navigator, focus mode, contextual materials, versions |
@@ -108,12 +108,14 @@ shipped.
 | **WS2-12** | Integration | Migrations, regression suite, permissions, responsive behavior |
 | **WS2-13** | Production walk | Deploy exact proven lineage; real-member experiential acceptance |
 
-**WS2-SUBSTRATE-01 precedes WS2-02 — see D-021.** It is not a thirteenth unit
-inserted for tidiness: the reference pack is ahead of the substrate, and
-WS2-02/03 are entitled to implement against an object model that already tells
-the truth. Doing the repairs inside the design units entangles presentation with
-object-model work, after which *"the UI chose this"* and *"the data model forced
-this"* can no longer be told apart.
+**WS2-SUBSTRATE-01 runs in parallel with WS2-02 — see D-021 as revised by
+D-022.** D-021's rule still holds: presentation work and object-model repair may
+not share a unit, because afterwards *"the UI chose this"* and *"the data model
+forced this"* can no longer be told apart. What changed is the ordering. D-021
+held WS2-02 behind the substrate on the premise that Work↔Manuscript was
+missing; the census found it already built as a member declaration, so the
+central relation the shell needs is real and **WS2-02 is released**. The two
+units proceed separately.
 
 **Deployment is per room, from WS2-03 onward — see D-012.** WS2-13 is final
 acceptance, not first contact. The Studio goes live once WS2-02 + WS2-03 pass,

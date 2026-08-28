@@ -427,6 +427,24 @@ branch and not on this one is not governing.**
 
 ## D-021 — Substrate repair precedes the design system
 
+> ### ⚠ REVISED BY CENSUS — 2026-08-28. Read with D-022.
+>
+> **The process decision stands. One factual premise was wrong.**
+>
+> D-021 was sound as process — substrate truth precedes UI assumptions, and
+> presentation work must not share a unit with object-model repair. But it named
+> Work↔Manuscript as the load-bearing missing edge. **Census established that
+> explicit Work↔Manuscript declaration is already implemented** through
+> `living_work_expressions`: member authorship, non-inferred placement,
+> deliberate many-to-many optionality, and consumer-side ambiguity refusal.
+>
+> **Therefore Work↔Manuscript is not a substrate repair and does not block
+> WS2-03.** Remaining substrate work is limited to provenance,
+> adoption/disposition persistence, and companion-turn referential integrity.
+>
+> Nothing below is deleted — the decision and its correction both stand in the
+> record, per this file's own rule.
+
 **Founder, 2026-08-28.** The object-model repairs do not happen inside
 WS2-02/03.
 
@@ -450,3 +468,72 @@ but not which Work it belongs to.
 
 The unit creates **exactly enough substrate for the already-settled architecture
 to be representable without loss.** It does not invent the full future schema.
+
+## D-022 — Work↔Manuscript already exists as a member declaration
+
+**Founder, 2026-08-28.** The WS2 substrate census corrected **D-021's factual
+premise**. D-021 is not rewritten — this record is append-only, and a reversal
+is a new entry that names the one it corrects.
+
+Work↔Manuscript is already represented by `living_work_expressions`:
+
+```text
+living_work_id
+expression_type / expression_id
+declared_by
+declared_at
+```
+
+The relationship is a **member-authored declaration**, not a column inferred
+onto `member_manuscripts`.
+
+An expression **may belong to multiple Works by design**. The schema says so in
+its own comment, and says why: *"preservation of optionality, not an omission. A
+relational constraint here would decide a constitutional question by accident."*
+
+**Unassigned means NO declaration row exists** — not NULL in a membership row.
+
+The current writer (`POST /api/sovereign/living-works/[id]/expressions`)
+validates ownership on both sides and performs **no automatic placement**. The
+Canvas unites Work and manuscript **only when exactly one Work declares that
+manuscript**; zero or multiple declarations remain unresolved (the unite rule,
+ruled 2026-08-05).
+
+Therefore:
+
+```text
+Work↔Manuscript is NOT a repair and NOT a migration.
+WS2-SUBSTRATE-01 shrinks to THREE repairs:
+  1  provenance model
+  2  adoption / disposition persistence
+  3  companion-turn referential integrity
+
+It remains an INVARIANT THIS UNIT MAY NOT BREAK.
+```
+
+**And WS2-02 is RELEASED.** The central structural relation the shell depends on
+is already real, so the design system and shell no longer wait on this unit.
+WS2-02 and WS2-SUBSTRATE-01 proceed as **separate bounded units**.
+
+**WS2-03 is not semantically blocked.** Its gate is subtler than a hold: the room
+may begin, because its core declaration mechanism exists. Any *portion* of WS2-03
+that depends specifically on richer provenance or durable adoption waits for the
+corresponding repair — rather than the whole room waiting.
+
+What D-021 got right was that presentation work and object-model repair must not
+share a unit. That rule is unchanged.
+
+### Why this correction matters beyond arithmetic
+
+This is not "one less repair." A piece of the deeper architecture was already
+there, and the programme came close to replacing it with something weaker.
+
+A `work_id` column can be backfilled by inference. A declaration row
+**structurally cannot be written without an actor and a date**. The existing
+design makes Work belonging a *dated member declaration* and the route refuses
+automatic placement — which is more aligned with Writer's Studio, and with D-018
+and D-019, than the convenient column would have been.
+
+**The census standard that caught it:** the earlier read tested for a column,
+found none, and concluded absence. Absence of the shape you expected is not
+absence of the thing. Census the relation, not the column.

@@ -1,7 +1,8 @@
 # WS2-SUBSTRATE-01 — make the object model able to express the grammar
 
-**Authorized as a unit 2026-08-28 (D-021). NOT YET IMPLEMENTED.**
-A bounded migration / object-model repair standing between WS2-00 and WS2-02.
+**Authorized 2026-08-28 (D-021), scope corrected by census (D-022). NOT STARTED.**
+A bounded migration / object-model repair unit. **It no longer gates WS2-02** —
+that unit is RELEASED and proceeds in parallel.
 
 > ### Writer's Studio Design Authority
 >
@@ -23,59 +24,88 @@ repairs happen inside them, presentation and object-model work entangle, and it
 later becomes impossible to distinguish *"the UI chose this"* from *"the data
 model forced this."* (D-021.)
 
-## Scope — exactly four repairs
+## The invariant this unit may not break
 
-### 1 · Work ↔ Manuscript as a real persisted relation — **load-bearing**
+**Work↔Manuscript already exists** as `living_work_expressions` — a member
+declaration carrying `declared_by` and `declared_at`, with no automatic
+placement, deliberate many-to-many optionality, and consumer-side ambiguity
+refusal (the Canvas unite rule). **It is not a repair and needs no migration**
+(D-022).
 
-Today `member_manuscripts` references `member_id` and nothing else. A manuscript
-belongs to a member, never to a Work. Work↔Material already exists
-(`living_work_materials`, already a declared writer act); Work↔Manuscript does
-not exist at all.
+It is listed here because this unit touches the seam around it. Nothing in the
+three repairs below may weaken it, and the acceptance walk verifies it survives.
 
-**Without this, "persistent work context" is semantically false**: the system
-can know whose manuscript it is, but not which Work it belongs to.
+> A `work_id` column would make belonging a property of the manuscript, and a
+> property can be backfilled by inference. A declaration row cannot be written
+> without an actor and a date. **The system does not discover that an expression
+> belongs somewhere; a person declares it, and the architecture remembers who
+> and when.** Do not "simplify" toward the column.
 
-The relation is **explicit and persisted**, not inferred through member
-ownership.
+## Scope — exactly three repairs
 
-### 2 · A real provenance model, replacing the one-value placeholder
+### 1 · The missing provenance dimensions
 
 ```sql
--- today
-provenance text NOT NULL DEFAULT 'member_uploaded'
-  CHECK (provenance = 'member_uploaded')
+-- today, and it is TRUTHFUL as far as it goes
+CHECK (provenance IN ('member_uploaded', 'member_written'))
 ```
 
-One permitted value: a constant wearing the name of a model. It must become the
-**minimum provenance required by the reference grammar**, including
-**imported-source identity** — `05` renders "Imported from: Zoom Recording"
-behind a `Provenance` tab.
+**Do not replace this field.** It answers *how did this manuscript enter the
+Studio?* and answers it well — set once at creation by the gesture the member
+actually performed, never inferred.
 
-The five questions the model must be able to answer (WS2-ARCHITECTURE-DEFINITION
-§3): who originated this · what kind of thing it is · where it came from · what
-authority it has · how it entered the Work.
+The repair is to **stop it being overloaded** and to add the dimensions that have
+nowhere to live. Entry method is one of five axes
+(WS2-ARCHITECTURE-DEFINITION §3):
 
-**Provenance persists. Salience does not** (Protocol §9). Do not add a stored
-relevance or importance field.
+```text
+originator        writer · MAIA · imported source
+kind              manuscript text · material · observation · proposal · decision
+source            transcript X · chapter Y · MAIA exchange Z
+entry method      EXISTS — member_uploaded · member_written
+authority         unreviewed · recognized · adopted · rejected
+```
 
-### 3 · Persisted adoption / disposition state
+`05` renders a `Provenance` tab and an "Imported from: Zoom Recording" record, so
+the target grammar is drawn. **Provenance persists; salience does not** (Protocol
+§9) — add no stored relevance, importance or quality field.
+
+### 2 · Persisted adoption / disposition
 
 Enough to represent, without pretending these are merely UI states:
 
 ```text
-material → work      Belongs · Maybe · Not now          (drawn in 05)
+material → work      Belongs · Maybe · Not now              (drawn in 05)
 MAIA companion       Discuss · Keep · Unresolved · Dismiss  (drawn in 08)
 ```
 
-Adoption is a **writer act with a record** (D-019). There is no MAIA
-self-adoption, and no accumulation of suggestions that becomes adoption by
-repetition.
+⚠ **Do not assume these are one enum.** They may be different acts at different
+layers. The read-only design must **prove the semantic model before sharing
+storage**.
 
-### 4 · Referential integrity on `studio_companion_turns.manuscript_id`
+⚠ **And do not assume nothing is persisted today.** The repository already has
+member-declared relationship acts of exactly this family —
+`living_work_expressions` and `living_work_materials`, both with
+`declared_by`/`declared_at`, and `living_work_materials` additionally carrying a
+`relationship_sentence`. The accurate question is:
+
+> **Which parts of the drawn disposition semantics already have durable member
+> acts, and which states are genuinely missing?**
+
+`Belongs` may already map to the *existence* of a declared relationship. `Maybe`
+and `Not now` probably require new durable semantics — a *considered and not yet
+resolved* state is not the same as no row.
+
+Every writer-authoritative transition needs **actor · timestamp · previous/new
+state where useful**. There is no MAIA self-adoption, and no accumulation of
+suggestions that becomes adoption by repetition (D-019).
+
+### 3 · Referential integrity on `studio_companion_turns.manuscript_id`
 
 `living_work_id` has a foreign key; `manuscript_id` is a bare `UUID` with none.
 An exchange can name a manuscript that does not exist — the identity-custody
-class D-010 governs. Repaired while this seam is open.
+class D-010 governs. Repaired while this seam is open, together with its
+relationship to the existing homeless-turn CHECK.
 
 ## Legacy Work-association transition rule
 
@@ -90,10 +120,15 @@ Existing manuscripts with no Work relation remain valid manuscripts.
 Their Work association is explicitly UNASSIGNED until a legitimate
 association occurs.
 
+UNASSIGNED = NO living_work_expressions DECLARATION ROW EXISTS.
+             It is NOT a NULL in a membership row. A declaration row cannot
+             itself be "unassigned" — its living_work_id, expression_id,
+             declared_by and declared_at are all real assertions.
+
 PERMITTED
   · remain readable
   · remain owned by their member
-  · Work relation remains NULL / unassigned
+  · no declaration row exists
   · member associates manuscript with an existing Work
   · member deliberately creates a Work and associates the manuscript
   · an explicit future migration rule ONLY if that rule records provenance
@@ -112,8 +147,11 @@ FORBIDDEN
   · any other heuristic presented as known relationship
 
 CONSTRAINT
-  The first Work↔Manuscript migration MUST permit the truthful unassigned
-  state. It must not begin by imposing blanket NOT NULL work membership.
+  Already satisfied by the existing design, and it must stay that way: the
+  unassigned state is the ABSENCE of a declaration row, so there is no
+  backfill to perform and no NOT NULL that could be imposed. Any future
+  narrowing (e.g. an additive UNIQUE index) is a founder ruling, never a
+  convenience.
 
 WS2-03 CONSEQUENCE
   An unassigned legacy manuscript may be opened as that manuscript,
@@ -122,8 +160,8 @@ WS2-03 CONSEQUENCE
   unassigned.
 ```
 
-> **NULL here is not missing data to clean up. It is truthful data about an
-> unresolved relationship.**
+> **The absence of a declaration is not missing data to clean up. It is truthful
+> data about an unresolved relationship.**
 
 That distinction is the whole rule. A migration that treats the NULLs as a
 cleanup task will reach for a heuristic, and every heuristic in the FORBIDDEN
@@ -162,14 +200,15 @@ Work↔Manuscript row is either NULL or traceable to a member act.
 ## Acceptance
 
 - [ ] Migration applies idempotently; rollback stated
-- [ ] Work↔Manuscript persisted and queryable in both directions
+- [ ] Work↔Manuscript declaration survives unweakened — `declared_by` /
+      `declared_at` intact, no automatic placement introduced, many-to-many
+      optionality preserved, unite rule still refuses ambiguity
 - [ ] Provenance answers all five questions for Manuscript and Material
 - [ ] Adoption/disposition persists for both drawn control sets
 - [ ] `studio_companion_turns.manuscript_id` has referential integrity
 - [ ] No existing manuscript orphaned; no Work invented on a member's behalf
-- [ ] The unassigned state is representable — no blanket NOT NULL on the first
-      Work↔Manuscript migration
-- [ ] Every Work↔Manuscript row is NULL or traceable to a member act
+- [ ] The unassigned state remains representable as the absence of a row
+- [ ] Every Work↔Manuscript declaration is traceable to a member act
 - [ ] `npm run typecheck` — no regression against baseline
 - [ ] `npm run check:no-supabase` — PASS
 - [ ] Co-Lab boundary gate — `scripts/pre-deploy-gate.sh colab`, 0 failed,
