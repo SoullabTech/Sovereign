@@ -62,8 +62,17 @@ export type SanctuaryInitSource =
   | 'conversation'
   /** Seeded from the member's server-backed account default. */
   | 'account-server'
-  /** Seeded from browser-local account settings (no member id available). */
-  | 'account-local'
+  /**
+   * No trustworthy member identity was available. Failed CLOSED to Sanctuary.
+   *
+   * NOT a member selection, and deliberately NOT read from browser-local
+   * account settings: `maia_account_settings` is scoped to the browser, not to
+   * a person, so it may carry a PREVIOUS authenticated member's default. Using
+   * it here would attribute one member's privacy preference to whoever is
+   * sitting at the machine now — laundering browser identity into member
+   * identity, which is the failure SANCTUARY-MEMBER-SCOPE-01 names.
+   */
+  | 'identity-unresolved'
   /** The preference lookup failed. Failed CLOSED to Sanctuary. Not a member selection. */
   | 'resolution-failed';
 
@@ -180,18 +189,21 @@ export async function resolveAccountDefaultSanctuary(
     }
   }
 
-  // No member id: nobody to look up. This is a known state, not a failure, so
-  // it does not fail closed — it reads the browser's own account settings.
-  try {
-    const { getAccountSettings } = await import('./accountSettings');
-    return {
-      sanctuary: getAccountSettings().defaultMemoryMode === 'sanctuary',
-      source: 'account-local',
-    };
-  } catch (err) {
-    console.warn('[Sanctuary] Local account settings unreadable — failing closed.', err);
-    return { sanctuary: true, source: 'resolution-failed' };
-  }
+  // No trustworthy member identity. We do NOT fall back to
+  // `maia_account_settings` here, however tempting: that store is scoped to the
+  // browser, not to a person. On a shared or previously-signed-in machine it
+  // can hold a prior member's Default Memory Mode, and consuming it would
+  // silently attribute their preference — including a preference for
+  // remembering — to whoever is present now.
+  //
+  // Anything capable of retention therefore fails closed until the product has
+  // an explicit guest-memory contract. The source stays truthful: this is
+  // Sanctuary because identity is unresolved, not because anyone chose it.
+  console.warn(
+    '[Sanctuary] No member identity — failing closed to Sanctuary. ' +
+      'Browser-local account settings are NOT consulted: they may belong to a different member.',
+  );
+  return { sanctuary: true, source: 'identity-unresolved' };
 }
 
 /**

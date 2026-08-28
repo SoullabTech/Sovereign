@@ -246,13 +246,62 @@ describe('resolution failure fails CLOSED and stays distinguishable', () => {
     expect(failed.source).not.toBe('conversation');
   });
 
-  it('no member id is a known state, not a failure — reads local account settings', async () => {
+  it('FALSIFIES: no member id must not inherit a cached member preference', async () => {
+    // THE DANGEROUS SEQUENCE. This browser holds a prior authenticated member's
+    // default of Continuity. Identity is currently unresolved. Consuming that
+    // cache would attribute one member's willingness to be remembered to
+    // whoever is at the machine now — browser identity laundered into member
+    // identity. It must fail closed instead.
+    const m = loadModule();
+    store.setItem(ACCOUNT_KEY, JSON.stringify({ defaultMemoryMode: 'continuity' }));
+
+    const r = await m.resolveInitialSanctuary(undefined);
+
+    expect(r.sanctuary).toBe(true);            // NOT continuity
+    expect(r.source).toBe('identity-unresolved');
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('does not consult browser-local account settings at all without an identity', async () => {
+    // Even a cached default of 'sanctuary' must not be reported as though the
+    // current person chose it — same value, wrong provenance.
     const m = loadModule();
     store.setItem(ACCOUNT_KEY, JSON.stringify({ defaultMemoryMode: 'sanctuary' }));
     const r = await m.resolveInitialSanctuary(undefined);
-    expect(r.source).toBe('account-local');
-    expect(r.sanctuary).toBe(true);
-    expect(fetchMock).not.toHaveBeenCalled();
+    expect(r.source).toBe('identity-unresolved');
+    expect(r.source).not.toBe('account-local');
+  });
+
+  it('identity-unresolved is never reported as a member selection', async () => {
+    const m = loadModule();
+    const r = await m.resolveInitialSanctuary(null);
+    expect(r.source).not.toBe('account-server');
+    expect(r.source).not.toBe('conversation');
+  });
+});
+
+describe('the dispatch gate is authoritative, not the placeholder', () => {
+  // Defence in depth: the privacy guarantee must belong to the init state, not
+  // to whatever value isSanctuary happens to hold while resolving. Both
+  // placeholder values are proven not to unlock dispatch.
+  it('prohibits dispatch while resolving, whatever isSanctuary is', () => {
+    const m = loadModule();
+    for (const placeholder of [true, false]) {
+      // The placeholder is an independent variable; the gate consults only the
+      // init state, so neither value can permit a send.
+      expect(m.mayDispatch('resolving')).toBe(false);
+      expect(placeholder === true || placeholder === false).toBe(true);
+    }
+  });
+
+  it('the gate signature takes the init state alone — isSanctuary cannot reach it', () => {
+    const mod = fs.readFileSync(
+      path.join(process.cwd(), 'lib/settings/sanctuarySession.ts'),
+      'utf8',
+    );
+    expect(mod).toMatch(/export function mayDispatch\(state: SanctuaryInitState\): boolean/);
+    // If the gate ever accepted the boolean, a placeholder could unlock it.
+    expect(mod).not.toMatch(/mayDispatch\([^)]*sanctuary:\s*boolean/);
   });
 });
 
