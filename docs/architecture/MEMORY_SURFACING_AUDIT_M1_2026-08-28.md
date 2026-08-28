@@ -13,8 +13,14 @@
 > voice turn — **is not evidence about memory.** Those five flags are structurally guaranteed
 > to be `false` on *every* voice turn, for a reason that has nothing to do with retrieval.
 
-Memory *does* reach MAIA on the voice path. What is missing is not access — it is **relevance**,
-**exclusion**, and **an audit trail**.
+**Separately, and more urgently — F10: the live voice memory build is not sanctuary-gated.**
+Cross-session memory is retrieved and injected into the prompt during Sanctuary voice sessions.
+No write occurs, so retention holds; the no-retrieval boundary does not. Vow-level. Reported,
+not repaired — the fix sits in a file shared with two other lanes and needs coordinator
+authorization.
+
+Outside Sanctuary, memory *does* reach MAIA on the voice path. What is missing there is not
+access — it is **relevance**, **exclusion**, and **an audit trail**.
 
 ---
 
@@ -144,6 +150,44 @@ not anything is relevant.
 `conversation_memory_uses` rows. The per-memory inclusion/exclusion record M2 needs does not exist
 for the voice path.
 
+### F10 — SANCTUARY RETRIEVAL GUARD MISSING ON THE LIVE BUILD · CONFIRMED — **vow-level**
+
+`app/api/voice/stream-conversation/route.ts:1168` guards the live memory build with:
+
+```ts
+if (userId) {                    // ← NOT `if (userId && !sanctuary)`
+  const bundle = await MemoryBundleService.build({ userId, currentInput: message, ... });
+  voiceMemoryContext = MemoryBundleService.formatForPrompt(bundle) || '';
+}
+```
+
+`voiceMemoryContext` is then joined into `voiceSystemPrompt` **unconditionally** (route.ts:1202).
+
+Every other retrieval/persistence site in this route is sanctuary-gated — identity context
+(`userId && !sanctuary`, :839), idea capture (:1392), training log (:1459), field monitor (:1480),
+trust observation (:1495) — and `MaiaWisdomProvider.buildVoiceContext` implements an explicit
+hard wall that returns `SANCTUARY_DIRECTIVE` with no retrieval. **Build #2 bypasses that wall.**
+
+There is no early return for sanctuary before :1168, and the LLM path demonstrably executes under
+sanctuary (`context.sanctuary` is passed at :1084). The site is reachable.
+
+**Effect:** in a Sanctuary voice session, cross-session turns, developmental memories and
+breakthrough moments are retrieved and injected into the system prompt.
+
+**Not affected:** no *write* occurs — `recordRetrievedCandidates` is gated on a `traceId` this call
+does not pass (F9). So this is a **retrieval + prompt-injection** breach, not a retention breach.
+Sanctuary Invariant 1 ("no content retention") appears to hold; Invariant 6 ("absolute boundary")
+and the `MaiaWisdomProvider` no-retrieval contract do not.
+
+**Provenance:** the R2 comment block immediately above (`CANONICAL CONTINUITY SUBSTRATE`) indicates
+build #2 was added to give voice the same contributors as text. The sanctuary predicate was present
+in the branch it duplicated (the wisdom provider) and was not carried across.
+
+**Not repaired in M1.** The fix is a one-predicate change in a file shared with VOICE-CAPTURE and
+ALLOY-PROSODY. Reported to the programme coordinator for authorization rather than crossing the
+lane boundary. Recommended as its own minimal PR ahead of the rest of this lane.
+
+
 ---
 
 ## III. Adjudication against the M3 table
@@ -158,6 +202,7 @@ for the voice path.
 | BEHAVIORAL GAP | **Not established.** Requires M2 runtime probes. |
 | CORRECT EXCLUSION | **Cannot be demonstrated (F8).** No eligibility mechanism exists to credit. |
 | *(new)* INSTRUMENTATION GAP | **CONFIRMED (F1, F2, F9).** The evidence surface is blind, mismatched, and unrecorded. |
+| *(new)* **SANCTUARY BREACH** | **CONFIRMED (F10).** Live build is not sanctuary-gated; memory is retrieved and injected in Sanctuary voice sessions. |
 
 ---
 
