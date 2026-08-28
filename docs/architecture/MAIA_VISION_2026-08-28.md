@@ -107,6 +107,13 @@ the downgrade ever regresses.
 
 ## V. Sovereignty
 
+**This claim is falsifiable, and the falsification is executable.**
+`VISION-EPHEMERAL-01` is enforced in two halves: a source-level drift alarm
+(`app/api/sovereign/app/maia/list/__tests__/visionEphemeral.test.ts`, 7
+assertions, mutation-tested) and a runtime probe
+(`scripts/verify-vision-ephemeral.ts`) that scans every text-bearing column in
+every table for image-byte signatures. See the witness doc §1.
+
 **Consent for memory / Sanctuary.** Images are **turn-scoped**. They are passed
 to the model call and to nothing else: no loader reads them, no writer persists
 them, they do not enter `conversation_turns`, atoms, or any memory layer, and no
@@ -145,6 +152,12 @@ It is now `composeAttachmentPrompt()`: the member's typed draft always wins;
 absent one, *"I'm sharing an image with you."*
 
 ## VII. Verification — NOT yet done
+
+> **Ruling 2026-08-28**: architecture ACCEPTED; device witness and privacy
+> witness REQUIRED before acceptance. The full gate, including the
+> `VISION-EPHEMERAL-01` falsification probe and the iPhone HEIC + live-camera
+> script, is **`docs/ops/VISION_WITNESS_2026-08-28.md`** — that document is the
+> acceptance record; this section is the summary.
 
 Status is **built + wired**. Per the standing discipline (*declaration is not
 liveness; built ≠ wired; wired ≠ surfacing; surfacing ≠ verified*), this ships as
