@@ -20,7 +20,7 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { query } from '@/lib/db/postgres';
+import { query, transaction } from '@/lib/db/postgres';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { normalizeSentence, refuseBelonging } from '@/lib/livingWork/domain';
 import { memberRef } from '@/lib/privacy/memberRef';
@@ -109,31 +109,57 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
       return NextResponse.json({ error: 'Not found' }, { status: 404 });
     }
 
-    /* Bringing the same thing twice is the member re-affirming, not an error.
+    /* Maybe/Not now → Belongs, explicit and in ONE transaction.
+       A consideration and a declaration are mutually exclusive (WS2-SUBSTRATE-01
+       Repair 2): the database refuses to hold both, deliberately REFUSING
+       rather than silently clearing, so the transition is a visible member act
+       here rather than a hidden side effect in the schema. The member declaring
+       belonging IS the resolution of the consideration, so the withdrawal
+       belongs in the same gesture — and in the same transaction, because a
+       crash between the two halves would leave the material considered by no
+       one and belonging to nothing.
+
+       Bringing the same thing twice is the member re-affirming, not an error.
        The original belonging (its date, its sentence) is preserved — a repeat
        gesture never silently overwrites the sentence they wrote before. */
-    const inserted = await query<BelongingRow>(
-      `INSERT INTO living_work_materials
-         (living_work_id, material_type, material_id, relationship_sentence, declared_by)
-       VALUES ($1, $2, $3, $4, $5)
-       ON CONFLICT (living_work_id, material_type, material_id) DO NOTHING
-       RETURNING id, material_type, material_id, relationship_sentence, declared_at`,
-      [id, materialType, materialId, sentence, memberId]
-    );
-    const row =
-      inserted.rows[0] ??
-      (
-        await query<BelongingRow>(
-          `SELECT id, material_type, material_id, relationship_sentence, declared_at
-             FROM living_work_materials
-            WHERE living_work_id = $1 AND material_type = $2 AND material_id = $3`,
-          [id, materialType, materialId]
-        )
-      ).rows[0];
+    const { row, resolvedConsideration, created } = await transaction(async (client) => {
+      const cleared = await client.query(
+        `DELETE FROM living_work_material_considerations
+          WHERE living_work_id = $1 AND material_type = $2 AND material_id = $3
+        RETURNING state`,
+        [id, materialType, materialId]
+      );
+
+      const ins = await client.query(
+        `INSERT INTO living_work_materials
+           (living_work_id, material_type, material_id, relationship_sentence, declared_by)
+         VALUES ($1, $2, $3, $4, $5)
+         ON CONFLICT (living_work_id, material_type, material_id) DO NOTHING
+         RETURNING id, material_type, material_id, relationship_sentence, declared_at`,
+        [id, materialType, materialId, sentence, memberId]
+      );
+      const existing =
+        ins.rows[0] ??
+        (
+          await client.query(
+            `SELECT id, material_type, material_id, relationship_sentence, declared_at
+               FROM living_work_materials
+              WHERE living_work_id = $1 AND material_type = $2 AND material_id = $3`,
+            [id, materialType, materialId]
+          )
+        ).rows[0];
+
+      return {
+        row: existing as BelongingRow,
+        resolvedConsideration: (cleared.rows[0]?.state as string | undefined) ?? null,
+        created: ins.rows.length > 0,
+      };
+    });
 
     console.log(
       `[MAIA/press] material brought { memberRef: ${memberRef(memberId)}, ` +
-        `workId: ${id}, type: ${materialType}, sentence: ${sentence ? 'written' : 'unwritten'} }`
+        `workId: ${id}, type: ${materialType}, sentence: ${sentence ? 'written' : 'unwritten'}, ` +
+        `resolvedConsideration: ${resolvedConsideration ?? 'none'} }`
     );
     return NextResponse.json(
       {
@@ -144,8 +170,9 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
           sentence: row.relationship_sentence,
           declaredAt: row.declared_at,
         },
+        resolvedConsideration,
       },
-      { status: inserted.rows.length > 0 ? 201 : 200 }
+      { status: created ? 201 : 200 }
     );
   } catch (error) {
     console.error('[living-works/materials] bring failed', error);
