@@ -142,7 +142,11 @@ export async function POST(request: NextRequest) {
         preferredName: resolveMemberDisplayName(member),
         onboarded: member.onboarded,
         onboardingStep: member.onboarding_step,
-        hasWebauthn: member.has_webauthn || true,
+        // `|| true` here was unconditional — it reported an enrolled member for
+        // every caller regardless of the column. The native sibling uses `|| false`.
+        // AUTH-BIOMETRIC-01B: enrollment state must be reported honestly, since
+        // the sign-in surface now decides what to offer from it.
+        hasWebauthn: member.has_webauthn === true,
         preferredAuthMethod: 'webauthn'
       },
       session: session ? {
