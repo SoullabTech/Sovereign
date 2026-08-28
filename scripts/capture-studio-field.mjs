@@ -219,10 +219,44 @@ let server = null;
 if (serve && !(await alreadyUp(origin))) {
   server = await startServer(origin);
 } else if (serve) {
-  console.log('[capture] something is already serving there — using it, not starting another.');
+  /* Reusing a server this script did not start is a real hazard: it may have
+     been launched from a different checkout, or before the last `git pull`, and
+     then the capture is of code that is not the code under review. That is the
+     same stale-artifact failure as an all-CACHED deploy reporting a fresh SHA —
+     plausible, and wrong. Next's dev server recompiles per request, so a server
+     started in THIS working tree is fine; one started elsewhere is not, and
+     from here the two are indistinguishable. So: say so, loudly. */
+  console.warn('');
+  console.warn('[capture] WARNING: something is already serving at', origin);
+  console.warn('[capture] Using it rather than starting another — but this script did not');
+  console.warn('[capture] start it and cannot tell which checkout or commit it is serving.');
+  console.warn('[capture] If it predates your last pull, the capture is of older code.');
+  console.warn('[capture] To be certain, stop it and re-run:  lsof -ti:3000 | xargs kill');
+  console.warn('');
 }
 
-const browser = await puppeteer.launch({
+/**
+ * A crashed run leaves Chrome holding the profile, and puppeteer then refuses
+ * to launch. The error is accurate but says nothing about what to do, and the
+ * lock is invisible — the window may not even be on screen.
+ */
+async function launch() {
+  try {
+    return await puppeteer.launch(launchOptions);
+  } catch (err) {
+    const m = err instanceof Error ? err.message : String(err);
+    if (/already running for/.test(m)) {
+      console.error('[capture] A browser is still holding the capture profile — almost always');
+      console.error('[capture] left behind by a run that crashed. Close it, or:');
+      console.error('[capture]   pkill -f "Chrome for Testing"');
+      console.error('[capture] The profile itself is fine; only the lock is stale.');
+      process.exit(1);
+    }
+    throw err;
+  }
+}
+
+const launchOptions = {
   executablePath: browser0.path,
   headless: !headful,
   userDataDir: PROFILE_DIR,
@@ -239,7 +273,9 @@ const browser = await puppeteer.launch({
     '--hide-crash-restore-bubble',
     `--window-size=${VIEWPORT.width},${VIEWPORT.height}`,
   ],
-});
+};
+
+const browser = await launch();
 try {
   /* Reuse the page Chrome already opened rather than adding one.
      `browser.newPage()` races Chrome's own startup tabs when a profile is
