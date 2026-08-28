@@ -16,8 +16,13 @@
  *
  * ⭐ The acceptance cases below are behavioural, run against the real module.
  * The source pins at the end cover the two component seams that have no
- * testable export — the dispatch gate and the identity rotation — following the
- * precedent set by the F10 boundary proof and VOICE-MIC-LABEL-01.
+ * testable export — the dispatch gate and the Sanctuary reset boundary —
+ * following the precedent set by the F10 boundary proof and VOICE-MIC-LABEL-01.
+ *
+ * ⛔ SCOPE. This unit does NOT rotate `maia_conversation_id`. Whether an
+ * explicit "New Conversation" should mint a new canonical conversation identity
+ * is MAIA-SESSION-ROTATION-01, still open. The privacy sequence below does not
+ * need that claim, and the tests prove the id is untouched throughout.
  */
 
 import fs from 'fs';
@@ -155,7 +160,7 @@ describe('an EXISTING conversation governs itself and is never re-seeded', () =>
   });
 });
 
-describe('THE SEQUENCE — default, identity and live state are actually separate', () => {
+describe('THE SEQUENCE — default, conversation state and live value are separate', () => {
   it('seeded ON → toggled OFF → remount OFF → New Conversation → ON', async () => {
     const m = loadModule();
     serverDefault('sanctuary');
@@ -163,41 +168,56 @@ describe('THE SEQUENCE — default, identity and live state are actually separat
     // account default = Sanctuary → new conversation starts ON
     const first = await m.resolveInitialSanctuary('member-1');
     expect(first.sanctuary).toBe(true);
-    const firstId = first.conversationId;
+    const conversationId = first.conversationId;
 
     // member explicitly toggles OFF
-    m.writeConversationSanctuary(firstId, false);
+    m.writeConversationSanctuary(conversationId, false);
 
     // reload / remount → remains OFF
     const remount = await m.resolveInitialSanctuary('member-1');
     expect(remount.sanctuary).toBe(false);
-    expect(remount.conversationId).toBe(firstId);
     expect(remount.source).toBe('conversation');
 
-    // New Conversation → new identity, seeded from the account default again
-    const rotated = m.rotateConversationId();
-    expect(rotated).not.toBe(firstId);
-
+    // explicit New Conversation → Sanctuary reset boundary, reseeded from the default
+    m.clearConversationSanctuary();
     const next = await m.resolveInitialSanctuary('member-1');
-    expect(next.conversationId).toBe(rotated);
     expect(next.sanctuary).toBe(true);
     expect(next.source).toBe('account-server');
+
+    // …and the conversation IDENTITY was never touched. Rotation is
+    // MAIA-SESSION-ROTATION-01, deliberately not decided by this sequence.
+    expect(next.conversationId).toBe(conversationId);
+    expect(store.getItem('maia_conversation_id')).toBe(conversationId);
   });
 
-  it('the ended conversation cannot leave its state behind for the new one', () => {
+  it('FALSIFIES: without the clear, an ended conversation imposes its state on the next', async () => {
+    // The discriminating case for the reset boundary. Toggle OFF, then start a
+    // New Conversation WITHOUT clearing: the account default is never consulted
+    // and the member silently continues in a remembering conversation.
     const m = loadModule();
-    const id = m.getConversationId();
-    m.writeConversationSanctuary(id, false);
-    expect(m.readConversationSanctuary(id)).toBe(false);
+    serverDefault('sanctuary');
+    const first = await m.resolveInitialSanctuary('member-1');
+    m.writeConversationSanctuary(first.conversationId, false);
 
-    const rotated = m.rotateConversationId();
-    expect(m.readConversationSanctuary(rotated)).toBeNull();
+    const withoutClear = await m.resolveInitialSanctuary('member-1');
+    expect(withoutClear.sanctuary).toBe(false);          // the stale OFF persists
+    expect(withoutClear.source).toBe('conversation');
 
-    // The read guard above rejects a record naming another conversation, so it
-    // alone would pass even if rotation left the old record in place. Pin the
-    // clearing itself: a dead conversation's privacy state should not linger in
-    // storage waiting for an id collision or a future reader that forgets to
-    // check. Without this assertion the removeItem is unproven.
+    m.clearConversationSanctuary();                       // the boundary this unit adds
+    const withClear = await m.resolveInitialSanctuary('member-1');
+    expect(withClear.sanctuary).toBe(true);               // default consulted again
+    expect(withClear.source).toBe('account-server');
+  });
+
+  it('the conversation identity is unchanged by the Sanctuary reset', () => {
+    const m = loadModule();
+    const before = m.getConversationId();
+    m.writeConversationSanctuary(before, false);
+
+    m.clearConversationSanctuary();
+
+    expect(m.getConversationId()).toBe(before);
+    expect(store.getItem('maia_conversation_id')).toBe(before);
     expect(store.getItem('maia_conversation_sanctuary')).toBeNull();
   });
 
@@ -359,20 +379,31 @@ describe('component wiring', () => {
     expect(src).toMatch(/writeConversationSanctuary\(conversationId, next\)/);
   });
 
-  it('New Conversation rotates the conversation identity and re-seeds', () => {
+  it('New Conversation clears Sanctuary state and re-resolves', () => {
     const src = read(ORACLE);
-    expect(src).toMatch(/const rotated = rotateConversationId\(\)/);
+    expect(src).toMatch(/clearConversationSanctuary\(\)/);
     expect(src).toMatch(/setSanctuaryInit\('resolving'\)/);
   });
 
-  it('the voice hook uses the shared conversation identity', () => {
+  it('does NOT rotate conversation identity — that is MAIA-SESSION-ROTATION-01', () => {
+    // Scope pin. If rotation returns to this unit, a conversation-model change
+    // is riding into production attached to a privacy repair.
+    const src = read(ORACLE);
+    expect(src).not.toMatch(/rotateConversationId/);
+    const mod = fs.readFileSync(
+      path.join(process.cwd(), 'lib/settings/sanctuarySession.ts'), 'utf8');
+    expect(mod).not.toMatch(/export function rotateConversationId/);
+    // The id is written in exactly one place — the create-if-absent path in
+    // getConversationId. Minting an identity that does not yet exist is not
+    // rotation; a second writer would be.
+    expect((mod.match(/setItem\(CONVERSATION_ID_KEY/g) ?? []).length).toBe(1);
+  });
+
+  it('the voice hook is untouched by this unit', () => {
+    // Its conversation-id implementation was consolidated only to make rotation
+    // visible. With rotation extracted, that change has no Sanctuary purpose.
     const hook = read('hooks/useStreamingVoice.ts');
-    expect(hook).toMatch(/import \{ getConversationId \} from '@\/lib\/settings\/sanctuarySession'/);
-    expect(hook).toMatch(/const conversationId = getConversationId\(\)/);
-    // Its private copy must not come back — a second authority would let a
-    // rotation be invisible to the server.
-    expect(hook).not.toMatch(/CONVERSATION_ID_KEY/);
-    expect(hook).not.toMatch(/function getOrCreateConversationId/);
+    expect(hook).not.toMatch(/sanctuarySession/);
   });
 
   it('MaiaSettingsPanel reset cannot silently revoke Sanctuary', () => {

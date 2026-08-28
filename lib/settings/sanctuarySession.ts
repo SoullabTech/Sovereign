@@ -110,24 +110,24 @@ export function getConversationId(): string {
 }
 
 /**
- * Begin a genuinely new conversation.
+ * The Sanctuary initialization boundary: discard this conversation's Sanctuary
+ * state so the next resolution consults the member's account default again.
  *
- * Rotating the identity is the point. Before this, "New Conversation" cleared
- * the transcript but kept `maia_conversation_id` forever, so anything keyed by
- * conversation — Sanctuary state included — silently belonged to a conversation
- * the member believed they had ended.
+ * Called on an explicit "New Conversation". Deliberately scoped to Sanctuary
+ * and nothing else — it does NOT mint a new `maia_conversation_id`. Whether
+ * that UI action should also be a new canonical conversation identity is
+ * MAIA-SESSION-ROTATION-01, an open architecture question that affects
+ * continuity, thread adoption, memory attribution and finalization. This unit
+ * treats the action as a Sanctuary reset boundary without claiming it is an
+ * identity boundary, because the privacy sequence does not need that claim.
  */
-export function rotateConversationId(): string {
-  const created = newConversationId();
+export function clearConversationSanctuary(): void {
+  if (typeof window === 'undefined') return;
   try {
-    localStorage.setItem(CONVERSATION_ID_KEY, created);
-    // The prior conversation's state belongs to a conversation that no longer
-    // exists. Leaving it would let it be adopted by the new one.
     localStorage.removeItem(CONVERSATION_SANCTUARY_KEY);
   } catch {
     /* storage unavailable */
   }
-  return created;
 }
 
 /** This conversation's recorded Sanctuary state, or null if it has none yet. */

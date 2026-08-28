@@ -171,7 +171,7 @@ import { getAccountSettings } from '@/lib/settings/accountSettings';
 // conversation state governs it thereafter. See lib/settings/sanctuarySession.ts.
 import {
   getConversationId,
-  rotateConversationId,
+  clearConversationSanctuary,
   writeConversationSanctuary,
   resolveInitialSanctuary,
   mayDispatch,
@@ -1509,28 +1509,30 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
         console.log(`🆕 [New Conversation] Cleared localStorage: ${storageKey}`);
       }
 
-      // SANCTUARY-SESSION-INIT-01 — this is where a conversation actually ends.
+      // SANCTUARY-SESSION-INIT-01 — the Sanctuary initialization boundary.
       //
-      // Before this, "New Conversation" cleared the transcript but kept
-      // `maia_conversation_id` forever, so the identity outlived the thing it
-      // named. Anything keyed by conversation therefore belonged to a
-      // conversation the member believed they had ended — Sanctuary state
-      // included. Rotating the identity makes the boundary real, and clearing
-      // the prior conversation's state stops the new one inheriting it.
-      const rotated = rotateConversationId();
-      conversationIdRef.current = rotated;
+      // An explicit "New Conversation" discards this conversation's Sanctuary
+      // state, so the next resolution consults the member's account default
+      // again instead of inheriting what the previous conversation became.
+      //
+      // Scoped to Sanctuary deliberately: `maia_conversation_id` is NOT rotated
+      // here. Whether this UI action should also mint a new canonical
+      // conversation identity is MAIA-SESSION-ROTATION-01 — an open question
+      // touching continuity, thread adoption, memory attribution and
+      // finalization. The privacy sequence does not require that claim, so this
+      // unit does not make it.
+      clearConversationSanctuary();
       setSanctuaryInit('resolving');
-      console.log(`🆕 [New Conversation] Conversation identity rotated → ${rotated.slice(0, 12)}`);
 
-      // Seed the new conversation from the account default — the whole point of
-      // the setting. Dispatch stays prohibited until this lands.
+      // Reseed from the account default. Dispatch stays prohibited until this
+      // lands, so no turn can cross a boundary we have not re-established.
       (async () => {
         const resolved = await resolveInitialSanctuary(userId);
         conversationIdRef.current = resolved.conversationId;
         setIsSanctuary(resolved.sanctuary);
         setSanctuaryInit(resolved.state);
         console.log(
-          `🛡️ [Sanctuary/init] new conversation=${resolved.conversationId.slice(0, 12)} ` +
+          `🛡️ [Sanctuary/init] explicit New Conversation reseeded — ` +
             `state=${resolved.state} source=${resolved.source}`,
         );
       })();
