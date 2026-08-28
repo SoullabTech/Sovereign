@@ -30,7 +30,7 @@ const srcDir = path.join(here, '..', 'src');
 
 const { createPlatformShell } = require('../src/shell.js');
 const {
-  PLATFORM_ORIGIN, PLATFORM_ENTRY_PATH, HOUSE, DEFAULT_PLATFORM_ORIGIN, normalizePlatformOrigin,
+  PLATFORM_ORIGIN, PLATFORM_ENTRY_PATH, HOUSE, PRODUCTION_PLATFORM_ORIGIN, resolvePlatformOrigin,
   navigationDecision, platformEntryUrl, isConversationPath, isHousePath, isUnderRoot,
 } = require('../src/shell-policy.js');
 const { createSession } = require('../src/session.js');
@@ -227,46 +227,68 @@ test('H — a House destination reached in-page is left alone', async () => {
 });
 
 // ════════════════════════════════════════════════════════════════════════════
-// DESKTOP-HOUSE-WITNESS-ORIGIN-01 · the platform base is configurable, validated
+// DESKTOP-PLATFORM-ORIGIN-01 · which remote origin the contained view may hold
+//
+// This is the containment perimeter, not a convenience variable: both
+// platformEntryUrl() and navigationDecision() derive their authority from it.
+// So an explicit-but-invalid value is FATAL. Falling back to production would
+// reproduce WITNESS-ORIGIN-01 exactly — a witness believing it is local while
+// its remote half quietly talks to production.
 // ════════════════════════════════════════════════════════════════════════════
 
-test('W — production remains the default when nothing is configured', () => {
-  assert.equal(DEFAULT_PLATFORM_ORIGIN, 'https://soullab.life');
-  assert.equal(normalizePlatformOrigin(undefined), DEFAULT_PLATFORM_ORIGIN);
-  assert.equal(normalizePlatformOrigin(''), DEFAULT_PLATFORM_ORIGIN);
+test('P1 — unset resolves to production, marked as a default', () => {
+  assert.deepEqual(resolvePlatformOrigin(undefined), { origin: PRODUCTION_PLATFORM_ORIGIN, source: 'default' });
+  assert.deepEqual(resolvePlatformOrigin(''), { origin: PRODUCTION_PLATFORM_ORIGIN, source: 'default' });
+  assert.deepEqual(resolvePlatformOrigin('   '), { origin: PRODUCTION_PLATFORM_ORIGIN, source: 'default' });
 });
 
-test('W — a witness runtime on loopback is accepted', () => {
-  // The whole reason this seam exists: a Desktop pointed at a local witness
-  // opened PRODUCTION in its BrowserView, so a House witness tested the wrong
-  // server and reported a defect in a route that was serving correctly.
-  assert.equal(normalizePlatformOrigin('http://127.0.0.1:3110'), 'http://127.0.0.1:3110');
-  assert.equal(normalizePlatformOrigin('http://localhost:3110'), 'http://localhost:3110');
-  // A path on the override is discarded — an ORIGIN is what the perimeter compares.
-  assert.equal(normalizePlatformOrigin('http://127.0.0.1:3110/house'), 'http://127.0.0.1:3110');
+test('P2 — the production origin, explicitly set, is accepted as an override', () => {
+  assert.deepEqual(resolvePlatformOrigin('https://soullab.life'), { origin: PRODUCTION_PLATFORM_ORIGIN, source: 'override' });
 });
 
-test('W — plain http on a PUBLIC host is refused, and falls back to production', () => {
-  // ⛔ The dangerous value. Accepting it would let an environment variable point
-  // the contained view at an attacker-controlled origin over cleartext, and every
+test('P3/P4 — loopback over http is accepted for a witness or dev runtime', () => {
+  assert.deepEqual(resolvePlatformOrigin('http://127.0.0.1:3110'), { origin: 'http://127.0.0.1:3110', source: 'override' });
+  assert.deepEqual(resolvePlatformOrigin('http://localhost:3110'), { origin: 'http://localhost:3110', source: 'override' });
+  assert.deepEqual(resolvePlatformOrigin('http://[::1]:3110'), { origin: 'http://[::1]:3110', source: 'override' });
+  assert.equal(resolvePlatformOrigin('http://127.0.0.1:3110/').origin, 'http://127.0.0.1:3110');
+});
+
+test('P5 — plain http on a public host HARD FAILS', () => {
+  // ⛔ Never a fallback. Accepting it would let an env var point the contained
+  // view at an attacker-controlled origin over cleartext, and every
   // navigationDecision would then treat that origin as legitimate.
-  assert.equal(normalizePlatformOrigin('http://evil.example.com'), DEFAULT_PLATFORM_ORIGIN);
-  assert.equal(normalizePlatformOrigin('http://soullab.life'), DEFAULT_PLATFORM_ORIGIN);
+  assert.throws(() => resolvePlatformOrigin('http://evil.example.com'), /only accepted on loopback/);
+  assert.throws(() => resolvePlatformOrigin('http://soullab.life'), /only accepted on loopback/);
 });
 
-test('W — an unparseable or non-web value falls back rather than throwing', () => {
+test('P6 — an ARBITRARY https origin HARD FAILS', () => {
+  // Accepting any https would turn an environment variable into permission to
+  // redefine Desktop's remote trust boundary. A staging origin gets added here
+  // deliberately and visibly, or not at all.
+  assert.throws(() => resolvePlatformOrigin('https://staging.soullab.life'), /redefine the remote trust boundary/);
+  assert.throws(() => resolvePlatformOrigin('https://evil.example.com'), /redefine the remote trust boundary/);
+  assert.throws(() => resolvePlatformOrigin('https://soullab.life.evil.com'), /redefine the remote trust boundary/);
+});
+
+test('P7 — a path, query, fragment or credentials HARD FAIL: this is an ORIGIN', () => {
+  assert.throws(() => resolvePlatformOrigin('http://127.0.0.1:3110/house'), /path is not part of an origin/);
+  assert.throws(() => resolvePlatformOrigin('http://127.0.0.1:3110/?a=1'), /query string is not part of an origin/);
+  assert.throws(() => resolvePlatformOrigin('http://127.0.0.1:3110/#x'), /fragment is not part of an origin/);
+  assert.throws(() => resolvePlatformOrigin('http://u:p@127.0.0.1:3110'), /credentials are not part of an origin/);
+});
+
+test('P8 — a malformed or non-web value HARD FAILS', () => {
   for (const bad of ['not a url', 'file:///etc/passwd', 'javascript:alert(1)', '://', 'ftp://x.com']) {
-    assert.equal(normalizePlatformOrigin(bad), DEFAULT_PLATFORM_ORIGIN, `${bad} was accepted`);
+    assert.throws(() => resolvePlatformOrigin(bad), Error, `${bad} was accepted`);
   }
 });
 
-test('W — the entry URL and the perimeter derive from the SAME value', () => {
-  // ⛔ The half-fix this guards against: making the view LOAD a new origin while
+test('P9/P10 — the entry URL and the navigation authority share ONE resolved origin', () => {
+  // ⛔ The half-fix this guards against: the view LOADS a new origin while
   // navigationDecision still believes only soullab.life is legitimate. The first
-  // navigation inside the witness server would then be judged foreign and handed
-  // to the member's OS browser.
-  assert.ok(platformEntryUrl().startsWith(PLATFORM_ORIGIN),
-    'the entry URL is not built from the same origin the perimeter enforces');
+  // navigation inside the witness server would be judged foreign and handed to
+  // the member's OS browser.
+  assert.equal(platformEntryUrl(), `${PLATFORM_ORIGIN}${PLATFORM_ENTRY_PATH}`);
   assert.equal(navigationDecision(`${PLATFORM_ORIGIN}/journal`).action, 'allow');
   assert.equal(navigationDecision(`${PLATFORM_ORIGIN}/maia`).action, 'return-to-maia');
 });

@@ -88,3 +88,30 @@ unit closure  BLOCKED on ORIGIN-SCOPE-01 + VIEW-CAPTURE-SUSPEND-01
 
 `475be3a DESKTOP-CAPTURE-RELEASE-01` is **not** credited against either blocker:
 it releases capture on sign-out and expiry, and a view change is neither.
+
+---
+
+## Erratum — witness provenance correction (2026-08-28, DESKTOP-PLATFORM-ORIGIN-01)
+
+The Desktop remote BrowserView was hardwired to `https://soullab.life` during
+DS01. `MAIA_BASE_URL` redirects the API/session side only; the platform view's
+origin was a hard-coded constant in `shell-policy.js`.
+
+Therefore **DS01's remote-view observations were observations of the production
+platform surface**, not of a remote surface served by the pinned local candidate.
+The split went unnoticed because DS01's entry path was `/journey`, which exists in
+production — nothing in the walk could reveal that the two halves were talking to
+different servers. It surfaced only when `DESKTOP-HOUSE-01` moved the entry to
+`/house`, a route that exists on the branch and not in production, and the walk
+returned production's genuine 404.
+
+What this does and does not change:
+
+- **Preserved.** The bridge-isolation evidence stands: production remote content
+  did not receive `window.maia`. Containment behaved correctly.
+- **Withdrawn.** It must NOT be cited as proof that the pinned local candidate's
+  remote half was exercised. It was not.
+
+Recorded as `WITNESS-ORIGIN-01` (the finding — the apparatus could not contain the
+platform view) and repaired by `DESKTOP-PLATFORM-ORIGIN-01` (validated origin
+authority, explicit-but-invalid values fatal rather than falling back).

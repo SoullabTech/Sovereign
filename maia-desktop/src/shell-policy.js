@@ -23,50 +23,86 @@
  * ours; `new URL(u).origin` cannot be fooled that way. Scheme and port are part
  * of the comparison for the same reason — `http://soullab.life` is not this.
  */
-const DEFAULT_PLATFORM_ORIGIN = 'https://soullab.life';
+const PRODUCTION_PLATFORM_ORIGIN = 'https://soullab.life';
 
 /**
- * DESKTOP-HOUSE-WITNESS-ORIGIN-01 — the platform view's base, validated.
+ * DESKTOP-PLATFORM-ORIGIN-01 — which remote origin the contained view may hold.
  *
- * ⛔ WHY THIS EXISTS. `MAIA_BASE_URL` redirects the API/session side only
- * (session.js). The platform view's origin was a hard-coded constant, so a
- * Desktop pointed at a local witness runtime for its conversation would still
- * open PRODUCTION in its BrowserView. A House witness therefore opened
- * production's `/house` — which does not exist — and reported a defect in a
- * route that was serving correctly on the witness server the whole time.
+ * ⛔ WHY THIS IS A UNIT OF ITS OWN. This is not a convenience setting. Both
+ * `platformEntryUrl()` and `navigationDecision()` derive their authority from
+ * this one value, so it IS the containment perimeter — the thing that decides
+ * what remote code is allowed inside Desktop at all.
  *
- * ⛔ WHY NOT JUST REUSE `MAIA_BASE_URL`. This origin is not a convenience
- * setting; it IS the containment boundary. Every decision in
- * `navigationDecision` compares against it, so one variable doing double duty
- * would mean an API redirect silently widened the browsing perimeter. It gets
- * its own name, and it is validated rather than trusted.
+ * ⛔ WHAT IT FIXES (WITNESS-ORIGIN-01). `MAIA_BASE_URL` redirects the
+ * API/session side only. The platform view's origin was hard-coded, so a
+ * Desktop pointed at a local witness for its conversation still opened
+ * PRODUCTION in its BrowserView. Every Desktop witness since DESKTOP-SHELL-01
+ * was therefore only half-contained; the original `/journey` walk passed
+ * because `/journey` exists in production, which hid the split entirely.
  *
- * ⛔ WHY BOTH THE ENTRY URL AND THE CHECK DERIVE FROM THIS ONE VALUE. The
- * dangerous half-fix is to make the view LOAD a new origin while
- * `navigationDecision` still believes only `soullab.life` is legitimate: the
- * first navigation inside the witness server would then be judged foreign and
- * handed to the member's OS browser. One value, one source.
+ * ⛔ AN EXPLICIT-BUT-INVALID VALUE IS FATAL, NEVER A FALLBACK. Falling back to
+ * production on a bad value would reproduce the exact defect this unit exists to
+ * remove: a witness that believes it is local while its remote half quietly
+ * talks to production. A typo must stop the process, not redirect it.
  *
- * Accepted: any `https:` origin, or `http:` on loopback (a witness runtime).
- * Anything else — a plain-http public host, a `file:`, a wallet of nonsense —
- * falls back to production and says so. Failing loudly toward the safe value is
- * the only sane direction for a perimeter.
+ * ⛔ ARBITRARY HTTPS IS REFUSED. Accepting any https origin would turn an
+ * environment variable into permission to redefine Desktop's remote trust
+ * boundary. A staging origin, if ever needed, gets added here deliberately and
+ * visibly.
+ *
+ * THE CONTRACT
+ *   unset                          → https://soullab.life
+ *   https://soullab.life           → accepted
+ *   http://127.0.0.1:<port>        → accepted (local witness / dev)
+ *   http://localhost:<port>        → accepted
+ *   anything else                  → HARD FAIL
+ *
+ * The value must be an ORIGIN: no path beyond `/`, no query, no fragment, no
+ * credentials. Anything richer is a sign the caller means something other than
+ * "which origin", and guessing on their behalf is how perimeters rot.
  */
-function normalizePlatformOrigin(raw) {
-  if (!raw) return DEFAULT_PLATFORM_ORIGIN;
-  let u;
-  try { u = new URL(String(raw)); }
-  catch {
-    console.warn(`[shell] MAIA_PLATFORM_BASE_URL is not a URL (${raw}) — using ${DEFAULT_PLATFORM_ORIGIN}`);
-    return DEFAULT_PLATFORM_ORIGIN;
+const LOOPBACK_HOSTS = Object.freeze(['127.0.0.1', 'localhost', '[::1]']);
+
+function resolvePlatformOrigin(raw) {
+  if (raw === undefined || raw === null || String(raw).trim() === '') {
+    return { origin: PRODUCTION_PLATFORM_ORIGIN, source: 'default' };
   }
-  const loopback = u.hostname === '127.0.0.1' || u.hostname === 'localhost' || u.hostname === '[::1]' || u.hostname === '::1';
-  if (u.protocol === 'https:' || (u.protocol === 'http:' && loopback)) return u.origin;
-  console.warn(`[shell] MAIA_PLATFORM_BASE_URL refused (${u.origin}) — plain http is accepted only on loopback. Using ${DEFAULT_PLATFORM_ORIGIN}`);
-  return DEFAULT_PLATFORM_ORIGIN;
+  const value = String(raw).trim();
+  const fatal = (why) => {
+    throw new Error(
+      `MAIA_PLATFORM_ORIGIN is invalid: ${why} (got "${value}"). ` +
+      'Accepted: https://soullab.life, or http:// on 127.0.0.1 / localhost. ' +
+      'Refusing to start rather than silently using production.',
+    );
+  };
+
+  let u;
+  try { u = new URL(value); } catch { return fatal('not a URL'); }
+
+  if (u.username || u.password) fatal('credentials are not part of an origin');
+  if (u.search) fatal('a query string is not part of an origin');
+  if (u.hash) fatal('a fragment is not part of an origin');
+  if (u.pathname !== '/' && u.pathname !== '') fatal('a path is not part of an origin');
+
+  if (u.origin === PRODUCTION_PLATFORM_ORIGIN) return { origin: u.origin, source: 'override' };
+  if (u.protocol === 'http:' && LOOPBACK_HOSTS.includes(u.hostname)) {
+    return { origin: u.origin, source: 'override' };
+  }
+  return fatal(
+    u.protocol === 'https:'
+      ? 'an arbitrary https origin would redefine the remote trust boundary'
+      : `scheme ${u.protocol} is only accepted on loopback`,
+  );
 }
 
-const PLATFORM_ORIGIN = normalizePlatformOrigin(process.env.MAIA_PLATFORM_BASE_URL);
+const RESOLVED_PLATFORM = resolvePlatformOrigin(process.env.MAIA_PLATFORM_ORIGIN);
+const PLATFORM_ORIGIN = RESOLVED_PLATFORM.origin;
+
+// One unmistakable line, so a future witness is self-identifying and nobody has
+// to infer from behaviour which server the remote half was actually talking to.
+// No credential, no member, no token — only which origin, and whether it was
+// chosen or defaulted.
+console.log(`[Desktop platform] origin=${PLATFORM_ORIGIN} source=${RESOLVED_PLATFORM.source}`);
 
 /**
  * A NAMED, NON-PERSISTENT partition.
@@ -250,8 +286,8 @@ function platformPermission() {
 }
 
 module.exports = {
-  DEFAULT_PLATFORM_ORIGIN,
-  normalizePlatformOrigin,
+  PRODUCTION_PLATFORM_ORIGIN,
+  resolvePlatformOrigin,
   PLATFORM_ORIGIN,
   PLATFORM_PARTITION,
   PLATFORM_ENTRY_PATH,
