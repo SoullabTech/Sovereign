@@ -22,6 +22,24 @@ persistence/non-persistence is being claimed. Logs alone do not prove absence of
 writes.* Every leg that asserts "nothing was written" carries a SQL check, not a
 log grep. A log line proves a code path ran; only the table proves what landed.
 
+### Where each marker actually appears — read this before grepping
+
+The Keep flow emits to **three different places**, and greppping the wrong one
+returns an empty result that looks exactly like a failure:
+
+| Instrument | How to read it | Markers |
+|---|---|---|
+| **Server log** | `docker logs maia-sovereign` on minisforum | `[API] Distilling … (preview — no write)` · `[API] Prepared Keep draft …` · `[API] Keep confirmed — capsule …` |
+| **Browser console** | devtools on the member's own tab — **never reaches the server** | `✨ [Capsule] handleCaptureSpirit called` · `🛡️ [Capsule] Capture refused: Sanctuary session` · `🔖 [Keep] explicit open command` · `🔖 [Keep] doorway attached` · `🛡️ [Keep] intent recognized but refused · Sanctuary` · `[Analytics] keep_panel_opened` |
+| **Database** | `docker exec maia-postgres psql` | `reflection_capsules` rows — the only proof of what persisted |
+
+`trackEvent()` is a placeholder (`lib/analytics/track.ts`) that only
+`console.log`s in the browser. `keep_panel_opened` will **never** appear in
+`docker logs`. So will none of the client-side Sanctuary refusals: they are
+proof for the operator sitting at the browser, not for anyone reading the host.
+
+Keep devtools open on the member's tab for the whole run.
+
 ---
 
 ## What is being repaired
@@ -99,10 +117,22 @@ Expected:
 - [ ] the Keep panel opens
 - [ ] telemetry reports the opening, not a capture
 
+Server side — the prepare ran and announced that it wrote nothing:
+
 ```bash
-# Opening emits this, and must NOT emit spirit_captured
-ssh soullab@minisforum 'docker logs maia-sovereign --since 5m 2>&1 | grep -E "keep_panel_opened|Keep draft prepared|explicit open command"'
+ssh soullab@minisforum 'docker logs maia-sovereign --since 5m 2>&1 | grep -E "Prepared Keep draft|preview — no write"'
 ```
+
+Browser console — the open was tracked as an open:
+
+```
+🔖 [Keep] explicit open command
+✨ [Capsule] handleCaptureSpirit called
+[Analytics] keep_panel_opened { persisted: false }
+```
+
+- [ ] `spirit_captured` appears nowhere — that name on the open path was the
+      old misreport of the member's consent gesture
 
 **Persistence check — the load-bearing one:**
 
@@ -146,6 +176,10 @@ ssh soullab@minisforum 'docker exec maia-postgres psql -U soullab maia_conscious
 ssh soullab@minisforum 'docker logs maia-sovereign --since 5m 2>&1 | grep -E "Keep confirmed — capsule"'
 ```
 
+The member reference in that line is a `memberRef()` hash, not a readable id —
+correlatable across the prepare and confirm lines for the same member, without
+the identifier being present.
+
 ---
 
 ### Leg C · Natural Keep intent
@@ -178,12 +212,23 @@ Expected:
 - [ ] MAIA accurately explains Keep is unavailable while Sanctuary is active,
       without treating it as a malfunction
 
+Server side — **no prepare and no confirm may appear for this window.** This
+grep must return nothing:
+
 ```bash
-# No prepare and no confirm may appear for this window
-ssh soullab@minisforum 'docker logs maia-sovereign --since 5m 2>&1 | grep -E "from-chat-window|Keep draft prepared|Keep confirmed"'
-# The refusal SHOULD appear
-ssh soullab@minisforum 'docker logs maia-sovereign --since 5m 2>&1 | grep -E "Capture refused: Sanctuary|intent recognized but refused"'
+ssh soullab@minisforum 'docker logs maia-sovereign --since 5m 2>&1 | grep -E "Prepared Keep draft|Keep confirmed — capsule|Distilling .* chat messages"'
 ```
+
+Browser console — the refusals SHOULD appear. These are client-side and will
+never show up in `docker logs`; read them in devtools:
+
+```
+🛡️ [Keep] intent recognized but refused · Sanctuary   ← from "Can we keep this?"
+🛡️ [Capsule] Capture refused: Sanctuary session       ← from "MAIA, open Keep."
+```
+
+- [ ] both refusals observed in the browser console
+- [ ] the server grep above returned **nothing**
 
 **Persistence check (the claim that actually matters):**
 

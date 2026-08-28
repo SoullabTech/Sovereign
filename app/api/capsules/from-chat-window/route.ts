@@ -37,6 +37,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
+import { memberRef } from '@/lib/privacy/memberRef';
 import {
   CapsuleCreateFromChatWindowSchema,
   distillCapsuleFromChatWindow,
@@ -105,7 +106,7 @@ export async function POST(request: NextRequest) {
     };
 
     console.log(
-      `[API] Prepared Keep draft from chat window for member ${memberId.slice(0, 8)} — nothing persisted`
+      `[API] Prepared Keep draft from chat window for member ${memberRef(memberId)} — nothing persisted`
     );
 
     // 200, not 201: nothing was created.

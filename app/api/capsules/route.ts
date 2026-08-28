@@ -27,6 +27,7 @@ import {
   CapsuleListQuerySchema,
   CapsuleCreateSchema,
 } from '@/lib/capsules';
+import { memberRef } from '@/lib/privacy/memberRef';
 
 export async function GET(request: NextRequest) {
   try {
@@ -101,7 +102,7 @@ export async function POST(request: NextRequest) {
     });
 
     console.log(
-      `[API] Keep confirmed — capsule ${capsule.id} created for member ${memberId.slice(0, 8)}`
+      `[API] Keep confirmed — capsule ${capsule.id} created for member ${memberRef(memberId)}`
     );
 
     return NextResponse.json({ capsule }, { status: 201 });
