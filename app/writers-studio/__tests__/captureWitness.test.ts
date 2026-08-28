@@ -63,3 +63,37 @@ describe('the capture harness classifies what the room rendered', () => {
     expect(harness).toContain('[witness-1] FAIL');
   });
 });
+
+/**
+ * A borrowed server may not render an image that gets named for HEAD.
+ *
+ * `--serve` means "start the app from this checkout". When something was
+ * already listening the script used to warn and carry on — and with `--sha`
+ * naming the output `writing-field-<sha>.png`, that deposits a file whose name
+ * asserts a tree that did not necessarily render it. Same shape as an
+ * all-CACHED deploy reporting a fresh SHA: the stamp is right, the code is
+ * unknown. A warning scrolls past; the filename stays in the record.
+ */
+describe('--serve refuses a server it did not start', () => {
+  it('exits rather than borrowing', () => {
+    const branch = harness.slice(harness.indexOf('} else if (serve) {'));
+    expect(branch.length).toBeGreaterThan(0);
+    const stop = branch.indexOf('process.exit(1)');
+    expect(stop).toBeGreaterThan(0);
+    /* Before the browser is launched, so no capture can follow it. */
+    expect(stop).toBeLessThan(branch.indexOf('puppeteer.launch'));
+  });
+
+  it('names the misattribution rather than only the inconvenience', () => {
+    expect(harness).toContain('lsof -ti:3000 | xargs kill');
+    expect(harness).toMatch(/while an unknown tree rendered it/);
+  });
+
+  it('still allows a server the caller vouches for, without --serve', () => {
+    /* The refusal is scoped to the contradiction — asking the script to start
+       the app when one is already up. Pointing --url at a server you started
+       yourself is a judgment the caller is entitled to make. */
+    expect(harness).toContain('if (serve && !(await alreadyUp(origin)))');
+    expect(harness).toContain('Or drop --serve to vouch for that server yourself.');
+  });
+});

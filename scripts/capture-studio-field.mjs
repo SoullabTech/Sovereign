@@ -232,14 +232,32 @@ if (serve && !(await alreadyUp(origin))) {
      same stale-artifact failure as an all-CACHED deploy reporting a fresh SHA —
      plausible, and wrong. Next's dev server recompiles per request, so a server
      started in THIS working tree is fine; one started elsewhere is not, and
-     from here the two are indistinguishable. So: say so, loudly. */
-  console.warn('');
-  console.warn('[capture] WARNING: something is already serving at', origin);
-  console.warn('[capture] Using it rather than starting another — but this script did not');
-  console.warn('[capture] start it and cannot tell which checkout or commit it is serving.');
-  console.warn('[capture] If it predates your last pull, the capture is of older code.');
-  console.warn('[capture] To be certain, stop it and re-run:  lsof -ti:3000 | xargs kill');
-  console.warn('');
+     from here the two are indistinguishable.
+
+     This was a warning until 2026-08-28, when a run hit it for real. The
+     warning is not enough, and `--sha` is why: the capture is written as
+     `writing-field-<sha>.png`, so borrowing an unknown server deposits a file
+     whose NAME asserts a tree that did not necessarily render it. A warning
+     scrolls past; the misattributed filename stays in the record forever.
+
+     `--serve` is an instruction to start the app from THIS checkout. Finding
+     one already running contradicts that instruction, so it is refused rather
+     than silently reinterpreted. Without `--serve` the caller is pointing the
+     script at a server they are vouching for themselves, and that is theirs to
+     judge — this refusal does not apply. */
+  console.error('');
+  console.error('[capture] Something is already serving at', origin + '.');
+  console.error('[capture] You asked for --serve, which means "start the app from this');
+  console.error('[capture] checkout" — but this script did not start that one and cannot tell');
+  console.error('[capture] which commit it is serving. Capturing against it would name the');
+  console.error(`[capture] file for HEAD (${sha}) while an unknown tree rendered it.`);
+  console.error('');
+  console.error('[capture] Stop it and re-run:');
+  console.error('[capture]   lsof -ti:3000 | xargs kill');
+  console.error('');
+  console.error('[capture] Or drop --serve to vouch for that server yourself.');
+  console.error('');
+  process.exit(1);
 }
 
 /**
