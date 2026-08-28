@@ -49,6 +49,49 @@ function escapeXmlText(input: string): string {
     .replace(/"/g, '&quot;');
 }
 
+const EMOJI_MODIFIER = '\\p{Emoji_Modifier}';
+const VARIATION_SELECTOR = '\\uFE0F';
+const ZWJ = '\\u200D';
+
+/**
+ * One full emoji grapheme: a pictographic base with any presentation selector
+ * or skin-tone modifier, plus any ZWJ-joined continuation (family sequences,
+ * profession sequences). Matching the whole cluster matters — removing only the
+ * base would leave invisible joiners and orphan modifiers in the speech input.
+ */
+const EMOJI_CLUSTER = new RegExp(
+  '(?:' +
+    // Flags: a pair of regional indicators.
+    '\\p{RI}\\p{RI}' +
+    '|' +
+    // Keycaps: 0-9, # or * followed by the combining enclosing keycap.
+    '[0-9#*]' + VARIATION_SELECTOR + '?\\u20E3' +
+    '|' +
+    // Pictographic base + optional modifier, plus ZWJ continuations.
+    '\\p{Extended_Pictographic}(?:' + VARIATION_SELECTOR + '|' + EMOJI_MODIFIER + ')?' +
+    '(?:' + ZWJ + '\\p{Extended_Pictographic}(?:' + VARIATION_SELECTOR + '|' + EMOJI_MODIFIER + ')?)*' +
+  ')',
+  'gu',
+);
+
+/** Joiners and modifiers that can survive on their own after a partial strip. */
+const ORPHAN_EMOJI_PARTS = new RegExp(
+  '[' + VARIATION_SELECTOR + ZWJ + '\\uFE0E]|' + EMOJI_MODIFIER,
+  'gu',
+);
+
+/**
+ * Remove emoji presentation while leaving language alone.
+ *
+ * ⛔ Deliberately NOT "strip non-ASCII". Accented Latin, CJK, and every other
+ * script are ordinary human speech and must survive untouched. Only
+ * pictographic characters and their modifiers are removed.
+ */
+export function stripEmojiPresentation(input: string): string {
+  if (!input) return '';
+  return input.replace(EMOJI_CLUSTER, ' ').replace(ORPHAN_EMOJI_PARTS, '');
+}
+
 /**
  * Remove non-speakable presentation syntax while preserving semantic prose.
  */
@@ -98,6 +141,12 @@ export function sanitizeForSpeech(input: string): string {
   // Plain-text HTML/XML tags are presentation markup. SSML is handled by the
   // dedicated sanitizer below so allowed synthesis tags can survive there.
   text = text.replace(/<[^>]+>/g, ' ');
+
+  // VOICE-TTS-EMOJI-01: emoji are presentation, not speech. A plain-text
+  // engine verbalizes them ("sparkles", "folded hands"), so they are removed
+  // rather than translated — naming them would turn this presentation
+  // sanitizer into a meaning interpreter, which is exactly what it must not be.
+  text = stripEmojiPresentation(text);
 
   // Normalize spacing after removing presentation artifacts.
   return text.replace(/\s+/g, ' ').trim();

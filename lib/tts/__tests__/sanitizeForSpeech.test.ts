@@ -272,3 +272,78 @@ describe('sanitizeSpeechInputPlain', () => {
     expect(sanitizeSpeechInputPlain('')).toBe('');
   });
 });
+
+/**
+ * VOICE-TTS-EMOJI-01 — emoji are presentation, never speech.
+ *
+ * A plain-text engine verbalizes emoji ("sparkles", "folded hands"). They are
+ * REMOVED, not translated: naming them would make this presentation sanitizer
+ * into a meaning interpreter, which is the thing it must never become.
+ *
+ * The controls below matter as much as the strips. This must never degrade
+ * into "remove non-ASCII" — accented Latin, CJK and every other script are
+ * ordinary human speech.
+ */
+describe('VOICE-TTS-EMOJI-01 — emoji removed, language preserved', () => {
+  it.each([
+    ['That feels right ✨', 'That feels right'],
+    ['Thank you \u{1F64F}', 'Thank you'],
+    ['Yes ❤️ absolutely', 'Yes absolutely'],
+    ['\u{1F44D}\u{1F3FD} nicely done', 'nicely done'],
+    ['the whole family \u{1F468}‍\u{1F469}‍\u{1F467}‍\u{1F466} together', 'the whole family together'],
+    ['flag \u{1F1EF}\u{1F1F5} here', 'flag here'],
+    ['step 1️⃣ first', 'step first'],
+  ])('removes %j', (input, expected) => {
+    expect(sanitizeForSpeech(input)).toBe(expected);
+  });
+
+  it.each([
+    'café',
+    'José',
+    '你好',
+    'R&D',
+    'x < 10',
+    '(really)',
+    'naïve résumé',
+    'Гринёв',
+    'مرحبا',
+    '[the old house] and {the garden}',
+  ])('preserves ordinary language: %s', (input) => {
+    expect(sanitizeForSpeech(input)).toBe(input);
+  });
+
+  it('leaves no invisible fragments behind', () => {
+    const output = sanitizeForSpeech(
+      'a \u{1F468}‍\u{1F4BB} b ❤️ c \u{1F44B}\u{1F3FF} d',
+    );
+    expect(output).toBe('a b c d');
+    expect(output).not.toMatch(/[‍️︎]/u);
+    expect(output).not.toMatch(/\p{Emoji_Modifier}/u);
+    expect(output).not.toMatch(/\p{Extended_Pictographic}/u);
+  });
+
+  it('does not translate emoji into words', () => {
+    const output = sanitizeForSpeech('Grateful \u{1F64F} and open ❤️');
+    for (const word of ['folded', 'hands', 'heart', 'sparkles', 'emoji']) {
+      expect(output.toLowerCase()).not.toContain(word);
+    }
+    expect(output).toBe('Grateful and open');
+  });
+
+  it('reaches the Kokoro provider boundary', async () => {
+    const fetchMock = jest.fn().mockResolvedValue({
+      ok: true,
+      arrayBuffer: async () => new ArrayBuffer(0),
+      text: async () => '',
+    });
+    const originalFetch = global.fetch;
+    global.fetch = fetchMock as any;
+    try {
+      await synthesizeKokoro({ text: 'Steady ✨ and clear \u{1F64F}', voice: 'af_kore' });
+      const body = JSON.parse(fetchMock.mock.calls[0][1].body as string);
+      expect(body.input).toBe('Steady and clear');
+    } finally {
+      global.fetch = originalFetch;
+    }
+  });
+});
