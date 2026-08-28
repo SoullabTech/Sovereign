@@ -2624,7 +2624,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       console.log(`🌊 [StreamingVoice] Text chunk ${index}:`, text.substring(0, 50) + '...');
       setMaiaResponseText(text);
     },
-    onComplete: (fullResponse, relational) => {
+    onComplete: (fullResponse, relational, exchangeId) => {
       const audioChunks = relational?.audioChunksReceived ?? 0;
       console.log(`✅ [StreamingVoice] Text stream complete (${audioChunks} audio chunks)`);
 
@@ -2649,6 +2649,9 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
           timestamp: new Date(),
           source: 'stream',
           suggestedActions: relational?.suggestedActions,
+          // ⭐ The identity of the invocation that completed — threaded through
+          // the hook, never read from a ref a newer turn may have overwritten.
+          metadata: exchangeId ? { exchangeId } : undefined,
         };
         setMessages(prev => appendMessageCapped(prev, oracleMessage));
         setMaiaResponseText('');
@@ -2672,6 +2675,9 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
         timestamp: new Date(),
         source: 'stream',
         suggestedActions: relational?.suggestedActions,
+        // ⭐ The identity of the invocation that completed — threaded through
+        // the hook, never read from a ref a newer turn may have overwritten.
+        metadata: exchangeId ? { exchangeId } : undefined,
       };
       setMessages(prev => appendMessageCapped(prev, oracleMessage));
       setMaiaResponseText('');
@@ -7373,12 +7379,25 @@ I'm not sure what I'm feeling yet.`;
         setStreamingResponseComplete(false);
 
         // Add user message to UI
+        // ⭐ CROSS-SURFACE-THREAD-ADOPTION-01. Identity is minted when the turn
+        // is AUTHORED, exactly as the sovereign text path does — not later by
+        // the persistence effect, which is downstream bookkeeping and would
+        // reverse the authority (the turn would exist first, and persistence
+        // would decide afterwards what turn it was).
+        //
+        // Without this, both halves of a streamed pair reached the screen with
+        // no durable identity, the write-sync effect persisted them, and the
+        // adoption poll read them back as two turns nobody had said.
+        const streamingExchangeId = crypto.randomUUID();
         const userMessage: ConversationMessage = {
           id: `msg-${Date.now()}`,
           role: 'user',
           text: cleanedText,
           timestamp: new Date(),
-          source: 'voice'
+          source: 'voice',
+          // The write-sync effect reads this when it POSTs the pair, so the
+          // server row and the on-screen message share one identity.
+          metadata: { exchangeId: streamingExchangeId },
         };
         // Build once, use for both UI state and API payload (avoids stale closure)
         const nextMessagesForApi = appendMessageCapped(messages, userMessage, MAX_DISPLAY_MESSAGES);
@@ -7411,7 +7430,7 @@ I'm not sure what I'm feeling yet.`;
           // live component state — the same value the sovereign path already
           // sends as `meta.sanctuary`. Until now the streaming leg sent nothing,
           // so a Sanctuary utterance reached the route as an ordinary turn.
-          sendStreamingMessage(cleanedText, conversationHistory, isSanctuary),
+          sendStreamingMessage(cleanedText, conversationHistory, isSanctuary, streamingExchangeId),
           90000,
           'streaming voice send'
         );

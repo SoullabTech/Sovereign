@@ -63,7 +63,20 @@ interface LimitsBlockData {
 
 interface StreamingVoiceOptions {
   onTextChunk?: (text: string, index: number) => void;
-  onComplete?: (fullResponse: string, relational?: RelationalMetadata) => void;
+  /**
+   * ⭐ CROSS-SURFACE-THREAD-ADOPTION-01. The third argument is the DURABLE
+   * EXCHANGE IDENTITY of the invocation that is completing — not of whatever
+   * turn happens to be current when the callback fires. It is the `exchangeId`
+   * argument of the `sendMessage` call that produced this completion, closed
+   * over per-invocation, so a late or aborted stream can never stamp a newer
+   * turn's identity onto its response.
+   *
+   * ⛔ NOT `turnIdRef`. That UUID is instrumentation/correlation and lives in a
+   * ref that the next turn overwrites. Both are UUIDs; they are different
+   * contracts, and conflating them would put telemetry identity into the
+   * conversation record.
+   */
+  onComplete?: (fullResponse: string, relational?: RelationalMetadata, exchangeId?: string) => void;
   onSilence?: (silence: SilenceResponse) => void;
   onMoveOutcome?: (outcome: MoveOutcomeEvent) => void;
   onError?: (error: string) => void;
@@ -558,6 +571,21 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
     // compile, not quietly send `false`. There is no safe default here — the
     // absent value is what caused the breach.
     sanctuary: boolean,
+    /**
+     * ⭐ The durable exchange identity for THIS turn, minted by the caller when
+     * the member's message was authored and already stamped on that message.
+     *
+     * An argument for the same reason `sanctuary` is one: `sendMessage` is a
+     * useCallback with a large dependency array, and identity read through a
+     * hook option or a ref would be identity read at the wrong moment. As a
+     * parameter it is bound per invocation, which is exactly the guarantee the
+     * completion needs — the response is stamped with the identity of the turn
+     * that produced it, even if a newer turn started meanwhile.
+     *
+     * Required, not optional: a caller that forgets it must fail to compile
+     * rather than silently produce a pair whose halves cannot be matched.
+     */
+    exchangeId: string,
   ) => {
     // ─── TURN START ───
     turnIdRef.current = crypto.randomUUID();
@@ -620,7 +648,7 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
         currentText: fallbackText,
         fullResponse: fallbackText,
       }));
-      onComplete?.(fallbackText);
+      onComplete?.(fallbackText, undefined, exchangeId);
       return;
     }
 
@@ -855,7 +883,7 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
                       fullResponse: data.fullResponse,
                       relational: relationalMeta,
                     }));
-                    onComplete?.(data.fullResponse, relationalMeta);
+                    onComplete?.(data.fullResponse, relationalMeta, exchangeId);
 
                     // ─── SERVER TIMING SUMMARY ───
                     // Log turn ID + host + server-side mark breakdown for comparison
@@ -940,7 +968,7 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
         fullResponse: fallbackText,
         error: null, // Don't show error - we have a graceful fallback
       }));
-      onComplete?.(fallbackText);
+      onComplete?.(fallbackText, undefined, exchangeId);
     }
   }, [voice, speed, model, element, assistantName, archetype, conversationMode, memoryDepth, prosodyRange, onTextChunk, onComplete, onSilence, onMoveOutcome, onError, onLimitsBlock, playNextChunk, forceRecoverFromFalseSpeaking]);
 

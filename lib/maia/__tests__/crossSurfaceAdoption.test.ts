@@ -352,3 +352,101 @@ describe('the surface upholds what the module assumes', () => {
     expect(adoption).not.toContain('seenCanonicalRowIdsRef.current = ');
   });
 });
+
+// ════════════════════════════════════════════════════════════════════════════
+// THE FOURTH DEFECT — streaming voice authored turns with no durable identity,
+// so the write-sync effect persisted them and the adoption poll read them back
+// as turns nobody had said. Repaired at TURN BIRTH, threaded through the
+// invocation — never minted later by the persistence effect.
+// ════════════════════════════════════════════════════════════════════════════
+
+describe('streaming voice carries durable identity from birth', () => {
+  const component = readFileSync(
+    new URL('../../../components/OracleConversation.tsx', import.meta.url), 'utf8');
+  const hook = readFileSync(
+    new URL('../../../hooks/useStreamingVoice.ts', import.meta.url), 'utf8');
+
+  it('the streamed MEMBER half is stamped where the turn is authored', () => {
+    expect(component).toContain('const streamingExchangeId = crypto.randomUUID();');
+    const userMsg = /const streamingExchangeId[\s\S]*?source: 'voice',[\s\S]*?\};/.exec(component)?.[0] ?? '';
+    expect(userMsg).toContain('metadata: { exchangeId: streamingExchangeId }');
+  });
+
+  it('the identity is threaded through the INVOCATION, not a shared ref', () => {
+    // Per-invocation binding is what stops a late completion stamping a newer
+    // turn. A ref in the component would not give that guarantee.
+    expect(component).toContain(
+      'sendStreamingMessage(cleanedText, conversationHistory, isSanctuary, streamingExchangeId)');
+    expect(component).not.toContain('streamingExchangeIdRef');
+    expect(hook).toMatch(/sanctuary: boolean,[\s\S]{0,1400}exchangeId: string,/);
+  });
+
+  it('BOTH streamed MAIA constructors stamp the id their completion carried', () => {
+    expect(component).toContain('onComplete: (fullResponse, relational, exchangeId) => {');
+    const stamps = component.match(/metadata: exchangeId \? \{ exchangeId \} : undefined,/g) ?? [];
+    expect(stamps).toHaveLength(2);   // normal success, and TTS-failure-text-success
+  });
+
+  it('EVERY completion path carries it — the client persists whatever pair is on screen', () => {
+    // The stream route writes nothing; the write-sync effect is the only writer.
+    // So a fallback response on screen is persisted too, and must be matchable.
+    const completions = hook.match(/onComplete\?\.\([^)]*\)/g) ?? [];
+    expect(completions.length).toBeGreaterThanOrEqual(3);
+    for (const c of completions) expect(c).toContain('exchangeId');
+  });
+
+  it('⛔ telemetry identity is NOT reused as conversational identity', () => {
+    // turnIdRef is instrumentation and lives in a ref the next turn overwrites.
+    // Both are UUIDs; they are different contracts.
+    expect(hook).toContain('turnIdRef');
+    const sig = /const sendMessage = useCallback\(async \([\s\S]*?\) => \{/.exec(hook)?.[0] ?? '';
+    expect(sig).toContain('exchangeId: string');
+    expect(component).not.toMatch(/exchangeId:\s*turnIdRef/);
+    expect(hook).not.toMatch(/onComplete\?\.\([^)]*turnIdRef[^)]*\)/);
+  });
+});
+
+describe('a streamed pair adopts ZERO rows once repaired', () => {
+  it('server echo of a streamed exchange is fully recognised', () => {
+    const streamed = [
+      local({ id: 'msg-1', role: 'user', metadata: { exchangeId: 'sx' } }),
+      local({ id: 'msg-2', role: 'oracle', metadata: { exchangeId: 'sx' } }),
+    ];
+    const echo = [
+      row({ id: 'srv-a', role: 'user', exchangeId: 'sx', seq: 0 }),
+      row({ id: 'srv-b', role: 'assistant', exchangeId: 'sx', seq: 1 }),
+    ];
+    expect(planAdoption(echo, streamed, new Set()).adopt).toEqual([]);
+  });
+
+  it('a SECOND streamed turn cannot inherit the first turn\'s identity', () => {
+    // Two consecutive streamed turns, each with its own id: the second echo is
+    // recognised on its own terms, not absorbed by the first.
+    const onScreen = [
+      local({ id: 'm1', role: 'user', metadata: { exchangeId: 'sx1' } }),
+      local({ id: 'm2', role: 'oracle', metadata: { exchangeId: 'sx1' } }),
+      local({ id: 'm3', role: 'user', metadata: { exchangeId: 'sx2' } }),
+      local({ id: 'm4', role: 'oracle', metadata: { exchangeId: 'sx2' } }),
+    ];
+    const echo = [
+      row({ id: 'a', role: 'user', exchangeId: 'sx1', seq: 0 }),
+      row({ id: 'b', role: 'assistant', exchangeId: 'sx1', seq: 1 }),
+      row({ id: 'c', role: 'user', exchangeId: 'sx2', seq: 0 }),
+      row({ id: 'd', role: 'assistant', exchangeId: 'sx2', seq: 1 }),
+    ];
+    expect(planAdoption(echo, onScreen, new Set()).unchanged).toBe(true);
+  });
+
+  it('⛔ the PRE-FIX streamed shape duplicated the whole pair', () => {
+    // Neither half carried identity, so the entire exchange came back as new.
+    const preFix = [
+      local({ id: 'msg-1', role: 'user' }),
+      local({ id: 'msg-2', role: 'oracle' }),
+    ];
+    const echo = [
+      row({ id: 'srv-a', role: 'user', exchangeId: 'sx', seq: 0 }),
+      row({ id: 'srv-b', role: 'assistant', exchangeId: 'sx', seq: 1 }),
+    ];
+    expect(planAdoption(echo, preFix, new Set()).adopt).toHaveLength(2);
+  });
+});
