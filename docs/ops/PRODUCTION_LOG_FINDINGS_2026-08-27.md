@@ -389,3 +389,157 @@ For a project whose memory is the thing that makes it more than a chatbot,
 losing a turn without saying so is the worst shape a failure can take: it
 cannot be noticed at the moment it happens, only later, as an absence the
 member will experience as being forgotten.
+
+---
+
+# VOICE-CAPTURE-PROVENANCE-01 — captured text is accepted as member-authored speech
+
+*Appended 2026-08-28. Recorded, not repaired. No implementation is authorized by
+this entry.*
+
+Observed on Desktop with the microphone live, in the member's canonical thread,
+on production `9865799e1`.
+
+## Observed
+
+The capture path can emit text that is then accepted, persisted, and answered as
+though it were member-authored, while downstream MAIA has no provenance field by
+which to distinguish captured speech from typed input or from capture-stack
+output.
+
+Two specimens, both attributed to the member in the canonical thread:
+
+```
+"sorry, I'm sorry, I'm sorry, I I'm sorry, …"   (repeated to the end of the turn)
+"1" followed by "tbbbbbbbbbbbbb…"               (a wall of a single letter)
+```
+
+MAIA answered both, reasonably and in good faith:
+
+> *Kelly. Stop. You don't owe me a single sorry. Not one. What's happening right now.*
+
+> *Another stuck key — the b's again. When you're ready, Kelly, I'm here.*
+
+Her second reading is wrong — no keyboard was involved — but the error is not
+hers. She was told the member said this. The system knew only that the capture
+stack emitted it.
+
+The member's own account, in the thread: **"that was not me."**
+
+## The chain this creates
+
+```
+room noise / capture degeneration
+        ↓
+capture stack emits text
+        ↓
+text is treated as member-authored
+        ↓
+canonical conversation persists it
+        ↓
+MAIA answers it
+        ↓
+memory / retrieval can later encounter it
+        ↓
+false autobiographical evidence
+```
+
+The last transition is what changes the class of this defect. It is not that
+the transcript is ugly. It is that an untrusted capture artifact becomes
+eligible to be recalled later as something the member said.
+
+## Not established
+
+- That any particular specimen represents something the member actually said.
+- That the speech engine is the proximate source of these specific turns. The
+  provenance defect is established without that causal attribution, and the
+  attribution is not needed to act. Say **capture-stack degeneration / emitted
+  transcript**, not a named model's hallucination, unless an artifact
+  establishes it.
+- That phrase heuristics can safely classify provenance.
+- That deletion of suspicious turns is an acceptable repair.
+
+## Architectural finding
+
+> **A canonical event does not imply a trusted autobiographical assertion.**
+
+Canonical history can faithfully record that the capture stack produced X at
+time Y without asserting that the member said X.
+
+This is not a new doctrine. The memory layer already separates member-marked
+from system-inferred — `is_breakthrough` is true only because a member marked
+it, and the standing discipline is *member-marked vs system-inferred, no
+synthesis, provenance-grounded*. The seam this finding exposes is one layer
+earlier: the **input** boundary carries no marking at all, so every utterance
+arrives claiming member authorship because nothing records how it arrived.
+
+## Ruled repair direction
+
+Carry input provenance and a trust state across the capture boundary, so that
+downstream memory and interpretation can distinguish member-authored text from
+capture-derived text whose authorship is not established.
+
+Non-destructive provenance, shape only — not a schema, not an implementation:
+
+```
+input_modality        text | speech | …
+capture_provider      …
+capture_session_id    …
+capture_confidence    where available
+capture_status        accepted | suspect | rejected
+member_authored       evidence-based
+```
+
+Then a gate before memory promotion / retrieval eligibility.
+
+## Constraints on any future repair
+
+```
+no phrase blacklist
+no "the model hallucinated" heuristic as authority
+no automatic deletion
+no retroactive rewriting of the specimen
+no memory synthesis to repair provenance
+no implementation in this act
+```
+
+Repetition, apology, fragments, and long runs of a single letter can all be
+intentional human speech or text. The system needs evidence about how an
+utterance arrived and whether capture was trustworthy — not a list of phrases
+a member is presumed unable to have meant.
+
+## Specimen and containment
+
+The garbage turns stay exactly as they are. Their presence in the canonical
+thread is part of the witness; deleting, editing, or sanitizing them would
+destroy the evidence this finding rests on.
+
+Accumulation is contained during witnesses instead: capture is stopped before
+any controlled measurement, and any interval in which it ran is recorded rather
+than filtered out afterwards.
+
+The contaminated interval on 2026-08-28, quantified before re-anchoring:
+
+```
+window from 2026-08-28T11:49:31Z
+lines=4382   completions=9   syntheses=9
+```
+
+Nine completed turns entered the canonical thread in that window. The D05 voice
+witness, which asserts on a single-turn count, is therefore VOID against that
+anchor — not salvaged by filtering. A new anchor is taken after capture stops.
+
+## State
+
+```
+finding               ESTABLISHED
+specimen              PRESERVED
+impact                canonical thread can receive untrusted capture text
+                      as member-authored
+root seam             missing input provenance / trust distinction
+root cause            NOT YET ADJUDICATED
+repair shape          RULED
+repair                NOT STARTED
+phrase heuristics     NOT AUTHORIZED
+memory deletion       NOT AUTHORIZED
+```
