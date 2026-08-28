@@ -28,47 +28,109 @@ if (!DB) {
 
 const pool = new Pool({ connectionString: DB });
 
+/**
+ * PRECONDITION. The probe does not apply the candidate migration; it proves
+ * that an applied one holds. Say so clearly rather than dying on a generic
+ * missing-relation error twenty lines later.
+ */
+async function requireCandidateSchema() {
+  const missing: string[] = [];
+
+  const table = await pool.query(
+    `SELECT to_regclass('public.living_work_material_considerations') AS t`
+  );
+  if (!table.rows[0].t) missing.push('table living_work_material_considerations');
+
+  const fn = await pool.query(
+    `SELECT prosrc FROM pg_proc WHERE proname = 'refuse_material_relationship_conflict'`
+  );
+  if (fn.rows.length === 0) {
+    missing.push('function refuse_material_relationship_conflict');
+  } else if (!fn.rows.some((r) => String(r.prosrc).includes('pg_advisory_xact_lock'))) {
+    /* The exact failure that produced this probe: a guard exists, and it is the
+       raceable one. Name it, so a FAIL is not mistaken for a design defect. */
+    missing.push(
+      'the INSTALLED refuse_material_relationship_conflict has no pg_advisory_xact_lock ' +
+        '— an older, raceable copy is in this database'
+    );
+  }
+
+  for (const t of [
+    'living_work_material_considerations_no_declaration',
+    'living_work_materials_no_consideration',
+  ]) {
+    const trg = await pool.query(`SELECT 1 FROM pg_trigger WHERE tgname = $1`, [t]);
+    if (trg.rows.length === 0) missing.push(`trigger ${t}`);
+  }
+
+  if (missing.length > 0) {
+    console.error('[ws2-substrate-01] PRECONDITION NOT MET — the candidate is not applied here:');
+    for (const m of missing) console.error(`  · ${m}`);
+    console.error(
+      '\nApply database/migrations/20260828000001_living_work_material_considerations.sql ' +
+        'to a DISPOSABLE database and re-run. Do not apply it to production to make this ' +
+        'probe executable.'
+    );
+    process.exit(1);
+  }
+}
+
+/** PostgreSQL restrict_violation, which the guard raises. */
+const RESTRICT_VIOLATION = '23001';
+const CONFLICT_PREFIX = 'material_relationship_conflict:';
+
+/**
+ * One racer, start to finish, on its own connection.
+ *
+ * The commit MUST live inside this path. An earlier version awaited both
+ * inserts and only then committed — which deadlocks exactly when the lock
+ * works: the winner holds a transaction-scoped lock it cannot release until
+ * COMMIT, the loser blocks on that lock, and the script waits for the loser
+ * before committing the winner. The test would hang as proof of success.
+ */
+async function racer(
+  client: { query: (q: string, v?: unknown[]) => Promise<unknown> },
+  deleteSql: string,
+  insertSql: string,
+  values: unknown[]
+): Promise<'committed'> {
+  try {
+    await client.query('BEGIN');
+    await client.query(deleteSql, values.slice(0, 2));
+    await client.query(insertSql, values);
+    await client.query('COMMIT');
+    return 'committed';
+  } catch (e) {
+    await client.query('ROLLBACK').catch(() => {});
+    throw e;
+  }
+}
+
 /** Both racers start from a pair with NO row in either table. */
 async function raceOnce(workId: string, materialId: string) {
   const a = await pool.connect();
   const b = await pool.connect();
   try {
-    await a.query('BEGIN');
-    await b.query('BEGIN');
-
-    // Each transition deletes its counterpart first, exactly as the routes do.
-    await a.query(
-      `DELETE FROM living_work_materials
-        WHERE living_work_id = $1 AND material_type = 'manuscript' AND material_id = $2`,
-      [workId, materialId]
-    );
-    await b.query(
-      `DELETE FROM living_work_material_considerations
-        WHERE living_work_id = $1 AND material_type = 'manuscript' AND material_id = $2`,
-      [workId, materialId]
-    );
-
-    // Now both insert. Whichever takes the pair lock first wins; the other
-    // must be refused by the guard.
-    const insertA = a.query(
-      `INSERT INTO living_work_material_considerations
-         (living_work_id, material_type, material_id, state, acted_by)
-       VALUES ($1, 'manuscript', $2, 'maybe', $3)`,
-      [workId, materialId, MEMBER]
-    );
-    const insertB = b.query(
-      `INSERT INTO living_work_materials
-         (living_work_id, material_type, material_id, relationship_sentence, declared_by)
-       VALUES ($1, 'manuscript', $2, NULL, $3)`,
-      [workId, materialId, MEMBER]
-    );
-
-    const results = await Promise.allSettled([insertA, insertB]);
-    await Promise.allSettled([
-      results[0].status === 'fulfilled' ? a.query('COMMIT') : a.query('ROLLBACK'),
-      results[1].status === 'fulfilled' ? b.query('COMMIT') : b.query('ROLLBACK'),
+    return await Promise.allSettled([
+      racer(
+        a,
+        `DELETE FROM living_work_materials
+          WHERE living_work_id = $1 AND material_type = 'manuscript' AND material_id = $2`,
+        `INSERT INTO living_work_material_considerations
+           (living_work_id, material_type, material_id, state, acted_by)
+         VALUES ($1, 'manuscript', $2, 'maybe', $3)`,
+        [workId, materialId, MEMBER]
+      ),
+      racer(
+        b,
+        `DELETE FROM living_work_material_considerations
+          WHERE living_work_id = $1 AND material_type = 'manuscript' AND material_id = $2`,
+        `INSERT INTO living_work_materials
+           (living_work_id, material_type, material_id, relationship_sentence, declared_by)
+         VALUES ($1, 'manuscript', $2, NULL, $3)`,
+        [workId, materialId, MEMBER]
+      ),
     ]);
-    return results;
   } finally {
     a.release();
     b.release();
@@ -78,6 +140,8 @@ async function raceOnce(workId: string, materialId: string) {
 let MEMBER = '';
 
 async function main() {
+  await requireCandidateSchema();
+
   let failures = 0;
   const ROUNDS = 25; // a race that only sometimes loses is still a defect
 
@@ -104,6 +168,33 @@ async function main() {
     for (let i = 1; i <= ROUNDS; i++) {
       const results = await raceOnce(workId, materialId);
 
+      const fulfilled = results.filter((r) => r.status === 'fulfilled');
+      const rejected = results.filter((r) => r.status === 'rejected') as PromiseRejectedResult[];
+
+      /* EXACTLY ONE WINNER. Not "at most one row pair" — one act commits and
+         the other is refused. Two winners is the race; two losers is a guard
+         that refuses everything. */
+      if (fulfilled.length !== 1 || rejected.length !== 1) {
+        failures++;
+        console.error(
+          `[ws2-substrate-01] round ${i} FAIL — expected exactly one winner and one ` +
+            `refusal; got ${fulfilled.length} committed, ${rejected.length} refused.`
+        );
+      }
+
+      /* And the refusal must be THE refusal — not a deadlock, a unique
+         violation, or a connection error that happens to look like success. */
+      for (const r of rejected) {
+        const e = r.reason as { code?: string; message?: string };
+        if (e?.code !== RESTRICT_VIOLATION || !e?.message?.includes(CONFLICT_PREFIX)) {
+          failures++;
+          console.error(
+            `[ws2-substrate-01] round ${i} FAIL — refusal was not the guard's. ` +
+              `code=${e?.code ?? 'none'} message=${(e?.message ?? '').slice(0, 120)}`
+          );
+        }
+      }
+
       const both = await pool.query(
         `SELECT
            (SELECT count(*) FROM living_work_materials
@@ -127,11 +218,6 @@ async function main() {
         console.error(
           `[ws2-substrate-01] round ${i} FAIL — both writes lost; expected exactly one winner.`
         );
-      }
-      const refused = results.filter((r) => r.status === 'rejected').length;
-      if (refused > 1) {
-        failures++;
-        console.error(`[ws2-substrate-01] round ${i} FAIL — both racers refused.`);
       }
 
       // Reset the pair for the next round.

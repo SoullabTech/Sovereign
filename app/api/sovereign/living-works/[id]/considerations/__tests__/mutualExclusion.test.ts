@@ -24,11 +24,62 @@ const MIGRATION = readFileSync(
   'utf8'
 );
 
-/** The guard function body, isolated from the surrounding DDL. */
-const GUARD = MIGRATION.slice(
-  MIGRATION.indexOf('CREATE OR REPLACE FUNCTION refuse_material_relationship_conflict'),
-  MIGRATION.indexOf('$$ LANGUAGE plpgsql;')
-);
+/**
+ * EXACTLY-ONCE DDL — and this suite's own correctness depends on it.
+ *
+ * `4fb520f9c` shipped this file with the whole tail duplicated: a dangling
+ * DROP TRIGGER, a second CREATE TABLE, and a SECOND copy of the guard — the
+ * OLD, unlocked one. Two failures in one artifact. The migration would not
+ * parse; and if someone repaired only the syntax, the second CREATE OR REPLACE
+ * would win and silently reinstate the raceable guard.
+ *
+ * The structural pin below sliced from the FIRST function definition to the
+ * FIRST terminator, so it proved the first copy had the lock while the LAST
+ * copy was what the database would actually run. A green test over the wrong
+ * copy is worse than no test.
+ *
+ * So uniqueness is asserted before anything is sliced, and the guard is taken
+ * from the LAST definition — the one PostgreSQL would end up with.
+ */
+function occurrences(needle: string): number {
+  return MIGRATION.split(needle).length - 1;
+}
+
+describe('the migration defines each object exactly once', () => {
+  it.each([
+    ['CREATE TABLE IF NOT EXISTS living_work_material_considerations', 1],
+    ['CREATE OR REPLACE FUNCTION refuse_material_relationship_conflict', 1],
+    ['CREATE INDEX IF NOT EXISTS living_work_material_considerations_work_idx', 1],
+    ['CREATE TRIGGER living_work_material_considerations_no_declaration', 1],
+    ['CREATE TRIGGER living_work_materials_no_consideration', 1],
+    ['pg_advisory_xact_lock', 1],
+  ])('%s appears exactly %i time(s)', (needle, want) => {
+    expect(occurrences(needle as string)).toBe(want);
+  });
+
+  it('has no dangling DROP TRIGGER — every one names its table', () => {
+    const drops = [...MIGRATION.matchAll(/DROP TRIGGER IF EXISTS[\s\S]{0,200}?;/g)].map(
+      (m) => m[0]
+    );
+    expect(drops.length).toBeGreaterThan(0);
+    for (const d of drops) expect(d).toMatch(/\bON\s+\w+\s*;/);
+  });
+});
+
+/**
+ * The guard body as PostgreSQL would finally have it: the LAST definition.
+ * With uniqueness asserted above, last and first are the same — but taking the
+ * last is what makes the assertion meaningful rather than incidental.
+ */
+const GUARD = (() => {
+  const start = MIGRATION.lastIndexOf(
+    'CREATE OR REPLACE FUNCTION refuse_material_relationship_conflict'
+  );
+  const end = MIGRATION.indexOf('$$ LANGUAGE plpgsql;', start);
+  expect(start).toBeGreaterThan(-1);
+  expect(end).toBeGreaterThan(start);
+  return MIGRATION.slice(start, end);
+})();
 
 describe('the pair lock is acquired before either counterpart is read', () => {
   it('takes a transaction-scoped advisory lock', () => {
