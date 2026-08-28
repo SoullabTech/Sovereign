@@ -4,15 +4,33 @@
  * duplicate-benign (a repeat gesture never overwrites the earlier sentence).
  */
 jest.mock('@/lib/auth/getMemberFromRequest', () => ({ getMemberIdFromRequest: jest.fn() }));
-jest.mock('@/lib/db/postgres', () => ({ query: jest.fn() }));
+jest.mock('@/lib/db/postgres', () => ({ query: jest.fn(), transaction: jest.fn() }));
 
 import { NextRequest } from 'next/server';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
-import { query } from '@/lib/db/postgres';
+import { query, transaction } from '@/lib/db/postgres';
 import { DELETE, POST } from '../route';
 
 const mockAuth = getMemberIdFromRequest as jest.Mock;
 const mockQuery = query as jest.Mock;
+const mockTx = transaction as jest.Mock;
+
+/**
+ * The write half now runs inside ONE transaction (WS2-SUBSTRATE-01 Repair 2):
+ * declaring belonging also withdraws any consideration for the same pair, and
+ * both halves commit together. These helpers let the existing assertions keep
+ * asking the same questions of the transaction client.
+ */
+let txCalls: unknown[][] = [];
+function txReturning(...results: Array<{ rows: unknown[] }>) {
+  mockTx.mockImplementation(async (cb: (c: { query: jest.Mock }) => unknown) => {
+    const q = jest.fn();
+    for (const r of results) q.mockResolvedValueOnce(r);
+    const out = await cb({ query: q });
+    txCalls = q.mock.calls;
+    return out;
+  });
+}
 
 const MEMBER = '11111111-1111-1111-1111-111111111111';
 const WORK = '22222222-2222-2222-2222-222222222222';
@@ -38,6 +56,8 @@ const BROUGHT = {
 
 beforeEach(() => {
   jest.clearAllMocks();
+  mockTx.mockReset();
+  txCalls = [];
   mockQuery.mockReset();
   mockAuth.mockReset();
 });
@@ -69,14 +89,14 @@ describe('POST /living-works/[id]/materials — bring this to this work', () => 
     mockAuth.mockResolvedValue(MEMBER);
     mockQuery
       .mockResolvedValueOnce({ rows: [{ id: WORK, member_id: MEMBER }], rowCount: 1 })
-      .mockResolvedValueOnce({ rows: [{ id: THING }], rowCount: 1 })
-      .mockResolvedValueOnce({ rows: [BROUGHT], rowCount: 1 });
+      .mockResolvedValueOnce({ rows: [{ id: THING }], rowCount: 1 });
+    txReturning({ rows: [] }, { rows: [BROUGHT] });
     const res = await POST(
       jsonRequest('POST', { materialType: 'manuscript', materialId: THING, sentence: '   ' }),
       ctx
     );
     expect(res.status).toBe(201);
-    const insert = mockQuery.mock.calls.find((c) =>
+    const insert = txCalls.find((c) =>
       String(c[0]).includes('INSERT INTO living_work_materials')
     );
     expect(insert![1]).toEqual([WORK, 'manuscript', THING, null, MEMBER]);
@@ -86,11 +106,11 @@ describe('POST /living-works/[id]/materials — bring this to this work', () => 
     mockAuth.mockResolvedValue(MEMBER);
     mockQuery
       .mockResolvedValueOnce({ rows: [{ id: WORK, member_id: MEMBER }], rowCount: 1 })
-      .mockResolvedValueOnce({ rows: [{ id: THING }], rowCount: 1 })
-      .mockResolvedValueOnce({
-        rows: [{ ...BROUGHT, relationship_sentence: 'the letters this grew from' }],
-        rowCount: 1,
-      });
+      .mockResolvedValueOnce({ rows: [{ id: THING }], rowCount: 1 });
+    txReturning(
+      { rows: [] }, // no consideration to withdraw
+      { rows: [{ ...BROUGHT, relationship_sentence: 'the letters this grew from' }] }
+    );
     const res = await POST(
       jsonRequest('POST', {
         materialType: 'manuscript',
@@ -100,7 +120,7 @@ describe('POST /living-works/[id]/materials — bring this to this work', () => 
       ctx
     );
     expect(res.status).toBe(201);
-    const insert = mockQuery.mock.calls.find((c) =>
+    const insert = txCalls.find((c) =>
       String(c[0]).includes('INSERT INTO living_work_materials')
     );
     expect(insert![1]).toEqual([WORK, 'manuscript', THING, 'the letters this grew from', MEMBER]);
@@ -110,18 +130,64 @@ describe('POST /living-works/[id]/materials — bring this to this work', () => 
     mockAuth.mockResolvedValue(MEMBER);
     mockQuery
       .mockResolvedValueOnce({ rows: [{ id: WORK, member_id: MEMBER }], rowCount: 1 })
-      .mockResolvedValueOnce({ rows: [{ id: THING }], rowCount: 1 })
-      .mockResolvedValueOnce({ rows: [], rowCount: 0 }) // ON CONFLICT DO NOTHING
-      .mockResolvedValueOnce({
-        rows: [{ ...BROUGHT, relationship_sentence: 'their first words about it' }],
-        rowCount: 1,
-      });
+      .mockResolvedValueOnce({ rows: [{ id: THING }], rowCount: 1 });
+    txReturning(
+      { rows: [] }, // no consideration to withdraw
+      { rows: [] }, // ON CONFLICT DO NOTHING
+      { rows: [{ ...BROUGHT, relationship_sentence: 'their first words about it' }] }
+    );
     const res = await POST(
       jsonRequest('POST', { materialType: 'manuscript', materialId: THING, sentence: 'newer words' }),
       ctx
     );
     expect(res.status).toBe(200);
     expect((await res.json()).material.sentence).toBe('their first words about it');
+  });
+
+  /* WS2-SUBSTRATE-01 Repair 2 — falsification. A consideration and a
+     declaration are mutually exclusive, and the database refuses to hold both.
+     So declaring belonging MUST withdraw the consideration, in the same
+     transaction, or the declaration is refused at the trigger. */
+  it('withdraws a consideration for the same pair, in the same transaction', async () => {
+    mockAuth.mockResolvedValue(MEMBER);
+    mockQuery
+      .mockResolvedValueOnce({ rows: [{ id: WORK, member_id: MEMBER }], rowCount: 1 })
+      .mockResolvedValueOnce({ rows: [{ id: THING }], rowCount: 1 });
+    txReturning(
+      { rows: [{ state: 'maybe' }] }, // the member had been undecided
+      { rows: [BROUGHT] }
+    );
+    const res = await POST(
+      jsonRequest('POST', { materialType: 'manuscript', materialId: THING }),
+      ctx
+    );
+    expect(res.status).toBe(201);
+    await expect(res.json()).resolves.toMatchObject({ resolvedConsideration: 'maybe' });
+
+    // Withdrawal first, declaration second, both on the same client.
+    expect(String(txCalls[0][0])).toContain(
+      'DELETE FROM living_work_material_considerations'
+    );
+    expect(String(txCalls[1][0])).toContain('INSERT INTO living_work_materials');
+    // Scoped to this pair — never the whole work.
+    expect(txCalls[0][1]).toEqual([WORK, 'manuscript', THING]);
+    // Neither half ran outside the transaction.
+    expect(
+      mockQuery.mock.calls.some((c) => String(c[0]).includes('living_work_material'))
+    ).toBe(false);
+  });
+
+  it('reports no consideration resolved when there was none', async () => {
+    mockAuth.mockResolvedValue(MEMBER);
+    mockQuery
+      .mockResolvedValueOnce({ rows: [{ id: WORK, member_id: MEMBER }], rowCount: 1 })
+      .mockResolvedValueOnce({ rows: [{ id: THING }], rowCount: 1 });
+    txReturning({ rows: [] }, { rows: [BROUGHT] });
+    const res = await POST(
+      jsonRequest('POST', { materialType: 'manuscript', materialId: THING }),
+      ctx
+    );
+    await expect(res.json()).resolves.toMatchObject({ resolvedConsideration: null });
   });
 });
 
@@ -147,5 +213,55 @@ describe('DELETE /living-works/[id]/materials — no longer feeds this work', ()
       ctx
     );
     expect(res.status).toBe(404);
+  });
+});
+
+
+describe('POST /materials — a lost race is a 409, never a 500', () => {
+  function conflict() {
+    const e = new Error(
+      'material_relationship_conflict: this material is under consideration for that work.'
+    ) as Error & { code?: string };
+    e.code = '23001'; // restrict_violation
+    return e;
+  }
+
+  it('answers 409 when a simultaneous consideration won the lock', async () => {
+    mockAuth.mockResolvedValue(MEMBER);
+    mockQuery
+      .mockResolvedValueOnce({ rows: [{ id: WORK, member_id: MEMBER }], rowCount: 1 })
+      .mockResolvedValueOnce({ rows: [{ id: THING }], rowCount: 1 });
+    mockTx.mockRejectedValue(conflict());
+    const res = await POST(
+      jsonRequest('POST', { materialType: 'manuscript', materialId: THING }),
+      ctx
+    );
+    expect(res.status).toBe(409);
+    await expect(res.json()).resolves.toEqual({
+      error: 'That relationship changed while you were acting. Refresh it and choose again.',
+    });
+  });
+
+  it('does not retry to force the declaration through', async () => {
+    mockAuth.mockResolvedValue(MEMBER);
+    mockQuery
+      .mockResolvedValueOnce({ rows: [{ id: WORK, member_id: MEMBER }], rowCount: 1 })
+      .mockResolvedValueOnce({ rows: [{ id: THING }], rowCount: 1 });
+    mockTx.mockRejectedValue(conflict());
+    await POST(jsonRequest('POST', { materialType: 'manuscript', materialId: THING }), ctx);
+    expect(mockTx).toHaveBeenCalledTimes(1);
+  });
+
+  it('an unrelated failure is still a 500', async () => {
+    mockAuth.mockResolvedValue(MEMBER);
+    mockQuery
+      .mockResolvedValueOnce({ rows: [{ id: WORK, member_id: MEMBER }], rowCount: 1 })
+      .mockResolvedValueOnce({ rows: [{ id: THING }], rowCount: 1 });
+    mockTx.mockRejectedValue(new Error('connection terminated'));
+    const res = await POST(
+      jsonRequest('POST', { materialType: 'manuscript', materialId: THING }),
+      ctx
+    );
+    expect(res.status).toBe(500);
   });
 });
