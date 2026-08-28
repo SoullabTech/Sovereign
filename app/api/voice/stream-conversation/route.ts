@@ -34,6 +34,7 @@ import { MemoryBundleService } from '@/lib/memory/MemoryBundle';
 import { MEMORY_CANON_GUARD_PROMPT } from '@/lib/maia/prompts/memoryCanonGuard';
 import { guardVoiceChunk, advanceVoiceGuardTail } from '@/lib/maia/prompts/voiceStreamGuard';
 import { synthesizeSpeech } from '@/lib/tts/openaiTts';
+import { resolveOpenAISpeechDelivery } from '@/lib/tts/openaiSpeechAdapter';
 import * as ttsRouter from '@/lib/tts/ttsRouter';
 import { TTSFallbackToOpenAI } from '@/lib/tts/ttsRouter';
 import { resolveOpenAIVoice, resolveKokoroVoice } from '@/lib/voice/voiceMap';
@@ -127,6 +128,17 @@ async function synthesizeWithFallback(
      * Omit or pass null to use plain shaped text.
      */
     ssml?: string | null;
+    /**
+     * MAIA's semantic delivery intent for this turn.
+     *
+     * Carried all the way to the provider boundary so the OpenAI adapter can
+     * translate it into `instructions`. Kokoro and PersonaPlex do not read it
+     * (PersonaPlex already receives `wisdomDirective`); it is not a routing
+     * input and never changes which provider is chosen.
+     */
+    prosodyHints?: ProsodyHints | null;
+    /** MAIA's relational intent (Meet / Mirror / Move) for this turn. */
+    moveIntent?: MoveIntent | null;
   }
 ): Promise<{ audio: string; format: string; source: string } | null> {
   // ── PersonaPlex (Sesame CSM) — gate on health cache to avoid stalling ──
@@ -273,13 +285,42 @@ async function synthesizeWithFallback(
     // `reason` no longer says "auto/cloud lead" — auto can no longer be here,
     // and the log line is the thing an auditor greps. It must not describe a
     // route the canon has closed.
-    console.info('[tts.attempt]', JSON.stringify({ provider: 'openai', voice: finalOpenaiVoice, reason: 'member_chose_cloud' }));
+    // ── JARVIS-VOICE-PROSODY-ALLOY-01 ──────────────────────────────────────
+    // Translate MAIA's semantic prosody intent into the provider's dialect.
+    // On an instruction-capable model this replaces the speed channel entirely
+    // (OpenAI ignores `speed` on gpt-4o-mini-tts); on tts-1/tts-1-hd it
+    // resolves back to exactly the speed-only request sent before this change.
+    const delivery = resolveOpenAISpeechDelivery({
+      model: process.env.OPENAI_TTS_MODEL || 'tts-1',
+      baseSpeed: options.speed,
+      hints: options.prosodyHints ?? null,
+      moveIntent: options.moveIntent ?? null,
+      sanctuary: options.sanctuary,
+    });
+
+    console.info('[tts.attempt]', JSON.stringify({
+      provider: 'openai',
+      voice: finalOpenaiVoice,
+      reason: 'member_chose_cloud',
+      control: delivery.channel,
+      // Which semantic terms actually governed this utterance — the thing an
+      // auditor greps to answer "did MAIA's intent reach the provider?"
+      prosody: options.prosodyHints ? {
+        moveIntent: options.moveIntent ?? null,
+        pace: options.prosodyHints.pace,
+        warmth: options.prosodyHints.warmth,
+        emphasis: options.prosodyHints.emphasis,
+        intentTag: options.prosodyHints.intentTag ?? null,
+      } : null,
+    }));
     try {
       const response = await synthesizeSpeech({
         text,
         voice: finalOpenaiVoice,
         format: 'mp3',
-        speed: options.speed,
+        model: delivery.model,
+        speed: delivery.speed,
+        instructions: delivery.instructions,
       });
       const buffer = Buffer.from(await response.arrayBuffer());
       return { audio: buffer.toString('base64'), format: 'mp3', source: 'openai' };
@@ -905,6 +946,20 @@ export async function POST(req: NextRequest) {
         // Compute effective speed from hints + base relational speed
         const effectiveSpeed = mapProsodyToSpeed(relationalSpeed, prosodyHints);
 
+        // ─── DELIVERY MOVE INTENT (Meet / Mirror / Move) ───
+        // The same pure derivation the threshold and LLM paths already log,
+        // hoisted here so it can reach the TTS boundary rather than only the
+        // `complete` event. `deriveMoveIntent` ignores `thresholdMode` in its
+        // body, and both speech paths pass identical remaining args, so this
+        // value is by construction the one those paths go on to report — no
+        // second opinion is introduced and no relational reasoning changes.
+        const deliveryMoveIntent = deriveMoveIntent({
+          maiaMode: voiceSession.relationalStack.currentMode,
+          activation: voiceSession.relationalStack.smoother.lastActivation,
+          wisdomMode: wisdomPayload?.mode,
+          thresholdMode: 'llm',
+        });
+
         // ─── UPDATE SESSION PROSODY BASELINE ───
         // Conversation Prosody Memory: baseline drifts toward current delivery
         const baselineTs = Date.now();
@@ -982,6 +1037,8 @@ export async function POST(req: NextRequest) {
             ttsProvider: memberTtsProvider,
             skipPersonaPlex: isIosPwa,
             ssml: thresholdSSML,
+            prosodyHints,
+            moveIntent: deliveryMoveIntent,
           }) : null;
 
           if (thresholdTtsResult) {
@@ -1338,6 +1395,8 @@ export async function POST(req: NextRequest) {
                 ttsProvider: memberTtsProvider,
                 skipPersonaPlex: isIosPwa,
                 ssml: chunkSSML,
+                prosodyHints,
+                moveIntent: deliveryMoveIntent,
               });
 
               if (result) {
