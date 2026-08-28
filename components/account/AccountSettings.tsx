@@ -476,15 +476,12 @@ export function AccountSettings() {
     saveAccountSettings(updated);
     showSaveIndicator();
 
-    // The memory-mode picker is not only a default — the member reads it as the
-    // answer to "is this being saved". Carry it to the live session boundary so
-    // the Sanctuary indicator on /maia reflects the choice just made, and keep
-    // the Data & Privacy view (which now reads the same value) in step.
-    if (key === 'defaultMemoryMode') {
-      setSessionSanctuary(value === 'sanctuary');
-      setSessionSanctuaryActive(value === 'sanctuary');
-      setConsentSummary(getConsentSummary());
-    }
+    // NOTE: changing a default deliberately does NOT touch the live boundary
+    // (`maia_settings.sanctuary`). A default governs how the *next* session
+    // begins; the encounter already in progress keeps whatever boundary it was
+    // given. Changing tomorrow's default must never silently rewrite today's
+    // consent. The live state is disclosed separately, and left only by the
+    // explicit member act in endSessionSanctuary().
 
     // Also sync to server if we have userId
     if (userId) {
@@ -2074,13 +2071,9 @@ export function AccountSettings() {
   const updateSanctuaryDefault = useCallback(async (enabled: boolean) => {
     if ('vibrate' in navigator) navigator.vibrate(5);
     await setSanctuaryDefault(enabled);
-    // Same act, same boundary: the toggle changes the live session too, not
-    // just the default the next session would have started from.
-    setSessionSanctuary(enabled);
-    setSessionSanctuaryActive(enabled);
+    // Default only — the session in progress is untouched. See updateMaiaSetting.
     const summary = await getConsentSummary();
     setConsentSummary(summary);
-    setMaiaSettings(getAccountSettings());
     showSaveIndicator();
   }, [showSaveIndicator]);
 

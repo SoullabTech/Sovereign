@@ -2,7 +2,6 @@
 // TODO: Implement full sovereignty storage
 
 import { apiFetch } from '@/lib/http/apiBase';
-import { getAccountSettings, updateAccountSetting } from '@/lib/settings/accountSettings';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -128,50 +127,19 @@ export function setDataTypeConsent(dataType: DataType, saveLocal: boolean, saveS
   }
 }
 
-const LEGACY_SANCTUARY_DEFAULT_KEY = 'maia_sanctuary_default';
-
-// The Sanctuary default has exactly one home: `maia_account_settings`'s
-// `defaultMemoryMode`. It used to have two — this module's own
-// `maia_sanctuary_default` key behind the Data & Privacy toggle, and
-// `defaultMemoryMode` behind MAIA Settings' memory-mode picker — which the
-// member saw as one setting in two places, free to disagree. Both surfaces now
-// read and write the same value.
-
 export function setSanctuaryDefault(enabled: boolean): void {
-  if (typeof window === 'undefined') return;
-
-  updateAccountSetting('defaultMemoryMode', enabled ? 'sanctuary' : 'continuity');
-  // Retire the legacy key so a stale `true` can never resurrect the divergence.
-  localStorage.removeItem(LEGACY_SANCTUARY_DEFAULT_KEY);
-}
-
-/**
- * Read the Sanctuary default, honouring a legacy `maia_sanctuary_default=true`
- * once and migrating it forward. The migration only ever moves toward
- * Sanctuary: an old opt-in must survive the merge, and a member who never set
- * the legacy key keeps whatever `defaultMemoryMode` already says.
- */
-function readSanctuaryDefault(): boolean {
-  const fromAccount = getAccountSettings().defaultMemoryMode === 'sanctuary';
-  if (fromAccount) return true;
-
-  if (localStorage.getItem(LEGACY_SANCTUARY_DEFAULT_KEY) === 'true') {
-    updateAccountSetting('defaultMemoryMode', 'sanctuary');
-    localStorage.removeItem(LEGACY_SANCTUARY_DEFAULT_KEY);
-    return true;
+  // Stub
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('maia_sanctuary_default', String(enabled));
   }
-
-  localStorage.removeItem(LEGACY_SANCTUARY_DEFAULT_KEY);
-  return false;
 }
-
 
 export function getConsentSummary(): ConsentSummary {
   if (typeof window === 'undefined') return { ...DEFAULT_STORAGE_CONSENT };
 
   const mode = (localStorage.getItem('maia_storage_mode') as StorageMode) || DEFAULT_STORAGE_CONSENT.mode;
   const autoSync = localStorage.getItem('maia_auto_sync') === 'true';
-  const sanctuaryDefault = readSanctuaryDefault();
+  const sanctuaryDefault = localStorage.getItem('maia_sanctuary_default') === 'true';
 
   const dataTypes: Record<DataType, boolean> = {
     conversations: localStorage.getItem('maia_consent_conversations') !== 'false',
