@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reference — shipped arrival (static reproduction)</title>
+<!--
+  STATIC REPRODUCTION, NOT A CAPTURE.
+  Rebuilt from the literal values in components/auth/UnifiedAuth.tsx as of
+  2026-08-28: ARRIVAL_CARD_STYLE, PRIMARY_BTN, OUTLINE_BTN, INPUT_CLASS, the
+  body gradient at line 528, and the /signin email-step markup at 615-680.
+  maia-navy scale from tailwind.config.js:20-27.
+
+  What it cannot reproduce: the real Holoflower component (spectrum variant,
+  crisp, low glow), Spectral as a loaded webfont, framer-motion's mount fade,
+  error/returning states, and anything the flag path changes at runtime.
+  A true before/after needs a browser capture of /signin on the Mac Studio or
+  minisforum. This is a like-for-like layout reference only.
+-->
+<style>
+  :root{
+    --navy-950:#060D18; --navy-900:#0A1628; --navy-850:#0F1D32;
+    --navy-800:#162640; --navy-700:#1E3A5F; --navy-600:#2A4A73;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;min-height:100dvh;color:#fff;
+    font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+    /* UnifiedAuth.tsx:528 — verbatim */
+    background:
+      radial-gradient(58% 40% at 50% 12%, rgba(124,94,170,0.16), rgba(90,70,150,0.05) 40%, transparent 60%),
+      linear-gradient(180deg,#071426 0%,#050f1f 52%,#030814 100%);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    padding:2.5rem 1rem;
+  }
+  .wrap{width:100%;max-width:26rem}
+  .mark{width:104px;height:104px;margin:0 auto 1.5rem;display:block}
+  .petal{fill:none;stroke:#B8860B;stroke-width:.7;opacity:.35}
+  .core{fill:#D4AF37;opacity:.5}
+  .card{
+    /* ARRIVAL_CARD_STYLE — verbatim */
+    background:linear-gradient(165deg, rgba(27,31,57,.75), rgba(18,19,43,.58));
+    backdrop-filter:blur(20px);
+    border:1px solid rgba(84,80,136,.30);
+    box-shadow:0 8px 32px rgba(0,0,0,.34),0 2px 8px rgba(0,0,0,.18),inset 0 1px 0 rgba(146,128,188,.14);
+    border-radius:16px;padding:1.75rem 1.5rem;
+  }
+  h1{font-family:Spectral,Georgia,serif;font-weight:200;font-size:1.875rem;
+     letter-spacing:.2em;text-align:center;color:rgba(255,255,255,.8);margin:0 0 .75rem}
+  .sub{font-size:.875rem;font-weight:300;text-align:center;line-height:1.6;
+       color:rgba(203,213,225,.95);margin:0 0 1.5rem}
+  input{width:100%;border-radius:12px;background:rgba(10,22,40,.45);
+        border:1px solid rgba(30,58,95,.6);padding:.75rem 1rem;font-size:1rem;
+        color:#fff;outline:none;box-shadow:inset 0 1px 2px rgba(0,0,0,.28)}
+  input::placeholder{color:#64748B}
+  .primary{width:100%;border-radius:12px;background:var(--navy-700);color:#fff;
+           padding:.75rem 1rem;font-weight:500;border:0;cursor:pointer;
+           box-shadow:0 10px 15px -3px rgba(0,0,0,.3);margin-top:.75rem}
+  .outline{width:100%;border-radius:12px;border:1px solid rgba(30,58,95,.5);
+           background:rgba(15,29,50,.4);padding:.75rem 1rem;font-size:.875rem;
+           font-weight:500;color:#E2E8F0;text-align:center;cursor:pointer;margin-top:.75rem}
+  .div{margin-top:1.5rem;display:flex;align-items:center;gap:.75rem}
+  .div i{flex:1;height:1px;background:rgba(30,58,95,.3)}
+  .div span{font-size:.75rem;color:#64748B;text-transform:uppercase;letter-spacing:.05em}
+  .oauth{margin-top:1rem;display:flex;justify-content:center;gap:.75rem}
+  .oauth button{width:44px;height:44px;border-radius:12px;
+                background:rgba(15,29,50,.5);border:1px solid rgba(30,58,95,.6);
+                display:flex;align-items:center;justify-content:center;cursor:pointer}
+  .oauth .apple{background:rgba(0,0,0,.5)}
+  .badge{position:fixed;left:1rem;bottom:1rem;font-size:.68rem;letter-spacing:.1em;
+         text-transform:uppercase;color:#7F8AA3;background:rgba(6,13,24,.7);
+         border:1px solid #1E2F4D;border-radius:999px;padding:.4rem .75rem}
+  .badge a{color:#B7C0D1;text-decoration:none}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <svg class="mark" viewBox="0 0 100 100" aria-hidden="true">
+      <circle class="petal" cx="50" cy="50" r="30"/><circle class="petal" cx="50" cy="50" r="38"/>
+      <g id="p"></g><circle class="core" cx="50" cy="50" r="3.2"/>
+    </svg>
+    <div class="card">
+      <h1>Welcome.</h1>
+      <p class="sub">Sign in with an emailed code.</p>
+      <input type="email" placeholder="Email address">
+      <button class="primary">Continue</button>
+      <button class="outline">Sign in with Touch ID</button>
+      <button class="outline">Sign in with username and password</button>
+      <div class="div"><i></i><span>or</span><i></i></div>
+      <div class="oauth">
+        <button title="Continue with Google"><svg width="20" height="20" viewBox="0 0 24 24">
+          <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+          <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+          <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+          <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg></button>
+        <button class="apple" title="Continue with Apple"><svg width="20" height="20" viewBox="0 0 24 24" fill="#fff">
+          <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09l.01-.01zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/></svg></button>
+      </div>
+    </div>
+  </div>
+  <div class="badge">Reference · shipped arrival (reproduction) — <a href="./index.html">index</a></div>
+<script>
+  const g=document.getElementById('p');
+  for(let i=0;i<12;i++){const e=document.createElementNS('http://www.w3.org/2000/svg','ellipse');
+    e.setAttribute('cx','50');e.setAttribute('cy','32');e.setAttribute('rx','5.5');e.setAttribute('ry','16');
+    e.setAttribute('class','petal');e.setAttribute('transform',`rotate(${i*30} 50 50)`);g.appendChild(e);}
+</script>
+</body>
+</html>

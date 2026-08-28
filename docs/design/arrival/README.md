@@ -2,6 +2,20 @@
 
 **Status:** ⛔ non-authoritative drafts. Nothing here is adopted, approved, or implemented.
 **Opened:** 2026-08-28, step 3 of the authorized cinematic-lane sequence.
+**Ruled:** 2026-08-28 — A rejected as final, B rejected, C retained as structural donor.
+Treatment **D** built from that ruling. See
+[`RULING_2026-08-28_TREATMENT_SELECTION.md`](./RULING_2026-08-28_TREATMENT_SELECTION.md), which
+also records two corrections to the material below: the filled gold button in A and B was an
+invention of these mockups (the shipped primary is navy `#1E3A5F`), and A/B/C all under-showed the
+door — the real `/signin` carries five ways in, which only D renders.
+
+| File | Status |
+|---|---|
+| [`treatment-d-resolve.html`](./treatment-d-resolve.html) | current candidate — C-derived, one settling gesture, real action set |
+| [`reference-shipped.html`](./reference-shipped.html) | static **reproduction** of the shipped arrival for comparison — not a capture |
+| `treatment-a/b/c-*.html` | superseded; kept as the record the ruling was formed against |
+
+Renders for D and the reference at 390 · 768 · 1440 · 1728 are in [`shots-d/`](./shots-d/).
 
 Open [`index.html`](./index.html) in a browser. Treatments A, B and C are self-contained files.
 
