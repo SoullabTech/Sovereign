@@ -50,12 +50,54 @@ necessary and never sufficient.
 
 ---
 
+## The two runtime witnesses
+
+The capture run produces two separate observations. They are recorded apart
+because they prove different things and can fail independently.
+
+```text
+WITNESS 1   fresh browser, no session
+            expected  the deliberate sign-in invitation
+            not       "Something Went Wrong"
+            PASS  →   ac02a22ba runtime re-witnessed
+
+WITNESS 2   signed in, manuscript named
+            expected  the WRITE field renders and captures
+            PASS  →   field-capture acceptance proceeds
+```
+
+Witness 1 is not incidental to getting a screenshot. The hook-order crash was
+STRUCTURALLY FIXED at `ac02a22ba` and 221 tests agree, but a test proves the
+hook sits above the return — only React proves React is satisfied. A member
+whose session expires mid-session takes that exact path.
+
+**STRUCTURALLY FIXED ≠ RUNTIME RE-WITNESSED.**
+
+## What SHA the evidence belongs to
+
+A capture is named for HEAD, because HEAD is the tree that rendered it. That is
+not the same as the change under test, and the record says both:
+
+```text
+application fix under test   ac02a22ba
+capture harness              8a81c9e7a
+tree that rendered           HEAD at capture time
+```
+
+The harness commits change how the field is observed, never the field. Claiming
+a capture at `8a81c9e7a` proves something new about the Studio would be reading
+an instrument change as a product change — the stamp-versus-code confusion of
+D-015, one level down.
+
+---
+
 ## Pass 1
 
 ```text
 STATUS    awaiting the authenticated canonical capture
 CAPTURE   not yet committed
-BUILD     c97613e01 (field) · 4eb46f12b (capture tooling)
+UNDER TEST  ac02a22ba (shell + WRITE field, signed-out crash repair)
+HARNESS     8a81c9e7a
 ```
 
 Nothing is scored here until an image exists. A dimension judged from reading
