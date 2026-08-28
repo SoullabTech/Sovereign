@@ -74,9 +74,23 @@ WS2-03          HELD behind the same four rulings AND behind
                 false until repair 1 lands: the system can know whose
                 manuscript it is, but not which Work it belongs to.
 
-NEXT UNIT       WS2-ARCHITECTURE-DEFINITION.md — DRAFTED 2026-08-28, awaiting
-                founder review. Binds A–D in words and types. No code, no
-                migration, no UI.
+A–D BINDING     REVIEW: PASS · ACCEPTED — founder, 2026-08-28, reviewed at
+                c6d20703e (the binding itself, not a summary of it).
+                  A object model         ACCEPTED
+                  B MAIA relationship    ACCEPTED
+                  C provenance           ACCEPTED
+                  D mode/distance/owner  ACCEPTED
+                WS2-ARCHITECTURE-DEFINITION.md is ACCEPTED / FROZEN. A session
+                reads it and proceeds; it does not re-derive the bindings.
+                The remaining hold is SUBSTRATE IMPLEMENTATION, not conceptual
+                uncertainty.
+
+NEXT UNIT       WS2-SUBSTRATE-01 — DEFINED, NOT STARTED.
+                The next technical lease is READ-ONLY SCHEMA DESIGN: cardinality,
+                nullable transition/backfill policy, FK behaviour, provenance
+                minimum, adoption-state mapping, rollback, exact migration
+                footprint. **No migration is written until that design returns
+                for adjudication.**
                 The hold is NOT "we do not know the architecture." The
                 reference pack already carries it — verified by reading 04 and
                 05, not their filenames. The hold is: write down the
@@ -98,8 +112,8 @@ SUBSTRATE       three facts WS2-02/03 must be planned around. Read from the
                     manuscript_id with a CHECK refusing a homeless turn —
                     better than the audit assumed. But no adoption state, and
                     manuscript_id has no FK.
-                Whether these are repaired inside WS2-02/03 or in a preceding
-                migration unit is a founder decision, NOT TAKEN.
+                RULED — D-021: repaired in a PRECEDING unit,
+                WS2-SUBSTRATE-01, never inside WS2-02/03.
 
 PRODUCTION      0d66a5a27  deployed 2026-08-27 · VERIFIED TWO WAYS (D-007)
                   env var  — GIT_COMMIT == 0d66a5a27 (gate-verified at swap)

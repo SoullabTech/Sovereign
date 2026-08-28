@@ -1,7 +1,23 @@
 # WS2 — ARCHITECTURE DEFINITION
 
-**The unit that lifts the WS2-02 hold.** Binds A–D in words and types, before
-any design-system implementation. **No implementation. No UI. No migration.**
+**STATUS: ACCEPTED / FROZEN — founder, 2026-08-28.** A–D binding review: **PASS**.
+The remaining hold is **substrate implementation, not conceptual uncertainty**.
+
+The unit that lifted the WS2-02 architecture hold. Binds A–D in words and types.
+**No implementation. No UI. No migration.**
+
+```text
+A  Work / Manuscript / Material              ACCEPTED
+B  MAIA relationship                         ACCEPTED
+C  provenance / adoption architecture        ACCEPTED
+D  Mode ≠ Distance ≠ Functional Owner        ACCEPTED
+
+SUBSTRATE IMPLEMENTATION                     NEXT · WS2-SUBSTRATE-01
+```
+
+Frozen: a session reads this and proceeds. It does not re-derive the bindings.
+Changing an accepted binding is a new founder ruling recorded in `DECISIONS.md`,
+never an edit here.
 
 Founder rulings of 2026-08-28 (`WS2-02-03-AUTHORITY-AUDIT.md` A/B/C/D) are the
 input. This file is the binding, plus a reconciliation against what the
@@ -508,10 +524,19 @@ interface OwnerContract { surfacesThrough: Mode[] }
    manuscript_id has no foreign key.
 ```
 
-**Whether these are repaired inside WS2-02/03 or in a preceding migration unit
-is a founder decision and is not taken here.** What this file settles is that
-they are *architecture*, not presentation, and therefore fall under statement 5:
-their presentation may wait for WS2-06; their existence may not.
+**Ruled — D-021, founder 2026-08-28.** These are repaired in a **preceding
+unit**, not inside WS2-02/03: **`WS2-SUBSTRATE-01`**.
+
+The reason is not sequencing taste. WS2-02/03 must implement against a substrate
+that already tells the truth; if presentation work and object-model repair share
+a unit, *"the UI chose this"* and *"the data model forced this"* stop being
+distinguishable afterwards. The shell may then only present relationships the
+domain can actually represent — and may not invent route-, recency-, browser- or
+UI-derived substitutes for a missing domain relationship.
+
+What this file settles stands: these are *architecture*, not presentation, and
+therefore fall under statement 5 — their presentation may wait for WS2-06; their
+existence may not.
 
 ---
 
@@ -526,8 +551,10 @@ their presentation may wait for WS2-06; their existence may not.
 - WS2-01 acceptance, which is outstanding on runtime and founder evidence and
   is untouched by this file.
 
-**No code was changed. No migration was written. WS2-02 remains held until this
-binding is reviewed.**
+**No code was changed. No migration was written.**
+
+The binding is reviewed and ACCEPTED. WS2-02/WS2-03 are **conceptually
+unblocked**; their **execution is held behind `WS2-SUBSTRATE-01`** (D-021).
 
 ---
 
