@@ -68,7 +68,9 @@ const PLATFORM = 'platform';
  * @param deps.credential    the member session — used ONLY for `mintWebSession`
  * @param deps.onPlace       notified when the visible destination changes
  */
-function createPlatformShell({ BrowserView, sessionApi, shellApi, window, credential, onPlace } = {}) {
+function createPlatformShell({
+  BrowserView, sessionApi, shellApi, window, credential, onPlace, onReturnToMaia,
+} = {}) {
   let view = null;                       // at most ONE, ever
   let place = MAIA;
   let partitionArmed = false;
@@ -118,6 +120,15 @@ function createPlatformShell({ BrowserView, sessionApi, shellApi, window, creden
       // outright rather than handing it to the OS.
       shellApi.openExternal(decision.url);
     }
+    if (decision.action === 'return-to-maia' && typeof onReturnToMaia === 'function') {
+      // ⭐ DESKTOP-HOUSE-01. The House's MAIA door does not open a remote
+      // conversation inside Desktop — Desktop already holds the member's MAIA,
+      // locally and privileged. Loading the web one would put two MAIAs in one
+      // window, which is the failure DS01's device walk actually observed. The
+      // navigation is prevented above; this hands the gesture to main, which
+      // detaches the platform view and reveals the conversation already there.
+      onReturnToMaia(url);
+    }
     return decision;
   }
 
@@ -130,6 +141,29 @@ function createPlatformShell({ BrowserView, sessionApi, shellApi, window, creden
     const wc = view.webContents;
     wc.on('will-navigate', (event, url) => route(url, event));
     wc.on('will-redirect', (event, url) => route(url, event));
+    // ⛔ THE ONE THAT WOULD HAVE MADE PATH AUTHORITY DECORATIVE. The platform
+    // is a Next.js App Router app: moving from the House into a World is a
+    // history.pushState transition, which fires NEITHER `will-navigate` NOR
+    // `will-redirect`. Guarding only those two would leave every in-app
+    // transition ungoverned — which is to say, most of them.
+    //
+    // It has already happened by the time this fires, so there is nothing to
+    // prevent; the response is corrective rather than preventive. A path the
+    // House does not name is walked back to the House; the conversation is
+    // handed to main as a return-to-center.
+    wc.on('did-navigate-in-page', (_event, url, isMainFrame) => {
+      if (isMainFrame === false) return;   // a frame moving is not the member moving
+      const decision = navigationDecision(url);
+      if (decision.action === 'allow') return;
+      if (decision.action === 'return-to-maia') {
+        if (typeof onReturnToMaia === 'function') onReturnToMaia(url);
+        return;
+      }
+      if (decision.action === 'external' && shellApi && shellApi.openExternal) {
+        shellApi.openExternal(decision.url);
+      }
+      if (typeof wc.loadURL === 'function') void wc.loadURL(platformEntryUrl());
+    });
     // ⛔ DENY, always. A second renderer created by the remote page would be
     // ungoverned by construction — nothing here would have attached a policy
     // to it. An external address still reaches the member, in their browser.

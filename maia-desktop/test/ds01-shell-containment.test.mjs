@@ -283,8 +283,11 @@ test('F2 — the MAIA renderer can never navigate, so remote content cannot reac
 // ════════════════════════════════════════════════════════════════════════════
 
 test('F3 — the origin test cannot be fooled by a lookalike host', () => {
-  assert.equal(navigationDecision('https://soullab.life/journey').action, 'allow');
-  assert.equal(navigationDecision('https://soullab.life/settings?x=1#y').action, 'allow');
+  // DESKTOP-HOUSE-01: the sample paths are now House destinations, because
+  // origin alone no longer grants entry. The point of THIS test is unchanged —
+  // a lookalike host must never be read as our origin.
+  assert.equal(navigationDecision('https://soullab.life/journal').action, 'allow');
+  assert.equal(navigationDecision('https://soullab.life/account/settings?x=1#y').action, 'allow');
   // ⭐ The one a startsWith() check would have admitted. A different site that
   // reads like ours must never load inside Desktop.
   assert.equal(navigationDecision('https://soullab.life.evil.com/journey').action, 'external');
@@ -339,13 +342,23 @@ test('F3 — REDIRECTS are guarded by the same rule as navigations', async () =>
   assert.deepEqual(log.external, ['https://evil.com/']);
 });
 
-test('F3 — internal navigation inside the platform origin is allowed to proceed', async () => {
+test('F3 — navigation to a HOUSE place proceeds; same-origin non-House does not', async () => {
   const { shell } = await signedInShell();
   await shell.show();
+
+  // A place the House names.
   let prevented = false;
   shell._view().webContents.emit('will-navigate',
-    { preventDefault: () => { prevented = true; } }, `${PLATFORM_ORIGIN}/settings`);
-  assert.equal(prevented, false, 'the platform view cannot move within its own origin');
+    { preventDefault: () => { prevented = true; } }, `${PLATFORM_ORIGIN}/journal`);
+  assert.equal(prevented, false, 'the platform view cannot reach a House destination');
+
+  // ⭐ DESKTOP-HOUSE-01. Same origin, but no House door opens onto it. Under
+  // DESKTOP-SHELL-01 this loaded, because sharing an origin was treated as
+  // authority. It must not.
+  prevented = false;
+  shell._view().webContents.emit('will-navigate',
+    { preventDefault: () => { prevented = true; } }, `${PLATFORM_ORIGIN}/admin/secrets`);
+  assert.ok(prevented, 'a same-origin route the House does not name was allowed to load');
 });
 
 test('F3 — window.open is DENIED in every case; no second renderer is ever created', async () => {

@@ -668,7 +668,7 @@ ipcMain.handle('maia:auth-state', async () => memberSession.state());
 
 const DESTINATIONS = [
   { id: MAIA, label: 'MAIA', accelerator: 'Alt+CmdOrCtrl+M', enabled: true },
-  { id: PLATFORM, label: 'Journey', accelerator: 'Alt+CmdOrCtrl+J', enabled: true },
+  { id: PLATFORM, label: 'The House', accelerator: 'Alt+CmdOrCtrl+J', enabled: true },
   { id: 'sessions', label: 'Sessions', enabled: false },
   { id: 'library', label: 'Library', enabled: false },
   { id: 'settings', label: 'Settings', enabled: false },
@@ -684,7 +684,7 @@ const DESTINATIONS = [
  */
 function showPlace(place) {
   if (!mainWindow || mainWindow.isDestroyed()) return;
-  mainWindow.setTitle(place === PLATFORM ? 'MAIA Desktop — Journey' : 'MAIA Desktop');
+  mainWindow.setTitle(place === PLATFORM ? 'MAIA Desktop — The House' : 'MAIA Desktop');
   buildMenu();
 }
 
@@ -693,13 +693,44 @@ async function goTo(id) {
   if (id === MAIA) return platformShell.hide();
   if (id !== PLATFORM) return;
   if (!memberSession || !memberSession.state().signedIn) return;
+
+  // ⭐ DESKTOP-HOUSE-01 · TRUTHFUL ATTENTION. Capture is released BEFORE the
+  // House becomes visible, never after and never in parallel.
+  //
+  // The member is about to look at a platform place. If the microphone were
+  // still live behind it, MAIA would be listening — and, with the epoch still
+  // open, transcribing, answering and speaking — to a member who has visibly
+  // gone somewhere else. Attention the member cannot see is not attention they
+  // consented to.
+  //
+  // `releaseCapture` DISCARDS: no transcription, no runTurn, no commit of the
+  // pending epoch. Words spoken before crossing the threshold are not turned
+  // into a turn behind a screen the member is no longer looking at.
+  //
+  // ⛔ Awaited. Showing first and releasing after would leave a window — small,
+  // real, and exactly the kind that only reveals itself on a device.
+  await releaseCapture('platform-visible');
+
   const out = await platformShell.show();
   // ⛔ A failed entry must not leave a blank view attached and the member
   // stranded. Fall back to MAIA and say so where the surface already speaks.
   if (!out.ok) {
     platformShell.hide();
-    broadcast('maia:turn', { phase: 'error', error: `Journey could not open — ${out.error}` });
+    broadcast('maia:turn', { phase: 'error', error: `The House could not open — ${out.error}` });
   }
+}
+
+/**
+ * The House's MAIA door, and any remote attempt to reach `/maia`.
+ *
+ * ⛔ Returning to center does NOT restart capture. The member chose to listen
+ * before; they did not choose to still be listening after a trip through the
+ * House. Starting the microphone on their behalf, because it happened to be on
+ * earlier, is exactly the silent-attention failure this unit forbids.
+ */
+function returnToMaia(fromUrl) {
+  console.log('[HOUSE] return to center', fromUrl ? String(fromUrl).slice(0, 120) : '');
+  if (platformShell) platformShell.hide();
 }
 
 function buildMenu() {
@@ -753,6 +784,7 @@ function createWindow() {
   });
 
   platformShell = createPlatformShell({
+    onReturnToMaia: returnToMaia,
     BrowserView,
     sessionApi: session,
     shellApi: shell,
