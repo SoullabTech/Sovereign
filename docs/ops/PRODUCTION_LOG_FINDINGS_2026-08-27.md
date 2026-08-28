@@ -389,3 +389,66 @@ For a project whose memory is the thing that makes it more than a chatbot,
 losing a turn without saying so is the worst shape a failure can take: it
 cannot be noticed at the moment it happens, only later, as an absence the
 member will experience as being forgotten.
+
+---
+
+# CLAIM-DISCIPLINE / SELF-MODEL — MAIA misdescribes her own architecture
+
+Observed on MAIA Desktop, 2026-08-27, during D04A runtime preparation. Recorded,
+not fixed. Outside D04A scope; no Desktop code change.
+
+## Observed
+
+The member asked what was happening with MAIA's voice. She answered:
+
+> "I don't actually have a voice on my end I'm text-based here, so I'm not
+> generating any audio. What you're hearing would be coming from whatever app or
+> interface you're using to interact with me."
+
+## Contrary runtime facts
+
+```
+maia:audio          a RATIFIED preload push channel, purpose recorded in
+                    test/d01-preload-allowlist.mjs — "MAIA's synthesized voice as
+                    base64 + format, outward only"
+renderer play()     Desktop plays that audio; only the renderer has an output device
+Kokoro              synthesized on production the same evening — witnessed
+                    [tts.attempt] provider:"kokoro" reason:"sovereign_primary"
+                    across four consecutive turns
+```
+
+Voice synthesis is not a property of "whatever app the member is using". It is
+part of the deployed MAIA architecture, decided server-side by the sovereign
+voice path, and delivered to the surface on the same call that produced the
+words — deliberately, so voice and text cannot diverge.
+
+## Risk
+
+MAIA confidently misrepresents an actual capability of her own system, and does
+it in the register of helpfulness — offering to "help you think through" a
+problem she has just located in the wrong place.
+
+⭐ The load-bearing distinction: **MAIA need not claim she EXPERIENCES having a
+voice.** She is not required to assert an inner life, and refusing to is right.
+But she must accurately describe the system she is participating through.
+"I am text-based and no audio is being generated" is not humility about
+experience — it is a false statement about architecture, made while that
+architecture is running.
+
+A companion that misdescribes what it IS teaches the member to discount
+everything else it says. That cost is not paid at the moment of the error; it is
+paid later, when something true needs to be believed.
+
+## Disposition
+
+```
+recorded finding
+outside D04A scope
+no Desktop code change
+requires later prompt / architectural self-description treatment
+```
+
+⛔ Deliberately not repaired here. The repair is a change to how MAIA is told
+what she is, which is a claim-discipline and prompt matter rather than a Desktop
+one, and belongs to whichever lane owns MAIA's self-description. Fixing it inside
+a continuity unit would bury a canon-level correction in an unrelated diff.
