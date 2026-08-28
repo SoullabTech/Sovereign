@@ -28,6 +28,9 @@ import { query } from '@/lib/db/postgres';
 import { getCurrentSession } from '@/lib/auth/serverSessions';
 import { getMemberIdFromRequest } from '@/lib/scribe/scribeAuth';
 import { resolveArrival } from '@/lib/practiceField/programPositionService';
+// The lived return's relation — extracted so the member-scoping check is
+// testable (a route.ts may export only handlers; same reason as NW-I01).
+import { resolveRespondsTo } from '@/lib/nowWhat/livedRelation';
 
 type Decision = 'keep' | 'revise' | 'discard' | 'split';
 interface ProposalDecision {
@@ -154,17 +157,18 @@ async function saveThread(
   fieldContext: string | null,
   shareWithPractitioner: boolean,
   flourishingDimension: string | null = null,
+  respondsToThreadId: string | null = null,
 ): Promise<string | null> {
   const res = await query<{ id: string }>(
     `INSERT INTO member_field_note_threads
        (member_id, source_session_ref, title, content, authorship, is_directly_stated,
         member_confirmed, member_decision, member_decision_at, revision_notes,
         consent_state, can_be_remembered, can_be_shown_to_practitioner, confirmed_at,
-        spiralogic_phase, field_context, flourishing_dimension)
+        spiralogic_phase, field_context, flourishing_dimension, responds_to_thread_id)
      VALUES ($1, $2, $3, $3, $4, $5, TRUE, $6, NOW(), $7,
-             'member-confirmed-memory', TRUE, $10, NOW(), $8, $9, $11)
+             'member-confirmed-memory', TRUE, $10, NOW(), $8, $9, $11, $12)
      RETURNING id`,
-    [memberId, sessionRef, title, authorship, isDirectlyStated, memberDecision, revisionNotes, spiralogicPhase, fieldContext, shareWithPractitioner, flourishingDimension],
+    [memberId, sessionRef, title, authorship, isDirectlyStated, memberDecision, revisionNotes, spiralogicPhase, fieldContext, shareWithPractitioner, flourishingDimension, respondsToThreadId],
   );
   return res.rows[0]?.id ?? null;
 }
@@ -191,7 +195,7 @@ export async function GET(request: NextRequest) {
     }>(
       `SELECT id, title, authorship, member_decision, spiralogic_phase,
               can_be_shown_to_practitioner, field_context, created_at,
-              flourishing_dimension
+              flourishing_dimension, responds_to_thread_id
          FROM member_field_note_threads
         WHERE member_id = $1
           AND released_at IS NULL
@@ -240,6 +244,10 @@ export async function POST(request: NextRequest) {
     // dimension door (Flourishing Field → Add a reflection). Validated
     // against the six dimensions; anything else is NULL.
     const flourishingDimension = asDimension(body?.dimension);
+    // The prior member act this session is answering — present only when the
+    // member returned through the lived doorway carrying one of their own acts.
+    // Resolved member-scoped; anything else becomes NULL (see resolveRespondsTo).
+    const respondsToThreadId = await resolveRespondsTo(memberId, body?.respondsToThreadId);
     // Practitioner visibility is per-thread, DEFAULT FALSE. Each thread carries its
     // own shareWithPractitioner flag parsed from the request body. Carrying a thread
     // is private to the member's field; sharing is a separate explicit gesture, per
@@ -265,7 +273,7 @@ export async function POST(request: NextRequest) {
           const childId = await saveThread(
             memberId, sessionRef, childTitle, 'member_authored', true, 'split',
             `split from MAIA's "${p.title}"`, threadPhase, fieldContext, p.shareWithPractitioner,
-            flourishingDimension,
+            flourishingDimension, respondsToThreadId,
           );
           saved += 1;
           activity.created += 1;
@@ -280,6 +288,7 @@ export async function POST(request: NextRequest) {
       const id = await saveThread(
         memberId, sessionRef, title, 'member_confirmed', false, p.decision, revisionNotes,
         threadPhase, fieldContext, p.shareWithPractitioner, flourishingDimension,
+        respondsToThreadId,
       );
       saved += 1;
       if (p.decision === 'keep') activity.kept += 1;
@@ -294,13 +303,19 @@ export async function POST(request: NextRequest) {
       // session phase, silently dropping the question (silent-loss bug 2,
       // NOW_WHAT_ROOM_DOORWAY_LOGIC_REVIEW_2026-08-05.md).
       const createdPhase = c.isQuestion ? 'question' : spiralogicPhase;
-      const id = await saveThread(memberId, sessionRef, c.title, 'member_authored', true, 'create', null, createdPhase, fieldContext, c.shareWithPractitioner, flourishingDimension);
+      const id = await saveThread(memberId, sessionRef, c.title, 'member_authored', true, 'create', null, createdPhase, fieldContext, c.shareWithPractitioner, flourishingDimension, respondsToThreadId);
       saved += 1;
       activity.created += 1;
       await logEvent(memberId, id, 'created', 'create');
     }
 
-    console.info('[NowWhat/field-note] saved', JSON.stringify({ saved, phase: spiralogicPhase, fieldContext, ...activity }));
+    console.info('[NowWhat/field-note] saved', JSON.stringify({
+      saved, phase: spiralogicPhase, fieldContext,
+      // Discoverable marker for the V1 return loop: whether this keep stayed
+      // related to a prior member act. Boolean only — never the id, never content.
+      respondsToPriorAct: respondsToThreadId !== null,
+      ...activity,
+    }));
     return NextResponse.json({ ok: true, saved, activity });
   } catch (err: any) {
     console.error('[NowWhat/field-note] error:', err?.message || err);

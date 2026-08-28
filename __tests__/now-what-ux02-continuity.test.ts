@@ -77,8 +77,14 @@ describe('GESTURE-HIERARCHY-01 — one primary gesture, doors as sentences', () 
 
   it('the primary DERIVES from the carried thread, not hard-coded prominence', () => {
     // The whole point of the founder's constraint: 02 and 05 cohere through
-    // continuity. The primary block is conditional on livingQuestion.
-    expect(home).toMatch(/livingQuestion \?[\s\S]{0,400}nwh-primary/);
+    // continuity. The primary block is conditional on the member's own carried
+    // material — `anchor` since NW-V1-CLIENT-01, which renamed `livingQuestion`
+    // when the Home stopped selecting two acts independently and started
+    // selecting one. Same property, tracked through the rename, and tightened:
+    // there is exactly ONE such conditional, so a second hard-coded hero
+    // cannot appear beside it.
+    expect(home).toMatch(/anchor \?[\s\S]{0,400}nwh-primary/);
+    expect((home.match(/\{anchor \?/g) ?? []).length).toBe(1);
     expect(home).toContain('Continue thinking');
   });
 

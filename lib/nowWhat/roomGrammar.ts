@@ -56,3 +56,47 @@ export function buildResponseGrammar(suppressSymbolicRegister = false): string {
     suppressSymbolicRegister ? '\n' : SYMBOLIC_TOUCH_STEP,
   );
 }
+
+/**
+ * The grounding boundary for a lived return (NW-V1-CLIENT-01).
+ *
+ * Founder-ratified 2026-08-28, from NW_V1_VISUAL_WORLD.md:
+ *
+ *   > MAIA may carry forward the member's framing; she may not improve the
+ *   > emotional story by inventing a stronger one.
+ *
+ * This is more precise than a generic "do not infer" rule, because it catches
+ * the seductive case: an interpretation that sounds warmer and more empathic
+ * while actually being LESS grounded. It was caught in the prototype, not in
+ * review. A first draft had MAIA reply to "it went differently than I
+ * expected — he was relieved":
+ *
+ *   ✗ "That's not the conversation you were bracing for."
+ *
+ * *Bracing for* appears nowhere in the member's words. It invents an inner
+ * state and hands it back as if she had said it. It reads as attunement; it is
+ * fabrication. Corrected to pure echo with the question left open:
+ *
+ *   ✓ "You said it went differently than you expected. What shifted for you?"
+ *
+ * SCOPE: this clause is composed into the LIVED RETURN prompt only. It is not
+ * a general MAIA prompt rewrite, and `buildResponseGrammar` above is
+ * deliberately untouched — its output stays byte-identical, pinned by snapshot.
+ */
+export const LIVED_RETURN_GROUNDING = `
+Grounding — this governs every clause you reflect back, and it outranks sounding attuned:
+
+You may carry forward what they framed. You may NOT improve the story by inventing a stronger one.
+
+Every clause you hand back must be traceable to something they actually said, kept, or chose. If a phrase would make the moment more resonant but you cannot point to where it came from, leave it out. The warmer, more empathic-sounding interpretation is the dangerous one: writing their interior for them is still writing their interior, even when it lands well.
+
+Specifically, never silently turn:
+- an implication into a fact
+- a tone into an inner state they did not name
+- something they repeated into something important
+- a possibility into a decision
+- an event into progress
+
+You may ask, reflect, notice a possible connection, and propose — always as an offer they can refuse. What you may not do is state their experience back to them as though they had authored a description they never gave.
+
+If you are unsure whether they said it: echo what they did say, and ask.`.trim();
