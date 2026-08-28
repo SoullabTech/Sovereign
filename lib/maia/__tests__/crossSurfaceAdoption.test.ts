@@ -450,3 +450,35 @@ describe('a streamed pair adopts ZERO rows once repaired', () => {
     expect(planAdoption(echo, preFix, new Set()).adopt).toHaveLength(2);
   });
 });
+
+describe('session parity — one session, not one for the record and another for the voice', () => {
+  const component = readFileSync(
+    new URL('../../../components/OracleConversation.tsx', import.meta.url), 'utf8');
+  const hook = readFileSync(
+    new URL('../../../hooks/useStreamingVoice.ts', import.meta.url), 'utf8');
+
+  it('the canonical /maia sessionId is supplied to the streaming hook', () => {
+    // Without it the hook mints `voice-<uuid>` and the route uses THAT as its
+    // relational + wisdom continuity key, so MAIA answers from a session the
+    // conversation record never knew about.
+    const call = /= useStreamingVoice\(\{[\s\S]*?\n  \}\);/.exec(component)?.[0] ?? '';
+    expect(call).not.toBe('');
+    expect(call).toMatch(/^\s*sessionId,$/m);
+  });
+
+  it('the hook sends the supplied session, and follows it when the thread changes', () => {
+    expect(hook).toContain('sessionId: sessionIdRef.current');
+    // Adopting a new canonical thread must carry the voice session with it.
+    expect(hook).toMatch(/providedSessionId && providedSessionId !== sessionIdRef\.current/);
+  });
+
+  it('⛔ a generated voice-* session is the FALLBACK, never used when one is supplied', () => {
+    const gen = /function getOrCreateSessionId\([\s\S]*?\n\}/.exec(hook)?.[0] ?? '';
+    expect(gen).toContain('if (providedId)');
+    // A supplied id returns BEFORE sessionStorage is consulted and before
+    // generateSessionId() is ever reached, so a stale `voice-*` left in
+    // sessionStorage by an earlier run cannot win over the canonical thread.
+    expect(gen.indexOf('return providedId;')).toBeLessThan(gen.indexOf('sessionStorage.getItem'));
+    expect(gen.indexOf('return providedId;')).toBeLessThan(gen.indexOf('generateSessionId()'));
+  });
+});

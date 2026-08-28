@@ -2590,6 +2590,20 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     lastMoveOutcome,
     unlockAudio: unlockStreamingAudio,
   } = useStreamingVoice({
+    // ⭐ CROSS-SURFACE-THREAD-ADOPTION-01 — session parity.
+    //
+    // Omitting this let the hook mint its own `voice-<uuid>` and send THAT to
+    // /api/voice/stream-conversation, which uses it as the relational and
+    // wisdom continuity key (`effectiveSessionId` → getOrCreateVoiceSession,
+    // MaiaWisdomProvider.buildVoiceContext). The turn still landed in the right
+    // canonical thread, because the write-sync effect persists under the page's
+    // sessionId — but MAIA GENERATED THE ANSWER while inhabiting a different
+    // session context. One thread in the database, two elsewhere.
+    //
+    // The hook already re-reads a changed `providedSessionId` into its ref, so
+    // adopting a new canonical thread carries the voice session with it. No new
+    // mechanism — the option existed and was simply never supplied.
+    sessionId,
     voice: voiceSettings.voice,
     speed: voiceSettings.speed,
     model: voiceSettings.model,
