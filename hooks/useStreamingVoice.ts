@@ -90,6 +90,22 @@ interface StreamingVoiceOptions {
   memoryDepth?: 'minimal' | 'moderate' | 'deep';
   /** Audio playback volume (0.0 - 1.0) */
   volume?: number;
+  /**
+   * Member's Sanctuary state for this turn.
+   *
+   * Sanctuary is a retrieval boundary, and the route enforces it — but the
+   * route can only enforce what reaches it. Until 2026-08-28 this hook sent no
+   * `sanctuary` field at all, so the route's `sanctuary = false` destructure
+   * default silently opened the memory gate on every streaming voice turn,
+   * including turns the member had explicitly placed in Sanctuary
+   * (F10 Turn B, witness 4fde4e90-4f09-4ff7-8021-d30cc94887d8).
+   *
+   * This is threaded from the caller rather than read here: `isSanctuary` in
+   * OracleConversation is the single authority. A second, independent read in
+   * this hook could disagree with the state the member can see, and would fail
+   * silently in the unsafe direction.
+   */
+  sanctuary?: boolean;
 }
 
 interface StreamingVoiceState {
@@ -240,6 +256,9 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
     conversationMode,
     memoryDepth,
     volume = 1.0,
+    // Defaults false to match the route's own default: an absent value must not
+    // read as Sanctuary-off by accident on either side of the wire.
+    sanctuary = false,
   } = options;
 
   // Stable session ID - persisted in sessionStorage for cross-reload continuity
@@ -634,6 +653,7 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
           archetype,     // MAIA's presence/archetype mode
           conversationMode, // Conversation style
           memoryDepth,   // Memory retrieval depth
+          sanctuary,     // 🛡️ Sanctuary: the route's memory gate reads this
         }),
         signal: abortControllerRef.current.signal,
       });

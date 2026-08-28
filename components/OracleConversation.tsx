@@ -2572,6 +2572,9 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     archetype: voiceSettings.archetype,
     conversationMode: voiceSettings.conversationMode,
     memoryDepth: voiceSettings.memoryDepth,
+    // 🛡️ SANCTUARY — the streaming-voice wire (F10). isSanctuary is the single
+    // authority; the hook must not read this independently.
+    sanctuary: isSanctuary,
     element: undefined, // Will be set dynamically per message
     // 🎤 PWA PLAYBACK SIGNALS: Route audio events to PWA state machine
     onPlaybackSignal: handlePlaybackSignal,

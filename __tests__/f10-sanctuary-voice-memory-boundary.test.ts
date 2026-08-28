@@ -145,3 +145,64 @@ describe('F10 · Sanctuary must not force a false continuity claim', () => {
     expect(v.safeText).toContain('may not have loaded the earlier specifics yet');
   });
 });
+
+// ═══════════════════════════════════════════════════════════════════
+// F10 CLIENT WIRE (F10-SANCTUARY-WIRE-01)
+//
+// The server half above proves the route's guard exists. It cannot prove the
+// guard is ever GIVEN a true — and on 2026-08-28 it was not: `useStreamingVoice`
+// sent no `sanctuary` field at all, so the route's `sanctuary = false`
+// destructure default opened the memory gate on a turn the member had placed in
+// Sanctuary (witness 4fde4e90-4f09-4ff7-8021-d30cc94887d8: attempted=true,
+// promptIncluded=true). The predicate was correct and inert for its whole life.
+//
+// WHAT THESE PINS PROVE: the member's Sanctuary state is threaded from its
+// single authority into the request body.
+// WHAT THEY DO NOT PROVE: that a runtime `true` arrives at the server as `true`.
+// `@testing-library/react` is not a dependency here and the jsdom project
+// matches only `lib/hooks/**/*.dom.test.tsx`, so no render test is available.
+// That claim belongs to the runtime witness, not to this file.
+// ═══════════════════════════════════════════════════════════════════
+
+const hookSrc = code(readFileSync(join(ROOT, 'hooks/useStreamingVoice.ts'), 'utf8'));
+const callerSrc = code(readFileSync(join(ROOT, 'components/OracleConversation.tsx'), 'utf8'));
+
+describe('F10 client wire · Sanctuary reaches the route', () => {
+  it('the hook accepts sanctuary as an option', () => {
+    expect(hookSrc).toMatch(/sanctuary\?:\s*boolean/);
+    expect(hookSrc).toMatch(/sanctuary = false,/); // destructured, defaulted like the route
+  });
+
+  it('the streaming request body carries sanctuary', () => {
+    // Anchor on the actual POST to the route, not on the word appearing anywhere.
+    const i = hookSrc.indexOf("apiFetch('/api/voice/stream-conversation'");
+    expect(i).toBeGreaterThan(-1);
+    const body = hookSrc.slice(i, hookSrc.indexOf('}),', i));
+    expect(body).toContain('sanctuary');
+    // The exact pre-repair defect, pinned so it cannot silently return.
+    expect(body).toContain('conversationHistory');
+    expect(body).toContain('sessionId');
+  });
+
+  it('the caller threads isSanctuary into the hook — one authority, not two', () => {
+    const i = callerSrc.indexOf('} = useStreamingVoice({');
+    expect(i).toBeGreaterThan(-1);
+    const opts = callerSrc.slice(i, callerSrc.indexOf('onTextChunk', i));
+    expect(opts).toMatch(/sanctuary:\s*isSanctuary/);
+  });
+
+  it('the hook never reads Sanctuary from storage itself', () => {
+    // A second source of truth could disagree with what the member can see, and
+    // would fail silently in the unsafe direction. isSanctuary stays sole authority.
+    const storageReads = hookSrc.match(/localStorage[^\n]*/g) ?? [];
+    for (const line of storageReads) {
+      expect(line).not.toMatch(/sanctuary/i);
+      expect(line).not.toMatch(/maia_settings/);
+    }
+  });
+
+  it('isSanctuary is still hydrated from the settings the member sees', () => {
+    expect(callerSrc).toMatch(/localStorage\.getItem\('maia_settings'\)/);
+    expect(callerSrc).toMatch(/settings\.sanctuary === true/);
+  });
+});
