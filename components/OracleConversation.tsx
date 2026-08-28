@@ -209,6 +209,7 @@ import { useFeatureFlags } from '@/lib/utils/feature-flags-client';
 import { MaiaArrivalField } from './maia/MaiaArrivalField';
 import type { MaiaUiAction } from '@/lib/types/ai';
 import { detectIntent, getIntentRoute, buildUiAction } from '@/lib/consciousness/intentRouter';
+import { detectKeepIntent } from '@/lib/consciousness/keepIntent';
 import { detectCaptureTrigger } from '@/lib/capsules/types';
 import type { CapsuleDTO } from '@/lib/capsules/types';
 import { TransformationalPresence, type PresenceState } from './nlp/TransformationalPresence';
@@ -6181,6 +6182,51 @@ I'm not sure what I'm feeling yet.`;
         suggestedActions: responseData.suggestedActions || responseData.spiralogic?.suggestedActions || undefined,
       };
 
+      // 🔖 KEEP-INTENT-01 — the member asked to keep something, or asked for Keep
+      // itself. Recognized HERE, after the reply exists, and deliberately not in
+      // handleTextMessage next to detectJournalCommand(): that detector returns
+      // before the message is sent, so MAIA goes silent. "Can we keep this?" is
+      // relational speech addressed to her; the interface must not make her mute
+      // because it recognized an affordance. The turn is untouched by this block.
+      //
+      // Three layers, held apart (Kelly ruling 2026-08-28):
+      //   UNDERSTAND — detectKeepIntent(), pure, writes nothing
+      //   FACILITATE — surface or open the member-controlled Keep gesture
+      //   COMMIT     — only the member's confirmation in the panel persists
+      // Opening Keep is now a zero-persistence act (KEEP-OPEN-NONPERSISTENT-01),
+      // which is what makes the explicit-command branch below safe to wire.
+      const keepIntent = detectKeepIntent(cleanedText);
+      if (keepIntent.kind) {
+        if (isSanctuary) {
+          // No doorway, no panel, no capsule. MAIA answers in words — the
+          // platform map tells her Keep is unavailable in Sanctuary and that
+          // this absence is the boundary working, not a fault.
+          console.log('🛡️ [Keep] intent recognized but refused · Sanctuary', {
+            kind: keepIntent.kind,
+          });
+        } else if (keepIntent.kind === 'open_keep') {
+          // Explicit House command. MAIA operates the interface; she does not
+          // exercise the member's consent authority by doing so — the panel
+          // opens holding an unsaved preview and nothing is written until the
+          // member confirms.
+          console.log('🔖 [Keep] explicit open command', { matched: keepIntent.matched });
+          handleCaptureSpiritRef.current?.();
+        } else if (!oracleMessage.uiAction || oracleMessage.uiAction.type === 'none') {
+          // The member wants to hold onto this material. Surface the existing
+          // member-controlled doorway rather than opening anything: they decide.
+          const action = buildUiAction(getIntentRoute('reflection_mark'), 1);
+          if (action.type !== 'none') {
+            oracleMessage.intent = 'reflection_mark';
+            // Override the ambient lead-in. The pooled ones ("Something
+            // important just happened.") are MAIA asserting significance she
+            // detected; here the member said it themselves, and echoing their
+            // ask back as her own observation would misreport who noticed.
+            oracleMessage.uiAction = { ...action, leadIn: 'You asked to keep this.' };
+            console.log('🔖 [Keep] doorway attached', { matched: keepIntent.matched });
+          }
+        }
+      }
+
       // 🚪 CLIENT-SIDE INTENT DETECTION (fallback when server doesn't provide uiAction)
       if (!oracleMessage.uiAction || oracleMessage.uiAction.type === 'none') {
         const detection = detectIntent({ userInput: cleanedText, maiaResponse: oracleMessage.text || '' });
@@ -6540,7 +6586,7 @@ I'm not sure what I'm feeling yet.`;
 
       setCurrentMotionState('idle');
     }
-  }, [isProcessing, isAudioPlaying, isResponding, sessionId, userId, onMessageAdded, agentConfig, messages.length, showChatInterface, voiceEnabled, maiaReady, maiaMode, pendingLensConsent]);
+  }, [isProcessing, isAudioPlaying, isResponding, sessionId, userId, onMessageAdded, agentConfig, messages.length, showChatInterface, voiceEnabled, maiaReady, maiaMode, pendingLensConsent, isSanctuary]);
 
   // 🔁 RECOVERY SEAM (Pattern A) — guarded resend of a not-delivered turn.
   // Reuses the member's existing bubble (retryOf); never creates a second turn.
