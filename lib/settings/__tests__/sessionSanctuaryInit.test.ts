@@ -19,6 +19,7 @@ import {
   readLiveSanctuary,
   applySessionSanctuary,
   initializeSessionSanctuary,
+  bootCloseSanctuaryIfNewSession,
 } from '../sessionSanctuaryInit';
 
 const store = new Map<string, string>();
@@ -30,7 +31,21 @@ beforeEach(() => {
   (globalThis as any).CustomEvent = class {
     constructor(public type: string, public init?: any) {}
   };
-  (globalThis as any).window = { dispatchEvent: jest.fn() };
+  // A REAL event target: B2 detects member writes by observing
+  // `maia-settings-changed`, so a jest.fn() stub would make that mechanism
+  // untestable — and a mechanism that cannot be exercised cannot be trusted.
+  const listeners = new Map<string, Set<Function>>();
+  (globalThis as any).window = {
+    addEventListener: (t: string, f: Function) => {
+      if (!listeners.has(t)) listeners.set(t, new Set());
+      listeners.get(t)!.add(f);
+    },
+    removeEventListener: (t: string, f: Function) => { listeners.get(t)?.delete(f); },
+    dispatchEvent: jest.fn((e: any) => {
+      listeners.get(e.type)?.forEach((f) => f(e));
+      return true;
+    }),
+  };
   (globalThis as any).localStorage = {
     getItem: (k: string) => (store.has(k) ? store.get(k)! : null),
     setItem: (k: string, v: string) => {
@@ -264,5 +279,93 @@ describe('call site — fires ONLY at the canonical new-session boundary', () =>
   it('surfaces an unenforced boundary instead of swallowing it', () => {
     expect(page).toMatch(/if \(!r\.enforced\)/);
     expect(page).toMatch(/NOT enforced/);
+  });
+});
+
+// ── Phase 2C — the three holes V2 still had ─────────────────────────────────
+
+describe('A2 · the boundary closes before any turn is possible', () => {
+  it('closes synchronously when a new session is imminent', () => {
+    const r = bootCloseSanctuaryIfNewSession(() => null); // peek: no live session
+    expect(r.closed).toBe(true);
+    expect(live()).toBe(true);
+  });
+
+  it('leaves a RESTORED session untouched — no default may overrule it', () => {
+    store.set('maia_settings', JSON.stringify({ sanctuary: false }));
+    const r = bootCloseSanctuaryIfNewSession(() => 'session_123');
+    expect(r.closed).toBe(false);
+    expect(live()).toBe(false);
+  });
+
+  it('is wired into a pre-render useState, not an effect, in /maia', () => {
+    // An effect runs AFTER children mount; by then OracleConversation is live
+    // and handleTextMessage carries no readiness guard. Only a render-phase
+    // initializer precedes the conversation surface existing at all.
+    const raw = readFileSync(
+      join(__dirname, '..', '..', '..', 'app', 'maia', 'page.tsx'), 'utf8');
+    expect(raw).toMatch(/useState\(\(\) => bootCloseSanctuaryIfNewSession\(peekMaiaSessionId\)\)/);
+    // Comments stripped: the rationale comment above the call names
+    // <OracleConversation>, and a positional pin that prose can satisfy is not
+    // a pin — the same lesson as the (D) assertion.
+    const code = raw
+      .replace(/\/\*[\s\S]*?\*\//g, '')
+      .replace(/^[ \t]*\/\/.*$/gm, '');
+    const boot = code.indexOf('bootCloseSanctuaryIfNewSession(peekMaiaSessionId)');
+    const convo = code.indexOf('<OracleConversation');
+    expect(boot).toBeGreaterThan(-1);
+    expect(convo).toBeGreaterThan(boot); // declared before the surface renders
+  });
+});
+
+describe('B2 · override provenance — a WRITE, not a value', () => {
+  it('stands down after OFF→ON even though the final value equals what we asserted', async () => {
+    // THE V2 HOLE. Member turns Sanctuary off, then deliberately back on, while
+    // the fetch is pending. Final value === asserted value, so V2's boolean
+    // comparison saw "no override" and relaxed to Continuity — destroying a
+    // newer, explicit choice.
+    let release: (v: any) => void;
+    const pending = new Promise<any>((r) => { release = r; });
+
+    const running = initializeSessionSanctuary({
+      memberId: 'm1', fetcher: (() => pending) as any,
+    });
+
+    const memberWrite = (v: boolean) => {
+      store.set('maia_settings', JSON.stringify({ sanctuary: v }));
+      (globalThis as any).window.dispatchEvent({
+        type: 'maia-settings-changed', init: { detail: { sanctuary: v } },
+      });
+    };
+    memberWrite(false);
+    memberWrite(true); // ← deliberate final choice, same boolean we asserted
+
+    release!({ ok: true, json: async () => ({ maia: { defaultMemoryMode: 'continuity' } }) });
+    const r = await running;
+
+    expect(r).toMatchObject({ overriddenByMember: true, applied: false });
+    expect(live()).toBe(true); // the member's ON survives
+  });
+
+  it('does not mistake its own close for a member write', async () => {
+    const r = await initializeSessionSanctuary({
+      memberId: 'm1', fetcher: ok('continuity') as any,
+    });
+    expect(r).toMatchObject({ overriddenByMember: false, applied: true });
+    expect(live()).toBe(false);
+  });
+});
+
+describe('C2 · persistence is not live enforcement', () => {
+  it('does NOT report enforced when the write lands but the event fails', async () => {
+    // THE V2 HOLE. OracleConversation is already mounted and holds isSanctuary
+    // in React state; it adopts external changes only via maia-settings-changed.
+    // A successful localStorage write is read at MOUNT — which already happened
+    // — so it changes nothing live. V2 reported enforced=true from it.
+    (globalThis as any).window.dispatchEvent = () => { throw new Error('dispatch failed'); };
+    const r = await initializeSessionSanctuary({ memberId: 'm1', fetcher: fails as any });
+    expect(r).toMatchObject({ source: 'fail_closed', sanctuary: true });
+    expect(store.has('maia_settings')).toBe(true); // it DID persist
+    expect(r!.enforced).toBe(false);               // but the live turn is not protected
   });
 });

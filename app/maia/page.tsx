@@ -16,7 +16,8 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { OracleConversation } from '@/components/OracleConversation';
 import { getOrCreateMaiaSessionId } from '@/lib/maia/presence/conversationIdentity';
-import { initializeSessionSanctuary } from '@/lib/settings/sessionSanctuaryInit';
+import { initializeSessionSanctuary, bootCloseSanctuaryIfNewSession } from '@/lib/settings/sessionSanctuaryInit';
+import { peekMaiaSessionId } from '@/lib/maia/presence/conversationIdentity';
 import { placeFromPathname } from '@/lib/maia/presence/place';
 import { processUltimateMAIAConsciousnessSession } from '@/lib/consciousness-computing/ultimate-consciousness-system';
 import { ClaudeCodePresence } from '@/components/ui/ClaudeCodePresence';
@@ -353,6 +354,21 @@ function MAIAPageContent() {
   // Fix hydration: Initialize with safe defaults, update in useEffect
   // NOTE: Initialize name as '' (not 'Friend') so greeting shows "Good morning" without a bogus label
   // The real name loads async via getInitialUserData() and updates before greeting renders
+  // 🛡️ SANCTUARY-SETTINGS-DISCONNECT-01 (A2) — the boundary must be closed
+  // before the conversation surface can accept a single turn.
+  //
+  // This effect-free useState initializer runs during THIS component's render,
+  // strictly before <OracleConversation> below renders or mounts. Closing here
+  // is the only placement that leaves no window: the session-identity work
+  // downstream sits behind `await getInitialUserData()`, and the conversation is
+  // already live across that await with no readiness guard on handleTextMessage.
+  //
+  // `peekMaiaSessionId()` reads without minting, and returns null in exactly the
+  // cases where the identity module would mint a new session — so this closes
+  // Sanctuary only when a new session is actually imminent, and leaves a
+  // restored session's live override completely alone.
+  useState(() => bootCloseSanctuaryIfNewSession(peekMaiaSessionId));
+
   const [explorerId, setExplorerId] = useState('guest');
   const [explorerName, setExplorerName] = useState('');
   const [userBirthDate, setUserBirthDate] = useState<string | undefined>();

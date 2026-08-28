@@ -74,11 +74,21 @@ export interface ApplyOutcome {
 export interface SanctuaryDefaultResolution {
   sanctuary: boolean;
   source: SanctuaryDefaultSource;
-  /** False when a member override landed while the default was resolving (B). */
+  /** False when a member override landed while the default was resolving (B2). */
   applied: boolean;
-  /** C: the boundary is only "closed" if it was actually enforced somewhere. */
+  /**
+   * C2 — enforcement means the LIVE conversation adopted the value.
+   *
+   * By the time this initializer runs, OracleConversation is already mounted and
+   * holds `isSanctuary` in React state. It adopts external changes ONLY through
+   * `maia-settings-changed`; a successful localStorage write does not reach it —
+   * that write is read at MOUNT, which has already happened. So persistence is
+   * durability for the next mount, not enforcement for this conversation, and
+   * `persisted || notified` was too permissive: it reported a live boundary from
+   * a write no live component would ever read.
+   */
   enforced: boolean;
-  /** True when a newer live choice was found and the default stood down (B). */
+  /** True when a member-authoritative write landed and the default stood down. */
   overriddenByMember: boolean;
 }
 
@@ -189,6 +199,37 @@ export async function fetchServerMemoryMode(
 }
 
 /**
+ * A2 — close the boundary BEFORE the conversation surface can accept a turn.
+ *
+ * V2 closed Sanctuary before the initializer's first `await`, which was not
+ * early enough. `/maia` mounts, renders OracleConversation, and only THEN awaits
+ * `getInitialUserData()` before it can even ask whether the session is new. The
+ * conversation is live across that await, and `handleTextMessage` carries no
+ * readiness guard — so a fast first turn could still escape under the previous
+ * session's stale Continuity.
+ *
+ * `peekMaiaSessionId()` reads the session without minting one, and returns null
+ * in exactly the cases where `getOrCreateMaiaSessionId()` would mint: absent, or
+ * belonging to a previous calendar day. So a synchronous peek is enough to know
+ * a new session is imminent, before any network work and before any child
+ * component exists.
+ *
+ * Called from a `useState` initializer in app/maia/page.tsx, which React runs
+ * during the parent's render — strictly before OracleConversation renders or
+ * mounts. Nothing can send a turn before this has run.
+ *
+ * Deliberately pessimistic: it closes without knowing the member's default. The
+ * default can only ever RELAX it afterwards, and only on the server's authority.
+ */
+export function bootCloseSanctuaryIfNewSession(
+  peek: () => string | null,
+): { closed: boolean; outcome: ApplyOutcome | null } {
+  if (typeof window === 'undefined') return { closed: false, outcome: null };
+  if (peek() !== null) return { closed: false, outcome: null };
+  return { closed: true, outcome: applySessionSanctuary(true) };
+}
+
+/**
  * Full initialization for one new canonical session.
  *
  * ONLY call this when `getOrCreateMaiaSessionId()` reported `isNew: true`.
@@ -204,43 +245,67 @@ export async function initializeSessionSanctuary(args: {
 }): Promise<SanctuaryDefaultResolution | null> {
   if (!args.memberId) return null;
 
-  // (A) Close the boundary BEFORE the first await. From here on, any turn the
-  // member manages to send is protected; the default can only ever RELAX it,
-  // and only with the server's authority.
+  // Idempotent re-close. bootCloseSanctuaryIfNewSession() has normally already
+  // done this during render; repeating it costs one write and guarantees the
+  // boundary regardless of how this function is reached.
   const closed = applySessionSanctuary(true);
   const asserted = true;
 
-  const serverMode = await fetchServerMemoryMode(args.fetcher, args.memberId);
+  // (B2) OVERRIDE PROVENANCE — observe WRITES, not values.
+  //
+  // V2 compared the final boolean against what it asserted, which misses the
+  // sequence that matters: member turns Sanctuary OFF then back ON while the
+  // fetch is in flight. The final value equals the asserted value, so V2 saw
+  // "no override" and relaxed to Continuity — destroying a deliberate, newer
+  // choice. The question is not "is the value different" but "did a
+  // member-authoritative write happen while we were resolving".
+  //
+  // Every member-authoritative writer (QuickSettingsSheet, VoiceHUD, the
+  // settings panel) dispatches `maia-settings-changed` on write. Listening for
+  // it is therefore a provenance signal that requires modifying none of them —
+  // which matters, because Quick Settings is not defective and must not be
+  // touched by this unit. The listener is attached AFTER our own close above, so
+  // our own dispatch cannot be mistaken for a member action.
+  let memberWrote = false;
+  const onMemberWrite = () => { memberWrote = true; };
+  try {
+    window.addEventListener('maia-settings-changed', onMemberWrite);
+  } catch {
+    // No event target: fall back to the value comparison below, which is weaker
+    // but better than nothing.
+  }
+
+  let serverMode: MemoryMode | null;
+  try {
+    serverMode = await fetchServerMemoryMode(args.fetcher, args.memberId);
+  } finally {
+    try { window.removeEventListener('maia-settings-changed', onMemberWrite); } catch { /* noop */ }
+  }
   const resolved = resolveSessionSanctuary({ serverMode });
 
-  // (B) Did anyone write between the close above and now? A live override is a
-  // newer, explicit member decision and outranks a default that arrived late.
+  // A write we did not make, or a value we did not assert: either way a newer
+  // authority exists and this default stands down.
   const live = readLiveSanctuary();
-  if (live !== null && live !== asserted) {
+  if (memberWrote || (live !== null && live !== asserted)) {
     return {
       ...resolved,
       applied: false,
-      enforced: closed.persisted || closed.notified,
+      enforced: closed.notified,
       overriddenByMember: true,
     };
   }
 
   // Already in the resolved state — no second write, no redundant event.
   if (resolved.sanctuary === asserted) {
-    return {
-      ...resolved,
-      applied: true,
-      // (C) enforced describes what happened, not what we wanted.
-      enforced: closed.persisted || closed.notified,
-      overriddenByMember: false,
-    };
+    return { ...resolved, applied: true, enforced: closed.notified, overriddenByMember: false };
   }
 
   const relaxed = applySessionSanctuary(resolved.sanctuary);
   return {
     ...resolved,
     applied: true,
-    enforced: relaxed.persisted || relaxed.notified,
+    // (C2) The mounted conversation adopts changes only via the event.
+    enforced: relaxed.notified,
     overriddenByMember: false,
   };
 }
