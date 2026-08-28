@@ -210,6 +210,13 @@ import { MaiaArrivalField } from './maia/MaiaArrivalField';
 import type { MaiaUiAction } from '@/lib/types/ai';
 import { detectIntent, getIntentRoute, buildUiAction } from '@/lib/consciousness/intentRouter';
 import { detectKeepIntent } from '@/lib/consciousness/keepIntent';
+import {
+  ensureSessionSanctuary,
+  establishSessionSanctuaryFallback,
+  type SanctuaryInitState,
+} from '@/lib/settings/accountSettings';
+import { mayBeginTurn as computeMayBeginTurn, decideTurnPersistence } from '@/lib/settings/turnAdmission';
+
 import { detectCaptureTrigger } from '@/lib/capsules/types';
 import type { CapsuleDTO } from '@/lib/capsules/types';
 import { TransformationalPresence, type PresenceState } from './nlp/TransformationalPresence';
@@ -412,6 +419,13 @@ interface ScribeSessionContext {
   duration: number;
   markerCount: number;
 }
+
+/**
+ * How long to wait for authoritative resolution of the member's default before
+ * failing closed into Sanctuary. Long enough for a slow round-trip, short
+ * enough that a member is not left unable to speak.
+ */
+const SANCTUARY_INIT_TIMEOUT_MS = 8000;
 
 interface OracleConversationProps {
   userId?: string;
@@ -1053,6 +1067,69 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     }
     return false;
   });
+
+  // ==========================================================================
+  // 🚦 SANCTUARY INITIALIZATION GATE (SANCTUARY-INIT-GATE-01)
+  // ==========================================================================
+  // Two different questions, deliberately not conflated:
+  //
+  //   isSanctuary      — HOW does an admitted turn execute?
+  //   sanctuaryInit    — MAY a turn execute at all?
+  //
+  // Until the boundary is established, `isSanctuary` is not a false answer, it
+  // is no answer, and a turn taken on it would be a retention decision made on
+  // no authority. One predicate is derived here and consumed by all three
+  // turn-bearing boundaries (text dispatch, voice dispatch, turn persistence)
+  // so they can never disagree about whether work is admitted.
+  const [sanctuaryInit, setSanctuaryInit] = useState<SanctuaryInitState>('unresolved');
+  const mayBeginTurn = computeMayBeginTurn(sanctuaryInit);
+  // Read inside callbacks, where the state value would be a stale closure.
+  const mayBeginTurnRef = useRef(false);
+  useEffect(() => { mayBeginTurnRef.current = mayBeginTurn; }, [mayBeginTurn]);
+
+  useEffect(() => {
+    // No session yet: nothing to establish against, so the gate stays closed.
+    if (!sessionId) return;
+
+    let settled = false;
+
+    const apply = (state: SanctuaryInitState) => {
+      setSanctuaryInit(state);
+      if (state !== 'unresolved') {
+        settled = true;
+        setIsSanctuary(state === 'sanctuary');
+        console.log(`🚦 [Sanctuary] boundary established: ${state}`);
+      }
+      return state;
+    };
+
+    // A restored session answers immediately from its own provenance stamp —
+    // no authoritative round-trip, so no initialization wait.
+    if (apply(ensureSessionSanctuary(sessionId)) !== 'unresolved') return;
+
+    console.log('🚦 [Sanctuary] boundary unresolved — turn-bearing work prohibited');
+
+    // Wait for the boot surfaces to establish the member's default. They emit
+    // this when hydration lands; nothing here fetches, so resolution authority
+    // stays where it belongs.
+    const onAccountSettings = () => {
+      if (settled) return;
+      apply(ensureSessionSanctuary(sessionId));
+    };
+    window.addEventListener('maia-account-settings-changed', onAccountSettings);
+
+    // Authoritative resolution failed. Fail closed rather than waiting forever
+    // or assuming Continuity.
+    const timer = setTimeout(() => {
+      if (settled) return;
+      apply(establishSessionSanctuaryFallback(sessionId));
+    }, SANCTUARY_INIT_TIMEOUT_MS);
+
+    return () => {
+      window.removeEventListener('maia-account-settings-changed', onAccountSettings);
+      clearTimeout(timer);
+    };
+  }, [sessionId]);
 
   // ==========================================================================
   // 🧵 VOICE CONTINUITY BUFFER — Sanctuary gate + restore-after-interruption
@@ -3178,12 +3255,37 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       }
     }
 
+    // 🚦 INIT GATE — turn persistence. The boundary must be established before
+    // a turn crosses into durable storage, not merely before it is dispatched:
+    // this is a `messages` effect, so gating the two entry points alone would
+    // leave a write path that still fires on message change.
+    //
+    // The watermark is advanced past whatever is here. That is not a skipped
+    // write — while unresolved no turn can be created (both entry points are
+    // refused above), so any growth in `messages` is restored history, and
+    // restored history must never be re-POSTed. Without this the gate would
+    // manufacture exactly the delayed rewrite the restore path already guards
+    // against at line ~3129: the effect would re-run on resolution holding the
+    // whole transcript as "new".
+    //
     // STEP 2: Save to PostgreSQL asynchronously (for sovereign cross-device sync)
     // Save when we have new messages (check if count increased by at least 2 = one exchange)
     const messageCount = messages.length;
-    const shouldSyncToPostgres = messageCount >= lastSyncedCountRef.current + 2;
+    const decision = decideTurnPersistence({
+      admitted: mayBeginTurn,
+      messageCount,
+      watermark: lastSyncedCountRef.current,
+    });
 
-    if (shouldSyncToPostgres) {
+    if (!decision.post) {
+      if (!mayBeginTurn) {
+        console.warn('🚦 [Sanctuary] turn persistence refused — boundary unresolved');
+      }
+      lastSyncedCountRef.current = decision.nextWatermark;
+      return;
+    }
+
+    {
       // Find the new messages since last sync
       const newMessages = messages.slice(lastSyncedCountRef.current);
 
@@ -3222,9 +3324,9 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
         }
       }
 
-      lastSyncedCountRef.current = messageCount;
+      lastSyncedCountRef.current = decision.nextWatermark;
     }
-  }, [messages, sessionId, userId]);
+  }, [messages, sessionId, userId, mayBeginTurn, isSanctuary]);
 
   // All state declarations moved earlier (lines 138-189) to avoid hook ordering issues
 
@@ -4868,6 +4970,14 @@ I'm not sure what I'm feeling yet.`;
 
   // Handle text messages from chat interface - MUST be defined before handleVoiceTranscript
   const handleTextMessage = useCallback(async (text: string, attachments?: File[], retryOf?: string) => {
+    // 🚦 INIT GATE — text dispatch. Refused while the Sanctuary boundary is
+    // unresolved: a turn sent now would carry a retention decision nobody made.
+    if (!mayBeginTurnRef.current) {
+      console.warn('🚦 [Sanctuary] text dispatch refused — boundary unresolved');
+      toast('One moment — establishing your privacy settings for this session.');
+      return;
+    }
+
     console.log('📝 Text message received:', { text, isProcessing, isAudioPlaying, isResponding });
 
     // 🎯 Mark as activated when user sends a message - hides welcome screen
@@ -6636,6 +6746,14 @@ I'm not sure what I'm feeling yet.`;
 
   // Handle voice transcript from mic button
   const handleVoiceTranscript = useCallback(async (transcript: string) => {
+    // 🚦 INIT GATE — voice dispatch. Same predicate as text; the streaming leg
+    // returns without ever reaching handleTextMessage, so gating that alone
+    // would leave spoken turns ungated.
+    if (!mayBeginTurnRef.current) {
+      console.warn('🚦 [Sanctuary] voice dispatch refused — boundary unresolved');
+      return;
+    }
+
     console.log('🎤 handleVoiceTranscript called with:', transcript);
     setInterimTranscript(''); // Clear interim display on final submit
     const t = transcript?.trim();

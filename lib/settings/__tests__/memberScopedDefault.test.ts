@@ -85,7 +85,7 @@ describe('two-member shared device (the proven unsafe sequence)', () => {
     signIn('memberA');
     await loadMemberDefaultMemoryMode('memberA', server);
     expect(getAccountSettings().defaultMemoryMode).toBe('continuity');
-    expect(ensureSessionSanctuary('session_A1')).toBe(false);
+    expect(ensureSessionSanctuary('session_A1')).toBe('continuity');
 
     signOut();
 
@@ -103,7 +103,7 @@ describe('two-member shared device (the proven unsafe sequence)', () => {
     expect(getAccountSettings().defaultMemoryMode).toBe('sanctuary');
 
     // B's new session consumes B's default — the bug was Sanctuary starting OFF.
-    expect(ensureSessionSanctuary('session_B1')).toBe(true);
+    expect(ensureSessionSanctuary('session_B1')).toBe('sanctuary');
   });
 
   it("member B's Continuity default is not overridden by member A's cached Sanctuary", async () => {
@@ -111,14 +111,14 @@ describe('two-member shared device (the proven unsafe sequence)', () => {
 
     signIn('memberA');
     await loadMemberDefaultMemoryMode('memberA', server);
-    expect(ensureSessionSanctuary('session_A1')).toBe(true);
+    expect(ensureSessionSanctuary('session_A1')).toBe('sanctuary');
 
     signOut();
     signIn('memberB');
     await loadMemberDefaultMemoryMode('memberB', server);
 
     expect(getAccountSettings().defaultMemoryMode).toBe('continuity');
-    expect(ensureSessionSanctuary('session_B1')).toBe(false);
+    expect(ensureSessionSanctuary('session_B1')).toBe('continuity');
   });
 });
 
@@ -234,14 +234,14 @@ describe('session provenance semantics are unchanged', () => {
   it('an established session is not reseeded when the member default hydrates', async () => {
     signIn('memberB');
     await loadMemberDefaultMemoryMode('memberB', serverWith({ memberB: 'continuity' }));
-    expect(ensureSessionSanctuary('session_1')).toBe(false);
+    expect(ensureSessionSanctuary('session_1')).toBe('continuity');
 
     // Default later changes (another device, or the member edits it).
     await loadMemberDefaultMemoryMode('memberB', serverWith({ memberB: 'sanctuary' }));
 
     // Same session — the encounter in progress keeps its boundary.
-    expect(ensureSessionSanctuary('session_1')).toBe(false);
+    expect(ensureSessionSanctuary('session_1')).toBe('continuity');
     // Next session consumes the new default.
-    expect(ensureSessionSanctuary('session_2')).toBe(true);
+    expect(ensureSessionSanctuary('session_2')).toBe('sanctuary');
   });
 });

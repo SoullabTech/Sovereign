@@ -293,6 +293,18 @@ export function setSessionSanctuary(enabled: boolean): void {
 }
 
 /**
+ * Whether a session's Sanctuary boundary is established, and how.
+ *
+ * `unresolved` is not a third kind of Sanctuary — it is the absence of an
+ * answer. It exists because the alternative was worse: returning `false` when
+ * the member's default could not be established silently converted "I do not
+ * know" into "Continuity", which is a retention decision made on no authority
+ * (SANCTUARY-INIT-GATE-01). Callers must treat it as "no turn may begin yet",
+ * never as a value.
+ */
+export type SanctuaryInitState = 'sanctuary' | 'continuity' | 'unresolved';
+
+/**
  * The ONE place a new session consumes the member's default.
  *
  * Idempotent by construction: it compares the caller's canonical sessionId
@@ -303,22 +315,31 @@ export function setSessionSanctuary(enabled: boolean): void {
  * timing-dependent; a stamp comparison does not care who arrives first, or how
  * many times.
  *
- * Returns the live Sanctuary value in force for `currentSessionId`.
+ * Returns the boundary in force for `currentSessionId`, or `unresolved` when
+ * it cannot be established — never a fabricated value.
  */
-export function ensureSessionSanctuary(currentSessionId: string): boolean {
-  if (typeof window === 'undefined') return false;
+export function ensureSessionSanctuary(currentSessionId: string): SanctuaryInitState {
+  if (typeof window === 'undefined') return 'unresolved';
 
-  // No canonical session means no boundary to enforce. Report the live value
-  // untouched rather than seeding against an id we cannot stamp.
-  if (!currentSessionId) return getSessionSanctuary();
+  // No canonical session means there is nothing to establish a boundary for.
+  if (!currentSessionId) return 'unresolved';
 
   try {
     const saved = localStorage.getItem(SESSION_STORAGE_KEY);
     const settings = saved ? JSON.parse(saved) : {};
 
-    // Same session — the member's override stands, reload or not.
+    // Same session — established already; the member's override stands, reload
+    // or not. This is also why a restored session incurs no initialization
+    // wait: the stamp answers immediately, with no authoritative round-trip.
     if (settings.sessionId === currentSessionId) {
-      return settings.sanctuary === true;
+      return settings.sanctuary === true ? 'sanctuary' : 'continuity';
+    }
+
+    // A new session must consume the member's OWN default. If ownership is not
+    // established, we do not have one to consume — and the system default is
+    // not a stand-in for it. Write nothing, stamp nothing, and say so.
+    if (!ownsCachedDefault()) {
+      return 'unresolved';
     }
 
     // Different or absent provenance: whatever `sanctuary` holds is residue
@@ -327,16 +348,54 @@ export function ensureSessionSanctuary(currentSessionId: string): boolean {
     // Sanctuary must not survive a Continuity default any more than stale
     // Continuity may survive a Sanctuary one.
     const seeded = getAccountSettings().defaultMemoryMode === 'sanctuary';
-    settings.sanctuary = seeded;
-    settings.sessionId = currentSessionId;
-    localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(settings));
-    window.dispatchEvent(
-      new CustomEvent('maia-settings-changed', { detail: settings })
-    );
-    return seeded;
+    writeSessionBoundary(settings, seeded, currentSessionId);
+    return seeded ? 'sanctuary' : 'continuity';
   } catch (e) {
     console.error('[AccountSettings] Failed to establish session sanctuary:', e);
-    return getSessionSanctuary();
+    return 'unresolved';
+  }
+}
+
+/** Commit a session boundary and announce it. */
+function writeSessionBoundary(
+  settings: Record<string, unknown>,
+  sanctuary: boolean,
+  sessionId: string,
+): void {
+  settings.sanctuary = sanctuary;
+  settings.sessionId = sessionId;
+  localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(settings));
+  window.dispatchEvent(new CustomEvent('maia-settings-changed', { detail: settings }));
+}
+
+/**
+ * Fail closed. When authoritative resolution of the member's default has
+ * definitively failed, establish Sanctuary for this session and stamp it, so
+ * turn-bearing work can be admitted under the safe boundary rather than
+ * waiting forever or proceeding under an assumed one.
+ *
+ * Deliberately does NOT claim ownership of the member's default: this
+ * establishes a session, not a preference. The next session still consumes the
+ * member's real default once it can be established.
+ */
+export function establishSessionSanctuaryFallback(currentSessionId: string): SanctuaryInitState {
+  if (typeof window === 'undefined' || !currentSessionId) return 'unresolved';
+
+  try {
+    const saved = localStorage.getItem(SESSION_STORAGE_KEY);
+    const settings = saved ? JSON.parse(saved) : {};
+
+    // Never override a boundary this session already established.
+    if (settings.sessionId === currentSessionId) {
+      return settings.sanctuary === true ? 'sanctuary' : 'continuity';
+    }
+
+    console.warn('[AccountSettings] Default unresolved — establishing Sanctuary for this session');
+    writeSessionBoundary(settings, true, currentSessionId);
+    return 'sanctuary';
+  } catch (e) {
+    console.error('[AccountSettings] Sanctuary fallback failed:', e);
+    return 'unresolved';
   }
 }
 

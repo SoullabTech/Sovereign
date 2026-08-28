@@ -86,7 +86,7 @@ describe('new session consumes the default (stale residue cannot survive)', () =
     setDefault('sanctuary');
     seedLiveState(false, 'session_OLD');
 
-    expect(ensureSessionSanctuary('session_NEW')).toBe(true);
+    expect(ensureSessionSanctuary('session_NEW')).toBe('sanctuary');
     expect(readLive().sanctuary).toBe(true);
     expect(readLive().sessionId).toBe('session_NEW');
   });
@@ -95,7 +95,7 @@ describe('new session consumes the default (stale residue cannot survive)', () =
     setDefault('continuity');
     seedLiveState(true, 'session_OLD');
 
-    expect(ensureSessionSanctuary('session_NEW')).toBe(false);
+    expect(ensureSessionSanctuary('session_NEW')).toBe('continuity');
     expect(readLive().sanctuary).toBe(false);
     expect(readLive().sessionId).toBe('session_NEW');
   });
@@ -116,7 +116,7 @@ describe('same session preserves the live override', () => {
     setDefault('sanctuary');
     seedLiveState(false, 'session_A');
 
-    expect(ensureSessionSanctuary('session_A')).toBe(false);
+    expect(ensureSessionSanctuary('session_A')).toBe('continuity');
     expect(readLive().sanctuary).toBe(false);
   });
 
@@ -124,7 +124,7 @@ describe('same session preserves the live override', () => {
     setDefault('continuity');
     seedLiveState(true, 'session_A');
 
-    expect(ensureSessionSanctuary('session_A')).toBe(true);
+    expect(ensureSessionSanctuary('session_A')).toBe('sanctuary');
     expect(readLive().sanctuary).toBe(true);
   });
 
@@ -142,19 +142,19 @@ describe('override lifecycle across the boundary', () => {
   it('default Sanctuary → override Continuity → reload holds → next session returns to Sanctuary', () => {
     setDefault('sanctuary');
 
-    expect(ensureSessionSanctuary('session_1')).toBe(true);   // seeded
+    expect(ensureSessionSanctuary('session_1')).toBe('sanctuary');   // seeded
     setSessionSanctuary(false);                                // member overrides
-    expect(ensureSessionSanctuary('session_1')).toBe(false);   // same-session reload
-    expect(ensureSessionSanctuary('session_2')).toBe(true);    // next new session
+    expect(ensureSessionSanctuary('session_1')).toBe('continuity');   // same-session reload
+    expect(ensureSessionSanctuary('session_2')).toBe('sanctuary');    // next new session
   });
 
   it('default Continuity → override Sanctuary → reload holds → next session returns to Continuity', () => {
     setDefault('continuity');
 
-    expect(ensureSessionSanctuary('session_1')).toBe(false);
+    expect(ensureSessionSanctuary('session_1')).toBe('continuity');
     setSessionSanctuary(true);
-    expect(ensureSessionSanctuary('session_1')).toBe(true);
-    expect(ensureSessionSanctuary('session_2')).toBe(false);
+    expect(ensureSessionSanctuary('session_1')).toBe('sanctuary');
+    expect(ensureSessionSanctuary('session_2')).toBe('continuity');
   });
 });
 
@@ -191,8 +191,8 @@ describe('changing the default does not touch the session in progress', () => {
 
     expect(getSessionSanctuary()).toBe(false);      // today's encounter unchanged
     expect(readLive().sessionId).toBe('session_A');
-    expect(ensureSessionSanctuary('session_A')).toBe(false); // still unchanged
-    expect(ensureSessionSanctuary('session_B')).toBe(true);  // next session consumes it
+    expect(ensureSessionSanctuary('session_A')).toBe('continuity'); // still unchanged
+    expect(ensureSessionSanctuary('session_B')).toBe('sanctuary');  // next session consumes it
   });
 });
 
@@ -224,7 +224,7 @@ describe('idempotence and legacy provenance', () => {
     setDefault('continuity');
     seedLiveState(true); // pre-provenance residue: sanctuary, no sessionId
 
-    expect(ensureSessionSanctuary('session_NEW')).toBe(false);
+    expect(ensureSessionSanctuary('session_NEW')).toBe('continuity');
     expect(readLive().sessionId).toBe('session_NEW');
   });
 
@@ -232,22 +232,22 @@ describe('idempotence and legacy provenance', () => {
     setDefault('sanctuary');
     seedLiveState(false);
 
-    expect(ensureSessionSanctuary('session_NEW')).toBe(true);
+    expect(ensureSessionSanctuary('session_NEW')).toBe('sanctuary');
   });
 
   it('absent maia_settings entirely → seeds from the default', () => {
     setDefault('sanctuary');
     expect(localStorage.getItem(SESSION_KEY)).toBeNull();
 
-    expect(ensureSessionSanctuary('session_NEW')).toBe(true);
+    expect(ensureSessionSanctuary('session_NEW')).toBe('sanctuary');
     expect(readLive().sessionId).toBe('session_NEW');
   });
 
-  it('an empty sessionId establishes nothing — reports the live value untouched', () => {
+  it('an empty sessionId establishes nothing — unresolved, never a guess', () => {
     setDefault('sanctuary');
     seedLiveState(false, 'session_OLD');
 
-    expect(ensureSessionSanctuary('')).toBe(false);
+    expect(ensureSessionSanctuary('')).toBe('unresolved');
     expect(readLive().sessionId).toBe('session_OLD'); // not stamped
     expect(dispatched).toHaveLength(0);
   });
