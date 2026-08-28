@@ -1002,7 +1002,21 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   const [showCapturePanel, setShowCapturePanel] = useState(false);
   const [showCaptureSuggestion, setShowCaptureSuggestion] = useState(false);
   const [captureSuggestionDismissed, setCaptureSuggestionDismissed] = useState(false);
+  // The Keep draft currently on screen. Until the member confirms, this is an
+  // UNSAVED preview: distilled server-side, held in memory here, with no row
+  // behind it and no `id`. `capturedCapsule.id` is therefore only meaningful
+  // once capsulePersisted is true.
   const [capturedCapsule, setCapturedCapsule] = useState<CapsuleDTO | null>(null);
+  // KEEP AUTHORITY CONTRACT (Kelly ruling 2026-08-28): OPEN = zero persistence,
+  // PREPARE = ephemeral, CONFIRM = persistence. This flag is the boundary
+  // between the second and the third: false means nothing has been written and
+  // closing the panel leaves no trace.
+  const [capsulePersisted, setCapsulePersisted] = useState(false);
+  // The panel's "Bring into the Lab" saves edits and then promotes, both inside
+  // one tick — React state has not re-rendered in between, so the second step
+  // would read a stale `capturedCapsule.id` (undefined, on a first confirm).
+  // This ref carries the id across that boundary synchronously.
+  const persistedCapsuleIdRef = useRef<string | null>(null);
   const [isCapturing, setIsCapturing] = useState(false);
   const [captureError, setCaptureError] = useState<string | null>(null);
 
@@ -4594,6 +4608,8 @@ I'm not sure what I'm feeling yet.`;
     setIsCapturing(true);
     setCaptureError(null);
     setCapturedCapsule(null);
+    setCapsulePersisted(false);
+    persistedCapsuleIdRef.current = null;
 
     try {
       // Convert messages to the format expected by the capsule API
@@ -4622,17 +4638,23 @@ I'm not sure what I'm feeling yet.`;
       }
 
       const data = await response.json();
-      console.log('✅ [Capsule] Successfully captured:', data);
+      console.log('✅ [Capsule] Keep draft prepared (nothing persisted):', data);
 
-      setCapturedCapsule(data.capsule);
+      // The route returns { draft } and no longer returns { capsule }: opening
+      // Keep writes nothing, so there is no row and no id to hold. Reading
+      // data.capsule here would be undefined — deliberately, so a regression to
+      // write-on-open surfaces as a broken panel rather than a silent save.
+      setCapturedCapsule(data.draft);
+      setCapsulePersisted(false);
 
-      // Track the capture
-      trackEvent('spirit_captured', {
+      // Track the OPENING, not a keep. Nothing was kept by this event, and the
+      // name says so — `spirit_captured` fired on open would misreport the
+      // member's consent gesture in every downstream count.
+      trackEvent('keep_panel_opened', {
         userId,
         sessionId,
         messageCount: messages.length,
-        capsuleId: data.capsule.id,
-        title: data.capsule.title,
+        persisted: false,
       });
     } catch (error: any) {
       console.error('❌ [Capsule] Error capturing spirit:', error);
@@ -4691,10 +4713,59 @@ I'm not sure what I'm feeling yet.`;
   }, [router]);
 
   // Update captured capsule (quick edits)
+  // CONFIRM KEEP — the member's governing gesture, and the first moment anything
+  // is written. Before this runs, the panel has been showing an unsaved preview.
+  //
+  // Two paths, one boundary: the first confirm CREATES the row from the draft the
+  // member actually reviewed (POST /api/capsules); later edits PATCH the row that
+  // now exists. What gets written is what they saw — nothing is re-distilled
+  // between the preview they approved and the row on disk.
   const handleUpdateCapsule = useCallback(async (updates: Partial<CapsuleDTO>) => {
     if (!capturedCapsule) return;
 
+    // 🛡️ Sanctuary cannot reach here — the panel is refused at
+    // handleCaptureSpirit — but the write seam guards itself rather than
+    // trusting that the only door stayed locked.
+    if (isSanctuary) {
+      console.warn('🛡️ [Capsule] Confirm refused: Sanctuary session');
+      return;
+    }
+
     try {
+      if (!capsulePersisted) {
+        const merged = { ...capturedCapsule, ...updates };
+        const response = await apiFetch('/api/capsules', {
+          method: 'POST',
+          body: JSON.stringify({
+            sourceType: 'chat',
+            sourceId: sessionId || null,
+            title: merged.title,
+            summary: merged.summary,
+            goldLines: merged.goldLines,
+            decisions: merged.decisions,
+            nextSteps: merged.nextSteps,
+            practices: merged.practices,
+            patterns: merged.patterns,
+            signals: merged.signals,
+            tags: merged.tags,
+            sourceExcerpt: merged.sourceExcerpt,
+            draft: true,
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to keep this');
+        }
+
+        const data = await response.json();
+        setCapturedCapsule(data.capsule);
+        setCapsulePersisted(true);
+        persistedCapsuleIdRef.current = data.capsule.id;
+        trackEvent('keep_confirmed', { userId, sessionId, capsuleId: data.capsule.id });
+        toast.success('Kept');
+        return;
+      }
+
       const response = await apiFetch(`/api/capsules/${capturedCapsule.id}`, {
         method: 'PATCH',
         body: JSON.stringify(updates),
@@ -4708,17 +4779,27 @@ I'm not sure what I'm feeling yet.`;
       setCapturedCapsule(data.capsule);
       toast.success('Changes saved');
     } catch (error: any) {
-      console.error('Failed to update capsule:', error);
+      console.error('Failed to save capsule:', error);
       toast.error('Failed to save changes');
     }
-  }, [capturedCapsule]);
+  }, [capturedCapsule, capsulePersisted, isSanctuary, sessionId, userId]);
 
   // Bring capsule into the lab (mark as non-draft)
   const handleBringCapsuleIntoLab = useCallback(async () => {
     if (!capturedCapsule) return;
 
+    // Promotion acts on a row, so it requires a confirmed Keep. The panel runs
+    // its save first, which is what creates that row; read the id from the ref
+    // rather than from state, which has not re-rendered yet within this tick.
+    const capsuleId = persistedCapsuleIdRef.current ?? capturedCapsule.id;
+    if (!capsuleId) {
+      console.warn('⚠️ [Capsule] Bring into Lab with no confirmed Keep — nothing to promote');
+      toast.error('Keep this first, then bring it into the Lab');
+      return;
+    }
+
     try {
-      const response = await apiFetch(`/api/capsules/${capturedCapsule.id}`, {
+      const response = await apiFetch(`/api/capsules/${capsuleId}`, {
         method: 'PATCH',
         body: JSON.stringify({ draft: false }),
       });
@@ -9960,10 +10041,16 @@ I'm not sure what I'm feeling yet.`;
         onSave={handleUpdateCapsule}
         onBringIntoLab={handleBringCapsuleIntoLab}
         onViewInLab={() => {
-          setShowCapturePanel(false);
-          if (capturedCapsule) {
-            router.push(`/labtools/reflections/${capturedCapsule.id}`);
+          // Only a confirmed Keep has a page to view. An unsaved preview has no
+          // row and no route — navigating on its absent id would 404 and read
+          // to the member as data loss.
+          const capsuleId = persistedCapsuleIdRef.current ?? capturedCapsule?.id;
+          if (!capsuleId) {
+            toast.error('Keep this first, then you can view it in the Lab');
+            return;
           }
+          setShowCapturePanel(false);
+          router.push(`/labtools/reflections/${capsuleId}`);
         }}
       />
 
