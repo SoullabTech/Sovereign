@@ -235,7 +235,16 @@ already first-class: **Invariant 7 is satisfied by the existing schema.**
 `lib/auth/webauthnServer.ts` — seven statements, no other reader or writer.
 `verifyAuthenticationResponse` receives `expectedOrigin`, `expectedRPID`, the
 stored `publicKey` and the stored `counter`, so origin binding and replay
-checking are real: **Invariants 4 and 6 hold for the web ceremony as it stands.**
+checking are real.
+
+**Invariant 6 holds for the existing WebAuthn ceremony**: RP/origin binding and
+stored-counter verification are present. **This does not establish Invariant 4
+for A's future bootstrap authorization.** Invariant 4 governs the *cross-surface
+bootstrap challenge* — a mechanism that does not exist yet — not ordinary
+WebAuthn verification. It remains gated until that challenge is explicitly
+short-lived, single-use, member-bound, and registration-intent-bound. A census
+can establish properties of a ceremony that runs today; it cannot establish
+properties of one that has not been built.
 One exception matters — `webauthn/authenticate/options/route.ts:41` gates on
 `members.has_webauthn`, not on the store. That is where the stored-versus-derived
 distinction has operational consequence today.
