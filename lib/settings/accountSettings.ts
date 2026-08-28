@@ -167,3 +167,57 @@ export function getInitialSessionSettings() {
     conversationMode: account.conversationMode,
   };
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Session Sanctuary Flag — the live runtime boundary
+// ─────────────────────────────────────────────────────────────────────────────
+//
+// `maia_account_settings.defaultMemoryMode` is the member's *default*. The live
+// boundary that actually gates retention for the conversation in front of them
+// is `maia_settings.sanctuary` — read by OracleConversation (badge, prompt
+// wire, Keep refusal, continuity-buffer purge), VoiceHUD, the chat inputs and
+// /maia. Those two used to drift: the settings surfaces wrote only the default,
+// so a Sanctuary session entered in-HUD stayed on forever and no settings
+// screen could clear it. Everything that changes the live boundary goes through
+// setSessionSanctuary() so the flag and the `maia-settings-changed` event that
+// every listener depends on can never come apart.
+
+const SESSION_STORAGE_KEY = 'maia_settings';
+
+/** Read the live session Sanctuary flag. */
+export function getSessionSanctuary(): boolean {
+  if (typeof window === 'undefined') return false;
+
+  try {
+    const saved = localStorage.getItem(SESSION_STORAGE_KEY);
+    if (!saved) return false;
+    return JSON.parse(saved).sanctuary === true;
+  } catch (e) {
+    console.warn('[AccountSettings] Failed to read session sanctuary flag:', e);
+    return false;
+  }
+}
+
+/**
+ * Set the live session Sanctuary flag and notify every listener.
+ *
+ * Turning it ON is always safe — it narrows what is kept. Turning it OFF widens
+ * consent, so callers must only do it on an explicit member act. Nothing here
+ * is retroactive either way: turns taken inside Sanctuary were never persisted,
+ * and leaving Sanctuary cannot reach back for them (Sanctuary invariant 6).
+ */
+export function setSessionSanctuary(enabled: boolean): void {
+  if (typeof window === 'undefined') return;
+
+  try {
+    const saved = localStorage.getItem(SESSION_STORAGE_KEY);
+    const settings = saved ? JSON.parse(saved) : {};
+    settings.sanctuary = enabled;
+    localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(settings));
+    window.dispatchEvent(
+      new CustomEvent('maia-settings-changed', { detail: settings })
+    );
+  } catch (e) {
+    console.error('[AccountSettings] Failed to set session sanctuary flag:', e);
+  }
+}

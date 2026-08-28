@@ -29,6 +29,8 @@ import { CalDAVConnectSection } from '@/components/settings/CalDAVConnectSection
 import {
   getAccountSettings,
   saveAccountSettings,
+  getSessionSanctuary,
+  setSessionSanctuary,
   DEFAULT_ACCOUNT_SETTINGS,
   type AccountSettings as AccountSettingsType,
 } from '@/lib/settings/accountSettings';
@@ -239,6 +241,19 @@ export function AccountSettings() {
 
   // Sovereignty state
   const [consentSummary, setConsentSummary] = useState<ConsentSummary | null>(null);
+
+  // Live session Sanctuary flag (`maia_settings.sanctuary`) — distinct from the
+  // default above, and the thing the indicator on /maia actually reads.
+  const [sessionSanctuaryActive, setSessionSanctuaryActive] = useState(false);
+  useEffect(() => {
+    setSessionSanctuaryActive(getSessionSanctuary());
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (detail?.sanctuary !== undefined) setSessionSanctuaryActive(detail.sanctuary === true);
+    };
+    window.addEventListener('maia-settings-changed', handler);
+    return () => window.removeEventListener('maia-settings-changed', handler);
+  }, []);
   const [syncState, setSyncState] = useState({ isSyncing: false, lastSyncAt: null as Date | null, pendingCount: 0 });
   const [syncCounts, setSyncCounts] = useState({ local: 0, server: 0, pending: 0 });
   const [showForgettingRitual, setShowForgettingRitual] = useState(false);
@@ -460,6 +475,16 @@ export function AccountSettings() {
     setMaiaSettings(updated);
     saveAccountSettings(updated);
     showSaveIndicator();
+
+    // The memory-mode picker is not only a default — the member reads it as the
+    // answer to "is this being saved". Carry it to the live session boundary so
+    // the Sanctuary indicator on /maia reflects the choice just made, and keep
+    // the Data & Privacy view (which now reads the same value) in step.
+    if (key === 'defaultMemoryMode') {
+      setSessionSanctuary(value === 'sanctuary');
+      setSessionSanctuaryActive(value === 'sanctuary');
+      setConsentSummary(getConsentSummary());
+    }
 
     // Also sync to server if we have userId
     if (userId) {
@@ -1744,6 +1769,18 @@ export function AccountSettings() {
             );
           })}
         </div>
+
+        {/* The live session can differ from the default — say so here rather
+            than letting the picker imply a state the session isn't in. */}
+        {sessionSanctuaryActive && maiaSettings.defaultMemoryMode !== 'sanctuary' && (
+          <div className="mt-3 flex items-start gap-2 text-xs text-emerald-300/90">
+            <Shield size={14} className="mt-0.5 flex-shrink-0" />
+            <span>
+              Sanctuary is on for the session in progress, above this default.
+              End it under Data &amp; Privacy.
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Voice — sovereign controls live in the dedicated Voice section */}
@@ -2037,8 +2074,27 @@ export function AccountSettings() {
   const updateSanctuaryDefault = useCallback(async (enabled: boolean) => {
     if ('vibrate' in navigator) navigator.vibrate(5);
     await setSanctuaryDefault(enabled);
+    // Same act, same boundary: the toggle changes the live session too, not
+    // just the default the next session would have started from.
+    setSessionSanctuary(enabled);
+    setSessionSanctuaryActive(enabled);
     const summary = await getConsentSummary();
     setConsentSummary(summary);
+    setMaiaSettings(getAccountSettings());
+    showSaveIndicator();
+  }, [showSaveIndicator]);
+
+  /**
+   * Leave Sanctuary for the conversation in progress without changing the
+   * member's default. This is the exit that did not exist: a session entered
+   * from the voice HUD or by voice command persisted in `maia_settings` across
+   * reloads, and no settings screen could clear it — the indicator stayed lit
+   * while both defaults read "off".
+   */
+  const endSessionSanctuary = useCallback(() => {
+    if ('vibrate' in navigator) navigator.vibrate(5);
+    setSessionSanctuary(false);
+    setSessionSanctuaryActive(false);
     showSaveIndicator();
   }, [showSaveIndicator]);
 
@@ -2047,6 +2103,11 @@ export function AccountSettings() {
 
     // Compute live status
     const getStatusLabel = () => {
+      // The live session flag outranks the default here: while it is set,
+      // nothing is being saved, whatever the per-type toggles below say.
+      if (sessionSanctuaryActive) {
+        return { text: 'Sanctuary — this session is not being saved', color: 'text-emerald-400', icon: Shield };
+      }
       if (consentSummary?.sanctuaryDefault) {
         return { text: 'Sanctuary mode — not saved', color: 'text-emerald-400', icon: Shield };
       }
@@ -2092,7 +2153,7 @@ export function AccountSettings() {
       <div className="space-y-6">
         {/* Live Status Indicator */}
         <div className={`flex items-center gap-3 p-4 rounded-xl border ${
-          consentSummary?.sanctuaryDefault
+          sessionSanctuaryActive || consentSummary?.sanctuaryDefault
             ? 'bg-emerald-500/10 border-emerald-500/30'
             : 'bg-white/5 border-white/10'
         }`}>
@@ -2152,6 +2213,31 @@ export function AccountSettings() {
             () => updateSanctuaryDefault(!consentSummary?.sanctuaryDefault)
           )}
         </div>
+
+        {/* Session Sanctuary — active without being the default */}
+        {sessionSanctuaryActive && !consentSummary?.sanctuaryDefault && (
+          <div className="p-4 bg-emerald-500/10 rounded-xl border border-emerald-500/30">
+            <div className="flex items-start gap-3">
+              <Shield size={18} className="text-emerald-400 mt-0.5 flex-shrink-0" />
+              <div className="flex-1">
+                <div className="text-sm font-medium text-emerald-200">
+                  Sanctuary is on for the session in progress
+                </div>
+                <div className="text-xs text-stone-400 mt-1">
+                  Turned on for this conversation rather than as your default, so it stays on
+                  until you end it. Nothing said inside it is saved — ending Sanctuary does not
+                  reach back and save it.
+                </div>
+                <button
+                  onClick={endSessionSanctuary}
+                  className="mt-3 px-3 py-2 rounded-lg text-xs font-medium bg-white/5 border border-white/15 text-stone-200 active:bg-white/10 transition-colors"
+                >
+                  End Sanctuary for this session
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Per-Data-Type Toggles */}
         {!consentSummary?.sanctuaryDefault && (() => {
