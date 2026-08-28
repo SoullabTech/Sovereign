@@ -55,6 +55,56 @@ borrow** progress framing, plans, or dashboard density.
 
 ---
 
+## REFERENCE HIERARCHY (founder ruling, 2026-08-28)
+
+```
+1.  LARRY'S OWN MATERIAL          — authoritative
+2.  EXISTING NOW WHAT? CODE       — architectural reality
+3.  EXTERNAL COACHING PRODUCTS    — pattern inspiration only
+```
+
+**Tier 1 is currently EMPTY in this session.** The "NOW WHAT? — Scope & Direction" presentation
+has been described to me but **no file has reached this conversation**. Everything attributed to
+it below is **founder-relayed (class D)** — a summary of a document I have not read — and is
+recorded as such rather than as extraction. It must not be cited as first-party until the deck is
+in hand.
+
+**Relayed, pending the source:**
+- Phase 1 goal — *help clients continue the work when they aren't with Larry, while keeping Larry
+  at the centre of the relationship.* This independently matches the V1 thesis in this brief.
+- Journey — Achievement → Transition → Clarity → Confidence → Flourishing. **Preserve the sequence;
+  invent no definitions, practices or stage transitions Larry has not supplied.**
+- Practitioner surface — Today · Clients · Programs · Schedule · Sessions · Communications ·
+  Resources · Client Notes · My Practice.
+- Aesthetic — clean · executive · brighter · Miami / Palm Springs · coral / aqua / teal / sky /
+  peach · modern-editorial-simple typography.
+
+### ⚠️ The palette relay supersedes, it does not refine
+
+Section F of this brief specifies the warm charcoal-and-bronze `--nw-*` language, and UX-02 has
+just unified five surfaces onto it. A Miami / Palm Springs direction is **a different world**, and
+adopting it would **supersede the ratified 2026-08-05 brand pass** rather than adjust it. That is
+entirely the founder's call — but it should be made against the deck itself, not against a relay,
+and it should be an explicit supersession ruling. **Nothing in this brief has been re-tokenized.**
+
+### Three extractions that must not be collapsed
+
+| | Can the deck carry it? |
+|---|---|
+| **A · Product doctrine** — what Now What? should accomplish | **Yes, at full weight.** Larry saying what he wants built is authoritative on that. |
+| **B · Practice model** — member ↔ Larry ↔ sessions ↔ materials ↔ MAIA | **Yes.** |
+| **C · Teaching methodology** — concepts, exercises, sequencing, distinctions | **No.** The deck's own Phase 3 defers methodology development, which is itself evidence it is not in there. **Do not infer teaching doctrine from interface requirements.** |
+
+### Custody question to settle before ingestion
+
+If the deck is **Soullab-authored for Larry**, it is our own document and freely usable. If it is
+**Larry-authored**, it is **class A** under an agreement that is still **unsigned** — *"nothing
+moves until both versions are signed"* — and the corpus audit already records *"Larry's
+presentation — read by Kelly, never ingested"* as the clearest instance of responding to primary
+material never taken into custody. **This may be that artifact.**
+
+---
+
 ## B · EXISTING SURFACE AUDIT
 
 **`RETIRE PRESENTATION ≠ RETIRE CAPABILITY`.** Nothing below is deleted; "HIDE FOR V1" means the
