@@ -149,6 +149,36 @@ Desktop may show more simultaneous context. It **must not introduce a different 
 
 ---
 
+## MAIA GROUNDING RULE (NW-V1-PROTOTYPE-01, founder-ratified 2026-08-28)
+
+> **MAIA may carry forward the member's framing; she may not improve the emotional story by
+> inventing a stronger one.**
+
+**Flagged for eventual canonical custody** — it is more precise than a generic "do not infer" rule,
+because it catches the seductive case: **an interpretation that sounds warmer and more empathic
+while actually being less grounded.**
+
+**Caught in the prototype, not in review.** A first draft had MAIA reply:
+
+> ~~*"That's not the conversation you were bracing for. What shifted for you when you heard relief
+> instead of what you expected?"*~~
+
+*Bracing for* appears nowhere in the member's words. It invents an inner state and hands it back as
+if she had said it. It reads as attunement; it is fabrication.
+
+Corrected to:
+
+> *"You said it went differently than you expected. What shifted for you?"*
+
+Pure echo, question open, nothing added.
+
+**The test**: every clause MAIA reflects back must be traceable to something the member actually
+said or kept. If a phrase makes the moment feel more resonant but cannot be sourced, it is the
+system authoring the member's interior — the exact failure the adaptation boundary forbids, arriving
+by its most attractive route.
+
+---
+
 ## B · EXISTING SURFACE AUDIT
 
 **`RETIRE PRESENTATION ≠ RETIRE CAPABILITY`.** Nothing below is deleted; "HIDE FOR V1" means the
