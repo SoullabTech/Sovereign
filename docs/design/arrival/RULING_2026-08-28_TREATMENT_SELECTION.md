@@ -200,3 +200,77 @@ The consequences, and one new render, are in
 a read-only Playwright script for the Mac Studio that captures **both phases** at 390/768/1440/1728,
 takes a first-paint frame as well as a settled one (to answer the biometric-reflow question), and
 records whether the biometric button was present. Syntax-checked here; not runnable here.
+
+---
+
+## 10 · Revised ruling — arrival is not one state
+
+The phase finding retired the previous framing. `/signin` and `/signup` had been treated as
+variants of one responsive threshold; the source says they are **different encounters with
+different first screens**.
+
+```
+/signup                          /signin
+  first encounter                  returning encounter
+  email phase first                password phase first
+  ~3 visible ways in               4-5 visible ways in
+                                   biometric conditional
+```
+
+So the product question is no longer *"should five ways in exist at first contact?"* — retired as
+incorrect framing. It is:
+
+> **What should a returning member encounter when coming back, and how much authentication
+> complexity belongs visibly at that return threshold?**
+
+### Disposition
+
+```
+61ce543            evidence/harness work · UnifiedAuth untouched · good boundary
+D                  remains leading treatment · NOT adoptable yet
+                   evaluate as TWO surfaces: D-SIGNUP (initiation) · D-SIGNIN (re-entry)
+NEW FINDINGS       ARRIVAL-RETURN-TONE-01        unresolved semantic split
+                   ARRIVAL-BIOMETRIC-REFLOW-01   suspected · needs live first-paint witness
+RETIRED            "five doors at first contact" — five is the returning maximum
+MOTION             curve still HOLD · reflow witness precedes the easing decision
+AUTH HIERARCHY     HOLD · usage evidence needed before any demotion
+CANON              unchanged
+```
+
+Registered in [`OPEN_FINDINGS.md`](./OPEN_FINDINGS.md), and named in the Experience Contract so a
+future session cannot quietly close them. The contract now also carries the two-encounter fact and
+an explicit prohibition on normalizing the two phases' typography.
+
+### The comparison matrix D must now survive
+
+Not width alone. **Phase × width × time:**
+
+```
+{signup-email, signin-password, signin-welcomeback}
+  × {390, 768, 1440, 1728}
+  × {first paint · settled pre-biometric · biometric arrival · final stable}
+```
+
+`capture-arrival.mjs` produces exactly that. It runs two passes — cheap DOM polling to find *when*
+the biometric control appears and whether the stack moved, then a reload to screenshot the moments
+the first pass named, because you cannot photograph a moment you have not yet detected. Layout
+shift is measured by the browser's own `PerformanceObserver('layout-shift')`, not by eye, and
+`reflow-report.json` returns a per-cell verdict:
+
+| Verdict | Reading |
+|---|---|
+| present at first paint | no finding |
+| arrived late, no displacement | probably fine |
+| **LATE + DISPLACED** | ARRIVAL-BIOMETRIC-REFLOW-01 confirmed |
+
+**Smoke-tested end to end** against the static D files through a local server on 2026-08-28: all
+twelve cells returned verdicts, screenshots were written at the named moments, the layout-shift
+instrument reported, and `reflow-report.json` was produced. It runs. It has not been run against
+the live app, which is the point of handing it over.
+
+### What this actually changed
+
+The most important result is not a treatment. It is that **arrival is not one state.** There is
+first entry and there is return, and the grammar can now become precise about the difference
+rather than merely more polished — which is only possible because the difference was found in the
+source rather than invented in a mockup.

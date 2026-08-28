@@ -1,7 +1,12 @@
 ---
 # ── Identity ────────────────────────────────────────────────────────────────
 room: Arrival Threshold
-human_activity: arriving — crossing from outside Soullab to inside it, and being let in
+human_activity: arriving — crossing from outside Soullab to inside it, and being let in.
+#   TWO ENCOUNTERS, NOT ONE. UnifiedAuth.tsx:185 (commit 44b7a52, 2026-08-24) opens
+#   /signin on the password phase and /signup on the email phase. First entry and
+#   return are different first screens with different door counts, and this contract
+#   governs both without asserting they should feel the same — see
+#   ARRIVAL-RETURN-TONE-01 in docs/design/arrival/OPEN_FINDINGS.md.
 
 # Deliberately narrow, on the house-return.md precedent. This binds THE FRONT
 # DOOR — the one shared auth surface and the two routes that render it — and
@@ -39,7 +44,9 @@ reference_surfaces:
   - components/auth/UnifiedAuth.tsx (the shipped arrival remodel, default-on since 2026-07-22)
   - components/journal/room/tokens.ts (the room-scoped motion token pattern and its measured reduced-motion lesson)
   - docs/design/contracts/house-return.md (narrow-scope precedent)
-  - docs/design/arrival/ (exploration treatments A/B/C, non-authoritative)
+  - docs/design/arrival/ (exploration treatments A/B/C/D, non-authoritative)
+  - docs/design/arrival/OPEN_FINDINGS.md (what this contract deliberately does not settle)
+  - docs/design/arrival/DOORS_AND_PHASES_2026-08-28.md (route/phase map and door inventory)
 
 # ── The House / Room split ──────────────────────────────────────────────────
 shared_with_house: The Soullab field hierarchy and palette (navy foundation, gold as signal only), the Holoflower as the house mark, the quiet declarative voice, and the gesture language of the rest of the platform. A member who arrives here and later reaches Journal or the Conversation Room should recognise one continuous environment, not a marketing front door bolted to a product.
@@ -88,12 +95,23 @@ is one front door, and both routes keep rendering the same component.
 
 ## Arrival
 
-> **"Welcome."**
+Two arrivals, because there are two encounters:
+
+| | first entry — `/signup` | return — `/signin` |
+|---|---|---|
+| first screen | email phase | password phase |
+| the line met | **"Welcome."** — Spectral, with the period | **"Welcome"** — plain sans |
+| visible ways in | ~3 (Continue · Google · Apple) | 4–5 (Sign in · code · Google · Apple · biometric when available) |
+
+Whether that difference is intended ceremony or accidental composition is
+**ARRIVAL-RETURN-TONE-01**, and this contract deliberately does not settle it.
+
+Both must answer, in the first painted frame:
 
 - **Where am I** — Soullab, unmistakably: navy field, Holoflower, the house voice.
 - **What is this place for** — enough to be worth entering, without a pitch.
-- **What is here now** — one way in, legible at a glance.
-- **Where can I begin** — the email field, present and reachable in the first painted frame.
+- **What is here now** — the ways in, legible at a glance.
+- **Where can I begin** — the first field, present and reachable before anything resolves.
 
 ## Gestures
 
@@ -121,6 +139,20 @@ is one front door, and both routes keep rendering the same component.
 - **Any change to auth behaviour under cover of presentation.** Sequence, completion flags
   (`members.onboarded`, `localStorage.beta_user.onboarded`), code delivery, biometric, recovery,
   and the `/signin`–`/signup` unification are **preservation boundaries**. Presentation only.
+
+## Open questions this contract does not settle
+
+Registered in [`../arrival/OPEN_FINDINGS.md`](../arrival/OPEN_FINDINGS.md). Each is unresolved by
+ruling, not by neglect, and none may be quietly closed by a future session:
+
+| ID | Question | Blocks |
+|---|---|---|
+| `ARRIVAL-RETURN-TONE-01` | should return carry lighter ceremony than first entry? | any move to normalize the two phases' typography |
+| `ARRIVAL-BIOMETRIC-REFLOW-01` | does a control arrive after the page has finished resolving, and move the stack? | any easing decision on the settling gesture |
+| `ARRIVAL-AUTH-HIERARCHY-01` | how much auth complexity belongs visibly at the *return* threshold? | any demotion of an existing door |
+
+⛔ In particular: **do not normalize the `/signin` and `/signup` typography to match.** The
+asymmetry may be meaningful. It is held, not overlooked.
 
 ## The two brand tests
 
