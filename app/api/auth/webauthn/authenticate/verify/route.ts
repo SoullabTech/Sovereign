@@ -13,7 +13,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { verifyAuthentication } from '@/lib/auth/webauthnServer';
 import { createSession, setSessionCookie, getCurrentSession } from '@/lib/auth/serverSessions';
 import { query } from '@/lib/db/postgres';
-import { logAuthEvent } from '@/lib/security/authAudit';
+import { logAuthEvent, hashCredential } from '@/lib/security/authAudit';
 import {
   checkRateLimit,
   resetRateLimit,
@@ -128,9 +128,12 @@ export async function POST(request: NextRequest) {
 
     await logAuthEvent({
       action: isStepUpReauth ? 'webauthn_step_up' : 'webauthn_authenticate',
+      // Verification succeeded, so the member IS established here — unlike the
+      // failure branch above, which correctly leaves the actor unset.
+      actorId: member.id,
       memberId: member.id,
       result: 'success',
-      metadata: { credentialId: result.credentialId, isStepUpReauth }
+      metadata: { credential_hash: hashCredential(result.credentialId ?? ''), isStepUpReauth }
     }, request);
 
     return NextResponse.json({
