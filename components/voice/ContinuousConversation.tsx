@@ -2456,9 +2456,21 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
       // duplicate". The comparator is scoped to one deliberate voice
       // engagement instead: see the mount/unmount effect and the
       // `userExitMode` branch of `stopListening`.
+      // ⛔ The raw MediaStreamTrack.label is NOT reported.
+      //
+      // Device labels are member-authored strings. Production carried
+      // "Scarlett 2i2 USB (1235:8210)" — harmless — but the same field on a
+      // different member reads "Kelly's AirPods Pro". The name is the
+      // member's, and this event ships to the server on every mic grant.
+      //
+      // The privacy boundary here is ABSENCE, not treatment: no hash, no
+      // redaction, no truncation, no replacement identifier. A shortened or
+      // hashed device name is still a per-member handle, and once a field
+      // exists something eventually fills it. The count below is what this
+      // event actually needs — it distinguishes "no audio track" from "a
+      // track was granted" without describing whose device it is.
       logVoiceEvent('voice_mic_granted', {
         audioTracks: stream.getAudioTracks().length,
-        trackLabel: stream.getAudioTracks()[0]?.label?.slice(0, 80) ?? '',
       });
 
       const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
