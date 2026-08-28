@@ -185,6 +185,55 @@ function stopCaptureWatchdog() {
   if (captureWatchdog) { clearInterval(captureWatchdog); captureWatchdog = null; }
 }
 
+// ── DESKTOP-CAPTURE-RELEASE-01 — forced release ─────────────────────────────
+//
+// THE DEFECT. `maia:voice-start` refuses whenever main still holds a `voice`
+// object. Nothing on the sign-out path released one, so a session that outlived
+// its member wedged the app permanently: the renderer, having lost its own
+// `listening` state, showed "Start listening"; every press came back
+// `already capturing`; signing out and back in changed nothing, because sign-out
+// never touched `voice`. The only escape was quitting the process. Reported from
+// a real Mac, 2026-08-28.
+//
+// ⛔ THIS IS NOT A STOP. `maia:voice-stop` is a member GESTURE, and it means
+// "I am finished — keep what I said": it runs `epoch.userStop()`, which may
+// salvage a partial utterance, and `epoch.commit()`, which returns it. A forced
+// teardown carries no such intent. Nobody decided to finish; a session ended
+// underneath them. Committing a half-spoken sentence on their behalf would be
+// the system authoring a member's words at the exact moment it stopped being
+// authorized to hold them.
+//
+// So this DISCARDS:
+//     no userStop      · no salvage
+//     no commit        · no pending speech kept
+//     no transcription · no runTurn
+//     nothing persisted
+//
+// What it does emit is one content-free `voice_capture_lost` — the vocabulary
+// already carries it, and a silent discard is precisely what the epoch machine
+// exists to prevent. The member is told, in the same language every other
+// capture boundary uses.
+//
+// @returns {boolean} whether a live session was actually released
+function releaseCapture(cause) {
+  // Idempotent, and the watchdog stops either way: a timer outliving its
+  // session is the same class of leak in miniature.
+  stopCaptureWatchdog();
+  if (!voice) return false;
+
+  const released = voice;
+  voice = null;                          // ⭐ FIRST — see runTurn's guard below.
+  released.liveness.disarm();
+  released.diagnostics.emit('voice_capture_lost', { cause, source: 'auth_teardown' });
+
+  // ⛔ `turnBusy` is deliberately NOT cleared. If a turn is mid-flight its
+  // `finally` owns that flag, and clearing it here would let a second turn
+  // start under the first. With `voice` null, `runTurn` refuses at its entry
+  // anyway, so nothing is gained by racing it.
+  pushState();                           // authoritative idle — active:false
+  return true;
+}
+
 // ── IPC — every handler validates in MAIN; nothing is taken on trust ────────
 
 ipcMain.handle('maia:voice-start', async (_evt, payload) => {
@@ -301,13 +350,26 @@ ipcMain.handle('maia:status', async () => ({
 // the failure mode this whole programme exists to avoid.
 async function runTurn() {
   if (!voice || turnBusy || !conversation) return;
-  const taken = voice.utterance.take();
+  // ⭐ DESKTOP-CAPTURE-RELEASE-01. Pin the session this turn belongs to. A
+  // forced release nulls `voice`, and every step below is separated from the
+  // next by a network round trip — so without this the turn would keep going
+  // for a member who has signed out: asking MAIA in their name, and writing a
+  // final into an epoch that no longer has an owner.
+  //
+  // ⛔ It cannot un-send a transcription already in flight. It guarantees that
+  // no FURTHER request is made and that no result is used. Stated plainly
+  // rather than claimed away.
+  const session = voice;
+  const stillOurs = () => voice === session;
+
+  const taken = session.utterance.take();
   if (!taken) return;                    // silence or a cough, not an utterance
   turnBusy = true;
   try {
     broadcast('maia:turn', { phase: 'transcribing' });
 
-    const t = await conversation.transcribe(taken.samples, voice.sampleRate);
+    const t = await conversation.transcribe(taken.samples, session.sampleRate);
+    if (!stillOurs()) return;            // released mid-flight — drop it silently
     if (!t.ok) { broadcast('maia:turn', { phase: 'error', error: t.error }); return; }
 
     const said = (t.text || '').trim();
@@ -315,11 +377,12 @@ async function runTurn() {
 
     // The transcript is a FINAL for the epoch — the tail invariant now has real
     // material to protect, which on the first walk it never did.
-    voice.epoch.final(said, `utt-${Date.now()}`);
+    session.epoch.final(said, `utt-${Date.now()}`);
     broadcast('maia:turn', { phase: 'heard', member: said });
 
     broadcast('maia:turn', { phase: 'thinking' });
     const a = await conversation.ask(said);
+    if (!stillOurs()) return;            // signed out while MAIA was answering
     if (!a.ok) { broadcast('maia:turn', { phase: 'error', error: a.error }); return; }
 
     broadcast('maia:turn', { phase: 'answered', maia: a.text });
@@ -473,6 +536,16 @@ ipcMain.handle('maia:sign-in', async (_evt, payload) => {
  * and it would have been reachable if only the button ran the teardown.
  */
 function teardownMemberState() {
+  // ⭐ DESKTOP-CAPTURE-RELEASE-01 — FIRST, before anything else falls away.
+  // Capture is the one piece of member state that used to outlive its member,
+  // and it is the piece that blocks every recovery: while main holds a `voice`,
+  // signing back in still cannot start listening.
+  //
+  // The renderer's own graph is closed by the auth broadcast at the end of this
+  // function — `showSignedIn({signedIn:false})` calls `stopListening()`, which
+  // closes the AudioContext and stops the MediaStream tracks. Main's voice-state
+  // push alone does not do that, which is why the broadcast stays where it is.
+  releaseCapture('signed_out');
   conversation = null;
   // ⛔ The watch dies with the session. Nothing may adopt on behalf of someone
   // who is no longer signed in.
