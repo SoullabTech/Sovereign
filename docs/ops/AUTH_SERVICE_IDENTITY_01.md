@@ -51,11 +51,11 @@ the practice is not only borrowing real members' identities, it is
 **accumulating principals** — a fixture created for one test became a standing
 credential holder.
 
-The `members` table holds at least ten synthetic rows, from three generators:
+The `members` table holds at least twelve non-person rows, from four generators:
 `isolation_test_exp` and `_2` … `_8` (2026-06-24),
 `a1-synthetic-witness-20260812T224213Z` (2026-08-12), and
-`fieldwalk_proof3_20260731` (2026-07-31). None is referenced anywhere in the
-repo.
+`fieldwalk_proof3_20260731` (2026-07-31), and `michael.demo` / `larry.demo`
+(2026-07). None is referenced anywhere in the repo. Plus `maia_bot`, below.
 
 "At least" is load-bearing. The first census matched usernames against
 `test|synthetic|fixture|witness|_exp` and missed `fieldwalk_proof3` entirely —
@@ -72,6 +72,22 @@ GROUP BY 1,2
 HAVING count(s.id) FILTER (WHERE s.user_agent ILIKE 'Mozilla%') = 0
 ORDER BY 2;
 ```
+
+Run 2026-08-27, it returned 13 and immediately found a **fourth** family no
+pattern would have guessed: `michael.demo` (2026-07-06, **12 sessions** — the
+most active non-person account in the system) and `larry.demo` (2026-07-10).
+
+It is not error-free either, and its error falls on real people: `angela`
+(2026-01-23, one session, no user agent) is almost certainly a member from the
+January cohort that predates user-agent capture — the same cohort as `nathan`
+and `Tara`, who escape the filter only because they also have browser sessions.
+So the rule is narrower than "no browser session means fixture":
+
+> A behavioural census is better than a syntactic one because its blind spots
+> are not the conventions you happen to know. It still needs a second
+> discriminator before anything is acted on — here, whether the member has an
+> email and conversation turns. **No census in this thread was ever safe to
+> revoke from directly.**
 
 It also holds **`maia_bot`** (2026-03-20) — a service principal that already
 exists, implemented as a member. That is the defect and its precedent in one
