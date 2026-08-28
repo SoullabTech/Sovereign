@@ -12,7 +12,7 @@ export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentSession } from '@/lib/auth/serverSessions';
 import { verifyRegistration } from '@/lib/auth/webauthnServer';
-import { logAuthEvent } from '@/lib/security/authAudit';
+import { logAuthEvent, hashCredential } from '@/lib/security/authAudit';
 import type { RegistrationResponseJSON } from '@simplewebauthn/server';
 
 export async function POST(request: NextRequest) {
@@ -49,6 +49,9 @@ export async function POST(request: NextRequest) {
     if (!result.verified) {
       await logAuthEvent({
         action: 'webauthn_register',
+        // The session established who is acting before the ceremony was
+        // attempted, so the actor is known even though the attempt failed.
+        actorId: session.memberId,
         memberId: session.memberId,
         result: 'failure',
         errorMessage: result.error,
@@ -70,9 +73,14 @@ export async function POST(request: NextRequest) {
 
     await logAuthEvent({
       action: 'webauthn_register',
+      actorId: session.memberId,
       memberId: session.memberId,
       result: 'success',
-      metadata: { step: 'credential_saved', credentialId: result.credentialId }
+      // Hashed, not raw. A credential id is credential material; the audit
+      // module's own contract says hash or redact, and hashCredential exists
+      // for exactly this. A hash still correlates rows for one credential
+      // across register / use / revoke without storing the identifier itself.
+      metadata: { step: 'credential_saved', credential_hash: hashCredential(result.credentialId ?? '') }
     }, request);
 
     return NextResponse.json({

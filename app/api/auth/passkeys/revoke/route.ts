@@ -11,7 +11,7 @@ export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentSession } from '@/lib/auth/serverSessions';
 import { revokeCredential } from '@/lib/auth/webauthnServer';
-import { logAuthEvent } from '@/lib/security/authAudit';
+import { logAuthEvent, hashCredential } from '@/lib/security/authAudit';
 
 export async function POST(request: NextRequest) {
   try {
@@ -43,10 +43,11 @@ export async function POST(request: NextRequest) {
     }
 
     await logAuthEvent({
-      action: 'webauthn_register',
+      action: 'webauthn_revoke',
+      actorId: session.memberId,
       memberId: session.memberId,
       result: 'success',
-      metadata: { step: 'credential_revoked', credentialId }
+      metadata: { credential_hash: hashCredential(credentialId) }
     }, request);
 
     return NextResponse.json({
