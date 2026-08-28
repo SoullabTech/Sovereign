@@ -119,6 +119,33 @@ export const CapsuleCreateFromChatWindowSchema = z.object({
 export type CapsuleCreateFromChatWindowInput = z.infer<typeof CapsuleCreateFromChatWindowSchema>;
 
 /**
+ * CONFIRM KEEP — the member-confirmed create.
+ *
+ * This is the only shape that authorizes an `INSERT INTO reflection_capsules`
+ * from the Keep flow. It carries the draft the member actually saw and edited,
+ * not a window to be re-distilled: what gets written is what they confirmed,
+ * never a fresh interpretation of the conversation made after the fact.
+ *
+ * Contract: OPEN = zero persistence · PREPARE = ephemeral · CONFIRM = this.
+ */
+export const CapsuleCreateSchema = z.object({
+  sourceType: z.enum(SOURCE_TYPES).default('chat'),
+  sourceId: z.string().nullable().optional(),
+  title: z.string().min(1),
+  summary: z.string(),
+  goldLines: z.array(z.any()).optional(),
+  decisions: z.array(z.any()).optional(),
+  nextSteps: z.array(z.any()).optional(),
+  practices: z.array(z.any()).optional(),
+  patterns: z.array(z.any()).optional(),
+  signals: SignalsSchema.nullable().optional(),
+  tags: z.array(z.string()).optional(),
+  sourceExcerpt: z.string().nullable().optional(),
+  draft: z.boolean().optional().default(true),
+});
+export type CapsuleCreateInput = z.infer<typeof CapsuleCreateSchema>;
+
+/**
  * Update an existing capsule
  */
 export const CapsuleUpdateSchema = z.object({

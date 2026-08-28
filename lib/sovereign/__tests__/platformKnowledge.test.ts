@@ -203,6 +203,50 @@ describe('orientation behavior contract', () => {
   });
 });
 
+describe('Keep is on the map (2026-08-28 — MAIA denied it existed in production)', () => {
+  // MAIA answered "can we keep this, I don't see the keep button" with "I don't
+  // control the interface directly so I can't save it from my side." Keep was
+  // absent from PLATFORM_AREAS entirely, so she had nothing true to say. These
+  // guards keep the affordance, its location, and its Sanctuary absence authored.
+  it('AREAS carries a Keep entry with its purpose', () => {
+    expect(PLATFORM_AREAS).toContain('• Keep —');
+    expect(lower(PLATFORM_AREAS)).toContain("holds onto something from a conversation");
+  });
+
+  it('names where the conversation-level Keep is found', () => {
+    expect(lower(PLATFORM_AREAS)).toContain('bookmark icon near the top of the main screen');
+  });
+
+  it('names both forms: the single moment and the wider conversation', () => {
+    const a = lower(PLATFORM_AREAS);
+    expect(a).toContain("member's own exact words");
+    expect(a).toContain('keeping the wider conversation');
+  });
+
+  it('states the Sanctuary absence as the boundary working, not a fault', () => {
+    const a = lower(PLATFORM_AREAS);
+    expect(a).toContain('deliberately absent during sanctuary mode');
+    expect(a).toContain('the boundary working, not a fault');
+  });
+
+  it('grounds the member utterance "can we keep this"', () => {
+    expect(lower(PLATFORM_AREAS)).toContain('can we keep this');
+  });
+
+  it('forbids the three false denials MAIA actually produced', () => {
+    const a = lower(PLATFORM_AREAS);
+    expect(a).toContain('never tell a member that keeping is impossible here');
+    expect(a).toContain('no relationship to the interface');
+    expect(a).toContain('only option');
+  });
+
+  it('naming Keep does not license claiming a keep happened', () => {
+    expect(lower(PLATFORM_AREAS)).toContain(
+      'naming keep is not claiming a keep happened',
+    );
+  });
+});
+
 describe('one relationship, one voice (composition ruling 2026-07-16)', () => {
   it('no second intelligence is ever named — "Jeeves" never appears in spoken content', () => {
     expect(lower(ALL)).not.toContain('jeeves');

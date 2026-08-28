@@ -209,6 +209,7 @@ import { useFeatureFlags } from '@/lib/utils/feature-flags-client';
 import { MaiaArrivalField } from './maia/MaiaArrivalField';
 import type { MaiaUiAction } from '@/lib/types/ai';
 import { detectIntent, getIntentRoute, buildUiAction } from '@/lib/consciousness/intentRouter';
+import { detectKeepIntent } from '@/lib/consciousness/keepIntent';
 import { detectCaptureTrigger } from '@/lib/capsules/types';
 import type { CapsuleDTO } from '@/lib/capsules/types';
 import { TransformationalPresence, type PresenceState } from './nlp/TransformationalPresence';
@@ -1002,7 +1003,21 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   const [showCapturePanel, setShowCapturePanel] = useState(false);
   const [showCaptureSuggestion, setShowCaptureSuggestion] = useState(false);
   const [captureSuggestionDismissed, setCaptureSuggestionDismissed] = useState(false);
+  // The Keep draft currently on screen. Until the member confirms, this is an
+  // UNSAVED preview: distilled server-side, held in memory here, with no row
+  // behind it and no `id`. `capturedCapsule.id` is therefore only meaningful
+  // once capsulePersisted is true.
   const [capturedCapsule, setCapturedCapsule] = useState<CapsuleDTO | null>(null);
+  // KEEP AUTHORITY CONTRACT (Kelly ruling 2026-08-28): OPEN = zero persistence,
+  // PREPARE = ephemeral, CONFIRM = persistence. This flag is the boundary
+  // between the second and the third: false means nothing has been written and
+  // closing the panel leaves no trace.
+  const [capsulePersisted, setCapsulePersisted] = useState(false);
+  // The panel's "Bring into the Lab" saves edits and then promotes, both inside
+  // one tick — React state has not re-rendered in between, so the second step
+  // would read a stale `capturedCapsule.id` (undefined, on a first confirm).
+  // This ref carries the id across that boundary synchronously.
+  const persistedCapsuleIdRef = useRef<string | null>(null);
   const [isCapturing, setIsCapturing] = useState(false);
   const [captureError, setCaptureError] = useState<string | null>(null);
 
@@ -4545,6 +4560,33 @@ I'm not sure what I'm feeling yet.`;
   const handleCaptureSpirit = useCallback(async () => {
     console.log('✨ [Capsule] handleCaptureSpirit called', { userId, messageCount: messages.length });
 
+    // 🛡️ SANCTUARY ABSOLUTE BOUNDARY — guard at the source, not at the button.
+    // Opening this panel is NOT a neutral, reversible act: the flow POSTs the
+    // last 16 turns to /api/capsules/from-chat-window, which distills them and
+    // calls createCapsule() — an INSERT INTO reflection_capsules that lands
+    // BEFORE the member confirms anything in the panel. So "the panel opens for
+    // the member to choose" is true of the UI and false of the substrate.
+    //
+    // The `!isSanctuary` render guard on the persistent bookmark hid the
+    // BUTTON, but four other callers reach this handler and none of them
+    // checked Sanctuary: the `open_reflection` doorway card
+    // (handleDoorwayAction), the SacredLabDrawer `capture-spirit` action, the
+    // `labAction` window event, and detectJournalCommand() on typed input
+    // ("capture this", "journal this", …). Any of those would have written
+    // Sanctuary content to disk.
+    //
+    // CLAUDE.md Sanctuary invariant 6 is absolute: nothing from a Sanctuary
+    // session may be saved, extracted, inferred, or converted into long-term
+    // memory "under any circumstances, including by user request during the
+    // session." That makes this a refusal, not a confirmation prompt — there is
+    // no consent gesture available inside Sanctuary that could authorize it.
+    if (isSanctuary) {
+      pushVoiceDebug('Capture refused · Sanctuary');
+      toast.error('Sanctuary — this conversation is not being kept');
+      console.warn('🛡️ [Capsule] Capture refused: Sanctuary session');
+      return;
+    }
+
     if (!userId) {
       // Surface WHY Capture "did not open" to the on-device trace, not just console.
       pushVoiceDebug('Capture blocked · member:n (userId not resolved)');
@@ -4567,6 +4609,8 @@ I'm not sure what I'm feeling yet.`;
     setIsCapturing(true);
     setCaptureError(null);
     setCapturedCapsule(null);
+    setCapsulePersisted(false);
+    persistedCapsuleIdRef.current = null;
 
     try {
       // Convert messages to the format expected by the capsule API
@@ -4595,17 +4639,23 @@ I'm not sure what I'm feeling yet.`;
       }
 
       const data = await response.json();
-      console.log('✅ [Capsule] Successfully captured:', data);
+      console.log('✅ [Capsule] Keep draft prepared (nothing persisted):', data);
 
-      setCapturedCapsule(data.capsule);
+      // The route returns { draft } and no longer returns { capsule }: opening
+      // Keep writes nothing, so there is no row and no id to hold. Reading
+      // data.capsule here would be undefined — deliberately, so a regression to
+      // write-on-open surfaces as a broken panel rather than a silent save.
+      setCapturedCapsule(data.draft);
+      setCapsulePersisted(false);
 
-      // Track the capture
-      trackEvent('spirit_captured', {
+      // Track the OPENING, not a keep. Nothing was kept by this event, and the
+      // name says so — `spirit_captured` fired on open would misreport the
+      // member's consent gesture in every downstream count.
+      trackEvent('keep_panel_opened', {
         userId,
         sessionId,
         messageCount: messages.length,
-        capsuleId: data.capsule.id,
-        title: data.capsule.title,
+        persisted: false,
       });
     } catch (error: any) {
       console.error('❌ [Capsule] Error capturing spirit:', error);
@@ -4615,7 +4665,11 @@ I'm not sure what I'm feeling yet.`;
       setShowCaptureSuggestion(false);
       setCaptureSuggestionDismissed(true);
     }
-  }, [userId, messages, sessionId]);
+    // isSanctuary is a dependency, not an incidental read: handleCaptureSpiritRef
+    // is what the doorway / labAction callers invoke, so a stale closure here
+    // would let a capture fire against a Sanctuary session entered after the
+    // last memoization.
+  }, [userId, messages, sessionId, isSanctuary]);
 
   // Keep ref updated for event dispatch
   useEffect(() => {
@@ -4660,10 +4714,59 @@ I'm not sure what I'm feeling yet.`;
   }, [router]);
 
   // Update captured capsule (quick edits)
+  // CONFIRM KEEP — the member's governing gesture, and the first moment anything
+  // is written. Before this runs, the panel has been showing an unsaved preview.
+  //
+  // Two paths, one boundary: the first confirm CREATES the row from the draft the
+  // member actually reviewed (POST /api/capsules); later edits PATCH the row that
+  // now exists. What gets written is what they saw — nothing is re-distilled
+  // between the preview they approved and the row on disk.
   const handleUpdateCapsule = useCallback(async (updates: Partial<CapsuleDTO>) => {
     if (!capturedCapsule) return;
 
+    // 🛡️ Sanctuary cannot reach here — the panel is refused at
+    // handleCaptureSpirit — but the write seam guards itself rather than
+    // trusting that the only door stayed locked.
+    if (isSanctuary) {
+      console.warn('🛡️ [Capsule] Confirm refused: Sanctuary session');
+      return;
+    }
+
     try {
+      if (!capsulePersisted) {
+        const merged = { ...capturedCapsule, ...updates };
+        const response = await apiFetch('/api/capsules', {
+          method: 'POST',
+          body: JSON.stringify({
+            sourceType: 'chat',
+            sourceId: sessionId || null,
+            title: merged.title,
+            summary: merged.summary,
+            goldLines: merged.goldLines,
+            decisions: merged.decisions,
+            nextSteps: merged.nextSteps,
+            practices: merged.practices,
+            patterns: merged.patterns,
+            signals: merged.signals,
+            tags: merged.tags,
+            sourceExcerpt: merged.sourceExcerpt,
+            draft: true,
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to keep this');
+        }
+
+        const data = await response.json();
+        setCapturedCapsule(data.capsule);
+        setCapsulePersisted(true);
+        persistedCapsuleIdRef.current = data.capsule.id;
+        trackEvent('keep_confirmed', { userId, sessionId, capsuleId: data.capsule.id });
+        toast.success('Kept');
+        return;
+      }
+
       const response = await apiFetch(`/api/capsules/${capturedCapsule.id}`, {
         method: 'PATCH',
         body: JSON.stringify(updates),
@@ -4677,17 +4780,27 @@ I'm not sure what I'm feeling yet.`;
       setCapturedCapsule(data.capsule);
       toast.success('Changes saved');
     } catch (error: any) {
-      console.error('Failed to update capsule:', error);
+      console.error('Failed to save capsule:', error);
       toast.error('Failed to save changes');
     }
-  }, [capturedCapsule]);
+  }, [capturedCapsule, capsulePersisted, isSanctuary, sessionId, userId]);
 
   // Bring capsule into the lab (mark as non-draft)
   const handleBringCapsuleIntoLab = useCallback(async () => {
     if (!capturedCapsule) return;
 
+    // Promotion acts on a row, so it requires a confirmed Keep. The panel runs
+    // its save first, which is what creates that row; read the id from the ref
+    // rather than from state, which has not re-rendered yet within this tick.
+    const capsuleId = persistedCapsuleIdRef.current ?? capturedCapsule.id;
+    if (!capsuleId) {
+      console.warn('⚠️ [Capsule] Bring into Lab with no confirmed Keep — nothing to promote');
+      toast.error('Keep this first, then bring it into the Lab');
+      return;
+    }
+
     try {
-      const response = await apiFetch(`/api/capsules/${capturedCapsule.id}`, {
+      const response = await apiFetch(`/api/capsules/${capsuleId}`, {
         method: 'PATCH',
         body: JSON.stringify({ draft: false }),
       });
@@ -6069,6 +6182,51 @@ I'm not sure what I'm feeling yet.`;
         suggestedActions: responseData.suggestedActions || responseData.spiralogic?.suggestedActions || undefined,
       };
 
+      // 🔖 KEEP-INTENT-01 — the member asked to keep something, or asked for Keep
+      // itself. Recognized HERE, after the reply exists, and deliberately not in
+      // handleTextMessage next to detectJournalCommand(): that detector returns
+      // before the message is sent, so MAIA goes silent. "Can we keep this?" is
+      // relational speech addressed to her; the interface must not make her mute
+      // because it recognized an affordance. The turn is untouched by this block.
+      //
+      // Three layers, held apart (Kelly ruling 2026-08-28):
+      //   UNDERSTAND — detectKeepIntent(), pure, writes nothing
+      //   FACILITATE — surface or open the member-controlled Keep gesture
+      //   COMMIT     — only the member's confirmation in the panel persists
+      // Opening Keep is now a zero-persistence act (KEEP-OPEN-NONPERSISTENT-01),
+      // which is what makes the explicit-command branch below safe to wire.
+      const keepIntent = detectKeepIntent(cleanedText);
+      if (keepIntent.kind) {
+        if (isSanctuary) {
+          // No doorway, no panel, no capsule. MAIA answers in words — the
+          // platform map tells her Keep is unavailable in Sanctuary and that
+          // this absence is the boundary working, not a fault.
+          console.log('🛡️ [Keep] intent recognized but refused · Sanctuary', {
+            kind: keepIntent.kind,
+          });
+        } else if (keepIntent.kind === 'open_keep') {
+          // Explicit House command. MAIA operates the interface; she does not
+          // exercise the member's consent authority by doing so — the panel
+          // opens holding an unsaved preview and nothing is written until the
+          // member confirms.
+          console.log('🔖 [Keep] explicit open command', { matched: keepIntent.matched });
+          handleCaptureSpiritRef.current?.();
+        } else if (!oracleMessage.uiAction || oracleMessage.uiAction.type === 'none') {
+          // The member wants to hold onto this material. Surface the existing
+          // member-controlled doorway rather than opening anything: they decide.
+          const action = buildUiAction(getIntentRoute('reflection_mark'), 1);
+          if (action.type !== 'none') {
+            oracleMessage.intent = 'reflection_mark';
+            // Override the ambient lead-in. The pooled ones ("Something
+            // important just happened.") are MAIA asserting significance she
+            // detected; here the member said it themselves, and echoing their
+            // ask back as her own observation would misreport who noticed.
+            oracleMessage.uiAction = { ...action, leadIn: 'You asked to keep this.' };
+            console.log('🔖 [Keep] doorway attached', { matched: keepIntent.matched });
+          }
+        }
+      }
+
       // 🚪 CLIENT-SIDE INTENT DETECTION (fallback when server doesn't provide uiAction)
       if (!oracleMessage.uiAction || oracleMessage.uiAction.type === 'none') {
         const detection = detectIntent({ userInput: cleanedText, maiaResponse: oracleMessage.text || '' });
@@ -6428,7 +6586,7 @@ I'm not sure what I'm feeling yet.`;
 
       setCurrentMotionState('idle');
     }
-  }, [isProcessing, isAudioPlaying, isResponding, sessionId, userId, onMessageAdded, agentConfig, messages.length, showChatInterface, voiceEnabled, maiaReady, maiaMode, pendingLensConsent]);
+  }, [isProcessing, isAudioPlaying, isResponding, sessionId, userId, onMessageAdded, agentConfig, messages.length, showChatInterface, voiceEnabled, maiaReady, maiaMode, pendingLensConsent, isSanctuary]);
 
   // 🔁 RECOVERY SEAM (Pattern A) — guarded resend of a not-delivered turn.
   // Reuses the member's existing bubble (retryOf); never creates a second turn.
@@ -9929,10 +10087,16 @@ I'm not sure what I'm feeling yet.`;
         onSave={handleUpdateCapsule}
         onBringIntoLab={handleBringCapsuleIntoLab}
         onViewInLab={() => {
-          setShowCapturePanel(false);
-          if (capturedCapsule) {
-            router.push(`/labtools/reflections/${capturedCapsule.id}`);
+          // Only a confirmed Keep has a page to view. An unsaved preview has no
+          // row and no route — navigating on its absent id would 404 and read
+          // to the member as data loss.
+          const capsuleId = persistedCapsuleIdRef.current ?? capturedCapsule?.id;
+          if (!capsuleId) {
+            toast.error('Keep this first, then you can view it in the Lab');
+            return;
           }
+          setShowCapturePanel(false);
+          router.push(`/labtools/reflections/${capsuleId}`);
         }}
       />
 
