@@ -38,10 +38,47 @@
  * invitation rendered or the error boundary did. The two witnesses have opposite
  * requirements, and the earlier version of this comment collapsed them.
  */
-import puppeteer from 'puppeteer';
 import { spawn, spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
+
+/**
+ * The driver.
+ *
+ * `puppeteer` is a devDependency of the app, so a checkout with a complete
+ * `npm install` already has it. A checkout that does NOT — a second worktree
+ * made just for capturing, an install that ran out of disk halfway — failed
+ * here with a bare ERR_MODULE_NOT_FOUND stack: true, and useless. This script
+ * refuses clearly everywhere else; it should not hand a person a stack trace
+ * at the one place the remedy is a single command.
+ *
+ * `puppeteer-core` is the same driver without the bundled browser download,
+ * and resolveBrowser() below already knows how to find a system browser. So
+ * either package is enough to capture with; only both being absent is fatal.
+ */
+const puppeteer = await (async () => {
+  for (const pkg of ['puppeteer', 'puppeteer-core']) {
+    try {
+      return (await import(pkg)).default;
+    } catch (err) {
+      if (err?.code !== 'ERR_MODULE_NOT_FOUND') throw err;
+    }
+  }
+  console.error('[capture] No puppeteer in this checkout — nothing to drive a browser with.');
+  console.error('');
+  console.error('Neither `puppeteer` nor `puppeteer-core` resolves from here. Most often this');
+  console.error('is a second checkout whose `npm install` never completed (node_modules is');
+  console.error('~2.2 GB, and a partial install leaves no trace but this).');
+  console.error('');
+  console.error('Fix with either:');
+  console.error('  npm install                 # complete this checkout\'s install');
+  console.error('  npm install puppeteer-core  # driver only, no browser download');
+  console.error('');
+  console.error('Or run the capture from a checkout that is already installed — the script');
+  console.error('names its output after the tree it runs in, so check this branch out there');
+  console.error('rather than duplicating node_modules for the capture alone.');
+  process.exit(1);
+})();
 
 /** The reference viewport. Every reference image was composed at this width. */
 const VIEWPORT = { width: 1680, height: 1050, deviceScaleFactor: 2 };
