@@ -28,7 +28,9 @@
 
 'use strict';
 
-const { app, BrowserWindow, ipcMain, session, safeStorage } = require('electron');
+const {
+  app, BrowserWindow, BrowserView, Menu, ipcMain, session, safeStorage, shell,
+} = require('electron');
 const path = require('node:path');
 const fs = require('node:fs');
 
@@ -40,6 +42,8 @@ const { createSession } = require('./session');
 const { createConversation } = require('./conversation');
 const { createCaptureLiveness } = require('./capture-liveness');
 const { createThreadWatch } = require('./thread-watch');
+const { createPlatformShell, MAIA, PLATFORM } = require('./shell');
+const { navigationDecision } = require('./shell-policy');
 
 // Separate userData for a dev launch, so a development instance can never read
 // or corrupt an installed instance's state. (jarvis-desktop precedent.)
@@ -50,6 +54,7 @@ if (!app.isPackaged) {
 let mainWindow = null;
 let memberSession = null; // member session — survives capture start/stop
 let conversation = null; // one continuity for this run
+let platformShell = null; // DESKTOP-SHELL-01 — the one remote view, or none
 
 // ── voice session, owned entirely by main ───────────────────────────────────
 let voice = null;
@@ -180,6 +185,55 @@ function stopCaptureWatchdog() {
   if (captureWatchdog) { clearInterval(captureWatchdog); captureWatchdog = null; }
 }
 
+// ── DESKTOP-CAPTURE-RELEASE-01 — forced release ─────────────────────────────
+//
+// THE DEFECT. `maia:voice-start` refuses whenever main still holds a `voice`
+// object. Nothing on the sign-out path released one, so a session that outlived
+// its member wedged the app permanently: the renderer, having lost its own
+// `listening` state, showed "Start listening"; every press came back
+// `already capturing`; signing out and back in changed nothing, because sign-out
+// never touched `voice`. The only escape was quitting the process. Reported from
+// a real Mac, 2026-08-28.
+//
+// ⛔ THIS IS NOT A STOP. `maia:voice-stop` is a member GESTURE, and it means
+// "I am finished — keep what I said": it runs `epoch.userStop()`, which may
+// salvage a partial utterance, and `epoch.commit()`, which returns it. A forced
+// teardown carries no such intent. Nobody decided to finish; a session ended
+// underneath them. Committing a half-spoken sentence on their behalf would be
+// the system authoring a member's words at the exact moment it stopped being
+// authorized to hold them.
+//
+// So this DISCARDS:
+//     no userStop      · no salvage
+//     no commit        · no pending speech kept
+//     no transcription · no runTurn
+//     nothing persisted
+//
+// What it does emit is one content-free `voice_capture_lost` — the vocabulary
+// already carries it, and a silent discard is precisely what the epoch machine
+// exists to prevent. The member is told, in the same language every other
+// capture boundary uses.
+//
+// @returns {boolean} whether a live session was actually released
+function releaseCapture(cause) {
+  // Idempotent, and the watchdog stops either way: a timer outliving its
+  // session is the same class of leak in miniature.
+  stopCaptureWatchdog();
+  if (!voice) return false;
+
+  const released = voice;
+  voice = null;                          // ⭐ FIRST — see runTurn's guard below.
+  released.liveness.disarm();
+  released.diagnostics.emit('voice_capture_lost', { cause, source: 'auth_teardown' });
+
+  // ⛔ `turnBusy` is deliberately NOT cleared. If a turn is mid-flight its
+  // `finally` owns that flag, and clearing it here would let a second turn
+  // start under the first. With `voice` null, `runTurn` refuses at its entry
+  // anyway, so nothing is gained by racing it.
+  pushState();                           // authoritative idle — active:false
+  return true;
+}
+
 // ── IPC — every handler validates in MAIN; nothing is taken on trust ────────
 
 ipcMain.handle('maia:voice-start', async (_evt, payload) => {
@@ -265,8 +319,23 @@ ipcMain.handle('maia:voice-capture-lost', async (_evt, payload) => {
   return { ok: true, tail };
 });
 
-ipcMain.handle('maia:voice-stop', async () => {
-  if (!voice) return { ok: false, reason: 'no capture session' };
+/**
+ * Close capture as a MEMBER GESTURE — "I'm finished, keep what I said".
+ *
+ * ⛔ The counterpart to `releaseCapture()`, and the difference between them is
+ * the member's intent, not the mechanism. This one runs `userStop()` (which may
+ * salvage a partial utterance) and `commit()`, because the member chose to end
+ * it. The forced release discards, because nobody chose anything.
+ *
+ * ⭐ DESKTOP-TEXT-01 extracted this from the `maia:voice-stop` handler so that
+ * sending a typed message can end capture with EXACTLY these semantics rather
+ * than a second, drifting copy of them. There is one member-gesture stop and
+ * this is it.
+ *
+ * @returns the stop record, or null when nothing was capturing
+ */
+function stopCaptureByMemberGesture() {
+  if (!voice) return null;
   voice.liveness.disarm();
   stopCaptureWatchdog();
   const tail = voice.epoch.userStop();
@@ -275,10 +344,55 @@ ipcMain.handle('maia:voice-stop', async () => {
   voice = null;
   pushState();
   // `chars` only — the transcript itself goes to the surface, never to telemetry.
-  return { ok: true, tail, chars: text.length, snapshot };
+  return { tail, chars: text.length, snapshot };
+}
+
+ipcMain.handle('maia:voice-stop', async () => {
+  const stopped = stopCaptureByMemberGesture();
+  if (!stopped) return { ok: false, reason: 'no capture session' };
+  return { ok: true, ...stopped };
 });
 
 ipcMain.handle('maia:voice-state', async () => voiceStateSnapshot());
+
+// ── DESKTOP-TEXT-01 — the second input modality ─────────────────────────────
+//
+// ⛔ SCOPING RULING (founder, 2026-08-28). Text and voice are mutually
+// exclusive. Sending a typed message while capture is running first performs a
+// NORMAL STOP — the member's own gesture semantics, keeping what they said —
+// so the "typing while listening" state never exists. That state is what
+// `DESKTOP-CAPTURE-CONTROL-01` governs (*muted means no frames, not frames of
+// silence*), and this unit is gated behind it. Making the state unreachable is
+// how TEXT-01 ships without implementing capture-control by accident.
+ipcMain.handle('maia:send-text', async (_evt, payload) => {
+  // Validated in MAIN, like every other handler. The renderer's trim is a
+  // convenience; this is the one that counts.
+  const raw = payload && typeof payload.text === 'string' ? payload.text : '';
+  const said = raw.trim().slice(0, 4000);
+  if (!said) return { ok: false, error: 'nothing to send' };
+
+  if (!memberSession || !memberSession.state().signedIn || !conversation) {
+    return { ok: false, error: 'sign in before writing' };
+  }
+  // One turn at a time, shared with the voice path — a typed message must not
+  // interleave with a spoken one and produce two half-turns in the thread.
+  if (turnBusy) return { ok: false, error: 'one turn at a time' };
+
+  const stopped = stopCaptureByMemberGesture();
+  const conv = conversation;
+  turnBusy = true;
+  try {
+    // ⭐ The same delivery path speech uses. Validity here is the conversation,
+    // not a capture session: a typed turn has none, and sign-out nulls this.
+    await deliverToMaia(said, () => conversation === conv);
+    return { ok: true, stoppedCapture: !!stopped };
+  } catch (e) {
+    broadcast('maia:turn', { phase: 'error', error: (e && e.message) || 'turn failed' });
+    return { ok: false, error: (e && e.message) || 'turn failed' };
+  } finally {
+    turnBusy = false;
+  }
+});
 
 ipcMain.handle('maia:status', async () => ({
   app: 'maia-desktop',
@@ -294,15 +408,65 @@ ipcMain.handle('maia:status', async () => ({
 // this is the loop that matters. Every failure is surfaced to the member in
 // words rather than swallowed — a companion that goes quiet after you speak is
 // the failure mode this whole programme exists to avoid.
+/**
+ * ⭐ DESKTOP-TEXT-01 — the turn, from the moment the words exist.
+ *
+ * THE POINT OF THIS FUNCTION IS THAT THERE IS ONLY ONE OF IT. Speech and typing
+ * are two ways for a member to produce words; everything after that — which
+ * MAIA is asked, on which thread, through which route, with which memory and
+ * context assembly, and how the answer reaches the surface — is identical, and
+ * is identical because it is literally the same code. A second delivery path
+ * would be a second MAIA within a month, whatever the commit message said.
+ *
+ * ⛔ It asks `conversation.ask`, which posts to `/api/sovereign/app/maia/list`.
+ * NOT `/api/between/chat`: that is the thinner web route, it degrades an
+ * unauthenticated request to `anon:`, and routing Desktop text through it would
+ * rebuild the exact split this unit exists to close. A test asserts the string
+ * appears nowhere in this tree.
+ *
+ * @param said       the member's words, from a microphone or a keyboard
+ * @param stillValid false once the turn no longer belongs to anyone — a
+ *                   released capture session, or a signed-out member. Checked
+ *                   after the await, because MAIA takes time to answer and the
+ *                   member may be gone by then.
+ */
+async function deliverToMaia(said, stillValid) {
+  broadcast('maia:turn', { phase: 'heard', member: said });
+  broadcast('maia:turn', { phase: 'thinking' });
+
+  const a = await conversation.ask(said);
+  if (!stillValid()) return;             // signed out while MAIA was answering
+  if (!a.ok) { broadcast('maia:turn', { phase: 'error', error: a.error }); return; }
+
+  broadcast('maia:turn', { phase: 'answered', maia: a.text });
+  // ⭐ A typed turn still gets her voice. The modality is how the member spoke,
+  // not how MAIA answers.
+  if (a.audio) broadcast('maia:audio', a.audio);
+  else broadcast('maia:turn', { phase: 'no-voice' });
+}
+
 async function runTurn() {
   if (!voice || turnBusy || !conversation) return;
-  const taken = voice.utterance.take();
+  // ⭐ DESKTOP-CAPTURE-RELEASE-01. Pin the session this turn belongs to. A
+  // forced release nulls `voice`, and every step below is separated from the
+  // next by a network round trip — so without this the turn would keep going
+  // for a member who has signed out: asking MAIA in their name, and writing a
+  // final into an epoch that no longer has an owner.
+  //
+  // ⛔ It cannot un-send a transcription already in flight. It guarantees that
+  // no FURTHER request is made and that no result is used. Stated plainly
+  // rather than claimed away.
+  const session = voice;
+  const stillOurs = () => voice === session;
+
+  const taken = session.utterance.take();
   if (!taken) return;                    // silence or a cough, not an utterance
   turnBusy = true;
   try {
     broadcast('maia:turn', { phase: 'transcribing' });
 
-    const t = await conversation.transcribe(taken.samples, voice.sampleRate);
+    const t = await conversation.transcribe(taken.samples, session.sampleRate);
+    if (!stillOurs()) return;            // released mid-flight — drop it silently
     if (!t.ok) { broadcast('maia:turn', { phase: 'error', error: t.error }); return; }
 
     const said = (t.text || '').trim();
@@ -310,16 +474,8 @@ async function runTurn() {
 
     // The transcript is a FINAL for the epoch — the tail invariant now has real
     // material to protect, which on the first walk it never did.
-    voice.epoch.final(said, `utt-${Date.now()}`);
-    broadcast('maia:turn', { phase: 'heard', member: said });
-
-    broadcast('maia:turn', { phase: 'thinking' });
-    const a = await conversation.ask(said);
-    if (!a.ok) { broadcast('maia:turn', { phase: 'error', error: a.error }); return; }
-
-    broadcast('maia:turn', { phase: 'answered', maia: a.text });
-    if (a.audio) broadcast('maia:audio', a.audio);
-    else broadcast('maia:turn', { phase: 'no-voice' });
+    session.epoch.final(said, `utt-${Date.now()}`);
+    await deliverToMaia(said, stillOurs);
   } catch (e) {
     broadcast('maia:turn', { phase: 'error', error: (e && e.message) || 'turn failed' });
   } finally {
@@ -372,10 +528,16 @@ let threadPoll = null;
 /**
  * Who is signed in right now.
  *
- * ⭐ `username`, not `name`. The session's `member.name` is a DISPLAY name —
- * two members can share one, and a display name is not an identity to gate
- * adoption on. `username` is what the member authenticated as and is unique by
- * the members contract.
+ * ⭐ DESKTOP-IDENTITY-CARRY-01. The canonical `memberId` from the sign-in
+ * response, when there is one. Until this unit the session discarded it, so
+ * this guard had to fall back to `username` — unique by the members contract,
+ * but a login handle rather than the identity the server actually resolves.
+ * Never `member.name`: a DISPLAY name can be shared by two people and is not
+ * something to gate one person's conversation on.
+ *
+ * The `username` fallback stays for a `session.bin` written before this unit,
+ * where no member id was stored. Both values are stable and unique for the life
+ * of a run, so the guard's semantics — same member or not — are unchanged.
  *
  * Returns null when nobody is signed in, which makes every observation
  * `member_mismatch` and therefore inert. Failing closed is the right default
@@ -385,7 +547,7 @@ let threadPoll = null;
 function currentMemberId() {
   const st = memberSession && memberSession.state();
   if (!st || !st.signedIn || !st.member) return null;
-  return st.member.username || null;
+  return memberSession.memberId() || st.member.username || null;
 }
 
 function startThreadWatch() {
@@ -447,29 +609,126 @@ ipcMain.handle('maia:sign-in', async (_evt, payload) => {
       sessionId: `desktop-${Date.now()}`,
     });
     void joinMemberThread();
+    buildMenu();                         // the destinations open for a member
   }
   broadcast('maia:auth', memberSession.state());
   return out;
 });
 
-ipcMain.handle('maia:sign-out', async () => {
-  memberSession.signOut();
+/**
+ * Everything that must fall away when a member is no longer signed in.
+ *
+ * ⛔ ONE teardown, reached from both doors: the sign-out button, and the 401
+ * that `authedFetch` discovers on its own. A signed-out member whose remote
+ * view still holds an authenticated cookie is the defect this shape prevents,
+ * and it would have been reachable if only the button ran the teardown.
+ */
+function teardownMemberState() {
+  // ⭐ DESKTOP-CAPTURE-RELEASE-01 — FIRST, before anything else falls away.
+  // Capture is the one piece of member state that used to outlive its member,
+  // and it is the piece that blocks every recovery: while main holds a `voice`,
+  // signing back in still cannot start listening.
+  //
+  // The renderer's own graph is closed by the auth broadcast at the end of this
+  // function — `showSignedIn({signedIn:false})` calls `stopListening()`, which
+  // closes the AudioContext and stops the MediaStream tracks. Main's voice-state
+  // push alone does not do that, which is why the broadcast stays where it is.
+  releaseCapture('signed_out');
   conversation = null;
   // ⛔ The watch dies with the session. Nothing may adopt on behalf of someone
   // who is no longer signed in.
   threadWatch.stop();
   stopThreadWatch();
-  broadcast('maia:auth', memberSession.state());
+  // ⛔ Destroy, not hide. The cookie goes with the view.
+  if (platformShell) void platformShell.destroy();
+  buildMenu();
+  broadcast('maia:auth', memberSession ? memberSession.state() : { signedIn: false, member: null });
+}
+
+ipcMain.handle('maia:sign-out', async () => {
+  memberSession.signOut();               // fires onSignedOut → teardownMemberState
   return { ok: true };
 });
 
 ipcMain.handle('maia:auth-state', async () => memberSession.state());
 
+// ── DESKTOP-SHELL-01 — destinations ─────────────────────────────────────────
+//
+// ⛔ NAVIGATION IS MAIN'S AUTHORITY, AND IT STAYS THERE. There is no bridge
+// verb for "show Journey". A renderer that could summon the platform view
+// would be a renderer that could pull remote content into its own window,
+// which is the collapse this whole unit exists to prevent. So the destinations
+// live in the application menu, whose accelerators are handled in main and
+// cannot be invoked by page script.
+//
+// The long-term IA is MAIA · Journey · Sessions · Library · Settings. Only the
+// first two function in this cut; the rest are present and DISABLED, because a
+// destination that is visibly unavailable is honest and one that is silently
+// missing is not.
+
+const DESTINATIONS = [
+  { id: MAIA, label: 'MAIA', accelerator: 'Alt+CmdOrCtrl+M', enabled: true },
+  { id: PLATFORM, label: 'Journey', accelerator: 'Alt+CmdOrCtrl+J', enabled: true },
+  { id: 'sessions', label: 'Sessions', enabled: false },
+  { id: 'library', label: 'Library', enabled: false },
+  { id: 'settings', label: 'Settings', enabled: false },
+];
+
+/**
+ * Where the member is, said in the one place the shell can say it without
+ * touching the renderer.
+ *
+ * The platform view covers the full content area, so the window title is the
+ * location indicator. Updating the MAIA renderer instead would mean injecting
+ * script into it from main — more power spent, for a label.
+ */
+function showPlace(place) {
+  if (!mainWindow || mainWindow.isDestroyed()) return;
+  mainWindow.setTitle(place === PLATFORM ? 'MAIA Desktop — Journey' : 'MAIA Desktop');
+  buildMenu();
+}
+
+async function goTo(id) {
+  if (!platformShell) return;
+  if (id === MAIA) return platformShell.hide();
+  if (id !== PLATFORM) return;
+  if (!memberSession || !memberSession.state().signedIn) return;
+  const out = await platformShell.show();
+  // ⛔ A failed entry must not leave a blank view attached and the member
+  // stranded. Fall back to MAIA and say so where the surface already speaks.
+  if (!out.ok) {
+    platformShell.hide();
+    broadcast('maia:turn', { phase: 'error', error: `Journey could not open — ${out.error}` });
+  }
+}
+
+function buildMenu() {
+  const signedIn = !!(memberSession && memberSession.state().signedIn);
+  const here = platformShell ? platformShell.place() : MAIA;
+  const go = DESTINATIONS.map((d) => ({
+    label: d.label,
+    accelerator: d.accelerator,
+    type: 'checkbox',
+    checked: d.id === here,
+    // Every destination but MAIA needs a member; nothing remote opens for
+    // nobody. MAIA itself stays reachable so there is always a way back.
+    enabled: d.enabled && (d.id === MAIA || signedIn),
+    click: () => { void goTo(d.id); },
+  }));
+
+  Menu.setApplicationMenu(Menu.buildFromTemplate([
+    ...(process.platform === 'darwin' ? [{ role: 'appMenu' }] : []),
+    { label: 'Go', submenu: go },
+    { role: 'editMenu' },
+    { role: 'windowMenu' },
+  ]));
+}
+
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 900,
     height: 700,
-    title: 'MAIA Desktop — D01 native voice witness',
+    title: 'MAIA Desktop',
     backgroundColor: '#14100E',
     webPreferences: {
       contextIsolation: true,
@@ -479,7 +738,37 @@ function createWindow() {
     },
   });
   mainWindow.loadFile(path.join(__dirname, 'index.html'));
-  mainWindow.on('closed', () => { mainWindow = null; });
+
+  // ⛔ THE PRIVILEGED RENDERER NEVER NAVIGATES. It holds `window.maia`, so
+  // anything that moved it off `file://` would put remote content in front of
+  // the bridge — the one thing this unit forbids. There is no legitimate
+  // navigation here to allow, so the guard is unconditional rather than
+  // origin-checked: a stricter rule than the platform view gets, because this
+  // side has more to lose.
+  mainWindow.webContents.on('will-navigate', (event) => event.preventDefault());
+  mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+    const decision = navigationDecision(url);
+    if (decision.action === 'external') shell.openExternal(decision.url);
+    return { action: 'deny' };
+  });
+
+  platformShell = createPlatformShell({
+    BrowserView,
+    sessionApi: session,
+    shellApi: shell,
+    window: mainWindow,
+    credential: memberSession,
+    onPlace: showPlace,
+  });
+
+  mainWindow.on('resize', () => { if (platformShell) platformShell.fit(); });
+  mainWindow.on('closed', () => {
+    mainWindow = null;
+    // The view belongs to the window; it must not outlive it.
+    if (platformShell) { void platformShell.destroy(); platformShell = null; }
+  });
+
+  buildMenu();
 }
 
 app.whenReady().then(() => {
@@ -492,7 +781,7 @@ app.whenReady().then(() => {
   session.defaultSession.setPermissionCheckHandler((_wc, permission) =>
     permission === 'media' || permission === 'audioCapture');
 
-  memberSession = createSession({ app, safeStorage });
+  memberSession = createSession({ app, safeStorage, onSignedOut: teardownMemberState });
   if (memberSession.state().signedIn) {
     conversation = createConversation({
       session: memberSession,
