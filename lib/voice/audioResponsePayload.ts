@@ -26,8 +26,12 @@
 export type AudioResponsePayload = {
   /** base64-encoded audio bytes. Absent only when a legacy payload carried a URL instead. */
   audioBase64?: string;
-  /** Container format of the bytes. Defaults to mp3, which is what synthesizeMaiaVoice emits. */
-  format: string;
+  /**
+   * Container format. Set to mp3 for raw bytes, because that is what
+   * synthesizeMaiaVoice currently emits. Absent for a legacy payload that did
+   * not declare one — a URL's format is not ours to assume.
+   */
+  format?: string;
   audioUrl?: string;
   voiceProfile?: string;
   synthesisTimeMs?: number;
@@ -58,15 +62,18 @@ export function toAudioResponsePayload(audio: unknown): AudioResponsePayload | n
 
   // Legacy contract: an already-shaped object. Preserved, not rewritten — some
   // callers carried a URL instead of bytes, and this repair must not drop them.
+  // ⛔ `format` is carried only if it was declared. Defaulting it to mp3 here
+  // would state a fact about someone else's bytes that this module cannot know:
+  // mp3 is true of what synthesizeMaiaVoice emits, not of an arbitrary URL.
   if (typeof audio === 'object') {
     const o = audio as Record<string, unknown>;
     const audioBase64 = nonEmptyString(o.audioBase64);
     const audioUrl = nonEmptyString(o.audioUrl);
     if (!audioBase64 && !audioUrl) return null; // an empty object is not audio
 
-    const out: AudioResponsePayload = {
-      format: nonEmptyString(o.format) ?? DEFAULT_FORMAT,
-    };
+    const out: AudioResponsePayload = {};
+    const format = nonEmptyString(o.format);
+    if (format) out.format = format;
     if (audioBase64) out.audioBase64 = audioBase64;
     if (audioUrl) out.audioUrl = audioUrl;
 

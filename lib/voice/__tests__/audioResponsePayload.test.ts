@@ -99,7 +99,20 @@ describe('an already-shaped object is preserved, not rewritten', () => {
     const out = toAudioResponsePayload({ audioUrl: 'https://example.invalid/a.mp3' })!;
     expect(out.audioUrl).toBe('https://example.invalid/a.mp3');
     expect(out.audioBase64).toBeUndefined();
-    expect(out.format).toBe('mp3');
+  });
+
+  // ⛔ mp3 is a fact about what synthesizeMaiaVoice emits, not about an
+  // arbitrary URL. Defaulting it here would be this module asserting a
+  // container format it has no way to know — a small invented fact, but an
+  // invented one, and the caller cannot tell it apart from a declared one.
+  it('does not invent a format the legacy payload never declared', () => {
+    const out = toAudioResponsePayload({ audioUrl: 'https://example.invalid/a' })!;
+    expect(out.format).toBeUndefined();
+    expect(Object.prototype.hasOwnProperty.call(out, 'format')).toBe(false);
+  });
+
+  it('carries a declared format through unchanged', () => {
+    expect(toAudioResponsePayload({ audioBase64: 'QUJD', format: 'opus' })!.format).toBe('opus');
   });
 });
 
