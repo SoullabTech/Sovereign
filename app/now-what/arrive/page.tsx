@@ -46,6 +46,7 @@ import { useState, useMemo, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { RoomHoloflower } from '@/components/maia/vision-studio/RoomHoloflower';
 import { invitedFieldContext, UNINVITED_COPY } from '@/lib/nowWhat/invitation';
+import { NowWhatSurface } from '@/components/now-what/NowWhatSurface';
 
 const ACCENT = '#c9a35e';
 
@@ -333,10 +334,10 @@ function ArriveInner() {
 
 export default function NowWhatArrivePage() {
   return (
-    <div className="min-h-screen bg-[#1f1b16] text-slate-200">
+    <NowWhatSurface>
       <Suspense fallback={<ArrivalResolving />}>
         <ArriveInner />
       </Suspense>
-    </div>
+    </NowWhatSurface>
   );
 }

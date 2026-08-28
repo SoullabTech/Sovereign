@@ -104,21 +104,36 @@ function quoteOfTheDay(): { text: string; who: string } {
   return QUOTES[day % QUOTES.length];
 }
 
-/** One door in the orientation field: name · meaning · living line · verb. */
+/**
+ * One door — a sentence, not a card (UX-02). It states where it goes and what
+ * the member will meet; it does not compete with its neighbours for the eye.
+ */
 function Door({
-  href, name, meaning, line, verb, warm, italicLine,
+  href, name, meaning, line,
 }: {
-  href: string; name: string; meaning: string; line: string; verb: string;
-  warm?: boolean; italicLine?: boolean;
+  href: string; name: string; meaning: string; line: string;
 }) {
   return (
-    <a className={`nwh-door${warm ? ' nwh-door-warm' : ''}`} href={href}>
-      <p className="nwh-dname">{name}</p>
-      <p className="nwh-dmean">{meaning}</p>
-      <p className={`nwh-dline${italicLine ? ' nwh-dline-italic' : ''}`}>{line}</p>
-      <span className="nwh-dverb">{verb} &rarr;</span>
+    <a className="nwh-door" href={href}>
+      <span className="nwh-dhead">
+        <span className="nwh-dname">{name}</span>
+        <span className="nwh-dmean">{meaning}</span>
+      </span>
+      <span className="nwh-dline">{line}</span>
     </a>
   );
+}
+
+/** A plain fact about the member's own act — never a system judgement. */
+function keptWhen(iso: string | null | undefined): string {
+  if (!iso) return '';
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return '';
+  const days = Math.floor((Date.now() - d.getTime()) / 86400000);
+  if (days <= 0) return ' today';
+  if (days === 1) return ' yesterday';
+  if (days < 7) return ` on ${d.toLocaleDateString(undefined, { weekday: 'long' })}`;
+  return ` on ${d.toLocaleDateString(undefined, { month: 'long', day: 'numeric' })}`;
 }
 
 // ── The orientation field ────────────────────────────────────────────────
@@ -228,50 +243,56 @@ export default function ClientHome({ fieldContext }: { fieldContext?: string }) 
           )}
         </div>
 
-        {/* ── The five doors — one per room of the ratified ontology
-              (NOW_WHAT_ROOM_ONTOLOGY_CONSOLIDATION_2026-08-05.md): four
-              noun-rooms that hold, one verb-room that works. Each line is a
-              member-authored fact when one exists, a plain invitation when
-              none does. ── */}
-        <div className="nwh-doors">
-          <Door
-            warm
-            italicLine={Boolean(livingQuestion)}
-            href={`/now-what/questions${ctx}`}
-            name="My Question"
-            meaning="What you are wrestling with"
-            line={questionLine}
-            verb="Continue thinking"
-          />
-          <Door
-            href={`/now-what/work${ctx}`}
-            name="My Work"
-            meaning="What you are living and cultivating"
-            line={livingLine}
-            verb="Reflect on what you are living"
-          />
-          <Door
-            href={`/now-what/coaching${ctx}`}
-            name="My Coaching"
-            meaning="The human relationship"
-            line={coachingLine}
-            verb={coachFirst ? `Continue with ${coachFirst}` : 'Continue your coaching'}
-          />
-          <Door
-            href={`/now-what/field${ctx}`}
-            name="My Story"
-            meaning="Becoming over time"
-            line="Turning points, realizations, chapters — in your own words."
-            verb="See what is becoming"
-          />
-          <Door
-            href={`${roomHref}${amp}entry=think`}
-            name="The Room"
-            meaning="A place to think"
-            line="Clarify a decision, explore a tension, listen to yourself think."
-            verb="Think something through"
-          />
-        </div>
+        {/* ── UX-02: what you were carrying → where you are now → what might be next.
+              The environment's own gesture architecture rules "one primary gesture
+              per screen" and "doors are sentences, not buttons-in-grids"; five
+              equal cards were a regression against it.
+
+              The primary is NOT hard-coded prominence. It is derived from the
+              member's own carried thread — so this screen and the Return screen
+              become coherent through continuity rather than through styling. When
+              nothing is carried yet, no hero is manufactured: The Room takes the
+              primary, because that is the only gesture available to someone with
+              nothing kept. Every other room stays one click away. ── */}
+        {livingQuestion ? (
+          <section className="nwh-carry" aria-label="What you are carrying">
+            <p className="nwh-label">What you are carrying</p>
+            <p className="nwh-carry-line">&ldquo;{livingQuestion.title}&rdquo;</p>
+            <p className="nwh-prov">You kept this{keptWhen(livingQuestion.keptAt)}.</p>
+            <a className="nwh-primary" href={`/now-what/questions${ctx}`}>
+              Continue thinking &rarr;
+            </a>
+          </section>
+        ) : (
+          <section className="nwh-carry" aria-label="Where to begin">
+            <p className="nwh-label">Where to begin</p>
+            <p className="nwh-carry-line nwh-carry-plain">
+              Nothing is waiting for you yet. That is a fine place to start.
+            </p>
+            <a className="nwh-primary" href={`${roomHref}${amp}entry=think`}>
+              Think something through &rarr;
+            </a>
+          </section>
+        )}
+
+        {/* Doors as sentences — stacked, hairline-separated, never competing
+            side by side. Each states where it goes in the member's terms. */}
+        <nav className="nwh-doors" aria-label="Your rooms">
+          {livingQuestion && (
+            <Door href={`${roomHref}${amp}entry=think`} name="The Room"
+                  meaning="A place to think" line="Clarify a decision, explore a tension, listen to yourself think." />
+          )}
+          <Door href={`/now-what/work${ctx}`} name="My Work"
+                meaning="What you are living and cultivating" line={livingLine} />
+          <Door href={`/now-what/coaching${ctx}`} name="My Coaching"
+                meaning="The human relationship" line={coachingLine} />
+          <Door href={`/now-what/field${ctx}`} name="My Story"
+                meaning="Becoming over time" line="Turning points, realizations, chapters — in your own words." />
+          {!livingQuestion && (
+            <Door href={`/now-what/questions${ctx}`} name="My Question"
+                  meaning="What you are wrestling with" line={questionLine} />
+          )}
+        </nav>
 
         {/* ── A daily thought — ambient orientation, in its author's voice ── */}
         <div className="nwh-quote" aria-label="A thought for today">
@@ -304,7 +325,7 @@ export default function ClientHome({ fieldContext }: { fieldContext?: string }) 
             linear-gradient(var(--nw-bg-1), var(--nw-bg-2));
           -webkit-font-smoothing: antialiased;
         }
-        .nwh-frame { max-width: 74rem; margin: 0 auto; padding: 26px 40px 80px; }
+        .nwh-frame { max-width: 46rem; margin: 0 auto; padding: 26px 40px 80px; }
         .nwh-top { display: flex; justify-content: space-between; align-items: baseline; }
         /* Direction B wordmark (brand pass 2026-08-05): words in ink, the
            question mark in bronze — a question, not a label. */
@@ -330,30 +351,52 @@ export default function ClientHome({ fieldContext }: { fieldContext?: string }) 
         .nwh-upcomingline b { font-family: ${SERIF}; font-weight: 400; color: ${INK_SOFT}; }
         .nwh-upcomingline:hover b { color: ${BRONZE}; }
 
-        .nwh-doors {
-          margin-top: 40px; display: grid;
-          grid-template-columns: repeat(3, 1fr); gap: 18px;
+        /* ── What you are carrying: the compositional centre. A hairline rail,
+              not a box — the eye lands on her words, not on a container. ── */
+        .nwh-carry {
+          margin-top: 44px; padding-left: 22px;
+          border-left: 2px solid ${BRONZE};
         }
+        .nwh-label {
+          font-size: 10.5px; letter-spacing: 0.28em; text-transform: uppercase;
+          color: ${INK_FAINT}; margin: 0;
+        }
+        .nwh-carry-line {
+          font-family: ${SERIF}; font-style: italic;
+          font-size: clamp(21px, 3.1vw, 27px); line-height: 1.42;
+          color: ${INK}; margin: 12px 0 0; max-width: 34rem;
+        }
+        .nwh-carry-plain { font-style: normal; font-size: clamp(19px, 2.6vw, 23px); color: ${INK_SOFT}; }
+        .nwh-prov { font-size: 12.5px; font-weight: 300; color: ${INK_FAINT}; margin: 10px 0 0; }
+        .nwh-primary {
+          display: inline-block; margin-top: 18px; font-size: 15px;
+          color: ${BRONZE}; text-decoration: none;
+          border-bottom: 1px solid transparent; padding-bottom: 2px;
+          transition: border-color .18s ease;
+        }
+        .nwh-primary:hover, .nwh-primary:focus-visible { border-bottom-color: ${BRONZE}; }
+
+        /* ── Doors as sentences: stacked, hairline-separated. Two doors never sit
+              side by side competing. Motion is settling, not attracting. ── */
+        .nwh-doors { margin-top: 40px; display: flex; flex-direction: column; }
         .nwh-door {
           display: block; text-decoration: none; color: ${INK};
-          border: 1px solid ${RULE}; background: var(--nw-box);
-          border-radius: 16px; padding: 26px 28px; min-height: 150px;
-          transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+          padding: 17px 0; border-top: 1px solid ${RULE};
+          transition: color .18s ease;
         }
-        .nwh-door:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 14px 34px rgba(0,0,0,0.14);
-          border-color: var(--nw-bronze);
-        }
-        .nwh-door-warm { background: var(--nw-box-warm); }
-        .nwh-dname { font-family: ${SERIF}; font-size: 20px; }
+        .nwh-doors .nwh-door:last-child { border-bottom: 1px solid ${RULE}; }
+        .nwh-dhead { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+        .nwh-dname { font-family: ${SERIF}; font-size: 17.5px; }
         .nwh-dmean {
-          font-size: 11px; letter-spacing: 0.25em; text-transform: uppercase;
-          color: ${INK_FAINT}; margin-top: 6px;
+          font-size: 10.5px; letter-spacing: 0.22em; text-transform: uppercase;
+          color: ${INK_FAINT};
         }
-        .nwh-dline { font-size: 13.5px; font-weight: 300; color: ${INK_SOFT}; line-height: 1.6; margin-top: 10px; }
-        .nwh-dline-italic { font-family: ${SERIF}; font-style: italic; }
-        .nwh-dverb { display: inline-block; margin-top: 14px; font-size: 13.5px; color: ${BRONZE}; }
+        .nwh-dline {
+          display: block; font-size: 13.5px; font-weight: 300; color: ${INK_SOFT};
+          line-height: 1.6; margin-top: 6px; max-width: 44rem;
+        }
+        .nwh-door:hover .nwh-dname, .nwh-door:focus-visible .nwh-dname { color: ${BRONZE}; }
+        .nwh-door:focus-visible { outline: 2px solid ${BRONZE}; outline-offset: 4px; }
 
         .nwh-quote { margin-top: 44px; text-align: center; padding: 0 26px; }
         .nwh-quote-text {
@@ -369,8 +412,10 @@ export default function ClientHome({ fieldContext }: { fieldContext?: string }) 
         .nwh-trust [class*="bg-"] { background: rgba(90,76,58,0.05) !important; }
 
         @media (max-width: 920px) {
-          .nwh-doors { grid-template-columns: 1fr; }
-          .nwh-door { min-height: unset; }
+          .nwh-frame { padding: 22px 22px 72px; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .nwh-primary, .nwh-door { transition: none; }
         }
       `}</style>
     </div>
