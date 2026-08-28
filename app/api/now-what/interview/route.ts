@@ -48,7 +48,7 @@ import { inferSpiralogicCell, type Element } from '@/lib/consciousness/spiralogi
 // no-write contract. Everything composed is read-only; MAIA_RUNTIME_PROMPT already
 // embeds the memory-canon guard.
 import { composeRoomTurnPrompt, composeConstitutionalFloor, cloudRegisterPinned } from '@/lib/maia/roomComposition';
-import { buildResponseGrammar } from '@/lib/nowWhat/roomGrammar';
+import { buildResponseGrammar, LIVED_RETURN_GROUNDING } from '@/lib/nowWhat/roomGrammar';
 
 const MAX_TOKENS_TURN = 700;
 const MAX_TOKENS_PROPOSE = 1500;
@@ -115,23 +115,45 @@ ${lensLine}
 ${HARD_LIMITS}`;
 }
 
-// Return visit: the participant previously committed to one practice. The room does
-// not begin again — it begins from what happened. Continuity, not conversation history.
-function buildReturnPrompt(practice: string, suppressSymbolicRegister = false): string {
+/*
+ * Return visit: the participant is coming back to an act they already made.
+ * The room does not begin again — it begins from what happened. Continuity,
+ * not conversation history.
+ *
+ * `priorActKind` keeps the prompt's own first sentence truthful. A member
+ * returning to a move they chose to live and a member returning to a question
+ * they were carrying made DIFFERENT acts, and telling MAIA that someone "chose
+ * a practice" when they only kept a question would be the grounding failure
+ * this room refuses — arriving in our own text rather than in hers.
+ */
+function buildReturnPrompt(
+  priorAct: string,
+  suppressSymbolicRegister = false,
+  priorActKind: 'practice' | 'carried' = 'practice',
+): string {
+  const theAct = priorActKind === 'practice'
+    ? `Last time, this person chose one move to actually live, in their own words:
+"${priorAct}"
+
+The opening has already been presented: "You chose this. What happened?"`
+    : `This person has been carrying this, in their own words:
+"${priorAct}"
+
+The opening has already been presented: "What happened since?"`;
+
   return `You are MAIA, in a live RETURN encounter in the What Now? room — a real conversation, not an assessment.
 
-Last time, this person chose one practice to actually live, in their own words:
-"${practice}"
+${theAct}
 
-The opening has already been presented: "Last time you chose this practice. What happened?"
-
-Receive what actually happened — lived experience before analysis. Whether they lived it fully, partially, differently than planned, or not at all: all of it is faithful material. Not living a practice is information about the practice or the season, never a failure of the person. Do not evaluate adherence. Do not praise compliance.
+Receive what actually happened — lived experience before analysis. Whether they lived it fully, partially, differently than planned, or not at all: all of it is faithful material. Not living something is information about it or about the season, never a failure of the person. Do not evaluate adherence. Do not praise compliance. Do not treat what happened as a result, an outcome, or progress.
 
 ${TWELVE_DISCIPLINES}
 
 ${buildResponseGrammar(suppressSymbolicRegister)}
 
-Quiet lens, held underneath — never the agenda: what the practice revealed as they lived it (or didn't).
+${LIVED_RETURN_GROUNDING}
+
+Quiet lens, held underneath — never the agenda: what living it revealed to them (or what its absence revealed).
 
 ${HARD_LIMITS}`;
 }
@@ -287,6 +309,11 @@ export async function POST(request: NextRequest) {
     // context only — read from the request, folded into the prompt, never persisted here.
     const returningPractice =
       typeof body?.returningPractice === 'string' ? body.returningPractice.slice(0, 300).trim() : '';
+    // What KIND of act they are returning to. 'carried' when the member came
+    // back to a thread they were holding rather than a move they chose — the
+    // prompt's opening sentence has to match the act they actually made.
+    const returningActKind: 'practice' | 'carried' =
+      body?.returningActKind === 'carried' ? 'carried' : 'practice';
 
     if (mode !== 'turn' && mode !== 'propose') {
       return NextResponse.json({ error: 'mode must be "turn" or "propose".' }, { status: 400 });
@@ -298,7 +325,7 @@ export async function POST(request: NextRequest) {
     let systemPrompt = mode === 'propose'
       ? PROPOSE_SYSTEM
       : returningPractice
-        ? buildReturnPrompt(returningPractice)
+        ? buildReturnPrompt(returningPractice, false, returningActKind)
         : buildPhasePrompt(phase);
     const maxTokens = mode === 'turn' ? MAX_TOKENS_TURN : MAX_TOKENS_PROPOSE;
 

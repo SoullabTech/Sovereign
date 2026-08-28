@@ -63,6 +63,7 @@ interface ThreadRow {
   field_context: string | null;
   created_at: string;
   member_decision_at: string | null;
+  responds_to_thread_id: string | null;
 }
 
 export interface HomeThread {
@@ -74,6 +75,13 @@ export interface HomeThread {
   keptAt: string;
   sharedWithCoach: boolean;
   sessionRef: string | null;
+  /**
+   * The member's prior act this thread was written in answer to, when they
+   * returned through the lived doorway (NW-V1-CLIENT-01). NULL = stands alone.
+   * Carried so the record stays legible; it is provenance, never a progress
+   * signal, and no surface may present it as an outcome.
+   */
+  respondsToThreadId: string | null;
 }
 
 const toThread = (r: ThreadRow): HomeThread => ({
@@ -86,6 +94,7 @@ const toThread = (r: ThreadRow): HomeThread => ({
   keptAt: r.member_decision_at ?? r.created_at,
   sharedWithCoach: r.can_be_shown_to_practitioner === true,
   sessionRef: r.source_session_ref,
+  respondsToThreadId: r.responds_to_thread_id,
 });
 
 export async function GET(request: NextRequest) {
@@ -104,7 +113,7 @@ export async function GET(request: NextRequest) {
     const res = await query<ThreadRow>(
       `SELECT id, title, content, authorship, member_decision, spiralogic_phase,
               can_be_shown_to_practitioner, source_session_ref, field_context,
-              created_at, member_decision_at
+              created_at, member_decision_at, responds_to_thread_id
          FROM member_field_note_threads
         WHERE member_id = $1
           AND released_at IS NULL
