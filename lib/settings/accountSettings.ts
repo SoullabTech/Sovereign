@@ -71,6 +71,21 @@ export const DEFAULT_ACCOUNT_SETTINGS: AccountSettings = {
 
 const STORAGE_KEY = 'maia_account_settings';
 
+/**
+ * Exported so new-session Sanctuary resolution can read the RAW stored object
+ * rather than the merged result of `getAccountSettings()`.
+ *
+ * The merge fills `defaultMemoryMode` from DEFAULT_ACCOUNT_SETTINGS — which is
+ * `'continuity'` — so a member who has never chosen becomes indistinguishable
+ * from one who deliberately chose Continuity. For a rendering fallback that is
+ * harmless. For a privacy boundary it is not: on a fresh device it would begin
+ * a session in Continuity for a member whose account default is Sanctuary.
+ *
+ * A second copy of this literal is how two stores drift apart, so it is shared
+ * rather than duplicated.
+ */
+export const ACCOUNT_SETTINGS_STORAGE_KEY = STORAGE_KEY;
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Read / Write
 // ─────────────────────────────────────────────────────────────────────────────
