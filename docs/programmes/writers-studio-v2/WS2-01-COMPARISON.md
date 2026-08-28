@@ -100,6 +100,38 @@ pause, and refuses a `crash` outright rather than capturing it. Pinned by
 This changes how the field is OBSERVED, never the field. No component, route or
 substrate file is touched, so `ac02a22ba` remains the code under test.
 
+### Witness 1 — PASS, 2026-08-28
+
+Observed in the remote container, on tree `de33c3638` (application code
+`ac02a22ba`, unchanged since):
+
+```text
+[capture] app is up.
+[capture] http://localhost:3000/writers-studio/canvas?m=dca75052-… at 1680×1050@2x
+[witness-1] PASS  unauthorized -> sign-in invitation rendered, no error boundary
+[capture] The Studio is showing its signed-out panel — … Refusing.
+EXIT=1
+```
+
+Fresh browser, no session, no database, no env file. The room reached its
+unauthorized state, rendered the invitation, and did not throw to the error
+boundary. No PNG was deposited.
+
+**`ac02a22ba` is RUNTIME RE-WITNESSED.**
+
+Why this leg did not need the founder's machine, when the field capture does:
+`/api/sovereign/manuscripts` returns 401 from `getMemberIdFromRequest` before it
+queries Postgres, so the unauthorized path is reachable with a browser and
+nothing else. The two witnesses have opposite requirements — one needs no
+session, the other needs a real one — and the harness header had collapsed them
+into a single "cannot run here". Corrected in place.
+
+Two qualifications, so this is not read as more than it is. It ran under
+`npm run dev`, not a production build; acceptable for this defect class, because
+React counts hooks per render in both modes and a hook below the early return
+throws in either. And it witnesses the unauthorized path only. Witness 2 — the
+field PNG — is unchanged and still yours.
+
 ## What SHA the evidence belongs to
 
 A capture is named for HEAD, because HEAD is the tree that rendered it. That is

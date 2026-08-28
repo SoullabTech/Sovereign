@@ -27,9 +27,16 @@
  * stopped before the capture ran, which is a coordination problem the tool
  * should not have handed to a person in the first place.
  *
- * None of this can happen in a remote Claude Code session: that container has
- * no database and no env files, so there is nothing to point a browser at. Run
- * it where the stack runs.
+ * A remote Claude Code session cannot produce the FIELD capture: that container
+ * has no database, no env files and no member session, so there is no signed-in
+ * room to photograph. Run that where the stack runs.
+ *
+ * It CAN produce the signed-out witness, and 2026-08-28 it did. The unauthorized
+ * path needs none of the above — /api/sovereign/manuscripts returns 401 from
+ * getMemberIdFromRequest before it touches Postgres — so a container with only a
+ * browser reaches the room's unauthorized state and can say whether the sign-in
+ * invitation rendered or the error boundary did. The two witnesses have opposite
+ * requirements, and the earlier version of this comment collapsed them.
  */
 import puppeteer from 'puppeteer';
 import { spawn } from 'node:child_process';
