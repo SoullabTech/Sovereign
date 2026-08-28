@@ -36,6 +36,19 @@ export type StudioAvailability = 'available' | 'later';
 /**
  * WS2-02 — the three regions of the Studio, and why they are three.
  *
+ * PROVENANCE. This grammar is **D-019**, settled by the founder on 2026-08-28
+ * and read from reference screen `04-writing-field-wide.png`. It is not
+ * settled here. This file is an implementation candidate for an existing
+ * ruling, and it may not drift from it. The governing record lives on the one
+ * Writer's Studio lane, `claude/writers-studio-organization-wxpb7q`
+ * (D-020: a Writer's Studio document that exists on another branch and not on
+ * that one is not governing) — see docs/programmes/writers-studio-v2/
+ * DECISIONS.md and WS2-ARCHITECTURE-DEFINITION.md.
+ *
+ * D-019 also retires "MAIA region" as an *architectural* definition: a region
+ * is presentation. The architecture is MAIA-in-relation-to-a-Work. `region`
+ * below is therefore chrome, and carries no authority over the object model.
+ *
  * The reference grammar keeps three kinds of thing apart because collapsing
  * them is the failure this product is most likely to commit:
  *
@@ -208,13 +221,18 @@ export const STUDIO_MAP: StudioGroup[] = [
     region: 'maia',
     label: 'MAIA',
     destinations: [
-      {
-        id: 'conversations',
-        label: 'Conversations',
-        note: 'Where you and MAIA talk.',
-        availability: 'available',
-        href: '/maia',
-      },
+      /* Conversations is NOT available, and route existence is why it looked
+         like it was. `/maia` exists and is the built conversational surface —
+         but D-019 settles the architecture as MAIA-in-relation-to-a-Work, and
+         app/maia/page.tsx reads searchParams for `panel`, `action`,
+         `changePassword` and journal capture only. No manuscript, no work, no
+         living_work. Entering it from the Studio drops the Work context.
+         A conversation that has forgotten which Work it is about is not the
+         Conversations this grammar names, so linking to it would be exactly
+         the roadmap leakage the rule below forbids. Marked available in the
+         first candidate on route existence alone; corrected here.
+         Lifts when the handoff preserves Work context. */
+      { id: 'conversations', label: 'Conversations', availability: 'later' },
       { id: 'discover', label: 'Discover', availability: 'later' },
       { id: 'insights', label: 'Insights', availability: 'later' },
       { id: 'suggestions', label: 'Suggestions', availability: 'later' },

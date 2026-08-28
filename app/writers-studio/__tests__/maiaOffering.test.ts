@@ -1,5 +1,5 @@
 import {
-  assertNoMachineScore,
+  assertNoMemberFacingScore,
   evidenceCount,
   goalProgress,
   type MaiaInsight,
@@ -25,30 +25,38 @@ describe('MAIA may offer a reading, never a score', () => {
   };
 
   it('refuses a machine-authored score on an offering', () => {
-    expect(() => assertNoMachineScore({ ...insight, score: 62 })).toThrow(
+    expect(() => assertNoMemberFacingScore({ ...insight, score: 62 })).toThrow(
       /machine-authored score/,
     );
   });
 
+  /*
+   * Confidence is refused HERE, at the boundary, and is legitimate upstream.
+   * lib/journal/chartIntegrationService.ts persists a confidence column on
+   * pattern findings and lib/consciousness/* reasons over insight.confidence
+   * to decide what is worth surfacing. That is a claim about the reading, not
+   * about the writing, and this guard is not a repository-wide lint — it is
+   * called on what crosses to the member. See maiaOffering.ts.
+   */
   it('refuses the euphemisms too — confidence, strength, quality, severity', () => {
     for (const key of ['confidence', 'strength', 'quality', 'severity', 'grade']) {
-      expect(() => assertNoMachineScore({ ...insight, [key]: 0.8 })).toThrow(
+      expect(() => assertNoMemberFacingScore({ ...insight, [key]: 0.8 })).toThrow(
         /machine-authored score/,
       );
     }
   });
 
   it('refuses a score hidden behind a compound name', () => {
-    expect(() => assertNoMachineScore({ ...insight, pacingScore: 41 })).toThrow();
-    expect(() => assertNoMachineScore({ ...insight, overall_rating: 3 })).toThrow();
+    expect(() => assertNoMemberFacingScore({ ...insight, pacingScore: 41 })).toThrow();
+    expect(() => assertNoMemberFacingScore({ ...insight, overall_rating: 3 })).toThrow();
   });
 
   it('allows a legitimate offering through untouched', () => {
-    expect(() => assertNoMachineScore(insight)).not.toThrow();
+    expect(() => assertNoMemberFacingScore(insight)).not.toThrow();
   });
 
   it('leaves non-numeric ordering alone — a member may prioritise their own work', () => {
-    expect(() => assertNoMachineScore({ ...insight, priority: 'later' })).not.toThrow();
+    expect(() => assertNoMemberFacingScore({ ...insight, priority: 'later' })).not.toThrow();
   });
 
   it('counts evidence as citations to open, not as strength of finding', () => {

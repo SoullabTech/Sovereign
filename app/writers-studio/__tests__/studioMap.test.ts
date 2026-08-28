@@ -166,10 +166,19 @@ describe('WS2-02 — the three regions stay three', () => {
     }
   });
 
-  it('the Work remains the primary context — the work region is the largest', () => {
-    const size = (r: string) =>
-      STUDIO_MAP.filter((g) => g.region === r).flatMap((g) => g.destinations).length;
-    expect(size('work')).toBeGreaterThan(size('maia'));
-    expect(size('work')).toBeGreaterThan(size('tools'));
-  });
+  /*
+   * REMOVED — "the work region must be the largest by destination count".
+   *
+   * It was an invented invariant. D-018 makes the Work the **primary
+   * persistent context**: Manuscripts and Materials belong to a Work, and a
+   * MAIA Exchange is relational activity belonging to a Work. That is an
+   * ontological relation, and counting navigation entries does not test it.
+   * MAIA could one day carry six legitimate relational offerings against five
+   * Work rooms without the Work ceasing to be the context they all belong to —
+   * and the arithmetic assertion would have failed a conformant Studio.
+   *
+   * The real relation lives in the object model, not the chrome, so no
+   * substitute assertion is made here. Left recorded rather than deleted
+   * silently, per the decisions record's own rule.
+   */
 });

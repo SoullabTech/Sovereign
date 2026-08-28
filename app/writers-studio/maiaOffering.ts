@@ -104,7 +104,34 @@ export interface WriterDeclaredGoal {
   declaredAt: string;
 }
 
-/** Field names that turn a reading into a verdict. */
+/**
+ * ── WHERE THIS GUARD APPLIES, AND WHERE IT MUST NOT ───────────────────────
+ *
+ * At the **member-facing offering boundary** only: the moment something MAIA
+ * produced is about to be presented to the writer as a statement about their
+ * work.
+ *
+ * It is NOT a repository-wide ban on the word `confidence`. The substrate
+ * already carries legitimate internal epistemic metadata under that name —
+ * `lib/journal/chartIntegrationService.ts` persists a `confidence` column on
+ * pattern findings, and `lib/consciousness/*` reasons over
+ * `insight.confidence` to decide what is worth surfacing at all. That number
+ * means *how sure this reading is*, which is a claim about the reading. It is
+ * not a claim about the quality of the writing, and it has every right to
+ * exist internally. A system that cannot represent its own uncertainty is
+ * worse, not better — and outlawing it would have pushed the same reasoning
+ * into an unnamed field where nothing could see it.
+ *
+ * The rule is about **authority presented to the writer**, not about what the
+ * system may know. So: reason with confidence internally; do not hand the
+ * writer a number that rates their work — including a bare confidence figure,
+ * which at the boundary reads as measurement whatever it meant upstream.
+ *
+ * Practically: call this on what is crossing to the member. Do not call it on
+ * a service's internal finding, and do not import it as a lint.
+ */
+
+/** Field names that turn a reading into a verdict at the member boundary. */
 const SCORE_SHAPED_KEYS = [
   'score',
   'rating',
@@ -120,26 +147,35 @@ const SCORE_SHAPED_KEYS = [
 ] as const;
 
 /**
- * Refuse a numeric evaluative field on anything MAIA offers about the work.
+ * Refuse a numeric evaluative field on something about to be shown to the writer.
  *
- * Applied to values crossing a boundary the compiler cannot see — an API
- * payload, a row widened by a migration, a mapped object from a service that
- * grew a field. The type above states the rule; this catches the cases that
- * arrive as `unknown`.
+ * Applied at boundaries the compiler cannot see — an API response body, a row
+ * widened by a migration, an object mapped from a service that grew a field.
+ * The types above state the rule for code that is typed; this catches what
+ * arrives as `unknown`.
+ *
+ * Named for its boundary on purpose. `assertNoMachineScore` read like a
+ * global prohibition and invited exactly the over-application the doc above
+ * refuses.
  *
  * Non-numeric values are left alone: a `priority` of 'later' is a member's
  * ordering of their own work, not a machine-authored measurement of it.
  */
-export function assertNoMachineScore(offering: unknown, context = 'MAIA offering'): void {
+export function assertNoMemberFacingScore(
+  offering: unknown,
+  context = 'MAIA offering',
+): void {
   if (offering === null || typeof offering !== 'object') return;
 
   for (const [key, value] of Object.entries(offering as Record<string, unknown>)) {
     const looksScored = SCORE_SHAPED_KEYS.some((k) => key.toLowerCase().includes(k));
     if (looksScored && typeof value === 'number') {
       throw new Error(
-        `${context}: "${key}" is a machine-authored score. MAIA may offer a reading ` +
-          `with its type, evidence and links — never a number rating the member's work. ` +
-          `Only writer-declared goal progress may be quantified.`,
+        `${context}: "${key}" is a machine-authored score crossing to the writer. ` +
+          `MAIA may offer a reading with its type, evidence and links — never a number ` +
+          `rating the member's work. Only writer-declared goal progress may be ` +
+          `quantified. Internal epistemic metadata is legitimate; it just may not be ` +
+          `presented as a figure to the member.`,
       );
     }
   }
