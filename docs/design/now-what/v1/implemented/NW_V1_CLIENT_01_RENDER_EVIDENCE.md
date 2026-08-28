@@ -109,6 +109,36 @@ Five posts against the real database, one row per member act:
 
 Every row: `can_be_shown_to_practitioner = false`.
 
+## Where the relation is allowed to travel
+
+Founder review of `7131966aa` found the relation propagating too far: it rode
+`saveTagged()` as well as `carry()`, so a practice or offering named later in
+the same lived-return room inherited it. Those are new acts she made after
+working with what happened — not statements written in answer to the earlier
+act, which is all the column means.
+
+> **Session context is not proof of relationship.**
+
+One lived return that ends with a practice and an offering, posted against the
+real database exactly as the Room now sends it — same `source_session_ref`
+throughout, so session context is present and demonstrably does not create a
+relation:
+
+| what she did | phase | session | relation |
+|---|---|---|---|
+| kept her account of what happened | — | `vs-lived-prop` | **answers the prior act** |
+| then chose a practice | `practice` | `vs-lived-prop` | **NULL** |
+| then named an offering | `offering` | `vs-lived-prop` | **NULL** |
+
+The refusal lives at the call site, **not** in the route. The route must stay
+able to write the relation when a real explicit gesture supplies one — a
+practice may legitimately be related to a prior act one day; it just may not
+inherit that by having occurred later in the same room. `livedRelation.ts`
+therefore knows nothing about phases, and a test asserts it stays that way.
+
+No visual recomposition was required, and none happened: the Home render after
+this repair is byte-identical to the one committed with `7131966aa`.
+
 ---
 
 ## Defects found by rendering, and repaired

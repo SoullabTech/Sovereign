@@ -344,6 +344,62 @@ describe('C — relation: the kept update stays related to the act it answers', 
     expect(strip(room)).not.toMatch(/respondsToThreadId: (entryThread|priorPractice)\b/);
   });
 
+  it('the relation travels ONLY with her account of what happened', () => {
+    const room = read(ROOM);
+    // carry() — what she keeps as what happened — carries it.
+    const carryFn = room.slice(room.indexOf('async function carry('), room.indexOf('async function saveTagged('));
+    expect(carryFn).toContain('respondsToThreadId');
+
+    // saveTagged() — the practice/offering she names AFTER working with what
+    // happened — must not. Session context is not proof of relationship.
+    const savedTagged = room.slice(
+      room.indexOf('async function saveTagged('),
+      room.indexOf('async function commitPractice('),
+    );
+    expect(savedTagged).not.toMatch(/\.\.\.\(respondsToThreadId/);
+    expect(savedTagged).not.toMatch(/respondsToThreadId[,:}]/);
+  });
+
+  it('NEGATIVE CONTROL — a later practice does not inherit the lived relation', () => {
+    const room = read(ROOM);
+    // commitPractice routes through saveTagged, which sends no relation.
+    const commit = room.slice(
+      room.indexOf('async function commitPractice('),
+      room.indexOf('async function commitOffering('),
+    );
+    expect(commit).toContain("saveTagged('practice'");
+    expect(commit).not.toContain('respondsToThreadId');
+  });
+
+  it('NEGATIVE CONTROL — a later offering does not inherit the lived relation', () => {
+    const room = read(ROOM);
+    const offering = room.slice(
+      room.indexOf('async function commitOffering('),
+      room.indexOf('function handleDecision('),
+    );
+    expect(offering).toContain("saveTagged('offering'");
+    expect(offering).not.toContain('respondsToThreadId');
+  });
+
+  it('NEGATIVE CONTROL — entry=lived alone relates NOTHING; only a keep does', () => {
+    const room = read(ROOM);
+    // The whole file sends the relation from exactly ONE place.
+    expect((room.match(/\.\.\.\(respondsToThreadId \? \{ respondsToThreadId \} : \{\}\)/g) ?? []).length).toBe(1);
+    // And never unconditionally, and never derived from the entry alone.
+    expect(strip(room)).not.toMatch(/respondsToThreadId: (entry|true|sessionRef)/);
+    expect(strip(room)).not.toMatch(/entry === 'lived' \? \{ respondsToThreadId/);
+  });
+
+  it('the refusal lives at the call site, not in the route — the field stays writable', () => {
+    // A future explicit gesture must still be able to relate a practice. So
+    // the route may not hard-refuse the relation by phase; it refuses only
+    // what is not the member's own thread.
+    const api = read(NOTE_API);
+    expect(api).not.toMatch(/spiralogicPhase === 'practice'[\s\S]{0,120}respondsTo/i);
+    expect(api).not.toMatch(/respondsTo[\s\S]{0,120}(phase !== |tag !== )/i);
+    expect(read('lib/nowWhat/livedRelation.ts')).not.toMatch(/practice|offering/i);
+  });
+
   it('the migration is additive, nullable and reversible', () => {
     const sql = read(MIGRATION);
     // Statements only — the rationale comments are prose, not schema.

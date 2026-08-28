@@ -561,6 +561,11 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext, program, entry, en
    * stays related to the act it answers. It is NOT sent for any other entry,
    * so an unrelated session can never acquire a false link, and it is never
    * sent on its own — only alongside a keep the member actually made.
+   *
+   * SCOPE, and it is narrow on purpose: `carry()` only — her account of what
+   * happened. It does NOT reach `saveTagged()`, so a practice or offering
+   * named later in the same room stays its own act. Being in the room is not
+   * being in answer to something; see the note on saveTagged below.
    */
   const respondsToThreadId = entry === 'lived' && entryThreadTitle ? entryThread ?? null : null;
 
@@ -825,8 +830,25 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext, program, entry, en
     }
   }
 
-  // Saves a single tagged thread (practice/offering) through the same field-note
-  // route and consent model as every other authored thread.
+  /*
+   * Saves a single tagged thread (practice/offering) through the same
+   * field-note route and consent model as every other authored thread.
+   *
+   * DELIBERATELY WITHOUT `respondsToThreadId` (NW-V1-CLIENT-01 propagation
+   * repair). A practice or an offering named at the end of a lived return is a
+   * NEW act she made after working with what happened — it is not a statement
+   * written in answer to the earlier act, which is the only thing the column
+   * means. Letting it inherit the relation because it occurred later in the
+   * same room would be the composition defect again in a different costume:
+   *
+   *     session context is not proof of relationship.
+   *
+   * Only what she keeps as her account of what happened carries the relation,
+   * through `carry()`. A new practice stands as its own act unless some later
+   * explicit gesture relates it — which is why the refusal lives here, at the
+   * call site, and NOT in the route: the route must stay able to write the
+   * relation when a real gesture supplies one.
+   */
   async function saveTagged(tag: 'practice' | 'offering', title: string, share: boolean) {
     const res = await apiFetch('/api/now-what/field-note', {
       method: 'POST',
@@ -838,7 +860,6 @@ export function NowWhatRoom({ phase = 'fire_1', fieldContext, program, entry, en
         spiralogicPhase: tag,
         fieldContext: fieldContext ?? null,
         ...(entryDimension ? { dimension: entryDimension } : {}),
-        ...(respondsToThreadId ? { respondsToThreadId } : {}),
       }),
     });
     const json = await res.json().catch(() => ({}));
