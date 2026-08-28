@@ -11,12 +11,32 @@
  * DESIGN-CONTRACT.md is FROZEN; §2 states the composition rules this file
  * makes executable, and §0 puts six distinct reference screens under custody.
  *
- * Every value below was taken from the reference pack, not from prose about
- * it. Method: the PNGs were read directly and sampled — the ground ramp by
+ * ── PROVENANCE, AND WHY IT IS LABELLED ─────────────────────────────────────
+ *
+ * An earlier draft of this file said "every value below was taken from the
+ * reference pack". That was too strong, and the correction matters more than
+ * it first appears: colours really were measured off the pixels, but numbers
+ * like a 216px rail or a 1024px breakpoint are translations — reasonable, and
+ * not facts. Left unlabelled, an inferred number inherits the authority of a
+ * measured one, and the first capture that disagrees with it looks like a
+ * violation of frozen design rather than what it is: a provisional value
+ * meeting a real screen for the first time.
+ *
+ * So every token group carries a provenance category, and a test refuses an
+ * unlabelled one:
+ *
+ *   INHERITED    an existing truthful token, reused unchanged
+ *   SAMPLED      measured directly from reference pixels
+ *   OBSERVED     a structural relation plainly visible in a reference
+ *   DERIVED      an implementation value translating an observed relation
+ *   PROVISIONAL  cannot be accepted until rendered and witnessed
+ *
+ * Sampling method, for re-derivation rather than trust: the ground ramp by
  * frequency, the accents by hue-clustering pixels above a saturation floor in
  * `04-writing-field-wide.png` (canonical) and `05-materials-studio.png`.
- * Sampled anchors are recorded beside the tokens they justify so a later
- * session can re-derive them instead of trusting this comment.
+ *
+ * WS2-02B is where PROVISIONAL and DERIVED numbers meet an actual composition
+ * and get corrected. That is the point of labelling them, not a caveat on it.
  *
  * ── WHAT THIS FILE DOES NOT DO ─────────────────────────────────────────────
  *
@@ -34,6 +54,71 @@
 import { PRESS, SERIF } from './pressTheme';
 
 export { PRESS, SERIF };
+
+export type Provenance =
+  | 'INHERITED'
+  | 'SAMPLED'
+  | 'OBSERVED'
+  | 'DERIVED'
+  | 'PROVISIONAL';
+
+/**
+ * How each token group came to hold the values it holds.
+ *
+ * Structural rather than a comment, so a new group cannot be added without
+ * stating where its numbers came from — see assertEveryTokenGroupHasProvenance.
+ */
+export const PROVENANCE: Record<string, { level: Provenance; note: string }> = {
+  GROUND: {
+    level: 'SAMPLED',
+    note: 'Ramp measured by frequency in 04; base/rule/accent confirmed against pressTheme.',
+  },
+  INK: {
+    level: 'DERIVED',
+    note: 'primary/onAccent INHERITED from PRESS; the intermediate tones are a translation.',
+  },
+  TYPE: {
+    level: 'DERIVED',
+    note: 'The hierarchy is OBSERVED in 04 (serif work, sans chrome, prose largest). '
+      + 'The exact rem sizes are a translation and are corrected against a capture in WS2-02B.',
+  },
+  GOLD: {
+    level: 'SAMPLED',
+    note: 'DEFAULT INHERITED from PRESS.accent; fill/text sampled from 04.',
+  },
+  GOLD_PERMITTED: { level: 'OBSERVED', note: 'Uses gold actually carries in 04 and 05.' },
+  GOLD_FORBIDDEN: {
+    level: 'OBSERVED',
+    note: 'Surfaces gold conspicuously does NOT occupy in either reference.',
+  },
+  MAIA_ACCENT: { level: 'SAMPLED', note: 'Violet family measured in 04 at hue 240-270.' },
+  INSIGHT_CHIP: { level: 'SAMPLED', note: 'Chip families measured in 04 and 08.' },
+  SPACE: { level: 'DERIVED', note: 'A conventional scale; the references show restraint, not px.' },
+  MEASURE: {
+    level: 'PROVISIONAL',
+    note: 'Rail/panel/gutter/measure widths are translations of an observed proportion. '
+      + 'No pixel measurement was taken. WS2-02B corrects them against a real composition.',
+  },
+  RADIUS: { level: 'PROVISIONAL', note: 'Not measured. Radii read small and uniform in 04.' },
+  RULE: { level: 'INHERITED', note: 'PRESS.rule / ruleSoft, confirmed against sampled #4F453B.' },
+  STATE: {
+    level: 'DERIVED',
+    note: 'active/selected grounds sampled; the rest translate an observed treatment.',
+  },
+  PANELS: {
+    level: 'OBSERVED',
+    note: 'Placement and close controls are drawn in 04 and 05.',
+  },
+  BREAKPOINT: {
+    level: 'PROVISIONAL',
+    note: 'NOT established by any reference. 04 and 08 are two architectures, not two '
+      + 'measured widths. These thresholds are placeholders and must not be treated as '
+      + 'design authority.',
+  },
+  YIELDS_BEFORE: { level: 'OBSERVED', note: 'The one ordering the 04 to 08 difference shows.' },
+  NEVER_COLLAPSES: { level: 'OBSERVED', note: 'The field is present and central in both.' },
+  PRESENT_AT_COMPACT: { level: 'OBSERVED', note: 'All three are still present in 08.' },
+};
 
 /* ══════════════════════════════════════════════════════════════════════════
    1 · GROUND — the ramp, darkest to lightest
@@ -74,10 +159,11 @@ export const GROUND = {
    counts. A member can tell, without reading a word, whether they are looking
    at their writing or at the building it sits in.
 
-   MAIA's reading is set in SANS on purpose. Her language is not the member's
-   prose, and setting it in the manuscript's own face would blur exactly the
-   line D-019 requires be kept: member material remains distinguishable from
-   MAIA interpretation.
+   MAIA's reading is set in SANS because 04 and 08 both set it that way. Her
+   language is not the member's prose, and the manuscript's own face is the
+   member's. D-019 is the reason the reference's choice is worth holding —
+   member material stays distinguishable from MAIA interpretation — but the
+   font is the design contract's, not the decision record's.
    ══════════════════════════════════════════════════════════════════════════ */
 
 export const SANS =
@@ -194,22 +280,33 @@ export const GOLD_FORBIDDEN = [
 /* ══════════════════════════════════════════════════════════════════════════
    5 · MAIA — her own accent, and why that is architecture
 
-   Sampled from 04, and this is the single most load-bearing finding of the
-   read: MAIA's greeting is NOT gold. It is violet — #7A71A0 as text, over a
-   #3D2E4D surface family, clustering at hue 240-270 degrees where every other
-   accent in the room sits at 30-45.
+   Sampled from 04: MAIA's greeting is NOT gold. It is violet — #7A71A0 as
+   text, over a #3D2E4D surface family, clustering at hue 240-270 degrees where
+   every other accent in the room sits at 30-45.
 
-   That is D-019 rendered. "Member material remains distinguishable from MAIA
-   interpretation" is stated in the decisions record as an object-model rule;
-   the reference pack independently keeps the same separation in colour. The
-   member's work and the member's emphasis are gold. MAIA's voice is violet.
-   A reader can tell whose language they are looking at pre-attentively,
-   before parsing a single word.
+   WHERE THE AUTHORITY SITS, precisely, because an earlier draft of this file
+   overstated it by calling the violet "D-019 rendered".
 
-   So this is not a palette preference. Recolouring MAIA gold would erase a
-   constitutional distinction at the visual layer while leaving the schema
-   intact — the kind of drift that is invisible in a code review and obvious
-   in a screenshot. assertMaiaIsNotGold refuses it.
+     DESIGN-CONTRACT / screen 04   requires THIS treatment: violet, and
+                                   MAIA's language set in sans rather than in
+                                   the manuscript's own serif.
+
+     D-019                         requires the DISTINCTION: member material
+                                   remains distinguishable from MAIA
+                                   interpretation. It decrees no hue and no
+                                   font.
+
+   The difference is load-bearing in one direction that matters. A future
+   accessible treatment that preserved authorship distinction through type,
+   label, placement and another reference-approved colour would satisfy D-019
+   completely — and reading the hue as constitutional would have made that
+   legitimate work look like an object-model violation. So the guard below is
+   a visual-contract guard, and D-019 is the reason the contract cares.
+
+   What both agree on: recolouring MAIA into gold would collapse the
+   distinction at the visual layer while leaving the schema intact — drift
+   that is invisible in a code review and obvious in a screenshot. That is
+   what assertMaiaIsVisuallyDistinctFromTheWork refuses.
    ══════════════════════════════════════════════════════════════════════════ */
 
 export const MAIA_ACCENT = {
@@ -328,8 +425,17 @@ export const STATE: Record<StudioState, { bg?: string; ink: string; edge?: strin
    is simpler than one that is not — so dismissibility is declared per role and
    asserted, rather than left to whoever builds the panel.
 
-   The writing field is the deliberate exception, and it is not furniture: it
-   is the thing the room is for. A member cannot dismiss their own manuscript.
+   WHAT THIS DOES NOT RULE. An earlier draft also asserted that ONLY the
+   writing field may ever be undismissable. The frozen contract does not
+   establish that, and it is not ours to add: a future persistent structural
+   rail or shell surface could legitimately be undismissable without being
+   "permanent furniture" in the sense §2 refuses. So the invariant enforces
+   the implication the contract actually states — contextual implies
+   dismissible — and says nothing about surfaces that are not contextual.
+
+   The individual contracts below still mark MAIA and Materials dismissible,
+   because 04 and 05 draw close controls on both. That is a fact about these
+   panels, not a law about every future Studio surface.
    ══════════════════════════════════════════════════════════════════════════ */
 
 export type PanelRole =
@@ -373,11 +479,47 @@ export const PANELS: PanelContract[] = [
    migration from a programme description.
    ══════════════════════════════════════════════════════════════════════════ */
 
+/**
+ * PROVISIONAL. No reference establishes a threshold.
+ *
+ * 04 and 08 are two architectures, not the same architecture measured at two
+ * widths — so nothing in the pack says where one becomes the other. These are
+ * placeholders for WS2-02B to replace once a real composition can be resized
+ * and witnessed. They carry no design authority; see PROVENANCE.BREAKPOINT.
+ */
 export const BREAKPOINT = { compact: 1024, wide: 1440 } as const;
 
-/** Collapsed in this order as width is lost. Earlier entries go first. */
-export const COLLAPSE_ORDER: PanelRole[] = [
-  'statistics', 'goals', 'versions', 'materials', 'manuscript-outline', 'maia',
+/**
+ * What the 04 to 08 difference actually establishes, and nothing beyond it.
+ *
+ * An earlier draft shipped a full six-step COLLAPSE_ORDER — statistics, then
+ * goals, then versions, then materials, then the outline, then MAIA. Only one
+ * of those steps is witnessed. There is no reference narrower than 08, so the
+ * later steps were predictions about screens no one has seen.
+ *
+ * That mattered most at the end of the list. §1 of the design contract makes
+ * MAIA a persistent companion region shared across all five modes; an invented
+ * breakpoint quietly deciding when she disappears would have set a real
+ * constitutional question by default, inside a token file, with no ruling.
+ *
+ * Recorded as relations rather than a sequence, because a partial order is
+ * what was observed and a total order is what was invented.
+ */
+
+/** [a, b] — a yields its position before b does. 08 demotes Materials to a
+ *  bottom strip while the manuscript outline keeps its rail. */
+export const YIELDS_BEFORE: ReadonlyArray<readonly [PanelRole, PanelRole]> = [
+  ['materials', 'manuscript-outline'],
+];
+
+/** Present and central in both architectures. */
+export const NEVER_COLLAPSES: readonly PanelRole[] = ['writing-field'];
+
+/** Still present in 08, the narrowest reference. Relocation is not removal. */
+export const PRESENT_AT_COMPACT: readonly PanelRole[] = [
+  'maia',
+  'manuscript-outline',
+  'materials',
 ];
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -442,37 +584,41 @@ export function assertGoldIsBounded(): void {
 }
 
 /**
- * MAIA's voice may not be gold.
+ * MAIA's accent may not collapse into the work's.
  *
- * D-019 at the visual layer: member material stays distinguishable from MAIA
- * interpretation. Gold marks the member's work and emphasis; MAIA speaks in
- * violet. Collapsing the two erases a constitutional distinction in a way a
- * schema review would never catch.
+ * Enforces the DESIGN-CONTRACT / screen 04 treatment, for the reason D-019
+ * gives: gold marks the member's work and emphasis, so MAIA's voice must stay
+ * separable from it. The hue itself is the reference's choice, not the
+ * decision record's — a different reference-approved treatment could satisfy
+ * the same distinction.
  */
-export function assertMaiaIsNotGold(): void {
+export function assertMaiaIsVisuallyDistinctFromTheWork(): void {
   const goldHue = hueOf(GOLD.DEFAULT);
   for (const [name, hex] of Object.entries(MAIA_ACCENT)) {
     const diff = Math.abs(hueOf(hex) - goldHue);
     if (Math.min(diff, 360 - diff) < 60) {
       throw new Error(
-        `MAIA_ACCENT.${name} (${hex}) sits in gold's hue family. MAIA's voice must remain ` +
-          `visually distinct from the member's own work and emphasis (D-019).`,
+        `MAIA_ACCENT.${name} (${hex}) sits in gold's hue family. Screen 04 keeps MAIA's ` +
+          `voice separable from the member's own work and emphasis; D-019 is why that ` +
+          `separation matters.`,
       );
     }
   }
 }
 
-/** Contextual panels are dismissible. The writing field is not furniture. */
-export function assertPanelsAreNotFurniture(): void {
+/**
+ * Contextual panels are dismissible.
+ *
+ * The whole of what DESIGN-CONTRACT §2 establishes, and deliberately no more:
+ * a panel summoned by context may not become permanent furniture. A surface
+ * that is not contextual is outside this rule — the contract does not decide
+ * it, so neither does this function.
+ */
+export function assertContextualPanelsAreDismissible(): void {
   for (const p of PANELS) {
     if (p.contextual && !p.dismissible) {
       throw new Error(
         `Panel "${p.role}" is contextual but not dismissible — that is permanent furniture.`,
-      );
-    }
-    if (!p.dismissible && p.role !== 'writing-field') {
-      throw new Error(
-        `Panel "${p.role}" cannot be dismissed. Only the writing field may be undismissable.`,
       );
     }
   }
@@ -501,16 +647,47 @@ export function assertSpacingOrdered(): void {
   }
 }
 
-/** Chrome yields before the writing field does. Read from 04 → 08. */
-export function assertFieldSurvivesCollapse(): void {
-  if (COLLAPSE_ORDER.includes('writing-field')) {
-    throw new Error('The writing field may not be collapsed. It is what the room is for.');
+/**
+ * The responsive contract claims only what 04 to 08 shows.
+ *
+ * Two guards, both narrow: the field never yields, and MAIA is not predicted
+ * out of existence below the narrowest reference we hold.
+ */
+export function assertResponsiveClaimsAreObserved(): void {
+  for (const [yielding] of YIELDS_BEFORE) {
+    if (NEVER_COLLAPSES.includes(yielding)) {
+      throw new Error(
+        `"${yielding}" is listed as yielding, but it is present and central in both ` +
+          `references. The writing field is what the room is for.`,
+      );
+    }
   }
-  if (COLLAPSE_ORDER.indexOf('materials') >= COLLAPSE_ORDER.indexOf('manuscript-outline')) {
+  if (!PRESENT_AT_COMPACT.includes('maia')) {
     throw new Error(
-      'Materials must yield before the manuscript outline — 08 demotes Materials to a ' +
-        'bottom strip while the outline keeps its rail.',
+      'MAIA has been dropped from the compact architecture. She is present in 08, and §1 ' +
+        'makes her a persistent companion across the modes — a token file may not decide ' +
+        'her disappearance by inventing a breakpoint below the narrowest reference.',
     );
+  }
+}
+
+/** Every token group states where its values came from. */
+export function assertEveryTokenGroupHasProvenance(
+  groups: readonly string[] = [
+    'GROUND', 'INK', 'TYPE', 'GOLD', 'GOLD_PERMITTED', 'GOLD_FORBIDDEN',
+    'MAIA_ACCENT', 'INSIGHT_CHIP', 'SPACE', 'MEASURE', 'RADIUS', 'RULE',
+    'STATE', 'PANELS', 'BREAKPOINT', 'YIELDS_BEFORE', 'NEVER_COLLAPSES',
+    'PRESENT_AT_COMPACT',
+  ],
+): void {
+  for (const g of groups) {
+    if (!PROVENANCE[g]) {
+      throw new Error(
+        `Token group "${g}" has no provenance. State whether its values are INHERITED, ` +
+          `SAMPLED, OBSERVED, DERIVED or PROVISIONAL — an unlabelled number inherits ` +
+          `authority it has not earned.`,
+      );
+    }
   }
 }
 
@@ -519,9 +696,10 @@ export function assertStudioThemeCoherent(): void {
   assertGroundRampOrdered();
   assertGroundIsWarm();
   assertGoldIsBounded();
-  assertMaiaIsNotGold();
-  assertPanelsAreNotFurniture();
+  assertMaiaIsVisuallyDistinctFromTheWork();
+  assertContextualPanelsAreDismissible();
   assertProseOutranksChrome();
   assertSpacingOrdered();
-  assertFieldSurvivesCollapse();
+  assertResponsiveClaimsAreObserved();
+  assertEveryTokenGroupHasProvenance();
 }

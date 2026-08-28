@@ -1,11 +1,12 @@
 import {
-  assertFieldSurvivesCollapse,
+  assertContextualPanelsAreDismissible,
+  assertEveryTokenGroupHasProvenance,
   assertGoldIsBounded,
   assertGroundIsWarm,
   assertGroundRampOrdered,
-  assertMaiaIsNotGold,
-  assertPanelsAreNotFurniture,
+  assertMaiaIsVisuallyDistinctFromTheWork,
   assertProseOutranksChrome,
+  assertResponsiveClaimsAreObserved,
   assertSpacingOrdered,
   assertStudioThemeCoherent,
   GOLD,
@@ -13,10 +14,14 @@ import {
   INSIGHT_CHIP,
   MAIA_ACCENT,
   MEASURE,
+  NEVER_COLLAPSES,
   PANELS,
+  PRESENT_AT_COMPACT,
   PRESS,
+  PROVENANCE,
   RULE,
   TYPE,
+  YIELDS_BEFORE,
 } from '../studioTheme';
 
 /**
@@ -70,24 +75,24 @@ describe('gold — accent and emphasis, never decoration', () => {
   });
 });
 
-describe('MAIA is visually distinct from the member’s work (D-019)', () => {
+describe('MAIA is visually distinct from the member’s work (screen 04; D-019 is why)', () => {
   it('does not speak in gold', () => {
-    expect(() => assertMaiaIsNotGold()).not.toThrow();
+    expect(() => assertMaiaIsVisuallyDistinctFromTheWork()).not.toThrow();
   });
 
   it('refuses MAIA being recoloured into the work’s accent', () => {
     const original = MAIA_ACCENT.voice;
     try {
       (MAIA_ACCENT as Record<string, string>).voice = GOLD.text;
-      expect(() => assertMaiaIsNotGold()).toThrow(/D-019/);
+      expect(() => assertMaiaIsVisuallyDistinctFromTheWork()).toThrow(/Screen 04/);
     } finally {
       (MAIA_ACCENT as Record<string, string>).voice = original;
     }
   });
 
-  it('sets MAIA’s reading in sans, not in the manuscript’s own face', () => {
-    // Setting her language in the serif the member writes in would blur the
-    // line the object model keeps: member material vs MAIA interpretation.
+  it('sets MAIA’s reading in sans, as both references do', () => {
+    // The font is the design contract's choice; D-019 is why holding it
+    // matters. Neither decrees the other.
     expect(TYPE.maiaReading.family).not.toBe(TYPE.prose.family);
   });
 });
@@ -135,32 +140,83 @@ describe('long-form reading is the primary act', () => {
 
 describe('panels are contextual, not furniture', () => {
   it('ships with every contextual panel dismissible', () => {
-    expect(() => assertPanelsAreNotFurniture()).not.toThrow();
+    expect(() => assertContextualPanelsAreDismissible()).not.toThrow();
   });
 
-  it('lets only the writing field be undismissable — a member cannot dismiss their work', () => {
-    const undismissable = PANELS.filter((p) => !p.dismissible).map((p) => p.role);
-    expect(undismissable).toEqual(['writing-field']);
-  });
-
-  it('refuses a permanent MAIA panel', () => {
+  it('refuses a permanent MAIA panel — she is contextual, so she must be dismissible', () => {
     const maia = PANELS.find((p) => p.role === 'maia')!;
     const original = maia.dismissible;
     try {
       maia.dismissible = false;
-      expect(() => assertPanelsAreNotFurniture()).toThrow(/permanent furniture/);
+      expect(() => assertContextualPanelsAreDismissible()).toThrow(/permanent furniture/);
     } finally {
       maia.dismissible = original;
     }
   });
+
+  it('does NOT rule that only the writing field may be undismissable', () => {
+    // §2 establishes "contextual implies dismissible" and nothing more. A
+    // future persistent structural rail could be undismissable without being
+    // the permanent furniture the contract refuses, so the guard must stay
+    // silent about non-contextual surfaces rather than pre-emptively ruling.
+    const structuralRail = [
+      ...PANELS,
+      { role: 'shell-rail' as const, dismissible: false, contextual: false, placement: 'left' },
+    ] as typeof PANELS;
+    expect(() => {
+      for (const p of structuralRail) {
+        if (p.contextual && !p.dismissible) throw new Error('permanent furniture');
+      }
+    }).not.toThrow();
+  });
 });
 
 describe('responsive — chrome yields before the writing field', () => {
-  it('never collapses the field, and demotes Materials before the outline', () => {
-    expect(() => assertFieldSurvivesCollapse()).not.toThrow();
+  it('claims only what the references establish', () => {
+    expect(() => assertResponsiveClaimsAreObserved()).not.toThrow();
+  });
+
+  it('records exactly one witnessed ordering — the rest would be prediction', () => {
+    // 08 demotes Materials to a bottom strip while the outline keeps its rail.
+    // That is the only collapse step any reference shows; there is nothing
+    // narrower than 08 to establish a further sequence.
+    expect(YIELDS_BEFORE).toEqual([['materials', 'manuscript-outline']]);
+    expect(NEVER_COLLAPSES).toEqual(['writing-field']);
+  });
+
+  it('does not predict MAIA out of existence below the narrowest reference', () => {
+    // §1 makes MAIA a persistent companion across the modes. A token file may
+    // not decide her disappearance by inventing a breakpoint.
+    expect(PRESENT_AT_COMPACT).toContain('maia');
   });
 
   it('keeps the spacing scale ordered, since spacing is structure', () => {
     expect(() => assertSpacingOrdered()).not.toThrow();
+  });
+});
+
+describe('provenance — an unlabelled number inherits authority it has not earned', () => {
+  it('labels every token group', () => {
+    expect(() => assertEveryTokenGroupHasProvenance()).not.toThrow();
+  });
+
+  it('refuses a new token group that states no provenance', () => {
+    expect(() => assertEveryTokenGroupHasProvenance(['ELEVATION'])).toThrow(/no provenance/);
+  });
+
+  it('does not claim measurement for values that were translated', () => {
+    // The correction this scale exists for: colours were sampled, but a 216px
+    // rail and a 1024px breakpoint are translations. Marking them SAMPLED
+    // would make the first disagreeing capture look like a design violation
+    // rather than a provisional number meeting a real screen.
+    expect(PROVENANCE.MEASURE.level).toBe('PROVISIONAL');
+    expect(PROVENANCE.BREAKPOINT.level).toBe('PROVISIONAL');
+    expect(PROVENANCE.RADIUS.level).toBe('PROVISIONAL');
+    expect(PROVENANCE.TYPE.level).toBe('DERIVED');
+    expect(PROVENANCE.SPACE.level).toBe('DERIVED');
+    // and does not understate the ones that were measured
+    expect(PROVENANCE.GROUND.level).toBe('SAMPLED');
+    expect(PROVENANCE.MAIA_ACCENT.level).toBe('SAMPLED');
+    expect(PROVENANCE.RULE.level).toBe('INHERITED');
   });
 });
