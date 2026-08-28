@@ -15,6 +15,7 @@ import {
   getSessionSanctuary,
   setSessionSanctuary,
   saveAccountSettings,
+  claimDefaultMemoryModeOwnership,
   DEFAULT_ACCOUNT_SETTINGS,
 } from '../accountSettings';
 
@@ -53,8 +54,18 @@ afterEach(() => {
 });
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
+/**
+ * A signed-in member whose default is established and owned — the ordinary
+ * state these session-boundary tests operate in. Ownership is required since
+ * SANCTUARY-MEMBER-SCOPE-01: an unowned default is not served as anyone's
+ * choice, which is that unit's concern and is covered in its own suite.
+ */
+const TEST_MEMBER = 'member_under_test';
+
 function setDefault(mode: 'continuity' | 'sanctuary') {
+  localStorage.setItem('beta_user', JSON.stringify({ id: TEST_MEMBER }));
   saveAccountSettings({ ...DEFAULT_ACCOUNT_SETTINGS, defaultMemoryMode: mode });
+  claimDefaultMemoryModeOwnership(TEST_MEMBER);
   dispatched = []; // saveAccountSettings emits its own event; not under test here
 }
 

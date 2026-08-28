@@ -16,7 +16,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { OracleConversation } from '@/components/OracleConversation';
 import { getOrCreateMaiaSessionId } from '@/lib/maia/presence/conversationIdentity';
-import { ensureSessionSanctuary } from '@/lib/settings/accountSettings';
+import { ensureSessionSanctuary, loadMemberDefaultMemoryMode } from '@/lib/settings/accountSettings';
 import { placeFromPathname } from '@/lib/maia/presence/place';
 import { processUltimateMAIAConsciousnessSession } from '@/lib/consciousness-computing/ultimate-consciousness-system';
 import { ClaudeCodePresence } from '@/components/ui/ClaudeCodePresence';
@@ -529,6 +529,17 @@ function MAIAPageContent() {
       // (lib/maia/presence/conversationIdentity) — the same module the global
       // MaiaPresence provider uses, so the full page and the presence sheet
       // can never mint competing sessions. Daily rotation semantics unchanged.
+      // SANCTUARY-MEMBER-SCOPE-01 — establish WHOSE default this is before the
+      // session boundary consumes it. The local cache is device-local and was
+      // never hydrated from the server, so on a shared device it can hold the
+      // previous member's default. Awaited deliberately: seeding first and
+      // hydrating after would stamp the session with a default we had not yet
+      // established. Never throws — on failure the ownership gate serves the
+      // documented system default rather than another member's choice.
+      if (initialData?.id) {
+        await loadMemberDefaultMemoryMode(initialData.id, (url) => apiFetch(url));
+      }
+
       const priorSessionId = localStorage.getItem('maia_session_id');
       const identity = getOrCreateMaiaSessionId();
       // Establish the live Sanctuary boundary for whichever session that

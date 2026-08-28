@@ -33,9 +33,9 @@ import React, {
 } from 'react';
 import dynamic from 'next/dynamic';
 import { usePathname } from 'next/navigation';
-import { getValidMemberId } from '@/lib/http/apiBase';
+import { getValidMemberId, apiFetch } from '@/lib/http/apiBase';
 import { getOrCreateMaiaSessionId } from '@/lib/maia/presence/conversationIdentity';
-import { ensureSessionSanctuary } from '@/lib/settings/accountSettings';
+import { ensureSessionSanctuary, loadMemberDefaultMemoryMode } from '@/lib/settings/accountSettings';
 import {
   type MaiaPlaceContext,
   isFullConversationRoute,
@@ -116,14 +116,29 @@ export function MaiaPresence({ children }: { children: React.ReactNode }) {
   // sheet and the full page can never mint competing sessions.
   useEffect(() => {
     if (!hasMember) return;
-    const identity = getOrCreateMaiaSessionId();
-    if (identity) {
-      setSessionId(identity.sessionId);
-      // The sheet can mint the day's session before /maia ever mounts. Same
-      // idempotent helper, same single policy — it discarded `isNew` here, so
-      // without this the boundary went uncrossed whenever presence arrived first.
-      ensureSessionSanctuary(identity.sessionId);
-    }
+    let cancelled = false;
+    (async () => {
+      // SANCTUARY-MEMBER-SCOPE-01 — establish whose default this is BEFORE the
+      // boundary consumes it, exactly as /maia does. This provider mounts on
+      // every route and its effect has no network wait of its own, so without
+      // this it would reliably win the race and seed the session from a default
+      // not yet attributed to this member. Idempotent and cheap once owned.
+      const memberId = getValidMemberId();
+      if (memberId) {
+        await loadMemberDefaultMemoryMode(memberId, (url) => apiFetch(url));
+      }
+      if (cancelled) return;
+
+      const identity = getOrCreateMaiaSessionId();
+      if (identity) {
+        setSessionId(identity.sessionId);
+        // The sheet can mint the day's session before /maia ever mounts. Same
+        // idempotent helper, same single policy — it discarded `isNew` here, so
+        // without this the boundary went uncrossed whenever presence arrived first.
+        ensureSessionSanctuary(identity.sessionId);
+      }
+    })();
+    return () => { cancelled = true; };
   }, [hasMember]);
 
   const governedRoom = resolveGovernedRoom(pathname);

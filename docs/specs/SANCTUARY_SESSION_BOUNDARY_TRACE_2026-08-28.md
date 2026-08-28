@@ -1,7 +1,7 @@
 # SANCTUARY-SETTINGS-DISCONNECT-01 — new-session boundary trace
 
-**Status:** boundary implemented via `sessionId` provenance (Kelly ruling
-2026-08-28). Member-scope question in §3 remains OPEN.
+**Status:** session provenance CLOSED. Member-scoped default CLOSED (§3).
+Residual named in §3.1.
 **Branch:** `claude/sanctuary-button-state-issue-872q0a`
 **Supersedes the semantics attempted in:** `188abf5` (default→live coupling, reverted)
 
@@ -120,20 +120,45 @@ default is Sanctuary — signs in, and B's session is seeded Continuity. B's
 chosen Sanctuary default is silently not applied. Do not claim member-scoped
 defaults until the server value is actually read back.
 
-Recorded as **SANCTUARY-MEMBER-SCOPE-01**, open.
+### SANCTUARY-MEMBER-SCOPE-01 — repaired
 
----
+The cache is now attributable. `maia_account_settings_owner` records which
+member the cached `defaultMemoryMode` belongs to — provenance again, not a
+second setting, and in its own key so `saveAccountSettings()` stays unaware
+of it.
 
-## 4. Held for separate adjudication
+* `getAccountSettings()` serves the cached `defaultMemoryMode` only when it is
+  provably the signed-in member's. Unowned (legacy, unattributed) counts as
+  unproven, not as mine. Gated field: **`defaultMemoryMode` only** — voice,
+  memory depth, display and assistant name have always been device-local and
+  are untouched.
+* `GET /api/members/settings` → `maia.defaultMemoryMode` is now consumed.
+  `hydrateAccountSettingsForMember()` adopts it and stamps ownership;
+  `loadMemberDefaultMemoryMode()` is the fetch-and-adopt wrapper.
+* Hydration runs **before** the session boundary consumes the default, on both
+  seeding surfaces (`/maia` boot and the presence provider). The provider has
+  no network wait of its own and mounts on every route, so it would otherwise
+  reliably win the race and seed from an unestablished default.
+* `clearAuthState()` withdraws the ownership claim. The cached settings
+  themselves are left alone; only the claim that they belong to a member goes.
+* Unresolved hydration (fetch fails, or the server returns no value for the
+  field) leaves the cache **unowned**. The member gets the documented system
+  default — the same thing a member on a fresh device gets — never the previous
+  member's value.
 
-**SANCTUARY-DEFAULT-AUTHORITY-CONSOLIDATION-01** — collapsing
-`maia_sanctuary_default` (Data & Privacy toggle) into
-`maia_account_settings.defaultMemoryMode` (MAIA Settings picker).
+12 tests in `lib/settings/__tests__/memberScopedDefault.test.ts`, including the
+exact two-member sequence in both directions. Mutation-checked: removing the
+ownership gate fails 6; adopting an unresolved server value fails 2.
 
-These are one setting rendered in two places with no code path between them,
-so they can and do disagree. That consolidation was attempted in `188abf5`
-and has been fully reverted out of this repair — `lib/storage/sovereign.ts`
-is byte-identical to canonical. It is a Class A consent change in its own
-right and is not blessed incidentally here. The migration direction proposed
-at the time, preserved for the future adjudication: migrate only *toward*
-Sanctuary, so a legacy opt-in cannot be lost in the merge.
+### 3.1 Residual — first-load window when hydration fails
+
+If hydration cannot resolve (offline, 500) on the first load after a member
+switch, that session is seeded from the **system** default rather than the
+member's stored one. Cross-member leakage is closed — member A's value is
+never used — but a member whose stored default is Sanctuary would begin that
+one session in Continuity, and would have to set it themselves.
+
+Closing this properly needs the seed to be *deferrable* rather than
+default-to-system, which means `ensureSessionSanctuary` gaining a "cannot
+establish yet" state. That was explicitly out of bounds for this unit
+(no changes to `ensureSessionSanctuary`). Recorded, not claimed as fixed.

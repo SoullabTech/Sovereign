@@ -31,6 +31,8 @@ import {
   saveAccountSettings,
   getSessionSanctuary,
   setSessionSanctuary,
+  hydrateAccountSettingsForMember,
+  claimDefaultMemoryModeOwnership,
   DEFAULT_ACCOUNT_SETTINGS,
   type AccountSettings as AccountSettingsType,
 } from '@/lib/settings/accountSettings';
@@ -355,6 +357,12 @@ export function AccountSettings() {
             notifications: settingsData.notifications,
             privacy: settingsData.privacy,
           });
+          // SANCTUARY-MEMBER-SCOPE-01. This response has always carried
+          // `maia.defaultMemoryMode` and it was discarded here, which is what
+          // made the local cache write-through-only and therefore attributable
+          // to the wrong member. Adopt it for THIS member and record ownership.
+          hydrateAccountSettingsForMember(memberId, settingsData?.maia?.defaultMemoryMode);
+          setMaiaSettings(getAccountSettings());
         }
 
         // Load sovereignty/consent data (local first, then reconcile with server)
@@ -474,6 +482,8 @@ export function AccountSettings() {
     const updated = { ...maiaSettings, [key]: value };
     setMaiaSettings(updated);
     saveAccountSettings(updated);
+    // The member choosing their own default is proof of ownership.
+    if (key === 'defaultMemoryMode') claimDefaultMemoryModeOwnership(userId);
     showSaveIndicator();
 
     // NOTE: changing a default deliberately does NOT touch the live boundary

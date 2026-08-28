@@ -72,6 +72,55 @@ export const DEFAULT_ACCOUNT_SETTINGS: AccountSettings = {
 const STORAGE_KEY = 'maia_account_settings';
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Member ownership of the consent-bearing default
+// ─────────────────────────────────────────────────────────────────────────────
+//
+// `defaultMemoryMode` is the only field here with a member-scoped server
+// record (`members_settings.default_memory_mode`). Everything else — voice,
+// prosody, tooltips — has always been device-local and is left exactly as it
+// was (no ownership gate, no discard).
+//
+// The cache was write-through only: updateMaiaSetting PUT it to the server,
+// and nothing ever read it back, so a signed-in member could inherit the
+// previous member's default on a shared device. This stamp records whose
+// default is cached, so an unprovable one is never served as this member's
+// choice. Held in its own key so saveAccountSettings() stays unaware of it.
+
+const OWNER_KEY = 'maia_account_settings_owner';
+
+/**
+ * The signed-in member, by the same reference every surface already uses
+ * (`beta_user.id`, falling back to the passkey). Null when signed out or
+ * unreadable — in which case ownership cannot be proven either way.
+ */
+function currentMemberRef(): string | null {
+  try {
+    const raw = localStorage.getItem('beta_user');
+    if (!raw) return null;
+    const user = JSON.parse(raw);
+    return user?.id || user?.passkey || null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * True only when the cached `defaultMemoryMode` is provably this member's.
+ * An absent stamp is NOT proof: before this existed the cache was unattributed,
+ * and an unattributed value may be the previous member's.
+ */
+function ownsCachedDefault(): boolean {
+  const me = currentMemberRef();
+  if (!me) return false;
+  return localStorage.getItem(OWNER_KEY) === me;
+}
+
+function stampDefaultOwner(memberRef?: string | null): void {
+  const owner = memberRef || currentMemberRef();
+  if (owner) localStorage.setItem(OWNER_KEY, owner);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Read / Write
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -91,13 +140,23 @@ export function getAccountSettings(): AccountSettings {
 
     const parsed = JSON.parse(stored);
     // Merge with defaults to handle missing fields from older versions
-    return {
+    const merged = {
       ...DEFAULT_ACCOUNT_SETTINGS,
       ...parsed,
       voice: { ...DEFAULT_ACCOUNT_SETTINGS.voice, ...parsed.voice },
       memory: { ...DEFAULT_ACCOUNT_SETTINGS.memory, ...parsed.memory },
       display: { ...DEFAULT_ACCOUNT_SETTINGS.display, ...parsed.display },
     };
+
+    // Ownership gate — the consent-bearing field only. An unowned or foreign
+    // cached default is not this member's choice, so it is not served as one;
+    // they get the documented system default, exactly as a member arriving on
+    // a fresh device would, until hydration establishes their real value.
+    if (!ownsCachedDefault()) {
+      merged.defaultMemoryMode = DEFAULT_ACCOUNT_SETTINGS.defaultMemoryMode;
+    }
+
+    return merged;
   } catch (e) {
     console.error('[AccountSettings] Failed to parse stored settings:', e);
     return DEFAULT_ACCOUNT_SETTINGS;
@@ -279,4 +338,69 @@ export function ensureSessionSanctuary(currentSessionId: string): boolean {
     console.error('[AccountSettings] Failed to establish session sanctuary:', e);
     return getSessionSanctuary();
   }
+}
+
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Member-scoped hydration (SANCTUARY-MEMBER-SCOPE-01)
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Adopt the authenticated member's server-backed `defaultMemoryMode` as the
+ * local default, and record that it is theirs.
+ *
+ * `serverDefaultMemoryMode` comes from `GET /api/members/settings` →
+ * `maia.defaultMemoryMode`. A missing or unrecognised value means the server
+ * did not answer for this field: the stamp is NOT written, so the ownership
+ * gate keeps returning the system default rather than promoting whatever the
+ * device happens to be holding.
+ *
+ * Touches the one consent-bearing field. Unrelated local settings keep their
+ * existing device-local semantics.
+ */
+export function hydrateAccountSettingsForMember(
+  memberRef: string,
+  serverDefaultMemoryMode: unknown,
+): void {
+  if (typeof window === 'undefined' || !memberRef) return;
+
+  if (serverDefaultMemoryMode !== 'continuity' && serverDefaultMemoryMode !== 'sanctuary') {
+    // Unresolved. Leave the cache unowned — an unproven default must not be
+    // silently adopted as this member's choice.
+    console.warn('[AccountSettings] No server defaultMemoryMode for member; cache stays unowned');
+    return;
+  }
+
+  const current = getAccountSettings(); // already gated, so never leaks a foreign value
+  saveAccountSettings({ ...current, defaultMemoryMode: serverDefaultMemoryMode });
+  stampDefaultOwner(memberRef);
+}
+
+/**
+ * Fetch-and-adopt, for surfaces that do not already hold the settings payload.
+ * Resolves to the member's default in force, and never throws — a failed
+ * hydration leaves the cache unowned and the gate serving the system default.
+ */
+export async function loadMemberDefaultMemoryMode(
+  memberRef: string,
+  fetcher: (url: string) => Promise<Response>,
+): Promise<AccountSettings['defaultMemoryMode']> {
+  try {
+    const res = await fetcher(`/api/members/settings?memberId=${encodeURIComponent(memberRef)}`);
+    if (res.ok) {
+      const data = await res.json();
+      hydrateAccountSettingsForMember(memberRef, data?.maia?.defaultMemoryMode);
+    } else {
+      console.warn('[AccountSettings] Member settings fetch failed:', res.status);
+    }
+  } catch (e) {
+    console.warn('[AccountSettings] Member settings hydration error:', e);
+  }
+  return getAccountSettings().defaultMemoryMode;
+}
+
+/** Record that the current member owns the cached default (they just set it). */
+export function claimDefaultMemoryModeOwnership(memberRef?: string | null): void {
+  if (typeof window === 'undefined') return;
+  stampDefaultOwner(memberRef);
 }
