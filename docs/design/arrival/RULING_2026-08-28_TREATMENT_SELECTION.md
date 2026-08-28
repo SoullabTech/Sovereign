@@ -147,3 +147,56 @@ mobile witness and its recorded experiential verification.
 **The durable result of steps 1–4 is not a winning design.** It is that the arrival surface now
 has a written list of what it must refuse: spectacle, ambiguity, motion-dependent identity, and
 visual emphasis that arrives before relationship.
+
+---
+
+## 7 · Disposition on D (founder, same day)
+
+```
+D          LEADING TREATMENT · not yet adopted
+SOLVED     containment · desktop composition · non-load-bearing motion
+           · authentic action inventory
+OPEN       five-door product hierarchy · physical-device feel
+           · true shipped-before comparison
+MOTION     leave the current curve; judge perceptually, not against the nominal duration
+COLOUR     leave Google/Apple marks alone — their saturation becoming visible is
+           diagnostic, not a defect. Solve compositionally if needed: spacing,
+           smaller controls, secondary grouping, lower textual emphasis. Never by
+           recolouring marks we do not own.
+CANON      no new global principle yet
+```
+
+On the motion finding, the ruling declined the stopwatch: *"extending the perceptual portion to
+hit a numerical duration could turn a nearly subliminal threshold gesture into cinema."* The curve
+stands until the device comparison. Judge the felt event.
+
+## 8 · What step 4's follow-through then found
+
+Acting on *"separate the next judgment from visual design"* surfaced something no visual pass
+would have: **`/signin` opens on the password phase, not the email phase** — deliberate, commit
+`44b7a52`, 2026-08-24. Every treatment in this directory, and my reproduction of the shipped
+surface, rendered the email phase, which on `/signin` is the **second** screen.
+
+The consequences, and one new render, are in
+[`DOORS_AND_PHASES_2026-08-28.md`](./DOORS_AND_PHASES_2026-08-28.md):
+
+- `treatment-d-resolve-signin.html` is the first look at the screen returning members meet.
+- The arrival remodel's typography (Spectral, "Welcome.") reaches the **email branch only**; the
+  password branch keeps the plain sans "Welcome". Atmospherically remodelled, typographically not.
+  Undocumented anywhere until now.
+- **Five doors was the maximum case, not the surface.** A genuinely new member on `/signup` meets
+  three, two of them third-party. The heaviest screen is the *returning* one — which inverts the
+  usual instinct about where ceremony belongs.
+- The biometric button is gated on an **async check after mount**, so it can arrive after first
+  paint and reflow the stack — including after D's settling gesture completes. Measurable, and
+  unmeasured; it needs the real capture.
+- The table of what each door costs if made latent is there too, with the honest limit: **nobody
+  has asked how many members use each path.** That is a database question, and until it is asked,
+  demoting a door is a guess about people.
+
+## 9 · Capture, since it cannot be done here
+
+[`capture-arrival.md`](./capture-arrival.md) + [`capture-arrival.mjs`](./capture-arrival.mjs) —
+a read-only Playwright script for the Mac Studio that captures **both phases** at 390/768/1440/1728,
+takes a first-paint frame as well as a settled one (to answer the biometric-reflow question), and
+records whether the biometric button was present. Syntax-checked here; not runnable here.
