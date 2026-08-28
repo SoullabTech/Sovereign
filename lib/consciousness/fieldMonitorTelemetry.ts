@@ -52,13 +52,28 @@ export interface FieldMonitorParams {
   pfiMindState?: any;            // PFI mind state when enabled
 }
 
-interface MemoryLayerHits {
-  episodic: boolean;
-  somatic: boolean;
-  morphic: boolean;
-  semantic: boolean;
-  session: boolean;
-}
+/**
+ * What the Memory Palace contributed to this turn — or an explicit statement
+ * that it did not run.
+ *
+ * M1.5: the five flags describe MemoryPalaceOrchestrator. Routes that never
+ * invoke it (voice/stream-conversation uses MemoryBundleService instead) were
+ * previously reported as five `false` values, which read as five observations
+ * about memory. They were not observations at all: `detectMemoryLayerHits`
+ * short-circuits when no palace context is supplied, so `false` was structurally
+ * guaranteed and carried no information. The `not_run` variant says the true
+ * thing instead — the question was not asked on this route.
+ */
+export type MemoryLayerHits =
+  | { palace: 'not_run'; reason: string }
+  | {
+      palace: 'ran';
+      episodic: boolean;
+      somatic: boolean;
+      morphic: boolean;
+      semantic: boolean;
+      session: boolean;
+    };
 
 // ═══════════════════════════════════════════════════════════════
 // 1. Fire-and-Forget Entry Point
@@ -127,7 +142,10 @@ async function _processAndInsert(params: FieldMonitorParams): Promise<void> {
 
   // ─── Memory Layer Hits ───
   const memoryLayerHits = detectMemoryLayerHits(memoryContext);
-  const memoryLayerCount = Object.values(memoryLayerHits).filter(Boolean).length;
+  // Counted explicitly, NOT via Object.values(...).filter(Boolean): the
+  // `not_run` variant's own fields are truthy strings, and counting them would
+  // manufacture layer hits out of a statement that no layer was consulted.
+  const memoryLayerCount = countMemoryLayerHits(memoryLayerHits);
 
   // ─── Framework metrics ───
   const frameworksDetected = frameworkAnalysis?.frameworks
@@ -265,6 +283,7 @@ async function _processAndInsert(params: FieldMonitorParams): Promise<void> {
     ainPass: ainShape?.pass,
     ainScore: ainShape?.score,
     memoryLayers: memoryLayerCount,
+    palace: memoryLayerHits.palace,
     diversity: diversityScore,
     alert: monoModalAlert,
     wisdomField,
@@ -282,12 +301,15 @@ async function _processAndInsert(params: FieldMonitorParams): Promise<void> {
  * Detect which of the 5 memory palace layers contributed to this turn.
  * Inspects the memoryContext object returned by MemoryPalaceOrchestrator.
  */
-function detectMemoryLayerHits(memoryContext: any): MemoryLayerHits {
+export function detectMemoryLayerHits(memoryContext: any): MemoryLayerHits {
   if (!memoryContext) {
-    return { episodic: false, somatic: false, morphic: false, semantic: false, session: false };
+    // No palace context reached this call, so no palace layer was consulted.
+    // Reporting five `false` flags here would state five findings we never made.
+    return { palace: 'not_run', reason: 'route_does_not_invoke_palace' };
   }
 
   return {
+    palace: 'ran',
     episodic: Boolean(
       memoryContext.significantEpisodes &&
       (Array.isArray(memoryContext.significantEpisodes) ? memoryContext.significantEpisodes.length > 0 : true)
@@ -307,6 +329,21 @@ function detectMemoryLayerHits(memoryContext: any): MemoryLayerHits {
       memoryContext.sessionMemory && memoryContext.sessionMemory !== null
     ),
   };
+}
+
+/**
+ * Number of palace layers that actually contributed.
+ *
+ * Returns 0 for `not_run`. The DB column is `integer NOT NULL DEFAULT 0`
+ * (verified against production 2026-08-28), so NULL cannot distinguish
+ * "not applicable" from "none hit" — and no migration is authorized in this
+ * cut. The disambiguation therefore lives in `memory_layers_hit.palace`, which
+ * must be read alongside this count. Recorded as a known residual ambiguity.
+ */
+export function countMemoryLayerHits(hits: MemoryLayerHits): number {
+  if (hits.palace === 'not_run') return 0;
+  return [hits.episodic, hits.somatic, hits.morphic, hits.semantic, hits.session]
+    .filter(Boolean).length;
 }
 
 /**
