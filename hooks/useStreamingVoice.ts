@@ -88,6 +88,23 @@ interface StreamingVoiceOptions {
   conversationMode?: string;
   /** Memory depth preference */
   memoryDepth?: 'minimal' | 'moderate' | 'deep';
+  /**
+   * Whether this turn is spoken under Sanctuary Mode.
+   *
+   * REQUIRED, and deliberately not optional-with-a-default. Until 2026-08-28
+   * this field did not exist: the streaming voice request carried no Sanctuary
+   * state at all, so app/api/voice/stream-conversation/route.ts applied its own
+   * `sanctuary = false` default and every `!sanctuary` guard on that route
+   * evaluated true. A Sanctuary voice turn therefore retrieved cross-session
+   * memory AND persisted verbatim member speech to maia_turns — the
+   * sovereign-learning store — while the member saw an active Sanctuary
+   * indicator (witnessed: turn 4fde4e90, maia_turns row 174884, 2026-08-28).
+   *
+   * A privacy flag that defaults to "not private" fails silently and invisibly.
+   * Making this required means the type system refuses a caller that forgets
+   * it, rather than the member discovering it in a training table.
+   */
+  sanctuary: boolean;
   /** Audio playback volume (0.0 - 1.0) */
   volume?: number;
 }
@@ -220,7 +237,10 @@ function getOrCreateSessionId(providedId?: string): string {
   return created;
 }
 
-export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
+// No `= {}` default: with `sanctuary` required, an empty-options call is exactly
+// the thing that must not compile. The default existed for convenience and was
+// never used — the single call site in OracleConversation always passes options.
+export function useStreamingVoice(options: StreamingVoiceOptions) {
   const {
     onTextChunk,
     onComplete,
@@ -239,6 +259,7 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
     archetype,
     conversationMode,
     memoryDepth,
+    sanctuary,
     volume = 1.0,
   } = options;
 
@@ -634,6 +655,13 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
           archetype,     // MAIA's presence/archetype mode
           conversationMode, // Conversation style
           memoryDepth,   // Memory retrieval depth
+          // 🛡️ SANCTUARY: the route cannot honor a boundary it is never told
+          // about. Every `!sanctuary` guard in stream-conversation/route.ts —
+          // retrieval, memory attribution, idea detection, training-turn
+          // logging, field monitor, trust observation — depends on this field
+          // arriving. Omitting it is not a missing feature; it is a silent
+          // privacy failure.
+          sanctuary,
         }),
         signal: abortControllerRef.current.signal,
       });
@@ -918,7 +946,12 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
       }));
       onComplete?.(fallbackText);
     }
-  }, [voice, speed, model, element, assistantName, archetype, conversationMode, memoryDepth, prosodyRange, onTextChunk, onComplete, onSilence, onMoveOutcome, onError, onLimitsBlock, playNextChunk, forceRecoverFromFalseSpeaking]);
+    // `sanctuary` belongs in this list for the same reason it exists: a member
+    // who enables Sanctuary mid-session must have the NEXT turn honor it. Omit
+    // it here and the callback closes over the value captured when the hook was
+    // last rebuilt, so the toggle would appear to work in the UI and change
+    // nothing on the wire — the same invisible failure, one layer down.
+  }, [voice, speed, model, element, assistantName, archetype, conversationMode, memoryDepth, sanctuary, prosodyRange, onTextChunk, onComplete, onSilence, onMoveOutcome, onError, onLimitsBlock, playNextChunk, forceRecoverFromFalseSpeaking]);
 
   /**
    * Stop streaming and playback

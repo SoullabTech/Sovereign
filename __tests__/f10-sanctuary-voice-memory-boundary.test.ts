@@ -145,3 +145,88 @@ describe('F10 · Sanctuary must not force a false continuity claim', () => {
     expect(v.safeText).toContain('may not have loaded the earlier specifics yet');
   });
 });
+
+/**
+ * F10-SANCTUARY-WIRE-01 — the client must TRANSMIT Sanctuary state.
+ *
+ * The route-side guards above were correct and still failed to protect the
+ * member, because the streaming voice request never carried the flag. The
+ * route's own `sanctuary = false` destructure default then made every
+ * `!sanctuary` guard on that path evaluate true.
+ *
+ * Witnessed in production on 2026-08-28 (turn 4fde4e90-4f09-4ff7-8021-d30cc94887d8):
+ * with the Sanctuary indicator active, the route logged
+ * `attempted=true notAttemptedReason=n/a promptIncluded=true`, five
+ * conversation_memory_uses rows landed, trust_observations row 998 landed, and
+ * maia_turns row 174884 persisted 38 characters of member speech and 797
+ * characters of MAIA's response VERBATIM into the sovereign-learning store.
+ *
+ * These pins are on the CLIENT wire, because that is where the boundary broke.
+ * A guard that is never reached cannot be tested by exercising the guard.
+ */
+const HOOK = 'hooks/useStreamingVoice.ts';
+const hookSrc = readFileSync(join(ROOT, HOOK), 'utf8');
+const CALLER = 'components/OracleConversation.tsx';
+const callerSrc = readFileSync(join(ROOT, CALLER), 'utf8');
+
+/** Extract the balanced `{...}` object literal that follows `marker`. */
+function objectLiteralAfter(text: string, marker: string): string {
+  const start = text.indexOf(marker);
+  expect(start).toBeGreaterThan(-1);
+  const open = text.indexOf('{', start);
+  expect(open).toBeGreaterThan(-1);
+  let depth = 0;
+  for (let i = open; i < text.length; i++) {
+    if (text[i] === '{') depth++;
+    else if (text[i] === '}' && --depth === 0) return text.slice(open, i + 1);
+  }
+  throw new Error(`unbalanced object literal after ${marker}`);
+}
+
+describe('F10-WIRE · the voice request carries Sanctuary state', () => {
+  it('sends `sanctuary` in the stream-conversation request body', () => {
+    const bare = code(hookSrc);
+    const body = objectLiteralAfter(bare, "apiFetch('/api/voice/stream-conversation'");
+    // The body literal is nested inside the apiFetch options; assert on the
+    // JSON.stringify payload specifically so a same-named key elsewhere in the
+    // options (headers, signal) cannot satisfy this.
+    const payload = objectLiteralAfter(body, 'JSON.stringify(');
+    expect(payload).toMatch(/(^|[\s,{])sanctuary\s*[,}]/);
+  });
+
+  it('requires `sanctuary` on the options type — no silent default', () => {
+    const bare = code(hookSrc);
+    const opts = objectLiteralAfter(bare, 'interface StreamingVoiceOptions');
+    // Required, not optional. `sanctuary?: boolean` would let a caller omit it
+    // and reintroduce exactly the 2026-08-28 breach with no compile error.
+    expect(opts).toMatch(/\bsanctuary\s*:\s*boolean\s*;/);
+    expect(opts).not.toMatch(/\bsanctuary\s*\?\s*:/);
+  });
+
+  it('does not give `sanctuary` a destructure default', () => {
+    const bare = code(hookSrc);
+    // `sanctuary = false` in the destructure would restore the silent default
+    // one layer up from the route, defeating the required-option pin above.
+    expect(bare).not.toMatch(/\bsanctuary\s*=\s*false\s*,/);
+    expect(bare).toMatch(/\bsanctuary\s*,/);
+  });
+
+  it('lists `sanctuary` in the send-callback dependencies', () => {
+    const bare = code(hookSrc);
+    // A stale closure would ignore a mid-session Sanctuary toggle: the UI would
+    // show the boundary active while the wire kept sending the old value. That
+    // is how Turn B was performed — Sanctuary was selected in Settings and the
+    // member returned to /maia.
+    const deps = bare.match(/\}, \[voice, speed, model[^\]]*\]/);
+    expect(deps).not.toBeNull();
+    expect(deps![0]).toContain('sanctuary');
+  });
+
+  it('passes the member-facing Sanctuary state from OracleConversation', () => {
+    const bare = code(callerSrc);
+    const opts = objectLiteralAfter(bare, 'useStreamingVoice(');
+    // Must be the live state, not a literal. `sanctuary: false` here would
+    // satisfy a naive "is the key present" check while transmitting nothing.
+    expect(opts).toMatch(/sanctuary\s*:\s*isSanctuary\s*,/);
+  });
+});

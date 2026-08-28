@@ -2572,6 +2572,10 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     archetype: voiceSettings.archetype,
     conversationMode: voiceSettings.conversationMode,
     memoryDepth: voiceSettings.memoryDepth,
+    // 🛡️ SANCTUARY MODE: the same state the text path already sends. The voice
+    // path did not, so a Sanctuary voice turn reached the server indistinguishable
+    // from an ordinary one.
+    sanctuary: isSanctuary,
     element: undefined, // Will be set dynamically per message
     // 🎤 PWA PLAYBACK SIGNALS: Route audio events to PWA state machine
     onPlaybackSignal: handlePlaybackSignal,
