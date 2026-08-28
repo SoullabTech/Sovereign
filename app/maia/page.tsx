@@ -841,6 +841,7 @@ function MAIAPageContent() {
                   initialMode={maiaMode}
                   onModeChange={setMaiaMode}
                   apiEndpoint="/api/sovereign/app/maia/list"
+                  onCanonicalThreadChange={setSessionId}
                   consciousnessType="maia"
                   initialShowChatInterface={showChatInterface}
                   onShowChatInterfaceChange={setShowChatInterface}
@@ -1538,6 +1539,7 @@ function MAIAPageContent() {
               initialMode={maiaMode}
               onModeChange={setMaiaMode}
               apiEndpoint="/api/sovereign/app/maia/list"
+              onCanonicalThreadChange={setSessionId}
               consciousnessType="maia"
               initialShowChatInterface={showChatInterface}
               onShowChatInterfaceChange={setShowChatInterface}

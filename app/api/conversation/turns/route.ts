@@ -65,22 +65,49 @@ export async function GET(request: NextRequest) {
     let params: string[];
 
     if (sessionId) {
-      // Get messages for specific session
+      // ⭐ CROSS-SURFACE-THREAD-ADOPTION-01 — THE NEWEST 100, not the oldest 100.
+      //
+      // This read used to be `ORDER BY created_at ASC LIMIT 100`, which returns
+      // the OLDEST hundred rows. For a mount-time restore that was merely a cap;
+      // for a live adoption poll it is a deterministic expiration date — past
+      // row 100 the thread would simply stop showing new conversation, and
+      // nothing would report an error. The inner query takes the newest hundred,
+      // the outer one puts them back in reading order.
+      //
+      // `seq` participates in both orderings because the two halves of one
+      // exchange are written together and can share a `created_at` to the
+      // microsecond; ordering by time alone can therefore put MAIA's reply
+      // before the member's words.
+      //
+      // ⭐ `exchangeId` + `seq` are DURABLE TURN IDENTITY, already written by
+      // TurnsStore for idempotent retries and already carried on local messages
+      // as `metadata.exchangeId`. Returning them lets a client recognise its own
+      // turn coming back from the server — and therefore adopt by identity
+      // rather than by comparing message text. Read-only; no schema change.
+      // `exchange_id` is NULL on legacy rows, so `id` remains the only always-
+      // present identity and clients must not assume otherwise.
       sql = `
-        SELECT id, role, content, created_at as "createdAt"
-        FROM conversation_turns
-        WHERE user_id = $1 AND session_id = $2
-        ORDER BY created_at ASC
-        LIMIT 100
+        SELECT * FROM (
+          SELECT id, role, content, exchange_id as "exchangeId", seq,
+                 created_at as "createdAt"
+          FROM conversation_turns
+          WHERE user_id = $1 AND session_id = $2
+          ORDER BY created_at DESC, seq DESC
+          LIMIT 100
+        ) newest
+        ORDER BY "createdAt" ASC, seq ASC
       `;
       params = [userId, sessionId];
     } else {
-      // Get recent messages for user (cross-session)
+      // Get recent messages for user (cross-session). Newest first: the first
+      // row carrying a session id names the member's current canonical thread,
+      // which is how every surface answers "where is this member talking now".
       sql = `
-        SELECT id, role, content, session_id as "sessionId", created_at as "createdAt"
+        SELECT id, role, content, session_id as "sessionId",
+               exchange_id as "exchangeId", seq, created_at as "createdAt"
         FROM conversation_turns
         WHERE user_id = $1
-        ORDER BY created_at DESC
+        ORDER BY created_at DESC, seq DESC
         LIMIT 50
       `;
       params = [userId];

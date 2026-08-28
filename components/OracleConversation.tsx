@@ -173,6 +173,10 @@ import { voiceLock } from '@/lib/services/VoiceLock';
 import { trackEvent } from '@/lib/analytics/track';
 import { saveConversationMemory, getOracleAgentId } from '@/lib/services/memoryService';
 import { getOrCreateExplorerId } from '@/lib/identity/explorerId';
+import {
+  planAdoption, nextPollDelayMs, mayPoll,
+  type CanonicalTurnRow,
+} from '@/lib/maia/crossSurfaceAdoption';
 import { useRouter } from 'next/navigation';
 import type { MaiaPlaceContext } from '@/lib/maia/presence/place';
 // REMOVED: Supabase persistence - now using sovereign PostgreSQL via /api/conversation/turns
@@ -420,6 +424,13 @@ interface OracleConversationProps {
   userAge?: number; // Pre-calculated age (optional, will calculate from birthDate if not provided)
   sessionId: string;
   apiEndpoint?: string; // API endpoint to use for conversation (defaults to /api/between/chat)
+  /**
+   * CROSS-SURFACE-THREAD-ADOPTION-01 — the member's canonical thread moved.
+   * ⛔ The parent owns `sessionId`; this component only reports what the server
+   * says is canonical. Adopting a different thread from in here would be a
+   * component-local workaround around that ownership.
+   */
+  onCanonicalThreadChange?: (sessionId: string) => void;
   consciousnessType?: string; // Type of consciousness processing to use
   initialCheckIns?: Record<string, number>;
   showAnalytics?: boolean;
@@ -624,6 +635,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   userAge: propUserAge,
   sessionId,
   apiEndpoint = '/api/between/chat', // Default to current behavior
+  onCanonicalThreadChange,
   consciousnessType = 'maia', // Default consciousness type
   initialCheckIns = {},
   showAnalytics = false,
@@ -3225,6 +3237,126 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       lastSyncedCountRef.current = messageCount;
     }
   }, [messages, sessionId, userId]);
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // CROSS-SURFACE-THREAD-ADOPTION-01 — the conversation catches up to itself
+  //
+  // `conversation_turns` has always been ONE canonical thread per member across
+  // every surface. Desktop already re-reads it; this page never did — it
+  // restored history at mount and afterwards only pushed its own turns up. So a
+  // member could speak on their phone, or into Desktop's native microphone, and
+  // the page in front of them would not show it until a reload.
+  //
+  // ⛔ SEPARATE CURSOR, DELIBERATELY. `lastSyncedCountRef` answers "how much of
+  // my local UI has the WRITE effect considered"; it is persistence bookkeeping
+  // and must not double as a read cursor. Read authority and write bookkeeping
+  // sharing one number is how adopted rows get re-POSTed and the thread
+  // multiplies.
+  // Current messages, without making them a dependency of the poll: adding
+  // `messages` to the effect would tear down and restart the timer on every
+  // render, so the poll would never actually fire during an active conversation.
+  // Same synced-ref pattern the component already uses for isProcessing.
+  const messagesRef = useRef<ConversationMessage[]>([]);
+  useEffect(() => { messagesRef.current = messages; }, [messages]);
+
+  const seenCanonicalRowIdsRef = useRef<Set<string>>(new Set());
+  const adoptionInFlightRef = useRef(false);
+  const adoptionErrorsRef = useRef(0);
+
+  useEffect(() => {
+    if (!sessionId || !userId) return;
+    let cancelled = false;
+    let timer: ReturnType<typeof setTimeout> | null = null;
+
+    const schedule = () => {
+      if (cancelled) return;
+      timer = setTimeout(tick, nextPollDelayMs({
+        visible: typeof document === 'undefined' || document.visibilityState === 'visible',
+        consecutiveErrors: adoptionErrorsRef.current,
+      }));
+    };
+
+    const tick = async () => {
+      if (cancelled) return;
+      // ⛔ Never mid-turn. The optimistic member message and the streaming reply
+      // are not on the server yet; adopting now could append a half-written
+      // exchange beneath the one being composed. Deferring costs one cycle.
+      if (!mayPoll({
+        hasSession: !!sessionId,
+        isProcessing: isProcessingRef.current,
+        isResponding: isRespondingRef.current,
+        isStreaming,
+        inFlightRequest: adoptionInFlightRef.current,
+      })) return schedule();
+
+      adoptionInFlightRef.current = true;
+      try {
+        // ⭐ ONE request answers both adoption questions. The cross-session read
+        // returns the member's newest rows WITH their session ids: the first row
+        // names the canonical thread (question B), and the rows belonging to the
+        // thread on screen are the new turns to adopt (question A).
+        const res = await apiFetch('/api/conversation/turns');
+        if (!res.ok) throw new Error(`turns ${res.status}`);
+        const data = await res.json();
+        if (cancelled) return;
+        const rows: Array<CanonicalTurnRow & { sessionId?: string }> =
+          Array.isArray(data?.messages) ? data.messages : [];
+
+        // ── B · another surface made a different thread canonical ────────────
+        const latest = rows.find((r) => typeof r.sessionId === 'string' && r.sessionId.trim());
+        if (latest && latest.sessionId !== sessionId) {
+          // Hand it to the parent. `setSessionId` re-runs the existing
+          // [sessionId, userId] restore effect, which loads the whole new thread
+          // AND initialises `lastSyncedCountRef` correctly — the anti-re-POST
+          // guard already lives on that path.
+          adoptionErrorsRef.current = 0;
+          onCanonicalThreadChange?.(latest.sessionId!);
+          return;                       // the restore effect owns it from here
+        }
+
+        // ── A · same thread, new turns from elsewhere ────────────────────────
+        // The route returns newest-first; adoption reads in conversation order.
+        const mine = rows.filter((r) => r.sessionId === sessionId).reverse();
+        const plan = planAdoption(mine, messagesRef.current ?? [], seenCanonicalRowIdsRef.current);
+        for (const id of plan.observed) seenCanonicalRowIdsRef.current.add(id);
+        adoptionErrorsRef.current = 0;
+
+        if (!plan.unchanged) {
+          const adopted: ConversationMessage[] = plan.adopt.map((r) => ({
+            id: `adopted-${r.id}`,
+            role: r.role === 'assistant' ? 'oracle' : (r.role as ConversationMessage['role']),
+            text: r.content,
+            timestamp: new Date(r.createdAt),
+            source: r.role === 'user' ? 'user' : 'maia',
+            // Carried so a later poll recognises this turn as already present,
+            // and so the write effect can see it is not a fresh local exchange.
+            metadata: r.exchangeId ? { exchangeId: r.exchangeId } : undefined,
+          } as ConversationMessage));
+
+          setMessages((prev) => {
+            const next = [...prev, ...adopted];
+            // ⛔ ADVANCE THE WRITE CURSOR IN THE SAME BREATH. The persistence
+            // effect runs on the next render off `messages`; if it saw these as
+            // new local messages it would POST them straight back and the
+            // thread would multiply on every poll. Idempotent under a double
+            // invoke — it is a length, not an increment.
+            lastSyncedCountRef.current = next.length;
+            return next;
+          });
+          console.log(`🔄 [Adoption] Adopted ${adopted.length} canonical turn(s) from another surface`);
+        }
+      } catch (err) {
+        adoptionErrorsRef.current += 1;
+        if (adoptionErrorsRef.current <= 2) console.warn('🔄 [Adoption] poll failed', err);
+      } finally {
+        adoptionInFlightRef.current = false;
+        schedule();
+      }
+    };
+
+    schedule();
+    return () => { cancelled = true; if (timer) clearTimeout(timer); };
+  }, [sessionId, userId, isStreaming, onCanonicalThreadChange]);
 
   // All state declarations moved earlier (lines 138-189) to avoid hook ordering issues
 
