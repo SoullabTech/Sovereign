@@ -235,3 +235,80 @@ This branch is held at `1ef523f` as a candidate for the two closed units and is
 deliberately **not** broadened to cover initialization. `SANCTUARY-INIT-GATE-01`
 changes `ensureSessionSanctuary`'s contract and touches turn dispatch, so it
 belongs in its own unit on its own branch, with its own authorization.
+
+---
+
+## 6. SANCTUARY-INIT-GATE-01 — frozen design candidate
+
+```
+HEAD        f95705d   branch claude/sanctuary-init-gate-01
+STATUS      PROVEN DESIGN CANDIDATE
+MERGEABLE   NO — prerequisite lineage is not canonical
+PR          HOLD        DEPLOY  HOLD
+```
+
+**Do not merge, do not PR, do not extend.** Frozen at `f95705d` as the donor
+for a later replay.
+
+### Why it is not mergeable
+
+The lease required a fresh branch from canonical precisely so Sanctuary units
+would not re-entangle. The pre-flight found canonical (`15a34c3`) has none of
+the gate's prerequisites, and the correct conclusion from that was **"GATE-01
+is not yet buildable as a canonical merge candidate"** — not "use the nearest
+branch that has them." Cutting from `ded1678` silently makes five commits of
+Sanctuary lineage a prerequisite of the gate:
+
+```
+15a34c3  canonical
+  188abf5  SANCTUARY-STATE-01 (default→live coupling)   ← VOID, rejected
+  8eb19af  SANCTUARY-STATE-01 correction
+  a767e23  SETTINGS-DISCONNECT-01 session provenance
+  1ef523f  MEMBER-SCOPE-01
+  ded1678  evidence record
+    f95705d  INIT-GATE-01
+```
+
+Note the first entry: the rejected default→live coupling is in that ancestry.
+`8eb19af` reverses its *semantics*, but merging this branch would still carry
+the void commit into canonical history. That alone settles it.
+
+### What is proven, and what is not
+
+| | |
+|---|---|
+| **Proven** | `unresolved` as a real state · text admission rule · voice admission rule · persistence admission rule · restored-history watermark semantics · fail-closed fallback · established session not overwritten · six discriminating mutation controls |
+| **Not proven** | component wiring at runtime · end-to-end temporal ordering on actual MAIA |
+
+Typecheck proves the call sites compile; it does not prove they are reached, or
+reached in order. Source existence is not ordering. For a Class A boundary the
+runtime witness is required regardless of any source-level wiring test.
+
+### Programme sequence
+
+```
+1  DEFAULT-RESOLVE-01
+2  SETTINGS-WRITE-SAFETY-01          ← not yet specified in this record
+3  MEMBER-SCOPE-01
+4  DISCONNECT/V3 semantic replay
+   → these canonicalize the prerequisite layers
+5  INIT-GATE-01  — recut from the resulting canonical
+```
+
+### Port manifest for the replay
+
+Port from `f95705d`, and nothing else — no ancestry travels with it:
+
+* `lib/settings/turnAdmission.ts` — `mayBeginTurn`, `decideTurnPersistence`
+* the three enforcement points in `components/OracleConversation.tsx`
+  (text entry, voice entry, persistence effect), all consuming the one predicate
+* watermark handling while unresolved, including the counterfactual assertion
+  that holding it back re-POSTs the restored transcript
+* `SanctuaryInitState` + `establishSessionSanctuaryFallback` fail-closed ordering
+* `lib/settings/__tests__/sanctuaryInitGate.test.ts` and the six mutation controls
+
+Add at replay time, absent from `f95705d`:
+
+* a wiring proof that pins the three real call sites and cannot be satisfied by
+  comments or prose
+* the runtime witness (Mac-only; unavailable in the remote container)
