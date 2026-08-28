@@ -44,7 +44,12 @@ const release = /function releaseCapture\(cause\)[\s\S]*?\n\}/.exec(mainJs)?.[0]
 const teardown = /function teardownMemberState\(\)[\s\S]*?\n\}/.exec(mainJs)?.[0] || '';
 const runTurn = /async function runTurn\(\)[\s\S]*?\n^\}/m.exec(mainJs)?.[0]
   || /async function runTurn\(\)[\s\S]*?\n\}\n/.exec(mainJs)?.[0] || '';
-const stopHandler = /ipcMain\.handle\('maia:voice-stop'[\s\S]*?\n\}\);/.exec(mainJs)[0];
+// ⭐ DESKTOP-TEXT-01 extracted the member-gesture stop so a typed message can
+// end capture with EXACTLY these semantics instead of a second copy of them.
+// The assertions follow the extraction; what they assert is unchanged.
+const stopHandler = /function stopCaptureByMemberGesture\(\)[\s\S]*?\n\}/.exec(mainJs)[0];
+const stopIpc = /ipcMain\.handle\('maia:voice-stop'[\s\S]*?\n\}\);/.exec(mainJs)[0];
+const deliver = /async function deliverToMaia\([\s\S]*?\n\}/.exec(mainJs)[0];
 
 /**
  * A faithful stand-in for the parts of a `voice` session the release touches,
@@ -189,6 +194,8 @@ test('FALSIFICATION — normal Stop behavior is unchanged: it still salvages and
   assert.ok(/voice\.epoch\.commit\(\)/.test(stopHandler), 'Stop no longer commits what was said');
   assert.ok(/voice\.liveness\.disarm\(\)/.test(stopHandler));
   assert.ok(/chars: text\.length/.test(stopHandler), 'Stop\'s return contract changed');
+  assert.ok(/stopCaptureByMemberGesture\(\)/.test(stopIpc),
+    'the Stop handler no longer routes through the one member-gesture stop');
   // ⛔ And Stop must NOT be reimplemented in terms of the forced release, which
   // would silently turn a member's "keep what I said" into a discard.
   assert.ok(!/releaseCapture/.test(stopHandler),
@@ -200,19 +207,25 @@ test('FALSIFICATION — normal Stop behavior is unchanged: it still salvages and
 test('FALSIFICATION — a turn released mid-flight makes no further request and uses no result', () => {
   assert.ok(/const session = voice;/.test(runTurn), 'the turn does not pin its session');
   assert.ok(/const stillOurs = \(\) => voice === session;/.test(runTurn));
-  const guards = runTurn.match(/if \(!stillOurs\(\)\) return;/g) || [];
-  assert.ok(guards.length >= 2,
-    `only ${guards.length} liveness guard(s) — every network await needs one after it`);
+  // The invariant is "every network await is followed by a liveness guard".
+  // There are two awaits and they now live in two functions: transcription in
+  // runTurn, the ask in the shared delivery path. Both must still be guarded.
+  const guards = (runTurn.match(/if \(!stillOurs\(\)\) return;/g) || []).length
+               + (deliver.match(/if \(!stillValid\(\)\) return;/g) || []).length;
+  assert.equal(guards, 2,
+    `${guards} liveness guard(s) — every network await needs exactly one after it`);
 
   // Specifically: after transcription (before a final is written and before MAIA
   // is asked) and after MAIA answers (before her words are broadcast).
   const afterTranscribe = runTurn.indexOf('await conversation.transcribe');
-  const afterAsk = runTurn.indexOf('await conversation.ask');
   const finalIdx = runTurn.indexOf('session.epoch.final');
   const firstGuard = runTurn.indexOf('if (!stillOurs()) return;');
   assert.ok(firstGuard > afterTranscribe && firstGuard < finalIdx,
     'a final can be written into an epoch whose session was released');
-  assert.ok(runTurn.indexOf('if (!stillOurs()) return;', afterAsk) > afterAsk,
+  // The post-ask guard moved into the shared delivery path with the ask
+  // itself — so it now protects the typed turn too, not just the spoken one.
+  const askIdx = deliver.indexOf('await conversation.ask');
+  assert.ok(deliver.indexOf('if (!stillValid()) return;', askIdx) > askIdx,
     'MAIA\'s answer is delivered for a member who signed out mid-turn');
 });
 
@@ -235,7 +248,12 @@ test('FALSIFICATION — the release does not clear turnBusy out from under a liv
 
 test('FALSIFICATION — no new preload or IPC channel', () => {
   const { INVOKE_CHANNEL_NAMES, PUSH_CHANNEL_NAMES } = require('./d01-preload-allowlist.mjs');
-  assert.equal(INVOKE_CHANNEL_NAMES.length, 10, 'the ratified invoke allow-list changed size');
+  // 11 since DESKTOP-TEXT-01 ratified `maia:send-text` — a member cannot type
+  // to MAIA without a verb that carries words to main, and it argued for itself
+  // in the allow-list. This number exists to make the NEXT addition deliberate
+  // too; it is not a budget to spend.
+  assert.equal(INVOKE_CHANNEL_NAMES.length, 11, 'the ratified invoke allow-list changed size');
+  assert.ok(INVOKE_CHANNEL_NAMES.includes('maia:send-text'));
   assert.equal(PUSH_CHANNEL_NAMES.length, 6, 'the ratified push allow-list changed size');
   assert.ok(!/ipcMain\.handle/.test(release), 'the release opened its own channel');
   // The repair is entirely main-side: the renderer gets no new verb, and needs

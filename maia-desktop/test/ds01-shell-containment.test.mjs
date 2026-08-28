@@ -423,7 +423,12 @@ test('F4 — the guard is armed on the PARTITION, once, so a rebuilt view is nev
 
 test('F5 — DS01 opens no IPC channel; navigation stays main\'s authority', () => {
   const { INVOKE_CHANNEL_NAMES, PUSH_CHANNEL_NAMES } = require('./d01-preload-allowlist.mjs');
-  assert.equal(INVOKE_CHANNEL_NAMES.length, 10, 'the ratified invoke allow-list changed size');
+  // 11 since DESKTOP-TEXT-01 ratified `maia:send-text` — a member cannot type
+  // to MAIA without a verb that carries words to main, and it argued for itself
+  // in the allow-list. This number exists to make the NEXT addition deliberate
+  // too; it is not a budget to spend.
+  assert.equal(INVOKE_CHANNEL_NAMES.length, 11, 'the ratified invoke allow-list changed size');
+  assert.ok(INVOKE_CHANNEL_NAMES.includes('maia:send-text'));
   assert.equal(PUSH_CHANNEL_NAMES.length, 6, 'the ratified push allow-list changed size');
 
   for (const source of [shellJs, strip('shell-policy.js')]) {

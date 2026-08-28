@@ -319,8 +319,23 @@ ipcMain.handle('maia:voice-capture-lost', async (_evt, payload) => {
   return { ok: true, tail };
 });
 
-ipcMain.handle('maia:voice-stop', async () => {
-  if (!voice) return { ok: false, reason: 'no capture session' };
+/**
+ * Close capture as a MEMBER GESTURE — "I'm finished, keep what I said".
+ *
+ * ⛔ The counterpart to `releaseCapture()`, and the difference between them is
+ * the member's intent, not the mechanism. This one runs `userStop()` (which may
+ * salvage a partial utterance) and `commit()`, because the member chose to end
+ * it. The forced release discards, because nobody chose anything.
+ *
+ * ⭐ DESKTOP-TEXT-01 extracted this from the `maia:voice-stop` handler so that
+ * sending a typed message can end capture with EXACTLY these semantics rather
+ * than a second, drifting copy of them. There is one member-gesture stop and
+ * this is it.
+ *
+ * @returns the stop record, or null when nothing was capturing
+ */
+function stopCaptureByMemberGesture() {
+  if (!voice) return null;
   voice.liveness.disarm();
   stopCaptureWatchdog();
   const tail = voice.epoch.userStop();
@@ -329,10 +344,55 @@ ipcMain.handle('maia:voice-stop', async () => {
   voice = null;
   pushState();
   // `chars` only — the transcript itself goes to the surface, never to telemetry.
-  return { ok: true, tail, chars: text.length, snapshot };
+  return { tail, chars: text.length, snapshot };
+}
+
+ipcMain.handle('maia:voice-stop', async () => {
+  const stopped = stopCaptureByMemberGesture();
+  if (!stopped) return { ok: false, reason: 'no capture session' };
+  return { ok: true, ...stopped };
 });
 
 ipcMain.handle('maia:voice-state', async () => voiceStateSnapshot());
+
+// ── DESKTOP-TEXT-01 — the second input modality ─────────────────────────────
+//
+// ⛔ SCOPING RULING (founder, 2026-08-28). Text and voice are mutually
+// exclusive. Sending a typed message while capture is running first performs a
+// NORMAL STOP — the member's own gesture semantics, keeping what they said —
+// so the "typing while listening" state never exists. That state is what
+// `DESKTOP-CAPTURE-CONTROL-01` governs (*muted means no frames, not frames of
+// silence*), and this unit is gated behind it. Making the state unreachable is
+// how TEXT-01 ships without implementing capture-control by accident.
+ipcMain.handle('maia:send-text', async (_evt, payload) => {
+  // Validated in MAIN, like every other handler. The renderer's trim is a
+  // convenience; this is the one that counts.
+  const raw = payload && typeof payload.text === 'string' ? payload.text : '';
+  const said = raw.trim().slice(0, 4000);
+  if (!said) return { ok: false, error: 'nothing to send' };
+
+  if (!memberSession || !memberSession.state().signedIn || !conversation) {
+    return { ok: false, error: 'sign in before writing' };
+  }
+  // One turn at a time, shared with the voice path — a typed message must not
+  // interleave with a spoken one and produce two half-turns in the thread.
+  if (turnBusy) return { ok: false, error: 'one turn at a time' };
+
+  const stopped = stopCaptureByMemberGesture();
+  const conv = conversation;
+  turnBusy = true;
+  try {
+    // ⭐ The same delivery path speech uses. Validity here is the conversation,
+    // not a capture session: a typed turn has none, and sign-out nulls this.
+    await deliverToMaia(said, () => conversation === conv);
+    return { ok: true, stoppedCapture: !!stopped };
+  } catch (e) {
+    broadcast('maia:turn', { phase: 'error', error: (e && e.message) || 'turn failed' });
+    return { ok: false, error: (e && e.message) || 'turn failed' };
+  } finally {
+    turnBusy = false;
+  }
+});
 
 ipcMain.handle('maia:status', async () => ({
   app: 'maia-desktop',
@@ -348,6 +408,43 @@ ipcMain.handle('maia:status', async () => ({
 // this is the loop that matters. Every failure is surfaced to the member in
 // words rather than swallowed — a companion that goes quiet after you speak is
 // the failure mode this whole programme exists to avoid.
+/**
+ * ⭐ DESKTOP-TEXT-01 — the turn, from the moment the words exist.
+ *
+ * THE POINT OF THIS FUNCTION IS THAT THERE IS ONLY ONE OF IT. Speech and typing
+ * are two ways for a member to produce words; everything after that — which
+ * MAIA is asked, on which thread, through which route, with which memory and
+ * context assembly, and how the answer reaches the surface — is identical, and
+ * is identical because it is literally the same code. A second delivery path
+ * would be a second MAIA within a month, whatever the commit message said.
+ *
+ * ⛔ It asks `conversation.ask`, which posts to `/api/sovereign/app/maia/list`.
+ * NOT `/api/between/chat`: that is the thinner web route, it degrades an
+ * unauthenticated request to `anon:`, and routing Desktop text through it would
+ * rebuild the exact split this unit exists to close. A test asserts the string
+ * appears nowhere in this tree.
+ *
+ * @param said       the member's words, from a microphone or a keyboard
+ * @param stillValid false once the turn no longer belongs to anyone — a
+ *                   released capture session, or a signed-out member. Checked
+ *                   after the await, because MAIA takes time to answer and the
+ *                   member may be gone by then.
+ */
+async function deliverToMaia(said, stillValid) {
+  broadcast('maia:turn', { phase: 'heard', member: said });
+  broadcast('maia:turn', { phase: 'thinking' });
+
+  const a = await conversation.ask(said);
+  if (!stillValid()) return;             // signed out while MAIA was answering
+  if (!a.ok) { broadcast('maia:turn', { phase: 'error', error: a.error }); return; }
+
+  broadcast('maia:turn', { phase: 'answered', maia: a.text });
+  // ⭐ A typed turn still gets her voice. The modality is how the member spoke,
+  // not how MAIA answers.
+  if (a.audio) broadcast('maia:audio', a.audio);
+  else broadcast('maia:turn', { phase: 'no-voice' });
+}
+
 async function runTurn() {
   if (!voice || turnBusy || !conversation) return;
   // ⭐ DESKTOP-CAPTURE-RELEASE-01. Pin the session this turn belongs to. A
@@ -378,16 +475,7 @@ async function runTurn() {
     // The transcript is a FINAL for the epoch — the tail invariant now has real
     // material to protect, which on the first walk it never did.
     session.epoch.final(said, `utt-${Date.now()}`);
-    broadcast('maia:turn', { phase: 'heard', member: said });
-
-    broadcast('maia:turn', { phase: 'thinking' });
-    const a = await conversation.ask(said);
-    if (!stillOurs()) return;            // signed out while MAIA was answering
-    if (!a.ok) { broadcast('maia:turn', { phase: 'error', error: a.error }); return; }
-
-    broadcast('maia:turn', { phase: 'answered', maia: a.text });
-    if (a.audio) broadcast('maia:audio', a.audio);
-    else broadcast('maia:turn', { phase: 'no-voice' });
+    await deliverToMaia(said, stillOurs);
   } catch (e) {
     broadcast('maia:turn', { phase: 'error', error: (e && e.message) || 'turn failed' });
   } finally {

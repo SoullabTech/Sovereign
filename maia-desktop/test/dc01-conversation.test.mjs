@@ -45,8 +45,14 @@ test('CLASS E REGRESSION — the frame handler buffers audio and dispatches a tu
 test('the turn loop actually calls transcribe AND ask — not one without the other', () => {
   const turn = /async function runTurn\(\)[\s\S]*?\n\}/.exec(mainJs)[0];
   assert.ok(turn.includes('conversation.transcribe('), 'never transcribes');
-  assert.ok(turn.includes('conversation.ask('), 'never asks MAIA — stops at "transcription works"');
-  assert.ok(turn.includes("'maia:audio'") || turn.includes('maia:audio'), 'never emits audio');
+  // ⭐ DESKTOP-TEXT-01 moved everything after "the words exist" into ONE shared
+  // path, so a spoken turn and a typed turn cannot diverge. The assertion
+  // follows it: the loop must still reach MAIA and still emit audio — now by
+  // delegating rather than inlining.
+  assert.ok(turn.includes('deliverToMaia('), 'the turn loop no longer reaches MAIA');
+  const deliver = /async function deliverToMaia\([\s\S]*?\n\}/.exec(mainJs)[0];
+  assert.ok(deliver.includes('conversation.ask('), 'never asks MAIA — stops at "transcription works"');
+  assert.ok(deliver.includes('maia:audio'), 'never emits audio');
 });
 
 test('a boundary does NOT end the epoch — a pause is still not a finished thought', () => {

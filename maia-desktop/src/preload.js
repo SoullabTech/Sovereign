@@ -37,6 +37,13 @@ contextBridge.exposeInMainWorld('maia', {
     ipcRenderer.invoke('maia:voice-mic-result', { granted, errorName }),
   voiceCaptureLost: (cause) => ipcRenderer.invoke('maia:voice-capture-lost', { cause }),
 
+  // ── DESKTOP-TEXT-01: the member's other way of speaking ───────────────────
+  // The renderer forwards TEXT and nothing else. It cannot name a thread, a
+  // route, or a member — main owns all three, exactly as it owns the epoch on
+  // the voice side. A typed turn and a spoken turn become the same turn the
+  // moment the words exist.
+  sendText: (text) => ipcRenderer.invoke('maia:send-text', { text }),
+
   // ── read-only ─────────────────────────────────────────────────────────────
   getVoiceState: () => ipcRenderer.invoke('maia:voice-state'),
   getStatus: () => ipcRenderer.invoke('maia:status'),
