@@ -13,6 +13,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { isProbablyOnline, generatePresenceFallback } from '@/lib/offline/presenceFallback';
 import { apiFetch, getValidMemberId } from '@/lib/http/apiBase';
+import { getConversationId } from '@/lib/settings/sanctuarySession';
 
 /** Relational stack metadata from server */
 interface RelationalMetadata {
@@ -117,7 +118,6 @@ interface AudioQueueItem {
 }
 
 const VOICE_SESSION_KEY = 'maia_voice_session_id';
-const CONVERSATION_ID_KEY = 'maia_conversation_id';
 
 /**
  * Sanitize text for display/speech - removes JSON metadata fragments
@@ -161,29 +161,6 @@ function generateSessionId(): string {
     return `voice-${crypto.randomUUID()}`;
   }
   return `voice-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
-}
-
-/**
- * Get or create a persistent conversation ID.
- * Uses localStorage for cross-session persistence (survives app restarts).
- * This is used for memory continuity - MAIA remembers based on this ID.
- */
-function getOrCreateConversationId(): string {
-  try {
-    const existing = localStorage.getItem(CONVERSATION_ID_KEY);
-    if (existing) return existing;
-  } catch {
-    // localStorage unavailable
-  }
-
-  // Generate new and persist
-  const created = `conv-${crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2, 11)}`}`;
-  try {
-    localStorage.setItem(CONVERSATION_ID_KEY, created);
-  } catch {
-    // localStorage unavailable
-  }
-  return created;
 }
 
 /**
@@ -627,7 +604,11 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
     try {
       // Use apiFetch for iOS/Safari compatibility (adds x-session-token header)
       // 🔧 FIX: Include stable conversationId for memory continuity
-      const conversationId = getOrCreateConversationId();
+      // SANCTUARY-SESSION-INIT-01: one authority for conversation identity. This
+      // hook minted and persisted its own copy, so a rotation performed by
+      // "New Conversation" was invisible here and the server kept receiving the
+      // ended conversation's id.
+      const conversationId = getConversationId();
       console.log('[StreamingVoice] Starting request to /api/voice/stream-conversation, conversationId:', conversationId.slice(0, 12) + '...');
       console.log(`[voice:submission_fired:${turnIdRef.current.slice(0,8)}] elapsed=0ms`);
       const response = await apiFetch('/api/voice/stream-conversation', {

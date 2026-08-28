@@ -167,6 +167,16 @@ import type { Element } from '@/lib/voice';
 // import { useMAIAHybrid as useMAIASDK } from '@/hooks/useMAIAHybrid'; // Hybrid (removed - we want full dynamics always)
 import { cleanMessage, cleanMessageForVoice, formatMessageForDisplay } from '@/lib/cleanMessage';
 import { getAccountSettings } from '@/lib/settings/accountSettings';
+// SANCTUARY-SESSION-INIT-01 — account default seeds a NEW conversation;
+// conversation state governs it thereafter. See lib/settings/sanctuarySession.ts.
+import {
+  getConversationId,
+  rotateConversationId,
+  writeConversationSanctuary,
+  resolveInitialSanctuary,
+  mayDispatch,
+  type SanctuaryInitState,
+} from '@/lib/settings/sanctuarySession';
 import { getAgentConfig, AgentConfig } from '@/lib/agent-config';
 import { toast } from 'react-hot-toast';
 import { voiceLock } from '@/lib/services/VoiceLock';
@@ -1039,20 +1049,73 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
 
   // 🛡️ SANCTUARY MODE: Session-level memory exclusion (consent boundary)
   // When true: no content retention, no patterns formed, just presence
-  const [isSanctuary, setIsSanctuary] = useState(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const saved = localStorage.getItem('maia_settings');
-        if (saved) {
-          const settings = JSON.parse(saved);
-          return settings.sanctuary === true;
-        }
-      } catch (e) {
-        console.warn('[Sanctuary] Failed to load initial state:', e);
+  // SANCTUARY-SESSION-INIT-01. This used to read `maia_settings.sanctuary`
+  // synchronously and fall back to false. That made browser-local session state
+  // the sole authority on the conversation path: the member's account Default
+  // Memory Mode never reached a mounting conversation, could not follow them to
+  // a second device, and went permanently inert on any browser where
+  // `maia_settings` already existed.
+  //
+  // Sanctuary is now resolved asynchronously — an existing conversation
+  // restores what it became; a genuinely new one is seeded from the account
+  // default. `false` here is a placeholder, NOT an assertion of standard
+  // memory: `sanctuaryInit` stays 'resolving' until the real value arrives, and
+  // dispatch is prohibited for that whole window. Nothing retention-bearing can
+  // happen while this value is still a placeholder.
+  const [isSanctuary, setIsSanctuary] = useState(false);
+  const [sanctuaryInitState, setSanctuaryInitState] = useState<SanctuaryInitState>('resolving');
+  const conversationIdRef = useRef<string | null>(null);
+  // Read by the dispatch gate. A ref, not the state value, deliberately: the
+  // send paths are useCallbacks with long dependency arrays, and a captured
+  // state value would let a stale 'resolving'/'standard' decide a privacy
+  // boundary. The ref is always current at the moment of dispatch.
+  const sanctuaryInitRef = useRef<SanctuaryInitState>('resolving');
+  const setSanctuaryInit = useCallback((next: SanctuaryInitState) => {
+    sanctuaryInitRef.current = next;
+    setSanctuaryInitState(next);
+  }, []);
+
+  /**
+   * The single place a Sanctuary change is applied.
+   *
+   * Live state and its persistence must move together: before this, a member's
+   * toggle lived only in React state and was lost on remount, which is why the
+   * conversation could not remember what it had become.
+   */
+  const applySanctuaryChange = useCallback((next: boolean) => {
+    setIsSanctuary(next);
+    const conversationId = conversationIdRef.current ?? getConversationId();
+    conversationIdRef.current = conversationId;
+    writeConversationSanctuary(conversationId, next);
+  }, []);
+
+  // Resolve this conversation's Sanctuary state. An EXISTING conversation
+  // restores what it became and is never re-seeded, so changing the account
+  // default cannot reach behind a member into a conversation already underway.
+  // Only a conversation with no state of its own is seeded from the default.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const resolved = await resolveInitialSanctuary(userId);
+      if (cancelled) return;
+      conversationIdRef.current = resolved.conversationId;
+      setIsSanctuary(resolved.sanctuary);
+      setSanctuaryInit(resolved.state);
+      console.log(
+        `🛡️ [Sanctuary/init] conversation=${resolved.conversationId.slice(0, 12)} ` +
+          `state=${resolved.state} source=${resolved.source}`,
+      );
+      if (resolved.source === 'resolution-failed') {
+        // Recorded distinctly so a lookup failure never reads as a member's
+        // deliberate choice of privacy — they are different facts.
+        console.warn(
+          '🛡️ [Sanctuary/init] Sanctuary is active because preference resolution FAILED, ' +
+            'not because the member selected it.',
+        );
       }
-    }
-    return false;
-  });
+    })();
+    return () => { cancelled = true; };
+  }, [userId]);
 
   // ==========================================================================
   // 🧵 VOICE CONTINUITY BUFFER — Sanctuary gate + restore-after-interruption
@@ -1359,7 +1422,9 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     }>) => {
       // Handle sanctuary mode
       if (typeof event.detail?.sanctuary === 'boolean') {
-        setIsSanctuary(event.detail.sanctuary);
+        // SANCTUARY-SESSION-INIT-01: persist against this conversation, so the
+        // member's explicit choice survives a remount instead of being re-seeded.
+        applySanctuaryChange(event.detail.sanctuary);
         console.log(`🛡️ [Sanctuary] Mode ${event.detail.sanctuary ? 'ENABLED' : 'disabled'}`);
       }
 
@@ -1443,13 +1508,41 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
         localStorage.removeItem(storageKey);
         console.log(`🆕 [New Conversation] Cleared localStorage: ${storageKey}`);
       }
+
+      // SANCTUARY-SESSION-INIT-01 — this is where a conversation actually ends.
+      //
+      // Before this, "New Conversation" cleared the transcript but kept
+      // `maia_conversation_id` forever, so the identity outlived the thing it
+      // named. Anything keyed by conversation therefore belonged to a
+      // conversation the member believed they had ended — Sanctuary state
+      // included. Rotating the identity makes the boundary real, and clearing
+      // the prior conversation's state stops the new one inheriting it.
+      const rotated = rotateConversationId();
+      conversationIdRef.current = rotated;
+      setSanctuaryInit('resolving');
+      console.log(`🆕 [New Conversation] Conversation identity rotated → ${rotated.slice(0, 12)}`);
+
+      // Seed the new conversation from the account default — the whole point of
+      // the setting. Dispatch stays prohibited until this lands.
+      (async () => {
+        const resolved = await resolveInitialSanctuary(userId);
+        conversationIdRef.current = resolved.conversationId;
+        setIsSanctuary(resolved.sanctuary);
+        setSanctuaryInit(resolved.state);
+        console.log(
+          `🛡️ [Sanctuary/init] new conversation=${resolved.conversationId.slice(0, 12)} ` +
+            `state=${resolved.state} source=${resolved.source}`,
+        );
+      })();
     };
 
     window.addEventListener('maia-new-conversation', handleNewConversation);
     return () => {
       window.removeEventListener('maia-new-conversation', handleNewConversation);
     };
-  }, [sessionId]);
+    // userId: the new conversation is seeded from THIS member's account default,
+    // so a stale capture here would seed it from the wrong person's preference.
+  }, [sessionId, userId]);
 
   // 🧭 THERAPEUTIC FRAMEWORK: Selected in Counsel mode (Jungian, Somatic, CBT, IFS, etc.)
   // Now handled by lib/consciousness/therapeuticFrameworks.ts
@@ -4868,6 +4961,15 @@ I'm not sure what I'm feeling yet.`;
 
   // Handle text messages from chat interface - MUST be defined before handleVoiceTranscript
   const handleTextMessage = useCallback(async (text: string, attachments?: File[], retryOf?: string) => {
+    // SANCTUARY-SESSION-INIT-01 — dispatch is prohibited while this
+    // conversation's Sanctuary state is still resolving. `isSanctuary` is a
+    // placeholder until then, so sending now could carry a member's words
+    // across a privacy boundary we have not yet established. Fail closed:
+    // refuse the turn rather than guess which side of it we are on.
+    if (!mayDispatch(sanctuaryInitRef.current)) {
+      console.warn('🛡️ [Sanctuary] Dispatch refused — conversation privacy state still resolving.');
+      return;
+    }
     console.log('📝 Text message received:', { text, isProcessing, isAudioPlaying, isResponding });
 
     // 🎯 Mark as activated when user sends a message - hides welcome screen
@@ -4900,8 +5002,7 @@ I'm not sure what I'm feeling yet.`;
           setListeningMode(newListeningMode);
 
           // Sanctuary flag
-          if (cmd.mode === 'sanctuary') setIsSanctuary(true);
-          else setIsSanctuary(false);
+          applySanctuaryChange(cmd.mode === 'sanctuary');
 
           console.log(`🔄 [Command] Mode → ${cmd.mode} (listeningMode: ${newListeningMode})`);
         }
@@ -6636,6 +6737,15 @@ I'm not sure what I'm feeling yet.`;
 
   // Handle voice transcript from mic button
   const handleVoiceTranscript = useCallback(async (transcript: string) => {
+    // SANCTUARY-SESSION-INIT-01 — dispatch is prohibited while this
+    // conversation's Sanctuary state is still resolving. `isSanctuary` is a
+    // placeholder until then, so sending now could carry a member's words
+    // across a privacy boundary we have not yet established. Fail closed:
+    // refuse the turn rather than guess which side of it we are on.
+    if (!mayDispatch(sanctuaryInitRef.current)) {
+      console.warn('🛡️ [Sanctuary] Dispatch refused — conversation privacy state still resolving.');
+      return;
+    }
     console.log('🎤 handleVoiceTranscript called with:', transcript);
     setInterimTranscript(''); // Clear interim display on final submit
     const t = transcript?.trim();
@@ -6761,7 +6871,7 @@ I'm not sure what I'm feeling yet.`;
 
           // Handle sanctuary toggle
           if (voiceCmd.settingsDelta.sanctuary !== undefined) {
-            setIsSanctuary(voiceCmd.settingsDelta.sanctuary);
+            applySanctuaryChange(voiceCmd.settingsDelta.sanctuary);
           }
 
           // Handle interrupt settings
@@ -7043,8 +7153,7 @@ I'm not sure what I'm feeling yet.`;
             cmd.mode === 'sanctuary' ? 'normal' as const :
             'normal' as const;
           setListeningMode(newListeningMode);
-          if (cmd.mode === 'sanctuary') setIsSanctuary(true);
-          else setIsSanctuary(false);
+          applySanctuaryChange(cmd.mode === 'sanctuary');
           console.log(`🔄 [Voice Command] Mode → ${cmd.mode}`);
         }
         if (cmd.type === 'lens') {

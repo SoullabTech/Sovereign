@@ -155,7 +155,18 @@ export function MaiaSettingsPanel({ onClose }: { onClose?: () => void }) {
   };
 
   const resetSettings = () => {
-    setSettings(DEFAULT_SETTINGS);
+    // SANCTUARY-SESSION-INIT-01. DEFAULT_SETTINGS has no `sanctuary` key, so a
+    // plain reset followed by Save wrote `maia_settings` without it — silently
+    // revoking a Sanctuary state the member had chosen, through a control that
+    // says nothing about privacy. Conversation Sanctuary now lives in its own
+    // record and is already out of reach here; carrying the compatibility field
+    // through as well keeps the other surfaces that still read it honest.
+    setSettings((prev) => ({
+      ...DEFAULT_SETTINGS,
+      ...((prev as Record<string, unknown>).sanctuary !== undefined
+        ? { sanctuary: (prev as Record<string, unknown>).sanctuary }
+        : {}),
+    }) as MaiaSettings);
   };
 
   const updateSetting = (path: string, value: any) => {
