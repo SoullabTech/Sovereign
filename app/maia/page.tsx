@@ -16,6 +16,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { OracleConversation } from '@/components/OracleConversation';
 import { getOrCreateMaiaSessionId } from '@/lib/maia/presence/conversationIdentity';
+import { initializeSessionSanctuary } from '@/lib/settings/sessionSanctuaryInit';
 import { placeFromPathname } from '@/lib/maia/presence/place';
 import { processUltimateMAIAConsciousnessSession } from '@/lib/consciousness-computing/ultimate-consciousness-system';
 import { ClaudeCodePresence } from '@/components/ui/ClaudeCodePresence';
@@ -571,6 +572,38 @@ function MAIAPageContent() {
           console.log('🌅 [MAIA] New day - cleared old conversation, starting fresh');
         }
         console.log('✨ [MAIA] Created new session:', newSessionId);
+
+        // 🛡️ SANCTUARY-SETTINGS-DISCONNECT-01 — this branch, and only this
+        // branch, is the canonical new-session boundary. The member's account
+        // default is documented as governing how a NEW session begins, but the
+        // only code path applying it was guarded on `maia_settings` being
+        // ABSENT — true once per browser, ever. So a member who chose
+        // "Default Memory Mode → Sanctuary" after their first visit kept
+        // running in Continuity while the UI said otherwise.
+        //
+        // Deliberately NOT in the `!identity.isNew` branch above: re-applying
+        // the default on a restored session would overwrite a Quick Settings
+        // override mid-session — a default impersonating live state.
+        //
+        // Not awaited, but safe to leave unawaited BECAUSE the initializer
+        // closes Sanctuary synchronously before its first await (invariant A).
+        // Awaiting here would block arrival on a network round trip; the
+        // boundary is already closed by the time this promise is pending.
+        initializeSessionSanctuary({ memberId: initialData?.id, fetcher: apiFetch })
+          .then((r) => {
+            if (!r) return;
+            console.log(
+              `🛡️ [Sanctuary] New session default → ${r.sanctuary} (${r.source})` +
+              `${r.overriddenByMember ? ' — stood down, member override is newer' : ''}`
+            );
+            if (!r.enforced) {
+              // Loud on purpose: the resolver wanted a boundary and could not
+              // set one. Silence here is how a fail-closed report drifts into a
+              // fail-open reality.
+              console.error('🛑 [Sanctuary] Default resolved but NOT enforced — settings unwritable');
+            }
+          })
+          .catch(() => { /* never blocks session creation */ });
       }
       setExplorerId(initialData.id);
       setExplorerName(initialData.name);
