@@ -77,6 +77,66 @@ repetition.
 An exchange can name a manuscript that does not exist — the identity-custody
 class D-010 governs. Repaired while this seam is open.
 
+## Legacy Work-association transition rule
+
+**Founder, 2026-08-28.** Operational, not interpretive. It constrains the
+migration directly.
+
+```text
+LEGACY MANUSCRIPT TRANSITION
+
+Existing manuscripts with no Work relation remain valid manuscripts.
+
+Their Work association is explicitly UNASSIGNED until a legitimate
+association occurs.
+
+PERMITTED
+  · remain readable
+  · remain owned by their member
+  · Work relation remains NULL / unassigned
+  · member associates manuscript with an existing Work
+  · member deliberately creates a Work and associates the manuscript
+  · an explicit future migration rule ONLY if that rule records provenance
+    and does not pretend inference is member authorship
+
+FORBIDDEN
+  · newest Work
+  · oldest Work
+  · only Work owned by the member
+  · matching title
+  · current route/browser context
+  · import chronology
+  · recent activity
+  · MAIA inference
+  · silently creating a Work
+  · any other heuristic presented as known relationship
+
+CONSTRAINT
+  The first Work↔Manuscript migration MUST permit the truthful unassigned
+  state. It must not begin by imposing blanket NOT NULL work membership.
+
+WS2-03 CONSEQUENCE
+  An unassigned legacy manuscript may be opened as that manuscript,
+  but the shell must not claim a persistent Work context that does not exist.
+  It must request/offer explicit association or represent the context as
+  unassigned.
+```
+
+> **NULL here is not missing data to clean up. It is truthful data about an
+> unresolved relationship.**
+
+That distinction is the whole rule. A migration that treats the NULLs as a
+cleanup task will reach for a heuristic, and every heuristic in the FORBIDDEN
+list produces the same failure: a relationship the member never asserted,
+presented to them as one they did. This is D-008 and D-010 applied to
+persistence — absence, loss and invalidity must never collapse into "open
+something else," and the data layer is where that collapse would become
+permanent.
+
+It also means the acceptance criterion "no Work invented on a member's behalf"
+is checkable rather than aspirational: after the migration, every
+Work↔Manuscript row is either NULL or traceable to a member act.
+
 ## Out of scope — explicitly
 
 - **The full future schema.** This unit creates *exactly enough* substrate for
@@ -107,6 +167,9 @@ class D-010 governs. Repaired while this seam is open.
 - [ ] Adoption/disposition persists for both drawn control sets
 - [ ] `studio_companion_turns.manuscript_id` has referential integrity
 - [ ] No existing manuscript orphaned; no Work invented on a member's behalf
+- [ ] The unassigned state is representable — no blanket NOT NULL on the first
+      Work↔Manuscript migration
+- [ ] Every Work↔Manuscript row is NULL or traceable to a member act
 - [ ] `npm run typecheck` — no regression against baseline
 - [ ] `npm run check:no-supabase` — PASS
 - [ ] Co-Lab boundary gate — `scripts/pre-deploy-gate.sh colab`, 0 failed,
