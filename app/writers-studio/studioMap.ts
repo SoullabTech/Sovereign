@@ -63,9 +63,17 @@ export type StudioAvailability = 'available' | 'later';
  *   tools   Instruments. **Not relational participants** — a tool operates on
  *           the work and says nothing about it. Find/Replace has no opinion.
  *
- * A destination's region is a structural fact, not a rendering hint. It is
- * what stops Insights from drifting into being a room that owns material, and
- * what stops Statistics from drifting into being a judgement.
+ * A destination's region is a structural fact **of the shell grammar** — not a
+ * rendering hint, and not domain ownership. Per D-019 a region is chrome: it
+ * says where a destination sits in the Studio's navigation, and it confers no
+ * authority over the object model. The domain relations are D-018's (a
+ * Manuscript belongs to a Work; a Material relates to one without becoming
+ * it), and they hold regardless of how this map is banded.
+ *
+ * What the banding does do is keep drift visible: it is what stops Insights
+ * from being placed as a room that owns material, and Statistics from being
+ * placed as a judgement. That is a constraint on the chrome, enforced by the
+ * region tests — never a claim that the chrome defines the ontology.
  */
 export type StudioRegion = 'work' | 'maia' | 'tools';
 
@@ -213,9 +221,18 @@ export const STUDIO_MAP: StudioGroup[] = [
   },
 
   /* ── WS2-02 · MAIA ─────────────────────────────────────────────────────
-     Offerings, not holdings. Conversations is real: /maia is the built
-     conversational surface. Discover / Insights / Suggestions have no
-     substrate — no route, no table, no service. */
+     Offerings, not holdings.
+
+     Nothing in this band is available. A generic conversational surface
+     exists at /maia, but Studio Conversations does not: under D-019 the
+     architecture is MAIA-in-relation-to-a-Work, and Work context does not
+     survive the handoff into that route. A surface that exists is not the
+     same as the destination this grammar names. Discover / Insights /
+     Suggestions have no substrate at all — no route, no table, no service.
+
+     Conversations becomes available when the handoff preserves Work context.
+     That seam is WS2-03's (persistent Work context), not this slice's;
+     WS2-09 owns the deeper situated-companion behaviour beyond it. */
   {
     id: 'maia',
     region: 'maia',

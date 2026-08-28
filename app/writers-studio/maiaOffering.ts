@@ -24,7 +24,17 @@
  *
  *   MAIA-generated evaluative judgement MUST NOT be quantified.
  *     No score, no rating, no percentage, no grade, no index, no "strength"
- *     out of anything. Not even a hidden one that only sorts the list.
+ *     out of anything — as something the writer is shown.
+ *
+ *     This is a rule about what CROSSES to the member, not about what the
+ *     system may compute. MAIA may hold an internal sense of how sure a
+ *     reading is and may use it to decide what is worth surfacing at all;
+ *     that is how a system avoids reporting everything it notices. What it
+ *     may not do is hand the writer that figure, or any figure, as a
+ *     measurement of their work. An earlier draft of this file forbade even
+ *     an internal sorter, which contradicted the rule below and would have
+ *     outlawed epistemic metadata that already exists and already means
+ *     something else.
  *
  * An insight may carry its TYPE (what kind of noticing this is), its EVIDENCE
  * COUNT (how many places in the work prompted it), and LINKS to the passages
@@ -38,8 +48,9 @@
  * A rule that lives only in a document is kept by whoever remembers it. This
  * one is easy to break by accident and invisible once broken — a `confidence`
  * field added for internal sorting is one render away from being shown. So the
- * type refuses the shape, and assertNoMachineScore refuses it again at runtime
- * for anything crossing a boundary the types do not cover.
+ * type refuses the shape, and assertNoMemberFacingScore refuses it again at
+ * runtime for anything crossing a boundary the types do not cover. Both act at
+ * the member-facing boundary; neither is a repository-wide lint.
  */
 
 /** What kind of noticing an insight is. Never a grade. */
@@ -154,9 +165,9 @@ const SCORE_SHAPED_KEYS = [
  * The types above state the rule for code that is typed; this catches what
  * arrives as `unknown`.
  *
- * Named for its boundary on purpose. `assertNoMachineScore` read like a
- * global prohibition and invited exactly the over-application the doc above
- * refuses.
+ * Named for its boundary on purpose. The former name, `assertNoMachineScore`,
+ * read like a global prohibition and invited exactly the over-application the
+ * doc above refuses.
  *
  * Non-numeric values are left alone: a `priority` of 'later' is a member's
  * ordering of their own work, not a machine-authored measurement of it.
