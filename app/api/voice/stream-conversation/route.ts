@@ -30,7 +30,8 @@ import { getClaudeService } from '@/lib/services/ClaudeService';
 // Before this, PWA voice reached ClaudeService with no memory loaded and no memory
 // canon guard — which is why MAIA truthfully said she had no memory on this path.
 // Reuses the shared composer (MemoryBundleService), not /list's route-specific logic.
-import { MemoryBundleService } from '@/lib/memory/MemoryBundle';
+import { MemoryBundleService, type MemoryBundle } from '@/lib/memory/MemoryBundle';
+import { ConversationMemoryUsesStore } from '@/lib/memory/stores/ConversationMemoryUsesStore';
 import { MEMORY_CANON_GUARD_PROMPT } from '@/lib/maia/prompts/memoryCanonGuard';
 import { guardVoiceChunk, advanceVoiceGuardTail } from '@/lib/maia/prompts/voiceStreamGuard';
 import { synthesizeSpeech } from '@/lib/tts/openaiTts';
@@ -1162,6 +1163,13 @@ export async function POST(req: NextRequest) {
         // MAIA may truthfully say she cannot recall when nothing was in fact loaded.
         let voiceMemoryContext = '';
         let voiceMemoryLoaded = false;
+        // M1.5 OBSERVABILITY (D2/D3) — evidence only. Nothing below reads these
+        // to decide anything; they exist so a turn can be reconstructed after
+        // the fact instead of inferred from a single boolean.
+        let memoryAttempted = false;
+        let memoryNotAttemptedReason: string | null = userId ? null : 'no_member';
+        let memoryStats: MemoryBundle['retrievalStats'] | null = null;
+        let memorySelection: MemoryBundle['selectionTrace'] = [];
         // Rolling detection window for the streaming canon guard — carries just
         // enough already-emitted text to catch a violation split across chunks.
         let voiceGuardTail = '';
@@ -1173,7 +1181,15 @@ export async function POST(req: NextRequest) {
         // Invariant 6 (absolute boundary) did not. Non-retention is not the boundary.
         // MaiaWisdomProvider.buildVoiceContext already implements this hard wall; the
         // R2 substrate duplicated that branch without carrying its predicate across.
+        if (sanctuary) {
+          // F10 exclusion, stated rather than left to look like an empty result.
+          // "Sanctuary: retrieval deliberately not attempted" and "retrieval ran
+          // and found nothing" are different facts, and only one of them is a
+          // boundary working correctly.
+          memoryNotAttemptedReason = 'sanctuary';
+        }
         if (userId && !sanctuary) {
+          memoryAttempted = true;
           try {
             const bundle = await MemoryBundleService.build({
               userId,
@@ -1185,6 +1201,8 @@ export async function POST(req: NextRequest) {
             if (bundle) {
               voiceMemoryContext = MemoryBundleService.formatForPrompt(bundle) || '';
               voiceMemoryLoaded = voiceMemoryContext.length > 0;
+              memoryStats = bundle.retrievalStats;
+              memorySelection = bundle.selectionTrace;
               console.log(
                 `📦 [Voice/MemoryBundle] bullets=${bundle.memoryBullets?.length ?? 0} ` +
                 `encounters=${bundle.relationshipSnapshot?.encounterCount ?? 0} ` +
@@ -1207,17 +1225,30 @@ export async function POST(req: NextRequest) {
         // any tuning would be guesswork about which half to touch.
         timer.mark('memory_bundle_done');
 
-        const voiceSystemPrompt =
-          [
-            councilPromptSection,
-            identityContext?.astrologyAddendum,
-            voiceMemoryContext,
-            // Same memory posture text/list ships. Included even when nothing loaded:
-            // the canon governs how MAIA speaks about memory, not only when she has it.
-            MEMORY_CANON_GUARD_PROMPT,
-          ]
-            .filter((s): s is string => !!s && s.length > 0)
-            .join('\n\n') || undefined;
+        // Same contributors, same filter, same join as before — split into a named
+        // array ONLY so inclusion can be witnessed at the insertion site.
+        const voicePromptParts = [
+          councilPromptSection,
+          identityContext?.astrologyAddendum,
+          voiceMemoryContext,
+          // Same memory posture text/list ships. Included even when nothing loaded:
+          // the canon governs how MAIA speaks about memory, not only when she has it.
+          MEMORY_CANON_GUARD_PROMPT,
+        ].filter((s): s is string => !!s && s.length > 0);
+        const voiceSystemPrompt = voicePromptParts.join('\n\n') || undefined;
+
+        // M1.5 (D4) — PROMPT-INCLUSION WITNESS.
+        // Deliberately NOT `voiceSystemPrompt.includes(voiceMemoryContext)`:
+        // `String.includes('')` is unconditionally true, so an empty memory
+        // context — no memory, or Sanctuary — would report as INCLUDED, and the
+        // F10 boundary would be the first thing the witness lied about. And when
+        // the context is non-empty a substring search is tautological anyway,
+        // since it is one of the joined elements. Membership in the composed
+        // array is the certain form of the same question.
+        const memoryPromptIncluded =
+          voiceMemoryContext.length > 0 &&
+          voicePromptParts.includes(voiceMemoryContext) &&
+          voiceSystemPrompt !== undefined;
         if (councilResolution.guide.id !== 'auto' || councilResolution.source === 'auto_integrator') {
           console.log(`🏛️ [Voice Council] ${councilResolution.guide.archetypeName} | ${councilResolution.source}`);
         }
@@ -1240,6 +1271,65 @@ export async function POST(req: NextRequest) {
           `historyMsgs=${conversationHistory?.length ?? 0} ` +
           `input=${message?.length ?? 0}`
         );
+        // ── M1.5 MEMORY TRACE (D1/D2/D3/D4) ──────────────────────────────
+        // One line, keyed by the turnId this route already carries, so retrieval,
+        // selection, prompt inclusion and downstream attribution join without
+        // inference. Four states that `voiceMemoryLoaded` alone collapses into
+        // one: a turn that retrieved five candidates, selected none and included
+        // nothing must be distinguishable from a turn that never retrieved.
+        // Identifiers, provenance, scores and state only — never memory bodies.
+        const memorySelected = memorySelection.filter((c) => c.selected);
+        console.log(
+          `[voice:memory_trace:${turnId}] ` +
+          `attempted=${memoryAttempted} ` +
+          `notAttemptedReason=${memoryNotAttemptedReason ?? 'n/a'} ` +
+          `retrieved=${memoryStats?.totalCandidates ?? 0} ` +
+          `turns=${memoryStats?.turnsRetrieved ?? 0} ` +
+          `crossSession=${memoryStats?.turnsCrossSession ?? 0} ` +
+          `semantic=${memoryStats?.semanticHits ?? 0} ` +
+          `breakthroughs=${memoryStats?.breakthroughsFound ?? 0} ` +
+          `selected=${memorySelected.length} ` +
+          `formatted=${voiceMemoryContext.length > 0} ` +
+          `promptIncluded=${memoryPromptIncluded} ` +
+          `palace=not_run`
+        );
+        if (memorySelection.length > 0) {
+          console.log(
+            `[voice:memory_selection:${turnId}] ` +
+            JSON.stringify(
+              memorySelection.map((c) => ({
+                id: c.id, src: c.source, score: c.score, rank: c.rank, sel: c.selected,
+              })),
+            )
+          );
+        }
+
+        // ── M1.5 ATTRIBUTION (D5) ────────────────────────────────────────────
+        // conversation_memory_uses means memory USED, so rows are written only
+        // for what was selected AND actually reached the prompt. The text path
+        // records retrieved candidates here instead, which conflates retrieval
+        // evidence with prompt use; that is a RECORDED DEFECT this cut neither
+        // repairs on text nor reproduces on voice. Retrieval-side evidence lives
+        // in the trace line above, joined by the same turnId — so a turn that
+        // retrieved and included nothing still leaves a witness, it just does not
+        // leave a false claim of use.
+        //
+        // Not awaited: attribution must not enter the response path.
+        if (memoryPromptIncluded && memorySelected.length > 0 && userId && !sanctuary) {
+          ConversationMemoryUsesStore.recordRetrievedCandidates({
+            sessionId: effectiveSessionId,
+            messageId: turnId,
+            userId,
+            candidates: memorySelected.map((c) => ({
+              id: c.id,
+              source: c.source,
+              retrievalScore: c.score,
+            })),
+          }).catch((auditErr) =>
+            console.warn('⚠️ [voice:memory_attribution] non-blocking failure:', auditErr?.message || auditErr),
+          );
+        }
+
         timer.mark('llm_request_sent');
 
         // Stream sentences from Claude
