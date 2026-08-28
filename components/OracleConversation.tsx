@@ -193,6 +193,13 @@ import { ElementDiscovery } from './discovery/ElementDiscovery';
 import { WisdomCouncilPicker } from './wisdom/WisdomCouncilPicker';
 import { CurrentTeachingModal } from './wisdom/CurrentTeachingModal';
 import { consumeMaiaSeed, setReturnPath, getReturnPath, clearReturnPath, type ConsumedSeed } from '@/lib/maia/seedPrompt';
+import {
+  setRelationalHandoff,
+  readRelationalHandoff,
+  clearRelationalHandoff,
+  isHandoffEligible,
+  type RelationalHandoff,
+} from '@/lib/maia/relationalHandoff';
 import { generateWelcomeGreeting } from '@/lib/maia/welcomeGreeting';
 import { ELDER_COUNCIL_TRADITIONS, type WisdomTradition } from '@/lib/consciousness/ElderCouncilService';
 import { ConversationStylePreference } from '@/lib/preferences/conversation-style-preference';
@@ -1690,10 +1697,18 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   const pendingSeedRef = useRef<ConsumedSeed | null>(null); // Store full seed until handler is ready
   // 🌉 RELATIONAL CONTEXT BRIDGE: Session-persistent (NOT one-shot).
   // Set on /relationships/[id] handoff. Rides every oracle POST in this session
-  // until the user leaves /maia or a new explicit handoff arrives.
+  // until the conversation session ends or a new explicit handoff arrives.
   // Override rule: latest explicit handoff always wins.
-  // See: memory/project_relational_context_bridge.md
-  const sessionRelationshipContextId = useRef<string | null>(null);
+  //
+  // This is STATE, not a ref, and it is rehydrated from lib/maia/relationalHandoff
+  // below — a ref did not survive remount, so the visible claim (localStorage-backed)
+  // could outlive the transported id and the interface would assert a continuity the
+  // request no longer had. Both now read this one value.
+  // See: lib/maia/relationalHandoff.ts
+  const [relationalHandoff, setRelationalHandoffState] = useState<RelationalHandoff | null>(null);
+  // Staged handoff from a seed consumed before sessionId/userId resolved. Committed by
+  // the effect that owns the record; never read as transport state directly.
+  const pendingHandoffRef = useRef<{ contextId: string; label?: string; returnTo?: string } | null>(null);
 
   // 🌊 LIQUID AI - Rhythm tracker instance
   const rhythmTrackerRef = useRef<ConversationalRhythm>(
@@ -1741,25 +1756,81 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     if (seed) {
       console.log('🌱 [SEED] Consumed seed from', seed.source || 'unknown source', ':', seed.prompt.slice(0, 50) + '...');
 
-      // If seed has return path, store it for the spiral return
-      if (seed.returnTo) {
+      // 🌉 RELATIONAL BRIDGE: If this seed came from /relationships/[id], hold the
+      // contextId for the conversation session. Latest explicit handoff always
+      // overrides prior session context (the override rule).
+      //
+      // The seed is one-shot and is consumed on mount, which can be BEFORE the parent
+      // has resolved sessionId (it starts as '' and is restored asynchronously). So we
+      // stage it here and the commit effect below persists it once the session and
+      // member are known. Staging, not persisting, is what makes remount survivable.
+      const isRelationalSeed = seed.source === 'relationships:thread' && !!seed.contextId;
+
+      if (isRelationalSeed) {
+        pendingHandoffRef.current = {
+          contextId: seed.contextId!,
+          label: seed.sourceLabel,
+          returnTo: seed.returnTo,
+        };
+        console.log('🌉 [RELATIONAL BRIDGE] Handoff staged:', seed.contextId);
+      }
+
+      // If seed has return path, store it for the spiral return.
+      //
+      // Deliberately SKIPPED for a relational seed: `maia_return_path` carries no session
+      // stamp, so a pill rendered from it would keep naming the relationship after the
+      // handoff ended and the id stopped travelling — the exact divergence this contract
+      // forbids. A relational handoff carries its own returnTo and its pill lives and dies
+      // with the record.
+      if (seed.returnTo && !isRelationalSeed) {
         setReturnPath(seed.returnTo, seed.sourceLabel);
         setReturnPathState({ path: seed.returnTo, label: seed.sourceLabel });
         console.log('🔄 [SEED] Return path set:', seed.returnTo, seed.sourceLabel ? `(${seed.sourceLabel})` : '');
-      }
-
-      // 🌉 RELATIONAL BRIDGE: If this seed came from /relationships/[id],
-      // hold the contextId for the entire session. Latest explicit handoff
-      // always overrides prior session context (the override rule).
-      if (seed.source === 'relationships:thread' && seed.contextId) {
-        sessionRelationshipContextId.current = seed.contextId;
-        console.log('🌉 [RELATIONAL BRIDGE] Held for session:', seed.contextId);
       }
 
       // Store full seed in ref - will be processed by the effect below when handleTextMessage is ready
       pendingSeedRef.current = seed;
     }
   }, []);
+
+  // ==================== RELATIONAL HANDOFF COMMIT / REHYDRATE ====================
+  // One effect owns the handoff record, so the visible claim and the request payload
+  // can never come from different places.
+  //
+  //   - a handoff staged by the seed above is committed once sessionId + userId exist
+  //   - otherwise the record for THIS session and THIS member is rehydrated
+  //
+  // The rehydrate branch is what survives remount: the seed is already gone by then,
+  // but the record is stamped with the conversation session and is still valid.
+  // A record stamped with a different session or member reads as null — that is how a
+  // handoff ends, and it is why a stale id from another account cannot be picked up.
+  useEffect(() => {
+    if (!sessionId || !userId) return;
+
+    const staged = pendingHandoffRef.current;
+    if (staged) {
+      pendingHandoffRef.current = null;
+      const handoff: RelationalHandoff = { ...staged, sessionId, userId };
+      setRelationalHandoff(handoff);
+      setRelationalHandoffState(handoff);
+      console.log('🌉 [RELATIONAL BRIDGE] Handoff committed for session:', handoff.contextId);
+      return;
+    }
+
+    setRelationalHandoffState(readRelationalHandoff(sessionId, userId));
+  }, [sessionId, userId]);
+
+  // The member ended the handoff. Clear the claim and the transport in one act — either
+  // one alone would recreate the divergence this contract exists to prevent.
+  const endRelationalHandoff = useCallback(() => {
+    clearRelationalHandoff();
+    setRelationalHandoffState(null);
+  }, []);
+
+  // Sanctuary suppresses relational-context reading server-side. The single predicate
+  // below gates BOTH the visible claim and the payload, so a Sanctuary turn cannot
+  // display an active handoff while carrying nothing (or carry one while claiming none).
+  const relationalHandoffActive = isHandoffEligible(relationalHandoff, isSanctuary);
 
   // Store handleTextMessage ref for seed injection (updated after handleTextMessage is defined)
   // This effect is defined early but the actual ref assignment happens later via another effect
@@ -5296,9 +5367,12 @@ I'm not sure what I'm feeling yet.`;
           // 🎓 MENTOR STANCE: Practitioner supervision mode (Care only)
           mentorStance: realtimeMode === 'counsel' ? getMentorStance() : false,
 
-          // 🌉 RELATIONAL BRIDGE: Session-persistent contextId from /relationships/[id] handoff
-          ...(sessionRelationshipContextId.current && {
-            relationshipContextId: sessionRelationshipContextId.current,
+          // 🌉 RELATIONAL BRIDGE: session-persistent contextId from the member's explicit
+          // /relationships/[id] handoff. Gated by the SAME predicate that gates the
+          // visible claim (see relationalHandoffActive) — if the interface says the
+          // relationship is here, it rides; if it does not, nothing rides.
+          ...(relationalHandoffActive && relationalHandoff && {
+            relationshipContextId: relationalHandoff.contextId,
           }),
 
           // 🌀 LENS CONSENT: User's choice from Stay/Switch/Blend ritual (if any)
@@ -6428,7 +6502,10 @@ I'm not sure what I'm feeling yet.`;
 
       setCurrentMotionState('idle');
     }
-  }, [isProcessing, isAudioPlaying, isResponding, sessionId, userId, onMessageAdded, agentConfig, messages.length, showChatInterface, voiceEnabled, maiaReady, maiaMode, pendingLensConsent]);
+  // relationalHandoff + relationalHandoffActive are dependencies because the payload gate
+  // must see the CURRENT handoff and the CURRENT Sanctuary state. Without them the closure
+  // would keep sending a handoff the interface has already stopped claiming.
+  }, [isProcessing, isAudioPlaying, isResponding, sessionId, userId, onMessageAdded, agentConfig, messages.length, showChatInterface, voiceEnabled, maiaReady, maiaMode, pendingLensConsent, relationalHandoff, relationalHandoffActive]);
 
   // 🔁 RECOVERY SEAM (Pattern A) — guarded resend of a not-delivered turn.
   // Reuses the member's existing bubble (retryOf); never creates a second turn.
@@ -10637,8 +10714,45 @@ I'm not sure what I'm feeling yet.`;
         }}
       />
 
-      {/* Return Path Pill - shows when user came from Guide/Academy via seed prompt */}
-      {returnPath && !showLabDrawer && (
+      {/* Relational Handoff Pill — the visible claim that a relationship is here with MAIA.
+          Rendered from the handoff record itself (never from `maia_return_path`), and gated by
+          the SAME predicate as the request payload, so the claim and the transport are the same
+          fact. Under Sanctuary relationalHandoffActive is false: nothing travels, so nothing is
+          claimed. Both controls end the handoff, because a visible dismissal that left the id
+          riding would be this defect inverted. */}
+      {relationalHandoffActive && relationalHandoff && !showLabDrawer && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: 20 }}
+          className="fixed bottom-24 left-16 z-[85] flex items-center gap-1 px-3 py-2 rounded-full bg-amber-500/20 border border-amber-500/30 text-amber-100 text-[13px] font-medium backdrop-blur-sm shadow-lg"
+        >
+          <button
+            onClick={() => {
+              const destination = relationalHandoff.returnTo || '/relationships';
+              endRelationalHandoff();
+              router.push(destination);
+            }}
+            className="flex items-center gap-2 px-1.5 py-0.5 hover:opacity-90 transition-opacity"
+          >
+            <CornerUpLeft className="w-4 h-4" />
+            <span>Return to {relationalHandoff.label || 'Relational Field'}</span>
+          </button>
+
+          <button
+            aria-label="End relationship handoff"
+            onClick={endRelationalHandoff}
+            className="ml-1 p-1 rounded-full text-amber-100/60 hover:text-amber-100 hover:bg-amber-500/20 transition-colors"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </motion.div>
+      )}
+
+      {/* Return Path Pill - shows when user came from Guide/Academy via seed prompt.
+          Suppressed while a relational handoff exists so the two pills cannot both claim
+          a return at once. */}
+      {returnPath && !relationalHandoff && !showLabDrawer && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
