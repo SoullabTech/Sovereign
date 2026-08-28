@@ -126,9 +126,14 @@ has_webauthn = EXISTS(active web credential for member)
 A derived flag cannot diverge from the store it is derived from. A stored flag
 can, and did — that divergence is the whole of AUTH-BIOMETRIC-01.
 
-Migration note: `lib/auth/webauthnServer.ts` already writes a
-`webauthn_credentials` table and sets the flag alongside it. A begins by
-reconciling that table against this shape, not by creating a parallel one.
+**Do not create `member_web_credentials` because that is the name in the
+sketch above.** `lib/auth/webauthnServer.ts` already writes a
+`webauthn_credentials` table and sets `has_webauthn` alongside it. Standing up a
+second store to match a diagram would reproduce the architectural split A exists
+to remove — a third credential store is the defect's own shape, not its repair.
+The shape above is a target to reconcile toward, and it may turn out that
+`webauthn_credentials` already satisfies it. See §6.1: whether any schema change
+exists at all is an output of the census, not an input.
 
 ## 5. Acceptance
 
@@ -160,9 +165,39 @@ provenance** are each explicit. That is not caution for its own sake: A is the
 one unit where a shortcut re-creates the exact defect its predecessor removed,
 and the shortcut is a single line of SQL.
 
+### 6.1 First implementation task is a census, not a migration
+
+When the gate lifts, the first task is **not** schema work. It is establishing
+what already exists:
+
+1. What does `webauthn_credentials` actually store — columns, constraints,
+   indexes, and how many live rows across how many members?
+2. How do registration and authentication read and write it today
+   (`lib/auth/webauthnServer.ts`, the four `webauthn/*` routes)?
+3. By what paths can `members.has_webauthn` diverge from it? Enumerate the
+   writers of each independently, then find members where the flag and the store
+   disagree — in production, by count.
+4. What revocation semantics exist today? Is a credential deleted, or flagged?
+   Does anything clear the member flag when the last credential goes?
+
+Only after those four are answered does A decide whether any schema change
+exists at all. A census that finds `webauthn_credentials` adequate is a
+successful outcome, not a wasted step.
+
+This rule exists because the alternative is well-trodden: a diagram names a
+table, the table gets created, and the system now has two stores where it had
+one. That is how AUTH-BIOMETRIC-01 came to exist in the first place.
+
 ## 7. Recorded alongside, not folded in
 
 **AUTH-BIOMETRY-01** (`AUTH_BOUNDARY_PARKED_FINDINGS.md`) — `deviceId` entropy
-and replay on the native store. A depends on native trust being *strong*, since
-invariant 3 makes a native verification the authorization for a web credential.
-It should be resolved before or with A, but it remains its own finding.
+and replay on the native store. Invariant 3 makes a fresh native verification
+the authorization for minting a web credential, so native trust stops being one
+surface's concern and becomes load-bearing for both.
+
+Precisely scoped: it blocks **the point where native biometric proof becomes
+authority to mint a cross-surface bootstrap authorization**. It does not block
+continuing to specify A. Challenge binding, replay defence, revocation semantics
+and provenance can all be designed while that finding is open; implementation
+must not cross the native-trust boundary until it is resolved. It remains its
+own finding and is not absorbed here.
