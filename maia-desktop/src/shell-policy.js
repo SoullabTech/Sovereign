@@ -23,7 +23,50 @@
  * ours; `new URL(u).origin` cannot be fooled that way. Scheme and port are part
  * of the comparison for the same reason — `http://soullab.life` is not this.
  */
-const PLATFORM_ORIGIN = 'https://soullab.life';
+const DEFAULT_PLATFORM_ORIGIN = 'https://soullab.life';
+
+/**
+ * DESKTOP-HOUSE-WITNESS-ORIGIN-01 — the platform view's base, validated.
+ *
+ * ⛔ WHY THIS EXISTS. `MAIA_BASE_URL` redirects the API/session side only
+ * (session.js). The platform view's origin was a hard-coded constant, so a
+ * Desktop pointed at a local witness runtime for its conversation would still
+ * open PRODUCTION in its BrowserView. A House witness therefore opened
+ * production's `/house` — which does not exist — and reported a defect in a
+ * route that was serving correctly on the witness server the whole time.
+ *
+ * ⛔ WHY NOT JUST REUSE `MAIA_BASE_URL`. This origin is not a convenience
+ * setting; it IS the containment boundary. Every decision in
+ * `navigationDecision` compares against it, so one variable doing double duty
+ * would mean an API redirect silently widened the browsing perimeter. It gets
+ * its own name, and it is validated rather than trusted.
+ *
+ * ⛔ WHY BOTH THE ENTRY URL AND THE CHECK DERIVE FROM THIS ONE VALUE. The
+ * dangerous half-fix is to make the view LOAD a new origin while
+ * `navigationDecision` still believes only `soullab.life` is legitimate: the
+ * first navigation inside the witness server would then be judged foreign and
+ * handed to the member's OS browser. One value, one source.
+ *
+ * Accepted: any `https:` origin, or `http:` on loopback (a witness runtime).
+ * Anything else — a plain-http public host, a `file:`, a wallet of nonsense —
+ * falls back to production and says so. Failing loudly toward the safe value is
+ * the only sane direction for a perimeter.
+ */
+function normalizePlatformOrigin(raw) {
+  if (!raw) return DEFAULT_PLATFORM_ORIGIN;
+  let u;
+  try { u = new URL(String(raw)); }
+  catch {
+    console.warn(`[shell] MAIA_PLATFORM_BASE_URL is not a URL (${raw}) — using ${DEFAULT_PLATFORM_ORIGIN}`);
+    return DEFAULT_PLATFORM_ORIGIN;
+  }
+  const loopback = u.hostname === '127.0.0.1' || u.hostname === 'localhost' || u.hostname === '[::1]' || u.hostname === '::1';
+  if (u.protocol === 'https:' || (u.protocol === 'http:' && loopback)) return u.origin;
+  console.warn(`[shell] MAIA_PLATFORM_BASE_URL refused (${u.origin}) — plain http is accepted only on loopback. Using ${DEFAULT_PLATFORM_ORIGIN}`);
+  return DEFAULT_PLATFORM_ORIGIN;
+}
+
+const PLATFORM_ORIGIN = normalizePlatformOrigin(process.env.MAIA_PLATFORM_BASE_URL);
 
 /**
  * A NAMED, NON-PERSISTENT partition.
@@ -207,6 +250,8 @@ function platformPermission() {
 }
 
 module.exports = {
+  DEFAULT_PLATFORM_ORIGIN,
+  normalizePlatformOrigin,
   PLATFORM_ORIGIN,
   PLATFORM_PARTITION,
   PLATFORM_ENTRY_PATH,

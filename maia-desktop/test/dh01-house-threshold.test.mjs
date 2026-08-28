@@ -30,7 +30,7 @@ const srcDir = path.join(here, '..', 'src');
 
 const { createPlatformShell } = require('../src/shell.js');
 const {
-  PLATFORM_ORIGIN, PLATFORM_ENTRY_PATH, HOUSE,
+  PLATFORM_ORIGIN, PLATFORM_ENTRY_PATH, HOUSE, DEFAULT_PLATFORM_ORIGIN, normalizePlatformOrigin,
   navigationDecision, platformEntryUrl, isConversationPath, isHousePath, isUnderRoot,
 } = require('../src/shell-policy.js');
 const { createSession } = require('../src/session.js');
@@ -224,4 +224,49 @@ test('H — a House destination reached in-page is left alone', async () => {
   await new Promise((r) => setTimeout(r, 0));
   assert.equal(log.loaded.length, before, 'entering a Room bounced the member back to the House');
   assert.deepEqual(log.returns, []);
+});
+
+// ════════════════════════════════════════════════════════════════════════════
+// DESKTOP-HOUSE-WITNESS-ORIGIN-01 · the platform base is configurable, validated
+// ════════════════════════════════════════════════════════════════════════════
+
+test('W — production remains the default when nothing is configured', () => {
+  assert.equal(DEFAULT_PLATFORM_ORIGIN, 'https://soullab.life');
+  assert.equal(normalizePlatformOrigin(undefined), DEFAULT_PLATFORM_ORIGIN);
+  assert.equal(normalizePlatformOrigin(''), DEFAULT_PLATFORM_ORIGIN);
+});
+
+test('W — a witness runtime on loopback is accepted', () => {
+  // The whole reason this seam exists: a Desktop pointed at a local witness
+  // opened PRODUCTION in its BrowserView, so a House witness tested the wrong
+  // server and reported a defect in a route that was serving correctly.
+  assert.equal(normalizePlatformOrigin('http://127.0.0.1:3110'), 'http://127.0.0.1:3110');
+  assert.equal(normalizePlatformOrigin('http://localhost:3110'), 'http://localhost:3110');
+  // A path on the override is discarded — an ORIGIN is what the perimeter compares.
+  assert.equal(normalizePlatformOrigin('http://127.0.0.1:3110/house'), 'http://127.0.0.1:3110');
+});
+
+test('W — plain http on a PUBLIC host is refused, and falls back to production', () => {
+  // ⛔ The dangerous value. Accepting it would let an environment variable point
+  // the contained view at an attacker-controlled origin over cleartext, and every
+  // navigationDecision would then treat that origin as legitimate.
+  assert.equal(normalizePlatformOrigin('http://evil.example.com'), DEFAULT_PLATFORM_ORIGIN);
+  assert.equal(normalizePlatformOrigin('http://soullab.life'), DEFAULT_PLATFORM_ORIGIN);
+});
+
+test('W — an unparseable or non-web value falls back rather than throwing', () => {
+  for (const bad of ['not a url', 'file:///etc/passwd', 'javascript:alert(1)', '://', 'ftp://x.com']) {
+    assert.equal(normalizePlatformOrigin(bad), DEFAULT_PLATFORM_ORIGIN, `${bad} was accepted`);
+  }
+});
+
+test('W — the entry URL and the perimeter derive from the SAME value', () => {
+  // ⛔ The half-fix this guards against: making the view LOAD a new origin while
+  // navigationDecision still believes only soullab.life is legitimate. The first
+  // navigation inside the witness server would then be judged foreign and handed
+  // to the member's OS browser.
+  assert.ok(platformEntryUrl().startsWith(PLATFORM_ORIGIN),
+    'the entry URL is not built from the same origin the perimeter enforces');
+  assert.equal(navigationDecision(`${PLATFORM_ORIGIN}/journal`).action, 'allow');
+  assert.equal(navigationDecision(`${PLATFORM_ORIGIN}/maia`).action, 'return-to-maia');
 });
