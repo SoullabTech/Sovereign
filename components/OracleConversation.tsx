@@ -7090,7 +7090,11 @@ I'm not sure what I'm feeling yet.`;
         // long Kokoro TTS generation but caps the stall case.
         const conversationHistory = truncateHistoryForAPI(nextMessagesForApi, historicalMessagesRef.current);
         await withTimeout(
-          sendStreamingMessage(cleanedText, conversationHistory),
+          // F10-SANCTUARY-WIRE-01: `isSanctuary` is read here, at dispatch, from
+          // live component state — the same value the sovereign path already
+          // sends as `meta.sanctuary`. Until now the streaming leg sent nothing,
+          // so a Sanctuary utterance reached the route as an ordinary turn.
+          sendStreamingMessage(cleanedText, conversationHistory, isSanctuary),
           90000,
           'streaming voice send'
         );
