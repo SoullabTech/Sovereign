@@ -87,14 +87,32 @@ export function localRepresentations(messages: readonly LocalMessageLike[]): Set
   return keys;
 }
 
-export interface AdoptionPlan<T> {
-  /** Rows that are genuinely new to this surface, in server order. */
-  adopt: CanonicalTurnRow[];
+/**
+ * One row to adopt, and WHERE it belongs.
+ *
+ * ⛔ Position is not "the end". The server tail is canonical order, and
+ * cross-surface concurrency makes out-of-order arrival ordinary: another
+ * surface's turn can be older than something already on screen, so appending
+ * would render the conversation in an order it never happened in. Each adopted
+ * row therefore carries the neighbouring rows that ARE already represented, so
+ * the caller can splice it into its canonical place — without reordering,
+ * replacing or otherwise disturbing the local messages around it.
+ */
+export interface AdoptedRow {
+  row: CanonicalTurnRow;
+  /** Local message this row follows in canonical order; null if none precedes it. */
+  afterLocalId: string | null;
+  /** Local message this row precedes; null if nothing represented follows it. */
+  beforeLocalId: string | null;
+}
+
+export interface AdoptionPlan {
+  /** Rows genuinely new to this surface, in server order, each with its anchor. */
+  adopt: AdoptedRow[];
   /** Every row observed this poll — whether adopted or already represented. */
   observed: string[];
-  /** Unchanged reference when nothing is new, so React can skip the render. */
+  /** Nothing new, so React can skip the render entirely. */
   unchanged: boolean;
-  _local?: T;
 }
 
 /**
@@ -115,21 +133,42 @@ export function planAdoption(
   rows: readonly CanonicalTurnRow[],
   messages: readonly LocalMessageLike[],
   seen: ReadonlySet<string>,
-): AdoptionPlan<never> {
+): AdoptionPlan {
   const represented = localRepresentations(messages);
-  const adopt: CanonicalTurnRow[] = [];
+  const byRepresentation = new Map<string, string>();
+  for (const m of messages) {
+    byRepresentation.set(`id:${m.id}`, m.id);
+    const k = representationKey(m.metadata?.exchangeId, m.role);
+    if (k) byRepresentation.set(k, m.id);
+  }
+
   const observed: string[] = [];
+  const pending: AdoptedRow[] = [];
+  let lastMatchedLocalId: string | null = null;
 
   for (const row of rows) {
     observed.push(observedKey(row));
-    if (seen.has(observedKey(row))) continue;          // a previous poll saw it
-    if (represented.has(`id:${row.id}`)) continue;     // already on screen by id
+
+    // Is this row already on screen? By id, or by durable exchange identity.
     const k = representationKey(row.exchangeId, row.role);
-    if (k && represented.has(k)) continue;             // our own turn, echoing back
-    adopt.push(row);
+    const matched = byRepresentation.get(`id:${row.id}`)
+      ?? (k ? byRepresentation.get(k) : undefined);
+
+    if (matched) {
+      // An anchor: everything adopted after this belongs after it, and
+      // everything adopted before it that lacked a successor now has one.
+      for (const p of pending) if (p.beforeLocalId === null) p.beforeLocalId = matched;
+      lastMatchedLocalId = matched;
+      continue;
+    }
+    if (seen.has(observedKey(row)) || represented.has(`id:${row.id}`)) {
+      lastMatchedLocalId = lastMatchedLocalId; // observed already; not an anchor
+      continue;
+    }
+    pending.push({ row, afterLocalId: lastMatchedLocalId, beforeLocalId: null });
   }
 
-  return { adopt, observed, unchanged: adopt.length === 0 };
+  return { adopt: pending, observed, unchanged: pending.length === 0 };
 }
 
 // ── polling cadence ─────────────────────────────────────────────────────────

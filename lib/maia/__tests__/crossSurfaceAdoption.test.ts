@@ -7,6 +7,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
+import { readFileSync } from 'node:fs';
 import {
   planAdoption,
   localRepresentations,
@@ -36,7 +37,7 @@ describe('GATE 1 — an external pair appears exactly once', () => {
       row({ id: 'r2', role: 'assistant', exchangeId: 'e1', seq: 1, content: 'her reply' }),
     ];
     const plan = planAdoption(rows, [], new Set());
-    expect(plan.adopt.map((r) => r.id)).toEqual(['r1', 'r2']);
+    expect(plan.adopt.map((a) => a.row.id)).toEqual(['r1', 'r2']);
     expect(plan.unchanged).toBe(false);
   });
 
@@ -48,7 +49,7 @@ describe('GATE 1 — an external pair appears exactly once', () => {
     const first = planAdoption(rows, [], new Set());
     const seen = new Set(first.observed);
     // Same tail returned again, and the adopted rows are now on screen.
-    const onScreen = first.adopt.map((r) => local({ id: r.id, role: r.role }));
+    const onScreen = first.adopt.map((a) => local({ id: a.row.id, role: a.row.role }));
     const second = planAdoption(rows, onScreen, seen);
     expect(second.adopt).toEqual([]);
     expect(second.unchanged).toBe(true);
@@ -81,7 +82,7 @@ describe('⭐ GATE 3 — my own turn echoing back does not duplicate', () => {
       row({ id: 's2', role: 'user', exchangeId: 'e2', seq: 0, content: 'yes' }),
     ];
     const plan = planAdoption(rows, messages, new Set());
-    expect(plan.adopt.map((r) => r.id)).toEqual(['s2']);
+    expect(plan.adopt.map((a) => a.row.id)).toEqual(['s2']);
   });
 
   it('a rich local message is never handed back for replacement', () => {
@@ -104,7 +105,7 @@ describe('legacy rows — exchange_id is NULL and must not become a wildcard', (
 
     const rows = [row({ id: 'legacy-1', exchangeId: null, seq: 0 })];
     // Not on screen → adopted.
-    expect(planAdoption(rows, [], new Set()).adopt.map((r) => r.id)).toEqual(['legacy-1']);
+    expect(planAdoption(rows, [], new Set()).adopt.map((a) => a.row.id)).toEqual(['legacy-1']);
     // On screen by id → skipped.
     expect(planAdoption(rows, [local({ id: 'legacy-1' })], new Set()).adopt).toEqual([]);
   });
@@ -144,7 +145,7 @@ describe('seq convention matches the migration', () => {
       [local({ id: 'l1', role: 'user', metadata: { exchangeId: 'e1' } })],
       new Set(),
     );
-    expect(plan.adopt.map((r) => r.id)).toEqual(['s2']);
+    expect(plan.adopt.map((a) => a.row.id)).toEqual(['s2']);
   });
 });
 
@@ -194,7 +195,7 @@ describe('GATE 5 — a thread beyond 100 rows still adopts its newest turn', () 
       local({ id: r.id, role: 'user', metadata: { exchangeId: r.exchangeId! } }));
 
     const plan = planAdoption(tail, onScreen, new Set());
-    expect(plan.adopt.map((r) => r.id)).toEqual(['r249']);
+    expect(plan.adopt.map((a) => a.row.id)).toEqual(['r249']);
   });
 
   it('⛔ the OLD oldest-first read would have made this unreachable', () => {
@@ -220,5 +221,134 @@ describe('the observed cursor is READ bookkeeping only', () => {
     // Nothing adopted, but both rows are marked observed — otherwise every poll
     // would re-examine the whole tail forever.
     expect(plan.observed).toEqual(['s1', 's2']);
+  });
+});
+
+
+// ════════════════════════════════════════════════════════════════════════════
+// ⭐ DEFECT FOUND IN PRE-WITNESS REVIEW — the fixture had assumed a shape the
+// runtime did not have. These two tests are written against reality.
+// ════════════════════════════════════════════════════════════════════════════
+
+describe('GATE 3, against the REAL message shape', () => {
+  it('⛔ the pre-fix shape: MAIA half without exchangeId would be adopted twice', () => {
+    // What the component actually produced before this unit's repair: the
+    // member's message carried metadata.exchangeId, MAIA's did not. The member
+    // half matches and MAIA's does not, so her answer is adopted a second time
+    // and appears twice on screen.
+    const preFixLocal = [
+      local({ id: 'l-user', role: 'user', metadata: { exchangeId: 'e9' } }),
+      local({ id: 'l-maia', role: 'oracle' }),          // ← no exchangeId
+    ];
+    const rows = [
+      row({ id: 's1', role: 'user', exchangeId: 'e9', seq: 0 }),
+      row({ id: 's2', role: 'assistant', exchangeId: 'e9', seq: 1 }),
+    ];
+    const plan = planAdoption(rows, preFixLocal, new Set());
+    expect(plan.adopt.map((a) => a.row.id)).toEqual(['s2']);   // the duplication
+  });
+
+  it('✅ with the repair — MAIA carries the same exchangeId — nothing duplicates', () => {
+    const repaired = [
+      local({ id: 'l-user', role: 'user', metadata: { exchangeId: 'e9' } }),
+      local({ id: 'l-maia', role: 'oracle', metadata: { exchangeId: 'e9' } }),
+    ];
+    const rows = [
+      row({ id: 's1', role: 'user', exchangeId: 'e9', seq: 0 }),
+      row({ id: 's2', role: 'assistant', exchangeId: 'e9', seq: 1 }),
+    ];
+    expect(planAdoption(rows, repaired, new Set()).unchanged).toBe(true);
+  });
+});
+
+describe('⭐ CANONICAL ORDERING — adoption never renders a conversation that did not happen', () => {
+  it('an external turn OLDER than a local one is placed before it, not appended', () => {
+    // Cross-surface concurrency: A was written elsewhere before B, but this
+    // surface only has B. Appending would show B then A.
+    const rows = [
+      row({ id: 'A', role: 'user', exchangeId: 'eA', seq: 0, content: 'said on the phone' }),
+      row({ id: 'B', role: 'user', exchangeId: 'eB', seq: 0, content: 'said here' }),
+    ];
+    const onScreen = [local({ id: 'local-B', role: 'user', metadata: { exchangeId: 'eB' } })];
+
+    const plan = planAdoption(rows, onScreen, new Set());
+    expect(plan.adopt).toHaveLength(1);
+    const [a] = plan.adopt;
+    expect(a.row.id).toBe('A');
+    expect(a.afterLocalId).toBeNull();         // nothing represented precedes it
+    expect(a.beforeLocalId).toBe('local-B');   // ⭐ it belongs BEFORE the local turn
+  });
+
+  it('a turn between two represented turns anchors to both', () => {
+    const rows = [
+      row({ id: 'A', exchangeId: 'eA', seq: 0 }),
+      row({ id: 'MID', exchangeId: 'eMID', seq: 0 }),
+      row({ id: 'C', exchangeId: 'eC', seq: 0 }),
+    ];
+    const onScreen = [
+      local({ id: 'l-A', role: 'user', metadata: { exchangeId: 'eA' } }),
+      local({ id: 'l-C', role: 'user', metadata: { exchangeId: 'eC' } }),
+    ];
+    const [mid] = planAdoption(rows, onScreen, new Set()).adopt;
+    expect(mid.row.id).toBe('MID');
+    expect(mid.afterLocalId).toBe('l-A');
+    expect(mid.beforeLocalId).toBe('l-C');
+  });
+
+  it('a newer turn with nothing after it appends — the ordinary case', () => {
+    const rows = [
+      row({ id: 'A', exchangeId: 'eA', seq: 0 }),
+      row({ id: 'NEW', exchangeId: 'eNEW', seq: 0 }),
+    ];
+    const onScreen = [local({ id: 'l-A', role: 'user', metadata: { exchangeId: 'eA' } })];
+    const [n] = planAdoption(rows, onScreen, new Set()).adopt;
+    expect(n.afterLocalId).toBe('l-A');
+    expect(n.beforeLocalId).toBeNull();
+  });
+});
+
+// ════════════════════════════════════════════════════════════════════════════
+// COMPONENT-LEVEL REPAIRS — the property IS the source, so it is read directly.
+// Without these two, the module can be perfectly correct while the surface that
+// feeds it regresses silently. Both were found in pre-witness review.
+// ════════════════════════════════════════════════════════════════════════════
+
+describe('the surface upholds what the module assumes', () => {
+  const component = readFileSync(
+    new URL('../../../components/OracleConversation.tsx', import.meta.url), 'utf8');
+
+  it('BOTH halves of a sovereign exchange carry the same durable identity', () => {
+    // The member's half always did. MAIA's did not — so the adoption poll
+    // matched one and adopted the other, and her answer appeared twice.
+    const sites = component.match(/exchangeId: turnExchangeId/g) ?? [];
+    expect(sites.length).toBeGreaterThanOrEqual(2);
+
+    // ⛔ Anchored on the SOVEREIGN response specifically. There are three
+    // `oracleMessage` constructors; only this one has a persisted server row
+    // and therefore only this one can be adopted back as a duplicate. The two
+    // streaming-path constructors carry no exchange identity at all — recorded
+    // as a separate finding, not silently absorbed here.
+    const at = component.indexOf('-oracle`,');
+    const oracleMsg = at > 0 ? component.slice(at, at + 2500) : '';
+    expect(oracleMsg).not.toBe('');
+    expect(oracleMsg).toContain('exchangeId: turnExchangeId');
+  });
+
+  it('the poll is OPT-IN — it never starts for an embedding that did not ask', () => {
+    // OracleConversation is generic: it defaults to /api/between/chat and is
+    // embedded in other contexts. A 1.8s database poll must not arrive in them
+    // by default. Canonical /maia opts in by supplying onCanonicalThreadChange.
+    expect(component).toContain('if (!onCanonicalThreadChange) return;');
+    const guard = component.indexOf('if (!onCanonicalThreadChange) return;');
+    const poll = component.indexOf('CROSS-SURFACE-THREAD-ADOPTION-01 — the conversation catches up');
+    expect(guard).toBeGreaterThan(poll);          // the guard is inside the poll effect
+  });
+
+  it('the write cursor is advanced where adoption happens, and is not the read cursor', () => {
+    expect(component).toContain('seenCanonicalRowIdsRef');
+    const adoption = /setMessages\(\(prev\) => \{\s*const next = \[\.\.\.prev\];[\s\S]*?return next;\s*\}\);/.exec(component)?.[0] ?? '';
+    expect(adoption).toContain('lastSyncedCountRef.current = next.length');
+    // ⛔ and the read cursor must never be the write cursor
+    expect(adoption).not.toContain('seenCanonicalRowIdsRef.current = ');
   });
 });

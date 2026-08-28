@@ -3264,6 +3264,13 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   const adoptionErrorsRef = useRef(0);
 
   useEffect(() => {
+    // ⛔ OPT-IN, NOT AMBIENT. OracleConversation is a generic component with a
+    // `/api/between/chat` default and other embeddings (Studio, and whatever
+    // comes next). Starting a 1.8s database poll for every instance that merely
+    // has a session would put platform-continuity machinery into contexts that
+    // never asked for it. Canonical /maia declares participation by supplying
+    // `onCanonicalThreadChange`; nothing else polls.
+    if (!onCanonicalThreadChange) return;
     if (!sessionId || !userId) return;
     let cancelled = false;
     let timer: ReturnType<typeof setTimeout> | null = null;
@@ -3322,19 +3329,31 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
         adoptionErrorsRef.current = 0;
 
         if (!plan.unchanged) {
-          const adopted: ConversationMessage[] = plan.adopt.map((r) => ({
-            id: `adopted-${r.id}`,
-            role: r.role === 'assistant' ? 'oracle' : (r.role as ConversationMessage['role']),
-            text: r.content,
-            timestamp: new Date(r.createdAt),
-            source: r.role === 'user' ? 'user' : 'maia',
-            // Carried so a later poll recognises this turn as already present,
-            // and so the write effect can see it is not a fresh local exchange.
-            metadata: r.exchangeId ? { exchangeId: r.exchangeId } : undefined,
-          } as ConversationMessage));
-
           setMessages((prev) => {
-            const next = [...prev, ...adopted];
+            const next = [...prev];
+            for (const { row, afterLocalId, beforeLocalId } of plan.adopt) {
+              const msg = {
+                // ⭐ The server row id IS the message id, so a later poll
+                // recognises this turn by identity even when `exchange_id` is
+                // NULL on a legacy row.
+                id: row.id,
+                role: row.role === 'assistant' ? 'oracle' : (row.role as ConversationMessage['role']),
+                text: row.content,
+                timestamp: new Date(row.createdAt),
+                source: row.role === 'user' ? 'user' : 'maia',
+                metadata: row.exchangeId ? { exchangeId: row.exchangeId } : undefined,
+              } as ConversationMessage;
+
+              // ⛔ SPLICE AT THE CANONICAL ANCHOR, never append blindly. Another
+              // surface's turn can be OLDER than something already on screen, and
+              // appending it would render a conversation in an order that never
+              // happened. The anchors come from the server's own ordering.
+              const at = afterLocalId ? next.findIndex((m) => m.id === afterLocalId) : -1;
+              if (at >= 0) { next.splice(at + 1, 0, msg); continue; }
+              const before = beforeLocalId ? next.findIndex((m) => m.id === beforeLocalId) : -1;
+              if (before >= 0) { next.splice(before, 0, msg); continue; }
+              next.push(msg);
+            }
             // ⛔ ADVANCE THE WRITE CURSOR IN THE SAME BREATH. The persistence
             // effect runs on the next render off `messages`; if it saw these as
             // new local messages it would POST them straight back and the
@@ -3343,7 +3362,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
             lastSyncedCountRef.current = next.length;
             return next;
           });
-          console.log(`🔄 [Adoption] Adopted ${adopted.length} canonical turn(s) from another surface`);
+          console.log(`🔄 [Adoption] Adopted ${plan.adopt.length} canonical turn(s) from another surface`);
         }
       } catch (err) {
         adoptionErrorsRef.current += 1;
@@ -6293,6 +6312,14 @@ I'm not sure what I'm feeling yet.`;
         // 🚪 AIN Knowledge Gate: source mix + awareness state
         ainState: responseData.ainState || null,
         metadata: {
+          // ⭐ CROSS-SURFACE-THREAD-ADOPTION-01. The SAME exchange id the member's
+          // half carries, because the server writes both halves under it
+          // (seq 0 = member, seq 1 = MAIA). Without it the adoption poll can
+          // match the member's turn and NOT MAIA's, and her answer appears a
+          // second time — the exact duplication this unit exists to prevent.
+          // Found before witness, against the runtime shape rather than a
+          // fixture that assumed it.
+          exchangeId: turnExchangeId,
           wisdomRouting: wisdomRouting ? {
             activated: wisdomRouting.activated,
             tool: wisdomRouting.tool,
