@@ -58,6 +58,7 @@ import { NostrMessagingSection } from '@/components/nostr/NostrMessagingSection'
 import PatternLedger from '@/components/consciousness/PatternLedger';
 import RecurringThemesCard from '@/components/consciousness/RecurringThemesCard';
 import { MemoryConsentSection } from '@/components/settings/MemoryConsentSection';
+import { guardMemberAuthoredMemoryMode, ACCOUNT_SETTINGS_KEY } from '@/lib/settings/settingsWriteSafety';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -173,11 +174,15 @@ const SECTIONS: { id: SettingsSection; label: string; icon: typeof User; practit
 // Component
 // ─────────────────────────────────────────────────────────────────────────────
 
+
 export function AccountSettings() {
   const [activeSection, setActiveSection] = useState<SettingsSection | null>(null);
   const [profile, setProfile] = useState<MemberProfile | null>(null);
   const [memberSettings, setMemberSettings] = useState<MemberSettings | null>(null);
   const [maiaSettings, setMaiaSettings] = useState<AccountSettingsType>(DEFAULT_ACCOUNT_SETTINGS);
+  // False until the stored account settings have actually been read. Until then
+  // `maiaSettings.defaultMemoryMode` is application-inserted, not member-authored.
+  const [maiaSettingsHydrated, setMaiaSettingsHydrated] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -276,6 +281,7 @@ export function AccountSettings() {
 
         // Load MAIA settings from localStorage
         setMaiaSettings(getAccountSettings());
+        setMaiaSettingsHydrated(true);
 
         // Load profile from server
         console.log('[AccountSettings] Fetching profile from API...');
@@ -458,7 +464,17 @@ export function AccountSettings() {
 
     const updated = { ...maiaSettings, [key]: value };
     setMaiaSettings(updated);
-    saveAccountSettings(updated);
+    // Never let an un-hydrated synthetic default be written as a member choice.
+    saveAccountSettings(
+      guardMemberAuthoredMemoryMode({
+        updated,
+        changedKey: key,
+        hydrated: maiaSettingsHydrated,
+        storedRaw: typeof window !== 'undefined'
+          ? localStorage.getItem(ACCOUNT_SETTINGS_KEY)
+          : null,
+      }),
+    );
     showSaveIndicator();
 
     // Also sync to server if we have userId
@@ -472,7 +488,7 @@ export function AccountSettings() {
         }),
       }).catch(console.error);
     }
-  }, [maiaSettings, userId, showSaveIndicator]);
+  }, [maiaSettings, maiaSettingsHydrated, userId, showSaveIndicator]);
 
   const updateNestedMaiaSetting = useCallback((path: string, value: unknown) => {
     if ('vibrate' in navigator) navigator.vibrate(5);
@@ -488,7 +504,20 @@ export function AccountSettings() {
     current[keys[keys.length - 1]] = value;
 
     setMaiaSettings(updated);
-    saveAccountSettings(updated);
+    // Same provenance guard as updateMaiaSetting: a nested write (voice, memory
+    // depth, display) must not carry an un-hydrated synthetic defaultMemoryMode
+    // into storage as though the member had chosen it. `defaultMemoryMode` is
+    // never itself nested, so this path can only ever be an unrelated write.
+    saveAccountSettings(
+      guardMemberAuthoredMemoryMode({
+        updated,
+        changedKey: keys[0],
+        hydrated: maiaSettingsHydrated,
+        storedRaw: typeof window !== 'undefined'
+          ? localStorage.getItem(ACCOUNT_SETTINGS_KEY)
+          : null,
+      }),
+    );
     showSaveIndicator();
 
     // Sync voice name to legacy localStorage key (still read by agentConfig)
