@@ -28,7 +28,9 @@
 
 'use strict';
 
-const { app, BrowserWindow, ipcMain, session, safeStorage } = require('electron');
+const {
+  app, BrowserWindow, BrowserView, Menu, ipcMain, session, safeStorage, shell,
+} = require('electron');
 const path = require('node:path');
 const fs = require('node:fs');
 
@@ -40,6 +42,8 @@ const { createSession } = require('./session');
 const { createConversation } = require('./conversation');
 const { createCaptureLiveness } = require('./capture-liveness');
 const { createThreadWatch } = require('./thread-watch');
+const { createPlatformShell, MAIA, PLATFORM } = require('./shell');
+const { navigationDecision } = require('./shell-policy');
 
 // Separate userData for a dev launch, so a development instance can never read
 // or corrupt an installed instance's state. (jarvis-desktop precedent.)
@@ -50,6 +54,7 @@ if (!app.isPackaged) {
 let mainWindow = null;
 let memberSession = null; // member session — survives capture start/stop
 let conversation = null; // one continuity for this run
+let platformShell = null; // DESKTOP-SHELL-01 — the one remote view, or none
 
 // ── voice session, owned entirely by main ───────────────────────────────────
 let voice = null;
@@ -453,29 +458,116 @@ ipcMain.handle('maia:sign-in', async (_evt, payload) => {
       sessionId: `desktop-${Date.now()}`,
     });
     void joinMemberThread();
+    buildMenu();                         // the destinations open for a member
   }
   broadcast('maia:auth', memberSession.state());
   return out;
 });
 
-ipcMain.handle('maia:sign-out', async () => {
-  memberSession.signOut();
+/**
+ * Everything that must fall away when a member is no longer signed in.
+ *
+ * ⛔ ONE teardown, reached from both doors: the sign-out button, and the 401
+ * that `authedFetch` discovers on its own. A signed-out member whose remote
+ * view still holds an authenticated cookie is the defect this shape prevents,
+ * and it would have been reachable if only the button ran the teardown.
+ */
+function teardownMemberState() {
   conversation = null;
   // ⛔ The watch dies with the session. Nothing may adopt on behalf of someone
   // who is no longer signed in.
   threadWatch.stop();
   stopThreadWatch();
-  broadcast('maia:auth', memberSession.state());
+  // ⛔ Destroy, not hide. The cookie goes with the view.
+  if (platformShell) void platformShell.destroy();
+  buildMenu();
+  broadcast('maia:auth', memberSession ? memberSession.state() : { signedIn: false, member: null });
+}
+
+ipcMain.handle('maia:sign-out', async () => {
+  memberSession.signOut();               // fires onSignedOut → teardownMemberState
   return { ok: true };
 });
 
 ipcMain.handle('maia:auth-state', async () => memberSession.state());
 
+// ── DESKTOP-SHELL-01 — destinations ─────────────────────────────────────────
+//
+// ⛔ NAVIGATION IS MAIN'S AUTHORITY, AND IT STAYS THERE. There is no bridge
+// verb for "show Journey". A renderer that could summon the platform view
+// would be a renderer that could pull remote content into its own window,
+// which is the collapse this whole unit exists to prevent. So the destinations
+// live in the application menu, whose accelerators are handled in main and
+// cannot be invoked by page script.
+//
+// The long-term IA is MAIA · Journey · Sessions · Library · Settings. Only the
+// first two function in this cut; the rest are present and DISABLED, because a
+// destination that is visibly unavailable is honest and one that is silently
+// missing is not.
+
+const DESTINATIONS = [
+  { id: MAIA, label: 'MAIA', accelerator: 'Alt+CmdOrCtrl+M', enabled: true },
+  { id: PLATFORM, label: 'Journey', accelerator: 'Alt+CmdOrCtrl+J', enabled: true },
+  { id: 'sessions', label: 'Sessions', enabled: false },
+  { id: 'library', label: 'Library', enabled: false },
+  { id: 'settings', label: 'Settings', enabled: false },
+];
+
+/**
+ * Where the member is, said in the one place the shell can say it without
+ * touching the renderer.
+ *
+ * The platform view covers the full content area, so the window title is the
+ * location indicator. Updating the MAIA renderer instead would mean injecting
+ * script into it from main — more power spent, for a label.
+ */
+function showPlace(place) {
+  if (!mainWindow || mainWindow.isDestroyed()) return;
+  mainWindow.setTitle(place === PLATFORM ? 'MAIA Desktop — Journey' : 'MAIA Desktop');
+  buildMenu();
+}
+
+async function goTo(id) {
+  if (!platformShell) return;
+  if (id === MAIA) return platformShell.hide();
+  if (id !== PLATFORM) return;
+  if (!memberSession || !memberSession.state().signedIn) return;
+  const out = await platformShell.show();
+  // ⛔ A failed entry must not leave a blank view attached and the member
+  // stranded. Fall back to MAIA and say so where the surface already speaks.
+  if (!out.ok) {
+    platformShell.hide();
+    broadcast('maia:turn', { phase: 'error', error: `Journey could not open — ${out.error}` });
+  }
+}
+
+function buildMenu() {
+  const signedIn = !!(memberSession && memberSession.state().signedIn);
+  const here = platformShell ? platformShell.place() : MAIA;
+  const go = DESTINATIONS.map((d) => ({
+    label: d.label,
+    accelerator: d.accelerator,
+    type: 'checkbox',
+    checked: d.id === here,
+    // Every destination but MAIA needs a member; nothing remote opens for
+    // nobody. MAIA itself stays reachable so there is always a way back.
+    enabled: d.enabled && (d.id === MAIA || signedIn),
+    click: () => { void goTo(d.id); },
+  }));
+
+  Menu.setApplicationMenu(Menu.buildFromTemplate([
+    ...(process.platform === 'darwin' ? [{ role: 'appMenu' }] : []),
+    { label: 'Go', submenu: go },
+    { role: 'editMenu' },
+    { role: 'windowMenu' },
+  ]));
+}
+
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 900,
     height: 700,
-    title: 'MAIA Desktop — D01 native voice witness',
+    title: 'MAIA Desktop',
     backgroundColor: '#14100E',
     webPreferences: {
       contextIsolation: true,
@@ -485,7 +577,37 @@ function createWindow() {
     },
   });
   mainWindow.loadFile(path.join(__dirname, 'index.html'));
-  mainWindow.on('closed', () => { mainWindow = null; });
+
+  // ⛔ THE PRIVILEGED RENDERER NEVER NAVIGATES. It holds `window.maia`, so
+  // anything that moved it off `file://` would put remote content in front of
+  // the bridge — the one thing this unit forbids. There is no legitimate
+  // navigation here to allow, so the guard is unconditional rather than
+  // origin-checked: a stricter rule than the platform view gets, because this
+  // side has more to lose.
+  mainWindow.webContents.on('will-navigate', (event) => event.preventDefault());
+  mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+    const decision = navigationDecision(url);
+    if (decision.action === 'external') shell.openExternal(decision.url);
+    return { action: 'deny' };
+  });
+
+  platformShell = createPlatformShell({
+    BrowserView,
+    sessionApi: session,
+    shellApi: shell,
+    window: mainWindow,
+    credential: memberSession,
+    onPlace: showPlace,
+  });
+
+  mainWindow.on('resize', () => { if (platformShell) platformShell.fit(); });
+  mainWindow.on('closed', () => {
+    mainWindow = null;
+    // The view belongs to the window; it must not outlive it.
+    if (platformShell) { void platformShell.destroy(); platformShell = null; }
+  });
+
+  buildMenu();
 }
 
 app.whenReady().then(() => {
@@ -498,7 +620,7 @@ app.whenReady().then(() => {
   session.defaultSession.setPermissionCheckHandler((_wc, permission) =>
     permission === 'media' || permission === 'audioCapture');
 
-  memberSession = createSession({ app, safeStorage });
+  memberSession = createSession({ app, safeStorage, onSignedOut: teardownMemberState });
   if (memberSession.state().signedIn) {
     conversation = createConversation({
       session: memberSession,

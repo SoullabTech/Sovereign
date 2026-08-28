@@ -116,7 +116,7 @@ function normalizeMember(member) {
   return memberRecord({ member }, typeof member.username === 'string' ? member.username : '');
 }
 
-function createSession({ app, safeStorage, fetchImpl } = {}) {
+function createSession({ app, safeStorage, fetchImpl, onSignedOut } = {}) {
   const doFetch = fetchImpl || ((...a) => fetch(...a));
   const baseUrl = (process.env.MAIA_BASE_URL || DEFAULT_BASE).replace(/\/+$/, '');
   const file = () => path.join(app.getPath('userData'), 'session.bin');
@@ -180,7 +180,23 @@ function createSession({ app, safeStorage, fetchImpl } = {}) {
     return { ok: true, member: projection() };
   }
 
-  function signOut() { token = null; member = null; persist(); }
+  /**
+   * Drop the session.
+   *
+   * ⭐ DESKTOP-SHELL-01 — `onSignedOut` exists because sign-out is not always
+   * something the member did. `authedFetch` calls this itself on a 401, and
+   * before this callback that expiry was invisible to main: the platform view
+   * would keep an authenticated cookie and stay on screen for a member the
+   * server had already stopped recognising. Both doors — the button and the
+   * expiry — now run the same teardown.
+   */
+  function signOut() {
+    const wasSignedIn = !!token;
+    token = null; member = null; persist();
+    if (wasSignedIn && typeof onSignedOut === 'function') {
+      try { onSignedOut(); } catch { /* teardown must not break sign-out */ }
+    }
+  }
 
   /** Authenticated fetch. Adds the session header and nothing else. */
   async function authedFetch(pathname, init = {}) {
@@ -197,6 +213,59 @@ function createSession({ app, safeStorage, fetchImpl } = {}) {
       return { ok: false, status: 401, error: 'session expired — please sign in again' };
     }
     return { ok: res.ok, status: res.status, res };
+  }
+
+  /**
+   * ⭐ DESKTOP-SHELL-01 — hand the EXISTING canonical session to an embedded
+   * platform view, without handing anyone the token.
+   *
+   * The web surface authenticates by the `maia_session` cookie —
+   * `readSessionCredential` reads it first, ahead of the `x-session-token`
+   * header Desktop already uses, and both resolve through the same
+   * `auth_sessions` row. So there is one credential and one identity here, not
+   * two: this writes the token Desktop already holds into the platform
+   * partition's cookie jar, and the embedded surface then behaves as an
+   * already-signed-in member. No second login, no second session row, no
+   * Desktop-only auth path.
+   *
+   * ⛔ THE MINT LIVES HERE, NOT IN THE SHELL. The shell needs an authenticated
+   * view; it does not need the credential, and the difference is the whole
+   * custody rule. `session.js` is the only module that has ever held the token
+   * and it stays that way — the shell passes a cookie jar in and gets a
+   * verdict out. A test asserts `shell.js` contains no token reference at all.
+   *
+   * ⛔ ONLY `maia_session` is written. Not `maia_member_id`, `maia_tier` or
+   * `maia_roles`: those are identity and authority CLAIMS, the middleware
+   * stopped trusting them in AUTH-BOUNDARY-01B, and `getMemberFromRequest`
+   * rejects a member-id claim that disagrees with the session. Minting them
+   * would be Desktop asserting who it is — exactly what `authedFetch` refuses
+   * to do on the wire, for the same reason.
+   *
+   * ⛔ A SESSION COOKIE, with no expirationDate. It lives in an in-memory
+   * partition and dies with the process; main re-mints from `session.bin` on
+   * the next launch. The shell must not become a second place a credential
+   * rests.
+   *
+   * @param cookies an Electron `Session.cookies` jar for the platform partition
+   */
+  async function mintWebSession(cookies) {
+    if (!token) return { ok: false, error: 'not signed in' };
+    try {
+      await cookies.set({
+        url: baseUrl,
+        name: 'maia_session',
+        value: token,
+        httpOnly: true,          // unreadable from the embedded page's JS
+        secure: baseUrl.startsWith('https://'),
+        sameSite: 'lax',
+        path: '/',
+      });
+      return { ok: true };
+    } catch (e) {
+      // Never carries the token — an error path is exactly where a credential
+      // ends up in a log.
+      return { ok: false, error: (e && e.message) || 'could not establish the web session' };
+    }
   }
 
   /**
@@ -219,7 +288,7 @@ function createSession({ app, safeStorage, fetchImpl } = {}) {
 
   restore();
   return {
-    signIn, signOut, authedFetch,
+    signIn, signOut, authedFetch, mintWebSession,
     baseUrl,
     // ⛔ The token itself is NEVER returned. Callers learn only that one exists,
     // who they are, and what they are entitled to SEE.
