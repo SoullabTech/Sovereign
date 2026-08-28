@@ -1165,7 +1165,15 @@ export async function POST(req: NextRequest) {
         // Rolling detection window for the streaming canon guard — carries just
         // enough already-emitted text to catch a violation split across chunks.
         let voiceGuardTail = '';
-        if (userId) {
+        // SANCTUARY IS A RETRIEVAL BOUNDARY, NOT ONLY A RETENTION ONE (F10).
+        // Until 2026-08-28 this guard read `if (userId)`, so a Sanctuary voice turn
+        // built the cross-session bundle and injected it into voiceSystemPrompt below.
+        // Nothing was written back — recordRetrievedCandidates is gated on a traceId
+        // this call does not pass — so Invariant 1 (no retention) held while
+        // Invariant 6 (absolute boundary) did not. Non-retention is not the boundary.
+        // MaiaWisdomProvider.buildVoiceContext already implements this hard wall; the
+        // R2 substrate duplicated that branch without carrying its predicate across.
+        if (userId && !sanctuary) {
           try {
             const bundle = await MemoryBundleService.build({
               userId,
