@@ -389,3 +389,105 @@ For a project whose memory is the thing that makes it more than a chatbot,
 losing a turn without saying so is the worst shape a failure can take: it
 cannot be noticed at the moment it happens, only later, as an absence the
 member will experience as being forgotten.
+
+---
+
+# D05 — PASS · DESKTOP-VOICE-SHAPE-01 CLOSED
+
+*Appended 2026-08-28. Acceptance record. No code, no repair, no new claim
+beyond the evidence below.*
+
+MAIA speaks on Desktop.
+
+## What was witnessed
+
+Production `9865799e1`. Server window anchored at `2026-08-28T13:11:23Z`,
+verified empty before the turns entered it:
+
+```
+completions=2   syntheses=2   synth_fail=0
+
+🎤 Synthesizing MAIA's voice...
+✅ Voice synthesis complete | warm profile
+✅ MAIA FAST  response complete:  7396ms | 290 chars + audio
+🎤 Synthesizing MAIA's voice...
+✅ Voice synthesis complete | warm profile
+✅ MAIA CORE response complete: 10291ms | 347 chars + audio
+```
+
+**Member-side acceptance:** Kelly directly heard MAIA speak aloud from the
+Electron Desktop app.
+
+## Protocol deviation, recorded rather than smoothed
+
+The D05 protocol specified exactly one turn in a quiet window. Two Desktop
+text turns were observed instead. That deviation is recorded because it is
+real — and it does not weaken the conclusion: both completions synthesized
+successfully, `synth_fail=0`, so there is no competing failure to attribute
+and no ambiguity about which turn did what.
+
+The microphone was live during the window, which masked the Desktop status
+line (it reads `Listening…` while capturing). The status line was therefore
+unavailable as evidence — and unnecessary, because audible speech is the
+acceptance criterion the status line only ever stood in for.
+
+## What is established end to end
+
+```
+synthesizeMaiaVoice → Buffer            server log (syntheses=2, synth_fail=0)
+route normalization → audioBase64       deployed source, DESKTOP-VOICE-SHAPE-01
+wire                → Desktop           see the inference below
+Desktop decode / playback → audible     direct member witness
+```
+
+⭐ **On the wire-shape claim, stated at exactly its strength.** The server log
+line `+ audio` is emitted from `!!audioResponse` — it establishes a non-empty
+audio Buffer at the service boundary, and **not, on its own, the base64
+serialization on the wire.**
+
+The end-to-end acceptance inference is grounded *jointly* in two things: the
+deployed route shape (`DESKTOP-VOICE-SHAPE-01`, merged and live at
+`9865799e1`), and the direct playback witness. Desktop has one path to audio —
+
+```js
+// maia-desktop/src/conversation.js
+const audio = data && data.audio && data.audio.audioBase64 ? {…} : null;
+```
+
+— so an absent or empty `audioBase64` yields `null`, the `no-voice` phase, and
+silence. Speech was heard; therefore a non-empty `audioBase64` reached Desktop.
+That is an inference from deployed shape plus witnessed playback, not a reading
+of the log line alone.
+
+## The defect this closes
+
+A `Buffer` was being read as an object. `synthesizeMaiaVoice` returns raw mp3
+bytes; the route read `.audioBase64` off them, got `undefined` for every field,
+and `JSON.stringify` dropped them — putting `"audio": {}` on the wire. Truthy
+enough to look like audio to a caller checking `data.audio`, carrying nothing.
+
+Both ends reported honestly the whole time. The server logged `+ audio` because
+it held a real Buffer. Desktop reported no voice because `audioBase64` was
+undefined. The contract between them was what lied.
+
+## Status
+
+```
+D05                        PASS (protocol deviation recorded above)
+DESKTOP-VOICE-SHAPE-01     CLOSED — merged, deployed, member-accepted
+DESKTOP-KEEP-01            unblocked (was queued behind voice closure)
+```
+
+⛔ Deliberately **not** closed or altered by this record:
+
+```
+DESKTOP-VOICE-PROVIDER-01     OPEN — the voice heard was nova, via OpenAI,
+                              bypassing the sovereign TTS router. Audibility
+                              is not provider approval.
+VOICE-CAPTURE-PROVENANCE-01   HOLD
+DESKTOP-EPOCH-LATE-FINAL-01   FILED
+DESKTOP-CAPTURE-CONTROL-01    PROPOSED, not started
+```
+
+Response latency (`7396ms` FAST, `10291ms` CORE) is recorded as observed and
+deliberately not diagnosed here.
