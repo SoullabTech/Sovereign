@@ -149,6 +149,28 @@ Desktop may show more simultaneous context. It **must not introduce a different 
 
 ---
 
+## PROTOTYPE STATE (founder-recorded 2026-08-28)
+
+```
+NW-V1-PROTOTYPE-01
+
+render evidence       EXISTS
+Chromium render pass  COMPLETE
+post-render defects   REPAIRED
+MAIA grounding        PASS
+mobile hierarchy      PASS
+visual review by me   NOT OBSERVED — tooling boundary
+cold witness          READY
+implementation        HOLD
+```
+
+**The prototype meets the witness frozen.** Do not improve it after reading the witness protocol —
+that turns the test into rehearsal. Nothing changes on the basis of images not rendering on the
+founder's side; the Chromium render pass already found and repaired real defects, and that is
+legitimate visual evidence. It is simply not the founder's adjudication.
+
+---
+
 ## MAIA GROUNDING RULE (NW-V1-PROTOTYPE-01, founder-ratified 2026-08-28)
 
 > **MAIA may carry forward the member's framing; she may not improve the emotional story by
