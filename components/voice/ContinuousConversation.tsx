@@ -20,6 +20,10 @@ import {
   CAPTURE_REASON_CODES,
   type CaptureLossCause,
 } from '@/lib/voice/micLiveness';
+import {
+  buildCaptureLossSnapshot,
+  ANALYSER_PEAK_WINDOW_MS,
+} from '@/lib/voice/captureLossSnapshot';
 import { getContinuityBuffer } from '@/lib/voice/conversationContinuityBuffer';
 import {
   recordDispatch,
@@ -416,6 +420,34 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
   }) => void>();
   const salvageTranscriptFnRef = useRef<(cause: string) => boolean>();
 
+  // ==========================================================================
+  // 🔍 CAPTURE-LOSS WITNESS — instrumentation only, no behavior change
+  // ==========================================================================
+  // The refs above measure the ABSENCE of recognition events, which is enough
+  // to declare capture dead but not to say WHAT died. Two very different
+  // failures produce the identical signature seen on 847485d41
+  // (onstart ✓ onaudiostart ✓ onspeechstart ✓ · onresult ✗ onerror ✗ onend ✗):
+  // a zombie recognizer still receiving audio, or an input that stopped
+  // delivering audio while the track still reads `live`.
+  //
+  // ⭐ The analyser loop below runs on the raw MediaStream and never passes
+  // through Chrome's speech service, so it is an independent witness. These
+  // refs make its testimony readable at the moment of loss. Nothing here
+  // changes what the component does — see lib/voice/captureLossSnapshot.ts.
+  /** When each recognition handler last fired. 0 = never, this instance. */
+  const handlerAtRef = useRef({
+    onstart: 0, onaudiostart: 0, onspeechstart: 0, onresult: 0, onerror: 0, onend: 0,
+  });
+  /** Last analyser frame, stamped every tick — staleness means the loop stopped. */
+  const analyserTickAtRef = useRef<number>(0);
+  /** Last time local energy crossed the VAD threshold, and the recent peak. */
+  const localEnergyRef = useRef({
+    lastAboveThresholdAt: 0,
+    peakRecent: 0,
+    peakWindowStartAt: 0,
+    threshold: 0,
+  });
+
   /** Stamp capture activity: the pipeline is demonstrably alive right now. */
   const markCaptureActivity = useCallback((audioOpened?: boolean) => {
     lastCaptureActivityAtRef.current = Date.now();
@@ -633,6 +665,12 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     // callback from a superseded instance is dropped before it can touch state.
     const session = getWebSession();
     const gen = session.adopt(recognition);
+    // 🔍 Handler ages are per-instance: a fresh object has fired nothing yet,
+    // and carrying the previous instance's timestamps forward would make a
+    // dead recognizer look recently alive.
+    handlerAtRef.current = {
+      onstart: 0, onaudiostart: 0, onspeechstart: 0, onresult: 0, onerror: 0, onend: 0,
+    };
     recognitionActiveRef.current = false;
     recognitionRef.current = recognition;
 
@@ -640,6 +678,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     // even after onstart fires — the gap between voice_listening_started and
     // voice_audio_started is the first observable signal of that failure mode.
     recognition.onaudiostart = session.guard(gen, () => {
+      handlerAtRef.current.onaudiostart = Date.now(); // 🔍 witness only
       audioStartedThisCycleRef.current = true;
       markCaptureActivity(true); // 🩺 audio is actually open — the watchdog's strongest proof of life
       logVoiceEvent('voice_audio_started');
@@ -650,6 +689,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     // A successful speech_started resets the no-speech cycle counter — we're
     // making forward progress.
     recognition.onspeechstart = session.guard(gen, () => {
+      handlerAtRef.current.onspeechstart = Date.now(); // 🔍 witness only
       speechStartedThisCycleRef.current = true;
       noSpeechCycleCountRef.current = 0;
       markCaptureActivity(true); // 🩺
@@ -657,6 +697,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     });
 
     recognition.onstart = session.guard(gen, () => {
+      handlerAtRef.current.onstart = Date.now(); // 🔍 witness only
       // 👁️ Close the ordering-F window: recognition has restarted, so any
       // further result belongs to the next turn rather than trailing the
       // committed one. Bounds the window so it cannot mislabel new speech.
@@ -736,6 +777,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     });
 
     recognition.onresult = session.guard(gen, (event: any) => {
+      handlerAtRef.current.onresult = Date.now(); // 🔍 witness only
       markCaptureActivity(true); // 🩺 results are arriving — capture is unambiguously alive
       logVoiceEvent('voice_transcribe_result', {
         resultCount: event.results?.length ?? 0,
@@ -981,6 +1023,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     });
 
     recognition.onerror = session.guard(gen, (event: any) => {
+      handlerAtRef.current.onerror = Date.now(); // 🔍 witness only
       const errorCode = String(event?.error || 'unknown');
       logVoiceEvent('voice_transcribe_error', { error: errorCode });
       // Only log critical errors (not no-speech or aborted, which are common)
@@ -1031,6 +1074,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     });
 
     recognition.onend = session.guard(gen, () => {
+      handlerAtRef.current.onend = Date.now(); // 🔍 witness only
       // 👁️ VOICE-02A — the recognition-epoch boundary, previously emitted with
       // NO metadata at all. tailAtRisk=true here is Safari ending an epoch on
       // an unfinalized tail: the demonstrated mechanism, not a hypothesis.
@@ -1449,7 +1493,61 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
 
     const reasonCode = CAPTURE_REASON_CODES[cause] ?? 'UNKNOWN_VOICE_STALL';
     console.warn(`🩺 [liveness] Capture loss detected: ${cause} (${reasonCode})`);
-    logVoiceEvent('voice_capture_lost', { cause, reasonCode });
+
+    // 🔍 Read the witnesses BEFORE teardown below clears them. This is the one
+    // moment the answer exists: `discardRecognition` and the ref resets a few
+    // lines down destroy exactly the state that explains what died.
+    //
+    // silentForMs is derived the same way assessCaptureLiveness derives it, so
+    // the snapshot and the verdict that produced it cannot disagree. Reading
+    // the refs is side-effect free; no branch below consults the snapshot.
+    const lossAt = Date.now();
+    const lossAnchor = Math.max(lastCaptureActivityAtRef.current, captureArmedAtRef.current);
+    const track = micStreamRef.current?.getAudioTracks?.()[0] ?? null;
+    const session = webSessionRef.current;
+    const snapshot = buildCaptureLossSnapshot({
+      now: lossAt,
+      silentForMs: lossAnchor > 0 ? lossAt - lossAnchor : 0,
+      recognition: {
+        generation: session?.currentGeneration ?? -1,
+        sessionState: session?.state ?? 'NONE',
+        shouldRecreate: session?.shouldRecreate ?? false,
+        handlerAt: handlerAtRef.current,
+      },
+      track: track
+        ? {
+            readyState: track.readyState,
+            enabled: track.enabled,
+            muted: track.muted,
+            // Device identity, not content. Truncated because some drivers
+            // report very long labels and this is a log line, not a record.
+            label: (track.label || 'unknown').slice(0, 48),
+          }
+        : null,
+      localAudio: {
+        contextState: audioContextRef.current?.state ?? 'none',
+        level: audioLevelRef.current,
+        lastLevelUpdateAt: analyserTickAtRef.current,
+        lastAboveThresholdAt: localEnergyRef.current.lastAboveThresholdAt,
+        peakRecent: localEnergyRef.current.peakRecent,
+        threshold: localEnergyRef.current.threshold,
+      },
+      capture: {
+        micState: micStateRef.current,
+        listeningMode: listeningModeRef.current,
+        isListening: isListeningRef.current,
+        isRecording: isRecordingRef.current,
+        restartInFlight: restartInFlightRef.current || isRestartingRef.current,
+      },
+    });
+
+    logVoiceEvent('voice_capture_lost', { cause, reasonCode, ...snapshot });
+    console.warn(
+      `🔍 [liveness] localAudio=${snapshot.localAudioVerdict} ` +
+      `level=${snapshot.audioLevel} peak=${snapshot.audioPeakRecent} ` +
+      `track=${snapshot.trackReadyState}/muted:${snapshot.trackMuted} ` +
+      `msSince onresult=${snapshot.msSinceOnResult} onerror=${snapshot.msSinceOnError} onend=${snapshot.msSinceOnEnd}`
+    );
 
     const preserved = salvageTranscript(cause);
 
@@ -2124,6 +2222,24 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
 
       // Throttle state updates to 10fps (every 100ms) instead of 60fps
       const now = Date.now();
+
+      // 🔍 CAPTURE-LOSS WITNESS (instrumentation only). Stamped every frame,
+      // NOT throttled like lastAudioLevelUpdate: staleness here must mean the
+      // loop stopped, and a 100ms throttle would make a running loop look
+      // intermittently dead. The peak resets on a rolling ~2s window so the
+      // number reported at loss time describes the recent past, not the
+      // loudest thing heard all session.
+      analyserTickAtRef.current = now;
+      {
+        const energy = localEnergyRef.current;
+        if (now - energy.peakWindowStartAt > ANALYSER_PEAK_WINDOW_MS) {
+          energy.peakWindowStartAt = now;
+          energy.peakRecent = normalizedLevel;
+        } else if (normalizedLevel > energy.peakRecent) {
+          energy.peakRecent = normalizedLevel;
+        }
+      }
+
       if (now - lastAudioLevelUpdate.current > 100) {
         setAudioLevel(normalizedLevel);
         lastAudioLevelUpdate.current = now;
@@ -2169,6 +2285,12 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
       const voiceThreshold = vadSensitivity; // Use sensitivity from props (default 0.3)
       const wasSpeaking = isSpeakingNowRef.current;
       const isSpeakingNow = normalizedLevel > voiceThreshold;
+
+      // 🔍 Witness the crossing at the SAME threshold the VAD uses, so the
+      // snapshot cannot disagree with what the component itself considered
+      // speech. Read-only: nothing below branches on these refs.
+      localEnergyRef.current.threshold = voiceThreshold;
+      if (isSpeakingNow) localEnergyRef.current.lastAboveThresholdAt = now;
 
       if (isSpeakingNow && !wasSpeaking) {
         // User started speaking
