@@ -16,6 +16,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { OracleConversation } from '@/components/OracleConversation';
 import { getOrCreateMaiaSessionId } from '@/lib/maia/presence/conversationIdentity';
+import { initializeSessionSanctuary } from '@/lib/settings/sessionSanctuaryInit';
 import { placeFromPathname } from '@/lib/maia/presence/place';
 import { processUltimateMAIAConsciousnessSession } from '@/lib/consciousness-computing/ultimate-consciousness-system';
 import { ClaudeCodePresence } from '@/components/ui/ClaudeCodePresence';
@@ -571,6 +572,24 @@ function MAIAPageContent() {
           console.log('🌅 [MAIA] New day - cleared old conversation, starting fresh');
         }
         console.log('✨ [MAIA] Created new session:', newSessionId);
+
+        // 🛡️ SANCTUARY-SETTINGS-DISCONNECT-01 — this branch, and only this
+        // branch, is the canonical new-session boundary. The member's account
+        // default is documented as governing how a NEW session begins, but the
+        // only code path that applied it was guarded on `maia_settings` being
+        // ABSENT — true once per browser, ever. So a member who set
+        // "Default Memory Mode → Sanctuary" after their first visit kept
+        // running in Continuity while the UI said otherwise.
+        //
+        // Deliberately NOT in the `!identity.isNew` branch above: re-applying
+        // the default on a restored session would overwrite a Quick Settings
+        // override mid-session — a default impersonating live state, which is
+        // the failure this repair exists to avoid.
+        initializeSessionSanctuary({ memberId: initialData?.id, fetcher: apiFetch })
+          .then((r) => {
+            if (r) console.log(`🛡️ [Sanctuary] New session default → ${r.sanctuary} (${r.source})`);
+          })
+          .catch(() => { /* never blocks session creation */ });
       }
       setExplorerId(initialData.id);
       setExplorerName(initialData.name);

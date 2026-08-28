@@ -71,6 +71,17 @@ export const DEFAULT_ACCOUNT_SETTINGS: AccountSettings = {
 
 const STORAGE_KEY = 'maia_account_settings';
 
+/**
+ * Exported so new-session Sanctuary initialization can read the RAW stored
+ * object rather than the merged result of `getAccountSettings()`. The merge
+ * fills `defaultMemoryMode` from DEFAULT_ACCOUNT_SETTINGS, which makes a member
+ * who has never chosen indistinguishable from one who deliberately chose
+ * Continuity — and on a fresh device that distinction decides whether the
+ * session fails closed. A second copy of this literal is exactly how two stores
+ * drift apart, so it is shared rather than duplicated.
+ */
+export const ACCOUNT_SETTINGS_STORAGE_KEY = STORAGE_KEY;
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Read / Write
 // ─────────────────────────────────────────────────────────────────────────────
