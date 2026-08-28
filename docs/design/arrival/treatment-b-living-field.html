@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Arrival B — Living Field · Soullab exploration</title>
+<style>
+  :root{
+    --canvas:#0A1628; --canvas-deep:#060D18;
+    --surface:#121A2B; --border:#1E2F4D; --border-strong:#2A3F63;
+    --text:#F5F7FB; --text-2:#B7C0D1; --text-muted:#7F8AA3;
+    --gold:#B8860B; --gold-soft:#D4AF37;
+    --t-slow:1400ms; --t-mid:700ms; --t-fast:220ms;
+    --ease:cubic-bezier(.22,.61,.36,1);
+    --parallax:1; /* zeroed under reduced motion — one switch, not per-layer */
+  }
+  @media (prefers-reduced-motion: reduce){
+    :root{ --t-slow:1ms; --t-mid:1ms; --t-fast:1ms; --parallax:0 }
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; min-height:100dvh; color:var(--text); overflow:hidden;
+    font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+    background:linear-gradient(180deg,#071426 0%,#050F1F 52%,#030814 100%);
+    display:flex; align-items:center; justify-content:center; padding:2.5rem 1rem;
+  }
+
+  /* ── The one cinematic gesture: depth ─────────────────────────────────
+     MEANING: depth + relationship. Three planes of the SOULLAB_THEME field
+     hierarchy (Void · Field · Surface) separate slightly under the pointer,
+     so the member perceives they are looking INTO somewhere, not AT
+     something. On entry the Surface plane advances — being let further in.
+     ORIENTATION FLOOR: every plane is painted at full opacity in frame one.
+     Parallax only re-positions ambience; the door never moves. */
+  .plane{position:fixed;inset:-6%;pointer-events:none;
+         transition:transform var(--t-mid) var(--ease)}
+  .void{
+    background:
+      radial-gradient(35% 28% at 22% 18%, rgba(124,94,170,.13), transparent 62%),
+      radial-gradient(30% 25% at 82% 76%, rgba(94,127,166,.10), transparent 60%);
+    transform:translate3d(calc(var(--mx,0)*-6px*var(--parallax)),calc(var(--my,0)*-6px*var(--parallax)),0);
+  }
+  .field{
+    background:radial-gradient(46% 34% at 50% 42%, rgba(184,134,11,.085), transparent 68%);
+    transform:translate3d(calc(var(--mx,0)*-14px*var(--parallax)),calc(var(--my,0)*-14px*var(--parallax)),0);
+  }
+  .motes{transform:translate3d(calc(var(--mx,0)*-24px*var(--parallax)),calc(var(--my,0)*-24px*var(--parallax)),0)}
+  .motes i{position:absolute;width:2px;height:2px;border-radius:50%;
+           background:var(--gold);opacity:.22}
+
+  .stage{
+    position:relative;z-index:1;width:100%;max-width:26rem;text-align:center;
+    transform:translateZ(0) scale(.985); opacity:0;
+    animation:advance var(--t-slow) var(--ease) 100ms forwards;
+  }
+  @keyframes advance{ to{ transform:none; opacity:1 } }
+
+  .mark{width:96px;height:96px;margin:0 auto 1.75rem;display:block}
+  .petal{fill:none;stroke:var(--gold);stroke-width:.7;opacity:.36}
+  .core{fill:var(--gold-soft);opacity:.5}
+
+  h1{font-family:Spectral,Georgia,serif;font-weight:300;font-size:1.9rem;
+     letter-spacing:.18em;margin:0 0 .55rem;color:rgba(255,255,255,.86)}
+  .sub{font-size:.875rem;font-weight:300;color:var(--text-2);margin:0 0 1.9rem}
+
+  .card{background:rgba(18,26,43,.66);border:1px solid var(--border);
+        border-radius:16px;padding:1.5rem 1.25rem;backdrop-filter:blur(10px)}
+  label{display:block;text-align:left;font-size:.75rem;letter-spacing:.08em;
+        text-transform:uppercase;color:var(--text-muted);margin:0 0 .5rem}
+  input{width:100%;padding:.85rem 1rem;font-size:1rem;color:var(--text);
+        background:rgba(6,13,24,.55);border:1px solid var(--border);
+        border-radius:10px;outline:none;
+        transition:border-color var(--t-fast) var(--ease)}
+  input::placeholder{color:var(--text-muted)}
+  input:focus{border-color:var(--border-strong)}
+  button{width:100%;margin-top:1rem;padding:.85rem 1rem;font-size:.95rem;
+         letter-spacing:.04em;color:#0A1628;background:var(--gold-soft);
+         border:0;border-radius:10px;cursor:pointer;
+         transition:opacity var(--t-fast) var(--ease)}
+  button:hover{opacity:.9}
+  .alt{margin-top:1.25rem;font-size:.8rem;color:var(--text-muted);line-height:1.9}
+  .alt a{color:var(--text-2);text-decoration:none;border-bottom:1px solid var(--border-strong)}
+  .alt .rule{display:block;height:1px;background:var(--border);margin:1rem 0}
+  .badge{position:fixed;left:1rem;bottom:1rem;z-index:2;font-size:.68rem;
+         letter-spacing:.1em;text-transform:uppercase;color:var(--text-muted);
+         background:rgba(6,13,24,.7);border:1px solid var(--border);
+         border-radius:999px;padding:.4rem .75rem}
+  .badge a{color:var(--text-2);text-decoration:none}
+</style>
+</head>
+<body>
+  <div class="plane void"></div>
+  <div class="plane field"></div>
+  <div class="plane motes" id="motes"></div>
+
+  <main class="stage">
+    <svg class="mark" viewBox="0 0 100 100" aria-hidden="true">
+      <circle class="petal" cx="50" cy="50" r="30"/>
+      <circle class="petal" cx="50" cy="50" r="38"/>
+      <g id="p"></g>
+      <circle class="core" cx="50" cy="50" r="3.2"/>
+    </svg>
+
+    <h1>Welcome.</h1>
+    <p class="sub">Sign in with an emailed code.</p>
+
+    <div class="card">
+      <label for="email">Email address</label>
+      <input id="email" type="email" placeholder="you@example.com" autocomplete="email">
+      <button type="button">Continue</button>
+      <div class="alt">
+        <span class="rule"></span>
+        <a href="#">Use biometric instead</a><br>
+        <a href="#">Forgot your passkey?</a><br>
+        New to Soullab? <a href="#">Begin Journey</a>
+      </div>
+    </div>
+  </main>
+
+  <div class="badge">Treatment B · Living Field — <a href="./index.html">exploration index</a></div>
+
+<script>
+  const g = document.getElementById('p');
+  for (let i=0;i<12;i++){
+    const e=document.createElementNS('http://www.w3.org/2000/svg','ellipse');
+    e.setAttribute('cx','50'); e.setAttribute('cy','32');
+    e.setAttribute('rx','5.5'); e.setAttribute('ry','16');
+    e.setAttribute('class','petal');
+    e.setAttribute('transform',`rotate(${i*30} 50 50)`);
+    g.appendChild(e);
+  }
+  // static field of motes — placed once, never animated (§2.1 no ambient drift)
+  const m = document.getElementById('motes');
+  for (let i=0;i<26;i++){
+    const s=document.createElement('i');
+    s.style.left=(Math.random()*100)+'%';
+    s.style.top=(Math.random()*100)+'%';
+    s.style.opacity=(.10+Math.random()*.18).toFixed(2);
+    m.appendChild(s);
+  }
+  // Parallax is CAUSED by the member's pointer (§2.1). --parallax is 0 under
+  // reduced motion, so this listener becomes inert without a second code path.
+  addEventListener('pointermove', e => {
+    const x=(e.clientX/innerWidth-.5)*2, y=(e.clientY/innerHeight-.5)*2;
+    document.documentElement.style.setProperty('--mx',x.toFixed(3));
+    document.documentElement.style.setProperty('--my',y.toFixed(3));
+  }, {passive:true});
+</script>
+</body>
+</html>

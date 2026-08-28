@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Arrival A — Threshold · Soullab exploration</title>
+<style>
+  /* ── Soullab Core palette (docs/canon/SOULLAB_THEME.md) ─────────────── */
+  :root{
+    --canvas:#0A1628; --canvas-deep:#060D18; --canvas-lift:#0F1D32;
+    --surface:#121A2B; --surface-elev:#1A2235;
+    --border:#1E2F4D; --border-strong:#2A3F63;
+    --text:#F5F7FB; --text-2:#B7C0D1; --text-muted:#7F8AA3;
+    --gold:#B8860B; --gold-soft:#D4AF37;
+    /* MOTION GRAMMAR §5.1 — the opt-out lives on the shared token, never at
+       the call site. Every animated rule below composes from these two. */
+    --t-slow:1600ms; --t-mid:700ms; --t-fast:220ms;
+    --ease:cubic-bezier(.22,.61,.36,1); /* ease-out; Soullab settles */
+  }
+  @media (prefers-reduced-motion: reduce){
+    :root{ --t-slow:1ms; --t-mid:1ms; --t-fast:1ms; }
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0; min-height:100dvh; color:var(--text);
+    font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+    background:
+      radial-gradient(58% 40% at 50% 12%, rgba(124,94,170,.16), rgba(90,70,150,.05) 40%, transparent 60%),
+      linear-gradient(180deg,#071426 0%,#050F1F 52%,#030814 100%);
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    padding:2.5rem 1rem; overflow-x:hidden;
+  }
+
+  /* ── The one cinematic gesture: light rising as material ──────────────
+     MEANING: attention + transformation. The place is already here; the
+     light does not create it, it lets the member see that it is a place.
+     ORIENTATION FLOOR: the form is in the first painted frame at full
+     legibility. Only the AMBIENT LIGHT moves. Nothing the member needs is
+     revealed by the animation. (MOTION_GRAMMAR §3.2) */
+  .dawn{
+    position:fixed; inset:0; pointer-events:none; z-index:0;
+    background:radial-gradient(46% 32% at 50% 30%, rgba(184,134,11,.13), rgba(124,94,170,.05) 45%, transparent 70%);
+    opacity:0; animation:rise var(--t-slow) var(--ease) 120ms forwards;
+  }
+  @keyframes rise{ to{ opacity:1 } }
+
+  .stage{position:relative; z-index:1; width:100%; max-width:26rem; text-align:center}
+
+  /* Holoflower stand-in — the house mark, not the real component */
+  .mark{width:104px;height:104px;margin:0 auto 2rem;display:block}
+  .mark g{transform-origin:50% 50%}
+  .petal{fill:none;stroke:var(--gold);stroke-width:.7;opacity:.34;
+         transition:opacity var(--t-mid) var(--ease)}
+  .core{fill:var(--gold-soft);opacity:.5}
+
+  h1{font-family:Spectral,Georgia,serif; font-weight:300; font-size:2rem;
+     letter-spacing:.18em; margin:0 0 .6rem; color:rgba(255,255,255,.86)}
+  .sub{font-size:.875rem; font-weight:300; color:var(--text-2); margin:0 0 2rem}
+
+  .card{
+    background:rgba(18,26,43,.62); border:1px solid var(--border);
+    border-radius:16px; padding:1.5rem 1.25rem;
+    backdrop-filter:blur(8px);
+    /* the surface resolves out of the dark rather than appearing */
+    animation:settle var(--t-slow) var(--ease) forwards;
+  }
+  @keyframes settle{
+    from{ border-color:rgba(30,47,77,.15); background:rgba(18,26,43,.28) }
+    to  { border-color:var(--border);      background:rgba(18,26,43,.62) }
+  }
+
+  label{display:block;text-align:left;font-size:.75rem;letter-spacing:.08em;
+        text-transform:uppercase;color:var(--text-muted);margin:0 0 .5rem}
+  input{
+    width:100%; padding:.85rem 1rem; font-size:1rem; color:var(--text);
+    background:rgba(6,13,24,.55); border:1px solid var(--border);
+    border-radius:10px; outline:none;
+    transition:border-color var(--t-fast) var(--ease), background var(--t-fast) var(--ease);
+  }
+  input::placeholder{color:var(--text-muted)}
+  input:focus{border-color:var(--border-strong); background:rgba(6,13,24,.75)}
+  /* gold moves last: accent answers the member's own act (§6) */
+  input:focus ~ .glow, body:has(input:focus) .petal{opacity:.62}
+
+  button{
+    width:100%; margin-top:1rem; padding:.85rem 1rem; font-size:.95rem;
+    letter-spacing:.04em; color:#0A1628; background:var(--gold-soft);
+    border:0; border-radius:10px; cursor:pointer;
+    transition:opacity var(--t-fast) var(--ease);
+  }
+  button:hover{opacity:.9}
+
+  .alt{margin-top:1.25rem;font-size:.8rem;color:var(--text-muted);line-height:1.9}
+  .alt a{color:var(--text-2);text-decoration:none;border-bottom:1px solid var(--border-strong)}
+  .alt .rule{display:block;height:1px;background:var(--border);margin:1rem 0}
+
+  .badge{
+    position:fixed; left:1rem; bottom:1rem; z-index:2;
+    font-size:.68rem; letter-spacing:.1em; text-transform:uppercase;
+    color:var(--text-muted); background:rgba(6,13,24,.7);
+    border:1px solid var(--border); border-radius:999px; padding:.4rem .75rem;
+  }
+  .badge a{color:var(--text-2);text-decoration:none}
+</style>
+</head>
+<body>
+  <div class="dawn"></div>
+
+  <main class="stage">
+    <svg class="mark" viewBox="0 0 100 100" aria-hidden="true">
+      <g>
+        <circle class="petal" cx="50" cy="50" r="30"/>
+        <circle class="petal" cx="50" cy="50" r="22"/>
+        <circle class="petal" cx="50" cy="50" r="38"/>
+        <g id="p"></g>
+        <circle class="core" cx="50" cy="50" r="3.2"/>
+      </g>
+    </svg>
+
+    <h1>Welcome.</h1>
+    <p class="sub">Sign in with an emailed code.</p>
+
+    <div class="card">
+      <label for="email">Email address</label>
+      <input id="email" type="email" placeholder="you@example.com" autocomplete="email">
+      <button type="button">Continue</button>
+
+      <div class="alt">
+        <span class="rule"></span>
+        <a href="#">Use biometric instead</a><br>
+        <a href="#">Forgot your passkey?</a><br>
+        New to Soullab? <a href="#">Begin Journey</a>
+      </div>
+    </div>
+  </main>
+
+  <div class="badge">Treatment A · Threshold — <a href="./index.html">exploration index</a></div>
+
+<script>
+  // 12 petals, the house mark's arrangement
+  const g = document.getElementById('p');
+  for (let i = 0; i < 12; i++) {
+    const e = document.createElementNS('http://www.w3.org/2000/svg','ellipse');
+    e.setAttribute('cx','50'); e.setAttribute('cy','32');
+    e.setAttribute('rx','5.5'); e.setAttribute('ry','16');
+    e.setAttribute('class','petal');
+    e.setAttribute('transform',`rotate(${i*30} 50 50)`);
+    g.appendChild(e);
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Arrival Threshold — exploration index</title>
+<style>
+  :root{--border:#1E2F4D;--text:#F5F7FB;--text-2:#B7C0D1;--muted:#7F8AA3;--gold:#D4AF37}
+  *{box-sizing:border-box}
+  body{margin:0;min-height:100dvh;color:var(--text);padding:3rem 1.25rem;
+       font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+       background:linear-gradient(180deg,#071426 0%,#050F1F 60%,#030814 100%)}
+  main{max-width:46rem;margin:0 auto}
+  h1{font-family:Spectral,Georgia,serif;font-weight:300;font-size:1.9rem;margin:0 0 .5rem}
+  .note{color:var(--muted);font-size:.85rem;line-height:1.7;margin:0 0 2.5rem;
+        border-left:2px solid var(--border);padding-left:1rem}
+  a.card{display:block;text-decoration:none;color:inherit;margin-bottom:1rem;
+         border:1px solid var(--border);border-radius:12px;padding:1.25rem 1.35rem;
+         background:rgba(18,26,43,.5);transition:border-color 200ms ease-out}
+  a.card:hover{border-color:#2A3F63}
+  a.card h2{margin:0 0 .35rem;font-size:1.05rem;font-weight:500;color:var(--gold)}
+  a.card p{margin:0 0 .5rem;color:var(--text-2);font-size:.9rem;line-height:1.6}
+  a.card .meta{font-size:.75rem;color:var(--muted);letter-spacing:.04em}
+  h3{font-size:.8rem;letter-spacing:.12em;text-transform:uppercase;
+     color:var(--muted);margin:2.5rem 0 .75rem}
+  ol{color:var(--text-2);font-size:.9rem;line-height:1.9;padding-left:1.2rem}
+</style>
+</head>
+<body>
+<main>
+  <h1>Arrival Threshold — exploration</h1>
+  <p class="note">
+    Non-authoritative. These are drafts for looking at, outside the design-canon gate
+    (<code>docs/design/**</code> is not <code>app/**</code> or <code>components/**</code>).
+    Nothing here is adopted. Rendered in headless Chromium at desktop, mobile and reduced
+    motion (see <code>shots/</code> and the README findings) — but not yet on a physical phone,
+    in Safari, or in the iOS WebView.
+    All three satisfy the orientation floor: the email field is present and legible in the
+    first painted frame, and each is complete with animation off.
+    Governing law: <code>docs/canon/SOULLAB_MOTION_GRAMMAR.md</code> ·
+    <code>docs/design/contracts/arrival-threshold.md</code>.
+  </p>
+
+  <a class="card" href="./treatment-a-threshold.html">
+    <h2>A · Threshold</h2>
+    <p>Light rising as material. The place is already there; illumination lets the member see
+       that it is a place, and the surface resolves out of the dark rather than appearing.</p>
+    <p class="meta">Motion meaning: attention + transformation · one ambient gesture, form static</p>
+  </a>
+
+  <a class="card" href="./treatment-b-living-field.html">
+    <h2>B · Living Field</h2>
+    <p>Depth. Three planes of the field hierarchy separate under the pointer, so the member is
+       looking <em>into</em> somewhere. On entry the surface plane advances — being let further in.</p>
+    <p class="meta">Motion meaning: depth + relationship · parallax caused by the member, never ambient</p>
+  </a>
+
+  <a class="card" href="./treatment-c-quiet-arrival.html">
+    <h2>C · Quiet Arrival</h2>
+    <p>Near-stillness. No card, no cinema — composition and typography carry the threshold, and
+       the ruled input reads as print rather than software. One movement in the whole file.</p>
+    <p class="meta">Motion meaning: relationship only · the deliberate test that stillness is a legitimate outcome</p>
+  </a>
+
+  <h3>What step 4 is choosing between</h3>
+  <ol>
+    <li>Which one still reads as Soullab beside <code>journal-room</code> and <code>house-return</code>?</li>
+    <li>Which survives its own motion being switched off — and does anything get <em>better</em>?</li>
+    <li>Which would a first-time member understand in two seconds, on a phone, on cellular?</li>
+    <li>Is any of them actually better than the arrival remodel already shipped and default-on?
+        "No" is a real and acceptable answer.</li>
+  </ol>
+</main>
+</body>
+</html>

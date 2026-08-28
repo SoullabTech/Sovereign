@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Arrival C — Quiet Arrival · Soullab exploration</title>
+<style>
+  :root{
+    --canvas-deep:#060D18; --border:#1E2F4D; --border-strong:#2A3F63;
+    --text:#F5F7FB; --text-2:#B7C0D1; --text-muted:#7F8AA3;
+    --gold:#B8860B; --gold-soft:#D4AF37;
+    --t-mid:600ms; --t-fast:260ms;
+    --ease:cubic-bezier(.22,.61,.36,1);
+  }
+  @media (prefers-reduced-motion: reduce){ :root{ --t-mid:1ms; --t-fast:1ms } }
+  *{box-sizing:border-box}
+  body{
+    margin:0;min-height:100dvh;color:var(--text);
+    font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+    background:
+      radial-gradient(60% 44% at 50% 30%, rgba(124,94,170,.10), transparent 64%),
+      linear-gradient(180deg,#071426 0%,#050F1F 55%,#030814 100%);
+    display:flex;align-items:center;justify-content:center;padding:3rem 1.25rem;
+  }
+
+  /* ── The deliberate near-absence of cinema ────────────────────────────
+     MOTION_GRAMMAR §2: "if a surface has nothing to say in those four
+     registers, the correct amount of motion is none." This treatment tests
+     whether the threshold's meaning is carried by COMPOSITION AND TYPE
+     rather than by movement — a still Soullab surface is not an unfinished
+     one. There is exactly ONE movement in the file, and it is RELATIONSHIP:
+     the mark answers the member's focus. Nothing else ever moves. */
+
+  .stage{width:100%;max-width:23rem}
+
+  .mark{width:72px;height:72px;margin:0 0 3rem;display:block}
+  .petal{fill:none;stroke:var(--gold);stroke-width:.6;opacity:.26;
+         transition:opacity var(--t-mid) var(--ease)}
+  .core{fill:var(--gold-soft);opacity:.4;
+        transition:opacity var(--t-mid) var(--ease)}
+  /* the single gesture — the place notices you */
+  body:has(input:focus) .petal{opacity:.5}
+  body:has(input:focus) .core{opacity:.72}
+
+  h1{font-family:Spectral,Georgia,serif;font-weight:300;font-size:2.4rem;
+     line-height:1.15;letter-spacing:.01em;margin:0 0 1rem;
+     color:rgba(255,255,255,.9)}
+  .lede{font-size:1rem;font-weight:300;line-height:1.7;color:var(--text-2);
+        margin:0 0 2.75rem;max-width:20rem}
+
+  /* No card. The field itself is the surface; the input is a ruled line,
+     the way a form looks in print rather than in software. */
+  label{display:block;font-size:.72rem;letter-spacing:.12em;
+        text-transform:uppercase;color:var(--text-muted);margin:0 0 .65rem}
+  input{
+    width:100%;padding:.5rem 0 .8rem;font-size:1.05rem;color:var(--text);
+    background:transparent;border:0;border-bottom:1px solid var(--border-strong);
+    border-radius:0;outline:none;
+    transition:border-color var(--t-fast) var(--ease);
+  }
+  input::placeholder{color:var(--text-muted)}
+  input:focus{border-bottom-color:var(--gold)}
+
+  button{
+    margin-top:2rem;padding:.8rem 1.9rem;font-size:.9rem;letter-spacing:.06em;
+    color:var(--gold-soft);background:transparent;
+    border:1px solid var(--border-strong);border-radius:2px;cursor:pointer;
+    transition:border-color var(--t-fast) var(--ease),color var(--t-fast) var(--ease);
+  }
+  button:hover{border-color:var(--gold);color:#E8D9A0}
+
+  .alt{margin-top:2.75rem;font-size:.8rem;color:var(--text-muted);line-height:2}
+  .alt a{color:var(--text-2);text-decoration:none;
+         border-bottom:1px solid var(--border);padding-bottom:1px}
+  .alt a:hover{border-bottom-color:var(--border-strong)}
+
+  .badge{position:fixed;left:1rem;bottom:1rem;font-size:.68rem;
+         letter-spacing:.1em;text-transform:uppercase;color:var(--text-muted);
+         background:rgba(6,13,24,.7);border:1px solid var(--border);
+         border-radius:999px;padding:.4rem .75rem}
+  .badge a{color:var(--text-2);text-decoration:none}
+
+  @media (max-width:420px){ h1{font-size:2rem} .lede{margin-bottom:2rem} }
+</style>
+</head>
+<body>
+  <main class="stage">
+    <svg class="mark" viewBox="0 0 100 100" aria-hidden="true">
+      <circle class="petal" cx="50" cy="50" r="32"/>
+      <g id="p"></g>
+      <circle class="core" cx="50" cy="50" r="3"/>
+    </svg>
+
+    <h1>Welcome.</h1>
+    <p class="lede">This is a place to think out loud. Sign in with a code we email you.</p>
+
+    <label for="email">Email address</label>
+    <input id="email" type="email" placeholder="you@example.com" autocomplete="email">
+    <br>
+    <button type="button">Continue</button>
+
+    <div class="alt">
+      <a href="#">Use biometric instead</a><br>
+      <a href="#">Forgot your passkey?</a><br>
+      New to Soullab? <a href="#">Begin Journey</a>
+    </div>
+  </main>
+
+  <div class="badge">Treatment C · Quiet Arrival — <a href="./index.html">exploration index</a></div>
+
+<script>
+  const g=document.getElementById('p');
+  for(let i=0;i<12;i++){
+    const e=document.createElementNS('http://www.w3.org/2000/svg','ellipse');
+    e.setAttribute('cx','50'); e.setAttribute('cy','34');
+    e.setAttribute('rx','5'); e.setAttribute('ry','15');
+    e.setAttribute('class','petal');
+    e.setAttribute('transform',`rotate(${i*30} 50 50)`);
+    g.appendChild(e);
+  }
+</script>
+</body>
+</html>
