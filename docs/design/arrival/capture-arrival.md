@@ -1,5 +1,31 @@
 # Capturing the true shipped arrival
 
+> ## Execution contract
+>
+> ```
+> subject        live app
+> phase          D-SIGNIN
+> device         physical device
+> credential     registered biometric credential
+> required       an ADJUDICATING biometric outcome
+> ```
+>
+> ## Stop rule
+>
+> ```
+> if no biometric control appears
+>   → do NOT clear ARRIVAL-BIOMETRIC-REFLOW-01
+>   → classify NON-ADJUDICATING
+>   → fix the witness conditions, not the finding
+> ```
+>
+> **Run the physical witness. Do not reinterpret the held findings from source or static
+> mocks.** The lane has reached the point where more desk reasoning reduces evidence quality
+> rather than improving it — the three findings in
+> [`OPEN_FINDINGS.md`](./OPEN_FINDINGS.md) are held by ruling, and closing one needs the
+> evidence it names, not a fresh reading of the code.
+
+
 The before-state witness must be a **browser capture of the running app**, not a reproduction.
 `reference-shipped.html` shares the assumptions of the person who reproduced it and cannot serve
 as evidence of what is live. This procedure produces the real thing.
