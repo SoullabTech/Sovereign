@@ -164,6 +164,37 @@ cold witness          READY
 implementation        HOLD
 ```
 
+```
+cold witness protocol  READY
+capture instrument     READY
+cold witness           NOT EXECUTED
+```
+
+> **Not executed is not failed. Not observed is not passed.**
+> **No technical repair is implied by the missing witness.** A future session reading this state
+> must not treat the gap as a defect to fix, or as an acceptance to build on.
+
+**Two legitimate paths, and only two.**
+
+**A · HOLD** *(current)* — leave the prototype frozen until a suitable tester and witnesser are
+available. Preserves the strongest evidence standard. **This is the standing ruling.**
+
+**B · EXPLICIT FOUNDER WAIVER** — if implementation must begin first, it is recorded exactly as:
+
+```
+COLD WITNESS     WAIVED FOR PRE-IMPLEMENTATION
+reason           <founder decision>
+design evidence  provisional
+experiential acceptance still required before V1 acceptance
+```
+
+That permits implementation **without pretending the experience was proven.** No waiver is in
+force. Founder position: *"I would not waive it yet — this test is tiny and aimed directly at the
+one thing Larry V1 needs to accomplish: does return feel like being remembered rather than opening
+software?"*
+
+**Screens 02 and 03 stay hidden until the Home test is complete.**
+
 **The prototype meets the witness frozen.** Do not improve it after reading the witness protocol —
 that turns the test into rehearsal. Nothing changes on the basis of images not rendering on the
 founder's side; the Chromium render pass already found and repaired real defects, and that is
