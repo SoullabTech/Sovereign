@@ -37,6 +37,12 @@ contextBridge.exposeInMainWorld('maia', {
     ipcRenderer.invoke('maia:voice-mic-result', { granted, errorName }),
   voiceCaptureLost: (cause) => ipcRenderer.invoke('maia:voice-capture-lost', { cause }),
 
+  // ── DESKTOP-TEXT-INPUT-01: the typed turn ─────────────────────────────────
+  // TEXT ONLY. The renderer cannot name a route, a method, a member or a
+  // session — it asks main to perform the one governed conversation operation,
+  // and main decides everything about how that happens.
+  say: (text) => ipcRenderer.invoke('maia:say', { text }),
+
   // ── read-only ─────────────────────────────────────────────────────────────
   getVoiceState: () => ipcRenderer.invoke('maia:voice-state'),
   getStatus: () => ipcRenderer.invoke('maia:status'),

@@ -269,6 +269,34 @@ window.addEventListener('DOMContentLoaded', async () => {
     const out = await window.maia.signIn($('u').value.trim(), $('p').value);
     $('autherr').textContent = out.ok ? '' : (out.error || 'Sign-in failed.');
   };
+  // ⭐ DESKTOP-TEXT-INPUT-01. Typing is a way to say something, not a second
+  // conversation. The renderer's whole job here is: refuse an empty send, hand
+  // main the text, clear the field. It does NOT render the member turn — that
+  // arrives on the `heard` phase like a spoken one, so exactly one member turn
+  // appears however the words were obtained.
+  async function sendTyped() {
+    const el = $('say');
+    const text = (el.value || '').trim();
+    if (!text) return;                     // whitespace is not a turn
+    $('send').disabled = true;
+    try {
+      const out = await window.maia.say(text);
+      if (!out || !out.ok) {
+        // ⛔ Never a silent refusal. Main's reason is the member's answer.
+        setState((out && out.reason) || 'Could not send that.', true);
+        return;                            // keep the text: it was not sent
+      }
+      el.value = '';
+    } finally {
+      $('send').disabled = false;
+      el.focus();
+    }
+  }
+  $('send').onclick = sendTyped;
+  $('say').onkeydown = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendTyped(); }
+  };
+
   $('out').onclick = () => window.maia.signOut();
   $('talk').onclick = () => (listening ? stopListening() : startListening());
   $('toggle').onclick = () => $('log').classList.toggle('on');

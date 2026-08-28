@@ -52,7 +52,11 @@
   .state.err { color:var(--sl-state-error); }
 
   footer { padding:16px 28px 22px; border-top:1px solid var(--sl-border-subtle);
-           display:flex; align-items:center; gap:14px; }
+           display:flex; flex-direction:column; align-items:stretch; gap:12px; }
+  .row { display:flex; align-items:center; gap:14px; }
+  /* DESKTOP-TEXT-INPUT-01. The typed path sits above the status row so a long
+     status line and a long message never fight for the same width. */
+  .compose input { flex:1; }
   button { background:var(--sl-bg-elevated); color:var(--sl-text-primary);
            border:1px solid var(--sl-border-strong);
            border-radius:7px; padding:9px 18px; font:inherit; cursor:pointer; }
@@ -94,12 +98,18 @@
 </main>
 
 <footer id="bar" style="display:none">
-  <div class="dot" id="dot"></div>
-  <div class="state" id="state">Ready when you are.</div>
-  <div class="spacer"></div>
-  <button class="link" id="toggle">diagnostics</button>
-  <button class="link" id="out">sign out</button>
-  <button class="primary" id="talk">Start listening</button>
+  <div class="row compose">
+    <input id="say" placeholder="Type to MAIA — Enter to send" autocomplete="off">
+    <button id="send">Send</button>
+  </div>
+  <div class="row">
+    <div class="dot" id="dot"></div>
+    <div class="state" id="state">Ready when you are.</div>
+    <div class="spacer"></div>
+    <button class="link" id="toggle">diagnostics</button>
+    <button class="link" id="out">sign out</button>
+    <button class="primary" id="talk">Start listening</button>
+  </div>
 </footer>
 
 <div id="log"></div>

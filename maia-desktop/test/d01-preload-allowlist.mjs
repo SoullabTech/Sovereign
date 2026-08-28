@@ -27,6 +27,8 @@ export const RATIFIED_INVOKE_CHANNELS = [
     purpose: 'Clear the stored session. Takes no argument; main owns the credential and its removal from encrypted storage.' },
   { channel: 'maia:auth-state', ratified_in: 'DESKTOP-CONVERSATION-01',
     purpose: 'Read WHETHER a session exists and whose it is. Read-only, and deliberately never returns the token itself — a renderer that could read the credential could exfiltrate it.' },
+  { channel: 'maia:say', ratified_in: 'DESKTOP-TEXT-INPUT-01',
+    purpose: 'Send one typed member turn. REQUIRED because Desktop had a single way in — the microphone — and a contaminated capture path left the member no channel they could trust. AUTHORIZED by the DESKTOP-TEXT-INPUT-01 ruling. MINIMAL: the payload is a string and nothing else; no route, endpoint, method, member id, session id or audio disposition may be named by the renderer. MAIN-VALIDATED: main enforces signed-in, refuses whitespace, clamps to MAX_TYPED_CHARS, and holds the shared turnBusy exclusion so a typed turn cannot race a spoken one. DOCTRINE-COMPATIBLE: it hands the words to the SAME deliverTurn a spoken turn uses, so it opens no second conversation implementation and acquires no network primitive.' },
   { channel: 'maia:status', ratified_in: 'MAIA-D01',
     purpose: 'Read app identity and build stamp. Read-only. An unstamped build reports UNSTAMPED rather than a fabricated SHA.' },
 ];

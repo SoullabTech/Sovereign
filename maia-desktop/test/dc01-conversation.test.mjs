@@ -43,10 +43,18 @@ test('CLASS E REGRESSION — the frame handler buffers audio and dispatches a tu
 });
 
 test('the turn loop actually calls transcribe AND ask — not one without the other', () => {
+  // ⭐ DESKTOP-TEXT-INPUT-01 moved everything from "we have the member's words"
+  // onward into `deliverTurn`, so a typed turn and a spoken turn share ONE
+  // implementation. The claim being asserted is unchanged — the spoken chain
+  // must reach MAIA and her audio, never stop at "transcription works" — but it
+  // is now asserted ACROSS the handoff instead of inside one function body.
   const turn = /async function runTurn\(\)[\s\S]*?\n\}/.exec(mainJs)[0];
   assert.ok(turn.includes('conversation.transcribe('), 'never transcribes');
-  assert.ok(turn.includes('conversation.ask('), 'never asks MAIA — stops at "transcription works"');
-  assert.ok(turn.includes("'maia:audio'") || turn.includes('maia:audio'), 'never emits audio');
+  assert.ok(turn.includes('deliverTurn('), 'the spoken turn does not reach the shared turn path');
+
+  const deliver = /async function deliverTurn\([\s\S]*?\n\}/.exec(mainJs)[0];
+  assert.ok(deliver.includes('conversation.ask('), 'never asks MAIA — stops at "transcription works"');
+  assert.ok(deliver.includes('maia:audio'), 'never emits audio');
 });
 
 test('a boundary does NOT end the epoch — a pause is still not a finished thought', () => {

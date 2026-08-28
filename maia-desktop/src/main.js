@@ -55,6 +55,10 @@ let conversation = null; // one continuity for this run
 let voice = null;
 let turnBusy = false;
 
+// ⭐ DESKTOP-TEXT-INPUT-01. Clamped in MAIN, not in the field's maxlength — a
+// renderer cannot be the authority on what main will accept.
+const MAX_TYPED_CHARS = 4000;
+
 function broadcast(channel, payload) {
   for (const w of BrowserWindow.getAllWindows()) {
     if (!w.isDestroyed()) w.webContents.send(channel, payload);
@@ -278,6 +282,51 @@ ipcMain.handle('maia:voice-stop', async () => {
   return { ok: true, tail, chars: text.length, snapshot };
 });
 
+// ⭐ DESKTOP-TEXT-INPUT-01. A typed turn.
+//
+// Desktop had exactly one way in — the microphone — and while capture is
+// producing degenerate transcripts that is not a channel a member can trust.
+// This adds a second way to SAY something. It adds no second way to CONVERSE:
+// the words are handed to the same `deliverTurn` a spoken turn uses, so
+// identity, persistence, canonical thread and `includeAudio` are not restated
+// here and cannot drift from the voice path.
+//
+// ⛔ The renderer supplies TEXT and nothing else. No route, no endpoint, no
+// method, no member id, no session id, no audio disposition. Main names the
+// operation; the renderer may only ask for it. A renderer that could name the
+// call would have acquired a network primitive, which is the exact thing the
+// preload doctrine exists to refuse.
+ipcMain.handle('maia:say', async (_evt, payload) => {
+  // Same refusal as speaking, in the same words — a typed turn is not a way
+  // around authentication.
+  if (!memberSession || !memberSession.state().signedIn) {
+    return { ok: false, reason: 'sign in before speaking' };
+  }
+  if (!conversation) return { ok: false, reason: 'no conversation yet' };
+
+  // ⛔ ONE turn at a time, shared with the voice path. A typed turn must never
+  // race a spoken one: two asks in flight would interleave two member turns
+  // into the canonical thread in an order nobody chose.
+  if (turnBusy) return { ok: false, reason: 'one turn at a time — MAIA is still with the last one' };
+
+  const raw = payload && typeof payload.text === 'string' ? payload.text : '';
+  const said = raw.trim().slice(0, MAX_TYPED_CHARS);
+  // Whitespace is not a turn. Refusing here, in main, means a renderer bug
+  // cannot post an empty member turn into the member's own history.
+  if (!said) return { ok: false, reason: 'nothing to send' };
+
+  turnBusy = true;
+  try {
+    await deliverTurn(said);
+    return { ok: true };
+  } catch (e) {
+    broadcast('maia:turn', { phase: 'error', error: (e && e.message) || 'turn failed' });
+    return { ok: false, reason: 'turn failed' };
+  } finally {
+    turnBusy = false;
+  }
+});
+
 ipcMain.handle('maia:voice-state', async () => voiceStateSnapshot());
 
 ipcMain.handle('maia:status', async () => ({
@@ -311,20 +360,37 @@ async function runTurn() {
     // The transcript is a FINAL for the epoch — the tail invariant now has real
     // material to protect, which on the first walk it never did.
     voice.epoch.final(said, `utt-${Date.now()}`);
-    broadcast('maia:turn', { phase: 'heard', member: said });
 
-    broadcast('maia:turn', { phase: 'thinking' });
-    const a = await conversation.ask(said);
-    if (!a.ok) { broadcast('maia:turn', { phase: 'error', error: a.error }); return; }
-
-    broadcast('maia:turn', { phase: 'answered', maia: a.text });
-    if (a.audio) broadcast('maia:audio', a.audio);
-    else broadcast('maia:turn', { phase: 'no-voice' });
+    await deliverTurn(said);
   } catch (e) {
     broadcast('maia:turn', { phase: 'error', error: (e && e.message) || 'turn failed' });
   } finally {
     turnBusy = false;
   }
+}
+
+// ── what a member said → MAIA → her answer ──────────────────────────────────
+//
+// ⭐ DESKTOP-TEXT-INPUT-01. Everything from "we have the member's words" onward
+// lives HERE, once. Speaking and typing differ only in how the words were
+// obtained; from this line down there is a single implementation, so a typed
+// turn cannot drift into a second conversation with different persistence,
+// a different identity, or a different audio disposition.
+//
+// ⛔ There is exactly ONE `conversation.ask(` call site in this file, and this
+// is it. A second one would be free to diverge, and the test asserts the count.
+//
+// The caller owns `turnBusy`: it is the caller that knows whether it may start.
+async function deliverTurn(said) {
+  broadcast('maia:turn', { phase: 'heard', member: said });
+
+  broadcast('maia:turn', { phase: 'thinking' });
+  const a = await conversation.ask(said);
+  if (!a.ok) { broadcast('maia:turn', { phase: 'error', error: a.error }); return; }
+
+  broadcast('maia:turn', { phase: 'answered', maia: a.text });
+  if (a.audio) broadcast('maia:audio', a.audio);
+  else broadcast('maia:turn', { phase: 'no-voice' });
 }
 
 
