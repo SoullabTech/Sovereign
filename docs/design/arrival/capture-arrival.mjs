@@ -161,8 +161,39 @@ for (const r of ROUTES) {
 await browser.close();
 writeFileSync(join(out, 'reflow-report.json'), JSON.stringify(report, null, 2));
 
-const late = report.filter(r => /LATE \+ DISPLACED/.test(r.verdict));
+// Four adjudication outcomes, kept distinct. The fourth matters most: a run
+// where no biometric control ever appeared has not TESTED the finding, and must
+// never be read as clearing it.
+const confirmed = report.filter(r => /LATE \+ DISPLACED/.test(r.verdict));
+const lateClean = report.filter(r => /no layout displacement/.test(r.verdict));
+const atPaint   = report.filter(r => /present at first paint/.test(r.verdict));
+const noControl = report.filter(r => /no biometric control offered/.test(r.verdict));
+
 console.log(`\nCaptures + reflow-report.json written to ${out}`);
-console.log(late.length
-  ? `\nARRIVAL-BIOMETRIC-REFLOW-01: CONFIRMED on ${late.length} of ${report.length} cells.`
-  : `\nARRIVAL-BIOMETRIC-REFLOW-01: not reproduced in ${report.length} cells (this device/profile).`);
+console.log(`\ncells: ${report.length}  ·  confirmed ${confirmed.length}`
+  + `  ·  late-but-stable ${lateClean.length}  ·  at-first-paint ${atPaint.length}`
+  + `  ·  no-control ${noControl.length}`);
+
+let adjudication;
+if (confirmed.length) {
+  adjudication = `CONFIRMED on ${confirmed.length} of ${report.length} cells.`
+    + ' Do NOT tune the easing curve yet — the gesture is claiming an arrival that then changes.';
+} else if (noControl.length === report.length) {
+  adjudication = 'NON-ADJUDICATING. No biometric control appeared in ANY cell, so the finding was'
+    + ' not exercised. This is NOT a pass. Re-run on a device+profile with a registered'
+    + ' credential before treating the reflow question as settled.';
+} else if (noControl.length) {
+  adjudication = `PARTIAL. ${noControl.length} of ${report.length} cells never offered a biometric`
+    + ' control and did not exercise the finding; the rest showed no displacement.'
+    + ' Re-run the un-exercised cells on a device+profile with a registered credential.';
+} else if (lateClean.length) {
+  adjudication = `not reproduced across ${report.length} exercised cells — the control arrives late`
+    + ' but nothing the member had oriented to moved. The curve may now be judged on feel.';
+} else {
+  adjudication = `collapsed — the control was present at first paint in all ${report.length} cells,`
+    + ' so there is no late arrival to witness. The curve may now be judged on feel.';
+}
+console.log(`\nARRIVAL-BIOMETRIC-REFLOW-01: ${adjudication}`);
+
+writeFileSync(join(out, 'adjudication.txt'),
+  `ARRIVAL-BIOMETRIC-REFLOW-01\n${new Date().toISOString()}\nbase: ${base}\n\n${adjudication}\n`);

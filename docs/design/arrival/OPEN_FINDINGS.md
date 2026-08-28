@@ -67,14 +67,28 @@ decision.**
 
 **Verdicts the harness can return:**
 
-| Outcome | Reading |
-|---|---|
-| present at first paint | no finding; the check resolved before paint |
-| arrives late, no displacement | probably fine — nothing the member had oriented to moved |
-| **arrives late and shifts the stack** | **real finding**; the gesture's meaning is compromised |
+| Outcome | Reading | Next |
+|---|---|---|
+| **arrives late and shifts the stack** | **CONFIRMED** — the gesture claimed an arrival that then changed | do **not** tune easing |
+| arrives late, no displacement | not reproduced — nothing the member had oriented to moved | curve may be judged on feel |
+| present at first paint | collapsed — no late arrival to witness | curve may be judged on feel |
+| **no biometric control ever appeared** | **NON-ADJUDICATING** — the finding was not exercised | ⛔ **not a pass**; re-run with a registered credential |
+
+That fourth row is the one that will be misread. A run where the control never appears looks like
+a clean result and is not one: it tested nothing. `capture-arrival.mjs` therefore reports it
+separately, in the summary line and in `adjudication.txt`, rather than folding it into "not
+reproduced". Both branches were verified by simulation on 2026-08-28 — a page serving the control
+returns *collapsed*, the same page with it removed returns *NON-ADJUDICATING*.
+
+**Acceptance condition, in full:**
+
+```
+LIVE APP  +  registered biometric credential  +  D-SIGNIN  +  phase × width × time witness
+```
 
 **Closes when:** `capture-arrival.mjs` is run against the live app on a device with a registered
-biometric credential, and `reflow-report.json` returns a verdict for `/signin` at all four widths.
+biometric credential, and `reflow-report.json` returns an *adjudicating* verdict for `/signin` at
+all four widths.
 
 ---
 
