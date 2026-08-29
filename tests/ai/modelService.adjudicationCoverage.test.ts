@@ -55,6 +55,7 @@ import { generateWithLocalModel } from '../../lib/ai/localModelClient';
 import { generateWithKimi } from '../../lib/ai/kimiClient';
 import { generateWithMultipleEngines } from '../../lib/ai/multiEngineOrchestrator';
 import { STANCE_ADJUDICATOR_VERSION } from '../../lib/sovereign/stanceDetector';
+import { applyStanceReanchor } from '../../lib/sovereign/stanceReanchor';
 
 const mockClaude = generateWithClaude as jest.MockedFunction<typeof generateWithClaude>;
 const mockLocal = generateWithLocalModel as jest.MockedFunction<typeof generateWithLocalModel>;
@@ -161,6 +162,36 @@ describe('generateText — observation does not change what it observes', () => 
     expect(mockClaude).toHaveBeenCalledTimes(1);
     expect(mockLocal).not.toHaveBeenCalled();
     expect(r.text).toBe(CAPTURED_TEXT);
+  });
+});
+
+describe('applyStanceReanchor — Sanctuary suppresses content-derived density', () => {
+  it('emits nothing and leaves the prompt untouched under Sanctuary', () => {
+    const spy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    try {
+      const history = Array.from({ length: 8 }, () => ({
+        role: 'user',
+        content: 'check the deploy logs for the container trace and the commit uuid',
+      }));
+      const out = applyStanceReanchor('PROMPT', history, { sanctuary: true });
+      expect(out).toBe('PROMPT');
+      const preLines = spy.mock.calls.map(c => String(c[0])).filter(l => l.includes('[MAIA/stance] pre'));
+      expect(preLines).toHaveLength(0);
+    } finally {
+      spy.mockRestore();
+    }
+  });
+
+  it('still emits density on an ordinary turn', () => {
+    const spy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    try {
+      applyStanceReanchor('PROMPT', [{ role: 'user', content: 'hello' }]);
+      const preLines = spy.mock.calls.map(c => String(c[0])).filter(l => l.includes('[MAIA/stance] pre'));
+      expect(preLines).toHaveLength(1);
+      expect(preLines[0]).toContain('density');
+    } finally {
+      spy.mockRestore();
+    }
   });
 });
 

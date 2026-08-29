@@ -155,6 +155,18 @@ Transient adjudication is permitted for constitutional protection. **Derived
 stance evidence must not enter durable runtime evidence or ordinary application
 logs for Sanctuary turns.**
 
+The governing distinction is **derived from member content vs operational
+metadata** — not classification vs scalar. A single number inferred from
+conversation history is still a retained inference about member material, and
+repeated across turns may indirectly trace trajectory or intensity.
+
+| Under Sanctuary | |
+|---|---|
+| stance classification, authority slip | suppress |
+| adjudicator version | suppress (no verdict exists to stamp) |
+| stance density | suppress — computation and emission both |
+| provider, timing, request mechanics | existing Sanctuary policy |
+
 Suppressing database fields while still writing the classification to
 application logs makes the boundary cosmetic: logs are durable telemetry too.
 Operational metadata such as the provider remains under its existing Sanctuary

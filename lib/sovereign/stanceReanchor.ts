@@ -59,9 +59,34 @@ const enabled = () => process.env.STANCE_REANCHOR_ENABLED === '1';
 /**
  * Logs `[MAIA/stance] pre` on every call. Appends the re-anchor to `prompt` ONLY when the flag is
  * on AND the trigger fires. Returns the (possibly unchanged) prompt. Never throws.
+ *
+ * SANCTUARY: `density` is a scalar, but it is an inference DERIVED FROM MEMBER
+ * CONTENT — technical-register share across recent turns — and across turns it
+ * could indirectly trace trajectory or intensity. The governing distinction is
+ * not classification-vs-scalar, it is derived-from-content vs operational
+ * metadata. So under Sanctuary neither the computation nor the emission
+ * happens: the function returns the prompt untouched.
+ *
+ * The re-anchor injection is forgone with it. That is acceptable and not a loss
+ * of constitutional protection — the re-anchor is a register correction, off by
+ * default (STANCE_REANCHOR_ENABLED), and never proven across production
+ * traffic. The protective egress guard (enforceIdentityPredicateConstraint) is
+ * untouched and still runs on every turn, sanctuary included.
+ *
+ * NOTE: this function currently has NO callers. It is gated now so that wiring
+ * it later cannot silently reintroduce content-derived emission into sanctuary
+ * logs. The live `pre` line comes from logStancePre below, which carries only
+ * operational metadata.
+ *
+ * Canon: docs/canon/MAIA_BEHAVIORAL_PORTABILITY.md § Sanctuary
  */
-export function applyStanceReanchor(prompt: string, history: any[]): string {
+export function applyStanceReanchor(
+  prompt: string,
+  history: any[],
+  opts?: { sanctuary?: boolean },
+): string {
   try {
+    if (opts?.sanctuary) return prompt;
     const density = technicalDensity(history);
     const fired = density >= THRESHOLD;
     const on = enabled();
@@ -76,6 +101,14 @@ export function applyStanceReanchor(prompt: string, history: any[]): string {
  * PHASE 1 (denominator, logging-only) — wired at the live chokepoint `generateWithClaude`.
  * Doctrine: log at the live chokepoint; intervene only where history is clean (Phase 2 @ getMaiaResponse).
  * These do NOT mutate the prompt, compute the density trigger, or inject the re-anchor.
+ *
+ * SANCTUARY: deliberately NOT gated, and that is the correct reading of the
+ * rule rather than an exemption from it. Every field here — `enabled`, `tier`,
+ * `reason` — is operational metadata about request mechanics. Nothing is
+ * derived from member content: no density, no classification, no text. It
+ * emits the same line for a sanctuary turn and an empty one. Suppressing it
+ * would protect nothing and would cost the denominator that makes the
+ * post-verdict rate legible.
  */
 export function logStancePre(ctx?: { tier?: string; reason?: string }): void {
   try {

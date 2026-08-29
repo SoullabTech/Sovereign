@@ -467,22 +467,28 @@ async function checkAdjudicatorIntegrity(): Promise<boolean> {
  * the shape of the seam rather than from counting call sites.
  *
  * The empirical complement lives in tests/ai/modelService.adjudicationCoverage
- * .test.ts, which exercises each dispatch branch and asserts a stamped verdict
- * comes back from every one.
+ * .test.ts (four branches) and tests/ai/modelService.sovereign-fallback.test.ts
+ * (the sovereign-routing branch, which needs MAIA_INFERENCE_MODE set at import
+ * time). Each exercises a dispatch branch and asserts a stamped verdict comes
+ * back from it.
  *
- * Note on the branch inventory: generateText dispatches to five branches
- * (sovereign router, multi-engine, moonshot, anthropic, local). localInference
- * is reached only beneath sovereignRouter, which itself returns through the
- * seam — so it is covered transitively, not separately.
+ * RECONCILIATION — 6 logical modes, 5 physical dispatch branches.
+ *
+ * P0 reported "1 of 6 generation paths adjudicated" against six client FILES.
+ * P1 reports five branches exercised. The sixth did not stop being tested and
+ * did not disappear: it was never an independent return path. This table is the
+ * reconciliation, kept in the verifier so a reader six months from now does not
+ * have to guess whether a finding was structurally subsumed or quietly dropped.
  */
-const GENERATION_CLIENTS = [
-  'lib/ai/claudeClient.ts',
-  'lib/ai/localModelClient.ts',
-  'lib/ai/localInferenceClient.ts',
-  'lib/ai/kimiClient.ts',
-  'lib/ai/sovereignRouter.ts',
-  'lib/ai/multiEngineOrchestrator.ts',
+const GENERATION_MODES: Array<{ mode: string; client: string; dispatch: string }> = [
+  { mode: 'anthropic',                    client: 'lib/ai/claudeClient.ts',           dispatch: 'own branch' },
+  { mode: 'local / consciousness_engine', client: 'lib/ai/localModelClient.ts',       dispatch: 'own branch (primary and Claude-fallback share one return)' },
+  { mode: 'moonshot',                     client: 'lib/ai/kimiClient.ts',             dispatch: 'own branch' },
+  { mode: 'multi_engine',                 client: 'lib/ai/multiEngineOrchestrator.ts', dispatch: 'own branch' },
+  { mode: 'sovereign routing',            client: 'lib/ai/sovereignRouter.ts',        dispatch: 'own branch' },
+  { mode: 'local / inference',            client: 'lib/ai/localInferenceClient.ts',   dispatch: 'SUBSUMED — reached only beneath sovereignRouter; no independent return from generateText' },
 ];
+const GENERATION_CLIENTS = GENERATION_MODES.map(m => m.client);
 const ADJUDICATOR_CALL = /\b(logStancePost|classifyStance|authoritativeSlip)\b/;
 
 async function checkAdjudicatorSubstrateCoverage() {
@@ -534,10 +540,88 @@ async function checkAdjudicatorSubstrateCoverage() {
     return;
   }
 
+  const subsumed = GENERATION_MODES.filter(m => m.dispatch.startsWith('SUBSUMED'));
+  const physical = GENERATION_MODES.length - subsumed.length;
+
   pass(
     `[LIVE] Adjudication is structurally unbypassable at the provider-neutral seam`,
     `generateTextInner is module-private · no client-local duplicate · every dispatch branch returns through one adjudicated return`
   );
+  pass(
+    `[LIVE] Generation coverage reconciled: ${GENERATION_MODES.length} logical mode(s) over ${physical} physical dispatch branch(es)`,
+    `P0 counted client files; P1 exercises return paths — the difference is subsumption, not a dropped finding`
+  );
+  for (const m of GENERATION_MODES) {
+    console.log(`      ${m.mode.padEnd(30)} ${m.dispatch}`);
+  }
+  console.log(
+    `      → ${physical} physical branch(es) exercised in tests/ai/modelService.adjudicationCoverage.test.ts` +
+    ` and tests/ai/modelService.sovereign-fallback.test.ts`
+  );
+}
+
+/**
+ * Sanctuary may not be widened by the act of observing portability.
+ *
+ * The rule is not classification-vs-scalar; it is derived-from-member-content
+ * vs operational metadata. Any emitter in the stance module that puts a
+ * content-derived value into a durable log must be reachable only behind a
+ * sanctuary gate — otherwise suppressing the database fields is cosmetic, since
+ * application logs are durable telemetry too.
+ *
+ * Checked structurally: each console line carrying a content-derived field must
+ * sit in a function whose body contains a sanctuary guard.
+ */
+const CONTENT_DERIVED_FIELDS = /\b(density|stance_mode|auth_slip|captured|endorsement_tier)\b/;
+
+async function checkSanctuaryObservationBoundary() {
+  const abs = path.join(path.resolve(process.cwd()), 'lib/sovereign/stanceReanchor.ts');
+  if (!existsSync(abs)) {
+    warn(`[PENDING] lib/sovereign/stanceReanchor.ts not found — cannot verify the sanctuary log boundary`);
+    return;
+  }
+  const src = readFileSync(abs, 'utf8');
+
+  // Scan line-wise. For each emitting line, walk back to the nearest enclosing
+  // `export function` and require a sanctuary early-return between that header
+  // and the emit. Splitting the file on function headers instead would fold the
+  // NEXT function's docblock into the previous chunk, and a docblock that
+  // merely discusses Sanctuary would satisfy the check — a false pass that this
+  // verifier itself produced on its first attempt.
+  const lines = src.split('\n');
+  const ungated: string[] = [];
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    if (!line.includes('console.log') || !CONTENT_DERIVED_FIELDS.test(line)) continue;
+
+    let header = -1;
+    for (let j = i; j >= 0; j--) {
+      if (/^export function \w+/.test(lines[j])) { header = j; break; }
+    }
+    if (header === -1) continue;
+    const name = lines[header].replace(/^export function /, '').split('(')[0];
+
+    // Code between the header and the emit, comments stripped so prose about
+    // Sanctuary can never stand in for a guard.
+    const between = lines
+      .slice(header, i)
+      .filter(l => !/^\s*(\*|\/\/|\/\*)/.test(l))
+      .join('\n');
+    const gated = /sanctuary/i.test(between) && /\breturn\b/.test(between);
+    if (!gated && !ungated.includes(name)) ungated.push(name);
+  }
+
+  if (ungated.length === 0) {
+    pass(
+      `[LIVE] Every content-derived stance emitter is sanctuary-gated`,
+      `suppression covers durable logs, not only runtime_events columns`
+    );
+  } else {
+    fail(
+      `[LIVE] ${ungated.length} stance emitter(s) can write content-derived values to logs under Sanctuary`,
+      `${ungated.join(', ')} — suppressing the DB columns alone makes the boundary cosmetic`
+    );
+  }
 }
 
 /**
@@ -805,6 +889,7 @@ async function main() {
   section('5. MAIA Behavioral Portability [substrate-portability evidence]');
   const adjudicatorRegressionChecked = await checkAdjudicatorIntegrity();
   await checkAdjudicatorSubstrateCoverage();
+  await checkSanctuaryObservationBoundary();
   await checkBehavioralPortability(adjudicatorRegressionChecked);
 
   const total = passed + failed + warned;
