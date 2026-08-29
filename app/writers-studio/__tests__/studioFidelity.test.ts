@@ -104,3 +104,71 @@ describe('counts stay facts about the member’s material', () => {
     expect(maiaBand).toEqual([]);
   });
 });
+
+describe('depicted controls carry no interactive semantics', () => {
+  const inert = read('__fixtures__/InertControls.tsx');
+  const code = strip(inert);
+  const composition = strip(read('__fixtures__/WritingFieldComposition.tsx'));
+
+  it('uses only div and span — never an element a browser makes actionable', () => {
+    for (const tag of ['<button', '<input', '<a ', '<textarea', '<select', '<form', '<label']) {
+      expect(code).not.toContain(tag);
+    }
+  });
+
+  it('refuses the disabled and readOnly forms too', () => {
+    // A disabled button and a readOnly input still announce themselves as
+    // controls to assistive technology. Depicting a control is permitted;
+    // presenting one that cannot work is not.
+    for (const attr of ['disabled', 'readOnly', 'aria-disabled']) {
+      expect(code).not.toContain(attr);
+    }
+  });
+
+  it('carries no handler, href, tabindex or interactive role', () => {
+    for (const attr of ['onClick', 'onChange', 'onSubmit', 'href', 'tabIndex']) {
+      expect(code).not.toContain(attr);
+    }
+    // Not a bare `role=` check: StudioText takes a typography `role` prop
+    // ("metadata", "navItem"), which is unrelated to ARIA. What must never
+    // appear is a role that makes a div announce itself as a control.
+    for (const aria of ['button', 'link', 'textbox', 'searchbox', 'checkbox', 'menuitem', 'tab']) {
+      expect(code).not.toContain(`role="${aria}"`);
+      expect(code).not.toContain(`role='${aria}'`);
+    }
+  });
+
+  it('marks every depiction fixture-only and hides it from assistive technology', () => {
+    expect(code).toContain("'data-fixture-only': 'true'");
+    expect(code).toContain("'aria-hidden': true");
+    // Every exported depiction spreads that marker rather than opting in
+    // one at a time.
+    const exported = code.match(/export function (\w+)/g) ?? [];
+    expect(exported.length).toBeGreaterThanOrEqual(5);
+    expect(code.match(/\{\.\.\.fixtureOnly\}/g)?.length).toBe(exported.length);
+  });
+
+  it('keeps the depictions out of the Studio primitives', () => {
+    // A generic operable Toolbar or SearchField belongs in the primitives only
+    // when a real product capability needs one — not because a fixture wanted
+    // its shape. These live under __fixtures__ and are imported from there.
+    const primitives = fs.readdirSync(DIR).filter((f) => f.endsWith('.tsx'));
+    for (const f of primitives) {
+      expect(strip(read(f))).not.toContain('Depiction');
+    }
+    expect(composition).toContain("from './InertControls'");
+  });
+
+  it('reaches no route', () => {
+    const files = fs.readdirSync(path.join(DIR, '__fixtures__'));
+    expect(files.filter((f) => /^(page|route|layout)\./.test(f))).toEqual([]);
+  });
+
+  it('spends gold only where 04 spends it', () => {
+    // Two gold affordances in the chrome: "+ New Work" in the rail and
+    // "+ Add Material" in the Materials panel. Gold marks where the member
+    // acts on their own work, and it stops meaning that if it spreads.
+    expect((code.match(/GOLD\.fill/g) ?? []).length).toBe(1);
+    expect(code).toContain('Add Material');
+  });
+});

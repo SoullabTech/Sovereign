@@ -40,6 +40,13 @@ import {
 import { MaiaInsightCard, MaiaPostureRow, MaiaVoice } from '../MaiaReading';
 import { StudioPanel } from '../StudioPanel';
 import { CanonicalRail } from './CanonicalRail';
+import {
+  AddMaterialDepiction,
+  EditorContextDepiction,
+  EditorToolbarDepiction,
+  MaterialsFilterDepiction,
+  MaterialsSearchDepiction,
+} from './InertControls';
 import { StudioText, typeStyle } from '../StudioType';
 
 const MODES = ['Write', 'Develop', 'Explore', 'Review', 'Publish'] as const;
@@ -266,10 +273,21 @@ export function WritingFieldComposition({
             border: `1px solid ${RULE.soft}`,
             borderRadius: RADIUS.panel,
             overflow: 'auto',
-            padding: `${SPACE.band}px ${MEASURE.roomGutter}px`,
+            display: 'flex',
+            flexDirection: 'column',
           }}
         >
-          <div style={{ maxWidth: `${MEASURE.prose}ch`, margin: '0 auto' }}>
+          {/* 04 stacks a context row and a formatting toolbar above the page.
+              Depictions only — see InertControls. */}
+          <EditorContextDepiction />
+          <EditorToolbarDepiction />
+          <div
+            style={{
+              maxWidth: `${MEASURE.prose}ch`,
+              margin: '0 auto',
+              padding: `${SPACE.band}px ${MEASURE.roomGutter}px`,
+            }}
+          >
             <StudioText role="chapterTitle" as="h1" style={{ textAlign: 'center' }}>
               Chapter Seven
             </StudioText>
@@ -363,6 +381,8 @@ export function WritingFieldComposition({
             count={24}
             style={{ width: L.materialsPanel, flexShrink: 0 }}
           >
+            <MaterialsSearchDepiction />
+            <MaterialsFilterDepiction />
             {/* 04 groups materials by kind under small caps headings, each item
                 carrying its format and extent. Reference content, inert. */}
             {MATERIAL_GROUPS.map((group) => (
@@ -386,6 +406,7 @@ export function WritingFieldComposition({
                 ))}
               </div>
             ))}
+            <AddMaterialDepiction />
           </StudioPanel>
         )}
       </div>
