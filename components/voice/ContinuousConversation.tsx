@@ -3,7 +3,7 @@
 import React, { useState, useRef, useCallback, useEffect, forwardRef, useImperativeHandle } from "react";
 import { Mic, MicOff, Loader2, Activity, Wifi, WifiOff, AlertCircle } from "lucide-react";
 import VoiceFeedbackPrevention from "@/lib/voice/voice-feedback-prevention";
-import { getPlatformInfo, getVoiceUnavailableMessage, isAndroidWebChrome, hasSpeechRecognitionAPI, type PlatformInfo } from "@/lib/utils/platformDetection";
+import { getPlatformInfo, getVoiceUnavailableMessage, isAndroidWebChrome, hasSpeechRecognitionAPI, isDesktopShell, selectVoiceTransport, type PlatformInfo } from "@/lib/utils/platformDetection";
 import { Capacitor } from '@capacitor/core';
 import { SpeechRecognition as NativeSpeechRecognition } from '@capacitor-community/speech-recognition';
 import { VoiceController } from '@/lib/voice/AudioSessionManager';
@@ -652,6 +652,23 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
   // Initialize Web Speech API
   const initializeSpeechRecognition = useCallback(() => {
     if (typeof window === 'undefined') return null;
+
+    // ⛔ DESKTOP-SOVEREIGN-STT-01 · S2 — Desktop may NEVER construct or start
+    // browser speech recognition.
+    //
+    // This is the single construction site, so refusing here makes the rule
+    // structural rather than a property of one call path. Every caller —
+    // startListening, the onend restart, the adoption path at ~1791 — receives
+    // null and cannot proceed to `.start()`.
+    //
+    // ⛔ It is deliberately NOT phrased as "when Web Speech is unavailable".
+    // Chromium ships SpeechRecognition, so an availability test would let
+    // Desktop straight back onto the browser service. The question is which
+    // platform this is, not what the platform can do.
+    if (isDesktopShell()) {
+      console.warn('[voice] SpeechRecognition refused on Desktop — sovereign Whisper transport only (D01 §XII)');
+      return null;
+    }
 
     // SAFARI FIX: Safari requires webkitSpeechRecognition specifically
     const SpeechRecognition = isSafari()
@@ -3328,16 +3345,41 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
         typeof navigator !== 'undefined' &&
         !!navigator.mediaDevices?.getUserMedia;
 
-      if (!hasSpeechRecognitionAPI() && canRecordAudio) {
+      // ⛔ DESKTOP-SOVEREIGN-STT-01 · S1/S4 — Desktop joins this branch.
+      //
+      // Strictly ADDITIVE (S11): the original condition is preserved verbatim
+      // as the second disjunct, so Firefox/Zen, ordinary Chrome, Safari,
+      // Android-Chrome recovery and every Capacitor build behave exactly as
+      // before. Only the Desktop shell is newly admitted, and it is admitted
+      // by CLASSIFICATION, never by capability — Chromium has Web Speech, so
+      // asking "is Web Speech missing?" would never route Desktop here.
+      //
+      // The transport is logged rather than dispatched on, so the decision is
+      // legible in a device walk without changing who reaches this code.
+      const voiceTransport = selectVoiceTransport({
+        isNative: info.isNative,
+        isDesktop: info.isDesktop,
+        hasSpeechRecognition: hasSpeechRecognitionAPI(),
+        canRecordAudio,
+      });
+      console.log('[voice] transport:', voiceTransport, { platform: info.platform });
+
+      if ((info.isDesktop || !hasSpeechRecognitionAPI()) && canRecordAudio) {
         // Clear the 2s ARMING watchdog — this path records up to ~8s and
         // would otherwise be reset to IDLE mid-utterance.
         if (armingTimeoutRef.current) {
           clearTimeout(armingTimeoutRef.current);
           armingTimeoutRef.current = null;
         }
-        console.log('🦊 [ContinuousConversation] No Web Speech API — MediaRecorder + local Whisper (one-shot)');
-        addDebug('🦊 web whisper fallback (no Web Speech API)');
-        logVoiceEvent('voice_listening_started', { path: 'web_whisper_fallback' });
+        // Same transport, two reasons for being here: Desktop by policy, other
+        // browsers by absence of Web Speech. Named separately so a log never
+        // reports Desktop as a fallback — on Desktop this IS the design.
+        const sovereignReason = info.isDesktop ? 'desktop_sovereign' : 'web_whisper_fallback';
+        console.log(info.isDesktop
+          ? '🛡️ [ContinuousConversation] Desktop — MediaRecorder + local Whisper (sovereign transport)'
+          : '🦊 [ContinuousConversation] No Web Speech API — MediaRecorder + local Whisper (one-shot)');
+        addDebug(info.isDesktop ? '🛡️ desktop sovereign whisper' : '🦊 web whisper fallback (no Web Speech API)');
+        logVoiceEvent('voice_listening_started', { path: sovereignReason });
 
         let stream: MediaStream;
         try {
