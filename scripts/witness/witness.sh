@@ -499,7 +499,6 @@ Environment:
   WITNESS_SOURCE_REPO           repo to resolve/archive the candidate from
   WITNESS_ENV_FILE              witness env file (default scripts/witness/.env.witness)
   WITNESS_HTTP_PORT             loopback port for the witness app (default 3999)
-  WITNESS_ACK_DIRTY_TREE=1      ack that uncommitted work is excluded from the candidate
 
   WITNESS_ARTIFACT_SOURCE_PATH  file in the candidate that identifies it        (required)
   WITNESS_ARTIFACT_PATTERN      string in that file, >= 8 chars, non-universal  (required)

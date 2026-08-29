@@ -70,9 +70,13 @@ guard_candidate_named() {
 # G2 — candidate clean. `git archive` already makes uncommitted work physically
 # unable to enter the snapshot. The risk is therefore not contamination but
 # BELIEF: an operator witnessing a dirty tree may think their edits are under
-# test when they are not. So: refuse, or make the operator say out loud that the
-# dirt is excluded — and record that ack in the manifest so it appears in the
-# evidence, not just in someone's memory.
+# test when they are not.
+#
+# That is precisely why this refusal is NON-BYPASSABLE. An acknowledgement flag
+# would not correct the belief; it would only record it, and a flag that exists
+# gets set under time pressure — which is when witnesses actually get run.
+# A future instrument may distinguish a disposable materialization tree from an
+# unrelated dirty operator checkout. V1 does not need that complexity.
 # ───────────────────────────────────────────────────────────────────────────────
 guard_candidate_clean() {
     local repo="${1:-$(w_source_repo)}" dirty
@@ -81,18 +85,15 @@ guard_candidate_clean() {
         WITNESS_TREE_STATE="clean"
         return 0
     fi
-    if [ "${WITNESS_ACK_DIRTY_TREE:-0}" = "1" ]; then
-        WITNESS_TREE_STATE="dirty-acked"
-        w_warn "Source tree has uncommitted tracked changes. WITNESS_ACK_DIRTY_TREE=1 given."
-        w_warn "These changes are NOT in the candidate and will NOT be witnessed:"
-        echo "$dirty" | sed 's/^/      /' >&2
-        return 0
-    fi
-    w_block "Dirty candidate: the source tree has uncommitted tracked changes."
+    WITNESS_TREE_STATE="dirty"
+    w_block "DIRTY_TREE=REFUSED — the source tree has uncommitted tracked changes."
     echo "$dirty" | sed 's/^/      /' >&2
-    w_dim "The snapshot is taken from the COMMIT, so these edits would be silently"
-    w_dim "absent from what you witness. Commit them, or ack their exclusion:"
-    w_dim "  WITNESS_ACK_DIRTY_TREE=1 scripts/witness/witness.sh prepare <SHA>"
+    w_dim "The snapshot is taken from the COMMIT, so these edits are silently absent"
+    w_dim "from what you would witness. There is no override: an operator who believes"
+    w_dim "their edits are under test, when they are not, is exactly the failure this"
+    w_dim "guard exists to prevent, and an acknowledgement flag does not remove that"
+    w_dim "belief — it only records it after the fact."
+    w_dim "Commit the changes, or stash them, then prepare again."
     return 1
 }
 

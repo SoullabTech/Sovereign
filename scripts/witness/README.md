@@ -18,7 +18,7 @@ it cannot.
 | claim | how it is proven |
 |---|---|
 | **Production isolation** | Every container, network, port, volume and database the witness stack can name is witness-owned. Protected names are refused by guard, and protected container state is recorded before and after every docker verb — so "untouched" is an observation, not a promise. |
-| **Candidate immutability** | The build context is a `git archive` snapshot of a named commit. Its digest is recorded at `prepare` and re-proven on every later verb. A rewritten history, a moved ref, a mutated snapshot, or a run re-pointed at another SHA all refuse. |
+| **Candidate immutability** | The source tree must be clean — `DIRTY_TREE=REFUSED`, no override. The build context is a `git archive` snapshot of a named commit. Its digest is recorded at `prepare` and re-proven on every later verb. A rewritten history, a moved ref, a mutated snapshot, or a run re-pointed at another SHA all refuse. |
 | **Runtime provenance** | The running container must report the candidate's `GIT_COMMIT`, must carry `DEPLOY_LANE=witness-lane`, and must physically contain a declared candidate-specific artifact. Anything less is `RUNTIME_PROVENANCE=UNPROVEN`, and unproven **fails**. |
 
 Container health proves something is running. It does not prove *the candidate*
@@ -72,6 +72,13 @@ scripts/witness/witness.sh verify        # exit 0 — the candidate is running
 scripts/witness/witness.sh collect
 scripts/witness/witness.sh teardown
 ```
+
+### Clean tree, no override
+
+`prepare` refuses a source tree with uncommitted tracked changes and there is
+no acknowledgement flag. `git archive` already keeps that work out of the
+snapshot; the danger is operator belief, and a flag would only record the
+belief rather than correct it. Commit or stash, then prepare.
 
 ### The artifact assertion
 

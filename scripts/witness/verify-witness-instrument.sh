@@ -6,7 +6,8 @@
 # no network, no production anything. What it asserts:
 #
 #   A. Candidate naming     — unnamed and bogus candidates are refused; a dirty
-#                             tree is refused unless explicitly acked.
+#                             tree is refused unconditionally, with no bypass
+#                             token anywhere in the instrument.
 #   B. Candidate immutability — the snapshot is the COMMIT's tree, not HEAD's;
 #                             mutation of tree or snapshot is caught; a run
 #                             cannot be re-pointed at a different SHA.
@@ -161,11 +162,23 @@ drv "${ASSERT_ENV[@]}" prepare deadbeefdeadbeef >/dev/null 2>&1
 [ $? -eq 1 ] && ok "bogus ref refused" || bad "bogus ref not refused"
 
 echo "uncommitted edit" >> "$REPO/lib/capture.ts"
-drv "${ASSERT_ENV[@]}" prepare "$CAND_SHA" >/dev/null 2>&1
+DIRTY_OUT="$(drv "${ASSERT_ENV[@]}" prepare "$CAND_SHA" 2>&1)"
 [ $? -eq 1 ] && ok "dirty tree refused" || bad "dirty tree not refused"
+printf '%s' "$DIRTY_OUT" | grep -q "DIRTY_TREE=REFUSED" \
+    && ok "refusal states DIRTY_TREE=REFUSED" || bad "dirty-tree refusal does not state the contract"
 
-drv "${ASSERT_ENV[@]}" WITNESS_ACK_DIRTY_TREE=1 prepare "$CAND_SHA" >/dev/null 2>&1
-[ $? -eq 0 ] && ok "dirty tree accepted only with explicit ack" || bad "dirty ack path broken"
+# The dirty-tree refusal is NON-BYPASSABLE. Setting the flag that used to
+# unlock it must change nothing. (Token assembled from parts so the
+# bypass-absence grep below cannot match this file.)
+ACK_VAR="WITNESS_ACK""_DIRTY_TREE"
+drv "${ASSERT_ENV[@]}" "${ACK_VAR}=1" prepare "$CAND_SHA" >/dev/null 2>&1
+[ $? -eq 1 ] && ok "dirty tree still refused with the old ack flag set" || bad "an ack flag still unlocks a dirty tree"
+
+if grep -rqE "(^|[^A-Z_])${ACK_VAR}([^A-Z_]|$)" "$SCRIPT_DIR"/witness.sh "$SCRIPT_DIR"/lib/*.sh 2>/dev/null; then
+    bad "a dirty-tree bypass token survives in the instrument"
+else
+    ok "dirty-tree bypass ABSENT from the instrument source"
+fi
 gitr checkout -- lib/capture.ts
 
 # ═══════════════════════════════════════════════════════════════════════════════
