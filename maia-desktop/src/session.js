@@ -190,11 +190,18 @@ function createSession({ app, safeStorage, fetchImpl, onSignedOut } = {}) {
    * server had already stopped recognising. Both doors — the button and the
    * expiry — now run the same teardown.
    */
-  function signOut() {
+  function signOut(reason) {
     const wasSignedIn = !!token;
     token = null; member = null; persist();
     if (wasSignedIn && typeof onSignedOut === 'function') {
-      try { onSignedOut(); } catch { /* teardown must not break sign-out */ }
+      // ⛔ DESKTOP-AUTH-CAUSE-01. The reason travels WITH the sign-out. Before
+      // this, an expiry and a deliberate sign-out were indistinguishable by the
+      // time they reached the teardown, so a member's whole visible surface
+      // could be taken down by a background poll and nothing anywhere recorded
+      // which request did it. A walk then has to infer the cause from timing,
+      // which is the failure mode this programme keeps having to correct.
+      try { onSignedOut(reason || { cause: 'member' }); }
+      catch { /* teardown must not break sign-out */ }
     }
   }
 
@@ -209,7 +216,11 @@ function createSession({ app, safeStorage, fetchImpl, onSignedOut } = {}) {
       // member would keep talking while MAIA quietly became a stranger. Desktop
       // drops the session and says so. (Founder decision pending; this is the
       // safer default and is easy to overturn.)
-      signOut();
+      //
+      // ⛔ The PATH only, query stripped. Enough to name which request ended the
+      // session; never enough to carry a conversation id, a member id or a
+      // token into a log line.
+      signOut({ cause: '401', path: String(pathname).split('?')[0] });
       return { ok: false, status: 401, error: 'session expired — please sign in again' };
     }
     return { ok: res.ok, status: res.status, res };

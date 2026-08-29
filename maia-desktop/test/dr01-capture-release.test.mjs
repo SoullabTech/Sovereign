@@ -41,7 +41,13 @@ const mainJs = strip('main.js');
 const { createDiagnostics } = require('../src/voice/diagnostics.js');
 
 const release = /function releaseCapture\(cause\)[\s\S]*?\n\}/.exec(mainJs)?.[0] || '';
-const teardown = /function teardownMemberState\(\)[\s\S]*?\n\}/.exec(mainJs)?.[0] || '';
+// ⛔ `?.[0] || ''` used to hide an extraction failure here: when the signature
+// gained a parameter, three assertions failed reporting "a teardown step went
+// missing" when in fact the regex had matched nothing at all. A source guard
+// that degrades to an empty string accuses the code of the guard's own fault.
+const teardownMatch = /function teardownMemberState\([\s\S]*?\n\}/.exec(mainJs);
+if (!teardownMatch) throw new Error('dr01 could not find teardownMemberState in main.js — fix the guard, not the code');
+const teardown = teardownMatch[0];
 const runTurn = /async function runTurn\(\)[\s\S]*?\n^\}/m.exec(mainJs)?.[0]
   || /async function runTurn\(\)[\s\S]*?\n\}\n/.exec(mainJs)?.[0] || '';
 // ⭐ DESKTOP-TEXT-01 extracted the member-gesture stop so a typed message can

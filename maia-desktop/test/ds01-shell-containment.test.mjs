@@ -526,12 +526,59 @@ test('ADVERSARIAL — an EXPIRED session runs the same teardown as the sign-out 
   // onSignedOut, main never learned, and the remote view kept its cookie.
   assert.ok(/onSignedOut: teardownMemberState/.test(mainJs),
     'main does not observe an expiry-driven sign-out');
-  const teardown = /function teardownMemberState\(\)[\s\S]*?\n\}/.exec(mainJs)[0];
+  const teardown = /function teardownMemberState\([\s\S]*?\n\}/.exec(mainJs)[0];
   assert.ok(/platformShell\.destroy\(\)/.test(teardown),
     'teardown hides the platform view instead of destroying it — the cookie would survive');
   const handler = /ipcMain\.handle\('maia:sign-out'[\s\S]*?\n\}\);/.exec(mainJs)[0];
   assert.ok(!/threadWatch\.stop/.test(handler),
     'the button has its own teardown copy — two paths that can drift apart');
+});
+
+test('DESKTOP-AUTH-CAUSE-01 — the teardown is told WHY, and by which request', async () => {
+  // ⛔ THE WALK THIS EXISTS FOR. On 2026-08-29 the real /maia was open, the
+  // member was in Talk mode, and the whole platform surface vanished — the
+  // retired local renderer appearing underneath it. Nothing anywhere recorded
+  // the cause, so it had to be reconstructed from source and timing.
+  //
+  // The 401 door is not just the one startup request: startThreadWatch() polls
+  // on an interval and every poll is an authedFetch, so an expiry can take the
+  // surface down at any moment, with no member action near it.
+  const reasons = [];
+  const s = createSession({
+    app: { getPath: () => fs.mkdtempSync(path.join(os.tmpdir(), 'ds01-')) },
+    safeStorage: { isEncryptionAvailable: () => false },
+    fetchImpl: async (url) => (
+      String(url).includes('/api/members/signin')
+        ? { ok: true, status: 200, json: async () => ({ success: true, token: TOKEN, member: { username: 'k' } }) }
+        : { ok: false, status: 401, json: async () => ({}) }
+    ),
+    onSignedOut: (r) => { reasons.push(r); },
+  });
+
+  await s.signIn('kelly', 'pw');
+  const out = await s.authedFetch('/api/conversation/turns?conversationId=SECRET-ID');
+  assert.equal(out.status, 401);
+  assert.deepEqual(reasons, [{ cause: '401', path: '/api/conversation/turns' }],
+    'the expiry reached the teardown without naming itself');
+
+  // ⛔ The QUERY is stripped. Enough to name the request; never enough to carry
+  // a conversation id, a member id or a token into a log line.
+  assert.ok(!JSON.stringify(reasons).includes('SECRET-ID'), 'a query string reached the reason');
+  assert.ok(!JSON.stringify(reasons).includes(TOKEN), 'the token reached the reason');
+
+  // A deliberate sign-out is distinguishable from an expiry — that difference
+  // is the whole point.
+  await s.signIn('kelly', 'pw');
+  s.signOut();
+  assert.deepEqual(reasons[1], { cause: 'member' });
+});
+
+test('DESKTOP-AUTH-CAUSE-01 — main names the cause on the console and on the surface', () => {
+  const teardown = /function teardownMemberState\([\s\S]*?\n\}/.exec(mainJs)[0];
+  assert.ok(/console\.log\(`\[Desktop auth\] member state torn down/.test(teardown),
+    'the surface can be destroyed without a single line saying why');
+  assert.ok(/endedBy: cause/.test(teardown),
+    'the member is not told that their session ended, only shown a signed-out screen');
 });
 
 test('ADVERSARIAL — signOut fires the callback exactly once, and not for a no-op', async () => {

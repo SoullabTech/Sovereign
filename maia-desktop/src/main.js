@@ -628,7 +628,24 @@ ipcMain.handle('maia:sign-in', async (_evt, payload) => {
  * view still holds an authenticated cookie is the defect this shape prevents,
  * and it would have been reachable if only the button ran the teardown.
  */
-function teardownMemberState() {
+function teardownMemberState(reason) {
+  // ⛔ DESKTOP-AUTH-CAUSE-01 — SAY WHAT HAPPENED, at the moment it happens.
+  //
+  // This function destroys the entire visible platform surface, and until now
+  // it did so in silence. A member watching MAIA vanish and the retired local
+  // renderer appear underneath had nothing to read; neither did a witness. The
+  // 2026-08-29 walk reached exactly that state and the cause had to be
+  // reconstructed from source and timing.
+  //
+  // Note WHY the timing was so hard to read: the 401 door is not only the one
+  // startup request. `startThreadWatch()` polls `pollCanonicalThread()` on an
+  // interval, and every poll is an `authedFetch`. So an expired or rejected
+  // credential can take the surface down at ANY moment, minutes into a walk,
+  // with no member action anywhere near it.
+  const cause = (reason && reason.cause) || 'member';
+  const via = reason && reason.path ? ` path=${reason.path}` : '';
+  console.log(`[Desktop auth] member state torn down — cause=${cause}${via}`);
+
   // ⭐ DESKTOP-CAPTURE-RELEASE-01 — FIRST, before anything else falls away.
   // Capture is the one piece of member state that used to outlive its member,
   // and it is the piece that blocks every recovery: while main holds a `voice`,
@@ -647,7 +664,12 @@ function teardownMemberState() {
   // ⛔ Destroy, not hide. The cookie goes with the view.
   if (platformShell) void platformShell.destroy();
   buildMenu();
-  broadcast('maia:auth', memberSession ? memberSession.state() : { signedIn: false, member: null });
+  // ⛔ The surface is told the cause too, not just the fact. A member whose
+  // session expired under them deserves to know that is what happened.
+  broadcast('maia:auth', {
+    ...(memberSession ? memberSession.state() : { signedIn: false, member: null }),
+    endedBy: cause,
+  });
 }
 
 ipcMain.handle('maia:sign-out', async () => {
