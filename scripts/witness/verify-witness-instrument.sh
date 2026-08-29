@@ -93,6 +93,10 @@ E
 echo 'DATABASE_URL=postgresql://soullab@maia-postgres:5432/maia_consciousness' > "$FIX/env.proddb"
 echo 'DATABASE_URL=postgresql://witness:witness@minisforum:5432/maia_witness'  > "$FIX/env.prodhost"
 printf 'DATABASE_URL=postgresql://witness:witness@maia-witness-postgres:5432/maia_witness\nNEXT_PUBLIC_APP_URL=https://soullab.life\n' > "$FIX/env.prodname"
+# Whole-token matching: a witness host whose NAME CONTAINS a protected name.
+# 'maia-postgres-witness-1' contains 'maia-postgres'; it is a different referent.
+echo 'DATABASE_URL=postgresql://witness:witness@maia-postgres-witness-1:5432/maia_witness' > "$FIX/env.suffixhost"
+printf 'DATABASE_URL=postgresql://witness:witness@maia-witness-postgres:5432/maia_witness\nWITNESS_NOTE=minisforum-witness-sandbox\n' > "$FIX/env.suffixnote"
 echo 'WEBAUTHN_RP_ID=localhost' > "$FIX/env.nodburl"
 
 # Compose fixtures.
@@ -259,6 +263,22 @@ guard_database_target "$FIX/env.prodhost" >/dev/null 2>&1 && bad "protected DB h
 guard_database_target "$FIX/env.nodburl"  >/dev/null 2>&1 && bad "missing DATABASE_URL accepted" || ok "missing DATABASE_URL refused"
 guard_database_target "$FIX/env.good"     >/dev/null 2>&1 && ok "witness database accepted"      || bad "witness database wrongly refused"
 
+# ⛔ Whole-token, not substring. Both of these CONTAIN a protected name and are
+# nonetheless different referents. A guard that refuses correct work is how
+# guards get switched off — so the false-refusal direction is asserted too.
+# NOTE on scope: guard_database_target additionally PINS the host to
+# ${WITNESS_PREFIX}-postgres, so no other host can be accepted by it whatever the
+# token matching does — its whole-token fix is defence in depth and is not
+# observable through this function's accept path. The behaviour IS observable in
+# guard_network_target, which greps the env file with no such pin, so that is
+# where the substring hazard is asserted.
+guard_network_target "$FIX/docker-compose.witness.yml" "$FIX/env.suffixnote" >/dev/null 2>&1 \
+    && ok "protected-name substring in env accepted (minisforum-witness-sandbox)" \
+    || bad "witness env wrongly refused for containing a protected name as substring"
+guard_network_target "$FIX/docker-compose.witness.yml" "$FIX/env.prodname" >/dev/null 2>&1 \
+    && bad "exact protected host in env still accepted" \
+    || ok "exact protected host in env still refused after token fix"
+
 guard_network_target "$FIX/external/docker-compose.witness.yml" "$FIX/env.good" >/dev/null 2>&1 \
     && bad "external network accepted" || ok "external network refused"
 guard_network_target "$FIX/badport/docker-compose.witness.yml" "$FIX/env.good" >/dev/null 2>&1 \
@@ -317,6 +337,24 @@ guard_network_target "$SCRIPT_DIR/docker-compose.witness.yml" "$SCRIPT_DIR/.env.
     && ok "shipped compose + env sample: loopback-only, no external network" || bad "shipped compose/env failed the network guard"
 guard_database_target "$SCRIPT_DIR/.env.witness.sample" >/dev/null 2>&1 \
     && ok "shipped env sample points at the witness database" || bad "shipped env sample failed the database guard"
+
+# ── the two corrections that came back from the discovery branch (3d4193ba) ──
+grep -q 'RUNTIME_IMAGE_ID' "$SCRIPT_DIR/lib/witness-guards.sh" \
+    && grep -q 'image identity moved' "$SCRIPT_DIR/lib/witness-guards.sh" \
+    && ok "runtime provenance binds the image DIGEST, not the tag" \
+    || bad "an image swapped under a stable tag would not be caught"
+
+_num_out="$(guard_artifact_assertion_declared 'maxMs:120000' 'lib/x.ts' '/nonexistent-snap' 2>&1 || true)"
+case "$_num_out" in
+    *"numeric literal"*) ok "numeric-literal assertion warns about minifier rewriting (120000 -> 12e4)" ;;
+    *)                   bad "an unstable numeric-literal discriminator passes without warning" ;;
+esac
+
+_id_out="$(guard_artifact_assertion_declared 'DESKTOP_MAX_UTTERANCE_MS' 'lib/x.ts' '/nonexistent-snap' 2>&1 || true)"
+case "$_id_out" in
+    *"numeric literal"*) bad "identifier assertion wrongly warned" ;;
+    *)                   ok "identifier assertion accepted without a stability warning" ;;
+esac
 
 grep -q 'launch_desktop_authenticated' "$SCRIPT_DIR/witness.sh" \
     && ! grep -qE '^\s*launch_desktop_authenticated\)' "$SCRIPT_DIR/witness.sh" \
