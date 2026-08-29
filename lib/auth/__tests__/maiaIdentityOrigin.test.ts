@@ -87,3 +87,67 @@ describe('the gate: nothing identity-dependent runs while identity is unknown', 
     expect(bootstrap).not.toMatch(/localStorage\.getItem/);
   });
 });
+
+/**
+ * ⛔ THE RULING'S OWN CONDITION.
+ *
+ * The `soul_guest` attribution holds "provided no independent guest path
+ * remains". It does not, yet. `generateGreeting({ userId })` builds
+ * `soul_${userId}` and fetches `/api/relationship-essence?soulSignature=…`, and
+ * it is reached from whatever mounted `OracleConversation` — so any surface that
+ * still originates identity from localStorage can produce `soul_guest` for an
+ * authenticated member, whatever `/maia` now does.
+ *
+ * This guard enumerates every mount and requires each to be either repaired or
+ * EXPLICITLY named as awaiting a ruling. It does not pretend the named ones are
+ * fine. What it prevents is a NEW surface joining that list in silence.
+ */
+describe('every surface that mounts the conversation is accounted for', () => {
+  /** Repaired: identity comes from the server before the conversation mounts. */
+  const RESOLVED = ['app/maia/page.tsx'];
+
+  /**
+   * Reads a member id from localStorage and hands it straight to
+   * OracleConversation. Same inversion as /maia had. NOT repaired — the ruling
+   * covered /maia, and these are separate surfaces that deserve separate
+   * rulings rather than being swept into one fix.
+   */
+  const AWAITING_RULING = [
+    // `getFieldUserData()` — a verbatim copy of the old /maia bootstrap, whose
+    // own comment says "mirrors /maia logic, no API call on mount".
+    'app/field/talk/page.tsx',
+    // Falls back to localStorage explorerId when beta_user is absent.
+    'app/studio/maia/page.tsx',
+  ];
+
+  /** Resolves through getValidMemberId() rather than a bespoke read. */
+  const VIA_SHARED_HELPER = ['components/maia/presence/MaiaPresence.tsx'];
+
+  it('no surface mounts the conversation outside these three lists', () => {
+    const root = path.join(__dirname, '..', '..', '..');
+    const known = new Set([...RESOLVED, ...AWAITING_RULING, ...VIA_SHARED_HELPER]);
+    const found: string[] = [];
+
+    const walk = (dir: string) => {
+      for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+        if (entry.name === 'node_modules' || entry.name.startsWith('.')) continue;
+        const full = path.join(dir, entry.name);
+        if (entry.isDirectory()) { walk(full); continue; }
+        if (!entry.name.endsWith('.tsx')) continue;
+        const text = fs.readFileSync(full, 'utf8');
+        if (!text.includes('<OracleConversation')) continue;
+        const rel = path.relative(root, full);
+        if (rel === 'components/OracleConversation.tsx') continue;  // its own definition
+        found.push(rel);
+      }
+    };
+    for (const top of ['app', 'components']) walk(path.join(root, top));
+
+    const unaccounted = found.filter((f) => !known.has(f));
+    expect(unaccounted, 'a new surface mounts the conversation and no one classified its identity origin').toEqual([]);
+  });
+
+  it('the repaired surface really is repaired', () => {
+    expect(code).toContain('await resolveMemberIdentity()');
+  });
+});
