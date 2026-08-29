@@ -211,14 +211,21 @@ describe('the mode bar is the Studio’s shape, not a promise', () => {
 /* ══ 5 · MANUSCRIPT IDENTITY — THE WS2-01 MINIMUM ════════════════════════ */
 
 describe('an unresolvable manuscript identity fails visibly', () => {
+  /* Synthetic ids on purpose.
+     An earlier version of this block used the two ids from the WS2-01 finding
+     and read them as two manuscripts. They are not: a3ae67fd is the requested
+     MANUSCRIPT and ce284751 is the authenticated MEMBER, and that manuscript
+     WAS owned by that member. So the original defect cannot be reproduced at
+     this level at all — the list handed to the resolver is what was wrong,
+     one layer up, and that is WS2-01's to find. Borrowing the real ids here
+     would dress a generic property test as a reproduction of the defect. */
   const LIB = [
-    { id: 'ce284751', title: 'Elemental Alchemy (KDP print)' },
-    { id: 'other', title: 'Something else' },
+    { id: 'ms-first', title: 'A book with sections' },
+    { id: 'ms-second', title: 'Something else' },
   ];
 
   it('never silently substitutes manuscripts[0] for a named identity', () => {
-    // The runtime finding, in its own shape: an id the member does not own.
-    const r = resolveManuscript('a3ae67fd-a21e-4948-8766-4c397d2e4712', LIB);
+    const r = resolveManuscript('ms-not-in-this-list', LIB);
     expect(r.kind).toBe('unresolved');
     expect(r).not.toHaveProperty('manuscript');
   });
@@ -247,7 +254,7 @@ describe('an unresolvable manuscript identity fails visibly', () => {
     expect(resolveManuscript(null, [LIB[0]])).toEqual({
       kind: 'resolved', manuscript: LIB[0], wasRequested: false,
     });
-    expect(resolveManuscript('other', LIB)).toEqual({
+    expect(resolveManuscript('ms-second', LIB)).toEqual({
       kind: 'resolved', manuscript: LIB[1], wasRequested: true,
     });
     expect(resolveManuscript(null, []).kind).toBe('empty');

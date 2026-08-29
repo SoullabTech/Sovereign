@@ -33,16 +33,39 @@ hierarchy, density, typography, alignment and states; it cannot adjudicate what
 a real member's own data does to the room. The production capture remains
 outstanding and is named as a blocker in the WS2-03B report.
 
-The stub deliberately uses the manuscript from the WS2-01 finding —
-`ce284751…`, *Elemental Alchemy (KDP print)*, 174 sections — because 174
-sections is what the outline column has to survive, and a reference-sized
+Every identifier in the stub is synthetic. The manuscript is given 174 sections
+because 174 is what the outline column has to survive, and a reference-sized
 eleven would have flattered it.
+
+## Correction, 2026-08-29 (founder)
+
+An earlier version of this file described the refusal capture as
+`?m=a3ae67fd…`, *"an id the member does not own."* **That was false**, twice
+over, and the record is corrected here rather than quietly edited away:
+
+- `a3ae67fd-a21e-4948-8766-4c397d2e4712` is the **manuscript** from the WS2-01
+  finding, and it **was owned** by the authenticated member — *Elemental
+  Alchemy (KDP print)*, 174 sections.
+- `ce284751-e457-42f6-89b6-bc07d0876682` is not a manuscript at all. It is the
+  **authenticated member's own id**. The earlier draft read the two as two
+  manuscripts.
+
+The misreading inverted the severity of the finding. The real defect is not a
+member requesting someone else's book and being sensibly redirected — it is a
+member requesting **their own** book, by identity, and being handed a different
+one in silence.
+
+**No capture here reproduces that defect, and none claims to.** The defect
+lives in what the manuscript list contained, one layer above the resolver, and
+that is WS2-01's to find. The refusal capture demonstrates only the generic
+property WS2-03B is responsible for: an explicit identity the room cannot
+resolve fails visibly instead of being replaced.
 
 ## The three captures
 
 - `ws2-03b-writers-studio-1680.png` — the wide room, all five columns of
   reference 04 present because the Work really has declared materials.
-- `ws2-03b-identity-refusal.png` — `?m=a3ae67fd…`, an id the member does not
-  own. The room names it and refuses. Nothing is substituted.
+- `ws2-03b-identity-refusal.png` — a synthetic manuscript id absent from the
+  list. The room names what was asked for and refuses. Nothing is substituted.
 - `ws2-03b-identity-ambiguous.png` — three manuscripts, none named. The room
   asks instead of guessing.

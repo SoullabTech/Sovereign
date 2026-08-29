@@ -84,11 +84,25 @@ export function currentWork(context: WorkContext): LivingWork | null {
      current Work identity → MAIA exchange situated in same Work
        → return to Studio → same Work remains current
 
-   Both ENDS of that round trip are built here and tested as a round trip:
-   the outbound carries the Work identity and an exact return address, and the
-   return address carries the manuscript identity from which the same Work is
-   re-derived. `assertRoundTripPreservesWork` is the executable form of the
-   contract — it fails if either leg starts guessing.
+   ── STATUS: NOT COMPLETE. Ruled by the founder, 2026-08-29. ──────────────
+
+     Studio-side Work context      BUILT
+     outbound Work identity        BUILT
+     return address                BUILT
+     real MAIA situated exchange   NOT BUILT
+     ───────────────────────────────────────
+     WS2-03 semantic handoff       NOT YET COMPLETE
+
+   Read `assertRoundTripPreservesWork` against that table before citing it.
+   It proves the TRANSPORT contract: the outbound carries the Work identity
+   and an exact return address, the return address carries the manuscript
+   identity from which the same Work is re-derived, and neither leg guesses.
+
+   It does NOT prove the middle term — "MAIA exchange situated in the same
+   Work" — and no test in this file can, because that half does not exist. A
+   green round-trip test here is easy to mistake for a finished handoff, which
+   is precisely why the table is stated above the function rather than left to
+   be inferred from the paragraph below it.
 
    WHAT IS DELIBERATELY NOT DONE: this does not make the MAIA band's
    Conversations destination available. The middle term of the contract —
@@ -96,7 +110,7 @@ export function currentWork(context: WorkContext): LivingWork | null {
    /maia is a generic conversational surface that does not read a Work, and
    handing it an identity it ignores would satisfy the URL and not the
    contract. Per the founder's rule for §5, Conversations stays unavailable
-   until the exchange is genuinely situated. The contract is built and proven
+   until the exchange is genuinely situated. The TRANSPORT is built and proven
    here so that when the MAIA side lands, the Studio side is not the unknown.
    ══════════════════════════════════════════════════════════════════════════ */
 

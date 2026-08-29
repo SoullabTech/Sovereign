@@ -81,15 +81,33 @@ export function identityHonoured<T extends SelectableManuscript>(
    `manuscripts[0]`, and the caller cannot tell a degradation from a defect
    without a second call to `identityHonoured`. The Canvas never made that
    second call, so a request for one manuscript put a different one on the
-   table and said nothing — the WS2-01 finding, reproduced in runtime:
+   table and said nothing.
 
-     requested  a3ae67fd-a21e-4948-8766-4c397d2e4712
-     owned      ce284751-e457-42f6-89b6-bc07d0876682  "Elemental Alchemy
-                (KDP print)", 174 sections
+   ── THE WS2-01 FINDING, STATED CORRECTLY ─────────────────────────────────
 
-   The root cause of THAT mismatch stays in the WS2-01 lane. What belongs here
-   is the property the Canvas must hold regardless of the cause: an identity
-   the room cannot resolve exactly FAILS VISIBLY. It is never silently swapped.
+   CORRECTED 2026-08-29 (founder). An earlier draft of this block read the two
+   ids in the finding as two manuscripts and labelled the second "owned". They
+   are not the same kind of thing:
+
+     manuscript requested   a3ae67fd-a21e-4948-8766-4c397d2e4712
+                            "Elemental Alchemy (KDP print)", 174 sections
+     authenticated member   ce284751-e457-42f6-89b6-bc07d0876682
+
+   The requested manuscript WAS owned by the authenticated member. That is the
+   whole severity of the finding and the misreading inverted it: this was not a
+   member asking for someone else's book and being sensibly redirected — it was
+   a member asking for their OWN book, by identity, and being handed a
+   different one silently.
+
+   The root cause stays in the WS2-01 lane. What belongs here is the property
+   the Canvas must hold regardless of the cause: an identity the room cannot
+   resolve exactly FAILS VISIBLY. It is never silently swapped.
+
+   Note the consequence for testing. Because the requested manuscript was
+   owned, no unit test of this function can reproduce the original defect —
+   the list it was given is the thing that was wrong, one layer up. What the
+   tests below CAN establish, and all they claim, is the generic property:
+   whatever the list contains, an unresolved explicit identity refuses.
 
    Resolution is a decision, so it is returned as one. A caller cannot read
    `.manuscript` off this without also seeing the kind — which is the whole
