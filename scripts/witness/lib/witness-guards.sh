@@ -277,10 +277,17 @@ guard_database_target() {
         esac
     done
 
+    # ⛔ WHOLE-TOKEN, NOT SUBSTRING. `*"@$host"*` matches '@maia-postgres' inside
+    # '@maia-postgres-witness-x:5432' — refusing a witness container because its
+    # name CONTAINS a protected name. Names are not identity: a protected name
+    # with a suffix is a different referent. Found by exercise (2026-08-29,
+    # discovery branch 3d4193ba); the failure direction is the dangerous one,
+    # because a guard that refuses correct work is how guards get switched off.
+    # A host token ends at ':', '/', '?' or end-of-string.
     local host
     for host in $WITNESS_PROTECTED_HOSTS; do
         case "$url" in
-            *"@$host"*|*"@$host:"*)
+            *"@$host"|*"@$host:"*|*"@$host/"*|*"@$host?"*)
                 w_block "Witness DATABASE_URL points at a protected host '$host'."
                 w_dim "  $url"
                 return 1 ;;
@@ -438,11 +445,15 @@ $port_specs
 EOF
 
     if [ -n "$env_file" ] && [ -f "$env_file" ]; then
+        # ⛔ WHOLE-TOKEN (see the note in guard_database_target). A bare grep for
+        # 'maia-postgres' also matches 'maia-postgres-witness-x'. The token must
+        # not be flanked by a name character, '-' or '.' — so 'minisforum' is
+        # caught and 'minisforum-witness' is not.
         local host
         for host in $WITNESS_PROTECTED_HOSTS; do
-            if grep -q "$host" "$env_file"; then
+            if grep -qE "(^|[^A-Za-z0-9_.-])$(printf '%s' "$host" | sed 's/[.[\*^$()+?{}|\\]/\\&/g')([^A-Za-z0-9_.-]|$)" "$env_file"; then
                 w_block "Witness env file references protected host '$host'."
-                grep -n "$host" "$env_file" | sed 's/^/      /' >&2
+                grep -nE "(^|[^A-Za-z0-9_.-])$(printf '%s' "$host" | sed 's/[.[\*^$()+?{}|\\]/\\&/g')([^A-Za-z0-9_.-]|$)" "$env_file" | sed 's/^/      /' >&2
                 bad=1
             fi
         done
@@ -505,6 +516,23 @@ guard_artifact_assertion_declared() {
         w_block "Artifact assertion pattern too short to be candidate-specific: '$pattern' (need >= 8 chars)."
         return 1
     fi
+    # ⛔ DISCRIMINATING IS NOT ENOUGH — IT MUST ALSO BE STABLE UNDER THE BUILD.
+    #
+    # The assertion is validated here against the candidate's SOURCE, and proven
+    # later inside the BUILT container. Anything the bundler rewrites between
+    # those two points is a correct-looking assertion that fails on a correct
+    # build. Found by exercise (2026-08-29): `maxMs:120000` in source is emitted
+    # as `maxMs:12e4` by the minifier, so a true assertion about the right commit
+    # refused the right image.
+    #
+    # A warning, not a refusal: a numeric literal in a file the bundler never
+    # touches is legitimate, and this guard cannot tell which file that is.
+    # Identifiers and object keys survive minification; numeric literals do not.
+    case "$pattern" in
+        *[0-9][0-9][0-9]*)
+            w_warn "Assertion contains a numeric literal — bundlers rewrite these (120000 -> 12e4)."
+            w_dim  "Prefer an identifier or object key, which survives minification." ;;
+    esac
     if [ -n "$snap" ] && [ -d "$snap" ]; then
         if [ ! -f "$snap/$src" ]; then
             w_block "Artifact assertion names $src, which does not exist in the candidate's tree."
@@ -601,9 +629,36 @@ guard_runtime_provenance() {
         return $?
     fi
 
+    # ⛔ BIND THE IMAGE IDENTITY, NOT THE TAG.
+    #
+    # Found by exercise (2026-08-29, discovery branch 3d4193ba): a witness image
+    # tag was rebuilt by another lane 48 minutes after the candidate build, under
+    # the same compose project and the same tag. The tag still resolved — to
+    # different software. GIT_COMMIT and the artifact probe both catch a
+    # DIFFERENT-COMMIT image, but neither catches a same-tag image swapped for
+    # one rebuilt from the same commit with a different context or base layer.
+    # A tag is a name; the digest is the identity.
+    #
+    # First proof records the digest. Every later verify must find the same one,
+    # or the run is UNPROVEN — evidence collected before and after an image swap
+    # cannot be attributed to one thing.
+    local img_id recorded_img
+    img_id="$(docker inspect --format '{{.Image}}' "$container" 2>/dev/null | tr -d '\r\n' || true)"
+    recorded_img="$(wm_get RUNTIME_IMAGE_ID)"
+    if [ -z "$img_id" ]; then
+        _unproven "could not read the image digest of '$container'"; return $?
+    fi
+    if [ -n "$recorded_img" ] && [ "$recorded_img" != "$img_id" ]; then
+        _unproven "image identity moved: recorded ${recorded_img%%[!a-z0-9:]*}, now ${img_id}
+   The container was re-created from a different image under the same tag.
+   Another lane may share this project. Prepare a new run."
+        return $?
+    fi
+
     wm_set RUNTIME_PROVENANCE "PROVEN"
     wm_set RUNTIME_GIT_COMMIT "$got_sha"
     wm_set RUNTIME_DEPLOY_LANE "$got_lane"
+    wm_set RUNTIME_IMAGE_ID "$img_id"
     wm_set RUNTIME_ARTIFACT_PROBE_OUTPUT "$(printf '%s' "$probe_out" | head -c 200)"
     return 0
 }

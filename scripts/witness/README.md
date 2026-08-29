@@ -19,7 +19,7 @@ it cannot.
 |---|---|
 | **Production isolation** | Every container, network, port, volume and database the witness stack can name is witness-owned. Protected names are refused by guard, and protected container state is recorded before and after every docker verb — so "untouched" is an observation, not a promise. |
 | **Candidate immutability** | The source tree must be clean — `DIRTY_TREE=REFUSED`, no override. The build context is a `git archive` snapshot of a named commit. Its digest is recorded at `prepare` and re-proven on every later verb. A rewritten history, a moved ref, a mutated snapshot, or a run re-pointed at another SHA all refuse. |
-| **Runtime provenance** | The running container must report the candidate's `GIT_COMMIT`, must carry `DEPLOY_LANE=witness-lane`, and must physically contain a declared candidate-specific artifact. Anything less is `RUNTIME_PROVENANCE=UNPROVEN`, and unproven **fails**. |
+| **Runtime provenance** | The running container must report the candidate's `GIT_COMMIT`, must carry `DEPLOY_LANE=witness-lane`, and must physically contain a declared candidate-specific artifact. Its **image digest** is bound on first proof and must not move afterwards — a tag is a name, and a tag can be rebuilt underneath a run by another lane. Anything less is `RUNTIME_PROVENANCE=UNPROVEN`, and unproven **fails**. |
 
 Container health proves something is running. It does not prove *the candidate*
 is running. That gap is where a witness quietly becomes a story about the wrong
@@ -95,6 +95,21 @@ commit and can be looked for inside the running container.
 The instrument refuses an assertion that is missing, universal, too short, false
 of the candidate, or (when a negative ref is given) also true of the baseline.
 
+**Discriminating is not enough — it must also be stable under the build.** The
+assertion is validated against the candidate's *source* and proven inside the
+*built* container. Anything the bundler rewrites between those two points is a
+correct-looking assertion that fails on a correct build.
+
+| prefer | avoid | why |
+|---|---|---|
+| identifiers, object keys, symbol names | numeric literals | the minifier emits `maxMs:120000` as `maxMs:12e4` — a true assertion about the right commit refused the right image (2026-08-29) |
+| distinctive string literals | comments | stripped from the bundle |
+| a name introduced by this commit | anything also in the negative ref | not discriminating |
+
+A pattern containing a run of three or more digits gets a warning, not a
+refusal — a numeric literal in a file the bundler never touches is legitimate,
+and the guard cannot tell which file that is.
+
 ---
 
 ## Evidence, in two classes
@@ -148,7 +163,7 @@ scripts/witness/
   lib/witness-evidence.sh        the two evidence classes
   docker-compose.witness.yml     the isolated stack
   .env.witness.sample            copy to .env.witness (gitignored)
-  verify-witness-instrument.sh   self-test — 44 assertions, no docker needed
+  verify-witness-instrument.sh   self-test — 51 assertions, no docker needed
 ```
 
 Runs live outside the repo, under `WITNESS_RUN_ROOT` (default
