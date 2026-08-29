@@ -239,3 +239,19 @@ The first unit is therefore:
 > would be genuinely new → **STOP before redesign.**
 
 ⛔ Do not begin from conversation alone.
+
+---
+
+## Related — a bounded lane chartered separately (2026-08-29)
+
+`docs/architecture/governance/jarvis-sim-01/JARVIS-SIM-01-FIELD-SIMULATION-LANE-CHARTER.md`
+charters **JARVIS-SIM-01 — Field Simulation / Counterfactual Rehearsal**:
+synthetic-agent rehearsal under `SIMULATED` provenance, isolated, no production
+writes, mandatory null model, no automatic canonization.
+
+⛔ **This does not open the programme above.** JARVIS-SIM-01 is a rehearsal
+instrument, not the observational study of real member trajectories described
+here. Simulation sits *upstream* of the evidence staircase (§ *The evidence
+staircase*) — it may suggest what to look for, and can never occupy a rung on
+it, because no rung is reachable by synthetic agents. This record remains
+**PRESERVED DIRECTION / NOT AUTHORIZED.**
