@@ -31,7 +31,11 @@ const code = src
 describe('/maia takes identity from the server, not from localStorage', () => {
   it('the localStorage-origin bootstrap is gone, not merely bypassed', () => {
     // ⛔ Left in place but unused, it is one call site away from returning.
-    for (const dead of ['getInitialUserData', 'getValidDisplayName', 'isValidMemberId']) {
+    for (const dead of ['getInitialUserData', 'getValidDisplayName', 'isValidMemberId',
+                        // ⛔ Added by the integration correction: this one ran
+                        // BEFORE identity resolution and could redirect to
+                        // /signin on localStorage alone.
+                        'checkAndMigrateSession']) {
       expect(code, `${dead} is still live in app/maia/page.tsx`).not.toContain(dead);
     }
   });
@@ -43,8 +47,8 @@ describe('/maia takes identity from the server, not from localStorage', () => {
   });
 
   it('identity is resolved through the shared resolver', () => {
-    expect(code).toContain("from '@/lib/auth/resolveMemberIdentity'");
-    expect(code).toContain('await resolveMemberIdentity()');
+    expect(code).toContain("from '@/lib/auth/maiaArrival'");
+    expect(code).toContain('await decideMaiaArrival()');
   });
 });
 
@@ -65,6 +69,21 @@ describe('the gate: nothing identity-dependent runs while identity is unknown', 
     expect(gate, 'an early return was placed above a hook').toBeGreaterThan(lastHook);
   });
 
+  it('NOTHING reads localStorage or routes before the arrival decision', () => {
+    // ⛔ THE GUARD THAT WAS MISSING. The first cut had the right resolver and
+    // the wrong order: checkAndMigrateSession() ran first and could redirect to
+    // /signin from localStorage alone, so a valid cookie with an empty store
+    // never reached the server at all. Order is the defect, so order is what
+    // this asserts.
+    const fn = code.slice(code.indexOf('const initializeUser = async ()'));
+    const decision = fn.indexOf('await decideMaiaArrival()');
+    expect(decision, 'the arrival decision is missing from initializeUser').toBeGreaterThan(-1);
+
+    const before = fn.slice(0, decision);
+    expect(before, 'localStorage is consulted before identity is resolved').not.toContain('localStorage');
+    expect(before, 'the member can be routed away before the server is asked').not.toContain('router.replace');
+  });
+
   it('a failure to REACH the server is not rendered as a guest', () => {
     // ⛔ The defect one level down. `error` folded into `unauthenticated` is how
     // an authenticated member silently becomes soul_guest again.
@@ -73,7 +92,7 @@ describe('the gate: nothing identity-dependent runs while identity is unknown', 
     expect(errBranch).toBeGreaterThan(-1);
     expect(errBranch).toBeLessThan(src.indexOf('explorerId={'));
     // and the bootstrap bails before registering a session as anybody
-    const bail = src.indexOf("resolved.state === 'error'");
+    const bail = src.indexOf("decision.kind === 'identity-error'");
     const register = src.indexOf('/api/maia/session/start');
     expect(bail).toBeGreaterThan(-1);
     expect(bail, 'a session is registered before identity is known').toBeLessThan(register);
@@ -82,7 +101,7 @@ describe('the gate: nothing identity-dependent runs while identity is unknown', 
   it('an unauthenticated verdict yields no member id', () => {
     // localStorage may cache identity; it may never originate authenticated
     // identity — including by rescuing an explicit "no" from the server.
-    const bootstrap = src.slice(src.indexOf('await resolveMemberIdentity()'), src.indexOf('setIdentityState(resolved.state)'));
+    const bootstrap = src.slice(src.indexOf('await decideMaiaArrival()'), src.indexOf('setIdentityState(decision.kind'));
     expect(bootstrap).toContain("{ id: 'guest', name: '' }");
     expect(bootstrap).not.toMatch(/localStorage\.getItem/);
   });
@@ -148,6 +167,6 @@ describe('every surface that mounts the conversation is accounted for', () => {
   });
 
   it('the repaired surface really is repaired', () => {
-    expect(code).toContain('await resolveMemberIdentity()');
+    expect(code).toContain('await decideMaiaArrival()');
   });
 });

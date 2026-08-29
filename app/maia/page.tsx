@@ -63,101 +63,28 @@ import {
 } from '@/lib/consciousness/therapeuticFrameworks';
 import { apiUrl, apiFetch, clearAuthState } from '@/lib/http/apiBase';
 import { reportServerIdentityParity } from '@/lib/auth/verifyServerIdentity';
-import { resolveMemberIdentity, type IdentityState } from '@/lib/auth/resolveMemberIdentity';
+import { type IdentityState } from '@/lib/auth/resolveMemberIdentity';
+import { decideMaiaArrival } from '@/lib/auth/maiaArrival';
 
-// Migration version - increment to force re-auth for all users
-const SESSION_VERSION = 2; // Bumped to fix UUID-as-name bug (Jan 5, 2026)
-
-// Helper to detect if a string looks like a UUID (should never be used as a name)
-function isLikelyUUID(str: string): boolean {
-  if (!str) return false;
-  // UUID pattern: 8-4-4-4-12 hex chars, or just looks like hex ID
-  const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-  const hexPattern = /^[0-9a-f]{8,}$/i;
-  const userIdPattern = /^user_\d+$/;
-  return uuidPattern.test(str) || hexPattern.test(str) || userIdPattern.test(str);
-}
-
-// Check if ID is a poisoned local_* fallback that can't be used with server
-function isPoisonedLocalId(id: string | null | undefined): boolean {
-  if (!id) return false;
-  return id.startsWith('local_');
-}
-
-// Force sign-out if session is outdated or corrupted
-// Returns: 'migrate' (go to /signin), 'fresh' (go to /begin), or null (continue to /maia)
-function checkAndMigrateSession(): 'migrate' | 'fresh' | null {
-  if (typeof window === 'undefined') return null;
-
-  const storedVersion = localStorage.getItem('maia_session_version');
-  const currentName = localStorage.getItem('explorerName');
-  const explorerId = localStorage.getItem('explorerId');
-  const betaUser = localStorage.getItem('beta_user');
-  const signupCompleted = localStorage.getItem('signup_completed');
-
-  // Also check for poisoned local_* IDs from failed onboarding
-  let betaUserId: string | null = null;
-  try {
-    if (betaUser) {
-      const parsed = JSON.parse(betaUser);
-      betaUserId = parsed.id;
-    }
-  } catch { /* ignore */ }
-
-  // DEBUG: Log all values for iOS debugging
-  console.log('🔍 [MAIA] checkAndMigrateSession:', {
-    storedVersion,
-    expectedVersion: String(SESSION_VERSION),
-    currentName,
-    explorerId: explorerId?.slice(0, 8) + '...',
-    betaUserId: betaUserId?.slice(0, 8) + '...',
-    betaUser: betaUser ? 'present' : 'null',
-    signupCompleted,
-  });
-
-  // FRESH INSTALL DETECTION: If there's NO session data at all, this is a fresh install.
-  // The user needs to go through onboarding at /begin, NOT /signin.
-  // Check both explicit keys AND any maia/explorer/beta prefixed keys for extra safety.
-  const hasAnySessionData = betaUser || explorerId || signupCompleted ||
-    Object.keys(localStorage).some(k =>
-      k.startsWith('maia_') || k.startsWith('explorer') || k.startsWith('beta')
-    );
-  if (!hasAnySessionData) {
-    console.log('🆕 [MAIA] Fresh install detected - no session data, redirecting to /begin');
-    return 'fresh';
-  }
-
-  // Check for poisoned local_* IDs
-  const hasLocalId = isPoisonedLocalId(explorerId) || isPoisonedLocalId(betaUserId);
-  if (hasLocalId) {
-    console.warn('🚨 [MAIA] Detected poisoned local_* ID - clearing and redirecting to /begin');
-    localStorage.removeItem('beta_user');
-    localStorage.removeItem('explorerId');
-    localStorage.removeItem('explorerName');
-    localStorage.removeItem('signup_completed');
-    return 'fresh';
-  }
-
-  // Check for version mismatch (only if there IS session data)
-  const versionMismatch = storedVersion !== String(SESSION_VERSION);
-  const nameIsUUID = isLikelyUUID(currentName || '');
-  const needsMigration = versionMismatch || nameIsUUID;
-
-  if (needsMigration) {
-    console.log('🔄 [MAIA] Session migration required - signing out user');
-    console.log('🔄 [MAIA] Reasons: versionMismatch=' + versionMismatch + ', nameIsUUID=' + nameIsUUID);
-    // Clear session data but preserve permanent markers
-    localStorage.removeItem('beta_user');
-    localStorage.removeItem('explorerId');
-    localStorage.removeItem('explorerName');
-    localStorage.removeItem('betaOnboardingComplete');
-    // Set new version
-    localStorage.setItem('maia_session_version', String(SESSION_VERSION));
-    return 'migrate'; // Needs redirect to sign-in (existing user, bad session)
-  }
-
-  return null; // Session is valid, continue to /maia
-}
+/**
+ * ⛔ DESKTOP-MAIA-IDENTITY-HYDRATION-01 — `checkAndMigrateSession()` REMOVED.
+ *
+ * It ran BEFORE identity resolution and could redirect to /signin on
+ * localStorage alone. A browser with a valid `maia_session` cookie and an empty
+ * store — a fresh profile, cleared site data, or Desktop's non-persistent
+ * `maia-platform` partition — was read as a fresh install and sent away before
+ * the server was ever asked who it was.
+ *
+ * Reordering alone would not have fixed it: `resolveMemberIdentity` writes the
+ * id and name but not `maia_session_version`, so the very next mount would have
+ * found a version mismatch and signed out a member the server had just
+ * confirmed.
+ *
+ * It is therefore SPLIT, in `lib/auth/maiaArrival.ts`, into a cache repair that
+ * cannot route and a guest policy reachable only after an explicit `authed:false`.
+ * localStorage decides where a guest goes; it never decides whether a member is
+ * one.
+ */
 
 /**
  * ⛔ DESKTOP-MAIA-IDENTITY-HYDRATION-01 — REMOVED FROM HERE.
@@ -378,50 +305,44 @@ function MAIAPageContent() {
     const initializeUser = async () => {
       setIsMounted(true);
 
-      // Check for session migration (forces re-auth if needed)
-      const sessionCheck = checkAndMigrateSession();
-      if (sessionCheck === 'fresh') {
-        console.log('[NAV] /maia -> /begin (reason: fresh install)');
-        router.replace('/signin');
-        return;
-      }
-      if (sessionCheck === 'migrate') {
-        console.log('[NAV] /maia -> /signin (reason: session migration)');
-        router.replace('/signin');
-        return;
-      }
-
-      // ⛔ DESKTOP-MAIA-IDENTITY-HYDRATION-01 — ASK THE SERVER, FIRST.
+      // ⛔ DESKTOP-MAIA-IDENTITY-HYDRATION-01 — THE SERVER DECIDES, FIRST.
       //
-      // When /maia has a valid server session, server identity is
-      // authoritative. localStorage may cache identity; it may never originate
-      // authenticated identity. `resolveMemberIdentity` never throws, so there
-      // is no catch here in which a member could be quietly demoted to guest.
-      const resolved = await resolveMemberIdentity();
+      // Nothing reads localStorage ahead of this. The legacy migration check
+      // used to sit here and could redirect to /signin before the server was
+      // ever asked; it now lives inside `decideMaiaArrival`, downstream of the
+      // verdict and unable to route a confirmed member anywhere.
+      const decision = await decideMaiaArrival();
 
-      if (resolved.state === 'error') {
-        // ⛔ NOT a guest. We could not ask, which is a different fact from the
-        // server saying no, and rendering it as guest is exactly how an
-        // authenticated member became soul_guest. Nothing identity-dependent
+      if (decision.kind === 'identity-error') {
+        // ⛔ NOT a guest and NOT a redirect. We could not ask, which is a
+        // different fact from the server saying no. Nothing identity-dependent
         // runs: no session registration, no memory or relationship calls.
-        console.warn('[MAIA identity] could not resolve identity:', resolved.reason);
-        setIdentityReason(resolved.reason);
+        console.warn('[MAIA identity] could not resolve identity:', decision.reason);
+        setIdentityReason(decision.reason);
         setIdentityState('error');
         return;
       }
 
-      const initialData = resolved.state === 'authenticated'
-        ? { id: resolved.memberId as string, name: resolved.displayName || '' }
-        // ⛔ An EXPLICIT verdict of "not signed in". The onboarding/guest path
-        // below decides what a genuine guest experiences — but nothing cached
-        // is allowed to promote that verdict back into a member.
+      if (decision.kind === 'redirect') {
+        console.log(`[NAV] /maia -> ${decision.to} (reason: ${decision.reason})`);
+        router.replace(decision.to);
+        return;
+      }
+
+      const initialData = decision.kind === 'member'
+        ? { id: decision.memberId, name: decision.displayName || '' }
+        // An EXPLICIT verdict of "not signed in", and no cached member may
+        // promote it back.
         : { id: 'guest', name: '' };
 
-      console.log(`[MAIA identity] ${resolved.state}`
-        + (resolved.credentialSource ? ` via=${resolved.credentialSource}` : '')
-        + (resolved.reason ? ` reason=${resolved.reason}` : ''));
-      setIdentityReason(resolved.reason);
-      setIdentityState(resolved.state);
+      if (decision.kind === 'member') {
+        console.log(`[MAIA identity] authenticated via=${decision.credentialSource || 'unknown'}`
+          + (decision.repaired.length ? ` repaired=${decision.repaired.join(',')}` : ''));
+      } else {
+        console.log(`[MAIA identity] unauthenticated${decision.reason ? ` reason=${decision.reason}` : ''}`);
+      }
+      setIdentityReason(decision.kind === 'guest' ? decision.reason : null);
+      setIdentityState(decision.kind === 'member' ? 'authenticated' : 'unauthenticated');
 
       // 🔎 IDENTITY PARITY (2026-08-24, iOS memory-context divergence).
       // Ask the server whether it recognizes this device, and compare with what
