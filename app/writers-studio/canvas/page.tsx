@@ -4,6 +4,10 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { apiFetch } from '@/lib/http/apiBase';
 import { PRESS, SERIF } from '../pressTheme';
+import { GROUND, INK, SPACE } from '../studioTheme';
+import { StudioPanel } from '../studio/StudioPanel';
+import { StudioRail } from '../studio/StudioRail';
+import { StudioText } from '../studio/StudioType';
 import { IMPORT_HREF, SOURCE_HREF } from '../studioMap';
 import { UNTITLED_EXPRESSION } from '../shellIdentity';
 import { arrivalWork, useLivingWorks } from '../useLivingWorks';
@@ -49,6 +53,30 @@ import MaterialsDrawer from './MaterialsDrawer';
  *     guess; so does this room).
  *   · any inferred state. The orientation line is authored facts only: the
  *     draft exists, it was last touched at a time.
+ *
+ * ── WS2-03A: THE SHELL PROJECTION SEAM ─────────────────────────────────────
+ *
+ * This room now renders through the accepted WS2-02 visual system — the GROUND
+ * ramp, the type roles, StudioPanel, and the honest StudioRail. That is the
+ * whole of WS2-03A: the design system was intentionally unrouted, so the §0.2
+ * instrument (which photographs /writers-studio/canvas) had nothing of it to
+ * photograph, and WS2-02's visual witness could not be obtained. This seam
+ * exists to make that witness possible, and stops there.
+ *
+ * WHAT IS PROJECTED: ramp, typography, panels, rail.
+ *
+ * WHAT IS NOT, and why: 04's column PROPORTIONS. The reference room has five
+ * columns — rail, outline, field, MAIA, materials. This room has a different
+ * real column set: a folded drawer spine showing one drawer at a time, and a
+ * folded Window. Forcing the measured fractions onto it would mean building
+ * Materials as a permanent right rail, which is WS2-03B and beyond. So the
+ * capture can adjudicate ramp, typography, hierarchy, density and states —
+ * and cannot yet adjudicate column proportion. That limit is real and is
+ * reported rather than papered over.
+ *
+ * The rail is the MEMBER-FACING projection: StudioRail draws through
+ * visibleDestinations, so it shows only what is built. It does not and must
+ * not match 04's sixteen. The full canonical grammar stays in the fixture.
  */
 
 type DrawerId = 'work' | 'materials' | 'structure' | 'history';
@@ -129,7 +157,7 @@ export default function WriterCanvasPage() {
     return (
       <div
         className="min-h-screen flex items-center justify-center px-6 text-center"
-        style={{ background: PRESS.bg, color: PRESS.text, fontFamily: SERIF }}
+        style={{ background: GROUND.base, color: INK.primary, fontFamily: SERIF }}
       >
         <div className="max-w-sm">
           <p className="text-[13px] tracking-[0.25em] uppercase opacity-50 mb-3">Writer Canvas</p>
@@ -264,23 +292,29 @@ export default function WriterCanvasPage() {
     }
   };
 
+  /* WS2-03A: the Window renders through StudioPanel, so MAIA's presence in the
+     real room carries the same treatment the accepted system gives it — and
+     its dismissibility comes from the design contract, not from here. The
+     sentence is unchanged: v0.1 opens onto one honest line, and no reflection
+     endpoint exists on this surface. Nothing here makes Conversations
+     available; that handoff is WS2-03B's, gated on Work context surviving it. */
   const reflectionPanel = (
-    <div className="flex flex-col px-5 py-6">
-      <h2 className="text-[11px] tracking-[0.2em] uppercase opacity-40 mb-4">Reflection</h2>
-      <p className="text-[13.5px] leading-relaxed opacity-70 max-w-[16rem]">{WINDOW_SENTENCE}</p>
-      <button
-        onClick={() => setWindowOpen(false)}
-        className="mt-6 self-start text-[12px] opacity-45 hover:opacity-80 underline underline-offset-4"
-      >
-        fold away
-      </button>
-    </div>
+    <StudioPanel
+      role="maia"
+      label="Reflection"
+      onDismiss={() => setWindowOpen(false)}
+      style={{ height: '100%', borderRadius: 0, border: 'none' }}
+    >
+      <StudioText role="maiaReading" style={{ maxWidth: '16rem' }}>
+        {WINDOW_SENTENCE}
+      </StudioText>
+    </StudioPanel>
   );
 
   return (
     <div
       className="min-h-screen flex flex-col"
-      style={{ background: PRESS.bg, color: PRESS.text, fontFamily: SERIF }}
+      style={{ background: GROUND.base, color: INK.primary, fontFamily: SERIF }}
     >
       {/* ── The head of the room: what am I working on, and where am I. ── */}
       <header className="px-6 md:px-10 pt-6 pb-5">
@@ -290,7 +324,9 @@ export default function WriterCanvasPage() {
         >
           ← Author Studio
         </Link>
-        <p className="text-[12px] tracking-[0.25em] uppercase opacity-45 mb-1.5">Writer Canvas</p>
+        <StudioText role="bandLabel" style={{ marginBottom: SPACE.tight }}>
+          Writer Canvas
+        </StudioText>
         <h1
           className="text-[24px] md:text-[27px] leading-snug"
           style={{ fontFamily: SERIF, opacity: headlineNamed ? 1 : 0.75 }}
@@ -334,6 +370,13 @@ export default function WriterCanvasPage() {
         className="flex-1 flex flex-col md:flex-row min-h-0 border-t"
         style={{ borderColor: PRESS.rule }}
       >
+        {/* ── WS2-03A: the honest rail. visibleDestinations only — an unbuilt
+            room cannot reach a member through it. ── */}
+        <StudioRail
+          hasManuscript={Boolean(manuscript)}
+          style={{ width: 200, flexShrink: 0, borderRadius: 0 }}
+        />
+
         {/* ── Study Wall: the folded spine. One drawer open at a time. ── */}
         <nav
           aria-label="This work"
@@ -359,19 +402,25 @@ export default function WriterCanvasPage() {
         </nav>
 
         {drawer && (
-          <aside
-            className="md:w-72 shrink-0 border-b md:border-b-0 md:border-r px-5 py-6 overflow-y-auto"
-            style={{ borderColor: PRESS.ruleSoft }}
+          /* The open drawer, now a StudioPanel. Its dismissibility comes from
+             the design contract rather than from this call site, and the
+             spine's toggle is what dismisses it — one drawer at a time, as
+             before. */
+          <StudioPanel
+            role="manuscript-outline"
+            label={drawers.find((d) => d.id === drawer)?.label}
+            onDismiss={() => setDrawer(null)}
+            style={{ width: 288, flexShrink: 0, borderRadius: 0, borderTop: 'none', borderBottom: 'none', borderLeft: 'none' }}
           >
-            <h2 className="text-[11px] tracking-[0.2em] uppercase opacity-40 mb-4">
-              {drawers.find((d) => d.id === drawer)?.label}
-            </h2>
             {drawerBody(drawer)}
-          </aside>
+          </StudioPanel>
         )}
 
         {/* ── Worktable: the center, always the largest thing. ── */}
-        <main className="flex-1 min-w-0 flex flex-col px-6 md:px-12 py-7">
+        <main
+          className="flex-1 min-w-0 flex flex-col px-6 md:px-12 py-7"
+          style={{ background: GROUND.field }}
+        >
           {listPhase === 'loading' && <p className="text-[14px] opacity-40">opening…</p>}
           {listPhase === 'error' && (
             <p className="text-[15px] opacity-70 max-w-md leading-relaxed">
