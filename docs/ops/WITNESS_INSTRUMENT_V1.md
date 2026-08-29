@@ -1,7 +1,7 @@
 # WITNESS-INSTRUMENT-V1 — scope, authorization boundary, phase exit
 
 **Lane:** Phase 0 of the MAIA Conversational Completion Program.
-**Status:** self-test 82/82 · **device qualification A/B/C/D PASSED on the real daemon** · Defect 5 open · phase exit NOT SATISFIED (external blocker) · **first device qualification RED — two instrument defects found and repaired** · phase exit NOT YET SATISFIED.
+**Status:** self-test 90/90 · **device qualification A/B/C/D PASSED on the real daemon** · Defect 5 open · phase exit NOT SATISFIED (external blocker) · **first device qualification RED — two instrument defects found and repaired** · phase exit NOT YET SATISFIED.
 **Entry point:** `scripts/witness/witness.sh` (see `scripts/witness/README.md`).
 
 ## Why this exists before any conversational lane
@@ -36,6 +36,7 @@ guards. The guards are the deliverable; the verbs are how they get invoked.
 | G7 | external networks, non-loopback ports, reserved production ports, protected hostnames in env |
 | G8 | writing runs, snapshots or evidence inside a protected project dir |
 | G9 | a missing, universal, too-short, false-of-candidate, or non-discriminating artifact assertion |
+| G11 | a verb executed by an instrument other than the one that prepared the run, or a dirty instrument at prepare |
 | G0 | a verb invoked without an explicitly named run — selection is never inferred from shared state |
 | G10a | a container belonging to another run, or carrying no witness run label — no run may adopt another run's runtime |
 | G10 | unproven runtime provenance — wrong `GIT_COMMIT`, wrong `DEPLOY_LANE`, or the declared artifact absent from the running container |
@@ -402,10 +403,42 @@ laboratory against a foundation nobody can rebuild.
 
 ```
 WITNESS-INSTRUMENT-V1 A/B/C/D    QUALIFIED · real daemon
-Defect 5 · observer provenance   OPEN · V1 INTERNAL
+Defect 5 · observer provenance   CLOSED · self-test; device witness pending
 PLATFORM-SCHEMA-PROVENANCE-01    CONFIRMED SYSTEMIC · 6 static orphans
 INPUT A · production comparison  PENDING
 PHASE 0                          OPEN · NOT GREEN
 ```
 
 Phase 0 is held open by the external schema blocker, not by the instrument.
+
+
+## Defect 5 — observer provenance, repaired
+
+The device qualification cost three inferred fingerprints to establish which
+instrument had actually executed an acceptance sequence: a bare verb that should
+have refused, an unpinned shell, and a missing `latest` file. The run recorded
+its candidate exactly and its observer not at all.
+
+    prepare      records INSTRUMENT_SHA and INSTRUMENT_TREE_STATE
+                 refuses a dirty instrument outright — no ack flag, as with G2
+                 refuses an instrument that is not in a git checkout at all
+    verify       G11 runs first in the static gate set; mismatch refuses before
+    provision    any evidentiary or runtime action
+    collect
+    status       prints prepared vs executing identity, flags mismatch
+    teardown     proceeds under mismatch, records
+                 TORN_DOWN_BY_FOREIGN_INSTRUMENT — refusing it would strand
+                 containers, and cleanup produces no evidence to contaminate
+
+A commit alone cannot identify an instrument: two checkouts at the same SHA with
+different working trees are different observers. Only the instrument's own files
+are considered, so unrelated dirt elsewhere in the repository does not change
+which witness is executing.
+
+The self-test now stands up its own clean instrument checkout in a throwaway git
+repo, because a developer's working tree is necessarily dirty and the
+alternative — an allow-dirty flag — would reintroduce precisely the escape hatch
+removed from G2.
+
+**The invariant:** *the candidate cannot change during a witness run, and neither
+can the witness.*

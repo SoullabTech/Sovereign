@@ -19,6 +19,7 @@ it cannot.
 |---|---|
 | **Production isolation** | Every container, network, port, volume and database the witness stack can name is witness-owned. Protected names are refused by guard, and protected container state is recorded before and after every docker verb — so "untouched" is an observation, not a promise. |
 | **Candidate immutability** | The source tree must be clean — `DIRTY_TREE=REFUSED`, no override. The build context is a `git archive` snapshot of a named commit. Its digest is recorded at `prepare` and re-proven on every later verb. A rewritten history, a moved ref, a mutated snapshot, or a run re-pointed at another SHA all refuse. |
+| **Observer provenance** | The instrument that prepared a run must be the instrument that executes every later verb — same commit, same tree state. A dirty instrument is refused at `prepare`; a mismatch refuses before any evidentiary or runtime action. The candidate cannot change during a run, and neither can the witness. |
 | **Substrate integrity** | If the candidate's migrations do not apply to the empty witness database, `provision` stops **before** the app is started. A healthy container over an incomplete schema is a false green, and health is the most persuasive signal the instrument emits. |
 | **Runtime attribution** | Runtime objects are scoped to the RUN, not the candidate: project, container names and volumes all carry a per-run token, and every container is labelled `ai.soullab.witness.run_id`. A run cannot adopt another run's containers even for the same candidate. |
 | **Runtime provenance** | The running container must report the candidate's `GIT_COMMIT`, must carry `DEPLOY_LANE=witness-lane`, and must physically contain a declared candidate-specific artifact. Its **image digest** is bound on first proof and must not move afterwards — a tag is a name, and a tag can be rebuilt underneath a run by another lane. Anything less is `RUNTIME_PROVENANCE=UNPROVEN`, and unproven **fails**. |
@@ -29,6 +30,18 @@ commit, so the instrument closes it by construction: no artifact assertion, no
 verification.
 
 ---
+
+## Naming the observer
+
+`prepare` records `INSTRUMENT_SHA` and `INSTRUMENT_TREE_STATE`, every verb prints
+both the executing and the prepared identity, and `status` flags a mismatch
+outright. A commit alone is not enough — two checkouts at the same SHA with
+different working trees are different observers — so a dirty instrument is
+refused with no ack flag, exactly as a dirty candidate is.
+
+`teardown` is the one exception: it proceeds under mismatch and records
+`TORN_DOWN_BY_FOREIGN_INSTRUMENT`. Refusing it would strand containers, and
+cleanup produces no evidence that a mismatch could contaminate.
 
 ## Naming the run
 

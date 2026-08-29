@@ -180,6 +180,31 @@ w_load_run() {
 
 w_utc() { date -u +%Y-%m-%dT%H:%M:%SZ; }
 
+# ── Observer identity ─────────────────────────────────────────────────────────
+# The instrument's own commit and tree state. The candidate cannot change during
+# a run; neither can the witness. Resolved from the checkout the running scripts
+# actually live in — not from $PWD, which is exactly how an operator ends up
+# executing one instrument while believing they are running another.
+w_instrument_sha() {
+    git -C "$WITNESS_SCRIPT_DIR" rev-parse HEAD 2>/dev/null || printf 'unknown'
+}
+
+# A commit alone cannot identify a locally modified instrument: two checkouts at
+# the same SHA with different working trees are different observers. Only the
+# instrument's own files are considered — unrelated dirt elsewhere in the
+# repository does not change which witness is executing.
+w_instrument_tree_state() {
+    local dirty
+    dirty="$(git -C "$WITNESS_SCRIPT_DIR" status --porcelain --untracked-files=no -- \
+             "$WITNESS_SCRIPT_DIR" 2>/dev/null || true)"
+    [ -z "$dirty" ] && printf 'clean' || printf 'dirty'
+}
+
+w_instrument_dirty_paths() {
+    git -C "$WITNESS_SCRIPT_DIR" status --porcelain --untracked-files=no -- \
+        "$WITNESS_SCRIPT_DIR" 2>/dev/null || true
+}
+
 # Record a verb outcome on the run — the run's own ledger, appended never edited.
 w_journal() {
     printf '%s  %-9s %s\n' "$(w_utc)" "${1}" "${2}" >> "$WITNESS_RUN_DIR/journal.log"

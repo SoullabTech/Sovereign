@@ -133,6 +133,25 @@ cmd_prepare() {
     guard_candidate_named "$ref" "$repo" || exit "$W_EXIT_REFUSED"
     guard_candidate_clean "$repo"        || exit "$W_EXIT_REFUSED"
 
+    # The observer is identified before the candidate is snapshotted. A dirty
+    # instrument is refused for the same reason a dirty candidate is: an
+    # unidentified local variant cannot be cited later, and "the instrument at
+    # <sha>" would be a claim about software that exists on exactly one disk.
+    local inst_sha inst_tree
+    inst_sha="$(w_instrument_sha)"; inst_tree="$(w_instrument_tree_state)"
+    if [ "$inst_sha" = "unknown" ]; then
+        w_block "The instrument is not in a git checkout — its identity cannot be established."
+        w_dim "  $WITNESS_SCRIPT_DIR"
+        exit "$W_EXIT_REFUSED"
+    fi
+    if [ "$inst_tree" != "clean" ]; then
+        w_block "DIRTY_INSTRUMENT=REFUSED — the witness itself has uncommitted changes."
+        w_instrument_dirty_paths | sed 's/^/      /' >&2
+        w_dim "Evidence would be attributed to instrument ${inst_sha:0:9}, which is not what"
+        w_dim "is executing. Commit or stash the instrument's changes, then prepare."
+        exit "$W_EXIT_REFUSED"
+    fi
+
     local root run_id run_dir snap_parent snap
     root="$(w_run_root)"
     run_id="$(date -u +%Y%m%dT%H%M%SZ)-${WITNESS_CANDIDATE_SHORT}"
@@ -167,6 +186,9 @@ cmd_prepare() {
     fi
 
     wm_set RUN_ID                    "$run_id"
+    wm_set INSTRUMENT_SHA            "$inst_sha"
+    wm_set INSTRUMENT_TREE_STATE     "$inst_tree"
+    wm_set INSTRUMENT_DIR            "$WITNESS_SCRIPT_DIR"
     wm_set PREPARED_AT               "$(w_utc)"
     wm_set PREPARED_BY               "$(id -un)@$(hostname 2>/dev/null || echo '?')"
     wm_set SOURCE_REPO               "$repo"
@@ -215,6 +237,7 @@ cmd_prepare() {
     w_dim "runtime:   project $(wm_get COMPOSE_PROJECT), containers ${WITNESS_PREFIX}-${run_token}-*"
     w_dim "assertion: '$(wm_get ARTIFACT_PATTERN)' in $(wm_get ARTIFACT_SOURCE_PATH) (discriminating: $(wm_get ARTIFACT_ASSERTION_DISCRIMINATING))"
     w_dim "run dir:   $run_dir"
+    w_dim "observer:  ${inst_sha:0:9} ($inst_tree)"
     w_rule
     w_log "Pin this run for the rest of the sequence — verbs will not infer it:"
     w_log "  export WITNESS_RUN=$run_id"
@@ -231,6 +254,7 @@ cmd_verify() {
 
     w_rule
     w_log "verify — refusal set + runtime provenance (run $WITNESS_RUN_ID)"
+    w_log "observer: $(w_instrument_sha | cut -c1-9) ($(w_instrument_tree_state)) · prepared by $(wm_get INSTRUMENT_SHA | cut -c1-9) ($(wm_get INSTRUMENT_TREE_STATE))"
     w_rule
 
     if ! witness_static_gates; then
@@ -277,6 +301,7 @@ cmd_provision() {
 
     w_rule
     w_log "provision — building the candidate into an isolated witness stack"
+    w_log "observer: $(w_instrument_sha | cut -c1-9) ($(w_instrument_tree_state)) · prepared by $(wm_get INSTRUMENT_SHA | cut -c1-9) ($(wm_get INSTRUMENT_TREE_STATE))"
     w_rule
 
     if ! witness_static_gates; then
@@ -445,6 +470,7 @@ cmd_collect() {
 
     w_rule
     w_log "collect — evidence in two classes (run $WITNESS_RUN_ID)"
+    w_log "observer: $(w_instrument_sha | cut -c1-9) ($(w_instrument_tree_state)) · prepared by $(wm_get INSTRUMENT_SHA | cut -c1-9) ($(wm_get INSTRUMENT_TREE_STATE))"
     w_rule
 
     # Evidence is only attributable while the candidate is still immutable.
@@ -512,9 +538,18 @@ cmd_teardown() {
 
     w_rule
     w_log "teardown — destroying the witness stack, keeping the evidence"
+    w_log "observer: $(w_instrument_sha | cut -c1-9) ($(w_instrument_tree_state)) · prepared by $(wm_get INSTRUMENT_SHA | cut -c1-9) ($(wm_get INSTRUMENT_TREE_STATE))"
     w_rule
 
     # The one guard that makes `down -v` safe to run at all.
+    # Deliberately NOT gated on observer provenance. Cleanup must remain possible
+    # when the wrong instrument is checked out — otherwise a mismatch strands
+    # containers. The mismatch is announced and recorded; it can never turn
+    # cleanup into qualifying evidence, because teardown produces none.
+    if ! guard_observer_provenance >/dev/null 2>&1; then
+        w_warn "Observer mismatch — tearing down anyway. Cleanup is not evidence."
+        wm_set TORN_DOWN_BY_FOREIGN_INSTRUMENT "$(w_instrument_sha)"
+    fi
     guard_compose_project || exit "$W_EXIT_REFUSED"
     guard_container_names || exit "$W_EXIT_REFUSED"
     guard_no_protected_writes || exit "$W_EXIT_REFUSED"
@@ -577,6 +612,12 @@ cmd_status() {
     echo "migrations             $(wm_show MIGRATIONS)"
     echo "app health             $(wm_show APP_HEALTH)"
     echo "RUN_TOKEN              $(wm_show RUN_TOKEN)"
+    echo "INSTRUMENT prepared    $(wm_show INSTRUMENT_SHA) ($(wm_show INSTRUMENT_TREE_STATE))"
+    echo "INSTRUMENT executing   $(w_instrument_sha) ($(w_instrument_tree_state))"
+    if [ "$(w_instrument_sha)" != "$(wm_get INSTRUMENT_SHA)" ]; then
+        echo "                       ⛔ OBSERVER MISMATCH — this run was not prepared by the"
+        echo "                          instrument you are running now."
+    fi
     echo "RUNTIME_PROVENANCE     $(wm_show RUNTIME_PROVENANCE)"
     echo "EVIDENCE_CLASS         $(wm_show EVIDENCE_CLASS)"
     echo "PRODUCTION_ISOLATION   $(wm_show PRODUCTION_ISOLATION)"

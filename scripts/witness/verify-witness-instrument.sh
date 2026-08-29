@@ -34,6 +34,8 @@
 #                         a second prepare moved shared state between two of the
 #                         operator's verbs, silently changing their subject.
 #
+#   K. Observer provenance — the witness may not change mid-run either.
+#
 #   G. Self-consistency     — the instrument's own compose file and env sample
 #                             pass the guards they are subject to.
 #
@@ -51,6 +53,19 @@ mkdir -p "$FIX"
 
 cleanup() { rm -rf "$ROOT"; }
 trap cleanup EXIT
+
+# ── The instrument under test gets its own CLEAN checkout ─────────────────────
+# G11 refuses a dirty instrument, which is correct and which makes the developer's
+# working tree unusable as the observer. The alternative — an allow-dirty flag —
+# would reintroduce exactly the escape hatch removed from G2. So the suite copies
+# the instrument into a throwaway git repo and executes that.
+INSTRUMENT_DIR="$ROOT/instrument"
+mkdir -p "$INSTRUMENT_DIR"
+cp -R "$SCRIPT_DIR"/. "$INSTRUMENT_DIR"/
+git init -q "$INSTRUMENT_DIR"
+git -C "$INSTRUMENT_DIR" -c user.email=selftest@maia -c user.name=selftest add -A >/dev/null
+git -C "$INSTRUMENT_DIR" -c user.email=selftest@maia -c user.name=selftest commit -qm "instrument under test" >/dev/null
+INSTRUMENT_SHA_UT="$(git -C "$INSTRUMENT_DIR" rev-parse HEAD)"
 
 PASS=0; FAIL=0
 ok()   { echo "  ok:   $1"; PASS=$((PASS + 1)); }
@@ -73,7 +88,7 @@ drv() {
         WITNESS_ENV_FILE="$FIX/env.good" \
         WITNESS_ASSUME_NO_DOCKER=1 \
         ${envs[@]+"${envs[@]}"} \
-        "$SCRIPT_DIR/witness.sh" "$@"
+        "$INSTRUMENT_DIR/witness.sh" "$@"
 }
 mkdir -p "$ROOT/home" "$ROOT/tmp"
 
@@ -284,7 +299,7 @@ ACK_VAR="WITNESS_ACK""_DIRTY_TREE"
 drv "${ASSERT_ENV[@]}" "${ACK_VAR}=1" prepare "$CAND_SHA" >/dev/null 2>&1
 [ $? -eq 1 ] && ok "dirty tree still refused with the old ack flag set" || bad "an ack flag still unlocks a dirty tree"
 
-if grep -rqE "(^|[^A-Z_])${ACK_VAR}([^A-Z_]|$)" "$SCRIPT_DIR"/witness.sh "$SCRIPT_DIR"/lib/*.sh 2>/dev/null; then
+if grep -rqE "(^|[^A-Z_])${ACK_VAR}([^A-Z_]|$)" "$INSTRUMENT_DIR"/witness.sh "$INSTRUMENT_DIR"/lib/*.sh 2>/dev/null; then
     bad "a dirty-tree bypass token survives in the instrument"
 else
     ok "dirty-tree bypass ABSENT from the instrument source"
@@ -322,12 +337,12 @@ RUN_DIR="$ROOT/witness/runs/$RUN_ID"
 if [ -n "$RUN_ID" ] && [ -d "$RUN_DIR" ]; then ok "prepare PASS → run $RUN_ID"; else bad "prepare did not produce a run dir"; fi
 
 # Load the run's manifest the way the guards do.
-WITNESS_SCRIPT_DIR="$SCRIPT_DIR"
+WITNESS_SCRIPT_DIR="$INSTRUMENT_DIR"
 export WITNESS_SCRIPT_DIR WITNESS_RUN_ROOT="$ROOT/witness" WITNESS_SOURCE_REPO="$REPO"
 export WITNESS_ENV_FILE="$FIX/env.good" WITNESS_ASSUME_NO_DOCKER=1
-. "$SCRIPT_DIR/lib/witness-common.sh"
-. "$SCRIPT_DIR/lib/witness-guards.sh"
-. "$SCRIPT_DIR/lib/witness-evidence.sh"
+. "$INSTRUMENT_DIR/lib/witness-common.sh"
+. "$INSTRUMENT_DIR/lib/witness-guards.sh"
+. "$INSTRUMENT_DIR/lib/witness-evidence.sh"
 WITNESS_RUN_DIR="$RUN_DIR"
 
 SNAP="$(wm_get SNAPSHOT_DIR)"
@@ -356,7 +371,7 @@ gitr archive --format=tar "$CAND_SHA" | tar -xf - -C "$SNAP" 2>/dev/null   # res
 # ═══════════════════════════════════════════════════════════════════════════════
 sect "C. production isolation"
 
-guard_compose_project "maia-sovereign" "$SCRIPT_DIR/docker-compose.witness.yml" >/dev/null 2>&1 \
+guard_compose_project "maia-sovereign" "$INSTRUMENT_DIR/docker-compose.witness.yml" >/dev/null 2>&1 \
     && bad "non-witness project accepted" || ok "non-witness compose project refused"
 guard_compose_project "maia-witness-x" "/home/user/Sovereign/docker-compose.production.yml" >/dev/null 2>&1 \
     && bad "production compose file accepted" || ok "non-witness compose file refused"
@@ -436,7 +451,7 @@ ev_collect() {
         WITNESS_DOCKER_CMD="$FAKE_BIN/docker" WITNESS_ASSUME_NO_DOCKER=0 \
         FAKE_RUN_LABEL="$(wm_get RUN_ID)" FAKE_GIT_COMMIT="$CAND_SHORT" FAKE_IMAGE_ID=sha256:candidate \
         HOME="$ROOT/home" ${1:+WITNESS_CLIENT_CONSOLE_LOG="$1"} \
-        "$SCRIPT_DIR/witness.sh" collect "$RUN_ID" >/dev/null 2>&1
+        "$INSTRUMENT_DIR/witness.sh" collect "$RUN_ID" >/dev/null 2>&1
 }
 wm_set RUNTIME_IMAGE_ID ""
 ev_collect
@@ -502,7 +517,7 @@ rm -rf "$RUN_DIR/evidence/server"
 env WITNESS_RUN_ROOT="$ROOT/witness" WITNESS_SOURCE_REPO="$REPO" WITNESS_ENV_FILE="$FIX/env.good" \
     WITNESS_DOCKER_CMD="$FAKE_BIN/docker" WITNESS_ASSUME_NO_DOCKER=0 \
     FAKE_RUN_LABEL="$FAKE_RUN_LABEL" FAKE_GIT_COMMIT="$CAND_SHORT" FAKE_IMAGE_ID=sha256:candidate \
-    HOME="$ROOT/home" "$SCRIPT_DIR/witness.sh" collect "$RUN_ID" >/dev/null 2>&1
+    HOME="$ROOT/home" "$INSTRUMENT_DIR/witness.sh" collect "$RUN_ID" >/dev/null 2>&1
 [ $? -eq 3 ] && ok "collect on an unproven runtime exits 3 (NOT ATTRIBUTABLE)" || bad "collect qualified an unproven runtime"
 [ "$(wm_get SERVER_EVIDENCE)" = "NOT_ATTRIBUTABLE" ] && ok "SERVER_EVIDENCE=NOT_ATTRIBUTABLE" || bad "server evidence wrongly classed: $(wm_get SERVER_EVIDENCE)"
 [ "$(wm_get EVIDENCE_CLASS)" = "DIAGNOSTIC_ONLY" ] && ok "EVIDENCE_CLASS=DIAGNOSTIC_ONLY" || bad "evidence class not diagnostic"
@@ -523,12 +538,12 @@ MIG_RUN_ID="$(env WITNESS_RUN_ROOT="$ROOT/witness" WITNESS_SOURCE_REPO="$REPO" W
     WITNESS_ASSUME_NO_DOCKER=1 HOME="$ROOT/home" \
     WITNESS_ARTIFACT_SOURCE_PATH=lib/capture.ts \
     WITNESS_ARTIFACT_PATTERN=CANDIDATE_UTTERANCE_CEILING_MARKER \
-    "$SCRIPT_DIR/witness.sh" prepare "$CAND_SHA" 2>/dev/null)"
+    "$INSTRUMENT_DIR/witness.sh" prepare "$CAND_SHA" 2>/dev/null)"
 
 env WITNESS_RUN_ROOT="$ROOT/witness" WITNESS_SOURCE_REPO="$REPO" WITNESS_ENV_FILE="$FIX/env.good" \
     WITNESS_DOCKER_CMD="$FAKE_BIN/docker" WITNESS_ASSUME_NO_DOCKER=0 \
     FAKE_MIGRATE_FAIL=1 FAKE_STATE_DIR="$FAKE_STATE" FAKE_GIT_COMMIT="$CAND_SHORT" \
-    HOME="$ROOT/home" "$SCRIPT_DIR/witness.sh" provision "$MIG_RUN_ID" >/dev/null 2>&1
+    HOME="$ROOT/home" "$INSTRUMENT_DIR/witness.sh" provision "$MIG_RUN_ID" >/dev/null 2>&1
 [ $? -ne 0 ] && ok "migration failure fails provision (non-zero)" || bad "provision succeeded despite failed migrations"
 
 MIG_DIR="$ROOT/witness/runs/$MIG_RUN_ID"
@@ -561,20 +576,56 @@ echo "$MIG_RUN_ID" > "$ROOT/witness/current"
 PINNED_OUT="$(drv WITNESS_RUN="$RUN_ID" status 2>/dev/null | awk '$1=="run"{print $2; exit}')"
 [ "$PINNED_OUT" = "$RUN_ID" ] && ok "a pinned verb is unaffected by another lane moving the pointer" || bad "pointer drift changed a pinned verb's subject"
 
+# K — the observer is identified, and may not change mid-run.
+sect "K. observer provenance"
+
+( WITNESS_RUN_DIR="$RUN_DIR"; [ "$(wm_get INSTRUMENT_SHA)" = "$INSTRUMENT_SHA_UT" ] ) \
+    && ok "prepare records the executing instrument's SHA" || bad "instrument SHA not recorded"
+( WITNESS_RUN_DIR="$RUN_DIR"; [ "$(wm_get INSTRUMENT_TREE_STATE)" = "clean" ] ) \
+    && ok "prepare records the instrument tree state" || bad "instrument tree state not recorded"
+
+WITNESS_RUN_DIR="$RUN_DIR"
+guard_observer_provenance >/dev/null 2>&1 \
+    && ok "an unchanged observer passes" || bad "unchanged observer refused"
+
+# A run prepared by a different instrument must not be acted on by this one.
+SAVED_SHA="$(wm_get INSTRUMENT_SHA)"
+wm_set INSTRUMENT_SHA "0000000000000000000000000000000000000000"
+guard_observer_provenance >/dev/null 2>&1 \
+    && bad "observer mismatch accepted" || ok "observer mismatch refused"
+drv verify "$RUN_ID" >/dev/null 2>&1
+[ $? -eq 1 ] && ok "verify refuses under observer mismatch" || bad "verify proceeded under observer mismatch"
+
+# Teardown must stay available under mismatch — otherwise a mismatch strands
+# containers — and must record that a foreign instrument did the cleanup.
+drv teardown "$RUN_ID" >/dev/null 2>&1
+[ $? -eq 0 ] && ok "teardown remains available under observer mismatch" || bad "mismatch stranded cleanup"
+[ -n "$(wm_get TORN_DOWN_BY_FOREIGN_INSTRUMENT)" ] \
+    && ok "foreign-instrument teardown is recorded" || bad "foreign teardown not recorded"
+wm_set INSTRUMENT_SHA "$SAVED_SHA"
+
+# A dirty instrument is refused outright — no ack flag, as with the candidate.
+echo "# local edit" >> "$INSTRUMENT_DIR/witness.sh"
+drv WITNESS_ARTIFACT_SOURCE_PATH=lib/capture.ts \
+    WITNESS_ARTIFACT_PATTERN=CANDIDATE_UTTERANCE_CEILING_MARKER \
+    prepare "$CAND_SHA" >/dev/null 2>&1
+[ $? -eq 1 ] && ok "a dirty instrument is refused at prepare" || bad "dirty instrument certified a run"
+git -C "$INSTRUMENT_DIR" checkout -- witness.sh 2>/dev/null
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # G. Self-consistency — the instrument's own artifacts pass their own guards
 # ═══════════════════════════════════════════════════════════════════════════════
 sect "G. self-consistency"
 
-guard_compose_project "maia-witness-${CAND_SHORT}" "$SCRIPT_DIR/docker-compose.witness.yml" >/dev/null 2>&1 \
+guard_compose_project "maia-witness-${CAND_SHORT}" "$INSTRUMENT_DIR/docker-compose.witness.yml" >/dev/null 2>&1 \
     && ok "shipped witness compose accepted as a witness project" || bad "shipped witness compose refused"
-guard_container_names "$SCRIPT_DIR/docker-compose.witness.yml" "$(wm_get COMPOSE_PROJECT)" >/dev/null 2>&1 \
+guard_container_names "$INSTRUMENT_DIR/docker-compose.witness.yml" "$(wm_get COMPOSE_PROJECT)" >/dev/null 2>&1 \
     && ok "shipped compose: every container is run-token scoped" || bad "shipped compose container not run-scoped"
 guard_container_names "$FIX/docker-compose.witness.yml" "$(wm_get COMPOSE_PROJECT)" >/dev/null 2>&1 \
     && bad "candidate-scoped container name accepted" || ok "candidate-scoped container name refused"
-guard_network_target "$SCRIPT_DIR/docker-compose.witness.yml" "$SCRIPT_DIR/.env.witness.sample" >/dev/null 2>&1 \
+guard_network_target "$INSTRUMENT_DIR/docker-compose.witness.yml" "$INSTRUMENT_DIR/.env.witness.sample" >/dev/null 2>&1 \
     && ok "shipped compose + env sample: loopback-only, no external network" || bad "shipped compose/env failed the network guard"
-guard_database_target "$SCRIPT_DIR/.env.witness.sample" >/dev/null 2>&1 \
+guard_database_target "$INSTRUMENT_DIR/.env.witness.sample" >/dev/null 2>&1 \
     && ok "shipped env sample points at the witness database" || bad "shipped env sample failed the database guard"
 
 # ── the two corrections that came back from the discovery branch (3d4193ba) ──
@@ -595,8 +646,8 @@ case "$_id_out" in
     *)                   ok "identifier assertion accepted without a stability warning" ;;
 esac
 
-grep -q 'launch_desktop_authenticated' "$SCRIPT_DIR/witness.sh" \
-    && ! grep -qE '^\s*launch_desktop_authenticated\)' "$SCRIPT_DIR/witness.sh" \
+grep -q 'launch_desktop_authenticated' "$INSTRUMENT_DIR/witness.sh" \
+    && ! grep -qE '^\s*launch_desktop_authenticated\)' "$INSTRUMENT_DIR/witness.sh" \
     && ok "launch_desktop_authenticated named as out-of-scope, not implemented" \
     || bad "V1 scope boundary on the Desktop launcher is unclear"
 

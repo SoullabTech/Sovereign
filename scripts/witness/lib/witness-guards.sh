@@ -168,6 +168,49 @@ guard_candidate_immutable() {
 }
 
 # ───────────────────────────────────────────────────────────────────────────────
+# G11 — observer provenance. The instrument executing this verb must be the
+# instrument that prepared the run.
+#
+# Found by the device qualification (2026-08-29): an acceptance sequence was run
+# against a checkout still at an older commit, and it took three inferred
+# fingerprints — a bare verb that should have refused, an unpinned shell, a
+# missing `latest` file — to establish which instrument had actually executed.
+# The run recorded its candidate exactly and its observer not at all.
+#
+# The candidate cannot change during a witness run. Neither can the witness.
+# Evidence attributed to a commit but produced by an unknown version of the
+# harness carries exactly the ambiguity this instrument exists to remove.
+# ───────────────────────────────────────────────────────────────────────────────
+guard_observer_provenance() {
+    local prepared_sha prepared_tree now_sha now_tree
+    prepared_sha="$(wm_get INSTRUMENT_SHA)"
+    prepared_tree="$(wm_get INSTRUMENT_TREE_STATE)"
+    now_sha="$(w_instrument_sha)"
+    now_tree="$(w_instrument_tree_state)"
+
+    if [ -z "$prepared_sha" ]; then
+        w_block "Run manifest records no instrument identity — it was prepared by an"
+        w_dim "instrument that did not know what it was. Prepare a new run."
+        return 1
+    fi
+    if [ "$now_sha" != "$prepared_sha" ]; then
+        w_block "Observer mismatch: this run was prepared by instrument ${prepared_sha:0:9},"
+        w_dim "but the executing instrument is ${now_sha:0:9}."
+        w_dim "  prepared by: $prepared_sha"
+        w_dim "  executing:   $now_sha  ($WITNESS_SCRIPT_DIR)"
+        w_dim "A witness may not change mid-run any more than a candidate may. Check out"
+        w_dim "the prepared instrument, or prepare a new run with this one."
+        return 1
+    fi
+    if [ "$now_tree" != "$prepared_tree" ]; then
+        w_block "Observer mismatch: instrument tree was '$prepared_tree' at prepare, now '$now_tree'."
+        w_instrument_dirty_paths | sed 's/^/      /' >&2
+        return 1
+    fi
+    return 0
+}
+
+# ───────────────────────────────────────────────────────────────────────────────
 # G4 — witness compose project. Refuses any project name or compose file that is
 # not unmistakably ours. This is what makes `teardown` safe to run at all: a
 # `_w_docker compose down -v` can only ever address a project named maia-witness-*.
@@ -725,6 +768,7 @@ guard_runtime_provenance() {
 # ───────────────────────────────────────────────────────────────────────────────
 witness_static_gates() {
     local rc=0
+    guard_observer_provenance                || rc=1
     guard_no_protected_writes                || rc=1
     guard_candidate_immutable                || rc=1
     guard_compose_project                    || rc=1
