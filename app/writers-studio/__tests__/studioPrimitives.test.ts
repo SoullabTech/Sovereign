@@ -2,6 +2,8 @@ import * as fs from 'fs';
 import * as path from 'path';
 import {
   assertFieldIsTheLargestColumn,
+  assertLayoutMatchesReference,
+  writingFieldLayout,
   columnPx,
   COLUMN_FRACTION,
   INSIGHT_CHIP,
@@ -25,10 +27,9 @@ const sourceFiles = fs
     code: stripComments(fs.readFileSync(path.join(DIR, f), 'utf8')),
   }));
 
-const fixture = fs.readFileSync(
-  path.join(DIR, '__fixtures__', 'WritingFieldComposition.tsx'),
-  'utf8',
-);
+const fx = (f: string) => fs.readFileSync(path.join(DIR, '__fixtures__', f), 'utf8');
+const fixture = fx('WritingFieldComposition.tsx');
+const canonicalRail = fx('CanonicalRail.tsx');
 
 describe('primitives consume studioTheme rather than forking it', () => {
   it('finds the primitives', () => {
@@ -73,6 +74,14 @@ describe('the rail cannot leak an unbuilt room', () => {
   it('still carries the whole grammar behind that boundary', () => {
     const all = STUDIO_MAP.flatMap((g) => g.destinations);
     expect(all.filter((d) => d.availability === 'later').length).toBeGreaterThan(0);
+  });
+
+  it('bands the rail by REGION, which is what gives MAIA her own band', () => {
+    const rail = sourceFiles.find((f) => f.name === 'StudioRail.tsx')!.code;
+    expect(rail).toContain('REGION_LABEL[group.region]');
+    // Not group.label: D-019's rail is banded by region, and filing MAIA as
+    // one owner among seven is the thing the banding exists to prevent.
+    expect(rail).not.toContain('{group.label');
   });
 });
 
@@ -171,5 +180,72 @@ describe('compact preserves the observed 04→08 relations', () => {
 
   it('never hides the writing field', () => {
     expect(fixture).not.toMatch(/\{!compact && \(\s*<main/);
+  });
+});
+
+describe('two projections of one grammar', () => {
+  it('gives the fixture the full canonical sixteen, inert', () => {
+    expect(canonicalRail).toContain('STUDIO_MAP');
+    expect(canonicalRail).toContain('inert');
+    expect(STUDIO_MAP.flatMap((g) => g.destinations)).toHaveLength(16);
+  });
+
+  it('renders inert items as spans carrying no href', () => {
+    const rail = sourceFiles.find((f) => f.name === 'StudioRail.tsx')!.code;
+    expect(rail).toContain("const Tag = inert ? 'span' : 'a'");
+    expect(rail).toMatch(/inert \? \{\} : \{ href: destination\.href \}/);
+  });
+
+  it('never exposes the canonical rail through a route', () => {
+    const dir = path.join(DIR, '__fixtures__');
+    expect(fs.readdirSync(dir).filter((f) => f.startsWith('page.'))).toEqual([]);
+    expect(fs.readdirSync(dir).filter((f) => f.startsWith('route.'))).toEqual([]);
+  });
+
+  it('keeps the member-facing rail on visibleDestinations', () => {
+    const rail = sourceFiles.find((f) => f.name === 'StudioRail.tsx')!.code;
+    expect(rail).toContain('visibleDestinations(hasManuscript)');
+  });
+});
+
+describe('the rendered layout reproduces the measured reference', () => {
+  it('lands every column within the stated tolerance at the capture width', () => {
+    expect(() => assertLayoutMatchesReference(1680)).not.toThrow();
+  });
+
+  it('gives the writing field an explicit width, never a flex remainder', () => {
+    // The first pass let <main> take flex:1 of what was left after padding and
+    // gaps, so it rendered ~33.3% against a measured 35.2%. The token table
+    // was ordered correctly the whole time — only the arithmetic that reached
+    // the screen was wrong.
+    expect(fixture).toContain('width: L.writingField');
+    expect(fixture).not.toMatch(/<main[\s\S]{0,200}flex: 1/);
+  });
+
+  it('accounts for the measured gutters rather than an arbitrary pad', () => {
+    expect(fixture).toContain('gap: L.gutter');
+    expect(fixture).toContain('padding: L.gutter');
+    const L = writingFieldLayout(1680);
+    expect(L.writingField / 1680).toBeCloseTo(0.34, 2);
+  });
+});
+
+describe('the inert lower band carries 04’s four regions', () => {
+  it('draws Versions, the structural band, Goals and Statistics', () => {
+    // The band labels are JSX children, wrapped across lines by the
+    // formatter, so match the label text rather than a literal ">Label".
+    for (const region of ['Versions', 'Goals', 'Statistics']) {
+      expect(fixture).toContain(region);
+    }
+    expect(fixture).toContain('VERSIONS');
+    expect(fixture).toContain('STRUCTURE_BAND');
+    for (const tab of ['Outline', 'Threads', 'Timeline', 'Word Web']) {
+      expect(fixture).toContain(tab);
+    }
+  });
+
+  it('adds no control that does nothing', () => {
+    expect(stripComments(fixture)).not.toMatch(/<button/);
+    expect(stripComments(fixture)).not.toMatch(/onClick=/);
   });
 });

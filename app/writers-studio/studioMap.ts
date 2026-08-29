@@ -130,88 +130,53 @@ export const IMPORT_HREF = '/press/manuscript?import=1';
  */
 export const CANVAS_HREF = '/writers-studio/canvas';
 
+/**
+ * The canonical D-019 grammar: 7 + 4 + 5 = SIXTEEN destinations.
+ *
+ * ── CORRECTED BY THE WS2-02B RENDER ────────────────────────────────────────
+ *
+ * This map carried NINETEEN. The extra three were Writer Canvas, Working Draft
+ * and Source, plus Import Manuscript — the transitional doors into the legacy
+ * working surfaces — sitting in the rail as if they were destinations of the
+ * same kind as Materials or Goals. The file's own comment said "the settled
+ * grammar names sixteen" while its data said otherwise. Nobody caught it until
+ * the fixture was rendered and the rail could be counted.
+ *
+ * That was not a miscount so much as a confusion of two different things:
+ *
+ *   DESTINATION   a place in the Studio. Manuscript is one.
+ *   SURFACE       a way of working inside a place. Working Draft and Source
+ *                 are two views of the manuscript, not two more rooms.
+ *   ARRIVAL       an action that brings work in. Import belongs to Work Home,
+ *                 per FUNCTION-PLACEMENT.md — EXPLORE owns start and import;
+ *                 WRITE owns the draft and its contextual surfaces.
+ *
+ * NOTHING IS DELETED. Every href below the fold still exists and is still
+ * exported — WRITE_HREF, SOURCE_HREF, IMPORT_HREF, CANVAS_HREF are unchanged
+ * and their consumers are untouched. What changed is placement: they are
+ * reached through Manuscript and through Work Home rather than standing in the
+ * persistent rail. Canonising today's transitional routes as permanent
+ * navigation is exactly what WS2-03 must not inherit.
+ */
 export const STUDIO_MAP: StudioGroup[] = [
   {
-    id: 'home',
+    id: 'work-space',
     region: 'work',
+    label: 'Work space',
     destinations: [
+      { id: 'home', label: 'Home', availability: 'available', href: '/writers-studio' },
       {
-        id: 'studio-home',
-        label: 'Home',
-        availability: 'available',
-        href: '/writers-studio',
-      },
-    ],
-  },
-  {
-    id: 'current-book',
-    region: 'work',
-    /* "Current Writing", not "Current Book" (Kelly, 2026-08-05): writing is
-       the practice; a book is one thing writing may become. The id stays —
-       it is an implementation key, not member-facing vocabulary. */
-    label: 'Current Writing',
-    destinations: [
-      {
-        id: 'canvas',
-        label: 'Writer Canvas',
+        id: 'manuscript',
+        label: 'Manuscript',
         note: 'The room where your work develops.',
         availability: 'available',
         href: CANVAS_HREF,
         requiresManuscript: true,
       },
-      {
-        id: 'write',
-        label: 'Working Draft',
-        note: 'Where you write. Yours to change.',
-        availability: 'available',
-        href: WRITE_HREF,
-        requiresManuscript: true,
-      },
-      {
-        id: 'source',
-        label: 'Source',
-        note: 'What you brought in, unchanged.',
-        availability: 'available',
-        href: SOURCE_HREF,
-        requiresManuscript: true,
-      },
-    ],
-  },
-  {
-    id: 'threshold',
-    region: 'work',
-    destinations: [
-      {
-        id: 'import',
-        label: 'Import Manuscript',
-        note: 'Bring in writing from a file.',
-        availability: 'available',
-        href: IMPORT_HREF,
-      },
-    ],
-  },
-
-  /* ── WS2-02 · the rest of the WORK region ──────────────────────────────
-     These are places the reference grammar settles, and that the substrate
-     does not yet reach as destinations. Availability below is grounded in a
-     read of the code, not in the programme description:
-
-       Materials  MaterialsDrawer.tsx + living-works/[id]/materials exist, but
-                  only as a drawer INSIDE the Canvas. There is no room to send
-                  a member to, so this is not a destination yet.
-       Structure  Same shape — a conditional Canvas drawer, no room.
-       Versions   manuscripts/[id]/draft/revisions exists as substrate with no
-                  member-facing surface. Substrate is not a destination.
-       Notes      No substrate found.
-       Goals      No substrate found. `writing_goal` appears nowhere.
-
-     They are carried here so the grammar is whole and later slices have a
-     settled place to land in — NOT so the member is shown them. See
-     visibleDestinations: a 'later' destination never reaches a screen. */
-  {
-    id: 'work-later',
-    region: 'work',
-    destinations: [
+      /* Not built as destinations. Materials and Structure exist only as
+         drawers inside the Canvas; Versions has revision substrate with no
+         member surface; Notes and Goals have none. See visibleDestinations —
+         a `later` destination never reaches a member. */
       { id: 'materials', label: 'Materials', availability: 'later' },
       { id: 'structure', label: 'Structure', availability: 'later' },
       { id: 'notes', label: 'Notes', availability: 'later' },
@@ -219,52 +184,39 @@ export const STUDIO_MAP: StudioGroup[] = [
       { id: 'goals', label: 'Goals', availability: 'later' },
     ],
   },
-
-  /* ── WS2-02 · MAIA ─────────────────────────────────────────────────────
-     Offerings, not holdings.
-
-     Nothing in this band is available. A generic conversational surface
-     exists at /maia, but Studio Conversations does not: under D-019 the
-     architecture is MAIA-in-relation-to-a-Work, and Work context does not
-     survive the handoff into that route. A surface that exists is not the
-     same as the destination this grammar names. Discover / Insights /
-     Suggestions have no substrate at all — no route, no table, no service.
-
-     Conversations becomes available when the handoff preserves Work context.
-     That seam is WS2-03's (persistent Work context), not this slice's;
-     WS2-09 owns the deeper situated-companion behaviour beyond it. */
   {
     id: 'maia',
     region: 'maia',
     label: 'MAIA',
+    /* Offerings, not holdings.
+
+       Nothing in this band is available. A generic conversational surface
+       exists at /maia, but Studio Conversations does not: under D-019 the
+       architecture is MAIA-in-relation-to-a-Work, and Work context does not
+       survive the handoff into that route. A surface that exists is not the
+       same as the destination this grammar names. Discover / Insights /
+       Suggestions have no substrate at all.
+
+       Conversations becomes available when the handoff preserves Work context.
+       That seam is WS2-03's; WS2-09 owns the deeper situated behaviour. */
     destinations: [
-      /* Conversations is NOT available, and route existence is why it looked
-         like it was. `/maia` exists and is the built conversational surface —
-         but D-019 settles the architecture as MAIA-in-relation-to-a-Work, and
-         app/maia/page.tsx reads searchParams for `panel`, `action`,
-         `changePassword` and journal capture only. No manuscript, no work, no
-         living_work. Entering it from the Studio drops the Work context.
-         A conversation that has forgotten which Work it is about is not the
-         Conversations this grammar names, so linking to it would be exactly
-         the roadmap leakage the rule below forbids. Marked available in the
-         first candidate on route existence alone; corrected here.
-         Lifts when the handoff preserves Work context. */
       { id: 'conversations', label: 'Conversations', availability: 'later' },
       { id: 'discover', label: 'Discover', availability: 'later' },
       { id: 'insights', label: 'Insights', availability: 'later' },
       { id: 'suggestions', label: 'Suggestions', availability: 'later' },
     ],
   },
-
-  /* ── WS2-02 · TOOLS ────────────────────────────────────────────────────
-     Export is real — /press/manuscript carries an export tab. The other four
-     were searched for and are absent: no find-replace, no writer-scoped
-     statistics, no timeline, no word-web. */
   {
     id: 'tools',
     region: 'tools',
     label: 'Tools',
+    /* Instruments. A tool operates on the work and says nothing about it.
+       Only Export is real — /press/manuscript carries an export tab. */
     destinations: [
+      { id: 'find-replace', label: 'Find/Replace', availability: 'later' },
+      { id: 'statistics', label: 'Statistics', availability: 'later' },
+      { id: 'timeline', label: 'Timeline', availability: 'later' },
+      { id: 'word-web', label: 'Word Web', availability: 'later' },
       {
         id: 'export',
         label: 'Export',
@@ -273,10 +225,6 @@ export const STUDIO_MAP: StudioGroup[] = [
         href: '/press/manuscript?tab=export',
         requiresManuscript: true,
       },
-      { id: 'find-replace', label: 'Find/Replace', availability: 'later' },
-      { id: 'statistics', label: 'Statistics', availability: 'later' },
-      { id: 'timeline', label: 'Timeline', availability: 'later' },
-      { id: 'word-web', label: 'Word Web', availability: 'later' },
     ],
   },
 ];

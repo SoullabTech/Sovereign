@@ -27,7 +27,6 @@
 'use client';
 
 import {
-  columnPx,
   GOLD,
   GROUND,
   INK,
@@ -36,10 +35,11 @@ import {
   RULE,
   SPACE,
   TYPE,
+  writingFieldLayout,
 } from '../../studioTheme';
 import { MaiaInsightCard, MaiaVoice } from '../MaiaReading';
 import { StudioPanel } from '../StudioPanel';
-import { StudioRail } from '../StudioRail';
+import { CanonicalRail } from './CanonicalRail';
 import { StudioText, typeStyle } from '../StudioType';
 
 const MODES = ['Write', 'Develop', 'Explore', 'Review', 'Publish'] as const;
@@ -54,6 +54,19 @@ const INSIGHTS = [
   { kind: 'structure' as const, reading: 'Consider the transition between the elements and integration in Chapter 9.', evidenceCount: 2, evidenceNoun: 'suggestions' as const },
   { kind: 'continuity' as const, reading: 'You introduced "the river" in Chapter 4. It reappears in Chapter 8.', evidenceCount: 4, evidenceNoun: 'passages' as const },
 ];
+
+/* 04's lower band carries four regions, not two. Versions and the structural
+   band (Outline / Threads / Timeline / Word Web) were missing from the first
+   pass, which is part of why the composition read emptier than the reference.
+   Reference content only — inert, unlinked, no controls. */
+const VERSIONS = [
+  { label: 'Current Draft', when: '2m ago', current: true },
+  { label: 'Air Chapter Revisions', when: 'Yesterday' },
+  { label: 'Integration notes', when: 'Aug 21' },
+  { label: 'Chapter 6 Expanded', when: 'Aug 19' },
+];
+
+const STRUCTURE_BAND = ['Outline', 'Threads', 'Timeline', 'Word Web'];
 
 /** Writer-declared goals. Quantified because the writer set both ends. */
 const GOALS = [
@@ -71,9 +84,18 @@ export function WritingFieldComposition({
   architecture = 'wide',
 }: WritingFieldCompositionProps) {
   const compact = architecture === 'compact';
-  // Widths resolve from the proportions measured off 04 — see COLUMN_FRACTION.
+  /* Geometry comes from writingFieldLayout, which allocates the MEASURED
+     gutters first and then divides the remainder in the measured ratio. The
+     writing field is an explicit width, never a `flex: 1` remainder — that is
+     what let the first pass render it at 33.3% while the token table said
+     35.2%. See assertLayoutMatchesReference. */
   const vw = compact ? 1180 : 1680;
-  const w = (c: Parameters<typeof columnPx>[0]) => columnPx(c, vw);
+  const L = writingFieldLayout(
+    vw,
+    compact
+      ? ['rail', 'outlinePanel', 'writingField', 'maiaPanel']
+      : ['rail', 'outlinePanel', 'writingField', 'maiaPanel', 'materialsPanel'],
+  );
 
   return (
     <div
@@ -136,16 +158,22 @@ export function WritingFieldComposition({
       </header>
 
       {/* ── Body ─────────────────────────────────────────────────────────── */}
-      <div style={{ display: 'flex', flex: 1, minHeight: 0, gap: SPACE.base, padding: SPACE.base }}>
-        <StudioRail
-          hasManuscript
-          style={{ width: w('rail'), flexShrink: 0, borderRadius: RADIUS.panel }}
-        />
+      <div
+        style={{
+          display: 'flex',
+          flex: 1,
+          minHeight: 0,
+          gap: L.gutter,
+          padding: L.gutter,
+        }}
+      >
+        {/* The canonical grammar, inert. See CanonicalRail. */}
+        <CanonicalRail style={{ width: L.rail, flexShrink: 0, borderRadius: RADIUS.panel }} />
 
         <StudioPanel
           role="manuscript-outline"
           label="Manuscript"
-          style={{ width: w('outlinePanel'), flexShrink: 0 }}
+          style={{ width: L.outlinePanel, flexShrink: 0 }}
         >
           <StudioText role="metadata" style={{ marginBottom: SPACE.base }}>
             Draft · 209 pages
@@ -181,7 +209,8 @@ export function WritingFieldComposition({
         {/* ── The writing field: the largest, quietest surface ───────────── */}
         <main
           style={{
-            flex: 1,
+            width: L.writingField,
+            flexShrink: 0,
             minWidth: MEASURE.fieldMinWidth,
             background: GROUND.field,
             border: `1px solid ${RULE.soft}`,
@@ -228,7 +257,7 @@ export function WritingFieldComposition({
 
         {/* MAIA stays present in both architectures — 08 keeps her, and §1
             makes her a persistent companion across the modes. */}
-        <StudioPanel role="maia" label="MAIA" style={{ width: w('maiaPanel'), flexShrink: 0 }}>
+        <StudioPanel role="maia" label="MAIA" style={{ width: L.maiaPanel, flexShrink: 0 }}>
           <MaiaVoice>Good morning, Kelly. What would you like to explore in your writing today?</MaiaVoice>
           <StudioText role="panelLabel" style={{ margin: `${SPACE.roomy}px 0 ${SPACE.snug}px` }}>
             Developmental insights
@@ -247,7 +276,7 @@ export function WritingFieldComposition({
             role="materials"
             label="Materials"
             count={24}
-            style={{ width: w('materialsPanel'), flexShrink: 0 }}
+            style={{ width: L.materialsPanel, flexShrink: 0 }}
           >
             {['Elemental Alchemy — Early Draft', 'Larry Interview — Elements & Practice', 'Thought on Air Element'].map(
               (m) => (
@@ -277,7 +306,7 @@ export function WritingFieldComposition({
           borderTop: `1px solid ${RULE.soft}`,
           background: GROUND.raised,
           flexShrink: 0,
-          ...(compact ? { overflowX: 'auto' } : {}),
+          overflowX: 'auto',
         }}
       >
         {compact && (
@@ -286,7 +315,62 @@ export function WritingFieldComposition({
             <StudioText role="metadata">24</StudioText>
           </div>
         )}
-        <div style={{ flex: 1, maxWidth: 420 }}>
+
+        <div style={{ minWidth: 190 }}>
+          <StudioText role="panelLabel" style={{ marginBottom: SPACE.snug }}>
+            Versions
+          </StudioText>
+          {VERSIONS.map((v) => (
+            <div
+              key={v.label}
+              style={{ display: 'flex', justifyContent: 'space-between', gap: SPACE.base }}
+            >
+              <StudioText role="metadata" tone={v.current ? 'secondary' : 'quiet'} as="span">
+                {v.label}
+              </StudioText>
+              <StudioText role="metadata" as="span">
+                {v.when}
+              </StudioText>
+            </div>
+          ))}
+        </div>
+
+        {/* The structural band. Tabs in 04; inert labels here, because a tab
+            that cannot switch anything is a control that does nothing. */}
+        <div style={{ minWidth: 240 }}>
+          <div style={{ display: 'flex', gap: SPACE.comfortable, marginBottom: SPACE.snug }}>
+            {STRUCTURE_BAND.map((t, i) => (
+              <StudioText
+                key={t}
+                role="panelLabel"
+                tone={i === 0 ? 'secondary' : 'quiet'}
+                as="span"
+                style={i === 0 ? { boxShadow: `0 2px 0 ${GOLD.DEFAULT}`, paddingBottom: 2 } : {}}
+              >
+                {t}
+              </StudioText>
+            ))}
+          </div>
+          <div style={{ display: 'flex', gap: SPACE.snug }}>
+            {['Remembering', 'Initiation', 'Integration'].map((part, i) => (
+              <div
+                key={part}
+                style={{
+                  padding: `${SPACE.tight}px ${SPACE.snug}px`,
+                  border: `1px solid ${i === 1 ? GOLD.edge : RULE.soft}`,
+                  borderRadius: RADIUS.sm,
+                  background: i === 1 ? GROUND.active : 'transparent',
+                }}
+              >
+                <StudioText role="metadata" tone={i === 1 ? 'secondary' : 'quiet'}>
+                  {part}
+                </StudioText>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div style={{ minWidth: 260, flex: 1, maxWidth: 420 }}>
           <StudioText role="panelLabel" style={{ marginBottom: SPACE.snug }}>
             Goals
           </StudioText>
@@ -300,20 +384,52 @@ export function WritingFieldComposition({
                   {g.pct}%
                 </StudioText>
               </div>
-              <div style={{ height: 3, background: GROUND.deepest, borderRadius: RADIUS.pill, marginTop: SPACE.hairline }}>
-                <div style={{ width: `${g.pct}%`, height: '100%', background: GOLD.DEFAULT, borderRadius: RADIUS.pill }} />
+              <div
+                style={{
+                  height: 3,
+                  background: GROUND.deepest,
+                  borderRadius: RADIUS.pill,
+                  marginTop: SPACE.hairline,
+                }}
+              >
+                <div
+                  style={{
+                    width: `${g.pct}%`,
+                    height: '100%',
+                    background: GOLD.DEFAULT,
+                    borderRadius: RADIUS.pill,
+                  }}
+                />
               </div>
             </div>
           ))}
         </div>
-        <div>
+
+        <div style={{ minWidth: 180 }}>
           <StudioText role="panelLabel" style={{ marginBottom: SPACE.snug }}>
             Statistics
           </StudioText>
           <StudioText role="chapterSubtitle" style={{ fontSize: `${TYPE.workIdentity.size}rem` }}>
             82,193 words
           </StudioText>
-          <StudioText role="metadata">Reading time 4h 27m</StudioText>
+          {[
+            ['Manuscript', '82,193'],
+            ['Materials', '24'],
+            ['Notes', '12'],
+            ['Comments', '8'],
+          ].map(([k, v]) => (
+            <div key={k} style={{ display: 'flex', justifyContent: 'space-between', gap: SPACE.base }}>
+              <StudioText role="metadata" as="span">
+                {k}
+              </StudioText>
+              <StudioText role="metadata" tone="secondary" as="span">
+                {v}
+              </StudioText>
+            </div>
+          ))}
+          <StudioText role="metadata" style={{ marginTop: SPACE.tight }}>
+            Reading time 4h 27m
+          </StudioText>
         </div>
       </footer>
     </div>

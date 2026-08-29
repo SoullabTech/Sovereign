@@ -99,6 +99,10 @@ export const PROVENANCE: Record<string, { level: Provenance; note: string }> = {
     note: 'prose measure and gutters remain translations. The column widths that were '
       + 'PROVISIONAL here moved to COLUMN_FRACTION once WS2-02B measured them.',
   },
+  GUTTER_FRACTION: {
+    level: 'SAMPLED',
+    note: 'Gutter runs measured at page-ground level between panels in 04 — 8/15/25/17/15/9px.',
+  },
   COLUMN_FRACTION: {
     level: 'SAMPLED',
     note: 'Column spans measured from 04 by luminance scan; gutters are the runs with no '
@@ -390,6 +394,69 @@ export const COLUMN_FRACTION = {
   maiaPanel: 0.166,
   materialsPanel: 0.173,
 } as const;
+
+/**
+ * Gutters, also measured — the WS2-02B correction pass.
+ *
+ * The first geometry pass resolved each column as a fraction of the FULL
+ * viewport and then let the writing field take `flex: 1` of whatever was left
+ * after padding and gaps. So the field never received its measured share: at
+ * 1680 it rendered near 33.3% against a measured 35.2%. The token table was
+ * ordered correctly and the guard passed; the rendered geometry still did not
+ * reproduce the reference.
+ *
+ * Measured the same way as the columns: a luminance profile across 04's panel
+ * body, taking the runs that sit at page-ground level between panels — 8px at
+ * the left edge, 15px rail-to-outline, 25px outline-to-field, 17px
+ * field-to-MAIA, 15px MAIA-to-materials, 9px at the right edge. Roughly 5.8%
+ * of the width in total.
+ *
+ * The column fractions were measured span-to-span and therefore carry a little
+ * of that gutter inside them; they sum to 97.6%, not 94.2%. Rather than
+ * silently re-cut the measurements to close the gap, `writingFieldLayout`
+ * allocates the measured gutters first and then divides what remains in the
+ * measured RATIO. The result reproduces the reference proportions to within
+ * about 1.2 percentage points, which is stated as a tolerance and tested
+ * rather than left as an impression.
+ */
+export const GUTTER_FRACTION = 0.058;
+
+/** How close a rendered layout must come to the measured reference share. */
+export const LAYOUT_TOLERANCE = 0.015;
+
+export interface StudioLayout {
+  rail: number;
+  outlinePanel: number;
+  writingField: number;
+  maiaPanel: number;
+  materialsPanel: number;
+  /** One gutter, applied at both edges and between each pair of columns. */
+  gutter: number;
+}
+
+/**
+ * Resolve the whole row at a viewport width, gutters included.
+ *
+ * Every column is returned explicitly — the writing field is a computed width,
+ * not a `flex: 1` remainder, so what renders is what was measured.
+ */
+export function writingFieldLayout(
+  viewportWidth: number,
+  columns: ReadonlyArray<keyof typeof COLUMN_FRACTION> = [
+    'rail', 'outlinePanel', 'writingField', 'maiaPanel', 'materialsPanel',
+  ],
+): StudioLayout {
+  const gaps = columns.length + 1; // both edges plus between each pair
+  const gutter = Math.round((GUTTER_FRACTION * viewportWidth) / gaps);
+  const available = viewportWidth - gutter * gaps;
+  const ratioTotal = columns.reduce((n, c) => n + COLUMN_FRACTION[c], 0);
+
+  const out = { gutter } as StudioLayout;
+  for (const c of columns) {
+    out[c] = Math.round((COLUMN_FRACTION[c] / ratioTotal) * available);
+  }
+  return out;
+}
 
 /** Resolve a measured proportion at a given viewport width. */
 export function columnPx(column: keyof typeof COLUMN_FRACTION, viewportWidth: number): number {
@@ -726,13 +793,42 @@ export function assertFieldIsTheLargestColumn(): void {
   }
 }
 
+/**
+ * A RENDERED layout reproduces the measured reference proportions.
+ *
+ * The distinction this exists for: assertFieldIsTheLargestColumn checks the
+ * token table is ordered, which the first geometry pass satisfied while
+ * rendering the field at 33.3% instead of 35.2%. This checks the arithmetic
+ * that actually reaches the screen, at the capture width.
+ */
+export function assertLayoutMatchesReference(viewportWidth = 1680): void {
+  const layout = writingFieldLayout(viewportWidth);
+  for (const c of ['rail', 'outlinePanel', 'writingField', 'maiaPanel', 'materialsPanel'] as const) {
+    const rendered = layout[c] / viewportWidth;
+    const drift = Math.abs(rendered - COLUMN_FRACTION[c]);
+    if (drift > LAYOUT_TOLERANCE) {
+      throw new Error(
+        `Rendered "${c}" is ${(rendered * 100).toFixed(1)}% of the room but 04 measures ` +
+          `${(COLUMN_FRACTION[c] * 100).toFixed(1)}% — a drift of ` +
+          `${(drift * 100).toFixed(1)}pp, past the stated ${(LAYOUT_TOLERANCE * 100).toFixed(1)}pp.`,
+      );
+    }
+  }
+  const sum =
+    layout.rail + layout.outlinePanel + layout.writingField + layout.maiaPanel +
+    layout.materialsPanel + layout.gutter * 6;
+  if (Math.abs(sum - viewportWidth) > 6) {
+    throw new Error(`Layout sums to ${sum}px at a ${viewportWidth}px viewport.`);
+  }
+}
+
 /** Every token group states where its values came from. */
 export function assertEveryTokenGroupHasProvenance(
   groups: readonly string[] = [
     'GROUND', 'INK', 'TYPE', 'GOLD', 'GOLD_PERMITTED', 'GOLD_FORBIDDEN',
     'MAIA_ACCENT', 'INSIGHT_CHIP', 'SPACE', 'MEASURE', 'RADIUS', 'RULE',
     'STATE', 'PANELS', 'BREAKPOINT', 'YIELDS_BEFORE', 'NEVER_COLLAPSES',
-    'COLUMN_FRACTION',
+    'COLUMN_FRACTION', 'GUTTER_FRACTION',
     'PRESENT_AT_COMPACT',
   ],
 ): void {
@@ -759,4 +855,5 @@ export function assertStudioThemeCoherent(): void {
   assertResponsiveClaimsAreObserved();
   assertEveryTokenGroupHasProvenance();
   assertFieldIsTheLargestColumn();
+  assertLayoutMatchesReference();
 }
