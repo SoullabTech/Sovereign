@@ -25,7 +25,7 @@ import { resolveVoicePreference } from '@/lib/tts/cloudVoicePolicy';
 import { sanitizeForSpeech } from '@/lib/tts/sanitizeForSpeech';
 import { NextRequest } from 'next/server';
 import os from 'os';
-import { getClaudeService } from '@/lib/services/ClaudeService';
+import { streamOracleResponse } from '@/lib/ai/oracleStreaming';
 // R2 (2026-08-13): voice must inhabit the SAME continuity contract as text MAIA.
 // Before this, PWA voice reached ClaudeService with no memory loaded and no memory
 // canon guard — which is why MAIA truthfully said she had no memory on this path.
@@ -1070,7 +1070,18 @@ export async function POST(req: NextRequest) {
         }
 
         // ============ FULL LLM PATH ============
-        const claudeService = getClaudeService();
+        // ⛔ VOICE-STREAM-PROVIDER-CONVERGENCE-01. This used to be
+        // `const claudeService = getClaudeService()` — an Anthropic client
+        // constructed unconditionally, so the voice response ignored
+        // MAIA_TEXT_PROVIDER entirely. With the sovereign local substrate
+        // configured and a placeholder key, a successfully transcribed member
+        // turn died here on `validation_error: API key is invalid`.
+        //
+        // Nothing below this line changed. The generator now honours the same
+        // provider authority as canonical text generation and yields the same
+        // chunk contract, so the memory bundle, identity and natal context, the
+        // council, relational governance, the canon and identity guards and the
+        // per-sentence TTS all operate exactly as before.
         timer.mark('llm_starting');
 
         // Build context with wisdom field integration (wisdomDirective already computed above)
@@ -1332,8 +1343,8 @@ export async function POST(req: NextRequest) {
 
         timer.mark('llm_request_sent');
 
-        // Stream sentences from Claude
-        for await (const chunk of claudeService.generateOracleResponseStreaming(
+        // Stream sentences from the CONFIGURED provider.
+        for await (const chunk of streamOracleResponse(
           message,
           context,
           voiceSystemPrompt
