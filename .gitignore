@@ -456,3 +456,12 @@ scripts/eval/reports/
 
 # Walk probe snapshots (scripts/walk/*) — local evidence, never committed
 .walk/
+
+# ── Witness instrument (scripts/witness/) ─────────────────────────────────────
+# The real witness env holds credentials and is never committed; the sample and
+# the witness compose file ARE part of the instrument and must be tracked. Both
+# would otherwise be swallowed by the broad `.env*` / `docker-compose.*.yml`
+# rules above, so they are un-ignored explicitly here.
+scripts/witness/.env.witness
+!scripts/witness/.env.witness.sample
+!scripts/witness/docker-compose.witness.yml

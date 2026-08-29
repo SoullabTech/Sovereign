@@ -1,0 +1,160 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# MAIA — Witness Stack (isolated, disposable, candidate-bound)
+# ═══════════════════════════════════════════════════════════════════════════════
+# NOT a deploy target. This stack exists so a named candidate commit can be
+# exercised and witnessed without any path to production.
+#
+# Isolation is structural, not conventional:
+#   - every container carries the maia-witness- prefix (guard G5 refuses others)
+#   - its own postgres, its own database (maia_witness), its own volume
+#   - no external networks (guard G7 refuses them)
+#   - the app port is loopback-bound and off every production/dev port (G7)
+#   - the build context is an immutable git-archive snapshot of the candidate,
+#     never the shared working tree
+#
+# Never invoked by hand. scripts/witness/witness.sh is the only entry point;
+# it runs the refusal set first and holds the witness lane lock throughout.
+# ═══════════════════════════════════════════════════════════════════════════════
+
+x-witness-build: &witness_build
+  # Immutable snapshot of the candidate, materialized by witness.sh prepare.
+  context: ${WITNESS_BUILD_CONTEXT:-.}
+  dockerfile: Dockerfile
+  args:
+    GIT_COMMIT: ${GIT_COMMIT:-unknown}
+    # This file IS the witness lane, so it declares itself — same pattern as
+    # docker-compose.staging.yml. The value also becomes DEPLOY_LANE inside the
+    # image, which guard G10 reads back as part of runtime provenance: a
+    # production image can never satisfy DEPLOY_LANE=witness-lane.
+    # See docs/ops/DEPLOY_LANE_TOKEN.md.
+    DEPLOY_LANE_TOKEN: ${DEPLOY_LANE_TOKEN:-witness-lane}
+
+x-witness-logging: &witness_logging
+  driver: "json-file"
+  options:
+    max-size: "20m"
+    max-file: "3"
+
+services:
+  # ═════════════════════════════════════════════════════════════════════════════
+  # The candidate under witness
+  # ═════════════════════════════════════════════════════════════════════════════
+  witness-app:
+    build: *witness_build
+    image: maia-sovereign:witness-${GIT_COMMIT:-unknown}
+    container_name: maia-witness-app
+    restart: "no"          # a witness never silently restarts itself back to life
+    logging: *witness_logging
+
+    depends_on:
+      witness-postgres:
+        condition: service_healthy
+
+    env_file:
+      - ${WITNESS_ENV_FILE:-./.env.witness}
+
+    environment:
+      NODE_ENV: production
+      PORT: "3000"
+      HOSTNAME: "0.0.0.0"
+      NEXT_TELEMETRY_DISABLED: "1"
+      GIT_COMMIT: ${GIT_COMMIT:-unknown}
+      MAIA_HOST_ID: "witness"
+      AUDIT_LOG_DIR: /app/data/audit-logs
+
+    ports:
+      - "127.0.0.1:${WITNESS_HTTP_PORT:-3999}:3000"
+
+    security_opt:
+      - no-new-privileges:true
+
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"require('http').get('http://localhost:3000/api/consciousness/health',(r)=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))\""]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 45s
+
+    networks:
+      - witness-internal
+
+  # ═════════════════════════════════════════════════════════════════════════════
+  # Throwaway database — never production, never shared
+  # ═════════════════════════════════════════════════════════════════════════════
+  # No published port at all: the witness DB is reachable only from inside this
+  # project's network. Nothing on the host can connect to it by accident, and it
+  # cannot collide with production's 5432 bind.
+  witness-postgres:
+    image: pgvector/pgvector:pg16
+    container_name: maia-witness-postgres
+    restart: "no"
+    logging: *witness_logging
+
+    environment:
+      POSTGRES_DB: maia_witness
+      POSTGRES_USER: witness
+      POSTGRES_PASSWORD: ${WITNESS_PG_PASSWORD:-witness}
+
+    volumes:
+      - witness_pgdata:/var/lib/postgresql/data
+      # Extensions only — schema is owned by the migrate service, from the
+      # candidate's own migration set.
+      - ${WITNESS_BUILD_CONTEXT:-.}/database/init:/docker-entrypoint-initdb.d:ro
+
+    security_opt:
+      - no-new-privileges:true
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U witness -d maia_witness"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+    networks:
+      - witness-internal
+
+  # ═════════════════════════════════════════════════════════════════════════════
+  # Migrations — the CANDIDATE's migration set, against the witness DB
+  # ═════════════════════════════════════════════════════════════════════════════
+  # Mounts come from the immutable snapshot for the same reason production's do:
+  # the schema that runs must be the schema of the commit under witness.
+  witness-migrate:
+    build:
+      context: ${WITNESS_BUILD_CONTEXT:-.}
+      dockerfile: Dockerfile
+      target: builder
+      args:
+        DEPLOY_LANE_TOKEN: ${DEPLOY_LANE_TOKEN:-witness-lane}
+    container_name: maia-witness-migrate
+    restart: "no"
+
+    env_file:
+      - ${WITNESS_ENV_FILE:-./.env.witness}
+
+    depends_on:
+      witness-postgres:
+        condition: service_healthy
+
+    command: ["sh", "/app/scripts/run-sql-migrations.sh"]
+
+    volumes:
+      - ${WITNESS_BUILD_CONTEXT:-.}/database/migrations:/app/database/migrations:ro
+      - ${WITNESS_BUILD_CONTEXT:-.}/scripts/run-sql-migrations.sh:/app/scripts/run-sql-migrations.sh:ro
+
+    profiles: ["migrate"]
+
+    networks:
+      - witness-internal
+
+volumes:
+  # Project-scoped by compose (maia-witness-<sha>_witness_pgdata) and dropped by
+  # `teardown`. It shares no name with any production volume.
+  witness_pgdata:
+    driver: local
+
+networks:
+  # Deliberately NOT external. Guard G7 refuses any external network in this
+  # file — an external network is exactly how a witness container would reach a
+  # production service.
+  witness-internal:
+    driver: bridge
