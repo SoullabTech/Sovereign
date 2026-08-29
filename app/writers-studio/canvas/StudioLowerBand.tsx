@@ -31,6 +31,18 @@
  *
  * The band is dismissible because PANELS marks versions/goals/statistics
  * contextual, and a contextual surface may not become permanent furniture.
+ *
+ * ── WS2-03B CORRECTION 3: AIR, AND A HIERARCHY WITHIN THE BAND ─────────────
+ *
+ * At the authenticated capture this read as a status dashboard: four regions
+ * competing on one baseline at one weight, every figure equally loud. 04's
+ * band is quieter and more spatial than that.
+ *
+ * The content is unchanged — nothing was removed to make it calmer. What
+ * changed is air and rank: the band breathes vertically, region labels get
+ * room above their contents, and the metadata that does not need immediate
+ * attention (a revision's date, a secondary figure) drops to `quiet` so the
+ * one thing worth seeing at a glance in each region can carry `secondary`.
  */
 'use client';
 
@@ -70,9 +82,9 @@ export default function StudioLowerBand({
       data-band="studio-lower"
       style={{
         display: 'flex',
-        gap: SPACE.section,
+        gap: SPACE.band,
         alignItems: 'flex-start',
-        padding: `${SPACE.base}px ${SPACE.roomy}px`,
+        padding: `${SPACE.roomy}px ${SPACE.roomy}px ${SPACE.comfortable}px`,
         borderTop: `1px solid ${RULE.soft}`,
         background: GROUND.raised,
         flexShrink: 0,
@@ -81,7 +93,7 @@ export default function StudioLowerBand({
     >
       {/* ── Versions ──────────────────────────────────────────────────── */}
       <section style={{ minWidth: 210 }}>
-        <StudioText role="panelLabel" style={{ marginBottom: SPACE.snug }}>
+        <StudioText role="panelLabel" style={{ marginBottom: SPACE.base }}>
           Versions
         </StudioText>
         {revisions === null ? (
@@ -94,19 +106,24 @@ export default function StudioLowerBand({
           revisions.slice(0, 4).map((r) => (
             <div
               key={r.revisionNumber}
-              style={{ display: 'flex', justifyContent: 'space-between', gap: SPACE.base }}
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                gap: SPACE.roomy,
+                marginBottom: SPACE.tight,
+              }}
             >
               <StudioText role="metadata" tone="secondary" as="span">
                 {r.note ? r.note : `Version ${r.revisionNumber}`}
               </StudioText>
-              <StudioText role="metadata" as="span">
+              <StudioText role="metadata" tone="quiet" as="span">
                 {formatWhen(r.createdAt)}
               </StudioText>
             </div>
           ))
         )}
         {revisions && revisions.length > 0 && (
-          <StudioText role="metadata" style={{ marginTop: SPACE.tight }}>
+          <StudioText role="metadata" tone="quiet" style={{ marginTop: SPACE.snug }}>
             ~{pageEstimate(revisions[0].contentChars)} page
             {pageEstimate(revisions[0].contentChars) === 1 ? '' : 's'} at the latest keep
           </StudioText>
@@ -115,7 +132,7 @@ export default function StudioLowerBand({
 
       {/* ── Structure ─────────────────────────────────────────────────── */}
       <section style={{ minWidth: 240 }}>
-        <div style={{ display: 'flex', gap: SPACE.comfortable, marginBottom: SPACE.snug }}>
+        <div style={{ display: 'flex', gap: SPACE.comfortable, marginBottom: SPACE.base }}>
           {STRUCTURE_SURFACES.map((t) => {
             const on = t.id === 'outline' && outlineOpen;
             if (!t.available) {
@@ -167,7 +184,7 @@ export default function StudioLowerBand({
 
       {/* ── Goals ─────────────────────────────────────────────────────── */}
       <section style={{ minWidth: 220 }} data-region="goals" data-state="unavailable">
-        <StudioText role="panelLabel" tone="quiet" style={{ marginBottom: SPACE.snug }}>
+        <StudioText role="panelLabel" tone="quiet" style={{ marginBottom: SPACE.base }}>
           Goals
         </StudioText>
         <StudioText role="metadata" style={{ maxWidth: '22ch', opacity: 0.7 }}>
@@ -178,10 +195,13 @@ export default function StudioLowerBand({
 
       {/* ── Statistics ────────────────────────────────────────────────── */}
       <section style={{ minWidth: 190 }}>
-        <StudioText role="panelLabel" style={{ marginBottom: SPACE.snug }}>
+        <StudioText role="panelLabel" style={{ marginBottom: SPACE.base }}>
           Statistics
         </StudioText>
-        <StudioText role="workIdentity" style={{ color: INK.primary }}>
+        <StudioText
+          role="workIdentity"
+          style={{ color: INK.primary, marginBottom: SPACE.snug }}
+        >
           {wordCount === null ? '—' : `${wordCount.toLocaleString()} words`}
         </StudioText>
         {[
@@ -190,12 +210,12 @@ export default function StudioLowerBand({
         ].map(([k, v]) => (
           <div
             key={k}
-            style={{ display: 'flex', justifyContent: 'space-between', gap: SPACE.base }}
+            style={{ display: 'flex', justifyContent: 'space-between', gap: SPACE.roomy }}
           >
-            <StudioText role="metadata" as="span">
+            <StudioText role="metadata" tone="quiet" as="span">
               {k}
             </StudioText>
-            <StudioText role="metadata" tone="secondary" as="span">
+            <StudioText role="metadata" tone="quiet" as="span">
               {v}
             </StudioText>
           </div>

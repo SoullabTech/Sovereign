@@ -509,6 +509,22 @@ export const RULE = {
   DEFAULT: PRESS.rule,
   soft: PRESS.ruleSoft,
   emphasis: GOLD.edge,
+  /**
+   * WS2-03B correction 2 — a border that recedes into the surface it bounds.
+   *
+   * Not a new colour: it is the `raised` step of the ramp, so a panel edged
+   * with it has no visible outline and is separated from the page ground by
+   * the ramp alone. That is what StudioSurface has said from the start —
+   * "depth in this room is carried by the ramp rather than by borders" — and
+   * the contextual panels were not honouring it.
+   *
+   * Why it was needed: at the authenticated capture the outline, MAIA and the
+   * writing field all carried the same `soft` edge, so four surfaces read as
+   * four equally consequential application panes and the manuscript stopped
+   * being the obvious centre of gravity. The field now keeps the only visible
+   * border in the row. No geometry moved to achieve that.
+   */
+  quiet: GROUND.raised,
 } as const;
 
 /* ══════════════════════════════════════════════════════════════════════════

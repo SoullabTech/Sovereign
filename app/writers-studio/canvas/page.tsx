@@ -19,6 +19,7 @@ import {
 import { StudioPanel } from '../studio/StudioPanel';
 import { StudioShellRail } from '../studio/StudioRail';
 import { StudioModeBar } from '../studio/StudioModeBar';
+import { StudioScrollbars } from '../studio/StudioScrollbars';
 import { StudioText } from '../studio/StudioType';
 import { IMPORT_HREF } from '../studioMap';
 import {
@@ -151,19 +152,34 @@ export default function WritersStudioPage() {
   const manuscript = resolution.kind === 'resolved' ? resolution.manuscript : null;
 
   /* PERSISTENT WORK CONTEXT, ACROSS RELOAD.
-     The manuscript identity is pinned into the URL the moment it resolves
-     without having been asked for. That is what makes reload preserve the
-     current Work: the Work is re-derived from the member's declarations for
-     THIS manuscript, so pinning the manuscript pins the Work — without
-     storing a second, staleable copy of it anywhere. */
+     The manuscript identity is pinned into the URL whenever one is resolved.
+     That is what makes reload preserve the current Work: the Work is
+     re-derived from the member's declarations for THIS manuscript, so pinning
+     the manuscript pins the Work — without storing a second, staleable copy
+     of it anywhere.
+
+     CORRECTED after the first authenticated capture. This effect used to skip
+     whenever `wasRequested` was true, on the reasoning that an identity that
+     came FROM the URL is already in it. That reasoning had a hole: choosing a
+     manuscript in the ambiguity chooser also sets `requested`, in React state
+     and nowhere else. So the founder's own session — four manuscripts, none
+     named, one chosen — ran with a bare /writers-studio/canvas in the address
+     bar, and a reload would have dropped them back at the chooser. The
+     capture is what showed it; no test could, because the URL is the one
+     piece of state the room does not own.
+
+     The condition is now about the URL rather than about provenance: pin
+     whenever what is on the table differs from what the address bar names. */
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    if (resolution.kind !== 'resolved' || resolution.wasRequested) return;
-    const pinned = canvasForManuscript(
-      window.location.pathname,
-      resolution.manuscript.id,
+    if (resolution.kind !== 'resolved') return;
+    const id = resolution.manuscript.id;
+    if (requestedManuscriptId(window.location.search) === id) return;
+    window.history.replaceState(
+      null,
+      '',
+      canvasForManuscript(window.location.pathname, id),
     );
-    window.history.replaceState(null, '', pinned);
   }, [resolution]);
 
   const workContext = resolveWorkContext(worksPhase, works, manuscript?.id ?? null);
@@ -293,6 +309,9 @@ export default function WritersStudioPage() {
         overflow: 'hidden',
       }}
     >
+      {/* Scoped to data-room above. See StudioScrollbars. */}
+      <StudioScrollbars />
+
       {/* ══ HEAD OF THE STUDIO ══════════════════════════════════════════ */}
       <header
         style={{
@@ -386,7 +405,12 @@ export default function WritersStudioPage() {
             width: compact ? '100%' : pct(L.rail),
             flexShrink: 0,
             borderRadius: RADIUS.panel,
-            ...(compact ? { borderRight: 'none' } : {}),
+            /* WS2-03B correction 2 — the rail is a rounded column here, not a
+               flush edge, so its right-only hairline had nothing to divide.
+               It joins the quiet chrome; the writing field keeps the only
+               visible border in the row. */
+            border: `1px solid ${RULE.quiet}`,
+            borderRight: `1px solid ${RULE.quiet}`,
           }}
         />
 
@@ -450,7 +474,12 @@ export default function WritersStudioPage() {
               width: '100%',
               maxWidth: `${MEASURE.prose}ch`,
               margin: '0 auto',
-              padding: `${SPACE.generous}px ${MEASURE.roomGutter}px ${SPACE.roomy}px`,
+              /* WS2-03B correction 2. The manuscript is the centre of gravity
+                 and was reading as one pane among four. Its measure and its
+                 column width are unchanged — MEASURE.prose and the geometry
+                 are measured values and not this correction's to move. What
+                 it gets is air: the field breathes where the panels do not. */
+              padding: `${SPACE.band}px ${MEASURE.roomGutter}px ${SPACE.generous}px`,
             }}
           >
             <FieldBody

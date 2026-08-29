@@ -25,6 +25,24 @@
  * in the writing field, in serif, on the field ground; MAIA speaks in violet
  * sans on a raised panel and never quotes across that line.
  *
+ * ── WS2-03B CORRECTION 4: VIOLET IS HER VOICE, NOT HER COLUMN ──────────────
+ *
+ * At the authenticated capture every line in this column was violet, and it
+ * pulled harder than the manuscript did. Gold is meant to be the scarcest
+ * emphasis in the Studio; MAIA's accent had quietly become the strongest
+ * chromatic element in the body.
+ *
+ * The rule now: violet marks MAIA SPEAKING and nothing else. One sentence.
+ * Everything else here — the Work she would be in relation to, the note about
+ * what she does not hold — is the room describing her, not her voice, so it
+ * is set in the room's own muted ink. She stays unmistakably distinguishable
+ * from the member's serif prose (D-019 holds; the guard still passes) while
+ * no longer competing with it.
+ *
+ * The token is untouched. MAIA_ACCENT.voice is SAMPLED from 04 and is not
+ * this correction's to re-cut — what changed is how much of the column is
+ * allowed to wear it.
+ *
  * ── WHY CONVERSATIONS IS STILL CLOSED ──────────────────────────────────────
  *
  * The Studio side of the handoff is built and proven (workContext.ts:
@@ -35,7 +53,7 @@
  */
 'use client';
 
-import { MAIA_ACCENT, RULE, SPACE } from '../studioTheme';
+import { RULE, SPACE } from '../studioTheme';
 import { StudioText } from '../studio/StudioType';
 import { MaiaVoice } from '../studio/MaiaReading';
 import type { WorkContext } from '../workContext';
@@ -89,7 +107,8 @@ export default function MaiaColumn({ context }: { context: WorkContext }) {
           paddingTop: SPACE.comfortable,
         }}
       >
-        <StudioText role="metadata" style={{ color: MAIA_ACCENT.voice, opacity: 0.7 }}>
+        {/* The room describing MAIA — not MAIA speaking. Muted ink. */}
+        <StudioText role="metadata" tone="quiet">
           MAIA reads; she does not hold your material. Nothing in this column is
           written by her into your manuscript.
         </StudioText>

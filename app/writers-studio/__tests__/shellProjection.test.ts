@@ -300,6 +300,19 @@ describe('the current Work is declared, never inferred', () => {
     expect(page).toContain('canvasForManuscript');
     expect(page).not.toMatch(/localStorage|sessionStorage/);
   });
+
+  it('pins a manuscript CHOSEN in the chooser, not only one resolved silently', () => {
+    /* Found in the first authenticated capture, not by any test here.
+       The pin used to skip whenever `wasRequested` was true — reasoning that
+       an identity which came from the URL is already in it. But choosing in
+       the ambiguity chooser also sets `requested`, in React state and nowhere
+       else, so the founder's session ran with a bare /writers-studio/canvas
+       in the address bar and a reload would have returned them to the chooser.
+
+       The condition must therefore be about the URL, never about provenance. */
+    expect(page).not.toMatch(/resolution\.wasRequested\)?\s*return/);
+    expect(page).toContain("requestedManuscriptId(window.location.search) === id");
+  });
 });
 
 /* ══ 7 · THE STUDIO → MAIA HANDOFF ═══════════════════════════════════════ */

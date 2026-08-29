@@ -53,7 +53,10 @@ export function StudioPanel({
       data-panel-role={role}
       style={{
         background: GROUND.raised,
-        border: `1px solid ${RULE.soft}`,
+        /* WS2-03B correction 2. The ramp separates this panel from the page
+           ground; a visible outline on top of that made every panel compete
+           with the writing field, which keeps the row's only real border. */
+        border: `1px solid ${RULE.quiet}`,
         borderRadius: RADIUS.panel,
         display: 'flex',
         flexDirection: 'column',
