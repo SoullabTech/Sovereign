@@ -55,6 +55,30 @@ const DEFAULT_PARTIAL_INTERVAL_MS = 900;
  */
 const MIN_PREFIX_BYTES = 2000;
 
+/**
+ * DESKTOP-SOVEREIGN-STT-UTTERANCE-LIMIT-01 — an upper bound on the prefix this
+ * module will re-read.
+ *
+ * ⛔ WHY IT APPEARED NOW. Provisional readings re-transcribe the WHOLE utterance
+ * so far — that is what lets a later reading correct an earlier word. Under the
+ * old 8 s ceiling the prefix could not grow far. Raising the Desktop ceiling to
+ * two minutes removes that accidental bound, and an unbounded prefix means the
+ * provisional stream competes with the FINAL transcript for the same local
+ * Whisper container, at exactly the moment the final matters most.
+ *
+ * ⛔ THE TRADE, NAMED. Past this point provisional text FREEZES at its last
+ * reading while capture continues normally. The member stops seeing new words;
+ * they do not lose any. The final transcript is unaffected and still covers the
+ * entire utterance. Degrading the display is acceptable; degrading the turn is
+ * not. `voice_partial_summary.frozenForSize` reports when this happened, so a
+ * frozen bar is never mistaken for a stalled capture.
+ *
+ * ~200 KB is on the order of a minute of Opus-in-WebM at typical bitrates. It is
+ * a byte bound rather than a time bound because bytes are what this module can
+ * observe; the minute is an estimate, not a guarantee.
+ */
+const MAX_PARTIAL_PREFIX_BYTES = 200_000;
+
 export interface RollingPartialOptions {
   mimeType: string;
   /** Provisional text for DISPLAY ONLY. Never a turn. */
@@ -93,6 +117,7 @@ export function createRollingPartialTranscriber(
   let attempts = 0;
   let delivered = 0;
   let failures = 0;
+  let frozenForSize = false;
 
   const revoked = (): boolean => closed || signal?.aborted === true;
 
@@ -150,6 +175,9 @@ export function createRollingPartialTranscriber(
       if (revoked()) return;
       if (inFlight) return;                       // newer audio will supersede
       if (prefix.size < MIN_PREFIX_BYTES) return;
+      // ⛔ Long turns freeze the DISPLAY, never the capture. Recording, silence
+      // detection and the final transcript continue untouched.
+      if (prefix.size > MAX_PARTIAL_PREFIX_BYTES) { frozenForSize = true; return; }
       const now = Date.now();
       if (now - lastDispatchAt < intervalMs) return;
 
@@ -162,7 +190,7 @@ export function createRollingPartialTranscriber(
       if (closed) return;
       closed = true;
       // Counts only — no transcript content, no lengths that could reconstruct it.
-      logVoiceEvent('voice_partial_summary', { attempts, delivered, failures });
+      logVoiceEvent('voice_partial_summary', { attempts, delivered, failures, frozenForSize });
     },
   };
 }
