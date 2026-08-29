@@ -110,6 +110,10 @@ export const PROVENANCE: Record<string, { level: Provenance; note: string }> = {
       + 'columnPx and are therefore DERIVED, not measured.',
   },
   RADIUS: { level: 'PROVISIONAL', note: 'Not measured. Radii read small and uniform in 04.' },
+  RAIL_RHYTHM: {
+    level: 'SAMPLED',
+    note: 'Item pitch, band spacing and icon size measured by brightness scan down 04 rail.',
+  },
   RULE: { level: 'INHERITED', note: 'PRESS.rule / ruleSoft, confirmed against sampled #4F453B.' },
   STATE: {
     level: 'DERIVED',
@@ -474,6 +478,32 @@ export const MEASURE = {
 
 export const RADIUS = { sm: 4, base: 6, panel: 8, pill: 999 } as const;
 
+/**
+ * Rail vertical rhythm, MEASURED from 04 by the WS2-02C fidelity pass.
+ *
+ * Method: a brightness scan down the rail column (x 30-190) of the 1024-tall
+ * reference, taking each run of text rows and the distance between their
+ * midpoints. The reference is markedly denser than the first composition,
+ * which ran a ~37px pitch against these numbers.
+ *
+ *   item pitch                 31,32,33,34,32,33,35 · 30,32,32,30 · 29,30,30,31,31
+ *   band label to first item   31 and 30
+ *   last item to next band     48 and 53
+ *
+ * Pitch is what the eye reads as density, so it is stored rather than left to
+ * accumulate out of padding and gap at each call site.
+ */
+export const RAIL_RHYTHM = {
+  /** px between item midpoints. Mean of the fifteen measured gaps. */
+  itemPitch: 32,
+  /** px from a band label's midpoint to its first item's midpoint. */
+  labelToFirstItem: 30,
+  /** px from a band's last item to the next band's label. */
+  bandGap: 48,
+  /** px. Icon column in 04 — every destination carries one. */
+  iconSize: 15,
+} as const;
+
 export const RULE = {
   /** PRESS.rule — confirmed against sampled #4F453B. */
   DEFAULT: PRESS.rule,
@@ -828,7 +858,7 @@ export function assertEveryTokenGroupHasProvenance(
     'GROUND', 'INK', 'TYPE', 'GOLD', 'GOLD_PERMITTED', 'GOLD_FORBIDDEN',
     'MAIA_ACCENT', 'INSIGHT_CHIP', 'SPACE', 'MEASURE', 'RADIUS', 'RULE',
     'STATE', 'PANELS', 'BREAKPOINT', 'YIELDS_BEFORE', 'NEVER_COLLAPSES',
-    'COLUMN_FRACTION', 'GUTTER_FRACTION',
+    'COLUMN_FRACTION', 'GUTTER_FRACTION', 'RAIL_RHYTHM',
     'PRESENT_AT_COMPACT',
   ],
 ): void {

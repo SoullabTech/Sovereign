@@ -12,12 +12,13 @@
  */
 'use client';
 
-import type { CSSProperties } from 'react';
+import type { CSSProperties, ReactNode } from 'react';
 import {
   GROUND,
   GOLD,
   INK,
   RADIUS,
+  RAIL_RHYTHM,
   RULE,
   SPACE,
   type StudioState,
@@ -29,6 +30,7 @@ import {
   type StudioRegion,
 } from '../studioMap';
 import { StudioText } from './StudioType';
+import { StudioIcon } from './StudioIcon';
 
 /**
  * The band headings the chrome carries. D-019's rail is banded by REGION —
@@ -64,14 +66,20 @@ export function StudioRailItem({ destination, state = 'rest', inert }: StudioRai
       style={{
         display: 'flex',
         alignItems: 'center',
-        gap: SPACE.snug,
-        padding: `${SPACE.snug}px ${SPACE.base}px`,
+        gap: SPACE.snug + 2,
+        /* Height comes from the MEASURED pitch rather than accumulating out of
+           padding at each call site — pitch is what the eye reads as density,
+           and the first composition drifted to ~37px against 04's 32px. */
+        height: RAIL_RHYTHM.itemPitch - 2,
+        padding: `0 ${SPACE.base}px`,
         borderRadius: RADIUS.base,
         textDecoration: 'none',
+        color: onRow ? INK.primary : state === 'quiet' ? INK.quiet : INK.secondary,
         background: onRow ? GROUND.active : 'transparent',
-        ...(state === 'selected' ? { boxShadow: `inset 2px 0 0 ${GOLD.DEFAULT}` } : {}),
+        ...(onRow ? { boxShadow: `inset 2px 0 0 ${GOLD.DEFAULT}` } : {}),
       }}
     >
+      <StudioIcon id={destination.id} />
       <StudioText
         role="navItem"
         as="span"
@@ -79,14 +87,38 @@ export function StudioRailItem({ destination, state = 'rest', inert }: StudioRai
       >
         {destination.label}
       </StudioText>
+      {/* 04 right-aligns a count on Materials (24) and Notes (12). A count is
+          a fact about the member's own material, never a rating. */}
+      {typeof destination.count === 'number' && (
+        <>
+          <span style={{ flex: 1 }} />
+          <StudioText role="metadata" as="span">
+            {destination.count}
+          </StudioText>
+        </>
+      )}
     </Tag>
   );
 }
 
 export function StudioBand({ group, inert }: { group: StudioGroup; inert?: boolean }) {
   return (
-    <nav data-region={group.region} style={{ marginBottom: SPACE.roomy }}>
-      <StudioText role="bandLabel" style={{ padding: `0 ${SPACE.base}px`, marginBottom: SPACE.snug }}>
+    <nav
+      data-region={group.region}
+      /* The measured band gap runs from the last item to the NEXT band's
+         label, so the margin is that distance less the half-item and label box
+         already inside it. Calibrated by re-measuring the render rather than
+         by eye: margin 18 gave a 40px gap and margin 44 gave 66, so the
+         relation is gap = margin + 22 and 04's ~51 wants 29. */
+      style={{ marginBottom: RAIL_RHYTHM.bandGap - RAIL_RHYTHM.itemPitch / 2 - 3 }}
+    >
+      <StudioText
+        role="bandLabel"
+        style={{
+          padding: `0 ${SPACE.base}px`,
+          marginBottom: RAIL_RHYTHM.labelToFirstItem - RAIL_RHYTHM.itemPitch / 2 - 6,
+        }}
+      >
         {REGION_LABEL[group.region]}
       </StudioText>
       <div style={{ display: 'flex', flexDirection: 'column', gap: SPACE.hairline }}>
@@ -109,10 +141,13 @@ export function StudioRailChrome({
   groups,
   inert,
   style,
+  lead,
 }: {
   groups: StudioGroup[];
   inert?: boolean;
   style?: CSSProperties;
+  /** Rendered above the first band. 04 puts "+ New Work" here. */
+  lead?: ReactNode;
 }) {
   return (
     <aside
@@ -125,6 +160,7 @@ export function StudioRailChrome({
         ...style,
       }}
     >
+      {lead}
       {groups.map((g) => (
         <StudioBand key={g.id} group={g} inert={inert} />
       ))}

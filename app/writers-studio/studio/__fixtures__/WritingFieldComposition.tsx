@@ -37,16 +37,61 @@ import {
   TYPE,
   writingFieldLayout,
 } from '../../studioTheme';
-import { MaiaInsightCard, MaiaVoice } from '../MaiaReading';
+import { MaiaInsightCard, MaiaPostureRow, MaiaVoice } from '../MaiaReading';
 import { StudioPanel } from '../StudioPanel';
 import { CanonicalRail } from './CanonicalRail';
 import { StudioText, typeStyle } from '../StudioType';
 
 const MODES = ['Write', 'Develop', 'Explore', 'Review', 'Publish'] as const;
 
+/* 04 numbers the sections and nests them under part headings. */
 const OUTLINE = [
-  { part: 'Part I — Remembering', items: ['The Call to Remember', 'The Language of Elements', 'The Living World'] },
-  { part: 'Part II — Initiation', items: ['Earth', 'Water', 'Fire', 'Air', 'Ether'] },
+  {
+    part: 'Part I — Remembering',
+    items: [
+      [1, 'The Call to Remember'],
+      [2, 'The Language of Elements'],
+      [3, 'The Living World'],
+    ] as const,
+  },
+  {
+    part: 'Part II — Initiation',
+    items: [
+      [4, 'Earth'],
+      [5, 'Water'],
+      [6, 'Fire'],
+      [7, 'Air'],
+      [8, 'Ether'],
+    ] as const,
+  },
+  {
+    part: 'Part III — Integration',
+    items: [
+      [9, 'The Alchemy of Being'],
+      [10, 'Ordinary Life, Extraordinary…'],
+      [11, 'The Return'],
+    ] as const,
+  },
+];
+
+const MATERIAL_GROUPS = [
+  {
+    kind: 'Manuscripts',
+    items: [{ title: 'Elemental Alchemy — Early Draft', meta: 'PDF · 189 pages' }],
+  },
+  {
+    kind: 'Transcripts',
+    items: [{ title: 'Larry Interview — Elements & Practice', meta: '48 min · Aug 17' }],
+  },
+  {
+    kind: 'Voice notes',
+    items: [{ title: 'Thought on Air Element', meta: '03:21 · Aug 20' }],
+  },
+  {
+    kind: 'Documents',
+    items: [{ title: 'Jung — The Transcendent Function', meta: 'PDF · 12 pages' }],
+  },
+  { kind: 'Images', items: [{ title: 'Air — Cloud Study', meta: 'PNG · Aug 18' }] },
 ];
 
 const INSIGHTS = [
@@ -183,12 +228,14 @@ export function WritingFieldComposition({
               <StudioText role="bandLabel" style={{ marginBottom: SPACE.tight }}>
                 {section.part}
               </StudioText>
-              {section.items.map((item) => {
+              {section.items.map(([n, item]) => {
                 const current = item === 'Air';
                 return (
                   <div
                     key={item}
                     style={{
+                      display: 'flex',
+                      gap: SPACE.snug,
                       padding: `${SPACE.tight}px ${SPACE.snug}px`,
                       borderRadius: RADIUS.sm,
                       ...(current
@@ -196,7 +243,10 @@ export function WritingFieldComposition({
                         : {}),
                     }}
                   >
-                    <StudioText role="navItem" tone={current ? 'primary' : 'quiet'}>
+                    <StudioText role="navItem" tone="quiet" as="span">
+                      {n}.
+                    </StudioText>
+                    <StudioText role="navItem" tone={current ? 'primary' : 'quiet'} as="span">
                       {item}
                     </StudioText>
                   </div>
@@ -242,7 +292,27 @@ export function WritingFieldComposition({
               Air is the unseen matrix in which all movement, communication and thought arise.
               It is the bridge between worlds.
             </StudioText>
-            <hr style={{ border: 'none', borderTop: `1px solid ${RULE.soft}`, margin: `${SPACE.generous}px 0` }} />
+            {/* 04 breaks the epigraph from the prose with a rule carrying a
+                small centred node, not a plain line. */}
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: SPACE.base,
+                margin: `${SPACE.generous}px 0`,
+              }}
+            >
+              <span style={{ flex: 1, height: 1, background: RULE.soft }} />
+              <span
+                style={{
+                  width: 7,
+                  height: 7,
+                  border: `1px solid ${GOLD.edge}`,
+                  borderRadius: RADIUS.pill,
+                }}
+              />
+              <span style={{ flex: 1, height: 1, background: RULE.soft }} />
+            </div>
             {[
               'We do not always notice the air. It is the most subtle of the elements, yet without it nothing moves, nothing speaks, nothing thinks.',
               'In the traditions of the East, air is associated with prāṇa, the life breath that animates the body and the world. In the West, the Greeks called air pneuma, the spirit that gives form to formlessness. In both views, air is the medium of relationship.',
@@ -259,14 +329,29 @@ export function WritingFieldComposition({
             makes her a persistent companion across the modes. */}
         <StudioPanel role="maia" label="MAIA" style={{ width: L.maiaPanel, flexShrink: 0 }}>
           <MaiaVoice>Good morning, Kelly. What would you like to explore in your writing today?</MaiaVoice>
-          <StudioText role="panelLabel" style={{ margin: `${SPACE.roomy}px 0 ${SPACE.snug}px` }}>
-            Developmental insights
-          </StudioText>
+          <MaiaPostureRow />
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: SPACE.snug,
+              margin: `${SPACE.roomy}px 0 ${SPACE.snug}px`,
+            }}
+          >
+            <StudioText role="panelLabel">Developmental insights</StudioText>
+            {/* 04 badges the count. A count of readings, not a rating of them. */}
+            <StudioText role="metadata" as="span">
+              {INSIGHTS.length}
+            </StudioText>
+          </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: SPACE.snug }}>
             {INSIGHTS.map((i) => (
               <MaiaInsightCard key={i.reading.slice(0, 20)} {...i} />
             ))}
           </div>
+          <StudioText role="metadata" style={{ marginTop: SPACE.base }}>
+            View all insights →
+          </StudioText>
         </StudioPanel>
 
         {/* Materials holds the right rail in 04 and yields to a bottom strip
@@ -278,21 +363,29 @@ export function WritingFieldComposition({
             count={24}
             style={{ width: L.materialsPanel, flexShrink: 0 }}
           >
-            {['Elemental Alchemy — Early Draft', 'Larry Interview — Elements & Practice', 'Thought on Air Element'].map(
-              (m) => (
-                <div
-                  key={m}
-                  style={{
-                    padding: SPACE.snug,
-                    marginBottom: SPACE.snug,
-                    border: `1px solid ${RULE.soft}`,
-                    borderRadius: RADIUS.sm,
-                  }}
-                >
-                  <StudioText role="navItem">{m}</StudioText>
-                </div>
-              ),
-            )}
+            {/* 04 groups materials by kind under small caps headings, each item
+                carrying its format and extent. Reference content, inert. */}
+            {MATERIAL_GROUPS.map((group) => (
+              <div key={group.kind} style={{ marginBottom: SPACE.comfortable }}>
+                <StudioText role="bandLabel" style={{ marginBottom: SPACE.snug }}>
+                  {group.kind}
+                </StudioText>
+                {group.items.map((m) => (
+                  <div
+                    key={m.title}
+                    style={{
+                      padding: SPACE.snug,
+                      marginBottom: SPACE.snug,
+                      border: `1px solid ${RULE.soft}`,
+                      borderRadius: RADIUS.sm,
+                    }}
+                  >
+                    <StudioText role="navItem">{m.title}</StudioText>
+                    <StudioText role="metadata">{m.meta}</StudioText>
+                  </div>
+                ))}
+              </div>
+            ))}
           </StudioPanel>
         )}
       </div>

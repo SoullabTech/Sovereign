@@ -94,6 +94,12 @@ export interface StudioDestination {
    * offer the one real door, not a row of greyed-out ones.
    */
   requiresManuscript?: boolean;
+  /**
+   * A count 04 right-aligns on the item — Materials 24, Notes 12. A fact about
+   * the member's own material. Never a rating: nothing MAIA evaluates may
+   * arrive here as a figure (D-003, maiaOffering.ts).
+   */
+  count?: number;
 }
 
 export interface StudioGroup {
@@ -177,9 +183,9 @@ export const STUDIO_MAP: StudioGroup[] = [
          drawers inside the Canvas; Versions has revision substrate with no
          member surface; Notes and Goals have none. See visibleDestinations —
          a `later` destination never reaches a member. */
-      { id: 'materials', label: 'Materials', availability: 'later' },
+      { id: 'materials', label: 'Materials', availability: 'later', count: 24 },
       { id: 'structure', label: 'Structure', availability: 'later' },
-      { id: 'notes', label: 'Notes', availability: 'later' },
+      { id: 'notes', label: 'Notes', availability: 'later', count: 12 },
       { id: 'versions', label: 'Versions', availability: 'later' },
       { id: 'goals', label: 'Goals', availability: 'later' },
     ],

@@ -24,6 +24,7 @@ describe('Author Studio map — honesty invariant', () => {
     const dishonest: StudioGroup[] = [
       {
         id: 'later',
+        region: 'work',
         destinations: [{ id: 'shape', label: 'Shape', availability: 'later', href: '/press/shape' }],
       },
     ];
@@ -32,7 +33,7 @@ describe('Author Studio map — honesty invariant', () => {
 
   it('rejects an available destination with nowhere to go (a dead link)', () => {
     const dishonest: StudioGroup[] = [
-      { id: 'x', destinations: [{ id: 'write', label: 'Working Draft', availability: 'available' }] },
+      { id: 'x', region: 'work', destinations: [{ id: 'write', label: 'Working Draft', availability: 'available' }] },
     ];
     expect(() => assertStudioMapHonest(dishonest)).toThrow(/nowhere to go/);
   });
