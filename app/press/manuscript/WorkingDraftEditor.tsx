@@ -640,11 +640,13 @@ export default function WorkingDraftEditor({
       ? 'Saving…'
       : saveState === 'unsaved'
         ? 'Unsaved changes'
-        : saveState === 'error'
-          ? 'Could not save just now'
-          : updatedAt
-            ? `Saved · ${formatWhen(updatedAt)}`
-            : '';
+        : saveState === 'unauthorized'
+          ? 'Signed out — not saved'
+          : saveState === 'error'
+            ? 'Could not save just now'
+            : updatedAt
+              ? `Saved · ${formatWhen(updatedAt)}`
+              : '';
 
   return (
     <div>
@@ -670,6 +672,26 @@ export default function WorkingDraftEditor({
           need, then reload.
         </p>
       )}
+      {saveState === 'unauthorized' && (
+        /* A session that ended under a writer who is still writing — the case
+           a returning beta writer met after time away. Everything they have
+           typed since is still here and still queued; the only thing that can
+           lose it now is navigating this tab away, so signing in opens in a
+           new one. */
+        <p role="alert" className="mb-4 text-[#E8B4A0] leading-relaxed" style={{ fontFamily: SERIF }}>
+          Your session ended, so the last changes have not been saved. They are still here — nothing
+          has been lost.{' '}
+          <a
+            href="/signin"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline underline-offset-4"
+          >
+            Sign in again in a new tab
+          </a>
+          , leave this page open, then use <span className="whitespace-nowrap">Save now</span>.
+        </p>
+      )}
       <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1 text-[12px] mb-6">
         <span className="opacity-40">≈ {pageEstimate(content.length)} pages</span>
         <span className="opacity-40">
@@ -681,11 +703,15 @@ export default function WorkingDraftEditor({
           <span
             role="status"
             aria-live="polite"
-            className={saveState === 'error' ? 'opacity-100 text-[#E8B4A0]' : 'opacity-40'}
+            className={
+              saveState === 'error' || saveState === 'unauthorized'
+                ? 'opacity-100 text-[#E8B4A0]'
+                : 'opacity-40'
+            }
           >
             {saveLabel}
           </span>
-          {saveState === 'error' && (
+          {(saveState === 'error' || saveState === 'unauthorized') && (
             /* W-4: the control a writer needs when saving has FAILED must not be
                hover-revealed — on touch there is no hover. Full opacity, real
                tap target, visible focus ring. */

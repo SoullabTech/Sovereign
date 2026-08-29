@@ -35,10 +35,20 @@ export type SourceKind = typeof ARTIFACT_EXTRACTION | typeof MEMBER_SUPPLIED_TEX
  * changes, arrivals written afterwards carry the new value and older rows keep
  * theirs — which is the whole point of storing it.
  */
+/*
+ * `+ws1` marks the import whitespace normalization that now runs as the last
+ * step of every extraction (lib/manuscript/ingest/normalizeWhitespace.ts). It
+ * belongs in the extractor identity, not outside it: the source text an
+ * arrival records is the text the normalizer produced and the member saw, so
+ * an arrival written before this change and one written after are genuinely
+ * different extractions of the same bytes, and must say so. The artifact bytes
+ * are unchanged and remain in custody, which is what makes the earlier
+ * extraction reproducible from the later row.
+ */
 export const EXTRACTORS = {
-  docx: { method: 'mammoth-convertToMarkdown', version: 'mammoth@1.12.0' },
-  pdf: { method: 'pdf-parse-getText', version: 'pdf-parse@2.4.5' },
-  text: { method: 'utf8-decode', version: 'node-buffer-utf8' },
+  docx: { method: 'mammoth-convertToMarkdown+ws-normalize', version: 'mammoth@1.12.0+ws1' },
+  pdf: { method: 'pdf-parse-getText+ws-normalize', version: 'pdf-parse@2.4.5+ws1' },
+  text: { method: 'utf8-decode+ws-normalize', version: 'node-buffer-utf8+ws1' },
   /** Not an extraction: the member's own text, recorded as it was confirmed. */
   supplied: { method: 'member-supplied', version: 'n/a' },
 } as const;

@@ -13,10 +13,16 @@
  *   - PDF yields its text layer only. Scanned/image PDFs have no text layer;
  *     we say so plainly (a warning) rather than fabricate or silently fail.
  *     OCR is deliberately out of scope for this slice.
+ *   - Whitespace that the source FILE carried but the author never typed —
+ *     Word's tab indents, non-breaking spaces, soft hyphens, stray trailing
+ *     spaces, stacked empty paragraphs — is normalized on the way in (see
+ *     normalizeWhitespace.ts). Not one character of the writing is touched;
+ *     only the invisible spacing that made the writing surface look wrong.
  *   - No persistence, no network, no model. Deterministic parsing only.
  */
 
 import mammoth from 'mammoth';
+import { normalizeImportWhitespace } from './normalizeWhitespace';
 
 export type UploadFormat = 'docx' | 'pdf' | 'text';
 
@@ -123,7 +129,7 @@ export async function parseUpload(
   }
 
   if (format === 'docx') {
-    const text = await extractDocxMarkdown(buffer);
+    const text = normalizeImportWhitespace(await extractDocxMarkdown(buffer));
     const warnings = text.trim().length === 0
       ? ['We could not find any text in this document.']
       : [];
@@ -131,10 +137,13 @@ export async function parseUpload(
   }
 
   if (format === 'pdf') {
+    // A PDF text layer is the worst offender for invisible spacing: extractors
+    // emit non-breaking and thin spaces wherever the typesetter kerned.
     const { text, warnings } = await extractPdfText(buffer);
-    return { text, warnings, format };
+    return { text: normalizeImportWhitespace(text), warnings, format };
   }
 
-  // text / markdown
-  return { text: buffer.toString('utf-8'), warnings: [], format };
+  // text / markdown — normalized too, so a .txt written on Windows and the
+  // same words pasted from Word arrive as the same characters.
+  return { text: normalizeImportWhitespace(buffer.toString('utf-8')), warnings: [], format };
 }

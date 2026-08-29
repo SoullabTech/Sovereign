@@ -24,7 +24,7 @@ import path from 'path';
 import { query } from '@/lib/db/postgres';
 import { resolveVaultRoot } from '@/lib/storage/fileVault';
 import { recordArtifactArrival, recordSuppliedArrival, claimArrival, verifyCustody } from '@/lib/manuscript/source/arrivals';
-import { hashBytes } from '@/lib/manuscript/source/custody';
+import { EXTRACTORS, hashBytes } from '@/lib/manuscript/source/custody';
 import { segment } from '@/lib/manuscript/ingest/segment';
 import { detectOmission } from '@/lib/manuscript/source/omission';
 
@@ -106,7 +106,8 @@ async function main() {
   check('7c non-identity extraction → artifact and source-text hashes differ',
     nrow.artifact_hash !== nrow.source_text_hash, nrow.extraction_method);
   check('8  extractor identity and version recorded',
-    row.extraction_method === 'utf8-decode' && row.extractor_version === 'node-buffer-utf8',
+    row.extraction_method === EXTRACTORS.text.method &&
+      row.extractor_version === EXTRACTORS.text.version,
     `${row.extraction_method} / ${row.extractor_version}`);
 
   const ms = await query<{ id: string }>(

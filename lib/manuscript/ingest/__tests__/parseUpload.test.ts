@@ -64,6 +64,35 @@ describe('parseUpload', () => {
     expect(sections.some((s) => s.heading === 'Chapter One')).toBe(true);
   });
 
+  /**
+   * A Word file carrying the spacing a real manuscript arrives with. Its
+   * document.xml sits beside it as `word-spacing.document.xml` so the fixture
+   * is readable rather than an opaque binary; it holds a tab-indented first
+   * line, non-breaking spaces, stray trailing spaces, a shift+enter line
+   * break, and a run split mid-word — all things Word writes and no author
+   * types.
+   */
+  it('brings a Word manuscript in without the spacing Word added', async () => {
+    const buf = fs.readFileSync(path.join(__dirname, 'fixtures', 'word-spacing.docx'));
+    const r = await parseUpload(buf, 'word-spacing.docx');
+
+    // The author's words, all of them, including the run Word split mid-word.
+    expect(r.text).toContain('The morning came slowly over the hills.');
+    expect(r.text).toContain('margins of other people.');
+    expect(r.text).toContain('# Chapter One');
+
+    // ...and none of Word's spacing.
+    expect(r.text).not.toMatch(/\t/); // no tab indents
+    expect(r.text).not.toMatch(/[\u00A0\u202F]/); // no non-breaking spaces
+    expect(r.text).not.toMatch(/[ ]+\n\n/); // no stray spaces ending a paragraph
+    expect(r.text).not.toMatch(/\n{3,}/); // no stacked empty paragraphs
+
+    // What the author DID choose survives: two spaces after a sentence, and a
+    // shift+enter break kept as a markdown hard break.
+    expect(r.text).toContain('She waited.  Then she wrote.');
+    expect(r.text).toContain('First line  \nsecond line');
+  });
+
   it('warns (never fabricates) when a PDF has no text layer (scanned)', async () => {
     mockPdf.text = '';
     mockPdf.pages = [{}, {}, {}];
