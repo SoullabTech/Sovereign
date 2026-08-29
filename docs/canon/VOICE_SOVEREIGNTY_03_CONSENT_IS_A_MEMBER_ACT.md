@@ -184,20 +184,37 @@ rather than re-litigated.
 | `maia_core` + `auto` + cloud permitted | MUST NOT reach OpenAI until the member acts | source-verified: `classifyCloudVoiceGate` returns `consent_required`; `TTSFallbackToOpenAI` refuses `auto` independently |
 | `maia_core` + `auto` + local Kokoro available | MUST speak locally as `af_kore`, not go silent | source-verified: archetype is not forwarded, so local dispatch is unchanged |
 | `maia_core` + member declines | MUST preserve `maia_core` identity, use `af_kore` | source-verified: consent write touches only `tts_provider`; `local` routes to Kokoro |
-| `maia_core` + `cloud` + `MAIA_ALLOW_CLOUD_VOICE=1` | → OpenAI Alloy | source-verified: `cloud_allowed`; route's `!openaiDisabled` branch resolves `alloy` |
+| `maia_core` + `cloud` + `MAIA_ALLOW_CLOUD_VOICE=1` | → OpenAI Alloy | **test** `cloud_allowed`; route's `!openaiDisabled` branch resolves `alloy` (route half source-verified) |
 
-⚠️ **"Source-verified" means read, not run.** None of these four has been
-executed. They are the acceptance set for whoever takes this to a device.
+All four gate states, and the ways the gate could silently decay into
+consent-by-inference, are now executable: `lib/tts/__tests__/cloudVoiceConsentGate.test.ts`,
+16 tests. The load-bearing ones:
+
+- `maia_core`/Alloy plus a permitting deployment does **not** reach
+  `cloud_allowed` — the ruling in one assertion.
+- a stored `local` never returns `consent_required`, so a decline cannot decay
+  into agreement through repetition.
+- `cloud_unavailable` never asks — no member is put a question whose answer
+  could not be honoured.
+- the identity descriptor cannot change the outcome; only
+  `identityIsCloudBacked` and the stored preference can.
+- the deploy flag alone does not consent on a member's behalf.
 
 ---
 
 ## Verification
 
 ```
-PASS  npm run typecheck        no TypeScript regressions
-                               231 errors vs baseline 239
-PASS  npm run check:no-supabase   no Supabase detected
+PASS  npm run typecheck              no TypeScript regressions
+PASS  npm run check:no-supabase      no Supabase detected
+PASS  jest lib/tts/__tests__         160 tests, 5 suites
+      └ cloudVoiceConsentGate         16 tests, the four states + negative controls
 ```
+
+⭐ The typecheck gate earned its keep here. The per-turn state reset in
+`useStreamingVoice` builds a full state literal rather than spreading, so adding
+`cloudVoiceConsent` made the omission a type error instead of a silent `undefined`
+that would have cleared the pending question on every turn.
 
 Both are the repository's own gates. (An earlier reading that the gate was
 inoperable was wrong: `npx tsc` resolved a global TypeScript 6.0.2, which refuses
@@ -207,17 +224,18 @@ normally through `npm run typecheck`.)
 ## ⛔ NOT WITNESSED
 
 ```
-the consent GESTURE has no client surface.
-  cloud_voice_consent_required is emitted; nothing consumes it yet.
-  a member can currently only consent via an authenticated
-  POST /api/voice/cloud-consent {"allow": true}
+the CLIENT GESTURE has not been run.
+  useStreamingVoice consumes cloud_voice_consent_required and
+  CloudVoiceConsentPrompt renders it, but no browser has executed
+  either. There is no component test and no device pass.
 
-no code in this change has been EXECUTED.
-  typecheck is not behaviour. no test was written or run against the
-  four cases above.
+the ROUTE half is source-verified only.
+  the gate policy has 16 passing tests; the stream-conversation
+  wiring that feeds it does not.
 
 the acceptance path has NOT been witnessed:
-  spoken turn → Whisper → MAIA → OpenAI TTS Alloy → audible Desktop playback
+  explicit cloud consent → next spoken turn → OpenAI Alloy synthesis
+  → audible Desktop playback
 ```
 
 Evidence class: **SOURCE**. `UNWITNESSED is not a pass.`

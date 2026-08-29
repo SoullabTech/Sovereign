@@ -13,6 +13,8 @@ import { getContinuityBuffer } from '@/lib/voice/conversationContinuityBuffer';
 import { VoiceHUD } from './voice/VoiceHUD';
 import { VoiceInteractionBar } from './voice/VoiceInteractionBar';
 import { useStreamingVoice, type StreamingVoicePlaybackSignal } from '@/hooks/useStreamingVoice';
+// VOICE-SOVEREIGNTY-03 — the member-facing half of the cloud-voice consent gesture.
+import { CloudVoiceConsentPrompt } from './voice/CloudVoiceConsentPrompt';
 // Phase 1.5B — Conversational Keep affordance (sidecar, feature-flagged; client flag default-off)
 import { KeepAffordance, type KeepIntent } from '@/components/psyche/KeepAffordance';
 const CONVERSATIONAL_KEEP_ENABLED =
@@ -2589,6 +2591,10 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     error: streamingVoiceError,
     lastMoveOutcome,
     unlockAudio: unlockStreamingAudio,
+    // VOICE-SOVEREIGNTY-03. The pending question and the one action that answers
+    // it. Nothing here gates the turn — MAIA is already speaking locally.
+    cloudVoiceConsent,
+    answerCloudVoiceConsent,
   } = useStreamingVoice({
     // ⭐ CROSS-SURFACE-THREAD-ADOPTION-01 — session parity.
     //
@@ -7910,6 +7916,26 @@ I'm not sure what I'm feeling yet.`;
     // block for fixed descendants — only transform/filter/perspective/contain do.
     <div className="oracle-conversation relative min-h-screen overflow-hidden">
       <div className="bg-soul-background absolute inset-0 pointer-events-none" aria-hidden="true" />
+
+      {/*
+        VOICE-SOVEREIGNTY-03 — cloud voice consent.
+
+        ⛔ Deliberately NOT a modal and NOT a backdrop, unlike the audio-unlock
+           surfaces below it. Those block because the member cannot hear MAIA
+           until they act. This one must not block, because MAIA is already
+           speaking locally: the question is additive and the conversation
+           continues whether or not it is ever answered. Rendering it as a modal
+           would make an offer look like a toll.
+      */}
+      <div className="pointer-events-none fixed inset-x-0 top-16 z-40 px-4">
+        <div className="pointer-events-auto">
+          <CloudVoiceConsentPrompt
+            request={cloudVoiceConsent}
+            onAnswer={answerCloudVoiceConsent}
+          />
+        </div>
+      </div>
+
       {/* iOS Audio Enable Button - Required for TTS on iOS Safari */}
       {needsIOSAudioPermission && (
         <div className="modal-backdrop fixed inset-0 bg-black/80 backdrop-blur flex items-center justify-center">

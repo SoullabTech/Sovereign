@@ -61,6 +61,26 @@ interface LimitsBlockData {
   tier?: string;
 }
 
+/**
+ * VOICE-SOVEREIGNTY-03 — the consent gesture's payload.
+ *
+ * Carries WHICH VOICE was asked for and nothing about what was said. The server
+ * deliberately omits transcript and conversation content: the gesture is about a
+ * data boundary, so it must not itself cross one.
+ */
+export interface CloudVoiceConsentRequest {
+  /** Internal archetype ID, e.g. 'maia_core'. Never shown to members. */
+  voiceArchetype: string | null;
+  /** Member-facing name, e.g. 'Maia'. This is what the prompt says. */
+  voiceLabel: string | null;
+  /** e.g. 'openai' */
+  provider: string;
+  /** e.g. 'alloy' */
+  voice: string | null;
+  /** The member's stored preference, verbatim — 'auto' or unset. */
+  storedPreference: string;
+}
+
 interface StreamingVoiceOptions {
   onTextChunk?: (text: string, index: number) => void;
   /**
@@ -84,6 +104,16 @@ interface StreamingVoiceOptions {
   onLimitsBlock?: (data: LimitsBlockData) => void;
   /** PWA playback signal callback for confirmed audio states */
   onPlaybackSignal?: (signal: StreamingVoicePlaybackSignal) => void;
+  /**
+   * MAIA's selected voice is cloud-backed, the deployment permits cloud
+   * synthesis, and the member has not yet said whether their words may leave the
+   * machine.
+   *
+   * ⛔ This is a QUESTION, not an error, and not a reason to withhold anything.
+   *    Local synthesis proceeds regardless; the surface must not gate the turn,
+   *    replay it, or resend the member's message on the answer.
+   */
+  onCloudVoiceConsentRequired?: (request: CloudVoiceConsentRequest) => void;
   voice?: string;
   speed?: number;
   /** TTS quality: 'tts-1' (faster) or 'tts-1-hd' (richer) */
@@ -120,6 +150,15 @@ interface StreamingVoiceState {
   lastSilence: SilenceResponse | null;
   /** Last move outcome from previous turn (for telemetry/debug) */
   lastMoveOutcome: MoveOutcomeEvent | null;
+  /**
+   * Pending cloud-voice consent question, or null.
+   *
+   * Set only by the server's `cloud_voice_consent_required` event. Cleared when
+   * the member answers either way — never by a new turn arriving, because an
+   * unanswered question is not stale, and never re-raised after an answer,
+   * because the answer is stored durably server-side.
+   */
+  cloudVoiceConsent: CloudVoiceConsentRequest | null;
 }
 
 interface AudioQueueItem {
@@ -242,6 +281,7 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
     onError,
     onLimitsBlock,  // 🛑 Tier limits callback
     onPlaybackSignal,  // 🎤 PWA playback signals
+    onCloudVoiceConsentRequired,  // 🔐 VOICE-SOVEREIGNTY-03
     voice = 'maya',
     speed = 1.0,
     model = 'tts-1',
@@ -276,6 +316,7 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
     relational: null,
     lastSilence: null,
     lastMoveOutcome: null,
+    cloudVoiceConsent: null,
   });
 
   // Audio queue and playback management
@@ -631,6 +672,13 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
       relational: prev.relational, // Preserve relational state across turns
       lastSilence: null,
       lastMoveOutcome: prev.lastMoveOutcome, // Preserve for telemetry
+      // VOICE-SOVEREIGNTY-03. PRESERVED across turns, deliberately. An
+      // unanswered question is not stale — the member has not declined, they
+      // have not yet chosen. Clearing here would also make the prompt vanish and
+      // reappear on every turn as the server re-emits it, which reads as a
+      // glitch and pressures an answer through repetition. It is cleared only by
+      // the member answering.
+      cloudVoiceConsent: prev.cloudVoiceConsent,
     }));
 
     // OFFLINE FALLBACK: Check if we're probably offline before attempting server call
@@ -806,6 +854,27 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
                       console.log('[StreamingVoice] 🎵 Starting audio playback');
                       playNextChunk();
                     }
+                    break;
+                  }
+
+                  case 'cloud_voice_consent_required': {
+                    // ── VOICE-SOVEREIGNTY-03 ──
+                    // MAIA's selected voice is cloud-backed and the member has
+                    // not said whether their words may leave the machine.
+                    //
+                    // ⛔ Nothing is blocked here and nothing is replayed. The
+                    //    turn continues; local synthesis is already underway
+                    //    with the af_kore mapping. A member who never answers
+                    //    keeps MAIA's voice — the ask is additive, never a toll.
+                    const consentRequest: CloudVoiceConsentRequest = {
+                      voiceArchetype: data.voiceArchetype ?? null,
+                      voiceLabel: data.voiceLabel ?? null,
+                      provider: data.provider,
+                      voice: data.voice ?? null,
+                      storedPreference: data.storedPreference,
+                    };
+                    setState(prev => ({ ...prev, cloudVoiceConsent: consentRequest }));
+                    onCloudVoiceConsentRequired?.(consentRequest);
                     break;
                   }
 
@@ -1093,11 +1162,56 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
     };
   }, []);
 
+  /**
+   * VOICE-SOVEREIGNTY-03 — record the member's answer.
+   *
+   * ⛔ This is the ONLY place the client may act on the consent question, and it
+   *    does exactly one thing: POST the answer. It does NOT resend the member's
+   *    message, regenerate the current turn, re-request audio, or touch the
+   *    voice archetype, voice ID, speed, or any other setting. The server's
+   *    narrow endpoint writes one column for the same reason — identity and
+   *    egress are separate axes and a consent act must not be able to reach
+   *    across them.
+   *
+   * The answer takes effect on the NEXT turn. Applying it retroactively would
+   * mean re-synthesising words the member already heard, which is not what they
+   * agreed to.
+   *
+   * The pending question is cleared optimistically: the member has answered, and
+   * leaving the prompt up while the POST is in flight would invite a second
+   * answer to a question already settled. A failed write leaves the stored
+   * preference untouched, so the server simply asks again next turn — the
+   * failure mode is a repeated question, never an unrecorded consent.
+   */
+  const answerCloudVoiceConsent = useCallback(async (allow: boolean) => {
+    setState(prev => ({ ...prev, cloudVoiceConsent: null }));
+    try {
+      const res = await apiFetch('/api/voice/cloud-consent', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ allow }),
+      });
+      if (!res.ok) {
+        console.warn('[StreamingVoice] cloud voice consent not recorded:', res.status);
+        return;
+      }
+      const result = await res.json().catch(() => null);
+      console.log('[StreamingVoice] cloud voice consent recorded:', result?.storedPreference);
+    } catch (e) {
+      console.warn('[StreamingVoice] cloud voice consent failed:', e instanceof Error ? e.message : e);
+    }
+  }, []);
+
   return {
     ...state,
     sendMessage,
     stop,
     togglePause,
+    /**
+     * Answer the cloud-voice consent question. `true` stores 'cloud', `false`
+     * stores 'local'. Both preserve the member's chosen voice identity.
+     */
+    answerCloudVoiceConsent,
     /** 🔥 iOS Safari: Call this from a user gesture to enable TTS playback */
     unlockAudio,
     /** Stable session ID for this conversation (for relational stack continuity) */
