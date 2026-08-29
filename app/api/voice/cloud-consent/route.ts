@@ -36,6 +36,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireMemberId } from '@/lib/auth/session';
 import { setMemberTtsProvider } from '@/lib/voice/voiceControlsService';
 import { cloudVoicePermitted } from '@/lib/tts/cloudVoicePolicy';
+import { memberRef } from '@/lib/privacy/memberRef';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -63,7 +64,12 @@ export async function POST(request: NextRequest) {
     // consented on a deployment that forbids cloud voice should not later find
     // an audit trail implying their choice was the thing that opened egress.
     console.info('[voice.consent]', JSON.stringify({
-      memberIdPrefix: memberId.slice(0, 8),
+      // ⛔ NOT a truncated member ID. A UUID fragment is not a derivation — it
+      //    still points at the member. memberRef() is a one-way hash, so the log
+      //    can correlate one member's actions without the log itself becoming a
+      //    way to name them. Caught by scripts/guards/member-id-log-gate.ts,
+      //    which was right.
+      memberRef: memberRef(memberId),
       allow,
       storedPreference: pref,
       deploymentPermitsCloud: cloudVoicePermitted(),

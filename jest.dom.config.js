@@ -32,7 +32,34 @@
  * Reviving it needs either that dependency or a rewrite, and that is its own
  * unit — not instrumentation work smuggled into a witness PR.
  *
- * Run: `npx jest -c jest.dom.config.js`
+ * WIRED 2026-08-29 (VOICE-SOVEREIGNTY-03). This project used to run only via a
+ * hand-typed `npx jest -c jest.dom.config.js`, which nothing in package.json or
+ * CI invoked. That is the same failure this file already documents for
+ * `useVoiceInput.rerender.test.tsx`: a suite nothing runs pins nothing. It is
+ * now part of the ordinary path —
+ *
+ *   npm test           this project, THEN the node suites
+ *   npm run test:dom   this project alone
+ *   npm run test:node  node suites alone
+ *
+ * so a regression in a client contract fails the same command everything else
+ * fails, rather than waiting for someone to remember a special invocation.
+ *
+ * ⛔ `npm test` AGGREGATES; it does not chain. Both paths run, and the overall
+ *    exit is nonzero if EITHER failed:
+ *
+ *      npm run test:node; n=$?; npm run test:dom; d=$?; [ $n -eq 0 ] && [ $d -eq 0 ]
+ *
+ *    `node && dom` would hide this project behind the node suites' 43
+ *    pre-existing failing suites — wiring that looks done and changes nothing.
+ *    `node ; dom` would run both but return only the DOM exit code, masking a
+ *    node regression. The aggregate is the only form with the property needed:
+ *
+ *      node red,  DOM green  → both run, overall red
+ *      node green, DOM red   → both run, overall red
+ *      both green            → overall green
+ *
+ * Run directly: `npx jest -c jest.dom.config.js`
  */
 
 /** @type {import('jest').Config} */
