@@ -372,6 +372,10 @@ backups/
 !docker-compose.production.yml
 !docker-compose.staging.yml
 !docker-compose.local-voice.yml
+# DESKTOP-SOVEREIGN-TTS-01 — witness-only Kokoro overlay. Committed on purpose:
+# the witness overrides it sits beside are ignored by the rule above, which is
+# why a later session cannot see the substrate a previous one stood up.
+!docker-compose.witness-kokoro.yml
 !Caddyfile
 !Caddyfile.staging
 

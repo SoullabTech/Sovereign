@@ -1,0 +1,151 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# DESKTOP-SOVEREIGN-TTS-01 — Kokoro witness overlay
+# ═══════════════════════════════════════════════════════════════════════════════
+# WITNESS-ONLY. Additive. Touches no production configuration.
+#
+# This file exists because of one measured fact, not a hypothesis. The Desktop
+# witness produced:
+#
+#   [TTS] Kokoro failed: cloud voice is not available under the current
+#         sovereignty policy (ttsRouter:openai_primary:pref=auto)
+#
+# `openai_primary` is thrown at lib/tts/ttsRouter.ts:352. Reading the router
+# backwards from that line, it is reachable ONLY when the resolved provider is
+# `openai`, which happens on exactly two paths:
+#
+#   MAIA_TTS_PROVIDER=openai                    (explicit), or
+#   MAIA_TTS_PROVIDER unset/auto  AND  MAIA_LOCAL_VOICE_ENABLED != "1"
+#
+# If the container had seen MAIA_TTS_PROVIDER=kokoro, `primary` would be
+# 'kokoro' (ttsRouter.ts:185) and dispatch would enter the Kokoro branch at
+# ttsRouter.ts:227 — which cannot reach line 352 at all.
+#
+# ⭐ THEREFORE the witness error is SUBSTRATE, not synthesis. The MAIA container
+#    that produced it did not have the sovereign voice environment. Kokoro was
+#    never called. The log line "[TTS] Kokoro failed" names a provider that was
+#    never reached — it is the route's catch-all wording, not evidence about
+#    Kokoro. Repairing TTS code before this overlay exists would be repairing a
+#    path that was never taken.
+#
+# docker-compose.production.yml ALREADY declares all four of these correctly
+# (maia: lines 168-170, kokoro-tts: line 624). Production is not the defect.
+# The witness stack is what lacks them. This overlay gives the witness stack the
+# substrate production already has — nothing more.
+#
+# ── USAGE ──────────────────────────────────────────────────────────────────────
+# Append LAST in the witness overlay chain, after the MAIA + Postgres + Whisper
+# witness file and after the local Ollama override, both of which are preserved
+# untouched:
+#
+#   docker compose -p <witness-project> \
+#     -f docker-compose.production.yml \
+#     -f <witness override> \
+#     -f <local ollama override> \
+#     -f docker-compose.witness-kokoro.yml \
+#     up -d kokoro-tts maia
+#
+# Then prove the substrate before touching any application code:
+#
+#   scripts/witness/kokoro-substrate-probe.sh -p <witness-project>
+#
+# ── WHY NOT docker-compose.local-voice.yml ─────────────────────────────────────
+# That file also stands up kokoro-tts, but it joins an EXTERNAL network pinned by
+# name to the production project (`maia-sovereign_maia-internal`). Using it under
+# a witness project name would either fail to resolve or — worse — attach the
+# witness Kokoro to the production network. It also sets no MAIA env, so it
+# cannot move the router off `openai_primary`. It is left exactly as it is.
+#
+# This overlay instead joins `maia-internal` by KEY, so it resolves inside
+# whatever project the witness runs under and cannot reach across into
+# production by construction.
+# ═══════════════════════════════════════════════════════════════════════════════
+
+services:
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # Kokoro TTS — local sovereign synthesis, witness instance
+  # ═══════════════════════════════════════════════════════════════════════════
+  # Same image and same liveness probe as production (docker-compose.production.yml
+  # :624), so a witness PASS is evidence about the artifact production runs and
+  # not about a lookalike.
+  #
+  # No container_name: the witness must be able to run alongside production's
+  # maia-kokoro-tts without a name collision. Compose auto-names it
+  # <project>-kokoro-tts-1, which is also what makes the probe able to tell the
+  # two apart.
+  #
+  # No published port: witness Kokoro is reachable only from inside the witness
+  # network. A host-published 8880 would be ambiguous with production's and would
+  # let a probe pass against the wrong service.
+  kokoro-tts:
+    image: ghcr.io/remsky/kokoro-fastapi-cpu:v0.2.2
+    restart: unless-stopped
+
+    environment:
+      # Liveness-probe voice only. MAIA's actual voice (af_kore) is chosen by
+      # the router at request time — see lib/tts/providers/kokoro.ts.
+      KOKORO_DEFAULT_VOICE: "af_heart"
+
+    # ⛔ NO security_opt HERE, deliberately. Compose CONCATENATES list-valued
+    #    keys across overlay files and then rejects duplicate entries outright:
+    #
+    #      validating docker-compose.witness-kokoro.yml:
+    #      services.kokoro-tts.security_opt items at 0 and 1 are equal
+    #
+    #    Any base that already declares `no-new-privileges:true` — production
+    #    does — makes this overlay unmergeable. This file is designed to be
+    #    appended LAST onto a witness base this session cannot read, so it must
+    #    not re-declare list keys a base may already own. The hardening is the
+    #    base's to state; repeating it here costs the whole merge.
+
+    # The image has no curl. This is production's exact probe, which uses the
+    # interpreter the image does ship.
+    healthcheck:
+      test: ["CMD-SHELL", "python3 -c \"import urllib.request,json; d=json.dumps({'input':'ok','voice':'af_heart','model':'kokoro'}).encode(); urllib.request.urlopen(urllib.request.Request('http://localhost:8880/v1/audio/speech',data=d,headers={'Content-Type':'application/json'}),timeout=10)\" || exit 1"]
+      interval: 30s
+      timeout: 15s
+      retries: 5
+      start_period: 60s
+
+    networks:
+      - maia-internal
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # MAIA — sovereign voice substrate for the witness
+  # ═══════════════════════════════════════════════════════════════════════════
+  # Three variables and one dependency. Nothing else. This overlay must not be
+  # able to change what the witness proves about STT, auth, persistence, memory,
+  # provider convergence, provider provenance, or lifecycle — all of which are
+  # closed and must stay closed.
+  maia:
+    depends_on:
+      kokoro-tts:
+        condition: service_healthy
+
+    environment:
+      # ttsRouter.ts:143 — isLocalVoiceEnabled(). Strict "1"; any other value,
+      # including "true", leaves the router on the OpenAI primary.
+      MAIA_LOCAL_VOICE_ENABLED: "1"
+      # ttsRouter.ts:150 — getConfiguredProvider(). Explicit "kokoro" makes
+      # `primary` kokoro unconditionally (ttsRouter.ts:185), so the witness does
+      # not depend on `auto` resolving the way we expect.
+      MAIA_TTS_PROVIDER: "kokoro"
+      # lib/tts/providers/kokoro.ts:19 — service name resolves on maia-internal.
+      # The default is http://localhost:8880, which inside the MAIA container is
+      # MAIA itself and would fail confusingly. Naming it is not optional.
+      KOKORO_TTS_URL: "http://kokoro-tts:8880"
+
+      # ⛔ MAIA_ALLOW_CLOUD_VOICE is deliberately ABSENT, not set to "0".
+      #    lib/tts/cloudVoicePolicy.ts treats absence and "0" identically, and
+      #    absence is the canon: "an unset variable, a fresh environment, a new
+      #    deployment — all sovereign." Writing "0" here would assert that the
+      #    sovereign default needs a keeper. It does not.
+      #
+      #    Probe 6 asserts this absence. If the witness ever passes WITH cloud
+      #    voice permitted, it has proven nothing about sovereign synthesis.
+
+networks:
+  # Declared by docker-compose.production.yml. Joined by KEY, so it resolves
+  # within the witness project and has no path to the production network.
+  maia-internal:
+    driver: bridge
