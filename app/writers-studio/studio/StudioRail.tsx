@@ -24,7 +24,10 @@ import {
   type StudioState,
 } from '../studioTheme';
 import {
+  shellDestinations,
   visibleDestinations,
+  type ShellDestination,
+  type ShellGroup,
   type StudioDestination,
   type StudioGroup,
   type StudioRegion,
@@ -46,23 +49,49 @@ export const REGION_LABEL: Record<StudioRegion, string> = {
 
 export interface StudioRailItemProps {
   destination: StudioDestination;
-  state?: Extract<StudioState, 'rest' | 'hover' | 'focus' | 'active' | 'selected' | 'quiet'>;
+  state?: Extract<
+    StudioState,
+    'rest' | 'hover' | 'focus' | 'active' | 'selected' | 'quiet' | 'unavailable'
+  >;
   /**
    * Renders a span with no href instead of a link. For the non-member-facing
    * composition fixture, which draws the full canonical grammar so it can be
    * compared against 04 — inert, so nothing unbuilt is ever clickable.
    */
   inert?: boolean;
+  /** Called when an actionable item is chosen in-place rather than navigated. */
+  onSelect?: () => void;
 }
 
-export function StudioRailItem({ destination, state = 'rest', inert }: StudioRailItemProps) {
+export function StudioRailItem({
+  destination,
+  state = 'rest',
+  inert,
+  onSelect,
+}: StudioRailItemProps) {
+  /* WS2-03B — active and selected are no longer the same treatment.
+     The shell marks the CURRENT room active and every OPEN panel selected, so
+     collapsing the two put a gold bar on four rows at once and gold stopped
+     meaning anything. Gold marks where the member IS. An open panel gets the
+     raised ground and nothing more. */
   const onRow = state === 'active' || state === 'selected';
-  const Tag = inert ? 'span' : 'a';
+  const isCurrent = state === 'active';
+  /* WS2-03B — an unavailable destination is a SPAN, always.
+     Not a disabled anchor (still focusable in some engines, still carries an
+     href in the DOM), not a button that does nothing. The tag itself is the
+     honesty: there is nothing here to take. */
+  const unavailable = state === 'unavailable';
+  const Tag = inert || unavailable ? 'span' : onSelect ? 'button' : 'a';
   return (
     <Tag
-      {...(inert ? {} : { href: destination.href })}
+      {...(inert || unavailable
+        ? { 'aria-disabled': unavailable ? true : undefined }
+        : onSelect
+          ? { type: 'button' as const, onClick: onSelect }
+          : { href: destination.href })}
       data-destination={destination.id}
       data-state={state}
+      data-actionable={inert || unavailable ? 'false' : 'true'}
       style={{
         display: 'flex',
         alignItems: 'center',
@@ -74,16 +103,25 @@ export function StudioRailItem({ destination, state = 'rest', inert }: StudioRai
         padding: `0 ${SPACE.base}px`,
         borderRadius: RADIUS.base,
         textDecoration: 'none',
-        color: onRow ? INK.primary : state === 'quiet' ? INK.quiet : INK.secondary,
+        textAlign: 'left',
+        width: '100%',
+        border: 'none',
+        cursor: unavailable || inert ? 'default' : 'pointer',
+        color: onRow
+          ? INK.primary
+          : unavailable || state === 'quiet'
+            ? INK.quiet
+            : INK.secondary,
+        opacity: unavailable ? 0.55 : 1,
         background: onRow ? GROUND.active : 'transparent',
-        ...(onRow ? { boxShadow: `inset 2px 0 0 ${GOLD.DEFAULT}` } : {}),
+        ...(isCurrent ? { boxShadow: `inset 2px 0 0 ${GOLD.DEFAULT}` } : {}),
       }}
     >
       <StudioIcon id={destination.id} />
       <StudioText
         role="navItem"
         as="span"
-        tone={onRow ? 'primary' : state === 'quiet' ? 'quiet' : 'secondary'}
+        tone={onRow ? 'primary' : unavailable || state === 'quiet' ? 'quiet' : 'secondary'}
       >
         {destination.label}
       </StudioText>
@@ -101,7 +139,18 @@ export function StudioRailItem({ destination, state = 'rest', inert }: StudioRai
   );
 }
 
-export function StudioBand({ group, inert }: { group: StudioGroup; inert?: boolean }) {
+export function StudioBand({
+  group,
+  inert,
+  stateFor,
+  onSelect,
+}: {
+  group: StudioGroup;
+  inert?: boolean;
+  /** Per-destination state. The shell uses it to mark the current room. */
+  stateFor?: (d: StudioDestination) => StudioRailItemProps['state'];
+  onSelect?: (d: StudioDestination) => void;
+}) {
   return (
     <nav
       data-region={group.region}
@@ -122,9 +171,22 @@ export function StudioBand({ group, inert }: { group: StudioGroup; inert?: boole
         {REGION_LABEL[group.region]}
       </StudioText>
       <div style={{ display: 'flex', flexDirection: 'column', gap: SPACE.hairline }}>
-        {group.destinations.map((d) => (
-          <StudioRailItem key={d.id} destination={d} inert={inert} />
-        ))}
+        {group.destinations.map((d) => {
+          const state = stateFor?.(d);
+          return (
+            <StudioRailItem
+              key={d.id}
+              destination={d}
+              inert={inert}
+              state={state}
+              onSelect={
+                state !== 'unavailable' && onSelect && !d.href
+                  ? () => onSelect(d)
+                  : undefined
+              }
+            />
+          );
+        })}
       </div>
     </nav>
   );
@@ -142,12 +204,16 @@ export function StudioRailChrome({
   inert,
   style,
   lead,
+  stateFor,
+  onSelect,
 }: {
   groups: StudioGroup[];
   inert?: boolean;
   style?: CSSProperties;
   /** Rendered above the first band. 04 puts "+ New Work" here. */
   lead?: ReactNode;
+  stateFor?: (d: StudioDestination) => StudioRailItemProps['state'];
+  onSelect?: (d: StudioDestination) => void;
 }) {
   return (
     <aside
@@ -162,7 +228,13 @@ export function StudioRailChrome({
     >
       {lead}
       {groups.map((g) => (
-        <StudioBand key={g.id} group={g} inert={inert} />
+        <StudioBand
+          key={g.id}
+          group={g}
+          inert={inert}
+          stateFor={stateFor}
+          onSelect={onSelect}
+        />
       ))}
     </aside>
   );
@@ -182,3 +254,66 @@ export function StudioRailChrome({
 export function StudioRail({ hasManuscript, style }: StudioRailProps) {
   return <StudioRailChrome groups={visibleDestinations(hasManuscript)} style={style} />;
 }
+
+/**
+ * THE PERSISTENT SHELL PROJECTION — WS2-03B.
+ *
+ * A third projection, and the reason there are now three rather than two:
+ *
+ *   member rail (StudioRail)   Studio Home. Drops `later`. Unchanged.
+ *   fixture rail (CanonicalRail)  the whole grammar, inert, route-less.
+ *   shell rail (this)          the whole grammar, in the real room, with the
+ *                              unbuilt rendered as plainly unavailable.
+ *
+ * The shell rail is the one that meets a member AND shows sixteen. That is
+ * only defensible because `shellDestinations` strips every href and every
+ * map-authored count from what is not actionable — so what the member reads
+ * is "the Studio has a Notes room and I cannot open it yet", never a dead
+ * link and never someone else's twelve notes.
+ *
+ * `current` marks the room the member is standing in. `onSelect` exists for
+ * destinations the shell can satisfy in place — Materials and Structure are
+ * panels in this room, not separate routes, so they are chosen, not navigated.
+ */
+export function StudioShellRail({
+  hasManuscript,
+  counts,
+  satisfiedInRoom,
+  current,
+  openPanels,
+  onSelect,
+  lead,
+  style,
+}: {
+  hasManuscript: boolean;
+  /** Facts the shell counted. Nothing here may be a reference figure. */
+  counts?: Readonly<Record<string, number>>;
+  /** Destination ids this room opens as panels rather than navigating to. */
+  satisfiedInRoom?: readonly string[];
+  /** Destination id of the room the member is in. */
+  current?: string;
+  /** Destination ids whose panel is open right now. */
+  openPanels?: readonly string[];
+  onSelect?: (d: StudioDestination) => void;
+  lead?: ReactNode;
+  style?: CSSProperties;
+}) {
+  const groups = shellDestinations(hasManuscript, undefined, counts, satisfiedInRoom);
+  return (
+    <StudioRailChrome
+      groups={groups}
+      style={style}
+      lead={lead}
+      onSelect={onSelect}
+      stateFor={(d) => {
+        const shell = d as ShellDestination;
+        if (!shell.actionable) return 'unavailable';
+        if (d.id === current) return 'active';
+        if (openPanels?.includes(d.id)) return 'selected';
+        return 'rest';
+      }}
+    />
+  );
+}
+
+export type { ShellGroup };

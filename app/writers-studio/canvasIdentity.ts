@@ -73,3 +73,58 @@ export function identityHonoured<T extends SelectableManuscript>(
   if (!requested) return true;
   return selected?.id === requested;
 }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   WS2-03B · RESOLUTION WITHOUT SUBSTITUTION
+
+   `selectManuscript` above degrades: an unresolvable identity falls through to
+   `manuscripts[0]`, and the caller cannot tell a degradation from a defect
+   without a second call to `identityHonoured`. The Canvas never made that
+   second call, so a request for one manuscript put a different one on the
+   table and said nothing — the WS2-01 finding, reproduced in runtime:
+
+     requested  a3ae67fd-a21e-4948-8766-4c397d2e4712
+     owned      ce284751-e457-42f6-89b6-bc07d0876682  "Elemental Alchemy
+                (KDP print)", 174 sections
+
+   The root cause of THAT mismatch stays in the WS2-01 lane. What belongs here
+   is the property the Canvas must hold regardless of the cause: an identity
+   the room cannot resolve exactly FAILS VISIBLY. It is never silently swapped.
+
+   Resolution is a decision, so it is returned as one. A caller cannot read
+   `.manuscript` off this without also seeing the kind — which is the whole
+   difference from the function above.
+
+   Ambiguity is separated from absence on purpose. Arriving with no `?m=` and
+   several manuscripts is not an error and not a fallback: it is a real
+   question the member is the only one who can answer, so the room asks it
+   rather than guessing. That is a chooser, not a dead end — refusing to guess
+   must not become refusing to open.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+export type ManuscriptResolution<T extends SelectableManuscript> =
+  /** Exactly one manuscript is on the table, and it is the right one. */
+  | { kind: 'resolved'; manuscript: T; wasRequested: boolean }
+  /** An identity was named and does not exist here. Show this; never swap. */
+  | { kind: 'unresolved'; requested: string }
+  /** Nothing was named and several exist. The member chooses. */
+  | { kind: 'ambiguous'; manuscripts: readonly T[] }
+  /** The member has no manuscripts at all. */
+  | { kind: 'empty' };
+
+export function resolveManuscript<T extends SelectableManuscript>(
+  requested: string | null,
+  manuscripts: readonly T[],
+): ManuscriptResolution<T> {
+  if (requested) {
+    const asked = manuscripts.find((m) => m.id === requested);
+    return asked
+      ? { kind: 'resolved', manuscript: asked, wasRequested: true }
+      : { kind: 'unresolved', requested };
+  }
+  if (manuscripts.length === 0) return { kind: 'empty' };
+  if (manuscripts.length === 1) {
+    return { kind: 'resolved', manuscript: manuscripts[0], wasRequested: false };
+  }
+  return { kind: 'ambiguous', manuscripts };
+}

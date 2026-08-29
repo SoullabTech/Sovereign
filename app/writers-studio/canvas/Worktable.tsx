@@ -2,7 +2,9 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { apiFetch } from '@/lib/http/apiBase';
-import { PRESS, SERIF } from '../pressTheme';
+import { PRESS } from '../pressTheme';
+import { INK } from '../studioTheme';
+import { typeStyle } from '../studio/StudioType';
 import {
   AUTOSAVE_DELAY_MS,
   beginDraft,
@@ -33,10 +35,31 @@ import {
 
 type Phase = 'loading' | 'ready' | 'no-source' | 'unauthorized' | 'error' | 'conflict';
 
+/**
+ * Words, counted the plain way: runs of non-whitespace.
+ *
+ * Deliberately not a "reading time", a "pace", or a target. A count of what
+ * the member wrote is a fact about their material; anything derived from it
+ * by a rate the system chose would be a measurement of them.
+ */
+export function countWords(text: string): number {
+  const trimmed = text.trim();
+  return trimmed === '' ? 0 : trimmed.split(/\s+/).length;
+}
+
 interface WorktableProps {
   manuscriptId: string;
   /** Authored draft facts for the room's orientation line. Facts only. */
-  onMeta?: (meta: { updatedAt: string | null; revisionCount: number | null }) => void;
+  onMeta?: (meta: {
+    updatedAt: string | null;
+    revisionCount: number | null;
+    /**
+     * Words in the draft as it stands. Counted from the text the member has,
+     * reported when the draft settles and after each save — never on every
+     * keystroke, which would re-render the whole shell while they type.
+     */
+    words: number;
+  }) => void;
   /** A version was kept; the History drawer re-reads. */
   onCheckpointed?: () => void;
 }
@@ -76,7 +99,11 @@ export default function Worktable({ manuscriptId, onMeta, onCheckpointed }: Work
           if (meta.revisionId !== null) baseRef.current = meta.revisionId;
           if (cancelled) return;
           setUpdatedAt(meta.updatedAt);
-          cbRef.current.onMeta?.({ updatedAt: meta.updatedAt, revisionCount: meta.revisionCount });
+          cbRef.current.onMeta?.({
+            updatedAt: meta.updatedAt,
+            revisionCount: meta.revisionCount,
+            words: countWords(contentRef.current),
+          });
         },
         onConflict: () => {
           // Not retryable (see workingDraftClient): the draft moved elsewhere,
@@ -103,7 +130,11 @@ export default function Worktable({ manuscriptId, onMeta, onCheckpointed }: Work
       setContent(r.content);
       setUpdatedAt(r.updatedAt ?? null);
       setPhase('ready');
-      cbRef.current.onMeta?.({ updatedAt: r.updatedAt ?? null, revisionCount: r.revisionCount });
+      cbRef.current.onMeta?.({
+        updatedAt: r.updatedAt ?? null,
+        revisionCount: r.revisionCount,
+        words: countWords(r.content),
+      });
     };
 
     (async () => {
@@ -173,7 +204,11 @@ export default function Worktable({ manuscriptId, onMeta, onCheckpointed }: Work
         if (res.revisionId !== null) baseRef.current = res.revisionId;
         setUpdatedAt(res.updatedAt);
         setKept(true);
-        cbRef.current.onMeta?.({ updatedAt: res.updatedAt, revisionCount: res.revisionCount });
+        cbRef.current.onMeta?.({
+          updatedAt: res.updatedAt,
+          revisionCount: res.revisionCount,
+          words: countWords(contentRef.current),
+        });
         cbRef.current.onCheckpointed?.();
         saver.endExclusive({ persisted: value });
       } else if (res.kind === 'conflict') {
@@ -271,12 +306,20 @@ export default function Worktable({ manuscriptId, onMeta, onCheckpointed }: Work
           {keeping ? 'keeping…' : 'Keep a version'}
         </button>
       </div>
+      {/* WS2-03B — the prose role, not a hardcoded 17px. TYPE.prose is the
+          largest thing in the room by contract (assertProseOutranksChrome),
+          and a size inlined here would have quietly forked the system and
+          survived every correction to it. */}
       <textarea
         value={content}
         onChange={(e) => edit(e.target.value)}
         aria-label="Working draft"
-        className="flex-1 w-full bg-transparent outline-none resize-none text-[17px] leading-[1.8]"
-        style={{ fontFamily: SERIF, color: PRESS.text, caretColor: PRESS.accent }}
+        className="flex-1 w-full bg-transparent outline-none resize-none"
+        style={{
+          ...typeStyle('prose'),
+          color: INK.primary,
+          caretColor: PRESS.accent,
+        }}
       />
     </div>
   );

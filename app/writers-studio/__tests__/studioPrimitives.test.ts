@@ -190,10 +190,18 @@ describe('two projections of one grammar', () => {
     expect(STUDIO_MAP.flatMap((g) => g.destinations)).toHaveLength(16);
   });
 
-  it('renders inert items as spans carrying no href', () => {
+  it('renders inert and unavailable items as spans carrying no href', () => {
+    /* WS2-03B widened this from one case to two. The rail now has a third
+       projection — the persistent shell — in which an UNBUILT destination is
+       drawn to a member for the first time. Both of the non-actionable cases
+       must reach the same tag, because the tag is the honesty: a span cannot
+       be taken, and a disabled anchor still carries an href in the DOM. */
     const rail = sourceFiles.find((f) => f.name === 'StudioRail.tsx')!.code;
-    expect(rail).toContain("const Tag = inert ? 'span' : 'a'");
-    expect(rail).toMatch(/inert \? \{\} : \{ href: destination\.href \}/);
+    expect(rail).toContain("const Tag = inert || unavailable ? 'span'");
+    expect(rail).toContain("const unavailable = state === 'unavailable'");
+    // The href branch is reachable only when neither case applies.
+    expect(rail).toMatch(/\{ href: destination\.href \}/);
+    expect(rail).toMatch(/inert \|\| unavailable[\s\S]{0,120}aria-disabled/);
   });
 
   it('never exposes the canonical rail through a route', () => {

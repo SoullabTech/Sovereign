@@ -1,115 +1,409 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { visibleDestinations } from '../studioMap';
-import { PANELS } from '../studioTheme';
+import {
+  STUDIO_MAP,
+  STUDIO_MODES,
+  assertModesHonest,
+  assertShellPromisesNothing,
+  shellDestinations,
+  visibleDestinations,
+} from '../studioMap';
+import { PANELS, writingFieldLayout, LAYOUT_TOLERANCE, COLUMN_FRACTION } from '../studioTheme';
+import { resolveManuscript } from '../canvasIdentity';
+import {
+  assertRoundTripPreservesWork,
+  handoffToMaia,
+  resolveWorkContext,
+  MAIA_WORK_PARAM,
+} from '../workContext';
+import type { LivingWork } from '../useLivingWorks';
 
-const canvas = fs.readFileSync(
-  path.join(__dirname, '..', 'canvas', 'page.tsx'),
-  'utf8',
-);
+const read = (...p: string[]) =>
+  fs.readFileSync(path.join(__dirname, '..', ...p), 'utf8');
 const strip = (s: string) => s.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*/g, '');
-const code = strip(canvas);
+
+const page = strip(read('canvas', 'page.tsx'));
+const maiaColumn = strip(read('canvas', 'MaiaColumn.tsx'));
+const outline = strip(read('canvas', 'ManuscriptOutline.tsx'));
+const band = strip(read('canvas', 'StudioLowerBand.tsx'));
+const modeBar = strip(read('studio', 'StudioModeBar.tsx'));
 
 /**
- * WS2-03A — the seam that makes the WS2-02 witness possible.
+ * WS2-03B — the real Writer's Studio shell.
  *
- * The design system was intentionally unrouted, so the §0.2 instrument, which
- * photographs /writers-studio/canvas, had nothing of it to photograph. These
- * tests hold the two things that projection must not cost: the accepted system
- * really is what the route renders, and the runtime rail stays honest.
+ * 03A projected the accepted primitives onto the old composition and the room
+ * still read as the old Canvas. These tests hold what the composition must be
+ * and, more importantly, what it may not fabricate to get there: reference 04
+ * is a picture of a finished Studio, and every beautiful thing in it that has
+ * no substrate is a temptation with a name.
  */
-describe('the real Canvas renders through the accepted WS2-02 system', () => {
-  it('draws on the accepted ground ramp, not the raw legacy gradient', () => {
-    expect(code).toContain('GROUND.base');
-    expect(code).toContain('GROUND.field');
-    expect(code).not.toContain('PRESS.bg');
+
+/* ══ 1 · THE COMPOSITION IS ACTUALLY DIFFERENT ═══════════════════════════ */
+
+describe('the old composition is gone, not re-skinned', () => {
+  it('no longer runs a folded drawer spine with one drawer at a time', () => {
+    // The 03A room's whole shape: a DrawerId union, a single `drawer` state,
+    // and a vertical writing-mode nav. If any of it survives, the projection
+    // seam survived with it.
+    expect(page).not.toMatch(/type DrawerId/);
+    expect(page).not.toMatch(/writing-mode:vertical-rl/);
+    expect(page).not.toMatch(/DRAWER_PANEL_ROLE/);
   });
 
-  it('uses the accepted panel and type primitives', () => {
-    expect(code).toContain('StudioPanel');
-    expect(code).toContain('StudioText');
+  it('no longer hides MAIA behind a 40px folded hinge', () => {
+    expect(page).not.toMatch(/windowOpen \? 'w-80' : 'w-10'/);
+    expect(page).toContain('MaiaColumn');
   });
 
-  it('renders MAIA’s presence through the panel contract', () => {
-    // Dismissibility comes from PANELS, not from this call site.
-    expect(code).toMatch(/role="maia"/);
+  it('carries the five-mode shell and the lower band the room never had', () => {
+    expect(page).toContain('StudioModeBar');
+    expect(page).toContain('StudioLowerBand');
+    expect(page).toContain('StudioShellRail');
   });
 });
 
-describe('the runtime rail stays honest', () => {
-  it('draws the member-facing projection, never the canonical fixture one', () => {
-    expect(code).toContain('StudioRail');
-    // CanonicalRail draws all sixteen inert. It is fixture-only and must never
-    // reach a route, however much closer to 04 that would look.
-    expect(code).not.toContain('CanonicalRail');
-    expect(code).not.toMatch(/\bSTUDIO_MAP\b/);
+/* ══ 2 · GEOMETRY — 04's MEASURED PROPORTIONS, IN THE REAL ROOM ══════════ */
+
+describe('the writing field takes its measured share', () => {
+  it('is an explicit width, never a flex remainder', () => {
+    // The WS2-02B defect, and the one this layout is built to make impossible:
+    // the field rendered at 33.3% while the token table said 35.2%, because it
+    // took whatever was left rather than what was measured.
+    const field = page.slice(page.indexOf('data-panel-role="writing-field"'));
+    const style = field.slice(0, field.indexOf('}}'));
+    expect(style).toMatch(/width: compact \? '100%' : pct\(L\.writingField\)/);
+    expect(style).not.toMatch(/flex:\s*1/);
+    // Nor may any column beside it grow into the field's share.
+    expect(page).not.toMatch(/pct\(L\.\w+\),\s*\n\s*flex: 1/);
   });
 
-  it('offers no unbuilt destination on the real route', () => {
+  it('resolves every one of 04’s five columns through writingFieldLayout', () => {
+    for (const col of ['rail', 'outlinePanel', 'writingField', 'maiaPanel', 'materialsPanel']) {
+      expect(page).toContain(`L.${col}`);
+    }
+    expect(page).toContain('writingFieldLayout(NOTIONAL, columnsShown)');
+  });
+
+  it('reproduces the reference share within the stated tolerance', () => {
+    const L = writingFieldLayout(100000);
+    const share = L.writingField / 100000;
+    expect(Math.abs(share - COLUMN_FRACTION.writingField)).toBeLessThan(LAYOUT_TOLERANCE);
+  });
+
+  it('keeps the field the largest column when a panel is dismissed', () => {
+    // A dismissed panel leaves the row and its share is redivided in the same
+    // measured ratio — the field can only grow, never be squeezed.
+    const full = writingFieldLayout(100000);
+    const fewer = writingFieldLayout(100000, [
+      'rail', 'outlinePanel', 'writingField', 'maiaPanel',
+    ]);
+    expect(fewer.writingField).toBeGreaterThan(full.writingField);
+    for (const c of ['rail', 'outlinePanel', 'maiaPanel'] as const) {
+      expect(fewer.writingField).toBeGreaterThan(fewer[c]);
+    }
+  });
+});
+
+/* ══ 3 · THE SHELL RAIL — SIXTEEN, AND SIXTEEN HONEST ════════════════════ */
+
+describe('the shell rail shows the whole Studio and promises none of it', () => {
+  const groups = (has = true) =>
+    shellDestinations(has, STUDIO_MAP, {}, ['materials', 'structure', 'versions']);
+
+  it('preserves D-019’s exact semantic grouping — 7 + 4 + 5', () => {
+    const g = groups();
+    expect(g.map((x) => x.region)).toEqual(['work', 'maia', 'tools']);
+    expect(g.map((x) => x.destinations.length)).toEqual([7, 4, 5]);
+    expect(g[0].destinations.map((d) => d.label)).toEqual([
+      'Home', 'Manuscript', 'Materials', 'Structure', 'Notes', 'Versions', 'Goals',
+    ]);
+    expect(g[1].destinations.map((d) => d.label)).toEqual([
+      'Conversations', 'Discover', 'Insights', 'Suggestions',
+    ]);
+    expect(g[2].destinations.map((d) => d.label)).toEqual([
+      'Find/Replace', 'Statistics', 'Timeline', 'Word Web', 'Export',
+    ]);
+  });
+
+  it('never lets an unavailable destination carry a link or a count', () => {
+    for (const has of [true, false]) {
+      expect(() => assertShellPromisesNothing(groups(has))).not.toThrow();
+      for (const d of groups(has).flatMap((x) => x.destinations)) {
+        if (!d.actionable) {
+          expect(d.href).toBeUndefined();
+          expect(d.count).toBeUndefined();
+        }
+      }
+    }
+  });
+
+  it('strips 04’s reference counts before they can reach a member', () => {
+    // STUDIO_MAP carries count 24 on Materials and 12 on Notes because the
+    // reference draws them. They are the reference author's figures. Shipping
+    // them would tell a member they have twenty-four materials they do not.
+    const mapCounts = STUDIO_MAP.flatMap((g) => g.destinations)
+      .filter((d) => typeof d.count === 'number');
+    expect(mapCounts.length).toBeGreaterThan(0);
+
+    const notes = groups().flatMap((g) => g.destinations).find((d) => d.id === 'notes')!;
+    expect(notes.count).toBeUndefined();
+    const materials = groups().flatMap((g) => g.destinations).find((d) => d.id === 'materials')!;
+    expect(materials.count).toBeUndefined();
+  });
+
+  it('shows a count only when the shell counted one itself', () => {
+    const withReal = shellDestinations(true, STUDIO_MAP, { materials: 3 }, ['materials']);
+    const m = withReal.flatMap((g) => g.destinations).find((d) => d.id === 'materials')!;
+    expect(m.count).toBe(3);
+  });
+
+  it('does not activate Conversations to match the reference', () => {
+    const conv = groups().flatMap((g) => g.destinations).find((d) => d.id === 'conversations')!;
+    expect(conv.actionable).toBe(false);
+    expect(conv.href).toBeUndefined();
+  });
+
+  it('leaves Studio Home’s drop-boundary untouched', () => {
+    // The amendment is scoped to the shell. Home still drops `later` entirely.
     for (const has of [true, false]) {
       const shown = visibleDestinations(has).flatMap((g) => g.destinations);
       expect(shown.filter((d) => d.availability === 'later')).toEqual([]);
     }
   });
 
-  it('does not make Conversations available to match the reference', () => {
-    const all = visibleDestinations(true).flatMap((g) => g.destinations).map((d) => d.label);
-    expect(all).not.toContain('Conversations');
-  });
-});
-
-describe('each drawer renders under the contract it actually is', () => {
-  /*
-   * The first projection gave every open drawer role="manuscript-outline".
-   * `role` is not styling — it selects the design-contract entry and is
-   * emitted as data-panel-role, so Materials announced itself as a manuscript
-   * outline and History did too. These four mappings are the repair.
-   */
-  it('maps materials, structure and history to their real panel roles', () => {
-    expect(code).toContain("materials: 'materials'");
-    expect(code).toContain("structure: 'manuscript-outline'");
-    expect(code).toContain("history: 'versions'");
-  });
-
-  it('gives Work no PanelRole, because the contract has none', () => {
-    // Inventing a 'work' role to fill the gap would be the same error in the
-    // other direction. StudioSurface gives a truthful surface instead.
-    expect(code).toContain('work: null');
-    expect(code).toContain('StudioSurface');
-    expect(PANELS.map((p) => p.role)).not.toContain('work');
-  });
-
-  it('no longer hardcodes one role for every drawer', () => {
-    expect(code).not.toMatch(/role="manuscript-outline"/);
-    expect(code).toContain('DRAWER_PANEL_ROLE[drawer]');
-  });
-
-  it('names only roles the contract actually defines', () => {
-    const declared = new Set(PANELS.map((p) => p.role));
-    for (const role of ['materials', 'manuscript-outline', 'versions']) {
-      expect(declared.has(role as never)).toBe(true);
+  it('advertises nothing as coming soon, in the rail or anywhere else', () => {
+    for (const src of [page, modeBar, band, maiaColumn, outline]) {
+      expect(src.toLowerCase()).not.toContain('coming soon');
+      expect(src.toLowerCase()).not.toContain('not yet available');
     }
   });
 });
 
-describe('WS2-03A stops at the seam', () => {
-  it('claims no Work context beyond the existing unite rule', () => {
-    // 0 works: nothing claimed. 1: that work. 2+: ambiguous, and the room does
-    // not choose. arrivalWork already decides this and 03A does not touch it.
-    expect(code).toContain('arrivalWork');
-    expect(code).not.toContain('living_work_expressions');
+/* ══ 4 · THE FIVE MODES ══════════════════════════════════════════════════ */
+
+describe('the mode bar is the Studio’s shape, not a promise', () => {
+  it('names all five', () => {
+    expect(STUDIO_MODES.map((m) => m.label)).toEqual([
+      'Write', 'Develop', 'Explore', 'Review', 'Publish',
+    ]);
   });
 
-  it('adds no Studio → MAIA handoff', () => {
-    // The Window still opens onto one honest sentence. A reflection endpoint
-    // on this surface is WS2-03B's, gated on Work context surviving the trip.
-    expect(code).toContain('WINDOW_SENTENCE');
-    expect(code).not.toMatch(/\/maia\b/);
+  it('gives a room only to Write', () => {
+    expect(() => assertModesHonest()).not.toThrow();
+    for (const m of STUDIO_MODES) {
+      if (m.id === 'write') expect(m.href).toBeTruthy();
+      else expect(m.href).toBeUndefined();
+    }
   });
 
-  it('keeps every existing drawer reachable', () => {
-    for (const drawer of ['WorkDrawer', 'MaterialsDrawer', 'Worktable']) {
-      expect(code).toContain(drawer);
+  it('renders the unavailable four as unpressable spans', () => {
+    expect(modeBar).toMatch(/<span/);
+    expect(modeBar).toContain("'aria-disabled': true");
+    expect(modeBar).not.toMatch(/onClick/);
+    expect(modeBar).not.toMatch(/<a\b/);
+  });
+
+  it('spends gold only on the mode that is live', () => {
+    expect(modeBar).toMatch(/active[\s\S]{0,120}GOLD\.DEFAULT/);
+  });
+});
+
+/* ══ 5 · MANUSCRIPT IDENTITY — THE WS2-01 MINIMUM ════════════════════════ */
+
+describe('an unresolvable manuscript identity fails visibly', () => {
+  const LIB = [
+    { id: 'ce284751', title: 'Elemental Alchemy (KDP print)' },
+    { id: 'other', title: 'Something else' },
+  ];
+
+  it('never silently substitutes manuscripts[0] for a named identity', () => {
+    // The runtime finding, in its own shape: an id the member does not own.
+    const r = resolveManuscript('a3ae67fd-a21e-4948-8766-4c397d2e4712', LIB);
+    expect(r.kind).toBe('unresolved');
+    expect(r).not.toHaveProperty('manuscript');
+  });
+
+  it('has removed the fallback from the room itself', () => {
+    expect(page).not.toMatch(/manuscripts\[0\]/);
+    expect(page).not.toMatch(/\?\?\s*manuscripts\[0\]/);
+    // And the sentence that made the substitution sound like a courtesy.
+    expect(page).not.toContain('The most recent of your');
+  });
+
+  it('renders the refusal as a refusal, not as an error', () => {
+    expect(page).toContain("resolution.kind === 'unresolved'");
+    expect(page).toMatch(/data-state="refusal"/);
+    expect(page).toContain('not on your shelf');
+  });
+
+  it('asks rather than guesses when nothing was named and several exist', () => {
+    const r = resolveManuscript(null, LIB);
+    expect(r.kind).toBe('ambiguous');
+    expect(page).toContain("resolution.kind === 'ambiguous'");
+    expect(page).toContain('Which one are you working on?');
+  });
+
+  it('still opens straight through in the unambiguous cases', () => {
+    expect(resolveManuscript(null, [LIB[0]])).toEqual({
+      kind: 'resolved', manuscript: LIB[0], wasRequested: false,
+    });
+    expect(resolveManuscript('other', LIB)).toEqual({
+      kind: 'resolved', manuscript: LIB[1], wasRequested: true,
+    });
+    expect(resolveManuscript(null, []).kind).toBe('empty');
+  });
+});
+
+/* ══ 6 · PERSISTENT WORK CONTEXT ═════════════════════════════════════════ */
+
+const work = (id: string, expressions: string[]): LivingWork => ({
+  id, title: `Work ${id}`, purpose: null, form: null, stage: null,
+  createdAt: '', updatedAt: '',
+  expressions: expressions.map((e) => ({
+    expressionType: 'manuscript', expressionId: e, declaredAt: '',
+  })),
+  materials: [],
+});
+
+describe('the current Work is declared, never inferred', () => {
+  it('claims no Work identity when none declares the manuscript', () => {
+    expect(resolveWorkContext('ready', [work('w1', ['other'])], 'm1').kind).toBe('none');
+  });
+
+  it('makes one declaring Work the explicit persistent context', () => {
+    const ctx = resolveWorkContext('ready', [work('w1', ['m1'])], 'm1');
+    expect(ctx.kind).toBe('work');
+    expect(ctx.kind === 'work' && ctx.work.id).toBe('w1');
+  });
+
+  it('refuses to choose when two or more declare it', () => {
+    const ctx = resolveWorkContext('ready', [work('w1', ['m1']), work('w2', ['m1'])], 'm1');
+    expect(ctx.kind).toBe('ambiguous');
+    expect(ctx).not.toHaveProperty('work');
+  });
+
+  it('asserts nothing before the declarations are read', () => {
+    expect(resolveWorkContext('loading', [], 'm1').kind).toBe('unknown');
+  });
+
+  it('survives reload by pinning the manuscript, not by storing the Work', () => {
+    // A stored "last Work" is a second source of truth that can go stale
+    // against a declaration the member has since withdrawn.
+    expect(page).toContain('window.history.replaceState');
+    expect(page).toContain('canvasForManuscript');
+    expect(page).not.toMatch(/localStorage|sessionStorage/);
+  });
+});
+
+/* ══ 7 · THE STUDIO → MAIA HANDOFF ═══════════════════════════════════════ */
+
+describe('the handoff contract carries identity both ways', () => {
+  const works = [work('w1', ['m1'])];
+
+  it('preserves the Work across the whole round trip', () => {
+    expect(() => assertRoundTripPreservesWork(works, 'm1')).not.toThrow();
+  });
+
+  it('refuses to hand off at all when the Work is ambiguous', () => {
+    const two = [work('w1', ['m1']), work('w2', ['m1'])];
+    expect(() => assertRoundTripPreservesWork(two, 'm1')).toThrow(/exactly one/);
+  });
+
+  it('carries an identity, never a position', () => {
+    const out = handoffToMaia('/maia', { workId: 'w1', manuscriptId: 'm1' });
+    expect(new URLSearchParams(out.slice(out.indexOf('?'))).get(MAIA_WORK_PARAM)).toBe('w1');
+    expect(out).not.toContain('recent');
+  });
+
+  it('still does NOT open Conversations, because MAIA does not situate yet', () => {
+    // Our half being ready is not the contract. The middle term — an exchange
+    // actually situated in this Work — is not ours to assert.
+    expect(page).not.toContain('handoffToMaia');
+    expect(maiaColumn).toContain('REFLECTION_SENTENCE');
+  });
+});
+
+/* ══ 8 · NOTHING FABRICATED TO REACH THE SCREENSHOT ══════════════════════ */
+
+describe('every visible region is real or plainly unavailable', () => {
+  it('invents no insight, posture, or MAIA figure', () => {
+    for (const banned of ['MaiaInsightCard', 'MaiaPostureRow', 'INSIGHTS', 'evidenceCount']) {
+      expect(maiaColumn).not.toContain(banned);
+    }
+  });
+
+  it('draws no goal and no progress bar, because no goal can be declared', () => {
+    expect(band).not.toMatch(/pct|percent|%`/);
+    expect(band).toContain('nothing is measured');
+  });
+
+  it('publishes no invented statistic', () => {
+    // Word-bounded: 'space-between' is not a claim about the member's pace.
+    for (const banned of ['Reading time', 'Comments', 'completion', 'pace']) {
+      expect(band).not.toMatch(new RegExp(`\\b${banned}\\b`));
+    }
+  });
+
+  it('groups the outline only as the member’s sections actually are', () => {
+    // 04 nests chapters under "Part I — Remembering". Nothing groups sections,
+    // so a part heading here would be the system authoring their book.
+    expect(outline).not.toContain('Part I');
+    expect(outline).not.toMatch(/OUTLINE\s*=/);
+    expect(outline).toContain('data.sections');
+  });
+
+  it('marks no current chapter, because no cursor-to-section relation exists', () => {
+    expect(outline).not.toMatch(/GOLD/);
+  });
+
+  it('carries no reference material record into the room', () => {
+    for (const banned of ['MATERIAL_GROUPS', 'Larry Interview', 'Cloud Study', 'Voice notes']) {
+      expect(page + band + outline + maiaColumn).not.toContain(banned);
+    }
+  });
+});
+
+/* ══ 9 · MATERIALS STAYS CONTEXTUAL ══════════════════════════════════════ */
+
+describe('Materials does not become furniture', () => {
+  it('opens on real declared materials, not because 04 draws it open', () => {
+    expect(page).toContain('const declaredMaterials = work?.materials.length ?? 0');
+    expect(page).toContain('const materialsInContext = declaredMaterials > 0');
+    expect(page).toMatch(/open\('materials', materialsInContext\)/);
+  });
+
+  it('is dismissible by contract, and the contract still says so', () => {
+    const m = PANELS.find((p) => p.role === 'materials')!;
+    expect(m.contextual).toBe(true);
+    expect(m.dismissible).toBe(true);
+    expect(page).toMatch(/onDismiss=\{\(\) => dismiss\('materials'\)\}/);
+  });
+
+  it('yields its column before the field gives up its measure', () => {
+    expect(page).toContain('materialsOpen && !compact');
+    expect(page).not.toMatch(/outlineOpen && !compact/);
+  });
+});
+
+/* ══ 10 · WHAT 03B DID NOT TAKE AWAY ═════════════════════════════════════ */
+
+describe('the room keeps every capability it had', () => {
+  it('still holds the writing surface, the Work drawer and Materials', () => {
+    for (const kept of ['Worktable', 'WorkDrawer', 'MaterialsDrawer']) {
+      expect(page).toContain(kept);
+    }
+  });
+
+  it('still reads revisions, which are now the Versions region', () => {
+    expect(page).toContain('loadRevisions');
+    expect(page).toContain('onCheckpointed');
+  });
+
+  it('still renders each panel under the contract it actually is', () => {
+    const declared = new Set(PANELS.map((p) => p.role));
+    for (const role of ['manuscript-outline', 'maia', 'materials', 'writing-field']) {
+      expect(declared.has(role as never)).toBe(true);
+      expect(page).toContain(role);
     }
   });
 });

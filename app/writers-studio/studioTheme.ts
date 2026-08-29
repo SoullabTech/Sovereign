@@ -514,13 +514,26 @@ export const RULE = {
 /* ══════════════════════════════════════════════════════════════════════════
    8 · STATES
 
-   `unavailable` is the delicate one, and it is deliberately NOT a member
-   affordance for an unbuilt room. Under the render-boundary rule ratified for
-   studioMap.ts, an unbuilt destination never reaches a screen at all — it is
-   dropped, not greyed. `unavailable` exists for a real control that is
-   momentarily not actionable: an export with nothing yet to export, an action
-   mid-save. If it is ever used to render a `later` destination, the roadmap
-   has leaked and the guard has been routed around.
+   `unavailable` is the delicate one. It exists for a real control that is
+   momentarily not actionable — an export with nothing yet to export, an
+   action mid-save.
+
+   AMENDED BY WS2-03B. This block used to end: "if it is ever used to render a
+   `later` destination, the roadmap has leaked and the guard has been routed
+   around". That was written when there was one render boundary. There are now
+   two, for two rooms with different jobs, and the distinction is recorded in
+   studioMap.ts beside both functions:
+
+     Studio HOME, an arrival surface   `later` is DROPPED. Unchanged.
+     The persistent SHELL, a map of    `later` is PRESENT and plainly
+     the Studio                        unavailable — ruled with the sixteen
+                                       enumerated in full.
+
+   So `unavailable` against a `later` destination is now correct in the shell
+   and still a leak anywhere else. What did NOT change is what unavailable
+   means: no href, no focus as a link, no hover, and no count. A greyed row
+   that still carries 04's "24" would be fabricated data wearing an honest
+   state — see assertShellPromisesNothing.
 
    `refusal` is separate from `error` on purpose. An error is the system
    failing; a refusal is the system declining — the Canvas leaving a

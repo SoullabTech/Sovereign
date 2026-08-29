@@ -294,3 +294,172 @@ export function visibleDestinations(
     }))
     .filter((g) => g.destinations.length > 0);
 }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   WS2-03B · THE PERSISTENT SHELL BOUNDARY
+
+   ── A RULING THAT CHANGED, AND WHY IT IS NOT A ROUTE-AROUND ───────────────
+
+   WS2-02 ratified one render boundary: `later` destinations are DROPPED, not
+   greyed. `visibleDestinations` above still enforces exactly that, unchanged,
+   and Studio Home still draws through it. The rationale is intact and good:
+   an author arriving with nothing must meet the one real door, not a wall of
+   greyed ones.
+
+   WS2-03B was ruled with the persistent shell rail enumerated in full — all
+   sixteen, in three bands, with "preserve the exact semantic grouping" and
+   "do not reactivate unavailable destinations merely to match the image".
+   Those two sentences are only consistent under one reading: in the SHELL,
+   an unbuilt destination is PRESENT AND TRUTHFULLY UNAVAILABLE.
+
+   So the boundary is now two boundaries, for two different rooms:
+
+     visibleDestinations   Studio HOME — an arrival surface. Drop.
+     shellDestinations     The persistent SHELL inside the working room —
+                           a map of the Studio. Present, plainly unavailable.
+
+   This is a genuine amendment to the WS2-02 ruling, recorded here rather than
+   slipped in: the STATE section of studioTheme.ts said an `unavailable` state
+   rendered against a `later` destination meant the guard had been routed
+   around. Under this ruling that is no longer true of the shell — and it is
+   still true everywhere else, which is why the old function is untouched.
+
+   ── WHAT "TRUTHFULLY UNAVAILABLE" COSTS THE RENDER ────────────────────────
+
+   An unavailable destination must not be a link, must not be focusable as
+   one, must not hover, and must not carry a count. That last one is the trap:
+   STUDIO_MAP holds `count: 24` on Materials and `count: 12` on Notes because
+   04 draws those figures — they are REFERENCE CONTENT, correct in a fixture
+   and fabricated data in front of a member. `shellDestinations` therefore
+   strips every map-authored count at the boundary. A count reaches the member
+   rail only when the shell hands it one it actually counted.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+export interface ShellDestination extends StudioDestination {
+  /** Resolved here, once, so no render has to re-derive it. */
+  actionable: boolean;
+  /** Actionable as a panel in the current room rather than as a route. */
+  satisfiedInRoom: boolean;
+}
+
+export interface ShellGroup extends StudioGroup {
+  destinations: ShellDestination[];
+}
+
+/**
+ * The whole grammar, with each destination's actionability resolved.
+ *
+ * Nothing is dropped: the shell is a map of the Studio and a map that hides
+ * the rooms you have not reached is not a map. What IS dropped is every
+ * promise — no href, no count, and (in the rail) no affordance.
+ *
+ * `requiresManuscript` still gates: a destination that only makes sense once
+ * there is a manuscript is not actionable without one. It stays visible,
+ * because its absence would make the Studio appear to change shape.
+ */
+export function shellDestinations(
+  hasManuscript: boolean,
+  map: StudioGroup[] = STUDIO_MAP,
+  /** Counts the shell actually counted, by destination id. Facts only. */
+  counts: Readonly<Record<string, number>> = {},
+  /**
+   * Destinations THIS ROOM can satisfy in place, as panels rather than routes.
+   *
+   * The map answers one question — is there somewhere to navigate to — and
+   * Materials and Structure honestly answer no: they are not rooms, they are
+   * surfaces inside the WRITE room. Marking them `available` to get them into
+   * the rail would have required inventing hrefs for routes that do not exist,
+   * which is the exact dishonesty `assertStudioMapHonest` was written to stop.
+   *
+   * So the room declares its own capability instead. A destination named here
+   * is actionable because the caller can actually open it, and the caller is
+   * the only thing that knows that. It still requires a manuscript if the map
+   * says it does.
+   */
+  satisfiedInRoom: readonly string[] = [],
+): ShellGroup[] {
+  return map.map((g) => ({
+    ...g,
+    destinations: g.destinations.map((d) => {
+      const inRoom = satisfiedInRoom.includes(d.id);
+      const actionable =
+        (d.availability === 'available' || inRoom) &&
+        (!d.requiresManuscript || hasManuscript);
+      const { count: _mapCount, ...rest } = d;
+      return {
+        ...rest,
+        actionable,
+        satisfiedInRoom: inRoom,
+        // No href unless it can actually be taken. A destination satisfied in
+        // place has no href either — there is nowhere to go, only something
+        // to open — which is why the shell rail renders it as a button.
+        ...(actionable && !inRoom ? {} : { href: undefined }),
+        // Real counts only, and only where the destination can be reached.
+        ...(actionable && typeof counts[d.id] === 'number'
+          ? { count: counts[d.id] }
+          : {}),
+      } as ShellDestination;
+    }),
+  }));
+}
+
+/**
+ * The rule above, executable — the shell may not leak a promise.
+ *
+ * Deliberately stronger than "no href on a later destination": it also refuses
+ * a map-authored count, which is the failure that would have shipped 04's
+ * 24 and 12 to a member as if they were their own materials and notes.
+ */
+export function assertShellPromisesNothing(groups: ShellGroup[]): void {
+  for (const g of groups) {
+    for (const d of g.destinations) {
+      if (!d.actionable && d.href !== undefined) {
+        throw new Error(`Shell: "${d.label}" is unavailable but carries an href.`);
+      }
+      if (!d.actionable && d.count !== undefined) {
+        throw new Error(`Shell: "${d.label}" is unavailable but carries a count.`);
+      }
+      if (d.actionable && !d.href && !d.satisfiedInRoom) {
+        throw new Error(`Shell: "${d.label}" is actionable but has nowhere to go.`);
+      }
+      if (d.satisfiedInRoom && d.href !== undefined) {
+        throw new Error(`Shell: "${d.label}" is a panel here and must not also be a link.`);
+      }
+    }
+  }
+}
+
+/**
+ * The five modes the Studio shell is built around (reference 04).
+ *
+ * WRITE is the room this Canvas is. The other four are named because the
+ * shell IS the five modes — a Studio that shows only the mode you are in is
+ * not a Studio — and they are unavailable because their rooms do not exist.
+ * `href` is absent by construction, exactly as for a `later` destination.
+ */
+export interface StudioMode {
+  id: string;
+  label: string;
+  availability: StudioAvailability;
+  href?: string;
+}
+
+export const STUDIO_MODES: StudioMode[] = [
+  { id: 'write', label: 'Write', availability: 'available', href: CANVAS_HREF },
+  { id: 'develop', label: 'Develop', availability: 'later' },
+  { id: 'explore', label: 'Explore', availability: 'later' },
+  { id: 'review', label: 'Review', availability: 'later' },
+  { id: 'publish', label: 'Publish', availability: 'later' },
+];
+
+/** Same honesty invariant as the map, applied to the mode bar. */
+export function assertModesHonest(modes: StudioMode[] = STUDIO_MODES): void {
+  for (const m of modes) {
+    if (m.availability === 'later' && m.href !== undefined) {
+      throw new Error(`Studio modes: "${m.label}" is not built but carries an href.`);
+    }
+    if (m.availability === 'available' && !m.href) {
+      throw new Error(`Studio modes: "${m.label}" is available but has nowhere to go.`);
+    }
+  }
+}
