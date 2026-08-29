@@ -200,6 +200,23 @@ consent-by-inference, are now executable: `lib/tts/__tests__/cloudVoiceConsentGa
   `identityIsCloudBacked` and the stored preference can.
 - the deploy flag alone does not consent on a member's behalf.
 
+A second suite, `lib/voice/__tests__/consentWriteIsNarrow.test.ts` (4 tests),
+proves the separation at the STORAGE layer — that the consent write *cannot*
+touch identity, not merely that it currently doesn't:
+
+- the statement does not **mention** `voice_archetype` or `voice_id_override`.
+  Stricter than "does not null them" on purpose: a write that helpfully preserved
+  identity by reading and re-writing it would still be a write that *can* change
+  identity, and the ruling is that the consent act must be incapable of it.
+- the `DO UPDATE SET` clause touches `tts_provider` and no offsets, so consenting
+  cannot reset a member's voice tuning.
+- a decline stores `local`, never null — the anti-attrition invariant at the
+  storage layer.
+
+⭐ This is the regression that would otherwise be silent: consent would still
+record, routing would still work, and the member's chosen voice would quietly
+revert to a default. Only the shape of the SQL catches it.
+
 ---
 
 ## Verification
@@ -209,6 +226,7 @@ PASS  npm run typecheck              no TypeScript regressions
 PASS  npm run check:no-supabase      no Supabase detected
 PASS  jest lib/tts/__tests__         160 tests, 5 suites
       └ cloudVoiceConsentGate         16 tests, the four states + negative controls
+PASS  jest consentWriteIsNarrow       4 tests, identity cannot be touched by consent
 ```
 
 ⭐ The typecheck gate earned its keep here. The per-turn state reset in
