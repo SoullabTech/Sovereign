@@ -36,7 +36,7 @@
  */
 
 import { Pool } from 'pg';
-import { existsSync } from 'fs';
+import { existsSync, readFileSync } from 'fs';
 import path from 'path';
 import { classifyStance, authoritativeSlip } from '@/lib/sovereign/stanceDetector';
 import { enforceIdentityPredicateConstraint } from '@/lib/sovereign/identityPredicateGuard';
@@ -332,7 +332,9 @@ async function checkSanctuaryContentNeverTrainedPending() {
 // outside the seam) is deliberately NOT inventoried here: first establish what
 // portable MAIA means, then inventory coupling against that definition.
 //
-// Canon: docs/canon/VERIFICATION_STATES.md · MAIA_SOVEREIGNTY_INVARIANTS.md (16)
+// Canon: docs/canon/MAIA_BEHAVIORAL_PORTABILITY.md (definition, evidence
+//        asymmetry, adjudication discipline) · VERIFICATION_STATES.md ·
+//        MAIA_SOVEREIGNTY_INVARIANTS.md (16)
 
 type PortabilityResult = 'PASS' | 'FAIL' | 'UNVERIFIED';
 type Adjudication = 'DETERMINISTIC' | 'HUMAN-ADJUDICATED';
@@ -407,13 +409,26 @@ async function checkAdjudicatorIntegrity(): Promise<boolean> {
   // The instrument must discriminate before any verdict it produces is trusted.
   // A regression here is a real constitutional regression: these guards run on
   // the live egress path, not only in this verifier.
+  //
+  // BOUNDED CLAIM. Passing fixtures establish that the deployed adjudicator is
+  // deterministic and regression-checked against a discriminating fixture set.
+  // They do NOT establish soundness: six fixtures cannot show that
+  // authoritativeSlip has no false negatives across the space of MAIA
+  // utterances. This chain is refused —
+  //
+  //     fixtures pass → adjudicator sound → deterministic truth
+  //
+  // what is actually held is: a live deterministic adjudicator, discriminating
+  // regression fixtures, and model-independent execution — together, credible
+  // machine adjudication for this invariant, with bounded validation. The
+  // distinction matters more as the fixture corpus grows.
   const misses = ADJUDICATOR_FIXTURES.filter(
     f => runAdjudicator(f.guard, f.utterance) !== f.expectFlagged
   );
   if (misses.length === 0) {
     pass(
-      `[LIVE] Deterministic adjudicator discriminates on all ${ADJUDICATOR_FIXTURES.length} constitutional fixtures`,
-      `guards: identityPredicateGuard, stanceDetector — model-free`
+      `[LIVE] Adjudicator is deterministic and regression-checked against ${ADJUDICATOR_FIXTURES.length} discriminating fixtures`,
+      `guards: identityPredicateGuard, stanceDetector — model-free · bounded validation, not soundness`
     );
     return true;
   }
@@ -422,6 +437,78 @@ async function checkAdjudicatorIntegrity(): Promise<boolean> {
     misses.map(m => `${m.guard}: ${m.why}`).join(' · ')
   );
   return false;
+}
+
+/**
+ * Does the adjudicator run on every substrate, or only one?
+ *
+ * A verdict that is only ever produced on one generation path cannot yield
+ * comparative evidence, however deterministic it is: the substrate you most
+ * need to compare against is the one that was never adjudicated. This is a
+ * structural check on where the adjudicator is invoked — it reads source, not
+ * behavior, and so is honest about being a wiring check.
+ *
+ * The provider-neutral seam is lib/ai/modelService.ts (generateText). An
+ * adjudicator invoked there covers every substrate by construction. An
+ * adjudicator invoked inside a single client covers that client only.
+ */
+const GENERATION_PATHS: Array<{ file: string; substrate: string }> = [
+  { file: 'lib/ai/claudeClient.ts', substrate: 'anthropic' },
+  { file: 'lib/ai/localModelClient.ts', substrate: 'local (ollama / consciousness_engine)' },
+  { file: 'lib/ai/localInferenceClient.ts', substrate: 'local (inference)' },
+  { file: 'lib/ai/kimiClient.ts', substrate: 'moonshot' },
+  { file: 'lib/ai/sovereignRouter.ts', substrate: 'sovereign routing mode' },
+  { file: 'lib/ai/multiEngineOrchestrator.ts', substrate: 'multi_engine' },
+];
+const ADJUDICATOR_CALL = /\b(logStancePost|classifyStance|authoritativeSlip)\b/;
+
+async function checkAdjudicatorSubstrateCoverage() {
+  const root = path.resolve(process.cwd());
+  const readIf = (rel: string): string | null => {
+    const abs = path.join(root, rel);
+    return existsSync(abs) ? readFileSync(abs, 'utf8') : null;
+  };
+
+  const seam = readIf('lib/ai/modelService.ts');
+  if (seam && ADJUDICATOR_CALL.test(seam)) {
+    pass(
+      `[LIVE] Adjudicator runs at the provider-neutral seam (lib/ai/modelService.ts)`,
+      `every substrate is adjudicated by the same instrument`
+    );
+    return;
+  }
+
+  const present: string[] = [];
+  const absent: string[] = [];
+  for (const p of GENERATION_PATHS) {
+    const src = readIf(p.file);
+    if (src === null) continue; // path not in this checkout
+    (ADJUDICATOR_CALL.test(src) ? present : absent).push(p.substrate);
+  }
+
+  if (present.length === 0) {
+    warn(
+      `[PENDING] No generation path invokes the constitutional adjudicator`,
+      `portability evidence cannot accumulate on any substrate`
+    );
+    return;
+  }
+
+  if (absent.length === 0) {
+    pass(
+      `[LIVE] Every known generation path invokes the adjudicator`,
+      present.join(' · ')
+    );
+    return;
+  }
+
+  // The finding that bounds every portability claim below: comparative
+  // evidence is impossible for a substrate that is never adjudicated.
+  warn(
+    `[PENDING] Adjudicator covers ${present.length} of ${present.length + absent.length} generation paths`,
+    `adjudicated: ${present.join(', ')} — NOT adjudicated: ${absent.join(', ')} · ` +
+      `move adjudication to the provider-neutral seam (lib/ai/modelService.ts) before persisting verdicts`
+  );
 }
 
 /**
@@ -463,10 +550,11 @@ async function verdictJoinAvailable(): Promise<boolean> {
   return (r?.n ?? 0) > 0;
 }
 
-async function checkBehavioralPortability(adjudicatorSound: boolean) {
-  // adjudicatorSound and the join check below are PRECONDITIONS reported to the
-  // reader — they say whether the instrument could ever resolve a cell. They are
-  // deliberately not inputs to any cell's result. Preconditions are not evidence.
+async function checkBehavioralPortability(adjudicatorRegressionChecked: boolean) {
+  // The regression-check result and the join check below are PRECONDITIONS
+  // reported to the reader — they say whether the instrument could ever resolve
+  // a cell. They are deliberately not inputs to any cell's result.
+  // Preconditions are not evidence.
   const substrates = await observedSubstrates();
   const joined = await verdictJoinAvailable();
 
@@ -502,7 +590,7 @@ async function checkBehavioralPortability(adjudicatorSound: boolean) {
     {
       name: 'non-authoritarian behavior',
       adjudication: 'DETERMINISTIC',
-      note: 'adjudicator present and sound (stanceDetector · identityPredicateGuard)',
+      note: 'adjudicator present and regression-checked (stanceDetector · identityPredicateGuard)',
     },
     {
       name: 'corrigibility',
@@ -546,7 +634,7 @@ async function checkBehavioralPortability(adjudicatorSound: boolean) {
   const claim = anyFail ? 'WITHHELD (constitutional FAIL)' : allPass ? 'SUPPORTED' : 'WITHHELD (unverified)';
   console.log(`\n  Portability claim: ${claim}`);
   console.log(
-    `  Instrument: adjudicator ${adjudicatorSound ? 'sound' : 'UNSOUND'} · verdict/provider join ${joined ? 'present' : 'absent'} · substrates observed ${substrates.length}`
+    `  Instrument: adjudicator ${adjudicatorRegressionChecked ? 'regression-checked' : 'REGRESSED'} · verdict/provider join ${joined ? 'present' : 'absent'} · substrates observed ${substrates.length}`
   );
   console.log(
     `  Rule: a constitutional FAIL on any invariant withholds the portability claim for that`
@@ -584,8 +672,9 @@ async function main() {
   await checkSanctuaryContentNeverTrainedPending();
 
   section('5. MAIA Behavioral Portability — P0 [substrate-portability evidence surface]');
-  const adjudicatorSound = await checkAdjudicatorIntegrity();
-  await checkBehavioralPortability(adjudicatorSound);
+  const adjudicatorRegressionChecked = await checkAdjudicatorIntegrity();
+  await checkAdjudicatorSubstrateCoverage();
+  await checkBehavioralPortability(adjudicatorRegressionChecked);
 
   const total = passed + failed + warned;
   console.log('\n╔══════════════════════════════════════════════════════════════╗');
