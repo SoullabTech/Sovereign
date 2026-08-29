@@ -1,7 +1,7 @@
 # WITNESS-INSTRUMENT-V1 — scope, authorization boundary, phase exit
 
 **Lane:** Phase 0 of the MAIA Conversational Completion Program.
-**Status:** self-test 90/90 · **device qualification A/B/C/D PASSED on the real daemon** · Defect 5 open · phase exit NOT SATISFIED (external blocker) · **first device qualification RED — two instrument defects found and repaired** · phase exit NOT YET SATISFIED.
+**Status:** self-test 93/93 · **device qualification A/B/C/D PASSED on the real daemon** · Defect 5 open · phase exit NOT SATISFIED (external blocker) · **first device qualification RED — two instrument defects found and repaired** · phase exit NOT YET SATISFIED.
 **Entry point:** `scripts/witness/witness.sh` (see `scripts/witness/README.md`).
 
 ## Why this exists before any conversational lane
@@ -442,3 +442,35 @@ removed from G2.
 
 **The invariant:** *the candidate cannot change during a witness run, and neither
 can the witness.*
+
+
+## Defect 6 — self-test host-environment leak
+
+The suite reported **90/90 for its author and 81/9 on the qualification
+machine**, at the same commit. Nine failures across three sections (F, H, I).
+
+Not an OS incompatibility, and not the throwaway-repo or hooks hypotheses that
+were raised and discarded. Three call sites launched the driver with plain `env`
+instead of the hermetic `drv()` seam, so those children inherited the operator's
+exported `WITNESS_RUN`. Each then saw an explicit run argument disagreeing with
+an inherited handle and refused as ambiguous — G0 working exactly as designed, on
+a suite that had lied about its own environment.
+
+The irony is load-bearing: `8af68e946` made exporting `WITNESS_RUN` the
+*recommended* workflow. The repair that fixed run custody is what made the
+author's shell and the operator's shell differ, and the suite had silently
+depended on the author's being empty.
+
+    reproduced on Linux by exporting WITNESS_RUN — 81/9, identical failure set
+    repaired  every instrument invocation now goes through drv() / env -i
+    regressed the suite runs a hostile WITNESS_RUN through itself and proves
+              no child inherits it
+
+Deliberately NOT repaired by unsetting `WITNESS_RUN` at the top of the file.
+That makes the suite green while leaving the leak latent for every variable
+added afterwards.
+
+**The lesson, which generalises past this instrument:** a suite that passes only
+in its author's environment pins nothing — the same finding as the candidate
+under witness (`01374f51b`, a jest project nothing invoked). The instrument
+reproduced the defect class it was built to observe.

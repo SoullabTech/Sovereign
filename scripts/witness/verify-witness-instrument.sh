@@ -74,6 +74,24 @@ sect() { echo; echo "── $1 ────────────────�
 
 # Run the driver with a hermetic environment.
 # drv [NAME=VALUE ...] <verb> [args...]  — leading assignments become env.
+#
+# ⛔ EVERY instrument invocation in this suite goes through here. `env -i` is the
+# point: the child gets exactly the environment the test declares and nothing
+# from the caller's shell.
+#
+# Found on the Mac Studio (2026-08-29): the suite reported 90/90 for its author
+# and 81/9 on the qualification machine. Three call sites launched the driver
+# with plain `env` instead, inheriting the operator's exported WITNESS_RUN — a
+# perfectly ordinary thing for that shell to have, since the run-custody repair
+# had just made exporting it the recommended workflow. Those children then saw
+# an explicit run argument disagreeing with an inherited handle and refused as
+# ambiguous, which is G0 working correctly on a test that had lied about its own
+# environment.
+#
+# Nine failures, one cause. Not an OS incompatibility: the suite depended on the
+# author's shell being conveniently empty. Do not "fix" this by unsetting
+# WITNESS_RUN at the top of the file — that makes the suite green while leaving
+# the leak latent for every variable added later.
 drv() {
     local envs=()
     while [ $# -gt 0 ]; do
@@ -447,11 +465,10 @@ drv collect "$RUN_ID" >/dev/null 2>&1
 
 # With a PROVEN runtime and no client capture: qualified, exit 4.
 ev_collect() {
-    env WITNESS_RUN_ROOT="$ROOT/witness" WITNESS_SOURCE_REPO="$REPO" WITNESS_ENV_FILE="$FIX/env.good" \
-        WITNESS_DOCKER_CMD="$FAKE_BIN/docker" WITNESS_ASSUME_NO_DOCKER=0 \
+    drv WITNESS_DOCKER_CMD="$FAKE_BIN/docker" WITNESS_ASSUME_NO_DOCKER=0 \
         FAKE_RUN_LABEL="$(wm_get RUN_ID)" FAKE_GIT_COMMIT="$CAND_SHORT" FAKE_IMAGE_ID=sha256:candidate \
-        HOME="$ROOT/home" ${1:+WITNESS_CLIENT_CONSOLE_LOG="$1"} \
-        "$INSTRUMENT_DIR/witness.sh" collect "$RUN_ID" >/dev/null 2>&1
+        ${1:+WITNESS_CLIENT_CONSOLE_LOG="$1"} \
+        collect "$RUN_ID" >/dev/null 2>&1
 }
 wm_set RUNTIME_IMAGE_ID ""
 ev_collect
@@ -468,6 +485,24 @@ ev_collect "$ROOT/console.log"
 [ $? -eq 0 ] && ok "both classes on a proven runtime is COMPLETE (exit 0)" || bad "complete path broken"
 [ "$(wm_get CLIENT_CONSOLE_CAPTURE)" = "CAPTURED" ] && ok "client console adopted when supplied" || bad "client console not adopted"
 [ "$(wm_get EVIDENCE_COMPLETE)" = "true" ] && ok "EVIDENCE_COMPLETE=true only with attribution + both classes" || bad "complete not reached"
+
+# J-hermetic — the suite must not depend on the caller's shell being empty.
+# Give this process a hostile WITNESS_RUN and prove no child inherits it.
+HOSTILE_RUN="19990101T000000Z-hostile"
+export WITNESS_RUN="$HOSTILE_RUN"
+
+drv status "$RUN_ID" >/dev/null 2>&1
+[ $? -eq 0 ] && ok "an explicit run works with a hostile WITNESS_RUN in the caller" \
+             || bad "caller's WITNESS_RUN leaked into a child (ambiguity refusal)"
+
+drv status >/dev/null 2>&1
+[ $? -eq 2 ] && ok "a bare verb still refuses — the hostile handle did not reach the child" \
+             || bad "caller's WITNESS_RUN leaked into a child (silently resolved)"
+
+HERMETIC_OUT="$(drv status "$RUN_ID" 2>/dev/null | awk '$1=="run"{print $2; exit}')"
+[ "$HERMETIC_OUT" = "$RUN_ID" ] && ok "the child acted on the declared run, not the caller's" \
+                                || bad "child acted on '$HERMETIC_OUT'"
+unset WITNESS_RUN
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # H. Runtime attribution (fake daemon)
@@ -514,10 +549,9 @@ wm_set RUNTIME_IMAGE_ID ""
 # collect never CREATES evidence/server, not that the directory happens to be
 # absent (section F legitimately populated it from a proven runtime).
 rm -rf "$RUN_DIR/evidence/server"
-env WITNESS_RUN_ROOT="$ROOT/witness" WITNESS_SOURCE_REPO="$REPO" WITNESS_ENV_FILE="$FIX/env.good" \
-    WITNESS_DOCKER_CMD="$FAKE_BIN/docker" WITNESS_ASSUME_NO_DOCKER=0 \
+drv WITNESS_DOCKER_CMD="$FAKE_BIN/docker" WITNESS_ASSUME_NO_DOCKER=0 \
     FAKE_RUN_LABEL="$FAKE_RUN_LABEL" FAKE_GIT_COMMIT="$CAND_SHORT" FAKE_IMAGE_ID=sha256:candidate \
-    HOME="$ROOT/home" "$INSTRUMENT_DIR/witness.sh" collect "$RUN_ID" >/dev/null 2>&1
+    collect "$RUN_ID" >/dev/null 2>&1
 [ $? -eq 3 ] && ok "collect on an unproven runtime exits 3 (NOT ATTRIBUTABLE)" || bad "collect qualified an unproven runtime"
 [ "$(wm_get SERVER_EVIDENCE)" = "NOT_ATTRIBUTABLE" ] && ok "SERVER_EVIDENCE=NOT_ATTRIBUTABLE" || bad "server evidence wrongly classed: $(wm_get SERVER_EVIDENCE)"
 [ "$(wm_get EVIDENCE_CLASS)" = "DIAGNOSTIC_ONLY" ] && ok "EVIDENCE_CLASS=DIAGNOSTIC_ONLY" || bad "evidence class not diagnostic"
@@ -534,16 +568,14 @@ export WITNESS_ASSUME_NO_DOCKER=1
 sect "I. substrate integrity"
 
 FAKE_STATE="$ROOT/fakestate"; mkdir -p "$FAKE_STATE"
-MIG_RUN_ID="$(env WITNESS_RUN_ROOT="$ROOT/witness" WITNESS_SOURCE_REPO="$REPO" WITNESS_ENV_FILE="$FIX/env.good" \
-    WITNESS_ASSUME_NO_DOCKER=1 HOME="$ROOT/home" \
+MIG_RUN_ID="$(drv WITNESS_ASSUME_NO_DOCKER=1 \
     WITNESS_ARTIFACT_SOURCE_PATH=lib/capture.ts \
     WITNESS_ARTIFACT_PATTERN=CANDIDATE_UTTERANCE_CEILING_MARKER \
-    "$INSTRUMENT_DIR/witness.sh" prepare "$CAND_SHA" 2>/dev/null)"
+    prepare "$CAND_SHA" 2>/dev/null)"
 
-env WITNESS_RUN_ROOT="$ROOT/witness" WITNESS_SOURCE_REPO="$REPO" WITNESS_ENV_FILE="$FIX/env.good" \
-    WITNESS_DOCKER_CMD="$FAKE_BIN/docker" WITNESS_ASSUME_NO_DOCKER=0 \
+drv WITNESS_DOCKER_CMD="$FAKE_BIN/docker" WITNESS_ASSUME_NO_DOCKER=0 \
     FAKE_MIGRATE_FAIL=1 FAKE_STATE_DIR="$FAKE_STATE" FAKE_GIT_COMMIT="$CAND_SHORT" \
-    HOME="$ROOT/home" "$INSTRUMENT_DIR/witness.sh" provision "$MIG_RUN_ID" >/dev/null 2>&1
+    provision "$MIG_RUN_ID" >/dev/null 2>&1
 [ $? -ne 0 ] && ok "migration failure fails provision (non-zero)" || bad "provision succeeded despite failed migrations"
 
 MIG_DIR="$ROOT/witness/runs/$MIG_RUN_ID"
