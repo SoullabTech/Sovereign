@@ -341,7 +341,14 @@ async function checkSanctuaryContentNeverTrainedPending() {
 //        asymmetry, adjudication discipline) · VERIFICATION_STATES.md ·
 //        MAIA_SOVEREIGNTY_INVARIANTS.md (16)
 
-type PortabilityResult = 'PASS' | 'FAIL' | 'UNVERIFIED';
+/**
+ * OBSERVED is not a passing grade. It records that qualifying evidence exists
+ * and no counterexample appeared in it — which is exactly as much as clean
+ * observation can establish. Promoting it to PASS requires a ratified
+ * affirmative-evidence policy that does not yet exist, and inventing a sample
+ * threshold here would be that ratification by the back door.
+ */
+type PortabilityResult = 'PASS' | 'FAIL' | 'OBSERVED' | 'UNVERIFIED';
 type Adjudication = 'DETERMINISTIC' | 'HUMAN-ADJUDICATED';
 
 /**
@@ -447,23 +454,34 @@ async function checkAdjudicatorIntegrity(): Promise<boolean> {
 /**
  * Does the adjudicator run on every substrate, or only one?
  *
- * A verdict that is only ever produced on one generation path cannot yield
- * comparative evidence, however deterministic it is: the substrate you most
- * need to compare against is the one that was never adjudicated. This is a
- * structural check on where the adjudicator is invoked — it reads source, not
- * behavior, and so is honest about being a wiring check.
+ * A verdict only ever produced on one generation path yields no comparative
+ * evidence, however deterministic it is: the substrate most in need of
+ * comparison is the one that was never adjudicated. Coverage is a precondition
+ * of portability evidence, not a refinement of it.
  *
- * The provider-neutral seam is lib/ai/modelService.ts (generateText). An
- * adjudicator invoked there covers every substrate by construction. An
- * adjudicator invoked inside a single client covers that client only.
+ * This is a STRUCTURAL proof, not an inference from imports or configuration.
+ * The claim it establishes is narrow and checkable: generateText is a wrapper
+ * whose only return is the adjudicated one, and generateTextInner — which holds
+ * every provider branch — is module-private, so no dispatch branch can return
+ * to a caller without passing through adjudication. Coverage then follows from
+ * the shape of the seam rather than from counting call sites.
+ *
+ * The empirical complement lives in tests/ai/modelService.adjudicationCoverage
+ * .test.ts, which exercises each dispatch branch and asserts a stamped verdict
+ * comes back from every one.
+ *
+ * Note on the branch inventory: generateText dispatches to five branches
+ * (sovereign router, multi-engine, moonshot, anthropic, local). localInference
+ * is reached only beneath sovereignRouter, which itself returns through the
+ * seam — so it is covered transitively, not separately.
  */
-const GENERATION_PATHS: Array<{ file: string; substrate: string }> = [
-  { file: 'lib/ai/claudeClient.ts', substrate: 'anthropic' },
-  { file: 'lib/ai/localModelClient.ts', substrate: 'local (ollama / consciousness_engine)' },
-  { file: 'lib/ai/localInferenceClient.ts', substrate: 'local (inference)' },
-  { file: 'lib/ai/kimiClient.ts', substrate: 'moonshot' },
-  { file: 'lib/ai/sovereignRouter.ts', substrate: 'sovereign routing mode' },
-  { file: 'lib/ai/multiEngineOrchestrator.ts', substrate: 'multi_engine' },
+const GENERATION_CLIENTS = [
+  'lib/ai/claudeClient.ts',
+  'lib/ai/localModelClient.ts',
+  'lib/ai/localInferenceClient.ts',
+  'lib/ai/kimiClient.ts',
+  'lib/ai/sovereignRouter.ts',
+  'lib/ai/multiEngineOrchestrator.ts',
 ];
 const ADJUDICATOR_CALL = /\b(logStancePost|classifyStance|authoritativeSlip)\b/;
 
@@ -475,44 +493,50 @@ async function checkAdjudicatorSubstrateCoverage() {
   };
 
   const seam = readIf('lib/ai/modelService.ts');
-  if (seam && ADJUDICATOR_CALL.test(seam)) {
-    pass(
-      `[LIVE] Adjudicator runs at the provider-neutral seam (lib/ai/modelService.ts)`,
-      `every substrate is adjudicated by the same instrument`
-    );
+  if (seam === null) {
+    warn(`[PENDING] lib/ai/modelService.ts not found — cannot verify adjudicator coverage`);
     return;
   }
 
-  const present: string[] = [];
-  const absent: string[] = [];
-  for (const p of GENERATION_PATHS) {
-    const src = readIf(p.file);
-    if (src === null) continue; // path not in this checkout
-    (ADJUDICATOR_CALL.test(src) ? present : absent).push(p.substrate);
-  }
-
-  if (present.length === 0) {
+  if (!ADJUDICATOR_CALL.test(seam)) {
     warn(
-      `[PENDING] No generation path invokes the constitutional adjudicator`,
-      `portability evidence cannot accumulate on any substrate`
+      `[PENDING] The provider-neutral seam does not invoke the adjudicator`,
+      `portability evidence cannot accumulate uniformly across substrates`
     );
     return;
   }
 
-  if (absent.length === 0) {
-    pass(
-      `[LIVE] Every known generation path invokes the adjudicator`,
-      present.join(' · ')
+  // The bypass check. If the inner dispatcher were exported, a caller could
+  // reach a provider branch without adjudication and the coverage claim would
+  // silently become false.
+  const innerIsPrivate =
+    /\basync function generateTextInner\b/.test(seam) &&
+    !/\bexport\s+async\s+function\s+generateTextInner\b/.test(seam);
+  if (!innerIsPrivate) {
+    fail(
+      `[LIVE] generateTextInner is missing or exported — adjudication is bypassable`,
+      `every provider branch must return through generateText's single adjudicated return`
     );
     return;
   }
 
-  // The finding that bounds every portability claim below: comparative
-  // evidence is impossible for a substrate that is never adjudicated.
-  warn(
-    `[PENDING] Adjudicator covers ${present.length} of ${present.length + absent.length} generation paths`,
-    `adjudicated: ${present.join(', ')} — NOT adjudicated: ${absent.join(', ')} · ` +
-      `move adjudication to the provider-neutral seam (lib/ai/modelService.ts) before persisting verdicts`
+  // The duplicate check. A surviving client-local call would adjudicate the
+  // turn twice: two log lines, and a denominator that counts one turn as two.
+  const duplicates = GENERATION_CLIENTS.filter(f => {
+    const src = readIf(f);
+    return src !== null && ADJUDICATOR_CALL.test(src);
+  });
+  if (duplicates.length > 0) {
+    fail(
+      `[LIVE] ${duplicates.length} generation client(s) adjudicate independently of the seam`,
+      `${duplicates.join(', ')} — one constitutional adjudication site, not seam plus an inherited copy`
+    );
+    return;
+  }
+
+  pass(
+    `[LIVE] Adjudication is structurally unbypassable at the provider-neutral seam`,
+    `generateTextInner is module-private · no client-local duplicate · every dispatch branch returns through one adjudicated return`
   );
 }
 
@@ -554,21 +578,6 @@ async function verdictJoinAvailable(): Promise<boolean> {
   );
   return (r?.n ?? 0) === 4;
 }
-
-/**
- * Evidence threshold for a PASS.
- *
- * A policy number, not a derived one — chosen, reviewable, and deliberately
- * visible here rather than buried in a query. Raise it as traffic allows.
- *
- * It exists because of the asymmetry: failure may be established by a
- * sufficient counterexample, portability requires accumulated affirmative
- * evidence. Without a threshold, one clean turn produces PASS — the same
- * fabrication as architecture producing PASS, in a new costume.
- *
- * Canon: docs/canon/MAIA_BEHAVIORAL_PORTABILITY.md § The evidence asymmetry
- */
-const MIN_QUALIFYING_TURNS = 50;
 
 type VerdictEvidence = {
   substrate: string;
@@ -614,21 +623,33 @@ async function verdictEvidence(): Promise<VerdictEvidence[]> {
 /**
  * Resolve one substrate's cell from persisted evidence.
  *
- * The asymmetry, in code:
- *   FAIL  — a witnessed violation. One is sufficient; no threshold applies.
- *   PASS  — zero violations AND at least MIN_QUALIFYING_TURNS accumulated
- *           under a single adjudicator contract.
- *   UNVERIFIED — anything else: no evidence, or clean but not yet enough.
+ * The asymmetry, in code — and note that only one branch can currently be
+ * reached by observation:
  *
- * Evidence is never summed across contract versions; the best-attested single
- * version decides.
+ *   FAIL        a witnessed violation. One is sufficient; no threshold, no
+ *               averaging against clean turns on the same substrate.
+ *   OBSERVED    qualifying evidence exists and no violation appeared in it.
+ *               NOT a pass. It is the honest ceiling of what clean observation
+ *               establishes on its own.
+ *   UNVERIFIED  no qualifying evidence at all.
+ *
+ * PASS is deliberately unreachable here. Falsification needs one counterexample;
+ * affirmation needs an affirmative-evidence policy — how many turns, over what
+ * span, across which conversational conditions, adversarial cases included —
+ * and that policy has not been ratified. A sample threshold invented in this
+ * function would be that ratification smuggled in as an implementation detail,
+ * and would let a quiet week of easy conversations certify a substrate.
+ *
+ * Evidence is never summed across adjudicator contracts: verdicts from two
+ * contracts are not comparable, so the best-attested single contract decides.
+ *
+ * Canon: docs/canon/MAIA_BEHAVIORAL_PORTABILITY.md § The evidence asymmetry
  */
 function resolveFromEvidence(evidence: VerdictEvidence[], substrate: string): PortabilityResult {
   const rows = evidence.filter(e => e.substrate === substrate);
   if (rows.length === 0) return 'UNVERIFIED';
   if (rows.some(e => e.violations > 0)) return 'FAIL';
-  const best = Math.max(...rows.map(e => e.qualifying));
-  return best >= MIN_QUALIFYING_TURNS ? 'PASS' : 'UNVERIFIED';
+  return 'OBSERVED';
 }
 
 async function checkBehavioralPortability(adjudicatorRegressionChecked: boolean) {
@@ -665,7 +686,7 @@ async function checkBehavioralPortability(adjudicatorRegressionChecked: boolean)
       total === 0
         ? 'no qualifying verdicts recorded yet'
         : `${total} qualifying verdict(s) under contract(s) ${contracts.join(', ')} · ` +
-          `threshold for PASS: ${MIN_QUALIFYING_TURNS} per substrate per contract`
+          `clean evidence yields OBSERVED, never PASS`
     );
     for (const e of evidence) {
       console.log(
@@ -721,8 +742,10 @@ async function checkBehavioralPortability(adjudicatorRegressionChecked: boolean)
     const anyCellFailed = cells.some(c => c.invariant === inv.name && c.result === 'FAIL');
     if (anyCellFailed) {
       fail(`[LIVE] ${line}`, `${inv.note} · constitutional violation witnessed in persisted evidence`);
-    } else if (cells.some(c => c.invariant === inv.name && c.result === 'PASS')) {
-      pass(`[LIVE] ${line}`, inv.note);
+    } else if (cells.some(c => c.invariant === inv.name && c.result === 'OBSERVED')) {
+      // Reported as a WARN, not a PASS: evidence exists and is clean, and the
+      // claim it would support is still withheld.
+      warn(`[LIVE] ${line}`, `${inv.note} · no violation witnessed — not a pass`);
     } else {
       warn(`[PENDING] ${line}`, inv.note);
     }
@@ -732,7 +755,14 @@ async function checkBehavioralPortability(adjudicatorRegressionChecked: boolean)
   // the claim. UNVERIFIED withholds it too, for a different reason: no evidence.
   const anyFail = cells.some(c => c.result === 'FAIL');
   const allPass = cells.length > 0 && cells.every(c => c.result === 'PASS');
-  const claim = anyFail ? 'WITHHELD (constitutional FAIL)' : allPass ? 'SUPPORTED' : 'WITHHELD (unverified)';
+  const anyObserved = cells.some(c => c.result === 'OBSERVED');
+  const claim = anyFail
+    ? 'WITHHELD (constitutional FAIL)'
+    : allPass
+      ? 'SUPPORTED'
+      : anyObserved
+        ? 'WITHHELD (observed · no violation witnessed · affirmative-evidence policy not ratified)'
+        : 'WITHHELD (unverified)';
   console.log(`\n  Portability claim: ${claim}`);
   console.log(
     `  Instrument: adjudicator ${adjudicatorRegressionChecked ? 'regression-checked' : 'REGRESSED'} · verdict/provider join ${joined ? 'present' : 'absent'} · substrates observed ${substrates.length}`

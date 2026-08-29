@@ -105,9 +105,28 @@ export function logStancePre(ctx?: { tier?: string; reason?: string }): void {
  */
 export function logStancePost(
   responseText: string,
-  ctx?: { tier?: string; reason?: string },
+  ctx?: { tier?: string; reason?: string; sanctuary?: boolean },
 ): ConstitutionalVerdict | null {
   try {
+    // ── SANCTUARY: no derived stance evidence, anywhere ───────────────────
+    //
+    // Suppressing the database fields while still writing stance_mode and
+    // auth_slip to container logs would make the privacy boundary cosmetic:
+    // application logs are durable telemetry too. A classification derived
+    // from sanctuary content must not survive the turn in ANY durable form.
+    //
+    // Nothing constitutional is lost by not computing it. This adjudicator is
+    // post-hoc observation, not protection — the protective egress guard is
+    // enforceIdentityPredicateConstraint, which is unaffected and still runs.
+    // So the strictest available choice is also the cheapest: do not classify
+    // at all, and emit a metadata-only line naming the refusal.
+    //
+    // Fails closed: the caller resolves posture through TurnPosture, which
+    // treats any affirmative or contradictory sanctuary signal as sanctuary.
+    if (ctx?.sanctuary) {
+      console.log('[MAIA/stance] post {"suppressed":"sanctuary"}');
+      return null;
+    }
     const text = responseText || '';
     const c = classifyStance(text);
     const aslip = authoritativeSlip(text);

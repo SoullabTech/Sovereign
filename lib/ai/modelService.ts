@@ -1,6 +1,7 @@
 // backend: lib/ai/modelService.ts
 import { generateWithLocalModel, checkLocalModelHealth, LocalChatParams } from './localModelClient';
 import { logStancePost } from '../sovereign/stanceReanchor';
+import { TurnPosture } from '../sanctuary/turnPosture';
 import { generateWithClaude, checkClaudeHealth } from './claudeClient';
 import { generateWithKimi, checkKimiHealth, isKimiAvailable } from './kimiClient';
 import { generateWithMultipleEngines, OrchestrationType } from './multiEngineOrchestrator';
@@ -96,9 +97,14 @@ export async function generateText(req: TextRequest): Promise<TextResult> {
   // tests/ai/modelService.sovereign-fallback.test.ts) rely on generateText
   // returning the SAME result object the routing path produced. Observation
   // must not change the identity of the thing observed.
+  // Posture resolved through TurnPosture, the canonical fail-closed resolver:
+  // any affirmative or contradictory sanctuary signal resolves to sanctuary.
+  // Under sanctuary the adjudicator emits nothing derived — not to the database,
+  // not to the logs — and returns null.
   const verdict = logStancePost(result.text, {
     tier: result.provider?.tier,
     reason: result.provider?.reason,
+    sanctuary: TurnPosture.resolve(req.meta).sanctuary,
   });
   if (verdict) result.verdict = verdict;
   return result;
