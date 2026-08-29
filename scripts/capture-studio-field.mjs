@@ -1,0 +1,604 @@
+/**
+ * Capture a Writer's Studio field at the reference viewport.
+ *
+ * WRITERS-STUDIO-V2 — visual acceptance is part of the build loop, not a
+ * review afterwards. A field is finished when its screenshot and its reference
+ * read as the same product; that comparison needs a screenshot taken at the
+ * SAME viewport, by a command anyone can run the same way twice.
+ *
+ *   node scripts/capture-studio-field.mjs <field> [--m=<manuscriptId>] [--url=<origin>] [--sha=<sha>] [--headful]
+ *
+ * --headful opens a real window against a PERSISTENT profile and waits for you
+ * to press Enter. Sign in once; every later capture reuses that session, so the
+ * remaining fields are one command each. The profile lives in .capture-profile/
+ * and is gitignored — it holds a real login.
+ *
+ * --url is an ORIGIN (http://localhost:3000). The route comes from the field.
+ * Pass a full URL instead and it is used verbatim — the first version appended
+ * its route to whatever it was given, so a complete URL became
+ * ".../canvas?m=xyz/writers-studio/canvas" and the capture died on a 404.
+ *
+ * Fields and their routes are declared below so the capture cannot drift from
+ * what acceptance compares against.
+ *
+ * The app must be reachable at --url. Pass `--serve` and this script starts it,
+ * waits for it, captures, and shuts it down again — one command, one terminal.
+ * Three separate capture attempts were lost to a dev server that had been
+ * stopped before the capture ran, which is a coordination problem the tool
+ * should not have handed to a person in the first place.
+ *
+ * A remote Claude Code session cannot produce the FIELD capture: that container
+ * has no database, no env files and no member session, so there is no signed-in
+ * room to photograph. Run that where the stack runs.
+ *
+ * It CAN produce the signed-out witness, and 2026-08-28 it did. The unauthorized
+ * path needs none of the above — /api/sovereign/manuscripts returns 401 from
+ * getMemberIdFromRequest before it touches Postgres — so a container with only a
+ * browser reaches the room's unauthorized state and can say whether the sign-in
+ * invitation rendered or the error boundary did. The two witnesses have opposite
+ * requirements, and the earlier version of this comment collapsed them.
+ */
+import { spawn, spawnSync } from 'node:child_process';
+import { existsSync, mkdirSync } from 'node:fs';
+import { join } from 'node:path';
+
+/**
+ * The driver.
+ *
+ * `puppeteer` is a devDependency of the app, so a checkout with a complete
+ * `npm install` already has it. A checkout that does NOT — a second worktree
+ * made just for capturing, an install that ran out of disk halfway — failed
+ * here with a bare ERR_MODULE_NOT_FOUND stack: true, and useless. This script
+ * refuses clearly everywhere else; it should not hand a person a stack trace
+ * at the one place the remedy is a single command.
+ *
+ * `puppeteer-core` is the same driver without the bundled browser download,
+ * and resolveBrowser() below already knows how to find a system browser. So
+ * either package is enough to capture with; only both being absent is fatal.
+ */
+const puppeteer = await (async () => {
+  for (const pkg of ['puppeteer', 'puppeteer-core']) {
+    try {
+      return (await import(pkg)).default;
+    } catch (err) {
+      if (err?.code !== 'ERR_MODULE_NOT_FOUND') throw err;
+    }
+  }
+  console.error('[capture] No puppeteer in this checkout — nothing to drive a browser with.');
+  console.error('');
+  console.error('Neither `puppeteer` nor `puppeteer-core` resolves from here. Most often this');
+  console.error('is a second checkout whose `npm install` never completed (node_modules is');
+  console.error('~2.2 GB, and a partial install leaves no trace but this).');
+  console.error('');
+  console.error('Fix with either:');
+  console.error('  npm install                 # complete this checkout\'s install');
+  console.error('  npm install puppeteer-core  # driver only, no browser download');
+  console.error('');
+  console.error('Or run the capture from a checkout that is already installed — the script');
+  console.error('names its output after the tree it runs in, so check this branch out there');
+  console.error('rather than duplicating node_modules for the capture alone.');
+  process.exit(1);
+})();
+
+/** The reference viewport. Every reference image was composed at this width. */
+const VIEWPORT = { width: 1680, height: 1050, deviceScaleFactor: 2 };
+
+const FIELDS = {
+  'work-home': '/writers-studio',
+  'writing-field': '/writers-studio/canvas',
+  'structure-versions': '/writers-studio/canvas?panel=structure',
+  'developmental-review': '/writers-studio/canvas?panel=review',
+  'materials-studio': '/writers-studio/canvas?panel=materials',
+};
+
+const [field, ...rest] = process.argv.slice(2);
+const arg = (name, fallback) =>
+  rest.find((a) => a.startsWith(`--${name}=`))?.split('=').slice(1).join('=') ?? fallback;
+
+if (!field || !FIELDS[field]) {
+  console.error(`usage: node scripts/capture-studio-field.mjs <field> [--url=...] [--sha=...]`);
+  console.error(`fields: ${Object.keys(FIELDS).join(' · ')}`);
+  process.exit(1);
+}
+
+const urlArg = arg('url', 'http://localhost:3000').replace(/\/+$/, '');
+const manuscript = arg('m', '') || arg('manuscript', '');
+/**
+ * The name is bound to OBSERVED provenance, not requested provenance.
+ *
+ * OBSERVATION-PROVENANCE-01 clause 4. `--sha` used to be taken on trust and
+ * written straight into the filename, which makes the caller's typing the
+ * evidence. Two ways that goes wrong: a pasted value that is not this tree, and
+ * a dirty working tree — where the render came from `<sha> + uncommitted diff`
+ * while the name claims a clean commit.
+ *
+ * So the script reads the tree itself, marks it `-dirty` when it is, and
+ * refuses a `--sha` that disagrees rather than honouring it.
+ */
+function observedTree() {
+  const run = (args) => {
+    const r = spawnSync('git', args, { encoding: 'utf8' });
+    return r.status === 0 ? r.stdout.trim() : null;
+  };
+  const head = run(['rev-parse', '--short', 'HEAD']);
+  if (!head) return null;
+  const dirt = run(['status', '--porcelain']);
+  return dirt ? `${head}-dirty` : head;
+}
+
+const observed = observedTree();
+const shaArg = arg('sha', '');
+if (shaArg && observed && shaArg !== observed && `${shaArg}-dirty` !== observed) {
+  console.error(`[capture] --sha says ${shaArg}, but this tree is ${observed}.`);
+  console.error('[capture] The filename would assert provenance the render does not have.');
+  console.error('[capture] Drop --sha and let the script read the tree.');
+  process.exit(1);
+}
+const sha = observed ?? shaArg ?? 'working';
+if (observed?.endsWith('-dirty')) {
+  console.warn(`[capture] working tree is dirty — naming the capture ${observed}.`);
+  console.warn('[capture] The image is of committed code PLUS uncommitted changes.');
+}
+
+/**
+ * Build the target.
+ *
+ * If --url already names a path, it IS the target — appending the field's route
+ * to it is how this script produced ".../canvas?m=xyz/writers-studio/canvas"
+ * and failed. Otherwise treat it as an origin and add the field's route.
+ */
+function targetUrl() {
+  let u;
+  try {
+    u = new URL(urlArg);
+  } catch {
+    console.error(`[capture] --url is not a URL: ${urlArg}`);
+    process.exit(1);
+  }
+  const hasPath = u.pathname && u.pathname !== '/';
+  if (hasPath) return u.toString();
+  const withRoute = new URL(FIELDS[field], u.origin);
+  if (manuscript) withRoute.searchParams.set('m', manuscript);
+  return withRoute.toString();
+}
+const outDir = 'docs/design/writer-studio/implementations';
+mkdirSync(outDir, { recursive: true });
+const out = join(outDir, `${field}-${sha}.png`);
+
+/**
+ * Find a browser to drive.
+ *
+ * The first version of this script hard-coded /opt/pw-browsers/chromium — the
+ * path inside a remote Claude Code container, which is exactly where this
+ * script CANNOT run. On the machine that actually has the stack, that path does
+ * not exist and the capture died on it.
+ *
+ * So: an explicit override first, then whatever puppeteer downloaded for
+ * itself, then the browsers a developer machine actually has. If none resolve,
+ * say which were tried rather than failing on one guess.
+ */
+function resolveBrowser() {
+  if (process.env.CHROMIUM_PATH) return { path: process.env.CHROMIUM_PATH, how: 'CHROMIUM_PATH' };
+
+  // puppeteer's own download, when the package manages a browser for us.
+  try {
+    const p = puppeteer.executablePath();
+    if (p && existsSync(p)) return { path: p, how: 'puppeteer bundled' };
+  } catch {
+    /* puppeteer-core, or no browser downloaded — fall through to the system. */
+  }
+
+  const candidates = [
+    '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+    '/Applications/Chromium.app/Contents/MacOS/Chromium',
+    '/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge',
+    '/opt/pw-browsers/chromium',
+    '/usr/bin/chromium',
+    '/usr/bin/chromium-browser',
+    '/usr/bin/google-chrome',
+  ];
+  const found = candidates.find((c) => existsSync(c));
+  if (found) return { path: found, how: 'system browser' };
+
+  console.error('[capture] No browser found. Tried, in order:');
+  console.error('  $CHROMIUM_PATH (unset)');
+  console.error('  puppeteer.executablePath() — no downloaded browser');
+  for (const c of candidates) console.error(`  ${c}`);
+  console.error('');
+  console.error('Fix with either:');
+  console.error('  npx puppeteer browsers install chrome');
+  console.error('  CHROMIUM_PATH="/path/to/your/browser" node scripts/capture-studio-field.mjs ...');
+  process.exit(1);
+}
+
+const serve = rest.includes('--serve');
+
+/** Is something already answering there? Then do not start a second one. */
+async function alreadyUp(origin) {
+  try {
+    await fetch(origin, { signal: AbortSignal.timeout(1500) });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Start the dev server and wait for it to answer.
+ *
+ * Detached so the whole process group can be killed afterwards — `npm run dev`
+ * spawns next, and killing only npm leaves the server holding the port, which
+ * would break the NEXT capture in a way that looks like this one succeeded.
+ */
+async function startServer(origin) {
+  console.log('[capture] starting the app (--serve) ...');
+  const child = spawn('npm', ['run', 'dev'], { detached: true, stdio: 'pipe' });
+  let out = '';
+  child.stdout.on('data', (d) => {
+    out += d.toString();
+  });
+  child.stderr.on('data', (d) => {
+    out += d.toString();
+  });
+
+  const deadline = Date.now() + 120_000;
+  while (Date.now() < deadline) {
+    await new Promise((r) => setTimeout(r, 1000));
+    if (await alreadyUp(origin)) {
+      console.log('[capture] app is up.');
+      return child;
+    }
+    if (child.exitCode !== null) {
+      console.error(`[capture] The app exited before it was ready (code ${child.exitCode}).`);
+      console.error(out.split('\n').slice(-25).join('\n'));
+      process.exit(1);
+    }
+  }
+  console.error('[capture] The app did not become ready within 120s. Last output:');
+  console.error(out.split('\n').slice(-25).join('\n'));
+  try {
+    process.kill(-child.pid, 'SIGTERM');
+  } catch {
+    /* already gone */
+  }
+  process.exit(1);
+}
+
+const browser0 = resolveBrowser();
+console.log(`[capture] browser: ${browser0.path}  (${browser0.how})`);
+
+const headful = rest.includes('--headful');
+
+/**
+ * A persistent profile is what makes this usable more than once.
+ *
+ * Headless Chrome starts with an empty profile every run, so it arrives at the
+ * Studio signed out — and the Studio, correctly, shows its signed-out panel
+ * rather than someone's manuscript. Capturing that and comparing it to the
+ * reference would be comparing the wrong screen.
+ *
+ * So the session is kept. `--headful` once to sign in, then every capture after
+ * it is headless and silent.
+ */
+const PROFILE_DIR = '.capture-profile';
+
+/**
+ * `defaultViewport: null` makes the headful window usable to sign in with — but
+ * it also hands the viewport to the OS window, and the viewport IS the capture
+ * contract. A window the operating system decided to make 1280 wide would drop
+ * the xl: breakpoint, Materials would vanish from the capture, and the pass
+ * would spend its time on a divergence that only ever existed in the window
+ * manager.
+ *
+ * So the window is asked for the contract's size too, and the viewport is
+ * asserted after navigation rather than assumed.
+ */
+const origin = new URL(targetUrl()).origin;
+let server = null;
+if (serve && !(await alreadyUp(origin))) {
+  server = await startServer(origin);
+} else if (serve) {
+  /* Reusing a server this script did not start is a real hazard: it may have
+     been launched from a different checkout, or before the last `git pull`, and
+     then the capture is of code that is not the code under review. That is the
+     same stale-artifact failure as an all-CACHED deploy reporting a fresh SHA —
+     plausible, and wrong. Next's dev server recompiles per request, so a server
+     started in THIS working tree is fine; one started elsewhere is not, and
+     from here the two are indistinguishable.
+
+     This was a warning until 2026-08-28, when a run hit it for real. The
+     warning is not enough, and `--sha` is why: the capture is written as
+     `writing-field-<sha>.png`, so borrowing an unknown server deposits a file
+     whose NAME asserts a tree that did not necessarily render it. A warning
+     scrolls past; the misattributed filename stays in the record forever.
+
+     `--serve` is an instruction to start the app from THIS checkout. Finding
+     one already running contradicts that instruction, so it is refused rather
+     than silently reinterpreted. Without `--serve` the caller is pointing the
+     script at a server they are vouching for themselves, and that is theirs to
+     judge — this refusal does not apply. */
+  console.error('');
+  console.error('[capture] Something is already serving at', origin + '.');
+  console.error('[capture] You asked for --serve, which means "start the app from this');
+  console.error('[capture] checkout" — but this script did not start that one and cannot tell');
+  console.error('[capture] which commit it is serving. Capturing against it would name the');
+  console.error(`[capture] file for HEAD (${sha}) while an unknown tree rendered it.`);
+  console.error('');
+  console.error('[capture] Stop it and re-run:');
+  console.error('[capture]   lsof -ti:3000 | xargs kill');
+  console.error('');
+  console.error('[capture] Or drop --serve to vouch for that server yourself.');
+  console.error('');
+  process.exit(1);
+}
+
+/**
+ * A crashed run leaves Chrome holding the profile, and puppeteer then refuses
+ * to launch. The error is accurate but says nothing about what to do, and the
+ * lock is invisible — the window may not even be on screen.
+ */
+async function launch() {
+  try {
+    return await puppeteer.launch(launchOptions);
+  } catch (err) {
+    const m = err instanceof Error ? err.message : String(err);
+    if (/already running for/.test(m)) {
+      console.error('[capture] A browser is still holding the capture profile — almost always');
+      console.error('[capture] left behind by a run that crashed. Close it, or:');
+      console.error('[capture]   pkill -f "Chrome for Testing"');
+      console.error('[capture] The profile itself is fine; only the lock is stale.');
+      process.exit(1);
+    }
+    throw err;
+  }
+}
+
+const launchOptions = {
+  executablePath: browser0.path,
+  headless: !headful,
+  userDataDir: PROFILE_DIR,
+  defaultViewport: headful ? null : VIEWPORT,
+  args: [
+    '--no-sandbox',
+    '--disable-dev-shm-usage',
+    /* A persistent profile means Chrome runs its first-run and default-browser
+       flows, which open and close tabs underneath the automation. That is what
+       detached the navigating frame. */
+    '--no-first-run',
+    '--no-default-browser-check',
+    '--disable-session-crashed-bubble',
+    '--hide-crash-restore-bubble',
+    `--window-size=${VIEWPORT.width},${VIEWPORT.height}`,
+  ],
+};
+
+const browser = await launch();
+try {
+  /* Reuse the page Chrome already opened rather than adding one.
+     `browser.newPage()` races Chrome's own startup tabs when a profile is
+     restored — the new page is created, Chrome tidies up its startup state,
+     and the page we are mid-navigation on is the one that gets closed. That is
+     exactly "Navigating frame was detached". */
+  const existing = await browser.pages();
+  const page = existing.find((p) => !p.isClosed()) ?? (await browser.newPage());
+  await page.bringToFront().catch(() => {});
+  await page.setViewport(VIEWPORT);
+  const url = targetUrl();
+  console.log(`[capture] ${url} at ${VIEWPORT.width}×${VIEWPORT.height}@${VIEWPORT.deviceScaleFactor}x`);
+  /**
+   * Navigate, tolerating one detachment.
+   *
+   * A profile-restoring Chrome can close the page out from under the first
+   * navigation. That is a startup race, not a fact about the app, so it is
+   * retried once on a fresh page rather than reported as a failure — and only
+   * once, so a genuinely broken page still fails instead of looping.
+   */
+  async function navigate(target) {
+    try {
+      return await target.goto(url, { waitUntil: 'networkidle0', timeout: 60_000 });
+    } catch (err) {
+      const m = err instanceof Error ? err.message : String(err);
+      if (/detached|Target closed|Session closed/i.test(m)) {
+        console.log('[capture] the page was closed during startup — retrying once.');
+        const fresh = await browser.newPage();
+        await fresh.setViewport(VIEWPORT);
+        page2 = fresh;
+        return await fresh.goto(url, { waitUntil: 'networkidle0', timeout: 60_000 });
+      }
+      throw err;
+    }
+  }
+
+  let page2 = page;
+  try {
+    await navigate(page);
+  } catch (err) {
+    /* The commonest failure by far is "the app is not running". Say that,
+       rather than a stack trace out of the CDP layer. */
+    const msg = err instanceof Error ? err.message : String(err);
+    if (/ERR_CONNECTION_REFUSED/.test(msg)) {
+      console.error(`[capture] Nothing is listening at ${new URL(url).origin}.`);
+      console.error('[capture] Start the app first, in its own terminal:');
+      console.error('[capture]   npm run dev');
+      process.exit(1);
+    }
+    throw err;
+  }
+
+  /**
+   * What the room ACTUALLY rendered. Three outcomes, never conflated.
+   *
+   * This used to be one boolean — "is the signed-out panel showing?" — and a
+   * boolean cannot tell the two failures apart. If the Canvas threw to the
+   * error boundary, that text is absent, the boolean reads false, and the
+   * harness walks straight past it and photographs the crash under a
+   * `[capture:ok]` line. A crash would have been filed as the field.
+   *
+   * That is the worst shape a witness can take: plausible evidence is more
+   * dangerous than obvious failure when provenance is uncertain. So the state
+   * is classified, and each class is said out loud.
+   */
+  const ROOM_CRASH = 'Something Went Wrong'; // app/error.tsx · app/global-error.tsx
+  const ROOM_SIGNED_OUT = 'opens only to you'; // app/writers-studio/canvas/page.tsx
+  /* Signed in, but not looking at a manuscript. Both are the room behaving
+     CORRECTLY — the custody refusal of WS2-01A, and the empty shelf — and
+     neither is the writing field. Added 2026-08-28, after a run that asked for
+     a manuscript id belonging to no member on that machine: the classifier saw
+     neither a crash nor the signed-out panel, called it `field`, and was about
+     to deposit a picture of a refusal panel under the field's name.
+     OBSERVATION-PROVENANCE-01 clause 3. */
+  const ROOM_MISSING = 'That manuscript is not on your shelf';
+  const ROOM_EMPTY = 'Nothing is on the table yet';
+  async function readRoomState(target) {
+    return await target.evaluate(
+      (crash, out, missing, empty) => {
+        const t = document.body.innerText;
+        if (t.includes(crash)) return 'crash';
+        if (t.includes(out)) return 'signed-out';
+        if (t.includes(missing)) return 'missing';
+        if (t.includes(empty)) return 'empty';
+        return 'field';
+      },
+      ROOM_CRASH,
+      ROOM_SIGNED_OUT,
+      ROOM_MISSING,
+      ROOM_EMPTY,
+    );
+  }
+
+  /**
+   * Witness 1 — observed on the FIRST load, before any sign-in.
+   *
+   * The proof `ac02a22ba` needs is not "the harness stopped because it was
+   * signed out". It is the whole chain:
+   *
+   *   fresh browser
+   *     -> WriterCanvas reaches its unauthorized state
+   *     -> the intended sign-in invitation renders
+   *     -> no React error boundary
+   *
+   * A generic stop before rendering witnesses nothing. This runs before the
+   * headful sign-in prompt precisely so the pre-session render is seen, whether
+   * or not the run goes on to capture afterwards.
+   */
+  const firstLoad = await readRoomState(page2);
+  if (firstLoad === 'signed-out') {
+    console.log('[witness-1] PASS  unauthorized -> sign-in invitation rendered, no error boundary');
+  } else if (firstLoad === 'crash') {
+    console.log('[witness-1] FAIL  the error boundary rendered on first load, not the invitation.');
+  } else {
+    console.log('[witness-1] n/a   this profile already held a session; the room opened to the field.');
+  }
+
+  /* A capture of the signed-out panel is not a capture of the field, and it
+     looks enough like a real screen to be mistaken for one. Refuse it. */
+  if (headful) {
+    console.log('');
+    console.log('[capture] A window is open against the persistent profile.');
+    console.log('[capture] Sign in there if you are not already, then press Enter here.');
+    console.log('[capture] This is a one-time step — later captures reuse the session.');
+    await new Promise((resolve) => process.stdin.once('data', resolve));
+    await page2.reload({ waitUntil: 'networkidle0', timeout: 60_000 });
+  }
+
+  const state = await readRoomState(page2);
+  if (state === 'crash') {
+    console.error('[capture] The room threw to the error boundary. This is NOT a capture');
+    console.error('[capture] failure — it is the field failing, and it must not be filed as');
+    console.error('[capture] an image. Refusing.');
+    console.error('[capture] Read the app terminal for the thrown error before anything else.');
+    process.exit(1);
+  }
+  if (state === 'missing') {
+    console.error('[capture] The room is refusing the manuscript you asked for — it is not');
+    console.error('[capture] on this member\'s shelf. That refusal is CORRECT behaviour, and it');
+    console.error('[capture] is not the writing field. Capturing it would file a refusal panel');
+    console.error('[capture] under the field\'s name.');
+    console.error('[capture] Find a real id while signed in:');
+    console.error(`[capture]   ${new URL(url).origin}/api/sovereign/manuscripts`);
+    process.exit(1);
+  }
+  if (state === 'empty') {
+    console.error('[capture] Nothing is on this member\'s shelf, so there is no field to');
+    console.error('[capture] photograph. Import or start a work first.');
+    process.exit(1);
+  }
+  /**
+   * The positive gate. OBSERVATION-PROVENANCE-01 clause 3, done properly.
+   *
+   * The four probes above name the states we have actually seen, and they give
+   * good messages. But enumerating bad states never terminates: each new one
+   * (a 500 from the manuscripts route, a maintenance page, a route that moves)
+   * reads as `field` because it is merely *not* the others. That is how a
+   * refusal panel nearly entered the record, and it would have happened again
+   * with the DB down.
+   *
+   * So the field must PROVE itself: the centre column has to hold enough text
+   * to be a manuscript. This is also exactly the acceptance clause — "real
+   * manuscript text present" — rather than a proxy for it. A field capture with
+   * three sentences in the middle cannot be scored for manuscript dominance,
+   * typography scale or panel rhythm anyway, so an image that fails this gate
+   * was never going to be admissible evidence.
+   */
+  const MIN_CENTRE_CHARS = 400;
+  const centre = await page2.evaluate(
+    () => document.querySelector('main')?.innerText.trim().length ?? 0,
+  );
+  if (state === 'field' && centre < MIN_CENTRE_CHARS) {
+    console.error(`[capture] The centre column holds ${centre} characters.`);
+    console.error('[capture] That is not a manuscript, so this is not a field capture — whatever');
+    console.error('[capture] the room is showing, it is not the work. Refusing before the');
+    console.error('[capture] screenshot rather than filing it under the field\'s name.');
+    console.error('[capture] Check the room in the browser, and check that the app can reach');
+    console.error('[capture] its database — a 500 from /api/sovereign/manuscripts lands here.');
+    process.exit(1);
+  }
+
+  if (state === 'signed-out') {
+    console.error('[capture] The Studio is showing its signed-out panel — this browser has no');
+    console.error('[capture] session, so the capture would not be of the field. Sign in with a');
+    console.error('[capture] profile this run can use, or capture with CHROMIUM_PATH pointed at');
+    console.error('[capture] Sign in once with:');
+    console.error(`[capture]   node scripts/capture-studio-field.mjs ${field} --headful`);
+    process.exit(1);
+  }
+  /* The Studio loads its manuscript after mount. A capture taken before that
+     photographs a loading state and calls it the field. */
+  await page2.waitForFunction(() => !document.body.innerText.includes('reading the draft'), {
+    timeout: 30_000,
+  }).catch(() => console.warn('[capture] draft-ready probe timed out — capturing anyway'));
+  /* The viewport is the contract. Two captures are comparable only because it
+     cannot vary between them, so it is verified rather than trusted — a
+     silently smaller one would drop a breakpoint and send the divergence pass
+     hunting a layout bug that is really a window size. */
+  const actual = await page2.evaluate(() => ({
+    w: window.innerWidth,
+    h: window.innerHeight,
+    dpr: window.devicePixelRatio,
+  }));
+  if (actual.w !== VIEWPORT.width || actual.h !== VIEWPORT.height) {
+    console.error(
+      `[capture] Viewport is ${actual.w}×${actual.h}, not the contract's ` +
+        `${VIEWPORT.width}×${VIEWPORT.height}. Refusing to capture: an image at the`,
+    );
+    console.error('[capture] wrong width is not comparable with the reference.');
+    process.exit(1);
+  }
+  console.log(`[capture] viewport verified ${actual.w}×${actual.h}@${actual.dpr}x`);
+
+  await page2.screenshot({ path: out });
+  console.log(`[capture:ok] ${out}`);
+} finally {
+  await browser.close();
+  if (server) {
+    console.log('[capture] stopping the app it started.');
+    try {
+      /* The whole group: `npm run dev` spawns next, and killing only npm
+         leaves the server holding the port — which would break the next
+         capture in a way that looks like this one succeeded. */
+      process.kill(-server.pid, 'SIGTERM');
+    } catch {
+      /* already gone */
+    }
+  }
+}
