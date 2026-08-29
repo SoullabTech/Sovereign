@@ -194,6 +194,19 @@ export class ClaudeService {
    * Streaming Oracle Response Generator
    * Yields sentence chunks as Claude generates them for immediate TTS processing
    */
+  /**
+   * The model this instance will actually call.
+   *
+   * ⛔ VOICE-STREAM-PROVIDER-PROVENANCE-01 — exposed so provenance can be
+   * REPORTED rather than guessed. The voice route used to record a literal
+   * 'claude-3-sonnet', which was stale even for Anthropic turns; the default
+   * here has been a Haiku 4.5 build for some time. A provenance record that
+   * names a model nobody called is worse than none.
+   */
+  get modelId(): string {
+    return this.model;
+  }
+
   async *generateOracleResponseStreaming(
     input: string,
     context: OracleContext,

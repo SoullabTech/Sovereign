@@ -25,7 +25,7 @@ import { resolveVoicePreference } from '@/lib/tts/cloudVoicePolicy';
 import { sanitizeForSpeech } from '@/lib/tts/sanitizeForSpeech';
 import { NextRequest } from 'next/server';
 import os from 'os';
-import { streamOracleResponse } from '@/lib/ai/oracleStreaming';
+import { streamOracleResponse, type TurnProvenance } from '@/lib/ai/oracleStreaming';
 // R2 (2026-08-13): voice must inhabit the SAME continuity contract as text MAIA.
 // Before this, PWA voice reached ClaudeService with no memory loaded and no memory
 // canon guard — which is why MAIA truthfully said she had no memory on this path.
@@ -1343,11 +1343,19 @@ export async function POST(req: NextRequest) {
 
         timer.mark('llm_request_sent');
 
+        // ⛔ VOICE-STREAM-PROVIDER-PROVENANCE-01. What actually generated this
+        // turn, reported by the code that chose and invoked the provider — not
+        // re-derived here. The training record below used to assert
+        // `claude-3-sonnet` unconditionally, which after provider convergence
+        // would have recorded a sovereign local turn as a Claude one.
+        let turnProvenance: TurnProvenance | null = null;
+
         // Stream sentences from the CONFIGURED provider.
         for await (const chunk of streamOracleResponse(
           message,
           context,
-          voiceSystemPrompt
+          voiceSystemPrompt,
+          { onProvenance: (p) => { turnProvenance = p; } }
         )) {
           if (chunk.type === 'sentence') {
             // Mark first token timing
@@ -1574,10 +1582,15 @@ export async function POST(req: NextRequest) {
                 fullResponse.trim(),
                 'CORE', // Voice mode is typically CORE processing
                 {
-                  primaryEngine: 'claude-3-sonnet',
+                  // ⛔ The provider that actually ran, and the model IT named.
+                  // A record that says Claude when Ollama answered is worse
+                  // than no record: it is a sovereignty claim in reverse.
+                  primaryEngine: (turnProvenance as TurnProvenance | null)?.model
+                    ?? (turnProvenance as TurnProvenance | null)?.provider
+                    ?? 'unknown',
                   latencyMs,
                   element: wisdomPayload?.element || element,
-                  usedClaudeConsult: true,
+                  usedClaudeConsult: (turnProvenance as TurnProvenance | null)?.usedClaudeConsult ?? false,
                   // R1: this route was invisible to route attribution — turn 173903
                   // landed with origin_route NULL and only the runtime log named it.
                   originRoute: '/api/voice/stream-conversation',

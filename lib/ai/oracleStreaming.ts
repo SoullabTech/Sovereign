@@ -41,6 +41,32 @@
 
 export type OracleStreamChunk = { type: 'sentence' | 'done'; text: string; index: number };
 
+/**
+ * What actually generated this turn.
+ *
+ * ⛔ VOICE-STREAM-PROVIDER-PROVENANCE-01. The voice route's training record
+ * hardcoded `primaryEngine: 'claude-3-sonnet'` and `usedClaudeConsult: true`.
+ * Once generation became configurable, that attribution stayed Claude-specific
+ * — so a sovereign local turn would have been recorded, durably, as a Claude
+ * turn. The generation would have been sovereign and the audit trail would have
+ * said it was not, which is the worse of the two failures: a witness that
+ * succeeds while manufacturing false provenance.
+ *
+ * ⛔ REPORTED, NOT RE-DERIVED. This is emitted by the same code path that
+ * chooses and invokes the provider, carrying the model the provider itself
+ * returned. A second place that inferred "which provider probably ran" could
+ * drift from the first — and the old literal shows exactly how: it named
+ * claude-3-sonnet long after the default became a Haiku 4.5 build.
+ */
+export interface TurnProvenance {
+  /** 'anthropic' | 'ollama' | whatever the provider reported. */
+  provider: string;
+  /** The concrete model, from the provider itself. */
+  model: string;
+  /** True only when an Anthropic request was actually made. */
+  usedClaudeConsult: boolean;
+}
+
 /** Whatever the voice route already builds and passes through. Untouched here. */
 export interface OracleStreamContext {
   conversationHistory?: Array<{ role?: string; content?: string }>;
@@ -50,9 +76,12 @@ export interface OracleStreamContext {
 export interface OracleStreamDeps {
   /** Injected so a test can prove Anthropic is never REACHED, not merely unused. */
   claudeFactory?: () => { generateOracleResponseStreaming: (...a: any[]) => AsyncGenerator<OracleStreamChunk> };
-  localGenerate?: (params: { systemPrompt: string; userInput: string }) => Promise<{ text: string }>;
+  localGenerate?: (params: { systemPrompt: string; userInput: string })
+    => Promise<{ text: string; provider?: { provider?: string; model?: string } }>;
   assertAvailable?: () => Promise<void> | void;
   provider?: string;
+  /** Called ONCE, with what actually ran, before the first chunk is yielded. */
+  onProvenance?: (provenance: TurnProvenance) => void;
 }
 
 /** The configured text provider — the SAME authority canonical text generation uses. */
@@ -146,6 +175,12 @@ export async function* streamOracleResponse(
       deps.claudeFactory ??
       (await import('@/lib/services/ClaudeService')).getClaudeService;
     const claude = factory();
+    deps.onProvenance?.({
+      provider: 'anthropic',
+      // The instance's own model, never a literal. See ClaudeService.modelId.
+      model: (claude as { modelId?: string }).modelId ?? 'anthropic:unknown',
+      usedClaudeConsult: true,
+    });
     yield* claude.generateOracleResponseStreaming(input, context as any, systemPrompt) as AsyncGenerator<OracleStreamChunk>;
     return;
   }
@@ -158,6 +193,16 @@ export async function* streamOracleResponse(
   const result = await generate({
     systemPrompt: systemPrompt ?? '',
     userInput: foldHistoryIntoInput(input, context?.conversationHistory),
+  });
+
+  // ⛔ The provider's OWN report of what it ran. `usedClaudeConsult` is false
+  // here as a matter of fact, not of policy: no Anthropic module was even
+  // imported on this path.
+  const meta = (result as { provider?: { provider?: string; model?: string } })?.provider;
+  deps.onProvenance?.({
+    provider: meta?.provider ?? provider,
+    model: meta?.model ?? 'unknown',
+    usedClaudeConsult: false,
   });
 
   const sentences = splitIntoSentences(result?.text ?? '');

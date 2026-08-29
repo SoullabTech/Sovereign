@@ -18,6 +18,7 @@ import {
   splitIntoSentences,
   foldHistoryIntoInput,
   type OracleStreamChunk,
+  type TurnProvenance,
 } from '../oracleStreaming';
 
 const collect = async (gen: AsyncGenerator<OracleStreamChunk>) => {
@@ -265,5 +266,119 @@ describe('T7 — stream-conversation no longer hardcodes Claude', () => {
     // they were; a provider repair that quietly moved them would be out of scope.
     expect(code).not.toContain('transcribe-simple');
     expect(code).toMatch(/emit\('text'/);
+  });
+});
+
+// ════════════════════════════════════════════════════════════════════════════
+// VOICE-STREAM-PROVIDER-PROVENANCE-01 — the record must match what ran
+// ════════════════════════════════════════════════════════════════════════════
+
+describe('provenance is reported by whatever actually generated the turn', () => {
+  it('a local turn CANNOT be recorded as Claude', async () => {
+    // ⛔ THE DEFECT. Generation became configurable; the training record stayed
+    // Claude-specific. A sovereign turn would have been logged, durably, as
+    // `claude-3-sonnet` with usedClaudeConsult: true — generation sovereign,
+    // audit trail asserting the opposite.
+    let seen: TurnProvenance | null = null;
+    await collect(
+      streamOracleResponse('hello', {}, 'SYS', {
+        provider: 'local',
+        claudeFactory: forbiddenClaude as any,
+        localGenerate: vi.fn(async () => ({
+          text: 'I hear you.',
+          provider: { provider: 'ollama', model: 'llama3.1:8b' },
+        })),
+        assertAvailable: available,
+        onProvenance: (p) => { seen = p; },
+      }),
+    );
+    expect(seen).toEqual({ provider: 'ollama', model: 'llama3.1:8b', usedClaudeConsult: false });
+    // The VALUES must name no Anthropic anything. (Asserting over the serialized
+    // object would match the `usedClaudeConsult` KEY and pass for the wrong reason.)
+    expect(seen!.provider).not.toMatch(/claude|anthropic/i);
+    expect(seen!.model).not.toMatch(/claude|anthropic/i);
+    expect(seen!.usedClaudeConsult).toBe(false);
+  });
+
+  it('the model comes from the PROVIDER, not from a literal', async () => {
+    // The old attribution named claude-3-sonnet long after the Anthropic default
+    // became a Haiku 4.5 build. A hardcoded model name rots silently.
+    let seen: TurnProvenance | null = null;
+    await collect(
+      streamOracleResponse('hi', {}, 'SYS', {
+        provider: 'local',
+        localGenerate: vi.fn(async () => ({
+          text: 'ok.', provider: { provider: 'ollama', model: 'qwen2.5:7b' },
+        })),
+        assertAvailable: available,
+        onProvenance: (p) => { seen = p; },
+      }),
+    );
+    expect(seen?.model).toBe('qwen2.5:7b');
+  });
+
+  it('anthropic attribution is preserved, and names the real instance model', async () => {
+    let seen: TurnProvenance | null = null;
+    const factory = vi.fn(() => ({
+      modelId: 'claude-haiku-4-5-20251001',
+      generateOracleResponseStreaming: async function* () {
+        yield { type: 'done', text: '', index: 0 } as OracleStreamChunk;
+      },
+    }));
+    await collect(
+      streamOracleResponse('hi', {}, 'SYS', {
+        provider: 'anthropic', claudeFactory: factory as any,
+        assertAvailable: available, onProvenance: (p) => { seen = p; },
+      }),
+    );
+    expect(seen).toEqual({
+      provider: 'anthropic', model: 'claude-haiku-4-5-20251001', usedClaudeConsult: true,
+    });
+  });
+
+  it('provenance is reported BEFORE any chunk, so a failed stream still attributes', async () => {
+    const order: string[] = [];
+    await collect(
+      streamOracleResponse('hi', {}, 'SYS', {
+        provider: 'local',
+        localGenerate: vi.fn(async () => ({ text: 'a. b.', provider: { provider: 'ollama', model: 'm' } })),
+        assertAvailable: available,
+        onProvenance: () => order.push('provenance'),
+      }),
+    ).then((chunks) => chunks.forEach(() => order.push('chunk')));
+    expect(order[0]).toBe('provenance');
+  });
+
+  it('a provider that reports no meta still is not attributed to Claude', async () => {
+    let seen: TurnProvenance | null = null;
+    await collect(
+      streamOracleResponse('hi', {}, 'SYS', {
+        provider: 'local',
+        localGenerate: vi.fn(async () => ({ text: 'ok.' })) as any,
+        assertAvailable: available, onProvenance: (p) => { seen = p; },
+      }),
+    );
+    expect(seen?.usedClaudeConsult).toBe(false);
+    expect(seen?.provider).toBe('local');
+  });
+});
+
+describe('the ROUTE records what ran', () => {
+  const fs2 = require('node:fs') as typeof import('node:fs');
+  const path2 = require('node:path') as typeof import('node:path');
+  const src2 = fs2.readFileSync(
+    path2.join(__dirname, '..', '..', '..', 'app', 'api', 'voice', 'stream-conversation', 'route.ts'), 'utf8');
+  const code2 = src2.replace(/\/\*[\s\S]*?\*\//g, '')
+    .split('\n').filter((l) => !/^\s*(\/\/|\*)/.test(l)).join('\n');
+
+  it('has no unconditional Claude training attribution', () => {
+    expect(code2).not.toContain("primaryEngine: 'claude");
+    expect(code2).not.toContain('usedClaudeConsult: true');
+  });
+
+  it('attributes from the reported provenance', () => {
+    expect(code2).toContain('onProvenance');
+    expect(code2).toMatch(/primaryEngine:[\s\S]{0,120}turnProvenance/);
+    expect(code2).toMatch(/usedClaudeConsult:[\s\S]{0,120}turnProvenance/);
   });
 });
