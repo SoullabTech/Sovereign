@@ -16,7 +16,7 @@
 import { describe, it, expect } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
-import { buildManifest, RETURN_TO_MAIA_ROUTES } from '../../../scripts/generate-desktop-house-allowlist';
+import { buildManifest, DESKTOP_MAIA_ROUTE } from '../../../scripts/generate-desktop-house-allowlist';
 import { HOUSE_DESTINATIONS } from '../houseDestinations';
 
 const MANIFEST = path.join(__dirname, '..', '..', '..', 'maia-desktop', 'src', 'house-allowlist.json');
@@ -27,19 +27,18 @@ describe('DESKTOP-HOUSE-01 · Desktop allow-list is derived from the House', () 
     expect(onDisk).toEqual(buildManifest());
   });
 
-  it('every routed House destination is reachable, except the conversation itself', () => {
+  it('every routed House destination is reachable, the conversation included', () => {
+    // ⛔ SUPERSEDED: DESKTOP-HOUSE-01 excluded /maia here, because Desktop
+    // answered it by revealing the local Electron renderer. Founder ruling after
+    // the device walk — there is ONE visible MAIA and she is the canonical one,
+    // so the conversation is a destination like any other place the House opens.
     const m = buildManifest();
     for (const d of HOUSE_DESTINATIONS) {
       if (d.kind !== 'route' || !d.route) continue;
-      if (RETURN_TO_MAIA_ROUTES.includes(d.route)) {
-        // ⛔ The center is NOT a remote destination. Desktop already holds the
-        // member's conversation locally; loading the web one would put a second
-        // MAIA in the same window.
-        expect(m.allowedRoots).not.toContain(d.route);
-        continue;
-      }
       expect(m.allowedRoots).toContain(d.route);
     }
+    expect(m.allowedRoots).toContain(DESKTOP_MAIA_ROUTE);
+    expect(m.maiaRoute).toBe(DESKTOP_MAIA_ROUTE);
   });
 
   it('nothing is allowed that the House does not name', () => {
@@ -54,15 +53,15 @@ describe('DESKTOP-HOUSE-01 · Desktop allow-list is derived from the House', () 
     }
   });
 
-  it('the conversation route is matched exactly, never as a prefix', () => {
-    // /maia/anchor, /maia/ideas, /maia/living-field, /maia/keep-capture and
-    // /maia/vision-studio are Rooms that live under the conversation's path.
-    // A prefix rule would bounce a member out of Anchor and back to MAIA.
+  it('Rooms living under the conversation path are reachable in their own right', () => {
+    // /maia/anchor, /maia/ideas, /maia/living-field and /maia/keep-capture are
+    // Rooms that happen to sit under the conversation's path. Each is allowed
+    // as itself, not merely as a consequence of /maia being allowed.
     const m = buildManifest();
     const roomsUnderMaia = m.allowedRoots.filter((r) => r.startsWith('/maia/'));
     expect(roomsUnderMaia.length).toBeGreaterThan(0);
     for (const room of roomsUnderMaia) {
-      expect(RETURN_TO_MAIA_ROUTES).not.toContain(room);
+      expect(m.destinations.some((d) => d.route === room)).toBe(true);
     }
   });
 

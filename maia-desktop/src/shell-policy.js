@@ -119,14 +119,23 @@ console.log(`[Desktop platform] origin=${PLATFORM_ORIGIN} source=${RESOLVED_PLAT
 const PLATFORM_PARTITION = 'maia-platform';
 
 /**
- * DESKTOP-HOUSE-01 — the threshold, replacing DESKTOP-SHELL-01's `/journey`
- * proof surface.
+ * DESKTOP-MAIA-UNIFICATION-01 — Desktop opens on MAIA herself.
  *
- * `/journey` was an entry point chosen because it was safe to prove a shell
- * with. The House is the member's actual threshold, and it is the surface that
- * knows — canonically — which places exist and who may see them.
+ * ⛔ THE PROGRESSION, AND WHY IT ENDED HERE.
+ *   DESKTOP-SHELL-01  `/journey`  — an entry chosen because it was safe to prove
+ *                                   a shell with.
+ *   DESKTOP-HOUSE-01  `/house`    — the member's threshold into the platform.
+ *   THIS UNIT         `/maia`     — the member's actual centre.
+ *
+ * The House is a doorway, not a home screen, and the local Electron renderer is
+ * witness scaffolding, not the product. There is one visible MAIA and it is the
+ * canonical one. The House opens FROM here; it is no longer what Desktop opens
+ * ON.
  */
-const PLATFORM_ENTRY_PATH = '/house';
+const PLATFORM_ENTRY_PATH = '/maia';
+
+/** The House, still the threshold — reached from MAIA, not instead of her. */
+const PLATFORM_HOUSE_PATH = '/house';
 
 /**
  * The path authority, GENERATED from `lib/navigation/houseDestinations.ts`.
@@ -216,18 +225,6 @@ function isUnderRoot(pathname, root) {
   return pathname === root || pathname.startsWith(root + '/');
 }
 
-/**
- * Is this pathname THE member's conversation?
- *
- * ⛔ Exact, never prefix. `/maia/anchor`, `/maia/ideas`, `/maia/living-field`,
- * `/maia/keep-capture` and `/maia/vision-studio` are Rooms that happen to live
- * under this path. A prefix rule would eject a member from Anchor back to the
- * local conversation — wrong, and baffling to experience.
- */
-function isConversationPath(pathname) {
-  return HOUSE.returnToMaiaRoutes.includes(pathname);
-}
-
 /** Does the House name a place at this path? */
 function isHousePath(pathname) {
   return HOUSE.allowedRoots.some((root) => isUnderRoot(pathname, root));
@@ -236,19 +233,17 @@ function isHousePath(pathname) {
 /**
  * What may happen when the platform view tries to go somewhere.
  *
- *   allow           the House names this place — it may load in the platform view
- *   return-to-maia  the remote conversation — Desktop already HAS the member's
- *                   MAIA locally, so this is read as "return to center": the
- *                   caller detaches the platform view and reveals it
- *   external        a web address elsewhere — the OS browser, never a Desktop renderer
- *   block           our origin but not a House place, or a refused scheme
+ *   allow     the House names this place — it may load in the platform view
+ *   external  a web address elsewhere — the OS browser, never a Desktop renderer
+ *   block     our origin but not a House place, or a refused scheme
  *
  * ⛔ `external` is reachable ONLY for http/https. A `javascript:` or `file:`
  * URL handed to `shell.openExternal` is a local-code-execution primitive
  * pointed at the member's machine; it is blocked outright, not delegated.
  *
- * ⛔ The order matters: the conversation is checked BEFORE the allow-list, so
- * `/maia` can never be admitted by some later widening of the House.
+ * ⛔ DESKTOP-MAIA-UNIFICATION-01 removed a `return-to-maia` action here. `/maia`
+ * used to be refused and translated into "reveal the local renderer"; it is now
+ * simply the destination Desktop opens on. One MAIA, and she is canonical.
  */
 function navigationDecision(url) {
   const raw = String(url == null ? '' : url);
@@ -257,9 +252,6 @@ function navigationDecision(url) {
   catch { return { action: 'block', reason: 'unparseable' }; }
 
   if (parsed.origin === PLATFORM_ORIGIN) {
-    if (isConversationPath(parsed.pathname)) {
-      return { action: 'return-to-maia', reason: 'remote_conversation' };
-    }
     if (isHousePath(parsed.pathname)) {
       return { action: 'allow', reason: 'house_destination' };
     }
@@ -291,6 +283,7 @@ module.exports = {
   PLATFORM_ORIGIN,
   PLATFORM_PARTITION,
   PLATFORM_ENTRY_PATH,
+  PLATFORM_HOUSE_PATH,
   PLATFORM_WEB_PREFERENCES,
   REFUSED_PERMISSIONS,
   EXTERNAL_SCHEMES,
@@ -298,7 +291,6 @@ module.exports = {
   platformEntryUrl,
   isPlatformUrl,
   isUnderRoot,
-  isConversationPath,
   isHousePath,
   navigationDecision,
   platformPermission,

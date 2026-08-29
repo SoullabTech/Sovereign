@@ -43,6 +43,7 @@ const { createConversation } = require('./conversation');
 const { createCaptureLiveness } = require('./capture-liveness');
 const { createThreadWatch } = require('./thread-watch');
 const { createPlatformShell, MAIA, PLATFORM } = require('./shell');
+const { PLATFORM_ENTRY_PATH: PLATFORM_MAIA_PATH, PLATFORM_HOUSE_PATH } = require('./shell-policy');
 const { navigationDecision } = require('./shell-policy');
 
 // Separate userData for a dev launch, so a development instance can never read
@@ -609,6 +610,10 @@ ipcMain.handle('maia:sign-in', async (_evt, payload) => {
       sessionId: `desktop-${Date.now()}`,
     });
     void joinMemberThread();
+    // ⭐ DESKTOP-MAIA-UNIFICATION-01. The member has authenticated, so the
+    // visible surface becomes MAIA herself — the canonical one. The local
+    // renderer's job from here is native infrastructure, not a destination.
+    void goTo(MAIA);
     buildMenu();                         // the destinations open for a member
   }
   broadcast('maia:auth', memberSession.state());
@@ -682,20 +687,35 @@ const DESTINATIONS = [
  * location indicator. Updating the MAIA renderer instead would mean injecting
  * script into it from main — more power spent, for a label.
  */
+// DESKTOP-MAIA-UNIFICATION-01 — where the member is, among PLATFORM places.
+// Both MAIA and the House are now inside the platform view; this is no longer
+// "attached or not", it is which place the one view is showing.
+let desktopPlace = MAIA;
+
 function showPlace(place) {
   if (!mainWindow || mainWindow.isDestroyed()) return;
   mainWindow.setTitle(place === PLATFORM ? 'MAIA Desktop — The House' : 'MAIA Desktop');
   buildMenu();
 }
 
+/**
+ * DESKTOP-MAIA-UNIFICATION-01 — MAIA is a PLACE, not a retreat.
+ *
+ * ⛔ WHAT THIS REPLACES. `goTo(MAIA)` used to HIDE the platform view and reveal
+ * the local Electron renderer. That made the witness scaffolding the centre of
+ * the product: a member coming back from Journal landed on a plain transcript
+ * instead of MAIA herself. Founder ruling after the device walk — there is one
+ * visible MAIA and she is canonical. Both destinations are now platform places
+ * and the local renderer is never a destination.
+ */
 async function goTo(id) {
   if (!platformShell) return;
-  if (id === MAIA) return platformShell.hide();
-  if (id !== PLATFORM) return;
   if (!memberSession || !memberSession.state().signedIn) return;
+  const path = id === MAIA ? PLATFORM_MAIA_PATH : id === PLATFORM ? PLATFORM_HOUSE_PATH : null;
+  if (!path) return;
 
-  // ⭐ DESKTOP-HOUSE-01 · TRUTHFUL ATTENTION. Capture is released BEFORE the
-  // House becomes visible, never after and never in parallel.
+  // ⭐ TRUTHFUL ATTENTION. Capture is released BEFORE the platform becomes
+  // visible, never after and never in parallel.
   //
   // The member is about to look at a platform place. If the microphone were
   // still live behind it, MAIA would be listening — and, with the epoch still
@@ -711,31 +731,22 @@ async function goTo(id) {
   // real, and exactly the kind that only reveals itself on a device.
   await releaseCapture('platform-visible');
 
-  const out = await platformShell.show();
-  // ⛔ A failed entry must not leave a blank view attached and the member
-  // stranded. Fall back to MAIA and say so where the surface already speaks.
+  const out = await platformShell.navigate(path);
   if (!out.ok) {
-    platformShell.hide();
-    broadcast('maia:turn', { phase: 'error', error: `The House could not open — ${out.error}` });
+    // ⛔ A failed entry must not leave a blank view attached and the member
+    // stranded. Say so where the surface already speaks. We do NOT fall back to
+    // the local renderer — that would reintroduce the second MAIA this unit
+    // removed, and would hide a real failure behind scaffolding.
+    broadcast('maia:turn', { phase: 'error', error: `Could not open ${path} — ${out.error}` });
+    return;
   }
-}
-
-/**
- * The House's MAIA door, and any remote attempt to reach `/maia`.
- *
- * ⛔ Returning to center does NOT restart capture. The member chose to listen
- * before; they did not choose to still be listening after a trip through the
- * House. Starting the microphone on their behalf, because it happened to be on
- * earlier, is exactly the silent-attention failure this unit forbids.
- */
-function returnToMaia(fromUrl) {
-  console.log('[HOUSE] return to center', fromUrl ? String(fromUrl).slice(0, 120) : '');
-  if (platformShell) platformShell.hide();
+  desktopPlace = id;
+  showPlace(id);
 }
 
 function buildMenu() {
   const signedIn = !!(memberSession && memberSession.state().signedIn);
-  const here = platformShell ? platformShell.place() : MAIA;
+  const here = desktopPlace;
   const go = DESTINATIONS.map((d) => ({
     label: d.label,
     accelerator: d.accelerator,
@@ -784,7 +795,6 @@ function createWindow() {
   });
 
   platformShell = createPlatformShell({
-    onReturnToMaia: returnToMaia,
     BrowserView,
     sessionApi: session,
     shellApi: shell,
@@ -825,7 +835,12 @@ app.whenReady().then(() => {
   createWindow();
   // After the window exists, so the restored thread has somewhere to land.
   if (memberSession.state().signedIn) {
-    mainWindow.webContents.once('did-finish-load', () => { void joinMemberThread(); });
+    mainWindow.webContents.once('did-finish-load', () => {
+      void joinMemberThread();
+      // A restored session is still an authenticated member: Desktop opens on
+      // MAIA, not on the scaffolding that happens to be mounted underneath.
+      void goTo(MAIA);
+    });
   }
 });
 

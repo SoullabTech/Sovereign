@@ -50,6 +50,7 @@
 'use strict';
 
 const {
+  PLATFORM_ORIGIN,
   PLATFORM_PARTITION,
   PLATFORM_WEB_PREFERENCES,
   platformEntryUrl,
@@ -69,7 +70,7 @@ const PLATFORM = 'platform';
  * @param deps.onPlace       notified when the visible destination changes
  */
 function createPlatformShell({
-  BrowserView, sessionApi, shellApi, window, credential, onPlace, onReturnToMaia,
+  BrowserView, sessionApi, shellApi, window, credential, onPlace,
 } = {}) {
   let view = null;                       // at most ONE, ever
   let place = MAIA;
@@ -120,15 +121,6 @@ function createPlatformShell({
       // outright rather than handing it to the OS.
       shellApi.openExternal(decision.url);
     }
-    if (decision.action === 'return-to-maia' && typeof onReturnToMaia === 'function') {
-      // ⭐ DESKTOP-HOUSE-01. The House's MAIA door does not open a remote
-      // conversation inside Desktop — Desktop already holds the member's MAIA,
-      // locally and privileged. Loading the web one would put two MAIAs in one
-      // window, which is the failure DS01's device walk actually observed. The
-      // navigation is prevented above; this hands the gesture to main, which
-      // detaches the platform view and reveals the conversation already there.
-      onReturnToMaia(url);
-    }
     return decision;
   }
 
@@ -155,10 +147,6 @@ function createPlatformShell({
       if (isMainFrame === false) return;   // a frame moving is not the member moving
       const decision = navigationDecision(url);
       if (decision.action === 'allow') return;
-      if (decision.action === 'return-to-maia') {
-        if (typeof onReturnToMaia === 'function') onReturnToMaia(url);
-        return;
-      }
       if (decision.action === 'external' && shellApi && shellApi.openExternal) {
         shellApi.openExternal(decision.url);
       }
@@ -175,6 +163,34 @@ function createPlatformShell({
       return { action: 'deny' };
     });
     return view;
+  }
+
+  /**
+   * DESKTOP-MAIA-UNIFICATION-01 — move the platform view to a place.
+   *
+   * ⛔ Main's authority, not the renderer's. There is still no bridge verb for
+   * navigation: this is called from the application menu, which lives in main.
+   * A renderer able to drive this could steer the member's window.
+   *
+   * ⛔ The path is checked by the SAME `navigationDecision` that guards
+   * `will-navigate`. A destination we open must be a destination we would have
+   * allowed had the page asked for it — otherwise main would be a hole in its
+   * own perimeter.
+   */
+  async function navigate(pathname) {
+    const url = `${PLATFORM_ORIGIN}${pathname}`;
+    const decision = navigationDecision(url);
+    if (decision.action !== 'allow') {
+      return { ok: false, error: `refused: ${decision.reason}` };
+    }
+    const shown = await show();
+    if (!shown.ok) return shown;
+    try {
+      await view.webContents.loadURL(url);
+      return { ok: true, url };
+    } catch (e) {
+      return { ok: false, error: (e && e.message) || 'navigation failed' };
+    }
   }
 
   function fit() {
@@ -251,6 +267,7 @@ function createPlatformShell({
   }
 
   return {
+    navigate,
     show, hide, destroy, fit,
     place: () => place,
     isShowing: () => place === PLATFORM,

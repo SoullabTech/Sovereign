@@ -30,8 +30,9 @@ const srcDir = path.join(here, '..', 'src');
 
 const { createPlatformShell } = require('../src/shell.js');
 const {
-  PLATFORM_ORIGIN, PLATFORM_ENTRY_PATH, HOUSE, PRODUCTION_PLATFORM_ORIGIN, resolvePlatformOrigin,
-  navigationDecision, platformEntryUrl, isConversationPath, isHousePath, isUnderRoot,
+  PLATFORM_ORIGIN, PLATFORM_ENTRY_PATH, PLATFORM_HOUSE_PATH, HOUSE,
+  PRODUCTION_PLATFORM_ORIGIN, resolvePlatformOrigin,
+  navigationDecision, platformEntryUrl, isHousePath, isUnderRoot,
 } = require('../src/shell-policy.js');
 const { createSession } = require('../src/session.js');
 
@@ -43,17 +44,17 @@ process.on('exit', () => tempDirs.forEach((d) => fs.rmSync(d, { recursive: true,
 // H · PATH AUTHORITY  (pure — no Electron needed)
 // ════════════════════════════════════════════════════════════════════════════
 
-test('H — the threshold is the House, not the old proof surface', () => {
-  assert.equal(PLATFORM_ENTRY_PATH, '/house');
-  assert.equal(platformEntryUrl(), `${PLATFORM_ORIGIN}/house`);
-  // /journey was DESKTOP-SHELL-01's entry. It is not a House destination, so it
-  // is now no more reachable than any other unnamed route.
+test('U — Desktop opens on MAIA herself; the House is a doorway from her', () => {
+  // DESKTOP-SHELL-01 /journey -> DESKTOP-HOUSE-01 /house -> THIS UNIT /maia.
+  assert.equal(PLATFORM_ENTRY_PATH, '/maia');
+  assert.equal(PLATFORM_HOUSE_PATH, '/house');
+  assert.equal(platformEntryUrl(), `${PLATFORM_ORIGIN}/maia`);
+  // /journey was the original proof surface and is not a House destination.
   assert.equal(navigationDecision(`${PLATFORM_ORIGIN}/journey`).action, 'block');
 });
 
 test('H — a place the House names loads; the same origin alone does not', () => {
   for (const d of HOUSE.destinations) {
-    if (HOUSE.returnToMaiaRoutes.includes(d.route)) continue;
     assert.equal(
       navigationDecision(`${PLATFORM_ORIGIN}${d.route}`).action, 'allow',
       `${d.id} (${d.route}) is a House destination but was refused`,
@@ -77,22 +78,21 @@ test('H — a destination admits its own sub-paths, and only its own', () => {
   assert.ok(!isUnderRoot('/journalism', '/journal'));
 });
 
-test('H5 — the remote conversation is a RETURN, never a load', () => {
-  const dec = navigationDecision(`${PLATFORM_ORIGIN}/maia`);
-  assert.equal(dec.action, 'return-to-maia');
-  assert.equal(dec.reason, 'remote_conversation');
-  assert.equal(navigationDecision(`${PLATFORM_ORIGIN}/maia?tab=x#y`).action, 'return-to-maia');
-  // It is never merely 'allow' — a second MAIA must not be loadable at all.
-  assert.notEqual(dec.action, 'allow');
-  assert.ok(!HOUSE.allowedRoots.includes('/maia'));
+test('U — the canonical conversation is a DESTINATION, not an instruction', () => {
+  // ⛔ SUPERSEDED CONTRACT. DESKTOP-HOUSE-01 answered 'return-to-maia' here and
+  // revealed the local Electron renderer instead of loading /maia. The device
+  // walk showed what that meant in the hand: a member returning from Journal
+  // landed on a plain transcript rather than MAIA. Founder ruling — there is one
+  // visible MAIA and she is canonical.
+  assert.equal(navigationDecision(`${PLATFORM_ORIGIN}/maia`).action, 'allow');
+  assert.equal(navigationDecision(`${PLATFORM_ORIGIN}/maia?tab=x#y`).action, 'allow');
+  assert.ok(HOUSE.allowedRoots.includes('/maia'));
+  assert.equal(HOUSE.maiaRoute, '/maia');
 });
 
-test('H5 — Rooms living UNDER /maia are Rooms, not the conversation', () => {
-  // A prefix rule would eject a member from Anchor back to the local
-  // conversation the moment they opened it.
+test('U — Rooms living UNDER /maia load as Rooms', () => {
   for (const p of ['/maia/anchor', '/maia/ideas', '/maia/living-field', '/maia/keep-capture']) {
-    assert.equal(navigationDecision(`${PLATFORM_ORIGIN}${p}`).action, 'allow', `${p} was treated as the conversation`);
-    assert.ok(!isConversationPath(p));
+    assert.equal(navigationDecision(`${PLATFORM_ORIGIN}${p}`).action, 'allow', `${p} was refused`);
     assert.ok(isHousePath(p));
   }
 });
@@ -191,22 +191,33 @@ test('H — a client-side transition to a non-House path is walked back to the H
   assert.equal(log.loaded[log.loaded.length - 1], platformEntryUrl());
 });
 
-test('H5 — a client-side transition to /maia returns to center and loads nothing', async () => {
+test('U — a client-side transition to /maia is left alone', async () => {
   const { shell, log } = await shellFor();
   const before = log.loaded.length;
   shell._view().webContents.emit('did-navigate-in-page', {}, `${PLATFORM_ORIGIN}/maia`, true);
   await new Promise((r) => setTimeout(r, 0));
-  assert.deepEqual(log.returns, [`${PLATFORM_ORIGIN}/maia`], 'return-to-center was not signalled to main');
-  assert.equal(log.loaded.length, before, 'the remote conversation was loaded anyway');
+  assert.equal(log.loaded.length, before, 'reaching MAIA bounced the member somewhere else');
 });
 
-test('H5 — a full navigation to /maia is prevented AND returns to center', async () => {
-  const { shell, log } = await shellFor();
+test('U — a full navigation to /maia proceeds', async () => {
+  const { shell } = await shellFor();
   let prevented = false;
   shell._view().webContents.emit('will-navigate',
     { preventDefault: () => { prevented = true; } }, `${PLATFORM_ORIGIN}/maia`);
-  assert.ok(prevented, 'the remote conversation was allowed to load');
-  assert.deepEqual(log.returns, [`${PLATFORM_ORIGIN}/maia`]);
+  assert.equal(prevented, false, 'the canonical conversation was prevented from loading');
+});
+
+test('U — navigate() opens a place, and refuses one the House does not name', async () => {
+  const { shell, log } = await shellFor();
+  const ok = await shell.navigate('/house');
+  assert.equal(ok.ok, true, `navigate(/house) failed: ${ok.error}`);
+  assert.equal(log.loaded[log.loaded.length - 1], `${PLATFORM_ORIGIN}/house`);
+
+  // ⛔ Main must not be a hole in its own perimeter: a place main opens has to
+  // be a place the page would have been allowed to ask for.
+  const no = await shell.navigate('/admin/secrets');
+  assert.equal(no.ok, false);
+  assert.match(no.error, /not_a_house_path/);
 });
 
 test('H — a SUBFRAME moving in-page is not the member moving', async () => {
@@ -290,5 +301,5 @@ test('P9/P10 — the entry URL and the navigation authority share ONE resolved o
   // the member's OS browser.
   assert.equal(platformEntryUrl(), `${PLATFORM_ORIGIN}${PLATFORM_ENTRY_PATH}`);
   assert.equal(navigationDecision(`${PLATFORM_ORIGIN}/journal`).action, 'allow');
-  assert.equal(navigationDecision(`${PLATFORM_ORIGIN}/maia`).action, 'return-to-maia');
+  assert.equal(navigationDecision(`${PLATFORM_ORIGIN}/maia`).action, 'allow');
 });
