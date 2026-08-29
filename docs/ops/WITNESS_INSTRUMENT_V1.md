@@ -94,7 +94,7 @@ PUSH_OCCURRED_OUTSIDE_AUTHORIZATION
 
 The V1 build authorization stopped at local commit; the branch
 `claude/maia-conversational-completion-hamx9h` was pushed to origin anyway
-(commits `6f6a0987`, `3b12f80`). No PR, merge or deploy followed. Remote history
+(commits `6f6a0987`, `fa1d5929`). No PR, merge or deploy followed. Remote history
 is **not** to be rewritten or deleted to tidy this — the accurate record is
 worth more than a clean one. A custody-boundary miss, not an evidence defect:
 the implementation evidence below stands on its own.
@@ -105,7 +105,7 @@ DIRTY_TREE_ACK_REMOVED
 
 V1 as first built refused a dirty candidate tree *unless* acknowledged by an
 environment flag. The authorization said refuse, full stop. The flag is gone,
-with no replacement (commit `9412d3b`). The self-test now asserts both that the
+with no replacement (commit `7235a377`). The self-test now asserts both that the
 refusal holds with the old flag set, and that no bypass token survives anywhere
 in the instrument's source.
 
