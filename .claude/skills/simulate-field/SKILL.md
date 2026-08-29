@@ -13,6 +13,30 @@ You are the **laboratory director**, not a participant. You never play a
 simulated agent. If you find yourself arguing inside your own experiment, the
 experiment is over and the result is void.
 
+## Execution is HELD — read this before Step 1
+
+```text
+JARVIS-SIM-01
+CHARTERED · INSTRUMENTS BUILT
+EXECUTION: HELD — FOUNDER GO REQUIRED
+```
+
+**Design is not execution.** Steps 1–6 are permitted under the hold: refuse at
+the gate, scaffold, write the brief, form hypotheses, design the world on paper,
+lay out the matrix, seal. **Step 7 is not.**
+
+Do not run anything — including a toy or smoke run — do not build agents, choose
+models, or install a simulation framework, until the founder has recorded:
+
+```text
+GO JARVIS-SIM-01 EXPERIMENT 1
+```
+
+Record the GO in `RUN_INTEGRITY.md` under *Execution authority*, quoting it.
+**You may identify that the authority is missing. You may never supply it.** If
+the GO is absent, complete the design, state plainly that execution is held, and
+stop. That is a complete and correct outcome, not a blocked one.
+
 ## Ordering is the philosophy — do not reorder
 
 The instinct is to start building the world, because that part is fun. The
@@ -133,15 +157,34 @@ not run.
 |---|---|
 | **NULL MODEL** | no interaction / no mechanism — the floor. Establishes what the task yields with the mechanism absent. |
 | **BASELINE** | the ordinary case |
+| **SHAM / TOKEN-MATCHED** | the same *quantity and shape* of added context as the treatment, drained of the meaning under test |
 | **COUNTERFACTUAL 1–2** | the varied conditions under test |
-| **ADVERSARIAL** | the mechanism present but corrupted or hostile — separates the mechanism from its side effects |
+| **ADVERSARIAL** | the mechanism present but corrupted or hostile |
+
+**SHAM is required whenever the treatment adds context, tokens, or structure
+relative to baseline** — which is nearly always. Without it, "the mechanism
+worked" and "the model had more to read" are indistinguishable.
+
+**The adversarial condition is not that control**, and using it as one is a
+design error (founder ruling, 2026-08-29). Corrupting the mechanism adds a second
+causal variable — misinformation — so a difference under corruption cannot
+separate *structure* from *extra context* from *actively false content*. They are
+two conditions asking two questions:
+
+- **SHAM:** is the mechanism doing anything beyond supplying more context?
+- **ADVERSARIAL:** if the mechanism matters, what happens when it is **wrong**?
+
+Keep both. The second is usually the one with real consequences attached.
 
 Where the question is architectural, add the **architecture comparison**:
 (A) ordinary agent debate · (B) social simulation · (C) AIN relational-field
 simulation. The point is not to show C wins. The point is to find out whether C
 differs at all — **if B and C produce the same result, that is the finding.**
 
-## Step 7 — Repeated runs
+## Step 7 — Repeated runs *(requires founder GO — see the hold above)*
+
+Confirm the GO is recorded in `RUN_INTEGRITY.md` before the first run. If it is
+not, stop here and report the design as complete and execution as held.
 
 Run each condition **several times.** Never present one run as the result.
 
@@ -174,6 +217,7 @@ of what it proved. Run `/adjudicate-simulation <slug>`.
 
 ## Standing constraints
 
+- Execution requires a recorded founder GO. Design and refusal do not.
 - No production code is edited during a simulation. No production writes.
 - JARVIS never plays an agent in its own experiment.
 - The simulator never adjudicates reality. MAIA interprets; humans decide.

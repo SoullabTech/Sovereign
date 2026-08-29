@@ -115,16 +115,28 @@ if [ "$MODE" = "--verify" ]; then
        echo "   assumption edited after results existed is disqualified." ;;
   esac
   echo
+  echo "3. EXECUTION AUTHORITY"
+  if grep -q '^- \*\*Founder GO:\*\* `NONE RECORDED`' "$INTEG"; then
+    GO_OK=0
+    echo "   NONE RECORDED — execution was held. Any run that occurred did so"
+    echo "   without founder authority. Report this in the verdict; do not treat"
+    echo "   the results as authorized."
+  else
+    GO_OK=1
+    echo "   $(grep '^- \*\*Founder GO:\*\*' "$INTEG" | sed 's/^- \*\*Founder GO:\*\* //')"
+  fi
+  echo
   echo "Seal the brief before running:  bash scripts/simulate-field-scaffold.sh ${SLUG} --seal"
   echo "=================================================================="
 
-  [ "$INST_OK" = "1" ] && [ "$BRIEF_OK" = "1" ] && exit 0
+  [ "$INST_OK" = "1" ] && [ "$BRIEF_OK" = "1" ] && [ "$GO_OK" = "1" ] && exit 0
 
   echo
   echo "Divergence is a REPORTABLE CONDITION, not a failure. Record both lines above in"
   echo "the verdict. Runs from before and after a divergence belong to different"
   echo "instruments — or to different questions — and may not be pooled."
 
+  if [ "$GO_OK" = "0" ] && [ "$INST_OK" = "1" ] && [ "$BRIEF_OK" = "1" ]; then exit 6; fi
   if [ "$INST_OK" = "0" ] && [ "$BRIEF_OK" != "1" ]; then exit 5; fi
   if [ "$INST_OK" = "0" ]; then exit 3; fi
   exit 4
@@ -214,11 +226,17 @@ founder does not expect.
 |---|---|---|
 | NULL MODEL | | |
 | BASELINE | | |
-| COUNTERFACTUAL 1 | | |
-| COUNTERFACTUAL 2 | | |
+| SHAM / TOKEN-MATCHED | | |
+| TREATMENT / COUNTERFACTUAL | | |
 | ADVERSARIAL | | |
 
-A design missing the null or the adversarial condition is not run.
+A design missing the NULL or the SHAM condition is not run.
+
+SHAM = same quantity and shape of added context as the treatment, drained of the
+meaning under test. It is the ONLY control for "the treatment just had more to
+read". ADVERSARIAL (mechanism present but corrupted) is NOT that control — it
+adds misinformation as a second causal variable. Keep both; they answer different
+questions.
 
 ## Sovereignty gate
 
@@ -271,6 +289,24 @@ and the brief can move while the instrument holds still.
 - **Instrument files:**
 $(printf '%s\n' "$INSTRUMENT_FILES" | sed 's|^|  - `|; s|$|`|')
 
+## Execution authority
+
+\`\`\`text
+JARVIS-SIM-01
+CHARTERED · INSTRUMENTS BUILT
+EXECUTION: HELD — FOUNDER GO REQUIRED
+\`\`\`
+
+Design is not execution. Scaffolding, briefing, hypothesis formation and sealing
+are permitted under the hold. Running is not — including a toy or smoke run.
+
+- **Founder GO:** \`NONE RECORDED\`
+
+Replace the line above with the founder's verbatim GO and the date, e.g.
+\`GO JARVIS-SIM-01 EXPERIMENT 1 (2026-09-04)\`. **This is written by the founder,
+never by a worker or an agent** — a worker may identify a missing authority, it
+may never supply one. There is deliberately no \`--go\` flag on this script.
+
 ## Brief + world
 
 Sealed before the first run. A metric or assumption edited after results exist is
@@ -298,5 +334,7 @@ echo "     answer the REFUSAL GATE first. 'This question does not need simulatio
 echo "     is a valid and often correct outcome."
 echo "  2. ${WORLD}"
 echo "  3. seal:   bash scripts/simulate-field-scaffold.sh ${SLUG} --seal"
-echo "  4. run, then: /adjudicate-simulation ${SLUG}"
-echo "  5. close:  bash scripts/simulate-field-scaffold.sh ${SLUG} --verify"
+echo "  4. EXECUTION IS HELD — a founder GO must be recorded in"
+echo "     ${INTEG} before any run. Design freely; do not execute."
+echo "  5. once GO is recorded: run, then /adjudicate-simulation ${SLUG}"
+echo "  6. close:  bash scripts/simulate-field-scaffold.sh ${SLUG} --verify"

@@ -1,10 +1,39 @@
 # JARVIS-SIM-01 — Field Simulation / Counterfactual Rehearsal
 
 **Lane ID:** JARVIS-SIM-01
-**Chartered:** 2026-08-29 (founder-directed)
-**Status:** CHARTERED. Instruments built. **No experiment has been run.**
+**Origin:** derived from founder exploration, 2026-08-29. The capability ceiling
+came from that conversation; **authorization to execute did not.**
+
+```text
+JARVIS-SIM-01
+CHARTERED · INSTRUMENTS BUILT
+EXECUTION: HELD — FOUNDER GO REQUIRED
+```
+
 **Authority ceiling:** synthetic data · isolated · read-only against production ·
 `SIMULATED` provenance · no result is canonical without a founder ruling.
+
+**Execution hold (founder ruling, 2026-08-29).** Specifying this lane's ceiling
+was not authority to begin an experiment. Running the first experiment is a
+**distinct authority transition**, and it is held pending an explicit:
+
+```text
+GO JARVIS-SIM-01 EXPERIMENT 1
+```
+
+This is the standing Jarvis principle applied to its own research capability:
+
+> **automate the work, never the authority.**
+
+**What the hold permits and forbids.** Design is not execution. Permitted under
+the hold: scaffolding a run, writing and sealing a brief, constructing hypotheses
+and a condition matrix, and — always — *refusing* a simulation at the gate.
+Forbidden under the hold: building agents, choosing models, installing any
+simulation framework, and executing any run, including a toy or smoke run.
+
+A worker may **identify** the missing authority; it may never **supply** it. The
+GO is recorded by the founder, and no instrument in this lane can write one —
+`scripts/simulate-field-scaffold.sh` deliberately has no `--go` flag.
 
 ---
 
@@ -144,7 +173,7 @@ nothing, contradicted itself, or merely restated its assumptions.
 
 Run artefacts: `docs/simulations/<slug>/<date>/`.
 
-## 7. First experiment (specified, NOT run)
+## 7. First experiment (specified, HELD — not run)
 
 Deliberately **not** about customers, pricing, or platform strategy. The first
 experiment interrogates AIN's own architecture, because a method's first job is
@@ -153,23 +182,69 @@ to be capable of embarrassing its authors.
 > **Does maintaining relationship-state between agents produce measurably
 > different collective intelligence from agents that merely exchange messages?**
 
-| Condition | Description |
-|---|---|
-| **NULL** | agents in isolation, no exchange — establishes the task's floor |
-| **BASELINE** | message-passing only; no persistent inter-agent relationship state |
-| **TREATMENT** | persistent relationship state (history, trust, prior correction) carried across turns |
-| **ADVERSARIAL** | relationship state present but *corrupted* — tests whether any effect is the state itself or merely extra tokens |
+### Five conditions (founder correction, 2026-08-29)
 
-The adversarial condition is what separates a finding from an artefact. Extra
-context alone changes behaviour; the question is whether *relational* structure
-does something extra context does not.
+| Condition | What it tests |
+|---|---|
+| **NULL** | task floor; agents do not interact |
+| **BASELINE** | agents exchange messages, no persistent relational state |
+| **SHAM / TOKEN-MATCHED CONTROL** | same amount and shape of extra context as treatment, but relationally meaningless |
+| **TREATMENT** | accurate persistent relationship state (history, trust, prior correction) |
+| **ADVERSARIAL** | persistent relationship state deliberately corrupted |
+
+### Why SHAM and ADVERSARIAL are not the same control
+
+The earlier draft used the adversarial condition as the control for the
+"treatment just has more tokens" confound. **That was wrong, and the error is
+worth recording rather than quietly fixing.** Corrupting the relational state
+introduces a *second* causal variable — misinformation. If the corrupted
+condition then behaves differently, three explanations remain live and the design
+cannot separate them: relational structure, additional context, or actively false
+relational content.
+
+Split, the conditions ask two different questions, and both are worth asking:
+
+**SHAM asks:** is relationship-state doing anything beyond supplying additional
+context? This is the clean control for the confound — matched in token count and
+shape, empty of relational meaning. It is the condition that can return *no*.
+
+**ADVERSARIAL asks:** if relational state matters, what happens when it is
+**wrong**?
+
+The second question is the one that matters most for MAIA. The risk in
+accumulated relational understanding is not that memory fails to work. It is
+that it works well enough to become **confidently wrong** — familiarity
+hardening into ontology. That connects directly to the developmental axis named
+in the held research programme:
+
+> **continuity without identity foreclosure**
+
+and to the ratified invariant it points at: *no representation of the system may
+acquire more authority simply by being copied into a more durable or more
+convenient store.* An accumulated model of a person is the most consequential
+such store MAIA will ever hold. The adversarial condition is the first place this
+lane can study that failure mode without a real person bearing the cost.
+
+### The standard this experiment is held to
 
 **This directly tests one of the deepest claims underneath AIN. If the answer is
-no, we should know.** A null result here is a successful experiment and must be
-recorded as one.
+no, we should know.** A null result is a successful experiment and is recorded as
+one, at full length.
+
+The design obligation on GO is therefore stated in the inverse of the usual
+direction. The first job is **not** to construct an experiment in which AIN wins.
+It is to construct an experiment capable of demonstrating that **persistent
+relational state adds nothing at all.**
+
+If this lane can faithfully discover *that*, it is a research instrument. If it
+cannot, it is a belief-confirmation machine, and the charter has failed
+regardless of what any run reports.
 
 ## 8. What this charter does not authorize
 
+- **No execution.** No run, no toy run, no smoke run, no agent construction, no
+  model selection, no simulation framework installed, until `GO JARVIS-SIM-01
+  EXPERIMENT 1` is recorded by the founder.
 - No production write path, on any result.
 - No member-facing surface describing simulated findings.
 - No promotion of a simulated finding to Live / Designed / Vision (§2).
