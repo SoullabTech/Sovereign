@@ -109,3 +109,22 @@ the acceptance path has NOT been witnessed:
 Evidence class: **SOURCE**. Probes 1–5 of the superseded Kokoro lane passed on
 device (Kokoro synthesised 17,685 bytes of mp3 from inside MAIA); that stack is
 stopped and is not evidence for this lane.
+
+---
+
+## Erratum — D2's stated repair was wrong
+
+This document said the archetype intercept is dead on this route and implied the
+repair was to thread `voiceArchetype` through to `ttsRouter.synthesize()`. The
+observation stands; **the implied repair does not** and was backed out before it
+shipped.
+
+The intercept runs *before* local dispatch and diverts `maia_core` to OpenAI, so
+forwarding the archetype would have made a member who declined cloud voice lose
+their local fallback — and in production would have silenced MAIA for every
+member on the default archetype. Identity resolution and provider selection are
+the two axes the ruling separates; making an identity instruct a provider
+collapses them.
+
+The archetype is now used only as identity and context. Full reasoning and the
+ruling it serves: `docs/canon/VOICE_SOVEREIGNTY_03_CONSENT_IS_A_MEMBER_ACT.md`.

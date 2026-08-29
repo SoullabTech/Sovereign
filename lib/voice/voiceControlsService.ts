@@ -165,6 +165,45 @@ export async function upsertMemberVoicePreferences(
   );
 }
 
+/**
+ * Set ONLY the member's TTS provider preference.
+ *
+ * VOICE-SOVEREIGNTY-03 (founder ruling 2026-08-29). The consent gesture must not
+ * be able to touch the member's voice identity.
+ *
+ * ⛔ Deliberately NOT `upsertMemberVoicePreferences`. That function is a
+ *    full-replace upsert: every column it does not receive is written NULL. A
+ *    consent act routed through it would silently clear `voice_id_override` and
+ *    `voice_archetype` — so answering "yes, you may use the cloud" would erase
+ *    which voice the member had chosen. The whole ruling is that identity and
+ *    egress are separate axes; a write that collapses them contradicts it in the
+ *    one place it matters most.
+ *
+ * On first write the row is created with default offsets, because a member may
+ * answer the consent question before ever opening voice settings.
+ */
+export async function setMemberTtsProvider(
+  memberId: string,
+  ttsProvider: TTSProviderPref | null,
+): Promise<void> {
+  await query(
+    `INSERT INTO member_voice_preferences
+       (member_id, tts_provider, pace_offset, warmth_offset, poetry_offset, directiveness_offset, energy_offset)
+     VALUES ($1, $2, $3, $4, $5, $6, $7)
+     ON CONFLICT (member_id) DO UPDATE SET
+       tts_provider = $2`,
+    [
+      memberId,
+      ttsProvider,
+      DEFAULT_OFFSETS.pace,
+      DEFAULT_OFFSETS.warmth,
+      DEFAULT_OFFSETS.poetry,
+      DEFAULT_OFFSETS.directiveness,
+      DEFAULT_OFFSETS.energy,
+    ],
+  );
+}
+
 // ===================================================================
 // Merge Helper (for conductor)
 // ===================================================================

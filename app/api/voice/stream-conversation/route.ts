@@ -21,7 +21,12 @@
  * The user hears MAIA begin speaking while she's still thinking.
  */
 
-import { resolveVoicePreference } from '@/lib/tts/cloudVoicePolicy';
+import {
+  resolveVoicePreference,
+  classifyCloudVoiceGate,
+  CloudVoiceForbidden,
+} from '@/lib/tts/cloudVoicePolicy';
+import { MAIA_VOICE_ARCHETYPES } from '@/lib/voice/voiceArchetypes';
 import { sanitizeForSpeech } from '@/lib/tts/sanitizeForSpeech';
 import { NextRequest } from 'next/server';
 import os from 'os';
@@ -309,11 +314,61 @@ async function synthesizeWithFallback(
       format: 'mp3',
       speed: options.speed,
       voiceHint: elementKey ? { element: elementKey, speed: options.speed } as any : undefined,
-      ttsProviderPref: 'auto',
+      // ⭐ DESKTOP-TTS-ALLOY-POLICY-MISMATCH-01 (D1). This was the literal
+      // 'auto', which discarded the preference computed at the top of this
+      // function. The policy was then enforced against a value the member never
+      // set: someone who had stored 'cloud' was refused with `pref=auto`, and
+      // the [tts.resolve] log above printed their real choice while the boundary
+      // received a different one. The log and the enforcement must agree.
+      //
+      // The sibling branch's hard-coded 'local' is correct — an `if` above it
+      // establishes that as the member's explicit choice. Nothing establishes
+      // 'auto' here, so nothing may assert it.
+      ttsProviderPref: memberProvider,
+      // ⛔ (D2) voiceArchetype is DELIBERATELY NOT forwarded here, and this is
+      //    the opposite of the obvious repair. The trace observed correctly that
+      //    the router's archetype intercept (ttsRouter.ts:188-206) is dead on
+      //    this route — but forwarding the archetype INTO THE LOCAL PATH is not
+      //    how to revive it, because the intercept runs BEFORE the Kokoro
+      //    dispatch and diverts `maia_core` to OpenAI. The consequences:
+      //
+      //      no consent  → CloudVoiceForbidden → silence, where the member
+      //                    would otherwise have heard Kokoro. That inverts the
+      //                    ruling: "Not now" must PRESERVE the local voice, not
+      //                    remove it.
+      //      consent but → the sentinel throws, this catch does not recognise
+      //      no key        it, and the turn is silent anyway.
+      //
+      //    In production (MAIA_TTS_PROVIDER=kokoro, MAIA_VOICE_OVERRIDE unset)
+      //    that would have taken MAIA's voice away from every member using the
+      //    default archetype.
+      //
+      //    ⭐ And it is unnecessary: MAIA's identity already reaches BOTH
+      //      providers through the `voice` channel resolved above —
+      //      resolveToOpenAI('maia_core') = 'alloy' and
+      //      resolveToKokoro('maia_core') = 'af_kore'. The archetype channel
+      //      would add no identity, only a diversion.
+      //
+      //    The archetype is still carried into this function for the resolve and
+      //    gate logs, where naming which voice was wanted is exactly the point.
     });
     const audio = result.audioBuffer.toString('base64');
     return { audio, format: 'mp3', source: 'kokoro' };
   } catch (kokoroErr) {
+    // ── A CLOSED GATE is not a BROKEN SERVICE ──
+    // Both produce no audio; only one is the member's to open, and the log line
+    // an operator greps must not describe the wrong one. The original witness
+    // read "[TTS] Kokoro failed: cloud voice is not available…" — naming a
+    // provider that was never reached. That sentence is why this lane exists.
+    if (kokoroErr instanceof CloudVoiceForbidden) {
+      console.info('[tts.gate]', JSON.stringify({
+        path: 'stream-conversation',
+        storedPreference: memberProvider,
+        voiceArchetype: options.voiceArchetype || null,
+        reason: kokoroErr.reason,
+      }));
+      return null;
+    }
     console.error(`[TTS] Kokoro failed: ${kokoroErr instanceof Error ? kokoroErr.message : kokoroErr}`);
     return null;
   }
@@ -645,6 +700,9 @@ export async function POST(req: NextRequest) {
   let voiceOffsets: { pace: number; warmth: number; poetry: number; directiveness: number; energy: number } | undefined;
   let effectiveVoice = voice; // Start with what the frontend sent
   let memberTtsProvider: string | null = null;
+  // (D2) MAIA's voice IDENTITY, carried on its own axis. Reaching the router at
+  // all is what makes `maia_core → Alloy` expressible; it grants nothing.
+  let memberVoiceArchetype: string | null = null;
   let memberTherapeuticApproach = 'auto';
   try {
     const [systemVoice, memberVoice, settingsRow] = await Promise.all([
@@ -662,6 +720,7 @@ export async function POST(req: NextRequest) {
     const merged = mergeVoiceIntent(systemVoice, memberVoice);
     voiceOffsets = merged.intent;
     memberTtsProvider = merged.ttsProvider;
+    memberVoiceArchetype = merged.voiceArchetype;
     // If member has a voice_id_override in the database, use it as the
     // authoritative voice — ensures cross-device consistency
     if (merged.voiceId && merged.voiceId !== 'maia') {
@@ -670,6 +729,37 @@ export async function POST(req: NextRequest) {
   } catch (e) {
     console.warn('[StreamConversation] Voice prefs load failed (continuing without):', e);
   }
+
+  // ── VOICE-SOVEREIGNTY-03: classify the consent gate ONCE per request ──
+  //
+  // Computed here rather than from a synthesis failure, because the question is
+  // about the member's stored preference and their chosen voice — not about
+  // whether Kokoro happened to succeed. Local synthesis proceeding normally must
+  // not suppress the gesture, and a Kokoro outage must not manufacture one.
+  //
+  // ⛔ `identityIsCloudBacked` requires an ACTUAL member pick. resolveArchetypeVoice
+  //    returns { provider: 'openai', voice: 'alloy' } for a null archetype, so
+  //    deriving cloud-backedness without this guard would raise the consent
+  //    gesture for every member who has never chosen a voice at all — inferring a
+  //    cloud-backed identity from a default. The ruling is explicit that consent
+  //    is never inferred from "an existing default voice", and a default is not a
+  //    pick: only a pick may INITIATE the request.
+  const pickedArchetype = memberVoiceArchetype
+    ? MAIA_VOICE_ARCHETYPES.find(a => a.id === memberVoiceArchetype) ?? null
+    : null;
+  const identityIsCloudBacked = pickedArchetype?.provider === 'openai';
+  const cloudVoiceGate = classifyCloudVoiceGate(
+    memberTtsProvider,
+    !!identityIsCloudBacked,
+    pickedArchetype
+      ? {
+          archetype: pickedArchetype.id,
+          label: pickedArchetype.label,
+          provider: pickedArchetype.provider,
+          voice: pickedArchetype.voice,
+        }
+      : null,
+  );
 
   console.log('🔊 [StreamConversation] Received voice settings:', { voice: effectiveVoice, speed, mode, sanctuary, ttsProvider: memberTtsProvider });
   console.log(`🔊 [StreamConversation] Message: "${(message || '').substring(0, 80)}" (${conversationHistory?.length ?? 0} history msgs)`);
@@ -694,6 +784,35 @@ export async function POST(req: NextRequest) {
 
       // Send connection established
       emit('connected', { sessionId: sessionId || 'default', timestamp: Date.now() });
+
+      // ── VOICE-SOVEREIGNTY-03: the consent gesture, offered once per request ──
+      //
+      // Emitted BEFORE any synthesis, and independent of it. The member chose a
+      // cloud-backed voice, the deployment permits cloud synthesis, and they have
+      // not yet said whether their words may leave the machine. That is a
+      // question, not a failure, and it must not arrive disguised as one.
+      //
+      // ⛔ NO transcript or conversation content in this event. It carries which
+      //    voice was asked for and nothing about what was said — the gesture is
+      //    about a data boundary, so it must not itself cross one.
+      //
+      // ⛔ Emitting this does NOT withhold audio. Local synthesis proceeds with
+      //    the already-resolved af_kore mapping; a member who never answers keeps
+      //    MAIA's voice. The ask is additive, never a toll.
+      //
+      // The surface should raise this at most once and let it rest: "Not now"
+      // stores 'local', which makes this state unreachable on later turns, so a
+      // decline is durable rather than re-litigated.
+      if (cloudVoiceGate.state === 'consent_required') {
+        emit('cloud_voice_consent_required', {
+          voiceArchetype: cloudVoiceGate.identity.archetype,
+          voiceLabel: cloudVoiceGate.identity.label,
+          provider: cloudVoiceGate.identity.provider,
+          voice: cloudVoiceGate.identity.voice,
+          storedPreference: cloudVoiceGate.storedPreference,
+          timestamp: Date.now(),
+        });
+      }
 
       try {
         // ============ RELATIONAL STACK GOVERNANCE ============
@@ -981,6 +1100,7 @@ export async function POST(req: NextRequest) {
             wisdomDirective,
             voice: effectiveVoice,
             ttsProvider: memberTtsProvider,
+            voiceArchetype: memberVoiceArchetype,
             skipPersonaPlex: isIosPwa,
             ssml: thresholdSSML,
           }) : null;
@@ -1018,6 +1138,11 @@ export async function POST(req: NextRequest) {
               index: 0,
               text,
               error: 'TTS unavailable',
+              // VOICE-SOVEREIGNTY-03. "TTS unavailable" is true of a closed
+              // consent gate and of a crashed synthesiser alike, and the member
+              // can act on one of those. Naming which is what makes the gesture
+              // possible; without it the surface can only apologise.
+              gate: cloudVoiceGate.state,
               timestamp: Date.now(),
             });
           }
@@ -1453,9 +1578,10 @@ export async function POST(req: NextRequest) {
                 wisdomDirective,
                 voice: effectiveVoice,
                 ttsProvider: memberTtsProvider,
+                voiceArchetype: memberVoiceArchetype,
                 skipPersonaPlex: isIosPwa,
                 ssml: chunkSSML,
-              });
+                  });
 
               if (result) {
                 // Store result with its original text then drain in order
@@ -1469,6 +1595,7 @@ export async function POST(req: NextRequest) {
                   index: chunkIndex,
                   text: chunkText,
                   error: 'TTS unavailable',
+                  gate: cloudVoiceGate.state,
                   timestamp: Date.now(),
                 });
               }

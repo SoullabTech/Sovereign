@@ -130,3 +130,160 @@ export function resolveVoicePreference(stored: string | null | undefined): {
     cloudRequestedButUnavailable: explicitCloud && !permitted,
   };
 }
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// VOICE-SOVEREIGNTY-03 — DESKTOP-TTS-ALLOY-POLICY-MISMATCH-01
+// Founder ruling, 2026-08-29: MEMBER ACT, NOT INFERENCE.
+// ═══════════════════════════════════════════════════════════════════════════════
+//
+// ⭐ THE RULING, in one line:
+//
+//     Choosing MAIA's voice identity is not the same act as consenting to
+//     cloud egress.
+//
+// `maia_core → OpenAI Alloy` says which voice the member wants. It does not say
+// "I consent to sending the text of my conversations to OpenAI for synthesis."
+// Two axes, deliberately not collapsed:
+//
+//     VOICE IDENTITY     maia_core → Alloy        which voice
+//     EGRESS CONSENT     local / cloud            whether text may leave
+//
+// ⛔ CONSENT IS NEVER INFERRED. Not from `maia_core`, not from `Alloy`, not from
+//    `auto`, not from an existing default voice, and not from the presence of an
+//    OpenAI key. A voice pick MAY INITIATE the consent request. It MAY NOT
+//    SUBSTITUTE for it.
+//
+// ⭐ BOTH GATES ARE REQUIRED, and they are different kinds of thing:
+//
+//     member consent          stored tts_provider = 'cloud'   (a member act)
+//     deployment permission   MAIA_ALLOW_CLOUD_VOICE=1        (an operator act)
+//
+//    Neither implies the other. An operator cannot consent on a member's behalf
+//    by setting a flag; a member cannot open egress on a deployment that forbids
+//    it. This mirrors the Daily Anchor `surface_preference` model, where
+//    eligibility originates from a member act and the deploy flag is only ever a
+//    kill-switch.
+//
+// ── WHY THIS FUNCTION EXISTS ────────────────────────────────────────────────
+//
+// The router's escapes previously answered "may I reach the cloud?" and nothing
+// else, so a refusal could say only "no". A member then heard silence, and
+// silence cannot be acted on: it is indistinguishable from a broken service. To
+// let the surface raise the gesture, the refusal has to also say WHICH gate is
+// closed and whether a member act could open it — without that classification
+// living in the surface, where it would drift.
+
+/**
+ * Which gate is closed, and whether a member act can open it.
+ *
+ * ⭐ Deliberately NOT a boolean. "May I reach the cloud?" has one bit of answer,
+ * and a member cannot act on one bit: silence and refusal look identical. Each
+ * state below names WHO can change it — member, operator, or nobody — because
+ * that is what decides whether a surface should ask, explain, or stay quiet.
+ */
+export type CloudVoiceGate =
+  /** Member consented AND the deployment permits. Cloud synthesis may proceed. */
+  | { state: 'cloud_allowed'; storedPreference: string }
+  /**
+   * The requested identity is cloud-backed, the deployment permits cloud voice,
+   * and the member has not chosen it.
+   *
+   * ⭐ The ONLY state in which a surface may raise the consent gesture. It is
+   * also the only state where asking is honest: the member has not answered, and
+   * their answer would actually change the outcome.
+   */
+  | {
+      state: 'consent_required';
+      storedPreference: string;
+      identity: CloudVoiceIdentity;
+    }
+  /**
+   * The deployment forbids cloud voice. NOT a consent question, whatever the
+   * member stored — agreeing would change nothing, so asking would be theatre.
+   * Only an operator can open this.
+   */
+  | { state: 'cloud_unavailable'; storedPreference: string }
+  /**
+   * Nothing is closed and nothing is asked: either the member's own preference
+   * is local, or the requested identity is not cloud-backed in the first place.
+   * The sovereign default working as intended.
+   */
+  | { state: 'local_preferred'; storedPreference: string };
+
+/**
+ * The voice the member asked for, named for the gesture and the audit trail.
+ *
+ * ⛔ Naming a voice is not proposing it. This descriptor never influences the
+ *    decision — `identityIsCloudBacked` does. Keeping the two apart is what
+ *    stops "which voice" from quietly becoming "which data boundary".
+ */
+export interface CloudVoiceIdentity {
+  /** e.g. 'maia_core' — internal ID, never shown to members. */
+  archetype: string | null;
+  /** e.g. 'Maia' — the member-facing name. */
+  label: string | null;
+  /** e.g. 'openai' */
+  provider: string;
+  /** e.g. 'alloy' */
+  voice: string | null;
+}
+
+/**
+ * Classify the cloud-voice gate for one request. Pure: every input is passed in,
+ * except the deployment flag, which is read at call time and never cached.
+ *
+ * @param stored  the member's stored provider preference, VERBATIM. Pass what
+ *                the member actually set — never a literal, and never a value
+ *                derived from their voice identity. Handing this function a
+ *                fabricated 'auto' is the original defect
+ *                (DESKTOP-TTS-ALLOY-POLICY-MISMATCH-01, D1).
+ * @param identityIsCloudBacked  whether the voice the member selected is served
+ *                by a cloud provider. Computed by the caller from the voice
+ *                registry, so this module stays pure and cannot be made to
+ *                depend on the archetype table.
+ * @param identity  descriptor for the gesture and telemetry. Never consulted in
+ *                the decision.
+ */
+export function classifyCloudVoiceGate(
+  stored: string | null | undefined,
+  identityIsCloudBacked: boolean,
+  identity: CloudVoiceIdentity | null = null,
+): CloudVoiceGate {
+  const pref = resolveVoicePreference(stored);
+  const storedPreference = pref.stored;
+
+  // ⛔ Deployment permission is checked FIRST and refuses unconditionally.
+  //    "MAIA_ALLOW_CLOUD_VOICE absent → cloud unavailable regardless of member
+  //    preference" — so a member who stored 'cloud' is told the deployment
+  //    refuses, and a member who stored nothing is never asked a question whose
+  //    answer could not be honoured.
+  if (!cloudVoicePermitted()) {
+    return { state: 'cloud_unavailable', storedPreference };
+  }
+
+  // Member consented and the deployment permits: both gates open.
+  if (pref.effective === 'cloud') {
+    return { state: 'cloud_allowed', storedPreference };
+  }
+
+  // ⛔ 'local' is a CHOICE and is never re-litigated by a prompt. Only the
+  //    ABSENCE of a choice may be asked about — and asking is not inferring,
+  //    because the answer still has to come from the member.
+  if (storedPreference === 'local') {
+    return { state: 'local_preferred', storedPreference };
+  }
+
+  // `auto` (or unset) + a cloud-backed identity + a permitting deployment.
+  // The one state where the gesture is honest.
+  if (identityIsCloudBacked) {
+    return {
+      state: 'consent_required',
+      storedPreference,
+      identity: identity ?? { archetype: null, label: null, provider: 'openai', voice: null },
+    };
+  }
+
+  // The member picked a locally-served voice. There is no egress question to
+  // ask, so none is asked.
+  return { state: 'local_preferred', storedPreference };
+}
