@@ -496,6 +496,13 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
   const sovereignGenerationRef = useRef(0);
 
   /**
+   * Latest `onInterimTranscript`, so revocation can erase provisional text
+   * without taking a render-churning dependency on the prop itself.
+   */
+  const onInterimTranscriptRef = useRef(onInterimTranscript);
+  onInterimTranscriptRef.current = onInterimTranscript;
+
+  /**
    * Revoke the active sovereign capture. Idempotent, synchronous, safe to call
    * when there is none.
    */
@@ -508,7 +515,16 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     sovereignCaptureRef.current = null;
     try { active.controller.abort(); } catch { /* already aborted */ }
     try { active.stream?.getTracks().forEach((t) => t.stop()); } catch { /* already stopped */ }
+    // ⛔ DESKTOP-SOVEREIGN-STT-INTERIM-01 — revoking a capture also erases the
+    // provisional text it painted. The revoked capture's own `finally` cannot
+    // do this: its generation check (correctly) refuses to touch shared UI it
+    // no longer owns. Revocation is the one place that still owns it.
+    try { onInterimTranscriptRef.current?.(''); } catch { /* display only */ }
     console.log(`🛡️ [sovereign capture] revoked (${reason})`);
+    // Deliberately NO dependency on the prop: `stopListening` depends on this
+    // callback, and parents pass an inline arrow, so taking the prop directly
+    // would churn this identity every render and cascade through the lifecycle
+    // effects. The ref below always holds the current one.
   }, []);
 
   const handsFreeActiveRef = useRef(true);
@@ -3455,9 +3471,37 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
         setVoiceError(null);
         addDebug('🎙️ web whisper: recording…');
 
+        // ⛔ DESKTOP-SOVEREIGN-STT-INTERIM-01 — the "she is hearing me" layer.
+        //
+        // Provisional text for DISPLAY ONLY. It is produced by the same local
+        // Whisper as the final transcript (rolling decodable prefixes of the
+        // same recording) — no browser SpeechRecognition, no cloud recognizer.
+        //
+        // ⛔⛔ It has exactly one destination: onInterimTranscript. There is no
+        // path from here to onTranscript, witnessDispatch, persistence, or the
+        // conversation record. A member turn is born once, below, from the
+        // single final transcript.
+        //
+        // ⛔ Generation-gated like every other output of this capture: a capture
+        // the member walked away from cannot paint text either.
+        //
+        // Scoped to Desktop — the device where the parity regression was
+        // confirmed. Firefox/Zen reach this same branch by absence of Web
+        // Speech and are deliberately left one-shot; widening to them is a
+        // separate decision with its own witness.
+        const emitProvisional = info.isDesktop
+          ? (text: string) => {
+              if (sovereignGenerationRef.current !== captureGeneration) return;
+              onInterimTranscript?.(text);
+            }
+          : undefined;
+
         try {
           const { recordAndTranscribe } = await import('@/lib/voice/androidVoiceFallback');
-          const result = await recordAndTranscribe(stream, { signal: captureController.signal });
+          const result = await recordAndTranscribe(stream, {
+            signal: captureController.signal,
+            ...(emitProvisional ? { onPartial: emitProvisional } : {}),
+          });
 
           // ⛔ THE STALE-RESULT GATE. Abort stops the work; it cannot un-resolve
           // a promise already in flight. If this capture's authority was revoked
@@ -3504,6 +3548,11 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
           // ⛔ Likewise the UI state: a superseded capture must not drag a live
           // one back to IDLE.
           if (sovereignGenerationRef.current === captureGeneration) {
+            // ⛔ Provisional text dies with the capture that produced it —
+            // whether it ended in a transcript, a failure, or a revocation.
+            // Leaving it on screen would let words MAIA never took read as
+            // words she did.
+            if (emitProvisional) onInterimTranscript?.('');
             setIsListening(false);
             isListeningRef.current = false;
             setMicState('IDLE', 'web_whisper_done');

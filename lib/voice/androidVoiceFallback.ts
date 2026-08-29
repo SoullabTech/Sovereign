@@ -25,6 +25,7 @@
 
 import { logVoiceEvent } from './voiceDiagnostics';
 import { readTranscript } from './transcribeResponse';
+import { createRollingPartialTranscriber } from './rollingPartialTranscription';
 import { apiFetch } from '@/lib/http/apiBase';
 
 const PREFERRED_MIME_TYPES = [
@@ -76,7 +77,30 @@ interface RunOptions {
    * not attention they consented to.
    */
   signal?: AbortSignal;
+  /**
+   * DESKTOP-SOVEREIGN-STT-INTERIM-01 — provisional text while recording.
+   *
+   * ⛔ OPTIONAL BY DESIGN. Callers that pass nothing (the Android-Chrome
+   * recovery, the Firefox/Zen branch) record exactly as before — no timeslice,
+   * no extra requests, one transcript. Only a caller that asks for provisional
+   * text pays for it.
+   *
+   * ⛔⛔ DISPLAY ONLY. What arrives here is a re-reading of the utterance so
+   * far and may be replaced word-for-word by the next one. It must never be
+   * treated as the member's turn: the RESOLVED value of this function is the
+   * single final transcript, and it is the only thing that may commit.
+   */
+  onPartial?: (text: string) => void;
+  /** Minimum wall-clock between provisional requests. */
+  partialIntervalMs?: number;
 }
+
+/**
+ * How often MediaRecorder flushes a chunk when provisional text is requested.
+ * Each flush yields a decodable prefix; the transcriber throttles separately,
+ * so a small timeslice only improves how fresh the offered prefix is.
+ */
+const PARTIAL_TIMESLICE_MS = 400;
 
 function pickMimeType(): string | null {
   if (typeof MediaRecorder === 'undefined') return null;
@@ -125,6 +149,18 @@ export async function recordAndTranscribe(
   const startedAt = Date.now();
   logVoiceEvent('voice_fallback_recording_started', { mimeType, maxMs });
 
+  // ⛔ Built only when a caller asked for provisional text, and handed the SAME
+  // signal as the capture — partials inherit revocation, they do not route
+  // around it.
+  const partial = options.onPartial
+    ? createRollingPartialTranscriber({
+        mimeType,
+        onPartial: options.onPartial,
+        ...(options.partialIntervalMs === undefined ? {} : { intervalMs: options.partialIntervalMs }),
+        ...(signal ? { signal } : {}),
+      })
+    : null;
+
   // ── Record ────────────────────────────────────────────────────────────
   let blob: Blob;
   try {
@@ -133,8 +169,17 @@ export async function recordAndTranscribe(
       silenceHoldoffMs,
       minMs,
       signal,
+      ...(partial
+        ? {
+            timesliceMs: PARTIAL_TIMESLICE_MS,
+            onPrefix: (prefix: Blob) => partial.offerPrefix(prefix),
+          }
+        : {}),
     });
   } catch (err: unknown) {
+    // ⛔ Recording is over on every exit path. From here the final transcript is
+    // the only authority; a provisional result still in flight must not land.
+    partial?.close();
     const name = err instanceof Error ? err.name : 'unknown';
     logVoiceEvent('voice_fallback_failed', {
       reason: 'recording_error',
@@ -142,6 +187,7 @@ export async function recordAndTranscribe(
     });
     return { ok: false, reason: 'recording_error' };
   }
+  partial?.close();
 
   const durationMs = Date.now() - startedAt;
 
@@ -261,7 +307,23 @@ export async function recordAndTranscribe(
 async function recordWithSilenceDetection(
   stream: MediaStream,
   mimeType: string,
-  opts: { maxMs: number; silenceHoldoffMs: number; minMs: number; signal?: AbortSignal },
+  opts: {
+    maxMs: number;
+    silenceHoldoffMs: number;
+    minMs: number;
+    signal?: AbortSignal;
+    /**
+     * DESKTOP-SOVEREIGN-STT-INTERIM-01 — when set, the recorder flushes chunks
+     * on this cadence so a decodable prefix exists mid-utterance. Absent, the
+     * recorder runs exactly as it always has (a single chunk at stop).
+     */
+    timesliceMs?: number;
+    /**
+     * The utterance so far, as a self-contained blob. Chunk 0 carries the
+     * container header, so every concatenation of chunks[0..n] decodes.
+     */
+    onPrefix?: (prefix: Blob) => void;
+  },
 ): Promise<Blob> {
   return new Promise<Blob>((resolve, reject) => {
     const chunks: Blob[] = [];
@@ -304,6 +366,18 @@ async function recordWithSilenceDetection(
 
     recorder.ondataavailable = (e: BlobEvent) => {
       if (e.data && e.data.size > 0) chunks.push(e.data);
+      // ⛔ The last chunk must never open a provisional request that would race
+      // the final transcript. Two independent guards, because recording can end
+      // two ways: our own stop() sets `stopped` before calling recorder.stop(),
+      // and a recorder that ends on its own (the capture's tracks stopped under
+      // it) leaves state !== 'recording' when the flush arrives.
+      if (!stopped && recorder.state === 'recording' && opts.onPrefix && chunks.length > 0) {
+        try {
+          opts.onPrefix(new Blob(chunks, { type: mimeType }));
+        } catch {
+          // Provisional display must never be able to break the recording.
+        }
+      }
     };
     recorder.onerror = () => stop('error');
     recorder.onstop = () => {
@@ -367,7 +441,11 @@ async function recordWithSilenceDetection(
     };
 
     try {
-      recorder.start();
+      // A timeslice changes only WHEN bytes are handed over, never what is
+      // captured: the concatenated chunks are byte-identical to the single blob
+      // the no-timeslice path produces.
+      if (opts.timesliceMs) recorder.start(opts.timesliceMs);
+      else recorder.start();
     } catch (err) {
       cleanup();
       reject(err);

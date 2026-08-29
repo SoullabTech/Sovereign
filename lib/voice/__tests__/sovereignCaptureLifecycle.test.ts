@@ -245,7 +245,15 @@ describe('the capture is owned by the component, not by one async scope', () => 
   });
 
   it('T4 — the signal is actually passed to the recorder', () => {
-    expect(src).toContain('recordAndTranscribe(stream, { signal: captureController.signal })');
+    // Shape-tolerant on purpose. DESKTOP-SOVEREIGN-STT-INTERIM-01 added a
+    // second option (`onPartial`) to this same call, which broke the original
+    // single-line literal match. What this guard is FOR is that the capture's
+    // signal reaches `recordAndTranscribe` — not how the object is formatted.
+    const call = sovereign.indexOf('recordAndTranscribe(stream, {');
+    expect(call, 'the sovereign branch no longer calls recordAndTranscribe').toBeGreaterThan(-1);
+    const args = sovereign.slice(call, sovereign.indexOf('});', call));
+    expect(args, 'the capture signal is not passed to the recorder')
+      .toContain('signal: captureController.signal');
   });
 
   it('T6 — one capture\'s finally cannot tear down a newer one', () => {
