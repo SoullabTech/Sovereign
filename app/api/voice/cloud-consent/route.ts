@@ -18,9 +18,11 @@
  *    must be incapable of touching identity. `setMemberTtsProvider` updates one
  *    column and no other.
  *
- * ⛔ "Not now" stores 'local', not null. Null is `auto` — the absence of an
- *    answer — and would make the surface ask again on the next turn. A member
- *    who declined has answered; re-asking would turn a refusal into attrition.
+ * ⛔ Declining ("Keep voice local") stores 'local', not null. Null is `auto` —
+ *    the absence of an answer — and would make the surface ask again on the next
+ *    turn. A member who declined has answered; re-asking would turn a refusal
+ *    into attrition. The button is labelled for the durable choice it makes, not
+ *    as a deferral it is not.
  *    They can still change it in voice settings, which is where a decision gets
  *    revisited deliberately rather than by repetition.
  *

@@ -41,6 +41,8 @@ originates from a member act and the deploy flag is only ever a kill-switch.
 
 ### The gesture
 
+The ruling as given:
+
 ```
 "Maia uses OpenAI Alloy for this voice. Allow cloud voice synthesis?"
 
@@ -48,6 +50,15 @@ Allow     → store tts_provider = 'cloud'
 Not now   → preserve voice identity
           → use local voice if available, otherwise text
 ```
+
+⭐ **The decline button ships as "Keep voice local", not "Not now."** The ruling's
+behaviour is unchanged; the label is. `allow:false` durably stores
+`tts_provider='local'` and the member is never asked again — that is a decision,
+not a deferral, and a durable choice labelled as a temporary one misrepresents
+the act at the moment of consent. If we truly meant "Not now" we would have to
+leave the preference unresolved and ask again later, which is exactly the
+repetition the storage design avoids. The phrasing also says what the member
+*gets* rather than only what they decline: MAIA keeps speaking, in `af_kore`.
 
 ### Why not the alternatives
 
@@ -151,6 +162,34 @@ matched from the member's stored `voice_archetype`. The ruling forbids inferring
 consent from "an existing default voice"; a default cannot even *initiate* the
 request.
 
+### Why the copy took three passes
+
+The prompt makes a claim about where the member's data goes, so it is held to the
+standard of the ruling itself. Two drafts were wrong:
+
+```
+draft 1   "your own words are not sent"
+          false — MAIA's reply can quote the member
+
+draft 2   "your audio stays on this machine"
+          false in the general case, and a subtler error: it sounds like
+          a privacy guarantee
+```
+
+Draft 2 is the instructive one. Desktop sovereign STT posts microphone audio to
+the first-party `/api/voice/transcribe-simple`. In the witness that server
+happens to be the same Mac — but the **product contract must not turn a
+first-party transport guarantee into a physical-locality promise.** A deployment
+where the app and Whisper sit on different hosts would make the sentence a lie
+without anyone editing the file.
+
+> ⭐ The claim must be about the boundary the member is actually consenting to —
+> OpenAI — not about topology we do not control. What ships:
+> *"Your microphone audio is not sent to OpenAI for this voice synthesis."*
+
+The prompt also names OpenAI and says "cloud", not "enhanced voice": a consent
+question that hides where the data goes is not consent.
+
 ### Why a closed gate is no longer silence
 
 `synthesizeWithFallback` returned `null` for every kind of failure, and the
@@ -217,6 +256,28 @@ touch identity, not merely that it currently doesn't:
 record, routing would still work, and the member's chosen voice would quietly
 revert to a default. Only the shape of the SQL catches it.
 
+A third suite, `components/voice/__tests__/cloudVoiceConsentGesture.dom.test.tsx`
+(10 tests), executes the member-facing gesture in jsdom — driving the real
+`cloud_voice_consent_required` SSE frame through the hook rather than rendering
+the prompt from a literal, so the SSE wiring is exercised too:
+
+- "Allow cloud voice" POSTs `{allow:true}`; "Keep voice local" POSTs `{allow:false}`
+- either answer clears the pending prompt
+- **either answer makes exactly ONE request, and never to `stream-conversation`**
+- the request body has exactly one key — no transcript, no voice settings
+- no button is labelled "Not now" or "Later"
+- the internal archetype ID is never rendered
+
+⭐ The no-replay assertion is the load-bearing one. A consent answer that re-ran
+the turn would re-synthesise words the member already heard, in a voice they only
+just authorised, without their asking. **Consent to a future boundary is not
+consent to repeat the past.** Nothing in the type system prevents someone later
+adding a helpful "and now speak it properly", so it is asserted.
+
+An earlier draft of this suite rendered the prompt with a literal request object,
+which made "answering clears the pending prompt" trivially true — hook state
+started null and was never set, so the assertion proved nothing.
+
 ---
 
 ## Verification
@@ -227,6 +288,11 @@ PASS  npm run check:no-supabase      no Supabase detected
 PASS  jest lib/tts/__tests__         160 tests, 5 suites
       └ cloudVoiceConsentGate         16 tests, the four states + negative controls
 PASS  jest consentWriteIsNarrow       4 tests, identity cannot be touched by consent
+PASS  jest -c jest.dom.config.js      30 tests, 3 suites (incl. the gesture, 10)
+PASS  check:no-vendor-voices / check:voice-provenance / check:no-openai
+
+      check:sovereignty does not run — scripts/check-maia-sovereignty.ts is
+      absent from the repository. Pre-existing and unrelated to this lane.
 ```
 
 ⭐ The typecheck gate earned its keep here. The per-turn state reset in
@@ -242,14 +308,12 @@ normally through `npm run typecheck`.)
 ## ⛔ NOT WITNESSED
 
 ```
-the CLIENT GESTURE has not been run.
-  useStreamingVoice consumes cloud_voice_consent_required and
-  CloudVoiceConsentPrompt renders it, but no browser has executed
-  either. There is no component test and no device pass.
+no REAL BROWSER has run this. jsdom is not a device: it has no audio
+  output, no OpenAI, and a hand-written SSE frame in place of a server.
 
 the ROUTE half is source-verified only.
-  the gate policy has 16 passing tests; the stream-conversation
-  wiring that feeds it does not.
+  the gate policy, the consent write and the gesture are tested;
+  the stream-conversation wiring that classifies and emits is not.
 
 the acceptance path has NOT been witnessed:
   explicit cloud consent → next spoken turn → OpenAI Alloy synthesis

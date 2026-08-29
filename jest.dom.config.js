@@ -44,6 +44,13 @@ const config = {
   testMatch: [
     '<rootDir>/app/press/manuscript/**/*.dom.test.tsx',
     '<rootDir>/lib/hooks/**/__tests__/**/*.dom.test.tsx',
+    // SCOPE WIDENED 2026-08-29 (VOICE-SOVEREIGNTY-03) for the cloud-voice
+    // consent gesture. The consent question is raised by an SSE frame, answered
+    // by a click, and must be proven NOT to resend the turn — none of which a
+    // Node environment can exercise. The opt-in stays explicit: a file is picked
+    // up only if it is NAMED `*.dom.test.tsx`, so no existing suite changes
+    // environment by accident.
+    '<rootDir>/components/voice/**/__tests__/**/*.dom.test.tsx',
   ],
   setupFilesAfterEnv: ['<rootDir>/app/press/manuscript/__tests__/domSetup.ts'],
   moduleNameMapper: {

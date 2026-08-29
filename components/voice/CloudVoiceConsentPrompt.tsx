@@ -22,12 +22,26 @@
  * leaving the machine, and the sentence they read should be the sentence that
  * is true.
  *
- * ⛔ THE COPY MUST NOT OVERCLAIM. An earlier draft read "your own words are not
- *    sent". That is false: MAIA's reply can quote the member, so consenting does
- *    put some of their words on the wire. What is true is narrower and is what
- *    the prompt now says — the text of her spoken replies goes out; the audio
- *    does not. A consent prompt that overstates the guarantee is worse than no
- *    prompt, because it obtains agreement to something other than what happens.
+ * ⛔ THE COPY MUST NOT OVERCLAIM, and it took two passes to stop doing so.
+ *
+ *    Draft 1: "your own words are not sent" — false. MAIA's reply can quote the
+ *    member, so consenting does put some of their words on the wire.
+ *
+ *    Draft 2: "your audio stays on this machine" — false in the general case,
+ *    and a subtler error because it sounds like a privacy guarantee. Desktop
+ *    sovereign STT posts microphone audio to the first-party
+ *    /api/voice/transcribe-simple. In the witness that server happens to be the
+ *    same Mac, but the PRODUCT CONTRACT must not turn a first-party transport
+ *    guarantee into a physical-locality promise: a deployment where the app and
+ *    Whisper sit on different hosts would make the sentence a lie without anyone
+ *    editing this file.
+ *
+ *    ⭐ The claim must be about the boundary the member is actually consenting
+ *      to — OpenAI — not about topology we do not control. Hence the narrower
+ *      true sentence: their microphone audio is not sent TO OPENAI for this
+ *      synthesis. A consent prompt that overstates the guarantee is worse than
+ *      no prompt, because it obtains agreement to something other than what
+ *      happens.
  */
 
 import type { CloudVoiceConsentRequest } from '@/hooks/useStreamingVoice';
@@ -59,8 +73,8 @@ export function CloudVoiceConsentPrompt({ request, onAnswer }: CloudVoiceConsent
       </p>
       <p className="mb-3 text-neutral-400">
         Allowing this sends the text of MAIA&apos;s spoken replies to {providerName}
-        so they can be read aloud. Your audio stays on this machine. MAIA keeps
-        speaking either way &mdash; declining keeps her local voice.
+        so they can be read aloud. Your microphone audio is not sent to{' '}
+        {providerName} for this voice synthesis. MAIA keeps speaking either way.
       </p>
       <div className="flex gap-2">
         <button
@@ -75,15 +89,21 @@ export function CloudVoiceConsentPrompt({ request, onAnswer }: CloudVoiceConsent
           onClick={() => onAnswer(false)}
           className="rounded-lg bg-neutral-700/50 px-3 py-1.5 text-neutral-300 transition hover:bg-neutral-700/70"
         >
-          Not now
+          Keep voice local
         </button>
       </div>
       {/*
-        ⭐ "Not now" is a real answer, stored as 'local' — not a dismissal that
-        leaves the question open. That is what stops the surface asking again on
-        every turn, which would turn a refusal into attrition. It is revisitable
-        in voice settings, where a decision is changed deliberately rather than
-        by repetition.
+        ⭐ THE LABEL MUST MATCH WHAT THE BUTTON DOES. This read "Not now", which
+        described a deferral. It is not one: allow:false durably stores
+        tts_provider='local' and the member is never asked again. That
+        anti-attrition behaviour is correct — but a durable choice labelled as a
+        temporary one misrepresents the act at the moment of consent, which is
+        the worst possible moment to be imprecise. If we truly meant "Not now" we
+        would have to leave the preference unresolved and ask again later, which
+        is exactly the repetition the storage design avoids.
+
+        "Keep voice local" also says what the member GETS, not merely what they
+        decline. Declining is not going without: MAIA keeps speaking, in af_kore.
       */}
       <p className="mt-2 text-xs text-neutral-500">
         You can change this any time in voice settings.
