@@ -141,7 +141,51 @@ services:
 C
 # Fixture compose files need a witness basename for guard_compose_project.
 cp "$FIX/prodname.yml"     "$FIX/prodname/docker-compose.witness.yml"     2>/dev/null || { mkdir -p "$FIX/prodname"     && cp "$FIX/prodname.yml"     "$FIX/prodname/docker-compose.witness.yml"; }
-mkdir -p "$FIX/external" "$FIX/badport" "$FIX/reserved"
+mkdir -p "$FIX/external" "$FIX/badport" "$FIX/reserved" "$FIX/longok" "$FIX/longbad" "$FIX/longres"
+# Long-form ports, as `docker compose config` RENDERS them. The V1 parser read
+# only `- ` lines and saw "mode: ingress", refusing a correctly bound port on
+# the first real docker host. Fixtures pin all three cases.
+cat > "$FIX/longok/docker-compose.witness.yml" <<'C'
+services:
+  witness-app:
+    container_name: maia-witness-app
+    ports:
+      - mode: ingress
+        target: 3000
+        published: "3999"
+        host_ip: 127.0.0.1
+        protocol: tcp
+networks:
+  witness-internal:
+    driver: bridge
+C
+cat > "$FIX/longbad/docker-compose.witness.yml" <<'C'
+services:
+  witness-app:
+    container_name: maia-witness-app
+    ports:
+      - mode: ingress
+        target: 3000
+        published: "3999"
+        protocol: tcp
+networks:
+  witness-internal:
+    driver: bridge
+C
+cat > "$FIX/longres/docker-compose.witness.yml" <<'C'
+services:
+  witness-app:
+    container_name: maia-witness-app
+    ports:
+      - mode: ingress
+        target: 5432
+        published: "5432"
+        host_ip: 127.0.0.1
+        protocol: tcp
+networks:
+  witness-internal:
+    driver: bridge
+C
 cp "$FIX/external.yml"     "$FIX/external/docker-compose.witness.yml"
 cp "$FIX/badport.yml"      "$FIX/badport/docker-compose.witness.yml"
 cp "$FIX/reservedport.yml" "$FIX/reserved/docker-compose.witness.yml"
@@ -267,6 +311,14 @@ guard_network_target "$FIX/reserved/docker-compose.witness.yml" "$FIX/env.good" 
     && bad "reserved port accepted" || ok "reserved production port refused"
 guard_network_target "$FIX/docker-compose.witness.yml" "$FIX/env.prodname" >/dev/null 2>&1 \
     && bad "production hostname in env accepted" || ok "production hostname in env refused"
+
+# Rendered long-form ports — the 2026-08-29 device-qualification defect.
+guard_network_target "$FIX/longok/docker-compose.witness.yml" "$FIX/env.good" >/dev/null 2>&1 \
+    && ok "rendered long-form loopback port accepted" || bad "long-form loopback port falsely refused"
+guard_network_target "$FIX/longbad/docker-compose.witness.yml" "$FIX/env.good" >/dev/null 2>&1 \
+    && bad "long-form port with no host_ip accepted" || ok "long-form port with no host_ip refused"
+guard_network_target "$FIX/longres/docker-compose.witness.yml" "$FIX/env.good" >/dev/null 2>&1 \
+    && bad "long-form reserved port accepted" || ok "long-form reserved port refused"
 
 ( WITNESS_RUN_ROOT="/Users/soullab/MAIA-SOVEREIGN/.witness"; guard_no_protected_writes >/dev/null 2>&1 ) \
     && bad "writes inside a protected project dir accepted" || ok "writes inside a protected project dir refused"

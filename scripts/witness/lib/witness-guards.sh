@@ -319,6 +319,71 @@ _w_expand_env_str() {
     printf '%s' "$out$s"
 }
 
+# Normalize a compose ports section into `host_ip:published:target` lines.
+# Handles BOTH forms, because they are not interchangeable in practice:
+#
+#   short  (what we author)          - "127.0.0.1:3999:3000"
+#   long   (what `docker compose     - mode: ingress
+#          config` renders)            target: 3000
+#                                       published: "3999"
+#                                       host_ip: 127.0.0.1
+#
+# Found on the first real docker host (2026-08-29 Mac Studio qualification): the
+# original parser read only `- ` lines, so a rendered long-form entry yielded the
+# single token "mode: ingress" and G7 refused a port that was in fact correctly
+# loopback-bound. It failed CLOSED, which is the right direction for a guard —
+# but a false refusal still blocks a legitimate witness, so it is a defect.
+#
+# A long-form entry with no host_ip is emitted as 0.0.0.0:… so it is refused
+# rather than silently treated as loopback — absence of a bind is not a bind.
+_w_ports_specs() {
+    awk '
+    function flush() {
+        if (have) {
+            if (hip == "") hip = "0.0.0.0"
+            print hip ":" pub ":" tgt
+            have = 0; hip = ""; pub = ""; tgt = ""
+        }
+    }
+    function setkv(k, v) {
+        if (k == "host_ip")        hip = v
+        else if (k == "published") pub = v
+        else if (k == "target")    tgt = v
+    }
+    /^[[:space:]]*ports:[[:space:]]*$/ { flush(); inp = 1; pind = match($0, /[^ ]/); next }
+    inp {
+        if ($0 ~ /^[[:space:]]*$/) next
+        ind = match($0, /[^ ]/)
+        if (ind <= pind && $0 !~ /^[[:space:]]*-/) { flush(); inp = 0; next }
+
+        line = $0
+        gsub(/\r/, "", line)
+        gsub(/"/, "", line)
+        gsub(/\047/, "", line)
+
+        if (line ~ /^[[:space:]]*-[[:space:]]*/) {
+            flush()
+            item = line; sub(/^[[:space:]]*-[[:space:]]*/, "", item)
+            if (item ~ /^[a-z_]+:[[:space:]]/) {          # long form, first key
+                have = 1
+                k = item; sub(/:.*$/, "", k)
+                v = item; sub(/^[a-z_]+:[[:space:]]*/, "", v)
+                setkv(k, v)
+            } else if (item != "") {
+                print item                                  # short form, verbatim
+            }
+            next
+        }
+        if (have && line ~ /^[[:space:]]*[a-z_]+:/) {        # long form, later keys
+            item = line; sub(/^[[:space:]]*/, "", item)
+            k = item; sub(/:.*$/, "", k)
+            v = item; sub(/^[a-z_]+:[[:space:]]*/, "", v)
+            setkv(k, v)
+        }
+    }
+    END { flush() }'
+}
+
 # ───────────────────────────────────────────────────────────────────────────────
 # G7 — network target. The witness stack must not join an external/production
 # network, must not publish on a production port, and must not carry a
@@ -340,11 +405,10 @@ guard_network_target() {
     # ${VAR} / ${VAR:-default} so the guard still works with no daemon.
     local port_specs=""
     if w_have_docker; then
-        port_specs="$(docker compose -p "$(wm_get COMPOSE_PROJECT)" -f "$file" ${env_file:+--env-file "$env_file"} config 2>/dev/null \
-            | sed -n '/^ *ports:/,/^ *[a-z_]*:/p' | sed -n 's/^ *- *//p')"
+        port_specs="$(docker compose -p "$(wm_get COMPOSE_PROJECT)" -f "$file" ${env_file:+--env-file "$env_file"} config 2>/dev/null | _w_ports_specs)"
     fi
     if [ -z "$port_specs" ]; then
-        port_specs="$(sed -n '/^ *ports:/,/^ *[a-z_]*:/p' "$file" | sed -n 's/^ *- *//p')"
+        port_specs="$(_w_ports_specs < "$file")"
     fi
 
     local spec hostport
