@@ -63,6 +63,7 @@ import {
 } from '@/lib/consciousness/therapeuticFrameworks';
 import { apiUrl, apiFetch, clearAuthState } from '@/lib/http/apiBase';
 import { reportServerIdentityParity } from '@/lib/auth/verifyServerIdentity';
+import { resolveMemberIdentity, type IdentityState } from '@/lib/auth/resolveMemberIdentity';
 
 // Migration version - increment to force re-auth for all users
 const SESSION_VERSION = 2; // Bumped to fix UUID-as-name bug (Jan 5, 2026)
@@ -158,167 +159,31 @@ function checkAndMigrateSession(): 'migrate' | 'fresh' | null {
   return null; // Session is valid, continue to /maia
 }
 
-// Helper to get a valid display name, filtering out UUIDs and generic names
-function getValidDisplayName(name: string | undefined | null, username: string | undefined | null): string {
-  // NOTE: 'friend' is excluded from genericNames - if user explicitly chose it, respect it
-  const genericNames = ['user', 'guest', 'anonymous', 'explorer', 'test', 'admin'];
-
-  // First try the name field
-  if (name && !isLikelyUUID(name) && !genericNames.includes(name.toLowerCase())) {
-    return name;
-  }
-
-  // Fall back to capitalized username if valid (username is user's chosen identifier)
-  if (username && !isLikelyUUID(username) && !genericNames.includes(username.toLowerCase())) {
-    return username.charAt(0).toUpperCase() + username.slice(1);
-  }
-
-  return 'Friend';
-}
-
-// Check if an ID is a valid member identifier (not a placeholder or local_* fallback)
-function isValidMemberId(id: string | null | undefined): boolean {
-  if (!id) return false;
-  if (id === 'guest' || id.startsWith('guest_') || id === 'anonymous') return false;
-  // CRITICAL: Reject local_* fallback IDs that can't be used with server
-  if (id.startsWith('local_')) return false;
-  return true;
-}
-
-async function getInitialUserData() {
-  if (typeof window === 'undefined') return { id: 'guest', name: 'Friend' };
-
-  const currentUrl = window.location.hostname;
-
-  // 🛡️ EARLY CHECK: If we already have a valid preferred name, use it
-  // This prevents API failures from overwriting good data
-  const existingPreferredName = localStorage.getItem('explorerPreferredName');
-  const existingId = localStorage.getItem('explorerId');
-  if (existingPreferredName &&
-      existingPreferredName.trim() &&
-      existingPreferredName.toLowerCase() !== 'friend' &&
-      !isLikelyUUID(existingPreferredName) &&
-      existingId &&
-      isValidMemberId(existingId)) {
-    console.log('🛡️ [MAIA] Using existing preferred name from localStorage:', existingPreferredName);
-    return { id: existingId, name: existingPreferredName };
-  }
-
-  // Check multiple sources for valid member ID, prioritizing authenticated data
-  let storedUserId = localStorage.getItem('explorerId');
-
-  // If explorerId is invalid (guest), try to get real ID from beta_user
-  if (!isValidMemberId(storedUserId)) {
-    const betaUser = localStorage.getItem('beta_user');
-    if (betaUser) {
-      try {
-        const userData = JSON.parse(betaUser);
-        if (isValidMemberId(userData.id)) {
-          storedUserId = userData.id;
-          // Sync the valid ID back to explorerId
-          localStorage.setItem('explorerId', userData.id);
-          console.log('🔄 [MAIA] Synced member ID from beta_user:', userData.id);
-        }
-      } catch (e) { /* invalid JSON */ }
-    }
-  }
-
-  // Fallback to betaUserId
-  if (!isValidMemberId(storedUserId)) {
-    storedUserId = localStorage.getItem('betaUserId');
-  }
-
-  // 🔍 DIAGNOSTIC: Log localStorage state for debugging name issues
-  console.log('🔍 [INIT] localStorage state:', {
-    explorerId: localStorage.getItem('explorerId'),
-    betaUserId: localStorage.getItem('betaUserId'),
-    explorerName: localStorage.getItem('explorerName'),
-    explorerPreferredName: localStorage.getItem('explorerPreferredName'),
-    beta_user: localStorage.getItem('beta_user')?.substring(0, 100) + '...',
-    storedUserId,
-    isValid: isValidMemberId(storedUserId)
-  });
-
-  // Try to fetch from API using stored userId (only if it's a valid member ID)
-  if (storedUserId && isValidMemberId(storedUserId)) {
-    try {
-      const params = new URLSearchParams();
-      params.append('userId', storedUserId);
-      params.append('domain', currentUrl);
-
-      const response = await apiFetch(`/api/user/profile?${params.toString()}`);
-      const data = await response.json();
-
-      if (data.success && data.user) {
-        // Priority: preferredName > name > username (preferredName is what user wants to be called)
-        const validName = getValidDisplayName(
-          data.user.preferredName || data.user.name,
-          data.user.username
-        );
-        console.log('✅ [MAIA] User profile fetched from API:', validName, '(preferredName:', data.user.preferredName, ')');
-        console.log('🔍 [MAIA] API response:', JSON.stringify(data.user));
-
-        // 🛡️ DON'T overwrite existing good data with guest/Friend data from failed API lookup
-        if (data.user.isGuest || validName === 'Friend') {
-          console.log('⚠️ [MAIA] API returned guest data - preserving existing localStorage');
-          // Don't overwrite - fall through to check beta_user
-        } else {
-          // Sync to localStorage only if we got real user data
-          localStorage.setItem('explorerName', validName);
-          localStorage.setItem('explorerPreferredName', validName);
-          localStorage.setItem('explorerId', data.user.id);
-          console.log('🔍 [MAIA] Wrote to localStorage: explorerName=' + validName);
-          localStorage.setItem('betaOnboardingComplete', 'true');
-          // PERMANENT marker that NEVER gets removed, even on signout
-          localStorage.setItem('maiaPermanentUser', 'true');
-
-          return { id: data.user.id, name: validName };
-        }
-      }
-    } catch (error) {
-      console.error('❌ [MAIA] Error fetching user profile:', error);
-    }
-  }
-
-  // Check NEW system (beta_user from auth system)
-  const betaUser = localStorage.getItem('beta_user');
-  if (betaUser) {
-    try {
-      const userData = JSON.parse(betaUser);
-      // Use bulletproof name validation (filters UUIDs, generic names)
-      // Priority: preferredName > name > displayName (preferredName is what user wants to be called)
-      const validName = getValidDisplayName(
-        userData.preferredName || userData.name || userData.displayName,
-        userData.username
-      );
-
-      // Accept if user has ID (onboarded check removed - was causing issues)
-      if (userData.id) {
-        localStorage.setItem('explorerName', validName);
-        localStorage.setItem('explorerId', userData.id);
-        console.log('✅ [MAIA] User authenticated from localStorage:', validName);
-        return { id: userData.id, name: validName };
-      }
-    } catch (e) {
-      console.error('❌ [MAIA] Error parsing beta_user:', e);
-    }
-  }
-
-  // Check OLD system (for backward compatibility)
-  if (localStorage.getItem('betaOnboardingComplete') === 'true') {
-    const id = localStorage.getItem('explorerId') || localStorage.getItem('betaUserId');
-    const storedName = localStorage.getItem('explorerName');
-    if (id) {
-      // Validate stored name isn't a UUID
-      const validName = isLikelyUUID(storedName || '') ? 'Friend' : (storedName || 'Friend');
-      console.log('📦 [MAIA] Using legacy user data:', validName);
-      return { id, name: validName };
-    }
-  }
-
-  console.log('⚠️ [MAIA] No user data found, using defaults');
-  return { id: 'guest', name: 'Friend' };
-}
+/**
+ * ⛔ DESKTOP-MAIA-IDENTITY-HYDRATION-01 — REMOVED FROM HERE.
+ *
+ * `getInitialUserData()`, `getValidDisplayName()` and `isValidMemberId()` used
+ * to live at this point in the file and between them decided who the member
+ * was. Every branch was gated on localStorage, and the single server call
+ * (`/api/user/profile?userId=…`) was only reached when localStorage ALREADY
+ * held a valid id — which it then passed as a query parameter. The client
+ * asserted who it was; it never asked.
+ *
+ * So a browser holding a valid `maia_session` cookie and no localStorage — a
+ * fresh profile, cleared site data, or Desktop's deliberately non-persistent
+ * `maia-platform` partition — resolved to `{ id: 'guest', name: 'Friend' }`.
+ * That was never only a label: the `guest` id is how a signed-in member's
+ * surface came to make requests as `soul_guest`.
+ *
+ * Identity now comes from `lib/auth/resolveMemberIdentity.ts`, which asks
+ * `/api/auth/whoami` — the server's own single source of truth, resolving
+ * through the same `getMemberIdFromRequest()` the conversation path uses.
+ * localStorage is written there as a CACHE and is read by nothing that
+ * originates identity.
+ *
+ * They are deleted rather than left unused: a second identity origin sitting
+ * dormant in this file is how the inversion comes back.
+ */
 
 function MAIAPageContent() {
   const router = useRouter();
@@ -351,9 +216,25 @@ function MAIAPageContent() {
 
   // Fix hydration: Initialize with safe defaults, update in useEffect
   // NOTE: Initialize name as '' (not 'Friend') so greeting shows "Good morning" without a bogus label
-  // The real name loads async via getInitialUserData() and updates before greeting renders
+  // The real name arrives from resolveMemberIdentity() before the gate lifts
   const [explorerId, setExplorerId] = useState('guest');
   const [explorerName, setExplorerName] = useState('');
+  /**
+   * ⛔ DESKTOP-MAIA-IDENTITY-HYDRATION-01 — the resolution LIFECYCLE, not just
+   * the answer.
+   *
+   * Inserting the whoami call without this would have fixed the visible label
+   * and preserved the defect underneath: `/maia` would still mount as
+   * `explorerId = 'guest'`, still fire relationship and memory requests as
+   * `soul_guest`, and only afterwards learn who the member is. The surface
+   * WAITS while this is `resolving`.
+   *
+   * `error` is deliberately not `unauthenticated`. A server we could not reach
+   * must never be rendered as "you are a guest".
+   */
+  const [identityState, setIdentityState] = useState<IdentityState>('resolving');
+  const [identityReason, setIdentityReason] = useState<string | null>(null);
+  const [identityAttempt, setIdentityAttempt] = useState(0);
   const [userBirthDate, setUserBirthDate] = useState<string | undefined>();
   const [sessionId, setSessionId] = useState('');
   const [isMounted, setIsMounted] = useState(false);
@@ -510,8 +391,37 @@ function MAIAPageContent() {
         return;
       }
 
-      // Load user data first (needed for session registration)
-      const initialData = await getInitialUserData();
+      // ⛔ DESKTOP-MAIA-IDENTITY-HYDRATION-01 — ASK THE SERVER, FIRST.
+      //
+      // When /maia has a valid server session, server identity is
+      // authoritative. localStorage may cache identity; it may never originate
+      // authenticated identity. `resolveMemberIdentity` never throws, so there
+      // is no catch here in which a member could be quietly demoted to guest.
+      const resolved = await resolveMemberIdentity();
+
+      if (resolved.state === 'error') {
+        // ⛔ NOT a guest. We could not ask, which is a different fact from the
+        // server saying no, and rendering it as guest is exactly how an
+        // authenticated member became soul_guest. Nothing identity-dependent
+        // runs: no session registration, no memory or relationship calls.
+        console.warn('[MAIA identity] could not resolve identity:', resolved.reason);
+        setIdentityReason(resolved.reason);
+        setIdentityState('error');
+        return;
+      }
+
+      const initialData = resolved.state === 'authenticated'
+        ? { id: resolved.memberId as string, name: resolved.displayName || '' }
+        // ⛔ An EXPLICIT verdict of "not signed in". The onboarding/guest path
+        // below decides what a genuine guest experiences — but nothing cached
+        // is allowed to promote that verdict back into a member.
+        : { id: 'guest', name: '' };
+
+      console.log(`[MAIA identity] ${resolved.state}`
+        + (resolved.credentialSource ? ` via=${resolved.credentialSource}` : '')
+        + (resolved.reason ? ` reason=${resolved.reason}` : ''));
+      setIdentityReason(resolved.reason);
+      setIdentityState(resolved.state);
 
       // 🔎 IDENTITY PARITY (2026-08-24, iOS memory-context divergence).
       // Ask the server whether it recognizes this device, and compare with what
@@ -619,7 +529,10 @@ function MAIAPageContent() {
     };
 
     initializeUser();
-  }, []);
+    // ⛔ `identityAttempt` so a member who hit an identity failure can retry
+    // without reloading. Every other input to this effect is read once at mount.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [identityAttempt]);
 
   // Check for password change request from signin redirect
   useEffect(() => {
@@ -751,7 +664,7 @@ function MAIAPageContent() {
         return;
       }
     }
-    // All other user loading is handled by getInitialUserData() in the first useEffect
+    // All other user loading is handled by resolveMemberIdentity() in the first useEffect
     // Do NOT duplicate that logic here - it causes race conditions with stale localStorage
   }, []);
 
@@ -799,6 +712,61 @@ function MAIAPageContent() {
     window.addEventListener('maia-settings-changed', handler);
     return () => window.removeEventListener('maia-settings-changed', handler);
   }, []);
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // DESKTOP-MAIA-IDENTITY-HYDRATION-01 — the gate.
+  //
+  // ⛔ WHY A GATE AND NOT JUST A BETTER FETCH. Every consumer below is handed
+  // `explorerId`, and its initial value is the string 'guest'. Without this,
+  // /maia mounts as a guest, its children fire relationship and memory requests
+  // as `soul_guest`, and identity arrives afterwards — the label is corrected
+  // and the guest-shaped traffic has already gone. That would fix the avatar
+  // and preserve the defect.
+  //
+  // ⛔ Placed AFTER every hook in this component. An early return above them
+  // would change hook order between renders.
+  // ══════════════════════════════════════════════════════════════════════════
+  if (identityState === 'resolving') {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#0a0e1a] text-white/50">
+        <div className="text-sm tracking-wide">One moment…</div>
+      </div>
+    );
+  }
+
+  if (identityState === 'error') {
+    // ⛔ NOT a guest screen, and deliberately not a sign-in screen either. We do
+    // not know that this member is signed out — we know we could not ask. Say
+    // that, and offer the two honest moves.
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center gap-5 bg-[#0a0e1a] px-6 text-center text-white/80">
+        <div className="max-w-sm space-y-2">
+          <p className="text-base">MAIA can&rsquo;t confirm who you are right now.</p>
+          <p className="text-sm text-white/50">
+            Your session may still be fine — this is a problem reaching the server, not a
+            sign-out. Nothing has been changed or forgotten.
+          </p>
+          {identityReason && (
+            <p className="font-mono text-[11px] text-white/30">{identityReason}</p>
+          )}
+        </div>
+        <div className="flex gap-3">
+          <button
+            onClick={() => { setIdentityState('resolving'); setIdentityAttempt((n) => n + 1); }}
+            className="rounded-full border border-white/20 px-5 py-2 text-sm hover:bg-white/10"
+          >
+            Try again
+          </button>
+          <button
+            onClick={() => router.push('/signin')}
+            className="rounded-full px-5 py-2 text-sm text-white/50 hover:text-white/80"
+          >
+            Sign in
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   if (featureFlags.spatialMaiaShell) {
     return (
