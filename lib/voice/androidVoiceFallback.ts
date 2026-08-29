@@ -24,6 +24,7 @@
  */
 
 import { logVoiceEvent } from './voiceDiagnostics';
+import { readTranscript } from './transcribeResponse';
 import { apiFetch } from '@/lib/http/apiBase';
 
 const PREFERRED_MIME_TYPES = [
@@ -176,11 +177,7 @@ export async function recordAndTranscribe(
 
   let transcript = '';
   try {
-    const payload = await response.json();
-    // Both /api/voice/transcribe-simple and the underlying Whisper service
-    // return a `text` field. Accept either { text } or { transcript } to be
-    // resilient to small response shape variation.
-    transcript = String(payload?.text ?? payload?.transcript ?? '').trim();
+    transcript = readTranscript(await response.json());
   } catch {
     transcript = '';
   }
