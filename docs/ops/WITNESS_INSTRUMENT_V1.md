@@ -1,7 +1,7 @@
 # WITNESS-INSTRUMENT-V1 — scope, authorization boundary, phase exit
 
 **Lane:** Phase 0 of the MAIA Conversational Completion Program.
-**Status:** built · self-test 70/70 · **first device qualification RED — two instrument defects found and repaired** · phase exit NOT YET SATISFIED.
+**Status:** built · self-test 77/77 · **first device qualification RED — two instrument defects found and repaired** · phase exit NOT YET SATISFIED.
 **Entry point:** `scripts/witness/witness.sh` (see `scripts/witness/README.md`).
 
 ## Why this exists before any conversational lane
@@ -264,6 +264,24 @@ Not repaired, per ruling. Two consequences worth holding:
    `developmental_memories`, and if so where it came from. Read-only check:
    `ssh soullab@minisforum 'docker exec maia-postgres psql -U soullab maia_consciousness -c "\\d developmental_memories"'`
 
+**Defect 3 — `provision` warned and continued.** The first qualification brought
+the app up HEALTHY on a schema whose migrations had failed. Health is the most
+persuasive signal the instrument emits, and it was being emitted over a database
+that had never finished being built — a witness capable of making a broken
+substrate look successful. Repaired: migration failure now aborts `provision`
+before `witness-app` starts, records `MIGRATIONS=FAILED` and
+`WITNESS_READY=false`, still performs the protected-container before/after check
+so an aborted run does not skip the production-isolation witness, and preserves
+the migration output under `evidence/diagnostic/MIGRATIONS_FAILED.txt`. No
+migration file or platform schema was touched.
+
 Runtime provenance does not depend on migrations, so this does not by itself
 block Phase 0 — but Phase 0 should not be called green while the schema pipeline
-has a known unreplayable step.
+has a known unreplayable step:
+
+```
+WITNESS-INSTRUMENT-V1        may become mechanically qualified
+EMPTY-DB MIGRATION REPLAY    OPEN, outside the harness
+PHASE 0                      does not close GREEN while that dependency is
+                             knowingly unreplayable
+```

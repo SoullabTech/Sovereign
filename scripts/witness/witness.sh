@@ -100,8 +100,8 @@ w_protected_state() {
     local n
     w_have_docker || { echo "NO_DOCKER"; return 0; }
     for n in $WITNESS_PROTECTED_CONTAINERS; do
-        if docker inspect "$n" >/dev/null 2>&1; then
-            echo "$n $(docker inspect --format '{{.Id}} {{.State.Status}} {{.State.StartedAt}}' "$n" 2>/dev/null)"
+        if _w_docker inspect "$n" >/dev/null 2>&1; then
+            echo "$n $(_w_docker inspect --format '{{.Id}} {{.State.Status}} {{.State.StartedAt}}' "$n" 2>/dev/null)"
         else
             echo "$n ABSENT"
         fi
@@ -304,7 +304,7 @@ cmd_provision() {
     export WITNESS_RUN_TOKEN="$(wm_get RUN_TOKEN)"
     export WITNESS_RUN_ID="$(wm_get RUN_ID)"
 
-    local dc=(docker compose -p "$project" -f "$file" --env-file "$WITNESS_ENV_FILE")
+    local dc=("${WITNESS_DOCKER_CMD:-docker}" compose -p "$project" -f "$file" --env-file "$WITNESS_ENV_FILE")
 
     w_log "Building witness image from snapshot $snap ..."
     if ! "${dc[@]}" build witness-app 2>&1 | tee "$WITNESS_RUN_DIR/build.log" | tail -25 >&2; then
@@ -317,13 +317,67 @@ cmd_provision() {
     "${dc[@]}" up -d witness-postgres >> "$WITNESS_RUN_DIR/provision.log" 2>&1 || {
         w_fail "Witness postgres failed to start."; w_journal provision "FAIL postgres"; exit "$W_EXIT_ENV"; }
 
+    # ⛔ A BROKEN SUBSTRATE MUST NOT BE ABLE TO LOOK SUCCESSFUL.
+    #
+    # Found by the first device qualification (2026-08-29): migrations failed,
+    # provision warned and carried on, and the app came up HEALTHY on an
+    # incomplete schema. Health is the most persuasive signal the instrument
+    # emits, and it was being emitted over a database that had never finished
+    # being built. A witness that can do that is worse than no witness — it
+    # manufactures confidence.
+    #
+    # So migration failure now STOPS provision, before witness-app is started.
+    # The protected-container check has already run below by the time we exit,
+    # so an aborted run still witnesses production isolation; what it must never
+    # do is produce a running candidate to observe.
+    #
+    # The migration set's own defect is NOT the harness's to repair — see
+    # docs/ops/WITNESS_INSTRUMENT_V1.md. The harness's duty is to report it and
+    # refuse to build on top of it.
     w_log "Applying the candidate's own migration set to the witness database ..."
     if ! "${dc[@]}" --profile migrate run --rm witness-migrate >> "$WITNESS_RUN_DIR/provision.log" 2>&1; then
-        w_warn "Witness migrations reported failure — see $WITNESS_RUN_DIR/provision.log"
         wm_set MIGRATIONS "FAILED"
-    else
-        wm_set MIGRATIONS "APPLIED"
+        wm_set WITNESS_READY "false"
+
+        after="$(w_protected_state)"
+        printf '%s\n' "$after" > "$WITNESS_RUN_DIR/protected-after-provision.txt"
+        if w_assert_protected_untouched "$before" "$after"; then
+            wm_set PRODUCTION_ISOLATION "OBSERVED_INTACT"
+        else
+            wm_set PRODUCTION_ISOLATION "VIOLATED"
+        fi
+
+        # Keep the migration output where a reader will find it, labelled for
+        # what it is: diagnosis of the substrate, never evidence about the
+        # candidate's behaviour.
+        mkdir -p "$WITNESS_RUN_DIR/evidence/diagnostic"
+        {
+            echo "MIGRATIONS=FAILED"
+            echo "run       = $(wm_get RUN_ID)"
+            echo "candidate = $(wm_get CANDIDATE_SHORT_SHA)"
+            echo "captured  = $(w_utc)"
+            echo ""
+            echo "The candidate's migration set did not apply cleanly to an empty"
+            echo "witness database. provision STOPPED before starting the app: a"
+            echo "healthy container over an incomplete schema is a false green."
+            echo ""
+            echo "--- migration output (tail) ---"
+            grep -nE 'ERROR|FATAL|psql:|Migration failed' "$WITNESS_RUN_DIR/provision.log" 2>/dev/null | tail -40
+        } > "$WITNESS_RUN_DIR/evidence/diagnostic/MIGRATIONS_FAILED.txt"
+
+        wm_render_json
+        w_journal provision "FAIL migrations"
+        w_rule
+        w_fail "PROVISION STOPPED — the candidate's migrations did not apply."
+        w_dim "The app was NOT started. Nothing is running to observe, and this run"
+        w_dim "can produce no evidence about $(wm_get CANDIDATE_SHORT_SHA)."
+        w_dim "  detail:  $WITNESS_RUN_DIR/evidence/diagnostic/MIGRATIONS_FAILED.txt"
+        w_dim "  full log: $WITNESS_RUN_DIR/provision.log"
+        w_dim "The witness database container is left standing for inspection;"
+        w_dim "  scripts/witness/witness.sh teardown  removes it."
+        exit "$W_EXIT_ENV"
     fi
+    wm_set MIGRATIONS "APPLIED"
 
     w_log "Starting the candidate ..."
     if ! "${dc[@]}" up -d witness-app >> "$WITNESS_RUN_DIR/provision.log" 2>&1; then
@@ -336,7 +390,7 @@ cmd_provision() {
     container="$(wm_get MAIA_CONTAINER)"
     w_log "Waiting for the witness app to report healthy ..."
     while [ "$i" -lt 60 ]; do
-        health="$(docker inspect --format '{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}' "$container" 2>/dev/null || echo missing)"
+        health="$(_w_docker inspect --format '{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}' "$container" 2>/dev/null || echo missing)"
         [ "$health" = "healthy" ] && break
         [ "$health" = "missing" ] && break
         sleep 5; i=$((i+1))
@@ -472,7 +526,7 @@ cmd_teardown() {
         WITNESS_HTTP_PORT="$(wm_get HTTP_PORT)" \
         WITNESS_RUN_TOKEN="$(wm_get RUN_TOKEN)" \
         WITNESS_RUN_ID="$(wm_get RUN_ID)" \
-        docker compose -p "$project" -f "$file" --env-file "$WITNESS_ENV_FILE" \
+        _w_docker compose -p "$project" -f "$file" --env-file "$WITNESS_ENV_FILE" \
             down -v --remove-orphans >> "$WITNESS_RUN_DIR/teardown.log" 2>&1 || \
             w_warn "compose down reported an error — see $WITNESS_RUN_DIR/teardown.log"
         after="$(w_protected_state)"

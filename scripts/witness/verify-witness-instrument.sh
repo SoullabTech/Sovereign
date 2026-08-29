@@ -209,7 +209,17 @@ cat > "$FAKE_BIN/docker" <<'FAKE'
 # host with no daemon.
 case "$1" in
   info) exit 0 ;;
-  compose) exit 0 ;;
+  compose)
+    for a in "$@"; do
+      if [ "$a" = "witness-migrate" ] && [ "${FAKE_MIGRATE_FAIL:-0}" = "1" ]; then
+        echo "psql:/app/database/migrations/20251231_x.sql:123: ERROR:  relation \"developmental_memories\" does not exist"
+        echo "Migration failed: 20251231_x.sql"
+        exit 1
+      fi
+      [ "$a" = "witness-app" ] && [ -n "${FAKE_STATE_DIR:-}" ] && \
+        printf '%s\n' "$*" | grep -q 'up -d' && : > "$FAKE_STATE_DIR/app-started"
+    done
+    exit 0 ;;
   logs) echo "fake container log line"; exit 0 ;;
   inspect)
     shift
@@ -497,6 +507,32 @@ env WITNESS_RUN_ROOT="$ROOT/witness" WITNESS_SOURCE_REPO="$REPO" WITNESS_ENV_FIL
 
 unset WITNESS_DOCKER_CMD FAKE_RUN_LABEL FAKE_GIT_COMMIT FAKE_IMAGE_ID
 export WITNESS_ASSUME_NO_DOCKER=1
+
+# I — a broken substrate must not be able to look successful.
+# The first device qualification produced a HEALTHY app over a schema whose
+# migrations had failed. provision must now stop before the app is started.
+sect "I. substrate integrity"
+
+FAKE_STATE="$ROOT/fakestate"; mkdir -p "$FAKE_STATE"
+MIG_RUN_ID="$(env WITNESS_RUN_ROOT="$ROOT/witness" WITNESS_SOURCE_REPO="$REPO" WITNESS_ENV_FILE="$FIX/env.good" \
+    WITNESS_ASSUME_NO_DOCKER=1 HOME="$ROOT/home" \
+    WITNESS_ARTIFACT_SOURCE_PATH=lib/capture.ts \
+    WITNESS_ARTIFACT_PATTERN=CANDIDATE_UTTERANCE_CEILING_MARKER \
+    "$SCRIPT_DIR/witness.sh" prepare "$CAND_SHA" 2>/dev/null)"
+
+env WITNESS_RUN_ROOT="$ROOT/witness" WITNESS_SOURCE_REPO="$REPO" WITNESS_ENV_FILE="$FIX/env.good" \
+    WITNESS_DOCKER_CMD="$FAKE_BIN/docker" WITNESS_ASSUME_NO_DOCKER=0 \
+    FAKE_MIGRATE_FAIL=1 FAKE_STATE_DIR="$FAKE_STATE" FAKE_GIT_COMMIT="$CAND_SHORT" \
+    HOME="$ROOT/home" "$SCRIPT_DIR/witness.sh" provision "$MIG_RUN_ID" >/dev/null 2>&1
+[ $? -ne 0 ] && ok "migration failure fails provision (non-zero)" || bad "provision succeeded despite failed migrations"
+
+MIG_DIR="$ROOT/witness/runs/$MIG_RUN_ID"
+[ ! -f "$FAKE_STATE/app-started" ] && ok "the app is never started after a migration failure" || bad "app was started over a broken schema"
+( WITNESS_RUN_DIR="$MIG_DIR"; [ "$(wm_get MIGRATIONS)" = "FAILED" ] ) && ok "MIGRATIONS=FAILED recorded" || bad "migration failure not recorded"
+( WITNESS_RUN_DIR="$MIG_DIR"; [ "$(wm_get WITNESS_READY)" = "false" ] ) && ok "WITNESS_READY=false after a migration failure" || bad "run marked ready over a broken schema"
+( WITNESS_RUN_DIR="$MIG_DIR"; [ -n "$(wm_get PRODUCTION_ISOLATION)" ] ) && ok "production isolation still witnessed on an aborted run" || bad "isolation check skipped by the abort"
+[ -f "$MIG_DIR/evidence/diagnostic/MIGRATIONS_FAILED.txt" ] && ok "migration output preserved as diagnostic" || bad "migration diagnostic missing"
+[ ! -d "$MIG_DIR/evidence/server" ] && ok "an aborted run produces no attributable evidence" || bad "aborted run wrote attributable evidence"
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # G. Self-consistency — the instrument's own artifacts pass their own guards

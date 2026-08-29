@@ -19,6 +19,7 @@ it cannot.
 |---|---|
 | **Production isolation** | Every container, network, port, volume and database the witness stack can name is witness-owned. Protected names are refused by guard, and protected container state is recorded before and after every docker verb — so "untouched" is an observation, not a promise. |
 | **Candidate immutability** | The source tree must be clean — `DIRTY_TREE=REFUSED`, no override. The build context is a `git archive` snapshot of a named commit. Its digest is recorded at `prepare` and re-proven on every later verb. A rewritten history, a moved ref, a mutated snapshot, or a run re-pointed at another SHA all refuse. |
+| **Substrate integrity** | If the candidate's migrations do not apply to the empty witness database, `provision` stops **before** the app is started. A healthy container over an incomplete schema is a false green, and health is the most persuasive signal the instrument emits. |
 | **Runtime attribution** | Runtime objects are scoped to the RUN, not the candidate: project, container names and volumes all carry a per-run token, and every container is labelled `ai.soullab.witness.run_id`. A run cannot adopt another run's containers even for the same candidate. |
 | **Runtime provenance** | The running container must report the candidate's `GIT_COMMIT`, must carry `DEPLOY_LANE=witness-lane`, and must physically contain a declared candidate-specific artifact. Its **image digest** is bound on first proof and must not move afterwards — a tag is a name, and a tag can be rebuilt underneath a run by another lane. Anything less is `RUNTIME_PROVENANCE=UNPROVEN`, and unproven **fails**. |
 
@@ -184,9 +185,12 @@ Named, not worked around:
 - **No Desktop launcher.** Investigation-only, as above.
 - **No whisper / TTS sidecars** in the witness stack. Nothing in V1 drives them.
   A voice lane must add the service deliberately, not inherit it by accident.
-- **Migrations may fail** on a candidate whose migration set is not idempotent.
-  Recorded as `MIGRATIONS=FAILED`; provision continues so the failure is visible
-  rather than fatal, and provenance is still decided on its own terms.
+- **Migrations must apply.** A candidate whose migration set cannot replay against
+  an empty database aborts `provision` (exit 5) with `MIGRATIONS=FAILED`, the app
+  unstarted, and the migration output preserved under
+  `evidence/diagnostic/MIGRATIONS_FAILED.txt`. The harness does not repair the
+  migration set — that defect belongs to the platform — but it will not build a
+  runtime on top of it.
 - **Self-test proves the refusals, not the runtime.** The docker-touching paths
   (`provision`, server-class `collect`, `teardown`) are source-accepted and
   device-unwitnessed until first run on a host with a daemon.
