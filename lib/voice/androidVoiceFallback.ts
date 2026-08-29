@@ -38,6 +38,40 @@ const PREFERRED_MIME_TYPES = [
 ] as const;
 
 const DEFAULT_MAX_RECORDING_MS = 8000;
+
+/**
+ * DESKTOP-SOVEREIGN-STT-UTTERANCE-LIMIT-01 — the Desktop safety ceiling.
+ *
+ * ⛔ WHY A SECOND CONSTANT RATHER THAN A LARGER DEFAULT. `DEFAULT_MAX_RECORDING_MS`
+ * was sized for what this module was built for: a ONE-SHOT RECOVERY probe on
+ * Android Chrome after the Web Speech VAD failed silently. Eight seconds is a
+ * defensible bound on a diagnostic capture. It was never a claim about how long
+ * a person is allowed to speak.
+ *
+ * Desktop inherited it along with the transport (DESKTOP-SOVEREIGN-STT-01), and
+ * that inheritance quietly promoted a recovery bound into the SEMANTIC END OF A
+ * CONVERSATION TURN. On the founder device, long spoken turns terminated at
+ * 8704 ms and 8652 ms while the member was still speaking — mid-breath. Two
+ * short turns in the same run ended at 3.0 s and 2.4 s, which is silence
+ * completion working correctly; the ~8.6–8.7 s cluster is what distinguishes a
+ * hard ceiling from a false VAD.
+ *
+ * ⛔ THE DEFAULT IS LEFT EXACTLY AS IT WAS. Android-Chrome recovery and the
+ * Firefox/Zen branch keep the bound they were designed against. Widening theirs
+ * would be a behaviour change nobody witnessed and nobody asked for.
+ *
+ * ⛔ THIS IS STILL A CEILING AND MUST STAY ONE. It is not "no limit". A
+ * microphone that never falls silent — a room with a television, a stuck gain
+ * stage, a tab left open beside a fan — must still end. Two minutes sits far
+ * enough past any spoken turn that reaching it means something has gone wrong,
+ * and near enough that a pathological capture is measured in minutes rather
+ * than in however long the machine stays awake.
+ *
+ * Ordinary Desktop speech never reaches this number. It ends on silence
+ * (`DEFAULT_SILENCE_HOLDOFF_MS`), which is what a turn boundary should be.
+ */
+export const DESKTOP_SOVEREIGN_MAX_RECORDING_MS = 120_000;
+
 const DEFAULT_SILENCE_HOLDOFF_MS = 1500;
 const DEFAULT_MIN_RECORDING_MS = 800; // don't stop before the user can speak
 const SILENCE_RMS_THRESHOLD = 0.012; // empirical; mic noise floor sits ~0.005

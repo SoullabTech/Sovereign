@@ -3422,8 +3422,9 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
       console.log('[voice] transport:', voiceTransport, { platform: info.platform });
 
       if ((info.isDesktop || !hasSpeechRecognitionAPI()) && canRecordAudio) {
-        // Clear the 2s ARMING watchdog — this path records up to ~8s and
-        // would otherwise be reset to IDLE mid-utterance.
+        // Clear the 2s ARMING watchdog — this path records for as long as the
+        // member keeps speaking and would otherwise be reset to IDLE
+        // mid-utterance.
         if (armingTimeoutRef.current) {
           clearTimeout(armingTimeoutRef.current);
           armingTimeoutRef.current = null;
@@ -3497,9 +3498,30 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
           : undefined;
 
         try {
-          const { recordAndTranscribe } = await import('@/lib/voice/androidVoiceFallback');
+          const { recordAndTranscribe, DESKTOP_SOVEREIGN_MAX_RECORDING_MS } =
+            await import('@/lib/voice/androidVoiceFallback');
+
+          // ⛔ DESKTOP-SOVEREIGN-STT-UTTERANCE-LIMIT-01 — where a Desktop turn ends.
+          //
+          // Unset, this capture inherits `DEFAULT_MAX_RECORDING_MS` (8 s), which
+          // this module sized for a one-shot Android-Chrome recovery probe. On
+          // Desktop that bound was not a safety net, it was a guillotine: long
+          // turns were cut at ~8.7 s while the member was still speaking.
+          //
+          // ⛔ SCOPED THE SAME WAY `emitProvisional` IS — by `info.isDesktop`,
+          // never by capability, and never by editing the shared default. This
+          // branch is also reached by Firefox/Zen (absence of Web Speech) and is
+          // adjacent to the Android-Chrome recovery call site; both keep the
+          // 8 s bound they were designed against. Widening them is a separate
+          // decision with its own witness.
+          //
+          // ⛔ A CEILING, NOT AN ABSENCE OF ONE. Desktop speech still ends on
+          // silence; this only stops a microphone that never falls silent.
+          const captureMaxMs = info.isDesktop ? DESKTOP_SOVEREIGN_MAX_RECORDING_MS : undefined;
+
           const result = await recordAndTranscribe(stream, {
             signal: captureController.signal,
+            ...(captureMaxMs === undefined ? {} : { maxMs: captureMaxMs }),
             ...(emitProvisional ? { onPartial: emitProvisional } : {}),
           });
 
