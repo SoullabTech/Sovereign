@@ -170,7 +170,7 @@ guard_candidate_immutable() {
 # ───────────────────────────────────────────────────────────────────────────────
 # G4 — witness compose project. Refuses any project name or compose file that is
 # not unmistakably ours. This is what makes `teardown` safe to run at all: a
-# `docker compose down -v` can only ever address a project named maia-witness-*.
+# `_w_docker compose down -v` can only ever address a project named maia-witness-*.
 # ───────────────────────────────────────────────────────────────────────────────
 guard_compose_project() {
     local project="${1:-$(wm_get COMPOSE_PROJECT)}" file="${2:-$(wm_get COMPOSE_FILE)}"
@@ -204,7 +204,7 @@ guard_container_names() {
     local names rendered=""
 
     if w_have_docker; then
-        rendered="$(docker compose -p "$project" -f "$file" ${WITNESS_ENV_FILE:+--env-file "$WITNESS_ENV_FILE"} config 2>/dev/null || true)"
+        rendered="$(_w_docker compose -p "$project" -f "$file" ${WITNESS_ENV_FILE:+--env-file "$WITNESS_ENV_FILE"} config 2>/dev/null || true)"
     fi
     if [ -n "$rendered" ]; then
         names="$(printf '%s\n' "$rendered" | sed -n 's/^ *container_name: *"\{0,1\}\([^"]*\)"\{0,1\} *$/\1/p')"
@@ -218,8 +218,24 @@ guard_container_names() {
         return 1
     fi
 
-    local n p bad=0
-    for n in $names; do
+    # Names are interpolated from THIS RUN's token, so a statically parsed
+    # compose file resolves the same way a rendered one does.
+    local token run_id
+    token="$(wm_get RUN_TOKEN)"; run_id="$(wm_get RUN_ID)"
+    export WITNESS_RUN_TOKEN="$token" WITNESS_RUN_ID="$run_id"
+
+    if [ -z "$token" ]; then
+        w_block "Run manifest carries no RUN_TOKEN — this run predates run-scoped runtime identity."
+        w_dim "Prepare a new run; a run without a token cannot own its containers."
+        return 1
+    fi
+
+    local n p bad=0 expanded=""
+    while IFS= read -r n; do
+        [ -n "$n" ] || continue
+        n="$(_w_expand_env_str "$n")"
+        expanded="$expanded$n
+"
         for p in $WITNESS_PROTECTED_CONTAINERS; do
             if [ "$n" = "$p" ]; then
                 w_block "Production container named in the witness stack: '$n'"
@@ -227,23 +243,33 @@ guard_container_names() {
             fi
         done
         case "$n" in
-            "${WITNESS_PREFIX}-"*) : ;;
-            *) w_block "Unprefixed container in the witness stack: '$n' (must be ${WITNESS_PREFIX}-*)"; bad=1 ;;
+            "${WITNESS_PREFIX}-${token}-"*) : ;;
+            "${WITNESS_PREFIX}-"*)
+                w_block "Candidate-scoped container in the witness stack: '$n'"
+                w_dim "Runtime objects must carry THIS RUN's token (${WITNESS_PREFIX}-${token}-*)."
+                w_dim "A name scoped only to the candidate lets one run adopt another run's runtime."
+                bad=1 ;;
+            *) w_block "Unprefixed container in the witness stack: '$n' (must be ${WITNESS_PREFIX}-${token}-*)"; bad=1 ;;
         esac
-    done
+    done <<EOF
+$names
+EOF
     [ "$bad" -eq 0 ] || return 1
 
     # A witness container name must not already be taken by something running
     # that we did not create — refuse rather than adopt a stranger's container.
     if w_have_docker; then
-        for n in $names; do
+        while IFS= read -r n; do
+            [ -n "$n" ] || continue
             local owner
-            owner="$(docker inspect --format '{{ index .Config.Labels "com.docker.compose.project" }}' "$n" 2>/dev/null || true)"
+            owner="$(_w_docker inspect --format '{{ index .Config.Labels "com.docker.compose.project" }}' "$n" 2>/dev/null || true)"
             if [ -n "$owner" ] && [ "$owner" != "$project" ]; then
                 w_block "Container '$n' already exists and belongs to project '$owner', not '$project'."
                 return 1
             fi
-        done
+        done <<EOF
+$expanded
+EOF
     fi
     return 0
 }
@@ -314,11 +340,13 @@ guard_database_target() {
 # substitution — a compose file is data, not code we are willing to run.
 _w_expand_env_str() {
     local s="$1" out="" name def val
-    while [[ "$s" =~ ^([^\$]*)\$\{([A-Za-z_][A-Za-z0-9_]*)(:-([^}]*))?\}(.*)$ ]]; do
+    while [[ "$s" =~ ^([^\$]*)\$\{([A-Za-z_][A-Za-z0-9_]*)(:([-?])([^}]*))?\}(.*)$ ]]; do
         out="$out${BASH_REMATCH[1]}"
         name="${BASH_REMATCH[2]}"
-        def="${BASH_REMATCH[4]}"
-        s="${BASH_REMATCH[5]}"
+        # ${VAR:-default} supplies a default; ${VAR:?message} supplies none —
+        # the message is an error string, never a value.
+        if [ "${BASH_REMATCH[4]}" = "-" ]; then def="${BASH_REMATCH[5]}"; else def=""; fi
+        s="${BASH_REMATCH[6]}"
         eval "val=\${$name:-}"
         [ -n "$val" ] || val="$def"
         out="$out$val"
@@ -330,7 +358,7 @@ _w_expand_env_str() {
 # Handles BOTH forms, because they are not interchangeable in practice:
 #
 #   short  (what we author)          - "127.0.0.1:3999:3000"
-#   long   (what `docker compose     - mode: ingress
+#   long   (what `_w_docker compose     - mode: ingress
 #          config` renders)            target: 3000
 #                                       published: "3999"
 #                                       host_ip: 127.0.0.1
@@ -412,7 +440,7 @@ guard_network_target() {
     # ${VAR} / ${VAR:-default} so the guard still works with no daemon.
     local port_specs=""
     if w_have_docker; then
-        port_specs="$(docker compose -p "$(wm_get COMPOSE_PROJECT)" -f "$file" ${env_file:+--env-file "$env_file"} config 2>/dev/null | _w_ports_specs)"
+        port_specs="$(_w_docker compose -p "$(wm_get COMPOSE_PROJECT)" -f "$file" ${env_file:+--env-file "$env_file"} config 2>/dev/null | _w_ports_specs)"
     fi
     if [ -z "$port_specs" ]; then
         port_specs="$(_w_ports_specs < "$file")"
@@ -599,18 +627,45 @@ guard_runtime_provenance() {
     if [ -z "$container" ]; then
         _unproven "run manifest names no witness container"; return $?
     fi
-    if ! docker inspect "$container" >/dev/null 2>&1; then
+    if ! _w_docker inspect "$container" >/dev/null 2>&1; then
         _unproven "witness container '$container' does not exist (expected before provision)"; return $?
     fi
+
+    # ⛔ BIND THE RUNTIME TO THIS RUN, BEFORE ANY OTHER PROPERTY IS READ.
+    #
+    # Found by device qualification (2026-08-29, run 20260829T202516Z-01374f51b):
+    # a FRESH run returned RUNTIME_PROVENANCE=PROVEN and exit 0 from its
+    # PRE-provision verify — which must be impossible, since that run had built
+    # nothing. Runtime identity was scoped to the candidate, not the run: the
+    # compose project was maia-witness-<sha> and the container names were fixed,
+    # so a second run of the same candidate silently adopted the FIRST run's
+    # container, bound its image digest, and then correctly exploded when
+    # provision replaced it.
+    #
+    # Every property below — GIT_COMMIT, DEPLOY_LANE, the artifact probe, the
+    # image digest — was TRUE of that container. All of them can be true of a
+    # runtime this run did not create. Only the run label answers "is this mine".
+    local got_run
+    got_run="$(_w_docker inspect --format '{{ index .Config.Labels "ai.soullab.witness.run_id" }}' "$container" 2>/dev/null | tr -d '\r\n' || true)"
+    if [ -z "$got_run" ] || [ "$got_run" = "<no value>" ]; then
+        _unproven "container '$container' carries no witness run label — it was not created by this instrument"
+        return $?
+    fi
+    if [ "$got_run" != "$(wm_get RUN_ID)" ]; then
+        _unproven "container '$container' belongs to run '$got_run', not '$(wm_get RUN_ID)'.
+   A run may never adopt another run's runtime, even for the same candidate.
+   Evidence from a runtime this run did not create is not attributable to it."
+        return $?
+    fi
     local running
-    running="$(docker inspect --format '{{.State.Running}}' "$container" 2>/dev/null || echo false)"
+    running="$(_w_docker inspect --format '{{.State.Running}}' "$container" 2>/dev/null || echo false)"
     if [ "$running" != "true" ]; then
         _unproven "witness container '$container' is not running"; return $?
     fi
 
     local got_sha got_lane
-    got_sha="$(docker exec "$container" printenv GIT_COMMIT 2>/dev/null | tr -d '\r\n' || true)"
-    got_lane="$(docker exec "$container" printenv DEPLOY_LANE 2>/dev/null | tr -d '\r\n' || true)"
+    got_sha="$(_w_docker exec "$container" printenv GIT_COMMIT 2>/dev/null | tr -d '\r\n' || true)"
+    got_lane="$(_w_docker exec "$container" printenv DEPLOY_LANE 2>/dev/null | tr -d '\r\n' || true)"
 
     if [ "$got_sha" != "$expect_short" ]; then
         _unproven "container reports GIT_COMMIT='${got_sha:-<unset>}', candidate is '$expect_short'"; return $?
@@ -623,7 +678,7 @@ guard_runtime_provenance() {
     local probe_cmd
     probe_cmd="${probe:-grep -R -F -q -- '$pattern' /app --exclude-dir=node_modules --exclude-dir=.git && echo WITNESS_ARTIFACT_FOUND}"
     local probe_out
-    probe_out="$(docker exec "$container" sh -c "$probe_cmd" 2>/dev/null || true)"
+    probe_out="$(_w_docker exec "$container" sh -c "$probe_cmd" 2>/dev/null || true)"
     if [ -z "$probe_out" ]; then
         _unproven "declared artifact assertion did NOT hold inside '$container'"
         return $?
@@ -643,7 +698,7 @@ guard_runtime_provenance() {
     # or the run is UNPROVEN — evidence collected before and after an image swap
     # cannot be attributed to one thing.
     local img_id recorded_img
-    img_id="$(docker inspect --format '{{.Image}}' "$container" 2>/dev/null | tr -d '\r\n' || true)"
+    img_id="$(_w_docker inspect --format '{{.Image}}' "$container" 2>/dev/null | tr -d '\r\n' || true)"
     recorded_img="$(wm_get RUNTIME_IMAGE_ID)"
     if [ -z "$img_id" ]; then
         _unproven "could not read the image digest of '$container'"; return $?
@@ -656,6 +711,7 @@ guard_runtime_provenance() {
     fi
 
     wm_set RUNTIME_PROVENANCE "PROVEN"
+    wm_set RUNTIME_RUN_LABEL "$got_run"
     wm_set RUNTIME_GIT_COMMIT "$got_sha"
     wm_set RUNTIME_DEPLOY_LANE "$got_lane"
     wm_set RUNTIME_IMAGE_ID "$img_id"

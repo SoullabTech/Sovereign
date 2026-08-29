@@ -137,7 +137,19 @@ w_journal() {
 # Test seam: the self-test runs with no daemon and must be able to force the
 # no-docker branch deterministically (same spirit as DEPLOY_VERIFY_PRINTENV_CMD
 # in scripts/deploy-context.sh).
+# Every docker invocation in the instrument goes through this seam, so the
+# self-test can drive the runtime-provenance and evidence paths against a fake
+# daemon on a host that has none. Same idea as DEPLOY_VERIFY_PRINTENV_CMD in
+# scripts/deploy-context.sh — the alternative is that the guards which decide
+# attribution are the only guards never exercised by a test.
+_w_docker() { "${WITNESS_DOCKER_CMD:-docker}" "$@"; }
+
 w_have_docker() {
     [ "${WITNESS_ASSUME_NO_DOCKER:-0}" = "1" ] && return 1
-    command -v docker >/dev/null 2>&1 && docker info >/dev/null 2>&1
+    command -v "${WITNESS_DOCKER_CMD:-docker}" >/dev/null 2>&1 && _w_docker info >/dev/null 2>&1
 }
+
+# A run's identity token: short, docker-name-safe, derived from the run id.
+# Runtime objects carry it so that no two runs can ever address the same
+# containers, project or volumes.
+w_run_token_for() { printf '%s' "$1" | _w_sha256 | cut -c1-8; }

@@ -19,6 +19,7 @@ it cannot.
 |---|---|
 | **Production isolation** | Every container, network, port, volume and database the witness stack can name is witness-owned. Protected names are refused by guard, and protected container state is recorded before and after every docker verb — so "untouched" is an observation, not a promise. |
 | **Candidate immutability** | The source tree must be clean — `DIRTY_TREE=REFUSED`, no override. The build context is a `git archive` snapshot of a named commit. Its digest is recorded at `prepare` and re-proven on every later verb. A rewritten history, a moved ref, a mutated snapshot, or a run re-pointed at another SHA all refuse. |
+| **Runtime attribution** | Runtime objects are scoped to the RUN, not the candidate: project, container names and volumes all carry a per-run token, and every container is labelled `ai.soullab.witness.run_id`. A run cannot adopt another run's containers even for the same candidate. |
 | **Runtime provenance** | The running container must report the candidate's `GIT_COMMIT`, must carry `DEPLOY_LANE=witness-lane`, and must physically contain a declared candidate-specific artifact. Its **image digest** is bound on first proof and must not move afterwards — a tag is a name, and a tag can be rebuilt underneath a run by another lane. Anything less is `RUNTIME_PROVENANCE=UNPROVEN`, and unproven **fails**. |
 
 Container health proves something is running. It does not prove *the candidate*
@@ -123,9 +124,13 @@ Voice, capture lifecycle, turn boundaries and re-entry are **client-side**
 events. Server logs cannot witness them. So `collect` never rolls the two
 classes into one verdict:
 
-- both present → `EVIDENCE_COMPLETE=true`, exit 0
-- anything missing → `EVIDENCE_COMPLETE=false`, exit **4**, and the run may only
-  be cited with that qualification attached
+- both present, runtime proven → `EVIDENCE_COMPLETE=true`, exit 0
+- a class missing, runtime proven → `EVIDENCE_COMPLETE=false`, exit **4**, and the
+  run may only be cited with that qualification attached
+- **runtime not proven** → nothing is attributable. Artifacts are still captured,
+  under `evidence/diagnostic/` with a `NOT_ATTRIBUTABLE.txt` header, and the run
+  exits **3**. A failed run is exactly when logs matter; they may inform the next
+  repair, never a claim about the candidate.
 
 V1 has no authenticated Desktop launcher — `launch_desktop_authenticated` is
 deliberately **not** implemented. Desktop targeting and auth lifecycle are not
@@ -147,7 +152,7 @@ WITNESS_CLIENT_CONSOLE_LOG=/path/to/console.log \
 | 0 | pass |
 | 1 | refused by a mechanical guard |
 | 2 | usage |
-| 3 | `RUNTIME_PROVENANCE=UNPROVEN` |
+| 3 | `RUNTIME_PROVENANCE=UNPROVEN`, or evidence not attributable |
 | 4 | evidence qualified / incomplete |
 | 5 | environment or tooling missing |
 

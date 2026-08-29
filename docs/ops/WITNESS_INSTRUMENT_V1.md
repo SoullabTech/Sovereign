@@ -1,7 +1,7 @@
 # WITNESS-INSTRUMENT-V1 — scope, authorization boundary, phase exit
 
 **Lane:** Phase 0 of the MAIA Conversational Completion Program.
-**Status:** built · self-test 46/46 · **docker paths device-unwitnessed** · phase exit NOT YET SATISFIED.
+**Status:** built · self-test 70/70 · **first device qualification RED — two instrument defects found and repaired** · phase exit NOT YET SATISFIED.
 **Entry point:** `scripts/witness/witness.sh` (see `scripts/witness/README.md`).
 
 ## Why this exists before any conversational lane
@@ -36,6 +36,7 @@ guards. The guards are the deliverable; the verbs are how they get invoked.
 | G7 | external networks, non-loopback ports, reserved production ports, protected hostnames in env |
 | G8 | writing runs, snapshots or evidence inside a protected project dir |
 | G9 | a missing, universal, too-short, false-of-candidate, or non-discriminating artifact assertion |
+| G10a | a container belonging to another run, or carrying no witness run label — no run may adopt another run's runtime |
 | G10 | unproven runtime provenance — wrong `GIT_COMMIT`, wrong `DEPLOY_LANE`, or the declared artifact absent from the running container |
 
 Protected by name: `maia-postgres`, `maia-sovereign`, the rest of the production
@@ -196,3 +197,73 @@ Note: `419ef230b`, `b562e3f8b` and `01374f51b…` do not exist in the remote
 clone — they are local/unpushed on the Mac Studio. G1 refuses a candidate that
 cannot be resolved, so those runs must be prepared on the machine that holds the
 commit. The instrument will not silently witness a lookalike.
+
+
+## First device qualification — 2026-08-29, RED
+
+Run `20260829T202516Z-01374f51b`, instrument `b957c921a`, candidate
+`01374f51b`. It found what it was built to find.
+
+```
+STATIC GATES            PASS
+DISCRIMINATION          PASS
+PRE-PROVISION VERIFY    INVALID PASS — expected exit 3, got 0
+PROVISION               FAIL
+RUNTIME PROVENANCE      UNPROVEN
+MIGRATIONS              FAILED
+PRODUCTION ISOLATION    OBSERVED_INTACT
+TEARDOWN                PASS
+```
+
+**Defect 1 — runtime identity was candidate-scoped, not run-scoped.** The
+compose project was `maia-witness-<sha>` and container names were fixed, so a
+fresh run adopted an earlier run's container and reported PROVEN before it had
+built anything. Every property the guard checked — `GIT_COMMIT`, `DEPLOY_LANE`,
+the artifact probe, the image digest — was *true of that container*. All of them
+can be true of a runtime the run did not create. Repaired by scoping project,
+container names and volumes to a per-run token, and by binding provenance to an
+`ai.soullab.witness.run_id` label read **before** any other property. The image
+digest guard is untouched; it caught the symptom correctly.
+
+**Defect 2 — `collect` was fail-open on attribution.** After provenance failed
+and the instrument had printed "Nothing observed through it may be cited as
+evidence about the candidate," `collect` reported `SERVER_EVIDENCE=COMPLETE`.
+Candidate immutability was checked; runtime attribution was not. Repaired:
+attribution is now decided *before* collection. An unproven runtime is captured
+as `evidence/diagnostic/` with a `NOT_ATTRIBUTABLE.txt` header, exits 3, and can
+never roll up to COMPLETE or QUALIFIED.
+
+Both defects are pinned by self-tests driven against a fake daemon
+(`WITNESS_DOCKER_CMD`), so the guards that decide attribution are no longer the
+only guards never exercised by a test.
+
+## Migration failure — classified, NOT an instrument or candidate defect
+
+```
+psql:/app/database/migrations/20251231_memory_architecture_enhancements.sql:123:
+  ERROR:  relation "developmental_memories" does not exist
+```
+
+That migration does `ALTER TABLE developmental_memories` unconditionally.
+**Nothing in the repository ever creates that table** — no migration, no
+`prisma/schema.prisma` model, no `database/init` script. The only files
+mentioning it are the migration that alters it and its stale duplicate under
+`db/migrations/`.
+
+So this is a pre-existing property of the SQL migration set: **it is not
+replayable from an empty database.** Production's schema was assembled
+incrementally over time, so that path was never exercised; the witness stack is
+the first thing to ever replay the full set from empty, which is why it surfaced
+here and not in production.
+
+Not repaired, per ruling. Two consequences worth holding:
+
+1. Any later lane needing a working DB in the witness stack (episodic memory,
+   atoms, anything schema-dependent) will hit this. It is its own work item.
+2. It is an open question whether production actually carries
+   `developmental_memories`, and if so where it came from. Read-only check:
+   `ssh soullab@minisforum 'docker exec maia-postgres psql -U soullab maia_consciousness -c "\\d developmental_memories"'`
+
+Runtime provenance does not depend on migrations, so this does not by itself
+block Phase 0 — but Phase 0 should not be called green while the schema pipeline
+has a known unreplayable step.

@@ -5,12 +5,21 @@
 # exercised and witnessed without any path to production.
 #
 # Isolation is structural, not conventional:
-#   - every container carries the maia-witness- prefix (guard G5 refuses others)
+#   - every container carries the maia-witness-<run token>- prefix and an
+#     ai.soullab.witness.run_id label (guards G5 + G10 refuse anything else)
 #   - its own postgres, its own database (maia_witness), its own volume
 #   - no external networks (guard G7 refuses them)
 #   - the app port is loopback-bound and off every production/dev port (G7)
 #   - the build context is an immutable git-archive snapshot of the candidate,
 #     never the shared working tree
+#
+# Runtime objects are scoped to the RUN, not the candidate. Device qualification
+# on 2026-08-29 found the opposite: fixed container names plus a project scoped
+# only to the candidate SHA let a fresh run adopt an earlier run's containers and
+# report PROVEN before it had built anything. The required-variable syntax below
+# (${VAR:?...}) is deliberate — compose REFUSES to render this file at all unless
+# the run token and run id are present, so there is no path by which an
+# unscoped witness stack can come into existence.
 #
 # Never invoked by hand. scripts/witness/witness.sh is the only entry point;
 # it runs the refusal set first and holds the witness lane lock throughout.
@@ -42,7 +51,11 @@ services:
   witness-app:
     build: *witness_build
     image: maia-sovereign:witness-${GIT_COMMIT:-unknown}
-    container_name: maia-witness-app
+    container_name: maia-witness-${WITNESS_RUN_TOKEN:?witness run token required}-app
+    labels:
+      ai.soullab.witness.run_id: ${WITNESS_RUN_ID:?witness run id required}
+      ai.soullab.witness.candidate: ${GIT_COMMIT:?witness candidate sha required}
+
     restart: "no"          # a witness never silently restarts itself back to life
     logging: *witness_logging
 
@@ -86,7 +99,11 @@ services:
   # cannot collide with production's 5432 bind.
   witness-postgres:
     image: pgvector/pgvector:pg16
-    container_name: maia-witness-postgres
+    container_name: maia-witness-${WITNESS_RUN_TOKEN:?witness run token required}-postgres
+    labels:
+      ai.soullab.witness.run_id: ${WITNESS_RUN_ID:?witness run id required}
+      ai.soullab.witness.candidate: ${GIT_COMMIT:?witness candidate sha required}
+
     restart: "no"
     logging: *witness_logging
 
@@ -125,7 +142,11 @@ services:
       target: builder
       args:
         DEPLOY_LANE_TOKEN: ${DEPLOY_LANE_TOKEN:-witness-lane}
-    container_name: maia-witness-migrate
+    container_name: maia-witness-${WITNESS_RUN_TOKEN:?witness run token required}-migrate
+    labels:
+      ai.soullab.witness.run_id: ${WITNESS_RUN_ID:?witness run id required}
+      ai.soullab.witness.candidate: ${GIT_COMMIT:?witness candidate sha required}
+
     restart: "no"
 
     env_file:

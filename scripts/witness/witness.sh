@@ -178,11 +178,17 @@ cmd_prepare() {
     wm_set CANDIDATE_TREE_DIGEST     "$tree_digest"
     wm_set SNAPSHOT_DIR              "$snap"
     wm_set SNAPSHOT_CONTENT_DIGEST   "$snap_digest"
+    # Runtime identity is scoped to the RUN, never to the candidate alone.
+    # Two runs of the same candidate must not be able to address the same
+    # containers, project or volumes — see the 2026-08-29 adoption defect in
+    # guard_runtime_provenance.
+    local run_token; run_token="$(w_run_token_for "$run_id")"
+    wm_set RUN_TOKEN                 "$run_token"
     wm_set COMPOSE_FILE              "$WITNESS_COMPOSE_FILE"
-    wm_set COMPOSE_PROJECT           "${WITNESS_PREFIX}-${WITNESS_CANDIDATE_SHORT}"
+    wm_set COMPOSE_PROJECT           "${WITNESS_PREFIX}-${WITNESS_CANDIDATE_SHORT}-${run_token}"
     wm_set ENV_FILE                  "$WITNESS_ENV_FILE"
-    wm_set MAIA_CONTAINER            "${WITNESS_PREFIX}-app"
-    wm_set PG_CONTAINER              "${WITNESS_PREFIX}-postgres"
+    wm_set MAIA_CONTAINER            "${WITNESS_PREFIX}-${run_token}-app"
+    wm_set PG_CONTAINER              "${WITNESS_PREFIX}-${run_token}-postgres"
     wm_set HTTP_PORT                 "${WITNESS_HTTP_PORT:-3999}"
     wm_set ARTIFACT_PATTERN          "${WITNESS_ARTIFACT_PATTERN:-}"
     wm_set ARTIFACT_SOURCE_PATH      "${WITNESS_ARTIFACT_SOURCE_PATH:-}"
@@ -206,6 +212,7 @@ cmd_prepare() {
     w_dim "subject:   $(wm_get CANDIDATE_SUBJECT)"
     w_dim "tree:      $WITNESS_TREE_STATE"
     w_dim "snapshot:  $snap"
+    w_dim "runtime:   project $(wm_get COMPOSE_PROJECT), containers ${WITNESS_PREFIX}-${run_token}-*"
     w_dim "assertion: '$(wm_get ARTIFACT_PATTERN)' in $(wm_get ARTIFACT_SOURCE_PATH) (discriminating: $(wm_get ARTIFACT_ASSERTION_DISCRIMINATING))"
     w_dim "run dir:   $run_dir"
     echo "$run_id"
@@ -292,6 +299,10 @@ cmd_provision() {
     export GIT_COMMIT="$(wm_get CANDIDATE_SHORT_SHA)"
     export DEPLOY_LANE_TOKEN="$WITNESS_LANE_TOKEN"
     export WITNESS_HTTP_PORT="$(wm_get HTTP_PORT)"
+    # Compose declares these with ${VAR:?...}: without them it refuses to render
+    # at all, so an unscoped witness stack cannot come into existence.
+    export WITNESS_RUN_TOKEN="$(wm_get RUN_TOKEN)"
+    export WITNESS_RUN_ID="$(wm_get RUN_ID)"
 
     local dc=(docker compose -p "$project" -f "$file" --env-file "$WITNESS_ENV_FILE")
 
@@ -384,7 +395,35 @@ cmd_collect() {
         exit "$W_EXIT_REFUSED"
     fi
 
-    witness_collect_server || true
+    # ⛔ ATTRIBUTION IS DECIDED BEFORE COLLECTION, NOT AFTER.
+    #
+    # Found by device qualification (2026-08-29): provision had already failed
+    # with RUNTIME_PROVENANCE=UNPROVEN and the instrument had already printed
+    # "Nothing observed through it may be cited as evidence about the
+    # candidate" — and collect then reported SERVER_EVIDENCE=COMPLETE anyway.
+    # Immutability of the CANDIDATE was checked; attribution of the RUNTIME was
+    # not. That is fail-open evidence: the most convincing artifact in the run
+    # directory would have been the least attributable.
+    #
+    # An unproven runtime may still be captured — a failed run is exactly when
+    # logs matter — but it is captured as DIAGNOSTIC, kept out of evidence/server,
+    # and can never roll up to COMPLETE or QUALIFIED.
+    if guard_runtime_provenance; then
+        witness_collect_server || true
+    else
+        wm_set EVIDENCE_CLASS "DIAGNOSTIC_ONLY"
+        witness_collect_diagnostic || true
+        witness_collect_client || true
+        witness_evidence_rollup || true
+        wm_render_json
+        w_journal collect "NOT_ATTRIBUTABLE provenance=$(wm_get RUNTIME_PROVENANCE)"
+        w_rule
+        w_fail "COLLECT NOT ATTRIBUTABLE — RUNTIME_PROVENANCE=$(wm_get RUNTIME_PROVENANCE)"
+        w_dim "Server artifacts were captured for DIAGNOSIS ONLY, under evidence/diagnostic/."
+        w_dim "They are not evidence about $(wm_get CANDIDATE_SHORT_SHA) and must not be cited as such."
+        exit "$W_EXIT_UNPROVEN"
+    fi
+    wm_set EVIDENCE_CLASS "ATTRIBUTABLE"
     witness_collect_client || true
 
     if witness_evidence_rollup; then
@@ -431,6 +470,8 @@ cmd_teardown() {
         WITNESS_BUILD_CONTEXT="$(wm_get SNAPSHOT_DIR)" \
         GIT_COMMIT="$(wm_get CANDIDATE_SHORT_SHA)" \
         WITNESS_HTTP_PORT="$(wm_get HTTP_PORT)" \
+        WITNESS_RUN_TOKEN="$(wm_get RUN_TOKEN)" \
+        WITNESS_RUN_ID="$(wm_get RUN_ID)" \
         docker compose -p "$project" -f "$file" --env-file "$WITNESS_ENV_FILE" \
             down -v --remove-orphans >> "$WITNESS_RUN_DIR/teardown.log" 2>&1 || \
             w_warn "compose down reported an error — see $WITNESS_RUN_DIR/teardown.log"
@@ -477,7 +518,9 @@ cmd_status() {
     echo "  discriminating       $(wm_show ARTIFACT_ASSERTION_DISCRIMINATING)"
     echo "migrations             $(wm_show MIGRATIONS)"
     echo "app health             $(wm_show APP_HEALTH)"
+    echo "RUN_TOKEN              $(wm_show RUN_TOKEN)"
     echo "RUNTIME_PROVENANCE     $(wm_show RUNTIME_PROVENANCE)"
+    echo "EVIDENCE_CLASS         $(wm_show EVIDENCE_CLASS)"
     echo "PRODUCTION_ISOLATION   $(wm_show PRODUCTION_ISOLATION)"
     echo "WITNESS_READY          $(wm_show WITNESS_READY)"
     echo "SERVER_EVIDENCE        $(wm_show SERVER_EVIDENCE)"

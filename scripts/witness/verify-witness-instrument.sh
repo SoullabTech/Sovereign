@@ -22,6 +22,13 @@
 #                             FAILS (exit 3). Health is never accepted as proof.
 #   F. Evidence classes     — a run with no client capture is QUALIFIED
 #                             (exit 4, EVIDENCE_COMPLETE=false), never complete.
+#   H. Runtime attribution — the 2026-08-29 device-qualification defects:
+#                             a run may not adopt another run's runtime, and
+#                             collect may not qualify evidence from a runtime
+#                             whose provenance is unproven. Driven against a
+#                             FAKE daemon (WITNESS_DOCKER_CMD) so the guards
+#                             that decide attribution are themselves tested.
+#
 #   G. Self-consistency     — the instrument's own compose file and env sample
 #                             pass the guards they are subject to.
 #
@@ -194,6 +201,46 @@ cp "$FIX/external.yml"     "$FIX/external/docker-compose.witness.yml"
 cp "$FIX/badport.yml"      "$FIX/badport/docker-compose.witness.yml"
 cp "$FIX/reservedport.yml" "$FIX/reserved/docker-compose.witness.yml"
 
+FAKE_BIN="$ROOT/fakebin"; mkdir -p "$FAKE_BIN"
+cat > "$FAKE_BIN/docker" <<'FAKE'
+#!/usr/bin/env bash
+# Minimal docker stand-in. Answers only what the witness guards ask, from
+# FAKE_* environment variables, so runtime provenance can be exercised on a
+# host with no daemon.
+case "$1" in
+  info) exit 0 ;;
+  compose) exit 0 ;;
+  logs) echo "fake container log line"; exit 0 ;;
+  inspect)
+    shift
+    if [ "$1" = "--format" ]; then
+      fmt="$2"; shift 2
+      case "$fmt" in
+        *witness.run_id*) printf '%s\n' "${FAKE_RUN_LABEL:-<no value>}" ;;
+        *State.Running*)  printf '%s\n' "${FAKE_RUNNING:-true}" ;;
+        *.Image*)         printf '%s\n' "${FAKE_IMAGE_ID:-sha256:aaaa}" ;;
+        *compose.project*) printf '%s\n' "${FAKE_PROJECT:-}" ;;
+        *) printf '\n' ;;
+      esac
+      exit 0
+    fi
+    [ "${FAKE_CONTAINER_EXISTS:-1}" = "1" ] || exit 1
+    echo "{}"; exit 0 ;;
+  exec)
+    shift; shift
+    if [ "$1" = "printenv" ]; then
+      case "$2" in
+        GIT_COMMIT) printf '%s\n' "${FAKE_GIT_COMMIT:-}" ;;
+        DEPLOY_LANE) printf '%s\n' "${FAKE_DEPLOY_LANE:-witness-lane}" ;;
+      esac
+      exit 0
+    fi
+    printf '%s\n' "${FAKE_PROBE_OUT:-WITNESS_ARTIFACT_FOUND}"; exit 0 ;;
+esac
+exit 0
+FAKE
+chmod +x "$FAKE_BIN/docker"
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # A. Candidate naming
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -361,20 +408,95 @@ drv verify "$RUN_ID" >/dev/null 2>&1
 # ═══════════════════════════════════════════════════════════════════════════════
 sect "F. evidence classes"
 
+# A run with NO proven runtime cannot be "qualified" — it is unattributable.
+# Qualification is about which evidence CLASSES are present; attribution is a
+# precondition of the whole roll-up.
 drv collect "$RUN_ID" >/dev/null 2>&1
-[ $? -eq 4 ] && ok "collect with no client capture is QUALIFIED (exit 4)" || bad "collect did not qualify"
+[ $? -eq 3 ] && ok "collect with no runtime is NOT ATTRIBUTABLE (exit 3)" || bad "collect without a runtime did not refuse attribution"
+[ "$(wm_get EVIDENCE_COMPLETE)" = "false" ] && ok "EVIDENCE_COMPLETE=false with no runtime" || bad "EVIDENCE_COMPLETE wrongly true"
+
+# With a PROVEN runtime and no client capture: qualified, exit 4.
+ev_collect() {
+    env WITNESS_RUN_ROOT="$ROOT/witness" WITNESS_SOURCE_REPO="$REPO" WITNESS_ENV_FILE="$FIX/env.good" \
+        WITNESS_DOCKER_CMD="$FAKE_BIN/docker" WITNESS_ASSUME_NO_DOCKER=0 \
+        FAKE_RUN_LABEL="$(wm_get RUN_ID)" FAKE_GIT_COMMIT="$CAND_SHORT" FAKE_IMAGE_ID=sha256:candidate \
+        HOME="$ROOT/home" ${1:+WITNESS_CLIENT_CONSOLE_LOG="$1"} \
+        "$SCRIPT_DIR/witness.sh" collect "$RUN_ID" >/dev/null 2>&1
+}
+wm_set RUNTIME_IMAGE_ID ""
+ev_collect
+[ $? -eq 4 ] && ok "proven runtime, no client capture is QUALIFIED (exit 4)" || bad "qualified path broken"
+[ "$(wm_get SERVER_EVIDENCE)" = "COMPLETE" ] && ok "SERVER_EVIDENCE=COMPLETE on a proven runtime" || bad "server class not complete: $(wm_get SERVER_EVIDENCE)"
 [ "$(wm_get CLIENT_CONSOLE_CAPTURE)" = "UNAVAILABLE" ] && ok "CLIENT_CONSOLE_CAPTURE=UNAVAILABLE recorded" || bad "client class flag not recorded"
-[ "$(wm_get SERVER_EVIDENCE)" = "UNAVAILABLE" ] && ok "SERVER_EVIDENCE=UNAVAILABLE with no daemon" || bad "server class flag not recorded"
-[ "$(wm_get EVIDENCE_COMPLETE)" = "false" ] && ok "EVIDENCE_COMPLETE=false" || bad "EVIDENCE_COMPLETE wrongly true"
+[ "$(wm_get EVIDENCE_COMPLETE)" = "false" ] && ok "server evidence alone is not complete" || bad "server-only run wrongly complete"
 [ -f "$RUN_DIR/evidence/client/README.txt" ] && ok "client class explains why it is empty" || bad "client README missing"
 [ -f "$RUN_DIR/evidence/EVIDENCE.md" ] && ok "evidence index written" || bad "evidence index missing"
 
+# Both classes present on a proven runtime: complete, exit 0.
 echo "[voice] fake client console line" > "$ROOT/console.log"
-env WITNESS_RUN_ROOT="$ROOT/witness" WITNESS_SOURCE_REPO="$REPO" WITNESS_ENV_FILE="$FIX/env.good" \
-    WITNESS_ASSUME_NO_DOCKER=1 WITNESS_CLIENT_CONSOLE_LOG="$ROOT/console.log" HOME="$ROOT/home" \
-    "$SCRIPT_DIR/witness.sh" collect "$RUN_ID" >/dev/null 2>&1
+ev_collect "$ROOT/console.log"
+[ $? -eq 0 ] && ok "both classes on a proven runtime is COMPLETE (exit 0)" || bad "complete path broken"
 [ "$(wm_get CLIENT_CONSOLE_CAPTURE)" = "CAPTURED" ] && ok "client console adopted when supplied" || bad "client console not adopted"
-[ "$(wm_get EVIDENCE_COMPLETE)" = "false" ] && ok "client capture alone is still not complete evidence" || bad "client-only run wrongly called complete"
+[ "$(wm_get EVIDENCE_COMPLETE)" = "true" ] && ok "EVIDENCE_COMPLETE=true only with attribution + both classes" || bad "complete not reached"
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# H. Runtime attribution (fake daemon)
+# ═══════════════════════════════════════════════════════════════════════════════
+sect "H. runtime attribution"
+
+
+export WITNESS_DOCKER_CMD="$FAKE_BIN/docker"
+export WITNESS_ASSUME_NO_DOCKER=0
+export FAKE_GIT_COMMIT="$CAND_SHORT"
+export FAKE_IMAGE_ID="sha256:candidate"
+
+# H1 — a container belonging to ANOTHER run must never be adopted. This is the
+# exact shape of the qualification failure: same candidate, different run,
+# every other property true.
+export FAKE_RUN_LABEL="20260101T000000Z-otherrun"
+wm_set RUNTIME_IMAGE_ID ""
+guard_runtime_provenance >/dev/null 2>&1
+[ $? -eq 3 ] && ok "another run's container is NOT adopted (exit 3)" || bad "foreign runtime was adopted"
+[ "$(wm_get RUNTIME_PROVENANCE)" = "UNPROVEN" ] && ok "foreign runtime records UNPROVEN" || bad "foreign runtime not recorded UNPROVEN"
+
+# H2 — an unlabelled container (not created by this instrument) is refused.
+export FAKE_RUN_LABEL="<no value>"
+guard_runtime_provenance >/dev/null 2>&1
+[ $? -eq 3 ] && ok "unlabelled container refused" || bad "unlabelled container accepted"
+
+# H3 — this run's own container proves.
+export FAKE_RUN_LABEL="$(wm_get RUN_ID)"
+wm_set RUNTIME_IMAGE_ID ""
+guard_runtime_provenance >/dev/null 2>&1
+[ $? -eq 0 ] && ok "this run's own container PROVES" || bad "own container failed to prove"
+[ "$(wm_get RUNTIME_PROVENANCE)" = "PROVEN" ] && ok "own container records PROVEN" || bad "own container not recorded PROVEN"
+
+# H4 — the digest guard is preserved: same run, image swapped underneath.
+export FAKE_IMAGE_ID="sha256:swapped"
+guard_runtime_provenance >/dev/null 2>&1
+[ $? -eq 3 ] && ok "image digest guard still fires on a swapped image" || bad "digest guard lost"
+export FAKE_IMAGE_ID="sha256:candidate"
+
+# H5 — collect must NOT produce attributable evidence from an unproven runtime.
+export FAKE_RUN_LABEL="20260101T000000Z-otherrun"
+wm_set RUNTIME_IMAGE_ID ""
+# Clear the attributable tree first: the assertion below is that a diagnostic
+# collect never CREATES evidence/server, not that the directory happens to be
+# absent (section F legitimately populated it from a proven runtime).
+rm -rf "$RUN_DIR/evidence/server"
+env WITNESS_RUN_ROOT="$ROOT/witness" WITNESS_SOURCE_REPO="$REPO" WITNESS_ENV_FILE="$FIX/env.good" \
+    WITNESS_DOCKER_CMD="$FAKE_BIN/docker" WITNESS_ASSUME_NO_DOCKER=0 \
+    FAKE_RUN_LABEL="$FAKE_RUN_LABEL" FAKE_GIT_COMMIT="$CAND_SHORT" FAKE_IMAGE_ID=sha256:candidate \
+    HOME="$ROOT/home" "$SCRIPT_DIR/witness.sh" collect "$RUN_ID" >/dev/null 2>&1
+[ $? -eq 3 ] && ok "collect on an unproven runtime exits 3 (NOT ATTRIBUTABLE)" || bad "collect qualified an unproven runtime"
+[ "$(wm_get SERVER_EVIDENCE)" = "NOT_ATTRIBUTABLE" ] && ok "SERVER_EVIDENCE=NOT_ATTRIBUTABLE" || bad "server evidence wrongly classed: $(wm_get SERVER_EVIDENCE)"
+[ "$(wm_get EVIDENCE_CLASS)" = "DIAGNOSTIC_ONLY" ] && ok "EVIDENCE_CLASS=DIAGNOSTIC_ONLY" || bad "evidence class not diagnostic"
+[ "$(wm_get EVIDENCE_COMPLETE)" = "false" ] && ok "unproven runtime can never be EVIDENCE_COMPLETE" || bad "unproven runtime marked complete"
+[ -f "$RUN_DIR/evidence/diagnostic/NOT_ATTRIBUTABLE.txt" ] && ok "diagnostic capture is labelled not-attributable" || bad "diagnostic header missing"
+[ ! -d "$RUN_DIR/evidence/server" ] && ok "a diagnostic collect never creates evidence/server" || bad "diagnostic collect wrote into evidence/server"
+
+unset WITNESS_DOCKER_CMD FAKE_RUN_LABEL FAKE_GIT_COMMIT FAKE_IMAGE_ID
+export WITNESS_ASSUME_NO_DOCKER=1
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # G. Self-consistency — the instrument's own artifacts pass their own guards
@@ -383,8 +505,10 @@ sect "G. self-consistency"
 
 guard_compose_project "maia-witness-${CAND_SHORT}" "$SCRIPT_DIR/docker-compose.witness.yml" >/dev/null 2>&1 \
     && ok "shipped witness compose accepted as a witness project" || bad "shipped witness compose refused"
-guard_container_names "$SCRIPT_DIR/docker-compose.witness.yml" "maia-witness-${CAND_SHORT}" >/dev/null 2>&1 \
-    && ok "shipped compose: every container is maia-witness-*" || bad "shipped compose has a non-witness container"
+guard_container_names "$SCRIPT_DIR/docker-compose.witness.yml" "$(wm_get COMPOSE_PROJECT)" >/dev/null 2>&1 \
+    && ok "shipped compose: every container is run-token scoped" || bad "shipped compose container not run-scoped"
+guard_container_names "$FIX/docker-compose.witness.yml" "$(wm_get COMPOSE_PROJECT)" >/dev/null 2>&1 \
+    && bad "candidate-scoped container name accepted" || ok "candidate-scoped container name refused"
 guard_network_target "$SCRIPT_DIR/docker-compose.witness.yml" "$SCRIPT_DIR/.env.witness.sample" >/dev/null 2>&1 \
     && ok "shipped compose + env sample: loopback-only, no external network" || bad "shipped compose/env failed the network guard"
 guard_database_target "$SCRIPT_DIR/.env.witness.sample" >/dev/null 2>&1 \

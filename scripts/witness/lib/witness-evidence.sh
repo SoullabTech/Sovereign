@@ -24,6 +24,11 @@ _WITNESS_EVIDENCE_SOURCED=1
 _ev_dir()        { echo "$WITNESS_RUN_DIR/evidence"; }
 _ev_server_dir() { echo "$WITNESS_RUN_DIR/evidence/server"; }
 _ev_client_dir() { echo "$WITNESS_RUN_DIR/evidence/client"; }
+# Deliberately a SEPARATE tree from evidence/server. Artifacts captured from a
+# runtime this run cannot prove is the candidate must never sit in the same
+# directory as artifacts that are attributable — a reader who finds app.log
+# under evidence/server/ is entitled to assume it came from the candidate.
+_ev_diag_dir()   { echo "$WITNESS_RUN_DIR/evidence/diagnostic"; }
 
 # capture <file> <label> <cmd...> — best effort, always leaves a file that says
 # what happened, so a missing artifact is never mistaken for an empty one.
@@ -61,20 +66,20 @@ witness_collect_server() {
         return 1
     fi
 
-    _ev_capture "$sd/compose-ps.txt"      "compose ps"        docker compose -p "$project" -f "$file" ps || failures=$((failures+1))
-    _ev_capture "$sd/container-inspect.json" "inspect"        docker inspect "$container" || failures=$((failures+1))
-    _ev_capture "$sd/app.log"             "container logs"    docker logs "$container" || failures=$((failures+1))
-    _ev_capture "$sd/provenance.txt"      "runtime provenance" docker exec "$container" sh -c 'echo "GIT_COMMIT=$GIT_COMMIT"; echo "DEPLOY_LANE=$DEPLOY_LANE"; echo "NODE_ENV=$NODE_ENV"' || failures=$((failures+1))
+    _ev_capture "$sd/compose-ps.txt"      "compose ps"        _w_docker compose -p "$project" -f "$file" ps || failures=$((failures+1))
+    _ev_capture "$sd/container-inspect.json" "inspect"        _w_docker inspect "$container" || failures=$((failures+1))
+    _ev_capture "$sd/app.log"             "container logs"    _w_docker logs "$container" || failures=$((failures+1))
+    _ev_capture "$sd/provenance.txt"      "runtime provenance" _w_docker exec "$container" sh -c 'echo "GIT_COMMIT=$GIT_COMMIT"; echo "DEPLOY_LANE=$DEPLOY_LANE"; echo "NODE_ENV=$NODE_ENV"' || failures=$((failures+1))
 
     # Image identity — which image is actually running, by id and digest.
     _ev_capture "$sd/image.txt" "image identity" \
-        docker inspect --format '{{.Image}} {{.Config.Image}}' "$container" || failures=$((failures+1))
+        _w_docker inspect --format '{{.Image}} {{.Config.Image}}' "$container" || failures=$((failures+1))
 
     # Database identity — proves the run spoke to the witness DB, not production.
     local pg="$(wm_get PG_CONTAINER)"
-    if [ -n "$pg" ] && docker inspect "$pg" >/dev/null 2>&1; then
+    if [ -n "$pg" ] && _w_docker inspect "$pg" >/dev/null 2>&1; then
         _ev_capture "$sd/database.txt" "witness database identity" \
-            docker exec "$pg" psql -U witness -d maia_witness -tAc \
+            _w_docker exec "$pg" psql -U witness -d maia_witness -tAc \
             "select current_database()||' tables='||count(*) from information_schema.tables where table_schema='public'" \
             || failures=$((failures+1))
     else
@@ -88,7 +93,7 @@ witness_collect_server() {
     probe="$(wm_get ARTIFACT_RUNTIME_PROBE)"
     probe="${probe:-grep -R -F -l -- '$pattern' /app --exclude-dir=node_modules --exclude-dir=.git | head -20}"
     _ev_capture "$sd/artifact-assertion.txt" "artifact assertion in container" \
-        docker exec "$container" sh -c "$probe" || failures=$((failures+1))
+        _w_docker exec "$container" sh -c "$probe" || failures=$((failures+1))
 
     if [ "$failures" -eq 0 ]; then
         wm_set SERVER_EVIDENCE "COMPLETE"
@@ -149,13 +154,56 @@ CLIENT_README
     return 1
 }
 
+# ── Diagnostic capture (unproven runtime) ─────────────────────────────────────
+# Same artifacts, different tree, and a header on every run directory saying
+# what they are not. A failed run is exactly when logs matter most; the rule is
+# that they may inform the next repair, never a claim about the candidate.
+witness_collect_diagnostic() {
+    local dd; dd="$(_ev_diag_dir)"; mkdir -p "$dd"
+    local container project file
+    container="$(wm_get MAIA_CONTAINER)"; project="$(wm_get COMPOSE_PROJECT)"; file="$(wm_get COMPOSE_FILE)"
+
+    cat > "$dd/NOT_ATTRIBUTABLE.txt" <<DIAG_HEADER
+NOT ATTRIBUTABLE EVIDENCE
+
+RUNTIME_PROVENANCE = $(wm_get RUNTIME_PROVENANCE)
+run                = $(wm_get RUN_ID)
+candidate          = $(wm_get CANDIDATE_SHORT_SHA)
+captured           = $(w_utc)
+
+The runtime these artifacts came from could not be proven to be this run's
+build of the candidate. They are kept for DIAGNOSIS of the instrument or the
+run — never as evidence about $(wm_get CANDIDATE_SHORT_SHA).
+
+Do not move these files into evidence/server/. If you need attributable
+evidence, prepare a new run and provision it successfully first.
+DIAG_HEADER
+
+    if ! w_have_docker; then
+        echo "no docker daemon reachable at $(w_utc)" >> "$dd/NOT_ATTRIBUTABLE.txt"
+        wm_set SERVER_EVIDENCE "NOT_ATTRIBUTABLE"
+        return 1
+    fi
+    _ev_capture "$dd/compose-ps.txt" "compose ps (diagnostic)"   _w_docker compose -p "$project" -f "$file" ps || true
+    _ev_capture "$dd/app.log"        "container logs (diagnostic)" _w_docker logs "$container" || true
+    _ev_capture "$dd/inspect.json"   "inspect (diagnostic)"      _w_docker inspect "$container" || true
+    wm_set SERVER_EVIDENCE "NOT_ATTRIBUTABLE"
+    return 0
+}
+
 # ── Roll-up ───────────────────────────────────────────────────────────────────
 witness_evidence_rollup() {
     local server client
     server="$(wm_get SERVER_EVIDENCE)"
     client="$(wm_get CLIENT_CONSOLE_CAPTURE)"
 
-    if [ "$server" = "COMPLETE" ] && [ "$client" = "CAPTURED" ]; then
+    # Attribution is a precondition of completeness, not a component of it.
+    # No combination of captured classes can make evidence from an unproven
+    # runtime complete.
+    if [ "$(wm_get RUNTIME_PROVENANCE)" != "PROVEN" ] || [ "$server" = "NOT_ATTRIBUTABLE" ]; then
+        wm_set EVIDENCE_COMPLETE "false"
+        wm_set EVIDENCE_CLASS "DIAGNOSTIC_ONLY"
+    elif [ "$server" = "COMPLETE" ] && [ "$client" = "CAPTURED" ]; then
         wm_set EVIDENCE_COMPLETE "true"
     else
         wm_set EVIDENCE_COMPLETE "false"
@@ -171,6 +219,7 @@ witness_evidence_rollup() {
 | runtime provenance | **$(wm_get RUNTIME_PROVENANCE)** |
 | artifact assertion | \`$(wm_get ARTIFACT_PATTERN)\` in \`$(wm_get ARTIFACT_SOURCE_PATH)\` |
 | assertion discriminating | $(wm_get ARTIFACT_ASSERTION_DISCRIMINATING) |
+| EVIDENCE_CLASS | **$(wm_get EVIDENCE_CLASS)** |
 | SERVER_EVIDENCE | **$server** |
 | CLIENT_CONSOLE_CAPTURE | **$client** |
 | EVIDENCE_COMPLETE | **$(wm_get EVIDENCE_COMPLETE)** |
@@ -185,6 +234,10 @@ Server evidence alone does not witness client-side conversational behaviour
 (capture lifecycle, turn boundaries, voice re-entry, provisional transcript).
 When \`CLIENT_CONSOLE_CAPTURE=UNAVAILABLE\`, this run is **qualified, not
 complete**, and must not be cited as a device pass.
+
+When \`EVIDENCE_CLASS=DIAGNOSTIC_ONLY\`, the runtime could not be proven to be
+this run's build of the candidate. Nothing here is evidence *about the
+candidate* — see \`diagnostic/NOT_ATTRIBUTABLE.txt\`.
 EVIDENCE_INDEX
 
     [ "$(wm_get EVIDENCE_COMPLETE)" = "true" ]
