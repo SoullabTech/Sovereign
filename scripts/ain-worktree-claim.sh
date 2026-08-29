@@ -287,7 +287,7 @@ cmd_gc() {
         esac
     done
 
-    local wt work_unit_id size_kb blockers freed_kb=0 removed=0 kept=0 stripped_kb=0
+    local wt work_unit_id size_kb blockers freed_kb=0 removed=0 kept=0 stripped_kb=0 kept_with_caches=0
 
     if [ "$dry_run" = "yes" ]; then
         echo "[ain-worktree-claim] sweeping $WORKTREES_ROOT (dry run — nothing will be deleted)" >&2
@@ -316,6 +316,10 @@ cmd_gc() {
         kept=$(( kept + 1 ))
         echo "  kept           $work_unit_id ($(_human_kb "$size_kb")) — $(printf '%s' "$blockers" | paste -sd'; ' - )" >&2
 
+        if [ -d "$wt/node_modules" ] || [ -d "$wt/.next" ]; then
+            kept_with_caches=$(( kept_with_caches + 1 ))
+        fi
+
         if [ "$caches" = "yes" ]; then
             local before_kb
             before_kb=$(( $(_size_kb "$wt/node_modules") + $(_size_kb "$wt/.next") ))
@@ -339,7 +343,7 @@ cmd_gc() {
     else
         echo "[ain-worktree-claim] $removed reclaimed, $kept kept — $(_human_kb $(( freed_kb + stripped_kb ))) freed" >&2
     fi
-    if [ "$kept" -gt 0 ] && [ "$caches" != "yes" ]; then
+    if [ "$kept_with_caches" -gt 0 ] && [ "$caches" != "yes" ]; then
         echo "   Kept trees still hold node_modules/.next; strip those with: $0 gc --caches" >&2
     fi
 }
