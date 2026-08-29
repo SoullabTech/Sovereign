@@ -1,13 +1,23 @@
-# WITNESS-INSTRUMENT-V1 — scope, authorization boundary, phase exit
+# WITNESS-INSTRUMENT-V1
 
-**Lane:** Phase 0 of the MAIA Conversational Completion Program.
-**Status:** self-test 93/93 · **device qualification A/B/C/D PASSED on the real daemon** · Defect 5 open · phase exit NOT SATISFIED (external blocker) · **first device qualification RED — two instrument defects found and repaired** · phase exit NOT YET SATISFIED.
-**Entry point:** `scripts/witness/witness.sh` (see `scripts/witness/README.md`).
+**Lane:** Phase 0 of the MAIA Conversational Completion Program — the laboratory.
+**Status:** **COMPLETE · QUALIFIED.** Self-test 93/93 (Linux + macOS). Device
+qualification closed 2026-08-29 on the Mac Studio against a real daemon. Six
+defects found, all repaired and pinned; none open.
+**Entry point:** `scripts/witness/witness.sh` — see `scripts/witness/README.md`.
+**Final instrument:** `c76bef4450320de0b3eedde87c7fd02c88bea014`.
+
+**Phase 0 remains OPEN and NOT GREEN** — held solely by an external blocker,
+`PLATFORM-SCHEMA-PROVENANCE-01`. Not by the instrument. The laboratory is
+finished; what it proved is that the substrate cannot yet be reconstructed
+truthfully.
+
+---
 
 ## Why this exists before any conversational lane
 
-The program's later phases — cloud voice consent witness, voice re-entry,
-provisional-transcript legibility, turn grammar, barge-in — all end in the same
+Every later phase of the program — cloud voice consent, voice re-entry,
+provisional-transcript legibility, turn grammar, barge-in — ends in the same
 sentence: *"and then a human watched it happen."* That sentence is only worth
 anything if three things are true of the thing they watched:
 
@@ -15,31 +25,32 @@ anything if three things are true of the thing they watched:
 2. it could not have touched **production**;
 3. the write-up says what was **not** captured.
 
-None of those are guaranteed by care. Each of them fails silently under time
-pressure, which is precisely when witnesses get run. So V1 is not a convenience
-wrapper around `docker compose`; it is the set of refusals that make those three
-claims mechanical.
+None of those are guaranteed by care. Each fails silently under time pressure,
+which is precisely when witnesses get run. So V1 is not a convenience wrapper
+around `docker compose`; it is the set of refusals that make those three claims
+mechanical.
 
 ## What is in V1
 
-Five verbs — `prepare`, `verify`, `provision`, `collect`, `teardown` — and ten
-guards. The guards are the deliverable; the verbs are how they get invoked.
+Five verbs — `prepare`, `verify`, `provision`, `collect`, `teardown` — over
+twelve guards. The guards are the deliverable; the verbs are how they get
+invoked.
 
 | guard | refuses |
 |---|---|
+| G0 | a verb invoked without an explicitly named run — selection is never inferred from shared state |
 | G1 | an unnamed or unresolvable candidate (no `DEPLOY_ALLOW_HEAD` equivalent in this lane) |
 | G2 | a dirty candidate tree — `DIRTY_TREE=REFUSED`, non-bypassable, no ack flag exists |
 | G3 | candidate mutation — tree digest drift, snapshot tampering, SHA re-pointing |
 | G4 | a non-witness compose project or compose file |
-| G5 | a protected or unprefixed container name; adopting another project's container |
+| G5 | a protected, unprefixed, or non-run-scoped container name; adopting another project's container |
 | G6 | a production database, a protected DB host, a missing or non-witness `DATABASE_URL` |
 | G7 | external networks, non-loopback ports, reserved production ports, protected hostnames in env |
 | G8 | writing runs, snapshots or evidence inside a protected project dir |
 | G9 | a missing, universal, too-short, false-of-candidate, or non-discriminating artifact assertion |
-| G11 | a verb executed by an instrument other than the one that prepared the run, or a dirty instrument at prepare |
-| G0 | a verb invoked without an explicitly named run — selection is never inferred from shared state |
+| G10 | unproven runtime provenance — wrong `GIT_COMMIT`, wrong `DEPLOY_LANE`, moved image digest, or the declared artifact absent from the running container |
 | G10a | a container belonging to another run, or carrying no witness run label — no run may adopt another run's runtime |
-| G10 | unproven runtime provenance — wrong `GIT_COMMIT`, wrong `DEPLOY_LANE`, or the declared artifact absent from the running container |
+| G11 | a verb executed by an instrument other than the one that prepared the run; a dirty instrument at prepare |
 
 Protected by name: `maia-postgres`, `maia-sovereign`, the rest of the production
 container set, `maia_consciousness`, the production hostnames, and
@@ -54,32 +65,44 @@ and — when a negative ref is named — provably absent from the baseline. With
 it, `verify` refuses; with it unmet, `RUNTIME_PROVENANCE=UNPROVEN` and `verify`
 **fails** (exit 3). There is no state in which "not yet proven" reads as "pass".
 
-`DEPLOY_LANE=witness-lane` rides on the existing Dockerfile lane tripwire
+`DEPLOY_LANE=witness-lane` rides on the Dockerfile lane tripwire
 (`docs/ops/DEPLOY_LANE_TOKEN.md`), so a production-lane image can never satisfy
 witness provenance, and a witness image can never be mistaken for a deploy.
 
 ### Evidence in two classes
 
-`collect` writes `evidence/server/` and `evidence/client/` separately and rolls
-them up honestly:
+`collect` writes `evidence/server/` and `evidence/client/` separately, and
+attribution is decided **before** collection:
 
-- both present → `EVIDENCE_COMPLETE=true` (exit 0)
-- anything missing → `EVIDENCE_COMPLETE=false` (exit 4), with the reason on the
-  run and in `evidence/EVIDENCE.md`
+- runtime proven, both classes → `EVIDENCE_COMPLETE=true` (exit 0)
+- runtime proven, a class missing → `EVIDENCE_COMPLETE=false` (exit 4), citable
+  only with that qualification attached
+- runtime **not** proven → nothing is attributable. Artifacts are captured under
+  `evidence/diagnostic/` with a `NOT_ATTRIBUTABLE.txt` header (exit 3). A failed
+  run is exactly when logs matter; they may inform the next repair, never a
+  claim about the candidate.
 
-This closes the specific failure mode named in the program brief: server logs
-collected cleanly, the client side never captured, the run written up as
-complete. Capture lifecycle, turn boundaries, voice re-entry and provisional
-transcript are client-side events; a run without client evidence cannot witness
-them and this instrument will not pretend it did.
+This closes the failure mode named in the program brief: server logs collected
+cleanly, the client side never captured, the run written up as complete. Capture
+lifecycle, turn boundaries, voice re-entry and provisional transcript are
+client-side events; a run without client evidence cannot witness them and this
+instrument will not pretend it did.
+
+### Substrate integrity
+
+If the candidate's migrations do not apply to the empty witness database,
+`provision` stops **before** the app starts. A healthy container over an
+incomplete schema is a false green, and health is the most persuasive signal the
+instrument emits. The harness does not repair the migration set — that defect
+belongs to the platform — but it will not build a runtime on top of it.
 
 ## What is deliberately NOT in V1
 
 **`launch_desktop_authenticated`.** Desktop targeting and auth lifecycle are not
 yet understood. A blind launcher would produce confident-looking evidence about
 the wrong session — worse than no launcher, because it would look like a pass.
-It stays investigation-only. Client evidence in V1 is adopted from a path the
-operator supplies (`WITNESS_CLIENT_CONSOLE_LOG`), never synthesised.
+Client evidence in V1 is adopted from a path the operator supplies
+(`WITNESS_CLIENT_CONSOLE_LOG`), never synthesised.
 
 **MCP wrapping.** The brief is explicit: build the instrument first. V1 is
 script-first, with no wrapper.
@@ -87,239 +110,130 @@ script-first, with no wrapper.
 **Voice sidecars** (whisper, TTS). Nothing in V1 drives them. A voice lane adds
 the service deliberately rather than inheriting it.
 
-## Custody record
+---
 
-Two entries, recorded rather than corrected:
+## Defects — all found by exercise, all closed
 
-```
-PUSH_OCCURRED_OUTSIDE_AUTHORIZATION
-```
+Every one shares a shape: **the run could look more proven than it was.** None
+was visible in 44 passing self-tests. Each appeared the first time the instrument
+met a real daemon, a real candidate, a second operator, or a second machine.
 
-The V1 build authorization stopped at local commit; the branch
-`claude/maia-conversational-completion-hamx9h` was pushed to origin anyway
-(commits `6f6a0987`, `fa1d5929`). No PR, merge or deploy followed. Remote history
-is **not** to be rewritten or deleted to tidy this — the accurate record is
-worth more than a clean one. A custody-boundary miss, not an evidence defect:
-the implementation evidence below stands on its own.
+| # | defect | found by | disposition |
+|---|---|---|---|
+| 1 | runtime identity candidate-scoped, not run-scoped | 1st device qualification | run token + `run_id` label; CLOSED |
+| 2 | `collect` fail-open on attribution | 1st device qualification | attribution decided before collection; CLOSED |
+| 3 | `provision` warned and continued over failed migrations | 1st device qualification | aborts before the app starts; CLOSED |
+| 4 | run selection inferred from shared mutable state | 2nd device qualification | inference removed entirely; CLOSED |
+| 5 | observer provenance — the instrument was unidentified | wrong-checkout episode | `INSTRUMENT_SHA` + tree state, G11; CLOSED |
+| 6 | self-test depended on the author's shell | 93/93 author vs 81/9 machine | every invocation hermetic; CLOSED |
 
-```
-DIRTY_TREE_ACK_REMOVED
-```
+### Defect 1 — runtime identity was candidate-scoped
 
-V1 as first built refused a dirty candidate tree *unless* acknowledged by an
-environment flag. The authorization said refuse, full stop. The flag is gone,
-with no replacement (commit `7235a377`). The self-test now asserts both that the
-refusal holds with the old flag set, and that no bypass token survives anywhere
-in the instrument's source.
+The compose project was `maia-witness-<sha>` with fixed container names, so a
+fresh run adopted an earlier run's container and reported PROVEN before it had
+built anything. Every property the guard checked — `GIT_COMMIT`, `DEPLOY_LANE`,
+the artifact probe, the image digest — was *true of that container*. All of them
+can be true of a runtime the run did not create; none answers "is this mine".
 
-## Phase exit — where this stands
+Repaired on both axes: project, container names and volumes carry a per-run
+token, and provenance binds to an `ai.soullab.witness.run_id` label read before
+any other property. Compose declares the token and run id with `${VAR:?...}`, so
+it refuses to render without them. The image-digest guard is untouched — it
+caught the symptom correctly.
 
-```
-WITNESS-INSTRUMENT-V1
+### Defect 2 — `collect` was fail-open on attribution
 
-source design           ACCEPTED WITH ONE CORRECTION (applied)
-self-tests              46/46 PASS
-real-repo static walk   PASS
-docker qualification    NOT YET RUN
-runtime provenance      NOT YET PROVEN
-server collection       NOT YET DEVICE-EXERCISED
-client collection       NOT YET DEVICE-EXERCISED
-dirty-tree bypass       ABSENT
+After provenance failed and the instrument had printed "Nothing observed through
+it may be cited as evidence about the candidate," `collect` reported
+`SERVER_EVIDENCE=COMPLETE`. Candidate immutability was checked; runtime
+attribution was not. The most convincing artifact in the run directory would
+have been the least attributable one.
 
-PHASE EXIT              NOT YET SATISFIED
-```
+### Defect 3 — `provision` warned and continued
 
-`provision` and the runtime half of `verify` exist to constrain a real docker
-environment. They have never met one. Until they do, the instrument is built and
-self-tested — not witnessed. The distinction the program brief insists on
-applies to the instrument itself: *built ≠ wired ≠ surfacing ≠ verified.*
+The first qualification brought the app up HEALTHY on a schema whose migrations
+had failed — a witness capable of making a broken substrate look successful.
 
-## WITNESS-INSTRUMENT-V1-DEVICE-QUALIFICATION — runbook
+### Defect 4 — run selection was inferred
 
-Authorized, not yet run. Must execute on the **Mac Studio**: that is where the
-real docker substrate lives and where the qualification candidate exists as a
-local commit. It cannot be run from a remote/cloud session — no daemon, and the
-candidate does not resolve there.
+The run prepared and verified was `…205354Z`; `provision` and `collect`, invoked
+without a run argument, acted on `…205439Z`, because a second prepare had moved
+the shared `current` pointer in between. No container was stolen — the
+run-scoped repair held — but the operator's commands silently changed subject.
 
-Candidate: `01374f51bda1e5a1b76703ee95ebf5cde330f80f` (the next consent
-candidate, exercised here **only** as a provenance target).
+Same ownership principle as Defect 1, one layer up: *"whichever run was prepared
+most recently" is not identity.* Inference removed entirely; `latest` is written
+for humans and never read as input; an argument disagreeing with `WITNESS_RUN`
+is refused as ambiguous rather than ranked.
 
-**Not in this lane:** triggering or answering consent, changing any member voice
-preference, modifying the candidate, or repairing auth/application code. This is
-the laboratory being qualified, not MAIA being witnessed.
+### Defect 5 — the observer was unidentified
 
-```bash
-cd /Users/soullab/MAIA-SOVEREIGN
-git fetch origin claude/maia-conversational-completion-hamx9h
-git checkout claude/maia-conversational-completion-hamx9h   # or cherry-pick scripts/witness/
+Establishing which instrument had executed an acceptance sequence took three
+inferred fingerprints. Runs recorded their candidate exactly and their observer
+not at all. A commit alone cannot identify an instrument — two checkouts at the
+same SHA with different working trees are different observers — so tree state is
+recorded alongside the SHA, and a dirty instrument is refused with no ack flag,
+the same reasoning as G2 applied to the observer.
 
-cp scripts/witness/.env.witness.sample scripts/witness/.env.witness
-# edit; G6/G7 refuse production databases and hostnames
+`teardown` is the deliberate exception: it proceeds under mismatch and records
+`TORN_DOWN_BY_FOREIGN_INSTRUMENT`. Refusing cleanup would strand containers, and
+cleanup produces no evidence a mismatch could contaminate.
 
-# G2 is non-bypassable: commit or stash any dirty tracked file first
-# (the standing `M Caddyfile` on this machine will refuse the run).
-git status --porcelain --untracked-files=no
+**The invariant:** *the candidate cannot change during a witness run, and
+neither can the witness.*
 
-# Pick an assertion true of the consent candidate and absent from its parent.
-export WITNESS_ARTIFACT_SOURCE_PATH=<file changed by the candidate>
-export WITNESS_ARTIFACT_PATTERN='<string >=8 chars introduced by the candidate>'
-export WITNESS_ARTIFACT_NEGATIVE_REF=01374f51bda1e5a1b76703ee95ebf5cde330f80f^
+### Defect 6 — the self-test depended on the author's shell
 
-scripts/witness/witness.sh prepare 01374f51bda1e5a1b76703ee95ebf5cde330f80f
-scripts/witness/witness.sh verify        # MUST exit 3 — no runtime yet
-scripts/witness/witness.sh provision
-scripts/witness/witness.sh verify        # MUST exit 0 — RUNTIME_PROVENANCE=PROVEN
-scripts/witness/witness.sh collect       # 0 complete · 4 qualified
-scripts/witness/witness.sh teardown
-scripts/witness/witness.sh status
-```
+The suite reported 90/90 for its author and 81/9 on the qualification machine at
+the same commit. Three call sites launched the driver with plain `env` instead of
+the hermetic `drv()` seam, inheriting the operator's exported `WITNESS_RUN`. Each
+child then saw an explicit run argument disagreeing with an inherited handle and
+refused as ambiguous — G0 working exactly as designed, on a suite that had lied
+about its own environment. Reproduced on Linux by exporting `WITNESS_RUN`:
+identical 81/9.
 
-### What the run must prove
+The irony is load-bearing: the Defect 4 repair made exporting `WITNESS_RUN` the
+*recommended* workflow, so the fix for one defect is what made the author's shell
+and the operator's shell diverge.
 
-| row | proven by |
-|---|---|
-| production isolation | `protected-before.txt` / `protected-after-provision.txt` / `protected-after-teardown.txt` identical across every docker verb — `maia-postgres`, `maia-sovereign` and the rest untouched; `PRODUCTION_ISOLATION=OBSERVED_INTACT` |
-| protected dirs untouched | G8: run root and snapshots outside `/Users/soullab/MAIA-SOVEREIGN` |
-| witness-owned names | witness DB `maia_witness`, containers `maia-witness-*`, network `witness-internal`, app on loopback only |
-| candidate immutability | prepare digest re-proven at verify, collect and teardown |
-| runtime provenance | `RUNTIME_PROVENANCE=PROVEN` from the declared artifact assertion — **not** health |
-| server evidence | `SERVER_EVIDENCE=COMPLETE` |
-| client evidence | `CLIENT_EVIDENCE` PASS if an existing CDP path can be exercised **without** implementing authenticated Desktop launch; otherwise `CLIENT_CONSOLE_CAPTURE=UNAVAILABLE` + `EVIDENCE_COMPLETE=false`, which is acceptable for V1 provided the limitation stays mechanically explicit. Do not expand scope to make this row green. |
+Repaired by routing every invocation through `drv()`/`env -i`, and regressed by
+running a hostile `WITNESS_RUN` through the suite itself. Deliberately **not**
+repaired by unsetting the variable at the top of the file — that makes the suite
+green while leaving the leak latent for every variable added afterwards.
 
-Capture `~/.maia-witness/runs/<id>/` — `manifest.json`, `journal.log`,
-`evidence/` and the three `protected-*.txt` files — as the qualification record.
+**The generalisable finding:** a suite that passes only in its author's
+environment pins nothing — the same defect class as the candidate under witness
+(`01374f51b`, whose jest project nothing invoked). The instrument reproduced the
+thing it was built to observe.
 
-## Next ruling required
+---
 
-Phase 1A (the human cloud-voice-consent witness) opens only after the device
-qualification above passes. First prove the laboratory works on the real
-machine; then use it to prove MAIA.
+## Qualification history
 
-Note: `419ef230b`, `b562e3f8b` and `01374f51b…` do not exist in the remote
-clone — they are local/unpushed on the Mac Studio. G1 refuses a candidate that
-cannot be resolved, so those runs must be prepared on the machine that holds the
-commit. The instrument will not silently witness a lookalike.
+### 2026-08-29 — first device qualification, RED
 
-
-## First device qualification — 2026-08-29, RED
-
-Run `20260829T202516Z-01374f51b`, instrument `b957c921a`, candidate
-`01374f51b`. It found what it was built to find.
+Run `20260829T202516Z-01374f51b`, instrument `b957c921a`.
 
 ```
 STATIC GATES            PASS
-DISCRIMINATION          PASS
 PRE-PROVISION VERIFY    INVALID PASS — expected exit 3, got 0
 PROVISION               FAIL
-RUNTIME PROVENANCE      UNPROVEN
 MIGRATIONS              FAILED
 PRODUCTION ISOLATION    OBSERVED_INTACT
 TEARDOWN                PASS
 ```
 
-**Defect 1 — runtime identity was candidate-scoped, not run-scoped.** The
-compose project was `maia-witness-<sha>` and container names were fixed, so a
-fresh run adopted an earlier run's container and reported PROVEN before it had
-built anything. Every property the guard checked — `GIT_COMMIT`, `DEPLOY_LANE`,
-the artifact probe, the image digest — was *true of that container*. All of them
-can be true of a runtime the run did not create. Repaired by scoping project,
-container names and volumes to a per-run token, and by binding provenance to an
-`ai.soullab.witness.run_id` label read **before** any other property. The image
-digest guard is untouched; it caught the symptom correctly.
+Found Defects 1, 2 and 3.
 
-**Defect 2 — `collect` was fail-open on attribution.** After provenance failed
-and the instrument had printed "Nothing observed through it may be cited as
-evidence about the candidate," `collect` reported `SERVER_EVIDENCE=COMPLETE`.
-Candidate immutability was checked; runtime attribution was not. Repaired:
-attribution is now decided *before* collection. An unproven runtime is captured
-as `evidence/diagnostic/` with a `NOT_ATTRIBUTABLE.txt` header, exits 3, and can
-never roll up to COMPLETE or QUALIFIED.
+### 2026-08-29 — second device qualification
 
-Both defects are pinned by self-tests driven against a fake daemon
-(`WITNESS_DOCKER_CMD`), so the guards that decide attribution are no longer the
-only guards never exercised by a test.
+Instrument `dbd8a113f`. A, B and C passed against the real daemon; found
+Defect 4.
 
-## Migration failure — classified, NOT an instrument or candidate defect
+### 2026-08-29 — device qualification CLOSED
 
-```
-psql:/app/database/migrations/20251231_memory_architecture_enhancements.sql:123:
-  ERROR:  relation "developmental_memories" does not exist
-```
-
-That migration does `ALTER TABLE developmental_memories` unconditionally.
-**Nothing in the repository ever creates that table** — no migration, no
-`prisma/schema.prisma` model, no `database/init` script. The only files
-mentioning it are the migration that alters it and its stale duplicate under
-`db/migrations/`.
-
-So this is a pre-existing property of the SQL migration set: **it is not
-replayable from an empty database.** Production's schema was assembled
-incrementally over time, so that path was never exercised; the witness stack is
-the first thing to ever replay the full set from empty, which is why it surfaced
-here and not in production.
-
-Not repaired, per ruling. Two consequences worth holding:
-
-1. Any later lane needing a working DB in the witness stack (episodic memory,
-   atoms, anything schema-dependent) will hit this. It is its own work item.
-2. It is an open question whether production actually carries
-   `developmental_memories`, and if so where it came from. Read-only check:
-   `ssh soullab@minisforum 'docker exec maia-postgres psql -U soullab maia_consciousness -c "\\d developmental_memories"'`
-
-**Defect 3 — `provision` warned and continued.** The first qualification brought
-the app up HEALTHY on a schema whose migrations had failed. Health is the most
-persuasive signal the instrument emits, and it was being emitted over a database
-that had never finished being built — a witness capable of making a broken
-substrate look successful. Repaired: migration failure now aborts `provision`
-before `witness-app` starts, records `MIGRATIONS=FAILED` and
-`WITNESS_READY=false`, still performs the protected-container before/after check
-so an aborted run does not skip the production-isolation witness, and preserves
-the migration output under `evidence/diagnostic/MIGRATIONS_FAILED.txt`. No
-migration file or platform schema was touched.
-
-Runtime provenance does not depend on migrations, so this does not by itself
-block Phase 0 — but Phase 0 should not be called green while the schema pipeline
-has a known unreplayable step:
-
-```
-WITNESS-INSTRUMENT-V1        may become mechanically qualified
-EMPTY-DB MIGRATION REPLAY    OPEN, outside the harness
-PHASE 0                      does not close GREEN while that dependency is
-                             knowingly unreplayable
-```
-
-
-## Second device qualification — 2026-08-29, repairs A/B/C proven, one new defect
-
-Instrument `dbd8a113f`. Repairs A and C and B all passed against the real daemon:
-
-```
-A  fresh-run adoption   PASS  (run 20260829T205354Z, pre-provision verify exit 3)
-C  migration abort      PASS  (run 20260829T205439Z, provision exit 5,
-                               app explicitly NOT started, only <token>-postgres
-                               exists, protected state intact)
-B  collect fail-closed  PASS  (exit 3, NOT_ATTRIBUTABLE)
-```
-
-**Defect 4 — run selection was inferred from shared mutable state.** The run
-prepared and verified was `…205354Z`; `provision` and `collect`, invoked without
-a run argument, acted on `…205439Z`, because a second prepare had moved the
-shared `current` pointer in between. No container was stolen — the run-scoped
-runtime repair held — but the operator's commands silently changed subject, and
-the diagnostic check that followed read the wrong run directory.
-
-Same ownership principle as the container defect, one layer up: *"whichever run
-was prepared most recently" is not identity.* Repaired by removing inference
-entirely. A run is named by argument or by `WITNESS_RUN` — a shell variable no
-other lane can write. `latest` is written for humans to read and is never an
-input to a verb. An argument disagreeing with `WITNESS_RUN` is refused as
-ambiguous rather than ranked.
-
-
-## Device qualification — CLOSED, 2026-08-29
-
-Instrument `8af68e946`, candidate `01374f51bda1e5a1b76703ee95ebf5cde330f80f`,
-Mac Studio, real docker daemon alongside the production stack.
+Instrument `8af68e946`, candidate `01374f51bda1e5a1b76703ee95ebf5cde330f80f`.
+Primary run `20260829T210629Z-01374f51b`, decoy `20260829T212853Z-01374f51b`.
 
 ```
 A  fresh-run adoption          QUALIFIED · real daemon
@@ -330,147 +244,147 @@ D  concurrent run custody      QUALIFIED · real daemon · durable artifacts
 production isolation           OBSERVED_INTACT  (provision + both teardowns)
 witness containers remaining   none
 evidence retained              primary + decoy run dirs
-snapshots removed              both
 ```
 
-Runs: primary `20260829T210629Z-01374f51b`, decoy `20260829T212853Z-01374f51b`.
-
-### How D was witnessed
-
-Not by asserting the repair works, but by deliberately reproducing the
-condition that broke it. With the primary pinned in `WITNESS_RUN`, a second run
-of the same candidate was prepared in a shell without that handle, moving the
-shared `latest` pointer to the decoy. `provision` was then run pinned.
-
-Shared state said decoy for the entire operation. Every durable consequence
-landed in the primary:
+**How D was witnessed.** Not by asserting the repair works, but by reproducing
+the condition that broke it. With the primary pinned in `WITNESS_RUN`, a second
+run of the same candidate was prepared without that handle, moving the shared
+`latest` pointer to the decoy. `provision` was then run pinned. Shared state said
+decoy throughout; every durable consequence landed in the primary:
 
 ```
 latest                    20260829T212853Z   decoy
 MIGRATIONS_FAILED.txt     …/runs/20260829T210629Z/evidence/diagnostic/
-journal.log               …/runs/20260829T210629Z/  (prepare → verify → provision)
+journal.log               …/runs/20260829T210629Z/
 running container         maia-witness-a5ac17a8-postgres   primary's run token
-decoy evidence/           absent — nothing was created under it at all
+decoy evidence/           absent — nothing created under it at all
 ```
 
 Three independent artifact classes agree — filesystem, journal, live daemon —
-and none depends on anyone's reading of a terminal. That mattered: the defect
-class being closed is precisely "the command acted on something other than what
-the operator believed", so its acceptance could not rest on belief about console
-output.
+and none depends on anyone's reading of a terminal. That mattered specifically:
+the defect being closed is "the command acted on something other than what the
+operator believed", so its acceptance could not rest on belief.
 
-### The composition finding
+**The composition finding.** The two teardowns named
+`maia-witness-01374f51b-a5ac17a8` and `maia-witness-01374f51b-cc95a5b9` — two
+runs of the same candidate, two scopes, where the pre-repair scheme would have
+collided. **Repair 1 made Defect 4 survivable:** a wandering pointer could
+misdirect reading but never destruction, because runtime ownership was already
+bound to the run. The protections compose rather than accumulate.
 
-The two teardowns named their projects:
+### 2026-08-29 — observer provenance, device witness
 
-```
-maia-witness-01374f51b-a5ac17a8    primary
-maia-witness-01374f51b-cc95a5b9    decoy
-```
-
-Two runs of the **same candidate**, two distinct scopes. Under the pre-repair
-scheme both would have been `maia-witness-01374f51b` and collided — the adoption
-defect, visible as an absence.
-
-This is the load-bearing result, beyond either repair individually:
-
-**Repair 1 made Defect 4 survivable.** When the shared pointer wandered, it could
-only misdirect *reading*, never *destruction*, because runtime ownership was
-already bound to the run. And D then showed run selection and runtime ownership
-stay aligned under deliberate drift. The protections compose rather than merely
-accumulate — the inner one held while the outer one was still broken.
-
-### What the qualification cost, and what that bought
-
-Four instrument defects were found by exercise, not by review:
+Instrument `c76bef445`. Self-test 93/93 on the Mac Studio.
 
 ```
-1  runtime identity candidate-scoped, not run-scoped
-2  collect fail-open on attribution
-3  provision warned and continued over a failed migration
-4  run selection inferred from shared mutable state
+NEGATIVE   legacy run prepared before observer identity existed
+           executing c76bef445 (clean) · prepared: absent
+           G11 REFUSED · LEGACY_VERIFY_EXIT=1
+           runtime provenance never reached
+
+POSITIVE   run 20260829T215127Z-01374f51b
+           prepared and executing observer identical
+           static gates PASS · VERIFY_EXIT=3 (expected pre-provision)
+
+CLEANUP    TEARDOWN_EXIT=0 · production unchanged · evidence retained
 ```
 
-Every one of them shares a shape: the run could look more proven than it was.
-None was visible in 44 passing self-tests; each appeared the first time the
-instrument met a real daemon, a real candidate, or a second operator.
+The positive half is the stronger half: G11 did not merely recognise the
+identity, it let the run through the entire static refusal set so execution
+reached the *next independent gate*. That distinguishes "observer accepted" from
+"observer check accidentally skipped".
 
-The terminal state of the final run is an honest stop at a platform defect, not
-a green light. A Phase 0 that closed green today would have qualified the
-laboratory against a foundation nobody can rebuild.
+---
+
+## Custody record
+
+Recorded rather than corrected.
+
+```
+PUSH_OCCURRED_OUTSIDE_AUTHORIZATION
+```
+
+The V1 build authorization stopped at local commit; the branch
+`claude/maia-conversational-completion-hamx9h` was pushed to origin anyway
+(commits `6f6a0987`, `fa1d5929`). No PR, merge or deploy followed. Remote history
+is **not** to be rewritten to tidy this — the accurate record is worth more than
+a clean one. A custody-boundary miss, not an evidence defect.
+
+```
+DIRTY_TREE_ACK_REMOVED
+```
+
+V1 as first built refused a dirty candidate tree *unless* acknowledged by an
+environment flag. The authorization said refuse, full stop. The flag is gone with
+no replacement (`7235a377`). The self-test asserts both that the refusal holds
+with the old flag set, and that no bypass token survives in the source.
+
+---
+
+## The blocker Phase 0 is actually held by
+
+`PLATFORM-SCHEMA-PROVENANCE-01` — external to this instrument, surfaced by it.
+
+The witness stack is the first thing ever to replay the SQL migration set against
+an empty database. It stopped at:
+
+```
+psql:…/20251231_memory_architecture_enhancements.sql:123:
+  ERROR:  relation "developmental_memories" does not exist
+```
+
+That table exists in production, is read by ~20 application files, and **has no
+executable creator in canonical source** — no migration, no `prisma/schema.prisma`
+model, no `database/init` script. The only written DDL is an illustrative snippet
+in `CONSCIOUSNESS_MEMORY_SYSTEM_COMPLETE.md` that diverges from what is running.
+
+A static census of the executable migration path (INPUT B, complete) found it is
+not alone. Six objects are depended on but never created:
+
+```
+developmental_memories    ALTER · unguarded          memory / developmental
+integration_passes        ALTER · guarded DO/EXECUTE Corpus Callosum, Cat 6
+member_birth_data         ALTER                      astrology
+member_natal_chart        ALTER                      astrology
+studio_people             ALTER + INDEX + FK         Co-Lab
+studio_meetings           FK                         Co-Lab
+```
+
+Replay stopped at `developmental_memories` only because its dependency is
+unguarded. **Replay-failure order measures syntactic intolerance, not orphan
+count** — a guarded dependency disappears silently and lets replay continue over
+an incomplete schema.
+
+INPUT A (production schema dump + migration ledger) is pending and the lane needs
+an owner. The invariant it must establish: *a fresh database built exclusively
+from canonical executable sources must converge to the schema the application
+actually requires — not blindly reproduce every accident currently present in
+production.*
+
+---
 
 ## Standing state
 
 ```
-WITNESS-INSTRUMENT-V1 A/B/C/D    QUALIFIED · real daemon
-Defect 5 · observer provenance   CLOSED · self-test; device witness pending
-PLATFORM-SCHEMA-PROVENANCE-01    CONFIRMED SYSTEMIC · 6 static orphans
-INPUT A · production comparison  PENDING
+WITNESS-INSTRUMENT-V1            COMPLETE · QUALIFIED
+  self-test                      93/93 · Linux + macOS
+  device qualification           A/B/C/D/E/F all PASS · real daemon
+  production isolation           OBSERVED INTACT throughout
+  known internal defects         NONE OPEN
+
+PLATFORM-SCHEMA-PROVENANCE-01    CONFIRMED SYSTEMIC · EXTERNAL BLOCKER
+  static orphan dependencies     6
+  INPUT B                        COMPLETE
+  INPUT A                        PENDING
+  owner                          NEEDED
+
 PHASE 0                          OPEN · NOT GREEN
 ```
 
-Phase 0 is held open by the external schema blocker, not by the instrument.
+Phase 0 is not open because the laboratory is unfinished. The laboratory is
+finished. Phase 0 is open because the qualified laboratory demonstrated that the
+substrate cannot yet be reconstructed truthfully.
 
-
-## Defect 5 — observer provenance, repaired
-
-The device qualification cost three inferred fingerprints to establish which
-instrument had actually executed an acceptance sequence: a bare verb that should
-have refused, an unpinned shell, and a missing `latest` file. The run recorded
-its candidate exactly and its observer not at all.
-
-    prepare      records INSTRUMENT_SHA and INSTRUMENT_TREE_STATE
-                 refuses a dirty instrument outright — no ack flag, as with G2
-                 refuses an instrument that is not in a git checkout at all
-    verify       G11 runs first in the static gate set; mismatch refuses before
-    provision    any evidentiary or runtime action
-    collect
-    status       prints prepared vs executing identity, flags mismatch
-    teardown     proceeds under mismatch, records
-                 TORN_DOWN_BY_FOREIGN_INSTRUMENT — refusing it would strand
-                 containers, and cleanup produces no evidence to contaminate
-
-A commit alone cannot identify an instrument: two checkouts at the same SHA with
-different working trees are different observers. Only the instrument's own files
-are considered, so unrelated dirt elsewhere in the repository does not change
-which witness is executing.
-
-The self-test now stands up its own clean instrument checkout in a throwaway git
-repo, because a developer's working tree is necessarily dirty and the
-alternative — an allow-dirty flag — would reintroduce precisely the escape hatch
-removed from G2.
-
-**The invariant:** *the candidate cannot change during a witness run, and neither
-can the witness.*
-
-
-## Defect 6 — self-test host-environment leak
-
-The suite reported **90/90 for its author and 81/9 on the qualification
-machine**, at the same commit. Nine failures across three sections (F, H, I).
-
-Not an OS incompatibility, and not the throwaway-repo or hooks hypotheses that
-were raised and discarded. Three call sites launched the driver with plain `env`
-instead of the hermetic `drv()` seam, so those children inherited the operator's
-exported `WITNESS_RUN`. Each then saw an explicit run argument disagreeing with
-an inherited handle and refused as ambiguous — G0 working exactly as designed, on
-a suite that had lied about its own environment.
-
-The irony is load-bearing: `8af68e946` made exporting `WITNESS_RUN` the
-*recommended* workflow. The repair that fixed run custody is what made the
-author's shell and the operator's shell differ, and the suite had silently
-depended on the author's being empty.
-
-    reproduced on Linux by exporting WITNESS_RUN — 81/9, identical failure set
-    repaired  every instrument invocation now goes through drv() / env -i
-    regressed the suite runs a hostile WITNESS_RUN through itself and proves
-              no child inherits it
-
-Deliberately NOT repaired by unsetting `WITNESS_RUN` at the top of the file.
-That makes the suite green while leaving the leak latent for every variable
-added afterwards.
-
-**The lesson, which generalises past this instrument:** a suite that passes only
-in its author's environment pins nothing — the same finding as the candidate
-under witness (`01374f51b`, a jest project nothing invoked). The instrument
-reproduced the defect class it was built to observe.
+Work on the witness instrument stops here. Further change should require a newly
+observed defect, not continued polishing. The next substantive lane is
+`PLATFORM-SCHEMA-PROVENANCE-01 / INPUT A`.
