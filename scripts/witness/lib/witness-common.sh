@@ -78,6 +78,10 @@ wm_get() {
     ( set +u; . "$mf" >/dev/null 2>&1 || true; eval "printf '%s' \"\${$1:-}\"" )
 }
 
+# Display helper: an unset field reads as an em dash, never as an empty string
+# that could be misread as a value.
+wm_show() { local v; v="$(wm_get "$1")"; printf '%s' "${v:-—}"; }
+
 # Render manifest.env → manifest.json (no jq dependency; values are ours).
 wm_render_json() {
     local mf out; mf="$(w_manifest_path)"; out="$WITNESS_RUN_DIR/manifest.json"
