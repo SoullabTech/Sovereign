@@ -1,6 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { visibleDestinations } from '../studioMap';
+import { PANELS } from '../studioTheme';
 
 const canvas = fs.readFileSync(
   path.join(__dirname, '..', 'canvas', 'page.tsx'),
@@ -54,6 +55,40 @@ describe('the runtime rail stays honest', () => {
   it('does not make Conversations available to match the reference', () => {
     const all = visibleDestinations(true).flatMap((g) => g.destinations).map((d) => d.label);
     expect(all).not.toContain('Conversations');
+  });
+});
+
+describe('each drawer renders under the contract it actually is', () => {
+  /*
+   * The first projection gave every open drawer role="manuscript-outline".
+   * `role` is not styling — it selects the design-contract entry and is
+   * emitted as data-panel-role, so Materials announced itself as a manuscript
+   * outline and History did too. These four mappings are the repair.
+   */
+  it('maps materials, structure and history to their real panel roles', () => {
+    expect(code).toContain("materials: 'materials'");
+    expect(code).toContain("structure: 'manuscript-outline'");
+    expect(code).toContain("history: 'versions'");
+  });
+
+  it('gives Work no PanelRole, because the contract has none', () => {
+    // Inventing a 'work' role to fill the gap would be the same error in the
+    // other direction. StudioSurface gives a truthful surface instead.
+    expect(code).toContain('work: null');
+    expect(code).toContain('StudioSurface');
+    expect(PANELS.map((p) => p.role)).not.toContain('work');
+  });
+
+  it('no longer hardcodes one role for every drawer', () => {
+    expect(code).not.toMatch(/role="manuscript-outline"/);
+    expect(code).toContain('DRAWER_PANEL_ROLE[drawer]');
+  });
+
+  it('names only roles the contract actually defines', () => {
+    const declared = new Set(PANELS.map((p) => p.role));
+    for (const role of ['materials', 'manuscript-outline', 'versions']) {
+      expect(declared.has(role as never)).toBe(true);
+    }
   });
 });
 

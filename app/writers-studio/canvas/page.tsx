@@ -4,8 +4,9 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { apiFetch } from '@/lib/http/apiBase';
 import { PRESS, SERIF } from '../pressTheme';
-import { GROUND, INK, SPACE } from '../studioTheme';
+import { GROUND, INK, RULE, SPACE, type PanelRole } from '../studioTheme';
 import { StudioPanel } from '../studio/StudioPanel';
+import { StudioSurface } from '../studio/StudioSurface';
 import { StudioRail } from '../studio/StudioRail';
 import { StudioText } from '../studio/StudioType';
 import { IMPORT_HREF, SOURCE_HREF } from '../studioMap';
@@ -80,6 +81,28 @@ import MaterialsDrawer from './MaterialsDrawer';
  */
 
 type DrawerId = 'work' | 'materials' | 'structure' | 'history';
+
+/**
+ * WS2-03A correction — which panel contract each drawer actually is.
+ *
+ * The first projection rendered every open drawer as
+ * `StudioPanel role="manuscript-outline"`. That is not a styling shortcut:
+ * `role` selects the design-contract entry and is emitted to the DOM as
+ * `data-panel-role`, so the Materials drawer announced itself as a manuscript
+ * outline and History did too. Exactly the semantic drift these primitives
+ * exist to prevent, introduced by the seam meant to carry them.
+ *
+ * `work` maps to no PanelRole on purpose. There is no Work panel in the
+ * contract and inventing one to fill the gap would be the same error in the
+ * other direction — so it renders through StudioSurface, which gives a
+ * truthful surface without asserting panel semantics it does not have.
+ */
+const DRAWER_PANEL_ROLE: Record<DrawerId, PanelRole | null> = {
+  work: null,
+  materials: 'materials',
+  structure: 'manuscript-outline',
+  history: 'versions',
+};
 type ListPhase = 'loading' | 'ready' | 'none' | 'unauthorized' | 'error';
 
 /** Same rule as Studio Home: return by identity, never by position. */
@@ -401,20 +424,55 @@ export default function WriterCanvasPage() {
           })}
         </nav>
 
-        {drawer && (
-          /* The open drawer, now a StudioPanel. Its dismissibility comes from
-             the design contract rather than from this call site, and the
-             spine's toggle is what dismisses it — one drawer at a time, as
-             before. */
-          <StudioPanel
-            role="manuscript-outline"
-            label={drawers.find((d) => d.id === drawer)?.label}
-            onDismiss={() => setDrawer(null)}
-            style={{ width: 288, flexShrink: 0, borderRadius: 0, borderTop: 'none', borderBottom: 'none', borderLeft: 'none' }}
-          >
-            {drawerBody(drawer)}
-          </StudioPanel>
-        )}
+        {drawer &&
+          (() => {
+            /* One drawer at a time, as before. Each renders under the contract
+               it actually is — see DRAWER_PANEL_ROLE. Dismissibility comes from
+               the contract, never from this call site; the spine's toggle is
+               still what folds it away. */
+            const label = drawers.find((d) => d.id === drawer)?.label;
+            const role = DRAWER_PANEL_ROLE[drawer];
+            const frame = {
+              width: 288,
+              flexShrink: 0,
+              borderRadius: 0,
+              borderTop: 'none',
+              borderBottom: 'none',
+              borderLeft: 'none',
+            } as const;
+
+            if (role === null) {
+              // The Work drawer. No Work panel exists in the contract, and one
+              // is not invented here: a truthful surface, no panel semantics.
+              return (
+                <StudioSurface
+                  level="raised"
+                  style={{
+                    ...frame,
+                    borderRight: `1px solid ${RULE.soft}`,
+                    overflowY: 'auto',
+                    padding: SPACE.comfortable,
+                  }}
+                >
+                  <StudioText role="panelLabel" style={{ marginBottom: SPACE.comfortable }}>
+                    {label}
+                  </StudioText>
+                  {drawerBody(drawer)}
+                </StudioSurface>
+              );
+            }
+
+            return (
+              <StudioPanel
+                role={role}
+                label={label}
+                onDismiss={() => setDrawer(null)}
+                style={frame}
+              >
+                {drawerBody(drawer)}
+              </StudioPanel>
+            );
+          })()}
 
         {/* ── Worktable: the center, always the largest thing. ── */}
         <main
