@@ -304,17 +304,62 @@ function isMaiaSurface(url) {
   }
 }
 
+/** The requesting frame's path, or null when the value carries none. */
+function requesterPath(value) {
+  try { return new URL(String(value)).pathname; } catch { return null; }
+}
+
 /**
  * The permission answer for the remote view.
  *
  * ⛔ Written as a total refusal with ONE narrow exception, rather than as
  * "deny the ones we listed". A Chromium upgrade that adds a permission class
  * must not arrive already granted because nobody edited an allow-list.
+ *
+ * ⛔ FACTS, NAMED. The first cut of this gate took `(permission, requestingUrl,
+ * maiaIsVisible)`, and `setPermissionCheckHandler` — which Chromium calls for
+ * `navigator.permissions.query` and for some `getUserMedia` paths — is only
+ * guaranteed to be given an ORIGIN. So its call site fell back to passing the
+ * origin in the URL slot, where `isMaiaSurface` read its pathname as `/` and
+ * refused. That fallback existed to handle a case it could only ever fail:
+ * VOICE-CHECK-FALLBACK-01, found by reading rather than on a device. Naming the
+ * facts separately is what makes the difference visible.
+ *
+ * THE FOUR FACTS, all of which must hold:
+ *
+ *   1. the permission is audio. Camera, screen, location and everything
+ *      Chromium invents later stay refused.
+ *
+ *   2. `maiaIsVisible` — MAIN'S OWN observation of where the view actually is.
+ *      Not something the page asserts. This is the PATH fact, and it is the
+ *      stronger of the two available sources for it.
+ *
+ *   3. the requester is not a subframe. An embedded third party on `/maia` is
+ *      not MAIA, and this is the clause that says so — without it, the path
+ *      check below would be carrying a load it cannot bear on the check path.
+ *
+ *   4. the requester is on the platform origin, compared as an origin; and when
+ *      Chromium supplies a path-bearing URL, that path is exactly `/maia`.
+ *
+ * ⛔ WHY A BARE ORIGIN IS NOT A HOLE. A bare origin carries no path to check.
+ * The path fact is already held by (2) from main's own observation, and (3)
+ * removes the frame that a path check would otherwise be guarding against. A
+ * requester at `/` cannot be the main frame of a view main believes is on
+ * `/maia`, because both track the same main frame.
  */
-function platformPermission(permission, requestingUrl, maiaIsVisible) {
+function platformPermission(permission, facts) {
+  const f = facts || {};
   if (!AUDIO_PERMISSIONS.includes(permission)) return false;
-  if (!maiaIsVisible) return false;
-  return isMaiaSurface(requestingUrl);
+  if (f.maiaIsVisible !== true) return false;
+  if (f.isMainFrame === false) return false;
+
+  const requester = String(f.requestingUrl || f.requestingOrigin || '').trim();
+  if (!requester) return false;                 // no requester fact at all
+  if (!isPlatformUrl(requester)) return false;  // origin equality, always
+
+  const pathname = requesterPath(requester);
+  if (pathname === null || pathname === '' || pathname === '/') return true;
+  return pathname === PLATFORM_ENTRY_PATH;
 }
 
 module.exports = {
@@ -333,6 +378,7 @@ module.exports = {
   isUnderRoot,
   isHousePath,
   isMaiaSurface,
+  requesterPath,
   AUDIO_PERMISSIONS,
   navigationDecision,
   platformPermission,

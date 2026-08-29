@@ -102,11 +102,17 @@ function createPlatformShell({
     // ⛔ Three handlers, and all three consult the SAME policy with the SAME
     // facts. A gate that answered differently depending on which Chromium path
     // asked would be a gate with a hole in it.
+    //
+    // ⛔ VOICE-CHECK-FALLBACK-01. These used to pass one string in a `requestingUrl`
+    // slot, so the CHECK path — which Chromium is only guaranteed to hand an
+    // ORIGIN — squeezed that origin into it and was refused for having the
+    // pathname `/`. The facts are named now, and each handler supplies exactly
+    // the ones Chromium actually gave it.
     ps.setPermissionRequestHandler((_wc, permission, callback, details) => {
-      callback(platformPermission(permission, (details && details.requestingUrl) || '', maiaIsVisible()));
+      callback(platformPermission(permission, permissionFacts(details)));
     });
     ps.setPermissionCheckHandler((_wc, permission, requestingOrigin, details) => (
-      platformPermission(permission, (details && details.requestingUrl) || requestingOrigin || '', maiaIsVisible())
+      platformPermission(permission, permissionFacts(details, requestingOrigin))
     ));
     if (typeof ps.setDevicePermissionHandler === 'function') {
       // The DEVICE itself, refused even if a permission somehow said yes.
@@ -115,6 +121,23 @@ function createPlatformShell({
       ps.setDevicePermissionHandler(() => false);
     }
     partitionArmed = true;
+  }
+
+  /**
+   * Assemble what Chromium actually told us, without inventing any of it.
+   *
+   * `maiaIsVisible` is deliberately NOT taken from `details` — it is main's own
+   * observation of where the view is, and it is the reason a page cannot talk
+   * its way to a microphone by asserting a URL.
+   */
+  function permissionFacts(details, requestingOrigin) {
+    const d = details || {};
+    return {
+      requestingUrl: d.requestingUrl,
+      requestingOrigin: d.securityOrigin || requestingOrigin,
+      isMainFrame: d.isMainFrame,
+      maiaIsVisible: maiaIsVisible(),
+    };
   }
 
   /**
@@ -218,7 +241,7 @@ function createPlatformShell({
     if (decision.action !== 'allow') {
       return { ok: false, error: `refused: ${decision.reason}` };
     }
-    const shown = await show();
+    const shown = await attach();
     if (!shown.ok) return shown;
     try {
       await view.webContents.loadURL(url);
@@ -239,14 +262,14 @@ function createPlatformShell({
   }
 
   /**
-   * Show the platform surface.
+   * Put the platform surface in front of the member, WITHOUT loading anything.
    *
-   * ⛔ The cookie is minted BEFORE the load, every time. Re-minting on an
+   * ⛔ The cookie is minted BEFORE any load, every time. Re-minting on an
    * already-built view is not redundant: the token may have been replaced by a
    * re-sign-in while the view sat detached, and loading first would send the
    * stale one.
    */
-  async function show() {
+  async function attach() {
     if (!credential || !credential.mintWebSession) {
       return { ok: false, error: 'no member session' };
     }
@@ -256,9 +279,23 @@ function createPlatformShell({
     if (!view) build();
     window.setBrowserView(view);
     fit();
-    await view.webContents.loadURL(platformEntryUrl());
     setPlace(PLATFORM);
     return { ok: true };
+  }
+
+  /**
+   * Open MAIA — the destination Desktop opens on.
+   *
+   * ⛔ SHELL-DOUBLE-LOAD-01. This used to attach AND load the entry URL, and
+   * `navigate()` called it before loading the real destination. Every crossing
+   * therefore loaded `/maia` first: opening the House cost a full MAIA mount
+   * the member watched appear and vanish, and opening MAIA itself mounted her
+   * twice — arrival, holoflower and state field all run twice, and the second
+   * mount tears down the first. Found by reading. `attach()` no longer loads,
+   * and `navigate()` is the single thing that does.
+   */
+  function show() {
+    return navigate(PLATFORM_ENTRY_PATH);
   }
 
   /**

@@ -153,8 +153,7 @@ function fakeElectron() {
   return { log, sessionApi, shellApi: { openExternal: (u) => log.external.push(u) }, window, BrowserView: FakeBrowserView };
 }
 
-async function shellFor() {
-  const e = fakeElectron();
+async function signedInCredential() {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'dh01-'));
   tempDirs.push(dir);
   const credential = createSession({
@@ -169,6 +168,12 @@ async function shellFor() {
     }),
   });
   await credential.signIn('kelly', 'pw');
+  return credential;
+}
+
+async function shellFor() {
+  const e = fakeElectron();
+  const credential = await signedInCredential();
   const shell = createPlatformShell({
     BrowserView: e.BrowserView, sessionApi: e.sessionApi, shellApi: e.shellApi,
     window: e.window, credential,
@@ -218,6 +223,38 @@ test('U — navigate() opens a place, and refuses one the House does not name', 
   const no = await shell.navigate('/admin/secrets');
   assert.equal(no.ok, false);
   assert.match(no.error, /not_a_house_path/);
+});
+
+test('U — SHELL-DOUBLE-LOAD-01: opening a place loads that place, once', async () => {
+  // ⛔ THE DEFECT. `show()` attached AND loaded the entry URL, and `navigate()`
+  // called `show()` before loading the real destination. So crossing to the
+  // House loaded /maia first — a full MAIA mount the member watches appear and
+  // vanish — and opening MAIA mounted her twice, the second mount tearing down
+  // the first. Arrival, holoflower and state field all ran twice.
+  const e = fakeElectron();
+  const credential = await signedInCredential();
+  const shell = createPlatformShell({
+    BrowserView: e.BrowserView, sessionApi: e.sessionApi, shellApi: e.shellApi,
+    window: e.window, credential, onPlace: () => {},
+  });
+
+  const house = await shell.navigate('/house');
+  assert.equal(house.ok, true, `navigate(/house) failed: ${house.error}`);
+  assert.deepEqual(e.log.loaded, [`${PLATFORM_ORIGIN}/house`],
+    'opening the House went through MAIA on the way');
+
+  const maia = await shell.navigate('/maia');
+  assert.equal(maia.ok, true);
+  assert.deepEqual(e.log.loaded, [`${PLATFORM_ORIGIN}/house`, `${PLATFORM_ORIGIN}/maia`],
+    'MAIA was mounted more than once');
+});
+
+test('U — a refused destination loads nothing and leaves the member where they were', async () => {
+  const { shell, log } = await shellFor();
+  const before = log.loaded.length;
+  const no = await shell.navigate('/admin/secrets');
+  assert.equal(no.ok, false);
+  assert.equal(log.loaded.length, before, 'a refused destination still loaded something');
 });
 
 test('H — a SUBFRAME moving in-page is not the member moving', async () => {

@@ -29,6 +29,10 @@ const {
   PLATFORM_ORIGIN, PLATFORM_ENTRY_PATH, PLATFORM_HOUSE_PATH,
   AUDIO_PERMISSIONS, REFUSED_PERMISSIONS, platformPermission, isMaiaSurface,
 } = require('../src/shell-policy.js');
+
+/** The gate takes NAMED facts. `on(url)` is "a main frame at this URL asking". */
+const on = (requestingUrl, maiaIsVisible = true) =>
+  ({ requestingUrl, isMainFrame: true, maiaIsVisible });
 const { createSession } = require('../src/session.js');
 
 const MAIA_URL = `${PLATFORM_ORIGIN}${PLATFORM_ENTRY_PATH}`;
@@ -41,7 +45,7 @@ process.on('exit', () => tempDirs.forEach((d) => fs.rmSync(d, { recursive: true,
 
 test('V — audio is granted on the visible MAIA surface, and only there', () => {
   for (const p of AUDIO_PERMISSIONS) {
-    assert.equal(platformPermission(p, MAIA_URL, true), true, `${p} refused on MAIA`);
+    assert.equal(platformPermission(p, on(MAIA_URL)), true, `${p} refused on MAIA`);
   }
 });
 
@@ -50,7 +54,7 @@ test('V — every OTHER place is refused, including Rooms under /maia', () => {
   // not MAIA merely by sharing a site with her.
   for (const p of ['/house', '/journal', '/astrology', '/studio', '/maia/anchor',
                    '/maia/ideas', '/maia/living-field', '/maia/keep-capture']) {
-    assert.equal(platformPermission('media', `${PLATFORM_ORIGIN}${p}`, true), false,
+    assert.equal(platformPermission('media', on(`${PLATFORM_ORIGIN}${p}`)), false,
       `${p} was granted a microphone`);
     assert.ok(!isMaiaSurface(`${PLATFORM_ORIGIN}${p}`));
   }
@@ -58,18 +62,18 @@ test('V — every OTHER place is refused, including Rooms under /maia', () => {
 
 test('V — a backgrounded or navigated-away view holds no microphone', () => {
   // Both halves of the visibility question matter: attached, AND showing MAIA.
-  assert.equal(platformPermission('media', MAIA_URL, false), false,
+  assert.equal(platformPermission('media', on(MAIA_URL, false)), false,
     'a view that is not the visible MAIA was granted a microphone');
 });
 
 test('V — only AUDIO. Camera, screen, location and the rest stay refused on MAIA', () => {
   for (const p of REFUSED_PERMISSIONS) {
     if (AUDIO_PERMISSIONS.includes(p)) continue;
-    assert.equal(platformPermission(p, MAIA_URL, true), false,
+    assert.equal(platformPermission(p, on(MAIA_URL)), false,
       `${p} was granted on MAIA — this unit grants a microphone, not a machine`);
   }
   // And a permission class Chromium has not invented yet.
-  assert.equal(platformPermission('brand-new-permission-2027', MAIA_URL, true), false);
+  assert.equal(platformPermission('brand-new-permission-2027', on(MAIA_URL)), false);
 });
 
 test('V — a foreign origin cannot impersonate MAIA by path', () => {
@@ -80,7 +84,52 @@ test('V — a foreign origin cannot impersonate MAIA by path', () => {
     'not a url',
     '',
   ]) {
-    assert.equal(platformPermission('media', u, true), false, `${u} was granted a microphone`);
+    assert.equal(platformPermission('media', on(u)), false, `${u} was granted a microphone`);
+  }
+});
+
+test('V — VOICE-CHECK-FALLBACK-01: a bare ORIGIN is enough on the check path', () => {
+  // ⛔ THE REGRESSION. `setPermissionCheckHandler` is only guaranteed an ORIGIN,
+  // and the first cut of this gate squeezed that origin into a `requestingUrl`
+  // slot, where its pathname read as `/` and the microphone was refused. The
+  // fallback existed to handle a case it could only ever fail.
+  //
+  // A bare origin is accepted because the PATH fact comes from main's own
+  // observation (`maiaIsVisible`), not from the page — and the subframe clause
+  // below, not the path, is what keeps an embedded third party out.
+  assert.equal(platformPermission('media',
+    { requestingOrigin: PLATFORM_ORIGIN, isMainFrame: true, maiaIsVisible: true }), true,
+    'the synchronous check path still cannot obtain a microphone on MAIA');
+
+  // …and it is NOT a way around visibility. Leaving MAIA still ends it.
+  assert.equal(platformPermission('media',
+    { requestingOrigin: PLATFORM_ORIGIN, isMainFrame: true, maiaIsVisible: false }), false);
+
+  // …nor around the origin.
+  assert.equal(platformPermission('media',
+    { requestingOrigin: 'https://evil.com', isMainFrame: true, maiaIsVisible: true }), false);
+
+  // …nor a way to ask for nothing and be granted it.
+  assert.equal(platformPermission('media', { isMainFrame: true, maiaIsVisible: true }), false);
+});
+
+test('V — a SUBFRAME on MAIA gets no microphone, however it asks', () => {
+  // An embedded third party sitting inside /maia is not MAIA. This is the
+  // clause that says so; it is what lets a bare origin be safe above.
+  for (const facts of [
+    { requestingUrl: MAIA_URL, isMainFrame: false, maiaIsVisible: true },
+    { requestingOrigin: PLATFORM_ORIGIN, isMainFrame: false, maiaIsVisible: true },
+  ]) {
+    assert.equal(platformPermission('media', facts), false, 'a subframe was granted a microphone');
+  }
+});
+
+test('V — maiaIsVisible must be TRUE, not merely truthy-adjacent', () => {
+  // The path fact is load-bearing enough that an absent or fuzzy value must
+  // refuse rather than be coerced.
+  for (const v of [undefined, null, 0, '', 'yes', 1]) {
+    assert.equal(platformPermission('media', { requestingUrl: MAIA_URL, maiaIsVisible: v }), false,
+      `maiaIsVisible=${JSON.stringify(v)} was treated as visible`);
   }
 });
 
@@ -152,6 +201,28 @@ test('V — on MAIA, all three permission paths agree: audio yes, device no', as
   // surface; it never hands remote content a device chooser.
   assert.equal(handlers.device({ deviceType: 'audioInput' }), false,
     'remote content reached a device chooser');
+});
+
+test('V — the check handler works when Electron gives it ONLY an origin', async () => {
+  // ⛔ The shape that actually reaches production. `setPermissionCheckHandler`
+  // receives `(wc, permission, requestingOrigin, details)` and `details` may
+  // carry no `requestingUrl` at all. This is VOICE-CHECK-FALLBACK-01 exercised
+  // through the wiring rather than against the pure gate.
+  const { handlers, shell } = await shellOn(PLATFORM_ENTRY_PATH);
+  assert.equal(handlers.check({}, 'media', PLATFORM_ORIGIN, { isMainFrame: true }), true,
+    'the check path refused the microphone when given only an origin');
+
+  // The two paths agree, which is the property that matters: a gate that
+  // answered differently depending on which Chromium path asked would be a gate
+  // with a hole in it.
+  let granted = null;
+  handlers.request({}, 'media', (v) => { granted = v; },
+    { requestingUrl: MAIA_URL, isMainFrame: true });
+  assert.equal(granted, true);
+
+  await shell.navigate(PLATFORM_HOUSE_PATH);
+  assert.equal(handlers.check({}, 'media', PLATFORM_ORIGIN, { isMainFrame: true }), false,
+    'an origin-only check kept a microphone alive off MAIA');
 });
 
 test('V — after moving to the House, MAIA-shaped requests are refused', async () => {
