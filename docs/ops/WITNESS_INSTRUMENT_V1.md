@@ -1,7 +1,7 @@
 # WITNESS-INSTRUMENT-V1 — scope, authorization boundary, phase exit
 
 **Lane:** Phase 0 of the MAIA Conversational Completion Program.
-**Status:** built · self-test 82/82 · **first device qualification RED — two instrument defects found and repaired** · phase exit NOT YET SATISFIED.
+**Status:** self-test 82/82 · **device qualification A/B/C/D PASSED on the real daemon** · Defect 5 open · phase exit NOT SATISFIED (external blocker) · **first device qualification RED — two instrument defects found and repaired** · phase exit NOT YET SATISFIED.
 **Entry point:** `scripts/witness/witness.sh` (see `scripts/witness/README.md`).
 
 ## Why this exists before any conversational lane
@@ -313,3 +313,99 @@ entirely. A run is named by argument or by `WITNESS_RUN` — a shell variable no
 other lane can write. `latest` is written for humans to read and is never an
 input to a verb. An argument disagreeing with `WITNESS_RUN` is refused as
 ambiguous rather than ranked.
+
+
+## Device qualification — CLOSED, 2026-08-29
+
+Instrument `8af68e946`, candidate `01374f51bda1e5a1b76703ee95ebf5cde330f80f`,
+Mac Studio, real docker daemon alongside the production stack.
+
+```
+A  fresh-run adoption          QUALIFIED · real daemon
+B  collect fail-closed         QUALIFIED · real daemon
+C  substrate integrity abort   QUALIFIED · real daemon
+D  concurrent run custody      QUALIFIED · real daemon · durable artifacts
+
+production isolation           OBSERVED_INTACT  (provision + both teardowns)
+witness containers remaining   none
+evidence retained              primary + decoy run dirs
+snapshots removed              both
+```
+
+Runs: primary `20260829T210629Z-01374f51b`, decoy `20260829T212853Z-01374f51b`.
+
+### How D was witnessed
+
+Not by asserting the repair works, but by deliberately reproducing the
+condition that broke it. With the primary pinned in `WITNESS_RUN`, a second run
+of the same candidate was prepared in a shell without that handle, moving the
+shared `latest` pointer to the decoy. `provision` was then run pinned.
+
+Shared state said decoy for the entire operation. Every durable consequence
+landed in the primary:
+
+```
+latest                    20260829T212853Z   decoy
+MIGRATIONS_FAILED.txt     …/runs/20260829T210629Z/evidence/diagnostic/
+journal.log               …/runs/20260829T210629Z/  (prepare → verify → provision)
+running container         maia-witness-a5ac17a8-postgres   primary's run token
+decoy evidence/           absent — nothing was created under it at all
+```
+
+Three independent artifact classes agree — filesystem, journal, live daemon —
+and none depends on anyone's reading of a terminal. That mattered: the defect
+class being closed is precisely "the command acted on something other than what
+the operator believed", so its acceptance could not rest on belief about console
+output.
+
+### The composition finding
+
+The two teardowns named their projects:
+
+```
+maia-witness-01374f51b-a5ac17a8    primary
+maia-witness-01374f51b-cc95a5b9    decoy
+```
+
+Two runs of the **same candidate**, two distinct scopes. Under the pre-repair
+scheme both would have been `maia-witness-01374f51b` and collided — the adoption
+defect, visible as an absence.
+
+This is the load-bearing result, beyond either repair individually:
+
+**Repair 1 made Defect 4 survivable.** When the shared pointer wandered, it could
+only misdirect *reading*, never *destruction*, because runtime ownership was
+already bound to the run. And D then showed run selection and runtime ownership
+stay aligned under deliberate drift. The protections compose rather than merely
+accumulate — the inner one held while the outer one was still broken.
+
+### What the qualification cost, and what that bought
+
+Four instrument defects were found by exercise, not by review:
+
+```
+1  runtime identity candidate-scoped, not run-scoped
+2  collect fail-open on attribution
+3  provision warned and continued over a failed migration
+4  run selection inferred from shared mutable state
+```
+
+Every one of them shares a shape: the run could look more proven than it was.
+None was visible in 44 passing self-tests; each appeared the first time the
+instrument met a real daemon, a real candidate, or a second operator.
+
+The terminal state of the final run is an honest stop at a platform defect, not
+a green light. A Phase 0 that closed green today would have qualified the
+laboratory against a foundation nobody can rebuild.
+
+## Standing state
+
+```
+WITNESS-INSTRUMENT-V1 A/B/C/D    QUALIFIED · real daemon
+Defect 5 · observer provenance   OPEN · V1 INTERNAL
+PLATFORM-SCHEMA-PROVENANCE-01    CONFIRMED SYSTEMIC · 6 static orphans
+INPUT A · production comparison  PENDING
+PHASE 0                          OPEN · NOT GREEN
+```
+
+Phase 0 is held open by the external schema blocker, not by the instrument.
