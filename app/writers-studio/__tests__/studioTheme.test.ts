@@ -209,7 +209,6 @@ describe('provenance — an unlabelled number inherits authority it has not earn
     // rail and a 1024px breakpoint are translations. Marking them SAMPLED
     // would make the first disagreeing capture look like a design violation
     // rather than a provisional number meeting a real screen.
-    expect(PROVENANCE.MEASURE.level).toBe('PROVISIONAL');
     expect(PROVENANCE.BREAKPOINT.level).toBe('PROVISIONAL');
     expect(PROVENANCE.RADIUS.level).toBe('PROVISIONAL');
     expect(PROVENANCE.TYPE.level).toBe('DERIVED');
@@ -218,5 +217,14 @@ describe('provenance — an unlabelled number inherits authority it has not earn
     expect(PROVENANCE.GROUND.level).toBe('SAMPLED');
     expect(PROVENANCE.MAIA_ACCENT.level).toBe('SAMPLED');
     expect(PROVENANCE.RULE.level).toBe('INHERITED');
+  });
+
+  it('lets a PROVISIONAL value graduate only by actual measurement', () => {
+    // MEASURE was PROVISIONAL. WS2-02B measured the column spans off 04, so
+    // those moved to COLUMN_FRACTION as SAMPLED and MEASURE kept only its
+    // translations, which are DERIVED. The pixel values stay DERIVED because
+    // they depend on a viewport — proportions were measured, widths were not.
+    expect(PROVENANCE.COLUMN_FRACTION.level).toBe('SAMPLED');
+    expect(PROVENANCE.MEASURE.level).toBe('DERIVED');
   });
 });

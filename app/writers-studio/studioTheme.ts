@@ -95,9 +95,15 @@ export const PROVENANCE: Record<string, { level: Provenance; note: string }> = {
   INSIGHT_CHIP: { level: 'SAMPLED', note: 'Chip families measured in 04 and 08.' },
   SPACE: { level: 'DERIVED', note: 'A conventional scale; the references show restraint, not px.' },
   MEASURE: {
-    level: 'PROVISIONAL',
-    note: 'Rail/panel/gutter/measure widths are translations of an observed proportion. '
-      + 'No pixel measurement was taken. WS2-02B corrects them against a real composition.',
+    level: 'DERIVED',
+    note: 'prose measure and gutters remain translations. The column widths that were '
+      + 'PROVISIONAL here moved to COLUMN_FRACTION once WS2-02B measured them.',
+  },
+  COLUMN_FRACTION: {
+    level: 'SAMPLED',
+    note: 'Column spans measured from 04 by luminance scan; gutters are the runs with no '
+      + 'text edges. Proportions are measured; pixel values are resolved per viewport by '
+      + 'columnPx and are therefore DERIVED, not measured.',
   },
   RADIUS: { level: 'PROVISIONAL', note: 'Not measured. Radii read small and uniform in 04.' },
   RULE: { level: 'INHERITED', note: 'PRESS.rule / ruleSoft, confirmed against sampled #4F453B.' },
@@ -357,15 +363,44 @@ export const SPACE = {
   roomy: 24, generous: 32, section: 48, band: 64,
 } as const;
 
+/**
+ * Column proportions, MEASURED from 04 by the WS2-02B composition pass.
+ *
+ * Method: a horizontal luminance scan across the panel body of
+ * `04-writing-field-wide.png` (1536px wide, sampled between 30% and 70% height
+ * to avoid header and footer). Text produces edges everywhere, so the panel
+ * gutters are the sustained runs with NO edges — 135-202, 373-434, 901-979,
+ * 1179-1230, 1448-1511. Those runs give the column spans below.
+ *
+ * This replaced a single `panelWidth: 300`, which the first render showed was
+ * wrong in two ways at once: the manuscript outline is genuinely NARROWER than
+ * the contextual panels in the reference, and using one width for all three
+ * squeezed the writing field to about 29% of the room when 04 gives it 35%.
+ * The field stopped being the largest thing in its own room — visible
+ * instantly in a capture, invisible in the token file.
+ *
+ * The proportions are measured. Any pixel value derived from them is not: it
+ * depends on the viewport, which is why they are stored as fractions and
+ * resolved by `columnPx` rather than frozen at one width.
+ */
+export const COLUMN_FRACTION = {
+  rail: 0.135,
+  outlinePanel: 0.150,
+  writingField: 0.352,
+  maiaPanel: 0.166,
+  materialsPanel: 0.173,
+} as const;
+
+/** Resolve a measured proportion at a given viewport width. */
+export function columnPx(column: keyof typeof COLUMN_FRACTION, viewportWidth: number): number {
+  return Math.round(COLUMN_FRACTION[column] * viewportWidth);
+}
+
 export const MEASURE = {
   /** ch. The manuscript column ceiling. Long-form reading degrades past this. */
   prose: 68,
   /** px. Room gutter around the writing field. */
   roomGutter: 32,
-  /** px. Left rail at rest. */
-  railWidth: 216,
-  /** px. Contextual panel at rest. */
-  panelWidth: 300,
   /** px. Below this the writing field cannot keep its measure — see RESPONSIVE. */
   fieldMinWidth: 420,
 } as const;
@@ -671,12 +706,33 @@ export function assertResponsiveClaimsAreObserved(): void {
   }
 }
 
+/**
+ * The writing field is the largest column in its own room.
+ *
+ * Added by WS2-02B, because the first render broke it without breaking any
+ * existing guard: three panels at one width squeezed the field to ~29% when 04
+ * gives it 35.2%. "The room is built around a column of prose" is a claim
+ * about proportion, and proportion is checkable.
+ */
+export function assertFieldIsTheLargestColumn(): void {
+  const field = COLUMN_FRACTION.writingField;
+  for (const [name, frac] of Object.entries(COLUMN_FRACTION)) {
+    if (name !== 'writingField' && frac >= field) {
+      throw new Error(
+        `COLUMN_FRACTION.${name} (${frac}) is at least as wide as the writing field ` +
+          `(${field}). The room is built around the column of prose.`,
+      );
+    }
+  }
+}
+
 /** Every token group states where its values came from. */
 export function assertEveryTokenGroupHasProvenance(
   groups: readonly string[] = [
     'GROUND', 'INK', 'TYPE', 'GOLD', 'GOLD_PERMITTED', 'GOLD_FORBIDDEN',
     'MAIA_ACCENT', 'INSIGHT_CHIP', 'SPACE', 'MEASURE', 'RADIUS', 'RULE',
     'STATE', 'PANELS', 'BREAKPOINT', 'YIELDS_BEFORE', 'NEVER_COLLAPSES',
+    'COLUMN_FRACTION',
     'PRESENT_AT_COMPACT',
   ],
 ): void {
@@ -702,4 +758,5 @@ export function assertStudioThemeCoherent(): void {
   assertSpacingOrdered();
   assertResponsiveClaimsAreObserved();
   assertEveryTokenGroupHasProvenance();
+  assertFieldIsTheLargestColumn();
 }
