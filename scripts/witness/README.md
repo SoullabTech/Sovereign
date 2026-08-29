@@ -30,6 +30,23 @@ verification.
 
 ---
 
+## Naming the run
+
+`prepare` mints a run id and prints the line to pin it. **Every later verb
+requires that run to be named** — by argument, or by `WITNESS_RUN` in your shell:
+
+```bash
+export WITNESS_RUN=20260829T205439Z-01374f51b
+scripts/witness/witness.sh verify
+```
+
+A bare verb refuses (exit 2) rather than resolving "the most recently prepared
+run". That pointer is shared, mutable state: another lane can prepare a run
+between two of your commands, and a verb that guessed would then act on someone
+else's run — observed on 2026-08-29, when `provision` and `collect` silently
+changed subject mid-sequence. An argument that disagrees with `WITNESS_RUN` is
+refused as ambiguous, not ranked.
+
 ## Verbs
 
 ```bash

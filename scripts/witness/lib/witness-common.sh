@@ -97,24 +97,75 @@ wm_render_json() {
 }
 
 # ── Run resolution ────────────────────────────────────────────────────────────
-# `current` is a pointer file (not a symlink — portable across macOS/Linux and
-# survives being copied around).
-w_set_current_run() { echo "$1" > "$(w_run_root)/current"; }
+# ⛔ A VERB MUST NEVER INFER WHICH RUN IT BELONGS TO.
+#
+# Found by the second device qualification (2026-08-29): a run was prepared and
+# verified as 20260829T205354Z, and then `provision` and `collect` — invoked with
+# no run argument — acted on 20260829T205439Z, because a second prepare had moved
+# the shared `current` pointer in between. No container was stolen; the run-scoped
+# runtime repair held. But the OPERATOR's commands silently changed subject, and
+# the diagnostic check that followed read the wrong run directory.
+#
+# It is the same ownership principle as the container defect, one layer up:
+# "whichever run was prepared most recently" is not identity. `current` is shared
+# mutable state that any lane on the machine can rewrite between two of your
+# verbs.
+#
+# So `latest` is now advisory only — written for a human to read, never an input
+# to a verb. A run is named explicitly, or through $WITNESS_RUN, which lives in
+# one shell and no other lane can write.
+w_set_current_run() {
+    local root; root="$(w_run_root)"
+    echo "$1" > "$root/latest"
+    # Kept only so an older instrument's pointer file does not go stale and
+    # mislead someone reading the directory by hand.
+    echo "$1" > "$root/current"
+}
+
+_w_latest_run() {
+    local root; root="$(w_run_root)"
+    [ -f "$root/latest" ] && cat "$root/latest" && return 0
+    [ -f "$root/current" ] && cat "$root/current" && return 0
+    printf ''
+}
+
+_w_run_dir_for() {
+    local id="$1" root; root="$(w_run_root)"
+    if [ -d "$root/runs/$id" ]; then echo "$root/runs/$id"; return 0; fi
+    if [ -d "$id" ]; then echo "$id"; return 0; fi
+    return 1
+}
 
 w_resolve_run() {
-    local want="${1:-}" root; root="$(w_run_root)"
-    if [ -n "$want" ]; then
-        if [ -d "$root/runs/$want" ]; then echo "$root/runs/$want"; return 0; fi
-        if [ -d "$want" ]; then echo "$want"; return 0; fi
+    local want="${1:-}" pinned="${WITNESS_RUN:-}" dir latest
+
+    # An argument and a pinned handle that disagree is ambiguity, not precedence.
+    if [ -n "$want" ] && [ -n "$pinned" ] && [ "$want" != "$pinned" ]; then
+        w_block "Ambiguous run: argument '$want' but WITNESS_RUN='$pinned'."
+        w_dim "Refusing to pick. Unset WITNESS_RUN, or pass the run it names."
+        return 1
+    fi
+    [ -n "$want" ] || want="$pinned"
+
+    if [ -z "$want" ]; then
+        latest="$(_w_latest_run)"
+        w_block "No run named. This verb will not infer one."
+        w_dim "The most-recently-prepared run is shared, mutable state: another lane"
+        w_dim "can prepare a run between two of your commands, and a verb that guesses"
+        w_dim "would then act on someone else's run. Name it:"
+        w_dim ""
+        w_dim "  export WITNESS_RUN=<run-id>       pins it for this shell, or"
+        w_dim "  witness.sh <verb> <run-id>        pins it for one command"
+        [ -n "$latest" ] && w_dim "" && w_dim "Most recently prepared here: $latest"
+        return 1
+    fi
+
+    if ! dir="$(_w_run_dir_for "$want")"; then
         w_block "No such witness run: '$want'"
         return 1
     fi
-    if [ -f "$root/current" ]; then
-        local id; id="$(cat "$root/current")"
-        if [ -d "$root/runs/$id" ]; then echo "$root/runs/$id"; return 0; fi
-    fi
-    w_block "No current witness run. Start one:  witness.sh prepare <SHA>"
-    return 1
+    echo "$dir"
+    return 0
 }
 
 # Load a run into the process: sets WITNESS_RUN_DIR + WITNESS_RUN_ID.

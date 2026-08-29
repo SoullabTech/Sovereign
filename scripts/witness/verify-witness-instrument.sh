@@ -29,6 +29,11 @@
 #                             FAKE daemon (WITNESS_DOCKER_CMD) so the guards
 #                             that decide attribution are themselves tested.
 #
+#   J. Run selection    — a verb must never infer which run it belongs to.
+#                         Reproduces the 2026-08-29 pointer-drift observation:
+#                         a second prepare moved shared state between two of the
+#                         operator's verbs, silently changing their subject.
+#
 #   G. Self-consistency     — the instrument's own compose file and env sample
 #                             pass the guards they are subject to.
 #
@@ -533,6 +538,28 @@ MIG_DIR="$ROOT/witness/runs/$MIG_RUN_ID"
 ( WITNESS_RUN_DIR="$MIG_DIR"; [ -n "$(wm_get PRODUCTION_ISOLATION)" ] ) && ok "production isolation still witnessed on an aborted run" || bad "isolation check skipped by the abort"
 [ -f "$MIG_DIR/evidence/diagnostic/MIGRATIONS_FAILED.txt" ] && ok "migration output preserved as diagnostic" || bad "migration diagnostic missing"
 [ ! -d "$MIG_DIR/evidence/server" ] && ok "an aborted run produces no attributable evidence" || bad "aborted run wrote attributable evidence"
+
+# J — run selection is explicit, never inferred.
+sect "J. run selection"
+
+drv status >/dev/null 2>&1
+[ $? -eq 2 ] && ok "a verb with no run named refuses (exit 2)" || bad "verb inferred a run from shared state"
+
+drv WITNESS_RUN="$RUN_ID" status >/dev/null 2>&1
+[ $? -eq 0 ] && ok "WITNESS_RUN pins the run for a shell" || bad "WITNESS_RUN not honoured"
+
+drv status "$RUN_ID" >/dev/null 2>&1
+[ $? -eq 0 ] && ok "an explicit run argument works" || bad "explicit run argument rejected"
+
+drv WITNESS_RUN="$MIG_RUN_ID" status "$RUN_ID" >/dev/null 2>&1
+[ $? -eq 2 ] && ok "argument disagreeing with WITNESS_RUN is refused, not ranked" || bad "ambiguous run silently resolved"
+
+# The observed defect: another lane prepares a run, moving the shared pointer,
+# between two of the operator's verbs. A pinned verb must not notice.
+echo "$MIG_RUN_ID" > "$ROOT/witness/latest"
+echo "$MIG_RUN_ID" > "$ROOT/witness/current"
+PINNED_OUT="$(drv WITNESS_RUN="$RUN_ID" status 2>/dev/null | awk '$1=="run"{print $2; exit}')"
+[ "$PINNED_OUT" = "$RUN_ID" ] && ok "a pinned verb is unaffected by another lane moving the pointer" || bad "pointer drift changed a pinned verb's subject"
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # G. Self-consistency — the instrument's own artifacts pass their own guards

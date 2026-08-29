@@ -1,7 +1,7 @@
 # WITNESS-INSTRUMENT-V1 — scope, authorization boundary, phase exit
 
 **Lane:** Phase 0 of the MAIA Conversational Completion Program.
-**Status:** built · self-test 77/77 · **first device qualification RED — two instrument defects found and repaired** · phase exit NOT YET SATISFIED.
+**Status:** built · self-test 82/82 · **first device qualification RED — two instrument defects found and repaired** · phase exit NOT YET SATISFIED.
 **Entry point:** `scripts/witness/witness.sh` (see `scripts/witness/README.md`).
 
 ## Why this exists before any conversational lane
@@ -36,6 +36,7 @@ guards. The guards are the deliverable; the verbs are how they get invoked.
 | G7 | external networks, non-loopback ports, reserved production ports, protected hostnames in env |
 | G8 | writing runs, snapshots or evidence inside a protected project dir |
 | G9 | a missing, universal, too-short, false-of-candidate, or non-discriminating artifact assertion |
+| G0 | a verb invoked without an explicitly named run — selection is never inferred from shared state |
 | G10a | a container belonging to another run, or carrying no witness run label — no run may adopt another run's runtime |
 | G10 | unproven runtime provenance — wrong `GIT_COMMIT`, wrong `DEPLOY_LANE`, or the declared artifact absent from the running container |
 
@@ -285,3 +286,30 @@ EMPTY-DB MIGRATION REPLAY    OPEN, outside the harness
 PHASE 0                      does not close GREEN while that dependency is
                              knowingly unreplayable
 ```
+
+
+## Second device qualification — 2026-08-29, repairs A/B/C proven, one new defect
+
+Instrument `dbd8a113f`. Repairs A and C and B all passed against the real daemon:
+
+```
+A  fresh-run adoption   PASS  (run 20260829T205354Z, pre-provision verify exit 3)
+C  migration abort      PASS  (run 20260829T205439Z, provision exit 5,
+                               app explicitly NOT started, only <token>-postgres
+                               exists, protected state intact)
+B  collect fail-closed  PASS  (exit 3, NOT_ATTRIBUTABLE)
+```
+
+**Defect 4 — run selection was inferred from shared mutable state.** The run
+prepared and verified was `…205354Z`; `provision` and `collect`, invoked without
+a run argument, acted on `…205439Z`, because a second prepare had moved the
+shared `current` pointer in between. No container was stolen — the run-scoped
+runtime repair held — but the operator's commands silently changed subject, and
+the diagnostic check that followed read the wrong run directory.
+
+Same ownership principle as the container defect, one layer up: *"whichever run
+was prepared most recently" is not identity.* Repaired by removing inference
+entirely. A run is named by argument or by `WITNESS_RUN` — a shell variable no
+other lane can write. `latest` is written for humans to read and is never an
+input to a verb. An argument disagreeing with `WITNESS_RUN` is refused as
+ambiguous rather than ranked.

@@ -215,6 +215,10 @@ cmd_prepare() {
     w_dim "runtime:   project $(wm_get COMPOSE_PROJECT), containers ${WITNESS_PREFIX}-${run_token}-*"
     w_dim "assertion: '$(wm_get ARTIFACT_PATTERN)' in $(wm_get ARTIFACT_SOURCE_PATH) (discriminating: $(wm_get ARTIFACT_ASSERTION_DISCRIMINATING))"
     w_dim "run dir:   $run_dir"
+    w_rule
+    w_log "Pin this run for the rest of the sequence — verbs will not infer it:"
+    w_log "  export WITNESS_RUN=$run_id"
+    w_rule
     echo "$run_id"
     return "$W_EXIT_PASS"
 }
