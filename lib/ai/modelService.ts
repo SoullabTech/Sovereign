@@ -1,5 +1,6 @@
 // backend: lib/ai/modelService.ts
 import { generateWithLocalModel, checkLocalModelHealth, LocalChatParams } from './localModelClient';
+import { logStancePost } from '../sovereign/stanceReanchor';
 import { generateWithClaude, checkClaudeHealth } from './claudeClient';
 import { generateWithKimi, checkKimiHealth, isKimiAvailable } from './kimiClient';
 import { generateWithMultipleEngines, OrchestrationType } from './multiEngineOrchestrator';
@@ -74,6 +75,36 @@ export interface TextRequest {
  * Returns TextResult with provider metadata for sovereignty auditing.
  */
 export async function generateText(req: TextRequest): Promise<TextResult> {
+  const result = await generateTextInner(req);
+
+  // ── Constitutional adjudication — the provider-neutral seam ───────────────
+  //
+  // ONE adjudication site, covering every substrate above: anthropic, local,
+  // moonshot, multi-engine, and the sovereign router. It previously ran inside
+  // claudeClient only, so the substrate most in need of comparison was the one
+  // never measured.
+  //
+  // The seam gains NO authority here. It does not adjudicate — the existing
+  // deterministic egress guard does — and it does not read, branch on, or act
+  // on the verdict. The verdict rides upward as optional evidence and nothing
+  // downstream of generation depends on it. Failure is absorbed inside
+  // logStancePost, which returns null rather than throwing: the hot path must
+  // never break for the sake of observation.
+  //
+  // Canon: docs/canon/MAIA_BEHAVIORAL_PORTABILITY.md § Coverage precondition
+  // Attached in place rather than spread into a new object: callers (and
+  // tests/ai/modelService.sovereign-fallback.test.ts) rely on generateText
+  // returning the SAME result object the routing path produced. Observation
+  // must not change the identity of the thing observed.
+  const verdict = logStancePost(result.text, {
+    tier: result.provider?.tier,
+    reason: result.provider?.reason,
+  });
+  if (verdict) result.verdict = verdict;
+  return result;
+}
+
+async function generateTextInner(req: TextRequest): Promise<TextResult> {
   const t0 = Date.now();
 
   // ── Phase 1 sovereign routing guard ─────────────────────────────────────

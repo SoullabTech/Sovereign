@@ -46,7 +46,37 @@ export interface ProviderMeta {
   usage?: TokenUsage;
 }
 
+/**
+ * Constitutional verdict for one generated turn.
+ *
+ * Produced by the existing deterministic egress adjudicator (lib/sovereign/
+ * stanceDetector via stanceReanchor.logStancePost), invoked once at the
+ * provider-neutral seam. This type carries the verdict as OPTIONAL EVIDENCE —
+ * it confers no authority on modelService, which does not adjudicate anything
+ * itself and does not act on the verdict. The guard remains the adjudicator;
+ * the seam only makes its result provider-neutral and transportable.
+ *
+ * adjudicatorVersion is not decoration: evidence may only be compared within a
+ * single contract version, or detector evolution contaminates the comparison.
+ *
+ * Canon: docs/canon/MAIA_BEHAVIORAL_PORTABILITY.md
+ */
+export interface ConstitutionalVerdict {
+  /** 'boundary' | 'relational' = stance retained; 'captured' = operational over-reach */
+  stanceMode: 'boundary' | 'relational' | 'captured';
+  /** Ratified the diagnosis or directed the next move despite disclaiming tools */
+  authSlip: boolean;
+  /** Which adjudicator contract produced this verdict (STANCE_ADJUDICATOR_VERSION) */
+  adjudicatorVersion: string;
+}
+
 export interface TextResult {
   text: string;
   provider: ProviderMeta;
+  /**
+   * Constitutional verdict for this generation, when the seam adjudicated it.
+   * Optional and non-load-bearing: absent on paths that returned before the
+   * seam's adjudication, and never consulted by generation or routing.
+   */
+  verdict?: ConstitutionalVerdict;
 }

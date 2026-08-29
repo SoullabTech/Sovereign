@@ -4,6 +4,7 @@ import { incrementTurnCount, addConversationExchange, getConversationHistory } f
 import { buildMaiaWisePrompt, buildMaiaComprehensivePrompt, sanitizeMaiaOutput, MaiaContext } from './maiaVoice';
 import { PLATFORM_KNOWLEDGE_ADDENDUM } from './platformKnowledge';
 import { generateText, type ProviderMeta } from '../ai/modelService';
+import type { ConstitutionalVerdict } from '../ai/types';
 import { consciousnessOrchestrator } from '../orchestration/consciousness-orchestrator';
 import { consciousnessWrapper, type ConsciousnessContext } from '../consciousness/consciousness-layer-wrapper';
 import { elementalRouter } from '../consciousness/elemental-context-router';
@@ -574,6 +575,14 @@ export type MaiaResponse = {
   processingTimeMs?: number;
   audio?: Buffer;
   provider?: ProviderMeta;  // 🔮 Sovereignty auditing: which model served this response
+  /**
+   * ⚖️ Constitutional verdict from the deterministic egress adjudicator,
+   * carried up from the provider-neutral seam so a turn's substrate provenance
+   * and its constitutional outcome are recorded together. Evidence only —
+   * nothing in MAIA's behavior branches on it.
+   * Canon: docs/canon/MAIA_BEHAVIORAL_PORTABILITY.md
+   */
+  verdict?: ConstitutionalVerdict;
   stateVector?: StateVector;                  // 🌀 State vector reading from this turn
   practiceRecommendation?: PracticeRecommendation;  // 🌿 Practice recommendation from state vector
   metadata?: {
@@ -712,7 +721,7 @@ async function fastPathResponse(
   conversationHistory: any[],
   meta: Record<string, unknown>,
   mindContext?: MindContext
-): Promise<{ response: string; provider: ProviderMeta }> {
+): Promise<{ response: string; provider: ProviderMeta; verdict?: ConstitutionalVerdict }> {
   console.log(`⚡ FAST PATH: Simple response with core MAIA voice`);
 
   // 🧬 CONSCIOUSNESS POLICY (lightweight for FAST path)
@@ -1469,7 +1478,7 @@ Current context: Simple conversation turn - respond naturally and warmly.`;
   }
 
   // Use single model call with complete MAIA intelligence stack
-  const { text: response, provider } = await generateText({
+  const { text: response, provider, verdict } = await generateText({
     systemPrompt: baseSystemPrompt,
     userInput: contextPrompt,
     meta: {
@@ -1502,7 +1511,7 @@ Current context: Simple conversation turn - respond naturally and warmly.`;
   // 🌀 SELFLET PHASE 2F: Apply delivery guard
   validatedResponse = applySelfletDeliveryGuard(validatedResponse, selfletContext);
 
-  return { response: validatedResponse, provider };
+  return { response: validatedResponse, provider, verdict };
 }
 
 /**
@@ -1515,7 +1524,7 @@ async function corePathResponse(
   conversationHistory: any[],
   meta: Record<string, unknown>,
   mindContext?: MindContext
-): Promise<{ response: string; provider: ProviderMeta }> {
+): Promise<{ response: string; provider: ProviderMeta; verdict?: ConstitutionalVerdict }> {
   console.log(`🎯 CORE PATH: Normal MAIA conversation with light awareness`);
   const coreT0 = Date.now();
 
@@ -1876,7 +1885,7 @@ The current user has not provided their name. Address them as "friend" or "there
     // Field intelligence must never break the hot path
   }
 
-  const { text: response, provider: coreProvider } = await generateText({
+  const { text: response, provider: coreProvider, verdict: coreVerdict } = await generateText({
     systemPrompt: adaptivePrompt,
     userInput: input,
     meta: {
@@ -1937,7 +1946,7 @@ The current user has not provided their name. Address them as "friend" or "there
   // 🌀 SELFLET PHASE 2F: Apply delivery guard
   validatedResponse = applySelfletDeliveryGuard(validatedResponse, selfletContext);
 
-  return { response: validatedResponse, provider: coreProvider };
+  return { response: validatedResponse, provider: coreProvider, verdict: coreVerdict };
 }
 
 /**
@@ -1950,7 +1959,7 @@ async function deepPathResponse(
   conversationHistory: any[],
   meta: Record<string, unknown>,
   mindContext?: MindContext
-): Promise<{ response: string; consciousnessData?: any; socraticValidation?: any; provider?: ProviderMeta }> {
+): Promise<{ response: string; consciousnessData?: any; socraticValidation?: any; provider?: ProviderMeta; verdict?: ConstitutionalVerdict }> {
   console.log(`🧠 DEEP PATH: Full consciousness orchestration + Claude consultation activated`);
 
   // 🧬 CONSCIOUSNESS POLICY (full depth for DEEP path)
@@ -2996,6 +3005,11 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
     let consciousnessData: any = null;
     // 🔮 Request-local provider tracking (not module-level - safe for serverless concurrency)
     let provider: ProviderMeta | undefined;
+    // Request-local, concurrency-safe — same lifetime as `provider`. Held
+    // separately from it: substrate provenance and constitutional verdict are
+    // distinct parts of the evidence record and must not collapse into one
+    // field. Never read by generation or routing; evidence only.
+    let verdict: ConstitutionalVerdict | undefined;
     // 🧬 RCN tracking
     let rcnResult: MaiaRcnResult | null = null;
 
@@ -3156,6 +3170,7 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
         const fastResult = await fastPathResponse(sessionId, input, conversationHistory, meta, mindContext);
         rawResponse = fastResult.response;
         provider = fastResult.provider;
+        verdict = fastResult.verdict;
         // Log PFI telemetry if mind state was generated
         if (mindContext?.pfiMindState) {
           logPFITelemetry(mindContext.pfiMindState, 'FAST');
@@ -3167,6 +3182,7 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
         const coreResult = await corePathResponse(sessionId, input, conversationHistory, meta, mindContext);
         rawResponse = coreResult.response;
         provider = coreResult.provider;
+        verdict = coreResult.verdict;
         // Log PFI telemetry if mind state was generated
         if (mindContext?.pfiMindState) {
           logPFITelemetry(mindContext.pfiMindState, 'CORE');
@@ -3179,6 +3195,7 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
         rawResponse = deepResult.response;
         consciousnessData = deepResult.consciousnessData;
         provider = deepResult.provider; // May be undefined for DEEP path
+        verdict = deepResult.verdict;
         // Log PFI telemetry if mind state was generated
         if (mindContext?.pfiMindState) {
           logPFITelemetry(mindContext.pfiMindState, 'DEEP');
@@ -3191,6 +3208,7 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
         const fallbackResult = await fastPathResponse(sessionId, input, conversationHistory, meta, mindContext);
         rawResponse = fallbackResult.response;
         provider = fallbackResult.provider;
+        verdict = fallbackResult.verdict;
         if (mindContext?.pfiMindState) {
           logPFITelemetry(mindContext.pfiMindState, 'FAST');
         }
@@ -3933,6 +3951,7 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
       processingTimeMs,
       audio: audioResponse,
       provider,  // 🔮 Sovereignty auditing: request-local, concurrency-safe
+      verdict,   // ⚖️ Constitutional verdict for this turn — evidence, not authority
       stateVector: parsedStateVector || undefined,
       practiceRecommendation: practiceRec || undefined,
       metadata: hasMetadata ? responseMetadata : undefined

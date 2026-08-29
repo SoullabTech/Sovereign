@@ -23,6 +23,7 @@
  */
 
 import type { MemoryHealth } from './memoryHealth';
+import { randomUUID } from 'crypto';
 import { recordRuntimeTurn } from './substrateObservability';
 
 // ─── Route Registry ──────────────────────────────────────────────────────────
@@ -164,6 +165,15 @@ export type MaiaRuntimeContext = {
   member: MemberContextSummary;
   /** Provider configuration (env-derived, no network check) */
   provider: ProviderConfig;
+  /**
+   * Identity for this turn's runtime_events row, minted here at context-build
+   * time. The row is inserted BEFORE generation (this builder is an observer,
+   * not an orchestrator), so the constitutional verdict — which only exists
+   * after generation — is attached later by recordConstitutionalVerdict()
+   * addressing this id. Without it the verdict and the substrate provenance
+   * could not be joined onto one turn-level evidence record.
+   */
+  turnId: string;
   /** Summary of assembled prompt context blocks */
   promptBlock: PromptBlockSummary;
   /** Memory health as built by buildMemoryHealth() */
@@ -234,6 +244,7 @@ export function buildMaiaRuntimeContext(
     registryEntry,
     member,
     provider,
+    turnId: randomUUID(),
     promptBlock,
     memoryHealth,
     builtAt: new Date().toISOString(),

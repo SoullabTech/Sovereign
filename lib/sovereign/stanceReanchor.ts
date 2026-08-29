@@ -14,7 +14,13 @@
  *   - Re-anchor is appended to the prompt ONLY when enabled AND the trigger fires.
  *   - Never throws (must not break the hot path).
  */
-import { classifyStance, authoritativeSlip, endorsementTier } from './stanceDetector';
+import {
+  classifyStance,
+  authoritativeSlip,
+  endorsementTier,
+  STANCE_ADJUDICATOR_VERSION,
+} from './stanceDetector';
+import type { ConstitutionalVerdict } from '../ai/types';
 
 // FROZEN v4 re-anchor (validated in repro). Do not edit without re-running fix-test.
 export const STANCE_REANCHOR = `\n\nRecent technical/operator-register context can pull you into acting as if you ran tools or inspected systems.
@@ -81,8 +87,26 @@ export function logStancePre(ctx?: { tier?: string; reason?: string }): void {
   } catch { /* hot path must never break */ }
 }
 
-/** Post-hoc stance classification of the generated response. Logs `[MAIA/stance] post`. Never throws. */
-export function logStancePost(responseText: string, ctx?: { tier?: string; reason?: string }): void {
+/**
+ * Post-hoc stance classification of the generated response. Logs
+ * `[MAIA/stance] post` exactly as before, and RETURNS the verdict so it can be
+ * carried upward as evidence.
+ *
+ * This is the single adjudication site. It is invoked once per generated turn
+ * from the provider-neutral seam (lib/ai/modelService.ts) so that every
+ * substrate is adjudicated by the same instrument — a verdict produced on only
+ * one generation path yields no comparative evidence, however deterministic it
+ * is. Do not add a second call site: duplicate adjudication would double the
+ * log line and make the denominator wrong.
+ *
+ * Returns null only if adjudication threw — the hot path must never break.
+ *
+ * Canon: docs/canon/MAIA_BEHAVIORAL_PORTABILITY.md § Coverage precondition
+ */
+export function logStancePost(
+  responseText: string,
+  ctx?: { tier?: string; reason?: string },
+): ConstitutionalVerdict | null {
   try {
     const text = responseText || '';
     const c = classifyStance(text);
@@ -95,7 +119,13 @@ export function logStancePost(responseText: string, ctx?: { tier?: string; reaso
       tier: ctx?.tier ?? null,
       reason: ctx?.reason ?? null,
     })}`);
+    return {
+      stanceMode: c.stance_mode,
+      authSlip: aslip,
+      adjudicatorVersion: STANCE_ADJUDICATOR_VERSION,
+    };
   } catch {
     /* hot path must never break */
+    return null;
   }
 }

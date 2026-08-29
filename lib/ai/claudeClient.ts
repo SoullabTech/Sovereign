@@ -2,7 +2,7 @@
 // Primary AI provider for MAIA - Claude (Anthropic)
 
 import Anthropic from '@anthropic-ai/sdk';
-import { logStancePre, logStancePost } from '../sovereign/stanceReanchor';
+import { logStancePre } from '../sovereign/stanceReanchor';
 import { AIN_INTEGRATIVE_ALCHEMY_SENTINEL } from './prompts/ainIntegrativeAlchemy';
 import { logVoiceTierTelemetry } from '../db/voiceTierTelemetry';
 import type { TextResult, ProviderMeta } from './types';
@@ -169,8 +169,12 @@ export async function generateWithClaude(
     const latencyMs = Date.now() - t0;
     console.log(`✅ Claude (${selection.tier}): ${text.length} chars, ${latencyMs}ms`);
 
-    // 🪟 STANCE POST (Phase 1 denominator — classify the generated response, never throws).
-    logStancePost(text, { tier: selection.tier, reason: selection.reason });
+    // 🪟 STANCE POST moved to the provider-neutral seam (lib/ai/modelService.ts).
+    // It ran here for the Anthropic path only, so no other substrate was ever
+    // adjudicated and no comparative evidence could accumulate. Adjudication is
+    // now invoked once for every substrate; do not restore a call here, or the
+    // turn is adjudicated twice and the denominator is wrong.
+    // Canon: docs/canon/MAIA_BEHAVIORAL_PORTABILITY.md § Coverage precondition
 
     // Log telemetry (async, non-blocking)
     logVoiceTierTelemetry({

@@ -15,6 +15,25 @@
  * = a separate failure (raw internal contract in output). Deterministic; no LLM judge.
  */
 
+/**
+ * Adjudicator contract version — the provenance stamped onto every persisted
+ * constitutional verdict.
+ *
+ * BUMP THIS whenever a change to this file could change a verdict for the same
+ * utterance: a pattern added, removed, tightened, or loosened; a gate changed;
+ * the capture rule itself revised. Do not bump for comments, formatting, or
+ * type-only edits.
+ *
+ * Why it exists: detectors improve. Without provenance, a verdict recorded
+ * under an older, less discerning contract is indistinguishable in the database
+ * from one recorded under a newer one, and longitudinal comparison silently
+ * becomes contaminated by detector evolution rather than substrate difference.
+ * A verifier may only compare evidence within a single contract version.
+ *
+ * Canon: docs/canon/MAIA_BEHAVIORAL_PORTABILITY.md § Adjudicator provenance
+ */
+export const STANCE_ADJUDICATOR_VERSION = 'stance/v4' as const;
+
 export type StanceMode = 'boundary' | 'relational' | 'captured';
 export interface StanceResult {
   stance_retained: boolean;

@@ -133,6 +133,7 @@ import { formatPriorExchangesForPrompt, summarizePriorExchangesForLog, computeLa
 import { formatMarkedEpisodesForPrompt, summarizeMarkedEpisodesForLog } from '@/lib/maia/episodicRecallBlock';
 // 🔐 De-frag step 3 — runtime contract: every getMaiaResponse() call must pass through this
 import { buildMaiaRuntimeContext, formatRuntimeContextForResponse } from '@/lib/maia/maiaRuntimeContext';
+import { recordConstitutionalVerdict } from '@/lib/maia/substrateObservability';
 // 🔐 De-frag step 5 — provider health guard: throws before generation, never soft-returns
 import { assertProviderAvailable, ProviderUnavailableError } from '@/lib/maia/assertProviderAvailable';
 // 🌀 Cut 2 — Spiral Orientation (read-only developmental context)
@@ -1267,6 +1268,22 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
       }),
       SOVEREIGN_TIMEOUT_MS,
       start,
+    );
+
+    // ⚖️ MAIA Behavioral Portability — attach this turn's constitutional verdict
+    // to the runtime_events row minted at context-build time, so substrate
+    // provenance and constitutional outcome land on ONE turn-level record.
+    //
+    // The verdict rode up from the provider-neutral seam; nothing above read or
+    // branched on it. verdict_provider is the substrate that ACTUALLY served
+    // this turn, which diverges from runtimeContext.provider (read from env at
+    // build time) exactly when fallback fires — the case portability most needs
+    // recorded correctly. Fire-and-forget, never throws, suppressed under
+    // Sanctuary inside the recorder.
+    recordConstitutionalVerdict(
+      runtimeContext,
+      orchestratorResult?.verdict,
+      orchestratorResult?.provider?.provider ?? null,
     );
 
     const duration = Date.now() - start;

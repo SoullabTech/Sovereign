@@ -23,6 +23,7 @@
  */
 
 import type { MaiaRuntimeContext } from './maiaRuntimeContext';
+import type { ConstitutionalVerdict } from '@/lib/ai/types';
 import type { LayerStatus } from './memoryHealth';
 import { query } from '@/lib/db/postgres';
 
@@ -90,10 +91,73 @@ const MAX_TURNS = 100;
  * Fire-and-forget — never throws, never blocks the calling route.
  */
 export function recordRuntimeTurn(ctx: MaiaRuntimeContext): void {
-  void insertRuntimeEvent(ctx).catch((err: unknown) => {
+  const pending = insertRuntimeEvent(ctx).catch((err: unknown) => {
     const message = err instanceof Error ? err.message : String(err);
     console.warn('[substrate] runtime_events insert failed:', message);
   });
+  // Held so a later verdict UPDATE cannot race ahead of its own INSERT: the row
+  // is written before generation, the verdict arrives after. Cleared on settle,
+  // so the map holds only turns currently in flight.
+  PENDING_INSERTS.set(ctx.turnId, pending);
+  void pending.finally(() => PENDING_INSERTS.delete(ctx.turnId));
+}
+
+const PENDING_INSERTS = new Map<string, Promise<void>>();
+
+/**
+ * Attach the constitutional verdict to this turn's already-written row.
+ *
+ * Fire-and-forget, never throws, never blocks the route — identical discipline
+ * to recordRuntimeTurn. Called after generation, because the verdict does not
+ * exist before it.
+ *
+ * SANCTUARY: fail-closed. `provider` is operational metadata, but stanceMode
+ * and authSlip are classifications DERIVED FROM MEMBER CONTENT. The live egress
+ * guard still adjudicates a sanctuary turn — MAIA needs that protection on
+ * every turn — but the verdict dies with the turn rather than becoming durable
+ * evidence. Suppression is unconditional and takes no argument that could be
+ * forged to disable it: a sanctuary turn's verdict is never persisted, and the
+ * portability experiment never becomes a reason to increase persistence in the
+ * one room designed to minimize it.
+ *
+ * Canon: CLAUDE.md § Sanctuary Mode (invariants 1, 3, 6) ·
+ *        docs/canon/MAIA_BEHAVIORAL_PORTABILITY.md
+ */
+export function recordConstitutionalVerdict(
+  ctx: MaiaRuntimeContext,
+  verdict: ConstitutionalVerdict | undefined,
+  servedProvider: string | null,
+): void {
+  if (!verdict) return;
+  if (ctx.member.isSanctuary) {
+    // Metadata-only refusal log: names the store and nothing about the turn.
+    console.log('[substrate] verdict suppressed (sanctuary) — not persisted');
+    return;
+  }
+  void updateConstitutionalVerdict(ctx.turnId, verdict, servedProvider).catch(
+    (err: unknown) => {
+      const message = err instanceof Error ? err.message : String(err);
+      console.warn('[substrate] verdict update failed:', message);
+    },
+  );
+}
+
+async function updateConstitutionalVerdict(
+  turnId: string,
+  verdict: ConstitutionalVerdict,
+  servedProvider: string | null,
+): Promise<void> {
+  const pending = PENDING_INSERTS.get(turnId);
+  if (pending) await pending;
+  await query(
+    `UPDATE runtime_events
+        SET stance_mode = $2,
+            auth_slip = $3,
+            stance_adjudicator_version = $4,
+            verdict_provider = $5
+      WHERE turn_id = $1`,
+    [turnId, verdict.stanceMode, verdict.authSlip, verdict.adjudicatorVersion, servedProvider],
+  );
 }
 
 async function insertRuntimeEvent(ctx: MaiaRuntimeContext): Promise<void> {
@@ -115,13 +179,15 @@ async function insertRuntimeEvent(ctx: MaiaRuntimeContext): Promise<void> {
 
   await query(
     `INSERT INTO runtime_events (
+      turn_id,
       built_at, route_id, route_known, registry_status,
       member_id_prefix, is_sanctuary,
       provider, provider_model, provider_configured, provider_fallback_active,
       prompt_block_chars, prompt_block_layers,
       memory_continuity_confidence, memory_layers
-    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)`,
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)`,
     [
+      ctx.turnId,
       ctx.builtAt,
       ctx.routeId,
       ctx.routeKnown,
