@@ -73,10 +73,19 @@ export type BeginResult =
  * `conflict` is not an error to retry. stale_base means the draft moved under
  * us and only the writer can decide what to keep; key_reuse means this client
  * has a defect. Retrying either would loop.
+ *
+ * `unauthorized` is separate from `error` because the writer's next move is
+ * different and only they can make it. A session that expired mid-manuscript
+ * (a beta writer came back to their book after a week away) answered 401 to
+ * every autosave; folded into `error`, the surface said "could not save just
+ * now" and offered a retry that could never succeed, for as long as they kept
+ * typing. It is recoverable — sign in again and the same queued content saves
+ * — so it does NOT stop the saver the way a conflict does.
  */
 export type SaveResult =
   | { kind: 'ok'; revisionCount: number | null; revisionId: number | null; updatedAt: string | null }
   | { kind: 'conflict'; reason: 'stale_base' | 'idempotency_key_reuse'; currentRevisionId: number }
+  | { kind: 'unauthorized' }
   | { kind: 'error' };
 
 export type RevisionsResult = { kind: 'ok'; revisions: RevisionSummary[] } | { kind: 'error' };
@@ -179,6 +188,7 @@ export async function putDraft(
       body: JSON.stringify(body),
     });
     if (res.status === 409) return readConflict(asRecord(await res.json().catch(() => ({}))));
+    if (res.status === 401) return { kind: 'unauthorized' };
     if (!res.ok) return { kind: 'error' };
     const data = asRecord(await res.json());
     return {
@@ -229,7 +239,14 @@ export async function restoreRevision(
 
 // ---- single-flight, ordered autosave -----------------------------------
 
-export type SaverState = 'idle' | 'unsaved' | 'saving' | 'saved' | 'error' | 'conflict';
+export type SaverState =
+  | 'idle'
+  | 'unsaved'
+  | 'saving'
+  | 'saved'
+  | 'error'
+  | 'conflict'
+  | 'unauthorized';
 
 export interface SaverCallbacks {
   onState(state: SaverState): void;
@@ -240,6 +257,11 @@ export interface SaverCallbacks {
   }): void;
   /** The draft moved elsewhere, or this client reused a key. Autosave stops. */
   onConflict?(info: { reason: 'stale_base' | 'idempotency_key_reuse'; currentRevisionId: number }): void;
+  /**
+   * The session is no longer valid. Nothing was saved and nothing was lost —
+   * the content stays queued, and signing in again makes the same save work.
+   */
+  onUnauthorized?(): void;
 }
 
 export interface DraftSaver {
@@ -341,6 +363,15 @@ export function createDraftSaver(
       stopped = true;
       cb.onConflict?.({ reason: result.reason, currentRevisionId: result.currentRevisionId });
       cb.onState('conflict');
+      return;
+    }
+    if (result.kind === 'unauthorized') {
+      // Recoverable, unlike a conflict: the lane stays OPEN so the next flush
+      // — the writer's own "Save now", or their next keystroke after signing
+      // back in — persists this same content. Nothing is dequeued, so nothing
+      // written while signed out is dropped.
+      cb.onUnauthorized?.();
+      cb.onState('unauthorized');
       return;
     }
     if (result.kind === 'ok') {

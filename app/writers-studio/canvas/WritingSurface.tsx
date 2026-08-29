@@ -386,11 +386,13 @@ const WritingSurface = forwardRef<WritingSurfaceHandle, WritingSurfaceProps>(
         ? 'saving…'
         : saveState === 'unsaved'
           ? '·'
-          : saveState === 'error'
-            ? "couldn't save"
-            : updatedAt
-              ? `saved · ${formatWhen(updatedAt)}`
-              : 'saved';
+          : saveState === 'unauthorized'
+            ? 'signed out — nothing saved since you were'
+            : saveState === 'error'
+              ? "couldn't save"
+              : updatedAt
+                ? `saved · ${formatWhen(updatedAt)}`
+                : 'saved';
 
     return (
       <div className="w-full max-w-[760px]">
@@ -398,13 +400,53 @@ const WritingSurface = forwardRef<WritingSurfaceHandle, WritingSurfaceProps>(
             writing actions and nothing else. The rest of the toolbar waits
             for the founder's button-pass. */}
         <div
-          className="flex items-center justify-end gap-3 text-[10.5px] mb-2 opacity-45 hover:opacity-95 transition-opacity"
+          /* The margin holds itself back until looked at — EXCEPT when a save
+             has failed. CSS opacity compounds, so a bright child inside a 45%
+             parent is still 45%: the lift has to happen here (W-4). */
+          className={`flex items-center justify-end gap-3 text-[10.5px] mb-2 transition-opacity ${
+            saveState === 'error' || saveState === 'unauthorized'
+              ? 'opacity-100'
+              : 'opacity-45 hover:opacity-95'
+          }`}
           style={{ fontFamily: 'ui-sans-serif, system-ui, sans-serif' }}
         >
           <span>
             ~{pageEstimate(content.length)} page{pageEstimate(content.length) === 1 ? '' : 's'}
           </span>
-          <span aria-live="polite">{status}</span>
+          {/* W-4: a save that FAILED is not a dim marginal fact — this line
+              is otherwise held at low opacity until hovered. */}
+          <span
+            role="status"
+            aria-live="polite"
+            style={
+              saveState === 'error' || saveState === 'unauthorized'
+                ? { color: PRESS.accent }
+                : undefined
+            }
+          >
+            {status}
+          </span>
+          {saveState === 'unauthorized' && (
+            /* The session ended under a writer who is still writing. Their
+               words are still queued, so signing in opens in a NEW tab — the
+               sheet stays on screen until they come back and save it. */
+            <>
+              <a
+                href="/signin"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline underline-offset-2"
+              >
+                sign in (opens a new tab)
+              </a>
+              <button
+                onClick={() => saverRef.current?.flush()}
+                className="underline underline-offset-2"
+              >
+                then save
+              </button>
+            </>
+          )}
           {saveState === 'error' && (
             <button
               onClick={() => saverRef.current?.flush()}

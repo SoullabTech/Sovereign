@@ -236,11 +236,13 @@ export default function Worktable({ manuscriptId, onMeta, onCheckpointed }: Work
       ? 'saving…'
       : saveState === 'unsaved'
         ? '·'
-        : saveState === 'error'
-          ? "couldn't save — your words are held here"
-          : updatedAt
-            ? `saved · ${formatWhen(updatedAt)}`
-            : 'saved';
+        : saveState === 'unauthorized'
+          ? 'signed out — nothing saved since you were'
+          : saveState === 'error'
+            ? "couldn't save — your words are held here"
+            : updatedAt
+              ? `saved · ${formatWhen(updatedAt)}`
+              : 'saved';
 
   return (
     <div className="flex-1 flex flex-col min-h-0">
@@ -250,9 +252,45 @@ export default function Worktable({ manuscriptId, onMeta, onCheckpointed }: Work
         <span className="opacity-40">
           ~{pageEstimate(content.length)} page{pageEstimate(content.length) === 1 ? '' : 's'}
         </span>
-        <span className="opacity-40" aria-live="polite">
+        {/* W-4: a save that FAILED is not a dim marginal fact. Everything
+            else on this line stays quiet; this does not. */}
+        <span
+          className={
+            saveState === 'error' || saveState === 'unauthorized' ? 'opacity-100' : 'opacity-40'
+          }
+          style={
+            saveState === 'error' || saveState === 'unauthorized'
+              ? { color: PRESS.accent }
+              : undefined
+          }
+          role="status"
+          aria-live="polite"
+        >
           {status}
         </span>
+        {saveState === 'unauthorized' && (
+          /* The session ended under a writer who is still writing. The words
+             on the table are still queued, so the one thing this must not do
+             is take them off the screen: signing in opens in a NEW tab, and
+             the draft stays exactly where it is until they come back and
+             save it. */
+          <>
+            <a
+              href="/signin"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline underline-offset-4 opacity-80 hover:opacity-100"
+            >
+              sign in (opens a new tab)
+            </a>
+            <button
+              onClick={() => saverRef.current?.flush()}
+              className="underline underline-offset-4 opacity-60 hover:opacity-90"
+            >
+              then save
+            </button>
+          </>
+        )}
         {saveState === 'error' && (
           <button
             onClick={() => saverRef.current?.flush()}
