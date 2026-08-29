@@ -470,6 +470,47 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
   const lastVisibilityChangeAtRef = useRef<number>(0);
 
   // Convenience aliases (kept for backward compat with existing code)
+  /**
+   * DESKTOP-SOVEREIGN-STT-LIFECYCLE-01 — the sovereign capture, owned by the
+   * component rather than by one async function's local scope.
+   *
+   * ⛔ THE DEFECT. The Desktop branch held its MediaStream in `let stream`, and
+   * `stopListening()` only ever knew about `micStreamRef.current`. So component
+   * teardown could not reach an in-flight sovereign capture: a member who left
+   * `/maia` mid-sentence left a recorder running behind another screen, which
+   * then POSTed their audio to `/api/voice/transcribe-simple` and dispatched a
+   * transcript into a conversation they had walked away from.
+   *
+   * ⛔ THE GENERATION TOKEN is the half that a stream reference alone does not
+   * solve. Aborting stops the work; it does not un-schedule a promise that has
+   * already resolved. Every result is checked against the generation it was
+   * started under, so a completion that arrives after revocation is dropped
+   * rather than dispatched — and a NEWER capture's teardown cannot be undone by
+   * an older one's `finally`.
+   */
+  const sovereignCaptureRef = useRef<{
+    generation: number;
+    stream: MediaStream | null;
+    controller: AbortController;
+  } | null>(null);
+  const sovereignGenerationRef = useRef(0);
+
+  /**
+   * Revoke the active sovereign capture. Idempotent, synchronous, safe to call
+   * when there is none.
+   */
+  const revokeSovereignCapture = useCallback((reason: string) => {
+    const active = sovereignCaptureRef.current;
+    // Bumping FIRST means any in-flight completion is already stale by the time
+    // it returns, even if abort/stop below throws.
+    sovereignGenerationRef.current += 1;
+    if (!active) return;
+    sovereignCaptureRef.current = null;
+    try { active.controller.abort(); } catch { /* already aborted */ }
+    try { active.stream?.getTracks().forEach((t) => t.stop()); } catch { /* already stopped */ }
+    console.log(`🛡️ [sovereign capture] revoked (${reason})`);
+  }, []);
+
   const handsFreeActiveRef = useRef(true);
   const lastSpeechHeardAtRef = useRef<number>(0);
 
@@ -3393,6 +3434,19 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
           throw new Error('MICROPHONE_UNAVAILABLE');
         }
 
+        // ⛔ REGISTERED BEFORE ANY AWAIT. Between getUserMedia resolving and this
+        // line there must be nothing that can suspend — otherwise a teardown
+        // landing in that window would find no capture to revoke and the stream
+        // would outlive the component that opened it.
+        revokeSovereignCapture('superseded');
+        const captureGeneration = sovereignGenerationRef.current;
+        const captureController = new AbortController();
+        sovereignCaptureRef.current = {
+          generation: captureGeneration,
+          stream,
+          controller: captureController,
+        };
+
         isProcessingRef.current = false;
         setIsListening(true);
         isListeningRef.current = true;
@@ -3403,7 +3457,18 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
 
         try {
           const { recordAndTranscribe } = await import('@/lib/voice/androidVoiceFallback');
-          const result = await recordAndTranscribe(stream);
+          const result = await recordAndTranscribe(stream, { signal: captureController.signal });
+
+          // ⛔ THE STALE-RESULT GATE. Abort stops the work; it cannot un-resolve
+          // a promise already in flight. If this capture's authority was revoked
+          // while we were awaiting — the member left `/maia`, or a newer capture
+          // superseded this one — the result is dropped here. Nothing reaches
+          // witnessDispatch, onTranscript, or the member's conversation.
+          if (sovereignGenerationRef.current !== captureGeneration) {
+            console.log('🛡️ [sovereign capture] stale result discarded');
+            return;
+          }
+
           if (result.ok && result.transcript) {
             console.log(`✅ [web whisper] Transcript: ${result.transcript.length} chars, ${result.durationMs}ms`);
             addDebug(`✅ web whisper: ${result.transcript.length} chars`);
@@ -3429,12 +3494,22 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
             userMessage: 'Voice input ran into a problem. You can type to MAIA instead.',
           });
         } finally {
+          // Always release THIS capture's tracks.
           stream.getTracks().forEach((t) => t.stop());
-          setIsListening(false);
-          isListeningRef.current = false;
-          setMicState('IDLE', 'web_whisper_done');
-          onRecordingStateChange?.(false);
-          isStartingRef.current = false;
+          // ⛔ Only clear the registration if it is still ours. A newer capture
+          // may already have taken the slot, and this teardown must not undo it.
+          if (sovereignCaptureRef.current?.generation === captureGeneration) {
+            sovereignCaptureRef.current = null;
+          }
+          // ⛔ Likewise the UI state: a superseded capture must not drag a live
+          // one back to IDLE.
+          if (sovereignGenerationRef.current === captureGeneration) {
+            setIsListening(false);
+            isListeningRef.current = false;
+            setMicState('IDLE', 'web_whisper_done');
+            onRecordingStateChange?.(false);
+            isStartingRef.current = false;
+          }
         }
         return;
       }
@@ -3612,6 +3687,13 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
   const stopListening = useCallback(async (options?: { userExitMode?: boolean }) => {
     console.log('🛑 [ContinuousConversation] stopListening called', options?.userExitMode ? '(USER EXIT MODE)' : '(internal)');
 
+    // ⛔ DESKTOP-SOVEREIGN-STT-LIFECYCLE-01 — FIRST, and UNCONDITIONALLY.
+    // The sovereign capture is the one this function used not to own: it lived
+    // in a local `let stream` that `micStreamRef` never saw. Revoking it only
+    // on an explicit user exit would leave every other stop path — navigation,
+    // supersession, error recovery — unable to reach it.
+    revokeSovereignCapture('stopListening');
+
     // 🔥 FIX: Only clear wantsContinuousConversation when user explicitly exits voice mode
     if (options?.userExitMode) {
       console.log('🚪 [ContinuousConversation] User explicitly exited voice mode - clearing wantsContinuousConversationRef');
@@ -3747,7 +3829,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     //   success: true,
     //   mode: 'continuous'
     // });
-  }, [onTranscript, onRecordingStateChange, getWebSession]);
+  }, [onTranscript, onRecordingStateChange, getWebSession, revokeSovereignCapture]);
 
   // Toggle listening
   const toggleListening = useCallback(() => {
@@ -4007,6 +4089,10 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     // A fresh engagement starts with no previous utterance to be the same as.
     resetDispatchProvenance();
     return () => {
+      // ⛔ Revoked explicitly as well as via stopListening(), so the guarantee
+      // does not depend on that function's internals staying as they are. Both
+      // calls are idempotent.
+      revokeSovereignCapture('unmount');
       stopListening();
       // Full lifecycle teardown: discards any remaining recognition instance
       // (handlers detached — no restart can fire post-unmount) and removes the
