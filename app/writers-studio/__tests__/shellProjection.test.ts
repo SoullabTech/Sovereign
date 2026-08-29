@@ -21,7 +21,9 @@ const code = strip(canvas);
 describe('the real Canvas renders through the accepted WS2-02 system', () => {
   it('draws on the accepted ground ramp, not the raw legacy gradient', () => {
     expect(code).toContain('GROUND.base');
-    expect(code).toContain('GROUND.field');
+    // The field's ground now comes from StudioSurface level="field" rather than
+    // a raw token on a <main> — the primitive owns the ramp, not the call site.
+    expect(code).toMatch(/StudioSurface[\s\S]{0,80}level="field"/);
     expect(code).not.toContain('PRESS.bg');
   });
 
@@ -58,36 +60,41 @@ describe('the runtime rail stays honest', () => {
   });
 });
 
-describe('each drawer renders under the contract it actually is', () => {
+describe('each surface renders under the contract it actually is', () => {
   /*
-   * The first projection gave every open drawer role="manuscript-outline".
-   * `role` is not styling — it selects the design-contract entry and is
-   * emitted as data-panel-role, so Materials announced itself as a manuscript
-   * outline and History did too. These four mappings are the repair.
+   * WS2-03A mapped four drawers to panel roles. WS2-03B dissolved the drawer
+   * spine into the reference composition, so the mapping is now direct: each
+   * region IS the panel it claims to be, and the roles are asserted where they
+   * are rendered rather than in a lookup table.
+   *
+   * The rule the old table protected still holds — no region may announce a
+   * contract it is not. Materials is `materials`, MAIA is `maia`, the outline
+   * is `manuscript-outline`.
    */
-  it('maps materials, structure and history to their real panel roles', () => {
-    expect(code).toContain("materials: 'materials'");
-    expect(code).toContain("structure: 'manuscript-outline'");
-    expect(code).toContain("history: 'versions'");
+  it('names each panel by its real role', () => {
+    expect(code).toMatch(/role="manuscript-outline"/);
+    expect(code).toMatch(/role="materials"/);
+    expect(code).toMatch(/role="maia"/);
   });
 
-  it('gives Work no PanelRole, because the contract has none', () => {
-    // Inventing a 'work' role to fill the gap would be the same error in the
-    // other direction. StudioSurface gives a truthful surface instead.
-    expect(code).toContain('work: null');
-    expect(code).toContain('StudioSurface');
+  it('invents no Work panel — the contract has none', () => {
+    // WorkDrawer's capability survives inside the manuscript panel rather than
+    // acquiring a role of its own.
+    expect(code).toContain('WorkDrawer');
+    expect(code).not.toMatch(/role="work"/);
     expect(PANELS.map((p) => p.role)).not.toContain('work');
   });
 
-  it('no longer hardcodes one role for every drawer', () => {
-    expect(code).not.toMatch(/role="manuscript-outline"/);
-    expect(code).toContain('DRAWER_PANEL_ROLE[drawer]');
+  it('gives Versions real content rather than a panel role it does not fill', () => {
+    // Versions moved to the lower band as read revisions, not a drawer.
+    expect(code).toContain('loadRevisions');
+    expect(code).toContain('revisions.slice');
   });
 
-  it('names only roles the contract actually defines', () => {
-    const declared = new Set(PANELS.map((p) => p.role));
-    for (const role of ['materials', 'manuscript-outline', 'versions']) {
-      expect(declared.has(role as never)).toBe(true);
+  it('keeps every contextual panel dismissible and recallable', () => {
+    for (const setter of ['setOutlineOpen', 'setMaiaOpen', 'setMaterialsOpen']) {
+      expect(code).toContain(`${setter}(false)`);
+      expect(code).toContain(`${setter}(true)`);
     }
   });
 });
@@ -111,5 +118,70 @@ describe('WS2-03A stops at the seam', () => {
     for (const drawer of ['WorkDrawer', 'MaterialsDrawer', 'Worktable']) {
       expect(code).toContain(drawer);
     }
+  });
+});
+
+describe('WS2-03B — identity is honoured or refused, never substituted', () => {
+  /*
+   * Runtime established the cost of the old rule. A member asked for
+   * a3ae67fd — "Elemental Alchemy (KDP print)", 174 sections, their own — and
+   * the room served a different, empty manuscript while reporting success.
+   * The page looked fine and was the wrong book.
+   */
+  it('no longer falls through to manuscripts[0] when a manuscript was named', () => {
+    expect(code).not.toMatch(/find\(\(m\) => m\.id === requested\) \?\? manuscripts\[0\]/);
+  });
+
+  it('resolves an explicit id exactly, or to nothing', () => {
+    expect(code).toMatch(/requested !== null\s*\?\s*\(manuscripts\.find\(\(m\) => m\.id === requested\) \?\? null\)/);
+  });
+
+  it('still opens the most recent when no identity was asserted', () => {
+    // Not naming a manuscript substitutes no identity, so this is safe.
+    expect(code).toMatch(/:\s*\(manuscripts\[0\] \?\? null\)/);
+  });
+
+  it('tells the member, rather than showing a different manuscript', () => {
+    expect(code).toContain('identityRefused');
+    expect(code).toContain('That manuscript is not one of yours');
+  });
+});
+
+describe('WS2-03B — the reference geometry reaches the real room', () => {
+  it('lays the five measured columns', () => {
+    for (const col of [
+      'rail',
+      'outlinePanel',
+      'writingField',
+      'maiaPanel',
+      'materialsPanel',
+    ]) {
+      expect(code).toContain(`columnFlex('${col}')`);
+    }
+  });
+
+  it('carries the five modes, with unbuilt ones not pretending to be links', () => {
+    for (const mode of ['Write', 'Develop', 'Explore', 'Review', 'Publish']) {
+      expect(code).toContain(`'${mode}'`);
+    }
+    // Explore is Studio Home, which is real. The rest carry no href.
+    expect(code).toMatch(/label: 'Explore', href: '\/writers-studio'/);
+    expect(code).toMatch(/label: 'Develop' \}/);
+    expect(code).toMatch(/label: 'Publish' \}/);
+  });
+
+  it('has dissolved the legacy drawer spine', () => {
+    // 03B's brief: do not skin the old composition. The spine, its DrawerId
+    // type and its one-at-a-time state are gone.
+    expect(code).not.toContain('DrawerId');
+    expect(code).not.toContain('drawerBody');
+    expect(code).not.toMatch(/writing-mode:vertical-rl/);
+  });
+
+  it('exposes no capability that does not exist', () => {
+    // Goals has no substrate, so the lower band does not draw it.
+    expect(code).not.toMatch(/bandLabel\('Goals'\)/);
+    // Conversations stays unavailable until Work context survives the handoff.
+    expect(code).not.toMatch(/href="\/maia"/);
   });
 });

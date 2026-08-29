@@ -462,6 +462,27 @@ export function writingFieldLayout(
   return out;
 }
 
+/**
+ * The measured proportions as CSS flex, for real runtime.
+ *
+ * writingFieldLayout needs a viewport width, which a server render does not
+ * have. Growing each column in proportion to its measured fraction reaches the
+ * same geometry without one: after the gaps are taken out, flex distributes
+ * what remains in exactly the measured ratio, at any width.
+ *
+ * `minWidth: 0` matters more than it looks — without it a flex child refuses to
+ * shrink below its content, and a long manuscript line would push the writing
+ * field past its share and silently break the composition.
+ */
+export function columnFlex(column: keyof typeof COLUMN_FRACTION) {
+  return {
+    flexGrow: COLUMN_FRACTION[column],
+    flexShrink: 1,
+    flexBasis: 0,
+    minWidth: 0,
+  } as const;
+}
+
 /** Resolve a measured proportion at a given viewport width. */
 export function columnPx(column: keyof typeof COLUMN_FRACTION, viewportWidth: number): number {
   return Math.round(COLUMN_FRACTION[column] * viewportWidth);

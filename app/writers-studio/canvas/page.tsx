@@ -4,11 +4,20 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { apiFetch } from '@/lib/http/apiBase';
 import { PRESS, SERIF } from '../pressTheme';
-import { GROUND, INK, RULE, SPACE, type PanelRole } from '../studioTheme';
+import {
+  columnFlex,
+  GOLD,
+  GROUND,
+  INK,
+  MAIA_ACCENT,
+  RADIUS,
+  RULE,
+  SPACE,
+} from '../studioTheme';
 import { StudioPanel } from '../studio/StudioPanel';
 import { StudioSurface } from '../studio/StudioSurface';
 import { StudioRail } from '../studio/StudioRail';
-import { StudioText } from '../studio/StudioType';
+import { StudioText, typeStyle } from '../studio/StudioType';
 import { IMPORT_HREF, SOURCE_HREF } from '../studioMap';
 import { UNTITLED_EXPRESSION } from '../shellIdentity';
 import { arrivalWork, useLivingWorks } from '../useLivingWorks';
@@ -80,29 +89,7 @@ import MaterialsDrawer from './MaterialsDrawer';
  * not match 04's sixteen. The full canonical grammar stays in the fixture.
  */
 
-type DrawerId = 'work' | 'materials' | 'structure' | 'history';
 
-/**
- * WS2-03A correction — which panel contract each drawer actually is.
- *
- * The first projection rendered every open drawer as
- * `StudioPanel role="manuscript-outline"`. That is not a styling shortcut:
- * `role` selects the design-contract entry and is emitted to the DOM as
- * `data-panel-role`, so the Materials drawer announced itself as a manuscript
- * outline and History did too. Exactly the semantic drift these primitives
- * exist to prevent, introduced by the seam meant to carry them.
- *
- * `work` maps to no PanelRole on purpose. There is no Work panel in the
- * contract and inventing one to fill the gap would be the same error in the
- * other direction — so it renders through StudioSurface, which gives a
- * truthful surface without asserting panel semantics it does not have.
- */
-const DRAWER_PANEL_ROLE: Record<DrawerId, PanelRole | null> = {
-  work: null,
-  materials: 'materials',
-  structure: 'manuscript-outline',
-  history: 'versions',
-};
 type ListPhase = 'loading' | 'ready' | 'none' | 'unauthorized' | 'error';
 
 /** Same rule as Studio Home: return by identity, never by position. */
@@ -146,25 +133,56 @@ export default function WriterCanvasPage() {
     };
   }, []);
 
-  // By identity when asked; most recent otherwise — degrading, not stranding,
-  // when the asked-for id is gone.
+  /**
+   * ── IDENTITY IS HONOURED OR REFUSED. NEVER SUBSTITUTED. ──────────────────
+   *
+   * This previously read `find(...) ?? manuscripts[0]`, and runtime showed what
+   * that costs. A member asked for a3ae67fd — "Elemental Alchemy (KDP print)",
+   * 174 sections, their own — and the room put a different, empty manuscript on
+   * the table and said "the most recent of your 4 manuscripts is on the table".
+   * The page looked fine. It was the wrong book. Nothing signalled it.
+   *
+   * That fallback is unremarkable until `?m=` names something. Once a producer
+   * has named a manuscript, an unresolvable name is an identity FAILURE, and
+   * turning it into plausible-looking wrong content is worse than an error,
+   * because an error can be seen.
+   *
+   * So: named and found → that manuscript. Named and not found → nothing, and
+   * the room says so. Not named at all → most recent, which substitutes no
+   * identity because none was asserted.
+   *
+   * The root cause of why a valid owned id failed to resolve is still open in
+   * the WS2-01 identity lane. This is the safety half, and it stands whatever
+   * that investigation finds.
+   */
   const manuscript =
     listPhase === 'ready'
-      ? (manuscripts.find((m) => m.id === requested) ?? manuscripts[0] ?? null)
+      ? requested !== null
+        ? (manuscripts.find((m) => m.id === requested) ?? null)
+        : (manuscripts[0] ?? null)
       : null;
 
-  const [drawer, setDrawer] = useState<DrawerId | null>(null);
-  const [windowOpen, setWindowOpen] = useState(false);
+  /** Named a manuscript, and it is not among the member's own. */
+  const identityRefused =
+    listPhase === 'ready' && requested !== null && manuscript === null;
+
+  /* Contextual panels. Open by default because 04 shows the room working, and
+     dismissible because DESIGN-CONTRACT §2 refuses permanent furniture. What is
+     dismissed can be called back from the lower band. */
+  const [outlineOpen, setOutlineOpen] = useState(true);
+  const [maiaOpen, setMaiaOpen] = useState(true);
+  const [materialsOpen, setMaterialsOpen] = useState(true);
   const [draftMeta, setDraftMeta] = useState<{
     updatedAt: string | null;
     revisionCount: number | null;
   } | null>(null);
 
-  // History drawer contents — read when opened, re-read after a kept version.
+  /* Versions live in the lower band now, not behind a drawer, so they are read
+     whenever something is on the table and re-read after a kept version. */
   const [revisions, setRevisions] = useState<RevisionSummary[] | null>(null);
   const [historyKey, setHistoryKey] = useState(0);
   useEffect(() => {
-    if (drawer !== 'history' || !manuscript) return;
+    if (!manuscript) return;
     let cancelled = false;
     (async () => {
       const r = await loadRevisions(apiFetch, manuscript.id);
@@ -173,7 +191,7 @@ export default function WriterCanvasPage() {
     return () => {
       cancelled = true;
     };
-  }, [drawer, manuscript, historyKey]);
+  }, [manuscript, historyKey]);
 
   // ---- Signed out ---------------------------------------------------------
   if (listPhase === 'unauthorized') {
@@ -227,283 +245,217 @@ export default function WriterCanvasPage() {
       ? manuscript.title !== null
       : Boolean(work?.title);
 
-  // Structure exists only where structure exists: a single-section draft has
-  // no Structure drawer, and its absence is correct, not a gap.
-  const drawers: { id: DrawerId; label: string }[] = [
-    { id: 'work', label: 'Work' },
-    { id: 'materials', label: 'Materials' },
-    ...(manuscript && manuscript.sectionCount > 1
-      ? [{ id: 'structure' as DrawerId, label: 'Structure' }]
-      : []),
-    { id: 'history', label: 'History' },
+  const typeStyleFor = () => typeStyle('navItem');
+
+  /** Calling a dismissed panel back. Quiet — this is chrome, not an action. */
+  const recallStyle = {
+    ...typeStyle('metadata'),
+    background: 'none',
+    border: `1px solid ${RULE.soft}`,
+    borderRadius: RADIUS.base,
+    color: INK.quiet,
+    cursor: 'pointer',
+    padding: `${SPACE.tight}px ${SPACE.snug}px`,
+  } as const;
+
+  /* ── The five modes. WRITE is here; EXPLORE is Studio Home, which is real.
+     The rest are not built, and are rendered as plainly unavailable rather
+     than as links that would lie about where they go. ── */
+  const MODES: { label: string; href?: string; current?: boolean }[] = [
+    { label: 'Write', current: true },
+    { label: 'Develop' },
+    { label: 'Explore', href: '/writers-studio' },
+    { label: 'Review' },
+    { label: 'Publish' },
   ];
 
-  const drawerBody = (id: DrawerId) => {
-    switch (id) {
-      case 'work':
-        /* The anchor of the Study Wall (first slice): identity tended here,
-           the Shape declaration lives here. Everything member-authored. */
-        return (
-          <WorkDrawer
-            works={works}
-            unitedWork={unitedWork}
-            manuscript={manuscript ? { id: manuscript.id, title: manuscript.title } : null}
-            manuscriptLabel={manuscriptLabel}
-            onChanged={reloadWorks}
-          />
-        );
-      case 'materials':
-        /* Belongings: sentence first, thing second, home stated. The bring
-           gesture is the consent event; un-belonging deletes nothing. */
-        return (
-          <MaterialsDrawer
-            work={unitedWork ?? (works.length === 1 ? works[0] : null)}
-            manuscript={manuscript}
-            manuscripts={manuscripts}
-            onChanged={reloadWorks}
-          />
-        );
-      case 'structure':
-        return manuscript ? (
-          <>
-            <p className="text-[13px] leading-relaxed opacity-70 mb-3">
-              {manuscript.sectionCount} sections, carried in with your import.
-            </p>
-            <Link
-              href={byIdentity(SOURCE_HREF, manuscript.id)}
-              className="text-[13px] underline underline-offset-4 opacity-60 hover:opacity-90"
-            >
-              Read them in the Source
-            </Link>
-          </>
-        ) : null;
-      case 'history':
-        return (
-          <>
-            <p className="text-[12.5px] leading-relaxed opacity-50 mb-4">
-              Autosave holds your latest words continuously. Versions you keep are set down here,
-              and nothing is ever silently overwritten.
-            </p>
-            {revisions === null ? (
-              <p className="text-[13px] opacity-40">opening…</p>
-            ) : revisions.length === 0 ? (
-              <p className="text-[13px] opacity-55 leading-relaxed">
-                No kept versions yet. “Keep a version” at the table sets one down.
-              </p>
-            ) : (
-              <ul className="space-y-2.5">
-                {revisions.map((r) => (
-                  <li
-                    key={r.revisionNumber}
-                    className="border px-4 py-2.5"
-                    style={{ borderColor: PRESS.ruleSoft }}
-                  >
-                    <p className="text-[13px]">
-                      Version {r.revisionNumber}
-                      {r.note ? ` — ${r.note}` : ''}
-                    </p>
-                    <p className="text-[11.5px] opacity-45 mt-0.5">
-                      ~{pageEstimate(r.contentChars)} page
-                      {pageEstimate(r.contentChars) === 1 ? '' : 's'} · {formatWhen(r.createdAt)}
-                    </p>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </>
-        );
-    }
-  };
+  const materialsWork = unitedWork ?? (works.length === 1 ? works[0] : null);
+  const materialCount = materialsWork?.materials?.length ?? 0;
 
-  /* WS2-03A: the Window renders through StudioPanel, so MAIA's presence in the
-     real room carries the same treatment the accepted system gives it — and
-     its dismissibility comes from the design contract, not from here. The
-     sentence is unchanged: v0.1 opens onto one honest line, and no reflection
-     endpoint exists on this surface. Nothing here makes Conversations
-     available; that handoff is WS2-03B's, gated on Work context surviving it. */
-  const reflectionPanel = (
-    <StudioPanel
-      role="maia"
-      label="Reflection"
-      onDismiss={() => setWindowOpen(false)}
-      style={{ height: '100%', borderRadius: 0, border: 'none' }}
-    >
-      <StudioText role="maiaReading" style={{ maxWidth: '16rem' }}>
-        {WINDOW_SENTENCE}
-      </StudioText>
-    </StudioPanel>
+  const bandLabel = (text: string) => (
+    <StudioText role="panelLabel" style={{ marginBottom: SPACE.snug }}>
+      {text}
+    </StudioText>
   );
 
   return (
     <div
       className="min-h-screen flex flex-col"
-      style={{ background: GROUND.base, color: INK.primary, fontFamily: SERIF }}
+      style={{ background: GROUND.base, color: INK.primary, fontFamily: SERIF, height: '100vh' }}
     >
-      {/* ── The head of the room: what am I working on, and where am I. ── */}
-      <header className="px-6 md:px-10 pt-6 pb-5">
-        <Link
-          href="/writers-studio"
-          className="inline-block text-[11px] tracking-[0.2em] uppercase opacity-40 hover:opacity-75 mb-3"
-        >
-          ← Author Studio
-        </Link>
-        <StudioText role="bandLabel" style={{ marginBottom: SPACE.tight }}>
-          Writer Canvas
-        </StudioText>
-        <h1
-          className="text-[24px] md:text-[27px] leading-snug"
-          style={{ fontFamily: SERIF, opacity: headlineNamed ? 1 : 0.75 }}
-        >
-          {headline}
-        </h1>
-        {/* The becoming — the member's one statement, in their words, shown
-            only when the member's declaration united work and table. */}
-        {unitedWork?.purpose && (
-          <p
-            className="text-[13px] leading-relaxed opacity-60 mt-1.5 max-w-md italic"
-            style={{ fontFamily: SERIF }}
-          >
-            {unitedWork.purpose}
-          </p>
-        )}
-        {/* Orientation, not measurement: authored facts only. */}
-        {draftMeta && (
-          <p className="text-[12.5px] mt-1.5 italic" style={{ color: PRESS.accent, opacity: 0.85 }}>
-            drafting
-            {draftMeta.updatedAt ? ` · last touched ${formatWhen(draftMeta.updatedAt)}` : ''}
-          </p>
-        )}
-        {/* Legitimate now, and only now: the belonging is the member's own
-            declaration, so saying it is honest display, not drawn containment. */}
-        {unitedWork && manuscript && (
-          <p className="text-[13px] opacity-55 mt-2">
-            On the table: {manuscriptLabel} — a form of this work, declared by you.
-          </p>
-        )}
-        {/* Several manuscripts, arrived without naming one: say which rule
-            picked. A fact about the room, not a claim about the work. */}
-        {manuscript && manuscripts.length > 1 && !manuscripts.some((m) => m.id === requested) && (
-          <p className="text-[13px] opacity-50 mt-2">
-            The most recent of your {manuscripts.length} manuscripts is on the table.
-          </p>
-        )}
-      </header>
-
-      <div
-        className="flex-1 flex flex-col md:flex-row min-h-0 border-t"
-        style={{ borderColor: PRESS.rule }}
+      {/* ── Header: the place, the work, the modes. ── */}
+      <header
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: SPACE.roomy,
+          padding: `${SPACE.base}px ${SPACE.roomy}px`,
+          borderBottom: `1px solid ${RULE.soft}`,
+          background: GROUND.raised,
+          flexShrink: 0,
+        }}
       >
-        {/* ── WS2-03A: the honest rail. visibleDestinations only — an unbuilt
-            room cannot reach a member through it. ── */}
-        <StudioRail
-          hasManuscript={Boolean(manuscript)}
-          style={{ width: 200, flexShrink: 0, borderRadius: 0 }}
-        />
+        <Link href="/writers-studio" style={{ textDecoration: 'none' }}>
+          <StudioText role="bandLabel">Soullab · Writer&rsquo;s Studio</StudioText>
+        </Link>
 
-        {/* ── Study Wall: the folded spine. One drawer open at a time. ── */}
-        <nav
-          aria-label="This work"
-          className="flex md:flex-col md:w-12 shrink-0 border-b md:border-b-0 md:border-r px-3 md:px-0 md:pt-8 gap-1"
-          style={{ borderColor: PRESS.ruleSoft }}
-        >
-          {drawers.map((d) => {
-            const open = drawer === d.id;
-            return (
-              <button
-                key={d.id}
-                onClick={() => setDrawer(open ? null : d.id)}
-                aria-expanded={open}
-                className={`text-[10.5px] tracking-[0.15em] uppercase px-2.5 py-2.5 md:px-0 md:py-3 md:[writing-mode:vertical-rl] transition-opacity ${
-                  open ? 'opacity-100' : 'opacity-45 hover:opacity-80'
-                }`}
-                style={open ? { color: PRESS.accent } : undefined}
+        <div style={{ minWidth: 0 }}>
+          <StudioText
+            role="workIdentity"
+            as="h1"
+            style={{ opacity: headlineNamed ? 1 : 0.75 }}
+          >
+            {headline}
+          </StudioText>
+          {unitedWork?.purpose && (
+            <StudioText role="quiet" style={{ fontStyle: 'italic' }}>
+              {unitedWork.purpose}
+            </StudioText>
+          )}
+        </div>
+
+        <nav style={{ display: 'flex', gap: SPACE.tight, marginLeft: SPACE.roomy }}>
+          {MODES.map((m) => {
+            const style = {
+              ...typeStyleFor(),
+              color: m.current ? INK.primary : m.href ? INK.secondary : INK.quiet,
+              padding: `${SPACE.tight}px ${SPACE.base}px`,
+              borderRadius: RADIUS.pill,
+              textDecoration: 'none',
+              ...(m.current
+                ? { background: GROUND.active, boxShadow: `inset 0 -2px 0 ${GOLD.DEFAULT}` }
+                : {}),
+            } as const;
+            return m.href && !m.current ? (
+              <Link key={m.label} href={m.href} style={style}>
+                {m.label}
+              </Link>
+            ) : (
+              <span
+                key={m.label}
+                style={style}
+                {...(m.current ? {} : { title: 'Not yet built' })}
               >
-                {d.label}
-              </button>
+                {m.label}
+              </span>
             );
           })}
         </nav>
 
-        {drawer &&
-          (() => {
-            /* One drawer at a time, as before. Each renders under the contract
-               it actually is — see DRAWER_PANEL_ROLE. Dismissibility comes from
-               the contract, never from this call site; the spine's toggle is
-               still what folds it away. */
-            const label = drawers.find((d) => d.id === drawer)?.label;
-            const role = DRAWER_PANEL_ROLE[drawer];
-            const frame = {
-              width: 288,
-              flexShrink: 0,
-              borderRadius: 0,
-              borderTop: 'none',
-              borderBottom: 'none',
-              borderLeft: 'none',
-            } as const;
+        <span style={{ flex: 1 }} />
+        {draftMeta?.updatedAt && (
+          <StudioText role="metadata">saved {formatWhen(draftMeta.updatedAt)}</StudioText>
+        )}
+      </header>
 
-            if (role === null) {
-              // The Work drawer. No Work panel exists in the contract, and one
-              // is not invented here: a truthful surface, no panel semantics.
-              return (
-                <StudioSurface
-                  level="raised"
-                  style={{
-                    ...frame,
-                    borderRight: `1px solid ${RULE.soft}`,
-                    overflowY: 'auto',
-                    padding: SPACE.comfortable,
-                  }}
-                >
-                  <StudioText role="panelLabel" style={{ marginBottom: SPACE.comfortable }}>
-                    {label}
-                  </StudioText>
-                  {drawerBody(drawer)}
-                </StudioSurface>
-              );
-            }
+      {/* ── The room: measured columns. ── */}
+      <div style={{ display: 'flex', flex: 1, minHeight: 0, gap: SPACE.base, padding: SPACE.base }}>
+        <StudioRail
+          hasManuscript={Boolean(manuscript)}
+          style={{ ...columnFlex('rail'), borderRadius: RADIUS.panel }}
+        />
 
-            return (
-              <StudioPanel
-                role={role}
-                label={label}
-                onDismiss={() => setDrawer(null)}
-                style={frame}
-              >
-                {drawerBody(drawer)}
-              </StudioPanel>
-            );
-          })()}
+        {/* Manuscript — the outline, and the Work beneath it. */}
+        {outlineOpen && (
+          <StudioPanel
+            role="manuscript-outline"
+            label="Manuscript"
+            onDismiss={() => setOutlineOpen(false)}
+            style={columnFlex('outlinePanel')}
+          >
+            {manuscript ? (
+              <>
+                <StudioText role="metadata" style={{ marginBottom: SPACE.base }}>
+                  {manuscript.sectionCount > 0
+                    ? `${manuscript.sectionCount} sections · ${pageEstimate(manuscript.charCount)}`
+                    : pageEstimate(manuscript.charCount)}
+                </StudioText>
+                {manuscript.sectionCount > 1 && (
+                  <Link
+                    href={byIdentity(SOURCE_HREF, manuscript.id)}
+                    style={{ ...typeStyleFor(), color: INK.secondary }}
+                  >
+                    Read them in the Source →
+                  </Link>
+                )}
+                <div style={{ marginTop: SPACE.roomy }}>
+                  {bandLabel('Work')}
+                  <WorkDrawer
+                    works={works}
+                    unitedWork={unitedWork}
+                    manuscript={{ id: manuscript.id, title: manuscript.title }}
+                    manuscriptLabel={manuscriptLabel}
+                    onChanged={reloadWorks}
+                  />
+                </div>
+              </>
+            ) : (
+              <StudioText role="quiet">Nothing is on the table.</StudioText>
+            )}
+          </StudioPanel>
+        )}
 
-        {/* ── Worktable: the center, always the largest thing. ── */}
-        <main
-          className="flex-1 min-w-0 flex flex-col px-6 md:px-12 py-7"
-          style={{ background: GROUND.field }}
+        {/* ── The writing field: the largest, quietest surface. ── */}
+        <StudioSurface
+          level="field"
+          edge="soft"
+          radius="panel"
+          style={{
+            ...columnFlex('writingField'),
+            display: 'flex',
+            flexDirection: 'column',
+            padding: `${SPACE.roomy}px ${SPACE.generous}px`,
+            overflow: 'auto',
+          }}
         >
-          {listPhase === 'loading' && <p className="text-[14px] opacity-40">opening…</p>}
+          {listPhase === 'loading' && <StudioText role="quiet">opening…</StudioText>}
+          {/* `unauthorized` never reaches here — the signed-out room returns
+              early above, so a branch for it would be dead code. */}
           {listPhase === 'error' && (
-            <p className="text-[15px] opacity-70 max-w-md leading-relaxed">
+            <StudioText role="prose" tone="secondary">
               The Canvas could not be reached just now. Your work is not affected — please try
               again in a moment.
-            </p>
+            </StudioText>
           )}
+
+          {/* Identity refused — named, and not found. Never a substitute. */}
+          {identityRefused && (
+            <div style={{ maxWidth: '32rem' }}>
+              <StudioText role="prose" tone="secondary" style={{ marginBottom: SPACE.base }}>
+                That manuscript is not one of yours.
+              </StudioText>
+              <StudioText role="quiet">
+                Nothing has been opened, and nothing has changed. Rather than put a different
+                manuscript on the table, the Canvas is telling you the one you asked for could not
+                be found.
+              </StudioText>
+              <div style={{ marginTop: SPACE.roomy }}>
+                <Link href="/writers-studio" style={{ ...typeStyleFor(), color: INK.secondary }}>
+                  ← Back to your writing
+                </Link>
+              </div>
+            </div>
+          )}
+
           {listPhase === 'none' && (
-            <div className="max-w-md">
-              <p className="text-[16px] leading-relaxed opacity-75 mb-6">
+            <div style={{ maxWidth: '28rem' }}>
+              <StudioText role="prose" tone="secondary" style={{ marginBottom: SPACE.base }}>
                 Nothing is on the table yet.
-              </p>
-              <p className="text-[14px] leading-relaxed opacity-55">
+              </StudioText>
+              <StudioText role="quiet">
                 Begin at the{' '}
-                <Link href="/writers-studio" className="underline underline-offset-4 opacity-90">
+                <Link href="/writers-studio" style={{ color: INK.secondary }}>
                   Studio Home
                 </Link>{' '}
                 — start writing, or{' '}
-                <Link href={IMPORT_HREF} className="underline underline-offset-4 opacity-90">
+                <Link href={IMPORT_HREF} style={{ color: INK.secondary }}>
                   bring in existing writing
                 </Link>
                 .
-              </p>
+              </StudioText>
             </div>
           )}
+
           {manuscript && (
             <Worktable
               manuscriptId={manuscript.id}
@@ -511,54 +463,120 @@ export default function WriterCanvasPage() {
               onCheckpointed={() => setHistoryKey((k) => k + 1)}
             />
           )}
-        </main>
+        </StudioSurface>
 
-        {/* ── Window: MAIA's folded presence. Opens only when invited, and in
-            v0.1 opens onto one honest sentence — never an empty panel
-            pretending to be a capability. ── */}
-        <aside
-          className={`hidden md:block shrink-0 border-l transition-all ${windowOpen ? 'w-80' : 'w-10'}`}
-          style={{ borderColor: PRESS.ruleSoft }}
-        >
-          {windowOpen ? (
-            reflectionPanel
-          ) : (
-            <button
-              onClick={() => setWindowOpen(true)}
-              aria-label="Reflection"
-              title="Reflection"
-              className="w-full flex justify-center pt-8 opacity-40 hover:opacity-80 transition-opacity"
-            >
-              <span
-                className="w-2 h-2 rounded-full border"
-                style={{ borderColor: PRESS.text }}
-              />
-            </button>
-          )}
-        </aside>
-      </div>
-
-      {/* The Window's mobile form: a quiet line under the field, same honesty. */}
-      <div className="md:hidden border-t px-6 py-4" style={{ borderColor: PRESS.ruleSoft }}>
-        {windowOpen ? (
-          <div>
-            <p className="text-[13px] leading-relaxed opacity-70 mb-2">{WINDOW_SENTENCE}</p>
-            <button
-              onClick={() => setWindowOpen(false)}
-              className="text-[12px] opacity-45 underline underline-offset-4"
-            >
-              fold away
-            </button>
-          </div>
-        ) : (
-          <button
-            onClick={() => setWindowOpen(true)}
-            className="text-[11px] tracking-[0.2em] uppercase opacity-40"
+        {/* ── MAIA: adjacent to the work, never its owner. ── */}
+        {maiaOpen && (
+          <StudioPanel
+            role="maia"
+            label="MAIA"
+            onDismiss={() => setMaiaOpen(false)}
+            style={columnFlex('maiaPanel')}
           >
-            Reflection
-          </button>
+            <StudioText role="maiaReading" style={{ color: MAIA_ACCENT.voice }}>
+              {WINDOW_SENTENCE}
+            </StudioText>
+            <StudioText role="quiet" style={{ marginTop: SPACE.base }}>
+              Conversations become available when this Work can be carried into MAIA and back
+              without guessing which one you meant.
+            </StudioText>
+          </StudioPanel>
+        )}
+
+        {/* ── Materials: contextual, dismissible, and real or absent. ── */}
+        {materialsOpen && (
+          <StudioPanel
+            role="materials"
+            label="Materials"
+            count={materialCount > 0 ? materialCount : undefined}
+            onDismiss={() => setMaterialsOpen(false)}
+            style={columnFlex('materialsPanel')}
+          >
+            <MaterialsDrawer
+              work={materialsWork}
+              manuscript={manuscript}
+              manuscripts={manuscripts}
+              onChanged={reloadWorks}
+            />
+          </StudioPanel>
         )}
       </div>
+
+      {/* ── Lower band: only what exists. Versions is real; Statistics is
+          counted from the member's own material. Goals has no substrate and
+          is therefore absent rather than drawn empty. ── */}
+      {manuscript && (
+        <footer
+          style={{
+            display: 'flex',
+            gap: SPACE.generous,
+            padding: `${SPACE.base}px ${SPACE.roomy}px`,
+            borderTop: `1px solid ${RULE.soft}`,
+            background: GROUND.raised,
+            flexShrink: 0,
+            overflowX: 'auto',
+          }}
+        >
+          <div style={{ minWidth: 220 }}>
+            {bandLabel('Versions')}
+            {revisions === null ? (
+              <StudioText role="metadata">opening…</StudioText>
+            ) : revisions.length === 0 ? (
+              <StudioText role="metadata">
+                No kept versions yet — “Keep a version” sets one down.
+              </StudioText>
+            ) : (
+              revisions.slice(0, 4).map((r) => (
+                <div
+                  key={r.revisionNumber}
+                  style={{ display: 'flex', justifyContent: 'space-between', gap: SPACE.base }}
+                >
+                  <StudioText role="metadata" tone="secondary" as="span">
+                    Version {r.revisionNumber}
+                  </StudioText>
+                  <StudioText role="metadata" as="span">
+                    {formatWhen(r.createdAt)}
+                  </StudioText>
+                </div>
+              ))
+            )}
+          </div>
+
+          <div style={{ minWidth: 200 }}>
+            {bandLabel('Statistics')}
+            <StudioText role="metadata" tone="secondary">
+              {pageEstimate(manuscript.charCount)}
+            </StudioText>
+            {manuscript.sectionCount > 0 && (
+              <StudioText role="metadata">{manuscript.sectionCount} sections</StudioText>
+            )}
+            {materialCount > 0 && (
+              <StudioText role="metadata">{materialCount} materials</StudioText>
+            )}
+          </div>
+
+          <span style={{ flex: 1 }} />
+
+          {/* Panels are contextual: what was dismissed can be called back. */}
+          <div style={{ display: 'flex', gap: SPACE.base, alignItems: 'flex-start' }}>
+            {!outlineOpen && (
+              <button type="button" onClick={() => setOutlineOpen(true)} style={recallStyle}>
+                Manuscript
+              </button>
+            )}
+            {!maiaOpen && (
+              <button type="button" onClick={() => setMaiaOpen(true)} style={recallStyle}>
+                MAIA
+              </button>
+            )}
+            {!materialsOpen && (
+              <button type="button" onClick={() => setMaterialsOpen(true)} style={recallStyle}>
+                Materials
+              </button>
+            )}
+          </div>
+        </footer>
+      )}
     </div>
   );
 }
