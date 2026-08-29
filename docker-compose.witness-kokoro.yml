@@ -32,32 +32,58 @@
 # The witness stack is what lacks them. This overlay gives the witness stack the
 # substrate production already has — nothing more.
 #
-# ── USAGE ──────────────────────────────────────────────────────────────────────
-# Append LAST in the witness overlay chain, after the MAIA + Postgres + Whisper
-# witness file and after the local Ollama override, both of which are preserved
-# untouched:
+# ── TOPOLOGY: THIS OVERLAY BELONGS TO THE docker-compose.yml CHAIN ─────────────
 #
-#   docker compose -p <witness-project> \
-#     -f docker-compose.production.yml \
-#     -f <witness override> \
-#     -f <local ollama override> \
+# ⛔ The witness chain roots at `docker-compose.yml`, NOT at
+#    `docker-compose.production.yml`. The two use different network keys:
+#
+#      docker-compose.yml            maia-network      (:199-200)
+#      docker-compose.production.yml maia-internal
+#
+#    The first version of this file joined `maia-internal`, because it was
+#    verified against the production compose and a synthetic base — neither of
+#    which is the stack the witness actually runs. Appended to the real chain,
+#    MAIA and Kokoro would have landed on different networks and
+#    `http://kokoro-tts:8880` would not have resolved. The failure would have
+#    read as `kokoro_unreachable` and looked exactly like a Kokoro defect.
+#
+#    ⭐ A witness overlay verified against the wrong base topology produces
+#      confident evidence about a stack nobody is running. Corrected here, and
+#      the correction is the reason this note exists rather than a silent edit.
+#
+#    Do NOT append this file to `docker-compose.production.yml`. Production
+#    already declares all three variables and its own kokoro-tts service
+#    (maia:168-170, kokoro-tts:624) and needs nothing from this overlay.
+#
+# ── USAGE ──────────────────────────────────────────────────────────────────────
+# Append LAST in the witness overlay chain, after the witness base and the local
+# Ollama override, all of which are preserved untouched:
+#
+#   docker compose -p witness-<id> \
+#     -f docker-compose.yml \
+#     -f /tmp/witness-<id>.override.yml \
+#     -f /tmp/witness-local-ai.override.yml \
+#     -f /tmp/witness-sovereign-voice.override.yml \
 #     -f docker-compose.witness-kokoro.yml \
 #     up -d kokoro-tts maia
 #
+# LAST is load-bearing: compose merges in file order, so an earlier position
+# lets a later override win on the three variables this whole lane depends on.
+#
 # Then prove the substrate before touching any application code:
 #
-#   scripts/witness/kokoro-substrate-probe.sh -p <witness-project>
+#   scripts/witness/kokoro-substrate-probe.sh -p witness-<id>
+#
+# The probe resolves containers by compose LABEL, so it needs no -f chain and no
+# COMPOSE_FILE — see scripts/witness/kokoro-substrate-probe.sh.
 #
 # ── WHY NOT docker-compose.local-voice.yml ─────────────────────────────────────
 # That file also stands up kokoro-tts, but it joins an EXTERNAL network pinned by
-# name to the production project (`maia-sovereign_maia-internal`). Using it under
-# a witness project name would either fail to resolve or — worse — attach the
-# witness Kokoro to the production network. It also sets no MAIA env, so it
-# cannot move the router off `openai_primary`. It is left exactly as it is.
-#
-# This overlay instead joins `maia-internal` by KEY, so it resolves inside
-# whatever project the witness runs under and cannot reach across into
-# production by construction.
+# name to the production project (`maia-sovereign_maia-internal`) — which is the
+# project actually running it today. Used under a witness project name it would
+# either fail to resolve or, worse, attach the witness Kokoro to the production
+# network. It also sets no MAIA env, so it cannot move the router off
+# `openai_primary`, which is the whole defect. It is left exactly as it is.
 # ═══════════════════════════════════════════════════════════════════════════════
 
 services:
@@ -108,7 +134,9 @@ services:
       start_period: 60s
 
     networks:
-      - maia-internal
+      # The network the ACTUAL witness chain puts MAIA on. See the topology note
+      # in the header: this is maia-network, NOT production's maia-internal.
+      - maia-network
 
   # ═══════════════════════════════════════════════════════════════════════════
   # MAIA — sovereign voice substrate for the witness
@@ -130,7 +158,7 @@ services:
       # `primary` kokoro unconditionally (ttsRouter.ts:185), so the witness does
       # not depend on `auto` resolving the way we expect.
       MAIA_TTS_PROVIDER: "kokoro"
-      # lib/tts/providers/kokoro.ts:19 — service name resolves on maia-internal.
+      # lib/tts/providers/kokoro.ts:19 — service name resolves on maia-network.
       # The default is http://localhost:8880, which inside the MAIA container is
       # MAIA itself and would fail confusingly. Naming it is not optional.
       KOKORO_TTS_URL: "http://kokoro-tts:8880"
@@ -145,7 +173,10 @@ services:
       #    voice permitted, it has proven nothing about sovereign synthesis.
 
 networks:
-  # Declared by docker-compose.production.yml. Joined by KEY, so it resolves
-  # within the witness project and has no path to the production network.
-  maia-internal:
+  # Declared by docker-compose.yml — the root of the ACTUAL witness chain
+  # (docker-compose.yml:199-200). Joined by KEY, so compose scopes it to
+  # <project>_maia-network inside the witness project. There is therefore no
+  # path from here to production's network, by construction rather than by
+  # anyone writing the right name.
+  maia-network:
     driver: bridge

@@ -22,8 +22,12 @@
 # because a probe from the host proves the host can reach Kokoro — which is not
 # the claim. The claim is that MAIA can.
 #
+# Containers are resolved by compose LABEL, not by `docker compose ps`, so the
+# probe needs no -f chain and no COMPOSE_FILE — which matters here because the
+# witness chain lives partly in /tmp.
+#
 # Usage:
-#   scripts/witness/kokoro-substrate-probe.sh -p <witness-compose-project>
+#   scripts/witness/kokoro-substrate-probe.sh -p witness-<id>
 #   scripts/witness/kokoro-substrate-probe.sh -p <p> -m <maia-svc> -k <kokoro-svc>
 # ═══════════════════════════════════════════════════════════════════════════════
 set -uo pipefail
@@ -60,21 +64,47 @@ echo "DESKTOP-SOVEREIGN-TTS-01 — Kokoro substrate probe"
 echo "project: $PROJECT   maia: $MAIA_SVC   kokoro: $KOKORO_SVC"
 echo "─────────────────────────────────────────────────────────────────────"
 
-# ── Container resolution ──────────────────────────────────────────────────────
-MAIA_ID="$(docker compose -p "$PROJECT" ps -q "$MAIA_SVC" 2>/dev/null | head -1)"
-KOKORO_ID="$(docker compose -p "$PROJECT" ps -q "$KOKORO_SVC" 2>/dev/null | head -1)"
+# ── Production guard, BEFORE resolution ───────────────────────────────────────
+# `maia-sovereign` is the production compose project on this daemon. A probe
+# that reads it would produce a confident PASS describing the wrong stack.
+if [[ "$PROJECT" == "maia-sovereign" ]]; then
+  echo "FATAL: '$PROJECT' is the production project." >&2
+  echo "       This probe is witness-only and must never read production." >&2
+  exit 2
+fi
+
+# ── Container resolution, by compose LABEL ────────────────────────────────────
+# Deliberately NOT `docker compose -p ... ps`: that form needs the project's full
+# -f chain (or COMPOSE_FILE) to resolve, and the witness chain lives partly in
+# /tmp. Every compose-managed container already carries its project and service
+# as labels, so the running stack can answer for itself without being told how it
+# was assembled. This is also the more truthful reading — it reports what IS
+# running, not what a set of files says should be.
+compose_id() {
+  docker ps -q \
+    --filter "label=com.docker.compose.project=$PROJECT" \
+    --filter "label=com.docker.compose.service=$1" | head -1
+}
+
+MAIA_ID="$(compose_id "$MAIA_SVC")"
+KOKORO_ID="$(compose_id "$KOKORO_SVC")"
 
 if [[ -z "$MAIA_ID" || -z "$KOKORO_ID" ]]; then
   echo "FATAL: could not resolve both services in project '$PROJECT'." >&2
   echo "       maia=${MAIA_ID:-<none>}  kokoro=${KOKORO_ID:-<none>}" >&2
-  echo "       Bring the witness up with docker-compose.witness-kokoro.yml appended last." >&2
+  echo >&2
+  echo "       Projects and services currently running:" >&2
+  docker ps --format '{{.Label "com.docker.compose.project"}}\t{{.Label "com.docker.compose.service"}}\t{{.Names}}' \
+    | grep -v '^\s' | sort | sed 's/^/         /' >&2
+  echo >&2
+  echo "       If kokoro-tts is absent, bring it up with the overlay appended LAST:" >&2
+  echo "         docker compose -p $PROJECT <the witness -f chain> \\" >&2
+  echo "           -f docker-compose.witness-kokoro.yml up -d kokoro-tts maia" >&2
   exit 2
 fi
 
-# ── Production guard ──────────────────────────────────────────────────────────
-# A probe that silently reads production containers would produce a PASS that
-# describes the wrong machine. Production pins container_name; the witness does
-# not. That difference is the discriminator.
+# A container literally named maia-sovereign / maia-kokoro-tts is production's:
+# container names are unique per daemon. Belt as well as braces.
 for id in "$MAIA_ID" "$KOKORO_ID"; do
   name="$(docker inspect -f '{{.Name}}' "$id" | sed 's#^/##')"
   case "$name" in
