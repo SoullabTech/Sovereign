@@ -51,6 +51,7 @@
 
 const {
   PLATFORM_ORIGIN,
+  PLATFORM_ENTRY_PATH,
   PLATFORM_PARTITION,
   PLATFORM_WEB_PREFERENCES,
   platformEntryUrl,
@@ -74,6 +75,11 @@ function createPlatformShell({
 } = {}) {
   let view = null;                       // at most ONE, ever
   let place = MAIA;
+  // DESKTOP-MAIA-VOICE-01. Where the view actually IS, which is not the same
+  // question as whether it is attached. The microphone gate reads this: a view
+  // sitting on the House or on Journal must not be able to open a microphone
+  // just because it once was on MAIA.
+  let currentPath = null;
   let partitionArmed = false;
 
   /**
@@ -93,12 +99,39 @@ function createPlatformShell({
   function armPartition() {
     if (partitionArmed) return;
     const ps = sessionApi.fromPartition(PLATFORM_PARTITION);
-    ps.setPermissionRequestHandler((_wc, _permission, callback) => callback(platformPermission()));
-    ps.setPermissionCheckHandler(() => platformPermission());
+    // ⛔ Three handlers, and all three consult the SAME policy with the SAME
+    // facts. A gate that answered differently depending on which Chromium path
+    // asked would be a gate with a hole in it.
+    ps.setPermissionRequestHandler((_wc, permission, callback, details) => {
+      callback(platformPermission(permission, (details && details.requestingUrl) || '', maiaIsVisible()));
+    });
+    ps.setPermissionCheckHandler((_wc, permission, requestingOrigin, details) => (
+      platformPermission(permission, (details && details.requestingUrl) || requestingOrigin || '', maiaIsVisible())
+    ));
     if (typeof ps.setDevicePermissionHandler === 'function') {
-      ps.setDevicePermissionHandler(() => platformPermission());
+      // The DEVICE itself, refused even if a permission somehow said yes.
+      // Desktop grants a capability to one surface; it never hands over a device
+      // chooser.
+      ps.setDevicePermissionHandler(() => false);
     }
     partitionArmed = true;
+  }
+
+  /**
+   * Is the member looking at MAIA right now?
+   *
+   * ⛔ Both halves matter. `place` says the view is attached; `currentPath` says
+   * what it is showing. A backgrounded or navigated-away view must not hold a
+   * microphone, and asking only one of these would let it.
+   */
+  function maiaIsVisible() {
+    return place === PLATFORM && currentPath === PLATFORM_ENTRY_PATH;
+  }
+
+  /** Remember where the view actually is, from any path that moves it. */
+  function noteLocation(url) {
+    try { currentPath = new URL(String(url)).pathname; }
+    catch { currentPath = null; }
   }
 
   /** The platform partition's cookie jar. */
@@ -143,8 +176,10 @@ function createPlatformShell({
     // prevent; the response is corrective rather than preventive. A path the
     // House does not name is walked back to the House; the conversation is
     // handed to main as a return-to-center.
+    wc.on('did-navigate', (_event, url) => noteLocation(url));
     wc.on('did-navigate-in-page', (_event, url, isMainFrame) => {
       if (isMainFrame === false) return;   // a frame moving is not the member moving
+      noteLocation(url);
       const decision = navigationDecision(url);
       if (decision.action === 'allow') return;
       if (decision.action === 'external' && shellApi && shellApi.openExternal) {
@@ -187,6 +222,7 @@ function createPlatformShell({
     if (!shown.ok) return shown;
     try {
       await view.webContents.loadURL(url);
+      noteLocation(url);
       return { ok: true, url };
     } catch (e) {
       return { ok: false, error: (e && e.message) || 'navigation failed' };
@@ -273,6 +309,7 @@ function createPlatformShell({
     isShowing: () => place === PLATFORM,
     // Test seams. Read-only views onto internal state — nothing here mutates.
     _view: () => view,
+    _maiaIsVisible: maiaIsVisible,
     _route: route,
     _cookieJar: cookieJar,
   };

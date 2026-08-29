@@ -385,11 +385,17 @@ test('F4 — the platform partition refuses every permission, including invented
   const h = sessionApi.fromPartition(PLATFORM_PARTITION).handlers;
   assert.ok(h.request && h.check && h.device, 'a permission handler was never installed');
 
+  // DESKTOP-MAIA-VOICE-01 narrowed this from "everything, always" to
+  // "everything, except audio on the visible /maia surface". So the refusal is
+  // asserted against a NON-MAIA surface — otherwise `media` would pass here for
+  // the wrong reason (an empty requesting URL) and the test would stop biting.
+  // The grant case is DV01's to prove.
+  const elsewhere = { requestingUrl: `${PLATFORM_ORIGIN}/journal` };
   for (const p of [...REFUSED_PERMISSIONS, 'a-permission-chromium-adds-in-2027']) {
     let answer = null;
-    h.request({}, p, (v) => { answer = v; });
+    h.request({}, p, (v) => { answer = v; }, elsewhere);
     assert.equal(answer, false, `${p} was GRANTED to remote content`);
-    assert.equal(h.check({}, p), false, `${p} passes the synchronous check`);
+    assert.equal(h.check({}, p, PLATFORM_ORIGIN, elsewhere), false, `${p} passes the synchronous check`);
   }
   assert.equal(h.device({}), false, 'the device itself is reachable even with permission refused');
 });

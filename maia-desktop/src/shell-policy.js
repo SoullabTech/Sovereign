@@ -266,15 +266,55 @@ function navigationDecision(url) {
 }
 
 /**
- * The permission answer for the remote view: always no.
+ * DESKTOP-MAIA-VOICE-01 — the ONE capability the platform view may hold.
  *
- * ⛔ Written as a total refusal rather than as "deny the ones we listed". A
- * Chromium upgrade that adds a permission class must not arrive already
- * granted because nobody edited an allow-list. The MAIA view keeps its own
- * handler on the default session and is untouched by this.
+ * ⛔ WHAT THIS IS NOT. It is not `remote platform permissions = allow`. That
+ * would hand Journal, Astrology, Studio, and every route added next week the
+ * same device authority. The capability belongs to MAIA, not to the origin.
+ *
+ * THE GATE, all of which must hold:
+ *   · the trusted platform origin, compared as an origin
+ *   · the EXACT `/maia` conversation surface — not a Room beneath it, not the
+ *     House, not a sub-path
+ *   · audio only — camera, screen capture, geolocation and everything else stay
+ *     refused, including permissions Chromium invents after this was written
+ *   · `/maia` is the visible active place (the caller supplies this; a
+ *     backgrounded view must not be able to open a microphone)
+ *
+ * A member gesture is also required, but that is Chromium's own rule for
+ * `getUserMedia` and is not something main can observe — so it is named here as
+ * part of the contract rather than claimed as something this function enforces.
+ *
+ * ⛔ WHAT IS STILL REFUSED, and stays refused: Node, filesystem, shell,
+ * preload. The remote page gains a microphone, not a machine.
+ *
+ * ⛔ Leaving `/maia` for the House or any place ends capture structurally — the
+ * page context is torn down by the navigation, so the tracks die with it. It is
+ * not a promise this function keeps; it is a consequence of how the view works.
+ * Returning does not restart anything: `getUserMedia` needs a fresh gesture.
  */
-function platformPermission() {
-  return false;
+const AUDIO_PERMISSIONS = Object.freeze(['media', 'audioCapture']);
+
+function isMaiaSurface(url) {
+  try {
+    const u = new URL(String(url));
+    return u.origin === PLATFORM_ORIGIN && u.pathname === PLATFORM_ENTRY_PATH;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * The permission answer for the remote view.
+ *
+ * ⛔ Written as a total refusal with ONE narrow exception, rather than as
+ * "deny the ones we listed". A Chromium upgrade that adds a permission class
+ * must not arrive already granted because nobody edited an allow-list.
+ */
+function platformPermission(permission, requestingUrl, maiaIsVisible) {
+  if (!AUDIO_PERMISSIONS.includes(permission)) return false;
+  if (!maiaIsVisible) return false;
+  return isMaiaSurface(requestingUrl);
 }
 
 module.exports = {
@@ -292,6 +332,8 @@ module.exports = {
   isPlatformUrl,
   isUnderRoot,
   isHousePath,
+  isMaiaSurface,
+  AUDIO_PERMISSIONS,
   navigationDecision,
   platformPermission,
 };
