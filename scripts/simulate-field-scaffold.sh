@@ -115,28 +115,51 @@ if [ "$MODE" = "--verify" ]; then
        echo "   assumption edited after results existed is disqualified." ;;
   esac
   echo
+  # The signal is TERNARY. Holding correctly and violating the hold are opposite
+  # standings and must never share an exit code: "no GO" alone is not a breach —
+  # a sealed design with no runs is the hold working exactly as intended. Only
+  # runs WITHOUT a GO are an authority violation.
+  RUN_COUNT="$(find "${SIM_DIR}/runs" -type f ! -name '.gitkeep' 2>/dev/null | grep -c . || true)"
   echo "3. EXECUTION AUTHORITY"
+  echo "   run artefacts in runs/: ${RUN_COUNT}"
   if grep -q '^- \*\*Founder GO:\*\* `NONE RECORDED`' "$INTEG"; then
-    GO_OK=0
-    echo "   NONE RECORDED — execution was held. Any run that occurred did so"
-    echo "   without founder authority. Report this in the verdict; do not treat"
-    echo "   the results as authorized."
+    if [ "$RUN_COUNT" -eq 0 ]; then
+      GO_OK=2
+      echo "   HELD CLEAN — no founder GO, and nothing was run. The hold was"
+      echo "   respected. Design may continue; execution may not begin."
+    else
+      GO_OK=0
+      echo "   AUTHORITY VIOLATION — ${RUN_COUNT} run artefact(s) exist with no"
+      echo "   founder GO recorded. These results are unauthorized. Report this"
+      echo "   in the first line of the verdict; do not treat them as evidence."
+    fi
   else
     GO_OK=1
-    echo "   $(grep '^- \*\*Founder GO:\*\*' "$INTEG" | sed 's/^- \*\*Founder GO:\*\* //')"
+    echo "   AUTHORIZED — $(grep '^- \*\*Founder GO:\*\*' "$INTEG" | sed 's/^- \*\*Founder GO:\*\* //')"
   fi
   echo
-  echo "Seal the brief before running:  bash scripts/simulate-field-scaffold.sh ${SLUG} --seal"
+  echo "Seal the brief before designing further:"
+  echo "  bash scripts/simulate-field-scaffold.sh ${SLUG} --seal"
+  echo "Sealing fixes the design. EXECUTION REMAINS HELD until a founder GO is"
+  echo "recorded in ${INTEG}."
   echo "=================================================================="
 
-  [ "$INST_OK" = "1" ] && [ "$BRIEF_OK" = "1" ] && [ "$GO_OK" = "1" ] && exit 0
+  # GO_OK 1 (authorized) and 2 (held clean) are both acceptable standings.
+  [ "$INST_OK" = "1" ] && [ "$BRIEF_OK" = "1" ] && [ "$GO_OK" != "0" ] && exit 0
 
   echo
-  echo "Divergence is a REPORTABLE CONDITION, not a failure. Record both lines above in"
+  echo "Divergence is a REPORTABLE CONDITION, not a failure. Record the lines above in"
   echo "the verdict. Runs from before and after a divergence belong to different"
   echo "instruments — or to different questions — and may not be pooled."
 
-  if [ "$GO_OK" = "0" ] && [ "$INST_OK" = "1" ] && [ "$BRIEF_OK" = "1" ]; then exit 6; fi
+  # An authority violation is a constitutional breach, not a methodological one,
+  # and outranks instrument or brief divergence in the exit code. The printed
+  # report above still carries all three signals independently.
+  if [ "$GO_OK" = "0" ]; then
+    echo
+    echo "An authority violation outranks any divergence above. Exit 6."
+    exit 6
+  fi
   if [ "$INST_OK" = "0" ] && [ "$BRIEF_OK" != "1" ]; then exit 5; fi
   if [ "$INST_OK" = "0" ]; then exit 3; fi
   exit 4
@@ -154,7 +177,8 @@ if [ "$MODE" = "--seal" ]; then
     sed "s|^- \*\*Brief fingerprint:\*\* \`PENDING\`.*|- **Brief fingerprint:** \`${CUR_BRIEF}\` (sealed $(date +%FT%T))|" "$INTEG" > "$TMP"
     mv "$TMP" "$INTEG"
     echo "brief sealed: ${CUR_BRIEF}"
-    echo "the question, metrics and hypotheses are now fixed. Runs may begin."
+    echo "the question, metrics and hypotheses are now fixed."
+    echo "EXECUTION REMAINS HELD — do not run without a recorded founder GO."
     exit 0
   fi
   echo "brief already sealed — a sealed brief is not re-sealed." >&2
@@ -172,6 +196,10 @@ if [ -d "$SIM_DIR" ]; then
 fi
 
 mkdir -p "${SIM_DIR}/runs"
+# runs/ must survive a commit while empty, so that "zero run artefacts" is a
+# recorded state rather than an absent directory. --verify excludes .gitkeep
+# from the run count for exactly this reason.
+: > "${SIM_DIR}/runs/.gitkeep"
 
 cat > "$BRIEF" <<EOF
 # Simulation Brief — ${SLUG} — ${DATE}
@@ -318,7 +346,7 @@ of trust.
 ## Commands
 
 \`\`\`bash
-bash scripts/simulate-field-scaffold.sh ${SLUG} --seal     # fix the question, then run
+bash scripts/simulate-field-scaffold.sh ${SLUG} --seal     # fix the question; execution remains held
 bash scripts/simulate-field-scaffold.sh ${SLUG} --verify   # at close
 \`\`\`
 
