@@ -1,9 +1,25 @@
-// MAIA Desktop — main process. MAIA-D01 native voice witness shell.
+// MAIA Desktop — main process. The Desktop host.
 //
-// SCOPE. This is the smallest governed shell that can carry the native voice
-// seam. It is NOT the MAIA Desktop Companion. There is no House, no Realm, no
-// conversation resume, no Session Room, no packaging, no updater — those are
-// D03+ and the D01 ruling forbids them here.
+// ⛔ THIS HEADER WAS FALSE, AND THE FALSEHOOD COST A DEVICE WALK. It described
+// this file as "the MAIA-D01 native voice witness shell… NOT the MAIA Desktop
+// Companion. There is no House, no Realm, no conversation resume." All three
+// clauses stopped being true when the House was reconciled in, and the stale
+// framing is part of how DESKTOP-ARRIVAL-01 survived source review: it made the
+// local witness renderer look like it still belonged as the visible root.
+//
+// SCOPE, as it actually is. This is the HOST: window and application lifecycle,
+// OS permissions, IPC validation, transport, composition, and the platform
+// shell that contains the canonical Soullab surface. It owns no MAIA semantics —
+// continuity, turns, capture liveness and supervision, voice lifecycle and
+// member authorship all live in portable modules beside it, and a proof fails
+// if any of them reaches for Electron.
+//
+// ⭐ WHERE THE MEMBER ACTUALLY ARRIVES. The Desktop centre is canonical `/maia`,
+// shown in the contained platform view. `index.html` is the privileged local
+// renderer: it owns the microphone (only Chromium can) and carries the voice
+// bridge, and it stays mounted underneath as native infrastructure. It is NOT a
+// destination. A build that shows it on arrival is showing scaffolding to a
+// member, which is exactly the DESKTOP-ARRIVAL-01 defect.
 //
 // SECURITY POSTURE, inherited from jarvis-desktop as precedent (R5):
 //   · contextIsolation on, nodeIntegration off, sandboxed renderer
@@ -438,6 +454,13 @@ ipcMain.handle('maia:sign-in', async (_evt, payload) => {
       sessionId: `desktop-${Date.now()}`,
     });
     void continuity.join();
+    // ⭐ DESKTOP-ARRIVAL-01 / DESKTOP-MAIA-UNIFICATION-01. The member has
+    // authenticated, so the visible surface becomes MAIA herself — the canonical
+    // one. The local renderer's job from here is native infrastructure, not a
+    // destination. Order is the one observed to work: session, conversation,
+    // continuity joined, menu rebuilt, canonical MAIA revealed.
+    void goTo(MAIA);
+    buildMenu();                         // the destinations open for a member
   }
   broadcast('maia:auth', memberSession.state());
   return out;
@@ -522,7 +545,15 @@ app.whenReady().then(() => {
   createWindow();
   // After the window exists, so the restored thread has somewhere to land.
   if (memberSession.state().signedIn) {
-    mainWindow.webContents.once('did-finish-load', () => { void continuity.join(); });
+    mainWindow.webContents.once('did-finish-load', () => {
+      void continuity.join();
+      // ⭐ DESKTOP-ARRIVAL-01. A restored session is still an authenticated
+      // member: Desktop opens on MAIA, not on the scaffolding that happens to be
+      // mounted underneath. Placement is `did-finish-load` because that is where
+      // it was proven to work — the window exists and the local renderer has
+      // finished loading before anything is revealed over it.
+      void goTo(MAIA);
+    });
   }
 });
 
