@@ -52,14 +52,19 @@ flatten(sections) === the old continuous draft     ← the invariant
 strip "# " from headings                           ← changes those bytes
 ```
 
-Both cannot be true of one transaction. A legacy draft therefore seeds
-byte-exactly **with its scaffolding**, or not at all. Normalisation, if ever
-wanted, is a separate transform with its own proof and its own disclosure.
+Both cannot be true of one transaction.
 
-Today `planConversion` refuses `LEGACY_COMPOSER_VARIANT` outright
-(`legacy_scaffold_held`). Production has zero drafts in that class, so nothing
-is blocked, and the invariant is not weakened to accommodate a case that does
-not exist.
+So a legacy draft **seeds like any other — byte-exactly, with its `# `
+scaffolding intact.** The boundary of a rewritten heading is still uniquely
+located (it is the line that replaced it), so the partition is exact either
+way. What the member's draft contains is what the sections contain.
+
+Scaffold **removal** is held, permanently outside conversion: it is a separate
+transform, with its own proof and its own disclosure, because it changes the
+member's bytes and conversion promises it does not.
+
+Production has zero drafts in this class today, so nothing here is exercised
+against real data.
 
 ## Every refusal, and why it refuses
 
@@ -68,7 +73,6 @@ not exist.
 | `draft_not_found` | no draft for that manuscript and member |
 | `withheld_instruments_disagree` | the proof's two passes disagree — nobody acts, the instrument gets fixed |
 | `no_source_sections` | no boundaries exist to derive; the writer creates structure |
-| `legacy_scaffold_held` | see above |
 | `boundary_moved` | a heading rewritten or deleted — only the writer can say where the break now falls |
 | `boundary_offsets_incomplete` | a boundary could not be located in the current draft, or the alignment ran backwards |
 | `leading_text_before_first_boundary` | text sits above every boundary; absorbing it would attribute it to section 0, dropping it would lose it |
@@ -106,7 +110,7 @@ everything they wrote.
 - production bulk backfill
 - Structure Adoption UI
 - `NO_SOURCE` automatic structuring
-- legacy scaffold removal
+- legacy scaffold removal (permanently outside conversion, per above)
 - WS2-04B chapter-click UI
 
 ## Open finding — four `book-print-kdp-final` drafts

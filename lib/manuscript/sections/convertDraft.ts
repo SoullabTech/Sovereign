@@ -27,13 +27,14 @@
  *                     structure when they want it
  *   moved boundary    a heading rewritten, deleted, or text carried across a
  *                     break — only the writer can say where it now falls
- *   LEGACY variant    held: a legacy draft seeds byte-exactly WITH its `# `
- *                     scaffolding or not at all. Removing the scaffold changes
- *                     the draft's bytes, so it cannot happen inside a
- *                     conversion that promises the bytes are unchanged. Those
- *                     two claims cannot both be true; normalisation is a
- *                     separate, separately proven transform. (No production
- *                     draft is in this class today.)
+ * A LEGACY draft seeds like any other — byte-exactly, WITH its `# `
+ * scaffolding. Stripping the scaffold is NOT part of conversion and never can
+ * be: removing `# ` changes the draft's bytes, and this transaction promises
+ * they are unchanged. Both claims cannot be true at once, so normalisation
+ * stays a separate transform with its own proof and its own disclosure. The
+ * boundary of a rewritten heading is still uniquely located — it is the line
+ * that replaced it — so the partition is exact either way. (No production
+ * draft is in this class today.)
  *
  * See docs/design/writer-studio/WS2-04A_SECTION_ADDRESSABLE_DRAFT.md.
  */
@@ -47,7 +48,6 @@ export type ConversionRefusal =
   | 'withheld_instruments_disagree'
   | 'no_source_sections'
   | 'boundary_moved'
-  | 'legacy_scaffold_held'
   | 'boundary_offsets_incomplete'
   | 'leading_text_before_first_boundary'
   | 'already_converted_inconsistently';
@@ -98,8 +98,6 @@ export function planConversion(
       return { ok: false, refusal: 'withheld_instruments_disagree' };
     case 'NO_SOURCE':
       return { ok: false, refusal: 'no_source_sections' };
-    case 'LEGACY_COMPOSER_VARIANT':
-      return { ok: false, refusal: 'legacy_scaffold_held' };
     default:
       break;
   }

@@ -94,13 +94,6 @@ describe('planConversion — what it refuses', () => {
     expect(planConversion('', [])).toMatchObject({ ok: false, refusal: 'no_source_sections' });
   });
 
-  it('HOLDS the legacy composer rather than stripping its scaffold', () => {
-    // Removing `# ` changes the draft's bytes, so it cannot happen inside a
-    // conversion promising the bytes are unchanged. Both claims cannot be true.
-    const plan = planConversion(composeLegacyHashHeadings(BOOK), BOOK);
-    expect(plan).toMatchObject({ ok: false, refusal: 'legacy_scaffold_held' });
-  });
-
   it('refuses a renamed heading — only the writer can say where the break falls', () => {
     const content = composeCurrent(BOOK).replace('Chapter Two', 'Chapter II — The Leaving');
     const plan = planConversion(content, BOOK);
@@ -130,6 +123,34 @@ describe('planConversion — what it refuses', () => {
     if (plan.ok) throw new Error('expected a refusal');
     expect(JSON.stringify(plan)).not.toContain('Anna');
     expect(JSON.stringify(plan)).not.toContain('morning');
+  });
+});
+
+describe('planConversion — the legacy composer', () => {
+  it('seeds byte-exactly, scaffolding INCLUDED', () => {
+    const content = composeLegacyHashHeadings(BOOK);
+    const plan = planConversion(content, BOOK);
+    expect(plan.ok).toBe(true);
+    if (!plan.ok) return;
+    expect(flattenSections(plan.slices)).toBe(content);
+    expect(plan.slices).toHaveLength(BOOK.length);
+  });
+
+  it('keeps the "# " the draft actually contains — conversion never strips it', () => {
+    // Removing the scaffold changes the draft's bytes, and this transaction
+    // promises they are unchanged. Normalisation is a separate transform.
+    const plan = planConversion(composeLegacyHashHeadings(BOOK), BOOK);
+    if (!plan.ok) throw new Error('expected a plan');
+    expect(plan.slices[0].text.startsWith('# Chapter One')).toBe(true);
+    expect(plan.slices[1].text.startsWith('# Chapter Two')).toBe(true);
+  });
+
+  it('a legacy draft with a body edit still partitions exactly', () => {
+    const content = composeLegacyHashHeadings(BOOK)
+      .replace('It was cold.', 'It was colder than she had expected.');
+    const plan = planConversion(content, BOOK);
+    if (!plan.ok) return; // refusal acceptable; loss is not
+    expect(flattenSections(plan.slices)).toBe(content);
   });
 });
 
