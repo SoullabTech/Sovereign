@@ -19,10 +19,23 @@
  * The switch is never awaited. The queue already serializes at the draft level,
  * so waiting adds no safety and turns persistence latency into navigation
  * latency. Chapter 18 opens now; Chapter 17 saves behind it.
+ *
+ * AND A KEYSTROKE IS NOT A LOGICAL SAVE. The queue is the save serializer, not
+ * the typing transport — enqueueing on every character would put one database
+ * transaction, and one full-manuscript aggregation, behind each letter. Typing
+ * STAGES text locally and marks the section dirty; the staged snapshot reaches
+ * the queue on the autosave timer, on a section switch, or when the page is
+ * hidden. That is the discipline the continuous editor already keeps, and the
+ * section cut inherits it rather than quietly dropping it.
+ *
+ * The switch seam is cleaner for it: Chapter 17 may have a debounce timer
+ * pending, and captureOnLeave forces the exact visible snapshot into the queue
+ * before Chapter 18 mounts, so the timer never races the navigation.
  */
 
-import { useCallback, useMemo, useRef, useState, useSyncExternalStore } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { SectionSaveQueue, type SaveFn, type SectionStatus } from './sectionSaveQueue';
+import { AUTOSAVE_DELAY_MS } from '@/app/press/manuscript/workingDraftClient';
 
 export interface WritingSection {
   id: string;
@@ -101,9 +114,26 @@ export function useSectionWriting(
   );
   void queueVersion;
 
+  /* Text typed but not yet handed to the queue. A section is dirty from the
+     first keystroke; it is only SAVED on a flush. */
+  const staged = useRef(new Map<string, string>());
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [stagedTick, setStagedTick] = useState(0);
+
+  const flush = useCallback((sectionId: string) => {
+    const text = staged.current.get(sectionId);
+    if (text === undefined) return;
+    staged.current.delete(sectionId);
+    queue.enqueue(sectionId, text);
+    setStagedTick((n) => n + 1);
+  }, [queue]);
+
   const active = activeId ? sectionsById.get(activeId) ?? null : null;
+  /* Staged text is the newest thing that exists, so it outranks both the
+     queue's copy and the server's. */
+  void stagedTick;
   const activeBody = activeId
-    ? (queue.localBody(activeId) ?? active?.body ?? '')
+    ? (staged.current.get(activeId) ?? queue.localBody(activeId) ?? active?.body ?? '')
     : '';
 
   const edit = useCallback((body: string) => {
@@ -111,13 +141,38 @@ export function useSectionWriting(
     const section = sectionsById.get(activeId);
     if (!section?.editable) return;
     visibleBody.current = body;
-    queue.enqueue(activeId, body);
-  }, [activeId, queue, sectionsById]);
+    staged.current.set(activeId, body);
+    setStagedTick((n) => n + 1);
+    if (timer.current) clearTimeout(timer.current);
+    timer.current = setTimeout(() => flush(activeId), AUTOSAVE_DELAY_MS);
+  }, [activeId, flush, sectionsById]);
+
+  /* Leaving the page is a flush point, exactly as it is for the continuous
+     editor: staged text that never reached the queue would be lost with the
+     tab, and losing it silently is worse than an extra save. */
+  useEffect(() => {
+    const flushAll = () => {
+      if (timer.current) clearTimeout(timer.current);
+      for (const id of [...staged.current.keys()]) flush(id);
+    };
+    const onHide = () => { if (document.visibilityState === 'hidden') flushAll(); };
+    window.addEventListener('pagehide', flushAll);
+    document.addEventListener('visibilitychange', onHide);
+    return () => {
+      window.removeEventListener('pagehide', flushAll);
+      document.removeEventListener('visibilitychange', onHide);
+      flushAll();
+    };
+  }, [flush]);
 
   const goToSection = useCallback((nextId: string) => {
     /* ORDER IS THE CONTRACT. Capture and enqueue the section being left BEFORE
        the active id changes — synchronously, from the ref, so the text read is
        the text on screen. */
+    /* A pending debounce must not fire against the section we are leaving
+       after the active id has moved on. */
+    if (timer.current) { clearTimeout(timer.current); timer.current = null; }
+    if (activeId) staged.current.delete(activeId);
     captureOnLeave(queue, activeId ? sectionsById.get(activeId) ?? null : null, visibleBody.current);
 
     /* Now switch. Not awaited: the queue is already serialized, and blocking
@@ -132,9 +187,11 @@ export function useSectionWriting(
     activeId,
     active,
     activeBody,
-    statusOf: (id) => queue.statusOf(id),
+    /* Staged-but-unflushed is dirty. Reporting `clean` while text sits in a
+       debounce would tell the writer their words are safe before they are. */
+    statusOf: (id) => (staged.current.has(id) ? 'dirty' : queue.statusOf(id)),
     edit,
     goToSection,
-    hasUnsavedWork: () => queue.hasUnsavedWork(),
+    hasUnsavedWork: () => staged.current.size > 0 || queue.hasUnsavedWork(),
   };
 }
