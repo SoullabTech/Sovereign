@@ -1,6 +1,7 @@
 # WS2-05 — Manuscript Structure Authority
 
-**Status:** SPEC ONLY. No implementation authorized.
+**Status:** SETTLED. **WS2-05A (Authorial Structure) authorized** 2026-08-30.
+WS2-05B (Proposed Structure) NOT authorized.
 **Predecessor:** WS2-04B (section-aware WRITE path, PASS · founder-witnessed locally)
 **DESKTOP_SEAM_CHANGED:** NO (proposed; this unit introduces a read surface the
 Desktop does not consume today, and changes no existing seam field)
@@ -8,6 +9,98 @@ Desktop does not consume today, and changes no existing seam field)
 04B made the manuscript safely writable in parts. WS2-05 should make those
 parts intelligible as a Work — without letting a persistence boundary author
 the book.
+
+---
+
+## Rulings (Kelly, 2026-08-30) — settled
+
+```text
+STRUCTURE UNIT
+belongs to:       MANUSCRIPT / WORK
+authored by:      member | mechanically-proved import | proposal
+contains text:    NO
+
+MEMBERSHIP
+points to:        current draft-section UUIDs
+meaning:          direct leaf placement
+replacement:      never silently remapped
+
+WRITING SUBSTRATE
+belongs to:       working draft
+authority over:   characters and save boundaries
+interprets book:  NEVER
+
+SECTION URL
+identity:         stable draft-section UUID
+history:          replaceState
+
+EXISTING BOOKS
+proved hierarchy: NONE
+choices:          organize myself | help find possible divisions
+
+FUTURE IMPORTS
+proved hierarchy: possible only after forward provenance-preservation cut
+third choice:     use structure found in original
+```
+
+**1. Structure attaches to the manuscript.** Attaching it to
+`manuscript_working_drafts` would make an authored statement — *this book has
+three movements* — contingent on a particular technical representation of the
+text. Wrong direction of authority.
+
+```text
+structure unit   = durable authorial meaning
+membership       = where that meaning currently lands in this draft
+draft section    = current persistence boundary
+```
+
+**Draft-replacement rule, stated now and left dormant.** A new working draft
+may never silently inherit old structure membership. The unit tree survives,
+because it belongs to the manuscript; its memberships must then be either
+mechanically remapped *with proof*, or left visibly unresolved until the
+member places them. No fuzzy matching, no title matching, no positional
+guessing, no "probably the same chapter." There is currently one durable
+working draft per manuscript, so **WS2-05A adds no machinery for draft
+replacement** — the rule is recorded, not built. That preserves the ontology
+without paying for a lifecycle that does not exist.
+
+**2. `replaceState`.** A section click changes place within the Work, not
+browser-level destination. Back should mean *leave this place*, not *retrace
+the 37 sections I happened to inspect*. `pushState` would turn browsing a
+manuscript into synthetic browser history — not useful history, interaction
+residue.
+
+```text
+section navigation          replaceState
+different manuscript/route  normal navigation history
+```
+
+**3. Two choices, not three — and stricter language.** The future third choice
+is **not** "Use the structure already present." It is **"Use the structure
+found in the original."** *Already present* is ambiguous: the database does
+have headings and sections, and this spec establishes that those do not prove
+hierarchy. The phrase must point back to provenance.
+
+**4. Membership is direct leaf placement.** `manuscript_structure_members`
+records direct membership in the **lowest authored structural unit** containing
+that writing section. Ancestor membership is derived through `parent_id`; the
+same draft section is never redundantly joined to both Chapter and Part. That
+keeps `UNIQUE (draft_section_id)` valid and prevents two competing
+representations of hierarchy.
+
+**5. Two internal cuts.** Prove that a human can author structure safely before
+giving the system the ability to propose it. 05A does not counterfeit the
+second door before 05B exists.
+
+| Cut | Contents | Status |
+|---|---|---|
+| **05A — Authorial Structure** | tables · zero-character invariant · create/name/group/nest/reorder/delete · unplaced sections · hierarchical outline · `?s=` place persistence | **AUTHORIZED** |
+| **05B — Proposed Structure** | MAIA analyzes · proposals outside the canonical outline · per-unit adoption · `adopted_from_id` provenance | not authorized |
+
+**Acceptance for 05A:** one real restructuring operation witnessed on the
+174-section book, proving the defining property — *the book becomes more
+intelligibly organized while the flattened manuscript remains byte-for-byte
+unchanged.*
 
 ---
 
@@ -63,7 +156,9 @@ Two consequences:
 
 1. **v1 ships two choices, not three** — *I'll organize it myself*, and
    *Help me find possible divisions* (suggestions, never mutations). The third
-   appears only for manuscripts whose import actually recorded hierarchy.
+   appears only for manuscripts whose import actually recorded hierarchy, and
+   it is worded **"Use the structure found in the original"** — pointing at
+   provenance, not at what the database happens to hold (ruling 3).
 2. **A separate, small, forward-only cut** should make the segmenter record
    what it already knows — heading class and markdown depth — so that
    *future* imports have a provable structure to adopt. That is not WS2-05.
@@ -137,13 +232,13 @@ The 04A constitution — *"No interpretive columns. No title, summary, topic,
 or ordering hint the member did not write"* — governs here too. `title` and
 `kind` are in the model precisely because the member writes them.
 
-**Open decision for Kelly:** does structure attach to the *manuscript* or to
-the *working draft*? Attaching to the manuscript survives draft replacement
-and matches "how this Work is divided". Attaching to the draft makes
-membership referentially simple, since membership points at draft sections
-which die with the draft. My recommendation is **manuscript**, with membership
-scoped to the current section-addressable draft and re-derived (never
-silently) if the draft is ever replaced. This wants a decision before code.
+**RULED: manuscript.** `manuscript_id`, not `draft_id`. An authored
+statement about how the Work divides must not be contingent on a
+particular technical representation of the text. Membership is scoped to
+the current section-addressable draft; if a draft is ever replaced,
+memberships are remapped only with proof or left visibly unplaced — never
+silently inherited. 05A builds no draft-replacement machinery; the rule is
+recorded and dormant (ruling 1).
 
 ### Q2 — Who may create structure?
 
@@ -178,7 +273,10 @@ manuscript_structure_members
   unit_id            uuid not null -> manuscript_structure_units
   draft_section_id   uuid not null -> manuscript_draft_sections
   PRIMARY KEY (unit_id, draft_section_id)
-  UNIQUE (draft_section_id)        -- a section belongs to at most one leaf unit
+  UNIQUE (draft_section_id)        -- direct leaf placement: a section joins the
+                                   -- LOWEST authored unit containing it, and no
+                                   -- other. Part membership is derived through
+                                   -- parent_id, never joined a second time.
 ```
 
 **Why a join table rather than a `structure_unit_id` column on
@@ -261,10 +359,8 @@ On load:
 No positional indexing as identity — never `s=22`. Position is a rendering
 fact and changes; the id is the thing.
 
-**Decision for Kelly:** `history.replaceState` or `pushState` on section
-change. My recommendation is **replaceState** — with push, the browser Back
-button walks backwards through every section the member visited instead of
-leaving the Work, which is a different and worse kind of place-loss.
+**RULED: `history.replaceState`** (ruling 2). Section navigation replaces;
+moving to a different manuscript or route uses normal navigation history.
 
 ---
 
@@ -315,8 +411,7 @@ how a Work is organized):
 
 ## What a WS2-05 implementation cut would need, in order
 
-1. Kelly's decisions on the two open questions (§Q1 attachment point,
-   §place-persistence history method).
+1. ~~Kelly's decisions on the two open questions~~ — ruled above.
 2. Migration: two additive tables. No column on `manuscript_draft_sections`.
 3. The zero-character invariant as an executable test before any UI.
 4. Read surface: outline renders the tree, unplaced sections visible.
@@ -326,6 +421,5 @@ how a Work is organized):
 7. Proposals — and only if the ladder is already enforced by the shape of the
    code, not by discipline at the call site.
 
-Nothing above is authorized. This document is the spec, and the structure
-model is not settled until Kelly rules on §Q1 and §1's two-versus-three
-choices.
+Items 1-6 are **WS2-05A and are authorized.** Item 7 (proposals) is 05B and
+is **not.**
