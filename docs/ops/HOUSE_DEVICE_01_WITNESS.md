@@ -198,42 +198,72 @@ dropped three caller lines that were present on the House branch:
 The candidate reached canonical MAIA only by a manual menu click.
 Repaired in DESKTOP-ARRIVAL-01 on a new SHA; this record stays as it is.
 
-### Walk 2 — candidate `1ec8135b2` · **FAIL** (a different defect) · PERMANENT RECORD
+### Walk 2 — candidate `1ec8135b2` · **FAIL at voice** · PERMANENT RECORD
 
 ```text
-HOUSE-DEVICE-01 / ARRIVAL RE-RUN        candidate 1ec8135b2
+HOUSE-DEVICE-01 / WALK 2                candidate 1ec8135b2
 
-canonical /maia revealed       PASS
-local mini-MAIA hidden         PASS
-title / host place agrees      PASS
+cold arrival → canonical /maia   PASS
+local mini-MAIA hidden           PASS
+title / host place agrees        PASS
+member identity → Kelly          PASS
 
-correct member identity        FAIL
-  observed avatar              F
-  expected member              Kelly
-  likely rendered identity     `Friend` fallback
+voice start                      FAIL
+  action     tap TAP TO SPEAK
+  observed   listening indicator engages briefly, then immediately returns
+  capture    none
 
-STEP 1                         FAIL
-STEPS 2-10                     NOT REACHED
+classification                   DESKTOP VOICE TRANSPORT
+STEPS 2-10                       NOT REACHED
 ```
 
-⭐ **DESKTOP-ARRIVAL-01 is witnessed and stays closed.** The original defect —
-cold launch showing the local D01 renderer — is fixed and confirmed on device,
-mechanically: `Hey`, `quiet hours`, `I'm ready` and the holoflower are all absent
-from `src/index.html`, the local renderer's `Start listening` and `Sign out` were
-not on screen, and the title bar read `MAIA Desktop` from `showPlace(MAIA)`. Do
-not reopen it.
+⭐ **DESKTOP-ARRIVAL-01 witnessed and closed.** Confirmed mechanically: `Hey`,
+`quiet hours`, `I'm ready` and the holoflower are all absent from
+`src/index.html`; the local renderer's `Start listening` and `Sign out` were not
+on screen; the title bar read `MAIA Desktop` from `showPlace(MAIA)`.
 
-This is a **second, separate defect** reached only because the first was fixed:
+⭐ **Identity resolved on device: the account sheet reads Kelly, and the top-right
+shows `K Kelly`.** The earlier `F` is closed for this walk and
+CANONICAL-MAIA-IDENTITY-01 is NOT opened. (An earlier revision of this page named
+a `DESKTOP-IDENTITY-CARRY-01`; that name was wrong twice over — the defect was
+not Desktop's, and it did not survive the device check. Recorded here so the
+correction is visible rather than silently edited away.)
 
-> **DESKTOP-IDENTITY-CARRY-01** — Desktop successfully restores canonical
-> authorization, but `/maia` does not receive or display the member's canonical
-> preferred identity. The surface is authenticated and nameless.
+#### The blocking defect: canonical MAIA thinks Electron is a browser
 
-`MaiaTopBar` renders the first letter of the first name from `explorerName`, and
-the `/maia` identity code falls back to `Friend` when it cannot obtain a valid
-display name — so `F` is most likely that fallback rather than a wrong F-named
-member. Pending device confirmation: open the account sheet, which uses the same
-`explorerName`, and read the name it shows.
+⛔ **This is NOT the old mini-MAIA voice problem.** The sovereign voice machinery
+extracted into the Desktop core is not what the member is touching. The visible
+surface is canonical web `/maia` inside the contained BrowserView, and it makes
+its own transport choice:
+
+```text
+IS                                        MUST BE
+canonical /maia                           canonical /maia
+  → Capacitor native?      no               → MAIA Desktop?        yes
+  → Chromium has                            → SOVEREIGN WHISPER
+    SpeechRecognition?     yes                 getUserMedia
+  → WEB SPEECH                                 MediaRecorder
+  → dies immediately in Electron               first-party transcription
+```
+
+`lib/utils/platformDetection.ts` on this lineage has no `desktop` category, no
+`maia-desktop/` UA marker, no `isDesktopShell()` and no `selectVoiceTransport()`.
+It selects the sovereign path only when `SpeechRecognition` is ABSENT — and in
+Electron's Chromium it is present.
+
+⚠️ **Carried half a contract.** `test/ds02-ua-marker.test.mjs` was brought over in
+HOUSE-RECONCILE-01 and is headed `DESKTOP-SOVEREIGN-STT-01`. It states that
+`platformDetection.ts` classifies Desktop by the `maia-desktop/<version>` token
+and defines *"the exact regex platformDetection.ts uses"* — locally. It never
+opens that file, so it passes against a counterpart that does not exist on this
+lineage. The pin was carried; the thing it pins was left on the branch.
+
+⛔ **Do not respond by widening the BrowserView permissions.** `platformPermission`
+is audio-only, main-frame-only, origin-equal, and gated on main's own observation
+that MAIA is visible at `/maia`. It is correct. The defect is which transport
+canonical MAIA chooses after the tap.
+
+Repaired in **DESKTOP-SOVEREIGN-STT-01**.
 
 ### Walk 3 — candidate `<pending DESKTOP-IDENTITY-CARRY-01>` · not yet run
 
