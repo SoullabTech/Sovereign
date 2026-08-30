@@ -17,6 +17,11 @@
  */
 
 import { describe, it, expect, jest, beforeEach, afterEach } from '@jest/globals';
+// ⛔ Side-effect import: jsdom provides no `crypto.randomUUID`, which `apiFetch`
+// calls on the way to every request. Without it each upload in this suite dies as
+// `transcribe_http_error / TypeError` before the behaviour under test runs.
+import './support/jsdomCrypto';
+
 /**
  * ⛔ jest has no `stubGlobal`. This is vitest's semantics, preserved exactly:
  * remember the ORIGINAL on first stub, and on restore put it back — or delete
@@ -57,6 +62,13 @@ class FakeRecorder {
   }
 }
 
+/**
+ * Amplitude fed to the analyser: comfortably above the module's 0.012 RMS
+ * threshold, so these captures simulate a member who is speaking throughout.
+ * A constant-filled buffer has RMS exactly equal to its amplitude.
+ */
+const SPEAKING_LEVEL = 0.56;
+
 const track = () => ({ stop: jest.fn(), kind: 'audio', addEventListener: jest.fn(), removeEventListener: jest.fn() });
 const fakeStream = () => { const t = [track()]; return { getTracks: () => t, getAudioTracks: () => t } as any; };
 
@@ -69,7 +81,24 @@ beforeEach(() => {
     state = 'running';
     createMediaStreamSource() { return { connect: jest.fn(), disconnect: jest.fn() }; }
     createAnalyser() {
-      return { fftSize: 0, frequencyBinCount: 8, getByteTimeDomainData: (a: Uint8Array) => a.fill(200), connect: jest.fn(), disconnect: jest.fn() };
+      return {
+        fftSize: 0,
+        frequencyBinCount: 8,
+        // ⛔ DESKTOP-VOICE-TEST-INSTRUMENT-RESTORE-01 — production reads the FLOAT
+        // time-domain API (`androidVoiceFallback.ts:416`). This double previously
+        // offered only `getByteTimeDomainData`, so every VAD poll threw a TypeError
+        // inside its own setInterval: no RMS was computed, `lastLoudAt` never moved,
+        // and the silence/ceiling comparisons after the throw never ran. The capture
+        // fell through to the hard timer instead. The suite was green while the VAD
+        // it appears to drive was dead.
+        //
+        // SPEAKING_LEVEL preserves the original fixture's intent, not merely its API:
+        // byte time-domain centres silence at 128, so the old `fill(200)` meant an
+        // amplitude of (200-128)/128 ≈ 0.56 — a member speaking continuously.
+        getFloatTimeDomainData: (a: Float32Array) => a.fill(SPEAKING_LEVEL),
+        connect: jest.fn(),
+        disconnect: jest.fn(),
+      };
     }
     resume() { return Promise.resolve(); }
     close() { return Promise.resolve(); }
@@ -219,7 +248,8 @@ describe('the capture is owned by the component, not by one async scope', () => 
     // sovereign stream lived in a local `let stream` it had never heard of.
     const stop = src.slice(src.indexOf('const stopListening = useCallback'));
     const revoke = stop.indexOf("revokeSovereignCapture('stopListening')");
-    expect(revoke, 'stopListening does not revoke the sovereign capture').toBeGreaterThan(-1);
+    // FAILS IF: stopListening does not revoke the sovereign capture
+    expect(revoke).toBeGreaterThan(-1);
     // and it is not nested inside the userExitMode branch, which would leave
     // navigation and error-recovery stops unable to reach it.
     const userExit = stop.indexOf('if (options?.userExitMode)');
@@ -260,8 +290,10 @@ describe('the capture is owned by the component, not by one async scope', () => 
     const dispatch = branch.indexOf("witnessDispatch('web_whisper'");
     const onTranscript = branch.indexOf('onTranscript(result.transcript)');
     expect(gate).toBeGreaterThan(-1);
-    expect(gate, 'a stale result can reach witnessDispatch').toBeLessThan(dispatch);
-    expect(gate, 'a stale result can reach onTranscript').toBeLessThan(onTranscript);
+    // FAILS IF: a stale result can reach witnessDispatch
+    expect(gate).toBeLessThan(dispatch);
+    // FAILS IF: a stale result can reach onTranscript
+    expect(gate).toBeLessThan(onTranscript);
   });
 
   it('T4 — the signal is actually passed to the recorder', () => {
@@ -270,9 +302,11 @@ describe('the capture is owned by the component, not by one async scope', () => 
     // single-line literal match. What this guard is FOR is that the capture's
     // signal reaches `recordAndTranscribe` — not how the object is formatted.
     const call = sovereign.indexOf('recordAndTranscribe(stream, {');
-    expect(call, 'the sovereign branch no longer calls recordAndTranscribe').toBeGreaterThan(-1);
+    // FAILS IF: the sovereign branch no longer calls recordAndTranscribe
+    expect(call).toBeGreaterThan(-1);
     const args = sovereign.slice(call, sovereign.indexOf('});', call));
-    expect(args, 'the capture signal is not passed to the recorder')
+    // FAILS IF: the capture signal is not passed to the recorder
+    expect(args)
       .toContain('signal: captureController.signal');
   });
 
@@ -293,6 +327,7 @@ describe('the capture is owned by the component, not by one async scope', () => 
     const between = sovereign.slice(sovereign.indexOf(';', start) + 1, register);
     // The catch block legitimately sits here and cannot suspend — it throws.
     const withoutCatch = between.replace(/catch \(err: any\)[\s\S]*?\n        \}/, '');
-    expect(withoutCatch, 'an await sits between acquiring and registering the stream').not.toContain('await ');
+    // FAILS IF: an await sits between acquiring and registering the stream
+    expect(withoutCatch).not.toContain('await ');
   });
 });

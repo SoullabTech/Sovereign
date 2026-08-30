@@ -15,6 +15,11 @@
  */
 
 import { describe, it, expect, jest, beforeEach, afterEach } from '@jest/globals';
+// ⛔ Side-effect import: jsdom provides no `crypto.randomUUID`, which `apiFetch`
+// calls on the way to every request. Without it each upload in this suite dies as
+// `transcribe_http_error / TypeError` before the behaviour under test runs.
+import './support/jsdomCrypto';
+
 /**
  * ⛔ jest has no `stubGlobal`. This is vitest's semantics, preserved exactly:
  * remember the ORIGINAL on first stub, and on restore put it back — or delete
@@ -64,6 +69,13 @@ class FakeRecorder {
   }
 }
 
+/**
+ * Amplitude fed to the analyser: comfortably above the module's 0.012 RMS
+ * threshold, so these captures simulate a member who is speaking throughout.
+ * A constant-filled buffer has RMS exactly equal to its amplitude.
+ */
+const SPEAKING_LEVEL = 0.56;
+
 const track = () => ({ stop: jest.fn(), kind: 'audio', addEventListener: jest.fn(), removeEventListener: jest.fn() });
 const fakeStream = () => { const t = [track()]; return { getTracks: () => t, getAudioTracks: () => t } as any; };
 
@@ -76,7 +88,24 @@ beforeEach(() => {
     state = 'running';
     createMediaStreamSource() { return { connect: jest.fn(), disconnect: jest.fn() }; }
     createAnalyser() {
-      return { fftSize: 0, frequencyBinCount: 8, getByteTimeDomainData: (a: Uint8Array) => a.fill(200), connect: jest.fn(), disconnect: jest.fn() };
+      return {
+        fftSize: 0,
+        frequencyBinCount: 8,
+        // ⛔ DESKTOP-VOICE-TEST-INSTRUMENT-RESTORE-01 — production reads the FLOAT
+        // time-domain API (`androidVoiceFallback.ts:416`). This double previously
+        // offered only `getByteTimeDomainData`, so every VAD poll threw a TypeError
+        // inside its own setInterval: no RMS was computed, `lastLoudAt` never moved,
+        // and the silence/ceiling comparisons after the throw never ran. The capture
+        // fell through to the hard timer instead. The suite was green while the VAD
+        // it appears to drive was dead.
+        //
+        // SPEAKING_LEVEL preserves the original fixture's intent, not merely its API:
+        // byte time-domain centres silence at 128, so the old `fill(200)` meant an
+        // amplitude of (200-128)/128 ≈ 0.56 — a member speaking continuously.
+        getFloatTimeDomainData: (a: Float32Array) => a.fill(SPEAKING_LEVEL),
+        connect: jest.fn(),
+        disconnect: jest.fn(),
+      };
     }
     resume() { return Promise.resolve(); }
     close() { return Promise.resolve(); }

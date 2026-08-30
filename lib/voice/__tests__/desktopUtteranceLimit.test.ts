@@ -18,6 +18,11 @@
  */
 
 import { describe, it, expect, jest, beforeEach, afterEach } from '@jest/globals';
+// ⛔ Side-effect import: jsdom provides no `crypto.randomUUID`, which `apiFetch`
+// calls on the way to every request. Without it each upload in this suite dies as
+// `transcribe_http_error / TypeError` before the behaviour under test runs.
+import './support/jsdomCrypto';
+
 /**
  * ⛔ jest has no `stubGlobal`. This is vitest's semantics, preserved exactly:
  * remember the ORIGINAL on first stub, and on restore put it back — or delete
