@@ -83,3 +83,41 @@ describe('the continuous path is unchanged', () => {
     expect(page).toMatch(/<Worktable\s+manuscriptId=\{manuscript\.id\}\s+onMeta=\{onMeta\}\s+onCheckpointed=\{onCheckpointed\}/);
   });
 });
+
+describe('the published session is referentially stable', () => {
+  const hook = readFileSync(
+    join(process.cwd(), 'lib/writersStudio/useSectionWriting.ts'), 'utf8');
+
+  it('the session object is memoized, not rebuilt every render', () => {
+    // The Canvas lifts this object into state. A fresh literal per render would
+    // feed itself: publish → setState → rerender → new object → publish → …
+    // One session republished by unstable identity, not two sessions.
+    const ret = hook.slice(hook.lastIndexOf('return useMemo('));
+    expect(ret).toMatch(/^return useMemo\(/m);
+    expect(ret).toContain('activeId');
+    expect(ret).toContain('activeBody');
+    expect(ret).toContain('statusOf');
+  });
+
+  it('its identity depends on observable writing state', () => {
+    const deps = hook.slice(hook.lastIndexOf('[initialSections'));
+    for (const signal of ['activeId', 'activeBody', 'statusOf', 'goToSection']) {
+      expect(deps).toContain(signal);
+    }
+  });
+
+  it('statusOf and hasUnsavedWork are stable callbacks, not inline arrows', () => {
+    // An inline arrow in the returned object would change identity every
+    // render and defeat the memo it sits inside.
+    expect(hook).toMatch(/const statusOf = useCallback\(/);
+    expect(hook).toMatch(/const hasUnsavedWork = useCallback\(/);
+  });
+
+  it('those callbacks re-read through the queue and staged revisions', () => {
+    // Without queueVersion/stagedTick in their deps they would close over a
+    // stale view and the outline would show yesterday's markers.
+    const seg = hook.slice(hook.indexOf('const statusOf = useCallback('));
+    expect(seg).toContain('queueVersion');
+    expect(seg).toContain('stagedTick');
+  });
+});

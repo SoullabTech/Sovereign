@@ -202,7 +202,6 @@ export function useSectionWriting(
           '|' + queue.state().conflicted.join(',') + '|' + queue.state().errored.join(','),
     () => 'server',
   );
-  void queueVersion;
 
   /* Text typed but not yet handed to the queue. A section is dirty from the
      first keystroke; it is only SAVED on a flush. */
@@ -220,7 +219,8 @@ export function useSectionWriting(
 
   const active = activeId ? sectionsById.get(activeId) ?? null : null;
   /* Staged text is the newest thing that exists, so it outranks both the
-     queue's copy and the server's. */
+     queue's copy and the server's. stagedTick is what makes a staged edit
+     produce a render at all — the map itself is a ref. */
   void stagedTick;
   const activeBody = activeId
     ? (staged.current.get(activeId)
@@ -296,14 +296,47 @@ export function useSectionWriting(
       ?? '';
   }, [activeId, queue, sectionsById]);
 
-  return {
-    sections: initialSections,
-    activeId,
-    active,
-    activeBody,
-    statusOf: (id) => resolveSectionStatus(queue.statusOf(id), staged.current.has(id)),
-    edit,
-    goToSection,
-    hasUnsavedWork: () => staged.current.size > 0 || queue.hasUnsavedWork(),
-  };
+  const statusOf = useCallback(
+    (id: string) => resolveSectionStatus(queue.statusOf(id), staged.current.has(id)),
+    // queueVersion and stagedTick are the observable revisions this reads
+    // through; without them the callback would close over a stale view.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [queue, queueVersion, stagedTick],
+  );
+
+  const hasUnsavedWork = useCallback(
+    () => staged.current.size > 0 || queue.hasUnsavedWork(),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [queue, queueVersion, stagedTick],
+  );
+
+  /**
+   * THE PUBLISHED SESSION MUST BE REFERENTIALLY STABLE.
+   *
+   * The Canvas lifts this object into state so the outline and the surface
+   * share one session. If the hook returned a fresh literal every render, that
+   * publication would feed itself:
+   *
+   *     session renders W1 → published → parent setState → parent rerenders
+   *     → session rerenders → W2 → published → … forever
+   *
+   * It is not the two-session bug; it is one session republished by unstable
+   * identity. So the object changes only when something observable about the
+   * writing changes — the active section, the visible text, or a queue/staged
+   * revision. A keystroke publishes exactly one new snapshot, and the rerender
+   * that publication causes receives the same object, so it terminates.
+   */
+  return useMemo(
+    () => ({
+      sections: initialSections,
+      activeId,
+      active,
+      activeBody,
+      statusOf,
+      edit,
+      goToSection,
+      hasUnsavedWork,
+    }),
+    [initialSections, activeId, active, activeBody, statusOf, edit, goToSection, hasUnsavedWork],
+  );
 }
