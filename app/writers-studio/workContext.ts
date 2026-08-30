@@ -84,34 +84,48 @@ export function currentWork(context: WorkContext): LivingWork | null {
      current Work identity → MAIA exchange situated in same Work
        → return to Studio → same Work remains current
 
-   ── STATUS: NOT COMPLETE. Ruled by the founder, 2026-08-29. ──────────────
+   ── STATUS: BUILT. ───────────────────────────────────────────────────────
 
      Studio-side Work context      BUILT
      outbound Work identity        BUILT
      return address                BUILT
-     real MAIA situated exchange   NOT BUILT
+     real MAIA situated exchange   BUILT   (WS2-03C)
      ───────────────────────────────────────
-     WS2-03 semantic handoff       NOT YET COMPLETE
+     WS2-03 semantic handoff       COMPLETE
 
-   Read `assertRoundTripPreservesWork` against that table before citing it.
-   It proves the TRANSPORT contract: the outbound carries the Work identity
-   and an exact return address, the return address carries the manuscript
-   identity from which the same Work is re-derived, and neither leg guesses.
+   CORRECTED 2026-08-30. This block asserted NOT BUILT and "Conversations
+   stays unavailable" for two units after both had stopped being true —
+   03C built the situated exchange and 03D moved it inside the Studio. It is
+   recorded rather than quietly swapped because it is the SAME failure as the
+   MAIA panel sentence that outlived its own condition: a statement true when
+   written, false the moment the thing it described was finished, and left
+   standing because nobody re-reads a comment that was accurate once. A stale
+   status block is worse than none — it is read as current.
 
-   It does NOT prove the middle term — "MAIA exchange situated in the same
-   Work" — and no test in this file can, because that half does not exist. A
-   green round-trip test here is easy to mistake for a finished handoff, which
-   is precisely why the table is stated above the function rather than left to
-   be inferred from the paragraph below it.
+   ── WHERE THE EXCHANGE ACTUALLY LIVES ────────────────────────────────────
 
-   WHAT IS DELIBERATELY NOT DONE: this does not make the MAIA band's
-   Conversations destination available. The middle term of the contract —
-   "MAIA exchange situated in same Work" — is not this lane's to assert:
-   /maia is a generic conversational surface that does not read a Work, and
-   handing it an identity it ignores would satisfy the URL and not the
-   contract. Per the founder's rule for §5, Conversations stays unavailable
-   until the exchange is genuinely situated. The TRANSPORT is built and proven
-   here so that when the MAIA side lands, the Studio side is not the unknown.
+   Inside the Studio, by default. WS2-03D: Conversations expands the MAIA
+   companion region into the canonical exchange beside the manuscript, and the
+   writer does not leave the Work to speak with MAIA.
+
+   `handoffToMaia` is therefore NOT the default path any more. It is the
+   explicit "Open in MAIA" expansion — a member choice — and it carries the
+   conversation already under way so full MAIA continues that exchange rather
+   than opening a second one beside it.
+
+   ── WHAT assertRoundTripPreservesWork DOES AND DOES NOT PROVE ────────────
+
+   Unchanged, and still worth stating: it proves the TRANSPORT contract — the
+   outbound carries the Work identity and an exact return address, the return
+   address carries the manuscript identity from which the same Work is
+   re-derived, and neither leg guesses.
+
+   It does not by itself prove the middle term. What proves that now is
+   elsewhere and deliberately so: server-side resolution in
+   lib/writersStudio/workSituation.ts (the member's own row, never the URL's
+   claim), and its composition into the prompt at FAST and CORE — with DEEP
+   contained by SITUATED-WORK-DEEP-01 precisely because it does not compose it.
+
    ══════════════════════════════════════════════════════════════════════════ */
 
 /** The parameter a situated MAIA exchange would read. One definition. */
