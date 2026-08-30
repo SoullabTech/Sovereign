@@ -85,25 +85,45 @@ async function main() {
     const identical = recomposed === d.content;
     const at = identical ? -1 : firstDivergence(recomposed, d.content);
 
+    /* CORRECTED after the first run. "REFUSE = member edits" was too coarse:
+       a draft with NO source sections was never composed from a Source at all
+       — it is a blank page someone started writing on. Calling that "edits
+       whose section ownership cannot be proven" implies a Source it never had.
+
+       Both are still refusals for migration, but for opposite reasons, and
+       04A's design depends on the difference: an edited draft needs a
+       member-facing act to section-address it; a blank-page draft needs
+       sections to exist at all. Conflating them would have produced a schema
+       that answers neither. */
+    const kind = identical
+      ? 'SEEDABLE'
+      : sections.rows.length === 0
+        ? 'NO-SOURCE'
+        : 'EDITED';
+
     if (identical) safe++;
     else refused++;
 
-    console.log(`  ${identical ? 'SAFE   ' : 'REFUSE '} ${d.title ?? '(untitled)'}`);
+    console.log(`  ${kind.padEnd(9)} ${d.title ?? '(untitled)'}`);
     console.log(`     manuscript   ${d.manuscript_id}`);
     console.log(`     sections     ${sections.rows.length}`);
     console.log(`     draft chars  ${d.content.length}  (sha ${sha(d.content)})`);
     console.log(`     source chars ${recomposed.length}  (sha ${sha(recomposed)})`);
     console.log(`     revisions    ${d.revision_count}`);
-    if (!identical) {
+    if (kind === 'EDITED') {
       console.log(`     diverges at  char ${at} of ${Math.min(recomposed.length, d.content.length)}`);
       console.log(`     → member edits present; section ownership is not derivable.`);
-      console.log(`       This draft is PRESERVED AS IS. It is not a defect —`);
-      console.log(`       it is a book someone wrote in.`);
+      console.log(`       PRESERVED AS IS. Not a defect — a book someone wrote in.`);
+    } else if (kind === 'NO-SOURCE') {
+      console.log(`     → no source sections: this draft was never composed from a`);
+      console.log(`       Source. A blank page someone started writing on. It cannot`);
+      console.log(`       be seeded because there is nothing to seed FROM, which is a`);
+      console.log(`       different problem from an edited draft.`);
     }
     console.log('');
   }
 
-  console.log(`  ${safe} losslessly seedable · ${refused} refused\n`);
+  console.log(`  ${safe} losslessly seedable · ${refused} not seedable\n`);
   if (refused > 0) {
     console.log('  A refusal is the correct outcome, not a blocker to route around.');
     console.log('  Section-addressing an edited draft requires a member-facing act,');
