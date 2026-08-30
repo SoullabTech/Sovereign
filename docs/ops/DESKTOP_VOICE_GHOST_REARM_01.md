@@ -14,11 +14,24 @@ repair, name a signal, or choose a threshold — see §6.
 > **No authority allowed the ghost transcript; the architecture never asked the
 > authorship question.**
 
-Nothing failed open. No guard was bypassed, no check regressed, no condition
-evaluated wrongly. The path from "a model returned characters" to "the member
-said this" contains no point at which authorship is interrogated. The defect is
-an absence, not a malfunction — which is why it survived review, and why it
-cannot be closed by repairing anything that already exists.
+The causal distinction, kept exact:
+
+```
+nothing failed open
+no suppression rule malfunctioned
+sameAsPrevious did what it was designed to do
+Whisper returned non-empty text
+the architecture treated non-empty model output as sufficient
+  evidence of member speech
+the missing thing is an authorship question, not a broken
+  existing authority
+```
+
+No guard was bypassed, no check regressed, no condition evaluated wrongly. The
+path from "a model returned characters" to "the member said this" contains no
+point at which authorship is interrogated. The defect is an absence, not a
+malfunction — which is why it survived review, and why it cannot be closed by
+repairing anything that already exists.
 
 ---
 
@@ -168,22 +181,7 @@ not ride in on an authorship correctness fix.
 
 ---
 
-## 7. Record state
-
-The candidate `1c2c59af9` is **byte-for-byte frozen**. This document is on the
-Desktop documentation/architecture branch and changes no application code, test,
-config, or candidate SHA.
-
-For completeness of the record rather than as an authorised remedy: a candidate
-repair was written and committed to this branch as `ec6175c44` before the
-findings/remedy separation above was set. It is **not adjudicated**, and the
-censuses in §6 have not been performed. It should be treated as a proposal
-subject to those censuses, or reverted, at the founder's direction — not as the
-answer to this finding.
-
----
-
-## 8. Evidence state
+## 7. Evidence state
 
 ```
 #1150 response reader       DEVICE PASS / CLOSED
