@@ -566,6 +566,22 @@ interface ConversationMessage {
     // the utterance can be persisted at acceptance, and reused by the later pair
     // write so it dedupes rather than duplicating.
     exchangeId?: string;
+    /**
+     * ⛔ MAIA-TURN-RETRY-PROVENANCE-01. What the member DID to author this
+     * turn, remembered on the turn itself so a resend can replay it.
+     *
+     * A retry is re-delivery, not a new authorship event: `handleResend` sends
+     * `target.text` — the member's exact prior representation — under the
+     * original exchangeId. So its generation authority belongs to the ORIGINAL
+     * turn and must travel with it. Classifying from "this request is a retry"
+     * would describe the transport, not the authorship.
+     *
+     * Absent on turns authored before this field existed, and on
+     * system-composed submissions that declare no class. Absent replays as
+     * absent, which the server resolves to `unknown-generation` — truthful,
+     * since nothing recorded what the member did.
+     */
+    memberActionClass?: MemberActionClass;
     [key: string]: unknown;
   };
   // 🚪 AIN: Knowledge Gate source well weighting for this turn
@@ -5067,7 +5083,9 @@ I'm not sure what I'm feeling yet.`;
         timestamp: new Date(),
         source: 'user',
         // Carried so the later pair write can reuse the same exchange (see above).
-        metadata: { exchangeId: turnExchangeId },
+        // Carried so a later resend replays THIS turn's authorship, and so the
+        // pair write reuses the same exchange (see above).
+        metadata: { exchangeId: turnExchangeId, ...(actionClass ? { memberActionClass: actionClass } : {}) },
       };
       setMessages(prev => appendMessageCapped(prev, userMessage!));
       onMessageAddedRef.current?.(userMessage);
@@ -6622,7 +6640,12 @@ I'm not sure what I'm feeling yet.`;
     const payload = target?.text ?? '';
     if (!payload.trim()) return;
     retryingIdsRef.current.add(messageId);
-    Promise.resolve(handleTextMessage(payload, undefined, messageId))
+    // ⛔ Replay the ORIGINAL turn's action class. Normally this write no-ops on
+    // the reused exchangeId; it matters when the first attempt never reached
+    // persistence and the retry becomes the first successful write. Passing
+    // nothing here would record member-authored text as unknown-generation, and
+    // hardcoding a class would mislabel a retried VOICE turn as typed.
+    Promise.resolve(handleTextMessage(payload, undefined, messageId, target?.metadata?.memberActionClass))
       .finally(() => { retryingIdsRef.current.delete(messageId); });
   }, [messages, handleTextMessage]);
 
