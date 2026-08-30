@@ -66,7 +66,17 @@ async function main() {
     `SELECT column_name FROM information_schema.columns
       WHERE table_name = 'manuscript_draft_sections'`);
   const names = cols.rows.map((r) => r.column_name);
-  check('manuscript_draft_sections exists', names.length > 0);
+  if (names.length === 0) {
+    /* Fail here, not three steps later. Without the migration every downstream
+       failure is a confusing consequence of this one, and a witness that keeps
+       going past a missing substrate reports noise instead of the finding. */
+    console.log('  ✗ manuscript_draft_sections does not exist\n');
+    console.error('  The 04A migration has not been applied to this database. Apply it first:\n');
+    console.error(`    psql "$DATABASE_URL" -v ON_ERROR_STOP=1 \\`);
+    console.error('      -f database/migrations/20260830000001_manuscript_draft_sections.sql\n');
+    process.exit(1);
+  }
+  check('manuscript_draft_sections exists', true);
   for (const c of ['id', 'draft_id', 'position', 'text', 'source_section_id'])
     check(`  column ${c}`, names.includes(c));
   const dcols = await query<{ column_name: string }>(
@@ -116,26 +126,77 @@ async function main() {
     memberId = member.rows[0].id;
   }
 
-  const { manuscriptId, draftId, draftContent } = await timed('copy into disposable manuscript', () => transaction(async (tx) => {
-    const m = await tx.query<{ id: string }>(
-      `INSERT INTO member_manuscripts (title) VALUES ($1) RETURNING id`,
-      ['WS2-04A witness (disposable)']);
-    const mid = m.rows[0].id;
-    for (const [i, r] of rows.entries())
-      await tx.query(
-        `INSERT INTO manuscript_sections (manuscript_id, position, heading, body)
-         VALUES ($1,$2,$3,$4)`, [mid, i, r.heading, r.body]);
+  const { manuscriptId, draftId, draftContent } = await timed(
+    'copy into disposable manuscript',
+    () => transaction(async (tx) => {
+      if (sourceId) {
+        /* CLONE, don't construct. These tables carry columns this witness has
+           no business knowing about — member_id, source_kind, custody and
+           import provenance — and a hand-written INSERT guesses at them and
+           gets them wrong. Copying the row through a temp table takes every
+           column as it actually is, so the disposable manuscript is a faithful
+           duplicate and the witness stays correct as the schema grows. */
+        await tx.query(
+          `CREATE TEMP TABLE _w_m ON COMMIT DROP AS
+             SELECT * FROM member_manuscripts WHERE id = $1`, [sourceId]);
+        await tx.query(
+          `UPDATE _w_m SET id = gen_random_uuid(), title = $1`,
+          ['WS2-04A witness (disposable)']);
+        await tx.query(`INSERT INTO member_manuscripts SELECT * FROM _w_m`);
+        const mid = (await tx.query<{ id: string }>(`SELECT id FROM _w_m`)).rows[0].id;
 
-    const text = content ?? rows.map((r) => {
-      const h = r.heading?.trim();
-      return (h ? `${h}\n\n` : '') + r.body + '\n';
-    }).join('');
+        await tx.query(
+          `CREATE TEMP TABLE _w_s ON COMMIT DROP AS
+             SELECT * FROM manuscript_sections WHERE manuscript_id = $1`, [sourceId]);
+        await tx.query(
+          `UPDATE _w_s SET id = gen_random_uuid(), manuscript_id = $1`, [mid]);
+        await tx.query(`INSERT INTO manuscript_sections SELECT * FROM _w_s`);
 
-    const d = await tx.query<{ id: string }>(
-      `INSERT INTO manuscript_working_drafts (manuscript_id, member_id, content, base_source_hash)
-       VALUES ($1,$2,$3,$4) RETURNING id`, [mid, memberId, text, 'witness']);
-    return { manuscriptId: mid, draftId: d.rows[0].id, draftContent: text };
-  }));
+        await tx.query(
+          `CREATE TEMP TABLE _w_d ON COMMIT DROP AS
+             SELECT * FROM manuscript_working_drafts WHERE manuscript_id = $1`, [sourceId]);
+        /* The copy starts unconverted whatever the source's state. */
+        await tx.query(
+          `UPDATE _w_d SET id = gen_random_uuid(), manuscript_id = $1,
+                           section_addressable_at = NULL,
+                           section_conversion_version = NULL`, [mid]);
+        await tx.query(`INSERT INTO manuscript_working_drafts SELECT * FROM _w_d`);
+        const d = (await tx.query<{ id: string; content: string }>(
+          `SELECT id, content FROM _w_d`)).rows[0];
+        return { manuscriptId: mid, draftId: d.id, draftContent: d.content };
+      }
+
+      /* Synthetic path: only viable where this witness knows every required
+         column. If the schema demands more, say so and point at the copy path,
+         which needs to know nothing. */
+      const required = await tx.query<{ column_name: string }>(
+        `SELECT column_name FROM information_schema.columns
+          WHERE table_name = 'member_manuscripts'
+            AND is_nullable = 'NO' AND column_default IS NULL
+            AND column_name NOT IN ('id','title')`);
+      if (required.rows.length > 0) {
+        throw new Error(
+          `member_manuscripts requires ${required.rows.map((r) => r.column_name).join(', ')}; ` +
+          `pass a manuscript id to use the copy path instead`);
+      }
+      const m = await tx.query<{ id: string }>(
+        `INSERT INTO member_manuscripts (title) VALUES ($1) RETURNING id`,
+        ['WS2-04A witness (disposable)']);
+      const mid = m.rows[0].id;
+      for (const [i, r] of rows.entries())
+        await tx.query(
+          `INSERT INTO manuscript_sections (manuscript_id, position, heading, body)
+           VALUES ($1,$2,$3,$4)`, [mid, i, r.heading, r.body]);
+      const text = rows.map((r) => {
+        const h = r.heading?.trim();
+        return (h ? `${h}\n\n` : '') + r.body + '\n';
+      }).join('');
+      const d = await tx.query<{ id: string }>(
+        `INSERT INTO manuscript_working_drafts (manuscript_id, member_id, content, base_source_hash)
+         VALUES ($1,$2,$3,$4) RETURNING id`, [mid, memberId, text, 'witness']);
+      return { manuscriptId: mid, draftId: d.rows[0].id, draftContent: text };
+    }),
+  );
   check('disposable manuscript created', true);
 
   try {
