@@ -146,6 +146,57 @@ async function main() {
     void within;
   });
 
+  /* ── SHAPE OF THE CHANGE ──────────────────────────────────────────────
+     Added after the first Stage 2 run returned a suspiciously regular result:
+     6989 lines on both sides, 174 unchanged runs (exactly the section count),
+     346 ops = 173 one-line replacements, and a net delta of +346.
+
+     One changed line per section, each ~2 chars longer, is not what a person
+     editing a book looks like. It is what a SYSTEMATIC difference looks like —
+     most likely every heading line. If so, the census's REFUSE verdict would
+     be a composer mismatch rather than member edits, and telling the writer
+     "173 of your sections changed" would be false.
+
+     So the instrument reports the shape of the change, structurally. Line
+     indices, counts and length deltas only — never a character of prose. */
+  const headingLines = new Set(
+    starts.map((o) => lineOf(A.starts, o)).filter((l) => (A.lines[l] ?? '').trim() !== ''),
+  );
+  const replacements: { aLine: number; delta: number; isHeading: boolean }[] = [];
+  for (let i = 0; i < ops.length - 1; i++) {
+    const d = ops[i];
+    const n = ops[i + 1];
+    if (d.type === 'del' && n.type === 'ins'
+        && d.aEnd - d.aStart === 1 && n.bEnd - n.bStart === 1) {
+      const aLine = d.aStart;
+      replacements.push({
+        aLine,
+        delta: (B.lines[n.bStart] ?? '').length - (A.lines[aLine] ?? '').length,
+        isHeading: headingLines.has(aLine),
+      });
+    }
+  }
+  const onHeading = replacements.filter((r) => r.isHeading).length;
+  const deltas = replacements.map((r) => r.delta);
+  const uniqueDeltas = [...new Set(deltas)].sort((x, y) => x - y);
+
+  console.log(`  ── shape of the change ──`);
+  console.log(`  one-line replacements   ${replacements.length} of ${hunks.length} hunk ops`);
+  console.log(`  falling on a HEADING    ${onHeading}`);
+  console.log(`  falling on body text    ${replacements.length - onHeading}`);
+  console.log(`  length deltas seen      ${uniqueDeltas.join(', ') || '—'}`);
+  if (replacements.length > 0 && onHeading === replacements.length && uniqueDeltas.length <= 2) {
+    console.log('');
+    console.log('  ⚠ EVERY changed line is a heading, with a uniform length delta.');
+    console.log('    That is a SYSTEMATIC composition difference, not member editing.');
+    console.log('    The draft was composed by a variant of composeDraftText — so the');
+    console.log('    census REFUSE for this manuscript is an artefact of comparing');
+    console.log('    against the wrong composer, and these 173 "CHANGED" sections');
+    console.log('    contain no member edits at all. Do not show a writer a review');
+    console.log('    screen for changes they did not make.');
+  }
+  console.log('');
+
   console.log(`  EXACT      ${counts.EXACT}\tlocated through unchanged identity`);
   console.log(`  CHANGED    ${counts.CHANGED}\tsurroundings edited, correspondence still unique`);
   console.log(`  AMBIGUOUS  ${counts.AMBIGUOUS}\tno single defensible position\n`);
