@@ -1,6 +1,6 @@
 # WS2-05B — MODEL
 
-**Stage:** MODEL, second pass. BUILD on HOLD.
+**Stage:** MODEL, third pass. BUILD on HOLD.
 **Gate:** WS2-05A-R1 source/tests PASS; browser witness pending.
 
 > The architectural risk this pass exists to remove: **one convenient object
@@ -30,11 +30,50 @@ AuthorStructureCommand     ← THE SOVEREIGNTY BOUNDARY
 MAIA result → INSERT manuscript_structure_units
 ```
 
-Type separation alone is a convention, so it is made checkable: the 05A service
-accepts **only** `AuthorStructureCommand`, there is no constructor from
-`StructureInterpretation` to one, and an **import-graph test** asserts that
-`lib/manuscript/structure/structureService.ts` has no path to the interpreter
-module. A convention a future edit can quietly break is not a boundary.
+**An import-graph test does not prove this, and pass 2 was wrong to say it
+did.** The service and the interpreter can perfectly well never import each
+other while a route imports both:
+
+```ts
+const interpretation = await interpretStructure(...);
+const command = { /* hand-mapped */ };
+await authorStructure(command);
+```
+
+Decoupled modules, and the member authorized nothing. What the boundary needs is
+a **capability only the adoption path can create**.
+
+- `AuthorStructureCommand` is **branded and opaque**, with exactly one
+  constructor, owned by the adoption module — not the interpreter, not the
+  route layer.
+- The adoption request refers to the **persisted, reviewed proposal**, and
+  cannot express arbitrary interpreted structure:
+
+```ts
+adoptStructure({
+  proposalId: string;
+  reviewedProposal: StructureProposal;   // what the member actually looked at
+  expectedTopologyHash: string;          // what they believed the book to be
+});
+```
+
+- The adoption boundary then, in order: resolves the proposal belonging to this
+  member and this Work; verifies topology is unchanged; validates the reviewed
+  structure against 05A's invariants; records what was proposed against what was
+  accepted; and only then constructs the command.
+
+**The property to test is therefore:** *no public write API accepts a
+`StructureInterpretation` or a bare `StructureProposal` as an authoring
+command.* The HTTP shape carries that enforcement — a route whose body names
+`proposalId` cannot express an interpretation — and the branded type carries the
+in-process half.
+
+`expectedTopologyHash` is compare-and-advance, the same pattern as the draft's
+`version` in 04B: the client sends what it believed, the server compares against
+what is, and a mismatch refuses rather than overwrites.
+
+**The import-graph test is kept as defence in depth.** It is useful. It is not
+the sovereignty proof.
 
 ---
 
@@ -58,30 +97,45 @@ type EvidenceObservation =
   | TransitionObservation;
 ```
 
-Every observation carries four things:
+Every observation inherits a base that **makes its own limits mandatory**:
 
-```text
-what was observed
-where            stable section ids AND positions
-how established  the rule that produced it
-does_not_establish
+```ts
+type EvidenceObservationBase = {
+  id: string;
+  sectionIds: readonly string[];
+  method: EvidenceMethod;
+  /** Non-empty by construction: a new detector cannot compile while silently
+      claiming "I observed X" without saying what X does not authorise. */
+  doesNotEstablish: readonly [EvidenceNonConclusion, ...EvidenceNonConclusion[]];
+  /** Optional prose for a human. The typed list above is what code reasons on. */
+  note?: string;
+};
+
+type EvidenceNonConclusion =
+  | 'start-boundary'
+  | 'end-boundary'
+  | 'structural-kind'
+  | 'hierarchy'
+  | 'structural-vs-thematic'
+  | 'whole-work-grammar';
 ```
 
-That fourth field is the one that keeps the tier honest:
+The non-empty tuple is the whole mechanism. Pass 2 left this as a convention and
+an open question; a convention future detectors can forget is not a constraint.
+
+`doesNotEstablish` is what keeps the tier honest:
 
 ```text
-observation
-  FIRE-bearing headings are dense around 57–68
-
-does_not_establish
-  that Fire begins at 57
-  that the Work uses chapters
-  that FIRE is structural rather than thematic
+observation        FIRE-bearing headings are dense around 57–68
+doesNotEstablish   start-boundary          (that Fire begins at 57)
+                   structural-kind         (that the Work uses chapters)
+                   structural-vs-thematic  (that FIRE divides rather than recurs)
 ```
 
-Without it, evidence gets upgraded into ontology by a later reader who only
-sees the first three lines. It is written by the detector that made the claim,
-because that detector is the only thing that knows its own limits.
+Without it, evidence gets upgraded into ontology by a later reader who only sees
+the first three lines. It is written by the detector that made the claim,
+because that detector is the only thing that knows its own limits — and now the
+type system requires it to say so.
 
 **`86bab2094` is the right machinery and the wrong output type.** Its cluster
 arithmetic becomes `LexicalDensityObservation`; its structural-label runs become
@@ -238,7 +292,8 @@ manuscript_structure_proposals
   evidence         jsonb    what mechanics observed
   interpretation   jsonb    what MAIA read
   coverage         jsonb    what she actually read
-  section_set_hash text     see staleness
+  section_topology_hash    text    ordered stable ids — hard gate
+  interpretation_input_hash text   what was actually read — soft warning
   adopted_at       timestamptz null
 ```
 
@@ -247,12 +302,53 @@ Adoption writes ordinary `origin='member'` units under 05A's existing contiguity
 trigger. **The difference between what was proposed and what was accepted is the
 member's authorship, and it stays answerable.**
 
-**Staleness is about the section set, not the text.** A proposal is invalidated
-when sections are added, removed or repositioned — not when the member edits
-prose. Tying it to `draftVersion` would invalidate a proposal every 1.2 seconds
-while the member wrote, which would make review impossible in the one situation
-where it matters most: reading the Work while deciding about it. Hence
-`section_set_hash`.
+### Staleness has two kinds, and one gate
+
+Pass 2 said "text edits don't invalidate a structural reading". **That went too
+far.** If MAIA reads section 42, concludes `THE SACRED FLAME` opens Fire, and
+the writer then rewrites 42 into unrelated material, the uuid still exists and
+the order is unchanged — but the evidence the interpretation rests on is gone.
+
+So: two hashes, two different consequences.
+
+```text
+TOPOLOGY STALENESS       did the writable pieces or their order change?
+                         → HARD gate. Adoption REFUSED.
+
+INTERPRETATION STALENESS did something MAIA actually read change?
+                         → visible epistemic warning. The member decides.
+```
+
+**`section_topology_hash`** — over the *ordered* sequence of stable draft-section
+ids, `s0 | s1 | s2 | …`. Not a set: a set does not encode order, and order is
+precisely what structure depends on. Renamed from pass 2's `section_set_hash`
+for that reason.
+
+```text
+add a section          → changes
+delete a section       → changes
+reorder                → changes
+split / merge          → changes
+edit prose             → unchanged
+renumber positions     → unchanged, when the ORDER is the same
+```
+
+**`interpretation_input_hash`** — over exactly what was interpreted: all
+headings (PASS 1 reads them all), plus the bodies of the particular sections
+read in PASS 2 or 3. If those change, the proposal is still structurally
+applicable and the surface says so:
+
+> Parts of the Work MAIA read have changed since this proposal was made.
+
+The member may refresh the reading or deliberately continue with the proposal
+they have already reviewed. That keeps writing fluid without pretending a
+semantic interpretation is timeless.
+
+```text
+topology changed        → adoption REFUSED
+read material changed   → proposal marked STALE-AS-READ, member decides
+unread prose changed    → no effect
+```
 
 Three rules on the commit:
 
@@ -310,6 +406,5 @@ because the member will believe it.
 - **Whether `adopted_from_id` (unit → unit) survives** now that provenance runs
   through the proposal record. Probably retire it; not in this unit.
 - **Re-proposal** after adoption, and what becomes of the first record.
-- **Who writes `does_not_establish`** for an observation type added later — the
-  answer must be "the detector, at the point of claim", and there is currently
-  no mechanism that forces it.
+- ~~Who writes `does_not_establish` for a later observation type~~ — **closed.**
+  The non-empty tuple on `EvidenceObservationBase` forces it at compile time.
