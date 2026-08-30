@@ -19,6 +19,16 @@
  * to work on. It never reads, writes, or reports on a manuscript it did not
  * create.
  *
+ * IT NEEDS A MEMBER ROW, and `members` in the real schema requires a passkey,
+ * username and password_hash. Pass MEMBER_ID to use an existing member instead
+ * of creating one, which is what you want against a database that has real
+ * people in it:
+ *
+ *   MEMBER_ID=<uuid> DATABASE_URL=... npx tsx scripts/ws2-05a-structure-witness.ts
+ *
+ * The fixture manuscript is still created and belongs to that member. It is
+ * synthetic, obviously named, and holds no prose of theirs.
+ *
  *   DATABASE_URL=... npx tsx scripts/ws2-05a-structure-witness.ts
  */
 
@@ -54,9 +64,15 @@ async function main() {
   console.log('\n2 · fixture');
   const N = 12;
   const fixture = await transaction(async (tx) => {
-    const mem = await tx.query<{ id: string }>(
-      `INSERT INTO members DEFAULT VALUES RETURNING id`);
-    const memberId = mem.rows[0].id;
+    let memberId = process.env.MEMBER_ID ?? '';
+    if (!memberId) {
+      /* Only reachable on a schema whose `members` needs nothing — the
+         throwaway cluster this was developed against. Against the real schema,
+         pass MEMBER_ID rather than inventing credentials. */
+      const mem = await tx.query<{ id: string }>(
+        `INSERT INTO members DEFAULT VALUES RETURNING id`);
+      memberId = mem.rows[0].id;
+    }
     const man = await tx.query<{ id: string }>(
       `INSERT INTO member_manuscripts (member_id, title) VALUES ($1, $2) RETURNING id`,
       [memberId, `ws2-05a-witness-${Date.now()}`]);
