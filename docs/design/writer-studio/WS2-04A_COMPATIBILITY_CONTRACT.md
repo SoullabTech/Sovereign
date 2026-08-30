@@ -1,6 +1,6 @@
 # WS2-04A — Compatibility contract
 
-**Status:** substrate implemented, **no production draft converted.**
+**Status:** **ACCEPTED** on the real-manuscript witness. **No production draft converted.**
 **Authorized:** founder, 2026-08-30, on `87f07543c`.
 
 ## The rule that governs everything here
@@ -26,43 +26,57 @@ write path takes over.
 | `lib/manuscript/sections/draftProof.ts` · `composers.ts` · `myers.ts` | the classification rule, moved out of `scripts/` — production conversion must not depend on instrumentation code |
 | `scripts/ws2-04a-substrate-witness.ts` | the acceptance witness: schema, conversion, idempotency, both trigger directions, cascade, source untouched |
 
-## Witness result
+## Witness result — ACCEPTED
 
-Two runs against a throwaway PostgreSQL **16.13**, 2026-08-30.
+Three runs. The third is the acceptance witness: the **real** local Elemental
+Alchemy, on the Mac Studio's development database.
 
-| run | shape | result |
+| run | database | shape | result |
+|---|---|---|---|
+| synthetic | throwaway PG 16.13 | 4 sections | 24 passed · 0 failed |
+| synthetic at scale | throwaway PG 16.13 | 185 sections, 669,064 chars | 26 passed · 0 failed |
+| **real manuscript** | **local `maia_consciousness`** | **174 sections, 380,675 chars** | **26 passed · 0 failed** |
+
+The real run copied `a3ae67fd` into a disposable manuscript, converted the
+copy, and proved the original byte-identical and unconverted afterwards. The
+disposable copy was then deleted and its section rows cascaded away.
+
+**Elemental Alchemy converts.** It is not a `boundary_moved` case, so it is not
+a Structure Adoption case. The book that opened this thread — the one an
+earlier census called `EDITED` and a Stage 2 run called "173 member edits" —
+seeds mechanically, byte for byte, with nothing owed its author.
+
+*(The witness reports that conversion succeeded but not which class it landed
+in. That distinction — `LEGACY_COMPOSER_VARIANT` versus `EDITED` with
+boundaries intact — is answered by
+`scripts/ws2-04a-stage21-legacy-proof.ts` against the same database, and is
+the last open question of the legacy-composer thread rather than a gate on the
+substrate.)*
+
+### Timings at book scale### Timings at book scale — is `string_agg` affordable?
+
+| step | throwaway, 185 §, 669 KB | **local, real book, 174 §, 381 KB** |
 |---|---|---|
-| synthetic | 4 sections | **24 passed · 0 failed** |
-| copy path | **185 sections, 669,064 chars** | **26 passed · 0 failed** |
+| copy into disposable manuscript | 51.4 | 51.5 |
+| `convertDraftToSections` (one-time) | 307.0 | **319.0** |
+| second call, idempotent | 13.8 | 3.1 |
+| content-only write → abort | 10.2 | 12.4 |
+| section-only delete → abort | 4.4 | 3.9 |
+| **consistent two-sided write → commit** | **9.4** | **12.0** |
+| delete manuscript, cascade | 10.4 | 10.1 |
 
-The second copies a real manuscript's sections and draft into a disposable
-one, converts the copy, and proves the original byte-identical and unconverted
-afterwards.
-
-### Timings at book scale — is `string_agg` affordable?
-
-| step | ms |
-|---|---|
-| copy into disposable manuscript | 51.4 |
-| `convertDraftToSections` (one-time) | 307.0 |
-| second call, idempotent | 13.8 |
-| content-only write → abort | 10.2 |
-| section-only delete → abort | 4.4 |
-| **consistent two-sided write → commit** | **9.4** |
-| delete manuscript, cascade | 10.4 |
-
-The number that matters for 04B is the last-but-one: **~9 ms for a checked
-write on a 669 KB, 185-section draft**, including the round trip. The
+The number that matters for 04B is the last-but-one: **~12 ms for a checked
+write on the real 381 KB, 174-section book**, including the round trip. The
 invariant is affordable on a live writing surface at a debounced autosave
 cadence. It is NOT free per keystroke, and the cost grows with draft size —
 04B should keep autosave debounced rather than fire a save per character.
 
-Conversion at 307 ms is one-time per draft and runs behind the "your draft is
+Conversion at ~320 ms is one-time per draft and runs behind the "your draft is
 now navigable by section" moment, not in the typing path.
 
-Caveat on the shape: the 185-section book was synthetic (uniform paragraphs),
-which is representative for byte-level timing but not for pathological section
-size distribution.
+The two columns agree closely, and the real book's uneven section sizes did not
+change the shape of the result — which is what the synthetic runs could not
+establish on their own.
 
 ## The invariant is enforced in the database, not only in code
 
