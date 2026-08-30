@@ -29,10 +29,12 @@ import { execFileSync } from 'node:child_process';
 
 import { renderHtmlToPdf } from '@/lib/manuscript/render/pagedPdf';
 
-export interface MemberBookSection {
-  heading: string | null;
-  body: string;
-}
+/* The assembler and its section shape live in a leaf module so callers that
+   only need markdown — the WS2-04A draft census — need not pull puppeteer in
+   through pagedPdf. Re-exported here so existing importers are unaffected. */
+export { assembleManuscriptMarkdown, type MemberBookSection } from './assembleMarkdown';
+import { assembleManuscriptMarkdown, type MemberBookSection } from './assembleMarkdown';
+
 
 export interface RenderMemberBookOptions {
   title: string;
@@ -57,25 +59,6 @@ const PRINT_CSS_PATH = path.join(REPO_ROOT, 'lib/manuscript/render/print-book.cs
 const EPUB_CSS_PATH = path.join(REPO_ROOT, 'lib/manuscript/render/epub-book.css');
 const MAX_PANDOC_BUFFER = 256 * 1024 * 1024;
 
-/**
- * Assemble the author's sections into a single Markdown document, verbatim.
- * Each section's confirmed heading becomes a level-1 heading (a chapter, which
- * also drives EPUB per-chapter splitting); the body follows unchanged. The
- * book title/author are carried as pandoc metadata, not injected into the text.
- */
-export function assembleManuscriptMarkdown(sections: MemberBookSection[]): string {
-  const parts: string[] = [];
-  for (const s of sections) {
-    const heading = s.heading?.trim();
-    if (heading) {
-      parts.push(`# ${heading}`);
-      parts.push('');
-    }
-    parts.push(s.body);
-    parts.push('');
-  }
-  return parts.join('\n');
-}
 
 /**
  * Provenance hash: a stable digest of the exact source sections this render was

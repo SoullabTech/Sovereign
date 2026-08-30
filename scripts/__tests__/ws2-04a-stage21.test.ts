@@ -110,6 +110,14 @@ describe('the classification rule (scripts/lib/draftProof.ts)', () => {
       .toBe('NO_SOURCE');
   });
 
+  it('an EMPTY sourceless draft → NO_SOURCE, not PRISTINE', () => {
+    // Both composers emit '' for zero sections, so this draft was "byte-for-byte
+    // what the Source composed" — about a composition that never happened. It
+    // would have been seeded exactly: from nothing, into nothing, silently.
+    // NO_SOURCE has to be decided before any composer match, not after.
+    expect(classifyDraft([], '').classification).toBe('NO_SOURCE');
+  });
+
   it('an edited body line → EDITED', () => {
     const draft = composeLegacyHashHeadings(BOOK).replace('beta', 'beta, rewritten');
     expect(classifyDraft(BOOK, draft).classification).toBe('EDITED');

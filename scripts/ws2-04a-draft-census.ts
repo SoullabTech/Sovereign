@@ -6,11 +6,18 @@
  *
  *   Is this draft still byte-for-byte what the immutable Source composed?
  *
- * If yes, its section boundaries are known exactly and it can be seeded into
- * section-addressable form losslessly. If no, the member has edited it, and
- * where their edits belong is NOT derivable — a paragraph moved across a
- * chapter break, a heading rewritten, a section merged. Attributing those by
- * heading search or diff would be guessing about someone's book.
+ * The answer used to be binary — matches, or the member edited it — and that
+ * was wrong in three directions. A draft may match a DIFFERENT, older composer
+ * and be equally seedable. A draft may have no source sections at all, having
+ * never been composed from anything. And the instruments may disagree, which
+ * is a fault in them rather than a fact about the book. So the question is
+ * answered by the shared rule in scripts/lib/draftProof.ts, which names all
+ * five outcomes.
+ *
+ * Where a draft genuinely IS edited, where those edits belong is NOT derivable
+ * — a paragraph moved across a chapter break, a heading rewritten, a section
+ * merged. Attributing those by heading search or diff would be guessing about
+ * someone's book.
  *
  * So a divergent draft is REFUSED, not migrated cleverly. This script only
  * reports which is which. It writes nothing, and it prints no member prose —
@@ -95,7 +102,14 @@ async function main() {
     /* This loop and classifyDraft reach the same conclusion by different
        routes. They must never disagree — if they do, one of them is wrong and
        neither verdict is usable. Fail loudly rather than print a number
-       someone would act on. */
+       someone would act on.
+
+       The proposition has to match the rule exactly, INCLUDING the sourceless
+       case: with no sections both composers emit '', so an empty draft is
+       "exact" against a composition that never happened. hasSource is what
+       keeps this loop from asserting a match the rule rightly refuses. */
+    const hasSource = sections.rows.length > 0;
+    const composerExact = hasSource && identical;
     const seedableClasses = ['PRISTINE', 'LEGACY_COMPOSER_VARIANT'];
 
     /* CORRECTED after the first run. "REFUSE = member edits" was too coarse:
@@ -114,9 +128,9 @@ async function main() {
        SEEDABLE/EDITED/NO-SOURCE vocabulary had no way to express. */
     const verdict = classifyDraft(sections.rows, d.content);
     const kind = verdict.classification;
-    if (identical !== seedableClasses.includes(kind)) {
+    if (composerExact !== seedableClasses.includes(kind)) {
       console.error(`\n  INSTRUMENT FAULT on ${d.manuscript_id}:`);
-      console.error(`    composer loop says ${identical ? 'exact' : 'divergent'};`);
+      console.error(`    composer loop says ${composerExact ? 'exact' : 'divergent'};`);
       console.error(`    classifyDraft says ${kind}. Census aborted — fix this first.\n`);
       process.exit(1);
     }
@@ -128,7 +142,7 @@ async function main() {
     console.log(`     draft chars  ${d.content.length}  (sha ${sha(d.content)})`);
     console.log(`     source chars ${recomposed.length}  (sha ${sha(recomposed)})`);
     console.log(`     revisions    ${d.revision_count}`);
-    if (identical) console.log(`     composed by  ${composer}`);
+    if (composerExact) console.log(`     composed by  ${composer}`);
     if (kind === 'LEGACY_COMPOSER_VARIANT') {
       const p = verdict.proof;
       console.log(`     legacy form  ${p.exactLegacy}/${p.headedCount} headings, ${p.bodyDiff} body differences`);

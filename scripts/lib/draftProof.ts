@@ -183,10 +183,17 @@ export function classifyDraft(sections: SourceSection[], draft: string): DraftVe
     proof.bodyDiff === 0 &&
     proof.resolved === proof.boundaries;
 
+  /* NO_SOURCE IS DECIDED FIRST, and this order is the correction, not a
+     style choice. Both composers emit '' for zero sections, so an empty
+     blank-page draft satisfied `wholeText.current` and was classified
+     PRISTINE — "byte-for-byte what the Source composed" about a draft that
+     never had a Source. It would then have been seeded exactly: from nothing,
+     into nothing, silently. A draft with no sections is owed structure, and
+     no composer match can speak to a composition that never happened. */
   let classification: Classification;
-  if (wholeText.current) classification = 'PRISTINE';
+  if (sections.length === 0) classification = 'NO_SOURCE';
+  else if (wholeText.current) classification = 'PRISTINE';
   else if (wholeText.legacy) classification = perLineAgrees ? 'LEGACY_COMPOSER_VARIANT' : 'WITHHELD';
-  else if (sections.length === 0) classification = 'NO_SOURCE';
   else classification = 'EDITED';
 
   return { classification, wholeText, proof, perLineAgrees };
