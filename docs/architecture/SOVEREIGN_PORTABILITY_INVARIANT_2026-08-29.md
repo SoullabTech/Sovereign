@@ -295,6 +295,20 @@ And set up the failing case so it can actually fail: DSC-03's self-stop test pas
 session only because it nulled the session before the first tick ever ran. A test whose scenario
 cannot reach the defect is not coverage.
 
+**The narrow role this earns mutation controls.** Not a repository-wide ceremony — that becomes
+expensive theatre. But every extracted **authority-bearing state transition** gets at least one
+deliberately broken implementation before its unit closes. The trigger is the semantics, not the
+file: whenever a transition means one of
+
+```text
+adopted / not adopted        alive / dead          in-flight / released
+heard / not heard            current session / revoked session
+canonical result / attempted result
+```
+
+a negative control is part of the proof, and the control itself must be checked — a mutation the
+scenario cannot reach proves nothing.
+
 Before any extraction, therefore, identify every sequence of the form:
 
 ```text
@@ -306,6 +320,38 @@ new caller. This is what keeps the portability programme from degenerating into 
 until main.js is small*. The objective is stricter and more useful:
 
 > **Move authority to its proper owner, and move its proof with it.**
+
+---
+
+## 7B · Session revocation invariant
+
+**Added 2026-08-29.** DSC-02 and DSC-03 arrived at the same rule independently — conversation and
+voice references re-read across an await, the voice session re-read every watchdog tick — which
+makes it a principle rather than two implementation quirks:
+
+> **Portable orchestration must not extend the authority or lifetime of a revoked session by
+> retaining stale capability references.**
+>
+> Where lifecycle revocation is represented by replacement or removal of a capability reference,
+> consumers must re-resolve that capability at the semantic point of use, unless evidence
+> establishes snapshot semantics.
+>
+> A cached reference must never convert revoked session state into continued authority.
+
+The failure it prevents is **zombie authority**: the owning layer says the session no longer exists,
+and an orchestration component keeps acting through the old reference — writing into a dead voice
+session, adopting a thread for someone who signed out, supervising a corpse. The host's revocation
+becomes advisory rather than actual, which is the inverse of the direction of authority §6 fixes.
+
+⛔ The "unless evidence establishes snapshot semantics" clause is not a loophole; it requires the
+evidence. One capture-by-value in the current tree qualifies and is worth naming as the pattern:
+`createConversation({ session: memberSession })` holds `memberSession` by value, which is correct
+because that object is created exactly once and **revocation is expressed by internal state change
+(`signOut()` clears the token) rather than by replacement**. Re-resolution would buy nothing. Had
+sign-out instead replaced the object, the same code would be a zombie-authority defect.
+
+So the test is not "always re-read". It is: *how does this capability's owner express revocation —
+by replacement, or by mutation?* Match the read to the answer, and record which one applies.
 
 ---
 
