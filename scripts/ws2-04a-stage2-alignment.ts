@@ -27,20 +27,36 @@
 import { query } from '../lib/db/postgres';
 import { diff, type Op } from './lib/myers';
 
-/** Historical composer, copied verbatim — see the census for why. */
+/** The CURRENT composer (plain headings), plus the offsets and heading line
+    indices the alignment needs. Copied rather than imported so this stage
+    measures a fixed algorithm — see the census for why composer identity
+    matters here. */
 function composeWithOffsets(sections: { heading: string | null; body: string }[]) {
   const parts: string[] = [];
   const starts: number[] = [];
+  /* Line indices carrying a heading, recorded by the composer as it writes
+     them. Derived from manuscript_sections.heading, never from a line's
+     position or contents — a headingless section's first body line also sits
+     at a section start, and calling that a heading would misreport the shape
+     of the change. */
+  const headingLines = new Set<number>();
   let offset = 0;
-  const push = (s: string) => { parts.push(s); offset += s.length + 1; };
+  /* A pushed part is not one line: a body carries its own newlines, so the
+     line counter advances by however many lines the part actually spans. */
+  let lineNo = 0;
+  const push = (s: string) => {
+    parts.push(s);
+    offset += s.length + 1;
+    lineNo += s.split('\n').length;
+  };
   for (const s of sections) {
     starts.push(offset);
     const h = s.heading?.trim();
-    if (h) { push(h); push(''); }
+    if (h) { headingLines.add(lineNo); push(h); push(''); }
     push(s.body);
     push('');
   }
-  return { text: parts.join('\n'), starts };
+  return { text: parts.join('\n'), starts, headingLines };
 }
 
 /** Line start offsets for a text split on '\n'. */
@@ -77,9 +93,28 @@ async function main() {
   if (dr.rows.length === 0) { console.error('no working draft'); process.exit(1); }
 
   const current = dr.rows[0].content;
-  const { text: source, starts } = composeWithOffsets(secs.rows);
+  const { text: source, starts, headingLines } = composeWithOffsets(secs.rows);
   const A = lineIndex(source);
   const B = lineIndex(current);
+
+  /* Self-check: every recorded heading line must actually hold that heading.
+     Line accounting is the one place this instrument could silently drift —
+     a body spans as many lines as it has newlines — and a drifted index would
+     mislabel body text as a heading, which is exactly the error this stage
+     exists to avoid making. */
+  {
+    let i = 0;
+    for (const sec of secs.rows) {
+      const h = sec.heading?.trim();
+      if (h) {
+        const line = [...headingLines][i++];
+        if (A.lines[line] !== h) {
+          console.error(`heading line accounting drifted at section index ${i - 1}`);
+          process.exit(1);
+        }
+      }
+    }
+  }
 
   const t0 = Date.now();
   const ops = diff(A.lines, B.lines);
@@ -152,16 +187,12 @@ async function main() {
      346 ops = 173 one-line replacements, and a net delta of +346.
 
      One changed line per section, each ~2 chars longer, is not what a person
-     editing a book looks like. It is what a SYSTEMATIC difference looks like —
-     most likely every heading line. If so, the census's REFUSE verdict would
-     be a composer mismatch rather than member edits, and telling the writer
-     "173 of your sections changed" would be false.
+     editing a book looks like. But shape is a question, not an answer: this
+     stage reports it and hands it to Stage 2.1, which tests the specific
+     historical transform instead of reasoning from regularity.
 
      So the instrument reports the shape of the change, structurally. Line
      indices, counts and length deltas only — never a character of prose. */
-  const headingLines = new Set(
-    starts.map((o) => lineOf(A.starts, o)).filter((l) => (A.lines[l] ?? '').trim() !== ''),
-  );
   const replacements: { aLine: number; delta: number; isHeading: boolean }[] = [];
   for (let i = 0; i < ops.length - 1; i++) {
     const d = ops[i];
@@ -188,12 +219,12 @@ async function main() {
   if (replacements.length > 0 && onHeading === replacements.length && uniqueDeltas.length <= 2) {
     console.log('');
     console.log('  ⚠ EVERY changed line is a heading, with a uniform length delta.');
-    console.log('    That is a SYSTEMATIC composition difference, not member editing.');
-    console.log('    The draft was composed by a variant of composeDraftText — so the');
-    console.log('    census REFUSE for this manuscript is an artefact of comparing');
-    console.log('    against the wrong composer, and these 173 "CHANGED" sections');
-    console.log('    contain no member edits at all. Do not show a writer a review');
-    console.log('    screen for changes they did not make.');
+    console.log('    That is CONSISTENT WITH a composition difference rather than member');
+    console.log('    editing — but a uniform shape is not proof of a cause. Stage 2.1');
+    console.log('    settles it by testing the one historical transform the repository');
+    console.log('    actually records:  current === "# " + source heading.');
+    console.log('    Do not act on this line. Run:');
+    console.log(`      npx tsx scripts/ws2-04a-stage21-legacy-proof.ts ${id}`);
   }
   console.log('');
 

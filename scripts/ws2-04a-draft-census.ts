@@ -22,6 +22,7 @@
 
 import { createHash } from 'crypto';
 import { query } from '../lib/db/postgres';
+import { COMPOSERS } from './lib/composers';
 
 /**
  * The HISTORICAL composition algorithm, copied verbatim from
@@ -81,7 +82,21 @@ async function main() {
         WHERE manuscript_id = $1 ORDER BY position ASC`,
       [d.manuscript_id],
     );
-    const recomposed = composeDraftText(sections.rows);
+    /* CORRECTED after Stage 2. Comparing against ONE composer made a draft
+       composed by the other look edited: Elemental Alchemy reported EDITED
+       with 173 divergent lines, every one a heading, every one exactly +2
+       chars — the `# ` prefix the composer used before 2026-08-05.
+
+       A draft can only be judged against the algorithm that actually made it,
+       so every known composer is tried. Still exact: a draft equals one of
+       them byte-for-byte or it does not. No fuzzy matching was introduced to
+       rescue this — a second exact hypothesis was. */
+    let recomposed = COMPOSERS[0].compose(sections.rows);
+    let composer: string = COMPOSERS[0].name;
+    for (const c of COMPOSERS) {
+      const text = c.compose(sections.rows);
+      if (text === d.content) { recomposed = text; composer = c.name; break; }
+    }
     const identical = recomposed === d.content;
     const at = identical ? -1 : firstDivergence(recomposed, d.content);
 
@@ -110,6 +125,7 @@ async function main() {
     console.log(`     draft chars  ${d.content.length}  (sha ${sha(d.content)})`);
     console.log(`     source chars ${recomposed.length}  (sha ${sha(recomposed)})`);
     console.log(`     revisions    ${d.revision_count}`);
+    if (identical) console.log(`     composed by  ${composer}`);
     if (kind === 'EDITED') {
       console.log(`     diverges at  char ${at} of ${Math.min(recomposed.length, d.content.length)}`);
       console.log(`     → member edits present; section ownership is not derivable.`);
