@@ -23,6 +23,14 @@
  * — a file is only picked up if it is NAMED `*.dom.test.tsx` — so no existing
  * suite changes environment by accident.
  *
+ * SCOPE WIDENED 2026-08-30 to include `components/voice`. The live interim
+ * transcript row is a layout contract — wrapping, a bounded height, and
+ * following its own growth — and none of those can be exercised in a Node
+ * environment. The same explicit opt-in applies: `*.dom.test.tsx` only. This
+ * file's own warning about `useVoiceInput.rerender.test.tsx` is the reason the
+ * match was widened rather than the test merely written: a `.tsx` suite that
+ * matches neither config does not fail, it silently never runs.
+ *
  * NOT revived here: `lib/hooks/__tests__/useVoiceInput.rerender.test.tsx`. It
  * matches NEITHER config and has therefore never executed — `.tsx` is outside
  * the root config's `*.test.ts` testMatch, and it sat outside this project's
@@ -44,6 +52,7 @@ const config = {
   testMatch: [
     '<rootDir>/app/press/manuscript/**/*.dom.test.tsx',
     '<rootDir>/lib/hooks/**/__tests__/**/*.dom.test.tsx',
+    '<rootDir>/components/voice/**/__tests__/**/*.dom.test.tsx',
   ],
   setupFilesAfterEnv: ['<rootDir>/app/press/manuscript/__tests__/domSetup.ts'],
   moduleNameMapper: {

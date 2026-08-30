@@ -145,7 +145,26 @@ export function VoiceInteractionBar({
   const [showTextInput, setShowTextInput] = useState(false);
   const [textValue, setTextValue] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
+  const interimScrollRef = useRef<HTMLDivElement>(null);
   const keyboardInset = useKeyboardBottomInset();
+
+  /**
+   * DESKTOP-VOICE-LIVE-TRANSCRIPT-VIEWPORT-01 — follow the newest words.
+   *
+   * The interim row is bounded (see `max-h-24` below) so a long turn cannot
+   * push the voice controls off-screen. A bounded box that does not follow its
+   * own growth is the same defect in a different costume: the member would see
+   * the FIRST few lines of what MAIA is hearing and lose the rest. Pinning
+   * scrollTop to scrollHeight on every change to `interimTranscript` keeps the
+   * live edge visible without the member touching anything.
+   *
+   * Keyed on the transcript, NOT on mount: interim text is replaced wholesale
+   * by each new reading, so the follow has to re-run per reading.
+   */
+  useEffect(() => {
+    const el = interimScrollRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
+  }, [interimTranscript]);
 
   const handleKeyboardToggle = useCallback(() => {
     setShowTextInput((v) => {
@@ -213,16 +232,32 @@ export function VoiceInteractionBar({
                 cannot be told apart from committed text reduces agency — the
                 member has to be able to see which words MAIA has actually
                 taken, so the row says so rather than implying it. */}
+            {/* DESKTOP-VOICE-LIVE-TRANSCRIPT-VIEWPORT-01 — the row used to carry
+                `truncate` (overflow:hidden + text-overflow:ellipsis +
+                white-space:nowrap). One line, no wrap: once a turn ran past the
+                bar's width the newest words — the ones the member most needs to
+                see — were clipped off the right edge, while the committed turn
+                still arrived complete. Presentation loss, not transcription
+                loss. The text now wraps, the box is bounded, and it follows its
+                own growth. `items-start`, not `items-baseline`: a scroll
+                container synthesises its baseline from its bottom margin edge,
+                which would drag the label down as lines accumulate. */}
             <div
-              className="px-5 pt-2 flex items-baseline gap-2"
+              className="px-5 pt-2 flex items-start gap-2"
               aria-live="polite"
             >
-              <span className="text-[10px] uppercase tracking-wider text-stone-400/70 flex-shrink-0">
+              <span className="text-[10px] uppercase tracking-wider text-stone-400/70 flex-shrink-0 mt-[3px]">
                 hearing · not sent yet
               </span>
-              <p className="text-sm italic text-stone-300/75 truncate min-w-0">
-                {interimTranscript}
-              </p>
+              <div
+                ref={interimScrollRef}
+                data-testid="interim-viewport"
+                className="min-w-0 flex-1 max-h-24 overflow-y-auto overscroll-contain"
+              >
+                <p className="text-sm italic text-stone-300/75 whitespace-pre-wrap break-words">
+                  {interimTranscript}
+                </p>
+              </div>
             </div>
           </motion.div>
         )}
