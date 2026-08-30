@@ -284,7 +284,15 @@ case.**
 DSC-01  a failed re-adoption recorded as done   the caller-level ordering was never asserted
 DSC-02  a final recorded for an EMPTY transcript  the predicate tested truthiness; '' is falsy
 DSC-03  a session cached instead of re-read       the case ran before the cache could fill
+DSC-04  a session cached instead of re-resolved   the case ran before the cache could fill
 ```
+
+⭐ DSC-04 repeated DSC-03's miss **exactly**, in a different file, after it had been written down.
+The revocation test nulled the session before any use, so the cache under test never filled. Knowing
+the pattern was not enough to avoid it; only the control caught it, again. Treat the scenario-reach
+check as mechanical, not as something attention supplies: **for a cache/staleness mutation, the
+scenario must use the capability successfully at least once before the state it depends on
+changes.**
 
 So, for any state transition:
 

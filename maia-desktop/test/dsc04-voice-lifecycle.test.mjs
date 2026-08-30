@@ -197,6 +197,36 @@ test('a frame after the session is gone is refused, and dispatches nothing', () 
   assert.deepEqual(log, []);
 });
 
+test('⭐ frames still in flight when the session is revoked are refused, not applied', () => {
+  // ⛔ The narrow version of this (null the session before ANY use) passes even
+  // against a lifecycle that caches the session on first resolve, because the
+  // cache is still empty. The real path: the renderer posts a block every
+  // 2.67 ms, so when `end` or a denial revokes mid-stream there are frames
+  // already in flight. A cached session would apply them to a committed epoch.
+  const { lc, log } = wire();
+  lc.begin();
+  lc.frame(Float32Array.from([0.1]), 20);          // a LIVE frame first
+  lc.end();                                         // revokes
+  log.length = 0;
+
+  assert.deepEqual(lc.frame(Float32Array.from([0.2]), 20),
+    { ok: false, reason: 'no capture session' });
+  assert.deepEqual(log, [], 'an in-flight frame was applied to a revoked session');
+});
+
+test('⭐ after a refusal revokes the session, later lifecycle calls touch nothing', () => {
+  const { lc, log } = wire();
+  lc.begin();
+  lc.frame(Float32Array.from([0.1]), 20);
+  lc.micResult(false, 'NotAllowedError');           // revokes
+  log.length = 0;
+
+  assert.equal(lc.frame(Float32Array.from([0.2]), 20).ok, false);
+  assert.equal(lc.captureLost('track_ended').ok, false);
+  assert.equal(lc.end().ok, false);
+  assert.deepEqual(log, [], 'a revoked session was still being driven');
+});
+
 // ── end ─────────────────────────────────────────────────────────────────────
 
 test('⭐ end: supervision stops before the epoch closes, and the snapshot precedes revocation', () => {
