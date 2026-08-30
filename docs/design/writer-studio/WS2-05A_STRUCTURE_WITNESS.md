@@ -70,20 +70,38 @@ The route returned the tree with all 174 sections in `unplacedSectionIds` —
 unplaced id, `1613add4-7ddb-4d95-b34c-7e11b4299162`, is the same uuid the canvas
 had been carrying in `?s=`: one identity namespace, end to end.
 
-**Precisely scoped.** `placements 0`. The real-book byte proof so far covers
-CREATING divisions. Placement writes membership rows — which still touch no
-text, and which the substrate gate exercises thoroughly — but that has not yet
-been done against this book, and this record does not claim it.
+### Placement, on the real book — PROVEN
+
+Authored through the room, from the inline naming field, at head `0e1abada6`:
+
+```text
+before   8d0bc84f45bef77a94551b42bbc5bfeb | 380343 chars
+         Fire | 28 sections | 42–69
+after    8d0bc84f45bef77a94551b42bbc5bfeb | 380343 chars
+```
+
+`Fire = 42–69` is the first genuine authored division of Elemental Alchemy: the
+whole Fire body, contiguous, twenty-eight sections, standing on a manuscript
+that did not move by a single character. The earlier scoping note — that the
+real-book proof covered only unit creation — no longer holds. Placement is
+proven here too.
+
+**Still scoped precisely.** The end state cannot by itself distinguish which of
+the intermediate gestures were exercised: `Fire 42–69` with one unit is the
+outcome of the full nest → promote → delete → restore sequence AND of simply
+creating Fire and placing 42–69 once. Nesting, promotion and leaf-deletion are
+proven in the substrate gate against live PostgreSQL; whether they were
+exercised in the room on this book is recorded only if the walker says so.
 
 ---
 
 ## Product reality — PARTIAL
 
 ```text
-inline authoring gesture          OUTSTANDING
-hierarchical map on the real book OUTSTANDING
-unplaced writing remains visible  proven at the route; not yet seen in the room
-explicit promote/delete grammar   OUTSTANDING
+inline authoring gesture          PASS  — Fire authored from the field
+hierarchical map on the real book PASS  — 42–69 grouped, rendered
+unplaced writing remains visible  PASS  — 146 sections stayed out of Fire
+explicit promote/delete grammar   substrate PASS; in-room use unconfirmed
 place survives reload             OUTSTANDING
 section visits don't pollute Back OUTSTANDING
 ```
