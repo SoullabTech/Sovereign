@@ -38,6 +38,11 @@ export async function GET(
     case 'no_draft':
       return NextResponse.json({ mode: 'no_draft' }, { status: 404 });
 
+    case 'indeterminate':
+      /* 503, not 200: the client must fail closed and mount no writer. A 200
+         with any mode would be a claim about a draft we could not read. */
+      return NextResponse.json({ mode: 'indeterminate' }, { status: 503 });
+
     case 'section_aware':
       return NextResponse.json({
         mode: 'section_aware',

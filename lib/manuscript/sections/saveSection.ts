@@ -218,6 +218,11 @@ export type DraftWriteState =
   /** Converted is not provable for this draft. Continuous, and the outline
       offers no navigation — never a guess at where sections fall. */
   | { kind: 'continuous_unprovable'; content: string; version: number; reason: string }
+  /**
+   * The draft is section-addressable but its writing state could not be
+   * established. Mounts NEITHER engine — see resolveDraftWriteState.
+   */
+  | { kind: 'indeterminate' }
   | { kind: 'no_draft' };
 
 /**
@@ -251,6 +256,12 @@ export async function resolveDraftWriteState(
   if (d.section_addressable_at !== null) {
     const loaded = await loadEditableSections(manuscriptId, memberId);
     if (loaded) return { kind: 'section_aware', sections: loaded.sections, version: loaded.version };
+    /* FAIL CLOSED. The draft IS section-addressable but its sections could not
+       be loaded. Falling through to the classification below would answer
+       `continuous` and hand a section-authoritative draft to the
+       whole-manuscript writer, where one save overwrites every section at
+       once. The honest answer is that the mode could not be established. */
+    return { kind: 'indeterminate' };
   }
 
   /* Unconverted. Say WHY navigation is unavailable when it is structurally
