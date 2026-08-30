@@ -40,6 +40,35 @@ echo "===== DISK ====="
 df -h /System/Volumes/Data 2>/dev/null || df -h /
 
 echo ""
+echo "===== ALL VOLUMES ====="
+df -h 2>/dev/null | head -20
+
+echo ""
+echo "===== APFS CONTAINER ====="
+if command -v diskutil >/dev/null 2>&1; then
+    diskutil apfs list 2>/dev/null | grep -E "Container |Capacity|APFS Volume Disk|Snapshot" | head -30
+else
+    echo "(diskutil unavailable — not macOS)"
+fi
+
+echo ""
+echo "===== PURGEABLE / FREE DETAIL ====="
+if command -v diskutil >/dev/null 2>&1; then
+    diskutil info /System/Volumes/Data 2>/dev/null | grep -iE "free space|available|purgeable|container total"
+else
+    echo "(diskutil unavailable — not macOS)"
+fi
+
+echo ""
+echo "===== LOCAL TIME MACHINE SNAPSHOTS ====="
+if command -v tmutil >/dev/null 2>&1; then
+    snaps="$(tmutil listlocalsnapshots / 2>/dev/null)"
+    if [ -n "$snaps" ]; then echo "$snaps" | head -30; else echo "(no local snapshots)"; fi
+else
+    echo "(tmutil unavailable — not macOS)"
+fi
+
+echo ""
 echo "===== HOME TOP-LEVEL ====="
 du -h -d1 "$HOME" 2>/dev/null | sort -rh | head -15
 
