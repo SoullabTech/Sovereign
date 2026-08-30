@@ -31,6 +31,8 @@
  * exclusive by construction — see assertStudioMapHonest().
  */
 
+import { CANVAS_MANUSCRIPT_PARAM, canvasForManuscript } from './canvasIdentity';
+
 export type StudioAvailability = 'available' | 'later';
 
 /**
@@ -377,6 +379,25 @@ export function shellDestinations(
    * says it does.
    */
   satisfiedInRoom: readonly string[] = [],
+  /**
+   * The manuscript on the table, so every link that needs it can carry it.
+   *
+   * WS2-03B correction. The shell rail rendered `destination.href` verbatim,
+   * and two of the three real links are manuscript-scoped: Manuscript is this
+   * room, and Export is the Manuscript Room's export tab. Neither carried an
+   * identity, so Export landed at /press/manuscript?tab=export, which falls
+   * back to `list[0].id` when no `m` is named — the identity substitution this
+   * whole lane exists to end, reappearing one room over, in a link the shell
+   * itself wrote. The boundary that strips hrefs from what is unavailable was
+   * never asked whether the surviving hrefs were addressed.
+   *
+   * Both consumers read the SAME parameter — the Canvas through
+   * requestedManuscriptId, and /press/manuscript at page.tsx via
+   * `searchParams.get('m')` — so `canvasForManuscript` is the correct builder
+   * for both rather than a string appended and hoped over. A pin test asserts
+   * that consumer keeps reading CANVAS_MANUSCRIPT_PARAM.
+   */
+  manuscriptId: string | null = null,
 ): ShellGroup[] {
   return map.map((g) => ({
     ...g,
@@ -393,7 +414,11 @@ export function shellDestinations(
         // No href unless it can actually be taken. A destination satisfied in
         // place has no href either — there is nowhere to go, only something
         // to open — which is why the shell rail renders it as a button.
-        ...(actionable && !inRoom ? {} : { href: undefined }),
+        ...(actionable && !inRoom
+          ? d.requiresManuscript && manuscriptId
+            ? { href: canvasForManuscript(d.href!, manuscriptId) }
+            : {}
+          : { href: undefined }),
         // Real counts only, and only where the destination can be reached.
         ...(actionable && typeof counts[d.id] === 'number'
           ? { count: counts[d.id] }
@@ -421,6 +446,18 @@ export function assertShellPromisesNothing(groups: ShellGroup[]): void {
       }
       if (d.actionable && !d.href && !d.satisfiedInRoom) {
         throw new Error(`Shell: "${d.label}" is actionable but has nowhere to go.`);
+      }
+      /* A manuscript-scoped link that does not name its manuscript is worse
+         than a dead one: the destination resolves, and opens something else. */
+      if (
+        d.actionable
+        && !d.satisfiedInRoom
+        && d.requiresManuscript
+        && !d.href?.includes(`${CANVAS_MANUSCRIPT_PARAM}=`)
+      ) {
+        throw new Error(
+          `Shell: "${d.label}" needs a manuscript but its link does not name one.`,
+        );
       }
       if (d.satisfiedInRoom && d.href !== undefined) {
         throw new Error(`Shell: "${d.label}" is a panel here and must not also be a link.`);

@@ -9,7 +9,7 @@ import {
   visibleDestinations,
 } from '../studioMap';
 import { PANELS, writingFieldLayout, LAYOUT_TOLERANCE, COLUMN_FRACTION } from '../studioTheme';
-import { resolveManuscript } from '../canvasIdentity';
+import { CANVAS_MANUSCRIPT_PARAM, resolveManuscript } from '../canvasIdentity';
 import {
   assertRoundTripPreservesWork,
   handoffToMaia,
@@ -107,8 +107,17 @@ describe('the writing field takes its measured share', () => {
 /* ══ 3 · THE SHELL RAIL — SIXTEEN, AND SIXTEEN HONEST ════════════════════ */
 
 describe('the shell rail shows the whole Studio and promises none of it', () => {
+  /* `hasManuscript` and a manuscript id are one fact, not two: if the room has
+     a manuscript it can name it. Passing them apart described a state that
+     cannot occur, and the identity guard rightly rejects it. */
   const groups = (has = true) =>
-    shellDestinations(has, STUDIO_MAP, {}, ['materials', 'structure', 'versions']);
+    shellDestinations(
+      has,
+      STUDIO_MAP,
+      {},
+      ['materials', 'structure', 'versions'],
+      has ? 'ms-on-the-table' : null,
+    );
 
   it('preserves D-019’s exact semantic grouping — 7 + 4 + 5', () => {
     const g = groups();
@@ -157,6 +166,40 @@ describe('the shell rail shows the whole Studio and promises none of it', () => 
     expect(m.count).toBe(3);
   });
 
+  it('carries the manuscript identity into every manuscript-scoped link', () => {
+    /* The shell rail rendered destination.href verbatim, so Export pointed at
+       /press/manuscript?tab=export with no manuscript named — and that room
+       falls back to list[0].id. A link the shell itself wrote would have
+       opened a different book. Dead links were guarded; addressed ones were
+       not. */
+    const withId = shellDestinations(
+      true, STUDIO_MAP, {}, ['materials', 'structure', 'versions'], 'ms-on-the-table',
+    ).flatMap((g) => g.destinations);
+
+    for (const d of withId) {
+      if (!d.actionable || d.satisfiedInRoom || !d.requiresManuscript) continue;
+      expect(d.href).toContain(`${CANVAS_MANUSCRIPT_PARAM}=ms-on-the-table`);
+    }
+    const exp = withId.find((d) => d.id === 'export')!;
+    expect(exp.href).toBe('/press/manuscript?tab=export&m=ms-on-the-table');
+    const ms = withId.find((d) => d.id === 'manuscript')!;
+    expect(ms.href).toContain('m=ms-on-the-table');
+  });
+
+  it('refuses a manuscript-scoped link that does not name its manuscript', () => {
+    // Structural, not a convention: the boundary throws rather than shipping
+    // a link that resolves and opens something else.
+    const noId = shellDestinations(true, STUDIO_MAP, {}, [], null);
+    expect(() => assertShellPromisesNothing(noId)).toThrow(/does not name one/);
+  });
+
+  it('leaves links alone that are not manuscript-scoped', () => {
+    const home = shellDestinations(true, STUDIO_MAP, {}, [], 'ms-x')
+      .flatMap((g) => g.destinations)
+      .find((d) => d.id === 'home')!;
+    expect(home.href).toBe('/writers-studio');
+  });
+
   it('does not activate Conversations to match the reference', () => {
     const conv = groups().flatMap((g) => g.destinations).find((d) => d.id === 'conversations')!;
     expect(conv.actionable).toBe(false);
@@ -176,6 +219,46 @@ describe('the shell rail shows the whole Studio and promises none of it', () => 
       expect(src.toLowerCase()).not.toContain('coming soon');
       expect(src.toLowerCase()).not.toContain('not yet available');
     }
+  });
+});
+
+describe('the parameter the shell writes is the one the destination reads', () => {
+  it('/press/manuscript still reads CANVAS_MANUSCRIPT_PARAM', () => {
+    /* The original WS2-01-adjacent defect was a producer and a consumer
+       disagreeing about a parameter name while every other check passed. The
+       shell now writes manuscript identity into a link aimed at another room,
+       so that room's reader is pinned here: if it renames the parameter, this
+       fails instead of the link silently opening list[0]. */
+    const room = fs.readFileSync(
+      path.join(__dirname, '..', '..', 'press', 'manuscript', 'page.tsx'),
+      'utf8',
+    );
+    expect(room).toMatch(
+      new RegExp(`searchParams\\?\\.get\\('${CANVAS_MANUSCRIPT_PARAM}'\\)`),
+    );
+  });
+});
+
+describe('MAIA’s panel can be brought back', () => {
+  it('offers a show/hide toggle for the panel itself', () => {
+    /* Her panel was dismissible with no route home: every other panel reopens
+       from the rail, and her whole rail band is unavailable by design. */
+    expect(page).toContain('data-panel-toggle="maia"');
+    expect(page).toContain("summon('maia')");
+    expect(page).toMatch(/aria-pressed=\{maiaOpen\}/);
+  });
+
+  it('does so without making any MAIA destination look reachable', () => {
+    // Fixing the bug by putting a live MAIA entry in the rail would have made
+    // the band look navigable — the exact promise WS2-03B refuses to make.
+    const conv = shellDestinations(true, STUDIO_MAP, {}, ['materials'], 'ms-x')
+      .flatMap((g) => g.destinations)
+      .find((d) => d.id === 'conversations')!;
+    expect(conv.actionable).toBe(false);
+    expect(conv.href).toBeUndefined();
+    // A toggle, not a link.
+    const toggle = page.slice(page.indexOf('data-panel-toggle="maia"'));
+    expect(toggle.slice(0, 400)).not.toMatch(/href/);
   });
 });
 

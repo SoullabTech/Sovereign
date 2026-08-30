@@ -9,6 +9,7 @@ import {
   GOLD,
   GROUND,
   INK,
+  MAIA_ACCENT,
   MEASURE,
   RADIUS,
   RULE,
@@ -345,6 +346,48 @@ export default function WritersStudioPage() {
         </div>
         {!compact && <StudioModeBar current="write" style={{ marginLeft: SPACE.roomy }} />}
         <span style={{ flex: 1 }} />
+        {/* ── WS2-03B correction: a way back to MAIA ────────────────────────
+            Her panel was dismissible with no route home. Every other panel is
+            re-opened from the rail, but her whole rail band is unavailable and
+            must stay that way — so a control had to exist somewhere else.
+
+            It is deliberately a SHOW/HIDE TOGGLE and not a destination: it
+            carries aria-pressed rather than an href, it sits in the header
+            chrome rather than in the rail's grammar, and its label names the
+            panel it reveals. Putting a live "MAIA" entry in the rail would
+            have fixed the same bug by making the MAIA band look reachable,
+            which is precisely the promise WS2-03B refuses to make. */}
+        <button
+          type="button"
+          data-panel-toggle="maia"
+          aria-pressed={maiaOpen}
+          onClick={() => (maiaOpen ? dismiss('maia') : summon('maia'))}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: SPACE.snug,
+            background: maiaOpen ? GROUND.active : 'transparent',
+            border: `1px solid ${maiaOpen ? RULE.soft : RULE.quiet}`,
+            borderRadius: RADIUS.pill,
+            padding: `${SPACE.tight}px ${SPACE.base}px`,
+            cursor: 'pointer',
+            marginRight: SPACE.base,
+          }}
+        >
+          <span
+            aria-hidden="true"
+            style={{
+              width: 6,
+              height: 6,
+              borderRadius: RADIUS.pill,
+              background: maiaOpen ? MAIA_ACCENT.voice : 'transparent',
+              border: `1px solid ${MAIA_ACCENT.voice}`,
+            }}
+          />
+          <StudioText role="metadata" as="span" tone={maiaOpen ? 'secondary' : 'quiet'}>
+            MAIA
+          </StudioText>
+        </button>
         {draftMeta && (
           <StudioText role="metadata" as="span">
             {draftMeta.words.toLocaleString()} words
@@ -368,6 +411,7 @@ export default function WritersStudioPage() {
           hasManuscript={Boolean(manuscript)}
           counts={railCounts}
           satisfiedInRoom={manuscript ? SATISFIED_IN_ROOM : []}
+          manuscriptId={manuscript?.id ?? null}
           current="manuscript"
           openPanels={[
             ...(materialsOpen ? ['materials'] : []),

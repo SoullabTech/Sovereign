@@ -279,6 +279,7 @@ export function StudioShellRail({
   hasManuscript,
   counts,
   satisfiedInRoom,
+  manuscriptId,
   current,
   openPanels,
   onSelect,
@@ -290,6 +291,8 @@ export function StudioShellRail({
   counts?: Readonly<Record<string, number>>;
   /** Destination ids this room opens as panels rather than navigating to. */
   satisfiedInRoom?: readonly string[];
+  /** The manuscript on the table. Every manuscript-scoped link carries it. */
+  manuscriptId?: string | null;
   /** Destination id of the room the member is in. */
   current?: string;
   /** Destination ids whose panel is open right now. */
@@ -298,7 +301,9 @@ export function StudioShellRail({
   lead?: ReactNode;
   style?: CSSProperties;
 }) {
-  const groups = shellDestinations(hasManuscript, undefined, counts, satisfiedInRoom);
+  const groups = shellDestinations(
+    hasManuscript, undefined, counts, satisfiedInRoom, manuscriptId,
+  );
   return (
     <StudioRailChrome
       groups={groups}
