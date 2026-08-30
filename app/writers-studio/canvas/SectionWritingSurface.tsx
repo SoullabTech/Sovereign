@@ -1,0 +1,135 @@
+/**
+ * WS2-04B — the writing surface for a section-addressable draft.
+ *
+ * A SIBLING of WritingSurface, not a rewrite of it. That component edits one
+ * continuous string and remains correct for every draft that has not been
+ * converted — which today is all of them. Branching between the two is the
+ * Canvas's job; neither knows about the other.
+ *
+ * WHAT THIS COMPONENT DOES NOT DECIDE. Identity, authority, versioning and the
+ * save lifecycle are all settled below it and it must not reinterpret any of
+ * them:
+ *
+ *   which text to show     staged → queued → persisted → loaded, from the hook
+ *   what a row is called   manuscript_draft_sections.id, from the server
+ *   when a save happens    the debounce and the queue, never a keystroke
+ *   what a status means    resolveSectionStatus, not a local guess
+ *
+ * THE WRITING SESSION IS LIFTED, not owned here. The outline and the canvas
+ * must be the same session — one queue, one active id, one set of statuses —
+ * or clicking a row would navigate a hook the canvas is not rendering from.
+ * So the Canvas calls useSectionWriting and hands the result to both.
+ *
+ * HEADINGS ARE READ-ONLY in this cut. The heading is rendered structurally
+ * above the field; the field holds body text only. Rename, split and merge are
+ * explicit structure operations later rather than hidden behaviour inside a
+ * text box.
+ */
+'use client';
+
+import { useEffect, useRef } from 'react';
+import { apiFetch } from '@/lib/http/apiBase';
+import type { SectionWriting } from '@/lib/writersStudio/useSectionWriting';
+import type { SaveFn } from '@/lib/writersStudio/sectionSaveQueue';
+import { GROUND, RADIUS, SPACE } from '../studioTheme';
+import { StudioText } from '../studio/StudioType';
+
+export interface SectionWritingSurfaceProps {
+  /** The shared writing session — see the header. */
+  writing: SectionWriting;
+}
+
+/**
+ * Build the save call for a manuscript.
+ *
+ * `witnessDelayMs` is development-only and only when the witness asks: it holds
+ * the RESPONSE so a section can be seen still saving while the next one opens.
+ * The mutation commits at the same moment either way.
+ */
+export function makeSectionSave(manuscriptId: string, witnessDelayMs?: number): SaveFn {
+  return async (sectionId, body, baseVersion) => {
+    const q = witnessDelayMs ? `?witnessDelayMs=${witnessDelayMs}` : '';
+    const res = await apiFetch(
+      `/api/sovereign/manuscripts/${manuscriptId}/sections/${sectionId}${q}`,
+      {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ body, baseVersion }),
+      },
+    );
+    if (res.ok) {
+      const data = await res.json();
+      return { ok: true, version: data.version };
+    }
+    /* A 409 is a version conflict and must stay one: the latch depends on
+       telling "the draft moved elsewhere" apart from "the save did not
+       arrive". Anything else is an unknown outcome. */
+    if (res.status === 409) return { ok: false, refusal: 'stale_base' };
+    return { ok: false, refusal: 'error' };
+  };
+}
+
+export default function SectionWritingSurface({ writing }: SectionWritingSurfaceProps) {
+  const fieldRef = useRef<HTMLTextAreaElement | null>(null);
+  const activeId = writing.activeId;
+
+  /* Focus follows the writer, so keyboard navigation lands in the prose rather
+     than leaving them somewhere they have to hunt for. */
+  useEffect(() => {
+    if (activeId) fieldRef.current?.focus();
+  }, [activeId]);
+
+  const active = writing.active;
+  if (!active) {
+    return <StudioText role="metadata">This draft has no sections to write in.</StudioText>;
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: SPACE.base }}>
+      {active.heading !== null && (
+        <StudioText role="chapterTitle" as="h2">
+          {active.heading}
+        </StudioText>
+      )}
+
+      {!active.editable ? (
+        <div
+          style={{
+            padding: SPACE.base,
+            borderRadius: RADIUS.sm,
+            background: GROUND.raised,
+          }}
+        >
+          {/* A section whose shape this cut cannot split is shown whole and
+              read-only. Offering a text box here would invite an edit the
+              server is guaranteed to refuse. */}
+          <StudioText role="metadata" style={{ marginBottom: SPACE.snug }}>
+            This section can be read here but not yet edited.
+          </StudioText>
+          <StudioText role="prose" as="pre" style={{ whiteSpace: 'pre-wrap', margin: 0 }}>
+            {active.body}
+          </StudioText>
+        </div>
+      ) : (
+        <textarea
+          ref={fieldRef}
+          value={writing.activeBody}
+          onChange={(e) => writing.edit(e.target.value)}
+          spellCheck
+          aria-label={active.heading ?? `Section ${active.position + 1}`}
+          style={{
+            width: '100%',
+            minHeight: '60vh',
+            resize: 'none',
+            border: 'none',
+            outline: 'none',
+            background: 'transparent',
+            font: 'inherit',
+            lineHeight: 1.7,
+            color: 'inherit',
+          }}
+        />
+      )}
+    </div>
+  );
+}
