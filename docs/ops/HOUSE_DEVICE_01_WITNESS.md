@@ -265,6 +265,97 @@ canonical MAIA chooses after the tap.
 
 Repaired in **DESKTOP-SOVEREIGN-STT-01**.
 
+### ⛔ ORIGIN-SPLIT CORRECTION — what every device walk so far actually tested
+
+**2026-08-30.** Desktop's contained view defaults to **production**, and `npm start` runs only
+`electron .` — it never starts the candidate's Next server. So every walk has been:
+
+```text
+Electron host   from the candidate      ✅
+      ↓
+BrowserView
+      ↓
+https://soullab.life/maia               ⛔ PRODUCTION web code, not the candidate
+```
+
+Verified: `shell-policy.js:26` defaults to `https://soullab.life`; `maia-desktop/package.json:8` is
+`electron .`; and the app's own log line printed `[Desktop platform] origin=https://soullab.life
+source=default` in the qualification output. `origin/clean-main-no-secrets` has **0** matches for
+`isDesktopShell` / `maia-desktop` / `selectVoiceTransport` — production has none of the STT work.
+
+#### What survives, and what does not
+
+```text
+SURVIVES — Electron host, candidate code
+  DESKTOP-ARRIVAL-01     cold arrival reveals the platform view, not the local D01 renderer.
+                         That is goTo(MAIA) in main.js. Genuinely witnessed.
+  title from showPlace
+
+INVALIDATED — web surface, production code
+  identity F / Kelly           production /maia
+  listening collapses          production voice path
+  listening holds / stuck      production voice path
+  everything transport, interim, 8-second
+```
+
+⛔ **The "listening collapses immediately" symptom that motivated DESKTOP-SOVEREIGN-STT-01 was
+production's.** The unit remains justified — its diagnosis came from an independent source trace,
+and that trace is confirmed above — but the fix has **never been under a microphone**.
+
+```text
+1c2c59af9  SOURCE / TEST   PASS
+1c2c59af9  DEVICE          NOT YET TESTED
+production /maia Desktop    voice stuck listening — a real finding, but NOT evidence
+                            against the candidate
+```
+
+#### ⚠️ Live production defect, independent of Desktop
+
+`clean-main-no-secrets:lib/voice/androidVoiceFallback.ts:183` still reads
+`payload?.text ?? payload?.transcript`, while `/api/voice/transcribe-simple` returns
+`{ success, transcription, … }`. That reader also serves the **Android-Chrome recovery** and the
+**Firefox/Zen web-whisper** branch. Members on those paths are having successful transcriptions read
+as blank **today**. This is a deploy decision, not a Desktop one.
+
+---
+
+### DESKTOP-STT-WITNESS-ORIGIN-01 — pin BOTH halves
+
+⛔ **Set both variables.** `session.js:289` mints the web session cookie at `url: baseUrl`, and
+`baseUrl` comes from `MAIA_BASE_URL` (`session.js:144`). Point only the *view* at loopback and the
+cookie lands on production's origin — the local `/maia` comes up **unauthenticated**, shows
+`Friend`, and looks like an identity regression. Both move together or neither does.
+
+`shell-policy.js` already accepts a loopback witness origin over plain http
+(`127.0.0.1`, `localhost`, `[::1]`); anything else public over http hard-fails rather than silently
+using production. **No code change is needed for this witness.**
+
+```
+cd /tmp/house-device-04
+PORT=3000 npm run dev
+```
+
+then, in a second terminal:
+
+```
+cd /tmp/house-device-04/maia-desktop
+MAIA_PLATFORM_ORIGIN=http://127.0.0.1:3000 MAIA_BASE_URL=http://127.0.0.1:3000 npm start
+```
+
+**Before any voice test, prove both halves are pinned.** The app prints its own origin line at
+startup:
+
+```text
+[Desktop platform] origin=http://127.0.0.1:3000 source=override
+```
+
+If it says `source=default`, stop — you are on production again and nothing that follows is evidence
+about the candidate.
+
+⛔ Do not edit voice code unless this two-sided witness fails.
+
+---
+
 ### Walk 3 — STT DEVICE witness · candidate `1c2c59af9` · **PENDING**
 
 ⛔ **PIN THE CANDIDATE, NOT THE BRANCH.** The branch head has moved past the frozen candidate
