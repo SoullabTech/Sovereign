@@ -20,6 +20,20 @@ import { createHash } from 'crypto';
 
 const sha = (s: string) => createHash('sha256').update(s, 'utf8').digest('hex').slice(0, 12);
 
+/** Time one awaited step. The trigger checks run string_agg over every section
+    of the draft on each write, so at book scale the question is not whether
+    they are correct but whether they are affordable on a live writing
+    surface. Measured rather than assumed. */
+async function timed<T>(label: string, fn: () => Promise<T>): Promise<T> {
+  const t0 = process.hrtime.bigint();
+  try {
+    return await fn();
+  } finally {
+    const ms = Number(process.hrtime.bigint() - t0) / 1e6;
+    console.log(`    ⏱  ${label.padEnd(38)} ${ms.toFixed(1)} ms`);
+  }
+}
+
 let passed = 0;
 let failed = 0;
 function check(label: string, ok: boolean, detail = '') {
@@ -73,27 +87,36 @@ async function main() {
   let rows = SYNTHETIC;
   let content: string | null = null;
   let originalHash: string | null = null;
+  let copyOwner: string | null = null;
 
   if (sourceId) {
     const s = await query<{ heading: string | null; body: string }>(
       `SELECT heading, body FROM manuscript_sections
         WHERE manuscript_id = $1 ORDER BY position ASC`, [sourceId]);
-    const d = await query<{ content: string }>(
-      `SELECT content FROM manuscript_working_drafts WHERE manuscript_id = $1`, [sourceId]);
+    const d = await query<{ content: string; member_id: string }>(
+      `SELECT content, member_id FROM manuscript_working_drafts WHERE manuscript_id = $1`,
+      [sourceId]);
     if (s.rows.length === 0 || d.rows.length === 0) {
       console.error(`  source ${sourceId} has no sections or no draft`); process.exit(1);
     }
     rows = s.rows;
     content = d.rows[0].content;
     originalHash = sha(content);
-    console.log(`  copied from ${sourceId}: ${rows.length} sections, ${content.length} chars`);
+    /* The copy belongs to the SOURCE draft's member. Conversion is
+       member-scoped, and a disposable manuscript owned by an arbitrary other
+       member would be both wrong and unconvertible. */
+    copyOwner = d.rows[0].member_id;
+    console.log(`  copying from ${sourceId}: ${rows.length} sections, ${content.length} chars`);
   }
 
-  const member = await query<{ id: string }>(`SELECT id FROM members LIMIT 1`);
-  if (member.rows.length === 0) { console.error('  no members in this database'); process.exit(1); }
-  const memberId = member.rows[0].id;
+  let memberId = copyOwner;
+  if (!memberId) {
+    const member = await query<{ id: string }>(`SELECT id FROM members LIMIT 1`);
+    if (member.rows.length === 0) { console.error('  no members in this database'); process.exit(1); }
+    memberId = member.rows[0].id;
+  }
 
-  const { manuscriptId, draftId, draftContent } = await transaction(async (tx) => {
+  const { manuscriptId, draftId, draftContent } = await timed('copy into disposable manuscript', () => transaction(async (tx) => {
     const m = await tx.query<{ id: string }>(
       `INSERT INTO member_manuscripts (title) VALUES ($1) RETURNING id`,
       ['WS2-04A witness (disposable)']);
@@ -112,13 +135,14 @@ async function main() {
       `INSERT INTO manuscript_working_drafts (manuscript_id, member_id, content, base_source_hash)
        VALUES ($1,$2,$3,$4) RETURNING id`, [mid, memberId, text, 'witness']);
     return { manuscriptId: mid, draftId: d.rows[0].id, draftContent: text };
-  });
+  }));
   check('disposable manuscript created', true);
 
   try {
     /* ── 4/5 · convert and prove ─────────────────────────────────────── */
     console.log('\n4 · convert');
-    const result = await convertDraftToSections(manuscriptId, memberId);
+    const result = await timed('convertDraftToSections', () =>
+      convertDraftToSections(manuscriptId, memberId));
     console.log(`  → ${result.status}${result.refusal ? ` (${result.refusal}${result.detail ? ': ' + result.detail : ''})` : ''}`);
     check('conversion succeeded', result.status === 'converted');
 
@@ -151,7 +175,8 @@ async function main() {
 
       /* ── 6 · idempotency ───────────────────────────────────────────── */
       console.log('\n6 · idempotency');
-      const again = await convertDraftToSections(manuscriptId, memberId);
+      const again = await timed('second call (idempotent)', () =>
+        convertDraftToSections(manuscriptId, memberId));
       check('second call returns already_converted', again.status === 'already_converted',
         again.status);
       const after = await query<{ n: string }>(
@@ -162,21 +187,21 @@ async function main() {
       console.log('\n7 · deferred trigger aborts a one-sided write');
       let aborted = false;
       try {
-        await transaction(async (tx) => {
+        await timed('content-only write (must abort)', () => transaction(async (tx) => {
           await tx.query(
             `UPDATE manuscript_working_drafts SET content = content || $2 WHERE id = $1`,
             [draftId, ' DRIFT']);
-        });
+        }));
       } catch { aborted = true; }
       check('content-only change refused', aborted);
 
       let aborted2 = false;
       try {
-        await transaction(async (tx) => {
+        await timed('section-only delete (must abort)', () => transaction(async (tx) => {
           await tx.query(
             `DELETE FROM manuscript_draft_sections WHERE draft_id = $1 AND position = $2`,
             [draftId, rows.length - 1]);
-        });
+        }));
       } catch { aborted2 = true; }
       check('section-only change refused', aborted2);
 
@@ -184,14 +209,14 @@ async function main() {
       console.log('\n8 · consistent write on both sides commits');
       let committed = false;
       try {
-        await transaction(async (tx) => {
+        await timed('consistent two-sided write (commits)', () => transaction(async (tx) => {
           await tx.query(
             `UPDATE manuscript_draft_sections SET text = text || $2
               WHERE draft_id = $1 AND position = $3`, [draftId, ' more', rows.length - 1]);
           await tx.query(
             `UPDATE manuscript_working_drafts SET content = content || $2 WHERE id = $1`,
             [draftId, ' more']);
-        });
+        }));
         committed = true;
       } catch (e) { console.log(`    (${(e as Error).message.slice(0, 90)})`); }
       check('both-sides change committed', committed);
@@ -201,7 +226,8 @@ async function main() {
     console.log('\n9 · member deletion');
     let deleted = false;
     try {
-      await query(`DELETE FROM member_manuscripts WHERE id = $1`, [manuscriptId]);
+      await timed('delete disposable manuscript (cascade)', () =>
+        query(`DELETE FROM member_manuscripts WHERE id = $1`, [manuscriptId]));
       deleted = true;
     } catch (e) { console.log(`    ${(e as Error).message.slice(0, 120)}`); }
     check('manuscript deletion cascades — invariant never blocks it', deleted);

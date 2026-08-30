@@ -28,15 +28,41 @@ write path takes over.
 
 ## Witness result
 
-Run against a throwaway PostgreSQL **16.13**, 2026-08-30: **24 passed · 0 failed.**
-`convertDraftToSections` has executed; both deferred triggers have fired and
-aborted; a consistent two-sided write committed; the deletion cascade ran with
-the invariant in place.
+Two runs against a throwaway PostgreSQL **16.13**, 2026-08-30.
 
-Two things that witness did NOT cover, and a dev run should: the copy path
-(`ws2-04a-substrate-witness.ts <manuscript-id>`, which duplicates a real
-manuscript's sections and draft and then proves the original untouched), and
-any draft at production scale — the largest here was four sections.
+| run | shape | result |
+|---|---|---|
+| synthetic | 4 sections | **24 passed · 0 failed** |
+| copy path | **185 sections, 669,064 chars** | **26 passed · 0 failed** |
+
+The second copies a real manuscript's sections and draft into a disposable
+one, converts the copy, and proves the original byte-identical and unconverted
+afterwards.
+
+### Timings at book scale — is `string_agg` affordable?
+
+| step | ms |
+|---|---|
+| copy into disposable manuscript | 51.4 |
+| `convertDraftToSections` (one-time) | 307.0 |
+| second call, idempotent | 13.8 |
+| content-only write → abort | 10.2 |
+| section-only delete → abort | 4.4 |
+| **consistent two-sided write → commit** | **9.4** |
+| delete manuscript, cascade | 10.4 |
+
+The number that matters for 04B is the last-but-one: **~9 ms for a checked
+write on a 669 KB, 185-section draft**, including the round trip. The
+invariant is affordable on a live writing surface at a debounced autosave
+cadence. It is NOT free per keystroke, and the cost grows with draft size —
+04B should keep autosave debounced rather than fire a save per character.
+
+Conversion at 307 ms is one-time per draft and runs behind the "your draft is
+now navigable by section" moment, not in the typing path.
+
+Caveat on the shape: the 185-section book was synthetic (uniform paragraphs),
+which is representative for byte-level timing but not for pathological section
+size distribution.
 
 ## The invariant is enforced in the database, not only in code
 
