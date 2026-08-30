@@ -23,6 +23,7 @@
  * durations, mime types, error names. Observable state first.
  */
 
+import { readTranscript } from './transcribeResponse';
 import { logVoiceEvent } from './voiceDiagnostics';
 import { apiFetch } from '@/lib/http/apiBase';
 
@@ -176,11 +177,13 @@ export async function recordAndTranscribe(
 
   let transcript = '';
   try {
-    const payload = await response.json();
-    // Both /api/voice/transcribe-simple and the underlying Whisper service
-    // return a `text` field. Accept either { text } or { transcript } to be
-    // resilient to small response shape variation.
-    transcript = String(payload?.text ?? payload?.transcript ?? '').trim();
+    // ⛔ VOICE-TRANSCRIBE-RESPONSE-SHAPE-01. The comment that stood here said
+    // the route "returns a `text` field", and that was simply wrong:
+    // /api/voice/transcribe-simple returns { success, transcription, ... }
+    // (transcribe-simple/route.ts:158). So this accepted two shapes, neither of
+    // which its own endpoint sends, and every successful transcription was read
+    // as blank and discarded as `empty_transcript`.
+    transcript = readTranscript(await response.json());
   } catch {
     transcript = '';
   }
