@@ -183,9 +183,21 @@ function createVoiceLifecycle({
   }
 
   /**
-   * ⭐ AUTH-TEARDOWN-CAPTURE-01. The member's authority to capture is gone —
-   * signed out, or a credential rejected on any authenticated call. Capture is
-   * released, and it is released FIRST, before the rest of member state falls
+   * ⭐ AUTH-TEARDOWN-CAPTURE-01, and — found by HOUSE-RECONCILE-01 — one more
+   * caller. Release capture WITHOUT completing it. Two causes, one disposition:
+   *
+   *   signed_out / expired    the member's authority to capture is gone
+   *   platform-visible        the member crossed into a platform place, and
+   *                           attention they cannot see is not attention they
+   *                           consented to. If the microphone stayed live behind
+   *                           the House, MAIA would be listening — and
+   *                           transcribing, answering and speaking — to someone
+   *                           who has visibly gone somewhere else.
+   *
+   * Renamed from `releaseOnAuthLoss` when the second caller appeared: the
+   * behaviour is identical and the old name would have lied about half of it.
+   *
+   * On auth loss it is released FIRST, before the rest of member state falls
    * away.
    *
    * ⛔ WHY FIRST, and why this path has to exist at all: capture is the one
@@ -214,7 +226,7 @@ function createVoiceLifecycle({
    *
    * Idempotent: releasing twice is not an error, and the second call says so.
    */
-  function releaseOnAuthLoss(cause) {
+  function releaseCapture(cause) {
     watch.stop();
     const released = session();
     if (!released) return { ok: false, released: false };
@@ -226,7 +238,7 @@ function createVoiceLifecycle({
     return { ok: true, released: true };
   }
 
-  return { begin, frame, micResult, captureLost, end, releaseOnAuthLoss };
+  return { begin, frame, micResult, captureLost, end, releaseCapture };
 }
 
 module.exports = { createVoiceLifecycle };

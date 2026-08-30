@@ -41,6 +41,7 @@ const PORTABLE_DOMAIN = [
   'voice/epoch.js', 'voice/vad.js', 'voice/utterance.js',
   'voice/wav.js', 'voice/transcription.js', 'voice/diagnostics.js',
   'voice/member-draft.js', // DSC-FINAL — salvage authorship left the composition root
+  'shell-policy.js', 'shell.js', // HOUSE-RECONCILE-01 — carried; both Electron-free
 ];
 
 // The presentation edge. Speaks an abstract capability surface, never Electron.
@@ -49,6 +50,18 @@ const PRESENTATION = ['renderer.js'];
 // Constructs that can only come from Electron itself — no injected parameter
 // legitimately carries these names. (`app` and `safeStorage` are deliberately
 // absent: session.js receives them as arguments, which is the shape we want.)
+// ⛔ Electron surfaces that arrive as INJECTED PARAMETERS rather than imports.
+// This is the shape the invariant asks for — session.js has always taken `app`
+// and `safeStorage` this way — but two of these names are otherwise unforgeable,
+// so a file that receives them has to say so here. Adding an entry is an
+// authority decision, exactly like HOST_ADAPTERS.
+const INJECTED_ELECTRON = {
+  'shell.js': {
+    names: ['BrowserView', 'webContents'],
+    why: 'Every Electron surface arrives as a constructor parameter — BrowserView, sessionApi, shellApi, window. `webContents` is only ever read off the injected view, never imported. ds01 drives the real logic with fakes precisely because none of it is bound to Electron.',
+  },
+};
+
 const ELECTRON_CONSTRUCTS = ['ipcMain', 'ipcRenderer', 'BrowserWindow', 'contextBridge', 'webContents'];
 
 const read = (rel) => readFileSync(path.join(SRC, rel), 'utf8');
@@ -96,7 +109,8 @@ test('domain logic never imports Electron', () => {
 test('domain logic never names an Electron construct', () => {
   for (const file of [...PORTABLE_DOMAIN, ...PRESENTATION]) {
     const body = code(read(file));
-    for (const construct of ELECTRON_CONSTRUCTS) {
+    const injected = (INJECTED_ELECTRON[file] || { names: [] }).names;
+    for (const construct of ELECTRON_CONSTRUCTS.filter((c) => !injected.includes(c))) {
       assert.ok(!new RegExp(`\\b${construct}\\b`).test(body),
         `${file} names ${construct}. Question 5: this could not survive replacing ` +
         `BrowserWindow + IPC with a native host without changing its semantics.`);
@@ -109,6 +123,16 @@ test('the renderer depends on an abstract Desktop capability, not on Electron ma
     const body = code(read(file));
     assert.ok(!/\brequire\s*\(/.test(body), `${file} uses require(); the renderer gets named verbs only.`);
     assert.ok(/window\.maia\./.test(body), `${file} no longer speaks the capability surface.`);
+  }
+});
+
+test('every declared Electron injection carries why it is injected, not imported', () => {
+  for (const [file, d] of Object.entries(INJECTED_ELECTRON)) {
+    assert.ok(d.why && d.why.length > 60, `INJECTED_ELECTRON entry ${file} must argue for itself`);
+    // The exemption covers naming only. Importing Electron is still forbidden,
+    // and the import proof above already covers every portable file.
+    const body = code(read(file));
+    assert.ok(!/require\(\s*['"]electron['"]\s*\)/.test(body), `${file} imports electron`);
   }
 });
 

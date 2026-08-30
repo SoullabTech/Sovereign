@@ -79,6 +79,18 @@
   #log.on { display:block; }
   .link { background:none; border:none; color:var(--sl-text-muted); font-size:12px;
           padding:4px 6px; cursor:pointer; }
+
+  /* DESKTOP-TEXT-01 — the composer. Sits above the voice bar because writing
+     and speaking are peers: neither is the "real" way to reach her. */
+  #composer { display:none; gap:10px; padding:14px 28px 0; align-items:center; }
+  #composer input {
+    flex:1; margin:0; padding:13px 16px; border-radius:11px; font-size:15px;
+    background:var(--sl-bg-surface); border:1px solid var(--sl-border-subtle);
+    color:var(--sl-text-primary);
+  }
+  #composer input::placeholder { color:var(--sl-text-muted); }
+  #composer input:focus { border-color:var(--sl-accent-primary); }
+  #composer button { padding:12px 20px; }
   .link:hover { color:var(--sl-accent-soft); }
 </style>
 
@@ -92,6 +104,11 @@
     <div class="hint" id="autherr"></div>
   </form>
 </main>
+
+<form id="composer">
+  <input id="msg" placeholder="Message MAIA…" autocomplete="off" spellcheck="true">
+  <button class="primary" id="send" type="submit">Send</button>
+</form>
 
 <footer id="bar" style="display:none">
   <div class="dot" id="dot"></div>

@@ -22,6 +22,7 @@ let audioCtx = null, stream = null, node = null, listening = false;
 let captureState = 'idle';        // idle | starting | listening | recovering | unavailable
 let captureCause = null;
 let rebuilding = false;
+let sending = false;                     // DESKTOP-TEXT-01 — one typed turn at a time
 let player = null;
 
 function setState(text, isError) {
@@ -253,6 +254,9 @@ function play({ base64, format }) {
 function showSignedIn(state) {
   $('signin').style.display = state.signedIn ? 'none' : 'flex';
   $('bar').style.display = state.signedIn ? 'flex' : 'none';
+  // ⭐ DESKTOP-TEXT-01. The composer appears with the voice bar, not instead of
+  // it: a signed-in member can reach MAIA either way, at any moment.
+  $('composer').style.display = state.signedIn ? 'flex' : 'none';
   if (state.signedIn) {
     $('main').classList.remove('center');
     setState('Ready when you are.');
@@ -269,6 +273,32 @@ window.addEventListener('DOMContentLoaded', async () => {
     const out = await window.maia.signIn($('u').value.trim(), $('p').value);
     $('autherr').textContent = out.ok ? '' : (out.error || 'Sign-in failed.');
   };
+  // ⭐ DESKTOP-TEXT-01. Enter submits (it is a <form>), so typing feels like
+  // typing. The turn itself renders through `maia:turn`, exactly as a spoken
+  // one does — the renderer does NOT append the member's line locally, because
+  // then a refused send would leave words on screen that MAIA never received.
+  $('composer').onsubmit = async (e) => {
+    e.preventDefault();
+    const text = $('msg').value.trim();
+    if (!text || sending) return;
+    sending = true;
+    $('send').disabled = true;
+    const previous = $('msg').value;
+    $('msg').value = '';
+    try {
+      const out = await window.maia.sendText(text);
+      if (!out || out.ok === false) {
+        // Give the member their words back rather than swallowing them.
+        $('msg').value = previous;
+        setState((out && out.error) || 'That did not send.', true);
+      }
+    } finally {
+      sending = false;
+      $('send').disabled = false;
+      $('msg').focus();
+    }
+  };
+
   $('out').onclick = () => window.maia.signOut();
   $('talk').onclick = () => (listening ? stopListening() : startListening());
   $('toggle').onclick = () => $('log').classList.toggle('on');

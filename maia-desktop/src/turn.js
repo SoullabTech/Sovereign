@@ -104,6 +104,53 @@ function createTurn({
     return TURN_OUTCOME.REVOKED;
   }
 
+  /**
+   * The half a spoken turn and a typed turn share, so they cannot drift apart.
+   *
+   * ⭐ DESKTOP-TEXT-01, reconciled. A typed turn still gets her voice: the
+   * modality is how the MEMBER spoke, not how MAIA answers.
+   */
+  async function answer(said) {
+    announce({ phase: 'heard', member: said });
+    announce({ phase: 'thinking' });
+
+    const a = await conversation().ask(said);
+    if (!authorized()) return revoke('ask');
+    if (!a.ok) { announce({ phase: 'error', error: a.error }); return TURN_OUTCOME.FAILED; }
+
+    // Words before voice, always. The surface must never speak an answer it
+    // has not yet shown — that is how text and voice diverge.
+    announce({ phase: 'answered', maia: a.text });
+    if (a.audio) speak(a.audio);
+    else announce({ phase: 'no-voice' });
+    return TURN_OUTCOME.COMPLETED;
+  }
+
+  /**
+   * A typed turn. Same turn, same thread, same revocation rule.
+   *
+   * ⛔ It shares `busy` with the spoken path deliberately: a typed message must
+   * not interleave with a spoken one and leave two half-turns in the thread.
+   *
+   * ⛔ It does NOT carry its own answer to "what if authority disappears" — the
+   * implementation this replaces had one, and TURN-REVOCATION-01 owns that
+   * disposition now for both modalities.
+   */
+  async function say(text) {
+    const said = typeof text === 'string' ? text.trim() : '';
+    if (!said || busy || !conversation()) return TURN_OUTCOME.SKIPPED;
+    busy = true;
+    try {
+      return await answer(said);
+    } catch (e) {
+      if (!authorized()) return revoke('threw');
+      announce({ phase: 'error', error: (e && e.message) || 'turn failed' });
+      return TURN_OUTCOME.FAILED;
+    } finally {
+      busy = false;
+    }
+  }
+
   async function run() {
     if (!voice() || busy || !conversation()) return TURN_OUTCOME.SKIPPED;
     const taken = voice().utterance.take();
@@ -124,19 +171,8 @@ function createTurn({
       // The transcript is a FINAL for the epoch — the tail invariant now has real
       // material to protect, which on the first walk it never did.
       voice().epoch.final(said, `utt-${now()}`);
-      announce({ phase: 'heard', member: said });
 
-      announce({ phase: 'thinking' });
-      const a = await conversation().ask(said);
-      if (!authorized()) return revoke('ask');
-      if (!a.ok) { announce({ phase: 'error', error: a.error }); return TURN_OUTCOME.FAILED; }
-
-      // Words before voice, always. The surface must never speak an answer it
-      // has not yet shown — that is how text and voice diverge.
-      announce({ phase: 'answered', maia: a.text });
-      if (a.audio) speak(a.audio);
-      else announce({ phase: 'no-voice' });
-      return TURN_OUTCOME.COMPLETED;
+      return await answer(said);
     } catch (e) {
       // A throw that happened BECAUSE the session went away is revocation, not
       // failure — the references vanished mid-flight for an authorised reason.
@@ -150,6 +186,7 @@ function createTurn({
 
   return {
     run,
+    say,
     /** Read by continuity: a turn in flight defers thread adoption. */
     get isBusy() { return busy; },
   };

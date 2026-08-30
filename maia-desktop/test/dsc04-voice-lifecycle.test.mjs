@@ -266,7 +266,7 @@ test('⭐ auth loss releases capture, disarms it, and records why', () => {
   const { lc, log, session } = wire();
   lc.begin();
   log.length = 0;
-  const out = lc.releaseOnAuthLoss('signed_out');
+  const out = lc.releaseCapture('signed_out');
 
   assert.deepEqual(out, { ok: true, released: true });
   assert.equal(session(), null, 'capture outlived its member — signing back in cannot start listening');
@@ -282,14 +282,14 @@ test('⭐ supervision stops FIRST, and unconditionally', () => {
   const { lc, log } = wire();
   lc.begin();
   log.length = 0;
-  lc.releaseOnAuthLoss('signed_out');
+  lc.releaseCapture('signed_out');
   const stopped = log.findIndex((e) => e.watch === 'stop');
   const revoked = log.findIndex((e) => e.revoked);
   assert.ok(stopped >= 0 && revoked > stopped, 'a timer was left running past its session');
 
   // Unconditionally: even with no session to release.
   const none = wire({ session: null });
-  none.lc.releaseOnAuthLoss('signed_out');
+  none.lc.releaseCapture('signed_out');
   assert.ok(none.log.some((e) => e.watch === 'stop'), 'a stale timer survived because there was no session');
 });
 
@@ -297,7 +297,7 @@ test('⭐ the session is revoked BEFORE the released one is touched', () => {
   const { lc, log } = wire();
   lc.begin();
   log.length = 0;
-  lc.releaseOnAuthLoss('signed_out');
+  lc.releaseCapture('signed_out');
   const revoked = log.findIndex((e) => e.revoked);
   const disarmed = log.findIndex((e) => e.liveness === 'disarm');
   assert.ok(revoked >= 0 && disarmed > revoked,
@@ -308,7 +308,7 @@ test('⛔ auth loss is NOT end() — nothing is committed and no transcript is r
   const { lc, log } = wire();
   lc.begin();
   log.length = 0;
-  const out = lc.releaseOnAuthLoss('signed_out');
+  const out = lc.releaseCapture('signed_out');
   assert.equal(log.filter((e) => e.epoch === 'commit' || e.epoch === 'userStop').length, 0,
     'a member who did not stop had their epoch committed on the way out');
   assert.equal(out.chars, undefined, 'a transcript was returned to a caller who no longer holds authority');
@@ -319,7 +319,7 @@ test('⛔ auth loss is NOT captureLost() — nothing seeks a rebuild', () => {
   const { lc, log } = wire();
   lc.begin();
   log.length = 0;
-  lc.releaseOnAuthLoss('signed_out');
+  lc.releaseCapture('signed_out');
   assert.equal(log.filter((e) => e.liveness === 'lost').length, 0,
     'a session going away entirely was sent looking for a rebuild');
 });
@@ -327,17 +327,24 @@ test('⛔ auth loss is NOT captureLost() — nothing seeks a rebuild', () => {
 test('releasing twice is not an error, and says so', () => {
   const { lc } = wire();
   lc.begin();
-  assert.deepEqual(lc.releaseOnAuthLoss('signed_out'), { ok: true, released: true });
-  assert.deepEqual(lc.releaseOnAuthLoss('signed_out'), { ok: false, released: false });
+  assert.deepEqual(lc.releaseCapture('signed_out'), { ok: true, released: true });
+  assert.deepEqual(lc.releaseCapture('signed_out'), { ok: false, released: false });
 });
 
 test('⭐ main releases capture on sign-out, before dropping the rest of member state', () => {
   const mainJs = readFileSync(new URL('../src/main.js', import.meta.url), 'utf8')
     .replace(/\/\*[\s\S]*?\*\//g, '')
     .split('\n').map((l) => l.replace(/(^|[^:'"`])\/\/.*$/, '$1')).join('\n');
+  // ⭐ HOUSE-RECONCILE-01. Sign-out now delegates to one teardown shared with
+  // expiry, so the assertion follows the behaviour rather than the handler: the
+  // ordering claim is proven where the ordering now happens, and the handler is
+  // proven to reach it. A button with its own teardown copy is two paths that
+  // can drift apart.
   const h = /ipcMain\.handle\('maia:sign-out'[\s\S]*?\n\}\);/.exec(mainJs)[0];
-  assert.ok(/releaseOnAuthLoss\(/.test(h), 'capture survives sign-out — the member cannot listen again');
-  assert.ok(h.indexOf('releaseOnAuthLoss') < h.indexOf('conversation = null'),
+  assert.ok(/teardownMemberState\(/.test(h), 'sign-out no longer runs the shared teardown');
+  const teardown = /function teardownMemberState\([\s\S]*?\n\}/.exec(mainJs)[0];
+  assert.ok(/releaseCapture\(/.test(teardown), 'capture survives sign-out — the member cannot listen again');
+  assert.ok(teardown.indexOf('releaseCapture') < teardown.indexOf('conversation = null'),
     'capture is released after the rest of member state has already fallen away');
 });
 

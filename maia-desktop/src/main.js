@@ -28,7 +28,7 @@
 
 'use strict';
 
-const { app, BrowserWindow, ipcMain, session, safeStorage } = require('electron');
+const { app, BrowserView, BrowserWindow, ipcMain, Menu, session, safeStorage, shell } = require('electron');
 const path = require('node:path');
 const fs = require('node:fs');
 
@@ -37,6 +37,10 @@ const { createEpochState, EPOCH_END_REASONS } = require('./voice/epoch');
 const { createVad } = require('./voice/vad');
 const { createUtteranceBuffer } = require('./voice/utterance');
 const { createMemberDraft } = require('./voice/member-draft');
+const { createPlatformShell, MAIA, PLATFORM } = require('./shell');
+const {
+  PLATFORM_ENTRY_PATH, PLATFORM_HOUSE_PATH, navigationDecision,
+} = require('./shell-policy');
 const { createSession } = require('./session');
 const { createConversation } = require('./conversation');
 const { createCaptureLiveness, IDLE } = require('./capture-liveness');
@@ -52,6 +56,8 @@ if (!app.isPackaged) {
 }
 
 let mainWindow = null;
+let platformShell = null;     // DESKTOP-SHELL-01 — the one remote view, or none
+let desktopPlace = MAIA;      // where the member is: MAIA, or a platform place
 let memberSession = null; // member session — survives capture start/stop
 let conversation = null; // one continuity for this run
 
@@ -231,6 +237,31 @@ ipcMain.handle('maia:voice-stop', async () => {
   return lifecycle.end();
 });
 
+// ── DESKTOP-TEXT-01: the member's other way of speaking ─────────────────────
+ipcMain.handle('maia:send-text', async (_evt, payload) => {
+  // Validated in MAIN, like every other handler. The renderer's trim is a
+  // convenience; this is the one that counts.
+  const raw = payload && typeof payload.text === 'string' ? payload.text : '';
+  const said = raw.trim().slice(0, 4000);
+  if (!said) return { ok: false, error: 'nothing to send' };
+
+  if (!memberSession || !memberSession.state().signedIn || !conversation) {
+    return { ok: false, error: 'sign in before writing' };
+  }
+  // One turn at a time, shared with the voice path — a typed message must not
+  // interleave with a spoken one and produce two half-turns in the thread.
+  if (turn.isBusy) return { ok: false, error: 'one turn at a time' };
+
+  // Text and voice are mutually exclusive: a live capture ends with normal
+  // member-Stop semantics first, so the epoch commits rather than being
+  // discarded behind a typed message.
+  const stopped = lifecycle.end();
+  const out = await turn.say(said);
+  return out === 'completed' || out === 'revoked'
+    ? { ok: true, stoppedCapture: !!(stopped && stopped.ok) }
+    : { ok: false, error: 'the turn did not complete' };
+});
+
 ipcMain.handle('maia:voice-state', async () => voiceStateSnapshot());
 
 ipcMain.handle('maia:status', async () => ({
@@ -279,6 +310,115 @@ const continuity = createContinuity({
   turnInFlight: () => turn.isBusy,
 });
 
+// ── destinations · navigation · the application menu ────────────────────────
+//
+// ⭐ HOUSE-RECONCILE-01. Carried from DESKTOP-HOUSE-01. Navigation is driven
+// from the application menu, which lives in MAIN — deliberately NOT from a
+// preload verb. A `showPlatform()` channel would let a compromised renderer
+// summon remote content into its own window, which is the precise move the
+// shell exists to prevent.
+const DESTINATIONS = [
+  { id: MAIA, label: 'MAIA', accelerator: 'Alt+CmdOrCtrl+M', enabled: true },
+  { id: PLATFORM, label: 'The House', accelerator: 'Alt+CmdOrCtrl+J', enabled: true },
+  { id: 'sessions', label: 'Sessions', enabled: false },
+  { id: 'library', label: 'Library', enabled: false },
+  { id: 'settings', label: 'Settings', enabled: false },
+];
+
+function buildMenu() {
+  const signedIn = !!(memberSession && memberSession.state().signedIn);
+  const here = desktopPlace;
+  const go = DESTINATIONS.map((d) => ({
+    label: d.label,
+    accelerator: d.accelerator,
+    type: 'checkbox',
+    checked: d.id === here,
+    // Every destination but MAIA needs a member; nothing remote opens for
+    // nobody. MAIA itself stays reachable so there is always a way back.
+    enabled: d.enabled && (d.id === MAIA || signedIn),
+    click: () => { void goTo(d.id); },
+  }));
+
+  Menu.setApplicationMenu(Menu.buildFromTemplate([
+    ...(process.platform === 'darwin' ? [{ role: 'appMenu' }] : []),
+    { label: 'Go', submenu: go },
+    { role: 'editMenu' },
+    { role: 'windowMenu' },
+  ]));
+}
+
+function showPlace(place) {
+  if (!mainWindow || mainWindow.isDestroyed()) return;
+  mainWindow.setTitle(place === PLATFORM ? 'MAIA Desktop — The House' : 'MAIA Desktop');
+  buildMenu();
+}
+
+async function goTo(id) {
+  if (!platformShell) return;
+  if (!memberSession || !memberSession.state().signedIn) return;
+  const path = id === MAIA ? PLATFORM_ENTRY_PATH : id === PLATFORM ? PLATFORM_HOUSE_PATH : null;
+  if (!path) return;
+
+  // ⭐ TRUTHFUL ATTENTION. Capture is released BEFORE the platform becomes
+  // visible, never after and never in parallel. If the microphone were still
+  // live behind the House, MAIA would be listening — and, with the epoch still
+  // open, transcribing, answering and speaking — to a member who has visibly
+  // gone somewhere else. Attention the member cannot see is not attention they
+  // consented to.
+  //
+  // The lifecycle DISCARDS: nothing is committed, no tail is taken, and the
+  // turn that was in flight ends as revoked rather than delivered. Words spoken
+  // before crossing the threshold are not turned into a turn behind a screen
+  // the member is no longer looking at.
+  lifecycle.releaseCapture('platform-visible');
+
+  const out = await platformShell.navigate(path);
+  if (!out.ok) {
+    // ⛔ A failed entry must not leave a blank view attached and the member
+    // stranded. Say so where the surface already speaks. We do NOT fall back to
+    // the local renderer — that would reintroduce the second MAIA this unit
+    // removed, and would hide a real failure behind scaffolding.
+    broadcast('maia:turn', { phase: 'error', error: `Could not open ${path} — ${out.error}` });
+    return;
+  }
+  desktopPlace = id;
+  showPlace(id);
+}
+
+// ── auth teardown ───────────────────────────────────────────────────────────
+//
+// ⭐ DESKTOP-AUTH-CAUSE-01, carried. This destroys the entire visible member
+// surface, and it used to do so in silence: a member watching MAIA vanish had
+// nothing to read, and neither did a witness.
+//
+// The 401 door is not only the one startup request — continuity polls on an
+// interval and every poll is an authenticated fetch, so a rejected credential
+// can take the surface down at ANY moment, minutes into a walk, with no member
+// action anywhere near it.
+function teardownMemberState(reason) {
+  const cause = (reason && reason.cause) || 'member';
+  const via = reason && reason.path ? ` path=${reason.path}` : '';
+  console.log(`[Desktop auth] member state torn down — cause=${cause}${via}`);
+
+  // ⭐ FIRST, before anything else falls away. Capture is the one piece of
+  // member state that used to outlive its member, and it is the piece that
+  // blocks every recovery: while a session is held, signing back in still
+  // cannot start listening. The disposition belongs to the lifecycle.
+  lifecycle.releaseCapture(cause === 'member' ? 'signed_out' : cause);
+  conversation = null;
+  continuity.stop();
+  // ⛔ Destroy, not hide. The cookie goes with the view.
+  if (platformShell) void platformShell.destroy();
+  desktopPlace = MAIA;
+  buildMenu();
+  // ⛔ The surface is told the CAUSE too, not just the fact. A member whose
+  // session expired under them deserves to know that is what happened.
+  broadcast('maia:auth', {
+    ...(memberSession ? memberSession.state() : { signedIn: false, member: null }),
+    endedBy: cause,
+  });
+}
+
 // ── auth IPC — the token never crosses the bridge ───────────────────────────
 
 ipcMain.handle('maia:sign-in', async (_evt, payload) => {
@@ -300,14 +440,7 @@ ipcMain.handle('maia:sign-in', async (_evt, payload) => {
 
 ipcMain.handle('maia:sign-out', async () => {
   memberSession.signOut();
-  // ⭐ AUTH-TEARDOWN-CAPTURE-01. Capture is released FIRST — it is the one piece
-  // of member state that used to outlive its member, and the piece that blocks
-  // recovery: while a session is held, signing back in cannot start listening.
-  // The disposition is the lifecycle's; main only says that authority is gone.
-  lifecycle.releaseOnAuthLoss('signed_out');
-  conversation = null;
-  continuity.stop();
-  broadcast('maia:auth', memberSession.state());
+  teardownMemberState({ cause: 'member' });
   return { ok: true };
 });
 
@@ -327,7 +460,36 @@ function createWindow() {
     },
   });
   mainWindow.loadFile(path.join(__dirname, 'index.html'));
-  mainWindow.on('closed', () => { mainWindow = null; });
+
+  // ⛔ THE PRIVILEGED RENDERER NEVER NAVIGATES. It holds `window.maia`, so
+  // anything that moved it off `file://` would put remote content in front of
+  // the bridge. There is no legitimate navigation here to allow, so the guard
+  // is unconditional rather than origin-checked: a stricter rule than the
+  // platform view gets, because this side has more to lose.
+  mainWindow.webContents.on('will-navigate', (event) => event.preventDefault());
+  mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+    const decision = navigationDecision(url);
+    if (decision.action === 'external') shell.openExternal(decision.url);
+    return { action: 'deny' };
+  });
+
+  platformShell = createPlatformShell({
+    BrowserView,
+    sessionApi: session,
+    shellApi: shell,
+    window: mainWindow,
+    credential: memberSession,
+    onPlace: showPlace,
+  });
+
+  mainWindow.on('resize', () => { if (platformShell) platformShell.fit(); });
+  mainWindow.on('closed', () => {
+    mainWindow = null;
+    // The view belongs to the window; it must not outlive it.
+    if (platformShell) { void platformShell.destroy(); platformShell = null; }
+  });
+
+  buildMenu();
 }
 
 app.whenReady().then(() => {
@@ -340,7 +502,10 @@ app.whenReady().then(() => {
   session.defaultSession.setPermissionCheckHandler((_wc, permission) =>
     permission === 'media' || permission === 'audioCapture');
 
-  memberSession = createSession({ app, safeStorage });
+  // ⭐ `onSignedOut` because sign-out is not always a button. session.js
+  // discovers a 401 by itself and signs out internally; without this, main
+  // never learned and the remote view kept its cookie.
+  memberSession = createSession({ app, safeStorage, onSignedOut: teardownMemberState });
   if (memberSession.state().signedIn) {
     conversation = createConversation({
       session: memberSession,

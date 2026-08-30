@@ -54,10 +54,16 @@ test('the turn loop actually calls transcribe AND ask — not one without the ot
   // follows it. Both halves are still proven, and the audio half is now proven
   // in TWO places because the emission crosses the boundary: the turn hands
   // audio to `speak`, and main wires `speak` to the ratified channel.
-  const turn = /async function run\(\)[\s\S]*?\n  \}/.exec(strip('turn.js'))[0];
-  assert.ok(turn.includes('conversation().transcribe('), 'never transcribes');
-  assert.ok(turn.includes('conversation().ask('), 'never asks MAIA — stops at "transcription works"');
-  assert.ok(/speak\(a\.audio\)/.test(turn), 'never emits audio');
+  // ⭐ HOUSE-RECONCILE-01. The answer half is now SHARED by the spoken and typed
+  // paths so they cannot drift apart. Both halves are still proven; the ask half
+  // is asserted where it now lives, and that `run` reaches it.
+  const src = strip('turn.js');
+  const run = /async function run\(\)[\s\S]*?\n  \}/.exec(src)[0];
+  const answer = /async function answer\([\s\S]*?\n  \}/.exec(src)[0];
+  assert.ok(run.includes('conversation().transcribe('), 'never transcribes');
+  assert.ok(/return await answer\(said\)/.test(run), 'the spoken path never reaches the answer');
+  assert.ok(answer.includes('conversation().ask('), 'never asks MAIA — stops at "transcription works"');
+  assert.ok(/speak\(a\.audio\)/.test(answer), 'never emits audio');
   assert.ok(/speak:\s*\(audio\)\s*=>\s*broadcast\('maia:audio'/.test(mainJs),
     'the turn emits audio into nothing — main no longer carries it to the surface');
 });
