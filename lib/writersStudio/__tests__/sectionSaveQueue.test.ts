@@ -152,24 +152,115 @@ describe('a refused save NEVER loses text', () => {
     expect(q.hasUnsavedWork()).toBe(true);
   });
 
-  it('the member editing a conflicted section clears the conflict and retries', async () => {
+  it('a conflicted save does not clobber a newer edit made while it was open', async () => {
+    const s = fakeServer(12);
+    const q = new SectionSaveQueue(12, s.save);
+    s.holdNextSave();
+    q.enqueue('A', 'older');
+    await Promise.resolve();
+    q.enqueue('A', 'newer');
+    s.advanceElsewhere();          // the save in flight will come back stale
+    s.release();
+    await q.settled();
+    expect(q.localBody('A')).toBe('newer');
+  });
+
+  it('typing does NOT clear a conflict — a keystroke is not a reconciliation', () => {
+    // The earlier version of this test reached through the abstraction
+    // (`(q as any).version = ...`) to manufacture a rebase the queue cannot
+    // perform, so it proved something that did not exist. What the queue
+    // actually does is latch, and that is what is asserted now.
     const s = fakeServer(12);
     const q = new SectionSaveQueue(12, s.save);
     s.advanceElsewhere();
     q.enqueue('A', 'v1');
+    return q.settled().then(async () => {
+      expect(q.statusOf('A')).toBe('conflict');
+      q.enqueue('A', 'v2');
+      await q.settled();
+      expect(q.statusOf('A')).toBe('conflict');   // still latched
+      expect(q.localBody('A')).toBe('v2');        // but the newer text is kept
+      expect(s.committed).toEqual([]);            // and nothing was sent
+    });
+  });
+
+  it('takeLocalVersion resolves it — and needs the server version to do so', async () => {
+    const s = fakeServer(12);
+    const q = new SectionSaveQueue(12, s.save);
+    s.advanceElsewhere();                       // server now at 13
+    q.enqueue('A', 'the writer\'s text');
     await q.settled();
     expect(q.statusOf('A')).toBe('conflict');
 
-    // the writer edits again; the queue is now at the server's version
-    (q as unknown as { version: number }).version = s.version;
-    q.enqueue('A', 'v2');
+    // The caller can only know 13 by reloading, which means the member could
+    // have seen the other version. Overwriting is then a decision, not a race.
+    q.takeLocalVersion('A', s.version);
     await q.settled();
-    expect(s.committed).toEqual([{ sectionId: 'A', body: 'v2' }]);
+    expect(s.committed).toEqual([{ sectionId: 'A', body: "the writer's text" }]);
+    expect(q.statusOf('A')).toBe('clean');
+  });
+
+  it('discardLocalVersion drops the local text without sending it', async () => {
+    const s = fakeServer(12);
+    const q = new SectionSaveQueue(12, s.save);
+    s.advanceElsewhere();
+    q.enqueue('A', 'text the writer chose to drop');
+    await q.settled();
+    q.discardLocalVersion('A', s.version);
+    await q.settled();
+    expect(s.committed).toEqual([]);
+    expect(q.statusOf('A')).toBe('clean');
+    expect(q.localBody('A')).toBeNull();
+    expect(q.hasUnsavedWork()).toBe(false);
+  });
+
+  it('an unknown outcome is an error, NOT a conflict', async () => {
+    // Never tell someone their draft changed elsewhere because Wi-Fi dropped.
+    const q = new SectionSaveQueue(12, async () => { throw new Error('offline'); });
+    q.enqueue('A', 'unsent words');
+    await q.settled();
+    expect(q.statusOf('A')).toBe('error');
+    expect(q.state().conflicted).toEqual([]);
+  });
+
+  it('an error does not latch: typing retries, because the server still checks', async () => {
+    let attempts = 0;
+    const s = fakeServer(12);
+    const q = new SectionSaveQueue(12, async (id, body, base) => {
+      attempts++;
+      if (attempts === 1) throw new Error('offline');
+      return s.save(id, body, base);
+    });
+    q.enqueue('A', 'first try');
+    await q.settled();
+    expect(q.statusOf('A')).toBe('error');
+    q.enqueue('A', 'second try');
+    await q.settled();
+    expect(s.committed).toEqual([{ sectionId: 'A', body: 'second try' }]);
     expect(q.statusOf('A')).toBe('clean');
   });
 });
 
 describe('local text stays authoritative while pending', () => {
+  it('PENDING WINS: a newer edit is shown, never the older in-flight snapshot', async () => {
+    // A is saving "first"; the writer types more; they navigate away and back.
+    // Returning the in-flight body here would hand the UI stale text from the
+    // very method that exists to prevent stale text reaching the screen.
+    const s = fakeServer(12);
+    const q = new SectionSaveQueue(12, s.save);
+    s.holdNextSave();
+    q.enqueue('A', 'first');
+    await Promise.resolve();
+    q.enqueue('A', 'first and second');
+
+    expect(q.localBody('A')).toBe('first and second');
+    expect(q.statusOf('A')).toBe('dirty');   // not 'saving': the visible words are not on the wire
+
+    s.release();
+    await q.settled();
+    expect(q.localBody('A')).toBeNull();
+  });
+
   it('returning to a section in flight shows the local body, not the server copy', async () => {
     const s = fakeServer(12);
     const q = new SectionSaveQueue(12, s.save);

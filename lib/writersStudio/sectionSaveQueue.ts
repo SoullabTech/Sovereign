@@ -50,7 +50,20 @@ export type SaveFn = (
   baseVersion: number,
 ) => Promise<SaveOutcome>;
 
-export type SectionStatus = 'clean' | 'dirty' | 'saving' | 'conflict';
+export type SectionStatus =
+  | 'clean'
+  /** Local text not yet sent. Takes precedence over `saving`: when a section
+      has both an in-flight snapshot and a newer edit waiting, the newer text is
+      what the member sees, and calling that `saving` would claim the visible
+      words are on their way when they are not. */
+  | 'dirty'
+  | 'saving'
+  /** The draft moved elsewhere. LATCHED — see `conflicted` below. */
+  | 'conflict'
+  /** The save's outcome is unknown: unreachable, timed out. Different truth
+      from `conflict`, and never to be reported as "changed elsewhere" because
+      Wi-Fi dropped. */
+  | 'error';
 
 export interface QueueState {
   version: number;
@@ -58,6 +71,7 @@ export interface QueueState {
   pending: string[];
   inFlight: string | null;
   conflicted: string[];
+  errored: string[];
 }
 
 interface PendingEntry {
@@ -72,7 +86,14 @@ export class SectionSaveQueue {
   /** Insertion-ordered: a Map preserves the order sections were first dirtied. */
   private pending = new Map<string, PendingEntry>();
   private inFlight: PendingEntry | null = null;
+  /** Version conflicts. Latched: further typing updates the preserved body but
+      does not clear this or dispatch again. Reconciling two versions is a
+      member act, and another keystroke is not one. */
   private conflicted = new Set<string>();
+  /** Failed-but-unknown saves. Not latched: a retry is safe because the server
+      still version-checks it — if the lost save did commit, the retry comes
+      back a conflict, which is the truth. */
+  private errored = new Set<string>();
   private seq = 0;
   private running = false;
   private listeners: (() => void)[] = [];
@@ -102,22 +123,32 @@ export class SectionSaveQueue {
          lose its place by being typed into again. */
       sequence: existing ? existing.sequence : this.seq++,
     });
-    /* Editing a conflicted section is the member resolving it by hand. */
-    this.conflicted.delete(sectionId);
+    /* Typing does NOT resolve a conflict. The body is preserved and updated,
+       but the section stays latched until the member has seen the other
+       version and chosen — see takeLocalVersion / discardLocalVersion. */
+    this.errored.delete(sectionId);
     this.emit();
-    void this.pump();
+    if (!this.conflicted.has(sectionId)) void this.pump();
   }
 
   /** The text the UI must show for a section, or null to use the server copy. */
   localBody(sectionId: string): string | null {
+    /* PENDING WINS. A section can hold both an in-flight snapshot and a newer
+       edit made while that save was open. Returning the in-flight body would
+       hand the UI the older text — from the very method that exists to stop
+       stale text reaching the screen. */
+    const pending = this.pending.get(sectionId);
+    if (pending) return pending.body;
     if (this.inFlight?.sectionId === sectionId) return this.inFlight.body;
-    return this.pending.get(sectionId)?.body ?? null;
+    return null;
   }
 
   statusOf(sectionId: string): SectionStatus {
-    if (this.inFlight?.sectionId === sectionId) return 'saving';
     if (this.conflicted.has(sectionId)) return 'conflict';
-    if (this.pending.has(sectionId)) return 'dirty';
+    /* dirty before saving, matching localBody: the status describes the text
+       the member can see, not the one on the wire. */
+    if (this.pending.has(sectionId)) return this.errored.has(sectionId) ? 'error' : 'dirty';
+    if (this.inFlight?.sectionId === sectionId) return 'saving';
     return 'clean';
   }
 
@@ -126,12 +157,36 @@ export class SectionSaveQueue {
     return this.pending.size > 0 || this.inFlight !== null || this.conflicted.size > 0;
   }
 
+  /**
+   * The member has seen the other version and chose to keep theirs.
+   *
+   * Requires the version the server is actually at, which the caller can only
+   * have by reloading — so this cannot be reached without the comparison
+   * having been possible. Overwriting the other device's change is then a
+   * decision someone made, not something a keystroke caused.
+   */
+  takeLocalVersion(sectionId: string, serverVersion: number): void {
+    if (!this.conflicted.delete(sectionId)) return;
+    this.version = serverVersion;
+    this.emit();
+    void this.pump();
+  }
+
+  /** The member has seen the other version and chose to drop their own text. */
+  discardLocalVersion(sectionId: string, serverVersion: number): void {
+    this.conflicted.delete(sectionId);
+    this.pending.delete(sectionId);
+    this.version = serverVersion;
+    this.emit();
+  }
+
   state(): QueueState {
     return {
       version: this.version,
       pending: [...this.pending.values()].sort((a, b) => a.sequence - b.sequence).map((e) => e.sectionId),
       inFlight: this.inFlight?.sectionId ?? null,
       conflicted: [...this.conflicted],
+      errored: [...this.errored],
     };
   }
 
@@ -162,21 +217,27 @@ export class SectionSaveQueue {
           /* baseVersion read HERE, not at enqueue — see the header. */
           outcome = await this.save(next.sectionId, next.body, this.version);
         } catch {
-          outcome = { ok: false, refusal: 'network' };
+          outcome = { ok: false, refusal: 'error' };
         }
 
         this.inFlight = null;
         if (outcome.ok && typeof outcome.version === 'number') {
           this.version = outcome.version;
         } else {
-          /* Refused. The body goes back to pending so it is never lost — but
-             a version conflict is NOT retried: re-sending against a newer
-             version is how one device silently overwrites another. Only the
-             member editing it again (or an explicit resolution) moves it. */
+          /* Refused. The body goes back to pending so it is never lost — and
+             a newer edit made while this was open is NOT overwritten by the
+             older snapshot coming back. */
           if (!this.pending.has(next.sectionId)) {
             this.pending.set(next.sectionId, next);
           }
-          this.conflicted.add(next.sectionId);
+          /* Two different truths. A version conflict LATCHES: re-sending
+             against a newer version is how one device silently overwrites
+             another, so only an explicit member decision moves it. An unknown
+             outcome does not latch: retrying is safe because the server still
+             version-checks, and if the lost save did commit the retry returns
+             a conflict, which is then the honest answer. */
+          if (outcome.refusal === 'stale_base') this.conflicted.add(next.sectionId);
+          else this.errored.add(next.sectionId);
           this.emit();
           return;
         }
