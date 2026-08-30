@@ -132,6 +132,31 @@ export default function StudioConversation({
           apiEndpoint="/api/sovereign/app/maia/list"
           consciousnessType="maia"
           workContext={{ workId: work.id }}
+          /* ── CONSENT. Text-only in v1, and these two are not styling. ──
+             The authenticated witness caught this: OracleConversation defaults
+             to voiceEnabled=true / initialShowChatInterface=false, so embedding
+             it bare inherited voice-first mode — a full-viewport LISTENING
+             presence over the Studio, and an OPEN MICROPHONE, from a member
+             gesture that was "show me a panel".
+
+             Opening Conversations is an invitation to converse. It is not
+             consent to listen. Those are separate acts and only the second may
+             turn on a microphone.
+
+             voiceEnabled={false} is the real gate, not a hint: it is the outer
+             conjunct of the render guard on <ContinuousConversation>, the only
+             capture component in this tree. Not rendered ⇒ no getUserMedia ⇒
+             no permission prompt and no listening state. Verified in
+             studioConversation.test.ts against BOTH halves, because a prop
+             whose mechanism is not asserted is a promise, not a guarantee.
+
+             Voice is not merely off here — it is absent. There is deliberately
+             no in-Studio microphone toggle in v1: adding one would put the
+             permission-bearing gesture back in a surface that has not been
+             designed for it. A writer who wants to speak uses "Open in MAIA",
+             where voice-first is the intentional design. */
+          voiceEnabled={false}
+          initialShowChatInterface
         />
       </div>
     </div>

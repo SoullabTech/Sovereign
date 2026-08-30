@@ -14,6 +14,12 @@ const strip = (s: string) => s.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*/
 const surface = strip(read('canvas', 'StudioConversation.tsx'));
 const identity = strip(read('useMemberIdentity.ts'));
 const canvas = strip(read('canvas', 'page.tsx'));
+const oracle = strip(
+  fs.readFileSync(
+    path.join(__dirname, '..', '..', '..', 'components', 'OracleConversation.tsx'),
+    'utf8',
+  ),
+);
 
 /**
  * WS2-03D — MAIA inside the Studio.
@@ -91,6 +97,50 @@ describe('conversation identity is minted, never discovered', () => {
   it('omits it when there is no exchange to continue', () => {
     const href = handoffToMaia('/maia', { workId: 'w1', manuscriptId: 'ms-1' });
     expect(href).not.toContain(MAIA_CONVERSATION_PARAM);
+  });
+});
+
+describe('opening Conversations is not consent to listen', () => {
+  /* The authenticated witness: clicking Conversations opened the microphone
+     and threw a full-viewport LISTENING presence over the Studio, because
+     OracleConversation defaults voiceEnabled=true / initialShowChatInterface=
+     false and the embed passed neither. An invitation to converse is not
+     permission to capture — those are separate acts.
+
+     Asserted in two halves on purpose. A prop assertion alone proves only that
+     someone wrote a prop; it says nothing about whether the prop stops
+     anything. The second half pins the MECHANISM. */
+
+  it('the Studio asks for text, and asks for no voice', () => {
+    expect(surface).toContain('voiceEnabled={false}');
+    expect(surface).toContain('initialShowChatInterface');
+  });
+
+  it('voiceEnabled gates the ONLY capture component in the tree', () => {
+    /* <ContinuousConversation> is the sole getUserMedia path OracleConversation
+       renders, and `voiceEnabled &&` is the outer conjunct of its render guard.
+       Not rendered ⇒ no capture, no permission prompt, no listening state.
+       If this guard is ever loosened, voiceEnabled={false} silently stops being
+       a consent boundary — which is exactly why it is pinned here. */
+    expect(oracle).toMatch(
+      /\{voiceEnabled && \(!showChatInterface \|\| \(showChatInterface && enableVoiceInput\)\) && \(/,
+    );
+    expect(oracle).toContain('<ContinuousConversation');
+  });
+
+  it('opens no capture path of its own either', () => {
+    for (const banned of ['getUserMedia', 'mediaDevices', 'AudioContext', 'MediaRecorder']) {
+      expect(surface).not.toContain(banned);
+    }
+  });
+
+  it('adds no in-Studio microphone toggle in v1', () => {
+    /* Deliberate. A toggle would put the permission-bearing gesture back into
+       a surface not yet designed for it. Voice lives behind Open in MAIA,
+       where voice-first is the intended design. */
+    for (const banned of ['setVoiceEnabled', 'enableVoiceInput', 'startListening', 'Talk with MAIA']) {
+      expect(surface).not.toContain(banned);
+    }
   });
 });
 
