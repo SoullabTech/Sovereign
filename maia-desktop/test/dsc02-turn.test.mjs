@@ -13,7 +13,7 @@ import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
 
 const require = createRequire(import.meta.url);
-const { createTurn } = require('../src/turn.js');
+const { createTurn, TURN_OUTCOME } = require('../src/turn.js');
 
 /** A voice session stub. `log` is shared so epoch writes and announcements interleave in ONE order. */
 function stubVoice(log, o = {}) {
@@ -51,6 +51,8 @@ function wire(o = {}) {
     conversation: () => c,
     announce: (p) => log.push(p),
     speak: (a) => log.push({ spoke: a }),
+    authorized: o.authorized || (() => true),
+    diagnostic: (event, meta) => log.push({ diagnostic: event, meta }),
     now: () => 1234,
   });
   return { t, log, setVoice: (x) => { v = x; }, setConv: (x) => { c = x; },
@@ -209,11 +211,103 @@ test('⭐ capture stopped mid-turn — the error is surfaced, not written to a d
   assert.equal(w.t.isBusy, false);
 });
 
-test('⭐ signed out mid-turn — the loss is surfaced rather than swallowed', async () => {
+test('the conversation client vanishing while still signed in IS a failure', async () => {
+  // ⛔ TURN-REVOCATION-01. Not sign-out. The member is still authorised; the
+  // client went away for some other reason, and that is an operational failure
+  // which must still be surfaced.
   const w = wire();
   const running = w.t.run();
   w.setConv(null);
   await running;
   assert.equal(w.phases().at(-1), 'error');
   assert.equal(w.t.isBusy, false);
+});
+
+// ── ⭐ TURN-REVOCATION-01: revocation is not failure ────────────────────────
+
+test('⭐ signed out mid-answer — the turn is CANCELLED, not failed', async () => {
+  let signedIn = true;
+  const w = wire({ authorized: () => signedIn });
+  const running = w.t.run();
+  signedIn = false;                       // the member signs out while MAIA answers
+  const outcome = await running;
+
+  assert.equal(outcome, TURN_OUTCOME.REVOKED, 'a revoked turn reports as something else');
+  assert.equal(w.log.filter((e) => e.phase === 'error').length, 0,
+    'an operational error was shown to someone who had just signed out');
+  assert.equal(w.log.filter((e) => e.phase === 'answered').length, 0,
+    'MAIA’s answer was delivered into a session that no longer authorises it');
+  assert.equal(w.log.filter((e) => e.spoke).length, 0, 'the answer was spoken aloud after sign-out');
+  assert.equal(w.t.isBusy, false, 'the in-flight flag survived revocation — every later turn is frozen');
+});
+
+test('⭐ revocation is explicit internally even though it is silent to the member', async () => {
+  let signedIn = true;
+  const w = wire({ authorized: () => signedIn });
+  const running = w.t.run();
+  signedIn = false;
+  await running;
+  const d = w.log.find((e) => e.diagnostic);
+  assert.equal(d && d.diagnostic, 'session_revoked',
+    'a bare return — a future caller cannot tell this from successful completion');
+});
+
+test('⭐ the surface is not left mid-thought — revocation ends at idle, not silence', async () => {
+  let signedIn = true;
+  const w = wire({ authorized: () => signedIn });
+  const running = w.t.run();
+  signedIn = false;
+  await running;
+  assert.equal(w.phases().at(-1), 'idle',
+    'the surface was left showing “thinking…” forever — the silent-success class');
+});
+
+test('⭐ revocation detected at the transcribe boundary, before anything is recorded', async () => {
+  let signedIn = true;
+  const w = wire({ authorized: () => signedIn, transcribe: () => { signedIn = false; return { ok: true, text: 'hello' }; } });
+  const outcome = await w.t.run();
+  assert.equal(outcome, TURN_OUTCOME.REVOKED);
+  assert.equal(w.log.filter((e) => 'epochFinal' in e).length, 0,
+    'a final was recorded on an epoch the member no longer authorises');
+  assert.equal(w.log.filter((e) => e.ask).length, 0, 'MAIA was asked on behalf of a signed-out member');
+});
+
+test('⭐ revocation detected at the ASK boundary — after transcription succeeded', async () => {
+  // ⛔ The sign-out tests above revoke before the transcribe await resolves, so
+  // the transcribe-boundary check catches them and the ask-boundary check is
+  // never reached. Revoking from inside `ask` is what exercises it — and it is
+  // the likelier real sequence, since asking MAIA is the long wait.
+  let signedIn = true;
+  const w = wire({ ask: () => { signedIn = false; return { ok: true, text: 'hello', audio: null }; },
+    authorized: () => signedIn });
+  const outcome = await w.t.run();
+  assert.equal(outcome, TURN_OUTCOME.REVOKED);
+  assert.equal(w.log.filter((e) => e.phase === 'answered').length, 0,
+    'MAIA answered into a session that stopped authorising the turn while she was thinking');
+  assert.equal(w.log.filter((e) => e.spoke).length, 0);
+  assert.equal(w.log.find((e) => e.diagnostic).meta.at, 'ask');
+});
+
+test('⭐ a throw caused BY the session going away is revocation, not failure', async () => {
+  let signedIn = true;
+  const w = wire({ authorized: () => signedIn, ask: () => { signedIn = false; throw new Error('socket closed'); } });
+  const outcome = await w.t.run();
+  assert.equal(outcome, TURN_OUTCOME.REVOKED);
+  assert.equal(w.log.filter((e) => e.phase === 'error').length, 0,
+    'a teardown-caused throw was reported to the member as an operational error');
+});
+
+test('a genuine failure while still signed in is still a failure', async () => {
+  const w = wire({ ask: () => ({ ok: false, error: 'maia unreachable' }) });
+  const outcome = await w.t.run();
+  assert.equal(outcome, TURN_OUTCOME.FAILED, 'a real failure was misclassified as revocation');
+  assert.equal(w.log.at(-1).error, 'maia unreachable');
+});
+
+test('outcomes are named for every terminal path', async () => {
+  assert.equal(await wire().t.run(), TURN_OUTCOME.COMPLETED);
+  assert.equal(await wire({ empty: true }).t.run(), TURN_OUTCOME.SKIPPED);
+  assert.equal(await wire({ transcribe: () => ({ ok: true, text: '  ' }) }).t.run(), TURN_OUTCOME.IDLE);
+  assert.equal(await wire({ transcribe: () => ({ ok: false, error: 'x' }) }).t.run(), TURN_OUTCOME.FAILED);
+  assert.equal(await wire({ voice: null }).t.run(), TURN_OUTCOME.SKIPPED);
 });

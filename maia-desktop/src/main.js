@@ -256,6 +256,13 @@ const turn = createTurn({
   voice: () => voice,
   announce: (payload) => broadcast('maia:turn', payload),
   speak: (audio) => broadcast('maia:audio', audio),
+  // ⛔ TURN-REVOCATION-01. The authority question, asked directly rather than
+  // inferred from which reference went null — auth teardown releases capture
+  // before it drops the conversation, and inferring would misread that window
+  // as a failure.
+  authorized: () => Boolean(memberSession && memberSession.state().signedIn),
+  diagnostic: (event, meta) =>
+    broadcast('maia:voice-event', { event, surface: 'desktop', at: Date.now(), ...meta }),
 });
 
 // ── conversation continuity ─────────────────────────────────────────────────
@@ -293,6 +300,11 @@ ipcMain.handle('maia:sign-in', async (_evt, payload) => {
 
 ipcMain.handle('maia:sign-out', async () => {
   memberSession.signOut();
+  // ⭐ AUTH-TEARDOWN-CAPTURE-01. Capture is released FIRST — it is the one piece
+  // of member state that used to outlive its member, and the piece that blocks
+  // recovery: while a session is held, signing back in cannot start listening.
+  // The disposition is the lifecycle's; main only says that authority is gone.
+  lifecycle.releaseOnAuthLoss('signed_out');
   conversation = null;
   continuity.stop();
   broadcast('maia:auth', memberSession.state());

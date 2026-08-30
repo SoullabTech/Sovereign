@@ -260,6 +260,87 @@ test('end returns only the committed length, never the transcript', () => {
     'the transcript left through the return value');
 });
 
+// ── ⭐ AUTH-TEARDOWN-CAPTURE-01: capture must not outlive its member ────────
+
+test('⭐ auth loss releases capture, disarms it, and records why', () => {
+  const { lc, log, session } = wire();
+  lc.begin();
+  log.length = 0;
+  const out = lc.releaseOnAuthLoss('signed_out');
+
+  assert.deepEqual(out, { ok: true, released: true });
+  assert.equal(session(), null, 'capture outlived its member — signing back in cannot start listening');
+  assert.ok(log.some((e) => e.liveness === 'disarm'));
+  const d = log.find((e) => e.emitted === 'voice_capture_lost');
+  assert.equal(d.meta.cause, 'signed_out');
+  assert.equal(d.meta.source, 'auth_teardown',
+    'the release is indistinguishable from a track that died on its own');
+  assert.ok(log.some((e) => e.announced), 'the surface still shows an active capture');
+});
+
+test('⭐ supervision stops FIRST, and unconditionally', () => {
+  const { lc, log } = wire();
+  lc.begin();
+  log.length = 0;
+  lc.releaseOnAuthLoss('signed_out');
+  const stopped = log.findIndex((e) => e.watch === 'stop');
+  const revoked = log.findIndex((e) => e.revoked);
+  assert.ok(stopped >= 0 && revoked > stopped, 'a timer was left running past its session');
+
+  // Unconditionally: even with no session to release.
+  const none = wire({ session: null });
+  none.lc.releaseOnAuthLoss('signed_out');
+  assert.ok(none.log.some((e) => e.watch === 'stop'), 'a stale timer survived because there was no session');
+});
+
+test('⭐ the session is revoked BEFORE the released one is touched', () => {
+  const { lc, log } = wire();
+  lc.begin();
+  log.length = 0;
+  lc.releaseOnAuthLoss('signed_out');
+  const revoked = log.findIndex((e) => e.revoked);
+  const disarmed = log.findIndex((e) => e.liveness === 'disarm');
+  assert.ok(revoked >= 0 && disarmed > revoked,
+    'a turn dispatched mid-teardown could still find a live session');
+});
+
+test('⛔ auth loss is NOT end() — nothing is committed and no transcript is returned', () => {
+  const { lc, log } = wire();
+  lc.begin();
+  log.length = 0;
+  const out = lc.releaseOnAuthLoss('signed_out');
+  assert.equal(log.filter((e) => e.epoch === 'commit' || e.epoch === 'userStop').length, 0,
+    'a member who did not stop had their epoch committed on the way out');
+  assert.equal(out.chars, undefined, 'a transcript was returned to a caller who no longer holds authority');
+  assert.equal(out.snapshot, undefined);
+});
+
+test('⛔ auth loss is NOT captureLost() — nothing seeks a rebuild', () => {
+  const { lc, log } = wire();
+  lc.begin();
+  log.length = 0;
+  lc.releaseOnAuthLoss('signed_out');
+  assert.equal(log.filter((e) => e.liveness === 'lost').length, 0,
+    'a session going away entirely was sent looking for a rebuild');
+});
+
+test('releasing twice is not an error, and says so', () => {
+  const { lc } = wire();
+  lc.begin();
+  assert.deepEqual(lc.releaseOnAuthLoss('signed_out'), { ok: true, released: true });
+  assert.deepEqual(lc.releaseOnAuthLoss('signed_out'), { ok: false, released: false });
+});
+
+test('⭐ main releases capture on sign-out, before dropping the rest of member state', () => {
+  const mainJs = readFileSync(new URL('../src/main.js', import.meta.url), 'utf8')
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+    .split('\n').map((l) => l.replace(/(^|[^:'"`])\/\/.*$/, '$1')).join('\n');
+  const h = /ipcMain\.handle\('maia:sign-out'[\s\S]*?\n\}\);/.exec(mainJs)[0];
+  assert.ok(/releaseOnAuthLoss\(/.test(h), 'capture survives sign-out — the member cannot listen again');
+  assert.ok(h.indexOf('releaseOnAuthLoss') < h.indexOf('conversation = null'),
+    'capture is released after the rest of member state has already fallen away');
+});
+
 // ── ⭐ SALVAGE: the member's authorship, proven at the Desktop disposition ───
 
 test('⭐ salvaged speech becomes the member’s draft — it is NOT a completed turn', () => {

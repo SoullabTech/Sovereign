@@ -182,7 +182,51 @@ function createVoiceLifecycle({
     return { ok: true, tail, chars: text.length, snapshot };
   }
 
-  return { begin, frame, micResult, captureLost, end };
+  /**
+   * ⭐ AUTH-TEARDOWN-CAPTURE-01. The member's authority to capture is gone —
+   * signed out, or a credential rejected on any authenticated call. Capture is
+   * released, and it is released FIRST, before the rest of member state falls
+   * away.
+   *
+   * ⛔ WHY FIRST, and why this path has to exist at all: capture is the one
+   * piece of member state that used to outlive its member, and it is the piece
+   * that blocks every recovery — while a session is held, signing back in still
+   * cannot start listening.
+   *
+   * ⛔ NOT `end()`. The member did not stop. Nothing is committed, no tail is
+   * taken, and no transcript is returned to a caller who no longer holds
+   * authority over it. This is a release, not a completion.
+   *
+   * ⛔ NOT `captureLost()`. That seeks a rebuild. Nothing is recoverable here:
+   * the session is going away entirely.
+   *
+   * ⛔ ORDER IS SEMANTIC, inherited intact from the implementation this replaces:
+   *   · supervision stops FIRST and unconditionally — a timer outliving its
+   *     session is the same class of leak in miniature
+   *   · the session is revoked BEFORE the released one is touched, so a turn
+   *     dispatched in the meantime refuses at its own guard
+   *   · the in-flight turn flag is deliberately NOT cleared. If a turn is in
+   *     flight its own `finally` owns that flag, and clearing it here would let
+   *     a second turn start under the first. With the session revoked the turn
+   *     refuses anyway, so nothing is gained by racing it. (The turn itself
+   *     ends as REVOKED rather than failed — see turn.js.)
+   *   · the announcement is last, and is authoritative idle
+   *
+   * Idempotent: releasing twice is not an error, and the second call says so.
+   */
+  function releaseOnAuthLoss(cause) {
+    watch.stop();
+    const released = session();
+    if (!released) return { ok: false, released: false };
+
+    revokeSession();
+    released.liveness.disarm();
+    released.diagnostics.emit('voice_capture_lost', { cause, source: 'auth_teardown' });
+    announce();
+    return { ok: true, released: true };
+  }
+
+  return { begin, frame, micResult, captureLost, end, releaseOnAuthLoss };
 }
 
 module.exports = { createVoiceLifecycle };
