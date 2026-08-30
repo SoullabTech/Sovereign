@@ -33,6 +33,7 @@ const HOST_ADAPTERS = [
 // without changing their semantics. Each is currently free of Electron.
 const PORTABLE_DOMAIN = [
   'conversation.js', 'thread-watch.js', 'capture-liveness.js', 'capture-worklet.js',
+  'continuity.js', // DESKTOP SOVEREIGN CORE 01 — extracted from main.js
   'session.js', // adapter-shaped: createSession({ app, safeStorage, fetchImpl })
   'voice/epoch.js', 'voice/vad.js', 'voice/utterance.js',
   'voice/wav.js', 'voice/transcription.js', 'voice/diagnostics.js',

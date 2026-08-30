@@ -105,12 +105,15 @@ test('adoption is a READ — it never writes and never invents an endpoint', asy
 });
 
 test('main joins the thread on sign-in AND on a restored session', () => {
+  // ⭐ DESKTOP SOVEREIGN CORE 01. The join itself moved to continuity.js; main
+  // still has to CALL it on both paths. The assertion follows the code rather
+  // than being relaxed — both halves are still proven, in their new homes.
   const mainJs = strip('main.js');
   const signIn = /ipcMain\.handle\('maia:sign-in'[\s\S]*?\n\}\);/.exec(mainJs)[0];
-  assert.ok(/joinMemberThread\(\)/.test(signIn), 'signing in opens a fresh Desktop-only thread');
-  assert.ok(/did-finish-load[\s\S]*?joinMemberThread\(\)/.test(mainJs),
+  assert.ok(/continuity\.join\(\)/.test(signIn), 'signing in opens a fresh Desktop-only thread');
+  assert.ok(/did-finish-load[\s\S]*?continuity\.join\(\)/.test(mainJs),
     'a restored session never joins the member’s thread');
-  const join = /async function joinMemberThread\(\)[\s\S]*?\n\}/.exec(mainJs)[0];
-  assert.ok(/if \(!out\.ok\)[\s\S]*?broadcast\('maia:thread'[\s\S]*?error/.test(join),
+  const join = /async function join\(\)[\s\S]*?\n  \}/.exec(strip('continuity.js'))[0];
+  assert.ok(/if \(!out\.ok\)[\s\S]*?publish\([\s\S]*?error/.test(join),
     'an adoption failure is swallowed rather than surfaced');
 });
