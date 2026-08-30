@@ -6,11 +6,105 @@
 import { Capacitor } from '@capacitor/core';
 
 export interface PlatformInfo {
-  platform: 'web' | 'ios' | 'android';
+  platform: 'web' | 'ios' | 'android' | 'desktop';
   isNative: boolean;
+  /** DESKTOP-SOVEREIGN-STT-01 — the MAIA Desktop shell, a category of its own. */
+  isDesktop: boolean;
   isSimulator: boolean;
   hasVoiceSupport: boolean;
   hasMicrophoneAccess: boolean;
+}
+
+/**
+ * DESKTOP-SOVEREIGN-STT-01 — Desktop is a FIRST-CLASS PLATFORM, not a browser.
+ *
+ * ⛔ THE DEFECT THIS EXISTS FOR (VOICE-PATH-SELECTION-01). The taxonomy had two
+ * categories — Capacitor-native and web — and asked exactly one question to
+ * choose between them: `Capacitor.isNativePlatform()`. A BrowserView has no
+ * native bridge, so MAIA Desktop answered "web" and took the browser
+ * `SpeechRecognition` path: member audio handed to a browser-managed, network-
+ * dependent recognition service, contrary to D01 §XII.
+ *
+ * The sovereign path already existed (`/api/voice/transcribe-simple` → local
+ * Faster-Whisper) and was reachable only from `isAndroidWebChrome()` recovery
+ * or from browsers with no Web Speech API at all. Desktop could not reach it
+ * by construction.
+ *
+ * ⛔ WHY A UA MARKER AND NOT A BRIDGE. Classification is not authority. Adding
+ * a preload or an IPC channel to answer "which platform am I" would widen the
+ * Desktop attack surface to settle a routing question. The Electron shell
+ * already announces itself in the user agent (`maia-desktop/<version>`, derived
+ * from the app's own package name), and that string reaches the page without
+ * any privileged channel. Whether `/maia` may open a microphone at all remains
+ * governed where it was: the main-process permission gate, scoped to the exact
+ * `/maia` surface.
+ *
+ * The marker is pinned from the other side too — a maia-desktop test asserts
+ * the package name still produces it, so a rename breaks a test rather than
+ * silently reclassifying Desktop as an ordinary browser.
+ */
+const DESKTOP_SHELL_UA_MARKER = /\bmaia-desktop\//i;
+
+export function isDesktopShell(userAgent?: string): boolean {
+  // Capacitor wins: a native build is native, whatever its UA says.
+  if (Capacitor.isNativePlatform()) return false;
+  const ua = userAgent ?? (typeof navigator !== 'undefined' ? navigator.userAgent : '');
+  return DESKTOP_SHELL_UA_MARKER.test(ua);
+}
+
+/**
+ * Which transcription transport a surface must use.
+ *
+ *   native-speech      Capacitor iOS/Android — the native speech plugin
+ *   sovereign-whisper  getUserMedia → MediaRecorder → /api/voice/transcribe-simple
+ *                      → local Faster-Whisper. Audio stays first-party.
+ *   web-speech         the browser's own SpeechRecognition
+ *   none               no usable transport; the caller must say so plainly
+ */
+export type VoiceTransport = 'native-speech' | 'sovereign-whisper' | 'web-speech' | 'none';
+
+export interface VoiceTransportFacts {
+  isNative: boolean;
+  isDesktop: boolean;
+  hasSpeechRecognition: boolean;
+  canRecordAudio: boolean;
+}
+
+/**
+ * Choose the transport. PURE — every input is a parameter, so the rule can be
+ * exercised for platforms the test runner will never actually be.
+ *
+ * ⛔ THE LOAD-BEARING CLAUSE: Desktop NEVER resolves to `web-speech`, and the
+ * check does not consult `hasSpeechRecognition` at all on that branch. Chromium
+ * ships `SpeechRecognition`, so a rule of the form "use Whisper when Web Speech
+ * is missing" would silently return Desktop to the browser service — which is
+ * precisely how this defect existed. A Desktop that cannot record returns
+ * `none`, an honest failure, rather than degrading to the path canon forbids.
+ */
+export function selectVoiceTransport(facts: VoiceTransportFacts): VoiceTransport {
+  if (facts.isNative) return 'native-speech';
+  if (facts.isDesktop) return facts.canRecordAudio ? 'sovereign-whisper' : 'none';
+  if (!facts.hasSpeechRecognition) return facts.canRecordAudio ? 'sovereign-whisper' : 'none';
+  return 'web-speech';
+}
+
+/** Can this surface record audio for server-side transcription? */
+export function canRecordAudioForWhisper(): boolean {
+  return (
+    typeof MediaRecorder !== 'undefined' &&
+    typeof navigator !== 'undefined' &&
+    !!navigator.mediaDevices?.getUserMedia
+  );
+}
+
+/** The transport for the surface we are actually running on. */
+export function currentVoiceTransport(): VoiceTransport {
+  return selectVoiceTransport({
+    isNative: Capacitor.isNativePlatform(),
+    isDesktop: isDesktopShell(),
+    hasSpeechRecognition: hasSpeechRecognitionAPI(),
+    canRecordAudio: canRecordAudioForWhisper(),
+  });
 }
 
 /**
@@ -115,7 +209,8 @@ export function hasSpeechRecognitionAPI(): boolean {
  * Mic permission will be requested when user actually clicks to start voice.
  */
 export async function getPlatformInfo(): Promise<PlatformInfo> {
-  const platform = Capacitor.getPlatform() as 'web' | 'ios' | 'android';
+  const isDesktop = isDesktopShell();
+  const platform = (isDesktop ? 'desktop' : Capacitor.getPlatform()) as PlatformInfo['platform'];
   const isNative = Capacitor.isNativePlatform();
   const isSimulator = isIOSSimulator() || isAndroidEmulator();
 
@@ -125,6 +220,7 @@ export async function getPlatformInfo(): Promise<PlatformInfo> {
     return {
       platform,
       isNative,
+      isDesktop,
       isSimulator,
       hasVoiceSupport: true, // Native speech plugin handles this
       hasMicrophoneAccess: true // Will be checked at runtime by native plugin
@@ -149,18 +245,29 @@ export async function getPlatformInfo(): Promise<PlatformInfo> {
   // Voice support = a mic device exists AND we can either run Web Speech OR
   // record audio for server-side transcription. Don't call getUserMedia here —
   // it needs a user gesture and will fail if called too early.
-  const hasVoiceSupport = hasMicDevice && (hasSpeechAPI || canRecordForWhisper);
+  // ⛔ DESKTOP-SOVEREIGN-STT-01. On Desktop, voice support is the ability to
+  // RECORD, never the presence of Web Speech. Chromium ships SpeechRecognition,
+  // so counting it here would advertise a capability Desktop is forbidden to use.
+  const hasVoiceSupport = hasMicDevice && (isDesktop
+    ? canRecordForWhisper
+    : (hasSpeechAPI || canRecordForWhisper));
 
-  console.log('[platformDetection] Web voice check:', {
+  console.log('[platformDetection] voice check:', {
+    platform,
+    isDesktop,
     hasSpeechAPI,
     hasMicDevice,
     canRecordForWhisper,
+    transport: selectVoiceTransport({
+      isNative, isDesktop, hasSpeechRecognition: hasSpeechAPI, canRecordAudio: canRecordForWhisper,
+    }),
     hasVoiceSupport
   });
 
   return {
     platform,
     isNative,
+    isDesktop,
     isSimulator,
     hasVoiceSupport,
     hasMicrophoneAccess: hasMicDevice // Actual access will be requested at runtime
