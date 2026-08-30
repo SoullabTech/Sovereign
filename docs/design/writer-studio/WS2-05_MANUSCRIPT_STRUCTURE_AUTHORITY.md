@@ -208,6 +208,15 @@ assuming any book uses all three, or those words at all.
 **Proposal:** self-referencing tree, arbitrary depth, with the *kind* as
 member-supplied free text rather than an enum.
 
+**Sibling order is a database constraint after all.** The reasoning against
+`UNIQUE (parent_id, position)` was right — top-level units have a NULL parent
+and UNIQUE treats NULLs as distinct — but PostgreSQL 15 added
+`NULLS NOT DISTINCT`, which is exactly the needed semantics. Added deferred in
+`20260830000003`, alongside a row lock on the owning `member_manuscripts` row
+taken by every mutating gesture. The service alone could not close the race:
+two tabs read the same sibling order and write into the same position, and the
+UI's `busy` flag serialises one React instance and cannot see another client.
+
 ```text
 manuscript_structure_units
   id                  uuid pk
@@ -305,6 +314,32 @@ a decision for the implementation cut — but the property is not optional.
 
 **v1 refuses to fake the match.**
 
+**CORRECTION (ruled 2026-08-30, after the first implementation).** The first
+cut permitted a *persisted* unit to become disjoint and merely reported it with
+a `⋯`. That was wrong, and it was wrong at the level of the model rather than
+the code: `sectionRun()` makes each **gesture** contiguous, but says nothing
+about the **unit** afterwards. Take 14–16 out of a division holding 10–20 and
+it becomes 10–13 + 17–20; append 8–10 to a division holding 1–3 and it becomes
+two stretches. Both were permitted.
+
+A non-contiguous thematic grouping may be worth having one day. It is not a
+structural division, and it must not arrive in that relation by omission. So:
+
+> Each persisted authored structural unit must remain contiguous after every
+> completed gesture. Transient UI selection may be unfinished; persisted
+> canonical structure may not.
+
+Enforced over **derived** membership, so a Part whose chapters leave a gap is
+refused too, not only a chapter with a gap of its own. Judged on the
+**post-image** of the whole tree, because a placement changes the unit losing
+sections as well as the one gaining them, and a reparent changes two ancestries
+without touching a membership row. Refused by the service with
+`would_split_division`, and again by a deferred constraint trigger at COMMIT
+(`20260830000003`) so it cannot be committed by any path.
+
+This does not prevent reorganisation: contiguous prefixes and suffixes move
+freely, in an order that leaves valid structure at every committed step.
+
 A unit's membership must be a contiguous run of *whole* draft sections. If a
 member wants a boundary in the middle of a section, the Studio says so plainly
 — that division needs the section split first, and split is not in this cut.
@@ -323,6 +358,13 @@ member can trust that organizing a book cannot damage it.
 A legible hierarchical map of the Work — not a flat database row viewer.
 
 - Units render as the tree the member authored, with their own vocabulary.
+- **Delete is leaf-only.** `parent_id` cascades, so removing a Part would
+  destroy every Chapter authored inside it — structural data loss, unmentioned
+  by a confirmation that speaks only about prose. Auto-promoting the children
+  instead would change the hierarchy as a side effect of a delete, which is a
+  different unasked-for edit. A division holding others therefore offers no
+  delete affordance at all (an affordance that cannot succeed should not be
+  offered), and its children carry an explicit promote gesture.
 - Leaf sections render inside their unit.
 - **Sections not yet in any unit are shown, not hidden**, under something like
   *not yet placed*. Hiding them would make a Work look organized when it is

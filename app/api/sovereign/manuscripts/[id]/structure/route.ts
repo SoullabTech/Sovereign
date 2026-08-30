@@ -39,6 +39,11 @@ const STATUS: Record<StructureRefusal, number> = {
   would_cycle: 422,
   unknown_section: 404,
   empty_name: 422,
+  /* Well-formed, and refused by the model: a division is a contiguous part of
+     the Work. */
+  would_split_division: 422,
+  /* Refused by the current state rather than by the request. */
+  unit_has_children: 409,
 };
 
 export async function GET(

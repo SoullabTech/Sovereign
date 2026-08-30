@@ -56,11 +56,17 @@ export interface StructureNode {
   /**
    * Whether `derivedSectionIds` is an unbroken run of the draft's positions.
    *
-   * REPORTED, NOT ENFORCED. A member placing sections one at a time passes
-   * through non-contiguous states on the way to a contiguous one, and refusing
-   * mid-edit would make the room fight the writer. But a chapter that has
-   * quietly become two disjoint pieces of the book is a fact the writer should
-   * be able to see, so it is surfaced rather than smoothed over.
+   * ENFORCED, not merely reported. A manuscript division is a CONTIGUOUS part
+   * of the Work; a unit split across two stretches of the book is a thematic
+   * grouping, which is a different relation and does not get to arrive here by
+   * omission. Every gesture that would leave any authored unit disjoint —
+   * including the unit LOSING sections, and including ancestors that derive
+   * them — is refused before it commits, and a deferred constraint trigger
+   * refuses it again at COMMIT.
+   *
+   * So on a persisted tree this is always true. A false value read from the
+   * database means the invariant has been broken by something outside these
+   * paths, and the outline says so rather than presenting it as a style.
    */
   contiguous: boolean;
 }
@@ -69,6 +75,27 @@ export interface StructureTree {
   roots: StructureNode[];
   /** Sections in no unit at all, in draft order. Shown, never hidden. */
   unplacedSectionIds: string[];
+}
+
+/**
+ * The first authored unit whose derived sections are not one unbroken run, or
+ * null when every unit is contiguous.
+ *
+ * The whole post-image is judged rather than the unit being edited: placing a
+ * run into one chapter removes those sections from another, and reparenting
+ * changes what two ancestries derive without touching a membership row. A
+ * check scoped to "the unit the member named" would miss every one of those.
+ */
+export function firstDisjointUnit(tree: StructureTree): StructureNode | null {
+  const walk = (nodes: readonly StructureNode[]): StructureNode | null => {
+    for (const n of nodes) {
+      if (!n.contiguous) return n;
+      const deeper = walk(n.children);
+      if (deeper) return deeper;
+    }
+    return null;
+  };
+  return walk(tree.roots);
 }
 
 /** A unit id that is not in this manuscript's rows, or a cycle, etc. */

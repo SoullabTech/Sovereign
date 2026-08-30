@@ -17,7 +17,7 @@
 
 import { query, transaction, type TransactionClient } from '@/lib/db/postgres';
 import {
-  buildTree, wouldCycle, renumberSiblings, sectionRun,
+  buildTree, wouldCycle, renumberSiblings, sectionRun, firstDisjointUnit,
   type UnitRow, type MemberRow, type PlaceableSection, type StructureTree,
 } from './tree';
 
@@ -29,14 +29,97 @@ export type StructureRefusal =
   | 'parent_other_manuscript'
   | 'would_cycle'
   | 'unknown_section'
-  | 'empty_name';
+  | 'empty_name'
+  /* The gesture would leave some authored unit split across two stretches of
+     the book. A division is a contiguous part of the Work. */
+  | 'would_split_division'
+  /* Deleting a unit would destroy the divisions the member authored inside it.
+     Promoting them silently would change the hierarchy as a side effect of a
+     delete, so the member is asked to move them out first. */
+  | 'unit_has_children';
 
 export type StructureResult<T> =
   | { status: 'ok'; value: T }
   | { status: 'refused'; refusal: StructureRefusal };
 
+/**
+ * Thrown to ROLL BACK a gesture the post-image judged invalid, then converted
+ * back into a typed refusal by `guard`.
+ *
+ * A refusal that merely returned would leave the offending rows committed: the
+ * writes have already happened by the time the whole tree can be judged.
+ */
+class StructureViolation extends Error {
+  constructor(readonly refusal: StructureRefusal) { super(refusal); }
+}
+
+/** Turn a rolled-back violation back into the refusal the caller expects. */
+async function guard<T>(run: () => Promise<StructureResult<T>>): Promise<StructureResult<T>> {
+  try {
+    return await run();
+  } catch (e) {
+    if (e instanceof StructureViolation) return { status: 'refused', refusal: e.refusal };
+    /* The database's own deferred triggers refuse the same invariants at
+       COMMIT. Reaching here means something got past the service check, so it
+       is reported as the refusal it is rather than as a 500. */
+    const msg = e instanceof Error ? e.message : '';
+    if (msg.includes('is not a contiguous part of the Work')) {
+      return { status: 'refused', refusal: 'would_split_division' };
+    }
+    throw e;
+  }
+}
+
 const refuse = <T>(refusal: StructureRefusal): StructureResult<T> => ({ status: 'refused', refusal });
 const ok = <T>(value: T): StructureResult<T> => ({ status: 'ok', value });
+
+/**
+ * Serialise structure mutations for one manuscript.
+ *
+ * Every mutating gesture reads the sibling order, decides a renumbering, and
+ * writes it back. Two clients doing that concurrently can both read the same
+ * order and write into the same position — the UI's `busy` flag serialises one
+ * React instance and cannot see another tab. Locking the owning manuscript row
+ * makes the read-decide-write sequence atomic with respect to other gestures on
+ * the same Work, and does not block gestures on anyone else's.
+ *
+ * It also carries the ownership check, so a caller cannot take the lock without
+ * having established that this member owns this manuscript.
+ */
+async function lockManuscript(
+  tx: TransactionClient,
+  manuscriptId: string,
+  memberId: string,
+): Promise<boolean> {
+  const r = await tx.query(
+    `SELECT 1 FROM member_manuscripts WHERE id = $1 AND member_id = $2 FOR UPDATE`,
+    [manuscriptId, memberId]);
+  return r.rows.length > 0;
+}
+
+/**
+ * Judge the tree the transaction is about to commit.
+ *
+ * The POST-IMAGE is validated rather than the gesture's intent: placing a run
+ * into one chapter removes those sections from another, deleting a leaf shrinks
+ * what its ancestors derive, and reparenting changes two ancestries at once. A
+ * check scoped to the named unit would miss all three.
+ *
+ * The database refuses the same thing at COMMIT (20260830000003). This exists so
+ * the member gets a sentence instead of a constraint violation — not as the
+ * enforcement itself.
+ */
+async function refuseIfDisjoint(
+  tx: TransactionClient,
+  manuscriptId: string,
+  draftId: string,
+): Promise<boolean> {
+  const { units, members, sections } = await readRows(manuscriptId, draftId, tx);
+  const authored = units.filter((u) => u.origin !== 'proposed');
+  const authoredIds = new Set(authored.map((u) => u.id));
+  const tree = buildTree(authored, members.filter((m) => authoredIds.has(m.unitId)), sections);
+  return firstDisjointUnit(tree) !== null;
+}
 
 /** The manuscript's addressable draft, or null. Ownership is part of the query. */
 async function ownedDraft(
@@ -131,7 +214,10 @@ export async function createUnit(
      identify. */
   if (!kind && !title) return refuse('empty_name');
 
-  return transaction(async (tx) => {
+  return guard(() => transaction(async (tx) => {
+    if (!(await lockManuscript(tx, manuscriptId, memberId))) {
+      return refuse<{ id: string }>('not_found');
+    }
     const draft = await ownedDraft(manuscriptId, memberId, tx);
     if (!draft) return refuse<{ id: string }>('not_found');
 
@@ -151,7 +237,7 @@ export async function createUnit(
     const siblings = await siblingRows(tx, manuscriptId, input.parentId, id);
     await applyPositions(tx, renumberSiblings(siblings, id, input.index ?? siblings.length));
     return ok({ id });
-  });
+  }));
 }
 
 /** Rename, or change what the member calls this kind of division. */
@@ -188,7 +274,8 @@ export async function moveUnit(
   unitId: string,
   input: { parentId: string | null; index: number },
 ): Promise<StructureResult<null>> {
-  return transaction(async (tx) => {
+  return guard(() => transaction(async (tx) => {
+    if (!(await lockManuscript(tx, manuscriptId, memberId))) return refuse<null>('not_found');
     const draft = await ownedDraft(manuscriptId, memberId, tx);
     if (!draft) return refuse<null>('not_found');
 
@@ -216,8 +303,13 @@ export async function moveUnit(
         .sort((a, b) => a.position - b.position)
         .map((u, i) => ({ id: u.id, position: i })));
     }
+
+    /* Promoting a chapter out of a Part can leave that Part in two pieces. */
+    if (await refuseIfDisjoint(tx, manuscriptId, draft.draftId)) {
+      throw new StructureViolation('would_split_division');
+    }
     return ok(null);
-  });
+  }));
 }
 
 /**
@@ -232,7 +324,8 @@ export async function deleteUnit(
   memberId: string,
   unitId: string,
 ): Promise<StructureResult<null>> {
-  return transaction(async (tx) => {
+  return guard(() => transaction(async (tx) => {
+    if (!(await lockManuscript(tx, manuscriptId, memberId))) return refuse<null>('not_found');
     const draft = await ownedDraft(manuscriptId, memberId, tx);
     if (!draft) return refuse<null>('not_found');
 
@@ -242,14 +335,29 @@ export async function deleteUnit(
     if (existing.rows.length === 0) return refuse<null>('unknown_unit');
     const parentId = existing.rows[0].parent_id;
 
+    /* parent_id CASCADEs, so deleting a Part would take every Chapter the
+       member authored inside it with no mention of them. Auto-promoting them
+       instead would change the hierarchy as a side effect of a delete, which
+       is a different unasked-for edit. So: leaves only, and the member moves
+       the children out first, deliberately. */
+    const children = await tx.query(
+      `SELECT 1 FROM manuscript_structure_units WHERE parent_id = $1 LIMIT 1`, [unitId]);
+    if (children.rows.length > 0) return refuse<null>('unit_has_children');
+
     await tx.query(`DELETE FROM manuscript_structure_units WHERE id = $1`, [unitId]);
 
     const sibs = await siblingRows(tx, manuscriptId, parentId, unitId);
     await applyPositions(tx, sibs
       .sort((a, b) => a.position - b.position)
       .map((u, i) => ({ id: u.id, position: i })));
+
+    /* Its sections return to unplaced, which can leave an ancestor in two
+       pieces around the gap they left. */
+    if (await refuseIfDisjoint(tx, manuscriptId, draft.draftId)) {
+      throw new StructureViolation('would_split_division');
+    }
     return ok(null);
-  });
+  }));
 }
 
 /**
@@ -268,7 +376,10 @@ export async function placeSections(
   memberId: string,
   input: { unitId: string | null; fromSectionId: string; toSectionId: string },
 ): Promise<StructureResult<{ placed: number }>> {
-  return transaction(async (tx) => {
+  return guard(() => transaction(async (tx) => {
+    if (!(await lockManuscript(tx, manuscriptId, memberId))) {
+      return refuse<{ placed: number }>('not_found');
+    }
     const draft = await ownedDraft(manuscriptId, memberId, tx);
     if (!draft) return refuse<{ placed: number }>('not_found');
 
@@ -280,6 +391,9 @@ export async function placeSections(
       await tx.query(
         `DELETE FROM manuscript_structure_members WHERE draft_section_id = ANY($1::uuid[])`,
         [run.ids]);
+      if (await refuseIfDisjoint(tx, manuscriptId, draft.draftId)) {
+        throw new StructureViolation('would_split_division');
+      }
       return ok({ placed: 0 });
     }
 
@@ -299,8 +413,16 @@ export async function placeSections(
       `INSERT INTO manuscript_structure_members (unit_id, draft_section_id)
        SELECT $1, unnest($2::uuid[])`,
       [input.unitId, run.ids]);
+
+    /* Both sides are judged: the unit gaining a run, and every unit that just
+       lost sections to it. A run appended away from a division's existing
+       sections splits the target; a run taken out of the middle of another
+       splits the source. */
+    if (await refuseIfDisjoint(tx, manuscriptId, draft.draftId)) {
+      throw new StructureViolation('would_split_division');
+    }
     return ok({ placed: run.ids.length });
-  });
+  }));
 }
 
 /**

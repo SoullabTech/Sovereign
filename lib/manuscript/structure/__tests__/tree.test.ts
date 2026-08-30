@@ -4,6 +4,7 @@
 
 import {
   buildTree, isContiguous, ancestryOf, wouldCycle, renumberSiblings, sectionRun,
+  firstDisjointUnit,
   type UnitRow, type MemberRow, type PlaceableSection,
 } from '../tree';
 
@@ -54,15 +55,43 @@ describe('buildTree', () => {
     expect(t.unplacedSectionIds).toEqual(['s0', 's1', 's3', 's4', 's5']);
   });
 
-  it('reports a unit that has become two disjoint pieces of the book', () => {
+  it('detects a unit that has become two disjoint pieces of the book', () => {
     const members: MemberRow[] = [
       { unitId: 'a', draftSectionId: 's0' },
       { unitId: 'a', draftSectionId: 's4' },
     ];
     const t = buildTree([unit('a', null, 0, 'One')], members, sections);
-    /* Reported, not refused: the member is mid-organisation, and the room does
-       not fight the writer. But it does not pretend the chapter is whole. */
     expect(t.roots[0].contiguous).toBe(false);
+    expect(firstDisjointUnit(t)?.id).toBe('a');
+  });
+
+  it('detects a Part made disjoint by a gap between its chapters', () => {
+    /* The parent's OWN placements are empty and each child is contiguous. Only
+       the derived set is broken, which is why the check is on derivation and
+       not on direct membership. */
+    const units = [unit('p', null, 0, 'Part'), unit('c1', 'p', 0, 'One'), unit('c2', 'p', 1, 'Two')];
+    const members: MemberRow[] = [
+      { unitId: 'c1', draftSectionId: 's0' },
+      { unitId: 'c1', draftSectionId: 's1' },
+      { unitId: 'c2', draftSectionId: 's3' },
+    ];
+    const t = buildTree(units, members, sections);
+    expect(t.roots[0].children.every((c) => c.contiguous)).toBe(true);
+    expect(firstDisjointUnit(t)?.id).toBe('p');
+  });
+
+  it('finds nothing to refuse in a well-formed tree', () => {
+    const units = [unit('p', null, 0, 'Part'), unit('c1', 'p', 0, 'One')];
+    const members: MemberRow[] = [
+      { unitId: 'c1', draftSectionId: 's0' },
+      { unitId: 'c1', draftSectionId: 's1' },
+      { unitId: 'p', draftSectionId: 's2' },
+    ];
+    expect(firstDisjointUnit(buildTree(units, members, sections))).toBeNull();
+  });
+
+  it('an empty division is contiguous, so a new one is never born invalid', () => {
+    expect(firstDisjointUnit(buildTree([unit('a', null, 0, 'New')], [], sections))).toBeNull();
   });
 
   it('an empty manuscript structure leaves every section unplaced', () => {

@@ -212,6 +212,107 @@ async function main() {
   console.log(`  after   ${Buffer.byteLength(after, 'utf8')} bytes  sha256:${digest(after)}`);
   check('the book was organised and not one character of it changed', identical);
 
+  /* ── 7 · the correction gate (A-G) ─────────────────────────────────── */
+  console.log('\n7 · correction gate');
+
+  /* A · two concurrent creates must not land on the same sibling position.
+         The manuscript row lock is what makes this true; without it both
+         transactions read the same sibling list and renumber into it. */
+  const before7 = await loadStructure(fixture.manuscriptId, fixture.memberId);
+  const rootsBefore = before7.status === 'ok' ? before7.value.roots.length : -1;
+  /* BOTH must succeed, not merely avoid duplicates. Without the lock the two
+     transactions cannot see each other's uncommitted insert, compute the same
+     renumbering, and one dies on the deferred sibling-order constraint at
+     COMMIT. Asserting only "no duplicates" would pass in that world too, and
+     prove nothing about the lock. */
+  const raced = await Promise.all([
+    createUnit(fixture.manuscriptId, fixture.memberId, { kind: 'Part', title: 'Race A', parentId: null })
+      .catch((e) => ({ status: 'threw' as const, refusal: String(e?.message ?? e) })),
+    createUnit(fixture.manuscriptId, fixture.memberId, { kind: 'Part', title: 'Race B', parentId: null })
+      .catch((e) => ({ status: 'threw' as const, refusal: String(e?.message ?? e) })),
+  ]);
+  check('A · both concurrent creates succeed',
+    raced.every((r) => r.status === 'ok'),
+    raced.map((r) => r.status).join(' + '));
+  const dupes = await query<{ n: string }>(
+    `SELECT count(*) AS n FROM (
+       SELECT parent_id, position FROM manuscript_structure_units
+        WHERE manuscript_id = $1
+        GROUP BY parent_id, position HAVING count(*) > 1) d`,
+    [fixture.manuscriptId]);
+  check('A · two concurrent creates leave no duplicate sibling position',
+    Number(dupes.rows[0].n) === 0);
+
+  /* B · and the surviving order is 0..n-1 under a NULL parent. */
+  const t7 = await loadStructure(fixture.manuscriptId, fixture.memberId);
+  if (t7.status !== 'ok') { check('B · reload', false); process.exit(1); }
+  check('B · top-level siblings are 0..n-1',
+    t7.value.roots.every((r, i) => r.position === i)
+      && t7.value.roots.length === rootsBefore + 2,
+    t7.value.roots.map((r) => r.position).join(','));
+
+  /* C · taking a run out of the MIDDLE of a division would split the source. */
+  const wide = await createUnit(fixture.manuscriptId, fixture.memberId,
+    { kind: 'Part', title: 'Wide', parentId: null });
+  const narrow = await createUnit(fixture.manuscriptId, fixture.memberId,
+    { kind: 'Part', title: 'Narrow', parentId: null });
+  if (wide.status !== 'ok' || narrow.status !== 'ok') { check('C · fixture', false); process.exit(1); }
+  const filled = await placeSections(fixture.manuscriptId, fixture.memberId,
+    { unitId: wide.value.id, fromSectionId: sid(7), toSectionId: sid(11) });
+  check('C · a five-section division is placed', filled.status === 'ok');
+
+  const splitSource = await placeSections(fixture.manuscriptId, fixture.memberId,
+    { unitId: narrow.value.id, fromSectionId: sid(9), toSectionId: sid(9) });
+  check('C · refuse a move that would leave the SOURCE in two places',
+    splitSource.status === 'refused' && splitSource.refusal === 'would_split_division',
+    splitSource.status === 'refused' ? splitSource.refusal : 'permitted');
+
+  /* D · appending a separated run would split the TARGET. */
+  const edge = await placeSections(fixture.manuscriptId, fixture.memberId,
+    { unitId: wide.value.id, fromSectionId: sid(7), toSectionId: sid(7) });
+  void edge;
+  const splitTarget = await placeSections(fixture.manuscriptId, fixture.memberId,
+    { unitId: narrow.value.id, fromSectionId: sid(0), toSectionId: sid(0) });
+  const splitTarget2 = splitTarget.status === 'ok'
+    ? await placeSections(fixture.manuscriptId, fixture.memberId,
+        { unitId: narrow.value.id, fromSectionId: sid(4), toSectionId: sid(4) })
+    : splitTarget;
+  check('D · refuse appending a run separated from what the division holds',
+    splitTarget2.status === 'refused' && splitTarget2.refusal === 'would_split_division',
+    splitTarget2.status === 'refused' ? splitTarget2.refusal : 'permitted');
+
+  /* E · deleting a parent must not destroy the divisions inside it. */
+  const parentU = await createUnit(fixture.manuscriptId, fixture.memberId,
+    { kind: 'Part', title: 'Holds one', parentId: null });
+  if (parentU.status !== 'ok') { check('E · fixture', false); process.exit(1); }
+  const childU = await createUnit(fixture.manuscriptId, fixture.memberId,
+    { kind: 'Chapter', title: 'Held', parentId: parentU.value.id });
+  if (childU.status !== 'ok') { check('E · fixture', false); process.exit(1); }
+  await placeSections(fixture.manuscriptId, fixture.memberId,
+    { unitId: childU.value.id, fromSectionId: sid(2), toSectionId: sid(3) });
+
+  const killParent = await deleteUnit(fixture.manuscriptId, fixture.memberId, parentU.value.id);
+  check('E · refuse deleting a division that holds others',
+    killParent.status === 'refused' && killParent.refusal === 'unit_has_children',
+    killParent.status === 'refused' ? killParent.refusal : 'permitted');
+
+  const survived = await query<{ n: string }>(
+    `SELECT count(*) AS n FROM manuscript_structure_members WHERE unit_id = $1`,
+    [childU.value.id]);
+  check('E · the child and its memberships are intact',
+    Number(survived.rows[0].n) === 2, `${survived.rows[0].n} placements`);
+
+  /* F · promotion is an explicit gesture and it succeeds. */
+  const promotedOut = await moveUnit(fixture.manuscriptId, fixture.memberId, childU.value.id,
+    { parentId: null, index: 0 });
+  check('F · promote the child out one level', promotedOut.status === 'ok',
+    promotedOut.status === 'refused' ? promotedOut.refusal : '');
+  const nowLeaf = await deleteUnit(fixture.manuscriptId, fixture.memberId, parentU.value.id);
+  check('F · the emptied parent can then be removed', nowLeaf.status === 'ok');
+
+  /* G · through all of it, not one character moved. */
+  check('G · flattening unchanged through the whole gate', await stillIntact());
+
   console.log(`\n${failures === 0 ? 'PASS' : 'FAIL'} — ${failures} failed\n`);
   process.exit(failures === 0 ? 0 : 1);
 }

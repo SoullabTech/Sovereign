@@ -10,11 +10,18 @@
  * when it is not — invention arrived at by omission instead of by invention.
  * A book with no divisions at all renders exactly as it did before this cut.
  *
- * PLACEMENT IS A RUN. The member names the ends of a stretch of the book and
- * says what it is, so a division is contiguous by construction rather than
- * policed afterwards. A unit that has nonetheless become two disjoint pieces
- * (by later placements elsewhere) is marked, not corrected: the member is
- * organising, and the room reports rather than intervenes.
+ * PLACEMENT IS A RUN, AND A DIVISION STAYS CONTIGUOUS. The member names the
+ * ends of a stretch of the book and says what it is. A gesture that would leave
+ * ANY division in two separate places — the one gaining sections, the one
+ * losing them, or an ancestor deriving them — is refused, by the service and
+ * again by the database at COMMIT. A division is one continuous part of the
+ * Work; a grouping split across the book is a different relation, and it does
+ * not get to arrive here because the outline had nowhere else to put it.
+ *
+ * DELETE IS LEAF-ONLY. `parent_id` cascades, so removing a Part would take
+ * every Chapter authored inside it. Auto-promoting them would change the
+ * hierarchy as a side effect of a delete. So a division holding others offers
+ * no ×, and its children carry ⇤ to move them out deliberately.
  *
  * THE WRITING IS NOT TOUCHED. Every gesture here is a grouping. Deleting a
  * division deletes a grouping and returns its sections to "not yet placed" —
@@ -163,14 +170,16 @@ export default function StructuredOutline({
             {unitLabel(node)}
           </StudioText>
           {!node.contiguous && (
-            /* Reported, never corrected. A division that has become two
-               separate stretches of the book is a fact the writer should be
-               able to see. */
-            <span title="this division is in two separate places in the book">
+            /* Unreachable through these gestures: contiguity is refused on the
+               way in and again at COMMIT. Drawn anyway, because a false value
+               read from the database means the invariant was broken by
+               something outside these paths, and the outline should say so
+               rather than render it as though it were fine. */
+            <span title="this division is in two separate places in the book — that should not be possible; please report it">
               <StudioText role="metadata" tone="quiet" as="span">
-                <span aria-hidden>⋯</span>
+                <span aria-hidden>⚠</span>
               </StudioText>
-              <span className="sr-only"> in two separate places</span>
+              <span className="sr-only"> in two separate places, unexpectedly</span>
             </span>
           )}
           {organising && (
@@ -186,12 +195,31 @@ export default function StructuredOutline({
                     void act({ gesture: 'create', kind: null, title: name.trim(), parentId: node.id });
                   }
                 }}>+</Tiny>
-              <Tiny label="remove this division, keeping its writing" disabled={busy}
-                onClick={() => {
-                  if (window.confirm(
-                    `Remove "${unitLabel(node)}"?\n\nIts sections return to "not yet placed". No writing is removed.`,
-                  )) void act({ gesture: 'delete', unitId: node.id });
-                }}>×</Tiny>
+              {depth > 0 && (
+                /* Move this division out to sit beside its parent. The only way
+                   a nested division leaves, and always a member's act. */
+                <Tiny label="move this division out one level" disabled={busy}
+                  onClick={() => act({
+                    gesture: 'move', unitId: node.id,
+                    parentId: grandparentOf(tree, node.id), index: 0,
+                  })}>⇤</Tiny>
+              )}
+              {node.children.length === 0 ? (
+                <Tiny label="remove this division, keeping its writing" disabled={busy}
+                  onClick={() => {
+                    if (window.confirm(
+                      `Remove "${unitLabel(node)}"?\n\nIts sections return to "not yet placed". No writing is removed.`,
+                    )) void act({ gesture: 'delete', unitId: node.id });
+                  }}>×</Tiny>
+              ) : (
+                /* No × at all, rather than one that refuses when pressed: an
+                   affordance that cannot succeed should not be offered. */
+                <span title="move the divisions inside this one out before removing it">
+                  <StudioText role="metadata" tone="quiet" as="span">
+                    <span aria-hidden>·</span>
+                  </StudioText>
+                </span>
+              )}
             </span>
           )}
         </div>
@@ -255,6 +283,12 @@ export default function StructuredOutline({
       </div>
     </>
   );
+}
+
+/** The parent of this unit's parent — where ⇤ moves it to. */
+function grandparentOf(tree: StructureTreeDTO | null, unitId: string): string | null {
+  const parent = parentOf(tree, unitId);
+  return parent ? parentOf(tree, parent) : null;
 }
 
 /** Which unit holds this one, from the tree the server sent. */

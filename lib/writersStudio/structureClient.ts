@@ -85,6 +85,10 @@ export function refusalCopy(refusal: string): string {
       return 'This draft is one continuous piece, so there are no sections to organise yet.';
     case 'would_cycle':
       return 'A division cannot be placed inside itself.';
+    case 'would_split_division':
+      return 'That would leave a division in two separate places in the book. A division is one continuous part of the Work — move a run from its beginning or its end instead.';
+    case 'unit_has_children':
+      return 'This division still holds other divisions. Move them out first — removing it would take them with it.';
     case 'empty_name':
       return 'Give the division a name, or say what kind of division it is.';
     case 'unknown_unit':
