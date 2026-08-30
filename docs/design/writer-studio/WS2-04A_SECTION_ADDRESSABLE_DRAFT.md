@@ -1,4 +1,4 @@
-# WS2-04A — Structure Adoption
+# WS2-04A — Section-Addressable Working Draft
 
 **Status:** design return, CORRECTED against production. No schema, no writes,
 no implementation.
@@ -65,7 +65,112 @@ Ownership stops being derivable only when a boundary itself moves — a heading
 rewritten or deleted, sections merged, text carried across a break. Neither
 book does that.
 
-## 0.2 · What this means for the unit
+## 0.2 · The unit is renamed
+
+Founder ruling, 2026-08-30. This unit was called *Structure Adoption*, which
+named the exception as though it were the capability. The production census
+showed why that was backwards: Structure Adoption applies to **no draft that
+exists today**, while section-addressability applies to all nine.
+
+> **WS2-04A — Section-Addressable Working Draft**, with migration branches:
+> exact seeding · resolved-edit seeding · legacy normalisation ·
+> Structure Adoption · NO_SOURCE creation.
+
+Section-addressability is the capability. Structure Adoption is what
+sovereignty requires **only when the machine cannot establish the structure by
+itself**.
+
+## 0.3 · Authority — tell, don't ask
+
+The governing distinction, founder-ruled:
+
+> **When the system changes authorship or meaning, ask.
+> When the system performs a lossless structural upgrade whose truth is
+> mechanically established, tell.**
+
+| draft condition | authority |
+|---|---|
+| `PRISTINE` | system may seed |
+| `LEGACY_COMPOSER_VARIANT` | system may seed mechanically |
+| `EDITED` + all boundaries resolved + headings unchanged | system may seed; **inform the writer** |
+| `EDITED` + a boundary moved or ambiguous | **writer decides — Structure Adoption** |
+| `NO_SOURCE` | **writer creates structure** |
+| `WITHHELD` | **nobody acts — fix the instrument** |
+
+Row 3 is the ruling's substance. The system is not deciding what belongs to
+which section; it is representing structure already demonstrably there. Asking
+would stage a decision that has been mechanically settled — a permission
+prompt that cannot be answered wrongly is not consent, it is theatre.
+
+### Preconditions for seeding without asking
+
+All six, or the branch does not apply:
+
+```
+heading differences        0
+boundaries resolved        N/N
+member text attribution    mechanically unique
+round-trip reconstruction  byte-identical
+pre-conversion snapshot    preserved
+conversion                 atomic
+```
+
+### The round-trip invariant
+
+Before commit:
+
+```
+flatten(new section-addressable draft) === exact old continuous draft
+```
+
+Byte for byte. **If it fails, abort. No "close enough."**
+
+Implemented and tested ahead of any migration that could call it:
+`lib/manuscript/sections/seedInvariant.ts`. It joins sections with nothing —
+a separator would be a character the member did not write — compares without
+normalising, reports the offset of a divergence and never the text at it, and
+throws rather than returning a warning something could ignore. It is pure, so
+the invariant is exercised exhaustively without a database.
+
+The licence to proceed unasked is exactly what makes this load-bearing: a
+conversion nobody approved must be *provably* lossless. The round trip is the
+evidence the member is owed and never asked to supply.
+
+### What the writer sees
+
+Not a permission screen. Not a migration warning. A small dismissible
+confirmation the first time the upgraded draft opens:
+
+> **Your draft is now navigable by section.**
+> Your writing was preserved exactly. You can use the Manuscript outline to
+> move directly between sections.
+
+A quiet **Details** affordance may carry provenance, with no requirement to
+engage with it.
+
+### Growth-obligation check
+
+Per `docs/canon/RECIPROCAL_SOVEREIGNTY_INTENTION_2026-08-04.md`, a capability
+increase must answer three questions rather than pass them.
+
+**What uncertainty does this introduce, and how is it preserved?** Whether a
+partition is faithful. It is preserved by never being assumed: the round trip
+re-derives it per conversion, and `WITHHELD` exists so that instruments in
+disagreement halt instead of resolving to a default. Uncertainty about a
+*boundary* is preserved by routing to the writer, never averaged away.
+
+**What provenance and ownership boundaries does this require?** The
+pre-conversion continuous draft is preserved as a revision, so the prior state
+remains reachable and the conversion is reversible in fact. Section text is
+the member's characters unaltered; the system owns only the boundaries, and
+only where it derived them by identity.
+
+**What new responsibility does this capability create?** Having taken the
+authority not to ask, the system owes proof rather than assurance — and owes
+the writer a plain statement that it happened. Silence would make the
+non-asking a concealment. This is why row 3 informs and row 4 does not act.
+
+## 0.4 · What this means for the unit
 
 Neither prediction held. There ARE edited drafts, so Structure Adoption is not
 speculative — but neither of today's edited drafts needs it.
@@ -79,16 +184,22 @@ So the honest treatment matrix is:
 | `EDITED`, a boundary moved | **member-facing act — Structure Adoption** |
 | `NO_SOURCE` | member creates structure when they want it |
 
-Sections 1–3 below specify the third row. It remains a defined contract with
-**no case in today's population**, and it must not be built speculatively
-ahead of one — but it must also not be retired, because the first writer to
-rename a chapter creates its first case.
+Sections 1–3 below specify **Structure Adoption only** — the fourth row of the
+authority table. It remains a defined contract with **no case in today's
+population**, and it must not be built speculatively ahead of one — but it
+must also not be retired, because the first writer to rename a chapter creates
+its first case.
 
 ---
 
 ---
 
-## 1 · The reconciliation algorithm
+## 1 · Structure Adoption — the exceptional pathway
+
+*Everything from here specifies row 4 of the authority table only: an EDITED
+draft where a boundary itself moved. It has no case in today's population.*
+
+### 1.1 · The reconciliation algorithm
 
 **Anchoring, not similarity.**
 
@@ -114,7 +225,7 @@ optimisation of how much review is asked for, never of what is asserted true.
 
 ---
 
-## 2 · Boundary states
+### 1.2 · Boundary states
 
 | state | meaning | mechanically decided? |
 |---|---|---|
@@ -128,7 +239,7 @@ that a writer deleted a chapter; only the writer may say so.
 
 ---
 
-## 3 · The member-facing act
+### 1.3 · The member-facing act
 
 **Adoption is a partition, never a transformation.** No character of the
 draft changes. Boundaries are introduced into text that stays byte-identical.
@@ -166,7 +277,7 @@ would be the guess this whole design exists to refuse.
 
 ---
 
-## 4 · Conversion and rollback
+## 2 · Conversion and rollback
 
 One transaction:
 
@@ -194,7 +305,7 @@ restorable by code that already exists rather than a bespoke undo.
 
 ---
 
-## 5 · How existing revisions survive
+## 3 · How existing revisions survive
 
 Revisions become bimodal, and the seam is explicit rather than smoothed over:
 
