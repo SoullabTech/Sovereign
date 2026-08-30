@@ -36,6 +36,7 @@ const { createDiagnostics } = require('./voice/diagnostics');
 const { createEpochState, EPOCH_END_REASONS } = require('./voice/epoch');
 const { createVad } = require('./voice/vad');
 const { createUtteranceBuffer } = require('./voice/utterance');
+const { createMemberDraft } = require('./voice/member-draft');
 const { createSession } = require('./session');
 const { createConversation } = require('./conversation');
 const { createCaptureLiveness, IDLE } = require('./capture-liveness');
@@ -105,14 +106,12 @@ function newVoiceSession() {
     { surface: 'desktop', now: () => Date.now() }
   );
 
-  // Salvaged material becomes the member's own draft. It is NOT silently
-  // re-fed to MAIA as if it had been recognized as final — the member decides
-  // what to do with words the system nearly lost.
-  const draft = [];
-  const epoch = createEpochState({
-    diagnostics,
-    onSalvage: (text) => { draft.push(text); return true; },
-  });
+  // ⭐ DSC-FINAL. The disposition for speech the system nearly lost is MAIA's,
+  // not Electron's: the host WIRES it, it does not define it. See
+  // `voice/member-draft.js` for what accepting salvage into the member's draft
+  // means and why a replacement host must inherit it rather than rediscover it.
+  const draft = createMemberDraft();
+  const epoch = createEpochState({ diagnostics, onSalvage: draft.accept });
 
   const vad = createVad();
   const utterance = createUtteranceBuffer();

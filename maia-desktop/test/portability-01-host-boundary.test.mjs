@@ -40,6 +40,7 @@ const PORTABLE_DOMAIN = [
   'session.js', // adapter-shaped: createSession({ app, safeStorage, fetchImpl })
   'voice/epoch.js', 'voice/vad.js', 'voice/utterance.js',
   'voice/wav.js', 'voice/transcription.js', 'voice/diagnostics.js',
+  'voice/member-draft.js', // DSC-FINAL — salvage authorship left the composition root
 ];
 
 // The presentation edge. Speaks an abstract capability surface, never Electron.

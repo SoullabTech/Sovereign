@@ -12,12 +12,14 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
+import { readFileSync } from 'node:fs';
 
 const require = createRequire(import.meta.url);
 const { createVoiceLifecycle } = require('../src/voice-lifecycle.js');
 const { createEpochState } = require('../src/voice/epoch.js');
 const { createCaptureLiveness } = require('../src/capture-liveness.js');
 const { createUtteranceBuffer } = require('../src/voice/utterance.js');
+const { createMemberDraft } = require('../src/voice/member-draft.js');
 
 /** A session whose every effect lands in ONE ordered log. */
 function stubSession(log, o = {}) {
@@ -265,12 +267,12 @@ test('⭐ salvaged speech becomes the member’s draft — it is NOT a completed
   // the epoch's generic callback stub. d01-tail-invariant proves the epoch CALLS
   // onSalvage; nothing proved what Desktop DOES with the call.
   const log = [];
-  const draft = [];
+  // ⭐ DSC-FINAL. The REAL disposition, not a replica of it. Replicating what
+  // main.js does would prove a copy of the rule rather than the rule, and would
+  // keep passing after main.js drifted away from it.
+  const draft = createMemberDraft();
   const diagnostics = { emit: (e, m) => log.push({ e, m }) };
-  const epoch = createEpochState({
-    diagnostics,
-    onSalvage: (text) => { draft.push(text); return true; },   // main.js:newVoiceSession
-  });
+  const epoch = createEpochState({ diagnostics, onSalvage: draft.accept });
 
   epoch.startEpoch();
   epoch.partial('something half-said');
@@ -291,7 +293,7 @@ test('⭐ salvaged speech becomes the member’s draft — it is NOT a completed
 
   lc.captureLost('track_ended');
 
-  assert.deepEqual(draft, ['something half-said'],
+  assert.deepEqual(draft.entries, ['something half-said'],
     'nearly-lost speech did not reach the member’s draft');
   assert.deepEqual(dispatched, [],
     'salvage alone completed a turn — the member never decided the words were final');
@@ -338,4 +340,46 @@ test('⭐ end-to-end: a refusal leaves liveness un-spent for a later real loss',
     'the refusal burned the single recovery a later real loss is entitled to');
   assert.equal(liveness.state, 'starting',
     'the refusal asserted RECOVERING about a session that was being destroyed');
+});
+
+// ── ⭐ DSC-FINAL: the disposition's portable owner carries the rule ──────────
+
+test('⭐ the member draft ACCEPTS salvage — refusing it would declare the words lost', () => {
+  const draft = createMemberDraft();
+  assert.equal(draft.accept('half a thought'), true,
+    'the draft declined salvage — the epoch would report voice_tail_lost and the words are gone');
+});
+
+test('⭐ accepted salvage lands in the member’s draft, in order', () => {
+  const draft = createMemberDraft();
+  draft.accept('first'); draft.accept('second');
+  assert.deepEqual(draft.entries, ['first', 'second']);
+  assert.equal(draft.length, 2, 'the projection reads depth from here');
+});
+
+test('⛔ the draft does nothing but hold — it cannot complete a turn or reach MAIA', () => {
+  const draft = createMemberDraft();
+  assert.deepEqual(Object.keys(draft).sort(), ['accept', 'entries', 'length'],
+    'the member’s draft grew a verb; salvage is not authorship');
+  // The projection may read depth. It may never read the words.
+  assert.equal(typeof draft.length, 'number');
+});
+
+test('⭐ entries are a copy — a reader cannot mutate the member’s draft', () => {
+  const draft = createMemberDraft();
+  draft.accept('mine');
+  draft.entries.push('not mine');
+  assert.deepEqual(draft.entries, ['mine'], 'a reader edited the member’s own material');
+});
+
+test('⭐ main WIRES the disposition, it does not define it', () => {
+  const mainJs = readFileSync(new URL('../src/main.js', import.meta.url), 'utf8')
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+    .split('\n').map((l) => l.replace(/(^|[^:'"`])\/\/.*$/, '$1')).join('\n');
+  assert.ok(/onSalvage:\s*draft\.accept/.test(mainJs),
+    'the host does not consume the portable disposition');
+  assert.ok(!/onSalvage:\s*\(/.test(mainJs),
+    'the composition root defines salvage policy again — a replacement host would have to rediscover it');
+  assert.ok(!/draft\.push/.test(mainJs), 'the host still decides where salvaged speech goes');
+  assert.ok(/createMemberDraft\(\)/.test(mainJs), 'the host no longer builds a member draft at all');
 });
