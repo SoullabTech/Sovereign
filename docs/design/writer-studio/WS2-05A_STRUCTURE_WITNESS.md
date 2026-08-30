@@ -137,6 +137,36 @@ restored reveal   PASS  ?s=7798878c-… restored 139 MAPPING YOUR DEVELOPMENT,
                         leaving it off-screen
 ```
 
+### Machine-verified, and re-runnable
+
+`scripts/ws2-witness-browser.ts` on `fbd3795a4`, against the real book:
+
+```text
+1 · load
+  ok  the outline rendered                                   174 rows
+  ok  the bundle is post-R1 (no "not yet placed" group)
+2 · the column reads as the book
+  ok  sections are drawn in ascending manuscript order        0 … 173
+  ok  every section is drawn once
+3 · sticky chrome
+  ok  the organise control survives a scroll                  scrolled 1200px
+  ok  and does not move with the list                         top 147 → 147
+4 · place
+  ok  the location names the section by uuid, not by ordinal  a9d38b80-…
+  ok  reload returns to the same section                      100 (wanted 100)
+  ok  and the outline reveals it rather than leaving it off-screen
+5 · history
+  ok  each click changed the place
+  ok  one Back press leaves the Work rather than retracing    /writers-studio
+
+PASS — 0 failed
+```
+
+Every line above was previously a request for a person to look at something and
+report. It now runs in seconds and can be re-run on any commit, which means
+these properties stop being a one-time observation and become a standing
+guarantee.
+
 **A stale bundle was misread as a defect first**, and that is the process
 finding rather than a product one. An earlier capture showed `63 … 69` followed
 by a `NOT YET PLACED` group holding `0. 1. 2. 3.` — which is pre-R1 rendering,
