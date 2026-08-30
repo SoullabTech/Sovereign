@@ -35,124 +35,8 @@
  */
 
 import { query } from '../lib/db/postgres';
-import { diff, type Op } from './lib/myers';
-import { composeCurrent, composeLegacyHashHeadings, type SourceSection } from './lib/composers';
-
-/**
- * The current composer, instrumented to report — from inside the composition,
- * not from inspecting the output — which line index carries each section's
- * heading and where each section boundary falls.
- */
-export function composeCurrentWithMarks(sections: SourceSection[]) {
-  const lines: string[] = [];
-  /** line index of section i's heading line, or null when the section has none */
-  const headingLineOf: (number | null)[] = [];
-  /** line index where section i begins */
-  const boundaryLineOf: number[] = [];
-
-  for (const s of sections) {
-    boundaryLineOf.push(lines.length);
-    const h = s.heading?.trim();
-    if (h) {
-      headingLineOf.push(lines.length);
-      lines.push(h);
-      lines.push('');
-    } else {
-      headingLineOf.push(null);
-    }
-    lines.push(...s.body.split('\n'));
-    lines.push('');
-  }
-  return { lines, headingLineOf, boundaryLineOf };
-}
-
-export interface LineProof {
-  headedCount: number;
-  exactLegacy: number;
-  otherHeadingDiff: number;
-  bodyDiff: number;
-  resolved: number;
-  boundaries: number;
-  unresolved: number[];
-}
-
-/**
- * The per-line pass, over an already-composed pair of texts. Extracted so it
- * can be exercised on synthetic manuscripts without a database — an
- * instrument that has never been run against a known answer is not evidence.
- */
-export function proveLines(
-  aLines: string[],
-  bLines: string[],
-  headingLineOf: (number | null)[],
-  boundaryLineOf: number[],
-): LineProof {
-  const headedCount = headingLineOf.filter((l) => l !== null).length;
-  const headingLineSet = new Map<number, number>(); // source line -> section index
-  headingLineOf.forEach((l, i) => { if (l !== null) headingLineSet.set(l, i); });
-
-  /* ── Per-line proof against the current composer. Every difference must be
-     accounted for by the known historical transform, or it is a real edit. */
-  const ops = diff(aLines, bLines);
-
-  let exactLegacy = 0;          // heading line, current === "# " + source
-  let otherHeadingDiff = 0;     // heading line, but NOT the legacy form
-  let bodyDiff = 0;             // any changed line that is not a heading line
-  const changedHeadingSections = new Set<number>();
-
-  /* Walk the ops. A heading rewritten in place shows as a deletion run
-     immediately followed by an insertion run; the k-th deleted line and the
-     k-th inserted line are the same line before and after. Any surplus on
-     either side is text that appeared or vanished outright. */
-  for (let i = 0; i < ops.length; i++) {
-    const o = ops[i];
-    if (o.type === 'eq') continue;
-
-    const del = o.type === 'del' ? o : null;
-    const next = ops[i + 1];
-    const ins = o.type === 'ins'
-      ? o
-      : (next && next.type === 'ins' ? next : null);
-    if (del && ins) i++; // the paired insertion is consumed here
-
-    const dCount = del ? del.aEnd - del.aStart : 0;
-    const iCount = ins ? ins.bEnd - ins.bStart : 0;
-    const paired = Math.min(dCount, iCount);
-
-    for (let k = 0; k < paired; k++) {
-      const aLine = del!.aStart + k;
-      const bLine = ins!.bStart + k;
-      const sectionIdx = headingLineSet.get(aLine);
-      if (sectionIdx === undefined) { bodyDiff++; continue; }
-      changedHeadingSections.add(sectionIdx);
-      if (bLines[bLine] === `# ${aLines[aLine]}`) exactLegacy++;
-      else otherHeadingDiff++;
-    }
-    for (let k = paired; k < dCount; k++) {
-      const aLine = del!.aStart + k;
-      if (headingLineSet.has(aLine)) otherHeadingDiff++; else bodyDiff++;
-    }
-    bodyDiff += Math.max(0, iCount - paired);
-  }
-
-  /* ── Boundary resolution. A boundary is uniquely located when its source
-     line sits in an unchanged run, or is a heading line rewritten 1:1 between
-     two unchanged runs — in both cases exactly one position corresponds. */
-  const eqRuns = ops.filter((o): o is Extract<Op, { type: 'eq' }> => o.type === 'eq');
-  const inEq = (aLine: number) => eqRuns.some((r) => aLine >= r.aStart && aLine < r.aEnd);
-  let resolved = 0;
-  const unresolved: number[] = [];
-  boundaryLineOf.forEach((aLine, i) => {
-    const headingLine = headingLineOf[i];
-    if (inEq(aLine)) { resolved++; return; }
-    /* the section's first line changed — resolved iff it is its own heading
-       line and that heading is accounted for by the legacy transform */
-    if (headingLine === aLine && changedHeadingSections.has(i) && otherHeadingDiff === 0) { resolved++; return; }
-    unresolved.push(i);
-  });
-
-  return { headedCount, exactLegacy, otherHeadingDiff, bodyDiff, resolved, boundaries: boundaryLineOf.length, unresolved };
-}
+import { type SourceSection } from './lib/composers';
+import { classifyDraft } from './lib/draftProof';
 
 async function main() {
   const id = process.argv[2];
@@ -170,35 +54,15 @@ async function main() {
 
   const sections = secs.rows;
   const current = dr.rows[0].content;
-  const { lines: aLines, headingLineOf, boundaryLineOf } = composeCurrentWithMarks(sections);
-  const bLines = current.split('\n');
 
-  /* Self-check before any claim is made: every line this instrument calls a
-     heading must literally hold that section's heading. The whole proof rests
-     on heading identity coming from manuscript_sections rather than from a
-     line's position, so the mapping is verified, not assumed. */
-  headingLineOf.forEach((line, i) => {
-    const h = sections[i].heading?.trim();
-    if (line === null) { if (h) { console.error(`section ${i} has a heading but no heading line`); process.exit(1); } return; }
-    if (aLines[line] !== h) { console.error(`heading line accounting drifted at section ${i}`); process.exit(1); }
-  });
+  const { classification, wholeText, proof, perLineAgrees } = classifyDraft(sections, current);
+  const { headedCount, exactLegacy, otherHeadingDiff, bodyDiff, resolved, boundaries, unresolved } = proof;
 
   console.log(`\nWS2-04A STAGE 2.1 — LEGACY COMPOSER PROOF — ${id}\n`);
-
-  /* ── The decisive test, before any diff: whole-text equality against each
-     named composer. A draft either IS one composer's output or it is not. */
-  const wholeText: Record<string, boolean> = {
-    'current': composeCurrent(sections) === current,
-    'legacy(# headings)': composeLegacyHashHeadings(sections) === current,
-  };
   console.log('  whole-draft byte equality');
-  for (const [name, eq] of Object.entries(wholeText)) {
-    console.log(`    ${name.padEnd(20)} ${eq ? 'EXACT MATCH' : 'differs'}`);
-  }
+  console.log(`    current              ${wholeText.current ? 'EXACT MATCH' : 'differs'}`);
+  console.log(`    legacy(# headings)   ${wholeText.legacy ? 'EXACT MATCH' : 'differs'}`);
   console.log('');
-
-  const { headedCount, exactLegacy, otherHeadingDiff, bodyDiff, resolved, unresolved } =
-    proveLines(aLines, bLines, headingLineOf, boundaryLineOf);
 
   console.log('  structural facts');
   console.log(`    sections                    ${sections.length}`);
@@ -206,62 +70,40 @@ async function main() {
   console.log(`    exact legacy "# " matches   ${exactLegacy}`);
   console.log(`    other heading differences   ${otherHeadingDiff}`);
   console.log(`    body differences            ${bodyDiff}`);
-  console.log(`    boundaries resolved         ${resolved}/${boundaryLineOf.length}`);
+  console.log(`    boundaries resolved         ${resolved}/${boundaries}`);
   console.log('');
 
-  /* ── Classification.
-     WHOLE-DRAFT EQUALITY IS THE ONLY PROMOTING EVIDENCE. The per-line
-     analysis explains WHY a draft matches; it may never promote one into a
-     historical-composer class on its own.
-
-     The case that forced this: a draft with some headings in the legacy "# "
-     form and some in the current plain form, body untouched, boundaries all
-     resolvable. No composer that ever ran produced that hybrid — it is a
-     partially edited draft — yet a predicate satisfied by "every difference
-     I can see is legacy-shaped" would have called it LEGACY_COMPOSER_VARIANT
-     and mechanically discarded a member's edits as scaffolding.
-
-     So: a draft is the legacy composer's output or it is not. */
-  const legacyWholeDraft = wholeText['legacy(# headings)'] === true;
-
-  /* Independent per-line corroboration. Not evidence for the class — a check
-     that the two instruments tell the same story. */
-  const perLineAgrees =
-    exactLegacy === headedCount &&
-    otherHeadingDiff === 0 &&
-    bodyDiff === 0 &&
-    resolved === boundaryLineOf.length;
-
-  const isLegacy = legacyWholeDraft && perLineAgrees;
-
-  if (wholeText['current']) {
+  /* Report the verdict. The RULE lives in scripts/lib/draftProof.ts and is
+     shared with the census, so the two instruments cannot drift apart. */
+  if (classification === 'PRISTINE') {
     console.log('  CLASSIFICATION: PRISTINE');
     console.log("    The draft is byte-for-byte the current composer's output.");
-  } else if (isLegacy) {
+  } else if (classification === 'LEGACY_COMPOSER_VARIANT') {
     console.log('  CLASSIFICATION: LEGACY_COMPOSER_VARIANT');
     console.log('    whole draft byte-identical to assembleManuscriptMarkdown');
     console.log(`    ${exactLegacy}/${headedCount} heading differences are exactly the historical "# " form`);
     console.log('    0 body differences');
-    console.log(`    ${resolved}/${boundaryLineOf.length} boundaries resolved`);
+    console.log(`    ${resolved}/${boundaries} boundaries resolved`);
     console.log('');
     console.log('    This draft was composed before 5f50f6790 and has not been edited.');
     console.log('    No Structure Adoption review is owed the writer: there is nothing');
     console.log('    of theirs to review. The obsolete "# " scaffold can be removed');
     console.log('    mechanically, preserving every member-authored body character.');
-  } else if (legacyWholeDraft) {
-    /* The decisive test passed and the corroborating one did not. That is a
-       fault in this instrument, not a finding about the book, and it must not
-       resolve into either class by default. */
+  } else if (classification === 'WITHHELD') {
     console.log('  CLASSIFICATION: WITHHELD — instruments disagree');
     console.log('    The whole draft IS byte-identical to the legacy composer, but the');
     console.log('    per-line pass does not account for every difference:');
     console.log(`      exact legacy "# " matches   ${exactLegacy} (expected ${headedCount})`);
     console.log(`      other heading differences   ${otherHeadingDiff} (expected 0)`);
     console.log(`      body differences            ${bodyDiff} (expected 0)`);
-    console.log(`      boundaries resolved         ${resolved}/${boundaryLineOf.length}`);
+    console.log(`      boundaries resolved         ${resolved}/${boundaries}`);
     console.log('');
     console.log('    Fix the line pass before classifying this manuscript. Do not');
     console.log('    migrate on a result the instrument cannot fully explain.');
+  } else if (classification === 'NO_SOURCE') {
+    console.log('  CLASSIFICATION: NO_SOURCE');
+    console.log('    No source sections: this draft was never composed from a Source.');
+    console.log('    A blank page someone started writing on. Nothing to seed FROM.');
   } else {
     console.log('  CLASSIFICATION: EDITED');
     console.log('    The draft matches no composer that ever ran:');
@@ -278,6 +120,7 @@ async function main() {
     console.log('');
     console.log('    Not attributable to a composer change. Member content is at stake.');
   }
+  void perLineAgrees;
   console.log('');
   console.log('  Exact equality only. No heading search, no similarity, no model.');
   console.log('  READ ONLY — nothing was written.\n');

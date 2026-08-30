@@ -14,8 +14,13 @@
 import {
   composeCurrentWithMarks,
   proveLines,
-} from '../ws2-04a-stage21-legacy-proof';
-import { composeLegacyHashHeadings, type SourceSection } from '../lib/composers';
+  classifyDraft,
+} from '../lib/draftProof';
+import {
+  composeCurrent,
+  composeLegacyHashHeadings,
+  type SourceSection,
+} from '../lib/composers';
 
 /** A book with multi-line bodies and one headingless section — the shapes that
     broke earlier line accounting. */
@@ -85,5 +90,45 @@ describe('stage 2.1 per-line proof', () => {
     expect(r.otherHeadingDiff).toBe(0);
     expect(r.bodyDiff).toBe(0);
     expect(r.resolved).toBe(r.boundaries);
+  });
+});
+
+describe('the classification rule (scripts/lib/draftProof.ts)', () => {
+  it('current composer, exact → PRISTINE', () => {
+    expect(classifyDraft(BOOK, composeCurrent(BOOK)).classification).toBe('PRISTINE');
+  });
+
+  it('legacy composer, exact → LEGACY_COMPOSER_VARIANT', () => {
+    expect(classifyDraft(BOOK, composeLegacyHashHeadings(BOOK)).classification)
+      .toBe('LEGACY_COMPOSER_VARIANT');
+  });
+
+  it('no source sections → NO_SOURCE, never EDITED', () => {
+    // a blank page someone started writing on. Calling this EDITED would imply
+    // a Source it never had, and 04A owes it sections, not a review screen.
+    expect(classifyDraft([], 'something typed into an empty room').classification)
+      .toBe('NO_SOURCE');
+  });
+
+  it('an edited body line → EDITED', () => {
+    const draft = composeLegacyHashHeadings(BOOK).replace('beta', 'beta, rewritten');
+    expect(classifyDraft(BOOK, draft).classification).toBe('EDITED');
+  });
+
+  it('THE HYBRID → EDITED, never a composer class', () => {
+    const draft = composeLegacyHashHeadings(BOOK).replace('# Chapter Two\n', 'Chapter Two\n');
+    expect(classifyDraft(BOOK, draft).classification).toBe('EDITED');
+  });
+
+  it('a trailing character is enough to disqualify a composer class', () => {
+    // exactness is the whole point: near-miss is EDITED, not "close enough"
+    expect(classifyDraft(BOOK, composeLegacyHashHeadings(BOOK) + ' ').classification)
+      .toBe('EDITED');
+  });
+
+  it('whole-draft equality is what decides, not the line pass', () => {
+    const v = classifyDraft(BOOK, composeLegacyHashHeadings(BOOK));
+    expect(v.wholeText.legacy).toBe(true);
+    expect(v.perLineAgrees).toBe(true); // corroboration, not the evidence
   });
 });
