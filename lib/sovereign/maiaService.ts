@@ -9,6 +9,12 @@ import { consciousnessWrapper, type ConsciousnessContext } from '../consciousnes
 import { elementalRouter } from '../consciousness/elemental-context-router';
 import { conversationElementalTracker } from '../consciousness/conversation-elemental-tracker';
 import { maiaConversationRouter, type ProcessingProfile } from '../consciousness/processingProfiles';
+// 📖 SITUATED-WORK-DEEP-01 — a situated exchange may not execute a tier that
+// silently drops the context the interface says is present.
+import {
+  containSituatedProfile,
+  summarizeContainmentForLog,
+} from '../writersStudio/situatedProfileContainment';
 import { buildTimeoutFallback } from '../consciousness/maiaFallbacks';
 import { synthesizeMaiaVoice } from '../voice/maiaVoiceService';
 import { consultClaudeForConsciousness, maiaIntegrateConsultation, type ConsultationType } from '../consciousness/claudeConsciousnessService';
@@ -571,6 +577,10 @@ export type PatternMeta = {
 export type MaiaResponse = {
   text: string;
   processingProfile?: ProcessingProfile;
+  /** 📖 SITUATED-WORK-DEEP-01 — what the router chose, when it was contained. */
+  computedProfile?: string;
+  /** Why executed differs from computed. Absent when nothing was contained. */
+  containmentReason?: string;
   processingTimeMs?: number;
   audio?: Buffer;
   provider?: ProviderMeta;  // 🔮 Sovereignty auditing: which model served this response
@@ -3006,11 +3016,40 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
       sessionId: userId ? undefined : sessionId, // Fallback to sessionId if no userId
       // NOTE: atlasContext removed - not yet in router interface (future: elemental routing)
     });
-    const processingProfile = routerResult.profile;
+    /* 📖 SITUATED-WORK-DEEP-01 — temporary execution containment.
+
+       A Writer's Studio conversation can visibly claim "In relation to <Work>"
+       while the router selects DEEP, whose prompt builder composes no addendum
+       of any kind — so the very context the interface says is present would be
+       silently dropped. Until the addenda-channel divergence is repaired, a
+       situated exchange may not enter that tier.
+
+       Keyed off the SERVER-BUILT addendum, never a client claim: the route
+       assigns workSituationAddendum after the `...meta` spread, and leaves it
+       undefined whenever the work id failed to resolve against the member's own
+       row. A forged or foreign id cannot reach containment.
+
+       Both facts are kept. `computedProfile` is what the router wanted and is
+       never overwritten — a containment that erased it would be invisible debt
+       within a week, with telemetry quietly misreporting the router's intent. */
+    const containment = containSituatedProfile(
+      routerResult.profile,
+      typeof (meta as any)?.workSituationAddendum === 'string'
+        && (meta as any).workSituationAddendum.length > 0,
+    );
+    const computedProfile = containment.computed;
+    const processingProfile = containment.executed as typeof routerResult.profile;
 
     // Attach cognitive profile to meta for downstream services
     if (routerResult.meta?.cognitiveProfile) {
       (meta as any).cognitiveProfile = routerResult.meta.cognitiveProfile;
+    }
+
+    if (containment.contained) {
+      console.log(
+        '📖 [MAIA] situated-work DEEP containment',
+        summarizeContainmentForLog(containment),
+      );
     }
 
     console.log(`🚦 Processing Profile: ${processingProfile} | Turn ${turnCount} | Length: ${input.length}`);
@@ -3955,6 +3994,17 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
     return {
       text,
       processingProfile,
+      /* 📖 SITUATED-WORK-DEEP-01. `processingProfile` above is what EXECUTED.
+         These carry what the router computed and why the two differ, so the
+         containment stays visible in telemetry instead of decaying into
+         invisible debt. Absent entirely when nothing was contained — an
+         ordinary turn reports exactly what it did before. */
+      ...(containment.contained
+        ? {
+            computedProfile,
+            containmentReason: containment.reason,
+          }
+        : {}),
       processingTimeMs,
       audio: audioResponse,
       provider,  // 🔮 Sovereignty auditing: request-local, concurrency-safe
