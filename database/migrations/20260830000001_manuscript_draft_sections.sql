@@ -26,6 +26,13 @@
 --     Checking at COMMIT rather than per-statement is what lets a legitimate
 --     edit touch sections and content in either order within one transaction.
 --
+--     The comparison is on bytea, via convert_to(..., 'UTF8'), NOT on text.
+--     Text '=' depends on the column's collation, and PostgreSQL permits
+--     NONDETERMINISTIC collations under which different byte sequences compare
+--     equal. This invariant claims byte-for-byte regardless of environment, so
+--     it must not be able to become false by a collation change no one
+--     connected to a member's manuscript.
+--
 --   - SOURCE STAYS IMMUTABLE. source_section_id is provenance — which Source
 --     section this boundary came from — and nothing more. It is nullable and
 --     ON DELETE SET NULL: losing the provenance link must never cascade into
@@ -108,9 +115,9 @@ BEGIN
     FROM manuscript_draft_sections s
    WHERE s.draft_id = target_draft;
 
-  IF flattened IS DISTINCT FROM draft_content THEN
+  IF convert_to(flattened, 'UTF8') IS DISTINCT FROM convert_to(draft_content, 'UTF8') THEN
     RAISE EXCEPTION
-      'draft % is section-addressable but its sections do not flatten to its content (sections %% chars, content %% chars)',
+      'draft % is section-addressable but its sections do not flatten to its content (sections % chars, content % chars)',
       target_draft, length(flattened), length(draft_content);
   END IF;
 
@@ -140,9 +147,9 @@ BEGIN
     FROM manuscript_draft_sections s
    WHERE s.draft_id = NEW.id;
 
-  IF flattened IS DISTINCT FROM NEW.content THEN
+  IF convert_to(flattened, 'UTF8') IS DISTINCT FROM convert_to(NEW.content, 'UTF8') THEN
     RAISE EXCEPTION
-      'draft % is section-addressable: content must equal the flattening of its sections (sections %% chars, content %% chars)',
+      'draft % is section-addressable: content must equal the flattening of its sections (sections % chars, content % chars)',
       NEW.id, length(flattened), length(NEW.content);
   END IF;
 

@@ -23,6 +23,20 @@ write path takes over.
 | `database/migrations/20260830000001_manuscript_draft_sections.sql` | additive table + two nullable columns + the round-trip constraint triggers |
 | `lib/manuscript/sections/seedInvariant.ts` | `flatten` / `verifyRoundTrip` / `assertRoundTrip` |
 | `lib/manuscript/sections/convertDraft.ts` | `planConversion` (pure) + `convertDraftToSections` (transactional) |
+| `lib/manuscript/sections/draftProof.ts` · `composers.ts` · `myers.ts` | the classification rule, moved out of `scripts/` — production conversion must not depend on instrumentation code |
+| `scripts/ws2-04a-substrate-witness.ts` | the acceptance witness: schema, conversion, idempotency, both trigger directions, cascade, source untouched |
+
+## Witness result
+
+Run against a throwaway PostgreSQL **16.13**, 2026-08-30: **24 passed · 0 failed.**
+`convertDraftToSections` has executed; both deferred triggers have fired and
+aborted; a consistent two-sided write committed; the deletion cascade ran with
+the invariant in place.
+
+Two things that witness did NOT cover, and a dev run should: the copy path
+(`ws2-04a-substrate-witness.ts <manuscript-id>`, which duplicates a real
+manuscript's sections and draft and then proves the original untouched), and
+any draft at production scale — the largest here was four sections.
 
 ## The invariant is enforced in the database, not only in code
 

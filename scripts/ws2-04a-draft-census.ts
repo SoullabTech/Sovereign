@@ -39,8 +39,8 @@
 
 import { createHash } from 'crypto';
 import { query } from '../lib/db/postgres';
-import { COMPOSERS } from './lib/composers';
-import { classifyDraft, type Classification } from './lib/draftProof';
+import { COMPOSERS } from '../lib/manuscript/sections/composers';
+import { classifyDraft, type Classification } from '../lib/manuscript/sections/draftProof';
 
 const sha = (s: string) => createHash('sha256').update(s, 'utf8').digest('hex').slice(0, 12);
 

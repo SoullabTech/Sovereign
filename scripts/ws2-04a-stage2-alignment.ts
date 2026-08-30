@@ -25,7 +25,7 @@
  */
 
 import { query } from '../lib/db/postgres';
-import { diff, type Op } from './lib/myers';
+import { diff, type Op } from '../lib/manuscript/sections/myers';
 
 /** The CURRENT composer (plain headings), plus the offsets and heading line
     indices the alignment needs. Copied rather than imported so this stage

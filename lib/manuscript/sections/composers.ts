@@ -13,7 +13,7 @@
 import {
   assembleManuscriptMarkdown,
   type MemberBookSection,
-} from '../../lib/manuscript/render/assembleMarkdown';
+} from '../render/assembleMarkdown';
 
 export type SourceSection = MemberBookSection;
 

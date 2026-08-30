@@ -35,8 +35,8 @@
  */
 
 import { query } from '../lib/db/postgres';
-import { type SourceSection } from './lib/composers';
-import { classifyDraft } from './lib/draftProof';
+import { type SourceSection } from '../lib/manuscript/sections/composers';
+import { classifyDraft } from '../lib/manuscript/sections/draftProof';
 
 async function main() {
   const id = process.argv[2];

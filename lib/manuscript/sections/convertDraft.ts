@@ -40,7 +40,7 @@
  */
 
 import { transaction, type TransactionClient } from '@/lib/db/postgres';
-import { classifyDraft } from '@/scripts/lib/draftProof';
+import { classifyDraft } from './draftProof';
 import { assertRoundTrip, type DraftSection } from './seedInvariant';
 
 export type ConversionRefusal =

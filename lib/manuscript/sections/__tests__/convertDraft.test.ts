@@ -15,7 +15,7 @@
 
 import { planConversion } from '../convertDraft';
 import { flattenSections } from '../seedInvariant';
-import { composeCurrent, composeLegacyHashHeadings } from '../../../../scripts/lib/composers';
+import { composeCurrent, composeLegacyHashHeadings } from '../composers';
 
 const src = (rows: { heading: string | null; body: string }[]) =>
   rows.map((r, i) => ({ id: `sec-${i}`, ...r }));
@@ -145,12 +145,16 @@ describe('planConversion — the legacy composer', () => {
     expect(plan.slices[1].text.startsWith('# Chapter Two')).toBe(true);
   });
 
-  it('a legacy draft with a body edit still partitions exactly', () => {
+  it('a legacy draft with a body edit IS a resolved-edit seed path', () => {
+    // Asserted, not tolerated. The earlier version of this test passed when
+    // conversion refused, which proved nothing about legacy + body edits.
     const content = composeLegacyHashHeadings(BOOK)
       .replace('It was cold.', 'It was colder than she had expected.');
     const plan = planConversion(content, BOOK);
-    if (!plan.ok) return; // refusal acceptable; loss is not
+    if (!plan.ok) throw new Error(`unexpected refusal: ${plan.refusal}`);
     expect(flattenSections(plan.slices)).toBe(content);
+    expect(plan.slices).toHaveLength(BOOK.length);
+    expect(plan.slices.some((s) => s.text.includes('colder than she had expected'))).toBe(true);
   });
 });
 

@@ -15,12 +15,12 @@ import {
   composeCurrentWithMarks,
   proveLines,
   classifyDraft,
-} from '../lib/draftProof';
+} from '../draftProof';
 import {
   composeCurrent,
   composeLegacyHashHeadings,
   type SourceSection,
-} from '../lib/composers';
+} from '../composers';
 
 /** A book with multi-line bodies and one headingless section — the shapes that
     broke earlier line accounting. */
