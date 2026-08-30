@@ -446,8 +446,19 @@ test('F5 — DS01 opens no IPC channel; navigation stays main\'s authority', () 
   // to MAIA without a verb that carries words to main, and it argued for itself
   // in the allow-list. This number exists to make the NEXT addition deliberate
   // too; it is not a budget to spend.
-  assert.equal(INVOKE_CHANNEL_NAMES.length, 11, 'the ratified invoke allow-list changed size');
+  //
+  // ⭐ 12 since DESKTOP-CONVERSATION-WIRING-01 ratified `maia:playback-ended`,
+  // and this assertion is what forced the argument to be made. RESET-01 §6
+  // requires the turn to return to idle when MAIA STOPS speaking; main holds no
+  // output device and cannot observe that, so the observation has to cross.
+  // Without it, speech-turn creation re-armed while she was still talking and
+  // her own voice came back through the microphone as a member turn. It carries
+  // an observation, not authority — the renderer names no turn, generation or
+  // conversation, and the authority refuses the report if it is late, doubled,
+  // or from a replaced conversation.
+  assert.equal(INVOKE_CHANNEL_NAMES.length, 12, 'the ratified invoke allow-list changed size');
   assert.ok(INVOKE_CHANNEL_NAMES.includes('maia:send-text'));
+  assert.ok(INVOKE_CHANNEL_NAMES.includes('maia:playback-ended'));
   assert.equal(PUSH_CHANNEL_NAMES.length, 6, 'the ratified push allow-list changed size');
 
   for (const source of [shellJs, strip('shell-policy.js')]) {

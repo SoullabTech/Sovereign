@@ -64,6 +64,7 @@ const { createCaptureWatch } = require('./capture-watch');
 const { createContinuity } = require('./continuity');
 const { createTurn } = require('./turn');
 const { createVoiceLifecycle } = require('./voice-lifecycle');
+const { createDesktopConversation } = require('./desktop-conversation');
 
 // Separate userData for a dev launch, so a development instance can never read
 // or corrupt an installed instance's state. (jarvis-desktop precedent.)
@@ -151,9 +152,25 @@ function voiceStateSnapshot() {
   // independently know what idle is. A private literal here would keep asserting
   // the old string if the policy renamed the state — silently, and about
   // liveness, which is the one domain D02A exists to stop lying about.
-  if (!voice) return { active: false, capture: { state: IDLE, cause: null } };
+  // ⭐ DESKTOP-CONVERSATION-WIRING-01. The conversation snapshot rides the
+  // ALREADY-RATIFIED `maia:voice-state-changed` channel rather than a new one.
+  // The preload doctrine says an added channel must argue for itself, and this
+  // one cannot: the snapshot already exists and already reaches the surface.
+  //
+  // ⛔ It is present even with no capture session. The renderer's conversational
+  // display is a projection of THIS, and a projection that vanished whenever the
+  // microphone was off would leave the renderer inventing its own resting state
+  // — which is the competing state machine this unit removes.
+  // ⛔ Named `conversationState`, NOT `conversation`: the module-level
+  // `conversation` is the API client. Shadowing it here would read as the same
+  // thing to the next person, and they are not remotely the same thing.
+  const conversationState = authority.snapshot();
+  if (!voice) {
+    return { active: false, capture: { state: IDLE, cause: null }, conversation: conversationState };
+  }
   return {
     active: true,
+    conversation: conversationState,
     ...voice.epoch.snapshot(),
     vad: voice.vad.state(),
     draft: voice.draft.length,
@@ -171,6 +188,54 @@ function voiceStateSnapshot() {
 }
 
 function pushState() { broadcast('maia:voice-state-changed', voiceStateSnapshot()); }
+
+// ── DESKTOP-CONVERSATION-WIRING-01 — the one conversational authority ───────
+//
+// MAIA-DESKTOP-CONVERSATION-RESET-01 §1. One object knows what Desktop is doing
+// conversationally; every organ reports to it and reads from it. It is created
+// ONCE for the application, not per capture session — its `capture` axis
+// includes `closed`, so a Desktop with the microphone off is still a
+// conversation that exists.
+//
+// ⛔ IT HOLDS NO TRANSPORT AND NO HOST. Main supplies both, exactly as it does
+// for every other portable module in this tree.
+const authority = createDesktopConversation();
+
+/**
+ * Every dispatch goes through here, because two host obligations hang off the
+ * authority's transitions and neither belongs inside a pure module.
+ *
+ * ⭐ 1. RE-ARM MEANS EMPTYING THE TURN WINDOW. Frames accumulate continuously
+ * — that is the pre-roll rule in `voice/utterance.js` — so while MAIA is being
+ * asked and is speaking, the buffer fills with the pause, the room, and MAIA's
+ * own voice coming back through the microphone. On the transition back to
+ * `idle` that audio is discarded, ACCOUNTED, because it is not the member's
+ * next utterance. Without this the ten-turn walk prepends MAIA's last reply to
+ * whatever the member says next.
+ *
+ * ⭐ 2. AN ACCEPTED TRANSITION IS PUSHED TO THE SURFACE. A refusal is not
+ * pushed on its own — refused VAD events are ordinary during MAIA's reply and
+ * would be pure noise — but the refusal counter rides the next accepted push,
+ * so nothing is lost, only deferred.
+ */
+function conversationDispatch(event) {
+  const before = authority.snapshot();
+  const out = authority.dispatch(event);
+  const after = out.snapshot;
+
+  if (before.turn.state !== 'idle' && after.turn.state === 'idle' && voice) {
+    const samples = voice.utterance.discard();
+    if (samples > 0) {
+      voice.diagnostics.emit('voice_utterance_discarded', {
+        samples,
+        reason: after.lastTurnEnd ? after.lastTurnEnd.reason : 'turn_ended',
+      });
+    }
+  }
+
+  if (out.accepted) pushState();
+  return out;
+}
 
 // ── MAIA-D02A: capture supervision ──────────────────────────────────────────
 //
@@ -202,6 +267,7 @@ const lifecycle = createVoiceLifecycle({
   announce: () => pushState(),
   dispatchTurn: () => { void turn.run(); },
   revokeSession: () => { voice = null; },
+  authority: { dispatch: conversationDispatch, snapshot: () => authority.snapshot() },
   projectState: () => voiceStateSnapshot(),
 });
 
@@ -264,18 +330,52 @@ ipcMain.handle('maia:send-text', async (_evt, payload) => {
   if (!memberSession || !memberSession.state().signedIn || !conversation) {
     return { ok: false, error: 'sign in before writing' };
   }
-  // One turn at a time, shared with the voice path — a typed message must not
-  // interleave with a spoken one and produce two half-turns in the thread.
-  if (turn.isBusy) return { ok: false, error: 'one turn at a time' };
-
-  // Text and voice are mutually exclusive: a live capture ends with normal
-  // member-Stop semantics first, so the epoch commits rather than being
-  // discarded behind a typed message.
-  const stopped = lifecycle.end();
+  // ⛔ ONE TURN AT A TIME IS THE AUTHORITY'S ANSWER, not a second check here.
+  // `turn.say` dispatches SEND_TEXT and is refused if a turn is already open,
+  // which is the same refusal that disarms speech while the typed turn runs.
+  //
+  // ⭐ RESET-01 §7 — CAPTURE IS NOT CLOSED. This used to call `lifecycle.end()`
+  // first, on the reasoning that text and voice are mutually exclusive. They
+  // are not: there is one conversation and two ways of speaking into it. Ending
+  // capture meant a member who typed one line had to press Start again to speak
+  // — and it tore down the microphone in the middle of a live conversation,
+  // which is exactly the teardown-and-recreate loop the reset forbids. The
+  // typed turn now traverses the ordinary grammar and leaves the session where
+  // it found it: capture=open / turn=idle.
   const out = await turn.say(said);
   return out === 'completed' || out === 'revoked'
-    ? { ok: true, stoppedCapture: !!(stopped && stopped.ok) }
+    ? { ok: true }
     : { ok: false, error: 'the turn did not complete' };
+});
+
+// ── RESET-01 §6 — the half-duplex handoff ───────────────────────────────────
+//
+// ⭐ THE ELEVENTH CHANNEL, AND WHY IT HAD TO EXIST. Until now nothing told main
+// when MAIA stopped speaking. `speak()` broadcast the audio and the turn was
+// considered over on the same tick — so speech-turn creation re-armed while she
+// was still talking, her voice arrived back through the microphone, and the VAD
+// authored a turn out of it. There is no way to observe playback completion
+// from main: only the renderer holds the output device. So the renderer reports
+// it, and the authority decides what it means.
+//
+// ⛔ It reports; it does not assert. Like `voiceMicResult`, this is an
+// observation of something only the renderer can see. The authority refuses it
+// if the turn is not `maia_speaking`, refuses it twice, and refuses it for a
+// stale generation or turn — so a renderer that fired it wrongly, repeatedly,
+// or late cannot move a conversation it no longer belongs to.
+ipcMain.handle('maia:playback-ended', async (_evt, payload) => {
+  const ok = !(payload && payload.ok === false);
+  const reason = payload && typeof payload.reason === 'string'
+    ? payload.reason.slice(0, 120) : 'unknown';
+  const out = conversationDispatch(
+    ok ? { type: 'PLAYBACK_ENDED' } : { type: 'PLAYBACK_FAILED', reason });
+  if (!out.accepted) {
+    return { ok: false, reason: out.refusal && out.refusal.reason };
+  }
+  // The member may speak again this instant, and the surface is told so through
+  // the same phase vocabulary every other turn ending uses.
+  broadcast('maia:turn', { phase: 'idle' });
+  return { ok: true };
 });
 
 ipcMain.handle('maia:voice-state', async () => voiceStateSnapshot());
@@ -310,6 +410,7 @@ const turn = createTurn({
   authorized: () => Boolean(memberSession && memberSession.state().signedIn),
   diagnostic: (event, meta) =>
     broadcast('maia:voice-event', { event, surface: 'desktop', at: Date.now(), ...meta }),
+  authority: { dispatch: conversationDispatch, snapshot: () => authority.snapshot() },
 });
 
 // ── conversation continuity ─────────────────────────────────────────────────
@@ -322,8 +423,21 @@ const turn = createTurn({
 const continuity = createContinuity({
   conversation: () => conversation,
   session: () => memberSession,
-  publish: (payload) => broadcast('maia:thread', payload),
+  publish: (payload) => {
+    // ⭐ The authority owns the thread. Adoption at launch/sign-in establishes
+    // it; a rejoin is only reachable when the conversation was NOT pinned,
+    // because `conversationActive` deferred it otherwise.
+    if (payload && payload.conversationId) {
+      conversationDispatch({ type: 'THREAD_ADOPTED', threadId: payload.conversationId });
+    }
+    broadcast('maia:thread', payload);
+  },
   turnInFlight: () => turn.isBusy,
+  // ⭐ RESET-01 §5, wired. Detection keeps its eyes; it loses its hands while
+  // the member is in the room. `threadPinned` is true whenever the microphone
+  // is open or a turn is underway — which is precisely the window in which
+  // replacing the conversation would redraw it underneath them.
+  conversationActive: () => authority.snapshot().threadPinned,
 });
 
 // ── destinations · navigation · the application menu ────────────────────────

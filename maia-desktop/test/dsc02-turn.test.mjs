@@ -14,6 +14,24 @@ import { createRequire } from 'node:module';
 
 const require = createRequire(import.meta.url);
 const { createTurn, TURN_OUTCOME } = require('../src/turn.js');
+const { createDesktopConversation } = require('../src/desktop-conversation.js');
+
+/**
+ * ⭐ DESKTOP-CONVERSATION-WIRING-01. These tests now drive the REAL authority,
+ * not a stub of it. `turn.js` holds no `busy` flag any more: whether a turn may
+ * open, whether a result is still current, and whether one is in flight are all
+ * the authority's answers, so a fake here would prove nothing about the wiring.
+ *
+ * `openUtterance()` is what `voice-lifecycle` does before calling `run()` — a
+ * VAD boundary the authority accepted. Calling `run()` without it is exactly
+ * the caller-did-not-ask case, and it is asserted separately.
+ */
+function liveAuthority() {
+  const a = createDesktopConversation();
+  a.dispatch({ type: 'START_VOICE' });
+  a.dispatch({ type: 'CAPTURE_OPENED' });
+  return a;
+}
 
 /** A voice session stub. `log` is shared so epoch writes and announcements interleave in ONE order. */
 function stubVoice(log, o = {}) {
@@ -46,24 +64,39 @@ function wire(o = {}) {
   const voice = o.voice === undefined ? stubVoice(log, o) : o.voice;
   const conv = o.conv === undefined ? stubConv(log, o) : o.conv;
   let v = voice, c = conv;
+  const authority = o.authority || liveAuthority();
   const t = createTurn({
     voice: () => v,
     conversation: () => c,
     announce: (p) => log.push(p),
     speak: (a) => log.push({ spoke: a }),
+    authority,
     authorized: o.authorized || (() => true),
     diagnostic: (event, meta) => log.push({ diagnostic: event, meta }),
     now: () => 1234,
   });
-  return { t, log, setVoice: (x) => { v = x; }, setConv: (x) => { c = x; },
+  /** One accepted VAD boundary, then the turn — the real call sequence. */
+  const speak = async () => {
+    authority.dispatch({ type: 'VAD_SPEECH_STARTED' });
+    const opened = authority.dispatch({ type: 'VAD_UTTERANCE_BOUNDARY' });
+    // ⛔ EXACTLY WHAT voice-lifecycle DOES: a refused boundary dispatches no
+    // turn. A harness that called `run()` anyway would be testing a caller
+    // that does not exist, and would hide the refusal it is meant to prove.
+    if (!opened.accepted) return TURN_OUTCOME.SKIPPED;
+    return t.run();
+  };
+  /** Finish MAIA's reply, as the renderer's playback report does. */
+  const endPlayback = () => authority.dispatch({ type: 'PLAYBACK_ENDED' });
+  return { t, log, authority, speak, endPlayback,
+           setVoice: (x) => { v = x; }, setConv: (x) => { c = x; },
            phases: () => log.filter((e) => e.phase).map((e) => e.phase) };
 }
 
 // ── the whole turn ──────────────────────────────────────────────────────────
 
 test('a complete turn: transcribing → heard → thinking → answered → voice', async () => {
-  const { t, log, phases } = wire();
-  await t.run();
+  const { t, speak, log, phases } = wire();
+  await speak();
   assert.deepEqual(phases(), ['transcribing', 'heard', 'thinking', 'answered']);
   assert.equal(log.find((e) => e.phase === 'heard').member, 'hello maia', 'the transcript is not trimmed');
   assert.equal(log.find((e) => e.phase === 'answered').maia, 'hello');
@@ -71,31 +104,31 @@ test('a complete turn: transcribing → heard → thinking → answered → voic
 });
 
 test('⭐ words before voice, always — the surface never speaks what it has not shown', async () => {
-  const { t, log } = wire();
-  await t.run();
+  const { t, speak, log } = wire();
+  await speak();
   const answered = log.findIndex((e) => e.phase === 'answered');
   const spoke = log.findIndex((e) => e.spoke);
   assert.ok(answered >= 0 && spoke > answered, 'audio was emitted before the words — text and voice diverge');
 });
 
 test('no audio in the answer — the member is told, and is never both', async () => {
-  const { t, log, phases } = wire({ ask: () => ({ ok: true, text: 'hello', audio: null }) });
-  await t.run();
+  const { t, speak, log, phases } = wire({ ask: () => ({ ok: true, text: 'hello', audio: null }) });
+  await speak();
   assert.deepEqual(phases(), ['transcribing', 'heard', 'thinking', 'answered', 'no-voice']);
   assert.equal(log.filter((e) => e.spoke).length, 0);
 });
 
 test('the real sample rate reaches transcription — a wrong one transcribes a chipmunk', async () => {
-  const { t, log } = wire({ sampleRate: 16000 });
-  await t.run();
+  const { t, speak, log } = wire({ sampleRate: 16000 });
+  await speak();
   assert.equal(log.find((e) => e.transcribe).transcribe.rate, 16000);
 });
 
 // ── ⛔ ORDERING 1: nothing is recorded that canonical MAIA did not return ────
 
 test('⭐ an empty transcript records NO epoch final, and never asks MAIA', async () => {
-  const { t, log, phases } = wire({ transcribe: () => ({ ok: true, text: '   ' }) });
-  await t.run();
+  const { t, speak, log, phases } = wire({ transcribe: () => ({ ok: true, text: '   ' }) });
+  await speak();
   assert.deepEqual(phases(), ['transcribing', 'idle']);
   assert.equal(log.filter((e) => 'epochFinal' in e).length, 0,
     'the tail invariant is now protecting material the member never said');
@@ -103,8 +136,8 @@ test('⭐ an empty transcript records NO epoch final, and never asks MAIA', asyn
 });
 
 test('⭐ a failed transcription records NO epoch final, and never asks MAIA', async () => {
-  const { t, log, phases } = wire({ transcribe: () => ({ ok: false, error: 'whisper down' }) });
-  await t.run();
+  const { t, speak, log, phases } = wire({ transcribe: () => ({ ok: false, error: 'whisper down' }) });
+  await speak();
   assert.deepEqual(phases(), ['transcribing', 'error']);
   assert.equal(log.find((e) => e.phase === 'error').error, 'whisper down');
   assert.equal(log.filter((e) => 'epochFinal' in e).length, 0,
@@ -113,9 +146,9 @@ test('⭐ a failed transcription records NO epoch final, and never asks MAIA', a
 });
 
 test('⭐ the final is recorded BEFORE the member is told they were heard', async () => {
-  const { t, log } = wire();
+  const { t, speak, log } = wire();
   assert.equal(log.findIndex((e) => 'epochFinal' in e), -1, 'sanity: nothing recorded before the run');
-  await t.run();
+  await speak();
   const f = log.findIndex((e) => 'epochFinal' in e);
   const heard = log.findIndex((e) => e.phase === 'heard');
   assert.ok(f >= 0 && heard > f,
@@ -133,16 +166,16 @@ test('⭐ the final is recorded BEFORE the member is told they were heard', asyn
 // test holds — is that a cough must not LEAVE the flag set, because a leaked
 // flag defers thread adoption forever. The dangerous mutation fails 2 tests.
 test('⭐ silence or a cough never enters the busy state — continuity is not stalled', async () => {
-  const { t, log } = wire({ empty: true });
-  await t.run();
+  const { t, speak, log } = wire({ empty: true });
+  await speak();
   assert.deepEqual(log, [], 'a cough announced a turn phase');
   assert.equal(t.isBusy, false);
 });
 
 test('the guard is silent when there is no voice session or no conversation', async () => {
-  const a = wire({ voice: null }); await a.t.run();
+  const a = wire({ voice: null }); await a.speak();
   assert.deepEqual(a.log, []);
-  const b = wire({ conv: null }); await b.t.run();
+  const b = wire({ conv: null }); await b.speak();
   assert.deepEqual(b.log, [], 'a turn ran without a conversation to have it with');
 });
 
@@ -153,62 +186,102 @@ test('⭐ one turn at a time — a second dispatch mid-turn does nothing', async
   // squarely mid-turn.
   let release;
   const gate = new Promise((r) => { release = r; });
-  const log2 = [];
-  const t2 = createTurn({
-    voice: () => stubVoice(log2),
-    conversation: () => ({
-      transcribe: async () => { await gate; return { ok: true, text: 'hi' }; },
-      ask: async () => ({ ok: true, text: 'yes', audio: null }),
-    }),
-    announce: (p) => log2.push(p),
-    speak: () => {},
-    now: () => 1,
+  const w = wire({
+    transcribe: async () => { await gate; return { ok: true, text: 'hi' }; },
+    ask: () => ({ ok: true, text: 'yes', audio: null }),
   });
-  const first = t2.run();
-  assert.equal(t2.isBusy, true, 'a turn in flight does not report itself busy — continuity would adopt mid-turn');
-  await t2.run();                                  // second dispatch, while busy
-  assert.equal(log2.filter((e) => e.phase === 'transcribing').length, 1, 'two turns ran at once');
+  const first = w.speak();
+  assert.equal(w.t.isBusy, true, 'a turn in flight does not report itself busy — continuity would adopt mid-turn');
+
+  // ⭐ THE SECOND DISPATCH IS NOW REFUSED BY THE AUTHORITY, not by a local
+  // flag. `speak()` offers a VAD boundary; the authority refuses it as
+  // `input_disarmed`, and the turn never opens — so `run` is never reached.
+  await w.speak();
+  assert.equal(w.log.filter((e) => e.phase === 'transcribing').length, 1, 'two turns ran at once');
+  // Precisely: the opening event is what the authority refuses. Asserting on
+  // `lastRefusal` would read the BOUNDARY's refusal, which is a consequence.
+  const denied = w.authority.dispatch({ type: 'VAD_SPEECH_STARTED' });
+  assert.equal(denied.refusal.reason, 'input_disarmed');
+
   release();
   await first;
-  assert.equal(t2.isBusy, false, 'busy leaked after a completed turn — every later turn is frozen');
+  // No audio in this answer, so the turn completes outright.
+  assert.equal(w.t.isBusy, false, 'the turn leaked — every later turn is frozen');
+});
+
+test('⭐ RESET-01 §6 — with audio the turn stays open until playback reports ended', async () => {
+  // The old contract ended the turn the instant the audio was handed over,
+  // which re-armed speech-turn creation while MAIA was still talking. Her voice
+  // then came back through the microphone and authored a turn.
+  const { t, speak, endPlayback, authority } = wire();
+  await speak();
+  assert.equal(authority.snapshot().turn.state, 'maia_speaking');
+  assert.equal(t.isBusy, true, 'the turn ended while MAIA was still speaking');
+
+  // ⛔ And a VAD boundary during playback opens nothing.
+  authority.dispatch({ type: 'VAD_SPEECH_STARTED' });
+  assert.equal(authority.snapshot().lastRefusal.reason, 'input_disarmed');
+
+  endPlayback();
+  assert.equal(t.isBusy, false, 'playback ended and the member is still disarmed');
+  assert.equal(authority.snapshot().capture.state, 'open', 'playback closed the capture');
 });
 
 test('⭐ a thrown error is surfaced in words and releases the turn', async () => {
-  const { t, log, phases } = wire({ ask: () => { throw new Error('network exploded'); } });
-  await t.run();
+  const { t, speak, log, phases } = wire({ ask: () => { throw new Error('network exploded'); } });
+  await speak();
   assert.deepEqual(phases(), ['transcribing', 'heard', 'thinking', 'error']);
   assert.equal(log.at(-1).error, 'network exploded');
-  assert.equal(t.isBusy, false, 'a throw leaked the busy flag — turns AND thread adoption are frozen');
+  assert.equal(t.isBusy, false, 'a throw leaked the turn — turns AND thread adoption are frozen');
 });
 
 test('a failed ask is surfaced, and "answered" is never announced', async () => {
-  const { t, log, phases } = wire({ ask: () => ({ ok: false, error: 'maia unreachable' }) });
-  await t.run();
+  const { t, speak, log, phases } = wire({ ask: () => ({ ok: false, error: 'maia unreachable' }) });
+  await speak();
   assert.deepEqual(phases(), ['transcribing', 'heard', 'thinking', 'error']);
   assert.equal(log.at(-1).error, 'maia unreachable');
   assert.equal(t.isBusy, false);
 });
 
-test('busy is released after every terminal path, not just the happy one', async () => {
-  for (const o of [{}, { empty: true }, { transcribe: () => ({ ok: false, error: 'x' }) },
+test('the turn is released after every terminal path, not just the happy one', async () => {
+  // ⛔ EVERY failure path must return the authority to idle. A terminal event
+  // the authority REFUSES is not a terminal event — it leaves the member
+  // disarmed behind an error they have already been shown, which is the exact
+  // defect `failTurn` exists to close.
+  for (const o of [{ empty: true }, { transcribe: () => ({ ok: false, error: 'x' }) },
     { transcribe: () => ({ ok: true, text: '' }) }, { ask: () => ({ ok: false, error: 'y' }) },
-    { ask: () => { throw new Error('z'); } }]) {
-    const { t } = wire(o);
-    await t.run();
-    assert.equal(t.isBusy, false, `busy leaked on ${JSON.stringify(Object.keys(o))}`);
+    { ask: () => { throw new Error('z'); } },
+    { transcribe: () => { throw new Error('t'); } }]) {
+    const { t, speak, authority } = wire(o);
+    await speak();
+    assert.equal(t.isBusy, false, `the turn leaked on ${JSON.stringify(Object.keys(o))}`);
+    assert.equal(authority.snapshot().turn.state, 'idle');
+    // ⛔ And capture is untouched by any of it — the member may speak again.
+    assert.equal(authority.snapshot().capture.state, 'open',
+      `a failed turn closed the capture on ${JSON.stringify(Object.keys(o))}`);
   }
+
+  // The happy path with audio is the one exception, and it is not a leak: the
+  // turn is genuinely still running until MAIA stops speaking.
+  const w = wire();
+  await w.speak();
+  assert.equal(w.t.isBusy, true);
+  w.endPlayback();
+  assert.equal(w.t.isBusy, false);
 });
 
 // ── ⛔ runtime references are re-read, not captured ─────────────────────────
 
 test('⭐ capture stopped mid-turn — the error is surfaced, not written to a dead session', async () => {
   const w = wire({ transcribe: () => ({ ok: true, text: 'hello' }) });
-  const original = w.t.run();
+  const original = w.speak();
   w.setVoice(null);                       // the member stops capture while MAIA transcribes
   await original;
   assert.equal(w.phases().at(-1), 'error',
     'a turn wrote into a session that no longer exists instead of surfacing the loss');
-  assert.equal(w.t.isBusy, false);
+  // ⛔ Released from wherever the authority actually was when it threw.
+  assert.equal(w.t.isBusy, false, 'the member was left disarmed behind a surfaced error');
+  assert.equal(w.authority.snapshot().turn.state, 'idle');
 });
 
 test('the conversation client vanishing while still signed in IS a failure', async () => {
@@ -216,7 +289,7 @@ test('the conversation client vanishing while still signed in IS a failure', asy
   // client went away for some other reason, and that is an operational failure
   // which must still be surfaced.
   const w = wire();
-  const running = w.t.run();
+  const running = w.speak();
   w.setConv(null);
   await running;
   assert.equal(w.phases().at(-1), 'error');
@@ -228,7 +301,7 @@ test('the conversation client vanishing while still signed in IS a failure', asy
 test('⭐ signed out mid-answer — the turn is CANCELLED, not failed', async () => {
   let signedIn = true;
   const w = wire({ authorized: () => signedIn });
-  const running = w.t.run();
+  const running = w.speak();
   signedIn = false;                       // the member signs out while MAIA answers
   const outcome = await running;
 
@@ -244,7 +317,7 @@ test('⭐ signed out mid-answer — the turn is CANCELLED, not failed', async ()
 test('⭐ revocation is explicit internally even though it is silent to the member', async () => {
   let signedIn = true;
   const w = wire({ authorized: () => signedIn });
-  const running = w.t.run();
+  const running = w.speak();
   signedIn = false;
   await running;
   const d = w.log.find((e) => e.diagnostic);
@@ -255,7 +328,7 @@ test('⭐ revocation is explicit internally even though it is silent to the memb
 test('⭐ the surface is not left mid-thought — revocation ends at idle, not silence', async () => {
   let signedIn = true;
   const w = wire({ authorized: () => signedIn });
-  const running = w.t.run();
+  const running = w.speak();
   signedIn = false;
   await running;
   assert.equal(w.phases().at(-1), 'idle',
@@ -265,7 +338,7 @@ test('⭐ the surface is not left mid-thought — revocation ends at idle, not s
 test('⭐ revocation detected at the transcribe boundary, before anything is recorded', async () => {
   let signedIn = true;
   const w = wire({ authorized: () => signedIn, transcribe: () => { signedIn = false; return { ok: true, text: 'hello' }; } });
-  const outcome = await w.t.run();
+  const outcome = await w.speak();
   assert.equal(outcome, TURN_OUTCOME.REVOKED);
   assert.equal(w.log.filter((e) => 'epochFinal' in e).length, 0,
     'a final was recorded on an epoch the member no longer authorises');
@@ -280,7 +353,7 @@ test('⭐ revocation detected at the ASK boundary — after transcription succee
   let signedIn = true;
   const w = wire({ ask: () => { signedIn = false; return { ok: true, text: 'hello', audio: null }; },
     authorized: () => signedIn });
-  const outcome = await w.t.run();
+  const outcome = await w.speak();
   assert.equal(outcome, TURN_OUTCOME.REVOKED);
   assert.equal(w.log.filter((e) => e.phase === 'answered').length, 0,
     'MAIA answered into a session that stopped authorising the turn while she was thinking');
@@ -291,7 +364,7 @@ test('⭐ revocation detected at the ASK boundary — after transcription succee
 test('⭐ a throw caused BY the session going away is revocation, not failure', async () => {
   let signedIn = true;
   const w = wire({ authorized: () => signedIn, ask: () => { signedIn = false; throw new Error('socket closed'); } });
-  const outcome = await w.t.run();
+  const outcome = await w.speak();
   assert.equal(outcome, TURN_OUTCOME.REVOKED);
   assert.equal(w.log.filter((e) => e.phase === 'error').length, 0,
     'a teardown-caused throw was reported to the member as an operational error');
@@ -299,15 +372,15 @@ test('⭐ a throw caused BY the session going away is revocation, not failure', 
 
 test('a genuine failure while still signed in is still a failure', async () => {
   const w = wire({ ask: () => ({ ok: false, error: 'maia unreachable' }) });
-  const outcome = await w.t.run();
+  const outcome = await w.speak();
   assert.equal(outcome, TURN_OUTCOME.FAILED, 'a real failure was misclassified as revocation');
   assert.equal(w.log.at(-1).error, 'maia unreachable');
 });
 
 test('outcomes are named for every terminal path', async () => {
-  assert.equal(await wire().t.run(), TURN_OUTCOME.COMPLETED);
-  assert.equal(await wire({ empty: true }).t.run(), TURN_OUTCOME.SKIPPED);
-  assert.equal(await wire({ transcribe: () => ({ ok: true, text: '  ' }) }).t.run(), TURN_OUTCOME.IDLE);
-  assert.equal(await wire({ transcribe: () => ({ ok: false, error: 'x' }) }).t.run(), TURN_OUTCOME.FAILED);
-  assert.equal(await wire({ voice: null }).t.run(), TURN_OUTCOME.SKIPPED);
+  assert.equal(await wire().speak(), TURN_OUTCOME.COMPLETED);
+  assert.equal(await wire({ empty: true }).speak(), TURN_OUTCOME.SKIPPED);
+  assert.equal(await wire({ transcribe: () => ({ ok: true, text: '  ' }) }).speak(), TURN_OUTCOME.IDLE);
+  assert.equal(await wire({ transcribe: () => ({ ok: false, error: 'x' }) }).speak(), TURN_OUTCOME.FAILED);
+  assert.equal(await wire({ voice: null }).speak(), TURN_OUTCOME.SKIPPED);
 });

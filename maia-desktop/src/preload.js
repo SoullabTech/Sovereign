@@ -44,6 +44,21 @@ contextBridge.exposeInMainWorld('maia', {
   // moment the words exist.
   sendText: (text) => ipcRenderer.invoke('maia:send-text', { text }),
 
+  // ── RESET-01 §6: the half-duplex handoff ──────────────────────────────────
+  // ⭐ THE ELEVENTH CHANNEL, and it had to argue for itself.
+  //
+  // Only the renderer holds an output device, so only the renderer can observe
+  // that MAIA finished speaking. Without this, main re-armed speech-turn
+  // creation the instant the audio was handed over — while she was still
+  // talking — and her voice came back through the microphone as a member turn.
+  //
+  // ⛔ It carries an OBSERVATION, not authority, exactly like `voiceMicResult`.
+  // The renderer cannot name a turn, a generation, or a conversation: main
+  // supplies all three from the authority, which refuses the report if the turn
+  // is not `maia_speaking`, if it arrives twice, or if it belongs to a
+  // conversation that has since been replaced.
+  playbackEnded: (ok, reason) => ipcRenderer.invoke('maia:playback-ended', { ok, reason }),
+
   // ── read-only ─────────────────────────────────────────────────────────────
   getVoiceState: () => ipcRenderer.invoke('maia:voice-state'),
   getStatus: () => ipcRenderer.invoke('maia:status'),

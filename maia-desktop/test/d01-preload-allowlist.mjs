@@ -42,6 +42,8 @@ export const RATIFIED_INVOKE_CHANNELS = [
   //                     it did not already have by speaking aloud.
   { channel: 'maia:send-text', ratified_in: 'DESKTOP-TEXT-01',
     purpose: 'Send a typed message to the SAME MAIA the member speaks to. Main trims and caps the text, ends any live capture with normal member-Stop semantics first (text and voice are mutually exclusive), and delivers it through the one shared turn path — same route, same thread, same context assembly, same rendering. The renderer names nothing but the words.' },
+  { channel: 'maia:playback-ended', ratified_in: 'DESKTOP-CONVERSATION-WIRING-01',
+    purpose: 'RESET-01 §6, the half-duplex handoff. Only the renderer holds an output device, so only the renderer can observe that MAIA finished speaking; without the report, main re-armed speech-turn creation while she was still talking and her voice returned through the microphone as a member turn. It carries an OBSERVATION, not authority — like maia:voice-mic-result. The renderer names no turn, generation or conversation; the authority supplies all three and refuses the report if the turn is not maia_speaking, if it arrives twice, or if it belongs to a replaced conversation.' },
   { channel: 'maia:status', ratified_in: 'MAIA-D01',
     purpose: 'Read app identity and build stamp. Read-only. An unstamped build reports UNSTAMPED rather than a fabricated SHA.' },
 ];

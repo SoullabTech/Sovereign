@@ -18,6 +18,17 @@ import { fileURLToPath } from 'node:url';
 
 const require = createRequire(import.meta.url);
 const { createVoiceLifecycle, REVOCATION_CAUSES } = require('../src/voice-lifecycle.js');
+const { createDesktopConversation } = require('../src/desktop-conversation.js');
+
+/**
+ * ⭐ DESKTOP-CONVERSATION-WIRING-01. The REAL authority, not a stub.
+ *
+ * The lifecycle no longer dispatches a turn on every VAD boundary — it offers
+ * the boundary to `DesktopConversation` and dispatches only if it was accepted.
+ * A stubbed authority that accepted everything would prove the opposite of what
+ * these assertions are for.
+ */
+function liveAuthority() { return createDesktopConversation(); }
 const { createEpochState } = require('../src/voice/epoch.js');
 const { createCaptureLiveness } = require('../src/capture-liveness.js');
 const { createUtteranceBuffer } = require('../src/voice/utterance.js');
@@ -52,6 +63,7 @@ function stubSession(log, o = {}) {
 function wire(o = {}) {
   const log = [];
   let v = o.session === undefined ? stubSession(log, o) : o.session;
+  const authority = o.authority || liveAuthority();
   const lc = createVoiceLifecycle({
     voice: () => v,
     watch: { start: () => log.push({ watch: 'start' }), stop: () => log.push({ watch: 'stop' }) },
@@ -59,8 +71,9 @@ function wire(o = {}) {
     dispatchTurn: () => log.push({ dispatched: true }),
     revokeSession: () => { log.push({ revoked: true }); v = null; },
     projectState: () => ({ snapshotOf: v ? 'live' : 'idle' }),
+    authority,
   });
-  return { lc, log, session: () => v, setSession: (x) => { v = x; },
+  return { lc, log, authority, session: () => v, setSession: (x) => { v = x; },
            order: () => log.map((e) => Object.keys(e)[0] + (e.epoch || e.liveness || e.watch || '')) };
 }
 
@@ -179,11 +192,47 @@ test('frames are counted, and a plain array is normalised to PCM', () => {
 });
 
 test('VAD transitions map onto the epoch, and a boundary dispatches a turn', () => {
-  const { lc, log } = wire({ vad: ['audio_started', 'speech_started', 'utterance_boundary'] });
-  lc.frame(Float32Array.from([0.1]), 20);
-  assert.ok(log.some((e) => e.epoch === 'audioStarted'));
-  assert.ok(log.some((e) => e.epoch === 'speechStarted'));
-  assert.ok(log.some((e) => e.dispatched), 'an utterance boundary never asked for a final');
+  const w = wire({ vad: ['audio_started', 'speech_started', 'utterance_boundary'] });
+  // ⭐ The capture session must be OPEN first. `begin()` only reaches
+  // `opening`; a frame is what proves the microphone is live (D02A), and the
+  // authority will not open a turn against a capture it has no evidence for.
+  w.lc.begin();
+  w.authority.dispatch({ type: 'CAPTURE_OPENED' });
+  w.lc.frame(Float32Array.from([0.1]), 20);
+  assert.ok(w.log.some((e) => e.epoch === 'audioStarted'));
+  assert.ok(w.log.some((e) => e.epoch === 'speechStarted'));
+  assert.ok(w.log.some((e) => e.dispatched), 'an utterance boundary never asked for a final');
+});
+
+test('⛔ WIRING — a boundary during MAIA\'s reply dispatches NOTHING, and capture survives', () => {
+  // The defect this closes: MAIA's own voice arrives back through the
+  // microphone, produces voiced frames, produces a boundary — and a turn was
+  // started FOR HER WORDS. The member watched MAIA answer herself.
+  const w = wire({ vad: ['speech_started', 'utterance_boundary'] });
+  w.lc.begin();
+  w.authority.dispatch({ type: 'CAPTURE_OPENED' });
+
+  // Drive the authority to `maia_speaking` the way a real turn does.
+  for (const e of [
+    { type: 'VAD_SPEECH_STARTED' }, { type: 'VAD_UTTERANCE_BOUNDARY' },
+    { type: 'TRANSCRIPTION_FINAL', text: 'the member spoke' },
+    { type: 'MAIA_ANSWER', text: 'and MAIA is answering', hasAudio: true },
+  ]) assert.equal(w.authority.dispatch(e).accepted, true, e.type);
+
+  w.lc.frame(Float32Array.from([0.1]), 20);
+  assert.equal(w.log.filter((e) => e.dispatched).length, 0,
+    "MAIA's own voice started a turn");
+
+  // ⛔ AND CAPTURE IS UNTOUCHED (RESET-01 §2). The frame was buffered, the
+  // epoch still ran, nothing was torn down. VAD ends an utterance, not listening.
+  assert.equal(w.authority.snapshot().capture.state, 'open', 'a refused boundary closed the capture');
+  assert.ok(w.log.some((e) => e.buffered), 'the frame was dropped rather than buffered');
+  assert.equal(w.log.filter((e) => e.watch === 'stop').length, 0);
+
+  // On playback end the member is armed again, with the same capture session.
+  w.authority.dispatch({ type: 'PLAYBACK_ENDED' });
+  w.lc.frame(Float32Array.from([0.1]), 20);
+  assert.equal(w.log.filter((e) => e.dispatched).length, 1, 'the member could not speak again');
 });
 
 test('⛔ a boundary does NOT end the epoch — capture runs through the pause', () => {
@@ -439,6 +488,7 @@ test('⭐ salvaged speech becomes the member’s draft — it is NOT a completed
   epoch.partial('something half-said');
   const dispatched = [];
   const lc = createVoiceLifecycle({
+    authority: liveAuthority(),
     voice: () => ({
       frames: 0, epoch, diagnostics,
       liveness: { lost: () => {}, arm: () => {}, disarm: () => {}, noteFrame: () => null },
@@ -492,6 +542,7 @@ test('⭐ end-to-end: a refusal leaves liveness un-spent for a later real loss',
     voice: () => live, watch: { start: () => {}, stop: () => {} },
     announce: () => log.push('announced'), dispatchTurn: () => {},
     revokeSession: () => { live = null; }, projectState: () => null,
+    authority: liveAuthority(),
   });
 
   lc.begin();

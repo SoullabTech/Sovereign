@@ -61,7 +61,11 @@ test('the turn loop actually calls transcribe AND ask — not one without the ot
   const run = /async function run\(\)[\s\S]*?\n  \}/.exec(src)[0];
   const answer = /async function answer\([\s\S]*?\n  \}/.exec(src)[0];
   assert.ok(run.includes('conversation().transcribe('), 'never transcribes');
-  assert.ok(/return await answer\(said\)/.test(run), 'the spoken path never reaches the answer');
+  // ⭐ DESKTOP-CONVERSATION-WIRING-01. The answer now carries the TICKET — the
+  // generation and turn id captured before the first await. Without it a reply
+  // for a cancelled or replaced conversation would be delivered into whichever
+  // one is here now, so the argument is asserted, not just the call.
+  assert.ok(/return await answer\(said, tkt\)/.test(run), 'the spoken path never reaches the answer');
   assert.ok(answer.includes('conversation().ask('), 'never asks MAIA — stops at "transcription works"');
   assert.ok(/speak\(a\.audio\)/.test(answer), 'never emits audio');
   assert.ok(/speak:\s*\(audio\)\s*=>\s*broadcast\('maia:audio'/.test(mainJs),

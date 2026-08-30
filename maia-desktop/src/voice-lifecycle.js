@@ -10,6 +10,24 @@
 //   newVoiceSession — the composition root, which is where concreteness belongs
 //   the `voice` reference itself: this module never holds it, it asks for it
 //
+// ── DESKTOP-CONVERSATION-WIRING-01 — THE BOUNDARY ASKS BEFORE IT ACTS ───────
+//
+// `frame()` used to call `dispatchTurn()` on every VAD utterance boundary,
+// unconditionally. The VAD does not know whether MAIA is speaking, and the
+// microphone hears her: her reply arrives back through it, produces voiced
+// frames, produces a boundary, and a turn was started FOR HER WORDS. The member
+// then watched MAIA answer herself.
+//
+// Now every VAD transition is offered to `DesktopConversation` first, and a turn
+// runs only if the authority ACCEPTED the boundary. While the turn axis is
+// anywhere but `idle` — finalizing, waiting for MAIA, or MAIA speaking — the
+// opening event is refused as `input_disarmed` and no turn is created.
+//
+// ⛔ AND CAPTURE IS UNTOUCHED BY ANY OF IT (RESET-01 §2). A refused boundary
+// does not stop the microphone, does not close the epoch, and does not end the
+// capture session. Frames keep arriving and liveness keeps being proven. VAD
+// ends an utterance; it does not end listening.
+//
 // ⛔ SESSION REVOCATION (invariant §7B). This module NEVER stores a session. It
 // re-resolves through `voice()` at each point of use, and when a session must
 // die it calls `revokeSession()` — the host owns the reference and performs the
@@ -98,8 +116,12 @@ function createVoiceLifecycle({
   announce,
   dispatchTurn,
   revokeSession,
+  authority,
   projectState = () => null,
 } = {}) {
+  if (!authority || typeof authority.dispatch !== 'function') {
+    throw new Error('voice lifecycle requires the DesktopConversation authority');
+  }
   const session = () => (voice ? voice() : null);
 
   /**
@@ -116,6 +138,16 @@ function createVoiceLifecycle({
     v.epoch.startEpoch();
     v.liveness.arm();
     watch.start();
+    // ⭐ RESET-01 §3. Pressed once. The conversational capture session opens
+    // here and does not close again for an utterance, a pause, a turn, or
+    // MAIA speaking — only for the member, a genuine failure, or a teardown.
+    //
+    // ⛔ `START_VOICE` ONLY — the authority goes to `opening`, NOT to `open`.
+    // D02A's whole finding was that graph connection is not evidence of audio:
+    // the interface said "Listening…" for sixteen seconds against zero frames.
+    // The authority inherits that rule rather than re-learning it — only a
+    // frame may claim the capture is open (see `frame`).
+    authority.dispatch({ type: 'START_VOICE' });
     announce();
     return { ok: true };
   }
@@ -140,18 +172,38 @@ function createVoiceLifecycle({
 
     // Audio is arriving, so the capture graph is alive. If a loss was detected
     // and a rebuild was in flight, this is the proof it worked.
-    if (v.liveness.noteFrame()) announce();
+    //
+    // ⭐ FRAME RECEIPT IS THE AUTHORITY FOR LISTENING (D02A), and it is what
+    // moves the authority's capture axis to `open` — on the first frame, and
+    // again after a recovery. `noteFrame()` returns a transition for exactly
+    // those two cases and null while healthy, so this maps 1:1 onto
+    // `opening → open` and `recovering → open` with nothing to keep in sync.
+    if (v.liveness.noteFrame()) {
+      authority.dispatch({ type: 'CAPTURE_OPENED' });
+      announce();
+    }
 
     const pcm = samples instanceof Float32Array ? samples : Float32Array.from(samples);
     v.utterance.push(pcm);
 
     for (const t of v.vad.push(pcm, frameMs)) {
       if (t === 'audio_started') v.epoch.audioStarted();
-      else if (t === 'speech_started') v.epoch.speechStarted();
-      else if (t === 'utterance_boundary') {
+      else if (t === 'speech_started') {
+        v.epoch.speechStarted();
+        // The epoch records what the microphone did; the authority decides
+        // whether it OPENS A TURN. During MAIA's reply it will not, and the
+        // refusal is the point.
+        authority.dispatch({ type: 'VAD_SPEECH_STARTED' });
+      } else if (t === 'utterance_boundary') {
         // ⛔ A boundary does NOT end the epoch. A pause is still not a finished
         // thought, and capture keeps running through it (§XII).
-        dispatchTurn();
+        //
+        // ⛔ AND IT DOES NOT UNCONDITIONALLY START A TURN. If the authority
+        // refuses — no utterance was ever opened, because input was disarmed —
+        // nothing is transcribed and nothing is asked. This is what stops
+        // MAIA's own voice from becoming a member turn.
+        const opened = authority.dispatch({ type: 'VAD_UTTERANCE_BOUNDARY' });
+        if (opened.accepted) dispatchTurn();
       }
     }
     return { ok: true };
@@ -171,6 +223,11 @@ function createVoiceLifecycle({
       // liveness is NOT sent looking for a rebuild that cannot help.
       v.epoch.captureLost('permission_denied');
       v.diagnostics.emit('voice_transcribe_error', { errorName, phase: 'permission' });
+      // A refused microphone is not a loss seeking recovery (see the asymmetry
+      // ruling above), and the authority is told the same truth: the capture
+      // FAILED. `CAPTURE_LOST` would claim a rebuild is coming.
+      authority.dispatch({ type: 'CAPTURE_LOST', cause: 'permission_denied' });
+      authority.dispatch({ type: 'CAPTURE_FAILED', cause: 'permission_denied' });
       revokeSession();
     }
     announce();
@@ -188,6 +245,10 @@ function createVoiceLifecycle({
     // Routing all three losses through one state machine is what stops a muted
     // device and a dead worklet from diverging in what the member is shown.
     v.liveness.lost(cause);
+    // ⛔ The capture axis moves; the turn axis is the authority's business. A
+    // reply already in flight to MAIA is not cancelled by a dead microphone —
+    // the member's words left the microphone at the final.
+    authority.dispatch({ type: 'CAPTURE_LOST', cause });
     announce();
     return { ok: true, tail };
   }
@@ -205,6 +266,10 @@ function createVoiceLifecycle({
     if (!v) return { ok: false, reason: 'no capture session' };
     v.liveness.disarm();
     watch.stop();
+    // ⛔ The member stopped LISTENING. `STOP_VOICE` closes the capture axis and
+    // deliberately leaves an answer already in flight alone — stopping the
+    // microphone is not stopping MAIA.
+    authority.dispatch({ type: 'STOP_VOICE' });
     const tail = v.epoch.userStop();
     const text = v.epoch.commit();
     const snapshot = projectState();
@@ -251,6 +316,12 @@ function createVoiceLifecycle({
     if (!released) return { ok: false, revoked: false };
 
     const ratified = REVOCATION_CAUSES[cause];
+    // Authority is WITHDRAWN, so there is no member-authored completion to
+    // protect: the turn is cancelled and the capture axis closed. Unlike
+    // `end()`, an in-flight reply must NOT be delivered — nobody authorised it
+    // any more.
+    authority.dispatch({ type: 'CANCEL' });
+    authority.dispatch({ type: 'STOP_VOICE' });
     revokeSession();
     released.liveness.disarm();
     released.diagnostics.emit('voice_capture_lost', {
