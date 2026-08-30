@@ -79,6 +79,20 @@ export default function SectionWritingSurface({ writing }: SectionWritingSurface
     if (activeId) fieldRef.current?.focus();
   }, [activeId]);
 
+  /* GROW TO CONTENT, exactly as the continuous field does.
+     A fixed height here was wrong for this room: the field became taller than
+     the outline beside it, the sibling panels ended early, and the ground
+     below them showed through. WritingSurface sizes itself to its text and
+     lets <main> scroll — one scroll for the whole room — and the geometry was
+     measured for that. This is the same strategy, not a new one. */
+  const body = writing.activeBody;
+  useEffect(() => {
+    const el = fieldRef.current;
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = `${el.scrollHeight}px`;
+  }, [body, activeId]);
+
   const active = writing.active;
   if (!active) {
     return <StudioText role="metadata">This draft has no sections to write in.</StudioText>;
@@ -117,10 +131,11 @@ export default function SectionWritingSurface({ writing }: SectionWritingSurface
           onChange={(e) => writing.edit(e.target.value)}
           spellCheck
           aria-label={active.heading ?? `Section ${active.position + 1}`}
+          rows={1}
           style={{
             width: '100%',
-            minHeight: '60vh',
             resize: 'none',
+            overflow: 'hidden',
             border: 'none',
             outline: 'none',
             background: 'transparent',
