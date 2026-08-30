@@ -422,6 +422,13 @@ const ADDENDA_SPECS: readonly AddendumSpec[] = [
   { field: 'maiaModeAddendum',                log: () => `🎭 [MAIA Mode] Relational mode guidance injected` },
   { field: 'scribeSessionDiscussionAddendum', log: () => `📝 [Scribe Discussion] Session context injected` },
   { field: 'studioAddendum',                  log: () => `🏢 [Studio] Practitioner context injected` },
+  /* CORE/DEEP only. ADDENDA_SPECS is iterated by appendAllContextAddenda,
+     which is the CORE/DEEP path (maiaVoice.ts:897, 959) — FAST composes its
+     prompt from the template in maiaService instead and emits no marker for
+     this field. Recorded because a runtime witness went looking for this line
+     on a FAST turn on my say-so and correctly did not find it. The absence is
+     not a wiring gap: FAST's composition is asserted in
+     situatedWorkInjection.test.ts. */
   { field: 'workSituationAddendum',           log: () => `📖 [Writer's Studio] Work context injected` },
   { field: 'knowledgeGateAddendum',           log: () => `🚪 [Knowledge Gate] Source well modulation injected` },
   { field: 'memberWebAddendum',               log: () => `🕸️ [Member Web] Patterns+summaries+journals injected` },
