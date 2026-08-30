@@ -23,6 +23,15 @@
  * hierarchy as a side effect of a delete. So a division holding others offers
  * no ×, and its children carry ⇤ to move them out deliberately.
  *
+ * NO BROWSER DIALOGS. Naming a division and confirming a removal happen inline,
+ * in the room's own type. `window.prompt` and `window.confirm` were the first
+ * cut's shortcut and they are wrong here twice over: they are OS chrome
+ * dropped into a surface built to be quiet, and Chrome lets a viewer silently
+ * suppress them for the rest of the tab ("prevent this page from creating
+ * additional dialogs"), after which every naming gesture returns null and the
+ * button appears to do nothing at all. An affordance whose failure mode is
+ * silence has no place on the gesture that authors a book's structure.
+ *
  * THE WRITING IS NOT TOUCHED. Every gesture here is a grouping. Deleting a
  * division deletes a grouping and returns its sections to "not yet placed" —
  * no words move, and the flattened manuscript is byte-identical before and
@@ -70,6 +79,13 @@ export default function StructuredOutline({
   const [notice, setNotice] = useState<string | null>(null);
   const [organising, setOrganising] = useState(false);
   const [busy, setBusy] = useState(false);
+  /* Which parent a new division is being named under: a unit id, null for top
+     level, and `undefined` for "not naming anything right now". The three-way
+     distinction matters — null is a real place in the tree. */
+  const [naming, setNaming] = useState<string | null | undefined>(undefined);
+  /* The unit whose × has been pressed once. Removal is two presses, in the
+     room, rather than one press and an OS dialog. */
+  const [confirming, setConfirming] = useState<string | null>(null);
 
   const byId = useMemo(() => new Map(sections.map((s) => [s.id, s])), [sections]);
 
@@ -188,13 +204,8 @@ export default function StructuredOutline({
                 onClick={() => act({ gesture: 'move', unitId: node.id, parentId: parentOf(tree, node.id), index: i - 1 })}>↑</Tiny>
               <Tiny label="move down" disabled={busy || i < 0 || i >= siblings.length - 1}
                 onClick={() => act({ gesture: 'move', unitId: node.id, parentId: parentOf(tree, node.id), index: i + 1 })}>↓</Tiny>
-              <Tiny label="add a division inside" disabled={busy}
-                onClick={() => {
-                  const name = window.prompt('What is this division called?');
-                  if (name && name.trim()) {
-                    void act({ gesture: 'create', kind: null, title: name.trim(), parentId: node.id });
-                  }
-                }}>+</Tiny>
+              <Tiny label="add a division inside this one" disabled={busy}
+                onClick={() => { setConfirming(null); setNaming(node.id); }}>+</Tiny>
               {depth > 0 && (
                 /* Move this division out to sit beside its parent. The only way
                    a nested division leaves, and always a member's act. */
@@ -205,12 +216,20 @@ export default function StructuredOutline({
                   })}>⇤</Tiny>
               )}
               {node.children.length === 0 ? (
-                <Tiny label="remove this division, keeping its writing" disabled={busy}
-                  onClick={() => {
-                    if (window.confirm(
-                      `Remove "${unitLabel(node)}"?\n\nIts sections return to "not yet placed". No writing is removed.`,
-                    )) void act({ gesture: 'delete', unitId: node.id });
-                  }}>×</Tiny>
+                confirming === node.id ? (
+                  <>
+                    <Tiny label="confirm: remove this division, keeping its writing"
+                      disabled={busy}
+                      onClick={() => { setConfirming(null); void act({ gesture: 'delete', unitId: node.id }); }}>
+                      remove?
+                    </Tiny>
+                    <Tiny label="keep this division" disabled={busy}
+                      onClick={() => setConfirming(null)}>keep</Tiny>
+                  </>
+                ) : (
+                  <Tiny label="remove this division, keeping its writing" disabled={busy}
+                    onClick={() => { setNaming(undefined); setConfirming(node.id); }}>×</Tiny>
+                )
               ) : (
                 /* No × at all, rather than one that refuses when pressed: an
                    affordance that cannot succeed should not be offered. */
@@ -223,6 +242,12 @@ export default function StructuredOutline({
             </span>
           )}
         </div>
+        {organising && naming === node.id && (
+          <NameDivision depth={depth + 1} disabled={busy}
+            onCancel={() => setNaming(undefined)}
+            onName={(title) => { setNaming(undefined); void act({
+              gesture: 'create', kind: null, title, parentId: node.id }); }} />
+        )}
         {organising && (
           <PlaceRun sections={sections} disabled={busy} depth={depth}
             onPlace={(from, to) => act({
@@ -260,14 +285,21 @@ export default function StructuredOutline({
 
       {organising && (
         <div style={{ marginBottom: SPACE.base }}>
-          <Tiny label="add a top-level division" disabled={busy}
-            onClick={() => {
-              const name = window.prompt('What is this division called?');
-              if (name && name.trim()) {
-                void act({ gesture: 'create', kind: null, title: name.trim(), parentId: null });
-              }
-            }}>+ division</Tiny>
+          {naming === null ? (
+            <NameDivision depth={0} disabled={busy}
+              onCancel={() => setNaming(undefined)}
+              onName={(title) => { setNaming(undefined); void act({
+                gesture: 'create', kind: null, title, parentId: null }); }} />
+          ) : (
+            <Tiny label="add a top-level division" disabled={busy}
+              onClick={() => { setConfirming(null); setNaming(null); }}>+ division</Tiny>
+          )}
         </div>
+      )}
+      {organising && confirming && (
+        <StudioText role="quiet" style={{ marginBottom: SPACE.base, display: 'block' }}>
+          Removing a division returns its sections to “not yet placed”. No writing is removed.
+        </StudioText>
       )}
 
       {tree?.roots.map((r) => unit(r, 0, tree.roots))}
@@ -323,6 +355,55 @@ function Tiny({
     >
       {children}
     </button>
+  );
+}
+
+/**
+ * Name a new division, in the room rather than in an OS dialog.
+ *
+ * Autofocused so the gesture is one press and then typing; Enter commits,
+ * Escape cancels. The member's own word for the division is the whole content
+ * of this control, so it gets the room's serif — it is the work, not the
+ * building.
+ */
+function NameDivision({
+  onName, onCancel, disabled, depth,
+}: {
+  onName: (title: string) => void;
+  onCancel: () => void;
+  disabled?: boolean;
+  depth: number;
+}) {
+  const [text, setText] = useState('');
+  const commit = () => { const t = text.trim(); if (t) onName(t); };
+  return (
+    <div style={{
+      display: 'flex', gap: SPACE.tight, alignItems: 'center',
+      paddingLeft: SPACE.snug + depth * SPACE.base,
+      margin: `${SPACE.tight}px 0`,
+    }}>
+      <input
+        autoFocus
+        aria-label="what this division is called"
+        placeholder="Part One, Chapter 4, Interlude…"
+        value={text}
+        disabled={disabled}
+        onChange={(e) => setText(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') { e.preventDefault(); commit(); }
+          if (e.key === 'Escape') { e.preventDefault(); onCancel(); }
+        }}
+        style={{
+          flex: 1, minWidth: 0,
+          background: GROUND.raised, color: INK.primary, border: 'none',
+          borderRadius: RADIUS.sm, padding: `${SPACE.tight}px ${SPACE.snug}px`,
+          font: 'inherit', fontSize: '0.875rem',
+        }}
+      />
+      <Tiny label="add this division" disabled={disabled || text.trim().length === 0}
+        onClick={commit}>add</Tiny>
+      <Tiny label="cancel" disabled={disabled} onClick={onCancel}>cancel</Tiny>
+    </div>
   );
 }
 
