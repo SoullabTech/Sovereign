@@ -129,6 +129,33 @@ test('⭐ the canonical thread moved elsewhere — Desktop conforms and says why
   assert.equal(published[0].from, 'conv-A');
 });
 
+test('⭐ a failed re-adoption is not recorded — the change is retried, not lost', async () => {
+  // The watch records an adoption only AFTER it succeeds. That rule lives in
+  // thread-watch and is proven there as a pure function (d04a) — but continuity
+  // is now the CALLER that has to honour it, and a caller that records first
+  // strands the member on the old thread forever: the next observation reads
+  // `unchanged` and never retries. Nothing proved that until this test.
+  let failing = true;
+  const conv = stubConv({
+    adopt: (n) => (n === 1 ? { ok: true, resumed: true, sessionId: 'conv-A' }
+      : failing ? { ok: false, error: 'adopt failed' }
+        : { ok: true, resumed: true, sessionId: 'conv-B' }),
+    canonical: () => ({ ok: true, sessionId: 'conv-B' }),
+  });
+  const { c, published } = wire({ conv });
+  await c.join();
+  published.length = 0;
+
+  await c.pollOnce();
+  assert.deepEqual(published, [], 'a failed adoption announced a thread it never joined');
+
+  failing = false;
+  await c.pollOnce();
+  assert.equal(published.length, 1,
+    'the failed adoption was recorded as done — the member is stranded on the old thread');
+  assert.equal(published[0].conversationId, 'conv-B');
+});
+
 test('⛔ the network is down — the held thread is kept, silently, and retried', async () => {
   const conv = stubConv({ canonical: () => ({ ok: false, error: 'offline' }) });
   const { c, published } = wire({ conv });
