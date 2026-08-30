@@ -198,7 +198,44 @@ dropped three caller lines that were present on the House branch:
 The candidate reached canonical MAIA only by a manual menu click.
 Repaired in DESKTOP-ARRIVAL-01 on a new SHA; this record stays as it is.
 
-### Walk 2 — candidate `<new SHA>` · pending
+### Walk 2 — candidate `1ec8135b2` · **FAIL** (a different defect) · PERMANENT RECORD
+
+```text
+HOUSE-DEVICE-01 / ARRIVAL RE-RUN        candidate 1ec8135b2
+
+canonical /maia revealed       PASS
+local mini-MAIA hidden         PASS
+title / host place agrees      PASS
+
+correct member identity        FAIL
+  observed avatar              F
+  expected member              Kelly
+  likely rendered identity     `Friend` fallback
+
+STEP 1                         FAIL
+STEPS 2-10                     NOT REACHED
+```
+
+⭐ **DESKTOP-ARRIVAL-01 is witnessed and stays closed.** The original defect —
+cold launch showing the local D01 renderer — is fixed and confirmed on device,
+mechanically: `Hey`, `quiet hours`, `I'm ready` and the holoflower are all absent
+from `src/index.html`, the local renderer's `Start listening` and `Sign out` were
+not on screen, and the title bar read `MAIA Desktop` from `showPlace(MAIA)`. Do
+not reopen it.
+
+This is a **second, separate defect** reached only because the first was fixed:
+
+> **DESKTOP-IDENTITY-CARRY-01** — Desktop successfully restores canonical
+> authorization, but `/maia` does not receive or display the member's canonical
+> preferred identity. The surface is authenticated and nameless.
+
+`MaiaTopBar` renders the first letter of the first name from `explorerName`, and
+the `/maia` identity code falls back to `Friend` when it cannot obtain a valid
+display name — so `F` is most likely that fallback rather than a wrong F-named
+member. Pending device confirmation: open the account sheet, which uses the same
+`explorerName`, and read the name it shows.
+
+### Walk 3 — candidate `<pending DESKTOP-IDENTITY-CARRY-01>` · not yet run
 
 Re-run **from Step 1, not from Step 2.** The first acceptance question is now:
 
