@@ -10,7 +10,7 @@ import { VoiceController } from '@/lib/voice/AudioSessionManager';
 import { getFeatureFlag } from '@/lib/features/flags';
 import { logVoiceEvent, resetVoiceSession } from '@/lib/voice/voiceDiagnostics';
 import { pushVoiceDebug } from '@/lib/voice/voiceDebugBus';
-import { DESKTOP_MAX_UTTERANCE_MS, DESKTOP_SILENCE_HOLDOFF_MS } from "@/lib/voice/desktopUtteranceLimits";
+import { DESKTOP_MAX_UTTERANCE_MS, DESKTOP_SILENCE_HOLDOFF_MS, DESKTOP_PARTIAL_INTERVAL_MS } from "@/lib/voice/desktopUtteranceLimits";
 import { WebSpeechRecognitionSession, classifyRecognitionError } from '@/lib/voice/webSpeechLifecycle';
 import {
   assessCaptureLiveness,
@@ -3501,6 +3501,14 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
             ...(info.isDesktop ? {
               maxMs: DESKTOP_MAX_UTTERANCE_MS,
               silenceHoldoffMs: DESKTOP_SILENCE_HOLDOFF_MS,
+              // DESKTOP-LISTENING-PRESENCE-01. Sovereign STT is batch: without
+              // this the member speaks into a surface that shows them nothing
+              // until they stop, and cannot tell being heard from being broken.
+              // Each partial is a real local-Whisper transcription of the audio
+              // captured so far — presentation only; the committed turn is
+              // still the final transcript.
+              partialIntervalMs: DESKTOP_PARTIAL_INTERVAL_MS,
+              onPartial: (text: string) => onInterimTranscript?.(text),
             } : {}),
           });
 

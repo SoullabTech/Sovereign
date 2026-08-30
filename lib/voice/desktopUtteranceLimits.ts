@@ -66,3 +66,30 @@ export const DESKTOP_MAX_UTTERANCE_MS = 120_000;
  * keep the module's own 1500 ms, unchanged.
  */
 export const DESKTOP_SILENCE_HOLDOFF_MS = 2_500;
+
+/**
+ * How often, while the member is still speaking, to transcribe what has been
+ * captured so far and show it.
+ *
+ * ⛔ THE DEFECT THIS ANSWERS, member-reported 2026-08-30: "it also didnt
+ * register what I was saying in the listening field". On the Web Speech path
+ * the interim slot fills continuously; on the Desktop sovereign path it stayed
+ * empty for the whole utterance, because Whisper is batch and sees the clip
+ * only after recording ends. The member could not distinguish being heard from
+ * being broken — and said so mid-utterance, on the record: "I'm not very
+ * confident this is working."
+ *
+ * ⛔ WHAT THESE PARTIALS ARE. Real transcriptions, by the same local Whisper,
+ * of every chunk captured up to that moment. NOT Web-Speech-style interim
+ * guesses. Later words can re-word earlier ones as context arrives, but
+ * nothing shown was invented — a system that displayed speculative text would
+ * be committing a smaller version of the untruth this lane keeps repairing.
+ *
+ * 2 s: frequent enough to read as live, and each tick re-transcribes a clip
+ * that keeps growing, so the interval is also the cost control. A tick is
+ * skipped outright while the previous one is still in flight.
+ *
+ * ⛔ SCOPE. Desktop only. Android Chrome recovery and the Firefox/Zen branch
+ * pass nothing and record exactly as before, in a single un-sliced blob.
+ */
+export const DESKTOP_PARTIAL_INTERVAL_MS = 2_000;

@@ -206,7 +206,22 @@ export function VoiceInteractionBar({
             transition={{ duration: 0.15 }}
             className="overflow-hidden"
           >
-            <p className="px-5 pt-2 text-sm italic text-stone-300/75 truncate">
+            {/*
+              ⛔ WAS `truncate` — `white-space: nowrap` plus an ellipsis. A long
+              utterance was not "disappearing"; it was clamped to one line
+              showing the START, so the words the member had just spoken were
+              precisely the ones they could never see. The longer they talked,
+              the less the display told them.
+
+              ⭐ Now it wraps, holds the last few lines, and stays pinned to the
+              bottom — newest speech visible, older speech scrolled above. The
+              member watches their sentence arrive rather than watching its
+              beginning sit still.
+            */}
+            <p
+              ref={(el) => { if (el) el.scrollTop = el.scrollHeight; }}
+              className="px-5 pt-2 text-sm italic text-stone-300/75 max-h-20 overflow-y-auto whitespace-pre-wrap break-words"
+            >
               {interimTranscript}
             </p>
           </motion.div>
