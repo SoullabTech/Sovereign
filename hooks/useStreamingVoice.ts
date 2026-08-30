@@ -48,9 +48,29 @@ interface MoveOutcomeEvent {
   latencyToOutcomeMs?: number;
 }
 
-/** PWA playback signal for confirmed audio state (used by PWA voice state machine) */
+/**
+ * Playback signals for confirmed audio state.
+ *
+ * ⚠️ NO LONGER PWA-ONLY, as of DESKTOP-GHOST-REARM-01 (2026-08-30). These were
+ * authored for the PWA voice state machine and the consumer still discards them
+ * on every other surface. Desktop now needs ONE fact from this channel — whether
+ * MAIA actually spoke — so the channel is cross-surface evidence, and the PWA
+ * state machine is one of its consumers rather than its only reason to exist.
+ *
+ * ⭐ `turnId` IS THE PLAYBACK MACHINERY'S OWN IDENTITY, not a new one. It is
+ * `turnIdRef`, minted per turn at TURN START and already sent to the server as
+ * `x-voice-turn-id`. It rides on the signal so a late `AUDIO_PLAYING_CONFIRMED`
+ * from turn N cannot be read as evidence about turn N+1 — the exact class of
+ * late-event race this codebase has been bitten by before.
+ *
+ * ⭐ `TURN_STARTED` exists so the RESET and the GRANT travel the same channel,
+ * in order, from the same emitter. A consumer that receives both cannot end up
+ * holding a stale `true` from a previous response, and needs no second source
+ * of truth about which turn is current.
+ */
 export type StreamingVoicePlaybackSignal =
-  | { type: 'AUDIO_PLAYING_CONFIRMED' }
+  | { type: 'TURN_STARTED'; turnId: string }
+  | { type: 'AUDIO_PLAYING_CONFIRMED'; turnId: string }
   | { type: 'AUDIO_ENDED' }
   | { type: 'AUDIO_FAILED'; reason: string }
   | { type: 'AUDIO_BLOCKED'; reason: string };
@@ -493,7 +513,12 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
           // 🎤 PWA SIGNAL: First successful play = CONFIRMED audio is working
           if (audioPlayedCountRef.current === 1) {
             console.log(`[voice:playback_start:${turnIdRef.current.slice(0,8)}] elapsed=${Date.now() - turnStartRef.current}ms`);
-            onPlaybackSignalRef.current?.({ type: 'AUDIO_PLAYING_CONFIRMED' });
+            // ⭐ DESKTOP-GHOST-REARM-01. Carries `turnId` so a consumer can
+            // reject a late confirmation belonging to a previous turn. This is
+            // the ONLY signal that may establish "MAIA actually spoke".
+            onPlaybackSignalRef.current?.({
+              type: 'AUDIO_PLAYING_CONFIRMED', turnId: turnIdRef.current,
+            });
             // 🔇 FEEDBACK PREVENTION: Signal MAIA is speaking to stop mic
             if (typeof window !== 'undefined') {
               console.log('🔇 [StreamingVoice] Dispatching maya-voice-start for feedback prevention');
@@ -563,6 +588,13 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
     turnIdRef.current = crypto.randomUUID();
     turnStartRef.current = Date.now();
     console.log(`[voice:turn_start:${turnIdRef.current.slice(0,8)}] chars=${message.length} ts=${turnStartRef.current}`);
+
+    // ⭐ DESKTOP-GHOST-REARM-01 — emitted HERE, at turn start, before any
+    // request or playback. A consumer tracking "did MAIA speak" must clear that
+    // belief at the moment the new turn begins, not at some later completion
+    // point: a `true` inherited from turn N would otherwise authorise a mic
+    // re-arm after a SILENT turn N+1, which is the defect itself.
+    onPlaybackSignalRef.current?.({ type: 'TURN_STARTED', turnId: turnIdRef.current });
 
     // Clear previous state
     // 🔥 iOS FIX: Keep the audio element but clear its source - don't null it out
