@@ -10,6 +10,7 @@ import { VoiceController } from '@/lib/voice/AudioSessionManager';
 import { getFeatureFlag } from '@/lib/features/flags';
 import { logVoiceEvent, resetVoiceSession } from '@/lib/voice/voiceDiagnostics';
 import { pushVoiceDebug } from '@/lib/voice/voiceDebugBus';
+import { DESKTOP_MAX_UTTERANCE_MS } from "@/lib/voice/desktopUtteranceLimits";
 import { WebSpeechRecognitionSession, classifyRecognitionError } from '@/lib/voice/webSpeechLifecycle';
 import {
   assessCaptureLiveness,
@@ -62,53 +63,6 @@ import {
 // `requestRestart` appeared exactly once — in this comment — while five call
 // sites started recognition directly. It is now enforced by the code below and
 // by __tests__/restartAuthority.test.ts.
-
-/**
- * DESKTOP-CANONICAL-VOICE-UTTERANCE-WINDOW-01 — Desktop's own utterance bounds.
- *
- * ⛔ THE DEFECT THIS REPAIRS. Desktop joined the shared one-shot capture in
- * `androidVoiceFallback` (DESKTOP-SOVEREIGN-STT-01 §S1/S4) but did NOT inherit
- * the utterance window the Desktop programme had already ratified. It silently
- * took that module's Android/browser defaults instead:
- *
- *     maxMs             8_000   →  a member speaking past 8 s is CUT OFF, and
- *                                  the truncated fragment is then authored as a
- *                                  COMPLETED canonical member turn. Device-
- *                                  witnessed 2026-08-30: 8623 ms, 61 chars,
- *                                  dispatched, and MAIA answered the fragment
- *                                  as though it were the finished thought.
- *     silenceHoldoffMs  1_500   →  closes on an ordinary mid-thought pause.
- *
- * The second is as wrong as the first and is easy to miss: truncation is
- * visible, a premature boundary just feels like being interrupted.
- *
- * ⭐ THE NUMBERS ARE NOT NEW. Both are carried from the Desktop programme's own
- * ratified bounds rather than invented here:
- *
- *     maia-desktop/src/voice/utterance.js:25-27
- *       maxSamples: 48000 * 60  — "~60 s of audio", a hard ceiling so a member
- *       who talks for ten minutes does not build an unbounded buffer.
- *
- *     maia-desktop/src/voice/vad.js:37
- *       endOfUtteranceMs: 2500  — deliberately above ordinary mid-thought
- *       pauses. "Silence is a relational event, not a timeout."
- *
- * ⛔ DESKTOP ONLY, BY CONSTRUCTION. The branch that reaches
- * `recordAndTranscribe` is shared — Firefox, Safari, Android recovery and every
- * browser without Web Speech arrive there too. Widening the module's DEFAULTS
- * would change all of them. So the policy is applied at the CALL SITE, gated on
- * `info.isDesktop`, and the shared defaults stay exactly as they are.
- *
- * ⛔ THIS IS A CEILING, NOT A CONVERSATION MODEL. A 60 s cap still ends a turn
- * by a timer rather than by a boundary the member authored. Truthful hearing,
- * tail preservation and streaming partials belong to MAIA-CONVERSATION-CORE-01;
- * this repair only stops Desktop from truncating and mis-authoring speech in
- * the meantime.
- */
-const DESKTOP_UTTERANCE_BOUNDS = Object.freeze({
-  maxMs: 60_000,
-  silenceHoldoffMs: 2_500,
-});
 
 export type ListeningMode = 'PUSH_TO_TALK' | 'HANDS_FREE' | 'OFF';
 
@@ -3453,7 +3407,9 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
       console.log('[voice] transport:', voiceTransport, { platform: info.platform });
 
       if ((info.isDesktop || !hasSpeechRecognitionAPI()) && canRecordAudio) {
-        // Clear the 2s ARMING watchdog — this path records up to ~8s and
+        // Clear the 2s ARMING watchdog — this path records for as long as the
+        // member keeps speaking (Desktop: up to the safety ceiling in
+        // desktopUtteranceLimits; other browsers: the module's 8s bound) and
         // would otherwise be reset to IDLE mid-utterance.
         if (armingTimeoutRef.current) {
           clearTimeout(armingTimeoutRef.current);
@@ -3504,12 +3460,17 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
 
         try {
           const { recordAndTranscribe } = await import('@/lib/voice/androidVoiceFallback');
-          // DESKTOP-CANONICAL-VOICE-UTTERANCE-WINDOW-01. Desktop supplies its own
-          // ratified bounds; every other surface reaching this branch keeps the
-          // module's shared Android/browser defaults untouched.
           const result = await recordAndTranscribe(stream, {
             signal: captureController.signal,
-            ...(info.isDesktop ? DESKTOP_UTTERANCE_BOUNDS : {}),
+            // ⛔ DESKTOP-SOVEREIGN-STT-UTTERANCE-LIMIT-01 — Desktop turns end in
+            // SILENCE, not on a timer. The module default (8 s) is a bound on a
+            // one-shot Android recovery attempt; inheriting it here cut members
+            // off mid-breath at second eight (device: 8704 ms, 8652 ms). Desktop
+            // gets a safety ceiling instead — exceptional, not conversational.
+            //
+            // ⛔ Desktop ONLY. Firefox/Zen reach this same branch by absence of
+            // Web Speech and keep the module's own 8 s bound, unchanged.
+            ...(info.isDesktop ? { maxMs: DESKTOP_MAX_UTTERANCE_MS } : {}),
           });
 
           // ⛔ THE STALE-RESULT GATE. Abort stops the work; it cannot un-resolve
