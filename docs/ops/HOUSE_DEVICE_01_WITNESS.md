@@ -265,7 +265,96 @@ canonical MAIA chooses after the tap.
 
 Repaired in **DESKTOP-SOVEREIGN-STT-01**.
 
-### Walk 3 — candidate `<pending DESKTOP-IDENTITY-CARRY-01>` · not yet run
+### Walk 3 — STT DEVICE witness · candidate `1c2c59af9` · **PENDING**
+
+⛔ **PIN THE CANDIDATE, NOT THE BRANCH.** The branch head has moved past the frozen candidate
+(docs and the lineage guard only — `git diff 1c2c59af9 HEAD -- maia-desktop lib components app` is
+empty). Walk **`1c2c59af9`** or you are not walking the frozen app.
+
+```bash
+cd /tmp/witness-house
+git fetch origin
+git cat-file -e '1c2c59af9^{commit}' && echo 'CANDIDATE FOUND'
+git worktree add -f --detach /tmp/house-device-04 1c2c59af9
+cd /tmp/house-device-04
+git rev-parse HEAD
+git status --short
+ln -s ~/MAIA-SOVEREIGN/node_modules /tmp/house-device-04/node_modules
+npx jest lib/utils/__tests__/voiceTransportSelection.test.ts lib/voice/__tests__/transcribeResponseShape.test.ts lib/voice/__tests__/sovereignPartialTranscription.test.ts lib/voice/__tests__/desktopUtteranceLimit.test.ts lib/voice/__tests__/sovereignCaptureLifecycle.test.ts
+npm run typecheck
+cd maia-desktop
+npm install --no-save --package-lock=false --no-audit --no-fund
+npm test
+npm start
+```
+
+Desktop expects **310/310**. Name the five tests explicitly — `lib/voice/__tests__` holds 18 files
+and the other 13 are unrelated pre-existing coverage.
+
+#### Three observations, increasingly demanding. If one fails, STOP — do not repair and continue.
+
+```text
+SHORT TURN
+  listening held:
+  provisional visible:          look for the exact label "hearing · not sent yet"
+  one final turn:
+  MAIA responded:
+
+SECOND TAP                      the highest-value check
+  re-armed:
+  second transcript:
+  second response:
+
+LONG TURN
+  duration:
+  cut off near 8s:
+  provisional continued:
+  final transcript complete:
+```
+
+⭐ **The second tap distinguishes "STT works once" from "the conversation voice lifecycle works."**
+A first turn that lands and a second tap that will not arm points at post-turn lifecycle state —
+`revokeCapture`, the turn's own `finally`, and `capture-watch`'s self-stop failing to agree — not at
+STT.
+
+**The label and the provisional words share ONE render guard** (`VoiceInteractionBar.tsx:200`:
+`voiceState === 'listening' && interimTranscript.length > 0`), so *"label but no words"* is not a
+possible outcome. They appear together or not at all.
+
+```text
+label + words + one final turn        first-turn sovereign STT PASS
+no label/words, but final lands       interim display pipeline defect
+listening holds, no interim, no final capture / transcription defect
+listening collapses                   acquisition / transport activation defect
+first turn works, second tap fails    post-turn lifecycle / restart defect
+```
+
+A clean result across all three establishes something materially stronger than "the microphone
+works": **canonical MAIA on Desktop can hear visibly, commit speech once, recover for another turn,
+and preserve a natural thought beyond the old recovery timer.**
+
+```text
+HEAD witnessed:
+date / walker:
+SHORT / SECOND / LONG:
+product findings (non-blocking):
+```
+
+---
+
+### Deferred, not lost
+
+```text
+identity `Friend` on a fresh profile   canonical /maia resolves identity from localStorage;
+                                       the platform partition starts empty. Not a Desktop
+                                       defect and untouched by the STT carry.
+VoiceWithNotes.tsx                     renders ContinuousConversation without
+                                       onInterimTranscript — Notes mode has no provisional
+                                       display. Logged, not in this unit.
+desktop-app/package.json               also names itself `maia-desktop`, colliding with
+                                       maia-desktop in jest-haste-map. Fix by renaming the
+                                       LEGACY one; ds02 fails if the wrong one is renamed.
+```
 
 Re-run **from Step 1, not from Step 2.** The first acceptance question is now:
 
