@@ -38,3 +38,31 @@
  * the transcription route's 25 MB limit.
  */
 export const DESKTOP_MAX_UTTERANCE_MS = 120_000;
+
+/**
+ * How long a Desktop turn may fall silent before the recorder decides the
+ * member has finished.
+ *
+ * ⛔ THE DEFECT THIS ANSWERS, device-witnessed 2026-08-30. The floor was
+ * inherited from `androidVoiceFallback`'s 1500 ms exactly as the 8 s ceiling
+ * was — by classification, not by decision. On a bounded Android recovery,
+ * where the member has already spoken once and is repeating themselves, 1.5 s
+ * is reasonable. In first-class Desktop conversation it is shorter than an
+ * ordinary considered pause, so a member who stops to think is told their turn
+ * is over. Paired with a silence clock that started before they spoke at all,
+ * it closed the microphone at ~1.5 s and handed Whisper room tone to
+ * hallucinate over.
+ *
+ * ⛔ WHAT THIS IS NOT. It is not a fix for the clock's start point — that is
+ * the `lastLoudAt === null` latch in `androidVoiceFallback`, and it is the
+ * load-bearing half. This value only governs how long a pause may be AFTER the
+ * member has actually been heard. Both are needed: the latch decides whether
+ * the timer may run at all, this decides how patient it is once it does.
+ *
+ * 2.5 s: long enough for a mid-thought breath or a searched-for word, short
+ * enough that a genuinely finished turn does not feel like it is hanging.
+ *
+ * ⛔ SCOPE. Desktop only. Android Chrome recovery and the Firefox/Zen branch
+ * keep the module's own 1500 ms, unchanged.
+ */
+export const DESKTOP_SILENCE_HOLDOFF_MS = 2_500;

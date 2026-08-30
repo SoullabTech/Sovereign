@@ -10,7 +10,7 @@ import { VoiceController } from '@/lib/voice/AudioSessionManager';
 import { getFeatureFlag } from '@/lib/features/flags';
 import { logVoiceEvent, resetVoiceSession } from '@/lib/voice/voiceDiagnostics';
 import { pushVoiceDebug } from '@/lib/voice/voiceDebugBus';
-import { DESKTOP_MAX_UTTERANCE_MS } from "@/lib/voice/desktopUtteranceLimits";
+import { DESKTOP_MAX_UTTERANCE_MS, DESKTOP_SILENCE_HOLDOFF_MS } from "@/lib/voice/desktopUtteranceLimits";
 import { WebSpeechRecognitionSession, classifyRecognitionError } from '@/lib/voice/webSpeechLifecycle';
 import {
   assessCaptureLiveness,
@@ -3494,7 +3494,14 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
             //
             // ⛔ Desktop ONLY. Firefox/Zen reach this same branch by absence of
             // Web Speech and keep the module's own 8 s bound, unchanged.
-            ...(info.isDesktop ? { maxMs: DESKTOP_MAX_UTTERANCE_MS } : {}),
+            // The holdoff travels with the ceiling. Both were inherited from
+            // the Android recovery by classification; fixing only one leaves
+            // Desktop conversation governed half by a decision and half by an
+            // accident.
+            ...(info.isDesktop ? {
+              maxMs: DESKTOP_MAX_UTTERANCE_MS,
+              silenceHoldoffMs: DESKTOP_SILENCE_HOLDOFF_MS,
+            } : {}),
           });
 
           // ⛔ THE STALE-RESULT GATE. Abort stops the work; it cannot un-resolve

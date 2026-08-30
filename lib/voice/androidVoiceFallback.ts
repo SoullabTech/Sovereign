@@ -335,7 +335,21 @@ async function recordWithSilenceDetection(
     source.connect(analyser);
     const buf = new Float32Array(analyser.fftSize);
 
-    let lastLoudAt = Date.now();
+    // ⭐ THE SILENCE CLOCK DOES NOT START UNTIL THE MEMBER DOES.
+    //
+    // ⛔ THE DEFECT, device-witnessed 2026-08-30. `lastLoudAt` was seeded with
+    // the recording's own start time, so the holdoff ran from the moment the
+    // microphone opened rather than from the end of speech. A member who tapped
+    // and then took a breath had the recorder close itself at ~1.5s — the
+    // "tried to listen but quickly clicked off" report — and an auto-armed mic
+    // that nobody spoke into recorded 1.5s of room tone, which Whisper
+    // hallucinated into a 3-character turn ("You"). Both symptoms, one cause.
+    //
+    // `null` means "not heard yet". Until the analyser reads one sample above
+    // threshold the silence branch cannot fire at all; the member has as long
+    // as they need to begin, bounded only by `maxMs`, which remains the safety
+    // ceiling it was always meant to be — never a turn boundary.
+    let lastLoudAt: number | null = null;
     const startedAt = Date.now();
     const checkSilence = () => {
       if (stopped) return;
@@ -346,11 +360,14 @@ async function recordWithSilenceDetection(
       const now = Date.now();
       if (rms >= SILENCE_RMS_THRESHOLD) lastLoudAt = now;
       const elapsed = now - startedAt;
-      const silenceFor = now - lastLoudAt;
       if (elapsed >= opts.maxMs) {
         stop('max');
         return;
       }
+      // Nothing has been heard yet — there is no silence to hold off from.
+      // Waiting is not a finished turn.
+      if (lastLoudAt === null) return;
+      const silenceFor = now - lastLoudAt;
       if (elapsed >= opts.minMs && silenceFor >= opts.silenceHoldoffMs) {
         stop('silence');
         return;

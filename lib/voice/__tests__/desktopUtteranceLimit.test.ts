@@ -183,7 +183,12 @@ describe('4 — Android-Chrome and Firefox/Zen keep the 8s bound', () => {
     expect(uses.length).toBe(2);
     const call = src.indexOf('recordAndTranscribe(stream, {');
     const args = src.slice(call, src.indexOf('});', call));
-    expect(args).toContain('info.isDesktop ? { maxMs: DESKTOP_MAX_UTTERANCE_MS }');
+    // DESKTOP-CAPTURE-FLOOR-01 added the holdoff to the SAME guarded spread, so
+    // the ceiling is no longer the only key in it. The rule is unchanged — the
+    // constant must sit behind `info.isDesktop` — so this follows the shape
+    // rather than relaxing the guard.
+    const spread = args.match(/\.\.\.\(info\.isDesktop \? \{[\s\S]*?\} : \{\}\)/)?.[0] ?? '';
+    expect(spread).toContain('maxMs: DESKTOP_MAX_UTTERANCE_MS');
   });
 });
 
