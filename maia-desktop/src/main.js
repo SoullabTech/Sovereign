@@ -36,6 +36,7 @@ const { createDiagnostics } = require('./voice/diagnostics');
 const { createEpochState, EPOCH_END_REASONS } = require('./voice/epoch');
 const { createVad } = require('./voice/vad');
 const { createUtteranceBuffer } = require('./voice/utterance');
+const { SURFACES, PROBE_SURFACE, isPermitted } = require('./surfaces');
 const { createSession } = require('./session');
 const { createConversation } = require('./conversation');
 const { createCaptureLiveness } = require('./capture-liveness');
@@ -465,32 +466,58 @@ ipcMain.handle('maia:sign-out', async () => {
 
 ipcMain.handle('maia:auth-state', async () => memberSession.state());
 
-function createWindow() {
-  mainWindow = new BrowserWindow({
-    width: 900,
-    height: 700,
-    title: 'MAIA Desktop — D01 native voice witness',
+// ── the permission wall ─────────────────────────────────────────────────────
+//
+// COMPANION-01A P1. Installed PER PARTITION, and the default session is denied
+// everything. Previously one handler on defaultSession granted audio to any
+// window that asked; a platform surface would have inherited it.
+//
+// Each surface's capabilities live in surfaces.js, which is where widening
+// Desktop's authority has to be argued. This function only enforces.
+function installPermissionWall() {
+  const wall = (partition) => {
+    const ses = session.fromPartition(partition);
+    ses.setPermissionRequestHandler((_wc, permission, callback) => {
+      callback(isPermitted(partition, permission));
+    });
+    ses.setPermissionCheckHandler((_wc, permission) => isPermitted(partition, permission));
+  };
+  for (const s of Object.values(SURFACES)) wall(s.partition);
+
+  // Fail closed. Anything that reaches the default session — a window created
+  // without naming a partition, a future mistake — gets nothing at all.
+  session.defaultSession.setPermissionRequestHandler((_wc, _p, callback) => callback(false));
+  session.defaultSession.setPermissionCheckHandler(() => false);
+}
+
+function createSurfaceWindow(surface, opts = {}) {
+  const win = new BrowserWindow({
+    width: opts.width || 900,
+    height: opts.height || 700,
+    show: opts.show !== false,
+    title: opts.title || 'MAIA Desktop',
     backgroundColor: '#14100E',
     webPreferences: {
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: true,
-      preload: path.join(__dirname, 'preload.js'),
+      partition: surface.partition,
+      preload: path.join(__dirname, surface.preload),
     },
   });
-  mainWindow.loadFile(path.join(__dirname, 'index.html'));
+  win.loadFile(path.join(__dirname, surface.entry));
+  return win;
+}
+
+function createWindow() {
+  mainWindow = createSurfaceWindow(SURFACES.voice, {
+    title: 'MAIA Desktop — D01 native voice witness',
+  });
   mainWindow.on('closed', () => { mainWindow = null; });
 }
 
 app.whenReady().then(() => {
-  // Grant ONLY audio, and only to our own loaded file. Everything else — video,
-  // geolocation, notifications, display capture — is refused, so the renderer
-  // cannot acquire a device this unit never authorized.
-  session.defaultSession.setPermissionRequestHandler((_wc, permission, callback) => {
-    callback(permission === 'media' || permission === 'audioCapture');
-  });
-  session.defaultSession.setPermissionCheckHandler((_wc, permission) =>
-    permission === 'media' || permission === 'audioCapture');
+  installPermissionWall();
 
   memberSession = createSession({ app, safeStorage });
   if (memberSession.state().signedIn) {
@@ -508,7 +535,23 @@ app.whenReady().then(() => {
   }
 });
 
+// Negative proof for the wall, dev-only. Opens a platform-partition window that
+// asks for the microphone exactly as web code would; main must refuse it.
+//   MAIA_DESKTOP_PLATFORM_PROBE=1 electron .
+if (process.env.MAIA_DESKTOP_PLATFORM_PROBE === '1') {
+  app.whenReady().then(() => {
+    const probe = createSurfaceWindow(PROBE_SURFACE, {
+      width: 640, height: 420, title: 'COMPANION-01A — platform permission probe',
+    });
+    ipcMain.handle('maia:probe-report', async (_e, r) => {
+      console.log('[COMPANION-01A] platform probe:', JSON.stringify(r));
+      return { ok: true };
+    });
+    probe.on('closed', () => {});
+  });
+}
+
 app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });
 app.on('activate', () => { if (BrowserWindow.getAllWindows().length === 0) createWindow(); });
 
-module.exports = { EPOCH_END_REASONS };
+module.exports = { EPOCH_END_REASONS, installPermissionWall, createSurfaceWindow };

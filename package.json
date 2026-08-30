@@ -164,7 +164,7 @@
     "jarvis": "node scripts/builder/session.mjs status",
     "jarvis:rate": "node scripts/builder/rate.mjs",
     "jarvis:report": "node scripts/builder/session.mjs report",
-    "jarvis:proof": "node scripts/builder/__tests__/session-proof.mjs && node scripts/builder/__tests__/rate-proof.mjs && node scripts/builder/__tests__/incident-scenario-proof.mjs && node scripts/builder/__tests__/work-unit-proof.mjs && node scripts/builder/__tests__/run-check-proof.mjs && node scripts/builder/__tests__/delegate-workspace-convergence-proof.mjs && node scripts/builder/__tests__/session-liveness-authority-proof.mjs && node scripts/builder/__tests__/claude-adapter-governance-proof.mjs"
+    "jarvis:proof": "node scripts/builder/__tests__/session-proof.mjs && node scripts/builder/__tests__/rate-proof.mjs && node scripts/builder/__tests__/incident-scenario-proof.mjs && node scripts/builder/__tests__/work-unit-proof.mjs && node scripts/builder/__tests__/run-check-proof.mjs && node scripts/builder/__tests__/delegate-workspace-convergence-proof.mjs && node scripts/builder/__tests__/session-liveness-authority-proof.mjs && node scripts/builder/__tests__/claude-adapter-governance-proof.mjs && node scripts/builder/__tests__/desktop-surface-wall-proof.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.27.3",
