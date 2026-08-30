@@ -34,6 +34,7 @@
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
+import { resolveInitialSection } from './placeInWork';
 import { SectionSaveQueue, type SaveFn, type SectionStatus } from './sectionSaveQueue';
 import { AUTOSAVE_DELAY_MS } from '@/app/press/manuscript/workingDraftClient';
 
@@ -162,6 +163,12 @@ export function useSectionWriting(
    * nothing else can.
    */
   draftKey: string,
+  /**
+   * WS2-05A — the place the URL asked for. Honoured only when this draft
+   * actually holds it; a stale or foreign id falls back to the first section
+   * rather than manufacturing a relation (see lib/writersStudio/placeInWork.ts).
+   */
+  initialSectionId?: string | null,
 ): SectionWriting {
   /* The latest save function, reachable without making it a reset signal. */
   const saveRef = useRef(save);
@@ -186,12 +193,19 @@ export function useSectionWriting(
   const queue = session.queue;
   const persisted = session.persisted;
   void initialVersion;
-  const [activeId, setActiveId] = useState<string | null>(initialSections[0]?.id ?? null);
+  /* Resolved ONCE, at mount, from what the URL asked for and what this draft
+     holds. Recomputing it on every render would fight the member: a later
+     click would be undone by the id still sitting in the address bar. */
+  const opening = useRef(
+    resolveInitialSection(initialSectionId, initialSections.map((s) => s.id)),
+  ).current;
+  const [activeId, setActiveId] = useState<string | null>(opening.sectionId);
 
   /* The visible text of the active section, held in a ref so the switch handler
      can read it synchronously. State alone would not do: a click handler must
      see what is on screen right now, not what a render pass last committed. */
-  const visibleBody = useRef<string>(initialSections[0]?.body ?? '');
+  const visibleBody = useRef<string>(
+    initialSections.find((s) => s.id === opening.sectionId)?.body ?? '');
   const sectionsById = useMemo(
     () => new Map(initialSections.map((s) => [s.id, s])), [initialSections]);
 
