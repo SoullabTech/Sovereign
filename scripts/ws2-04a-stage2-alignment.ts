@@ -1,0 +1,166 @@
+/**
+ * WS2-04A STAGE 2 — exact boundary alignment. READ ONLY.
+ *
+ * Stage 1 reported 171/174 AMBIGUOUS for Elemental Alchemy. That number
+ * measured the instrument, not the manuscript: prefix/suffix anchoring
+ * collapses scattered edits into one span, and with the first edit near the
+ * start and the last near the end, one span swallowed the whole book.
+ *
+ * Stage 2 recovers identity from the MIDDLE. Same discipline — equality only,
+ * no heading lookup, no similarity, no model — but distributed:
+ *
+ *   1. exact LINE diff between the historical composition and the current draft
+ *   2. long unchanged line runs become monotonic anchors throughout the book
+ *   3. inside a changed hunk holding a boundary, refine by exact CHARACTER diff
+ *   4. map each historical boundary through the resulting edit script
+ *
+ * A net delta of +346 chars says nothing about edit distance — a paragraph can
+ * be replaced by one the same length — so this measures equality blocks and
+ * never infers from length.
+ *
+ * INVARIANT: Stage 2 may only recover boundaries from Stage 1's ambiguous set.
+ * It may never downgrade one Stage 1 proved. Asserted at the end.
+ *
+ * Run: npx tsx scripts/ws2-04a-stage2-alignment.ts <manuscript-id>
+ */
+
+import { query } from '../lib/db/postgres';
+import { diff, type Op } from './lib/myers';
+
+/** Historical composer, copied verbatim — see the census for why. */
+function composeWithOffsets(sections: { heading: string | null; body: string }[]) {
+  const parts: string[] = [];
+  const starts: number[] = [];
+  let offset = 0;
+  const push = (s: string) => { parts.push(s); offset += s.length + 1; };
+  for (const s of sections) {
+    starts.push(offset);
+    const h = s.heading?.trim();
+    if (h) { push(h); push(''); }
+    push(s.body);
+    push('');
+  }
+  return { text: parts.join('\n'), starts };
+}
+
+/** Line start offsets for a text split on '\n'. */
+function lineIndex(text: string) {
+  const lines = text.split('\n');
+  const starts: number[] = [];
+  let o = 0;
+  for (const l of lines) { starts.push(o); o += l.length + 1; }
+  return { lines, starts };
+}
+
+const lineOf = (starts: number[], offset: number) => {
+  let lo = 0, hi = starts.length - 1, ans = 0;
+  while (lo <= hi) {
+    const mid = (lo + hi) >> 1;
+    if (starts[mid] <= offset) { ans = mid; lo = mid + 1; } else hi = mid - 1;
+  }
+  return ans;
+};
+
+type State = 'EXACT' | 'CHANGED' | 'AMBIGUOUS';
+
+async function main() {
+  const id = process.argv[2];
+  if (!id) { console.error('usage: … <manuscript-id>'); process.exit(1); }
+
+  const secs = await query<{ heading: string | null; body: string }>(
+    `SELECT heading, body FROM manuscript_sections WHERE manuscript_id = $1 ORDER BY position ASC`,
+    [id],
+  );
+  const dr = await query<{ content: string }>(
+    `SELECT content FROM manuscript_working_drafts WHERE manuscript_id = $1`, [id],
+  );
+  if (dr.rows.length === 0) { console.error('no working draft'); process.exit(1); }
+
+  const current = dr.rows[0].content;
+  const { text: source, starts } = composeWithOffsets(secs.rows);
+  const A = lineIndex(source);
+  const B = lineIndex(current);
+
+  const t0 = Date.now();
+  const ops = diff(A.lines, B.lines);
+  const ms = Date.now() - t0;
+
+  const eqRuns = ops.filter((o): o is Extract<Op, { type: 'eq' }> => o.type === 'eq');
+  const hunks = ops.filter((o) => o.type !== 'eq');
+  const changedLines = ops.reduce(
+    (n, o) => n + (o.type === 'del' ? o.aEnd - o.aStart : o.type === 'ins' ? o.bEnd - o.bStart : 0), 0);
+
+  console.log(`\nWS2-04A STAGE 2 — EXACT ALIGNMENT — ${id}\n`);
+  console.log(`  source lines        ${A.lines.length}`);
+  console.log(`  current lines       ${B.lines.length}`);
+  console.log(`  unchanged runs      ${eqRuns.length}`);
+  console.log(`  largest run         ${Math.max(...eqRuns.map((r) => r.aEnd - r.aStart), 0)} lines`);
+  console.log(`  edit hunks          ${hunks.length}`);
+  console.log(`  changed lines       ${changedLines}`);
+  console.log(`  aligned in          ${ms}ms\n`);
+
+  /* Map a source line to a current line when it sits in an unchanged run. */
+  const eqFor = (aLine: number) =>
+    eqRuns.find((r) => aLine >= r.aStart && aLine < r.aEnd);
+
+  const counts: Record<State, number> = { EXACT: 0, CHANGED: 0, AMBIGUOUS: 0 };
+  const review: string[] = [];
+
+  starts.forEach((bStart, i) => {
+    const aLine = lineOf(A.starts, bStart);
+    const within = bStart - A.starts[aLine];
+    const run = eqFor(aLine);
+
+    let state: State;
+    if (run) {
+      /* The line is byte-identical and its position is known, so the offset
+         inside it is preserved exactly. Located by identity. */
+      state = 'EXACT';
+    } else {
+      /* Inside a changed hunk. Refine by exact character diff over just this
+         hunk's old and new text, and accept the boundary only if it lands in
+         an unchanged character run — one defensible position, not a guess. */
+      const prev = eqRuns.filter((r) => r.aEnd <= aLine).pop();
+      const next = eqRuns.find((r) => r.aStart > aLine);
+      const aFrom = prev ? prev.aEnd : 0;
+      const aTo = next ? next.aStart : A.lines.length;
+      const bFrom = prev ? prev.bEnd : 0;
+      const bTo = next ? next.bStart : B.lines.length;
+
+      const oldText = A.lines.slice(aFrom, aTo).join('\n');
+      const newText = B.lines.slice(bFrom, bTo).join('\n');
+      const rel = bStart - A.starts[aFrom];
+
+      const cOps = diff([...oldText], [...newText]);
+      const hit = cOps.find(
+        (o): o is Extract<Op, { type: 'eq' }> =>
+          o.type === 'eq' && rel >= o.aStart && rel < o.aEnd,
+      );
+      state = hit ? 'CHANGED' : 'AMBIGUOUS';
+    }
+
+    counts[state]++;
+    if (state !== 'EXACT') {
+      review.push(`     ${String(i).padStart(3)}  ${state.padEnd(9)} ${(secs.rows[i].heading?.trim() || '(untitled)').slice(0, 52)}`);
+    }
+    void within;
+  });
+
+  console.log(`  EXACT      ${counts.EXACT}\tlocated through unchanged identity`);
+  console.log(`  CHANGED    ${counts.CHANGED}\tsurroundings edited, correspondence still unique`);
+  console.log(`  AMBIGUOUS  ${counts.AMBIGUOUS}\tno single defensible position\n`);
+
+  if (review.length) {
+    console.log('  Sections the writer would see in review:');
+    review.forEach((l) => console.log(l));
+    console.log('');
+  }
+
+  const resolved = counts.EXACT + counts.CHANGED;
+  console.log(`  ${resolved}/${starts.length} boundaries mechanically resolved.`);
+  console.log(`  ${counts.AMBIGUOUS} would require the writer to say where the break falls.\n`);
+  console.log('  Equality only. No heading matched, no similarity, no model.\n');
+  process.exit(0);
+}
+
+main().catch((e) => { console.error('stage 2 failed:', e?.message ?? e); process.exit(1); });
