@@ -62,6 +62,36 @@ export function unitLabel(node: { kind: string | null; title: string | null }): 
   return node.title ?? node.kind ?? 'Untitled division';
 }
 
+/**
+ * The panel's chrome band.
+ *
+ * StudioPanel scrolls its body with `padding: SPACE.comfortable`, and sticky
+ * offsets resolve against that scrollport's padding box — so a bare `top: 0`
+ * would leave a 16px strip above the band through which rows would be seen
+ * scrolling. The negative margins pull the band out to the panel's edges and
+ * the matching padding puts its content back where it was, so it covers the
+ * full width and the gap above it. Opaque `GROUND.raised` because it is the
+ * panel's own ground; a translucent band would show the outline through it.
+ *
+ * NO BORDER. `RULE.quiet` is the ramp's own `raised` step and would be
+ * invisible here; anything more visible would put a new edge into a room whose
+ * contract says the writing field keeps the only one in the row. Depth in this
+ * room is carried by the ramp, so the opaque band plus the space beneath it is
+ * the whole separation, and rows read as passing under it.
+ */
+const CHROME: React.CSSProperties = {
+  position: 'sticky',
+  top: -SPACE.comfortable,
+  zIndex: 1,
+  background: GROUND.raised,
+  marginLeft: -SPACE.comfortable,
+  marginRight: -SPACE.comfortable,
+  marginTop: -SPACE.comfortable,
+  paddingLeft: SPACE.comfortable,
+  paddingRight: SPACE.comfortable,
+  paddingTop: SPACE.comfortable,
+};
+
 export default function StructuredOutline({
   manuscriptId,
   sections,
@@ -269,6 +299,14 @@ export default function StructuredOutline({
 
   return (
     <>
+      {/* PANEL CHROME, NOT THE FIRST ROW.
+          On a 174-section manuscript the count and the organise control used to
+          scroll away exactly while the member was moving through the Work — the
+          instrument for organising a book disappearing at the moment they are
+          reading it. Sticky to the scrollport, opaque, and pulled out to the
+          panel's padding so rows pass under it rather than beside it.
+          Presentation only: nothing here changes what a gesture does. */}
+      <div style={CHROME}>
       <div style={{ display: 'flex', alignItems: 'baseline', gap: SPACE.snug, marginBottom: SPACE.base }}>
         <StudioText role="metadata" style={{ flex: 1 }}>
           {sections.length} section{sections.length === 1 ? '' : 's'}
@@ -301,6 +339,7 @@ export default function StructuredOutline({
           Removing a division returns its sections to “not yet placed”. No writing is removed.
         </StudioText>
       )}
+      </div>
 
       {tree?.roots.map((r) => unit(r, 0, tree.roots))}
 
