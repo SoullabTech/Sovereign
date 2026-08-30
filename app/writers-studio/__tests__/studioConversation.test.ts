@@ -14,32 +14,45 @@ const strip = (s: string) => s.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*/
 const surface = strip(read('canvas', 'StudioConversation.tsx'));
 const identity = strip(read('useMemberIdentity.ts'));
 const canvas = strip(read('canvas', 'page.tsx'));
-const oracle = strip(
-  fs.readFileSync(
-    path.join(__dirname, '..', '..', '..', 'components', 'OracleConversation.tsx'),
-    'utf8',
-  ),
-);
 
 /**
  * WS2-03D — MAIA inside the Studio.
  */
 
-describe('one MAIA runtime, in a different container', () => {
-  it('renders the canonical conversation component, not a Studio one', () => {
-    expect(surface).toContain("import('@/components/OracleConversation')");
-    expect(surface).toContain('/api/sovereign/app/maia/list');
+describe('one MAIA runtime, a different presentation', () => {
+  /* OracleConversation was tried and the runtime witness ruled it out: its
+     presence layers are position:fixed and escape any container, and its
+     pre-conversation state IS the full holoflower — the guard is
+     `(shouldRenderArrival || (!hasActivated && ...))`, which no prop
+     suppresses. A contained holoflower is still a holoflower, and the ruling
+     is that the manuscript stays primary.
+
+     So this is a second CLIENT rendering, not a second runtime, and the
+     distinction is asserted rather than asserted-about. */
+
+  it('posts to the canonical endpoint, like every other MAIA surface', () => {
+    expect(surface).toContain("apiFetch('/api/sovereign/app/maia/list'");
   });
 
-  it('spawns no second conversation model, store, or prompt path', () => {
-    for (const forbidden of ['useState<Message', 'messages.push', 'buildPrompt', 'fetch(']) {
-      expect(surface).not.toContain(forbidden);
+  it('carries the Work by id, so the server situates the exchange', () => {
+    // Same request contract ⇒ same server-side resolution from the member's
+    // own row ⇒ SITUATED-WORK-DEEP-01 applies unchanged. Nothing about the
+    // exchange is decided in this file.
+    expect(surface).toContain('workContext: { workId: work.id }');
+  });
+
+  it('decides nothing about the exchange itself', () => {
+    // No prompt building, no memory, no provenance, no tier selection. If any
+    // of these appeared here, it really would be a second runtime.
+    for (const forbidden of [
+      'buildPrompt', 'addendum', 'processingProfile', 'systemPrompt', 'memory',
+    ]) {
+      expect(surface.toLowerCase()).not.toContain(forbidden.toLowerCase());
     }
   });
 
-  it('carries workContext, so SITUATED-WORK-DEEP-01 applies unchanged', () => {
-    // Same runtime ⇒ same containment. Nothing about it is re-implemented.
-    expect(surface).toContain('workContext={{ workId: work.id }}');
+  it('no longer embeds the viewport-owning component', () => {
+    expect(surface).not.toContain('OracleConversation');
   });
 });
 
@@ -101,46 +114,44 @@ describe('conversation identity is minted, never discovered', () => {
 });
 
 describe('opening Conversations is not consent to listen', () => {
-  /* The authenticated witness: clicking Conversations opened the microphone
-     and threw a full-viewport LISTENING presence over the Studio, because
-     OracleConversation defaults voiceEnabled=true / initialShowChatInterface=
-     false and the embed passed neither. An invitation to converse is not
-     permission to capture — those are separate acts.
+  /* The witness: clicking Conversations opened the microphone and threw a
+     full-viewport LISTENING field over the Studio, because the embedded
+     component defaulted voice-first.
 
-     Asserted in two halves on purpose. A prop assertion alone proves only that
-     someone wrote a prop; it says nothing about whether the prop stops
-     anything. The second half pins the MECHANISM. */
+     The guard is stronger now than when it was a prop. Voice is not disabled
+     on this surface — it is ABSENT. There is no capture API, no voice
+     component, and nothing to flip. */
 
-  it('the Studio asks for text, and asks for no voice', () => {
-    expect(surface).toContain('voiceEnabled={false}');
-    expect(surface).toContain('initialShowChatInterface');
-  });
-
-  it('voiceEnabled gates the ONLY capture component in the tree', () => {
-    /* <ContinuousConversation> is the sole getUserMedia path OracleConversation
-       renders, and `voiceEnabled &&` is the outer conjunct of its render guard.
-       Not rendered ⇒ no capture, no permission prompt, no listening state.
-       If this guard is ever loosened, voiceEnabled={false} silently stops being
-       a consent boundary — which is exactly why it is pinned here. */
-    expect(oracle).toMatch(
-      /\{voiceEnabled && \(!showChatInterface \|\| \(showChatInterface && enableVoiceInput\)\) && \(/,
-    );
-    expect(oracle).toContain('<ContinuousConversation');
-  });
-
-  it('opens no capture path of its own either', () => {
-    for (const banned of ['getUserMedia', 'mediaDevices', 'AudioContext', 'MediaRecorder']) {
+  it('contains no capture API of any kind', () => {
+    for (const banned of [
+      'getUserMedia', 'mediaDevices', 'AudioContext', 'MediaRecorder',
+      'SpeechRecognition', 'webkitSpeechRecognition',
+    ]) {
       expect(surface).not.toContain(banned);
     }
   });
 
-  it('adds no in-Studio microphone toggle in v1', () => {
-    /* Deliberate. A toggle would put the permission-bearing gesture back into
-       a surface not yet designed for it. Voice lives behind Open in MAIA,
-       where voice-first is the intended design. */
-    for (const banned of ['setVoiceEnabled', 'enableVoiceInput', 'startListening', 'Talk with MAIA']) {
+  it('renders no voice component beneath it', () => {
+    for (const banned of [
+      'ContinuousConversation', 'MicrophoneCapture', 'MicInputWithTorus',
+      'EnhancedVoiceControls', 'MaiaCapture',
+    ]) {
       expect(surface).not.toContain(banned);
     }
+  });
+
+  it('adds no in-Studio microphone affordance in v1', () => {
+    /* Deliberate. A future "Talk with MAIA" control would be the
+       consent-bearing gesture — and it must be added on purpose, never
+       inherited. Voice lives behind Open in MAIA, where it was designed for. */
+    for (const banned of ['Talk with MAIA', 'startListening', 'voiceEnabled', 'isListening']) {
+      expect(surface).not.toContain(banned);
+    }
+  });
+
+  it('offers a text composer and nothing else to speak into', () => {
+    expect(surface).toContain('<textarea');
+    expect(surface).toContain('MINI_MAIA_PLACEHOLDER');
   });
 });
 

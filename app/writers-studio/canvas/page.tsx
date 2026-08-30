@@ -597,6 +597,10 @@ export default function WritersStudioPage() {
                 work={work}
                 manuscriptId={manuscript.id}
                 conversationId={conversationId}
+                /* Puts her away without ending the exchange: the panel is
+                   hidden by `dismiss`, never unmounted, so calling her forward
+                   again returns to the same conversation. */
+                onClose={() => dismiss('conversation')}
               />
             ) : (
               <MaiaColumn context={workContext} />
