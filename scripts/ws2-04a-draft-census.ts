@@ -52,6 +52,22 @@ function firstDivergence(a: string, b: string): number {
 }
 
 async function main() {
+  /* NAME THE POPULATION, from the database's own answer rather than from an
+     env var this script might have misread. Twice during 04A a run was very
+     nearly made against the wrong data — once from a directory with no repo,
+     once against a local dev database that does not hold these manuscripts —
+     and in neither case would the output have said so. A census that does not
+     name what it counted is one `cd` away from lying. */
+  const where = await query<{
+    db: string; host: string | null; port: number | null; user: string;
+  }>(`SELECT current_database() AS db,
+             host(coalesce(inet_server_addr(), '127.0.0.1'::inet)) AS host,
+             inet_server_port() AS port,
+             current_user AS "user"`);
+  const w = where.rows[0];
+  console.log(`\n  counted against  ${w.user}@${w.host ?? 'local socket'}:${w.port ?? '-'}/${w.db}`);
+  console.log(`  at               ${new Date().toISOString()}`);
+
   const drafts = await query<{
     manuscript_id: string;
     title: string | null;
