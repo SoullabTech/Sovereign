@@ -3,7 +3,8 @@
 **Head:** `20b8638c6`
 **Book:** Elemental Alchemy, `a3ae67fd-a21e-4948-8766-4c397d2e4712`, 174 sections,
 local dev. Kelly's own manuscript, not a fixture.
-**Status:** structural safety PROVEN on the real book. Product reality PARTIAL.
+**Status:** **PASS · founder-witnessed locally on the real 174-section
+manuscript.** Closed 2026-08-30.
 
 Written as it stands, not as it will stand. The lines marked OUTSTANDING have
 not happened, and nothing below should be read as if they had.
@@ -99,12 +100,49 @@ exercised in the room on this book is recorded only if the walker says so.
 
 ```text
 inline authoring gesture          PASS  — Fire authored from the field
-hierarchical map on the real book PASS  — 42–69 grouped, rendered
+hierarchical map on the real book PASS  — Fire renders with 42–69 nested
 unplaced writing remains visible  PASS  — 146 sections stayed out of Fire
+sticky outline chrome             PASS  — held at rows 93–106
 explicit promote/delete grammar   substrate PASS; in-room use unconfirmed
-place survives reload             OUTSTANDING
-section visits don't pollute Back OUTSTANDING
+place survives reload             PASS
+section visits don't pollute Back PASS
 ```
+
+### The last two, witnessed
+
+Section 100 (`DIALOGUE`) opened; the location read
+`?m=a3ae67fd-…&s=a9d38b80-c6dc-430b-873a-a99829b7e996`.
+
+```text
+reload:  same section   — ⌘R, and the field is still DIALOGUE
+Back:    left the Work  — one press exits the canvas entirely
+```
+
+Place survives a full document load because the id in the URL is resolved
+against the draft's own sections, and section clicks leave no browser history
+because they replace rather than push. Both rules held on a real manuscript at
+row 100 of 174.
+
+---
+
+## Two findings the witness produced
+
+Neither blocks closure; both are real and neither was predicted.
+
+**1 · The outline stops reading in book order once a division exists.**
+After reload the panel shows the chrome, then `Fire` with 42, 43, 44 … beneath
+it — and sections 0–41 are nowhere above it. Divisions render first and
+everything unplaced follows, so a partially organised book lists 42–69 before
+0–41. For a Work mid-organisation, that is most of the time. The outline should
+interleave divisions and unplaced material in position order, so the column
+still reads as the book.
+
+**2 · The restored section is not scrolled into view.**
+Place is restored correctly — the field holds DIALOGUE — but the outline is
+showing Fire at 42–54, not row 100. The member returns to where they were
+standing in the writing and not in the map. Small, and felt every time.
+
+---
 
 `?s=<draft-section-uuid>` was observed in the address bar on `b05451e56`, so
 place is being written to the location. That it *survives a reload* has not been
