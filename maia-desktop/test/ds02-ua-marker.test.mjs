@@ -51,6 +51,21 @@ test('S0 — the web side actually classifies Desktop, and on the SAME marker', 
     'Desktop can reach web-speech');
 });
 
+const CONTINUOUS = readFileSync(
+  path.join(here, '..', '..', 'components', 'voice', 'ContinuousConversation.tsx'), 'utf8',
+);
+
+test('S0b — the surface actually OBEYS the Desktop route', () => {
+  // ⛔ platformDetection deciding correctly is not enough. The component that
+  // runs after the tap has to consult it. Proving the decision without proving
+  // the obedience is the same seam-shaped miss this test was carried with.
+  assert.ok(/isDesktop \|\| !hasSpeechRecognitionAPI\(\)/.test(CONTINUOUS),
+    'ContinuousConversation reaches the sovereign path only when SpeechRecognition is ABSENT — ' +
+    'in Electron it is present, so Desktop takes the browser path regardless of classification');
+  assert.ok(/isDesktopShell|selectVoiceTransport/.test(CONTINUOUS),
+    'the surface never imports the Desktop classification at all');
+});
+
 test('S1 — the package name still produces the marker the web classifies on', () => {
   assert.equal(pkg.name, 'maia-desktop',
     'the package was renamed — lib/utils/platformDetection.ts classifies Desktop by ' +
