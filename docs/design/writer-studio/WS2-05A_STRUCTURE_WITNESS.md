@@ -125,9 +125,31 @@ row 100 of 174.
 
 ---
 
+## WS2-05A-R1 — PASS
+
+Both repairs witnessed on the real book at `995463ea1`.
+
+```text
+book order        PASS  the column opens at 0 and ascends; no "not yet placed"
+                        group, because unplaced sections now interleave
+restored reveal   PASS  ?s=7798878c-… restored 139 MAPPING YOUR DEVELOPMENT,
+                        and the outline showed row 139 selected rather than
+                        leaving it off-screen
+```
+
+**A stale bundle was misread as a defect first**, and that is the process
+finding rather than a product one. An earlier capture showed `63 … 69` followed
+by a `NOT YET PLACED` group holding `0. 1. 2. 3.` — which is pre-R1 rendering,
+because R1 deleted that group entirely. It cost a round of adjudication to
+establish that the code under test was not the code being run.
+`scripts/ws2-witness-browser.ts` now asserts that first and refuses to report on
+anything else if the bundle is stale.
+
+---
+
 ## Two findings the witness produced
 
-Neither blocks closure; both are real and neither was predicted.
+Both now repaired by R1. Recorded because neither was predicted.
 
 **1 · The outline stops reading in book order once a division exists.**
 After reload the panel shows the chrome, then `Fire` with 42, 43, 44 … beneath
