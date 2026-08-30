@@ -1,213 +1,196 @@
 # DESKTOP-VOICE-GHOST-REARM-01
 
 **Class:** authorship / voice authority
-**Candidate:** `1c2c59af9` — DEVICE-witnessed 2026-08-30
+**Candidate:** `1c2c59af9` — DEVICE-witnessed 2026-08-30, pinned two-origin loopback witness
 **Ruling:** candidate NOT ACCEPTED · DO NOT PACKAGE
 
-> A non-empty model transcription is not sufficient evidence that the member spoke.
+**Findings only.** This document establishes what is known. It does not design a
+repair, name a signal, or choose a threshold — see §6.
 
 ---
 
-## 1. What happened on the device
+## The central finding
 
-The pinned two-origin witness (`MAIA_PLATFORM_ORIGIN` and `MAIA_BASE_URL` both
-`http://127.0.0.1:3105`, `source=override`, worktree at `1c2c59af9`) passed every
-objective it was built to test, and then authored words the member did not say.
+> **No authority allowed the ghost transcript; the architecture never asked the
+> authorship question.**
 
-```
-PASSED
-  short turn                     mic → sovereign-whisper → real transcript → turn
-  long turn                      32.749 s · 278 chars · final tail survived
-  120 s ceiling                  active; the old ~8 s truncation is gone
-  readTranscript()               delivered real Whisper transcripts  (#1150)
+Nothing failed open. No guard was bypassed, no check regressed, no condition
+evaluated wrongly. The path from "a model returned characters" to "the member
+said this" contains no point at which authorship is interrogated. The defect is
+an absence, not a malfunction — which is why it survived review, and why it
+cannot be closed by repairing anything that already exists.
 
-FAILED
-  post-turn re-arm               captured a room in which nobody spoke
-  authorship                     Whisper returned "You" → dispatched as member speech
-  duplicate                      sameAsPrevious:true → dispatched again
-```
+---
 
-### The observed cycle
+## 1. DEVICE
+
+Witnessed on candidate `1c2c59af9`, both origins pinned to `http://127.0.0.1:3105`,
+`source=override` confirmed before speaking.
 
 ```
-legitimate member turn
-      ↓
-MAIA responds        (no TTS audio produced on any attempt)
-      ↓
-hands-free re-arms   on all_tts_done → requestRestart('maia_stopped_speaking')
-      ↓
-~2 s capture, no member speech attested
-      ↓
-Whisper returns "You"
-      ↓
-non-empty transcript == accepted as authorship
-      ↓
-ghost member turn → MAIA responds → re-arm → "You" again → dispatched again
+legitimate long turn                 PASS
+  32.749 s captured
+  278-char final transcript
+  tail "marigold" survived
+  MAIA responded to the real turn
+
+member then said nothing
+  automatic re-arm occurred
+  ~2.1 s capture → 3-char transcript "You"
+  "You" dispatched as member speech
+  second ~1.5 s capture → same 3-char result
+  sameAsPrevious = true
+  duplicate still dispatched
 ```
+
+Each ghost dispatch produced a MAIA response, which completed, which re-armed
+capture, which produced another ghost. The cycle was self-sustaining.
 
 **Speaker feedback is ruled out.** Every TTS attempt explicitly returned no
-audio, and re-arm occurred only after `all_tts_done`. There was no sound for the
-microphone to capture from MAIA.
+audio, and re-arm occurred only after `all_tts_done`. There was no sound present
+for the microphone to capture from MAIA.
 
 ---
 
-## 2. What the durations prove on their own
+## 2. SOURCE
+
+Read at `1c2c59af9`. Each line is sourced; none is inferred.
+
+- **Re-arm after an accepted voice turn is intentional.**
+  `components/OracleConversation.tsx:6682` — *"accepted voice turn — the mic may
+  re-arm after the response. Set AFTER the feedback/duplicate guards."* The
+  re-arm following the legitimate 32.7 s turn was the consent model working as
+  designed.
+
+- **The sovereign recorder uses RMS only to decide when recording ends.**
+  `lib/voice/androidVoiceFallback.ts:43` defines `SILENCE_RMS_THRESHOLD`; its only
+  use is `if (rms >= SILENCE_RMS_THRESHOLD) lastLoudAt = now;` — a stop-timing
+  input. The signal is computed and then discarded.
+
+- **There is no positive speech prerequisite before transcription.** A capture
+  that never crossed the threshold is still uploaded to
+  `/api/voice/transcribe-simple`.
+
+- **A non-empty Whisper result is sufficient to reach dispatch.** Three call
+  sites in `components/voice/ContinuousConversation.tsx` — `:1263` `fallback`,
+  `:2819` `android_fallback`, `:3503` `web_whisper` (the path in the trace) —
+  each guard on `result.ok && result.transcript` and then call `witnessDispatch`
+  and `onTranscript`. Non-empty is the whole test.
+
+- **`sameAsPrevious` is observational telemetry, not suppression authority.**
+  `lib/voice/dispatchProvenance.ts:29` — *"`sameAsPrevious` is REPORTED, never
+  acted on."* The second ghost was correctly labelled a duplicate and dispatched
+  anyway, because the label was never wired to a decision.
+
+### Corroboration from timing alone
 
 `recordWithSilenceDetection` stops when
 `elapsed >= minMs (800) && silenceFor >= silenceHoldoffMs (1500)`, where
-`silenceFor = now - lastLoudAt`. The two ghost captures are therefore
-self-describing:
+`silenceFor = now - lastLoudAt`. The two ghost captures therefore describe
+themselves:
 
 | capture | reading |
 |---|---|
-| **1.503 s** | `lastLoudAt` never updated. Not one sample crossed `SILENCE_RMS_THRESHOLD`. Stop fires at exactly `silenceHoldoffMs`. Pure silence. |
-| **2.094 s** | `lastLoudAt` updated once at ~594 ms, then never again. One 100 ms blip, then silence. |
+| **~1.5 s** | `lastLoudAt` never updated — no sample crossed the threshold. Stop fires at exactly `silenceHoldoffMs`. |
+| **~2.1 s** | `lastLoudAt` updated once at ~594 ms, then never again. |
 
-This is independent corroboration that no member speech occurred, derived from
-timing alone — no audio required.
-
-It also **rules out the obvious repair**: a boolean `speechObserved` set by any
-single threshold crossing would have refused the 1.503 s ghost and admitted the
-2.094 s one. One ambient blip satisfies it. The evidence must be voiced
-*duration*.
+This corroborates that no sustained member speech occurred, from durations
+alone, without reference to the audio.
 
 ---
 
-## 3. The source chain (all at `1c2c59af9`)
+## 3. RULING
 
-Every link is sourced. No step is inferred.
+- **#1150 did not create the defect; it exposed it.** Before the response-shape
+  repair, every sovereign-whisper transcript was discarded as `empty_transcript`
+  — ghosts along with everything else. The path had to start working before the
+  missing question could matter.
 
-**1. Re-arm after the long turn was correct by design.**
-`components/OracleConversation.tsx:6682` — *"accepted voice turn — the mic may
-re-arm after the response. Set AFTER the feedback/duplicate guards."* A
-legitimate voice turn grants re-arm. That is the consent model working.
+- **Web Speech previously supplied an implicit no-speech property.** Its VAD
+  returned *no result at all* for a silent room. The guarantee existed, but it
+  lived in the browser and was never written down, because it never had to be.
 
-**2. Nothing asks whether speech actually occurred.**
-`lib/voice/androidVoiceFallback.ts:43` defines `SILENCE_RMS_THRESHOLD`; its
-*only* use was `if (rms >= SILENCE_RMS_THRESHOLD) lastLoudAt = now;` — deciding
-**when to stop**, never **whether anything was said**. The VAD computed the exact
-signal authorship needed and discarded it. A capture that never crossed the
-threshold was still POSTed to Whisper.
+- **The sovereign Whisper transport removed that implicit property without
+  replacing it with an explicit authorship gate.** Whisper always returns text.
+  The transport swap silently dropped a safety property that no line of our code
+  had ever been responsible for holding.
 
-**3. Dispatch had no dedupe authority, deliberately.**
-`lib/voice/dispatchProvenance.ts:29` — *"`sameAsPrevious` is REPORTED, never
-acted on."* So `sameAsPrevious:true` followed by dispatch is not a guard
-failing. It is a field that was never a guard.
-
-**No guard failed. No guard was ever asked.**
+- **Non-empty model output is not proof that the member spoke.**
 
 ---
 
-## 4. The structural cause
+## 4. UNRESOLVED
 
-Web Speech had VAD: a silent room produced **no result at all**. The gate existed,
-but it lived in the browser. Whisper always returns text. Moving to the sovereign
-path removed an implicit safety property that had never been written down,
-because we had never had to write it.
-
-**#1150 did not cause this — it exposed it.** Before the response-shape repair,
-every whisper transcript was discarded, ghosts included. The path had to start
-working before the missing gate could matter.
+- Whether the captured stimulus was near-silence, ambient sound, or another
+  restart/capture artifact. The authority defect is identical under all three,
+  so this does not block adjudication — but it is not established.
+- The exact repair design. See §6.
 
 ---
 
-## 5. The repair
+## 5. HELD
 
-A mechanical rule at the capture/authorship boundary:
-
-> A sovereign capture that never observed positive speech evidence cannot become
-> a member turn, regardless of what Whisper returns.
-
-**Deliberately NOT used** — each fails on a member's real words or merely masks
-this instance:
-
-- minimum transcript length (`"Hi"` is valid speech)
-- blacklisting `"You"`
-- generic Whisper hallucination lists
-- disabling hands-free
-- suppressing `sameAsPrevious` alone
-
-**Implemented** in `lib/voice/androidVoiceFallback.ts`:
+Explicitly refused as approaches, each because it either fails on a member's
+real words or conceals this instance without answering the authorship question:
 
 ```
-RecordingOutcome { blob, voicedMs }   the VAD's own evidence, kept not discarded
-voicedMs                              accumulates VAD_POLL_MS per threshold crossing
-MIN_VOICED_MS = 200                   two samples — one blip cannot satisfy it
-                                      refusal reason: 'no_speech_observed'
+no blacklist for "You"
+no minimum transcript-length heuristic          ("Hi" is valid speech)
+no generic hallucination list
+no sameAsPrevious suppression presented as the authorship fix
+no disabling hands-free merely to hide the defect
+no packaging of 1c2c59af9
 ```
-
-`lastLoudAt` is left seeded to `Date.now()` — it is correct for stop timing and
-useless as evidence, and changing it would alter stop behaviour. `voicedMs`
-starts at zero and counts only readings that actually crossed the threshold.
-
-### Why the gate is in the producer, not the call sites
-
-Three call sites in `components/voice/ContinuousConversation.tsx` each guard on
-`result.ok && result.transcript` before `witnessDispatch` and `onTranscript`:
-
-```
-:1263  fallback
-:2819  android_fallback
-:3503  web_whisper          ← the path in the trace
-```
-
-Refusing inside `recordAndTranscribe` makes all three safe by construction, and a
-fourth call site added later inherits the refusal without having to remember it.
-
-### Why the refusal is placed before the upload
-
-Strictly earlier than dispatch was required; earlier than the network was
-available for free. A capture that never heard a member is not the member's
-audio, so it does not leave the device at all — the same rule the revocation gate
-already enforces, applied to a capture that was never authored rather than one
-whose authority was withdrawn.
 
 ---
 
-## 6. Regression witness
+## 6. Why no remedy is designed here
 
-`lib/voice/__tests__/ghostRearmAuthorship.test.ts` drives the analyser tick by
-tick, reproducing both device captures:
+The likely repair surface is visible — the recorder already computes the signal
+that authorship would need — but naming it here would fix a design before its
+preconditions are known. Two censuses must precede any repair:
 
-| case | pattern | expected |
-|---|---|---|
-| pure silence (1.503 s ghost) | 20 quiet ticks | refused · `no_speech_observed` |
-| silent capture never uploaded | 20 quiet ticks | `fetch` not called |
-| single blip (2.094 s ghost) | 5 quiet · 1 voiced · 20 quiet | refused · `fetch` not called |
-| short real utterance | 3 voiced · 20 quiet | admitted · `"Hi"` returned |
-| sustained speech | 20 voiced · 20 quiet | admitted, unchanged |
-| distinct reason | 20 quiet | not `empty_transcript`, not `empty_blob` |
+1. **What signal evidence `recordWithSilenceDetection()` can truthfully export.**
+   What the analyser actually observes, at what sampling rate, with what
+   quantisation, and what that permits us to claim honestly about a capture.
+2. **What existing tests already constrain.** The sovereign capture suites carry
+   assumptions about this function's contract; a change to what it returns may
+   be constrained, or already contradicted, by proofs that exist.
 
-The **single blip** case is the load-bearing one: it is the negative control for
-the repair we did not make. The **short utterance** case is the calibration
-guard — if raising `MIN_VOICED_MS` ever turns it red, the floor went too far, and
-the two ghost cases must not be relaxed to compensate.
+Until both are done, any threshold would be a number chosen ahead of its
+evidence.
+
+**Separately noted, not part of this repair:** Desktop initialises
+`listeningModeRef = HANDS_FREE` and `handsFreeActiveRef = true`, while nearby
+comments still describe push-to-talk as the default. That contradiction deserves
+adjudication as a policy question in its own unit. A default-mode migration must
+not ride in on an authorship correctness fix.
 
 ---
 
-## 7. Evidence state
+## 7. Record state
+
+The candidate `1c2c59af9` is **byte-for-byte frozen**. This document is on the
+Desktop documentation/architecture branch and changes no application code, test,
+config, or candidate SHA.
+
+For completeness of the record rather than as an authorised remedy: a candidate
+repair was written and committed to this branch as `ec6175c44` before the
+findings/remedy separation above was set. It is **not adjudicated**, and the
+censuses in §6 have not been performed. It should be treated as a proposal
+subject to those censuses, or reverted, at the founder's direction — not as the
+answer to this finding.
+
+---
+
+## 8. Evidence state
 
 ```
 #1150 response reader       DEVICE PASS / CLOSED
 Desktop short turn          DEVICE PASS
 Desktop >12 s turn          DEVICE PASS
 120 s ceiling               DEVICE PASS
-ghost re-arm authorship     DEFECT — repaired in source, TEST pending run
+ghost re-arm authorship     DEFECT — open, remedy not designed
 Desktop whole candidate     NOT ACCEPTED
 1c2c59af9                   DO NOT PACKAGE
 ```
-
----
-
-## 8. Deliberately out of scope
-
-**Not established, and not needed for this repair:** whether Whisper hallucinated
-`"You"` from true silence or misrecognised a faint ambient sound. The authority
-defect is identical either way, and the repair does not depend on the answer.
-
-**Routed separately — do not fold into this unit:** Desktop initialises
-`listeningModeRef = HANDS_FREE` and `handsFreeActiveRef = true`, while nearby
-comments still describe push-to-talk as the default. That contradiction deserves
-adjudication as a policy question. Mixing a default-mode migration into an
-authorship repair would make both harder to review and would let a policy change
-ride in on a correctness fix.
