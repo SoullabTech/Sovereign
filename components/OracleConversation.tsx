@@ -1599,6 +1599,33 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   // run in setTimeout/requestAnimationFrame where a state value would be a stale
   // closure (see the note at ~line 2558).
   const lastSendWasVoiceRef = useRef(true);
+  // 🎙️ CONSENT BOUNDARY, SECOND HALF (DESKTOP-GHOST-REARM-01).
+  //
+  // ⛔ THE DEFECT, DEVICE-PROVEN 2026-08-30. MAIA generated text; every TTS
+  // attempt was refused by the sovereignty policy ("cloud voice is not available
+  // …"), so NO audio ever played. The response lifecycle completed anyway, the
+  // microphone re-armed on its own, heard a fragment of room noise, and Whisper
+  // dispatched a 3-character transcript. Twice.
+  //
+  // ⛔ WHY THE EXISTING BOUNDARY DID NOT CATCH IT. `lastSendWasVoiceRef` asks one
+  // question — was the last turn SPOKEN — and that repair (fix/typed-turn-no-mic-
+  // rearm) was right: typed input is not microphone re-consent. But it scoped
+  // consent to the INPUT side only. Re-arming after a response is a hands-free
+  // affordance that means "MAIA has finished speaking, your turn". When MAIA
+  // never spoke, there is no such moment, and the member — who is reading, not
+  // conversing — has their microphone opened without asking.
+  //
+  // ⭐ THE INVARIANT. No-audio TTS completion must not by itself constitute
+  // permission to re-arm the microphone.
+  //
+  // ⛔ REFS, NOT STATE, for the reason the comment above already gives: the mic
+  // restart paths run in setTimeout/requestAnimationFrame, where a state value
+  // would be a stale closure.
+  const responseSpokeRef = useRef(false);
+  /** The turn `responseSpokeRef` is about. Guards against a late confirmation
+   *  from a previous turn being read as evidence about the current one. */
+  const spokenTurnIdRef = useRef<string | null>(null);
+
 
   // ♿ PHOTOSENSITIVITY GUARD — respect the OS reduced-motion setting.
   // The holoflower glows are the largest animated areas on this surface; when
@@ -2562,6 +2589,28 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
 
   // PWA playback signal handler - routes audio events to PWA state machine
   const handlePlaybackSignal = useCallback((signal: StreamingVoicePlaybackSignal) => {
+    // ⭐ CROSS-SURFACE EVIDENCE FIRST (DESKTOP-GHOST-REARM-01). Everything below
+    // the `isPwaVoice` guard is the PWA state machine and is UNCHANGED. This
+    // block runs on every surface, because Desktop already receives these
+    // signals — `onPlaybackSignal` is subscribed unconditionally — and was
+    // discarding them at that guard. The evidence was arriving and being thrown
+    // away.
+    //
+    // ⛔ ONLY `AUDIO_PLAYING_CONFIRMED` may establish that MAIA spoke.
+    // `AUDIO_ENDED` is too late and too ambiguous; `AUDIO_FAILED` and
+    // `AUDIO_BLOCKED` must leave the belief false — they are the no-audio cases
+    // this exists to catch.
+    if (signal.type === 'TURN_STARTED') {
+      responseSpokeRef.current = false;
+      spokenTurnIdRef.current = signal.turnId;
+    } else if (signal.type === 'AUDIO_PLAYING_CONFIRMED') {
+      // A confirmation for a turn we are no longer in is not evidence about
+      // this one. Dropped rather than trusted.
+      if (spokenTurnIdRef.current === signal.turnId) {
+        responseSpokeRef.current = true;
+      }
+    }
+
     if (!isPwaVoice) return;
 
     if (signal.type === 'AUDIO_PLAYING_CONFIRMED') {
@@ -2572,6 +2621,38 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       pwaVoice.ttsFailedOrSkipped(signal.reason);
     }
   }, [isPwaVoice, pwaVoice]);
+
+  /**
+   * THE ONE AUTOMATIC RE-ARM AUTHORITY (DESKTOP-GHOST-REARM-01).
+   *
+   * ⛔ WHY THIS OWNS THE ACTUATION AND NOT MERELY THE PREDICATE. Before this,
+   * seven sites each wrote `if (lastSendWasVoiceRef.current) …startListening(x)`.
+   * Seven callers that can each independently decide the member has granted a
+   * new listening epoch is the same structure that produced the restart-authority
+   * P0 — five call sites starting recognition directly, two re-arm paths each
+   * deciding "continue" from a different predicate. Handing those seven a shared
+   * boolean would leave the shape intact and put us one edit from the same drift.
+   *
+   * ⭐ CALLERS MAY REQUEST; THEY MAY NOT DECIDE. Site-specific PRECONDITIONS
+   * (canStartListening, streamingVoiceMode, isHandsFree, unmuting, scheduling)
+   * stay at the call sites — those are about whether re-arming is possible or
+   * timely. Whether the member has AUTHORISED it lives only here, so an eighth
+   * path added later inherits the boundary instead of having to remember it.
+   *
+   * ⛔ THE WATCHDOG IS NOT EXEMPT. An exemption would recreate the defect through
+   * a slower door: no-audio response → ordinary re-arm correctly refused →
+   * watchdog fires later → microphone reopens anyway. If the watchdog is
+   * genuinely repairing an ALREADY-AUTHORISED epoch, that is a different
+   * operation and needs its own primitive; it does not have one today, so it
+   * obeys this one. Liveness remains available through the explicit Speak tap,
+   * which is member consent and is deliberately not routed through here.
+   */
+  const attemptAutoRearm = useCallback((reason: string): boolean => {
+    if (!lastSendWasVoiceRef.current) return false;   // typed turn — not voice re-consent
+    if (!responseSpokeRef.current) return false;      // MAIA never spoke — no "your turn" moment
+    voiceSession.methods.startListening(reason);
+    return true;
+  }, [voiceSession]);
 
   // 🎤 PWA EFFECTIVE FLAGS: Use PWA state machine values on Safari PWA, original values otherwise
   // This allows UI components to use a single set of flags regardless of platform
@@ -2675,7 +2756,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
           if (voiceSession.state.capabilities.canStartListening) {
             console.log('🎤 [StreamingVoice] Resuming mic after TTS failure');
             setIsMuted(false);
-            if (lastSendWasVoiceRef.current) voiceSession.methods.startListening('stream_failure_recovery');
+            attemptAutoRearm('stream_failure_recovery');
           }
         }, 500);
         return;
@@ -2781,7 +2862,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
         if (voiceSession.state.capabilities.canStartListening && streamingVoiceMode && isHandsFree) {
           console.log('🎤 [StreamingVoice] Resuming mic after force recovery');
           setIsMuted(false);
-          if (lastSendWasVoiceRef.current) voiceSession.methods.startListening('streaming_force_recovery');
+          attemptAutoRearm('streaming_force_recovery');
         }
       }, 500);
     }
@@ -2850,7 +2931,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
           if (streamingVoiceMode) {
             setIsMuted(false);
             console.log('🎤 [StreamingVoice] Calling startListening after 300ms');
-            if (lastSendWasVoiceRef.current) voiceSession.methods.startListening('streaming_response_complete');
+            attemptAutoRearm('streaming_response_complete');
           }
         }, 300);
       }
@@ -2998,7 +3079,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       // Actually restart the mic
       if (voiceSession.state.capabilities.canStartListening) {
         console.log(`🐕 [WATCHDOG] Force-restarting microphone (${reason})...`);
-        if (lastSendWasVoiceRef.current) voiceSession.methods.startListening('watchdog_recovery');
+        attemptAutoRearm('watchdog_recovery');
       }
 
       toast('⚠️ Voice recovered', { duration: 2000 });
@@ -5885,7 +5966,7 @@ I'm not sure what I'm feeling yet.`;
                     if (!isProcessingRef.current && !isRespondingRef.current && !isAudioPlayingRef.current && !isMicrophonePausedRef.current) {
                       setIsMuted(false);
                       console.log('🎤 [STREAM] Hands-free: requesting mic restart');
-                      if (lastSendWasVoiceRef.current) voiceSession.methods.startListening('hands_free_stream_restart');
+                      attemptAutoRearm('hands_free_stream_restart');
                     }
                   });
                 } else {
@@ -6637,7 +6718,7 @@ I'm not sure what I'm feeling yet.`;
                       if (voiceSession.state.capabilities.canStartListening) {
                         console.log('🎤 [NON-STREAM] Final attempt after state reset...');
                         setIsMuted(false);
-                        if (lastSendWasVoiceRef.current) voiceSession.methods.startListening('non_stream_final_reset');
+                        attemptAutoRearm('non_stream_final_reset');
                       }
                     }, 500);
                     return;
@@ -6654,7 +6735,7 @@ I'm not sure what I'm feeling yet.`;
 
                     if (canRestart) {
                       console.log(`🎤 [NON-STREAM] Attempting mic restart (attempt ${attempt})...`);
-                      if (lastSendWasVoiceRef.current) voiceSession.methods.startListening('non_stream_restart_attempt');
+                      attemptAutoRearm('non_stream_restart_attempt');
                       // Verify mic actually started after a brief delay
                       setTimeout(() => {
                         if (voiceSession.state.phase === 'listening') {
