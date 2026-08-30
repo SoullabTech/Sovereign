@@ -15,15 +15,41 @@
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import fs from 'node:fs';
+import fs, { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const pkg = JSON.parse(fs.readFileSync(path.join(here, '..', 'package.json'), 'utf8'));
 
-/** The exact regex `platformDetection.ts` uses. Kept in step by the test below. */
+/** The exact regex `platformDetection.ts` uses. */
 const DESKTOP_SHELL_UA_MARKER = /\bmaia-desktop\//i;
+
+/**
+ * ⛔ THE HALF-CONTRACT THIS CLOSES. DESKTOP-SOVEREIGN-STT-01.
+ *
+ * This test was carried into HOUSE-RECONCILE-01 while its counterpart was left
+ * on the branch. It asserted the package name against the regex ABOVE — its own
+ * copy — and never opened `platformDetection.ts`. So it passed for a lineage
+ * where no such classification existed at all, and a device walk found MAIA
+ * unable to listen with every proof green.
+ *
+ * A pin that does not read the thing it pins is not a pin. This reads it.
+ */
+const WEB_DETECTION = readFileSync(
+  path.join(here, '..', '..', 'lib', 'utils', 'platformDetection.ts'), 'utf8',
+);
+
+test('S0 — the web side actually classifies Desktop, and on the SAME marker', () => {
+  assert.ok(/DESKTOP_SHELL_UA_MARKER\s*=\s*\/\\bmaia-desktop\\\/\/i/.test(WEB_DETECTION),
+    'platformDetection.ts does not carry the marker this test pins — Desktop would be ' +
+    'classified as an ordinary browser and take the web-speech path canon forbids');
+  assert.ok(/export function isDesktopShell/.test(WEB_DETECTION), 'no isDesktopShell()');
+  assert.ok(/if \(facts\.isDesktop\) return facts\.canRecordAudio \? 'sovereign-whisper'/
+    .test(WEB_DETECTION), 'Desktop does not select the sovereign transport');
+  assert.ok(!/'web-speech'[\s\S]{0,40}isDesktop/.test(WEB_DETECTION),
+    'Desktop can reach web-speech');
+});
 
 test('S1 — the package name still produces the marker the web classifies on', () => {
   assert.equal(pkg.name, 'maia-desktop',

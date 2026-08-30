@@ -24,6 +24,7 @@
  */
 
 import { logVoiceEvent } from './voiceDiagnostics';
+import { readTranscript } from './transcribeResponse';
 import { apiFetch } from '@/lib/http/apiBase';
 
 const PREFERRED_MIME_TYPES = [
@@ -49,6 +50,7 @@ export interface FallbackResult {
     | 'empty_blob'              // recording produced no bytes
     | 'transcribe_http_error'   // /api/voice/transcribe-simple non-2xx
     | 'transcribe_disabled'     // 410 from the route (env gate off)
+    | 'aborted'                 // the caller revoked this capture's authority
     | 'empty_transcript'        // Whisper returned blank text
     | 'unknown';
   durationMs?: number;
@@ -59,6 +61,21 @@ interface RunOptions {
   maxMs?: number;
   silenceHoldoffMs?: number;
   minMs?: number;
+  /**
+   * DESKTOP-SOVEREIGN-STT-LIFECYCLE-01 — revoke this capture's authority.
+   *
+   * ⛔ OPTIONAL BY DESIGN. Callers that pass nothing (the Android-Chrome
+   * recovery, the Firefox/Zen branch) behave exactly as before — this unit adds
+   * cancellation, it does not require it.
+   *
+   * ⛔ WHY THIS MODULE NEEDED IT. Its own contract said stream lifecycle belongs
+   * to the caller, and it had no way to be told to stop. So a capture whose
+   * member had already left `/maia` would finish recording and go on to POST
+   * their audio to `/api/voice/transcribe-simple` — transcribing speech from a
+   * surface nobody was looking at any more. Attention the member cannot see is
+   * not attention they consented to.
+   */
+  signal?: AbortSignal;
 }
 
 function pickMimeType(): string | null {
@@ -79,6 +96,22 @@ export async function recordAndTranscribe(
   stream: MediaStream,
   options: RunOptions = {}
 ): Promise<FallbackResult> {
+  const signal = options.signal;
+  const aborted = (): boolean => signal?.aborted === true;
+  /** Uniform, silent exit. A revoked capture is not a failure to report loudly. */
+  const abortResult = (durationMs?: number, bytes?: number): FallbackResult => {
+    // The telemetry payload accepts no undefined values; omit what we do not have
+    // rather than widening its type for an abort path.
+    logVoiceEvent('voice_fallback_failed', {
+      reason: 'aborted',
+      ...(durationMs === undefined ? {} : { durationMs }),
+      ...(bytes === undefined ? {} : { bytes }),
+    });
+    return { ok: false, reason: 'aborted', durationMs, bytes };
+  };
+
+  if (aborted()) return abortResult();
+
   const maxMs = options.maxMs ?? DEFAULT_MAX_RECORDING_MS;
   const silenceHoldoffMs = options.silenceHoldoffMs ?? DEFAULT_SILENCE_HOLDOFF_MS;
   const minMs = options.minMs ?? DEFAULT_MIN_RECORDING_MS;
@@ -99,6 +132,7 @@ export async function recordAndTranscribe(
       maxMs,
       silenceHoldoffMs,
       minMs,
+      signal,
     });
   } catch (err: unknown) {
     const name = err instanceof Error ? err.name : 'unknown';
@@ -110,6 +144,14 @@ export async function recordAndTranscribe(
   }
 
   const durationMs = Date.now() - startedAt;
+
+  // ⛔ THE GATE THIS UNIT EXISTS FOR. Recording is over; the network request has
+  // not happened yet. If authority was revoked at any point up to here, the
+  // member's audio does not leave the device. Checked BEFORE the empty-blob
+  // branch so an abort is reported as an abort rather than as a recording
+  // failure.
+  if (aborted()) return abortResult(durationMs, blob.size);
+
   if (blob.size === 0) {
     logVoiceEvent('voice_fallback_failed', { reason: 'empty_blob', durationMs });
     return { ok: false, reason: 'empty_blob', durationMs };
@@ -139,9 +181,13 @@ export async function recordAndTranscribe(
     response = await apiFetch('/api/voice/transcribe-simple', {
       method: 'POST',
       body: formData,
+      // Aborting mid-flight cancels the upload itself, not merely its result.
+      ...(signal ? { signal } : {}),
     });
   } catch (err: unknown) {
     const name = err instanceof Error ? err.name : 'unknown';
+    // An aborted fetch is not a transport failure — it is this unit working.
+    if (aborted() || name === 'AbortError') return abortResult(durationMs, blob.size);
     logVoiceEvent('voice_fallback_failed', {
       reason: 'transcribe_http_error',
       errorName: String(name).slice(0, 60),
@@ -150,6 +196,10 @@ export async function recordAndTranscribe(
     });
     return { ok: false, reason: 'transcribe_http_error', durationMs, bytes: blob.size };
   }
+
+  // Revoked while the request was in flight and the response still arrived:
+  // the transcript is real, and it is not ours to deliver.
+  if (aborted()) return abortResult(durationMs, blob.size);
 
   if (response.status === 410) {
     // Server-side gate is off; the env var ALLOW_AUDIO_TRANSCRIPTION was
@@ -176,11 +226,7 @@ export async function recordAndTranscribe(
 
   let transcript = '';
   try {
-    const payload = await response.json();
-    // Both /api/voice/transcribe-simple and the underlying Whisper service
-    // return a `text` field. Accept either { text } or { transcript } to be
-    // resilient to small response shape variation.
-    transcript = String(payload?.text ?? payload?.transcript ?? '').trim();
+    transcript = readTranscript(await response.json());
   } catch {
     transcript = '';
   }
@@ -215,7 +261,7 @@ export async function recordAndTranscribe(
 async function recordWithSilenceDetection(
   stream: MediaStream,
   mimeType: string,
-  opts: { maxMs: number; silenceHoldoffMs: number; minMs: number },
+  opts: { maxMs: number; silenceHoldoffMs: number; minMs: number; signal?: AbortSignal },
 ): Promise<Blob> {
   return new Promise<Blob>((resolve, reject) => {
     const chunks: Blob[] = [];
@@ -228,9 +274,9 @@ async function recordWithSilenceDetection(
     }
 
     let stopped = false;
-    let stopReason: 'silence' | 'max' | 'error' = 'silence';
+    let stopReason: 'silence' | 'max' | 'error' | 'aborted' = 'silence';
 
-    const stop = (reason: 'silence' | 'max' | 'error') => {
+    const stop = (reason: 'silence' | 'max' | 'error' | 'aborted') => {
       if (stopped) return;
       stopped = true;
       stopReason = reason;
@@ -241,11 +287,27 @@ async function recordWithSilenceDetection(
       }
     };
 
+    // ⛔ DESKTOP-SOVEREIGN-STT-LIFECYCLE-01 — stop RECORDING on revocation, not
+    // merely discard the result afterwards. Without this, leaving `/maia`
+    // mid-sentence would leave the recorder running for the remainder of its
+    // window with the member's microphone open behind another screen.
+    const onAbort = () => stop('aborted');
+    if (opts.signal) {
+      if (opts.signal.aborted) {
+        // Already revoked before the first frame: stop immediately, and let
+        // onstop resolve with whatever (nothing) was captured.
+        queueMicrotask(() => stop('aborted'));
+      } else {
+        opts.signal.addEventListener('abort', onAbort, { once: true });
+      }
+    }
+
     recorder.ondataavailable = (e: BlobEvent) => {
       if (e.data && e.data.size > 0) chunks.push(e.data);
     };
     recorder.onerror = () => stop('error');
     recorder.onstop = () => {
+      opts.signal?.removeEventListener('abort', onAbort);
       cleanup();
       const blob = new Blob(chunks, { type: mimeType });
       // log only stopReason and counts — no content
