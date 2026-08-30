@@ -35,6 +35,7 @@ const PORTABLE_DOMAIN = [
   'conversation.js', 'thread-watch.js', 'capture-liveness.js', 'capture-worklet.js',
   'continuity.js', // DESKTOP SOVEREIGN CORE 01 — extracted from main.js
   'turn.js',       // DESKTOP SOVEREIGN CORE 02 — extracted from main.js
+  'capture-watch.js', // DESKTOP SOVEREIGN CORE 03 — extracted from main.js
   'session.js', // adapter-shaped: createSession({ app, safeStorage, fetchImpl })
   'voice/epoch.js', 'voice/vad.js', 'voice/utterance.js',
   'voice/wav.js', 'voice/transcription.js', 'voice/diagnostics.js',

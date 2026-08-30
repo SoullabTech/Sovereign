@@ -39,6 +39,7 @@ const { createUtteranceBuffer } = require('./voice/utterance');
 const { createSession } = require('./session');
 const { createConversation } = require('./conversation');
 const { createCaptureLiveness } = require('./capture-liveness');
+const { createCaptureWatch } = require('./capture-watch');
 const { createContinuity } = require('./continuity');
 const { createTurn } = require('./turn');
 
@@ -145,39 +146,18 @@ function voiceStateSnapshot() {
 
 function pushState() { broadcast('maia:voice-state-changed', voiceStateSnapshot()); }
 
-// ── MAIA-D02A: the capture watchdog ─────────────────────────────────────────
+// ── MAIA-D02A: capture supervision ──────────────────────────────────────────
 //
-// The worklet posts a block every 2.67 ms, and silence is still blocks. So the
-// absence of frames is never "the member went quiet" — it is the capture graph
-// having died without saying so. That is what the interface was concealing when
-// it held "Listening…" for sixteen seconds against zero audio.
-//
-// ⛔ The tick is not the event. `check()` returns null while healthy, so this
-// pushes state only on a real transition — a watchdog that broadcast every
-// second would be its own kind of noise.
-let captureWatchdog = null;
-
-function startCaptureWatchdog() {
-  stopCaptureWatchdog();
-  captureWatchdog = setInterval(() => {
-    if (!voice) return stopCaptureWatchdog();
-    const t = voice.liveness.check();
-    if (!t) return;
-    // The epoch machine already knows how to record a capture boundary; this
-    // reuses it rather than inventing a second notion of "lost".
-    voice.epoch.captureLost(t.cause);
-    voice.diagnostics.emit('voice_capture_lost', {
-      cause: t.cause,
-      source: 'watchdog',
-    });
-    pushState();
-  }, 1000);
-  if (captureWatchdog.unref) captureWatchdog.unref();
-}
-
-function stopCaptureWatchdog() {
-  if (captureWatchdog) { clearInterval(captureWatchdog); captureWatchdog = null; }
-}
+// ⭐ DESKTOP SOVEREIGN CORE 03. The liveness POLICY was already portable
+// (`capture-liveness.js` — a decision function over a clock). What main was
+// holding was the supervision around it: the cadence, what a detected loss
+// means for the epoch and the diagnostic record, and when supervision stops
+// itself. That moved to `capture-watch.js`. Main still supplies the two things
+// only a host can: the timer primitive and the transport.
+const captureWatch = createCaptureWatch({
+  voice: () => voice,
+  announce: () => pushState(),
+});
 
 // ── IPC — every handler validates in MAIN; nothing is taken on trust ────────
 
@@ -193,7 +173,7 @@ ipcMain.handle('maia:voice-start', async (_evt, payload) => {
   voice.sampleRate = Number.isFinite(sr) && sr >= 8000 && sr <= 192000 ? Math.round(sr) : 48000;
   voice.epoch.startEpoch();
   voice.liveness.arm();
-  startCaptureWatchdog();
+  captureWatch.start();
   pushState();
   return { ok: true };
 });
@@ -267,7 +247,7 @@ ipcMain.handle('maia:voice-capture-lost', async (_evt, payload) => {
 ipcMain.handle('maia:voice-stop', async () => {
   if (!voice) return { ok: false, reason: 'no capture session' };
   voice.liveness.disarm();
-  stopCaptureWatchdog();
+  captureWatch.stop();
   const tail = voice.epoch.userStop();
   const text = voice.epoch.commit();
   const snapshot = voiceStateSnapshot();
