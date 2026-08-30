@@ -35,6 +35,15 @@ import { resolveWorkContext, currentWork, mintStudioConversationId } from '../wo
 import type { CurrentManuscript } from '../useCurrentManuscript';
 import { loadRevisions, type RevisionSummary } from '../../press/manuscript/workingDraftClient';
 import Worktable from './Worktable';
+import SectionWritingSession from './SectionWritingSession';
+import SectionWritingSurface from './SectionWritingSurface';
+import {
+  chooseMount,
+  fetchWriteState,
+  type WriteState,
+  type WriteMount,
+} from '@/lib/writersStudio/writeStateClient';
+import type { SectionWriting } from '@/lib/writersStudio/useSectionWriting';
 import WorkDrawer from './WorkDrawer';
 import MaterialsDrawer from './MaterialsDrawer';
 import ManuscriptOutline, { useManuscriptSections } from './ManuscriptOutline';
@@ -188,6 +197,35 @@ export default function WritersStudioPage() {
   const work = currentWork(workContext);
 
   const { phase: sectionsPhase, sections } = useManuscriptSections(manuscript?.id ?? null);
+
+  /* ── WS2-04B: which engine may write this draft. Resolved by the server in
+     one response; the room never assembles it from parts. */
+  const [writePhase, setWritePhase] = useState<'loading' | 'ready' | 'error'>('loading');
+  const [writeState, setWriteState] = useState<WriteState | null>(null);
+  const [writing, setWriting] = useState<SectionWriting | null>(null);
+
+  useEffect(() => {
+    const id = manuscript?.id;
+    if (!id) { setWritePhase('loading'); setWriteState(null); return; }
+    let cancelled = false;
+    setWritePhase('loading');
+    setWriteState(null);
+    (async () => {
+      const r = await fetchWriteState(id, (url) => apiFetch(url));
+      if (cancelled) return;
+      setWritePhase(r.phase);
+      setWriteState(r.state);
+    })();
+    return () => { cancelled = true; };
+  }, [manuscript?.id]);
+
+  const writeMount = chooseMount(writePhase, writeState);
+  /* Development only, and only when a witness asks: holds the save RESPONSE so
+     a section can be seen still saving while the next opens. */
+  const witnessDelayMs =
+    typeof window === 'undefined'
+      ? undefined
+      : Number(new URLSearchParams(window.location.search).get('witnessDelayMs') ?? 0) || undefined;
 
   const [draftMeta, setDraftMeta] = useState<{
     updatedAt: string | null;
@@ -520,11 +558,39 @@ export default function WritersStudioPage() {
             onDismiss={() => dismiss('outline')}
             style={{ width: compact ? '100%' : pct(L.outlinePanel), flexShrink: 0 }}
           >
-            <ManuscriptOutline
-              manuscriptId={manuscript?.id ?? null}
-              phase={sectionsPhase}
-              sections={sections}
-            />
+            {/* ONE NAMESPACE AT A TIME. In section_aware the rows are
+                manuscript_draft_sections ids and carry navigation; in every
+                other mode they are the immutable Source and carry none.
+                Combining Source rows with navigation callbacks would produce a
+                column that looks wired and misses every click. */}
+            {writeMount.mount === 'sections' && writing ? (
+              <ManuscriptOutline
+                manuscriptId={manuscript?.id ?? null}
+                phase="ready"
+                sections={writeMount.rows}
+                activeId={writing.activeId}
+                statusOf={writing.statusOf}
+                onSelect={writing.goToSection}
+              />
+            ) : (
+              <>
+                <ManuscriptOutline
+                  manuscriptId={manuscript?.id ?? null}
+                  phase={sectionsPhase}
+                  sections={sections}
+                />
+                {writeMount.mount === 'worktable' && writeMount.notice && (
+                  <div style={{ marginTop: SPACE.comfortable, maxWidth: '34ch' }}>
+                    <StudioText role="metadata" style={{ marginBottom: SPACE.tight }}>
+                      {writeMount.notice.title}
+                    </StudioText>
+                    {writeMount.notice.body && (
+                      <StudioText role="quiet">{writeMount.notice.body}</StudioText>
+                    )}
+                  </div>
+                )}
+              </>
+            )}
           </StudioPanel>
         )}
 
@@ -562,6 +628,9 @@ export default function WritersStudioPage() {
             }}
           >
             <FieldBody
+              writeMount={writeMount}
+              witnessDelayMs={witnessDelayMs}
+              onWriting={setWriting}
               listPhase={listPhase}
               resolution={resolution}
               manuscript={manuscript}
@@ -631,7 +700,11 @@ export default function WritersStudioPage() {
         <StudioLowerBand
           revisions={revisions}
           wordCount={draftMeta?.words ?? null}
-          sectionCount={sectionsPhase === 'ready' ? sections.length : null}
+          sectionCount={
+            writeMount.mount === 'sections'
+              ? writeMount.rows.length
+              : sectionsPhase === 'ready' ? sections.length : null
+          }
           outlineOpen={outlineOpen}
           onShowOutline={() => summon('outline')}
           onDismiss={() => setBandOpen(false)}
@@ -650,6 +723,9 @@ function FieldBody({
   onPick,
   onMeta,
   onCheckpointed,
+  writeMount,
+  witnessDelayMs,
+  onWriting,
 }: {
   listPhase: 'loading' | 'ready' | 'unauthorized' | 'error';
   resolution: ManuscriptResolution<CurrentManuscript>;
@@ -657,6 +733,11 @@ function FieldBody({
   onPick: (id: string) => void;
   onMeta: (m: { updatedAt: string | null; revisionCount: number | null; words: number }) => void;
   onCheckpointed: () => void;
+  /** What the server said to mount. Resolved above; never guessed here. */
+  writeMount: WriteMount;
+  witnessDelayMs?: number;
+  /** Publishes the section session so the outline can share it. */
+  onWriting?: (w: SectionWriting | null) => void;
 }) {
   if (listPhase === 'loading') {
     return <StudioText role="metadata">opening…</StudioText>;
@@ -758,13 +839,77 @@ function FieldBody({
     );
   }
 
-  return manuscript ? (
+  if (!manuscript) return null;
+
+  /* ══ THE WRITE-MODE BRANCH ══════════════════════════════════════════════
+     The server resolved which engine may touch this draft. Every case below
+     is one the server named; none is inferred here.
+
+     `continuous` and `no_draft` reach the SAME unchanged Worktable — the
+     second matters because Worktable owns first-draft creation
+     (loadDraft → none → beginDraft), and treating the GET's 404 as an error
+     would strand a newly imported manuscript.
+
+     An unknown mode mounts NOTHING. Guessing continuous would let the
+     whole-manuscript writer touch a draft that may already be
+     section-authoritative, where one save overwrites every section at once. */
+  if (writeMount.mount === 'pending') {
+    return <StudioText role="metadata">opening…</StudioText>;
+  }
+
+  if (writeMount.mount === 'unavailable') {
+    return (
+      <div style={{ maxWidth: '44ch' }}>
+        <StudioText role="prose" style={{ opacity: 0.8 }}>
+          The writing surface could not be prepared just now. Nothing has been
+          changed, and your writing is unaffected.
+        </StudioText>
+      </div>
+    );
+  }
+
+  if (writeMount.mount === 'sections') {
+    return (
+      <SectionWritingSession
+        manuscriptId={manuscript.id}
+        sections={writeMount.sections}
+        version={writeMount.version}
+        witnessDelayMs={witnessDelayMs}
+      >
+        {(writing) => (
+          <SectionSurfaceBridge writing={writing} onWriting={onWriting} />
+        )}
+      </SectionWritingSession>
+    );
+  }
+
+  return (
     <Worktable
       manuscriptId={manuscript.id}
       onMeta={onMeta}
       onCheckpointed={onCheckpointed}
     />
-  ) : null;
+  );
+}
+
+/**
+ * Publishes the section session upward so the outline renders from the SAME
+ * one, then draws the surface. A second useSectionWriting for the outline
+ * would give it a different queue, a different active id and statuses nobody
+ * can see.
+ */
+function SectionSurfaceBridge({
+  writing,
+  onWriting,
+}: {
+  writing: SectionWriting;
+  onWriting?: (w: SectionWriting | null) => void;
+}) {
+  useEffect(() => {
+    onWriting?.(writing);
+    return () => onWriting?.(null);
+  }, [writing, onWriting]);
+  return <SectionWritingSurface writing={writing} />;
 }
 
 function Bare({ children }: { children: React.ReactNode }) {

@@ -215,3 +215,20 @@ source identity and hash, revision histories, Work relationships,
 Keeps/collections, import provenance.
 
 It does not block substrate work, because bulk conversion is held anyway.
+
+---
+
+## Compatibility debt — SECTION-AWARE-CHECKPOINT
+
+The continuous `Worktable` owns **Keep a version**, the save-state line, the
+page estimate, and the `onMeta` word/stat updates. `SectionWritingSurface` does
+not reproduce them.
+
+**This is named, not solved.** Wiring the existing checkpoint gesture into a
+section-authoritative draft would post a whole-manuscript representation into
+the world this cut exists to eliminate — the same hazard, re-entering through
+the button that used to be safe.
+
+So for WS2-04B: **section editing and navigation is the accepted capability,
+and Worktable feature parity is not claimed.** Section-aware checkpointing is
+the next bounded compatibility unit.
