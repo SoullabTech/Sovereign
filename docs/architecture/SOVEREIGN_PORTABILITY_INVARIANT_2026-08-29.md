@@ -363,6 +363,23 @@ by replacement, or by mutation?* Match the read to the answer, and record which 
 
 ---
 
+## 7C · Programme status — CLOSED 2026-08-29
+
+The extraction sequence this invariant governs is complete. DSC-01 continuity · DSC-02 turn ·
+DSC-03 capture supervision · DSC-04 voice session lifecycle · DSC-FINAL salvage authorship, plus a
+host-boundary recensus and a final read-only proof
+(`docs/ops/DESKTOP_FINAL_HOST_BOUNDARY_PROOF_2026-08-29.md`).
+
+> **Electron now contains host knowledge, not MAIA knowledge.**
+
+⛔ The invariant stays in force for NEW Desktop work — the five questions, the forbidden list, §7A's
+proof obligations, §7B's revocation rule. It is not a licence for further extraction. Code is not
+moved because it could be moved; the objective was never a smaller `main.js` but a replaceable host,
+and that is reached. Further abstraction from here consumes the advantage these units created rather
+than adding to it.
+
+---
+
 ## 8 · The likely evolution
 
 ```text

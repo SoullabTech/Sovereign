@@ -10,7 +10,7 @@ DSC-02  turn orchestration        CLOSED      DSC-04  voice session lifecycle CL
 
 ---
 
-## OUTCOME: **B — one residual semantic defect**
+## OUTCOME: **B — one residual semantic defect** → **CORRECTED. See §8.**
 
 Everything in `main.js` is host lifecycle, transport, validation, OS capability, composition,
 evidence mediation, or projection — **with one exception**, and it is one of the exact claims the
@@ -172,3 +172,68 @@ correction on §3, or to accept it and move outward to product, is a founder cal
 architectural blocker either way.
 
 **Do not create DSC-05 for anything other than §3.**
+
+
+---
+
+## 8 · DSC-FINAL — the residual is corrected · **OUTCOME A**
+
+**Correction landed.** The salvage disposition has a portable owner:
+`maia-desktop/src/voice/member-draft.js` (`createMemberDraft`, zero Electron). `accept()` is the
+epoch's salvage sink; returning true **is** the decision that stops the epoch declaring the tail
+lost. `main.js:114` is now `onSalvage: draft.accept` — a reference, not a definition.
+`newVoiceSession` remains the composition root, the epoch is untouched, and no manager, service or
+factory was introduced.
+
+**Re-inspection at `main.js` (350 lines).** Every callback the host hands to a portable capability:
+
+```text
+voice · conversation · session · watch · turnInFlight   getters (§7B re-resolution)
+announce · publish · speak                              transport
+dispatchTurn                                            delegation
+projectState                                            projection
+revokeSession                                           host state the host owns
+onSalvage                                               a REFERENCE to the portable rule
+```
+
+No decision verb remains. No MAIA semantic claim originates in `main.js`.
+
+**Controls (narrow, authorship-bearing boundary only):** acceptance removed → 2 fail; draft
+disposition removed → 3 fail; the host defining the policy again → 1 fail. Suite 212/212 green.
+
+```text
+OUTCOME A — HOST BOUNDARY CLEAN
+DSC PORTABILITY PROGRAMME CLOSED
+```
+
+No DSC-05. No further extraction. No native-host work.
+
+### The final architecture
+
+```text
+Electron main (350 lines)     validation · permissions · composition · transport · lifecycle
+  voice-lifecycle             member capture semantics
+  capture-watch               liveness supervision
+  capture-liveness            liveness policy
+  turn                        turn semantics
+  continuity                  canonical conversation continuity
+  member-draft                salvage authorship
+```
+
+> **Electron now contains host knowledge, not MAIA knowledge.**
+
+### What the sequence cost and what it bought
+
+```text
+main.js         514 → 350 lines, and the 350 are host code
+suite           138 → 212 tests
+units           4 extractions + 1 census + 1 proof + 1 two-line correction
+proof gaps      4, every one found by a negative control, none by review
+```
+
+⭐ The last defect was two lines governing what happens to a fragment of speech a member almost
+lost. The large things — continuity, turns, liveness, lifecycle — were comparatively easy to
+recognise. **Sovereignty lives in tiny disposition decisions, not in impressive machinery.**
+
+The next work is product: building the Desktop experience on this substrate rather than refining
+the substrate.
