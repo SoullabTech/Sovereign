@@ -2635,12 +2635,24 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
    * obeys this one. Liveness remains available through the explicit Speak tap,
    * which is member consent and is deliberately not routed through here.
    */
-  const attemptAutoRearm = useCallback((reason: string): boolean => {
+  // ⭐ THE consent predicate for automatic re-arming. Decision only — it opens
+  // nothing. Both the parent's own re-arm sites and ContinuousConversation's
+  // `requestRestart` ask THIS function, so the rule has one implementation and
+  // cannot drift into two disagreeing copies. The device witness of
+  // 2026-08-30 found exactly that drift: the Oracle path was gated while the
+  // Desktop sovereign path re-armed 0.7s after a response that made no sound,
+  // transcribed silence into "You", and displaced the member's real exchange.
+  const mayAutoRearm = useCallback((): boolean => {
     if (!lastSendWasVoiceRef.current) return false;   // typed turn — not voice re-consent
     if (!responseSpokeRef.current) return false;      // MAIA never spoke — no "your turn" moment
+    return true;
+  }, []);
+
+  const attemptAutoRearm = useCallback((reason: string): boolean => {
+    if (!mayAutoRearm()) return false;
     voiceSession.methods.startListening(reason);
     return true;
-  }, [voiceSession]);
+  }, [voiceSession, mayAutoRearm]);
 
   // 🎤 PWA EFFECTIVE FLAGS: Use PWA state machine values on Safari PWA, original values otherwise
   // This allows UI components to use a single set of flags regardless of platform
@@ -10325,6 +10337,7 @@ I'm not sure what I'm feeling yet.`;
         <div className="sr-only">
           <ContinuousConversation
             ref={voiceMicRef}
+            authorizeAutoRearm={mayAutoRearm}
             onTranscript={handleVoiceTranscript}
             onInterimTranscript={(t) => setInterimTranscript(t)}
             onRecordingStateChange={handleRecordingStateChange}

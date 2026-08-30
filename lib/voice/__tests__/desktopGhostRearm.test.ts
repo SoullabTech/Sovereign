@@ -43,8 +43,12 @@ describe('1 — one authority, not seven predicates', () => {
   });
 
   it('the authority reads BOTH halves of the consent boundary', () => {
-    const fn = ORACLE.slice(ORACLE.indexOf('const attemptAutoRearm'));
-    const body = fn.slice(0, fn.indexOf('}, [voiceSession]);'));
+    // GHOST-REARM-02 moved the predicate out of `attemptAutoRearm` into
+    // `mayAutoRearm`, so ContinuousConversation.requestRestart could ask the
+    // SAME rule instead of copying it. The rule is unchanged; only its address
+    // moved. This assertion follows it rather than relaxing.
+    const fn = ORACLE.slice(ORACLE.indexOf('const mayAutoRearm'));
+    const body = fn.slice(0, fn.indexOf('}, []);'));
     expect(body).toContain('lastSendWasVoiceRef.current');  // input modality
     expect(body).toContain('responseSpokeRef.current');     // MAIA actually spoke
   });
@@ -145,8 +149,8 @@ describe('4 — the acceptance table', () => {
 
   it('the reproduced rule matches the source rule', () => {
     // Guards the table above from drifting away from the component.
-    const fn = ORACLE.slice(ORACLE.indexOf('const attemptAutoRearm'));
-    const body = fn.slice(0, fn.indexOf('}, [voiceSession]);'));
+    const fn = ORACLE.slice(ORACLE.indexOf('const mayAutoRearm'));
+    const body = fn.slice(0, fn.indexOf('}, []);'));
     expect(body).toMatch(/if \(!lastSendWasVoiceRef\.current\) return false;/);
     expect(body).toMatch(/if \(!responseSpokeRef\.current\) return false;/);
   });

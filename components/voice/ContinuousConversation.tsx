@@ -201,6 +201,22 @@ export interface ContinuousConversationProps {
   /** Called when hands-free mode auto-falls back to push-to-talk (e.g. after backoff exhaustion) */
   onHandsFreeFallback?: () => void;
   /**
+   * ⭐ THE canonical consent predicate for AUTOMATIC re-arming, owned by the
+   * parent and passed down. This component decides *how* to restart; it does
+   * not decide *whether* it is permitted to. Returning false means the mic
+   * stays closed.
+   *
+   * ⛔ Do NOT reimplement the predicate here. It reads live parent refs (did
+   * the member's last turn come from voice, did MAIA actually make a sound for
+   * the response now ending). A copy in this file would be a second authority
+   * that drifts from the first — which is precisely the defect the 2026-08-30
+   * Desktop witness exposed.
+   *
+   * Absent (undefined) preserves prior behaviour for surfaces that mount this
+   * component without a parent authority: the restart is permitted.
+   */
+  authorizeAutoRearm?: () => boolean;
+  /**
    * Called when voice has been bounded-recovery-stopped because a known
    * platform failure mode was observed (e.g. Android Chrome: audio captured
    * but VAD never triggered for 2 consecutive cycles). Parent should surface
@@ -304,6 +320,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     interruptThresholdMultiplier = 1.2,
     persistentListening = false,
     onHandsFreeFallback,
+    authorizeAutoRearm,
     onVoiceUnavailable,
   } = props;
 
@@ -358,6 +375,13 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
   const listeningModeRef = useRef<ListeningMode>('HANDS_FREE');
   const restartInFlightRef = useRef(false); // True while a restart setTimeout is pending
   const restartRequestInFlightRef = useRef(false); // True while requestRestart() is deciding/starting
+
+  // Ref-backed so `requestRestart` reads the authority at CALL time. Capturing
+  // the prop in the callback closure would freeze the parent's live consent
+  // facts at the moment the callback was built — a stale answer about the
+  // previous response is exactly what we are refusing to act on.
+  const authorizeAutoRearmRef = useRef<(() => boolean) | undefined>(undefined);
+  authorizeAutoRearmRef.current = authorizeAutoRearm;
   // Forward refs: the post-TTS effects run above where these are defined.
   const normalizeTurnCompleteStateFnRef = useRef<(source: string) => void>();
   const backoffStepRef = useRef(0); // Current exponential backoff step (0 = no backoff)
@@ -3648,6 +3672,25 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     // in SUBMITTING/WAITING_FOR_TTS is recoverable instead of permanently
     // rejected as `mic_state_SUBMITTING`.
     normalizeTurnCompleteState(source);
+
+    // ⭐ CONSENT, asked of the ONE authority that owns it. Normalization above
+    // is deliberately allowed to run first: returning a stale turn-complete
+    // state to IDLE keeps a later explicit tap recoverable, and it opens
+    // nothing on its own.
+    //
+    // `user_tap` is exempt because it IS the member's consent — the gesture is
+    // the authorization, and routing it through a predicate about the previous
+    // response would make the Speak button dead after a silent turn.
+    //
+    // `forceOverride` deliberately does NOT bypass this. It exists to stop the
+    // policy/authority guards from refusing a restart that a caller already
+    // reasoned about; it was never a licence to listen without consent. A
+    // watchdog recovering from a response that made no sound is still a
+    // microphone the member did not open.
+    if (!isUserTap && authorizeAutoRearmRef.current?.() === false) {
+      console.log('🎙️ [RESTART] BLOCKED', JSON.stringify({ source, reason: 'auto_rearm_unauthorized' }));
+      return;
+    }
 
     const policy = restartPolicy({
       source,
