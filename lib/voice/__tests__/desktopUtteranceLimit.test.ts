@@ -243,15 +243,19 @@ describe('4 — Android-Chrome and Firefox/Zen keep the 8s bound', () => {
 
 // ── 7 · revocation still wins, at any turn length ─────────────────────────
 describe('7 — route exit still aborts immediately', () => {
-  it('a 30-second turn abandoned mid-sentence sends nothing and shows nothing', async () => {
+  // ⛔ "and shows nothing" was dropped from this test's name and body along with
+  // the provisional path. It drove `onPartial` and then asserted no provisional
+  // text arrived — which this tree CANNOT fail, because `RunOptions` has no
+  // `onPartial` to call. A green tick that cannot go red is not proof, so the
+  // assertion travels with the interim-text unit rather than standing here
+  // looking like coverage. What remains below is real: the ceiling does not
+  // widen the window in which an abandoned capture keeps the microphone.
+  it('a 30-second turn abandoned mid-sentence sends nothing', async () => {
     jest.useFakeTimers();
     const c = new AbortController();
-    const seen: string[] = [];
     const p = recordAndTranscribe(fakeStream(), {
       signal: c.signal,
       maxMs: DESKTOP_MAX_UTTERANCE_MS,
-      partialIntervalMs: 0,
-      onPartial: (t) => seen.push(t),
     });
 
     await advance(30_000, 1_000);
@@ -266,6 +270,5 @@ describe('7 — route exit still aborts immediately', () => {
     const result = await p;
     expect(result.reason).toBe('aborted');
     expect(transcribeCalls()).toHaveLength(0);
-    expect(seen).toHaveLength(0);
   });
 });
