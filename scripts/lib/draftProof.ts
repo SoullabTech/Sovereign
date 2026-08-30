@@ -35,7 +35,7 @@ import { composeCurrent, composeLegacyHashHeadings, type SourceSection } from '.
  * not from inspecting the output — which line index carries each section's
  * heading and where each section boundary falls.
  */
-export function composeCurrentWithMarks(sections: SourceSection[]) {
+export function composeCurrentWithMarks(sections: readonly SourceSection[]) {
   const lines: string[] = [];
   /** line index of section i's heading line, or null when the section has none */
   const headingLineOf: (number | null)[] = [];
@@ -66,6 +66,19 @@ export interface LineProof {
   resolved: number;
   boundaries: number;
   unresolved: number[];
+  /**
+   * Where section i's boundary lands in the CURRENT draft, as a line index, or
+   * null when it could not be located by identity.
+   *
+   * This is what makes the proof usable for conversion rather than only for
+   * classification. The partition has to cut the member's current text, not a
+   * recomposition of the Source — the Source establishes which boundaries
+   * exist and where they came from; the draft supplies the characters. For
+   * the two production EDITED books that distinction is the whole point:
+   * their body edits only survive verbatim if the slices come from what they
+   * actually wrote.
+   */
+  boundaryBLine: (number | null)[];
 }
 
 /**
@@ -91,6 +104,7 @@ export function proveLines(
   let otherHeadingDiff = 0;     // heading line, but NOT the legacy form
   let bodyDiff = 0;             // any changed line that is not a heading line
   const changedHeadingSections = new Set<number>();
+  const replacedHeadingBLine = new Map<number, number>();
 
   /* Walk the ops. A heading rewritten in place shows as a deletion run
      immediately followed by an insertion run; the k-th deleted line and the
@@ -117,6 +131,10 @@ export function proveLines(
       const sectionIdx = headingLineSet.get(aLine);
       if (sectionIdx === undefined) { bodyDiff++; continue; }
       changedHeadingSections.add(sectionIdx);
+      /* A heading rewritten in place still has one defensible position: the
+         line that replaced it. Recorded here so a legacy draft could be
+         partitioned byte-exactly if one ever appears. */
+      replacedHeadingBLine.set(sectionIdx, bLine);
       if (bLines[bLine] === `# ${aLines[aLine]}`) exactLegacy++;
       else otherHeadingDiff++;
     }
@@ -134,16 +152,28 @@ export function proveLines(
   const inEq = (aLine: number) => eqRuns.some((r) => aLine >= r.aStart && aLine < r.aEnd);
   let resolved = 0;
   const unresolved: number[] = [];
+  const boundaryBLine: (number | null)[] = [];
   boundaryLineOf.forEach((aLine, i) => {
     const headingLine = headingLineOf[i];
-    if (inEq(aLine)) { resolved++; return; }
-    /* the section's first line changed — resolved iff it is its own heading
-       line and that heading is accounted for by the legacy transform */
-    if (headingLine === aLine && changedHeadingSections.has(i) && otherHeadingDiff === 0) { resolved++; return; }
+    const run = eqRuns.find((r) => aLine >= r.aStart && aLine < r.aEnd);
+    if (run) {
+      /* Byte-identical and uniquely positioned: the offset within the run is
+         preserved exactly, so the corresponding line in the current draft is
+         known rather than estimated. */
+      boundaryBLine.push(run.bStart + (aLine - run.aStart));
+      resolved++;
+      return;
+    }
+    if (headingLine === aLine && changedHeadingSections.has(i) && otherHeadingDiff === 0) {
+      boundaryBLine.push(replacedHeadingBLine.get(i) ?? null);
+      resolved++;
+      return;
+    }
+    boundaryBLine.push(null);
     unresolved.push(i);
   });
 
-  return { headedCount, exactLegacy, otherHeadingDiff, bodyDiff, resolved, boundaries: boundaryLineOf.length, unresolved };
+  return { headedCount, exactLegacy, otherHeadingDiff, bodyDiff, resolved, boundaries: boundaryLineOf.length, unresolved, boundaryBLine };
 }
 
 export type Classification =
@@ -166,7 +196,7 @@ export interface DraftVerdict {
  * Classify one draft against its source sections. The only place the rule is
  * written down.
  */
-export function classifyDraft(sections: SourceSection[], draft: string): DraftVerdict {
+export function classifyDraft(sections: readonly SourceSection[], draft: string): DraftVerdict {
   const { lines, headingLineOf, boundaryLineOf } = composeCurrentWithMarks(sections);
   const proof = proveLines(lines, draft.split('\n'), headingLineOf, boundaryLineOf);
 

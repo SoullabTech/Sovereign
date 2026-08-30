@@ -25,7 +25,7 @@ export type SourceSection = MemberBookSection;
  * which removed the `# ` scaffolding after the walk found it sitting inside
  * the novelist's prose at the worktable.
  */
-export function composeCurrent(sections: SourceSection[]): string {
+export function composeCurrent(sections: readonly SourceSection[]): string {
   const parts: string[] = [];
   for (const s of sections) {
     const h = s.heading?.trim();

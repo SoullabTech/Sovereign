@@ -28,7 +28,7 @@ export interface MemberBookSection {
  * The `# ` prefix is load-bearing for the render path — pandoc splits chapters
  * on it — so it is not cosmetic and must not be "cleaned up".
  */
-export function assembleManuscriptMarkdown(sections: MemberBookSection[]): string {
+export function assembleManuscriptMarkdown(sections: readonly MemberBookSection[]): string {
   const parts: string[] = [];
   for (const s of sections) {
     const heading = s.heading?.trim();
