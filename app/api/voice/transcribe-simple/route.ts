@@ -17,6 +17,8 @@ export const revalidate = false;
  * - Base English model for accurate transcription
  */
 
+import { collapseRepetitionLoops, isDegenerate } from '@/lib/voice/transcriptSanity';
+
 const WHISPER_LOCAL_URL = process.env.WHISPER_LOCAL_URL || 'http://127.0.0.1:8000';
 const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25MB max for audio transcription
 
@@ -121,6 +123,26 @@ export async function POST(req: NextRequest) {
     // English-only was 'base.en'. See docs/specs/CONVERSATIONAL_MULTILINGUAL_UNLOCK_2026-06-14.md.
     whisperFormData.append('model', 'base');
 
+    // ⭐ DESKTOP-WHISPER-REPETITION-LOOP-01 — do not decode the room.
+    //
+    // ⛔ DEVICE-WITNESSED 2026-08-30, with background noise present: Whisper
+    // fell into repeating one phrase — "There is." ×60, "no," ×100, "Good to
+    // have a star with an apple." ×40 — and those loops were committed as
+    // member turns. This request previously sent only the file and the model,
+    // so the decoder ran on defaults and was handed stretches of room tone as
+    // if they were speech.
+    //
+    // `vad_filter` drops non-speech before decoding, which removes the input
+    // that produces the loop in the first place. `condition_on_previous_text`
+    // is the specific feedback path that sustains one: with it on, a repeated
+    // phrase becomes the context that makes the next repetition more likely.
+    //
+    // ⛔ Unknown fields are ignored by the server rather than rejected, so this
+    // is safe if a deployment's Whisper build does not implement them — and the
+    // collapse below still catches anything that gets through either way.
+    whisperFormData.append('vad_filter', 'true');
+    whisperFormData.append('condition_on_previous_text', 'false');
+
     console.log("🎤 [TRANSCRIBE-SIMPLE] Forwarding to Whisper:", WHISPER_LOCAL_URL);
 
     // Send to local Whisper server (OpenAI-compatible endpoint)
@@ -152,6 +174,31 @@ export async function POST(req: NextRequest) {
     // Post-process to fix common mis-transcriptions
     // "Maya" -> "MAIA" (Whisper often mishears our name)
     transcription = transcription.replace(/\bMaya\b/gi, 'MAIA');
+
+    // ⛔ JUDGED BEFORE COLLAPSING, and the order is load-bearing. Collapsing
+    // first would turn a capture that was ENTIRELY a hallucinated loop into a
+    // short, plausible-looking utterance ("no no no") and commit it as
+    // something the member said. The raw output is what tells us whether there
+    // was ever any speech in there at all.
+    if (isDegenerate(transcription)) {
+      console.warn('🎤 [TRANSCRIBE-SIMPLE] degenerate transcription refused', {
+        chars: transcription.length,   // length only — never content
+      });
+      transcription = '';
+    } else {
+      // ⭐ There IS speech here. Collapse the runaway repetition and KEEP what
+      // surrounds it — the witnessed loops were preceded by real sentences, and
+      // discarding the turn would throw away what the member actually said in
+      // order to remove what they did not.
+      const sanity = collapseRepetitionLoops(transcription);
+      if (sanity.collapsed) {
+        console.warn('🎤 [TRANSCRIBE-SIMPLE] repetition loop collapsed', {
+          before: transcription.length,
+          after: sanity.text.length,
+        });
+      }
+      transcription = sanity.text;
+    }
 
     console.log("✅ Local Faster-Whisper transcription:", transcription.length, "chars"); // Never log content
 
