@@ -34,10 +34,17 @@ Proven:
 Production conversion                            NOT AUTHORIZED
 Production deployment                            NOT DONE
 
-Separate / unstarted:
-  04B-0                                           legacy # normalization
+Separate:
+  04B-0    legacy # normalization
+           BUILT + EXECUTED LOCALLY · WITNESS/AUTHORIZATION PENDING · PRODUCTION UNTOUCHED
   SECTION-AWARE-CHECKPOINT                        section-authoritative Keep a version
+           unstarted
 ```
+
+04B-0's state, precisely: `2522c5898` built the transform with its inverse
+proof; the local run established `{ normalized, 173 headings, 346 chars
+removed }`. What has not happened is a formal witness/authorization or any
+execution against production.
 
 ---
 
