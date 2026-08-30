@@ -58,6 +58,38 @@ export interface FallbackResult {
   bytes?: number;
 }
 
+/**
+ * DESKTOP-VOICE-DEVICE-CALIBRATION-HARNESS-01 — bounded measurements from one
+ * real capture, for the local calibration surface only.
+ *
+ * ⛔ BOUNDED BY CONSTRUCTION. Two integers, two floats and four booleans. There
+ * is deliberately NO per-poll RMS history, no waveform, no activity timeline and
+ * no segment timestamps: a per-poll trace would be an amplitude silhouette of
+ * the member's room, and the calibration question does not need one.
+ *
+ * ⛔ `crossingCount` IS NOT MILLISECONDS. It counts SCHEDULED OBSERVATIONS whose
+ * sampled window crossed the threshold. The analyser reads 1024 samples — about
+ * 21.33 ms at 48 kHz — once every 100 ms, so it observes roughly 21% of the
+ * capture's wall clock. `crossingCount × 100` is not voiced duration and must
+ * never be described as such.
+ */
+export interface CaptureCalibration {
+  durationMs: number;
+  /** Analyser polls attempted. */
+  scheduledPolls: number;
+  /** Polls where context was running, track live and unmuted, and the read succeeded. */
+  trustedPolls: number;
+  /** Trusted polls whose sampled window crossed SILENCE_RMS_THRESHOLD. */
+  crossingCount: number;
+  rmsMax: number;
+  rmsMean: number;
+  /** Apparatus faults observed at any poll — any of these invalidates the trial. */
+  contextTrustBroken: boolean;
+  trackEnded: boolean;
+  trackMuted: boolean;
+  analyserErrors: number;
+}
+
 interface RunOptions {
   maxMs?: number;
   silenceHoldoffMs?: number;
@@ -93,6 +125,29 @@ interface RunOptions {
   onPartial?: (text: string) => void;
   /** Minimum wall-clock between provisional requests. */
   partialIntervalMs?: number;
+  /**
+   * DESKTOP-VOICE-DEVICE-CALIBRATION-HARNESS-01 — local diagnostic only.
+   *
+   * ⛔ INERT UNLESS SUPPLIED. Absent — which is every production caller — this
+   * module behaves exactly as before: nothing is measured, nothing is read that
+   * was not read already, and the upload proceeds normally.
+   *
+   * ⛔ `stopBeforeUpload` IS MANDATORY WHEN MEASURING. The calibration walk ends
+   * before transcription: the member's audio is recorded, measured and dropped
+   * without leaving the device. There is no variant of this option that
+   * measures and also uploads.
+   *
+   * ⛔ THE ONE DIVERGENCE, stated rather than hidden: when this option is
+   * supplied the analyser read is wrapped in try/catch so a failing apparatus
+   * can be COUNTED. Production is deliberately left unwrapped, because catching
+   * there would let the stop comparisons run after a throw and change stop
+   * timing. The divergence therefore only occurs in trials that a thrown read
+   * has already marked invalid.
+   */
+  calibration?: {
+    onMeasure: (m: CaptureCalibration) => void;
+    stopBeforeUpload: true;
+  };
 }
 
 /**
@@ -161,6 +216,21 @@ export async function recordAndTranscribe(
       })
     : null;
 
+  // ⛔ Calibration only; undefined for every production caller.
+  const measure = options.calibration
+    ? {
+        scheduledPolls: 0,
+        trustedPolls: 0,
+        crossingCount: 0,
+        rmsMax: 0,
+        rmsMean: 0,
+        contextTrustBroken: false,
+        trackEnded: false,
+        trackMuted: false,
+        analyserErrors: 0,
+      }
+    : undefined;
+
   // ── Record ────────────────────────────────────────────────────────────
   let blob: Blob;
   try {
@@ -175,6 +245,7 @@ export async function recordAndTranscribe(
             onPrefix: (prefix: Blob) => partial.offerPrefix(prefix),
           }
         : {}),
+      ...(measure ? { measure } : {}),
     });
   } catch (err: unknown) {
     // ⛔ Recording is over on every exit path. From here the final transcript is
@@ -197,6 +268,15 @@ export async function recordAndTranscribe(
   // branch so an abort is reported as an abort rather than as a recording
   // failure.
   if (aborted()) return abortResult(durationMs, blob.size);
+
+  // ⛔ CALIBRATION EXIT. The walk ends here: the capture was recorded and
+  // measured, and the audio is dropped without leaving the device. Placed
+  // BEFORE the empty-blob branch so a silent trial still yields its
+  // measurement — silence is precisely one of the classes being calibrated.
+  if (options.calibration) {
+    options.calibration.onMeasure({ ...measure!, durationMs });
+    return { ok: false, reason: 'aborted', durationMs, bytes: blob.size };
+  }
 
   if (blob.size === 0) {
     logVoiceEvent('voice_fallback_failed', { reason: 'empty_blob', durationMs });
@@ -323,6 +403,8 @@ async function recordWithSilenceDetection(
      * container header, so every concatenation of chunks[0..n] decodes.
      */
     onPrefix?: (prefix: Blob) => void;
+    /** Calibration only. Absent in production; see RunOptions.calibration. */
+    measure?: Omit<CaptureCalibration, 'durationMs'>;
   },
 ): Promise<Blob> {
   return new Promise<Blob>((resolve, reject) => {
@@ -411,13 +493,48 @@ async function recordWithSilenceDetection(
 
     let lastLoudAt = Date.now();
     const startedAt = Date.now();
+    const m = opts.measure;
+    let rmsSum = 0;
     const checkSilence = () => {
       if (stopped) return;
-      analyser.getFloatTimeDomainData(buf);
+      if (m) {
+        // ⛔ CALIBRATION ONLY. Apparatus facts read at the poll — the context
+        // state production reads once at setup and never again, and the track
+        // facts ContinuousConversation watches but the recorder cannot see.
+        // Reads only; nothing here influences the stop comparisons below.
+        m.scheduledPolls++;
+        if (audioCtx.state !== 'running') m.contextTrustBroken = true;
+        const tr = stream.getAudioTracks()[0];
+        if (tr) {
+          if (tr.readyState !== 'live') m.trackEnded = true;
+          if (tr.muted) m.trackMuted = true;
+        }
+        try {
+          analyser.getFloatTimeDomainData(buf);
+        } catch {
+          // Production leaves this unwrapped on purpose: catching there would
+          // let the stop comparisons run after a throw and change stop timing.
+          m.analyserErrors++;
+          return;
+        }
+      } else {
+        analyser.getFloatTimeDomainData(buf);
+      }
       let sumSq = 0;
       for (let i = 0; i < buf.length; i++) sumSq += buf[i] * buf[i];
       const rms = Math.sqrt(sumSq / buf.length);
       const now = Date.now();
+      if (m) {
+        const trusted =
+          audioCtx.state === 'running' && !m.trackEnded && !m.trackMuted;
+        if (trusted) {
+          m.trustedPolls++;
+          if (rms >= SILENCE_RMS_THRESHOLD) m.crossingCount++;
+        }
+        if (rms > m.rmsMax) m.rmsMax = rms;
+        rmsSum += rms;
+        m.rmsMean = rmsSum / m.scheduledPolls;
+      }
       if (rms >= SILENCE_RMS_THRESHOLD) lastLoudAt = now;
       const elapsed = now - startedAt;
       const silenceFor = now - lastLoudAt;
