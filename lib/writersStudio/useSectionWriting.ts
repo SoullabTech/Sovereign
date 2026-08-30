@@ -72,15 +72,22 @@ export function captureOnLeave(
   queue: Pick<SectionSaveQueue, 'localBody' | 'statusOf' | 'enqueue'>,
   leaving: WritingSection | null,
   visibleBody: string,
+  /**
+   * What the server is known to hold for this section NOW — the body the last
+   * successful save persisted, falling back to the body the page loaded with.
+   *
+   * Comparing against `leaving.body` forever is wrong once anything has been
+   * saved: after a successful save the initial body is stale, so leaving the
+   * section would re-enqueue an edit that is already persisted.
+   */
+  persistedBody?: string,
 ): boolean {
   /* A read-only section has no text of the member's to capture. */
   if (!leaving?.editable) return false;
 
   /* Compare against what is already known — the pending/in-flight body if one
-     exists, otherwise the server copy. Comparing against the server copy alone
-     would re-enqueue text already queued, and comparing against nothing would
-     enqueue on every switch. */
-  const lastKnown = queue.localBody(leaving.id) ?? leaving.body;
+     exists, else what was last persisted, else the body the page loaded. */
+  const lastKnown = queue.localBody(leaving.id) ?? persistedBody ?? leaving.body;
   const changed = visibleBody !== lastKnown;
   /* Still dirty and unchanged since it was queued: nothing new to capture, and
      the queue is already carrying it. */
@@ -90,12 +97,66 @@ export function captureOnLeave(
   return true;
 }
 
+/**
+ * How a section's queue status and its staged text combine. PURE.
+ *
+ * Extracted so the precedence is provable rather than read: it is the rule that
+ * decides whether a writer sees "needs attention" or "unsaved", and getting it
+ * backwards hides a conflict behind the keystrokes that cannot resolve it.
+ */
+export function resolveSectionStatus(
+  queueStatus: SectionStatus,
+  hasStagedText: boolean,
+): SectionStatus {
+  /* A LATCHED CONFLICT OUTRANKS EVERYTHING. Typing more does not reconcile two
+     versions, so a staged edit must not turn "needs attention" back into
+     "unsaved". An `error` MAY become `dirty` — that new body is headed for a
+     safe version-checked retry — but a conflict may not disappear until the
+     member has reconciled it. */
+  if (queueStatus === 'conflict') return 'conflict';
+  /* Staged-but-unflushed is dirty. Reporting `clean` while text sits in a
+     debounce would tell the writer their words are safe before they are. */
+  if (hasStagedText) return 'dirty';
+  return queueStatus;
+}
+
 export function useSectionWriting(
   initialSections: WritingSection[],
   initialVersion: number,
   save: SaveFn,
+  /**
+   * The writing session's identity — the manuscript or draft being edited.
+   *
+   * The queue's lifetime is THIS, not a render. Keying it on the `save`
+   * callback's identity meant an inline arrow from the canvas, or any parent
+   * re-render, could construct a fresh queue and discard its pending and
+   * in-flight state — silently dropping saves that were about to happen.
+   * Resetting is now something a different draft causes, deliberately, and
+   * nothing else can.
+   */
+  draftKey: string,
 ): SectionWriting {
-  const queue = useMemo(() => new SectionSaveQueue(initialVersion, save), [initialVersion, save]);
+  /* The latest save function, reachable without making it a reset signal. */
+  const saveRef = useRef(save);
+  saveRef.current = save;
+
+  /* What the server is known to hold, per section, after a successful save.
+     Without this the visible body falls back to the body the page loaded with,
+     so the canvas snaps back to the old text the moment a save resolves. */
+  const persisted = useRef(new Map<string, string>());
+
+  const queue = useMemo(
+    () => new SectionSaveQueue(initialVersion, async (sectionId, body, baseVersion) => {
+      const outcome = await saveRef.current(sectionId, body, baseVersion);
+      /* Bank what was actually persisted, here, where both the body and the
+         outcome are in hand. */
+      if (outcome.ok) persisted.current.set(sectionId, body);
+      return outcome;
+    }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [draftKey],
+  );
+  void initialVersion;
   const [activeId, setActiveId] = useState<string | null>(initialSections[0]?.id ?? null);
 
   /* The visible text of the active section, held in a ref so the switch handler
@@ -133,7 +194,11 @@ export function useSectionWriting(
      queue's copy and the server's. */
   void stagedTick;
   const activeBody = activeId
-    ? (staged.current.get(activeId) ?? queue.localBody(activeId) ?? active?.body ?? '')
+    ? (staged.current.get(activeId)
+        ?? queue.localBody(activeId)
+        ?? persisted.current.get(activeId)
+        ?? active?.body
+        ?? '')
     : '';
 
   const edit = useCallback((body: string) => {
@@ -173,13 +238,20 @@ export function useSectionWriting(
        after the active id has moved on. */
     if (timer.current) { clearTimeout(timer.current); timer.current = null; }
     if (activeId) staged.current.delete(activeId);
-    captureOnLeave(queue, activeId ? sectionsById.get(activeId) ?? null : null, visibleBody.current);
+    const leaving = activeId ? sectionsById.get(activeId) ?? null : null;
+    captureOnLeave(queue, leaving, visibleBody.current,
+      leaving ? persisted.current.get(leaving.id) : undefined);
 
     /* Now switch. Not awaited: the queue is already serialized, and blocking
        here would make navigation as slow as the network. */
     setActiveId(nextId);
     const next = sectionsById.get(nextId);
-    visibleBody.current = queue.localBody(nextId) ?? next?.body ?? '';
+    visibleBody.current =
+      staged.current.get(nextId)
+      ?? queue.localBody(nextId)
+      ?? persisted.current.get(nextId)
+      ?? next?.body
+      ?? '';
   }, [activeId, queue, sectionsById]);
 
   return {
@@ -187,9 +259,7 @@ export function useSectionWriting(
     activeId,
     active,
     activeBody,
-    /* Staged-but-unflushed is dirty. Reporting `clean` while text sits in a
-       debounce would tell the writer their words are safe before they are. */
-    statusOf: (id) => (staged.current.has(id) ? 'dirty' : queue.statusOf(id)),
+    statusOf: (id) => resolveSectionStatus(queue.statusOf(id), staged.current.has(id)),
     edit,
     goToSection,
     hasUnsavedWork: () => staged.current.size > 0 || queue.hasUnsavedWork(),
