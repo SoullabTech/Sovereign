@@ -12,10 +12,12 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const require = createRequire(import.meta.url);
-const { createVoiceLifecycle } = require('../src/voice-lifecycle.js');
+const { createVoiceLifecycle, REVOCATION_CAUSES } = require('../src/voice-lifecycle.js');
 const { createEpochState } = require('../src/voice/epoch.js');
 const { createCaptureLiveness } = require('../src/capture-liveness.js');
 const { createUtteranceBuffer } = require('../src/voice/utterance.js');
@@ -266,9 +268,9 @@ test('⭐ auth loss releases capture, disarms it, and records why', () => {
   const { lc, log, session } = wire();
   lc.begin();
   log.length = 0;
-  const out = lc.releaseCapture('signed_out');
+  const out = lc.revokeCapture({ cause: 'signed_out' });
 
-  assert.deepEqual(out, { ok: true, released: true });
+  assert.deepEqual(out, { ok: true, revoked: true, cause: 'signed_out' });
   assert.equal(session(), null, 'capture outlived its member — signing back in cannot start listening');
   assert.ok(log.some((e) => e.liveness === 'disarm'));
   const d = log.find((e) => e.emitted === 'voice_capture_lost');
@@ -282,14 +284,14 @@ test('⭐ supervision stops FIRST, and unconditionally', () => {
   const { lc, log } = wire();
   lc.begin();
   log.length = 0;
-  lc.releaseCapture('signed_out');
+  lc.revokeCapture({ cause: 'signed_out' });
   const stopped = log.findIndex((e) => e.watch === 'stop');
   const revoked = log.findIndex((e) => e.revoked);
   assert.ok(stopped >= 0 && revoked > stopped, 'a timer was left running past its session');
 
   // Unconditionally: even with no session to release.
   const none = wire({ session: null });
-  none.lc.releaseCapture('signed_out');
+  none.lc.revokeCapture({ cause: 'signed_out' });
   assert.ok(none.log.some((e) => e.watch === 'stop'), 'a stale timer survived because there was no session');
 });
 
@@ -297,7 +299,7 @@ test('⭐ the session is revoked BEFORE the released one is touched', () => {
   const { lc, log } = wire();
   lc.begin();
   log.length = 0;
-  lc.releaseCapture('signed_out');
+  lc.revokeCapture({ cause: 'signed_out' });
   const revoked = log.findIndex((e) => e.revoked);
   const disarmed = log.findIndex((e) => e.liveness === 'disarm');
   assert.ok(revoked >= 0 && disarmed > revoked,
@@ -308,7 +310,7 @@ test('⛔ auth loss is NOT end() — nothing is committed and no transcript is r
   const { lc, log } = wire();
   lc.begin();
   log.length = 0;
-  const out = lc.releaseCapture('signed_out');
+  const out = lc.revokeCapture({ cause: 'signed_out' });
   assert.equal(log.filter((e) => e.epoch === 'commit' || e.epoch === 'userStop').length, 0,
     'a member who did not stop had their epoch committed on the way out');
   assert.equal(out.chars, undefined, 'a transcript was returned to a caller who no longer holds authority');
@@ -319,7 +321,7 @@ test('⛔ auth loss is NOT captureLost() — nothing seeks a rebuild', () => {
   const { lc, log } = wire();
   lc.begin();
   log.length = 0;
-  lc.releaseCapture('signed_out');
+  lc.revokeCapture({ cause: 'signed_out' });
   assert.equal(log.filter((e) => e.liveness === 'lost').length, 0,
     'a session going away entirely was sent looking for a rebuild');
 });
@@ -327,8 +329,8 @@ test('⛔ auth loss is NOT captureLost() — nothing seeks a rebuild', () => {
 test('releasing twice is not an error, and says so', () => {
   const { lc } = wire();
   lc.begin();
-  assert.deepEqual(lc.releaseCapture('signed_out'), { ok: true, released: true });
-  assert.deepEqual(lc.releaseCapture('signed_out'), { ok: false, released: false });
+  assert.deepEqual(lc.revokeCapture({ cause: 'signed_out' }), { ok: true, revoked: true, cause: 'signed_out' });
+  assert.deepEqual(lc.revokeCapture({ cause: 'signed_out' }), { ok: false, revoked: false });
 });
 
 test('⭐ main releases capture on sign-out, before dropping the rest of member state', () => {
@@ -343,9 +345,80 @@ test('⭐ main releases capture on sign-out, before dropping the rest of member 
   const h = /ipcMain\.handle\('maia:sign-out'[\s\S]*?\n\}\);/.exec(mainJs)[0];
   assert.ok(/teardownMemberState\(/.test(h), 'sign-out no longer runs the shared teardown');
   const teardown = /function teardownMemberState\([\s\S]*?\n\}/.exec(mainJs)[0];
-  assert.ok(/releaseCapture\(/.test(teardown), 'capture survives sign-out — the member cannot listen again');
-  assert.ok(teardown.indexOf('releaseCapture') < teardown.indexOf('conversation = null'),
+  assert.ok(/revokeCapture\(/.test(teardown), 'capture survives sign-out — the member cannot listen again');
+  assert.ok(teardown.indexOf('revokeCapture') < teardown.indexOf('conversation = null'),
     'capture is released after the rest of member state has already fallen away');
+});
+
+// ── ⭐ revokeCapture must not become a semantic garbage chute ───────────────
+
+test('⭐ every ratified cause argues for why it IS revocation', () => {
+  const causes = Object.keys(REVOCATION_CAUSES);
+  assert.deepEqual(causes.sort(), ['attention_crossed', 'session_expired', 'signed_out'],
+    'the ratified revocation causes changed — an addition is an authority decision');
+  for (const [name, d] of Object.entries(REVOCATION_CAUSES)) {
+    assert.ok(d.why && d.why.length > 80, `${name} carries no argument for being revocation`);
+    assert.ok(d.source, `${name} has no provenance`);
+  }
+});
+
+test('⭐ every call site in the tree uses a ratified cause', () => {
+  const here = path.dirname(fileURLToPath(import.meta.url));
+  const srcDir = path.join(here, '..', 'src');
+  const files = readdirSync(srcDir, { withFileTypes: true })
+    .filter((e) => e.isFile() && e.name.endsWith('.js')).map((e) => e.name);
+  let found = 0;
+  for (const f of files) {
+    const body = readFileSync(path.join(srcDir, f), 'utf8');
+    for (const m of body.matchAll(/revokeCapture\(\s*\{\s*cause:\s*'([^']+)'/g)) {
+      found += 1;
+      assert.ok(REVOCATION_CAUSES[m[1]],
+        `${f} revokes capture for an unratified reason '${m[1]}' — it must argue that it is ` +
+        'revocation and not an ordinary stop, a capture loss, or "we need to reset voice"');
+    }
+  }
+  assert.ok(found >= 1, 'no call site found — the proof would pass vacuously');
+});
+
+test('⭐ provenance is not shared for convenience — a crossing is not a teardown', () => {
+  const crossing = wire();
+  crossing.lc.begin();
+  crossing.log.length = 0;
+  crossing.lc.revokeCapture({ cause: 'attention_crossed' });
+  const d = crossing.log.find((e) => e.emitted === 'voice_capture_lost');
+  assert.equal(d.meta.source, 'attention_crossing',
+    'a threshold crossing wore auth teardown’s provenance — a later walk would reconstruct the wrong cause');
+  assert.equal(d.meta.cause, 'attention_crossed');
+});
+
+test('⭐ THE SHARED-VERB TEST: changing only the cause leaves the operation identical', () => {
+  // The founder's own test, executable. If two causes produced different epoch,
+  // recovery, authorship or turn behaviour, they would not be the same operation
+  // and must not share this verb.
+  const shape = (cause) => {
+    const w = wire();
+    w.lc.begin();
+    w.log.length = 0;
+    w.lc.revokeCapture({ cause });
+    // Everything except the provenance/cause of the diagnostic record.
+    return w.log.map((e) => (e.emitted ? { emitted: e.emitted } : e));
+  };
+  assert.deepEqual(shape('signed_out'), shape('attention_crossed'),
+    'the two causes are not the same lifecycle operation and must not share the verb');
+  assert.deepEqual(shape('signed_out'), shape('session_expired'));
+});
+
+test('⛔ an unratified cause still revokes, but is recorded as unratified', () => {
+  // A teardown must never be blocked by a vocabulary check — capture surviving
+  // is the worse failure. It is made visible instead of silent.
+  const { lc, log, session } = wire();
+  lc.begin();
+  log.length = 0;
+  const out = lc.revokeCapture({ cause: 'we_need_to_reset_voice' });
+  assert.equal(out.revoked, true, 'a vocabulary check blocked a teardown — capture survived');
+  assert.equal(session(), null);
+  assert.equal(log.find((e) => e.emitted).meta.source, 'unratified',
+    'an unratified cause silently borrowed another trigger’s provenance');
 });
 
 // ── ⭐ SALVAGE: the member's authorship, proven at the Desktop disposition ───

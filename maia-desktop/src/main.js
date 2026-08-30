@@ -370,7 +370,7 @@ async function goTo(id) {
   // turn that was in flight ends as revoked rather than delivered. Words spoken
   // before crossing the threshold are not turned into a turn behind a screen
   // the member is no longer looking at.
-  lifecycle.releaseCapture('platform-visible');
+  lifecycle.revokeCapture({ cause: 'attention_crossed' });
 
   const out = await platformShell.navigate(path);
   if (!out.ok) {
@@ -404,7 +404,12 @@ function teardownMemberState(reason) {
   // member state that used to outlive its member, and it is the piece that
   // blocks every recovery: while a session is held, signing back in still
   // cannot start listening. The disposition belongs to the lifecycle.
-  lifecycle.releaseCapture(cause === 'member' ? 'signed_out' : cause);
+  // The host translates its own vocabulary into the ratified one. `member` is
+  // the sign-out button; `401` is a credential rejected on any authenticated
+  // call, which any background poll can trigger with no member action near it.
+  lifecycle.revokeCapture({
+    cause: cause === '401' ? 'session_expired' : 'signed_out',
+  });
   conversation = null;
   continuity.stop();
   // ⛔ Destroy, not hide. The cookie goes with the view.

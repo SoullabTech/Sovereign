@@ -53,6 +53,38 @@
 'use strict';
 
 /**
+ * ⛔ THE RATIFIED REVOCATION CAUSES. HOUSE-RECONCILE-01.
+ *
+ * `revokeCapture` is a neutral verb, and a neutral verb is exactly what turns
+ * into a semantic garbage chute if it is left unguarded — the convenient way to
+ * "reset voice" from anywhere. So each cause is declared here with the argument
+ * for why it IS revocation, and a proof asserts that every call site in the tree
+ * uses a ratified one. Adding an entry is an authority decision.
+ *
+ * The test each entry must pass: *if the cause string changed but the lifecycle
+ * operation stayed the same, would the member-facing and authority semantics be
+ * identical?* If not, it is a different operation and must not share this verb.
+ *
+ * ⛔ `source` is PROVENANCE and must not be shared for convenience. A crossing
+ * that reported `auth_teardown` would put a false cause in the witness record —
+ * the trigger is exactly what a later walk needs to reconstruct.
+ */
+const REVOCATION_CAUSES = Object.freeze({
+  signed_out: {
+    source: 'auth_teardown',
+    why: 'The member signed out. Their authority to capture is gone, so there is no member-authored completion to commit and no rebuild that could help.',
+  },
+  session_expired: {
+    source: 'auth_teardown',
+    why: 'A credential was rejected on an authenticated call — the 401 door, which any background poll can walk through minutes into a session. Same authority loss as sign-out, arrived at without a member gesture.',
+  },
+  attention_crossed: {
+    source: 'attention_crossing',
+    why: 'The member crossed into a platform place. Capture authority is withdrawn because attention the member cannot see is not attention they consented to: a live microphone behind the House would be listening, transcribing and answering someone who has visibly gone elsewhere. Nothing is committed, because words spoken before the threshold are not a turn the member finished.',
+  },
+});
+
+/**
  * @param voice          () => session | null   never stored; re-resolved at use
  * @param watch          capture supervision capability (start/stop)
  * @param announce       () => void   push the state projection to the surface
@@ -183,36 +215,20 @@ function createVoiceLifecycle({
   }
 
   /**
-   * ⭐ AUTH-TEARDOWN-CAPTURE-01, and — found by HOUSE-RECONCILE-01 — one more
-   * caller. Release capture WITHOUT completing it. Two causes, one disposition:
+   * ⭐ AUTH-TEARDOWN-CAPTURE-01 + HOUSE-RECONCILE-01. Capture authority is
+   * WITHDRAWN. Named for what happens to capture; the caller supplies why.
    *
-   *   signed_out / expired    the member's authority to capture is gone
-   *   platform-visible        the member crossed into a platform place, and
-   *                           attention they cannot see is not attention they
-   *                           consented to. If the microphone stayed live behind
-   *                           the House, MAIA would be listening — and
-   *                           transcribing, answering and speaking — to someone
-   *                           who has visibly gone somewhere else.
+   * Its place among the three ways capture can end:
    *
-   * Renamed from `releaseOnAuthLoss` when the second caller appeared: the
-   * behaviour is identical and the old name would have lied about half of it.
+   *   end()             the member intentionally stops
+   *                     → authorship applies: the epoch commits
+   *   captureLost()     a live capture unexpectedly disappears
+   *                     → recovery may be sought: one rebuild
+   *   revokeCapture()   capture authority is withdrawn
+   *                     → NO member-authored completion, NO recovery claim,
+   *                       release what must not survive
    *
-   * On auth loss it is released FIRST, before the rest of member state falls
-   * away.
-   *
-   * ⛔ WHY FIRST, and why this path has to exist at all: capture is the one
-   * piece of member state that used to outlive its member, and it is the piece
-   * that blocks every recovery — while a session is held, signing back in still
-   * cannot start listening.
-   *
-   * ⛔ NOT `end()`. The member did not stop. Nothing is committed, no tail is
-   * taken, and no transcript is returned to a caller who no longer holds
-   * authority over it. This is a release, not a completion.
-   *
-   * ⛔ NOT `captureLost()`. That seeks a rebuild. Nothing is recoverable here:
-   * the session is going away entirely.
-   *
-   * ⛔ ORDER IS SEMANTIC, inherited intact from the implementation this replaces:
+   * ⛔ ORDER IS SEMANTIC, inherited intact:
    *   · supervision stops FIRST and unconditionally — a timer outliving its
    *     session is the same class of leak in miniature
    *   · the session is revoked BEFORE the released one is touched, so a turn
@@ -220,25 +236,32 @@ function createVoiceLifecycle({
    *   · the in-flight turn flag is deliberately NOT cleared. If a turn is in
    *     flight its own `finally` owns that flag, and clearing it here would let
    *     a second turn start under the first. With the session revoked the turn
-   *     refuses anyway, so nothing is gained by racing it. (The turn itself
-   *     ends as REVOKED rather than failed — see turn.js.)
+   *     refuses anyway. (It ends as REVOKED rather than failed — see turn.js.)
    *   · the announcement is last, and is authoritative idle
    *
-   * Idempotent: releasing twice is not an error, and the second call says so.
+   * ⛔ An unratified cause still revokes — a teardown must never be blocked by
+   * a vocabulary check — but it is recorded as `unratified` rather than
+   * borrowing another trigger's provenance, so it is visible instead of silent.
+   *
+   * Idempotent: revoking twice is not an error, and the second call says so.
    */
-  function releaseCapture(cause) {
+  function revokeCapture({ cause } = {}) {
     watch.stop();
     const released = session();
-    if (!released) return { ok: false, released: false };
+    if (!released) return { ok: false, revoked: false };
 
+    const ratified = REVOCATION_CAUSES[cause];
     revokeSession();
     released.liveness.disarm();
-    released.diagnostics.emit('voice_capture_lost', { cause, source: 'auth_teardown' });
+    released.diagnostics.emit('voice_capture_lost', {
+      cause: cause || 'unspecified',
+      source: ratified ? ratified.source : 'unratified',
+    });
     announce();
-    return { ok: true, released: true };
+    return { ok: true, revoked: true, cause: cause || 'unspecified' };
   }
 
-  return { begin, frame, micResult, captureLost, end, releaseCapture };
+  return { begin, frame, micResult, captureLost, end, revokeCapture };
 }
 
-module.exports = { createVoiceLifecycle };
+module.exports = { createVoiceLifecycle, REVOCATION_CAUSES };
