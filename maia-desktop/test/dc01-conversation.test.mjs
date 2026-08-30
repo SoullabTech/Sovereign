@@ -35,11 +35,18 @@ const { createSession } = require('../src/session.js');
 // ── ⭐ the class E regression ───────────────────────────────────────────────
 
 test('CLASS E REGRESSION — the frame handler buffers audio and dispatches a turn', () => {
-  const handler = /ipcMain\.handle\('maia:voice-frame'[\s\S]*?\n\}\);/.exec(mainJs)[0];
-  assert.ok(handler.includes('utterance.push'),
+  // ⭐ DSC-04. The pipeline moved to voice-lifecycle.js; the assertion follows
+  // it, and the dispatch half is now proven on BOTH sides of the boundary —
+  // the pipeline asks, and main wires the ask to the turn.
+  const pipeline = /function frame\([\s\S]*?\n  \}/.exec(strip('voice-lifecycle.js'))[0];
+  assert.ok(pipeline.includes('utterance.push'),
     'frames are not buffered — audio is being dropped, which is the class E defect');
-  assert.ok(/utterance_boundary[\s\S]*?turn\.run\(\)/.test(handler),
+  assert.ok(/utterance_boundary[\s\S]*?dispatchTurn\(\)/.test(pipeline),
     'an utterance boundary does not dispatch a turn — transcription is unreachable');
+  assert.ok(/dispatchTurn:\s*\(\)\s*=>\s*\{\s*void turn\.run\(\)/.test(mainJs),
+    'the pipeline dispatches into nothing — main no longer wires it to the turn');
+  const handler = /ipcMain\.handle\('maia:voice-frame'[\s\S]*?\n\}\);/.exec(mainJs)[0];
+  assert.ok(/lifecycle\.frame\(/.test(handler), 'the frame handler no longer reaches the pipeline');
 });
 
 test('the turn loop actually calls transcribe AND ask — not one without the other', () => {
@@ -56,8 +63,12 @@ test('the turn loop actually calls transcribe AND ask — not one without the ot
 });
 
 test('a boundary does NOT end the epoch — a pause is still not a finished thought', () => {
-  const handler = /ipcMain\.handle\('maia:voice-frame'[\s\S]*?\n\}\);/.exec(mainJs)[0];
-  assert.ok(!/endEpoch|userStop/.test(handler), 'an utterance boundary tore down capture');
+  // ⭐ DSC-04. Asserted on the frame path itself, not on the handler. The
+  // handler now passes this trivially because the pipeline left it, and a
+  // trivially-passing assertion is not a proof. voice-lifecycle.js DOES contain
+  // userStop — in `end()`, where it belongs — so the scope matters.
+  const pipeline = /function frame\([\s\S]*?\n  \}/.exec(strip('voice-lifecycle.js'))[0];
+  assert.ok(!/endEpoch|userStop|commit\(/.test(pipeline), 'an utterance boundary tore down capture');
 });
 
 // ── audio format ────────────────────────────────────────────────────────────

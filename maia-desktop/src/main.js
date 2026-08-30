@@ -42,6 +42,7 @@ const { createCaptureLiveness, IDLE } = require('./capture-liveness');
 const { createCaptureWatch } = require('./capture-watch');
 const { createContinuity } = require('./continuity');
 const { createTurn } = require('./turn');
+const { createVoiceLifecycle } = require('./voice-lifecycle');
 
 // Separate userData for a dev launch, so a development instance can never read
 // or corrupt an installed instance's state. (jarvis-desktop precedent.)
@@ -163,6 +164,26 @@ const captureWatch = createCaptureWatch({
   announce: () => pushState(),
 });
 
+// ── the voice session lifecycle ─────────────────────────────────────────────
+//
+// ⭐ DESKTOP SOVEREIGN CORE 04. What happens when capture begins, when a frame
+// arrives, when the microphone is refused, when capture is lost and when the
+// member stops is MAIA voice semantics — a CoreAudio host would owe every one
+// identically. It lives in `voice-lifecycle.js`.
+//
+// Main keeps what only a host can: the IPC envelope, payload validation, the
+// signed-in gate, the composition root, the transport — and the `voice`
+// reference itself. The capability never holds a session; when one must die it
+// asks, and main revokes. See invariant §7B.
+const lifecycle = createVoiceLifecycle({
+  voice: () => voice,
+  watch: captureWatch,
+  announce: () => pushState(),
+  dispatchTurn: () => { void turn.run(); },
+  revokeSession: () => { voice = null; },
+  projectState: () => voiceStateSnapshot(),
+});
+
 // ── IPC — every handler validates in MAIN; nothing is taken on trust ────────
 
 ipcMain.handle('maia:voice-start', async (_evt, payload) => {
@@ -175,27 +196,15 @@ ipcMain.handle('maia:voice-start', async (_evt, payload) => {
   // Whisper would transcribe a chipmunk or a drawl rather than the member.
   const sr = Number(payload && payload.sampleRate);
   voice.sampleRate = Number.isFinite(sr) && sr >= 8000 && sr <= 192000 ? Math.round(sr) : 48000;
-  voice.epoch.startEpoch();
-  voice.liveness.arm();
-  captureWatch.start();
-  pushState();
-  return { ok: true };
+  return lifecycle.begin();
 });
 
 ipcMain.handle('maia:voice-mic-result', async (_evt, payload) => {
   if (!voice) return { ok: false, reason: 'no capture session' };
   const granted = payload && payload.granted === true;
-  if (granted) {
-    voice.epoch.micGranted();
-  } else {
-    const errorName = payload && typeof payload.errorName === 'string'
-      ? payload.errorName.slice(0, 64) : 'Error';
-    voice.epoch.captureLost('permission_denied');
-    voice.diagnostics.emit('voice_transcribe_error', { errorName, phase: 'permission' });
-    voice = null;
-  }
-  pushState();
-  return { ok: true };
+  const errorName = payload && typeof payload.errorName === 'string'
+    ? payload.errorName.slice(0, 64) : 'Error';
+  return lifecycle.micResult(granted, errorName);
 });
 
 ipcMain.handle('maia:voice-frame', async (_evt, payload) => {
@@ -208,57 +217,19 @@ ipcMain.handle('maia:voice-frame', async (_evt, payload) => {
     return { ok: false, reason: 'invalid frame' };
   }
   const frameMs = Math.max(1, Math.min(1000, Number(payload.frameMs) || 20));
-
-  voice.frames += 1;
-
-  // ⭐ MAIA-D02A. Audio is arriving, so the capture graph is alive. If a loss
-  // was detected and a rebuild was in flight, this is the proof it worked.
-  if (voice.liveness.noteFrame()) pushState();
-
-  // ⭐ CLASS E REPAIR (device walk 2026-08-27). The buffer used to not exist:
-  // the VAD ran and every sample was dropped, so transcription was unreachable.
-  // Frames accumulate CONTINUOUSLY — not from `speech_started` — because the VAD
-  // needs consecutive frames to confirm speech, so starting the buffer at the
-  // acknowledgement would clip the first syllable of every utterance.
-  const frame = raw instanceof Float32Array ? raw : Float32Array.from(raw);
-  voice.utterance.push(frame);
-
-  for (const t of voice.vad.push(frame, frameMs)) {
-    if (t === 'audio_started') voice.epoch.audioStarted();
-    else if (t === 'speech_started') voice.epoch.speechStarted();
-    else if (t === 'utterance_boundary') {
-      // An utterance ended, so a final may be requested. This still does NOT end
-      // the epoch — capture keeps running through the pause (§XII).
-      void turn.run();
-    }
-  }
-  return { ok: true };
+  return lifecycle.frame(raw, frameMs);
 });
 
 ipcMain.handle('maia:voice-capture-lost', async (_evt, payload) => {
   if (!voice) return { ok: false, reason: 'no capture session' };
   const cause = payload && typeof payload.cause === 'string'
     ? payload.cause.slice(0, 64) : 'unknown';
-  const tail = voice.epoch.captureLost(cause);
-  // ⭐ MAIA-D02A. `track_ended` and `track_muted` used to reach main and change
-  // nothing the member could see. Routing them through the same state machine
-  // as silent death means all three losses produce the same visible truth.
-  voice.liveness.lost(cause);
-  pushState();
-  return { ok: true, tail };
+  return lifecycle.captureLost(cause);
 });
 
 ipcMain.handle('maia:voice-stop', async () => {
   if (!voice) return { ok: false, reason: 'no capture session' };
-  voice.liveness.disarm();
-  captureWatch.stop();
-  const tail = voice.epoch.userStop();
-  const text = voice.epoch.commit();
-  const snapshot = voiceStateSnapshot();
-  voice = null;
-  pushState();
-  // `chars` only — the transcript itself goes to the surface, never to telemetry.
-  return { ok: true, tail, chars: text.length, snapshot };
+  return lifecycle.end();
 });
 
 ipcMain.handle('maia:voice-state', async () => voiceStateSnapshot());
