@@ -92,6 +92,8 @@ export interface MaiaContext {
   guestContextAddendum?: string;
   // 🏢 STUDIO: Practitioner prompt cap when running in Studio
   studioAddendum?: string;
+  /** 📖 WS2-03C — the Writer's Studio Work the member brought, server-resolved. */
+  workSituationAddendum?: string;
   // 🚪 KNOWLEDGE GATE: AIN source well modulation
   knowledgeGateAddendum?: string;
   // 🕸️ MEMBER WEB: Patterns + session summaries + journals
@@ -420,6 +422,7 @@ const ADDENDA_SPECS: readonly AddendumSpec[] = [
   { field: 'maiaModeAddendum',                log: () => `🎭 [MAIA Mode] Relational mode guidance injected` },
   { field: 'scribeSessionDiscussionAddendum', log: () => `📝 [Scribe Discussion] Session context injected` },
   { field: 'studioAddendum',                  log: () => `🏢 [Studio] Practitioner context injected` },
+  { field: 'workSituationAddendum',           log: () => `📖 [Writer's Studio] Work context injected` },
   { field: 'knowledgeGateAddendum',           log: () => `🚪 [Knowledge Gate] Source well modulation injected` },
   { field: 'memberWebAddendum',               log: () => `🕸️ [Member Web] Patterns+summaries+journals injected` },
   { field: 'consultationAddendum',            log: () => `🏛️ [Consultation] Council insights injected` },

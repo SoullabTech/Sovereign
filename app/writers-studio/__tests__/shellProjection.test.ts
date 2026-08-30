@@ -111,13 +111,10 @@ describe('the shell rail shows the whole Studio and promises none of it', () => 
      a manuscript it can name it. Passing them apart described a state that
      cannot occur, and the identity guard rightly rejects it. */
   const groups = (has = true) =>
-    shellDestinations(
-      has,
-      STUDIO_MAP,
-      {},
-      ['materials', 'structure', 'versions'],
-      has ? 'ms-on-the-table' : null,
-    );
+    shellDestinations(has, STUDIO_MAP, {
+      satisfiedInRoom: ['materials', 'structure', 'versions'],
+      manuscriptId: has ? 'ms-on-the-table' : null,
+    });
 
   it('preserves D-019’s exact semantic grouping — 7 + 4 + 5', () => {
     const g = groups();
@@ -161,7 +158,9 @@ describe('the shell rail shows the whole Studio and promises none of it', () => 
   });
 
   it('shows a count only when the shell counted one itself', () => {
-    const withReal = shellDestinations(true, STUDIO_MAP, { materials: 3 }, ['materials']);
+    const withReal = shellDestinations(true, STUDIO_MAP, {
+      counts: { materials: 3 }, satisfiedInRoom: ['materials'], manuscriptId: 'ms-x',
+    });
     const m = withReal.flatMap((g) => g.destinations).find((d) => d.id === 'materials')!;
     expect(m.count).toBe(3);
   });
@@ -172,9 +171,10 @@ describe('the shell rail shows the whole Studio and promises none of it', () => 
        falls back to list[0].id. A link the shell itself wrote would have
        opened a different book. Dead links were guarded; addressed ones were
        not. */
-    const withId = shellDestinations(
-      true, STUDIO_MAP, {}, ['materials', 'structure', 'versions'], 'ms-on-the-table',
-    ).flatMap((g) => g.destinations);
+    const withId = shellDestinations(true, STUDIO_MAP, {
+      satisfiedInRoom: ['materials', 'structure', 'versions'],
+      manuscriptId: 'ms-on-the-table',
+    }).flatMap((g) => g.destinations);
 
     for (const d of withId) {
       if (!d.actionable || d.satisfiedInRoom || !d.requiresManuscript) continue;
@@ -189,12 +189,12 @@ describe('the shell rail shows the whole Studio and promises none of it', () => 
   it('refuses a manuscript-scoped link that does not name its manuscript', () => {
     // Structural, not a convention: the boundary throws rather than shipping
     // a link that resolves and opens something else.
-    const noId = shellDestinations(true, STUDIO_MAP, {}, [], null);
+    const noId = shellDestinations(true, STUDIO_MAP, {});
     expect(() => assertShellPromisesNothing(noId)).toThrow(/does not name one/);
   });
 
   it('leaves links alone that are not manuscript-scoped', () => {
-    const home = shellDestinations(true, STUDIO_MAP, {}, [], 'ms-x')
+    const home = shellDestinations(true, STUDIO_MAP, { manuscriptId: 'ms-x' })
       .flatMap((g) => g.destinations)
       .find((d) => d.id === 'home')!;
     expect(home.href).toBe('/writers-studio');
@@ -251,7 +251,7 @@ describe('MAIA’s panel can be brought back', () => {
   it('does so without making any MAIA destination look reachable', () => {
     // Fixing the bug by putting a live MAIA entry in the rail would have made
     // the band look navigable — the exact promise WS2-03B refuses to make.
-    const conv = shellDestinations(true, STUDIO_MAP, {}, ['materials'], 'ms-x')
+    const conv = shellDestinations(true, STUDIO_MAP, { satisfiedInRoom: ['materials'], manuscriptId: 'ms-x' })
       .flatMap((g) => g.destinations)
       .find((d) => d.id === 'conversations')!;
     expect(conv.actionable).toBe(false);
@@ -418,10 +418,53 @@ describe('the handoff contract carries identity both ways', () => {
     expect(out).not.toContain('recent');
   });
 
-  it('still does NOT open Conversations, because MAIA does not situate yet', () => {
-    // Our half being ready is not the contract. The middle term — an exchange
-    // actually situated in this Work — is not ours to assert.
-    expect(page).not.toContain('handoffToMaia');
+  /* SUPERSEDED AT WS2-03C, and replaced by its inverse rather than deleted.
+     This used to assert `page` did NOT contain handoffToMaia — Conversations
+     was held shut because the middle term did not exist. It exists now:
+     /maia receives the Work id, the server re-reads the member's own row, and
+     the exchange names what it is in relation to. Holding the door shut after
+     that would be its own dishonesty. What survives is the CONDITION. */
+  it('opens Conversations only when exactly one Work is declared', () => {
+    expect(page).toContain('handoffToMaia');
+    // The gate, verbatim: a Work AND a manuscript, or nothing offered.
+    expect(page).toMatch(/work && manuscript\s*\?\s*\{ conversations:/);
+  });
+
+  it('offers nothing to situate when no Work is declared', () => {
+    const none = shellDestinations(true, STUDIO_MAP, { manuscriptId: 'ms-x' })
+      .flatMap((g) => g.destinations)
+      .find((d) => d.id === 'conversations')!;
+    expect(none.actionable).toBe(false);
+    expect(none.href).toBeUndefined();
+  });
+
+  it('opens it, addressed, when the room can situate one', () => {
+    const open = shellDestinations(true, STUDIO_MAP, {
+      manuscriptId: 'ms-x',
+      situatedHrefs: { conversations: '/maia?work=w1&return=%2Fwriters-studio%2Fcanvas%3Fm%3Dms-x' },
+    }).flatMap((g) => g.destinations).find((d) => d.id === 'conversations')!;
+    expect(open.actionable).toBe(true);
+    expect(open.href).toContain('work=w1');
+    expect(() => assertShellPromisesNothing(
+      shellDestinations(true, STUDIO_MAP, {
+        manuscriptId: 'ms-x',
+        situatedHrefs: { conversations: '/maia?work=w1' },
+      }),
+    )).not.toThrow();
+  });
+
+  it('cannot be used to promote a destination that has no room behind it', () => {
+    // A context gate, not a back door. Only `later` destinations situate, and
+    // only with a real href — Home, already available, is unaffected.
+    const g = shellDestinations(true, STUDIO_MAP, {
+      manuscriptId: 'ms-x',
+      situatedHrefs: { notes: '', home: '/somewhere-else' },
+    }).flatMap((x) => x.destinations);
+    expect(g.find((d) => d.id === 'notes')!.actionable).toBe(false);
+    expect(g.find((d) => d.id === 'home')!.href).toBe('/writers-studio');
+  });
+
+  it('still says nothing in MAIA’s column that she has not been given', () => {
     expect(maiaColumn).toContain('REFLECTION_SENTENCE');
   });
 });

@@ -359,11 +359,9 @@ export interface ShellGroup extends StudioGroup {
  * there is a manuscript is not actionable without one. It stays visible,
  * because its absence would make the Studio appear to change shape.
  */
-export function shellDestinations(
-  hasManuscript: boolean,
-  map: StudioGroup[] = STUDIO_MAP,
+export interface ShellOptions {
   /** Counts the shell actually counted, by destination id. Facts only. */
-  counts: Readonly<Record<string, number>> = {},
+  counts?: Readonly<Record<string, number>>;
   /**
    * Destinations THIS ROOM can satisfy in place, as panels rather than routes.
    *
@@ -375,36 +373,62 @@ export function shellDestinations(
    *
    * So the room declares its own capability instead. A destination named here
    * is actionable because the caller can actually open it, and the caller is
-   * the only thing that knows that. It still requires a manuscript if the map
-   * says it does.
+   * the only thing that knows that.
    */
-  satisfiedInRoom: readonly string[] = [],
+  satisfiedInRoom?: readonly string[];
   /**
    * The manuscript on the table, so every link that needs it can carry it.
    *
-   * WS2-03B correction. The shell rail rendered `destination.href` verbatim,
-   * and two of the three real links are manuscript-scoped: Manuscript is this
-   * room, and Export is the Manuscript Room's export tab. Neither carried an
-   * identity, so Export landed at /press/manuscript?tab=export, which falls
-   * back to `list[0].id` when no `m` is named — the identity substitution this
-   * whole lane exists to end, reappearing one room over, in a link the shell
-   * itself wrote. The boundary that strips hrefs from what is unavailable was
-   * never asked whether the surviving hrefs were addressed.
-   *
-   * Both consumers read the SAME parameter — the Canvas through
-   * requestedManuscriptId, and /press/manuscript at page.tsx via
-   * `searchParams.get('m')` — so `canvasForManuscript` is the correct builder
-   * for both rather than a string appended and hoped over. A pin test asserts
-   * that consumer keeps reading CANVAS_MANUSCRIPT_PARAM.
+   * The shell rail once rendered `destination.href` verbatim, and two of its
+   * three real links are manuscript-scoped. Export therefore pointed at
+   * /press/manuscript?tab=export with no manuscript named, and that room falls
+   * back to `list[0].id` — the identity substitution this lane exists to end,
+   * in a link the shell itself wrote.
    */
-  manuscriptId: string | null = null,
+  manuscriptId?: string | null;
+  /**
+   * WS2-03C — destinations whose availability depends on CONTEXT, not build state.
+   *
+   * Conversations is the case this exists for, and it is genuinely a third
+   * kind of thing. It is not unbuilt: MAIA can now receive a Work and situate
+   * an exchange in it. It is not unconditionally available either: without a
+   * declared Work there is nothing to situate, and a Conversations link that
+   * opened an unsituated chat would be the promise D-019 refuses.
+   *
+   * So the room supplies the href when — and only when — it can honestly
+   * address one. `later` in STUDIO_MAP stays the truth about the general case;
+   * this is the room saying "for this member, right now, I can."
+   *
+   * Constrained deliberately: only a `later` destination can be situated this
+   * way, and only with a real href. It cannot be used to quietly promote an
+   * arbitrary destination.
+   */
+  situatedHrefs?: Readonly<Record<string, string>>;
+}
+
+export function shellDestinations(
+  hasManuscript: boolean,
+  map: StudioGroup[] = STUDIO_MAP,
+  opts: ShellOptions = {},
 ): ShellGroup[] {
+  const {
+    counts = {},
+    satisfiedInRoom = [],
+    manuscriptId = null,
+    situatedHrefs = {},
+  } = opts;
   return map.map((g) => ({
     ...g,
     destinations: g.destinations.map((d) => {
       const inRoom = satisfiedInRoom.includes(d.id);
+      /* Situated only where the map says `later` — this is a context gate, not
+         a back door for promoting a destination that has no room behind it. */
+      const situated =
+        d.availability === 'later' && !inRoom
+          ? (situatedHrefs[d.id] || undefined)
+          : undefined;
       const actionable =
-        (d.availability === 'available' || inRoom) &&
+        (d.availability === 'available' || inRoom || Boolean(situated)) &&
         (!d.requiresManuscript || hasManuscript);
       const { count: _mapCount, ...rest } = d;
       return {
@@ -415,9 +439,11 @@ export function shellDestinations(
         // place has no href either — there is nowhere to go, only something
         // to open — which is why the shell rail renders it as a button.
         ...(actionable && !inRoom
-          ? d.requiresManuscript && manuscriptId
-            ? { href: canvasForManuscript(d.href!, manuscriptId) }
-            : {}
+          ? situated
+            ? { href: situated }
+            : d.requiresManuscript && manuscriptId
+              ? { href: canvasForManuscript(d.href!, manuscriptId) }
+              : {}
           : { href: undefined }),
         // Real counts only, and only where the destination can be reached.
         ...(actionable && typeof counts[d.id] === 'number'

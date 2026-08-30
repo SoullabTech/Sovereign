@@ -12,6 +12,9 @@
 
 import { useEffect, useState, useCallback, Suspense } from 'react';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
+// 📖 WS2-03C — arriving from the Writer's Studio carrying one Work.
+import { useStudioHandoff } from './useStudioHandoff';
+import StudioHandoffBanner from './StudioHandoffBanner';
 import Link from 'next/link';
 import Image from 'next/image';
 import { OracleConversation } from '@/components/OracleConversation';
@@ -348,6 +351,9 @@ function MAIAPageContent() {
 
   // Derive showDashboard from URL
   const showDashboard = searchParams?.get('panel') === 'journey';
+  /* 📖 WS2-03C — the Studio handoff, verified against the member's own works.
+     `situated` is presentation; the prompt gets its own server-side read. */
+  const studioHandoff = useStudioHandoff(searchParams?.toString());
 
   // Fix hydration: Initialize with safe defaults, update in useEffect
   // NOTE: Initialize name as '' (not 'Friend') so greeting shows "Good morning" without a bogus label
@@ -842,6 +848,11 @@ function MAIAPageContent() {
                   onModeChange={setMaiaMode}
                   apiEndpoint="/api/sovereign/app/maia/list"
                   consciousnessType="maia"
+                  workContext={
+                    studioHandoff.phase === 'situated' && studioHandoff.work
+                      ? { workId: studioHandoff.work.id }
+                      : undefined
+                  }
                   initialShowChatInterface={showChatInterface}
                   onShowChatInterfaceChange={setShowChatInterface}
                   showSessionSelector={showSessionSelector}
@@ -909,6 +920,10 @@ function MAIAPageContent() {
         {/* DirectionalHints removed - keyboard shortcuts now active (arrow keys + ESC) */}
 
         <div className="h-screen relative overflow-hidden bg-gradient-to-br from-stone-950 via-stone-900 to-stone-950 flex flex-col">
+        {/* 📖 WS2-03C — when the member arrived from the Writer's Studio carrying
+            a Work, say so. Hidden context is not situated context. Renders
+            nothing on an ordinary visit. */}
+        <StudioHandoffBanner handoff={studioHandoff} />
         {/* Atmospheric Particles - Floating dust/sand */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
           {[...Array(30)].map((_, i) => {
@@ -1539,6 +1554,11 @@ function MAIAPageContent() {
               onModeChange={setMaiaMode}
               apiEndpoint="/api/sovereign/app/maia/list"
               consciousnessType="maia"
+              workContext={
+                studioHandoff.phase === 'situated' && studioHandoff.work
+                  ? { workId: studioHandoff.work.id }
+                  : undefined
+              }
               initialShowChatInterface={showChatInterface}
               onShowChatInterfaceChange={setShowChatInterface}
               showSessionSelector={showSessionSelector}

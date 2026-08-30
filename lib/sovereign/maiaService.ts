@@ -1295,6 +1295,24 @@ This is a sanctuary session. The user has chosen NOT to have this conversation s
 
   // 🏢 STUDIO ADDENDUM: Practitioner prompt cap when running in Studio
   const studioAddendum = (meta as any)?.studioAddendum as string | undefined;
+  /* 📖 WS2-03C — the Work the member brought from their Writer's Studio.
+     Extracted and injected in the SAME place as studioAddendum, because
+     ADDENDA_CHANNEL_DIVERGENCE_2026-05-24.md records exactly what happens
+     otherwise: a block rides in the context object, shows up in observability,
+     and never reaches a prompt — wired by the metric and unwired in fact.
+
+     TIER COVERAGE, stated rather than assumed:
+       FAST  injected — the template below.
+       CORE  injected — appended to adaptivePrompt.
+       DEEP  NOT injected. It is carried into MaiaContext and counted in
+             observability, but buildComprehensiveVoicePrompt extracts no
+             addendum of any kind (zero occurrences of "Addendum" in
+             intelligentVoiceAdaptation.ts), so studioAddendum, astrology,
+             conversational recall and this one all stop at the same wall.
+             That is the pre-existing divergence, not something this cut
+             introduced, and it is not this cut's to fix. Most turns are
+             FAST/CORE; DEEP fires on explicit-depth requests. */
+  const workSituationAddendum = (meta as any)?.workSituationAddendum as string | undefined;
   if (studioAddendum) {
     console.log(`🏢 [FAST] Studio addendum applied: practitioner context injected`);
   }
@@ -1429,7 +1447,7 @@ ${MAIA_CENTER_OF_GRAVITY}
 
 ${PLATFORM_KNOWLEDGE_ADDENDUM}
 
-${MAIA_RUNTIME_PROMPT}${userIdentification}${placeAddendum ? '\n\n' + placeAddendum : ''}${modeAdaptation}${timeAwareness}${cognitiveScaffolding}${relationshipContext}${selfletPromptBlock ? '\n\n' + selfletPromptBlock : ''}${sanctuaryInstruction}${wisdomInjection}${knowledgeFieldAddendum}${epistemicPathAddendum ? '\n\n' + epistemicPathAddendum : ''}${spiralSnapshotAddendum ? '\n\n' + spiralSnapshotAddendum : ''}${therapeuticFrameworkAddendum ? '\n\n' + therapeuticFrameworkAddendum : ''}${reflectionLensAddendum ? '\n\n' + reflectionLensAddendum : ''}${governorAddendum ? '\n\n' + governorAddendum : ''}${maiaModeAddendum ? '\n\n' + maiaModeAddendum : ''}${scribeSessionDiscussionAddendum ? '\n\n' + scribeSessionDiscussionAddendum : ''}${wuxingSnapshotAddendum ? '\n\n' + wuxingSnapshotAddendum : ''}${astrologyAddendum ? '\n\n' + astrologyAddendum : ''}${practiceFieldAddendum ? '\n\n' + practiceFieldAddendum : ''}${studioAddendum ? '\n\n' + studioAddendum : ''}${knowledgeGateAddendum ? '\n\n' + knowledgeGateAddendum : ''}${memberWebAddendum ? '\n\n' + memberWebAddendum : ''}${fieldWisdomAddendum ? '\n\n' + fieldWisdomAddendum : ''}${conversationalRecallAddendum ? '\n\n' + conversationalRecallAddendum : ''}${episodicRecallAddendum ? '\n\n' + episodicRecallAddendum : ''}${atomsAddendum ? '\n\n' + atomsAddendum : ''}${relationalContextAddendum ? '\n\n' + relationalContextAddendum : ''}${memoryInfluenceAddendum ? '\n\n' + memoryInfluenceAddendum : ''}${forwardReadinessAddendum ? '\n\n' + forwardReadinessAddendum : ''}${stateVectorContract}${youthPromptAddendum}
+${MAIA_RUNTIME_PROMPT}${userIdentification}${placeAddendum ? '\n\n' + placeAddendum : ''}${modeAdaptation}${timeAwareness}${cognitiveScaffolding}${relationshipContext}${selfletPromptBlock ? '\n\n' + selfletPromptBlock : ''}${sanctuaryInstruction}${wisdomInjection}${knowledgeFieldAddendum}${epistemicPathAddendum ? '\n\n' + epistemicPathAddendum : ''}${spiralSnapshotAddendum ? '\n\n' + spiralSnapshotAddendum : ''}${therapeuticFrameworkAddendum ? '\n\n' + therapeuticFrameworkAddendum : ''}${reflectionLensAddendum ? '\n\n' + reflectionLensAddendum : ''}${governorAddendum ? '\n\n' + governorAddendum : ''}${maiaModeAddendum ? '\n\n' + maiaModeAddendum : ''}${scribeSessionDiscussionAddendum ? '\n\n' + scribeSessionDiscussionAddendum : ''}${wuxingSnapshotAddendum ? '\n\n' + wuxingSnapshotAddendum : ''}${astrologyAddendum ? '\n\n' + astrologyAddendum : ''}${practiceFieldAddendum ? '\n\n' + practiceFieldAddendum : ''}${studioAddendum ? '\n\n' + studioAddendum : ''}${workSituationAddendum ? '\n\n' + workSituationAddendum : ''}${knowledgeGateAddendum ? '\n\n' + knowledgeGateAddendum : ''}${memberWebAddendum ? '\n\n' + memberWebAddendum : ''}${fieldWisdomAddendum ? '\n\n' + fieldWisdomAddendum : ''}${conversationalRecallAddendum ? '\n\n' + conversationalRecallAddendum : ''}${episodicRecallAddendum ? '\n\n' + episodicRecallAddendum : ''}${atomsAddendum ? '\n\n' + atomsAddendum : ''}${relationalContextAddendum ? '\n\n' + relationalContextAddendum : ''}${memoryInfluenceAddendum ? '\n\n' + memoryInfluenceAddendum : ''}${forwardReadinessAddendum ? '\n\n' + forwardReadinessAddendum : ''}${stateVectorContract}${youthPromptAddendum}
 
 Current context: Simple conversation turn - respond naturally and warmly.`;
 
@@ -1811,9 +1829,14 @@ The current user has not provided their name. Address them as "friend" or "there
 
   // 🏢 STUDIO ADDENDUM: Practitioner prompt cap when running in Studio
   const studioAddendumCore = (meta as any)?.studioAddendum as string | undefined;
+  const workSituationAddendumCore = (meta as any)?.workSituationAddendum as string | undefined;
   if (studioAddendumCore) {
     console.log(`🏢 [CORE] Studio addendum applied: practitioner context injected`);
     adaptivePrompt = adaptivePrompt + '\n\n' + studioAddendumCore;
+  }
+  if (workSituationAddendumCore) {
+    console.log(`📖 [CORE] Writer's Studio work context applied`);
+    adaptivePrompt = adaptivePrompt + '\n\n' + workSituationAddendumCore;
   }
 
   // 🤝 PRACTICE FIELD: Practitioner accompaniment context (CORE tier)
@@ -2377,6 +2400,7 @@ Do NOT mention Bloom's Taxonomy explicitly. The scaffolding should feel organic 
         astrologicalContextAddendum: (meta as any)?.astrologyAddendum as string | undefined,
         // 🏢 STUDIO: Practitioner prompt cap
         studioAddendum: (meta as any)?.studioAddendum as string | undefined,
+        workSituationAddendum: (meta as any)?.workSituationAddendum as string | undefined,
         // 🚪 KNOWLEDGE GATE: AIN source well modulation
         knowledgeGateAddendum: (meta as any)?.knowledgeGateAddendum as string | undefined,
         // 🏛️ CONSULTATION: AIN council multi-perspective synthesis
@@ -3121,6 +3145,7 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
         memoryOrchestrator: isFastTier && !!m.memoryInfluenceAddendum,
         forwardReadiness: isFastTier && !!m.forwardReadinessAddendum,
         studio: !!m.studioAddendum,
+        workSituation: !!m.workSituationAddendum,
         episodic: !!m.episodicRecallAddendum, // Phase 2, 2026-07-13 — member-marked moments
         dreams: false,   // layer not wired
       };

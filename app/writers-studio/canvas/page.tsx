@@ -31,7 +31,7 @@ import {
 } from '../canvasIdentity';
 import { UNTITLED_EXPRESSION } from '../shellIdentity';
 import { useLivingWorks } from '../useLivingWorks';
-import { resolveWorkContext, currentWork } from '../workContext';
+import { resolveWorkContext, currentWork, handoffToMaia } from '../workContext';
 import type { CurrentManuscript } from '../useCurrentManuscript';
 import { loadRevisions, type RevisionSummary } from '../../press/manuscript/workingDraftClient';
 import Worktable from './Worktable';
@@ -291,6 +291,21 @@ export default function WritersStudioPage() {
   const headline = work?.title ?? (manuscript ? manuscriptLabel : 'Writer’s Studio');
   const named = Boolean(work?.title ?? manuscript?.title);
 
+  /* 📖 WS2-03C — Conversations opens, and only on the one condition that makes
+     it honest. WS2-03B held it shut because the middle term did not exist:
+     /maia could not receive a Work. It can now — the id travels, the server
+     re-reads the member's own row, and the exchange says in the member's sight
+     what it is in relation to.
+
+     The gate is unchanged in spirit: exactly one declared Work. With none
+     there is nothing to situate, and with several the room does not choose —
+     so the destination simply stays unavailable rather than opening a
+     conversation that has quietly picked one. */
+  const situatedHrefs: Record<string, string> =
+    work && manuscript
+      ? { conversations: handoffToMaia('/maia', { workId: work.id, manuscriptId: manuscript.id }) }
+      : {};
+
   const railCounts: Record<string, number> = {};
   if (manuscript) {
     railCounts.structure = sections.length;
@@ -412,6 +427,7 @@ export default function WritersStudioPage() {
           counts={railCounts}
           satisfiedInRoom={manuscript ? SATISFIED_IN_ROOM : []}
           manuscriptId={manuscript?.id ?? null}
+          situatedHrefs={situatedHrefs}
           current="manuscript"
           openPanels={[
             ...(materialsOpen ? ['materials'] : []),

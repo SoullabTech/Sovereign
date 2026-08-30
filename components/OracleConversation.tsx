@@ -484,6 +484,17 @@ interface OracleConversationProps {
   // Scribe session discussion mode
   scribeSessionId?: string; // ID of scribe session to discuss
   scribeSessionContext?: ScribeSessionContext; // Context for scoped discussion
+  /**
+   * 📖 WS2-03C — the Writer's Studio Work this exchange is situated in.
+   *
+   * ONLY the id. The title and purpose that reach MAIA's prompt are read
+   * server-side from the member's own row, because this value originates in a
+   * member-editable URL and anything it asserts is a claim, not a fact. An id
+   * the member does not own resolves to nothing and the exchange is simply
+   * not situated.
+   */
+  workContext?: { workId: string };
+
   // Studio surface mode
   surface?: 'maia' | 'studio'; // Which surface MAIA is running on
   studioContext?: {
@@ -650,6 +661,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   scribeSessionContext,
   surface,
   studioContext,
+  workContext,
   fieldMode,
   fieldEnergyState,
   askMode: askModeProp,
@@ -5472,6 +5484,12 @@ I'm not sure what I'm feeling yet.`;
           // 🏢 STUDIO SURFACE: When running inside Soullab Studio
           surface: surface ?? 'maia',
           studioContext: studioContext ?? undefined,
+
+          // 📖 WRITER'S STUDIO — the Work the member carried in. Sent on the
+          // same terms as `place` below: only inside a message the member chose
+          // to send, never on a route change. An id only; the server resolves
+          // and verifies it against the member's own declarations.
+          workContext: workContext ?? undefined,
 
           // 🚪 PLACE — facts-only current-room context. Sent ONLY here, inside
           // a message the member chose to send. Route changes transmit nothing.

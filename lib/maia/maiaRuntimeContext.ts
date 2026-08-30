@@ -193,6 +193,8 @@ export type MaiaRuntimeContextInputs = {
     memberWeb?: string;
     astrology?: string;
     studio?: string;
+    /** 📖 WS2-03C — the Writer's Studio Work the member brought, server-resolved. */
+    workSituation?: string;
     knowledgeGate?: string;
     wuxing?: string;
     /** Phase 2 conversational recall block (cross-session continuity, system-retrieved). */

@@ -153,6 +153,14 @@ import { calculateDaYun } from '@/lib/astrology/daYunCalculator';
 import { pool } from '@/lib/db/postgres';
 import { logAINShapeTelemetry } from '@/lib/db/ainShapeTelemetry';
 import { buildPracticeFieldContext, formatPracticeFieldContextForPrompt } from '@/lib/practiceField/practiceFieldService';
+// 📖 WS2-03C — the Writer's Studio Work the member brought into this exchange.
+// The client sends an id; every word that reaches the prompt is read here from
+// the member's own row. See lib/writersStudio/workSituation.ts.
+import {
+  resolveSituatedWork,
+  formatWorkSituationForPrompt,
+  summarizeWorkSituationForLog,
+} from '@/lib/writersStudio/workSituation';
 import { assessAINResponseShape } from '@/lib/ai/quality/ainResponseShape';
 import { classifyAssistantTurn } from '@/lib/ai/quality/assistantTurnType';
 
@@ -773,6 +781,24 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
       console.log(`🏢 [Route] Studio surface detected — practitioner prompt cap applied`);
     }
 
+    /* 📖 WS2-03C — the Writer's Studio handoff, situated server-side.
+       The member clicked a control in their Studio that named one Work. The
+       client sends only that id: the title and purpose reaching the prompt are
+       read from the member's own row here, because the handoff URL is
+       member-editable and anything it asserts is a claim, not a fact.
+       An id the member does not own resolves to null and the exchange is
+       simply not situated — fails closed, and quietly, because an unsituated
+       conversation still works and a refusal to claim context is not a fault. */
+    const requestedWorkId = (meta as any)?.workContext?.workId;
+    const situatedWork = await resolveSituatedWork(userId, requestedWorkId);
+    const workSituationAddendum = formatWorkSituationForPrompt(situatedWork);
+    if (summarizeWorkSituationForLog(requestedWorkId, situatedWork).requested) {
+      console.log(
+        '📖 [MAIA/sovereign] writers-studio work situation',
+        summarizeWorkSituationForLog(requestedWorkId, situatedWork),
+      );
+    }
+
     // 🤝 PRACTICE FIELD CONTEXT: Inject practitioner's accompaniment context when member
     // is a participant in an active Relationship Space. Received as context, not instructions.
     // Constitutional behavior is invariant across all Practice Fields.
@@ -1142,6 +1168,8 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
         memberWeb: memberWebAddendum || undefined,
         astrology: astrologyAddendum || undefined,
         studio: studioAddendum || undefined,
+        // 📖 WS2-03C — present only when a Work the member owns was resolved.
+        workSituation: workSituationAddendum || undefined,
         knowledgeGate: knowledgeGateAddendum || undefined,
         wuxing: wuxingAddendum || undefined,
         // 💬 Phase 2 — conversational recall observability (PROMPT_BLOCK_CHARS sums this).
@@ -1234,6 +1262,9 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
           bridgedSnapshot, // 🌿 Combined Spiral × Wu Xing snapshot
           conversationId: bodyConversationId || session.id, // 📝 Stable conversation ID for thread continuity
           studioAddendum, // 🏢 Studio prompt cap (when surface === 'studio')
+          // 📖 WS2-03C — server-resolved; deliberately after ...meta so a
+          // client-supplied workSituation can never reach the prompt.
+          workSituationAddendum,
           practiceFieldAddendum, // 🤝 Practice Field: practitioner accompaniment context
           knowledgeGateAddendum, // 🚪 AIN Knowledge Gate: source well modulation (Phase 1)
           memberWebAddendum: memberWebAddendum || undefined, // 🕸️ Member web: patterns + summaries + journals
