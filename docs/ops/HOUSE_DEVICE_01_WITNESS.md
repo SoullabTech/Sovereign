@@ -178,6 +178,33 @@ without failing the witness, unless they make the House confusing or unusable.
 
 ## 4 · Result
 
+### Walk 1 — candidate `124ae099a` · **FAIL** · PERMANENT RECORD, do not overwrite
+
+```text
+HEAD witnessed:   124ae099a
+STEP 1 COLD ARRIVAL   FAIL
+  expected:  canonical full /maia as the Desktop centre
+  observed:  the local D01 mini-MAIA witness surface (file:// index.html —
+             local transcript, "Message MAIA…", diagnostics, Start listening)
+STEPS 2-10            NOT REACHED
+  Voice, containment and navigation were not tested: on this candidate they
+  would no longer answer the acceptance question.
+```
+
+**Cause, traced before any change.** `/maia` existed, its containment existed,
+`shell.show()` was correct — and nothing called it during arrival. HOUSE-RECONCILE-01
+dropped three caller lines that were present on the House branch:
+`did-finish-load → goTo(MAIA)`, `sign-in success → goTo(MAIA)`, `sign-in success → buildMenu()`.
+The candidate reached canonical MAIA only by a manual menu click.
+Repaired in DESKTOP-ARRIVAL-01 on a new SHA; this record stays as it is.
+
+### Walk 2 — candidate `<new SHA>` · pending
+
+Re-run **from Step 1, not from Step 2.** The first acceptance question is now:
+
+> Cold launch with an existing member session must open the canonical full `/maia`,
+> not mini-MAIA.
+
 ```text
 HEAD witnessed:
 date / walker:
