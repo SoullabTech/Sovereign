@@ -11,9 +11,12 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const require = createRequire(import.meta.url);
-const { createCaptureLiveness, SILENT_DEATH_MS } = require('../src/capture-liveness.js');
+const { createCaptureLiveness, SILENT_DEATH_MS, IDLE } = require('../src/capture-liveness.js');
 
 /** A liveness machine on a clock we control, so no test needs a microphone. */
 function mk(opts = {}) {
@@ -175,4 +178,26 @@ test('disarming is not a loss', () => {
   assert.equal(l.state, 'idle');
   assert.equal(l.isListening, false);
   assert.equal(l.check(), null, 'a stopped session must not report failures');
+});
+
+// ── the renderer projection follows the domain, it does not shadow it ───────
+
+test('⭐ the state projection reports the domain’s IDLE, never a private literal', () => {
+  const here = path.dirname(fileURLToPath(import.meta.url));
+  const mainJs = readFileSync(path.join(here, '..', 'src', 'main.js'), 'utf8')
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+    .split('\n').map((l) => l.replace(/(^|[^:'"`])\/\/.*$/, '$1')).join('\n');
+
+  assert.ok(/require\('\.\/capture-liveness'\)/.test(mainJs) && /\bIDLE\b/.test(mainJs),
+    'main does not consume the liveness domain’s IDLE at all');
+  const snapshot = /function voiceStateSnapshot\(\)[\s\S]*?\n\}/.exec(mainJs)[0];
+  assert.ok(/state: IDLE\b/.test(snapshot),
+    'the projection asserts its own capture state instead of reporting the domain’s');
+  assert.ok(!/'idle'|"idle"/.test(snapshot),
+    'a private idle literal survives in the projection — renaming the state would leave it lying');
+  // And the constant the projection now defers to is the one a real disarmed
+  // session reports, so the two cannot drift apart.
+  const l = createCaptureLiveness();
+  l.arm();
+  assert.equal(l.disarm().state, IDLE);
 });

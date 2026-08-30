@@ -38,7 +38,7 @@ const { createVad } = require('./voice/vad');
 const { createUtteranceBuffer } = require('./voice/utterance');
 const { createSession } = require('./session');
 const { createConversation } = require('./conversation');
-const { createCaptureLiveness } = require('./capture-liveness');
+const { createCaptureLiveness, IDLE } = require('./capture-liveness');
 const { createCaptureWatch } = require('./capture-watch');
 const { createContinuity } = require('./continuity');
 const { createTurn } = require('./turn');
@@ -125,7 +125,11 @@ function newVoiceSession() {
 }
 
 function voiceStateSnapshot() {
-  if (!voice) return { active: false, capture: { state: 'idle', cause: null } };
+  // ⛔ The projection REPORTS what the liveness domain calls idle; it does not
+  // independently know what idle is. A private literal here would keep asserting
+  // the old string if the policy renamed the state — silently, and about
+  // liveness, which is the one domain D02A exists to stop lying about.
+  if (!voice) return { active: false, capture: { state: IDLE, cause: null } };
   return {
     active: true,
     ...voice.epoch.snapshot(),
