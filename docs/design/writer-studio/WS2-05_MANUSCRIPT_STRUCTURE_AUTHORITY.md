@@ -263,8 +263,13 @@ Three rules that make the table real rather than decorative:
   unit must never render where an authored unit renders. If a member has to
   read the origin badge to know whether the book is organized, the ladder has
   already collapsed.
-- **Adoption is per unit, not per batch.** "Accept all" is a single gesture
-  that authors an entire structure without the member having seen any of it.
+- ~~**Adoption is per unit, not per batch.**~~ **SUPERSEDED 2026-08-30** by
+  `WS2-05B_PROPOSED_STRUCTURE_CHARTER.md` ruling 3. Real use overturned it: if
+  the complete proposed structure is visible BEFORE adoption, one explicit act
+  is enough authorship — the member has seen the proposition they are
+  accepting. The original concern was "accept all" on a structure nobody had
+  read; the answer is to show the whole of it, not to demand twenty
+  confirmations. Per-unit *correction* remains available throughout.
 - **Adoption is recorded, not erased.** `adopted_from_id` keeps the fact that
   MAIA proposed it and the member accepted. Provenance survives the act.
 
