@@ -95,7 +95,7 @@ test('⭐ an empty transcript records NO epoch final, and never asks MAIA', asyn
   const { t, log, phases } = wire({ transcribe: () => ({ ok: true, text: '   ' }) });
   await t.run();
   assert.deepEqual(phases(), ['transcribing', 'idle']);
-  assert.equal(log.filter((e) => e.epochFinal).length, 0,
+  assert.equal(log.filter((e) => 'epochFinal' in e).length, 0,
     'the tail invariant is now protecting material the member never said');
   assert.equal(log.filter((e) => e.ask).length, 0, 'MAIA was asked about silence');
 });
@@ -105,16 +105,16 @@ test('⭐ a failed transcription records NO epoch final, and never asks MAIA', a
   await t.run();
   assert.deepEqual(phases(), ['transcribing', 'error']);
   assert.equal(log.find((e) => e.phase === 'error').error, 'whisper down');
-  assert.equal(log.filter((e) => e.epochFinal).length, 0,
+  assert.equal(log.filter((e) => 'epochFinal' in e).length, 0,
     'a final was recorded for a transcription that never succeeded');
   assert.equal(log.filter((e) => e.ask).length, 0);
 });
 
 test('⭐ the final is recorded BEFORE the member is told they were heard', async () => {
   const { t, log } = wire();
-  assert.equal(log.findIndex((e) => e.epochFinal), -1, 'sanity: nothing recorded before the run');
+  assert.equal(log.findIndex((e) => 'epochFinal' in e), -1, 'sanity: nothing recorded before the run');
   await t.run();
-  const f = log.findIndex((e) => e.epochFinal);
+  const f = log.findIndex((e) => 'epochFinal' in e);
   const heard = log.findIndex((e) => e.phase === 'heard');
   assert.ok(f >= 0 && heard > f,
     "'heard' was announced before the epoch recorded the final — the tail invariant has nothing to protect");
@@ -124,6 +124,12 @@ test('⭐ the final is recorded BEFORE the member is told they were heard', asyn
 
 // ── ⛔ ORDERING 2: a cough is not a turn ────────────────────────────────────
 
+// ⛔ HONEST LIMIT of the control below. Setting busy before `take()` and
+// releasing it synchronously on an empty take is NOT observable: there is no
+// await between, and JS is single-threaded, so continuity's poll can never see
+// the transient. That ordering is incidental. What IS semantic — and what this
+// test holds — is that a cough must not LEAVE the flag set, because a leaked
+// flag defers thread adoption forever. The dangerous mutation fails 2 tests.
 test('⭐ silence or a cough never enters the busy state — continuity is not stalled', async () => {
   const { t, log } = wire({ empty: true });
   await t.run();
