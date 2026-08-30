@@ -88,7 +88,7 @@ difference between a clean worktable and markdown in a novelist's paragraphs.
 It needs its own proof (it is a byte-changing edit to a member's draft) and
 its own disclosure — the writer is told, as with conversion itself.
 
-### Timings at book scale### Timings at book scale — is `string_agg` affordable?
+### Timings at book scale — is `string_agg` affordable?
 
 | step | throwaway, 185 §, 669 KB | **local, real book, 174 §, 381 KB** |
 |---|---|---|
