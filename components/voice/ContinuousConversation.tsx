@@ -10,6 +10,7 @@ import { VoiceController } from '@/lib/voice/AudioSessionManager';
 import { getFeatureFlag } from '@/lib/features/flags';
 import { logVoiceEvent, resetVoiceSession } from '@/lib/voice/voiceDiagnostics';
 import { pushVoiceDebug } from '@/lib/voice/voiceDebugBus';
+import { DESKTOP_MAX_UTTERANCE_MS } from "@/lib/voice/desktopUtteranceLimits";
 import { WebSpeechRecognitionSession, classifyRecognitionError } from '@/lib/voice/webSpeechLifecycle';
 import {
   assessCaptureLiveness,
@@ -3406,7 +3407,9 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
       console.log('[voice] transport:', voiceTransport, { platform: info.platform });
 
       if ((info.isDesktop || !hasSpeechRecognitionAPI()) && canRecordAudio) {
-        // Clear the 2s ARMING watchdog — this path records up to ~8s and
+        // Clear the 2s ARMING watchdog — this path records for as long as the
+        // member keeps speaking (Desktop: up to the safety ceiling in
+        // desktopUtteranceLimits; other browsers: the module's 8s bound) and
         // would otherwise be reset to IDLE mid-utterance.
         if (armingTimeoutRef.current) {
           clearTimeout(armingTimeoutRef.current);
@@ -3457,7 +3460,18 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
 
         try {
           const { recordAndTranscribe } = await import('@/lib/voice/androidVoiceFallback');
-          const result = await recordAndTranscribe(stream, { signal: captureController.signal });
+          const result = await recordAndTranscribe(stream, {
+            signal: captureController.signal,
+            // ⛔ DESKTOP-SOVEREIGN-STT-UTTERANCE-LIMIT-01 — Desktop turns end in
+            // SILENCE, not on a timer. The module default (8 s) is a bound on a
+            // one-shot Android recovery attempt; inheriting it here cut members
+            // off mid-breath at second eight (device: 8704 ms, 8652 ms). Desktop
+            // gets a safety ceiling instead — exceptional, not conversational.
+            //
+            // ⛔ Desktop ONLY. Firefox/Zen reach this same branch by absence of
+            // Web Speech and keep the module's own 8 s bound, unchanged.
+            ...(info.isDesktop ? { maxMs: DESKTOP_MAX_UTTERANCE_MS } : {}),
+          });
 
           // ⛔ THE STALE-RESULT GATE. Abort stops the work; it cannot un-resolve
           // a promise already in flight. If this capture's authority was revoked
