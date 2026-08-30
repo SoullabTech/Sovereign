@@ -79,7 +79,18 @@ export interface EditableSection {
   id: string;
   position: number;
   heading: string | null;
+  /** The member's editable text when `editable`; the whole opaque slice when not. */
   body: string;
+  /**
+   * Whether this cut can edit the section.
+   *
+   * False when the stored slice does not begin with the heading the Source
+   * records — still scaffolded, or a shape this cut does not understand. The
+   * UI must not offer an edit gesture the server is guaranteed to refuse, and
+   * without this flag it could not tell the two cases apart: an opaque slice
+   * arrives in `body` looking exactly like editable text.
+   */
+  editable: boolean;
 }
 
 /**
@@ -115,6 +126,7 @@ export async function loadEditableSections(
         /* A section whose shape this cut cannot split is shown whole and
            read-only rather than silently reinterpreted. */
         body: split ? split.body : r.text,
+        editable: split !== null,
       };
     }),
   };
@@ -188,4 +200,74 @@ export async function saveSection(
       sectionChars: newText.length,
     };
   });
+}
+
+/* ────────────────────────────────────────────────────────────────────────
+   THE THREE TRUTHFUL STATES.
+
+   A draft is in exactly one of these, and the writing surface says which
+   rather than falling back to a single "not ready" that quietly implies the
+   others. Founder ruling, 2026-08-30.
+   ──────────────────────────────────────────────────────────────────────── */
+
+export type DraftWriteState =
+  /** Converted: sections are the writing authority, outline navigates. */
+  | { kind: 'section_aware'; sections: EditableSection[]; version: number }
+  /** Not converted yet. The existing continuous editor, outline inert. */
+  | { kind: 'continuous'; content: string; version: number }
+  /** Converted is not provable for this draft. Continuous, and the outline
+      offers no navigation — never a guess at where sections fall. */
+  | { kind: 'continuous_unprovable'; content: string; version: number; reason: string }
+  | { kind: 'no_draft' };
+
+/**
+ * What the writing surface should render, decided on the server.
+ *
+ * The client never infers this. A UI that decides for itself whether sections
+ * exist will eventually decide wrong on a draft mid-conversion and offer
+ * navigation into rows that are not there.
+ *
+ * NOTE ON WHAT THIS DOES NOT DO: it never converts. During this cut a
+ * convertible-but-unconverted draft reports `continuous`, and conversion stays
+ * an explicit act. When 04B is activated, the open path re-proves eligibility
+ * and converts BEFORE the UI claims navigation exists — so there is never an
+ * intermediate screen with an empty outline beside a working manuscript.
+ */
+export async function resolveDraftWriteState(
+  manuscriptId: string,
+  memberId: string,
+): Promise<DraftWriteState> {
+  const { query } = await import('@/lib/db/postgres');
+  const draft = await query<{
+    id: string; content: string; version: string; section_addressable_at: Date | null;
+  }>(
+    `SELECT id, content, version, section_addressable_at
+       FROM manuscript_working_drafts WHERE manuscript_id = $1 AND member_id = $2`,
+    [manuscriptId, memberId]);
+  if (draft.rows.length === 0) return { kind: 'no_draft' };
+  const d = draft.rows[0];
+  const version = Number(d.version);
+
+  if (d.section_addressable_at !== null) {
+    const loaded = await loadEditableSections(manuscriptId, memberId);
+    if (loaded) return { kind: 'section_aware', sections: loaded.sections, version: loaded.version };
+  }
+
+  /* Unconverted. Say WHY navigation is unavailable when it is structurally
+     unavailable, so the outline can be honest instead of merely inert. */
+  const { classifyDraft } = await import('./draftProof');
+  const sections = await query<{ heading: string | null; body: string }>(
+    `SELECT heading, body FROM manuscript_sections
+      WHERE manuscript_id = $1 ORDER BY position ASC`, [manuscriptId]);
+  const verdict = classifyDraft(sections.rows, d.content);
+  const provable =
+    verdict.classification === 'PRISTINE' ||
+    verdict.classification === 'LEGACY_COMPOSER_VARIANT' ||
+    (verdict.classification === 'EDITED' &&
+      verdict.proof.otherHeadingDiff === 0 &&
+      verdict.proof.resolved === verdict.proof.boundaries);
+
+  return provable
+    ? { kind: 'continuous', content: d.content, version }
+    : { kind: 'continuous_unprovable', content: d.content, version, reason: verdict.classification };
 }
