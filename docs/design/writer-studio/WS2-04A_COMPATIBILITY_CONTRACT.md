@@ -46,12 +46,47 @@ a Structure Adoption case. The book that opened this thread — the one an
 earlier census called `EDITED` and a Stage 2 run called "173 member edits" —
 seeds mechanically, byte for byte, with nothing owed its author.
 
-*(The witness reports that conversion succeeded but not which class it landed
-in. That distinction — `LEGACY_COMPOSER_VARIANT` versus `EDITED` with
-boundaries intact — is answered by
-`scripts/ws2-04a-stage21-legacy-proof.ts` against the same database, and is
-the last open question of the legacy-composer thread rather than a gate on the
-substrate.)*
+### Which class — the legacy thread, closed
+
+Stage 2.1 against the same database, 2026-08-30:
+
+```
+whole-draft byte equality
+  current              differs
+  legacy(# headings)   EXACT MATCH
+
+sections                    174
+headed sections             173
+exact legacy "# " matches   173
+other heading differences     0
+body differences              0
+boundaries resolved       174/174
+
+CLASSIFICATION: LEGACY_COMPOSER_VARIANT
+```
+
+**Elemental Alchemy contains no member edits.** The original census `REFUSE`
+was an artefact of comparing the draft against the current composer when it
+had been composed by the historical one. Zero body differences on a 380,675-
+character book is as clean a result as this instrument can produce.
+
+### The consequence 04B inherits
+
+The book seeds **with its `# ` scaffolding**, because conversion cannot remove
+it — that changes the member's bytes while conversion promises they are
+unchanged.
+
+So a writer opening this draft in the section-aware canvas will see
+`# Chapter One` sitting in their prose. **That is precisely what the
+2026-08-05 persona walk objected to**, and what `5f50f6790` removed from the
+draft route in the first place. Conversion is faithful; the scaffolding was
+already there.
+
+This is a **WS2-04B question, not a 04A one**, and it is a real one: the
+normalisation transform is not optional polish for this book, it is the
+difference between a clean worktable and markdown in a novelist's paragraphs.
+It needs its own proof (it is a byte-changing edit to a member's draft) and
+its own disclosure — the writer is told, as with conversion itself.
 
 ### Timings at book scale### Timings at book scale — is `string_agg` affordable?
 

@@ -87,8 +87,14 @@ async function main() {
     console.log('');
     console.log('    This draft was composed before 5f50f6790 and has not been edited.');
     console.log('    No Structure Adoption review is owed the writer: there is nothing');
-    console.log('    of theirs to review. The obsolete "# " scaffold can be removed');
-    console.log('    mechanically, preserving every member-authored body character.');
+    console.log('    of theirs to review. It seeds byte-exactly, WITH its scaffolding.');
+    console.log('');
+    console.log('    Removing the "# " is NOT part of conversion and cannot be: it');
+    console.log('    changes the draft\'s bytes, and conversion promises they are');
+    console.log('    unchanged. Normalisation is a separate transform with its own');
+    console.log('    proof — and until it runs, a writer opening this draft sees the');
+    console.log('    scaffolding in their prose, which is what the 2026-08-05 persona');
+    console.log('    walk objected to. That is a WS2-04B question, not a 04A one.');
   } else if (classification === 'WITHHELD') {
     console.log('  CLASSIFICATION: WITHHELD — instruments disagree');
     console.log('    The whole draft IS byte-identical to the legacy composer, but the');
