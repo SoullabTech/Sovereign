@@ -1,6 +1,6 @@
 // MAIA Desktop — the Sovereign Portability Invariant, asserted structurally.
 //
-// Doctrine: docs/architecture/SOVEREIGN_PORTABILITY_INVARIANT_2026-08-30.md
+// Doctrine: docs/architecture/SOVEREIGN_PORTABILITY_INVARIANT_2026-08-29.md
 //
 //   Electron is a host adapter, not a domain boundary.
 //

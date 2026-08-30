@@ -1,7 +1,9 @@
 # Sovereign Portability Invariant — Electron is a host, not the architecture
 
-**Date:** 2026-08-30 · **Status:** standing constraint on MAIA Desktop
-**Applies to:** every capability introduced by Companion-01A and everything after it
+**Date:** 2026-08-29 · **Status:** standing constraint on MAIA Desktop
+**Applies to:** ALL MAIA Desktop work — every unit, every capability, from here on. It is not
+scoped to a named unit. Any later unit that acquires the "Companion" name inherits it by being
+Desktop work, not by being named.
 **Evidence class of §4:** SOURCE (a read of the tree as it stands, not a runtime or device claim)
 
 ---
@@ -76,7 +78,7 @@ MAIA-D01/D02A bought, and this invariant is what keeps it.
 
 ## 3 · The five questions
 
-Any capability introduced in Companion-01A must answer these before it is written:
+Any Desktop capability must answer these before it is written:
 
 ```text
 1. Is this logic intrinsically Electron-specific?
@@ -129,7 +131,7 @@ transport adapter        Electron adapter today · native service adapter tomorr
 
 ---
 
-## 4 · Where the tree actually stands (SOURCE census, 2026-08-30)
+## 4 · Where the tree actually stands (SOURCE census, 2026-08-29)
 
 `maia-desktop/src` — 2,519 lines. Only **one** file imports Electron.
 
@@ -170,7 +172,7 @@ MIXED — the real portability debt
 
 The honest read: **the Desktop Sovereign Core already exists in embryo, and it is legible.** The
 portability debt is not spread through the tree — it is concentrated in `main.js`, where domain
-orchestration and host wiring share a file. Companion-01A's obligation is therefore narrow and
+orchestration and host wiring share a file. The obligation on Desktop work is therefore narrow and
 specific: **do not add to that pile.** New domain logic goes in a module that does not name Electron;
 `main.js` gets the wiring only.
 
@@ -238,7 +240,7 @@ has not declared which side of the boundary it is on.
 Two files are declared host adapters: `src/main.js` and `src/preload.js`. Adding a third is an
 authority decision, not a convenience.
 
-**Negative controls, run 2026-08-30 (TEST class):** adding `require('electron')` to a domain module
+**Negative controls, run 2026-08-29 (TEST class):** adding `require('electron')` to a domain module
 fails 3 of the 5 proofs; adding an undeclared source file under `src/` fails 1. The Desktop suite is
 138/138 green with the proof in place. Decay is loud, not silent.
 
@@ -248,7 +250,7 @@ fails 3 of the 5 proofs; adding an undeclared source file under `src/` fails 1. 
 
 ```text
 NOW      Electron Companion
-   ↓     proper boundaries / adapters          ← Companion-01A lives here
+   ↓     proper boundaries / adapters          ← boundary work lives here
    ↓     extract sovereign supervisor
    ↓     Electron becomes optional frontend
    ↓     native macOS frontend
@@ -262,5 +264,5 @@ canonical AIN on the sovereign network. If cross-platform portability is wanted,
 core behind native shells (macOS · iOS · Windows · Linux) is far more durable than making Chromium
 the permanent center of gravity.
 
-⭐ None of that is authorized here. It is written down so that the boundaries Companion-01A draws
+⭐ None of that is authorized here. It is written down so that the boundaries Desktop work draws
 are drawn toward something, rather than toward nothing in particular.

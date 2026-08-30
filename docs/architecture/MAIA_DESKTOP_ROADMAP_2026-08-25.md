@@ -539,9 +539,10 @@ It does not confer authority to re-sequence another.
   directly on Electron APIs; Electron-specific code stays at the adapters (`BrowserWindow`, session
   partitions, IPC, `safeStorage`, permission handlers, notifications, window lifecycle) while
   identity, memory, conversation, Work, permissions and voice grammar stay substrate-neutral. Added
-  2026-08-30 and binding on **Companion-01A and everything after it** — the five placement questions,
+  2026-08-29 and binding on **ALL MAIA Desktop work from here on** — not scoped to a named unit —
+  the five placement questions,
   the forbidden list, the SOURCE census of the current tree, and what the invariant deliberately does
-  NOT authorize are in `docs/architecture/SOVEREIGN_PORTABILITY_INVARIANT_2026-08-30.md`. Enforced
+  NOT authorize are in `docs/architecture/SOVEREIGN_PORTABILITY_INVARIANT_2026-08-29.md`. Enforced
   structurally by `maia-desktop/test/portability-01-host-boundary.test.mjs`, in the preload
   allow-list doctrine: only `src/main.js` and `src/preload.js` may name Electron, and a new source
   file fails the suite until it declares which side of the boundary it is on.
