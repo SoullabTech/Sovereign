@@ -90,9 +90,30 @@ not a fix for main's staleness — whether main should be retired is a separate 
 not the browser/deploy machinery in deploy.yml
 ```
 
-## 6 · Open question for the founder
+## 6 · Open question — routed, not answered
+
+```text
+MAIN-BRANCH-STATUS-01
+  live and badly stale?    or    historical/dead and still referenced by CI?
+```
 
 `main` is 3081 commits from the deployment target and four months stale, yet three workflows still
-gate it. Either it is a live target that should be re-synced, or it is dead and its workflows are
-gating nothing. **This census does not decide that** — but Stage 1 should not be written in a way
-that assumes the answer.
+gate it. **This census does not decide that, and Stage 1 makes no assertion about it either way.**
+`main` is deliberately absent from the new workflow's trigger — including it "for symmetry" would
+smuggle a branch-policy migration into a small correctness fix.
+
+## 7 · Stage 2 — deferred with a named precondition
+
+```text
+CANONICAL-PR-UNIT-GATE-02
+
+first          measure the canonical `test:ci` baseline, once, on a machine with dependencies
+if green       make test:ci blocking, unswallowed
+if red         establish a bounded baseline/remediation policy FIRST
+never          add it as another `|| true`
+```
+
+⛔ **This unit must not be used to satisfy PR #1150's missing gates retroactively.** #1150 still
+needs its focused Jest run and typecheck run explicitly. If this workflow later runs on it because
+that PR is synchronised or rebased, fine — but base drift must not be manufactured to make that
+happen.
