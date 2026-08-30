@@ -173,9 +173,32 @@ async function main() {
       console.log(`       An instrument fault, not a finding about this book. Do not`);
       console.log(`       migrate on a result that cannot be fully explained.`);
     } else if (kind === 'EDITED') {
+      const p = verdict.proof;
+      console.log(`     edits        ${p.otherHeadingDiff} heading, ${p.bodyDiff} body line(s)`);
+      console.log(`     boundaries   ${p.resolved}/${p.boundaries} resolved`);
       console.log(`     diverges at  char ${at} of ${Math.min(recomposed.length, d.content.length)}`);
-      console.log(`     → member edits present; section ownership is not derivable.`);
-      console.log(`       PRESERVED AS IS. Not a defect — a book someone wrote in.`);
+      /* CORRECTED after the first production census. "EDITED ⇒ ownership is
+         not derivable" was too coarse, and the finer instrument contradicted
+         it on both real books: every heading byte-identical, every boundary
+         located by identity, every edit inside body text. When no heading
+         differs and every boundary resolves, each edit lies within exactly
+         one section — attribution is mechanical, not inferred, and telling
+         the writer their book cannot be section-addressed would be false.
+
+         Ownership stops being derivable when a boundary itself moves: a
+         heading rewritten or deleted, sections merged, text carried across a
+         break. That is what the two counts below distinguish. */
+      if (p.resolved === p.boundaries && p.otherHeadingDiff === 0) {
+        console.log(`     → edits are body-only and every boundary is located by`);
+        console.log(`       identity, so each edit falls inside exactly one section.`);
+        console.log(`       Section ownership IS derivable here. Seedable with the`);
+        console.log(`       member's text preserved verbatim — no ceremony owed.`);
+      } else {
+        console.log(`     → a boundary itself moved; section ownership is not`);
+        console.log(`       derivable. PRESERVED AS IS. Not a defect — a book`);
+        console.log(`       someone wrote in. Only the writer can say where the`);
+        console.log(`       break now falls.`);
+      }
     } else if (kind === 'NO_SOURCE') {
       console.log(`     → no source sections: this draft was never composed from a`);
       console.log(`       Source. A blank page someone started writing on. It cannot`);
@@ -187,6 +210,8 @@ async function main() {
 
   const seedable = tally.PRISTINE + tally.LEGACY_COMPOSER_VARIANT;
   const refused = tally.EDITED + tally.NO_SOURCE + tally.WITHHELD;
+  /* An EDITED draft is not automatically un-seedable — see the per-draft
+     boundary lines above. This split counts composer-exact drafts only. */
 
   console.log('  ── population ──────────────────────────────────────────');
   console.log(`  PRISTINE                 ${tally.PRISTINE}\tcurrent composer, exact`);
@@ -195,7 +220,8 @@ async function main() {
   console.log(`  NO_SOURCE                ${tally.NO_SOURCE}\tnever composed from a Source`);
   console.log(`  WITHHELD                 ${tally.WITHHELD}\tinstruments disagree — fix before migrating`);
   console.log('');
-  console.log(`  ${seedable} exactly seedable · ${refused} not\n`);
+  console.log(`  ${seedable} composer-exact · ${refused} not (see boundary lines above:`);
+  console.log(`  an EDITED draft whose boundaries all resolve is still seedable)\n`);
 
   if (tally.EDITED > 0) {
     console.log('  A refusal is the correct outcome, not a blocker to route around.');

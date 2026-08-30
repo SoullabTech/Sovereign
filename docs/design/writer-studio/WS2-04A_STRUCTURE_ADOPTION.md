@@ -1,17 +1,90 @@
 # WS2-04A — Structure Adoption
 
-**Status:** design return. No schema, no writes, no implementation.
-**Grounded on:** census `ef411a38`, boundary analysis `ca7b7063`.
+**Status:** design return, CORRECTED against production. No schema, no writes,
+no implementation.
+**Grounded on:** production census `c910cefd9`, run 2026-08-30 against
+`maia-postgres:5432/maia_consciousness` — 9 working drafts.
 
-The census settled it: **Elemental Alchemy (KDP print) is `EDITED`** — 174
-sections, draft 380,675 chars against a 380,329-char Source composition, first
-divergence at char 2,452. The flagship book cannot be migrated automatically,
-and four of eight drafts are in the same position or have no Source at all.
+## 0 · Correction — what the earlier return was grounded on
 
-So the substrate is not the hard part. This is:
+This document previously opened:
 
-> How does a writer make a draft they have already written in navigable,
-> without the system deciding which of their words belong to which chapter?
+> The census settled it: **Elemental Alchemy (KDP print) is `EDITED`** — 174
+> sections, draft 380,675 chars … The flagship book cannot be migrated
+> automatically, and four of eight drafts are in the same position.
+
+**That is retracted.** Elemental Alchemy does not exist in production. A
+direct query returns no row for `a3ae67fd` and no manuscript whose title
+matches *elemental*. The census, boundary analysis and Stage 1/2 alignment
+that produced those numbers ran against a different database — a local
+development copy — and nothing in their output named the population, so the
+mistake was invisible for the whole investigation.
+
+The instrument now prints `counted against user@host:port/database` before it
+counts anything. That line exists because of this.
+
+What survives the retraction: the **legacy composer** is real. `5f50f6790`
+(2026-08-05) moved the draft route off `assembleManuscriptMarkdown`, whose
+body has been byte-identical since `be2927c2f`. The mechanism is documented
+history. It simply explains **no production draft** — `LEGACY_COMPOSER_VARIANT
+= 0` — and the machinery that proves it stays as a correct instrument for a
+population it does not currently describe.
+
+## 0.1 · The production population, 2026-08-30
+
+| class | n |
+|---|---|
+| `PRISTINE` | 6 |
+| `LEGACY_COMPOSER_VARIANT` | 0 |
+| `EDITED` | 2 |
+| `NO_SOURCE` | 1 |
+| `WITHHELD` | 0 |
+
+A census describes the drafts existing on the day it runs. Any draft becomes
+`EDITED` the moment a member types into it, so these counts are a population
+at a date — never a finding about what the system can produce.
+
+### The two edited books
+
+| draft | sections | headed | heading diffs | body diffs | boundaries |
+|---|---|---|---|---|---|
+| Listening for What Matters | 11 | 10 | **0** | 22 | **11/11** |
+| The Reluctant Alchemist | 49 | 48 | **0** | 27 | **49/49** |
+
+**Both are body-only edits with every heading byte-identical and every
+boundary located by identity.**
+
+This overturns the assumption the rest of this document was built on. The old
+premise was that an edited draft cannot be section-addressed without asking
+its author. That is false for both real cases: when no heading differs and
+every boundary resolves, each edit lies inside exactly one section, so
+attribution is *mechanical, not inferred*. Both books can be seeded with the
+member's text preserved verbatim, and **no ceremony is owed**.
+
+Ownership stops being derivable only when a boundary itself moves — a heading
+rewritten or deleted, sections merged, text carried across a break. Neither
+book does that.
+
+## 0.2 · What this means for the unit
+
+Neither prediction held. There ARE edited drafts, so Structure Adoption is not
+speculative — but neither of today's edited drafts needs it.
+
+So the honest treatment matrix is:
+
+| population | treatment |
+|---|---|
+| `PRISTINE` · `LEGACY_COMPOSER_VARIANT` | exact seed |
+| `EDITED`, boundaries all resolved, no heading diff | exact seed, edits preserved verbatim |
+| `EDITED`, a boundary moved | **member-facing act — Structure Adoption** |
+| `NO_SOURCE` | member creates structure when they want it |
+
+Sections 1–3 below specify the third row. It remains a defined contract with
+**no case in today's population**, and it must not be built speculatively
+ahead of one — but it must also not be retired, because the first writer to
+rename a chapter creates its first case.
+
+---
 
 ---
 
