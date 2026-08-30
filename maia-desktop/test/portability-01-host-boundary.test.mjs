@@ -1,0 +1,119 @@
+// MAIA Desktop — the Sovereign Portability Invariant, asserted structurally.
+//
+// Doctrine: docs/architecture/SOVEREIGN_PORTABILITY_INVARIANT_2026-08-30.md
+//
+//   Electron is a host adapter, not a domain boundary.
+//
+// This proof exists for the same reason the preload allow-list does: a boundary
+// that is only written down decays on the second regression, not the first. The
+// declaration lives in ONE place and a new source file has to come and argue for
+// which side of the boundary it is on.
+//
+// ⛔ Adding a file to HOST_ADAPTERS is an authority decision. It says: this
+// capability is intrinsically Electron-specific and could not be answered by
+// injection. Convenience is not an answer.
+
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { readFileSync, readdirSync } from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const SRC = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'src');
+
+// The ONLY files permitted to name Electron. Each carries why.
+const HOST_ADAPTERS = [
+  { file: 'main.js',
+    why: 'Host wiring: BrowserWindow, app lifecycle, ipcMain transport, webContents broadcast. The native supervisor replaces THIS file.' },
+  { file: 'preload.js',
+    why: 'The bridge itself: contextBridge + ipcRenderer. Electron-specific by definition; ten ratified channels reviewed in test/d01-preload-allowlist.mjs.' },
+];
+
+// Modules that must survive replacing BrowserWindow + IPC with a native host
+// without changing their semantics. Each is currently free of Electron.
+const PORTABLE_DOMAIN = [
+  'conversation.js', 'thread-watch.js', 'capture-liveness.js', 'capture-worklet.js',
+  'session.js', // adapter-shaped: createSession({ app, safeStorage, fetchImpl })
+  'voice/epoch.js', 'voice/vad.js', 'voice/utterance.js',
+  'voice/wav.js', 'voice/transcription.js', 'voice/diagnostics.js',
+];
+
+// The presentation edge. Speaks an abstract capability surface, never Electron.
+const PRESENTATION = ['renderer.js'];
+
+// Constructs that can only come from Electron itself — no injected parameter
+// legitimately carries these names. (`app` and `safeStorage` are deliberately
+// absent: session.js receives them as arguments, which is the shape we want.)
+const ELECTRON_CONSTRUCTS = ['ipcMain', 'ipcRenderer', 'BrowserWindow', 'contextBridge', 'webContents'];
+
+const read = (rel) => readFileSync(path.join(SRC, rel), 'utf8');
+
+// Strip comments, so doctrine ABOUT the boundary is never mistaken for a crossing.
+function code(text) {
+  return text.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
+}
+
+function listSources(dir = SRC, prefix = '') {
+  return readdirSync(dir, { withFileTypes: true }).flatMap((e) =>
+    e.isDirectory()
+      ? listSources(path.join(dir, e.name), `${prefix}${e.name}/`)
+      : e.name.endsWith('.js') ? [`${prefix}${e.name}`] : []
+  );
+}
+
+test('every source file has declared which side of the host boundary it is on', () => {
+  const declared = new Set([
+    ...HOST_ADAPTERS.map((a) => a.file), ...PORTABLE_DOMAIN, ...PRESENTATION,
+  ]);
+  const undeclared = listSources().filter((f) => !declared.has(f));
+  assert.deepEqual(undeclared, [],
+    'A new Desktop source file appeared without declaring its side of the Sovereign Portability ' +
+    'Invariant. Answer question 1 — is this logic intrinsically Electron-specific? — then add it ' +
+    'to PORTABLE_DOMAIN, PRESENTATION, or (as an authority decision) HOST_ADAPTERS.');
+
+  // And nothing declared may have quietly vanished.
+  const present = new Set(listSources());
+  for (const f of declared) {
+    assert.ok(present.has(f), `Declared source ${f} is gone; update the declaration.`);
+  }
+});
+
+test('domain logic never imports Electron', () => {
+  for (const file of [...PORTABLE_DOMAIN, ...PRESENTATION]) {
+    const body = code(read(file));
+    assert.ok(!/require\(\s*['"]electron['"]\s*\)/.test(body),
+      `${file} requires electron. Domain logic must reach host capability by injection ` +
+      `(see session.js), so a native supervisor can supply it instead.`);
+    assert.ok(!/from\s+['"]electron['"]/.test(body), `${file} imports from electron.`);
+  }
+});
+
+test('domain logic never names an Electron construct', () => {
+  for (const file of [...PORTABLE_DOMAIN, ...PRESENTATION]) {
+    const body = code(read(file));
+    for (const construct of ELECTRON_CONSTRUCTS) {
+      assert.ok(!new RegExp(`\\b${construct}\\b`).test(body),
+        `${file} names ${construct}. Question 5: this could not survive replacing ` +
+        `BrowserWindow + IPC with a native host without changing its semantics.`);
+    }
+  }
+});
+
+test('the renderer depends on an abstract Desktop capability, not on Electron machinery', () => {
+  for (const file of PRESENTATION) {
+    const body = code(read(file));
+    assert.ok(!/\brequire\s*\(/.test(body), `${file} uses require(); the renderer gets named verbs only.`);
+    assert.ok(/window\.maia\./.test(body), `${file} no longer speaks the capability surface.`);
+  }
+});
+
+test('exactly two files are host adapters, and they are the ones declared', () => {
+  const naming = listSources().filter((f) =>
+    /require\(\s*['"]electron['"]\s*\)|from\s+['"]electron['"]/.test(code(read(f))));
+  assert.deepEqual(naming.sort(), HOST_ADAPTERS.map((a) => a.file).sort(),
+    'The set of files importing Electron changed. Electron is a host adapter, not a domain ' +
+    'boundary — a third adapter has to argue for itself.');
+  for (const a of HOST_ADAPTERS) {
+    assert.ok(a.why && a.why.length > 40, `HOST_ADAPTERS entry ${a.file} must carry why it is Electron-specific.`);
+  }
+});
