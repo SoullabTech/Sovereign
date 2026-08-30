@@ -1,4 +1,5 @@
-// @vitest-environment jsdom
+/** @jest-environment jsdom */
+
 /**
  * DESKTOP-SOVEREIGN-STT-01 — Desktop must never reach browser recognition.
  *
