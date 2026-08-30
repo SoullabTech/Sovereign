@@ -27,7 +27,10 @@
  *   MEMBER_ID=<uuid> DATABASE_URL=... npx tsx scripts/ws2-05a-structure-witness.ts
  *
  * The fixture manuscript is still created and belongs to that member. It is
- * synthetic, obviously named, and holds no prose of theirs.
+ * synthetic, obviously named, holds no prose of theirs, and is DELETED at the
+ * end — by the id this run created, never by name or by pattern. Nothing the
+ * member owns is read, listed, or reported on. Pass KEEP_FIXTURE=1 to leave it
+ * in place for inspection.
  *
  *   DATABASE_URL=... npx tsx scripts/ws2-05a-structure-witness.ts
  */
@@ -312,6 +315,22 @@ async function main() {
 
   /* G · through all of it, not one character moved. */
   check('G · flattening unchanged through the whole gate', await stillIntact());
+
+  /* ── 8 · leave nothing behind ──────────────────────────────────────── */
+  if (process.env.KEEP_FIXTURE === '1') {
+    console.log(`\n8 · fixture KEPT at manuscript ${fixture.manuscriptId}`);
+  } else {
+    console.log('\n8 · cleanup');
+    /* By the id this run created. Never by title, never by pattern: a witness
+       that deletes by name could one day match something a member wrote. */
+    const gone = await query(
+      `DELETE FROM member_manuscripts WHERE id = $1`, [fixture.manuscriptId]);
+    check('the fixture manuscript is removed', (gone.rowCount ?? 0) === 1);
+    const left = await query(
+      `SELECT 1 FROM manuscript_structure_units WHERE manuscript_id = $1`,
+      [fixture.manuscriptId]);
+    check('its structure went with it', left.rows.length === 0);
+  }
 
   console.log(`\n${failures === 0 ? 'PASS' : 'FAIL'} — ${failures} failed\n`);
   process.exit(failures === 0 ? 0 : 1);
