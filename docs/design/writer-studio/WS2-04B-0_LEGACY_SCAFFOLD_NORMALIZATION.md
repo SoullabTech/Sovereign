@@ -100,6 +100,38 @@ numbers. 30 unit tests cover the refusals, the inverse proof, and awkward
 manuscripts (a heading that itself starts with `#`, unicode, empty bodies,
 blank runs, no headings at all).
 
+## Conversion and normalization are a PAIR for this class
+
+Found in the first browser witness, 2026-08-30, and neither unit is wrong.
+
+04A converts a legacy draft byte-exactly, preserving the `# ` — as it must, or
+it breaks its own promise. 04B reads a section's heading from the Source
+record and REFUSES a slice it cannot split — as it must, or it guesses at a
+member's structure. Compose the two and the result is a book a writer can read
+and cannot type in:
+
+```
+position 0   heading null                  editable: true
+position 1   "PART ONE — THE GROUND"       editable: false
+…                                          173 of 174 read-only
+```
+
+`splitStoredSection` looks for the heading plain, as the current composer
+writes it. The stored slice begins `# PART ONE — THE GROUND`. No match, so it
+declines — correct behaviour producing a useless surface.
+
+Normalisation resolves it exactly: on the real 174-section book it removed
+**173 headings, 346 characters**, and every section became editable.
+
+**So for a `LEGACY_COMPOSER_VARIANT` draft, conversion without normalisation
+is not a usable state.** It is honest — nothing is guessed, nothing is lost —
+but it is not somewhere to leave a writer. Activation should treat the two as
+one sequence for this class, or decide deliberately that a legacy draft stays
+continuous until normalisation can run.
+
+That is a product decision, not a defect. It is recorded here because the two
+units are individually correct and only their composition reveals it.
+
 ## Held
 
 - running it against any production draft
