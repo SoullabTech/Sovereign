@@ -3,13 +3,18 @@
 **Candidate:** `11b484ab12f10e057ddb7c13f4a4427703640fa0` (`companion/convergence-01`)
 **Base:** `11bd40e3f` (`origin/claude/desktop-full-platform-01`)
 **Canonical at time of writing:** `3e1bb7b2a21ede3e5d7fbcfb42297e497d4ee0b0`
-**Status:** MERGE HOLD · PUSH HOLD · DEPLOY NOT AUTHORIZED · device walk is the only next act
+**Status:** MERGE HOLD · PUSH HOLD · DEPLOY HOLD
+**The walk is authorized as a DIAGNOSTIC / PRE-MERGE WITNESS.** A green walk does **not**
+make `11b484ab1` merge-ready. Landing is a separate future ruling — see below.
 
 ---
 
 ## ⚠️ TWO FACTS TO HAVE BEFORE THE WALK
 
-### 1. The three-file diff is the convergence delta, not the merge surface
+### 1. A green walk does not produce a merge candidate
+
+The three-file diff describes what convergence added to `11bd40e3f`. It does **not**
+describe what would enter canonical.
 
 The three-file production diff is measured against the **lineage base** `11bd40e3f`.
 That base is **not in canonical** — it is 28 commits ahead of `3e1bb7b2a` and unmerged.
@@ -32,51 +37,78 @@ and changes to `components/OracleConversation.tsx`, `components/voice/Continuous
 Now What? routes — all inherited from the full-platform lineage, none authored by
 convergence.
 
-**Consequence:** landing this is a schema-changing, multi-service deploy
-(`scripts/deploy-production.sh deploy <SHA>`), **not** a quick `deploy-maia` rebuild.
-The "governed merge path into the then-current canonical head" therefore carries the
-whole lineage, not three files. That is a separate authorization from accepting the
-convergence shape.
+**Consequence.** This is a **full-platform landing with schema consequences.** A future
+landing decision has to adjudicate the *entire* candidate against then-current canonical:
+the full diff, migration review and replay implications, CI against the then-current
+canonical head, and the governed full deploy path (`scripts/deploy-production.sh deploy
+<SHA>`) if deployment were ever separately authorized. **No `deploy-maia` shortcut.**
 
-### 2. Custody: the candidate is not on any device that can run the walk
+A green device walk tells us the Desktop architecture is inhabitable. It does not
+discharge any of the above.
+
+### 2. Custody: thin exact-SHA bundle, not the patch series
 
 `companion/convergence-01` exists only in this remote container. `origin` carries only
 `companion/01a-voice-wall` @ `4db04923b`. **PUSH is on HOLD**, so the branch has not been
 published.
 
-The walk runs on the Mac Studio. Transfer without pushing, using the three commits as a
-patch series on top of a base that **is** already on origin:
+⛔ **The patch series is a REVIEW artifact, not the custody mechanism.** `git am` does not
+inherently reproduce the original commit IDs — commit metadata can change — so a
+patch-applied tree cannot satisfy an exact-SHA witness. A thin bundle is made for exactly
+this case: the base already exists on origin, so the bundle carries only the objects above
+it while **preserving the exact commit identities**.
+
+Built in the authoring container against a temporary ref pointing at the **code
+candidate** — deliberately *not* the later walk-doc commits:
 
 ```bash
-# on the Mac Studio, in a WORKTREE — never in /Users/soullab/MAIA-SOVEREIGN itself
+git update-ref refs/heads/witness/convergence-01 11b484ab12f10e057ddb7c13f4a4427703640fa0
+git bundle create /tmp/companion-convergence-01.bundle \
+  refs/heads/witness/convergence-01 ^11bd40e3f6078b6f6591701afc9c48f2f70eae15
+git bundle verify /tmp/companion-convergence-01.bundle
+shasum -a 256 /tmp/companion-convergence-01.bundle
+git update-ref -d refs/heads/witness/convergence-01
+```
+
+Produced and verified:
+
+```
+companion-convergence-01.bundle          27,284 bytes
+sha256   08af1f75d190cde9a0efb34bfaaf18e12bdbd6f5e5df6eb4ce713b4189cdad25
+contains 11b484ab12f10e057ddb7c13f4a4427703640fa0  refs/heads/witness/convergence-01
+requires 11bd40e3f6078b6f6591701afc9c48f2f70eae15
+```
+
+Temporary ref deleted after creation; confirmed absent.
+
+On the Mac Studio, **without touching the root checkout**:
+
+```bash
+cd /Users/soullab/MAIA-SOVEREIGN
 git fetch origin claude/desktop-full-platform-01
-git worktree add ../convergence-01 11bd40e3f
-cd ../convergence-01
-git am 0001-*.patch 0002-*.patch 0003-*.patch
-git rev-parse HEAD    # must print 11b484ab12f10e057ddb7c13f4a4427703640fa0
+git bundle verify /path/to/companion-convergence-01.bundle
+git fetch /path/to/companion-convergence-01.bundle \
+  refs/heads/witness/convergence-01:refs/remotes/witness/convergence-01
+git worktree add --detach /tmp/companion-convergence-witness 11b484ab12f10e057ddb7c13f4a4427703640fa0
+git -C /tmp/companion-convergence-witness rev-parse HEAD
 ```
 
-Patch sha256:
+The final line must print exactly:
 
 ```
-6fee0328…  0001  entitlements x-session-token carry
-0b5e5650…  0002  MAIA-CONVERSATION-HARVEST-01 census
-a3ec584a…  0003  rulings, fail-closed default session, steps 5–7
+11b484ab12f10e057ddb7c13f4a4427703640fa0
 ```
 
-If `git rev-parse HEAD` does not print the candidate SHA exactly, **stop** — the walk
-would be witnessing something other than the candidate, which is the failure mode the
-witness instrument exists to refuse.
+**Otherwise, no witness.**
 
-⚠️ Worktree note: `npm run preflight` will fail in a fresh worktree without
-`cp /Users/soullab/MAIA-SOVEREIGN/.env.docker <worktree>/.env.docker` (known trap).
-
----
+⚠️ `npm run preflight` fails in a fresh worktree without
+`cp /Users/soullab/MAIA-SOVEREIGN/.env.docker <worktree>/.env.docker` (known trap). The
+Desktop walk itself does not need preflight.
 
 ## Pre-walk
 
 ```bash
-cd ../convergence-01/maia-desktop
+cd /tmp/companion-convergence-witness/maia-desktop
 npm test                      # expect 265/265 — re-establish source/test on the device
 npm start                     # electron .
 ```
@@ -88,7 +120,7 @@ would grant the harness a microphone and invalidate steps 1 and 7.
 
 ## The walk
 
-Nine steps. Each falsifies a convergence claim; none is a feature tour.
+Eleven legs. Each falsifies a convergence claim; none is a feature tour.
 
 | # | Act | What would falsify | Implicates |
 |---|---|---|---|
@@ -97,7 +129,9 @@ Nine steps. Each falsifies a convergence claim; none is a feature tour.
 | 3 | Open a real existing Work | Work is absent, empty, or Desktop-local | seam 2 |
 | 4 | Work → MAIA | `/maia` opens unsituated; WS2 Work relationship lost | seam 3 |
 | 5 | Grant mic on `/maia`; **complete one real spoken turn** | no grant, no transcript, or no canonical response | `platformPermission` · `defaultSessionPermission` |
-| 6 | Navigate `/maia` → Studio **while capture is live/armed** | capture survives the departure | `shell.js` `hide()` / navigation revocation |
+| **6A** | Speak on `/maia` → navigate to `/house` | capture continues | lifecycle capture ownership (`11bd40e3f`) |
+| **6B** | Speak on `/maia` → open a House presentation that **leaves `/maia` mounted** | capture continues | `maiaIsVisible()` — route-only |
+| **6C** | Speak on `/maia` → **hide / minimize Desktop** | capture continues | `maiaIsVisible()` — no window signal |
 | 7 | Attempt mic on Studio / House / another governed surface | mic acquired anywhere but canonical MAIA; camera ever granted | `platformPermission` deny list |
 | 8 | Return to the same Work | Work forked, reset, or state lost | seam 5 |
 | 9 | Return to MAIA | a second/Desktop-specific conversation appears | seam 4 · `conversation.js` |
@@ -114,21 +148,63 @@ Work context disappears/forks             FAIL
 spoken turn does not enter canon          FAIL
 ```
 
-### Step 6 is the one the source cannot settle
+### Step 6 is split, and it is NOT known-broken
 
-Steps 1–5 and 7–9 are strongly predicted by the source/test evidence. **Step 6 is not.**
-The known gap: House shown *over* a still-mounted `/maia` leaves a live `MediaStream`,
-because `platformPermission` governs *acquisition*, not *continuation*. The ratified
-amendment is explicit — *leaving `/maia` must revoke capture, not merely deny the next
-permission request.* Whether the current `hide()`/navigation path already achieves this
-structurally (the view is torn down) or leaves a live track is **exactly what step 6 is
-for.** Expect this one to be the finding.
+⛔ **Correction to an earlier framing of mine.** I previously called route-exit revocation
+a known gap. That was too strong, and there is counter-evidence in the exact base:
+`11bd40e3f` **is** `DESKTOP-SOVEREIGN-STT-LIFECYCLE-01`, which explicitly repairs the case
+where a member leaves `/maia` mid-sentence and the recorder continues behind the new
+screen — lifecycle-owned capture, abort, track stopping, stale-generation rejection.
+
+So **6A may already be green.** Do not pre-repair it.
+
+The narrower issue the earlier framing did not discriminate is a **visibility-authority**
+one, and it is source fact, not prediction:
+
+```js
+// maia-desktop/src/shell.js:150
+function maiaIsVisible() {
+  return place === PLATFORM && currentPath === PLATFORM_ENTRY_PATH;
+}
+```
+
+That is: *platform view attached* **AND** *`currentPath === /maia`*. It does not inspect
+`BrowserWindow` visibility or minimized state — and there is **no `isMinimized`, no
+`.isVisible()`, and no `hide`/`minimize`/`blur` listener anywhere in `maia-desktop/src/`**
+(verified by search). Meanwhile the policy's own contract requires that `/maia` be the
+*visible active place*, and relies on the caller to supply that fact.
+
+Two cases a route-only gate cannot distinguish:
+
+- **6B** — the House can obscure the conversation while the URL may still be `/maia`.
+- **6C** — the window can be hidden or minimized while the URL is still `/maia`.
+
+The device walk is what tells us whether these expose a real gap. Do not code around a
+prediction.
+
+### If 6B or 6C fail
+
+Classify **one bounded finding**:
+
+```
+DESKTOP-MAIA-VISIBILITY-REVOCATION-01
+```
+
+Required invariant:
+
+> When canonical MAIA ceases to be **actually visible**, active capture is revoked even if
+> the `/maia` document remains alive. **Permission denial alone is insufficient.**
+
+Then repair only that seam and re-witness it. **No second MAIA. No general privileged
+bridge. No Writer's Studio changes.**
 
 ### Evidence to capture per step
 
-Screen recording is enough for 1–4 and 8–9. For 5–7 also capture:
+Screen recording is enough for 1–4 and 8–9. For 5, 6A–6C and 7 also capture:
 
-- macOS **menu-bar microphone indicator** — the one signal Electron cannot fake.
+- macOS **menu-bar microphone indicator** — the one signal Electron cannot fake, and the
+  decisive evidence for 6A–6C: if it stays lit after MAIA stops being visible, capture
+  survived, whatever the app reports about itself.
 - `MAIA_DEBUG` / devtools console lines for the permission decision.
 - For step 9: the `sessionId` MAIA answers on, compared against the phone/web thread.
 
@@ -136,9 +212,12 @@ Screen recording is enough for 1–4 and 8–9. For 5–7 also capture:
 
 ## If the walk is green
 
-`11b484ab1` becomes a merge candidate **with device evidence**. The governed merge path
-then needs its own authorization, informed by fact 1 above: it lands 31 commits and two
-migrations, on the then-current canonical head, via the full deploy path.
+The Desktop architecture is confirmed **inhabitable**. That is the whole claim.
+
+`11b484ab1` does **not** thereby become merge-ready. Landing remains a separate future
+ruling over the full 31-commit / 80-file / 2-migration candidate against then-current
+canonical — full diff, migration replay implications, CI on that head, governed full
+deploy path if deployment is ever separately authorized.
 
 ## If the walk finds a defect
 
@@ -147,9 +226,10 @@ migrations, on the then-current canonical head, via the full deploy path.
 - Is it in `shell-policy.js` / `main.js` / `entitlements/route.ts`? → convergence defect, fix here.
 - Is it in the inherited lineage (Studio, Work, `/maia`, Now What?)? → not convergence's
   to fix; record it against the owning lane.
-- Is it the step-6 revocation gap? → that is a **known open seam**, deliberately not
-  implemented pending the ruling on its shape (injecting into remote content vs. a
-  governed channel). It is a finding, not a regression.
+- Is it 6B / 6C? → `DESKTOP-MAIA-VISIBILITY-REVOCATION-01`, bounded as above. Repair that
+  seam only, then re-witness it.
+- Is it 6A? → that *would* be a regression against `DESKTOP-SOVEREIGN-STT-LIFECYCLE-01`,
+  which the base claims to have fixed. Classify it against that lane, not this one.
 
 ## Held untouched
 
