@@ -45,6 +45,7 @@ const { createThreadWatch } = require('./thread-watch');
 const { createPlatformShell, MAIA, PLATFORM } = require('./shell');
 const { PLATFORM_ENTRY_PATH: PLATFORM_MAIA_PATH, PLATFORM_HOUSE_PATH } = require('./shell-policy');
 const { navigationDecision } = require('./shell-policy');
+const { defaultSessionPermission, witnessModeDeclared, WITNESS_MODE_ENV } = require('./shell-policy');
 
 // Separate userData for a dev launch, so a development instance can never read
 // or corrupt an installed instance's state. (jarvis-desktop precedent.)
@@ -836,14 +837,34 @@ function createWindow() {
 }
 
 app.whenReady().then(() => {
-  // Grant ONLY audio, and only to our own loaded file. Everything else — video,
-  // geolocation, notifications, display capture — is refused, so the renderer
-  // cannot acquire a device this unit never authorized.
+  // ── THE DEFAULT SESSION IS FAIL-CLOSED ────────────────────────────────────
+  //
+  // This is the LOCAL shell scaffolding — the internal harness — not the MAIA
+  // surface. MAIA's microphone lives on the platform partition, under
+  // `platformPermission()`, and reaches the canonical `/maia` page.
+  //
+  // It used to hold a blanket audio grant, correctly, back when this renderer
+  // WAS the voice path. Convergence moved the conversation to canonical MAIA,
+  // and the founder ruling of 2026-08-30 settled what is left behind:
+  //   ordinary default session → audio DENY, video DENY.
+  //   audio only for an EXPLICITLY DECLARED, UNPACKAGED witness run.
+  //
+  // ⛔ The declaration is the harness's to make, not the session's to assume.
+  // `app.isPackaged` is read here and passed as a fact, so the policy stays a
+  // pure function and a packaged build cannot be argued into witness mode by
+  // its environment.
+  const sessionFacts = { env: process.env, isPackaged: app.isPackaged };
+  if (witnessModeDeclared(sessionFacts)) {
+    console.warn(
+      `[Desktop] ${WITNESS_MODE_ENV}=1 on an unpackaged build — the default ` +
+      'session may open a microphone for the witness harness. This is a ' +
+      'diagnostic mode and is unavailable in a packaged Desktop.');
+  }
   session.defaultSession.setPermissionRequestHandler((_wc, permission, callback) => {
-    callback(permission === 'media' || permission === 'audioCapture');
+    callback(defaultSessionPermission(permission, sessionFacts));
   });
   session.defaultSession.setPermissionCheckHandler((_wc, permission) =>
-    permission === 'media' || permission === 'audioCapture');
+    defaultSessionPermission(permission, sessionFacts));
 
   memberSession = createSession({ app, safeStorage, onSignedOut: teardownMemberState });
   if (memberSession.state().signedIn) {

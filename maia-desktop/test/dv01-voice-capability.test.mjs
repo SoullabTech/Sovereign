@@ -49,14 +49,79 @@ test('V — audio is granted on the visible MAIA surface, and only there', () =>
   }
 });
 
-test('V — every OTHER place is refused, including Rooms under /maia', () => {
-  // ⛔ The capability belongs to MAIA, not to the origin. A House destination is
-  // not MAIA merely by sharing a site with her.
-  for (const p of ['/house', '/journal', '/astrology', '/studio', '/maia/anchor',
-                   '/maia/ideas', '/maia/living-field', '/maia/keep-capture']) {
+// ⭐ THE RATIFIED DENY LIST, NAMED BY ROUTE (founder amendment to P1,
+// surface-scoped voice authority). The policy names surfaces in prose; this
+// table names them in the only vocabulary the gate can be wrong about. Every
+// entry is a real route in `app/`, so a route that is renamed or removed
+// upstream shows up here as a stale test rather than as a silent hole.
+//
+// ⛔ The capability belongs to MAIA, not to the origin. A House destination is
+// not MAIA merely by sharing a site with her.
+const RATIFIED_DENY = Object.freeze([
+  // House and its destinations — every one of these is in `house-allowlist.json`
+  // as a place Desktop may NAVIGATE to, and none of them may hold a microphone.
+  // Navigability and capability are separate axes; this is where that is proven.
+  '/house',
+  '/journal',
+  '/astrology',
+  '/writers-studio',          // Writer's Studio — named in the ratified policy
+  '/studio',                  // Pro Studio
+  '/account/settings',        // Settings — named in the ratified policy
+  '/relationships',
+  '/team/for-you',
+  '/commons/circles',
+  '/book-studio',
+  '/wisdom-keepers/wisdom',
+  '/open-web',
+  '/signin',
+  // ⭐ Rooms UNDER /maia. The most tempting hole in the whole gate: these share
+  // the prefix of the one surface that IS granted. The founder ruling was
+  // explicit — do not implement this as a `/maia/*` prefix permission.
+  '/maia/anchor',
+  '/maia/ideas',
+  '/maia/living-field',
+  '/maia/keep-capture',
+  '/maia/vision-studio',
+  // ⭐ Named in the ratified policy but NOT House destinations — they are
+  // unreachable by navigation today. Listed anyway: the gate must already
+  // refuse them on the day one of them becomes reachable.
+  '/now-what',                // Now What?
+  '/open/session-room',       // Session Room — unless separately governed later
+  '/studio/session-room',
+  '/practitioner',            // Practitioner surfaces
+  '/practitioners',
+]);
+
+test('V — every place on the ratified deny list is refused, by route', () => {
+  for (const p of RATIFIED_DENY) {
     assert.equal(platformPermission('media', on(`${PLATFORM_ORIGIN}${p}`)), false,
       `${p} was granted a microphone`);
-    assert.ok(!isMaiaSurface(`${PLATFORM_ORIGIN}${p}`));
+    assert.equal(platformPermission('audioCapture', on(`${PLATFORM_ORIGIN}${p}`)), false,
+      `${p} was granted a microphone via audioCapture`);
+    assert.ok(!isMaiaSurface(`${PLATFORM_ORIGIN}${p}`), `${p} read as the MAIA surface`);
+  }
+});
+
+test('V — every navigable House destination is refused a microphone', () => {
+  // ⛔ THE COVERAGE PROOF, not a second spot-check. `RATIFIED_DENY` above is
+  // hand-written and can fall behind the House; this reads the generated
+  // allow-list and asserts that the ONLY navigable root holding a microphone
+  // is `/maia` itself. A destination added to the House next year is covered
+  // the moment the allow-list is regenerated — nobody has to remember this file.
+  const roots = require('../src/house-allowlist.json').allowedRoots;
+  const granted = roots.filter((r) => platformPermission('media', on(`${PLATFORM_ORIGIN}${r}`)));
+  assert.deepEqual(granted, [PLATFORM_ENTRY_PATH],
+    `House roots holding a microphone: ${JSON.stringify(granted)} — expected only ${PLATFORM_ENTRY_PATH}`);
+});
+
+test('V — an UNKNOWN route invented after this test was written is refused', () => {
+  // The gate is written as a total refusal with one exception, so a route
+  // nobody has thought of is already denied. This is the assertion that keeps
+  // it that way if somebody later rewrites it as an allow-list.
+  for (const p of ['/some-room-shipped-in-2027', '/maia-lookalike', '/maia2',
+                   '/maia/', '/maia/x', '/MAIA', '/maia%2Fanchor']) {
+    assert.equal(platformPermission('media', on(`${PLATFORM_ORIGIN}${p}`)), false,
+      `${p} was granted a microphone`);
   }
 });
 

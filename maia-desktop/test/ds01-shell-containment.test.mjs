@@ -412,15 +412,34 @@ test('F4 — microphone and camera are named refusals, not incidental ones', asy
   }
 });
 
-test('F4 — the MAIA side keeps its microphone: the audio grant is on the DEFAULT session', () => {
-  // Two different sessions, so the platform refusal cannot reach MAIA and the
-  // MAIA grant cannot reach the platform view.
+// ⚠️ F4 IS REVERSED, 2026-08-30, BY RULING — and it is worth saying why,
+// because the original was not wrong.
+//
+// When F4 was written, "the MAIA side" WAS the default session: the local
+// renderer held the whole voice path, and the platform view was the untrusted
+// remote thing to be contained. So "keep the audio grant on the default
+// session" correctly described where MAIA lived.
+//
+// Convergence inverted that. MAIA now lives on the platform partition, on the
+// canonical `/maia` page, under surface-scoped `platformPermission()`. What is
+// left on the default session is the local harness — and a harness does not
+// earn ambient capability by being useful.
+//
+// The two sessions must STILL not be conflated. That half of F4 is unchanged
+// and is the half that was always doing the structural work.
+test('F4 — the default session holds NO ambient microphone; MAIA’s lives on the partition', () => {
   assert.ok(/session\.defaultSession\.setPermissionRequestHandler/.test(mainJs),
-    'the MAIA microphone grant was removed or moved off the default session');
-  assert.ok(/permission === 'media' \|\| permission === 'audioCapture'/.test(mainJs),
-    'the MAIA audio grant changed shape — the voice path must not be weakened here');
+    'the default session lost its permission handler entirely — absent is not fail-closed');
+  assert.ok(/defaultSessionPermission\(/.test(mainJs),
+    'the default session decides permissions inline again instead of through the policy');
+  assert.ok(!/permission === 'media' \|\| permission === 'audioCapture'/.test(mainJs),
+    'the blanket audio grant returned to the default session');
+  // ⭐ Still two sessions. The platform refusal must not reach the harness and
+  // the harness exemption must never reach the platform view.
   assert.ok(!new RegExp(`defaultSession[\\s\\S]{0,400}${PLATFORM_PARTITION}`).test(mainJs),
     'the platform partition and the default session were conflated');
+  assert.ok(!/defaultSessionPermission[\s\S]{0,200}fromPartition/.test(mainJs),
+    'the harness permission policy was applied to the platform partition');
 });
 
 test('F4 — the guard is armed on the PARTITION, once, so a rebuilt view is never unguarded', async () => {

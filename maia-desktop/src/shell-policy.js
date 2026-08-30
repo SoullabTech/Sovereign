@@ -362,6 +362,66 @@ function platformPermission(permission, facts) {
   return pathname === PLATFORM_ENTRY_PATH;
 }
 
+/**
+ * ── THE DEFAULT SESSION ─────────────────────────────────────────────────────
+ *
+ * The default Electron session is NOT the platform view. It is the local shell
+ * scaffolding — the internal harness that the conversation research was done
+ * in. Until 2026-08-30 it held a blanket audio grant, because at the time it
+ * WAS the MAIA side: the whole voice path ran in that local renderer.
+ *
+ * It is not the MAIA side any more. Convergence moves the conversation to the
+ * canonical `/maia` surface under `platformPermission()` above, and the founder
+ * ruling that accompanied it is explicit:
+ *
+ *   ordinary defaultSession          audio DENY · video DENY
+ *   mini MAIA at normal launch       not exposed
+ *   explicit internal witness mode   audio may be granted, to that context only
+ *
+ * ⭐ THE DIRECTION OF AUTHORITY IS THE POINT. We do not make the default
+ * session permissive because a diagnostic tool needs a microphone. The
+ * diagnostic tool declares that it is running as a diagnostic tool, and the
+ * grant follows that declaration. A harness does not earn ambient capability by
+ * being useful.
+ *
+ * ⛔ TWO FACTS, BOTH REQUIRED, AND NEITHER IS A DEFAULT. The declaration must
+ * be made (`MAIA_WITNESS_MODE=1`) AND the app must be unpackaged. A packaged
+ * Desktop cannot be talked into witness mode by its environment, so shipping
+ * this does not ship a side door that survives to a member's machine.
+ *
+ * ⛔ And even then it is AUDIO ONLY. Witness mode is not a bypass of the rest
+ * of the refusal — camera, screen capture, geolocation and everything Chromium
+ * invents later stay refused in every mode.
+ *
+ * ⭐ IF MINI MAIA LATER BECOMES FOCUS MODE, it does not inherit this. Focus
+ * would render canonical `/maia` under `platformPermission()`. The witness
+ * exemption is not a foothold for a second privileged surface — that topology
+ * is the one this programme withdrew.
+ */
+const WITNESS_MODE_ENV = 'MAIA_WITNESS_MODE';
+
+/**
+ * Is this process an explicitly declared, unpackaged witness run?
+ * @param {{env?: object, isPackaged?: boolean}} [facts]
+ */
+function witnessModeDeclared(facts) {
+  const f = facts || {};
+  const env = f.env || {};
+  if (f.isPackaged !== false) return false;      // absent or true ⇒ refuse
+  return String(env[WITNESS_MODE_ENV] || '').trim() === '1';
+}
+
+/**
+ * The permission answer for the DEFAULT session.
+ *
+ * Written, like `platformPermission`, as a total refusal with one narrow
+ * exception — so a permission class Chromium adds next year arrives denied.
+ */
+function defaultSessionPermission(permission, facts) {
+  if (!AUDIO_PERMISSIONS.includes(permission)) return false;
+  return witnessModeDeclared(facts);
+}
+
 module.exports = {
   PRODUCTION_PLATFORM_ORIGIN,
   resolvePlatformOrigin,
@@ -382,4 +442,7 @@ module.exports = {
   AUDIO_PERMISSIONS,
   navigationDecision,
   platformPermission,
+  WITNESS_MODE_ENV,
+  witnessModeDeclared,
+  defaultSessionPermission,
 };

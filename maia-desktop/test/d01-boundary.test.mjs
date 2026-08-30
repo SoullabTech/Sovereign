@@ -75,11 +75,56 @@ test('main truncates every renderer-supplied string', () => {
   }
 });
 
-test('media permission is granted for audio only, never wholesale', () => {
+// ⚠️ AUTHORITY CHANGE, 2026-08-30. This guard used to assert the OPPOSITE: that
+// the default session grants `media`/`audioCapture` unconditionally. That was
+// right while this local renderer was the voice path. Convergence moved the
+// conversation to canonical `/maia` on the platform partition, and the founder
+// ruling that followed made the default session fail-closed:
+//
+//   ordinary defaultSession          audio DENY · video DENY
+//   explicit unpackaged witness run  audio only, to that context
+//
+// The test is inverted deliberately and by ruling, not relaxed. What it
+// protects is stronger than what it protected before.
+test('the default session grants NOTHING unconditionally', () => {
   assert.ok(mainJs.includes('setPermissionRequestHandler'), 'no permission handler installed');
   const h = /setPermissionRequestHandler\([\s\S]*?\}\);/.exec(mainJs)[0];
-  assert.ok(/permission === 'media'/.test(h) && /permission === 'audioCapture'/.test(h));
+  assert.ok(/defaultSessionPermission\(/.test(h),
+    'the default session no longer routes through the policy — it must not decide inline');
   assert.ok(!/callback\(true\)\s*;/.test(h), 'permission is granted unconditionally');
+  assert.ok(!/permission === 'media'/.test(h),
+    'the blanket audio grant is back on the default session');
+});
+
+test('the default session is fail-closed, and witness mode is a declaration', () => {
+  const { defaultSessionPermission, WITNESS_MODE_ENV } = require('../src/shell-policy.js');
+  const declared = { env: { [WITNESS_MODE_ENV]: '1' }, isPackaged: false };
+
+  // ⛔ A PACKAGED build cannot be talked into it by its environment. This is
+  // the assertion that keeps the diagnostic exemption off a member's machine.
+  assert.equal(defaultSessionPermission('media', { ...declared, isPackaged: true }), false,
+    'a packaged Desktop granted a microphone on the default session');
+
+  // ⛔ Nor can an unpackaged build that never declared itself.
+  for (const env of [{}, { [WITNESS_MODE_ENV]: '' }, { [WITNESS_MODE_ENV]: '0' },
+                     { [WITNESS_MODE_ENV]: 'true' }, { [WITNESS_MODE_ENV]: 'yes' }]) {
+    assert.equal(defaultSessionPermission('media', { env, isPackaged: false }), false,
+      `${JSON.stringify(env)} was treated as a witness declaration`);
+  }
+
+  // ⛔ Absent facts refuse. Fail-closed means the empty case is a denial.
+  assert.equal(defaultSessionPermission('media', undefined), false);
+  assert.equal(defaultSessionPermission('media', {}), false);
+
+  // ⭐ The one exception, and it is AUDIO ONLY — witness mode is not a bypass
+  // of the rest of the refusal.
+  assert.equal(defaultSessionPermission('media', declared), true);
+  assert.equal(defaultSessionPermission('audioCapture', declared), true);
+  for (const p of ['videoCapture', 'display-capture', 'geolocation', 'notifications',
+                   'brand-new-permission-2027']) {
+    assert.equal(defaultSessionPermission(p, declared), false,
+      `witness mode granted ${p} — it grants a microphone, not a machine`);
+  }
 });
 
 test('the renderer window is sandboxed, isolated, and loads no remote content', () => {
