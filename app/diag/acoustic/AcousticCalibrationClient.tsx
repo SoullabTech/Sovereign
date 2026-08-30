@@ -20,6 +20,14 @@
 import { useCallback, useRef, useState } from 'react';
 import { recordAndTranscribe, type CaptureCalibration } from '@/lib/voice/androidVoiceFallback';
 
+/** What the harness reports about the track it is actually recording through. */
+interface MicIdentity {
+  label: string;
+  readyState: MediaStreamTrackState;
+  enabled: boolean;
+  muted: boolean;
+}
+
 interface Trial extends CaptureCalibration {
   label: string;
   n: number;
@@ -54,7 +62,25 @@ export default function AcousticCalibrationClient() {
   const [trials, setTrials] = useState<Trial[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [mic, setMic] = useState<MicIdentity | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
+
+  /**
+   * DIAG-ACOUSTIC-MIC-IDENTITY-01 — read the identity of the track the recorder
+   * is actually using. It reads `streamRef.current` — the SAME MediaStream
+   * handed to `recordAndTranscribe` — so this reports the device in the
+   * measurement path, not a device the OS or Chrome merely lists. No
+   * enumeration, no selection, no second acquisition.
+   */
+  const readMic = useCallback(() => {
+    const track = streamRef.current?.getAudioTracks()[0];
+    setMic(track ? {
+      label: track.label || '(no label — permission granted without device name)',
+      readyState: track.readyState,
+      enabled: track.enabled,
+      muted: track.muted,
+    } : null);
+  }, []);
 
   const capture = useCallback(async () => {
     setError(null);
@@ -66,6 +92,9 @@ export default function AcousticCalibrationClient() {
       if (!streamRef.current) {
         streamRef.current = await navigator.mediaDevices.getUserMedia({ audio: true });
       }
+      // Identity is read on every capture, not only on acquisition: readyState,
+      // enabled and muted are live properties that can change under the trial.
+      readMic();
       let measured: CaptureCalibration | null = null;
       await recordAndTranscribe(streamRef.current, {
         calibration: {
@@ -84,14 +113,29 @@ export default function AcousticCalibrationClient() {
     } catch (e) {
       setError(e instanceof Error ? `${e.name}: ${e.message}` : String(e));
     } finally {
+      readMic();
       setBusy(false);
     }
-  }, [label]);
+  }, [label, readMic]);
 
   const release = useCallback(() => {
     streamRef.current?.getTracks().forEach((t) => t.stop());
     streamRef.current = null;
+    setMic(null);
   }, []);
+
+  /** Acquire without recording, so the device can be identified before trial 1. */
+  const identify = useCallback(async () => {
+    setError(null);
+    try {
+      if (!streamRef.current) {
+        streamRef.current = await navigator.mediaDevices.getUserMedia({ audio: true });
+      }
+      readMic();
+    } catch (e) {
+      setError(e instanceof Error ? `${e.name}: ${e.message}` : String(e));
+    }
+  }, [readMic]);
 
   const rows = CLASSES.map((c) => {
     const all = trials.filter((t) => t.label === c.label);
@@ -113,13 +157,121 @@ export default function AcousticCalibrationClient() {
   ].join('\n');
 
   return (
-    <div style={{ padding: 24, fontFamily: 'ui-monospace, monospace', fontSize: 13, lineHeight: 1.5 }}>
+    <div className="diag-acoustic">
+      {/*
+        DIAG-ACOUSTIC-READABILITY-01 — diagnostic CSS only.
+
+        This page inherits the app's dark surface, which rendered near-black text
+        on a near-black background and made the instrument unreadable. The
+        readings are only as good as the operator's ability to see them, so the
+        surface is pinned to an explicit light scheme rather than left to inherit.
+
+        `color-scheme: light` is the load-bearing declaration: without it Chrome
+        in dark mode paints the UA form controls (select, button, textarea) dark
+        regardless of any color/background we set, which was half the problem.
+        The body rule is deliberate and scoped to this route's render — the page
+        is server-gated on NEXT_PUBLIC_MOBILE_FAST_LANE and never ships.
+      */}
+      <style>{`
+        .diag-acoustic {
+          /* A FIXED, OPAQUE OVERLAY, not a styled child. The first attempt set
+             colours on this element and let the app's dark surface stay behind
+             it; anything the theme painted on an ancestor still showed through
+             and the page stayed unreadable. Covering the viewport outright is
+             the only version that cannot be undone by a parent rule. */
+          position: fixed;
+          inset: 0;
+          z-index: 2147483000;
+          overflow: auto;
+          color-scheme: light;
+          background: #ffffff !important;
+          color: #111111 !important;
+          padding: 24px;
+          font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+          font-size: 13px;
+          line-height: 1.5;
+        }
+        .diag-acoustic h1,
+        .diag-acoustic p,
+        .diag-acoustic td,
+        .diag-acoustic th,
+        .diag-acoustic summary,
+        .diag-acoustic strong,
+        .diag-acoustic div,
+        .diag-acoustic span,
+        .diag-acoustic option,
+        .diag-acoustic label { color: #111111 !important; }
+        .diag-acoustic .muted { color: #444444 !important; }
+        .diag-acoustic table {
+          border-collapse: collapse;
+          margin-top: 8px;
+          background: #ffffff;
+        }
+        .diag-acoustic thead tr {
+          text-align: left;
+          background: #f0f0f0;
+          border-bottom: 2px solid #333333;
+        }
+        .diag-acoustic tbody tr { border-bottom: 1px solid #cccccc; }
+        .diag-acoustic select,
+        .diag-acoustic option,
+        .diag-acoustic button,
+        .diag-acoustic textarea {
+          color: #111111 !important;
+          background: #ffffff !important;
+          background-image: none !important;
+          border: 1px solid #666666 !important;
+          font-family: inherit;
+          -webkit-text-fill-color: #111111;
+          opacity: 1;
+        }
+        .diag-acoustic button { padding: 6px 14px; cursor: pointer; }
+        .diag-acoustic button:disabled {
+          color: #555555 !important;
+          -webkit-text-fill-color: #555555;
+          background: #eeeeee !important;
+          cursor: default;
+        }
+        .diag-acoustic .warn { color: #b00000 !important; }
+        .diag-acoustic .flag { color: #a04000 !important; }
+        .diag-acoustic .mic {
+          margin: 12px 0 4px;
+          padding: 10px 12px;
+          border: 1px solid #666666;
+          background: #f6f6f6 !important;
+          max-width: 720px;
+        }
+        .diag-acoustic .mic .bad { color: #b00000 !important; font-weight: 700; }
+      `}</style>
+
       <h1 style={{ fontSize: 16, marginBottom: 4 }}>Acoustic calibration harness</h1>
-      <p style={{ opacity: 0.7, maxWidth: 720 }}>
+      <p className="muted" style={{ maxWidth: 720 }}>
         Local diagnostic. Records through the production recorder, measures, and drops the audio.
         Nothing is uploaded, nothing is transcribed, nothing is persisted.
         <strong> crossingCount counts scheduled analyser observations that crossed threshold — it is not milliseconds of speech.</strong>
       </p>
+
+      {/*
+        DIAG-ACOUSTIC-MIC-IDENTITY-01. The device the harness actually acquired,
+        read off the same track the recorder holds. This is the authoritative
+        answer to "which microphone is this" — Chrome's settings UI describes
+        what it would grant, this describes what was granted.
+      */}
+      <div className="mic">
+        {mic ? (
+          <>
+            <div><strong>Microphone:</strong> {mic.label}</div>
+            <div>readyState: <span className={mic.readyState === 'live' ? undefined : 'bad'}>{mic.readyState}</span></div>
+            <div>enabled: <span className={mic.enabled ? undefined : 'bad'}>{String(mic.enabled)}</span></div>
+            <div>muted: <span className={mic.muted ? 'bad' : undefined}>{String(mic.muted)}</span></div>
+          </>
+        ) : (
+          <div>
+            Microphone: not acquired yet.{' '}
+            <button onClick={identify} disabled={busy}>Identify microphone</button>
+          </div>
+        )}
+      </div>
 
       <div style={{ margin: '16px 0' }}>
         <select value={label} onChange={(e) => setLabel(e.target.value)} disabled={busy}>
@@ -129,19 +281,19 @@ export default function AcousticCalibrationClient() {
             </option>
           ))}
         </select>
-        <button onClick={capture} disabled={busy} style={{ marginLeft: 12, padding: '6px 14px' }}>
+        <button onClick={capture} disabled={busy} style={{ marginLeft: 12 }}>
           {busy ? 'capturing…' : 'Capture'}
         </button>
-        <button onClick={release} disabled={busy} style={{ marginLeft: 8, padding: '6px 14px' }}>
+        <button onClick={release} disabled={busy} style={{ marginLeft: 8 }}>
           Release mic
         </button>
       </div>
 
-      {error && <p style={{ color: '#c00' }}>⚠ {error}</p>}
+      {error && <p className="warn">⚠ {error}</p>}
 
-      <table cellPadding={6} style={{ borderCollapse: 'collapse', marginTop: 8 }}>
+      <table cellPadding={6}>
         <thead>
-          <tr style={{ textAlign: 'left', borderBottom: '1px solid #888' }}>
+          <tr>
             <th>case</th><th>n / target</th>
             <th>count min/med/max</th><th>rmsMax min/med/max</th><th>rmsMean min/med/max</th>
             <th>trust fails</th>
@@ -149,19 +301,19 @@ export default function AcousticCalibrationClient() {
         </thead>
         <tbody>
           {rows.map((r) => (
-            <tr key={r.label} style={{ borderBottom: '1px solid #333' }}>
+            <tr key={r.label}>
               <td>{r.label}</td>
               <td>{r.n} / {r.target}</td>
               <td>{r.count.min} / {r.count.med} / {r.count.max}</td>
               <td>{r.rmsMax.min} / {r.rmsMax.med} / {r.rmsMax.max}</td>
               <td>{r.rmsMean.min} / {r.rmsMean.med} / {r.rmsMean.max}</td>
-              <td style={{ color: r.trustFails ? '#c60' : undefined }}>{r.trustFails}</td>
+              <td className={r.trustFails ? 'flag' : undefined}>{r.trustFails}</td>
             </tr>
           ))}
         </tbody>
       </table>
 
-      <p style={{ marginTop: 16, opacity: 0.7 }}>
+      <p className="muted" style={{ marginTop: 16 }}>
         Trials with any apparatus fault are excluded from the statistics above and counted under
         “trust fails”. Do not rehearse the utterances into uniformity — the minima matter most,
         and poll phase alone moves the count by ±1.
@@ -169,7 +321,7 @@ export default function AcousticCalibrationClient() {
 
       <details style={{ marginTop: 16 }}>
         <summary>Raw trials ({trials.length}) — copy out</summary>
-        <textarea readOnly value={tsv} rows={14} style={{ width: '100%', fontFamily: 'inherit', fontSize: 12, marginTop: 8 }} />
+        <textarea readOnly value={tsv} rows={14} style={{ width: '100%', fontSize: 12, marginTop: 8 }} />
       </details>
     </div>
   );
