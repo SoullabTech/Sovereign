@@ -3467,12 +3467,59 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
         };
 
         isProcessingRef.current = false;
-        setIsListening(true);
-        isListeningRef.current = true;
-        setMicState('LISTENING', 'web_whisper_fallback');
-        onRecordingStateChange?.(true);
         setVoiceError(null);
-        addDebug('🎙️ web whisper: recording…');
+
+        // ⛔ PLATFORM-D02A-01 — THE CLAIM MOVED, AND THIS IS THE WHOLE UNIT.
+        //
+        // LISTENING used to be declared HERE, the instant `getUserMedia`
+        // resolved: before MediaRecorder existed, before the analyser existed,
+        // before one sample was admitted. It was therefore true through a
+        // suspended AudioContext, a muted or ended track, a 410 from the
+        // transcribe route and a recording that never stopped — one word for
+        // every failure, distinguishing none of them. The census
+        // (docs/ops/DESKTOP_PLATFORM_CONVERSATION_01_CENSUS.md §3) names it as
+        // the first lie on the path the founder actually walks.
+        //
+        // This is MAIA-D02A's rule, on the surface D02A never covered: frame
+        // receipt is the authority for listening, never graph acquisition.
+        //
+        // ⭐ The claim now waits for `audio_admitted` — the audio graph RUNNING
+        // and the track live and unmuted — reported by the recorder itself.
+        // Until then the surface stays in ARMING and says it is opening the
+        // microphone, which is what is actually happening.
+        setMicState('ARMING', 'sovereign_awaiting_admission');
+        addDebug('🎙️ opening the microphone…');
+
+        const admit = () => {
+          if (sovereignGenerationRef.current !== captureGeneration) return;
+          setIsListening(true);
+          isListeningRef.current = true;
+          setMicState('LISTENING', 'sovereign_audio_admitted');
+          onRecordingStateChange?.(true);
+          addDebug('🎙️ web whisper: recording…');
+        };
+
+        /**
+         * ⛔ PLATFORM-D02A-01. Observations, never instructions — the only stage
+         * acted on is `audio_admitted`, and the only action is permission to say
+         * the word. Every stage is logged so a device walk can name where a
+         * capture stopped instead of showing one label for all of it:
+         *
+         *   recorder_created → audio_admitted → first_audio_chunk
+         *   → speech_detected → capture_stopped
+         *
+         * ⛔ Declared here rather than inline in the `recordAndTranscribe`
+         * arguments: `desktopUtteranceLimit` §4 reads that call's argument list
+         * as source text to prove the raised ceiling stays behind
+         * `info.isDesktop`, and a callback body inside it truncated that read.
+         * The proof is right; the call site keeps its shape.
+         */
+        const handleMilestone = (stage: string, detail?: Record<string, unknown>) => {
+          if (sovereignGenerationRef.current !== captureGeneration) return;
+          console.log(`🎚️ [capture] ${stage}`, detail ?? {});
+          addDebug(`🎚️ ${stage}`);
+          if (stage === 'audio_admitted') admit();
+        };
 
         // ⛔ DESKTOP-SOVEREIGN-STT-INTERIM-01 — the "she is hearing me" layer.
         //
@@ -3504,6 +3551,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
           const result = await recordAndTranscribe(stream, {
             signal: captureController.signal,
             ...(emitProvisional ? { onPartial: emitProvisional } : {}),
+            onMilestone: handleMilestone,
             // ⛔ DESKTOP-SOVEREIGN-STT-UTTERANCE-LIMIT-01 — Desktop turns end in
             // SILENCE, not on a timer. The module default (8 s) is a bound on a
             // one-shot Android recovery attempt; inheriting it here cut members
@@ -3539,6 +3587,13 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
               userMessage:
                 result.reason === 'transcribe_disabled'
                   ? 'Voice transcription is not enabled on the server right now. You can type to MAIA instead.'
+                  // ⛔ PLATFORM-D02A-01. The apparatus never heard. Saying "I
+                  // could not hear that clearly" here would blame the member for
+                  // speaking unclearly into a microphone that was never
+                  // delivering audio — the same lie as the LISTENING label, one
+                  // layer down. Named as ours, with the one thing that helps.
+                  : result.reason === 'no_audio_admitted'
+                  ? 'No audio reached MAIA — the microphone opened but never delivered any sound. Check that the right input device is selected and not muted, then try again. You can type to MAIA meanwhile.'
                   : 'I could not hear that clearly. Try again, or type to MAIA instead.',
             });
           }

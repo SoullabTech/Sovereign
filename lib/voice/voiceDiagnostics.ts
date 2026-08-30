@@ -46,6 +46,7 @@ export type VoiceDiagEvent =
   // one-shot MediaRecorder capture + POST to /api/voice/transcribe-simple
   // (local maia-whisper, NOT OpenAI cloud). All four are observational —
   // no transcript content in telemetry, only durations/byte-counts/mime/error.
+  | 'voice_capture_milestone'          // PLATFORM-D02A-01 capture stage report
   | 'voice_fallback_recording_started'
   // Capture-liveness events (silent-death detection, track loss, salvage).
   // See lib/voice/micLiveness.ts — these fire when the capture path dies

@@ -191,8 +191,13 @@ the surface reads LISTENING and will keep reading it whether or not:
 - the analyser's `AudioContext` resumed (`androidVoiceFallback.ts:483` documents this exact
   symptom — *"a suspended context feeds the analyser pure silence → the VAD sees
   false-silence and stops at ~1.5s → 'listening but doesn't hear'"* — found for
-  Firefox/Zen; Electron's Chromium carries the same autoplay policy and Desktop now
-  shares that branch),
+  Firefox/Zen. ⚠️ **HYPOTHESIS, corrected 2026-08-30.** This section first read
+  *"Electron's Chromium carries the same autoplay policy and Desktop now shares that
+  branch"* as though it were established. It is not. Desktop does share the branch —
+  that is read from the code — but nothing here shows a suspended context occurred on
+  the founder's Mac, or caused the failure. PLATFORM-D02A-01 makes the case
+  *observable* (`audio_admitted` fires or it does not) precisely so it can be settled
+  by evidence rather than assumed),
 - the track is live, muted, or ended,
 - `/api/voice/transcribe-simple` answers, 410s on `ALLOW_AUDIO_TRANSCRIPTION`, or fails,
 - the recording ever stops.
@@ -200,7 +205,8 @@ the surface reads LISTENING and will keep reading it whether or not:
 Nothing between the gesture and the transcript can correct the label, because no signal
 downstream of it feeds back into `isListening`.
 
-**Desktop-specific aggravation.** `:3515` sets `maxMs: DESKTOP_MAX_UTTERANCE_MS`
+**Desktop-specific aggravation — also a hypothesis, not a cause.** `:3515` sets
+`maxMs: DESKTOP_MAX_UTTERANCE_MS`
 = **120 000 ms** (`lib/voice/desktopUtteranceLimits.ts:40`); every other browser on this
 branch keeps the module's 8 000 ms bound. The silence-stop needs
 `elapsed ≥ 800 && silenceFor ≥ 1500` with `SILENCE_RMS_THRESHOLD = 0.012`
@@ -237,3 +243,14 @@ where it was. The next unit decides how much of `DesktopConversation` becomes a 
 UI. It hosts the platform surface."* Under ruling B the second is authoritative. The
 document must be amended so a later lane cannot read the first and wire the hidden
 renderer again — which is precisely what happened.
+
+
+---
+
+## 6 · Amendment log
+
+**2026-08-30** — two sentences in §3 stated hypotheses in the grammar of findings: the
+Electron/Firefox `AudioContext` similarity, and the 120 s ceiling as the cause of the
+observed freeze. Both are corrected above and marked. Neither has evidence behind it;
+both are now *observable* under PLATFORM-D02A-01 rather than assumed. A census is a
+reading of code, and a reading of code cannot establish what happened on a device.
