@@ -41,44 +41,6 @@ const DEFAULT_MAX_RECORDING_MS = 8000;
 const DEFAULT_SILENCE_HOLDOFF_MS = 1500;
 const DEFAULT_MIN_RECORDING_MS = 800; // don't stop before the user can speak
 const SILENCE_RMS_THRESHOLD = 0.012; // empirical; mic noise floor sits ~0.005
-const VAD_POLL_MS = 100; // analyser sampling period; one sample == this much voiced time
-
-/**
- * ⛔ DESKTOP-VOICE-GHOST-REARM-01 — the authorship floor.
- *
- * How much *voiced* time a capture must contain before its transcription may be
- * authored as the member's words. This is not a transcript-length rule and not a
- * hallucination blacklist: it is evidence that a human spoke into the microphone.
- *
- * Two samples, not one. DEVICE-witnessed 2026-08-30 on candidate 1c2c59af9: after
- * a legitimate 32.7s turn, hands-free re-armed and produced two ghost turns —
- *
- *     1.503s capture — `lastLoudAt` never updated; not one sample crossed the
- *                      threshold. Stopped at exactly silenceHoldoffMs.
- *     2.094s capture — one crossing at ~594ms, then silence.
- *
- * Whisper returned "You" for both and each was dispatched as member speech. A
- * boolean `speechObserved` set by any single crossing would have refused the
- * first and admitted the second — one ambient blip is enough to satisfy it. So
- * the evidence has to be voiced *duration*.
- *
- * ⛔ WHY 300 AND NOT 200. Derived, not chosen by feel. Polling quantises: an
- * acoustic event of duration D registers at most `ceil(D / VAD_POLL_MS) + 1`
- * samples, because it can straddle a poll boundary at each end. So a single
- * 100ms blip can register TWO samples — 200ms of apparent voiced time. A floor
- * of 200 is therefore exactly reachable by one blip, and the first draft of this
- * constant was 200. The regression witness caught it: the 2.094s ghost pattern
- * passed the gate and reached the upload.
- *
- * 300 is the first floor a single blip cannot reach. Real speech is not at risk:
- * to fall under it, an utterance would need less than ~100ms of acoustic energy,
- * and a spoken "Hi" carries three to five times that even quietly.
- *
- * Raising it further trades ghost-rejection against refusing quiet real speech,
- * and refusing a member's actual words is the worse failure. The regression
- * witness is what calibrates it: real quiet → no turn, real "Hi" → turn.
- */
-const MIN_VOICED_MS = 300;
 
 export interface FallbackResult {
   ok: boolean;
@@ -87,7 +49,6 @@ export interface FallbackResult {
     | 'recording_unsupported'  // MediaRecorder not available / no supported mime
     | 'recording_error'         // MediaRecorder threw mid-recording
     | 'empty_blob'              // recording produced no bytes
-    | 'no_speech_observed'      // captured, but the VAD never attested speech
     | 'transcribe_http_error'   // /api/voice/transcribe-simple non-2xx
     | 'transcribe_disabled'     // 410 from the route (env gate off)
     | 'aborted'                 // the caller revoked this capture's authority
@@ -202,9 +163,8 @@ export async function recordAndTranscribe(
 
   // ── Record ────────────────────────────────────────────────────────────
   let blob: Blob;
-  let voicedMs = 0;
   try {
-    ({ blob, voicedMs } = await recordWithSilenceDetection(stream, mimeType, {
+    blob = await recordWithSilenceDetection(stream, mimeType, {
       maxMs,
       silenceHoldoffMs,
       minMs,
@@ -215,7 +175,7 @@ export async function recordAndTranscribe(
             onPrefix: (prefix: Blob) => partial.offerPrefix(prefix),
           }
         : {}),
-    }));
+    });
   } catch (err: unknown) {
     // ⛔ Recording is over on every exit path. From here the final transcript is
     // the only authority; a provisional result still in flight must not land.
@@ -241,34 +201,6 @@ export async function recordAndTranscribe(
   if (blob.size === 0) {
     logVoiceEvent('voice_fallback_failed', { reason: 'empty_blob', durationMs });
     return { ok: false, reason: 'empty_blob', durationMs };
-  }
-
-  // ⛔ DESKTOP-VOICE-GHOST-REARM-01 — THE AUTHORSHIP GATE.
-  //
-  // A non-empty model transcription is not evidence that the member spoke. Under
-  // Web Speech that evidence came free: its VAD returned no result at all for a
-  // silent room. Whisper always returns text, so moving to the sovereign path
-  // removed an implicit guarantee we had never had to write down. This is it,
-  // written down.
-  //
-  // Placed BEFORE the upload, not merely before dispatch. A capture that never
-  // heard a member is not the member's audio, so it does not leave the device at
-  // all — the same rule the revocation gate above enforces, applied to a capture
-  // that was never authored rather than one whose authority was withdrawn.
-  //
-  // Refusing here is what makes the three call sites in ContinuousConversation
-  // (`fallback`, `android_fallback`, `web_whisper`) safe by construction: each
-  // guards on `result.ok && result.transcript`, so `ok: false` means neither
-  // witnessDispatch nor onTranscript is ever reached. A fourth call site added
-  // later inherits the refusal without having to remember it.
-  if (voicedMs < MIN_VOICED_MS) {
-    logVoiceEvent('voice_fallback_failed', {
-      reason: 'no_speech_observed',
-      durationMs,
-      voicedMs,
-      minVoicedMs: MIN_VOICED_MS,
-    });
-    return { ok: false, reason: 'no_speech_observed', durationMs, bytes: blob.size };
   }
 
   // ── Transcribe ───────────────────────────────────────────────────────
@@ -372,18 +304,6 @@ export async function recordAndTranscribe(
  * Uses Web Audio API analyser on the same MediaStream — does NOT clone the
  * stream, does NOT touch its tracks. Caller owns stream lifecycle.
  */
-/**
- * What a completed recording carries out. `voicedMs` is the VAD's own evidence —
- * the same analyser readings that decide when to stop, kept instead of discarded.
- * ⛔ DESKTOP-VOICE-GHOST-REARM-01: before this, the recorder computed exactly
- * this signal and threw it away, so nothing downstream could tell a member's
- * utterance from a silent room.
- */
-interface RecordingOutcome {
-  blob: Blob;
-  voicedMs: number;
-}
-
 async function recordWithSilenceDetection(
   stream: MediaStream,
   mimeType: string,
@@ -404,8 +324,8 @@ async function recordWithSilenceDetection(
      */
     onPrefix?: (prefix: Blob) => void;
   },
-): Promise<RecordingOutcome> {
-  return new Promise<RecordingOutcome>((resolve, reject) => {
+): Promise<Blob> {
+  return new Promise<Blob>((resolve, reject) => {
     const chunks: Blob[] = [];
     let recorder: MediaRecorder;
     try {
@@ -467,7 +387,7 @@ async function recordWithSilenceDetection(
       // log only stopReason and counts — no content
       // (transcribe_sent will fire next with bytes; no need for a duplicate event here)
       void stopReason;
-      resolve({ blob, voicedMs });
+      resolve(blob);
     };
 
     // ── Silence detection via Web Audio API analyser ───────────────────
@@ -490,12 +410,6 @@ async function recordWithSilenceDetection(
     const buf = new Float32Array(analyser.fftSize);
 
     let lastLoudAt = Date.now();
-    // ⛔ DESKTOP-VOICE-GHOST-REARM-01. `lastLoudAt` is seeded to now so the
-    // silence window is measured from the start of the capture — which means it
-    // asserts loudness that was never observed. It is fine for *stop timing* and
-    // useless as evidence. `voicedMs` counts only readings that actually crossed
-    // the threshold, starting from zero, and is the fact authorship rests on.
-    let voicedMs = 0;
     const startedAt = Date.now();
     const checkSilence = () => {
       if (stopped) return;
@@ -504,10 +418,7 @@ async function recordWithSilenceDetection(
       for (let i = 0; i < buf.length; i++) sumSq += buf[i] * buf[i];
       const rms = Math.sqrt(sumSq / buf.length);
       const now = Date.now();
-      if (rms >= SILENCE_RMS_THRESHOLD) {
-        lastLoudAt = now;
-        voicedMs += VAD_POLL_MS;
-      }
+      if (rms >= SILENCE_RMS_THRESHOLD) lastLoudAt = now;
       const elapsed = now - startedAt;
       const silenceFor = now - lastLoudAt;
       if (elapsed >= opts.maxMs) {
@@ -519,9 +430,7 @@ async function recordWithSilenceDetection(
         return;
       }
     };
-    // Sampling period and voiced-time accounting must be the same number, or
-    // `voicedMs` silently stops meaning milliseconds.
-    const silenceTimer = setInterval(checkSilence, VAD_POLL_MS);
+    const silenceTimer = setInterval(checkSilence, 100);
     const hardTimer = setTimeout(() => stop('max'), opts.maxMs + 200);
 
     const cleanup = () => {
