@@ -6,9 +6,14 @@
  * the word, and no proposals — 05B is not built, and a suggestion rendered
  * where authored structure renders has already become authorship.
  *
- * UNPLACED SECTIONS ARE SHOWN. Hiding them would make a Work look organised
- * when it is not — invention arrived at by omission instead of by invention.
- * A book with no divisions at all renders exactly as it did before this cut.
+ * UNPLACED SECTIONS ARE SHOWN, AND THE COLUMN READS AS THE BOOK. Hiding them
+ * would make a Work look organised when it is not. Listing them after every
+ * division — which the first cut did — put a partially organised manuscript out
+ * of its own order, which is the state a Work is in for the whole of an
+ * organising session. Divisions are anchored by the earliest section they hold
+ * and interleave with unplaced material in manuscript order
+ * (lib/writersStudio/outlineOrder.ts). A book with no divisions renders exactly
+ * as the flat list always did.
  *
  * PLACEMENT IS A RUN, AND A DIVISION STAYS CONTIGUOUS. The member names the
  * ends of a stretch of the book and says what it is. A gesture that would leave
@@ -39,13 +44,14 @@
  */
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { GROUND, INK, RADIUS, SPACE } from '../studioTheme';
 import { StudioText } from '../studio/StudioType';
 import {
   fetchStructure, sendGesture, refusalCopy,
   type StructureNodeDTO, type StructureTreeDTO,
 } from '@/lib/writersStudio/structureClient';
+import { orderOutline, type OutlineEntry } from '@/lib/writersStudio/outlineOrder';
 import type { ManuscriptSection, OutlineSectionStatus } from './ManuscriptOutline';
 
 const STATUS_MARK: Record<OutlineSectionStatus, { glyph: string; label: string } | null> = {
@@ -141,20 +147,27 @@ export default function StructuredOutline({
     else setNotice(refusalCopy(r.refusal));
   }, [manuscriptId]);
 
-  const placedIds = useMemo(() => {
-    const s = new Set<string>();
-    const walk = (n: StructureNodeDTO) => {
-      n.sectionIds.forEach((id) => s.add(id));
-      n.children.forEach(walk);
-    };
-    tree?.roots.forEach(walk);
-    return s;
-  }, [tree]);
-
-  const unplaced = useMemo(
-    () => sections.filter((s) => !placedIds.has(s.id)),
-    [sections, placedIds],
+  const ordered = useMemo(
+    () => orderOutline(tree?.roots ?? [], sections),
+    [tree, sections],
   );
+
+  /* WS2-05A-R1 — reveal the restored place ONCE, on the render where the
+     active row first exists.
+     Not a general "chase the cursor": scrolling the map on every navigation
+     would fight a member who has scrolled it deliberately to look somewhere
+     else. This fires only when the outline first has a row for the section the
+     URL restored, which is exactly the moment the writing field and the map
+     would otherwise disagree about where the member is standing. */
+  const activeRow = useRef<HTMLDivElement | null>(null);
+  const revealed = useRef(false);
+  useEffect(() => {
+    if (revealed.current || !activeId) return;
+    const el = activeRow.current;
+    if (!el) return;
+    revealed.current = true;
+    el.scrollIntoView({ block: 'center' });
+  }, [activeId, ordered]);
 
   const row = (s: ManuscriptSection, depth: number) => {
     const isActive = activeId === s.id;
@@ -162,6 +175,7 @@ export default function StructuredOutline({
     return (
       <div
         key={s.id}
+        ref={isActive ? activeRow : undefined}
         data-section={s.position}
         data-active={isActive || undefined}
         role="button"
@@ -199,7 +213,14 @@ export default function StructuredOutline({
     );
   };
 
-  const unit = (node: StructureNodeDTO, depth: number, siblings: StructureNodeDTO[]) => {
+  const unitHead = (
+    node: StructureNodeDTO,
+    depth: number,
+    siblings: readonly StructureNodeDTO[],
+    entries: readonly OutlineEntry[],
+    empty: readonly StructureNodeDTO[],
+    holdsNothing: boolean,
+  ) => {
     const i = siblings.findIndex((s) => s.id === node.id);
     return (
       <div key={node.id} style={{ marginTop: SPACE.snug }}>
@@ -278,24 +299,40 @@ export default function StructuredOutline({
             onName={(title) => { setNaming(undefined); void act({
               gesture: 'create', kind: null, title, parentId: node.id }); }} />
         )}
+        {holdsNothing && (
+          <StudioText role="metadata" tone="quiet"
+            style={{ display: 'block', paddingLeft: SPACE.snug + (depth + 1) * SPACE.base }}>
+            no sections yet
+          </StudioText>
+        )}
         {organising && (
           <PlaceRun sections={sections} disabled={busy} depth={depth}
             onPlace={(from, to) => act({
               gesture: 'place', unitId: node.id, fromSectionId: from, toSectionId: to,
             })} />
         )}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: SPACE.hairline }}>
-          {node.sectionIds
-            .map((id) => byId.get(id))
-            .filter((s): s is ManuscriptSection => Boolean(s))
-            .map((s) => row(s, depth + 1))}
-        </div>
-        {node.children.map((c) => unit(c, depth + 1, node.children))}
+        {/* Its own sections and its children, in manuscript order. */}
+        {entries.map((e) => renderEntry(e, depth + 1, node.children))}
+        {empty.map((c) => emptyUnit(c, depth + 1, node.children))}
       </div>
     );
   };
 
-  const hasStructure = (tree?.roots.length ?? 0) > 0;
+  /** A division holding nothing yet. Drawn plainly, given no position. */
+  const emptyUnit = (node: StructureNodeDTO, depth: number, siblings: StructureNodeDTO[]) =>
+    unitHead(node, depth, siblings, [], [], true);
+
+  const renderEntry = (
+    e: OutlineEntry,
+    depth: number,
+    siblings: readonly StructureNodeDTO[],
+  ): React.ReactNode => {
+    if (e.kind === 'section') {
+      const s = byId.get(e.id);
+      return s ? row(s, depth) : null;
+    }
+    return unitHead(e.node, depth, siblings, e.entries, e.empty, false);
+  };
 
   return (
     <>
@@ -341,17 +378,23 @@ export default function StructuredOutline({
       )}
       </div>
 
-      {tree?.roots.map((r) => unit(r, 0, tree.roots))}
-
-      {/* Sans: this label is the room speaking, not the member. */}
-      {(hasStructure || organising) && unplaced.length > 0 && (
-        <StudioText role="panelLabel" tone="muted" style={{ marginTop: SPACE.comfortable, display: 'block' }}>
-          not yet placed
-        </StudioText>
-      )}
+      {/* The book, in its own order: divisions anchored where their earliest
+          section sits, unplaced material keeping its place between them. */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: SPACE.hairline }}>
-        {unplaced.map((s) => row(s, 0))}
+        {ordered.entries.map((e) => renderEntry(e, 0, tree?.roots ?? []))}
       </div>
+
+      {ordered.empty.length > 0 && (
+        <>
+          {/* Sans: the room speaking. These hold nothing, so they have no
+              position in the manuscript and are not given one. */}
+          <StudioText role="panelLabel" tone="muted"
+            style={{ marginTop: SPACE.comfortable, display: 'block' }}>
+            not yet holding any sections
+          </StudioText>
+          {ordered.empty.map((u) => emptyUnit(u, 0, tree?.roots ?? []))}
+        </>
+      )}
     </>
   );
 }
