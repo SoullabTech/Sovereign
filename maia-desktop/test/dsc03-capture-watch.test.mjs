@@ -116,6 +116,26 @@ test('⭐ the session disappearing stops supervision without announcing', () => 
   assert.equal(timers.live.size, 0, 'the timer outlived the session');
 });
 
+test('⭐ the session disappearing MID-SUPERVISION stops it — not just before the first tick', () => {
+  // ⛔ The narrow version of this test (null before any tick has run) passes
+  // even against a watcher that caches the session at start, because the cache
+  // is still empty on tick one. The real path is the microphone-denied one: the
+  // watcher has already been ticking against a live session when `voice` drops
+  // to null. Re-reading is what notices; caching is what would run forever
+  // against a corpse.
+  const { w, log, timers, setVoice } = wire({ transitions: [null, LOSS] });
+  w.start();
+  w.tick();                              // a healthy tick against a LIVE session
+  assert.equal(w.isWatching, true);
+  log.length = 0;
+
+  setVoice(null);
+  assert.equal(w.tick(), null);
+  assert.deepEqual(log, [], 'a vanished session was still being supervised and announced');
+  assert.equal(w.isWatching, false, 'supervision kept ticking against a session that is gone');
+  assert.equal(timers.live.size, 0);
+});
+
 // ── ORDERING ────────────────────────────────────────────────────────────────
 
 test('⭐ the surface is told LAST — never before the epoch records the boundary', () => {

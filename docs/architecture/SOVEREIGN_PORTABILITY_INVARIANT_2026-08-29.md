@@ -274,6 +274,27 @@ canonical realm never confirmed. That generalizes past Electron and past Desktop
 constraint as §6's offline clause, in miniature. **A host may record what canonical MAIA confirmed.
 It may not record what it merely attempted.**
 
+### The rule the gaps keep proving
+
+Three units, three proof gaps, all found by mutation and none by review. They are one shape: **an
+assertion that looks like it covers a transition while its predicate quietly excludes the failing
+case.**
+
+```text
+DSC-01  a failed re-adoption recorded as done   the caller-level ordering was never asserted
+DSC-02  a final recorded for an EMPTY transcript  the predicate tested truthiness; '' is falsy
+DSC-03  a session cached instead of re-read       the case ran before the cache could fill
+```
+
+So, for any state transition:
+
+> **Prove occurrence, non-occurrence, ordering, and state-after separately. Never infer one from
+> truthiness or from the final state.**
+
+And set up the failing case so it can actually fail: DSC-03's self-stop test passed against a cached
+session only because it nulled the session before the first tick ever ran. A test whose scenario
+cannot reach the defect is not coverage.
+
 Before any extraction, therefore, identify every sequence of the form:
 
 ```text
