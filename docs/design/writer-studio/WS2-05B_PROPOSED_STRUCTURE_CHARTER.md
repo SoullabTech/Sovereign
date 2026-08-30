@@ -1,8 +1,33 @@
-# JARVIS / WS2-05B — Proposed Manuscript Structure
+# JARVIS / WS2-05B — Proposed Structure of a Work
 
 **Status:** CHARTER. Design rulings settled; implementation NOT authorized.
 **Opens after:** WS2-05A closes on the real-book witness.
 **Predecessor evidence:** `86bab2094` — the failed mechanical baseline.
+
+---
+
+## Governing rule
+
+> **WS2-05B does not detect chapters.** It perceives and proposes the organizing
+> grammar of a Work — without assuming what that grammar is called, how deep it
+> is, whether its levels are uniform, or whether the Work presently has a stable
+> larger structure at all.
+
+The first question is not *"where are the chapters?"* It is **"how does this
+Work appear to organize itself?"**
+
+A chapter is one possible structural form. The answer may be
+`Part → Chapter → Section`, or `Movement → Passage`, or `Act → Scene`, or
+`Section → Poem`, or a flat run of `Essay Essay Essay`, or `Entry Entry Entry`,
+or a vocabulary that belongs entirely to this writer.
+
+**"No stable larger structure is evident yet" must be a legitimate result.**
+The system never manufactures hierarchy because the interface expects one.
+
+This validates a decision 05A already made rather than requiring a change to
+it: arbitrary tree depth, `kind` as free text and never an enum, member-authored
+titles, no mandatory Chapter/Part/Section vocabulary. **What broadens here is
+05B's perception model, not 05A's storage model.**
 
 ---
 
@@ -28,9 +53,23 @@ Mechanical-only is ruled out as the product solution. `86bab2094` demonstrated
 why: it finds real signals and cannot recover the Fire boundary, because
 `THE SACRED FLAME` carries meaning that no lexical rule contains.
 
-### Tier 1 — Mechanical evidence
+### Tier 1 — Mechanical evidence, and NOT ontology
 
-May state only what is establishable from inspectable features:
+May state only what is establishable from inspectable features. Seeing
+`CHAPTER 5`, it must not conclude *"this is a chaptered book"*. It reports
+**"several headings use numbered chapter language"** — which is a fact.
+
+The questions it may answer:
+
+- Are there explicit labels?
+- Are there numbering sequences?
+- Are there repeated formatting patterns or repeated title forms?
+- Are there dense semantic regions?
+- Are there obvious front- or back-matter runs?
+- Are some headings likely contents or index scaffolding rather than divisions?
+- Are there large shifts of subject, voice, time, narrator, element, place?
+
+What it may state:
 
 - explicit structural labels
 - runs that look like contents/outline scaffolding
@@ -77,6 +116,36 @@ Why this boundary was suggested
 ```
 
 Enough for a writer to judge the proposal without redoing the analysis.
+
+**MAIA's task is to read the Work's organizing grammar, not to fill a template.**
+On Elemental Alchemy that might come back as:
+
+```text
+The Work appears to have several structural grammars.
+
+Opening / foundational material
+Elemental sequence — Fire · Water · Earth · Air · Aether
+Living Spiral / application material
+Possible duplicated outline or contents material — 161–173, unresolved
+```
+
+Nothing there needs forcing into "Chapter 1, Chapter 2". The elemental
+divisions may well be chapters in the published book, but **Fire is already
+meaningful without the database deciding its kind must be `Chapter`.**
+
+### Irregular is not malformed
+
+Sibling units need not share a `kind`. A Work may legitimately be:
+
+```text
+Part One — Departure        Part Two — Return
+  Chapter                     Letter
+  Chapter                     Vignette
+  Interlude                   Chapter
+  Chapter
+```
+
+The writer's form can be irregular, and the proposal must be able to say so.
 
 ---
 
@@ -150,6 +219,30 @@ survived long enough to be built.
 
 ---
 
+## Structure is where the Work divides — not every way it can be understood
+
+Canonical structure describes where the **linear** Work is divided, so its units
+remain contiguous stretches of the manuscript.
+
+A Work may carry recurring threads — *mother*, *New Orleans*, *dream sequences*,
+*fire imagery*, *Sophie*, *ancestral material*. Those are valuable and they are
+**not structural divisions** when they recur throughout the book.
+
+```text
+STRUCTURE          Where the Work divides.
+THREAD / MOTIF     What recurs across those divisions.
+```
+
+Both matter; they are different geometries. Keeping them apart is what stops
+Structure being corrupted into "every way this Work can be understood".
+
+This also gives 05A's contiguity invariant a positive rationale rather than only
+a constraint: a non-contiguous grouping was never a broken division: it is a
+thread, and it belongs to a layer that does not exist yet. Naming that layer is
+outside this unit.
+
+---
+
 ## Uncertainty is a first-class output
 
 A proposal may look like:
@@ -209,7 +302,26 @@ stop — not to be improved until it somehow finds 42.
 
 ---
 
+## Product language
+
+Not **"Find the chapters"**. In the room: **"Help me see the structure of this
+Work"** — and the answer may legitimately be *"I see a likely elemental
+sequence, several larger movements, and an unresolved group near the end that
+looks like outline material."*
+
+---
+
 ## Flow
+
+```text
+WORK
+  ↓  mechanical structure evidence
+  ↓  MAIA reads the Work's organizing grammar
+  ↓  proposed vocabulary + boundaries + hierarchy
+  ↓  member reviews the whole proposal
+  ↓  "Use this structure"
+  ↓  05A authored structure
+```
 
 ```text
 OBSERVE    real manuscript + current 174-section structure
