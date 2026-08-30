@@ -39,8 +39,6 @@ const PREFERRED_MIME_TYPES = [
 const DEFAULT_MAX_RECORDING_MS = 8000;
 const DEFAULT_SILENCE_HOLDOFF_MS = 1500;
 const DEFAULT_MIN_RECORDING_MS = 800; // don't stop before the user can speak
-/** Timeslice for chunked recording when live partials are requested. */
-const PARTIAL_CHUNK_MS = 1000;
 const SILENCE_RMS_THRESHOLD = 0.012; // empirical; mic noise floor sits ~0.005
 
 export interface FallbackResult {
@@ -64,23 +62,6 @@ interface RunOptions {
   silenceHoldoffMs?: number;
   minMs?: number;
   /**
-   * DESKTOP-LISTENING-PRESENCE-01 — how often to transcribe what has been said
-   * SO FAR, while the member is still speaking. Omitted (the Android recovery,
-   * the Firefox/Zen branch) means no partials and byte-identical behaviour.
-   *
-   * ⛔ WHY THIS IS NOT "INTERIM RESULTS". Web Speech streams guesses it later
-   * revises. This does not: each partial is a real transcription, by the same
-   * local Whisper, of every chunk captured up to that moment. It can grow and
-   * it can be re-worded as more context arrives, but it is never invented.
-   * Showing the member speculative text would be its own small untruth.
-   */
-  partialIntervalMs?: number;
-  /**
-   * Called with each partial transcript. Presentation only — the committed turn
-   * is still the final transcript returned by this function, never a partial.
-   */
-  onPartial?: (text: string) => void;
-  /**
    * DESKTOP-SOVEREIGN-STT-LIFECYCLE-01 — revoke this capture's authority.
    *
    * ⛔ OPTIONAL BY DESIGN. Callers that pass nothing (the Android-Chrome
@@ -95,46 +76,6 @@ interface RunOptions {
    * not attention they consented to.
    */
   signal?: AbortSignal;
-}
-
-/** Filename extension the transcription route expects for a given mime type. */
-function extFor(mimeType: string): string {
-  return mimeType.includes('webm') ? 'webm'
-    : mimeType.includes('mp4') ? 'm4a'
-    : mimeType.includes('wav') ? 'wav'
-    : mimeType.includes('ogg') ? 'ogg'
-    : 'webm';
-}
-
-/**
- * Transcribe a clip for PRESENTATION ONLY — the live partial shown to the
- * member while they are still speaking.
- *
- * ⛔ DELIBERATELY SEPARATE from the committing path below, which keeps its own
- * inline request so its telemetry and failure branches stay exactly as they
- * were device-proven. A partial that fails is not an event: it means this
- * update is skipped and the next one may succeed. Nothing is committed here,
- * so nothing needs reporting.
- */
-async function transcribeClipForDisplay(
-  blob: Blob,
-  mimeType: string,
-  signal?: AbortSignal,
-): Promise<string> {
-  try {
-    const file = new File([blob], `fallback-partial.${extFor(mimeType)}`, { type: mimeType });
-    const formData = new FormData();
-    formData.append('file', file);
-    const response = await apiFetch('/api/voice/transcribe-simple', {
-      method: 'POST',
-      body: formData,
-      ...(signal ? { signal } : {}),
-    });
-    if (!response.ok) return '';
-    return readTranscript(await response.json()) || '';
-  } catch {
-    return '';
-  }
 }
 
 function pickMimeType(): string | null {
@@ -192,17 +133,6 @@ export async function recordAndTranscribe(
       silenceHoldoffMs,
       minMs,
       signal,
-      // Presentation only. `onPartialClip` hands us everything captured so far;
-      // we transcribe it and pass the text up. If a partial is still in flight
-      // the recorder skips the next one, so a slow machine degrades to less
-      // frequent updates rather than a queue of stale requests.
-      ...(options.partialIntervalMs && options.onPartial ? {
-        partialIntervalMs: options.partialIntervalMs,
-        onPartialClip: async (clip: Blob) => {
-          const text = await transcribeClipForDisplay(clip, mimeType, signal);
-          if (text && !aborted()) options.onPartial?.(text);
-        },
-      } : {}),
     });
   } catch (err: unknown) {
     const name = err instanceof Error ? err.name : 'unknown';
@@ -331,11 +261,7 @@ export async function recordAndTranscribe(
 async function recordWithSilenceDetection(
   stream: MediaStream,
   mimeType: string,
-  opts: {
-    maxMs: number; silenceHoldoffMs: number; minMs: number; signal?: AbortSignal;
-    partialIntervalMs?: number;
-    onPartialClip?: (clip: Blob) => void | Promise<void>;
-  },
+  opts: { maxMs: number; silenceHoldoffMs: number; minMs: number; signal?: AbortSignal },
 ): Promise<Blob> {
   return new Promise<Blob>((resolve, reject) => {
     const chunks: Blob[] = [];
@@ -450,50 +376,15 @@ async function recordWithSilenceDetection(
     const silenceTimer = setInterval(checkSilence, 100);
     const hardTimer = setTimeout(() => stop('max'), opts.maxMs + 200);
 
-    // ── Live partials ──────────────────────────────────────────────────────
-    // DESKTOP-LISTENING-PRESENCE-01. A member speaking into a batch
-    // transcriber has no evidence they are being heard; the interim slot the
-    // Web Speech path fills stays empty for the whole utterance. So while
-    // recording continues, hand the caller everything captured so far.
-    //
-    // ⭐ WHY `chunks.slice()` IS A VALID CLIP. The recorder is started with a
-    // timeslice, so chunk 0 carries the container header and each later chunk
-    // appends to it. The concatenation of chunks 0..k is therefore a complete,
-    // decodable recording of the first k slices — not a fragment Whisper would
-    // have to guess at.
-    //
-    // ⛔ ONE AT A TIME. If a partial is still in flight the tick is skipped.
-    // Transcribing a growing clip costs more as the turn goes on, and a queue
-    // of stale requests would spend the member's CPU to show them older text.
-    let partialInFlight = false;
-    const partialTimer = opts.partialIntervalMs && opts.onPartialClip
-      ? setInterval(() => {
-          if (stopped || partialInFlight || chunks.length === 0) return;
-          if (opts.signal?.aborted) return;
-          partialInFlight = true;
-          void Promise.resolve(
-            opts.onPartialClip?.(new Blob(chunks.slice(), { type: mimeType })),
-          ).finally(() => { partialInFlight = false; });
-        }, opts.partialIntervalMs)
-      : null;
-
     const cleanup = () => {
       clearInterval(silenceTimer);
       clearTimeout(hardTimer);
-      if (partialTimer) clearInterval(partialTimer);
       try { source.disconnect(); } catch { /* noop */ }
       try { audioCtx.close(); } catch { /* noop */ }
     };
 
     try {
-      // A timeslice is required for partials: without it `ondataavailable`
-      // fires once, at the end, and there is nothing to transcribe mid-turn.
-      // Callers that asked for no partials keep the original single-blob call.
-      if (opts.partialIntervalMs && opts.onPartialClip) {
-        recorder.start(PARTIAL_CHUNK_MS);
-      } else {
-        recorder.start();
-      }
+      recorder.start();
     } catch (err) {
       cleanup();
       reject(err);
