@@ -5,8 +5,10 @@
 // JARVIS application. What carries over is the doctrine, and MAIA-D00A's lesson
 // about how it decays: the renderer gets named verbs and nothing else, main owns
 // every value that reaches a privileged call, and the allow-list is reviewed in
-// exactly ONE place (test/d01-preload-allowlist.mjs) so an eleventh channel has
-// to come and argue for itself instead of appearing.
+// exactly ONE place (test/d01-preload-allowlist.mjs) so the NEXT channel has
+// to come and argue for itself instead of appearing. That list is a data
+// module; test/d01-boundary.test.mjs asserts it EXACTly against this file and
+// against main.js, so an unratified channel fails the suite.
 //
 // ⛔ What deliberately does NOT cross this bridge:
 //    · no general IPC channel, no `send`, no `exec`

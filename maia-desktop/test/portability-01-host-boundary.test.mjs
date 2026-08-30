@@ -26,7 +26,7 @@ const HOST_ADAPTERS = [
   { file: 'main.js',
     why: 'Host wiring: BrowserWindow, app lifecycle, ipcMain transport, webContents broadcast. The native supervisor replaces THIS file.' },
   { file: 'preload.js',
-    why: 'The bridge itself: contextBridge + ipcRenderer. Electron-specific by definition; ten ratified channels reviewed in test/d01-preload-allowlist.mjs.' },
+    why: 'The bridge itself: contextBridge + ipcRenderer. Electron-specific by definition; the ratified channels are listed in test/d01-preload-allowlist.mjs (a data module, not a suite) and asserted EXACTly against this file by test/d01-boundary.test.mjs.' },
 ];
 
 // Modules that must survive replacing BrowserWindow + IPC with a native host
