@@ -8431,7 +8431,27 @@ I'm not sure what I'm feeling yet.`;
               // isMuted=true means user wants to be muted → tap means START listening
               // isMuted=false means user is actively listening → tap means STOP listening
               if (voiceMicRef.current) {
-                if (isMuted) {
+                // ⭐ A TAP STARTS UNLESS A CAPTURE IS ACTUALLY LIVE.
+                //
+                // ⛔ THE DEFECT, device-witnessed 2026-08-30: "it went off of
+                // listening and now Tap to Speak doesnt work." This branched on
+                // `isMuted` alone, treating it as capture truth. During a
+                // hands-free conversation the re-arm paths call
+                // `setIsMuted(false)`; when listening later ended, nothing set
+                // it back. So the member tapped a surface reading TAP TO SPEAK,
+                // took the STOP branch, and stopped a microphone that was
+                // already stopped — nothing happened, repeatedly. The Speak
+                // button worked only because it calls startListening directly
+                // and never consults this toggle.
+                //
+                // `isMuted` is a PREFERENCE, not a state of the microphone.
+                // `isListening` is capture truth — established solely by
+                // `handleRecordingStateChange` (LISTENING-STATE-TRUTH-01), so it
+                // is now trustworthy enough to decide with. Muted still means
+                // start, preserving the iOS desync workaround this replaced;
+                // the addition is that not-actually-listening also means start.
+                // Only a live capture is stopped by a tap.
+                if (isMuted || !isListening) {
                   // TAP-TO-INTERRUPT: If MAIA is speaking, stop her and start listening
                   let isInterrupt = false;
                   if (isAudioPlayingRef.current || isRespondingRef.current) {
