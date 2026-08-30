@@ -155,6 +155,42 @@ describe('opening Conversations is not consent to listen', () => {
   });
 });
 
+describe('a Keep is the member handing her a passage', () => {
+  /* She is given the Work's identity and never its text — that is the D-019
+     line. A Keep is the exception the member makes themselves: verbatim words
+     they already chose to set aside. The crossing IS the consent event, the
+     same rule Materials entering a Work obey. */
+
+  it('offers the member their own kept passages', () => {
+    expect(surface).toContain('useManuscriptKeeps');
+    expect(surface).toContain('data-keeps-toggle="true"');
+  });
+
+  it('puts a chosen Keep in the COMPOSER, never straight into the exchange', () => {
+    /* The distinction the whole feature turns on. Sending it automatically
+       would make the button a disclosure; placing it in the composer makes it
+       a quotation the writer chooses to read aloud, and they still author the
+       turn it travels in. */
+    expect(surface).toMatch(/setDraft\(\(d\) =>/);
+    const chooser = surface.slice(surface.indexOf('data-keeps-chooser'));
+    expect(chooser.slice(0, 1200)).not.toMatch(/setTurns|void send\(\)/);
+  });
+
+  it('reaches into the manuscript for nothing else', () => {
+    /* Only what the member kept. No draft, no section bodies, no full text.
+       Note what is NOT banned: `content:` — that is the conversation history's
+       own field name, and banning the token rather than the capability would
+       have forced the transcript out to satisfy the test. */
+    for (const banned of ['loadDraft', '/draft', 'sectionBody', 'manuscript.content']) {
+      expect(surface).not.toContain(banned);
+    }
+  });
+
+  it('says plainly that she has not been given the text', () => {
+    expect(surface).toContain('She has not been given its text');
+  });
+});
+
 describe('Open in MAIA is a choice, not the default', () => {
   it('lives inside the panel, and names the Work it is leaving with', () => {
     expect(surface).toContain('data-open-in-maia="true"');

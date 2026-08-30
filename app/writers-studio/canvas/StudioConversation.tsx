@@ -6,6 +6,7 @@ import { apiFetch } from '@/lib/http/apiBase';
 import { GROUND, INK, MAIA_ACCENT, RADIUS, RULE, SPACE } from '../studioTheme';
 import { StudioText, typeStyle } from '../studio/StudioType';
 import { useMemberIdentity } from '../useMemberIdentity';
+import { useManuscriptKeeps } from '../useManuscriptKeeps';
 import { handoffToMaia } from '../workContext';
 import type { LivingWork } from '../useLivingWorks';
 
@@ -52,6 +53,22 @@ import type { LivingWork } from '../useLivingWorks';
  * endpoint with its own compact surface. Nothing about the exchange is decided
  * here; every decision still happens server-side on the canonical route.
  *
+ * ── KEEPS: HOW MAIA COMES TO HOLD ANY OF THE WRITING ───────────────────────
+ *
+ * She is given the Work's identity and never its text. That is the D-019 line
+ * and it holds: nothing here reaches into the manuscript.
+ *
+ * A Keep is the exception the member makes themselves. It is verbatim text the
+ * writer already chose to set aside, and bringing one into the conversation is
+ * their gesture — the crossing IS the consent event, exactly as it is for
+ * Materials entering a Work.
+ *
+ * So a chosen Keep lands in the COMPOSER, not in the transcript. It is not
+ * sent on the member's behalf: they see the passage, add whatever they want to
+ * ask about it, and send it as their own turn. The difference matters. Sending
+ * it automatically would make the button a disclosure; putting it in the
+ * composer makes it a quotation the writer is choosing to read aloud.
+ *
  * ── CONSENT ────────────────────────────────────────────────────────────────
  *
  * Text only. There is no microphone code in this file and no voice component
@@ -88,6 +105,8 @@ export default function StudioConversation({
   onClose,
 }: StudioConversationProps) {
   const identity = useMemberIdentity();
+  const { keeps } = useManuscriptKeeps(manuscriptId);
+  const [showKeeps, setShowKeeps] = useState(false);
   const [turns, setTurns] = useState<Turn[]>([]);
   const [draft, setDraft] = useState('');
   const [sending, setSending] = useState(false);
@@ -193,8 +212,11 @@ export default function StudioConversation({
       {/* ── The exchange ── */}
       <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', paddingRight: SPACE.tight }}>
         {turns.length === 0 && (
-          <StudioText role="metadata" style={{ opacity: 0.7, maxWidth: '30ch' }}>
-            She has your Work in view. She has not been given its text.
+          <StudioText role="metadata" style={{ opacity: 0.7, maxWidth: '34ch' }}>
+            She has your Work in view. She has not been given its text —
+            {keeps.length > 0
+              ? ' bring a Keep if you want her to read a passage.'
+              : ' a Keep is how you would hand her one.'}
           </StudioText>
         )}
         {turns.map((t, i) => (
@@ -218,6 +240,63 @@ export default function StudioConversation({
         )}
         <div ref={endRef} />
       </div>
+
+      {/* ── The member's kept passages, offered rather than inserted. ── */}
+      {showKeeps && (
+        <div
+          data-keeps-chooser="true"
+          style={{
+            maxHeight: '38%',
+            overflowY: 'auto',
+            border: `1px solid ${RULE.soft}`,
+            borderRadius: RADIUS.sm,
+            padding: SPACE.snug,
+            marginBottom: SPACE.snug,
+            background: GROUND.base,
+          }}
+        >
+          {keeps.length === 0 ? (
+            <StudioText role="metadata" style={{ opacity: 0.75 }}>
+              You have not kept any passages yet. Keeps are made in the Source,
+              where your sections live.
+            </StudioText>
+          ) : (
+            keeps.map((k) => (
+              <button
+                key={k.id}
+                type="button"
+                onClick={() => {
+                  /* Into the composer — never straight into the exchange. The
+                     member decides what to ask about it, and sends it as their
+                     own turn. */
+                  const quoted = `From ${k.sectionHeading ?? 'my manuscript'}:\n\n“${k.verbatimText}”\n\n`;
+                  setDraft((d) => (d ? `${quoted}${d}` : quoted));
+                  setShowKeeps(false);
+                }}
+                style={{
+                  display: 'block',
+                  width: '100%',
+                  textAlign: 'left',
+                  background: 'transparent',
+                  border: 'none',
+                  borderBottom: `1px solid ${RULE.quiet}`,
+                  padding: `${SPACE.snug}px ${SPACE.tight}px`,
+                  cursor: 'pointer',
+                }}
+              >
+                <StudioText role="metadata" tone="quiet">
+                  {k.sectionHeading ?? 'Untitled section'}
+                </StudioText>
+                <StudioText role="metadata" tone="secondary" style={{ opacity: 0.9 }}>
+                  {k.verbatimText.length > 120
+                    ? `${k.verbatimText.slice(0, 120)}…`
+                    : k.verbatimText}
+                </StudioText>
+              </button>
+            ))
+          )}
+        </div>
+      )}
 
       {/* ── Composer. Text only; no microphone exists on this surface. ── */}
       <div style={{ borderTop: `1px solid ${RULE.soft}`, paddingTop: SPACE.base }}>
@@ -249,6 +328,24 @@ export default function StudioConversation({
           {/* Immersion, by choice. Carries the Work, the way back, and this
               exact exchange, so full MAIA continues it rather than starting
               another — and voice lives there, where it was designed for. */}
+          <button
+            type="button"
+            data-keeps-toggle="true"
+            aria-expanded={showKeeps}
+            onClick={() => setShowKeeps((v) => !v)}
+            style={{
+              background: showKeeps ? GROUND.active : 'transparent',
+              border: `1px solid ${RULE.soft}`,
+              borderRadius: RADIUS.sm,
+              padding: `${SPACE.tight}px ${SPACE.snug}px`,
+              cursor: 'pointer',
+              color: INK.secondary,
+            }}
+          >
+            <StudioText role="metadata" as="span">
+              Keeps{keeps.length > 0 ? ` ${keeps.length}` : ''}
+            </StudioText>
+          </button>
           <Link
             href={handoffToMaia('/maia', { workId: work.id, manuscriptId, conversationId })}
             data-open-in-maia="true"
