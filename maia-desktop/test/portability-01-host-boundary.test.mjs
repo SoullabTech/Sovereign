@@ -32,6 +32,12 @@ const HOST_ADAPTERS = [
 // Modules that must survive replacing BrowserWindow + IPC with a native host
 // without changing their semantics. Each is currently free of Electron.
 const PORTABLE_DOMAIN = [
+  // MAIA-DESKTOP-CONVERSATION-RESET-01 §1 — the one conversational authority.
+  // The most portable module in the tree by construction: it holds no transport
+  // at all, so no host can be inferred from it. Its own suite reads its source
+  // and asserts the absence of Electron, DOM, fetch, timers, audio, fs and the
+  // clock; this declaration is the tree-level half of the same claim.
+  'desktop-conversation.js',
   'conversation.js', 'thread-watch.js', 'capture-liveness.js', 'capture-worklet.js',
   'continuity.js', // DESKTOP SOVEREIGN CORE 01 — extracted from main.js
   'turn.js',       // DESKTOP SOVEREIGN CORE 02 — extracted from main.js
