@@ -38,15 +38,21 @@ test('CLASS E REGRESSION — the frame handler buffers audio and dispatches a tu
   const handler = /ipcMain\.handle\('maia:voice-frame'[\s\S]*?\n\}\);/.exec(mainJs)[0];
   assert.ok(handler.includes('utterance.push'),
     'frames are not buffered — audio is being dropped, which is the class E defect');
-  assert.ok(/utterance_boundary[\s\S]*?runTurn\(\)/.test(handler),
+  assert.ok(/utterance_boundary[\s\S]*?turn\.run\(\)/.test(handler),
     'an utterance boundary does not dispatch a turn — transcription is unreachable');
 });
 
 test('the turn loop actually calls transcribe AND ask — not one without the other', () => {
-  const turn = /async function runTurn\(\)[\s\S]*?\n\}/.exec(mainJs)[0];
-  assert.ok(turn.includes('conversation.transcribe('), 'never transcribes');
-  assert.ok(turn.includes('conversation.ask('), 'never asks MAIA — stops at "transcription works"');
-  assert.ok(turn.includes("'maia:audio'") || turn.includes('maia:audio'), 'never emits audio');
+  // ⭐ DESKTOP SOVEREIGN CORE 02. The loop moved to turn.js; the assertion
+  // follows it. Both halves are still proven, and the audio half is now proven
+  // in TWO places because the emission crosses the boundary: the turn hands
+  // audio to `speak`, and main wires `speak` to the ratified channel.
+  const turn = /async function run\(\)[\s\S]*?\n  \}/.exec(strip('turn.js'))[0];
+  assert.ok(turn.includes('conversation().transcribe('), 'never transcribes');
+  assert.ok(turn.includes('conversation().ask('), 'never asks MAIA — stops at "transcription works"');
+  assert.ok(/speak\(a\.audio\)/.test(turn), 'never emits audio');
+  assert.ok(/speak:\s*\(audio\)\s*=>\s*broadcast\('maia:audio'/.test(mainJs),
+    'the turn emits audio into nothing — main no longer carries it to the surface');
 });
 
 test('a boundary does NOT end the epoch — a pause is still not a finished thought', () => {

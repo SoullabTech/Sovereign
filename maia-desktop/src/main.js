@@ -40,6 +40,7 @@ const { createSession } = require('./session');
 const { createConversation } = require('./conversation');
 const { createCaptureLiveness } = require('./capture-liveness');
 const { createContinuity } = require('./continuity');
+const { createTurn } = require('./turn');
 
 // Separate userData for a dev launch, so a development instance can never read
 // or corrupt an installed instance's state. (jarvis-desktop precedent.)
@@ -53,7 +54,6 @@ let conversation = null; // one continuity for this run
 
 // ── voice session, owned entirely by main ───────────────────────────────────
 let voice = null;
-let turnBusy = false;
 
 function broadcast(channel, payload) {
   for (const w of BrowserWindow.getAllWindows()) {
@@ -245,7 +245,7 @@ ipcMain.handle('maia:voice-frame', async (_evt, payload) => {
     else if (t === 'utterance_boundary') {
       // An utterance ended, so a final may be requested. This still does NOT end
       // the epoch — capture keeps running through the pause (§XII).
-      void runTurn();
+      void turn.run();
     }
   }
   return { ok: true };
@@ -287,45 +287,22 @@ ipcMain.handle('maia:status', async () => ({
   build: process.env.MAIA_DESKTOP_BUILD_SHA || 'UNSTAMPED',
 }));
 
-// ── the turn: transcript → MAIA → audible answer ────────────────────────────
+// ── the turn ────────────────────────────────────────────────────────────────
 //
-// The acceptance for DESKTOP-CONVERSATION-01 is back-and-forth conversation, so
-// this is the loop that matters. Every failure is surfaced to the member in
-// words rather than swallowed — a companion that goes quiet after you speak is
-// the failure mode this whole programme exists to avoid.
-async function runTurn() {
-  if (!voice || turnBusy || !conversation) return;
-  const taken = voice.utterance.take();
-  if (!taken) return;                    // silence or a cough, not an utterance
-  turnBusy = true;
-  try {
-    broadcast('maia:turn', { phase: 'transcribing' });
-
-    const t = await conversation.transcribe(taken.samples, voice.sampleRate);
-    if (!t.ok) { broadcast('maia:turn', { phase: 'error', error: t.error }); return; }
-
-    const said = (t.text || '').trim();
-    if (!said) { broadcast('maia:turn', { phase: 'idle' }); return; }
-
-    // The transcript is a FINAL for the epoch — the tail invariant now has real
-    // material to protect, which on the first walk it never did.
-    voice.epoch.final(said, `utt-${Date.now()}`);
-    broadcast('maia:turn', { phase: 'heard', member: said });
-
-    broadcast('maia:turn', { phase: 'thinking' });
-    const a = await conversation.ask(said);
-    if (!a.ok) { broadcast('maia:turn', { phase: 'error', error: a.error }); return; }
-
-    broadcast('maia:turn', { phase: 'answered', maia: a.text });
-    if (a.audio) broadcast('maia:audio', a.audio);
-    else broadcast('maia:turn', { phase: 'no-voice' });
-  } catch (e) {
-    broadcast('maia:turn', { phase: 'error', error: (e && e.message) || 'turn failed' });
-  } finally {
-    turnBusy = false;
-  }
-}
-
+// ⭐ DESKTOP SOVEREIGN CORE 02. What a turn MEANS — its ordering, its guard, its
+// failure and completion semantics — lives in `turn.js`, Electron-free. What
+// main keeps is the transport: announcing a phase to a window, and handing
+// audio to the renderer because only it has an output device.
+//
+// `turnBusy` moved with it. It was never host state: it is the turn's own
+// in-flight flag, which main merely happened to hold. Continuity reads it
+// through the same accessor it always did.
+const turn = createTurn({
+  conversation: () => conversation,
+  voice: () => voice,
+  announce: (payload) => broadcast('maia:turn', payload),
+  speak: (audio) => broadcast('maia:audio', audio),
+});
 
 // ── conversation continuity ─────────────────────────────────────────────────
 //
@@ -338,7 +315,7 @@ const continuity = createContinuity({
   conversation: () => conversation,
   session: () => memberSession,
   publish: (payload) => broadcast('maia:thread', payload),
-  turnInFlight: () => turnBusy,
+  turnInFlight: () => turn.isBusy,
 });
 
 // ── auth IPC — the token never crosses the bridge ───────────────────────────

@@ -246,6 +246,48 @@ fails 3 of the 5 proofs; adding an undeclared source file under `src/` fails 1. 
 
 ---
 
+## 7A · Extraction carries proof obligations with semantics
+
+**Added 2026-08-29, from DSC-01.** Learned by a negative control, not by reasoning:
+
+> **When orchestration ownership moves across a boundary, tests must prove the caller-level ordering
+> invariants, not merely the correctness of the extracted component.**
+
+DSC-01 moved conversation continuity out of `main.js`. `thread-watch.js` was correct before the move
+and correct after it, and its pure-function proofs (d04a) passed throughout. But one of its rules —
+*the watch records an adoption only after that adoption succeeds* — is an obligation on the
+**caller**, and extraction moved the caller. A mutation that recorded the adoption first passed the
+entire suite, 153/153. Nothing was watching the seam the move created.
+
+That mutation is not an implementation detail. It is an **authority-ordering invariant**:
+
+```text
+canonical adoption succeeds
+        ↓
+local state records the adoption
+```
+
+Inverting it converts an *attempted* transition into an *apparent fact*, and the apparent fact
+suppresses the retry that continuity depends on — the next observation reads `unchanged` and the
+member is stranded on the old thread permanently. The local host would be asserting something the
+canonical realm never confirmed. That generalizes past Electron and past Desktop: it is the same
+constraint as §6's offline clause, in miniature. **A host may record what canonical MAIA confirmed.
+It may not record what it merely attempted.**
+
+Before any extraction, therefore, identify every sequence of the form:
+
+```text
+canonical action → local state mutation → broadcast → completion / release
+```
+
+and decide which orderings are **semantic** rather than incidental. Prove the semantic ones at the
+new caller. This is what keeps the portability programme from degenerating into *move functions
+until main.js is small*. The objective is stricter and more useful:
+
+> **Move authority to its proper owner, and move its proof with it.**
+
+---
+
 ## 8 · The likely evolution
 
 ```text
