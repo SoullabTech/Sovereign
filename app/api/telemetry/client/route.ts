@@ -35,6 +35,7 @@ const ALLOWED_EVENTS = new Set([
   // never does, recognition_ended — recognizer's VAD never triggered.
   'voice_audio_no_speech',
   // Stage 3 — Android Chrome voice fallback (MediaRecorder → local Whisper).
+  'voice_capture_milestone',
   'voice_fallback_recording_started',
   'voice_fallback_transcribe_sent',
   'voice_fallback_transcribe_result',

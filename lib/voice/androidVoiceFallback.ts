@@ -41,6 +41,63 @@ const DEFAULT_SILENCE_HOLDOFF_MS = 1500;
 const DEFAULT_MIN_RECORDING_MS = 800; // don't stop before the user can speak
 const SILENCE_RMS_THRESHOLD = 0.012; // empirical; mic noise floor sits ~0.005
 
+/**
+ * PLATFORM-D02A-01 — how long capture may claim nothing before it says so.
+ *
+ * ⛔ NOT A VAD VALUE AND NOT AN UTTERANCE BOUND. It measures only the distance
+ * between "the microphone handle resolved" and "audio is demonstrably being
+ * admitted from it". Nothing about speech, silence, or turn length is decided
+ * here, and the utterance bounds above are untouched.
+ *
+ * 2500 ms because an AudioContext resume and a first analyser poll are
+ * sub-second on every surface measured so far: generous enough that a slow
+ * device is not called a failure, short enough that a member is not left in
+ * front of a lie.
+ */
+const ADMISSION_DEADLINE_MS = 2500;
+
+/**
+ * ⭐ PLATFORM-D02A-01 — THE RATIFIED CAPTURE MILESTONES.
+ *
+ * `/maia` declared LISTENING the instant `getUserMedia` resolved — before the
+ * recorder existed, before the analyser existed, before one sample was
+ * admitted. The claim was therefore true through a suspended AudioContext, a
+ * muted or ended track, a route that 410s, and a recording that never stopped.
+ * One word for every failure, distinguishing none of them.
+ *
+ * These name the stages a capture actually passes through, so a walk can say
+ * where it stopped instead of showing one word for all of it.
+ *
+ *   recorder_created    MediaRecorder constructed on this stream
+ *   audio_admitted      ⭐ the graph is RUNNING and nothing says the track is
+ *                       dead — the first evidence audio is arriving. This, and
+ *                       nothing earlier, may ground "listening".
+ *   speech_detected     a poll crossed SILENCE_RMS_THRESHOLD
+ *   capture_stopped     with the reason it ended
+ *
+ * ⛔ Each fires AT MOST ONCE except `capture_stopped`. They are observations,
+ * never instructions: no branch in this module reads a milestone back.
+ */
+export type CaptureMilestone =
+  | 'recorder_created'
+  | 'audio_admitted'
+  | 'speech_detected'
+  | 'capture_stopped';
+
+/**
+ * What a recording produced, and how it ended.
+ *
+ * ⛔ `stopReason` used to be computed and then discarded (`void stopReason`),
+ * so a capture that never heard was indistinguishable from a short silence —
+ * the caller posted an unheard blob to Whisper and reported an empty
+ * transcript. The reason is carried now because it is the difference between
+ * "you said nothing" and "we never heard you".
+ */
+interface CaptureOutcome {
+  blob: Blob;
+  stopReason: 'silence' | 'max' | 'error' | 'aborted' | 'no_admission';
+}
+
 export interface FallbackResult {
   ok: boolean;
   transcript?: string;
@@ -48,6 +105,9 @@ export interface FallbackResult {
     | 'recording_unsupported'  // MediaRecorder not available / no supported mime
     | 'recording_error'         // MediaRecorder threw mid-recording
     | 'empty_blob'              // recording produced no bytes
+    | 'no_audio_admitted'       // PLATFORM-D02A-01: the apparatus never heard —
+                                // graph never RUNNING, or the track reported
+                                // dead throughout. NOT the member being quiet.
     | 'transcribe_http_error'   // /api/voice/transcribe-simple non-2xx
     | 'transcribe_disabled'     // 410 from the route (env gate off)
     | 'aborted'                 // the caller revoked this capture's authority
@@ -76,6 +136,19 @@ interface RunOptions {
    * not attention they consented to.
    */
   signal?: AbortSignal;
+  /**
+   * PLATFORM-D02A-01 — capture stage reports, for a surface that must not claim
+   * to be listening before audio is admitted.
+   *
+   * ⛔ OPTIONAL, AND OBSERVATIONS ONLY. A caller that passes nothing behaves
+   * exactly as before; nothing in this module branches on a milestone.
+   */
+  onMilestone?: (stage: CaptureMilestone, detail?: Record<string, unknown>) => void;
+  /**
+   * Override the admission deadline. Tests only — production takes the
+   * constant, so the bound cannot drift per call site.
+   */
+  admissionDeadlineMs?: number;
 }
 
 function pickMimeType(): string | null {
@@ -126,13 +199,15 @@ export async function recordAndTranscribe(
   logVoiceEvent('voice_fallback_recording_started', { mimeType, maxMs });
 
   // ── Record ────────────────────────────────────────────────────────────
-  let blob: Blob;
+  let outcome: CaptureOutcome;
   try {
-    blob = await recordWithSilenceDetection(stream, mimeType, {
+    outcome = await recordWithSilenceDetection(stream, mimeType, {
       maxMs,
       silenceHoldoffMs,
       minMs,
       signal,
+      ...(options.onMilestone ? { onMilestone: options.onMilestone } : {}),
+      admissionDeadlineMs: options.admissionDeadlineMs ?? ADMISSION_DEADLINE_MS,
     });
   } catch (err: unknown) {
     const name = err instanceof Error ? err.name : 'unknown';
@@ -143,6 +218,7 @@ export async function recordAndTranscribe(
     return { ok: false, reason: 'recording_error' };
   }
 
+  const { blob } = outcome;
   const durationMs = Date.now() - startedAt;
 
   // ⛔ THE GATE THIS UNIT EXISTS FOR. Recording is over; the network request has
@@ -151,6 +227,24 @@ export async function recordAndTranscribe(
   // branch so an abort is reported as an abort rather than as a recording
   // failure.
   if (aborted()) return abortResult(durationMs, blob.size);
+
+  // ⛔ PLATFORM-D02A-01 — NEVER HEARD, SAID PLAINLY.
+  //
+  // Audio was never demonstrably admitted for the whole deadline. Posting this
+  // to Whisper returns an empty transcript and the member is told they said
+  // nothing — blaming them for an apparatus that was not listening. Distinct
+  // from `empty_blob`, which is a real recording that happens to be quiet.
+  //
+  // ⛔ KEYED ON THE DEADLINE HAVING FIRED, not on a flag. Admission is observed
+  // on a 100 ms poll, so a capture that ends before its first tick has proved
+  // nothing either way; reading a bare flag would accuse a perfectly good short
+  // recording — and one the member ABORTED — of never being heard.
+  if (outcome.stopReason === 'no_admission') {
+    logVoiceEvent('voice_fallback_failed', {
+      reason: 'no_audio_admitted', durationMs, bytes: blob.size,
+    });
+    return { ok: false, reason: 'no_audio_admitted', durationMs, bytes: blob.size };
+  }
 
   if (blob.size === 0) {
     logVoiceEvent('voice_fallback_failed', { reason: 'empty_blob', durationMs });
@@ -267,9 +361,15 @@ export async function recordAndTranscribe(
 async function recordWithSilenceDetection(
   stream: MediaStream,
   mimeType: string,
-  opts: { maxMs: number; silenceHoldoffMs: number; minMs: number; signal?: AbortSignal },
-): Promise<Blob> {
-  return new Promise<Blob>((resolve, reject) => {
+  opts: {
+    maxMs: number; silenceHoldoffMs: number; minMs: number; signal?: AbortSignal;
+    /** PLATFORM-D02A-01 — capture stage reports. Observations only. */
+    onMilestone?: (stage: CaptureMilestone, detail?: Record<string, unknown>) => void;
+    /** PLATFORM-D02A-01 — how long admission may fail to occur before it is named. */
+    admissionDeadlineMs: number;
+  },
+): Promise<CaptureOutcome> {
+  return new Promise<CaptureOutcome>((resolve, reject) => {
     const chunks: Blob[] = [];
     let recorder: MediaRecorder;
     try {
@@ -279,10 +379,24 @@ async function recordWithSilenceDetection(
       return;
     }
 
-    let stopped = false;
-    let stopReason: 'silence' | 'max' | 'error' | 'aborted' = 'silence';
+    // ⛔ AT MOST ONCE, except `capture_stopped`. A stage that could report twice
+    // would let a surface re-enter a state it had already left.
+    const seen = new Set<CaptureMilestone>();
+    const milestone = (stage: CaptureMilestone, detail?: Record<string, unknown>) => {
+      if (stage !== 'capture_stopped') {
+        if (seen.has(stage)) return;
+        seen.add(stage);
+      }
+      logVoiceEvent('voice_capture_milestone', { stage, ...(detail || {}) });
+      try { opts.onMilestone?.(stage, detail); }
+      catch { /* an observer must never break the capture it is observing */ }
+    };
+    milestone('recorder_created', { mimeType });
 
-    const stop = (reason: 'silence' | 'max' | 'error' | 'aborted') => {
+    let stopped = false;
+    let stopReason: CaptureOutcome['stopReason'] = 'silence';
+
+    const stop = (reason: CaptureOutcome['stopReason']) => {
       if (stopped) return;
       stopped = true;
       stopReason = reason;
@@ -316,10 +430,8 @@ async function recordWithSilenceDetection(
       opts.signal?.removeEventListener('abort', onAbort);
       cleanup();
       const blob = new Blob(chunks, { type: mimeType });
-      // log only stopReason and counts — no content
-      // (transcribe_sent will fire next with bytes; no need for a duplicate event here)
-      void stopReason;
-      resolve(blob);
+      milestone('capture_stopped', { reason: stopReason, bytes: blob.size });
+      resolve({ blob, stopReason });
     };
 
     // ── Silence detection via Web Audio API analyser ───────────────────
@@ -342,6 +454,8 @@ async function recordWithSilenceDetection(
     const buf = new Float32Array(analyser.fftSize);
 
     let lastLoudAt = Date.now();
+    /** When audio was first demonstrably admitted. Null until it is. */
+    let admittedAt: number | null = null;
     const startedAt = Date.now();
     const checkSilence = () => {
       if (stopped) return;
@@ -350,9 +464,46 @@ async function recordWithSilenceDetection(
       for (let i = 0; i < buf.length; i++) sumSq += buf[i] * buf[i];
       const rms = Math.sqrt(sumSq / buf.length);
       const now = Date.now();
-      if (rms >= SILENCE_RMS_THRESHOLD) lastLoudAt = now;
+      // ⭐ PLATFORM-D02A-01 — ADMISSION, and it is what may ground "listening".
+      //
+      // The context RUNNING proves the graph is pulling samples from this
+      // stream. `getUserMedia` resolving proves nothing of the kind, which is
+      // why the surface could say LISTENING through a suspended context, a
+      // muted microphone and an ended track alike.
+      //
+      // ⛔ THE POSITIVE REQUIREMENT IS THE GRAPH; track health only
+      // DISQUALIFIES on explicit evidence of deadness. Demanding
+      // `readyState === 'live'` would refuse admission in any environment that
+      // simply does not populate the property — turning a missing field into a
+      // silent "MAIA cannot hear you", the same lie in the other direction.
+      const liveTrack = stream.getAudioTracks()[0];
+      const admitted =
+        audioCtx.state === 'running' &&
+        !!liveTrack &&
+        liveTrack.readyState !== 'ended' &&
+        liveTrack.muted !== true;
+      if (admitted) {
+        admittedAt = admittedAt ?? now;
+        milestone('audio_admitted', { afterMs: now - startedAt });
+      }
+
+      if (rms >= SILENCE_RMS_THRESHOLD) {
+        lastLoudAt = now;
+        milestone('speech_detected', { afterMs: now - startedAt });
+      }
       const elapsed = now - startedAt;
       const silenceFor = now - lastLoudAt;
+
+      // ⛔ NEVER ADMITTED — SAY SO, DO NOT WAIT IT OUT. Without this the capture
+      // runs to its utterance ceiling having never heard anything, and the
+      // member watches a word that was never true. Bounded by admission alone:
+      // once audio IS admitted this can no longer fire, so it can never cut an
+      // utterance short.
+      if (admittedAt === null && elapsed >= opts.admissionDeadlineMs) {
+        stop('no_admission');
+        return;
+      }
+
       if (elapsed >= opts.maxMs) {
         stop('max');
         return;
