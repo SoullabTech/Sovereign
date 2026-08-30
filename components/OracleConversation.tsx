@@ -2904,7 +2904,27 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       // lifecycle concern. See: continuous talk-mode parity goal.
       if (streamingVoiceMode) {
         console.log('🎤 [StreamingVoice] Hands-free mode - requesting mic restart');
-        setIsListening(true);
+        // ⛔ NO `setIsListening(true)` HERE. This is a REQUEST for a microphone,
+        // not evidence of one.
+        //
+        // THE DEFECT, device-witnessed 2026-08-30. This line ran 300ms before
+        // `attemptAutoRearm` decided, and nothing put it back when the answer
+        // was no. After a response that made no sound the authority correctly
+        // refused — the server telemetry shows no capture epoch ever began —
+        // and the member was still shown LISTENING, indefinitely, with a
+        // microphone that was closed. A system that claims attention it does
+        // not have is telling the same kind of untruth as one that listens
+        // without asking.
+        //
+        // ⭐ THE RULE. Callers may request a microphone. Only the capture epoch
+        // may claim one exists. `isListening` is established from
+        // `onRecordingStateChange` — `handleRecordingStateChange`, which calls
+        // itself "mic truth" — after acquisition actually succeeded.
+        //
+        // ⛔ And NOT from `attemptAutoRearm`'s return value either. That says
+        // permission was granted, which is a different fact from a capture
+        // being open: `startListening` can still fail on permissions, a device
+        // change, or a stale generation. Authorization is not acquisition.
         setIsActivating(false);
 
         setTimeout(() => {
