@@ -159,93 +159,76 @@ export default function AcousticCalibrationClient() {
   return (
     <div className="diag-acoustic">
       {/*
-        DIAG-ACOUSTIC-READABILITY-01 — diagnostic CSS only.
-
-        This page inherits the app's dark surface, which rendered near-black text
-        on a near-black background and made the instrument unreadable. The
-        readings are only as good as the operator's ability to see them, so the
-        surface is pinned to an explicit light scheme rather than left to inherit.
-
-        `color-scheme: light` is the load-bearing declaration: without it Chrome
-        in dark mode paints the UA form controls (select, button, textarea) dark
-        regardless of any color/background we set, which was half the problem.
-        The body rule is deliberate and scoped to this route's render — the page
-        is server-gated on NEXT_PUBLIC_MOBILE_FAST_LANE and never ships.
+        DIAG-ACOUSTIC-WHITE-TEXT-01 — diagnostic CSS only. The page is served
+        only under NEXT_PUBLIC_MOBILE_FAST_LANE=1 and never ships; no shared
+        theme token, recorder, calibration, microphone or measurement code is
+        touched by this styling.
       */}
       <style>{`
+        /* DIAG-ACOUSTIC-WHITE-TEXT-01 — one job: white text on the existing
+           dark background. The previous pass forced a white surface; that
+           changed the background, which is not what was asked for. The
+           background is now left exactly as the app paints it and every piece
+           of text on this diagnostic page is pinned white. */
         .diag-acoustic {
-          /* A FIXED, OPAQUE OVERLAY, not a styled child. The first attempt set
-             colours on this element and let the app's dark surface stay behind
-             it; anything the theme painted on an ancestor still showed through
-             and the page stayed unreadable. Covering the viewport outright is
-             the only version that cannot be undone by a parent rule. */
-          position: fixed;
-          inset: 0;
-          z-index: 2147483000;
-          overflow: auto;
-          color-scheme: light;
-          background: #ffffff !important;
-          color: #111111 !important;
+          color-scheme: dark;
+          min-height: 100vh;
           padding: 24px;
           font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
           font-size: 13px;
           line-height: 1.5;
+          color: #ffffff !important;
         }
+        .diag-acoustic *,
         .diag-acoustic h1,
         .diag-acoustic p,
-        .diag-acoustic td,
-        .diag-acoustic th,
-        .diag-acoustic summary,
-        .diag-acoustic strong,
         .diag-acoustic div,
         .diag-acoustic span,
-        .diag-acoustic option,
-        .diag-acoustic label { color: #111111 !important; }
-        .diag-acoustic .muted { color: #444444 !important; }
-        .diag-acoustic table {
-          border-collapse: collapse;
-          margin-top: 8px;
-          background: #ffffff;
+        .diag-acoustic strong,
+        .diag-acoustic label,
+        .diag-acoustic table,
+        .diag-acoustic thead,
+        .diag-acoustic tbody,
+        .diag-acoustic tr,
+        .diag-acoustic th,
+        .diag-acoustic td,
+        .diag-acoustic details,
+        .diag-acoustic summary {
+          color: #ffffff !important;
+          -webkit-text-fill-color: #ffffff;
         }
-        .diag-acoustic thead tr {
-          text-align: left;
-          background: #f0f0f0;
-          border-bottom: 2px solid #333333;
-        }
-        .diag-acoustic tbody tr { border-bottom: 1px solid #cccccc; }
+        .diag-acoustic table { border-collapse: collapse; margin-top: 8px; }
+        .diag-acoustic thead tr { text-align: left; border-bottom: 2px solid #ffffff; }
+        .diag-acoustic tbody tr { border-bottom: 1px solid #666666; }
         .diag-acoustic select,
         .diag-acoustic option,
         .diag-acoustic button,
         .diag-acoustic textarea {
-          color: #111111 !important;
-          background: #ffffff !important;
+          color: #ffffff !important;
+          -webkit-text-fill-color: #ffffff;
+          background: #222222 !important;
           background-image: none !important;
-          border: 1px solid #666666 !important;
+          border: 1px solid #999999 !important;
           font-family: inherit;
-          -webkit-text-fill-color: #111111;
           opacity: 1;
         }
         .diag-acoustic button { padding: 6px 14px; cursor: pointer; }
-        .diag-acoustic button:disabled {
-          color: #555555 !important;
-          -webkit-text-fill-color: #555555;
-          background: #eeeeee !important;
-          cursor: default;
-        }
-        .diag-acoustic .warn { color: #b00000 !important; }
-        .diag-acoustic .flag { color: #a04000 !important; }
+        .diag-acoustic button:disabled { background: #111111 !important; cursor: default; }
+        /* Warning + flag text stays legible against dark rather than near-black red. */
+        .diag-acoustic .warn,
+        .diag-acoustic .warn * { color: #ff8080 !important; -webkit-text-fill-color: #ff8080; }
+        .diag-acoustic .flag { color: #ffb060 !important; -webkit-text-fill-color: #ffb060; }
         .diag-acoustic .mic {
           margin: 12px 0 4px;
           padding: 10px 12px;
-          border: 1px solid #666666;
-          background: #f6f6f6 !important;
+          border: 1px solid #999999;
           max-width: 720px;
         }
-        .diag-acoustic .mic .bad { color: #b00000 !important; font-weight: 700; }
+        .diag-acoustic .mic .bad { color: #ff8080 !important; -webkit-text-fill-color: #ff8080; font-weight: 700; }
       `}</style>
 
       <h1 style={{ fontSize: 16, marginBottom: 4 }}>Acoustic calibration harness</h1>
-      <p className="muted" style={{ maxWidth: 720 }}>
+      <p style={{ maxWidth: 720 }}>
         Local diagnostic. Records through the production recorder, measures, and drops the audio.
         Nothing is uploaded, nothing is transcribed, nothing is persisted.
         <strong> crossingCount counts scheduled analyser observations that crossed threshold — it is not milliseconds of speech.</strong>
@@ -313,7 +296,7 @@ export default function AcousticCalibrationClient() {
         </tbody>
       </table>
 
-      <p className="muted" style={{ marginTop: 16 }}>
+      <p style={{ marginTop: 16 }}>
         Trials with any apparatus fault are excluded from the statistics above and counted under
         “trust fails”. Do not rehearse the utterances into uniformity — the minima matter most,
         and poll phase alone moves the count by ±1.
