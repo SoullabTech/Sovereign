@@ -2643,9 +2643,34 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   // Desktop sovereign path re-armed 0.7s after a response that made no sound,
   // transcribed silence into "You", and displaced the member's real exchange.
   const mayAutoRearm = useCallback((): boolean => {
-    if (!lastSendWasVoiceRef.current) return false;   // typed turn — not voice re-consent
-    if (!responseSpokeRef.current) return false;      // MAIA never spoke — no "your turn" moment
-    return true;
+    // A typed turn is not voice consent. Nothing about typing asks for a
+    // microphone, and opening one would be the system helping itself.
+    if (!lastSendWasVoiceRef.current) return false;
+
+    // ⭐ HANDS-FREE IS THE CONSENT. Entering hands-free is an explicit member
+    // gesture that says: keep this conversation open. It stands until they end
+    // it — switching to Text, leaving hands-free, muting, navigating away.
+    // Push-to-talk means the opposite by construction: one tap, one turn, and
+    // the next turn needs the next tap.
+    return voiceMicRef.current?.isHandsFree === true;
+
+    // ⛔ WHY `responseSpokeRef` IS NO LONGER THE GATE — the overcorrection this
+    // repair undoes. GHOST-REARM-01 required MAIA to have produced audible TTS
+    // before the microphone could reopen. It stopped the ghost turns, and it
+    // was the wrong rule: with TTS refused by the sovereignty policy, MAIA
+    // returns text and no audio, so `responseSpokeRef` stayed false forever and
+    // every hands-free conversation was deliberately ended after ONE exchange.
+    // A voice companion that works for exactly one turn is not one.
+    //
+    // The error was conflating two unrelated facts. Whether MAIA's SPEAKER
+    // worked is not evidence about whether the MEMBER still wants to talk. Their
+    // consent came from their own gesture and is not revoked by our TTS failing.
+    //
+    // The ghost turns are still prevented — at the boundary where the question
+    // is actually answerable. `androidVoiceFallback` now refuses to submit a
+    // capture whose analyser never heard the member, so silence cannot become
+    // "You". Consent is decided here, where the member's intent lives; whether
+    // anyone actually spoke is decided at the audio, where the evidence lives.
   }, []);
 
   const attemptAutoRearm = useCallback((reason: string): boolean => {

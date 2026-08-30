@@ -52,6 +52,7 @@ export interface FallbackResult {
     | 'transcribe_disabled'     // 410 from the route (env gate off)
     | 'aborted'                 // the caller revoked this capture's authority
     | 'empty_transcript'        // Whisper returned blank text
+    | 'no_speech_detected'      // capture ended having never heard the member
     | 'unknown';
   durationMs?: number;
   bytes?: number;
@@ -61,6 +62,22 @@ interface RunOptions {
   maxMs?: number;
   silenceHoldoffMs?: number;
   minMs?: number;
+  /**
+   * DESKTOP-LISTENING-PRESENCE-01 — live loudness from the analyser this unit
+   * ALREADY runs for silence detection. No second AudioContext, no second
+   * stream, no network.
+   *
+   * ⛔ WHY IT EXISTS. Sovereign STT is batch: the member sees nothing until
+   * they stop talking, and cannot tell being heard from being broken. They
+   * said so mid-utterance, on the record: "I'm not very confident this is
+   * working." This is evidence of hearing, not transcript text — the true
+   * live transcript is a separate streaming-STT unit and must not be faked
+   * by polling a batch endpoint.
+   *
+   * `level` is normalised 0..1 for display; `speaking` is whether this sample
+   * crossed the speech threshold.
+   */
+  onLevel?: (level: number, speaking: boolean) => void;
   /**
    * DESKTOP-SOVEREIGN-STT-LIFECYCLE-01 — revoke this capture's authority.
    *
@@ -127,13 +144,17 @@ export async function recordAndTranscribe(
 
   // ── Record ────────────────────────────────────────────────────────────
   let blob: Blob;
+  let heardSpeech = false;
   try {
-    blob = await recordWithSilenceDetection(stream, mimeType, {
+    const captured = await recordWithSilenceDetection(stream, mimeType, {
       maxMs,
       silenceHoldoffMs,
       minMs,
       signal,
+      ...(options.onLevel ? { onLevel: options.onLevel } : {}),
     });
+    blob = captured.blob;
+    heardSpeech = captured.heardSpeech;
   } catch (err: unknown) {
     const name = err instanceof Error ? err.name : 'unknown';
     logVoiceEvent('voice_fallback_failed', {
@@ -155,6 +176,34 @@ export async function recordAndTranscribe(
   if (blob.size === 0) {
     logVoiceEvent('voice_fallback_failed', { reason: 'empty_blob', durationMs });
     return { ok: false, reason: 'empty_blob', durationMs };
+  }
+
+  // ⭐ THE ANTI-GHOST BOUNDARY. A capture whose analyser never once crossed the
+  // speech threshold heard no member. Room tone is not a turn, so it is not
+  // submitted — no request, no transcript, no member bubble, no conversation
+  // mutation.
+  //
+  // ⛔ THIS IS WHERE THE GUARD BELONGS. The device witness of 2026-08-30 saw a
+  // mic that opened uninvited record 1.5s of silence, which Whisper rendered as
+  // "You"; that ghost turn was answered and DISPLACED the member's real
+  // exchange. The first repair prevented it upstream, by refusing to reopen the
+  // microphone after a response that made no sound — but that conflated MAIA's
+  // speaker working with the member's consent still existing, and so ended
+  // every hands-free conversation after one turn. Consent belongs upstream;
+  // "was anyone actually speaking" belongs HERE, where the audio is.
+  //
+  // ⛔ AND IT IS NOT THE CAPTURE FLOOR. That rule says waiting before the
+  // member speaks is not silence after speech, so the recorder keeps listening.
+  // This one says: if the whole capture went by and nobody ever spoke, do not
+  // invent a turn out of it. Together they let a member take as long as they
+  // like to begin, without the silence becoming words.
+  if (!heardSpeech) {
+    logVoiceEvent('voice_fallback_failed', {
+      reason: 'no_speech_detected',
+      durationMs,
+      bytes: blob.size,
+    });
+    return { ok: false, reason: 'no_speech_detected', durationMs, bytes: blob.size };
   }
 
   // ── Transcribe ───────────────────────────────────────────────────────
@@ -261,9 +310,12 @@ export async function recordAndTranscribe(
 async function recordWithSilenceDetection(
   stream: MediaStream,
   mimeType: string,
-  opts: { maxMs: number; silenceHoldoffMs: number; minMs: number; signal?: AbortSignal },
-): Promise<Blob> {
-  return new Promise<Blob>((resolve, reject) => {
+  opts: {
+    maxMs: number; silenceHoldoffMs: number; minMs: number; signal?: AbortSignal;
+    onLevel?: (level: number, speaking: boolean) => void;
+  },
+): Promise<{ blob: Blob; heardSpeech: boolean }> {
+  return new Promise<{ blob: Blob; heardSpeech: boolean }>((resolve, reject) => {
     const chunks: Blob[] = [];
     let recorder: MediaRecorder;
     try {
@@ -313,7 +365,10 @@ async function recordWithSilenceDetection(
       // log only stopReason and counts — no content
       // (transcribe_sent will fire next with bytes; no need for a duplicate event here)
       void stopReason;
-      resolve(blob);
+      // `lastLoudAt` is null only if no sample ever crossed the speech
+      // threshold — the analyser heard the room, never the member. Reported so
+      // the caller can decline to turn silence into a turn.
+      resolve({ blob, heardSpeech: lastLoudAt !== null });
     };
 
     // ── Silence detection via Web Audio API analyser ───────────────────
@@ -358,7 +413,12 @@ async function recordWithSilenceDetection(
       for (let i = 0; i < buf.length; i++) sumSq += buf[i] * buf[i];
       const rms = Math.sqrt(sumSq / buf.length);
       const now = Date.now();
-      if (rms >= SILENCE_RMS_THRESHOLD) lastLoudAt = now;
+      const speaking = rms >= SILENCE_RMS_THRESHOLD;
+      if (speaking) lastLoudAt = now;
+      // Presence, from the analyser already running for silence detection.
+      // Scaled so ordinary speech fills the indicator without clipping every
+      // sample to 1; the threshold itself sits well inside the range.
+      opts.onLevel?.(Math.min(1, rms / 0.15), speaking);
       const elapsed = now - startedAt;
       if (elapsed >= opts.maxMs) {
         stop('max');
@@ -373,6 +433,12 @@ async function recordWithSilenceDetection(
         return;
       }
     };
+    // ⭐ SAMPLE ONCE IMMEDIATELY. The interval below ticks every 100ms, so a
+    // capture shorter than one tick would reach the anti-ghost gate having
+    // never sampled the analyser and be judged "nobody spoke" — discarding a
+    // real, if brief, utterance. The first reading costs nothing and makes the
+    // speech evidence start when the capture does.
+    checkSilence();
     const silenceTimer = setInterval(checkSilence, 100);
     const hardTimer = setTimeout(() => stop('max'), opts.maxMs + 200);
 

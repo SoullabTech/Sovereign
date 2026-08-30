@@ -1,10 +1,24 @@
 /**
- * DESKTOP-GHOST-REARM-01 — a silent response is not permission to listen.
+ * DESKTOP-GHOST-REARM-01 — automatic listening needs the member's consent.
  *
  * ⛔ THE DEVICE DEFECT, 2026-08-30. MAIA generated text; every TTS attempt was
  * refused by the sovereignty policy, so no audio played. The response lifecycle
  * completed anyway, the microphone re-armed by itself, heard room noise, and
- * Whisper dispatched a 3-character transcript. Twice.
+ * Whisper dispatched a 3-character transcript. Twice. The ghost turn was then
+ * answered and DISPLACED the member's real exchange.
+ *
+ * ⭐ SUPERSEDED IN PART by DESKTOP-HANDS-FREE-CONSENT-01. The original rule was
+ * "MAIA must have made an audible sound before the microphone may reopen." It
+ * stopped the ghosts and it was the wrong rule: with TTS refused by policy,
+ * MAIA always returns text and no audio, so hands-free conversation ended after
+ * exactly one exchange. Whether OUR SPEAKER worked is not evidence about
+ * whether the MEMBER still wants to talk.
+ *
+ * The two questions are now answered where each is answerable. CONSENT lives
+ * here: a turn came from voice, and the member is in hands-free, which is
+ * standing consent until they end it. WAS ANYONE ACTUALLY SPEAKING lives at the
+ * audio: `androidVoiceFallback` refuses to submit a capture whose analyser never
+ * crossed the speech threshold, so silence cannot become "You".
  *
  * ⭐ WHAT THIS FILE TESTS, AND WHY IT IS SOURCE-SHAPED. The authority itself
  * lives inside a 11k-line React component whose render requires the whole voice
@@ -43,14 +57,18 @@ describe('1 — one authority, not seven predicates', () => {
   });
 
   it('the authority reads BOTH halves of the consent boundary', () => {
-    // GHOST-REARM-02 moved the predicate out of `attemptAutoRearm` into
-    // `mayAutoRearm`, so ContinuousConversation.requestRestart could ask the
-    // SAME rule instead of copying it. The rule is unchanged; only its address
-    // moved. This assertion follows it rather than relaxing.
+    // ⭐ THE HALVES CHANGED BY RULING (DESKTOP-HANDS-FREE-CONSENT-01), not by a
+    // test being loosened. The second half WAS `responseSpokeRef` — MAIA must
+    // have made a sound — which ended every hands-free conversation after one
+    // turn once TTS was refused by the sovereignty policy. Whether our speaker
+    // worked is not evidence about whether the member still wants to talk.
+    //
+    // The halves are now: this turn came from voice, AND the member is in
+    // hands-free, which is itself standing consent until they end it.
     const fn = ORACLE.slice(ORACLE.indexOf('const mayAutoRearm'));
     const body = fn.slice(0, fn.indexOf('}, []);'));
-    expect(body).toContain('lastSendWasVoiceRef.current');  // input modality
-    expect(body).toContain('responseSpokeRef.current');     // MAIA actually spoke
+    expect(body).toContain('lastSendWasVoiceRef.current');   // input modality
+    expect(body).toContain('isHandsFree === true');          // standing consent
   });
 
   it('the explicit Speak tap is NOT routed through the auto authority', () => {
@@ -126,25 +144,32 @@ describe('3 — evidence survives the surface guard', () => {
   });
 });
 
-// ── 4 · the founder's acceptance table, executable ─────────────────────────
+// ── 4 · the acceptance table, executable ───────────────────────────────────
 describe('4 — the acceptance table', () => {
   /** The authority's decision, reproduced exactly. */
-  const mayRearm = (lastSendWasVoice: boolean, responseSpoke: boolean) =>
-    lastSendWasVoice && responseSpoke;
+  const mayRearm = (lastSendWasVoice: boolean, handsFree: boolean) =>
+    lastSendWasVoice && handsFree;
 
   const CASES: Array<[string, boolean, boolean, boolean]> = [
-    // description,                                  voiceInput, spoke, expected
-    ['voice → AUDIO_PLAYING_CONFIRMED → normal end',      true,  true,  true],
-    ['voice → AUDIO_BLOCKED',                             true,  false, false],
-    ['voice → AUDIO_FAILED',                              true,  false, false],
-    ['voice → no playback signal / skipped TTS',          true,  false, false],
-    ['audio begins, later fails (MAIA did speak)',        true,  true,  true],
-    ['typed input → audio plays',                         false, true,  false],
-    ['no-audio response → watchdog fires',                true,  false, false],
+    // description,                                        voice, handsFree, expected
+    ['hands-free voice turn, MAIA spoke',                   true,  true,  true],
+    ['hands-free voice turn, MAIA returned text only',      true,  true,  true],
+    ['hands-free, TTS refused by sovereignty policy',       true,  true,  true],
+    ['hands-free, third consecutive turn',                  true,  true,  true],
+    ['push-to-talk voice turn, MAIA spoke',                 true,  false, false],
+    ['push-to-talk voice turn, silent response',            true,  false, false],
+    ['typed turn, MAIA spoke',                              false, true,  false],
+    ['typed turn in hands-free mode',                       false, true,  false],
   ];
 
-  it.each(CASES)('%s → auto-rearm %s', (_d, voice, spoke, expected) => {
-    expect(mayRearm(voice, spoke)).toBe(expected);
+  it.each(CASES)('%s → auto-rearm %s', (_d, voice, handsFree, expected) => {
+    expect(mayRearm(voice, handsFree)).toBe(expected);
+  });
+
+  it('a silent response no longer ends a hands-free conversation', () => {
+    // ⛔ THE OVERCORRECTION THIS PINS AGAINST. Under the old rule this case was
+    // `false`, which is why voice worked for exactly one exchange.
+    expect(mayRearm(true, true)).toBe(true);
   });
 
   it('the reproduced rule matches the source rule', () => {
@@ -152,6 +177,8 @@ describe('4 — the acceptance table', () => {
     const fn = ORACLE.slice(ORACLE.indexOf('const mayAutoRearm'));
     const body = fn.slice(0, fn.indexOf('}, []);'));
     expect(body).toMatch(/if \(!lastSendWasVoiceRef\.current\) return false;/);
-    expect(body).toMatch(/if \(!responseSpokeRef\.current\) return false;/);
+    expect(body).toMatch(/isHandsFree === true/);
+    // The retired predicate must not silently return as a gate.
+    expect(body).not.toMatch(/if \(!responseSpokeRef\.current\) return false;/);
   });
 });

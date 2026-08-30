@@ -3502,6 +3502,15 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
               maxMs: DESKTOP_MAX_UTTERANCE_MS,
               silenceHoldoffMs: DESKTOP_SILENCE_HOLDOFF_MS,
             } : {}),
+            // DESKTOP-LISTENING-PRESENCE-01. `initializeAudioMonitoring` runs
+            // only on the Web Speech path — the sovereign branch returns before
+            // it — so nothing fed the parent's visualiser and the member had no
+            // evidence of being heard for the whole utterance. This forwards
+            // the analyser the recorder is ALREADY running for silence
+            // detection. Presence, not transcript: the live sentence is a
+            // separate streaming-STT unit and is not faked from a batch
+            // endpoint.
+            onLevel: (level: number, speaking: boolean) => onAudioLevelChange?.(level, speaking),
           });
 
           // ⛔ THE STALE-RESULT GATE. Abort stops the work; it cannot un-resolve
