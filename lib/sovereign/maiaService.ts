@@ -86,6 +86,7 @@ import {
 import { persistDecision, type Candidate } from '../services/decisionPersistenceService';
 import { detectAndPersistExpansion } from '../services/expansionEventService';
 import { logCorpusCallosumTrace } from '../services/corpusCallosumService';
+import { TurnGeneration } from '@/lib/provenance/turnGeneration';
 import { TurnPosture } from '../sanctuary/turnPosture';
 import { recordConsentState } from '../provenance/consentState';
 import { VoiceDistinctionScorer } from '../spiralogic/VoiceDistinctionScorer';
@@ -3332,7 +3333,7 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
         console.log('🔒 [TurnsStore] Skipping persist - sensitive data detected');
       } else {
         try {
-          await TurnsStore.addExchange(turnPosture, effectiveUserId, sessionId, input, text, exchangeId);
+          await TurnsStore.addExchange(turnPosture, TurnGeneration.resolve(meta), effectiveUserId, sessionId, input, text, exchangeId);
           console.log(`✅ [TurnsStore] Persisted exchange for ${memberRef(effectiveUserId)}`);
         } catch (turnsErr) {
           console.error('❌ [TurnsStore] persist failed', turnsErr);

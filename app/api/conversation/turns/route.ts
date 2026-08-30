@@ -12,6 +12,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
 import { TurnPosture } from '@/lib/sanctuary/turnPosture';
+import { TurnGeneration } from '@/lib/provenance/turnGeneration';
 import { TurnsStore } from '@/lib/memory/stores/TurnsStore';
 import { recordConsentState } from '@/lib/provenance/consentState';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
@@ -167,7 +168,7 @@ export async function POST(request: NextRequest) {
         ? clientExchangeId
         : globalThis.crypto.randomUUID();
     recordConsentState({ requestId: exchangeId, posture, memberId: userId, sessionId });
-    await TurnsStore.addExchange(posture, userId, sessionId || undefined, userMessage, assistantMessage, exchangeId);
+    await TurnsStore.addExchange(posture, TurnGeneration.resolve(body), userId, sessionId || undefined, userMessage, assistantMessage, exchangeId);
 
     console.log(`[CONVERSATION] Stored turn pair for user ${userId.slice(0, 8)}...`);
 

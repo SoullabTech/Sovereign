@@ -2,6 +2,7 @@
 import { query } from '@/lib/db';
 import { randomUUID } from 'crypto';
 import { TurnsStore } from '@/lib/memory/stores/TurnsStore';
+import { TurnGeneration } from '@/lib/provenance/turnGeneration';
 import { TurnPosture, contentWritable } from '@/lib/sanctuary/turnPosture';
 
 export type ConversationExchange = {
@@ -64,6 +65,9 @@ export async function addConversationExchange(
   // conversation_turns. The posture governing this turn is the posture in
   // force when the turn occurred; the session's stored mode is not consulted.
   const posture = TurnPosture.resolve(meta);
+  // The same meta that carries the posture signal carries the member's action
+  // class. Absent (legacy client) resolves to `unknown-generation`.
+  const generation = TurnGeneration.resolve(meta);
   if (!contentWritable(posture, 'sessionManager.addConversationExchange', sessionId)) {
     return;
   }
@@ -97,7 +101,7 @@ export async function addConversationExchange(
       // a partial index cannot fire on NULL — which is how one member action
       // became four rows on 2026-07-23.
       const exchangeId = typeof meta?.exchangeId === 'string' ? meta.exchangeId : undefined;
-      await TurnsStore.addExchange(posture, userId, sessionId, userMessage, maiaResponse, exchangeId);
+      await TurnsStore.addExchange(posture, generation, userId, sessionId, userMessage, maiaResponse, exchangeId);
     } catch (err) {
       // Non-blocking: don't break the conversation if turns storage fails
       console.warn('[SessionManager] Failed to persist turns:', err);

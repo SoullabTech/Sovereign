@@ -92,6 +92,7 @@ import { getMaiaResponse } from '@/lib/sovereign/maiaService';
 // become durable — not the browser, later, once a pair exists.
 import { TurnsStore } from '@/lib/memory/stores/TurnsStore';
 import { TurnPosture } from '@/lib/sanctuary/turnPosture';
+import { TurnGeneration } from '@/lib/provenance/turnGeneration';
 import { scrubMemoryAmnesia } from '@/lib/maia/prompts/memoryCanonGuard';
 import { ensureSession, initializeSessionTable } from '@/lib/sovereign/sessionManager';
 import { ensureSchemaReady } from '@/lib/db/schemaGate';
@@ -385,6 +386,11 @@ export async function POST(req: NextRequest) {
       !userId.startsWith('anon:');
 
     const turnPosture = TurnPosture.resolve({ sanctuary: isSanctuary });
+    // ⛔ Generation is resolved from the member's declared action class, never
+    // from role, content, includeAudio or voiceProfile — the last two describe
+    // whether MAIA should SPEAK, not whether the member did. A client that
+    // declares nothing yields `unknown-generation`.
+    const turnGeneration = TurnGeneration.resolve(meta);
     // Reuse the client's exchange id when supplied so the later client-side pair
     // write collapses onto this same exchange instead of duplicating it. Falling
     // back to requestId keeps older clients working exactly as before.
@@ -398,7 +404,7 @@ export async function POST(req: NextRequest) {
 
     if (isRecognizedUser && !isSanctuary) {
       try {
-        memberTurnDurable = await TurnsStore.addExchangeTurn(turnPosture, {
+        memberTurnDurable = await TurnsStore.addExchangeTurn(turnPosture, turnGeneration, {
           userId: userId!,
           sessionId: acceptedSessionId,
           role: 'user',
@@ -1366,7 +1372,9 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
       try {
         await withTimeoutLabeled(
           'durableMaiaTurn',
-          TurnsStore.addExchangeTurn(turnPosture, {
+          TurnsStore.addExchangeTurn(turnPosture, null, {
+            // Assistant half: generation is `synthesis` by role, so no member
+            // action class applies and none is asserted.
             // Same sessionId as the member half, so both rows of the exchange
             // restore together under the session the client will ask for.
             userId: userId!,

@@ -10,6 +10,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { TurnsStore } from '@/lib/memory/stores/TurnsStore';
 import { TurnPosture } from '@/lib/sanctuary/turnPosture';
+import { TurnGeneration } from '@/lib/provenance/turnGeneration';
 import { recordConsentState } from '@/lib/provenance/consentState';
 import { ensureSession, addConversationExchange } from '@/lib/sovereign/sessionManager';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
@@ -104,6 +105,13 @@ export async function POST(request: NextRequest) {
       sessionId: effectiveSessionId,
     });
 
+    // ⛔ SERVER-KNOWN ACTION CLASS. This route's contract is that its member
+    // content is a resolved speech transcript, so the classification comes from
+    // the route itself — not from a caller declaration, and NOT from
+    // maia_sessions.conversation_history meta.type, which is the shadow
+    // compatibility lane already marked for retirement.
+    const generation = TurnGeneration.fromServerKnownAction('speech-transcription');
+
     // Ensure session exists
     await ensureSession(effectiveSessionId);
 
@@ -111,6 +119,7 @@ export async function POST(request: NextRequest) {
     if (userMessage && assistantMessage) {
       await TurnsStore.addExchange(
         turnPosture,
+        generation,
         effectiveUserId,
         effectiveSessionId,
         userMessage,
@@ -130,7 +139,7 @@ export async function POST(request: NextRequest) {
     }
     // Save individual turns if only one is provided
     else if (userMessage) {
-      await TurnsStore.addTurn(turnPosture, {
+      await TurnsStore.addTurn(turnPosture, generation, {
         userId: effectiveUserId,
         sessionId: effectiveSessionId,
         role: 'user',
@@ -139,7 +148,7 @@ export async function POST(request: NextRequest) {
       console.log(`[VoicePersist] Saved user voice turn for ${effectiveUserId}`);
     }
     else if (assistantMessage) {
-      await TurnsStore.addTurn(turnPosture, {
+      await TurnsStore.addTurn(turnPosture, null, {
         userId: effectiveUserId,
         sessionId: effectiveSessionId,
         role: 'assistant',

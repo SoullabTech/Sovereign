@@ -172,6 +172,7 @@ import { toast } from 'react-hot-toast';
 import { voiceLock } from '@/lib/services/VoiceLock';
 import { trackEvent } from '@/lib/analytics/track';
 import { saveConversationMemory, getOracleAgentId } from '@/lib/services/memoryService';
+import type { MemberActionClass } from '@/lib/provenance/turnGeneration';
 import { getOrCreateExplorerId } from '@/lib/identity/explorerId';
 import { useRouter } from 'next/navigation';
 import type { MaiaPlaceContext } from '@/lib/maia/presence/place';
@@ -4120,7 +4121,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
 
       // 3) Auto-send after a tiny tick so the UI settles
       setTimeout(() => {
-        handleTextMessage(text);
+        handleTextMessage(text, undefined, undefined, 'direct-composition');
         setComposerDraft(''); // Clear after send
       }, 150);
     };
@@ -4275,7 +4276,7 @@ Not sure what I'm supposed to notice here.`;
 
       // 3) Auto-send after UI settles
       setTimeout(() => {
-        handleTextMessage(text);
+        handleTextMessage(text, undefined, undefined, 'direct-composition');
         setComposerDraft('');
       }, 150);
     };
@@ -4306,7 +4307,7 @@ I'm not sure what I'm feeling yet.`;
 
       // 3) Auto-send after UI settles
       setTimeout(() => {
-        handleTextMessage(text);
+        handleTextMessage(text, undefined, undefined, 'direct-composition');
         setComposerDraft('');
       }, 150);
     };
@@ -4867,7 +4868,26 @@ I'm not sure what I'm feeling yet.`;
   }, [messages, userName]);
 
   // Handle text messages from chat interface - MUST be defined before handleVoiceTranscript
-  const handleTextMessage = useCallback(async (text: string, attachments?: File[], retryOf?: string) => {
+  /**
+   * ⛔ MAIA-TURN-GENERATION-PROVENANCE-IMPLEMENTATION-01. `actionClass` is where
+   * the member's action survives the boundary that used to erase it: voice
+   * reached here as a bare string and became indistinguishable from typing one
+   * call after the microphone. It is the CLIENT'S EXPRESSION of what the member
+   * did — never a provenance value. The server resolves it and mints.
+   *
+   * Deliberately optional and deliberately UNDEFAULTED. Callers that submit
+   * system-composed text (seed prompts, "Please analyze these files", the
+   * supervision prompt) and the retry path, whose original class is not
+   * recoverable here, pass nothing — and the server records `unknown-generation`,
+   * which is true of them. Defaulting to direct composition would launder
+   * system-authored strings into member-authored provenance.
+   */
+  const handleTextMessage = useCallback(async (
+    text: string,
+    attachments?: File[],
+    retryOf?: string,
+    actionClass?: MemberActionClass,
+  ) => {
     console.log('📝 Text message received:', { text, isProcessing, isAudioPlaying, isResponding });
 
     // 🎯 Mark as activated when user sends a message - hides welcome screen
@@ -5376,6 +5396,9 @@ I'm not sure what I'm feeling yet.`;
           // memoryMode: 'longterm' enables pattern formation + developmental memory
           // Enable via: localStorage.setItem('maiaMemoryMode', 'longterm')
           meta: {
+            // The member's action class, expressed not asserted: the server's
+            // TurnGeneration.resolve maps it to provenance. Absent ⇒ unknown.
+            ...(actionClass ? { memberActionClass: actionClass } : {}),
             explorerId: effectiveExplorerId, // ✅ Stable identity across sessions
             sessionId,  // Current session (changes per session)
             memoryMode: (typeof window !== 'undefined' && localStorage.getItem('maiaMemoryMode') === 'longterm') ? 'longterm' : 'continuity',
@@ -7265,7 +7288,13 @@ I'm not sure what I'm feeling yet.`;
 
       // ✅ STANDARD FLOW: Browser STT → /api/between/chat → Browser TTS
       console.log('🌀 Routing voice through THE BETWEEN...');
-      await handleTextMessage(cleanedText);
+      // ⛔ THE BOUNDARY THAT USED TO ERASE MODALITY. Every convergent speech
+      // transport — Desktop sovereign Whisper, Firefox/Zen, Android-Chrome
+      // recovery, legacy Web Speech, PWA, iOS/Capacitor — arrives here, and all
+      // of them produce the same generation class, because the same kind of
+      // process produced the characters. Transport names are deliberately not
+      // encoded.
+      await handleTextMessage(cleanedText, undefined, undefined, 'speech-transcription');
 
       const duration = Date.now() - voiceStartTime;
       trackEvent.voiceResult(userId || 'anonymous', transcript, duration);
@@ -7916,7 +7945,7 @@ I'm not sure what I'm feeling yet.`;
                 greeting={welcomeGreeting.greeting}
                 subtext={welcomeGreeting.subtext}
                 userInitial={(userName || 'K').trim().charAt(0).toUpperCase()}
-                onSend={(text) => handleTextMessage(text)}
+                onSend={(text) => handleTextMessage(text, undefined, undefined, 'direct-composition')}
                 onActivate={() => {
                   // #736: hasActivated alone cannot exit — the gate above is a
                   // disjunction and ignores it while shouldRenderArrival is
@@ -10025,7 +10054,7 @@ I'm not sure what I'm feeling yet.`;
                     isProcessing={isProcessing}
                     enableVoiceInChat={enableVoiceInChat}
                     onSubmit={(msg, files) => {
-                      handleTextMessage(msg, files);
+                      handleTextMessage(msg, files, undefined, 'direct-composition');
                       setDraftMessage(''); // Clear draft after sending
                     }}
                     onVoiceResponseToggle={() => {
@@ -10177,7 +10206,7 @@ I'm not sure what I'm feeling yet.`;
             setIsListening(false);
           }}
           onInterrupt={handleVoiceInterrupt}
-          onTextSubmit={(text) => handleTextMessage(text)}
+          onTextSubmit={(text) => handleTextMessage(text, undefined, undefined, 'direct-composition')}
         />
         </div>
       )}

@@ -1,5 +1,6 @@
 // @ts-nocheck
 import { PrismaClient } from '@prisma/client';
+import { TurnGeneration } from '@/lib/provenance/turnGeneration';
 import { TurnPosture } from '@/lib/sanctuary/turnPosture';
 import { generateLocalEmbedding } from './embeddings';
 import { RelationshipContextStore, type RelationshipContext } from './stores/RelationshipContextStore';
@@ -604,6 +605,9 @@ export class MemoryOrchestrator {
    */
   async updateSessionMemory(
     posture: TurnPosture,
+    // Mirrors `posture`: resolved at the serving boundary and passed by
+    // reference, never derived here. A member turn cannot be minted without it.
+    generation: TurnGeneration,
     userId: string,
     userMessage: string,
     assistantResponse: string,
@@ -617,7 +621,7 @@ export class MemoryOrchestrator {
 
     try {
       // Persist to database for cross-session recall
-      await TurnsStore.addExchange(posture, userId, sessionId, userMessage, assistantResponse);
+      await TurnsStore.addExchange(posture, generation, userId, sessionId, userMessage, assistantResponse);
       console.log(`[MEMORY] Stored exchange for user ${memberRef(userId)}`);
     } catch (error) {
       console.error('Session memory update error:', error);

@@ -8,6 +8,7 @@
 import { query } from '../../db/postgres';
 import { TurnPosture, contentWritable } from '../../sanctuary/turnPosture';
 import { Provenance } from '../../provenance/provenance';
+import { TurnGeneration } from '../../provenance/turnGeneration';
 
 /**
  * S5: mint turn provenance server-side, at the store, from the boundary-
@@ -18,14 +19,37 @@ import { Provenance } from '../../provenance/provenance';
 function mintTurnProvenance(
   posture: TurnPosture,
   role: 'user' | 'assistant',
+  generation: TurnGeneration | null,
   turnId: string,
   sessionId: string | null | undefined
 ): Provenance | null {
+  // ⛔ Fail closed, exactly as posture does. A member turn whose generation was
+  // never resolved is a wiring error at the serving boundary, not an absent
+  // client declaration — absence of a CLIENT declaration is resolved to
+  // `unknown-generation` by TurnGeneration.resolve and arrives here as a real
+  // instance. A null here means no boundary resolved anything, so there is
+  // nothing truthful to mint. The nominal check also refuses a forged literal.
+  if (role === 'user' && !(generation instanceof TurnGeneration)) {
+    console.error('[PROVENANCE] mint failed — member turn generation unresolved (fail closed)', {
+      store: 'TurnsStore',
+    });
+    return null;
+  }
   return Provenance.mint(
     posture,
     {
+      // `createdBy` answers WHO — established by authentication, and unchanged
+      // by this unit. A member originates their turn whether they typed it,
+      // spoke it, or arrived from a client too old to say which.
       createdBy: role === 'user' ? 'member' : 'maia',
-      generatedBy: role === 'user' ? 'member-utterance' : 'synthesis',
+      // ⛔ MAIA-TURN-GENERATION-PROVENANCE-IMPLEMENTATION-01. `generatedBy`
+      // answers WHAT PRODUCED THE CHARACTERS, and role cannot establish that.
+      // Previously this read `role === 'user' ? 'member-utterance' : …`, which
+      // recorded every member turn — typed, spoken, or hallucinated by a
+      // transcription model — as the member having produced the text himself.
+      // Member-side generation now comes from the server-resolved TurnGeneration;
+      // assistant generation is unchanged.
+      generatedBy: role === 'user' ? generation!.generatedBy : 'synthesis',
       sourceContainer: 'personal',
       source: { type: 'turn', turnId, sessionId: sessionId ?? null },
     },
@@ -109,13 +133,17 @@ export const TurnsStore = {
    * SANCTUARY (S1, boundary-enforced): posture REQUIRED; sanctuary or
    * missing/forged posture refuses the write (fail closed, metadata-only log).
    */
-  async addTurn(posture: TurnPosture, turn: Omit<ConversationTurn, 'id' | 'createdAt'>): Promise<string | null> {
+  async addTurn(
+    posture: TurnPosture,
+    generation: TurnGeneration | null,
+    turn: Omit<ConversationTurn, 'id' | 'createdAt'>
+  ): Promise<string | null> {
     if (!contentWritable(posture, 'TurnsStore.addTurn', turn.sessionId)) {
       return null;
     }
     // globalThis.crypto works in both Node and Edge bundles (node:crypto does not).
     const turnRef = globalThis.crypto.randomUUID();
-    const provenance = mintTurnProvenance(posture, turn.role, turnRef, turn.sessionId);
+    const provenance = mintTurnProvenance(posture, turn.role, generation, turnRef, turn.sessionId);
     if (!provenance) {
       return null; // mint refused — no durable object without provenance (S5)
     }
@@ -164,7 +192,9 @@ export const TurnsStore = {
       ...(opts.parentLocalId ? { parentLocalId: opts.parentLocalId } : {}),
     };
 
-    return this.addTurn(posture, {
+    // Assistant turn: generation is `synthesis` by role, so no member action
+    // class applies and none is asserted.
+    return this.addTurn(posture, null, {
       userId: opts.userId,
       sessionId: opts.sessionId,
       role: 'assistant',
@@ -195,6 +225,7 @@ export const TurnsStore = {
    */
   async addExchangeTurn(
     posture: TurnPosture,
+    generation: TurnGeneration | null,
     opts: {
       userId: string;
       sessionId?: string;
@@ -206,7 +237,7 @@ export const TurnsStore = {
     if (!contentWritable(posture, `TurnsStore.addExchangeTurn:${opts.role}`, opts.sessionId)) {
       return false;
     }
-    const provenance = mintTurnProvenance(posture, opts.role, opts.exchangeId, opts.sessionId);
+    const provenance = mintTurnProvenance(posture, opts.role, generation, opts.exchangeId, opts.sessionId);
     if (!provenance) {
       return false; // mint refused — no durable object without provenance (S5)
     }
@@ -247,6 +278,7 @@ export const TurnsStore = {
    */
   async addExchange(
     posture: TurnPosture,
+    generation: TurnGeneration,
     userId: string,
     sessionId: string | undefined,
     userMessage: string,
@@ -263,8 +295,10 @@ export const TurnsStore = {
     // S5: provenance minted here, per turn, from the boundary-resolved posture.
     // The exchange id (or a per-call reference) is the typed source's turnId.
     const turnRef = exchangeId ?? globalThis.crypto.randomUUID();
-    const userProvenance = mintTurnProvenance(posture, 'user', turnRef, sessionId);
-    const assistantProvenance = mintTurnProvenance(posture, 'assistant', turnRef, sessionId);
+    const userProvenance = mintTurnProvenance(posture, 'user', generation, turnRef, sessionId);
+    // The assistant turn's generation is `synthesis` regardless — the member's
+    // action class says nothing about how MAIA produced its reply.
+    const assistantProvenance = mintTurnProvenance(posture, 'assistant', generation, turnRef, sessionId);
     if (!userProvenance || !assistantProvenance) {
       return; // mint refused — no durable object without provenance (S5)
     }
