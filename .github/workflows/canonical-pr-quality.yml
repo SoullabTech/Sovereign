@@ -1,0 +1,75 @@
+# CANONICAL PR QUALITY GATE — the branch that actually receives production work.
+#
+# WHY THIS FILE EXISTS. PR #1150 presented 6/6 green checks while neither
+# TypeScript nor any unit test had run. Not a flake, and not a gate that failed:
+# the repo's only non-swallowed `npm run typecheck` lives in `deploy.yml`, which
+# triggers on `pull_request: branches: [main]` — and `main` has not moved since
+# 2026-04-10, 3081 commits away from the branch we actually ship. The quality
+# gate was aimed at a branch nobody merges to. The green check named `build` is
+# `docker-build.yml` building an image.
+#
+# Evidence: docs/ops/CANONICAL_PR_QUALITY_GATE_CENSUS.md
+#
+# ⛔ SCOPE of what a green run here establishes, exactly and no further:
+#
+#   `npm run typecheck` passed on this PR's head — meaning the application-wide
+#   ship config produced NO NEW diagnostic against `typecheck-baseline.json`.
+#
+#   A green run does NOT establish that the repository typechecks cleanly
+#   (there is pre-existing debt in the baseline, by design), that unit tests
+#   pass, that lint passes, or that the change behaves correctly. Unit tests are
+#   deliberately NOT gated here yet — see below.
+#
+# ⛔ WHY TYPECHECK ONLY, FOR NOW. `test:ci` is `npm run lint && npm run
+# test:coverage`, which chains with `&&` and so already has honest exit
+# semantics — the defect is only that both existing call sites invoke it as
+# `|| true`. But its present state on `clean-main-no-secrets` is UNMEASURED:
+# `next lint` plus jest over ~349 test files. Making it blocking before
+# measuring it could turn every canonical PR red on day one. That measurement is
+# CANONICAL-PR-UNIT-GATE-02, not this unit.
+#
+# ⛔ WHY NOT WIDEN `deploy.yml`. That workflow also carries browser tests, Docker,
+# and the staging and production deploy jobs. Adding this branch to its trigger
+# would attach deployment machinery to every canonical PR. This file follows the
+# shape of `jarvis-epistemic-guard.yml` instead: its own file, its own trigger,
+# no swallowing, and a header that says what a green run means and no further.
+#
+# ⛔ `main` IS DELIBERATELY ABSENT from the trigger. Whether it is live-and-stale
+# or historical-and-still-referenced-by-CI is a governance question
+# (MAIN-BRANCH-STATUS-01), and answering it by adding it here for symmetry would
+# turn a small correctness fix into a branch-policy migration.
+
+name: Canonical PR Quality Gate
+
+on:
+  pull_request:
+    branches: [clean-main-no-secrets]
+
+permissions:
+  contents: read
+
+jobs:
+  typecheck:
+    name: TypeScript no-regression gate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout PR head
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      # ⛔ NO `|| true`, and no `continue-on-error`. A gate that cannot fail is
+      # not a gate — that is precisely the defect this workflow exists to close.
+      # `npm run typecheck` compares against typecheck-baseline.json and fails
+      # only on a NEW diagnostic, an increased occurrence count, or a path that
+      # left the program while still existing on disk.
+      - name: Run TypeScript no-regression gate
+        run: npm run typecheck
