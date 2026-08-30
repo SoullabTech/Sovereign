@@ -47,6 +47,7 @@ import type { SectionWriting } from '@/lib/writersStudio/useSectionWriting';
 import WorkDrawer from './WorkDrawer';
 import MaterialsDrawer from './MaterialsDrawer';
 import ManuscriptOutline, { useManuscriptSections } from './ManuscriptOutline';
+import StructuredOutline from './StructuredOutline';
 import MaiaColumn from './MaiaColumn';
 import StudioConversation from './StudioConversation';
 import StudioLowerBand from './StudioLowerBand';
@@ -563,7 +564,19 @@ export default function WritersStudioPage() {
                 other mode they are the immutable Source and carry none.
                 Combining Source rows with navigation callbacks would produce a
                 column that looks wired and misses every click. */}
-            {writeMount.mount === 'sections' && writing ? (
+            {writeMount.mount === 'sections' && writing && manuscript?.id ? (
+              /* WS2-05A — the same navigable rows, grouped by whatever the
+                 member has authored. With no divisions yet it renders exactly
+                 the flat list this column has always shown; unplaced sections
+                 are never hidden. */
+              <StructuredOutline
+                manuscriptId={manuscript.id}
+                sections={writeMount.rows}
+                activeId={writing.activeId}
+                statusOf={writing.statusOf}
+                onSelect={writing.goToSection}
+              />
+            ) : writeMount.mount === 'sections' && writing ? (
               <ManuscriptOutline
                 manuscriptId={manuscript?.id ?? null}
                 phase="ready"
