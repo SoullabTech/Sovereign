@@ -1,6 +1,6 @@
 # WS2-05B — MODEL
 
-**Stage:** MODEL, third pass. BUILD on HOLD.
+**Stage:** MODEL, fourth pass — SETTLED pending Kelly's read. BUILD on HOLD.
 **Gate:** WS2-05A-R1 source/tests PASS; browser witness pending.
 
 > The architectural risk this pass exists to remove: **one convenient object
@@ -46,31 +46,86 @@ a **capability only the adoption path can create**.
 - `AuthorStructureCommand` is **branded and opaque**, with exactly one
   constructor, owned by the adoption module — not the interpreter, not the
   route layer.
-- The adoption request refers to the **persisted, reviewed proposal**, and
-  cannot express arbitrary interpreted structure:
+- **The adoption request carries no structure at all.** Pass 3 still accepted a
+  `reviewedProposal` in the payload, which left this possible:
 
 ```ts
-adoptStructure({
-  proposalId: string;
-  reviewedProposal: StructureProposal;   // what the member actually looked at
-  expectedTopologyHash: string;          // what they believed the book to be
-});
+adoptStructure({ proposalId: real, reviewedProposal: invented, expectedTopologyHash });
 ```
 
+  The brand protected the service while the HTTP boundary accepted arbitrary
+  canonical-looking structure from the client. So review and adoption are split,
+  and **the reviewed proposal becomes server-authoritative before adoption:**
+
+```text
+MAIA interpretation
+      ↓  persisted, immutable
+proposal record
+      ↓  member edits through bounded REVIEW operations
+reviewed revision (server-held)
+      ↓
+ADOPT   proposalId · expectedReviewRevision · expectedTopologyHash
+      ↓  server reloads what the member actually reviewed
+branded AuthorStructureCommand
+```
+
+```ts
+type AdoptStructureRequest = {
+  proposalId: string;
+  expectedReviewRevision: number;
+  expectedTopologyHash: string;
+  /** Required only when interpretation inputs have changed since the read. */
+  acknowledgeStaleAsRead?: true;
+};
+```
+
+  No tree. No divisions. No `StructureProposal` in the payload.
+
 - The adoption boundary then, in order: resolves the proposal belonging to this
-  member and this Work; verifies topology is unchanged; validates the reviewed
-  structure against 05A's invariants; records what was proposed against what was
-  accepted; and only then constructs the command.
+  member and this Work; verifies topology is unchanged; verifies the review
+  revision the member is adopting is the current one; validates the reviewed
+  structure against 05A's invariants; and only then constructs the command.
 
-**The property to test is therefore:** *no public write API accepts a
-`StructureInterpretation` or a bare `StructureProposal` as an authoring
-command.* The HTTP shape carries that enforcement — a route whose body names
-`proposalId` cannot express an interpretation — and the branded type carries the
-in-process half.
+**The property to test is therefore true rather than aspirational:** *no public
+write API accepts a `StructureInterpretation` or a `StructureProposal` as an
+authoring command.* The HTTP shape carries that enforcement — a body naming
+`proposalId` and two guards cannot express a structure — and the branded type
+carries the in-process half.
 
-`expectedTopologyHash` is compare-and-advance, the same pattern as the draft's
-`version` in 04B: the client sends what it believed, the server compares against
-what is, and a mismatch refuses rather than overwrites.
+### Review mutations are proposal edits, not authoring
+
+The client must be able to correct MAIA. Those are **proposal-edit operations**:
+
+```text
+rename proposed unit · change proposed boundary · reparent proposed unit
+remove proposed unit · add proposed unit
+```
+
+Each mutates **only** the proposal record and bumps `review_revision`. None of
+them touches `manuscript_structure_units` or `manuscript_structure_members`.
+**Only adopt crosses that boundary.**
+
+That also produces the audit trail properly, rather than trusting a final client
+payload to say what was reviewed:
+
+```text
+MAIA proposed    A   (immutable on the record)
+member reviewed  B   (server-held, revision-tracked)
+member adopted   B
+```
+
+### Compare-and-guard, not compare-and-advance
+
+Pass 3 called `expectedTopologyHash` compare-and-advance by analogy to 04B. That
+was loose: adoption does not change section topology.
+
+```text
+draft PUT            compare → write → ADVANCE version
+structure adoption   compare topology → write structure → topology UNCHANGED
+```
+
+So topology is **compare-and-guard**. The proposal's `review_revision` is the
+thing that genuinely advances, and that one is 04B's pattern exactly.
 
 **The import-graph test is kept as defence in depth.** It is useful. It is not
 the sovereignty proof.
@@ -290,12 +345,19 @@ above it and no tree — **a complete result, not an empty state.**
 manuscript_structure_proposals
   id, manuscript_id, created_at
   evidence         jsonb    what mechanics observed
-  interpretation   jsonb    what MAIA read
+  interpretation   jsonb    what MAIA produced — IMMUTABLE, the audit trail
+  reviewed         jsonb    what the member has shaped — mutated by review ops
+  review_revision  int      advances on every review edit (compare-and-advance)
   coverage         jsonb    what she actually read
-  section_topology_hash    text    ordered stable ids — hard gate
-  interpretation_input_hash text   what was actually read — soft warning
-  adopted_at       timestamptz null
+  section_topology_hash     text  ordered stable ids — hard gate, compare-and-guard
+  interpretation_input_hash text  what was actually read — soft warning
+  adopted_at              timestamptz null
+  adopted_review_revision int null   which revision was authored
 ```
+
+`interpretation` is written once and never edited: it is the record of what the
+system proposed, and a proposal whose original can be revised is not evidence of
+anything. `reviewed` begins as a copy of it and diverges as the member works.
 
 Units gain `proposed_from_id → manuscript_structure_proposals(id)`, nullable.
 Adoption writes ordinary `origin='member'` units under 05A's existing contiguity
