@@ -57,6 +57,17 @@ describe('1 — a request is not a capture', () => {
     expect(REARM_BLOCK).not.toMatch(/setIsListening\(true\)/);
   });
 
+  it('the watchdog recovery path does not claim it either', () => {
+    // ⛔ Found on re-read: `forceWatchdogReset` had the identical shape —
+    // assert LISTENING, then ask `attemptAutoRearm('watchdog_recovery')`, which
+    // carries no exemption and may refuse. Same untruth, recovery path.
+    const i = ORACLE_CODE.indexOf('function forceWatchdogReset');
+    const j = ORACLE_CODE.indexOf("attemptAutoRearm('watchdog_recovery')", i);
+    expect(i).toBeGreaterThan(-1);
+    expect(j).toBeGreaterThan(i);
+    expect(ORACLE_CODE.slice(i, j)).not.toMatch(/setIsListening\(true\)/);
+  });
+
   it('does not derive the display from the authority answer either', () => {
     // Authorization is not acquisition.
     expect(ORACLE_CODE).not.toMatch(/setIsListening\(\s*attemptAutoRearm\(/);

@@ -3070,7 +3070,13 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       setIsAudioPlaying(false);
       setIsResponding(false);
       setIsMicrophonePaused(false);
-      setIsListening(true);
+      // ⛔ NO `setIsListening(true)` HERE either — same defect as the hands-free
+      // completion path. The watchdog RESETS state and then REQUESTS a restart
+      // through the authority below, which may refuse (it carries no exemption:
+      // recovering from a response that made no sound is still a microphone the
+      // member did not open). Claiming the capture up front would leave the
+      // display asserting LISTENING against a mic that never opened — the same
+      // untruth, arriving on the recovery path instead of the completion path.
       setIsActivating(false);
 
       // Reset the progress timer
