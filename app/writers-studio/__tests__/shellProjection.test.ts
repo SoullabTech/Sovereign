@@ -424,33 +424,33 @@ describe('the handoff contract carries identity both ways', () => {
      /maia receives the Work id, the server re-reads the member's own row, and
      the exchange names what it is in relation to. Holding the door shut after
      that would be its own dishonesty. What survives is the CONDITION. */
-  it('opens Conversations only when exactly one Work is declared', () => {
-    expect(page).toContain('handoffToMaia');
-    // The gate, verbatim: a Work AND a manuscript, or nothing offered.
-    expect(page).toMatch(/work && manuscript\s*\?\s*\{ conversations:/);
+  /* SUPERSEDED AT WS2-03D by the founder's placement ruling. At 03C
+     Conversations was a LINK to /maia, and the authenticated witness showed
+     the cost: speaking with MAIA ejected the writer from the Studio, taking
+     the manuscript and the Work with it. MAIA is adjacent to the Work, not a
+     destination you abandon your book to reach. The gate is unchanged; where
+     it opens is not. */
+  it('satisfies Conversations in this room rather than navigating away', () => {
+    expect(page).toContain("'conversations'");
+    expect(page).toContain("summon('conversation')");
+    // The default interaction may not be a link out of the Studio.
+    expect(page).not.toContain('handoffToMaia');
+    expect(page).not.toMatch(/situatedHrefs/);
   });
 
-  it('offers nothing to situate when no Work is declared', () => {
-    const none = shellDestinations(true, STUDIO_MAP, { manuscriptId: 'ms-x' })
-      .flatMap((g) => g.destinations)
-      .find((d) => d.id === 'conversations')!;
-    expect(none.actionable).toBe(false);
-    expect(none.href).toBeUndefined();
+  it('still gates on exactly one declared Work', () => {
+    expect(page).toMatch(/summoned\.conversation === true && Boolean\(work\)/);
   });
 
-  it('opens it, addressed, when the room can situate one', () => {
-    const open = shellDestinations(true, STUDIO_MAP, {
-      manuscriptId: 'ms-x',
-      situatedHrefs: { conversations: '/maia?work=w1&return=%2Fwriters-studio%2Fcanvas%3Fm%3Dms-x' },
-    }).flatMap((g) => g.destinations).find((d) => d.id === 'conversations')!;
-    expect(open.actionable).toBe(true);
-    expect(open.href).toContain('work=w1');
-    expect(() => assertShellPromisesNothing(
-      shellDestinations(true, STUDIO_MAP, {
-        manuscriptId: 'ms-x',
-        situatedHrefs: { conversations: '/maia?work=w1' },
-      }),
-    )).not.toThrow();
+  it('keeps the manuscript at its measured width while conversing', () => {
+    /* The whole point of speaking beside the Work: MAIA takes the Materials
+       share, the writing field does not give up a pixel. */
+    expect(page).toMatch(/\(materialsOpen \|\| conversationOpen\) && !compact/);
+    expect(page).toContain('pct(L.maiaPanel + L.materialsPanel + L.gutter)');
+    const L = writingFieldLayout(100000);
+    const conversing = L.maiaPanel + L.materialsPanel + L.gutter;
+    expect(conversing).toBeGreaterThan(L.maiaPanel);
+    expect(L.writingField).toBeGreaterThan(conversing / 2);
   });
 
   it('cannot be used to promote a destination that has no room behind it', () => {
@@ -464,8 +464,13 @@ describe('the handoff contract carries identity both ways', () => {
     expect(g.find((d) => d.id === 'home')!.href).toBe('/writers-studio');
   });
 
-  it('still says nothing in MAIA’s column that she has not been given', () => {
-    expect(maiaColumn).toContain('REFLECTION_SENTENCE');
+  it('no longer says reflection "will become available" once it is', () => {
+    /* That sentence was true when written and went false the moment 03C
+       opened Conversations. A kept promise still reading as pending tells the
+       member the room cannot do what it is at that moment doing. */
+    expect(maiaColumn).not.toContain('will become available');
+    expect(maiaColumn).toContain('REFLECTION_READY');
+    expect(maiaColumn).toContain('REFLECTION_NEEDS_WORK');
   });
 });
 
@@ -526,8 +531,16 @@ describe('Materials does not become furniture', () => {
   });
 
   it('yields its column before the field gives up its measure', () => {
-    expect(page).toContain('materialsOpen && !compact');
+    expect(page).toContain('materialsOpen && !conversationOpen && !compact');
     expect(page).not.toMatch(/outlineOpen && !compact/);
+  });
+
+  it('also yields to the conversation, and the field still does not', () => {
+    /* WS2-03D. Materials had one yield condition (compact); it now has two.
+       Both are the same rule in different circumstances — chrome collapses
+       before the writing field is crushed. The field is in neither list. */
+    expect(page).toContain('materialsOpen && !conversationOpen && !compact');
+    expect(page).not.toMatch(/conversationOpen && !compact\s*&&[\s\S]{0,40}<main/);
   });
 });
 

@@ -122,7 +122,23 @@ export const MAIA_RETURN_PARAM = 'return';
 export interface Handoff {
   workId: string;
   manuscriptId: string;
+  /**
+   * WS2-03D — the exchange already under way in the Studio.
+   *
+   * "Open in MAIA" must CONTINUE the conversation the member is having, not
+   * start a second one beside it. So the id travels with the Work and the
+   * return address, and full MAIA adopts it.
+   *
+   * Minted explicitly by the Studio when the panel first opens — never
+   * discovered. "Which conversation belonged to this Work?" is a most-recent
+   * question, and this lane has refused every one of those: it is the same
+   * guess as `manuscripts[0]`, wearing a different noun.
+   */
+  conversationId?: string;
 }
+
+/** The parameter carrying an already-running exchange. One definition. */
+export const MAIA_CONVERSATION_PARAM = 'conversation';
 
 /** Where the Studio sends the member, carrying identity and a way back. */
 export function handoffToMaia(base: string, h: Handoff): string {
@@ -130,8 +146,26 @@ export function handoffToMaia(base: string, h: Handoff): string {
   const sep = base.includes('?') ? '&' : '?';
   return (
     `${base}${sep}${MAIA_WORK_PARAM}=${encodeURIComponent(h.workId)}` +
-    `&${MAIA_RETURN_PARAM}=${encodeURIComponent(back)}`
+    `&${MAIA_RETURN_PARAM}=${encodeURIComponent(back)}` +
+    (h.conversationId
+      ? `&${MAIA_CONVERSATION_PARAM}=${encodeURIComponent(h.conversationId)}`
+      : '')
   );
+}
+
+/**
+ * A conversation id for an exchange begun in the Studio, minted here.
+ *
+ * Deterministic in shape, unique per opening, and carrying the surface it was
+ * born on so a Studio-originated exchange is identifiable in the record
+ * without anyone having to infer it later.
+ */
+export function mintStudioConversationId(): string {
+  const rand =
+    typeof crypto !== 'undefined' && 'randomUUID' in crypto
+      ? crypto.randomUUID()
+      : `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+  return `writers-studio-${rand}`;
 }
 
 /** The Studio address that resolves to this exact manuscript, and no other. */

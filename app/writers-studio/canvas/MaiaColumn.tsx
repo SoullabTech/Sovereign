@@ -43,13 +43,16 @@
  * this correction's to re-cut — what changed is how much of the column is
  * allowed to wear it.
  *
- * ── WHY CONVERSATIONS IS STILL CLOSED ──────────────────────────────────────
+ * ── WHAT THIS COLUMN IS NOW ────────────────────────────────────────────────
  *
- * The Studio side of the handoff is built and proven (workContext.ts:
- * assertRoundTripPreservesWork). The MAIA side is not: /maia is a generic
- * conversational surface that does not read a Work. Opening the door because
- * our half is ready would hand the member an exchange that has forgotten what
- * they are writing — the substitution failure again, one room over.
+ * At WS2-03B it was a folded hinge. At 03C it was a truthful placeholder while
+ * Conversations pointed away to /maia. At 03D it is the RESTING state of a
+ * surface that becomes a real conversation in place: the member opens
+ * Conversations and this region expands into the canonical exchange without
+ * leaving the manuscript.
+ *
+ * The founder's ruling, and the reason: MAIA is adjacent to the Work, not a
+ * destination the writer must abandon their book to reach.
  */
 'use client';
 
@@ -58,13 +61,30 @@ import { StudioText } from '../studio/StudioType';
 import { MaiaVoice } from '../studio/MaiaReading';
 import type { WorkContext } from '../workContext';
 
-export const REFLECTION_SENTENCE =
-  'Reflection with MAIA will become available when this Work can carry its context into the exchange and back.';
+/**
+ * WS2-03D — the resting state, corrected.
+ *
+ * This used to read "Reflection with MAIA will become available when this Work
+ * can carry its context into the exchange and back." That sentence was true
+ * when it was written and went FALSE the moment WS2-03C opened Conversations —
+ * the Work does carry its context now. A promise that has been kept and still
+ * reads as pending is not a small copy problem: it tells the member the room
+ * cannot do the thing it is at that moment doing.
+ *
+ * Two resting states now, because there are two real situations.
+ */
+export const REFLECTION_READY =
+  'Open Conversations to speak with MAIA here, beside your manuscript.';
+export const REFLECTION_NEEDS_WORK =
+  'MAIA can speak with you about a declared Work. Declare one in “This work” and Conversations opens.';
 
 export default function MaiaColumn({ context }: { context: WorkContext }) {
+  /* Which resting sentence is true right now. Conversations is available
+     exactly when one Work is declared, so that is the condition. */
+  const ready = context.kind === 'work';
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: SPACE.comfortable }}>
-      <MaiaVoice>{REFLECTION_SENTENCE}</MaiaVoice>
+      <MaiaVoice>{ready ? REFLECTION_READY : REFLECTION_NEEDS_WORK}</MaiaVoice>
 
       <div
         style={{

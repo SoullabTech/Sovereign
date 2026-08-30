@@ -809,6 +809,14 @@ function MAIAPageContent() {
   if (featureFlags.spatialMaiaShell) {
     return (
       <ErrorBoundary>
+        {/* 📖 WS2-03D — the situated banner belongs HERE.
+            It was added to the legacy tree below, which `spatialMaiaShell`
+            returns before ever reaching. The flag is on and is even migrated
+            back on for anyone who turned it off, so the banner was in dead
+            code: the Work travelled to the prompt and the member could not see
+            that it had. A conversation carrying hidden context is not
+            situated, it is merely influenced. */}
+        <StudioHandoffBanner handoff={studioHandoff} />
         <VoiceStateProvider presenceState={voicePresenceState} amplitude={voiceAmplitude} isSanctuary={isSanctuary}>
           <MaiaShell
             explorerName={explorerName}
@@ -838,7 +846,9 @@ function MAIAPageContent() {
                   userId={explorerId}
                   userName={explorerName}
                   userBirthDate={userBirthDate}
-                  sessionId={sessionId}
+                  /* 📖 WS2-03D — continue the Studio's exchange when one was
+                     handed over, rather than opening a second one beside it. */
+                  sessionId={studioHandoff.conversationId ?? sessionId}
                   voiceEnabled={voiceEnabled}
                   voice={selectedVoice}
                   voiceSpeed={voiceSpeed}

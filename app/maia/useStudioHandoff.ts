@@ -5,6 +5,7 @@ import { apiFetch } from '@/lib/http/apiBase';
 import {
   MAIA_WORK_PARAM,
   MAIA_RETURN_PARAM,
+  MAIA_CONVERSATION_PARAM,
 } from '@/app/writers-studio/workContext';
 
 /**
@@ -50,6 +51,13 @@ export interface StudioHandoff {
   returnHref: string | null;
   /** The id that was asked for — shown when it cannot be resolved. */
   requestedWorkId: string | null;
+  /**
+   * WS2-03D — an exchange begun in the Studio, to be CONTINUED here.
+   *
+   * Full MAIA must not open a second conversation beside the one the member
+   * is already having. Carried explicitly; never looked up.
+   */
+  conversationId: string | null;
 }
 
 /** A return address must be a Studio path on this origin. Nothing else. */
@@ -66,6 +74,7 @@ export function useStudioHandoff(search: string | null | undefined): StudioHando
   const params = new URLSearchParams(search ?? '');
   const requestedWorkId = params.get(MAIA_WORK_PARAM);
   const returnHref = safeReturnHref(params.get(MAIA_RETURN_PARAM));
+  const conversationId = params.get(MAIA_CONVERSATION_PARAM);
 
   const [phase, setPhase] = useState<HandoffPhase>(requestedWorkId ? 'loading' : 'none');
   const [work, setWork] = useState<StudioHandoff['work']>(null);
@@ -102,5 +111,5 @@ export function useStudioHandoff(search: string | null | undefined): StudioHando
     };
   }, [requestedWorkId]);
 
-  return { phase, work, returnHref, requestedWorkId };
+  return { phase, work, returnHref, requestedWorkId, conversationId };
 }

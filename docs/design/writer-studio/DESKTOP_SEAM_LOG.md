@@ -148,3 +148,56 @@ contract. It must be removed when DEEP composes the supported addenda channel
   It is what **executed**; `computedProfile` is what the router wanted.
 - That these fields are always present. They appear only when a turn was
   actually contained.
+
+---
+
+## WS2-03D · MAIA in the Studio
+
+```
+DESKTOP_SEAM_CHANGED: YES
+```
+
+**Contract changed —** the **default container** for Conversations.
+
+Conversations no longer navigates to `/maia`. It is satisfied **in room**: the
+MAIA companion region expands into the canonical conversation beside the
+manuscript, and the writer does not leave the Work to speak with MAIA.
+
+The `/maia` handoff is preserved as an **explicit member choice** — "Open in
+MAIA" — and now carries a third parameter:
+
+```
+/maia?work=<living-work-id>&return=<studio-path>&conversation=<conversation-id>
+```
+
+- Same canonical runtime (`OracleConversation`), same endpoint, same prompt
+  path. Only the container differs.
+- Member identity for the embedded surface comes from `GET /api/members/me`.
+- Conversation id is **minted by the Studio** when the panel opens.
+- Panel dismiss/reopen within a page continues the same exchange. **A reload
+  does not recover it in v1.**
+
+**Files:** `app/writers-studio/canvas/StudioConversation.tsx`,
+`app/writers-studio/useMemberIdentity.ts`,
+`app/writers-studio/workContext.ts` (`MAIA_CONVERSATION_PARAM`,
+`mintStudioConversationId`), `app/writers-studio/canvas/page.tsx`,
+`app/writers-studio/canvas/MaiaColumn.tsx`, `app/maia/useStudioHandoff.ts`,
+`app/maia/page.tsx`.
+
+**Permanence:** permanent for the default-container ruling. The v1 reload
+behaviour is provisional.
+
+**A consumer must NOT infer:**
+
+- That a Conversations link exists to navigate to. There is none by default;
+  a container reproducing WS2-03C's link would recreate the ejection this unit
+  corrected.
+- That a reload resumes a conversation. It does not, and the fix is never a
+  "most recent conversation for this Work" lookup — that is the same guess as
+  `manuscripts[0]` wearing a different noun. If persistence is added it will be
+  an explicit id in the URL.
+- That Writer's Studio may read member, Work or conversation identity from
+  browser storage. It may not — storage is member-editable, and an id read from
+  it is a claim. (MAIA's own local *preferences* are separate and out of scope.)
+- That embedded MAIA escapes SITUATED-WORK-DEEP-01. Same runtime, same
+  containment.

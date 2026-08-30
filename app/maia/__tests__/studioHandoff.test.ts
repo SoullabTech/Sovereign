@@ -54,3 +54,50 @@ describe('the handoff carries an identity and nothing else', () => {
     expect(keys.sort()).toEqual([MAIA_RETURN_PARAM, MAIA_WORK_PARAM].sort());
   });
 });
+
+/* ══════════════════════════════════════════════════════════════════════════
+   WS2-03D — the two failures this unit corrected, held so they cannot return.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+import * as fs from 'fs';
+import * as path from 'path';
+
+const maiaPage = fs.readFileSync(
+  path.join(__dirname, '..', 'page.tsx'),
+  'utf8',
+);
+const flags = fs.readFileSync(
+  path.join(__dirname, '..', '..', '..', 'lib', 'utils', 'feature-flags.ts'),
+  'utf8',
+);
+
+describe('the situated banner renders on the path that is actually live', () => {
+  it('sits inside the spatialMaiaShell tree, not only the legacy one', () => {
+    /* The 03C defect: the banner was added below, in a tree that
+       `if (featureFlags.spatialMaiaShell) return (...)` never reaches. The
+       Work reached the prompt and the member could not see that it had —
+       "merely influenced", by the component's own definition. No test caught
+       it because every test read source rather than rendering the page, so
+       this one reads the source at the level the bug lived: placement. */
+    const spatialAt = maiaPage.indexOf('if (featureFlags.spatialMaiaShell)');
+    const bannerAt = maiaPage.indexOf('<StudioHandoffBanner');
+    expect(spatialAt).toBeGreaterThan(-1);
+    expect(bannerAt).toBeGreaterThan(spatialAt);
+
+    // And it must come before the shell it decorates, inside that same return.
+    const shellAt = maiaPage.indexOf('<MaiaShell', spatialAt);
+    expect(bannerAt).toBeLessThan(shellAt);
+  });
+
+  it('is still needed, because that flag is on and self-healing', () => {
+    // If this ever flips, the placement above stops being load-bearing — but
+    // it will still be correct, and this test will say why it changed.
+    expect(flags).toMatch(/spatialMaiaShell:\s*true/);
+  });
+});
+
+describe('full MAIA continues the Studio’s exchange', () => {
+  it('adopts the handed-over conversation instead of opening another', () => {
+    expect(maiaPage).toContain('sessionId={studioHandoff.conversationId ?? sessionId}');
+  });
+});

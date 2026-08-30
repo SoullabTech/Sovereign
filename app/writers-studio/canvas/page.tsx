@@ -31,7 +31,7 @@ import {
 } from '../canvasIdentity';
 import { UNTITLED_EXPRESSION } from '../shellIdentity';
 import { useLivingWorks } from '../useLivingWorks';
-import { resolveWorkContext, currentWork, handoffToMaia } from '../workContext';
+import { resolveWorkContext, currentWork, mintStudioConversationId } from '../workContext';
 import type { CurrentManuscript } from '../useCurrentManuscript';
 import { loadRevisions, type RevisionSummary } from '../../press/manuscript/workingDraftClient';
 import Worktable from './Worktable';
@@ -39,6 +39,7 @@ import WorkDrawer from './WorkDrawer';
 import MaterialsDrawer from './MaterialsDrawer';
 import ManuscriptOutline, { useManuscriptSections } from './ManuscriptOutline';
 import MaiaColumn from './MaiaColumn';
+import StudioConversation from './StudioConversation';
 import StudioLowerBand from './StudioLowerBand';
 
 /**
@@ -106,10 +107,10 @@ import StudioLowerBand from './StudioLowerBand';
  */
 
 /** Panels that can stand in the row beside the field. */
-type ColumnId = 'outline' | 'maia' | 'materials';
+type ColumnId = 'outline' | 'maia' | 'materials' | 'conversation';
 
 /** Rail destinations this room satisfies in place rather than by navigation. */
-const SATISFIED_IN_ROOM = ['materials', 'structure', 'versions'] as const;
+const SATISFIED_IN_ROOM = ['materials', 'structure', 'versions', 'conversations'] as const;
 
 export default function WritersStudioPage() {
   const { phase: worksPhase, works, reload: reloadWorks } = useLivingWorks();
@@ -236,6 +237,17 @@ export default function WritersStudioPage() {
   const maiaOpen = open('maia', true);
   const materialsOpen = open('materials', materialsInContext);
 
+  /* 📖 WS2-03D — the conversation, open in this room rather than away from it.
+     Gated on a declared Work for the same reason Conversations is: with none
+     there is nothing to situate, and the room does not choose between several. */
+  const conversationOpen = summoned.conversation === true && Boolean(work);
+
+  /* Minted once per page life, when the panel first opens — never discovered.
+     Dismissing and reopening the panel continues the SAME exchange; a reload
+     starts a new one, because asking "which conversation was this Work's?" is
+     a most-recent question and this lane refuses those. */
+  const [conversationId] = useState(mintStudioConversationId);
+
   const [compact, setCompact] = useState(false);
   useEffect(() => {
     const mq = window.matchMedia(`(max-width: ${BREAKPOINT.compact - 1}px)`);
@@ -254,9 +266,14 @@ export default function WritersStudioPage() {
     if (outlineOpen) cols.push('outlinePanel');
     cols.push('writingField');
     if (maiaOpen) cols.push('maiaPanel');
-    if (materialsOpen && !compact) cols.push('materialsPanel');
+    /* Reserved while conversing even though Materials is not drawn: MAIA takes
+       that share, so the writing field keeps EXACTLY its measured width.
+       Opening a conversation must never shrink the manuscript — that is the
+       whole point of speaking with MAIA beside the Work rather than instead
+       of it. */
+    if ((materialsOpen || conversationOpen) && !compact) cols.push('materialsPanel');
     return cols as Array<'rail' | 'outlinePanel' | 'writingField' | 'maiaPanel' | 'materialsPanel'>;
-  }, [outlineOpen, maiaOpen, materialsOpen, compact]);
+  }, [outlineOpen, maiaOpen, materialsOpen, conversationOpen, compact]);
 
   /* Resolved at a large notional width and expressed as percentages, so the
      MEASURED ratio holds at every viewport and nothing reads `window` during
@@ -291,21 +308,19 @@ export default function WritersStudioPage() {
   const headline = work?.title ?? (manuscript ? manuscriptLabel : 'Writer’s Studio');
   const named = Boolean(work?.title ?? manuscript?.title);
 
-  /* 📖 WS2-03C — Conversations opens, and only on the one condition that makes
-     it honest. WS2-03B held it shut because the middle term did not exist:
-     /maia could not receive a Work. It can now — the id travels, the server
-     re-reads the member's own row, and the exchange says in the member's sight
-     what it is in relation to.
-
-     The gate is unchanged in spirit: exactly one declared Work. With none
-     there is nothing to situate, and with several the room does not choose —
-     so the destination simply stays unavailable rather than opening a
-     conversation that has quietly picked one. */
-  const situatedHrefs: Record<string, string> =
-    work && manuscript
-      ? { conversations: handoffToMaia('/maia', { workId: work.id, manuscriptId: manuscript.id }) }
-      : {};
-
+  /* 📖 WS2-03D — Conversations opens HERE.
+     
+     At 03C it was a link to /maia, and the founder's runtime witness showed
+     what that costs: speaking with MAIA ejected the writer from the Studio,
+     the manuscript vanished, and the Work went with it. MAIA is adjacent to
+     the Work — not a destination you abandon your book to reach.
+     
+     So Conversations joins Materials, Structure and Versions as a destination
+     this room satisfies in place. The /maia handoff is not discarded; it
+     becomes the explicit "Open in MAIA" inside the panel.
+     
+     The gate is unchanged: exactly one declared Work. None, and there is
+     nothing to situate; several, and the room does not choose. */
   const railCounts: Record<string, number> = {};
   if (manuscript) {
     railCounts.structure = sections.length;
@@ -427,17 +442,21 @@ export default function WritersStudioPage() {
           counts={railCounts}
           satisfiedInRoom={manuscript ? SATISFIED_IN_ROOM : []}
           manuscriptId={manuscript?.id ?? null}
-          situatedHrefs={situatedHrefs}
           current="manuscript"
           openPanels={[
             ...(materialsOpen ? ['materials'] : []),
             ...(outlineOpen ? ['structure'] : []),
             ...(bandOpen ? ['versions'] : []),
+            ...(conversationOpen ? ['conversations'] : []),
           ]}
           onSelect={(d) => {
             if (d.id === 'materials') summon('materials');
             if (d.id === 'structure') summon('outline');
             if (d.id === 'versions') setBandOpen(true);
+            if (d.id === 'conversations') {
+              summon('conversation');
+              summon('maia');
+            }
           }}
           lead={
             <button
@@ -556,15 +575,36 @@ export default function WritersStudioPage() {
         {maiaOpen && (
           <StudioPanel
             role="maia"
-            label="MAIA"
-            onDismiss={() => dismiss('maia')}
-            style={{ width: compact ? '100%' : pct(L.maiaPanel), flexShrink: 0 }}
+            label={conversationOpen ? 'MAIA · conversation' : 'MAIA'}
+            onDismiss={() => {
+              /* Dismissing the region closes the conversation with it. The
+                 exchange itself is not lost — reopening within this page
+                 continues the same conversation id. */
+              dismiss('maia');
+              dismiss('conversation');
+            }}
+            style={{
+              width: compact
+                ? '100%'
+                : conversationOpen
+                  ? pct(L.maiaPanel + L.materialsPanel + L.gutter)
+                  : pct(L.maiaPanel),
+              flexShrink: 0,
+            }}
           >
-            <MaiaColumn context={workContext} />
+            {conversationOpen && work && manuscript ? (
+              <StudioConversation
+                work={work}
+                manuscriptId={manuscript.id}
+                conversationId={conversationId}
+              />
+            ) : (
+              <MaiaColumn context={workContext} />
+            )}
           </StudioPanel>
         )}
 
-        {materialsOpen && !compact && (
+        {materialsOpen && !conversationOpen && !compact && (
           <StudioPanel
             role="materials"
             label="Materials"
