@@ -83,6 +83,10 @@ export type VoiceDiagEvent =
   | 'voice_fallback_transcribe_sent'
   | 'voice_fallback_transcribe_result'
   | 'voice_fallback_failed'
+  // DESKTOP-SOVEREIGN-STT-INTERIM-01 — one summary per capture, counts only.
+  // Deliberately NOT per-partial: a provisional request is a display detail,
+  // and a telemetry POST per chunk would cost more than the thing it observes.
+  | 'voice_partial_summary'
 
   // ── V5 utterance-tail witness ───────────────────────────────────────────
   // The question: why do the ENDS of Jondi's utterances go missing?

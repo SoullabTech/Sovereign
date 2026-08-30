@@ -206,9 +206,24 @@ export function VoiceInteractionBar({
             transition={{ duration: 0.15 }}
             className="overflow-hidden"
           >
-            <p className="px-5 pt-2 text-sm italic text-stone-300/75 truncate">
-              {interimTranscript}
-            </p>
+            {/* DESKTOP-SOVEREIGN-STT-INTERIM-01 — provisional text is LABELLED.
+                Every word in this row is still being heard: it can be replaced
+                by the next reading and it has not become a turn. Styling alone
+                (italic, dimmed) asked the member to infer that. Text that
+                cannot be told apart from committed text reduces agency — the
+                member has to be able to see which words MAIA has actually
+                taken, so the row says so rather than implying it. */}
+            <div
+              className="px-5 pt-2 flex items-baseline gap-2"
+              aria-live="polite"
+            >
+              <span className="text-[10px] uppercase tracking-wider text-stone-400/70 flex-shrink-0">
+                hearing · not sent yet
+              </span>
+              <p className="text-sm italic text-stone-300/75 truncate min-w-0">
+                {interimTranscript}
+              </p>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
