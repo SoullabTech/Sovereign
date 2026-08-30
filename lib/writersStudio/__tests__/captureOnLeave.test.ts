@@ -7,7 +7,7 @@
  * so it cannot accidentally read the section being entered.
  */
 
-import { captureOnLeave, resolveSectionStatus } from '../useSectionWriting';
+import { captureOnLeave, resolveSectionStatus, retireQueue } from '../useSectionWriting';
 import { SectionSaveQueue } from '../sectionSaveQueue';
 
 const section = (id: string, body: string, editable = true) =>
@@ -117,5 +117,46 @@ describe('resolveSectionStatus', () => {
     expect(resolveSectionStatus('clean', false)).toBe('clean');
     expect(resolveSectionStatus('saving', false)).toBe('saving');
     expect(resolveSectionStatus('dirty', false)).toBe('dirty');
+  });
+});
+
+describe('retireQueue — a different draft may not eat unsent text', () => {
+  it('flushes every staged body into the OUTGOING queue', () => {
+    const outgoing = new SectionSaveQueue(1, () => new Promise(() => {}));
+    const staged = new Map([['A', 'draft A, unsent'], ['B', 'also unsent']]);
+    expect(retireQueue(outgoing, staged)).toBe(2);
+    expect(outgoing.localBody('A')).toBe('draft A, unsent');
+    expect(outgoing.localBody('B')).toBe('also unsent');
+  });
+
+  it('leaves nothing staged behind for the next draft to inherit', () => {
+    const staged = new Map([['A', 'text']]);
+    retireQueue(new SectionSaveQueue(1, () => new Promise(() => {})), staged);
+    expect(staged.size).toBe(0);
+  });
+
+  it('THE TRANSITION CASE: a debounced edit survives the draft change', () => {
+    // A was typed into; its debounce had not fired; the editor moved to draft
+    // B. Making the reset intentional is better than tying it to callback
+    // identity, but intentional data loss is still data loss.
+    const outgoingA = new SectionSaveQueue(1, () => new Promise(() => {}));
+    const staged = new Map([['sec-A', 'the sentence that had not dispatched']]);
+    retireQueue(outgoingA, staged);
+    expect(outgoingA.localBody('sec-A')).toBe('the sentence that had not dispatched');
+    expect(outgoingA.hasUnsavedWork()).toBe(true);
+  });
+
+  it('the incoming queue is untouched by the outgoing one', () => {
+    const outgoing = new SectionSaveQueue(1, () => new Promise(() => {}));
+    const incoming = new SectionSaveQueue(1, () => new Promise(() => {}));
+    retireQueue(outgoing, new Map([['sec-A', 'A text']]));
+    expect(incoming.localBody('sec-A')).toBeNull();
+    expect(incoming.hasUnsavedWork()).toBe(false);
+  });
+
+  it('retiring an empty queue is a no-op', () => {
+    const q = new SectionSaveQueue(1, () => new Promise(() => {}));
+    expect(retireQueue(q, new Map())).toBe(0);
+    expect(q.hasUnsavedWork()).toBe(false);
   });
 });

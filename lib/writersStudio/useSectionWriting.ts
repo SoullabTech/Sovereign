@@ -120,6 +120,33 @@ export function resolveSectionStatus(
   return queueStatus;
 }
 
+/**
+ * Retire a queue whose draft is being left. PURE.
+ *
+ * A different draft is allowed to create a different queue. It is NOT allowed
+ * to make a staged, debounced or pending body disappear — intentional data
+ * loss is still data loss. Every unsent snapshot goes into the OUTGOING
+ * queue, which owns those rows, before it is let go.
+ *
+ * An already in-flight save may resolve normally; it belongs to the old draft
+ * and writes only into the old draft's persisted map, which the new one never
+ * reads.
+ *
+ * Returns how many bodies were flushed.
+ */
+export function retireQueue(
+  queue: Pick<SectionSaveQueue, 'enqueue'>,
+  staged: Map<string, string>,
+): number {
+  let flushed = 0;
+  for (const [sectionId, body] of staged) {
+    queue.enqueue(sectionId, body);
+    flushed++;
+  }
+  staged.clear();
+  return flushed;
+}
+
 export function useSectionWriting(
   initialSections: WritingSection[],
   initialVersion: number,
@@ -140,22 +167,24 @@ export function useSectionWriting(
   const saveRef = useRef(save);
   saveRef.current = save;
 
-  /* What the server is known to hold, per section, after a successful save.
-     Without this the visible body falls back to the body the page loaded with,
-     so the canvas snaps back to the old text the moment a save resolves. */
-  const persisted = useRef(new Map<string, string>());
-
-  const queue = useMemo(
-    () => new SectionSaveQueue(initialVersion, async (sectionId, body, baseVersion) => {
+  /* Queue AND persisted map are created together and belong to one draft.
+     Scoping the map to the queue is what stops a late completion from the
+     previous draft writing into this one's baseline: the old wrapper closes
+     over the old map, which nothing here reads. */
+  const session = useMemo(() => {
+    const persisted = new Map<string, string>();
+    const queue = new SectionSaveQueue(initialVersion, async (sectionId, body, baseVersion) => {
       const outcome = await saveRef.current(sectionId, body, baseVersion);
       /* Bank what was actually persisted, here, where both the body and the
-         outcome are in hand. */
-      if (outcome.ok) persisted.current.set(sectionId, body);
+         outcome are in hand — and into THIS draft's map only. */
+      if (outcome.ok) persisted.set(sectionId, body);
       return outcome;
-    }),
+    });
+    return { queue, persisted };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [draftKey],
-  );
+  }, [draftKey]);
+  const queue = session.queue;
+  const persisted = session.persisted;
   void initialVersion;
   const [activeId, setActiveId] = useState<string | null>(initialSections[0]?.id ?? null);
 
@@ -196,7 +225,7 @@ export function useSectionWriting(
   const activeBody = activeId
     ? (staged.current.get(activeId)
         ?? queue.localBody(activeId)
-        ?? persisted.current.get(activeId)
+        ?? persisted.get(activeId)
         ?? active?.body
         ?? '')
     : '';
@@ -211,6 +240,19 @@ export function useSectionWriting(
     if (timer.current) clearTimeout(timer.current);
     timer.current = setTimeout(() => flush(activeId), AUTOSAVE_DELAY_MS);
   }, [activeId, flush, sectionsById]);
+
+  /* RETIREMENT. When the draft changes, the outgoing queue takes every unsent
+     body with it before it is let go. React runs this cleanup with the OLD
+     queue still captured, which is exactly the ordering the invariant needs:
+     the flush lands in the queue that owns those section rows. */
+  useEffect(() => {
+    const outgoing = queue;
+    const pendingTimer = timer;
+    return () => {
+      if (pendingTimer.current) { clearTimeout(pendingTimer.current); pendingTimer.current = null; }
+      retireQueue(outgoing, staged.current);
+    };
+  }, [queue]);
 
   /* Leaving the page is a flush point, exactly as it is for the continuous
      editor: staged text that never reached the queue would be lost with the
@@ -240,7 +282,7 @@ export function useSectionWriting(
     if (activeId) staged.current.delete(activeId);
     const leaving = activeId ? sectionsById.get(activeId) ?? null : null;
     captureOnLeave(queue, leaving, visibleBody.current,
-      leaving ? persisted.current.get(leaving.id) : undefined);
+      leaving ? persisted.get(leaving.id) : undefined);
 
     /* Now switch. Not awaited: the queue is already serialized, and blocking
        here would make navigation as slow as the network. */
@@ -249,7 +291,7 @@ export function useSectionWriting(
     visibleBody.current =
       staged.current.get(nextId)
       ?? queue.localBody(nextId)
-      ?? persisted.current.get(nextId)
+      ?? persisted.get(nextId)
       ?? next?.body
       ?? '';
   }, [activeId, queue, sectionsById]);
