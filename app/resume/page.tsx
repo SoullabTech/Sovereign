@@ -86,7 +86,7 @@ export default function ResumePage() {
   }, [router]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#A0C4C7] to-[#7FB5B3] flex flex-col items-center justify-center px-6">
+    <div className="min-h-[100dvh] bg-soullab-core flex flex-col items-center justify-center px-6">
 
       <motion.div
         initial={{ opacity: 0, scale: 0.85 }}
@@ -108,13 +108,13 @@ export default function ResumePage() {
         {phase === 'unauthenticated' ? (
           <>
             <p className="text-white text-lg font-light mb-2">Taking you to sign in…</p>
-            <p className="text-teal-100/60 text-sm font-light">We'll bring you right back.</p>
+            <p className="text-slate-400 text-sm font-light">We'll bring you right back.</p>
           </>
         ) : phase === 'redirecting' ? (
           <>
             <div className="w-10 h-10 border-4 border-white/30 border-t-white rounded-full animate-spin mx-auto mb-4" />
             <p className="text-white text-lg font-light mb-1">{label}</p>
-            <p className="text-teal-100/60 text-sm font-light">Taking you there now…</p>
+            <p className="text-slate-400 text-sm font-light">Taking you there now…</p>
           </>
         ) : (
           <>

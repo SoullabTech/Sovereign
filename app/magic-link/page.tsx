@@ -39,7 +39,7 @@ function MagicLinkContent() {
         <p className="text-white text-lg font-light mb-6">That link appears to be incomplete.</p>
         <button
           onClick={() => router.push('/magic-link-error?reason=no_token')}
-          className="px-6 py-3 rounded-xl bg-white/85 text-teal-950 font-semibold"
+          className="px-6 py-3 rounded-xl bg-maia-navy-700 hover:bg-maia-navy-600 text-white font-medium transition-all shadow-lg"
         >
           Request a new link
         </button>
@@ -52,19 +52,19 @@ function MagicLinkContent() {
       <h1 className="text-white text-2xl font-light mb-3 leading-snug">
         Welcome back.
       </h1>
-      <p className="text-teal-100/70 text-sm font-light leading-relaxed mb-8">
+      <p className="text-slate-400 text-sm font-light leading-relaxed mb-8">
         Click below to sign in to Soullab.
       </p>
 
       <button
         onClick={handleSignIn}
         disabled={status === 'loading'}
-        className="w-full py-3 rounded-xl bg-white/85 hover:bg-white text-teal-950 font-semibold text-base shadow-lg transition focus:outline-none focus:ring-2 focus:ring-white/40 disabled:opacity-50"
+        className="w-full py-3 rounded-xl bg-maia-navy-700 hover:bg-maia-navy-600 text-white font-medium text-base shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-maia-navy-600 disabled:opacity-50"
       >
         {status === 'loading' ? 'Signing in…' : 'Sign In'}
       </button>
 
-      <p className="text-teal-100/40 text-xs mt-4 font-light">
+      <p className="text-slate-500 text-xs mt-4 font-light">
         This link expires in 1 hour and can only be used once.
       </p>
     </div>
@@ -79,7 +79,7 @@ function LoadingFallback() {
 
 export default function MagicLinkPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#A0C4C7] to-[#7FB5B3] flex flex-col items-center justify-center px-6">
+    <div className="min-h-[100dvh] bg-soullab-core flex flex-col items-center justify-center px-6">
       <motion.div
         initial={{ opacity: 0, scale: 0.85 }}
         animate={{ opacity: 1, scale: 1 }}
@@ -95,12 +95,13 @@ export default function MagicLinkPage() {
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.7, delay: 0.2 }}
-        className="rounded-2xl p-8 shadow-2xl border max-w-sm w-full"
+        className="rounded-2xl p-8 max-w-sm w-full"
         style={{
-          background: 'linear-gradient(145deg, rgba(255,255,255,0.18), rgba(110,231,183,0.05), rgba(255,255,255,0.15))',
-          backdropFilter: 'blur(8px)',
-          border: '1px solid rgba(255,255,255,0.2)',
-          boxShadow: '0 0 60px rgba(251,191,36,0.3), 0 0 100px rgba(245,158,11,0.2)',
+          background: 'linear-gradient(165deg, rgba(15, 29, 50, 0.8), rgba(10, 22, 40, 0.6))',
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
+          border: '1px solid rgba(30, 58, 95, 0.5)',
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04), inset 0 1px 0 rgba(30, 58, 95, 0.3)',
         }}
       >
         <Suspense fallback={<LoadingFallback />}>
