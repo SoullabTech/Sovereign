@@ -87,9 +87,14 @@ shipped behaviour.
 05B-8B-EDITORIAL-REVIEW-          SPECIFIED · its blocking discovery
        SURFACE-02                 resolved by 02b
                                   WS2-05B-8B_EDITORIAL_REVIEW_SURFACE_02.md
-  02b  editorial reading contract BUILT · offline-witnessed
-                                  awaiting ONE real reading (Kelly's act)
+  02b  editorial reading contract steps 1-5 PASS · Kelly 2026-08-31
+                                  real-Work DRY_RUN NEXT (Mac Studio),
+                                  then ONE real reading, AUTHORIZED
                                   WS2-05B-8B-02b_EDITORIAL_READING_CONTRACT.md
+       READER_VERSION            unchanged, ruled: the hash identifies the
+                                  contract, the row says whether a letter
+                                  exists; -02 is reserved for a change to
+                                  the reader ARCHITECTURE
   02a  editorial surface          HOLD · behind 02b's real reading
   02c  Ask MAIA                   SEPARATE UNIT · not designed
 ```

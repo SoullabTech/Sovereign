@@ -11,11 +11,16 @@ the labels do not exist anywhere.*
 > surface deliberately dumb and faithful.
 
 ```text
-02b  editorial reading contract   BUILT · awaiting one real reading
-02a  editorial surface            HOLD, behind 02b's real-reading witness
-02c  Ask MAIA                     SEPARATE UNIT · not designed
-05B-8b founder judgment           HOLD
-05B-6  adoption                   HOLD
+02b types/parser/schema           PASS
+02b commentary/adoption seam      PASS
+02b adversarial fixture           PASS
+02b contract witness              PASS
+02b real-Work DRY_RUN             NEXT · Mac Studio
+02b real reading                  AUTHORIZED after DRY_RUN
+02a editorial surface             HOLD
+02c Ask MAIA                      HOLD
+05B-8b semantic judgment          HOLD
+05B-6 adoption                    HOLD
 ```
 
 ---
@@ -165,6 +170,23 @@ READER_VERSION      REAL-STRUCTURE-READER-01     unchanged
 promptContractHash  7d4e27cfa81d…  →  a1825a7c2f50…
 ```
 
+**Ruled 2026-08-31 (Kelly): leave the version alone.** Three distinct facts,
+answered by three distinct places, and collapsing any two of them would cost
+more than it saves:
+
+```text
+readerVersion       names the reader implementation / unit
+promptContractHash  identifies the exact epistemic and output contract
+                    a reading was made under
+the row itself      says whether editorialSynthesis exists
+```
+
+The containment teaching already established that a contract change moves the
+hash without creating a new reader unit; that doctrine is kept consistent rather
+than given a second meaning now. **`REAL-STRUCTURE-READER-02` is reserved for a
+change to the reader ARCHITECTURE** — a different host protocol, a different
+body policy, a different model-interaction pattern.
+
 **The version is deliberately unchanged.** It names the reader UNIT; the hash is
 what distinguishes one contract from another, and it moved once already when the
 containment rule was taught after Run A. Two proposals bearing this version and
@@ -187,6 +209,79 @@ no manuscript, no key, nothing sent. It is the smaller half of `DRY_RUN=1`,
 separated because the contract is the half that changes between readers, and
 `DRY_RUN` also prints this Work's 174 headings and its observations — a lot of
 scrolling when what you are checking is what MAIA was *asked*.
+
+## The preflight, on the machine that will make the call
+
+`DRY_RUN=1` now opens with the facts a person actually checks, **read out of the
+code rather than asserted in prose**: the hash from the reader, the ceilings from
+the same scope constant the host enforces, the contract fields from the tool
+schema itself. Hunting for them inside 174 heading rows is how a preflight
+becomes a formality.
+
+```text
+══ PREFLIGHT ═════════════════════════════════════════════════════════
+  promptContractHash  a1825a7c2f50…
+  readerVersion       REAL-STRUCTURE-READER-01
+  pass 1 bodies       0
+  contract includes
+    editorialLabel on every division   true
+    editorialSynthesis required        true
+      thesis · strongestFindings · questionsForAuthor
+  body law            4/request · 8/read · 60,000 chars · no truncation · no Materials
+```
+
+```bash
+export MEMBER_ID=$(psql -U soullab -d maia_consciousness -tAc \
+  "SELECT member_id FROM member_manuscripts WHERE id='a3ae67fd-a21e-4948-8766-4c397d2e4712'")
+
+DRY_RUN=1 \
+DATABASE_URL=postgresql://soullab@localhost:5432/maia_consciousness \
+MEMBER_ID="$MEMBER_ID" \
+MANUSCRIPT=a3ae67fd-a21e-4948-8766-4c397d2e4712 \
+npx tsx scripts/ws2-05b-reader-run.ts
+```
+
+**This preflight has to run on the Mac Studio.** The container this branch was
+built in has no `maia_consciousness` and no copy of the book; a DRY_RUN there
+would be the fixture-shape error again — the right output from the wrong Work,
+on a machine that will not make the call.
+
+**What WAS exercised here.** The script's DRY_RUN path was run end-to-end
+against a real PostgreSQL with a synthetic 14-section Work, so the preflight
+block is not new code meeting a real book for the first time. It printed the
+block above and exited 0 with `pass 1 bodies: 0`. The Work was synthetic; the
+only claim is that the path runs.
+
+## The 02b witness the runner now prints
+
+Reported AFTER the proposal is stored, deliberately: this is commentary, and a
+paid reading must not be lost to a crash in the code that describes it. The row
+is the artifact and the report is re-runnable from it.
+
+```text
+── editorial witness ──
+labels: N given · N declined (null) · N ABSENT — INVESTIGATE  of M division(s)
+
+  5 untitled siblings of kind "element" — the shape 8B failed on:
+    kind          title   editorialLabel
+    element       null    ?               43–69
+    …
+
+label leaked into title: none
+editorialSynthesis: N finding(s), N question(s)
+```
+
+**The label prints unconditionally; the title still does not.** The existing
+`SHOW_READING` gate exists because titles are drawn from the MEMBER'S words. An
+editorial label is MAIA's own words, and whether she produced one is the whole
+question 02b was built to answer — putting it behind the flag that also dumps
+the member's titles would put the witness behind the wrong door. The letter's
+text stays behind `SHOW_READING`, like `account`, because it is her prose about
+their book and may quote it; the counts are structural and always print.
+
+**The leak check is the one thing the offline tests cannot do.** They prove the
+code does not COPY a label into `title`. They cannot prove MAIA did not write the
+same words into both fields, and only a real reading can.
 
 ---
 
@@ -233,10 +328,32 @@ editorial labels do not travel into the member's copy, by key or by value
 
 ## What is NOT closed
 
-**Step 6 — one new real reading of Elemental Alchemy.** Not taken. It needs
-Kelly's key and is his act, on his machine, after inspecting the contract above.
-Nothing in the app creates a reading; there is still no trigger, no
+**Step 6 — one new real reading of Elemental Alchemy.** AUTHORISED after the
+preflight above, and not taken. It needs Kelly's key and is his act, on his
+machine. Nothing in the app creates a reading; there is still no trigger, no
 import-triggered reading, no ambient re-reading, no scheduled re-proposal.
+
+**What that run is judged on** — and it is not whether MAIA reproduces the old
+structure:
+
+```text
+the five siblings          kind · title · editorialLabel, recorded as a table
+the thesis                 understandable WITHOUT reading `account`
+strongestFindings          selective, not the whole analysis repeated
+questionsForAuthor         things a writer can take up, not diagnostic tags
+                           dressed as sentences; their places meaningful
+the seam                   no editorial label in any `title`
+runtime sovereignty        canonical fingerprint before == after
+                           new proposal frozen separately
+                           old proposal untouched
+                           no canonical structure write
+```
+
+**Five nulls is a result, not a bug, and the prompt is not to be repaired on the
+spot.** It would mean she could perceive the labels in prose and did not regard
+them as sufficiently grounded when asked to emit them explicitly. That is a
+legitimate experimental outcome, and patching the prompt in the same sitting
+would destroy the finding.
 
 **Whether the labels are any good.** Whether MAIA can honestly ground `Fire` on
 that book — rather than declining to `null` five times, which the contract

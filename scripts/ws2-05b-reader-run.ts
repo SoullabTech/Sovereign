@@ -130,6 +130,35 @@ async function main() {
        Materials exclusion actually live - could not be inspected before a book
        was sent. "Read it before you send your book" has to mean all of it. */
     const body = buildRequest({ pass: 1, evidence, sections, bodies: new Map() });
+
+    /* THE PREFLIGHT FACTS, STATED, and READ OUT OF THE CODE rather than
+       asserted in prose here. They are what a person actually checks before
+       spending a real reading, and hunting for them inside 174 heading rows is
+       how a preflight becomes a formality. Each line is derived: the hash from
+       the reader, the ceilings from the scope constant the host enforces, the
+       contract fields from the tool schema itself. */
+    const { promptContractHash, READER_VERSION, readerTools } =
+      await import('@/lib/manuscript/structure/maiaReader');
+    const propose = readerTools()[0].input_schema as Record<string, unknown>;
+    const props = propose.properties as Record<string, Record<string, unknown>>;
+    const unitReq = ((props.units.items as Record<string, unknown>).required ?? []) as string[];
+    const synReq = (props.editorialSynthesis?.required ?? []) as string[];
+    const readingReq = (propose.required ?? []) as string[];
+
+    console.log('\n══ PREFLIGHT ' + '═'.repeat(57));
+    console.log(`  promptContractHash  ${promptContractHash().slice(0, 12)}…`);
+    console.log(`  readerVersion       ${READER_VERSION}`);
+    console.log(`  pass 1 bodies       ${body.includes('SECTIONS YOU REQUESTED')
+      ? 'SOME — INVESTIGATE' : '0'}`);
+    console.log('  contract includes'
+      + `\n    editorialLabel on every division   ${unitReq.includes('editorialLabel')}`
+      + `\n    editorialSynthesis required        ${readingReq.includes('editorialSynthesis')}`
+      + `\n      ${synReq.join(' · ') || '(none)'}`);
+    console.log(`  body law            ${DEFAULT_READ_SCOPE.maxIdsPerRequest}/request ·`
+      + ` ${DEFAULT_READ_SCOPE.maxSections}/read ·`
+      + ` ${DEFAULT_READ_SCOPE.maxChars.toLocaleString('en-US')} chars`
+      + ' · no truncation · no Materials');
+
     console.log('\n  DRY RUN — everything that would be sent on pass 1.\n');
     console.log('══ SYSTEM ' + '═'.repeat(60));
     console.log(READER_SYSTEM);
@@ -271,11 +300,20 @@ async function main() {
 
   const at = new Map(sections.map((s) => [s.id, s.position]));
   const show = (u: { id: string; title: string | null; kind: string | null;
+    editorialLabel?: string | null;
     fromSectionId: string; toSectionId: string; uncertainty: readonly string[];
     children: readonly unknown[] }, depth: number): void => {
-    const name = SHOW_READING
+    /* THE LABEL PRINTS UNCONDITIONALLY; the title does not.
+       The existing gate is there because titles are drawn from the MEMBER'S own
+       words. An editorial label is MAIA's own words about a division, and
+       whether she produced one is the whole question 02b was built to answer -
+       so requiring the flag that also dumps the member's titles in order to see
+       it would put the witness behind the wrong door. */
+    const label = u.editorialLabel === undefined ? ''
+      : `  ⟨${u.editorialLabel ?? 'no label'}⟩`;
+    const name = (SHOW_READING
       ? `${u.kind ?? '—'} · ${u.title ?? '(untitled)'}`
-      : `${u.kind ?? '—'}`;
+      : `${u.kind ?? '—'}`) + label;
     console.log(`  ${'  '.repeat(depth)}${u.id}  ${name}`
       + `  ${at.get(u.fromSectionId)}–${at.get(u.toSectionId)}`
       + `${u.uncertainty.length ? `  ?${u.uncertainty.join(',')}` : ''}`);
@@ -308,6 +346,102 @@ async function main() {
     console.error(`\n  NOT STORED — ${stored.refusal}`
       + `${stored.detail ? ` (${stored.detail})` : ''}\n`);
     process.exit(1);
+  }
+
+  /* ── the 02b witness: is the reading COMMUNICABLE? ─────────────────────── */
+
+  /* AFTER the proposal is stored, deliberately. This is reporting, and a paid
+     reading must not be lost to a crash in the code that describes it. The row
+     is the artifact; the console is commentary, and re-runnable from the row. */
+
+  /**
+   * Not "did she reproduce the old structure". 8B failed on a page that was
+   * mechanically faithful, so what has to be inspected here is whether the
+   * distinction a reader needs was available to MAIA when she was asked for it
+   * explicitly - and whether it stayed on her side of the adoption seam.
+   *
+   * FIVE NULLS IS A RESULT, NOT A BUG. It would mean she could perceive the
+   * labels in prose and did not regard them as grounded enough to emit. That
+   * is a finding about the reading, and repairing the prompt on the spot would
+   * destroy it.
+   */
+  type U = { id: string; title: string | null; kind: string | null;
+    editorialLabel?: string | null; fromSectionId: string; toSectionId: string;
+    children: U[] };
+  const allUnits: U[] = [];
+  const gather = (us: readonly U[]) => { for (const u of us) { allUnits.push(u); gather(u.children); } };
+  if ('units' in interp) gather(interp.units as U[]);
+  if ('alternatives' in interp) for (const a of interp.alternatives) gather(a.units as U[]);
+
+  console.log('\n  ── editorial witness ──');
+  const labelled = allUnits.filter((u) => typeof u.editorialLabel === 'string');
+  const declined = allUnits.filter((u) => u.editorialLabel === null);
+  const missing = allUnits.filter((u) => u.editorialLabel === undefined);
+  console.log(`  labels: ${labelled.length} given · ${declined.length} declined (null)`
+    + `${missing.length ? ` · ${missing.length} ABSENT — INVESTIGATE` : ''}`
+    + ` of ${allUnits.length} division(s)`);
+
+  /* The adversarial shape itself: siblings sharing one kind with no titles.
+     If any such group exists, its rows are what 02b lives or dies on. */
+  const groups = new Map<string, U[]>();
+  const sib = (us: readonly U[]) => {
+    const byKind = new Map<string, U[]>();
+    for (const u of us) {
+      if (u.kind) byKind.set(u.kind, [...(byKind.get(u.kind) ?? []), u]);
+      sib(u.children);
+    }
+    for (const [k, list] of byKind) {
+      if (list.length >= 2 && list.every((u) => u.title === null)) {
+        groups.set(k, [...(groups.get(k) ?? []), ...list]);
+      }
+    }
+  };
+  if ('units' in interp) sib(interp.units as U[]);
+
+  if (groups.size === 0) {
+    console.log('  no untitled same-kind sibling group in this reading');
+  } else {
+    for (const [kind, list] of groups) {
+      console.log(`\n  ${list.length} untitled siblings of kind "${kind}" —`
+        + ' the shape 8B failed on:');
+      console.log('    kind          title   editorialLabel');
+      for (const u of list) {
+        console.log(`    ${kind.padEnd(13)} null    `
+          + `${u.editorialLabel === undefined ? '(absent)' : u.editorialLabel ?? 'null'}`
+          + `   ${at.get(u.fromSectionId)}–${at.get(u.toSectionId)}`);
+      }
+    }
+  }
+
+  /* THE SEAM. A label that arrived as a title would be exactly the invention
+     this programme has refused throughout, and the one failure the offline
+     leak test cannot catch: it proves the code does not COPY the label, not
+     that MAIA did not write the same words into both fields. */
+  const leaked = allUnits.filter((u) =>
+    u.title !== null && u.editorialLabel != null && u.title === u.editorialLabel);
+  console.log(`\n  label leaked into title: ${leaked.length === 0 ? 'none'
+    : `${leaked.length} unit(s) — ${leaked.map((u) => u.id).join(',')} — INVESTIGATE`}`);
+
+  const syn = interp.editorialSynthesis;
+  if (!syn) {
+    console.log('  editorialSynthesis: ABSENT — this reading predates the contract');
+  } else {
+    console.log(`  editorialSynthesis: ${syn.strongestFindings.length} finding(s),`
+      + ` ${syn.questionsForAuthor.length} question(s)`);
+    /* Text behind the same gate as `account`: it is MAIA's prose about the
+       member's book, and may quote it. The COUNTS above are structural and
+       always print, so "did she write a letter at all" needs no flag. */
+    if (SHOW_READING) {
+      console.log(`\n  THESIS: ${syn.thesis}`);
+      for (const f of syn.strongestFindings) console.log(`    · ${f}`);
+      for (const q of syn.questionsForAuthor) {
+        const where = (q.sectionIds ?? []).map((id) => at.get(id) ?? '?').join(',');
+        console.log(`\n    Q: ${q.label}${where ? `  [${where}]` : '  [no place named]'}`);
+        console.log(`       ${q.explanation}`);
+      }
+    } else {
+      console.log('  (SHOW_READING=1 to print the letter itself)');
+    }
   }
 
   /* ── the negative witness: nothing about the Work moved ───────────────── */
