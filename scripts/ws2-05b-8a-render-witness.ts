@@ -267,12 +267,29 @@ async function main() {
     adoptish.length === 0 ? 'absent, not disabled' : adoptish.join(' / '));
 
   /* 10 ── captures ─────────────────────────────────────────────────────── */
+  //
+  // The room now opens on the reading with section rows collapsed, so a capture
+  // of a particular section has to open the division holding it first. Clicking
+  // a disclosure is a DOM interaction and not a write - the interceptor above
+  // still aborts every non-GET, and item 12 still asserts none was issued.
+  //
+  // The FIRST capture is taken BEFORE any expansion, because the state the
+  // member meets on arrival is the one worth having on the record.
+  await page.screenshot({ path: `${OUT}/ws2-8a-room-as-opened.png`, fullPage: true });
+  const disclosures = await page.$$('[data-review-unit] button[aria-label^="show the"]');
+  for (const d of disclosures) await d.click().catch(() => undefined);
   await page.screenshot({ path: `${OUT}/ws2-8a-room.png`, fullPage: true });
+  /* HONEST ABOUT WHAT IT WROTE. The first version returned true whenever the
+     element EXISTED, swallowing a failed screenshot - so a capture that never
+     reached disk was reported as written. An element hidden behind a collapsed
+     division fails exactly that way. */
   const shot = async (name: string, sel: string) => {
     const el = await page.$(sel);
     if (!el) return false;
-    await el.screenshot({ path: `${OUT}/ws2-8a-${name}.png` }).catch(() => undefined);
-    return true;
+    try {
+      await el.screenshot({ path: `${OUT}/ws2-8a-${name}.png` });
+      return true;
+    } catch { return false; }
   };
   const gotCoverage = await shot('coverage', '[data-coverage]');
   /* The section whose placement was refused in Run A. */
@@ -280,7 +297,8 @@ async function main() {
   const gotEnd = await shot('end', `[data-section="${sectionCount - 1}"]`);
   record(10, 'captures written',
     gotCoverage && got42 && gotEnd ? 'PASS' : 'UNKNOWN',
-    `${OUT}/ws2-8a-room.png · coverage ${gotCoverage} · section 42 ${got42}`
+    `${OUT}/ws2-8a-room-as-opened.png + room.png`
+    + ` · coverage ${gotCoverage} · section 42 ${got42}`
     + ` · end ${gotEnd} · uncertain region ${regionMarks > 0}`);
 
   /* 11 ── the console, and anything the page tried to write ────────────── */

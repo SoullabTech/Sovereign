@@ -27,7 +27,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { GROUND, INK, RADIUS, SPACE } from '../studioTheme';
+import { GROUND, INK, RADIUS, RULE, SPACE } from '../studioTheme';
 import { StudioText } from '../studio/StudioType';
 import {
   fetchProposal, applyGesture, previewGesture, reviewRefusalCopy,
@@ -46,6 +46,16 @@ export default function StructureReview({
   const [notice, setNotice] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [pending, setPending] = useState<{ op: ReviewOperation; rows: ChangeRow[] } | null>(null);
+  /* Which divisions have been opened to show their sections. Empty by default:
+     the room opens on the reading, not on 174 rows of evidence for it. */
+  const [expanded, setExpanded] = useState<ReadonlySet<string>>(new Set());
+  const toggle = useCallback((unitId: string) => {
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      if (!next.delete(unitId)) next.add(unitId);
+      return next;
+    });
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -165,33 +175,6 @@ export default function StructureReview({
         </div>
       )}
 
-      {/* WHAT SHE COULD NOT SETTLE, in her words.
-          These were frozen in the interpretation and rendered nowhere, so the
-          room presented the reading as more certain than the reading was. The
-          `why` is printed VERBATIM: paraphrasing a qualification is the same
-          failure as dropping it, one step quieter. */}
-      {view.interpretation.uncertainRegions.length > 0 && (
-        <div style={{ marginBottom: SPACE.base }}>
-          <StudioText role="panelLabel" tone="muted" style={{ display: 'block' }}>
-            what she could not settle
-          </StudioText>
-          {view.interpretation.uncertainRegions.map((r, i) => {
-            const from = headingOf(r.fromSectionId)?.position;
-            const to = headingOf(r.toSectionId)?.position;
-            return (
-              <StudioText
-                key={`${r.fromSectionId}:${r.toSectionId}:${i}`}
-                role="quiet"
-                data-uncertain-region={`${from ?? '?'}-${to ?? '?'}`}
-                style={{ display: 'block', marginTop: SPACE.hairline }}
-              >
-                {from ?? '?'}–{to ?? '?'} · {r.why}
-              </StudioText>
-            );
-          })}
-        </div>
-      )}
-
       {/* NONE: a complete answer. The account above, the book below, no tree
           and no apology. */}
       {form === 'none' && (
@@ -212,10 +195,17 @@ export default function StructureReview({
             <Entry key={entryKey(e)} entry={e} depth={0}
               headingOf={headingOf} proposedById={proposedById}
               positionOf={(id) => headingOf(id)?.position}
-              busy={busy} onGesture={gesture} />
+              busy={busy} onGesture={gesture}
+              expanded={expanded} onToggle={toggle} />
           ))}
         </div>
       )}
+
+      {/* AFTER THE READING, NOT BEFORE IT. The thesis is what the member came
+          to judge; her open questions are how to weigh it, and they read as
+          qualifications of something already seen rather than as a preamble to
+          something not yet shown. */}
+      <OpenQuestions view={view} headingOf={headingOf} proposedById={proposedById} />
 
       {delta && (delta.added.length || delta.removed.length || delta.changed.length) ? (
         <StudioText role="metadata" tone="muted" data-review-delta
@@ -229,6 +219,72 @@ export default function StructureReview({
 }
 
 const entryKey = (e: OutlineEntry) => e.kind === 'section' ? `s:${e.id}` : `u:${e.node.id}`;
+
+/**
+ * Everything MAIA left unresolved, gathered — and kept in TWO KINDS.
+ *
+ * There are three frozen `uncertainRegions` and ten divisions carrying
+ * `uncertainty` tags. Those are different qualifications and collapsing them
+ * into "three doubts" would be a fresh compression error of exactly the kind
+ * this unit exists to correct — the 8a defect rebuilt one level higher.
+ *
+ * A REGION is a stretch of the Work she could not settle, in her own words.
+ * A TAG is a caveat attached to a division she did propose.
+ */
+function OpenQuestions({
+  view, headingOf, proposedById,
+}: {
+  view: ProposalView;
+  headingOf: (id: string) => { position: number } | undefined;
+  proposedById: Map<string, ProposedUnit>;
+}) {
+  const regions = view.interpretation.uncertainRegions;
+  const tagged = [...proposedById.values()].filter((u) => u.uncertainty.length > 0);
+  if (regions.length === 0 && tagged.length === 0) return null;
+
+  const at = (id: string) => headingOf(id)?.position ?? '?';
+  return (
+    <div data-open-questions
+      style={{ marginTop: SPACE.comfortable, paddingTop: SPACE.base,
+        borderTop: `1px solid ${RULE.quiet}` }}>
+      <StudioText role="panelLabel" tone="muted" style={{ display: 'block' }}>
+        MAIA has unresolved questions
+      </StudioText>
+
+      {regions.length > 0 && (
+        <div data-question-group="regions" style={{ marginTop: SPACE.snug }}>
+          <StudioText role="metadata" tone="muted" style={{ display: 'block' }}>
+            boundary and structure questions
+          </StudioText>
+          {regions.map((r, i) => (
+            <StudioText key={`${r.fromSectionId}:${i}`} role="quiet"
+              data-uncertain-region={`${at(r.fromSectionId)}-${at(r.toSectionId)}`}
+              style={{ display: 'block', paddingLeft: SPACE.base }}>
+              {at(r.fromSectionId)}–{at(r.toSectionId)} · {r.why}
+            </StudioText>
+          ))}
+        </div>
+      )}
+
+      {tagged.length > 0 && (
+        <div data-question-group="qualifications" style={{ marginTop: SPACE.snug }}>
+          <StudioText role="metadata" tone="muted" style={{ display: 'block' }}>
+            further qualifications, division by division
+          </StudioText>
+          {tagged.map((u) => (
+            <StudioText key={u.id} role="quiet"
+              style={{ display: 'block', paddingLeft: SPACE.base }}>
+              {at(u.fromSectionId)}–{at(u.toSectionId)}
+              {u.kind || u.title ? ` ${u.kind ?? ''}${u.title ? ` ${u.title}` : ''}` : ''}
+              {' · '}
+              {u.uncertainty.map((t) => UNCERTAINTY_SAYS[t] ?? t).join(' · ')}
+            </StudioText>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 /**
  * What each uncertainty tag says, in a member's words.
@@ -338,7 +394,7 @@ function PostImage({
 }
 
 function Entry({
-  entry, depth, headingOf, proposedById, positionOf, busy, onGesture,
+  entry, depth, headingOf, proposedById, positionOf, busy, onGesture, expanded, onToggle,
 }: {
   entry: OutlineEntry;
   depth: number;
@@ -347,6 +403,8 @@ function Entry({
   positionOf: (id: string) => number | undefined;
   busy: boolean;
   onGesture: (op: ReviewOperation, previewFirst: boolean) => void;
+  expanded: ReadonlySet<string>;
+  onToggle: (unitId: string) => void;
 }) {
   const pad = SPACE.snug + depth * SPACE.base;
 
@@ -377,15 +435,46 @@ function Entry({
   const boundaryChanged = proposed
     && (positionOf(proposed.fromSectionId) !== from || positionOf(proposed.toSectionId) !== to);
   const mine = node.id.startsWith('m');
+  const hasDoubt = (proposed?.uncertainty.length ?? 0) > 0;
+  const open = expanded.has(node.id);
+  const sectionCount = entry.entries.filter((e) => e.kind === 'section').length;
 
   return (
     <div data-review-unit={node.id} style={{ marginTop: SPACE.snug }}>
       <div style={{ display: 'flex', gap: SPACE.snug, alignItems: 'baseline', paddingLeft: pad }}>
+        {/* COLLAPSED MUST NOT MEAN SETTLED. A division carrying qualification
+            says so before it is opened; without this the summary would read as
+            a settled outline and the caveats would be one click away from a
+            member who has no reason to click. */}
+        {/* THE MARKER IS THE ROW'S SHARE OF THE QUALIFICATION.
+            What she left open is stated in full, once, in the gathered panel
+            below - where the ten of them can be weighed together, which is the
+            point. Repeating each division's caveat inline said the same thing
+            twice and tripled the height of the outline, which is how the room
+            became unreadable in the first place.
+            NOT HIDDEN: the marker is on the row, it names the tags to a
+            machine, and its title names them to a person on hover. */}
+        {hasDoubt && (
+          <span data-uncertainty={proposed?.uncertainty.join(',')}
+            aria-label={`MAIA left open: ${(proposed?.uncertainty ?? [])
+              .map((u) => UNCERTAINTY_SAYS[u] ?? u).join(', ')}`}
+            title={`MAIA left open: ${(proposed?.uncertainty ?? [])
+              .map((u) => UNCERTAINTY_SAYS[u] ?? u).join(', ')}`}
+            style={{ color: INK.muted }}>◇</span>
+        )}
         <StudioText role="workIdentity" as="span" style={{ flex: 1 }}>
           {node.kind && node.title ? `${node.kind} — ${node.title}`
             : node.title ?? node.kind ?? 'Untitled division'}
         </StudioText>
         <StudioText role="metadata" tone="quiet" as="span">{from}–{to}</StudioText>
+        {sectionCount > 0 && (
+          <Tiny
+            label={open ? `hide the ${sectionCount} sections here`
+              : `show the ${sectionCount} sections here`}
+            disabled={false}
+            onClick={() => onToggle(node.id)}
+          >{open ? '−' : `+${sectionCount}`}</Tiny>
+        )}
         <Tiny label="move this division out one level" disabled={busy}
           onClick={() => onGesture({ op: 'promote', unitId: node.id }, true)}>⇤</Tiny>
       </div>
@@ -402,21 +491,6 @@ function Entry({
           )}
         </div>
       )}
-      {/* WHAT SHE LEFT OPEN ABOUT THIS DIVISION.
-          Frozen on the proposed unit and rendered nowhere until now, so ten of
-          eleven divisions on the first real reading arrived looking settled.
-          Read from the PROPOSED unit rather than the member's copy: these are
-          MAIA's qualifications about what she suggested, and they do not
-          silently transfer to a boundary the member has since moved. */}
-      {proposed && proposed.uncertainty.length > 0 && (
-        <StudioText role="metadata" tone="quiet"
-          data-uncertainty={proposed.uncertainty.join(',')}
-          style={{ display: 'block', paddingLeft: pad + SPACE.base }}>
-          MAIA left open: {proposed.uncertainty
-            .map((u) => UNCERTAINTY_SAYS[u] ?? u).join(' · ')}
-        </StudioText>
-      )}
-
       {mine && (
         <StudioText role="metadata" tone="quiet" data-member-authored
           style={{ display: 'block', paddingLeft: pad + SPACE.base }}>
@@ -424,10 +498,29 @@ function Entry({
         </StudioText>
       )}
 
+      {/* THE THESIS FIRST, EVIDENCE ON DEMAND.
+          Child DIVISIONS always show - they are the reading. Section rows are
+          the evidence for it, and 174 of them at once is a serialization, not a
+          structure a person can hold.
+
+          They remain IN THE DOM, hidden rather than unmounted, deliberately:
+          the whole Work is still present, once, in order, which is what 8a
+          asserts about this surface. Collapsing by unmounting would have made
+          the room pass a completeness check it no longer met. */}
       {entry.entries.map((e) => (
-        <Entry key={entryKey(e)} entry={e} depth={depth + 1}
-          headingOf={headingOf} proposedById={proposedById} positionOf={positionOf}
-          busy={busy} onGesture={onGesture} />
+        e.kind === 'section'
+          ? (
+            <div key={entryKey(e)} hidden={!open}>
+              <Entry entry={e} depth={depth + 1}
+                headingOf={headingOf} proposedById={proposedById} positionOf={positionOf}
+                busy={busy} onGesture={onGesture} expanded={expanded} onToggle={onToggle} />
+            </div>
+          )
+          : (
+            <Entry key={entryKey(e)} entry={e} depth={depth + 1}
+              headingOf={headingOf} proposedById={proposedById} positionOf={positionOf}
+              busy={busy} onGesture={onGesture} expanded={expanded} onToggle={onToggle} />
+          )
       ))}
       {entry.empty.map((c) => (
         <StudioText key={c.id} role="metadata" tone="quiet"
