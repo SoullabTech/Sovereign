@@ -81,6 +81,15 @@ export type VoiceDiagEvent =
   | 'voice_playback_resumed'
   | 'voice_playback_ended'
   | 'voice_playback_failed'
+  // VOICE-TTS-REQUEST-DEADLINE-01 — abandonment witness.
+  // `voice_tts_abandoned` records that a generation was given up at a
+  // deadline (client or server) and the member was released with MAIA's text
+  // intact. `voice_tts_late_completion_discarded` is the negative control: it
+  // fires when audio for an already-abandoned generation arrives and is
+  // refused at the point of effect. Its ABSENCE proves nothing; its presence
+  // proves the stale response was caught rather than spoken.
+  | 'voice_tts_abandoned'
+  | 'voice_tts_late_completion_discarded'
   | 'voice_fallback_transcribe_sent'
   | 'voice_fallback_transcribe_result'
   | 'voice_fallback_failed'

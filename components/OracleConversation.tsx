@@ -79,6 +79,14 @@ import { OracleResponse, ConversationContext as OracleConversationContext } from
 import { mapResponseToMotion, enrichOracleResponse } from '@/lib/motion-mapper';
 import { apiUrl, apiFetch, getValidMemberId } from '@/lib/http/apiBase';
 import { VOICE_TIMING } from '@/lib/voice/voiceTiming';
+import { logVoiceEvent } from '@/lib/voice/voiceDiagnostics';
+
+// VOICE-TTS-REQUEST-DEADLINE-01 — client-side abandonment deadline.
+// Deliberately a touch above the route's own 20s so, in the normal case, the
+// server's structured 504 wins and the member gets the truthful reason rather
+// than a bare abort. The client deadline is the backstop for when the server
+// itself is the thing that stopped answering.
+const TTS_CLIENT_DEADLINE_MS = 22_000;
 import useSession from '@/lib/hooks/useSession';
 import { ShareToCircleModal } from '@/components/circles/ShareToCircleModal';
 import { useOfferToCircle } from '@/lib/circles/useOfferToCircle';
@@ -1595,6 +1603,16 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   const animationFrameRef = useRef<number | null>(null);
   const currentAudioRef = useRef<HTMLAudioElement | null>(null);
   const iosWarmedAudioRef = useRef<HTMLAudioElement | null>(null); // Pre-warmed audio element for iOS Safari
+
+  // VOICE-TTS-REQUEST-DEADLINE-01 — abandonment epoch.
+  // Every speak attempt claims a generation number. Once a newer attempt
+  // starts, or this one exceeds its deadline, the older generation is
+  // abandoned and MUST become inert: it may not play audio, mutate the
+  // message list, or touch responding/playing state. Witnessed 2026-08-31:
+  // a response that returned after the conversation had moved on spoke into
+  // a later exchange. A bounded deadline alone does not prevent that; only
+  // an epoch check at the point of effect does.
+  const ttsGenerationRef = useRef(0);
   const isProcessingRef = useRef(false);
   const isRespondingRef = useRef(false);
   const isAudioPlayingRef = useRef(false);
@@ -1975,6 +1993,10 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
 
       setIsResponding(true);
 
+      // VOICE-TTS-REQUEST-DEADLINE-01: claim this attempt's generation.
+      const ttsGeneration = ++ttsGenerationRef.current;
+      const ttsAbandoned = () => ttsGenerationRef.current !== ttsGeneration;
+
       // 🔥 iOS Safari Fix: Use Web Audio API decodeAudioData instead of HTMLAudioElement
       // HTMLAudioElement.play() requires a user gesture for EACH element on iOS
       // But AudioContext.decodeAudioData() works once the context is unlocked
@@ -2115,16 +2137,53 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
         console.log(`📱 [TTS] ArrayBuffer ready, size: ${arrayBuffer.byteLength}, looksLikeMP3: ${isMP3}`);
       } else {
         // Non-Capacitor: Use standard fetch
-        const response = await apiFetch('/api/voice/openai-tts', {
-          method: 'POST',
-          body: JSON.stringify({
-            text: text,
-            voice: voiceSettings.voice,
-            speed: voiceSettings.speed,
-            model: ttsInstructions ? 'gpt-4o-mini-tts' : voiceSettings.model,
-            ...(ttsInstructions ? { instructions: ttsInstructions } : {}),
-          })
-        });
+        // VOICE-TTS-REQUEST-DEADLINE-01: the route now enforces its own 20s
+        // deadline, but the client keeps an independent one so abandonment
+        // does not depend on the server behaving. Whichever fires first, the
+        // member is released.
+        const ttsAbort = new AbortController();
+        const ttsDeadline = setTimeout(() => ttsAbort.abort(), TTS_CLIENT_DEADLINE_MS);
+        let response: Response;
+        try {
+          response = await apiFetch('/api/voice/openai-tts', {
+            method: 'POST',
+            signal: ttsAbort.signal,
+            body: JSON.stringify({
+              text: text,
+              voice: voiceSettings.voice,
+              speed: voiceSettings.speed,
+              model: ttsInstructions ? 'gpt-4o-mini-tts' : voiceSettings.model,
+              ...(ttsInstructions ? { instructions: ttsInstructions } : {}),
+            })
+          });
+        } catch (fetchErr: any) {
+          if (ttsAbort.signal.aborted) {
+            // Abandon this generation. MAIA's text is already on screen and
+            // stays there; only the optional audio is withdrawn. The `finally`
+            // below clears responding/playing state, which re-arms listening.
+            ttsGenerationRef.current++;
+            console.warn(`[TTS] client deadline ${TTS_CLIENT_DEADLINE_MS}ms exceeded — generation abandoned`);
+            logVoiceEvent('voice_tts_abandoned', {
+              reason: 'client_deadline',
+              deadlineMs: TTS_CLIENT_DEADLINE_MS,
+              textChars: text.length,
+            });
+            toast('Voice is taking too long — continuing without it', { duration: 4000 });
+            return;
+          }
+          throw fetchErr;
+        } finally {
+          clearTimeout(ttsDeadline);
+        }
+
+        if (response.status === 504) {
+          // Server abandoned the generation at its own deadline.
+          ttsGenerationRef.current++;
+          console.warn('[TTS] server reported deadline_exceeded — generation abandoned');
+          logVoiceEvent('voice_tts_abandoned', { reason: 'server_deadline', textChars: text.length });
+          toast('Voice is taking too long — continuing without it', { duration: 4000 });
+          return;
+        }
 
         if (!response.ok) {
           throw new Error('Failed to generate speech');
@@ -2140,6 +2199,21 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
           toast.error('Voice generation failed');
           throw new Error('TTS returned error: ' + errorText.slice(0, 100));
         }
+      }
+
+      // VOICE-TTS-REQUEST-DEADLINE-01 — the mandatory negative control.
+      // If a newer speak attempt started while this one was in flight, or this
+      // generation was abandoned at a deadline, a late arrival stops here: no
+      // playback, no message mutation, no state mutation. This is the check
+      // that keeps a stale response from speaking into a later conversation.
+      if (ttsAbandoned()) {
+        console.warn(`[TTS] late completion for abandoned generation ${ttsGeneration} — discarded, not played`);
+        logVoiceEvent('voice_tts_late_completion_discarded', {
+          generation: ttsGeneration,
+          currentGeneration: ttsGenerationRef.current,
+          textChars: text.length,
+        });
+        return;
       }
 
       // Log which playback path we're taking

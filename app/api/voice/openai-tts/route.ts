@@ -13,6 +13,7 @@ import { TTSFallbackToOpenAI } from '@/lib/tts/ttsRouter';
 import { logFallbackEvent, checkCloudConsent, resolveVoicePolicy } from '@/lib/tts/voiceSovereignty';
 import { resolveArchetypeVoice } from '@/lib/voice/voiceArchetypes';
 import { getMemberVoicePreferences } from '@/lib/voice/voiceControlsService';
+import { runWithTTSDeadline, TTSDeadlineExceeded } from '@/lib/voice/ttsDeadline';
 
 export const runtime = "nodejs"; // important: TTS returns binary; avoid edge surprises
 export const dynamic = "force-dynamic";
@@ -26,6 +27,15 @@ function getOpenAI() {
     });
   }
   return _openai;
+}
+
+// VOICE-TTS-REQUEST-DEADLINE-01 — see lib/voice/ttsDeadline.ts for the
+// witnessed failure this bounds and why 20s is the number.
+async function createSpeechWithDeadline(params: any, requestId: string) {
+  return runWithTTSDeadline(
+    (signal) => getOpenAI().audio.speech.create(params, { signal }),
+    requestId
+  );
 }
 
 function jsonError(message: string, status = 500, extra?: Record<string, unknown>) {
@@ -147,7 +157,7 @@ export async function POST(req: NextRequest) {
         speed,
         ...(ttsInstructions ? { instructions: ttsInstructions } : {}),
       };
-      const speech = await getOpenAI().audio.speech.create(speechParams);
+      const speech = await createSpeechWithDeadline(speechParams, requestId);
 
       const audioBuffer = Buffer.from(await speech.arrayBuffer());
       const ms = Date.now() - t0;
@@ -315,7 +325,7 @@ export async function POST(req: NextRequest) {
       speed,
       ...(ttsInstructions ? { instructions: ttsInstructions } : {}),
     };
-    const speech = await getOpenAI().audio.speech.create(fallbackSpeechParams);
+    const speech = await createSpeechWithDeadline(fallbackSpeechParams, requestId);
 
     const audioBuffer = Buffer.from(await speech.arrayBuffer());
     const ms = Date.now() - t0;
@@ -357,6 +367,23 @@ export async function POST(req: NextRequest) {
       },
     });
   } catch (err: any) {
+    // VOICE-TTS-REQUEST-DEADLINE-01: an abandoned generation is a bounded,
+    // truthful failure — not an upstream error to be re-narrated. The member
+    // keeps MAIA's text; only the optional audio is withdrawn.
+    //
+    // Note: usage is recorded only on the success path, so an abandoned
+    // generation bills nothing. That is a consequence of abandonment, not a
+    // change to the quota formula (see VOICE-QUOTA-BILLS-LATENCY-01, parked).
+    if (err instanceof TTSDeadlineExceeded) {
+      return jsonError("Voice is taking too long right now", 504, {
+        requestId,
+        voiceUnavailable: true,
+        reason: "deadline_exceeded",
+        deadlineMs: err.deadlineMs,
+        elapsedMs: err.elapsedMs,
+      });
+    }
+
     // This is the money: surface upstream details
     const status = err?.status ?? err?.response?.status ?? 500;
 
