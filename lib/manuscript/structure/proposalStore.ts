@@ -20,7 +20,8 @@
 
 import { query, transaction } from '@/lib/db/postgres';
 import type { StructureEvidence, EvidenceCoverage } from './evidence';
-import type { StructureInterpretation, ProposedUnit } from './interpret';
+import type { StructureInterpretation } from './interpret';
+import { toReviewed, type ReviewedStructure } from './review';
 
 export interface StoredProposal {
   id: string;
@@ -38,19 +39,15 @@ export interface StoredProposal {
 }
 
 /**
- * What the member is shaping.
+ * What the member is shaping is defined in `./review`, deliberately.
  *
- * Deliberately NOT a `StructureInterpretation`: the six forms describe what a
- * reading found, and once a member is editing, the only question is which
- * divisions they intend. An ambiguous reading becomes reviewable by the member
- * choosing an alternative, which produces units; a `none` reading becomes
- * reviewable as an empty list they may add to.
+ * It is NOT a `StructureInterpretation`: the six forms describe what a reading
+ * FOUND, and once a member is editing, the only question is which divisions
+ * they intend. And it carries none of MAIA's rationale, evidence or
+ * uncertainty - those stay frozen in the interpretation, or a moved boundary
+ * would arrive carrying her reasoning for a boundary she never proposed.
  */
-export interface ReviewedStructure {
-  units: ProposedUnit[];
-  /** Set when the member picked one alternative of an ambiguous reading. */
-  chosenAlternative?: string;
-}
+export type { ReviewedStructure } from './review';
 
 export type ProposalRefusal =
   | 'not_found'
@@ -148,9 +145,13 @@ export async function createProposal(
     if (at) return refuse('prose_in_payload', `${name}${at.slice(1)}`);
   }
 
+  /* Ids survive from the interpretation, which is what lets the surface pair
+     "MAIA proposed" against "your structure" for the same division later.
+     `none` and `ambiguous` have nothing to copy: one found no structure, the
+     other has not chosen. */
   const reviewed: ReviewedStructure = {
     units: 'units' in input.interpretation
-      ? structuredClone(input.interpretation.units)
+      ? toReviewed(input.interpretation.units)
       : [],
   };
 

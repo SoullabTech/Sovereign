@@ -37,7 +37,8 @@ export type ProposedUncertainty =
   | 'possible-scaffold-contamination'
   | 'competing-interpretation';
 
-export interface ProposedUnit {
+/** What a reader may return: everything except an identity. */
+export interface ProposedUnitDraft {
   /** The member's own words where possible. Null is honest; invented is not. */
   title: string | null;
   /** Free text, never an enum. Null rather than a manufactured "Chapter". */
@@ -45,11 +46,40 @@ export interface ProposedUnit {
   /** STABLE SECTION IDS. Positions move; ids do not. */
   fromSectionId: string;
   toSectionId: string;
-  children: ProposedUnit[];
+  children: ProposedUnitDraft[];
   rationale: string;
   /** Observation ids from the evidence. Checkable, not restated. */
   evidenceRefs: string[];
   uncertainty: ProposedUncertainty[];
+}
+
+/**
+ * A proposed division, with a proposal-local identity.
+ *
+ * THE ID IS MINTED BY THE HOST, after validation, and never by the reader.
+ * Identity is a fact about the record rather than a claim in the answer, and a
+ * reader that could name its own units could also reuse a name across passes.
+ *
+ * The same id survives into the member's editable copy, which is what makes an
+ * audit legible:
+ *
+ *     unit p7   MAIA proposed    Fire 57-68
+ *               member reviewed  Fire 42-69
+ *
+ * rather than inferring whether two changing JSON objects are the same unit
+ * from a title and a range that both moved.
+ */
+export interface ProposedUnit extends Omit<ProposedUnitDraft, 'children'> {
+  id: string;
+  children: ProposedUnit[];
+}
+
+/** Deterministic, depth-first, so a stored proposal reads the same twice. */
+export function assignUnitIds(drafts: readonly ProposedUnitDraft[]): ProposedUnit[] {
+  let n = 0;
+  const walk = (list: readonly ProposedUnitDraft[]): ProposedUnit[] =>
+    list.map((d) => ({ ...d, id: `p${++n}`, children: walk(d.children) }));
+  return walk(drafts);
 }
 
 export interface UncertainRegion {
@@ -89,9 +119,9 @@ export type StructureInterpretation =
 /** What the reader may return. The host completes it into an interpretation. */
 export type ReaderReading =
   | { form: 'stable' | 'partial' | 'flat' | 'mixed'; account: string;
-      units: ProposedUnit[]; uncertainRegions?: UncertainRegion[] }
+      units: ProposedUnitDraft[]; uncertainRegions?: UncertainRegion[] }
   | { form: 'ambiguous'; account: string;
-      alternatives: { label: string; units: ProposedUnit[]; why: string }[];
+      alternatives: { label: string; units: ProposedUnitDraft[]; why: string }[];
       uncertainRegions?: UncertainRegion[] }
   | { form: 'none'; account: string; uncertainRegions?: UncertainRegion[] };
 
@@ -189,13 +219,13 @@ export async function interpretStructure(
 
 /* -- host-side completion and validation --------------------------------- */
 
-function unitsOf(r: ReaderReading): ProposedUnit[] {
+function unitsOf(r: ReaderReading): ProposedUnitDraft[] {
   if (r.form === 'none') return [];
   if (r.form === 'ambiguous') return r.alternatives.flatMap((a) => a.units);
   return r.units;
 }
 
-function walk(units: readonly ProposedUnit[], fn: (u: ProposedUnit) => void): void {
+function walk(units: readonly ProposedUnitDraft[], fn: (u: ProposedUnitDraft) => void): void {
   for (const u of units) { fn(u); walk(u.children, fn); }
 }
 
@@ -214,7 +244,7 @@ function complete(
   const evidenceIds = new Set(evidence.observations.map((o) => o.id));
 
   let refusal: { refusal: InterpretRefusal; detail?: string } | null = null;
-  const rangeOf = (u: ProposedUnit): [number, number] | null => {
+  const rangeOf = (u: ProposedUnitDraft): [number, number] | null => {
     const a = position.get(u.fromSectionId);
     const b = position.get(u.toSectionId);
     if (a === undefined) { refusal ??= { refusal: 'unknown-section', detail: u.fromSectionId }; return null; }
@@ -223,7 +253,7 @@ function complete(
     return [a, b];
   };
 
-  const validate = (siblings: readonly ProposedUnit[]) => {
+  const validate = (siblings: readonly ProposedUnitDraft[]) => {
     const ranges: [number, number][] = [];
     for (const u of siblings) {
       const r = rangeOf(u);
@@ -286,11 +316,16 @@ function complete(
     uncertainRegions: reading.uncertainRegions ?? [],
   };
 
+  /* Identity is minted HERE - after the reading has been judged well-formed,
+     and by the host rather than the reader. */
   const interpretation: StructureInterpretation =
     reading.form === 'none' ? { form: 'none', ...common }
       : reading.form === 'ambiguous'
-        ? { form: 'ambiguous', ...common, alternatives: reading.alternatives }
-        : { form: reading.form, ...common, units: reading.units };
+        ? { form: 'ambiguous', ...common,
+            alternatives: reading.alternatives.map((a) => ({
+              ...a, units: assignUnitIds(a.units),
+            })) }
+        : { form: reading.form, ...common, units: assignUnitIds(reading.units) };
 
   return {
     status: 'ok',
