@@ -136,6 +136,50 @@ Not "how do we add voice".
 
 ---
 
+## The roadmap held from here
+
+**Ratified 2026-08-31.** Six steps, in order. Two of them run at once.
+
+```
+NOW       get a member talking with her reliably
+MAP       see the whole MAIA intelligence we already built
+COMPOSE   make those systems operate as one conversational organism
+EMBODY    use Desktop to develop timing, presence and continuity
+EVOLVE    Apple/MLX, better hearing, full-duplex dynamics, expressive voice,
+          multimodality — through governed R&D
+WITNESS   accept nothing until humans actually experience the deeper MAIA
+```
+
+⭐ **NOW and MAP run in parallel.** The repair lane finishes embodied
+conversation; the census maps the organism read-only. Neither waits for the
+other; neither writes into the other. No new intelligence architecture is
+invented in NOW.
+
+⛔ **WITNESS is not a final step appended to the list — it is the acceptance
+condition on every step above it.** A technically successful reply is not the
+bar. The bar is a human being experiencing the depth.
+
+### The composition questions
+
+⭐ **These are the research agenda for COMPOSE, and the reason it cannot be
+guessed at before MAP.** The failure they exist to prevent is seventeen
+subsystems all injecting independently into one turn:
+
+- When should **relational memory** matter?
+- When should **Elemental intelligence** become salient?
+- When should **symbolic material remain silent**?
+- How does **Resonant Field Intelligence** inform without dominating?
+- **How much depth can this particular moment bear?**
+- When should MAIA **inquire rather than interpret**?
+- **What gets remembered** after the encounter?
+
+⛔ Note what every one of these is really asking: *when should a capability
+NOT fire?* That is the composition problem. Each subsystem, working correctly and
+firing always, produces a worse companion than the same subsystems firing when
+the moment warrants them. Restraint is the integration.
+
+---
+
 ## Three horizons
 
 ```
