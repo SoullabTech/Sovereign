@@ -419,7 +419,7 @@ interface OracleConversationProps {
   userBirthDate?: string; // Birth date for age calculation and teen support
   userAge?: number; // Pre-calculated age (optional, will calculate from birthDate if not provided)
   sessionId: string;
-  apiEndpoint?: string; // API endpoint to use for conversation (defaults to /api/between/chat)
+  apiEndpoint: string; // ⛔ REQUIRED, deliberately un-defaulted: an omitted route must never silently become a different mind. See MAIA_CONVERSATIONAL_INTELLIGENCE_NON_DEGRADATION.md
   consciousnessType?: string; // Type of consciousness processing to use
   initialCheckIns?: Record<string, number>;
   showAnalytics?: boolean;
@@ -623,7 +623,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   userBirthDate,
   userAge: propUserAge,
   sessionId,
-  apiEndpoint = '/api/between/chat', // Default to current behavior
+  apiEndpoint, // ⛔ NO DEFAULT. Omission is a compile error, not a silent reroute.
   consciousnessType = 'maia', // Default consciousness type
   initialCheckIns = {},
   showAnalytics = false,
@@ -7263,13 +7263,13 @@ I'm not sure what I'm feeling yet.`;
         return;
       }
 
-      // ✅ STANDARD FLOW: Browser STT → /api/between/chat → Browser TTS
-      console.log('🌀 Routing voice through THE BETWEEN...');
+      // ✅ CONVERGENCE POINT: sovereign capture (Whisper) → handleTextMessage → apiFetch(apiEndpoint) — the same path a typed turn takes; voice carries no send of its own. Doctrine: docs/canon/MAIA_CONVERSATIONAL_INTELLIGENCE_NON_DEGRADATION.md
+      console.log('🌀 Voice converging on the canonical MAIA turn...');
       await handleTextMessage(cleanedText);
 
       const duration = Date.now() - voiceStartTime;
       trackEvent.voiceResult(userId || 'anonymous', transcript, duration);
-      console.log('✅ Voice flow through THE BETWEEN completed');
+      console.log('✅ Voice turn completed through the canonical path');
     } catch (error) {
       console.error('❌ Error in voice flow:', error);
       trackEvent.error(userId || 'anonymous', 'voice_error', String(error));

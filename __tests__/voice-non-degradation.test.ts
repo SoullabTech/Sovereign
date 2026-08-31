@@ -70,13 +70,11 @@ describe('the spoken turn converges on the canonical MAIA cognition boundary', (
   });
 });
 
-describe('the canonical endpoint is passed, never inherited from the default', () => {
+describe('the canonical endpoint is passed, and there is no default to inherit', () => {
   it('⚠️ /maia passes apiEndpoint explicitly at every mount', () => {
-    // ⛔ THE STANDING HAZARD. `apiEndpoint` defaults to '/api/between/chat'
-    // (OracleConversation.tsx:626) and is overridden to the sovereign route by
-    // /maia. A mount that omits the prop silently gets a DIFFERENT
-    // conversational route — degradation by omission rather than by intent,
-    // which is precisely the shape this rule exists to catch.
+    // Every mount names its route. Kept as a source assertion even though the
+    // prop is now required, because it also pins WHICH route /maia names — a
+    // thing the type system cannot check.
     const mounts = [...MAIA_PAGE.matchAll(/<OracleConversation\b/g)];
     expect(mounts.length).toBeGreaterThan(0);
     const endpoints = [...MAIA_PAGE.matchAll(/apiEndpoint=["'{]/g)];
@@ -84,7 +82,17 @@ describe('the canonical endpoint is passed, never inherited from the default', (
     expect(MAIA_PAGE).toContain("apiEndpoint=\"/api/sovereign/app/maia/list\"");
   });
 
-  it('the default remains a default — not the value /maia relies on', () => {
-    expect(code(ORACLE)).toContain("apiEndpoint = '/api/between/chat'");
+  it('⭐ the omission hazard is closed — no default route exists to fall back to', () => {
+    // ⛔ SUPERSEDES a former assertion here that pinned the default's literal
+    // value ("apiEndpoint = '/api/between/chat'"). That default WAS the hazard:
+    // a surface mounting OracleConversation and forgetting the prop silently
+    // reached a different cognition path — degradation by omission rather than
+    // by intent. `apiEndpoint` is now a REQUIRED prop with no default, so an
+    // omitted route is a compile error under tsconfig.ship.json (which covers
+    // app/** and components/**), not a silent reroute. Strictly stronger than
+    // the assertion it replaces: it forbids the fallback rather than describing it.
+    const src = code(ORACLE);
+    expect(src).toContain('apiEndpoint: string;'); // required, not optional
+    expect(src).not.toMatch(/apiEndpoint\s*=\s*['"]/); // no default value anywhere
   });
 });
