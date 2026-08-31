@@ -456,7 +456,7 @@ Despite our best-laid plans, life often takes unforeseen directions. We intuitiv
 
 ### The Vision of the Crystalline Mandala
 
-Carl Jung once said that if you see a mandala in a dream, it is a vision of your own soul. In a powerful dream, I experienced a mandala that reflected my earlier experiences with Native American teachings and the sacred medicine wheel within a massive crystalline structure. This dream offered a vision of the collective soul, elegantly merging ancient models of reality with modern developmental theories.
+For Jung, the mandala was an image of the Self—a symbol of psychic wholeness that can emerge in dreams. In a powerful dream, I experienced a mandala that reflected my earlier experiences with Native American teachings and the sacred medicine wheel within a massive crystalline structure. This dream offered a vision of the collective soul, elegantly merging ancient models of reality with modern developmental theories.
 
 In the dream, I was circling a massive crystalline structure composed of infinite facets. Surrounding it was a labyrinthine path formed by translucent crystal walls, guiding me to the central crystal. As I walked through this winding path, I saw energy flowing in a toroidal pattern, descending and spiraling down as well as ascending and spiraling up, like a tree receiving both sun and earth energies.
 
