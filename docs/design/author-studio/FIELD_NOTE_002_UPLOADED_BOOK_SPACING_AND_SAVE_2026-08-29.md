@@ -73,14 +73,19 @@ typed.** Deleting it is an authorship inference wearing a provenance argument.
 
 A test pins this, so the transform is not rediscovered as a good idea.
 
-### What remains open, and it is not an extraction problem
+### The durable finding
 
-The writer's complaint is still real: a tab-led paragraph reads as a **markdown
-code block**, so their opening paragraph arrives in a monospace slab. That is a
-**rendering** defect, not an extraction one, and the honest repair is on the
-other side of the seam — preserve the author's tab as source, and stop the
-Studio's rendering from interpreting a tab-indented paragraph as code. Not
-built, not authorized, named here so it is not lost.
+> **The source survives correctly; Writer's Studio rendering can misinterpret
+> that surviving source as Markdown code.**
+> — founder, 2026-08-31
+
+That is the sentence this lane produced, and it relocates the problem: what
+remains is a **future rendering** problem, not an import-normalization one. The
+writer's complaint is still real — a tab-led paragraph reads as a code block, so
+their opening paragraph arrives in a monospace slab — and the honest repair is on
+the other side of the seam: preserve the author's tab as source, and stop the
+Studio's rendering from reading a tab-indented paragraph as code. Not built, not
+authorized, named here so it is not lost.
 
 The residue this leaves — non-breaking spaces, blank-line runs, trailing spaces
 — stays residue. A member-invoked *"tidy the spacing"* gesture, on their own
@@ -143,8 +148,9 @@ PDF normalization                 WITHDRAWN · insufficient provenance
 DOCX indent-tab deletion          WITHDRAWN · provenance disproved
   → no formatting property is materialized as text; a tab in the
     text was typed. Nothing ships from this finding.
-tab-led paragraph renders as code NAMED · a rendering defect, not
-                                  extraction. Not built.
+tab-led paragraph renders as code NAMED · a future RENDERING problem,
+                                  not an import-normalization one.
+                                  Not built.
 existing Work re-import           PROHIBITED
 ```
 
