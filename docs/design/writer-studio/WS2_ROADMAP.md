@@ -9,7 +9,7 @@ that produced it.
 
 ---
 
-## NOW — close WS2-05A · Authorial Structure
+## CLOSED — WS2-05A · Authorial Structure
 
 Proven on the real 174-section manuscript:
 
@@ -20,14 +20,14 @@ stable &s=<uuid> navigation observed
 substrate / concurrency / contiguity / delete invariants green
 ```
 
-Two browser witnesses remain:
+**WS2-05A — PASS · founder-witnessed locally. CLOSED.**
 
-```text
-reload:  same section / top of book
-Back:    left the Work / retraced sections
-```
-
-Both pass → **WS2-05A — PASS · founder-witnessed locally.**
+**Corrected 2026-08-31 (Kelly).** This section previously read *"two browser
+witnesses remain — reload, Back"*, and a later reading of the roadmap repeated
+it as an open item. It is not: 05A closed founder-witnessed on the real
+manuscript, and **05A-R1 — map continuity / restore / sticky controls — PASS ·
+machine-verified** subsequently put those continuity properties into the browser
+harness. **Do not reopen 05A.**
 
 Nesting, promotion and leaf-deletion stay labelled substrate-proven unless the
 walker says they were exercised in the room.
@@ -64,40 +64,90 @@ THREADS     what recurs across those divisions
 `86bab2094` remains the failed mechanical baseline and GROUND evidence, not
 shipped behaviour.
 
-### 05B board — Kelly's ruling, 2026-08-31
+### The board — Kelly's ruling, 2026-08-31 (superseding the 05B-only board)
 
 ```text
-05B-1  evidence                     PASS
-05B-2  interpretation host          PASS
-05B-3  proposal persistence         PASS
-05B-4  review operations            PASS
-05B-5  review surface               PASS  (5a · 5b · 5c)
-05B-5½ real MAIA structure reader   PASS · REAL-WORK WITNESSED · CLOSED
-05B-6  sovereign adoption           HOLD
-05B-7  end-to-end adoption witness  HOLD
-05B-8a instrument                 PASS
-05B-8a target render fidelity     PASS · REAL PROPOSAL · accepted 6eacae5fb
-05B-8a favicon invariant          RED · baseline red · separate unit
-                                  Baseline and acceptance in
-                                  WS2-05B-8A_RENDER_FIDELITY_WITNESS.md
-05B-8b founder judgment of the    PENDING
-       reading itself
-05B-8B-READABILITY-01             SUPERSEDED · its witness FAILED
-                                  WS2-05B-8B_READABILITY_FINDING.md
-05B-8B-EDITORIAL-REVIEW-          SPECIFIED · its blocking discovery
-       SURFACE-02                 resolved by 02b
-                                  WS2-05B-8B_EDITORIAL_REVIEW_SURFACE_02.md
-  02b  editorial reading contract steps 1-5 PASS · Kelly 2026-08-31
-                                  real-Work DRY_RUN NEXT (Mac Studio),
-                                  then ONE real reading, AUTHORIZED
-                                  WS2-05B-8B-02b_EDITORIAL_READING_CONTRACT.md
-       READER_VERSION            unchanged, ruled: the hash identifies the
-                                  contract, the row says whether a letter
-                                  exists; -02 is reserved for a change to
-                                  the reader ARCHITECTURE
-  02a  editorial surface          HOLD · behind 02b's real reading
-  02c  Ask MAIA                   SEPARATE UNIT · not designed
+FOUNDATION / WRITING SUBSTRATE
+  WS2-04A  section-addressable writing            CLOSED
+  WS2-04B  real-book Canvas writing               PASS · founder-witnessed
+  04B-0    legacy scaffold normalization          BUILT + EXECUTED LOCALLY
+                                                  witness / production
+                                                  authorization still separate
+
+AUTHORIAL STRUCTURE
+  WS2-05A  writer creates and edits structure     PASS · CLOSED
+  05A-R1   map continuity / restore / sticky      PASS · machine-verified
+
+MAIA PERCEIVES STRUCTURE
+  05B-1    mechanical StructureEvidence           PASS
+  05B-2    interpretation host / six readings     PASS
+  05B-3    immutable proposal persistence         PASS
+  05B-4    proposal review operations             PASS
+  05B-5    presentation · HTTP boundary · browser PASS
+  05B-5½   real MAIA StructureReader              PASS · real Work · CLOSED
+
+EDITORIAL RELATIONSHIP
+  05B-8a   render fidelity                        PASS · target accepted on the
+                                                  real proposal; favicon 404s
+                                                  remain unrelated baseline-red
+  05B-8B-02b  editorial reading contract          PASS · REAL-WORK WITNESSED
+                                                  Fire / Water / Earth / Air /
+                                                  Aether · structured synthesis
+                                                  · no authorial leakage
+  05B-8B-02a  editorial review surface            BUILT a205fef29
+                                                  machine floor PASS on a
+                                                  fixture; 8a on the real row
+                                                  and the FOUNDER WITNESS both
+                                                  outstanding
+  05B-8B-02c  ask MAIA about the reading          NEXT once 02a is witnessed
+  05B-8b   founder semantic judgment              HOLD · behind 02c
+
+SOVEREIGNTY BOUNDARY
+  05B-6    adoption                               HOLD
 ```
+
+### The ordering correction — 02c comes BEFORE final 8b
+
+**Kelly, 2026-08-31, overturning the sequence recorded at `a55d9962f`.** That
+one read `02a → 8b → 02c → 6`, on the reasoning that 8b needs a room the founder
+can read. True as far as it goes, and it stopped a step short:
+
+> Being unable to question the editor was part of why the reading did not make
+> sense.
+
+The 8B verdict on the old questions panel was that it *"just dumps out cryptic
+insights without interaction capabilities"* — so the missing conversation was
+never only a missing feature, it was half the reason the reading did not land.
+A report you cannot interrogate is not yet an editorial relationship.
+
+```text
+02a  a readable editorial report
+      ↓
+02c  converse with MAIA about it
+      ↓
+8b   judge whether her reading is right
+```
+
+An opinion may well form before 02c. **The program gate does not fire before the
+writer can ask:**
+
+```text
+Why does Fire begin at 42?
+Why do you think those Part labels belong to the real architecture?
+What made you change your reading from the previous proposal?
+Show me what you saw around this seam.
+```
+
+That last question is the one with teeth: the reading MOVED between
+`2a427a6f` and `e6cabcc4` — `stable` not `mixed`, 22 divisions not 11, the
+Work's own PART names adopted where the earlier reading refused them — and
+02b's record leaves open whether the editorial contract caused it or it is
+ordinary variance. A writer who can ask her is in a different position from one
+who cannot.
+
+**02a already carries this limit visibly rather than hiding it:** a member can
+read one of her questions and cannot answer it. That was recorded as the honest
+state of the room; this ruling makes it a gate rather than a footnote.
 
 **The room was built for a machine.** Every iteration was shaped by what the 8a
 harness can assert — attributes, counts, order — and all of that is satisfiable
@@ -195,14 +245,19 @@ above went green; green proves bounded work, it does not confer permission.
  ↓
 8a  render fidelity                  PASS · target green on the real proposal
  ↓
-8B-02b editorial reading contract    real reading OBSERVED 2026-08-31
-                                     proposal e6cabcc4 · founder ruling PENDING
+8B-02b editorial reading contract    PASS · REAL-WORK WITNESSED
+                                     proposal e6cabcc4
  ↓
-8B-02a editorial surface             HOLD — behind that ruling
+8B-02a editorial surface             BUILT a205fef29 · machine floor PASS
+                                     8a on the real row and the founder
+                                     witness both outstanding
  ↓
-8b  founder judgment of the reading  HOLD — behind a room he can read it in
+8B-02c Ask MAIA about the reading    NEXT once 02a is witnessed
+                                     conversation ABOUT a proposal
+                                       ≠ revision OF it
+                                       ≠ adoption
  ↓
-8B-02c Ask MAIA                      SEPARATE UNIT — not designed
+8b  founder semantic judgment        HOLD — behind 02c, not before it
  ↓
 6   adoption                         HOLD — needs explicit adoption authority
  ↓
@@ -225,14 +280,20 @@ above went green; green proves bounded work, it does not confer permission.
 
 Holds in force: **6 HOLD** (requires explicit adoption authority).
 
-**Superseded, and recorded rather than quietly edited.** This section previously
-read *"5½ is closed; 05B-8 is openable and is the next honest act."* That was
-true when written and stopped being true within the day: 8a found the room
+**Superseded twice, and recorded rather than quietly edited** — a roadmap that
+silently rewrites its own past reads as though it always knew.
+
+*First:* this section read *"5½ is closed; 05B-8 is openable and is the next
+honest act."* True when written, false within the day — 8a found the room
 rendering a cleaner, more certain reading than the one MAIA made, and 8B found
-that even a faithful render was not legible — *render fidelity ≠
-intelligibility*. 8b cannot be asked of a screen whose thesis has to be
-reconstructed before it can be judged, so it sits behind 02a, which sits behind
-the ruling on 02b. The single open item is that ruling.
+that even a faithful render was not legible. *Render fidelity ≠
+intelligibility.*
+
+*Second:* it then read `02a → 8b → 02c`, on the reasoning that 8b needs a room
+the founder can read. Kelly's correction, same day: a report you cannot
+interrogate is not yet an editorial relationship, and being unable to question
+the editor was itself part of why the reading did not land. **8b now sits behind
+02c.**
 
 `TYPECHECK-BASELINE-DIAGNOSTIC-IDENTITY-01` and the three app-wide favicon 404s
 sit outside this sequence entirely.
