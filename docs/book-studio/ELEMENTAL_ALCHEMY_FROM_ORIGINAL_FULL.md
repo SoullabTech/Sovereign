@@ -418,8 +418,6 @@ Each time we come back to a problem of the same sort, we are given the opportuni
 
 The purpose of this work is to bring us into closer contact with the foundational elements of life—seeing them, feeling them, engaging with them. As these patterns become more visible—something many already sense in different ways—a deeper mystery tends to come into view, one that holds both our unique individuality and our connection to the greater whole.
 
-We all know that, regardless of the plans we make or how much we predict, our lives often take unforeseen directions. Despite the apparent chaos and randomness, we are intuitively aware of the underlying cycles and patterns that shape our experiences. This awareness allows us to navigate unpredictability with a sense of wonder and discovery.
-
 I have come to view the torus as a kind of message in a bottle from the past with advice to help us move forward successfully. It is telling us that we exist as integral and ongoing processes of nature and that every action we take as individuals must be considered a part of the whole system of nature. There really is no moving forward—at least in a healthy manner—without grounding ourselves in the past and considering the repercussions of our behavior on the future.
 
 Contemporary science enables us to see ourselves as quantum beings within a mysterious world of spooky effects and energetic entanglement. It is at this level that the fuzzy logic of sacred geometry, the beauty of fractal symmetry, and the holism of toroidal processes reveal an expansive view of who we are as elemental beings.
@@ -457,8 +455,6 @@ Life is full of pivotal decisions that significantly influence our trajectory. O
 Despite our best-laid plans, life often takes unforeseen directions. We intuitively sense the underlying cycles and patterns that shape our experiences, even when life seems chaotic and random. This awareness allows us to navigate unpredictability with a sense of wonder and discovery.
 
 ### The Vision of the Crystalline Mandala
-
-*"A mandala symbolizes a microcosm of the universe from the human perspective." — Carl Jung*
 
 Carl Jung once said that if you see a mandala in a dream, it is a vision of your own soul. In a powerful dream, I experienced a mandala that reflected my earlier experiences with Native American teachings and the sacred medicine wheel within a massive crystalline structure. This dream offered a vision of the collective soul, elegantly merging ancient models of reality with modern developmental theories.
 
