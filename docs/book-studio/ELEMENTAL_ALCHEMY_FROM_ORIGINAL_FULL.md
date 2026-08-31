@@ -871,17 +871,11 @@ Tending a campfire is an excellent metaphor for tending the fire of our spiritua
 
 *"Make of yourself a light," said the Buddha, before he died. That is what I hope to become." – Sharon Salzberg*
 
-#### The Fire's Energy
+Fire often announces itself as a change in energy when we are motivated by a challenge in our life, signaling that something extraordinary is taking place within our spirits. Every obstacle is presented by fire as an opportunity. Never pass up the chance to shine when the world presents it to us.
 
-A change in energy occurs when we are motivated by a challenge in our life, signaling that something extraordinary is taking place within our spirits. Every obstacle is presented by fire as an opportunity. Never pass up the chance to shine when the world presents it to us.
+When the fire of my imagination takes hold, my attention is rapt. I'm entranced. For however long it lasts, I am focused as I burn brightly with the flames of ideas, visions for the future, and insights into my own potential.
 
-#### The Present Moment
-
-Likewise, when the fire of my imagination takes hold, my attention is rapt. I'm entranced. For however long it lasts, I am focused as I burn brightly with the flames of ideas, visions for the future, and insights into my own potential.
-
-#### Sustaining the Fire
-
-Once a campfire is lit, there is always a hint of anticipation as to whether or not the fire will spread and persist. There is comfort when it spreads enough that we only need to add more wood to sustain it. It's not out of control or threatening to burn down the camp; rather, it remains luminous and warm late into the evening.
+It's not out of control or threatening to burn down the camp; rather, it remains luminous and warm late into the evening.
 
 #### Tending the Inner Fire
 
@@ -889,13 +883,9 @@ At the heart of most of the challenges I witness in my life as well as in sessio
 
 An example is when my client David came into a session grieving the loss of his youth and anxious about his future. This existential situation takes great personal power to manage. His inner fire was nearly extinguished—he had little awareness of his individuality or what lay ahead. His sense of self was drowning in uncertainty, regret, and despair.
 
-#### Rekindling the Inner Fire
-
 Returning to tending the fire that reignited purpose and meaning helped David regain a vision for his life path's importance. Rekindling the fires of remembrance to full flame isn't always easy, but even a spark of reconnection with our true Self provides warmth and encouragement to manage life's most challenging periods.
 
 Speaking for myself, it sometimes takes a while to get my own inner fires lit. Life has its ways of dampening the fires of my passion. My inner being can feel too damp from heavy emotions to sustain or reignite my will. If my spirit gets too fiery, I can't hold the intensity long enough to capture its brilliance. Or I can feel buried in apathy and exhaustion, like my inner fire has been reduced to smoldering embers and ashes. Even so, I take a deep breath and try to be fully present.
-
-#### Being Present with the Inner Fire
 
 Listening, watching, hearing, sensing, and feeling are the true essence of being present. Instead of yearning for a blazing fire, one can sit with what is here in this moment. Like a candle flame that can illuminate a dark room, nurturing the embers quietly and carefully allows them to teach what they need to grow stronger and brighter. A heavy log might be too much at times. Striving too hard, desiring too deeply, or having grand fantasies can overwhelm the moment. Often, a few dry twigs or some light kindling work best to reignite the flames. Similarly, an openness to what wishes to reveal itself often yields the best results.
 
