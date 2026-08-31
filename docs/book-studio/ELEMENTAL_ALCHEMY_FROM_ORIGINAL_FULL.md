@@ -875,7 +875,7 @@ Fire often announces itself as a change in energy when we are motivated by a cha
 
 When the fire of my imagination takes hold, my attention is rapt. I'm entranced. For however long it lasts, I am focused as I burn brightly with the flames of ideas, visions for the future, and insights into my own potential.
 
-It's not out of control or threatening to burn down the camp; rather, it remains luminous and warm late into the evening.
+The fire is not out of control or threatening to burn down the camp; rather, it remains luminous and warm late into the evening.
 
 #### Tending the Inner Fire
 
@@ -1011,7 +1011,7 @@ Fire also represents the quest for knowledge, as seen in the Hierophant holding 
 
 *"The desire to know is natural to good men." – Leonardo da Vinci*
 
-### The Purifying Fires
+### Fire as the Heroic Call
 
 Our spiritual, intuitive, expressive, and creative nature is represented by the element fire. This means that there is a part of us that recognizes our uniqueness while still being acutely aware of our shared humanity as intuitive, instinctual, and creative beings. This spiritual aspect of our nature is the portion of us, our inner fire, that is constantly encouraged to embark on new heroic adventures in our daily lives, whether it is to overcome anxiety over the world or rise to the challenge of being good medicine for someone in need.
 
