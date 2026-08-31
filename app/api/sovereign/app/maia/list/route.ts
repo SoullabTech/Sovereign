@@ -1543,6 +1543,8 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
       stateVector: orchestratorResult.stateVector || null,
       // 🌿 PRACTICE: Recommended practice from state vector routing
       practiceRecommendation: orchestratorResult.practiceRecommendation || null,
+      // 🗓️ PROPOSAL: pending calendar event awaiting member confirm (MAIA_CONSENT_GATES Art. 2)
+      proposal: orchestratorResult.proposal || null,
       // 🚪 AIN KNOWLEDGE GATE: Source well scoring (Phase 1)
       ainState: knowledgeGateResult ? {
         sourceMix: knowledgeGateResult.source_mix.map(s => ({

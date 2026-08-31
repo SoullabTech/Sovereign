@@ -46,7 +46,17 @@ export interface ProviderMeta {
   usage?: TokenUsage;
 }
 
+export interface ToolUseBlock {
+  id: string;
+  name: string;
+  input: Record<string, unknown>;
+}
+
 export interface TextResult {
   text: string;
   provider: ProviderMeta;
+  // Populated only when the caller passed `tools` and the model emitted tool_use
+  // block(s). Used by the Proposal pipeline (docs/canon/MAIA_CONSENT_GATES.md):
+  // a tool_use is a *proposal* surfaced for confirmation, never an executed action.
+  toolUses?: ToolUseBlock[];
 }

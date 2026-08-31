@@ -78,6 +78,9 @@ import { OracleResponse, ConversationContext as OracleConversationContext } from
 // import { useElementalVoice } from '@/hooks/useElementalVoice'; // DISABLED - was causing OpenAI Realtime browser errors
 import { mapResponseToMotion, enrichOracleResponse } from '@/lib/motion-mapper';
 import { apiUrl, apiFetch, getValidMemberId } from '@/lib/http/apiBase';
+// 🗓️ Calendar proposal pipeline (docs/canon/MAIA_CONSENT_GATES.md) — MAIA proposes; only confirm writes.
+import type { Proposal, CalendarEventPayload } from '@/lib/maia/proposals/types';
+import { CalendarProposalCard } from '@/components/maia/CalendarProposalCard';
 import { VOICE_TIMING } from '@/lib/voice/voiceTiming';
 import useSession from '@/lib/hooks/useSession';
 import { ShareToCircleModal } from '@/components/circles/ShareToCircleModal';
@@ -546,6 +549,8 @@ interface ConversationMessage {
   stateVector?: any;
   // 🌿 PRACTICE: Recommended practice from state vector routing
   practiceRecommendation?: any;
+  // 🗓️ PROPOSAL: pending calendar event awaiting member confirm (MAIA_CONSENT_GATES Art. 2)
+  proposal?: Proposal<CalendarEventPayload> | null;
   // Pattern metadata for "Show why" drawer
   metadata?: {
     patterns?: Array<{
@@ -6158,6 +6163,8 @@ I'm not sure what I'm feeling yet.`;
         stateVector: responseData.stateVector || null,
         // 🌿 PRACTICE: Recommended practice from state vector routing
         practiceRecommendation: responseData.practiceRecommendation || null,
+        // 🗓️ PROPOSAL: pending calendar event awaiting member confirm (MAIA_CONSENT_GATES Art. 2)
+        proposal: responseData.proposal || null,
         // 🚪 AIN Knowledge Gate: source mix + awareness state
         ainState: responseData.ainState || null,
         metadata: {
@@ -9548,6 +9555,11 @@ I'm not sure what I'm feeling yet.`;
                             Send as SMS
                           </button>
                         </div>
+                      )}
+
+                      {/* 🗓️ CALENDAR PROPOSAL: MAIA proposes; only confirm writes (MAIA_CONSENT_GATES Art. 2) */}
+                      {message.role === 'oracle' && message.proposal && (
+                        <CalendarProposalCard proposal={message.proposal} />
                       )}
 
                       {/* 🏛️ AIN: Council consultation results panel */}
