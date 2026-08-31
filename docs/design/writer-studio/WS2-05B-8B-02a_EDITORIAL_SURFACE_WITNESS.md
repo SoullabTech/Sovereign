@@ -273,6 +273,81 @@ the server must be confirmed on `5fb31b248` or restarted from this worktree.**
 
 ---
 
+# The founder read it — first verdict, and the bounded pass that followed
+
+**2026-08-31, on `e6cabcc4`.** The thesis, the labels and the map landed. The
+verdict on the page as a whole:
+
+> It's a lot to read.
+
+**The same failure as 8B, one level up.** On the real reading the questions
+panel carried 5 questions, 4 stretches and 19 qualifications — twenty-eight
+items of "still open", arriving together and saying substantially the same
+things three times over. *"Does Part Two begin at the Sacred Flame"* IS the
+`35–43` stretch IS the `where this begins` tag on Fire. Keeping the three kinds
+distinct was right; showing all three expanded at once rebuilt the dump.
+
+## The bounded pass
+
+**Only the questions stay open.** They are the only ones addressed TO the
+member. The stretches and the qualifications collapse to one counted line each —
+`Show 4 stretches she could not settle`, `Show 19 further qualifications` — so
+their weight is visible without their bulk. Nothing is removed and everything
+stays in the DOM, which is also what keeps 8a's assertions true.
+
+**The range travels with the name.** `flex: 1` on the name pushed the kind and
+the span to the far right edge, so on a wide screen the eye crossed the whole
+row to learn where Fire is — 22 times. A division is a name AND a span.
+
+**Two controls per row, not three.** `Move out` left the reading row for the
+`Why?` panel, where the member is already engaged with that division. Three
+controls × 22 divisions was 66 buttons competing with her reading; the spec's
+own layout names two. It is still offered only at depth > 0, where `promote`
+can actually succeed.
+
+```text
+all three fixtures    02a PASS · 8a green except item 11
+typecheck             no regressions
+```
+
+## Two findings that are NOT 02a's, recorded so they are not lost
+
+**"A section that references being at the front of the book is at the back."**
+She caught it and the room buried it. Section 161 is headed `PREFACE` and she
+places it inside `Bibliography 161–173`; her second finding says section 163
+headed `CHAPTER 1: THE JOURNEY BEGINS` contains only citations. So the
+apparatus/heading mismatch IS in her reading — stated as *"this run is a
+bibliography"*, never as *"a section announcing itself as front matter is
+sitting at the back."* Whether those are the same finding is the founder's
+judgment: **05B-8b.**
+
+**"Anomalies in Chapter 10, and I have issues with the way it is structured."**
+She reads 163–173 as bibliography entries, so she never discusses Chapter 10 as
+a chapter at all. If that is wrong it is wrong in the READING, not in the
+render — **05B-8b**, and pressing her on it is **02c**.
+
+Neither is a surface defect and neither is fixable here. A room that surfaced
+them by inference would be deriving structure from prose, which is the thing the
+interpreter exists to stop a client doing.
+
+## Still short of the bar the founder named
+
+*"Apple level"* is a larger bar than one density pass, and the gap should be
+named rather than implied:
+
+```text
+no hover or focus treatment beyond browser defaults
+the control cluster still sits far from its row on a wide screen
+no responsive behaviour at narrow widths
+the five elements read as five rows, not as one set
+keyboard navigation is tab order and nothing more
+```
+
+None of that is in this pass. It is a nameable next unit rather than something
+to slip in under a witness that has already been taken.
+
+---
+
 ## What this does NOT establish
 
 **The room has not been read by a person.** The specified acceptance is:

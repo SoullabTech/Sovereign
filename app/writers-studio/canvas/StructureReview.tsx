@@ -426,6 +426,22 @@ function OpenQuestions({
   headingOf: (id: string) => { position: number } | undefined;
   proposedById: Map<string, ProposedUnit>;
 }) {
+  /* THE THREE KINDS STAY THREE; ONLY ONE OF THEM OPENS.
+     On the real reading that is 5 questions, 4 stretches and 19 qualifications
+     — twenty-eight items of "still open", arriving together, saying
+     substantially the same things three times over. "Does Part Two begin at
+     the Sacred Flame" IS the 35–43 stretch IS the `where this begins` tag on
+     Fire. Showing all three expanded rebuilt the dump 8B failed on, one level
+     up.
+     Only the questions are addressed TO the member. The other two are the
+     reading qualifying itself; they stay one gesture away, counted so their
+     weight is visible, and in the DOM either way. */
+  const [open, setOpen] = useState<ReadonlySet<string>>(new Set());
+  const flip = (k: string) => setOpen((prev) => {
+    const next = new Set(prev);
+    if (!next.delete(k)) next.add(k);
+    return next;
+  });
   const regions = view.interpretation.uncertainRegions;
   const questions = view.interpretation.editorialSynthesis?.questionsForAuthor ?? [];
   const tagged = [...proposedById.values()].filter((u) => u.uncertainty.length > 0);
@@ -468,9 +484,14 @@ function OpenQuestions({
 
       {regions.length > 0 && (
         <div data-question-group="regions" style={{ marginTop: SPACE.base }}>
-          <StudioText role="panelLabel" style={{ display: 'block' }}>
-            stretches she could not settle
-          </StudioText>
+          <Tiny label={open.has('regions')
+            ? 'hide the stretches MAIA could not settle'
+            : `show the ${regions.length} stretches MAIA could not settle`}
+            onClick={() => flip('regions')}>
+            {open.has('regions') ? 'Hide' : 'Show'} {regions.length} stretch
+            {regions.length === 1 ? '' : 'es'} she could not settle
+          </Tiny>
+          <div hidden={!open.has('regions')}>
           {regions.map((r, i) => (
             <StudioText key={`${r.fromSectionId}:${i}`} role="quiet"
               data-uncertain-region={`${at(r.fromSectionId)}-${at(r.toSectionId)}`}
@@ -478,14 +499,20 @@ function OpenQuestions({
               {at(r.fromSectionId)}–{at(r.toSectionId)} · {r.why}
             </StudioText>
           ))}
+          </div>
         </div>
       )}
 
       {tagged.length > 0 && (
         <div data-question-group="qualifications" style={{ marginTop: SPACE.base }}>
-          <StudioText role="panelLabel" style={{ display: 'block' }}>
-            further qualifications, division by division
-          </StudioText>
+          <Tiny label={open.has('quals')
+            ? 'hide the division-by-division qualifications'
+            : `show ${tagged.length} further qualifications, division by division`}
+            onClick={() => flip('quals')}>
+            {open.has('quals') ? 'Hide' : 'Show'} {tagged.length} further
+            qualification{tagged.length === 1 ? '' : 's'}, division by division
+          </Tiny>
+          <div hidden={!open.has('quals')}>
           {/* NAMED THE WAY THE MAP NAMES IT. Five rows reading "element" here
               would rebuild the 8B defect inside the panel that exists to fix
               it: a member cannot weigh a qualification they cannot attach to a
@@ -500,6 +527,7 @@ function OpenQuestions({
               {u.uncertainty.map((t) => UNCERTAINTY_SAYS[t] ?? t).join(' · ')}
             </StudioText>
           ))}
+          </div>
         </div>
       )}
     </div>
@@ -682,7 +710,8 @@ function Entry({
   /* Shown beside the name unless it IS the name, so 174 rows do not read
      "element · element". */
   const kindAside = node.kind && node.kind !== named ? node.kind : null;
-  const hasWhy = Boolean(proposed && (proposed.rationale || label || hasDoubt));
+  const hasWhy = Boolean(proposed && (proposed.rationale || label || hasDoubt))
+    || depth > 0;
 
   return (
     <div data-review-unit={node.id} style={{ marginTop: SPACE.snug }}>
@@ -718,7 +747,7 @@ function Entry({
             tell a name their Work carries from a name MAIA gave it, and a
             difference in colour alone does not say which is which. The wrapper
             carries `title`, which StudioText deliberately does not forward. */}
-        <span style={{ flex: 1 }}
+        <span
           title={namedByMaia
             ? "MAIA's description of this division — not a title in your Work"
             : undefined}>
@@ -733,10 +762,16 @@ function Entry({
             {named}
           </StudioText>
         </span>
+        {/* THE RANGE TRAVELS WITH THE NAME.
+            With `flex: 1` on the name these sat at the far right edge, so on a
+            wide screen the eye crossed the whole row to learn where Fire is —
+            22 times. A division is a name AND a span; they belong together and
+            the controls take the right edge. */}
         {kindAside && (
           <StudioText role="metadata" tone="quiet" as="span">{kindAside}</StudioText>
         )}
-        <StudioText role="metadata" tone="quiet" as="span">{from}–{to}</StudioText>
+        <StudioText role="metadata" tone="quiet" as="span"
+          style={{ marginRight: 'auto' }}>{from}–{to}</StudioText>
         {/* PLAIN WORDS INSTEAD OF GLYPHS. `⇤` and `+38` are a console's
             vocabulary; the aria-labels are unchanged, because they were already
             written for a person and 8a's captures find the disclosure by one. */}
@@ -753,14 +788,6 @@ function Entry({
             onClick={() => onToggle(node.id)}
           >{open ? 'Hide sections'
             : `Show ${sectionCount} section${sectionCount === 1 ? '' : 's'}`}</Tiny>
-        )}
-        {/* OFFERED ONLY WHERE IT CAN SUCCEED. `promote` refuses `not_nested`
-            on a top-level division, so a button on those rows could do nothing
-            but produce a refusal — an affordance that lies, and one repeated
-            down every root row of the map. */}
-        {depth > 0 && (
-          <Tiny label="move this division out one level" disabled={busy}
-            onClick={() => onGesture({ op: 'promote', unitId: node.id }, true)}>Move out</Tiny>
         )}
       </div>
 
@@ -785,6 +812,21 @@ function Entry({
               She left open: {(proposed?.uncertainty ?? [])
                 .map((u) => UNCERTAINTY_SAYS[u] ?? u).join(', ')}.
             </StudioText>
+          )}
+          {/* THE EDIT LIVES WHERE THE MEMBER IS ALREADY ENGAGED with this
+              division, not on every row of a page they came to READ. Three
+              controls × 22 divisions was 66 buttons competing with her reading;
+              the spec's own layout names two — `Why?` and `Show sections`.
+              OFFERED ONLY WHERE IT CAN SUCCEED: `promote` refuses `not_nested`
+              on a top-level division, so a button there could produce nothing
+              but a refusal. */}
+          {depth > 0 && (
+            <div style={{ marginTop: SPACE.tight }}>
+              <Tiny label="move this division out one level" disabled={busy}
+                onClick={() => onGesture({ op: 'promote', unitId: node.id }, true)}>
+                Move out one level
+              </Tiny>
+            </div>
           )}
         </div>
       )}
