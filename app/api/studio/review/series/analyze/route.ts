@@ -28,6 +28,7 @@ import { query } from '@/lib/db/postgres';
 import { getMemberIdFromRequest } from '@/lib/scribe/scribeAuth';
 import { REVIEW_LENS_REGISTRY, isValidReviewLensId, type ReviewLensId } from '@/lib/studio/reviewLens';
 import { getLLMProvider } from '@/lib/consciousness/LLMProvider';
+import { representationRefusal, type PrivacyMode } from '@/lib/governance/clientRepresentationGuards';
 
 const MIN_SESSIONS = 2;
 const MAX_SESSIONS = 8;
@@ -337,9 +338,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'lenses must be a non-empty array of valid ReviewLensId values', code: 'INVALID_LENSES' }, { status: 400 });
     }
 
-    // Verify case ownership
-    const caseCheck = await query<{ id: string }>(
-      `SELECT id FROM practitioner_cases WHERE id = $1 AND practitioner_id = $2`,
+    // Verify case ownership + load consent posture (Client Representation Governance)
+    const caseCheck = await query<{
+      id: string;
+      privacy_mode: PrivacyMode | null;
+      consent_captured_at: Date | null;
+    }>(
+      `SELECT id, privacy_mode, consent_captured_at FROM practitioner_cases WHERE id = $1 AND practitioner_id = $2`,
       [caseId, practitionerId],
     );
     if (caseCheck.rows.length === 0) {
@@ -347,6 +352,16 @@ export async function POST(request: NextRequest) {
         { error: 'Case not found or not owned by practitioner', code: 'CASE_NOT_FOUND' },
         { status: 404 },
       );
+    }
+
+    // GENERATE GATE (Client Representation Governance §2). Refuse BEFORE any LLM call:
+    // private ⇒ no representation; consent_based ⇒ requires captured client consent.
+    const refusal = representationRefusal(
+      caseCheck.rows[0].privacy_mode ?? 'private',
+      caseCheck.rows[0].consent_captured_at ?? null,
+    );
+    if (refusal) {
+      return NextResponse.json({ error: refusal.message, code: refusal.code }, { status: 403 });
     }
 
     // Verify all sessions belong to this practitioner (via membership/ownership)

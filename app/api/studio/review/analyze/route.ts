@@ -29,6 +29,7 @@ import {
   isValidReviewLensId,
 } from '@/lib/studio/reviewLens';
 import { getLLMProvider } from '@/lib/consciousness/LLMProvider';
+import { representationRefusal, type PrivacyMode } from '@/lib/governance/clientRepresentationGuards';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -342,6 +343,26 @@ export async function POST(request: NextRequest) {
         { error: 'Session not found or not owned by member', code: 'SESSION_NOT_FOUND' },
         { status: 404 },
       );
+    }
+
+    // 3b. GENERATE GATE (Client Representation Governance §2). analyze is session-keyed; the
+    // case is only attached later at save. Resolve the session's client case(s) and refuse
+    // generation if any governed case refuses (private ⇒ no representation; consent_based ⇒
+    // needs consent). Unlinked sessions (no client case) proceed — the persist gate at save
+    // (3A) is the backstop. STRUCTURAL NOTE: a fully clean generate-gate needs analyze to be
+    // case-aware; until then this covers client-linked sessions only.
+    const caseGov = await query<{ privacy_mode: PrivacyMode | null; consent_captured_at: Date | null }>(
+      `SELECT pc.privacy_mode, pc.consent_captured_at
+         FROM scribe_sessions ss
+         JOIN practitioner_cases pc ON pc.client_id = ss.client_id
+        WHERE ss.id = $1 AND pc.practitioner_id = $2`,
+      [sessionId, memberId],
+    );
+    for (const c of caseGov.rows) {
+      const refusal = representationRefusal(c.privacy_mode ?? 'private', c.consent_captured_at ?? null);
+      if (refusal) {
+        return NextResponse.json({ error: refusal.message, code: refusal.code }, { status: 403 });
+      }
     }
 
     // 4. Load transcript entries
