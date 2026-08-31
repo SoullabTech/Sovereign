@@ -263,7 +263,7 @@ export async function PATCH(request: NextRequest) {
 
     // Build dynamic update
     const updateFields: string[] = [];
-    const params: (string | null | number | object)[] = [id, practitionerId];
+    const params: (string | null | number | boolean | object)[] = [id, practitionerId];
 
     if (updates.name !== undefined) {
       updateFields.push(`name = $${params.length + 1}`);
@@ -299,6 +299,15 @@ export async function PATCH(request: NextRequest) {
     if (updates.tags !== undefined) {
       updateFields.push(`tags = $${params.length + 1}`);
       params.push(JSON.stringify(updates.tags));
+    }
+
+    if (updates.reminderConsent !== undefined) {
+      // Per-recipient consent to send SMS/WhatsApp appointment reminders to this client.
+      // Enforced (fail-closed) in SessionNotificationService.sendDualChannelNotification.
+      const granted = updates.reminderConsent === true;
+      updateFields.push(`reminder_consent = $${params.length + 1}`);
+      params.push(granted);
+      updateFields.push(`reminder_consent_at = ${granted ? 'NOW()' : 'NULL'}`);
     }
 
     if (updates.birthDate !== undefined) {
@@ -366,6 +375,8 @@ export async function PATCH(request: NextRequest) {
         leadershipProfile: client.leadership_profile,
         clientTypes: client.client_types || [],
         lastSessionAt: client.last_session_at,
+        reminderConsent: client.reminder_consent,
+        reminderConsentAt: client.reminder_consent_at,
         createdAt: client.created_at,
         updatedAt: client.updated_at,
       },
