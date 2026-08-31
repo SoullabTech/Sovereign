@@ -1,0 +1,163 @@
+/**
+ * WS2-05B step 5 - a reading of each kind, without a model.
+ *
+ * The review surface must be able to render every outcome the interpreter can
+ * produce, including the two that carry no structure at all. Fixtures make that
+ * testable now, and keep it testable after MAIA enters at 5.5: if she ever
+ * returns an ambiguous reading and the room has never drawn one, the member
+ * meets that gap instead of the finding.
+ *
+ * NOT A MODEL, AND NOT A TARGET. These are shapes, not answers. Nothing here
+ * encodes a reading of Elemental Alchemy - fitting the interpreter to a fixture
+ * would be the failure this programme has refused since 86bab2094.
+ */
+
+import { assignUnitIds, type ProposedUnitDraft, type StructureInterpretation } from './interpret';
+import type { EvidenceCoverage } from './evidence';
+
+export interface FixtureSection { id: string; position: number; heading: string | null }
+
+/** A plain synthetic Work. Twelve sections, no meaning in the headings. */
+export function fixtureSections(n = 12): FixtureSection[] {
+  return Array.from({ length: n }, (_, i) => ({
+    id: `s${i}`, position: i, heading: `SECTION ${i}`,
+  }));
+}
+
+const coverage = (mode: EvidenceCoverage['bodies']['mode'] = 'none'): EvidenceCoverage => ({
+  headings: 'all',
+  bodies: { mode, sectionIds: mode === 'none' ? [] : ['s3', 's4'] },
+  passes: mode === 'none' ? 1 : 2,
+});
+
+const draft = (
+  from: number, to: number, title: string,
+  over: Partial<ProposedUnitDraft> = {},
+): ProposedUnitDraft => ({
+  title, kind: null,
+  fromSectionId: `s${from}`, toSectionId: `s${to}`,
+  children: [], rationale: `the material from ${from} to ${to} holds together`,
+  evidenceRefs: [], uncertainty: [], ...over,
+});
+
+const ids = (s: FixtureSection[], from: number, to: number) =>
+  s.filter((x) => x.position >= from && x.position <= to).map((x) => x.id);
+
+/** A coherent larger grammar: two parts, one holding chapters. */
+export function stableReading(s = fixtureSections()): StructureInterpretation {
+  return {
+    form: 'stable',
+    account: 'The Work divides into two movements; the first holds three shorter passages.',
+    coverage: coverage(),
+    unaccountedSectionIds: [],
+    uncertainRegions: [],
+    units: assignUnitIds([
+      draft(0, 5, 'Departure', {
+        kind: 'Part',
+        children: [draft(0, 1, 'Setting out', { kind: 'Chapter' }),
+                   draft(2, 3, 'The road', { kind: 'Chapter' }),
+                   draft(4, 5, 'The turn', { kind: 'Chapter' })],
+      }),
+      draft(6, 11, 'Return', { kind: 'Part' }),
+    ]),
+  };
+}
+
+/** Some of the Work reads; some does not, and says so in place. */
+export function partialReading(s = fixtureSections()): StructureInterpretation {
+  return {
+    form: 'partial',
+    account: 'The opening organises clearly. The later material does not yet.',
+    coverage: coverage('selected'),
+    unaccountedSectionIds: ids(s, 4, 11),
+    uncertainRegions: [{
+      fromSectionId: 's8', toSectionId: 's11',
+      why: 'These read as a contents list rather than as writing.',
+    }],
+    units: assignUnitIds([draft(0, 3, 'Opening', { kind: 'Part' })]),
+  };
+}
+
+/** Meaningfully sequential. No larger hierarchy, and none invented. */
+export function flatReading(s = fixtureSections()): StructureInterpretation {
+  return {
+    form: 'flat',
+    account: 'A sequence of essays. Nothing groups them, and nothing appears to want to.',
+    coverage: coverage(),
+    unaccountedSectionIds: [],
+    uncertainRegions: [],
+    units: assignUnitIds([
+      draft(0, 3, 'On beginning', { kind: 'Essay' }),
+      draft(4, 7, 'On the middle', { kind: 'Essay' }),
+      draft(8, 11, 'On stopping', { kind: 'Essay' }),
+    ]),
+  };
+}
+
+/** Different regions organise differently, and siblings differ in kind. */
+export function mixedReading(s = fixtureSections()): StructureInterpretation {
+  return {
+    form: 'mixed',
+    account: 'A part of chapters, then a letter and a vignette. The form is irregular, not broken.',
+    coverage: coverage(),
+    unaccountedSectionIds: [],
+    uncertainRegions: [],
+    units: assignUnitIds([
+      draft(0, 5, 'Departure', {
+        kind: 'Part',
+        children: [draft(0, 2, 'Setting out', { kind: 'Chapter' }),
+                   draft(3, 5, 'The road', { kind: 'Chapter' })],
+      }),
+      draft(6, 8, 'A letter home', { kind: 'Letter' }),
+      draft(9, 11, 'The window', { kind: 'Vignette' }),
+    ]),
+  };
+}
+
+/** Two defensible readings, and no winner chosen. */
+export function ambiguousReading(s = fixtureSections()): StructureInterpretation {
+  return {
+    form: 'ambiguous',
+    account: 'Two readings remain plausible, and the evidence does not separate them.',
+    coverage: coverage('selected'),
+    /* Nothing is accounted for: no alternative has been taken up. */
+    unaccountedSectionIds: s.map((x) => x.id),
+    uncertainRegions: [],
+    alternatives: [
+      { id: 'a1', label: 'by movement', why: 'The subject turns at 6.',
+        units: assignUnitIds([draft(0, 5, 'First movement'), draft(6, 11, 'Second movement')]) },
+      { id: 'a2', label: 'by voice', why: 'The address changes at 4.',
+        units: assignUnitIds([draft(0, 3, 'Spoken'), draft(4, 11, 'Written')]) },
+    ],
+  };
+}
+
+/**
+ * No larger structure is evident.
+ *
+ * The load-bearing fixture. A complete result with no units field at all - not
+ * an empty tree, not a failure, not an empty state to apologise for. If the
+ * surface cannot draw this one, the interpreter will eventually be asked not to
+ * produce it.
+ */
+export function noStructureReading(s = fixtureSections()): StructureInterpretation {
+  return {
+    form: 'none',
+    account: 'No stable larger structure is evident yet. The sections read as '
+      + 'a continuous body of work without divisions I can see.',
+    coverage: coverage('selected'),
+    unaccountedSectionIds: s.map((x) => x.id),
+    uncertainRegions: [],
+  };
+}
+
+export const allReadings = {
+  stable: stableReading,
+  partial: partialReading,
+  flat: flatReading,
+  mixed: mixedReading,
+  ambiguous: ambiguousReading,
+  none: noStructureReading,
+} as const;
+
+export type FixtureName = keyof typeof allReadings;
