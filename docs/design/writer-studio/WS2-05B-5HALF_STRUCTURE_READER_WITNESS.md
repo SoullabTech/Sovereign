@@ -211,13 +211,21 @@ explicitly could not answer. 8.5% of the character budget.
 
 ## Reproduction
 
+No placeholder in these commands, deliberately: an angle-bracket placeholder is
+a redirect in zsh, and pasting one cost four runs during this unit.
+
 ```bash
+export MEMBER_ID=$(psql -U soullab -d maia_consciousness -tAc \
+  "SELECT member_id FROM member_manuscripts WHERE id='a3ae67fd-a21e-4948-8766-4c397d2e4712'")
+
 DRY_RUN=1 \
 DATABASE_URL=postgresql://soullab@localhost:5432/maia_consciousness \
-MEMBER_ID=<the member who owns the Work> \
 MANUSCRIPT=a3ae67fd-a21e-4948-8766-4c397d2e4712 \
 npx tsx scripts/ws2-05b-reader-run.ts
 ```
+
+Run it with `MANUSCRIPT` set and `MEMBER_ID` unset and the script prints that
+resolving query itself.
 
 Prints the entire pass-1 request — system and user both — and sends nothing.
 Drop `DRY_RUN` and set `ANTHROPIC_API_KEY` to read. `SHOW_READING=1` adds the
