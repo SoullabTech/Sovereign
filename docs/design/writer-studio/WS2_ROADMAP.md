@@ -193,6 +193,17 @@ above went green; green proves bounded work, it does not confer permission.
 ```text
 5½  MAIA reader                      CLOSED 2026-08-31 · real-Work witnessed
  ↓
+8a  render fidelity                  PASS · target green on the real proposal
+ ↓
+8B-02b editorial reading contract    real reading OBSERVED 2026-08-31
+                                     proposal e6cabcc4 · founder ruling PENDING
+ ↓
+8B-02a editorial surface             HOLD — behind that ruling
+ ↓
+8b  founder judgment of the reading  HOLD — behind a room he can read it in
+ ↓
+8B-02c Ask MAIA                      SEPARATE UNIT — not designed
+ ↓
 6   adoption                         HOLD — needs explicit adoption authority
  ↓
 06  read divisions whole
@@ -212,10 +223,19 @@ above went green; green proves bounded work, it does not confer permission.
     expression / publish
 ```
 
-Holds in force: **6 HOLD** (requires explicit adoption authority). 5½ is closed;
-**05B-8**, the founder judgment of what MAIA perceived, is openable and is the
-next honest act. `TYPECHECK-BASELINE-DIAGNOSTIC-IDENTITY-01` sits outside
-this sequence entirely.
+Holds in force: **6 HOLD** (requires explicit adoption authority).
+
+**Superseded, and recorded rather than quietly edited.** This section previously
+read *"5½ is closed; 05B-8 is openable and is the next honest act."* That was
+true when written and stopped being true within the day: 8a found the room
+rendering a cleaner, more certain reading than the one MAIA made, and 8B found
+that even a faithful render was not legible — *render fidelity ≠
+intelligibility*. 8b cannot be asked of a screen whose thesis has to be
+reconstructed before it can be judged, so it sits behind 02a, which sits behind
+the ruling on 02b. The single open item is that ruling.
+
+`TYPECHECK-BASELINE-DIAGNOSTIC-IDENTITY-01` and the three app-wide favicon 404s
+sit outside this sequence entirely.
 
 ---
 
