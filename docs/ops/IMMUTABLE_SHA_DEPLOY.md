@@ -119,6 +119,63 @@ scripts/verify-deploy-context.sh
 # After a real deploy, the running container must report the SHA you named:
 ssh soullab@minisforum 'docker exec maia-sovereign printenv GIT_COMMIT'   # == <SHA>
 ssh soullab@minisforum 'docker exec maia-sovereign printenv DEPLOY_LANE'  # == deploy-lane
+
+# ...and the commit must have a durable per-commit image tag to roll back to:
+ssh soullab@minisforum 'docker image inspect maia-sovereign:<SHA> --format "{{.Id}}"'
+```
+
+## The per-commit rollback referent (`maia-sovereign:<sha>`)
+
+An immutable-SHA deploy is only half a control if the deployed commit leaves no
+durable name behind. `:current` and `:prod` are **mutable** — the next deploy
+moves them — and image IDs are **host-local**, so neither can serve as a
+long-term deployment referent. `maia-sovereign:<sha>` is the one that can.
+
+`scripts/deploy-tag.sh` therefore treats it as a post-condition, not a hope:
+
+- Every `docker tag` failure is surfaced (stderr kept, exit status inspected).
+- After tagging, `maia-sovereign:<sha>` is **asserted to exist**. If it does
+  not, `tag_images_for_rollback` returns non-zero and — under the callers'
+  `set -e` — the deploy stops **before `up -d`**. The running container is
+  untouched. A deploy that cannot leave a rollback referent does not swap.
+
+Why this exists: on 2026-08-06 a deploy of `ac5e4b981` logged
+`Tagging new image as :current and :ac5e4b981...` and exited 0 with no such
+tag. The prune's `kept newest 3, removed 1` line was read as the cause; it was
+not — the three surviving SHA tags were exactly the `kept newest 3`, meaning
+the new tag was never in the set. `docker tag` had failed and both its stderr
+and its exit status were discarded, while the log line — printed *before* the
+command and never checked — still announced success. The announcement is not
+the act.
+
+### `RETAIN_SHA_TAGS` semantics
+
+An upper **bound** on rollback-tag growth (default `3`), never an exact count.
+Protected from pruning, in order of authority:
+
+1. **The `<sha>` just deployed** — exempt *by name*, always ranked first,
+   always occupies a retention slot. It outranks retention entirely.
+2. Any `<sha>` tag whose image ID matches `:current` or `:previous` — a
+   rollback image is *identified* by its SHA tag; pruning that tag would delete
+   the name of the thing we roll back to.
+3. Any `<sha>` tag whose image ID matches the just-deployed commit's image.
+
+So **more than `RETAIN_SHA_TAGS` tags may legitimately survive.** Do not "fix"
+that by pruning to an exact N — the protections are the point. Remaining older
+tags are ranked by image `.Created`, which is a *proxy* for deploy recency and
+can be wrong (a fully cache-hit rebuild yields an image whose `.Created`
+predates the deploy; tags sharing an image share a timestamp). That proxy is
+acceptable for ordering stale tags and is deliberately not relied on for the
+tag that matters. Retention exists because each image is ~35–42 GB: on
+2026-07-12 nineteen stale SHA tags filled minisforum's 937 GB disk and broke an
+in-flight deploy at metadata write.
+
+```bash
+# Self-test — throwaway image repo, never touches maia-sovereign:
+scripts/verify-deploy-tag-prune.sh
+# → 14 assertions across 3 scenarios: happy-path retention, cache-hit rebuild
+#   (deployed SHA is the oldest image and survives by name), fail-closed
+#   tagging (empty SHA / missing :prod / uncreatable tag all refused).
 ```
 
 ## Rehearsal & test evidence (2026-07-27)
