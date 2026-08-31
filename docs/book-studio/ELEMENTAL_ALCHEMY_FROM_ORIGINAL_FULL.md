@@ -537,19 +537,9 @@ Embracing the Spiral Journey: Reflecting on the spiral-like nature of change inv
 
 The toroidal flow is a fundamental pattern found throughout nature. It serves as a powerful metaphor for the dynamic nature of transformation. This cycling of energy and information continuously through a system reflects the spiraling dance of expansion, contraction, and integration within us. When we align with this natural flow, we can embrace change as a catalyst for growth and evolution.
 
-*"Astrology is a language. If you understand this language, the sky speaks to you." – Dane Rudhyar*
-
-The Vedic gunas have a remarkable correspondence with the astrological properties of the cardinal, fixed, and mutable signs respectively. This correspondence is as follows: rajas, with its expansive energy, correlates with the initiating cardinal quality of Aries, Cancer, Capricorn, and Libra. Tamas, with its constricting power, parallels the stabilizing quality of the fixed signs of Leo, Scorpio, Taurus, and Aquarius. Sattva, with its harmonizing force, is similar to the mutable quality of the mutable signs Sagittarius, Pisces, Libra, and Gemini.
-
-By developing an awareness of the complex interrelation between the gunas, astrological and metaphysical qualities, one acquires a knowledge of universal mechanisms of change. Rajas and the cardinal signs initiate change. Tamas and the fixed signs bring fixity and solidity to the change that has been initiated. Sattva and the mutable signs enable the flux of change to continue. Different traditions have developed these relationships in different ways but the additional metaphors work as a means of amplifying our understanding of these fundamental aspects of experience in everyday life.
-
-*"As above, so below, as within, so without, as the universe, so the soul." – Hermes Trismegistus*
-
-We live more self-reflective, engaged, and meaningful lives the more embodied this knowledge becomes, and the further it extends into lived experience. Attunement with the natural ordering of change as it plays out in every local, self-organizing process leads us to work with the forces that are already in play, leading us to greater awareness, resilience, and responsiveness.
-
 ### The Gunas: The Three Threads of Creation
 
-They are referred to in Vedic philosophy as the gunas, the three facets or strands that compose all of life. The strands, known as Rajas, Tamas, and Sattva, represent the driving forces that bring about change and balance to the universe.
+In Vedic philosophy, the gunas are the three facets or strands that compose all of life. The strands, known as Rajas, Tamas, and Sattva, represent the driving forces that bring about change and balance to the universe.
 
 **Rajas (Expansion)**: Rajas represents the expansive movement into the world, the driving agent behind growth, change, and transformation.
 
@@ -566,6 +556,8 @@ Astrology also reflects a triadic structure through its modalities: cardinal, fi
 **Fixed (Tamas)**: The fixed movements reveal the phase of creative engagement, providing structured experiences that result in transformation.
 
 **Mutable (Sattva)**: The mutable phases reflect the goal of each elemental process to facilitate the constant need for adaptability, flexibility, and the ability to transition between different states of being.
+
+This correspondence is as follows: rajas, with its expansive energy, correlates with the initiating cardinal quality of Aries, Cancer, Capricorn, and Libra. Tamas, with its constricting power, parallels the stabilizing quality of the fixed signs of Leo, Scorpio, Taurus, and Aquarius. Sattva, with its harmonizing force, is similar to the mutable quality of the mutable signs Sagittarius, Pisces, Virgo, and Gemini.
 
 ### The Alchemical Principles: Sulfur, Salt, and Mercury
 
@@ -591,9 +583,7 @@ At the core of this work is the belief that we as embodied souls are multidimens
 
 By working with each of these elemental aspects, we can craft a holistic, customized journey of growth tailored to our unique paths as individuals while recognizing our unity with the greater whole.
 
-### The Toroidal Flow: The Spiral Dance of Transformation
-
-Referencing the previous chapter on the toroidal flow, we understand it as a fundamental pattern found throughout nature, providing a powerful visual metaphor for the dynamics of transformation. The torus represents the continuous cycling of energy and information through a system, with the output of one cycle becoming the input for the next.
+### The Threefold Dynamics of Transformation
 
 In the context of personal transformation, the toroidal flow can be understood as the spiraling dance of the three gunas and the alchemical principles. The expansive energy of Rajas and Sulfur initiates the flow, propelling us outward into new experiences and insights. The contractive energy of Tamas and Salt then draws us back inward, allowing for the integration and embodiment of these experiences. The harmonizing energy of Sattva and Mercury facilitates the continuous cycling of this process, ensuring that the wisdom gained in one cycle becomes the foundation for the next.
 
@@ -2815,7 +2805,6 @@ A working bibliography organized by chapter. Where the same source informs multi
 
 ### Chapter 3: Understanding the Trinity and the Toroidal Flow
 
-- Paracelsus. *Selected Writings.* Princeton University Press, 1979.
 - James, William. *The Varieties of Religious Experience: A Study in Human Nature.* Longmans, Green & Co., 1902.
 - Emunds, Stefan. *The Five Elements of Healing: Hindu Tattvas in Psychotherapy.* CreateSpace, 2015.
 - Smith, C. Michael. *Jung and Shamanism in Dialogue: Retrieving the Soul / Retrieving the Sacred.* Paulist Press, 1997.
