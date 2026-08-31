@@ -15,10 +15,23 @@ Phase 6   DRIFT CLASSIFICATION        COMPLETE
 Phase 7   ONE MIND, MANY EMBODIMENTS  RATIFIED / CLOSED
 Phase 8   CONDUCTOR ARCHITECTURE      PACKETIZED
 
-  P0        EVIDENCE CONTRACT         ✅ DELIVERED 2026-08-31
+  P0        EVIDENCE CONTRACT         ✅ CLOSED / DELIVERED  (SHA 1d09c42)
+              runtime behavior          UNCHANGED
+              30 sources                CLOSED SET
+              registry                  EXHAUSTIVE
+              tier disposition          EXHAUSTIVE
+              authority / provenance /
+              consent / participation   TYPED
+              current tier inversion    DECLARED / PINNED — NOT REPAIRED
+              live runtime adoption     NOT YET
+                                        (old untyped meta path still exists)
+
   §6 probes RUNTIME FACTS             READY — scripts/wic01-runtime-boundary-probes.sh
+                                      BLOCKED in cloud sessions (no LAN path)
   P1+                                 HELD pending required facts
 ```
+
+**Scope discipline on P0.** Omission is impossible *for code that adopts the canonical contract*. It is **not yet impossible in the live runtime** — nothing live imports the modules, and `MaiaRequest.meta` still exists and can still silently omit intelligence today. P0 is a contract, not runtime convergence.
 **Ratified canon:** `docs/canon/MAIA_ONE_MIND_MANY_EMBODIMENTS.md`
 **Lane:** `claude/maia-intelligence-census-6aav7v`
 

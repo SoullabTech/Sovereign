@@ -93,6 +93,16 @@ type MaiaTurnInput = { /* typed; no Record<string, unknown> */ };
 
 **The mechanism:** `INTELLIGENCE_REGISTRY` and all three tiers of `TIER_DISPOSITION` are `Record<IntelligenceSourceId, ...>`. A source added to the union without a registry entry and a declared disposition on every tier **does not compile**. The tier inversion is now a declared value (`absent_unratified`) that `unratifiedTierGaps()` enumerates, rather than an omission nobody can see.
 
+> **⚠️ SCOPE OF THAT GUARANTEE — do not overstate it.**
+>
+> Omission is impossible **for code that adopts the canonical contract.** It is **not yet impossible in the live runtime.**
+>
+> Nothing live imports these modules. The existing `MaiaRequest.meta?: Record<string, unknown>` path still exists and **can still silently omit intelligence today, exactly as before.** What P0 delivered is a type boundary that makes the failure mode impossible *once the runtime is migrated through it* — which is packets P2–P5, not this one.
+>
+> P0 is a contract, not runtime convergence. Any claim that "omission is now impossible" without that qualifier is a Cat-6 inflation of a Cat-2 artifact.
+
+**`unratifiedTierGaps()` — instrument today, gate later.** It is currently a **migration instrument**: it reports that *the declared contract contains unresolved divergence*. It is **not** a runtime-health metric and must not be cited as one. After runtime adoption (P5) it can become a gate on actual canonical cognition — at which point it reports divergence in what MAIA is really doing. Preserve the distinction; they are different claims about different objects.
+
 **Deliberately not corrected here:** `TIER_DISPOSITION` records what is TRUE TODAY, including the inversion the ruling calls architecturally incorrect. Fixing the values in a type-only packet would be a behavior change smuggled past the P2 byte-identical-prompt witness. P3 flips them.
 
 ---

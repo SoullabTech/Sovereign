@@ -28,6 +28,14 @@
  * authority, provenance, consent gate and per-tier reachability does not
  * typecheck.
  *
+ * ⚠️ SCOPE OF THAT GUARANTEE. Omission is impossible FOR CODE THAT ADOPTS
+ * THIS CONTRACT. It is NOT yet impossible in the live runtime. Nothing live
+ * imports this module; `MaiaRequest.meta?: Record<string, unknown>` still
+ * exists and can still silently omit intelligence today, exactly as before.
+ * What this file provides is a type boundary that makes the failure mode
+ * impossible ONCE THE RUNTIME IS MIGRATED THROUGH IT — packets P2–P5, not
+ * this one. This is a contract, not runtime convergence.
+ *
  * SCOPE DISCIPLINE (packet P0)
  * ----------------------------
  * Type architecture ONLY. This module is deliberately inert:
@@ -555,6 +563,16 @@ export const TIER_DISPOSITION: Record<
  *
  * This is the machine-readable form of census findings D7 and D8. Packet P3
  * closes when this returns empty for all three tiers.
+ *
+ * MIGRATION INSTRUMENT — NOT A RUNTIME-HEALTH METRIC.
+ * Today this reports one thing only: *the declared contract contains
+ * unresolved divergence.* It says nothing about what the live runtime is
+ * actually doing, because the live runtime does not yet consult this module.
+ * Do not cite it as evidence about MAIA's real cognition.
+ *
+ * After runtime adoption (packet P5) it can become a gate on actual canonical
+ * cognition — at which point it reports divergence in what MAIA really does.
+ * Same function, different claim about a different object. Keep them distinct.
  */
 export function unratifiedTierGaps(
   tier: ProcessingTier
