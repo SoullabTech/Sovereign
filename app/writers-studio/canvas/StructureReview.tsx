@@ -165,6 +165,33 @@ export default function StructureReview({
         </div>
       )}
 
+      {/* WHAT SHE COULD NOT SETTLE, in her words.
+          These were frozen in the interpretation and rendered nowhere, so the
+          room presented the reading as more certain than the reading was. The
+          `why` is printed VERBATIM: paraphrasing a qualification is the same
+          failure as dropping it, one step quieter. */}
+      {view.interpretation.uncertainRegions.length > 0 && (
+        <div style={{ marginBottom: SPACE.base }}>
+          <StudioText role="panelLabel" tone="muted" style={{ display: 'block' }}>
+            what she could not settle
+          </StudioText>
+          {view.interpretation.uncertainRegions.map((r, i) => {
+            const from = headingOf(r.fromSectionId)?.position;
+            const to = headingOf(r.toSectionId)?.position;
+            return (
+              <StudioText
+                key={`${r.fromSectionId}:${r.toSectionId}:${i}`}
+                role="quiet"
+                data-uncertain-region={`${from ?? '?'}-${to ?? '?'}`}
+                style={{ display: 'block', marginTop: SPACE.hairline }}
+              >
+                {from ?? '?'}–{to ?? '?'} · {r.why}
+              </StudioText>
+            );
+          })}
+        </div>
+      )}
+
       {/* NONE: a complete answer. The account above, the book below, no tree
           and no apology. */}
       {form === 'none' && (
@@ -203,6 +230,28 @@ export default function StructureReview({
 
 const entryKey = (e: OutlineEntry) => e.kind === 'section' ? `s:${e.id}` : `u:${e.node.id}`;
 
+/**
+ * What each uncertainty tag says, in a member's words.
+ *
+ * TRANSLATION, NOT INTERPRETATION. The slugs are the reader's closed vocabulary
+ * and mean something exact; these phrases say the same thing in the room's
+ * language and neither soften nor sharpen it. `competing-interpretation` does
+ * not become "probably fine", and `possible-scaffold-contamination` does not
+ * become "this is a contents list".
+ *
+ * A TAG WITH NO ENTRY IS SHOWN RAW, never dropped. If the reader's vocabulary
+ * grows and this map has not, the member meets an unfamiliar word rather than
+ * silence - and silence is the failure this whole unit exists to correct.
+ */
+const UNCERTAINTY_SAYS: Record<string, string> = {
+  'start-boundary': 'where this begins',
+  'end-boundary': 'where this ends',
+  kind: 'what kind of division this is',
+  hierarchy: 'how this sits inside the whole',
+  'possible-scaffold-contamination': 'whether this is writing or apparatus',
+  'competing-interpretation': 'another reading is nearly as good',
+};
+
 /** What was actually read, shown rather than buried in a record. */
 function Coverage({ view }: { view: ProposalView }) {
   const b = view.coverage.bodies;
@@ -219,8 +268,25 @@ function Coverage({ view }: { view: ProposalView }) {
         + ` — ${n} of at most ${b.sectionLimit} she may ask for`;
   return (
     <StudioText role="metadata" tone="quiet" data-coverage={b.mode}
+      /* The frozen facts, machine-readable beside their reading. A witness that
+         had to grep the prose for "truncated" would force the row's vocabulary
+         into the member's room to satisfy itself; these carry the row exactly,
+         and the sentence stays in the room's language. */
+      data-truncated={String(b.truncated)}
+      data-passes={String(view.coverage.passes)}
       style={{ display: 'block', marginBottom: SPACE.base }}>
-      MAIA {said}.
+      MAIA {said}
+      {/* READ FROM THE ROW. `truncated` is typed as the literal false, so only
+          one branch can be reached today - but the sentence is derived from the
+          record rather than asserted from what we believe the record says. The
+          member is told what was read AND that none of it was shortened,
+          because "she read 4 sections" and "she read the whole of 4 sections"
+          are different claims. */}
+      {b.mode !== 'none'
+        && (b.truncated
+          ? ', though some of it was shortened'
+          : ', none of it shortened')}
+      {', '}in {view.coverage.passes} pass{view.coverage.passes === 1 ? '' : 'es'}.
       {view.staleAsRead === true && ' Parts of the Work she read have changed since.'}
       {/* Not silence. An unmeasurable comparison is stated as one, because a
           member reading no warning will reasonably hear "nothing has changed". */}
@@ -336,6 +402,21 @@ function Entry({
           )}
         </div>
       )}
+      {/* WHAT SHE LEFT OPEN ABOUT THIS DIVISION.
+          Frozen on the proposed unit and rendered nowhere until now, so ten of
+          eleven divisions on the first real reading arrived looking settled.
+          Read from the PROPOSED unit rather than the member's copy: these are
+          MAIA's qualifications about what she suggested, and they do not
+          silently transfer to a boundary the member has since moved. */}
+      {proposed && proposed.uncertainty.length > 0 && (
+        <StudioText role="metadata" tone="quiet"
+          data-uncertainty={proposed.uncertainty.join(',')}
+          style={{ display: 'block', paddingLeft: pad + SPACE.base }}>
+          MAIA left open: {proposed.uncertainty
+            .map((u) => UNCERTAINTY_SAYS[u] ?? u).join(' · ')}
+        </StudioText>
+      )}
+
       {mine && (
         <StudioText role="metadata" tone="quiet" data-member-authored
           style={{ display: 'block', paddingLeft: pad + SPACE.base }}>

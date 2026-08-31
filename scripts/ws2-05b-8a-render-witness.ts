@@ -169,11 +169,26 @@ async function main() {
       `mode ${shownMode} vs frozen ${cov.mode}; sections ${saysSections};`
       + ` ceiling ${cov.sectionLimit} ${saysCeiling}`);
   }
-  /* `truncated` and `passes` are in the row and not on the page at all. */
-  record(3.1 as unknown as number, 'coverage states truncated and passes',
-    /truncat/i.test(text) ? 'PASS' : 'FAIL',
-    `frozen truncated=${cov.truncated}, passes=${p.coverage.passes};`
-    + ' neither is rendered');
+  /**
+   * `truncated` and `passes`, checked as FACTS rather than as words.
+   *
+   * The first version grepped the rendered prose for "truncated". That would
+   * have forced the row's vocabulary into the member's room to satisfy the
+   * witness - the render bending to the test, which is the same failure as the
+   * row bending to the render, one level up. The room is free to say "none of
+   * it shortened"; these attributes carry the row exactly, and a page claiming
+   * two passes over a three-pass reading now fails.
+   */
+  const shownTruncated = await attr('[data-coverage]', 'data-truncated');
+  const shownPasses = await attr('[data-coverage]', 'data-passes');
+  const saysNotShortened = /shorten/i.test(text) || /truncat/i.test(text);
+  record(3.1 as unknown as number, 'coverage carries truncated and passes from the row',
+    shownTruncated === String(cov.truncated)
+      && shownPasses === String(p.coverage.passes)
+      && saysNotShortened ? 'PASS' : 'FAIL',
+    `truncated ${shownTruncated ?? 'absent'} vs ${cov.truncated};`
+    + ` passes ${shownPasses ?? 'absent'} vs ${p.coverage.passes};`
+    + ` stated in words ${saysNotShortened}`);
 
   /* 4 ── every section accounted for ───────────────────────────────────── */
   record(4, `the proposal accounts for all ${sectionCount} sections`,
