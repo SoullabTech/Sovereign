@@ -43,24 +43,7 @@ export interface PlatformInfo {
  * the package name still produces it, so a rename breaks a test rather than
  * silently reclassifying Desktop as an ordinary browser.
  */
-/**
- * ⛔ TWO SPELLINGS, BECAUSE TWO SHIPPED APPS EXIST.
- *
- * `maia-desktop/<version>` comes from Electron's default user agent in the
- * `maia-desktop/` tree (product token = package name).
- *
- * `MAIADesktop/<version>` is appended explicitly by the packaged Soullab app
- * (`desktop-app/src/main.js`, `setUserAgent(... + ' MAIADesktop/' + version)`).
- * That build is the one members actually have installed, and it did NOT match
- * the original marker — no hyphen. So `/maia` classified it as an ordinary
- * browser, skipped the sovereign capture path entirely, fell onto Web Speech
- * (which has no service behind it inside Electron), and showed a member
- * "listening" against a transport that could never produce a word.
- *
- * Both are specific enough that no ordinary browser matches; a test asserts
- * that from the other side.
- */
-const DESKTOP_SHELL_UA_MARKER = /\b(maia-desktop|MAIADesktop)\//i;
+const DESKTOP_SHELL_UA_MARKER = /\bmaia-desktop\//i;
 
 export function isDesktopShell(userAgent?: string): boolean {
   // Capacitor wins: a native build is native, whatever its UA says.
