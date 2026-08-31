@@ -376,3 +376,53 @@ Gate B                     still CLOSED
 5½                         still NOT AUTHORIZED
 Custody B                  still HOLD
 ```
+
+
+---
+
+## 9. WS2-05B-CUSTODY-01 — CLOSED · 2026-08-31
+
+**Merged.** `SoullabTech/Sovereign#1158` → `clean-main-no-secrets`, merged by `Soullab` at
+`2026-08-31T12:13:07Z`. New canonical: **`750f492b`**.
+
+### Canonical gates witnessed the transfer
+
+```text
+build · sovereignty · Axis 1 authoritative adjudication · TypeScript no-regression gate
+covenant-gates (class-b, rollback declared) · check-diagrams · auto-label      7/7 ✅
+mergeable_state clean · 1 commit · 29 files · +6,771 · 0 deletions
+```
+
+### Post-merge census — read from canonical, not inferred
+
+```text
+29 files present on 750f492b and byte-identical to source 845adb88   diverged 0 · missing 0
+importers outside the custody set                                    0
+```
+
+⛔ **State on the Board is therefore `ZERO-CALLERS`, not LIVE.** Built ≠ wired ≠ surfacing ≠
+verified. Nothing on canonical imports these modules; no migration has been applied; nothing is
+deployed.
+
+### Scope of what the green establishes — exactly, and no further
+
+**No CI job ran the 145 tests.** `canonical-pr-quality.yml` defines exactly one job, `typecheck`;
+the `sovereignty` job runs a single voice contract test; and every `npm test` invocation in
+`.github/workflows` is swallowed (`|| true`, `|| echo`) and lives in workflows that do not trigger
+on this branch. The 145/145 and both failure probes are **local evidence, reproducible on the merge
+commit**, not CI evidence.
+
+This is the surviving half of the gap `canonical-pr-quality.yml`'s own header documents: that
+census closed the typecheck hole; **the unit-test hole on canonical PRs is still open.** It was
+deliberately not fixed inside this unit — a CI job is an added file, and would have broken the
+`29 added / 0 modified` acceptance condition. It is a finding awaiting its own unit and ruling.
+
+### Gate state after this unit
+
+```text
+GATE A   substrate custody on canonical      COMPLETE
+GATE B   BUILD MODE                          still CLOSED
+5½       MAIA Structure Reader               still NOT AUTHORIZED
+CUSTODY B  surface                           still HOLD
+DEPLOY · MIGRATION APPLICATION               still NOT AUTHORIZED
+```

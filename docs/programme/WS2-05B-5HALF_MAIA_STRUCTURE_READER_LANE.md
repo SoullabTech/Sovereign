@@ -13,7 +13,7 @@
 | **Threshold** | 5½ — *MAIA becomes a real reader* |
 | **Objective** | Give `interpretStructure` **one** real `StructureReader` implementation, resolve three open rulings, and witness a valid frozen interpretation produced from real Work evidence. Nothing else. |
 | **Binding rulings** | master brief **§A1.3** authority chain · **§A1.5** structure ontology · **§A3.1** programme entry · **§A4.9** structural perspective · **§A4.10** writer-controlled meaning · **§28** a check must be shown capable of failing |
-| **Entry state** | **SCOPED AND READY · BUILD BLOCKED ON GATE B.** Gate A satisfied by `WS2-05B-CUSTODY-01` Custody A (founder-authorized 2026-08-31, canonical-only, no deploy). Gate B — the founder release — is still CLOSED |
+| **Entry state** | **GATE A SATISFIED · BUILD BLOCKED ON GATE B.** Custody A merged to canonical `750f492b` via #1158 (2026-08-31); the `interpretStructure` seam this lane fills now holds custody on canonical, at ZERO-CALLERS. Gate B — the founder release — is still CLOSED, so 5½ is **not authorized to build** |
 | **Stop condition** | first valid frozen interpretation witnessed on real Work evidence. **Then stop.** |
 
 ---
@@ -53,7 +53,11 @@ must hold custody on canonical before 5½ has anything to implement against.** U
 has no `interpretStructure` to give an implementation to, and any work done here would be the
 zero-caller pattern the Board exists to prevent.
 
-> **Source located, 2026-08-31.** The work is not lost. It is complete, with 111 test cases, on
+> **GATE A CLEARED, 2026-08-31.** Custody A merged to canonical `750f492b` (#1158): 29 files,
+> byte-identical to source, zero importers. `interpretStructure` now exists on canonical and has no
+> reader. The rest of this section is preserved as the record of how that was established.
+>
+> **Source located, 2026-08-31.** The work was not lost. It is complete, with 111 test cases, on
 > `origin/claude/writers-studio-ws2-03b-qf49hj` @ `845adb88`. Custody is chartered as its own
 > bounded unit — `docs/programme/WS2-05B-CUSTODY-01_STRUCTURE_CUSTODY_UNIT.md` — which found that
 > custody **splits**: a 29-file substrate half (Canvas-free, closure-complete, landable under the

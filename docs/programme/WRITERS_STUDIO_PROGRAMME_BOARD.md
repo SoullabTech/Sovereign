@@ -35,7 +35,7 @@ CURRENT UNIT       WS-01 Source Custody + Freeze Release
 CURRENT CANDIDATE  4a551d3d13a27ec442252be7822865e0f2d31978
                    feature/ws-01-source-custody-v3  ·  PINNED / DEPLOYED
 NEXT EXECUTABLE    P0-D
-LAST UPDATED       2026-08-31  (structure census + source located + custody unit; mode unchanged)
+LAST UPDATED       2026-08-31  (05 substrate custody COMPLETE via #1158 → 750f492b; mode unchanged)
 ```
 
 Writer's Studio mode reflects **this programme only**. Unrelated Jarvis incidents may sit ahead of
@@ -117,31 +117,42 @@ unbuilt while the unit list reads complete. They create no WS-08+.
 | Worktable (serious long-form) | **PARTIAL** | a textarea; the researched surface is the zero-caller easel |
 | Structure · Outline · Read · Compare | **ABSENT** | — |
 
-## STRUCTURE PIPELINE — censused 2026-08-31
+## STRUCTURE PIPELINE — custody COMPLETE 2026-08-31
 
-Censused tree-wide against canonical `55021771`. These are the symbols the `05A → 05B → 5½ → 6`
-lane series is written in. **None is present on canonical**, so the series is direction, not state:
-`docs/programme/WRITERS_STUDIO_STRUCTURE_PIPELINE_ROADMAP.md`.
+Censused against `55021771` as **0 files**, located off-canonical the same day, and taken into
+custody the same day. `WS2-05B-CUSTODY-01` (unit definition: `WS2-05B-CUSTODY-01_STRUCTURE_CUSTODY_UNIT.md`)
+merged as **#1158 → canonical `750f492b`**, 29 files, byte-identical to source
+`claude/writers-studio-ws2-03b-qf49hj` @ `845adb88`, `1 commit · 29 added · 0 modified · 0 deleted`,
+7/7 canonical gates green.
 
-**Source located, same day.** The work is complete and off-canonical on
-`origin/claude/writers-studio-ws2-03b-qf49hj` @ `845adb88` — 9 implementation modules (~2,800 LOC),
-111 test cases, 3 routes, 3 migrations, 3 witness scripts. Custody is chartered as
-`WS2-05B-CUSTODY-01`, which found the custody act **splits**: a 29-file Canvas-free substrate half,
-and a surface half entangled with **6 divergent frozen Canvas files**
+**Post-merge census, read from canonical:** 29/29 present and identical to source; **0 importers
+outside the custody set.** ⛔ State is `ZERO-CALLERS`, not LIVE — nothing imports it, no migration
+is applied, nothing is deployed.
+
+Custody **split**, and the surface half did not travel: 6 divergent frozen Canvas files
 (`canvas/page.tsx`, `Worktable.tsx`, `canvasIdentity.ts`, `studioMap.ts`, 2 tests) plus 13 absent
-`app/writers-studio/studio/**` modules. ⛔ The surface half is a Canvas-convergence decision, not a
-custody act.
+`app/writers-studio/studio/**` modules remain off-canonical as **Custody B**. ⛔ That half is a
+Canvas-convergence decision, not a custody act, and is HOLD under the freeze.
 
 | Node | State | Evidence |
 |---|---|---|
-| `StructureEvidence` · `StructureProposal` (05B-5a) | **ABSENT on canonical · COMPLETE off-canonical** | 0 files on canonical `55021771`; `lib/manuscript/structure/{evidence,interpret,review,proposalStore}.ts` + 111 test cases on `845adb88` |
-| `interpretStructure` seam · `StructureInterpretation` | **ABSENT** | 0 files on canonical `55021771` |
-| `StructureReader` implementation (05B-5½) | **DESIGNED** | charter `WS2-05B-5HALF_MAIA_STRUCTURE_READER_LANE.md`; **BLOCKED** on the two gates in its §2. The seam it fills — `interpretStructure(evidence, sections, reader, opts)` — exists on the located branch; **no reader implementation exists anywhere** |
-| `AuthorStructureCommand` — sovereign adoption (05B-6) | **DESIGNED** | held until 5½ is witnessed; three questions open |
-| `manuscript_structure_units` — structure of record (05A) | **ABSENT on canonical · COMPLETE off-canonical** | no migration on canonical; `20260830000002/3` + `structureService.ts` (470 LOC) on `845adb88`, and it is the **only** writer of the table |
+| `StructureEvidence` · `StructureProposal` (05B-5a) | **ZERO-CALLERS** | on canonical `750f492b`; `lib/manuscript/structure/{evidence,interpret,review,proposalStore}.ts` + 111 test cases. 0 importers |
+| `interpretStructure` seam · `StructureInterpretation` | **ZERO-CALLERS** | on canonical `750f492b`; the reader seam exists and **has no reader** |
+| `StructureReader` implementation (05B-5½) | **DESIGNED · NOT AUTHORIZED** | charter `WS2-05B-5HALF_MAIA_STRUCTURE_READER_LANE.md`. **Gate A cleared** by #1158; **Gate B still CLOSED**, so it may not be built. ⛔ No reader implementation exists anywhere |
+| `AuthorStructureCommand` — sovereign adoption (05B-6) | **DESIGNED · HOLD** | held until 5½ is witnessed; three questions open |
+| `manuscript_structure_units` — structure of record (05A) | **ZERO-CALLERS** | migrations `20260830000002/3/5` on canonical as **files, unapplied**; `structureService.ts` (470 LOC) is the **only** writer of the table, reached only by the 05A route and its witness script |
 
-⛔ A charter is not a programme entry (**§A3.1**) and not the *NEXT BUILD UNIT AUTHORIZED* signal.
-This section records a census and two custody artifacts. It does not change programme mode.
+⛔ **Custody is not release.** #1158 satisfies §A3.1's custody-on-canonical requirement for the 05
+substrate and nothing else: BUILD MODE stays **CLOSED**, no acceptance state moved, no deploy and no
+migration was authorized, and 5½ remains **NOT AUTHORIZED** pending the Gate B founder act
+(`WS-01 ACCEPTED + CANVAS FREEZE RELEASED + NEXT BUILD UNIT AUTHORIZED`).
+
+> **Out-of-programme finding, recorded not adopted.** No CI job runs unit tests on canonical PRs:
+> `canonical-pr-quality.yml` defines only `typecheck`, and every `npm test` in `.github/workflows`
+> is swallowed (`|| true` / `|| echo`) inside workflows that do not trigger on canonical. This is
+> the surviving half of the gap that file's own header documents. ⛔ It is a **gate defect awaiting
+> its own unit and ruling** — it does not become Writer's Studio scope merely because custody
+> surfaced it. Detail: `WS2-05B-CUSTODY-01_STRUCTURE_CUSTODY_UNIT.md` §9.
 
 ## MATERIAL
 
