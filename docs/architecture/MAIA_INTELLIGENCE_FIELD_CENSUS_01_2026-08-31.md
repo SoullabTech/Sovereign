@@ -75,19 +75,19 @@ Tier columns mean *reaches a prompt seam on that tier*, not *loaded*.
 | 15 | **Forward readiness** | `detectForwardReadiness` | ✅ | — | ✅ | ❌ | ❌ | single | **LIVE (FAST only)** | `route.ts:1053`; not in `ADDENDA_SPECS` |
 | 16 | **Field wisdom (collective)** | field service | ✅ | — | ✅ | ✅ | ✅ | single | **LIVE** | `maiaVoice.ts:425` |
 | 17 | **Corpus Callosum** (8-voice parallel emission) | `agent_runs` (7 mig) / `integration_passes` (2 mig) | ✅ default-on | — | ✅ | ✅ | ❓ | `WisdomRouter` selective (~49%) | **LIVE (substrate)** | `maiaOrchestrator.ts:590,640,685,736` |
-| 18 | **MythicAtlas / archetypal** | **external HTTP** `MYTHIC_ATLAS_URL` → default `localhost:8000` | ⚠️ invoked, 422 witnessed | — | ❌ | ❌ | ❓ | advisory | **BROKEN (env-conditional)** | `mythicAtlasService.ts:49,79,95`; `maiaService.ts:2839` |
+| 18 | **MythicAtlas / archetypal** | **in-network Docker service** `http://mythic-atlas:8088` (probe-confirmed) | ⚠️ invoked, 422 witnessed | — | ❌ | ❌ | ❓ | advisory | **BROKEN (contract drift)** | `mythicAtlasService.ts:49,79,95`; probe fact 3 |
 | 19 | **RCN / RLM** | **relative URL** `'/api/rlm'` | ❌ fails server-side | — | ❌ | ❌ | ❌ | advisory | **BROKEN (structural)** | `lib/rlm/client.ts:188,271,302` |
 | 20 | **Semantic retrieval** | `semantic_memory_vectors` — **0 migrations** | **write-only**: `INSERT` exists, **no `SELECT` anywhere** | — | ❌ | ❌ | ❌ | — | **BROKEN / ORPHANED** | `maiaService.ts:3522-3524`; `grep "FROM semantic_memory_vectors"` → ∅ |
 | 21 | **Pattern / resonance lattice** | `lattice_nodes` — **0 migrations** | reads + writes coded | — | ❌ | ❌ | ❌ | — | **BROKEN / UNKNOWN adjudication** | `ConsciousnessMemoryLattice.ts:500,583,716,747`; `maiaService.ts:3432` |
 | 22 | **Relational signal observation** | `member_relational_signals` | write path, `.catch()` swallowed | observation-only by canon | n/a | n/a | n/a | — | **UNKNOWN (runtime)** — writes may be failing silently | `relationalObserver.ts:139-140,223` |
-| 23 | **Memory transition records** | `memory_transition_records` | fire-and-forget INSERT | — | n/a | n/a | n/a | — | **UNKNOWN (runtime)** | `memoryTransitionRecord.ts:185` |
+| 23 | **Memory transition records** | `memory_transition_records` | fire-and-forget INSERT | — | n/a | n/a | n/a | — | **LIVE** — 3992 rows (probe) | `memoryTransitionRecord.ts:185`; probe fact 6 |
 | 24 | **Conversation memory uses** | `conversation_memory_uses` (4 mig) | records **retrieved candidates**, not uses | — | n/a | n/a | n/a | — | **LIVE but misnamed** | `ConversationMemoryUsesStore.ts:148,206` |
 | 25 | **Somatic intelligence** | `SomaticMemoryService` | ❌ never called on turn | — | ❌ | ❌ | ❌ | — | **ORPHANED** | 0 refs in route + service |
 | 26 | **Coherence / field layer** | `CoherenceFieldService` | ❌ never called on turn | — | ❌ | ❌ | ❌ | — | **RESTRAINED (frozen plan)** | 0 refs; `COHERENCE_FIELD_WIRE_UP_SPEC §0.C` |
 | 27 | **Morphic pattern** | `MorphicPatternService` | ❌ | consent + aggregation gate unmet | ❌ | ❌ | ❌ | — | **NOT_ACTIVATED** | 0 refs |
 | 28 | **Quantum field memory** | `QuantumFieldMemory` (810 LOC, 0 persistence) | ❌ | — | ❌ | ❌ | ❌ | — | **ORPHANED** | 0 refs |
 | 29 | **Corpus / manuscript / teachings** | manuscripts routes | ❌ not on member turn | — | ❌ | ❌ | ❌ | — | **ORPHANED (from turn)** | 0 refs in route + service |
-| 30 | **Model routing + fallback** | `modelService.generateText` | Anthropic primary, local Ollama fallback | — | ✅ | ✅ | ✅ | `MAIA_TEXT_PROVIDER` | **UNKNOWN (env)** | `modelService.ts:49-58`; `localModelClient.ts:11-22` |
+| 30 | **Model routing + fallback** | `modelService.generateText` | Anthropic primary (default), Ollama `qwen2.5:7b` fallback | — | ✅ | ✅ | ✅ | `MAIA_TEXT_PROVIDER` unset → default | **LIVE** (probe-confirmed) | probe fact 3; `modelService.ts:49-58` |
 | 31 | **Memory health telemetry** | `buildMemoryHealth` | ✅ every turn | — | n/a | n/a | n/a | see §4 | **BROKEN (truthfulness)** | `memoryHealth.ts:122-130,141-146` |
 | 32 | **Ranking authority** | ≥12 independent implementations | — | — | — | — | — | **no single authority** | **REDUNDANT** | see §5 |
 
@@ -258,9 +258,17 @@ So the failure mode is not subsystems leaking into the response. It is **incoher
 
 ---
 
-## 6. What this census does NOT know (honest gaps)
+## 6. Runtime gaps — **CLOSED 2026-08-31**
 
-These require production runtime and were **not** collected. They are listed with their probes so the gap is closable, not so it is claimed closed.
+Probes run from Kelly's Mac Studio against minisforum. Full results and the P1 adjudication: `docs/programs/WIC01_RUNTIME_PROBE_RESULTS.md`.
+
+**Custody confirmed:** production `GIT_COMMIT=fc66b477a` matches the census SHA `fc66b47`. **This census describes code members are actually running.** No finding is invalidated.
+
+**The result that changes priorities:** 7-day tier distribution is `CORE 1935 (72.9%) · FAST 721 (27.1%) · DEEP 0`. Developmental memory, forward-readiness, knowledge-field and youth-support are `absent_unratified` on CORE — so **finding D7 costs roughly three of every four production turns and escalates to P0**, while D8 (DEEP) de-escalates to P2 on zero measured DEEP traffic.
+
+Nine of ten facts settled. Fact 9 (`memoryHealth` log markers) stays **UNKNOWN** — zero markers in the probe hour is most simply explained by no traffic after the 17:11 deploy, but the probe cannot distinguish that from broken logging. Follow-up named in the results doc.
+
+The original probe table is retained below for reference.
 
 | Gap | Probe |
 |---|---|

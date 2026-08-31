@@ -1,6 +1,6 @@
 # MAIA-WHOLE-INTELLIGENCE-CONVERGENCE-01 — Program Charter
 
-**State:** `INTEGRATING` (packet P0 only) — Phase 7 ratified 2026-08-31
+**State:** `INTEGRATING` — P0 closed · runtime facts closed · P1 adjudicated, awaiting authorization
 **Opened:** 2026-08-31
 **Posture:** Packet **P0 authorized and delivered** (type architecture only, zero runtime behavior change). Every other packet remains **HELD**. No route convergence has begun.
 
@@ -26,9 +26,13 @@ Phase 8   CONDUCTOR ARCHITECTURE      PACKETIZED
               live runtime adoption     NOT YET
                                         (old untyped meta path still exists)
 
-  §6 probes RUNTIME FACTS             READY — scripts/wic01-runtime-boundary-probes.sh
-                                      BLOCKED in cloud sessions (no LAN path)
-  P1+                                 HELD pending required facts
+  §6 probes RUNTIME FACTS             ✅ CLOSED 2026-08-31T19:26Z
+              production SHA            fc66b477a — MATCHES census SHA
+              custody                   CONFIRMED — no finding invalidated
+              tier distribution         CORE 1935 · FAST 721 · DEEP 0
+              9 of 10 facts             SETTLED (fact 9 UNKNOWN, follow-up named)
+  P1        TRUTH INSTRUMENT          ADJUDICATED — awaiting authorization
+  P2+                                 HELD
 ```
 
 **Scope discipline on P0.** Omission is impossible *for code that adopts the canonical contract*. It is **not yet impossible in the live runtime** — nothing live imports the modules, and `MaiaRequest.meta` still exists and can still silently omit intelligence today. P0 is a contract, not runtime convergence.
@@ -71,10 +75,10 @@ This extends the established voice doctrine — *different capture path, not a d
 | Program branch | `claude/maia-intelligence-census-6aav7v` |
 | Branch base / HEAD at bind | `fc66b47` (2026-08-31) |
 | Integration branch | `clean-main-no-secrets` |
-| Production SHA | **UNKNOWN** — requires `ssh soullab@minisforum 'docker exec maia-sovereign printenv GIT_COMMIT'` |
+| Production SHA | `fc66b477a` — **confirmed 2026-08-31, matches census SHA** |
 | Production host | minisforum (`192.168.0.104`), Docker + Caddy |
 
-**Custody gap recorded, not guessed:** this census was performed against `fc66b47`, not against verified production. Any row whose truth depends on deployed state is marked `UNKNOWN (runtime)`. The census does not assume branch state equals production state.
+**Custody gap CLOSED 2026-08-31.** The census was performed against `fc66b47`; production reports `fc66b477a`. They match, so every static finding describes running code and the `INVALIDATED → rebind` transition is not triggered. The gap was recorded rather than assumed away, and the probe confirmed rather than contradicted it.
 
 ### Frozen vocabulary
 
