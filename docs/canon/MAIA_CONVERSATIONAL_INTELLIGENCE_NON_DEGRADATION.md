@@ -157,12 +157,24 @@ memory bundle, relational stack, prompt machinery and TTS — zero references to
 `finalizeMemberFacingText`. Not a thinner call into canonical cognition: a
 **second mind**.
 
-⛔ **How the enforcement missed it.** The test asserted four *named* routes were
-absent. `/api/voice/stream-conversation` was not among them, so it passed while
-the divergence ran. A denylist cannot find what it was not told to look for, and
-it was presented as a structural proof. It has been replaced with a positive
-property — the response-producing exit SET is constrained, and two probes assert
-the gate catches an exit nobody listed.
+⛔ **How the enforcement missed it, twice.** v1 asserted four *named* routes
+were absent; `/api/voice/stream-conversation` was not among them, so it passed
+while the divergence ran. v2 replaced that with a catalogue of
+response-producing call *patterns* and called it positive enforcement — it was
+not: anything not matching a listed pattern stayed invisible, and its
+"unnamed endpoint" probe used a URL inside the catalogue's own regex family, so
+it proved the pattern generalized within what it already knew while being
+presented as proof against the unknown.
+
+⭐ **Both were catalogues of things we had thought of.** The enforcement now
+enumerates, via the TypeScript AST, every `return` belonging to
+`handleVoiceTranscript` — exits are a closed set the compiler can enumerate
+exhaustively; responder names are not. The property proven is that **every
+explicit return is a non-response admission guard**, the single
+response-producing path being the fall-through to `handleTextMessage`. An added
+exit fails because a new exit appeared, whatever preceded it and whether or not
+anyone has heard of it. A probe injecting `totallyNewResponder()` — no known
+name, no known route family — fails the gate.
 
 ⛔ **Repaired in `VOICE-CANONICAL-CONVERGENCE-02`** by removing the branch
 structurally, not by defaulting a flag off — a flag would have made the defect
