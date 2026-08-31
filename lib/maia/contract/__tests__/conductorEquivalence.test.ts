@@ -16,8 +16,10 @@ import {
   evidenceFromLegacyContext,
   renderPlan,
   normalizeContent,
+  rawContent,
   SHARED_SEAM_ORDERING,
   FAST_RUN_ORDERING,
+  FAST_RUN_LAYOUT,
 } from '../conductor';
 import {
   INTELLIGENCE_REGISTRY,
@@ -51,22 +53,26 @@ function legacyAppend(
 }
 
 /**
- * Verbatim reproduction of the FAST template-literal delimiter rules
- * (lib/sovereign/maiaService.ts:1432 @ fc66b477a). Note that
- * `knowledgeFieldAddendum` is interpolated WITHOUT the `\n\n` guard the other
- * fields carry — a real asymmetry of the original, preserved deliberately.
+ * Verbatim reproduction of the FAST template-literal run
+ * (lib/sovereign/maiaService.ts:1432 @ fc66b477a), reproducing BOTH asymmetries:
+ *
+ *   1. `knowledgeFieldAddendum` is interpolated bare, with no separator.
+ *   2. Every other field uses `${x ? '\n\n' + x : ''}` — RAW TRUTHINESS with
+ *      NO trimming, so a whitespace-only block renders verbatim and the literal
+ *      string 'undefined' renders as itself.
+ *
+ * Both differ from the shared seam's `safeAddendum` rule. Reproduced, not tidied.
  */
 function legacyFastRun(context: Record<string, unknown>): string {
   let out = '';
   for (const source of FAST_RUN_ORDERING) {
-    const key = INTELLIGENCE_REGISTRY[source].legacyContextKey;
-    const raw = context[key];
+    const raw = context[INTELLIGENCE_REGISTRY[source].legacyContextKey];
+    const v = typeof raw === 'string' ? raw : '';
     if (source === 'knowledgeField') {
-      out += typeof raw === 'string' ? raw : '';
+      out += v;                       // bare interpolation, no guard
       continue;
     }
-    const v = typeof raw === 'string' ? raw : '';
-    out += v ? `\n\n${v}` : '';
+    out += v ? `\n\n${v}` : '';      // guarded, untrimmed truthiness
   }
   return out;
 }
@@ -194,53 +200,80 @@ describe('byte-identical composition vs pre-P2 implementation', () => {
 // 4. FAST RUN — proven equivalent, adoption deferred
 // ════════════════════════════════════════════════════════════════════════════
 
-describe('FAST run — ordering proven, ONE delimiter divergence explained', () => {
-  const fastPlan = (context: Record<string, unknown>) =>
-    conduct({
-      evidence: evidenceFromLegacyContext(context, FAST_RUN_ORDERING),
+describe('P2B — FAST adoption: byte-identical through the Conductor', () => {
+  const fastCompose = (context: Record<string, unknown>) =>
+    renderPlan(
+      conduct({
+        evidence: evidenceFromLegacyContext(context, FAST_RUN_ORDERING, FAST_RUN_LAYOUT),
+        tier: 'FAST',
+        ordering: FAST_RUN_ORDERING,
+      }),
+      '',
+      FAST_RUN_LAYOUT
+    );
+
+  it('rawContent reproduces the template truthiness rule (no trimming)', () => {
+    const cases: unknown[] = ['x', '   ', '', 'undefined', 'null', '\n', null, undefined, 0, {}];
+    for (const c of cases) {
+      const legacy = typeof c === 'string' && c ? c : '';
+      expect(rawContent(c)).toBe(legacy);
+    }
+  });
+
+  it('DIFFERS from the shared-seam rule — the reason FAST needs its own layout', () => {
+    // A whitespace-only block: absent under safeAddendum, PRESENT under FAST.
+    expect(normalizeContent('   ')).toBe('');
+    expect(rawContent('   ')).toBe('   ');
+    // The literal string 'undefined': absent under safeAddendum, PRESENT on FAST.
+    expect(normalizeContent('undefined')).toBe('');
+    expect(rawContent('undefined')).toBe('undefined');
+  });
+
+  const scenarios: Array<[string, IntelligenceSourceId[]]> = [
+    ['full population', FAST_POPULATED],
+    ['without knowledgeField (the un-guarded field)', FAST_POPULATED.filter((s) => s !== 'knowledgeField')],
+    ['knowledgeField only', ['knowledgeField']],
+    ['member WITH developmental memory', ['developmentalMemory', 'conversationalRecall']],
+    ['member-declared significance only', ['episodicRecall', 'memoryAtoms']],
+    ['Sanctuary — no cross-session evidence', ['maiaMode', 'governor']],
+    ['empty turn', []],
+  ];
+
+  it.each(scenarios)('byte-identical: %s', (_label, sources) => {
+    const context = ctx(sources);
+    expect(fastCompose(context)).toBe(legacyFastRun(context));
+  });
+
+  it('byte-identical across randomized population incl. whitespace + "undefined" (300 cases)', () => {
+    let seed = 831831;
+    const rnd = () => (seed = (seed * 1103515245 + 12345) % 2147483648) / 2147483648;
+    for (let i = 0; i < 300; i++) {
+      const context: Record<string, unknown> = {};
+      for (const s of FAST_RUN_ORDERING) {
+        const r = rnd();
+        const k = keyOf(s);
+        if (r < 0.4) context[k] = `[${s}]\n${r}`;
+        else if (r < 0.5) context[k] = '   ';        // truthy but blank
+        else if (r < 0.58) context[k] = 'undefined';  // literal string
+        else if (r < 0.64) context[k] = '';
+        else if (r < 0.7) context[k] = null;
+      }
+      expect(fastCompose(context)).toBe(legacyFastRun(context));
+    }
+  });
+
+  it('preserves FAST ordering exactly', () => {
+    const plan = conduct({
+      evidence: evidenceFromLegacyContext(ctx(FAST_POPULATED), FAST_RUN_ORDERING, FAST_RUN_LAYOUT),
       tier: 'FAST',
       ordering: FAST_RUN_ORDERING,
     });
-
-  it('selects the same sources in the same order as the FAST template', () => {
-    const plan = fastPlan(ctx(FAST_POPULATED));
     expect(plan.ordering).toEqual(FAST_RUN_ORDERING);
   });
 
-  it('EXPLAINS the one place FAST is NOT byte-identical: knowledgeField', () => {
-    // The FAST template interpolates knowledgeFieldAddendum as a bare
-    // `${knowledgeFieldAddendum}` with NO '\n\n' guard, while every other
-    // field uses the guarded form. `renderPlan` always joins with '\n\n'.
-    //
-    // This is a REAL divergence, recorded rather than hidden. It is precisely
-    // why FAST adoption is deferred out of P2: adopting the FAST run would
-    // change bytes, and P2's standard is that it must not. Closing it is a
-    // scoped unit of its own.
-    const context = ctx(FAST_POPULATED);
-    const composed = renderPlan(fastPlan(context), '');
-    const legacy = legacyFastRun(context);
-
-    expect(composed).not.toBe(legacy);
-
-    // The divergence is exactly one leading delimiter, and nothing else:
-    // strip the leading '\n\n' the Conductor adds before the first item and
-    // the two become byte-identical.
-    expect(composed.replace(/^\n\n/, '')).toBe(legacy);
-  });
-
-  it('is byte-identical for FAST once knowledgeField is absent', () => {
-    // With the un-guarded field unpopulated, every remaining interpolation
-    // uses the guarded form and the Conductor matches the template exactly.
-    const sources = FAST_POPULATED.filter((s) => s !== 'knowledgeField');
-    const context = ctx(sources);
-    const composed = renderPlan(fastPlan(context), '');
-    expect(composed).toBe(legacyFastRun(context));
-  });
-
   it('carries developmentalMemory on FAST — the tier inversion, reproduced', () => {
-    const context = ctx(FAST_POPULATED);
     const plan = conduct({
-      evidence: evidenceFromLegacyContext(context, FAST_RUN_ORDERING),
+      evidence: evidenceFromLegacyContext(ctx(FAST_POPULATED), FAST_RUN_ORDERING, FAST_RUN_LAYOUT),
       tier: 'FAST',
       ordering: FAST_RUN_ORDERING,
     });
@@ -248,7 +281,7 @@ describe('FAST run — ordering proven, ONE delimiter divergence explained', () 
   });
 
   it('D7 stays reproduced: the shared CORE seam carries no developmentalMemory', () => {
-    // If this test ever fails, someone repaired D7 outside packet P3a and the
+    // If this ever fails, someone repaired D7 outside packet P3a and the
     // byte-identical witness is void.
     expect(SHARED_SEAM_ORDERING).not.toContain('developmentalMemory');
   });

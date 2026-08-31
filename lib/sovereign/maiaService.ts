@@ -108,6 +108,13 @@ import {
   FORBIDDEN_AMNESIA_PATTERNS,
 } from '@/lib/maia/prompts/memoryCanonGuard';
 import { memberRef } from '../privacy/memberRef';
+import {
+  conduct,
+  evidenceFromLegacyContext,
+  renderPlan,
+  FAST_RUN_ORDERING,
+  FAST_RUN_LAYOUT,
+} from '@/lib/maia/contract/conductor';
 
 // =============================================================================
 // CROSS-SESSION PAIRING (PH2-001 TODAY, items 1+2)
@@ -1413,6 +1420,53 @@ The current user has not provided their name. Address them as "friend" or "there
 
   // 🌱 YOUTH DEVELOPMENTAL CONTEXT: Inject teen safety system prompt when present
   const teenSupportContext = (meta as any)?.teenSupportContext;
+  // ── WIC01-P2B: FAST composes at the canonical Conductor seam ──
+  // The decision boundary has moved; the decision has NOT changed. FAST_RUN_LAYOUT
+  // reproduces this template's two asymmetries exactly — raw truthiness with NO
+  // trimming, and knowledgeField interpolated with NO separator — so the composed
+  // run is byte-identical to the guarded interpolations it replaces. Those quirks
+  // are running behavior, not authority to normalize FAST.
+  //
+  // placeAddendum (earlier in this template) and youthPromptAddendum (after
+  // stateVectorContract) sit OUTSIDE the contiguous run and are unchanged.
+  const fastComposedAddenda = renderPlan(
+    conduct({
+      evidence: evidenceFromLegacyContext(
+        {
+          knowledgeFieldAddendum,
+          epistemicPathAddendum,
+          spiralSnapshotAddendum,
+          therapeuticFrameworkAddendum,
+          reflectionLensAddendum,
+          governorAddendum,
+          maiaModeAddendum,
+          scribeSessionDiscussionAddendum,
+          wuxingSnapshotAddendum,
+          // FAST's local is `astrologyAddendum`; the registry key is
+          // `astrologicalContextAddendum`. Mapped explicitly rather than renamed.
+          astrologicalContextAddendum: astrologyAddendum,
+          practiceFieldAddendum,
+          studioAddendum,
+          knowledgeGateAddendum,
+          memberWebAddendum,
+          fieldWisdomAddendum,
+          conversationalRecallAddendum,
+          episodicRecallAddendum,
+          atomsAddendum,
+          relationalContextAddendum,
+          memoryInfluenceAddendum,
+          forwardReadinessAddendum,
+        },
+        FAST_RUN_ORDERING,
+        FAST_RUN_LAYOUT
+      ),
+      tier: 'FAST',
+      ordering: FAST_RUN_ORDERING,
+    }),
+    '',
+    FAST_RUN_LAYOUT
+  );
+
   const youthPromptAddendum = teenSupportContext?.teenSystemPrompt
     ? '\n\n' + teenSupportContext.teenSystemPrompt
     : '';
@@ -1429,7 +1483,7 @@ ${MAIA_CENTER_OF_GRAVITY}
 
 ${PLATFORM_KNOWLEDGE_ADDENDUM}
 
-${MAIA_RUNTIME_PROMPT}${userIdentification}${placeAddendum ? '\n\n' + placeAddendum : ''}${modeAdaptation}${timeAwareness}${cognitiveScaffolding}${relationshipContext}${selfletPromptBlock ? '\n\n' + selfletPromptBlock : ''}${sanctuaryInstruction}${wisdomInjection}${knowledgeFieldAddendum}${epistemicPathAddendum ? '\n\n' + epistemicPathAddendum : ''}${spiralSnapshotAddendum ? '\n\n' + spiralSnapshotAddendum : ''}${therapeuticFrameworkAddendum ? '\n\n' + therapeuticFrameworkAddendum : ''}${reflectionLensAddendum ? '\n\n' + reflectionLensAddendum : ''}${governorAddendum ? '\n\n' + governorAddendum : ''}${maiaModeAddendum ? '\n\n' + maiaModeAddendum : ''}${scribeSessionDiscussionAddendum ? '\n\n' + scribeSessionDiscussionAddendum : ''}${wuxingSnapshotAddendum ? '\n\n' + wuxingSnapshotAddendum : ''}${astrologyAddendum ? '\n\n' + astrologyAddendum : ''}${practiceFieldAddendum ? '\n\n' + practiceFieldAddendum : ''}${studioAddendum ? '\n\n' + studioAddendum : ''}${knowledgeGateAddendum ? '\n\n' + knowledgeGateAddendum : ''}${memberWebAddendum ? '\n\n' + memberWebAddendum : ''}${fieldWisdomAddendum ? '\n\n' + fieldWisdomAddendum : ''}${conversationalRecallAddendum ? '\n\n' + conversationalRecallAddendum : ''}${episodicRecallAddendum ? '\n\n' + episodicRecallAddendum : ''}${atomsAddendum ? '\n\n' + atomsAddendum : ''}${relationalContextAddendum ? '\n\n' + relationalContextAddendum : ''}${memoryInfluenceAddendum ? '\n\n' + memoryInfluenceAddendum : ''}${forwardReadinessAddendum ? '\n\n' + forwardReadinessAddendum : ''}${stateVectorContract}${youthPromptAddendum}
+${MAIA_RUNTIME_PROMPT}${userIdentification}${placeAddendum ? '\n\n' + placeAddendum : ''}${modeAdaptation}${timeAwareness}${cognitiveScaffolding}${relationshipContext}${selfletPromptBlock ? '\n\n' + selfletPromptBlock : ''}${sanctuaryInstruction}${wisdomInjection}${fastComposedAddenda}${stateVectorContract}${youthPromptAddendum}
 
 Current context: Simple conversation turn - respond naturally and warmly.`;
 

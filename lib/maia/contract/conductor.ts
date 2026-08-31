@@ -130,19 +130,89 @@ export const FAST_RUN_ORDERING: readonly IntelligenceSourceId[] = [
 ];
 
 // ═══════════════════════════════════════════════════════════════════════════
-// NORMALIZATION — verbatim behavior of `safeAddendum` (maiaVoice.ts:394)
+// LEGACY LAYOUT — the architecture accommodates reality, not the reverse
 // ═══════════════════════════════════════════════════════════════════════════
 
 /**
- * Byte-for-byte reproduction of the legacy normalizer. Trims, and treats the
- * literal strings 'undefined' and 'null' as empty — a quirk of the original
- * that MUST be preserved for equivalence, not tidied away.
+ * How a legacy assembly site decided eligibility and joined blocks.
+ *
+ * P2B exists because the two assembly sites do NOT agree, and pass-through
+ * must reproduce BOTH exactly:
+ *
+ *   shared seam (CORE / DEEP-repair)   trims, drops 'undefined'/'null',
+ *                                      joins every block with '\n\n'
+ *   FAST template literal              raw JS truthiness, NO trim, and
+ *                                      knowledgeField carries NO separator
+ *
+ * These asymmetries are quirks of running code. **They are not authority to
+ * normalize FAST.** Reality does not get rewritten to make the abstraction
+ * prettier; the abstraction has to be able to say what reality already does.
+ */
+export interface LegacyLayout {
+  /** Separator placed before each block unless overridden. */
+  readonly defaultSeparator: string;
+  /** Per-source separator overrides. */
+  readonly separatorBySource?: Partial<Record<IntelligenceSourceId, string>>;
+  /**
+   * How the site decided a block was present.
+   *   'safeAddendum' — trim; '' / 'undefined' / 'null' count as absent
+   *   'truthy'       — raw JS truthiness on the string, NO trimming, so a
+   *                    whitespace-only block IS present and renders verbatim
+   */
+  readonly eligibility: 'safeAddendum' | 'truthy';
+}
+
+/** `appendAllContextAddenda` @ fc66b477a. */
+export const SHARED_SEAM_LAYOUT: LegacyLayout = {
+  defaultSeparator: '\n\n',
+  eligibility: 'safeAddendum',
+};
+
+/**
+ * FAST template literal @ fc66b477a (maiaService.ts:1432).
+ *
+ * `knowledgeFieldAddendum` is interpolated bare — `${knowledgeFieldAddendum}` —
+ * because `buildKnowledgeFieldBlock` returns a block that already carries its
+ * own leading whitespace, and the variable is initialized to `''`. Every other
+ * field uses the guarded `${x ? '\n\n' + x : ''}` form.
+ */
+export const FAST_RUN_LAYOUT: LegacyLayout = {
+  defaultSeparator: '\n\n',
+  separatorBySource: { knowledgeField: '' },
+  eligibility: 'truthy',
+};
+
+// ═══════════════════════════════════════════════════════════════════════════
+// NORMALIZATION
+// ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * Byte-for-byte reproduction of `safeAddendum` (maiaVoice.ts:394). Trims, and
+ * treats the literal strings 'undefined' and 'null' as empty — a quirk of the
+ * original that MUST be preserved for equivalence, not tidied away.
  */
 export function normalizeContent(v: unknown): string {
   if (typeof v !== 'string') return '';
   const s = v.trim();
   if (!s || s === 'undefined' || s === 'null') return '';
   return s;
+}
+
+/** Raw truthiness, no trimming — the FAST template's rule. */
+export function rawContent(v: unknown): string {
+  return typeof v === 'string' && v ? v : '';
+}
+
+function contentFor(v: unknown, layout: LegacyLayout): string {
+  return layout.eligibility === 'truthy' ? rawContent(v) : normalizeContent(v);
+}
+
+/** Separator this layout places before a given source's block. */
+export function separatorFor(
+  source: IntelligenceSourceId,
+  layout: LegacyLayout
+): string {
+  return layout.separatorBySource?.[source] ?? layout.defaultSeparator;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -159,21 +229,22 @@ const LEGACY_CONSENT: ConsentState = {
 };
 
 /**
- * Build typed evidence from a legacy `MaiaContext`-shaped record.
+ * Build typed evidence from a legacy context-shaped record.
  *
  * Reads each source through `INTELLIGENCE_REGISTRY[id].legacyContextKey`, so
  * the mapping is the registry's, not a second hand-maintained list. A source
- * whose content normalizes to empty is simply not offered — matching the
- * legacy `if (safe)` guard.
+ * whose content is absent under the layout's eligibility rule is not offered —
+ * matching the legacy guard at that assembly site.
  */
 export function evidenceFromLegacyContext(
   context: Record<string, unknown>,
-  ordering: readonly IntelligenceSourceId[] = SHARED_SEAM_ORDERING
+  ordering: readonly IntelligenceSourceId[] = SHARED_SEAM_ORDERING,
+  layout: LegacyLayout = SHARED_SEAM_LAYOUT
 ): EvidenceItem[] {
   const items: EvidenceItem[] = [];
   for (const source of ordering) {
     const spec = INTELLIGENCE_REGISTRY[source];
-    const content = normalizeContent(context[spec.legacyContextKey]);
+    const content = contentFor(context[spec.legacyContextKey], layout);
     if (!content) continue;
     items.push({
       source,
@@ -248,10 +319,14 @@ export function conduct(input: ConductInput): CompositionPlan {
  * Kept separate from `conduct()` so that later packets can change the decision
  * without touching the byte-level rendering, and vice versa.
  */
-export function renderPlan(plan: CompositionPlan, prompt: string): string {
+export function renderPlan(
+  plan: CompositionPlan,
+  prompt: string,
+  layout: LegacyLayout = SHARED_SEAM_LAYOUT
+): string {
   let out = prompt;
   for (const { item } of plan.selected) {
-    out += `\n\n${item.content}`;
+    out += `${separatorFor(item.source, layout)}${item.content}`;
   }
   return out;
 }

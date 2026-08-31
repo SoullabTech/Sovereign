@@ -2,7 +2,13 @@
 
 **Program:** `MAIA-WHOLE-INTELLIGENCE-CONVERGENCE-01`
 **Packet:** P2 — move the decision boundary; do not change the decision
-**Executed:** 2026-08-31
+**Executed:** 2026-08-31 · **P2A** shared seam · **P2B** FAST adoption
+
+```text
+P2A  SHARED-SEAM CONDUCTOR EXTRACTION   CLOSED   (CORE + DEEP-repair)
+P2B  FAST CONDUCTOR ADOPTION            CLOSED   (byte-identical, incl. quirks)
+P2   CANONICAL TIER BOUNDARY            CLOSED   — all three tiers cross conduct()
+```
 **Standard:** byte-identical model-facing composition. *"Equivalent meaning" is not sufficient for this packet.*
 
 ---
@@ -42,26 +48,62 @@ Scenarios covered: FAST · CORE · DEEP-repair fixture · member **with** develo
 
 ---
 
-## §3 — The one divergence, explained
+## §3 — P2B: FAST adoption, and the two asymmetries it had to reproduce
 
-**FAST is not byte-identical, and is therefore NOT adopted in this packet.**
+P2A closed with FAST still composing outside the Conductor. That left **two composition paths** and 27.1% of production turns bypassing the canonical boundary — which is not a canonical boundary. P2B closes it.
 
-The FAST template literal (`lib/sovereign/maiaService.ts:1432`) interpolates `knowledgeFieldAddendum` as a bare `${knowledgeFieldAddendum}` with **no `\n\n` guard**, while every other field uses the guarded `${x ? '\n\n' + x : ''}` form. `renderPlan` always joins with `\n\n`.
+`fastComposedAddenda` now replaces the contiguous addendum run in the FAST template literal (`lib/sovereign/maiaService.ts:1432`). `placeAddendum` (earlier) and `youthPromptAddendum` (after `stateVectorContract`) sit outside that run and are untouched.
 
-The divergence is **exactly one leading delimiter and nothing else** — pinned by test:
+### Two asymmetries, not one
+
+The first pass found one divergence. Wiring FAST for real surfaced a **second, more consequential** one that the earlier test had not exercised:
+
+| | shared seam (CORE / DEEP-repair) | FAST template |
+|---|---|---|
+| separator | `\n\n` before every block | `\n\n` — **except `knowledgeField`, which is bare** |
+| eligibility | `safeAddendum`: **trims**, drops `'undefined'` / `'null'` | **raw truthiness, NO trim** |
+
+The second one has teeth: under the shared rule a whitespace-only block is *absent*; under FAST it is **present and renders verbatim**. The literal string `'undefined'` behaves the same way. Had P2B reused `normalizeContent` for FAST, those turns would have silently lost a block — a real cognition change, disguised as cleanup.
+
+### The architecture accommodated reality
+
+Both quirks are expressed as policy, not normalized away:
 
 ```ts
-expect(composed).not.toBe(legacy);              // honest: it differs
-expect(composed.replace(/^\n\n/, '')).toBe(legacy);  // and differs by exactly this
+export const FAST_RUN_LAYOUT: LegacyLayout = {
+  defaultSeparator: '\n\n',
+  separatorBySource: { knowledgeField: '' },
+  eligibility: 'truthy',
+};
 ```
 
-A third test proves FAST **is** byte-identical once `knowledgeField` is unpopulated.
+> **The delimiter discrepancy was not authority to normalize FAST. It was a requirement on the pass-through architecture.**
 
-Per the packet's own rule — *if any prompt diverges, P2 stays open until the divergence is explained* — the divergence is explained and **the response is to defer FAST adoption, not to change bytes.** Rewiring a single 3,000-character template expression is a distinct risk unit and gets its own scoped pass.
+Reality does not get rewritten to make the abstraction prettier. The abstraction had to become able to say what reality already does — and `LegacyLayout` is that.
 
-**Consequence to hold consciously:** two composition paths still exist. CORE (72.9% of traffic) and DEEP-repair run through the Conductor; FAST (27.1%) does not. That is not worse than the pre-P2 state, which also had two paths — but it means P2 moved the *dominant* boundary, not *the* boundary.
+### Witness
+
+Byte-identical against a verbatim reproduction of the FAST template's own rules, across full population · without `knowledgeField` · `knowledgeField` alone · with developmental memory · member-declared significance only · Sanctuary · empty turn · and **300 randomized populations that deliberately include whitespace-only blocks, the literal string `'undefined'`, empty strings and nulls.**
+
+**57 contract tests pass.** `npm run typecheck` green: 231 vs 239 baseline, no regressions.
 
 ---
+
+## §3b — The witness constrains the architecture, not the reverse
+
+Worth recording as method, not anecdote.
+
+The first FAST test I wrote contained a no-op `.replace()` chain that transformed
+
+> *"our abstraction cannot reproduce legacy behavior"*
+
+into
+
+> *"legacy behavior is byte-identical."*
+
+It passed. It was wrong. Caught and rewritten before closure — and the rewrite is what exposed the truthiness asymmetry that the tidy version would have hidden all the way into production.
+
+**This is the epistemic discipline of the whole program in miniature.** A witness that bends to fit the architecture certifies nothing. The standard has to be able to fail, or it is not a standard — and here it failed twice before it passed honestly.
 
 ## §4 — D7 and D8 remain reproduced, on purpose
 
@@ -97,49 +139,91 @@ Reported, not repaired. **Finding a defect does not create authority to fix it**
 
 ---
 
-## §7 — Closure gate
+## §7 — Closure gates
+
+### P2A — shared-seam extraction
 
 ```text
 [x] canonical conduct() seam exists
 [x] P0 typed evidence crosses that seam
 [x] CompositionPlan is structured and inspectable
-[x] FAST source-set/order equivalence proven      (prompt: ONE divergence, explained §3)
-[x] CORE source-set/order/prompt equivalence proven
-[x] DEEP equivalence proven by fixture
-[x] representative text path passes
-[ ] representative voice path passes               ← CANNOT REACH THE SEAM (see below)
-[x] Sanctuary behavior unchanged
-[x] member-declared-significance behavior unchanged
-[x] D7 remains intentionally reproduced
-[x] D8 remains intentionally reproduced
-[x] no model/tier routing change
-[x] no endpoint consolidation
-[x] contract + no-regression gates green
+[x] CORE source-set / order / prompt equivalence proven
+[x] DEEP-repair equivalence proven by fixture
+[x] D7 + D8 intentionally reproduced
+[x] no behavioral convergence smuggled in
+[x] presenceMode failure correctly excluded from this unit
 ```
 
-**The voice gate cannot be satisfied inside P2, by construction.** `/api/voice/stream-conversation` is a separate cognition implementation that never calls `appendAllContextAddenda` — it builds its own context via `buildMaiaContext`. Routing it through the seam **is endpoint convergence**, which P2's non-authorization list forbids. The authorization anticipated this: *"one representative voice and one text turn **if both can reach the extracted seam**."* It cannot. Recorded as unsatisfiable-here rather than silently checked or silently dropped.
+### P2B — FAST adoption
+
+```text
+[x] FAST enters conduct()
+[x] existing FAST source set preserved
+[x] existing FAST order preserved
+[x] exact FAST delimiter behavior preserved      (knowledgeField bare)
+[x] exact FAST eligibility behavior preserved    (raw truthiness, no trim)
+[x] final FAST model-facing prompt byte-identical
+[x] randomized equivalence witness green         (300 cases incl. quirks)
+[x] D7 unchanged
+[x] no eligibility changes
+[x] no source changes
+[x] no model/tier routing changes
+[x] no endpoint convergence
+[x] typecheck / contract gates green
+```
 
 ---
 
-## §8 — Standing
+## §8 — Voice: deferred by adjudication, not passed
+
+```text
+VOICE CANONICAL-SEAM ADOPTION
+DEFERRED BY SCOPE
+
+Reason:
+voice/stream-conversation is itself a parallel cognition embodiment.
+Moving it through conduct() is a later convergence packet, not a
+pass-through extraction of the shared maiaService path.
+```
+
+This is **architectural information discovered by P2**, and the program's diagrams must not overstate it. The truthful picture:
+
+```text
+shared cognition (maiaService)
+   CORE ─┐
+   FAST ─┼─→ Conductor            ← canonical tier boundary, CLOSED
+   DEEP ─┘
+
+voice/stream-conversation
+       └── independent cognition stack     ← convergence still owed
+
+between/chat
+       └── independent cognition stack     ← convergence still owed
+```
+
+**Not** "all MAIA cognition → Conductor." That claim is not yet true and must not be drawn.
+
+---
+
+## §9 — Standing
 
 ```text
 P0   typed evidence contract          CLOSED   1d09c42
 P1   runtime / source adjudication    CLOSED   9ab6046
-P2   pass-through Conductor           CLOSED   this packet
-       CORE + DEEP-repair             ADOPTED — byte-identical
-       FAST                           PROVEN, adoption deferred (§3)
-       voice / between-chat           OUT OF REACH until endpoint adoption
+P2A  shared-seam extraction           CLOSED   e8ac679
+P2B  FAST adoption                    CLOSED   this packet
+P2   canonical tier boundary          CLOSED
+       CORE · FAST · DEEP             ALL CROSS conduct()
+       voice · between/chat           convergence owed (own packets)
  ↓
 P3a  DEVELOPMENTAL MEMORY ELIGIBILITY CONVERGENCE   ← NEXT · P0 PRIORITY
-P3b  remaining tier convergence (incl. D8)
-P4+  participation record · embodiment · restraint
-
-HEALTH TRUTHFULNESS   KNOWN BROKEN · NOT REPAIRED
-                      was blocked by the P2 seam — now unblocked
+health truthfulness packet            D1/D2/D16 — now meaningfully scoped
+P3b  remaining tier convergence
 ```
 
-The program can now make its **first deliberate cognition change.** P3a asks one question and changes one thing:
+All three cognition tiers of the shared path now compose at one boundary, and none of them changed a byte doing it. **The program can now safely begin changing what the boundary decides.**
+
+P3a asks one question and changes one thing:
 
 > Given equivalent member state, does canonical composition make developmental memory eligible under the same authority and consent rules regardless of whether cognition executes FAST, CORE, or DEEP?
 

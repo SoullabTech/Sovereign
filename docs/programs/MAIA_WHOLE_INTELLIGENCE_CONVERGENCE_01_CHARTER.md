@@ -37,10 +37,11 @@ Phase 8   CONDUCTOR ARCHITECTURE      PACKETIZED
               D7 tier inversion         ESCALATED → P0 (CORE = 72.9% of turns)
               D8 DEEP wiring            DE-ESCALATED → P2 (zero DEEP turns/7d)
               runtime behavior          UNCHANGED
-  P2        PASS-THROUGH CONDUCTOR    ✅ CLOSED 2026-08-31
-              CORE + DEEP-repair        ADOPTED — byte-identical vs pre-P2
-              FAST                      PROVEN; adoption deferred (1 delimiter)
-              voice / between-chat      OUT OF REACH until endpoint adoption
+  P2A       SHARED-SEAM EXTRACTION    ✅ CLOSED — CORE + DEEP-repair
+  P2B       FAST ADOPTION             ✅ CLOSED — byte-identical incl. quirks
+  P2        CANONICAL TIER BOUNDARY   ✅ CLOSED 2026-08-31
+              CORE · FAST · DEEP        ALL CROSS conduct()
+              voice / between-chat      CONVERGENCE OWED — own packets
               D7 + D8                   INTENTIONALLY REPRODUCED
               withheld[]                empty — truthful, no restraint exists yet
   P3a       DEVELOPMENTAL CONVERGENCE ← NEXT AUTHORIZATION · P0 priority
