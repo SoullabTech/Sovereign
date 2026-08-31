@@ -4,9 +4,13 @@
 
 import {
   reviewedToOutlineNodes, orderReview, previewOperation, needsPreview,
+  MalformedReviewedStructure,
 } from '../reviewPresentation';
 import { drawnSectionIds } from '../outlineOrder';
-import { toReviewed, applyReviewOperation, type ReviewedStructure } from '@/lib/manuscript/structure/review';
+import {
+  toReviewed, applyReviewOperation,
+  type ReviewedStructure, type ReviewedUnit,
+} from '@/lib/manuscript/structure/review';
 import { assignUnitIds, type ProposedUnitDraft } from '@/lib/manuscript/structure/interpret';
 import { allReadings, fixtureSections } from '@/lib/manuscript/structure/fixtures';
 
@@ -36,12 +40,49 @@ describe('ranges become the membership shape the outline understands', () => {
     expect(a.children[0].sectionIds).toEqual(['s0', 's1', 's2']);
   });
 
-  it('a malformed range is dropped rather than drawn wrong', () => {
+  it('throws on a range it cannot resolve, rather than skipping it', () => {
+    /* A drawing routine that quietly omits what it cannot draw produces a
+       picture of a book that does not exist. */
+    const bad: ReviewedUnit[] = [{ id: 'x', title: 'Backwards', kind: null,
+      fromSectionId: sid(5), toSectionId: sid(2), children: [] }];
+    expect(() => reviewedToOutlineNodes(bad, sections)).toThrow(MalformedReviewedStructure);
+  });
+});
+
+describe('a malformed proposal is refused, never tidied', () => {
+  it('refuses the whole display rather than dropping a division', () => {
     const bad: ReviewedStructure = {
       units: [{ id: 'x', title: 'Backwards', kind: null,
         fromSectionId: sid(5), toSectionId: sid(2), children: [] }],
     };
-    expect(reviewedToOutlineNodes(bad.units, sections)).toEqual([]);
+    const r = orderReview(bad, sections);
+    expect(r.status === 'refused' && r.refusal).toBe('inverted_range');
+  });
+
+  it('refuses when a CHILD is malformed, not only a root', () => {
+    /* The more dangerous case: the parent would still draw, the Work would look
+       organised, and the missing division would be invisible precisely because
+       it was missing. */
+    const bad: ReviewedStructure = {
+      units: [{
+        id: 'p', title: 'Parent', kind: null,
+        fromSectionId: sid(0), toSectionId: sid(5),
+        children: [{ id: 'c', title: 'Child', kind: null,
+          fromSectionId: 'ghost', toSectionId: sid(2), children: [] }],
+      }],
+    };
+    const r = orderReview(bad, sections);
+    expect(r.status === 'refused' && r.refusal).toBe('unknown_section');
+  });
+
+  it('refuses a structure whose siblings overlap', () => {
+    const bad: ReviewedStructure = {
+      units: toReviewed(assignUnitIds([draft(0, 5, 'A')])).concat(
+        toReviewed(assignUnitIds([draft(4, 9, 'B')]))),
+    };
+    /* Two units both minted p1, so this also proves duplicate ids are caught. */
+    const r = orderReview(bad, sections);
+    expect(r.status).toBe('refused');
   });
 });
 
@@ -51,8 +92,10 @@ describe('the review reads in book order', () => {
     const reviewed: ReviewedStructure = {
       units: toReviewed(assignUnitIds([draft(0, 3, 'Opening')])),
     };
-    const o = orderReview(reviewed, sections);
-    const shape = o.entries.map((e) => e.kind === 'unit' ? `[${e.node.title}]` : String(e.position));
+    const r = orderReview(reviewed, sections);
+    expect(r.status).toBe('ok');
+    if (r.status !== 'ok') return;
+    const shape = r.outline.entries.map((e) => e.kind === 'unit' ? `[${e.node.title}]` : String(e.position));
     expect(shape).toEqual(['[Opening]', '4', '5', '6', '7', '8', '9', '10', '11']);
   });
 
@@ -60,21 +103,26 @@ describe('the review reads in book order', () => {
     const reviewed: ReviewedStructure = {
       units: toReviewed(assignUnitIds([draft(6, 8, 'Later')])),
     };
-    const o = orderReview(reviewed, sections);
-    const shape = o.entries.map((e) => e.kind === 'unit' ? `[${e.node.title}]` : String(e.position));
+    const r = orderReview(reviewed, sections);
+    expect(r.status).toBe('ok');
+    if (r.status !== 'ok') return;
+    const shape = r.outline.entries.map((e) => e.kind === 'unit' ? `[${e.node.title}]` : String(e.position));
     expect(shape).toEqual(['0', '1', '2', '3', '4', '5', '[Later]', '9', '10', '11']);
   });
 
   it('every section is drawn exactly once', () => {
-    const drawn = drawnSectionIds(orderReview(twoParents(), sections));
+    const r = orderReview(twoParents(), sections);
+    expect(r.status).toBe('ok');
+    if (r.status !== 'ok') return;
+    const drawn = drawnSectionIds(r.outline);
     expect(drawn).toEqual(sections.map((s) => s.id));
     expect(new Set(drawn).size).toBe(drawn.length);
   });
 
   it('a reading with no units renders the book unchanged', () => {
-    const o = orderReview({ units: [] }, sections);
-    expect(o.entries.every((e) => e.kind === 'section')).toBe(true);
-    expect(o.entries).toHaveLength(12);
+    const r = orderReview({ units: [] }, sections);
+    expect(r.status === 'ok' && r.outline.entries.every((e) => e.kind === 'section')).toBe(true);
+    expect(r.status === 'ok' && r.outline.entries).toHaveLength(12);
   });
 });
 
@@ -151,16 +199,18 @@ describe('every reading the interpreter can produce is orderable', () => {
       const reviewed: ReviewedStructure = {
         units: 'units' in reading ? toReviewed(reading.units) : [],
       };
-      const o = orderReview(reviewed, sections);
-      expect(drawnSectionIds(o)).toEqual(sections.map((s) => s.id));
+      const r = orderReview(reviewed, sections);
+      expect(r.status).toBe('ok');
+      if (r.status !== 'ok') return;
+      expect(drawnSectionIds(r.outline)).toEqual(sections.map((s) => s.id));
     });
 
   it('none and ambiguous produce no tree at all', () => {
     for (const name of ['none', 'ambiguous'] as const) {
       const reading = allReadings[name]();
       expect('units' in reading).toBe(false);
-      const o = orderReview({ units: [] }, sections);
-      expect(o.entries.every((e) => e.kind === 'section')).toBe(true);
+      const r = orderReview({ units: [] }, sections);
+      expect(r.status === 'ok' && r.outline.entries.every((e) => e.kind === 'section')).toBe(true);
     }
   });
 

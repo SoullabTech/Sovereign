@@ -17,17 +17,31 @@
  * ATOMIC DOES NOT MEAN HIDDEN. `promote` and `transfer` each change several
  * coupled range facts, and the member sees all of them before committing. The
  * parent's boundary moving is part of the gesture, not a side effect of it.
+ *
+ * A MALFORMED PROPOSAL IS REFUSED, NEVER TIDIED. The first version dropped a
+ * division whose range would not resolve and rendered what remained - which
+ * would show the member a CLEANER Work than the one actually stored, and lose a
+ * division without saying so. That is the omission failure this programme has
+ * refused everywhere else, arriving through the display rather than the data.
+ * `orderReview` validates first and returns a refusal the surface can state.
  */
 
 import { orderOutline, type OrderedOutline } from './outlineOrder';
 import type { StructureNodeDTO } from './structureClient';
 import {
-  applyReviewOperation,
+  applyReviewOperation, validateReviewed,
   type ReviewedStructure, type ReviewedUnit, type ReviewOperation,
   type ReviewContext, type OrderedSection, type ReviewRefusal,
 } from '@/lib/manuscript/structure/review';
 
 /* -- ranges into the shape the outline understands ----------------------- */
+
+/** A structure that cannot be drawn. Thrown, never swallowed. */
+export class MalformedReviewedStructure extends Error {
+  constructor(readonly unitId: string, readonly why: string) {
+    super(`unit ${unitId}: ${why}`);
+  }
+}
 
 /**
  * A reviewed unit spans a RANGE; 05A's outline thinks in MEMBERSHIPS.
@@ -37,6 +51,11 @@ import {
  * derived rather than declared. Building it here means the review surface and
  * the eventual canonical structure are ordered by identical logic, so what the
  * member reviews is the shape they will get.
+ *
+ * CALLERS MUST VALIDATE FIRST. Given a unit whose range does not resolve this
+ * THROWS rather than skipping it: a drawing routine that quietly omits what it
+ * cannot draw produces a picture of a book that does not exist. `orderReview`
+ * is the entry point that validates and refuses in one piece.
  */
 export function reviewedToOutlineNodes(
   units: readonly ReviewedUnit[],
@@ -45,12 +64,14 @@ export function reviewedToOutlineNodes(
   const ordered = [...sections].sort((a, b) => a.position - b.position);
   const position = new Map(ordered.map((s) => [s.id, s.position]));
 
-  const build = (u: ReviewedUnit): StructureNodeDTO | null => {
+  const build = (u: ReviewedUnit): StructureNodeDTO => {
     const from = position.get(u.fromSectionId);
     const to = position.get(u.toSectionId);
-    if (from === undefined || to === undefined || from > to) return null;
+    if (from === undefined) throw new MalformedReviewedStructure(u.id, 'unknown start section');
+    if (to === undefined) throw new MalformedReviewedStructure(u.id, 'unknown end section');
+    if (from > to) throw new MalformedReviewedStructure(u.id, 'range runs backwards');
 
-    const children = u.children.map(build).filter((c): c is StructureNodeDTO => c !== null);
+    const children = u.children.map(build);
     const claimed = new Set<string>();
     for (const c of children) c.derivedSectionIds.forEach((id) => claimed.add(id));
 
@@ -74,15 +95,33 @@ export function reviewedToOutlineNodes(
     };
   };
 
-  return units.map(build).filter((n): n is StructureNodeDTO => n !== null);
+  return units.map(build);
 }
 
-/** The review column, in manuscript order, with everything unclaimed in place. */
+export type PresentationResult =
+  | { status: 'ok'; outline: OrderedOutline }
+  | { status: 'refused'; refusal: ReviewRefusal; detail?: string };
+
+/**
+ * The review column, in manuscript order, with everything unclaimed in place -
+ * or a refusal the surface can state.
+ *
+ * Validation runs BEFORE translation, over the whole structure, so a malformed
+ * CHILD refuses the display as surely as a malformed root. The earlier version
+ * would have dropped the child and drawn its parent, which is the more
+ * dangerous of the two failures: the Work would look organised, and the missing
+ * division would be invisible precisely because it was missing.
+ */
 export function orderReview(
   reviewed: ReviewedStructure,
   sections: readonly OrderedSection[],
-): OrderedOutline {
-  return orderOutline(reviewedToOutlineNodes(reviewed.units, sections), sections);
+): PresentationResult {
+  const bad = validateReviewed(reviewed.units, sections);
+  if (bad) return { status: 'refused', ...bad };
+  return {
+    status: 'ok',
+    outline: orderOutline(reviewedToOutlineNodes(reviewed.units, sections), sections),
+  };
 }
 
 /* -- the post-image a gesture will produce ------------------------------- */

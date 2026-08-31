@@ -248,13 +248,23 @@ function complete(
   const position = new Map(sections.map((s) => [s.id, s.position]));
   const evidenceIds = new Set(evidence.observations.map((o) => o.id));
 
-  let refusal: { refusal: InterpretRefusal; detail?: string } | null = null;
+  /* An ARRAY rather than a nullable `let`.
+     The helpers below assign from inside closures, and TypeScript's
+     control-flow analysis does not see those - it narrows a `let` initialised
+     to null down to `never` at the guard, so the code type-checked as
+     unreachable while working correctly at runtime. Collecting into a const
+     array removes the disagreement instead of arguing with it. Only the first
+     problem is reported: a reading with three faults is refused once. */
+  const problems: { refusal: InterpretRefusal; detail?: string }[] = [];
+  const note = (refusal: InterpretRefusal, detail?: string) => {
+    if (problems.length === 0) problems.push({ refusal, detail });
+  };
   const rangeOf = (u: ProposedUnitDraft): [number, number] | null => {
     const a = position.get(u.fromSectionId);
     const b = position.get(u.toSectionId);
-    if (a === undefined) { refusal ??= { refusal: 'unknown-section', detail: u.fromSectionId }; return null; }
-    if (b === undefined) { refusal ??= { refusal: 'unknown-section', detail: u.toSectionId }; return null; }
-    if (a > b) { refusal ??= { refusal: 'inverted-range', detail: u.title ?? u.fromSectionId }; return null; }
+    if (a === undefined) { note('unknown-section', u.fromSectionId); return null; }
+    if (b === undefined) { note('unknown-section', u.toSectionId); return null; }
+    if (a > b) { note('inverted-range', u.title ?? u.fromSectionId); return null; }
     return [a, b];
   };
 
@@ -264,12 +274,12 @@ function complete(
       const r = rangeOf(u);
       if (!r) return;
       for (const ref of u.evidenceRefs) {
-        if (!evidenceIds.has(ref)) refusal ??= { refusal: 'unknown-evidence-ref', detail: ref };
+        if (!evidenceIds.has(ref)) note('unknown-evidence-ref', ref);
       }
       for (const child of u.children) {
         const cr = rangeOf(child);
         if (cr && (cr[0] < r[0] || cr[1] > r[1])) {
-          refusal ??= { refusal: 'child-outside-parent', detail: child.title ?? child.fromSectionId };
+          note('child-outside-parent', child.title ?? child.fromSectionId);
         }
       }
       ranges.push(r);
@@ -278,7 +288,7 @@ function complete(
     ranges.sort((x, y) => x[0] - y[0]);
     for (let i = 1; i < ranges.length; i++) {
       if (ranges[i][0] <= ranges[i - 1][1]) {
-        refusal ??= { refusal: 'overlapping-siblings', detail: `${ranges[i - 1]} / ${ranges[i]}` };
+        note('overlapping-siblings', `${ranges[i - 1]} / ${ranges[i]}`);
       }
     }
   };
@@ -286,7 +296,7 @@ function complete(
   if (reading.form === 'ambiguous') reading.alternatives.forEach((a) => validate(a.units));
   else if (reading.form !== 'none') validate(reading.units);
 
-  if (refusal) return { status: 'refused', ...refusal };
+  if (problems.length > 0) return { status: 'refused', ...problems[0] };
 
   /* DERIVED, never accepted from the reader. What a reading failed to explain
      is not the reading's own account to give. For an ambiguous reading nothing
