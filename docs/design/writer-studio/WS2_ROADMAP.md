@@ -82,9 +82,27 @@ shipped behaviour.
                                   WS2-05B-8A_RENDER_FIDELITY_WITNESS.md
 05B-8b founder judgment of the    PENDING
        reading itself
-05B-8B-READABILITY-01             FOUND · not authorised, not built
+05B-8B-READABILITY-01             SUPERSEDED · its witness FAILED
                                   WS2-05B-8B_READABILITY_FINDING.md
+05B-8B-EDITORIAL-REVIEW-          SPECIFIED · one blocking discovery
+       SURFACE-02                 WS2-05B-8B_EDITORIAL_REVIEW_SURFACE_02.md
 ```
+
+**The room was built for a machine.** Every iteration was shaped by what the 8a
+harness can assert — attributes, counts, order — and all of that is satisfiable
+by a page no writer can use. The harness stays as a non-regression gate; it is
+not the product specification.
+
+**MAIA should act like an editor, not a database viewer**: editorial synthesis,
+then a structural map, then her questions, then evidence on demand, then
+conversation. And the doctrinal correction the unit rests on — *"do not invent
+manuscript titles" does not mean "MAIA may not describe what she perceives"* —
+the Work's words are a `title`, MAIA's description is a `label`, and a label is
+never written into the manuscript.
+
+**Blocking:** the labels do not exist. `Fire` is nowhere in the frozen row — not
+title, not kind — only inside her account prose. Rendering it requires either
+inference or a new reader field, so 8B-02 is not pure surface work.
 
 **8a proved fidelity; it did not prove intelligibility.** The room shows the data
 structure of MAIA's reading rather than communicating the reading: eleven nested
