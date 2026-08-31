@@ -28,6 +28,7 @@
 #   24  a served asset does not exist in the container
 #   25  side counts differ
 #   26  the negative control compared equal -- the witness itself is broken
+#   28  a public asset fetch failed (404 / transport)
 #   27  byte mismatch: the public path is not serving this container
 #
 # AUTHENTICATION, ADDED DELIBERATELY (2026-08-31). The first run refused with
@@ -118,7 +119,10 @@ if [[ "$SIGNIN_CODE" != "200" ]] || ! grep -q 'maia_session' "$JAR" 2>/dev/null;
   exit 19
 fi
 
-echo "session cookies: $(awk '!/^#/ && NF {print $6}' "$JAR" | tr '\n' ' ')"
+# NOT `!/^#/` -- curl writes HttpOnly cookies as "#HttpOnly_domain ...", so
+# skipping every #-line hid exactly the session cookie we care about and printed
+# an empty list next to a successful sign-in. Misleading, not harmful.
+echo "session cookies: $(awk '!/^# / && NF {print $6}' "$JAR" | tr '\n' ' ')"
 
 echo
 echo "=== 1. FETCH PUBLIC /maia ==="
@@ -168,13 +172,23 @@ from html import unescape
 
 text = unescape(open(sys.argv[1], encoding="utf-8", errors="replace").read())
 
+# NOTE the backslash in the class. Asset URLs also appear inside the
+# self.__next_f payload as JSON-escaped strings -- \"/_next/static/x.css\" --
+# and HTML unescape does not remove those backslashes. Without excluding it the
+# match ran past the filename into the escape, producing phantom entries like
+# "x.css\\" that dedup kept alongside the real one and that 404 on fetch.
 assets = set(
-    re.findall(r'/_next/static/[^"\'<>\s]+', text)
+    re.findall(r'/_next/static/[^"\'\\<>\s]+', text)
 )
 
-for asset in sorted(assets):
+cleaned = set()
+for asset in assets:
     # Strip query/hash; filesystem counterpart has neither.
     asset = asset.split("?", 1)[0].split("#", 1)[0]
+    asset = asset.rstrip("\\")            # belt and braces
+    cleaned.add(asset)
+
+for asset in sorted(cleaned):
     print(asset)
 PY
 
@@ -207,6 +221,11 @@ while IFS= read -r asset; do
       awk '{print $1}'
   )"
 
+  if [[ -z "$hash" ]]; then
+    echo "REFUSE: public fetch failed for $asset" >&2
+    exit 28
+  fi
+
   printf '%s  %s\n' "$hash" "$asset" >> "$TMP/public.sha256"
 done < "$TMP/assets.txt"
 
@@ -222,8 +241,12 @@ while IFS= read -r asset; do
   rel="${asset#/_next/static/}"
   container_path="/app/.next/static/$rel"
 
+  # -n is load-bearing: ssh reads stdin by default, and without it the FIRST
+  # call consumes the rest of assets.txt from under this while-read loop. The
+  # loop then runs exactly once and the run dies at the count check with one
+  # container hash against forty public ones.
   if ! hash="$(
-    ssh "$REMOTE" \
+    ssh -n "$REMOTE" \
       "docker exec '$CONTAINER' sha256sum '$container_path'" \
       2>/dev/null |
       awk '{print $1}'
