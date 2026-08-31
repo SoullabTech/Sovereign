@@ -4,7 +4,8 @@
 
 import {
   toReviewed, applyReviewOperation, validateReviewed, reviewDiff, findUnit,
-  mintMemberUnitId, type ReviewedStructure, type OrderedSection,
+  mintMemberUnitId, promoteShape,
+  type ReviewedStructure, type OrderedSection,
 } from '../review';
 import { assignUnitIds, type ProposedUnitDraft } from '../interpret';
 
@@ -380,5 +381,50 @@ describe('nothing here can author structure', () => {
     const r = start();
     const deep = r.units[0].children[1].id;
     expect(findUnit(r.units, deep)?.parent?.id).toBe(r.units[0].id);
+  });
+});
+
+describe('promoteShape — the rule the room shows and the operation performs', () => {
+  /* The review surface reads this to tell the member what "move this division
+     outside X" will do BEFORE they commit. If it could disagree with the
+     operation, the room would be promising outcomes the server refuses — so
+     these cases are pinned against the operation's own behaviour below. */
+  it('a division at its parent\'s start lands before that parent', () => {
+    expect(promoteShape({ from: 0, to: 2 }, { from: 0, to: 5 })).toBe('prefix');
+  });
+
+  it('a division at its parent\'s end lands after it', () => {
+    expect(promoteShape({ from: 3, to: 5 }, { from: 0, to: 5 })).toBe('suffix');
+  });
+
+  it('a division in the middle would split its parent in two', () => {
+    expect(promoteShape({ from: 2, to: 3 }, { from: 0, to: 5 })).toBe('splits-parent');
+  });
+
+  it('a division spanning its whole parent would leave it empty', () => {
+    expect(promoteShape({ from: 0, to: 5 }, { from: 0, to: 5 })).toBe('spans-parent');
+  });
+
+  /* The agreement is the point: a preview that could disagree with the edit
+     would be the room promising something the server refuses. `Opening` spans
+     0-5 and holds `First` at 0-2 and `Second` at 3-5. */
+  it('agrees with the operation: what it calls prefix, promote puts first', () => {
+    const r = start();
+    const child = r.units[0].children[0];
+    expect(promoteShape({ from: 0, to: 2 }, { from: 0, to: 5 })).toBe('prefix');
+    const out = apply(r, { op: 'promote', unitId: child.id });
+    expect(out.status).toBe('ok');
+    if (out.status !== 'ok') return;
+    expect(out.reviewed.units.map((u) => u.title)).toEqual(['First', 'Opening', 'Return']);
+  });
+
+  it('agrees with the operation: what it calls suffix, promote puts last', () => {
+    const r = start();
+    const child = r.units[0].children[1];
+    expect(promoteShape({ from: 3, to: 5 }, { from: 0, to: 5 })).toBe('suffix');
+    const out = apply(r, { op: 'promote', unitId: child.id });
+    expect(out.status).toBe('ok');
+    if (out.status !== 'ok') return;
+    expect(out.reviewed.units.map((u) => u.title)).toEqual(['Opening', 'Second', 'Return']);
   });
 });

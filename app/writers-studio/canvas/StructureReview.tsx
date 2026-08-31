@@ -72,8 +72,8 @@ import {
 } from '@/lib/writersStudio/reviewClient';
 import { orderReview, type ChangeRow } from '@/lib/writersStudio/reviewPresentation';
 import type { OutlineEntry } from '@/lib/writersStudio/outlineOrder';
-import { reviewDiff } from '@/lib/manuscript/structure/review';
-import type { ReviewOperation } from '@/lib/manuscript/structure/review';
+import { promoteShape, reviewDiff } from '@/lib/manuscript/structure/review';
+import type { PromoteShape, ReviewOperation, ReviewedUnit } from '@/lib/manuscript/structure/review';
 import type {
   EditorialQuestion, EditorialSynthesis, ProposedUnit,
 } from '@/lib/manuscript/structure/interpret';
@@ -89,8 +89,8 @@ const MEASURE = '70ch';
  * and visible from the keyboard, not merely clickable.
  */
 const CSS = `
-.ws2sr-row{display:flex;align-items:center;gap:${SPACE.snug}px;min-height:44px;
-  border-radius:${RADIUS.sm}px;padding-right:${SPACE.snug}px}
+.ws2sr-row{display:flex;align-items:center;flex-wrap:wrap;gap:${SPACE.snug}px;
+  min-height:44px;border-radius:${RADIUS.sm}px;padding-right:${SPACE.snug}px}
 .ws2sr-row:hover{background:${GROUND.raised}}
 .ws2sr-row[data-selected="true"]{background:${GROUND.active}}
 .ws2sr-pick{flex:1;display:flex;align-items:center;gap:${SPACE.snug}px;
@@ -106,6 +106,12 @@ const CSS = `
 .ws2sr-inspector{flex:0 0 360px;position:sticky;top:${SPACE.base}px;
   border-left:1px solid ${RULE.quiet};padding-left:${SPACE.base}px}
 .ws2sr-group{border-left:1px solid ${RULE.quiet}}
+/* A mark is an aside about the row, not part of its name. The left rule and
+   the padding keep two marks from reading as one phrase — which is exactly how
+   \`question\` and \`uncertain\` failed, both on screen and when the outline was
+   copied out of the page. */
+.ws2sr-mark{flex:0 0 auto;padding-left:${SPACE.snug}px;
+  border-left:1px solid ${RULE.quiet}}
 @media (max-width:900px){
   .ws2sr-split{display:block}
   .ws2sr-inspector{flex:none;position:static;border-left:none;padding-left:0;
@@ -189,6 +195,51 @@ export default function StructureReview({
     if (view && 'units' in view.interpretation) walk(view.interpretation.units);
     return m;
   }, [view]);
+
+  /**
+   * WHAT "MOVE THIS DIVISION OUT" WOULD ACTUALLY DO, in the member's own names.
+   *
+   * The affordance used to read `Move out one level`, which describes the tree
+   * and not the book: it asked the writer to hold a mental model of depth in
+   * order to predict a change to their manuscript. What they need is the
+   * consequence — which division this one is currently inside, and where it
+   * would sit afterwards.
+   *
+   * NO NEW COGNITION. Every fact here is already in the reviewed tree and the
+   * section order: who the parent is, who the grandparent is, and whether this
+   * division sits at its parent's start, its end, or in the middle. The last of
+   * those is `promoteShape` from the review module itself — the same rule the
+   * operation enforces — so the room cannot promise an outcome the server would
+   * refuse, nor name a landing place different from the one it performs.
+   */
+  const promotion = useMemo(() => {
+    if (!view || !selected) return null;
+    const path = pathToUnit(view.reviewed.units, selected);
+    /* One entry is a top-level division: there is nothing to move out OF, and
+       the whole panel is absent rather than disabled. */
+    if (!path || path.length < 2) return null;
+    const unit = path[path.length - 1];
+    const parent = path[path.length - 2];
+    const grandparent = path.length >= 3 ? path[path.length - 3] : null;
+
+    const at = (id: string) => headingOf(id)?.position;
+    const cFrom = at(unit.fromSectionId), cTo = at(unit.toSectionId);
+    const pFrom = at(parent.fromSectionId), pTo = at(parent.toSectionId);
+    if (cFrom === undefined || cTo === undefined || pFrom === undefined || pTo === undefined) {
+      return null;
+    }
+    const name = (u: ReviewedUnit) =>
+      divisionName(u.title, proposedById.get(u.id)?.editorialLabel ?? null, u.kind);
+    return {
+      unitId: unit.id,
+      thisName: name(unit),
+      parentName: name(parent),
+      /* No grandparent means the parent is top-level, so this division would
+         land at the top level too — named as the book, not as a null. */
+      grandparentName: grandparent ? name(grandparent) : null,
+      shape: promoteShape({ from: cFrom, to: cTo }, { from: pFrom, to: pTo }),
+    };
+  }, [view, selected, headingOf, proposedById]);
 
   /**
    * Which questions bear on which division, matched by the sections they name.
@@ -363,12 +414,9 @@ export default function StructureReview({
               ))}
             </div>
             <Inspector unit={selectedUnit}
-              node={selected}
               positionOf={(id) => headingOf(id)?.position}
               questions={questionsFor(selectedUnit)}
-              busy={busy} onGesture={gesture}
-              depthOf={(id) => depthOfUnit(view.reviewed.units as { id: string;
-                children: unknown[] }[], id)} />
+              busy={busy} onGesture={gesture} promotion={promotion} />
           </div>
         </div>
       )}
@@ -392,17 +440,37 @@ export default function StructureReview({
   );
 }
 
-/** Depth of a unit in the member's tree, so the inspector knows what can move. */
-function depthOfUnit(
-  units: readonly { id: string; children: unknown[] }[], id: string | null, depth = 0,
-): number {
-  if (!id) return 0;
+/**
+ * The chain of divisions from the top of the tree down to one unit.
+ *
+ * Depth alone told the inspector only THAT something could move; the path tells
+ * it what the division is inside and what it would sit under afterwards, which
+ * is what the member is actually being asked to picture.
+ */
+function pathToUnit(
+  units: readonly ReviewedUnit[], id: string, trail: ReviewedUnit[] = [],
+): ReviewedUnit[] | null {
   for (const u of units) {
-    if (u.id === id) return depth;
-    const d = depthOfUnit(u.children as typeof units, id, depth + 1);
-    if (d > 0) return d;
+    if (u.id === id) return [...trail, u];
+    const deeper = pathToUnit(u.children, id, [...trail, u]);
+    if (deeper) return deeper;
   }
-  return 0;
+  return null;
+}
+
+/**
+ * ONE NAMING RULE for a division, wherever it is written.
+ *
+ * The Work's own title first; MAIA's description only where the Work does not
+ * name it; the kind only where neither does. Kept in one function because the
+ * outline row, the inspector headline and the promotion preview must call the
+ * same division by the same name — a preview that renamed it would read as a
+ * different division.
+ */
+function divisionName(
+  title: string | null, editorialLabel: string | null, kind: string | null,
+): string {
+  return title ?? editorialLabel ?? kind ?? 'Untitled division';
 }
 
 const entryKey = (e: OutlineEntry) => e.kind === 'section' ? `s:${e.id}` : `u:${e.node.id}`;
@@ -547,15 +615,18 @@ function Orientation({
  * clearest thing wrong with the room.
  */
 function Inspector({
-  unit, node, positionOf, questions, busy, onGesture, depthOf,
+  unit, positionOf, questions, busy, onGesture, promotion,
 }: {
   unit: ProposedUnit | undefined;
-  node: string | null;
   positionOf: (id: string) => number | undefined;
   questions: EditorialQuestion[];
   busy: boolean;
   onGesture: (op: ReviewOperation, previewFirst: boolean) => void;
-  depthOf: (id: string | null) => number;
+  /** What moving this division out would do — absent when it is top-level. */
+  promotion: {
+    unitId: string; thisName: string; parentName: string;
+    grandparentName: string | null; shape: PromoteShape;
+  } | null;
 }) {
   if (!unit) {
     return (
@@ -568,11 +639,10 @@ function Inspector({
   }
   const from = positionOf(unit.fromSectionId);
   const to = positionOf(unit.toSectionId);
-  const nested = depthOf(node) > 0;
   return (
     <aside className="ws2sr-inspector" data-inspector={unit.id}>
       <StudioText role="workIdentity" style={{ display: 'block' }}>
-        {unit.title ?? unit.editorialLabel ?? unit.kind ?? 'Untitled division'}
+        {divisionName(unit.title, unit.editorialLabel ?? null, unit.kind)}
       </StudioText>
       <StudioText role="metadata" tone="quiet" style={{ display: 'block' }}>
         sections {from}–{to}{unit.kind ? ` · ${unit.kind}` : ''}
@@ -610,16 +680,75 @@ function Inspector({
         </div>
       ))}
 
-      {nested && (
-        <div style={{ marginTop: SPACE.roomy, paddingTop: SPACE.snug,
-          borderTop: `1px solid ${RULE.quiet}` }}>
+      {promotion && (
+        /* THE GESTURE IS DESCRIBED BY ITS CONSEQUENCE, NOT BY THE TREE.
+           `Move out one level` was accurate and unreadable: it named a
+           mechanic. What the writer holds in mind is their book — this
+           division is inside that one, and afterwards it would sit beside it.
+           So the panel names the parent, and shows where this would land.
+
+           WHERE IT CANNOT MOVE, IT SAYS SO HERE rather than accepting the
+           click and answering with a refusal. Same words either way: the copy
+           comes from the refusal the operation itself would return. */
+        <div data-inspector-structure
+          style={{ marginTop: SPACE.roomy, paddingTop: SPACE.snug,
+            borderTop: `1px solid ${RULE.quiet}` }}>
           <StudioText role="metadata" tone="quiet" style={{ display: 'block' }}>
             your structure
           </StudioText>
-          <Tiny label="move this division out one level" disabled={busy}
-            onClick={() => onGesture({ op: 'promote', unitId: unit.id }, true)}>
-            Move out one level
-          </Tiny>
+          <StudioText role="quiet" style={{ display: 'block', marginTop: SPACE.hairline }}>
+            Currently inside {promotion.parentName}
+          </StudioText>
+
+          {promotion.shape === 'splits-parent' || promotion.shape === 'spans-parent' ? (
+            <StudioText role="quiet" data-promote-blocked={promotion.shape}
+              style={{ display: 'block', marginTop: SPACE.snug }}>
+              {reviewRefusalCopy(promotion.shape === 'splits-parent'
+                ? 'child_splits_parent' : 'parent_would_be_empty')}
+            </StudioText>
+          ) : (
+            <>
+              <div style={{ marginTop: SPACE.snug }}>
+                <Tiny gesture="promote" disabled={busy}
+                  label={`move this division outside ${promotion.parentName}`}
+                  onClick={() => onGesture({ op: 'promote', unitId: promotion.unitId }, true)}>
+                  Move outside “{promotion.parentName}”
+                </Tiny>
+              </div>
+              <div data-promote-result style={{ marginTop: SPACE.base }}>
+                <StudioText role="metadata" tone="quiet" style={{ display: 'block' }}>
+                  it would then sit here
+                </StudioText>
+                <StudioText role="navItem" tone="quiet" style={{ display: 'block' }}>
+                  {promotion.grandparentName ?? 'the top level of your book'}
+                </StudioText>
+                {/* BOOK ORDER, not a list: a division taken out of the start
+                    of its parent stands before it, one taken out of the end
+                    stands after. Showing them in the wrong order would
+                    mispredict the one thing this preview exists to show.
+
+                    Which row is the moved one is decided by POSITION, not by
+                    comparing names — two divisions may legitimately carry the
+                    same name, and then the preview would mark both. */}
+                {(promotion.shape === 'prefix'
+                  ? [
+                      { name: promotion.thisName, moved: true },
+                      { name: promotion.parentName, moved: false },
+                    ]
+                  : [
+                      { name: promotion.parentName, moved: false },
+                      { name: promotion.thisName, moved: true },
+                    ]
+                ).map((row, i) => (
+                  <StudioText key={i} role="navItem" tone={row.moved ? 'primary' : 'quiet'}
+                    data-promote-row={row.moved ? 'moved' : 'former-parent'}
+                    style={{ display: 'block', paddingLeft: SPACE.roomy }}>
+                    {row.name}{row.moved ? ' — this division' : ''}
+                  </StudioText>
+                ))}
+              </div>
+            </>
+          )}
         </div>
       )}
     </aside>
@@ -744,19 +873,35 @@ function Entry({
 
         {/* ONLY EXCEPTIONS ARE MARKED. Marking every row is the same as marking
             none; a question or an open boundary earns a word, and a settled
-            division says nothing. */}
+            division says nothing.
+
+            AND THE WORD HAS TO BE A WORD ABOUT THE BOOK. These read `question`
+            and `uncertain` — two bare adjectives that named the DATA and told
+            the writer nothing, and which ran together into `questionuncertain`
+            the moment two of them met. The states behind them were always
+            legitimate; only the saying was decoration.
+
+            So each mark now says what is actually open, in the same language
+            the inspector uses. Nothing is suppressed: where a division has
+            several open readings the first is shown with a count of the rest,
+            and the inspector still lists every one. */}
         {qs.length > 0 && (
-          <StudioText role="metadata" tone="quiet" as="span" data-row-state="question">
-            question
-          </StudioText>
+          <span className="ws2sr-mark">
+            <StudioText role="metadata" tone="quiet" as="span" data-row-state="question">
+              {qs.length === 1 ? 'a question for you' : `${qs.length} questions for you`}
+            </StudioText>
+          </span>
         )}
         {doubts.length > 0 && (
-          <span data-uncertainty={doubts.join(',')}
+          <span className="ws2sr-mark" data-uncertainty={doubts.join(',')}
             aria-label={`MAIA left open: ${doubts
               .map((u) => UNCERTAINTY_SAYS[u] ?? u).join(', ')}`}
             title={`MAIA left open: ${doubts
               .map((u) => UNCERTAINTY_SAYS[u] ?? u).join(', ')}`}>
-            <StudioText role="metadata" tone="quiet" as="span">uncertain</StudioText>
+            <StudioText role="metadata" tone="quiet" as="span" data-row-state="uncertain">
+              left open: {UNCERTAINTY_SAYS[doubts[0]] ?? doubts[0]}
+              {doubts.length > 1 ? ` +${doubts.length - 1} more` : ''}
+            </StudioText>
           </span>
         )}
       </div>
@@ -1023,15 +1168,22 @@ function PostImage({
 }
 
 function Tiny({
-  children, label, onClick, disabled, plain,
+  children, label, onClick, disabled, plain, gesture,
 }: {
   children: React.ReactNode; label: string; onClick: () => void;
   disabled?: boolean;
   /** Subordinate: an authoring gesture sitting beside two reading ones. */
   plain?: boolean;
+  /**
+   * A stable handle for the gesture this button performs, so the witness can
+   * find it by what it DOES rather than by what it currently says. The label is
+   * prose and is expected to change; the operation is not.
+   */
+  gesture?: string;
 }) {
   return (
-    <button type="button" title={label} aria-label={label} onClick={onClick} disabled={disabled}
+    <button type="button" title={label} aria-label={label} data-gesture={gesture}
+      onClick={onClick} disabled={disabled}
       style={{
         background: plain ? 'transparent' : GROUND.active,
         border: 'none', borderRadius: RADIUS.sm,

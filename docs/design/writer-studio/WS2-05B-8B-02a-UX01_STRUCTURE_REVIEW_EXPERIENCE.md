@@ -202,3 +202,104 @@ UX01 founder witness    PENDING · the acceptance
 05B-8b                  HOLD
 05B-6 adoption          HOLD · its own fresh lane
 ```
+
+---
+
+## 02a FINAL SURFACE CLOSEOUT — the founder witness, and the two things it left
+
+**Date**: 2026-08-31 · on the real row (174 sections, 22 divisions).
+
+The witness returned **CORE EXPERIENCE: PASS**. The reading is clear, the map is
+understandable, selecting a division makes her reasoning intelligible, and the
+author can see where he disagrees with her without the interface getting in the
+way. Two surface defects remained, and both were about *saying*, not about
+cognition. Neither the frozen reading nor any proposal changed.
+
+### 1 · `Move out one level` → the consequence, in the book's own names
+
+The operation was useful and the label was unreadable: it named a **tree
+mechanic** and asked the writer to hold a model of depth in order to predict a
+change to their manuscript. The inspector now says what will happen.
+
+```text
+your structure
+
+Currently inside the elemental practice sequence
+
+[ Move outside “the elemental practice sequence” ]
+
+it would then sit here
+PART THREE — THE SPIRAL
+    the elemental practice sequence
+    the elemental practice sequence's former child — this division
+```
+
+Where the division sits in the **middle** of its parent, the panel says so in
+place of the button, using the same words the operation's own refusal would
+return — rather than accepting the click and answering with a rejection.
+
+**One rule, two readers.** `promoteShape` now lives in
+`lib/manuscript/structure/review.ts` and is read by both
+`applyReviewOperation` (which enforces it) and the inspector (which previews
+it). A preview that could disagree with the edit would be the room promising an
+outcome the server refuses, so the two cannot be written separately. Pinned by
+tests that assert the preview's verdict against the operation's own behaviour.
+
+Book order still decides where it lands — a division taken from its parent's
+start stands *before* it, one taken from the end stands *after* — and the
+preview shows that order rather than a list.
+
+### 2 · `question` / `uncertain` → what is actually open
+
+Two bare adjectives that named the **data** and told the writer nothing. They
+also ran together into `questionuncertain` the moment two of them met on one
+row. The states behind them were always legitimate; only the saying was
+decoration.
+
+| was | is |
+|---|---|
+| `question` | `a question for you` · `3 questions for you` |
+| `uncertain` | `left open: where this ends` · `left open: where this begins +2 more` |
+
+The language is the inspector's own (`UNCERTAINTY_SAYS`), so a row and its
+inspector call the same open reading by the same name. **Nothing is
+suppressed**: where several readings are open the first is shown with a count of
+the rest, the full list stays in the row's title/aria-label, and the inspector's
+*what she left open* panel still lists every one. A mark is separated by its own
+rule so two marks can never read as one phrase, and the row wraps rather than
+hiding a mark on a narrow screen — a mark that disappeared would suppress the
+signal it exists to carry.
+
+### What this closeout did not do
+
+No new cognition. No `Ask MAIA`. No change to the interpretation, the proposal,
+the reviewed tree, or adoption. `promoteShape` is an extraction of a rule that
+was already there, not a new judgement.
+
+```text
+UX01 machine floor        PASS · three fixtures
+UX01 on the real row      PASS · founder witness, core experience
+02a surface closeout      DONE · both defects, awaiting re-witness
+02c Ask MAIA              NEXT LANE · and Kelly calls it
+05B-8b                    HOLD
+05B-6 adoption            HOLD · its own fresh lane
+```
+
+### The requirement 02c inherits
+
+The witness also named the missing capability, and it is not more 02a:
+
+> From any place in MAIA's reading, I can talk with her about what she sees and
+> what I might do next — edit, develop, restructure, investigate, or leave alone
+> — while I remain the author.
+
+Every question in *questions for you* is the obvious entry point. The boundary
+that lane must hold:
+
+```text
+conversation ABOUT the reading
+        ≠ changing the frozen reading
+        ≠ changing the reviewed proposal
+        ≠ changing the manuscript
+        ≠ adoption
+```
