@@ -20,6 +20,7 @@
 # gates testing capture. Circular.
 #
 # REFUSALS, so this cannot pass by finding nothing. Each exits non-zero:
+#   19  sign-in failed -- no session, so /maia cannot be reached as a member
 #   20  container GIT_COMMIT != public /api/health version
 #   21  /maia did not return HTTP 200
 #   22  /maia resolved elsewhere (auth redirect)
@@ -28,6 +29,19 @@
 #   25  side counts differ
 #   26  the negative control compared equal -- the witness itself is broken
 #   27  byte mismatch: the public path is not serving this container
+#
+# AUTHENTICATION, ADDED DELIBERATELY (2026-08-31). The first run refused with
+# code 22: /maia redirected to /signin?reason=no_session_cookie. The fix is a
+# real session, NOT a relaxed assertion -- and the redirect check below is
+# unchanged, because it is what caught the problem. Note what it caught: the
+# signin page ALSO references /_next/static assets, so a witness that merely
+# looked for "are there Next assets here" would have hashed the SIGNIN bundle
+# and printed a green PASS. The final-URL check is the whole reason it did not.
+#
+# Credentials come from the environment or an interactive prompt -- never an
+# argument, never a file, never this repo:
+#     MAIA_USER=<username> ./verify-served-bundle.sh      # prompts for password
+# The password is read with `read -s`, so it does not enter shell history.
 #
 # Read-only. No build, no deploy, no container writes. Run from the Mac Studio.
 
@@ -66,11 +80,53 @@ if [[ "$CONTAINER_SHA" != "$PUBLIC_SHA" ]]; then
 fi
 
 echo
+echo "=== 0b. SIGN IN ==="
+
+JAR="$TMP/cookies.txt"
+
+if [[ -z "${MAIA_USER:-}" ]]; then
+  printf 'MAIA username: ' >&2
+  read -r MAIA_USER
+fi
+if [[ -z "${MAIA_PASS:-}" ]]; then
+  printf 'MAIA password (not echoed, not stored): ' >&2
+  read -rs MAIA_PASS
+  echo >&2
+fi
+
+SIGNIN_CODE="$(
+  MAIA_USER="$MAIA_USER" MAIA_PASS="$MAIA_PASS" python3 -c '
+import json, os, sys
+sys.stdout.write(json.dumps({"username": os.environ["MAIA_USER"],
+                             "password": os.environ["MAIA_PASS"]}))
+' | curl -sS -X POST \
+      -H 'Content-Type: application/json' \
+      -H 'Accept-Encoding: identity' \
+      -c "$JAR" \
+      -o "$TMP/signin.json" \
+      -w '%{http_code}' \
+      --data-binary @- \
+      "$PUBLIC_ORIGIN/api/members/signin"
+)"
+
+echo "signin status: $SIGNIN_CODE"
+
+if [[ "$SIGNIN_CODE" != "200" ]] || ! grep -q 'maia_session' "$JAR" 2>/dev/null; then
+  echo "REFUSE: sign-in did not produce a session cookie" >&2
+  head -c 300 "$TMP/signin.json" >&2 || true
+  echo >&2
+  exit 19
+fi
+
+echo "session cookies: $(awk '!/^#/ && NF {print $6}' "$JAR" | tr '\n' ' ')"
+
+echo
 echo "=== 1. FETCH PUBLIC /maia ==="
 
 RESULT="$(
   curl -sS -L \
     -H 'Accept-Encoding: identity' \
+    -b "$JAR" -c "$JAR" \
     -D "$TMP/headers" \
     -o "$TMP/maia.html" \
     -w '%{http_code} %{url_effective}' \
