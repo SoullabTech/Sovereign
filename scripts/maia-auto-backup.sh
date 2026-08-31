@@ -5,6 +5,21 @@
 
 set -e
 
+# === QUARANTINED — file/source snapshot, NOT a database backup ============
+# This tars app/, lib/, components/, ... to "$(pwd)/backups" (relative to
+# wherever it is run) — it does NOT back up the database. For DB backups use
+# the canonical scripts/backup-postgres.sh (see
+# docs/ops/CONTINUITY_RECOVERY_RUNBOOK.md). Its "Backup complete" output has
+# been mistaken for a database backup. Retained for reference; refuses to run
+# unless invoked explicitly with --force-legacy.
+if [ "${1:-}" != "--force-legacy" ]; then
+  echo "DEPRECATED/QUARANTINED: this is a FILE/source snapshot, not a database backup." >&2
+  echo "  For database backups use scripts/backup-postgres.sh." >&2
+  echo "  Re-run with --force-legacy only if you specifically want a source-tree tarball." >&2
+  exit 2
+fi
+shift
+
 # Configuration
 BACKUP_DIR="$(pwd)/backups"
 TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
