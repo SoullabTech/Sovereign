@@ -107,10 +107,23 @@ describe('operations', () => {
     const out = apply(r, { op: 'promote', unitId: r.units[0].children[0].id });
     expect(out.status).toBe('ok');
     if (out.status !== 'ok') return;
-    expect(out.reviewed.units.map((u) => u.title)).toEqual(['Opening', 'First', 'Return']);
-    /* Opening gave up 0-2 and now begins where First ended. */
-    expect(out.reviewed.units[0].fromSectionId).toBe(sid(3));
-    expect(out.reviewed.units[0].children).toHaveLength(1);
+    /* BOOK ORDER: a promoted PREFIX child sits BEFORE its former parent.
+       The first version always inserted after, which put 0-2 below a division
+       now starting at 3 - R1's invariant undone in the one place nobody would
+       look for it. */
+    expect(out.reviewed.units.map((u) => u.title)).toEqual(['First', 'Opening', 'Return']);
+    expect(out.reviewed.units[1].fromSectionId).toBe(sid(3));
+    expect(out.reviewed.units[1].children).toHaveLength(1);
+  });
+
+  it('a promoted SUFFIX child sits after its former parent', () => {
+    const r = start();
+    const out = apply(r, { op: 'promote', unitId: r.units[0].children[1].id });
+    expect(out.status).toBe('ok');
+    if (out.status !== 'ok') return;
+    expect(out.reviewed.units.map((u) => u.title)).toEqual(['Opening', 'Second', 'Return']);
+    /* Opening gave up 3-5 and now ends where Second began. */
+    expect(out.reviewed.units[0].toSectionId).toBe(sid(2));
   });
 
   it('promote refuses a child in the MIDDLE, which would split the parent', () => {
@@ -172,14 +185,81 @@ describe('operations', () => {
     expect(added.id).toMatch(/^m\d+$/);
   });
 
-  it('chooses an alternative, which is how an ambiguous reading becomes editable', () => {
-    const empty: ReviewedStructure = { units: [] };
-    const out = apply(empty, {
-      op: 'choose-alternative', label: 'by movement',
+  it('chooses an alternative BY ID, resolved from the stored interpretation', () => {
+    const alternatives = [{
+      id: 'a1', label: 'by movement',
       units: assignUnitIds([draft(0, 5, 'One'), draft(6, 11, 'Two')]),
-    });
+    }];
+    const out = applyReviewOperation(
+      { units: [] }, { op: 'choose-alternative', alternativeId: 'a1' },
+      sections, { alternatives });
     expect(out.status === 'ok' && out.reviewed.chosenAlternative).toBe('by movement');
     expect(out.status === 'ok' && out.reviewed.units).toHaveLength(2);
+  });
+
+  it('and cannot be told which units the alternative contained', () => {
+    /* The operation carries identity only. A client saying "I chose X" while
+       supplying its own tree is the authority hole removed from adoption; it
+       has no expression here. */
+    const out = applyReviewOperation(
+      { units: [] }, { op: 'choose-alternative', alternativeId: 'a1' }, sections, {});
+    expect(out.status === 'refused' && out.refusal).toBe('unknown_alternative');
+  });
+});
+
+describe('cross-parent transfer', () => {
+  /* The realistic correction: MAIA put a boundary division under the wrong
+     adjacent parent. Doing it in steps is unreachable for the same reason
+     promotion was, so it is one gesture with a whole post-image. */
+  const twoParents = () => ({
+    units: toReviewed(assignUnitIds([
+      draft(0, 5, 'A', [draft(0, 2, 'Head'), draft(3, 5, 'Tail')]),
+      draft(6, 11, 'B', [draft(6, 8, 'Bhead')]),
+    ])),
+  });
+
+  it('moves a suffix child into the following parent, moving both boundaries', () => {
+    const r = twoParents();
+    const tail = r.units[0].children[1].id;
+    const out = apply(r, { op: 'transfer', unitId: tail, toParentId: r.units[1].id });
+    expect(out.status).toBe('ok');
+    if (out.status !== 'ok') return;
+    /* A relinquishes 3-5; B acquires it; Tail is now inside B. */
+    expect(out.reviewed.units[0].toSectionId).toBe(sid(2));
+    expect(out.reviewed.units[1].fromSectionId).toBe(sid(3));
+    expect(out.reviewed.units[1].children.map((u) => u.title)).toEqual(['Tail', 'Bhead']);
+    expect(validateReviewed(out.reviewed.units, sections)).toBeNull();
+  });
+
+  it('refuses a child that is not at the edge the two parents share', () => {
+    const r = twoParents();
+    const head = r.units[0].children[0].id;
+    const out = apply(r, { op: 'transfer', unitId: head, toParentId: r.units[1].id });
+    /* Taking 0-2 out of the middle-facing end would leave A as 3-5 with a hole
+       where nothing sits, and B claiming sections it does not touch. */
+    expect(out.status === 'refused' && out.refusal).toBe('not_at_the_shared_edge');
+  });
+
+  it('refuses parents that do not touch', () => {
+    const r = {
+      units: toReviewed(assignUnitIds([
+        draft(0, 3, 'A', [draft(2, 3, 'Tail')]),
+        draft(6, 11, 'B'),
+      ])),
+    };
+    const out = apply(r, { op: 'transfer', unitId: r.units[0].children[0].id, toParentId: r.units[1].id });
+    expect(out.status === 'refused' && out.refusal).toBe('parents_not_adjacent');
+  });
+
+  it('refuses one that would leave the source holding nothing', () => {
+    const r = {
+      units: toReviewed(assignUnitIds([
+        draft(0, 5, 'A', [draft(0, 5, 'All')]),
+        draft(6, 11, 'B'),
+      ])),
+    };
+    const out = apply(r, { op: 'transfer', unitId: r.units[0].children[0].id, toParentId: r.units[1].id });
+    expect(out.status === 'refused' && out.refusal).toBe('parent_would_be_empty');
   });
 });
 

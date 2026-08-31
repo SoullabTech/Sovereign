@@ -112,7 +112,12 @@ export type StructureInterpretation =
   | ({ form: 'flat' } & Common & { units: ProposedUnit[] })
   | ({ form: 'mixed' } & Common & { units: ProposedUnit[] })
   | ({ form: 'ambiguous' } & Common & {
-      alternatives: { label: string; units: ProposedUnit[]; why: string }[];
+      /**
+       * `id` is host-minted, for the same reason units are: a label is display
+       * text, and a member choosing "by movement" must name an identity rather
+       * than a string a client could have written itself.
+       */
+      alternatives: { id: string; label: string; units: ProposedUnit[]; why: string }[];
     })
   | ({ form: 'none' } & Common);
 
@@ -322,8 +327,8 @@ function complete(
     reading.form === 'none' ? { form: 'none', ...common }
       : reading.form === 'ambiguous'
         ? { form: 'ambiguous', ...common,
-            alternatives: reading.alternatives.map((a) => ({
-              ...a, units: assignUnitIds(a.units),
+            alternatives: reading.alternatives.map((a, i) => ({
+              ...a, id: `a${i + 1}`, units: assignUnitIds(a.units),
             })) }
         : { form: reading.form, ...common, units: assignUnitIds(reading.units) };
 

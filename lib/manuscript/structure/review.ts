@@ -77,7 +77,27 @@ export type ReviewOperation =
   | { op: 'add'; parentId: string | null; index: number;
       title: string | null; kind: string | null;
       fromSectionId: string; toSectionId: string }
-  | { op: 'choose-alternative'; label: string; units: ProposedUnit[] };
+  /**
+   * Take up one alternative of an ambiguous reading, BY IDENTITY ONLY.
+   *
+   * The first version carried the units themselves, which would have let a
+   * client say "I chose alternative X" while supplying a tree of its own -
+   * the authority hole removed from adoption, recreated one stage earlier. The
+   * caller resolves the id against the IMMUTABLE interpretation and passes the
+   * resolved alternatives in as context; nothing structural comes off the wire.
+   */
+  | { op: 'choose-alternative'; alternativeId: string }
+  /**
+   * Move a nested division from one parent to the adjacent one.
+   *
+   * Atomic for the same reason `promote` is. Doing it in steps is unreachable:
+   * shrink the source and the child escapes it; move it first and the source
+   * still spans it while the target does not; widen the target first and it
+   * overlaps the source. One authorial statement - "this belongs to that one
+   * instead" - necessarily changes three coupled range facts, so it is one
+   * gesture whose whole post-image the surface can show.
+   */
+  | { op: 'transfer'; unitId: string; toParentId: string };
 
 export type ReviewRefusal =
   | 'unknown_unit'
@@ -93,7 +113,19 @@ export type ReviewRefusal =
   | 'child_splits_parent'
   | 'parent_would_be_empty'
   | 'not_nested'
+  | 'unknown_alternative'
+  | 'parents_not_adjacent'
+  | 'not_at_the_shared_edge'
   | 'empty_name';
+
+/**
+ * What the caller supplies from the IMMUTABLE interpretation, never from the
+ * request. Keeps identity-only operations resolvable without letting a client
+ * hand in structure.
+ */
+export interface ReviewContext {
+  alternatives?: readonly { id: string; label: string; units: readonly ProposedUnit[] }[];
+}
 
 export type ReviewResult =
   | { status: 'ok'; reviewed: ReviewedStructure }
@@ -242,6 +274,7 @@ export function applyReviewOperation(
   reviewed: ReviewedStructure,
   op: ReviewOperation,
   sections: readonly OrderedSection[],
+  context: ReviewContext = {},
 ): ReviewResult {
   const next = clone(reviewed);
 
@@ -327,14 +360,22 @@ export function applyReviewOperation(
       if (cFrom > pFrom && cTo < pTo) return refuse('child_splits_parent', at.parent.title ?? at.parent.id);
       if (cFrom === pFrom && cTo === pTo) return refuse('parent_would_be_empty', at.parent.title ?? at.parent.id);
 
-      if (cFrom === pFrom) at.parent.fromSectionId = ordered[cTo + 1].id;
+      /* BOOK ORDER DECIDES WHERE IT LANDS, mechanically:
+           a promoted PREFIX child sits BEFORE its former parent
+           a promoted SUFFIX child sits AFTER it
+         Always inserting after was the first version, and it put 0-2 below a
+         parent that now starts at 3 - undoing R1's invariant in the one place
+         nobody would look for it. */
+      const wasPrefix = cFrom === pFrom;
+      if (wasPrefix) at.parent.fromSectionId = ordered[cTo + 1].id;
       else at.parent.toSectionId = ordered[cFrom - 1].id;
 
       const grandparent = findUnit(next.units, at.parent.id);
       const target = grandparent?.siblings ?? next.units;
       at.siblings.splice(at.siblings.indexOf(at.unit), 1);
       const parentAt = target.indexOf(at.parent);
-      target.splice(parentAt < 0 ? target.length : parentAt + 1, 0, at.unit);
+      const insertAt = parentAt < 0 ? target.length : (wasPrefix ? parentAt : parentAt + 1);
+      target.splice(insertAt, 0, at.unit);
       break;
     }
 
@@ -370,11 +411,53 @@ export function applyReviewOperation(
     }
 
     case 'choose-alternative': {
-      /* An ambiguous reading has no structure until the member picks one. This
-         is the gesture that makes it reviewable at all, and it is recorded so
-         the proposal remembers which reading was taken up. */
-      next.units = toReviewed(op.units);
-      next.chosenAlternative = op.label;
+      /* An ambiguous reading has no structure until the member picks one. The
+         units come from the stored interpretation, resolved by id. */
+      const chosen = context.alternatives?.find((a) => a.id === op.alternativeId);
+      if (!chosen) return refuse('unknown_alternative', op.alternativeId);
+      next.units = toReviewed(chosen.units);
+      next.chosenAlternative = chosen.label;
+      break;
+    }
+
+    case 'transfer': {
+      const at = findUnit(next.units, op.unitId);
+      if (!at) return refuse('unknown_unit', op.unitId);
+      if (!at.parent) return refuse('not_nested');
+      const to = findUnit(next.units, op.toParentId);
+      if (!to) return refuse('unknown_parent', op.toParentId);
+
+      const ordered = [...sections].sort((a, b) => a.position - b.position);
+      const idx = new Map(ordered.map((x, i) => [x.id, i]));
+      const num = (id: string) => idx.get(id);
+      const [sFrom, sTo] = [num(at.parent.fromSectionId), num(at.parent.toSectionId)];
+      const [tFrom, tTo] = [num(to.unit.fromSectionId), num(to.unit.toSectionId)];
+      const [cFrom, cTo] = [num(at.unit.fromSectionId), num(at.unit.toSectionId)];
+      if ([sFrom, sTo, tFrom, tTo, cFrom, cTo].some((n) => n === undefined)) {
+        return refuse('unknown_section');
+      }
+
+      /* The two parents must touch, or the sections between them belong to
+         neither and the transfer would silently claim them. */
+      const sourceFirst = sTo! + 1 === tFrom!;
+      const targetFirst = tTo! + 1 === sFrom!;
+      if (!sourceFirst && !targetFirst) return refuse('parents_not_adjacent');
+
+      /* And the child must sit AT the edge they share, or the source would be
+         left in two pieces. */
+      if (sourceFirst && cTo !== sTo) return refuse('not_at_the_shared_edge');
+      if (targetFirst && cFrom !== sFrom) return refuse('not_at_the_shared_edge');
+      if (cFrom === sFrom && cTo === sTo) return refuse('parent_would_be_empty');
+
+      if (sourceFirst) {
+        at.parent.toSectionId = ordered[cFrom! - 1].id;
+        to.unit.fromSectionId = at.unit.fromSectionId;
+      } else {
+        at.parent.fromSectionId = ordered[cTo! + 1].id;
+        to.unit.toSectionId = at.unit.toSectionId;
+      }
+      at.siblings.splice(at.siblings.indexOf(at.unit), 1);
+      to.unit.children.splice(sourceFirst ? 0 : to.unit.children.length, 0, at.unit);
       break;
     }
   }
