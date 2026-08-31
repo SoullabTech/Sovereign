@@ -32,6 +32,7 @@ import {
   type TranscriptDispatchSource,
   type TranscriptDispatchTrigger,
 } from '@/lib/voice/dispatchProvenance';
+import { VOICE_TIMING } from '@/lib/voice/voiceTiming';
 import { classifyRecognitionEnd, RAPID_END_LOOP_THRESHOLD } from '@/lib/voice/rapidEndPolicy';
 import {
   TURN_COMPLETE_RECOVERABLE,
@@ -85,9 +86,9 @@ function isConversationAlive(ctx: {
 }): boolean {
   const now = Date.now();
   return (
-    (ctx.lastTranscriptAt > 0 && now - ctx.lastTranscriptAt < 30_000) ||
-    (ctx.lastAudioEndAt > 0 && now - ctx.lastAudioEndAt < 15_000) ||
-    (ctx.lastMicTapAt > 0 && now - ctx.lastMicTapAt < 10_000)
+    (ctx.lastTranscriptAt > 0 && now - ctx.lastTranscriptAt < VOICE_TIMING.CONVERSATION_ALIVE_MS) ||
+    (ctx.lastAudioEndAt > 0 && now - ctx.lastAudioEndAt < VOICE_TIMING.POST_RESPONSE_ALIVE_MS) ||
+    (ctx.lastMicTapAt > 0 && now - ctx.lastMicTapAt < VOICE_TIMING.MIC_TAP_ALIVE_MS)
   );
 }
 
@@ -1364,9 +1365,20 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
       const now = Date.now();
       const timeSinceLastSpeech = hasEverSpoken ? now - lastSpeechTime.current : Infinity;
       // 🔥 FIX: Also count MAIA finishing as "recent activity" — the user may be
-      // reflecting on what MAIA said. 45s window allows deep contemplative pauses.
+      // reflecting on what MAIA said.
       const timeSinceLastAudioEnd = lastAudioEndAtRef.current > 0 ? now - lastAudioEndAtRef.current : Infinity;
-      const hasRecentActivity = (hasEverSpoken && timeSinceLastSpeech < 45000) || timeSinceLastAudioEnd < 45000;
+      // Session-scoped liveness, not a silence timeout. Chrome ends an epoch
+      // after ~5-8s of quiet; this decides whether we re-arm. It used to be a
+      // 45s window, and in practice a member who paused to think lost the mic
+      // after ~20s of real time (a couple of epochs, then a stand-down) —
+      // Kelly, 2026-08-31, PWA on Chrome. A pause is part of the conversation.
+      // Both windows now run for the whole session (VOICE_TIMING.*_ALIVE_MS).
+      // Genuine failure modes are unaffected: the rapid-restart loop guard, the
+      // abort-loop classifier and every fatal onerror path below still stand
+      // the mic down, and each of those reports itself instead of going quiet.
+      const hasRecentActivity =
+        (hasEverSpoken && timeSinceLastSpeech < VOICE_TIMING.CONVERSATION_ALIVE_MS) ||
+        timeSinceLastAudioEnd < VOICE_TIMING.POST_RESPONSE_ALIVE_MS;
       const hasAccumulatedTranscript = accumulatedTranscript.current.trim().length > 0;
 
       // In Care/Scribe modes, ALWAYS restart to stay open for the user

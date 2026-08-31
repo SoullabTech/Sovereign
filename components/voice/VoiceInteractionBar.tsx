@@ -58,6 +58,125 @@ function useKeyboardBottomInset(): number {
   return inset;
 }
 
+/**
+ * LIVE TRANSCRIPT LAYER
+ *
+ * WHY THIS IS ITS OWN LAYER (Kelly, 2026-08-31)
+ * ---------------------------------------------
+ * The live transcript used to be a row INSIDE this bar: one line, `truncate`,
+ * pinned to the bottom edge of the screen. Two things followed, and members
+ * reported both:
+ *
+ *  1. It ran off the screen. `truncate` clips to the START of the string, so a
+ *     member speaking more than a few words watched their own sentence
+ *     disappear past the right edge — the newest words, the ones that answer
+ *     "is it still hearing me?", were exactly the ones cut.
+ *  2. It vanished the instant `voiceState` left 'listening'. The moment a turn
+ *     was submitted, the only evidence of what had been captured was gone,
+ *     before the member had a chance to read it.
+ *
+ * The felt consequence is the one that matters: a member cannot tell whether
+ * they are being registered, so they don't trust the mic. That is a confidence
+ * problem, not a cosmetic one — and for testers it reads as a broken product.
+ *
+ * SO: the transcript is lifted OFF the bar into its own layer above it, sized
+ * to several lines, scrolled to the TAIL (never the head), and held through
+ * 'thinking' so the member sees what was actually sent.
+ *
+ * It is also the transparency half of the long-lived mic session
+ * (VOICE_TIMING.CONVERSATION_ALIVE_MS): the mic now stays fluently open across
+ * long pauses, and an open mic must be a visible one. What is being registered
+ * is on screen, continuously, in the member's own words.
+ */
+function LiveTranscriptLayer({
+  voiceState,
+  interimTranscript,
+  bottomOffset,
+}: {
+  voiceState: VoiceInteractionState;
+  interimTranscript: string;
+  bottomOffset: number;
+}) {
+  const scrollRef = useRef<HTMLDivElement | null>(null);
+
+  // Held through 'thinking' so the captured turn stays readable while MAIA
+  // works, instead of blinking out at the moment of submission. Cleared once
+  // MAIA starts speaking — by then the answer itself is the feedback.
+  const visible =
+    (voiceState === 'listening' || voiceState === 'thinking') &&
+    interimTranscript.trim().length > 0;
+
+  // Pin to the tail. The newest words are the ones that prove the mic is live,
+  // so they are the ones that must never be the ones scrolled out of view.
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    el.scrollTop = el.scrollHeight;
+  }, [interimTranscript, visible]);
+
+  return (
+    <AnimatePresence>
+      {visible && (
+        <motion.div
+          key="live-transcript"
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: 8 }}
+          transition={{ duration: 0.18, ease: 'easeOut' }}
+          className="fixed left-0 right-0 z-40 px-3"
+          style={{
+            // Sits directly on top of the bar, tracking both the keyboard
+            // inset and the bar's real measured height so it can never end up
+            // underneath either.
+            bottom: bottomOffset + 8,
+            pointerEvents: 'none',
+          }}
+          // Announced politely: a member using a screen reader gets the same
+          // "you are being heard" confirmation the sighted layer provides.
+          aria-live="polite"
+          aria-atomic="false"
+        >
+          <div
+            className="mx-auto w-full max-w-2xl rounded-2xl border border-white/10
+                       bg-maia-navy-900/90 backdrop-blur-md shadow-lg shadow-black/30"
+            style={{ pointerEvents: 'auto' }}
+          >
+            <div className="flex items-center gap-2 px-4 pt-2.5">
+              <motion.span
+                className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
+                  voiceState === 'listening' ? 'bg-emerald-400' : 'bg-maia-spice-500'
+                }`}
+                animate={
+                  voiceState === 'listening'
+                    ? { opacity: [1, 0.35, 1] }
+                    : { opacity: 0.7 }
+                }
+                transition={{ duration: 1.2, repeat: Infinity, ease: 'easeInOut' }}
+              />
+              <span className="text-[11px] uppercase tracking-[0.14em] text-stone-500">
+                {voiceState === 'listening' ? 'hearing you' : 'heard'}
+              </span>
+            </div>
+
+            <div
+              ref={scrollRef}
+              // Several lines, scrolled — NOT one truncated line. Capped at a
+              // third of the viewport so a long stretch of speech grows the
+              // panel without ever swallowing the conversation behind it.
+              className="px-4 pb-3 pt-1.5 overflow-y-auto overscroll-contain"
+              style={{ maxHeight: 'min(33vh, 190px)' }}
+            >
+              <p className="text-[15px] leading-relaxed text-stone-200/90 whitespace-pre-wrap break-words">
+                {interimTranscript}
+              </p>
+            </div>
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+}
+
 interface VoiceInteractionBarProps {
   voiceState: VoiceInteractionState;
   interimTranscript: string;
@@ -147,6 +266,24 @@ export function VoiceInteractionBar({
   const inputRef = useRef<HTMLInputElement>(null);
   const keyboardInset = useKeyboardBottomInset();
 
+  // The bar's own height, measured rather than assumed: it changes when the
+  // text-input row slides out, and the transcript layer above must move with
+  // it. A hard-coded offset was how the transcript ended up tucked behind the
+  // bar in the first place. Falls back to the resting control-row height (56px
+  // + padding) before the first measurement lands.
+  const barRef = useRef<HTMLDivElement | null>(null);
+  const [barHeight, setBarHeight] = useState(72);
+  useEffect(() => {
+    const el = barRef.current;
+    if (!el) return;
+    const measure = () => setBarHeight(el.getBoundingClientRect().height);
+    measure();
+    if (typeof ResizeObserver === 'undefined') return; // older WebViews keep the fallback
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
   const handleKeyboardToggle = useCallback(() => {
     setShowTextInput((v) => {
       if (!v) setTimeout(() => inputRef.current?.focus(), 50);
@@ -177,7 +314,14 @@ export function VoiceInteractionBar({
   );
 
   return (
+    <>
+      <LiveTranscriptLayer
+        voiceState={voiceState}
+        interimTranscript={interimTranscript}
+        bottomOffset={keyboardInset + barHeight}
+      />
     <div
+      ref={barRef}
       className={`fixed left-0 right-0 z-50 bg-maia-navy-900/95 backdrop-blur-md border-t border-white/5 ${className}`}
       style={{
         // Docks directly above the keyboard instead of floating above it
@@ -195,24 +339,6 @@ export function VoiceInteractionBar({
         pointerEvents: 'auto',
       }}
     >
-      {/* Transcript row — fades in while listening */}
-      <AnimatePresence>
-        {voiceState === 'listening' && interimTranscript.length > 0 && (
-          <motion.div
-            key="transcript"
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.15 }}
-            className="overflow-hidden"
-          >
-            <p className="px-5 pt-2 text-sm italic text-stone-300/75 truncate">
-              {interimTranscript}
-            </p>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
       {/* Text input row — expands when keyboard toggled */}
       <AnimatePresence>
         {showTextInput && (
@@ -321,5 +447,6 @@ export function VoiceInteractionBar({
 
       </div>
     </div>
+    </>
   );
 }

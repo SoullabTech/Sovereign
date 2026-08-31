@@ -41,4 +41,52 @@ export const VOICE_TIMING = {
    * — common for reflective, thoughtful speech.
    */
   GRACE_WINDOW_MS: 750,
+
+  // ─── Session liveness (how long the mic stays fluently open) ────────────────
+
+  /**
+   * How long a member-started listening session stays ALIVE across silence.
+   *
+   * This is NOT "how long to wait before submitting a turn" (that is the
+   * WEB_SILENCE_* / NATIVE_SILENCE_MS thresholds above). This is the window in
+   * which the mic keeps re-arming itself after the platform ends a recognition
+   * epoch on its own.
+   *
+   * WHY THIS EXISTS (Kelly, 2026-08-31, PWA on Chrome): the browser's Web
+   * Speech API ends a recognition epoch after ~5-8s of silence. The onend
+   * handler re-arms only while the conversation reads as "recently active";
+   * that liveness window used to be 15-45 SECONDS, so a member who paused to
+   * think — or who was simply listening — found the mic had stood down after
+   * roughly twenty seconds. Silence is not absence. A contemplative companion
+   * that stops hearing you the moment you stop talking is not listening; it is
+   * waiting for input.
+   *
+   * The requirement is explicit: fluent listening for at least the first hour
+   * of a conversation, longer for some. So the window is one hour, and the
+   * post-MAIA window is the same — a member reflecting on what MAIA just said
+   * is mid-conversation, not idle.
+   *
+   * SOVEREIGNTY NOTE. This lengthens a session the member STARTED and can end
+   * at any moment (the bar's stop control, the mic toggle). It does not open
+   * the mic on its own, does not change the push-to-talk default, and does not
+   * survive an explicit stop. It is paired with the on-screen transcript layer
+   * (VoiceInteractionBar) so an open mic is always a VISIBLE mic: the member
+   * can see what is being registered rather than trusting that it is.
+   */
+  CONVERSATION_ALIVE_MS: 60 * 60 * 1000,
+
+  /**
+   * Liveness window measured from the end of MAIA's own speech. Held equal to
+   * CONVERSATION_ALIVE_MS: the pause after MAIA finishes is the single most
+   * common place a member goes quiet, and it is the last place the mic should
+   * give up.
+   */
+  POST_RESPONSE_ALIVE_MS: 60 * 60 * 1000,
+
+  /**
+   * Liveness window measured from an explicit mic tap. Shorter than the two
+   * above only because a tap with nothing following it is the one case where
+   * the member may have armed the mic by accident.
+   */
+  MIC_TAP_ALIVE_MS: 5 * 60 * 1000,
 } as const;
