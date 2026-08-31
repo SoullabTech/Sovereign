@@ -75,18 +75,18 @@ shipped behaviour.
 05B-5½ real MAIA structure reader   PASS · REAL-WORK WITNESSED · CLOSED
 05B-6  sovereign adoption           HOLD
 05B-7  end-to-end adoption witness  HOLD
-05B-8a render fidelity            FAIL · baseline in
+05B-8a render fidelity            GREEN · accepted 6eacae5fb on the real
+                                  proposal. Baseline and acceptance in
                                   WS2-05B-8A_RENDER_FIDELITY_WITNESS.md
-                                  repair NEEDS bounded surface authority
-05B-8b founder judgment of the    HOLD behind 8a
+05B-8b founder judgment of the    UNBLOCKED
        reading itself
 ```
 
-**8b is held behind 8a deliberately.** The room renders none of the three
-uncertain regions and none of the ten divisions' uncertainty tags, so what is on
-screen is a cleaned-up, more-certain version of the reading MAIA actually made.
-Judging "did she perceive my book" through that surface would be judging a
-different reading.
+**8b was held behind 8a deliberately, and is now released.** The room rendered
+none of the three uncertain regions and none of the ten divisions' uncertainty
+tags, so what was on screen was a cleaned-up, more-certain version of the reading
+MAIA actually made; judging "did she perceive my book" through that surface would
+have been judging a different reading. It now shows the whole one.
 
 5½ closed 2026-08-31 on Elemental Alchemy, both runs recorded in
 `WS2-05B-5HALF_STRUCTURE_READER_WITNESS.md`. **5½ passing is not a reason to

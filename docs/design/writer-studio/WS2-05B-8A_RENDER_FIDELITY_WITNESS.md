@@ -4,8 +4,10 @@
 **Proposal:** `2a427a6f-86b5-4ba3-a901-267710977f25` — the real reading of Elemental
 Alchemy, `a3ae67fd-a21e-4948-8766-4c397d2e4712`, 174 sections.
 **Harness:** `scripts/ws2-05b-8a-render-witness.ts`, read-only by construction.
-**Status:** **FAIL — 4 failed, 0 unknown.** Baseline taken 2026-08-31, before any
-repair.
+**Status:** baseline **FAIL — 4 failed**, taken 2026-08-31 before any repair.
+**Accepted `6eacae5fb`** the same day: 3.1, 5 and 7.1 green on the same frozen
+proposal, everything previously green still green, revision 0. See *Acceptance*
+below.
 
 **The question 8a asks.** Does the room show what the row holds? Not whether the
 reading is right — that is **05B-8b**, and it is held behind this record for a
@@ -147,13 +149,59 @@ revision and interpretation are byte-identical.
 
 ---
 
+## Acceptance — `6eacae5fb`, same frozen proposal
+
+Rerun against `2a427a6f-86b5-4ba3-a901-267710977f25` after the bounded repair.
+**The three target items turned green and every previously green item stayed
+green.**
+
+```text
+ok    3.1  coverage carries truncated and passes from the row
+           truncated false vs false; passes 2 vs 2; stated in words true
+ok    5.   3 uncertain region(s) are rendered visibly
+           3 rendered; the stored text is present on the page
+ok    7.1  uncertainty tags render on the divisions that carry them
+           10 division(s) carry tags in the frozen row; 10 rendered
+
+ok    1, 2, 3, 4, 6, 7, 7.2, 8, 9, 12, 13   unchanged
+ok    10.  captures written — coverage, section 42, end, AND uncertain region
+ok    13.  the proposal is unchanged by this witness — revision 0
+
+FAIL  11.  three app-wide favicon 404s — excluded from this mandate
+
+FAIL — 1 failed, 0 unknown
+```
+
+**The row did not move.** Revision 0, interpretation byte-identical, and the ten
+divisions the harness counted in the frozen row are the same ten it counted in
+the DOM. What changed is that the room now says what the row always held.
+
+**Item 11 is the one remaining red**, and it is the one the mandate explicitly
+excluded: `/icons/favicon-{16,32,48}x32.png` are missing app-wide and have
+nothing to do with the review room. It was already red in the baseline, so it is
+not a "previously green invariant" and does not bear on this acceptance. It
+belongs to its own unit.
+
+### What the member now sees that they did not
+
+Ten of eleven divisions carry a line naming what MAIA left open — `where this
+begins`, `what kind of division this is`, `whether this is writing or apparatus`,
+`another reading is nearly as good`. Beneath her account, three regions she could
+not settle, in her own words. And the coverage sentence states that nothing she
+read was shortened, and in how many passes.
+
+**8b is now unblocked.** The founder is judging the reading MAIA actually made,
+qualifications included, rather than the cleaner one the room used to produce.
+
+---
+
 ## Board
 
 ```text
 5½ reader                    PASS · CLOSED
 8a harness                   PASS as instrument
-8a render fidelity           FAIL · real-proposal baseline recorded here
-8a repair                    NEEDS bounded surface authority
-8b founder semantic judgment HOLD behind 8a
+8a render fidelity           GREEN on the three target items · accepted 6eacae5fb
+8a item 11 (favicon 404s)    RED · app-wide, excluded from this mandate, own unit
+8b founder semantic judgment UNBLOCKED — the room now shows the whole reading
 6 adoption                   HOLD
 ```
