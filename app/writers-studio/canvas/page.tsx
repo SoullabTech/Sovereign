@@ -48,6 +48,8 @@ import WorkDrawer from './WorkDrawer';
 import MaterialsDrawer from './MaterialsDrawer';
 import ManuscriptOutline, { useManuscriptSections } from './ManuscriptOutline';
 import StructuredOutline from './StructuredOutline';
+import StructureReview from './StructureReview';
+import ReadingsEntry from './ReadingsEntry';
 import MaiaColumn from './MaiaColumn';
 import StudioConversation from './StudioConversation';
 import StudioLowerBand from './StudioLowerBand';
@@ -265,6 +267,11 @@ export default function WritersStudioPage() {
   const [summoned, setSummoned] = useState<Partial<Record<ColumnId, boolean>>>({});
   const [bandOpen, setBandOpen] = useState(true);
   const [workOpen, setWorkOpen] = useState(false);
+  /* WS2-05B - the reading being looked at, or null. It takes the outline's
+     place rather than becoming a seventh column: a proposal is ABOUT the
+     manuscript column, and two structure columns side by side would invite the
+     reading to be mistaken for the Work. */
+  const [readingId, setReadingId] = useState<string | null>(null);
 
   const declaredMaterials = work?.materials.length ?? 0;
   const materialsInContext = declaredMaterials > 0;
@@ -552,7 +559,26 @@ export default function WritersStudioPage() {
           </StudioPanel>
         )}
 
-        {!workOpen && outlineOpen && (
+        {/* WS2-05B - a reading of this Work, in the manuscript column's place.
+            THE SAME PANEL ROLE, RELABELLED. No seventh panel is invented: the
+            contract's roles are read from the two reference architectures, and
+            neither shows one for this. A proposal is ABOUT the manuscript
+            column, so it takes that column's place and its label says which of
+            the two the member is looking at.
+            READ AND REVIEW ONLY. There is no adoption endpoint to reach from
+            here, so leaving the room leaves the Work exactly as it was. */}
+        {!workOpen && outlineOpen && readingId && manuscript?.id && (
+          <StudioPanel
+            role="manuscript-outline"
+            label="A reading"
+            onDismiss={() => setReadingId(null)}
+            style={{ width: compact ? '100%' : pct(L.outlinePanel), flexShrink: 0 }}
+          >
+            <StructureReview manuscriptId={manuscript.id} proposalId={readingId} />
+          </StudioPanel>
+        )}
+
+        {!workOpen && outlineOpen && !readingId && (
           <StudioPanel
             role="manuscript-outline"
             label="Manuscript"
@@ -569,13 +595,18 @@ export default function WritersStudioPage() {
                  member has authored. With no divisions yet it renders exactly
                  the flat list this column has always shown; unplaced sections
                  are never hidden. */
-              <StructuredOutline
-                manuscriptId={manuscript.id}
-                sections={writeMount.rows}
-                activeId={writing.activeId}
-                statusOf={writing.statusOf}
-                onSelect={writing.goToSection}
-              />
+              <>
+                <StructuredOutline
+                  manuscriptId={manuscript.id}
+                  sections={writeMount.rows}
+                  activeId={writing.activeId}
+                  statusOf={writing.statusOf}
+                  onSelect={writing.goToSection}
+                />
+                {/* Renders NOTHING when no reading exists. The absence of an
+                    interpreter must look like absence, not like an offer. */}
+                <ReadingsEntry manuscriptId={manuscript.id} onOpen={setReadingId} />
+              </>
             ) : writeMount.mount === 'sections' && writing ? (
               <ManuscriptOutline
                 manuscriptId={manuscript?.id ?? null}

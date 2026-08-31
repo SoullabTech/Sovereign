@@ -42,6 +42,37 @@ export type PreviewOutcome =
   | { ok: true; rows: ChangeRow[]; reviewed: ReviewedStructure }
   | { ok: false; refusal: string; detail?: string };
 
+/**
+ * One line per reading, enough to choose between them and nothing more.
+ *
+ * No tree crosses this call. A column that could draw divisions from a summary
+ * would be a second structure surface, and the two would eventually disagree.
+ */
+export interface ProposalSummary {
+  id: string;
+  form: StructureInterpretation['form'];
+  account: string;
+  createdAt: string;
+  adoptedAt: string | null;
+  reviewRevision: number;
+}
+
+export async function fetchProposalSummaries(
+  manuscriptId: string,
+): Promise<ProposalSummary[]> {
+  try {
+    const res = await apiFetch(
+      `/api/sovereign/manuscripts/${manuscriptId}/structure/proposals`, { method: 'GET' });
+    if (!res.ok) return [];
+    const body = await res.json();
+    return Array.isArray(body?.proposals) ? (body.proposals as ProposalSummary[]) : [];
+  } catch {
+    /* A transport failure means UNKNOWN, and unknown is drawn as nothing at
+       all - never as "MAIA has not read this Work". */
+    return [];
+  }
+}
+
 const url = (manuscriptId: string, proposalId: string) =>
   `/api/sovereign/manuscripts/${manuscriptId}/structure/proposals/${proposalId}`;
 

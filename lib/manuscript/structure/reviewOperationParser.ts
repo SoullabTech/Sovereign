@@ -11,6 +11,19 @@
  *
  * So the discriminant is closed here, at the boundary, and every field is
  * checked for the shape the operation actually needs.
+ *
+ * THE ENVELOPE IS PART OF THE REQUEST. `parseReviewRequest` closes the fields
+ * around the operation for the same reason. Two of them were load-bearing and
+ * merely cast:
+ *
+ *   `previewOnly: "false"` is a non-empty string, and therefore truthy. A
+ *   caller who meant to COMMIT would have received an unsaved preview and been
+ *   told nothing - the worst available outcome, since the gesture reads as
+ *   accepted and no post-image was stored.
+ *
+ *   `expectedReviewRevision: 1.5` passed a `typeof === 'number'` check, matched
+ *   no stored revision, and surfaced to the member as "someone else changed
+ *   this" - a conflict story invented out of malformed input.
  */
 
 import type { ReviewOperation } from './review';
@@ -19,13 +32,28 @@ export type ParseResult =
   | { ok: true; operation: ReviewOperation }
   | { ok: false; reason: string };
 
+/** Everything the review route accepts, after checking. */
+export interface ReviewRequest {
+  /** The revision the caller believed. A whole count, never negative. */
+  expectedReviewRevision: number;
+  operation: ReviewOperation;
+  /** Normalised: absent means commit. Never a truthy string. */
+  previewOnly: boolean;
+}
+
+export type RequestParseResult =
+  | { ok: true; request: ReviewRequest }
+  | { ok: false; reason: string };
+
 const str = (v: unknown): v is string => typeof v === 'string' && v.length > 0;
 const nullableStr = (v: unknown): v is string | null =>
   v === null || typeof v === 'string';
 const int = (v: unknown): v is number => typeof v === 'number' && Number.isInteger(v);
 
 export function parseReviewOperation(input: unknown): ParseResult {
-  if (!input || typeof input !== 'object') return { ok: false, reason: 'not an object' };
+  if (!input || typeof input !== 'object' || Array.isArray(input)) {
+    return { ok: false, reason: 'not an object' };
+  }
   const o = input as Record<string, unknown>;
 
   switch (o.op) {
@@ -99,4 +127,34 @@ export function parseReviewOperation(input: unknown): ParseResult {
     default:
       return { ok: false, reason: `unknown operation "${String(o.op)}"` };
   }
+}
+
+/* -- the envelope around it --------------------------------------------- */
+
+export function parseReviewRequest(input: unknown): RequestParseResult {
+  if (!input || typeof input !== 'object' || Array.isArray(input)) {
+    return { ok: false, reason: 'not an object' };
+  }
+  const o = input as Record<string, unknown>;
+
+  const rev = o.expectedReviewRevision;
+  if (!int(rev) || rev < 0) {
+    return { ok: false, reason: 'expectedReviewRevision must be an integer of at least 0' };
+  }
+
+  /* Absent or a real boolean. A string, a number and null are all refused
+     rather than coerced: coercion here silently changes what the call DOES. */
+  const preview = o.previewOnly;
+  if (preview !== undefined && typeof preview !== 'boolean') {
+    return { ok: false, reason: 'previewOnly must be absent or a boolean' };
+  }
+
+  const parsed = parseReviewOperation(o.operation);
+  if (!parsed.ok) return parsed;
+
+  return { ok: true, request: {
+    expectedReviewRevision: rev,
+    operation: parsed.operation,
+    previewOnly: preview === true,
+  } };
 }

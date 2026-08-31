@@ -281,7 +281,12 @@ function Entry({
   if (entry.kind === 'section') {
     const s = headingOf(entry.id);
     return (
-      <div data-section={entry.position} data-unaccounted
+      /* UNACCOUNTED MEANS OUTSIDE EVERY DIVISION, and only depth 0 is. The
+         attribute was set on every section row, so material a proposal HAD
+         accounted for was marked as material it had not - the reading looked
+         emptier in the DOM than it was. */
+      <div data-section={entry.position}
+        data-unaccounted={depth === 0 ? 'true' : undefined}
         style={{ display: 'flex', gap: SPACE.snug, paddingLeft: pad }}>
         <StudioText role="navItem" tone="quiet" as="span">{entry.position}.</StudioText>
         <StudioText role="navItem" tone="secondary" as="span">

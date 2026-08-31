@@ -343,7 +343,7 @@ export default function StructuredOutline({
           reading it. Sticky to the scrollport, opaque, and pulled out to the
           panel's padding so rows pass under it rather than beside it.
           Presentation only: nothing here changes what a gesture does. */}
-      <div style={CHROME}>
+      <div data-structured-outline style={CHROME}>
       <div style={{ display: 'flex', alignItems: 'baseline', gap: SPACE.snug, marginBottom: SPACE.base }}>
         <StudioText role="metadata" style={{ flex: 1 }}>
           {sections.length} section{sections.length === 1 ? '' : 's'}

@@ -16,9 +16,10 @@
  * resolves it against the IMMUTABLE stored interpretation. No structural tree
  * is ever accepted from a client.
  *
- * THE OPERATION IS PARSED, NOT ASSERTED. `parseReviewOperation` closes the
- * discriminant at the boundary. A cast is a claim about a request the client
- * writes; this is a check.
+ * THE REQUEST IS PARSED, NOT ASSERTED. `parseReviewRequest` closes the whole
+ * envelope - the operation's discriminant AND the two fields around it, both of
+ * which change what the call does when merely cast. A cast is a claim about a
+ * request the client writes; this is a check.
  *
  * ONE APPLICATION PER GESTURE. The post-image returned by a preview is the one
  * a commit stores, because it is the same object rather than a second run that
@@ -31,11 +32,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { loadProposal, updateReviewed, type ProposalRefusal } from '@/lib/manuscript/structure/proposalStore';
-import type {
-  ReviewOperation, ReviewContext, ReviewRefusal,
-} from '@/lib/manuscript/structure/review';
+import type { ReviewContext, ReviewRefusal } from '@/lib/manuscript/structure/review';
 import { previewOperation } from '@/lib/writersStudio/reviewPresentation';
-import { parseReviewOperation } from '@/lib/manuscript/structure/reviewOperationParser';
+import { parseReviewRequest } from '@/lib/manuscript/structure/reviewOperationParser';
 import { interpretationInputHash } from '@/lib/manuscript/structure/interpret';
 
 export const dynamic = 'force-dynamic';
@@ -173,13 +172,6 @@ export async function GET(
   });
 }
 
-interface ReviewRequest {
-  expectedReviewRevision: number;
-  operation: unknown;
-  /** When true the server computes the post-image and returns it UNSAVED. */
-  previewOnly?: boolean;
-}
-
 export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string; proposalId: string }> },
@@ -188,25 +180,24 @@ export async function POST(
   const memberId = await getMemberIdFromRequest(req);
   if (!memberId) return NextResponse.json({ error: 'unauthenticated' }, { status: 401 });
 
-  let body: ReviewRequest;
+  let raw: unknown;
   try {
-    body = (await req.json()) as ReviewRequest;
+    raw = await req.json();
   } catch {
-    return NextResponse.json({ refusal: 'malformed' }, { status: 400 });
-  }
-  if (typeof body?.expectedReviewRevision !== 'number') {
-    return NextResponse.json({ refusal: 'malformed', detail: 'expectedReviewRevision' },
-      { status: 400 });
+    return NextResponse.json({ refusal: 'malformed', detail: 'not JSON' }, { status: 400 });
   }
 
-  /* CLOSED AT THE BOUNDARY. `await req.json() as ReviewRequest` is an assertion,
-     not a check, so the operation is parsed against the shape each gesture
-     actually needs before the engine is reached. */
-  const parsed = parseReviewOperation(body.operation);
+  /* CLOSED AT THE BOUNDARY - THE WHOLE ENVELOPE, NOT ONLY THE OPERATION.
+     `as ReviewRequest` is an assertion about a request the client writes. The
+     two fields around the operation both change what the call DOES if they are
+     merely cast: `previewOnly: "false"` is truthy, so an intended commit
+     returns an unsaved preview and says nothing; a fractional revision matches
+     nothing and reaches the member as an invented editing conflict. */
+  const parsed = parseReviewRequest(raw);
   if (!parsed.ok) {
     return NextResponse.json({ refusal: 'malformed', detail: parsed.reason }, { status: 400 });
   }
-  const operation: ReviewOperation = parsed.operation;
+  const { operation, expectedReviewRevision, previewOnly } = parsed.request;
 
   const p = await loadProposal(proposalId, memberId);
   if (p.status === 'refused') {
@@ -219,7 +210,7 @@ export async function POST(
   /* Checked here as well as in the store, so a stale client is told BEFORE the
      work of computing a post-image it cannot commit, and gets the current state
      to reload rather than an opaque conflict. */
-  if (p.value.reviewRevision !== body.expectedReviewRevision) {
+  if (p.value.reviewRevision !== expectedReviewRevision) {
     return NextResponse.json({
       refusal: 'stale_revision',
       reviewRevision: p.value.reviewRevision,
@@ -242,7 +233,7 @@ export async function POST(
       { status: REVIEW_STATUS[preview.refusal] ?? 422 });
   }
 
-  if (body.previewOnly) {
+  if (previewOnly) {
     /* Nothing is persisted. `reviewed` is returned alongside the rows so a
        caller - or a witness - can compare the previewed post-image against the
        committed one and see that they are byte-identical, rather than take the
@@ -259,7 +250,7 @@ export async function POST(
      reintroduce exactly the preview/commit divergence the preview exists to
      rule out. What is shown is what is stored. */
   const saved = await updateReviewed(
-    proposalId, memberId, body.expectedReviewRevision, preview.reviewed);
+    proposalId, memberId, expectedReviewRevision, preview.reviewed);
   if (saved.status === 'refused') {
     return NextResponse.json({ refusal: saved.refusal, detail: saved.detail },
       { status: PROPOSAL_STATUS[saved.refusal] });

@@ -6,7 +6,7 @@
  * one, and `{"op":"whatever"}` satisfied the assertion completely.
  */
 
-import { parseReviewOperation } from '../reviewOperationParser';
+import { parseReviewOperation, parseReviewRequest } from '../reviewOperationParser';
 
 const ok = (input: unknown) => {
   const r = parseReviewOperation(input);
@@ -34,10 +34,10 @@ describe('the discriminant is closed', () => {
     expect(refused(42)).toBe('not an object');
   });
 
-  /* An array IS an object to `typeof`. It carries no `op`, so it must fall to
-     the unknown arm rather than through it. */
+  /* An array IS an object to `typeof`, so it is excluded explicitly rather
+     than left to fall through on a missing `op`. */
   it('refuses an array', () => {
-    expect(refused([{ op: 'rename', unitId: 'u1' }])).toMatch(/unknown operation/);
+    expect(refused([{ op: 'rename', unitId: 'u1' }])).toBe('not an object');
   });
 });
 
@@ -108,5 +108,66 @@ describe('choose-alternative carries an identity and nothing else', () => {
     });
     expect(op).toEqual({ op: 'choose-alternative', alternativeId: 'a1' });
     expect(JSON.stringify(op)).not.toMatch(/INVENTED/);
+  });
+});
+
+describe('the envelope around the operation is checked too', () => {
+  const good = { op: 'rename', unitId: 'u1', title: 'x', kind: null };
+  const req = (input: unknown) => parseReviewRequest(input);
+  const reqOk = (input: unknown) => {
+    const r = req(input);
+    if (!r.ok) throw new Error(`expected ok, got: ${r.reason}`);
+    return r.request;
+  };
+  const reqRefused = (input: unknown) => {
+    const r = req(input);
+    if (r.ok) throw new Error(`expected a refusal, got ${JSON.stringify(r.request)}`);
+    return r.reason;
+  };
+
+  it('accepts a well-formed commit and normalises previewOnly to false', () => {
+    expect(reqOk({ expectedReviewRevision: 0, operation: good }))
+      .toEqual({ expectedReviewRevision: 0, operation: good, previewOnly: false });
+  });
+
+  it('accepts an explicit preview', () => {
+    expect(reqOk({ expectedReviewRevision: 3, operation: good, previewOnly: true }).previewOnly)
+      .toBe(true);
+  });
+
+  /* THE DEFECT THIS EXISTS FOR. "false" is a non-empty string and therefore
+     truthy: a caller meaning to commit would have been handed an unsaved
+     preview and told nothing. Coercion here silently changes what the call
+     DOES, so a non-boolean is refused rather than interpreted. */
+  it('refuses a stringified boolean rather than believing it', () => {
+    expect(reqRefused({ expectedReviewRevision: 0, operation: good, previewOnly: 'false' }))
+      .toMatch(/previewOnly/);
+    expect(reqRefused({ expectedReviewRevision: 0, operation: good, previewOnly: 'true' }))
+      .toMatch(/previewOnly/);
+    expect(reqRefused({ expectedReviewRevision: 0, operation: good, previewOnly: 1 }))
+      .toMatch(/previewOnly/);
+    expect(reqRefused({ expectedReviewRevision: 0, operation: good, previewOnly: null }))
+      .toMatch(/previewOnly/);
+  });
+
+  /* A fractional revision matched no stored revision and surfaced as
+     "someone else changed this" - a conflict story invented from bad input. */
+  it('refuses a revision that is not a whole count', () => {
+    expect(reqRefused({ expectedReviewRevision: 1.5, operation: good }))
+      .toMatch(/expectedReviewRevision/);
+    expect(reqRefused({ expectedReviewRevision: -1, operation: good }))
+      .toMatch(/expectedReviewRevision/);
+    expect(reqRefused({ expectedReviewRevision: '0', operation: good }))
+      .toMatch(/expectedReviewRevision/);
+    expect(reqRefused({ operation: good })).toMatch(/expectedReviewRevision/);
+  });
+
+  it('still refuses a bad operation inside a good envelope', () => {
+    expect(reqRefused({ expectedReviewRevision: 0, operation: { op: 'obliterate' } }))
+      .toMatch(/unknown operation/);
+  });
+
+  it('refuses an array envelope', () => {
+    expect(reqRefused([{ expectedReviewRevision: 0, operation: good }])).toBe('not an object');
   });
 });

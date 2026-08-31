@@ -45,7 +45,14 @@ async function main() {
   const fixture = await transaction(async (tx) => {
     let memberId = process.env.MEMBER_ID ?? '';
     if (!memberId) {
-      const m = await tx.query<{ id: string }>(`INSERT INTO members DEFAULT VALUES RETURNING id`);
+      /* `DEFAULT VALUES` assumed every column was nullable. On the production
+         schema passkey, username and password_hash are NOT NULL, so this arm
+         threw - and nobody saw it, because the witness is always run with
+         MEMBER_ID set. A fallback nobody exercises is not a fallback. */
+      const m = await tx.query<{ id: string }>(
+        `INSERT INTO members (passkey, username, password_hash, name)
+         VALUES ($1, $1, 'not-a-credential', 'WS2 witness') RETURNING id`,
+        [`ws2-witness-${Date.now()}`]);
       memberId = m.rows[0].id;
     }
     const man = await tx.query<{ id: string }>(
@@ -131,12 +138,37 @@ async function main() {
       { waitUntil: 'networkidle0', timeout: 60_000 });
     await page.waitForSelector('[data-structure-review]', { timeout: 30_000 });
   };
+  /* HTTP ASSERTIONS RUN FROM NODE, NOT FROM THE PAGE.
+     `page.evaluate` ships a function's SOURCE to the browser, and tsx compiles
+     named inner functions with an esbuild `__name` helper that does not travel
+     with it - the block threw `__name is not defined` at runtime rather than
+     failing an assertion. The same request carrying the same cookie proves the
+     same thing from here, without a compiler in the path. */
+  const call = async (proposalId: string, body: unknown) => {
+    const res = await fetch(
+      `${BASE}/api/sovereign/manuscripts/${fixture.manuscriptId}/structure/proposals/${proposalId}`,
+      { method: 'POST',
+        headers: { 'Content-Type': 'application/json', Cookie: `maia_session=${TOK}` },
+        body: JSON.stringify(body) });
+    return { status: res.status, json: await res.json().catch(() => ({})) as Record<string, unknown> };
+  };
+  const read = async (proposalId: string) => {
+    const res = await fetch(
+      `${BASE}/api/sovereign/manuscripts/${fixture.manuscriptId}/structure/proposals/${proposalId}`,
+      { headers: { Cookie: `maia_session=${TOK}` } });
+    return await res.json() as Record<string, unknown>;
+  };
+
   const form = () => page.$eval('[data-structure-review]',
     (el) => el.getAttribute('data-form'));
   const drawnPositions = (p: Page) => p.$$eval('[data-section]',
     (els) => els.map((e) => Number(e.getAttribute('data-section'))));
   const unitIds = (p: Page) => p.$$eval('[data-review-unit]',
     (els) => els.map((e) => e.getAttribute('data-review-unit')!));
+  /* Sections OUTSIDE every proposed division - what the reading did not
+     account for, in the member's view rather than in the payload. */
+  const unaccounted = (p: Page) => p.$$eval('[data-section][data-unaccounted]',
+    (els) => els.map((e) => Number(e.getAttribute('data-section'))));
 
   /* -- the six forms ---------------------------------------------------- */
   console.log('\n2 · every reading has a real screen');
@@ -150,11 +182,17 @@ async function main() {
 
   await open('partial');
   const partialDrawn = await drawnPositions(page);
-  check('partial keeps unaccounted material in position',
-    partialDrawn.length === 8 && partialDrawn[0] === 4,
-    partialDrawn.join(','));
+  /* THE WHOLE WORK IS ALWAYS DRAWN. A partial reading shows every section -
+     the four it organised inside a division, the eight it did not, in place.
+     A column that drew only the unaccounted half would be a picture of a
+     different book. */
+  check('partial draws the whole Work', partialDrawn.length === N, partialDrawn.join(','));
   check('partial renders in book order',
     partialDrawn.every((p, i) => i === 0 || p > partialDrawn[i - 1]));
+  const partialLoose = await unaccounted(page);
+  check('and marks exactly what it did not account for',
+    partialLoose.length === 8 && partialLoose[0] === 4 && partialLoose[7] === 11,
+    partialLoose.join(','));
 
   await open('flat');
   const flatNested = await page.$$eval('[data-review-unit] [data-review-unit]', (e) => e.length);
@@ -171,13 +209,17 @@ async function main() {
   check('ambiguous renders its alternatives', alts === 2, `${alts}`);
   check('ambiguous renders no canonical tree', (await unitIds(page)).length === 0);
   const ambiguousDrawn = await drawnPositions(page);
-  check('and nothing is accounted for', ambiguousDrawn.length === N, `${ambiguousDrawn.length}`);
+  check('and nothing is accounted for',
+    ambiguousDrawn.length === N && (await unaccounted(page)).length === N,
+    `${ambiguousDrawn.length}`);
 
   await open('none');
   check('none renders a complete screen with no tree',
     (await unitIds(page)).length === 0 && (await page.$('[data-no-structure]')) !== null);
   const noneDrawn = await drawnPositions(page);
   check('and the Work beneath it', noneDrawn.length === N, `${noneDrawn.length}`);
+  check('with every section standing outside a division',
+    (await unaccounted(page)).length === N);
   const apology = await page.$$eval('[data-structure-review]',
     (els) => /try again|something went wrong|no results|failed/i.test(els[0].textContent ?? ''));
   check('with no apology or failure framing', !apology);
@@ -243,62 +285,47 @@ async function main() {
   /* An unrecognised operation must be REFUSED, not silently applied. Before the
      boundary parser existed this returned 200 with an unchanged tree: a no-op
      reported as a completed gesture. */
-  const bogus = await page.evaluate(async (args) => {
-    const call = async (operation: unknown) => {
-      const res = await fetch(
-        `/api/sovereign/manuscripts/${args.m}/structure/proposals/${args.p}`,
-        { method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ expectedReviewRevision: args.rev, operation }) });
-      return res.status;
-    };
-    return {
-      unknown: await call({ op: 'obliterate', unitId: args.u }),
-      missingField: await call({ op: 'reparent', unitId: args.u }),
-      notAnObject: await call('rename'),
-    };
-  }, { m: fixture.manuscriptId, p: proposals.stable, u: first, rev: 1 });
-  check('an unknown operation is refused as malformed', bogus.unknown === 400,
-    String(bogus.unknown));
-  check('a known operation missing a field is refused', bogus.missingField === 400,
-    String(bogus.missingField));
-  check('a non-object operation is refused', bogus.notAnObject === 400,
-    String(bogus.notAnObject));
+  const P = proposals.stable;
+  const bad = async (operation: unknown) => (await call(P, {
+    expectedReviewRevision: 1, operation })).status;
+  check('an unknown operation is refused as malformed',
+    (await bad({ op: 'obliterate', unitId: first })) === 400);
+  check('a known operation missing a field is refused',
+    (await bad({ op: 'reparent', unitId: first })) === 400);
+  check('a non-object operation is refused', (await bad('rename')) === 400);
+
+  /* The envelope around the operation, which also decides what the call DOES. */
+  const envelope = async (body: unknown) => (await call(P, body)).status;
+  const op = { op: 'rename', unitId: first, title: 'envelope', kind: null };
+  check('previewOnly: "false" is refused, not read as truthy',
+    (await envelope({ expectedReviewRevision: 1, operation: op, previewOnly: 'false' })) === 400);
+  check('a fractional revision is malformed, not a conflict',
+    (await envelope({ expectedReviewRevision: 1.5, operation: op })) === 400);
+  check('a negative revision is malformed',
+    (await envelope({ expectedReviewRevision: -1, operation: op })) === 400);
+  check('a missing revision is malformed', (await envelope({ operation: op })) === 400);
 
   /* ONE ENGINE, PROVEN. The post-image returned by a preview and the one stored
      by the commit must be identical - not similar, and not merely believed to
      agree because the same function is called twice. */
   console.log('\n4b · what is previewed is what is stored');
-  const sameImage = await page.evaluate(async (args) => {
-    const call = async (body: unknown) => {
-      const res = await fetch(
-        `/api/sovereign/manuscripts/${args.m}/structure/proposals/${args.p}`,
-        { method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(body) });
-      return { status: res.status, json: await res.json() };
-    };
-    const op = { op: 'rename', unitId: args.u, title: 'Previewed then stored', kind: 'Part' };
-    const pre = await call({ expectedReviewRevision: args.rev, operation: op, previewOnly: true });
-    const com = await call({ expectedReviewRevision: args.rev, operation: op });
-    return {
-      previewHasImage: pre.json?.reviewed !== undefined,
-      identical: JSON.stringify(pre.json?.reviewed) === JSON.stringify(com.json?.reviewed),
-      status: com.status,
-    };
-  }, { m: fixture.manuscriptId, p: proposals.stable, u: first, rev: 1 });
-  check('a preview returns the post-image it describes', sameImage.previewHasImage);
+  const commitOp = { op: 'rename', unitId: first, title: 'Previewed then stored', kind: 'Part' };
+  const pre = await call(P, { expectedReviewRevision: 1, operation: commitOp, previewOnly: true });
+  const com = await call(P, { expectedReviewRevision: 1, operation: commitOp });
+  check('a preview returns the post-image it describes', pre.json.reviewed !== undefined);
   check('and the committed post-image is byte-identical to it',
-    sameImage.identical && sameImage.status === 200, String(sameImage.status));
+    com.status === 200
+      && JSON.stringify(pre.json.reviewed) === JSON.stringify(com.json.reviewed),
+    String(com.status));
+  /* And the preview did not write: the commit was the first advance past 1. */
+  check('the preview advanced nothing', com.json.reviewRevision === 2,
+    String(com.json.reviewRevision));
 
   /* -- staleness is measured, never assumed ------------------------------ */
   console.log('\n4c · staleAsRead is a measurement');
-  const readStale = async (name: string) => page.evaluate(async (args) => {
-    const res = await fetch(
-      `/api/sovereign/manuscripts/${args.m}/structure/proposals/${args.p}`);
-    const j = await res.json();
-    return j.staleAsRead as boolean | null;
-  }, { m: fixture.manuscriptId, p: proposals[name] });
+  check('an unrewritten Work reads as not stale',
+    (await read(proposals.stable)).staleAsRead === false);
 
-  check('an unrewritten Work reads as not stale', (await readStale('stable')) === false);
   /* `partial` read two bodies in full. Rewrite one of them - through the round
      trip, because the database refuses a section edit that leaves the draft's
      content out of step with its sections. Rewriting the section alone would
@@ -316,14 +343,15 @@ async function main() {
       [fixture.draftId]);
   });
   check('rewriting a body MAIA read makes the reading stale',
-    (await readStale('partial')) === true);
+    (await read(proposals.partial)).staleAsRead === true);
+
   /* And a heading change is caught even where no body was read at all. */
   await query(
     `UPDATE manuscript_sections SET heading = 'CHANGED'
       WHERE id = (SELECT source_section_id FROM manuscript_draft_sections WHERE id = $1)`,
     [sections[0].id]);
   check('rewriting a heading makes a headings-only reading stale',
-    (await readStale('flat')) === true);
+    (await read(proposals.flat)).staleAsRead === true);
 
   /* -- coupled gestures show their whole post-image ---------------------- */
   console.log('\n5 · atomic does not mean hidden');
@@ -340,6 +368,31 @@ async function main() {
       changeRows.length === 2 && changeRows.includes('moves-out')
         && changeRows.includes('range-changes'),
       changeRows.join(','));
+  }
+
+  /* -- the room the member actually writes in ---------------------------- */
+  console.log('\n5b · the reading is reachable from the Canvas');
+  /* The Canvas opens the member's most recent Work, which is this fixture. If
+     the mount were wrong this would fail here rather than in front of Kelly. */
+  await page.goto(`${BASE}/writers-studio/canvas`,
+    { waitUntil: 'networkidle0', timeout: 60_000 });
+  const entry = await page.waitForSelector('[data-readings-entry]', { timeout: 30_000 })
+    .catch(() => null);
+  check('the manuscript column offers the reading MAIA made', entry !== null);
+  if (entry) {
+    /* The BUTTON, not the block. Clicking the container lands on whichever
+       child sits under its centre - here MAIA's account, which is text. */
+    await page.click('[data-readings-entry] button');
+    const opened = await page.waitForSelector('[data-structure-review]', { timeout: 30_000 })
+      .catch(() => null);
+    check('and opens it in the manuscript column\'s place', opened !== null);
+    check('the review is drawn inside the Canvas, not on its own page',
+      new URL(page.url()).pathname === '/writers-studio/canvas', page.url());
+    /* The Work itself must be gone from view while a reading of it is open -
+       one structure column at a time, so a proposal is never mistaken for the
+       Work beside it. */
+    const outlineStill = await page.$('[data-structured-outline]');
+    check('the authored outline is not shown beside it', outlineStill === null);
   }
 
   /* -- the boundary ------------------------------------------------------ */

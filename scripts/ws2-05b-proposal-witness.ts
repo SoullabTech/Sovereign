@@ -48,7 +48,14 @@ async function main() {
   const fixture = await transaction(async (tx) => {
     let memberId = process.env.MEMBER_ID ?? '';
     if (!memberId) {
-      const m = await tx.query<{ id: string }>(`INSERT INTO members DEFAULT VALUES RETURNING id`);
+      /* `DEFAULT VALUES` assumed every column was nullable. On the production
+         schema passkey, username and password_hash are NOT NULL, so this arm
+         threw - and nobody saw it, because the witness is always run with
+         MEMBER_ID set. A fallback nobody exercises is not a fallback. */
+      const m = await tx.query<{ id: string }>(
+        `INSERT INTO members (passkey, username, password_hash, name)
+         VALUES ($1, $1, 'not-a-credential', 'WS2 witness') RETURNING id`,
+        [`ws2-witness-${Date.now()}`]);
       memberId = m.rows[0].id;
     }
     const man = await tx.query<{ id: string }>(

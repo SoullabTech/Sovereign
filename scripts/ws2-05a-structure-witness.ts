@@ -69,11 +69,15 @@ async function main() {
   const fixture = await transaction(async (tx) => {
     let memberId = process.env.MEMBER_ID ?? '';
     if (!memberId) {
-      /* Only reachable on a schema whose `members` needs nothing — the
-         throwaway cluster this was developed against. Against the real schema,
-         pass MEMBER_ID rather than inventing credentials. */
+      /* Supplies the NOT NULL credential columns rather than relying on
+         DEFAULT VALUES, which threw on the real schema. Nobody saw it: the
+         witness is always run with MEMBER_ID set, and a fallback nobody
+         exercises is not a fallback. The password hash is a literal, not a
+         credential - this member exists for the length of one run. */
       const mem = await tx.query<{ id: string }>(
-        `INSERT INTO members DEFAULT VALUES RETURNING id`);
+        `INSERT INTO members (passkey, username, password_hash, name)
+         VALUES ($1, $1, 'not-a-credential', 'WS2 witness') RETURNING id`,
+        [`ws2-witness-${Date.now()}`]);
       memberId = mem.rows[0].id;
     }
     const man = await tx.query<{ id: string }>(
@@ -94,9 +98,19 @@ async function main() {
     const draftId = draft.rows[0].id;
 
     for (let i = 0; i < N; i++) {
+      /* Source sections as well as draft sections. Without them the Work has
+         no headings and, more to the point, the Canvas never opens its
+         manuscript column - `ws2-witness-browser.ts` could therefore only ever
+         be run against a real book, which is the cost this harness exists to
+         remove. */
+      const src = await tx.query<{ id: string }>(
+        `INSERT INTO manuscript_sections (manuscript_id, position, heading, body)
+         VALUES ($1, $2, $3, $4) RETURNING id`,
+        [manuscriptId, i, `HEADING ${i}`, bodies[i]]);
       await tx.query(
-        `INSERT INTO manuscript_draft_sections (draft_id, position, text) VALUES ($1, $2, $3)`,
-        [draftId, i, bodies[i]]);
+        `INSERT INTO manuscript_draft_sections (draft_id, position, text, source_section_id)
+         VALUES ($1, $2, $3, $4)`,
+        [draftId, i, bodies[i], src.rows[0].id]);
     }
     await tx.query(
       `UPDATE manuscript_working_drafts
