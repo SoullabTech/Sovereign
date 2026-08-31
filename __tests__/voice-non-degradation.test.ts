@@ -1,72 +1,86 @@
 /**
- * MAIA DEEP-INTELLIGENCE GATE — convergence, enforced by EXHAUSTIVE ENUMERATION
- * AND A CLOSED ADMISSION-PHASE ALLOWLIST.
+ * MAIA DEEP-INTELLIGENCE GATE — convergence, enforced by TWO CLOSED SETS THE
+ * COMPILER DERIVES FROM THE CODE.
  *
  * Doctrine: docs/canon/MAIA_CONVERSATIONAL_INTELLIGENCE_NON_DEGRADATION.md
  * Unit:     docs/architecture/VOICE_CANONICAL_CONVERGENCE_02_EXIT_MAP.md
  *
  *   Voice may have a different capture path. It may not have a different mind.
  *
- * ── THREE FAILED ATTEMPTS PRECEDE THIS ONE. ALL THREE FAILED THE SAME WAY ────
+ * ── FOUR FAILED ATTEMPTS PRECEDE THIS ONE. ALL FOUR FAILED THE SAME WAY ─────
  *
- * v1 asserted four NAMED routes were absent from the voice handler.
- * `/api/voice/stream-conversation` was not among them, so it passed while the
- * DEFAULT spoken turn went to a second mind.
+ * v1  A denylist of four NAMED routes. `/api/voice/stream-conversation` was not
+ *     among them, so it passed green for the entire life of the divergence.
  *
- * v2 replaced that with a catalogue of response-producing call patterns and
- * called it positive enforcement. It was not. Its "unnamed endpoint" probe used
- * a URL inside the catalogue's own regex family — it proved the pattern
- * generalized within what it already knew, and was presented as proof against
- * the unknown.
+ * v2  A catalogue of response-producing call PATTERNS, called positive
+ *     enforcement. Its "unnamed endpoint" probe used a URL inside the
+ *     catalogue's own regex family — it proved the pattern generalized within
+ *     what it already knew, and was presented as proof against the unknown.
  *
- * v3 enumerated every `return` via the AST, which closed the "a new exit slips
- * in" hole for good. But it classified each exit with a leftover regex —
- * `/handleTextMessage|sendStreamingMessage|fetch\(...\/api\//` — so a responder
- * nobody had named, placed BEFORE AN EXISTING RATIFIED RETURN, changed no exit
- * and matched no pattern, and the gate stayed green:
+ * v3  Exhaustive AST enumeration of every `return`, which closed the added-exit
+ *     hole for good. But each exit was still CLASSIFIED by a leftover regex, so
+ *     an unknown responder placed before an EXISTING ratified return changed no
+ *     exit, matched no pattern, and left the gate green.
  *
- *     if (isScribing && !scribeSession.isAside) {
- *       console.log('📝 [Scribe Mode] ...');
- *       await totallyNewResponder();          // ⛔ v3 SAW NOTHING
- *       recordVoiceTranscript(cleanedText);
- *       return;
- *     }
+ * v4  Inverted the polarity inside guard branches: each ratified exit pinned the
+ *     exact calls its branch makes. That closed v3's hole — and left the
+ *     SUCCESSFUL FALL-THROUGH CORRIDOR ungoverned. The handler runs journal
+ *     actions, scribe APIs, crisis detection, tracking and memory writes outside
+ *     every guard, so this still passed:
  *
- * ⛔ ALL THREE WERE DENYLISTS, AND A DENYLIST FAILS OPEN ON THE UNKNOWN. Each
- * asked "does this look like something we thought of?" and answered no.
+ *         await totallyNewResponder();          // ⛔ v4 SAW NOTHING
+ *         await handleTextMessage(cleanedText);
  *
- * ── WHAT THIS VERSION DOES INSTEAD: IT INVERTS THE POLARITY ─────────────────
+ *     Exit keys unchanged, guard allowlists unchanged, exactly one
+ *     `handleTextMessage`, no `sendStreamingMessage`. GREEN.
  *
- * Two closed sets, both derived from the code by the compiler, both pinned:
+ * ⛔ THE SAME EPISTEMIC FAILURE FOUR TIMES, EACH TIME IN A SMALLER ROOM. Every
+ * version asked "does this look like something we thought of?" and answered no.
+ * A denylist fails open on the unknown, and narrowing WHERE it is applied does
+ * not change that — it only moves where the unknown may stand.
+ *
+ * ── WHAT THIS VERSION DOES INSTEAD ─────────────────────────────────────────
+ *
+ * No responder names. No route families. No patterns. Two closed sets, both
+ * enumerated from the source by the TypeScript compiler and pinned here:
  *
  *   1. THE EXIT SET — every `return` belonging to `handleVoiceTranscript`.
  *      An added exit fails because a new exit appeared, whatever preceded it.
  *
- *   2. THE ADMISSION-PHASE ALLOWLIST — for each ratified exit, the exact set of
- *      calls its guard branch makes. Not "no responder-shaped call"; *exactly
- *      these calls and no others*. So an unknown call fails BECAUSE IT IS
- *      UNKNOWN, without the gate ever learning its name.
+ *   2. THE CALL SETS — the complete set of calls the handler makes, AND, per
+ *      ratified exit, the exact calls its guard branch makes. Not "no
+ *      responder-shaped call": *exactly these calls and no others*, everywhere
+ *      in the handler, on the guarded path and the successful path alike.
+ *
+ * The two are complementary, not redundant. The handler-wide set catches a call
+ * appearing anywhere; the per-guard sets catch a call MOVING — `maiaSpeak`
+ * migrating out of the command-only guard onto the fall-through corridor leaves
+ * the handler-wide set identical but changes what MAIA does on every turn.
  *
  * The property this enforces:
  *
  *   Every explicit return from handleVoiceTranscript is a NON-RESPONSE
- *   admission guard THAT STILL DOES ONLY WHAT IT WAS CERTIFIED TO DO. The
- *   single response-producing path is the fall-through to handleTextMessage —
- *   the canonical cognition spine.
+ *   admission guard, every call the handler makes — guarded or not — is one it
+ *   was certified to make, and the sole canonical cognition call is
+ *   handleTextMessage.
  *
- * ⛔ THE COST, ACCEPTED DELIBERATELY. Changing what an admission guard does now
- * turns this suite red, including for innocent edits. That is the mechanism,
- * not a side effect: the admission phase is a sovereignty boundary, and it
- * should not be possible to widen it quietly. Re-pinning a row is an authority
- * decision, argued for in the diff, exactly like adding a preload channel.
+ * An unknown call fails BECAUSE IT IS UNKNOWN, without the gate ever learning
+ * its name. That is the only form in which a gate can be honest about the
+ * unknown.
+ *
+ * ⛔ THE COST, ACCEPTED DELIBERATELY. Editing this handler now turns the suite
+ * red, innocent edits included. That is the mechanism, not a side effect:
+ * `handleVoiceTranscript` is where a spoken turn becomes a member turn, and it
+ * must not be possible to widen it quietly. Re-pinning a row is an authority
+ * decision argued for in the diff, exactly like adding a preload channel.
  *
  * ⛔ WHAT THIS STILL DOES NOT CLAIM. Not universal MAIA egress convergence.
  * Class C of the exit map — eleven `maiaSpeak()` sites uttering locally-authored
  * or data-API text with no model in the path — and `OracleConversation.tsx:6712`
  * (a crisis script spoken outside any guard that deliberately does not return)
- * are separately recorded findings, unrepaired. They may not be laundered into
- * "fixed" by this suite passing. One of those `maiaSpeak` sites is pinned below,
- * inside the command-only guard; pinning it freezes it, it does not bless it.
+ * are separately recorded findings, unrepaired. Several Class C calls are pinned
+ * below. ⚠️ FROZEN IS NOT BLESSED: pinning stops them growing, it does not
+ * certify them, and they may not be laundered into "fixed" by this suite passing.
  */
 
 import { describe, it, expect } from '@jest/globals';
@@ -79,33 +93,122 @@ const ORACLE = read('components/OracleConversation.tsx');
 const MAIA_PAGE = read('app/maia/page.tsx');
 
 /**
- * ⭐ THE RATIFIED ADMISSION PHASE.
+ * ⭐ THE RATIFIED CORRIDOR — every call `handleVoiceTranscript` makes, anywhere.
  *
- * Every explicit return from `handleVoiceTranscript`, keyed by its own log
- * marker or enclosing condition — text, not line numbers, so ordinary edits
- * above do not churn it — together with EVERY CALL its guard branch makes.
+ * Callee expressions only; arguments are never pinned, so ordinary edits to log
+ * text or payloads do not churn this. A chained call renders its receiver as
+ * `f(…)` for the same reason.
  *
- * Each row is an ADMISSION GUARD: the turn is refused before it becomes a
- * member turn, so there is correctly no cognition and no convergence. The
- * `calls` column is what makes that a checkable claim rather than a label: the
- * entire admission phase logs, formats strings, and in two places performs one
- * named local effect. Nothing here can reach a model.
+ * ⚠️ CLASS C AND EGRESS-ADJACENT ENTRIES, pinned so they cannot grow, NOT
+ * blessed: `maiaSpeak` (locally-authored command acknowledgement, no model in
+ * the path), `detectCrisis`, `apiFetch`, `saveConversationMemory`,
+ * `recordVoiceTranscript`, `stopStreamingVoice`. Each belongs to a separately
+ * recorded finding, unrepaired by this unit.
  *
- * ⛔ ADDING OR EDITING A ROW IS AN AUTHORITY DECISION. If a future exit is
- * response-producing, this file is the wrong place to record it — the invariant
- * is broken and the architecture, not the list, needs the repair.
+ * ⛔ `handleTextMessage` is the ONLY canonical cognition call in this list, and
+ * the assertions below prove it appears exactly once. Anything else that reaches
+ * a model does not belong here — the invariant is broken and the architecture,
+ * not this list, needs the repair.
+ */
+const RATIFIED_CALLS = [
+  'Date.now',
+  'JSON.parse',
+  'JSON.stringify',
+  'String',
+  'apiFetch',
+  'appendMessageCapped',
+  'appendTranscriptEntry',
+  'applySettingsDelta',
+  'cleanMessage',
+  'cleanedText.substring',
+  'confirmScribeConsent',
+  'console.error',
+  'console.log',
+  'console.warn',
+  'data.actionItems.map',
+  'data.actionItems.map(…).join',
+  'detectCrisis',
+  'detectMaiaCommands',
+  'getMaiaCommandConfirmation',
+  'ghostPhrases.some',
+  'handleTextMessage',
+  'lastMaiaResponseRef.current.toLowerCase',
+  'lastMaiaResponseRef.current.toLowerCase(…).trim',
+  'localStorage.getItem',
+  'localStorage.setItem',
+  'lowerTranscript.includes',
+  'maiaSpeak',
+  'maiaWords.includes',
+  'maiaWords.substring',
+  'markScribeMoment',
+  'matchVoiceCommand',
+  'messages.slice',
+  'onMessageAddedRef.current',
+  'pauseScribeSession',
+  'pwaVoice.transcriptReceived',
+  'recentMessages.map',
+  'recentMessages.map(…).join',
+  'recordVoiceTranscript',
+  'res.json',
+  'rhythmTrackerRef.current.onSpeechEnd',
+  'saveConversationMemory',
+  'saveConversationMemory(…).catch',
+  'setCounselFramework',
+  'setInterimTranscript',
+  'setInterruptEnabled',
+  'setIsAudioPlaying',
+  'setIsProcessing',
+  'setIsResponding',
+  'setIsSanctuary',
+  'setListeningMode',
+  'setMaiaMode',
+  'setMessages',
+  'setScribeSession',
+  'setShowCapturePanel',
+  'setTimeout',
+  'setTranscriptEnabled',
+  'setVoiceSettings',
+  'startScribeSession',
+  'stopScribeSession',
+  'stopStreamingVoice',
+  'toast',
+  'toast.error',
+  'toast.success',
+  'toggleScribeAside',
+  'trackEvent.error',
+  'trackEvent.voiceResult',
+  'transcript.replace',
+  'transcript.toLowerCase',
+  'transcript.toLowerCase(…).trim',
+  'transcript.trim',
+  'transcriptWords.includes',
+  'transcriptWords.substring',
+  'userTracker.trackActivity',
+  'voiceCmd.action.includes',
+  'voiceCmd.action.startsWith',
+  'window.dispatchEvent',
+];
+
+/**
+ * ⭐ THE RATIFIED ADMISSION PHASE — every explicit return, keyed by its own log
+ * marker or enclosing condition (text, not line numbers, so edits above do not
+ * churn it), with the exact calls its guard branch makes.
  *
- * ⭐ Note three separate echo defences below. MAIA hearing herself has been
- * fought more than once.
+ * Each is an ADMISSION GUARD: the turn is refused before it becomes a member
+ * turn, so there is correctly no cognition and no convergence. The `calls`
+ * column makes that a checkable claim rather than a label, and it pins LOCATION
+ * as well as membership — a call moving between a guard and the corridor is
+ * caught here even though the handler-wide set above is unchanged.
+ *
+ * ⭐ Note three separate echo defences. MAIA hearing herself has been fought
+ * more than once.
  */
 const RATIFIED_EXITS: ReadonlyArray<{ key: string; calls: string[] }> = [
   { key: '⚠️ Empty transcript, returning', calls: ['console.log'] },
   { key: '🔇 [Voice Feedback Prevention] Rejecting transcript - MAIA is speaking', calls: ['console.warn'] },
   { key: '⚠️ Duplicate transcript detected (${timeSinceLastProcess}ms ago), igno', calls: ['console.warn'] },
   { key: "if isStandaloneCommand && !voiceCmd.action?.includes('reflect')", calls: [] },
-  // ⚠️ `maiaSpeak` here is a Class C egress site — locally-authored command
-  // acknowledgement, no model in the path. Recorded in the exit map, unrepaired,
-  // and pinned so it cannot grow.
+  // ⚠️ Class C egress site — see the header. Frozen, not blessed.
   { key: '✅ [Voice Command] Command-only, no content to process', calls: ['console.log', 'maiaSpeak', 'toast.success'] },
   { key: '⚠️ Ignoring empty/punctuation-only transcript:', calls: ['console.log'] },
   { key: '👻 Ghost transcript detected (YouTube/video audio):', calls: ['console.warn'] },
@@ -131,24 +234,31 @@ function handlerFn(source: string): ts.ArrowFunction {
   return (decl!.initializer as ts.CallExpression).arguments[0] as ts.ArrowFunction;
 }
 
-/** The handler's own source text, comments stripped — via AST, never by slicing. */
-function handlerBody(source: string): string {
-  return handlerFn(source)
-    .getText()
-    .replace(/\/\*[\s\S]*?\*\//g, '')
-    .replace(/^\s*\/\/.*$/gm, '');
+/**
+ * A callee's identity, independent of its arguments: `f`, `a.b.c`, `f(…).then`.
+ * Optional chaining and non-null assertions are normalized away — they change
+ * nothing about WHAT is called.
+ */
+function callee(e: ts.Node): string {
+  if (ts.isCallExpression(e)) return `${callee(e.expression)}(…)`;
+  if (ts.isPropertyAccessExpression(e)) return `${callee(e.expression)}.${e.name.text}`;
+  if (ts.isNonNullExpression(e) || ts.isParenthesizedExpression(e)) return callee(e.expression);
+  return e.getText().replace(/\s+/g, '');
 }
 
 /** Every call made anywhere inside a node, callback bodies included (fail closed). */
 function callsWithin(node: ts.Node): string[] {
   const found = new Set<string>();
   const walk = (n: ts.Node): void => {
-    if (ts.isCallExpression(n)) found.add(n.expression.getText().replace(/\s+/g, ''));
+    if (ts.isCallExpression(n)) found.add(callee(n.expression));
     ts.forEachChild(n, walk);
   };
   walk(node);
   return [...found].sort();
 }
+
+/** Every call `handleVoiceTranscript` makes — guarded path and corridor alike. */
+const handlerCalls = (source: string): string[] => callsWithin(handlerFn(source).body);
 
 /**
  * Every `return` belonging to `handleVoiceTranscript` itself, with the calls its
@@ -156,8 +266,8 @@ function callsWithin(node: ts.Node): string[] {
  *
  * ⛔ Nested function bodies are NOT descended into WHEN FINDING RETURNS: a
  * `return` inside a callback returns from the callback, not from the handler.
- * They ARE descended into when collecting a guard's calls — a responder hidden
- * in a callback is still a responder the guard reaches.
+ * They ARE descended into when collecting calls — a responder hidden inside a
+ * callback is still a responder the handler reaches.
  */
 function enumerateExits(source: string): Exit[] {
   const fn = handlerFn(source);
@@ -179,9 +289,9 @@ function enumerateExits(source: string): Exit[] {
     let cond: string | null = null;
     let branch: ts.Node = r;
     let p: ts.Node | undefined = r.parent;
-    let seen = false;
+    let scoped = false;
     while (p && p !== fn.body) {
-      if (!seen && ts.isBlock(p) && p.parent && ts.isIfStatement(p.parent)) { branch = p; seen = true; }
+      if (!scoped && ts.isBlock(p) && p.parent && ts.isIfStatement(p.parent)) { branch = p; scoped = true; }
       if (ts.isIfStatement(p)) { cond = p.expression.getText().replace(/\s+/g, ' ').slice(0, 70); break; }
       p = p.parent;
     }
@@ -190,33 +300,63 @@ function enumerateExits(source: string): Exit[] {
   });
 }
 
+describe('the whole handler is a closed set, not a filtered one', () => {
+  it('⭐ EVERY call the handler makes is one it was certified to make', () => {
+    // ⛔ THE PROPERTY v1-v4 EACH MISSED IN A DIFFERENT ROOM. Not "no call looks
+    // like a responder" — that question can only be answered about responders
+    // someone thought of. Instead: exactly these calls and no others, on the
+    // guarded path and the successful fall-through corridor alike.
+    expect(handlerCalls(ORACLE)).toEqual(RATIFIED_CALLS);
+  });
+
+  it('⭐ handleTextMessage is the sole canonical cognition call, reached once', () => {
+    const fn = handlerFn(ORACLE);
+    const calls: string[] = [];
+    const walk = (n: ts.Node): void => {
+      if (ts.isCallExpression(n)) calls.push(callee(n.expression));
+      ts.forEachChild(n, walk);
+    };
+    walk(fn.body);
+    expect(calls.filter((c) => c === 'handleTextMessage')).toHaveLength(1);
+    expect(calls).not.toContain('sendStreamingMessage');
+  });
+});
+
 describe('every exit from the voice handler is enumerated and classified', () => {
   it('⭐ the exit set is exactly the ratified one', () => {
     expect(enumerateExits(ORACLE).map((e) => e.key)).toEqual(RATIFIED_EXITS.map((e) => e.key));
   });
 
   it('⭐ EVERY guard branch still does exactly what it was certified to do', () => {
-    // ⛔ THE POLARITY INVERSION, and the whole reason v3 was insufficient.
-    // Not "no exit matches a response-producing pattern" — that question can
-    // only be answered about patterns someone thought of. Instead: the guard's
-    // calls are EXACTLY the pinned set. An unknown call fails because it is
-    // unknown, which is the only way a gate can be honest about the unknown.
+    // Pins LOCATION, which the handler-wide set cannot: a call migrating out of
+    // a guard onto the corridor leaves that set identical and is caught here.
     expect(enumerateExits(ORACLE)).toEqual([...RATIFIED_EXITS]);
-  });
-
-  it('⭐ the fall-through reaches canonical cognition exactly once', () => {
-    const code = handlerBody(ORACLE);
-    expect([...code.matchAll(/\bhandleTextMessage\s*\(/g)]).toHaveLength(1);
-    expect(code).not.toMatch(/\bsendStreamingMessage\s*\(/);
   });
 });
 
 describe('PROBES — the gate must catch what nobody listed', () => {
-  it('⛔ an UNKNOWN responder inside an EXISTING guard, adding NO exit, fails', () => {
-    // ⭐ THE PROBE v3 COULD NOT PASS, and the reason this version exists.
-    // No new return. No known name. No known route family. The exit set is
-    // untouched — asserted below, so this test would go green the moment the
-    // classification silently weakened back into a catalogue.
+  it('⛔ an UNKNOWN responder on the SUCCESSFUL PATH, adding no exit, fails', () => {
+    // ⭐ THE PROBE v4 COULD NOT PASS, and the reason this version exists. It
+    // stands on the fall-through corridor: outside every guard, before the
+    // canonical call, adding no return.
+    const probed = ORACLE.replace(
+      'await handleTextMessage(cleanedText);',
+      'await totallyNewResponder();\n      await handleTextMessage(cleanedText);',
+    );
+    expect(probed).not.toBe(ORACLE);
+
+    // Deliberately unchanged — the three properties v4 checked are all blind
+    // here, and asserting that keeps this probe from decaying into a tautology.
+    expect(enumerateExits(probed).map((e) => e.key)).toEqual(RATIFIED_EXITS.map((e) => e.key));
+    expect(enumerateExits(probed)).toEqual([...RATIFIED_EXITS]);
+    expect(handlerCalls(probed).filter((c) => c === 'handleTextMessage')).toHaveLength(1);
+
+    // The corridor pin is not blind.
+    expect(handlerCalls(probed)).not.toEqual(RATIFIED_CALLS);
+    expect(handlerCalls(probed)).toContain('totallyNewResponder');
+  });
+
+  it('⛔ an UNKNOWN responder inside an EXISTING guard, adding no exit, fails', () => {
     const probed = ORACLE.replace(
       "console.log('📝 [Scribe Mode] Recording voice transcript passively:'",
       "await totallyNewResponder();\n        console.log('📝 [Scribe Mode] Recording voice transcript passively:'",
@@ -224,11 +364,22 @@ describe('PROBES — the gate must catch what nobody listed', () => {
     expect(probed).not.toBe(ORACLE);
 
     const exits = enumerateExits(probed);
-    // Enumeration alone is blind here — that is the point being demonstrated.
-    expect(exits.map((e) => e.key)).toEqual(RATIFIED_EXITS.map((e) => e.key));
-    // The allowlist is not.
+    expect(exits.map((e) => e.key)).toEqual(RATIFIED_EXITS.map((e) => e.key)); // enumeration is blind
     expect(exits).not.toEqual([...RATIFIED_EXITS]);
     expect(exits.find((e) => e.key.startsWith('📝'))!.calls).toContain('totallyNewResponder');
+  });
+
+  it('⛔ a call MOVING out of its guard onto the corridor fails', () => {
+    // The handler-wide set is IDENTICAL — same calls, same count. Only location
+    // changed, and location is the difference between MAIA acknowledging a
+    // command and MAIA speaking a local script on every turn.
+    const probed = ORACLE.replace(
+      'await handleTextMessage(cleanedText);',
+      'maiaSpeak("moved");\n      await handleTextMessage(cleanedText);',
+    ).replace('maiaSpeak(confirmation)', 'void 0');
+    expect(probed).not.toBe(ORACLE);
+    expect(handlerCalls(probed)).toEqual(RATIFIED_CALLS);           // blind
+    expect(enumerateExits(probed)).not.toEqual([...RATIFIED_EXITS]); // not blind
   });
 
   it('⛔ a GENUINELY UNKNOWN responder on a NEW exit fails too', () => {
@@ -246,16 +397,16 @@ describe('PROBES — the gate must catch what nobody listed', () => {
       'await sendStreamingMessage(cleanedText); return;\n      await handleTextMessage(cleanedText);',
     );
     expect(enumerateExits(probed)).not.toEqual([...RATIFIED_EXITS]);
-    expect(handlerBody(probed)).toMatch(/\bsendStreamingMessage\s*\(/);
+    expect(handlerCalls(probed)).toContain('sendStreamingMessage');
   });
 
   it('⛔ removing the canonical call fails — voice would reach no cognition', () => {
-    // Scoped to the handler via AST. An earlier draft sliced from the handler
-    // to end-of-file and counted unrelated call sites — a probe that could not
-    // fail, which is the same defect as a catalogue that cannot find.
+    // Scoped to the handler via AST. An earlier draft sliced from the handler to
+    // end-of-file and counted unrelated call sites — a probe that could not fail,
+    // which is the same defect as a catalogue that cannot find.
     const probed = ORACLE.replace('await handleTextMessage(cleanedText);', '');
     expect(probed).not.toBe(ORACLE);
-    expect([...handlerBody(probed).matchAll(/\bhandleTextMessage\s*\(/g)]).toHaveLength(0);
+    expect(handlerCalls(probed)).not.toContain('handleTextMessage');
   });
 });
 
@@ -268,7 +419,17 @@ describe('the streaming implementation is preserved, only unreachable from voice
   });
 
   it('⛔ STRUCTURAL, not defaulted off — no flag can restore the exit', () => {
-    expect(handlerBody(ORACLE)).not.toMatch(/streamingVoiceMode/);
+    // ⛔ AST identifiers, not source text. The removal left a comment block
+    // explaining why the branch is gone, which names `streamingVoiceMode` — a
+    // text match reads that explanation as the defect. Identifiers cannot.
+    const ids = new Set<string>();
+    const walk = (n: ts.Node): void => {
+      if (ts.isIdentifier(n)) ids.add(n.text);
+      ts.forEachChild(n, walk);
+    };
+    walk(handlerFn(ORACLE).body);
+    expect([...ids]).not.toContain('streamingVoiceMode');
+    expect([...ids]).not.toContain('sendStreamingMessage');
   });
 });
 
