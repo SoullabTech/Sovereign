@@ -191,11 +191,11 @@ arising before she has time to understand it. An energetic flush moves through h
 Her thoughts accelerate. She feels the familiar impulse to retreat behind competence and control. Nothing
 catastrophic has happened, and yet her entire system is responding as though something important is at stake.
 
-The person across from her was someone whose respect mattered, which made the moment more dangerous than it
-looked. Maya had spent years becoming the person who could handle things, and somewhere along the way
+The person across from her is someone whose respect matters, which makes the moment more dangerous than it
+looks. Maya had spent years becoming the person who could handle things, and somewhere along the way
 competence had stopped being something she possessed and become the place she hid. To be seen uncertain,
 overwhelmed, or simply not knowing felt less like an ordinary human limitation than the beginning of
-exposure. So before she could feel what was actually happening, she reached for the old protection: become
+exposure. So before she can feel what is actually happening, she reaches for the old protection: become
 composed, become useful, know what to do.
 
 Earlier in her life, that would have been the whole of it. She would have taken the reaction at face value —
@@ -815,15 +815,10 @@ the architecture at a glance. Neither substitutes for the other.
   The elemental architecture is Fire / Water / Earth / Air / Aether; the developmental arc is Fire → Water →
   Earth → Air **within** Aether.
 
-**Open — tense at the seam.** The scene around the author passage is present tense (*"Maya notices," "her
-chest tightens"*); the passage is past (*"was someone whose respect mattered," "she reached for the old
-protection"*). Three ways to close it, in order of how little they touch the words:
-(a) change two verbs — *is someone whose respect matters* / *she reaches for the old protection* — and leave
-everything between them exactly as written, since the backstory clauses (*had spent years*, *felt less
-like*) are already correct inside a present scene;
-(b) leave it, and accept a deliberate step back into summary before returning to the moment;
-(c) put the whole *Meet Maya* section into past tense to match the rest of the chapter.
-Recommendation is (a). It is two words and the passage survives intact.
+**Closed — tense at the seam.** Resolved by option (a): two verbs changed (*is someone whose respect
+matters*, *she reaches for the old protection*). The backstory clauses inside the passage — *had spent
+years*, *had stopped being*, *felt less like* — are correct as written inside a present-tense scene and were
+left alone.
 
 `CHAPTER_10_BODY_DRAFT_v1.md` and `CHAPTER_10_OPENING_PASS_v1.md` are both consistent with this chapter as
 written. The earlier drafts in this folder (`_REBUILD_v1`, `_DEVELOPMENTAL_DRAFT_v2`) are superseded by this
