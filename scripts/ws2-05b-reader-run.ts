@@ -63,9 +63,11 @@ async function main() {
   const { query } = await import('@/lib/db/postgres');
   const { gatherEvidence, sectionTopologyHash } = await import('@/lib/manuscript/structure/evidence');
   const { interpretStructure } = await import('@/lib/manuscript/structure/interpret');
+  const { DEFAULT_READ_SCOPE } = await import('@/lib/manuscript/structure/readScope');
   const { createProposal } = await import('@/lib/manuscript/structure/proposalStore');
   const {
     createMaiaStructureReader, boundedFetcher, buildRequest, StructureReaderError,
+    READER_SYSTEM,
   } = await import('@/lib/manuscript/structure/maiaReader');
   const { canonicalFingerprint } = await import('@/lib/manuscript/structure/canonicalFingerprint');
 
@@ -97,10 +99,23 @@ async function main() {
   }
 
   if (DRY_RUN) {
-    console.log('\n  DRY RUN — the pass-1 request, which is what would be sent:\n');
-    console.log(buildRequest({ pass: 1, evidence, sections, bodies: new Map() }));
-    console.log('\n  Nothing was sent and nothing was stored.\n');
-    process.exit(0);
+    /* THE WHOLE THING, not half of it. The first version printed only the user
+       message, so the standing instructions - where the ceilings and the
+       Materials exclusion actually live - could not be inspected before a book
+       was sent. "Read it before you send your book" has to mean all of it. */
+    const body = buildRequest({ pass: 1, evidence, sections, bodies: new Map() });
+    console.log('\n  DRY RUN — everything that would be sent on pass 1.\n');
+    console.log('══ SYSTEM ' + '═'.repeat(60));
+    console.log(READER_SYSTEM);
+    console.log('\n══ USER ' + '═'.repeat(62));
+    console.log(body);
+    console.log('\n══ ' + '═'.repeat(67));
+    /* Stated rather than left to be inferred from the absence of a heading. */
+    const carriesProse = body.includes('SECTIONS YOU REQUESTED');
+    console.log(`\n  Manuscript bodies in this request: ${carriesProse ? 'SOME — INVESTIGATE'
+      : '0 — headings and mechanical observations only'}`);
+    console.log('  Nothing was sent and nothing was stored.\n');
+    process.exit(carriesProse ? 1 : 0);
   }
 
   /* Taken BEFORE anything runs, including before the proposal is written. */
@@ -132,6 +147,10 @@ async function main() {
   });
   console.log(`  Reader: ${maia.provenance.model} · ${maia.provenance.readerVersion}`
     + ` · prompt ${maia.provenance.promptHash.slice(0, 12)}`);
+  console.log(`  Scope:  at most ${DEFAULT_READ_SCOPE.maxIdsPerRequest} ids per request,`
+    + ` ${DEFAULT_READ_SCOPE.maxSections} sections and`
+    + ` ${DEFAULT_READ_SCOPE.maxChars.toLocaleString('en-US')} chars per reading;`
+    + ' no truncation; Materials out of scope');
 
   console.log('\n  Reading…');
   const started = Date.now();
@@ -155,15 +174,32 @@ async function main() {
   if (result.status === 'refused') {
     console.error(`\n  THE HOST REFUSED THE READING — ${result.refusal}`
       + `${result.detail ? ` (${result.detail})` : ''}`);
-    console.error('  Nothing was stored. The interpreter judged the reading'
-      + ' ill-formed, which is the guard working.\n');
+    if (result.scope) {
+      /* Counts and ids. A scope refusal must not become the channel that leaks
+         what the scope exists to bound. */
+      const q = result.scope;
+      console.error(`  sections: ${q.alreadySuppliedCount} supplied,`
+        + ` ${q.requestedTotalCount} would be, limit ${q.limitSections}`);
+      console.error(`  chars:    ${q.alreadySuppliedChars} supplied,`
+        + ` ${q.prospectiveTotalChars} would be, limit ${q.limitChars}`);
+      console.error(`  refused request: ${q.requestedIds.length} id(s)`);
+      console.error('\n  Nothing was truncated and nothing was stored. If a bounded'
+        + '\n  reading cannot settle this Work, that is a finding about the'
+        + '\n  protocol - not a reason to raise the ceiling.\n');
+    } else {
+      console.error('  Nothing was stored. The interpreter judged the reading'
+        + ' ill-formed, which is the guard working.\n');
+    }
     process.exit(1);
   }
 
   const interp = result.interpretation;
   console.log(`\n  Form: ${interp.form}   (${secs}s)`);
-  console.log(`  Coverage: headings all · bodies ${interp.coverage.bodies.mode}`
-    + ` (${interp.coverage.bodies.sectionIds.length}) · ${interp.coverage.passes} pass(es)`);
+  const cov = interp.coverage.bodies;
+  console.log(`  Coverage: headings all · bodies ${cov.mode}`
+    + ` (${cov.sectionIds.length}/${cov.sectionLimit} sections,`
+    + ` ${cov.totalChars}/${cov.charLimit} chars, truncated ${cov.truncated})`
+    + ` · ${interp.coverage.passes} pass(es)`);
   console.log(`  Unaccounted: ${interp.unaccountedSectionIds.length} of ${sections.length}`);
   console.log(`  Uncertain regions: ${interp.uncertainRegions.length}`);
 

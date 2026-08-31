@@ -27,6 +27,7 @@
  */
 
 import type { EvidenceCoverage, StructureEvidence, HeadedSection } from './evidence';
+import { DEFAULT_READ_SCOPE, type ReadScope, type ReadScopeReport } from './readScope';
 import { observeTransitions } from './evidence';
 
 export type ProposedUncertainty =
@@ -149,6 +150,7 @@ export type StructureReader = (input: ReaderInput) => Promise<ReaderOutput>;
 
 export type InterpretRefusal =
   | 'read-request-exhausted'
+  | 'read-scope-exceeded'
   | 'unknown-section'
   | 'inverted-range'
   | 'overlapping-siblings'
@@ -160,7 +162,9 @@ export type InterpretRefusal =
 export type InterpretResult =
   | { status: 'ok'; interpretation: StructureInterpretation;
       interpretationInputHash: string }
-  | { status: 'refused'; refusal: InterpretRefusal; detail?: string };
+  | { status: 'refused'; refusal: InterpretRefusal; detail?: string;
+      /** Present on `read-scope-exceeded`. Counts only. */
+      scope?: ReadScopeReport };
 
 /* -- the host loop ------------------------------------------------------- */
 
@@ -173,6 +177,8 @@ export interface InterpretOptions {
     bodies: ReadonlyMap<string, string>,
   ) => StructureEvidence['observations'];
   maxPasses?: 1 | 2 | 3;
+  /** Defaults to `DEFAULT_READ_SCOPE`. Never unbounded. */
+  readScope?: ReadScope;
 }
 
 export async function interpretStructure(
@@ -182,8 +188,10 @@ export async function interpretStructure(
   opts: InterpretOptions,
 ): Promise<InterpretResult> {
   const maxPasses = opts.maxPasses ?? 3;
+  const scope = opts.readScope ?? DEFAULT_READ_SCOPE;
   const bodies = new Map<string, string>();
   const known = new Set(sections.map((s) => s.id));
+  let suppliedChars = 0;
   let working = evidence;
   let previousRequest: { sectionIds: string[]; why: string } | undefined;
 
@@ -191,7 +199,7 @@ export async function interpretStructure(
     const out = await reader({ pass, evidence: working, sections, bodies, previousRequest });
 
     if (out.status === 'interpreted') {
-      return complete(out.reading, working, sections, bodies);
+      return complete(out.reading, working, sections, bodies, scope);
     }
 
     /* A request naming sections this draft does not hold is refused rather
@@ -200,13 +208,54 @@ export async function interpretStructure(
     const unknown = out.sectionIds.find((id) => !known.has(id));
     if (unknown) return { status: 'refused', refusal: 'unknown-section', detail: unknown };
 
+    /* THE SCOPE IS ENFORCED BY THE HOST, NOT THE READER. A reader that policed
+       its own ceilings is a reader that can raise them; the thing that hands
+       over the prose is the thing that has to say no. */
+    const report = (prospectiveChars: number, ids: readonly string[]): InterpretResult => ({
+      status: 'refused',
+      refusal: 'read-scope-exceeded',
+      scope: {
+        requestedIds: [...ids],
+        alreadySuppliedCount: bodies.size,
+        requestedTotalCount: new Set([...bodies.keys(), ...ids]).size,
+        alreadySuppliedChars: suppliedChars,
+        prospectiveTotalChars: prospectiveChars,
+        limitSections: scope.maxSections,
+        limitChars: scope.maxChars,
+      },
+    });
+
+    if (out.sectionIds.length > scope.maxIdsPerRequest) {
+      /* Refused whole rather than trimmed to the first four: silently returning
+         fewer sections than were asked for is the same lie as truncating one. */
+      return report(suppliedChars, out.sectionIds);
+    }
+    if (new Set([...bodies.keys(), ...out.sectionIds]).size > scope.maxSections) {
+      return report(suppliedChars, out.sectionIds);
+    }
+
+    /* AFTER the scope checks, deliberately. A request that breaks a ceiling is
+       named as one even when it arrives on the last pass: "the reading did not
+       settle" and "the reading asked for more than it may have" are different
+       facts, and the pass budget running out should not absorb the second.
+       No fabricated answer either way. */
     if (pass === maxPasses) {
-      /* No fabricated answer. The caller is told the reading did not settle. */
       return { status: 'refused', refusal: 'read-request-exhausted', detail: out.why };
     }
 
     const supplied = await opts.fetchBodies(out.sectionIds);
-    for (const [id, text] of supplied) bodies.set(id, text);
+
+    /* Measured BEFORE anything is kept. A body that would cross the character
+       ceiling is not stored, not shortened, and not partially counted - the
+       whole request is refused and the reading stops here. */
+    let prospective = suppliedChars;
+    for (const [id, text] of supplied) if (!bodies.has(id)) prospective += text.length;
+    if (prospective > scope.maxChars) return report(prospective, out.sectionIds);
+
+    for (const [id, text] of supplied) {
+      if (!bodies.has(id)) suppliedChars += text.length;
+      bodies.set(id, text);
+    }
 
     if (opts.observeBodies) {
       /* Deterministic, and therefore EVIDENCE - carrying its own limits - even
@@ -239,6 +288,7 @@ function complete(
   evidence: StructureEvidence,
   sections: readonly HeadedSection[],
   bodies: ReadonlyMap<string, string>,
+  scope: ReadScope,
 ): InterpretResult {
   if (!reading.account.trim()) return { status: 'refused', refusal: 'empty-account' };
   if (reading.form === 'ambiguous' && reading.alternatives.length < 2) {
@@ -314,13 +364,21 @@ function complete(
     .sort((x, y) => x.position - y.position)
     .map((s) => s.id);
 
+  /* `requested-full` says both halves at once: WHOLE sections, and only ones
+     MAIA named. `selected` said neither, and a member reading it later could not
+     tell a targeted read from a sampled one. */
+  let totalChars = 0;
+  for (const text of bodies.values()) totalChars += text.length;
   const coverage: EvidenceCoverage = {
     headings: 'all',
-    bodies: bodies.size === 0
-      ? { mode: 'none', sectionIds: [] }
-      : bodies.size === sections.length
-        ? { mode: 'all', sectionIds: [...bodies.keys()] }
-        : { mode: 'selected', sectionIds: [...bodies.keys()] },
+    bodies: {
+      mode: bodies.size === 0 ? 'none' : 'requested-full',
+      sectionIds: [...bodies.keys()],
+      totalChars,
+      truncated: false,
+      sectionLimit: scope.maxSections,
+      charLimit: scope.maxChars,
+    },
     passes: bodies.size === 0 ? 1 : bodies.size === sections.length ? 3 : 2,
   };
 

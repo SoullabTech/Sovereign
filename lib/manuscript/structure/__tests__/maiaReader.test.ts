@@ -22,6 +22,7 @@ import {
 } from '../maiaReader';
 import { gatherEvidence } from '../evidence';
 import { interpretStructure, type ReaderInput } from '../interpret';
+import { DEFAULT_READ_SCOPE } from '../readScope';
 import type { HeadedSection } from '../evidence';
 
 const sections: HeadedSection[] = [
@@ -425,5 +426,183 @@ describe('a reading reaches the host loop the same way a real one will', () => {
       { fetchBodies: async () => new Map() });
     expect(r.status).toBe('refused');
     if (r.status === 'refused') expect(r.refusal).toBe('inverted-range');
+  });
+});
+
+
+/* ── the body-scope ruling, falsified ────────────────────────────────────── */
+
+describe('how much of the Work may leave the machine', () => {
+  const many: HeadedSection[] = Array.from({ length: 20 }, (_, i) => ({
+    id: `s${i}`, position: i, heading: `H${i}`,
+  }));
+
+  /** A reader that keeps asking, so the ceilings are what stop it. */
+  const asker = (batches: string[][]) => {
+    let i = 0;
+    return async (): Promise<Awaited<ReturnType<typeof parseReaderOutput>>> => {
+      const ids = batches[Math.min(i++, batches.length - 1)];
+      return { status: 'read-request', sectionIds: ids, why: 'settling a boundary' };
+    };
+  };
+  const run = (batches: string[][], body: (id: string) => string, maxPasses: 1 | 2 | 3 = 3) =>
+    interpretStructure(gatherEvidence('m', many), many, asker(batches), {
+      fetchBodies: async (ids) => new Map(ids.map((id) => [id, body(id)])),
+      maxPasses,
+    });
+
+  it('is ruled at 4 per request, 8 sections, 60,000 characters', () => {
+    expect(DEFAULT_READ_SCOPE).toEqual({
+      maxIdsPerRequest: 4, maxSections: 8, maxChars: 60_000 });
+  });
+
+  /* Refused WHOLE, not trimmed to the first four: silently returning fewer
+     sections than were asked for is the same lie as truncating one. */
+  it('refuses a request naming more ids than the per-request ceiling', async () => {
+    const r = await run([['s0', 's1', 's2', 's3', 's4']], () => 'x');
+    expect(r.status).toBe('refused');
+    if (r.status !== 'refused') return;
+    expect(r.refusal).toBe('read-scope-exceeded');
+    expect(r.scope).toMatchObject({
+      requestedIds: ['s0', 's1', 's2', 's3', 's4'],
+      alreadySuppliedCount: 0,
+      limitSections: 8,
+      limitChars: 60_000,
+    });
+  });
+
+  /**
+   * The total-sections ceiling, falsified with a scope small enough to reach it.
+   *
+   * WHY A CUSTOM SCOPE. Under the ruled policy the ceiling is guarded TWICE and
+   * the other guard binds first: three passes allow at most two read requests,
+   * four ids each, so eight is the most that can ever be supplied even with the
+   * section ceiling removed. That is a pleasant accident of two independent
+   * limits agreeing, not a reason to leave the ceiling untested - the pass
+   * budget is a property of the loop and could change without anyone thinking
+   * about prose. So the mechanism is proven here, and the arithmetic is stated
+   * in the test below.
+   */
+  it('refuses the request that would cross the total-sections ceiling', async () => {
+    const r = await interpretStructure(gatherEvidence('m', many), many,
+      asker([['s0', 's1', 's2'], ['s3', 's4']]), {
+        fetchBodies: async (ids) => new Map(ids.map((id) => [id, 'x'])),
+        readScope: { maxIdsPerRequest: 4, maxSections: 4, maxChars: 60_000 },
+      });
+    expect(r.status).toBe('refused');
+    if (r.status !== 'refused') return;
+    expect(r.refusal).toBe('read-scope-exceeded');
+    /* Three were already in hand and legitimate; the request taking it to five
+       is what is refused - whole, not trimmed to the one that would fit. */
+    expect(r.scope).toMatchObject({
+      alreadySuppliedCount: 3, requestedTotalCount: 5, requestedIds: ['s3', 's4'],
+      limitSections: 4 });
+  });
+
+  /**
+   * And under the RULED policy, the ninth section is refused by the ceiling.
+   *
+   * The scope checks run before the pass budget, deliberately: "the reading did
+   * not settle" and "the reading asked for more than it may have" are different
+   * facts, and the pass budget running out must not absorb the second. Two
+   * guards do bind at the same number here - three passes allow two requests of
+   * four - but the one that speaks is the one about the member's prose.
+   */
+  it('refuses the ninth section under the ruled policy, by the ceiling', async () => {
+    expect(DEFAULT_READ_SCOPE.maxIdsPerRequest * 2).toBe(DEFAULT_READ_SCOPE.maxSections);
+    const r = await run([['s0', 's1', 's2', 's3'], ['s4', 's5', 's6', 's7'], ['s8']],
+      () => 'x');
+    expect(r.status).toBe('refused');
+    if (r.status !== 'refused') return;
+    expect(r.refusal).toBe('read-scope-exceeded');
+    expect(r.scope).toMatchObject({
+      alreadySuppliedCount: 8, requestedTotalCount: 9, requestedIds: ['s8'] });
+  });
+
+  it('refuses the request that would cross the character ceiling', async () => {
+    const big = 'x'.repeat(20_000);
+    const r = await run([['s0', 's1', 's2'], ['s3']], () => big);
+    expect(r.status).toBe('refused');
+    if (r.status !== 'refused') return;
+    expect(r.refusal).toBe('read-scope-exceeded');
+    expect(r.scope).toMatchObject({
+      alreadySuppliedChars: 60_000, prospectiveTotalChars: 80_000, limitChars: 60_000 });
+  });
+
+  /* NO TRUNCATION. The prose that would have crossed the ceiling is not stored,
+     not shortened, and not partially counted - the whole request is refused. */
+  it('never stores a shortened body to fit', async () => {
+    const big = 'x'.repeat(70_000);
+    const r = await run([['s0']], () => big);
+    expect(r.status).toBe('refused');
+    if (r.status !== 'refused') return;
+    expect(r.scope).toMatchObject({
+      alreadySuppliedCount: 0, alreadySuppliedChars: 0, prospectiveTotalChars: 70_000 });
+  });
+
+  /* The diagnostic travels into logs. It must not become the leak. */
+  it('reports counts and ids only, never a word of the Work', async () => {
+    const r = await run([['s0', 's1', 's2', 's3', 's4']], () => 'THE-MEMBERS-PROSE');
+    if (r.status !== 'refused') throw new Error('expected a refusal');
+    expect(JSON.stringify(r.scope)).not.toContain('THE-MEMBERS-PROSE');
+    expect(Object.keys(r.scope ?? {}).sort()).toEqual([
+      'alreadySuppliedChars', 'alreadySuppliedCount', 'limitChars', 'limitSections',
+      'prospectiveTotalChars', 'requestedIds', 'requestedTotalCount',
+    ]);
+  });
+
+  it('permits a reading that stays inside every ceiling', async () => {
+    let turn = 0;
+    const r = await interpretStructure(gatherEvidence('m', many), many, async () => {
+      if (turn++ === 0) {
+        return { status: 'read-request', sectionIds: ['s0', 's1'], why: 'the turn' };
+      }
+      return parseReaderOutput('propose_structure', {
+        form: 'flat', account: 'A sequence.',
+        units: [{ title: null, kind: null, fromSectionId: 's0', toSectionId: 's19' }],
+      });
+    }, { fetchBodies: async (ids) => new Map(ids.map((id) => [id, 'y'.repeat(100)])) });
+
+    if (r.status !== 'ok') throw new Error(`refused: ${r.refusal}`);
+    /* Coverage says WHAT was read and UNDER WHAT POLICY - "two sections" means
+       something different under a ceiling of eight than under no ceiling. */
+    expect(r.interpretation.coverage.bodies).toEqual({
+      mode: 'requested-full',
+      sectionIds: ['s0', 's1'],
+      totalChars: 200,
+      truncated: false,
+      sectionLimit: 8,
+      charLimit: 60_000,
+    });
+  });
+
+  it('records a headings-only reading as none, with the ceilings still stated', async () => {
+    const r = await interpretStructure(gatherEvidence('m', many), many,
+      async () => parseReaderOutput('propose_structure',
+        { form: 'none', account: 'Nothing larger is evident.' }),
+      { fetchBodies: async () => new Map() });
+    if (r.status !== 'ok') throw new Error('expected ok');
+    expect(r.interpretation.coverage.bodies).toEqual({
+      mode: 'none', sectionIds: [], totalChars: 0, truncated: false,
+      sectionLimit: 8, charLimit: 60_000,
+    });
+  });
+});
+
+describe('the prompt states the same ceilings the host enforces', () => {
+  it('interpolates them from the one constant', () => {
+    expect(READER_SYSTEM).toContain('at most 4 section ids');
+    expect(READER_SYSTEM).toContain('at most 8 distinct sections');
+    expect(READER_SYSTEM).toContain('at most 60,000 characters');
+  });
+
+  it('tells her Materials are not hers to read', () => {
+    expect(READER_SYSTEM).toContain('no access to notes, uploads, source material');
+  });
+
+  it('caps the request schema at the same number', () => {
+    const t = readerTools()[1].input_schema as
+      { properties: { sectionIds: { maxItems?: number } } };
+    expect(t.properties.sectionIds.maxItems).toBe(DEFAULT_READ_SCOPE.maxIdsPerRequest);
   });
 });

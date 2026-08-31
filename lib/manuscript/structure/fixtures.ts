@@ -14,6 +14,7 @@
 
 import { assignUnitIds, type ProposedUnitDraft, type StructureInterpretation } from './interpret';
 import type { EvidenceCoverage } from './evidence';
+import { DEFAULT_READ_SCOPE } from './readScope';
 
 export interface FixtureSection { id: string; position: number; heading: string | null }
 
@@ -33,11 +34,23 @@ export function fixtureSections(n = 12): FixtureSection[] {
 const coverage = (
   s: readonly FixtureSection[],
   mode: EvidenceCoverage['bodies']['mode'] = 'none',
-): EvidenceCoverage => ({
-  headings: 'all',
-  bodies: { mode, sectionIds: mode === 'none' ? [] : [s[3].id, s[4].id] },
-  passes: mode === 'none' ? 1 : 2,
-});
+): EvidenceCoverage => {
+  const sectionIds = mode === 'none' ? [] : [s[3].id, s[4].id];
+  return {
+    headings: 'all',
+    bodies: {
+      mode, sectionIds,
+      /* A plausible size for two sections. Fixtures carry the ceilings too, so
+         a surface drawing coverage is drawing the same shape it will get from a
+         real reading. */
+      totalChars: sectionIds.length * 2_400,
+      truncated: false,
+      sectionLimit: DEFAULT_READ_SCOPE.maxSections,
+      charLimit: DEFAULT_READ_SCOPE.maxChars,
+    },
+    passes: mode === 'none' ? 1 : 2,
+  };
+};
 
 /**
  * Built against the sections actually passed in, so a fixture reading can be
@@ -84,7 +97,7 @@ export function partialReading(s = fixtureSections()): StructureInterpretation {
   return {
     form: 'partial',
     account: 'The opening organises clearly. The later material does not yet.',
-    coverage: coverage(s, 'selected'),
+    coverage: coverage(s, 'requested-full'),
     unaccountedSectionIds: ids(s, 4, 11),
     uncertainRegions: [{
       fromSectionId: s[8].id, toSectionId: s[11].id,
@@ -135,7 +148,7 @@ export function ambiguousReading(s = fixtureSections()): StructureInterpretation
   return {
     form: 'ambiguous',
     account: 'Two readings remain plausible, and the evidence does not separate them.',
-    coverage: coverage(s, 'selected'),
+    coverage: coverage(s, 'requested-full'),
     /* Nothing is accounted for: no alternative has been taken up. */
     unaccountedSectionIds: s.map((x) => x.id),
     uncertainRegions: [],
@@ -161,7 +174,7 @@ export function noStructureReading(s = fixtureSections()): StructureInterpretati
     form: 'none',
     account: 'No stable larger structure is evident yet. The sections read as '
       + 'a continuous body of work without divisions I can see.',
-    coverage: coverage(s, 'selected'),
+    coverage: coverage(s, 'requested-full'),
     unaccountedSectionIds: s.map((x) => x.id),
     uncertainRegions: [],
   };

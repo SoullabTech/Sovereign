@@ -55,6 +55,7 @@ import type {
 } from './interpret';
 import type { EvidenceObservation, HeadedSection, StructureEvidence } from './evidence';
 import type { ReaderIdentity } from './readerProvenance';
+import { DEFAULT_READ_SCOPE } from './readScope';
 
 /** The model could not be understood. Never converted into a reading. */
 export class StructureReaderError extends Error {
@@ -118,7 +119,16 @@ const DEFAULT_MAX_TOKENS = 32_000;
  * the member would meet a confident invention rather than a reading. `none` is
  * named as a complete finding twice, and nothing here rewards a tree.
  */
-export const READER_SYSTEM = `You are reading a member's Work in order to PERCEIVE AND PROPOSE its organizing grammar. You are not detecting chapters. You are asking what kind of thing this Work is and where, if anywhere, it divides.
+const SCOPED = (t: string): string => t
+  .replace('SCOPE_IDS', String(DEFAULT_READ_SCOPE.maxIdsPerRequest))
+  .replace('SCOPE_SECTIONS', String(DEFAULT_READ_SCOPE.maxSections))
+  .replace('SCOPE_CHARS', DEFAULT_READ_SCOPE.maxChars.toLocaleString('en-US'));
+
+/* The ceilings are interpolated from the SAME constant the host enforces, so a
+   prompt promising one policy while the host enforces another is not
+   expressible. It also means the prompt hash moves when the scope moves, which
+   is correct: a reader operating under different limits is a different reader. */
+export const READER_SYSTEM = SCOPED(`You are reading a member's Work in order to PERCEIVE AND PROPOSE its organizing grammar. You are not detecting chapters. You are asking what kind of thing this Work is and where, if anywhere, it divides.
 
 WHAT YOU ARE LOOKING AT
 A Work is an ordered sequence of sections. A section is a writing unit, not a chapter: a book's chapter may span many sections, and some Works have no larger structure at all.
@@ -148,8 +158,18 @@ Use uncertainRegions for stretches you cannot account for and can say something 
 WHAT YOU MAY ASK FOR
 On the first pass you have headings only. If headings alone cannot settle the reading, you may request the full text of specific sections and say why. Ask for the fewest sections that would actually settle it - this is a member's private writing, and every section you request is one more piece of their Work leaving their machine. Do not request sections out of general curiosity, and do not request the whole book.
 
+The limits are hard, and a request that crosses one is refused whole rather than trimmed:
+- at most SCOPE_IDS section ids in a single request
+- at most SCOPE_SECTIONS distinct sections across the entire reading
+- at most SCOPE_CHARS characters of the member's prose across the entire reading
+- whole sections only; nothing is ever shortened for you
+
+You have no access to notes, uploads, source material, or anything else in the member's Studio. You are reading the Work as written, not reconstructing what they meant from surrounding material.
+
+If those limits cannot settle the reading, say so in your account and give the honest partial answer - "partial", "ambiguous" or "none" as fits. That a bounded reading could not settle this Work is a real finding and worth stating. Do not spend requests approaching a limit you already expect to be insufficient.
+
 WHAT YOU ARE NOT
-You are not deciding this Work's structure. The member reads your proposal, changes anything they like, and only they can make it real. Your rationale is evidence for their judgement, not an instruction to it. Do not write as though the reading is settled, and do not address the member.`;
+You are not deciding this Work's structure. The member reads your proposal, changes anything they like, and only they can make it real. Your rationale is evidence for their judgement, not an instruction to it. Do not write as though the reading is settled, and do not address the member.`);
 
 /* ── the closed shape MAIA may answer in ──────────────────────────────────── */
 
@@ -249,7 +269,10 @@ export function readerTools(): Anthropic.Tool[] {
       input_schema: {
         type: 'object',
         properties: {
-          sectionIds: { type: 'array', items: { type: 'string' } },
+          sectionIds: { type: 'array', items: { type: 'string' },
+            maxItems: DEFAULT_READ_SCOPE.maxIdsPerRequest,
+            description: `At most ${DEFAULT_READ_SCOPE.maxIdsPerRequest}. A longer `
+              + 'request is refused whole, not trimmed to the first few.' },
           why: { type: 'string', description: 'What you expect reading these to settle.' },
         },
         required: ['sectionIds', 'why'],

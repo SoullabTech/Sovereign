@@ -206,11 +206,17 @@ const entryKey = (e: OutlineEntry) => e.kind === 'section' ? `s:${e.id}` : `u:${
 /** What was actually read, shown rather than buried in a record. */
 function Coverage({ view }: { view: ProposalView }) {
   const b = view.coverage.bodies;
+  const n = b.sectionIds.length;
+  /* "in full" is load-bearing and true by construction: nothing is ever
+     truncated, so a section she read is a section she read to the end. The
+     ceiling is named because "3 sections" means one thing under a limit of 8 and
+     something else under none. */
   const said = b.mode === 'none'
-    ? 'read the headings of this Work'
+    ? 'read the headings of this Work, and none of its text'
     : b.mode === 'all'
       ? 'read the whole Work'
-      : `read the headings, and ${b.sectionIds.length} section${b.sectionIds.length === 1 ? '' : 's'} in full`;
+      : `read the headings, and ${n} section${n === 1 ? '' : 's'} in full`
+        + ` — ${n} of at most ${b.sectionLimit} she may ask for`;
   return (
     <StudioText role="metadata" tone="quiet" data-coverage={b.mode}
       style={{ display: 'block', marginBottom: SPACE.base }}>
