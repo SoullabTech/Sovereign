@@ -1,8 +1,9 @@
 # MAIA-WHOLE-INTELLIGENCE-CONVERGENCE-01 — Program Charter
 
-**State:** `CENSUSING`
+**State:** `PACKETIZING` — Phase 7 ratified 2026-08-31
 **Opened:** 2026-08-31
-**Posture:** READ ONLY. No repair is authorized by this program until Phase 7 ratification.
+**Posture:** READ ONLY. Phase 7 is ratified; Phase 8 is packetized but **no packet is authorized to execute yet**.
+**Ratified canon:** `docs/canon/MAIA_ONE_MIND_MANY_EMBODIMENTS.md`
 **Lane:** `claude/maia-intelligence-census-6aav7v`
 
 ---
@@ -118,7 +119,9 @@ BOUND ──▶ CENSUSING ──▶ MAPPING_AUTHORITY ──▶ DEFINING_CANONIC
          never silently redo settled architecture)
 ```
 
-**Current state: `CENSUSING` → Phases 1–6 drafted; awaiting §6 runtime probes and human ratification.**
+**Current state: `PACKETIZING`.** Phases 1–6 delivered; Phase 7 ratified by founder ruling 2026-08-31; Phase 8 packetized as `MAIA_WIC_01_PHASE_8_CONDUCTOR_PACKET_PLAN.md`.
+
+**Still open:** the census §6 runtime probes. They gate packet **P1** (truth instrument), which in turn gates every packet after it — a repair verified by a broken instrument is not verified.
 
 ---
 
@@ -133,10 +136,20 @@ BOUND ──▶ CENSUSING ──▶ MAPPING_AUTHORITY ──▶ DEFINING_CANONIC
 | 4 | TURN-COMPOSITION MAP | census §3 | **DRAFT** |
 | 5 | EMBODIMENT MATRIX | authority/embodiment doc §5 | **DRAFT** |
 | 6 | DRIFT CLASSIFICATION | same, §6 | **DRAFT** |
-| 7 | TARGET ARCHITECTURE | — | **BLOCKED — human ratification gate** |
-| 8 | INTEGRATION WAVES | — | NOT STARTED |
-| 9 | CROSS-MEDIUM WITNESS | — | NOT STARTED |
+| 7 | ARCHITECTURE RATIFICATION | `docs/canon/MAIA_ONE_MIND_MANY_EMBODIMENTS.md` | **RATIFIED** 2026-08-31 |
+| 8 | CONDUCTOR / CANONICAL TURN ARCHITECTURE | `docs/programs/MAIA_WIC_01_PHASE_8_CONDUCTOR_PACKET_PLAN.md` | **PACKETIZED** — P0–P6 defined, none authorized |
+| 9 | CROSS-MEDIUM WITNESS | — | NOT STARTED — gated on Phase 8 exit |
 | 10 | CONVERGENCE GATES | — | NOT STARTED |
+
+### Phase 7 ruling (summary — full text in canon)
+
+> MAIA has one canonical cognition and composition authority. Surfaces may provide explicit embodiment, task, persona, latency and permission contracts around that cognition. **Any divergence in memory eligibility, relational intelligence, authority hierarchy, consent, provenance, or composition requires an explicit architectural ruling; it may not emerge accidentally from endpoint-specific prompt assembly.**
+
+Three corollaries bind the program:
+
+1. **The tier inversion is architecturally incorrect** — tier is accidentally functioning as identity. D7/D8 are re-scoped as symptoms of D6 and **may not be repaired by copying the five missing addenda into another array.**
+2. **Some divergence is sovereignty.** Sanctuary is divergence. Convergence applies to accretion, never to consent, task, or embodiment.
+3. **`USED` is architecture, not telemetry.** A memory can be used without being spoken; withholding is participation and is recorded as such.
 
 ---
 
