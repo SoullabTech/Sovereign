@@ -156,6 +156,10 @@ import { buildPracticeFieldContext, formatPracticeFieldContextForPrompt } from '
 import { assessAINResponseShape } from '@/lib/ai/quality/ainResponseShape';
 import { classifyAssistantTurn } from '@/lib/ai/quality/assistantTurnType';
 
+// ─── Direct Recall ─────────────────────────────────────────────────────────────
+import { isDirectRecallEnabled, locateMemoryObjects, materializeMemoryObject } from '@/lib/memory/directRecall';
+import { detectDirectRecallIntent, detectConfirmationIntent, pendingRecalls } from '@/lib/memory/directRecall/intentDetector';
+
 // Import for build verification compatibility (not used in session-based implementation)
 // @ts-ignore
 import type { AetherConsciousnessInterface } from '@/lib/consciousness/aether/AetherConsciousnessInterface';
@@ -501,6 +505,99 @@ export async function POST(req: NextRequest) {
     // 🔍 MEMORY DEBUG: Log identity state for debugging memory issues
     console.log(`🧠 [Route/MemoryDebug] userId="${memberRef(userId)}" isRecognized=${isRecognizedUser} effectiveUserId="${memberRef(effectiveUserId)}" sanctuary=${isSanctuary} allowCross=${allowCrossSessionMemory}`);
 
+
+    // ─── DIRECT RECALL GATE ────────────────────────────────────────────────────
+    // Short-circuits the full memory bundle + LLM call when the member explicitly
+    // asks for something they saved. Two-turn flow:
+    //   Turn 1: detect recall phrasing → locate → offer title/excerpt → store pending ref
+    //   Turn 2: detect confirmation → materialize → return full content
+    //
+    // Invariants: fail-closed (any error falls through), never runs in Sanctuary,
+    // only for recognized users, gated by DIRECT_RECALL_ENABLED=1.
+    // ──────────────────────────────────────────────────────────────────────────
+    if (isDirectRecallEnabled() && isRecognizedUser && !isSanctuary && userId) {
+      try {
+        const hasPending = pendingRecalls.has(userId);
+
+        // Turn 2: confirmation of a previously offered recall
+        if (hasPending && detectConfirmationIntent(message)) {
+          const ref = pendingRecalls.get(userId)!;
+          pendingRecalls.delete(userId);
+          const materialized = await materializeMemoryObject(userId, ref, { isSanctuary });
+          if (materialized) {
+            const dateStr = materialized.createdAt.toLocaleDateString('en-US', {
+              month: 'long', day: 'numeric', year: 'numeric',
+            });
+            const titlePart = materialized.title ? `"${materialized.title}"` : 'your saved note';
+            const recallMsg =
+              `Here it is — ${titlePart} (${materialized.provenance.sourceKind}, ${dateStr}):\n\n${materialized.body}`;
+            console.log(`[MAIA/directRecall] materialized { sourceKind: "${materialized.provenance.sourceKind}", sourceId: "${ref.sourceId}" }`);
+            return jsonWithCors(req, {
+              message: recallMsg,
+              route: {
+                endpoint: '/api/sovereign/app/maia',
+                type: 'Sovereign Consciousness Interface',
+                operational: true,
+                mode: 'direct-recall-materialized',
+              },
+              session: { id: session.id, turns: session.turns },
+              metadata: {
+                recallState: 'materialized',
+                sourceKind: materialized.provenance.sourceKind,
+                sourceId: ref.sourceId,
+              },
+            }, 200);
+          }
+          // Materialization returned null (ownership check failed / row gone) —
+          // fall through so the LLM can respond gracefully.
+        }
+
+        // Clear stale pending when the member's next turn is not a confirmation
+        if (hasPending && !detectConfirmationIntent(message)) {
+          pendingRecalls.delete(userId);
+        }
+
+        // Turn 1: detect explicit recall phrasing → locate candidates → offer top result
+        const { isRecall, query } = detectDirectRecallIntent(message);
+        if (isRecall) {
+          const refs = await locateMemoryObjects(userId, query, { isSanctuary });
+          if (refs.length > 0) {
+            const top = refs[0];
+            pendingRecalls.set(userId, top);
+            const dateStr = top.createdAt.toLocaleDateString('en-US', {
+              month: 'long', day: 'numeric', year: 'numeric',
+            });
+            const titlePart = top.title ? `"${top.title}"` : 'something saved';
+            const excerptPart = top.excerpt ? `\n\n> ${top.excerpt}` : '';
+            const offerMsg =
+              `I found ${titlePart} from ${top.provenance.sourceKind} (${dateStr}).${excerptPart}\n\nWould you like the full text?`;
+            console.log(`[MAIA/directRecall] offered { sourceKind: "${top.provenance.sourceKind}", sourceId: "${top.sourceId}", confidence: ${top.confidence.toFixed(2)}, totalFound: ${refs.length} }`);
+            return jsonWithCors(req, {
+              message: offerMsg,
+              route: {
+                endpoint: '/api/sovereign/app/maia',
+                type: 'Sovereign Consciousness Interface',
+                operational: true,
+                mode: 'direct-recall-offered',
+              },
+              session: { id: session.id, turns: session.turns },
+              metadata: {
+                recallState: 'offered',
+                sourceKind: top.provenance.sourceKind,
+                confidence: top.confidence,
+                totalFound: refs.length,
+              },
+            }, 200);
+          }
+          // No results found — fall through so LLM can respond with context
+          console.log(`[MAIA/directRecall] no results for query="${query.slice(0, 80)}"`);
+        }
+      } catch (recallErr) {
+        // Fail-closed: any error falls through to normal conversational LLM path
+        console.warn('[MAIA/directRecall] guard error (non-blocking):', recallErr instanceof Error ? recallErr.message : String(recallErr));
+      }
+    }
+    // ─── END DIRECT RECALL GATE ────────────────────────────────────────────────
 
     // Resolve memory mode (server-side permission check)
     // 🔧 FIX: Default to 'continuity' for recognized users instead of respecting client's request
