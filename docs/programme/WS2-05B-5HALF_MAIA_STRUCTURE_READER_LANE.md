@@ -13,7 +13,7 @@
 | **Threshold** | 5½ — *MAIA becomes a real reader* |
 | **Objective** | Give `interpretStructure` **one** real `StructureReader` implementation, resolve three open rulings, and witness a valid frozen interpretation produced from real Work evidence. Nothing else. |
 | **Binding rulings** | master brief **§A1.3** authority chain · **§A1.5** structure ontology · **§A3.1** programme entry · **§A4.9** structural perspective · **§A4.10** writer-controlled meaning · **§28** a check must be shown capable of failing |
-| **Entry state** | **BLOCKED** — two gates, §2 |
+| **Entry state** | **SCOPED AND READY · BUILD BLOCKED ON GATE B.** Gate A satisfied by `WS2-05B-CUSTODY-01` Custody A (founder-authorized 2026-08-31, canonical-only, no deploy). Gate B — the founder release — is still CLOSED |
 | **Stop condition** | first valid frozen interpretation witnessed on real Work evidence. **Then stop.** |
 
 ---
@@ -123,6 +123,21 @@ The negative test is part of the lane, not a nicety: **it must be demonstrable t
 cannot write structure** — not merely that it happens not to.
 
 ---
+
+## 5.0 Inherited constraints — sovereignty protections that already exist
+
+Founder ruling 2026-08-31: the three findings from reading the located code are **constraints on
+5½, not work to redo.** The lane inherits them intact and may not weaken any of them.
+
+| Constraint | Already established in `interpret.ts` | Obligation on 5½ |
+|---|---|---|
+| **Body access is request-driven and bounded** | reader starts with no bodies; must ask via `read-request` + `why`; ≤ 3 passes; `unknown-section` refused | implement a reader that **asks**; ⛔ never widen the protocol to take bodies it did not request |
+| **Input provenance exists** | `interpretationInputHash` returned on `{ status: 'ok' }` | add **reader identity** (model · prompt · version) alongside it; ⛔ do not replace or recompute the hash |
+| **`form: 'none'` cannot carry a tree** | no `units` field on the `'none'` variant of either `ReaderReading` or `StructureInterpretation`; `complete()` reads units only off variants that declare them | ⛔ never add a `units` field to `'none'`, and never route a `'none'` reading through a variant that has one |
+| **`assertNoProse`** | 5 cases; a reading may describe the Work, never carry its prose | ⛔ the reader's output must stay describable-only; a passing `assertNoProse` is part of the §7 witness |
+
+⛔ **A change to any row above is not a 5½ implementation detail.** It is a sovereignty change and
+requires its own ruling.
 
 ## 5. The three rulings owed
 

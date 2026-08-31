@@ -1,8 +1,53 @@
 # WS2-05B-CUSTODY-01 — Canonical Custody of 05A + 05B-5a/5b/5c · Unit Definition
 
-> **Scope established. Not executed.** In the WS-01 pattern: *"Do not implement that repair until
-> its scope is established."* This unit takes custody of completed work. ⛔ **It does not redesign
-> it, and it does not build 5½ inside itself.**
+> **Custody A AUTHORIZED. Custody B HOLD.** Founder ruling, 2026-08-31. This unit takes custody of
+> completed work. ⛔ **It does not redesign it, and it does not build 5½ inside itself.**
+
+## Founder ruling — 2026-08-31
+
+> *"Custody A is lawful under the freeze. Custody B is not. The freeze closes BUILD MODE. It does
+> not require canonical to remain ignorant of already-completed, behaviorally inert substrate."*
+
+Custody A is not new product work. It is custody of already-built 05-series substrate whose
+provenance is known, whose closure is established, and whose landing changes zero existing files —
+consistent with the programme rule that **canonical custody is what makes something a real
+programme entry** (§A3.1).
+
+```text
+CUSTODY A
+  canonical landing        AUTHORIZED
+  29 additions             REQUIRED
+  existing modifications   0
+  Canvas files             0
+  redesign                 0
+  acceptance-state change  0
+
+DEPLOY                     NOT AUTHORIZED
+MIGRATION APPLICATION      NOT AUTHORIZED
+5½ IMPLEMENTATION          NOT AUTHORIZED
+CUSTODY B                  BLOCKED BY GATE B
+```
+
+### The inertness correction — recorded, because the first rationale was too loose
+
+⛔ **"29 additions nothing imports" is not by itself sufficient to say nothing is reachable.**
+The set includes three `app/api/**` routes and three migrations. Those become **potentially live
+on deploy**, with or without an importer. Inertness is therefore established by **deployment not
+occurring**, never by importer count.
+
+**Precondition, checked before landing:** *if merging to canonical automatically deploys or
+automatically applies migrations, Custody A must HOLD before merge.*
+
+**Checked 2026-08-31 — it does not:**
+
+| Evidence | Finding |
+|---|---|
+| `.github/workflows/deploy.yml` | the only workflow carrying migration/ssh steps; triggers on `push: [main, production]`, `tags: v*`, `pull_request: [main]`, `workflow_dispatch` — **not** `clean-main-no-secrets`. Per `canonical-pr-quality.yml`'s own header, `main` has not moved since 2026-04-10 |
+| workflows triggered by a canonical push | `sovereignty-gate` · `jarvis-epistemic-guard` · `canonical-pr-quality` — quality/admission gates, **no deploy, no migrate** |
+| production deploy path | `scripts/deploy-production.sh` / `pre-deploy-gate.sh` on minisforum, behind the deploy-lane `flock` and an explicit SHA argument — **a manual, separately governed act** |
+
+**Therefore canonical custody may proceed, and deployment remains a separate governed act.**
+The migrations land as **files**; they are applied only by a future authorized deploy.
 
 | Field | Value |
 |---|---|
@@ -151,7 +196,25 @@ still governs is whether 5½ may be **built**, and whether any of it may become 
 
 ## 4. Acceptance
 
-Six criteria. Each is evidence, not narration.
+### The decisive statement
+
+> **The resulting canonical diff is exactly the identified 05A/05B substrate closure: 29 added
+> files, zero modified files, zero deleted files, zero Canvas files, and no unrelated programme
+> state change.**
+
+### Source provenance — preserved explicitly
+
+```text
+source:
+origin/claude/writers-studio-ws2-03b-qf49hj
+845adb884...
+```
+
+⛔ **The files are not recreated from memory.** The exact artifacts are transferred
+(`git checkout <source-ref> -- <paths>`) and equivalence is proved blob-by-blob against the source
+tree.
+
+### Six criteria. Each is evidence, not narration.
 
 | # | Criterion | Proof |
 |---|---|---|
@@ -199,3 +262,63 @@ WS2-05B-5HALF-…-01           the MAIA Structure Reader
 ```
 
 ⛔ This unit is not the founder act. It makes the founder act possible to take on evidence.
+
+---
+
+## 7. Custody A — execution record · 2026-08-31
+
+Executed on `claude/writers-studio-maia-roadmap-vnby0k`. ⛔ The merge to canonical is a separate
+act, not taken here.
+
+### Precondition cleared before transfer
+
+```text
+merging to canonical auto-deploys?          NO   deploy.yml triggers main/production/tags only
+merging to canonical auto-applies migrations? NO  no migration step on any canonical-push workflow
+                                                  (sovereignty-gate · jarvis-epistemic-guard ·
+                                                   canonical-pr-quality are gates)
+```
+
+### The decisive statement — met
+
+```text
+added     29        modified   0        deleted   0
+Canvas    0         redesign   0        acceptance-state change   0
+```
+
+### Criterion-by-criterion
+
+| # | Criterion | Result |
+|---|---|---|
+| 1 | Located | `origin/claude/writers-studio-ws2-03b-qf49hj` @ `845adb884…` |
+| 2 | Provenance exact | transferred with `git checkout <source-ref> -- <paths>`; **29/29 blobs identical** to the source tree, 0 mismatched. ⛔ Nothing recreated from memory |
+| 3 | Compared to canonical | all 29 confirmed absent before landing; diff is `29 A`, no `M`, no `D` |
+| 4 | Tests mean what they claim | **145 passed / 145** across 8 suites (111 in the six `lib/manuscript/structure/__tests__` files + 34 in the two `lib/writersStudio` tests) — and **shown capable of failing**, see probes below |
+| 5 | Invariant holds | `structureService.ts` is the **only** writer of `manuscript_structure_units`; the two other mentions (`proposalStore.ts`, `review.ts`) are **header comments declaring the invariant**, not SQL. `structureService` has exactly two importers: `structure/route.ts` (05A) and the 05A witness script. ⛔ Neither `interpretStructure` nor either proposals route reaches it |
+| 6 | No redesign | 0 modified files, 0 renames |
+
+### Controlled probes — the gates can fail
+
+Both mutations were reverted and blob-equivalence re-verified; the suite returned to 145/145.
+
+| Probe | Mutation | Result |
+|---|---|---|
+| **1 · sovereignty guard** | `assertNoProse`'s `FORBIDDEN` field pattern neutered | **3 of 5 failed** — and the two *permits* cases correctly still passed, so the guard discriminates rather than merely throwing |
+| **2 · refusal path** | `ambiguous && alternatives.length < 2` → `< 0` | **1 failed** — *"an ambiguous reading carrying only one alternative"*. The no-fake-choice protection is real |
+
+### Boundary held
+
+```text
+migration executed        NO   files only; applied by a future authorized deploy
+route deployed            NO   no deploy attempted, no container touched
+5½ implemented            NO   no StructureReader exists anywhere
+Custody B landed          NO   0 Canvas files, 0 app/writers-studio/studio/** files
+Board BUILD MODE          CLOSED — unchanged
+Board acceptance states   unchanged (WS-01 still IN ACCEPTANCE, P0-D still owed)
+```
+
+### Dependency isolation
+
+Every local import in the 29 files resolves against canonical. Zero references to any of the six
+divergent Canvas files, and zero to `StructureReview` · `StructuredOutline` · `ManuscriptOutline` ·
+`studioTheme` · `studio/StudioType` — the Custody B surface. **The substrate does not reach for it.**
