@@ -114,13 +114,33 @@ describe('the prompt keeps all six answers available', () => {
 /* ── what comes back ─────────────────────────────────────────────────────── */
 
 const unit = (from: string, to: string, over: Record<string, unknown> = {}) => ({
-  title: 'One', kind: 'Chapter', fromSectionId: from, toSectionId: to,
+  title: 'One', kind: 'Chapter', editorialLabel: 'the first movement',
+  fromSectionId: from, toSectionId: to,
   rationale: 'it holds', evidenceRefs: [], uncertainty: [], ...over,
 });
+
+/**
+ * A well-formed editorial letter, so the tests below stay about what they were
+ * about. Every `propose_structure` call in this file carries one, because the
+ * parser now requires one - and a refusal test that tripped on a missing letter
+ * instead of the fault it names would be asserting nothing.
+ */
+const SYN = {
+  thesis: 'A sequence of essays rather than a book with parts.',
+  strongestFindings: ['The contents list does not describe the body.'],
+  /* No `sectionIds` here, deliberately: the host validates them against the
+     draft, so a shared fixture carrying ids would refuse in every test whose
+     Work happens not to hold them. The ids are exercised on their own, below. */
+  questionsForAuthor: [
+    { label: 'Where does Fire begin?',
+      explanation: 'One section could open it or close the ground.' },
+  ],
+};
 
 describe('parsing a reading', () => {
   it('takes a tree-bearing form', () => {
     const out = parseReaderOutput('propose_structure', {
+      editorialSynthesis: SYN,
       form: 'stable', account: 'Two movements.', units: [unit('sec-a', 'sec-b')],
     });
     expect(out.status).toBe('interpreted');
@@ -132,6 +152,7 @@ describe('parsing a reading', () => {
 
   it('takes none with no units field at all', () => {
     const out = parseReaderOutput('propose_structure', {
+      editorialSynthesis: SYN,
       form: 'none', account: 'It reads as one continuous body.',
     });
     expect(out.status).toBe('interpreted');
@@ -143,6 +164,7 @@ describe('parsing a reading', () => {
 
   it('takes ambiguous with its alternatives', () => {
     const out = parseReaderOutput('propose_structure', {
+      editorialSynthesis: SYN,
       form: 'ambiguous', account: 'Two readings hold.',
       alternatives: [
         { label: 'by movement', why: 'turns at two', units: [unit('sec-a', 'sec-b')] },
@@ -156,6 +178,7 @@ describe('parsing a reading', () => {
 
   it('reads nested children', () => {
     const out = parseReaderOutput('propose_structure', {
+      editorialSynthesis: SYN,
       form: 'mixed', account: 'A part holding chapters.',
       units: [unit('sec-a', 'sec-c', {
         kind: 'Part', children: [unit('sec-a', 'sec-b'), unit('sec-c', 'sec-c')],
@@ -168,6 +191,7 @@ describe('parsing a reading', () => {
 
   it('keeps the uncertainty tags a reading actually gave', () => {
     const out = parseReaderOutput('propose_structure', {
+      editorialSynthesis: SYN,
       form: 'flat', account: 'Essays.',
       units: [unit('sec-a', 'sec-b', { uncertainty: ['start-boundary', 'kind'] })],
     });
@@ -197,29 +221,29 @@ describe('a malformed answer raises rather than becoming a finding', () => {
      machine fault. Rewriting it to `none` would publish "no structure is
      evident" under MAIA's name for a Work she never finished reading. */
   it('refuses a tree-bearing form with no tree, rather than downgrading it to none', () => {
-    expect(bad('propose_structure', { form: 'stable', account: 'a', units: [] }))
+    expect(bad('propose_structure', { editorialSynthesis: SYN, form: 'stable', account: 'a', units: [] }))
       .toBe('form-claims-units-but-has-none');
-    expect(bad('propose_structure', { form: 'partial', account: 'a' }))
+    expect(bad('propose_structure', { editorialSynthesis: SYN, form: 'partial', account: 'a' }))
       .toBe('form-claims-units-but-has-none');
   });
 
   it('refuses an empty account', () => {
-    expect(bad('propose_structure', { form: 'none', account: '   ' }))
+    expect(bad('propose_structure', { editorialSynthesis: SYN, form: 'none', account: '   ' }))
       .toBe('reading-missing-account');
   });
 
   it('refuses a form nobody defined', () => {
-    expect(bad('propose_structure', { form: 'chapters', account: 'a' })).toBe('unknown-form');
+    expect(bad('propose_structure', { editorialSynthesis: SYN, form: 'chapters', account: 'a' })).toBe('unknown-form');
   });
 
   it('refuses ambiguous with fewer than two readings', () => {
-    expect(bad('propose_structure', { form: 'ambiguous', account: 'a',
+    expect(bad('propose_structure', { editorialSynthesis: SYN, form: 'ambiguous', account: 'a',
       alternatives: [{ label: 'one', why: 'w', units: [unit('sec-a', 'sec-b')] }] }))
       .toBe('ambiguous-without-alternatives');
   });
 
   it('refuses a unit with no range', () => {
-    expect(bad('propose_structure', { form: 'flat', account: 'a', units: [{ title: 'x' }] }))
+    expect(bad('propose_structure', { editorialSynthesis: SYN, form: 'flat', account: 'a', units: [{ title: 'x' }] }))
       .toBe('unit-missing-range');
   });
 
@@ -256,18 +280,20 @@ describe('a field that does not belong to the variant is a refusal', () => {
    */
   it('refuses none carrying units, and never publishes it as a none finding', () => {
     expect(bad({
+      editorialSynthesis: SYN,
       form: 'none', account: 'No stable larger structure is evident yet.',
       units: [unit('sec-a', 'sec-b')],
     })).toBe('form-carries-a-field-it-cannot-have');
   });
 
   it('refuses none carrying alternatives', () => {
-    expect(bad({ form: 'none', account: 'a', alternatives: [] }))
+    expect(bad({ editorialSynthesis: SYN, form: 'none', account: 'a', alternatives: [] }))
       .toBe('form-carries-a-field-it-cannot-have');
   });
 
   it('refuses ambiguous carrying a canonical tree', () => {
     expect(bad({
+      editorialSynthesis: SYN,
       form: 'ambiguous', account: 'a', units: [unit('sec-a', 'sec-b')],
       alternatives: [
         { label: 'x', why: 'w', units: [unit('sec-a', 'sec-a')] },
@@ -277,7 +303,7 @@ describe('a field that does not belong to the variant is a refusal', () => {
   });
 
   it('refuses a tree-bearing form carrying alternatives', () => {
-    expect(bad({ form: 'stable', account: 'a', units: [unit('sec-a', 'sec-b')],
+    expect(bad({ editorialSynthesis: SYN, form: 'stable', account: 'a', units: [unit('sec-a', 'sec-b')],
       alternatives: [] })).toBe('form-carries-a-field-it-cannot-have');
   });
 });
@@ -291,7 +317,7 @@ describe('malformed detail is refused, not quietly tidied', () => {
     throw new Error('expected a StructureReaderError');
   };
   const flat = (over: Record<string, unknown>) =>
-    ({ form: 'flat', account: 'a', units: [unit('sec-a', 'sec-b', over)] });
+    ({ editorialSynthesis: SYN, form: 'flat', account: 'a', units: [unit('sec-a', 'sec-b', over)] });
 
   /* Dropping an unrenderable caveat silently UPGRADES the reading's confidence.
      The member would meet a division presented as more settled than MAIA left
@@ -311,22 +337,167 @@ describe('malformed detail is refused, not quietly tidied', () => {
   });
 
   it('refuses a malformed uncertain region rather than dropping it', () => {
-    expect(bad({ form: 'none', account: 'a',
+    expect(bad({ editorialSynthesis: SYN, form: 'none', account: 'a',
       uncertainRegions: [{ fromSectionId: 'sec-a', why: 'no end given' }] }))
       .toBe('region-incomplete');
-    expect(bad({ form: 'none', account: 'a', uncertainRegions: 'later' }))
+    expect(bad({ editorialSynthesis: SYN, form: 'none', account: 'a', uncertainRegions: 'later' }))
       .toBe('regions-not-an-array');
   });
 
   it('still treats an absent optional field as absent', () => {
     const out = parseReaderOutput('propose_structure', {
+      editorialSynthesis: SYN,
       form: 'flat', account: 'a',
-      units: [{ title: null, kind: null, fromSectionId: 'sec-a', toSectionId: 'sec-b' }],
+      units: [{ title: null, kind: null, editorialLabel: null,
+        fromSectionId: 'sec-a', toSectionId: 'sec-b' }],
     });
     if (out.status === 'interpreted' && 'units' in out.reading) {
       expect(out.reading.units[0]).toMatchObject({
         rationale: '', evidenceRefs: [], uncertainty: [], children: [] });
     } else { throw new Error('expected units'); }
+  });
+});
+
+/* ── the editorial reading contract ──────────────────────────────────────── */
+
+/**
+ * WS2-05B-8B-02b. The reading has to be COMMUNICABLE at the moment it is made.
+ *
+ * The first real reading returned five sibling divisions all reading
+ * `kind: "element"` with `title: null`, and named them — Fire, Water, Earth,
+ * Air, Aether — only inside its prose account. The room could not lift those
+ * names out without inferring structure from prose. The fix is not a smarter
+ * surface: it is asking MAIA for the label and the letter while she is reading,
+ * and refusing a reading that arrives without them.
+ */
+describe('the editorial reading contract', () => {
+  const bad = (v: unknown) => {
+    try { parseReaderOutput('propose_structure', v); } catch (e) {
+      if (e instanceof StructureReaderError) return e.reason;
+      throw e;
+    }
+    throw new Error('expected a StructureReaderError');
+  };
+  const flat = (over: Record<string, unknown> = {}, unitOver: Record<string, unknown> = {}) =>
+    ({ editorialSynthesis: SYN, form: 'flat', account: 'a',
+      units: [unit('sec-a', 'sec-b', unitOver)], ...over });
+
+  it('asks for a label on every division, and for the letter on every reading', () => {
+    const propose = readerTools()[0].input_schema as Record<string, unknown>;
+    expect(propose.required).toContain('editorialSynthesis');
+
+    const props = propose.properties as Record<string, Record<string, unknown>>;
+    const unitProps = (props.units.items as Record<string, unknown>);
+    expect(unitProps.required).toContain('editorialLabel');
+
+    const syn = props.editorialSynthesis;
+    expect(syn.required).toEqual(['thesis', 'strongestFindings', 'questionsForAuthor']);
+  });
+
+  /* NULL IS LAWFUL, AND STAYS LAWFUL. Making a label mechanically non-null
+     would move the invention pressure out of `title` and into a new field —
+     the same fabrication, one column over. */
+  it('accepts an honest null label without turning it into a manufactured one', () => {
+    const out = parseReaderOutput('propose_structure', flat({}, { editorialLabel: null }));
+    if (out.status !== 'interpreted' || !('units' in out.reading)) throw new Error('units');
+    expect(out.reading.units[0].editorialLabel).toBeNull();
+  });
+
+  /**
+   * ABSENT AND null ARE DIFFERENT ANSWERS, and only one of them is a reading.
+   *
+   * A reader that omitted the field never considered whether it could describe
+   * the division. A reader that answered null considered it and declined.
+   * Defaulting absence to null erases that difference and quietly restores the
+   * five-identical-rows failure this unit exists to close.
+   */
+  it('refuses a division with no label at all, rather than defaulting it to null', () => {
+    expect(bad(flat({}, { editorialLabel: undefined }))).toBe('unit-bad-editorial-label');
+    expect(bad(flat({}, { editorialLabel: 42 }))).toBe('unit-bad-editorial-label');
+    expect(bad(flat({}, { editorialLabel: ['Fire'] }))).toBe('unit-bad-editorial-label');
+  });
+
+  it('refuses a reading with no editorial letter, on every form including none', () => {
+    expect(bad({ form: 'none', account: 'One continuous body.' }))
+      .toBe('reading-missing-editorial-synthesis');
+    expect(bad({ form: 'flat', account: 'a', units: [unit('sec-a', 'sec-b')] }))
+      .toBe('reading-missing-editorial-synthesis');
+  });
+
+  /* Normalising any of these would publish a blank line the member is invited
+     to read, under MAIA's name. */
+  it('refuses malformed editorial fields rather than normalising them', () => {
+    const syn = (over: Record<string, unknown>) =>
+      flat({ editorialSynthesis: { ...SYN, ...over } });
+
+    expect(bad(flat({ editorialSynthesis: 'she thinks it is essays' })))
+      .toBe('synthesis-not-an-object');
+    expect(bad(flat({ editorialSynthesis: [SYN] }))).toBe('synthesis-not-an-object');
+    expect(bad(syn({ thesis: '   ' }))).toBe('synthesis-missing-thesis');
+    expect(bad(syn({ thesis: 7 }))).toBe('synthesis-missing-thesis');
+    expect(bad(syn({ strongestFindings: 'one thing' }))).toBe('synthesis-bad-findings');
+    expect(bad(syn({ strongestFindings: ['a', ''] }))).toBe('synthesis-bad-findings');
+    expect(bad(syn({ questionsForAuthor: {} }))).toBe('synthesis-bad-questions');
+    expect(bad(syn({ questionsForAuthor: [{ label: 'Where?' }] })))
+      .toBe('question-missing-label-or-explanation');
+    expect(bad(syn({ questionsForAuthor: [{ label: '  ', explanation: 'x' }] })))
+      .toBe('question-missing-label-or-explanation');
+    expect(bad(syn({ questionsForAuthor: [{ label: 'a', explanation: 'b', sectionIds: 'sec-a' }] })))
+      .toBe('question-bad-section-ids');
+    expect(bad(syn({ questionsForAuthor: [{ label: 'a', explanation: 'b', sectionIds: [1] }] })))
+      .toBe('question-bad-section-ids');
+  });
+
+  /* Empty ARRAYS are lawful: she may stand behind little, and may genuinely
+     have nothing to ask. Only empty STRINGS are refused. */
+  it('accepts a letter that finds little and asks nothing', () => {
+    const out = parseReaderOutput('propose_structure', flat({
+      editorialSynthesis: { thesis: 'I could not settle this.',
+        strongestFindings: [], questionsForAuthor: [] },
+    }));
+    if (out.status !== 'interpreted') throw new Error('interpreted');
+    expect(out.reading.editorialSynthesis).toEqual({
+      thesis: 'I could not settle this.', strongestFindings: [], questionsForAuthor: [] });
+  });
+});
+
+/**
+ * The host checks a question's places exactly as it checks a division's range.
+ *
+ * The surface offers to show the member what a question is about, so an id this
+ * draft does not hold would arrive there as a doorway onto nothing. Commentary
+ * is not held to a laxer rule than structure merely because it is commentary.
+ */
+describe('a question names places, and the host checks them', () => {
+  const two: HeadedSection[] = [
+    { id: 'sec-a', position: 0, heading: 'A' },
+    { id: 'sec-b', position: 1, heading: 'B' },
+  ];
+  const reading = (sectionIds: string[]) => parseReaderOutput('propose_structure', {
+    editorialSynthesis: { ...SYN,
+      questionsForAuthor: [{ label: 'Where?', explanation: 'w', sectionIds }] },
+    form: 'flat', account: 'a', units: [unit('sec-a', 'sec-b')],
+  });
+  const run = (sectionIds: string[]) => interpretStructure(
+    gatherEvidence('m', two), two, async () => reading(sectionIds),
+    { fetchBodies: async () => new Map() });
+
+  it('carries the letter through to the interpretation, verbatim', async () => {
+    const r = await run(['sec-a']);
+    if (r.status !== 'ok') throw new Error(`refused: ${r.refusal}`);
+    expect(r.interpretation.editorialSynthesis?.questionsForAuthor[0])
+      .toEqual({ label: 'Where?', explanation: 'w', sectionIds: ['sec-a'] });
+    expect(r.interpretation.editorialSynthesis?.thesis).toBe(SYN.thesis);
+  });
+
+  it('refuses a question naming a section this draft does not hold', async () => {
+    const r = await run(['sec-a', 'sec-z']);
+    expect(r).toMatchObject({ status: 'refused', refusal: 'unknown-section' });
+    if (r.status !== 'refused') return;
+    expect(r.detail).toContain('sec-z');
+    /* Named as a question rather than a division, so a refusal says WHERE the
+       bad id was without printing a word of the Work. */
+    expect(r.detail).toContain('editorialSynthesis question');
   });
 });
 
@@ -379,6 +550,7 @@ describe('a reading reaches the host loop the same way a real one will', () => {
     const r = await interpretStructure(
       gatherEvidence('m1', sections), sections,
       readerFrom([{ tool: 'propose_structure', input: {
+        editorialSynthesis: SYN,
         form: 'partial', account: 'The first three organise; the last does not.',
         units: [unit('sec-a', 'sec-c', { kind: 'Part' })],
       } }]),
@@ -400,6 +572,7 @@ describe('a reading reaches the host loop the same way a real one will', () => {
       readerFrom([
         { tool: 'request_sections', input: { sectionIds: ['sec-d'], why: 'is it writing?' } },
         { tool: 'propose_structure', input: {
+          editorialSynthesis: SYN,
           form: 'none', account: 'No stable larger structure is evident yet.' } },
       ]),
       { fetchBodies: async (ids) => { asked.push([...ids]); return new Map([['sec-d', 'x']]); } });
@@ -427,6 +600,7 @@ describe('a reading reaches the host loop the same way a real one will', () => {
     const r = await interpretStructure(
       gatherEvidence('m1', sections), sections,
       readerFrom([{ tool: 'propose_structure', input: {
+        editorialSynthesis: SYN,
         form: 'stable', account: 'backwards', units: [unit('sec-c', 'sec-a')] } }]),
       { fetchBodies: async () => new Map() });
     expect(r.status).toBe('refused');
@@ -563,8 +737,10 @@ describe('how much of the Work may leave the machine', () => {
         return { status: 'read-request', sectionIds: ['s0', 's1'], why: 'the turn' };
       }
       return parseReaderOutput('propose_structure', {
+        editorialSynthesis: SYN,
         form: 'flat', account: 'A sequence.',
-        units: [{ title: null, kind: null, fromSectionId: 's0', toSectionId: 's19' }],
+        units: [{ title: null, kind: null, editorialLabel: null,
+          fromSectionId: 's0', toSectionId: 's19' }],
       });
     }, { fetchBodies: async (ids) => new Map(ids.map((id) => [id, 'y'.repeat(100)])) });
 
@@ -584,7 +760,7 @@ describe('how much of the Work may leave the machine', () => {
   it('records a headings-only reading as none, with the ceilings still stated', async () => {
     const r = await interpretStructure(gatherEvidence('m', many), many,
       async () => parseReaderOutput('propose_structure',
-        { form: 'none', account: 'Nothing larger is evident.' }),
+        { editorialSynthesis: SYN, form: 'none', account: 'Nothing larger is evident.' }),
       { fetchBodies: async () => new Map() });
     if (r.status !== 'ok') throw new Error('expected ok');
     expect(r.interpretation.coverage.bodies).toEqual({
@@ -629,6 +805,7 @@ describe('the host returns what it refused', () => {
   it('hands back the reading a validation refusal rejected', async () => {
     const r = await interpretStructure(gatherEvidence('m1', sections), sections,
       reader({
+        editorialSynthesis: SYN,
         form: 'stable', account: 'A part, with a child that escapes it.',
         units: [unit('sec-b', 'sec-c', {
           title: 'PART', children: [unit('sec-a', 'sec-b', { title: 'THE FLAME' })],
@@ -658,7 +835,7 @@ describe('the host returns what it refused', () => {
      and it never holds a body - the host gave the reading none to carry. */
   it('carries no body, because the reading was never given one', async () => {
     const r = await interpretStructure(gatherEvidence('m1', sections), sections,
-      reader({ form: 'stable', account: 'a',
+      reader({ editorialSynthesis: SYN, form: 'stable', account: 'a',
         units: [unit('sec-c', 'sec-a')] }),
       { fetchBodies: async () => new Map([['sec-a', 'THE-MEMBERS-PROSE']]) });
     if (r.status !== 'refused') throw new Error('expected a refusal');
@@ -703,6 +880,7 @@ describe('the containment grammar is taught AND enforced', () => {
   it('and the host still refuses a child that escapes its parent', async () => {
     const r = await interpretStructure(gatherEvidence('m1', sections), sections,
       async () => parseReaderOutput('propose_structure', {
+        editorialSynthesis: SYN,
         form: 'stable', account: 'taught, and still wrong',
         units: [unit('sec-b', 'sec-c', {
           title: 'PART', children: [unit('sec-a', 'sec-b', { title: 'ESCAPEE' })] })],

@@ -44,6 +44,33 @@ export interface ProposedUnitDraft {
   title: string | null;
   /** Free text, never an enum. Null rather than a manufactured "Chapter". */
   kind: string | null;
+  /**
+   * MAIA'S OWN WORDS **ABOUT** THIS DIVISION - what an editor calls a section
+   * when writing to you about it. `Fire`. `The opening ground`. `Reference
+   * apparatus`.
+   *
+   * IT IS NOT A TITLE, AND IT NEVER BECOMES ONE. `title` is the Work's words
+   * and ends up in the manuscript on adoption; a label is commentary and does
+   * not. `toReviewed` does not copy it, so it cannot reach the member's
+   * editable structure, and no adoption path can carry it into the Work.
+   *
+   * WHY IT EXISTS. The first real reading returned five sibling divisions all
+   * reading `kind: "element"`, `title: null`, distinguished on screen only by
+   * a section range. She named them - Fire, Water, Earth, Air, Aether - inside
+   * her prose account, and the room could not lift them out without inferring
+   * structure from prose, which is the thing this interpreter exists to stop a
+   * client doing. "Do not invent manuscript titles" was never "MAIA may not
+   * describe what she perceives"; conflating the two produced a reading that
+   * could not be read.
+   *
+   * NULL REMAINS LAWFUL. Nothing here makes a label mechanically required: that
+   * would move the invention pressure out of `title` and into a new field.
+   *
+   *   absent   this reading predates editorial labels
+   *   null     MAIA could not honestly ground one
+   *   string   MAIA's description, offered as commentary
+   */
+  editorialLabel?: string | null;
   /** STABLE SECTION IDS. Positions move; ids do not. */
   fromSectionId: string;
   toSectionId: string;
@@ -89,9 +116,57 @@ export interface UncertainRegion {
   why: string;
 }
 
+/**
+ * One thing the reading could not settle, put to the author as a question.
+ *
+ * DISTINCT FROM `uncertainty` AND `uncertainRegions`, which are the reading's
+ * own qualifications of itself. This is the same doubt turned outward: stated
+ * so the person who wrote the book can answer it, and carrying the sections it
+ * is about so the surface can offer to show them.
+ */
+export interface EditorialQuestion {
+  /** Short, and the member's entry point: "Where does Fire begin?" */
+  label: string;
+  /** What is actually at stake, in plain words. Not a restatement of `label`. */
+  explanation: string;
+  /**
+   * The places this question is about. Validated by the host against the
+   * draft, exactly as a division's range is: a question naming a section the
+   * Work does not hold is refused, not silently dropped.
+   */
+  sectionIds?: string[];
+}
+
+/**
+ * MAIA's reading, said to the author rather than serialized at them.
+ *
+ * ASKED FOR AT READING TIME, NOT DERIVED LATER. A surface that cut her account
+ * into headings would be authoring the parts of a letter she did not write, and
+ * a surface that summarised her tree would be a second reading made by code.
+ * The only honest source of "what do you think my book is doing" is the reader,
+ * at the moment she reads.
+ *
+ * Frozen with the interpretation. It is commentary about the Work and never
+ * structure: nothing here reaches `reviewed`, and nothing here is adoptable.
+ */
+export interface EditorialSynthesis {
+  /** What she thinks this Work is doing, in one or two sentences. */
+  thesis: string;
+  /** The few claims she would stand behind. Not every division. */
+  strongestFindings: string[];
+  /** What she would ask the author, if she could. May be empty and often is not. */
+  questionsForAuthor: EditorialQuestion[];
+}
+
 interface Common {
   /** MAIA's account of this Work's grammar, in her words. */
   account: string;
+  /**
+   * Her reading addressed to the author. Absent on every proposal frozen
+   * before the editorial contract existed - which is a different fact from an
+   * empty synthesis, and is why this is optional rather than defaulted.
+   */
+  editorialSynthesis?: EditorialSynthesis;
   /** Built by the host from what it supplied. Never from the reader. */
   coverage: EvidenceCoverage;
   /** Derived by the host. Never accepted from the reader. */
@@ -122,14 +197,28 @@ export type StructureInterpretation =
     })
   | ({ form: 'none' } & Common);
 
-/** What the reader may return. The host completes it into an interpretation. */
+/**
+ * What the reader may return. The host completes it into an interpretation.
+ *
+ * `editorialSynthesis` is OPTIONAL HERE AND REQUIRED OF MAIA, deliberately, and
+ * the difference is where each is enforced. `StructureReader` is an interface -
+ * fixtures implement it, and a fixture that must invent an editorial letter to
+ * satisfy a compiler proves nothing about the contract. The real contract is
+ * enforced where the untrusted value actually arrives: the tool schema requires
+ * it, and `parseReaderOutput` REFUSES a `propose_structure` call without a
+ * well-formed one, the same way it refuses a malformed uncertainty tag. Making
+ * it non-optional in TypeScript would move that check to the one place it
+ * cannot run - a boundary the model does not compile against.
+ */
 export type ReaderReading =
   | { form: 'stable' | 'partial' | 'flat' | 'mixed'; account: string;
-      units: ProposedUnitDraft[]; uncertainRegions?: UncertainRegion[] }
+      units: ProposedUnitDraft[]; uncertainRegions?: UncertainRegion[];
+      editorialSynthesis?: EditorialSynthesis }
   | { form: 'ambiguous'; account: string;
       alternatives: { label: string; units: ProposedUnitDraft[]; why: string }[];
-      uncertainRegions?: UncertainRegion[] }
-  | { form: 'none'; account: string; uncertainRegions?: UncertainRegion[] };
+      uncertainRegions?: UncertainRegion[]; editorialSynthesis?: EditorialSynthesis }
+  | { form: 'none'; account: string; uncertainRegions?: UncertainRegion[];
+      editorialSynthesis?: EditorialSynthesis };
 
 export type ReaderOutput =
   | { status: 'interpreted'; reading: ReaderReading }
@@ -370,6 +459,16 @@ function complete(
   if (reading.form === 'ambiguous') reading.alternatives.forEach((a) => validate(a.units));
   else if (reading.form !== 'none') validate(reading.units);
 
+  /* A QUESTION NAMES PLACES, AND THE PLACES ARE CHECKED. The surface offers to
+     show the member what a question is about; an id this draft does not hold
+     would arrive there as a doorway onto nothing. Held to the same rule as a
+     division's range rather than a laxer one because it is only commentary. */
+  for (const q of reading.editorialSynthesis?.questionsForAuthor ?? []) {
+    for (const id of q.sectionIds ?? []) {
+      if (!position.has(id)) note('unknown-section', `editorialSynthesis question: ${id}`);
+    }
+  }
+
   if (problems.length > 0) {
     return { status: 'refused', ...problems[0], refusedReading: reading };
   }
@@ -410,6 +509,10 @@ function complete(
 
   const common: Common = {
     account: reading.account,
+    /* Carried through verbatim. The host derives `unaccountedSectionIds` and
+       builds `coverage` because those are facts about what it did; the letter
+       is MAIA's, and the host neither writes nor edits a word of it. */
+    ...(reading.editorialSynthesis ? { editorialSynthesis: reading.editorialSynthesis } : {}),
     coverage,
     unaccountedSectionIds,
     uncertainRegions: reading.uncertainRegions ?? [],

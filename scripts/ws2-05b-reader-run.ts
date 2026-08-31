@@ -27,6 +27,14 @@
  * Run it with MANUSCRIPT set and MEMBER_ID unset once, and it prints the query
  * that resolves your member id. No placeholder to paste - an angle-bracket
  * placeholder is a redirect in zsh, and has twice been pasted literally.
+ *
+ * `CONTRACT_ONLY=1` prints the STANDING INSTRUCTIONS and the TOOL SCHEMA and
+ * nothing else - no database, no manuscript, no key. It is the smaller half of
+ * DRY_RUN, separated because the contract is the half that changes between
+ * readers: `DRY_RUN=1` also shows this Work's headings and observations, which
+ * is a lot of scrolling when what you are checking is what MAIA was ASKED.
+ * Inspect it before a reading, and compare `promptContractHash` afterwards
+ * against the one frozen on the proposal.
  */
 
 const MANUSCRIPT = process.env.MANUSCRIPT ?? '';
@@ -39,6 +47,22 @@ const MAX_PASSES = Number(process.env.MAX_PASSES ?? '3') as 1 | 2 | 3;
 const OUT = process.env.OUT ?? '/tmp';
 
 async function main() {
+  if (process.env.CONTRACT_ONLY === '1') {
+    /* Imported here rather than at the top so this path needs no database, no
+       manuscript and no key: the contract is a property of the reader, not of
+       any Work, and checking it should cost nothing. */
+    const { READER_SYSTEM, readerTools, promptContractHash, READER_VERSION } =
+      await import('@/lib/manuscript/structure/maiaReader');
+    console.log(`\n=== READER CONTRACT · ${READER_VERSION} ===`);
+    console.log(`promptContractHash  ${promptContractHash()}`);
+    console.log('\n--- STANDING INSTRUCTIONS (system) ---\n');
+    console.log(READER_SYSTEM);
+    console.log('\n--- TOOLS (the other half of the instruction) ---\n');
+    console.log(JSON.stringify(readerTools(), null, 2));
+    console.log('\nNothing was sent. No database was opened.\n');
+    return;
+  }
+
   if (!MANUSCRIPT || !MEMBER_ID) {
     /* The member id is NOT looked up from the manuscript here, deliberately:
        every query below is scoped by (manuscript, member) so a wrong id reads

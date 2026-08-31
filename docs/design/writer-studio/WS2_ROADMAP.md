@@ -84,8 +84,14 @@ shipped behaviour.
        reading itself
 05B-8B-READABILITY-01             SUPERSEDED · its witness FAILED
                                   WS2-05B-8B_READABILITY_FINDING.md
-05B-8B-EDITORIAL-REVIEW-          SPECIFIED · one blocking discovery
-       SURFACE-02                 WS2-05B-8B_EDITORIAL_REVIEW_SURFACE_02.md
+05B-8B-EDITORIAL-REVIEW-          SPECIFIED · its blocking discovery
+       SURFACE-02                 resolved by 02b
+                                  WS2-05B-8B_EDITORIAL_REVIEW_SURFACE_02.md
+  02b  editorial reading contract BUILT · offline-witnessed
+                                  awaiting ONE real reading (Kelly's act)
+                                  WS2-05B-8B-02b_EDITORIAL_READING_CONTRACT.md
+  02a  editorial surface          HOLD · behind 02b's real reading
+  02c  Ask MAIA                   SEPARATE UNIT · not designed
 ```
 
 **The room was built for a machine.** Every iteration was shaped by what the 8a
@@ -100,9 +106,19 @@ manuscript titles" does not mean "MAIA may not describe what she perceives"* —
 the Work's words are a `title`, MAIA's description is a `label`, and a label is
 never written into the manuscript.
 
-**Blocking:** the labels do not exist. `Fire` is nowhere in the frozen row — not
-title, not kind — only inside her account prose. Rendering it requires either
-inference or a new reader field, so 8B-02 is not pure surface work.
+**Blocking, and now resolved by 02b:** the labels did not exist. `Fire` is
+nowhere in the frozen row — not title, not kind — only inside her account prose.
+Rendering it required either inference or a new reader field, so 8B-02 was never
+pure surface work. 02b added the field: `editorialLabel` on every division and an
+`editorialSynthesis` on every reading, required of MAIA at the tool schema and
+refused by the parser when malformed or missing, and structurally unable to reach
+the member's copy or the manuscript. The contract hash moved
+`7d4e27cfa81d… → a1825a7c2f50…`.
+
+**What that does not settle:** whether MAIA can honestly ground a label on that
+book, or declines to `null` — which the contract permits. That is a fact about
+the next real reading, not about the code, and 02a stays HOLD behind it. *Don't
+make the surface smarter to compensate for an under-specified reading.*
 
 **8a proved fidelity; it did not prove intelligibility.** The room shows the data
 structure of MAIA's reading rather than communicating the reading: eleven nested

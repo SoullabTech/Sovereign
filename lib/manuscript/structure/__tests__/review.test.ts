@@ -16,7 +16,8 @@ const sid = (i: number) => `s${i}`;
 const draft = (
   from: number, to: number, title: string, children: ProposedUnitDraft[] = [],
 ): ProposedUnitDraft => ({
-  title, kind: null, fromSectionId: sid(from), toSectionId: sid(to),
+  title, kind: null, editorialLabel: `MAIA-CALLS-IT-${title}`,
+  fromSectionId: sid(from), toSectionId: sid(to),
   children, rationale: `MAIA on ${title}`, evidenceRefs: [], uncertainty: [],
 });
 
@@ -37,6 +38,56 @@ describe('the member\'s copy carries no claim of MAIA\'s', () => {
        boundary she never proposed. */
     expect(serialised).not.toMatch(/"(rationale|evidenceRefs|uncertainty)"/);
     expect(serialised).toContain('MAIA on'.slice(0, 0) || 'Opening');
+  });
+
+  /**
+   * THE EDITORIAL LABEL IS COMMENTARY, AND STOPS AT THIS LINE.
+   *
+   * `title` is the Work's words and is written into the manuscript on adoption.
+   * A label is MAIA's description of a division for writing to the member ABOUT
+   * their book - "the reference apparatus", "Fire" - and adopting a reading must
+   * never put it in the Work. The member's copy is the only thing 6 could ever
+   * adopt from, so a label that cannot reach `reviewed` cannot reach a
+   * manuscript by any path, present or future.
+   *
+   * Asserted on the VALUE as well as the key: a future `toReviewed` that
+   * renamed the field while still copying it would pass a key-only check.
+   */
+  it('MAIA\'s editorial labels do not travel into it, by key or by value', () => {
+    const p = proposed();
+    expect(p[0].editorialLabel).toBe('MAIA-CALLS-IT-Opening');
+
+    const serialised = JSON.stringify(toReviewed(p));
+    expect(serialised).not.toContain('editorialLabel');
+    expect(serialised).not.toContain('MAIA-CALLS-IT-');
+  });
+
+  /* And it stays out after the member has worked on the copy - including
+     `choose-alternative`, which is the one operation that re-enters the
+     member's half from the interpretation rather than editing what is there. */
+  it('and stays out after the member edits, and after choosing an alternative', () => {
+    let r = start();
+    for (const op of [
+      { op: 'rename', unitId: 'p1', title: 'Mine', kind: 'Movement' },
+      { op: 'set-boundary', unitId: 'p4', fromSectionId: sid(6), toSectionId: sid(10) },
+    ] as Parameters<typeof applyReviewOperation>[1][]) {
+      const out = apply(r, op);
+      if (out.status !== 'ok') throw new Error(`refused: ${out.refusal}`);
+      r = out.reviewed;
+    }
+
+    /* `choose-alternative` is the one operation that re-enters the member's
+       half FROM the interpretation rather than editing what is already there,
+       so it is the path a label would most plausibly cross by. */
+    const chosen = applyReviewOperation(r, { op: 'choose-alternative', alternativeId: 'a1' },
+      sections, { alternatives: [{ id: 'a1', label: 'by movement', why: 'w',
+        units: assignUnitIds([draft(0, 11, 'Whole')]) }] });
+    if (chosen.status !== 'ok') throw new Error(`refused: ${chosen.refusal}`);
+
+    for (const serialised of [JSON.stringify(r), JSON.stringify(chosen.reviewed)]) {
+      expect(serialised).not.toContain('editorialLabel');
+      expect(serialised).not.toContain('MAIA-CALLS-IT-');
+    }
   });
 
   it('but the ids survive, so the two halves pair', () => {

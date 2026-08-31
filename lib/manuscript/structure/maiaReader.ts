@@ -50,8 +50,8 @@
 import { createHash } from 'crypto';
 import Anthropic from '@anthropic-ai/sdk';
 import type {
-  ProposedUnitDraft, ProposedUncertainty, ReaderInput, ReaderOutput,
-  ReaderReading, StructureReader, UncertainRegion,
+  EditorialQuestion, EditorialSynthesis, ProposedUnitDraft, ProposedUncertainty,
+  ReaderInput, ReaderOutput, ReaderReading, StructureReader, UncertainRegion,
 } from './interpret';
 import type { EvidenceObservation, HeadedSection, StructureEvidence } from './evidence';
 import type { ReaderIdentity } from './readerProvenance';
@@ -163,6 +163,24 @@ VOCABULARY IS THE WORK'S, NOT YOURS
 
 "title" should be the member's own words wherever the Work supplies them. Use null rather than inventing a title. A null title is honest; an invented one is you writing their book.
 
+DESCRIBING WHAT YOU SEE IS NOT INVENTING A TITLE
+Those are different acts, and only one of them is forbidden. A title is the Work's words and would be written into the member's manuscript if they adopt your reading. An "editorialLabel" is YOUR words about a division, for writing to the member ABOUT their book - what an editor calls a section in a letter. It is never written into the manuscript and never becomes a title.
+
+Every division carries one. Give the shortest phrase that would let the member tell this division from its siblings at a glance: "Fire", "the opening ground", "the reference apparatus".
+
+A repeated kind is NOT editorial communication. Five sibling divisions all reading kind "element", all untitled, are five identical rows to the person reading your proposal - they can tell them apart only by counting section numbers. If you can see that they are Fire, Water, Earth, Air and Aether, say so here. That is the whole reason this field exists.
+
+Ground a label in what you actually read. A heading inside the division, a word the Work uses for itself, a distinction you can point at. Use null when you cannot ground one - null is lawful and remains the honest answer. Do not fabricate a label to avoid an empty field; a manufactured label is the same fault as a manufactured title, moved one column over.
+
+WRITE YOUR READING TO THE AUTHOR
+"account" is your account of the Work's grammar. "editorialSynthesis" is the same reading said to the person who wrote it, and it is required.
+
+- thesis: what you think this Work is doing, in one or two sentences. The single claim you would want them to see first.
+- strongestFindings: the few things you would stand behind, one per string. Not a list of every division. If your reading is weak throughout, say fewer things.
+- questionsForAuthor: what you would ask the author if you could. A question is a doubt turned outward - not "I am uncertain about the Water/Earth seam" but "Does the Earth material begin at the conclusion, or after it?" Give each a short label, an explanation of what is actually at stake, and the section ids it concerns. Ask nothing you do not genuinely want answered, and ask nothing you could settle yourself from what you were given.
+
+This is commentary, not structure. Nothing in it is adopted, nothing in it enters their manuscript, and none of it decides anything. It exists so that a member can read what you found without reconstructing it from a tree.
+
 UNCERTAINTY IS PART OF THE READING
 Every division carries an uncertainty list, and an empty list is a claim of confidence you must actually hold. Where a boundary could reasonably sit one section either way, say so. Where you suspect a passage is front/back matter or a contents list rather than writing, mark it. Where a second reading is nearly as good, that is what "ambiguous" is for.
 
@@ -198,6 +216,11 @@ const unitSchema = (depth: number): Record<string, unknown> => ({
       description: "The Work's own words. null rather than invented." },
     kind: { type: ['string', 'null'],
       description: "Free text in the Work's vocabulary. Never forced. null is allowed." },
+    editorialLabel: { type: ['string', 'null'],
+      description: 'YOUR short description of this division, for writing to the member '
+        + 'about their book. Never written into the manuscript and never a title. '
+        + 'Siblings sharing a kind must be distinguishable here. null when you cannot '
+        + 'ground one in what you read - null is lawful, a fabricated label is not.' },
     fromSectionId: { type: 'string', description: 'Section id from the table given.' },
     toSectionId: { type: 'string', description: 'Inclusive. May equal fromSectionId.' },
     rationale: { type: 'string',
@@ -214,7 +237,7 @@ const unitSchema = (depth: number): Record<string, unknown> => ({
           + 'nest, prefer siblings, an alternative, or a less confident form.' } }
       : {}),
   },
-  required: ['title', 'kind', 'fromSectionId', 'toSectionId',
+  required: ['title', 'kind', 'editorialLabel', 'fromSectionId', 'toSectionId',
     'rationale', 'evidenceRefs', 'uncertainty'],
   additionalProperties: false,
 });
@@ -275,8 +298,41 @@ export function readerTools(): Anthropic.Tool[] {
               additionalProperties: false,
             },
           },
+          editorialSynthesis: {
+            type: 'object',
+            description: 'Your reading said to the author. Required for every form, '
+              + 'including "none" - a Work that reads as one continuous body still '
+              + 'deserves to be told what you think it is doing.',
+            properties: {
+              thesis: { type: 'string',
+                description: 'What this Work is doing, in one or two sentences.' },
+              strongestFindings: { type: 'array', items: { type: 'string' },
+                description: 'The few claims you would stand behind. Not every division.' },
+              questionsForAuthor: {
+                type: 'array',
+                description: 'What you would ask the author. May be empty if you '
+                  + 'genuinely have nothing to ask.',
+                items: {
+                  type: 'object',
+                  properties: {
+                    label: { type: 'string',
+                      description: 'Short, and answerable: "Where does Fire begin?"' },
+                    explanation: { type: 'string',
+                      description: 'What is at stake. Not a restatement of the label.' },
+                    sectionIds: { type: 'array', items: { type: 'string' },
+                      description: 'The sections this question is about. Ids from the '
+                        + 'table given; an id this Work does not hold is refused.' },
+                  },
+                  required: ['label', 'explanation'],
+                  additionalProperties: false,
+                },
+              },
+            },
+            required: ['thesis', 'strongestFindings', 'questionsForAuthor'],
+            additionalProperties: false,
+          },
         },
-        required: ['form', 'account'],
+        required: ['form', 'account', 'editorialSynthesis'],
         additionalProperties: false,
       },
     },
@@ -394,6 +450,15 @@ function parseUnits(value: unknown, where: string): ProposedUnitDraft[] {
     if (!nullableStr(u.title) || !nullableStr(u.kind)) {
       throw new StructureReaderError('unit-bad-title-or-kind', at);
     }
+    /* ABSENT REFUSES, EXPLICIT null PASSES - the same treatment `title` and
+       `kind` already get, and the distinction the field turns on. A reader that
+       omitted the field never considered whether it could describe this
+       division; a reader that answered null considered it and declined. Only
+       the second is a reading. Defaulting absence to null would erase that
+       difference and quietly restore the five-identical-rows failure. */
+    if (!nullableStr(u.editorialLabel)) {
+      throw new StructureReaderError('unit-bad-editorial-label', at);
+    }
     /* Absent is fine; malformed is not. An invented uncertainty tag would reach
        the review surface as a caveat nothing renders - the member meeting a
        blank where a limit should be - so it is refused rather than dropped.
@@ -421,6 +486,7 @@ function parseUnits(value: unknown, where: string): ProposedUnitDraft[] {
     return {
       title: u.title ?? null,
       kind: u.kind ?? null,
+      editorialLabel: u.editorialLabel as string | null,
       fromSectionId: u.fromSectionId,
       toSectionId: u.toSectionId,
       rationale: isStr(u.rationale) ? u.rationale : '',
@@ -450,6 +516,63 @@ function parseRegions(value: unknown): UncertainRegion[] {
     }
     return { fromSectionId: r.fromSectionId, toSectionId: r.toSectionId, why: r.why };
   });
+}
+
+/**
+ * The editorial letter. REQUIRED, and malformed is refused rather than tidied.
+ *
+ * This is the field 8B exists for: without it the member meets a serialized
+ * tree and has to reconstruct the claim before they can judge it. A reading
+ * that arrives without one has not been communicated, and normalising the gap
+ * to an empty letter would publish silence under MAIA's name.
+ *
+ * Empty ARRAYS are lawful - she may stand behind little and may have nothing to
+ * ask. Empty STRINGS are not: a blank thesis or a blank finding renders as a
+ * blank line the member is invited to read.
+ */
+function parseSynthesis(value: unknown): EditorialSynthesis {
+  if (value === undefined) throw new StructureReaderError('reading-missing-editorial-synthesis');
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    throw new StructureReaderError('synthesis-not-an-object');
+  }
+  const y = value as Record<string, unknown>;
+
+  if (!isStr(y.thesis) || !y.thesis.trim()) {
+    throw new StructureReaderError('synthesis-missing-thesis');
+  }
+  if (!Array.isArray(y.strongestFindings)
+    || !y.strongestFindings.every((f) => isStr(f) && f.trim())) {
+    throw new StructureReaderError('synthesis-bad-findings');
+  }
+  if (!Array.isArray(y.questionsForAuthor)) {
+    throw new StructureReaderError('synthesis-bad-questions');
+  }
+
+  const questionsForAuthor = y.questionsForAuthor.map((raw, i): EditorialQuestion => {
+    const at = `questionsForAuthor[${i}]`;
+    if (!raw || typeof raw !== 'object') {
+      throw new StructureReaderError('question-not-an-object', at);
+    }
+    const q = raw as Record<string, unknown>;
+    if (!isStr(q.label) || !q.label.trim() || !isStr(q.explanation) || !q.explanation.trim()) {
+      throw new StructureReaderError('question-missing-label-or-explanation', at);
+    }
+    /* Absent is fine - a question may be about the reading rather than a place.
+       Malformed is refused: the host checks these ids against the draft, and a
+       non-string would slip past that check as neither present nor absent. */
+    if (q.sectionIds !== undefined
+      && (!Array.isArray(q.sectionIds) || !q.sectionIds.every(isStr))) {
+      throw new StructureReaderError('question-bad-section-ids', at);
+    }
+    return {
+      label: q.label,
+      explanation: q.explanation,
+      ...(q.sectionIds ? { sectionIds: q.sectionIds as string[] } : {}),
+    };
+  });
+
+  return { thesis: y.thesis, strongestFindings: y.strongestFindings as string[],
+    questionsForAuthor };
 }
 
 /**
@@ -483,6 +606,7 @@ export function parseReaderOutput(toolName: string, input: unknown): ReaderOutpu
     throw new StructureReaderError('reading-missing-account');
   }
   const uncertainRegions = parseRegions(o.uncertainRegions);
+  const editorialSynthesis = parseSynthesis(o.editorialSynthesis);
 
   /**
    * A field that does not belong to this variant is a CONTRADICTION, not noise.
@@ -504,7 +628,7 @@ export function parseReaderOutput(toolName: string, input: unknown): ReaderOutpu
   switch (o.form) {
     case 'none':
       refuseForeign('none', ['units', 'alternatives']);
-      return { status: 'interpreted', reading: { form: 'none', account: o.account, uncertainRegions } };
+      return { status: 'interpreted', reading: { form: 'none', account: o.account, uncertainRegions, editorialSynthesis } };
 
     case 'ambiguous': {
       refuseForeign('ambiguous', ['units']);
@@ -525,7 +649,8 @@ export function parseReaderOutput(toolName: string, input: unknown): ReaderOutpu
         throw new StructureReaderError('ambiguous-without-alternatives',
           `${alternatives.length} given`);
       }
-      return { status: 'interpreted', reading: { form: 'ambiguous', account: o.account, alternatives, uncertainRegions } };
+      return { status: 'interpreted', reading: { form: 'ambiguous', account: o.account, alternatives, uncertainRegions,
+          editorialSynthesis } };
     }
 
     case 'stable': case 'partial': case 'flat': case 'mixed': {
@@ -538,7 +663,8 @@ export function parseReaderOutput(toolName: string, input: unknown): ReaderOutpu
       if (units.length === 0) {
         throw new StructureReaderError('form-claims-units-but-has-none', String(o.form));
       }
-      return { status: 'interpreted', reading: { form: o.form, account: o.account, units, uncertainRegions } };
+      return { status: 'interpreted', reading: { form: o.form, account: o.account, units, uncertainRegions,
+          editorialSynthesis } };
     }
 
     default:

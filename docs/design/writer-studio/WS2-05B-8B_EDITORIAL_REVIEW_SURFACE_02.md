@@ -54,6 +54,12 @@ a name being written into your manuscript.
 
 ---
 
+> **Resolved 2026-08-31 — see `WS2-05B-8B-02b_EDITORIAL_READING_CONTRACT.md`.**
+> The blocking discovery below is no longer a discovery: `editorialLabel` and
+> `editorialSynthesis` are in the reader contract, offline-witnessed, and
+> awaiting one real reading. **02a remains HOLD behind that reading**, for the
+> reason stated at the end of this document.
+
 ## BLOCKING DISCOVERY — the labels do not exist anywhere
 
 The specified map reads:
@@ -145,10 +151,14 @@ designed:
 ## Sequencing, proposed — not authorised
 
 ```text
-8B-02a  editorial surface, today's row      pure surface · A above
-8B-02b  editorial labels + structured letter reader + schema · B above
-8B-02c  Ask MAIA                            new capability · C above
+8B-02a  editorial surface, today's row      pure surface · A above   HOLD
+8B-02b  editorial labels + structured letter reader + schema · B     BUILT
+8B-02c  Ask MAIA                            new capability · C above SEPARATE
 ```
+
+**Authorised in the reverse order, and built that way**: 02b first, so the
+surface is designed against a reading that can be communicated rather than made
+smarter to compensate for one that cannot.
 
 A alone will not pass the human witness — the `element` rows survive it. B is
 what makes the map legible. C is what makes it a relationship rather than a
