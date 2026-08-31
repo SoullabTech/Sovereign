@@ -105,6 +105,15 @@ const MAIA_PAGE = read('app/maia/page.tsx');
  * `recordVoiceTranscript`, `stopStreamingVoice`. Each belongs to a separately
  * recorded finding, unrepaired by this unit.
  *
+ * ⚠️ WHY THIS IS THE WHOLE HANDLER AND NOT JUST THE COGNITION TAIL. The tail
+ * pin below is narrow and cheap, and it closes the mutation that motivated it —
+ * an unknown call immediately ahead of `handleTextMessage`. It does not close
+ * the corridor: measured on this source, 72 of these 76 calls sit OUTSIDE both
+ * the ratified guard branches and the tail, in the journal-action, scribe,
+ * command and crisis-detection stretches of the successful path. An unknown
+ * responder placed there would change no exit, no guard set and no tail — the
+ * same hole in a fifth room. The breadth is the cost of not leaving it open.
+ *
  * ⛔ `handleTextMessage` is the ONLY canonical cognition call in this list, and
  * the assertions below prove it appears exactly once. Anything else that reaches
  * a model does not belong here — the invariant is broken and the architecture,
@@ -190,6 +199,28 @@ const RATIFIED_CALLS = [
 ];
 
 /**
+ * ⭐ THE RATIFIED COGNITION TAIL — ordered, not a set.
+ *
+ * The `try` block that contains the canonical call, in execution order. This is
+ * the last few centimetres before a spoken turn becomes a MAIA turn, and ORDER
+ * is the property the handler-wide set above cannot express: a call that already
+ * exists elsewhere in the handler — `maiaSpeak`, `apiFetch` — inserted between
+ * the log line and `handleTextMessage` leaves that set identical while placing
+ * an alternate authority immediately ahead of cognition.
+ *
+ * ⛔ Nothing may be inserted before `handleTextMessage` here. What follows it is
+ * post-cognition telemetry and is pinned for the same reason: nothing may be
+ * appended there either.
+ */
+const RATIFIED_COGNITION_TAIL = [
+  'console.log',
+  'handleTextMessage',
+  'Date.now',
+  'trackEvent.voiceResult',
+  'console.log',
+];
+
+/**
  * ⭐ THE RATIFIED ADMISSION PHASE — every explicit return, keyed by its own log
  * marker or enclosing condition (text, not line numbers, so edits above do not
  * churn it), with the exact calls its guard branch makes.
@@ -257,6 +288,32 @@ function callsWithin(node: ts.Node): string[] {
   return [...found].sort();
 }
 
+/**
+ * The ordered call sequence of the `try` block holding the canonical call.
+ * Located by AST from `handleTextMessage` outward — never by line number, so it
+ * follows the block if the handler is reorganised.
+ */
+function cognitionTail(source: string): string[] {
+  const fn = handlerFn(source);
+  let target: ts.CallExpression | null = null;
+  const find = (n: ts.Node): void => {
+    if (ts.isCallExpression(n) && callee(n.expression) === 'handleTextMessage') target = n;
+    ts.forEachChild(n, find);
+  };
+  find(fn.body);
+  expect(target).not.toBeNull();
+  let p: ts.Node | undefined = target!.parent;
+  while (p && !ts.isTryStatement(p)) p = p.parent;
+  expect(p).toBeDefined();
+  const seq: string[] = [];
+  const walk = (n: ts.Node): void => {
+    if (ts.isCallExpression(n)) seq.push(callee(n.expression));
+    ts.forEachChild(n, walk);
+  };
+  walk((p as ts.TryStatement).tryBlock);
+  return seq;
+}
+
 /** Every call `handleVoiceTranscript` makes — guarded path and corridor alike. */
 const handlerCalls = (source: string): string[] => callsWithin(handlerFn(source).body);
 
@@ -309,6 +366,13 @@ describe('the whole handler is a closed set, not a filtered one', () => {
     expect(handlerCalls(ORACLE)).toEqual(RATIFIED_CALLS);
   });
 
+  it('⭐ NOTHING stands between the log line and canonical cognition', () => {
+    // Ordered. The set assertion above is blind to position, and position is
+    // exactly what an alternate authority immediately ahead of cognition
+    // occupies.
+    expect(cognitionTail(ORACLE)).toEqual(RATIFIED_COGNITION_TAIL);
+  });
+
   it('⭐ handleTextMessage is the sole canonical cognition call, reached once', () => {
     const fn = handlerFn(ORACLE);
     const calls: string[] = [];
@@ -351,9 +415,25 @@ describe('PROBES — the gate must catch what nobody listed', () => {
     expect(enumerateExits(probed)).toEqual([...RATIFIED_EXITS]);
     expect(handlerCalls(probed).filter((c) => c === 'handleTextMessage')).toHaveLength(1);
 
-    // The corridor pin is not blind.
+    // Two independent pins catch it. Either alone would suffice; both are kept
+    // because they fail for different reasons and would decay separately.
     expect(handlerCalls(probed)).not.toEqual(RATIFIED_CALLS);
     expect(handlerCalls(probed)).toContain('totallyNewResponder');
+    expect(cognitionTail(probed)).not.toEqual(RATIFIED_COGNITION_TAIL);
+    expect(cognitionTail(probed)[1]).toBe('totallyNewResponder'); // ahead of cognition
+  });
+
+  it('⛔ a KNOWN call moved to sit immediately ahead of cognition fails', () => {
+    // ⭐ THE CASE ONLY THE ORDERED TAIL CATCHES. `maiaSpeak` already exists in
+    // the handler, so the handler-wide SET is identical; it is merely somewhere
+    // it must never be — speaking before MAIA has thought.
+    const probed = ORACLE.replace(
+      'await handleTextMessage(cleanedText);',
+      'maiaSpeak("ahead");\n      await handleTextMessage(cleanedText);',
+    );
+    expect(probed).not.toBe(ORACLE);
+    expect(handlerCalls(probed)).toEqual(RATIFIED_CALLS);              // blind
+    expect(cognitionTail(probed)).not.toEqual(RATIFIED_COGNITION_TAIL); // not blind
   });
 
   it('⛔ an UNKNOWN responder inside an EXISTING guard, adding no exit, fails', () => {

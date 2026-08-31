@@ -157,7 +157,7 @@ memory bundle, relational stack, prompt machinery and TTS — zero references to
 `finalizeMemberFacingText`. Not a thinner call into canonical cognition: a
 **second mind**.
 
-⛔ **How the enforcement missed it, three times.** v1 asserted four *named*
+⛔ **How the enforcement missed it, four times.** v1 asserted four *named*
 routes were absent; `/api/voice/stream-conversation` was not among them, so it
 passed while the divergence ran. v2 replaced that with a catalogue of
 response-producing call *patterns* and called it positive enforcement — it was
@@ -168,30 +168,48 @@ presented as proof against the unknown. v3 enumerated every `return` via the
 TypeScript AST, which closed the added-exit hole for good — but it still
 *classified* each exit with a leftover regex, so a responder nobody had named,
 placed **before an existing ratified return**, changed no exit, matched no
-pattern, and left the gate green.
+pattern, and left the gate green. v4 inverted the polarity inside guard branches
+— each ratified exit pinned to the exact calls it makes — and left the
+**successful fall-through corridor** ungoverned, so an unknown call standing on
+that path changed no exit and no guard set, and stayed green again.
 
-⭐ **All three were denylists, and a denylist fails open on the unknown.** Each
-asked *"does this look like something we thought of?"* and answered no. The
-enforcement therefore now pins **two closed sets, both derived from the code by
-the compiler**:
+⭐ **All four were denylists, and a denylist fails open on the unknown.** Each
+asked *"does this look like something we thought of?"* and answered no —
+narrowing *where* the question is asked never changed that; it only moved where
+the unknown could stand. The enforcement therefore pins **three things, all
+derived from the code by the compiler, over the WHOLE handler**:
 
 1. **The exit set** — every `return` belonging to `handleVoiceTranscript`. Exits
    are a closed set the compiler can enumerate exhaustively; responder names are
    not. An added exit fails because a new exit appeared, whatever preceded it.
-2. **The admission-phase allowlist** — for each ratified exit, the *exact* set of
-   calls its guard branch makes. Not "no responder-shaped call": *exactly these
-   calls and no others*. An unknown call fails **because it is unknown**, without
-   the gate ever learning its name.
+2. **The call sets** — the complete set of calls the handler makes, *and*, per
+   ratified exit, the exact calls its guard branch makes. Not "no
+   responder-shaped call": *exactly these calls and no others*, on the guarded
+   path and the successful path alike. An unknown call fails **because it is
+   unknown**, without the gate ever learning its name.
+3. **The cognition tail** — the *ordered* call sequence of the `try` block
+   holding the canonical call. Sets are blind to position, and position is what
+   an alternate authority standing immediately ahead of cognition occupies.
+
+The three are complementary. The handler-wide set catches a call *appearing*;
+the per-guard sets catch a call *moving* out of a guard; the ordered tail catches
+an already-present call *moving ahead of cognition*.
 
 The property proven is that **every explicit return is a non-response admission
-guard that still does only what it was certified to do**, the single
-response-producing path being the fall-through to `handleTextMessage`.
+guard, every call the handler makes is one it was certified to make, and the sole
+canonical cognition call is `handleTextMessage`**, reached by fall-through with
+nothing interposed.
 
-⛔ **The cost is accepted deliberately.** Changing what an admission guard does
-turns the gate red, including for innocent edits. That is the mechanism, not a
-side effect: the admission phase is a sovereignty boundary, and it must not be
-possible to widen it quietly. Re-pinning a row is an authority decision argued
-for in the diff, exactly like adding a preload channel.
+⛔ **The cost is accepted deliberately.** Editing this handler turns the gate
+red, including for innocent edits. That is the mechanism, not a side effect:
+`handleVoiceTranscript` is where a spoken turn becomes a member turn, and it must
+not be possible to widen it quietly. Re-pinning a row is an authority decision
+argued for in the diff, exactly like adding a preload channel.
+
+⚠️ **Frozen is not blessed.** The pin necessarily freezes Class C egress and
+data-acknowledgement calls (`maiaSpeak`, `detectCrisis`, `apiFetch`,
+`saveConversationMemory`) that this unit does not repair. Pinning stops them
+growing; it does not certify them.
 
 ⛔ **Repaired in `VOICE-CANONICAL-CONVERGENCE-02`** by removing the branch
 structurally, not by defaulting a flag off — a flag would have made the defect
