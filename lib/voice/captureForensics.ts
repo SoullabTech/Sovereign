@@ -12,7 +12,7 @@
  *   onresult      never
  *   onerror       never          ← and onerror IS wired to telemetry, so this
  *   onend         never            absence is evidence, not a gap in coverage
- *   ~15s later    voice_capture_lost  cause=silent_death  NO_AUDIO_FRAMES
+ *   ~15s later    voice_capture_lost  cause=silent_death  RECOGNITION_UNRESPONSIVE
  *
  * Every remaining hypothesis fits that trace equally well. The one witness
  * that separates them is already running and was never read: the component
@@ -23,6 +23,18 @@
  * upstream of both — the stream, the device, or the AudioContext.
  *
  * This module turns that comparison into a single reported field.
+ *
+ * ── 2026-08-31: THE ANALYSER STOPPED BEING ONLY A WITNESS ───────────────────
+ *
+ * Reading it settled the question above, and the answer inverted the verdict
+ * it was built to explain: the analyser was healthy and ticking, the track was
+ * live, and the member was simply quiet. The `~15s later` line above is no
+ * longer how a verdict is reached — absence of recognition events is now
+ * suspicion, not proof. `micLiveness.ts` requires a speech ONSET the member
+ * issued and recognition failed to answer, so the analyser signal it reports
+ * here is also the signal that decides. The reason code was renamed with it:
+ * `NO_AUDIO_FRAMES` overstated an observation in which audio frames were
+ * demonstrably arriving.
  *
  * DESIGN POSITION
  * ---------------

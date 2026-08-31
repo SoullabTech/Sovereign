@@ -54,17 +54,74 @@
  */
 
 /**
- * How long the capture path may produce NO event of any kind — no `onstart`,
- * `onaudiostart`, `onspeechstart`, or `onresult` — while the UI claims to be
- * listening, before we call it dead.
+ * ⚠️ RETAINED FOR TELEMETRY AND FORENSICS ONLY — NO LONGER A DEATH VERDICT.
  *
- * Calibration: a healthy Web Speech session emits `onaudiostart` within
- * milliseconds of `onstart`, and even during a completely silent stretch the
- * browser's own ~5-8s no-speech timeout produces an onend→restart→onstart
- * cycle that re-stamps activity. Fifteen seconds of true silence across every
- * event channel is not a quiet member; it is a broken pipeline.
+ * ── THE FALSIFIED PREMISE ───────────────────────────────────────────────────
+ *
+ * This constant used to mean: "no recognition event of any kind for 15s while
+ * the UI claims to be listening, therefore the pipeline is dead." Its written
+ * calibration was:
+ *
+ *   "even during a completely silent stretch the browser's own ~5-8s no-speech
+ *    timeout produces an onend→restart→onstart cycle that re-stamps activity.
+ *    Fifteen seconds of true silence across every event channel is not a quiet
+ *    member; it is a broken pipeline."
+ *
+ * Production telemetry on 2026-08-31 falsified that premise outright. Chrome
+ * held a recognition instance open, emitting NOTHING — no result, no end, no
+ * error — while a member simply stopped talking:
+ *
+ *   cause: silent_death        silentForMs: 15797     msSinceResult: 15797
+ *   msSinceEnd: -1             msSinceError: -1       recognitionActive: true
+ *   trackReadyState: "live"    trackEnabled: true     trackMuted: false
+ *   analyserLoopRunning: true  analyserTicks: 1888    msSinceAnalyserTick: 12
+ *   audioContextState: running micState: "LISTENING"
+ *
+ * Nothing was broken. The apparatus was healthy in every observable channel.
+ * The member was quiet. The watchdog killed the session anyway, twice, and the
+ * member experienced it as "she stops listening after about twenty seconds" —
+ * the defect this branch exists to close.
+ *
+ * ── WHY SILENCE CANNOT BE THE EVIDENCE ──────────────────────────────────────
+ *
+ * A contemplative companion's members go quiet for minutes. Absence of
+ * recognition events is therefore SUSPICION, never proof: it is exactly what a
+ * thinking member and a zombie instance look like from the outside. To tell
+ * them apart the watchdog must ask recognition a question it can only answer
+ * by responding — and only when the member has actually given it something to
+ * respond to.
  */
 export const CAPTURE_SILENT_DEATH_MS = 15_000;
+
+/**
+ * A new speech episode is an analyser voice sample that follows a quiet gap of
+ * at least this long. That onset — NOT the mere presence of voice — is what
+ * challenges recognition.
+ *
+ * ⛔ THE DISTINCTION THIS ENCODES. The watchdog asks "the member has started
+ * speaking again; is recognition responding?" It must NEVER ask "has
+ * recognition emitted anything while this person has been talking for a
+ * while?" — a member can speak continuously well past any grace window without
+ * a further Web Speech event, and testing presence-of-voice against a timer
+ * would reintroduce the long-form cutoff this repair removes.
+ *
+ * Long enough that a mid-sentence breath is not an onset. Spurious onsets are
+ * harmless while recognition is answering (each answer re-stamps activity);
+ * they matter only when it is inert, which is the case being detected.
+ */
+export const ANALYSER_ONSET_QUIET_MS = 2_000;
+
+/**
+ * How long recognition may stay inert after a speech onset before we call it
+ * unresponsive.
+ *
+ * Calibrated from the same production capture: a healthy instance emitted its
+ * first interim 250–1600ms after `onspeechstart`. Five seconds is several times
+ * the observed worst case, so a slow first interim never reads as death, while
+ * a member who has spoken and been met with nothing is not left talking into a
+ * corpse for long.
+ */
+export const RECOGNITION_RESPONSE_GRACE_MS = 5_000;
 
 /** Heartbeat tick. Detection latency budget is ≤2s, so we sample every second. */
 export const CAPTURE_HEARTBEAT_MS = 1_000;
@@ -86,7 +143,12 @@ export const TRACK_MUTE_GRACE_MS = 1_500;
 
 /** Why capture stopped. Drives both the member-facing wording and telemetry. */
 export type CaptureLossCause =
-  /** No event of any kind for CAPTURE_SILENT_DEATH_MS. The zombie. */
+  /**
+   * Recognition did not respond to a speech onset within the grace. The zombie.
+   * Named `silent_death` for continuity with existing telemetry; what is
+   * actually observed is recognition UNRESPONSIVENESS, not absent audio — the
+   * track, context and analyser are typically all healthy when this fires.
+   */
   | 'silent_death'
   /** onstart fired but audio never opened. */
   | 'never_armed'
@@ -122,7 +184,7 @@ export const CAPTURE_REASON_CODES: Record<CaptureLossCause, string> = {
   permission_lost: 'MIC_PERMISSION_LOST',
   device_changed: 'MIC_DEVICE_CHANGED',
   audio_context_interrupted: 'AUDIO_CONTEXT_INTERRUPTED',
-  silent_death: 'NO_AUDIO_FRAMES',
+  silent_death: 'RECOGNITION_UNRESPONSIVE',
   never_armed: 'CAPTURE_NEVER_ARMED',
   restart_loop: 'RECOGNITION_RESTART_LOOP',
   abort_loop: 'RECOGNITION_ABORT_LOOP',
@@ -143,6 +205,21 @@ export interface CaptureLivenessInput {
    * legitimately torn down in those windows and silence means nothing.
    */
   applicable: boolean;
+  /**
+   * Timestamp of the most recent analyser SPEECH ONSET — a voice sample that
+   * followed at least `ANALYSER_ONSET_QUIET_MS` of quiet. 0 if none observed.
+   *
+   * This is the challenge the verdict rests on. It comes from the acoustic
+   * analyser, which is an independent witness to recognition: the analyser can
+   * hear the member even when the recognition instance has gone deaf, which is
+   * precisely what makes a zombie detectable at all.
+   *
+   * A stalled analyser produces no new onsets, so it cannot manufacture a
+   * death verdict — absence of a witness reads as "cannot say", never as
+   * "dead". Track and AudioContext failures have their own causes and do not
+   * route through here.
+   */
+  analyserVoiceOnsetAt: number;
 }
 
 export interface CaptureLivenessVerdict {
@@ -160,7 +237,7 @@ export interface CaptureLivenessVerdict {
  * simulating a browser or advancing real time.
  */
 export function assessCaptureLiveness(input: CaptureLivenessInput): CaptureLivenessVerdict {
-  const { now, lastActivityAt, armedAt, audioOpened, applicable } = input;
+  const { now, lastActivityAt, armedAt, audioOpened, applicable, analyserVoiceOnsetAt } = input;
 
   // Not listening, or in a window where teardown is expected: silence is
   // meaningless here, and a false positive would interrupt a working session.
@@ -172,12 +249,42 @@ export function assessCaptureLiveness(input: CaptureLivenessInput): CaptureLiven
   const silentForMs = now - Math.max(lastActivityAt, armedAt);
   if (silentForMs < 0) return { dead: false, silentForMs: 0 };
 
-  // Stillborn instance: onstart fired, audio never opened.
+  // Stillborn instance: onstart fired, audio never opened. Unchanged — this
+  // one IS decidable from absence, because a healthy instance opens audio
+  // within milliseconds and the member is not asked to do anything first.
   if (!audioOpened && now - armedAt >= CAPTURE_ARMING_SILENT_MS) {
     return { dead: true, cause: 'never_armed', silentForMs: now - armedAt };
   }
 
-  if (silentForMs >= CAPTURE_SILENT_DEATH_MS) {
+  // ── THE CHALLENGE ─────────────────────────────────────────────────────────
+  //
+  // Recognition is unresponsive only if the member GAVE IT SOMETHING TO ANSWER
+  // and it did not answer. Both halves are required:
+  //
+  //   1. a speech onset exists — the member began a new speech episode; and
+  //   2. that onset is NEWER than the last recognition event — so recognition
+  //      has not reacted to it; and
+  //   3. the response grace has elapsed since the onset.
+  //
+  // Consequences, each of them deliberate:
+  //
+  //   · A quiet member is ALIVE indefinitely. No onset arrives, so no verdict
+  //     is ever reached, no matter how long the silence runs. Silence is not
+  //     evidence.
+  //   · Long continuous speech is ALIVE. One episode produces ONE onset; a
+  //     single recognition event answering it moves `lastActivityAt` past the
+  //     onset, and no further onset can occur until after a real quiet gap. A
+  //     member may talk for minutes without another event and stay alive.
+  //   · The cost, accepted knowingly: if recognition answers an onset and dies
+  //     mid-utterance while the member talks on without pausing, this verdict
+  //     waits for their next quiet gap. Catching that sooner would require
+  //     timing recognition against continuous speech, which is exactly the
+  //     long-form cutoff this repair exists to remove.
+  const hasOnset = analyserVoiceOnsetAt > 0;
+  const onsetUnanswered = hasOnset && analyserVoiceOnsetAt > lastActivityAt;
+  const graceElapsed = hasOnset && now - analyserVoiceOnsetAt >= RECOGNITION_RESPONSE_GRACE_MS;
+
+  if (onsetUnanswered && graceElapsed) {
     return { dead: true, cause: 'silent_death', silentForMs };
   }
 
@@ -219,8 +326,11 @@ export function describeCaptureLoss(
         'Tap the mic to reconnect.' + preserved
       );
     case 'silent_death':
+      // Was "MAIA stopped receiving audio", which overstated the observation:
+      // the microphone is typically still delivering and the analyser still
+      // hears the member. What failed is recognition answering.
       return (
-        'MAIA stopped receiving audio and did not recover on its own. ' +
+        "MAIA stopped responding to your voice and didn't recover on its own. " +
         'Tap the mic to start listening again.' + preserved
       );
     case 'never_armed':

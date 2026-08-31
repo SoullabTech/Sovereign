@@ -18,6 +18,7 @@ import {
   isCaptureLossUnexpected,
   TRACK_MUTE_GRACE_MS,
   CAPTURE_HEARTBEAT_MS,
+  ANALYSER_ONSET_QUIET_MS,
   CAPTURE_REASON_CODES,
   type CaptureLossCause,
 } from '@/lib/voice/micLiveness';
@@ -458,6 +459,16 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
   const analyserLastTickAtRef = useRef<number>(0);
   /** When the analysed level last crossed the VAD threshold. */
   const analyserLastVoiceAtRef = useRef<number>(0);
+  /**
+   * When the member last STARTED a speech episode — a voice sample that
+   * followed at least ANALYSER_ONSET_QUIET_MS of quiet.
+   *
+   * This is the liveness watchdog's challenge to recognition (see
+   * lib/voice/micLiveness.ts). It is an onset, not a presence: continuous
+   * speech produces exactly one, so a member talking at length is never timed
+   * out, and a member sitting quietly never produces one at all.
+   */
+  const analyserVoiceOnsetAtRef = useRef<number>(0);
   /** Ticks since the loop started. Distinguishes "never ran" from "ran then stopped". */
   const analyserTicksRef = useRef<number>(0);
   /**
@@ -1775,13 +1786,14 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
         armedAt: captureArmedAtRef.current,
         audioOpened: captureAudioOpenedRef.current,
         applicable,
+        analyserVoiceOnsetAt: analyserVoiceOnsetAtRef.current,
       });
 
       if (!verdict.dead || !verdict.cause) return;
 
       console.warn(
-        `🩺 [liveness] Capture silent for ${Math.round(verdict.silentForMs / 1000)}s ` +
-        `(${verdict.cause}) — mic said "listening" and was not.`
+        `🩺 [liveness] ${verdict.cause} after ${Math.round(verdict.silentForMs / 1000)}s ` +
+        'without a recognition event — the member spoke and recognition did not answer.'
       );
       handleCaptureLossFnRef.current?.(verdict.cause);
     };
@@ -2339,7 +2351,16 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
       // below reads these — see lib/voice/captureForensics.ts.
       analyserLastTickAtRef.current = now;
       analyserTicksRef.current++;
-      if (normalizedLevel > vadSensitivity) analyserLastVoiceAtRef.current = now;
+      if (normalizedLevel > vadSensitivity) {
+        // An onset is voice that BROKE a quiet gap — the start of a speech
+        // episode. Recorded before the "last voice" stamp is advanced, since
+        // the gap is measured against the previous voice sample.
+        const previousVoiceAt = analyserLastVoiceAtRef.current;
+        if (previousVoiceAt === 0 || now - previousVoiceAt >= ANALYSER_ONSET_QUIET_MS) {
+          analyserVoiceOnsetAtRef.current = now;
+        }
+        analyserLastVoiceAtRef.current = now;
+      }
       {
         const w = analyserPeakRef.current;
         if (w.startedAt === 0) w.startedAt = now;
