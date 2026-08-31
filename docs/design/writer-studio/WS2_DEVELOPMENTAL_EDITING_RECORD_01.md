@@ -212,6 +212,33 @@ existed — was architectural, not textual.
 
 ---
 
+## Persistence classes for a developmental decision
+
+Founder's formulation, recorded as given:
+
+> A developmental decision is meaningful only in relation to the manuscript state
+> against which it was made. "Locked," "declined," "deferred," and even
+> "approved" cannot safely function as timeless properties of a passage if the
+> underlying passage, chapter structure, or book architecture later changes.
+
+| class | behaviour over time |
+|---|---|
+| **Finding** | *Expires.* The manuscript changed; the old diagnosis no longer applies. |
+| **Decline** | *Persists* — but as a decision made against a particular manuscript state. |
+| **Deferral** | *Persists conditionally*, alive until its stated ripening condition occurs. |
+| **Lock** | *Can be superseded.* Later development may make a settled state historical rather than operative. |
+| **Applied edit** | *Persists only insofar as the passage survives.* Changing the surrounding architecture may legitimately reopen its function. |
+
+No example of a superseded canonical lock is recorded here. One was proposed
+during the session and withdrawn by the founder on inspection: the artifact
+declaring `Chapter 2 = LOCKED` was a session transcript, not a repository
+artifact, and the repository evidence says the opposite — `CHAPTER_2_PASS_v1.md`
+describes Chapter 2 as establishing torus, circle and spiral. **The class is held
+open with no specimen.** Recording a transcript as canonical provenance would
+have been the same error this record exists to document.
+
+---
+
 ## The finding this session adds
 
 Recorded as evidence. Whether it is a finding of the programme is the founder's
@@ -240,8 +267,35 @@ Work:
 
 Eight of ten had been repaired by a later assembly. Acting on the document as
 written would have meant editing a file that is not the book, to fix problems
-that no longer exist, using line numbers that address different text. The same
-pattern held for `CHAPTER_1_PASS_v1.md`: all six of its flags were already gone.
+that no longer exist, using line numbers that address different text.
+
+Three legacy artifacts were rechecked in full against the canonical manuscript:
+
+```text
+EDITORIAL_FINDINGS_v1.md    10 item entries     8 expired,  2 real
+CHAPTER_1_PASS_v1.md         9 item entries      8 expired, 1 still live
+CHAPTER_2_PASS_v1.md         5 item entries      5 expired, 0 real
+                            ──────────────────────────────────────────
+                            24 item entries     23 expired, 1 operative
+```
+
+Counted as **item entries, not unique defects** — the artifacts may overlap.
+
+**The single survivor is the most informative row.** Chapter 1's flag F4 — *"The
+Campfire Initiation movement is currently unmarked"* — was still true against the
+canonical manuscript, and was independently rediscovered by this session's fresh
+read before the legacy artifact was consulted. It is the item the founder ruled
+on with a section break.
+
+The 23 that expired were empty heading artifacts, italicization parity, stray
+horizontal rules, mislabeled part numbering, an orphaned workbook ending: all
+**markup** properties of one file's assembly. The one that survived was an
+observation about **how the chapter moves**.
+
+Offered as evidence, not doctrine: *findings about markup expire with the file;
+findings about composition can outlive it.* If that holds across further
+chapters, the two may not be the same kind of record and may not want the same
+lifetime.
 
 This is the same class of error the capture document already names — *"the Work
 itself may be the thing that is wrong"* — inverted. Here the Work was right and
@@ -263,9 +317,20 @@ Chapter 10 ................. replaced, rendered, live
 Ch6 / Ch8 duplications ..... resolved
 Chapter 1 .................. two applied, four declined
 Jung / Campbell ............ resolved globally
+Chapter 2 .................. two applied, two declined, one deferred,
+                             one held for the author's sentence
 Transitions ................ CLOSED, zero prose interventions
 Cosmogonic recurrence ...... OPEN, cross-chapter diction review
+Crystal / Indra / cymatics . OPEN, ripens on the Chapter 3 pass
+Epigraph provenance audit .. OPEN, book-level, before publication
 Heading hierarchy .......... OPEN, mechanical normalization only
-Chapters 2-9 ............... not yet passed
+Chapters 3-9 ............... not yet passed
 Render / upload ............ deferred until the batch completes
 ```
+
+Two entries above are new classes of open item that no built surface holds. The
+crystal/Indra/cymatics question is a **conditional deferral** with a named
+ripening event. The epigraph provenance audit is a **book-level job discovered
+from a declined chapter-level finding** — it exists because a stylistic finding
+was rejected and the real work underneath it became visible. Neither is a note,
+and neither attaches to a division.
