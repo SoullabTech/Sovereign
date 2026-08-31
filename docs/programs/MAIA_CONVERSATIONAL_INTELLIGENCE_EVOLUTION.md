@@ -37,6 +37,33 @@ relationship, memory, symbolic and developmental intelligence, field perception,
 ethics, discernment and expression. A change that improves one organ while
 dissolving that composition is a regression, however well it benchmarks.
 
+## ⭐ THE GOVERNING STATEMENT
+
+> **MAIA's intelligence is not merely the sum of her capabilities. It is her
+> capacity to compose — and restrain — those capabilities in relationship to the
+> actual human moment.**
+
+**Restraint is the integration.**
+
+A sophisticated MAIA is not the one with the most systems firing. It is the one
+that can discern which intelligence belongs in *this* moment, at what depth, and
+which intelligence should **remain latent**.
+
+The deeper problem every composition question reduces to:
+
+> **What should be allowed to become salient now?**
+
+- Memory may be **relevant but intrusive**.
+- Symbol may be **meaningful but premature**.
+- Elemental perception may **illuminate or flatten**.
+- RFI may sense something that should be **held rather than spoken**.
+- Developmental context may **matter without becoming a diagnosis**.
+- A pattern may be **real without being useful to name**.
+- MAIA may **know more than she should say**.
+
+⭐ That is closer to mature human intelligence than anything a capability count
+describes. Not maximum inference — **discerned participation**.
+
 ## The seven interacting systems
 
 ⭐ **This program manages the RELATIONSHIPS among these layers — it is not seven
@@ -148,6 +175,16 @@ EMBODY    use Desktop to develop timing, presence and continuity
 EVOLVE    Apple/MLX, better hearing, full-duplex dynamics, expressive voice,
           multimodality — through governed R&D
 WITNESS   accept nothing until humans actually experience the deeper MAIA
+```
+
+⛔ **NOW DOES NOT WAIT FOR MAP.** The census is the beginning of MAP; it must
+never become another prerequisite for a member simply talking to MAIA. Two
+clocks, meeting later at COMPOSE:
+
+```
+NOW   repair embodiment          → Kelly can actually converse with MAIA
+MAP   read-only organism census  → understand how MAIA's intelligence
+                                   presently composes
 ```
 
 ⭐ **NOW and MAP run in parallel.** The repair lane finishes embodied
@@ -409,6 +446,14 @@ replacing one.
 
 ⛔⛔ **READ-ONLY. NO IMPROVEMENTS. NO CLEANUP. NO REFACTOR. NO CODE.**
 
+### ⛔ THE STOP RULE
+
+> **Finding a defect during the census does not create permission to repair it.**
+
+Record it, classify it, and **continue tracing**. Every defect found will feel
+urgent and small. Acting on one is how this census becomes the exact pattern the
+program exists to escape.
+
 > **First we finally see all of MAIA at once.**
 
 This runs **in parallel** with the production repair lane, and touches nothing it
@@ -442,8 +487,12 @@ Recover and map the **complete existing MAIA intelligence architecture**:
 
 ### Classification
 
-Each item: **BUILT · ACTIVE · PARTIAL · DISCONNECTED · LEGACY · RESEARCHED ·
-RATIFIED · MISSING**
+Each item: **BUILT · ACTIVE · PARTIAL · DISCONNECTED · REDUNDANT · LEGACY ·
+RESEARCHED · RATIFIED · MISSING**
+
+⭐ **REDUNDANT is a first-class verdict**, not a footnote. Two systems making the
+same contribution to one stage is a composition finding, and probably a common
+one.
 
 ⭐ **ACTIVE is not BUILT.** The distinction is the point. This repo already
 carries the six-category typology and its warning — *declaration is not liveness;
@@ -455,6 +504,35 @@ built, migration applied, zero live callers.
 ⚠️ And expect the **inverse drift** the same section names: live infrastructure
 that stays invisible until explicitly measured. Corpus Callosum was firing under
 production traffic while going unnamed in every system description.
+
+### The primary artifact — the turn-composition map
+
+```
+STAGE          SYSTEMS PRESENT   ACTUALLY FIRED   CONTRIBUTION   CONFLICT / REDUNDANCY
+PERCEIVE
+REMEMBER
+SENSE FIELD
+DISCERN
+COGNIZE
+INTEND
+EXPRESS
+UPDATE
+```
+
+⭐ **For every arrow, distinguish four things that are routinely conflated:**
+
+```
+exists in repository  ≠  reachable  ≠  called  ≠  influences the response
+```
+
+⛔ That distinction will probably be one of the most valuable findings in the
+entire census. This repo has already been burned by it twice — a service with a
+migration and zero live callers, and a conversational authority wired into a
+surface no member sees.
+
+> The question is not *"do we have Anamnesis?"* It is: **during an actual MAIA
+> encounter, does Anamnesis participate here? Why? What did it contribute? Did
+> another system make the same contribution? Should it have remained silent?**
 
 ### The deliverable that matters most
 
