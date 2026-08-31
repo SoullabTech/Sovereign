@@ -80,10 +80,11 @@ person, and 8a's captures find the disclosure by one.
 
 ---
 
-## Three defects found by looking at it
+## Four defects found by looking at it
 
-None of them had a machine witness. They were found in a screenshot, which is
-the only instrument for this class.
+None of them had a machine witness. They were found in screenshots, which is the
+only instrument for this class. The witness passed every check before and after
+each one.
 
 **The `◇` marker shifted rows out of column.** Rendered only where MAIA left
 something open, it pushed every unmarked row a character left — so `Air`, the
@@ -96,6 +97,13 @@ thing. The gutter is now always there and the mark is not.
 on a top-level division, so `Move out` on those rows could produce nothing but a
 refusal — an affordance that lies, repeated down every root row. It now appears
 only at depth > 0.
+
+**The tree did not read as a tree.** One `SPACE.base` per level is 12px, so a
+Part and the elements inside it landed in almost the same column. On the two
+all-untitled fixtures this was invisible; it appeared the moment a fixture with
+titled Parts and three real levels was drawn, which is the shape the real
+reading has — 22 divisions, three levels deep. **The nesting IS the reading**,
+and it was the thing being lost. The step is now `SPACE.roomy`.
 
 ---
 
@@ -146,6 +154,28 @@ without it            PASS · 0 failed        every item green except 11
                       and it belongs to the reading rather than the room
   check 2             account NOT behind a disclosure, correctly
 ```
+
+### A third run, because two N/As were hiding a path the real row will take
+
+Both fixtures above are entirely untitled, so **check 6 — where the Work names
+a division, the row shows the WORK's name — came back N/A on both.** The real
+reading has 10 of 22 divisions titled and runs three levels deep. A witness
+green on a shape the subject does not have is the fixture failure this
+programme has already found twice; N/A is not a pass.
+
+A third proposal was built to the real row's shape: titled `PART ONE — THE
+GROUND` and `PART TWO — THE ELEMENTS` alongside five untitled `element`
+siblings, `Contents` and `BACK MATTER` titled, three levels deep.
+
+```text
+mixed shape           PASS · 0 failed, 0 n/a     every 8a item green except 11
+  check 4             5 × "element" → Fire · Water · Earth · Air · Aether
+  check 6             4/4 show the title · 0 show a label in a title's place
+  check 7             12 rationales · 12 Why? disclosures
+```
+
+**Every check exercised, none skipped** — and it is what surfaced the fourth
+defect above. The two untitled fixtures could not have shown it.
 
 **Item 11 is the app-wide favicon unit** — `/icons/favicon-{16,32,48}x32.png`,
 red in the 8a baseline, explicitly outside every mandate since. **Item 10 is

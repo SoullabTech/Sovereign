@@ -629,7 +629,12 @@ function Entry({
   whyOpen: ReadonlySet<string>;
   onToggleWhy: (unitId: string) => void;
 }) {
-  const pad = SPACE.snug + depth * SPACE.base;
+  /* A STEP THE EYE CAN SEE. At one `base` per level the indent was 12px, so a
+     Part and the elements inside it landed in almost the same column and the
+     map stopped reading as a tree — on the real reading, 22 divisions three
+     levels deep, the hierarchy was the thing being lost. The nesting is the
+     reading; it has to be visible without counting. */
+  const pad = SPACE.snug + depth * SPACE.roomy;
 
   if (entry.kind === 'section') {
     const s = headingOf(entry.id);
