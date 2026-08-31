@@ -3769,10 +3769,38 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     // supersession, error recovery — unable to reach it.
     revokeSovereignCapture('stopListening');
 
-    // 🔥 FIX: Only clear wantsContinuousConversation when user explicitly exits voice mode
+    // 🛑 STOP DOMINATES LIVENESS — it does not merely outlast it.
+    //
+    // Revoking session authority is UNCONDITIONAL, on every stop path. It used
+    // to happen only under `userExitMode`, and no caller in the app passes that
+    // flag — not the bar's stop button, not the emergency stop, not the two
+    // call sites whose own comments read "User-initiated exit". So a stopped
+    // hands-free session kept both of these refs set, and the two native
+    // re-arm paths (iOS interruption-end, app foreground-resume) gate on
+    // `handsFreeActiveRef` + `isConversationAlive` WITHOUT consulting
+    // `isListeningRef`. A stop followed by background→foreground could
+    // therefore resurrect the mic.
+    //
+    // That seam predates this change, but this change is what made it matter:
+    // while the liveness lease was 15-45s the stale session expired on its own
+    // within seconds. At a one-hour lease it does not. Restoring stop
+    // semantics is part of this repair's non-degradation obligation, not
+    // separate cleanup — a longer lease is only safe if stop revokes it
+    // outright rather than waiting it out.
+    //
+    // Safe to do unconditionally: no caller uses stopListening() as a mid-turn
+    // pause. The mic is suppressed during MAIA's speech by the lifecycle
+    // session (discard / inputSuppressed), never by this function. Its callers
+    // are the stop control, the mic-tap toggle's stop branch, the exits, and
+    // unmount — every one of them an end of engagement.
+    //
+    // `userExitMode` is left exactly as it was and is NOT redesigned here; it
+    // still owns the counter reset and the comparator close below.
+    wantsContinuousConversationRef.current = false;
+    handsFreeActiveRef.current = false;
+
     if (options?.userExitMode) {
-      console.log('🚪 [ContinuousConversation] User explicitly exited voice mode - clearing wantsContinuousConversationRef');
-      wantsContinuousConversationRef.current = false;
+      console.log('🚪 [ContinuousConversation] User explicitly exited voice mode');
       // Reset Android no-speech counters on explicit user stop so a future
       // mic tap gets a fresh budget (the failure may have been transient).
       noSpeechCycleCountRef.current = 0;

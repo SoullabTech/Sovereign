@@ -129,6 +129,69 @@ describe('genuine failure detection is not defanged by the longer window', () =>
   });
 });
 
+describe('explicit stop dominates liveness rather than outlasting it', () => {
+  /**
+   * The contract:
+   *
+   *   silence                  → epoch may end → re-arm
+   *   MAIA response            → epoch may end → re-arm
+   *   background/interruption  → may re-arm IF the session is still active
+   *   explicit stop            → session authority revoked
+   *                            → no web re-arm, no native re-arm
+   *                            → the liveness lease is irrelevant
+   *
+   * This block exists because lengthening the lease to an hour is only safe if
+   * stop REVOKES it. While the window was 15-45s a stopped-but-stale session
+   * expired on its own within seconds; at an hour it does not.
+   */
+  function stopListeningBody(): string {
+    const start = CONTINUOUS.indexOf('const stopListening = useCallback');
+    expect(start).toBeGreaterThan(-1);
+    return CONTINUOUS.slice(start, CONTINUOUS.indexOf('if (options?.userExitMode)', start));
+  }
+
+  it('revokes hands-free authority on every stop path, not only userExitMode', () => {
+    const body = stopListeningBody();
+    expect(body).toContain('handsFreeActiveRef.current = false;');
+    expect(body).toContain('wantsContinuousConversationRef.current = false;');
+  });
+
+  it('revokes it before the userExitMode branch, so no caller can skip it', () => {
+    // No caller in the app passes userExitMode — not the stop button, not the
+    // emergency stop, not the two sites whose comments claim "User-initiated
+    // exit". Anything gated on that flag is unreachable from the product.
+    const body = stopListeningBody();
+    const handsFree = body.indexOf('handsFreeActiveRef.current = false;');
+    const wants = body.indexOf('wantsContinuousConversationRef.current = false;');
+    expect(handsFree).toBeGreaterThan(-1);
+    expect(wants).toBeGreaterThan(-1);
+  });
+
+  it('closes both native re-arm paths, which never consult isListeningRef', () => {
+    // iOS interruption-end and app foreground-resume gate on handsFreeActiveRef
+    // + isConversationAlive. Clearing handsFreeActiveRef is what makes a
+    // stopped session unresurrectable through either, independent of the lease.
+    const interruptionEnd = CONTINUOUS.slice(
+      CONTINUOUS.indexOf('const handleInterruptionEnd'),
+      CONTINUOUS.indexOf('const handleInterruptionEnd') + 900
+    );
+    expect(interruptionEnd).toContain('handsFreeActiveRef.current');
+    expect(interruptionEnd).toContain('isConversationAlive');
+
+    const foreground = CONTINUOUS.slice(
+      CONTINUOUS.indexOf("App.addListener('appStateChange'"),
+      CONTINUOUS.indexOf("requestRestartFnRef.current?.('foreground_resume')")
+    );
+    expect(foreground).toContain('if (!handsFreeActiveRef.current) return;');
+    expect(foreground).toContain('isConversationAlive');
+  });
+
+  it('does not redesign userExitMode — it still owns the counter reset', () => {
+    expect(CONTINUOUS).toContain('noSpeechCycleCountRef.current = 0;');
+    expect(CONTINUOUS).toContain('noSpeechFallbackFiredRef.current = false;');
+  });
+});
+
 describe('the member can see they are being heard', () => {
   it('renders the transcript in its own layer above the bar', () => {
     expect(BAR).toContain('function LiveTranscriptLayer');
