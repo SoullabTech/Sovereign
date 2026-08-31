@@ -31,11 +31,17 @@ function getOpenAI() {
 
 // VOICE-TTS-REQUEST-DEADLINE-01 — see lib/voice/ttsDeadline.ts for the
 // witnessed failure this bounds and why 20s is the number.
-async function createSpeechWithDeadline(params: any, requestId: string) {
-  return runWithTTSDeadline(
-    (signal) => getOpenAI().audio.speech.create(params, { signal }),
-    requestId
-  );
+//
+// The deadline covers the WHOLE generation — request AND response body — not
+// just speech.create(). The production 589,288ms was measured after the body
+// had been consumed, so we cannot say whether those minutes went to headers,
+// to the body, or to both. Bounding only the header exchange would leave the
+// witnessed failure reachable.
+async function synthesizeWithDeadline(params: any, requestId: string): Promise<Buffer> {
+  return runWithTTSDeadline(async (signal) => {
+    const speech = await getOpenAI().audio.speech.create(params, { signal });
+    return Buffer.from(await speech.arrayBuffer());
+  }, requestId);
 }
 
 function jsonError(message: string, status = 500, extra?: Record<string, unknown>) {
@@ -157,9 +163,7 @@ export async function POST(req: NextRequest) {
         speed,
         ...(ttsInstructions ? { instructions: ttsInstructions } : {}),
       };
-      const speech = await createSpeechWithDeadline(speechParams, requestId);
-
-      const audioBuffer = Buffer.from(await speech.arrayBuffer());
+      const audioBuffer = await synthesizeWithDeadline(speechParams, requestId);
       const ms = Date.now() - t0;
 
       console.log(`[openai-tts:${requestId}] ARCHETYPE provider=openai voice=${voice} archetype=${effectiveArchetype} hasInstructions=${Boolean(ttsInstructions)} bytes=${audioBuffer.length} ms=${ms}`);
@@ -325,9 +329,7 @@ export async function POST(req: NextRequest) {
       speed,
       ...(ttsInstructions ? { instructions: ttsInstructions } : {}),
     };
-    const speech = await createSpeechWithDeadline(fallbackSpeechParams, requestId);
-
-    const audioBuffer = Buffer.from(await speech.arrayBuffer());
+    const audioBuffer = await synthesizeWithDeadline(fallbackSpeechParams, requestId);
     const ms = Date.now() - t0;
 
     console.log(`[openai-tts:${requestId}] ok model=${fallbackModel} voice=${voice} format=${format} bytes=${audioBuffer.length} ms=${ms}`);

@@ -33,15 +33,29 @@ export class TTSDeadlineExceeded extends Error {
 }
 
 /**
- * Runs one speech generation under a hard wall-clock deadline.
+ * Runs one whole speech generation under a hard wall-clock deadline.
  *
- * A single AbortController wraps the entire call, so SDK-internal retries
- * cannot extend the wall clock past the deadline — the signal stays aborted
- * across every attempt.
+ * The deadline is a RACE, not a hope. An earlier revision only aborted the
+ * controller and then waited for the upstream call to reject — which makes
+ * the deadline contingent on upstream honouring AbortSignal. An upstream that
+ * ignores or mishandles the signal could still hold the caller indefinitely,
+ * which is the exact failure this unit exists to end.
  *
- * On deadline, this throws. It never returns a late value: a generation
- * abandoned here is abandoned for good, and the caller is responsible for
- * ensuring nothing from it reaches the member.
+ * The two mechanisms do different jobs and both are required:
+ *
+ *   abort  → resource cancellation (stop the work, free the socket)
+ *   race   → conversational authority (the caller is released on time,
+ *            whether or not the work cooperates)
+ *
+ * Whatever `run` is given must include EVERY leg of the generation, response
+ * body consumption included. The production 589,288ms was measured after the
+ * body was consumed, so we do not know whether those minutes were spent
+ * waiting for headers, for the body, or both. A deadline that covers only the
+ * header exchange would not have bounded the witnessed failure.
+ *
+ * A generation abandoned here is abandoned for good. If the upstream later
+ * succeeds, that result is discarded — it can never become this call's return
+ * value.
  */
 export async function runWithTTSDeadline<T>(
   run: (signal: AbortSignal) => Promise<T>,
@@ -50,19 +64,40 @@ export async function runWithTTSDeadline<T>(
 ): Promise<T> {
   const controller = new AbortController();
   const startedAt = Date.now();
-  const timer = setTimeout(() => controller.abort(), deadlineMs);
-  try {
-    return await run(controller.signal);
-  } catch (err) {
-    if (controller.signal.aborted) {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+
+  const deadline = new Promise<never>((_resolve, reject) => {
+    timer = setTimeout(() => {
+      controller.abort();
       const elapsedMs = Date.now() - startedAt;
       console.warn(
         `[openai-tts:${requestId}] DEADLINE_EXCEEDED elapsed=${elapsedMs}ms deadline=${deadlineMs}ms — generation abandoned`
       );
-      throw new TTSDeadlineExceeded(deadlineMs, elapsedMs);
+      reject(new TTSDeadlineExceeded(deadlineMs, elapsedMs));
+    }, deadlineMs);
+  });
+
+  const work = run(controller.signal);
+
+  // An abandoned generation may still settle later, in either direction. Its
+  // rejection must not surface as an unhandled rejection, and its success must
+  // not reach anyone: nothing awaits `work` again after the race is decided.
+  void work.then(
+    () => undefined,
+    () => undefined
+  );
+
+  try {
+    return await Promise.race([work, deadline]);
+  } catch (err) {
+    if (err instanceof TTSDeadlineExceeded) throw err;
+    if (controller.signal.aborted) {
+      // Upstream rejected because we aborted it — same abandonment, reported
+      // in the same terms rather than as an upstream transport failure.
+      throw new TTSDeadlineExceeded(deadlineMs, Date.now() - startedAt);
     }
     throw err;
   } finally {
-    clearTimeout(timer);
+    if (timer) clearTimeout(timer);
   }
 }

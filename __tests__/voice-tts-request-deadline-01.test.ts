@@ -4,8 +4,17 @@
  * Reproduces the witnessed 2026-08-31 failure shape: a TTS generation that
  * does not answer, and then answers long after the conversation has moved on.
  *
- * The last test is the mandatory negative control. It is not enough that the
- * deadline fires; the abandoned generation's eventual success must be inert.
+ * Two producers are used deliberately:
+ *
+ *   abortAware   — honours AbortSignal. Proves resource cancellation.
+ *   abortIgnoring — deliberately ignores AbortSignal and resolves anyway.
+ *                   Proves the deadline is a hard wall rather than a request
+ *                   the upstream may decline.
+ *
+ * The abortIgnoring case is the load-bearing one. An earlier revision of this
+ * test only ever used an abort-aware producer, which meant a late completion
+ * could never occur and the negative control proved nothing about the failure
+ * actually witnessed in production.
  */
 import {
   runWithTTSDeadline,
@@ -13,18 +22,29 @@ import {
   TTS_REQUEST_DEADLINE_MS,
 } from '@/lib/voice/ttsDeadline';
 
-const never = (signal: AbortSignal, resolveAfterMs?: number) =>
-  new Promise<string>((resolve, reject) => {
-    const t = resolveAfterMs
-      ? setTimeout(() => resolve('late-audio'), resolveAfterMs)
-      : undefined;
+/** Honours the signal: rejects with AbortError when aborted. */
+const abortAware = (signal: AbortSignal) =>
+  new Promise<string>((_resolve, reject) => {
     signal.addEventListener('abort', () => {
-      if (t) clearTimeout(t);
       const err = new Error('aborted');
       err.name = 'AbortError';
       reject(err);
     });
   });
+
+/**
+ * Ignores the signal entirely and resolves after `ms`, exactly as the
+ * production request did when it returned 200 after 589,288ms.
+ */
+const abortIgnoring = (ms: number, onResolve?: () => void) => () =>
+  new Promise<string>((resolve) => {
+    setTimeout(() => {
+      onResolve?.();
+      resolve('late-audio');
+    }, ms);
+  });
+
+const WITNESSED_HANG_MS = 589_288;
 
 describe('VOICE-TTS-REQUEST-DEADLINE-01', () => {
   beforeEach(() => jest.useFakeTimers());
@@ -35,42 +55,39 @@ describe('VOICE-TTS-REQUEST-DEADLINE-01', () => {
     expect(TTS_REQUEST_DEADLINE_MS).toBeLessThan(45_000);
   });
 
-  it('returns normally when generation succeeds before the deadline', async () => {
-    const p = runWithTTSDeadline(async () => 'audio', 'rid-fast');
-    await expect(p).resolves.toBe('audio');
+  it('returns normally when the whole generation succeeds before the deadline', async () => {
+    await expect(runWithTTSDeadline(async () => 'audio', 'rid-fast')).resolves.toBe('audio');
   });
 
-  it('abandons a generation that exceeds the deadline (the 589s case)', async () => {
-    const p = runWithTTSDeadline((signal) => never(signal), 'rid-hang', 20_000);
-    const assertion = expect(p).rejects.toBeInstanceOf(TTSDeadlineExceeded);
+  it('abandons an abort-aware generation that exceeds the deadline', async () => {
+    const p = runWithTTSDeadline(abortAware, 'rid-hang', 20_000);
+    const settled = p.catch((e) => e);
     jest.advanceTimersByTime(20_001);
-    await assertion;
+    expect(await settled).toBeInstanceOf(TTSDeadlineExceeded);
   });
 
-  it('carries the elapsed time so abandonment is auditable, not silent', async () => {
-    const p = runWithTTSDeadline((signal) => never(signal), 'rid-audit', 20_000);
-    const assertion = p.catch((e) => e);
+  it('carries deadline and elapsed time so abandonment is auditable, not silent', async () => {
+    const p = runWithTTSDeadline(abortAware, 'rid-audit', 20_000);
+    const settled = p.catch((e) => e);
     jest.advanceTimersByTime(20_001);
-    const err = await assertion;
-    expect(err).toBeInstanceOf(TTSDeadlineExceeded);
+    const err = await settled;
     expect(err.deadlineMs).toBe(20_000);
     expect(err.elapsedMs).toBeGreaterThanOrEqual(0);
   });
 
-  it('passes a signal that is already aborted, so SDK retries cannot extend the wall clock', async () => {
+  it('aborts the signal, so SDK-internal retries cannot extend the wall clock', async () => {
     let seen: AbortSignal | undefined;
     const p = runWithTTSDeadline((signal) => {
       seen = signal;
-      return never(signal);
+      return abortAware(signal);
     }, 'rid-retry', 20_000);
-    const assertion = p.catch((e) => e);
+    const settled = p.catch((e) => e);
     jest.advanceTimersByTime(20_001);
-    await assertion;
-    // A retry inside the SDK would reuse this same signal, which stays aborted.
+    await settled;
     expect(seen!.aborted).toBe(true);
   });
 
-  it('does not surface a non-deadline transport error as an abandonment', async () => {
+  it('does not report a non-deadline transport error as an abandonment', async () => {
     const boom = new Error('upstream 500');
     const err = await runWithTTSDeadline(async () => {
       throw boom;
@@ -79,27 +96,43 @@ describe('VOICE-TTS-REQUEST-DEADLINE-01', () => {
     expect(err).not.toBeInstanceOf(TTSDeadlineExceeded);
   });
 
+  // ── HARD WALL ───────────────────────────────────────────────────────────
+  it('releases the caller at the deadline even when the upstream IGNORES the abort', async () => {
+    const p = runWithTTSDeadline(abortIgnoring(WITNESSED_HANG_MS), 'rid-uncooperative', 20_000);
+    const settled = p.catch((e) => e);
+    jest.advanceTimersByTime(20_001);
+    const err = await settled;
+    expect(err).toBeInstanceOf(TTSDeadlineExceeded);
+    expect(err.deadlineMs).toBe(20_000);
+  });
+
   // ── MANDATORY NEGATIVE CONTROL ──────────────────────────────────────────
-  // Witnessed: a response that returned after the conversation had moved on
-  // spoke into a later exchange. A deadline alone does not prevent that.
-  it('NEGATIVE CONTROL: a late success after abandonment never reaches the caller', async () => {
-    let lateValue: string | undefined;
+  // Witnessed: a response returned after the conversation had moved on and
+  // spoke into a later exchange. This models that exactly — the upstream
+  // ignores the abort and genuinely succeeds at 589,288ms.
+  it('NEGATIVE CONTROL: an abort-ignoring upstream really completes late, and that success reaches no one', async () => {
+    let upstreamCompleted = false;
     const p = runWithTTSDeadline(
-      (signal) => never(signal, 589_288).then((v) => (lateValue = v)),
+      abortIgnoring(WITNESSED_HANG_MS, () => {
+        upstreamCompleted = true;
+      }),
       'rid-late',
       20_000
     );
-    const assertion = p.catch((e) => e);
-    jest.advanceTimersByTime(20_001);
-    const err = await assertion;
-    expect(err).toBeInstanceOf(TTSDeadlineExceeded);
+    const settled = p.catch((e) => e);
 
-    // Advance past the full 589s the production request actually took.
-    jest.advanceTimersByTime(600_000);
+    jest.advanceTimersByTime(20_001);
+    expect(await settled).toBeInstanceOf(TTSDeadlineExceeded);
+    expect(upstreamCompleted).toBe(false); // not yet — the caller was freed first
+
+    // Now run out the full duration the production request actually took.
+    jest.advanceTimersByTime(WITNESSED_HANG_MS);
+    await Promise.resolve();
     await Promise.resolve();
 
-    // The abandoned generation produced nothing the caller can act on.
-    expect(lateValue).toBeUndefined();
+    // The upstream DID succeed. That is the whole point of this control:
+    // a late success occurred, and it changed nothing for the caller.
+    expect(upstreamCompleted).toBe(true);
     await expect(p).rejects.toBeInstanceOf(TTSDeadlineExceeded);
   });
 });
