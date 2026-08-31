@@ -1,5 +1,9 @@
 # Chapter 10: The Living Spiral — Developmental Draft v2
 
+> **SUPERSEDED by** [`CHAPTER_10_FULL_DRAFT_v3.md`](./CHAPTER_10_FULL_DRAFT_v3.md) — the chapter as continuous prose,
+> built under the ratified rulings (Air = *With*; Aether = held field, not phase five). Retained for the
+> move-by-move record only. Do not build from this file.
+
 > **What changed from your draft.** Nothing of the thought. The staccato has been worked into full
 > paragraphs; the sections have been grouped into a stated six-movement arc; transitions now carry the
 > reader across the seams. Isolated single-line beats survive only where they are doing rhetorical work

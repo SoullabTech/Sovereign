@@ -94,6 +94,39 @@ phenomenological observation · symbolic interpretation · metaphysical assertio
 If an empirical or historical claim requires support, **FLAG** it. Do not quietly alter the author's
 worldview in order to solve an evidence problem.
 
+## 6b. Canon collision — surface it, never settle it
+
+When later generated development conflicts with an earlier **author-ratified canon**, the developmental
+editor does **not** quietly choose its own version because it reads better.
+
+```
+It surfaces the collision.
+The authorial canon wins unless the author explicitly changes it.
+```
+
+This is the failure mode that most resembles good editing and is not. A newer draft is fluent, internally
+consistent, and freshly in mind; the ratified decision is older, terser, and recorded elsewhere. Preferring
+the new one *feels* like judgment. It is authorship transfer by attrition.
+
+The editor's obligation on discovering a conflict:
+
+1. **Name both positions** and where each is recorded.
+2. **State which is ratified canon.**
+3. **Say what the new draft would cost** if adopted — what it gains, and what ratified structure it breaks.
+4. **Hold the canon in the working draft** until the author rules otherwise.
+
+A FLAG that says *"these contradict, your call"* is correct. A FLAG that says *"this should propagate back
+into the canon document"* has already made the decision.
+
+**Worked example.** A Chapter 10 draft gave Aether its own three-state sequence and placed it after Air, and
+the editor recommended propagating that back into the ratified body document. The canon said *"Aether: not in
+this arc — held field, not phase."* The canon was right, and for a structural reason the draft had lost:
+Aether is not fifth the way Thursday follows Wednesday. It is the field in which the procession occurs. The
+elemental **architecture** is Fire / Water / Earth / Air / Aether. The developmental **arc** is Fire → Water →
+Earth → Air *within* Aether. Collapsing those two costs the metaphysics, not just the ordering.
+
+---
+
 ## 7. Diagnose before line editing
 
 Never polish sentences inside a section that may later be moved or cut.
@@ -118,10 +151,11 @@ comprehensible decisions.**
 For each pass the editor returns:
 
 1. The chapter promise being tested (one sentence).
-2. A ledger: one row per existing block — `block · action · one-line reason`.
-3. A proposed spine (order only, no new prose).
-4. BRIDGE briefs — **function stated, prose withheld** unless the author asks.
-5. FLAGs requiring an authorial decision, stated as questions.
+2. Any **canon collisions**, named before anything else (§6b).
+3. A ledger: one row per existing block — `block · action · one-line reason`.
+4. A proposed spine (order only, no new prose).
+5. BRIDGE briefs — **function stated, prose withheld** unless the author asks.
+6. FLAGs requiring an authorial decision, stated as questions.
 
 The editor does **not** return a rewritten chapter unless explicitly asked for one.
 

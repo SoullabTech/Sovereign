@@ -1,5 +1,9 @@
 # Chapter 10 — Developmental Rebuild v1
 
+> **SUPERSEDED by** [`CHAPTER_10_FULL_DRAFT_v3.md`](./CHAPTER_10_FULL_DRAFT_v3.md) — the chapter as continuous prose,
+> built under the ratified rulings (Air = *With*; Aether = held field, not phase five). Retained for the
+> move-by-move record only. Do not build from this file.
+
 > **Superseded by** [`CHAPTER_10_DEVELOPMENTAL_DRAFT_v2.md`](./CHAPTER_10_DEVELOPMENTAL_DRAFT_v2.md),
 > which is built from the live manuscript rather than the repo copy. This file is retained because it is the
 > only place the **block-by-block moves** (KEEP/MOVE/CUT/HOLD) are recorded against the repo manuscript, and
