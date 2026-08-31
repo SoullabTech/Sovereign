@@ -198,10 +198,17 @@ qualifications included, rather than the cleaner one the room used to produce.
 ## Board
 
 ```text
-5½ reader                    PASS · CLOSED
-8a harness                   PASS as instrument
-8a render fidelity           GREEN on the three target items · accepted 6eacae5fb
-8a item 11 (favicon 404s)    RED · app-wide, excluded from this mandate, own unit
-8b founder semantic judgment UNBLOCKED — the room now shows the whole reading
-6 adoption                   HOLD
+05B-5½ real MAIA reader       PASS · CLOSED
+05B-8a instrument             PASS
+05B-8a target render fidelity PASS · REAL PROPOSAL
+05B-8a favicon invariant      RED · BASELINE RED · SEPARATE UNIT
+05B-8b founder judgment       UNBLOCKED
+05B-6 adoption                HOLD
 ```
+
+**A wording distinction that matters.** The browser run as a whole is **not**
+green — item 11 still fails. What passes is 8a's **authorized acceptance
+target**: 3.1, 5 and 7.1 green, every previously green item still green. The
+remaining red was red before the repair and lies outside the mandate. "The 8a
+run is green" would be false; "8a's target passed on the real proposal" is what
+happened.

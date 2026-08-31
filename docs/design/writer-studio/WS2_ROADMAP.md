@@ -75,8 +75,10 @@ shipped behaviour.
 05B-5½ real MAIA structure reader   PASS · REAL-WORK WITNESSED · CLOSED
 05B-6  sovereign adoption           HOLD
 05B-7  end-to-end adoption witness  HOLD
-05B-8a render fidelity            GREEN · accepted 6eacae5fb on the real
-                                  proposal. Baseline and acceptance in
+05B-8a instrument                 PASS
+05B-8a target render fidelity     PASS · REAL PROPOSAL · accepted 6eacae5fb
+05B-8a favicon invariant          RED · baseline red · separate unit
+                                  Baseline and acceptance in
                                   WS2-05B-8A_RENDER_FIDELITY_WITNESS.md
 05B-8b founder judgment of the    UNBLOCKED
        reading itself
