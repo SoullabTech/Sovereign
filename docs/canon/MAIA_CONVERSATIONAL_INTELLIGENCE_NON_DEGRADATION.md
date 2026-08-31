@@ -157,24 +157,41 @@ memory bundle, relational stack, prompt machinery and TTS — zero references to
 `finalizeMemberFacingText`. Not a thinner call into canonical cognition: a
 **second mind**.
 
-⛔ **How the enforcement missed it, twice.** v1 asserted four *named* routes
-were absent; `/api/voice/stream-conversation` was not among them, so it passed
-while the divergence ran. v2 replaced that with a catalogue of
+⛔ **How the enforcement missed it, three times.** v1 asserted four *named*
+routes were absent; `/api/voice/stream-conversation` was not among them, so it
+passed while the divergence ran. v2 replaced that with a catalogue of
 response-producing call *patterns* and called it positive enforcement — it was
 not: anything not matching a listed pattern stayed invisible, and its
 "unnamed endpoint" probe used a URL inside the catalogue's own regex family, so
 it proved the pattern generalized within what it already knew while being
-presented as proof against the unknown.
+presented as proof against the unknown. v3 enumerated every `return` via the
+TypeScript AST, which closed the added-exit hole for good — but it still
+*classified* each exit with a leftover regex, so a responder nobody had named,
+placed **before an existing ratified return**, changed no exit, matched no
+pattern, and left the gate green.
 
-⭐ **Both were catalogues of things we had thought of.** The enforcement now
-enumerates, via the TypeScript AST, every `return` belonging to
-`handleVoiceTranscript` — exits are a closed set the compiler can enumerate
-exhaustively; responder names are not. The property proven is that **every
-explicit return is a non-response admission guard**, the single
-response-producing path being the fall-through to `handleTextMessage`. An added
-exit fails because a new exit appeared, whatever preceded it and whether or not
-anyone has heard of it. A probe injecting `totallyNewResponder()` — no known
-name, no known route family — fails the gate.
+⭐ **All three were denylists, and a denylist fails open on the unknown.** Each
+asked *"does this look like something we thought of?"* and answered no. The
+enforcement therefore now pins **two closed sets, both derived from the code by
+the compiler**:
+
+1. **The exit set** — every `return` belonging to `handleVoiceTranscript`. Exits
+   are a closed set the compiler can enumerate exhaustively; responder names are
+   not. An added exit fails because a new exit appeared, whatever preceded it.
+2. **The admission-phase allowlist** — for each ratified exit, the *exact* set of
+   calls its guard branch makes. Not "no responder-shaped call": *exactly these
+   calls and no others*. An unknown call fails **because it is unknown**, without
+   the gate ever learning its name.
+
+The property proven is that **every explicit return is a non-response admission
+guard that still does only what it was certified to do**, the single
+response-producing path being the fall-through to `handleTextMessage`.
+
+⛔ **The cost is accepted deliberately.** Changing what an admission guard does
+turns the gate red, including for innocent edits. That is the mechanism, not a
+side effect: the admission phase is a sovereignty boundary, and it must not be
+possible to widen it quietly. Re-pinning a row is an authority decision argued
+for in the diff, exactly like adding a preload channel.
 
 ⛔ **Repaired in `VOICE-CANONICAL-CONVERGENCE-02`** by removing the branch
 structurally, not by defaulting a flag off — a flag would have made the defect
