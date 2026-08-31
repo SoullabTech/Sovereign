@@ -189,22 +189,93 @@ jest                 731 tests green across lib/manuscript, lib/writersStudio,
 
 ---
 
-## What this does NOT establish
+---
 
-**The gate 8a actually names is `2a427a6f-86b5-4ba3-a901-267710977f25`**, the
-real reading of Elemental Alchemy, and it is not in this container — no
-`maia_consciousness`, no copy of the book. The runs above are on a fixture built
-to reproduce the adversarial properties, which is the right instrument for
-"could the room draw this shape" and **is not** the acceptance 8a specifies.
-Running 8a on `2a427a6f` is Kelly's, on the Mac Studio:
+# The real Work — Mac Studio, `5fb31b248`, 2026-08-31
 
-```bash
-cd /private/tmp/ws2-04a-witness
+Three runs on Elemental Alchemy, `a3ae67fd-a21e-4948-8766-4c397d2e4712`, 174
+sections. **The machine floor is GREEN on the real row.**
+
+## 8a on its own named gate — `2a427a6f`, the pre-contract reading
+
+```text
+Frozen row: form mixed · 11 divisions · 3 uncertain regions · unaccounted 0/174
+Reader: claude-opus-5 · prompt 7d4e27cfa81d
+
+every item green, item 11 excepted
+  3.1  truncated false vs false; passes 2 vs 2; stated in words
+  5    3 regions rendered; the stored text present
+  7.1  10 carry tags in the row; 10 rendered
+  10   captures written — incl. section 42
+  13   revision 0
 ```
 
-then the reproduction in `WS2-05B-8A_RENDER_FIDELITY_WITNESS.md`, unchanged.
+**This is 8a's acceptance target, held.** 3.1, 5 and 7.1 green, every previously
+green item still green, on the same frozen proposal 8a was accepted on — after a
+rewrite of the room. And because `2a427a6f` predates the editorial contract, the
+run doubles as the honest-degradation witness on a REAL pre-contract row: no
+letter, no labels, the account in its old place, nothing invented in their
+absence.
 
-**And the room has not been read by a person.** The specified acceptance is:
+## 8a on the new reading — `e6cabcc4`
+
+```text
+Frozen row: form stable · 22 divisions · 4 uncertain regions · unaccounted 0/174
+Reader: claude-opus-5 · prompt a1825a7c2f50
+
+every item green, item 11 excepted
+  7    13 of 22 divisions carry no title; the kind is shown, never a
+       manufactured name
+  7.1  19 carry tags; 19 rendered
+  7.2  16/16 free-text kinds survive
+  8    174 of 174 drawn, ascending, unique
+```
+
+## 02a on the new reading — `e6cabcc4`
+
+```text
+PASS — 0 failed, 0 n/a
+
+1  the room opens on the thesis          MAIA's thesis, verbatim
+2  her account is present, and second    1 element, behind a disclosure
+3  findings and questions                5/5 findings · 5/5 questions · 5 marked
+4  same-kind untitled siblings           5 × "element" →
+                                         Fire · Water · Earth · Air · Aether
+5  every label names its row             13/13 rendered · 13 marked as hers
+6  where the Work names a division       9/9 show the title ·
+                                         0 show a label in a title's place
+7  her reasoning is reachable            22 rationales · 22 Why? disclosures
+8  the map opens on the reading          0 of 174 section rows visible
+9  the witness wrote nothing             revision 0 · 0 non-GET attempted
+```
+
+**Every check exercised on the real row, none skipped.** The fixture work
+predicted it: the three-fixture set was built precisely so that no check would
+arrive at the real Work untested.
+
+**Item 11's three favicon 404s are red on all three runs**, as they were in 8a's
+own baseline. Its own unit.
+
+## One thing these runs do NOT settle
+
+**The dev server on 3105 was already running when the worktree advanced** —
+`EADDRINUSE` — so the code under test came from whatever checkout started it.
+The evidence says it carries 02a: `data-thesis`, `data-editorial-label`,
+`data-row-name` and `data-why` all resolve, and those attributes exist in no
+earlier commit. What it cannot distinguish is `a205fef29` from `5fb31b248`,
+because **the only difference between them is the indentation step, and no
+assertion covers it.**
+
+Every result above therefore stands regardless. The one thing at risk is what a
+person SEES: the flat-tree defect was found on a 3-level fixture and is worst
+exactly here, at 22 divisions and three levels. **Before the founder witness,
+the server must be confirmed on `5fb31b248` or restarted from this worktree.**
+
+---
+
+## What this does NOT establish
+
+**The room has not been read by a person.** The specified acceptance is:
 
 > the founder opens the room and can say what MAIA thinks the structure of the
 > book is, what she is unsure about, and can take up one of her questions —
@@ -217,10 +288,10 @@ answer it, and that limit is the honest state of the room rather than something
 the layout hides.
 
 ```text
-02a machine floor        PASS · fixture
-02a on the real row      PENDING · Kelly, Mac Studio
+02a machine floor        PASS · three fixtures AND the real row
+02a 8a on 2a427a6f       PASS · the accepted target held after the rewrite
 02a founder witness      PENDING · the one that matters
-02c Ask MAIA             HOLD
-05B-8b semantic judgment HOLD, behind that witness
-05B-6 adoption           HOLD
+02c Ask MAIA             NEXT once 02a is witnessed — a fresh lane, Kelly's call
+05B-8b semantic judgment HOLD, behind 02c
+05B-6 adoption           HOLD · its own fresh lane
 ```
