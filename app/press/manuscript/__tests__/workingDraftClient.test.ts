@@ -131,6 +131,12 @@ describe('putDraft — autosave vs checkpoint', () => {
       await putDraft(jest.fn(async () => resp(500)), ID, { content: 'x', ...GUARD })
     ).toEqual({ kind: 'error' });
   });
+
+  it('maps 401 to "unauthorized" — a sign-in, never a retryable failure', async () => {
+    expect(
+      await putDraft(jest.fn(async () => resp(401)), ID, { content: 'x', ...GUARD })
+    ).toEqual({ kind: 'unauthorized' });
+  });
 });
 
 describe('restoreRevision — restore creates a new revision', () => {
@@ -300,6 +306,58 @@ describe('createDraftSaver — autosave sequencing (the load-bearing guarantee)'
     await saver.whenIdle();
     expect(save).toHaveBeenCalledTimes(2);
     expect(saver.hasPending()).toBe(false);
+  });
+});
+
+describe('createDraftSaver — a session that ended mid-manuscript', () => {
+  /* Reported by a beta writer returning to their book after time away: every
+     save answered 401, the surface said "could not save just now", and the
+     retry it offered could never succeed. The two things that must hold: the
+     writer is told it is a sign-in and not a glitch, and the lane stays open
+     so the very same content saves once they are back. */
+  it('reports unauthorized, keeps the content, and saves it after signing back in', async () => {
+    const save = jest.fn(async (): Promise<SaveResult> => ({ kind: 'unauthorized' }));
+    const states: SaverState[] = [];
+    const unauthorized = jest.fn();
+    const saver = createDraftSaver(save, {
+      onState: (s) => states.push(s),
+      onUnauthorized: unauthorized,
+    });
+
+    saver.queue('a page of the book');
+    saver.flush();
+    await saver.whenIdle();
+
+    expect(states[states.length - 1]).toBe('unauthorized');
+    expect(states).not.toContain('saved');
+    expect(states).not.toContain('error'); // not a transient failure — a sign-in
+    expect(unauthorized).toHaveBeenCalledTimes(1);
+    expect(saver.hasPending()).toBe(true); // the words are still held
+
+    // Signed in again in another tab; the same content goes through.
+    save.mockResolvedValueOnce({ kind: 'ok', revisionCount: 3, revisionId: 7, updatedAt: 't' });
+    saver.flush();
+    await saver.whenIdle();
+    expect(save).toHaveBeenNthCalledWith(2, 'a page of the book');
+    expect(saver.hasPending()).toBe(false);
+    expect(states[states.length - 1]).toBe('saved');
+  });
+
+  it('keeps typing while signed out and saves the LATEST content, not the stale one', async () => {
+    const save = jest.fn(async (): Promise<SaveResult> => ({ kind: 'unauthorized' }));
+    const saver = createDraftSaver(save, { onState: () => {} });
+
+    saver.queue('first');
+    saver.flush();
+    await saver.whenIdle();
+    saver.queue('first, then more');
+    saver.flush();
+    await saver.whenIdle();
+
+    save.mockResolvedValueOnce({ kind: 'ok', revisionCount: 1, revisionId: 2, updatedAt: null });
+    saver.flush();
+    await saver.whenIdle();
+    expect(save).toHaveBeenLastCalledWith('first, then more');
   });
 });
 
