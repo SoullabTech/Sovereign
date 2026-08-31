@@ -72,42 +72,56 @@ describe('parseUpload', () => {
    * spaces, stray trailing spaces, a shift+enter line break, and a run split
    * mid-word.
    *
-   * The pair of tests below is the boundary itself: the first is what the DOCX
-   * structure PROVES is presentation, the second is everything the format does
-   * not prove and which therefore survives untouched.
+   * ALL OF IT SURVIVES, and that is the assertion. Two normalizations were
+   * written against this fixture and both were withdrawn: a global whitespace
+   * pass, then a narrow "drop Word's indent tab" transform. The second failed
+   * on provenance — see the second test below, which pins the reason so the
+   * transform is not rediscovered as a good idea.
    */
-  it("drops Word's first-line indent tab, which is presentation, not a character", async () => {
+  it('carries a Word manuscript through with its spacing intact', async () => {
     const buf = fs.readFileSync(path.join(__dirname, 'fixtures', 'word-spacing.docx'));
     const r = await parseUpload(buf, 'word-spacing.docx');
 
-    // The author's words, all of them, including the run Word split mid-word.
+    // The author's words, including the run Word split mid-word.
     expect(r.text).toContain('The morning came slowly over the hills.');
     expect(r.text).toContain('margins of other people.');
     expect(r.text).toContain('# Chapter One');
 
-    /* The indent is gone — and with it the markdown code block a leading tab
-       would otherwise have made of the paragraph. */
-    expect(r.text).toMatch(/^The morning came slowly over the hills\.$/m);
-    // a deeper indent is the same mechanic, however many tabs deep
-    expect(r.text).toMatch(/^A deeply indented paragraph\.$/m);
-
-    /* But a tab BETWEEN words is a column the author built, and the format
-       gives no reason to call it furniture. */
+    /* And the author's spacing. A non-breaking space is a character they can
+       type; a blank-line run may be a scene break; a trailing space is
+       invisible but authored; a leading tab is a tab someone put there. */
+    expect(r.text).toMatch(/^\tThe morning came slowly over the hills\.$/m);
+    expect(r.text).toMatch(/^\t\tA deeply indented paragraph\.$/m);
     expect(r.text).toContain('Fire\tthe first element.');
+    expect(r.text).toMatch(/[\u00A0]/);
+    expect(r.text).toMatch(/[ ]\n/);
+    expect(r.text).toContain('She waited.  Then she wrote.');
+    expect(r.text).toContain('First line  \nsecond line');
   });
 
-  it('leaves every other spacing artifact alone — the format does not prove them', async () => {
-    /* Each of these was normalized in an earlier draft and withdrawn: a
-       non-breaking space is a character the author can type, a blank-line run
-       may be a scene break, and a trailing space is invisible but authored.
-       Nothing in the file distinguishes them from furniture, so they stand. */
-    const buf = fs.readFileSync(path.join(__dirname, 'fixtures', 'word-spacing.docx'));
-    const r = await parseUpload(buf, 'word-spacing.docx');
+  /**
+   * WHY THE INDENT-TAB TRANSFORM CANNOT BE REBUILT (founder ruling, 2026-08-31).
+   *
+   * The argument for it was that Word writes a `<w:tab/>` for a first-line
+   * indent, so a tab before a paragraph's first word is presentation. It is
+   * not. A TRUE paragraph-format indent — `w:ind`, or a paragraph style
+   * carrying one — produces no text through mammoth whatsoever. So there is no
+   * seam where a formatting property is being wrongly materialized as a
+   * character, and a tab that DOES reach the text is one a person typed.
+   *
+   * Deleting it would have been an authorship inference wearing a provenance
+   * argument. This test is the evidence, so the next reader does not have to
+   * take the claim on trust.
+   */
+  it('mammoth emits no text for a true paragraph indent — so a tab in the text was typed', async () => {
+    const buf = fs.readFileSync(path.join(__dirname, 'fixtures', 'indent-kinds.docx'));
+    const r = await parseUpload(buf, 'indent-kinds.docx');
 
-    expect(r.text).toMatch(/[\u00A0]/); // non-breaking spaces survive
-    expect(r.text).toMatch(/[ ]\n/); // trailing spaces survive
-    expect(r.text).toContain('She waited.  Then she wrote.'); // the author's two spaces
-    expect(r.text).toContain('First line  \nsecond line'); // shift+enter hard break
+    // w:ind firstLine, and a style carrying an indent: nothing in the text.
+    expect(r.text).toMatch(/^Indented by paragraph FORMAT\.$/m);
+    expect(r.text).toMatch(/^Indented by STYLE\.$/m);
+    // A typed tab: present, because it is a character in the document.
+    expect(r.text).toMatch(/^\tIndented by a TYPED TAB\.$/m);
   });
 
   it('passes a .txt manuscript through byte-for-byte — the whitespace IS the source', async () => {

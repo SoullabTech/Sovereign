@@ -16,83 +16,87 @@ unsure whose it was. That uncertainty is the finding. A member should never
 have to guess whether what is on the page came from their work or from our
 pipeline.
 
-## Finding 1 — the spacing is the upload, and only one part of it is ours to fix
+## Finding 1 — the spacing IS the upload, and none of it is ours to remove
 
 Reproduced against a Word file carrying what Word actually writes (fixture:
 `lib/manuscript/ingest/__tests__/fixtures/word-spacing.docx`, its
-`document.xml` kept alongside it so the fixture is readable). Extraction
-carried all of this through, verbatim:
+`document.xml` kept alongside it so the fixture is readable). Extraction carries
+all of this through:
 
 | Artifact | Where it comes from | How it reads in the writing surface |
 |---|---|---|
-| Leading `\t` | Word's first-line indent | A wide gap; in markdown, a code block |
-| U+00A0 non-breaking space | Word autocorrect | A space that will not wrap |
+| Leading `\t` | Someone pressed Tab | A wide gap; in markdown, a code block |
+| U+00A0 non-breaking space | Word autocorrect, or typed | A space that will not wrap |
 | U+00AD soft hyphen | Word's optional break | An invisible character mid-word |
 | Trailing spaces | Word paragraph ends | The caret lands past the last letter |
 | Stacked blank lines | Return pressed for spacing | Chapter gaps of unequal height |
 
-The first draft of this repair normalized all of it, in every format. **That was
-overbroad and was withdrawn** (founder ruling, 2026-08-31). The governing rule:
+**The diagnosis stands. Every proposed repair was withdrawn.** The governing
+rule, and it did the work here:
 
 > Do not decide which of a manuscript's visible spacing was authored and which
 > was import furniture unless the source format gives us the evidence for that
 > distinction.
 
-Under that rule most of the table above is the author's text until proven
-otherwise. In a `.txt` manuscript, `Scene one.\n\n\n\nScene two.` may be a
-deliberate scene break; a leading tab may be the author's own indent; and
-U+00AD, U+200B, U+2060, U+FEFF are characters, so removing them is a decision
-about content and not about spacing at all.
+### Two attempts, both withdrawn
 
-### What ships: one row of that table
+**First: normalize whitespace across all three formats.** Overbroad, withdrawn
+2026-08-31. `Scene one.\n\n\n\nScene two.` may be a deliberate scene break; a
+leading tab in a `.txt` may be the author's own indent; and U+00AD, U+200B,
+U+2060 and U+FEFF are characters, so removing them is a decision about content,
+not about spacing.
 
-Word's first-line indent arrives as a `<w:tab/>` element standing before the
-paragraph's first word. The DOCX structure *proves* that is presentation rather
-than a typed character — so `lib/manuscript/ingest/docxIndentTabs.ts` drops it
-on mammoth's **document tree**, before the file is flattened. Once it is a
-string, a tab is just a tab and the evidence is gone; the tree is the only place
-the judgement can honestly be made.
+**Second: drop only Word's first-line indent tab, on the document tree.** The
+argument was that a `<w:tab/>` standing before a paragraph's first word is
+presentation the DOCX structure proves. **It is not, and the claim was false.**
+Withdrawn the same day.
 
-It also fixes a rendering corruption rather than a preference: a line beginning
-with a tab is a markdown code block, so the author's opening paragraph arrived
-in a monospace slab.
+The predicate the code actually ran was *"a tab node before the first text
+node"* — position, not provenance. It deleted two tabs from a doubly-indented
+paragraph on the reasoning that they appeared early.
 
-### What was written and withdrawn
+### What the format actually contains — settled, not argued
 
-- Tabs **between** words — a column the author may have built. Untouched.
-- Blank-line runs — possibly a scene break. Untouched.
-- Non-breaking, thin and ideographic spaces — characters. Untouched.
-- Soft hyphens, ZWSP, word joiner, BOM — characters. Untouched.
-- Trailing whitespace — invisible, but authored. Untouched.
-- **PDF and plain text are not transformed at all.** A PDF text layer has no
-  reliable distinction between authored spacing and typesetting, and in a `.txt`
-  or `.md` manuscript the whitespace *is* the source.
+Tested directly (fixture: `indent-kinds.docx`, with its `document.xml`):
 
-Two tests hold this boundary from both sides: one asserts the indent tab is
-gone, the next asserts every other artifact in the same file survives.
+```text
+<w:pPr><w:ind w:firstLine="720"/></w:pPr>   →  NO text emitted
+<w:pPr><w:pStyle …indent-carrying…/></w:pPr> →  NO text emitted
+<w:r><w:tab/></w:r>                          →  "\t"
+```
 
-**Provenance.** Only the DOCX identity in `lib/manuscript/source/custody.ts`
-changes, to `mammoth-convertToMarkdown+drop-indent-tabs` /
-`mammoth@1.12.0+indent1`. PDF and text keep their original identities because
-nothing was added to them. The artifact bytes are unchanged and remain in
-custody, which is what keeps the earlier extraction reproducible from the later
-row.
+A true paragraph-format indent produces **no text through mammoth at all**. So
+there is no seam where a formatting property is being wrongly materialized as a
+character — the repair that would have been legitimate does not have a defect to
+repair. And it follows that **a tab which does reach the text is a tab a person
+typed.** Deleting it is an authorship inference wearing a provenance argument.
+
+A test pins this, so the transform is not rediscovered as a good idea.
+
+### What remains open, and it is not an extraction problem
+
+The writer's complaint is still real: a tab-led paragraph reads as a **markdown
+code block**, so their opening paragraph arrives in a monospace slab. That is a
+**rendering** defect, not an extraction one, and the honest repair is on the
+other side of the seam — preserve the author's tab as source, and stop the
+Studio's rendering from interpreting a tab-indented paragraph as code. Not
+built, not authorized, named here so it is not lost.
+
+The residue this leaves — non-breaking spaces, blank-line runs, trailing spaces
+— stays residue. A member-invoked *"tidy the spacing"* gesture, on their own
+Work, with the change visible before it is taken, is a different lane and is not
+proposed here.
 
 ### An already-imported Work is NOT to be re-imported for this
 
 **Prohibited.** Once a Work is section-addressable, its section UUIDs are
 working identities — frozen structural proposals reference them, and the
 Writer's Studio reading is built on them. Re-importing to clean spacing would
-mint new identities and orphan that work. This repair applies to imports made
-after it ships and to nothing else.
+mint new identities and orphan that work.
 
-For the reporting writer's existing book, the honest answer is the first half of
-their question: the spacing they were correcting came from the upload, not from
-their manuscript. Whether to keep correcting it by hand is theirs to decide, and
-the residue this repair does not remove (non-breaking spaces, blank-line runs)
-stays residue. A member-invoked "tidy the spacing" gesture — the writer asking,
-on their own Work, with the change visible — is a different lane and is not
-proposed here.
+For the reporting writer, the answer to their question is the whole of it: the
+spacing came from the upload, not from their manuscript, and we are not going to
+silently decide which of it they meant.
 
 ## Finding 2 — "can't save" was a sign-in, described as a glitch
 
@@ -119,13 +123,11 @@ button that could never succeed, for as long as they kept typing.
 
 - **Agency**: increases. A writer can recover their own work instead of being
   told a falsehood about why it will not save.
-- **Provenance**: increases with the capability — the DOCX extraction identity
-  names the one transform it performs, and the formats that transform nothing
-  say nothing.
-- **Restraint**: the transform runs only where the source format proves the
-  distinction it depends on. Everything the format leaves ambiguous is left to
-  the author, and the member still reviews the extracted text in an editable
-  field before anything saves.
+- **Provenance**: unchanged, because the capability was withdrawn. No extractor
+  identity moves; every reading is still what its decoder produced.
+- **Restraint**: the whole spacing repair was given up rather than shipped on an
+  inference. The member still reviews the extracted text in an editable field
+  before anything saves, which is where a decision about their spacing belongs.
 
 ## Ruling of record (founder, 2026-08-31)
 
@@ -138,7 +140,11 @@ DOCX spacing diagnosis            PASS
 global normalization policy       WITHDRAWN
 plain-text normalization          WITHDRAWN · was overbroad
 PDF normalization                 WITHDRAWN · insufficient provenance
-DOCX indent tab, on the tree      SHIPS · the format proves it
+DOCX indent-tab deletion          WITHDRAWN · provenance disproved
+  → no formatting property is materialized as text; a tab in the
+    text was typed. Nothing ships from this finding.
+tab-led paragraph renders as code NAMED · a rendering defect, not
+                                  extraction. Not built.
 existing Work re-import           PROHIBITED
 ```
 

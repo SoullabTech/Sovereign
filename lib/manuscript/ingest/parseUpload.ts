@@ -13,20 +13,17 @@
  *   - PDF yields its text layer only. Scanned/image PDFs have no text layer;
  *     we say so plainly (a warning) rather than fabricate or silently fail.
  *     OCR is deliberately out of scope for this slice.
- *   - ONE spacing artifact is removed, and only from DOCX: the `<w:tab/>` Word
- *     writes for a first-line indent, dropped on the document tree where the
- *     format still proves it is presentation rather than a typed character (see
- *     docxIndentTabs.ts). Left in, it is also a markdown code block, so the
- *     author's opening paragraph arrives in a monospace slab.
- *   - Nothing else is normalized, in any format. Blank lines, non-breaking
- *     spaces, trailing spaces and tabs between words are the author's text
- *     until the format gives evidence otherwise, and PDF and plain text give
- *     none at all — in a .txt or .md manuscript the whitespace IS the source.
+ *   - NOTHING is normalized, in any format. Blank lines, non-breaking spaces,
+ *     trailing spaces and tabs are the author's text unless the source format
+ *     proves otherwise, and on the one case that was tried — Word's leading
+ *     tab — it does not: a true first-line indent (`w:ind`, or a style that
+ *     carries one) produces NO text through mammoth at all, so a tab that does
+ *     reach the text is a tab someone typed. See the field note; the seam that
+ *     a transform would have repaired turned out not to exist.
  *   - No persistence, no network, no model. Deterministic parsing only.
  */
 
 import mammoth from 'mammoth';
-import { dropWordIndentTabs } from './docxIndentTabs';
 
 export type UploadFormat = 'docx' | 'pdf' | 'text';
 
@@ -87,12 +84,7 @@ function normalizeMammothMarkdown(md: string): string {
 async function extractDocxMarkdown(buffer: Buffer): Promise<string> {
   // convertToMarkdown maps Word heading styles to `#`/`##`, preserving the
   // structure the author gave the document. extractRawText would flatten it.
-  const result = await mammoth.convertToMarkdown(
-    { buffer },
-    /* On the document tree, before it is flattened — the only place Word's
-       indent mechanic is still distinguishable from a typed tab. */
-    { transformDocument: dropWordIndentTabs },
-  );
+  const result = await mammoth.convertToMarkdown({ buffer });
   return normalizeMammothMarkdown(result.value ?? '');
 }
 

@@ -35,26 +35,13 @@ export type SourceKind = typeof ARTIFACT_EXTRACTION | typeof MEMBER_SUPPLIED_TEX
  * changes, arrivals written afterwards carry the new value and older rows keep
  * theirs — which is the whole point of storing it.
  *
- * `+drop-indent-tabs` marks the ONE transform the DOCX reader applies: the
- * `<w:tab/>` Word writes for a first-line indent is dropped on the document
- * tree, where the format still proves it is presentation rather than a typed
- * character (lib/manuscript/ingest/docxIndentTabs.ts). It belongs in the
- * extractor identity rather than outside it, because the source text an arrival
- * records is what that reader produced and what the member saw — so an arrival
- * written before this change and one written after are genuinely different
- * extractions of the same bytes, and must say so. The artifact bytes are
- * unchanged and remain in custody, which is what keeps the earlier extraction
- * reproducible from the later row.
- *
- * PDF and text carry no suffix because nothing was added to them: those
- * extractions are byte-for-byte what they always were, and deliberately so —
- * neither format gives evidence for telling authored spacing from furniture.
+ * No reader carries a transform suffix, and that is a decision rather than an
+ * omission: every extraction here is what its decoder produced, unaltered. An
+ * import whitespace normalization was written and withdrawn in full (2026-08-31)
+ * — see the field note — so these identities are the ones they always were.
  */
 export const EXTRACTORS = {
-  docx: {
-    method: 'mammoth-convertToMarkdown+drop-indent-tabs',
-    version: 'mammoth@1.12.0+indent1',
-  },
+  docx: { method: 'mammoth-convertToMarkdown', version: 'mammoth@1.12.0' },
   pdf: { method: 'pdf-parse-getText', version: 'pdf-parse@2.4.5' },
   text: { method: 'utf8-decode', version: 'node-buffer-utf8' },
   /** Not an extraction: the member's own text, recorded as it was confirmed. */
