@@ -83,7 +83,15 @@ export class StructureReaderError extends Error {
  */
 export type { ReaderProvenance, ReaderIdentity } from './readerProvenance';
 
-/** Bumped when the reading's standing instructions or contract change. */
+/**
+ * The reader UNIT, not its exact instructions.
+ *
+ * `promptHash` is what distinguishes one contract from another, and it moves
+ * whenever the prompt or the tool schema does - as it did when the containment
+ * grammar was added after the first real reading. Two proposals bearing this
+ * same version and different hashes were made by different readers, and the row
+ * says so.
+ */
 export const READER_VERSION = 'REAL-STRUCTURE-READER-01';
 
 /**
@@ -145,6 +153,11 @@ THE SIX ANSWERS, ALL EQUALLY LEGITIMATE
 
 "none" is a COMPLETE ANSWER, not a failure and not an empty result. A Work that reads as one continuous body deserves to be told so. Never manufacture a division to avoid returning it.
 
+HOW DIVISIONS NEST
+Hierarchy must be representable by the structure model. If a unit has children, every child's inclusive section range must lie entirely within its parent's inclusive range. A part running 43-69 holds only children that begin at or after 43 and end at or before 69.
+
+Never widen, shrink, or invent a boundary merely to satisfy this rule. If your reading cannot be expressed as a valid hierarchy, use siblings, uncertainty, an alternative reading, "partial", "ambiguous", or "none" instead. The constraint is on what the model can hold, not on what you may see.
+
 VOCABULARY IS THE WORK'S, NOT YOURS
 "kind" is free text, in whatever vocabulary the Work itself uses: Part, Chapter, Movement, Act, Scene, Essay, Letter, Entry, Vignette, Book, Section, or a word this particular Work invented. Never force a Work into Part/Chapter because that is what books usually have. Use null rather than a manufactured kind.
 
@@ -193,7 +206,12 @@ const unitSchema = (depth: number): Record<string, unknown> => ({
       description: 'Observation ids you actually reasoned from. May be empty.' },
     uncertainty: { type: 'array', items: { type: 'string', enum: UNCERTAINTY_VALUES } },
     ...(depth > 0
-      ? { children: { type: 'array', items: unitSchema(depth - 1) } }
+      ? { children: {
+        type: 'array', items: unitSchema(depth - 1),
+        description: "Every child's inclusive range must lie entirely within this "
+          + 'unit\'s range. A child that escapes its parent is refused by the host, '
+          + 'whole - the reading is not repaired for you. Where a reading will not '
+          + 'nest, prefer siblings, an alternative, or a less confident form.' } }
       : {}),
   },
   required: ['title', 'kind', 'fromSectionId', 'toSectionId',

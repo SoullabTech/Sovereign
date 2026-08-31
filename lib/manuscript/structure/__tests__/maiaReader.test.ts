@@ -25,6 +25,11 @@ import { interpretStructure, type ReaderInput } from '../interpret';
 import { DEFAULT_READ_SCOPE } from '../readScope';
 import type { HeadedSection } from '../evidence';
 
+/** Just enough of the generated JSON Schema to assert on it. */
+interface UnitSchema {
+  properties: { children?: { description?: string; items: UnitSchema } };
+}
+
 const sections: HeadedSection[] = [
   { id: 'sec-a', position: 0, heading: 'CHAPTER ONE' },
   { id: 'sec-b', position: 1, heading: 'CHAPTER TWO' },
@@ -658,5 +663,63 @@ describe('the host returns what it refused', () => {
       { fetchBodies: async () => new Map([['sec-a', 'THE-MEMBERS-PROSE']]) });
     if (r.status !== 'refused') throw new Error('expected a refusal');
     expect(JSON.stringify(r.refusedReading)).not.toContain('THE-MEMBERS-PROSE');
+  });
+});
+
+
+/* ── teaching a rule is not enforcing it ─────────────────────────────────── */
+
+describe('the containment grammar is taught AND enforced', () => {
+  /* The first real reading was refused for child-outside-parent, and the reader
+     had never been told the rule. Telling her is right - it is part of the
+     output language, not interpretive guidance - but the guard is what makes it
+     true, and the two must not be confused for one another. */
+  it('states the rule in the standing instructions', () => {
+    expect(READER_SYSTEM).toContain('HOW DIVISIONS NEST');
+    expect(READER_SYSTEM).toContain(
+      "every child's inclusive section range must lie entirely within its parent's");
+  });
+
+  /* Without this sentence a mechanical constraint becomes pressure to alter the
+     reading - the boundary moves to satisfy the model rather than the book. */
+  it('and forbids moving a boundary to satisfy it', () => {
+    expect(READER_SYSTEM).toContain(
+      'Never widen, shrink, or invent a boundary merely to satisfy this rule');
+    expect(READER_SYSTEM).toContain('"partial", "ambiguous", or "none" instead');
+  });
+
+  it('states it in the schema the reading is written into', () => {
+    const proposeSchema = readerTools()[0].input_schema as {
+      properties: { units: { items: UnitSchema } };
+    };
+    const children = proposeSchema.properties.units.items.properties.children;
+    expect(children?.description).toContain('must lie entirely within');
+    /* At every depth the schema goes, not only the first. */
+    expect(children?.items.properties.children?.description)
+      .toContain('must lie entirely within');
+  });
+
+  /* THE FALSIFIER. Teaching must not have replaced enforcement. */
+  it('and the host still refuses a child that escapes its parent', async () => {
+    const r = await interpretStructure(gatherEvidence('m1', sections), sections,
+      async () => parseReaderOutput('propose_structure', {
+        form: 'stable', account: 'taught, and still wrong',
+        units: [unit('sec-b', 'sec-c', {
+          title: 'PART', children: [unit('sec-a', 'sec-b', { title: 'ESCAPEE' })] })],
+      }), { fetchBodies: async () => new Map() });
+
+    expect(r.status).toBe('refused');
+    if (r.status !== 'refused') return;
+    expect(r.refusal).toBe('child-outside-parent');
+    expect(r.detail).toBe('ESCAPEE 0-1 sits outside PART 1-2');
+    expect(r.refusedReading).toBeDefined();
+  });
+
+  /* And the reader's identity moved with its instructions, which is what the
+     frozen provenance exists to record. */
+  it('changes the prompt hash, so the second reading has a different identity', () => {
+    expect(promptContractHash()).toMatch(/^[0-9a-f]{64}$/);
+    expect(promptContractHash()).not.toBe(
+      require('crypto').createHash('sha256').update(READER_SYSTEM, 'utf8').digest('hex'));
   });
 });
