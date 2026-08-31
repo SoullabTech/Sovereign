@@ -1119,8 +1119,6 @@ No matter what inspired vision wants to come through us, no matter how big or sm
 
 A vision for this book inspired me to challenge myself with exploring a new world as a writer. I was intimidated by the thought of what it would take, but the inner fires pushed me to step out of my comfort zone and write. It helped to keep a vision of what was possible if done well. In the process, I struggled a bit, but I developed my abilities to write with the support of experienced writers and editors. It wasn't easy, but most creative endeavors aren't, at first.
 
-*"The privilege of a lifetime is to become who you truly are." – Carl Jung*
-
 The secret fire within us is always there to encourage us to hold the light of possibilities even when the world doesn't yet reflect our vision in the same way we experience it within. Much time is spent in trial and error until the spark has become a full movement. If we answer the call to what inspires us most, we will be rewarded, no matter the outcome of our creation.
 
 The evolution of the soul is not based on awards, plaudits, or outward marks of achievement; rather, it is dependent on the ability to adapt and progress. Whatever the case may be, the creative act is critical because it allows us to be recreated. If we are to advance in life, we must change. If we are seeking to reach an ideal state of being, we must change often. In this process of living into our secret fire, we rely on inner metrics more than we do on outer measures. It is a form of "soulplay," where we are acting in the world by living out our soul's yearning.
@@ -2039,8 +2037,6 @@ The aetheric realm is a gateway between states of normal consciousness as well a
 We yearn to belong to something much larger than our surviving self; we all seek self-actualization. This is a part of our free will and our autonomous nature as individuals. It is also a precondition for a healthy community.
 
 The aetheric state is both an individual state of coherence and manifests as the heart of a harmonious, diverse, collaborative collective.
-
-*"The privilege of a lifetime is to become who you truly are." — Carl Jung*
 
 Aether consciousness keeps us from spiraling out into any state of being that could bring us out of harmony with the collective reality of which we are a functioning part. If we spiral out by becoming too high-spirited (fire), overly emotional (water), too physical (earth), or too into our heads (air), we become out of sync with our collective reality. Aether is the middle ground where we come back into inner coherence and outer resonance, again and again.
 
