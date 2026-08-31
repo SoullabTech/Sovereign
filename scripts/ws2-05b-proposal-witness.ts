@@ -23,6 +23,7 @@ async function main() {
     createProposal, loadProposal, listProposals, updateReviewed, assertNoProse,
   } = await import('@/lib/manuscript/structure/proposalStore');
   const { gatherEvidence } = await import('@/lib/manuscript/structure/evidence');
+  const { assignUnitIds } = await import('@/lib/manuscript/structure/interpret');
 
   let failures = 0;
   const check = (name: string, pass: boolean, detail = '') => {
@@ -91,13 +92,17 @@ async function main() {
     coverage: evidence.coverage,
     unaccountedSectionIds: [],
     uncertainRegions: [],
-    units: [
+    /* Ids are MINTED BY THE HOST, never written by hand. This script predated
+       that rule and carried literals without ids: it ran green because tsx does
+       not typecheck, so the drift was invisible until the witnesses were put
+       under the compiler. */
+    units: assignUnitIds([
       { title: 'Opening', kind: null, fromSectionId: sid(0), toSectionId: sid(4),
         children: [], rationale: 'the first five hold together', evidenceRefs: [],
         uncertainty: [] },
       { title: 'Return', kind: null, fromSectionId: sid(5), toSectionId: sid(9),
         children: [], rationale: 'the remainder turn', evidenceRefs: [], uncertainty: [] },
-    ],
+    ]),
   };
 
   const created = await createProposal(fixture.manuscriptId, fixture.memberId, {
@@ -124,14 +129,17 @@ async function main() {
   const originalJson = JSON.stringify(
     loadedA.status === 'ok' ? loadedA.value.interpretation : null);
 
+  /* A ReviewedUnit carries no rationale, no evidenceRefs and no uncertainty:
+     the member's copy holds the member's structure, and MAIA's reasoning stays
+     in the frozen interpretation where it can still be read beside it. */
   const edited = await updateReviewed(pid, fixture.memberId, 0, {
     units: [
-      { title: 'Opening', kind: 'Movement', fromSectionId: sid(0), toSectionId: sid(2),
-        children: [], rationale: 'the member shortened this', evidenceRefs: [], uncertainty: [] },
-      { title: 'Middle', kind: 'Movement', fromSectionId: sid(3), toSectionId: sid(6),
-        children: [], rationale: 'and added one', evidenceRefs: [], uncertainty: [] },
-      { title: 'Return', kind: 'Movement', fromSectionId: sid(7), toSectionId: sid(9),
-        children: [], rationale: 'and moved this', evidenceRefs: [], uncertainty: [] },
+      { id: 'm1', title: 'Opening', kind: 'Movement',
+        fromSectionId: sid(0), toSectionId: sid(2), children: [] },
+      { id: 'm2', title: 'Middle', kind: 'Movement',
+        fromSectionId: sid(3), toSectionId: sid(6), children: [] },
+      { id: 'm3', title: 'Return', kind: 'Movement',
+        fromSectionId: sid(7), toSectionId: sid(9), children: [] },
     ],
   });
   check('the member may reshape the reviewed copy',

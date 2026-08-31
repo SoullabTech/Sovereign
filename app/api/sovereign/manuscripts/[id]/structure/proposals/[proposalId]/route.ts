@@ -15,15 +15,28 @@
  * IDENTITY ONLY OFF THE WIRE. `choose-alternative` carries an id; the server
  * resolves it against the IMMUTABLE stored interpretation. No structural tree
  * is ever accepted from a client.
+ *
+ * THE OPERATION IS PARSED, NOT ASSERTED. `parseReviewOperation` closes the
+ * discriminant at the boundary. A cast is a claim about a request the client
+ * writes; this is a check.
+ *
+ * ONE APPLICATION PER GESTURE. The post-image returned by a preview is the one
+ * a commit stores, because it is the same object rather than a second run that
+ * is expected to agree.
+ *
+ * NOTHING IS REPORTED THAT WAS NOT MEASURED. `staleAsRead` is computed against
+ * the draft as it stands, and is `null` where the comparison cannot be made.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { loadProposal, updateReviewed, type ProposalRefusal } from '@/lib/manuscript/structure/proposalStore';
-import {
-  applyReviewOperation, type ReviewOperation, type ReviewContext, type ReviewRefusal,
+import type {
+  ReviewOperation, ReviewContext, ReviewRefusal,
 } from '@/lib/manuscript/structure/review';
 import { previewOperation } from '@/lib/writersStudio/reviewPresentation';
+import { parseReviewOperation } from '@/lib/manuscript/structure/reviewOperationParser';
+import { interpretationInputHash } from '@/lib/manuscript/structure/interpret';
 
 export const dynamic = 'force-dynamic';
 
@@ -52,6 +65,10 @@ const REVIEW_STATUS: Record<ReviewRefusal, number> = {
   not_at_the_shared_edge: 422,
   not_nested: 409,
   empty_name: 422,
+  /* Defence in depth. The HTTP parser refuses an unrecognised operation before
+     the engine sees it, so this arm is reachable only from a TypeScript caller
+     that has defeated its own types - a bad request either way. */
+  unknown_operation: 400,
 };
 
 /** Sections of the addressable draft, ordered. Ids only cross this boundary. */
@@ -68,6 +85,54 @@ async function orderedSections(manuscriptId: string, memberId: string) {
       ORDER BY s.position ASC`,
     [manuscriptId, memberId]);
   return r.rows;
+}
+
+/**
+ * The bodies a reading actually read, by id, for hashing ONLY.
+ *
+ * Prose crosses this boundary in memory and leaves it as a digest. Nothing here
+ * is returned to the client, logged, or stored.
+ */
+async function readBodies(
+  manuscriptId: string, memberId: string, ids: readonly string[],
+): Promise<Map<string, string>> {
+  if (ids.length === 0) return new Map();
+  const { query } = await import('@/lib/db/postgres');
+  const r = await query<{ id: string; text: string }>(
+    `SELECT s.id, s.text
+       FROM manuscript_draft_sections s
+       JOIN manuscript_working_drafts d ON d.id = s.draft_id
+       JOIN member_manuscripts m ON m.id = d.manuscript_id
+      WHERE d.manuscript_id = $1 AND m.member_id = $2
+        AND d.section_addressable_at IS NOT NULL
+        AND s.id = ANY($3::uuid[])`,
+    [manuscriptId, memberId, ids]);
+  return new Map(r.rows.map((row) => [row.id, row.text]));
+}
+
+/**
+ * Has the material this reading rests on been rewritten since it was made?
+ *
+ * Measured, not assumed. The frozen `interpretation_input_hash` covers every
+ * heading plus exactly the bodies that were supplied; the same function is run
+ * over the draft as it stands now and the two are compared.
+ *
+ * `null` means UNMEASURED - the coverage names sections this draft no longer
+ * holds, so the question cannot be answered honestly. That is a third answer,
+ * not a quiet `false`: a surface must be able to say "I do not know" rather
+ * than reassure a member on the strength of a comparison that never ran.
+ */
+async function staleAsRead(
+  manuscriptId: string, memberId: string,
+  sections: readonly { id: string; position: number; heading: string | null }[],
+  coveredIds: readonly string[],
+  frozenHash: string,
+): Promise<boolean | null> {
+  const present = new Set(sections.map((s) => s.id));
+  if (coveredIds.some((cid) => !present.has(cid))) return null;
+  const bodies = await readBodies(manuscriptId, memberId, coveredIds);
+  if (bodies.size !== coveredIds.length) return null;
+  return interpretationInputHash(sections, bodies) !== frozenHash;
 }
 
 export async function GET(
@@ -87,6 +152,10 @@ export async function GET(
   }
 
   const sections = await orderedSections(id, memberId);
+  const stale = await staleAsRead(
+    id, memberId, sections, p.value.coverage.bodies.sectionIds,
+    p.value.interpretationInputHash);
+
   return NextResponse.json({
     proposalId: p.value.id,
     /* Frozen. What the system proposed, for the surface to show beside what the
@@ -96,16 +165,17 @@ export async function GET(
     reviewed: p.value.reviewed,
     reviewRevision: p.value.reviewRevision,
     adoptedAt: p.value.adoptedAt,
-    /* Whether anything the reading rests on has been rewritten since. The
-       member is told; nothing is decided for them. */
-    staleAsRead: false,
+    /* Whether anything the reading rests on has been rewritten since - or null
+       when that could not be measured. The member is told; nothing is decided
+       for them. */
+    staleAsRead: stale,
     sections,
   });
 }
 
 interface ReviewRequest {
   expectedReviewRevision: number;
-  operation: ReviewOperation;
+  operation: unknown;
   /** When true the server computes the post-image and returns it UNSAVED. */
   previewOnly?: boolean;
 }
@@ -124,9 +194,19 @@ export async function POST(
   } catch {
     return NextResponse.json({ refusal: 'malformed' }, { status: 400 });
   }
-  if (!body?.operation?.op || typeof body.expectedReviewRevision !== 'number') {
-    return NextResponse.json({ refusal: 'malformed' }, { status: 400 });
+  if (typeof body?.expectedReviewRevision !== 'number') {
+    return NextResponse.json({ refusal: 'malformed', detail: 'expectedReviewRevision' },
+      { status: 400 });
   }
+
+  /* CLOSED AT THE BOUNDARY. `await req.json() as ReviewRequest` is an assertion,
+     not a check, so the operation is parsed against the shape each gesture
+     actually needs before the engine is reached. */
+  const parsed = parseReviewOperation(body.operation);
+  if (!parsed.ok) {
+    return NextResponse.json({ refusal: 'malformed', detail: parsed.reason }, { status: 400 });
+  }
+  const operation: ReviewOperation = parsed.operation;
 
   const p = await loadProposal(proposalId, memberId);
   if (p.status === 'refused') {
@@ -156,33 +236,37 @@ export async function POST(
       : undefined,
   };
 
-  const preview = previewOperation(p.value.reviewed, body.operation, sections, context);
+  const preview = previewOperation(p.value.reviewed, operation, sections, context);
   if (preview.status === 'refused') {
     return NextResponse.json({ refusal: preview.refusal, detail: preview.detail },
       { status: REVIEW_STATUS[preview.refusal] ?? 422 });
   }
 
   if (body.previewOnly) {
-    /* Nothing is persisted. The rows describe the post-image the same call
-       would produce without this flag, because it is the same computation. */
-    return NextResponse.json({ preview: preview.rows, reviewRevision: p.value.reviewRevision });
+    /* Nothing is persisted. `reviewed` is returned alongside the rows so a
+       caller - or a witness - can compare the previewed post-image against the
+       committed one and see that they are byte-identical, rather than take the
+       claim on trust. */
+    return NextResponse.json({
+      preview: preview.rows,
+      reviewed: preview.reviewed,
+      reviewRevision: p.value.reviewRevision,
+    });
   }
 
-  const applied = applyReviewOperation(p.value.reviewed, body.operation, sections, context);
-  if (applied.status === 'refused') {
-    return NextResponse.json({ refusal: applied.refusal, detail: applied.detail },
-      { status: REVIEW_STATUS[applied.refusal] ?? 422 });
-  }
-
+  /* ONE APPLICATION, NOT TWO. `previewOperation` produced this post-image BY
+     APPLYING the operation; re-running the engine to get a second one would
+     reintroduce exactly the preview/commit divergence the preview exists to
+     rule out. What is shown is what is stored. */
   const saved = await updateReviewed(
-    proposalId, memberId, body.expectedReviewRevision, applied.reviewed);
+    proposalId, memberId, body.expectedReviewRevision, preview.reviewed);
   if (saved.status === 'refused') {
     return NextResponse.json({ refusal: saved.refusal, detail: saved.detail },
       { status: PROPOSAL_STATUS[saved.refusal] });
   }
 
   return NextResponse.json({
-    reviewed: applied.reviewed,
+    reviewed: preview.reviewed,
     reviewRevision: saved.value.reviewRevision,
     applied: preview.rows,
   });

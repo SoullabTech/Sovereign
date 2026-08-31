@@ -24,7 +24,9 @@ export interface ProposalView {
   reviewed: ReviewedStructure;
   reviewRevision: number;
   adoptedAt: string | null;
-  staleAsRead: boolean;
+  /** True, false, or NULL when the server could not measure it. Three states,
+      because a surface that cannot say "I do not know" will say "no". */
+  staleAsRead: boolean | null;
   sections: { id: string; position: number; heading: string | null }[];
 }
 
@@ -35,7 +37,9 @@ export type ReviewOutcome =
       current?: { reviewed: ReviewedStructure; reviewRevision: number } };
 
 export type PreviewOutcome =
-  | { ok: true; rows: ChangeRow[] }
+  /** `reviewed` is the post-image the commit will store, returned so the two
+      can be compared rather than assumed equal. */
+  | { ok: true; rows: ChangeRow[]; reviewed: ReviewedStructure }
   | { ok: false; refusal: string; detail?: string };
 
 const url = (manuscriptId: string, proposalId: string) =>
@@ -80,7 +84,11 @@ export async function previewGesture(
       return { ok: false, refusal: String(json.refusal ?? `http_${status}`),
         detail: json.detail as string | undefined };
     }
-    return { ok: true, rows: (json.preview ?? []) as ChangeRow[] };
+    return {
+      ok: true,
+      rows: (json.preview ?? []) as ChangeRow[],
+      reviewed: json.reviewed as ReviewedStructure,
+    };
   } catch {
     return { ok: false, refusal: 'unreachable' };
   }

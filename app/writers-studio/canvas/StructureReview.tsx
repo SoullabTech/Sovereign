@@ -215,7 +215,11 @@ function Coverage({ view }: { view: ProposalView }) {
     <StudioText role="metadata" tone="quiet" data-coverage={b.mode}
       style={{ display: 'block', marginBottom: SPACE.base }}>
       MAIA {said}.
-      {view.staleAsRead && ' Parts of the Work she read have changed since.'}
+      {view.staleAsRead === true && ' Parts of the Work she read have changed since.'}
+      {/* Not silence. An unmeasurable comparison is stated as one, because a
+          member reading no warning will reasonably hear "nothing has changed". */}
+      {view.staleAsRead === null
+        && ' Whether it has changed since cannot be checked against this draft.'}
     </StudioText>
   );
 }

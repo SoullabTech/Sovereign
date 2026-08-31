@@ -36,6 +36,7 @@ async function main() {
   const { query, transaction } = await import('@/lib/db/postgres');
   const { createProposal, loadProposal } = await import('@/lib/manuscript/structure/proposalStore');
   const { gatherEvidence } = await import('@/lib/manuscript/structure/evidence');
+  const { interpretationInputHash } = await import('@/lib/manuscript/structure/interpret');
   const { allReadings } = await import('@/lib/manuscript/structure/fixtures');
 
   /* -- a Work of our own ------------------------------------------------ */
@@ -60,9 +61,18 @@ async function main() {
       [manuscriptId, memberId, content,
        createHash('sha256').update(content, 'utf8').digest('hex')]);
     for (let i = 0; i < N; i++) {
+      /* Source sections exist so the draft sections carry HEADINGS through the
+         same join the route reads. Without them the witness held headings it
+         invented and the server saw nulls, and every hash comparison between
+         the two was meaningless. */
+      const src = await tx.query<{ id: string }>(
+        `INSERT INTO manuscript_sections (manuscript_id, position, heading, body)
+         VALUES ($1, $2, $3, $4) RETURNING id`,
+        [manuscriptId, i, `HEADING ${i}`, bodies[i]]);
       await tx.query(
-        `INSERT INTO manuscript_draft_sections (draft_id, position, text) VALUES ($1, $2, $3)`,
-        [draft.rows[0].id, i, bodies[i]]);
+        `INSERT INTO manuscript_draft_sections (draft_id, position, text, source_section_id)
+         VALUES ($1, $2, $3, $4)`,
+        [draft.rows[0].id, i, bodies[i], src.rows[0].id]);
     }
     await tx.query(
       `UPDATE manuscript_working_drafts SET section_addressable_at = now(),
@@ -70,12 +80,16 @@ async function main() {
     return { memberId, manuscriptId, draftId: draft.rows[0].id };
   });
 
-  const rows = await query<{ id: string; position: number }>(
-    `SELECT id, position FROM manuscript_draft_sections WHERE draft_id = $1 ORDER BY position`,
+  const rows = await query<{ id: string; position: number; text: string; heading: string | null }>(
+    `SELECT s.id, s.position, s.text, ms.heading
+       FROM manuscript_draft_sections s
+       LEFT JOIN manuscript_sections ms ON ms.id = s.source_section_id
+      WHERE s.draft_id = $1 ORDER BY s.position`,
     [fixture.draftId]);
   const sections = rows.rows.map((r) => ({
-    id: r.id, position: r.position, heading: `HEADING ${r.position}`,
+    id: r.id, position: r.position, heading: r.heading,
   }));
+  const bodyOf = new Map(rows.rows.map((r) => [r.id, r.text]));
   check('a manuscript to propose about', sections.length === N, `${N} sections`);
 
   /* One stored proposal per reading, built against the REAL section ids. */
@@ -86,7 +100,12 @@ async function main() {
     const created = await createProposal(fixture.manuscriptId, fixture.memberId, {
       evidence, interpretation, coverage: interpretation.coverage,
       sectionTopologyHash: evidence.sectionTopologyHash,
-      interpretationInputHash: `hash-${name}`,
+      /* The REAL hash over what this reading rests on, so `staleAsRead` is a
+         measurement the witness can check rather than a stored placeholder. */
+      interpretationInputHash: interpretationInputHash(
+        sections,
+        new Map(interpretation.coverage.bodies.sectionIds
+          .map((sid) => [sid, bodyOf.get(sid) ?? '']))),
     });
     if (created.status !== 'ok') {
       check(`store the ${name} reading`, false, created.refusal);
@@ -220,6 +239,91 @@ async function main() {
   check('choose-alternative ignores a smuggled tree',
     smuggled.status === 200 && !smuggled.titles,
     `${smuggled.status}${smuggled.titles ? ' — TREE ACCEPTED' : ''}`);
+
+  /* An unrecognised operation must be REFUSED, not silently applied. Before the
+     boundary parser existed this returned 200 with an unchanged tree: a no-op
+     reported as a completed gesture. */
+  const bogus = await page.evaluate(async (args) => {
+    const call = async (operation: unknown) => {
+      const res = await fetch(
+        `/api/sovereign/manuscripts/${args.m}/structure/proposals/${args.p}`,
+        { method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ expectedReviewRevision: args.rev, operation }) });
+      return res.status;
+    };
+    return {
+      unknown: await call({ op: 'obliterate', unitId: args.u }),
+      missingField: await call({ op: 'reparent', unitId: args.u }),
+      notAnObject: await call('rename'),
+    };
+  }, { m: fixture.manuscriptId, p: proposals.stable, u: first, rev: 1 });
+  check('an unknown operation is refused as malformed', bogus.unknown === 400,
+    String(bogus.unknown));
+  check('a known operation missing a field is refused', bogus.missingField === 400,
+    String(bogus.missingField));
+  check('a non-object operation is refused', bogus.notAnObject === 400,
+    String(bogus.notAnObject));
+
+  /* ONE ENGINE, PROVEN. The post-image returned by a preview and the one stored
+     by the commit must be identical - not similar, and not merely believed to
+     agree because the same function is called twice. */
+  console.log('\n4b · what is previewed is what is stored');
+  const sameImage = await page.evaluate(async (args) => {
+    const call = async (body: unknown) => {
+      const res = await fetch(
+        `/api/sovereign/manuscripts/${args.m}/structure/proposals/${args.p}`,
+        { method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body) });
+      return { status: res.status, json: await res.json() };
+    };
+    const op = { op: 'rename', unitId: args.u, title: 'Previewed then stored', kind: 'Part' };
+    const pre = await call({ expectedReviewRevision: args.rev, operation: op, previewOnly: true });
+    const com = await call({ expectedReviewRevision: args.rev, operation: op });
+    return {
+      previewHasImage: pre.json?.reviewed !== undefined,
+      identical: JSON.stringify(pre.json?.reviewed) === JSON.stringify(com.json?.reviewed),
+      status: com.status,
+    };
+  }, { m: fixture.manuscriptId, p: proposals.stable, u: first, rev: 1 });
+  check('a preview returns the post-image it describes', sameImage.previewHasImage);
+  check('and the committed post-image is byte-identical to it',
+    sameImage.identical && sameImage.status === 200, String(sameImage.status));
+
+  /* -- staleness is measured, never assumed ------------------------------ */
+  console.log('\n4c · staleAsRead is a measurement');
+  const readStale = async (name: string) => page.evaluate(async (args) => {
+    const res = await fetch(
+      `/api/sovereign/manuscripts/${args.m}/structure/proposals/${args.p}`);
+    const j = await res.json();
+    return j.staleAsRead as boolean | null;
+  }, { m: fixture.manuscriptId, p: proposals[name] });
+
+  check('an unrewritten Work reads as not stale', (await readStale('stable')) === false);
+  /* `partial` read two bodies in full. Rewrite one of them - through the round
+     trip, because the database refuses a section edit that leaves the draft's
+     content out of step with its sections. Rewriting the section alone would
+     have failed at COMMIT, which is the invariant working. */
+  const readIds = allReadings.partial(sections).coverage.bodies.sectionIds;
+  await transaction(async (tx) => {
+    await tx.query(
+      `UPDATE manuscript_draft_sections SET text = text || 'rewritten. ' WHERE id = $1`,
+      [readIds[0]]);
+    await tx.query(
+      `UPDATE manuscript_working_drafts d
+          SET content = (SELECT COALESCE(string_agg(s.text, '' ORDER BY s.position), '')
+                           FROM manuscript_draft_sections s WHERE s.draft_id = d.id)
+        WHERE d.id = $1`,
+      [fixture.draftId]);
+  });
+  check('rewriting a body MAIA read makes the reading stale',
+    (await readStale('partial')) === true);
+  /* And a heading change is caught even where no body was read at all. */
+  await query(
+    `UPDATE manuscript_sections SET heading = 'CHANGED'
+      WHERE id = (SELECT source_section_id FROM manuscript_draft_sections WHERE id = $1)`,
+    [sections[0].id]);
+  check('rewriting a heading makes a headings-only reading stale',
+    (await readStale('flat')) === true);
 
   /* -- coupled gestures show their whole post-image ---------------------- */
   console.log('\n5 · atomic does not mean hidden');

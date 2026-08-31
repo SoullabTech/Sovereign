@@ -114,6 +114,7 @@ export type ReviewRefusal =
   | 'parent_would_be_empty'
   | 'not_nested'
   | 'unknown_alternative'
+  | 'unknown_operation'
   | 'parents_not_adjacent'
   | 'not_at_the_shared_edge'
   | 'empty_name';
@@ -460,6 +461,12 @@ export function applyReviewOperation(
       to.unit.children.splice(sourceFirst ? 0 : to.unit.children.length, 0, at.unit);
       break;
     }
+
+    default:
+      /* Defence in depth behind the HTTP parser. Without this an unknown
+         discriminant fell through every case, validated an unchanged tree and
+         returned success - a no-op reported as a completed gesture. */
+      return refuse('unknown_operation', String((op as { op?: unknown }).op));
   }
 
   const bad = validateReviewed(next.units, sections);

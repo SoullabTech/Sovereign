@@ -24,9 +24,18 @@ export function fixtureSections(n = 12): FixtureSection[] {
   }));
 }
 
-const coverage = (mode: EvidenceCoverage['bodies']['mode'] = 'none'): EvidenceCoverage => ({
+/**
+ * Parameterised on the sections passed in, for the same reason `draft` is.
+ * Hardcoded `s3`/`s4` named sections a real draft does not hold, which made the
+ * frozen reading uncheckable against the draft it was seeded onto - the
+ * staleness comparison had nothing to read.
+ */
+const coverage = (
+  s: readonly FixtureSection[],
+  mode: EvidenceCoverage['bodies']['mode'] = 'none',
+): EvidenceCoverage => ({
   headings: 'all',
-  bodies: { mode, sectionIds: mode === 'none' ? [] : ['s3', 's4'] },
+  bodies: { mode, sectionIds: mode === 'none' ? [] : [s[3].id, s[4].id] },
   passes: mode === 'none' ? 1 : 2,
 });
 
@@ -55,7 +64,7 @@ export function stableReading(s = fixtureSections()): StructureInterpretation {
   return {
     form: 'stable',
     account: 'The Work divides into two movements; the first holds three shorter passages.',
-    coverage: coverage(),
+    coverage: coverage(s),
     unaccountedSectionIds: [],
     uncertainRegions: [],
     units: assignUnitIds([
@@ -75,7 +84,7 @@ export function partialReading(s = fixtureSections()): StructureInterpretation {
   return {
     form: 'partial',
     account: 'The opening organises clearly. The later material does not yet.',
-    coverage: coverage('selected'),
+    coverage: coverage(s, 'selected'),
     unaccountedSectionIds: ids(s, 4, 11),
     uncertainRegions: [{
       fromSectionId: s[8].id, toSectionId: s[11].id,
@@ -90,7 +99,7 @@ export function flatReading(s = fixtureSections()): StructureInterpretation {
   return {
     form: 'flat',
     account: 'A sequence of essays. Nothing groups them, and nothing appears to want to.',
-    coverage: coverage(),
+    coverage: coverage(s),
     unaccountedSectionIds: [],
     uncertainRegions: [],
     units: assignUnitIds([
@@ -106,7 +115,7 @@ export function mixedReading(s = fixtureSections()): StructureInterpretation {
   return {
     form: 'mixed',
     account: 'A part of chapters, then a letter and a vignette. The form is irregular, not broken.',
-    coverage: coverage(),
+    coverage: coverage(s),
     unaccountedSectionIds: [],
     uncertainRegions: [],
     units: assignUnitIds([
@@ -126,7 +135,7 @@ export function ambiguousReading(s = fixtureSections()): StructureInterpretation
   return {
     form: 'ambiguous',
     account: 'Two readings remain plausible, and the evidence does not separate them.',
-    coverage: coverage('selected'),
+    coverage: coverage(s, 'selected'),
     /* Nothing is accounted for: no alternative has been taken up. */
     unaccountedSectionIds: s.map((x) => x.id),
     uncertainRegions: [],
@@ -152,7 +161,7 @@ export function noStructureReading(s = fixtureSections()): StructureInterpretati
     form: 'none',
     account: 'No stable larger structure is evident yet. The sections read as '
       + 'a continuous body of work without divisions I can see.',
-    coverage: coverage('selected'),
+    coverage: coverage(s, 'selected'),
     unaccountedSectionIds: s.map((x) => x.id),
     uncertainRegions: [],
   };
