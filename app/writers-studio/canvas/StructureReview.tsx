@@ -710,8 +710,7 @@ function Entry({
   /* Shown beside the name unless it IS the name, so 174 rows do not read
      "element · element". */
   const kindAside = node.kind && node.kind !== named ? node.kind : null;
-  const hasWhy = Boolean(proposed && (proposed.rationale || label || hasDoubt))
-    || depth > 0;
+  const hasWhy = Boolean(proposed && (proposed.rationale || label || hasDoubt));
 
   return (
     <div data-review-unit={node.id} style={{ marginTop: SPACE.snug }}>
@@ -780,6 +779,17 @@ function Entry({
             : 'why MAIA proposed this division'}
             onClick={() => onToggleWhy(node.id)}>{why ? 'Hide why' : 'Why?'}</Tiny>
         )}
+        {/* AN EDIT IS NOT AN ANSWER TO "WHY?".
+            This lived inside the `Why?` disclosure for one commit, moved there
+            to thin the row. That was a category error: a member who asks why she
+            proposed a division is asking about HER READING, and opening that
+            question onto an authoring gesture answers a question they did not
+            ask. It is back on the row, subordinate to the two reading controls,
+            and still only where `promote` can succeed. */}
+        {depth > 0 && (
+          <Tiny label="move this division out one level" disabled={busy} plain
+            onClick={() => onGesture({ op: 'promote', unitId: node.id }, true)}>Move out</Tiny>
+        )}
         {sectionCount > 0 && (
           <Tiny
             label={open ? `hide the ${sectionCount} sections here`
@@ -812,21 +822,6 @@ function Entry({
               She left open: {(proposed?.uncertainty ?? [])
                 .map((u) => UNCERTAINTY_SAYS[u] ?? u).join(', ')}.
             </StudioText>
-          )}
-          {/* THE EDIT LIVES WHERE THE MEMBER IS ALREADY ENGAGED with this
-              division, not on every row of a page they came to READ. Three
-              controls × 22 divisions was 66 buttons competing with her reading;
-              the spec's own layout names two — `Why?` and `Show sections`.
-              OFFERED ONLY WHERE IT CAN SUCCEED: `promote` refuses `not_nested`
-              on a top-level division, so a button there could produce nothing
-              but a refusal. */}
-          {depth > 0 && (
-            <div style={{ marginTop: SPACE.tight }}>
-              <Tiny label="move this division out one level" disabled={busy}
-                onClick={() => onGesture({ op: 'promote', unitId: node.id }, true)}>
-                Move out one level
-              </Tiny>
-            </div>
           )}
         </div>
       )}
@@ -887,13 +882,19 @@ function Entry({
 }
 
 function Tiny({
-  children, label, onClick, disabled,
-}: { children: React.ReactNode; label: string; onClick: () => void; disabled?: boolean }) {
+  children, label, onClick, disabled, plain,
+}: {
+  children: React.ReactNode; label: string; onClick: () => void;
+  disabled?: boolean;
+  /** Subordinate: an authoring gesture sitting beside two reading ones. */
+  plain?: boolean;
+}) {
   return (
     <button type="button" title={label} aria-label={label} onClick={onClick} disabled={disabled}
       style={{
-        background: GROUND.active, border: 'none', borderRadius: RADIUS.sm,
-        color: INK.secondary, cursor: disabled ? 'default' : 'pointer',
+        background: plain ? 'transparent' : GROUND.active,
+        border: 'none', borderRadius: RADIUS.sm,
+        color: plain ? INK.quiet : INK.secondary, cursor: disabled ? 'default' : 'pointer',
         opacity: disabled ? 0.4 : 1,
         padding: `${SPACE.hairline}px ${SPACE.snug}px`,
         font: 'inherit', fontSize: '0.75rem', lineHeight: 1.4,

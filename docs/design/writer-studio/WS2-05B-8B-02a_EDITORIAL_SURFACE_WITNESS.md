@@ -362,6 +362,75 @@ to slip in under a witness that has already been taken.
 
 ---
 
+# Act 1 re-taken at `96d2ea3eb` — 8a on `2a427a6f`, PASS
+
+Every accepted verdict unchanged after the density pass.
+
+```text
+3.1  truncated false vs false; passes 2 vs 2; stated in words
+5    3 regions rendered; the stored text present on the page
+7.1  10 carry tags in the row; 10 rendered
+1, 2, 3, 4, 6, 7, 7.2, 8, 9, 10, 12, 13   all still green
+11   the three favicon 404s, as in its own baseline
+```
+
+**Item 5 was the one at risk** and it held: the uncertain regions now render
+inside a collapsed disclosure, and the assertion counts `data-uncertain-region`
+elements and checks the stored text is in `textContent`. Hidden content
+satisfies both — which is why the collapse hides rather than unmounts.
+
+# `Why?` — the founder's second finding
+
+> The `Why?` additions don't seem to make sense.
+
+Two separate things are true here, and only one of them is the room's.
+
+## The room's: an edit was answering a question about her reading
+
+`Move out one level` sat INSIDE the `Why?` disclosure for one commit, moved
+there to thin the row. **A category error.** A member who asks why she proposed
+a division is asking about HER READING; opening that question onto an authoring
+gesture answers a question they did not ask. It is back on the row, subordinate
+in weight to the two reading controls, and still only where `promote` can
+succeed. Fixed.
+
+## Not the room's: the button asks *why* and the field answers *what*
+
+The reader is asked for `rationale` as *"Why this holds together, in your
+reading. Not a restatement of evidence."* What `e6cabcc4` actually carries reads
+as content description:
+
+```text
+awakening and the call   5–20
+  Narrative and invitational material: the dream, the call to adventure,
+  the nature of change, choosing an authentic path.
+```
+
+That is a **what**, not a **why**. It says what is in the range; it does not say
+why those sixteen sections hold together as one division rather than two, or
+why the boundary falls at 20.
+
+**The room cannot fix that, and must not try.** Manufacturing a reason MAIA did
+not give is the same act as manufacturing a title she did not give — the failure
+the whole programme is built to prevent, wearing the costume of a fix. This is a
+finding about the READING and the CONTRACT, not about the render:
+
+```text
+02b   the contract asks for a why; the reading returned a what
+      → whether the field's description needs sharpening is a 02b question,
+        and it costs a real reading to test
+8b    whether that is good enough is the founder's judgment
+02c   asking her directly is the actual answer, and it is HOLD
+```
+
+**A third statement of the same doubt.** The `Why?` panel also carries `She left
+open: where this ends` — which the ◇ marker already says on the row and the
+qualifications list says again. Three statements of one caveat. Noted, not cut:
+cutting it without the founder looking at the real page again would repeat the
+pattern of optimising the data rather than the reading.
+
+---
+
 ## What this does NOT establish
 
 **The room has not been read by a person.** The specified acceptance is:
