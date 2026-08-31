@@ -194,7 +194,21 @@ jest                 731 tests green across lib/manuscript, lib/writersStudio,
 # The real Work — Mac Studio, `5fb31b248`, 2026-08-31
 
 Three runs on Elemental Alchemy, `a3ae67fd-a21e-4948-8766-4c397d2e4712`, 174
-sections. **The machine floor is GREEN on the real row.**
+sections. **The machine floor was GREEN on the real row at that commit.**
+
+> **SUPERSEDED BY `173df47ee`, and recorded rather than quietly carried
+> forward.** These runs were taken before the density pass. That pass changed
+> what the page renders — the stretches and the qualifications now open behind a
+> disclosure, the range moved beside the name, `Move out` left the row — so
+> **these verdicts describe code that is no longer the code.** They are kept
+> because they establish that the accepted 8a target survived the 02a rewrite,
+> which is a real fact about that commit. They are **not** the real-row witness
+> for the current head, and 8a on `2a427a6f` has to be taken again at
+> `173df47ee` before 02a can close.
+>
+> The distinction the commits keep, kept here too: **a green fixture gate
+> establishes bounded mechanics, not real-book acceptance** — and a green
+> real-row gate on superseded code establishes neither.
 
 ## 8a on its own named gate — `2a427a6f`, the pre-contract reading
 
@@ -363,10 +377,24 @@ answer it, and that limit is the honest state of the room rather than something
 the layout hides.
 
 ```text
-02a machine floor        PASS · three fixtures AND the real row
-02a 8a on 2a427a6f       PASS · the accepted target held after the rewrite
-02a founder witness      PENDING · the one that matters
-02c Ask MAIA             NEXT once 02a is witnessed — a fresh lane, Kelly's call
-05B-8b semantic judgment HOLD, behind 02c
+02a surface              BUILT
+02a density correction   BUILT · 173df47ee
+02a machine floor        PASS · three fixtures at the current head
+02a 8a on 2a427a6f       PASS at 5fb31b248 · SUPERSEDED · re-take at 173df47ee
+02a founder re-witness   STILL NEEDED · the one that matters
+02c Ask MAIA             HOLD · a fresh lane, and Kelly calls it
+05B-8b semantic judgment HOLD
 05B-6 adoption           HOLD · its own fresh lane
 ```
+
+**The two findings parked outside 02a stay parked.** The PREFACE/bibliography
+mismatch and Chapter 10 are both about the reading rather than the render. **No
+client inference is to be added to "help" either** — a room that surfaced them
+by deriving structure from her prose is the failure the interpreter exists to
+prevent, and it would be that failure wearing the costume of a fix.
+
+**The experience-quality gap is named and NOT authorised.** Hover and focus
+treatment, the control cluster's distance from its row, responsive behaviour,
+the five elements reading as one set, real keyboard navigation: a later unit, if
+Kelly opens one. It is not a blocker on 02a and it is not to be slipped in under
+a witness already taken.
