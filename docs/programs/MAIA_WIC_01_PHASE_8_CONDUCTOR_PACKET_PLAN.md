@@ -107,7 +107,7 @@ type MaiaTurnInput = { /* typed; no Record<string, unknown> */ };
 
 ---
 
-### P1 — Truth instrument *(Wave A; unblocks measurement of everything after)*
+### P1 — Runtime / source adjudication *(Wave A)* — ✅ **CLOSED 2026-08-31**
 
 Close D1/D2/D16 **before** any composition change, so P2+ are measured by a working instrument.
 
@@ -118,7 +118,9 @@ Close D1/D2/D16 **before** any composition change, so P2+ are measured by a work
 
 **Verification:** induce a dependency failure in staging; health must report degraded. **Today it reports healthy — that is the acceptance test.**
 
-**Blocked on:** the §6 runtime probes (census). They have not been run.
+**Closed 2026-08-31.** Probes run; facts frozen; both stores adjudicated; D7→P0 and D8→P2 recorded. Full record: `docs/programs/WIC01_P1_CLOSURE.md`.
+
+**P1 was an adjudication packet, not a repair packet.** The health-truthfulness *repairs* listed above (D1/D2/D16) were NOT executed — they are re-scoped into the convergence sequence, because a health instrument rebuilt against the old untyped path would have to be rebuilt again against the Conductor. The acceptance test stands unchanged for whenever it ships: **induce a dependency failure in staging; health must report degraded. Today it reports healthy.**
 
 ---
 
@@ -142,15 +144,33 @@ Prompt assembly becomes a **pure function of the plan**. `ADDENDA_SPECS` is dele
 
 ---
 
-### P3 — Tier parity *(closes D7/D8 through the architecture, not around it)*
+### P3a — Developmental memory convergence *(**P0 PRIORITY** — CORE first)*
 
-With P2 in place, tier stops selecting *which* evidence exists and selects **only depth, model, latency, and reasoning budget**. The five FAST-only addenda cease to be special because nothing consults an array to decide.
+Split out from the broader tier-parity packet on 2026-08-31, so a high-impact production defect is not buried inside a large convergence phase.
 
-DEEP-primary's missing prompt seam (`consciousnessOrchestrator`, D8) is resolved by the plan being an input to orchestration rather than a string appended to a prompt.
+**Measured cost:** CORE serves **72.9%** of production turns (1935 of 2656 over 7 days) and is the tier where `developmentalMemory` is `absent_unratified`. MAIA loses developmental memory on roughly three of every four turns.
 
-**Verification:** same member moment across FAST/CORE/DEEP produces **equivalent composition plans**, differing only in budget fields.
+**Sequencing constraint — non-negotiable.** P3a runs *after* P2's pass-through Conductor is proven, never before. Adding `developmentalMemory` to CORE's old addenda list would fix the symptom through exactly the architecture this program replaces, and would do it without a witness that makes the change interpretable. **Urgency changes the order within convergence; it does not justify bypassing the architecture.**
+
+**The acceptance question is not "does CORE now contain `developmentalMemory`?"** It is:
+
+> **Given equivalent member state, does canonical composition make developmental memory eligible under the same authority and consent rules regardless of whether cognition executes FAST, CORE, or DEEP?**
+
+That phrasing guards against the opposite mistake: making all tiers string-identical. **What must converge is intelligence eligibility, not inference budget.** A tier may legitimately spend a different reasoning budget on the same eligible evidence — that is what a tier *is*. It may not have a different answer about what the member has consented to surface.
+
+**Verification:** for a fixed member state, `conduct()` returns the same eligibility set and the same authority ordering across all three tiers; only budget fields differ.
 
 ---
+
+### P3b — Remaining tier convergence *(P2 priority)*
+
+Everything `unratifiedTierGaps()` still reports after P3a: `forwardReadiness`, `knowledgeField`, `youthSupport` on CORE, and the full DEEP set including **D8** (consultation-lane-only wiring).
+
+**D8 sits here, not in an emergency packet.** DEEP served **zero turns in seven days**. Still architecturally incorrect — the ruling is unchanged — but with no measured member cost, it is corrected as part of canonical tier convergence rather than competing for priority with D7.
+
+DEEP-primary's missing prompt seam (`consciousnessOrchestrator`) resolves the same way as everything else here: the composition plan becomes an input to orchestration rather than a string appended to a prompt.
+
+**P3 closes when `unratifiedTierGaps()` returns empty for all three tiers** — and, at that point, the function graduates from migration instrument to runtime-health gate.
 
 ### P4 — Participation record *(closes Corollary 3)*
 
