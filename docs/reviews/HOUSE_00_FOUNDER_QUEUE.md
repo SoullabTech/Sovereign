@@ -109,7 +109,7 @@ Working tree is **427 commits behind** `origin/clean-main-no-secrets`.
 | Instrument | Preservation | Durability |
 |---|---|---|
 | Field Study method | ✅ | ✅ tracked, PR #810 |
-| House charter + Pass 1 artifacts | ✅ | ❌ working tree only |
+| House charter + Pass 1 artifacts | ✅ | ✅ tracked, merge `d531974e2` (PR #814) |
 
 > **Preserve both candidate instruments in their current form. If either lacks
 > repository durability, record that as a precondition for instrument selection rather
