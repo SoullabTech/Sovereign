@@ -178,3 +178,92 @@ accept or reject it.
 
 The first response to a carefully governed reading should be *"ah, I see what she
 thinks the book is"*, not *"what am I looking at"*.
+
+
+---
+
+# Witness — FAILED · `364e6dc76`
+
+**Mechanical gate:** PASS. Every accepted 8a verdict held on the real proposal,
+revision 0, interpretation byte-identical, and item 10's section-42 capture
+became genuinely true for the first time.
+
+**Human gate: FAIL.** The founder opened the room and still could not say what
+MAIA thinks the structure of the book is.
+
+## Three causes, and they are not the same kind
+
+### 1 · The account is an undifferentiated wall
+
+MAIA's account is ~1,800 characters of continuous prose at the top of the room:
+what she settled, what the four read sections established, the elemental
+sequence, and her three least-certain boundaries, all in one block with no
+headings and no seams. It is the densest thing on the page and it arrives first.
+
+Room's fault. Presentation only — the account is frozen and must not be
+rewritten, but it can be given structure to read by.
+
+### 2 · Five divisions are all called `element`
+
+```text
+◇ element    43–69
+◇ element    70–81
+◇ element    82–96
+  element   97–108
+◇ element  109–122
+```
+
+Nothing on those rows distinguishes Fire from Water from Earth from Air from
+Aether. The reader is left to open `+27` and read headings to tell which is
+which — which is exactly the reconstruction this unit was meant to remove.
+
+**This one is partly MAIA's, not the room's.** She set `kind: "element"` and
+`title: null` on all five. She names them — *"Fire (43–69), Water (70–81), Earth
+(82–96), Air (97–108), Aether (109–122)"* — in her ACCOUNT, and not in the
+divisions. The room cannot lift those names out of her prose into her titles:
+that is inference, and a title the member did not write and MAIA did not set is
+the invention this programme has refused throughout.
+
+So there are two separate things here:
+
+- **a room defect** — the rows carry no legible identity beyond a repeated kind
+  and a range, when the sections inside them could supply one truthfully;
+- **a reading finding for 8b** — the reading is under-labelled. A division called
+  `element` five times, distinguished only by number, is a weaker proposal than
+  the same reading with the Work's own words on it. She had the words.
+
+### 3 · The gathered questions are stated, not workable
+
+The panel lists positions and phrases — `81–83 · A conclusion-to-Earth heading
+precedes…`, `43–69 element · where this begins` — with no way to go to the
+place, see what is there, or ask her anything about it. It reads as a dump of
+cryptic insight rather than as questions a person can take up.
+
+Partly the room; partly a capability that does not exist. Nothing in this
+programme yet lets a member ask MAIA about a reading she has made.
+
+## The fixture failure that let this through
+
+The mechanical gate passed and the local screenshot read well because the
+synthetic proposal gave every division a DIFFERENT kind — `front matter`,
+`body`, `opening movement`, `element`, `applied movement`, `back matter`. The
+real reading has `element` five times.
+
+**The fixture could not exhibit the defect.** It was built to have the same
+SHAPE as the real proposal — nested, mostly null titles, tags on most divisions,
+three regions — and shape was the wrong property to copy. What mattered was
+repeated kinds with null titles, and the fixture had none.
+
+That is the same failure the programme has now found four times, in a new place:
+
+```text
+test execution   ≠ type validation
+script execution ≠ inclusion in ship program
+gate identity    ≠ diagnostic identity
+render fidelity  ≠ intelligibility
+fixture shape    ≠ fixture content
+```
+
+Any further readability work must be witnessed against the REAL proposal, or
+against a fixture that reproduces its adversarial properties — five identically
+kinded, untitled siblings — and not merely its outline.
