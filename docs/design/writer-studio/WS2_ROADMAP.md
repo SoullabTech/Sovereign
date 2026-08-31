@@ -67,13 +67,22 @@ shipped behaviour.
 ### 05B board — Kelly's ruling, 2026-08-31
 
 ```text
-5a  pure presentation      PASS
-5b  route corrections      PASS
-5b  component              PASS
-5c  browser harness        GREEN / COMPLETE
-5½  MAIA reader            HOLD
-6   adoption               HOLD
+05B-1  evidence                     PASS
+05B-2  interpretation host          PASS
+05B-3  proposal persistence         PASS
+05B-4  review operations            PASS
+05B-5  review surface               PASS  (5a · 5b · 5c)
+05B-5½ real MAIA structure reader   PASS · REAL-WORK WITNESSED · CLOSED
+05B-6  sovereign adoption           HOLD
+05B-7  end-to-end adoption witness  HOLD
+05B-8  founder judgment of the      OPENABLE — a proposal now exists
+       reading itself
 ```
+
+5½ closed 2026-08-31 on Elemental Alchemy, both runs recorded in
+`WS2-05B-5HALF_STRUCTURE_READER_WITNESS.md`. **5½ passing is not a reason to
+open 6.** The next honest act is 05B-8: did MAIA perceive the organizing grammar
+of this Work? That is a founder judgment, not a test result.
 
 `05a6bfc09` is where 5c closed. What it establishes:
 
@@ -124,7 +133,7 @@ Each unit depends on the one above it. Nothing below is opened because something
 above went green; green proves bounded work, it does not confer permission.
 
 ```text
-5½  MAIA reader                      ← the only legitimate next implementation unit
+5½  MAIA reader                      CLOSED 2026-08-31 · real-Work witnessed
  ↓
 6   adoption                         HOLD — needs explicit adoption authority
  ↓
@@ -145,8 +154,9 @@ above went green; green proves bounded work, it does not confer permission.
     expression / publish
 ```
 
-Holds in force: **5½ HOLD** (requires the reader), **6 HOLD** (requires explicit
-adoption authority). `TYPECHECK-BASELINE-DIAGNOSTIC-IDENTITY-01` sits outside
+Holds in force: **6 HOLD** (requires explicit adoption authority). 5½ is closed;
+**05B-8**, the founder judgment of what MAIA perceived, is openable and is the
+next honest act. `TYPECHECK-BASELINE-DIAGNOSTIC-IDENTITY-01` sits outside
 this sequence entirely.
 
 ---
