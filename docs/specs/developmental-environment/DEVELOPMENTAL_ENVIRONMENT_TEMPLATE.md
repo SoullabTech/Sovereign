@@ -105,6 +105,19 @@ briefs, unprompted-gesture sequence data) confirms it. The architecture beneath 
 Conversation → Retention → Return → Continuity → Developmental Environment — the keep
 gesture as foundational infrastructure, pending that confirmation.**
 
+## The extraction-phase question (open — answered by evidence, not decision)
+
+> **What is universal across all practitioner worlds, and what is configurable?**
+
+Working hypothesis (Kelly, 07-13 — held, not ruled): universal ≈ arrival · continuity ·
+keeps · questions · relationship · departure; configurable ≈ language · rituals ·
+curriculum · stages · community · practices · ontology. The authoring system depends
+entirely on where this line actually falls, which is why it cannot be designed ahead of
+the evidence. Instruments that answer it: round-2 sequence data (do personas enter
+through different doors?) → Larry's field in real use → n=2's divergence from Larry.
+The constitution is already known to be universal (fence 2); everything else is
+hypothesis until a second world disagrees with the first.
+
 ## Two fences the template library must carry from day one
 
 1. **Modality jurisdiction.** Recovery, grief, couples, and depth-psychological templates
@@ -137,6 +150,30 @@ Template library as Studio offering     ← only here does this document activat
 
 Templates are extracted from proven fields, never designed ahead of them. The
 configurations above are illustrations of range, not a roadmap. n=1 first.
+
+## Why this templates (07-13 — three arguments, one register stamp)
+
+1. **Fossil record, not hypothesis.** Nothing enters the template by speculation — doors,
+   rooms, trust grammar, the five-stage sequence each earned their place by being walked,
+   wounded, and fixed on Now What? first. When the template ships, every element in it
+   has a production ancestor. Most platform templates are hypotheses; this one is a
+   fossil record.
+2. **The constraints travel with the features — and the constraints are the product.**
+   A generic coach template is rooms + graph + engagement mechanics. This one is rooms +
+   the refusals: member-pulled synthesis, seasons self-placed or absent, zero-residue
+   proposals, no position reads, the substitution line. Competitors can copy the rooms;
+   adopting this template means inheriting a trust architecture clients can *feel*
+   ("unwatched").
+3. **The method templates too.** Storyboard pair (first five minutes + year two), walk
+   instruments, design rules, charter composition, the critical-path grammar
+   (substrate → ruling → build). A new practitioner's field is authored through the same
+   sequence Larry's was — faster, because the road is paved. The template's blank spaces
+   are exactly the right ones: the coach's voice, doors, and curriculum.
+
+**Register stamp**: internally, "template-grade" is true today. Outwardly it becomes
+sayable the day Level 1 is walk-verified end-to-end in Larry's field — the current
+board's finish line. Until then the template is a description; after Larry walks his
+world, it becomes an offer.
 
 ---
 
