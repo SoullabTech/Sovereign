@@ -116,7 +116,20 @@ async function main(): Promise<void> {
   console.log(`    epigraph paragraphs marked: ${epigraphCount}`);
 
   console.log('[2/4] Wrapping with print CSS...');
-  const css = fs.readFileSync(CSS_PATH, 'utf-8');
+  // Inline the static font faces. The @import in print-book.css cannot be
+  // followed from a file:// document with no network, and MUST NOT be replaced
+  // by the Google Fonts css2 URL — that serves a variable font and Chromium
+  // rasterizes the whole interior rather than embedding it. See
+  // lib/manuscript/render/fonts/eb-garamond-static.css for the full finding.
+  const FONT_CSS_PATH = path.join(REPO_ROOT, 'lib/manuscript/render/fonts/eb-garamond-static.css');
+  let css = fs.readFileSync(CSS_PATH, 'utf-8');
+  const fontCss = fs.readFileSync(FONT_CSS_PATH, 'utf-8');
+  const beforeLen = css.length;
+  css = css.replace(/@import url\('fonts\/eb-garamond-static\.css'\);/, fontCss);
+  if (css.length === beforeLen) {
+    throw new Error('font @import not found in print-book.css — fonts would not embed');
+  }
+  console.log('    fonts inlined: EB Garamond static (' + (fontCss.length / 1024 / 1024).toFixed(2) + ' MB)');
 
   // <base href="file://.../public/"> resolves absolute image src paths
   // (e.g. /book-studio/figures/F05-fire-calcinatio.png) against the

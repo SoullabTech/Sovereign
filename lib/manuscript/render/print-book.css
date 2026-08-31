@@ -11,7 +11,11 @@
  *   - Running headers: NONE; page numbers only in footer (Option A)
  */
 
-@import url('https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,700;1,400;1,500&display=swap');
+/* Fonts: see fonts/eb-garamond-static.css. Do NOT restore the Google Fonts
+ * css2 @import — it serves a VARIABLE font, which Chromium cannot embed in a
+ * PDF and silently rasterizes the entire interior instead. The renderer
+ * inlines fonts/eb-garamond-static.css in place of this comment. */
+@import url('fonts/eb-garamond-static.css');
 
 /* ============================================================
  * PAGE GEOMETRY
