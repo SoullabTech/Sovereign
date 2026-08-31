@@ -174,7 +174,7 @@ element · applied movement · back matter · references`. Not Part/Chapter — 
 the account says why: the Work's own three-part scheme "exists only in the
 contents list and cannot be laid over the body without inventing seams."
 
-**Uncertainty populated, not decorative.** Nine of eleven units carry tags, and
+**Uncertainty populated, not decorative.** **Ten** of eleven units carry tags, and
 the account names specific seams: 82/83 as a possibly disordered Water/Earth
 join, 123–147 as perhaps a fourth movement rather than an applied part, and 42
 as able to "open Fire or close the ground".
@@ -189,6 +189,13 @@ second sentence asked for, and it was the thing most at risk of going wrong.
 would settle whether 0–4 and 161–173 were writing or apparatus — the question
 the mechanics flagged (`suspected-scaffold` at 1–4, 161–164, 166–173) and
 explicitly could not answer. 8.5% of the character budget.
+
+---
+
+**Corrected 2026-08-31.** This record first said nine units carried uncertainty
+tags, read off the runner's printed lines. The 8a harness counted the frozen row
+and found ten. The row is the fact; the count is corrected above and the record
+says so rather than being quietly amended.
 
 ---
 
