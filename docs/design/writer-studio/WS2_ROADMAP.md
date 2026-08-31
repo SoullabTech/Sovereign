@@ -94,12 +94,11 @@ EDITORIAL RELATIONSHIP
                                                   Fire / Water / Earth / Air /
                                                   Aether · structured synthesis
                                                   · no authorial leakage
-  05B-8B-02a  editorial review surface            BUILT a205fef29
-                                                  machine floor PASS on a
-                                                  fixture; 8a on the real row
-                                                  and the FOUNDER WITNESS both
-                                                  outstanding
-  05B-8B-02c  ask MAIA about the reading          NEXT once 02a is witnessed
+  05B-8B-02a  editorial review surface            PASS · FOUNDER RE-WITNESSED
+                                                  CLOSED at eeb452dcb
+                                                  2026-08-31, on the real
+                                                  reading e6cabcc4
+  05B-8B-02c  ask MAIA about the reading          OPENED · Gate Zero first
   05B-8b   founder semantic judgment              HOLD · behind 02c
 
 SOVEREIGNTY BOUNDARY
@@ -248,11 +247,10 @@ above went green; green proves bounded work, it does not confer permission.
 8B-02b editorial reading contract    PASS · REAL-WORK WITNESSED
                                      proposal e6cabcc4
  ↓
-8B-02a editorial surface             BUILT a205fef29 · machine floor PASS
-                                     8a on the real row and the founder
-                                     witness both outstanding
+8B-02a editorial surface             PASS · FOUNDER RE-WITNESSED · CLOSED
+                                     eeb452dcb · 2026-08-31
  ↓
-8B-02c Ask MAIA about the reading    NEXT once 02a is witnessed
+8B-02c Ask MAIA about the reading    OPENED · Gate Zero before any build
                                      conversation ABOUT a proposal
                                        ≠ revision OF it
                                        ≠ adoption

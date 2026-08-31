@@ -279,13 +279,46 @@ was already there, not a new judgement.
 ```text
 UX01 machine floor        PASS · three fixtures
 UX01 on the real row      PASS · founder witness, core experience
-02a surface closeout      BUILT eeb452dcb · both defects repaired
-                          PENDING · founder re-witness. 02a does not
-                          close until that returns.
-02c Ask MAIA              NEXT LANE · and Kelly calls it
+02a surface closeout      PASS · FOUNDER RE-WITNESSED · CLOSED
+                          eeb452dcb · 2026-08-31
+02c Ask MAIA              OPENED · Gate Zero first, no implementation
 05B-8b                    HOLD
 05B-6 adoption            HOLD · its own fresh lane
 ```
+
+### The re-witness — 2026-08-31
+
+Run by the founder on the REAL reading, not a fixture: manuscript
+`a3ae67fd-a21e-4948-8766-4c397d2e4712` (*Elemental Alchemy (KDP print)*, 174
+sections), proposal `e6cabcc4-a506-4ea7-aa89-9b23b450ca74`, with the tree
+pinned at `eeb452dcbc61f9e655004595f5103d6320f2a25a` and `.next` cleared, so
+what was judged was this commit and nothing else. Three properties, and only
+these three:
+
+```text
+1  Move outside <parent>     the consequence in book language, with the
+                             parent named and the landing shown
+2  the middle child          refuses BEFORE the gesture, in place of an
+                             impossible button
+3  the outline markers       editorial language, two distinct signals
+```
+
+The third is visible in the witness capture: `turn toward the four elements
+35–41` carries `a question for you` and `left open: where this ends +2 more`
+side by side. Across the outline nothing reads `question` or `uncertain` any
+more, and the `questionuncertain` collision cannot occur — `Elemental
+Astrology` and `The Four Grades of the Elements` each carry two marks and each
+reads as a sentence.
+
+**Founder ruling: `WS2-05B-8B-02a — PASS · FOUNDER RE-WITNESSED · CLOSED`.**
+`eeb452dcb` is the fixed, founder-witnessed closeout commit. It is a reference
+now, not a target: the lane branch head is left standing on it.
+
+*Recorded, because the room's own limits were: the wide-screen distance between
+a row and its marks was not repaired here and is not repaired by the ruling; nor
+were hover/focus treatment, narrow-width behaviour, or keyboard navigation
+beyond tab order. 02a closed on the two defects it was given, not on the whole
+of `Apple level`.*
 
 ### The requirement 02c inherits
 
