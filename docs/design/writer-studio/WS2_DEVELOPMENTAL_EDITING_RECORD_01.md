@@ -1,0 +1,271 @@
+# WS2 — Developmental editing, capture record 01
+
+**Status: EVIDENCE, NOT LEARNING.** This is the record of one live session against
+the seven classes in `WS2_DEVELOPMENTAL_EDITING_CAPTURE.md`. It authorizes no
+unit, proposes no feature, and does not revise the roadmap's ordering.
+
+Per that document: *"The learning from the actual Chapter 10 edit is the
+founder's to enter."* Nothing below is entered as learning. The rulings recorded
+here are the founder's and are quoted as made; the observations are the record of
+what happened, offered so the learning has evidence to stand on.
+
+**Session:** 2026-08-31. Chapter 10 replacement, KDP resubmission, and the
+opening of a whole-book editorial pass.
+**Work:** *Elemental Alchemy*, canonical source
+`docs/book-studio/ELEMENTAL_ALCHEMY_FROM_ORIGINAL_FULL.md`.
+**Commits:** `3c4795d`, `6c39a23`, `fcd298e`, `10ee4f0`, `73fed131`.
+
+---
+
+## 1 — THE ACT
+
+At verb level, what was actually done:
+
+```text
+replaced      an author-supplied Chapter 10 into the canonical source
+conformed     the incoming draft to house typographic convention
+verified      each finding against the canonical source before acting on it
+re-verified   a findings document written against a different manuscript file
+corrected     a misattributed epigraph
+removed       a duplicated sentence; a repeated quote; two disputed epigraphs
+marked        a threshold with a section break rather than prose
+mapped        all ten chapter boundaries, neutrally, before adjudicating any
+declined      four findings in Chapter 1, and an entire transition pass
+deferred      two questions to later cross-chapter passes
+batched       every change behind a single render and a single upload
+```
+
+Two of these verbs are not in the built pipeline's vocabulary at all: **declined**
+and **deferred**. A third, **re-verified**, exists only because a finding
+outlived the file it was found in.
+
+## 2 — WHERE IT LANDED
+
+| act | landed at | granularity |
+|---|---|---|
+| Chapter 10 replacement | L2114–2440 | whole division |
+| "Alchemy of Water" duplication | L1181 | one sentence inside a paragraph |
+| Rumi repetition | L1928 | one line |
+| Second-campfire threshold | L271 | between two paragraphs |
+| Epigraph provenance | L313 | one line |
+| Disputed epigraph, Fire | L1122 | one line |
+| Disputed epigraph, Aether | L2043 | one line |
+| Source additions | Bibliography, Ch1 + Ch10 | back matter list |
+
+The acts landed at five different granularities — a division, a paragraph, a
+sentence, a line, and a back-matter list — and two of them landed in back matter
+as a consequence of a decision made in a chapter.
+
+## 3 — WHAT WAS MISSING
+
+Stated as wants. No feature is named.
+
+- I wanted to know **which manuscript is the Work** without deriving it from a
+  comment inside a render script.
+- I wanted a finding to **carry the file it was found in**, so it would expire on
+  its own when that file stopped being the Work.
+- I wanted to see **all ten chapter boundaries beside one another** before ruling
+  on any one of them. *(Asked for explicitly by the founder, mid-session.)*
+- I wanted a declined finding to **stay declined**, with its reason, so it would
+  not return later as a new discovery.
+- I wanted to see **every occurrence of a quotation at once**, not one at a time.
+- I wanted a change to **show its blast radius** before I made it.
+- I wanted to know, before editing, **whether a change would move the page
+  count** — because page count is bound to spine width and to a cover already
+  accepted by a printer.
+
+## 4 — WHAT YOU HELD
+
+Held in the head across the session because nothing would hold it:
+
+- Which of four built PDFs was current. Filename and page count were both
+  unreliable — the file named `final` was the *older* one.
+- The chain **page count → spine width → cover validity**, live from the moment
+  the chapter grew the book by one page until two later cuts returned it.
+- That a findings document's line numbers pointed at a manuscript that is not the
+  Work, so every number in it had to be re-derived before use.
+- That two branches carried two different Chapter 10s, and that a grep matching
+  both could not tell them apart.
+- That correcting one instance of a quotation had put the book into a state where
+  it carried one quotation in two wordings under two attributions.
+
+## 5 — WHAT LEAKED
+
+**The entire session leaked. Nothing about this edit happened inside the Studio.**
+
+| what | where it went |
+|---|---|
+| the ten-seam comparative map | a published artifact |
+| every ruling | chat, then a git commit message |
+| every decline, with reasons | a git commit message, "recorded so they are not re-raised" |
+| the audit of a stale findings doc | a table inside a commit message |
+| items left open | commit prose |
+| which file is safe to upload | a shell loop, run twice, in a terminal |
+| verification evidence | terminal scrollback |
+| the open question on cosmogonic recurrence | this document |
+
+Git commit messages are currently carrying the developmental record. They were
+chosen because they are the only durable, author-adjacent place a judgment and
+its reasoning could sit next to the change it produced. That is the leak, and it
+is total — a version-control system is doing the work of the editorial memory.
+
+One leak is worth naming separately because it is the same shape as Finding 1 in
+the capture document. A commit message contains this heading:
+
+> `DECLINED, recorded so they are not re-raised:`
+
+Written by hand, into version control, because there was nowhere else to put it.
+
+## 6 — WHAT MOVED YOU
+
+Three founder reversals, each caused by evidence rather than argument:
+
+1. **The transition pass.** Opened as *"looks like something to look at
+   first(?)"*. After the seam map: *"the full map changes the editorial
+   conclusion quite a bit… No new transition prose. No global bridge pass."* The
+   map did not answer the question that was asked; it dissolved it.
+
+2. **Fire.** Presented as the one elemental chapter that breaks its siblings'
+   handoff convention. Ruled protected: *"making Fire say 'Water is next' merely
+   because its siblings do would impose a template on an element whose
+   phenomenology is different… Fire can consume itself and leave the reader at
+   the embers."* Asymmetry was re-read as characterization rather than defect.
+
+3. **Jung/Campbell.** The obvious repair — correct all three instances — was
+   declined once the repetition question surfaced beside the provenance one:
+   *"That would solve the factual problem by creating a literary one."*
+
+And three corrections to the editorial agent's own claims, each caught by an
+instrument rather than by reasoning:
+
+- A webfont `@import` in the print CSS was missed on a first pass because the
+  search was for `@font-face` and font files. Another lane found it.
+- A `strings` test reported "old Ch10" for a file that contains the new one —
+  the instrument was structurally incapable of reading compressed PDF text.
+  Both files returned the same wrong answer, which is what exposed it.
+- A grep intended to distinguish two drafts matched both, because the old
+  chapter and both rewrites open on the same sentence. It produced a confident,
+  wrong claim about a file's provenance.
+
+## 7 — WHAT YOU DECLINED
+
+| declined | reason given |
+|---|---|
+| Rewriting Chapter 10 | another lane did; the branch that preserved the author's draft was taken instead |
+| Trimming a page to recover the original spine | cutting approved prose to save 0.0025″ and some back-matter parity |
+| "An Infinite Embrace" register shift | Ch1 has a job later chapters don't — experience → possibility → what the book offers |
+| Reducing the epigraph count in that section | no independent stylistic cut |
+| The 261/265 restatement | protected as didactic recursion, per the standard in `CHAPTER_7_PASS_v1.md` |
+| A heading over the second campfire | a heading would name the movement and explain the resonance |
+| Correcting Ch5/Ch9 to Campbell | would solve a factual problem by creating a literary one |
+| Ch2 and Ch3 transitions | *"A chapter does not have to tell us what comes next every time."* |
+| Ch5 → Ch6 | the benediction is protected |
+| The Ch10 → Conclusion stop | deliberate; protected |
+| A global bridge pass | *"would likely make the book more mechanical"* |
+| Inventing a heading for Chapter 6 | *"Absence of a heading can be compositional; wrong hierarchy is markup."* |
+| Manufacturing edits to justify the pass | *"We shouldn't manufacture edits simply because we're doing an editorial pass."* |
+
+Thirteen declines against nine applied changes. The transition pass closed with
+**zero** interventions — recorded by the founder as *"a useful editorial finding,
+not a failure to find things to edit."*
+
+---
+
+## Evidence toward the five open questions
+
+The capture document lists five questions only the live edit can answer. This
+session bears on four of them. The answers remain the founder's.
+
+**Q1 — one pass over the whole, or many passes over parts?**
+Evidence for whole-book passes with a single concern. The ten-seam pass produced
+a conclusion that ten local chapter passes could not have produced: six of ten
+boundaries already hand off, so the book has no systemic transition problem. The
+founder's phrasing for the alternative: *"thirteen local edits pretending to be
+one book."* The pass had exactly one concern and covered the whole Work.
+
+**Q2 — does a judgment stay open across sessions?**
+Directly evidenced. The cosmogonic-opening recurrence was neither applied nor
+dismissed but deferred with a condition attached: *"adjudicate them when Ch3,
+Ch5, and Ch9 have each received their own canonical pass."* That is a question
+with a life of its own, a stated ripening condition, and no owner in any built
+surface. It currently survives only in this file.
+
+**Q3 — at the moment of decision, what did you need to see?**
+The founder's to answer. Observable from outside: before ruling on any single
+seam, the founder declined to rule at all until all ten could be seen together,
+and specified the fields required — closing text, opening text, existing markers,
+what changes across the boundary, a neutral verdict, and a confidence level.
+
+**Q4 — does the plan live at the chapter, or across the book?**
+Evidenced as: **across**. The epigraph correction was found in Chapter 1 and
+could not be resolved there — it was one of three instances across Chapters 1, 5
+and 9, and fixing the local one put the book into an inconsistent state until the
+other two were ruled on. A chapter-scoped note would have recorded the finding
+and lost the problem.
+
+**Q5 — how much is text, how much architecture?**
+The acts landed mostly at sentence and line level (see class 2). But the
+*decisive* acts were architectural: establishing which file is the Work, mapping
+the seams before adjudicating, and batching changes behind one render. The
+session's largest single finding — that 8 of 10 catalogued defects no longer
+existed — was architectural, not textual.
+
+---
+
+## The finding this session adds
+
+Recorded as evidence. Whether it is a finding of the programme is the founder's
+to decide.
+
+**A developmental finding outlives the file it was found in, and nothing marks
+it stale.**
+
+`EDITORIAL_FINDINGS_v1.md` catalogues ten defects with line numbers, against
+`ELEMENTAL_ALCHEMY_MANUSCRIPT.md` (5,184 lines). The Work is
+`ELEMENTAL_ALCHEMY_FROM_ORIGINAL_FULL.md` (2,973 lines). Re-verified against the
+Work:
+
+```text
+ 1  Ch8 Air five-fold repeat ......... already resolved
+ 2  Ch7 Augusten trip told twice ..... already resolved
+ 3  Ch6 "Alchemy of Water" twice ..... REAL      -> fixed
+ 4  Ch6 immersive-phase repeat ....... already resolved
+ 5  Ch3/Ch4 cosmic-silence opening ... already resolved
+ 6  "Four Grades" template ........... appears once
+ 7  Rumi quote in two chapters ....... REAL      -> fixed
+ 8  Earth Phase 1 repeat ............. already resolved
+ 9  Duplicate prefaces/abstracts ..... already resolved
+10  Move "A Message…" to back ........ already done
+```
+
+Eight of ten had been repaired by a later assembly. Acting on the document as
+written would have meant editing a file that is not the book, to fix problems
+that no longer exist, using line numbers that address different text. The same
+pattern held for `CHAPTER_1_PASS_v1.md`: all six of its flags were already gone.
+
+This is the same class of error the capture document already names — *"the Work
+itself may be the thing that is wrong"* — inverted. Here the Work was right and
+the finding was stale, and nothing in either document could say so.
+
+---
+
+## What this record does not do
+
+It does not propose a unit, a lane, or a surface. It does not name a feature for
+any want in class 3. It does not claim that git commit messages are a design for
+the editorial record — only that they are what the process reached for when the
+product had nowhere to put a judgment.
+
+It does not close any open item in the book edit. As of this record:
+
+```text
+Chapter 10 ................. replaced, rendered, live
+Ch6 / Ch8 duplications ..... resolved
+Chapter 1 .................. two applied, four declined
+Jung / Campbell ............ resolved globally
+Transitions ................ CLOSED, zero prose interventions
+Cosmogonic recurrence ...... OPEN, cross-chapter diction review
+Heading hierarchy .......... OPEN, mechanical normalization only
+Chapters 2-9 ............... not yet passed
+Render / upload ............ deferred until the batch completes
+```
