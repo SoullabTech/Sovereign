@@ -55,6 +55,25 @@ describe('Desktop is a first-class platform, never generic web', () => {
     expect(isDesktopShell('Mozilla/5.0 evil.com/maia-desktop-lookalike')).toBe(false);
     expect(isDesktopShell('Mozilla/5.0 (X11) maia-desktopish/1.0')).toBe(false);
   });
+
+  it('the marker is pinned to the D01 package name, so a rename breaks a test', () => {
+    // ⛔ platformDetection.ts derives the marker from the Electron app's own
+    // package name and says so. Nothing enforced that until this assertion:
+    // renaming maia-desktop/package.json would otherwise have reclassified
+    // Desktop as an ordinary browser in silence, with no test going red.
+    const pkg = JSON.parse(
+      fs.readFileSync(
+        path.join(__dirname, '..', '..', '..', 'maia-desktop', 'package.json'),
+        'utf8',
+      ),
+    ) as { name: string; version: string };
+
+    // The asserted value carries the name, so a failure names the rename.
+    expect({
+      name: pkg.name,
+      accepted: isDesktopShell(`Mozilla/5.0 (Macintosh) ${pkg.name}/${pkg.version} Chrome/120`),
+    }).toMatchObject({ accepted: true });
+  });
 });
 
 describe('S1/S2 — Desktop resolves to sovereign-whisper, never web-speech', () => {

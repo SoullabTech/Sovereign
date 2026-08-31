@@ -39,12 +39,53 @@ export interface PlatformInfo {
  * governed where it was: the main-process permission gate, scoped to the exact
  * `/maia` surface.
  *
- * The marker is pinned from the other side too — a maia-desktop test asserts
- * the package name still produces it, so a rename breaks a test rather than
- * silently reclassifying Desktop as an ordinary browser.
+ * The marker is pinned to the package name by
+ * `lib/utils/__tests__/voiceTransportSelection.test.ts`, which reads
+ * `maia-desktop/package.json` and asserts the token it yields is still
+ * accepted — so a rename breaks a test rather than silently reclassifying
+ * Desktop as an ordinary browser.
+ *
+ * ⛔ WHAT THIS PREDICATE DOES NOT ANSWER (route census, 2026-08-31). It answers
+ * exactly one question: *is this web page being hosted by an Electron shell
+ * whose product token is `maia-desktop/`?* It is a SHELL classifier. It is NOT
+ * an architecture classifier, and `isDesktopShell() === true` must never be
+ * read as "the sovereign D01 pipeline is in play".
+ *
+ * The reason is a verified name collision: `maia-desktop/` (the D01 client) and
+ * `desktop-app/` (an Electron host that wraps the web app) BOTH declare
+ * `"name": "maia-desktop"` in package.json. They are materially different
+ * architectures — `maia-desktop/src/main.js` does `loadFile(src/index.html)`
+ * and carries its own capture → VAD → Whisper → MAIA → TTS pipeline, and never
+ * loads this code at all; `desktop-app/src/main.js` does `loadURL(...)` and
+ * mounts the real web surfaces, where this code does run. So the two possible
+ * inferences fail in opposite directions: inside `desktop-app/` the predicate
+ * could be true while the D01 pipeline is entirely absent, and inside
+ * `maia-desktop/` the D01 pipeline is present while this predicate is never
+ * consulted.
+ *
+ * ⚠️ UNRESOLVED, held rather than assumed. Whether `desktop-app/` actually
+ * emits the marker at runtime is NOT established. It calls
+ * `app.setName('Soullab AIN')` before window creation and appends
+ * ` MAIADesktop/<version>` to the UA — neither of which matches this regex — so
+ * it may well classify as an ordinary browser. That is a runtime claim and
+ * needs a runtime witness; no Electron is installed in this tree to produce
+ * one. Do not resolve it by reading either main.js. Two other shells load web
+ * routes and are worth the same check before relying on this predicate:
+ * `compact-companion/` (`/maia/compact`) and `electron/main.js`
+ * (`/maia/labtools`).
+ *
+ * If a caller ever needs an architecture-level predicate — "am I inside the
+ * D01 client?" — do not widen this one. Establish the runtime facts first,
+ * give the two packages distinct names so the UA can separate them, and add a
+ * predicate that a real caller asked for.
  */
 const DESKTOP_SHELL_UA_MARKER = /\bmaia-desktop\//i;
 
+/**
+ * Is this web page hosted by a `maia-desktop`-named Electron shell?
+ *
+ * ⛔ NOT "is this the sovereign D01 client" — see the collision note above.
+ */
 export function isDesktopShell(userAgent?: string): boolean {
   // Capacitor wins: a native build is native, whatever its UA says.
   if (Capacitor.isNativePlatform()) return false;
