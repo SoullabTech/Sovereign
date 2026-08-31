@@ -201,6 +201,7 @@ while IFS= read -r asset; do
   hash="$(
     curl -fsS \
       -H 'Accept-Encoding: identity' \
+      -b "$JAR" \
       "$PUBLIC_ORIGIN$asset" |
       shasum -a 256 |
       awk '{print $1}'
