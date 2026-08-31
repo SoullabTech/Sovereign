@@ -607,9 +607,7 @@ With an open heart and mind, embrace the adventure of transformation, trusting t
 
 *"We try to realize the essential unity of the world with the conscious soul of man; we learn to perceive the unity held together by the one Eternal Spirit, whose power creates the earth, the sky, and the stars, and at the same time irradiates our mind." – Rabindranath Tagore*
 
-*"Spiritual experience is an experience of aliveness of mind and body as a unity. . . . The central awareness in these spiritual moments is a profound sense of oneness with all, a sense of belonging to the universe as a whole." — Fritjof Capra*
-
-#### My Morning Ritual
+### My Morning Ritual
 
 I woke up early this morning to meditate, pray, and practice Chi Kung, a form of movement from the Taoist tradition that helps me cultivate my vital energy. I meditate to get centered and attune to the moment before my mind turns its attention to the everyday world. This process centers me in the cosmic dance of creation into and out of this moment.
 
@@ -684,17 +682,13 @@ In general, we seem culturally unaccustomed to having a functional relationship 
 
 ### The Dance Between Stability and Change
 
-*"The only constant in life is change." — Heraclitus*
-
 Ideally, we have a balance of all available modes. We all have our preferred modes and genius in certain areas of conscious functioning, yet we are better off when we can integrate our preferences with other augmenting modes. It is in our capacity to break out of fixated states, diversify our perception of reality, and learn new, more adaptive ways of functioning. Psychologists call this neuroplasticity, the ability to learn new things and enhance existing cognitive abilities.
 
 Our beliefs about reality can predetermine how we engage it. If someone believes they are unemotional, they will naturally avoid emotional signals. If a person doesn't believe in telepathy, they will disregard telepathic messages as "mind chatter." Beliefs inform, persuade, color, and transform our world into a smaller, more predictable, yet less realistic version by filtering out anything that doesn't fit the mold. Our capacity to shift between elemental states of awareness fluidly and consciously helps us escape the limitations of our biases and beliefs, because every new elemental state presents us with new insights and challenges our habitual—fixated—ways of being.
 
-Embrace the unity of opposites. This key reminds us that duality exists for the purpose of growth and transcendence. By embracing and integrating both the light and the dark aspects within ourselves, we can achieve wholeness and balance.
+Embrace the unity of opposites. This reminds us that duality exists for the purpose of growth and transcendence. By embracing and integrating both the light and the dark aspects within ourselves, we can achieve wholeness and balance.
 
 ### The I Ching and Nature's Wisdom
-
-#### Ancient Insights Meet Modern Science
 
 *"What we forget we can also remember." – John Perkins*
 
@@ -747,8 +741,6 @@ As Hermes Trismegistus advises, we should see every event in life as "one thing,
 By embracing this journey, we become active participants in the recreation of reality, allowing us to truly live rather than merely exist. Let the elements guide you, and may the light of conscious awareness lead the way.
 
 ### The Journey Forward
-
-#### Transition: An Ode to the Elements of Soulful Living
 
 Having understood the elements and their role in achieving wholeness, it's time to delve deeper into their individual qualities. The chapters ahead offer an exploration of the five elements, each one unfolding its unique attributes and insights. Through this journey, you will discover new ways of seeing your life and deepen your understanding of how these elements animate our existence, inform our consciousness, and offer us the tools we need to experience the world and express ourselves. This is an ode to the elements that shape our soulful living, inviting us to explore their wisdom and embrace their transformative power.
 
@@ -2819,10 +2811,9 @@ A working bibliography organized by chapter. Where the same source informs multi
 - Perkins, John. *Confessions of an Economic Hit Man.* Berrett-Koehler Publishers, 2004.
 - McKenna, Terence. *The Archaic Revival.* HarperSanFrancisco, 1991.
 - Tolle, Eckhart. *The Power of Now: A Guide to Spiritual Enlightenment.* New World Library, 1997.
-- Heraclitus. *Fragments.*
 - Herrmann, Ned. *The Whole Brain Business Book.* McGraw-Hill, 1996.
 - Vasudev, Jaggi. *Mystic's Musings.* Isha Foundation, 2003.
-- Gabriel, Peter. *UP.* Real World Records, 2002.
+- Gabriel, Peter. "Growing Up." *Up.* Real World Records, 2002.
 
 ### Chapter 5: Fire
 
