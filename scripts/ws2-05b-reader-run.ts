@@ -20,9 +20,9 @@
  * the stored proposal's coverage. `DRY_RUN=1` prints the pass-1 request instead
  * of sending it - read it before you send your book.
  *
- *   ANTHROPIC_API_KEY=... DATABASE_URL=... \
- *   MEMBER_ID=<uuid> MANUSCRIPT=<uuid> \
- *   npx tsx scripts/ws2-05b-reader-run.ts
+ * Run it with MANUSCRIPT set and MEMBER_ID unset once, and it prints the query
+ * that resolves your member id. No placeholder to paste - an angle-bracket
+ * placeholder is a redirect in zsh, and has twice been pasted literally.
  */
 
 const MANUSCRIPT = process.env.MANUSCRIPT ?? '';
@@ -34,7 +34,18 @@ const MAX_PASSES = Number(process.env.MAX_PASSES ?? '3') as 1 | 2 | 3;
 
 async function main() {
   if (!MANUSCRIPT || !MEMBER_ID) {
-    console.error('\n  MANUSCRIPT and MEMBER_ID are required (both uuids).\n');
+    /* The member id is NOT looked up from the manuscript here, deliberately:
+       every query below is scoped by (manuscript, member) so a wrong id reads
+       nothing rather than someone else's Work. Deriving it from the manuscript
+       would quietly remove that check. Printing the query keeps the safety and
+       spares a placeholder, which is a shell redirect in zsh and has now cost a
+       run twice. */
+    console.error('\n  MANUSCRIPT and MEMBER_ID are required (both uuids).');
+    if (MANUSCRIPT && !MEMBER_ID) {
+      console.error('\n  Your member id, for this Work:\n'
+        + `\n    export MEMBER_ID=$(psql -U soullab -d maia_consciousness -tAc \\\n`
+        + `      "SELECT member_id FROM member_manuscripts WHERE id='${MANUSCRIPT}'")\n`);
+    }
     process.exit(2);
   }
   if (!DRY_RUN && !process.env.ANTHROPIC_API_KEY) {
