@@ -167,7 +167,22 @@ async function main() {
         + ' finding about the Work.\n');
       process.exit(1);
     }
-    throw e;
+    /* AND SO IS A TRANSPORT FAULT. This arrived as a raw SDK stack trace with no
+       statement about what had happened to the Work - which is the one thing a
+       person watching a reading of their own book needs to be told first. An
+       auth failure, a rate limit and a dropped connection are all "the reading
+       did not happen", and none of them is a finding. */
+    const status = (e as { status?: number }).status;
+    const kind = status === 401 ? 'the API rejected the key'
+      : status === 429 ? 'rate limited'
+        : status && status >= 500 ? 'the API is failing'
+          : 'the request did not complete';
+    console.error(`\n  THE READING DID NOT HAPPEN — ${kind}`
+      + `${status ? ` (HTTP ${status})` : ''}`);
+    console.error(`  ${(e as Error).message?.split('\n')[0] ?? String(e)}`);
+    console.error('\n  Nothing was stored, and your Work is untouched: no proposal'
+      + '\n  was written and nothing here can write canonical structure.\n');
+    process.exit(1);
   }
   const secs = ((Date.now() - started) / 1000).toFixed(1);
 
