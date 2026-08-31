@@ -102,7 +102,56 @@ redesign the gate.
 
 ---
 
-## THEN — likely sequence
+## THE GOVERNING BOUNDARY
+
+> **Perception may become increasingly whole-work; authorship does not thereby
+> become implicit.**
+
+MAIA may perceive structure, repetition, unresolved promises, energy and
+development across the entire Work. None of those perceptions becomes manuscript
+bytes by being correct, by being whole-work, or by being adopted into the
+roadmap. 05B already enforces this structurally — the frozen interpretation is
+evidence, the reviewed copy is authorship, and no route can turn one into the
+other — and everything below inherits it.
+
+`07` and `08` are where that stops being automatic. They are qualitatively
+different from perception work because they can alter the actual manuscript:
+**census first, proof first, explicit authority first.**
+
+## THE ORDERING — strict
+
+Each unit depends on the one above it. Nothing below is opened because something
+above went green; green proves bounded work, it does not confer permission.
+
+```text
+5½  MAIA reader                      ← the only legitimate next implementation unit
+ ↓
+6   adoption                         HOLD — needs explicit adoption authority
+ ↓
+06  read divisions whole
+ ↓
+07  import-artifact census           read-only; only THEN any authorised normalisation
+ ↓
+08  split / merge real writing units
+ ↓
+    section-aware checkpoint
+ ↓
+    developmental notes + threads
+ ↓
+    whole-work intelligence
+ ↓
+    revision
+ ↓
+    expression / publish
+```
+
+Holds in force: **5½ HOLD** (requires the reader), **6 HOLD** (requires explicit
+adoption authority). `TYPECHECK-BASELINE-DIAGNOSTIC-IDENTITY-01` sits outside
+this sequence entirely.
+
+---
+
+## THEN — the units, in that order
 
 ### WS2-06 · Division Reading View
 
