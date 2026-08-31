@@ -1,6 +1,6 @@
 # Writer's Studio — Roadmap
 
-**As of 2026-08-30.** Kelly's sequencing, recorded so it survives the session
+**As of 2026-08-31.** Kelly's sequencing, recorded so it survives the session
 that produced it.
 
 > The key shift: we are past building the room. We are now building the sequence
@@ -63,6 +63,42 @@ THREADS     what recurs across those divisions
 
 `86bab2094` remains the failed mechanical baseline and GROUND evidence, not
 shipped behaviour.
+
+### 05B board — Kelly's ruling, 2026-08-31
+
+```text
+5a  pure presentation      PASS
+5b  route corrections      PASS
+5b  component              PASS
+5c  browser harness        GREEN / COMPLETE
+5½  MAIA reader            HOLD
+6   adoption               HOLD
+```
+
+`05a6bfc09` is where 5c closed. What it establishes:
+
+- the HTTP envelope is real — `previewOnly` and `expectedReviewRevision` have
+  semantic types at ingress rather than relying on JavaScript coercion;
+- a reading is discoverable without becoming another application surface —
+  summaries only, the existing panel role, no production POST;
+- absence means absence — `ReadingsEntry` renders null, so the Canvas never
+  implies an interpreter exists merely because the schema does;
+- 5c tested COMPOSITION, not pieces. Its three findings were a prop vanishing
+  at a component boundary, a semantic attribute inverted, and assertions that
+  never executed across the browser/tsx serialization boundary.
+
+> A negative DOM assertion against a component incapable of forwarding the
+> attribute is a false witness. The component was fixed; the assertion was not
+> weakened.
+
+**Do not advance into 5½ or 6 from this commit.** 5½ requires the reader; 6
+requires adoption authority, and neither is authorised by 5c being green.
+
+Parked, deliberately outside this unit:
+`docs/ops/TYPECHECK_BASELINE_DIAGNOSTIC_IDENTITY_01.md` — the typecheck gate
+keys on a presentation artifact, so the same tree passes or fails depending on
+whether `.next` exists. 5c discovered it; discovering it is not permission to
+redesign the gate.
 
 ---
 
