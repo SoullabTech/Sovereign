@@ -61,7 +61,7 @@ now-what/interview        → room task contract       → buildMaiaTurn()
 
 Each packet is independently shippable, independently verifiable, and reversible. **No packet is authorized to run until the one before it is verified.**
 
-### P0 — Evidence contract *(type-only; zero behavior change)*
+### P0 — Evidence contract *(type-only; zero behavior change)* — ✅ **DELIVERED**
 
 Define and export the structured intelligence payload. No runtime wiring.
 
@@ -83,6 +83,17 @@ type MaiaTurnInput = { /* typed; no Record<string, unknown> */ };
 **Verification:** `npm run typecheck` green against baseline. No behavior change is possible — nothing consumes it yet.
 
 **Why first:** this is the only packet that makes every later packet non-reversible by accident.
+
+**Delivered 2026-08-31:**
+- `lib/maia/contract/intelligenceSources.ts` — closed `IntelligenceSourceId` union (30 sources, derived 1:1 from running code), `AUTHORITY_RANKS`, `Provenance`, `INTELLIGENCE_REGISTRY`, and `TIER_DISPOSITION`.
+- `lib/maia/contract/evidence.ts` — `EvidenceItem`, `ConsentState`, `ParticipationState`, `CompositionPlan`, `SurfaceContract`, `MaiaTurnInput`, `MaiaTurnResult`.
+- `lib/maia/contract/__tests__/intelligenceContract.test.ts` — 11 tests, all passing.
+
+**Acceptance met:** exported canonical contract · no `Record<string, unknown>` intelligence payload at the seam · no `as any` to retrieve registered intelligence · `npm run typecheck` green against baseline (231 errors vs 239 baseline, no regressions) · zero runtime behavior change (nothing in the live turn imports the module) · no route convergence · no Conductor decision changes.
+
+**The mechanism:** `INTELLIGENCE_REGISTRY` and all three tiers of `TIER_DISPOSITION` are `Record<IntelligenceSourceId, ...>`. A source added to the union without a registry entry and a declared disposition on every tier **does not compile**. The tier inversion is now a declared value (`absent_unratified`) that `unratifiedTierGaps()` enumerates, rather than an omission nobody can see.
+
+**Deliberately not corrected here:** `TIER_DISPOSITION` records what is TRUE TODAY, including the inversion the ruling calls architecturally incorrect. Fixing the values in a type-only packet would be a behavior change smuggled past the P2 byte-identical-prompt witness. P3 flips them.
 
 ---
 
@@ -168,12 +179,41 @@ Demonstrate that a source being AVAILABLE and SELECTED-eligible does **not** pro
 
 | Item | Status |
 |---|---|
-| `semantic_memory_vectors` / `lattice_nodes` (D10/D11) | **Adjudication still open.** Neither table is created. Under P0's provenance contract, a source with no reader cannot register — which likely retires the writer rather than owing a migration. |
+| `semantic_memory_vectors` / `lattice_nodes` (D10/D11) | **Adjudication still open.** Neither table is created. See the adjudication ladder below — P0 establishes a rule, **not deletion authority**. |
 | Ranking authority consolidation (D12) | Subsumed: the Conductor *is* the arbiter. The 12 implementations become relevance inputs, not deciders. |
 | RLM relative URL (D9) | Independent one-line fix. May ship outside this sequence. |
 | MythicAtlas 422 (D15) | Contract drift with an external service. Needs that service; not on the convergence path. |
 | Corpus / manuscript (D17) | Registers as an authority-ranked source under P0, below member-authored experience. Wiring is a later wave. |
 | Somatic / morphic / coherence (D18) | Remain `INTENTIONALLY_RESTRAINED`. This program does not lift frozen plans. |
+
+---
+
+## The P0 rule is not deletion authority
+
+P0 establishes exactly one rule:
+
+> **No intelligence source participates without an explicit reader and an `EvidenceItem` registration.**
+
+That rule does **not** by itself retire any writer. An earlier draft of this plan overstated it — saying a source with no reader "likely retires the writer" — and that inference is withdrawn. A registration requirement is a condition on *participation*, not a verdict on *existence*.
+
+Each existing writer is adjudicated separately, at P1, against the runtime probe results:
+
+```text
+writer + legitimate reader
+    → register
+
+writer + intended future reader
+    → explicitly dormant / deferred, with the intent named
+
+writer + no consumer and no architectural purpose
+    → CANDIDATE for retirement  (a candidate, not a decision)
+
+unknown
+    → stays unknown
+```
+
+This keeps the type contract from quietly becoming deletion authority — the same discipline the census applied when it refused to create either missing table. A query against a nonexistent table does not prove the table is canonical; it may prove the query is obsolete. **Neither conclusion is reachable from the type system alone.**
+
 
 ---
 

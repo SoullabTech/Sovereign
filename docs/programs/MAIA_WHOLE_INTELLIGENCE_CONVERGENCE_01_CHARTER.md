@@ -1,8 +1,24 @@
 # MAIA-WHOLE-INTELLIGENCE-CONVERGENCE-01 — Program Charter
 
-**State:** `PACKETIZING` — Phase 7 ratified 2026-08-31
+**State:** `INTEGRATING` (packet P0 only) — Phase 7 ratified 2026-08-31
 **Opened:** 2026-08-31
-**Posture:** READ ONLY. Phase 7 is ratified; Phase 8 is packetized but **no packet is authorized to execute yet**.
+**Posture:** Packet **P0 authorized and delivered** (type architecture only, zero runtime behavior change). Every other packet remains **HELD**. No route convergence has begun.
+
+```text
+Phase 0   BIND                        CLOSED
+Phase 1   FIELD CENSUS                COMPLETE
+Phase 2   AUTHORITY MAP               COMPLETE
+Phase 3   CANONICAL MODEL             COMPLETE
+Phase 4   TURN-COMPOSITION MAP        COMPLETE
+Phase 5   EMBODIMENT MATRIX           COMPLETE
+Phase 6   DRIFT CLASSIFICATION        COMPLETE
+Phase 7   ONE MIND, MANY EMBODIMENTS  RATIFIED / CLOSED
+Phase 8   CONDUCTOR ARCHITECTURE      PACKETIZED
+
+  P0        EVIDENCE CONTRACT         ✅ DELIVERED 2026-08-31
+  §6 probes RUNTIME FACTS             READY — scripts/wic01-runtime-boundary-probes.sh
+  P1+                                 HELD pending required facts
+```
 **Ratified canon:** `docs/canon/MAIA_ONE_MIND_MANY_EMBODIMENTS.md`
 **Lane:** `claude/maia-intelligence-census-6aav7v`
 
