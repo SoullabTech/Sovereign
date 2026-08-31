@@ -4911,7 +4911,21 @@ I'm not sure what I'm feeling yet.`;
 
     // 🎙️ CONSENT BOUNDARY (fix/typed-turn-no-mic-rearm): typed turn — the mic must NOT
     // auto-re-arm after MAIA's response. Typed input is not voice re-consent.
-    lastSendWasVoiceRef.current = false;
+    //
+    // ⛔ PLATFORM-SOVEREIGN-REENTRY-01. This clear must read `actionClass`, because
+    // this function is no longer reached only by typing. The convergence boundary
+    // routes EVERY speech transport through here as `speech-transcription` so the
+    // server records how the characters were generated — and an unconditional clear
+    // then erased the voice consent the transcript had just established, three lines
+    // after `handleVoiceTranscript` set it. The member spoke; the mic then refused to
+    // re-arm because this line had reclassified their utterance as typing.
+    //
+    // The distinction is consent, not transport: speech is re-consent to listen,
+    // composition is not. `undefined` (system-composed text, the retry path) is not
+    // speech and correctly clears.
+    if (actionClass !== 'speech-transcription') {
+      lastSendWasVoiceRef.current = false;
+    }
 
     if (detectJournalCommand(text)) {
       await handleCaptureSpirit();
@@ -6494,12 +6508,16 @@ I'm not sure what I'm feeling yet.`;
                     isRespondingRef.current = false;
                     isAudioPlayingRef.current = false;
                     isMicrophonePausedRef.current = false;
-                    // Final attempt after forced reset
+                    // Final attempt after forced reset.
+                    // ⛔ PLATFORM-SOVEREIGN-REENTRY-01. Gated on the LIVE phase: the
+                    // captured `state.capabilities` was computed before the reset
+                    // above, so it could not describe the state the reset produced.
                     setTimeout(() => {
-                      if (voiceSession.state.capabilities.canStartListening) {
+                      if (!lastSendWasVoiceRef.current) return;
+                      if (voiceSession.getPhase() === 'idle') {
                         console.log('🎤 [NON-STREAM] Final attempt after state reset...');
                         setIsMuted(false);
-                        if (lastSendWasVoiceRef.current) voiceSession.methods.startListening('non_stream_final_reset');
+                        voiceSession.methods.startListening('non_stream_final_reset');
                       }
                     }, 500);
                     return;
@@ -6515,15 +6533,40 @@ I'm not sure what I'm feeling yet.`;
                     console.log(`🔍 [NON-STREAM] Mic restart check (attempt ${attempt}): proc=${isProcessingRef.current}, resp=${isRespondingRef.current}, audio=${isAudioPlayingRef.current}, micPause=${isMicrophonePausedRef.current}`);
 
                     if (canRestart) {
+                      // ⛔ PLATFORM-SOVEREIGN-REENTRY-01. The log used to claim an
+                      // attempt before the guard below decided whether to make one, so
+                      // a run that never called `startListening` still printed eight
+                      // "Attempting mic restart" lines. A device walk then read those
+                      // as evidence about the microphone. Say what actually happened.
+                      if (!lastSendWasVoiceRef.current) {
+                        console.log('⏹️ [NON-STREAM] Last turn was typed — not re-arming the mic');
+                        return;
+                      }
                       console.log(`🎤 [NON-STREAM] Attempting mic restart (attempt ${attempt})...`);
-                      if (lastSendWasVoiceRef.current) voiceSession.methods.startListening('non_stream_restart_attempt');
+                      voiceSession.methods.startListening('non_stream_restart_attempt');
                       // Verify mic actually started after a brief delay
                       setTimeout(() => {
-                        if (voiceSession.state.phase === 'listening') {
-                          console.log('✅ [NON-STREAM] Microphone auto-resumed successfully');
+                        // ⛔ PLATFORM-SOVEREIGN-REENTRY-01. Live read, not
+                        // `voiceSession.state.phase`. That snapshot predates the
+                        // restart this block just requested, so it reported failure
+                        // against a microphone that had already reached LISTENING —
+                        // eight times, while capture ran normally underneath.
+                        // ⛔ ARMING is a start IN PROGRESS, not a failed one. The
+                        // witnessed capture reached `audio_admitted` at 101ms against
+                        // this 150ms window — comfortable on that machine, a coin flip
+                        // on a slower one. Calling ARMING "didn't start" would retry
+                        // over a healthy capture, and `revokeSovereignCapture` bumps
+                        // the generation before aborting, so the retry would kill the
+                        // very restart it was checking. Only genuine non-starts retry.
+                        const phase = voiceSession.getPhase();
+                        if (phase === 'listening' || phase === 'arming' || phase === 'capturing') {
+                          console.log(`✅ [NON-STREAM] Microphone auto-resumed successfully (${phase})`);
                         } else {
                           console.log(`⚠️ [NON-STREAM] Mic didn't start on attempt ${attempt}, retrying...`);
-                          if (attempt < 8) {
+                          // ⛔ `<= 8` so attempt 9 exists and reaches the forced-reset
+                          // branch above. With `< 8` the recovery this loop was built
+                          // around could never run on the path that actually fails.
+                          if (attempt <= 8) {
                             setTimeout(() => attemptMicRestart(attempt + 1), 400);
                           }
                         }

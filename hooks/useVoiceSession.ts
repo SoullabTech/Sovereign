@@ -186,6 +186,9 @@ export function useVoiceSession(
   return {
     state,
     methods,
+    // ⛔ PLATFORM-SOVEREIGN-REENTRY-01. `getPhase` already reads the live ref;
+    // it was simply never exposed, so consumers had only the render snapshot.
+    getPhase,
     onTranscript,
     onPhaseChange,
     onError,

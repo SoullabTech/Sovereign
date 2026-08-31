@@ -101,6 +101,19 @@ export interface UseVoiceSessionResult {
   state: VoiceSessionState;
   methods: VoiceSessionMethods;
 
+  /**
+   * The phase RIGHT NOW, read through the live ref rather than the render that
+   * produced this object.
+   *
+   * ⛔ PLATFORM-SOVEREIGN-REENTRY-01. `state` is a plain object literal built
+   * once per render, so `state.phase` is frozen at the moment the consumer's
+   * closure captured it. A caller that starts the microphone and then checks
+   * `state.phase` inside a `setTimeout` is asking the past whether the future
+   * happened, and the answer is always no. Anything verifying the effect of an
+   * action it just took must call this instead.
+   */
+  getPhase(): VoicePhase;
+
   // Event registration (returns unsubscribe function)
   onTranscript(handler: TranscriptHandler): () => void;
   onPhaseChange(handler: PhaseChangeHandler): () => void;
