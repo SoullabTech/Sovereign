@@ -28,14 +28,33 @@
  * Work; a parse failure is a fact about the machine, and quietly rendering one
  * as the other would put words in MAIA's mouth at the exact moment she said
  * nothing intelligible.
+ *
+ * FAIL CLOSED, NOT QUIETLY CLEAN. The first cut of this parser threw on the
+ * loud faults and silently tidied the quiet ones: it dropped uncertainty tags
+ * outside the closed set, dropped malformed uncertain regions, turned a
+ * non-string rationale into `''`, filtered non-string evidence refs - and, worst
+ * of all, accepted `form: 'none'` WITH a units array by ignoring the units.
+ *
+ * That last one reopened by hand exactly what the type design had made
+ * impossible: `none` has no `units` field, so a shape that cannot hold a tree
+ * cannot be filled with one. A parser that discards the tree instead of refusing
+ * it turns a self-contradicting answer into a clean finding, and the member
+ * would read "no structure is evident" from a model that had just proposed
+ * some. A field that does not belong to the variant is now a REFUSAL.
+ *
+ * The tool schema describes these constraints, but a JSON Schema cannot express
+ * "units only when form is not none", and schema conformance is the model's
+ * side of the contract in any case. This parser is ours.
  */
 
+import { createHash } from 'crypto';
 import Anthropic from '@anthropic-ai/sdk';
 import type {
   ProposedUnitDraft, ProposedUncertainty, ReaderInput, ReaderOutput,
   ReaderReading, StructureReader, UncertainRegion,
 } from './interpret';
 import type { EvidenceObservation, HeadedSection, StructureEvidence } from './evidence';
+import type { ReaderIdentity } from './readerProvenance';
 
 /** The model could not be understood. Never converted into a reading. */
 export class StructureReaderError extends Error {
@@ -43,6 +62,42 @@ export class StructureReaderError extends Error {
     super(detail ? `${reason}: ${detail}` : reason);
     this.name = 'StructureReaderError';
   }
+}
+
+/* ── who read it ──────────────────────────────────────────────────────────── */
+
+/**
+ * Attribution of the reading, frozen alongside it. Defined in
+ * `./readerProvenance` so the proposal store can describe who read a Work
+ * without importing the thing that reads.
+ *
+ * NOT the manuscript, and not the prompt payload - a proposal must never become
+ * a second copy of the Work. This is who read, with what standing instructions,
+ * and when: enough to answer "what produced this reading" from a row rather than
+ * from a recollection, six months and three model versions later.
+ *
+ * Captured at freeze time rather than reconstructed. A provenance derived later
+ * from whatever the code says today describes the CURRENT reader, which is
+ * exactly the reader you cannot trust it to have been.
+ */
+export type { ReaderProvenance, ReaderIdentity } from './readerProvenance';
+
+/** Bumped when the reading's standing instructions or contract change. */
+export const READER_VERSION = 'REAL-STRUCTURE-READER-01';
+
+/**
+ * The prompt AND the tool contract, hashed together.
+ *
+ * The schema is half the instruction: changing the form enum or a field
+ * description changes what MAIA can say as surely as editing the prose. Hashing
+ * only `READER_SYSTEM` would report two different readers as identical.
+ */
+export function promptContractHash(): string {
+  return createHash('sha256')
+    .update(READER_SYSTEM, 'utf8')
+    .update('\u0000', 'utf8')
+    .update(JSON.stringify(readerTools()), 'utf8')
+    .digest('hex');
 }
 
 /**
@@ -151,10 +206,13 @@ export function readerTools(): Anthropic.Tool[] {
             description: 'Your account of this Work\'s grammar, in your words. Required for '
               + 'every form, including "none".' },
           units: { type: 'array', items: unitSchema(MAX_PROPOSAL_DEPTH),
-            description: 'For stable, partial, flat and mixed. Omit for ambiguous and none.' },
+            description: 'For stable, partial, flat and mixed ONLY. Omitting it is required '
+              + 'for ambiguous and none - a reading that says "none" and carries divisions '
+              + 'is rejected outright rather than having the divisions dropped.' },
           alternatives: {
             type: 'array',
-            description: 'For "ambiguous" only. At least two, and choose no winner.',
+            description: 'For "ambiguous" ONLY, and rejected on any other form. At least '
+              + 'two, and choose no winner.',
             items: {
               type: 'object',
               properties: {
@@ -295,34 +353,61 @@ function parseUnits(value: unknown, where: string): ProposedUnitDraft[] {
     if (!nullableStr(u.title) || !nullableStr(u.kind)) {
       throw new StructureReaderError('unit-bad-title-or-kind', at);
     }
-    /* Uncertainty is filtered to the closed set rather than passed through: an
-       invented tag would reach the review surface as a label nothing renders,
-       and the member would meet a blank where a caveat should be. */
-    const uncertainty = Array.isArray(u.uncertainty)
-      ? u.uncertainty.filter((x): x is ProposedUncertainty =>
-        typeof x === 'string' && (UNCERTAINTY_VALUES as readonly string[]).includes(x))
-      : [];
+    /* Absent is fine; malformed is not. An invented uncertainty tag would reach
+       the review surface as a caveat nothing renders - the member meeting a
+       blank where a limit should be - so it is refused rather than dropped.
+       Dropping it would silently upgrade the reading's confidence. */
+    if (u.uncertainty !== undefined) {
+      if (!Array.isArray(u.uncertainty)) {
+        throw new StructureReaderError('unit-bad-uncertainty', at);
+      }
+      const bad = u.uncertainty.find((x) =>
+        typeof x !== 'string' || !(UNCERTAINTY_VALUES as readonly string[]).includes(x));
+      if (bad !== undefined) {
+        throw new StructureReaderError('unit-unknown-uncertainty', `${at}: ${String(bad)}`);
+      }
+    }
+    /* `rationale` became '' when it was not a string. An empty rationale is a
+       division offered with no reason given, which is a different thing from a
+       reason we failed to read. */
+    if (u.rationale !== undefined && !isStr(u.rationale)) {
+      throw new StructureReaderError('unit-bad-rationale', at);
+    }
+    if (u.evidenceRefs !== undefined
+      && (!Array.isArray(u.evidenceRefs) || !u.evidenceRefs.every(isStr))) {
+      throw new StructureReaderError('unit-bad-evidence-refs', at);
+    }
     return {
       title: u.title ?? null,
       kind: u.kind ?? null,
       fromSectionId: u.fromSectionId,
       toSectionId: u.toSectionId,
       rationale: isStr(u.rationale) ? u.rationale : '',
-      evidenceRefs: Array.isArray(u.evidenceRefs) ? u.evidenceRefs.filter(isStr) : [],
-      uncertainty,
+      evidenceRefs: (u.evidenceRefs as string[] | undefined) ?? [],
+      uncertainty: (u.uncertainty as ProposedUncertainty[] | undefined) ?? [],
       children: parseUnits(u.children, `${at}.children`),
     };
   });
 }
 
+/**
+ * Absent means none. A malformed one is refused, not dropped.
+ *
+ * These are the reading's own statements of where it could not see. Silently
+ * discarding one publishes a MORE confident reading than the model gave.
+ */
 function parseRegions(value: unknown): UncertainRegion[] {
-  if (!Array.isArray(value)) return [];
-  return value.flatMap((raw): UncertainRegion[] => {
-    if (!raw || typeof raw !== 'object') return [];
+  if (value === undefined) return [];
+  if (!Array.isArray(value)) throw new StructureReaderError('regions-not-an-array');
+  return value.map((raw, i): UncertainRegion => {
+    if (!raw || typeof raw !== 'object') {
+      throw new StructureReaderError('region-not-an-object', `[${i}]`);
+    }
     const r = raw as Record<string, unknown>;
-    return isStr(r.fromSectionId) && isStr(r.toSectionId) && isStr(r.why)
-      ? [{ fromSectionId: r.fromSectionId, toSectionId: r.toSectionId, why: r.why }]
-      : [];
+    if (!isStr(r.fromSectionId) || !isStr(r.toSectionId) || !isStr(r.why)) {
+      throw new StructureReaderError('region-incomplete', `[${i}]`);
+    }
+    return { fromSectionId: r.fromSectionId, toSectionId: r.toSectionId, why: r.why };
   });
 }
 
@@ -358,11 +443,30 @@ export function parseReaderOutput(toolName: string, input: unknown): ReaderOutpu
   }
   const uncertainRegions = parseRegions(o.uncertainRegions);
 
+  /**
+   * A field that does not belong to this variant is a CONTRADICTION, not noise.
+   *
+   * `none` carrying units is the case that matters: the type has no `units`
+   * field precisely so a shape that cannot hold a tree cannot be filled with
+   * one, and a parser that discarded the tree would hand the member "no
+   * structure is evident" from a model that had just proposed some. Refusing is
+   * the only reading of that answer which is true.
+   */
+  const refuseForeign = (form: string, fields: readonly string[]): void => {
+    const present = fields.filter((f) => o[f] !== undefined);
+    if (present.length > 0) {
+      throw new StructureReaderError('form-carries-a-field-it-cannot-have',
+        `${form} + ${present.join(',')}`);
+    }
+  };
+
   switch (o.form) {
     case 'none':
+      refuseForeign('none', ['units', 'alternatives']);
       return { status: 'interpreted', reading: { form: 'none', account: o.account, uncertainRegions } };
 
     case 'ambiguous': {
+      refuseForeign('ambiguous', ['units']);
       if (!Array.isArray(o.alternatives)) {
         throw new StructureReaderError('ambiguous-without-alternatives');
       }
@@ -384,6 +488,7 @@ export function parseReaderOutput(toolName: string, input: unknown): ReaderOutpu
     }
 
     case 'stable': case 'partial': case 'flat': case 'mixed': {
+      refuseForeign(o.form, ['alternatives']);
       const units = parseUnits(o.units, 'units');
       /* A tree-bearing form with no tree is a contradiction, and the honest
          answer for it already exists. It is NOT silently rewritten to `none`:
@@ -413,18 +518,28 @@ export interface MaiaReaderOptions {
   }) => void;
 }
 
+export interface MaiaReader {
+  read: StructureReader;
+  /**
+   * Bound to the reader that will actually run, rather than recomputed by the
+   * caller from the same options. Two sources for one fact drift, and this is
+   * the fact a member would rely on when asking what produced their reading.
+   */
+  provenance: ReaderIdentity;
+}
+
 /**
- * A `StructureReader` backed by Claude.
+ * A `StructureReader` backed by Claude, with its own attribution.
  *
  * Streamed because a reading of a long Work with adaptive thinking can outrun a
  * non-streaming HTTP timeout; the response is still consumed whole.
  */
-export function createMaiaStructureReader(opts: MaiaReaderOptions = {}): StructureReader {
+export function createMaiaStructureReader(opts: MaiaReaderOptions = {}): MaiaReader {
   const client = opts.client ?? new Anthropic();
   const model = opts.model ?? DEFAULT_MODEL;
   const maxTokens = opts.maxTokens ?? DEFAULT_MAX_TOKENS;
 
-  return async (input: ReaderInput): Promise<ReaderOutput> => {
+  const read: StructureReader = async (input: ReaderInput): Promise<ReaderOutput> => {
     const stream = client.messages.stream({
       model,
       max_tokens: maxTokens,
@@ -451,6 +566,16 @@ export function createMaiaStructureReader(opts: MaiaReaderOptions = {}): Structu
     });
 
     return parseReaderOutput(call.name, call.input);
+  };
+
+  return {
+    read,
+    provenance: {
+      provider: 'anthropic',
+      model,
+      promptHash: promptContractHash(),
+      readerVersion: READER_VERSION,
+    },
   };
 }
 

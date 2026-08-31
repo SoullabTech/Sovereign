@@ -6,9 +6,13 @@
  * stores the result as a PROPOSAL, and prints the link to the room where the
  * member judges it.
  *
- * WHAT IT CANNOT DO. It imports the proposal store and never the structure
- * service. Nothing here can write `manuscript_structure_units`; adoption is 6
- * and 6 is not built. Running this against your own book cannot change it.
+ * WHAT IT CANNOT DO, AND HOW THAT IS SHOWN. It imports the proposal store and
+ * never the structure service, so there is no writer in the process. That is the
+ * static half. The dynamic half is a FINGERPRINT OF THE CANONICAL STRUCTURE
+ * taken before and after: the first version of this check asserted that the
+ * manuscript had zero structure rows, which proves "this Work has no structure"
+ * and says nothing at all about a Work that already has some. Before == after is
+ * the claim actually being made.
  *
  * WHAT IT PRINTS. Structure, counts, ranges, uncertainty tags and coverage - and
  * never a body, under any flag. `SHOW_READING=1` additionally prints MAIA's
@@ -63,6 +67,7 @@ async function main() {
   const {
     createMaiaStructureReader, boundedFetcher, buildRequest, StructureReaderError,
   } = await import('@/lib/manuscript/structure/maiaReader');
+  const { canonicalFingerprint } = await import('@/lib/manuscript/structure/canonicalFingerprint');
 
   /* ── the Work, as the app addresses it ────────────────────────────────── */
   const rows = await query<{ id: string; position: number; heading: string | null }>(
@@ -98,6 +103,14 @@ async function main() {
     process.exit(0);
   }
 
+  /* Taken BEFORE anything runs, including before the proposal is written. */
+  const before = await canonicalFingerprint(MANUSCRIPT);
+  const beforeCount = (await query(
+    `SELECT 1 FROM manuscript_structure_units WHERE manuscript_id = $1`,
+    [MANUSCRIPT])).rows.length;
+  console.log(`  Canonical structure before: ${beforeCount} unit(s)`
+    + `  fp ${before.slice(0, 12)}`);
+
   /* ── the reading ──────────────────────────────────────────────────────── */
   const supplied: string[] = [];
   const fetchBodies = boundedFetcher(async (ids) => {
@@ -112,17 +125,19 @@ async function main() {
     return new Map(r.rows.map((row) => [row.id, row.text]));
   });
 
-  const reader = createMaiaStructureReader({
+  const maia = createMaiaStructureReader({
     onTurn: (t) => console.log(`  pass ${t.pass} → ${t.tool}`
       + `  (in ${t.inputTokens} / out ${t.outputTokens} tokens,`
       + ` ${t.bodiesSupplied} bodies in hand)`),
   });
+  console.log(`  Reader: ${maia.provenance.model} · ${maia.provenance.readerVersion}`
+    + ` · prompt ${maia.provenance.promptHash.slice(0, 12)}`);
 
   console.log('\n  Reading…');
   const started = Date.now();
   let result;
   try {
-    result = await interpretStructure(evidence, sections, reader,
+    result = await interpretStructure(evidence, sections, maia.read,
       { fetchBodies, maxPasses: MAX_PASSES });
   } catch (e) {
     /* A reader fault is reported AS a reader fault. It is not stored, and it is
@@ -182,6 +197,9 @@ async function main() {
     evidence, interpretation: interp, coverage: interp.coverage,
     sectionTopologyHash: sectionTopologyHash(sections),
     interpretationInputHash: result.interpretationInputHash,
+    /* Bound to the reader that actually ran, and frozen by the database with
+       the reading it belongs to. */
+    readerProvenance: maia.provenance,
   });
 
   if (stored.status !== 'ok') {
@@ -190,16 +208,20 @@ async function main() {
     process.exit(1);
   }
 
-  const units = await query(
-    `SELECT 1 FROM manuscript_structure_units WHERE manuscript_id = $1`, [MANUSCRIPT]);
+  /* ── the negative witness: nothing about the Work moved ───────────────── */
+  const after = await canonicalFingerprint(MANUSCRIPT);
+  const unchanged = after === before;
+
   console.log(`\n  Stored as a proposal: ${stored.value.id}`);
-  console.log(`  Canonical structure rows written: ${units.rows.length === 0 ? '0 — none, '
-    + 'as there is no path from here to one' : `${units.rows.length} — INVESTIGATE`}`);
+  console.log(`  Canonical structure after:  fp ${after.slice(0, 12)}`);
+  console.log(`  Structure unchanged by this run: ${unchanged
+    ? 'YES — before == after'
+    : 'NO — INVESTIGATE. A reading changed the Work, which nothing here may do'}`);
   console.log(`  Bodies that left the machine: ${supplied.length}`);
   console.log(`\n  Read it: ${BASE}/writers-studio/review`
     + `?m=${MANUSCRIPT}&p=${stored.value.id}\n`);
 
-  process.exit(units.rows.length === 0 ? 0 : 1);
+  process.exit(unchanged ? 0 : 1);
 }
 
 main().catch((e) => { console.error(e); process.exit(1); });

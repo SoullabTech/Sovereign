@@ -18,6 +18,7 @@
 import {
   buildRequest, parseReaderOutput, renderObservation, boundedFetcher,
   StructureReaderError, readerTools, READER_SYSTEM,
+  promptContractHash, createMaiaStructureReader, READER_VERSION,
 } from '../maiaReader';
 import { gatherEvidence } from '../evidence';
 import { interpretStructure, type ReaderInput } from '../interpret';
@@ -159,15 +160,13 @@ describe('parsing a reading', () => {
     } else { throw new Error('expected units'); }
   });
 
-  /* An invented tag would reach the review surface as a caveat nothing renders,
-     and the member would meet a blank where a limit should be. */
-  it('drops an uncertainty tag outside the closed set', () => {
+  it('keeps the uncertainty tags a reading actually gave', () => {
     const out = parseReaderOutput('propose_structure', {
       form: 'flat', account: 'Essays.',
-      units: [unit('sec-a', 'sec-b', { uncertainty: ['start-boundary', 'vibes', 42] })],
+      units: [unit('sec-a', 'sec-b', { uncertainty: ['start-boundary', 'kind'] })],
     });
     if (out.status === 'interpreted' && 'units' in out.reading) {
-      expect(out.reading.units[0].uncertainty).toEqual(['start-boundary']);
+      expect(out.reading.units[0].uncertainty).toEqual(['start-boundary', 'kind']);
     } else { throw new Error('expected units'); }
   });
 
@@ -226,6 +225,134 @@ describe('a malformed answer raises rather than becoming a finding', () => {
 
   it('refuses a tool it does not implement', () => {
     expect(bad('author_structure', { anything: true })).toBe('unknown-tool');
+  });
+});
+
+/* ── variant-incompatible fields fail closed ─────────────────────────────── */
+
+describe('a field that does not belong to the variant is a refusal', () => {
+  const bad = (v: unknown) => {
+    try { parseReaderOutput('propose_structure', v); } catch (e) {
+      if (e instanceof StructureReaderError) return e.reason;
+      throw e;
+    }
+    throw new Error('expected a StructureReaderError');
+  };
+
+  /**
+   * THE FALSIFIER.
+   *
+   * `none` has no `units` field in the type, so a shape that cannot hold a tree
+   * cannot be filled with one. The first parser discarded the units and returned
+   * a clean `none` - handing the member "no structure is evident" from a model
+   * that had just proposed some, and reopening by hand the contradiction the
+   * type design had closed.
+   */
+  it('refuses none carrying units, and never publishes it as a none finding', () => {
+    expect(bad({
+      form: 'none', account: 'No stable larger structure is evident yet.',
+      units: [unit('sec-a', 'sec-b')],
+    })).toBe('form-carries-a-field-it-cannot-have');
+  });
+
+  it('refuses none carrying alternatives', () => {
+    expect(bad({ form: 'none', account: 'a', alternatives: [] }))
+      .toBe('form-carries-a-field-it-cannot-have');
+  });
+
+  it('refuses ambiguous carrying a canonical tree', () => {
+    expect(bad({
+      form: 'ambiguous', account: 'a', units: [unit('sec-a', 'sec-b')],
+      alternatives: [
+        { label: 'x', why: 'w', units: [unit('sec-a', 'sec-a')] },
+        { label: 'y', why: 'w', units: [unit('sec-b', 'sec-b')] },
+      ],
+    })).toBe('form-carries-a-field-it-cannot-have');
+  });
+
+  it('refuses a tree-bearing form carrying alternatives', () => {
+    expect(bad({ form: 'stable', account: 'a', units: [unit('sec-a', 'sec-b')],
+      alternatives: [] })).toBe('form-carries-a-field-it-cannot-have');
+  });
+});
+
+describe('malformed detail is refused, not quietly tidied', () => {
+  const bad = (v: unknown) => {
+    try { parseReaderOutput('propose_structure', v); } catch (e) {
+      if (e instanceof StructureReaderError) return e.reason;
+      throw e;
+    }
+    throw new Error('expected a StructureReaderError');
+  };
+  const flat = (over: Record<string, unknown>) =>
+    ({ form: 'flat', account: 'a', units: [unit('sec-a', 'sec-b', over)] });
+
+  /* Dropping an unrenderable caveat silently UPGRADES the reading's confidence.
+     The member would meet a division presented as more settled than MAIA left
+     it, with nothing on screen to say a limit had been lost. */
+  it('refuses an uncertainty tag outside the closed set', () => {
+    expect(bad(flat({ uncertainty: ['start-boundary', 'vibes'] })))
+      .toBe('unit-unknown-uncertainty');
+    expect(bad(flat({ uncertainty: 'start-boundary' }))).toBe('unit-bad-uncertainty');
+  });
+
+  it('refuses a rationale that is not text', () => {
+    expect(bad(flat({ rationale: { because: true } }))).toBe('unit-bad-rationale');
+  });
+
+  it('refuses evidence refs that are not ids', () => {
+    expect(bad(flat({ evidenceRefs: [1, 2] }))).toBe('unit-bad-evidence-refs');
+  });
+
+  it('refuses a malformed uncertain region rather than dropping it', () => {
+    expect(bad({ form: 'none', account: 'a',
+      uncertainRegions: [{ fromSectionId: 'sec-a', why: 'no end given' }] }))
+      .toBe('region-incomplete');
+    expect(bad({ form: 'none', account: 'a', uncertainRegions: 'later' }))
+      .toBe('regions-not-an-array');
+  });
+
+  it('still treats an absent optional field as absent', () => {
+    const out = parseReaderOutput('propose_structure', {
+      form: 'flat', account: 'a',
+      units: [{ title: null, kind: null, fromSectionId: 'sec-a', toSectionId: 'sec-b' }],
+    });
+    if (out.status === 'interpreted' && 'units' in out.reading) {
+      expect(out.reading.units[0]).toMatchObject({
+        rationale: '', evidenceRefs: [], uncertainty: [], children: [] });
+    } else { throw new Error('expected units'); }
+  });
+});
+
+/* ── provenance ──────────────────────────────────────────────────────────── */
+
+describe('the reader carries its own attribution', () => {
+  it('reports the model it will actually send, not the default name', () => {
+    const m = createMaiaStructureReader({ model: 'claude-opus-5-pinned-for-this-test' });
+    expect(m.provenance).toMatchObject({
+      provider: 'anthropic',
+      model: 'claude-opus-5-pinned-for-this-test',
+      readerVersion: READER_VERSION,
+    });
+    expect(m.provenance.promptHash).toMatch(/^[0-9a-f]{64}$/);
+    /* Bound to the reader, so the two cannot drift apart. */
+    expect(typeof m.read).toBe('function');
+  });
+
+  /* The schema is half the instruction: changing the form enum or a field
+     description changes what MAIA can say as surely as editing the prose, and a
+     hash of the prompt alone would report two different readers as identical. */
+  it('hashes the tool contract as well as the prompt', () => {
+    const withContract = promptContractHash();
+    const promptOnly = require('crypto').createHash('sha256')
+      .update(READER_SYSTEM, 'utf8').digest('hex');
+    expect(withContract).not.toBe(promptOnly);
+    expect(withContract).toBe(promptContractHash());
+  });
+
+  it('does not carry the prompt itself into what gets stored', () => {
+    const m = createMaiaStructureReader();
+    expect(JSON.stringify(m.provenance)).not.toContain('You are reading');
   });
 });
 
