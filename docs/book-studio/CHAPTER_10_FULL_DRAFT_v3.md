@@ -191,23 +191,20 @@ arising before she has time to understand it. An energetic flush moves through h
 Her thoughts accelerate. She feels the familiar impulse to retreat behind competence and control. Nothing
 catastrophic has happened, and yet her entire system is responding as though something important is at stake.
 
-> **[ AUTHOR — 2 to 4 sentences. ]**
-> *What was actually at stake in this moment?*
->
-> Not the whole story. Just enough that the reader understands why competence and control were the things
-> that came forward, and what it would have cost Maya to be seen without them. It can be relational,
-> professional, intimate, social — whatever Maya's real story is.
->
-> This is the human hinge of the chapter, and it belongs to you. Everything around it can be developed from
-> what is already here; this cannot.
+The person across from her was someone whose respect mattered, which made the moment more dangerous than it
+looked. Maya had spent years becoming the person who could handle things, and somewhere along the way
+competence had stopped being something she possessed and become the place she hid. To be seen uncertain,
+overwhelmed, or simply not knowing felt less like an ordinary human limitation than the beginning of
+exposure. So before she could feel what was actually happening, she reached for the old protection: become
+composed, become useful, know what to do.
 
-Earlier in her life, Maya would have taken the reaction at face value. She would have read it as evidence
-that something was wrong with her, or that the person in front of her was the problem. She would have
-defended herself, withdrawn, overexplained, worked harder, or found some efficient way to make the discomfort
-disappear — and she would have been very good at it. Competence had always been the fastest exit.
+Earlier in her life, that would have been the whole of it. She would have taken the reaction at face value —
+read it as evidence that something was wrong with her, or that the person in front of her was the problem.
+She would have defended herself, withdrawn, overexplained, worked harder, or found some efficient way to make
+the discomfort disappear, and she would have been very good at it.
 
-What is different now is small and almost undramatic. She notices the reaction while it is happening. And in
-noticing it, she recognizes something she had not been able to see from inside it before: the experience has
+What is different now is small and almost undramatic. She still reaches. But she watches herself reach. And
+in watching, she recognizes something she had not been able to see from inside it before: the experience has
 a shape. It has arrived before. It has a beginning, a middle, and a familiar destination.
 
 The experience has a pattern. And patterns can be observed.
@@ -796,9 +793,12 @@ That is the living spiral.
 
 Three things, and then this is a manuscript rather than a document about a manuscript.
 
-**1. The one passage that is yours.** Movement IV, marked `[ AUTHOR — 2 to 4 sentences ]`. Maya has
-circumstance but not stakes. What was at risk in the moment her chest tightened? Everything around it is
-built and will hold; this is the human hinge and it should not be generated.
+**1. The author passage is in.** Movement IV — *"competence had stopped being something she possessed and
+become the place she hid."* Two small adjustments were made around it, both to generated prose, both
+reversible: the line *"Competence had always been the fastest exit"* was cut as now redundant, and the
+following paragraph was changed from *she notices* to *she still reaches, but she watches herself reach*, so
+that the chapter no longer implies she stopped reaching. Tense in the inserted passage is past inside a
+present-tense scene; see the note below.
 
 **2. The designed spread.** Movement V, marked `[ DESIGNED SPREAD ]`. Four elements × three states × three
 phases on one returnable page. The prose keeps the journey and the continuity — the golden seed planted in
@@ -814,6 +814,16 @@ the architecture at a glance. Neither substitutes for the other.
   through her arc as what was holding it, named retrospectively, and given qualities rather than a sequence.
   The elemental architecture is Fire / Water / Earth / Air / Aether; the developmental arc is Fire → Water →
   Earth → Air **within** Aether.
+
+**Open — tense at the seam.** The scene around the author passage is present tense (*"Maya notices," "her
+chest tightens"*); the passage is past (*"was someone whose respect mattered," "she reached for the old
+protection"*). Three ways to close it, in order of how little they touch the words:
+(a) change two verbs — *is someone whose respect matters* / *she reaches for the old protection* — and leave
+everything between them exactly as written, since the backstory clauses (*had spent years*, *felt less
+like*) are already correct inside a present scene;
+(b) leave it, and accept a deliberate step back into summary before returning to the moment;
+(c) put the whole *Meet Maya* section into past tense to match the rest of the chapter.
+Recommendation is (a). It is two words and the passage survives intact.
 
 `CHAPTER_10_BODY_DRAFT_v1.md` and `CHAPTER_10_OPENING_PASS_v1.md` are both consistent with this chapter as
 written. The earlier drafts in this folder (`_REBUILD_v1`, `_DEVELOPMENTAL_DRAFT_v2`) are superseded by this
