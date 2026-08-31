@@ -131,12 +131,30 @@ async function main() {
        was sent. "Read it before you send your book" has to mean all of it. */
     const body = buildRequest({ pass: 1, evidence, sections, bodies: new Map() });
 
-    /* THE PREFLIGHT FACTS, STATED, and READ OUT OF THE CODE rather than
-       asserted in prose here. They are what a person actually checks before
-       spending a real reading, and hunting for them inside 174 heading rows is
-       how a preflight becomes a formality. Each line is derived: the hash from
-       the reader, the ceilings from the scope constant the host enforces, the
-       contract fields from the tool schema itself. */
+    /* THE PREFLIGHT FACTS, and THE STANDING OF EACH ONE.
+       They are what a person actually checks before spending a real reading,
+       and hunting for them inside 174 heading rows is how a preflight becomes a
+       formality. But they are NOT all the same kind of claim, and printing them
+       in one undifferentiated block would make "the preflight said true" into a
+       new proof category - which is precisely the drift this programme keeps
+       finding under new names.
+
+       So the block is grouped by standing, and each group says how it knows:
+
+         DERIVED     read out of live code in this process - the hash from the
+                     reader, the ceilings from the same scope constant the host
+                     enforces, the contract fields from the tool schema itself.
+                     A change to any of them moves this output.
+         SENTINEL    a textual test on the rendered request. It would miss a
+                     body that arrived without the heading it looks for, so the
+                     exact request is printed below and the property has its own
+                     host tests. The line is a convenience, not the evidence.
+         DISPLAYED   standing rules enforced elsewhere - in the host loop, its
+                     refusals and their tests - and shown here for inspection.
+                     This preflight does not derive them and cannot verify them.
+
+       The distinction is the point. Two of these lines used to sit beside the
+       derived ones looking equally strong. */
     const { promptContractHash, READER_VERSION, readerTools } =
       await import('@/lib/manuscript/structure/maiaReader');
     const propose = readerTools()[0].input_schema as Record<string, unknown>;
@@ -146,18 +164,28 @@ async function main() {
     const readingReq = (propose.required ?? []) as string[];
 
     console.log('\n══ PREFLIGHT ' + '═'.repeat(57));
-    console.log(`  promptContractHash  ${promptContractHash().slice(0, 12)}…`);
-    console.log(`  readerVersion       ${READER_VERSION}`);
-    console.log(`  pass 1 bodies       ${body.includes('SECTIONS YOU REQUESTED')
-      ? 'SOME — INVESTIGATE' : '0'}`);
-    console.log('  contract includes'
-      + `\n    editorialLabel on every division   ${unitReq.includes('editorialLabel')}`
-      + `\n    editorialSynthesis required        ${readingReq.includes('editorialSynthesis')}`
-      + `\n      ${synReq.join(' · ') || '(none)'}`);
-    console.log(`  body law            ${DEFAULT_READ_SCOPE.maxIdsPerRequest}/request ·`
-      + ` ${DEFAULT_READ_SCOPE.maxSections}/read ·`
-      + ` ${DEFAULT_READ_SCOPE.maxChars.toLocaleString('en-US')} chars`
-      + ' · no truncation · no Materials');
+
+    console.log('\n  DERIVED — read out of live code in this process');
+    const row = (k: string, v: string) => console.log(`    ${k.padEnd(30)} ${v}`);
+    row('promptContractHash', `${promptContractHash().slice(0, 12)}…`);
+    row('readerVersion', READER_VERSION);
+    row('editorialLabel required', String(unitReq.includes('editorialLabel')));
+    row('editorialSynthesis required', String(readingReq.includes('editorialSynthesis')));
+    row('  its fields', synReq.join(' · ') || '(none)');
+    row('ceilings', `${DEFAULT_READ_SCOPE.maxIdsPerRequest}/request · `
+      + `${DEFAULT_READ_SCOPE.maxSections}/read · `
+      + `${DEFAULT_READ_SCOPE.maxChars.toLocaleString('en-US')} chars`);
+
+    const carriesProse = body.includes('SECTIONS YOU REQUESTED');
+    console.log('\n  SENTINEL — a textual test on the request printed below.'
+      + '\n             Read the request; this line is a convenience, not the evidence.');
+    row('pass 1 bodies', carriesProse
+      ? 'SOME — INVESTIGATE' : '0 (no requested-sections block)');
+
+    console.log('\n  DISPLAYED — standing rules enforced in the host loop and its'
+      + '\n              tests, NOT derived or verified by this preflight');
+    row('no truncation', 'whole section or no section');
+    row('Materials', 'out of scope');
 
     console.log('\n  DRY RUN — everything that would be sent on pass 1.\n');
     console.log('══ SYSTEM ' + '═'.repeat(60));
@@ -165,8 +193,8 @@ async function main() {
     console.log('\n══ USER ' + '═'.repeat(62));
     console.log(body);
     console.log('\n══ ' + '═'.repeat(67));
-    /* Stated rather than left to be inferred from the absence of a heading. */
-    const carriesProse = body.includes('SECTIONS YOU REQUESTED');
+    /* Stated rather than left to be inferred from the absence of a heading -
+       and it is the SAME sentinel as the preflight line, not a second opinion. */
     console.log(`\n  Manuscript bodies in this request: ${carriesProse ? 'SOME — INVESTIGATE'
       : '0 — headings and mechanical observations only'}`);
     console.log('  Nothing was sent and nothing was stored.\n');

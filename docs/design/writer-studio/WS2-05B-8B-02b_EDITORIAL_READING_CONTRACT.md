@@ -212,23 +212,58 @@ scrolling when what you are checking is what MAIA was *asked*.
 
 ## The preflight, on the machine that will make the call
 
-`DRY_RUN=1` now opens with the facts a person actually checks, **read out of the
-code rather than asserted in prose**: the hash from the reader, the ceilings from
-the same scope constant the host enforces, the contract fields from the tool
-schema itself. Hunting for them inside 174 heading rows is how a preflight
-becomes a formality.
+`DRY_RUN=1` now opens with the facts a person actually checks. Hunting for them
+inside 174 heading rows is how a preflight becomes a formality.
+
+**They are not all the same kind of claim, and the block says so.** Printing them
+undifferentiated would turn *"the preflight said true"* into a new proof
+category — precisely the drift this programme keeps finding under new names.
+Corrected on Kelly's reading of `452f8ccc6`, where two lines sat beside the
+derived ones looking equally strong:
+
+```text
+DERIVED     read out of live code in this process. A change to any of
+            them moves this output.
+              promptContractHash · readerVersion
+              editorialLabel required · editorialSynthesis required
+              its fields · ceilings
+
+SENTINEL    a textual test on the rendered request. It would miss a body
+            that arrived without the heading it looks for, so the exact
+            request is printed below and the property has its own host
+            tests. The line is a convenience, not the evidence.
+              pass 1 bodies
+
+DISPLAYED   standing rules enforced elsewhere — in the host loop, its
+            refusals and their tests — and shown for inspection. This
+            preflight does not derive them and cannot verify them.
+              no truncation · Materials out of scope
+```
 
 ```text
 ══ PREFLIGHT ═════════════════════════════════════════════════════════
-  promptContractHash  a1825a7c2f50…
-  readerVersion       REAL-STRUCTURE-READER-01
-  pass 1 bodies       0
-  contract includes
-    editorialLabel on every division   true
-    editorialSynthesis required        true
-      thesis · strongestFindings · questionsForAuthor
-  body law            4/request · 8/read · 60,000 chars · no truncation · no Materials
+
+  DERIVED — read out of live code in this process
+    promptContractHash             a1825a7c2f50…
+    readerVersion                  REAL-STRUCTURE-READER-01
+    editorialLabel required        true
+    editorialSynthesis required    true
+      its fields                   thesis · strongestFindings · questionsForAuthor
+    ceilings                       4/request · 8/read · 60,000 chars
+
+  SENTINEL — a textual test on the request printed below.
+             Read the request; this line is a convenience, not the evidence.
+    pass 1 bodies                  0 (no requested-sections block)
+
+  DISPLAYED — standing rules enforced in the host loop and its
+              tests, NOT derived or verified by this preflight
+    no truncation                  whole section or no section
+    Materials                      out of scope
 ```
+
+It belongs in the OUTPUT and not only here, because the display is where the
+claim is made. A doc that names the distinction while the terminal prints one
+flat list would leave the flat list as the operative artifact.
 
 ```bash
 export MEMBER_ID=$(psql -U soullab -d maia_consciousness -tAc \
