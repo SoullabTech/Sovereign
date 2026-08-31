@@ -31,8 +31,13 @@ module.exports = {
             100: '#f8fafc',  // primary text (≈ white)
             80: '#e2e8f0',   // secondary text (≈ slate-200)
             60: '#94a3b8',   // muted text (≈ slate-400)
+            50: '#7c8fa4',   // mid-muted (≈ slate-400/500 midpoint)
             40: '#64748b',   // tertiary (≈ slate-500)
+            35: '#5c6d7e',   // soft hint
+            30: '#536070',   // dim hint
+            25: '#4c5c6c',   // very dim
             20: '#475569',   // subtle hints (≈ slate-600)
+            15: '#3d4d5c',   // near-invisible (deepest readable hint)
           },
 
           // Signal accent — gold (meaningful actions, step indicators)
