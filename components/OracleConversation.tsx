@@ -7206,62 +7206,49 @@ I'm not sure what I'm feeling yet.`;
     }
 
     try {
-      // 🌊 STREAMING VOICE MODE: Use server-side sentence TTS for natural flow
-      if (streamingVoiceMode && !showChatInterface) {
-        console.log('🌊 [StreamingVoice] Using streaming voice flow...');
-
-        // Reset streaming state for new message
-        setStreamingResponseComplete(false);
-
-        // Add user message to UI
-        const userMessage: ConversationMessage = {
-          id: `msg-${Date.now()}`,
-          role: 'user',
-          text: cleanedText,
-          timestamp: new Date(),
-          source: 'voice'
-        };
-        // Build once, use for both UI state and API payload (avoids stale closure)
-        const nextMessagesForApi = appendMessageCapped(messages, userMessage, MAX_DISPLAY_MESSAGES);
-        setMessages(nextMessagesForApi);
-        // The member has spoken. Streaming voice commits its own user message and
-        // never routes through handleTextMessage, so it must announce separately.
-        onMemberExpressionRef.current?.();
-
-        // Set processing states
-        // NOTE: Do NOT set isAudioPlaying(true) here — it should only be true
-        // when audio is actually playing (see isStreamingPlaying sync below).
-        // Setting it prematurely triggers the watchdog (15s timeout) during
-        // TTS generation which can take 60+ seconds with Kokoro.
-        setIsProcessing(true);
-        setIsResponding(true);
-        setIsMicrophonePaused(true); // Signal ContinuousConversation to suppress mic
-        setIsMuted(true); // Mute while MAIA speaks
-
-        // Stop mic while processing
-        voiceSession.methods.stopListening();
-
-        // Send via streaming voice system (includes historical context)
-        // 🛡️ Hard timeout — if the server SSE stream stalls (common on iOS
-        // WebView under flaky network), the promise never resolves and
-        // isResponding stays true forever ("stuck on thinking"). 90s allows
-        // long Kokoro TTS generation but caps the stall case.
-        const conversationHistory = truncateHistoryForAPI(nextMessagesForApi, historicalMessagesRef.current);
-        await withTimeout(
-          // F10-SANCTUARY-WIRE-01: `isSanctuary` is read here, at dispatch, from
-          // live component state — the same value the sovereign path already
-          // sends as `meta.sanctuary`. Until now the streaming leg sent nothing,
-          // so a Sanctuary utterance reached the route as an ordinary turn.
-          sendStreamingMessage(cleanedText, conversationHistory, isSanctuary),
-          90000,
-          'streaming voice send'
-        );
-
-        const duration = Date.now() - voiceStartTime;
-        trackEvent.voiceResult(userId || 'anonymous', transcript, duration);
-        console.log('✅ [StreamingVoice] Streaming voice flow completed');
-        return;
-      }
+      // ⛔ VOICE-CANONICAL-CONVERGENCE-02 — THE DIVERGENT COGNITION EXIT IS GONE.
+      //
+      // A `streamingVoiceMode && !showChatInterface` branch used to sit here. It
+      // called `sendStreamingMessage(...)` and RETURNED — before
+      // `handleTextMessage` below — sending the turn to
+      // `/api/voice/stream-conversation`. That route operates its own Claude
+      // service, memory bundle, relational stack, prompt machinery and TTS: zero
+      // references to `getMaiaResponse`, `maiaService`, `buildMaiaWisePrompt` or
+      // `finalizeMemberFacingText`. It was not a thinner call into canonical
+      // cognition. It was a SECOND MIND.
+      //
+      // ⛔ And it was the DEFAULT. `streamingVoiceMode` is hard-initialised true
+      // (see its useState), so the ordinary spoken turn took the divergent exit
+      // while typed turns took the canonical one. Spoken and typed MAIA were
+      // different systems.
+      //
+      // ⛔ REMOVED STRUCTURALLY, NOT DEFAULTED OFF. Flipping the flag would have
+      // made the defect dormant rather than impossible: any override could
+      // restore a second cognition path. There is now exactly one
+      // response-producing cognition exit from this function, and restoring a
+      // second requires editing this code and breaking the positive gate in
+      // `__tests__/voice-non-degradation.test.ts`.
+      //
+      // ⛔ THE STREAMING IMPLEMENTATION IS UNTOUCHED AND UNDELETED.
+      // `sendStreamingMessage`, `useStreamingVoice`, the SSE protocol and the
+      // route all remain exactly as they are — evidence, and the starting point
+      // for a separately authorized transport-extraction unit. Only voice's
+      // reachability into it is removed.
+      //
+      // ⚠️ THE COST, RECORDED RATHER THAN DISCOVERED. Canonical voice sacrifices
+      // token-streaming latency for single-cognition convergence. MAIA still
+      // speaks — the canonical path returns audio via `includeAudio: true` — but
+      // first sound now waits for the canonical response to complete instead of
+      // beginning mid-generation. That is the price of one mind, and it was
+      // ruled worth paying.
+      //
+      // ⛔ WHY STREAMING COULD NOT SIMPLY BE DEMOTED TO TRANSPORT. Streaming's
+      // value is emitting tokens AS the model generates them. Once canonical
+      // cognition must complete first, there is nothing left to stream — only
+      // chunked TTS of a finished text, which is a different feature. The route
+      // also emits `silence` (MAIA deliberately not answering) and
+      // `move_outcome`; both are cognition decisions a transport layer cannot
+      // author.
 
       // ✅ STANDARD FLOW: Browser STT → /api/between/chat → Browser TTS
       console.log('🌀 Routing voice through THE BETWEEN...');

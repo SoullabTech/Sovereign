@@ -145,9 +145,72 @@ RED     spoken and typed diverge downstream of input acquisition into
 through voice is not an optimization problem to be tuned later. It is a failed
 architecture, and it fails acceptance outright.
 
-**Current verdict: GREEN**, on the evidence traced above — with the omission
-hazard at `apiEndpoint` standing as the live way it could turn RED without anyone
-deciding to make it so.
+### ⛔ CORRECTION, 2026-08-31 — the first GREEN verdict was WITHDRAWN
+
+The verdict above was **falsified**. `MAIA-ORGANISM-CENSUS-01` found an earlier
+reachable return in `handleVoiceTranscript` — `sendStreamingMessage(...)` →
+`/api/voice/stream-conversation` → `return`, taken **before** the convergence
+point this document certified. `streamingVoiceMode` was hard-initialised `true`,
+so that was the DEFAULT spoken path. The route runs its own Claude service,
+memory bundle, relational stack, prompt machinery and TTS — zero references to
+`getMaiaResponse`, `maiaService`, `buildMaiaWisePrompt` or
+`finalizeMemberFacingText`. Not a thinner call into canonical cognition: a
+**second mind**.
+
+⛔ **How the enforcement missed it.** The test asserted four *named* routes were
+absent. `/api/voice/stream-conversation` was not among them, so it passed while
+the divergence ran. A denylist cannot find what it was not told to look for, and
+it was presented as a structural proof. It has been replaced with a positive
+property — the response-producing exit SET is constrained, and two probes assert
+the gate catches an exit nobody listed.
+
+⛔ **Repaired in `VOICE-CANONICAL-CONVERGENCE-02`** by removing the branch
+structurally, not by defaulting a flag off — a flag would have made the defect
+dormant rather than impossible.
+
+### The invariant, restated NARROWLY
+
+> **Every response-producing voice turn requiring MAIA cognition crosses the
+> canonical cognition spine exactly once before any response transport begins.**
+
+⛔ This deliberately does **not** claim universal MAIA egress convergence.
+Class C of the exit map — eleven `maiaSpeak()` sites uttering locally-authored or
+data-API text with no model in the path — prevents that claim from being
+established, and `OracleConversation.tsx:6712` (a crisis script spoken outside
+any guard, which deliberately does not return) remains a separately recorded
+safety/egress finding. Neither is repaired, and neither may be laundered into
+"fixed" by the narrower invariant holding.
+
+### R13, precisely
+
+```
+R13 implementation on canonical spine     DEMONSTRATED ✅
+R13 coverage of streaming voice           NOT ESTABLISHED
+"single egress funnel" as a global claim  SUSPECT / overbroad
+```
+
+The Refusal Registry audits the spine `OracleConversation →
+/api/sovereign/app/maia/list → getMaiaResponse()` and names *"route an egress
+around the funnel"* as the violating action. The repair does not copy the guard
+into the streaming route — that would yield a better-guarded second mind. The
+guard applies because spoken output now uses the canonical egress.
+
+### ⚠️ The cost, recorded rather than discovered
+
+Canonical voice **sacrifices token-streaming latency** for single-cognition
+convergence. MAIA still speaks — the canonical path returns audio via
+`includeAudio: true` — but first sound now waits for the canonical response to
+complete instead of beginning mid-generation.
+
+Streaming could not simply be demoted to transport: its value is emitting tokens
+*as the model generates them*, so once cognition must finish first there is
+nothing left to stream. The route also emits `silence` and `move_outcome`, both
+cognition decisions a transport layer cannot author. The implementation is
+preserved untouched for a separately authorized transport-extraction unit.
+
+**Current verdict on the narrow invariant: GREEN**, positively enforced — with
+the omission hazard at `apiEndpoint` standing as the live way it could turn RED
+without anyone deciding to make it so.
 
 ## Proof required, at voice acceptance
 
