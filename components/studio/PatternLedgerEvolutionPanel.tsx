@@ -82,6 +82,7 @@ export function PatternLedgerEvolutionPanel({ clientId }: PatternLedgerEvolution
   const [patterns, setPatterns] = useState<PatternRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [containment, setContainment] = useState<{ reason: string } | null>(null);
 
   useEffect(() => {
     if (clientId) {
@@ -97,6 +98,7 @@ export function PatternLedgerEvolutionPanel({ clientId }: PatternLedgerEvolution
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to load');
       setPatterns(data.patterns || []);
+      setContainment(data.containment ?? null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load pattern ledger');
     } finally {
@@ -116,6 +118,18 @@ export function PatternLedgerEvolutionPanel({ clientId }: PatternLedgerEvolution
     return (
       <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 text-sm text-red-400">
         {error}
+      </div>
+    );
+  }
+
+  // Containment is NOT emptiness. Saying "no patterns recorded yet" while the
+  // read path is closed would assert something we have not established and
+  // cannot see — the honest statement is that this view is closed, and why.
+  // ⛔ Do not collapse this branch into the empty state.
+  if (containment) {
+    return (
+      <div className="bg-slate-900/50 border border-slate-800 rounded-xl p-6">
+        <p className="text-sm text-slate-400">{containment.reason}</p>
       </div>
     );
   }
