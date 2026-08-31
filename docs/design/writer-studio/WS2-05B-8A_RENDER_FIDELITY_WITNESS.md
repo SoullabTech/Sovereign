@@ -195,6 +195,28 @@ qualifications included, rather than the cleaner one the room used to produce.
 
 ---
 
+## A limit of this instrument
+
+**8a proves fidelity. It cannot prove intelligibility.** Every one of the
+thirteen assertions can pass on a page no human can read: the harness compares
+the render against the frozen row, and legibility is not a property of that
+comparison. A page dumping the row verbatim in source order scores perfectly.
+
+That was found the moment the accepted surface met a reader — see
+`WS2-05B-8B_READABILITY_FINDING.md`. It belongs beside the other boundaries this
+programme has had to name:
+
+```text
+test execution   ≠ type validation
+script execution ≠ inclusion in ship program
+gate identity    ≠ diagnostic identity
+render fidelity  ≠ intelligibility
+```
+
+The last has no machine witness, and none should be built to fake one.
+
+---
+
 ## Board
 
 ```text

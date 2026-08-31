@@ -80,9 +80,17 @@ shipped behaviour.
 05B-8a favicon invariant          RED · baseline red · separate unit
                                   Baseline and acceptance in
                                   WS2-05B-8A_RENDER_FIDELITY_WITNESS.md
-05B-8b founder judgment of the    UNBLOCKED
+05B-8b founder judgment of the    PENDING
        reading itself
+05B-8B-READABILITY-01             FOUND · not authorised, not built
+                                  WS2-05B-8B_READABILITY_FINDING.md
 ```
+
+**8a proved fidelity; it did not prove intelligibility.** The room shows the data
+structure of MAIA's reading rather than communicating the reading: eleven nested
+divisions have to be reverse-engineered out of 174 heading rows before the
+central claim is visible. A founder who cannot see the claim cannot fairly accept
+or reject it, so 8b is pending rather than merely unblocked.
 
 **8b was held behind 8a deliberately, and is now released.** The room rendered
 none of the three uncertain regions and none of the ten divisions' uncertainty
