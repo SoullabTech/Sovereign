@@ -53,6 +53,13 @@ must hold custody on canonical before 5½ has anything to implement against.** U
 has no `interpretStructure` to give an implementation to, and any work done here would be the
 zero-caller pattern the Board exists to prevent.
 
+> **Source located, 2026-08-31.** The work is not lost. It is complete, with 111 test cases, on
+> `origin/claude/writers-studio-ws2-03b-qf49hj` @ `845adb88`. Custody is chartered as its own
+> bounded unit — `docs/programme/WS2-05B-CUSTODY-01_STRUCTURE_CUSTODY_UNIT.md` — which found that
+> custody **splits**: a 29-file substrate half (Canvas-free, closure-complete, landable under the
+> freeze) and a surface half entangled with six divergent frozen Canvas files. **5½ needs the
+> substrate half only.** Gate A for this lane = **Custody A**.
+
 ### Gate B — programme mode
 
 Board, canonical: `BUILD MODE — CLOSED · Canvas / Phase 1 freeze BINDING`, and *"Everything else is
@@ -139,8 +146,17 @@ invited.
 
 ### 5.2 Bodies — what manuscript material may the reader see?
 
-**Question.** Exactly which text is exposed to the reader: headings only · headings plus openings ·
-full section bodies · the whole Work? At what scale, and with what truncation discipline?
+> **Narrowed by the located seam, 2026-08-31.** This ruling is smaller than first written. The
+> protocol is **already decided in `interpret.ts`**: the reader starts with **no bodies** (`bodies`
+> is empty on pass 1) and must *ask* — `{ status: 'read-request', sectionIds, why }` — for at most
+> three passes, with a stated reason; a request naming a section the draft does not hold is
+> **refused** (`unknown-section`) rather than quietly narrowed. `assertNoProse` already forbids a
+> reading from carrying manuscript prose back. What remains open is **`fetchBodies` policy**, not
+> the protocol.
+
+**Question.** Given that the reader must ask: what does the host's `fetchBodies` supply — whole
+bodies or truncated, at what scale, and how is truncation recorded? Are Materials (as distinct from
+the Work, §A4.4) ever in scope — the presumption is **no**?
 
 **Why it is load-bearing.** This is the source-custody law applied to *reading*. What the reader is
 shown determines what it can honestly claim, and an undeclared body scope makes every downstream
@@ -155,8 +171,12 @@ record of which.
 
 ### 5.3 Provenance — what identifies the reading?
 
-**Question.** What is recorded such that a frozen interpretation can be attributed later: model
-identity · prompt identity · the evidence snapshot it read · timestamp · reader version?
+> **Partly present already, 2026-08-31.** `interpret.ts` exports `interpretationInputHash` and
+> returns it on `{ status: 'ok' }` — the evidence-snapshot half of provenance is built. The gap is
+> **reader identity**: model, prompt, reader version.
+
+**Question.** What is recorded alongside `interpretationInputHash` such that a frozen interpretation
+can be attributed later: model identity · prompt identity · timestamp · reader version?
 
 **Why it is load-bearing.** §A4.8 requires memory with provenance, and §A1.3 forbids MAIA-generated
 interpretation drifting into writer attribution. An unattributed reading becomes, over months,
@@ -185,6 +205,16 @@ to be simple. Restated here only to fence the lane's scope, not re-opened:
 - the frozen reading is **preserved separately** from anything the member later edits.
 
 ⛔ The lane may not move any of these obligations into the reader to make the reader look better.
+
+> **These are code on the located branch, not intentions.** `interpretStructure` runs the pass loop
+> and completes the reading; `assignUnitIds` mints ids host-side; `InterpretRefusal` enumerates
+> `unknown-section · inverted-range · overlapping-siblings · child-outside-parent ·
+> unknown-evidence-ref · ambiguous-without-alternatives · empty-account · read-request-exhausted`;
+> and both `ReaderReading` and `StructureInterpretation` give `form: 'none'` **no `units` field at
+> all**, while `complete()` reads units only off the variants that declare them. So the
+> *"no structure"* + *returned tree* contradiction is not handled by a runtime guard that could be
+> forgotten — **the shape cannot carry the tree, and the host never looks for one.** That is the
+> stronger form, and this lane must not weaken it.
 
 ---
 

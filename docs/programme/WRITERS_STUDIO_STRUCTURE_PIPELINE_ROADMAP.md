@@ -51,8 +51,12 @@ database/migrations/20260721000003_press_manuscript_room.sql
 database/migrations/20260824000001_manuscript_source_custody.sql
 ```
 
+**The work was then located** (same day): `origin/claude/writers-studio-ws2-03b-qf49hj` @
+`845adb88`, complete with 111 test cases. Custody is chartered as
+`docs/programme/WS2-05B-CUSTODY-01_STRUCTURE_CUSTODY_UNIT.md`.
+
 **Therefore:** where this roadmap says a unit is built or passing, that is a claim about a lane
-working tree, not about canonical. It is recorded here as direction so the work is not rebuilt
+branch, not about canonical. It is recorded here as direction so the work is not rebuilt
 beside itself — which is exactly the failure §A3.1 exists to break. It is not recorded as state.
 
 > This clone is **shallow** (181 commits). Commit-ancestry claims about lane SHAs cannot be made

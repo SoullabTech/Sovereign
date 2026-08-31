@@ -10,6 +10,7 @@
 > HISTORICAL EVIDENCE   docs/design/author-studio/WRITERS_STUDIO_MEMBER_UPGRADE_PROGRAMME_LEDGER.md
 > STRUCTURE DIRECTION   docs/programme/WRITERS_STUDIO_STRUCTURE_PIPELINE_ROADMAP.md
 > NEXT LANE CHARTER     docs/programme/WS2-05B-5HALF_MAIA_STRUCTURE_READER_LANE.md
+> CUSTODY UNIT         docs/programme/WS2-05B-CUSTODY-01_STRUCTURE_CUSTODY_UNIT.md
 > ```
 >
 > The **Master Brief** governs meaning, architecture, invariants and unit identity. This board
@@ -34,7 +35,7 @@ CURRENT UNIT       WS-01 Source Custody + Freeze Release
 CURRENT CANDIDATE  4a551d3d13a27ec442252be7822865e0f2d31978
                    feature/ws-01-source-custody-v3  ·  PINNED / DEPLOYED
 NEXT EXECUTABLE    P0-D
-LAST UPDATED       2026-08-31  (structure-pipeline census + two evidence corrections; mode unchanged)
+LAST UPDATED       2026-08-31  (structure census + source located + custody unit; mode unchanged)
 ```
 
 Writer's Studio mode reflects **this programme only**. Unrelated Jarvis incidents may sit ahead of
@@ -122,13 +123,22 @@ Censused tree-wide against canonical `55021771`. These are the symbols the `05A 
 lane series is written in. **None is present on canonical**, so the series is direction, not state:
 `docs/programme/WRITERS_STUDIO_STRUCTURE_PIPELINE_ROADMAP.md`.
 
+**Source located, same day.** The work is complete and off-canonical on
+`origin/claude/writers-studio-ws2-03b-qf49hj` @ `845adb88` — 9 implementation modules (~2,800 LOC),
+111 test cases, 3 routes, 3 migrations, 3 witness scripts. Custody is chartered as
+`WS2-05B-CUSTODY-01`, which found the custody act **splits**: a 29-file Canvas-free substrate half,
+and a surface half entangled with **6 divergent frozen Canvas files**
+(`canvas/page.tsx`, `Worktable.tsx`, `canvasIdentity.ts`, `studioMap.ts`, 2 tests) plus 13 absent
+`app/writers-studio/studio/**` modules. ⛔ The surface half is a Canvas-convergence decision, not a
+custody act.
+
 | Node | State | Evidence |
 |---|---|---|
-| `StructureEvidence` · `StructureProposal` (05B-5a) | **ABSENT** | 0 files on canonical `55021771` |
+| `StructureEvidence` · `StructureProposal` (05B-5a) | **ABSENT on canonical · COMPLETE off-canonical** | 0 files on canonical `55021771`; `lib/manuscript/structure/{evidence,interpret,review,proposalStore}.ts` + 111 test cases on `845adb88` |
 | `interpretStructure` seam · `StructureInterpretation` | **ABSENT** | 0 files on canonical `55021771` |
-| `StructureReader` implementation (05B-5½) | **DESIGNED** | charter `WS2-05B-5HALF_MAIA_STRUCTURE_READER_LANE.md`; **BLOCKED** on the two gates in its §2 |
+| `StructureReader` implementation (05B-5½) | **DESIGNED** | charter `WS2-05B-5HALF_MAIA_STRUCTURE_READER_LANE.md`; **BLOCKED** on the two gates in its §2. The seam it fills — `interpretStructure(evidence, sections, reader, opts)` — exists on the located branch; **no reader implementation exists anywhere** |
 | `AuthorStructureCommand` — sovereign adoption (05B-6) | **DESIGNED** | held until 5½ is witnessed; three questions open |
-| `manuscript_structure_units` — structure of record (05A) | **ABSENT** | 0 files, no migration on canonical `55021771` |
+| `manuscript_structure_units` — structure of record (05A) | **ABSENT on canonical · COMPLETE off-canonical** | no migration on canonical; `20260830000002/3` + `structureService.ts` (470 LOC) on `845adb88`, and it is the **only** writer of the table |
 
 ⛔ A charter is not a programme entry (**§A3.1**) and not the *NEXT BUILD UNIT AUTHORIZED* signal.
 This section records a census and two custody artifacts. It does not change programme mode.
