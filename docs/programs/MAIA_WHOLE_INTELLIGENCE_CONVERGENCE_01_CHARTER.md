@@ -1,6 +1,6 @@
 # MAIA-WHOLE-INTELLIGENCE-CONVERGENCE-01 — Program Charter
 
-**State:** `INTEGRATING` — P0 closed · runtime facts closed · **P1 closed** · P2 next authorization
+**State:** `INTEGRATING` — P0 · P1 · **P2 closed** · P3a next authorization
 **Opened:** 2026-08-31
 **Posture:** Packet **P0 authorized and delivered** (type architecture only, zero runtime behavior change). Every other packet remains **HELD**. No route convergence has begun.
 
@@ -37,9 +37,17 @@ Phase 8   CONDUCTOR ARCHITECTURE      PACKETIZED
               D7 tier inversion         ESCALATED → P0 (CORE = 72.9% of turns)
               D8 DEEP wiring            DE-ESCALATED → P2 (zero DEEP turns/7d)
               runtime behavior          UNCHANGED
-  P2        PASS-THROUGH CONDUCTOR    ← NEXT AUTHORIZATION
-  P3a       DEVELOPMENTAL CONVERGENCE  P0 priority, split out; runs AFTER P2 proof
+  P2        PASS-THROUGH CONDUCTOR    ✅ CLOSED 2026-08-31
+              CORE + DEEP-repair        ADOPTED — byte-identical vs pre-P2
+              FAST                      PROVEN; adoption deferred (1 delimiter)
+              voice / between-chat      OUT OF REACH until endpoint adoption
+              D7 + D8                   INTENTIONALLY REPRODUCED
+              withheld[]                empty — truthful, no restraint exists yet
+  P3a       DEVELOPMENTAL CONVERGENCE ← NEXT AUTHORIZATION · P0 priority
   P3b+                                HELD
+
+  HEALTH TRUTHFULNESS                 KNOWN BROKEN · NOT REPAIRED
+                                      no longer blocked by the P2 seam
 ```
 
 **Scope discipline on P0.** Omission is impossible *for code that adopts the canonical contract*. It is **not yet impossible in the live runtime** — nothing live imports the modules, and `MaiaRequest.meta` still exists and can still silently omit intelligence today. P0 is a contract, not runtime convergence.

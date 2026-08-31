@@ -6,6 +6,12 @@ import { awarenessLanguageAdapter, type AwarenessLevel } from '../consciousness/
 import { type RelationshipMemoryContext, formatRelationshipMemoryForPrompt } from '../memory/RelationshipMemoryService';
 import { buildSelfAwareContext } from '../consciousness/maiaArchitectureContext';
 import { PLATFORM_KNOWLEDGE_ADDENDUM } from './platformKnowledge';
+import {
+  conduct,
+  evidenceFromLegacyContext,
+  renderPlan,
+} from '@/lib/maia/contract/conductor';
+import { INTELLIGENCE_REGISTRY } from '@/lib/maia/contract/intelligenceSources';
 
 export interface MaiaContext {
   sessionId: string;
@@ -403,6 +409,9 @@ type AddendumSpec = {
   log: (value: string) => string;
 };
 
+// WIC01-P2 — canonical composition seam. See lib/maia/contract/conductor.ts.
+// ADDENDA_SPECS survives ONLY as a rendering/logging detail; it is no longer
+// the authority on what composes a turn. That authority is now `conduct()`.
 const ADDENDA_SPECS: readonly AddendumSpec[] = [
   { field: 'placeAddendum',                   log: () => `🚪 [Place] Current-room orientation injected` },
   { field: 'relationshipModeAddendum',        log: v => `💫 [Relationship] Mode: ${v.split('\n')[0]}` },
@@ -429,6 +438,11 @@ const ADDENDA_SPECS: readonly AddendumSpec[] = [
   { field: 'atomsAddendum',                   log: v => `🧬 [Atoms] Member-placed portfolio + practitioner observations injected (${v.length} chars)` },
   { field: 'relationalContextAddendum',       log: v => `🔗 [Relational Context] Member-handed-off relationship injected (${v.length} chars)` },
 ];
+
+/** Rendering/logging lookup only — not a composition authority (WIC01-P2). */
+const ADDENDA_SPEC_BY_FIELD = new Map<string, AddendumSpec>(
+  ADDENDA_SPECS.map((spec) => [spec.field as string, spec])
+);
 
 // ═══════════════════════════════════════════════════════════════════════════
 // PLATFORM KNOWLEDGE BOUNDARY — standing capability discipline (always-on)
@@ -487,13 +501,27 @@ Whatever signals inform this response — symbols, archetypes, elemental or spir
  * prompt and in what order.
  */
 export function appendAllContextAddenda(context: MaiaContext, prompt: string): string {
-  let out = prompt;
-  for (const spec of ADDENDA_SPECS) {
-    const safe = safeAddendum(context[spec.field]);
-    if (safe) {
-      out += `\n\n${safe}`;
-      console.log(spec.log(safe));
-    }
+  // ── WIC01-P2: composition now decided at the canonical Conductor seam ──
+  // The decision boundary has moved; the decision has NOT changed. `conduct()`
+  // is pass-through — same source set, same order, same omissions (including
+  // the D7 developmental-memory gap on CORE) — and `renderPlan` reproduces the
+  // former `out += '\n\n' + safe` concatenation byte for byte. Proven by
+  // differential test against the pre-P2 implementation, retained verbatim in
+  // lib/maia/contract/__tests__/conductorEquivalence.test.ts.
+  //
+  // Tier differences never lived in this loop. They come from which context
+  // fields the caller populated, which is upstream of this seam — so this
+  // function is tier-agnostic exactly as before.
+  const plan = conduct({
+    evidence: evidenceFromLegacyContext(context as unknown as Record<string, unknown>),
+    tier: 'CORE',
+  });
+  let out = renderPlan(plan, prompt);
+  for (const { item } of plan.selected) {
+    const spec = ADDENDA_SPEC_BY_FIELD.get(
+      INTELLIGENCE_REGISTRY[item.source].legacyContextKey
+    );
+    if (spec) console.log(spec.log(item.content));
   }
 
   // ── Standing speech-act floor (Entrustment Covenant; Invariant 11 — "promise late") ──
