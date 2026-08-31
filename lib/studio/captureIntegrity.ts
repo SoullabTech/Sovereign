@@ -1,0 +1,207 @@
+/**
+ * captureIntegrity — truthful degradation for Session Room recording.
+ *
+ * Dual-channel capture makes a claim to the practitioner: "your microphone and
+ * the meeting participants are both being recorded." The Session Room shows
+ * both sources as connected, and the transcript that results is read as a
+ * complete record of the conversation.
+ *
+ * That claim is made once, at the start. Audio sources can end at any moment —
+ * the practitioner stops screen-sharing, a device is unplugged, a recorder
+ * faults. When that happens the interface must stop making the claim. A
+ * transcript that silently becomes half a conversation while still presenting
+ * as a two-source record is the same failure this whole lane exists to fix:
+ * originally the two sources were captured and their distinction discarded;
+ * here they would appear connected while one is no longer recorded. Different
+ * mechanism, identical result for the practitioner — a transcript that looks
+ * complete and is not.
+ *
+ * So loss is: detected, timestamped, shown without a dismiss affordance, and
+ * persisted onto the session so the completed record carries it too. Recovery
+ * is deliberately NOT attempted here. Knowing a lane went quiet is what makes
+ * the transcript honest; getting it back is a separate problem.
+ */
+
+import type { CaptureChannel } from '@/lib/studio/audioChannels';
+
+export type CaptureIntegrityKind = 'lane_lost' | 'upload_failed';
+
+export interface CaptureIntegrityEvent {
+  kind: CaptureIntegrityKind;
+  /** Which capture lane. Upload failures carry the lane the chunk came from. */
+  channel: CaptureChannel;
+  /** Milliseconds since recording started — stable regardless of clock changes. */
+  atMs: number;
+  /** Wall-clock ISO timestamp, for the persisted record. */
+  atIso: string;
+  /** Human clock reading used in the warning copy, e.g. "12:41 PM". */
+  atClock: string;
+  /** Upload failures only: which chunk, and why. */
+  chunkIndex?: number;
+  reason?: string;
+}
+
+/** "12:41 PM" — the reading a practitioner can match against their own clock. */
+export function formatClockTime(date: Date): string {
+  return date.toLocaleTimeString('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+  });
+}
+
+/**
+ * The warning shown when a capture lane ends mid-session.
+ *
+ * Says what stopped, when, and what the transcript may be missing from that
+ * point. It does not speculate about why, and it does not reassure.
+ */
+export function laneLossMessage(channel: CaptureChannel, atClock: string): string {
+  return channel === 'participants'
+    ? `Participant audio stopped at ${atClock}. The transcript after this point may contain only the practitioner's microphone.`
+    : `Practitioner microphone stopped at ${atClock}. The transcript after this point may contain only meeting audio.`;
+}
+
+/**
+ * The warning shown when transcript chunks fail to upload.
+ *
+ * There is no retry yet. A failed chunk is simply gone, so the only honest
+ * thing to do is say a gap exists rather than let the transcript read as
+ * continuous. Counts rather than per-chunk noise: the practitioner needs to
+ * know the record is incomplete, not which index failed.
+ */
+export function uploadFailureMessage(count: number, firstAtClock: string): string {
+  const chunks = count === 1 ? '1 audio segment' : `${count} audio segments`;
+  return `${chunks} failed to upload, beginning at ${firstAtClock}. Those portions of the conversation are missing.`;
+}
+
+/**
+ * Warnings to display, derived from the event log.
+ *
+ * Lane losses are reported once per lane — a lane can only be lost once, and
+ * repeating it would bury the upload warning underneath. Upload failures
+ * collapse into a single count so a flaky minute does not produce forty
+ * banners.
+ */
+export function integrityWarnings(events: CaptureIntegrityEvent[]): string[] {
+  const warnings: string[] = [];
+
+  const seenLanes = new Set<CaptureChannel>();
+  for (const e of events) {
+    if (e.kind !== 'lane_lost' || seenLanes.has(e.channel)) continue;
+    seenLanes.add(e.channel);
+    warnings.push(laneLossMessage(e.channel, e.atClock));
+  }
+
+  const failures = events.filter((e) => e.kind === 'upload_failed');
+  if (failures.length > 0) {
+    warnings.push(uploadFailureMessage(failures.length, failures[0].atClock));
+  }
+
+  return warnings;
+}
+
+/**
+ * Whether the finished recording is an uninterrupted two-source record.
+ *
+ * `false` whenever any lane ended early or any chunk was lost — the completed
+ * transcript must not present itself as complete in either case. Sessions that
+ * never had two sources are not "interrupted"; they were single-source from
+ * the start and are labeled Unattributed by the capture layer instead.
+ */
+export function isUninterruptedTwoSourceRecord(
+  events: CaptureIntegrityEvent[],
+  hadTwoSources: boolean,
+): boolean {
+  return hadTwoSources && events.length === 0;
+}
+
+/** Shape persisted onto supervision_sessions.metadata. */
+export interface CaptureIntegrityRecord {
+  hadTwoSources: boolean;
+  uninterrupted: boolean;
+  events: CaptureIntegrityEvent[];
+}
+
+/**
+ * The capture-integrity notice that must travel with every representation of
+ * the transcript a human can read, copy, download, or export.
+ *
+ * Why this exists as a formatter rather than a UI detail: without it the system
+ * holds a split epistemic state. The live recorder knows the capture was
+ * incomplete, the stored session knows it, and the durable artifact — the thing
+ * that actually leaves the building — does not. An exported transcript would
+ * then arrive stripped of the one fact that governs how far it can be trusted,
+ * recreating false completeness at exactly the point the record becomes
+ * portable.
+ *
+ * Three states, deliberately distinct:
+ *
+ *   null      → integrity was never assessed (a session recorded before this
+ *               shipped). Says nothing, because nothing is known. NOT the same
+ *               as "no problems found".
+ *   clean     → monitored and intact. The affirmative matters: it is what makes
+ *               "verified intact" distinguishable from "never checked".
+ *   degraded  → what was lost, when, and what it means for interpretation.
+ *
+ * It never estimates how much conversation is missing. The number of failed
+ * chunks is known; the duration they covered is not measured, and inventing it
+ * would be a second false precision layered on the first.
+ */
+export function captureIntegrityNotice(
+  record: CaptureIntegrityRecord | null | undefined,
+): string | null {
+  if (!record) return null;
+
+  if (record.events.length === 0) {
+    return record.hadTwoSources
+      ? '**Capture integrity**\n\nTwo-source capture was monitored and no interruption was detected.'
+      : '**Capture integrity**\n\nSingle-source capture (practitioner microphone only). Speech in this transcript is not attributed to individual speakers.';
+  }
+
+  const blocks: string[] = [];
+
+  const seenLanes = new Set<CaptureChannel>();
+  const laneLosses: string[] = [];
+  for (const e of record.events) {
+    if (e.kind !== 'lane_lost' || seenLanes.has(e.channel)) continue;
+    seenLanes.add(e.channel);
+    laneLosses.push(laneLossMessage(e.channel, e.atClock));
+  }
+
+  if (laneLosses.length > 0) {
+    const lines = ['**Capture integrity warning**', ''];
+    if (record.hadTwoSources) {
+      lines.push(
+        'This recording began with two capture sources (practitioner microphone and meeting participants).',
+        '',
+      );
+    }
+    lines.push(...laneLosses);
+    blocks.push(lines.join('\n'));
+  }
+
+  const failures = record.events.filter((e) => e.kind === 'upload_failed');
+  if (failures.length > 0) {
+    blocks.push(
+      [
+        '**Transcript completeness warning**',
+        '',
+        uploadFailureMessage(failures.length, failures[0].atClock),
+      ].join('\n'),
+    );
+  }
+
+  return blocks.join('\n\n');
+}
+
+export function buildIntegrityRecord(
+  events: CaptureIntegrityEvent[],
+  hadTwoSources: boolean,
+): CaptureIntegrityRecord {
+  return {
+    hadTwoSources,
+    uninterrupted: isUninterruptedTwoSourceRecord(events, hadTwoSources),
+    events,
+  };
+}

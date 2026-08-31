@@ -54,6 +54,8 @@ import { apiFetch } from '@/lib/http/apiBase';
 import { cleanTranscriptTexts } from '@/lib/scribe/transcriptCleaner';
 import { repairTranscriptTexts } from '@/lib/scribe/transcriptRepair';
 import { logMeetingAudioEvent } from '@/lib/studio/meetingAudioTelemetry';
+import { CHANNEL_LABELS, UNATTRIBUTED_LABEL } from '@/lib/studio/audioChannels';
+import { shouldRepresentAsUnattributed } from '@/lib/scribe/attributionGuard';
 import { SessionReviewChat } from '@/components/studio/SessionReviewChat';
 import { TranscriptImportPanel, type ImportedSessionInfo } from '@/components/studio/TranscriptImportPanel';
 import { AudioSourcesStatus } from '@/components/studio/AudioSourcesStatus';
@@ -170,6 +172,18 @@ const formatDuration = (seconds: number) => {
   return `${mins}:${secs.toString().padStart(2, '0')}`;
 };
 
+/**
+ * Colour a transcript segment by its capture lane so the two sides of the
+ * conversation are separable at a glance. Unattributed segments — mic-only
+ * sessions, where every voice landed in one waveform — stay deliberately
+ * muted: the transcript should not imply an attribution it does not have.
+ */
+const getSpeakerLabelClass = (speaker: string) => {
+  if (speaker === CHANNEL_LABELS.practitioner) return 'text-amber-400';
+  if (speaker === CHANNEL_LABELS.participants) return 'text-sky-400';
+  return 'text-slate-500 italic';
+};
+
 const getInsightColor = (type: string) => {
   const colors: Record<string, string> = {
     rupture: 'bg-red-500/20 text-red-300 border-red-500/40',
@@ -253,6 +267,21 @@ export default function SessionRoomPage() {
     const deduped = cleanTranscriptTexts(raw).texts;
     return repairTranscriptTexts(deduped).texts;
   }, [ctx.segments]);
+
+  // Transcripts recorded before dual-channel capture carry a hardcoded
+  // "Speaker 1" on every line — a claim nothing determined. Re-present those
+  // as Unattributed wherever the label reaches a person (on screen and in
+  // exports). Stored rows are untouched; see lib/scribe/attributionGuard.ts.
+  // Judged across the whole transcript, so it self-disables the moment a
+  // session carries two real capture-channel labels.
+  const representAsUnattributed = useMemo(
+    () => shouldRepresentAsUnattributed(ctx.segments.map(s => s.speaker)),
+    [ctx.segments],
+  );
+  const displaySpeaker = useCallback(
+    (speaker: string) => (representAsUnattributed ? UNATTRIBUTED_LABEL : speaker),
+    [representAsUnattributed],
+  );
   const container = phase === 'idle' ? localContainer : ctx.container;
   const memoryPolicy = phase === 'idle' ? localMemoryPolicy : ctx.memoryPolicy;
   const needsConsent = container === 'witness' || container === 'practitioner';
@@ -504,7 +533,7 @@ export default function SessionRoomPage() {
 
   const buildTranscriptText = () =>
     ctx.segments
-      .map(seg => `[${formatDuration(Math.floor(seg.startMs / 1000))}] ${seg.speaker}: ${seg.text}`)
+      .map(seg => `[${formatDuration(Math.floor(seg.startMs / 1000))}] ${displaySpeaker(seg.speaker)}: ${seg.text}`)
       .join('\n\n');
 
   const downloadTranscriptTxt = () => {
@@ -524,7 +553,7 @@ export default function SessionRoomPage() {
     const dur = formatDuration(ctx.duration);
 
     const transcriptSection = ctx.segments
-      .map(seg => `[${formatDuration(Math.floor(seg.startMs / 1000))}] ${seg.speaker}: ${seg.text}`)
+      .map(seg => `[${formatDuration(Math.floor(seg.startMs / 1000))}] ${displaySpeaker(seg.speaker)}: ${seg.text}`)
       .join('\n\n');
 
     const insightsSection = ctx.insights.length > 0
@@ -1217,6 +1246,34 @@ ${insightsSection}
                 capture, consent, Sanctuary, or transcription. */}
             <AudioSourcesStatus hasTabAudio={ctx.hasTabAudio} />
 
+            {/* Capture-integrity warnings. Deliberately NOT dismissible: the
+                session cannot become whole again, and a warning the
+                practitioner can click away would let a half-recorded session
+                look complete for the rest of its run. Sits directly under the
+                source checklist so the claim and its contradiction are read
+                together. */}
+            {ctx.integrityWarnings.length > 0 && (
+              <div
+                role="alert"
+                aria-live="assertive"
+                className="mt-3 rounded-xl border border-amber-500/40 bg-amber-500/10 p-3"
+              >
+                <div className="flex items-start gap-2">
+                  <AlertCircle className="w-4 h-4 text-amber-400 mt-0.5 shrink-0" />
+                  <div className="flex-1 space-y-1.5">
+                    <p className="text-xs font-medium uppercase tracking-wider text-amber-300/80">
+                      Recording incomplete
+                    </p>
+                    {ctx.integrityWarnings.map((warning) => (
+                      <p key={warning} className="text-xs text-amber-100/90 leading-relaxed">
+                        {warning}
+                      </p>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Two-column: Transcript + Interactive Rail */}
             <div className="grid lg:grid-cols-2 gap-4">
               {/* Transcript column */}
@@ -1256,8 +1313,8 @@ ${insightsSection}
                           }`}
                         >
                           <div className="flex items-center gap-2 mb-0.5">
-                            <span className="text-xs font-medium text-amber-400 uppercase">
-                              {seg.speaker}
+                            <span className={`text-xs font-medium uppercase ${getSpeakerLabelClass(displaySpeaker(seg.speaker))}`}>
+                              {displaySpeaker(seg.speaker)}
                             </span>
                             <span className="text-xs text-slate-600">
                               {formatDuration(Math.floor(seg.startMs / 1000))}
@@ -1661,7 +1718,7 @@ ${insightsSection}
                       {ctx.segments.map((seg, idx) => (
                         <div key={seg.id} className="p-2.5 rounded-lg bg-slate-800/30 border border-slate-700/20">
                           <div className="flex items-center gap-2 mb-0.5">
-                            <span className="text-xs font-medium text-amber-400 uppercase">{seg.speaker}</span>
+                            <span className={`text-xs font-medium uppercase ${getSpeakerLabelClass(displaySpeaker(seg.speaker))}`}>{displaySpeaker(seg.speaker)}</span>
                             <span className="text-xs text-slate-600">{formatDuration(Math.floor(seg.startMs / 1000))}</span>
                           </div>
                           <p className="text-sm text-slate-300">{cleanedSegmentTexts[idx] ?? seg.text}</p>

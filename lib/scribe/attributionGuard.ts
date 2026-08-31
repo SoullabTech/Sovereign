@@ -14,6 +14,8 @@
  * with no code change.
  */
 
+import { CHANNEL_LABELS, UNATTRIBUTED_LABEL } from '@/lib/studio/audioChannels';
+
 /**
  * True when the transcript carries no speaker distinctions — every line has
  * the same label. An empty transcript is NOT single-speaker: there is no
@@ -21,6 +23,48 @@
  */
 export function isSingleSpeakerTranscript(speakers: string[]): boolean {
   return speakers.length > 0 && new Set(speakers).size === 1;
+}
+
+/**
+ * Display-time re-presentation of transcripts recorded before dual-channel
+ * capture (2026-08-04).
+ *
+ * Those sessions were captured as one mixed waveform and every chunk was
+ * uploaded with a hardcoded `Speaker 1`. The stored label is therefore not a
+ * weak attribution — it is a claim nothing ever determined. Rendering it makes
+ * the transcript assert, to the practitioner and to anyone they export it to,
+ * that one identified person said all of it.
+ *
+ * This corrects the PRESENTATION only. Stored rows are left exactly as they
+ * are: the transcript text is the record of what was said, and the stale label
+ * is the evidence that made this correction necessary. Overwriting it would
+ * destroy both the provenance trail and the ability to tell a genuinely
+ * single-speaker session from a mixed one.
+ *
+ * Derived from the transcript, not from a flag or a date — the same design as
+ * SINGLE_SPEAKER_ATTRIBUTION_GUARD above. A session whose segments carry two
+ * distinct capture-channel labels is left untouched, so this turns itself off
+ * for dual-channel sessions with no code change.
+ */
+export function shouldRepresentAsUnattributed(speakers: string[]): boolean {
+  if (!isSingleSpeakerTranscript(speakers)) return false;
+  const only = speakers[0];
+  // A single-lane session that legitimately recorded one channel (only the
+  // practitioner ever spoke) already carries a true, provenance-derived label.
+  // Leave it alone; it is not a mixed stream.
+  if (only === CHANNEL_LABELS.practitioner || only === CHANNEL_LABELS.participants) {
+    return false;
+  }
+  return true;
+}
+
+/**
+ * Speaker label to render for a segment, given the labels present across the
+ * whole transcript. Callers must pass the full set — the judgement is about
+ * the session, not the line.
+ */
+export function displaySpeakerLabel(speaker: string, allSpeakers: string[]): string {
+  return shouldRepresentAsUnattributed(allSpeakers) ? UNATTRIBUTED_LABEL : speaker;
 }
 
 /**

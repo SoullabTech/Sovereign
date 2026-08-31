@@ -29,6 +29,8 @@ import { getLLMProvider } from '@/lib/consciousness/LLMProvider';
 import { getCompletedSessionData } from '@/lib/scribe/sessionReviewMode';
 import { cleanForSynthesis, buildQualityHeader } from '@/lib/scribe/transcriptCleaner';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
+import { captureIntegrityNotice } from '@/lib/studio/captureIntegrity';
+import { getCaptureIntegrityByScribeSessionId } from '@/lib/supervision/SupervisionStore';
 
 function formatTranscriptForPrompt(segments: { speaker: string; text: string; startMs: number }[]): string {
   return segments.map(s => {
@@ -155,12 +157,28 @@ export async function POST(req: NextRequest) {
 
     console.log(`✅ [ExportReport] Done | ${elapsedMs}ms | tokens=${llmResponse.metadata.tokenCount ?? 'n/a'}`);
 
+    // Capture-integrity notice. Built in code and placed above the report —
+    // never asked of the model. A generated warning is a warning that can be
+    // omitted, and the one case where it would silently go missing is a long,
+    // messy transcript: precisely the session most likely to have lost a lane.
+    // null means integrity was never assessed for this session, which is not
+    // the same as "no problems found", so nothing is asserted either way.
+    const integrityNotice = captureIntegrityNotice(
+      await getCaptureIntegrityByScribeSessionId(sessionId),
+    );
+
     if (format === 'json') {
       return NextResponse.json({
         success: true,
         sessionId,
         lens,
-        report: reportText,
+        // Embedded in `report` AND exposed as its own field. The structured
+        // field is the useful one for a machine consumer; the embedded copy is
+        // what makes the notice inseparable from the prose. A caller that
+        // reads `.report` alone — the obvious thing to do — must not end up
+        // holding a transcript stripped of the condition governing its trust.
+        report: integrityNotice ? `${integrityNotice}\n\n---\n\n${reportText}` : reportText,
+        captureIntegrity: integrityNotice,
         meta: {
           generatedAt: new Date().toISOString(),
           sessionDate: sessionData.startTime.toISOString(),
@@ -183,7 +201,7 @@ export async function POST(req: NextRequest) {
 **Session:** ${sessionId}
 **Container:** ${sessionData.container}
 **Lens:** ${lens}
-
+${integrityNotice ? `\n---\n\n${integrityNotice}\n` : ''}
 ---
 
 ${reportText}
