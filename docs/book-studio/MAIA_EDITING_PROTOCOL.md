@@ -3,6 +3,20 @@
 > Articulated by Kelly during the Soullab Press founding arc, 2026-04-26.
 > Designed to **sharpen without diluting** the manuscript voice.
 
+## Pass 0 — Developmental structure (runs first)
+
+Before any of the six passes below, the chapter's **job**, **sequence**, and **section functions** must be
+settled. That is a different act from editing prose, and it has its own doctrine:
+**[`DEVELOPMENTAL_EDITOR_PROTOCOL_v1.md`](./DEVELOPMENTAL_EDITOR_PROTOCOL_v1.md)** — KEEP / MOVE / CUT /
+HOLD / FLAG / BRIDGE, structure before language, and the author writes the bridges.
+
+Never polish a sentence inside a section that may later be moved or cut. The six passes below begin only
+once the architecture is standing.
+
+Worked example: [`CHAPTER_10_STRUCTURE_PASS_v1.md`](./CHAPTER_10_STRUCTURE_PASS_v1.md).
+
+---
+
 ## Core rule
 
 ```
