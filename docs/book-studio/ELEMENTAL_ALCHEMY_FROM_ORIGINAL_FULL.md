@@ -268,6 +268,8 @@ In that eternal play between the formless, elemental source and transient creati
 
 I offered a silent prayer of gratitude for the sacred teachings encoded in the lapping flames. Once again, the way was illuminated through the elemental gateways of transformation...
 
+---
+
 It's the smell that transports me first—the earthy, slightly smoky scent of damp wood crackling in the firepit. I take a deep breath, allowing the aroma to fill my lungs as memories come rushing back of countless nights huddled around the dancing flames with friends and family.
 
 In this moment, I'm brought back to a favorite camping spot, deep in the swamps of Cajun country in the Louisiana wilderness, where my soul feels most alive. I remember the laughter and stories, returning easily as if I were there now, my senses buzzing with the sound of cicadas humming, the smell of the campfire, the creek flowing next to our camp, and the feeling of the humidity wrapping around us like a warm hug. And yes, the mosquitos, forcing us to keep our wits about us. But mostly, I recall the feeling of being profoundly at peace, deeply present, and interconnected with all of nature.
@@ -308,7 +310,7 @@ The story of our relationship with the world is one of an ongoing process of mut
 
 ### An Infinite Embrace
 
-*"The privilege of a lifetime is to become who you truly are." – Carl Jung*
+*"The privilege of a lifetime is being who you are." – Joseph Campbell*
 
 For those who walk with the five elemental spheres and their three-phase developments, what often emerges is a quiet, profound transformation—a deepening into one's own truth, a widening of conscious awareness. The journey, in time, touches every aspect of consciousness, bringing it into closer step with the natural rhythms of life.
 
@@ -2811,6 +2813,7 @@ A working bibliography organized by chapter. Where the same source informs multi
 - Munch, Edvard. *Edvard Munch: Behind the Scream.* Yale University Press, 2005.
 - Miller, Henry. *The Air-Conditioned Nightmare.* New Directions, 1945.
 - Nepo, Mark. *The Book of Awakening: Having the Life You Want by Being Present to the Life You Have.* Conari Press, 2000.
+- Campbell, Joseph. *A Joseph Campbell Companion: Reflections on the Art of Living.* Edited by Diane K. Osbon. HarperCollins, 1991.
 
 ### Chapter 2: The Torus of Change
 
