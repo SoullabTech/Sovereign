@@ -145,9 +145,119 @@ RED     spoken and typed diverge downstream of input acquisition into
 through voice is not an optimization problem to be tuned later. It is a failed
 architecture, and it fails acceptance outright.
 
-**Current verdict: GREEN**, on the evidence traced above — with the omission
-hazard at `apiEndpoint` standing as the live way it could turn RED without anyone
-deciding to make it so.
+### ⛔ CORRECTION, 2026-08-31 — the first GREEN verdict was WITHDRAWN
+
+The verdict above was **falsified**. `MAIA-ORGANISM-CENSUS-01` found an earlier
+reachable return in `handleVoiceTranscript` — `sendStreamingMessage(...)` →
+`/api/voice/stream-conversation` → `return`, taken **before** the convergence
+point this document certified. `streamingVoiceMode` was hard-initialised `true`,
+so that was the DEFAULT spoken path. The route runs its own Claude service,
+memory bundle, relational stack, prompt machinery and TTS — zero references to
+`getMaiaResponse`, `maiaService`, `buildMaiaWisePrompt` or
+`finalizeMemberFacingText`. Not a thinner call into canonical cognition: a
+**second mind**.
+
+⛔ **How the enforcement missed it, four times.** v1 asserted four *named*
+routes were absent; `/api/voice/stream-conversation` was not among them, so it
+passed while the divergence ran. v2 replaced that with a catalogue of
+response-producing call *patterns* and called it positive enforcement — it was
+not: anything not matching a listed pattern stayed invisible, and its
+"unnamed endpoint" probe used a URL inside the catalogue's own regex family, so
+it proved the pattern generalized within what it already knew while being
+presented as proof against the unknown. v3 enumerated every `return` via the
+TypeScript AST, which closed the added-exit hole for good — but it still
+*classified* each exit with a leftover regex, so a responder nobody had named,
+placed **before an existing ratified return**, changed no exit, matched no
+pattern, and left the gate green. v4 inverted the polarity inside guard branches
+— each ratified exit pinned to the exact calls it makes — and left the
+**successful fall-through corridor** ungoverned, so an unknown call standing on
+that path changed no exit and no guard set, and stayed green again.
+
+⭐ **All four were denylists, and a denylist fails open on the unknown.** Each
+asked *"does this look like something we thought of?"* and answered no —
+narrowing *where* the question is asked never changed that; it only moved where
+the unknown could stand. The enforcement therefore pins **three things, all
+derived from the code by the compiler, over the WHOLE handler**:
+
+1. **The exit set** — every `return` belonging to `handleVoiceTranscript`. Exits
+   are a closed set the compiler can enumerate exhaustively; responder names are
+   not. An added exit fails because a new exit appeared, whatever preceded it.
+2. **The call sets** — the complete set of calls the handler makes, *and*, per
+   ratified exit, the exact calls its guard branch makes. Not "no
+   responder-shaped call": *exactly these calls and no others*, on the guarded
+   path and the successful path alike. An unknown call fails **because it is
+   unknown**, without the gate ever learning its name.
+3. **The cognition tail** — the *ordered* call sequence of the `try` block
+   holding the canonical call. Sets are blind to position, and position is what
+   an alternate authority standing immediately ahead of cognition occupies.
+
+The three are complementary. The handler-wide set catches a call *appearing*;
+the per-guard sets catch a call *moving* out of a guard; the ordered tail catches
+an already-present call *moving ahead of cognition*.
+
+The property proven is that **every explicit return is a non-response admission
+guard, every call the handler makes is one it was certified to make, and the sole
+canonical cognition call is `handleTextMessage`**, reached by fall-through with
+nothing interposed.
+
+⛔ **The cost is accepted deliberately.** Editing this handler turns the gate
+red, including for innocent edits. That is the mechanism, not a side effect:
+`handleVoiceTranscript` is where a spoken turn becomes a member turn, and it must
+not be possible to widen it quietly. Re-pinning a row is an authority decision
+argued for in the diff, exactly like adding a preload channel.
+
+⚠️ **Frozen is not blessed.** The pin necessarily freezes Class C egress and
+data-acknowledgement calls (`maiaSpeak`, `detectCrisis`, `apiFetch`,
+`saveConversationMemory`) that this unit does not repair. Pinning stops them
+growing; it does not certify them.
+
+⛔ **Repaired in `VOICE-CANONICAL-CONVERGENCE-02`** by removing the branch
+structurally, not by defaulting a flag off — a flag would have made the defect
+dormant rather than impossible.
+
+### The invariant, restated NARROWLY
+
+> **Every response-producing voice turn requiring MAIA cognition crosses the
+> canonical cognition spine exactly once before any response transport begins.**
+
+⛔ This deliberately does **not** claim universal MAIA egress convergence.
+Class C of the exit map — eleven `maiaSpeak()` sites uttering locally-authored or
+data-API text with no model in the path — prevents that claim from being
+established, and `OracleConversation.tsx:6712` (a crisis script spoken outside
+any guard, which deliberately does not return) remains a separately recorded
+safety/egress finding. Neither is repaired, and neither may be laundered into
+"fixed" by the narrower invariant holding.
+
+### R13, precisely
+
+```
+R13 implementation on canonical spine     DEMONSTRATED ✅
+R13 coverage of streaming voice           NOT ESTABLISHED
+"single egress funnel" as a global claim  SUSPECT / overbroad
+```
+
+The Refusal Registry audits the spine `OracleConversation →
+/api/sovereign/app/maia/list → getMaiaResponse()` and names *"route an egress
+around the funnel"* as the violating action. The repair does not copy the guard
+into the streaming route — that would yield a better-guarded second mind. The
+guard applies because spoken output now uses the canonical egress.
+
+### ⚠️ The cost, recorded rather than discovered
+
+Canonical voice **sacrifices token-streaming latency** for single-cognition
+convergence. MAIA still speaks — the canonical path returns audio via
+`includeAudio: true` — but first sound now waits for the canonical response to
+complete instead of beginning mid-generation.
+
+Streaming could not simply be demoted to transport: its value is emitting tokens
+*as the model generates them*, so once cognition must finish first there is
+nothing left to stream. The route also emits `silence` and `move_outcome`, both
+cognition decisions a transport layer cannot author. The implementation is
+preserved untouched for a separately authorized transport-extraction unit.
+
+**Current verdict on the narrow invariant: GREEN**, positively enforced — with
+the omission hazard at `apiEndpoint` standing as the live way it could turn RED
+without anyone deciding to make it so.
 
 ## Proof required, at voice acceptance
 
