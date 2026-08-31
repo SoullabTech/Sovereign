@@ -34,6 +34,7 @@
 
 import fs from 'fs';
 import path from 'path';
+import ts from 'typescript';
 
 const HOOK = path.join(process.cwd(), 'hooks/useStreamingVoice.ts');
 const COMPONENT = path.join(process.cwd(), 'components/OracleConversation.tsx');
@@ -136,25 +137,111 @@ describe('B. the parameter — required, and read at dispatch', () => {
   });
 });
 
-describe('C. the dispatch — the component supplies live state', () => {
-  it('FALSIFIES: the call site passes isSanctuary', () => {
-    expect(componentSrc()).toMatch(
-      /sendStreamingMessage\(\s*cleanedText\s*,\s*conversationHistory\s*,\s*isSanctuary\s*\)/,
-    );
+/**
+ * ── SECTION C, AMENDED BY VOICE-CANONICAL-CONVERGENCE-02 ────────────────────
+ *
+ * C formerly required the voice handler to dispatch
+ *   `sendStreamingMessage(cleanedText, conversationHistory, isSanctuary)`
+ * That requirement is now OBSOLETE, because it pinned the very dispatch #1157
+ * correctly removes: voice no longer reaches a second cognition path, so there
+ * is no streaming call from the handler left to carry Sanctuary on.
+ *
+ * ⛔ THE BOUNDARY IS NOT WEAKENED, IT MOVED. Sanctuary now crosses on the
+ * canonical sender, and the reason the original hazard does NOT follow it is
+ * structural rather than incidental:
+ *
+ *   The header forbids Sanctuary as a hook OPTION because `sendMessage`'s own
+ *   17-entry dependency array could go stale and ship a silent `false`.
+ *   `handleTextMessage` is not in that position — it is the STATE-OWNING
+ *   closure, and it declares `isSanctuary` as its own dependency.
+ *
+ *     isSanctuary state
+ *           ↓ dependency
+ *     handleTextMessage ──── body: sanctuary: isSanctuary ──→ canonical route
+ *           ↑ dependency
+ *     handleVoiceTranscript
+ *
+ * So the voice callback follows the refreshed canonical sender instead of
+ * capturing Sanctuary independently. Four structural facts hold that chain,
+ * asserted below, plus two probes proving the assertions can actually go RED.
+ */
+
+/** A `useCallback`'s declaration, located structurally rather than by slicing. */
+function callbackDecl(name: string): ts.VariableDeclaration {
+  const sf = ts.createSourceFile(
+    'o.tsx',
+    fs.readFileSync(COMPONENT, 'utf8'),
+    ts.ScriptTarget.Latest,
+    true,
+    ts.ScriptKind.TSX,
+  );
+  let found: ts.VariableDeclaration | null = null;
+  const walk = (n: ts.Node): void => {
+    if (ts.isVariableDeclaration(n) && n.name.getText() === name) found = n;
+    ts.forEachChild(n, walk);
+  };
+  walk(sf);
+  expect(found).not.toBeNull();
+  return found!;
+}
+
+/** The dependency array text of a `useCallback`, comments stripped. */
+const depsOf = (name: string): string => {
+  const call = callbackDecl(name).initializer as ts.CallExpression;
+  const deps = call.arguments[1];
+  expect(deps).toBeDefined(); // a useCallback with no dep array is itself the hazard
+  return strip(deps.getText()).replace(/\s+/g, ' ');
+};
+
+/** A callback's whole body text, nested functions included, comments stripped. */
+const bodyOf = (name: string): string =>
+  strip((callbackDecl(name).initializer as ts.CallExpression).arguments[0].getText());
+
+describe('C. the dispatch — Sanctuary crosses on the canonical sender', () => {
+  it('FALSIFIES: the canonical request body carries sanctuary: isSanctuary', () => {
+    expect(bodyOf('handleTextMessage')).toMatch(/\bsanctuary:\s*isSanctuary\b/);
   });
 
-  it('pins the exact pre-repair call as forbidden', () => {
-    // Negative control. If this two-argument form returns, the breach returns.
-    expect(componentSrc()).not.toMatch(
-      /sendStreamingMessage\(\s*cleanedText\s*,\s*conversationHistory\s*\)/,
-    );
+  it('FALSIFIES: handleTextMessage declares isSanctuary as a dependency', () => {
+    // Without this the state-owning closure goes stale and ships `false` — the
+    // exact failure mode the header forbids for hook options.
+    expect(depsOf('handleTextMessage')).toMatch(/\bisSanctuary\b/);
   });
 
-  it('passes state, not a literal or a stale capture', () => {
-    const src = componentSrc();
-    expect(src).not.toMatch(/sendStreamingMessage\([^)]*,\s*(true|false)\s*\)/);
-    // isSanctuary must still be the component's own state, not a prop or const.
-    expect(src).toMatch(/const \[isSanctuary, setIsSanctuary\] = useState/);
+  it('FALSIFIES: handleVoiceTranscript follows the canonical sender', () => {
+    // Voice must not capture Sanctuary on its own. It depends on the sender, so
+    // it is recreated whenever Sanctuary changes.
+    expect(depsOf('handleVoiceTranscript')).toMatch(/\bhandleTextMessage\b/);
+  });
+
+  it('⛔ voice dispatches no streaming send — the old egress is gone', () => {
+    expect(bodyOf('handleVoiceTranscript')).not.toMatch(/\bsendStreamingMessage\s*\(/);
+  });
+
+  it('sends it unconditionally, and as state — never a literal', () => {
+    const body = bodyOf('handleTextMessage');
+    expect(body).not.toMatch(/\bsanctuary:\s*(true|false)\b/);
+    expect(body).not.toMatch(/\.\.\.\(\s*isSanctuary\s*&&/); // no conditional spread
+    expect(componentSrc()).toMatch(/const \[isSanctuary, setIsSanctuary\] = useState/);
+  });
+});
+
+describe('C-PROBES — the amended assertions can actually fail', () => {
+  // ⭐ An assertion that cannot go RED is decoration. These mutate the real
+  // source in memory and require the checks above to reject the mutation.
+  it('⛔ removing isSanctuary from handleTextMessage deps → RED', () => {
+    const deps = depsOf('handleTextMessage');
+    const mutated = deps.replace(/,?\s*\bisSanctuary\b/, '');
+    expect(mutated).not.toBe(deps); // the probe must actually change something
+    expect(mutated).not.toMatch(/\bisSanctuary\b/);
+  });
+
+  it('⛔ replacing sanctuary: isSanctuary with sanctuary: false → RED', () => {
+    const body = bodyOf('handleTextMessage');
+    const mutated = body.replace(/\bsanctuary:\s*isSanctuary\b/, 'sanctuary: false');
+    expect(mutated).not.toBe(body);
+    expect(mutated).not.toMatch(/\bsanctuary:\s*isSanctuary\b/);
+    expect(mutated).toMatch(/\bsanctuary:\s*(true|false)\b/); // the forbidden literal form
   });
 });
 
