@@ -95,7 +95,7 @@ export type CaptureMilestone =
  */
 interface CaptureOutcome {
   blob: Blob;
-  stopReason: 'silence' | 'max' | 'error' | 'aborted' | 'no_admission';
+  stopReason: 'silence' | 'max' | 'error' | 'aborted' | 'no_admission' | 'idle_no_speech';
 }
 
 export interface FallbackResult {
@@ -112,6 +112,8 @@ export interface FallbackResult {
     | 'transcribe_disabled'     // 410 from the route (env gate off)
     | 'aborted'                 // the caller revoked this capture's authority
     | 'empty_transcript'        // Whisper returned blank text
+    | 'no_speech_detected'      // the member never began speaking — an IDLE
+                                // capture, not a turn. Never uploaded.
     | 'unknown';
   durationMs?: number;
   bytes?: number;
@@ -121,6 +123,43 @@ interface RunOptions {
   maxMs?: number;
   silenceHoldoffMs?: number;
   minMs?: number;
+  /**
+   * DESKTOP-CONVERSATIONAL-SILENCE-01 — silence before speech is not the end
+   * of an utterance.
+   *
+   * ⛔ THE DEFECT, DEVICE-MEASURED (Electron, 2026-08-31). After MAIA answered,
+   * Desktop re-armed correctly:
+   *
+   *     15:29:57.596  voice_listening_started
+   *     15:29:57.721  recording_started
+   *     15:29:58.434  audio_admitted
+   *
+   * The member then simply did not speak. No `speech_detected` was ever
+   * emitted. ~2s later the recorder called that quiet an utterance, stopped,
+   * uploaded silence to Whisper, got 0 characters back, failed with
+   * `empty_transcript`, set the mic IDLE — and the conversation ended. The
+   * member had done nothing but think.
+   *
+   * ⛔ THE CAUSE. `lastLoudAt` is initialised to the capture's start time, so a
+   * capture that has heard nothing looks identical to one whose speech just
+   * ended. `minMs` (800ms) + `silenceHoldoffMs` (1500ms) then elapse and the
+   * stop fires. `speech_detected` existed as an observational milestone only;
+   * nothing consulted it.
+   *
+   * The invariant this restores:
+   *
+   *     silence BEFORE speech  = the member is thinking   → keep waiting
+   *     silence AFTER speech   = utterance boundary       → stop and transcribe
+   *
+   * ⛔ OFF BY DEFAULT, DELIBERATELY. This module is shared with the
+   * Android-Chrome recovery and the Firefox/Zen no-Web-Speech branch, where it
+   * is a BOUNDED ONE-SHOT and a caller may legitimately want a capture to
+   * close on its own. Turning this on for all three would repeat the exact
+   * mistake documented in `desktopUtteranceLimits.ts`: a value authored for a
+   * bounded recovery silently became the semantics of a first-class
+   * conversation turn. Desktop opts in; nothing else changes.
+   */
+  requireSpeechBeforeSilenceStop?: boolean;
   /**
    * DESKTOP-SOVEREIGN-STT-LIFECYCLE-01 — revoke this capture's authority.
    *
@@ -205,6 +244,7 @@ export async function recordAndTranscribe(
       maxMs,
       silenceHoldoffMs,
       minMs,
+      requireSpeechBeforeSilenceStop: options.requireSpeechBeforeSilenceStop === true,
       signal,
       ...(options.onMilestone ? { onMilestone: options.onMilestone } : {}),
       admissionDeadlineMs: options.admissionDeadlineMs ?? ADMISSION_DEADLINE_MS,
@@ -239,6 +279,21 @@ export async function recordAndTranscribe(
   // on a 100 ms poll, so a capture that ends before its first tick has proved
   // nothing either way; reading a bare flag would accuse a perfectly good short
   // recording — and one the member ABORTED — of never being heard.
+  // ⛔ DESKTOP-CONVERSATIONAL-SILENCE-01 — AN IDLE CAPTURE NEVER LEAVES THE
+  // DEVICE. The member's microphone was open and healthy; they simply did not
+  // speak. Posting that silence to Whisper is what produced the 0-character
+  // transcript, the `empty_transcript` failure, and the phantom turns. Placed
+  // beside the admission gate because it is the same class of honesty: this is
+  // not "you said nothing", it is "you had not started yet".
+  //
+  // The caller re-arms on this reason; it is not a conversation-ending failure.
+  if (outcome.stopReason === 'idle_no_speech') {
+    // Observed at the RECYCLE SITE, not here: what matters for a five-minute
+    // silence is whether the conversation stayed armed, which only the caller
+    // knows. See `desktop_idle_capture_recycled` in ContinuousConversation.
+    return { ok: false, reason: 'no_speech_detected', durationMs, bytes: blob.size };
+  }
+
   if (outcome.stopReason === 'no_admission') {
     logVoiceEvent('voice_fallback_failed', {
       reason: 'no_audio_admitted', durationMs, bytes: blob.size,
@@ -362,7 +417,8 @@ async function recordWithSilenceDetection(
   stream: MediaStream,
   mimeType: string,
   opts: {
-    maxMs: number; silenceHoldoffMs: number; minMs: number; signal?: AbortSignal;
+    maxMs: number; silenceHoldoffMs: number; minMs: number;
+    requireSpeechBeforeSilenceStop: boolean; signal?: AbortSignal;
     /** PLATFORM-D02A-01 — capture stage reports. Observations only. */
     onMilestone?: (stage: CaptureMilestone, detail?: Record<string, unknown>) => void;
     /** PLATFORM-D02A-01 — how long admission may fail to occur before it is named. */
@@ -454,6 +510,14 @@ async function recordWithSilenceDetection(
     const buf = new Float32Array(analyser.fftSize);
 
     let lastLoudAt = Date.now();
+    /**
+     * When the member demonstrably began speaking. Null until they do.
+     *
+     * DESKTOP-CONVERSATIONAL-SILENCE-01: `speech_detected` was an observation
+     * nothing read. It decides now — a capture cannot end on silence before it
+     * has heard any.
+     */
+    let speechAt: number | null = null;
     /** When audio was first demonstrably admitted. Null until it is. */
     let admittedAt: number | null = null;
     const startedAt = Date.now();
@@ -489,6 +553,7 @@ async function recordWithSilenceDetection(
 
       if (rms >= SILENCE_RMS_THRESHOLD) {
         lastLoudAt = now;
+        speechAt = speechAt ?? now;
         milestone('speech_detected', { afterMs: now - startedAt });
       }
       const elapsed = now - startedAt;
@@ -505,10 +570,23 @@ async function recordWithSilenceDetection(
       }
 
       if (elapsed >= opts.maxMs) {
-        stop('max');
+        // ⛔ THE CEILING REACHED WITH NOTHING SAID IS AN IDLE CAPTURE, NOT A
+        // TURN. Uploading it yields an empty transcript, which the caller then
+        // has to interpret — and the interpretation that ended conversations
+        // was "the member said nothing". Named at the source instead, so the
+        // caller can re-arm rather than conclude.
+        stop(opts.requireSpeechBeforeSilenceStop && speechAt === null
+          ? 'idle_no_speech'
+          : 'max');
         return;
       }
-      if (elapsed >= opts.minMs && silenceFor >= opts.silenceHoldoffMs) {
+      // ⛔ SILENCE BEFORE SPEECH IS NOT AN UTTERANCE BOUNDARY. Without the
+      // `speechAt` guard this fires ~2.3s into every re-arm the member does not
+      // immediately answer, which is what ended the conversation in the
+      // 2026-08-31 Electron walk. `lastLoudAt` cannot distinguish "not yet
+      // begun" from "just finished"; `speechAt` can.
+      const speechHasBegun = !opts.requireSpeechBeforeSilenceStop || speechAt !== null;
+      if (speechHasBegun && elapsed >= opts.minMs && silenceFor >= opts.silenceHoldoffMs) {
         stop('silence');
         return;
       }

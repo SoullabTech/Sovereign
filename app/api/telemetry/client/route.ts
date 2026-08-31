@@ -37,6 +37,10 @@ const ALLOWED_EVENTS = new Set([
   // Stage 3 — Android Chrome voice fallback (MediaRecorder → local Whisper).
   'voice_capture_milestone',
   'voice_fallback_recording_started',
+  // DESKTOP-CONVERSATIONAL-SILENCE-01 — a Desktop capture that heard no speech,
+  // was not uploaded, made no turn, and re-armed. A long silence reads as a run
+  // of these; dropping them would make it an unexplained gap.
+  'desktop_idle_capture_recycled',
   'voice_fallback_transcribe_sent',
   'voice_fallback_transcribe_result',
   'voice_fallback_failed',

@@ -48,6 +48,15 @@ export type VoiceDiagEvent =
   // no transcript content in telemetry, only durations/byte-counts/mime/error.
   | 'voice_capture_milestone'          // PLATFORM-D02A-01 capture stage report
   | 'voice_fallback_recording_started'
+  /**
+   * DESKTOP-CONVERSATIONAL-SILENCE-01 — a Desktop capture ended having heard no
+   * speech, was NOT uploaded, produced no member turn, and the conversation was
+   * re-armed (or was not, and says so).
+   *
+   * Exists so a five-minute silence is legible as a run of these rather than as
+   * an unexplained gap in the record.
+   */
+  | 'desktop_idle_capture_recycled'
   // Capture-liveness events (silent-death detection, track loss, salvage).
   // See lib/voice/micLiveness.ts — these fire when the capture path dies
   // without the recognition object reporting anything.

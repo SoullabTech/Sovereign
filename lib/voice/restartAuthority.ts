@@ -31,7 +31,17 @@ export type RestartSourceName =
   | 'maia_stopped_speaking'
   | 'recognition_stopped'
   | 'interruption_end'
-  | 'foreground_resume';
+  | 'foreground_resume'
+  /**
+   * DESKTOP-CONVERSATIONAL-SILENCE-01 — a Desktop capture ended having heard no
+   * speech, so the conversation re-arms without a turn having occurred.
+   *
+   * A first-class source rather than a reuse of `recognition_stopped`: nothing
+   * failed and nothing was recognised, so the trace should say which of those
+   * a restart came from. The guard treats it like any other — a stopped
+   * conversation refuses it, because Stop clears hands-free authority.
+   */
+  | 'desktop_idle_recycle';
 
 /**
  * States a turn may legitimately END in, from which the mic must be recoverable.

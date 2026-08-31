@@ -3532,6 +3532,10 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
           if (stage === 'audio_admitted') admit();
         };
 
+        // DESKTOP-CONVERSATIONAL-SILENCE-01 — set when this capture heard no
+        // speech. Read in `finally`, AFTER the mic has been returned to IDLE,
+        // so the re-arm goes through the same door as every other one.
+        let idleCapture = false;
         try {
           const { recordAndTranscribe } = await import('@/lib/voice/androidVoiceFallback');
           const result = await recordAndTranscribe(stream, {
@@ -3546,6 +3550,12 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
             // ⛔ Desktop ONLY. Firefox/Zen reach this same branch by absence of
             // Web Speech and keep the module's own 8 s bound, unchanged.
             ...(info.isDesktop ? { maxMs: DESKTOP_MAX_UTTERANCE_MS } : {}),
+            // ⛔ DESKTOP-CONVERSATIONAL-SILENCE-01 — Desktop only, same reason.
+            // A capture that has not yet heard speech is the member THINKING;
+            // it may not close on silence, and if it reaches the ceiling having
+            // heard nothing it is an idle capture rather than a turn. Firefox/
+            // Zen keep the module's one-shot semantics unchanged.
+            ...(info.isDesktop ? { requireSpeechBeforeSilenceStop: true } : {}),
           });
 
           // ⛔ THE STALE-RESULT GATE. Abort stops the work; it cannot un-resolve
@@ -3564,6 +3574,17 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
             isProcessingRef.current = true;
             witnessDispatch('web_whisper', 'fallback', result.transcript, recognitionEpochRef.current, turnCommitIdRef.current);
             onTranscript(result.transcript);
+          } else if (result.reason === 'no_speech_detected') {
+            // ⛔ NOT A FAILURE, AND NOT THE END OF ANYTHING. The member's
+            // microphone was open and healthy; they had simply not started
+            // speaking. Treating this as a failed turn is what set the mic IDLE
+            // and ended the conversation on 2026-08-31. No error surfaces, no
+            // phantom message is created, and the lease decides what happens
+            // next — the capture is simply over, and the parent re-arms exactly
+            // as it does after any completed one.
+            console.log('🌙 [web whisper] Idle capture — member had not begun speaking; no upload');
+            addDebug('🌙 idle capture (no speech) — still listening');
+            idleCapture = true;
           } else {
             console.warn(`❌ [web whisper] Failed: ${result.reason}`);
             addDebug(`❌ web whisper failed: ${result.reason || 'unknown'}`);
@@ -3605,6 +3626,28 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
             setMicState('IDLE', 'web_whisper_done');
             onRecordingStateChange?.(false);
             isStartingRef.current = false;
+
+            // ⛔ THE CONVERSATION DID NOT END — THE CAPTURE DID.
+            //
+            // Desktop is one utterance per capture, so the block above returns
+            // the mic to IDLE after every one. For a capture that heard actual
+            // speech that is correct: the turn is in flight. For an IDLE
+            // capture it is the whole defect — the member paused to think, the
+            // capture closed, and nothing re-armed.
+            //
+            // ⛔ THROUGH THE AUTHORITY, NEVER `startListening` DIRECTLY. That
+            // is the single-conductor rule at the top of this file, and it is
+            // also what makes explicit Stop dominate here for free: Stop clears
+            // handsFreeActiveRef and wantsContinuousConversationRef
+            // unconditionally, so authorityGuard refuses this restart and a
+            // stopped conversation stays stopped through any number of idle
+            // recycles.
+            if (idleCapture) {
+              const stillActive =
+                isListeningRef.current || wantsContinuousConversationRef.current;
+              logVoiceEvent('desktop_idle_capture_recycled', { rearmed: stillActive });
+              if (stillActive) void requestRestartFnRef.current?.('desktop_idle_recycle');
+            }
           }
         }
         return;
