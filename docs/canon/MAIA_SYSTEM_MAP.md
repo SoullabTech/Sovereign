@@ -1,3 +1,7 @@
+---
+level: architecture
+---
+
 # MAIA System Map
 
 ## Modes, Layers, Flows, and Architecture

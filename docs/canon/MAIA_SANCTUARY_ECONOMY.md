@@ -1,3 +1,7 @@
+---
+level: jurisprudence
+---
+
 # MAIA Sanctuary Economy
 
 **Status**: Canonical doctrine

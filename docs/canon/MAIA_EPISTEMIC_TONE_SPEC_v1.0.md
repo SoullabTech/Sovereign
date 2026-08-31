@@ -1,3 +1,7 @@
+---
+level: constitution
+---
+
 # MAIA EPISTEMIC TONE SPECIFICATION v1.0
 
 ## Epistemic Signaling Through Voice

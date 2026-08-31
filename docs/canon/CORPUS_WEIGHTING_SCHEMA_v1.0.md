@@ -1,3 +1,7 @@
+---
+level: jurisprudence
+---
+
 # Corpus Weighting Schema v1.0
 
 **Status:** Canon

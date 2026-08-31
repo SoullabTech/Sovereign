@@ -1,3 +1,7 @@
+---
+level: jurisprudence
+---
+
 # Soullab Voice Doctrine (Daoist-based)
 
 > This is the operating system for all Oracle responses.

@@ -1,3 +1,7 @@
+---
+level: protocol
+---
+
 # Session Review Lens Constitutions
 
 **Status: Phase 0 — operational constitutions under observation.**

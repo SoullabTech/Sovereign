@@ -1,3 +1,7 @@
+---
+level: constitution
+---
+
 # Longitudinal Memory Category Gradient
 
 **Status:** Working doctrine — not implementation spec.

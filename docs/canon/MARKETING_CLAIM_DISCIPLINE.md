@@ -1,3 +1,7 @@
+---
+level: protocol
+---
+
 # MAIA Canon — Representation & Claim Discipline
 
 **Status:** Canon. Promoted 2026-06-03 (steward directive). Governs representation across all surfaces.

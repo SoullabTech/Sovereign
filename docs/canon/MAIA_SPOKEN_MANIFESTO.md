@@ -1,3 +1,7 @@
+---
+level: jurisprudence
+---
+
 # MAIA — Spoken Manifesto
 
 ## *Intelligence That Does Not Colonize*

@@ -1,3 +1,7 @@
+---
+level: constitution
+---
+
 # The Spiral Continuity Engine
 
 **Developmental continuity without possession.**

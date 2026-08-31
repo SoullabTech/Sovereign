@@ -1,3 +1,7 @@
+---
+level: constitution
+---
+
 # FIS Field State Primitive
 
 **Status:** Working doctrine / interface target — no runtime authority yet.
