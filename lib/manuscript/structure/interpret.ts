@@ -164,7 +164,22 @@ export type InterpretResult =
       interpretationInputHash: string }
   | { status: 'refused'; refusal: InterpretRefusal; detail?: string;
       /** Present on `read-scope-exceeded`. Counts only. */
-      scope?: ReadScopeReport };
+      scope?: ReadScopeReport;
+      /**
+       * THE READING THAT WAS REFUSED, for inspection - never for storage.
+       *
+       * The first version discarded it. A refusal then cost a real call and
+       * several sections of a member's prose leaving their machine, and taught
+       * nothing: there was no way to see whether one stray boundary had spoiled
+       * an otherwise sound reading, or whether the validator was wrong about
+       * what the reader was expressing. A guard that destroys the evidence it
+       * rejects cannot itself be checked.
+       *
+       * It is NOT a proposal and no caller may store it. It carries the
+       * reader's own words about the Work - titles, rationale - and never a
+       * body, because the host never gave the reading one to carry.
+       */
+      refusedReading?: ReaderReading };
 
 /* -- the host loop ------------------------------------------------------- */
 
@@ -290,9 +305,12 @@ function complete(
   bodies: ReadonlyMap<string, string>,
   scope: ReadScope,
 ): InterpretResult {
-  if (!reading.account.trim()) return { status: 'refused', refusal: 'empty-account' };
+  if (!reading.account.trim()) {
+    return { status: 'refused', refusal: 'empty-account', refusedReading: reading };
+  }
   if (reading.form === 'ambiguous' && reading.alternatives.length < 2) {
-    return { status: 'refused', refusal: 'ambiguous-without-alternatives' };
+    return { status: 'refused', refusal: 'ambiguous-without-alternatives',
+      refusedReading: reading };
   }
 
   const position = new Map(sections.map((s) => [s.id, s.position]));
@@ -329,7 +347,13 @@ function complete(
       for (const child of u.children) {
         const cr = rangeOf(child);
         if (cr && (cr[0] < r[0] || cr[1] > r[1])) {
-          note('child-outside-parent', child.title ?? child.fromSectionId);
+          /* The ranges, not just a name. "child-outside-parent (THE SACRED
+             FLAME)" says which division broke the rule and nothing about how,
+             so a reader cannot tell one stray boundary from a misconceived
+             hierarchy without the numbers. */
+          note('child-outside-parent',
+            `${child.title ?? child.fromSectionId} ${cr[0]}-${cr[1]}`
+            + ` sits outside ${u.title ?? u.fromSectionId} ${r[0]}-${r[1]}`);
         }
       }
       ranges.push(r);
@@ -346,7 +370,9 @@ function complete(
   if (reading.form === 'ambiguous') reading.alternatives.forEach((a) => validate(a.units));
   else if (reading.form !== 'none') validate(reading.units);
 
-  if (problems.length > 0) return { status: 'refused', ...problems[0] };
+  if (problems.length > 0) {
+    return { status: 'refused', ...problems[0], refusedReading: reading };
+  }
 
   /* DERIVED, never accepted from the reader. What a reading failed to explain
      is not the reading's own account to give. For an ambiguous reading nothing

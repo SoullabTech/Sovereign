@@ -35,6 +35,8 @@ const BASE = process.env.BASE ?? 'http://localhost:3105';
 const SHOW_READING = process.env.SHOW_READING === '1';
 const DRY_RUN = process.env.DRY_RUN === '1';
 const MAX_PASSES = Number(process.env.MAX_PASSES ?? '3') as 1 | 2 | 3;
+/** Where a refused reading is kept for inspection. Never the database. */
+const OUT = process.env.OUT ?? '/tmp';
 
 async function main() {
   if (!MANUSCRIPT || !MEMBER_ID) {
@@ -189,6 +191,31 @@ async function main() {
   if (result.status === 'refused') {
     console.error(`\n  THE HOST REFUSED THE READING — ${result.refusal}`
       + `${result.detail ? ` (${result.detail})` : ''}`);
+
+    /* KEEP WHAT WAS REFUSED, so the guard can be checked.
+       A refusal costs a real call and several sections of the member's prose
+       leaving their machine. Discarding the reading makes that expensive and
+       uninformative: there is then no way to see whether one stray boundary
+       spoiled a sound reading, or whether the validator misread what she was
+       expressing. Written to a LOCAL FILE, never to the database - it is not a
+       proposal and there is no path here that could make it one. It holds her
+       words about the Work; it holds no body, because the host never gave the
+       reading one to carry. */
+    if (result.refusedReading) {
+      const r = result.refusedReading;
+      const out = `${OUT}/ws2-05b-refused-${Date.now()}.json`;
+      const { writeFileSync } = await import('fs');
+      writeFileSync(out, JSON.stringify(r, null, 2));
+
+      const count = (us: readonly { children: readonly unknown[] }[]): number =>
+        us.reduce((n, u) => n + 1 + count(u.children as typeof us), 0);
+      const units = 'units' in r ? r.units : [];
+      console.error(`\n  What she proposed, refused: form ${r.form},`
+        + ` ${count(units)} division(s)`
+        + `${'alternatives' in r ? `, ${r.alternatives.length} alternative(s)` : ''}`);
+      console.error(`  Kept for inspection, NOT stored: ${out}`);
+    }
+
     if (result.scope) {
       /* Counts and ids. A scope refusal must not become the channel that leaks
          what the scope exists to bound. */

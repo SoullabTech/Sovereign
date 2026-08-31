@@ -606,3 +606,57 @@ describe('the prompt states the same ceilings the host enforces', () => {
     expect(t.properties.sectionIds.maxItems).toBe(DEFAULT_READ_SCOPE.maxIdsPerRequest);
   });
 });
+
+
+/* ── a refused reading is kept, not destroyed ────────────────────────────── */
+
+describe('the host returns what it refused', () => {
+  const reader = (input: unknown) => async () => parseReaderOutput('propose_structure', input);
+
+  /**
+   * A guard that destroys the evidence it rejects cannot itself be checked.
+   *
+   * The first real reading of Elemental Alchemy was refused for
+   * `child-outside-parent` and thrown away - a real call, and four sections of
+   * the member's prose off their machine, for a refusal nobody could inspect.
+   * There was no way to tell one stray boundary from a misconceived hierarchy.
+   */
+  it('hands back the reading a validation refusal rejected', async () => {
+    const r = await interpretStructure(gatherEvidence('m1', sections), sections,
+      reader({
+        form: 'stable', account: 'A part, with a child that escapes it.',
+        units: [unit('sec-b', 'sec-c', {
+          title: 'PART', children: [unit('sec-a', 'sec-b', { title: 'THE FLAME' })],
+        })],
+      }), { fetchBodies: async () => new Map() });
+
+    expect(r.status).toBe('refused');
+    if (r.status !== 'refused') return;
+    expect(r.refusal).toBe('child-outside-parent');
+    /* The numbers, so one stray boundary is distinguishable from a broken
+       hierarchy without opening the file. */
+    expect(r.detail).toBe('THE FLAME 0-1 sits outside PART 1-2');
+    expect(r.refusedReading).toBeDefined();
+    expect(r.refusedReading?.account).toBe('A part, with a child that escapes it.');
+  });
+
+  it('hands back a reading refused for an empty account', async () => {
+    const r = await interpretStructure(gatherEvidence('m1', sections), sections,
+      async () => ({ status: 'interpreted', reading: { form: 'none', account: ' ' } }),
+      { fetchBodies: async () => new Map() });
+    if (r.status !== 'refused') throw new Error('expected a refusal');
+    expect(r.refusal).toBe('empty-account');
+    expect(r.refusedReading).toBeDefined();
+  });
+
+  /* It is evidence, not a proposal. Nothing that reaches the store carries it,
+     and it never holds a body - the host gave the reading none to carry. */
+  it('carries no body, because the reading was never given one', async () => {
+    const r = await interpretStructure(gatherEvidence('m1', sections), sections,
+      reader({ form: 'stable', account: 'a',
+        units: [unit('sec-c', 'sec-a')] }),
+      { fetchBodies: async () => new Map([['sec-a', 'THE-MEMBERS-PROSE']]) });
+    if (r.status !== 'refused') throw new Error('expected a refusal');
+    expect(JSON.stringify(r.refusedReading)).not.toContain('THE-MEMBERS-PROSE');
+  });
+});
