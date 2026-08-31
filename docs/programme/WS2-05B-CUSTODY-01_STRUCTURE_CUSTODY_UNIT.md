@@ -322,3 +322,57 @@ Board acceptance states   unchanged (WS-01 still IN ACCEPTANCE, P0-D still owed)
 Every local import in the 29 files resolves against canonical. Zero references to any of the six
 divergent Canvas files, and zero to `StructureReview` · `StructuredOutline` · `ManuscriptOutline` ·
 `studioTheme` · `studio/StudioType` — the Custody B surface. **The substrate does not reach for it.**
+
+
+---
+
+## 8. Custody A — canonical submission · 2026-08-31
+
+Founder ruling: ⛔ **do not fast-forward canonical directly; let the canonical PR gates witness the
+custody transfer**, and ⛔ do not submit from the roadmap branch, whose programme/charter changes are
+a separate artifact and must not be smuggled through Gate A.
+
+### Correction — `dcf4c009` was not a pure custody commit
+
+The execution commit on `claude/writers-studio-maia-roadmap-vnby0k` was **29 A + 2 M**: it carried
+the 29 substrate files *and* edits to this unit definition and the 5½ charter. A cherry-pick of it
+would therefore have landed `29 added / 2 modified`, failing the decisive acceptance condition.
+
+The pure commit was constructed instead: a branch cut fresh from canonical, with only the 29
+substrate paths applied from the source tree and blob-equivalence re-proved.
+
+```text
+branch  feature/ws2-05b-custody-01   (from origin/clean-main-no-secrets @ 55021771)
+commit  1 · 29 added · 0 modified · 0 deleted · 0 Canvas · 0 docs · 6,771 insertions
+source  origin/claude/writers-studio-ws2-03b-qf49hj @ 845adb884…   29/29 blobs identical
+PR      SoullabTech/Sovereign#1158 → clean-main-no-secrets
+```
+
+### Verified on the submitted branch
+
+```text
+jest       145 passed / 145 · 8 suites
+probes     assertNoProse neutered → 3 of 5 failed (both "permits" cases still passed)
+           ambiguous < 2 → < 0    → 1 failed
+           both reverted; blob-equivalence re-verified; suite back to 145/145
+typecheck  green — "No TypeScript regressions" (231 errors vs 239 baseline,
+           4,094 program files vs 3,965). ⛔ Baseline deliberately NOT re-recorded
+check:phi-gate      pass   (one advisory on a pre-existing January migration)
+check:no-supabase   pass
+```
+
+### ⛔ Standing constraint while the PR is open
+
+A CI failure on this PR **may not be fixed by patching the substrate.** Any edit to the 29 files, or
+any added file, breaks the `29 added / 0 modified` condition that is the unit's whole acceptance.
+If a gate fails, the correct act is to **report the failure and stop** — a failing gate on unmodified
+custody is a finding about canonical or about the gate, and it belongs to a ruling, not to a patch.
+
+### After merge
+
+```text
+Gate A substrate custody   COMPLETE
+Gate B                     still CLOSED
+5½                         still NOT AUTHORIZED
+Custody B                  still HOLD
+```
