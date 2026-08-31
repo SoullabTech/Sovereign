@@ -232,14 +232,38 @@ async function main() {
       : `${titleRows.length}/${titled.length} show the title;`
         + ` ${labelAsTitle.length} show a label in a title's place`);
 
-  /* 7 ── her reasoning is reachable at all ─────────────────────────────── */
+  /**
+   * 7 ── her reasoning is reachable at all ────────────────────────────────
+   *
+   * THE CLAIM IS UNCHANGED; THE MECHANISM MOVED. This check counted
+   * `[data-why]` disclosures, one per division. UX01 replaced twenty-two of
+   * those with selection and a single inspector, so counting them would now
+   * report a defect on a room that reaches her reasoning perfectly well.
+   *
+   * The check follows the CLAIM, not the markup: it SELECTS each division that
+   * carries a rationale and asserts the inspector shows that exact text. That
+   * is a stronger test than the old one — it exercises the path a member takes
+   * rather than the presence of an element — and it is not the test bending to
+   * the implementation, because the sentence being asserted is the same
+   * sentence.
+   */
   const withRationale = flat.filter((u) => u.rationale.trim().length > 0);
-  const whyBlocks = await count('[data-why]');
-  record('7', 'her reasoning for a division is reachable',
+  let reached = 0;
+  const unreachable: string[] = [];
+  for (const u of withRationale) {
+    const picked = await page.click(`[data-review-unit="${u.id}"] .ws2sr-pick`)
+      .then(() => page.waitForSelector(`[data-inspector="${u.id}"]`, { timeout: 3_000 }))
+      .then(() => page.$eval(`[data-inspector="${u.id}"]`, (el) => el.textContent ?? ''))
+      .catch(() => null);
+    if (picked !== null && picked.includes(u.rationale.slice(0, 60))) reached += 1;
+    else unreachable.push(u.id);
+  }
+  record('7', "selecting a division shows MAIA's reasoning for it",
     withRationale.length === 0 ? 'N/A'
-      : whyBlocks >= withRationale.length ? 'PASS' : 'FAIL',
-    `${withRationale.length} division(s) carry a rationale in the row;`
-    + ` ${whyBlocks} Why? disclosure(s) rendered`);
+      : reached === withRationale.length ? 'PASS' : 'FAIL',
+    `${reached}/${withRationale.length} division(s) with a rationale showed it`
+    + ` in the inspector when selected`
+    + `${unreachable.length ? `; missing ${unreachable.slice(0, 5).join(',')}` : ''}`);
 
   /* 8 ── the map does not open as a serialization ──────────────────────── */
   const visibleSections = await page.$$eval('[data-section]',
