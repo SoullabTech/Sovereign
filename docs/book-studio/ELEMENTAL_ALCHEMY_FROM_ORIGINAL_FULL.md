@@ -1178,7 +1178,7 @@ What you feel carries great power to create your reality. At the heart of your e
 
 To surf the waves of our fluid emotional intelligence and swim deep within the oceanic field of the inner psyche, we must become fluent in the capricious element of our water state of consciousness. To better comprehend the nature of the subconscious beliefs, values, and motives that influence our thoughts, emotions, and behaviors, we must be psychologically self-aware as well as tapped into the deeper source of collective wisdom, the unconscious mind. Water is also where we connect with all that is happening beneath the surface of our consciousness in the realm of daydreams and sleeping dreams. All personal change gestates in water.
 
-The alchemy of water is the process of cleansing ourselves of emotional impurities. Water is associated with love, compassion, and rebirth. As such, it holds the potential for all forms of redemption through selfless acts and deep emotional connections.
+Water is associated with love, compassion, and rebirth. As such, it holds the potential for all forms of redemption through selfless acts and deep emotional connections.
 
 This is to honor this divine gift by immersing ourselves in the wisdom of water, allowing its currents to cleanse and renew us, and flowing through life with empathy and grace. In doing so, we align ourselves with the fluid dance of creation, embodying the love and compassion that water so generously offers. May all we manifest be guided by this wisdom, and may we experience love flowing back to us in all our relationships, in all we create, and in all we do. Let our love be a way forward on the earth, passion for the air, and vision for our fire.
 
@@ -1924,8 +1924,6 @@ In relationships, allowing this deeper level of communication enriches our conne
 Often, the most profound connections are simple—a hug, a kiss, or a reassuring glance can convey worlds of information. The air element is subtle, where less is more. It invites us to elevate our minds, relationships, and culture, countering the divisive rhetoric prevalent in social media.
 
 We need the air realm to refine our society by awakening us to ancient wisdom. Indigenous cultures, religious traditions, and spiritual practices offer valuable insights into our nature and relationships.
-
-*"Your task is not to seek for love, but merely to seek and find all the barriers within yourself that you have built against it." – Rumi*
 
 The beauty of the air realm lies in its ability to transmit wisdom subtly and profoundly, reminding us to engage deeply and meaningfully with each other and the world.
 
