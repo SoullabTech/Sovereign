@@ -77,6 +77,11 @@ const OUT_OF_SCOPE = [
   // component and stays in scope. sitemap/robots/manifest are the same class
   // conceptually but are .ts, so they never reach this gate's .tsx scope and
   // are not matched here. Founder ruling 2026-08-16.
+  //
+  // The same class of content living INSIDE a non-metadata file is handled by
+  // the block-scoped rule below (METADATA_BLOCK_SCOPED, founder ruling
+  // 2026-08-31) — deliberately not here, because this list is path-based and
+  // would exempt the whole file.
   /^app\/(.*\/)?(opengraph-image|twitter-image|icon|apple-icon)\d*\.tsx$/,
 ];
 
@@ -179,11 +184,22 @@ function git(cmd: string): string {
  *   --branch    → merge-base vs trunk  (PR-level review, opt-in)
  *   --all       → whole tree           (coverage audit, reporting)
  */
-function changedFiles(branchScope: boolean): { files: string[]; how: string } {
+type ChangeScope = {
+  files: string[];
+  how: string;
+  /** Revision the change is measured FROM — the "old side" of the diff. */
+  baseRev: string;
+  /** git-diff selector reproducing this scope for a single path. */
+  diffSelector: string;
+};
+
+function changedFiles(branchScope: boolean): ChangeScope {
   if (process.env.GIT_PRE_COMMIT === "1") {
     return {
       files: git("git diff --cached --name-only --diff-filter=ACM").split("\n"),
       how: "staged changes",
+      baseRev: "HEAD",
+      diffSelector: "--cached",
     };
   }
 
@@ -193,6 +209,8 @@ function changedFiles(branchScope: boolean): { files: string[]; how: string } {
       return {
         files: git(`git diff --name-only --diff-filter=ACM ${base}...HEAD`).split("\n"),
         how: `branch changes vs ${TRUNK}`,
+        baseRev: base,
+        diffSelector: `${base}...HEAD`,
       };
     }
     console.error(`⚠️  --branch: no merge-base with ${TRUNK}; falling back to working tree.`);
@@ -203,6 +221,10 @@ function changedFiles(branchScope: boolean): { files: string[]; how: string } {
       .split("\n")
       .concat(git("git diff --cached --name-only --diff-filter=ACM").split("\n")),
     how: "working-tree changes",
+    // Working tree (staged + unstaged) measured against the last commit, so a
+    // change that is half-staged is still judged as one whole change.
+    baseRev: "HEAD",
+    diffSelector: "HEAD",
   };
 }
 
@@ -213,6 +235,107 @@ function allTrackedSurfaces(): string[] {
 function inScope(f: string): boolean {
   if (!IN_SCOPE.test(f)) return false;
   return !OUT_OF_SCOPE.some((re) => re.test(f));
+}
+
+// ── Block-scoped exemption: document-head metadata ──────────────────────────
+// Founder ruling 2026-08-31, extending the 2026-08-16 metadata ruling above.
+//
+// THE DISTINCTION: *document-head metadata is not an Experience Contract
+// surface.* The 2026-08-16 ruling already established this for the app-router
+// metadata FILES (opengraph-image, icon, apple-icon …) on the reasoning that
+// they emit icons and share-cards for crawlers, carry no human activity, and
+// no member ever inhabits one — and that registering them would corrupt what
+// the contract registry means. That reasoning applies word-for-word to a
+// favicon href. But it was implemented as a filename regex, so it does not
+// reach the same class of content when it lives inside `export const metadata`
+// in app/layout.tsx.
+//
+// THE BOUNDARY IS THE SYMBOL, NOT THE FILE. app/layout.tsx is NOT exempt:
+//
+//   metadata export only .................. OUT_OF_SCOPE for this change
+//   layout/render structure, providers,
+//   children composition, navigation /
+//   House behavior, visible experience .... still requires its Contract
+//
+// So this is deliberately NOT added to OUT_OF_SCOPE — that list is path-based
+// and would exempt the file. `inScope()` stays untouched, which means `--all`
+// still reports app/layout.tsx as an uncovered surface. That gap is real and
+// stays visible; this rule only declines to bill a favicon href for it.
+//
+// FAIL-CLOSED: any ambiguity — export not found on either side, unparseable
+// hunk, deleted/added file, missing base blob — returns false and the change
+// is gated normally. The exemption must be affirmatively proven, never assumed.
+const METADATA_BLOCK_SCOPED = new Set(["app/layout.tsx"]);
+
+// `export const viewport` is deliberately NOT exempt even though it is also a
+// document-head declaration. It carries maximumScale/minimumScale, which is
+// zoom — a WCAG 1.4.4 accessibility behaviour a member directly experiences.
+const METADATA_EXPORT = /^export\s+const\s+metadata\b/;
+
+/** 1-based inclusive [start, end] of the `export const metadata` declaration. */
+function metadataExportRange(source: string): [number, number] | null {
+  const lines = source.split("\n");
+  const start = lines.findIndex((l) => METADATA_EXPORT.test(l));
+  if (start === -1) return null;
+  // Terminates at the first column-0 close (`};` or `}`). The declaration is
+  // top-level, so any nested close is indented.
+  for (let i = start + 1; i < lines.length; i++) {
+    if (/^\}\s*;?\s*$/.test(lines[i])) return [start + 1, i + 1];
+  }
+  return null; // unterminated → fail closed
+}
+
+/** Changed line ranges from a `-U0` diff: old side and new side, 1-based. */
+function touchedRanges(diff: string): { old: [number, number][]; new: [number, number][] } | null {
+  const out = { old: [] as [number, number][], new: [] as [number, number][] };
+  const hunk = /^@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@/;
+  let seen = false;
+  for (const line of diff.split("\n")) {
+    if (!line.startsWith("@@")) continue;
+    const m = hunk.exec(line);
+    if (!m) return null; // unparseable → fail closed
+    seen = true;
+    const oStart = Number(m[1]);
+    const oLen = m[2] === undefined ? 1 : Number(m[2]);
+    const nStart = Number(m[3]);
+    const nLen = m[4] === undefined ? 1 : Number(m[4]);
+    if (oLen > 0) out.old.push([oStart, oStart + oLen - 1]);
+    if (nLen > 0) out.new.push([nStart, nStart + nLen - 1]);
+  }
+  return seen ? out : null;
+}
+
+const within = (r: [number, number][], box: [number, number]) =>
+  r.every(([a, b]) => a >= box[0] && b <= box[1]);
+
+/**
+ * True only if EVERY line this change touches — added and removed — falls
+ * inside the `export const metadata` declaration, judged on both sides of the
+ * diff. Checking the old side matters: a pure deletion of layout JSX adds no
+ * new-side lines and must not slip through.
+ */
+function isDocumentMetadataOnlyChange(file: string, scope: ChangeScope): boolean {
+  const diff = git(`git diff -U0 ${scope.diffSelector} -- ${file}`);
+  if (!diff.trim()) return false;
+  if (/^(new|deleted) file mode/m.test(diff)) return false;
+
+  const ranges = touchedRanges(diff);
+  if (!ranges) return false;
+
+  const newSource =
+    scope.diffSelector === "--cached"
+      ? git(`git show :${file}`) // the staged blob, not the working tree
+      : fs.existsSync(path.join(REPO, file))
+        ? fs.readFileSync(path.join(REPO, file), "utf8")
+        : "";
+  const oldSource = git(`git show ${scope.baseRev}:${file}`);
+  if (!newSource.trim() || !oldSource.trim()) return false;
+
+  const newRange = metadataExportRange(newSource);
+  const oldRange = metadataExportRange(oldSource);
+  if (!newRange || !oldRange) return false;
+
+  return within(ranges.new, newRange) && within(ranges.old, oldRange);
 }
 
 // ── Contract scaffold ───────────────────────────────────────────────────────
@@ -260,13 +383,26 @@ function main(): void {
         .filter((c): c is Contract => c !== null)
     : [];
 
-  const { files, how } = auditAll
-    ? { files: allTrackedSurfaces(), how: "full tree audit" }
-    : changedFiles(branchScope);
+  const scope: ChangeScope | null = auditAll ? null : changedFiles(branchScope);
+  const { files, how } = scope ?? { files: allTrackedSurfaces(), how: "full tree audit" };
 
-  const targets = [...new Set(files.map((f) => f.trim()).filter(Boolean))]
+  const inScopeFiles = [...new Set(files.map((f) => f.trim()).filter(Boolean))]
     .filter(inScope)
     .sort();
+
+  // Block-scoped exemption. Only applies when gating a CHANGE — never in
+  // --all, where the file's missing contract is a real gap that must stay
+  // visible rather than be papered over by what one diff happened to touch.
+  const exempt = scope
+    ? inScopeFiles.filter((f) => METADATA_BLOCK_SCOPED.has(f) && isDocumentMetadataOnlyChange(f, scope))
+    : [];
+  for (const f of exempt) {
+    console.log(`🏷  ${f}: change is confined to the \`export const metadata\` declaration.`);
+    console.log(`   Document-head metadata is not an Experience Contract surface (founder ruling 2026-08-31).`);
+    console.log(`   The file is NOT exempt — any layout, provider, composition or navigation change still requires its Contract.`);
+  }
+
+  const targets = inScopeFiles.filter((f) => !exempt.includes(f));
 
   if (targets.length === 0) {
     console.log(`✅ Design canon: no member-facing UI surfaces in ${how}.`);
