@@ -13,16 +13,20 @@
  *   - PDF yields its text layer only. Scanned/image PDFs have no text layer;
  *     we say so plainly (a warning) rather than fabricate or silently fail.
  *     OCR is deliberately out of scope for this slice.
- *   - Whitespace that the source FILE carried but the author never typed —
- *     Word's tab indents, non-breaking spaces, soft hyphens, stray trailing
- *     spaces, stacked empty paragraphs — is normalized on the way in (see
- *     normalizeWhitespace.ts). Not one character of the writing is touched;
- *     only the invisible spacing that made the writing surface look wrong.
+ *   - ONE spacing artifact is removed, and only from DOCX: the `<w:tab/>` Word
+ *     writes for a first-line indent, dropped on the document tree where the
+ *     format still proves it is presentation rather than a typed character (see
+ *     docxIndentTabs.ts). Left in, it is also a markdown code block, so the
+ *     author's opening paragraph arrives in a monospace slab.
+ *   - Nothing else is normalized, in any format. Blank lines, non-breaking
+ *     spaces, trailing spaces and tabs between words are the author's text
+ *     until the format gives evidence otherwise, and PDF and plain text give
+ *     none at all — in a .txt or .md manuscript the whitespace IS the source.
  *   - No persistence, no network, no model. Deterministic parsing only.
  */
 
 import mammoth from 'mammoth';
-import { normalizeImportWhitespace } from './normalizeWhitespace';
+import { dropWordIndentTabs } from './docxIndentTabs';
 
 export type UploadFormat = 'docx' | 'pdf' | 'text';
 
@@ -83,7 +87,12 @@ function normalizeMammothMarkdown(md: string): string {
 async function extractDocxMarkdown(buffer: Buffer): Promise<string> {
   // convertToMarkdown maps Word heading styles to `#`/`##`, preserving the
   // structure the author gave the document. extractRawText would flatten it.
-  const result = await mammoth.convertToMarkdown({ buffer });
+  const result = await mammoth.convertToMarkdown(
+    { buffer },
+    /* On the document tree, before it is flattened — the only place Word's
+       indent mechanic is still distinguishable from a typed tab. */
+    { transformDocument: dropWordIndentTabs },
+  );
   return normalizeMammothMarkdown(result.value ?? '');
 }
 
@@ -129,7 +138,7 @@ export async function parseUpload(
   }
 
   if (format === 'docx') {
-    const text = normalizeImportWhitespace(await extractDocxMarkdown(buffer));
+    const text = await extractDocxMarkdown(buffer);
     const warnings = text.trim().length === 0
       ? ['We could not find any text in this document.']
       : [];
@@ -137,13 +146,14 @@ export async function parseUpload(
   }
 
   if (format === 'pdf') {
-    // A PDF text layer is the worst offender for invisible spacing: extractors
-    // emit non-breaking and thin spaces wherever the typesetter kerned.
+    /* Verbatim. A PDF text layer carries no reliable distinction between
+       spacing the author chose and spacing the typesetter produced, so there is
+       nothing here we could clean on evidence. */
     const { text, warnings } = await extractPdfText(buffer);
-    return { text: normalizeImportWhitespace(text), warnings, format };
+    return { text, warnings, format };
   }
 
-  // text / markdown — normalized too, so a .txt written on Windows and the
-  // same words pasted from Word arrive as the same characters.
-  return { text: normalizeImportWhitespace(buffer.toString('utf-8')), warnings: [], format };
+  // text / markdown — verbatim. These bytes ARE the manuscript; a blank-line
+  // run may be a scene break and a leading tab may be the author's indent.
+  return { text: buffer.toString('utf-8'), warnings: [], format };
 }

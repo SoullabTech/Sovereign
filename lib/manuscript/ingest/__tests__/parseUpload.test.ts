@@ -68,11 +68,15 @@ describe('parseUpload', () => {
    * A Word file carrying the spacing a real manuscript arrives with. Its
    * document.xml sits beside it as `word-spacing.document.xml` so the fixture
    * is readable rather than an opaque binary; it holds a tab-indented first
-   * line, non-breaking spaces, stray trailing spaces, a shift+enter line
-   * break, and a run split mid-word — all things Word writes and no author
-   * types.
+   * line, a doubly-indented line, a tab BETWEEN two words, non-breaking
+   * spaces, stray trailing spaces, a shift+enter line break, and a run split
+   * mid-word.
+   *
+   * The pair of tests below is the boundary itself: the first is what the DOCX
+   * structure PROVES is presentation, the second is everything the format does
+   * not prove and which therefore survives untouched.
    */
-  it('brings a Word manuscript in without the spacing Word added', async () => {
+  it("drops Word's first-line indent tab, which is presentation, not a character", async () => {
     const buf = fs.readFileSync(path.join(__dirname, 'fixtures', 'word-spacing.docx'));
     const r = await parseUpload(buf, 'word-spacing.docx');
 
@@ -81,16 +85,45 @@ describe('parseUpload', () => {
     expect(r.text).toContain('margins of other people.');
     expect(r.text).toContain('# Chapter One');
 
-    // ...and none of Word's spacing.
-    expect(r.text).not.toMatch(/\t/); // no tab indents
-    expect(r.text).not.toMatch(/[\u00A0\u202F]/); // no non-breaking spaces
-    expect(r.text).not.toMatch(/[ ]+\n\n/); // no stray spaces ending a paragraph
-    expect(r.text).not.toMatch(/\n{3,}/); // no stacked empty paragraphs
+    /* The indent is gone — and with it the markdown code block a leading tab
+       would otherwise have made of the paragraph. */
+    expect(r.text).toMatch(/^The morning came slowly over the hills\.$/m);
+    // a deeper indent is the same mechanic, however many tabs deep
+    expect(r.text).toMatch(/^A deeply indented paragraph\.$/m);
 
-    // What the author DID choose survives: two spaces after a sentence, and a
-    // shift+enter break kept as a markdown hard break.
-    expect(r.text).toContain('She waited.  Then she wrote.');
-    expect(r.text).toContain('First line  \nsecond line');
+    /* But a tab BETWEEN words is a column the author built, and the format
+       gives no reason to call it furniture. */
+    expect(r.text).toContain('Fire\tthe first element.');
+  });
+
+  it('leaves every other spacing artifact alone — the format does not prove them', async () => {
+    /* Each of these was normalized in an earlier draft and withdrawn: a
+       non-breaking space is a character the author can type, a blank-line run
+       may be a scene break, and a trailing space is invisible but authored.
+       Nothing in the file distinguishes them from furniture, so they stand. */
+    const buf = fs.readFileSync(path.join(__dirname, 'fixtures', 'word-spacing.docx'));
+    const r = await parseUpload(buf, 'word-spacing.docx');
+
+    expect(r.text).toMatch(/[\u00A0]/); // non-breaking spaces survive
+    expect(r.text).toMatch(/[ ]\n/); // trailing spaces survive
+    expect(r.text).toContain('She waited.  Then she wrote.'); // the author's two spaces
+    expect(r.text).toContain('First line  \nsecond line'); // shift+enter hard break
+  });
+
+  it('passes a .txt manuscript through byte-for-byte — the whitespace IS the source', async () => {
+    /* A blank-line run may be a deliberate scene break and a leading tab may be
+       the author's own indent. In plain text there is no structure to consult,
+       so nothing here may be reinterpreted. */
+    const source = '\tScene one.\n\n\n\nScene two.   \n';
+    const r = await parseUpload(Buffer.from(source), 'book.txt');
+    expect(r.text).toBe(source);
+  });
+
+  it('passes a PDF text layer through unchanged — no evidence to clean on', async () => {
+    mockPdf.text = 'A  page\u00A0with\ttypesetter spacing.\n\n\n\nAnd more.';
+    mockPdf.pages = [{}];
+    const r = await parseUpload(Buffer.from('%PDF-1.4'), 'typeset.pdf');
+    expect(r.text).toBe(mockPdf.text);
   });
 
   it('warns (never fabricates) when a PDF has no text layer (scanned)', async () => {

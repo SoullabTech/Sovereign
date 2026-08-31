@@ -58,10 +58,10 @@ describe('Control 2 — extraction independence', () => {
       sourceText: 'extracted words',
       extractor: 'pdf',
     });
-    /* The identity names the whole pipeline, normalization included: the
-       source text recorded here is what the normalizer produced. */
-    expect(a.extractionMethod).toBe('pdf-parse-getText+ws-normalize');
-    expect(a.extractorVersion).toBe('pdf-parse@2.4.5+ws1');
+    /* Unsuffixed: the PDF reader transforms nothing, so its extraction is
+       byte-for-byte what it always was. */
+    expect(a.extractionMethod).toBe('pdf-parse-getText');
+    expect(a.extractorVersion).toBe('pdf-parse@2.4.5');
     // The two identities are distinct, so a changed extraction stays
     // distinguishable from a changed artifact (Amendment A1.1).
     expect(a.artifactHash).not.toBe(a.sourceTextHash);

@@ -34,21 +34,29 @@ export type SourceKind = typeof ARTIFACT_EXTRACTION | typeof MEMBER_SUPPLIED_TEX
  * must not retroactively relabel arrivals it never touched. When a version here
  * changes, arrivals written afterwards carry the new value and older rows keep
  * theirs — which is the whole point of storing it.
- */
-/*
- * `+ws1` marks the import whitespace normalization that now runs as the last
- * step of every extraction (lib/manuscript/ingest/normalizeWhitespace.ts). It
- * belongs in the extractor identity, not outside it: the source text an
- * arrival records is the text the normalizer produced and the member saw, so
- * an arrival written before this change and one written after are genuinely
- * different extractions of the same bytes, and must say so. The artifact bytes
- * are unchanged and remain in custody, which is what makes the earlier
- * extraction reproducible from the later row.
+ *
+ * `+drop-indent-tabs` marks the ONE transform the DOCX reader applies: the
+ * `<w:tab/>` Word writes for a first-line indent is dropped on the document
+ * tree, where the format still proves it is presentation rather than a typed
+ * character (lib/manuscript/ingest/docxIndentTabs.ts). It belongs in the
+ * extractor identity rather than outside it, because the source text an arrival
+ * records is what that reader produced and what the member saw — so an arrival
+ * written before this change and one written after are genuinely different
+ * extractions of the same bytes, and must say so. The artifact bytes are
+ * unchanged and remain in custody, which is what keeps the earlier extraction
+ * reproducible from the later row.
+ *
+ * PDF and text carry no suffix because nothing was added to them: those
+ * extractions are byte-for-byte what they always were, and deliberately so —
+ * neither format gives evidence for telling authored spacing from furniture.
  */
 export const EXTRACTORS = {
-  docx: { method: 'mammoth-convertToMarkdown+ws-normalize', version: 'mammoth@1.12.0+ws1' },
-  pdf: { method: 'pdf-parse-getText+ws-normalize', version: 'pdf-parse@2.4.5+ws1' },
-  text: { method: 'utf8-decode+ws-normalize', version: 'node-buffer-utf8+ws1' },
+  docx: {
+    method: 'mammoth-convertToMarkdown+drop-indent-tabs',
+    version: 'mammoth@1.12.0+indent1',
+  },
+  pdf: { method: 'pdf-parse-getText', version: 'pdf-parse@2.4.5' },
+  text: { method: 'utf8-decode', version: 'node-buffer-utf8' },
   /** Not an extraction: the member's own text, recorded as it was confirmed. */
   supplied: { method: 'member-supplied', version: 'n/a' },
 } as const;
