@@ -30,12 +30,19 @@ const coverage = (mode: EvidenceCoverage['bodies']['mode'] = 'none'): EvidenceCo
   passes: mode === 'none' ? 1 : 2,
 });
 
+/**
+ * Built against the sections actually passed in, so a fixture reading can be
+ * seeded onto ANY manuscript with enough sections - a synthetic one in a test,
+ * or a real draft in a witness. Hardcoding `s0`..`s11` would have made these
+ * usable only against the fixture manuscript, which is exactly the sort of
+ * limit that gets discovered in the browser.
+ */
 const draft = (
-  from: number, to: number, title: string,
+  s: readonly FixtureSection[], from: number, to: number, title: string,
   over: Partial<ProposedUnitDraft> = {},
 ): ProposedUnitDraft => ({
   title, kind: null,
-  fromSectionId: `s${from}`, toSectionId: `s${to}`,
+  fromSectionId: s[from].id, toSectionId: s[to].id,
   children: [], rationale: `the material from ${from} to ${to} holds together`,
   evidenceRefs: [], uncertainty: [], ...over,
 });
@@ -52,13 +59,13 @@ export function stableReading(s = fixtureSections()): StructureInterpretation {
     unaccountedSectionIds: [],
     uncertainRegions: [],
     units: assignUnitIds([
-      draft(0, 5, 'Departure', {
+      draft(s, 0, 5, 'Departure', {
         kind: 'Part',
-        children: [draft(0, 1, 'Setting out', { kind: 'Chapter' }),
-                   draft(2, 3, 'The road', { kind: 'Chapter' }),
-                   draft(4, 5, 'The turn', { kind: 'Chapter' })],
+        children: [draft(s, 0, 1, 'Setting out', { kind: 'Chapter' }),
+                   draft(s, 2, 3, 'The road', { kind: 'Chapter' }),
+                   draft(s, 4, 5, 'The turn', { kind: 'Chapter' })],
       }),
-      draft(6, 11, 'Return', { kind: 'Part' }),
+      draft(s, 6, 11, 'Return', { kind: 'Part' }),
     ]),
   };
 }
@@ -71,10 +78,10 @@ export function partialReading(s = fixtureSections()): StructureInterpretation {
     coverage: coverage('selected'),
     unaccountedSectionIds: ids(s, 4, 11),
     uncertainRegions: [{
-      fromSectionId: 's8', toSectionId: 's11',
+      fromSectionId: s[8].id, toSectionId: s[11].id,
       why: 'These read as a contents list rather than as writing.',
     }],
-    units: assignUnitIds([draft(0, 3, 'Opening', { kind: 'Part' })]),
+    units: assignUnitIds([draft(s, 0, 3, 'Opening', { kind: 'Part' })]),
   };
 }
 
@@ -87,9 +94,9 @@ export function flatReading(s = fixtureSections()): StructureInterpretation {
     unaccountedSectionIds: [],
     uncertainRegions: [],
     units: assignUnitIds([
-      draft(0, 3, 'On beginning', { kind: 'Essay' }),
-      draft(4, 7, 'On the middle', { kind: 'Essay' }),
-      draft(8, 11, 'On stopping', { kind: 'Essay' }),
+      draft(s, 0, 3, 'On beginning', { kind: 'Essay' }),
+      draft(s, 4, 7, 'On the middle', { kind: 'Essay' }),
+      draft(s, 8, 11, 'On stopping', { kind: 'Essay' }),
     ]),
   };
 }
@@ -103,13 +110,13 @@ export function mixedReading(s = fixtureSections()): StructureInterpretation {
     unaccountedSectionIds: [],
     uncertainRegions: [],
     units: assignUnitIds([
-      draft(0, 5, 'Departure', {
+      draft(s, 0, 5, 'Departure', {
         kind: 'Part',
-        children: [draft(0, 2, 'Setting out', { kind: 'Chapter' }),
-                   draft(3, 5, 'The road', { kind: 'Chapter' })],
+        children: [draft(s, 0, 2, 'Setting out', { kind: 'Chapter' }),
+                   draft(s, 3, 5, 'The road', { kind: 'Chapter' })],
       }),
-      draft(6, 8, 'A letter home', { kind: 'Letter' }),
-      draft(9, 11, 'The window', { kind: 'Vignette' }),
+      draft(s, 6, 8, 'A letter home', { kind: 'Letter' }),
+      draft(s, 9, 11, 'The window', { kind: 'Vignette' }),
     ]),
   };
 }
@@ -125,9 +132,9 @@ export function ambiguousReading(s = fixtureSections()): StructureInterpretation
     uncertainRegions: [],
     alternatives: [
       { id: 'a1', label: 'by movement', why: 'The subject turns at 6.',
-        units: assignUnitIds([draft(0, 5, 'First movement'), draft(6, 11, 'Second movement')]) },
+        units: assignUnitIds([draft(s, 0, 5, 'First movement'), draft(s, 6, 11, 'Second movement')]) },
       { id: 'a2', label: 'by voice', why: 'The address changes at 4.',
-        units: assignUnitIds([draft(0, 3, 'Spoken'), draft(4, 11, 'Written')]) },
+        units: assignUnitIds([draft(s, 0, 3, 'Spoken'), draft(s, 4, 11, 'Written')]) },
     ],
   };
 }
