@@ -144,6 +144,50 @@ the tags are hers and 8a asserts they render. Whether a reading that qualifies
 almost every division is telling the author much is a question about the
 READING — 8b, and worth putting to her in 02c.
 
+## Ruling — Kelly, 2026-08-31, on `a823917e5`
+
+```text
+architecture              PASS · source-reviewed
+fixture witness           PASS
+8a non-regression floor   PASS except known favicon item 11
+real-book readability     NOT YET WITNESSED
+02a overall               HOLD at founder witness
+02c                       HOLD
+fresh Jarvis lane         NOT YET
+```
+
+**The `19 of 22 uncertain` discomfort is preserved deliberately, and is not to
+be touched:**
+
+> If nearly every division is qualified, is MAIA actually giving the author
+> useful discrimination? The room should not solve that by hiding marks.
+
+It belongs to 02c / 8b, not to UX01.
+
+**And no re-import**, asked and answered: re-importing would mint new section
+uuids and destroy the stable identities that both frozen proposals and the
+witness machinery name. Chapter 10 and the PREFACE-at-the-back are already in
+the sections — 172 and 161. What is at issue is her READING of them.
+
+**The four questions the founder witness answers**, and they are not
+implementation details:
+
+```text
+1  Do I understand MAIA's thesis quickly?
+2  Can I understand the structure without decoding the interface?
+3  When I select a division, does the inspector help me understand what
+   MAIA thinks and why?
+4  Does the page feel like an editorial conversation waiting to happen,
+   rather than a data structure with nicer controls?
+```
+
+**A note for question 3: Chapter 10 is not selectable, and that is the finding
+rather than a bug.** Her reading contains no Chapter 10 — she places 163–173 in
+`Bibliography`, so `CHAPTER 10: THE LIVING SPIRAL` at 172 is a bibliography
+entry in her structure, not a division. Selecting `Bibliography` is where it
+lives in this reading. That gap between her reading and the book the author
+knows he has is **8b**, and it is the sharpest one on the board.
+
 ## What this does NOT establish
 
 **The founder witness.** Every screenshot here is a 14-section fixture. The real
