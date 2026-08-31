@@ -5,9 +5,11 @@ export class ElevenLabsVoice {
   private baseUrl: string = 'https://api.elevenlabs.io/v1';
   
   constructor() {
-    this.apiKey = process.env.NEXT_PUBLIC_ELEVENLABS_API_KEY || process.env.ELEVENLABS_API_KEY || '';
-    this.voiceId = process.env.NEXT_PUBLIC_ELEVENLABS_VOICE_ID_AUNT_ANNIE || 
-                   process.env.ELEVENLABS_VOICE_ID_AUNT_ANNIE || 
+    // SOVEREIGNTY (Phase 0, 2026-07-26): removed client-exposed NEXT_PUBLIC_ELEVENLABS_*
+    // reads — provider secrets are server-only; NEXT_PUBLIC_ inlines them into the browser
+    // bundle. This module has no live importers (inert), so the change is behavior-neutral.
+    this.apiKey = process.env.ELEVENLABS_API_KEY || '';
+    this.voiceId = process.env.ELEVENLABS_VOICE_ID_AUNT_ANNIE ||
                    'y2TOWGCXSYEgBanvKsYJ'; // Aunt Annie's voice
     
     if (!this.apiKey) {

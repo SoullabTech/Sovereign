@@ -588,6 +588,8 @@ export async function generateAudioChunk(
     element?: string;
     voiceTone?: any;
     agentVoice?: string;
+    // Phase 0: lets the caller cancel an in-flight TTS request on stop/interrupt/unmount.
+    signal?: AbortSignal;
   }
 ): Promise<HTMLAudioElement> {
   console.log('🎤 [TTS] Generating audio for:', text.length, 'chars'); // Never log content
@@ -603,6 +605,8 @@ export async function generateAudioChunk(
         voiceTone: options?.voiceTone,
         agentVoice: options?.agentVoice || 'maya',
       }),
+      // Phase 0: abortable — a stop/interrupt/unmount cancels the network round-trip.
+      signal: options?.signal,
     });
 
     if (!response.ok) {
@@ -622,7 +626,13 @@ export async function generateAudioChunk(
     console.log('✅ [TTS] Audio chunk generated');
     return audio;
 
-  } catch (error) {
+  } catch (error: any) {
+    // Phase 0: a caller-initiated abort is interruption/cleanup, not a failure. Rethrow so the
+    // caller can distinguish and drop the chunk quietly — the written response is unaffected.
+    if (error?.name === 'AbortError') {
+      console.log('🛑 [TTS] Audio generation aborted (interrupt/cleanup)');
+      throw error;
+    }
     console.error('❌ [TTS] Failed to generate audio:', error);
     throw error;
   }

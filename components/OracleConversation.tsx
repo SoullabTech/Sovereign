@@ -931,6 +931,24 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
 
   // Reference to current audio queue for enhanced Safari unlock functionality
   const currentAudioQueueRef = useRef<InstanceType<typeof import('@/lib/voice/StreamingAudioQueue').StreamingAudioQueue> | null>(null);
+  // Phase 0: cancels in-flight TTS network requests on stop / interrupt / unmount / room change.
+  const currentTTSAbortRef = useRef<AbortController | null>(null);
+  // Phase 0: stop voice playback + cancel in-flight TTS on user interrupt and on unmount /
+  // room (session) transition, so audio can never outlive the view. The written response is
+  // produced independently (see the streaming reader) and is unaffected by this cleanup.
+  useEffect(() => {
+    const abortInFlightTTS = () => { try { currentTTSAbortRef.current?.abort(); } catch {} };
+    if (typeof window !== 'undefined') {
+      window.addEventListener('maya-voice-interrupted', abortInFlightTTS);
+    }
+    return () => {
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('maya-voice-interrupted', abortInFlightTTS);
+      }
+      try { currentTTSAbortRef.current?.abort(); } catch {}
+      try { currentAudioQueueRef.current?.stop(); } catch {}
+    };
+  }, [sessionId]);
 
   // UI state
   const [showLabDrawer, setShowLabDrawer] = useState(false);
@@ -5729,6 +5747,10 @@ I'm not sure what I'm feeling yet.`;
           currentAudioQueueRef.current = audioQueue;
           console.log('🔓 [OracleConversation] Connected StreamingAudioQueue to ref for Safari audio unlock');
 
+          // Phase 0: fresh abort scope for THIS turn's TTS network requests (see generateAudioChunk).
+          try { currentTTSAbortRef.current?.abort(); } catch {}
+          currentTTSAbortRef.current = new AbortController();
+
           // Apply audio unlock status if already unlocked
           if (audioUnlocked) {
             audioQueue.setAudioUnlocked(true);
@@ -5796,6 +5818,7 @@ I'm not sure what I'm feeling yet.`;
                     agentVoice: 'maya',
                     element,
                     instructions: ttsInstructionsForVoice,
+                    signal: currentTTSAbortRef.current?.signal,
                   });
                   audioQueue.enqueue({
                     audio,
@@ -5887,8 +5910,11 @@ I'm not sure what I'm feeling yet.`;
                                     agentVoice: 'maya',
                                     element,
                                     instructions: chunkTTSInstructions,
+                                    signal: currentTTSAbortRef.current?.signal,
                                   });
-                                } catch (err) {
+                                } catch (err: any) {
+                                  // Phase 0: a caller-initiated abort is interruption/cleanup — stop, don't retry.
+                                  if (err?.name === 'AbortError') return null;
                                   console.warn(`⚠️ [STREAM] TTS attempt ${attempt}/${retries} failed:`, err);
                                   if (attempt < retries) {
                                     await new Promise(r => setTimeout(r, 300 * attempt)); // Exponential backoff
@@ -5949,6 +5975,8 @@ I'm not sure what I'm feeling yet.`;
           console.error('❌ [STREAM] Error reading stream:', streamError);
           // Clean up audio queue on error
           if (finalizeStallTimer) { clearTimeout(finalizeStallTimer); finalizeStallTimer = null; }
+          // Phase 0: cancel any in-flight TTS so it can't resolve after the turn errored.
+          try { currentTTSAbortRef.current?.abort(); } catch {}
           if (audioQueue) {
             audioQueue.stop();
           }
