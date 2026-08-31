@@ -8,6 +8,8 @@
 > UNIT DEFINITION       docs/programme/WS-01_SOURCE_CUSTODY_UNIT_DEFINITION.md
 > LIVE STATE (here)     docs/programme/WRITERS_STUDIO_PROGRAMME_BOARD.md
 > HISTORICAL EVIDENCE   docs/design/author-studio/WRITERS_STUDIO_MEMBER_UPGRADE_PROGRAMME_LEDGER.md
+> STRUCTURE DIRECTION   docs/programme/WRITERS_STUDIO_STRUCTURE_PIPELINE_ROADMAP.md
+> NEXT LANE CHARTER     docs/programme/WS2-05B-5HALF_MAIA_STRUCTURE_READER_LANE.md
 > ```
 >
 > The **Master Brief** governs meaning, architecture, invariants and unit identity. This board
@@ -32,7 +34,7 @@ CURRENT UNIT       WS-01 Source Custody + Freeze Release
 CURRENT CANDIDATE  4a551d3d13a27ec442252be7822865e0f2d31978
                    feature/ws-01-source-custody-v3  ·  PINNED / DEPLOYED
 NEXT EXECUTABLE    P0-D
-LAST UPDATED       2026-08-25
+LAST UPDATED       2026-08-31  (structure-pipeline census + two evidence corrections; mode unchanged)
 ```
 
 Writer's Studio mode reflects **this programme only**. Unrelated Jarvis incidents may sit ahead of
@@ -88,7 +90,7 @@ unbuilt while the unit list reads complete. They create no WS-08+.
 
 | Node | State | Evidence / next |
 |---|---|---|
-| WS-01 Source Custody | **IN ACCEPTANCE** | candidate `e92f53239`; P0-M PASS, P0-D owed. `lib/manuscript/source/**` is **not on canonical** — candidate only |
+| WS-01 Source Custody | **IN ACCEPTANCE** | P0-M PASS, **P0-D still owed**. Evidence cell corrected 2026-08-31: `lib/manuscript/source/{arrivals,custody,omission}.ts` + `20260824000001_manuscript_source_custody.sql` **are now on canonical `55021771`**, imported by `api/sovereign/manuscripts/{route,ingest/route}.ts`. State unchanged — custody on canonical is not acceptance; P0-D is deploy proof |
 | Restore floor | **IN ACCEPTANCE** | required by frozen walk act **H**; rides with WS-01 |
 | Work Structure | **BLOCKED** | by WS-01. Contract ruled (Phase 3A); member-declared, no chapter schema |
 | #995 Harvest | **BLOCKED** | by Canvas freeze |
@@ -113,6 +115,23 @@ unbuilt while the unit list reads complete. They create no WS-08+.
 | Work-centered Home | **ABSENT** | — |
 | Worktable (serious long-form) | **PARTIAL** | a textarea; the researched surface is the zero-caller easel |
 | Structure · Outline · Read · Compare | **ABSENT** | — |
+
+## STRUCTURE PIPELINE — censused 2026-08-31
+
+Censused tree-wide against canonical `55021771`. These are the symbols the `05A → 05B → 5½ → 6`
+lane series is written in. **None is present on canonical**, so the series is direction, not state:
+`docs/programme/WRITERS_STUDIO_STRUCTURE_PIPELINE_ROADMAP.md`.
+
+| Node | State | Evidence |
+|---|---|---|
+| `StructureEvidence` · `StructureProposal` (05B-5a) | **ABSENT** | 0 files on canonical `55021771` |
+| `interpretStructure` seam · `StructureInterpretation` | **ABSENT** | 0 files on canonical `55021771` |
+| `StructureReader` implementation (05B-5½) | **DESIGNED** | charter `WS2-05B-5HALF_MAIA_STRUCTURE_READER_LANE.md`; **BLOCKED** on the two gates in its §2 |
+| `AuthorStructureCommand` — sovereign adoption (05B-6) | **DESIGNED** | held until 5½ is witnessed; three questions open |
+| `manuscript_structure_units` — structure of record (05A) | **ABSENT** | 0 files, no migration on canonical `55021771` |
+
+⛔ A charter is not a programme entry (**§A3.1**) and not the *NEXT BUILD UNIT AUTHORIZED* signal.
+This section records a census and two custody artifacts. It does not change programme mode.
 
 ## MATERIAL
 
@@ -172,7 +191,7 @@ while these rows read ABSENT. A shipped manuscript editor is not fruition.
 | 2 | Manuscript-wide find · safe find/replace | **ABSENT** | `findInDraft` → **0 files**; no find/replace symbol on canonical | living manuscripts | — | Ch10 misplaced-copy search | authored on an unmerged branch only — A4.0 says that is not presence |
 | 2 | Return continuity beyond cursor position | **UNVERIFIED / TO CENSUS** | not censused | memory + provenance | — | return after a month | census before claiming either way |
 | 3 | Transcript & material intake | **PARTIAL** | `mammoth` (5), `pdf-parse` (8), `fileVault` (2), `api/book-studio/workbench/uploads/**` | — | — | real transcripts | recordings · voice notes · images **UNVERIFIED** |
-| 3 | Never silently transform an artifact into manuscript text | **IN ACCEPTANCE** | WS-01 candidate `e92f53239`; `manuscript_source_arrivals` → **0 files on canonical** | — | WS-01 | P0-D | **P0-D is the only executable proof** |
+| 3 | Never silently transform an artifact into manuscript text | **IN ACCEPTANCE** | corrected 2026-08-31: `manuscript_source_arrivals` **is on canonical `55021771`** (migration + 3 importers), `source_kind ∈ artifact_extraction \| member_supplied_text` per A1.1 | — | WS-01 | P0-D | **P0-D is still the only executable proof** |
 | 4 | Materials distinguishable **at the data level** | **PARTIAL** | `living_work_materials`: `material_type`, `declared_by`, `relationship_sentence` — belonging is already a **declared writer act**, not a styling choice | source custody | — | C · Material field | full A4.4 vocabulary not enumerated against schema |
 | 5 | MAIA as creative companion — nine stances | **UNVERIFIED / TO CENSUS** | no Studio-scoped stance surface identified; `developmental` matches 337 files, none Studio-scoped | Work + material | — | all four classes | census what, if anything, already serves Reflect/Question/Notice/Connect |
 | 5 | `Edit` only on explicit request | **DESIGNED** | capability spec; no runtime | companion | — | D · Ch10 | ⛔ default must never be `analyze → generate replacement` |
