@@ -447,10 +447,11 @@ export function TeamSidebar({ currentMemberId, currentTeamId: initialTeamId }: T
             action={
               <button
                 onClick={() => setShowCreateChannel(true)}
-                className="text-white/25 hover:text-white/70 transition-colors w-5 h-5 flex items-center justify-center rounded"
-                title="Add channel"
+                className="text-white/60 hover:text-white hover:bg-white/10 transition-colors w-5 h-5 flex items-center justify-center rounded"
+                title="Create a channel"
+                aria-label="Create a channel"
               >
-                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                 </svg>
               </button>
@@ -467,7 +468,7 @@ export function TeamSidebar({ currentMemberId, currentTeamId: initialTeamId }: T
             action={
               <button
                 onClick={() => setShowInvite(true)}
-                className="text-white/25 hover:text-white/60 transition-colors text-xs"
+                className="text-white/55 hover:text-white/90 transition-colors text-xs"
                 title="Invite to Co-lab"
               >
                 + Invite
@@ -572,7 +573,7 @@ function ChannelGroup({ label, children, action }: { label: string; children: Re
   return (
     <div className="mb-2">
       <div className="flex items-center justify-between px-4 py-1">
-        <p className="text-xs font-semibold text-white/25 uppercase tracking-wider">{label}</p>
+        <p className="text-xs font-semibold text-white/45 uppercase tracking-wider">{label}</p>
         {action}
       </div>
       <div className="mt-0.5 space-y-0.5">
