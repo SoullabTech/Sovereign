@@ -279,7 +279,9 @@ was already there, not a new judgement.
 ```text
 UX01 machine floor        PASS · three fixtures
 UX01 on the real row      PASS · founder witness, core experience
-02a surface closeout      DONE · both defects, awaiting re-witness
+02a surface closeout      BUILT eeb452dcb · both defects repaired
+                          PENDING · founder re-witness. 02a does not
+                          close until that returns.
 02c Ask MAIA              NEXT LANE · and Kelly calls it
 05B-8b                    HOLD
 05B-6 adoption            HOLD · its own fresh lane

@@ -67,8 +67,13 @@ adoption                       (HOLD)
 ```
 
 Every act in that chain begins with her reading. The member may accept it,
-correct it, or — once 02c lands — question it. That is **structural review**, and
-02a proved it works.
+correct it, or — once 02c lands — question it. That is **structural review**.
+
+*Its standing, precisely:* 02a's core editorial experience was founder-witnessed
+as intelligible. Its final surface closeout at `eeb452dcb` remains **pending
+founder re-witness**. This document must not close that gate in passing — a
+record of how we learned the process is worth less if it quietly erases the last
+unresolved step while writing the story down.
 
 Developmental editing runs the other way:
 
@@ -128,7 +133,9 @@ The author knows he has a Chapter 10. Note carefully what this is **not**:
 
 ```text
 not a render defect        8a is green
-not a surface defect       02a is closed on both its findings
+not a surface defect       02a's two surface defects are repaired at
+                           eeb452dcb, pending founder re-witness; neither
+                           was ever this
 not a bug
 ```
 
@@ -192,9 +199,18 @@ repository:
 
 1. **Is the whole-book edit one pass over the whole, or many passes over parts?**
    The roadmap's `WS2-06 Division Reading View` assumes reading a division whole
-   is the developmental act. If the real work is whole-book passes with a single
-   concern each — *where does energy drop, what never resolves* — then 06 is
-   sized for the wrong unit of attention.
+   is the developmental act. If the real work turns out to be
+
+   ```text
+   whole book → one concern → move through many chapters
+              → hold decisions across sessions → return to whole
+   ```
+
+   then **06 is an instrument inside developmental editing rather than its
+   organizing unit** (founder, 2026-08-31). Naming that risk is the point: `06`
+   must not become "the developmental editing architecture" by default, merely
+   because it is the item already standing on the roadmap when the question
+   arrives.
 
 2. **Does a judgment about Chapter 10 stay open across sessions, or resolve in
    one sitting?** If it stays open, the missing primitive is a *held question*
