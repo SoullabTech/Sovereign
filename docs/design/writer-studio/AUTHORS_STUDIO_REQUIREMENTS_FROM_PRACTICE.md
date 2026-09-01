@@ -947,3 +947,105 @@ from the quotation and be phrased indefinitely many ways. **No regex closes it.*
 objects, stop correcting the detector and change the representation.* **Three
 extension passes were diligence; a fourth was a signal I had misdiagnosed the
 problem as typography when it was never about punctuation at all.**
+
+---
+
+# THE EDITORIAL CONTRACT — two controls, not one slider
+
+**Recorded 2026-09-01. Grounded in established practice** — CIEP and the EFA both
+separate **developmental · line · copy · proofreading**, treat **coaching,
+fact-checking, permissions and authenticity reading** as distinct services, and
+**explicitly warn that terminology varies between editors** — which is why **the
+agreed brief matters more than the label.**
+
+> **The system must offer recognisable editing levels without reducing itself to a
+> single Light → Heavy slider.**
+
+## Control 1 — *What kind of help do you want?* **(scope)**
+
+**Human intention first, industry jargon never.**
+
+| Member-facing choice | What MAIA is authorised to examine |
+|---|---|
+| **Clean up my writing** | grammar, spelling, punctuation, obvious errors |
+| **Polish my prose** | + clarity, rhythm, repetition, awkward sentences, consistency |
+| **Strengthen my writing** | + line editing, voice, pacing, paragraph construction, places meaning gets lost |
+| **Develop my manuscript** | structure, argument/story, chapters, sequence, omissions, redundancy, themes, reader experience |
+| **Be my full editorial partner** | + active challenge, alternatives, architecture, sources, factual and provenance issues, cross-manuscript patterns |
+| **Prepare it for publication** | copy/proof + citations, facts, quotation provenance, bibliography, permissions and rights flags, consistency, production QA |
+
+**Coaching is available throughout, not a separate stage** — guidance and
+collaboration rather than direct revision, which is the natural fit for the
+author-development philosophy.
+
+## Control 2 — *How actively should MAIA intervene?* **(intervention)**
+
+**Orthogonal to scope, and the distinction is the point.** A member may want **deep
+developmental analysis with no sentence rewriting**; another may want **aggressive
+line-editing suggestions and no questioning of structure.**
+
+> **Point it out → Explain it → Offer possibilities → Show me a revision → Work it through with me**
+
+Plus one explicit permission: **"You may challenge my assumptions."**
+
+> ### "Full editorial support" must never quietly mean *MAIA gets to change everything.* It means **MAIA is permitted to see everything.** The author still decides.
+
+## UX — presets, then custom
+
+**Most members should never configure twelve switches.** On entering **Review**:
+
+> **"How would you like me to work with you on this draft?"**
+
+**Proofread** *— just make it correct.* · **Polish** *— help my writing become
+clearer and stronger.* · **Develop** *— help me understand what is and isn't
+working.* · **Full Editorial Partnership** *— bring everything you can see.
+Challenge me, teach me, and help me make the decisions.*
+
+**Customize →** opens the real contract: **Grammar · Style · Voice · Structure ·
+Argument · Character · Pacing · Repetition · Sources · Facts · Quotations · Rights ·
+Bibliography · Reader experience · Publication readiness** — **each with its own
+intervention level.**
+
+## MAIA may recommend without deciding
+
+**Editorial assessments exist precisely because writers frequently do not know what
+kind of editing they need.** So:
+
+> **"Not sure? Let MAIA assess the manuscript first."**
+> → *"Your structure appears settled. I don't think you need developmental editing
+> right now. I'd recommend line editing + source review + final copyediting."*
+> → **Use recommendation** | **Choose differently**
+
+**Expertise without substitution.**
+
+## ⚠️ ABSOLUTE BOUNDARY — both directions
+
+**A member who selects "grammar only" must not start receiving developmental
+criticism simply because MAIA can see it.** Noticing is not licence. A genuinely
+consequential exception surfaces **once, gently, as an offer**:
+
+> *"I noticed something outside the editing scope you chose. Would you like me to
+> show you?"*
+
+**This is sovereignty in the UI, not merely in the doctrine** — and it is where the
+doctrine either becomes real or stays decorative.
+
+**The opposite boundary is equally absolute.** A member selecting **Full Editorial
+Partnership** must get **a genuinely formidable editor — not a grammar bot wearing a
+nicer interface.** At that setting every heuristic derived from the *Elemental
+Alchemy* edit becomes available: source relationships, structural asymmetry,
+certification versus dialogue, attribution and speaker problems, authorial
+dependence, repeated patterns, hypotheses needing tests, argument carriers.
+
+*(This is the "timidity and substitution are both failures" doctrine given a
+concrete control surface: scope bounds what may be seen; intervention bounds what
+may be done; neither may be used to justify a weak editor.)*
+
+## Why this architecture
+
+Someone will arrive saying: **"I don't know anything about publishing. I just need
+help making this say what I mean."**
+
+> **They should not have to understand professional editing taxonomy before we can
+> help them. We understand the taxonomy. They tell us what they need. We translate
+> that into an editorial relationship they understand and control.**
