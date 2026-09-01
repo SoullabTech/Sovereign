@@ -1,8 +1,11 @@
 # Elemental Alchemy — publication roadmap
 
-**Publisher of record: Soullab Press LLC.** To be used consistently in
-publication metadata, bibliography front matter, copyright page, and the final
-KDP and distribution files.
+**Publisher of record: Soullab Press LLC.**
+**Foreword by C. Michael Smith.**
+
+Both to be carried consistently in publication metadata, bibliography front
+matter, copyright page, title page, cover and the final KDP and distribution
+files.
 
 **Position as of 2026-09-01:** stage 2 of 10. The large creative and
 developmental work is behind us.
@@ -119,8 +122,9 @@ Recalculate spine and cover dimensions.
 Final paperback / hardcover interior · final cover and spine · update KDP and
 other distribution files · **freeze the publication edition.**
 
-**Publisher metadata:** **Soullab Press LLC**, applied consistently across
-copyright page, title-page verso, distribution metadata and cover.
+**Publication metadata:** **Publisher — Soullab Press LLC** · **Foreword by
+C. Michael Smith**, applied consistently across copyright page, title page,
+title-page verso, distribution metadata and cover.
 
 > **Note for the provenance audit:** Soullab Press LLC materials are
 > **author/publisher-controlled sources**. They establish chronology and internal

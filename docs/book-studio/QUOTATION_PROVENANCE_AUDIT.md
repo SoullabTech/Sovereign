@@ -3489,6 +3489,24 @@ quoted author's**.
 Without this distinction the rule would have discarded some of the audit's
 strongest verifications.
 
+### C. Michael Smith is also a CONTRIBUTOR — a three-way evidence distinction
+
+**Elemental Alchemy carries a Foreword by C. Michael Smith.** He is therefore
+both a **quoted source** and a **contributor**, and the three roles must not be
+conflated:
+
+| Source | Status |
+|---|---|
+| **cmichaelsmith.com · his books · prior publications** | **Independent external evidence** for a Smith attribution |
+| **Smith's new Foreword in *Elemental Alchemy*** | **Authoritative for what he writes there** — and *only* there |
+| **Soullab Press LLC catalogue copy quoting Smith from this book** | **Internal circulation**, not corroboration |
+
+**The middle row is the trap.** A contributor's new Foreword is primary evidence
+for its own words. It is **not** independent corroboration for an **older
+quotation elsewhere in the manuscript already attributed to him** — even though
+he is the same person, and even if he would endorse it. A contributor writing
+inside the book cannot retroactively verify the book's prior attributions to him.
+
 ### C. Michael Smith — coordinated resolution, not a declared family
 
 Both instances resolve identically: **L622 (Ch4)** and **L2001 (Ch9)** are
