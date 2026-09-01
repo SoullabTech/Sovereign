@@ -1664,14 +1664,20 @@ exist:
 (Shambhala, 1997). Bibliography correct — **fourth correctly-supported citation
 in Chapter 6.**
 
-*A fidelity indicator:* the manuscript includes "**It's just like that.**", which
-the widely circulated online version **omits**. That is evidence the passage was
-taken from the book rather than from a quote site.
+*A textual witness worth preserving:* the manuscript includes "**It's just like
+that.**", which the widely circulated online excerpt **omits**. That is evidence
+the passage was sourced from the actual book rather than copied from the common
+circulating version — exactly the kind of small witness the census should record
+rather than discard.
 
 **Rights: `LIKELY PROTECTED` · `HIGH`.** The manuscript quotes the **full
-paragraph** — roughly 75 words, verbatim, from an in-copyright 1997 book. This is
-the **second paragraph-length block quotation** in the audit after Bear Heart, and
-it belongs in the permissions inventory on length.
+paragraph** — roughly 75 words, verbatim, from an in-copyright 1997 book. Second
+paragraph-length block quotation in the audit, after Bear Heart.
+
+> **Water establishes what Fire and Air did not: correct source fidelity can
+> coexist with significant permissions exposure.** This is the audit's most
+> faithfully sourced quotation *and* one of its largest rights liabilities.
+> **"Verified" is not the same as "publication-ready."**
 
 **L1277 · Louisa May Alcott — "I am not afraid of storms for I am learning how to sail my ship."**
 `VERIFIED VARIANT/TRANSLATION`. *Little Women*, **chapter 44, "My Lord and
@@ -1685,7 +1691,7 @@ Bibliography correct.
 heal thyself"; the manuscript's substitution is acknowledged in the byline itself.
 **Rights: `PUBLIC DOMAIN` · `NONE`.** No repair required.
 
-### A real pattern in the manuscript's habits — labelled adaptations are accurate
+### Positive control — explicit adaptation labelling is reliable
 
 The book now contains **two explicitly labelled adaptations**, and **both are
 accurate**:
@@ -1694,13 +1700,35 @@ accurate**:
 - **L1314** — "adapted from Luke 4:23" — correct: the substitution is
   acknowledged.
 
-**Every provenance failure in the audit so far occurs in an *unlabelled*
-attribution.** Where the author signalled adaptation, the signal was truthful.
+After **72 adjudicated quotations, none of the confirmed provenance failures
+occurs inside an explicitly labelled adaptation.**
 
-This matters for the repair batch and for the authorship question: the manuscript
-demonstrably **possesses** the correct provenance form and applies it accurately
-when it is applied at all. The defect is not an inability to label — it is that
-most quotations were never treated as requiring one.
+> **Manuscript-level finding: explicit adaptation labelling is highly reliable in
+> this book. Provenance failures concentrate in material presented as direct
+> attribution.**
+
+**Consequence for the repair batch and for Writer's Studio:** `Adapted from…`
+must **not** be treated as suspicious, nor "cleaned up" into direct quotation
+because a more prestigious source can be named. The label is a signal of
+reliability here, not of weakness.
+
+#### Restraint — what this does *not* establish
+
+**Correction to an earlier framing of mine.** I wrote that "the author knew the
+form and used it elsewhere." That overstates the evidence.
+
+What is established: **the manuscript contains and correctly uses the form
+elsewhere.** Who introduced those labels — and when — is not established. Absent
+drafting history, this cannot be used as evidence of the author's personal
+awareness at the moment the Chapter 5 quotations acquired their names.
+
+The four internal-origin candidates' lack of adaptation labels becomes **more
+conspicuous**, but it still does not distinguish between hardening introduced by
+the author, an editor, a model, or an earlier assembly process.
+
+> **The Chapter 5 question remains: where did the language originate, and when and
+> how did the external attribution enter?** — not "why didn't the author label it
+> correctly?" 
 
 ---
 
