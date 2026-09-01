@@ -1890,7 +1890,7 @@ In Taoism from China and in other shamanic systems originating in other places, 
 
 There is most often a three-part self: the lower self being the basic self, belonging to the earth realm; the middle self being an ephemeral, momentary manifestation of the presence of a unique, ego-augmented soul living a lifetime journeying on earth yet connected to heaven; and the higher Self (with a capital S to denote its sacredness). The latter is our aetheric, metaconscious Self, which oversees our earthwalk. Other religious traditions might call this aspect our being the soul—an embodied spirit. Ultimately, the soul is the dreamer who is dreaming a life into being from the aether which bridges the spaces between the immaterial realms and the material world.
 
-*"As above, so below, as within, so without, as the universe, so the soul." — Hermes Trismegistus*
+*"What is above is like what is below, and what is below is like what is above." — The Emerald Tablet*
 
 ### The Alchemical Properties of Aether
 
@@ -2745,7 +2745,6 @@ A working bibliography organized by chapter. Where the same source informs multi
 - Emunds, Stefan. *The Five Elements of Healing: Hindu Tattvas in Psychotherapy.* CreateSpace, 2015.
 - Smith, C. Michael. *Jung and Shamanism in Dialogue: Retrieving the Soul / Retrieving the Sacred.* Paulist Press, 1997.
 - Jung, Carl. *The Red Book: Liber Novus.* Edited by Sonu Shamdasani. W. W. Norton & Company, 2009.
-- Trismegistus, Hermes. *The Emerald Tablet of Hermes.*
 - Rudhyar, Dane. *Astrological Timing: The Transition to the New Age.* Aurora Press, 1980.
 - Nabokov, Vladimir. *Speak, Memory: An Autobiography Revisited.* G. P. Putnam's Sons, 1966.
 
@@ -2854,6 +2853,7 @@ A working bibliography organized by chapter. Where the same source informs multi
 - Coelho, Paulo. *The Alchemist.* HarperCollins, 1988.
 - Baldwin, James. *The Fire Next Time.* Dial Press, 1963.
 - Gabriel, Peter. "Signal to Noise." *Up.* Real World Records, 2002.
+- Trismegistus, Hermes. *The Emerald Tablet of Hermes.*
 
 ### Chapter 10: The Living Spiral
 
