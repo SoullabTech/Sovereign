@@ -1,0 +1,153 @@
+{
+  "_comment": "BATCH 6 - Chapter 6. Faithful transfer only.",
+  "entries": [
+    {
+      "match": "all the heavens, all the hells",
+      "occurrence": 1,
+      "provenance_status": "paraphrase_adapted",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L1115",
+      "actual_author": "Joseph Campbell",
+      "family": "fam-campbell",
+      "notes": "Audit: PARAPHRASE/ADAPTED - the third Campbell contraction in the book. Ruled individually; the census explicitly declined to group Campbell by author."
+    },
+    {
+      "match": "Emotions are not just the fuel",
+      "occurrence": 1,
+      "provenance_status": "verified_variant",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L1137",
+      "actual_author": "Martha Nussbaum",
+      "work": "Upheavals of Thought: The Intelligence of Emotions (Cambridge UP, 2001)",
+      "rights_status": "protectability_uncertain_standard",
+      "bibliography_relationship": "CORRECT",
+      "notes": "Published text reads 'reasoning creature, they are parts'; the manuscript has 'creature; they are also parts'. Minor variant."
+    },
+    {
+      "match": "I own my fear",
+      "occurrence": 1,
+      "provenance_status": "verified_exact",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md rights table L1153",
+      "actual_author": "Peter Gabriel",
+      "rights_status": "song_lyric_high",
+      "family": "fam-song-lyrics",
+      "notes": "Song lyric. Rights class recorded in the audit's rights table with the other Gabriel occurrences and Cohen. Provenance verdict not separately narrated in the audit; recorded here as attributed-and-listed, with the rights finding as the substantive one."
+    },
+    {
+      "match": "Things falling apart is a kind of testing",
+      "occurrence": 1,
+      "provenance_status": "verified_exact",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L1185",
+      "actual_author": "Pema Chodron",
+      "work": "When Things Fall Apart: Heart Advice for Difficult Times (Shambhala, 1997)",
+      "rights_status": "likely_protected_high",
+      "bibliography_relationship": "CORRECT - fourth correctly-supported citation in Ch6",
+      "notes": "Textual witness worth preserving: the manuscript includes 'It's just like that.', which the widely circulated online form drops."
+    },
+    {
+      "match": "as much as anybody in the entire universe",
+      "occurrence": 1,
+      "provenance_status": "misattributed",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L1253",
+      "actual_author": "Sharon Salzberg, not the Buddha",
+      "work": "Woman of Power (1989); in print 2001",
+      "family": "fam-salzberg-inversion",
+      "notes": "Audit: it REVERSES the sense of the Udana passage, where the point is that others hold themselves dear too, so we should extend our regard OUTWARD. The popular version turns it inward. Paired in the audit with the Oliver/Salzberg item as an attribution inversion - one false credit, one missing credit - with the two repairs determined independently rather than forced to match."
+    },
+    {
+      "match": "mind is like water",
+      "occurrence": 1,
+      "provenance_status": "unverified",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L1269",
+      "actual_author": "unknown",
+      "notes": "Audit: UNVERIFIED, UNKNOWN, pattern FLOATING APHORISM / SOURCE UNRESOLVED. THE PUREST FLOATING CASE IN THE AUDIT - no book, no publication, no dated utterance. The name is left exactly as printed and deliberately NOT normalized, per ruling."
+    },
+    {
+      "match": "worth of water till the well",
+      "occurrence": 1,
+      "provenance_status": "verified_variant",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L1283",
+      "actual_author": "Thomas Fuller (compiler, not composer)",
+      "work": "Gnomologia (1732)",
+      "bibliography_relationship": "CORRECT",
+      "notes": "Audit: VERIFIED TO GNOMOLOGIA / COMPILED PROVERB. Two qualifications, both in the Aesop/Laozi family: Gnomologia is a compilation of 'Adagies and Proverbs... ancient and modern, foreign and British' - Fuller COLLECTED this proverb, he did not compose it. A Scottish variant exists."
+    },
+    {
+      "match": "Forgive yourself for not knowing",
+      "occurrence": 1,
+      "provenance_status": "misattributed",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L1308",
+      "actual_author": "Doe Zantamata, not Maya Angelou",
+      "notes": "Audit: MISATTRIBUTED, pattern SOURCE DISPLACEMENT. Snopes fact-checked it specifically - no evidence Angelou ever said or wrote it. The originator is Doe Zantamata, who has described writing it while thinking about self-forgiveness."
+    },
+    {
+      "match": "Healer, heal thyself",
+      "occurrence": 1,
+      "provenance_status": "paraphrase_adapted",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L1314",
+      "actual_author": "adapted from Luke 4:23",
+      "work": "KJV reads 'Physician, heal thyself'",
+      "rights_status": "public_domain",
+      "family": "fam-labelled-adaptations",
+      "notes": "Audit: PARAPHRASE/ADAPTED and CORRECTLY SELF-LABELLED - the substitution is acknowledged in the byline itself. No repair required. One of the book's two explicitly labelled adaptations, cited as a positive control that the labelling practice is reliable."
+    },
+    {
+      "match": "most genuine paths to knowledge",
+      "occurrence": 1,
+      "provenance_status": "verified_exact",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L1326",
+      "actual_author": "Audre Lorde",
+      "work": "Sister Outsider: Essays and Speeches, p. 132, from the Claudia Tate interview",
+      "rights_status": "protectability_uncertain_standard",
+      "bibliography_relationship": "CORRECT - third correctly-supported citation in Ch6"
+    },
+    {
+      "match": "kissing the Earth with your feet",
+      "occurrence": 1,
+      "provenance_status": "unverified",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L1358",
+      "actual_author": "Thich Nhat Hanh - ATTRIBUTION VERIFIED, exact English unresolved",
+      "notes": "Audit: UNVERIFIED on the PRINTED WORDING while the ATTRIBUTION IS WELL-FOUNDED - recorded as 'ATTRIBUTION VERIFIED TO THICH NHAT HANH; exact English / source-form unresolved'. Two authentic source trails exist, not one quotation with one obvious home. A narrowed uncertainty, not a blank one."
+    }
+  ],
+  "historical_entries": [
+    {
+      "match": "Knowing yourself is the beginning",
+      "occurrence": 1,
+      "provenance_status": "misattributed",
+      "actual_author": "not Aristotle",
+      "notes": "Audit: appears TWICE, verbatim, same attribution (Ch6 and Ch8). Not located in the Aristotelian corpus; attested only on quote sites, which variously credit Aristotle, Plato, Socrates and Laozi - a signature of an unsourced attribution. The underlying maxim is the Delphic 'Know thyself'.",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L1340 and L1770"
+    },
+    {
+      "match": "whole is greater than the sum",
+      "occurrence": 1,
+      "provenance_status": "verified_variant",
+      "actual_author": "not Aristotle's wording",
+      "notes": "Audit: Metaphysics VIII.6 (1045a) holds that the whole is something BESIDE the parts. 'Greater than the sum' is a modern gestalt formulation.",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L1129"
+    },
+    {
+      "match": "launch yourself on every wave",
+      "occurrence": 1,
+      "provenance_status": "verified_exact",
+      "actual_author": "Henry David Thoreau",
+      "notes": "Audit: Journal, 24 April 1859; reproduced in Cramer, ed., I to Myself (Yale UP, 2007), p. 395. PUBLIC DOMAIN as the 1859 journal text. VERIFIED EXACT and removed at 4A on editorial economy - the axes are independent.",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L1239"
+    },
+    {
+      "match": "more light you allow within you",
+      "occurrence": 1,
+      "provenance_status": "verified_exact",
+      "actual_author": "Shakti Gawain",
+      "notes": "Audit: VERIFIED wording, WRONG SOURCE/WORK. The line is from Living in the Light (New World Library) p. 217, NOT Creative Visualization, which the Ch6 bibliography cites. FAMOUS-WORK SUBSTITUTION again - Creative Visualization (1978) is her best-known book.",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L1221"
+    },
+    {
+      "match": "not afraid of storms",
+      "occurrence": 1,
+      "provenance_status": "verified_variant",
+      "actual_author": "Louisa May Alcott",
+      "notes": "Audit: Little Women, ch. 44 'My Lord and Lady' - SPOKEN BY AMY MARCH. Another character-voice case the census already recorded. Wikiquote notes the line has sometimes been slightly misquoted; the manuscript carries the polished popular form. Bibliography correct. PUBLIC DOMAIN (1868).",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L1277"
+    }
+  ]
+}

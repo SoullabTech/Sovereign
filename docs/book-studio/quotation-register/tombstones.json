@@ -262,9 +262,11 @@
       "last_location": "Ch6 · Immersion in the Healing Waters",
       "text": "The more light you allow within you, the brighter the world you live in will be.",
       "attributed_as": "Shakti Gawain",
-      "provenance_status": "unverified",
+      "provenance_status": "verified_exact",
       "editorial_status": "REMOVE",
-      "evidence_location": "STAGE4 4A batch 2"
+      "evidence_location": "STAGE4 4A batch 2",
+      "bibliography_relationship": "WRONG SOURCE/WORK - line is from Living in the Light p.217, not Creative Visualization as cited. FAMOUS-WORK SUBSTITUTION.",
+      "notes": "CORRECTED 2026-09-01: originally carried unverified, authored from a 4A editorial impression rather than the Stage 2 verdict. The audit verdict is VERIFIED wording with WRONG SOURCE/WORK. Caught by the historical conflict check during batch 6."
     },
     {
       "state": "removed",
@@ -272,10 +274,12 @@
       "last_location": "Ch6 · Emotional Immersion",
       "text": "I am not afraid of storms for I am learning how to sail my ship.",
       "attributed_as": "Louisa May Alcott",
-      "provenance_status": "verified_exact",
+      "provenance_status": "verified_variant",
       "rights_status": "public_domain",
       "editorial_status": "REMOVE - economy; the prose already sails its own ship",
-      "evidence_location": "STAGE4 4A batch 2"
+      "evidence_location": "STAGE4 4A batch 2",
+      "internal_speaker": "Amy March",
+      "notes": "CORRECTED 2026-09-01: originally verified_exact; the audit verdict is VERIFIED VARIANT/TRANSLATION - the manuscript carries the polished popular form. Also: spoken by Amy March in Little Women ch.44, a character-voice case the census already recorded. Caught by the historical conflict check during batch 6."
     },
     {
       "state": "removed",

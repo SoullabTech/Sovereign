@@ -705,3 +705,88 @@ provenance facts were on record the whole time.**
 `fam-infinite-sphere` 1
 
 **→ Batch 6: Chapter 6.**
+
+---
+
+# BATCH 6 — Chapter 6 · 2026-09-01
+
+**`GATE PASSED`.** 11 active + 5 historical verdicts migrated. **Zero
+`pending_migration` in Chapter 6.**
+
+## Findings of note
+
+**`MISATTRIBUTED` — Angelou.** *"Forgive yourself for not knowing what you didn't
+know before you learned it."* **Snopes fact-checked it specifically.** The originator
+is **Doe Zantamata**, who has described writing it. *(This was a `KEEP` recommendation
+in 4A on editorial grounds — the migration shows its provenance is `MISATTRIBUTED`.
+**Both facts stand; they answer different questions.**)*
+
+**The Salzberg inversion pair.** *"You yourself, as much as anybody in the entire
+universe, deserve your love and affection"* traces to **Sharon Salzberg**, *Woman of
+Power* (1989) — **not the Buddha** — and **it reverses the sense of the Udāna
+passage**, where the point is that others hold themselves dear too, so we should
+extend regard *outward*. The popular version turns it inward. The audit pairs it
+with the Oliver/Salzberg item — **one false credit, one missing credit** — with **the
+two repairs determined independently, not forced to match.**
+
+**The purest floating case in the audit.** *"Prasad Mahes"* — no book, no
+publication, no dated utterance. **The name is left exactly as printed and
+deliberately not normalised, per ruling.**
+
+**Two positive controls.** *"Healer, heal thyself — adapted from Luke 4:23"* is
+`PARAPHRASE/ADAPTED` **and correctly self-labelled; no repair required.** And
+Chödrön preserves a **textual witness**: the manuscript includes *"It's just like
+that."*, which the circulated online form drops.
+
+**A narrowed uncertainty, recorded as such.** Thich Nhat Hanh:
+**`ATTRIBUTION VERIFIED`; exact English / source-form unresolved** — two authentic
+source trails, not one quotation with one obvious home.
+
+## ⚠️ STOP — a pattern in my own tombstone authoring
+
+**Two more conflicts fired, and neither was supersession.** Both were **wrong values
+I authored**:
+
+| Record | I wrote | Census says |
+|---|---|---|
+| **Gawain** | `unverified` | **`VERIFIED` wording · `WRONG SOURCE/WORK`** — from *Living in the Light* p. 217, **not** *Creative Visualization* as cited. Famous-work substitution again |
+| **Alcott** | `verified_exact` | **`VERIFIED VARIANT`** — the manuscript carries the polished popular form. Also **spoken by Amy March**, a character-voice case **the census already recorded** |
+
+**With Perkins in batch 4, that is three tombstone provenance values I authored
+wrongly — and three of three that have been checked.**
+
+### The integrity check, run now rather than deferred
+
+**28 lifecycle records. The split matters:**
+
+| | |
+|---|---|
+| **Stage 3 tombstones — 9** | verdicts genuinely **earned at Stage 3**; `no_ancestor` / `partial_ancestor` are correct and cite the Stage 3 record. **Legitimate.** |
+| **Stage 4A tombstones — 19** | carry **Stage 2 verdicts** and must trace to the census |
+| → traced | **10** |
+| → **NOT yet traced** | **9 — the risk set** |
+
+**The nine untraced:** Socrates · MLK · Gandhi · Ramana Maharshi · William James ·
+**Shakespeare (`verified_exact`)** · Nehru · **Angelou (`verified_exact`)** · Tagore.
+
+> **These are exactly the class already shown to be wrong three times out of three.
+> I authored them from 4A editorial notes, not from the census.**
+
+**And the conflict check cannot find them**, because nothing will collide with them:
+their occurrences are removed, so no active-layer migration will ever contradict
+them. **They would sit in the register looking earned, forever.**
+
+**Recommendation: pull the tombstone integrity pass forward, before Chapter 7.** It
+is nine records, hand-traced to the census — small, and the register is currently
+carrying nine provenance verdicts I cannot vouch for.
+
+## Standing after batch 6
+
+**74 migrated · 44 pending · 12 deferred · 130 current · 28 historical.**
+**`137 = 109 + 28`** ✅
+
+**Families:** `fam-song-lyrics` **4** · `fam-campbell` **3** · `fam-rumi-unsourced` 3
+· `fam-perfect-laugh` 3 · `fam-teasdale` 2 · `fam-laotzu-adaptation` 2 · plus 5
+singletons.
+
+**→ HOLDING for authorisation: tombstone integrity pass (9 records), then Chapter 7.**
