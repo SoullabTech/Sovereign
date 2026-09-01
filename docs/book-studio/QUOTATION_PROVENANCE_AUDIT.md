@@ -2,7 +2,7 @@
 
 **Source of record:** `docs/book-studio/ELEMENTAL_ALCHEMY_FROM_ORIGINAL_FULL.md`
 **Opened:** 2026-09-01, after Chapter 10 closed developmental adjudication.
-**Status:** IN PROGRESS — 82 of 137 adjudicated. **Chapter 5 CLOSED (30/30). Chapter 8 CLOSED (23/23).**
+**Status:** IN PROGRESS — 83 of 137 adjudicated. **Chapter 5 CLOSED (30/30). Chapter 8 CLOSED (23/23).**
 
 ## Scope
 
@@ -1844,7 +1844,7 @@ Eight independent instances across three chapters. No longer incidental.
 
 **Still findings-only. No repair batch. No bibliography reconstruction.**
 
-**Chapter 7 — Earth: 8 of 16 in progress. Next after: Chapter 9 — Aether (12), then Chapter 9 — Aether (12)**, completing the
+**Chapter 7 — Earth: 9 of 16 in progress. Next after: Chapter 9 — Aether (12), then Chapter 9 — Aether (12)**, completing the
 five-element provenance picture before the lower-volume chapters.
 
 
@@ -2129,6 +2129,40 @@ byline and quotation marks it never had.*
 **Not named as a class yet.** Per the taxonomy discipline, a mechanism needs a
 **second independent instance** before it earns a name. Recorded as a candidate
 and to be watched for across the remaining 55 items.
+
+**L1369 · Terence McKenna — "The archaic mind understood and perceived that nature is conscious, nature is alive, nature is an organism full of intent."**
+`UNVERIFIED` · `UNKNOWN`. No source located. The only attestation is a Facebook
+page, which also carries a **shorter variant** — "The archaic mind understood
+that nature is conscious…" — without the manuscript's "and perceived."
+**`MISSING`** — no McKenna entry in the Ch7 bibliography.
+**Rights: `PROTECTABILITY UNCERTAIN` · `STANDARD`.**
+
+#### Why absence is unusually meaningful for McKenna
+
+McKenna's corpus is **exceptionally well transcribed** — the organism.earth
+library holds hundreds of hours of his talks in searchable form, alongside
+Wikiquote and the published books. **Absence from that corpus carries more weight
+than absence from a typical author's searchable material**, where much of the
+speech was never recorded. The unverified McKenna verdicts are therefore stronger
+than the label alone suggests.
+
+#### McKenna — provenance family FORMING, not yet formed
+
+**Four of five sourced; three unresolved**, all sharing one mechanism: no
+locatable source in an unusually complete corpus, circulating only on social
+media and quote sites.
+
+| | Chapter | Status |
+|---|---|---|
+| L840 | Ch5 Fire | `UNVERIFIED` · `UNKNOWN` |
+| L1369 | Ch7 Earth | `UNVERIFIED` · `UNKNOWN` |
+| L1790 | Ch8 Air | `UNVERIFIED` · `UNKNOWN` |
+| L701 | Ch4 | substantive block quotation, bibliography-backed |
+| **L2040** | **Ch10** | **still open** |
+
+**Not formed until L2040 is sourced independently** — the Campbell lesson: a
+family's membership must be recomputed on completion, and Campbell split four
+ways at exactly this point. L701 is already the likely non-member.
 
 ### Chapter 7 bibliography — three findings and one exemplar
 
