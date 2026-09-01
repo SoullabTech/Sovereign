@@ -202,10 +202,54 @@ async function main() {
   check('and passes a reading that only describes',
     assertNoProse({ account: 'a reading', units: [{ rationale: 'because' }] }) === null);
 
+  /* ── 5½ · who read it, frozen with the reading ────────────────────────── */
+  console.log('\n6b · reader provenance');
+  const { createMaiaStructureReader } = await import('@/lib/manuscript/structure/maiaReader');
+
+  /* A fixture reading was made by no model, and NULL says exactly that. An
+     empty object would claim a machine read it and declined to say which. */
+  const fixtureRead = await loadProposal(pid, fixture.memberId);
+  check('a reading no model made carries NULL provenance, not an empty object',
+    fixtureRead.status === 'ok' && fixtureRead.value.readerProvenance === null);
+
+  const maia = createMaiaStructureReader({ model: 'witness-pinned-model' });
+  const attributed = await createProposal(fixture.manuscriptId, fixture.memberId, {
+    evidence, interpretation, coverage: evidence.coverage,
+    sectionTopologyHash: evidence.sectionTopologyHash,
+    interpretationInputHash: 'input-hash-C',
+    readerProvenance: maia.provenance,
+  });
+  check('a machine reading stores its attribution', attributed.status === 'ok',
+    attributed.status === 'refused' ? attributed.refusal : '');
+
+  if (attributed.status === 'ok') {
+    const back = await loadProposal(attributed.value.id, fixture.memberId);
+    const p = back.status === 'ok' ? back.value.readerProvenance : null;
+    check('provider, model, prompt hash, reader version and freeze time are all there',
+      p !== null && p.provider === 'anthropic' && p.model === 'witness-pinned-model'
+        && /^[0-9a-f]{64}$/.test(p.promptHash) && p.readerVersion.length > 0
+        && !Number.isNaN(Date.parse(p.frozenAt)),
+      p ? `${p.model} · ${p.promptHash.slice(0, 8)} · ${p.readerVersion}` : 'MISSING');
+
+    /* The prompt is HASHED, not stored. That is what keeps a proposal from
+       becoming an archive of the request a member's Work was carried in. */
+    check('and the prompt itself is not in the row',
+      !JSON.stringify(p).includes('You are reading'));
+
+    /* Frozen by the DATABASE, like the interpretation it belongs to. */
+    let refused = false;
+    try {
+      await query(
+        `UPDATE manuscript_structure_proposals SET reader_provenance = $2 WHERE id = $1`,
+        [attributed.value.id, JSON.stringify({ provider: 'anthropic', model: 'rewritten' })]);
+    } catch { refused = true; }
+    check('rewriting the attribution is refused by the trigger, not by convention', refused);
+  }
+
   console.log('\n7 · listing');
   const all = await listProposals(fixture.manuscriptId, fixture.memberId);
-  check('one proposal is stored, the refused one is not',
-    all.status === 'ok' && all.value.length === 1, `${all.status === 'ok' ? all.value.length : '?'}`);
+  check('two proposals are stored, the refused one is not',
+    all.status === 'ok' && all.value.length === 2, `${all.status === 'ok' ? all.value.length : '?'}`);
 
   console.log('\n8 · cleanup');
   if (process.env.KEEP_FIXTURE === '1') {

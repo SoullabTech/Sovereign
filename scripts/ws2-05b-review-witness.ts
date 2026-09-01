@@ -359,8 +359,25 @@ async function main() {
   const nested = await page.$$eval('[data-review-unit] [data-review-unit]',
     (els) => els.map((e) => e.getAttribute('data-review-unit')!));
   check('the mixed reading has something nested to promote', nested.length > 0);
-  if (nested.length > 0) {
-    await page.click(`[data-review-unit="${nested[0]}"] button[aria-label*="out one level"]`);
+  /* The gesture lives in the INSPECTOR, so the row has to be selected first —
+     one explanation surface, not a control repeated on every row. And it is
+     offered only where the move is actually available: a division in the
+     middle of its parent shows the reason instead of a button, so the witness
+     walks the nested rows until it finds one that can move. */
+  let promotable: string | null = null;
+  for (const id of nested) {
+    await page.click(`[data-review-unit="${id}"] .ws2sr-pick`);
+    const offered = await page.$('[data-inspector-structure] button[data-gesture="promote"]');
+    if (offered) { promotable = id; break; }
+  }
+  check('the inspector names the division this one is inside',
+    promotable !== null && /Currently inside \S/.test(
+      await page.$eval('[data-inspector-structure]', (e) => e.textContent ?? '')));
+  check('and shows where it would land, before anything is committed',
+    promotable !== null
+      && (await page.$$('[data-promote-result] [data-promote-row="moved"]')).length === 1);
+  if (promotable) {
+    await page.click('[data-inspector-structure] button[data-gesture="promote"]');
     await page.waitForSelector('[data-post-image]', { timeout: 10_000 }).catch(() => undefined);
     const changeRows = await page.$$eval('[data-change-row]',
       (els) => els.map((e) => e.getAttribute('data-change-row')!));

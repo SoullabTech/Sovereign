@@ -21,6 +21,7 @@
 import { query, transaction } from '@/lib/db/postgres';
 import type { StructureEvidence, EvidenceCoverage } from './evidence';
 import type { StructureInterpretation } from './interpret';
+import type { ReaderProvenance, ReaderIdentity } from './readerProvenance';
 import { toReviewed, type ReviewedStructure } from './review';
 
 export interface StoredProposal {
@@ -32,6 +33,12 @@ export interface StoredProposal {
   coverage: EvidenceCoverage;
   sectionTopologyHash: string;
   interpretationInputHash: string;
+  /**
+   * Who read the Work, frozen with the reading. NULL for every proposal made by
+   * a fixture reader - which is not the same claim as an empty object, and is
+   * why this is nullable rather than defaulted.
+   */
+  readerProvenance: ReaderProvenance | null;
   reviewed: ReviewedStructure;
   reviewRevision: number;
   adoptedAt: Date | null;
@@ -118,6 +125,12 @@ export interface NewProposal {
   coverage: EvidenceCoverage;
   sectionTopologyHash: string;
   interpretationInputHash: string;
+  /**
+   * Supplied by the caller that ran the reader, so it describes the reader that
+   * ACTUALLY ran. Omitted by a fixture caller, which is the honest answer for a
+   * reading no model made.
+   */
+  readerProvenance?: ReaderIdentity;
 }
 
 /**
@@ -136,10 +149,15 @@ export async function createProposal(
 ): Promise<ProposalResult<{ id: string }>> {
   if (!(await owns(manuscriptId, memberId))) return refuse('not_found');
 
+  /* Provenance goes through the same guard. `promptHash` passes; a future
+     caller attaching the actual `prompt`, `messages` or `excerpts` it was made
+     from does not - which is the whole point of hashing the instructions rather
+     than storing them. */
   for (const [name, payload] of Object.entries({
     evidence: input.evidence,
     interpretation: input.interpretation,
     coverage: input.coverage,
+    readerProvenance: input.readerProvenance ?? {},
   })) {
     const at = assertNoProse(payload);
     if (at) return refuse('prose_in_payload', `${name}${at.slice(1)}`);
@@ -155,14 +173,23 @@ export async function createProposal(
       : [],
   };
 
+  /* `frozenAt` is stamped HERE, at the write, rather than accepted from the
+     caller: the freeze time is a fact about this row, and a caller-supplied
+     timestamp is a claim. */
+  const provenance: ReaderProvenance | null = input.readerProvenance
+    ? { ...input.readerProvenance, frozenAt: new Date().toISOString() }
+    : null;
+
   const r = await query<{ id: string }>(
     `INSERT INTO manuscript_structure_proposals
        (manuscript_id, evidence, interpretation, coverage,
-        section_topology_hash, interpretation_input_hash, reviewed)
-     VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`,
+        section_topology_hash, interpretation_input_hash, reader_provenance, reviewed)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id`,
     [manuscriptId, JSON.stringify(input.evidence), JSON.stringify(input.interpretation),
      JSON.stringify(input.coverage), input.sectionTopologyHash,
-     input.interpretationInputHash, JSON.stringify(reviewed)]);
+     input.interpretationInputHash,
+     provenance === null ? null : JSON.stringify(provenance),
+     JSON.stringify(reviewed)]);
   return ok({ id: r.rows[0].id });
 }
 
@@ -176,6 +203,7 @@ function hydrate(row: Record<string, unknown>): StoredProposal {
     coverage: row.coverage as EvidenceCoverage,
     sectionTopologyHash: row.section_topology_hash as string,
     interpretationInputHash: row.interpretation_input_hash as string,
+    readerProvenance: (row.reader_provenance as ReaderProvenance | null) ?? null,
     reviewed: row.reviewed as ReviewedStructure,
     reviewRevision: Number(row.review_revision),
     adoptedAt: (row.adopted_at as Date | null) ?? null,

@@ -330,6 +330,58 @@ async function main() {
   /* G · through all of it, not one character moved. */
   check('G · flattening unchanged through the whole gate', await stillIntact());
 
+  /* ── 7b · the fingerprint 5½ leans on ─────────────────────────────────── */
+  //
+  // The reader run's negative witness is BEFORE == AFTER over this digest. That
+  // is only worth anything if the digest actually moves when the Work does - so
+  // it is falsified here, against a manuscript that HAS structure, which is
+  // exactly the case the old zero-rows check could not see.
+  console.log('\n7b · the canonical fingerprint');
+  const { canonicalFingerprint } = await import('@/lib/manuscript/structure/canonicalFingerprint');
+
+  const fp1 = await canonicalFingerprint(fixture.manuscriptId);
+  const fp2 = await canonicalFingerprint(fixture.manuscriptId);
+  check('a fingerprint of an unchanged Work is stable', fp1 === fp2, fp1.slice(0, 12));
+
+  const anyUnit = await query<{ id: string; title: string | null }>(
+    `SELECT id, title FROM manuscript_structure_units WHERE manuscript_id = $1 LIMIT 1`,
+    [fixture.manuscriptId]);
+  if (anyUnit.rows.length === 0) {
+    check('the fixture has structure to fingerprint', false, 'no units');
+  } else {
+    const unit = anyUnit.rows[0];
+
+    /* A RENAME. The write a count is blindest to: same rows, same memberships,
+       different book. */
+    await query(`UPDATE manuscript_structure_units SET title = $2 WHERE id = $1`,
+      [unit.id, `${unit.title ?? ''}·moved`]);
+    const renamed = await canonicalFingerprint(fixture.manuscriptId);
+    check('and MOVES when a division is renamed', renamed !== fp1, renamed.slice(0, 12));
+
+    await query(`UPDATE manuscript_structure_units SET title = $2 WHERE id = $1`,
+      [unit.id, unit.title]);
+    check('and returns to itself when the rename is undone',
+      (await canonicalFingerprint(fixture.manuscriptId)) === fp1);
+
+    /* A MEMBERSHIP MOVE. Unit count unchanged; the Work is not. */
+    const moved = await query(
+      `DELETE FROM manuscript_structure_members
+        WHERE unit_id = $1
+          AND draft_section_id = (SELECT draft_section_id FROM manuscript_structure_members
+                                   WHERE unit_id = $1 ORDER BY draft_section_id LIMIT 1)
+        RETURNING draft_section_id`, [unit.id]);
+    if (moved.rows.length > 0) {
+      const after = await canonicalFingerprint(fixture.manuscriptId);
+      check('and MOVES when a section leaves a division, with the unit count unchanged',
+        after !== fp1, after.slice(0, 12));
+      await query(
+        `INSERT INTO manuscript_structure_members (unit_id, draft_section_id) VALUES ($1, $2)`,
+        [unit.id, (moved.rows[0] as { draft_section_id: string }).draft_section_id]);
+      check('and returns to itself when the section is put back',
+        (await canonicalFingerprint(fixture.manuscriptId)) === fp1);
+    }
+  }
+
   /* ── 8 · leave nothing behind ──────────────────────────────────────── */
   if (process.env.KEEP_FIXTURE === '1') {
     console.log(`\n8 · fixture KEPT at manuscript ${fixture.manuscriptId}`);
