@@ -464,3 +464,32 @@ not editorial judgement but *recoverable history*: an assembly note in one case,
 the entries' own tagging in the other. A completeness checker sees only counts,
 and would have been wrong twice.
 
+---
+
+## Plausibility must never close provenance
+
+During the Chapter 8 audit the manuscript attributed to Richard Feynman: *"Reality
+is not only stranger than you think, but stranger than you can think."* The
+auditor's own prior was that the line belonged to **Werner Heisenberg**.
+
+Both were wrong. The origin is **J. B. S. Haldane**, *Possible Worlds* (1927), and
+Quote Investigator names Heisenberg explicitly as one of the *spurious*
+ascriptions the saying accumulated after 1927 — alongside Eddington and Priestley.
+The auditor's confident alternative was itself a documented misattribution.
+
+**The product lesson is not "the model should know quotations better."** It is:
+
+> Verification must be capable of overturning **both** the manuscript's
+> attribution **and** the editor's prior. Plausibility — from either side — must
+> never close a provenance finding.
+
+This is why the audit's evidence standard forbids quote sites from closing an
+item, and why the source-lead rule keeps an item open until a named edition is
+actually checked. Both rules exist to prevent a confident guess from terminating
+an inquiry. In this instance the auditor's guess was more specific and more
+scholarly-sounding than the manuscript's, and it was equally false.
+
+A developmental editing tool that emits attributions with confidence, without an
+audit trail showing what was checked and what was ruled out, reproduces exactly
+the failure it is supposed to detect.
+

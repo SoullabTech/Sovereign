@@ -157,6 +157,19 @@ label would erase. It does **not** prove authorship by anyone in particular.
 remedy should be one systematic authorial decision, not quote-by-quote
 improvisation.
 
+**Interim result at Ch8 7/23 — keep the two problems separate.**
+Chapter 8 independently reproduces the *quotation-source unreliability* pattern:
+prestigious author → altered or popular wording → plausible bibliographic
+apparatus that does not establish the quotation. Two chapters showing this
+independently is enough to call **source unreliability book-wide**.
+
+It has **not** yet reproduced attribution hardening. Shaw and Feynman both have
+identifiable external source histories (Whyte 1950; Haldane 1927), which makes
+them ordinary transmission failures, not locally generated prose acquiring famous
+names. If Chapter 8 yields no internal-origin candidates across all 23, that is
+itself a finding: **attribution hardening may be localized to Chapter 5 inside a
+broader book-wide quotation-integrity problem.**
+
 **Likely eventual rule** (`INTERNAL-ORIGIN CANDIDATE` + no external source):
 1. First decide whether the language itself deserves to remain.
 2. If yes — remove the false external authority and reclaim it as unquoted
@@ -438,8 +451,14 @@ wrong works → remove confirmed orphans → normalize bibliographic form.
 - `WRONG SOURCE/WORK` — dependency exists, bibliography points somewhere incorrect.
 - `ORPHAN CANDIDATE` — no quotation occurrence; body dependency still to be checked.
 - `ORPHAN CONFIRMED` — no remaining chapter dependency at all.
-- `FABRICATED SUPPORT` — the entry exists to support a quotation the audit finds
-  misattributed. Not correctable to a right work; removed with the quotation.
+- `SPURIOUS SUPPORT` — a **real source by the attributed author** is cited in a
+  way that appears to substantiate a quotation the source does not contain.
+  Materially worse than `WRONG SOURCE/WORK`: there, the author/quotation
+  relationship is real and only the work is wrong; here the **underlying
+  attribution itself fails**, while a plausible work by that person lends the
+  false attribution an appearance of documentary support. On repair, the entry
+  survives only if the chapter independently depends on that work; otherwise it
+  becomes an `ORPHAN CANDIDATE`.
 - Form inconsistency (same title cited differently in different sections) is
   handled by the normalization step, not by these statuses.
 
@@ -723,6 +742,15 @@ the English universalises and loses the Sufi argument.
 copyrighted poetic translation. **The strongest rights exposure found so far**,
 stronger than the Ch5 Barks item, which turned out to be a paraphrase.
 
+**Recorded status:** `PARAPHRASE/ADAPTED` · current attribution incomplete and
+false in form · Barks dependency established · `LIKELY PROTECTED` · `HIGH`.
+
+**Do not simply change the byline to Coleman Barks in the repair batch.** The
+eventual choices are: (1) retain the wording and describe its actual
+Barks-mediated provenance, subject to rights review; (2) replace it with a
+defensible translation closer to the Persian; (3) remove it if it is not
+load-bearing. That decision belongs after the census.
+
 **Internal inconsistency in the book's own practice.** Ch5's L1052 honestly
 labels its Barks-derived line "Adapted from Rumi, after Coleman Barks." Ch8's
 L1666 gives a bare "— Rumi" for a line that is *more* Barks's own composition,
@@ -731,17 +759,18 @@ place and not the other.**
 
 ### Bibliography defects — a worse class than famous-work substitution
 
-**Fabricated support for a misattribution.** The Ch8 bibliography lists
+**Spurious support for a misattribution.** The Ch8 bibliography lists
 **"Feynman, Richard. *The Character of Physical Law.* MIT Press, 1965"** — a real
 book, cited in support of a quotation **Feynman did not say**. This is more
 damaging than naming the wrong work: the bibliography does not merely misfile a
 source, it **lends scholarly credibility to a false attribution**. A reader
 checking the citation finds a plausible Feynman title and stops.
 
-New status value required: **`FABRICATED SUPPORT`** — a bibliography entry that
-exists to support a quotation the audit finds misattributed. It cannot be
-corrected to a right work, because there is no right work; it must be removed
-with the quotation.
+New status value required: **`SPURIOUS SUPPORT`**. *Not "fabricated" — that
+would imply someone knowingly invented the citation, which is not established.*
+The entry cannot be corrected to a right work because there is no right work. On
+repair it survives only if Chapter 8 independently depends on *The Character of
+Physical Law*; otherwise it becomes an `ORPHAN CANDIDATE`.
 
 **`MISSING`** — Ch8 quotes Barks's copyrighted translation verbatim and carries
 **no Rumi or Barks entry at all**.
