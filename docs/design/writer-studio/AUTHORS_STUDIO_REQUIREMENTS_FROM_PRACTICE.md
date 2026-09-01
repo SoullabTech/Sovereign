@@ -1404,3 +1404,31 @@ population instead.**
 **hardcoded line number**, so a manuscript edit silently stopped them being detected
 — in a system whose identity scheme exists *because line numbers move*. **Positional
 identity must not survive anywhere once semantic identity exists.**
+
+### Requirement — the member's account of how the work was made is evidence
+
+> **When the member says "I took this directly from this book," treat that as
+> material provenance evidence and investigate the named source. Do not override the
+> member because a web search failed to locate the line.**
+
+**The member may still misremember a page or a wording** — that is an ordinary
+verification task. **But their first-person account of how the material entered the
+manuscript changes the investigation, and must never be treated as though it was not
+said.**
+
+**Grounding event:** two quotations were carried at `UNVERIFIED` because a search
+had not matched them to an edition. The author then reported taking both **directly
+from the book**. `UNVERIFIED` was the wrong state: it means *our matching has not
+connected the wording to an edition*, not *the quotation lacks a source*. **The
+corrected state is `AUTHOR_REPORTS_DIRECT_SOURCE` with `edition_check_required`**,
+and the next action changed from further searching to an edition check against the
+author's own copy.
+
+**The compounding error is the one to design against:** the unverified state was then
+folded into an editorial reading — *"may earn its place on function but not on
+evidence."* **A tooling limitation became a property of the quotation, and a
+provenance state contaminated a judgment the axes exist to keep separate.**
+
+> **A system that can only see what it can find will systematically discount the one
+> category of evidence the author holds and it does not: how the work was actually
+> made.**

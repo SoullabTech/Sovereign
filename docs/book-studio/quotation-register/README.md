@@ -1829,3 +1829,69 @@ its own voice.**
 > one** — and **the closer to the book's own crescendo, the higher the bar.**
 
 **Neither B nor C is ruled.** Both are yours. **A stands untouched.**
+
+---
+
+# ⚠️ CORRECTION — author testimony is provenance evidence · 2026-09-01
+
+## The error
+
+**I let register uncertainty become editorial suspicion.**
+
+`UNVERIFIED` means **our matching process has not connected the printed wording to a
+specific edition.** It does **not** mean the quotation lacks a source. I reported the
+Teasdale occurrences as though absence of a search hit were evidence of absence, and
+then **compounded it** by folding that into the editorial reading — *"B may earn its
+place on function but cannot earn it on evidence."*
+
+**That coupling was wrong twice over:** it treated a limitation of our tooling as a
+property of the quotation, and it let a provenance state contaminate a question the
+axes exist to keep separate.
+
+## The corrected state
+
+> **`AUTHOR_REPORTS_DIRECT_SOURCE`** · review state **`edition_check_required`**
+
+**The author reports taking both quotations directly from Teasdale's book.** That is
+**first-person evidence about how the material entered the manuscript**, and it
+changes the investigation: the next action is **an edition check against the
+author's own copy**, not further web search.
+
+**The prior search-based verdict is preserved in `provenance_history` as
+superseded** — not deleted. It records a real thing: *our search did not find it.*
+That remains true and remains useful. It is simply no longer the standing verdict.
+
+## What survives of my editorial reading, and what does not
+
+**WITHDRAWN — B.** My reading of B was positive (a genuinely different relationship
+from A: maturity as outward-turned, hinging into *Groupthink vs. Collaborative
+Intelligence*). **The "cannot earn it on evidence" clause is withdrawn entirely.**
+
+**STANDS, but on its own merits — C.** My argument that C repeats A's relationship,
+and arrives inside the Conclusion's own crescendo where the book is strongest in its
+own voice, **is an editorial argument and does not rest on provenance at all.** The
+*"and it's unverified"* reinforcement I attached to it **is withdrawn.**
+
+**The question at both is now the one the author framed:**
+
+> **What specific Teasdale idea were you bringing into conversation here, and is
+> this still the best place for it?**
+>
+> **Not: "why is Teasdale here at all?"**
+
+## The Studio requirement this earns
+
+> ### When the member says "I took this directly from this book," MAIA must treat that as material provenance evidence and investigate the named source — not override the member because a web search failed to locate the line.
+
+**The member may still misremember a page or a wording.** That is an ordinary
+verification task. **But their first-person account of how the material entered the
+manuscript changes the investigation, and it must never be treated as though it was
+not said.**
+
+**A system that can only see what it can find will systematically discount the one
+category of evidence the author holds and it does not: how the work was actually
+made.**
+
+**And the gate caught the arithmetic:** `edition_check_required` is a **documented,
+deliberate state**, not missing data — the third time the *"deliberately unresolved
+must be counted"* lesson has surfaced. Added to the reconciliation.

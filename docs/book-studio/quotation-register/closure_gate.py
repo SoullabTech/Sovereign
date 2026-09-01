@@ -40,7 +40,7 @@ print(f"  NOTE  {len(ruled_no_prov)} record(s) editorially ruled with provenance
 blk = sum(1 for r in R if r["display_form"] == "block_epigraph")
 pend = sum(1 for r in R if r["provenance_review_state"] == "pending_migration")
 mig_blk = sum(1 for r in R if r["display_form"] == "block_epigraph" and r["provenance_review_state"] == "migrated")
-DOCUMENTED = ("not_investigated", "verdict_not_locatable_in_source")
+DOCUMENTED = ("not_investigated", "verdict_not_locatable_in_source", "edition_check_required")
 ni_blk = sum(1 for r in R if r["display_form"] == "block_epigraph" and r["provenance_review_state"] in DOCUMENTED)
 check("block reconciliation: total = migrated + pending + documented not_investigated",
       blk == pend + mig_blk + ni_blk,

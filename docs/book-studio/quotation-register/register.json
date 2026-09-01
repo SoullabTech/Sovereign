@@ -1982,7 +1982,7 @@
       "notes": "Audit: MISATTRIBUTED, EVOLVED APHORISM / RECOVERABLE ANCESTOR. CLOSED BY AN AUTHORITATIVE SOURCE - the Santayana Edition (Indiana University's critical edition) published 'Citation and the Challenges of Misattribution' specifically on this line, and their editors found no sign of it in his works."
     },
     {
-      "id": "EA-Q-0244",
+      "id": "EA-Q-0246",
       "occurrence": 1,
       "text": "Alone we can do so little; together we can do so much.",
       "line_at_build": 1451,
@@ -2319,18 +2319,27 @@
       "internal_speaker": null,
       "work": "proposed editions: A Monk in the World and The Mystic Heart - not located in either",
       "translator_or_mediator": null,
-      "provenance_status": "unverified",
-      "provenance_review_state": "migrated",
+      "provenance_status": "author_reports_direct_source",
+      "provenance_review_state": "edition_check_required",
       "rights_review_state": "not_investigated",
       "editorial_review_state": "not_investigated",
-      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L1690",
+      "evidence_location": "Author testimony, 2026-09-01; supersedes QUOTATION_PROVENANCE_AUDIT.md L1690",
       "rights_status": null,
       "bibliography_relationship": null,
       "family": "fam-teasdale",
       "editorial_status": "unadjudicated",
       "record_state": "confirmed",
       "identity_match_score": 1.0,
-      "notes": "Audit: UNVERIFIED - source lead unresolved. Teasdale is a real author and the thought matches his interspiritual, engaged-monastic thesis exactly. THEMATIC FIT PROVES NOTHING."
+      "notes": "STATE CORRECTED 2026-09-01. Previously UNVERIFIED on the basis that the sentence was not located in A Monk in the World or The Mystic Heart via search. That is a failure of OUR matching, not an absence of source. Next action is an edition check against the author's own copy, not further web search.",
+      "provenance_history": [
+        {
+          "verdict": "unverified",
+          "stage": "search-based verification",
+          "note": "Superseded by author testimony about how the material entered the manuscript.",
+          "superseded_by": "author_reports_direct_source"
+        }
+      ],
+      "member_testimony": "Author reports taking this directly from a Wayne Teasdale book. Exact edition and page not yet matched."
     },
     {
       "id": "EA-Q-0089",
@@ -2387,7 +2396,7 @@
       "notes": "Audit: UNVERIFIED, UNKNOWN. Shows BOTH instability markers at once - a competing attribution (Hale, 1822-1909, whose death predates the attribution) and no primary source."
     },
     {
-      "id": "EA-Q-0245",
+      "id": "EA-Q-0247",
       "occurrence": 2,
       "text": "Alone we can do so little; together we can do so much.",
       "line_at_build": 1670,
@@ -3376,18 +3385,27 @@
       "internal_speaker": null,
       "work": "LEAD (open): The Mystic Heart: Discovering a Universal Spirituality in the World's Religions (1999); sentence NOT located",
       "translator_or_mediator": null,
-      "provenance_status": "unverified",
-      "provenance_review_state": "migrated",
+      "provenance_status": "author_reports_direct_source",
+      "provenance_review_state": "edition_check_required",
       "rights_review_state": "not_investigated",
       "editorial_review_state": "not_investigated",
-      "evidence_location": "Stage 2d verification, 2026-09-01",
+      "evidence_location": "Author testimony, 2026-09-01; supersedes Stage 2d verification",
       "rights_status": null,
       "bibliography_relationship": null,
       "family": "fam-teasdale",
       "editorial_status": "unadjudicated",
       "record_state": "confirmed",
       "identity_match_score": 1.0,
-      "notes": "NOVELTY: NEW EVIDENCE for this object; CONFIRMS AN EXISTING PATTERN for the family. The thought matches Teasdale's interspiritual thesis exactly - which is precisely why it cannot be treated as verified. THEMATIC FIT PROVES NOTHING. Identical verdict shape to the Ch8 Teasdale item: real author, matching thesis, sentence not located. Two of the three Teasdale occurrences are now unverified; the Chapter 10 opener is the only one with a closed source."
+      "notes": "STATE CORRECTED 2026-09-01. Same correction as the Chapter 8 occurrence. The editorial question at this location - whether it repeats the relationship already established at the Chapter 10 opener - is separate and unaffected.",
+      "provenance_history": [
+        {
+          "verdict": "unverified",
+          "stage": "search-based verification",
+          "note": "Superseded by author testimony about how the material entered the manuscript.",
+          "superseded_by": "author_reports_direct_source"
+        }
+      ],
+      "member_testimony": "Author reports taking this directly from a Wayne Teasdale book. Exact edition and page not yet matched."
     },
     {
       "id": "EA-Q-0129",
@@ -4334,7 +4352,7 @@
       "EA-Q-0073",
       "EA-Q-0074",
       "EA-Q-0075",
-      "EA-Q-0244",
+      "EA-Q-0246",
       "EA-Q-0077",
       "EA-Q-0078",
       "EA-Q-0079",
@@ -4356,7 +4374,7 @@
       "EA-Q-0103",
       "EA-Q-0104",
       "EA-Q-0098",
-      "EA-Q-0245",
+      "EA-Q-0247",
       "EA-Q-0106",
       "EA-Q-0107",
       "EA-Q-0108",
@@ -4382,6 +4400,8 @@
       "EA-Q-0094",
       "EA-Q-0125",
       "EA-Q-0126",
+      "EA-Q-0128",
+      "EA-Q-0088",
       "EA-Q-0128"
     ],
     "ambiguous": [],

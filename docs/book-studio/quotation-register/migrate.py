@@ -18,7 +18,7 @@ TOMB = HERE / "tombstones.json"
 ALLOWED = {"provenance_status", "actual_author", "internal_speaker", "work",
            "translator_or_mediator", "rights_status", "bibliography_relationship",
            "family", "editorial_status", "notes", "evidence_location",
-           "provenance_review_state", "attributed_as_note", "recovery_note", "family_role", "object_class"}
+           "provenance_review_state", "attributed_as_note", "recovery_note", "family_role", "object_class", "member_testimony"}
 
 
 def norm(t):
@@ -37,6 +37,9 @@ def main():
         entries += json.loads(bd.read_text())["entries"]
     for b in sorted(HERE.glob("batch_*.json")):
         entries += json.loads(b.read_text())["entries"]
+    at = HERE / "author_testimony.json"
+    if at.exists():
+        entries += json.loads(at.read_text())["entries"]
     report = {"migrated": [], "ambiguous": [], "unmatched": [], "conflicts": []}
 
     for e in entries:
@@ -56,6 +59,12 @@ def main():
                                         "ids": [h["id"] for h in hits]}); continue
         rec = hits[0]
         new_p, old_p = e.get("provenance_status"), rec.get("provenance_status")
+        if e.get("member_testimony") and old_p and new_p and old_p != new_p:
+            rec.setdefault("provenance_history", []).append({
+                "verdict": old_p, "stage": "search-based verification",
+                "note": "Superseded by author testimony about how the material entered the manuscript.",
+                "superseded_by": new_p})
+            old_p = None
         if old_p and new_p and old_p != new_p:
             report["conflicts"].append({"id": rec["id"], "existing": old_p,
                                         "incoming": new_p}); continue
@@ -64,7 +73,9 @@ def main():
                 rec[k] = v
         # Per-axis review state. Migrating a rights class or an editorial ruling
         # does NOT assert that provenance was investigated.
-        if e.get("provenance_review_state") == "ruled_out_of_scope":
+        if e.get("provenance_review_state") == "edition_check_required":
+            rec["provenance_review_state"] = "edition_check_required"
+        elif e.get("provenance_review_state") == "ruled_out_of_scope":
             rec["provenance_review_state"] = "ruled_out_of_scope"
         elif e.get("provenance_status"):
             rec["provenance_review_state"] = "migrated"
