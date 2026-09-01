@@ -3111,33 +3111,51 @@ per-item adjudication.
 **L574 · "The four elements: water, air, fire, earth must be woven together in your life…" — Sai Baba**
 `UNVERIFIED` · `UNKNOWN` · `MEDIATED TRANSLATION` (discourses delivered in Telugu).
 
-**Not merely unlocated — the attributed content contradicts the attributed
-teacher's documented framework.** Sathya Sai Baba taught **five** elements —
-*pruthvi* (earth), *jala* (water), *agni* (fire), *vayu* (air), *akasa* (ether) —
-consistently, across the *Sathya Sai Speaks* volumes and the official discourse
-archive. The manuscript attributes to him a **four-element** formulation.
+**`UNVERIFIED` stands.** The official corpus is dense and searchable —
+saispeaks.sathyasai.org and the published *Sathya Sai Speaks* volumes — so the
+failure to locate the wording is meaningful under the corpus-density principle.
 
-**Corpus density applies** (the McKenna principle): an official searchable corpus
-exists at saispeaks.sathyasai.org and in the published *Sathya Sai Speaks*
-volumes, so absence from it is more probative than absence from an author whose
-speech survives sparsely.
+### WITHDRAWN — `DOCTRINAL MISMATCH` was not established
 
-**A note on the irony, which is also evidence:** *Elemental Alchemy* is itself a
-five-element book including Aether. A four-element quotation attributed to a
-five-element teacher fits **neither** framework — which weakens any reading that
-the manuscript was faithfully compressing a real Sai Baba passage.
+I recorded that the four-element formulation contradicted Sai Baba's documented
+five-element teaching. **Checking the official corpus further dissolves that.**
 
-### Observation — `DOCTRINAL MISMATCH` as a provenance marker
+He teaches the **five elements** throughout — earth, water, fire, air, ether —
+**and the same corpus explicitly distinguishes the four *perceptible* elements
+from ether as their unseen basis.** A four-element formulation is therefore
+**compatible** with his framework where it describes the manifest elements, with
+akasa as their ground.
 
-*The attributed content contradicts the attributed source's documented position.*
+> **Audit lesson: a compressed formulation can look doctrinally contradictory
+> until the source tradition's own internal distinctions are checked.** The
+> corpus search **strengthened the provenance problem while weakening the
+> doctrinal one** — two findings moving in opposite directions from one search.
 
-This is a **stronger negative signal than absence alone**: it is not that the
-passage cannot be found, but that the teacher taught otherwise.
+**`DOCTRINAL MISMATCH` — withdrawn, not established.** It would require the
+manuscript sentence to claim something genuinely incompatible — that **only** four
+elements exist, or that ether is excluded. It does not.
 
-**One instance. Recorded as an observation, NOT named as a class** — per the
-taxonomy discipline requiring a second independent specimen. To be watched for
-across the remaining items.
+**Remaining problem is purely provenance:** locate the actual Sai Baba passage, or
+establish what the manuscript wording derives from.
 
+---
+
+## AUTHORIAL DOCTRINE — the book's own elemental ontology
+
+Recorded because it governs how the audit reads four- versus five-element
+language anywhere in the manuscript:
+
+> **In *Elemental Alchemy*, Aether is not simply a fifth material element
+> alongside four others. It is the divine appearing — the unifying spiritual
+> presence through and within elemental manifestation.**
+
+The four manifest elements are the differentiated world; Aether is the
+source/field becoming perceptible through them.
+
+**Consequence for the census:** a four-element formulation in a source is **not**
+by itself evidence of mismatch with this book, nor with traditions that
+distinguish perceptible elements from their ground. Do not treat the count as a
+provenance signal.
 
 ---
 
