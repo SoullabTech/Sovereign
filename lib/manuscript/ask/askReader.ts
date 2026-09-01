@@ -19,7 +19,8 @@
  */
 
 import { createHash } from 'crypto';
-import Anthropic from '@anthropic-ai/sdk';
+import { runStructured } from '../../ai/structured/router';
+import type { StructuredBlock, StructuredMessage } from '../../ai/structured/types';
 import type { StructureInterpretation } from '../structure/interpret';
 import type { ReviewedStructure } from '../structure/review';
 import type { AskAnchor } from './anchor';
@@ -191,7 +192,8 @@ function readingSays(ctx: AskContext): string {
 }
 
 export interface AskOptions {
-  client?: Anthropic;
+  /* No `client`. The provider is the platform's to authorize, not the asker's
+     to name. */
   model?: string;
   maxTokens?: number;
 }
@@ -208,14 +210,13 @@ export async function askMaia(
   question: string,
   opts: AskOptions = {},
 ): Promise<AskOutcome> {
-  const client = opts.client ?? new Anthropic();
   const model = opts.model ?? DEFAULT_MODEL;
 
   const system = [STANDING, '', '--- THE READING YOU MADE ---', readingSays(ctx), '',
     '--- WHAT THEY ARE POINTING AT ---', anchorSays(ctx), '',
     '--- HOW MUCH OF THIS IS STILL TRUE ---', stalenessSays(ctx.staleness)].join('\n');
 
-  const messages: Anthropic.MessageParam[] = [
+  const messages: StructuredMessage[] = [
     ...history.map((t) => ({
       role: (t.speaker === 'author' ? 'user' : 'assistant') as 'user' | 'assistant',
       content: t.body,
@@ -224,15 +225,21 @@ export async function askMaia(
   ];
 
   try {
-    /* NO `tools` KEY. See the header: the capability is absent, not disabled. */
-    const message = await client.messages.create({
+    /* NO `tools` KEY. See the header: the capability is absent, not disabled.
+       The field is OMITTED rather than set to undefined, so no `tools` key
+       reaches the wire at all — there is nothing for a provider to enable.
+       No `execution` either: an ordinary completion, as this has always been. */
+    const outcome = await runStructured({
       model,
-      max_tokens: opts.maxTokens ?? 1200,
+      maxTokens: opts.maxTokens ?? 1200,
       system,
       messages,
     });
-    const text = message.content
-      .filter((b): b is Anthropic.TextBlock => b.type === 'text')
+    /* A refused inference is not an answer, and must not be shown as one — the
+       same ruling the transport catch below makes, for the same reason. */
+    if (!outcome.ok) return { ok: false, refusal: 'unreachable' };
+    const text = outcome.result.content
+      .filter((b): b is Extract<StructuredBlock, { type: 'text' }> => b.type === 'text')
       .map((b) => b.text).join('').trim();
     if (!text) return { ok: false, refusal: 'empty_answer' };
     return {

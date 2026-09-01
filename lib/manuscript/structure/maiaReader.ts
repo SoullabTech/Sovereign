@@ -48,7 +48,8 @@
  */
 
 import { createHash } from 'crypto';
-import Anthropic from '@anthropic-ai/sdk';
+import { runStructured } from '../../ai/structured/router';
+import type { StructuredBlock, StructuredTool } from '../../ai/structured/types';
 import type {
   EditorialQuestion, EditorialSynthesis, ProposedUnitDraft, ProposedUncertainty,
   ReaderInput, ReaderOutput, ReaderReading, StructureReader, UncertainRegion,
@@ -252,7 +253,22 @@ const unitSchema = (depth: number): Record<string, unknown> => ({
  */
 const MAX_PROPOSAL_DEPTH = 4;
 
-export function readerTools(): Anthropic.Tool[] {
+/**
+ * The tool contract, in the wire shape it has always had.
+ *
+ * `input_schema` is snake_case here and NOT the seam's neutral `inputSchema` on
+ * purpose: `promptContractHash()` hashes `JSON.stringify(readerTools())`, so the
+ * key name is load-bearing provenance. Renaming it would report every reading
+ * ever made as having come from a different reader. The translation to the
+ * neutral vocabulary happens once, at the call site.
+ */
+export interface ReaderTool {
+  name: string;
+  description: string;
+  input_schema: Record<string, unknown>;
+}
+
+export function readerTools(): ReaderTool[] {
   return [
     {
       name: 'propose_structure',
@@ -675,7 +691,8 @@ export function parseReaderOutput(toolName: string, input: unknown): ReaderOutpu
 /* ── the reader itself ────────────────────────────────────────────────────── */
 
 export interface MaiaReaderOptions {
-  client?: Anthropic;
+  /* No `client`. The provider is resolved by the platform's structured seam,
+     not handed in by a caller — a reader cannot name its own provider. */
   model?: string;
   maxTokens?: number;
   /** Structural telemetry only. Never called with prose. */
@@ -696,39 +713,64 @@ export interface MaiaReader {
 }
 
 /**
- * A `StructureReader` backed by Claude, with its own attribution.
+ * A `StructureReader` backed by the platform's structured-inference seam, with
+ * its own attribution.
  *
- * Streamed because a reading of a long Work with adaptive thinking can outrun a
- * non-streaming HTTP timeout; the response is still consumed whole.
+ * It asks for a `long-running` completion because a reading of a long Work with
+ * adaptive thinking can outrun a non-streaming HTTP timeout. Whether that is met
+ * by streaming, long-polling, or a transport with no such timeout is the
+ * adapter's business; the response is consumed whole either way.
  */
 export function createMaiaStructureReader(opts: MaiaReaderOptions = {}): MaiaReader {
-  const client = opts.client ?? new Anthropic();
   const model = opts.model ?? DEFAULT_MODEL;
   const maxTokens = opts.maxTokens ?? DEFAULT_MAX_TOKENS;
 
+  /* The same two tools, in the seam's provider-neutral vocabulary. Only the key
+     name differs from the hashed shape; the wire request the adapter builds is
+     the one this reader has always sent. */
+  const tools: StructuredTool[] = readerTools().map((t) => ({
+    name: t.name,
+    description: t.description,
+    inputSchema: t.input_schema,
+  }));
+
   const read: StructureReader = async (input: ReaderInput): Promise<ReaderOutput> => {
-    const stream = client.messages.stream({
+    const outcome = await runStructured({
       model,
-      max_tokens: maxTokens,
+      maxTokens,
       system: READER_SYSTEM,
-      tools: readerTools(),
+      tools,
       /* She must answer THROUGH one of the two tools. Prose in the text block is
          not a reading, and there is no path here that turns one into a tree. */
-      tool_choice: { type: 'any' },
+      toolChoice: { type: 'any' },
       messages: [{ role: 'user', content: buildRequest(input) }],
+      /* A reading of a long Work with adaptive thinking can outrun a
+         non-streaming HTTP timeout. The requirement is named; how it is met is
+         the adapter's business. */
+      execution: { completion: 'long-running' },
     });
-    const message = await stream.finalMessage();
 
-    const call = message.content.find((b): b is Anthropic.ToolUseBlock => b.type === 'tool_use');
+    /* A refused inference is a fact about the machine, exactly like a parse
+       failure, and gets the same treatment: it THROWS. Rendering it as
+       `form: 'none'` would publish "no stable larger structure is evident"
+       under MAIA's name at the moment she was never asked. */
+    if (!outcome.ok) {
+      throw new StructureReaderError('inference-refused', outcome.detail
+        ? `${outcome.refusal}: ${outcome.detail}` : outcome.refusal);
+    }
+    const message = outcome.result;
+
+    const call = message.content.find(
+      (b): b is Extract<StructuredBlock, { type: 'tool_use' }> => b.type === 'tool_use');
     if (!call) {
-      throw new StructureReaderError('no-tool-call', message.stop_reason ?? 'unknown');
+      throw new StructureReaderError('no-tool-call', message.stopReason ?? 'unknown');
     }
 
     opts.onTurn?.({
       pass: input.pass,
       tool: call.name,
-      inputTokens: message.usage.input_tokens,
-      outputTokens: message.usage.output_tokens,
+      inputTokens: message.usage.inputTokens,
+      outputTokens: message.usage.outputTokens,
       bodiesSupplied: input.bodies.size,
     });
 
