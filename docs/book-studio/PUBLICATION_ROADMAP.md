@@ -45,16 +45,17 @@ Full record: `QUOTATION_PROVENANCE_AUDIT.md`.
 > **Scope note:** this census covers **attributed quotation objects**. It does
 > **not** cover narrative source dependencies — see stage 3b.
 
-## 3 · Authorship-recovery adjudication — NEXT
+## 3 · Attribution reclamation & repair — NEXT
 
-Resolve the Chapter 2 and Chapter 5 passages that may be **manuscript-originated
-language wearing Jung / Rumi / Lao Tzu / Estés authority**.
+**Authorship is settled by authorial ruling: these nine passages are the author's
+own words.** The question is whether his words were **incorrectly framed as
+someone else's quotation or adaptation**.
 
-For each: **reclaim as the author's prose · establish a genuine adaptation ·
-remove.**
+Verdicts: `RECLAIM AS AUTHORIAL PROSE` · `RECLAIM + LOCALLY INTEGRATE` ·
+`GENUINE SOURCE FOUND → CREDIT ACCURATELY` · `REMOVE`.
 
-**This is a compositional pass, not citation cleanup.** Nine epigraphs may be
-doing structural work in two chapters.
+**Reclamation is not a new byline** — it removes the artificial quotation frame
+and lets the words live as prose. Detail: `STAGE3_ATTRIBUTION_RECLAMATION.md`.
 
 ## 3b · Narrative source-dependency census
 

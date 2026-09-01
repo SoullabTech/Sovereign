@@ -195,3 +195,20 @@ official accounts · Joseph Campbell Foundation · the Santayana Edition · the 
 Institute. Specimens excluded: the quoting author's own Book Studio and Medium
 pages.*
 
+**The author can make an authoritative provenance ruling about their own
+manuscript — and the system must accept it.** Stylistic inference, absence of
+external circulation, and register analysis are *circumstantial*. The author has
+**direct knowledge of how the book was written**. A Studio that kept treating its
+own inference as more authoritative than the author's testimony would invert the
+sovereignty the product exists to protect.
+*Specimen: nine passages carried as `INTERNAL-ORIGIN CANDIDATE` through an entire
+census — correctly, since the evidence was circumstantial — and closed by a single
+authorial ruling. The census's job was to surface them and refuse to guess; the
+author's job was to answer.*
+
+**The corollary:** once authorship is settled, the remaining work changes shape
+entirely. "Whose words are these?" becomes "were my words wrongly framed as
+someone else's?" — and the verdict set changes with it. The Studio must be able to
+**re-scope a workstream on an authorial ruling**, not merely record the ruling and
+carry on with the old questions.
+

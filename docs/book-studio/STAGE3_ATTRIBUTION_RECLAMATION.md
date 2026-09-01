@@ -1,27 +1,50 @@
-# Stage 3 — Authorship recovery and adjudication
+# Stage 3 — Attribution Reclamation & Repair
 
-**Opened at the close of the Attributed Quotation Provenance Census (137/137).**
+*Renamed from "Authorship recovery." **The authorship question is resolved.***
 
-**Nine passages** carry positive evidence that manuscript/compositional language
-may have acquired external authority. **None is claimed as author- or
-model-written.** The epistemic level is `INTERNAL-ORIGIN CANDIDATE` and stays
-there until drafting history says otherwise.
+## AUTHORIAL RULING — 2026-09-01
 
-> **This is not "change `— Rumi` to `— Kelly`."** It is recovering the book's
-> actual voice and authorship boundaries.
+> **These passages are the author's own words.** He wrote the book. **Engaging a
+> professional editor to help develop and polish the manuscript does not turn
+> manuscript language into Jung's, Rumi's, Lao Tzu's or anyone else's.**
 
----
+The census could only ever produce circumstantial evidence — register, absence of
+external circulation, local coinage. It correctly refused to assert authorship on
+that basis. **The author holds direct knowledge of how the book was written, and
+that ruling closes the question.** `INTERNAL-ORIGIN CANDIDATE` is retired for
+these nine.
 
-## The five questions, per item
+## The question that remains
 
-1. **Is there an external ancestor we missed?** *(one final targeted check)*
-2. If not, **can manuscript history establish where the wording originated?**
-3. **Does the thought belong in the book without borrowed authority?**
-4. If yes, **does it become ordinary manuscript prose** — and how does that read?
-5. If removed, **what happens compositionally around it?**
+> **Did the author's words get incorrectly framed as somebody else's quotation or
+> adaptation?**
 
-**Question 5 is why this is not nine isolated deletions.** In both chapters these
-epigraphs may be doing structural work.
+## Ruling set — four verdicts
+
+| | |
+|---|---|
+| **`RECLAIM AS AUTHORIAL PROSE`** | remove the attribution and the quotation frame; the words return to the manuscript as prose |
+| **`RECLAIM + LOCALLY INTEGRATE`** | as above, plus fold into the surrounding passage so it reads as one movement |
+| **`GENUINE SOURCE FOUND → CREDIT ACCURATELY`** | a real influence or adaptation exists; credit it properly |
+| **`REMOVE`** | redundant with what the passage already says, or simply not needed |
+
+### Reclamation does NOT mean a new byline
+
+> **It does not mean putting "— Kelly Nezat" beneath the former quotation.** It
+> means **removing the artificial quotation frame** and letting the words live
+> naturally in the book he wrote.
+
+### Per-item work
+
+1. **One final source check** — *not* to determine whether the words are his, but
+   **so we do not accidentally erase a legitimate influence or genuine
+   adaptation.**
+2. **Remove the unsupported attribution** and the quotation formatting where
+   appropriate.
+3. **Reread the immediate passage** — does it still flow once the borrowed
+   authority disappears?
+4. **Eliminate redundancy** — a former epigraph often simply restates what the
+   prose says immediately afterward.
 
 ---
 
@@ -37,11 +60,10 @@ verification.
 | **L846** | — Carl Jung | "Our senses provide a subjective view of our surroundings, not an objective accounting… All that you experience is, in this sense, imagined." |
 | **L1074** | — Ken Wilber | "Soulplay is the act of expressing ourselves authentically and intuitively in the world. It arises from a place of inner knowing and truth, rather than external expectation or obligation." |
 
-**Evidence on record:** no external circulation located for any · **L756/L764
-bracket the chapter's own opening prose in an identical ornamental register** ·
-**L1074 defines a term the manuscript coins two sentences earlier** ("It is a
-form of 'soulplay'…") and is findable only on an author-controlled page ·
-authentic Estés material on the same theme reads nothing like L764.
+**Census evidence, now corroborating rather than inferring:** no external
+circulation located for any · **L756/L764 bracket the chapter's own opening prose
+in an identical register** — because it *is* the same hand · **L1074 defines a
+term the manuscript coins two sentences earlier**.
 
 **External checks still owed:** L846.
 
@@ -67,6 +89,13 @@ every putative source · no external circulation located for L403.
 
 ---
 
+## Redundancy is now the sharpest editorial question
+
+With authorship settled, the live issue in several of these is **duplication**:
+L756/L764 bracket prose in the same voice saying much the same thing, and L1074
+defines a term the sentence before it already introduces. **Where the epigraph
+restates its neighbour, `REMOVE` may serve the passage better than `RECLAIM`.**
+
 ## An observation from seeing all nine together
 
 **Four of the nine are definitions** — L846 (what perception is), L1074 (what
@@ -83,9 +112,7 @@ does not bear on origin.
 
 ## Held open
 
-- `POSSIBLE DISTINCT COMPOSITIONAL LAYERS — provenance history required.` The two
-  surface forms are **stylistically distinct**; that they represent different
-  manuscript layers is a **hypothesis**, not a finding.
-- The **Chapter 2 orphan/candidate numerical symmetry** was withdrawn as evidence
-  when the bibliography-scope error was corrected. It is **not** support for the
-  layer hypothesis.
+- The **compositional-layers hypothesis** is now of **historical interest only**.
+  It asked whether two surface forms marked different drafting layers; with
+  authorship settled it no longer bears on any ruling.
+- The **Chapter 2 orphan/candidate numerical symmetry** remains withdrawn.
