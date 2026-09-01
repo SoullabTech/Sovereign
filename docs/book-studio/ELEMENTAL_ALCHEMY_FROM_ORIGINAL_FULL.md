@@ -1533,15 +1533,13 @@ Air represents the realm of innovation and novel insights. Our thoughts, visions
 
 ### The Sublime Nature of Air
 
-In the alchemical process of sublimatio, the element of Air transforms the dense creations of Earth into a vapor of wisdom. This ethereal essence can then be shared, fostering dialectic synthesis and enhancing our collective understanding. Earth and Air belong to the realms of the left hemisphere, organizing and crystallizing knowledge into a collaborative, creative process.
+In the alchemical process of sublimatio, the element of Air transforms the dense creations of Earth into a vapor of wisdom. This ethereal essence can then be shared, fostering dialectic synthesis and enhancing our collective understanding. Earth and Air organize and crystallize knowledge into a collaborative, creative process.
 
-Fire and Water, on the other hand, represent the right hemisphere, embracing the unknown and the yet-to-be-experienced. They delve into nuance and novelty, traversing uncharted paths and uncovering new experiences. This inductive aspect of experience involves burning and washing away what no longer aligns with emerging insights and truths.
+Fire and Water, on the other hand, embrace the unknown and the yet-to-be-experienced. They delve into nuance and novelty, traversing uncharted paths and uncovering new experiences. This inductive aspect of experience involves burning and washing away what no longer aligns with emerging insights and truths.
 
 Fire and Water reveal deeper truths by purging falsehoods, distilling an inner elixir of insight. I take the term *inner gold* from the Jungian analyst Robert A. Johnson, who used it for the value we carry but cannot yet see in ourselves, and who wrote about how often we hand it to someone else to hold. This inner gold is then planted in the Earth, where it takes form and develops into our created selfhood. From the Earth, it rises into the Air, connecting with the world and becoming part of a greater collective wisdom.
 
 Air represents the culmination of these regressive and progressive processes, embodying all the preparatory work and delivering essential insights to the world. It transcends mere matter, reflecting the essence of what truly matters. By reconnecting with others, it shares and communicates wisdom, synthesizing greater understanding through dialectic exchange. This process ignites new hypotheses and visions, perpetuating the spiral of growth and refining us toward the center of our being, where our true nature awaits.
-
-Our wits do not grow stronger until nature has found the right conditions for them to thrive, reminding us that true growth comes from engaging with the world and each other.
 
 ### Embracing the Element of Air
 
