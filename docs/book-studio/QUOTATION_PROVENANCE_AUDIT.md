@@ -2,7 +2,7 @@
 
 **Source of record:** `docs/book-studio/ELEMENTAL_ALCHEMY_FROM_ORIGINAL_FULL.md`
 **Opened:** 2026-09-01, after Chapter 10 closed developmental adjudication.
-**Status:** IN PROGRESS — 130 of 137. **Ch2 CLOSED (10/10).** adjudicated. **Chapter 5 CLOSED (30/30). Chapter 8 CLOSED (23/23).**
+**Status:** IN PROGRESS — 131 of 137. **Ch2 CLOSED (10/10).** adjudicated. **Chapter 5 CLOSED (30/30). Chapter 8 CLOSED (23/23).**
 
 ## Scope
 
@@ -3657,6 +3657,39 @@ The rule was established on Zhuangzi alone because the evidence was binary. The
 **class** is now independently recurrent as well.
 
 **Nine translator-naming entries remain unchecked.**
+
+
+### Final batch — tranche 7
+
+**L173 · Preface · Sadhguru — "Life is a game of just five ingredients. Even a pizza requires more ingredients!…"**
+
+`UNVERIFIED — source lead unresolved` on the **exact printed wording**; the
+**concept and structure are verified to Sadhguru** via his own institution's
+official channel.
+
+**Isha Foundation** (isha.sadhguru.org — the *quoted* author's institution, so
+legitimate attestation) carries "**Life Is a Five-Cornered Game**": *"It is a
+five-cornered game – just five ingredients"* … *"Even if you want to make
+**sambar**, you need 17 ingredients."*
+
+**The manuscript reads "pizza." The official text reads "sambar."**
+
+#### Observation — culturally localized substitution
+
+A **concrete image is exchanged for one legible to a different readership** —
+a South Indian dish for an Italian-American one — while the argument is untouched.
+
+**Distinct from `HOST-ALIGNED ALTERATION`**, which concerns a variant fitting the
+host *argument*. This concerns a variant fitting the host *audience*. The claim
+is unchanged; only the illustration is domesticated.
+
+**Agency unestablished.** Sadhguru speaks constantly to Western audiences and may
+well have said "pizza" himself; *Inner Engineering* (2016) may carry either form.
+**The edition check decides both the wording and whether any substitution
+happened in this manuscript at all.**
+
+**Rights: `LIKELY PROTECTED` · `HIGH`** — the epigraph runs ~80 words of
+in-copyright prose, the longest quotation in the front matter.
 
 
 ---
