@@ -1935,17 +1935,21 @@ retrofitted.
 3. **If they do not track, strike the hypothesis.**
 4. If they do track, only then investigate what the marker corresponds to.
 
-### Open classification question — Santayana, pattern 1 or 2?
+### RULED — Santayana stays pattern 2, and the discriminator is now exact
 
-Recorded as `EVOLVED APHORISM` (pattern 2). Flagged because it was suggested as a
-`SOURCE DISPLACEMENT` (pattern 1) specimen.
+**L1457 → `MISATTRIBUTED` · Pattern 2 `EVOLVED APHORISM` · recoverable ancestor:
+Reginald Vincent Holmes.**
 
-**The discriminator is whether the manuscript's wording belongs to the true
-source.** In the pattern-1 specimen (Oliver → Salzberg) the wording **is** Oliver's
-exactly, which is why reattribution repairs it. Here Holmes wrote "The earth has
-**its** music for those who **will** listen" and the manuscript has neither word —
-which is why simple reattribution is unavailable, the defining feature of pattern
-2. **Held at pattern 2 pending authorial ruling.**
+> **Pattern 1 — `SOURCE DISPLACEMENT`:** the manuscript quotation **substantially
+> belongs** to another identifiable source, so **reattribution preserves the
+> textual object**.
+> **Pattern 2 — `EVOLVED APHORISM`:** a recoverable ancestor exists, but
+> transmission has altered the wording enough that **simply changing the byline
+> would falsely put the altered wording into the ancestor's mouth**.
+
+Oliver → Salzberg is the clean pattern-1 specimen: the words themselves can be
+returned to their actual source. Holmes wrote the earlier sentence; the
+manuscript carries a polished descendant.
 
 ### Chapter 7 — second tranche
 
@@ -1958,7 +1962,20 @@ on health-and-wellness quote lists and Pinterest.
 Mahes": **the attributed person cannot be verified to exist as an author at
 all.** Both sit in the same wellness-aphorism register.
 
-**New defect — text/apparatus name divergence.** The Ch7 bibliography lists
+**New defect — `TEXT–APPARATUS ATTRIBUTION DIVERGENCE`.** *The manuscript
+attribution and its apparent bibliographic support name different people.*
+Canonical specimen: text says **Robert C. Peale**; bibliography says **Norman
+Vincent Peale**; the quotation is supported by neither. This may reveal a failed
+normalization or an attempted bibliographic "correction" somewhere in assembly
+history.
+
+**Flag the entry separately as a `SPURIOUS SUPPORT` candidate** — a real, famous
+Peale book lending documentary appearance to an unsupported quotation — pending a
+check of whether *The Power of Positive Thinking* has any independent Chapter 7
+dependency. **Do not collapse the two defects:** one describes the name mismatch,
+the other the false documentary appearance.
+
+The Ch7 bibliography lists
 **"Peale, Norman Vincent. *The Power of Positive Thinking.* Prentice Hall,
 1952."** The in-text byline says **"Robert C. Peale."** *The bibliography and the
 text name different people.* This is not `MISFILED SOURCE`, `WRONG SOURCE/WORK`
@@ -1979,18 +1996,29 @@ Three competing attributions across three languages, none established:
 
 **Bartlett's Familiar Quotations lists the author as anonymous.**
 
-#### Doctrine question — is an authoritative finding of anonymity different?
+#### RULED — `ORIGIN UNKNOWN / TRADITIONAL` is a closed state, not a byline
 
-The doctrine says: *do not "solve" a floating aphorism with "— Anonymous"; that
-launders the provenance problem.* That was written for cases where **the audit
-cannot find a source**.
+The doctrine is **modified, not overturned.** Two different things:
 
-Mies is different: **Bartlett's has affirmatively concluded anonymity after
-investigation.** A reference work's positive finding of anonymous origin is
-evidence, not a shrug — which may make "traditional" or "anonymous" labelling
-*accurate here* rather than laundering.
+- **A. "I couldn't find the author, so call it Anonymous."** → **still
+  prohibited.** Provenance laundering.
+- **B. Strong reference/provenance research concludes the origin is genuinely
+  unknown or traditional.** → a **legitimate resolved provenance finding**.
 
-**Authorial ruling needed.** I have not applied it either way.
+> **`ORIGIN UNKNOWN / TRADITIONAL` may be a closed provenance state when supported
+> by affirmative reference evidence. It does not automatically authorize the
+> reader-facing byline "— Anonymous."**
+
+Anonymous authorship and unknown origin after centuries of circulation are not
+the same thing.
+
+**L1543 classified: `UNVERIFIED AS MIES` · `FLOATING APHORISM / SOURCE
+UNRESOLVED` · `ORIGIN UNKNOWN / TRADITIONAL`.**
+
+At repair time: if expendable → remove; if it genuinely earns its place → use as
+an **unattributed traditional saying** or fold into prose; **do not write "—
+Mies"**; and avoid "— Anonymous" unless dealing with an actual anonymous
+historical text.
 
 ### Chapter 7 bibliography — three findings and one exemplar
 
@@ -2006,10 +2034,24 @@ lending documentary appearance to an attribution its critical editors reject.
   quotation is the early-1920s vaudeville remark documented in Lash (1980).
 
 **An exemplar worth naming.** "King Jr., Martin Luther. **'The Purpose of
-Education.'** *Morehouse College Maroon Tiger*, **1947**." — a precisely cited
-article, in the right periodical, with the right year. **This is what the whole
-bibliography should look like**, and it demonstrates the apparatus is capable of
-it.
+Education.'** *Morehouse College Maroon Tiger*, **1947**." — precise article,
+right periodical, right year.
+
+#### What Earth proves about the apparatus
+
+| Bad apparatus | Good apparatus |
+|---|---|
+| **Santayana** → real famous book, rejected attribution | **MLK** → exact essay, periodical, year |
+| **Emerson** → famous work instead of the actual essay | |
+| **Keller** → autobiography instead of documented spoken source | |
+| **Peale** → a different person entirely | |
+
+> **Bibliographic precision is possible within the existing manuscript. The
+> defect is not merely loose house style — source-level rigor varies materially
+> from entry to entry.**
+
+**Consequence for reconstruction:** the correct entries must become **models, not
+casualties of a wholesale rebuild.**
 
 **`ORPHAN CANDIDATE` ×7** — Robert A. Johnson, H. Jackson Brown Jr., Churchill,
 Arthur Ashe, Darwin, Winona LaDuke, Marlee Matlin: listed with no matching
