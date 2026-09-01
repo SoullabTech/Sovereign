@@ -19,20 +19,32 @@ these nine.
 > **Did the author's words get incorrectly framed as somebody else's quotation or
 > adaptation?**
 
-## Ruling set — four verdicts
+## Treatment set — four outcomes of the ancestor check
 
-| | |
+Authorship is settled. The external checks answer one question only: **is there a
+genuine external ancestor that deserves acknowledgement?** The answer routes the
+item to one of four treatments.
+
+| Check outcome | Treatment |
 |---|---|
-| **`RECLAIM AS AUTHORIAL PROSE`** | remove the attribution and the quotation frame; the words return to the manuscript as prose |
-| **`RECLAIM + LOCALLY INTEGRATE`** | as above, plus fold into the surrounding passage so it reads as one movement |
-| **`GENUINE SOURCE FOUND → CREDIT ACCURATELY`** | a real influence or adaptation exists; credit it properly |
-| **`REMOVE`** | redundant with what the passage already says, or simply not needed |
+| **`GENUINE ANCESTOR FOUND`** | credit it accurately — real source, real wording, real citation |
+| **`NO ANCESTOR` + load-bearing** | **`RECLAIM`** — remove the frame, integrate the words into the passage |
+| **`NO ANCESTOR` + decorative / redundant** | remove the frame, then decide independently whether the line earns a place |
+| **`PARTIAL ANCESTOR`** | **preserve the distinction** — what came from the source, and what is the author's own formulation, must not be blurred back together |
 
 ### Reclamation does NOT mean a new byline
 
 > **It does not mean putting "— Kelly Nezat" beneath the former quotation.** It
 > means **removing the artificial quotation frame** and letting the words live
 > naturally in the book he wrote.
+
+### Definitions are adjudicated separately
+
+A **defined term belongs with the concept it defines.** A decorative epigraph can
+be deleted at little cost; a definition the book then uses cannot. Where a
+definition has no ancestor, the strong default is **`RECLAIM`, not delete** —
+**Soulplay (L1074) especially.** Definitions and load-bearing material are ruled
+on separately from decorative epigraphs.
 
 ### Per-item work
 
@@ -65,7 +77,7 @@ circulation located for any · **L756/L764 bracket the chapter's own opening pro
 in an identical register** — because it *is* the same hand · **L1074 defines a
 term the manuscript coins two sentences earlier**.
 
-**External checks still owed:** L846.
+**External check: COMPLETE** — L846 → `PARTIAL ANCESTOR` (see checks below).
 
 ## Group B — Chapter 2 · unsupported adaptation claims
 
@@ -85,7 +97,7 @@ have already done the provenance work.
 authors** separated by two millennia and two languages · register mismatch with
 every putative source · no external circulation located for L403.
 
-**External checks still owed:** L359 · L373 · L389 · L479.
+**External checks: COMPLETE** — L359 · L373 · L389 · L479 (see checks below).
 
 ---
 
@@ -116,3 +128,147 @@ does not bear on origin.
   It asked whether two surface forms marked different drafting layers; with
   authorship settled it no longer bears on any ruling.
 - The **Chapter 2 orphan/candidate numerical symmetry** remains withdrawn.
+
+---
+
+## External-ancestor checks — all nine now at the same evidentiary standard
+
+**Completed 2026-09-01.** Four items (L756 Rumi, L764 Estés, L403 Jung, L1074
+Wilber) were checked during the census. The five outstanding checks are recorded
+below. **None of these checks investigates whether the words are the author's.
+Each asks only: is there a genuine external ancestor that deserves
+acknowledgement?**
+
+### L846 — "Our senses provide a subjective view…" · attributed to Carl Jung
+
+**Outcome: `PARTIAL ANCESTOR` — doctrinal, not textual.**
+
+No textual ancestor. The five sentences do not correspond to any locatable
+passage in Jung's *Collected Works*, letters, seminars or *Memories, Dreams,
+Reflections*; the register is contemporary English, not Hull's translation of
+Jung.
+
+But a real Jungian doctrine stands behind the claim, and it is citable:
+
+- **CW 8 §747** — "We are steeped in a world that was created by our own psyche."
+- **CW 13 §75** — "image is psyche."
+
+These are **ancestors of the idea, not of the wording.** Under the standing rule
+that *thematic fit proves nothing*, they cannot verify this text — but they do
+mean the passage's debt to Jung is genuine and should not be erased along with
+the false quotation. The distinction to preserve: **Jung established that
+experience is psychically mediated; the five-sentence formulation of it is the
+author's.**
+
+**Load-bearing.** It is the book's definition of perception, and the section
+"The Subjective Nature of Reality" is built on it. Definitions rule applies.
+
+### L359 — "Ancient wisdom echoes through the ages…" · "Adapted from Lao Tzu"
+
+**Outcome: `NO ANCESTOR`.**
+
+No correspondence to any chapter of the *Tao Te Ching* in any translation
+consulted, and no candidate in the *Zhuangzi* or later Taoist transmission. The
+diction ("the noise of the world," "the silence of our souls," "calls us back to
+our roots") is modern English devotional prose. The adaptation claim is
+unsupported at the level of source, not merely of wording.
+
+**Decorative and redundant.** The paragraph immediately following says the same
+thing at greater length and in the author's own voice.
+
+### L373 — "Like a torus, life is an ongoing balance…" · "Adapted from Nassim Haramein"
+
+**Outcome: `PARTIAL ANCESTOR` — genuine conceptual debt, no textual ancestor.**
+**Highest exposure of the five.**
+
+Haramein is a **living author with an active official channel**, and his actual
+verified formulation is available and quite different:
+
+> "The torus is the fundamental energy-flow field-patterning in the universe at
+> all scales from the proton to the atom to the electromagnetic fields of
+> planets, stars, galaxies and even the universe itself…"
+> — Nassim Haramein, official channel, 2020
+
+The manuscript's sentence — expansion/contraction, giving/receiving,
+integrating/differentiating, becoming and being — is **not his wording, and its
+content is the book's own**: a life-balance and developmental reading of the
+torus that Haramein does not make. What the book genuinely owes him is **the
+model of the torus as a universal energy-flow geometry present at every scale.**
+
+The distinction to preserve: **credit Haramein as the source of the toroidal
+field model in the body prose or a citation — not as the speaker of these words.**
+
+*Rights note:* attributing an invented quotation to a living, publicly active
+author is the sharpest of the nine, independent of the reclamation ruling.
+
+### L389 — "The circle is a reminder…" · "Adapted from Black Elk"
+
+**Outcome: `GENUINE ANCESTOR EXISTS — but the manuscript is not quoting it.`**
+**Most culturally sensitive of the five.**
+
+A strong, famous, textually stable ancestor exists — the sacred-hoop passage in
+*Black Elk Speaks* (John G. Neihardt, 1932):
+
+> "Everything the Power of the World does is done in a circle… Even the seasons
+> form a great circle in their changing, and always come back again to where they
+> were. The life of a man is a circle from childhood to childhood, and so it is
+> in everything where power moves."
+
+The manuscript's line is **not a variant of this**. It is a modern abstraction
+("a process of becoming whole") that Black Elk's passage does not contain. So
+the ancestor exists but has not been used; what stands in the book is an
+invented sentence in a Lakota holy man's mouth. **`UNSUPPORTED CULTURAL
+ATTRIBUTION` applies here in its sharpest form.**
+
+Two facts to carry into the repair:
+
+1. **The authentic passage is itself mediated** — Neihardt's English rendering of
+   Black Elk's Lakota through an interpreter. Quoting it is a translation
+   question as well as an attribution one; the translator/editor must be named.
+2. **It is not free to quote.** The 1932 US publication remains protected; the
+   1961 and later editions are separately protected. This moves to the
+   permissions inventory **only if** the book chooses to quote the real passage.
+
+**The two options are cleanly separable:** reclaim the manuscript's own sentence
+as prose, *or* quote the authentic passage properly with credit and permission.
+What must not happen is the current state — neither.
+
+### L479 — "The path to wisdom… winding and spiraling" · "Adapted from Lao Tzu"
+
+**Outcome: `NO ANCESTOR`.**
+
+No *Tao Te Ching* correspondence. **One candidate was considered and rejected on
+the evidence rather than passed over:** *Tao Te Ching* ch. 40, 反者道之動 —
+"returning/reversal is the movement of the Tao" — is a genuine Taoist statement
+of cyclicality. But the manuscript's line is developmental and progressive
+("revisit and **refine** our understanding continually"), which is the book's
+spiral doctrine, not Taoist return. **The doctrines differ; this is not a partial
+ancestor.**
+
+**Decorative and redundant.** The author's own twenty-five-year account follows
+immediately and says it better.
+
+### Provenance family formed by these checks
+
+**L359 and L479 share a mechanism**, not merely a verdict: both attach a modern
+English devotional sentence about wisdom-as-journey to Lao Tzu via "Adapted
+from," with no Taoist text behind either. **One mechanism, two occurrences.** They
+should be ruled on together.
+
+**L846 and L373 also pair** — both are `PARTIAL ANCESTOR`, both owe a real
+thinker a real debt that the false quotation currently obscures rather than
+honours. Both are repaired by the same move: **credit the idea accurately, keep
+the formulation as the book's own.**
+
+### Standing at the close of the checks
+
+| Outcome | Items |
+|---|---|
+| `GENUINE ANCESTOR FOUND` | none of the nine |
+| `PARTIAL ANCESTOR` | **L846** (Jung), **L373** (Haramein) |
+| `GENUINE ANCESTOR EXISTS, UNUSED` | **L389** (Black Elk) |
+| `NO ANCESTOR` · load-bearing / definition | **L1074** (Soulplay), **L403** (spiral) |
+| `NO ANCESTOR` · decorative or redundant | **L359**, **L479**, **L756**, **L764** |
+
+**All nine now stand at the same evidentiary standard.** Adjudication follows —
+definitions and load-bearing material separately from decorative epigraphs.
