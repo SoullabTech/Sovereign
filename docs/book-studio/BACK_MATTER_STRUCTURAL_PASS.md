@@ -85,11 +85,74 @@ cost.
 complete set the content does not deliver. Check the remaining appendix sections
 against their own titles before closing this pass.
 
-## Remaining questions for authorial ruling
+## RULINGS — 2026-09-01
 
-1. Four Grades — add Fire and Aether, or rename the section?
-2. 12 Facets — supply twelve, or retitle to five elemental facets?
-3. Is Conclusion / Afterword / Message to Fellow Healers / Acknowledgments
-   **body or back matter**? They sit between Ch10 and `# Appendix` at H1, with
-   no part heading over them.
-4. Do the three appendix sections have the right hierarchy under `# Appendix`?
+### Four Grades — Fire is missing; Aether never belonged
+
+Historical evidence corrects Studio's finding in one direction and the obvious
+symmetry fix in the other. An earlier assembly record described the appendix as
+**"Four Grades (Fire–Air)"**, while the assembled appendix carries only Water,
+Earth and Air. No Four Grades of Fire text and no Four Grades of Aether text is
+recoverable from manuscript history.
+
+So: **Fire is a genuine missing member. Aether is not — there is no evidence it
+was ever part of this four-grade schema.**
+
+**RULING — `Four Grades of Fire`: MISSING CONTENT / AUTHORIAL COMPLETION
+REQUIRED.**
+- Keep Water, Earth, Air unchanged.
+- **Do not create Aether grades.** Inventing both for symmetry would fabricate
+  doctrine; narrowing the appendix to three because Fire was lost would ratify
+  an accident.
+- Once Fire is supplied, retitle the section **"The Four Grades of Fire, Water,
+  Earth, and Air"**, making Aether's absence intentional rather than mysteriously
+  incomplete.
+- Compose Fire **only** from the established Fire ontology and the existing
+  Primal / Inner / Collective / Universal pattern. This is bounded new authorial
+  work, not developmental cleanup — it is not written silently.
+- **Sequenced after the provenance census**, so the audit lane is not
+  interrupted.
+
+### 12 Facets — the title was right; the numbering was not — APPLIED
+
+Studio's count obscured the real structure. Verified against the canonical file:
+
+- **Fire, Water, Earth, Air** each carry three entries, each tagged
+  *(vector / intelligence)*, *(circle / intention)*, *(spiral / goal)*.
+  **4 x 3 = 12.** The title preserves a real model.
+- **Aether is structurally different.** Its entries are *Expansive Nature
+  (vector)*, *Contractive Nature (circle)*, and *Stillness*. They do not carry
+  the intelligence / intention / goal tags — and **Stillness carries no tag at
+  all**, not even *(spiral)*. The same distinction appears in older manuscript
+  witnesses.
+
+What misled was formatting Aether as `5.` inside the same numbered list.
+
+**APPLIED:**
+- `## The 12 Facets of the Spiralogic Profile` -> `## The Spiralogic Profile: 12 Facets and Aether`
+- `### 5. Aether — ...` -> `### Aether — ...` (unnumbered)
+- Contents entry updated to match.
+- **No prose changes.** No 15-facet doctrine invented; Aether not deleted.
+
+**Left standing, noted not fixed:** Aether's *Stillness* has no parenthetical tag
+where its two siblings do. Possibly deliberate — stillness has no vector — or an
+omission. Flagged for the author; not repaired on inference.
+
+### Elemental Astrology — PROTECT AS APPENDIX
+
+Already appendix in both structure and Contents. No edit.
+
+### Appendix boundary — CLOSED
+
+Canonical carries `# Appendix` at L2438. Studio's claim that the material begins
+with no appendix heading is a **sectioniser / source-selection defect, not a
+manuscript defect**, as is its generated "Summary" division.
+
+## Open work remaining in this pass
+
+**One authoring task:** write the missing Four Grades of Fire (after the
+provenance census).
+
+**One question unresolved:** are Conclusion / Afterword / A Message to My Fellow
+Healers / Acknowledgments **body or back matter**? They sit between Ch10 and
+`# Appendix` at H1 with no part heading over them. Not yet ruled.

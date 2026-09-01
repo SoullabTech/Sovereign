@@ -112,7 +112,7 @@ Appendix
 
 &nbsp;&nbsp;&nbsp;&nbsp;Chapter Summaries by Elemental Type
 
-&nbsp;&nbsp;&nbsp;&nbsp;The 12 Facets of the Spiralogic Profile
+&nbsp;&nbsp;&nbsp;&nbsp;The Spiralogic Profile: 12 Facets and Aether
 
 &nbsp;&nbsp;&nbsp;&nbsp;Elemental Astrology
 
@@ -2510,7 +2510,7 @@ For readers who orient themselves through elemental temperament, the following e
 
 ---
 
-## The 12 Facets of the Spiralogic Profile
+## The Spiralogic Profile: 12 Facets and Aether
 
 ### 1. Fire — Spiritual, Intuitive Intelligence
 
@@ -2536,7 +2536,7 @@ For readers who orient themselves through elemental temperament, the following e
 - **Collective, Tribal Frameworks, Collaborative Dynamics, Social Paradigms:** Perfecting ways of relating to groups, family, and the collective world. *(circle / intention)*
 - **Codified Systems, Elevated Communications, and Generative Communications:** Developing proficiency in communicating, especially within codified systems and formal situations and institutions. *(spiral / goal)*
 
-### 5. Aether — Spiritual, Non-Dual, Transcendent Intelligence
+### Aether — Spiritual, Non-Dual, Transcendent Intelligence
 
 - **Expansive Nature:** Transmitting, evolving through exploring and expressing Self within existence within and through the elemental facets. *(vector)*
 - **Contractive Nature:** Receiving, witnessing, and evolving from experiencing phenomenon. *(circle)*
