@@ -2,7 +2,7 @@
 
 **Source of record:** `docs/book-studio/ELEMENTAL_ALCHEMY_FROM_ORIGINAL_FULL.md`
 **Opened:** 2026-09-01, after Chapter 10 closed developmental adjudication.
-**Status:** IN PROGRESS — 28 of 137 adjudicated (Ch5: 17 of 30).
+**Status:** IN PROGRESS — 31 of 137 adjudicated (Ch5: 21 of 30).
 
 ## Scope
 
@@ -387,12 +387,48 @@ Jung, Campbell, Wilber, Tolle, Ram Dass, da Vinci, Socrates, Aesop, McKenna.
 Three defect classes in a single chapter. Scope the reconstruction on the
 assumption that the misalignment is structural, not incidental.
 
-### Chapter 5 — still open (13 of 30)
+### Chapter 5 — third tranche
 
-L840 McKenna · L864 Aesop · L872 Salzberg · L894 Mother Teresa · L906 Magritte ·
-L922 Thomas Berry · L926 Bear Heart · L938 Eckhart Tolle · L1012 Leonardo da
-Vinci · L1042 Maya Angelou · L1052 Rumi (already labelled "Adapted from… after
-Coleman Barks") · L1062 Simone Weil · L1106 John O'Donohue.
+**L864 · Aesop — "It is with our passions, as it is with fire and water, they are good servants but bad masters."**
+`UNVERIFIED` + `UNKNOWN`. Appears in Bartleby's *Proverbs, Maxims and Phrases of
+All Ages* under "Passions," and circulates in a second form ("The passions are
+like fire and water…"). No Aesopic fable contains it.
+
+**Structural note on Aesop.** No writings by Aesop survive, and his historical
+existence is uncertain; the fables are a centuries-long accretion attributed to
+him. A verbatim sentence ascribed to "Aesop" therefore **cannot reach
+`VERIFIED EXACT` in principle** — the ceiling for any Aesop attribution in this
+book is `UNVERIFIED`, or `PARAPHRASE/ADAPTED` where a fable's moral is being
+rendered. Worth a single policy decision rather than per-instance rulings, as
+with Campbell.
+
+**L1012 · Leonardo da Vinci — "The desire to know is natural to good men."**
+`UNVERIFIED`, strong lead. Consistently placed in *The Notebooks of Leonardo da
+Vinci* (Richter's compilation), but attested in this search only on quote sites,
+which cannot close a finding. Needs an edition check against Richter. Note the
+line echoes the opening of Aristotle's *Metaphysics* ("All men by nature desire
+to know"); whether Leonardo is quoting, adapting, or independently arriving
+there is unresolved and bears on how it should be cited.
+
+**L840 · Terence McKenna — "The imagination is the golden pathway to everywhere."**
+`UNVERIFIED` + `UNKNOWN`. Quote-site attestation only; no talk, lecture, book or
+interview located. Circulates widely outside this manuscript, so there is no
+local-coinage evidence — `UNKNOWN`, not `INTERNAL-ORIGIN CANDIDATE`.
+
+**McKenna running tally.** Of five McKenna quotations in the book, two now sit
+unresolved: this one and the Chapter 10 epigraph. The standing whole-book
+McKenna item should absorb both.
+
+### Chapter 5 — still open (9 of 30)
+
+All have a named primary work, most already in the chapter bibliography:
+L872 Salzberg (*Lovingkindness*) · L894 Mother Teresa (*A Simple Path*) ·
+L906 Magritte (collected interviews) · L922 Thomas Berry (*The Great Work*) ·
+L926 Bear Heart (*The Wind Is My Mother*) · L938 Eckhart Tolle ·
+L1042 Maya Angelou · L1052 Rumi (already honestly labelled "Adapted from…
+after Coleman Barks") · L1062 Simone Weil (*Waiting for God*) ·
+L1106 John O'Donohue (*Anam Cara*).
+
 
 ### Bibliography citation error — found in passing
 
