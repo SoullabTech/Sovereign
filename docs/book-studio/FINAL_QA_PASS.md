@@ -208,20 +208,21 @@ covers the whole book. **Recommend REFRAME** on the finding-20 pattern, or confi
 the author's declaration of allegiance rather than a claim about the state of science.
 
 **Batch 12 ruled and applied — 29 REVISE · 30 REVISE · 31 FRAME · 32 SOFTEN · 33 SOFTEN ·
-34 REVISE · 35 REFRAME.** All seven repairs use the author's own wording. Two grafts are recorded
-rather than absorbed:
+34 REVISE · 35 REFRAME.** All seven repairs use the author's own wording.
 
-- **30** was supplied as a standalone sentence; the surrounding sentence's trailing clause
-  *"transforming your heart's vision into reality"* was preserved rather than discarded, so the
-  entry keeps its original shape. Confirm or cut on the next read.
-- **34** was supplied as one sentence; the paragraph's second sentence
-  *"we can achieve wholeness and balance"* was **left untouched**. It was briefly softened to
-  "move toward" and reverted — it carries an outcome promise of the same family as 29, but it was
-  not ruled on, and no unruled sentence changes silently.
+**The two grafts were then ruled and are closed — no editorial debt carried past this point.**
 
-On **35**, the applied wording states the author's approach rather than the state of a science.
-The nuance recorded with the ruling stands open: if a stronger claim about the objective reality
-of energetic phenomena is wanted, it belongs stated as a **working ontology**, not under "science."
+- **30 — CUT.** The trailing clause *"transforming your heart's vision into reality"* is removed.
+  It was inherited from the entry's old template and pulled the Aether summary back toward
+  manifestation, which belongs to Fire. The revised sentence stands complete:
+  *"It encourages you to explore how Aether can be experienced tangibly through presence,
+  relationship, and the ordinary texture of daily life."* The phrase now echoes the book's own
+  Ch9 vocabulary, where the same formulation already appears.
+- **34 — SOFTEN.** *"we can achieve wholeness and balance"* → *"we can move toward greater
+  wholeness and balance."* Direction preserved, completion withdrawn — consistent with 29 and 32,
+  which removed outcome promises from the same family.
+- **35 — PROTECT.** The applied wording says *this is how I approach healing*, not *science has
+  established this ontology*. That is the distinction the reframe was for. It stands.
 
 ---
 

@@ -666,7 +666,7 @@ Ideally, we have a balance of all available modes. We all have our preferred mod
 
 Our beliefs about reality can predetermine how we engage it. If someone believes they are unemotional, they will naturally avoid emotional signals. If a person doesn't believe in telepathy, they will disregard telepathic messages as "mind chatter." Beliefs inform, persuade, color, and transform our world into a smaller, more predictable, yet less realistic version by filtering out anything that doesn't fit the mold. Our capacity to shift between elemental states of awareness fluidly and consciously helps us escape the limitations of our biases and beliefs, because every new elemental state presents us with new insights and challenges our habitual—fixated—ways of being.
 
-The tension between opposites can become a place of growth and transformation when we learn to hold both sides consciously. By embracing and integrating both the light and the dark aspects within ourselves, we can achieve wholeness and balance.
+The tension between opposites can become a place of growth and transformation when we learn to hold both sides consciously. By embracing and integrating both the light and the dark aspects within ourselves, we can move toward greater wholeness and balance.
 
 ### The I Ching and Nature's Wisdom
 
@@ -2373,7 +2373,7 @@ For readers who orient themselves through elemental temperament, the following e
 
 ### Aether Chapter
 
-- **Fire Type:** The Aether chapter inspires you to envision a grand unity that transcends earthly life. It encourages you to explore how Aether can be experienced tangibly through presence, relationship, and the ordinary texture of daily life, transforming your heart's vision into reality. You carry within you the seeds of your true destiny, ready to blossom and fulfill their potential.
+- **Fire Type:** The Aether chapter inspires you to envision a grand unity that transcends earthly life. It encourages you to explore how Aether can be experienced tangibly through presence, relationship, and the ordinary texture of daily life. You carry within you the seeds of your true destiny, ready to blossom and fulfill their potential.
 - **Water Type:** The Aether chapter invites you to dive deeply into your soul and connect with universal unity. By opening emotionally and spiritually, you transcend human limitations and gain profound insights into your humanity. This merging of inner and outer realities allows you to experience a deep, spiritual connection with all that is.
 - **Earth Type:** Grounding the concept of unity, the Aether chapter guides you to create harmonious environments that reflect the interconnectedness of all things. It encourages you to design spaces, build bridges, and develop infrastructure that honor the unity of existence, fostering a sense of wholeness and interconnectedness in your daily life.
 - **Air Type:** The Aether chapter, centered on unity and transcendence, invites you to explore intellectual and expansive realms. It encourages you to articulate the intuition of oneness, communicate this experience to others, and embrace the complexity of expressing unity through words. This chapter teaches you to convey the essence of interconnectedness and shared existence.
