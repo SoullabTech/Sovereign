@@ -1,5 +1,10 @@
 # WS2-05B-8B-02c-1 · CONVERSATION CONTRACT
 
+*Closeout revision. Adjudicated PASS IN PRINCIPLE with three shape-level
+corrections and five rulings; all are applied below. The architecture is
+unchanged — §§1–8 rulings stand as approved, with identity, staleness and anchor
+coherence corrected to match what the prose already claimed.*
+
 **Status:** specification only. No endpoint, UI, persistence, schema, model call,
 or manuscript/structure operation was built.
 **Base:** `e586c4189f71aeb32b15005b7208e45c27cacad2`.
@@ -23,12 +28,33 @@ readerProvenance, reviewRevision, adoptedAt}`, `canonicalFingerprint()`,
 
 An **Ask thread** is the unit. Not a session, not a message log.
 
+**Identity is `threadId` and nothing else.** `(manuscriptId, anchor)` is a
+**grouping / lookup key**, never an identity — that is what makes "many threads
+per anchor" true rather than a contradiction (§8, and open decision 5 as ruled).
+
+```
+thread identity     = id            host-minted, unique
+ownership           = manuscriptId  the Work
+grouping / lookup   = anchor        many threads may share one
+reading reference   = ReadingIdentity | null   frozen, never re-pointed
+```
+
 ```ts
 interface AskThread {
-  id: string;                    // host-minted, like unit ids
-  manuscriptId: string;          // the Work. The ONLY always-present anchor.
-  anchor: AskAnchor;             // §2
+  id: string;                    // THE identity. Host-minted, like unit ids.
+  manuscriptId: string;          // ownership. The Work.
+  anchor: AskAnchor;             // §2 — grouping key, NOT identity
   reading: ReadingIdentity | null;  // null for a Work with no reading yet
+  /**
+   * canonicalFingerprint(manuscriptId) at open — the BEFORE of §4's
+   * BEFORE == AFTER assertion.
+   *
+   * ON THE THREAD, NOT IN ReadingIdentity, deliberately: a thread may be opened
+   * on a Work that has never been read (§6), and that thread needs the baseline
+   * too. A field that lives inside a nullable reading is absent exactly where an
+   * author-originated concern would use it.
+   */
+  canonicalAtOpen: string;
   initiatedBy: 'maia' | 'author';   // §6 — first-class, not derived
   openedAt: string;
   turns: AskTurn[];              // append-only
@@ -105,6 +131,34 @@ Rulings:
   name sections, and may optionally name a division, but it is **not** required
   to correspond to anything MAIA said.
 
+### Anchor ⇄ reading coherence — hard invariants
+
+The union alone still permits two incoherent threads: an anchor whose
+`proposalId` disagrees with `reading.proposalId`, and a proposal-dependent anchor
+with `reading: null`. Both are **impossible, not merely discouraged** — a thread
+that points at proposal A while reasoning from proposal B would launder one
+reading's authority onto another's content, which is the failure WS2 refuses
+everywhere else.
+
+```
+proposal | division | question | uncertainty
+    REQUIRE  reading !== null
+    REQUIRE  anchor.proposalId === reading.proposalId
+
+work | section | concern
+    MAY have reading === null
+```
+
+- A mismatch is **refused at open**, not repaired and not preferred-to-one-side.
+- `division`, `question` and `uncertainty` additionally require their `unitId` /
+  index to resolve **within that frozen reading**.
+- For a `concern` carrying an optional `unitId`, the unit must resolve against
+  the frozen reading it claims to reference. If it does not, the thread opens
+  **without the unit relationship** — the concern is the author's and survives;
+  the false structural claim is dropped rather than guessed at.
+- `sectionIds` on any anchor resolve against the Work, as
+  `EditorialQuestion.sectionIds` already do.
+
 Validation, mirroring how `EditorialQuestion.sectionIds` is already handled: an
 anchor naming a section or unit the Work/proposal does not hold is **refused, not
 silently dropped**.
@@ -126,14 +180,23 @@ default and it is cheap to relax later; the reverse is not.
 `ReaderOutput.status: 'read-request'` with `sectionIds` and `why`. Nothing new is
 invented for the ask.
 
-**Budget: a thread-lifetime ceiling, not per turn.**
+**Budget: an opening allowance, extended only by an explicit author act.**
 
 ```ts
-const THREAD_READ_SCOPE: ReadScope = {
+const OPENING_ALLOWANCE: ReadScope = {
   maxIdsPerRequest: 4,   // same as DEFAULT_READ_SCOPE
   maxSections: 8,
   maxChars: 60_000,
 };
+
+interface ReadAllowance {
+  epoch: number;                       // 0 = the opening allowance
+  scope: ReadScope;
+  grantedBy: 'contract' | 'author';    // epoch 0 is 'contract'; every other is 'author'
+  grantedAtTurn: number;
+  /** The author gesture that authorised it. Required for every epoch > 0. */
+  grantId: string | null;
+}
 ```
 
 Ruled, not tuned — inheriting `readScope.ts` wholesale, including its two hard
@@ -141,10 +204,26 @@ rules: **crossing a ceiling refuses the request whole; it never truncates and
 never silently returns fewer sections.** A per-turn budget would be an unbounded
 mode wearing a small number, since turns are unbounded.
 
+**Exhaustion is not refill.** When the current epoch is spent, **MAIA cannot
+refill it** — not by asking well, not by starting a new turn, and not by the
+thread being long. The author may **explicitly grant a further bounded
+allowance**, which opens epoch *n+1*. Each grant is recorded as a provenance
+event with its own `grantId`.
+
+This is deliberately **not** "resetting the lifetime budget". The budget is an
+**initial allowance plus author-authorised extension epochs**, and the spend is
+always against the current epoch. Repeated extensions are lawful precisely
+because the author is repeatedly choosing them — expansion stays a member act,
+matching the `surface_preference` precedent.
+
+Nor can a new thread on the same anchor be used to launder a fresh allowance:
+allowances are per thread, and abandoning an exhausted thread to re-ask the same
+question in a new one is a **new thread with its own record**, visible as such.
+
 The thread budget is **its own instance**, separate from the reading's. A thread
-cannot spend the reading's remaining allowance, and cannot top itself up by being
-long. When the ceiling is reached the thread can still talk — it simply cannot
-read more, and must say so rather than answer as if it had.
+cannot spend the reading's remaining allowance. When the current epoch is
+exhausted the thread can still talk — it simply cannot read more, and must say so
+rather than answer as if it had.
 
 **Materials remain out of scope**, per `readScope.ts`. Notes, uploads, scraps and
 surrounding Studio context are not readable in a thread either. A conversation
@@ -183,36 +262,55 @@ uses all three and does **not** collapse them:
 | `reviewRevision` | has the **author's reviewed tree** moved? |
 | `canonicalFingerprint()` | has **canonical structure** moved? (read-only check) |
 
-Recomputed **at every turn**, compared against `ReadingIdentity`:
+Recomputed **at every turn** against `ReadingIdentity` and `canonicalAtOpen`.
+
+**The signals are compositional, not mutually exclusive.** A real thread can have
+text moved *and* the reviewed tree moved *and* a newer reading existing, all at
+once. A tagged union would force a surface to pick one and drop the rest — the
+exact collapse this section exists to forbid.
 
 ```ts
-type StalenessState =
-  | { state: 'current' }
-  | { state: 'text-moved';          changed: ('input' | 'topology')[] }
-  | { state: 'review-moved';        was: number; now: number }
-  | { state: 'reading-superseded';  supersededBy: string | null };
+interface StalenessState {
+  /** null = could not be measured. Three states, not two. */
+  inputMoved: boolean | null;
+  topologyMoved: boolean | null;
+  reviewMoved: { was: number; now: number } | null;
+  readingSuperseded: { supersededBy: string | null } | null;
+  /** BEFORE == AFTER against `AskThread.canonicalAtOpen`. */
+  canonicalMoved: boolean | null;
+}
 ```
+
+`null` means *could not measure*, following the precedent `reviewClient` already
+sets for `staleAsRead`: *"True, false, or NULL when the server could not measure
+it. Three states, because a surface that cannot say 'I do not know' will say
+'no'."* An unmeasured digest must never present as an unmoved one.
+
+"Current" is **derived, never stored** — every field falsy/null. Storing a
+summary flag alongside the parts is how the parts drift out of agreement.
 
 Rulings:
 
-- **`text-moved` is not a warning banner, it is a constraint on MAIA.** She is
-  told, in the turn, that the prose underneath her reading has changed. She may
+- **`inputMoved` / `topologyMoved` is not a warning banner, it is a constraint
+  on MAIA.** She is told, in the turn, that the prose underneath her reading has
+  changed. She may
   continue to explain *what she saw*, and she may **not** assert what the text
   *currently says* about a moved region without re-reading it under §3.
-- **`review-moved`** means the author has been editing the reviewed tree since the
+- **`reviewMoved`** means the author has been editing the reviewed tree since the
   thread opened. Her advice must be recomputed against the current
   `reviewRevision` or explicitly marked as advice about an older tree.
-- **`reading-superseded`** means a newer proposal exists. The thread does **not**
+- **`readingSuperseded`** means a newer proposal exists. The thread does **not**
   re-point to it. It stays a thread about the reading it was opened on, and the
   surface offers to open a new thread on the new reading.
-- **Never quietly reattach old reasoning to new text.** Where staleness is not
-  `current`, an answer that depends on the moved material must either re-read or
-  say it is reasoning about what she read then.
+- **Never quietly reattach old reasoning to new text.** Where any signal is set,
+  an answer that depends on the moved material must either re-read it or say it
+  is reasoning about what she read then.
 
-`canonicalFingerprint()` is a **BEFORE == AFTER assertion for the whole thread**:
-canonical structure must be byte-identical at close to what it was at open. It
-can only show that nothing moved, never that nothing could — so it stands
-alongside §7's structural inability, never in place of it.
+`canonicalMoved` is the **BEFORE == AFTER assertion for the whole thread**,
+against the `canonicalAtOpen` baseline pinned in §1: canonical structure must be
+byte-identical at close to what it was at open. It can only show that nothing
+moved, never that nothing could — so it stands alongside §7's structural
+inability, never in place of it.
 
 ---
 
@@ -230,17 +328,25 @@ Rejected — *thread owned by the proposal*: readings are superseded routinely, 
 that model destroys or orphans the conversation each time. It also invites the
 worst failure in §4 — silently re-pointing a thread at a reading it was not about.
 
-**Adopted:** identity is `(manuscriptId, anchor)`; the reading is a *frozen
-reference*, not the owner.
+**Adopted:** the thread is **owned by** `manuscriptId` and **grouped by**
+`anchor`; its identity is `threadId` (§1); the reading is a *frozen reference*,
+not the owner. Grouping is not identity — many threads may share an anchor.
 
 - Append-only. Turns are never mutated; corrections are new turns.
 - A thread is **never** a memory substrate for anything outside the Work. It is
   not a member atom, not episodic memory, not a pattern source, and nothing in it
   is eligible for cross-session recall. It is a record of an editorial exchange
   about one Work, readable by its author.
-- **Sanctuary applies.** A thread opened under Sanctuary is not persisted at all
-  — not stored, not indexed, no pattern formation. This is the project's absolute
-  boundary and 02c does not get an exemption for being useful.
+- **Sanctuary applies to the conversation record, not to lawful reference.**
+  A Sanctuary thread is **not persisted at all** — not stored, not indexed, no
+  pattern formation, no memory or atom extraction. This is the project's absolute
+  boundary and 02c gets no exemption for being useful.
+  It **may** still be anchored to a stored proposal, division, question or
+  uncertainty: where the member is already authorised to view that proposal,
+  reasoning about it in Sanctuary is lawful reference to Work material they can
+  already see. What Sanctuary forbids is **creating, persisting or indexing the
+  conversation**, not looking at the reading. Nothing from such a thread — no
+  read grant, no turn, no proposed gesture — survives it.
 - **Deletable by the author, whole.** Append-only governs MAIA and the system, not
   the author's sovereignty over their own record.
 
@@ -260,6 +366,10 @@ resolved model string actually sent, never the default's name.*
   (`anchor.on: 'work' | 'section' | 'concern'`, `reading: null`).
 - It requires no MAIA question to exist, and does not become one. Nothing about
   an author-originated thread is written into `questionsForAuthor` (§8).
+- An author thread may request **bounded sections** under §3. It may **not**
+  silently launch a new whole-Work 05B reading. If the inquiry genuinely needs
+  the book read again, that is an explicit handoff to a new reading, chosen by
+  the author — never a side effect of a conversation.
 - MAIA's opening move in an author thread is **not** to produce a reading.
   "I have a problem with Chapter 10" is answered by helping the author find what
   the problem is, which may end with no structural conclusion at all.
@@ -342,10 +452,10 @@ Rulings:
 
 | # | Case | Ruling |
 |---|---|---|
-| 1 | *"Why did you put 82 in Water?"* | Answerable from the frozen reading + `evidence` + `coverage`. **No read needed.** She cites what she saw, not a fresh rationalisation. If the reading's own `uncertainRegions` cover 82 she must say so. |
+| 1 | *"Why did you put 82 in Water?"* | **No read needed *if* the frozen reading holds enough evidence to answer honestly.** She cites what she saw, not a fresh rationalisation, and if the reading's own `uncertainRegions` cover 82 she must say so. Where `evidence` / `coverage` do **not** settle it, she requests the relevant body under §3 rather than reasoning past the gap. The zero-body default survives: it is a default, not a prohibition on reading. |
 | 2 | *"Read 81–84 and reconsider."* | A `read-request` under §3. 4 ids ≤ `maxIdsPerRequest`. Grant recorded as `ThreadRead`. She may then revise **in the thread**. The frozen interpretation does not change (§8). |
 | 3 | *"I disagree. I think 82 belongs in Earth."* | Legitimate author input, not an instruction. She may agree, disagree with reasons, or offer a `ProposedGesture` (`reparent`). **Nothing moves.** Author disagreement is never itself a mutation trigger. |
-| 4 | *"Could your original reading simply have been wrong?"* | **Must be answerable "yes".** The contract forbids defending the frozen proposal as such: `reviewRevision`, `uncertainRegions` and `coverage` exist precisely because a reading is a claim, not a fact. A thread that cannot concede error is a failed thread, and this is the case most worth testing. |
+| 4 | *"Could your original reading simply have been wrong?"* | **She must be *capable* of concluding "yes" when the evidence warrants it**, and must never defend the frozen proposal merely because it is hers — `reviewRevision`, `uncertainRegions` and `coverage` exist precisely because a reading is a claim, not a fact. This is **not** a demand for a yes on every instance: where the evidence still supports the original reading, saying so with reasons is the correct answer. The failure modes are symmetric — a thread that cannot concede error, and a thread that performs self-doubt to seem agreeable. Both are failed threads. |
 | 5 | *"Chapter 10 is inside what you called Bibliography. Explain that."* | Anchor `division`. She explains from `evidence`/`coverage` — and `unaccountedSectionIds` and `possible-scaffold-contamination` are exactly the vocabulary for this. Likely a §3 read. Correct outcome may be conceding a misread run. |
 | 6 | *"I have a problem with Chapter 10 that has nothing to do with your question."* | Anchor `concern`, `initiatedBy: 'author'` (§6). Opens with **no** obligation to relate to any `questionsForAuthor` entry. May be opened where no proposal exists. |
 | 7 | *"What would you change?"* | Developmental answer permitted, as **options** — plural, with trade-offs. May include `ProposedGesture` values. May not be phrased as instruction, and may not be executed. |
@@ -355,27 +465,35 @@ Rulings:
 
 ---
 
-## 10 · Open decisions (for adjudication, not assumed)
+## 10 · Adjudicated decisions
 
-1. **Thread budget refill.** `THREAD_READ_SCOPE` is a thread-lifetime ceiling. A
-   long, legitimate editorial thread will exhaust it. Options: it never refills
-   (thread ends its reading life); the author may explicitly grant a new
-   allowance as a consent gesture; or a new thread on the same anchor starts a new
-   budget — which is a loophole unless ruled. **Recommendation: explicit author
-   grant**, because it keeps expansion a member act, matching the
-   `surface_preference` precedent. Not decided here.
-2. **Zero-body opening.** §3 opens with no bodies on conservative grounds. If real
-   use shows case 1 (*"Why 82?"*) routinely needs one read to answer well, that is
-   a finding to rule on, not to quietly default.
-3. **Does an author thread ever trigger a re-read of the Work?** Contract says no
-   — that is a reading, and readings are 05B. Confirm.
-4. **Sanctuary interaction with anchors.** A Sanctuary thread persists nothing;
-   whether it may be *opened* on a proposal anchor at all (the anchor itself is a
-   pointer into stored content) needs a ruling.
-5. **Multiple concurrent threads on one anchor.** §8 permits many threads per
-   question over time. Whether several may be *open simultaneously* is undecided.
+All five open decisions were ruled at closeout. None remain assumed.
 
----
+1. **Read-budget refill — explicit author-granted bounded extension.** The
+   opening allowance stands (8 sections / 60k chars). MAIA cannot refill it. The
+   author may explicitly grant a further bounded allowance, opening a new epoch,
+   recorded as a provenance event. Not a reset: *initial allowance + author-
+   authorised extension epochs*. Repeated extensions are lawful because the
+   author repeatedly chooses them. **Applied in §3.**
+2. **Zero-body opening — KEEP.** Bodies are not pre-fed merely because a
+   conversation opened. Case 1 is now conditional on the frozen reading holding
+   enough evidence to answer honestly; where it does not, she reads under §3.
+   **Applied in §3 and §9.1.**
+3. **Author thread triggering a re-read — no implicit whole-Work reread.** An
+   author-originated thread may request bounded sections through the same thread
+   read protocol. It may **not** silently launch a new whole-Work 05B reading. If
+   the inquiry genuinely requires reading the book again, that is an **explicit
+   handoff to a new reading**, made by the author, not a side effect of a
+   conversation. **Applied in §6.**
+4. **Sanctuary + proposal anchors — anchor allowed, persistence prohibited.**
+   Where the member may already view the stored proposal, a Sanctuary thread may
+   reason about it; what Sanctuary forbids is creating, persisting or indexing
+   the conversation, plus any memory or pattern extraction from it.
+   **Applied in §5.**
+5. **Multiple / concurrent threads per anchor — allowed.** `threadId` makes them
+   distinct (§1). Preferring "resume this thread" over casually multiplying
+   threads is **presentation policy, not an identity restriction**, and belongs
+   to 02c-2's surface, not to this contract. **Applied in §1, §5 and §8.**
 
 ## 11 · What this unit did not do
 
@@ -383,7 +501,7 @@ No endpoint, no UI, no persistence, no schema or migration, no model call, no
 manuscript or structure operation, no `OracleConversation` involvement. No file
 under `lib/`, `app/`, `database/` or `scripts/` was added or modified.
 
-Next, in order: **adjudicate this contract** → **clear the 02c-0 real-row witness
+Next, in order: **this contract is closed out and adjudicated** → **clear the 02c-0 real-row witness
 debt on the Mac Studio** (load the real `e6cab…` proposal from `e586c418` and
 confirm the closed 02a room still behaves as witnessed — a regression witness, not
 another adjudication) → **02c-2 · Anchored Ask**.
