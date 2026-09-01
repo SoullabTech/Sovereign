@@ -27,7 +27,18 @@
 
 **Rights status** — recorded for **every** quotation, independent of attribution:
 `PUBLIC DOMAIN` · `LIKELY PROTECTED` · `TERM UNCERTAIN` ·
-`PERMISSION-OR-LICENSE CONFIRMED`
+`PROTECTABILITY UNCERTAIN` · `PERMISSION-OR-LICENSE CONFIRMED`
+
+`PROTECTABILITY UNCERTAIN` exists because **words and short phrases are not
+copyrightable merely because their author is modern** — the U.S. Copyright
+Office excludes them from protection. A compact spoken aphorism is not
+automatically `LIKELY PROTECTED`.
+
+**Triage shape:**
+- Poetry, song lyrics, or a substantial literary passage → `LIKELY PROTECTED` · `HIGH`
+- Short aphorism or isolated sentence → `PROTECTABILITY UNCERTAIN` · `STANDARD`
+- Translation → evaluate the **actual translation's** term and status, and the amount quoted
+- Public-domain source → `PUBLIC DOMAIN` · `NONE`
 
 **Rights-review priority** — because copyright status alone does not answer
 whether permission is required:
@@ -407,6 +418,16 @@ it unless drafting history confirms it.
 **Workflow.** quotation / source dependency → actual work → actual edition or
 translation → attribution verdict → rights flag → bibliography reconciliation.
 
+**Explicit check — famous-work substitution.** *Correct author + plausible but
+wrong famous work* is a citation defect that **only source-level quotation
+verification can detect**. A completeness check will pass it; a reader will
+believe it. Run this check chapter by chapter, evidence-led, never by
+presumption from Chapter 5.
+
+**The bibliography is not audited independently.** The corrected bibliography is
+built **downstream from the completed provenance census**, which is becoming the
+book's authoritative source map.
+
 **Task shape.** Reconstruct from actual manuscript dependencies outward, not
 entry-by-entry patching. Per chapter: inventory quotations *and* substantive
 source dependencies → establish correct work/edition → add missing → correct
@@ -554,7 +575,8 @@ This is a fifth item for the permissions review.
 Winfrey's *Master Class* and posted in this exact wording by Angelou's official
 account. A spoken saying with several recorded phrasings ("When you know better,
 do better"), so variant rather than exact.
-**Rights: `LIKELY PROTECTED` · `STANDARD`.**
+**Rights: `PROTECTABILITY UNCERTAIN` · `STANDARD`** — a compact spoken aphorism,
+not a literary passage.
 **`WRONG SOURCE/WORK`** — the Ch5 bibliography cites *I Know Why the Caged Bird
 Sings*. This is a spoken remark, not from that book.
 
@@ -565,7 +587,8 @@ lamp burning "through the continuous input of small drops of oil" — the
 manuscript's sentence reads as a compression of it, which would make it
 `PARAPHRASE/ADAPTED` on confirmation. Proposed editions to check: *No Greater
 Love* (1997) and *A Simple Path* (1995).
-**Rights: `LIKELY PROTECTED` · `STANDARD`.**
+**Rights: `PROTECTABILITY UNCERTAIN` · `STANDARD`** — a short aphorism; if the
+fuller *No Greater Love* passage were quoted instead, this would rise.
 **`WRONG SOURCE/WORK` (probable)** — the Ch5 bibliography cites *A Simple Path*;
 the language located is in *No Greater Love*. Confirm before recording.
 
@@ -649,6 +672,8 @@ census.**
 | Coleman Barks / Rumi (L1052) | `LIKELY PROTECTED` | `HIGH` |
 | John O'Donohue (L1106) | `LIKELY PROTECTED` | `HIGH` |
 | Emma Craufurd / Weil (L1062) | `TERM UNCERTAIN` | `STANDARD` |
+| Maya Angelou (L1042) | `PROTECTABILITY UNCERTAIN` | `STANDARD` |
+| Mother Teresa (L894) | `PROTECTABILITY UNCERTAIN` | `STANDARD` |
 
 **Three Peter Gabriel lyrics**, located precisely.
 
