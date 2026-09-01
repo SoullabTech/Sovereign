@@ -71,10 +71,43 @@ describe('the production API does not accept a mode', () => {
     }
   });
 
-  it('the test seam is named so it cannot be mistaken for the API', () => {
-    const src = readFileSync(join(__dirname, '..', 'router.ts'), 'utf8');
-    expect(src).toContain('__runStructuredWithPolicyForTest');
-    /* And the production export takes no mode. */
-    expect(src).toMatch(/export async function runStructured\(\s*req: StructuredRequest,\s*\): Promise/);
+  /**
+   * THE STRUCTURAL GATE. Comments are stripped first — the module deliberately
+   * DISCUSSES the export it no longer has, and an earlier version of this test
+   * passed on that prose rather than on the code.
+   */
+  it('router.ts exports no callable path that accepts a mode or policy override', () => {
+    const src = readFileSync(join(__dirname, '..', 'router.ts'), 'utf8')
+      .replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
+
+    /* Exactly two exports: the production entry point and a null constant. */
+    const exported = [...src.matchAll(/^export\s+(?:async\s+)?(?:function|const|let|var|class)\s+(\w+)/gm)]
+      .map((m) => m[1]).sort();
+    expect(exported).toEqual(['LOCAL_STRUCTURED_PROVIDER', 'runStructured']);
+
+    /* And no export re-surfaces one under another name. */
+    expect(src).not.toMatch(/^export\s*\{/m);
+    expect(src).not.toMatch(/^export\s+\*/m);
+
+    /* No exported signature mentions a mode or a provider override. */
+    const exportedSignatures = [...src.matchAll(/^export[\s\S]*?\)/gm)].map((m) => m[0]).join('\n');
+    expect(exportedSignatures).not.toMatch(/InferenceMode/);
+    expect(exportedSignatures).not.toMatch(/\bmode\b/);
+    expect(exportedSignatures).not.toMatch(/StructuredProvider\s*\}/);
+  });
+
+  it('the removed seam is gone from the code, not merely renamed', () => {
+    const src = readFileSync(join(__dirname, '..', 'router.ts'), 'utf8')
+      .replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
+    expect(src).not.toContain('__runStructuredWithPolicyForTest');
+    expect(src).not.toContain('ForTest');
+  });
+
+  it('only policy.ts decides the mode, and it is not a routing path', () => {
+    const policy = readFileSync(join(__dirname, '..', 'policy.ts'), 'utf8');
+    expect(policy).toContain('export function resolveStructuredMode');
+    /* It resolves a mode; it cannot execute anything. */
+    expect(policy).not.toContain('execute');
+    expect(policy).not.toContain('StructuredProvider');
   });
 });

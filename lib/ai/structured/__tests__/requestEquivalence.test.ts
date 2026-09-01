@@ -33,7 +33,6 @@
  */
 
 import { anthropicStructuredProvider, toAnthropicParams } from '../anthropicStructuredAdapter';
-import { __runStructuredWithPolicyForTest as routeForTest } from '../router';
 import type { StructuredRequest } from '../types';
 
 /** Captures exactly what the adapter would send, and by which method. */
@@ -194,47 +193,6 @@ describe('Ask MAIA request equivalence', () => {
     const r = await anthropicStructuredProvider({ client }).execute(askRequest);
     expect(r.content).toEqual([{ type: 'text', text: 'I could be wrong.' }]);
     expect(r.provenance.model).toBe('claude-opus-5');
-  });
-});
-
-describe('the ruling: structured inference is non-fallbackable', () => {
-  const failing = { name: 'anthropic' as const,
-    execute: async () => { throw new Error('529 overloaded'); } };
-
-  it('a provider failure REFUSES and calls nothing else', async () => {
-    const r = await routeForTest(readerRequest, { mode: 'primary', provider: failing });
-    expect(r).toEqual({ ok: false, refusal: 'provider_unavailable', detail: '529 overloaded' });
-  });
-
-  it('refuses rather than returning a degraded or templated answer', async () => {
-    const r = await routeForTest(askRequest, { mode: 'primary', provider: failing });
-    expect(r.ok).toBe(false);
-    expect('result' in r).toBe(false);
-  });
-
-  it.each(['sovereign', 'local_only'] as const)(
-    'refuses in %s while no local structured provider exists', async (mode) => {
-      /* A provider IS supplied, to prove the mode refuses before reaching it —
-         the mode is honoured, not merely unserved. */
-      const spy = { name: 'anthropic' as const, execute: jest.fn() };
-      const r = await routeForTest(readerRequest, { mode, provider: spy });
-      expect(r).toEqual({
-        ok: false,
-        refusal: 'structured_inference_unavailable',
-        detail: `mode=${mode}: no local provider can honour a structured contract`,
-      });
-      expect(spy.execute).not.toHaveBeenCalled();
-    });
-
-  it('succeeds in primary and returns the exact structured result', async () => {
-    const { client } = capturingClient({
-      content: [{ type: 'tool_use', id: 't', name: 'propose_structure', input: { form: 'flat' } }],
-    });
-    const r = await routeForTest(readerRequest,
-      { mode: 'primary', provider: anthropicStructuredProvider({ client }) });
-    expect(r.ok).toBe(true);
-    expect(r.ok && r.result.content[0]).toEqual(
-      { type: 'tool_use', id: 't', name: 'propose_structure', input: { form: 'flat' } });
   });
 });
 

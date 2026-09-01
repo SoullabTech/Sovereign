@@ -19,12 +19,13 @@
  *   sovereign / local_only → structured_inference_unavailable, until a local
  *                            provider exists that can honour the same contract
  *
- * THE CALLER DOES NOT NAME THE MODE. `runStructured` takes the request and
- * nothing else; the mode is resolved from platform configuration by
- * `resolveStructuredMode`. A cognitive surface that could pass `primary` could
- * opt itself out of sovereign policy, which is the boundary this seam exists to
- * hold. The test seam below is deliberately named so it cannot be mistaken for
- * the production API.
+ * THE CALLER DOES NOT NAME THE MODE, AND HAS NO SECOND DOOR. `runStructured`
+ * takes the request and nothing else; the mode is resolved from platform
+ * configuration by `resolveStructuredMode`. This module exports NO other
+ * callable routing path, and in particular none that accepts a mode or a
+ * provider override — a surface that could pass `primary` could opt itself out
+ * of sovereign policy, and an export whose name merely asks callers not to do
+ * that is a convention, not a boundary.
  *
  * NO MODEL POLICY RUNS HERE. `selectClaudeModel` is unreachable: the caller
  * pinned the model, and the seam's job is to send it, not to have an opinion.
@@ -72,20 +73,22 @@ export async function runStructured(
 }
 
 /**
- * Test-only seam. Named so it cannot be mistaken for the production API, and so
- * a production caller reaching for it is visible in review.
+ * PRIVATE. Not exported, and deliberately so.
+ *
+ * An earlier cut exported a `__runStructuredWithPolicyForTest(req, { mode,
+ * provider })` beside the production API. Its name asked callers not to use it,
+ * which made sovereignty a convention again: any cognitive surface could import
+ * it and route as `primary` while the platform was configured sovereign. The
+ * whole point of this seam is that the boundary is a property of the program,
+ * so the second entry point is gone rather than discouraged.
+ *
+ * Tests reach the provider by mocking the adapter module, and the mode by
+ * setting the platform variable — neither of which is a callable routing path
+ * that ships.
  */
-export async function __runStructuredWithPolicyForTest(
-  req: StructuredRequest,
-  override: { mode: InferenceMode; provider?: StructuredProvider },
-): Promise<StructuredOutcome> {
-  return route(req, override.mode, override.provider);
-}
-
 async function route(
   req: StructuredRequest,
   mode: InferenceMode,
-  provider?: StructuredProvider,
 ): Promise<StructuredOutcome> {
   if (!EXTERNAL_AUTHORIZED.includes(mode)) {
     if (LOCAL_STRUCTURED_PROVIDER === null) {
@@ -103,7 +106,7 @@ async function route(
 
   let p: StructuredProvider;
   try {
-    p = provider ?? await defaultProvider();
+    p = await defaultProvider();
   } catch (err) {
     return { ok: false, refusal: 'not_configured', detail: String(err) };
   }

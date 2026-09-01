@@ -211,3 +211,77 @@ Pinned caller model · exact system and messages · exact tool schema and
 `tool_choice` · exact max-token limits · missing tool call detectable ·
 role-preserving Ask history · `tools` key **absent** for Ask · `stop_reason` and
 usage · structured inference non-fallbackable · plain-text stack byte-identical.
+
+---
+
+# FINAL SOVEREIGNTY CLOSE — the second door is gone
+
+Applied to `2f4b3b9b`. Neither reader migrated; no Writer's Studio file touched;
+no paid reading run. Every `2f4b3b9b` behaviour is unchanged.
+
+## The defect
+
+`router.ts` exported `__runStructuredWithPolicyForTest(req, { mode, provider })`,
+which bypassed `resolveStructuredMode()` and routed on the supplied mode. So the
+claim was not yet structurally true — it was *"the caller cannot choose the mode,
+unless it imports the function whose name asks it not to."* A name is a
+convention; this seam exists to make sovereignty a property.
+
+## The close
+
+`router.ts` now exports exactly two things:
+
+```
+LOCAL_STRUCTURED_PROVIDER   a null constant, not a path
+runStructured(request)      the only routing entry point
+```
+
+`route(req, mode)` is private and takes no provider. Tests reach the provider by
+**mocking the adapter module** and the mode by **setting the platform variable** —
+neither of which ships as a callable routing path.
+
+## The structural gate, and a false pass it replaced
+
+`modePolicy.test.ts` asserts, with comments stripped first:
+
+- the exported symbol set is exactly `['LOCAL_STRUCTURED_PROVIDER', 'runStructured']`;
+- there is no `export {` block and no `export *` re-surfacing a private path;
+- no exported signature mentions `InferenceMode`, a `mode` parameter, or a
+  provider override;
+- `__runStructuredWithPolicyForTest` — and any `ForTest` — is absent from the code;
+- `policy.ts` resolves a mode and cannot execute anything (no `execute`, no
+  `StructuredProvider`).
+
+**Comments are stripped for a reason found here.** The previous assertion
+`expect(src).toContain('__runStructuredWithPolicyForTest')` kept passing *after*
+the export was removed, because the new doc comment explains the removal by name.
+It was a false pass on prose. Any source-level gate in this seam strips comments
+before matching.
+
+**Probed three ways, all reverted:**
+
+```
+same named seam reintroduced      → 2 tests fail
+DIFFERENTLY named mode-accepting export (runStructuredIn)  → gate fails
+private route re-surfaced via `export { route }`           → gate fails
+```
+
+The second and third matter: the gate is not name-based, so it cannot be walked
+past by choosing a friendlier identifier or a different export form.
+
+## Closeout gates — new source files TRACKED
+
+```
+lib/ai/structured                45 passed (4 suites)
+check:no-direct-anthropic        GREEN · approved: 2
+typecheck no-regression          PASS · baseline not re-recorded
+modelService · sovereignRouter · claudeClient · types   byte-identical to canonical
+changed paths                    lib/ai/structured/** · allowlist · two docs
+```
+
+## Unchanged from `2f4b3b9b`
+
+Unset structured mode → primary · invalid mode → refusal · sovereign/local_only →
+unavailable without a local structured provider · caller-pinned model ·
+non-fallbackable · `ordinary` vs `long-running` execution requirement · exact
+tool and message semantics · plain-text stack untouched.
