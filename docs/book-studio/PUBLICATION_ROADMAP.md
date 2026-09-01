@@ -221,3 +221,6 @@ title-page verso, distribution metadata and cover.
   of the chapter, not merely to clean its citations.
   **This is a read for chapter experience after subtraction. It is not permission to refill
   empty spaces with quotations.**
+- **Read Chapter 8 (Air) continuously after quotation adjudication** for rhythm and arrival
+  — nine of fifteen quotations left the chapter. Same terms as the Fire read: not to refill
+  emptied epigraph slots, but to make sure the chapter still breathes.

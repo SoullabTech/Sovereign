@@ -80,15 +80,6 @@
       "notes": "Audit: UNVERIFIED, UNKNOWN. Shows BOTH instability markers at once - a competing attribution (Hale, 1822-1909, whose death predates the attribution) and no primary source."
     },
     {
-      "match": "human race is challenged more",
-      "occurrence": 1,
-      "provenance_status": "paraphrase_adapted",
-      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L1714",
-      "actual_author": "Rachel Carson",
-      "work": "documented original in Paul Brooks, The House of Life: Rachel Carson at Work (1972)",
-      "notes": "Audit: EVOLVED APHORISM / RECOVERABLE ANCESTOR. A documented Carson original exists and the manuscript's wording departs from it."
-    },
-    {
       "match": "Maps are essential",
       "occurrence": 1,
       "provenance_status": "unverified",

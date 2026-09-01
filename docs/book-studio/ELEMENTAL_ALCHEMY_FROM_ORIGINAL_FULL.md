@@ -1569,8 +1569,6 @@ In the alchemical process of sublimatio, the element of Air transforms the dense
 
 Fire and Water, on the other hand, represent the right hemisphere, embracing the unknown and the yet-to-be-experienced. They delve into nuance and novelty, traversing uncharted paths and uncovering new experiences. This inductive aspect of experience involves burning and washing away what no longer aligns with emerging insights and truths.
 
-*"Reality is not only stranger than you think, but stranger than you can think." – Richard Feynman*
-
 Fire and Water reveal deeper truths by purging falsehoods, distilling an inner elixir of insight. I take the term *inner gold* from the Jungian analyst Robert A. Johnson, who used it for the value we carry but cannot yet see in ourselves, and who wrote about how often we hand it to someone else to hold. This inner gold is then planted in the Earth, where it takes form and develops into our created selfhood. From the Earth, it rises into the Air, connecting with the world and becoming part of a greater collective wisdom.
 
 Air represents the culmination of these regressive and progressive processes, embodying all the preparatory work and delivering essential insights to the world. It transcends mere matter, reflecting the essence of what truly matters. By reconnecting with others, it shares and communicates wisdom, synthesizing greater understanding through dialectic exchange. This process ignites new hypotheses and visions, perpetuating the spiral of growth and refining us toward the center of our being, where our true nature awaits.
@@ -1607,7 +1605,7 @@ Dialectic exchanges aim to merge opposing ideas into something greater. For exam
 
 Miscommunication has deepened divides, but it also forces us to dialogue and confront our true beliefs. This challenge can lead to personal and collective growth, pushing us to think, feel, and live more inclusively and globally.
 
-*"Out beyond ideas of wrongdoing and rightdoing, there is a field. I'll meet you there." – Rumi*
+*"Out beyond ideas of wrongdoing and rightdoing, there is a field. I'll meet you there." – Adapted from Rumi, after Coleman Barks*
 
 ### Refining the Air of Mindful Communication
 
@@ -1625,8 +1623,6 @@ We all have thoughts and ideas, a need to communicate in a useful way, and a nee
 
 By being truly connected and integrated with our cognitive, relational, communicating mind, we feel more centered, empowered, harmonious, inspired, innovative, and caring, with an intelligent sense of respect for others, an ability to share in mutual concern, and the ability to form solid and generative unions with the world around us.
 
-*"An open mind leaves a chance for someone to drop a worthwhile thought in it." – Mark Twain*
-
 We create a better life, for ourselves and for the world, when we are conscious of our intentions, clear in our motives, and coherent in the way we relate to others. Harmony, balance, beauty, love, higher consciousness, and the creation of new systems of communication and interactions are the ultimate outcomes of mindful living. The air realm reminds us to bring out what is most essential in our nature and in our intentions and share in the evolution of consciousness, within our own minds and the collective field of intelligence.
 
 Our interrelated, interdependent, and mycelial, interwoven mind is critical to the success of the air world of coming to know reality. In this interrelated field of interdependent points of perspectives, there is the tendency to collapse into a shared field of mutual agreement ranging from the density and illusory nature of groupthink to the finer states of collaborative intelligence.
@@ -1638,8 +1634,6 @@ Our interrelated, interdependent, and mycelial, interwoven mind is critical to t
 In groupthink, self-awareness, self-advocacy, and integrity are sacrificed to an overarching spirit consuming all into one mind. It is the collapse into the externalized perspective and power dynamic. Here, we lose the integrity of self-awareness and responsibility of maintaining our authenticity. Our core being overwhelmed and conceding to the energetic demands of the external forces, like a healthy cell conceding to the parasitic pathology of a cancer. The delicate balance lost between collective influence and individual integrity—an unfortunate release of responsibility to maintain the dictates and direction of health and wellness found within the coercive demands of a greater field of influence.
 
 Collaborative intelligence is an integrated field of mutually beneficial intelligence, driven by principles like innate integrity, functional independence, and radical authenticity. It embraces collective forces that complement and extend each of us in a mutually beneficial equilibrium, fostering growth through shared experiences and learning.
-
-*"Coming together is a beginning; keeping together is progress; working together is success." – Henry Ford*
 
 The air element clears our emotional swamps, enhancing awareness and presence. A call from a friend can shift our mood, reminding us of our best selves and reflecting our inner gold. We are sacred mirrors for each other, sharing realities and balancing opposites to create new wisdom from shared experiences.
 
@@ -1653,7 +1647,7 @@ When energies are suppressed, dark, chaotic forces emerge first. Initial communi
 
 We can find common ground and share across differences. Nature thrives on diversity and interconnectivity. Like Daedalus, we seek wisdom from nature to escape cultural traps. Technology and science provide wings for personal freedom and collective wisdom for maintaining harmony.
 
-*"The human race is challenged more than ever before to demonstrate our mastery, not over nature but of ourselves." – Rachel Carson*
+*"Now I truly believe that we in this generation must come to terms with nature, and I think we're challenged, as mankind has never been challenged before, to prove our maturity and our mastery, not of nature but of ourselves." – Rachel Carson, quoted in Paul Brooks, The House of Life*
 
 ### Mapping Reality
 
@@ -1664,8 +1658,6 @@ The air element of cognition allows us to create meaningful symbols and symbolic
 Alchemy and shamanism are rich with symbolism, guiding rituals and processes. Symbols, icons, and sigils in alchemy, and elements, objects, and images in shamanism, act as portals into different realms. Rituals, like fire purification and water cleansing, are systems within larger ceremonies, each part contributing to a holistic experience.
 
 Maps of meaning ensure consistency and purpose in these processes, much like a city map uses symbols to represent roads, highways, and buildings. Creating personal journey maps involves essentializing our experiences into symbolic forms that guide us.
-
-*"Maps are essential. Planning a journey without a map is like building a house without drawings." – Mark Jenkins*
 
 The elemental model and the Spiralogic process have become my standardized map for personal and client development. This open-source model integrates various methods and practices, helping clients organize their life elements and create conscious, alchemically wise paths.
 
@@ -1683,15 +1675,11 @@ In this state of openness and trust, love and wisdom flow through relationships.
 
 Awareness of interpersonal dynamics enhances collaborative intelligence, conflict resolution, and diplomacy. As a therapist, I focus on the client's whole, sacred self, inviting their higher self to rise during challenges.
 
-*"When we seek to discover the best in others, we somehow bring out the best in ourselves." – William Arthur Ward*
-
 I once saw a video of Taoist healing masters shrinking a tumor in real time, focusing on the patient's spirit as whole and healthy. They believed this focus redirected life force, starving the tumor. Although I couldn't verify the video's authenticity, the lesson was clear: what we focus on, we nurture.
 
 Air sublimation brings heightened self and world awareness, reflecting our water nature's inner flow in our outer relations. It allows us to transcend physical limitations, unite opposites, and form higher communications and relations.
 
 In a culture of increasing isolation despite social media, algorithms often divide rather than unite us due to our attention's attraction to controversy. This reflects the growing pains of our emerging collective consciousness. Learning to engage collectively and publicly in real time will take time.
-
-*"Our ability to reach unity in diversity will be the beauty and the test of our civilization." – Mahatma Gandhi*
 
 ### The Path of Knowing
 
@@ -1722,8 +1710,6 @@ We learn best from stories and lived experiences. Living our teachings adds cont
 Experiences expand us beyond our beliefs, biases, and concepts of reality. Relationships transform thoughts and ideas into shared experiences, transcending self-doubts and enriching with lived wisdom. It's easy to argue theories and beliefs, but challenging to dispute someone's experience. Information leads to knowledge; experience leads to wisdom.
 
 ### The Dark Side of Air
-
-*"Our own decision to view the universe as dead, as inanimate, as unintelligent, allowed us to dissect it, use it, and deny its validity outside of human purpose." — Terence McKenna*
 
 Air can exalt the soul and free the mind, but it also harbors a corrosive element: negative, reified thinking. Intellectualizing and compulsive rationalizing without feeling give rise to unstoppable skepticism, where the ego is ruled by cold logic and finds itself lost in "thoughtland." Milton gives this enclosure a voice in Satan, who declares, *"The mind is its own place, and in itself can make a heaven of hell, a hell of heaven."*
 
@@ -1787,11 +1773,7 @@ The air realm represents the full spectrum of our intellectual nature as central
 
 At the heart of becoming self-actualized is the ability to witness, learn, and interact intelligently with others. Our lives are not lived in a vacuum.
 
-*"The only thing worse than being blind is having sight but no vision." – Helen Keller*
-
 The primary purpose of the air element state of consciousness is to gain a better understanding of how your world works and to learn how to relate to people in a way that allows you to evolve your patterns of relating to and communicating with others. As we improve our ability to connect with individuals, we also improve our ability to engage groups, such as family, community, and culture, in a positive way.
-
-*"Intelligence is the ability to adapt to change." – Stephen Hawking*
 
 Refining our ability to think well draws us closer to embracing our true self, helps us integrate the other three elements of conscious perception, and informs us from this state of balanced and harmonious presence. In the aether realm of conscious experience, where all of the elements are woven into our conscious field of experience, we find a vast and fertile space to embrace the four elements of consciousness to weave our nature into the world. This is where the four elements come together to animate our creative soul. So, let's spiral into the center of our being, now, and explore this state of infinite awareness and creative potential.
 

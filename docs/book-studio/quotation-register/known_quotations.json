@@ -396,12 +396,6 @@
     "id": "EA-Q-0080"
   },
   {
-    "text": "Reality is not only stranger than you think, but stranger than you can think.",
-    "display_form": "block_epigraph",
-    "attributed_as": "Richard Feynman",
-    "id": "EA-Q-0081"
-  },
-  {
     "text": "In the end we can never be given knowledge by others; we can only be stimulated. We must develop our own knowledge.",
     "display_form": "inline_emphasised",
     "attributed_as": null,
@@ -432,22 +426,10 @@
     "id": "EA-Q-0086"
   },
   {
-    "text": "An open mind leaves a chance for someone to drop a worthwhile thought in it.",
-    "display_form": "block_epigraph",
-    "attributed_as": "Mark Twain",
-    "id": "EA-Q-0087"
-  },
-  {
     "text": "Spiritual maturity is not about pursuing salvation alone; it is about contributing to the salvation or enlightenment of others.",
     "display_form": "block_epigraph",
     "attributed_as": "Wayne Teasdale",
     "id": "EA-Q-0088"
-  },
-  {
-    "text": "Coming together is a beginning; keeping together is progress; working together is success.",
-    "display_form": "block_epigraph",
-    "attributed_as": "Henry Ford",
-    "id": "EA-Q-0090"
   },
   {
     "text": "Alone we can do so little; together we can do so much.",
@@ -474,34 +456,10 @@
     "id": "EA-Q-0094"
   },
   {
-    "text": "Maps are essential. Planning a journey without a map is like building a house without drawings.",
-    "display_form": "block_epigraph",
-    "attributed_as": "Mark Jenkins",
-    "id": "EA-Q-0095"
-  },
-  {
-    "text": "When we seek to discover the best in others, we somehow bring out the best in ourselves.",
-    "display_form": "block_epigraph",
-    "attributed_as": "William Arthur Ward",
-    "id": "EA-Q-0096"
-  },
-  {
-    "text": "Our ability to reach unity in diversity will be the beauty and the test of our civilization.",
-    "display_form": "block_epigraph",
-    "attributed_as": "Mahatma Gandhi",
-    "id": "EA-Q-0097"
-  },
-  {
     "text": "Knowing yourself is the beginning of all wisdom.",
     "display_form": "block_epigraph",
     "attributed_as": "Aristotle",
     "id": "EA-Q-0098"
-  },
-  {
-    "text": "Our own decision to view the universe as dead, as inanimate, as unintelligent, allowed us to dissect it, use it, and deny its validity outside of human purpose.",
-    "display_form": "block_epigraph",
-    "attributed_as": "Terence McKenna",
-    "id": "EA-Q-0100"
   },
   {
     "text": "The mind is its own place, and in itself can make a heaven of hell, a hell of heaven.",
@@ -514,18 +472,6 @@
     "display_form": "block_epigraph",
     "attributed_as": "Roy T. Bennett",
     "id": "EA-Q-0102"
-  },
-  {
-    "text": "The only thing worse than being blind is having sight but no vision.",
-    "display_form": "block_epigraph",
-    "attributed_as": "Helen Keller",
-    "id": "EA-Q-0103"
-  },
-  {
-    "text": "Intelligence is the ability to adapt to change.",
-    "display_form": "block_epigraph",
-    "attributed_as": "Stephen Hawking",
-    "id": "EA-Q-0104"
   },
   {
     "text": "I have lived on the lip of insanity, wanting to know reasons, knocking on a door. It opens. I've been knocking from the inside.",

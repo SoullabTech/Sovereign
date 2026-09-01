@@ -1,0 +1,58 @@
+{
+  "_comment": "Stage 4C - Chapter 8 (Air). 15 records: 6 survive editorially, 9 leave.",
+  "entries": [
+    {
+      "match": "Out beyond ideas of wrongdoing and rightdoing",
+      "editorial_status": "KEEP - KINSHIP / ILLUMINATION, REFRAMED. No longer under a bare 'Rumi' byline: the frame is now the honest form the book already established elsewhere, 'Adapted from Rumi, after Coleman Barks', which tells the reader what the object actually is - Rumi lineage mediated through Barks's creative rendering.",
+      "attributed_as_note": "Adapted from Rumi, after Coleman Barks",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md (Barks renders kufr and islam as 'wrongdoing' and 'rightdoing' - a loose rendering, not a translation); 4C Chapter 8 ruling",
+      "notes": "Rights remain HIGH. Attribution fixes provenance, not permission.",
+      "occurrence": 1
+    },
+    {
+      "match": "Now I truly believe that we in this generation",
+      "editorial_status": "RESTORE - ILLUMINATION. Carson's actual recoverable wording replaces the evolved aphorism. Distinct from the Goethe and Kierkegaard cases: there the English had no single authoritative form, here the genuine sentence is recoverable, and there is no reason to retain a polished descendant when the source itself is available. GUARDRAIL OBSERVED: the restored sentence was tested in place and performs the editorial job; had it not, the choice would have become remove or reclaim - Carson would not have been altered to fit.",
+      "provenance_status": "verified_exact",
+      "actual_author": "Rachel Carson",
+      "work": "documented in Paul Brooks, The House of Life: Rachel Carson at Work (1972)",
+      "rights_status": "protectability_uncertain_standard",
+      "bibliography_relationship": "Ch8 cites Silent Spring p.51 for the old wording - likely WRONG SOURCE/WORK; the bibliography must now point at Brooks",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L1714; 4C Chapter 8 ruling",
+      "notes": "The compressed form also shifted 'not OF nature' to 'not OVER nature'. Pattern 2 rather than pattern 5: the claim was intact, only compressed - the discriminator is whether the claim changed materially, not whose the ancestor is.",
+      "occurrence": 1,
+      "provenance_history": [
+        {
+          "verdict": "paraphrase_adapted",
+          "stage": "Stage 2 census",
+          "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L1714",
+          "note": "Applied to the compressed wording 'The human race is challenged more than ever before to demonstrate our mastery, not over nature but of ourselves', which the Stage 4C restoration removed from the book.",
+          "superseded_by": "verified_exact"
+        }
+      ]
+    },
+    {
+      "match": "Vulnerability sounds like truth and feels like courage",
+      "editorial_status": "KEEP. Verified exact including the second sentence; bibliography correct. Clean.",
+      "evidence_location": "4C Chapter 8 ruling",
+      "occurrence": 1
+    },
+    {
+      "match": "The past is a place of reference",
+      "editorial_status": "KEEP. Verified exact on the author's own publication channel; bibliography correct - the third correctly-supported citation in Ch8.",
+      "evidence_location": "4C Chapter 8 ruling",
+      "occurrence": 1
+    },
+    {
+      "match": "Alone we can do so little",
+      "editorial_status": "KEEP. Verified variant; the spoken line is documented in Lash, Helen and Teacher (1980). Ruled apart from the unverified Keller record in the same chapter.",
+      "evidence_location": "4C Chapter 8 ruling",
+      "occurrence": 2
+    },
+    {
+      "match": "Beware of false knowledge",
+      "editorial_status": "KEEP. Verified variant. The original reads 'Beware of HIS false knowledge' and the standalone form was standardised by Peter's Quotations; that split is a Stage 7 apparatus note, not an editorial defect.",
+      "evidence_location": "4C Chapter 8 ruling",
+      "occurrence": 1
+    }
+  ]
+}
