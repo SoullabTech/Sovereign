@@ -2,7 +2,7 @@
 
 **Source of record:** `docs/book-studio/ELEMENTAL_ALCHEMY_FROM_ORIGINAL_FULL.md`
 **Opened:** 2026-09-01, after Chapter 10 closed developmental adjudication.
-**Status:** IN PROGRESS — 34 of 137 adjudicated (Ch5: 24 of 30, 6 open).
+**Status:** IN PROGRESS — 36 of 137 adjudicated (Ch5: 26 of 30, 4 open).
 
 ## Scope
 
@@ -547,14 +547,54 @@ already clear: **`LIKELY PROTECTED` · `HIGH`.** Rumi's Persian is public domain
 Barks's English renderings are his own copyrighted work, and they are poetry.
 This is a fifth item for the permissions review.
 
-### Chapter 5 — still open (6 of 30)
+### Chapter 5 — sixth tranche
+
+**L1042 · Maya Angelou — "Do the best you can until you know better. Then when you know better, do better."**
+`VERIFIED VARIANT/TRANSLATION`. Genuinely Angelou's, transmitted through Oprah
+Winfrey's *Master Class* and posted in this exact wording by Angelou's official
+account. A spoken saying with several recorded phrasings ("When you know better,
+do better"), so variant rather than exact.
+**Rights: `LIKELY PROTECTED` · `STANDARD`.**
+**`WRONG SOURCE/WORK`** — the Ch5 bibliography cites *I Know Why the Caged Bird
+Sings*. This is a spoken remark, not from that book.
+
+**L894 · Mother Teresa — "To keep a lamp burning we have to keep putting oil in it."**
+`UNVERIFIED — source lead unresolved`. The attribution is not in doubt, but the
+located language sits in ***No Greater Love***, which carries a passage on a
+lamp burning "through the continuous input of small drops of oil" — the
+manuscript's sentence reads as a compression of it, which would make it
+`PARAPHRASE/ADAPTED` on confirmation. Proposed editions to check: *No Greater
+Love* (1997) and *A Simple Path* (1995).
+**Rights: `LIKELY PROTECTED` · `STANDARD`.**
+**`WRONG SOURCE/WORK` (probable)** — the Ch5 bibliography cites *A Simple Path*;
+the language located is in *No Greater Love*. Confirm before recording.
+
+### Famous-work substitution in Chapter 5 — running count
+
+Five of the chapter's bibliography work-attributions are wrong or probably wrong:
+
+| Quotation | Bibliography cites | Actually from |
+|---|---|---|
+| Thoreau (L792) | *Walden* | *The Maine Woods* |
+| Shakespeare (L976) | *Henry IV, Part 2* | *Henry IV, **Part 1*** |
+| Weil (L1062) | *Waiting for God* | *Gravity and Grace* |
+| Angelou (L1042) | *I Know Why the Caged Bird Sings* | spoken (*Master Class*) |
+| Mother Teresa (L894) | *A Simple Path* | *No Greater Love* (probable) |
+
+In four of the five the bibliography names the author's **best-known** work. This
+is now the dominant defect class in Chapter 5 — more common than missing entries
+and more consequential than orphans, because a wrong work reads as a real
+citation and will not be caught by any completeness check.
+
+### Chapter 5 — still open (4 of 30)
 
 All have a named primary work, most already in the chapter bibliography.
 Under the source-lead rule each requires an edition check before any
 `UNVERIFIED` verdict:
-L894 Mother Teresa (*A Simple Path*) · L906 Magritte (collected interviews) ·
-L926 Bear Heart (*The Wind Is My Mother*) · L938 Eckhart Tolle ·
-L1042 Maya Angelou · L1052 Rumi/Barks (attribution open; rights already flagged).
+L906 Magritte (bibliography already hedges: "as cited in collected interviews
+and writings") · L926 Bear Heart (*The Wind Is My Mother*; the in-text
+attribution already names the work) · L938 Eckhart Tolle · L1052 Rumi/Barks
+(attribution open; rights already flagged `LIKELY PROTECTED` · `HIGH`).
 
 *Note:* the Ch5 bibliography lists Weil as *Waiting for God*; the quotation is
 from *Gravity and Grace*. That is a third `WRONG SOURCE/WORK` instance in this
