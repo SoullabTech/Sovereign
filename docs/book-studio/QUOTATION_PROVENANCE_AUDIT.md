@@ -2,7 +2,7 @@
 
 **Source of record:** `docs/book-studio/ELEMENTAL_ALCHEMY_FROM_ORIGINAL_FULL.md`
 **Opened:** 2026-09-01, after Chapter 10 closed developmental adjudication.
-**Status:** IN PROGRESS — 119 of 137. **Ch2 CLOSED (10/10).** adjudicated. **Chapter 5 CLOSED (30/30). Chapter 8 CLOSED (23/23).**
+**Status:** IN PROGRESS — 122 of 137. **Ch2 CLOSED (10/10).** adjudicated. **Chapter 5 CLOSED (30/30). Chapter 8 CLOSED (23/23).**
 
 ## Scope
 
@@ -3339,6 +3339,23 @@ composition begins.
 
 **Rights:** Dickinson's line `PUBLIC DOMAIN` · `NONE`; the gloss is of unknown
 authorship and unknown status, which is itself a reason not to retain it.
+
+
+---
+
+## Final batch — tranche 1
+
+| Line | Ch | Attribution | Verdict | Rights |
+|---|---|---|---|---|
+| L2196 | 10 | Marcel Duchamp — "Alchemy is a kind of philosophy…" | `UNVERIFIED` · `UNKNOWN` — quote-site attestation only; no primary source. Duchamp's alchemical interests **are** scholarly-documented (Moffitt, *Alchemist of the Avant-Garde*, SUNY) but that supports the **theme**, not the sentence | `PROTECTABILITY UNCERTAIN` · `STANDARD` |
+| L2282 | Back matter | St. John of the Cross — "At the evening of life, you will be examined in Love." | **`VERIFIED VARIANT/TRANSLATION`** — ***Sayings of Light and Love*, saying 57**; also quoted in the *Catechism of the Catholic Church* §1022. `MEDIATED TRANSLATION`: Spanish → English, translator unidentified (the standard modern English is Kavanaugh–Rodriguez, ICS). Variants exist ("when evening comes" / "at the evening of life") | `TERM UNCERTAIN` · `STANDARD` — 16th-c. original public domain; the English translation may not be |
+| L319 | 1 | Henry Miller — "The aim of life is to live…" | `UNVERIFIED — source lead unresolved` — consistently attributed, **no work identified** | `PROTECTABILITY UNCERTAIN` · `STANDARD` |
+
+**Note on Duchamp:** this is the *inverse* of the Sai Baba case. There the source
+tradition's documented framework initially looked contradicted and turned out
+compatible. Here the author's documented preoccupation **is** genuinely alchemical
+— which makes the sentence *plausible* and is exactly why it must not be treated
+as verified. **Thematic fit is not provenance**, in either direction.
 
 
 ---
