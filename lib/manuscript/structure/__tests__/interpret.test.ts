@@ -138,8 +138,12 @@ describe('the seven acceptance cases', () => {
     expect(pass).toBe(2);
     expect(asked).toEqual([['s3', 's4']]);
     /* Coverage is what the host handed over, not what the reader claimed. */
+    /* `requested-full` says both halves: WHOLE sections, and only ones the
+       reader named. The ceilings travel with them, so "two sections" is legible
+       later against the policy that governed it. */
     expect(r.status === 'ok' && r.interpretation.coverage.bodies)
-      .toEqual({ mode: 'selected', sectionIds: ['s3', 's4'] });
+      .toEqual({ mode: 'requested-full', sectionIds: ['s3', 's4'],
+        totalChars: 20, truncated: false, sectionLimit: 8, charLimit: 60_000 });
     expect(r.status === 'ok' && r.interpretation.coverage.passes).toBe(2);
   });
 });

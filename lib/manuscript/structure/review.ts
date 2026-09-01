@@ -99,6 +99,37 @@ export type ReviewOperation =
    */
   | { op: 'transfer'; unitId: string; toParentId: string };
 
+/**
+ * Where a promoted division would land, and whether it can be promoted at all.
+ *
+ * ONE RULE, TWO READERS. `applyReviewOperation` enforces this below; the review
+ * surface reads it to tell the member what the gesture will DO before they
+ * commit to it. It lives here, once, so the sentence the room shows and the
+ * edit the server performs cannot drift apart — a preview that disagreed with
+ * the operation would be worse than no preview.
+ *
+ * `from`/`to` are book-order positions. Both pairs must come from the SAME
+ * ordering; only their comparisons are read, never their magnitudes.
+ */
+export type PromoteShape =
+  /** Sits at its parent's start — lands BEFORE the parent it leaves. */
+  | 'prefix'
+  /** Sits at its parent's end — lands AFTER it. */
+  | 'suffix'
+  /** Sits in the middle: what remained of the parent would be two stretches. */
+  | 'splits-parent'
+  /** Spans the whole parent, which would then hold nothing. */
+  | 'spans-parent';
+
+export function promoteShape(
+  child: { from: number; to: number },
+  parent: { from: number; to: number },
+): PromoteShape {
+  if (child.from === parent.from && child.to === parent.to) return 'spans-parent';
+  if (child.from > parent.from && child.to < parent.to) return 'splits-parent';
+  return child.from === parent.from ? 'prefix' : 'suffix';
+}
+
 export type ReviewRefusal =
   | 'unknown_unit'
   | 'unknown_parent'
@@ -357,17 +388,21 @@ export function applyReviewOperation(
 
       /* A child in the MIDDLE cannot be promoted: what remains of the parent
          would be two stretches, which is the discontinuity this whole
-         programme refuses. The member moves a boundary first. */
-      if (cFrom > pFrom && cTo < pTo) return refuse('child_splits_parent', at.parent.title ?? at.parent.id);
-      if (cFrom === pFrom && cTo === pTo) return refuse('parent_would_be_empty', at.parent.title ?? at.parent.id);
+         programme refuses. The member moves a boundary first.
 
-      /* BOOK ORDER DECIDES WHERE IT LANDS, mechanically:
+         BOOK ORDER DECIDES WHERE IT LANDS, mechanically:
            a promoted PREFIX child sits BEFORE its former parent
            a promoted SUFFIX child sits AFTER it
          Always inserting after was the first version, and it put 0-2 below a
          parent that now starts at 3 - undoing R1's invariant in the one place
-         nobody would look for it. */
-      const wasPrefix = cFrom === pFrom;
+         nobody would look for it.
+
+         Both readings come from promoteShape, which the review surface also
+         reads to say what this gesture will do before it is committed. */
+      const shape = promoteShape({ from: cFrom, to: cTo }, { from: pFrom, to: pTo });
+      if (shape === 'splits-parent') return refuse('child_splits_parent', at.parent.title ?? at.parent.id);
+      if (shape === 'spans-parent') return refuse('parent_would_be_empty', at.parent.title ?? at.parent.id);
+      const wasPrefix = shape === 'prefix';
       if (wasPrefix) at.parent.fromSectionId = ordered[cTo + 1].id;
       else at.parent.toSectionId = ordered[cFrom - 1].id;
 

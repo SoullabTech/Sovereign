@@ -18,6 +18,8 @@
  * what it read.
  */
 
+import { DEFAULT_READ_SCOPE as SCOPE } from './readScope';
+
 export type EvidenceNonConclusion =
   | 'start-boundary'
   | 'end-boundary'
@@ -88,9 +90,36 @@ export type EvidenceObservation =
   | SuspectedScaffoldObservation
   | TransitionObservation;
 
+/**
+ * What was actually read, and under what policy.
+ *
+ * THE LIMITS ARE PART OF THE RECORD. "MAIA read six sections" means one thing
+ * under a six-section ceiling and something else entirely under an unlimited
+ * reader, and a member asking later what this reading rests on deserves the
+ * second half of that sentence. Reconstructing the policy from whatever the code
+ * says today would describe the CURRENT policy, which is exactly the one you
+ * cannot trust it to have been.
+ *
+ * `truncated` is typed as the literal `false`. Truncation is not a setting this
+ * system has: a partial section read as a whole one lets a surface say "MAIA
+ * read section X" when she read an arbitrary prefix of X - and for a structural
+ * boundary the END of a section is often the thing that decides it. Full section
+ * or no section. The field exists so the row states the law rather than leaving
+ * it to be assumed.
+ */
 export interface EvidenceCoverage {
   headings: 'all';
-  bodies: { mode: 'none' | 'selected' | 'all'; sectionIds: readonly string[] };
+  bodies: {
+    /** `requested-full` — whole sections, asked for by name. Never a prefix. */
+    mode: 'none' | 'selected' | 'all' | 'requested-full';
+    sectionIds: readonly string[];
+    /** Characters of manuscript prose that left the machine. */
+    totalChars: number;
+    truncated: false;
+    /** The ceilings in force when this reading was made. */
+    sectionLimit: number;
+    charLimit: number;
+  };
   passes: 1 | 2 | 3;
 }
 
@@ -419,7 +448,16 @@ export function gatherEvidence(
          carry the signal, and a detector that fires at 59% of boundaries is
          noise wearing the costume of evidence. */
     ],
-    /* This tier reads headings and nothing else, and says so. */
-    coverage: { headings: 'all', bodies: { mode: 'none', sectionIds: [] }, passes: 1 },
+    /* This tier reads headings and nothing else, and says so - including the
+       ceilings that would have governed prose, so a headings-only reading and a
+       body-reading one are legible under the same policy. */
+    coverage: {
+      headings: 'all',
+      bodies: {
+        mode: 'none', sectionIds: [], totalChars: 0, truncated: false,
+        sectionLimit: SCOPE.maxSections, charLimit: SCOPE.maxChars,
+      },
+      passes: 1,
+    },
   };
 }

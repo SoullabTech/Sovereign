@@ -100,7 +100,14 @@ describe('vocabulary shift is not part of pass 1', () => {
 
   it('and pass 1 says it read headings only', () => {
     const ev = gatherEvidence('m', [s(0, 'A HEADING HERE')]);
-    expect(ev.coverage).toEqual({ headings: 'all', bodies: { mode: 'none', sectionIds: [] }, passes: 1 });
+    expect(ev.coverage).toEqual({
+      headings: 'all',
+      /* The ceilings are stated even where nothing was read, so a headings-only
+         reading and a body-reading one are legible under the same policy. */
+      bodies: { mode: 'none', sectionIds: [], totalChars: 0, truncated: false,
+        sectionLimit: 8, charLimit: 60_000 },
+      passes: 1,
+    });
   });
 });
 

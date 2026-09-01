@@ -27,6 +27,7 @@
  */
 
 import type { EvidenceCoverage, StructureEvidence, HeadedSection } from './evidence';
+import { DEFAULT_READ_SCOPE, type ReadScope, type ReadScopeReport } from './readScope';
 import { observeTransitions } from './evidence';
 
 export type ProposedUncertainty =
@@ -43,6 +44,33 @@ export interface ProposedUnitDraft {
   title: string | null;
   /** Free text, never an enum. Null rather than a manufactured "Chapter". */
   kind: string | null;
+  /**
+   * MAIA'S OWN WORDS **ABOUT** THIS DIVISION - what an editor calls a section
+   * when writing to you about it. `Fire`. `The opening ground`. `Reference
+   * apparatus`.
+   *
+   * IT IS NOT A TITLE, AND IT NEVER BECOMES ONE. `title` is the Work's words
+   * and ends up in the manuscript on adoption; a label is commentary and does
+   * not. `toReviewed` does not copy it, so it cannot reach the member's
+   * editable structure, and no adoption path can carry it into the Work.
+   *
+   * WHY IT EXISTS. The first real reading returned five sibling divisions all
+   * reading `kind: "element"`, `title: null`, distinguished on screen only by
+   * a section range. She named them - Fire, Water, Earth, Air, Aether - inside
+   * her prose account, and the room could not lift them out without inferring
+   * structure from prose, which is the thing this interpreter exists to stop a
+   * client doing. "Do not invent manuscript titles" was never "MAIA may not
+   * describe what she perceives"; conflating the two produced a reading that
+   * could not be read.
+   *
+   * NULL REMAINS LAWFUL. Nothing here makes a label mechanically required: that
+   * would move the invention pressure out of `title` and into a new field.
+   *
+   *   absent   this reading predates editorial labels
+   *   null     MAIA could not honestly ground one
+   *   string   MAIA's description, offered as commentary
+   */
+  editorialLabel?: string | null;
   /** STABLE SECTION IDS. Positions move; ids do not. */
   fromSectionId: string;
   toSectionId: string;
@@ -88,9 +116,57 @@ export interface UncertainRegion {
   why: string;
 }
 
+/**
+ * One thing the reading could not settle, put to the author as a question.
+ *
+ * DISTINCT FROM `uncertainty` AND `uncertainRegions`, which are the reading's
+ * own qualifications of itself. This is the same doubt turned outward: stated
+ * so the person who wrote the book can answer it, and carrying the sections it
+ * is about so the surface can offer to show them.
+ */
+export interface EditorialQuestion {
+  /** Short, and the member's entry point: "Where does Fire begin?" */
+  label: string;
+  /** What is actually at stake, in plain words. Not a restatement of `label`. */
+  explanation: string;
+  /**
+   * The places this question is about. Validated by the host against the
+   * draft, exactly as a division's range is: a question naming a section the
+   * Work does not hold is refused, not silently dropped.
+   */
+  sectionIds?: string[];
+}
+
+/**
+ * MAIA's reading, said to the author rather than serialized at them.
+ *
+ * ASKED FOR AT READING TIME, NOT DERIVED LATER. A surface that cut her account
+ * into headings would be authoring the parts of a letter she did not write, and
+ * a surface that summarised her tree would be a second reading made by code.
+ * The only honest source of "what do you think my book is doing" is the reader,
+ * at the moment she reads.
+ *
+ * Frozen with the interpretation. It is commentary about the Work and never
+ * structure: nothing here reaches `reviewed`, and nothing here is adoptable.
+ */
+export interface EditorialSynthesis {
+  /** What she thinks this Work is doing, in one or two sentences. */
+  thesis: string;
+  /** The few claims she would stand behind. Not every division. */
+  strongestFindings: string[];
+  /** What she would ask the author, if she could. May be empty and often is not. */
+  questionsForAuthor: EditorialQuestion[];
+}
+
 interface Common {
   /** MAIA's account of this Work's grammar, in her words. */
   account: string;
+  /**
+   * Her reading addressed to the author. Absent on every proposal frozen
+   * before the editorial contract existed - which is a different fact from an
+   * empty synthesis, and is why this is optional rather than defaulted.
+   */
+  editorialSynthesis?: EditorialSynthesis;
   /** Built by the host from what it supplied. Never from the reader. */
   coverage: EvidenceCoverage;
   /** Derived by the host. Never accepted from the reader. */
@@ -121,14 +197,28 @@ export type StructureInterpretation =
     })
   | ({ form: 'none' } & Common);
 
-/** What the reader may return. The host completes it into an interpretation. */
+/**
+ * What the reader may return. The host completes it into an interpretation.
+ *
+ * `editorialSynthesis` is OPTIONAL HERE AND REQUIRED OF MAIA, deliberately, and
+ * the difference is where each is enforced. `StructureReader` is an interface -
+ * fixtures implement it, and a fixture that must invent an editorial letter to
+ * satisfy a compiler proves nothing about the contract. The real contract is
+ * enforced where the untrusted value actually arrives: the tool schema requires
+ * it, and `parseReaderOutput` REFUSES a `propose_structure` call without a
+ * well-formed one, the same way it refuses a malformed uncertainty tag. Making
+ * it non-optional in TypeScript would move that check to the one place it
+ * cannot run - a boundary the model does not compile against.
+ */
 export type ReaderReading =
   | { form: 'stable' | 'partial' | 'flat' | 'mixed'; account: string;
-      units: ProposedUnitDraft[]; uncertainRegions?: UncertainRegion[] }
+      units: ProposedUnitDraft[]; uncertainRegions?: UncertainRegion[];
+      editorialSynthesis?: EditorialSynthesis }
   | { form: 'ambiguous'; account: string;
       alternatives: { label: string; units: ProposedUnitDraft[]; why: string }[];
-      uncertainRegions?: UncertainRegion[] }
-  | { form: 'none'; account: string; uncertainRegions?: UncertainRegion[] };
+      uncertainRegions?: UncertainRegion[]; editorialSynthesis?: EditorialSynthesis }
+  | { form: 'none'; account: string; uncertainRegions?: UncertainRegion[];
+      editorialSynthesis?: EditorialSynthesis };
 
 export type ReaderOutput =
   | { status: 'interpreted'; reading: ReaderReading }
@@ -149,6 +239,7 @@ export type StructureReader = (input: ReaderInput) => Promise<ReaderOutput>;
 
 export type InterpretRefusal =
   | 'read-request-exhausted'
+  | 'read-scope-exceeded'
   | 'unknown-section'
   | 'inverted-range'
   | 'overlapping-siblings'
@@ -160,7 +251,24 @@ export type InterpretRefusal =
 export type InterpretResult =
   | { status: 'ok'; interpretation: StructureInterpretation;
       interpretationInputHash: string }
-  | { status: 'refused'; refusal: InterpretRefusal; detail?: string };
+  | { status: 'refused'; refusal: InterpretRefusal; detail?: string;
+      /** Present on `read-scope-exceeded`. Counts only. */
+      scope?: ReadScopeReport;
+      /**
+       * THE READING THAT WAS REFUSED, for inspection - never for storage.
+       *
+       * The first version discarded it. A refusal then cost a real call and
+       * several sections of a member's prose leaving their machine, and taught
+       * nothing: there was no way to see whether one stray boundary had spoiled
+       * an otherwise sound reading, or whether the validator was wrong about
+       * what the reader was expressing. A guard that destroys the evidence it
+       * rejects cannot itself be checked.
+       *
+       * It is NOT a proposal and no caller may store it. It carries the
+       * reader's own words about the Work - titles, rationale - and never a
+       * body, because the host never gave the reading one to carry.
+       */
+      refusedReading?: ReaderReading };
 
 /* -- the host loop ------------------------------------------------------- */
 
@@ -173,6 +281,8 @@ export interface InterpretOptions {
     bodies: ReadonlyMap<string, string>,
   ) => StructureEvidence['observations'];
   maxPasses?: 1 | 2 | 3;
+  /** Defaults to `DEFAULT_READ_SCOPE`. Never unbounded. */
+  readScope?: ReadScope;
 }
 
 export async function interpretStructure(
@@ -182,8 +292,10 @@ export async function interpretStructure(
   opts: InterpretOptions,
 ): Promise<InterpretResult> {
   const maxPasses = opts.maxPasses ?? 3;
+  const scope = opts.readScope ?? DEFAULT_READ_SCOPE;
   const bodies = new Map<string, string>();
   const known = new Set(sections.map((s) => s.id));
+  let suppliedChars = 0;
   let working = evidence;
   let previousRequest: { sectionIds: string[]; why: string } | undefined;
 
@@ -191,7 +303,7 @@ export async function interpretStructure(
     const out = await reader({ pass, evidence: working, sections, bodies, previousRequest });
 
     if (out.status === 'interpreted') {
-      return complete(out.reading, working, sections, bodies);
+      return complete(out.reading, working, sections, bodies, scope);
     }
 
     /* A request naming sections this draft does not hold is refused rather
@@ -200,13 +312,54 @@ export async function interpretStructure(
     const unknown = out.sectionIds.find((id) => !known.has(id));
     if (unknown) return { status: 'refused', refusal: 'unknown-section', detail: unknown };
 
+    /* THE SCOPE IS ENFORCED BY THE HOST, NOT THE READER. A reader that policed
+       its own ceilings is a reader that can raise them; the thing that hands
+       over the prose is the thing that has to say no. */
+    const report = (prospectiveChars: number, ids: readonly string[]): InterpretResult => ({
+      status: 'refused',
+      refusal: 'read-scope-exceeded',
+      scope: {
+        requestedIds: [...ids],
+        alreadySuppliedCount: bodies.size,
+        requestedTotalCount: new Set([...bodies.keys(), ...ids]).size,
+        alreadySuppliedChars: suppliedChars,
+        prospectiveTotalChars: prospectiveChars,
+        limitSections: scope.maxSections,
+        limitChars: scope.maxChars,
+      },
+    });
+
+    if (out.sectionIds.length > scope.maxIdsPerRequest) {
+      /* Refused whole rather than trimmed to the first four: silently returning
+         fewer sections than were asked for is the same lie as truncating one. */
+      return report(suppliedChars, out.sectionIds);
+    }
+    if (new Set([...bodies.keys(), ...out.sectionIds]).size > scope.maxSections) {
+      return report(suppliedChars, out.sectionIds);
+    }
+
+    /* AFTER the scope checks, deliberately. A request that breaks a ceiling is
+       named as one even when it arrives on the last pass: "the reading did not
+       settle" and "the reading asked for more than it may have" are different
+       facts, and the pass budget running out should not absorb the second.
+       No fabricated answer either way. */
     if (pass === maxPasses) {
-      /* No fabricated answer. The caller is told the reading did not settle. */
       return { status: 'refused', refusal: 'read-request-exhausted', detail: out.why };
     }
 
     const supplied = await opts.fetchBodies(out.sectionIds);
-    for (const [id, text] of supplied) bodies.set(id, text);
+
+    /* Measured BEFORE anything is kept. A body that would cross the character
+       ceiling is not stored, not shortened, and not partially counted - the
+       whole request is refused and the reading stops here. */
+    let prospective = suppliedChars;
+    for (const [id, text] of supplied) if (!bodies.has(id)) prospective += text.length;
+    if (prospective > scope.maxChars) return report(prospective, out.sectionIds);
+
+    for (const [id, text] of supplied) {
+      if (!bodies.has(id)) suppliedChars += text.length;
+      bodies.set(id, text);
+    }
 
     if (opts.observeBodies) {
       /* Deterministic, and therefore EVIDENCE - carrying its own limits - even
@@ -239,10 +392,14 @@ function complete(
   evidence: StructureEvidence,
   sections: readonly HeadedSection[],
   bodies: ReadonlyMap<string, string>,
+  scope: ReadScope,
 ): InterpretResult {
-  if (!reading.account.trim()) return { status: 'refused', refusal: 'empty-account' };
+  if (!reading.account.trim()) {
+    return { status: 'refused', refusal: 'empty-account', refusedReading: reading };
+  }
   if (reading.form === 'ambiguous' && reading.alternatives.length < 2) {
-    return { status: 'refused', refusal: 'ambiguous-without-alternatives' };
+    return { status: 'refused', refusal: 'ambiguous-without-alternatives',
+      refusedReading: reading };
   }
 
   const position = new Map(sections.map((s) => [s.id, s.position]));
@@ -279,7 +436,13 @@ function complete(
       for (const child of u.children) {
         const cr = rangeOf(child);
         if (cr && (cr[0] < r[0] || cr[1] > r[1])) {
-          note('child-outside-parent', child.title ?? child.fromSectionId);
+          /* The ranges, not just a name. "child-outside-parent (THE SACRED
+             FLAME)" says which division broke the rule and nothing about how,
+             so a reader cannot tell one stray boundary from a misconceived
+             hierarchy without the numbers. */
+          note('child-outside-parent',
+            `${child.title ?? child.fromSectionId} ${cr[0]}-${cr[1]}`
+            + ` sits outside ${u.title ?? u.fromSectionId} ${r[0]}-${r[1]}`);
         }
       }
       ranges.push(r);
@@ -296,7 +459,19 @@ function complete(
   if (reading.form === 'ambiguous') reading.alternatives.forEach((a) => validate(a.units));
   else if (reading.form !== 'none') validate(reading.units);
 
-  if (problems.length > 0) return { status: 'refused', ...problems[0] };
+  /* A QUESTION NAMES PLACES, AND THE PLACES ARE CHECKED. The surface offers to
+     show the member what a question is about; an id this draft does not hold
+     would arrive there as a doorway onto nothing. Held to the same rule as a
+     division's range rather than a laxer one because it is only commentary. */
+  for (const q of reading.editorialSynthesis?.questionsForAuthor ?? []) {
+    for (const id of q.sectionIds ?? []) {
+      if (!position.has(id)) note('unknown-section', `editorialSynthesis question: ${id}`);
+    }
+  }
+
+  if (problems.length > 0) {
+    return { status: 'refused', ...problems[0], refusedReading: reading };
+  }
 
   /* DERIVED, never accepted from the reader. What a reading failed to explain
      is not the reading's own account to give. For an ambiguous reading nothing
@@ -314,18 +489,30 @@ function complete(
     .sort((x, y) => x.position - y.position)
     .map((s) => s.id);
 
+  /* `requested-full` says both halves at once: WHOLE sections, and only ones
+     MAIA named. `selected` said neither, and a member reading it later could not
+     tell a targeted read from a sampled one. */
+  let totalChars = 0;
+  for (const text of bodies.values()) totalChars += text.length;
   const coverage: EvidenceCoverage = {
     headings: 'all',
-    bodies: bodies.size === 0
-      ? { mode: 'none', sectionIds: [] }
-      : bodies.size === sections.length
-        ? { mode: 'all', sectionIds: [...bodies.keys()] }
-        : { mode: 'selected', sectionIds: [...bodies.keys()] },
+    bodies: {
+      mode: bodies.size === 0 ? 'none' : 'requested-full',
+      sectionIds: [...bodies.keys()],
+      totalChars,
+      truncated: false,
+      sectionLimit: scope.maxSections,
+      charLimit: scope.maxChars,
+    },
     passes: bodies.size === 0 ? 1 : bodies.size === sections.length ? 3 : 2,
   };
 
   const common: Common = {
     account: reading.account,
+    /* Carried through verbatim. The host derives `unaccountedSectionIds` and
+       builds `coverage` because those are facts about what it did; the letter
+       is MAIA's, and the host neither writes nor edits a word of it. */
+    ...(reading.editorialSynthesis ? { editorialSynthesis: reading.editorialSynthesis } : {}),
     coverage,
     unaccountedSectionIds,
     uncertainRegions: reading.uncertainRegions ?? [],

@@ -1,0 +1,918 @@
+/**
+ * WS2-02A — the Writer's Studio visual foundation.
+ *
+ * The reusable vocabulary of form: type, surfaces, gold, spacing, states,
+ * panel behaviour and responsive rules. WS2-02B composes rooms from it;
+ * WS2-03 builds the persistent shell. Nothing here renders anything.
+ *
+ * ── AUTHORITY ──────────────────────────────────────────────────────────────
+ *
+ * Governing lane: claude/writers-studio-organization-wxpb7q (D-020).
+ * DESIGN-CONTRACT.md is FROZEN; §2 states the composition rules this file
+ * makes executable, and §0 puts six distinct reference screens under custody.
+ *
+ * ── PROVENANCE, AND WHY IT IS LABELLED ─────────────────────────────────────
+ *
+ * An earlier draft of this file said "every value below was taken from the
+ * reference pack". That was too strong, and the correction matters more than
+ * it first appears: colours really were measured off the pixels, but numbers
+ * like a 216px rail or a 1024px breakpoint are translations — reasonable, and
+ * not facts. Left unlabelled, an inferred number inherits the authority of a
+ * measured one, and the first capture that disagrees with it looks like a
+ * violation of frozen design rather than what it is: a provisional value
+ * meeting a real screen for the first time.
+ *
+ * So every token group carries a provenance category, and a test refuses an
+ * unlabelled one:
+ *
+ *   INHERITED    an existing truthful token, reused unchanged
+ *   SAMPLED      measured directly from reference pixels
+ *   OBSERVED     a structural relation plainly visible in a reference
+ *   DERIVED      an implementation value translating an observed relation
+ *   PROVISIONAL  cannot be accepted until rendered and witnessed
+ *
+ * Sampling method, for re-derivation rather than trust: the ground ramp by
+ * frequency, the accents by hue-clustering pixels above a saturation floor in
+ * `04-writing-field-wide.png` (canonical) and `05-materials-studio.png`.
+ *
+ * WS2-02B is where PROVISIONAL and DERIVED numbers meet an actual composition
+ * and get corrected. That is the point of labelling them, not a caveat on it.
+ *
+ * ── WHAT THIS FILE DOES NOT DO ─────────────────────────────────────────────
+ *
+ * It does not fork the palette. `pressTheme.ts` already holds the Studio's
+ * true ground, text, accent and rules, and is deliberately duplicated into
+ * app/press/manuscript while PR #825 is open. PRESS and SERIF are imported and
+ * re-exported here unchanged — one source, extended, never a second system.
+ *
+ * The sampling confirmed those existing values rather than replacing them:
+ * PRESS.rule #4A4238 against a sampled border family of #4F453B, and
+ * PRESS.ink #1A1513 against a ground ramp whose dominant tone is #1D1812.
+ * The tokens that were missing are the ones added below.
+ */
+
+import { PRESS, SERIF } from './pressTheme';
+
+export { PRESS, SERIF };
+
+export type Provenance =
+  | 'INHERITED'
+  | 'SAMPLED'
+  | 'OBSERVED'
+  | 'DERIVED'
+  | 'PROVISIONAL';
+
+/**
+ * How each token group came to hold the values it holds.
+ *
+ * Structural rather than a comment, so a new group cannot be added without
+ * stating where its numbers came from — see assertEveryTokenGroupHasProvenance.
+ */
+export const PROVENANCE: Record<string, { level: Provenance; note: string }> = {
+  GROUND: {
+    level: 'SAMPLED',
+    note: 'Ramp measured by frequency in 04; base/rule/accent confirmed against pressTheme.',
+  },
+  INK: {
+    level: 'DERIVED',
+    note: 'primary/onAccent INHERITED from PRESS; the intermediate tones are a translation.',
+  },
+  TYPE: {
+    level: 'DERIVED',
+    note: 'The hierarchy is OBSERVED in 04 (serif work, sans chrome, prose largest). '
+      + 'The exact rem sizes are a translation and are corrected against a capture in WS2-02B.',
+  },
+  GOLD: {
+    level: 'SAMPLED',
+    note: 'DEFAULT INHERITED from PRESS.accent; fill/text sampled from 04.',
+  },
+  GOLD_PERMITTED: { level: 'OBSERVED', note: 'Uses gold actually carries in 04 and 05.' },
+  GOLD_FORBIDDEN: {
+    level: 'OBSERVED',
+    note: 'Surfaces gold conspicuously does NOT occupy in either reference.',
+  },
+  MAIA_ACCENT: { level: 'SAMPLED', note: 'Violet family measured in 04 at hue 240-270.' },
+  INSIGHT_CHIP: { level: 'SAMPLED', note: 'Chip families measured in 04 and 08.' },
+  SPACE: { level: 'DERIVED', note: 'A conventional scale; the references show restraint, not px.' },
+  MEASURE: {
+    level: 'DERIVED',
+    note: 'prose measure and gutters remain translations. The column widths that were '
+      + 'PROVISIONAL here moved to COLUMN_FRACTION once WS2-02B measured them.',
+  },
+  GUTTER_FRACTION: {
+    level: 'SAMPLED',
+    note: 'Gutter runs measured at page-ground level between panels in 04 — 8/15/25/17/15/9px.',
+  },
+  COLUMN_FRACTION: {
+    level: 'SAMPLED',
+    note: 'Column spans measured from 04 by luminance scan; gutters are the runs with no '
+      + 'text edges. Proportions are measured; pixel values are resolved per viewport by '
+      + 'columnPx and are therefore DERIVED, not measured.',
+  },
+  RADIUS: { level: 'PROVISIONAL', note: 'Not measured. Radii read small and uniform in 04.' },
+  RAIL_RHYTHM: {
+    level: 'SAMPLED',
+    note: 'Item pitch, band spacing and icon size measured by brightness scan down 04 rail.',
+  },
+  RULE: { level: 'INHERITED', note: 'PRESS.rule / ruleSoft, confirmed against sampled #4F453B.' },
+  STATE: {
+    level: 'DERIVED',
+    note: 'active/selected grounds sampled; the rest translate an observed treatment.',
+  },
+  PANELS: {
+    level: 'OBSERVED',
+    note: 'Placement and close controls are drawn in 04 and 05.',
+  },
+  BREAKPOINT: {
+    level: 'PROVISIONAL',
+    note: 'NOT established by any reference. 04 and 08 are two architectures, not two '
+      + 'measured widths. These thresholds are placeholders and must not be treated as '
+      + 'design authority.',
+  },
+  YIELDS_BEFORE: { level: 'OBSERVED', note: 'The one ordering the 04 to 08 difference shows.' },
+  NEVER_COLLAPSES: { level: 'OBSERVED', note: 'The field is present and central in both.' },
+  PRESENT_AT_COMPACT: { level: 'OBSERVED', note: 'All three are still present in 08.' },
+};
+
+/* ══════════════════════════════════════════════════════════════════════════
+   1 · GROUND — the ramp, darkest to lightest
+
+   Sampled from 04. The room is not one flat colour: it is a shallow warm
+   ramp, and depth is carried by that ramp rather than by borders. Ordered
+   here so `deepest` really is the deepest — asserted in tests, because a ramp
+   that stops being monotonic stops reading as depth and starts reading as
+   noise.
+
+   Warm on purpose. This is espresso, not neutral charcoal: every sampled
+   ground tone has red > green > blue. A cool grey dropped into this room is
+   immediately foreign, which is why `assertGroundIsWarm` exists.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+export const GROUND = {
+  /** Recessed wells — the panel behind panels. Sampled #15120D. */
+  deepest: '#15120D',
+  /** Page edge / shell ground. PRESS.ink, confirmed against sampled #1C1711. */
+  base: '#1A1513',
+  /** The writing field itself — the largest, quietest surface. Sampled #1D1812. */
+  field: '#1D1812',
+  /** Rails and bands sitting on the field. Sampled #221B12. */
+  raised: '#221B12',
+  /** Hover / selected row. Sampled #342715 on the active section row in 04. */
+  active: '#342715',
+} as const;
+
+/* ══════════════════════════════════════════════════════════════════════════
+   2 · TYPOGRAPHY
+
+   DESIGN-CONTRACT §2: "Generous type. Long-form reading is the primary act;
+   the room is built around a column of prose, not around chrome."
+
+   Two families, and the split is semantic rather than decorative. Serif is
+   the member's work — manuscript prose, chapter titles, work identity,
+   epigraphs. Sans is the room around it — navigation, labels, metadata,
+   counts. A member can tell, without reading a word, whether they are looking
+   at their writing or at the building it sits in.
+
+   MAIA's reading is set in SANS because 04 and 08 both set it that way. Her
+   language is not the member's prose, and the manuscript's own face is the
+   member's. D-019 is the reason the reference's choice is worth holding —
+   member material stays distinguishable from MAIA interpretation — but the
+   font is the design contract's, not the decision record's.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+export const SANS =
+  'ui-sans-serif, system-ui, -apple-system, "Segoe UI", Inter, Helvetica, Arial, sans-serif';
+
+export interface TypeRole {
+  family: string;
+  /** rem. Long-form prose sits at the top of the scale, not the middle. */
+  size: number;
+  lineHeight: number;
+  weight: number;
+  /** em. Positive only on the small uppercase labels the references use. */
+  tracking?: number;
+  uppercase?: boolean;
+}
+
+export const TYPE: Record<string, TypeRole> = {
+  /** Chapter titles — the largest thing in the room. "Chapter Seven" in 04. */
+  chapterTitle: { family: SERIF, size: 2.5, lineHeight: 1.15, weight: 400 },
+  /** The chapter's subtitle/element, italic in 04 ("Air"). */
+  chapterSubtitle: { family: SERIF, size: 1.75, lineHeight: 1.25, weight: 400 },
+  /** Work identity in the chrome — the work's name, never a manuscript's. */
+  workIdentity: { family: SERIF, size: 1.0625, lineHeight: 1.35, weight: 500 },
+  /**
+   * Long-form manuscript prose. The primary act, so the primary size.
+   * 1.1875rem ≈ 19px: comfortably above UI text, which is the point.
+   */
+  prose: { family: SERIF, size: 1.1875, lineHeight: 1.75, weight: 400 },
+  /** Epigraph — centred gold italic in 04. */
+  epigraph: { family: SERIF, size: 1.0625, lineHeight: 1.6, weight: 400 },
+  /** Rail band headings: WORK SPACE · MAIA · TOOLS. */
+  bandLabel: {
+    family: SANS, size: 0.6875, lineHeight: 1.2, weight: 600,
+    tracking: 0.12, uppercase: true,
+  },
+  /** Panel headings: MANUSCRIPT · MATERIALS · DEVELOPMENTAL INSIGHTS. */
+  panelLabel: {
+    family: SANS, size: 0.75, lineHeight: 1.2, weight: 600,
+    tracking: 0.1, uppercase: true,
+  },
+  /** Navigation and destination labels. */
+  navItem: { family: SANS, size: 0.875, lineHeight: 1.4, weight: 500 },
+  /** MAIA's reading. Sans — see the note above; this is not the member's prose. */
+  maiaReading: { family: SANS, size: 0.875, lineHeight: 1.55, weight: 400 },
+  /** Counts, timestamps, file facts. Quiet by construction. */
+  metadata: { family: SANS, size: 0.75, lineHeight: 1.4, weight: 400 },
+  /** Supporting text that must not compete: notes under a destination. */
+  quiet: { family: SANS, size: 0.8125, lineHeight: 1.5, weight: 400 },
+};
+
+/* ══════════════════════════════════════════════════════════════════════════
+   3 · INK — text tones on the ramp
+   ══════════════════════════════════════════════════════════════════════════ */
+
+export const INK = {
+  /** Manuscript prose and titles. PRESS.text. */
+  primary: PRESS.text,
+  /** Chrome text that is not prose. */
+  secondary: '#CFC5B6',
+  /** Metadata, counts, timestamps. */
+  muted: '#9A8F80',
+  /** Present but deliberately receding — an inactive rail item. */
+  quiet: '#7A7065',
+  /** On a gold fill. Dark, because gold is a light surface here. */
+  onAccent: PRESS.ink,
+} as const;
+
+/* ══════════════════════════════════════════════════════════════════════════
+   4 · GOLD — where it is permitted, and where it is not
+
+   DESIGN-CONTRACT §2: "Gold used as accent and emphasis, not as decoration."
+
+   A rule with no enforcement drifts within one sprint, because gold is the
+   most attractive colour in the palette and every new surface wants a little.
+   So the permitted uses are enumerated and the forbidden ones are named. The
+   test asserts the two sets never overlap and that nothing in GROUND is gold.
+
+   The deeper reason it is bounded: gold marks the member's own work and the
+   member's own emphasis. Spend it on chrome and it stops meaning anything —
+   and, worse, it stops being available to mean *this is yours*.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+export const GOLD = {
+  /** PRESS.accent. The one true accent. */
+  DEFAULT: PRESS.accent,
+  /** Fills at rest — sampled #734F1A on the New Work button in 04. */
+  fill: '#734F1A',
+  /** Epigraph / emphasis text — sampled #A7783A in 04. */
+  text: '#A7783A',
+  /** Hairline emphasis on a border. */
+  edge: '#5A431C',
+} as const;
+
+export const GOLD_PERMITTED = [
+  'primary-action-fill',
+  'active-mode-indicator',
+  'active-nav-item',
+  'selected-item-border',
+  'epigraph-and-emphasis',
+  'writer-declared-goal-progress',
+  'section-marker',
+] as const;
+
+export const GOLD_FORBIDDEN = [
+  'panel-ground',
+  'page-ground',
+  'body-prose',
+  'decorative-flourish',
+  'maia-voice',
+  'maia-authored-emphasis',
+  'metadata',
+] as const;
+
+/* ══════════════════════════════════════════════════════════════════════════
+   5 · MAIA — her own accent, and why that is architecture
+
+   Sampled from 04: MAIA's greeting is NOT gold. It is violet — #7A71A0 as
+   text, over a #3D2E4D surface family, clustering at hue 240-270 degrees where
+   every other accent in the room sits at 30-45.
+
+   WHERE THE AUTHORITY SITS, precisely, because an earlier draft of this file
+   overstated it by calling the violet "D-019 rendered".
+
+     DESIGN-CONTRACT / screen 04   requires THIS treatment: violet, and
+                                   MAIA's language set in sans rather than in
+                                   the manuscript's own serif.
+
+     D-019                         requires the DISTINCTION: member material
+                                   remains distinguishable from MAIA
+                                   interpretation. It decrees no hue and no
+                                   font.
+
+   The difference is load-bearing in one direction that matters. A future
+   accessible treatment that preserved authorship distinction through type,
+   label, placement and another reference-approved colour would satisfy D-019
+   completely — and reading the hue as constitutional would have made that
+   legitimate work look like an object-model violation. So the guard below is
+   a visual-contract guard, and D-019 is the reason the contract cares.
+
+   What both agree on: recolouring MAIA into gold would collapse the
+   distinction at the visual layer while leaving the schema intact — drift
+   that is invisible in a code review and obvious in a screenshot. That is
+   what assertMaiaIsVisuallyDistinctFromTheWork refuses.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+export const MAIA_ACCENT = {
+  /** MAIA's speaking voice. Sampled #7A71A0 in 04. */
+  voice: '#7A71A0',
+  /** Her panel's chip/inset surface. Sampled #3D2E4D. */
+  surface: '#3D2E4D',
+  /** Her edge treatment. */
+  edge: '#4A3A5E',
+} as const;
+
+/* ══════════════════════════════════════════════════════════════════════════
+   6 · INSIGHT TYPE CHIPS
+
+   04 and 08 both label each developmental insight with a type chip, and the
+   chips are colour-coded BY KIND — theme, structure, continuity, reader
+   experience. Sampled families: violet (#3D2E4D), amber (#412E15), teal
+   (#1F5750), blue.
+
+   These encode kind, never severity. There is no worst-to-best ordering here
+   and none may be introduced: a red "critical" chip would be a machine
+   judgement wearing the costume of a category, which is exactly what D-003
+   and maiaOffering.ts forbid. Both references show the same discipline — the
+   only numbers beside an insight are "3 passages" and "2 suggestions".
+   ══════════════════════════════════════════════════════════════════════════ */
+
+export const INSIGHT_CHIP = {
+  theme: { bg: '#3D2E4D', ink: '#C3B4D8' },
+  structure: { bg: '#412E15', ink: '#D8B98A' },
+  continuity: { bg: '#1F5750', ink: '#9FD4CB' },
+  readerExperience: { bg: '#25384D', ink: '#A8C4DD' },
+} as const;
+
+/* ══════════════════════════════════════════════════════════════════════════
+   7 · SPACING & DENSITY
+
+   DESIGN-CONTRACT §2: "Density is low. The references show restraint —
+   whitespace is load-bearing."
+
+   Treated as structure, not leftover. `prose` is the measure and it is a
+   ceiling, not a target: a manuscript column that grows with the viewport
+   stops being readable somewhere around 75 characters, and the whole room is
+   built around that column staying comfortable.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+export const SPACE = {
+  hairline: 2, tight: 4, snug: 8, base: 12, comfortable: 16,
+  roomy: 24, generous: 32, section: 48, band: 64,
+} as const;
+
+/**
+ * Column proportions, MEASURED from 04 by the WS2-02B composition pass.
+ *
+ * Method: a horizontal luminance scan across the panel body of
+ * `04-writing-field-wide.png` (1536px wide, sampled between 30% and 70% height
+ * to avoid header and footer). Text produces edges everywhere, so the panel
+ * gutters are the sustained runs with NO edges — 135-202, 373-434, 901-979,
+ * 1179-1230, 1448-1511. Those runs give the column spans below.
+ *
+ * This replaced a single `panelWidth: 300`, which the first render showed was
+ * wrong in two ways at once: the manuscript outline is genuinely NARROWER than
+ * the contextual panels in the reference, and using one width for all three
+ * squeezed the writing field to about 29% of the room when 04 gives it 35%.
+ * The field stopped being the largest thing in its own room — visible
+ * instantly in a capture, invisible in the token file.
+ *
+ * The proportions are measured. Any pixel value derived from them is not: it
+ * depends on the viewport, which is why they are stored as fractions and
+ * resolved by `columnPx` rather than frozen at one width.
+ */
+export const COLUMN_FRACTION = {
+  rail: 0.135,
+  outlinePanel: 0.150,
+  writingField: 0.352,
+  maiaPanel: 0.166,
+  materialsPanel: 0.173,
+} as const;
+
+/**
+ * Gutters, also measured — the WS2-02B correction pass.
+ *
+ * The first geometry pass resolved each column as a fraction of the FULL
+ * viewport and then let the writing field take `flex: 1` of whatever was left
+ * after padding and gaps. So the field never received its measured share: at
+ * 1680 it rendered near 33.3% against a measured 35.2%. The token table was
+ * ordered correctly and the guard passed; the rendered geometry still did not
+ * reproduce the reference.
+ *
+ * Measured the same way as the columns: a luminance profile across 04's panel
+ * body, taking the runs that sit at page-ground level between panels — 8px at
+ * the left edge, 15px rail-to-outline, 25px outline-to-field, 17px
+ * field-to-MAIA, 15px MAIA-to-materials, 9px at the right edge. Roughly 5.8%
+ * of the width in total.
+ *
+ * The column fractions were measured span-to-span and therefore carry a little
+ * of that gutter inside them; they sum to 97.6%, not 94.2%. Rather than
+ * silently re-cut the measurements to close the gap, `writingFieldLayout`
+ * allocates the measured gutters first and then divides what remains in the
+ * measured RATIO. The result reproduces the reference proportions to within
+ * about 1.2 percentage points, which is stated as a tolerance and tested
+ * rather than left as an impression.
+ */
+export const GUTTER_FRACTION = 0.058;
+
+/** How close a rendered layout must come to the measured reference share. */
+export const LAYOUT_TOLERANCE = 0.015;
+
+export interface StudioLayout {
+  rail: number;
+  outlinePanel: number;
+  writingField: number;
+  maiaPanel: number;
+  materialsPanel: number;
+  /** One gutter, applied at both edges and between each pair of columns. */
+  gutter: number;
+}
+
+/**
+ * Resolve the whole row at a viewport width, gutters included.
+ *
+ * Every column is returned explicitly — the writing field is a computed width,
+ * not a `flex: 1` remainder, so what renders is what was measured.
+ */
+export function writingFieldLayout(
+  viewportWidth: number,
+  columns: ReadonlyArray<keyof typeof COLUMN_FRACTION> = [
+    'rail', 'outlinePanel', 'writingField', 'maiaPanel', 'materialsPanel',
+  ],
+): StudioLayout {
+  const gaps = columns.length + 1; // both edges plus between each pair
+  const gutter = Math.round((GUTTER_FRACTION * viewportWidth) / gaps);
+  const available = viewportWidth - gutter * gaps;
+  const ratioTotal = columns.reduce((n, c) => n + COLUMN_FRACTION[c], 0);
+
+  const out = { gutter } as StudioLayout;
+  for (const c of columns) {
+    out[c] = Math.round((COLUMN_FRACTION[c] / ratioTotal) * available);
+  }
+  return out;
+}
+
+/** Resolve a measured proportion at a given viewport width. */
+export function columnPx(column: keyof typeof COLUMN_FRACTION, viewportWidth: number): number {
+  return Math.round(COLUMN_FRACTION[column] * viewportWidth);
+}
+
+export const MEASURE = {
+  /** ch. The manuscript column ceiling. Long-form reading degrades past this. */
+  prose: 68,
+  /** px. Room gutter around the writing field. */
+  roomGutter: 32,
+  /** px. Below this the writing field cannot keep its measure — see RESPONSIVE. */
+  fieldMinWidth: 420,
+} as const;
+
+export const RADIUS = { sm: 4, base: 6, panel: 8, pill: 999 } as const;
+
+/**
+ * Rail vertical rhythm, MEASURED from 04 by the WS2-02C fidelity pass.
+ *
+ * Method: a brightness scan down the rail column (x 30-190) of the 1024-tall
+ * reference, taking each run of text rows and the distance between their
+ * midpoints. The reference is markedly denser than the first composition,
+ * which ran a ~37px pitch against these numbers.
+ *
+ *   item pitch                 31,32,33,34,32,33,35 · 30,32,32,30 · 29,30,30,31,31
+ *   band label to first item   31 and 30
+ *   last item to next band     48 and 53
+ *
+ * Pitch is what the eye reads as density, so it is stored rather than left to
+ * accumulate out of padding and gap at each call site.
+ */
+export const RAIL_RHYTHM = {
+  /** px between item midpoints. Mean of the fifteen measured gaps. */
+  itemPitch: 32,
+  /** px from a band label's midpoint to its first item's midpoint. */
+  labelToFirstItem: 30,
+  /** px from a band's last item to the next band's label. */
+  bandGap: 48,
+  /** px. Icon column in 04 — every destination carries one. */
+  iconSize: 15,
+} as const;
+
+export const RULE = {
+  /** PRESS.rule — confirmed against sampled #4F453B. */
+  DEFAULT: PRESS.rule,
+  soft: PRESS.ruleSoft,
+  emphasis: GOLD.edge,
+  /**
+   * WS2-03B correction 2 — a border that recedes into the surface it bounds.
+   *
+   * Not a new colour: it is the `raised` step of the ramp, so a panel edged
+   * with it has no visible outline and is separated from the page ground by
+   * the ramp alone. That is what StudioSurface has said from the start —
+   * "depth in this room is carried by the ramp rather than by borders" — and
+   * the contextual panels were not honouring it.
+   *
+   * Why it was needed: at the authenticated capture the outline, MAIA and the
+   * writing field all carried the same `soft` edge, so four surfaces read as
+   * four equally consequential application panes and the manuscript stopped
+   * being the obvious centre of gravity. The field now keeps the only visible
+   * border in the row. No geometry moved to achieve that.
+   */
+  quiet: GROUND.raised,
+} as const;
+
+/* ══════════════════════════════════════════════════════════════════════════
+   8 · STATES
+
+   `unavailable` is the delicate one. It exists for a real control that is
+   momentarily not actionable — an export with nothing yet to export, an
+   action mid-save.
+
+   AMENDED BY WS2-03B. This block used to end: "if it is ever used to render a
+   `later` destination, the roadmap has leaked and the guard has been routed
+   around". That was written when there was one render boundary. There are now
+   two, for two rooms with different jobs, and the distinction is recorded in
+   studioMap.ts beside both functions:
+
+     Studio HOME, an arrival surface   `later` is DROPPED. Unchanged.
+     The persistent SHELL, a map of    `later` is PRESENT and plainly
+     the Studio                        unavailable — ruled with the sixteen
+                                       enumerated in full.
+
+   So `unavailable` against a `later` destination is now correct in the shell
+   and still a leak anywhere else. What did NOT change is what unavailable
+   means: no href, no focus as a link, no hover, and no count. A greyed row
+   that still carries 04's "24" would be fabricated data wearing an honest
+   state — see assertShellPromisesNothing.
+
+   `refusal` is separate from `error` on purpose. An error is the system
+   failing; a refusal is the system declining — the Canvas leaving a
+   manuscript unresolved when several works declare it rather than guessing.
+   A refusal is correct behaviour and must not be dressed as a fault.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+export type StudioState =
+  | 'rest' | 'hover' | 'focus' | 'active' | 'selected'
+  | 'quiet' | 'empty' | 'loading' | 'unavailable' | 'refusal' | 'error';
+
+export const STATE: Record<StudioState, { bg?: string; ink: string; edge?: string }> = {
+  rest: { ink: INK.secondary },
+  hover: { bg: GROUND.raised, ink: INK.primary },
+  focus: { ink: INK.primary, edge: GOLD.DEFAULT },
+  active: { bg: GROUND.active, ink: INK.primary, edge: GOLD.edge },
+  selected: { bg: GROUND.active, ink: INK.primary, edge: GOLD.DEFAULT },
+  quiet: { ink: INK.quiet },
+  empty: { ink: INK.muted },
+  loading: { ink: INK.muted },
+  unavailable: { ink: INK.quiet },
+  refusal: { ink: INK.secondary, edge: RULE.DEFAULT },
+  error: { ink: '#D9A48F', edge: '#6E3B2E' },
+};
+
+/* ══════════════════════════════════════════════════════════════════════════
+   9 · PANEL BEHAVIOUR CONTRACT
+
+   DESIGN-CONTRACT §2: "Panels are contextual and dismissible, not permanent
+   furniture."
+
+   Both 04 and 05 draw a close control on MAIA and on Materials. The rule is
+   easy to lose to implementation convenience — a panel that is always mounted
+   is simpler than one that is not — so dismissibility is declared per role and
+   asserted, rather than left to whoever builds the panel.
+
+   WHAT THIS DOES NOT RULE. An earlier draft also asserted that ONLY the
+   writing field may ever be undismissable. The frozen contract does not
+   establish that, and it is not ours to add: a future persistent structural
+   rail or shell surface could legitimately be undismissable without being
+   "permanent furniture" in the sense §2 refuses. So the invariant enforces
+   the implication the contract actually states — contextual implies
+   dismissible — and says nothing about surfaces that are not contextual.
+
+   The individual contracts below still mark MAIA and Materials dismissible,
+   because 04 and 05 draw close controls on both. That is a fact about these
+   panels, not a law about every future Studio surface.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+export type PanelRole =
+  | 'writing-field' | 'manuscript-outline' | 'maia' | 'materials'
+  | 'versions' | 'goals' | 'statistics';
+
+export interface PanelContract {
+  role: PanelRole;
+  /** False only for the writing field — see above. */
+  dismissible: boolean;
+  /** True when the panel is summoned by context rather than always present. */
+  contextual: boolean;
+  /** Which side the reference places it on. */
+  placement: 'center' | 'left' | 'right' | 'bottom';
+}
+
+export const PANELS: PanelContract[] = [
+  { role: 'writing-field', dismissible: false, contextual: false, placement: 'center' },
+  { role: 'manuscript-outline', dismissible: true, contextual: false, placement: 'left' },
+  { role: 'maia', dismissible: true, contextual: true, placement: 'right' },
+  { role: 'materials', dismissible: true, contextual: true, placement: 'right' },
+  { role: 'versions', dismissible: true, contextual: true, placement: 'bottom' },
+  { role: 'goals', dismissible: true, contextual: true, placement: 'bottom' },
+  { role: 'statistics', dismissible: true, contextual: true, placement: 'bottom' },
+];
+
+/* ══════════════════════════════════════════════════════════════════════════
+   10 · RESPONSIVE
+
+   Only what the two reference architectures actually support. 04 is the wide
+   field — five-mode nav, left rail, MAIA and Materials as right rails, a
+   bottom band. 08 is the second architecture at a narrower width: no
+   five-mode nav, Materials demoted to a horizontal strip along the bottom,
+   MAIA still present at the right.
+
+   The ordering below is read from that difference: chrome collapses before
+   the writing field is crushed. Materials leaves the right rail before the
+   field gives up its measure, because 08 shows exactly that trade being made.
+   No mobile architecture is invented — neither reference shows one, and
+   guessing it here would be the design-system equivalent of inventing a
+   migration from a programme description.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/**
+ * PROVISIONAL. No reference establishes a threshold.
+ *
+ * 04 and 08 are two architectures, not the same architecture measured at two
+ * widths — so nothing in the pack says where one becomes the other. These are
+ * placeholders for WS2-02B to replace once a real composition can be resized
+ * and witnessed. They carry no design authority; see PROVENANCE.BREAKPOINT.
+ */
+export const BREAKPOINT = { compact: 1024, wide: 1440 } as const;
+
+/**
+ * What the 04 to 08 difference actually establishes, and nothing beyond it.
+ *
+ * An earlier draft shipped a full six-step COLLAPSE_ORDER — statistics, then
+ * goals, then versions, then materials, then the outline, then MAIA. Only one
+ * of those steps is witnessed. There is no reference narrower than 08, so the
+ * later steps were predictions about screens no one has seen.
+ *
+ * That mattered most at the end of the list. §1 of the design contract makes
+ * MAIA a persistent companion region shared across all five modes; an invented
+ * breakpoint quietly deciding when she disappears would have set a real
+ * constitutional question by default, inside a token file, with no ruling.
+ *
+ * Recorded as relations rather than a sequence, because a partial order is
+ * what was observed and a total order is what was invented.
+ */
+
+/** [a, b] — a yields its position before b does. 08 demotes Materials to a
+ *  bottom strip while the manuscript outline keeps its rail. */
+export const YIELDS_BEFORE: ReadonlyArray<readonly [PanelRole, PanelRole]> = [
+  ['materials', 'manuscript-outline'],
+];
+
+/** Present and central in both architectures. */
+export const NEVER_COLLAPSES: readonly PanelRole[] = ['writing-field'];
+
+/** Still present in 08, the narrowest reference. Relocation is not removal. */
+export const PRESENT_AT_COMPACT: readonly PanelRole[] = [
+  'maia',
+  'manuscript-outline',
+  'materials',
+];
+
+/* ══════════════════════════════════════════════════════════════════════════
+   11 · EXECUTABLE INVARIANTS
+   ══════════════════════════════════════════════════════════════════════════ */
+
+function luminance(hex: string): number {
+  const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
+  return (r * 0.299 + g * 0.587 + b * 0.114) / 255;
+}
+
+function hueOf(hex: string): number {
+  const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255);
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  if (max === min) return 0;
+  const d = max - min;
+  const h =
+    max === r ? ((g - b) / d + (g < b ? 6 : 0)) : max === g ? (b - r) / d + 2 : (r - g) / d + 4;
+  return (h * 60 + 360) % 360;
+}
+
+/** The ground ramp must stay monotonic, or depth reads as noise. */
+export function assertGroundRampOrdered(): void {
+  const ramp = [GROUND.deepest, GROUND.base, GROUND.field, GROUND.raised, GROUND.active];
+  for (let i = 1; i < ramp.length; i++) {
+    if (luminance(ramp[i]) <= luminance(ramp[i - 1])) {
+      throw new Error(
+        `Ground ramp is not monotonic at index ${i} (${ramp[i - 1]} → ${ramp[i]}). ` +
+          `The room carries depth by the ramp, not by borders.`,
+      );
+    }
+  }
+}
+
+/** Espresso, not charcoal. Every ground tone is warm: red > green > blue. */
+export function assertGroundIsWarm(): void {
+  for (const [name, hex] of Object.entries(GROUND)) {
+    const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
+    if (!(r > g && g >= b)) {
+      throw new Error(`GROUND.${name} (${hex}) is not warm. The Studio ground is espresso.`);
+    }
+  }
+}
+
+/** Gold is accent and emphasis. It may not become a surface or decoration. */
+export function assertGoldIsBounded(): void {
+  const forbidden = new Set<string>(GOLD_FORBIDDEN);
+  for (const use of GOLD_PERMITTED) {
+    if (forbidden.has(use)) {
+      throw new Error(`"${use}" is listed as both a permitted and a forbidden gold use.`);
+    }
+  }
+  for (const [name, hex] of Object.entries(GROUND)) {
+    const h = hueOf(hex);
+    if (h >= 30 && h <= 50 && luminance(hex) > 0.35) {
+      throw new Error(
+        `GROUND.${name} (${hex}) has become a gold surface. Gold is accent, not ground.`,
+      );
+    }
+  }
+}
+
+/**
+ * MAIA's accent may not collapse into the work's.
+ *
+ * Enforces the DESIGN-CONTRACT / screen 04 treatment, for the reason D-019
+ * gives: gold marks the member's work and emphasis, so MAIA's voice must stay
+ * separable from it. The hue itself is the reference's choice, not the
+ * decision record's — a different reference-approved treatment could satisfy
+ * the same distinction.
+ */
+export function assertMaiaIsVisuallyDistinctFromTheWork(): void {
+  const goldHue = hueOf(GOLD.DEFAULT);
+  for (const [name, hex] of Object.entries(MAIA_ACCENT)) {
+    const diff = Math.abs(hueOf(hex) - goldHue);
+    if (Math.min(diff, 360 - diff) < 60) {
+      throw new Error(
+        `MAIA_ACCENT.${name} (${hex}) sits in gold's hue family. Screen 04 keeps MAIA's ` +
+          `voice separable from the member's own work and emphasis; D-019 is why that ` +
+          `separation matters.`,
+      );
+    }
+  }
+}
+
+/**
+ * Contextual panels are dismissible.
+ *
+ * The whole of what DESIGN-CONTRACT §2 establishes, and deliberately no more:
+ * a panel summoned by context may not become permanent furniture. A surface
+ * that is not contextual is outside this rule — the contract does not decide
+ * it, so neither does this function.
+ */
+export function assertContextualPanelsAreDismissible(): void {
+  for (const p of PANELS) {
+    if (p.contextual && !p.dismissible) {
+      throw new Error(
+        `Panel "${p.role}" is contextual but not dismissible — that is permanent furniture.`,
+      );
+    }
+  }
+}
+
+/** Long-form reading is the primary act, so prose outranks chrome in size. */
+export function assertProseOutranksChrome(): void {
+  const chrome = ['navItem', 'metadata', 'bandLabel', 'panelLabel', 'maiaReading', 'quiet'];
+  for (const role of chrome) {
+    if (TYPE[role].size >= TYPE.prose.size) {
+      throw new Error(
+        `TYPE.${role} is at least as large as prose. The room is built around the column ` +
+          `of prose, not around chrome.`,
+      );
+    }
+  }
+}
+
+/** Spacing is structure: the scale must stay ordered to mean anything. */
+export function assertSpacingOrdered(): void {
+  const vals = Object.values(SPACE);
+  for (let i = 1; i < vals.length; i++) {
+    if (vals[i] <= vals[i - 1]) {
+      throw new Error(`SPACE scale is not ascending at index ${i}.`);
+    }
+  }
+}
+
+/**
+ * The responsive contract claims only what 04 to 08 shows.
+ *
+ * Two guards, both narrow: the field never yields, and MAIA is not predicted
+ * out of existence below the narrowest reference we hold.
+ */
+export function assertResponsiveClaimsAreObserved(): void {
+  for (const [yielding] of YIELDS_BEFORE) {
+    if (NEVER_COLLAPSES.includes(yielding)) {
+      throw new Error(
+        `"${yielding}" is listed as yielding, but it is present and central in both ` +
+          `references. The writing field is what the room is for.`,
+      );
+    }
+  }
+  if (!PRESENT_AT_COMPACT.includes('maia')) {
+    throw new Error(
+      'MAIA has been dropped from the compact architecture. She is present in 08, and §1 ' +
+        'makes her a persistent companion across the modes — a token file may not decide ' +
+        'her disappearance by inventing a breakpoint below the narrowest reference.',
+    );
+  }
+}
+
+/**
+ * The writing field is the largest column in its own room.
+ *
+ * Added by WS2-02B, because the first render broke it without breaking any
+ * existing guard: three panels at one width squeezed the field to ~29% when 04
+ * gives it 35.2%. "The room is built around a column of prose" is a claim
+ * about proportion, and proportion is checkable.
+ */
+export function assertFieldIsTheLargestColumn(): void {
+  const field = COLUMN_FRACTION.writingField;
+  for (const [name, frac] of Object.entries(COLUMN_FRACTION)) {
+    if (name !== 'writingField' && frac >= field) {
+      throw new Error(
+        `COLUMN_FRACTION.${name} (${frac}) is at least as wide as the writing field ` +
+          `(${field}). The room is built around the column of prose.`,
+      );
+    }
+  }
+}
+
+/**
+ * A RENDERED layout reproduces the measured reference proportions.
+ *
+ * The distinction this exists for: assertFieldIsTheLargestColumn checks the
+ * token table is ordered, which the first geometry pass satisfied while
+ * rendering the field at 33.3% instead of 35.2%. This checks the arithmetic
+ * that actually reaches the screen, at the capture width.
+ */
+export function assertLayoutMatchesReference(viewportWidth = 1680): void {
+  const layout = writingFieldLayout(viewportWidth);
+  for (const c of ['rail', 'outlinePanel', 'writingField', 'maiaPanel', 'materialsPanel'] as const) {
+    const rendered = layout[c] / viewportWidth;
+    const drift = Math.abs(rendered - COLUMN_FRACTION[c]);
+    if (drift > LAYOUT_TOLERANCE) {
+      throw new Error(
+        `Rendered "${c}" is ${(rendered * 100).toFixed(1)}% of the room but 04 measures ` +
+          `${(COLUMN_FRACTION[c] * 100).toFixed(1)}% — a drift of ` +
+          `${(drift * 100).toFixed(1)}pp, past the stated ${(LAYOUT_TOLERANCE * 100).toFixed(1)}pp.`,
+      );
+    }
+  }
+  const sum =
+    layout.rail + layout.outlinePanel + layout.writingField + layout.maiaPanel +
+    layout.materialsPanel + layout.gutter * 6;
+  if (Math.abs(sum - viewportWidth) > 6) {
+    throw new Error(`Layout sums to ${sum}px at a ${viewportWidth}px viewport.`);
+  }
+}
+
+/** Every token group states where its values came from. */
+export function assertEveryTokenGroupHasProvenance(
+  groups: readonly string[] = [
+    'GROUND', 'INK', 'TYPE', 'GOLD', 'GOLD_PERMITTED', 'GOLD_FORBIDDEN',
+    'MAIA_ACCENT', 'INSIGHT_CHIP', 'SPACE', 'MEASURE', 'RADIUS', 'RULE',
+    'STATE', 'PANELS', 'BREAKPOINT', 'YIELDS_BEFORE', 'NEVER_COLLAPSES',
+    'COLUMN_FRACTION', 'GUTTER_FRACTION', 'RAIL_RHYTHM',
+    'PRESENT_AT_COMPACT',
+  ],
+): void {
+  for (const g of groups) {
+    if (!PROVENANCE[g]) {
+      throw new Error(
+        `Token group "${g}" has no provenance. State whether its values are INHERITED, ` +
+          `SAMPLED, OBSERVED, DERIVED or PROVISIONAL — an unlabelled number inherits ` +
+          `authority it has not earned.`,
+      );
+    }
+  }
+}
+
+/** Run the whole foundation. */
+export function assertStudioThemeCoherent(): void {
+  assertGroundRampOrdered();
+  assertGroundIsWarm();
+  assertGoldIsBounded();
+  assertMaiaIsVisuallyDistinctFromTheWork();
+  assertContextualPanelsAreDismissible();
+  assertProseOutranksChrome();
+  assertSpacingOrdered();
+  assertResponsiveClaimsAreObserved();
+  assertEveryTokenGroupHasProvenance();
+  assertFieldIsTheLargestColumn();
+  assertLayoutMatchesReference();
+}
