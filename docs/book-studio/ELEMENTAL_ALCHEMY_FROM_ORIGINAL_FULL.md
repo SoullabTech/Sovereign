@@ -2307,10 +2307,10 @@ In alchemy, every element is understood to have four grades that range from the 
 
 ### The Four Grades of Fire
 
-- **Primal Fire:** This is the natural element we encounter every day, from the flame that cooks our food and warms our bodies to the sun whose light makes life on this planet possible. It is the first element we learned to tend, and tending it is still how most of us meet it.
+- **Primal Fire:** This is the natural element we encounter every day, from the flame that cooks our food and warms our bodies to the sun whose light makes life on this planet possible.
 - **Inner Fire:** This is the fire of the alchemist, or you as a soulful explorer. Mirroring the qualities of elementary fire, your secret fire is your spiritual and intuitive nature—the imagination that shows you what is not yet here, the will that moves you toward it, and the heat that burns away what no longer serves. It is the part of you that recognizes your own uniqueness and insists on expressing it.
 - **Collective Fire:** This grade is the shared imaginative and inspirational field of humanity, carried in myth, vision, and story. It is the fire passed between generations and kept alive in the circle—the ancestral flame that no single person lights or owns, and that each of us is briefly asked to tend.
-- **Universal Fire:** This is the originating light from which all fires arise—the creative energy of stars and of the first spark, the source of illumination itself. The force that kindles galaxies is the same force that kindles our own becoming.
+- **Universal Fire:** This is the originating light from which all fires arise—the generative principle of illumination itself, the creative energy of stars and of the first spark.
 
 ### The Four Grades of Water
 
