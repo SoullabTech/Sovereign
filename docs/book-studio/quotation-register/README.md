@@ -1492,3 +1492,93 @@ Kierkegaard · Pillai · TTC 33 · Frank Lloyd Wright.
 **Block records still unadjudicated: 96.** 13 block records carry 4A rulings. **4C
 is by far the largest remaining editorial pass**, and it now has an exact size for
 the first time.
+
+---
+
+# STAGE 4I — WIDENED TO 21 · family-aware view built · 2026-09-01
+
+## The governing rule
+
+> **When an active semantic family crosses a pass boundary, family integrity may
+> override the typographic boundary for unadjudicated members. Previously
+> adjudicated members are shown as context, not reopened.**
+>
+> **And unchanged: family membership requires shared inspection, not shared
+> outcome.**
+
+**4I: 19 → 21. 4C: 96 → 94.** Both moved records carry an explicit
+`pass_override` recording why. **Neither returns at 4C.**
+
+> **4A / 4I / 4C are editorial workflows. They are not truths about the manuscript.**
+> Where following them literally would split one semantic question into two
+> disconnected decisions, **the workflow bends and the register does not.**
+
+## The two families that forced it
+
+### `fam-perfect-laugh` — three occurrences, one shared failure
+
+| | Location | Function |
+|---|---|---|
+| **L47** | **Disclaimer** — front matter | closes a statement of the author's aspiration |
+| **L190** | **Call to Adventure** | stands alone |
+| **L1899** | **Mind-Body Coherence: The Aetheric Way of the Heart** — Ch9 | block epigraph, **different wording** |
+
+**Shared evidence, stated once:** no canonical source · earliest trace a 2001 Usenet
+post where it was posted as *"Buddhist,"* not as the Buddha · **the manuscript
+carries two different corrupt versions of one spurious saying** · possible ancestor
+in **Longchenpa**.
+
+**Three separate rulings owed**, because the locations do different work — a
+front-matter aspiration, a bare epigraph, and a chapter-section opening. **The
+question at each is the same and the answer need not be:** *does this location need
+the underlying thought at all, and if so — restored to a genuine ancestor, reclaimed
+in the author's voice, reframed, or removed?*
+
+### `fam-teasdale` — and why this is not an author-set judgment
+
+| | | |
+|---|---|---|
+| **A · L1984** | **SETTLED, read-only** | `KEEP · PHILOSOPHICAL KINSHIP + DIALOGUE · RIGHTS HOLD` — with the author-adopted frame beneath it |
+| **B · L1656** | 4I, awaiting ruling | `UNVERIFIED` — *Refining the Air of Mindful Communication* |
+| **C · L2262** | 4I, awaiting ruling | `UNVERIFIED` — the **Conclusion** |
+
+**The settled item is doing the important work here.** It proves the question is not
+*"do we like Teasdale?"* — one occurrence already earned its place on kinship
+grounds. **So the question at B and C becomes unavoidable and specific:**
+
+> ### Why does Teasdale belong *here*?
+
+**And the two unruled occurrences are both `UNVERIFIED`** while the settled one is
+`VERIFIED EXACT`. **Same author, three occurrences, three different evidentiary
+positions.**
+
+## The remaining population
+
+**Three more families with a single 4I member** — `fam-cogito` (Descartes,
+`authored_response` pairing) · `fam-laotzu-genuine` (TTC 33) · `fam-under-attributed`
+(Goethe).
+
+**Thirteen single occurrences**, each turning on a named question: Hermes ·
+**Blake** *(under-attribution + unreliable speaker)* · Miles Davis · the interrupted
+Lao Tzu · Tart · Kierkegaard · **Jung belief→experience** *(host-aligned
+alteration)* · **Milton/Satan** *(speaker context may strengthen)* ·
+**Lao Tzu/Waley** *(editorial value against high rights exposure)* · **John 17**
+*(false precision, true idea)* · Pillai · Frank Lloyd Wright · **Clayton**
+*(consent, not permissions)*.
+
+**Plus the control specimen** — the Jung chemical-substances passage, already
+author-adopted. **Shown, not reopened.**
+
+## The member-facing form of this move
+
+**No one needs to know two records moved from `4C` to `4I`:**
+
+> *"You use this source in three places. One has already been resolved. The other two
+> do different jobs, but reviewing them together may help you decide what
+> relationship you want this voice to have with your book."*
+>
+> **[ Review together ]**
+
+**That is the translation layer applied to the family-crossing-pass logic** — and it
+is the honest form, because *reviewing together* is exactly what the system is
+proposing, not *ruling together*.

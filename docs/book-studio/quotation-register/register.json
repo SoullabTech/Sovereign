@@ -2384,7 +2384,9 @@
       "editorial_status": "unadjudicated",
       "record_state": "confirmed",
       "identity_match_score": 1.0,
-      "notes": "Audit: UNVERIFIED - source lead unresolved. Teasdale is a real author and the thought matches his interspiritual, engaged-monastic thesis exactly. THEMATIC FIT PROVES NOTHING."
+      "notes": "Audit: UNVERIFIED - source lead unresolved. Teasdale is a real author and the thought matches his interspiritual, engaged-monastic thesis exactly. THEMATIC FIT PROVES NOTHING.",
+      "pass_assignment": "4I",
+      "pass_override": "MOVED 4C -> 4I by family-integrity rule: an active semantic family crossed a pass boundary. Ruled here so the family is inspected in one sitting; does not return at 4C."
     },
     {
       "id": "EA-Q-0089",
@@ -3062,7 +3064,9 @@
       "editorial_status": "unadjudicated",
       "record_state": "confirmed",
       "identity_match_score": 1.0,
-      "notes": "THIRD occurrence, block form, different wording. Independently ruled in Stage 2 and reached the same Longchenpa ancestor. Linkage found only by the speaker sweep."
+      "notes": "THIRD occurrence, block form, different wording. Independently ruled in Stage 2 and reached the same Longchenpa ancestor. Linkage found only by the speaker sweep.",
+      "pass_assignment": "4I",
+      "pass_override": "MOVED 4C -> 4I by family-integrity rule: an active semantic family crossed a pass boundary. Ruled here so the family is inspected in one sitting; does not return at 4C."
     },
     {
       "id": "EA-Q-0114",

@@ -1343,3 +1343,22 @@ stage.**
 > **Here is why it matters.**
 > **Here is what I can help with.**
 > **Here is the choice that is yours.**
+
+### Rule — family integrity may override a pass boundary
+
+> **When an active semantic family crosses a pass boundary, family integrity may
+> override the typographic boundary for unadjudicated members. Previously
+> adjudicated members are shown as context, not reopened.** Family membership still
+> requires **shared inspection, not shared outcome.**
+
+**Editorial passes are workflows. They are not truths about the manuscript.** Where
+following one literally would split a single semantic question into two disconnected
+decisions, **the workflow bends and the register does not.**
+
+**Member-facing form** — nobody needs to know a record moved between passes:
+> *"You use this source in three places. One has already been resolved. The other two
+> do different jobs, but reviewing them together may help you decide what
+> relationship you want this voice to have with your book."*  **[ Review together ]**
+
+**Note the verb: *reviewing* together, not *ruling* together.** The honest offer is
+shared inspection; the outcome stays per-occurrence.
