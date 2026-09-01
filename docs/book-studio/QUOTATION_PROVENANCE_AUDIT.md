@@ -3053,7 +3053,11 @@ James quotation (L632), which has no entry of its own.
 
 ---
 
-## RUMI — complete picture, 7 of 7. The book's most-quoted author.
+## RUMI — complete picture, 7 of 7
+
+**The most frequently *attributed* author in the current quotation inventory** —
+not "the most-quoted author," since several of the seven may ultimately prove not
+to be Rumi at all.
 
 | Line | Chapter | Status | Rights |
 |---|---|---|---|
@@ -3086,10 +3090,18 @@ This is the `MEDIATED TRANSLATION` problem at maximum depth, compounded by
 `SOURCE-FORM MISCLASSIFICATION` — a 1995 copyrighted rendering presented as a
 thirteenth-century text.
 
-**Not declared a single provenance family**, per the McKenna correction: the two
-verbatim Barks items have a demonstrated mechanism; the four unverified ones do
-not yet share a demonstrated one, only a shared absence. **Coordinated resolution
-task; per-item adjudication.**
+### The durable result, locked
+
+- **2 verbatim Barks items** → **demonstrated shared mechanism**; mediator credit
+  **and** rights review both required.
+- **1 correctly labelled Barks-derived paraphrase** → **good provenance
+  specimen**, retained as such.
+- **4 unverified "Rumi" sayings** → **coordinated specialist-resolution queue**,
+  but **each remains independent** until a Persian textual ancestor is found or
+  ruled out.
+
+Per the McKenna correction: not one family. Coordinated resolution task,
+per-item adjudication.
 
 
 ---
