@@ -42,11 +42,7 @@ In honor of my sister, Karen.
 
 This book is intended for inspirational, informational, explorational, and educational purposes only. It is a collection of interconnected insights, conversations, and experiences I wish had been shared with me when I started my journey of awakening. The advice, strategies, and ways of interpreting reality may not fit your own reality tunnel. Still, there may be some insights of value for you to ponder.
 
-While my goal is to honor your path and offer support, nothing replaces your own experiences, sensibilities, and those augmenting sources of wisdom from others who have dedicated their lives to supporting intrepid souls like you. Always seek advice from wise elders, colleagues, trusted professionals, and experts in health, wellness, spiritual, psychological, and emotional matters who match your sensibilities — especially the poets and mystics. Think of this as honoring and support for your Inner Guides in harmony with the experts out there, ensuring you have the best support possible.
-
-I aspire to offer guidance and support to all who seek the spiritual path and who want to explore the interconnectedness of our many ways of knowing, being, and becoming in the world.
-
-Take what resonates, leave what doesn't, and may your path be illuminated with joy, laughter, and profound insights.
+It is not a substitute for professional care. Where matters of physical health, mental health, or crisis are involved, seek qualified support.
 
 ---
 
