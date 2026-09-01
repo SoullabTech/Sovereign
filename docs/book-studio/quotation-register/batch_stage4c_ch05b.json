@@ -1,0 +1,28 @@
+{
+  "_comment": "Stage 4C - Chapter 5, closing three. Two genuine exceptions to 'unverified + decorative = remove', and one record explicitly NOT ruled by author-set inheritance.",
+  "entries": [
+    {
+      "match": "good servants but bad masters",
+      "editorial_status": "KEEP THE THOUGHT - REMOVE AESOP - PROVERBIAL FRAME. A genuine exception to the unverified-and-decorative default, because the line is structurally illuminating rather than ornamental: passion can serve or govern us is the section's proposition, and the campfire-tending prose develops it. What failed is the historical speaker, not the thought. Now reads 'A proverb puts it plainly:' - 'an old proverb' was avoided because the age itself is not established.",
+      "actual_author": "unknown - proverbial",
+      "attributed_as_note": "attribution to Aesop removed; carried as a proverb with no claimed speaker",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md (Aesop policy: 'Aesop' as verbatim historical speaker has a low ceiling); 4C Chapter 5 ruling",
+      "occurrence": 1,
+      "former_form": "block",
+      "notes": "FORM CHANGE: was a block epigraph, now runs as prose inside the section. It stays in the book, so it is neither an active block record nor a lifecycle record - the census arithmetic tracks it by former_form."
+    },
+    {
+      "match": "To keep a lamp burning",
+      "editorial_status": "KEEP - ILLUMINATION, REFRAMED TOWARD THE EARNED SOURCE. Not floating attribution: there is a real textual ancestor in No Greater Love carrying the lamp and oil image; what is unresolved is the aphoristic compression. Kierkegaard/Goethe class - real source relationship, evolved wording - so the frame now reads 'after Mother Teresa, No Greater Love' rather than presenting the compact sentence as verified verbatim. The longer source passage was deliberately not restored: the short image is what the section needs.",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md (source lead: No Greater Love, 'continuous input of small drops of oil'); 4C Chapter 5 ruling",
+      "occurrence": 1
+    },
+    {
+      "match": "As long as the ego runs your life",
+      "editorial_status": "KEEP - ILLUMINATION / SECTION THRESHOLD. Explicitly NOT ruled by author-set inheritance: the 4A Tolle occurrence was removed because the surrounding book already made its point and Tolle was redundant there. Here the line opens The Dark Side of Fire and names the mechanism the section is about - ego, then desire and fear, then action. Verified exact, locally relevant, doing a different job from the removed occurrence.",
+      "evidence_location": "4C Chapter 5 ruling",
+      "notes": "Bibliography entry owed at Stage 7 - Ch5 carries no Tolle entry at all. Rights remains its own later question.",
+      "occurrence": 1
+    }
+  ]
+}

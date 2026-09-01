@@ -837,7 +837,7 @@ Fire is a creative force, but it can also be destructive. In alchemy, its proces
 
 Fire is not without its danger. Its heat can destroy a forest or a house if it is not confined, yet we nonetheless use it to cook our food, heat our homes, and light our evening campsites. It turns flammable matter into ashes, sterilizing, cleansing, and purifying whatever reaches its flames. Emotionally, its illumination unites us when we're seated around a campfire. Candlelight enchants our dinner conversations and helps connect us to other worlds when we see it on our altars.
 
-*"It is with our passions, as it is with fire and water, they are good servants but bad masters." – Aesop*
+A proverb puts it plainly: "It is with our passions, as it is with fire and water: they are good servants but bad masters."
 
 ### Tending the Fire of Our Spiritual Nature
 
@@ -865,7 +865,7 @@ Listening, watching, hearing, sensing, and feeling are the true essence of being
 
 And so it is with our spirit. There are times when we do best by simply being present with our inner fire. It isn't always a roaring flame, nor is it ever fully out. There are times when we need to get still, quiet, and present with the fire burning within our hearts. We can gently blow a kind thought, a wonderful memory, or a sweet emotion onto the embers of our soul's presence until it reflects back the love we reinvest in ourselves. A little attention goes a long way here. Taking a moment to be with your spirit without judgment, diagnosis, or projection can do wonders.
 
-*"To keep a lamp burning we have to keep putting oil in it." – Mother Teresa*
+*"To keep a lamp burning we have to keep putting oil in it." – after Mother Teresa, No Greater Love*
 
 Much can be learned from simply receiving the light of what is present within you. Just being present and listening, learning, tending your inner fire. The fire keeper in ceremony is a position of honor. When we learn to see worlds of beauty within the simplest moments, we open doorways to spiritual wisdom. The art of being a receptive witness to the nuances and novelties within a moment can yield the most enlightening insights and inspirations. In these moments of being open to what we don't yet know and open to the mysteries crystallizing before us, we allow a higher level of truth to shine forth.
 

@@ -37,11 +37,15 @@ ruled_no_prov = [r["id"] for r in R if r["editorial_review_state"] == "migrated"
                  and r["provenance_review_state"] != "migrated"]
 print(f"  NOTE  {len(ruled_no_prov)} record(s) editorially ruled with provenance still open: {ruled_no_prov}")
 
-blk = sum(1 for r in R if r["display_form"] == "block_epigraph")
+blk = sum(1 for r in R if r["display_form"] == "block_epigraph" or r.get("former_form") == "block")
 pend = sum(1 for r in R if r["provenance_review_state"] == "pending_migration")
-mig_blk = sum(1 for r in R if r["display_form"] == "block_epigraph" and r["provenance_review_state"] == "migrated")
+def _is_blk(r):
+    return r["display_form"] == "block_epigraph" or r.get("former_form") == "block"
+
+
+mig_blk = sum(1 for r in R if _is_blk(r) and r["provenance_review_state"] == "migrated")
 DOCUMENTED = ("not_investigated", "verdict_not_locatable_in_source", "edition_check_required")
-ni_blk = sum(1 for r in R if r["display_form"] == "block_epigraph" and r["provenance_review_state"] in DOCUMENTED)
+ni_blk = sum(1 for r in R if _is_blk(r) and r["provenance_review_state"] in DOCUMENTED)
 check("block reconciliation: total = migrated + pending + documented not_investigated",
       blk == pend + mig_blk + ni_blk,
       f"{blk} = {mig_blk} migrated + {pend} pending + {ni_blk} documented-deferred")

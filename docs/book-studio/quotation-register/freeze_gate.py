@@ -57,7 +57,7 @@ check("families reconciled", not orphan_fams, f"{len(fams)} families across both
 
 check("every current record has an explicit review state",
       all(r.get("provenance_review_state") for r in R))
-ab = sum(1 for r in R if r["display_form"] == "block_epigraph")
+ab = sum(1 for r in R if r["display_form"] == "block_epigraph" or r.get("former_form") == "block")
 ib = sum(1 for r in H if r.get("former_form", "block") == "block")
 check("block lifecycle closes against the original census",
       ab + ib == 137, f"137 = {ab} active block + {ib} inactive block")

@@ -212,3 +212,12 @@ title-page verso, distribution metadata and cover.
 > **author/publisher-controlled sources**. They establish chronology and internal
 > circulation but **cannot independently verify an external attribution** — see
 > the self-corroboration rule in `QUOTATION_PROVENANCE_AUDIT.md`.
+
+### Final manuscript QA — added 2026-09-01 (Chapter 5 close)
+
+- **Read Chapter 5 (Fire) continuously after quotation adjudication** and ask whether Fire
+  still has enough threshold, rhythm, and breath between sections — or whether any opening
+  now feels abruptly bare. Nine removed epigraphs is enough to change the *felt authorship*
+  of the chapter, not merely to clean its citations.
+  **This is a read for chapter experience after subtraction. It is not permission to refill
+  empty spaces with quotations.**

@@ -144,15 +144,15 @@
     "id": "EA-Q-0028"
   },
   {
-    "text": "It is with our passions, as it is with fire and water, they are good servants but bad masters.",
-    "display_form": "block_epigraph",
-    "attributed_as": "Aesop",
+    "text": "It is with our passions, as it is with fire and water: they are good servants but bad masters.",
+    "display_form": "inline_plain_lead",
+    "attributed_as": null,
     "id": "EA-Q-0034"
   },
   {
     "text": "To keep a lamp burning we have to keep putting oil in it.",
     "display_form": "block_epigraph",
-    "attributed_as": "Mother Teresa",
+    "attributed_as": "after Mother Teresa, No Greater Love",
     "id": "EA-Q-0036"
   },
   {
