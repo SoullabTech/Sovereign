@@ -5,7 +5,8 @@
     2,
     3,
     4,
-    5
+    5,
+    6
   ],
   "rows": [
     {
@@ -510,6 +511,104 @@
       "evidence": "Reframed at 4C to the book's honest label. The register names Barks WITH JOHN MOYNE for this occurrence, where the Ch5 Rumi names Barks alone.",
       "merge": "Same duplicate-entry merge as EA-Q-0047, preserving the Barks/Moyne mediation appropriate to this occurrence.",
       "rights": "likely_protected_high - alongside O'Donohue and the song lyrics, one of the book's high-exposure permissions"
+    },
+    {
+      "id": "EA-Q-0086",
+      "source": "George Bernard Shaw, 'Beware of false knowledge'",
+      "relationship": "quotation, standardised form",
+      "object": "Shaw, George Bernard. \"Maxims for Revolutionists.\" In *Man and Superman.* 1903.",
+      "decision": "ADD",
+      "evidence": "VERIFIED VARIANT; the original reads 'Beware of HIS false knowledge' and the standalone form was standardised by Peter's Quotations. No Shaw entry exists.",
+      "note": "Cite the play and its appendix, NOT Peter's Quotations - that is where the variant comes from, not the text.",
+      "rights": "public_domain"
+    },
+    {
+      "id": "EA-Q-0088",
+      "source": "Wayne Teasdale, 'Spiritual maturity is not about pursuing salvation alone'",
+      "relationship": "quotation, AUTHOR_REPORTS_DIRECT_SOURCE",
+      "object": null,
+      "decision": "RECOVERY REQUIRED",
+      "evidence": "The register's most unusual provenance state: the author's account that he took it directly from the book is material evidence about transmission. The sentence was not located in either A Monk in the World or The Mystic Heart.",
+      "unresolved": "Open the Teasdale books, find the passage, record exact work, page and wording. The author's account determines WHERE WE LOOK, not what answer we force - it is not a licence to choose whichever title seems most plausible. If the wording turns out to have been adapted during drafting, the register can hold that too.",
+      "merge": "Three entries exist, two of them duplicates of The Mystic Heart. Merge the duplicates now; do NOT choose the surviving Teasdale work until the passage is located."
+    },
+    {
+      "id": "EA-Q-0268",
+      "source": "Helen Keller, 'Alone we can do so little; together we can do so much'",
+      "relationship": "SPEAKER not equal to TEXTUAL WITNESS - spoken line, documented by another author",
+      "object": "Lash, Joseph P. *Helen and Teacher: The Story of Helen Keller and Anne Sullivan Macy.* Delacorte Press, 1980.",
+      "decision": "ADD WITNESS SOURCE",
+      "evidence": "VERIFIED VARIANT - spoken during the vaudeville performances Keller and Anne Sullivan gave in the early 1920s, documented in Lash.",
+      "supersedes": "Keller, Helen. *The Story of My Life.* Doubleday, 1903.",
+      "drop_reason": "A book published in 1903 cannot be the source of a line spoken in the 1920s. Do not cite it for this saying.",
+      "note": "THE THIRD WITNESS-NOT-WORK CASE, and the architecture deserves to stay visible in the map: Keller -> Lash, Carson -> Brooks, Boothby -> Pollan. A bibliography built only around attributed names misses this repeatedly, because the AUTHOR is right in every instance."
+    },
+    {
+      "id": "EA-Q-0269",
+      "source": "Rachel Carson, 'Now I truly believe that we in this generation'",
+      "relationship": "SPEAKER not equal to TEXTUAL WITNESS - restored original, documented by another author",
+      "object": "Brooks, Paul. *The House of Life: Rachel Carson at Work.* Houghton Mifflin, 1972.",
+      "decision": "CORRECT",
+      "evidence": "Restored at 4C; the byline carries it. The obsolete entry cited Silent Spring p.51 for wording that no longer exists in the book.",
+      "supersedes": "Carson, Rachel. *Silent Spring.* Houghton Mifflin, 1962.",
+      "rights": "protectability_uncertain_standard"
+    },
+    {
+      "id": "EA-Q-0093",
+      "source": "Kierkegaard, 'Life can only be understood backwards'",
+      "relationship": "quotation, evolved English",
+      "object": "Kierkegaard, Soren. *Journals*, 1843 (IV A 164).",
+      "decision": "ADD - source location settled, English mediator unresolved",
+      "evidence": "VERIFIED VARIANT; 4I ruled REFRAME precisely because no single authoritative English exists.",
+      "unresolved": "TRANSLATOR/RENDERING UNRESOLVED. Do NOT cite The Essential Kierkegaard merely because that entry is already present - it would silently attach the manuscript's evolved English to the Hong translation, which is exactly the precision 4I refused. Rights turn on which English is printed, Dru 1938 against Hong 1967-78. Less precision is more truthful until the lineage is identified.",
+      "rights": "term_uncertain"
+    },
+    {
+      "id": "EA-Q-0094",
+      "source": "Descartes, 'I think therefore I am'",
+      "relationship": "quotation, translated",
+      "object": "Descartes, Rene. *Discourse on the Method*, Part IV. 1637.",
+      "decision": "ADD",
+      "evidence": "VERIFIED EXACT. The manuscript engages the French cogito formulation, 'je pense, donc je suis', not the later Latin 'cogito, ergo sum' of Principles of Philosophy (1644) - so the location is Part IV of the Discourse.",
+      "note": "No Descartes entry exists, despite the cogito being quoted and argued with across a paragraph of Ch8. Treat the English as the conventional form; do not fabricate a translator or edition relationship.",
+      "rights": "public_domain"
+    },
+    {
+      "id": "EA-Q-0101",
+      "source": "Milton, 'The mind is its own place'",
+      "relationship": "quotation, character voice",
+      "object": "Milton, John. *Paradise Lost*, I.254-255.",
+      "decision": "KEEP + add line reference",
+      "evidence": "VERIFIED VARIANT; reframed at 4I to name Satan as the speaker. The entry exists as a bare 'Milton, John. Paradise Lost.'",
+      "rights": "public_domain"
+    },
+    {
+      "id": "EA-Q-0102",
+      "source": "Roy T. Bennett, 'The past is a place of reference'",
+      "relationship": "quotation",
+      "object": "Bennett, Roy T. *The Light in the Heart.* Bennett Books Publishing, 2016.",
+      "decision": "KEEP",
+      "evidence": "VERIFIED EXACT on the author's own channel; bibliography CORRECT - the third correctly-supported citation in Ch8.",
+      "note": "Also the record where the census corrected itself: Bennett had been flagged as an uncertain identity and was not."
+    },
+    {
+      "id": "EA-Q-0105",
+      "source": "Rumi, 'I have lived on the lip of insanity'",
+      "relationship": "quotation, rendering named in-text",
+      "object": "Rumi. *The Essential Rumi.* Translated by Coleman Barks. HarperCollins, 1995.",
+      "decision": "KEEP",
+      "evidence": "VERIFIED EXACT; Barks is NOW NAMED in the manuscript - a Stage 3/4 repair that landed.",
+      "merge": "Third Rumi object. All three surviving Rumi objects use the same book, so one merged entry serves all, with Moyne named where the specific occurrence requires it.",
+      "rights": "likely_protected_high"
+    },
+    {
+      "id": "EA-Q-0107",
+      "source": "Blake, 'If the doors of perception were cleansed'",
+      "relationship": "quotation",
+      "object": "Blake, William. *The Marriage of Heaven and Hell.* c.1790.",
+      "decision": "KEEP",
+      "evidence": "VERIFIED EXACT, bibliography CORRECT. Confirms the earlier row: both surviving Blake objects legitimately resolve to this one entry.",
+      "rights": "public_domain"
     }
   ],
   "findings": [
