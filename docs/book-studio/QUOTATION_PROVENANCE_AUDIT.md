@@ -2608,8 +2608,11 @@ verifiable sources.
 | L2001 | C. Michael Smith | `UNVERIFIED — source lead unresolved` — Smith is real, and "inner axis mundi," "Dream Maker" and "Daimon" are all documented as his; the combined sentence was not located | `LIKELY PROTECTED` · `STANDARD` | *Jung and Shamanism in Dialogue* (Paulist, 1997) — correct work |
 | L2005 | Paulo Coelho | `VERIFIED` — *The Alchemist*; **`MEDIATED TRANSLATION`** — the English is Alan R. Clarke's (1993), not Coelho's Portuguese | `LIKELY PROTECTED` · `STANDARD` | correct |
 
-**Third Gabriel song identified** — "Signal to Noise." All three lyrics are now
-sourced: "Darkness" (Ch6), "Signal to Noise" (Ch9), and L713 (Ch4) still to place.
+**All three Gabriel songs are identified** — no further song identification is
+needed; all three remain in the permissions review:
+- **Ch4 L713** — "Growing Up," *Up* (Real World Records, 2002)
+- **Ch6 L1153** — "Darkness," *Up* (2002)
+- **Ch9 L1911** — "Signal to Noise," *Up* (2002)
 
 **Ch9's bibliography is the best-matched in the book so far.** Every quoted author
 checked has a correct entry, with the right work. `ORPHAN CANDIDATE` ×9 — Arthur
@@ -2632,9 +2635,15 @@ the book. Its failures are concentrated in `UNVERIFIED` items with real named
 sources awaiting edition checks — Black Elk, Krishnamurti, C. Michael Smith — a
 materially more tractable position than Air's.
 
-**Five chapters, five different profiles.** No two elemental chapters behave
-alike on any measure. The book-wide census was necessary; no sample would have
-modelled the whole.
+> **The five elemental chapters have materially different provenance profiles.**
+
+The book-wide census was necessary; no single-chapter sample would have modelled
+the whole.
+
+**And Aether carries a constructive result:** good bibliography construction is
+**achievable within this manuscript**. The reconstruction must therefore
+**preserve verified entries rather than normalize everything indiscriminately** —
+Ch9's apparatus and Ch7's MLK entry are the models to protect.
 
 ---
 
