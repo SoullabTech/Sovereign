@@ -1122,7 +1122,7 @@ Feeling and thinking represent polar opposites: right and left hemispheric funct
 
 The alchemy of water is the process of cleansing ourselves of emotional impurities. Water is associated with love, compassion, and rebirth. As such, it holds the potential for all forms of redemption through the selfless act of letting go and receiving what is wanting to be grown within us.
 
-As Carl Jung once said, *"The meeting of two personalities is like the contact of two chemical substances: if there is any reaction, both are transformed."* What Jung gives us here is an image, not a rule: contact that changes both parties, or no reaction at all. Water is the element in which that becomes unavoidable. To go down into emotional depth with another person is to accept that we will not come back up unaltered—and that if we insist on being unaltered, nothing has actually met.
+As Carl Jung once said, *"The meeting of two personalities is like the contact of two chemical substances: if there is any reaction, both are transformed."* What Jung gives us here is an image, not a rule: contact that changes both parties, or no reaction at all. Water is the element in which that becomes hardest to ignore. To go down into emotional depth with another person is to accept that we will not come back up unaltered—and that if we insist on being unaltered, nothing has actually met.
 
 ### The Dark Side of Water
 

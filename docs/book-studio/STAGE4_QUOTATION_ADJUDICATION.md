@@ -1158,3 +1158,153 @@ citing as wisdom a line the work itself frames as self-deception.
 **Retroactive scope:** applies to any quotation drawn from drama, epic, dialogue, or
 fiction. **A sweep of the remaining population for character-spoken lines is owed
 before 4B closes.**
+
+---
+
+# SPEAKER SWEEP — complete 2026-09-01
+
+**Scope:** every quotation sourced from **drama · fiction · dialogue · epic and
+narrative poetry · scripted speech**. **Wording, editions and rights were not
+re-proved** except where the speaker check exposed a new conflict — which it did
+twice.
+
+**Question:** *who is actually speaking, and does the manuscript treat that
+character's statement as though it were the author's own position?*
+
+## ✅ JUNG PARAGRAPH — `AUTHOR-ADOPTED`
+
+The revision was applied before adoption: **"unavoidable" → "hardest to ignore."**
+The author's reasoning, recorded because it is a general principle: opening with
+*"an image, not a rule"* and then calling the consequence *unavoidable* **quietly
+turns the image back into a rule.** The paragraph now preserves the distinction
+between Jung offering an image and the book making its own interpretation, **without
+converting that interpretation into an absolute law.**
+
+**Status: `EDITOR/MODEL SUGGESTION` → `AUTHOR-ADOPTED`.** Canonical.
+
+---
+
+## Findings
+
+### 1 · `SPEAKER MISATTRIBUTION` + wording defect — "John 17:16" · L1951
+
+> The Christian admonition, *"Be in the world but not of it" — John 17:16*
+
+**Two defects, and the verse citation is the more serious.**
+
+**(a) The speaker is unnamed.** John 17 is **Jesus praying to the Father**. The
+citation gives book, chapter and verse but not the speaker — which for scripture is
+the equivalent of naming the play and not the character.
+
+**(b) ⚠️ The wording is not John 17:16.** That verse reads: *"They are not of the
+world, even as I am not of the world."* **Declarative, third person, about the
+disciples.** The manuscript's *"Be in the world but not of it"* is **imperative and
+second person** — a well-known **traditional summary of John 17:14–16**, not a
+quotation from it.
+
+**The manuscript is right to call it "the Christian admonition"** — that is exactly
+what it is. **The defect is attaching a chapter-and-verse citation to a phrase that
+does not appear at that verse**, which converts a fair tradition-summary into a
+false quotation. *(Pattern 1 — `SOURCE DISPLACEMENT`.)*
+
+**This was invisible to the block census: it is inline, and it was invisible to the
+speaker question alone. It surfaced only because the speaker check sent me to the
+verse.**
+
+### 2 · `CHARACTER VOICE, CONTEXT LOST` + `IRONIC/UNRELIABLE SPEAKER` — Shakespeare · L966
+
+> *"Out of this nettle, danger, we pluck this flower, safety." – William Shakespeare*
+
+**Spoken by Hotspur**, *Henry IV Part 1*, II.iii — **not by Shakespeare.**
+
+**And Hotspur is the least reliable possible source for advice about danger.** The
+speech is his self-justification for a rebellion that gets him killed at Shrewsbury.
+**The play stages the line as bravado, and then disproves it.**
+
+**Second Shakespeare specimen of the same shape as Polonius**, and it independently
+confirms the pattern: **the manuscript's Shakespeare quotations are drawn from
+characters the plays undercut.** Recorded for 4B, not repaired.
+
+### 3 · `CHARACTER VOICE, CONTEXT LOST` *(mild)* — Coelho · L1965
+
+> *"And, when you want something, all the universe conspires in helping you to achieve it."*
+
+**Spoken by Melchizedek, the King of Salem**, to Santiago in *The Alchemist* — not
+narrated by Coelho. **Mild**, because it is the novel's central maxim delivered by
+its wisdom figure, and the book plainly endorses it. **Not an irony case.** Noted so
+the record is complete; **no reframe indicated.**
+
+### 4 · ⚠️ NEW — nested attribution, needs its own check — Salzberg · L862
+
+> *"Make of yourself a light," said the Buddha, before he died. That is what I hope
+> to become." – Sharon Salzberg*
+
+**A quotation inside a quotation, attributed to the outer speaker.** *"Make of
+yourself a light, said the Buddha, before he died"* is **the opening of Mary
+Oliver's poem "The Buddha's Last Instruction."** Salzberg does quote Oliver.
+
+**Recorded as a lead, not a verdict** — this needs the ordinary Stage 2 treatment to
+establish whether the manuscript is quoting Salzberg quoting Oliver, or has
+attributed Oliver's line to Salzberg outright. **If the latter, it is a
+misattribution across three layers: Oliver → Salzberg → the Buddha.**
+
+**Found by the speaker sweep because the sweep asks who is speaking — and here three
+people are.**
+
+### 5 · ⚠️ NEW — the fake-Buddha saying occurs **three times, in two wordings**
+
+| L | Wording | Form |
+|---|---|---|
+| **47** | *"If you knew how perfect it all is you'd throw your head up at the clouds and laugh."* | inline |
+| **190** | same | inline |
+| **1899** | *"When you realize how perfect everything is, you will tilt your head back and laugh at the sky."* | **block epigraph** |
+
+**The block occurrence was censused and correctly ruled** — no canonical source,
+earliest traces 2004–2005, possible distant derivation from **Longchenpa**, *The
+Great Perfection's Self-Liberation in the Nature of Mind*, ch. 1. **The Stage 2c
+verdict on the inline pair independently reached the same conclusion and the same
+ancestor.**
+
+**What was missing was the linkage.** Because the wordings differ, **nothing
+connected the block item to the inline pair.** One spurious saying, **three
+occurrences**, and the manuscript carries **two different corrupt versions of it.**
+
+**Consequence for 4B:** these must be ruled **together**. Removing two and keeping
+one — in either wording — would leave the book asserting a fake Buddha attribution
+while having deleted the same saying elsewhere.
+
+## Clean — no speaker defect
+
+| Source | Speaker status |
+|---|---|
+| **Nabokov** L600 | **`AUTHORIAL`** — *Speak, Memory* is autobiography, not fiction. *My fiction suspicion was wrong* |
+| **Rilke** L161 · **Dickinson** L245 | **`AUTHORIAL / POETIC VOICE`** — lyric persona, conventionally the poet's |
+| **Zhuangzi** L129 | **`AUTHORIAL`** — first-person narration in his own text |
+| **Aesop** L854 | **`NARRATORIAL`** — an appended fable moral, not a character line |
+| **Cohen** L1211 · **Gabriel** L707, L1135, L1871 | **`AUTHORIAL / LYRIC PERSONA`** — clean on speaker |
+| **Twain** L1650 | aphorism, not fiction. Clean on speaker |
+| **Emerald Tablet** L1853 | anonymous text, no speaker |
+| **"Sioux Legend"** L1893 | not a speaker defect — this is the standing `UNSUPPORTED CULTURAL ATTRIBUTION` flag |
+
+**One rights observation, outside the sweep's remit but noticed:** **Leonard Cohen
+L1211 is a song lyric** — the same most-restrictive licensing class as the three
+Peter Gabriel items, and **it was never grouped with them.** **Four song lyrics, not
+three.** Carried to Stage 6.
+
+---
+
+## Sweep standing
+
+| Outcome | Count |
+|---|---|
+| `AUTHORIAL / NARRATORIAL VOICE` — clean | **11** |
+| `CHARACTER VOICE, CONTEXT LOST` | **2** — Shakespeare/Hotspur · Coelho/Melchizedek |
+| `IRONIC / UNRELIABLE SPEAKER` | **1** — Hotspur *(also counted above)* |
+| `SPEAKER MISATTRIBUTION` | **1** — "John 17:16" |
+| **New findings outside the speaker axis** | **2** — Salzberg/Oliver nesting · the Buddha triplication |
+
+**The sweep was worth running.** It produced **two speaker defects, one false verse
+citation, one three-layer nesting problem, one duplicate-linkage discovery, and one
+rights reclassification** — **none of which any amount of author/work/wording
+verification would have surfaced**, and four of which sit outside the axis the sweep
+was designed to test.

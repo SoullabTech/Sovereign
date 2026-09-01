@@ -623,3 +623,27 @@ inspects.**
 **Requirement:** for any quotation from drama, epic, dialogue or fiction, the model
 must carry a **speaker** field distinct from **author**, and flag when a
 character-spoken line is introduced as the author's own position.
+
+### Heuristic — for literary quotations, author + work + wording is insufficient
+
+> **Verify the speaker and the dramatic context.**
+
+**Polonius and Satan demonstrate why: a quotation can be textually perfect and
+interpretively backwards.** A third specimen — **Hotspur**, in *Henry IV Part 1*,
+justifying the rebellion that kills him — confirms it is a pattern, not two
+accidents.
+
+**Five outcomes the model must support:** `AUTHORIAL/NARRATORIAL VOICE` ·
+`CHARACTER VOICE, CONTEXT PRESERVED` · `CHARACTER VOICE, CONTEXT LOST` ·
+`SPEAKER MISATTRIBUTION` · `IRONIC/UNRELIABLE SPEAKER`.
+
+**Extends to scripture.** *"Be in the world but not of it — John 17:16"* carries the
+same defect in a different costume: the citation names book, chapter and verse but
+not the speaker — **and the check that asks who is speaking is what revealed that
+the phrase does not appear at that verse at all.**
+
+**The general lesson, which is the useful part:** *a well-formed question asked of
+the right population returns findings outside its own axis.* The speaker sweep
+produced two speaker defects — and also a false verse citation, a three-layer nested
+attribution, a duplicate-linkage discovery, and a rights reclassification. **Narrow,
+well-aimed passes are worth more than broad re-verification.**
