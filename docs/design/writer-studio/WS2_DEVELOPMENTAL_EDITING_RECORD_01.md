@@ -493,3 +493,37 @@ A developmental editing tool that emits attributions with confidence, without an
 audit trail showing what was checked and what was ruled out, reproduces exactly
 the failure it is supposed to detect.
 
+---
+
+## Provisional confidence must remain revisable
+
+In the provenance census's first tranche, three quotations were noted as "sound
+as attributed" for contrast against the flagged ones: Socrates (*Apology* 38a),
+the Kalama Sutta, and Gandhi's "The best way to find yourself is to lose yourself
+in the service of others."
+
+**The Gandhi note was never a provenance verdict.** It was an impression, formed
+from familiarity rather than from a source check, and offered as background while
+attention was elsewhere. Eighty items later the census reached that item on its
+own terms and found it `UNVERIFIED` — tagged "attributed-no-source," with no
+primary text located.
+
+**The census overruled the auditor's earlier impression.** That is the system
+working, and it is worth recording as a design requirement rather than an
+embarrassment:
+
+> **Provisional confidence must remain revisable until source evidence closes the
+> item.** An impression offered in passing must never harden into a verdict
+> merely because it was stated early, stated confidently, or never contradicted.
+
+This is the third instance in this record of the same failure shape — after the
+Heisenberg prior and the two withdrawn internal-origin flags — and all four ran
+the same direction: **plausibility arriving before evidence, and needing to be
+displaced by it.**
+
+For a tool, the requirement is concrete: every claim needs a status
+(`impression` / `lead` / `verdict`) and a visible audit trail, so a reader can
+tell which claims have been closed by evidence and which are merely standing
+unchallenged. A system that renders both in the same voice reproduces exactly
+this failure at scale.
+

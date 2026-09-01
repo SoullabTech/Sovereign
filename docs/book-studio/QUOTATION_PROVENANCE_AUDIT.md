@@ -2203,12 +2203,32 @@ Genuine source: ***Twilight of the Idols*** (1889), "Maxims and Arrows" §12.
 manuscript's wording is the form **popularized by Viktor Frankl** in *Man's
 Search for Meaning* — not a standard scholarly translation of Nietzsche.
 
-*Third instance of the translation-mediation pattern*, after Barks/Rumi and
-Bahm/Lao Tzu: **a genuine ancient or classic source reaching the manuscript
-through a modern populariser whose name appears nowhere.**
-**Rights: `PROTECTABILITY UNCERTAIN` · `STANDARD`** — the German is public
-domain; the English rendering's status depends on the mediator, but the extract
-is a short aphorism.
+**Tightened verdict:** `VERIFIED VARIANT` · original source **Nietzsche,
+*Twilight of the Idols* §12** · English **mediated through Frankl's *Man's Search
+for Meaning*** (Google Books reproduces Frankl's wording, "He who has a why to
+live for can bear with almost any how," explicitly as Nietzsche quoted by
+Frankl) · **bibliography correct at work level but incomplete at English-text
+level.**
+
+> **General rule: correct work-level attribution does not establish the
+> provenance of the English wording.**
+
+#### `MEDIATED TRANSLATION` — one family, three distinct mechanisms
+
+All three belong together, but **the exact mechanism stays attached to each
+item** and must not be flattened:
+
+| Item | Mechanism |
+|---|---|
+| **Barks / Rumi** | Modern mediator **substantially recreates** the poetic English |
+| **Frankl / Nietzsche** | Frankl **transmits** Nietzsche through another English rendering, which then becomes the familiar popular form |
+| **Bahm / Lao Tzu** | An identifiable translator's English is **subsequently altered** in circulation |
+
+Same family — a classic source reaching the manuscript through a modern
+intermediary whose name appears nowhere — but three different repairs.
+**Rights: `PROTECTABILITY UNCERTAIN` · `STANDARD`** — the Nietzsche German is
+public domain; **the familiar modern English wording is not automatically so.**
+Short aphoristic sentence, so `STANDARD`, not `HIGH`.
 
 ### Chapter 7 bibliography — three findings and one exemplar
 
