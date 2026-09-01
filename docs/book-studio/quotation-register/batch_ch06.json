@@ -115,7 +115,8 @@
       "provenance_status": "misattributed",
       "actual_author": "not Aristotle",
       "notes": "Audit: appears TWICE, verbatim, same attribution (Ch6 and Ch8). Not located in the Aristotelian corpus; attested only on quote sites, which variously credit Aristotle, Plato, Socrates and Laozi - a signature of an unsourced attribution. The underlying maxim is the Delphic 'Know thyself'.",
-      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L1340 and L1770"
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L1340 and L1770",
+      "last_location": "Ch6"
     },
     {
       "match": "whole is greater than the sum",

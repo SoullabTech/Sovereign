@@ -135,6 +135,11 @@ def main():
     for e in hist_entries:
         m = norm(e["match"])
         hits = [t for t in tombs if m in norm(t["text_at_removal"])]
+        # Two lifecycle records can carry the SAME TEXT - the two halves of a
+        # duplicated saying removed at different stages. Text alone cannot then
+        # identify one, so an entry may name the location it belongs to.
+        if len(hits) > 1 and e.get("last_location"):
+            hits = [t for t in hits if e["last_location"] in (t.get("last_known_location") or "")]
         if len(hits) != 1:
             report.setdefault("historical_unmatched", []).append(
                 {"match": e["match"], "hits": len(hits)})

@@ -1184,6 +1184,22 @@
       "editorial_status": "KEEP LINEAGE - REFRAME AND OWN THE CIRCLE MOVE. The problem was not only Cusa: the inherited image is a SPHERE, and calling it a circle was the host-aligned alteration that made it fit 'The Circle: A Model of Wholeness'. The truthful structure is medieval lineage, then infinite sphere, then the author's move into the circle as the book's model - so the sphere is restored, Cusa is no longer presented as originator (Alain de Lille, Bonaventure, Pascal and Voltaire used the figure too), and the circle interpretation is explicitly claimed by the author. No false traditional 'circle' was manufactured to save the section. LANGUAGE ORIGIN: prose EDITOR/MODEL-ORIGINATED, author adoption pending.",
       "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L397 (provenance); 4C tail ruling (editorial)",
       "notes": "Audit: EVOLVED APHORISM / RECOVERABLE ANCESTOR. Cusa USED the figure (De Docta Ignorantia I.23) but did not originate it; so did Alain de Lille, Bonaventure, Pascal and Voltaire. TWO alterations in the manuscript: sphere changed to circle, and the clause order reversed. Sphaera is the point of the image - infinity in every direction."
+    },
+    {
+      "state": "removed",
+      "stage": "Stage 4C",
+      "former_form": "block",
+      "last_location": "Ch8 - The Path of Knowing",
+      "text": "Knowing yourself is the beginning of all wisdom.",
+      "attributed_as": "Aristotle",
+      "provenance_status": "misattributed",
+      "actual_author": "not Aristotle",
+      "work": null,
+      "rights_status": null,
+      "family": "fam-know-thyself",
+      "editorial_status": "REMOVE - MISATTRIBUTED. Not located in the Aristotelian corpus; the family's other occurrence was removed at 4A and this one survived only because 4A's scope was section-opening epigraphs. The Path of Knowing already opens strongly on the author's own twenty-year account of developing the model, so there was no independent editorial reason to preserve the saying. No replacement prose. This closes the fam-know-thyself asymmetric-repair obligation and, with it, the last deferred quotation ruling in the book.",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L1340 and L1770; batch 8 family finding (provenance); Stage 4C structural-QA sweep (editorial)",
+      "notes": "HOW IT WAS NEARLY MISSED, recorded because the lesson generalises: this record's provenance_review_state read 'migrated' while its editorial_status was not a ruling but a deferral - 'requires Stage 4C adjudication'. A zero-unadjudicated COUNT was therefore technically clean while the MEANING of the status was not. The closure gate had been printing the record under ASYMMETRIC REPAIR throughout; the count was read and the report was not. A state field records that something was written, never that what was written was a decision."
     }
   ]
 }

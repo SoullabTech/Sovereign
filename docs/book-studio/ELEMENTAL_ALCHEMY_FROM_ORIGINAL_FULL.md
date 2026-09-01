@@ -1549,8 +1549,6 @@ In the beginning was the Word, the sound made intelligible, creating the symbolâ
 
 Attuning our awareness to this eternal Breath reveals the majesty of mind, awareness, and creation. Every sight and sound becomes a message from the Sublime Architect, expressing the beauty and power of relationships. The manifesting power of communication allows us to be sacred mirrors for each other, forming sacred communities, tribes, families, and partnerships. Our ability to communicate transcends words; it is the capacity to express ourselves from the inside out. Our inner worlds flow outward through the air of our thoughts, minds, and connections, continuously creating new worlds with each shared moment and understanding.
 
-This is in honor of this divine gift by attuning ourselves to the wisdom of the air, giving breath to our dreams, and walking our path with integrity and compassion. In doing so, we align ourselves with the timeless dance of creation, embodying the clarity and connection that air so generously offers. May all we manifest be guided by this wisdom, and may we experience love flowing back to us in all our relations, in all we create, and in all we do.
-
 Let our lives be a song to the earth, love to the water, and a form of prayer to the fire.
 
 ### Dialectics as Problem Solving: The Power of Dialogue
@@ -1654,8 +1652,6 @@ Knowledge comes from learning from others. Wisdom comes from direct experience. 
 I walked the intellectual, academic route, reading hundreds of books on alchemy, psychology, metaphysics, mysticism, mythology, and more. Yet, it wasn't enough to prepare me to write about something so interconnected, universal, and fundamental. Ironically, despite writing papers that illustrated the strength of the model, I still struggled to convey my ideas effectively. I wasn't successfully communicating what I was grappling with myself.
 
 The beautiful irony, or perhaps the wise design, of it all is that my desire to share this truth with others, rather than simply keep it to myself, has been the major catalyst for me to fully live, transform, and come to understand what I "knew" on one level more than 20 years ago but hadn't fully lived. This journey has highlighted the difference between sharing knowledge and information versus sharing wisdom. Only by experiencing the processes firsthand was I able to speak from true experience. As a process, this separates the projected visions of fire with the enlightened sharing of air.
-
-*"Knowing yourself is the beginning of all wisdom." â€“ Aristotle*
 
 We are all invited into the air realm to refine our relations and communications by developing greater authenticity, integrity, and wisdom that comes from walking the walk. Our personal understanding is refined when we face the hurdles of turning our inner knowing into shareable insights.
 
