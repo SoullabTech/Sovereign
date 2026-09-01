@@ -26,13 +26,17 @@ DO-NOT-START state, its migration assumptions, or its witness procedure.
 
 ---
 
-> **DO NOT START THIS RUN YET** — but the reason has changed. The original block was
-> *"we do not know what the database holds."* That is now answered: the database was read
-> directly on 2026-09-01 and Steps 2 and 3 are settled from live evidence (below). The
-> remaining block is narrower and real: **nobody knows why `session_01Dxk7Q9RFrEPK9W3joK4vPd`
-> failed its Step-6 assertion.** A fresh run from this prompt would execute Steps 1–5 against
-> an already-satisfied database and arrive at the same unexplained Step 6. Extract that
-> session's Step-6 evidence first.
+> **THE STEP-6 FAILURE IS RESOLVED, AND IT WAS THIS REPOSITORY'S OWN DEFECT.** On
+> 2026-09-01 the `01Dxk7Q9` transcript was recovered from disk
+> (`~/.claude/projects/-Users-soullab-MAIA-SOVEREIGN/bbb2bdfd-….jsonl`, 62 records,
+> 03:24:44Z–03:49:44Z). Step 6 failed because `StructureReview.tsx` violated React's
+> hook-order invariant and crashed to an error boundary — **the exact defect repaired
+> in `58ac95a77` on `fix/ws2-05b-02c-2r-structure-review-hook-order`.**
+>
+> **The consequence for any rerun is the important part: `93216567` still carries the
+> defect.** A witness run pinned to the frozen SHA will reproduce the same Step-6
+> failure, deterministically. The rerun must be **re-pinned to a tree containing the
+> repair** — `58ac95a77` or a merge carrying it — or it is guaranteed to fail.
 
 **Status of the prior runs:**
 
@@ -91,10 +95,38 @@ confirm it.*
 or one was created and removed under the Step-6 whole-thread `DELETE` the charter authorizes.
 Row counts cannot separate these. **UNKNOWN** — only the transcript settles it.
 
-**Open lead, not a finding.** The frozen proposal carries `question_count = 0`. If the
-Step-5/6 witness asserts that a held question is asked, or that a question mark is reachable,
-it would fail against a proposal with no questions. This fits the Step-6 failure; there is no
-evidence for it. Read `01Dx` with it in mind, do not assume it.
+**The `question_count = 0` lead is REFUTED — and it exposed a charter defect.** The
+proposal carries **five** editorial questions. The zero came from the charter's own Step-3
+probe reading `interpretation->'questions'`, which is the wrong path; the questions live at
+`editorialSynthesis.questionsForAuthor`. `01Dx` caught this at 03:27:49Z and recorded it
+correctly as *"noted, not a GO condition."* The five, from the transcript at 03:27:42Z,
+begin: *"Does Part Two begin at the Sacred Flame, or earlier?"* (4 sectionIds).
+
+**Charter defect to fix before any rerun:** the Step-3 question-count query reads a path
+that does not exist and will always return 0. It is not a GO condition, so it did not
+corrupt the verdict — but it is a false instrument and it misled this adjudication once
+already. Correct the path or drop the probe.
+
+## Step 6 · what actually failed — recovered from the transcript
+
+| | |
+|---|---|
+| **Instrument** | `/tmp/ws2-05b-02c-2-runtime-witness.ts`, 176 lines, written 03:31:18Z against a controlled dev server the lane started itself (`base=http://localhost:3131`) — no pre-existing server was credited as the frozen slice |
+| **Progress before failure** | `[PASS] 1 identity` · `[PASS] 2 target/proposal` · session token acquired (03:32:40Z) |
+| **Failure** | 03:33:17Z, browser console: *"React has detected a change in the order of Hooks called by %s. This will lead to bugs and errors if not fixed."* |
+| **Diagnosis in-session** | early return at line 344 (`if (!view)`) sitting above `takeUpMark = useCallback` at line 378; blamed to `e586c4189` and `b9e55c7e5` (03:33:26Z–03:34:02Z) |
+| **Verdict recorded** | 03:34:58Z — *"`StructureReview.tsx` crashes to an error boundary on every load. The review surface never renders, so the marker 02c-2 exists to prove is unreachable at runtime."* |
+| **Classification** | **implementation behaviour** — a real product defect, not a witness assumption, not database state, not environment |
+
+**The lane behaved correctly.** It stopped at the defect rather than repairing it, exactly as
+the charter requires of a witness lane. Fingerprints before (03:27:21Z) and after (03:34:21Z)
+are identical — `proposal 64fae7bd…`, `draft 7d47966d…`, `sections d4cf0cfa…`,
+`source 23d7efdc…` — so no non-mutation fingerprint moved. The instrument was deleted and the
+worktree verified still at `93216567` with only `?? .jarvis/` (03:34:37Z). A clean stop.
+
+**Migration 6, confirmed from the transcript as well as the database.** 03:27:09Z:
+`=== STAGED === 20260901000001_ask_threads.sql === APPLY === COMMIT INSERT 0 1 ✅ Applied`.
+The earlier inference that `01Dx` applied it is now direct evidence.
 
 ---
 
