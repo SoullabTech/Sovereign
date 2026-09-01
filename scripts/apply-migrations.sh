@@ -40,6 +40,86 @@ hash_file_md5() {
   fi
 }
 
+# ---------------------------------------------------------------------------
+# Bootstrap phase — empty databases only.
+#
+# The migration tree amends a schema it cannot construct: several relations were
+# created out-of-band against live databases and their genesis DDL never entered
+# database/migrations/. A run against a genuinely empty database therefore fails
+# partway through the tree. The baseline closes that gap.
+#
+# database/baseline/schema.sql is a present-day reconstruction of the known-good
+# schema. It carries no historical provenance and is not a migration. CUT_LINE
+# names the migrations it subsumes; those are stamped into schema_migrations so
+# the runner does not re-apply them and the schema gate is satisfied.
+#
+# This phase is inert on every database that already has a schema. It runs only
+# when BOTH hold: no migration has been recorded, AND the public schema is empty
+# apart from schema_migrations itself. Production can never enter it.
+# ---------------------------------------------------------------------------
+BASELINE_DIR="${BASELINE_DIR:-$(dirname "$MIG_DIR")/baseline}"
+BASELINE_SQL="$BASELINE_DIR/schema.sql"
+BASELINE_CUT_LINE="$BASELINE_DIR/CUT_LINE"
+EXTENSIONS_SQL="${EXTENSIONS_SQL:-$(dirname "$MIG_DIR")/init/001_extensions.sql}"
+
+recorded_migrations="$(psql "$DATABASE_URL" -tAc \
+  "SELECT count(*) FROM schema_migrations;" 2>/dev/null || echo 0)"
+foreign_relations="$(psql "$DATABASE_URL" -tAc \
+  "SELECT count(*) FROM pg_class c
+     JOIN pg_namespace n ON n.oid = c.relnamespace
+    WHERE n.nspname = 'public'
+      AND c.relkind IN ('r','p','v','m')
+      AND c.relname <> 'schema_migrations';" 2>/dev/null || echo 0)"
+
+if [[ "${recorded_migrations:-0}" -eq 0 && "${foreign_relations:-0}" -eq 0 ]]; then
+  if [[ -f "$BASELINE_SQL" && -f "$BASELINE_CUT_LINE" ]]; then
+    echo "🌱 Empty database detected — applying canonical baseline."
+    echo "   baseline: $BASELINE_SQL"
+
+    if [[ -f "$EXTENSIONS_SQL" ]]; then
+      psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -q -f "$EXTENSIONS_SQL"
+    fi
+    psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -q -f "$BASELINE_SQL"
+
+    psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -q -c "
+      CREATE TABLE IF NOT EXISTS schema_migrations (
+        filename text PRIMARY KEY,
+        checksum text,
+        applied_at timestamptz NOT NULL DEFAULT now()
+      );"
+
+    # Stamp the subsumed migrations. The checksum is the current on-disk hash, so
+    # a later edit to a subsumed file still trips the runner's tamper check. A
+    # filename with no file on disk is stamped without a checksum.
+    stamped=0
+    while IFS= read -r line || [[ -n "$line" ]]; do
+      [[ "$line" =~ ^[[:space:]]*# ]] && continue
+      [[ -z "${line// }" ]] && continue
+      name="$(echo "$line" | tr -d '[:space:]')"
+      name_esc="${name//\'/\'\'}"
+      if [[ -f "$MIG_DIR/$name" ]]; then
+        sum="$(hash_file "$MIG_DIR/$name")"
+        psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -q -c \
+          "INSERT INTO schema_migrations(filename, checksum) VALUES ('${name_esc}', '${sum}')
+             ON CONFLICT (filename) DO NOTHING;"
+      else
+        psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -q -c \
+          "INSERT INTO schema_migrations(filename, checksum) VALUES ('${name_esc}', NULL)
+             ON CONFLICT (filename) DO NOTHING;"
+      fi
+      stamped=$((stamped + 1))
+    done < "$BASELINE_CUT_LINE"
+
+    echo "✅ Baseline applied; ${stamped} subsumed migrations stamped."
+    echo
+  else
+    echo "⚠️  Empty database, and no baseline at $BASELINE_SQL."
+    echo "   The migration tree alone cannot construct this schema from empty."
+    echo "   Capture one with: scripts/capture-baseline.sh"
+    echo
+  fi
+fi
+
 tmp="$(mktemp -t maia-migrations.XXXXXX.psql)"
 cleanup(){ rm -f "$tmp"; }
 trap cleanup EXIT

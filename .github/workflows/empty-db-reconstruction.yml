@@ -1,0 +1,88 @@
+name: Empty-DB Reconstruction
+
+# The standing gate for DB-EMPTY-BOOTSTRAP-01.
+#
+# The defect it exists to prevent: relations created out-of-band against live
+# databases, with their genesis DDL never entering database/migrations/. The
+# migration tree then amends a schema it cannot construct, and nothing notices
+# because nothing ever replays the tree into an empty database.
+#
+# This job replays it, every time the schema changes. A migration that depends on
+# a relation no migration creates fails here instead of at the next disaster
+# recovery.
+#
+# Nothing may be copied from a live database to make this pass. The job has no
+# route to one.
+#
+# ⛔ Do NOT add `|| true` to any step. A gate that swallows its exit status is a
+# green-looking control, not a control.
+
+on:
+  pull_request:
+    paths:
+      - 'database/**'
+      - 'scripts/apply-migrations.sh'
+      - 'scripts/ensure-migrations.sh'
+      - 'scripts/test-empty-db-reconstruction.sh'
+      - '.github/workflows/empty-db-reconstruction.yml'
+  push:
+    branches: [main, clean-main-no-secrets]
+
+concurrency:
+  group: empty-db-reconstruction-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  reconstruct:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        # pgvector: database/init/001_extensions.sql requires it, and columns are
+        # declared vector(1536). Plain postgres:16 cannot replay this schema.
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: reconstruction
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DATABASE_URL: postgres://postgres:postgres@localhost:5432/reconstruction
+      PGSSLMODE: disable
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install psql client
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+
+      - name: Baseline present?
+        id: baseline
+        run: |
+          if [[ -f database/baseline/schema.sql && -f database/baseline/CUT_LINE ]]; then
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "present=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Empty-database reconstruction
+        if: steps.baseline.outputs.present == 'true'
+        run: ./scripts/test-empty-db-reconstruction.sh
+
+      # Until the baseline lands there is nothing this gate could hold a PR to:
+      # the tree provably cannot construct the schema from empty, and every PR
+      # would be red for a defect it did not introduce. The job says so loudly
+      # and passes. It does NOT run the falsifier and discard its exit status —
+      # that would be a green-looking control.
+      - name: No baseline yet — not enforceable
+        if: steps.baseline.outputs.present != 'true'
+        run: |
+          echo "::warning title=Empty-DB reconstruction not yet enforceable::database/baseline/schema.sql is absent, so an empty database cannot be reconstructed from this repository (DB-EMPTY-BOOTSTRAP-01). Capture it with scripts/capture-baseline.sh. This gate begins enforcing the moment that file lands."
