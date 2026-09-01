@@ -2978,7 +2978,7 @@ The manuscript reads "of **any** generation" where the common circulating form i
 
 ---
 
-## THE McKENNA SET — COMPLETE, and it does not split
+## THE McKENNA CLUSTER — complete verdicts, but NOT an established family
 
 | | Chapter | Status |
 |---|---|---|
@@ -2988,17 +2988,30 @@ The manuscript reads "of **any** generation" where the common circulating form i
 | **L1790** | Ch8 Air | `UNVERIFIED` · `UNKNOWN` |
 | **L2038** | Ch10 | `UNVERIFIED` · `UNKNOWN` |
 
-**Five of five unresolved.** The family forms with **all five members and no
-non-member** — the outcome the Campbell lesson said to test for, and it comes out
-the opposite way.
+**Five of five currently `UNVERIFIED`.** But — **correction to my own framing** —
+a **uniform verdict is not a shared transmission mechanism**, and I collapsed the
+two.
 
-**L701 — the long-standing open item from the first tranche, now resolved to a
-checkable state.** McKenna discussed the I Ching / 64-codon correspondence
-throughout his work and notably in his **final 1998 interview**. The bibliography
-cites ***The Archaic Revival*** (1991). **Possible `WRONG SOURCE/WORK`** — 1998
-interview versus 1991 book. The full text of *The Archaic Revival* is available
-on archive.org, so **this one is directly checkable** and should be resolved
-before the repair batch.
+> **McKenna cluster — 5/5 currently `UNVERIFIED`; coordinated resolution task
+> warranted, but PROVENANCE-FAMILY STATUS NOT YET ESTABLISHED.**
+
+**Do not adjudicate all five together yet.** **L701 is already different**:
+McKenna demonstrably discussed the I Ching / DNA 64-codon correspondence in the
+**John Hazard interview (October 1998)** and in the ***In the Valley of Novelty*
+workshop (July 1998)**. It has a **real McKenna source trail**; the four
+aphorisms may not.
+
+L701 could resolve to `VERIFIED`, to `PARAPHRASE/ADAPTED`, or to a
+wrong-work/source-form problem, while the other four stay unverified — **which
+would reproduce the Campbell lesson despite the initially uniform verdict.**
+
+**L701 — the open item from the first tranche, now resolved to a checkable
+state.** Concrete 1998 provenance trail (Hazard interview; *In the Valley of
+Novelty*). The bibliography cites ***The Archaic Revival*** (1991).
+**`WRONG SOURCE/WORK` remains a CANDIDATE, not a finding:** a strong 1998 source
+existing does **not** prove *The Archaic Revival* lacks the same material. The
+book's full text is on archive.org, so **the direct check must be made before the
+bibliography verdict closes.**
 
 **L2038 — `UNVERIFIED`.** Not located, including in the organism.earth archive.
 
@@ -3010,9 +3023,13 @@ paraphrase), Angelou (1 verified, 1 misattributed), Gandhi (2 unverified — but
 different leads), Thoreau (2 verified, both mis-cited), Jung (2 verified, 1
 unverified), Watts (2 verified).
 
-**McKenna is uniform across five instances in five chapters** — and his corpus is
-**unusually well transcribed**, which makes the uniformity more meaningful, not
-less. This is a genuine provenance family requiring **one adjudication**, not five.
+**McKenna shows an unusually high author-level unresolved concentration** across
+five instances in five chapters — and his corpus is **unusually well
+transcribed**, which makes that concentration more meaningful, not less.
+
+That warrants a **coordinated resolution task**. It does **not** yet warrant a
+single adjudication: the mechanism has to be demonstrated per item, and L701
+already points the other way.
 
 ---
 
