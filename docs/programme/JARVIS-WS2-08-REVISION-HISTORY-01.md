@@ -1,11 +1,21 @@
-# WS2-08 · Revision & History — lane opening
+# JARVIS-WS2-08-REVISION-HISTORY-01
+
+> **Lane opened. Not authorized. Not started.**
+>
+> This document exists so the lane is defined before it is entered. It authorizes **no code, no
+> schema, no route, no migration, no census**. Entering FIND requires the trigger below to be
+> satisfied on canonical — not asserted in a session.
 
 ```text
 LANE            JARVIS-WS2-08-REVISION-HISTORY-01
 STATE           OPENED · BLOCKED ON TRIGGER
-TRIGGER         Stage 7 developmental intelligence is merged, witnessed, and closed
-AUTHORIZES      nothing yet
+TRIGGER         Stage 7 developmental intelligence merged, witnessed, and closed
+AUTHORIZES      nothing yet — FIND opens when the trigger is satisfied
 ROADMAP STATUS  direction, not implementation authority
+PRIOR LANE      docs/programme/JARVIS-WS2-07-DEVELOPMENTAL-INTELLIGENCE-01.md
+NORMATIVE       docs/programme/WRITERS_STUDIO_MASTER_BRIEF.md
+LIVE STATE      docs/programme/WRITERS_STUDIO_PROGRAMME_BOARD.md
+ROADMAP         docs/programme/WRITERS_STUDIO_ROADMAP_STAGE_6_TO_15.md
 OPENED          2026-09-01
 ```
 
@@ -57,19 +67,43 @@ manuscript in response?**
 8    Revision & History
 ```
 
+### State of the chain
+
+Founder-stated, 2026-09-01. **Recorded here, not written into the Programme Board** — the
+board sets node states from canonical evidence only, and these have not been censused.
+
+```text
+6A   BUILT LOCALLY · awaiting authenticated walk + merge
+ ↓
+7    OPENED · BLOCKED ON 6A MERGE
+ ↓
+8    OPENED · BLOCKED ON STAGE 7 CLOSURE
+```
+
 ### Why this lane is blocked
 
 The trigger is Stage 7 closure — merged, witnessed, and closed.
 
-As of this opening, **Stage 7 is not merely unclosed; it is not yet opened as a lane
-in this repository.** No Stage 7 lane document exists under `docs/design/writer-studio/`
-or `docs/design/author-studio/`. Stage 6 is likewise named-but-unbuilt: the ratified
-Canvas Structure contract (`docs/design/contracts/writer-canvas-structure.md`) records
-that no reachable path writes `manuscript_structure_units`, and that this must keep
-holding "when Stage 6 gives the author a command that can."
+**Stage 7 is already opened**, as `JARVIS-WS2-07-DEVELOPMENTAL-INTELLIGENCE-01` in
+`docs/programme/`. It carries `STATE OPENED · BLOCKED ON TRIGGER`, with its own trigger
+being *Stage 6A AuthorStructureCommand merged to canonical and witnessed*, and it records
+the checkpoint state `Stage 7 OPENED · BLOCKED ON 6A MERGE`.
 
-So the block is doubly held. Nothing in this document changes that, and reading it is
-not an event that partially lifts it.
+At the time of this correction that lane document has not yet reached canonical: it is
+reachable at `ccf04f1ca` on `origin/claude/stage-7-developmental-intelligence-coebvj`, and
+`origin/clean-main-no-secrets` does not carry the path. That is a statement about where the
+document currently sits, not about whether the lane is open. **The lane is open.** Stage 7's
+own rule — that a trigger is satisfied on canonical rather than asserted in a session —
+applies to Stage 7's entry into FIND, and it applies identically here.
+
+So Stage 8 waits on a lane that is itself waiting: 6A must merge and be witnessed before
+Stage 7 may enter FIND, and Stage 7 must close before Stage 8 may enter 08A. Nothing in
+this document changes that, and reading it is not an event that partially lifts it.
+
+The Canvas Structure contract (`docs/design/contracts/writer-canvas-structure.md`) remains
+the ratified constraint standing over the seam 6A will open: no reachable path writes
+`manuscript_structure_units` today, and that must keep holding "when Stage 6 gives the
+author a command that can."
 
 ---
 
@@ -377,5 +411,5 @@ That alone is a major threshold.
 - It does not lift, weaken, or reinterpret the Canvas Structure contract's prohibition
   on non-authored structural change.
 
-The next legitimate act in this lane is the closure of Stage 7 — not a line of code
-here.
+The next legitimate act in this lane is the closure of Stage 7 — which itself waits on
+6A merging to canonical and being witnessed. Not a line of code here.
