@@ -2703,13 +2703,85 @@ disclosure* while disclosing nothing. A reader sees provenance care and relaxes.
 different guise. Fire's candidates carry **bare** attributions; Chapter 2's carry
 **labelled** ones. Same underlying phenomenon, milder-looking surface.
 
-### Ruling requested
+### RULED — same phenomenon, different attribution form. Not milder.
 
-Is *"Adapted from X"* over text that adapts **no identifiable passage** by X:
-- a **distinct, milder defect** deserving its own treatment, or
-- **the same attribution hardening** as Fire, differently dressed?
+**Status for all five:** origin `INTERNAL-ORIGIN CANDIDATE` · attribution
+`UNVERIFIED` · cross-cutting flag **`UNSUPPORTED ADAPTATION CLAIM`**.
 
-The remedy differs. I have applied neither.
+> **`UNSUPPORTED ADAPTATION CLAIM`** — text is presented as "Adapted from X," but
+> **no identifiable passage, translation, or sufficiently specific textual
+> ancestor by X** can be established from which the wording is actually adapted.
+
+The underlying mechanism is **attribution hardening** where positive
+internal-origin evidence is present.
+
+> **Fire:** manuscript-like language → **bare** famous-author attribution.
+> **Chapter 2:** manuscript-like language → **"Adapted from"** attribution.
+> *Different surface. Same provenance problem.*
+
+**It is not milder — in one respect it is more deceptive.** A bare "— Jung"
+**invites verification**. "Adapted from Carl Jung" appears to have **already done
+the provenance work**: it tells the reader *these are not Jung's exact words, but
+a real Jung passage lies underneath*. Where no such passage can be identified,
+**the disclosure itself is unsupported**.
+
+This does **not** imply intentional deception — how and when these labels entered
+the manuscript is unknown. But the reader-facing effect is stronger than ordinary
+misattribution.
+
+**Why the twinning evidence carries weight:** two supposedly independent
+adaptations, from authors separated by language, culture, genre and two
+millennia, converge on "inviting us to…", "…our understanding", "continually",
+and one modern developmental register. That is positive evidence of a
+**compositional source closer to the manuscript than to either attributed
+author** — while still not proving who wrote them. `INTERNAL-ORIGIN CANDIDATE`
+remains the correct epistemic level.
+
+---
+
+## FORMAL WITHDRAWALS
+
+### 1. Positive-control doctrine — WITHDRAWN
+
+Withdrawn: *"Explicit adaptation labelling is highly reliable in this book."*
+
+**Replaced by:**
+> **An adaptation label has no independent evidentiary value.** Some manuscript
+> adaptation labels are demonstrably accurate; others may themselves be
+> unsupported attribution frames. **Every "Adapted from…" claim must identify a
+> recoverable source relationship.**
+
+Barks (L1052), Luke 4:23 (L1314) and Permaculture (L1441) **remain good
+specimens**. They simply stop being evidence that the label *class* is
+trustworthy.
+
+### 2. "Attribution hardening is localized to Chapter 5" — WITHDRAWN
+
+**Replaced by:**
+> **Attribution hardening has replicated outside Chapter 5.** Chapter 5 presents
+> the **bare-attribution** form; Chapter 2 the **adapted-attribution** form. The
+> phenomenon is **not chapter-specific**, though its presentation varies by
+> manuscript layer.
+
+*Consequence:* the Air and Water "no hardening" results stand as findings about
+**those chapters**, not as evidence the phenomenon was confined to Fire. The
+remaining 31 items must be checked for **both** forms.
+
+### Repair doctrine for `UNSUPPORTED ADAPTATION CLAIM`
+
+**Do not merely delete "Adapted from" and leave the famous person's name.**
+
+1. Search once more for an actual source passage or idea relationship.
+2. If one exists → write an honest adaptation credit **tied to that source**.
+3. If none exists **and the prose deserves to remain** → **remove the external
+   attribution entirely** and evaluate it as manuscript prose, subject to
+   authorship recovery.
+4. If it does not earn its place independently → remove it.
+
+---
+
+**This finding changes the book-wide model of the provenance problem.** It is not
+a chapter exception.
 
 ### Chapter 2 bibliography — two notes
 
