@@ -310,8 +310,6 @@ What I have witnessed, again and again, is that those who give themselves to thi
 
 This book represents a synergy of diverse wisdom lineages—from ancient metaphysical traditions like alchemy, shamanism, Taoism, Hermeticism, Tantra, and Sufism to modern psychological principles and wellness modalities. My role is simply that of a storytelling cartographer, weaving experiences and teachings into a lived tapestry that unlocks your multidimensional potentials.
 
-A word about how I came by any of this. The ceremonies, dreams, and practices I describe in these pages are my own—I was there for them—but I did not find my way to them alone. My formation in the shamanic and healing arts began more than thirty years ago with Luata Bray, my first true teacher, and has been deepened since through the work and friendship of Dr. C. Michael Smith. Where this book speaks with any authority about ceremony, it is because I was taught, and then spent decades practicing what I was taught. I name them here once so that I do not have to interrupt every story that follows.
-
 Ultimately, the real mystery school is your own being. All answers you'll ever need lie within your authentic resonance as a vibrantly elemental soul. These pages are offered as openings.
 
 The path ahead has a way of unlocking, awakening, and empowering—each person, in their own time, finding the radiant elemental nature that was theirs all along. The first step is inward; the light blazes outward of its own.
