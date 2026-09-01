@@ -499,6 +499,19 @@
       "editorial_status": "REFRAME - LINEAGE + AUTHORIAL DERIVATION. The composite formula no longer stands as a quotation with a source. The chapter now names the tradition and then names its own extension of it: 'The Emerald Tablet gives the correspondence as above and below. Spiralogic extends it inward: as within, so without.' This tells the reader where tradition ends and the model begins, which saving the popular formula would not.",
       "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md (composite attribution, third confirmed instance); 4B batch 2 ruling (editorial)",
       "notes": "COMPOSITE ATTRIBUTION plus SOURCE-FORM MISCLASSIFICATION: 'As above, so below' is a modern popular paraphrase of the Emerald Tablet's second precept, and 'Hermetic Principle' names a source form that does not exist as a citable work. Its ancestor EA-Q-0108 (the accurate Emerald Tablet form, Ch9, public domain) is KEPT unchanged and is what makes this reframe possible. LANGUAGE ORIGIN: derivation sentence EDITOR/MODEL-ORIGINATED, awaiting the author's own wording."
+    },
+    {
+      "state": "reclaimed_as_author_prose",
+      "stage": "Stage 4B",
+      "former_form": "block",
+      "last_location": "Ch9 - The Goal of Aether",
+      "text": "The Self, the Guardian Spirit, the Daimonion, The Dream Maker — different names for the Inner Axis Mundi, a center of orientation, inspiration and guidance that can be felt with the Silent Knowledge, in the heart.",
+      "attributed_as": "C. Michael Smith",
+      "provenance_status": "unverified",
+      "actual_author": "C. Michael Smith",
+      "editorial_status": "REFERENCE / CONTEXTUALIZE HIS THINKING - preferred over keeping an unverified quotation. The chapter now names what it received from Smith - the Daimon, the Dream Maker, the inner axis mundi - and then develops those ideas inside the book's own Aether framework, rather than forcing an uncertain combined sentence into quotation marks.",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md (composite of genuine elements); 4B batch 2 ruling as revised (editorial)",
+      "notes": "Solves four things at once: credits Smith honestly, does not pretend a sentence was verified when it was not, makes the intellectual relationship visible, and keeps the author's synthesis distinct from his. Same doctrine reached with the Four Yogis, Edinger, McKenna/Schonberger and Haramein material: sometimes the most truthful way to honour a source is not to quote it but to name what was received from it and then make clear what was done with it. LANGUAGE ORIGIN: sentence EDITOR/MODEL-ORIGINATED from the author's supplied substance, awaiting the author's own wording."
     }
   ]
 }

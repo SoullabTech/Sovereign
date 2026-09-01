@@ -1948,9 +1948,7 @@ Between stillness and movement, mindfulness and no-mindedness, and action and re
 
 ### The Goal of Aether
 
-*"The Self, the Guardian Spirit, the Daimonion, The Dream Maker — different names for the Inner Axis Mundi, a center of orientation, inspiration and guidance that can be felt with the Silent Knowledge, in the heart." — C. Michael Smith*
-
-The goal of engaging with our aether nature as Self is to cultivate a state of coherence where our inner and outer worlds harmonize. This involves embracing stillness and silence while trusting the unfolding of our life's path. By integrating the qualities of our aetheric nature into our daily practice, we bridge the space between our connection to our true selves and the interconnected web of existence.
+C. Michael Smith's work has given me language for this territory—particularly his thinking about the Daimon, the Dream Maker, and the inner axis mundi: a center of orientation and guidance that is felt in the heart rather than deduced. The goal of engaging with our aether nature as Self is to cultivate a state of coherence where our inner and outer worlds harmonize. This involves embracing stillness and silence while trusting the unfolding of our life's path. By integrating the qualities of our aetheric nature into our daily practice, we bridge the space between our connection to our true selves and the interconnected web of existence.
 
 *"And, when you want something, all the universe conspires in helping you to achieve it." — Paulo Coelho*
 
