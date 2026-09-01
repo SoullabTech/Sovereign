@@ -2,7 +2,7 @@
 
 **Source of record:** `docs/book-studio/ELEMENTAL_ALCHEMY_FROM_ORIGINAL_FULL.md`
 **Opened:** 2026-09-01, after Chapter 10 closed developmental adjudication.
-**Status:** IN PROGRESS — 108 of 137 (Ch2: 8 of 10) adjudicated. **Chapter 5 CLOSED (30/30). Chapter 8 CLOSED (23/23).**
+**Status:** IN PROGRESS — 110 of 137. **Ch2 CLOSED (10/10).** adjudicated. **Chapter 5 CLOSED (30/30). Chapter 8 CLOSED (23/23).**
 
 ## Scope
 
@@ -2809,11 +2809,7 @@ reads "there is only **a** circumambulation"; the manuscript drops the article.
   relationship is checked directly.**
 **Rights: `LIKELY PROTECTED` · `STANDARD`** — the Winston translation.
 
-**Still open in Ch2 (2):** L333 Alan Watts and L417 Johannes Kepler. Both have
-plausible, correctly-named bibliography entries (*The Wisdom of Insecurity*;
-*Harmonices Mundi*, trans. E. J. Aiton). **Not yet checked — recorded as open
-rather than assumed**, per the standing correction against impression hardening
-into verdict.
+
 
 ---
 
@@ -2871,6 +2867,58 @@ The later choices are then:
 
 All three specimens are flagged for the **authorial repair batch**, not routine
 repair.
+
+### Chapter 2 — final two, chapter CLOSED (10/10)
+
+**L333 · Alan Watts** — `VERIFIED EXACT`. *The Wisdom of Insecurity*, **ch. 3**
+(1951). Bibliography correct. `TERM UNCERTAIN` · `STANDARD`.
+
+**L417 · Johannes Kepler** — `UNVERIFIED — source lead unresolved` ·
+`MEDIATED TRANSLATION` (Latin → English). The exact sentence was **not located**.
+Kepler expresses closely related ideas in *Harmonices Mundi* (1619) — "God has
+established nothing without geometrical beauty," and geometry "coeternal with
+God… supplied patterns to God… so that it should become best and most beautiful"
+— but the manuscript's sentence is not confirmed. Bibliography **names the Aiton
+translation**, which is good practice; the sentence still needs finding in it.
+`PUBLIC DOMAIN` (Kepler) / translation status open · `STANDARD`.
+
+**L451 · Shakespeare** — `VERIFIED EXACT`. *Hamlet* I.iii, Polonius. Bibliography
+correct. `PUBLIC DOMAIN` · `NONE`.
+
+---
+
+## Chapter 2 CLOSED — the highest internal-origin rate in the book
+
+| Verdict | Count | % |
+|---|--:|--:|
+| `INTERNAL-ORIGIN CANDIDATE` + `UNSUPPORTED ADAPTATION CLAIM` | **5** | **50%** |
+| `VERIFIED` (exact + variant) | 3 | 30% |
+| `PARAPHRASE/ADAPTED` | 1 | 10% |
+| `UNVERIFIED` | 1 | 10% |
+
+**Half of Chapter 2's quotations are internal-origin candidates.** Compare Fire,
+the chapter where the phenomenon was first identified: **4 of 30, or 13%**.
+
+| | Internal-origin candidates | Rate |
+|---|--:|--:|
+| **Ch2 The Torus of Change** | **5 of 10** | **50%** |
+| Ch5 Fire | 4 of 30 | 13% |
+| Ch6 Water · Ch7 Earth · Ch8 Air · Ch9 Aether | 0 | 0% |
+
+**Chapter 2, not Chapter 5, is the concentration point.** Fire was identified
+first only because the census began there.
+
+**What distinguishes them:** Fire's four are **bare attributions** in an
+ornamental register; Chapter 2's five are **"Adapted from" claims** in a
+developmental-prose register. Both are manuscript-like language wearing external
+authority — but they are stylistically distinct, which is consistent with
+different manuscript layers rather than one uniform practice.
+
+**Consequence for the authorship-recovery lane:** it now holds **nine items
+across two chapters**, not four in one. That is large enough that the eventual
+question — whether this language is the author's own, and whether it should be
+reclaimed as prose — is a substantive compositional decision about the book, not
+a cleanup of stray epigraphs.
 
 ### Chapter 2 bibliography — two notes
 
