@@ -270,28 +270,7 @@ def reconcile(records):
 # authority; detection is only a bootstrap. An interrupted attribution splits the
 # quotation across two spans with the attribution between them, which no
 # quote-pairing pass can resolve — so it is asserted here, by hand, on purpose.
-MANUAL = [{
-    "id": "EA-Q-manual01", "occurrence": 1,
-    "text": "And yet, ... at the heart of it all, you know.",
-    "line_at_build": 1078, "chapter": None, "section": None,
-    "display_form": "inline_interrupted",
-    "attributed_as": "Lao Tzu", "attribution_state": "attributed",
-    "actual_author": None, "internal_speaker": None, "work": None,
-    "translator_or_mediator": None,
-    "provenance_status": None,
-    "provenance_review_state": "not_investigated",
-    "rights_review_state": "not_investigated",
-    "editorial_review_state": "not_investigated",
-    "evidence_location": None,
-    "rights_status": None,
-    "bibliography_relationship": None,
-    "family": None, "editorial_status": "unadjudicated",
-    "record_state": "confirmed", "identity_match_score": None,
-    "notes": ("Interrupted attribution: quotation split across two spans with the "
-              "attribution between them. Asserted manually - no detector can pair "
-              "this. On inspection does not appear to be a Tao Te Ching passage; "
-              "provenance check owed."),
-}]
+MANUAL = []  # the one inline_interrupted record was reclaimed as author prose at Stage 4I
 
 # Reconciler false positives: spans produced by quote-mark pairing across scare
 # quotes and coinages. Not quotations; recorded so they are not rediscovered.
@@ -308,7 +287,6 @@ NOT_QUOTATION_TEXTS = (
     "which draws us toward a bright imagined future",
     "where potential buyers are welcomed in with wine and story",
     "Milton gives this enclosure a voice in Satan",
-    "Lao Tzu reminds us",
 )
 
 

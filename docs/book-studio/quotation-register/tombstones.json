@@ -399,6 +399,49 @@
       "editorial_status": "REMOVE - CERTIFICATION / REDUNDANT. The paragraph already carries the Hermetic relationship through 'As above, so below'; this quotation added an ancient authority after the argument had arrived.",
       "evidence_location": "Stage 2d verification 2026-09-01 (provenance); 4I batch 3 ruling (editorial)",
       "notes": "Three avoidable ambiguities travelled with it: exact sentence unlocated; 'Hermes Trismegistus' treated as an individual author rather than an attribution tradition; and the lead verb 'advises' inventing a speech act the evidence cannot support. Removal only - no replacement prose. SEAM NOTE: the surviving sentence opens 'This alchemical practice', whose nearest antecedent is now a principle ('As above, so below'), not a practice. Reported to the author; not repaired unilaterally."
+    },
+    {
+      "state": "reclaimed_as_author_prose",
+      "stage": "Stage 4I",
+      "former_form": "inline",
+      "last_location": "Ch5 - closing passage",
+      "text": "And yet, ... at the heart of it all, you know.",
+      "attributed_as": "Lao Tzu",
+      "provenance_status": "unverified",
+      "actual_author": "unknown",
+      "editorial_status": "RECLAIM - AUTHORIAL CLAIM. Attribution and quotation frame dropped; the thought kept as the book's own: 'And yet - at the heart of it all, you know.' The next sentence already completes the claim in the author's voice.",
+      "evidence_location": "Stage 2d verification 2026-09-01 (provenance); 4I batch 4 ruling (editorial)",
+      "family": "fam-laotzu-adaptation",
+      "notes": "Not a Tao Te Ching passage; no source located. Same class as the four 'Adapted from Lao Tzu' items dissolved at Stage 3, except this one carried a direct attribution rather than an adaptation label - the stronger claim on the weaker evidence. The one inline_interrupted record in the book."
+    },
+    {
+      "state": "removed",
+      "stage": "Stage 4I",
+      "former_form": "inline",
+      "last_location": "Conclusion - fire paragraph",
+      "text": "When you bring more attention, then you become more alert. Then Karma will stop,",
+      "attributed_as": "Dr. Pillai",
+      "provenance_status": "verified_exact",
+      "actual_author": "Dr. Baskaran Pillai",
+      "work": "Pillai Center teaching material - the quoted author's own institutional channel",
+      "rights_status": "likely_protected_standard",
+      "editorial_status": "REMOVE - CERTIFICATION. The following sentence already states the idea in the book's own language, so the quotation functioned primarily as certification during a recapitulating passage. Attribution was sound; the removal is editorial, not evidentiary.",
+      "evidence_location": "Stage 2d verification 2026-09-01 (provenance); 4I batch 4 ruling (editorial)",
+      "notes": "AUTHOR DIRECTION: if this teaching was personally important to the author's development, the debt is to be preserved in the Acknowledgments or lineage apparatus rather than in the Conclusion. Stage 6/7 may still document the doctrinal source. EVIDENCE LIMITATION CARRIED FORWARD: attestation came through search rather than direct inspection of the primary page."
+    },
+    {
+      "state": "removed",
+      "stage": "Stage 4I",
+      "former_form": "inline",
+      "last_location": "Conclusion - earth paragraph",
+      "text": "I believe in God, only I spell it Nature.",
+      "attributed_as": "Frank Lloyd Wright",
+      "provenance_status": "unverified",
+      "work": "LEAD (open): Truth Against the World: Frank Lloyd Wright Speaks for an Organic Architecture",
+      "rights_status": "term_uncertain",
+      "editorial_status": "REMOVE - CERTIFICATION. The paragraph had already earned the claim about sacred corporality; an unverified famous voice arriving during recapitulation added authority rather than meaning.",
+      "evidence_location": "STAGE2C-ii Part A (provenance); 4I batch 4 ruling (editorial)",
+      "notes": "Consonant with Wright's documented position, but thematic fit proves nothing, and the lead-in 'intuited when he said' asserted both a speech act and an inner state. Bibliography obligation dissolves with the removal."
     }
   ]
 }
