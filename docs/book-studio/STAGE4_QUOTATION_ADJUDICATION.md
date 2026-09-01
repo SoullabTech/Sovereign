@@ -1078,3 +1078,83 @@ it.** A census is tested by what depends on it.
 **The failure is invisible from inside the census** — 137 of 137 verified is a true
 statement and a complete-looking one. It became visible only when the *next* stage
 asked a question the census could not answer.
+
+---
+
+# 4B · RESUMED — inline objects first · 2026-09-01
+
+**4B begins with the nine Stage 2c objects before reading further argument-carriers
+out of the remaining mid-prose population.** They are where argument dependency
+demonstrably lives.
+
+## RULED AND APPLIED — Jung, chemical substances · L1125
+
+### `KEEP · ILLUMINATION + LINEAGE · REFRAME`
+
+**The quotation earns its place.** The chemical-reaction image gives the reader
+something genuinely useful — **relationship as an encounter in which both
+participants can be changed.**
+
+**The weakness was never Jung.** It was the sentence beneath him:
+
+> ~~*"This quote beautifully encapsulates the transformative power of engaging with
+> our emotional depths and the profound impact it can have on our relationships and
+> personal growth."*~~
+
+**That sentence handed the argument to Jung and then congratulated the quotation
+for carrying it.** Removed.
+
+### ⚠️ Replacement wording — `EDITOR/MODEL SUGGESTION`, pending adoption
+
+**Under the collaboration doctrine, this is proposed, not canonical.** The
+*structure* is the author's ruling — *Jung supplies the transformation-through-
+contact image; the book interprets what that means for Water, emotional depth and
+relationship.* **The wording below is mine and requires an explicit yes, a revision,
+or a rejection.**
+
+> What Jung gives us here is an image, not a rule: contact that changes both
+> parties, or no reaction at all. Water is the element in which that becomes
+> unavoidable. To go down into emotional depth with another person is to accept
+> that we will not come back up unaltered—and that if we insist on being unaltered,
+> nothing has actually met.
+
+**What it is doing, so the review has something to test:** *"an image, not a rule"*
+refuses to let Jung legislate · *"Water is the element in which that becomes
+unavoidable"* is the book's move, not his · the final clause turns the chemistry
+back into a claim about relationship that Jung does not make. **It answers rather
+than agrees**, which is the Teasdale lesson applied inside prose rather than at a
+threshold.
+
+**Status: `PROPOSED` — not `AUTHOR-ADOPTED`.** If the wording is wrong, the ruling
+still stands; only the sentences change.
+
+---
+
+## The remaining eight — directions recorded, not yet applied
+
+| Object | Direction | Note |
+|---|---|---|
+| **Milton / Satan** L1752 | **`CORRECT + REFRAME`** | **Likely improves the passage.** Satan's insistence that mind can manufacture its own heaven or hell is almost a perfect voice for the pathology "The Dark Side of Air" is diagnosing. **Do not quote "Milton's wisdom" — identify the speaker and let the irony do the work** |
+| **Jung / beliefs** L1746 | **`REMOVE OR RECLAIM THE ARGUMENT`** | The mutated wording exists **because the paragraph wants experience**. Correcting Jung back to *knowledge* would break the function — **which is the proof it was never doing Jung's work.** The paragraph should make its experience-over-belief claim in the author's voice |
+| **Buddha ×2** L47, L190 | **`REMOVE` both as Buddha quotations** | Then ask **independently** whether either location needs the underlying thought at all. **Two occurrences, ruled together only because it is one saying** |
+| **Lao Tzu / Waley** L1867 | **editorial ruling first, rights second** | If the passage genuinely illuminates the section, **keep it editorially** and deal honestly with Waley attribution and rights. If not, **its length and rights burden make removal easy** |
+| **Charles Tart** L1606 | not yet directed | `VERIFIED`; bibliography `MISSING` |
+| **Kierkegaard** L1684 | not yet directed | translator must be identified before rights can be judged |
+| **Clayton** L2382 | **`PRESERVE`** | Own class, **assuming the consent record remains sound** |
+
+---
+
+## `SPEAKER MISATTRIBUTION` — confirmed as a permanent flag
+
+> **The work and the author can both be correct while the manuscript assigns the
+> words to the wrong speaker inside the work.**
+
+**Ordinary attribution checking cannot catch this.** Verify *Paradise Lost*, verify
+Milton, verify the wording — and still be wrong about who is speaking. **The
+Polonius and Satan specimens show why it matters: dramatic speakers are not
+automatically mouthpieces for their authors**, and in both cases the manuscript was
+citing as wisdom a line the work itself frames as self-deception.
+
+**Retroactive scope:** applies to any quotation drawn from drama, epic, dialogue, or
+fiction. **A sweep of the remaining population for character-spoken lines is owed
+before 4B closes.**

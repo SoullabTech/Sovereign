@@ -582,3 +582,44 @@ complete-looking, and wrong about its own scope.
 - **A zero result on a well-formed probe is a finding about the inventory, not
   about the corpus.** This is the tell, and it must be surfaced rather than
   reported as a clean pass.
+
+### Capability — "quotation" is not one object type
+
+> **Typography predicts function imperfectly but meaningfully.**
+
+**Grounding event (Stage 2c):** block epigraphs tended toward **threshold and
+atmospheric authority** — across 45 of them, **none** was structurally load-bearing.
+Inline quotations were **far more likely to be woven into an argument, to carry an
+unnamed translator, and to be depended upon**: 1 of 9 explicitly load-bearing, 2
+more leaning, 3 of 9 with unnamed translators, and **the book's longest quotation
+and highest rights exposure among them.**
+
+**The Studio must model at least five quotation types**, because each carries
+different editorial questions:
+
+| Type | The question it raises |
+|---|---|
+| **`EPIGRAPH`** | does this voice earn the threshold, or only decorate it? |
+| **`INLINE EVIDENCE`** | does the argument *depend* on this? what happens to the claim if it collapses? |
+| **`INLINE ILLUSTRATION`** | does this voice do something the prose cannot? |
+| **`DIALOGUE / RESPONSE`** | is the author answering this source, and is the boundary visible? |
+| **`PERSONAL COMMUNICATION`** | is there consent? *(no published source, no bibliography obligation, no permissions clearance — the only instrument is the speaker's agreement)* |
+
+**A system treating all five as "quotation" will ask epigraph questions of
+load-bearing evidence** — which is precisely how the most structurally dependent
+quotation in this manuscript passed a complete census unexamined.
+
+### Capability — verify the speaker, not only the author
+
+> **The work and the author can both be correct while the manuscript assigns the
+> words to the wrong speaker inside the work.**
+
+**Grounding events:** *"To thine own self be true"* — **Polonius**, a windbag who
+does not follow it. *"The mind is its own place…"* — **Satan**, newly fallen,
+insisting he can manufacture his own heaven. Both were cited as authorial wisdom;
+**both were verified correct at every level ordinary attribution checking
+inspects.**
+
+**Requirement:** for any quotation from drama, epic, dialogue or fiction, the model
+must carry a **speaker** field distinct from **author**, and flag when a
+character-spoken line is introduced as the author's own position.
