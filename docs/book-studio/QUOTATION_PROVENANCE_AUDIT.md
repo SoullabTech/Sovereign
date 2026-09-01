@@ -2,7 +2,7 @@
 
 **Source of record:** `docs/book-studio/ELEMENTAL_ALCHEMY_FROM_ORIGINAL_FULL.md`
 **Opened:** 2026-09-01, after Chapter 10 closed developmental adjudication.
-**Status:** IN PROGRESS — 124 of 137. **Ch2 CLOSED (10/10).** adjudicated. **Chapter 5 CLOSED (30/30). Chapter 8 CLOSED (23/23).**
+**Status:** IN PROGRESS — 126 of 137. **Ch2 CLOSED (10/10).** adjudicated. **Chapter 5 CLOSED (30/30). Chapter 8 CLOSED (23/23).**
 
 ## Scope
 
@@ -3407,6 +3407,45 @@ Trismegistus · Dickinson · Berry (×2).**
 
 *Every one of these was checked against the whole bibliography, not a single
 section — the corrected method applied prospectively.*
+
+
+### Final batch — tranche 3
+
+**L602 · Ch3 · Vladimir Nabokov — "The spiral is a spiritualized circle…"**
+**`VERIFIED EXACT`.** ***Speak, Memory*, chapter 14.** The fuller passage
+continues "…the circle, uncoiled, has ceased to be vicious; it has been set
+free," and Nabokov describes conceiving the idea as a schoolboy on encountering
+Hegel's triadic series as "the essential spirality of all things in their relation
+to time." Bibliography present.
+**Rights: `LIKELY PROTECTED` · `STANDARD`.**
+
+**L2024 · Ch10 · Wayne Teasdale — "To be spiritual means essentially to take responsibility for our inner journey…"**
+**`VERIFIED — pending independent edition confirmation`.** ***The Mystic Heart:
+Discovering a Universal Spirituality in the World's Religions*** (1999; © 2001).
+**Rights: `LIKELY PROTECTED` · `STANDARD`**, with length noted — the epigraph runs
+~60 words of in-copyright prose.
+
+### RULE — self-citation circularity
+
+The strongest search result for the Teasdale attribution was **Soullab's own
+Medium publication**. It corroborates nothing.
+
+> **The author's own prior publications — Medium posts, Book Studio pages, site
+> content — CANNOT corroborate the manuscript's attribution.** They are the same
+> claim in another location.
+
+This is the mechanism that made the **Wilber / "Soulplay"** case legible: the
+definition was findable only on Soullab's own Book Studio page, which looked like
+external attestation and was not.
+
+**Operationally:** any search result on a domain the author controls or
+contributes to is **excluded from the evidence base** and, where it is the *only*
+attestation, is **positive evidence of internal origin**. Teasdale survives this
+because independent book listings also carry the attribution; Wilber did not.
+
+*Second-instance note:* Teasdale is now 1 verified (L2024) and 1 unverified
+(L1690, Ch8) — another author set that **splits**. C. Michael Smith (2 instances)
+remains the last such set open.
 
 
 ---

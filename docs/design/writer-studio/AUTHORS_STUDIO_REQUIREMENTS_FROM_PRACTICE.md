@@ -171,3 +171,14 @@ the system produces its worst false positive: real person, real source, wrong
 individual.
 *Specimens: two John Perkinses; two Thomas Fullers.*
 
+**Self-citation circularity must be detected and excluded.** An author's own prior
+publications — blog posts, site pages, earlier books, studio content — routinely
+surface as top search results for their own manuscript's attributions. **They
+corroborate nothing; they are the same claim in another location.** The Studio
+must know which domains the author controls or contributes to, exclude them from
+the evidence base, and treat *sole* attestation on such a domain as **positive
+evidence of internal origin**.
+*Specimens: the "Soulplay" definition findable only on the author's Book Studio
+page; a Teasdale attribution whose top result was the author's own Medium
+publication (independent listings rescued that one).*
+
