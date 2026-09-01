@@ -3763,30 +3763,68 @@ material **in its own words**, with an honest in-text attribution.
 > retell, summarize or structurally borrow from an identified source **are a
 > separate class and have never been audited.**
 
-**This is the first instance surfaced, and there are almost certainly others.**
-The Ch4 McKenna I Ching material, the Maya composite figure, the alchemical
-sequence discussions and the Spiralogic genealogy passages all likely qualify.
+### What "137/137" will and will not mean
 
-**Required: a separate narrative-dependency pass** — after the quotation census
-closes, before the bibliography reconstruction, since these dependencies generate
-bibliography obligations the quotation map will not contain.
+**Renamed precisely: `ATTRIBUTED QUOTATION PROVENANCE CENSUS — 137/137`.**
 
-## The Four Yogis passage specifically
+> It establishes provenance for the manuscript's **attributed quotation objects**.
+> It does **not** establish that every externally derived idea, retelling,
+> summary, framework or narrative dependency in the book has been sourced.
 
-**Relayed evidence — NOT independently verified by me.** A YouTube recording of
-Sadhguru telling this story has been reported, with this content: Karma
-(body/action) · Jnana (intelligence) · Bhakti (emotion/devotion) · Kriya (energy);
-each path alone becomes partial and dismissive of the others; the four are forced
-together under one roof; they embrace the deity together; **God appears only when
-the four come together.**
+### Bounded `NARRATIVE SOURCE-DEPENDENCY PASS` — to be added
 
-**I have not seen the recording.** Recorded as the author's report pending the
-**URL or video ID**, which is required for the citation.
+**Unit is not "quotation."** The question is:
 
-**If it holds, the status is:** `SADHGURU — VERIFIED SPOKEN SOURCE` for the
-four-path architecture, the temple/deity story, and the teaching that their
-integration makes the divine present. **Cite the recording itself**, not
-*Inner Engineering*, if the manuscript is drawing on the spoken telling.
+> **Where does the manuscript materially depend on an identifiable external source
+> even though it is speaking in its own words?**
+
+**Per dependency:** source → what was borrowed → what the manuscript added →
+fidelity → mediation → bibliography obligation → rights *only where relevant*.
+
+**Discovery targets:** retold stories · summarized teachings · named conceptual
+frameworks · genealogies of ideas · historical claims · source-dependent
+explanatory passages.
+
+**Candidates remain candidates.** The Ch4 McKenna I Ching material, the Maya
+composite figure, the alchemical-sequence discussions and the Spiralogic genealogy
+are **discovery targets, not established dependencies**. *Dependency is not
+presumed because another thinker appears nearby.*
+
+**Bounded and source-focused — not another developmental edit.**
+
+## The Four Yogis passage — the canonical specimen of HEALTHY source use
+
+**Borrowed source and authorial contribution coexist in one passage without
+collapsing into each other:**
+
+| | |
+|---|---|
+| **Narrative dependency** | `VERIFIED` |
+| **Source** | Sadhguru's Four Yogis teaching (video `Wrloqvk5sYg`) |
+| **Authorial synthesis** | the **elemental correspondence** — Kriya→Fire · Bhakti→Water · Karma→Earth · Jnana→Air — **added by the manuscript** |
+| **Attribution form** | **transparent** — "a story Sadhguru tells," with the mapping never attributed back to him |
+
+> **This is the provenance architecture Author's Studio should represent:** a
+> single passage can carry a borrowed source *and* an authorial contribution,
+> and the record must show both without merging them.
+
+## Details
+
+**Source identified — YouTube video ID `Wrloqvk5sYg`** (supplied by the author,
+with transcript). Content: Karma (body/action) · Jnana (intelligence) · Bhakti
+(emotion/devotion) · Kriya (energy); each path alone becomes partial and
+dismissive of the others; the four are forced together under one roof; they
+embrace the deity together; **God appears only when the four come together.**
+
+**Status: `SADHGURU — VERIFIED SPOKEN SOURCE`** for the four-path architecture,
+the temple/deity story, and the teaching that integration makes the divine
+present. **Cite the recording**, not *Inner Engineering*, since the manuscript
+draws on the spoken telling.
+
+*Auditor's note:* content verification rests on the author's reading of the
+recording, not on my own — I have not viewed it. **Still pending for the
+publication source note:** formal bibliographic formatting — title, channel,
+upload date.
 
 **Keep separate from L173.** The video does **not** verify the *sambar → pizza*
 wording unless that occurs in it or another Sadhguru source. **Two distinct

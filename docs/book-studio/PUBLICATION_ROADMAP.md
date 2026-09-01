@@ -27,7 +27,7 @@ developmental work is behind us.
   dissolved into the chapter's own grammar).
 - Back-matter architecture substantially settled.
 
-## 2 · Quotation provenance census — 🔵 CURRENT
+## 2 · Attributed quotation provenance census — 🔵 CURRENT
 
 **119 of 137 checked (87%). 18 remaining.**
 
@@ -42,6 +42,9 @@ authorship-recovery decision.
 
 Full record: `QUOTATION_PROVENANCE_AUDIT.md`.
 
+> **Scope note:** this census covers **attributed quotation objects**. It does
+> **not** cover narrative source dependencies — see stage 3b.
+
 ## 3 · Authorship-recovery adjudication — NEXT
 
 Resolve the Chapter 2 and Chapter 5 passages that may be **manuscript-originated
@@ -53,7 +56,24 @@ remove.**
 **This is a compositional pass, not citation cleanup.** Nine epigraphs may be
 doing structural work in two chapters.
 
-## 4 · Quotation repair batch
+## 3b · Narrative source-dependency census
+
+**Bounded and source-focused. Not another developmental edit.**
+
+> Where does the manuscript materially depend on an identifiable external source
+> **while speaking in its own words**?
+
+Per dependency: source → what was borrowed → what the manuscript added →
+fidelity → mediation → bibliography obligation → rights where relevant.
+
+**Canonical specimen (healthy):** the Four Yogis passage (Ch4) — Sadhguru's story
+borrowed transparently, with the elemental correspondence supplied by the
+manuscript and never attributed back to him.
+
+These dependencies generate **bibliography obligations the quotation map does not
+contain**, so this pass precedes reconstruction.
+
+## 4 · Quotation and source repair batch
 
 Once all 137 are known, make approved changes **together**:
 
