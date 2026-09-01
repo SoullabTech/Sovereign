@@ -13,6 +13,7 @@ set -euo pipefail
 
 BASELINE="${BASELINE:-database/baseline/0001_baseline_2026-09-01.sql}"
 MANIFEST="${MANIFEST:-database/baseline/0001_baseline_2026-09-01.manifest}"
+MIG_DIR="${MIG_DIR:-database/migrations}"
 
 [ -f "$BASELINE" ] || { echo "❌ baseline not found: $BASELINE"; exit 1; }
 [ -f "$MANIFEST" ] || { echo "❌ manifest not found: $MANIFEST"; exit 1; }
@@ -38,13 +39,53 @@ CREATE TABLE IF NOT EXISTS schema_migrations (
 ALTER TABLE schema_migrations ADD COLUMN IF NOT EXISTS checksum text;
 SQL
 
-# The manifest is "sha256<two spaces>filename", fixed at capture time.
-# Built as one statement rather than one psql invocation per row.
+# The manifest is the SOURCE DATABASE'S LEDGER — filenames only, one per line,
+# comments with '#'. A migration is stamped because production recorded it as
+# applied, never because a file of that name happens to sit in the repository.
+#
+# The checksum is computed FROM DISK NOW, not captured with the manifest, so a
+# subsumed migration edited after capture still trips the runner's tamper check.
+# Where production recorded a migration whose source file is gone, the ledger
+# fact is preserved with a NULL checksum: the runner reads that as "applied, no
+# checksum stored" and skips it. Nothing is synthesized to fill the gap.
+hash_file() {
+  if command -v sha256sum >/dev/null 2>&1; then sha256sum "$1" | awk '{print $1}'
+  else shasum -a 256 "$1" | awk '{print $1}'; fi
+}
+
+# Built to a file rather than piped into psql: a pipeline runs the loop in a
+# subshell, and the counters below would be reported as zero while the ledger
+# was in fact correctly stamped — a summary line that lies about what happened.
+stamp_sql="$(mktemp -t maia-bootstrap-stamp.XXXXXX.sql)"
+trap 'rm -f "$stamp_sql"' EXIT
+
+stamped=0; with_file=0; ledger_only=0
 {
   echo "INSERT INTO schema_migrations (filename, checksum) VALUES"
-  awk 'NF==2 {printf "%s(%c%s%c,%c%s%c)", sep, 39, $2, 39, 39, $1, 39; sep=","} END {print ""}' "$MANIFEST"
+  sep=""
+  while IFS= read -r line || [ -n "$line" ]; do
+    case "$line" in ''|\#*) continue ;; esac
+    name="$(printf '%s' "$line" | tr -d '[:space:]')"
+    [ -n "$name" ] || continue
+    esc="${name//\'/\'\'}"
+    if [ -f "$MIG_DIR/$name" ]; then
+      printf "%s('%s','%s')" "$sep" "$esc" "$(hash_file "$MIG_DIR/$name")"
+      with_file=$((with_file+1))
+    else
+      printf "%s('%s',NULL)" "$sep" "$esc"
+      ledger_only=$((ledger_only+1))
+    fi
+    sep=","
+    stamped=$((stamped+1))
+  done < "$MANIFEST"
+  echo ""
   echo "ON CONFLICT (filename) DO NOTHING;"
-} | psql "$DATABASE_URL" -q -v ON_ERROR_STOP=1
+} > "$stamp_sql"
+
+[ "$stamped" -gt 0 ] || { echo "❌ manifest named no migrations: $MANIFEST"; exit 1; }
+psql "$DATABASE_URL" -q -v ON_ERROR_STOP=1 -f "$stamp_sql"
+
+echo "   $stamped ledger entries stamped — $with_file with an on-disk checksum, $ledger_only ledger-only (source file no longer in the repository)."
 
 seeded="$(psql "$DATABASE_URL" -tAc 'select count(*) from schema_migrations')"
 tables="$(psql "$DATABASE_URL" -tAc "select count(*) from pg_tables where schemaname='public'")"
