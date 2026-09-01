@@ -74,8 +74,15 @@ body {
 p {
   margin: 0;
   text-indent: 0.2in;
-  orphans: 2;
-  widows: 2;
+  /* Trade paper convention is three, not two. At 2 the 199-page proof left
+   * a single line alone at the top of a page three times - including the
+   * Conclusion's final line stranded on a page of its own - and left ten
+   * headings sitting at a page bottom with only two lines beneath them.
+   * Raising to 3 also fixes the headings: `break-after: avoid` keeps a
+   * heading with its paragraph, so a paragraph that cannot place three
+   * lines carries the heading forward with it. */
+  orphans: 3;
+  widows: 3;
 }
 
 /* Hyperlinks render as plain body text in print — no blue, no underline.
@@ -198,6 +205,33 @@ h4 {
   break-after: avoid;
 }
 
+/* Headings hold together, and their first block holds to them.
+ *
+ * `break-after: avoid` on the heading alone is NOT sufficient in this
+ * engine: the 207-page proof still stranded two h3s at a page bottom with
+ * their body overleaf (p82 "The Alchemy of Water", p123 "Embracing the
+ * Element of Air"). The same asymmetry appeared with epigraphs - the
+ * engine honours a break constraint declared on the LATER element far more
+ * reliably than one declared on the earlier one. So the rule is stated
+ * from both directions: the heading refuses a break after it, and whatever
+ * follows refuses a break before it.
+ *
+ * `break-inside: avoid` keeps a heading that wraps to two lines from
+ * splitting across the turn - p82's heading wrapped, and its second line
+ * was what ended up alone. */
+h2, h3, h4 {
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+h2 + p, h3 + p, h4 + p,
+h2 + ul, h3 + ul, h4 + ul,
+h2 + ol, h3 + ol, h4 + ol,
+h2 + blockquote, h3 + blockquote, h4 + blockquote {
+  break-before: avoid;
+  page-break-before: avoid;
+}
+
 /* ============================================================
  * EPIGRAPHS
  * Italic-only paragraphs (markdown `*"…" — Author*` lines).
@@ -223,6 +257,18 @@ p.epigraph {
   text-indent: 0;
   margin: 12pt 0.5in 16pt 0.5in;
   line-height: 1.35;
+  /* An epigraph is one unit and belongs to the text it introduces: never
+   * split across a page turn, and never separated from the heading above it.
+   * NOTE: `break-after: avoid` was tried here and made things worse - chained
+   * against the heading's own break-after it gave the engine an unsatisfiable
+   * constraint, which it resolved by breaking between heading and epigraph,
+   * stranding the heading alone at the page bottom (proof at p99, p146).
+   * `break-before: avoid` is the correct direction: it glues the epigraph up
+   * to its heading so the pair moves as one unit. */
+  break-inside: avoid;
+  page-break-inside: avoid;
+  break-before: avoid;
+  page-break-before: avoid;
 }
 
 p.epigraph > em {
@@ -240,6 +286,10 @@ p:has(> em:only-child) {
   margin: 14pt 0 18pt 0;
   line-height: 1.4;
   color: #333;
+  break-inside: avoid;
+  page-break-inside: avoid;
+  break-before: avoid;
+  page-break-before: avoid;
 }
 
 /* Paragraph immediately after an epigraph: no first-line indent.
@@ -289,6 +339,10 @@ blockquote {
   padding: 0;
   font-style: italic;
   font-size: 10.5pt;
+  /* A quotation block reads as one object; a page turn through its middle
+   * breaks that. Short enough throughout this manuscript to hold whole. */
+  break-inside: avoid;
+  page-break-inside: avoid;
 }
 
 blockquote p {
@@ -426,6 +480,9 @@ ul, ol {
 
 li {
   margin: 0 0 4pt 0;
+  /* A list item splitting across a page turn reads as two items. */
+  break-inside: avoid;
+  page-break-inside: avoid;
 }
 
 /* Bibliography list items: left-align, no justification.
