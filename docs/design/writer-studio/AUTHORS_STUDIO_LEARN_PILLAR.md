@@ -174,3 +174,48 @@ each lesson traces to a real decision:
 
 **Rule for curriculum growth:** a lesson enters the library when the manuscript work has
 already earned it. The Studio does not teach principles it has not itself had to apply.
+
+---
+
+## Advanced lesson — *A record is not the thing it records*
+
+**Placement:** near the advanced end of **Manuscript Intelligence**, cross-listed under
+**Sources** and **Authorship**. Earned by the *Elemental Alchemy* source work; every
+instance below is real.
+
+### What happened in your manuscript
+
+Five records looked sound and pointed at nothing, or at something else:
+
+- A **translator citation** existed while the printed words came from someone else.
+- A **review state** read `migrated` while the actual decision was still deferred.
+- A **gate** reported PASS while its own report still named an unresolved obligation.
+- A **bibliography entry** survived after the source relationship had disappeared.
+- A **commit message** described a file the commit did not contain.
+
+Each was internally consistent. Each was official-looking. None of that made any of them
+true.
+
+### What the writer learns
+
+> **Ask what the record actually points to.**
+
+Not whether it is complete, well-formed, or agrees with the other records. Those are
+properties of the record, and a record can have all of them while pointing at nothing.
+
+### The advanced principle
+
+> **Trust comes from recoverable correspondence between claim and referent — not from how
+> official, complete, or internally consistent a record looks.**
+
+### Why this is a writing lesson, not a software lesson
+
+Writers meet this constantly, and usually without a gate to catch it: citations carried
+forward from an earlier draft, a memory of where a phrase came from, a quotation copied
+from notes rather than from the book, a secondary source standing in for a primary one,
+a claim about one's own influences. The failure is never that the record is missing. It is
+that the record is present, plausible, and unchecked.
+
+**The habit the lesson builds:** when a record matters, follow it back to its referent
+once. If the correspondence cannot be recovered, that is the finding — say so in the work
+rather than letting the record's confidence stand in for evidence.
