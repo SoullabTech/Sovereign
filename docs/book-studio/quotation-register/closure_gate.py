@@ -3,7 +3,8 @@
 import json, sys
 from pathlib import Path
 d = json.loads((Path(__file__).resolve().parent / "register.json").read_text())
-R, rep, fail = d["records"], d.get("migration_report", {}), []
+R, H = d["records"], d.get("historical_records", [])
+rep, fail = d.get("migration_report", {}), []
 
 def check(name, ok, detail=""):
     print(f"  {'PASS' if ok else 'FAIL'}  {name}{'  ' + detail if detail else ''}")
@@ -43,7 +44,18 @@ ni_blk = sum(1 for r in R if r["display_form"] == "block_epigraph" and r["proven
 check("block reconciliation: total = migrated + pending + documented not_investigated",
       blk == pend + mig_blk + ni_blk,
       f"{blk} = {mig_blk} migrated + {pend} pending + {ni_blk} not_investigated")
-check("total reconciliation", len(R) == 130, f"{len(R)} records")
+check("current-field total", len(R) == 130, f"{len(R)} active records")
+check("historical records carry no active manuscript span",
+      all(h.get("active_span") is None for h in H), f"{len(H)} historical")
+check("historical ids disjoint from current ids",
+      not ({h["id"] for h in H} & {r["id"] for r in R}))
+check("historical block lifecycle: 137 = 109 active + 28 inactive",
+      blk + len(H) == 137, f"{blk} active + {len(H)} inactive")
+sh = {}
+for h in H: sh[h["record_state"]] = sh.get(h["record_state"], 0) + 1
+print(f"  NOTE  historical states: {sh}")
+print("  NOTE  attributed occurrences ever identified: 137 historical block + 19 inline = 156; "
+      "2 unattributed boundary records held separately")
 
 fams = {}
 for r in R:

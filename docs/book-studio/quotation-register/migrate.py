@@ -13,6 +13,7 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 REG, SRC = HERE / "register.json", HERE / "session_verdicts.json"
+TOMB = HERE / "tombstones.json"
 
 ALLOWED = {"provenance_status", "actual_author", "internal_speaker", "work",
            "translator_or_mediator", "rights_status", "bibliography_relationship",
@@ -68,6 +69,30 @@ def main():
             r["evidence_location"] = ("QUOTATION_PROVENANCE_AUDIT.md - "
                                       "chapter-batch migration owed")
 
+    tombs, n = [], 0
+    for t in json.loads(TOMB.read_text())["records"]:
+        n += 1
+        tombs.append({
+            "id": f"EA-Q-T{n:03d}",
+            "record_state": t["state"],
+            "removed_at_stage": t["stage"],
+            "last_known_location": t["last_location"],
+            "text_at_removal": t["text"],
+            "attributed_as": t.get("attributed_as"),
+            "provenance_status": t.get("provenance_status"),
+            "provenance_review_state": "migrated" if t.get("provenance_status") else "not_investigated",
+            "internal_speaker": t.get("internal_speaker"),
+            "rights_status": t.get("rights_status"),
+            "rights_review_state": "migrated" if t.get("rights_status") else "not_investigated",
+            "bibliography_relationship": t.get("bibliography_relationship"),
+            "editorial_status": t.get("editorial_status"),
+            "editorial_review_state": "migrated",
+            "family": t.get("family"),
+            "evidence_location": t.get("evidence_location"),
+            "notes": t.get("notes"),
+            "active_span": None,
+        })
+    data["historical_records"] = tombs
     data["migration_report"] = report
     REG.write_text(json.dumps(data, indent=2, ensure_ascii=False))
 

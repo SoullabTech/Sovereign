@@ -261,3 +261,87 @@ wordings across block and inline · `fam-song-lyrics` **(3, plus Cohen)** ·
 
 **Chapter-by-chapter migration of the historical census, in manuscript order,
 with the closure gate run after each chapter.** No bulk prose parser.
+
+---
+
+# LIFECYCLE RECORDS — 28 historical occurrences · 2026-09-01
+
+> **The register represents the quotation lifecycle, not merely the current
+> manuscript surface.**
+
+**28 former block-quotation occurrences preserved**, hand-authored from
+already-established Stage 3 and Stage 4A rulings. **Not re-adjudicated.** They carry
+last-known location, the text as it stood at removal, provenance, rights,
+bibliography relationship, editorial ruling, evidence location and family links —
+**and no active manuscript span.**
+
+## `record_state` — because 28 removals were not 28 of the same thing
+
+| State | Count | Meaning |
+|---|---|---|
+| **`removed`** | **24** | the occurrence is gone from the manuscript |
+| **`reclaimed_as_author_prose`** | **4** | **the quotation frame was removed and the words stayed, as the author's own prose** |
+| `superseded` | 0 | reserved; no specimen yet |
+
+**The distinction is load-bearing.** *"Deleted because it was false"* and *"the
+author reclaimed the underlying thought in their own voice"* are **completely
+different facts about the book**, and flattening both to `removed` would erase the
+entire Stage 3 finding.
+
+The four reclaimed: **Haramein** (torus) · **Jung** (subjective perception) ·
+**Wilber → soulplay** · **the spiral definition**. Each remains in the book. **None
+is a quotation any more.**
+
+## Questions the register can now answer
+
+- **"Did this book ever attribute this sentence to Aristotle?"** → yes, twice; both
+  removed at 4A; one was ruled a provenance failure at Stage 2.
+- **"Why is this bibliography entry still here when no current quotation points to
+  it?"** → because its quotation was removed, and the record says which stage,
+  which ruling, and why.
+- **"Was this deleted because it was false, or because the author reclaimed the
+  thought?"** → `record_state` answers directly.
+
+**These are publication questions, not archival trivia.** Stage 7 will need every
+one of them.
+
+## Arithmetic kept separate — tombstones never inflate the census
+
+**Current semantic field**
+
+| | |
+|---|---|
+| active block | **109** |
+| inline attributed | **19** |
+| unattributed boundary records | **2** |
+| **current records** | **130** |
+
+**Historical lifecycle**
+
+| | |
+|---|---|
+| inactive former block occurrences | **28** |
+| **block lifecycle** | **137 = 109 active + 28 inactive** ✅ *(gated)* |
+
+> **Attributed quotation occurrences ever identified: 137 historical block + 19
+> inline = 156**, with the **two unattributed boundary objects represented
+> separately** rather than forced into that number.
+
+**Three gate checks now enforce the separation:** historical records carry no active
+span · historical ids are disjoint from current ids · the block lifecycle
+reconciles to 137. **Current and historical cannot be conflated by accident.**
+
+## Doctrine confirmed by this batch
+
+> ### A failed gate is evidence until demonstrated otherwise.
+
+**Twice now the implementation wanted to say "the check is too strict," and both
+times reality said the schema was too weak.** Per-axis review states came from one
+such failure; the "documented as deliberately uninvestigated" term came from
+another.
+
+> **Deliberately unresolved is itself a state that must be counted. Otherwise
+> responsible restraint looks like missing data.**
+
+**→ Chapter 1 historical provenance migration next.** Chapter → gate → chapter →
+gate. No bulk parser, no loosened gate.

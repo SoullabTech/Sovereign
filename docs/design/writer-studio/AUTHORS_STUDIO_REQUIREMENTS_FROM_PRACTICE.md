@@ -1122,3 +1122,30 @@ the correct execution environment.
 **If MAIA generates code, transformations, or automated manuscript operations, the
 tool performing the test must not possess the power to damage the thing being
 tested.**
+
+### Requirement — represent the lifecycle, not the current surface
+
+**A quotation that was removed is still a fact about the book.** The register must
+answer *"did this manuscript ever attribute this to Aristotle?"* and *"why does this
+bibliography entry survive when no quotation points at it?"* — **publication
+questions, not archival trivia.**
+
+**`record_state` must distinguish removal from reclamation.** Grounding event: of 28
+former occurrences, **24 were removed and 4 were reclaimed as the author's own
+prose** — the words stayed, the quotation frame went. *"Deleted because it was
+false"* and *"the author reclaimed the thought in their own voice"* are completely
+different facts, and flattening both to "removed" erases the finding.
+
+**Historical records must never inflate the current census.** Separate arithmetic,
+separately gated: current field, and lifecycle total.
+
+### Doctrine — a failed gate is evidence until demonstrated otherwise
+
+**Grounding events, twice in one migration:** the implementation wanted to conclude
+the check was too strict; **both times reality was that the schema was too weak.**
+Per-axis review states came from one failure; a missing "documented as deliberately
+uninvestigated" term came from the other.
+
+> **Deliberately unresolved is itself a state that must be counted. Otherwise
+> responsible restraint looks like missing data** — and a system will report an
+> author's careful "I have not settled this yet" as a gap to be filled.
