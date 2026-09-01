@@ -1149,3 +1149,35 @@ uninvestigated" term came from the other.
 > **Deliberately unresolved is itself a state that must be counted. Otherwise
 > responsible restraint looks like missing data** — and a system will report an
 > author's careful "I have not settled this yet" as a gap to be filled.
+
+### Requirement — evidence lineage, not plausibility
+
+> **A value is not trustworthy because it is plausible, internally consistent, or
+> conflict-free. It is trustworthy because its evidence lineage is recoverable.**
+
+**A contradiction detector asks "does anything disagree with this?" An integrity
+check asks "what earned this?"** A system needs both, and the second is stronger.
+
+**Grounding event:** nine provenance verdicts in the quotation register were
+authored from editorial notes rather than traced to the census. **They were
+conflict-free by construction** — their manuscript occurrences had been removed, so
+nothing downstream could ever contradict them. **Eight were right. One was wrong.**
+No amount of contradiction checking would have found it.
+
+**This generalises well past quotations:** claims, citations, developmental
+findings, remembered author preferences, and **the system's own prior conclusions.**
+
+> **A system must not be able to turn "I inferred this earlier" into "the record
+> establishes this."**
+
+### Requirement — a check that cannot fail is not a check
+
+**Grounding event:** the integrity gate's corrections check passed on its first run
+reporting **"0 corrected records"** — `all()` over an empty list is `True`, and the
+loader was silently dropping the correction history it was meant to verify. **Two
+bugs, one symptom: data loss, and a gate reporting success for finding nothing.**
+
+**Every gate must fail when its subject population is unexpectedly empty.**
+**Vacuous truth is the quietest way a gate degrades into decoration** — it reports
+PASS while verifying nothing, and it does so most reliably at exactly the moment the
+data it needed went missing.

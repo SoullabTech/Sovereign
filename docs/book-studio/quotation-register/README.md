@@ -790,3 +790,95 @@ carrying nine provenance verdicts I cannot vouch for.
 singletons.
 
 **→ HOLDING for authorisation: tombstone integrity pass (9 records), then Chapter 7.**
+
+---
+
+# TOMBSTONE INTEGRITY PASS — 19 Stage 4A records · 2026-09-01
+
+**Narrowly bounded as authorised: trace → compare → correct authoring errors only →
+preserve the census verdict even where it now looks questionable → record evidence
+location → gate the full 19.** **No new investigation. No Stage 4 reconsideration.
+No manuscript changes.**
+
+## Result — better than the failure rate predicted
+
+| | |
+|---|---|
+| **Confirmed correct** | **8 of 9** |
+| **Corrected** | **1** — Angelou, `verified_exact` → **`verified_variant`** |
+
+**The 3-of-3 failure rate was not representative, and I should say so plainly.**
+Perkins, Gawain and Alcott were wrong; the nine untraced records were **almost all
+right.** The correct conclusion is **not** *"the tombstone method was broadly
+unreliable"* — it is *"the method produced occasional unearned values, and there was
+no way to tell which without tracing."*
+
+**Which is the actual point.** The problem was never the error rate. **It was that
+the register could not distinguish an earned verdict from a plausible one.**
+
+**The Angelou correction is instructive:** `VERIFIED VARIANT`, not `VERIFIED EXACT`
+— *"a **spoken** saying with several recorded phrasings, so variant rather than
+exact."* **My value was not wrong about whether Angelou said it. It was wrong about
+what kind of verification had been achieved** — the distinction between a fixed
+printed text and a transmitted spoken line.
+
+## What the nine turned out to hold
+
+- **Socrates** — `COMPOSITE ATTRIBUTION`. The second sentence is **Robert C.
+  Solomon**, *Introducing Philosophy* (1989) — **his gloss on Socrates.** The
+  epigraph fuses a paraphrase with a modern commentator's description and credits
+  both to Socrates.
+- **MLK** — `UNVERIFIED`. Earliest published evidence is 1986, eighteen years after
+  his death. **Marian Wright Edelman states she heard the metaphor from him** —
+  credible oral testimony, but not a located source. *The census kept both facts.*
+- **Gandhi** — the census **records its own correction**: initially listed among
+  quotations "sound as attributed," later found unverified.
+- **Nehru · Tagore · Ramana Maharshi** — all `UNVERIFIED`, and **all three carry a
+  probable `WRONG SOURCE/WORK`** flag on the bibliography axis. Tagore's is the
+  sharpest: the bibliography cites *The Home and the World* (1919), **a novel**, for
+  a philosophical aphorism.
+- **Shakespeare** — `VERIFIED EXACT`, *Hamlet* I.iii, **Polonius**, bibliography
+  correct. **The speaker was in the census from the start.**
+
+## The gate, strengthened — and one vacuous pass caught
+
+**Five new checks**, all passing across the full 19: every Stage 4A tombstone
+verdict cites a **Stage 2** evidence location · **no verdict originates solely from
+a Stage 4 editorial note** · corrections appear in `provenance_history` rather than
+being silently reconciled · editorial removal status untouched · bibliography and
+rights remain on their own axes.
+
+**⚠️ The corrections check passed vacuously on its first run** — *"0 corrected
+record(s)"* — because the tombstone loader **was silently dropping
+`provenance_history`**, and `all()` over an empty list is `True`.
+
+**Two bugs, one symptom:** a data-loss bug in the loader, and **a gate that reported
+success for finding nothing.** Both fixed — the loader now carries the history, and
+the check fails if it finds zero corrections when at least one is known.
+
+> **A check that cannot fail is not a check.** Worth more than the bug it caught:
+> **vacuous truth is the quietest way a gate degrades into decoration.**
+
+## The rule this establishes
+
+> ### A value is not trustworthy because it is plausible, internally consistent, or conflict-free. It is trustworthy because its evidence lineage is recoverable.
+
+**A contradiction detector asks *"does anything disagree with this?"*
+An integrity check asks *"what earned this?"***
+
+**These are different questions and a system needs both.** The nine were
+conflict-free by construction — nothing downstream could ever contradict them —
+**and one was wrong.**
+
+**And it generalises past quotations:** claims, citations, developmental findings,
+remembered author preferences, and **MAIA's own prior conclusions.** *A system must
+not be able to turn "I inferred this earlier" into "the record establishes this."*
+
+## Standing
+
+**All 19 Stage 4A tombstones are now vouched, not merely the nine.**
+
+**74 migrated · 44 pending · 12 deferred · 130 current · 28 historical.**
+**`137 = 109 + 28`** ✅ · **`GATE PASSED`**
+
+**→ Chapter 7.**

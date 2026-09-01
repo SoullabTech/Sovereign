@@ -1,7 +1,7 @@
 {
   "records": [
     {
-      "id": "EA-Q-0190",
+      "id": "EA-Q-0198",
       "occurrence": 1,
       "text": "If you knew how perfect it all is you'd throw your head up at the clouds and laugh.",
       "line_at_build": 47,
@@ -219,7 +219,7 @@
       "notes": "Audit: bibliography cites Thanissaro Bhikkhu (Access to Insight, 1994), whose actual rendering begins 'Now, Kalamas, don't go by reports, by legends...' - materially different from the printed text."
     },
     {
-      "id": "EA-Q-0191",
+      "id": "EA-Q-0199",
       "occurrence": 2,
       "text": "If you knew how perfect it all is you'd throw your head up at the clouds and laugh.",
       "line_at_build": 190,
@@ -2035,7 +2035,7 @@
       "notes": null
     },
     {
-      "id": "EA-Q-0192",
+      "id": "EA-Q-0200",
       "occurrence": 1,
       "text": "Alone we can do so little; together we can do so much.",
       "line_at_build": 1453,
@@ -2440,7 +2440,7 @@
       "notes": null
     },
     {
-      "id": "EA-Q-0193",
+      "id": "EA-Q-0201",
       "occurrence": 2,
       "text": "Alone we can do so little; together we can do so much.",
       "line_at_build": 1672,
@@ -3586,6 +3586,7 @@
       "family": "fam-laotzu-adaptation",
       "evidence_location": "STAGE3_ATTRIBUTION_RECLAMATION.md L359",
       "notes": null,
+      "provenance_history": [],
       "active_span": null
     },
     {
@@ -3606,6 +3607,7 @@
       "family": "fam-laotzu-adaptation",
       "evidence_location": "STAGE3 L479",
       "notes": null,
+      "provenance_history": [],
       "active_span": null
     },
     {
@@ -3626,6 +3628,7 @@
       "family": null,
       "evidence_location": "STAGE3 L389",
       "notes": "Genuine ancestor exists in Black Elk Speaks but was not being quoted. Authentic passage deliberately NOT substituted - no permission triggered.",
+      "provenance_history": [],
       "active_span": null
     },
     {
@@ -3646,7 +3649,6 @@
       "family": null,
       "evidence_location": "STAGE3 L756",
       "notes": "Its removal is why Chapter 5 now opens without an epigraph. Protected state, not a defect.",
-      "active_span": null,
       "provenance_history": [
         {
           "verdict": "unverified",
@@ -3655,7 +3657,8 @@
           "note": "Audit: UNVERIFIED + INTERNAL-ORIGIN CANDIDATE, the Chapter 5 opening pair. Resolved by authorial ruling at Stage 3: the words are the author's. Removed as redundant with the opening prose.",
           "superseded_by": "no_ancestor"
         }
-      ]
+      ],
+      "active_span": null
     },
     {
       "id": "EA-Q-T005",
@@ -3675,7 +3678,6 @@
       "family": null,
       "evidence_location": "STAGE3 L764",
       "notes": null,
-      "active_span": null,
       "provenance_history": [
         {
           "verdict": "unverified",
@@ -3684,7 +3686,8 @@
           "note": "Audit: UNVERIFIED + INTERNAL-ORIGIN CANDIDATE, the Chapter 5 opening pair.",
           "superseded_by": "no_ancestor"
         }
-      ]
+      ],
+      "active_span": null
     },
     {
       "id": "EA-Q-T006",
@@ -3704,6 +3707,7 @@
       "family": null,
       "evidence_location": "STAGE3 L373",
       "notes": "Haramein is a living author with a published, different formulation. Highest-exposure of the nine.",
+      "provenance_history": [],
       "active_span": null
     },
     {
@@ -3724,6 +3728,7 @@
       "family": null,
       "evidence_location": "STAGE3 L403",
       "notes": null,
+      "provenance_history": [],
       "active_span": null
     },
     {
@@ -3744,6 +3749,7 @@
       "family": null,
       "evidence_location": "STAGE3 L846",
       "notes": "Doctrinal ancestors CW 8 par.747 and CW 13 par.75 deliberately NOT forced into an epigraph.",
+      "provenance_history": [],
       "active_span": null
     },
     {
@@ -3764,6 +3770,7 @@
       "family": null,
       "evidence_location": "STAGE3 L1074",
       "notes": "The manuscript coins soulplay two sentences earlier. Definitions belong with the concept they define.",
+      "provenance_history": [],
       "active_span": null
     },
     {
@@ -3784,6 +3791,7 @@
       "family": null,
       "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L1340 and L1770",
       "notes": "Audit: appears TWICE, verbatim, same attribution (Ch6 and Ch8). Not located in the Aristotelian corpus; attested only on quote sites, which variously credit Aristotle, Plato, Socrates and Laozi - a signature of an unsourced attribution. The underlying maxim is the Delphic 'Know thyself'.",
+      "provenance_history": [],
       "active_span": null,
       "actual_author": "not Aristotle"
     },
@@ -3805,6 +3813,7 @@
       "family": null,
       "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L1129",
       "notes": "Audit: Metaphysics VIII.6 (1045a) holds that the whole is something BESIDE the parts. 'Greater than the sum' is a modern gestalt formulation.",
+      "provenance_history": [],
       "active_span": null,
       "actual_author": "not Aristotle's wording"
     },
@@ -3824,8 +3833,9 @@
       "editorial_status": "REMOVE - the author's own twenty-year account follows and is stronger",
       "editorial_review_state": "migrated",
       "family": null,
-      "evidence_location": "STAGE4 4A group A",
-      "notes": null,
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L1758",
+      "notes": "CENSUS VERDICT: COMPOSITE ATTRIBUTION. The second sentence is ROBERT C. SOLOMON, Introducing Philosophy (1989) - his gloss on Socrates, not Socrates. Apology 21d reads closer to 'I don't pretend to know what I don't know.' The epigraph fuses a paraphrase with a modern commentator's description and credits both to Socrates.",
+      "provenance_history": [],
       "active_span": null
     },
     {
@@ -3844,8 +3854,9 @@
       "editorial_status": "REMOVE - unverified AND legally encumbered",
       "editorial_review_state": "migrated",
       "family": null,
-      "evidence_location": "STAGE4 4A group A",
-      "notes": null,
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L1776",
+      "notes": "CENSUS VERDICT: UNVERIFIED, origin UNKNOWN. Earliest published evidence is the Cleveland Plain Dealer, 1986 - eighteen years after King's death. Marian Wright Edelman, who knew King and heard him speak many times, states she heard the metaphor from him; credible oral testimony, but not a located source.",
+      "provenance_history": [],
       "active_span": null
     },
     {
@@ -3864,8 +3875,9 @@
       "editorial_status": "REMOVE",
       "editorial_review_state": "migrated",
       "family": null,
-      "evidence_location": "STAGE4 4A group A",
-      "notes": null,
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L1383",
+      "notes": "CENSUS VERDICT: UNVERIFIED, UNKNOWN. Goodreads tags it explicitly 'attributed-no-source'. No primary source located; requires a check against the Collected Works of Mahatma Gandhi. The audit records its own correction here: initially listed among quotations 'sound as attributed', later found unverified.",
+      "provenance_history": [],
       "active_span": null
     },
     {
@@ -3880,12 +3892,13 @@
       "internal_speaker": null,
       "rights_status": null,
       "rights_review_state": "not_investigated",
-      "bibliography_relationship": null,
+      "bibliography_relationship": "Ch7 bibliography cites Be As You Are (ed. Godman, Penguin 1985) with no confirmation",
       "editorial_status": "REMOVE - the next sentence says the same thing in the author's voice",
       "editorial_review_state": "migrated",
       "family": null,
-      "evidence_location": "STAGE4 4A group A",
-      "notes": null,
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L1391",
+      "notes": "CENSUS VERDICT: UNVERIFIED - source lead unresolved. Attribution consistent across sources; one places it in 'Teachings of Bhagavan Sri Ramana Maharshi in His Own Words', the last chapter of Ramana Smriti.",
+      "provenance_history": [],
       "active_span": null
     },
     {
@@ -3904,8 +3917,9 @@
       "editorial_status": "REMOVE",
       "editorial_review_state": "migrated",
       "family": null,
-      "evidence_location": "STAGE4 4A group A",
-      "notes": "Its removal is why Chapter 8 now opens without an epigraph - the first chapter opening lost on provenance rather than editorial grounds.",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L1616",
+      "notes": "Its removal is why Chapter 8 now opens without an epigraph - the first chapter opening lost on provenance rather than editorial grounds. | CENSUS VERDICT: UNVERIFIED, origin UNKNOWN. Quote-site and merchandise attestation only; nothing scholarly, and the register is modern self-help rather than James's prose. Circulates widely outside this manuscript, which rules out local coinage.",
+      "provenance_history": [],
       "active_span": null
     },
     {
@@ -3920,12 +3934,13 @@
       "internal_speaker": "POLONIUS",
       "rights_status": null,
       "rights_review_state": "not_investigated",
-      "bibliography_relationship": null,
+      "bibliography_relationship": "CORRECT",
       "editorial_status": "REMOVE - pure certification; the speaker is a windbag who does not follow it",
       "editorial_review_state": "migrated",
       "family": null,
-      "evidence_location": "STAGE4 4A group A",
-      "notes": "First SPEAKER MISATTRIBUTION specimen. Verified at every level ordinary checking inspects, and interpretively backwards.",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L451",
+      "notes": "First SPEAKER MISATTRIBUTION specimen. Verified at every level ordinary checking inspects, and interpretively backwards. | CENSUS VERDICT: VERIFIED EXACT. Hamlet I.iii, Polonius. Bibliography correct. The speaker was recorded by the census; the editorial question about using Polonius as wisdom was raised later, at 4A.",
+      "provenance_history": [],
       "active_span": null
     },
     {
@@ -3940,12 +3955,13 @@
       "internal_speaker": null,
       "rights_status": null,
       "rights_review_state": "not_investigated",
-      "bibliography_relationship": null,
+      "bibliography_relationship": "Possible WRONG SOURCE/WORK - The Discovery of India not confirmed",
       "editorial_status": "REMOVE - the seasonal scene beneath it needs no warrant",
       "editorial_review_state": "migrated",
       "family": null,
-      "evidence_location": "STAGE4 4A group A",
-      "notes": null,
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L1429",
+      "notes": "CENSUS VERDICT: UNVERIFIED - source lead unresolved. Attributed on Wikiquote; NOT confirmed in The Discovery of India, which the Ch7 bibliography cites.",
+      "provenance_history": [],
       "active_span": null
     },
     {
@@ -3955,7 +3971,7 @@
       "last_known_location": "Ch5 · The Purifying and Transformative Power of Fire",
       "text_at_removal": "Do the best you can until you know better. Then when you know better, do better.",
       "attributed_as": "Maya Angelou",
-      "provenance_status": "verified_exact",
+      "provenance_status": "verified_variant",
       "provenance_review_state": "migrated",
       "internal_speaker": null,
       "rights_status": "likely_protected",
@@ -3964,8 +3980,16 @@
       "editorial_status": "REMOVE - about learning, under a section on purification; decorative fit",
       "editorial_review_state": "migrated",
       "family": null,
-      "evidence_location": "STAGE4 4A group A",
-      "notes": null,
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L1042",
+      "notes": "CENSUS VERDICT: VERIFIED VARIANT/TRANSLATION. Genuinely Angelou's, transmitted through Oprah Winfrey's Master Class and posted in this exact wording by her official account. A SPOKEN saying with several recorded phrasings, so VARIANT rather than EXACT.",
+      "provenance_history": [
+        {
+          "verdict": "verified_exact",
+          "stage": "tombstone authoring (unearned)",
+          "note": "Authored from a Stage 4A editorial note, not traced to the census. Corrected by the tombstone integrity pass.",
+          "superseded_by": "verified_variant"
+        }
+      ],
       "active_span": null
     },
     {
@@ -3986,6 +4010,7 @@
       "family": null,
       "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L1239",
       "notes": "Audit: Journal, 24 April 1859; reproduced in Cramer, ed., I to Myself (Yale UP, 2007), p. 395. PUBLIC DOMAIN as the 1859 journal text. VERIFIED EXACT and removed at 4A on editorial economy - the axes are independent.",
+      "provenance_history": [],
       "active_span": null,
       "actual_author": "Henry David Thoreau"
     },
@@ -4007,6 +4032,7 @@
       "family": "fam-rumi-unsourced",
       "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md - Rumi table, L536",
       "notes": "Audit: UNVERIFIED, origin UNKNOWN, variant family ('The universe' / 'This universe'). Occurrence removed at Stage 4A; the Stage 2 provenance verdict is preserved here on the lifecycle record.",
+      "provenance_history": [],
       "active_span": null,
       "actual_author": "unknown"
     },
@@ -4028,6 +4054,7 @@
       "family": null,
       "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L632",
       "notes": "Audit: EVOLVED APHORISM / RECOVERABLE ANCESTOR. Also misattributed to Albert Schweitzer. The manuscript reads 'of ANY generation' where the common circulating form is 'of MY generation' - a further variant. Both William James quotations in the book failed; both are now removed.",
+      "provenance_history": [],
       "active_span": null,
       "actual_author": "not William James",
       "work": "earliest related text: Harry Granison Hill, Cincinnati Enquirer, 1928, attributing a similar idea TO James"
@@ -4050,6 +4077,7 @@
       "family": null,
       "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md - table row L693",
       "notes": "Audit verdict: UNVERIFIED - source lead unresolved. The identity problem (two John Perkinses; the bibliography cites Confessions of an Economic Hit Man while the register belongs to the shamanic John Perkins) is a BIBLIOGRAPHY defect, recorded separately - it is not the provenance verdict. Specimen for the audit's rule that identity disambiguation precedes source verification.",
+      "provenance_history": [],
       "active_span": null
     },
     {
@@ -4070,6 +4098,7 @@
       "family": "fam-campbell",
       "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L1028",
       "notes": "Audit: popularized contraction. Same family as the surviving 'Follow your bliss' item, which is also PARAPHRASE/ADAPTED - two Campbell contractions, one removed and one retained, ruled individually.",
+      "provenance_history": [],
       "active_span": null,
       "actual_author": "Joseph Campbell"
     },
@@ -4091,6 +4120,7 @@
       "family": null,
       "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L1221",
       "notes": "Audit: VERIFIED wording, WRONG SOURCE/WORK. The line is from Living in the Light (New World Library) p. 217, NOT Creative Visualization, which the Ch6 bibliography cites. FAMOUS-WORK SUBSTITUTION again - Creative Visualization (1978) is her best-known book.",
+      "provenance_history": [],
       "active_span": null,
       "actual_author": "Shakti Gawain"
     },
@@ -4112,6 +4142,7 @@
       "family": null,
       "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L1277",
       "notes": "Audit: Little Women, ch. 44 'My Lord and Lady' - SPOKEN BY AMY MARCH. Another character-voice case the census already recorded. Wikiquote notes the line has sometimes been slightly misquoted; the manuscript carries the polished popular form. Bibliography correct. PUBLIC DOMAIN (1868).",
+      "provenance_history": [],
       "active_span": null,
       "actual_author": "Louisa May Alcott"
     },
@@ -4127,12 +4158,13 @@
       "internal_speaker": null,
       "rights_status": null,
       "rights_review_state": "not_investigated",
-      "bibliography_relationship": null,
+      "bibliography_relationship": "Probable WRONG SOURCE/WORK - bibliography cites The Home and the World (1919), a NOVEL; this is a philosophical aphorism",
       "editorial_status": "REMOVE - no located source; brings nothing the section lacks",
       "editorial_review_state": "migrated",
       "family": null,
-      "evidence_location": "STAGE4 4A batch 2",
-      "notes": "Contrast the Chapter 4 Tagore, which is sourced to Sadhana and kept. Same author, opposite rulings - the case against author sets.",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L1736",
+      "notes": "Contrast the Chapter 4 Tagore, which is sourced to Sadhana and kept. Same author, opposite rulings - the case against author sets. | CENSUS VERDICT: UNVERIFIED - source lead unresolved. Quote-site attestation only. Proposed edition: Sadhana (1913), the thematically closest work.",
+      "provenance_history": [],
       "active_span": null
     },
     {
@@ -4153,6 +4185,7 @@
       "family": null,
       "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L677",
       "notes": "Audit: Goodreads places it in A New Earth, but the official channels carry it WITHOUT a book citation, so it may be a spoken or teaching line rather than a published sentence. Removed at 4A on redundancy, not on provenance - the book already says 'Awareness is paramount'. VERIFIED and REMOVED are different axes.",
+      "provenance_history": [],
       "active_span": null,
       "actual_author": "Eckhart Tolle",
       "work": "attested on Tolle's own official channels (X, the Eckhart Tolle Foundation, official Facebook) - the quoted-author's-channel evidence class"
@@ -4160,8 +4193,8 @@
   ],
   "migration_report": {
     "migrated": [
-      "EA-Q-0190",
-      "EA-Q-0191",
+      "EA-Q-0198",
+      "EA-Q-0199",
       "EA-Q-0113",
       "EA-Q-0055",
       "EA-Q-0082",

@@ -127,7 +127,8 @@
       "attributed_as": "Socrates",
       "provenance_status": "misattributed",
       "editorial_status": "REMOVE - the author's own twenty-year account follows and is stronger",
-      "evidence_location": "STAGE4 4A group A"
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L1758",
+      "notes": "CENSUS VERDICT: COMPOSITE ATTRIBUTION. The second sentence is ROBERT C. SOLOMON, Introducing Philosophy (1989) - his gloss on Socrates, not Socrates. Apology 21d reads closer to 'I don't pretend to know what I don't know.' The epigraph fuses a paraphrase with a modern commentator's description and credits both to Socrates."
     },
     {
       "state": "removed",
@@ -138,7 +139,8 @@
       "provenance_status": "unverified",
       "rights_status": "legal_review",
       "editorial_status": "REMOVE - unverified AND legally encumbered",
-      "evidence_location": "STAGE4 4A group A"
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L1776",
+      "notes": "CENSUS VERDICT: UNVERIFIED, origin UNKNOWN. Earliest published evidence is the Cleveland Plain Dealer, 1986 - eighteen years after King's death. Marian Wright Edelman, who knew King and heard him speak many times, states she heard the metaphor from him; credible oral testimony, but not a located source."
     },
     {
       "state": "removed",
@@ -148,7 +150,8 @@
       "attributed_as": "Mahatma Gandhi",
       "provenance_status": "unverified",
       "editorial_status": "REMOVE",
-      "evidence_location": "STAGE4 4A group A"
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L1383",
+      "notes": "CENSUS VERDICT: UNVERIFIED, UNKNOWN. Goodreads tags it explicitly 'attributed-no-source'. No primary source located; requires a check against the Collected Works of Mahatma Gandhi. The audit records its own correction here: initially listed among quotations 'sound as attributed', later found unverified."
     },
     {
       "state": "removed",
@@ -158,7 +161,9 @@
       "attributed_as": "Ramana Maharshi",
       "provenance_status": "unverified",
       "editorial_status": "REMOVE - the next sentence says the same thing in the author's voice",
-      "evidence_location": "STAGE4 4A group A"
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L1391",
+      "bibliography_relationship": "Ch7 bibliography cites Be As You Are (ed. Godman, Penguin 1985) with no confirmation",
+      "notes": "CENSUS VERDICT: UNVERIFIED - source lead unresolved. Attribution consistent across sources; one places it in 'Teachings of Bhagavan Sri Ramana Maharshi in His Own Words', the last chapter of Ramana Smriti."
     },
     {
       "state": "removed",
@@ -168,8 +173,8 @@
       "attributed_as": "William James",
       "provenance_status": "unverified",
       "editorial_status": "REMOVE",
-      "evidence_location": "STAGE4 4A group A",
-      "notes": "Its removal is why Chapter 8 now opens without an epigraph - the first chapter opening lost on provenance rather than editorial grounds."
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L1616",
+      "notes": "Its removal is why Chapter 8 now opens without an epigraph - the first chapter opening lost on provenance rather than editorial grounds. | CENSUS VERDICT: UNVERIFIED, origin UNKNOWN. Quote-site and merchandise attestation only; nothing scholarly, and the register is modern self-help rather than James's prose. Circulates widely outside this manuscript, which rules out local coinage."
     },
     {
       "state": "removed",
@@ -180,8 +185,9 @@
       "provenance_status": "verified_exact",
       "internal_speaker": "POLONIUS",
       "editorial_status": "REMOVE - pure certification; the speaker is a windbag who does not follow it",
-      "evidence_location": "STAGE4 4A group A",
-      "notes": "First SPEAKER MISATTRIBUTION specimen. Verified at every level ordinary checking inspects, and interpretively backwards."
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L451",
+      "notes": "First SPEAKER MISATTRIBUTION specimen. Verified at every level ordinary checking inspects, and interpretively backwards. | CENSUS VERDICT: VERIFIED EXACT. Hamlet I.iii, Polonius. Bibliography correct. The speaker was recorded by the census; the editorial question about using Polonius as wisdom was raised later, at 4A.",
+      "bibliography_relationship": "CORRECT"
     },
     {
       "state": "removed",
@@ -191,7 +197,9 @@
       "attributed_as": "Jawaharlal Nehru",
       "provenance_status": "unverified",
       "editorial_status": "REMOVE - the seasonal scene beneath it needs no warrant",
-      "evidence_location": "STAGE4 4A group A"
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L1429",
+      "bibliography_relationship": "Possible WRONG SOURCE/WORK - The Discovery of India not confirmed",
+      "notes": "CENSUS VERDICT: UNVERIFIED - source lead unresolved. Attributed on Wikiquote; NOT confirmed in The Discovery of India, which the Ch7 bibliography cites."
     },
     {
       "state": "removed",
@@ -199,10 +207,19 @@
       "last_location": "Ch5 · The Purifying and Transformative Power of Fire",
       "text": "Do the best you can until you know better. Then when you know better, do better.",
       "attributed_as": "Maya Angelou",
-      "provenance_status": "verified_exact",
+      "provenance_status": "verified_variant",
       "rights_status": "likely_protected",
       "editorial_status": "REMOVE - about learning, under a section on purification; decorative fit",
-      "evidence_location": "STAGE4 4A group A"
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L1042",
+      "provenance_history": [
+        {
+          "verdict": "verified_exact",
+          "stage": "tombstone authoring (unearned)",
+          "note": "Authored from a Stage 4A editorial note, not traced to the census. Corrected by the tombstone integrity pass.",
+          "superseded_by": "verified_variant"
+        }
+      ],
+      "notes": "CENSUS VERDICT: VERIFIED VARIANT/TRANSLATION. Genuinely Angelou's, transmitted through Oprah Winfrey's Master Class and posted in this exact wording by her official account. A SPOKEN saying with several recorded phrasings, so VARIANT rather than EXACT."
     },
     {
       "state": "removed",
@@ -289,8 +306,9 @@
       "attributed_as": "Rabindranath Tagore",
       "provenance_status": "unverified",
       "editorial_status": "REMOVE - no located source; brings nothing the section lacks",
-      "evidence_location": "STAGE4 4A batch 2",
-      "notes": "Contrast the Chapter 4 Tagore, which is sourced to Sadhana and kept. Same author, opposite rulings - the case against author sets."
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L1736",
+      "notes": "Contrast the Chapter 4 Tagore, which is sourced to Sadhana and kept. Same author, opposite rulings - the case against author sets. | CENSUS VERDICT: UNVERIFIED - source lead unresolved. Quote-site attestation only. Proposed edition: Sadhana (1913), the thematically closest work.",
+      "bibliography_relationship": "Probable WRONG SOURCE/WORK - bibliography cites The Home and the World (1919), a NOVEL; this is a philosophical aphorism"
     },
     {
       "state": "removed",

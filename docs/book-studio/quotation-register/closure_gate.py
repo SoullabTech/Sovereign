@@ -48,6 +48,27 @@ check("block reconciliation: total = migrated + pending + documented not_investi
 check("current-field total", len(R) == 130, f"{len(R)} active records")
 check("historical entries all matched exactly one lifecycle record",
       not rep.get("historical_unmatched"), str(rep.get("historical_unmatched", [])))
+# ---- Stage 4A tombstone integrity gate ----
+s4 = [h for h in H if h.get("removed_at_stage") == "Stage 4A"]
+no_ev = [h["id"] for h in s4 if h.get("provenance_status")
+         and not (h.get("evidence_location") or "").startswith("QUOTATION_PROVENANCE_AUDIT")]
+check("every Stage 4A tombstone verdict cites a Stage 2 evidence location",
+      not no_ev, f"{len(s4)} Stage 4A tombstones; {len(no_ev)} unearned")
+s4_ev = [h["id"] for h in s4 if (h.get("evidence_location") or "").startswith("STAGE4")]
+check("no provenance verdict originates solely from a Stage 4 editorial note",
+      not s4_ev, str(s4_ev))
+corrected = [h for h in s4 if any(v.get("stage") == "tombstone authoring (unearned)"
+                                  for v in h.get("provenance_history", []))]
+check("authoring corrections are represented in provenance_history, not silently reconciled",
+      len(corrected) > 0 and all(h.get("provenance_history") for h in corrected),
+      f"{len(corrected)} corrected record(s) carry their superseded value"
+      + ("  [VACUOUS - no corrections found where at least one is known]" if not corrected else ""))
+check("editorial removal status untouched by the integrity pass",
+      all(h.get("record_state") in ("removed", "reclaimed_as_author_prose") for h in H))
+check("bibliography and rights remain on their own axes",
+      all(not (h.get("bibliography_relationship") and
+               h["bibliography_relationship"] == h.get("provenance_status")) for h in H))
+
 hist_hist = [h for h in H if h.get("provenance_history")]
 check("superseded verdicts are preserved, not discarded",
       all(all(v.get("superseded_by") for v in h["provenance_history"]) for h in hist_hist),

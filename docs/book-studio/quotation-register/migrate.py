@@ -92,6 +92,7 @@ def main():
             "family": t.get("family"),
             "evidence_location": t.get("evidence_location"),
             "notes": t.get("notes"),
+            "provenance_history": t.get("provenance_history", []),
             "active_span": None,
         })
     hist_entries = []
