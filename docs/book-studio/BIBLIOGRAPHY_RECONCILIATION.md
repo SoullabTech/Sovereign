@@ -9,8 +9,8 @@ The existing bibliography is used as EVIDENCE, never as the base.
 
 - active source objects requiring an entry: **70**
 - existing bibliography entries: **151**
-- existing entries matched by a surviving source object: **102**
-- existing entries matched by nothing surviving: **47**
+- existing entries matched by a surviving source object: **63**
+- existing entries matched by nothing surviving: **86**
 
 ## 1 · Candidate set from surviving source objects
 
@@ -71,14 +71,14 @@ The existing bibliography is used as EVIDENCE, never as the base.
 **EA-Q-0116** · traditional Christian formulation · _Chapter 9: Aether — The In_
   - work: summarises John 17:14-16; the phrase does NOT appear at John 17:16
 
+**EA-Q-0124** · St. John of the Cross, Sayings of Light and Love, trans. Kavanaugh and Rodriguez · _Conclusion — Embracing You_
+  - work: Sayings of Light and Love (numbering NOT settled - secondary sources disagree; USCCB gives no. 60 while others number it differently, so the number must be taken from the ICS edition actually cited)
+  - translator/mediator: Kieran Kavanaugh and Otilio Rodriguez, The Collected Works of St. John of the Cross (rev. edn 1991, ICS Publications)
+  - register flag: ENTRY OWED - name the ICS edition and confirm the saying number from it
+
 **EA-Q-0126** · Laozi · _Conclusion — Embracing You_
   - work: Tao Te Ching 33
   - translator/mediator: ENGLISH RENDERING UNIDENTIFIED - and demonstrably NOT Legge, whose text reads 'He who knows other men is discerning; he who knows himself is intelligent'
-
-**EA-Q-0270** · the Buddha, as rendered by Bhikkhu Sujato · _Preface_
-  - work: Kālāma Sutta / Kesamutti Sutta, Aṅguttara Nikāya 3.65
-  - translator/mediator: Bhikkhu Sujato, SuttaCentral
-  - register flag: REPLACE the Access to Insight / Thanissaro entry with SuttaCentral, Bhikkhu Sujato, Aṅguttara Nikāya 3.65
 
 ### WRONG WORK / WRONG TRANSLATOR — 3
 
@@ -104,10 +104,8 @@ The existing bibliography is used as EVIDENCE, never as the base.
   - translator/mediator: Richard and Clara Winston - MEDIATED TRANSLATION, fifth instance
   - register flag: MIGRATED AS WRITTEN: audit recorded MISSING
   - existing entry — Introduction: Jung, Carl. *Memories, Dreams, Reflections.* Edited by Aniela Jaffé. Vintage Books, 1961.
-  - existing entry — Chapter 3: Understanding the Trinity and the Toroidal Flow: Smith, C. Michael. *Jung and Shamanism in Dialogue: Retrieving the Soul / Retrieving the Sacred.* Paulist Press, 1997.
   - existing entry — Chapter 3: Understanding the Trinity and the Toroidal Flow: Jung, Carl. *The Red Book: Liber Novus.* Edited by Sonu Shamdasani. W. W. Norton & Company, 2009.
   - existing entry — Chapter 6: Water: Jung, Carl. *Modern Man in Search of a Soul.* Harcourt Brace, 1933.
-  - existing entry — Chapter 9: Aether: Smith, C. Michael. *Jung and Shamanism in Dialogue.* Paulist Press, 1997.
 
 **EA-Q-0037** · Rene Magritte · _Chapter 5: Fire — The Elem_
   - translator/mediator: translation from French
@@ -131,76 +129,19 @@ The existing bibliography is used as EVIDENCE, never as the base.
   - register flag: Blake present for a DIFFERENT work (doors of perception)
   - existing entry — Chapter 9: Aether: Blake, William. *The Marriage of Heaven and Hell.* 1790.
 
-**EA-Q-0124** · St. John of the Cross, Sayings of Light and Love, trans. Kavanaugh and Rodriguez · _Conclusion — Embracing You_
-  - work: Sayings of Light and Love (numbering NOT settled - secondary sources disagree; USCCB gives no. 60 while others number it differently, so the number must be taken from the ICS edition actually cited)
-  - translator/mediator: Kieran Kavanaugh and Otilio Rodriguez, The Collected Works of St. John of the Cross (rev. edn 1991, ICS Publications)
-  - register flag: ENTRY OWED - name the ICS edition and confirm the saying number from it
-  - existing entry — Preface: Zhuangzi. *The Complete Works of Chuang Tzu.* Translated by Burton Watson. Columbia University Press, 1968.
-  - existing entry — Preface: Rilke, Rainer Maria. *Rilke's Book of Hours: Love Poems to God.* Translated by Anita Barrows and Joanna Macy. Riverhead Books, 2005.
-  - existing entry — Preface: Nicholas of Cusa. As reported in *The Theosophical Quarterly*, Volume 23. Theosophical Society of America, 1925.
-  - existing entry — Introduction: Whitmont, Edward. *The Alchemy of Healing: Psyche and Soma.* North Atlantic Books, 1993.
-  - existing entry — Introduction: Dominguez Jr., Ivo. *The Four Elements of the Wise: Working with the Magickal Powers of Earth, Air, Water, Fire.* Red Wheel/Weiser Books, 2021.
-  - existing entry — Introduction: McGilchrist, Iain. *The Master and His Emissary: The Divided Brain and the Making of the Western World.* Yale University Press, 2009.
-  - existing entry — Introduction: Khan, Hazrat Inayat. *The Music of Life: The Inner Nature and Effects of Sound.* Omega Publications, 1993.
-  - existing entry — Introduction: Merleau-Ponty, Maurice. *Phenomenology of Perception.* Routledge & Kegan Paul, 1962.
-  - existing entry — Introduction: Steiner, Rudolf. *The Essential Steiner: Basic Writings of Rudolf Steiner.* Edited by Robert A. McDermott. Harper & Row, 1984.
-  - existing entry — Chapter 1: The Journey Begins: Dickinson, Emily. *The Complete Poems of Emily Dickinson.* Edited by Thomas H. Johnson. Little, Brown and Company, 1960.
-  - existing entry — Chapter 1: The Journey Begins: Nepo, Mark. *The Book of Awakening: Having the Life You Want by Being Present to the Life You Have.* Conari Press, 2000.
-  - existing entry — Chapter 1: The Journey Begins: Campbell, Joseph. *A Joseph Campbell Companion: Reflections on the Art of Living.* Edited by Diane K. Osbon. HarperCollins, 1991.
-  - existing entry — Chapter 2: The Torus of Change: Watts, Alan. *The Wisdom of Insecurity: A Message for an Age of Anxiety.* Vintage Books, 1951.
-  - existing entry — Chapter 2: The Torus of Change: Black Elk. *Black Elk Speaks.* As told through John G. Neihardt. State University of New York Press, 2008.
-  - existing entry — Chapter 2: The Torus of Change: James, William. *The Principles of Psychology.* Henry Holt and Company, 1890.
-  - existing entry — Chapter 3: Understanding the Trinity and the Toroidal Flow: James, William. *The Varieties of Religious Experience: A Study in Human Nature.* Longmans, Green & Co., 1902.
-  - existing entry — Chapter 3: Understanding the Trinity and the Toroidal Flow: Emunds, Stefan. *The Five Elements of Healing: Hindu Tattvas in Psychotherapy.* CreateSpace, 2015.
-  - existing entry — Chapter 4: The Elements of Wholeness: Tagore, Rabindranath. *Sadhana: The Realisation of Life.* Macmillan, 1913.
-  - existing entry — Chapter 4: The Elements of Wholeness: Perkins, John. *Confessions of an Economic Hit Man.* Berrett-Koehler Publishers, 2004.
-  - existing entry — Chapter 4: The Elements of Wholeness: Tolle, Eckhart. *The Power of Now: A Guide to Spiritual Enlightenment.* New World Library, 1997.
-  - existing entry — Chapter 5: Fire: Estés, Clarissa Pinkola. *Women Who Run with the Wolves: Myths and Stories of the Wild Woman Archetype.* Ballantine Books, 1992.
-  - existing entry — Chapter 5: Fire: Nhat Hanh, Thich. *Peace Is Every Step: The Path of Mindfulness in Everyday Life.* Bantam, 1991.
-  - existing entry — Chapter 5: Fire: Proust, Marcel. *In Search of Lost Time.*
-  - existing entry — Chapter 5: Fire: Salzberg, Sharon. *Lovingkindness: The Revolutionary Art of Happiness.* Shambhala Publications, 1995.
-  - existing entry — Chapter 5: Fire: Feynman, Richard P. *The Pleasure of Finding Things Out.* Perseus Books, 1999.
-  - existing entry — Chapter 5: Fire: Bear Heart. *The Wind Is My Mother: The Life and Teachings of a Native American Shaman.* Berkley Books, 1996.
-  - existing entry — Chapter 5: Fire: O'Donohue, John. *Anam Cara: A Book of Celtic Wisdom.* Harper Perennial, 1997.
-  - existing entry — Chapter 5: Fire: Foch, Ferdinand. *The Principles of War.* 1903.
-  - existing entry — Chapter 6: Water: Campbell, Joseph. *The Power of Myth.* Anchor, 1991.
-  - existing entry — Chapter 6: Water: Nussbaum, Martha. *Upheavals of Thought: The Intelligence of Emotions.* Cambridge University Press, 2001.
-  - existing entry — Chapter 6: Water: Jung, Carl. *Modern Man in Search of a Soul.* Harcourt Brace, 1933.
-  - existing entry — Chapter 7: Earth: Van der Kolk, Bessel. *The Body Keeps the Score: Brain, Mind, and Body in the Healing of Trauma.* Viking, 2014.
-  - existing entry — Chapter 7: Earth: Churchill, Winston. *Never Give In! The Best of Winston Churchill's Speeches.* Hyperion, 2003.
-  - existing entry — Chapter 7: Earth: Maharshi, Ramana. *Be As You Are: The Teachings of Sri Ramana Maharshi.* Penguin Books, 1985.
-  - existing entry — Chapter 7: Earth: Ashe, Arthur. *Days of Grace: A Memoir.* Alfred A. Knopf, 1993.
-  - existing entry — Chapter 7: Earth: Gandhi, Mahatma. *The Words of Gandhi.* Newmarket Press, 1982.
-  - existing entry — Chapter 7: Earth: Darwin, Charles. *On the Origin of Species.* John Murray, 1859.
-  - existing entry — Chapter 7: Earth: Nietzsche, Friedrich. *Twilight of the Idols.* 1889.
-  - existing entry — Chapter 7: Earth: McKeown, Max. *Adaptability: The Art of Winning in an Age of Uncertainty.* Kogan Page, 2012.
-  - existing entry — Chapter 7: Earth: Keller, Helen. *The Story of My Life.* Doubleday, 1903.
-  - existing entry — Chapter 7: Earth: Peale, Norman Vincent. *The Power of Positive Thinking.* Prentice Hall, 1952.
-  - existing entry — Chapter 7: Earth: King Jr., Martin Luther. "The Purpose of Education." *Morehouse College Maroon Tiger,* 1947.
-  - existing entry — Chapter 7: Earth: Nehru, Jawaharlal. *The Discovery of India.* Oxford University Press, 1946.
-  - existing entry — Chapter 7: Earth: Santayana, George. *The Sense of Beauty.* Charles Scribner's Sons, 1896.
-  - existing entry — Chapter 8: Air: Feynman, Richard. *The Character of Physical Law.* MIT Press, 1965.
-  - existing entry — Chapter 8: Air: Hawking, Stephen. *A Brief History of Time.* Bantam Books, 1988.
-  - existing entry — Chapter 8: Air: Dyer, Dery. *The Return of Collective Intelligence: Ancient Wisdom for a World out of Balance.* Bear & Company, 2020.
-  - existing entry — Chapter 8: Air: Goldsmith, Oliver. *The Vicar of Wakefield.* J. M. Dent & Sons, 1908.
-  - existing entry — Chapter 9: Aether: Blake, William. *The Marriage of Heaven and Hell.* 1790.
-  - existing entry — Chapter 9: Aether: Sun Tzu. *The Art of War.*
-  - existing entry — Chapter 9: Aether: Planck, Max. *The Universe in the Light of Modern Physics.* George Allen & Unwin, 1931.
-  - existing entry — Chapter 9: Aether: Watts, Alan. *The Wisdom of Insecurity.* Vintage Books, 1951.
-  - existing entry — Chapter 9: Aether: Lorca, Federico García. *In Search of Duende.* New Directions, 1998.
-  - existing entry — Chapter 9: Aether: Trismegistus, Hermes. *The Emerald Tablet of Hermes.*
-  - existing entry — Chapter 10: The Living Spiral: Whitman, Walt. *Leaves of Grass.* 1855.
-  - existing entry — Chapter 10: The Living Spiral: Edinger, Edward F. *The Anatomy of the Psyche: Alchemical Symbolism in Psychotherapy.* Open Court, 1985.
-  - existing entry — Chapter 10: The Living Spiral: *The Book of the Lambspring.*
-  - existing entry — Chapter 10: The Living Spiral: Korzybski, Alfred. *Science and Sanity.* Institute of General Semantics, 1933.
-  - existing entry — Chapter 10: The Living Spiral: Duchamp, Marcel. *The Writings of Marcel Duchamp.* Da Capo Press, 1989.
-  - existing entry — Conclusion: Embracing Your Elemental Soul: St. John of the Cross. *Dark Night of the Soul.*
-
 **EA-Q-0004** · Rainer Maria Rilke · _Preface_
   - work: Rilke's Book of Hours: Love Poems to God
   - translator/mediator: Anita Barrows and Joanna Macy (Riverhead, 1996) - translator claim CORRECT
   - register flag: cites the 2005 anniversary edition of the same translation
   - existing entry — Preface: Rilke, Rainer Maria. *Rilke's Book of Hours: Love Poems to God.* Translated by Anita Barrows and Joanna Macy. Riverhead Books, 2005.
+
+**EA-Q-0270** · the Buddha, as rendered by Bhikkhu Sujato · _Preface_
+  - work: Kālāma Sutta / Kesamutti Sutta, Aṅguttara Nikāya 3.65
+  - translator/mediator: Bhikkhu Sujato, SuttaCentral
+  - register flag: REPLACE the Access to Insight / Thanissaro entry with SuttaCentral, Bhikkhu Sujato, Aṅguttara Nikāya 3.65
+  - existing entry — Preface: Buddha. *Kalama Sutta.* Anguttara Nikaya, translated by Thanissaro Bhikkhu. Access to Insight, 1994.
+  - existing entry — Preface: Buddha. *Udana.* Translated by John Ireland. Buddhist Publication Society, 1990.
+  - existing entry — Chapter 2: The Torus of Change: Buddha. *The Dhammapada.* Translated by Eknath Easwaran. Nilgiri Press, 1985.
 
 ### PRESENT, unverified — 26
 
@@ -235,7 +176,6 @@ The existing bibliography is used as EVIDENCE, never as the base.
 **EA-Q-0022** · C. Michael Smith · _Chapter 4: The Elements of_
   - work: LEADS (open): cmichaelsmith.com and Jung and Shamanism in Dialogue (Paulist, 1997)
   - existing entry — Chapter 3: Understanding the Trinity and the Toroidal Flow: Smith, C. Michael. *Jung and Shamanism in Dialogue: Retrieving the Soul / Retrieving the Sacred.* Paulist Press, 1997.
-  - existing entry — Chapter 8: Air: Goldsmith, Oliver. *The Vicar of Wakefield.* J. M. Dent & Sons, 1908.
   - existing entry — Chapter 9: Aether: Smith, C. Michael. *Jung and Shamanism in Dialogue.* Paulist Press, 1997.
 
 **EA-Q-0028** · Plutarch · _Chapter 5: Fire — The Elem_
@@ -248,12 +188,7 @@ The existing bibliography is used as EVIDENCE, never as the base.
 
 **EA-Q-0039** · Bear Heart · _Chapter 5: Fire — The Elem_
   - work: The Wind Is My Mother
-  - existing entry — Chapter 1: The Journey Begins: Teasdale, Wayne. *The Mystic Heart: Discovering a Universal Spirituality in the World's Religions.* New World Library, 1999.
   - existing entry — Chapter 5: Fire: Bear Heart. *The Wind Is My Mother: The Life and Teachings of a Native American Shaman.* Berkley Books, 1996.
-  - existing entry — Chapter 6: Water: Chödrön, Pema. *When Things Fall Apart: Heart Advice for Difficult Times.* Shambhala, 1997.
-  - existing entry — Chapter 8: Air: Bennett, Roy T. *The Light in the Heart.* Bennett Books Publishing, 2016.
-  - existing entry — Chapter 9: Aether: McCraty, Rollin. *The Energetic Heart: Bioelectromagnetic Communication Within and Between People.* HeartMath Research Center, 2003.
-  - existing entry — Chapter 10: The Living Spiral: Teasdale, Wayne. *The Mystic Heart: Discovering a Universal Spirituality in the World's Religions.* New World Library, 1999.
 
 **EA-Q-0042** · William Shakespeare · _Chapter 5: Fire — The Elem_
   - work: Henry IV Part 1, II.iii
@@ -264,10 +199,8 @@ The existing bibliography is used as EVIDENCE, never as the base.
 **EA-Q-0044** · C. G. Jung · _Chapter 5: Fire — The Elem_
   - work: letter to Fanny Bowditch, Letters Vol. 1, p. 33 (Princeton UP, 1973)
   - existing entry — Introduction: Jung, Carl. *Memories, Dreams, Reflections.* Edited by Aniela Jaffé. Vintage Books, 1961.
-  - existing entry — Chapter 3: Understanding the Trinity and the Toroidal Flow: Smith, C. Michael. *Jung and Shamanism in Dialogue: Retrieving the Soul / Retrieving the Sacred.* Paulist Press, 1997.
   - existing entry — Chapter 3: Understanding the Trinity and the Toroidal Flow: Jung, Carl. *The Red Book: Liber Novus.* Edited by Sonu Shamdasani. W. W. Norton & Company, 2009.
   - existing entry — Chapter 6: Water: Jung, Carl. *Modern Man in Search of a Soul.* Harcourt Brace, 1933.
-  - existing entry — Chapter 9: Aether: Smith, C. Michael. *Jung and Shamanism in Dialogue.* Paulist Press, 1997.
 
 **EA-Q-0047** · Rumi, rendered by Coleman Barks · _Chapter 5: Fire — The Elem_
   - work: Mathnawi I.3150-3175
@@ -287,10 +220,8 @@ The existing bibliography is used as EVIDENCE, never as the base.
   - work: Modern Man in Search of a Soul (1933); CW 16
   - translator/mediator: W. S. Dell and Cary F. Baynes - UNNAMED in the manuscript
   - existing entry — Introduction: Jung, Carl. *Memories, Dreams, Reflections.* Edited by Aniela Jaffé. Vintage Books, 1961.
-  - existing entry — Chapter 3: Understanding the Trinity and the Toroidal Flow: Smith, C. Michael. *Jung and Shamanism in Dialogue: Retrieving the Soul / Retrieving the Sacred.* Paulist Press, 1997.
   - existing entry — Chapter 3: Understanding the Trinity and the Toroidal Flow: Jung, Carl. *The Red Book: Liber Novus.* Edited by Sonu Shamdasani. W. W. Norton & Company, 2009.
   - existing entry — Chapter 6: Water: Jung, Carl. *Modern Man in Search of a Soul.* Harcourt Brace, 1933.
-  - existing entry — Chapter 9: Aether: Smith, C. Michael. *Jung and Shamanism in Dialogue.* Paulist Press, 1997.
 
 **EA-Q-0056** · Peter Gabriel · _Chapter 6: Water — The Dep_
   - existing entry — Chapter 4: The Elements of Wholeness: Gabriel, Peter. "Growing Up." *Up.* Real World Records, 2002.
@@ -392,7 +323,6 @@ The existing bibliography is used as EVIDENCE, never as the base.
 **EA-Q-0084** · Brene Brown · _Chapter 8: Air — The Eleme_
   - work: Daring Greatly (2012), p. 37
   - register flag: CORRECT
-  - existing entry — Chapter 1: The Journey Begins: Dickinson, Emily. *The Complete Poems of Emily Dickinson.* Edited by Thomas H. Johnson. Little, Brown and Company, 1960.
   - existing entry — Chapter 7: Earth: Brown Jr., H. Jackson. *Life's Little Instruction Book.* Thomas Nelson, 2007.
   - existing entry — Chapter 8: Air: Brown, Brené. *Daring Greatly.* Gotham Books, 2012.
 
@@ -439,17 +369,22 @@ Each must be justified as a non-quotation source the manuscript still relies on
 
 - _Preface_ — Sadhguru. *Inner Engineering: A Yogi's Guide to Joy.* Spiegel & Grau, 2016.  
   → source relationship removed at Stage 4C (reclaimed_as_author_prose)
-- _Preface_ — Buddha. *Kalama Sutta.* Anguttara Nikaya, translated by Thanissaro Bhikkhu. Access to Insight, 1994.  
-  → source relationship removed at Stage 4I (removed)
-- _Preface_ — Buddha. *Udana.* Translated by John Ireland. Buddhist Publication Society, 1990.  
-  → source relationship removed at Stage 4I (removed)
+- _Preface_ — Nicholas of Cusa. As reported in *The Theosophical Quarterly*, Volume 23. Theosophical Society of America, 1925.  
+  → source relationship removed at Stage 4C (reclaimed_as_author_prose)
+- _Introduction_ — Whitmont, Edward. *The Alchemy of Healing: Psyche and Soma.* North Atlantic Books, 1993.  
+  → source relationship removed at Stage 4C (removed)
 - _Introduction_ — Hurley, Samuel. *A Cosmic Gene: Nature's Witness.* Self-published, 2020.
 - _Introduction_ — Yeats, W. B. *The Celtic Twilight: Faerie and Folklore.* Simon & Schuster, 1962.
 - _Introduction_ — Buber, Martin. *I and Thou.* Charles Scribner's Sons, 1937.
+- _Introduction_ — Khan, Hazrat Inayat. *The Music of Life: The Inner Nature and Effects of Sound.* Omega Publications, 1993.
 - _Introduction_ — Amiel, Henri-Frédéric. *Amiel's Journal.* Translated by Mrs. Humphry Ward. Macmillan, 1893.  
   → source relationship removed at Stage 4C (removed)
+- _Introduction_ — Merleau-Ponty, Maurice. *Phenomenology of Perception.* Routledge & Kegan Paul, 1962.
+- _Introduction_ — Steiner, Rudolf. *The Essential Steiner: Basic Writings of Rudolf Steiner.* Edited by Robert A. McDermott. Harper & Row, 1984.
 - _Introduction_ — Steiner, Rudolf. *Theosophy: An Introduction to the Spiritual Processes in Human Life and in the Cosmos.* Anthroposophic Press, 1994.
 - _Introduction_ — Ram Dass. *Be Here Now.* Lama Foundation, 1971.  
+  → source relationship removed at Stage 4C (removed)
+- _Chapter 1: The Journey Begins_ — Dickinson, Emily. *The Complete Poems of Emily Dickinson.* Edited by Thomas H. Johnson. Little, Brown and Company, 1960.  
   → source relationship removed at Stage 4C (removed)
 - _Chapter 1: The Journey Begins_ — Sai Baba. *Divine Discourses.* Sai Publications, 1984.  
   → source relationship removed at Stage 4C (removed)
@@ -457,53 +392,110 @@ Each must be justified as a non-quotation source the manuscript still relies on
 - _Chapter 1: The Journey Begins_ — Munch, Edvard. *Edvard Munch: Behind the Scream.* Yale University Press, 2005.
 - _Chapter 1: The Journey Begins_ — Miller, Henry. *The Air-Conditioned Nightmare.* New Directions, 1945.  
   → source relationship removed at Stage 4C (removed)
+- _Chapter 1: The Journey Begins_ — Nepo, Mark. *The Book of Awakening: Having the Life You Want by Being Present to the Life You Have.* Conari Press, 2000.
 - _Chapter 2: The Torus of Change_ — Lao Tzu. *Tao Te Ching.* Translated by Stephen Mitchell. Harper & Row, 1988.  
   → source relationship removed at Stage 3 (removed)
 - _Chapter 2: The Torus of Change_ — Haramein, Nassim. *The Connected Universe.* Resonance Science Foundation, 2016.  
   → source relationship removed at Stage 3 (reclaimed_as_author_prose)
+- _Chapter 2: The Torus of Change_ — Black Elk. *Black Elk Speaks.* As told through John G. Neihardt. State University of New York Press, 2008.  
+  → source relationship removed at Stage 3 (removed)
 - _Chapter 2: The Torus of Change_ — Kepler, Johannes. *Harmonices Mundi.* Translated by E. J. Aiton. American Philosophical Society, 1997.  
   → source relationship removed at Stage 4C (removed)
+- _Chapter 2: The Torus of Change_ — James, William. *The Principles of Psychology.* Henry Holt and Company, 1890.  
+  → source relationship removed at Stage 4A (removed)
 - _Chapter 2: The Torus of Change_ — Einstein, Albert. *The World As I See It.* Philosophical Library, 1949.  
   → source relationship removed at Stage 4C (removed)
-- _Chapter 2: The Torus of Change_ — Buddha. *The Dhammapada.* Translated by Eknath Easwaran. Nilgiri Press, 1985.  
-  → source relationship removed at Stage 4I (removed)
 - _Chapter 2: The Torus of Change_ — Redfield, James. *The Celestine Prophecy: An Adventure.* Warner Books, 1993.  
   → source relationship removed at Stage 4A (removed)
 - _Chapter 2: The Torus of Change_ — Balfour, Arthur. *Decadence: A Philosophical Inquiry.* Bloomsbury Academic, 2020.
+- _Chapter 3: Understanding the Trinity and the Toroidal Flow_ — James, William. *The Varieties of Religious Experience: A Study in Human Nature.* Longmans, Green & Co., 1902.  
+  → source relationship removed at Stage 4A (removed)
+- _Chapter 3: Understanding the Trinity and the Toroidal Flow_ — Emunds, Stefan. *The Five Elements of Healing: Hindu Tattvas in Psychotherapy.* CreateSpace, 2015.
 - _Chapter 3: Understanding the Trinity and the Toroidal Flow_ — Rudhyar, Dane. *Astrological Timing: The Transition to the New Age.* Aurora Press, 1980.
+- _Chapter 4: The Elements of Wholeness_ — Perkins, John. *Confessions of an Economic Hit Man.* Berrett-Koehler Publishers, 2004.  
+  → source relationship removed at Stage 4A (removed)
 - _Chapter 4: The Elements of Wholeness_ — McKenna, Terence. *The Archaic Revival.* HarperSanFrancisco, 1991.  
   → source relationship removed at Stage 4C (removed)
 - _Chapter 4: The Elements of Wholeness_ — Herrmann, Ned. *The Whole Brain Business Book.* McGraw-Hill, 1996.
 - _Chapter 4: The Elements of Wholeness_ — Vasudev, Jaggi. *Mystic's Musings.* Isha Foundation, 2003.
+- _Chapter 5: Fire_ — Estés, Clarissa Pinkola. *Women Who Run with the Wolves: Myths and Stories of the Wild Woman Archetype.* Ballantine Books, 1992.  
+  → source relationship removed at Stage 3 (removed)
 - _Chapter 5: Fire_ — Merton, Thomas. *No Man Is an Island.* Harcourt, Brace & World, 1955.
+- _Chapter 5: Fire_ — Nhat Hanh, Thich. *Peace Is Every Step: The Path of Mindfulness in Everyday Life.* Bantam, 1991.  
+  → source relationship removed at Stage 4C (removed)
+- _Chapter 5: Fire_ — Proust, Marcel. *In Search of Lost Time.*
+- _Chapter 5: Fire_ — Salzberg, Sharon. *Lovingkindness: The Revolutionary Art of Happiness.* Shambhala Publications, 1995.
+- _Chapter 5: Fire_ — Feynman, Richard P. *The Pleasure of Finding Things Out.* Perseus Books, 1999.  
+  → source relationship removed at Stage 4C (removed)
 - _Chapter 5: Fire_ — Drucker, Peter F. *The Essential Drucker.* HarperBusiness, 2001.  
   → source relationship removed at Stage 4C (removed)
 - _Chapter 5: Fire_ — Aristotle. *Metaphysics.*  
   → source relationship removed at Stage 4A (removed)
 - _Chapter 5: Fire_ — Angelou, Maya. *I Know Why the Caged Bird Sings.* Random House, 1969.  
   → source relationship removed at Stage 4A (removed)
+- _Chapter 5: Fire_ — Foch, Ferdinand. *The Principles of War.* 1903.  
+  → source relationship removed at Stage 4B (reclaimed_as_author_prose)
 - _Chapter 6: Water_ — Gibran, Kahlil. *Sand and Foam.* Alfred A. Knopf, 1926.
 - _Chapter 6: Water_ — Alcott, Louisa May. *Little Women.* Roberts Brothers, 1868.  
   → source relationship removed at Stage 4A (removed)
 - _Chapter 6: Water_ — Gawain, Shakti. *Creative Visualization.* New World Library, 1978.  
   → source relationship removed at Stage 4A (removed)
 - _Chapter 7: Earth_ — Johnson, Robert A. *Inner Gold: Understanding Psychological Projection.* HarperOne, 2008.
+- _Chapter 7: Earth_ — Van der Kolk, Bessel. *The Body Keeps the Score: Brain, Mind, and Body in the Healing of Trauma.* Viking, 2014.  
+  → source relationship removed at Stage 4B (removed)
+- _Chapter 7: Earth_ — Churchill, Winston. *Never Give In! The Best of Winston Churchill's Speeches.* Hyperion, 2003.
+- _Chapter 7: Earth_ — Maharshi, Ramana. *Be As You Are: The Teachings of Sri Ramana Maharshi.* Penguin Books, 1985.  
+  → source relationship removed at Stage 4A (removed)
+- _Chapter 7: Earth_ — Ashe, Arthur. *Days of Grace: A Memoir.* Alfred A. Knopf, 1993.
+- _Chapter 7: Earth_ — Gandhi, Mahatma. *The Words of Gandhi.* Newmarket Press, 1982.  
+  → source relationship removed at Stage 4A (removed)
+- _Chapter 7: Earth_ — Darwin, Charles. *On the Origin of Species.* John Murray, 1859.
+- _Chapter 7: Earth_ — McKeown, Max. *Adaptability: The Art of Winning in an Age of Uncertainty.* Kogan Page, 2012.  
+  → source relationship removed at Stage 4C (removed)
+- _Chapter 7: Earth_ — Peale, Norman Vincent. *The Power of Positive Thinking.* Prentice Hall, 1952.  
+  → source relationship removed at Stage 4C (removed)
+- _Chapter 7: Earth_ — Nehru, Jawaharlal. *The Discovery of India.* Oxford University Press, 1946.  
+  → source relationship removed at Stage 4A (removed)
+- _Chapter 7: Earth_ — Santayana, George. *The Sense of Beauty.* Charles Scribner's Sons, 1896.  
+  → source relationship removed at Stage 4C (removed)
 - _Chapter 7: Earth_ — LaDuke, Winona. *Last Standing Woman.* Voyageur Press, 1997.
 - _Chapter 7: Earth_ — Matlin, Marlee. *I'll Scream Later.* Simon & Schuster, 2009.
+- _Chapter 8: Air_ — Feynman, Richard. *The Character of Physical Law.* MIT Press, 1965.  
+  → source relationship removed at Stage 4C (removed)
 - _Chapter 8: Air_ — Williams, Rowan. *Being Christian: Baptism, Bible, Eucharist, Prayer.* Eerdmans, 2014.
 - _Chapter 8: Air_ — Confucius. *The Analects.*
 - _Chapter 8: Air_ — Dewey, John. *The Quest for Certainty.* G. P. Putnam's Sons, 1929.
+- _Chapter 8: Air_ — Hawking, Stephen. *A Brief History of Time.* Bantam Books, 1988.  
+  → source relationship removed at Stage 4C (removed)
+- _Chapter 8: Air_ — Dyer, Dery. *The Return of Collective Intelligence: Ancient Wisdom for a World out of Balance.* Bear & Company, 2020.  
+  → source relationship removed at Stage 4B (removed)
+- _Chapter 8: Air_ — Goldsmith, Oliver. *The Vicar of Wakefield.* J. M. Dent & Sons, 1908.  
+  → source relationship removed at Stage 4B (reclaimed_as_author_prose)
 - _Chapter 9: Aether_ — Young, Arthur M. *Nested Time.* Harper & Row, 1988.
 - _Chapter 9: Aether_ — Young, Arthur M. *The Reflexive Universe.* Harper & Row, 1976.
 - _Chapter 9: Aether_ — Carroll, Peter J. *Psybermagick: Advanced Ideas in Chaos Magick.* Weiser Books, 1995.
 - _Chapter 9: Aether_ — Krishnamurti, Jiddu. *The First and Last Freedom.* Harper & Brothers, 1954.  
   → source relationship removed at Stage 4C (removed)
+- _Chapter 9: Aether_ — Sun Tzu. *The Art of War.*  
+  → source relationship removed at Stage 3 (removed)
+- _Chapter 9: Aether_ — Planck, Max. *The Universe in the Light of Modern Physics.* George Allen & Unwin, 1931.
 - _Chapter 9: Aether_ — Gibran, Kahlil. *The Prophet.* Alfred A. Knopf, 1923.
+- _Chapter 9: Aether_ — McCraty, Rollin. *The Energetic Heart: Bioelectromagnetic Communication Within and Between People.* HeartMath Research Center, 2003.
+- _Chapter 9: Aether_ — Lorca, Federico García. *In Search of Duende.* New Directions, 1998.
 - _Chapter 9: Aether_ — Baldwin, James. *The Fire Next Time.* Dial Press, 1963.  
   → source relationship removed at Stage 4A (removed)
+- _Chapter 9: Aether_ — Trismegistus, Hermes. *The Emerald Tablet of Hermes.*  
+  → source relationship removed at Stage 4I (removed)
+- _Chapter 10: The Living Spiral_ — Whitman, Walt. *Leaves of Grass.* 1855.
+- _Chapter 10: The Living Spiral_ — Edinger, Edward F. *The Anatomy of the Psyche: Alchemical Symbolism in Psychotherapy.* Open Court, 1985.  
+  → source relationship removed at Stage 4C (removed)
+- _Chapter 10: The Living Spiral_ — *The Book of the Lambspring.*
 - _Chapter 10: The Living Spiral_ — *The Rosarium Philosophorum.*
 - _Chapter 10: The Living Spiral_ — *The Hermetica.*
+- _Chapter 10: The Living Spiral_ — Duchamp, Marcel. *The Writings of Marcel Duchamp.* Da Capo Press, 1989.  
+  → source relationship removed at Stage 4C (removed)
 - _Chapter 10: The Living Spiral_ — McKenna, Terence. *The Archaic Revival.* HarperSanFrancisco, 1991.  
   → source relationship removed at Stage 4C (removed)
+- _Conclusion: Embracing Your Elemental Soul_ — St. John of the Cross. *Dark Night of the Soul.*
 - _Conclusion: Embracing Your Elemental Soul_ — Wright, Frank Lloyd. *The Natural House.* Horizon Press, 1954.  
   → source relationship removed at Stage 4I (removed)

@@ -31,13 +31,31 @@ def norm(t):
     return re.sub(r"[^a-z0-9 ]", " ", t.lower())
 
 
+STOP = {"of", "the", "by", "as", "a", "an", "and", "de", "von", "van", "st", "dr"}
+
+
 def surname(name):
-    """Last token of the first comma-free chunk - good enough to match a bib line."""
+    """The family name a bibliography entry would sort under.
+
+    'Good enough' matching was NOT good enough: taking the last token of a
+    stripped string returned "of" for 'St. John of the Cross', which then matched
+    every entry containing that word - James, Feynman, and anything else. A
+    matcher that can silently attach a source to an unrelated entry is the same
+    failure class this whole reconciliation exists to catch.
+    """
     if not name:
         return ""
     n = re.split(r"[,(]", name)[0].strip()
-    n = re.sub(r"\b(trans|translated|by|the|as rendered)\b.*", "", n, flags=re.I).strip()
-    return n.split()[-1] if n else ""
+    n = re.sub(r"\b(trans\.?|translated|rendered|as rendered)\b.*", "", n, flags=re.I)
+    toks = [t for t in re.findall(r"[A-Za-z'\u00c0-\u024f]+", n) if norm(t).strip() not in STOP]
+    return toks[-1] if toks else ""
+
+
+def entry_author(entry):
+    """The author string a bibliography line leads with, before the title."""
+    head = re.split(r"\*", entry)[0]
+    head = re.split(r"\.\s", head)[0]
+    return head.strip(" .,")
 
 
 def load_bibliography():
@@ -75,7 +93,8 @@ def main():
     for r in recs:
         who = r.get("actual_author") or r.get("attributed_as")
         sn = surname(who)
-        hits = [(c, e) for c, e in bib if sn and norm(sn) in norm(e)]
+        hits = [(c, e) for c, e in bib
+                if sn and re.search(rf"\b{re.escape(norm(sn).strip())}\b", norm(entry_author(e)))]
         flag = r.get("bibliography_relationship") or ""
         if not hits:
             cls = "MISSING"
