@@ -1,23 +1,24 @@
 {
   "_doc": "Allowlist for direct @anthropic-ai/sdk imports. Enforced by scripts/check-no-direct-anthropic.ts. See docs/orientation/maia-sovereign-runtime-intelligence-audit.md for context.",
   "_invariant": "MAIA is a layered intelligence architecture in which substrate inference is one conditional manifestation pathway, not the cognition center. New direct SDK imports bypass sovereignRouter and re-introduce drift. Additions here must be deliberate and pass PR review.",
-
   "approved": {
     "description": "Canonical provider-adapter layer. The ONLY files that should newly import @anthropic-ai/sdk are SovereignRouter-backed adapters. New additions here are load-bearing architectural decisions and require explicit PR review.",
     "files": [
-      "lib/ai/claudeClient.ts"
-    ]
+      "lib/ai/claudeClient.ts",
+      "lib/ai/structured/anthropicStructuredAdapter.ts"
+    ],
+    "notes": {
+      "lib/ai/structured/anthropicStructuredAdapter.ts": "AIN-STRUCTURED-INFERENCE-SEAM-01. The structured-inference counterpart to claudeClient: the only vendor-facing file in lib/ai/structured. It translates a provider-neutral StructuredRequest into Anthropic wire params and decides nothing \u2014 no model policy, no retry, no fallback. Routing and the non-fallbackable ruling live in lib/ai/structured/router.ts. Added so cognitive surfaces needing tool contracts stop importing the SDK one at a time."
+    }
   },
-
   "operational": {
     "description": "Non-cognitive endpoints that legitimately need direct SDK access (health checks, authentication probes, billing telemetry). Cognitive surfaces do NOT belong here.",
     "files": [
       "app/api/anthropic/ping/route.ts"
     ]
   },
-
   "grandfathered": {
-    "description": "Legacy cognitive surfaces that bypass sovereignRouter. Each one is an intelligence layer that currently delegates its reasoning to substrate instead of executing its own logic. To be migrated per docs/orientation/maia-sovereign-runtime-intelligence-audit.md. New additions are strongly discouraged — they represent expansion of the drift this guard exists to prevent.",
+    "description": "Legacy cognitive surfaces that bypass sovereignRouter. Each one is an intelligence layer that currently delegates its reasoning to substrate instead of executing its own logic. To be migrated per docs/orientation/maia-sovereign-runtime-intelligence-audit.md. New additions are strongly discouraged \u2014 they represent expansion of the drift this guard exists to prevent.",
     "files": [
       "app/api/_backend/maia-ask-needs.js",
       "app/api/_backend/maia-first-contact-direct.js",
@@ -76,7 +77,7 @@
       "scripts/walk-relational-navigation.ts"
     ],
     "notes": {
-      "_batch_2026-07-27": "The seven entries below were added retroactively on 2026-07-27. Each shipped AFTER this guard landed (2026-05-20) without being allowlisted — their lanes did not exercise preflight/pre-commit, so the guard never fired. Classified here as migration debt, NOT green-light: each pins its own model and calls messages.create directly, so routing through lib/ai/claudeClient generateWithClaude (which imposes selectClaudeModel policy) is a per-surface behavior change requiring its own reviewed migration per the audit. Migrate when each surface is next touched.",
+      "_batch_2026-07-27": "The seven entries below were added retroactively on 2026-07-27. Each shipped AFTER this guard landed (2026-05-20) without being allowlisted \u2014 their lanes did not exercise preflight/pre-commit, so the guard never fired. Classified here as migration debt, NOT green-light: each pins its own model and calls messages.create directly, so routing through lib/ai/claudeClient generateWithClaude (which imposes selectClaudeModel policy) is a per-surface behavior change requiring its own reviewed migration per the audit. Migrate when each surface is next touched.",
       "app/api/maia/living-field/[fieldKey]/encounter/route.ts": "Living Field encounter (added 2026-07-05). Cognitive surface, pins Sonnet.",
       "app/api/maia/living-field/[fieldKey]/refine/route.ts": "Living Field refine (added 2026-07-01). Cognitive surface, pins Haiku.",
       "app/api/maia/relational-navigation/route.ts": "Relational Navigation Room (added 2026-05-22, two days after the guard). Cognitive surface.",
