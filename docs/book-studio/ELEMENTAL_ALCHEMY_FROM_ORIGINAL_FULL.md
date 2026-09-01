@@ -769,7 +769,7 @@ All awareness seems to return to this circle around the flames, smoke, smells, a
 
 The fire always leads to this place of softness, of presence that feels mysterious and sacred. The bright, noisy, crackling of the fire gives way to embers that undulate and draw us into a quiet, abiding presence. Our senses become sharper as we open ourselves to being receptive to the more subtle aspects of life.
 
-*"The mind is not a vessel to be filled, but wood that needs kindling." – Plutarch*
+Plutarch offers the image of the mind not as a vessel to be filled, but as wood that needs kindling.
 
 ### The Expansion of Intuition and the Enchantment of the World
 
@@ -1770,7 +1770,7 @@ I encountered the three-part self through my own shamanic training, and I have w
 
 There is most often a three-part self: the lower self being the basic self, belonging to the earth realm; the middle self being an ephemeral, momentary manifestation of the presence of a unique, ego-augmented soul living a lifetime journeying on earth yet connected to heaven; and the higher Self (with a capital S to denote its sacredness). The latter is our aetheric, metaconscious Self, which oversees our earthwalk. Other religious traditions might call this aspect our being the soul—an embodied spirit. Ultimately, the soul is the dreamer who is dreaming a life into being from the aether which bridges the spaces between the immaterial realms and the material world.
 
-*"What is above is like what is below, and what is below is like what is above." — The Emerald Tablet*
+The Emerald Tablet holds that what is above and what is below mirror one another.
 
 ### The Alchemical Properties of Aether
 

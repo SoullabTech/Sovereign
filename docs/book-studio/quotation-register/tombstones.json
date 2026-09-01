@@ -1222,6 +1222,38 @@
           "superseded_by": "misattributed"
         }
       ]
+    },
+    {
+      "state": "reclaimed_as_author_prose",
+      "stage": "Bibliography mapping - textual identification pass",
+      "former_form": "block",
+      "last_location": "Ch5 - The Mysterious and Sacred Presence of the Fire",
+      "text": "The mind is not a vessel to be filled, but wood that needs kindling.",
+      "attributed_as": "Plutarch",
+      "provenance_status": "verified_variant",
+      "actual_author": "Plutarch",
+      "work": "Moralia, 'On Listening to Lectures'",
+      "rights_status": null,
+      "family": null,
+      "editorial_status": "RECLAIM - LINEAGE. The image is Plutarch's; the English was the book's own, composed at 4C after the host-aligned 'fire' was removed. Presenting our paraphrase as a quotation would be false precision, so it now runs as credited prose: 'Plutarch offers the image of the mind not as a vessel to be filled, but as wood that needs kindling.' No translation rights problem is created by the book's own paraphrase.",
+      "evidence_location": "Bounded textual-identification pass, 2026-09-01",
+      "notes": "GOVERNING RULE APPLIED: when the source idea is known but the English cannot be honestly identified, do not manufacture a translator - either choose a translation deliberately or stop presenting the wording as a quotation. LANGUAGE ORIGIN: replacement sentence EDITOR/MODEL-ORIGINATED, awaiting the author's wording."
+    },
+    {
+      "state": "reclaimed_as_author_prose",
+      "stage": "Bibliography mapping - textual identification pass",
+      "former_form": "block",
+      "last_location": "Ch9 - The Higher Self",
+      "text": "What is above is like what is below, and what is below is like what is above.",
+      "attributed_as": "The Emerald Tablet",
+      "provenance_status": "verified_variant",
+      "actual_author": "The Emerald Tablet (traditional)",
+      "work": "English rendering unidentified; cf. Newton's 'That which is below is like that which is above'",
+      "rights_status": "public_domain",
+      "family": "fam-hermetic",
+      "editorial_status": "RECLAIM - LINEAGE / PARAPHRASE OF SOURCE. No named rendering matches the printed English: Holmyard's Jabir, Newton's, and the standard Latin-derived English all differ. Rather than manufacture a translator or attach Newton opportunistically, the precept now runs as credited prose. Ch10 had already established the mature relationship - the Tablet gives above and below, Spiralogic develops its own correspondence from there - and Ch9 now uses the same honesty. Quotation marks were not preserved merely because the sentence began life as an epigraph.",
+      "evidence_location": "Bounded textual-identification pass, 2026-09-01",
+      "notes": "GOVERNING RULE APPLIED: when the source idea is known but the English cannot be honestly identified, do not manufacture a translator - either choose a translation deliberately or stop presenting the wording as a quotation. LANGUAGE ORIGIN: replacement sentence EDITOR/MODEL-ORIGINATED, awaiting the author's wording."
     }
   ]
 }
