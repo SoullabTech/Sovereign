@@ -176,3 +176,11 @@ bibliography pass then found the printed English was still a paraphrase of what 
 wrote. A second provenance defect was sitting inside a record everyone considered closed.
 
 We are close enough to the end that **precision is worth more than speed.**
+
+### Added from final QA — unquoted attributions to verify
+
+**Aristotle (Ch5):** *"Aristotle understood fire as the one element of the four connecting us in
+kinship with the gods since it is the one element we could create."* Carries no quotation marks,
+so the census never saw it — the **Buber class**. Two questions: did Aristotle hold this, and is
+the *"since it is the one element we could create"* reasoning his or the book's? Resolve before
+the bibliography closes; an Aristotle entry may or may not follow.
