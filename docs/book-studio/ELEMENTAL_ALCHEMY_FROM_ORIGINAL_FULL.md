@@ -2023,8 +2023,6 @@ With this understanding of aether along with the four elements as our guide, we 
 
 *"To be spiritual means essentially to take responsibility for our inner journey while using all the resources from all the traditions available to us. They are our common heritage. All we require to tap into them is the capacity to do so, the requisite generosity of spirit. These great treasures are part of a universal mystical tradition, and our growth in the future depends on our willingness to integrate them into our own experience." — Wayne Teasdale*
 
-## I. The Living Spiral
-
 To be human is to move through cycles. Morning turns to midday, midday leads toward dusk, dusk gives way to nightfall, and night eventually finds its way back to the light of day. Winter moves into spring, spring opens into summer, summer releases into fall, and fall returns again to the dormancy of winter. These rhythms surround us so completely that we rarely stop to consider how deeply they shape the way life itself unfolds.
 
 These cycles are not simply happening around us. They are part of us. We come from this cycling earth, and our lives participate in its movements at every level. The atoms that form our bodies were forged within stars. Cells continually die and are replaced. We sleep and wake, hunger and become full, and move between activity and rest, expansion and contraction. Our emotional lives move through their own ebbs and flows as happiness, sadness, pleasure, pain, longing, anger, love, and grief arise within us, remain for a time, and eventually change into something else.
@@ -2047,7 +2045,7 @@ Although we can speak about the elements individually, we experience them phenom
 
 The art of inner development involves becoming increasingly sensitive to these movements within our own nature. We learn to distinguish inspiration from emotional intensity, feeling from thought, bodily knowing from interpretation, and to become more aware of the ways these dimensions influence one another. This growing capacity for discernment allows us to participate more consciously in the living orchestration of our inner and outer worlds. The elements are not compartments into which we divide ourselves. They are movements within a whole, and the whole is a life.
 
-## II. Finding Our Place
+### Finding Our Place
 
 When I introduce the idea of a developmental map, I often ask people to imagine themselves wandering through nature. It is a beautiful day and the environment is inviting enough that you decide to throw caution, and perhaps your busy schedule, to the wind and take an impromptu hike along one of the trails. For a while it is exhilarating. You are absorbed in the landscape, following whatever opens in front of you.
 
@@ -2082,8 +2080,6 @@ There are periods in life when the ways we have understood ourselves continue to
 Such thresholds can feel disorienting precisely because the old ways of understanding ourselves have not necessarily been wrong. They may simply no longer be enough. We begin looking differently, paying attention to what is moving beneath the surface of ordinary life and becoming curious about feelings we once tried to manage, questions we once dismissed, and possibilities we once assumed did not belong to us.
 
 The map does not prevent us from becoming lost. It helps us become more conscious of where we are when we realize that we have. Maya's journey begins in such a place.
-
-## III. A Life Through the Elements
 
 ### Meet Maya
 
@@ -2167,7 +2163,7 @@ Aether allows the elemental movements to remain in relationship. Vision can exis
 
 Her life remained unfinished, and the elements continued to move. This is precisely where the deeper architecture of the Spiralogic Process becomes visible.
 
-## IV. The Architecture Beneath the Experience
+### The Architecture Beneath the Experience
 
 Maya's journey gives us a way of seeing the Spiralogic Process from inside a life. Having experienced the process through her, we can now look more closely at the architecture beneath it.
 
@@ -2206,8 +2202,6 @@ The old alchemical language offers another way of imagining the inner process th
 Aether breathes this process into and out of being, like lungs breathing in and breathing out. Somewhere in the middle of everything is soul, weaving our experiences into body, relationship, meaning, and life.
 
 The architecture can appear complex when its different parts are viewed separately, but underneath these names and correspondences is a simple movement. Something awakens, we enter into relationship with it and are changed by what we encounter, we give that change form, bring what has taken form into relationship with others, and eventually find ourselves again at another beginning. The map helps us see the movement; life is where the movement becomes real.
-
-## V. Living the Spiral
 
 A map becomes meaningful only when we return to the territory. We can understand the elemental movements intellectually and learn the symbolic language of alchemy, but the real work begins when life presents us with something we did not plan for: an emotional reaction, an unexpected loss, a conflict, a recurring fear, a relationship that unsettles us, a period of uncertainty, or simply the realization that something within us is no longer in balance.
 
