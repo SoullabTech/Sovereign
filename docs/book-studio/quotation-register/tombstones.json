@@ -1024,6 +1024,54 @@
       "editorial_status": "KEEP THE LINEAGE - REFERENCE AND CONTEXTUALISE, NOT THE LONG QUOTATION. The Smith treatment rather than a shortening. What belongs at the threshold is that the author encountered a five-element understanding through a living yogic lineage, not the particular phrasing or the pizza register. The prose now credits Sadhguru's teaching and the book proceeds into what the author makes of the five elements - which also removes about eighty words of protected prose and distinguishes received framework from the Elemental Alchemy synthesis. LANGUAGE ORIGIN: sentence EDITOR/MODEL-ORIGINATED from the author's supplied structure, awaiting the author's own wording.",
       "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L173 (provenance); 4C Preface ruling (editorial)",
       "notes": "Audit: source/concept VERIFIED, wording VARIANT - EDITION CHECK REQUIRED. Attested on the quoted author's own institutional channel, which meets the official-source standard. ~80 words of in-copyright prose."
+    },
+    {
+      "state": "removed",
+      "stage": "Stage 4C",
+      "former_form": "block",
+      "last_location": "Ch9 - None",
+      "text": "The heart is a sanctuary at the center of which is a little space wherein the Great Spirit dwells, and this is the Eye. This is the Eye of the Great Spirit by which He sees all things, and through which we see Him. If the heart is not pure, the Great Spirit cannot be seen.",
+      "attributed_as": "Black Elk",
+      "provenance_status": "unverified",
+      "actual_author": "Black Elk",
+      "work": "LEAD (unconfirmed): The Sacred Pipe: Black Elk's Account of the Seven Rites of the Oglala Sioux, recorded by Joseph Epes Brown, 1953 (University of Oklahoma Press)",
+      "rights_status": null,
+      "family": "fam-black-elk",
+      "editorial_status": "REMOVE. The facts stack one way: the wording is unverified; it is a chapter-opening attribution to a named Lakota holy man, so the standard should be high; the book already carries a truthful Black Elk acknowledgement established at Stage 3; and the epigraph is not carrying an argument the chapter cannot make in its own voice. Distinct from the 'Sioux Legend' case in that Black Elk is a real, locatable source tradition - but that only makes recovery possible, it does not give this particular sentence enough editorial value to justify another investigation. NO STAGE 6 RECOVERY TASK WAS CREATED: recovery should serve the manuscript, not rescue a quotation. If ordinary bibliography work later locates this exact passage in The Sacred Pipe or another primary source, that can be recorded; it does not need to remain in the manuscript while we search.",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L1871 (provenance); 4C Chapter 9 ruling (editorial)",
+      "notes": "Audit: UNVERIFIED - source lead unresolved. Not confirmed in the search. Note: the invented 'Adapted from Black Elk' epigraph in Ch2 was removed at Stage 3 and replaced with an accurate acknowledgement; THIS occurrence is a different object with a real, if unconfirmed, source lead."
+    },
+    {
+      "state": "removed",
+      "stage": "Stage 4C",
+      "former_form": "block",
+      "last_location": "Ch9 - Within the Elemental Quaternity",
+      "text": "The quieter you become, the more you are able to hear.",
+      "attributed_as": "Rumi",
+      "provenance_status": "unverified",
+      "actual_author": "unknown - competing attribution Rumi vs Ram Dass",
+      "work": null,
+      "rights_status": null,
+      "family": "fam-floating-aphorisms",
+      "editorial_status": "REMOVE - UNVERIFIED floating aphorism with both instability markers: a competing attribution (widely assigned to Ram Dass) and a variant family ('the more you CAN hear'). Decorative; the prose that follows describes aether in the author's own terms.",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L1977 (provenance); 4C Chapter 9 ruling (editorial)",
+      "notes": "Audit: FLOATING APHORISM / SOURCE UNRESOLVED with BOTH instability markers present - a competing attribution (Goodreads and others assign it to Ram Dass) and a variant family ('the more you CAN hear', the Ram Dass form, against the manuscript's wording)."
+    },
+    {
+      "state": "removed",
+      "stage": "Stage 4C",
+      "former_form": "block",
+      "last_location": "Ch9 - The Alchemical Properties of Aether",
+      "text": "The more you know yourself, the more clarity there is. Self-knowledge has no end—you don't come to an achievement, you don't come to a conclusion. It is an endless river.",
+      "attributed_as": "Jiddu Krishnamurti",
+      "provenance_status": "unverified",
+      "actual_author": "Jiddu Krishnamurti",
+      "work": null,
+      "rights_status": "term_uncertain_standard",
+      "family": null,
+      "editorial_status": "REMOVE - UNVERIFIED, and the citation looks more solid than it is: The First and Last Freedom (1954) is plausible but unconfirmed, and the register suggests spoken talks rather than that book - a probable WRONG SOURCE/WORK sitting under an apparently sound reference. The paragraph that follows is the author's own reflection on describing the indescribable.",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md Ch9 table L1903 (provenance); 4C Chapter 9 ruling (editorial)",
+      "notes": "Audit: register suggests spoken talks rather than the cited book."
     }
   ]
 }

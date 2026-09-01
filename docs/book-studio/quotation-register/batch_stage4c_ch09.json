@@ -1,0 +1,23 @@
+{
+  "_comment": "Stage 4C - Chapter 9 (Aether). 6 records: 3 survive, 3 removed.",
+  "entries": [
+    {
+      "match": "If the doors of perception were cleansed",
+      "editorial_status": "KEEP. Verified exact, public domain, bibliography correct. The epigraph and the section's argument are the same thought. Family symmetry now complete: this is the correctly attributed Blake, and its sibling from the same work - 'If the fool would persist in his folly' - was the under-attributed one repaired at 4I. Two occurrences from one work, both now honest.",
+      "evidence_location": "4C Chapter 9 ruling",
+      "occurrence": 1
+    },
+    {
+      "match": "contradiction in wanting to be perfectly secure",
+      "editorial_status": "KEEP. Verified variant, bibliography correct. The published text reads 'It must be obvious, FROM THE START, that' and the manuscript drops the phrase - an apparatus note for Stage 7. Second Watts occurrence; the Ch2 one is verified exact. Same author, different verdicts, ruled individually.",
+      "evidence_location": "4C Chapter 9 ruling",
+      "occurrence": 1
+    },
+    {
+      "match": "all the universe conspires in helping you",
+      "editorial_status": "KEEP. Verified exact, bibliography correct; rights likely_protected_standard for Stage 6. Two apparatus facts ride on the record without changing the verdict: it is a mediated translation, and it is spoken by Melchizedek, King of Salem - the fourth character-voice specimen after Polonius, Satan and Hotspur.",
+      "evidence_location": "4C Chapter 9 ruling",
+      "occurrence": 1
+    }
+  ]
+}

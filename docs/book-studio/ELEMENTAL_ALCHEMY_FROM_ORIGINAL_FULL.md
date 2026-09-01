@@ -1760,8 +1760,6 @@ Refining our ability to think well draws us closer to embracing our true self, h
 
 In the sacred stillness within, whatever arises—be it an insight, a deep urge, a vision, or a profound idea—can be sculpted into reality through your deliberate choices. You stand in the space between the manifest and spiritual fields of potential, like a conductor before an orchestra, orchestrating worlds of beauty and a symphony of soul. Inner Silence is the birthplace of creation, the divine stillness where you weave the tapestry of your existence.
 
-*"The heart is a sanctuary at the center of which is a little space wherein the Great Spirit dwells, and this is the Eye. This is the Eye of the Great Spirit by which He sees all things, and through which we see Him. If the heart is not pure, the Great Spirit cannot be seen." — Black Elk*
-
 It's 3:33 in the morning, and I'm awakened by a light descending our stairs. It is my son, anticipating my ritual period of writing. He has become increasingly excited about my impending book and being with me while I write. I was deeply absorbed in an intense dream when he woke me up, where I was in the high Tibetan Alps preparing to make a final climb to Taktsang Palphug, a holy Tibetan monastery founded by Guru Rinpoche, Padmasambhava, during the 8th Century.
 
 I had always dreamed of being there, and I was so close to arriving only moments ago. In the dream, I was busily putting on all the gear needed for the climb. I was determined yet unsure if I was ready to make the journey. Am I fit enough? Am I worthy of the journey?
@@ -1791,8 +1789,6 @@ The realm of aether is a challenging energy field to speak about since it is whe
 In this realm, all opposites unite in a singular effort of being. All duality concedes to the creative life force of our aether nature. At the heart of all of our doing and living is our abiding, true Self. This self is at the center of our stillness when we're in a state associated with the element of aether and connects us with "more than this." This state is the still point and no-mind state of Zen meditation. It is called wuji in Taoism, prana in Hinduism, and the inner kingdom in Christianity.
 
 Like the unknowable quantum world manifests our knowable universe, there is an element of our being that is etheric, fine, and subtle which dances between the worlds of potential nonduality and manifest states of duality, like the dancing Tibetan deity Hevajra.
-
-*"The more you know yourself, the more clarity there is. Self-knowledge has no end—you don't come to an achievement, you don't come to a conclusion. It is an endless river." — Jiddu Krishnamurti*
 
 By its nature, this part of us is indescribable and ephemeral. However, since it is the essence of who we are as souls and it is the source of all life within us and between us, it is worth the time and effort of trying to communicate about it. Yet how do you describe the indescribable? The formless? As always, humankind has done best by creating symbols, images, and stories that describe this ephemeral part of our nature.
 
@@ -1861,8 +1857,6 @@ Meditation, guided journeywork, or even a soulful walk in nature can help us con
 We bring all the aspects of our being into resonance in the aetheric state of being, which we experience as being in a state of Flow or coherence. These states can be attained through contemplative practices or simply by being totally present in the moment and paying close attention.
 
 The aether realm is a mysterious state which, unlike the other elements, can't be seen or felt directly. It can only be understood within the context of the quality or state of being it instills in us. Its presence is closer to the nature of pure consciousness, which can only be understood by its products and qualities of perception.
-
-*"The quieter you become, the more you are able to hear." — Rumi*
 
 Aether is as much a qualitative, felt experience as it is a state of being. It's hard to describe it, but we know it when we are in it. Our goal with the aether state of consciousness is to develop strategies, practices, and opportunities to enter this state at will. When we are in aether awareness, we are at our best. Developing our aetheric nature is a process of returning to a state of inner stillness and presence.
 
