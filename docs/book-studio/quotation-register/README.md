@@ -555,3 +555,63 @@ break a family link.** Cross-layer family counting is now in the gate.
 · `fam-infinite-sphere` 1
 
 **→ Batch 4: Chapter 4.**
+
+---
+
+# BATCH 4 — Chapter 4 · 2026-09-01
+
+**`GATE PASSED`.** 5 active + 3 historical records. Zero `pending_migration` in
+scope.
+
+| Record | Verdict migrated |
+|---|---|
+| **Tagore** L606 | `VERIFIED EXACT` — *Sadhana* (1913) p. 109, the Gayatri passage. **`PUBLIC DOMAIN`**, and **no mediation layer**: Tagore wrote and translated *Sadhana* into English himself. **This resolves the standing "check, do not assume" flag on his English** |
+| **C. Michael Smith** L620 | `UNVERIFIED — source lead unresolved`. **The concept is documented as his** on his own site; the manuscript's specific sentence is not located |
+| **McKenna / 64 codons** L693 | `UNVERIFIED` with a **real source trail** — Hazard interview (Oct 1998), *In the Valley of Novelty* (Jul 1998). **Migrated with the open state intact** |
+| **William James** *(historical)* | `MISATTRIBUTED` · `EVOLVED APHORISM`. Earliest related text is **Harry Granison Hill, *Cincinnati Enquirer*, 1928**, attributing the idea *to* James. Also misattributed to Schweitzer. **"of ANY generation" is a further variant** of the circulating "of MY generation" |
+| **John Perkins** *(historical)* | `UNVERIFIED — source lead unresolved` |
+| **Eckhart Tolle** *(historical)* | **`VERIFIED EXACT`** — attested on Tolle's own official channels. **Removed at 4A on redundancy, not provenance** |
+
+## ⚠️ The conflict check fired — and it was my error
+
+**`EA-Q-T023` (Perkins): existing `identity_unresolved` vs incoming `unverified`.**
+
+**The tombstone was wrong, not the audit.** When I authored the 28 lifecycle records
+I gave Perkins **an invented status derived from the 4A editorial note** — *"identity
+unresolved"* — instead of transferring the **Stage 2 verdict**, which is
+`UNVERIFIED — source lead unresolved`. The identity problem is a **bibliography
+defect**, and it was already correctly recorded in `bibliography_relationship`.
+
+**Fixed at the source, not at the check.** The tombstone now carries the audit's
+verdict and a note recording the correction and how it was caught.
+
+> **This is the first time a gate has caught an error I introduced rather than a
+> schema gap.** It is also the failure the whole migration boundary exists to
+> prevent: **an editorial observation quietly becoming a provenance verdict.** One
+> invented status value, in one record, authored by me — and the cross-layer
+> conflict check surfaced it three batches later.
+
+## The Tolle record is the cleanest axis demonstration yet
+
+**`VERIFIED EXACT` · `REMOVED`.**
+
+Verified on the quoted author's own official channels — a strong evidence class —
+**and removed anyway**, because the book already says *"Awareness is paramount"* in
+its own voice. **Provenance said keep-able; editorial judgment said unnecessary.**
+
+A single "reviewed" flag could not express that, and a system that treated
+`VERIFIED` as a reason to retain would have kept it.
+
+## Standing after batch 4
+
+| | |
+|---|---|
+| `migrated` | **42** |
+| `not_investigated` | **12** |
+| `verdict_not_locatable_in_source` | **1** |
+| `pending_migration` | **75** |
+| **current / historical** | **130 / 28** |
+
+**`109 = 29 migrated + 75 pending + 5 documented-deferred`** ✅ · **`137 = 109 + 28`** ✅
+
+**→ Batch 5: Chapter 5 — the largest, at 30 censused occurrences.**

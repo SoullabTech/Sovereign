@@ -1,7 +1,7 @@
 {
   "records": [
     {
-      "id": "EA-Q-0166",
+      "id": "EA-Q-0174",
       "occurrence": 1,
       "text": "If you knew how perfect it all is you'd throw your head up at the clouds and laugh.",
       "line_at_build": 47,
@@ -219,7 +219,7 @@
       "notes": "Audit: bibliography cites Thanissaro Bhikkhu (Access to Insight, 1994), whose actual rendering begins 'Now, Kalamas, don't go by reports, by legends...' - materially different from the printed text."
     },
     {
-      "id": "EA-Q-0167",
+      "id": "EA-Q-0175",
       "occurrence": 2,
       "text": "If you knew how perfect it all is you'd throw your head up at the clouds and laugh.",
       "line_at_build": 190,
@@ -555,22 +555,22 @@
       "display_form": "block_epigraph",
       "attributed_as": "Rabindranath Tagore",
       "attribution_state": "attributed",
-      "actual_author": null,
+      "actual_author": "Rabindranath Tagore",
       "internal_speaker": null,
-      "work": null,
-      "translator_or_mediator": null,
-      "provenance_status": null,
-      "provenance_review_state": "pending_migration",
-      "rights_review_state": "not_investigated",
+      "work": "Sadhana: The Realisation of Life (1913), p. 109 - the Gayatri meditation passage",
+      "translator_or_mediator": "NONE - Tagore wrote and translated Sadhana into English himself",
+      "provenance_status": "verified_exact",
+      "provenance_review_state": "migrated",
+      "rights_review_state": "migrated",
       "editorial_review_state": "not_investigated",
-      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md - chapter-batch migration owed",
-      "rights_status": null,
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L608",
+      "rights_status": "public_domain",
       "bibliography_relationship": null,
       "family": null,
       "editorial_status": "unadjudicated",
       "record_state": "confirmed",
       "identity_match_score": 1.0,
-      "notes": null
+      "notes": "Audit: sixth public-domain classification. This also resolves the standing 'check, do not assume' flag on Tagore's English - there is no mediation layer here, unlike Rumi, Lao Tzu, Nietzsche, Weil or Coelho."
     },
     {
       "id": "EA-Q-0022",
@@ -584,20 +584,21 @@
       "attribution_state": "attributed",
       "actual_author": null,
       "internal_speaker": null,
-      "work": null,
+      "work": "LEADS (open): cmichaelsmith.com and Jung and Shamanism in Dialogue (Paulist, 1997)",
       "translator_or_mediator": null,
-      "provenance_status": null,
-      "provenance_review_state": "pending_migration",
+      "provenance_status": "unverified",
+      "provenance_review_state": "migrated",
       "rights_review_state": "not_investigated",
       "editorial_review_state": "not_investigated",
-      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md - chapter-batch migration owed",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L622",
       "rights_status": null,
       "bibliography_relationship": null,
       "family": null,
       "editorial_status": "unadjudicated",
       "record_state": "confirmed",
       "identity_match_score": 1.0,
-      "notes": null
+      "notes": "Audit: UNVERIFIED - source lead unresolved. The CONCEPT is documented as his on his own site ('Wholeness-making is an ongoing process organized around the Center of your being'), but the manuscript's specific sentence is not located. Smith is also the book's Foreword author.",
+      "attributed_as_note": "C. Michael Smith"
     },
     {
       "id": "EA-Q-0023",
@@ -611,20 +612,21 @@
       "attribution_state": "unattributed",
       "actual_author": null,
       "internal_speaker": null,
-      "work": null,
+      "work": "REAL SOURCE TRAIL, verdict deliberately NOT closed: John Hazard interview (October 1998) and the In the Valley of Novelty workshop (July 1998)",
       "translator_or_mediator": null,
-      "provenance_status": null,
-      "provenance_review_state": "pending_migration",
+      "provenance_status": "unverified",
+      "provenance_review_state": "migrated",
       "rights_review_state": "not_investigated",
       "editorial_review_state": "not_investigated",
-      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md - chapter-batch migration owed",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md - McKenna set, L701; Stage 3b finding 2",
       "rights_status": null,
       "bibliography_relationship": null,
       "family": null,
       "editorial_status": "unadjudicated",
       "record_state": "confirmed",
       "identity_match_score": 1.0,
-      "notes": null
+      "notes": "Audit explicitly held this open: 'L701 is already different - it has a real McKenna source trail; the four aphorisms may not. L701 could resolve to VERIFIED, to PARAPHRASE/ADAPTED, or to a wrong-work/source-form problem, while the other four stay unverified.' Migrated with the open state intact rather than resolved to a verdict the audit declined to reach. Separately: Stage 3b found the surrounding argument develops a borrowed thesis past its credit line, and Schoenberger is unnamed.",
+      "attributed_as_note": "Terence McKenna (in prose, no byline)"
     },
     {
       "id": "EA-Q-0024",
@@ -2033,7 +2035,7 @@
       "notes": null
     },
     {
-      "id": "EA-Q-0168",
+      "id": "EA-Q-0176",
       "occurrence": 1,
       "text": "Alone we can do so little; together we can do so much.",
       "line_at_build": 1453,
@@ -2438,7 +2440,7 @@
       "notes": null
     },
     {
-      "id": "EA-Q-0169",
+      "id": "EA-Q-0177",
       "occurrence": 2,
       "text": "Alone we can do so little; together we can do so much.",
       "line_at_build": 1672,
@@ -4003,9 +4005,11 @@
       "editorial_status": "REMOVE",
       "editorial_review_state": "migrated",
       "family": null,
-      "evidence_location": "STAGE4 4A batch 2",
-      "notes": null,
-      "active_span": null
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L632",
+      "notes": "Audit: EVOLVED APHORISM / RECOVERABLE ANCESTOR. Also misattributed to Albert Schweitzer. The manuscript reads 'of ANY generation' where the common circulating form is 'of MY generation' - a further variant. Both William James quotations in the book failed; both are now removed.",
+      "active_span": null,
+      "actual_author": "not William James",
+      "work": "earliest related text: Harry Granison Hill, Cincinnati Enquirer, 1928, attributing a similar idea TO James"
     },
     {
       "id": "EA-Q-T023",
@@ -4014,7 +4018,7 @@
       "last_known_location": "Ch4 · The I Ching and Nature's Wisdom",
       "text_at_removal": "What we forget we can also remember.",
       "attributed_as": "John Perkins",
-      "provenance_status": "identity_unresolved",
+      "provenance_status": "unverified",
       "provenance_review_state": "migrated",
       "internal_speaker": null,
       "rights_status": null,
@@ -4023,8 +4027,8 @@
       "editorial_status": "REMOVE - removal dissolves the identity problem rather than repairing it",
       "editorial_review_state": "migrated",
       "family": null,
-      "evidence_location": "STAGE4 4A batch 2",
-      "notes": null,
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md - table row L693",
+      "notes": "Audit verdict: UNVERIFIED - source lead unresolved. The identity problem (two John Perkinses; the bibliography cites Confessions of an Economic Hit Man while the register belongs to the shamanic John Perkins) is a BIBLIOGRAPHY defect, recorded separately - it is not the provenance verdict. Specimen for the audit's rule that identity disambiguation precedes source verification.",
       "active_span": null
     },
     {
@@ -4123,15 +4127,17 @@
       "editorial_status": "REMOVE - the book already says it better and earlier: 'Awareness is paramount'",
       "editorial_review_state": "migrated",
       "family": null,
-      "evidence_location": "STAGE4 4A reconsideration",
-      "notes": "Recorded as the author's lean rather than a hard ruling. Reversible in one line if Tolle belongs to the book's philosophical company.",
-      "active_span": null
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L677",
+      "notes": "Audit: Goodreads places it in A New Earth, but the official channels carry it WITHOUT a book citation, so it may be a spoken or teaching line rather than a published sentence. Removed at 4A on redundancy, not on provenance - the book already says 'Awareness is paramount'. VERIFIED and REMOVED are different axes.",
+      "active_span": null,
+      "actual_author": "Eckhart Tolle",
+      "work": "attested on Tolle's own official channels (X, the Eckhart Tolle Foundation, official Facebook) - the quoted-author's-channel evidence class"
     }
   ],
   "migration_report": {
     "migrated": [
-      "EA-Q-0166",
-      "EA-Q-0167",
+      "EA-Q-0174",
+      "EA-Q-0175",
       "EA-Q-0113",
       "EA-Q-0055",
       "EA-Q-0082",
@@ -4175,13 +4181,19 @@
       "EA-Q-0014",
       "EA-Q-0015",
       "EA-Q-0016",
-      "EA-Q-0019"
+      "EA-Q-0019",
+      "EA-Q-0021",
+      "EA-Q-0022",
+      "EA-Q-0023"
     ],
     "ambiguous": [],
     "unmatched": [],
     "conflicts": [],
     "historical_migrated": [
-      "EA-Q-T021"
+      "EA-Q-T021",
+      "EA-Q-T022",
+      "EA-Q-T023",
+      "EA-Q-T028"
     ]
   }
 }

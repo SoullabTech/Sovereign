@@ -1,0 +1,42 @@
+{
+  "_comment": "BATCH 4 - Chapter 4. Faithful transfer, current and historical records both eligible.",
+  "entries": [
+    {"match": "essential unity of the world", "occurrence": 1,
+     "provenance_status": "verified_exact", "actual_author": "Rabindranath Tagore",
+     "work": "Sadhana: The Realisation of Life (1913), p. 109 - the Gayatri meditation passage",
+     "translator_or_mediator": "NONE - Tagore wrote and translated Sadhana into English himself",
+     "rights_status": "public_domain",
+     "notes": "Audit: sixth public-domain classification. This also resolves the standing 'check, do not assume' flag on Tagore's English - there is no mediation layer here, unlike Rumi, Lao Tzu, Nietzsche, Weil or Coelho.",
+     "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L608"},
+
+    {"match": "Wholeness-making is that dimension", "occurrence": 1,
+     "provenance_status": "unverified", "attributed_as_note": "C. Michael Smith",
+     "work": "LEADS (open): cmichaelsmith.com and Jung and Shamanism in Dialogue (Paulist, 1997)",
+     "notes": "Audit: UNVERIFIED - source lead unresolved. The CONCEPT is documented as his on his own site ('Wholeness-making is an ongoing process organized around the Center of your being'), but the manuscript's specific sentence is not located. Smith is also the book's Foreword author.",
+     "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L622"},
+
+    {"match": "DNA codons are based on a system", "occurrence": 1,
+     "provenance_status": "unverified", "attributed_as_note": "Terence McKenna (in prose, no byline)",
+     "work": "REAL SOURCE TRAIL, verdict deliberately NOT closed: John Hazard interview (October 1998) and the In the Valley of Novelty workshop (July 1998)",
+     "notes": "Audit explicitly held this open: 'L701 is already different - it has a real McKenna source trail; the four aphorisms may not. L701 could resolve to VERIFIED, to PARAPHRASE/ADAPTED, or to a wrong-work/source-form problem, while the other four stay unverified.' Migrated with the open state intact rather than resolved to a verdict the audit declined to reach. Separately: Stage 3b found the surrounding argument develops a borrowed thesis past its credit line, and Schoenberger is unnamed.",
+     "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md - McKenna set, L701; Stage 3b finding 2"}
+  ],
+  "historical_entries": [
+    {"match": "greatest discovery of any generation", "occurrence": 1,
+     "provenance_status": "misattributed", "actual_author": "not William James",
+     "work": "earliest related text: Harry Granison Hill, Cincinnati Enquirer, 1928, attributing a similar idea TO James",
+     "notes": "Audit: EVOLVED APHORISM / RECOVERABLE ANCESTOR. Also misattributed to Albert Schweitzer. The manuscript reads 'of ANY generation' where the common circulating form is 'of MY generation' - a further variant. Both William James quotations in the book failed; both are now removed.",
+     "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L632"},
+
+    {"match": "What we forget we can also remember", "occurrence": 1,
+     "provenance_status": "unverified",
+     "notes": "Audit verdict: UNVERIFIED - source lead unresolved. The identity problem (two John Perkinses; the bibliography cites Confessions of an Economic Hit Man while the register belongs to the shamanic John Perkins) is a BIBLIOGRAPHY defect, recorded separately - it is not the provenance verdict. Specimen for the audit's rule that identity disambiguation precedes source verification.",
+     "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md - table row L693"},
+
+    {"match": "Awareness is the greatest agent", "occurrence": 1,
+     "provenance_status": "verified_exact", "actual_author": "Eckhart Tolle",
+     "work": "attested on Tolle's own official channels (X, the Eckhart Tolle Foundation, official Facebook) - the quoted-author's-channel evidence class",
+     "notes": "Audit: Goodreads places it in A New Earth, but the official channels carry it WITHOUT a book citation, so it may be a spoken or teaching line rather than a published sentence. Removed at 4A on redundancy, not on provenance - the book already says 'Awareness is paramount'. VERIFIED and REMOVED are different axes.",
+     "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L677"}
+  ]
+}
