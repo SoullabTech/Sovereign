@@ -23,7 +23,12 @@ import path from 'node:path';
 import { execSync } from 'node:child_process';
 
 const REPO_ROOT = process.cwd();
-const MD_PATH = path.join(REPO_ROOT, 'docs/book-studio/ELEMENTAL_ALCHEMY_FROM_ORIGINAL_FULL.md');
+// Default source is the canonical Second Edition manuscript. The interim
+// current-edition ebook is rendered by pointing BOOK_MD at
+// ELEMENTAL_ALCHEMY_CURRENT_EDITION.md, matching the print lane so the
+// two formats never diverge on edition identity.
+const MD_PATH = path.join(REPO_ROOT,
+  process.env.BOOK_MD ?? 'docs/book-studio/ELEMENTAL_ALCHEMY_FROM_ORIGINAL_FULL.md');
 const CSS_PATH = path.join(REPO_ROOT, 'lib/manuscript/render/epub-book.css');
 const LUA_FILTER = path.join(REPO_ROOT, 'lib/manuscript/render/canonical-plates.lua');
 const COVER_PATH = path.join(REPO_ROOT, 'public/book-studio/elemental-alchemy-cover.jpg');
@@ -56,6 +61,24 @@ async function main(): Promise<void> {
   // Cover image is embedded as the EPUB cover; the source JPG at
   // public/book-studio/elemental-alchemy-cover.jpg is already at 1600×2597
   // which meets KDP eBook spec (1.6:1 ratio, ≥1000px longest side).
+  // Metadata goes through a UTF-8 file, NOT inline --metadata flags.
+  // Passing `Copyright © 2026` as a shell argument through execSync sent the
+  // © through a non-UTF-8 shell and landed two U+FFFD replacement characters
+  // in dc:rights ("Copyright \uFFFD\uFFFD 2026"), shipped inside the EPUB's
+  // OPF. Pandoc reads a --metadata-file as UTF-8 directly, so the character
+  // never crosses the shell boundary.
+  const META_PATH = path.join(OUT_DIR, `.epub-meta-${VERSION}.yaml`);
+  fs.writeFileSync(META_PATH, [
+    'title: Elemental Alchemy',
+    'subtitle: The Art of Living a Phenomenal Life',
+    'author: Kelly W. Nezat',
+    'publisher: Soullab Media',
+    'date: "2026"',
+    'rights: Copyright © 2026 by Kelly Nezat',
+    'lang: en-US',
+    '',
+  ].join('\n'), 'utf-8');
+
   const cmd = [
     'pandoc',
     `"${MD_PATH}"`,
@@ -65,18 +88,12 @@ async function main(): Promise<void> {
     '--toc',
     '--toc-depth=1',
     '-V', 'toc-title=Contents',
-    '--metadata', 'title="Elemental Alchemy"',
-    '--metadata', 'subtitle="The Art of Living a Phenomenal Life"',
-    '--metadata', 'author="Kelly W. Nezat"',
-    '--metadata', 'publisher="Soullab Media"',
-    '--metadata', 'date="2026"',
-    '--metadata', 'rights="Copyright © 2026 by Kelly Nezat"',
-    '--metadata', 'lang=en-US',
+    '--metadata-file', `"${META_PATH}"`,
     '--epub-cover-image', `"${COVER_PATH}"`,
     '--css', `"${CSS_PATH}"`,
     '--lua-filter', `"${LUA_FILTER}"`,
     '--resource-path', `".:${path.join(REPO_ROOT, 'public')}"`,
-    '--syntax-highlighting=none',
+    '--no-highlight',
   ].join(' ');
 
   execSync(cmd, {
