@@ -22,8 +22,12 @@ manuscript is referenced in this record.* **Ch2 CLOSED (10/10).** adjudicated. *
 > **block-level quotations only** (lines beginning `*"`). **Nine inline
 > quotations — embedded mid-sentence, each with an explicit lead-in verb — were
 > never counted or verified.** They are recorded in
-> `STAGE4_QUOTATION_ADJUDICATION.md` and **still owe Stage 2 treatment.** True
-> original population: **146, not 137.**
+> `STAGE2C_INLINE_QUOTATION_CENSUS.md`. **✅ Closed 2026-09-01 at the same
+> evidence standard.** True original population: **146, not 137** — 137 block
+> occurrences plus 9 inline. Current after 4A: **109 block + 9 inline = 118.**
+>
+> **Stage 2 did not fail.** It completed exactly what it enumerated. **The scope
+> claim failed**, and Stage 2c extends the enumeration rather than reopening it.
 
 ## Scope
 

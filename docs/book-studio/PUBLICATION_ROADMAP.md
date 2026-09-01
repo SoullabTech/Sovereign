@@ -68,7 +68,7 @@ distinguish:
 
 ---
 
-**Position as of 2026-09-01:** stage 4 of 10, pass 4B (stages 2, 3, 3b and pass 4A closed). The large creative and
+**Position as of 2026-09-01:** stage 4 of 10, pass 4B (stages 2, 2c, 3, 3b and pass 4A closed). **Quotation accounting: 146 original occurrences — 137 block + 9 inline; 118 current.** The large creative and
 developmental work is behind us.
 
 > In plain language: **the book itself is edited.** What remains is making sure

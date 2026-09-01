@@ -554,3 +554,31 @@ this shape**, after narrative dependencies produced Stage 3b.
 **Requirement:** a census must declare its **matching pattern** alongside its count,
 and the system must **re-test that pattern whenever a later stage depends on it.**
 "N of N complete" without a stated scope is a claim the enumeration cannot support.
+
+### Capability — prove an inventory by running a thin downstream probe
+
+> **An inventory is only proven complete when a downstream operation can
+> successfully rely on it.**
+
+**Design principle:** *before declaring a census complete, ask the next stage's
+question against it. If the next stage finds objects the census cannot represent,
+the ontology is incomplete.*
+
+**Grounding events — twice, the same shape:**
+- **Stage 3b** exposed unquoted narrative dependencies, because bibliography
+  reconstruction needed them.
+- **Stage 4B** exposed inline quotations, because argument analysis needed them.
+
+**Neither was found by auditing the census.** Both were found by trying to use it.
+A census inspected on its own terms reports *"137 of 137 complete"* — true, and
+complete-looking, and wrong about its own scope.
+
+**Requirements:**
+- **State the matching pattern beside every count.** *"N of N"* without a declared
+  scope is a claim the enumeration cannot support.
+- **Run a thin downstream probe before closing an inventory** — a handful of
+  next-stage questions, not the full stage. The nine inline quotations were found
+  by a single signal scan that returned zero and should not have.
+- **A zero result on a well-formed probe is a finding about the inventory, not
+  about the corpus.** This is the tell, and it must be surfaced rather than
+  reported as a clean pass.
