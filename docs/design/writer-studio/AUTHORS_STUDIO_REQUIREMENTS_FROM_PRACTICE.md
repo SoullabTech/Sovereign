@@ -917,3 +917,33 @@ gap in place, and the next probe will find it.
 **Corollary for the manuscript itself:** where a corpus permits several
 typographic conventions for the same object, **normalising the convention is a
 structural fix worth more than any single recount.**
+
+### Heuristic — specificity must be earned
+
+> **False precision is worse than honest generality.**
+
+**Grounding event:** *"Be in the world but not of it — John 17:16."* The idea is a
+fair traditional summary of John 17:14–16; **the phrase does not appear at that
+verse.** **Removing the verse number makes the sentence more accurate, not less.**
+A system must be able to propose *reducing* precision as a repair — most citation
+tooling can only ever add.
+
+### Requirement — quotations must be objects, not pattern matches
+
+**Grounding event, stated against my own record:** the quotation inventory was
+extended **four times** — block → inline → two more punctuation forms → attribution
+that follows or interrupts the quotation. **Each pass found real objects. Each
+"corrected" detector was wrong again.**
+
+**The class is: a span in quotation marks, with attribution optionally preceding,
+interrupting, or following it — or absent.** The attribution can sit arbitrarily far
+from the quotation and be phrased indefinitely many ways. **No regex closes it.**
+
+> **A quotation must be a first-class record from the moment it is inserted — never
+> rediscovered from prose.** Provenance, rights, speaker, mediation and function
+> attach to the object, not to a syntax match.
+
+**And the honest corollary:** *when successive corrections keep finding real
+objects, stop correcting the detector and change the representation.* **Three
+extension passes were diligence; a fourth was a signal I had misdiagnosed the
+problem as typography when it was never about punctuation at all.**
