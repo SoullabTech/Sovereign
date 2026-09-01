@@ -75,9 +75,24 @@ clause, which names a doctrinal position as a position and flags a live disagree
 the Four Yogis in Ch4; Ch3's ornate cosmogonic opening, not flattened for being unusual.
 
 ### Batch 4 — Ch5 Fire — **open**
-- **Section fragmentation** — 40 headings in 330 lines, sixteen introducing one or two
-  paragraphs. Epigraphs used to do the separating; nine left. **Recommend merging headings, not
-  adding text.** The only structural recommendation of the pass.
+- **Section fragmentation — HELD FOR THE FIRE CONTINUOUS READ.** Not ruled from a heading
+  count: "40 headings in 330 lines" is a numerical proxy, and ruling from it would turn closure
+  QA back into developmental editing. The real question is experiential — **does the heading
+  create a real threshold, or interrupt a movement the reader is already inside?** Five headings
+  in the campfire meditation are justified if the consciousness of the passage genuinely changes
+  five times, and are development scaffolding if it does not.
+
+  **Three tests, applied during the read, not before it:**
+  1. Does something actually change here — scene, argument, voice, time, practice, or
+     developmental movement?
+  2. Does removing the heading make the passage more continuous and intelligible?
+  3. Does the next paragraph depend grammatically or semantically on what came before? The two
+     pronoun cases are strong evidence that those breaks may be false.
+
+  **If a heading fails, merge by subtraction only** — remove the heading, add no prose unless
+  the seam genuinely breaks. **No predetermined number of headings needs to disappear.**
+  Clusters to inspect: the campfire meditation (five headings, one movement) and the shadow
+  material (four headings, one subject).
 - **Two sections open on a pronoun reaching back across a heading** — same cause; merging fixes
   both without touching a word.
 - **Aristotle — moved out of QA.** See below.
