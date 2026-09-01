@@ -25,6 +25,31 @@
 **Origin status**, recorded only when attribution fails:
 `EXTERNAL SOURCE` · `INTERNAL-ORIGIN CANDIDATE` · `UNKNOWN`
 
+**Transmission pattern** — recorded when attribution fails. Records *how* the
+failure happened, separately from the verdict:
+
+1. **`SOURCE DISPLACEMENT`** — a recoverable source exists and the wrong famous
+   name got attached. *Feynman → Haldane.* Remedy: reattribute **if** the
+   manuscript wording actually belongs to that source.
+2. **`EVOLVED APHORISM / RECOVERABLE ANCESTOR`** — an identifiable earlier
+   formulation exists, but repeated transmission substantially reshaped the
+   wording before another name attached. *Shaw → Whyte 1950.* Remedy: **do not**
+   simply swap the byline — Whyte did not write the manuscript's sentence. Remove
+   as a quotation, or, only if it earns its place, recast with explicit
+   provenance.
+3. **`FLOATING APHORISM / SOURCE UNRESOLVED`** — competing authors, unstable
+   wording family, no defensible originating text. *Ford; Keller L1854.* Remedy:
+   usually remove as a quotation; if the thought is genuinely load-bearing it can
+   become ordinary authorial prose. **Do not "solve" it with "— Anonymous"** —
+   that launders the provenance problem rather than fixing it.
+
+> **Competing attribution + variant family is a diagnostic signal of transmission
+> drift, not itself a provenance verdict.** The next question is always whether
+> the drift has a recoverable ancestor.
+
+This matters at repair time because all three look identical on the page — "bad
+famous quote" — while requiring different remedies.
+
 **Rights status** — recorded for **every** quotation, independent of attribution:
 `PUBLIC DOMAIN` · `LIKELY PROTECTED` · `TERM UNCERTAIN` ·
 `PROTECTABILITY UNCERTAIN` · `PERMISSION-OR-LICENSE CONFIRMED`
@@ -1015,6 +1040,39 @@ close.
 
 **Both Keller quotations are `MISSING` from the Ch8 bibliography** — no Helen Keller entry exists,
 despite two quotations.
+
+### Transmission-pattern classification of items already adjudicated
+
+| Item | Pattern | Ancestor |
+|---|---|---|
+| L1628 Feynman (Ch8) | `SOURCE DISPLACEMENT` | Haldane, *Possible Worlds*, 1927 |
+| L1654 Shaw (Ch8) | `EVOLVED APHORISM` | Whyte, *Fortune*, 1950 |
+| L1858 Hawking (Ch8) | `EVOLVED APHORISM` *(tentative)* | Megginson-on-Darwin, 1963 |
+| L998 Drucker (Ch5) | `EVOLVED APHORISM` | Gabor 1963 → Kay 1971 |
+| L1531 "Chinese Proverb" (Ch7) | `EVOLVED APHORISM` | G. W. White, 1967 |
+| L1700 Ford (Ch8) | `FLOATING APHORISM` | — (Hale contested) |
+| L1854 Keller (Ch8) | `FLOATING APHORISM` | — |
+| L872 Oliver→Salzberg (Ch5) | `SOURCE DISPLACEMENT` | Oliver, *House of Light*, 1990 |
+| L1253 Salzberg→Buddha (Ch6) | `SOURCE DISPLACEMENT` | Salzberg, 1989 |
+| L1939 Buddha (Ch9) | `FLOATING APHORISM` | Longchenpa, speculative only |
+
+### Two items do not fit the three patterns — flagged, not forced
+
+**L1758 · Socrates/Solomon (Ch8) — composite.** The epigraph fuses a Socratic
+paraphrase with **Robert C. Solomon's commentary *about* Socrates** into one
+quotation under one name. The failure is not that a name was displaced or an
+aphorism drifted: **two different kinds of text were welded together.**
+Reattributing to Solomon would create a *new* false attribution, since half the
+sentence is not his either.
+
+**L852 · Einstein (Ch5) — same-author distortion.** The **author is correct**;
+the Besso letter is genuinely Einstein's. What changed is the *subject* — from
+the separation of past, present and future to "reality" — which inverts what the
+sentence claims. No displacement (right name), no floating (real source), and the
+ancestor is by the same author rather than a different one.
+
+Both may warrant a fourth pattern, or may be better handled as noted exceptions.
+**Authorial ruling needed** — I have not invented a category to absorb them.
 
 ---
 
