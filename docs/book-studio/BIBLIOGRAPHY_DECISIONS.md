@@ -126,3 +126,53 @@ None of these may be invented:
 
 `quotation-register/emit_bibliography.py` stays **not runnable** until the mapping is
 complete.
+
+---
+
+## EMISSION HOLD — no placeholders (ruled 2026-09-01)
+
+> **Do not emit a bibliography containing `[edition to confirm]` placeholders.**
+
+The remaining uncertainty is small enough that placeholders would create exactly the artifact
+this whole process exists to eliminate: **a formally complete-looking record whose referent is
+still unresolved.** No placeholders. No guessed editions. No "probably this one."
+
+### And the governing distinction for optional detail
+
+> **We do not need maximal bibliographic detail. We need earned detail.**
+
+St. John's saying number is the test case: include it **only if the actual ICS edition supports
+it cleanly**. If it does not, **omit the number**. Do not leave a placeholder, and do not import
+a number from a secondary source — the secondary sources disagree, which is how this became a
+question at all.
+
+### True bibliography blockers — copy and email
+
+| Item | What closes it |
+|---|---|
+| **Teasdale ×2** | Exact work(s) — one shelf inspection settles both and decides whether one or two entries survive |
+| **C. Michael Smith** | Concept → exact work — one email, and the relationship already exists |
+| **Zhuangzi / Giles** | The edition and imprint actually used |
+| **Campbell** | 1991 HarperCollins hardcover vs. 1995 HarperPerennial paperback — whichever was consulted |
+| **Rilke / Barrows–Macy** | The edition actually consulted, not the first printing by default |
+
+### Manuscript confirmation, not bibliography
+
+| Item | What closes it |
+|---|---|
+| **Wendell Berry** | Confirm `begun` against the 1983 North Point copy. Do not restore `come to` until inspected. |
+
+### Then, in order
+
+**emit alphabetical bibliography → reverse reconcile → merge duplicates → release genuine
+orphans → confirm every surviving entry has a live manuscript relationship → BIBLIOGRAPHY
+CLOSED → rights and permissions.**
+
+### Why waiting is right, in one example
+
+The Whyte repair is the argument. **Correcting the speaker did not verify the sentence.** Stage 4
+moved that line from George Bernard Shaw to William H. Whyte and treated it as settled; the
+bibliography pass then found the printed English was still a paraphrase of what Whyte actually
+wrote. A second provenance defect was sitting inside a record everyone considered closed.
+
+We are close enough to the end that **precision is worth more than speed.**
