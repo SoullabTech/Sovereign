@@ -10,17 +10,29 @@
 #
 # Evidence: docs/ops/CANONICAL_PR_QUALITY_GATE_CENSUS.md
 #
-# ⛔ SCOPE of what a green run here establishes, exactly and no further:
+# ⛔ SCOPE of what a green run here establishes, exactly two things and no further:
 #
-#   `npm run typecheck` passed on this PR's head — meaning the application-wide
-#   ship config produced NO NEW diagnostic against `typecheck-baseline.json`.
+#   1. `npm run typecheck` passed on this PR's head — meaning the
+#      application-wide ship config produced NO NEW diagnostic against
+#      `typecheck-baseline.json`.
+#
+#   2. `npm run db:verify-bootstrap` passed — the committed database artifacts
+#      reconstruct a bootable schema from a blank PostgreSQL instance, using
+#      only files in this repository.
 #
 #   A green run does NOT establish that the repository typechecks cleanly
 #   (there is pre-existing debt in the baseline, by design), that unit tests
-#   pass, that lint passes, or that the change behaves correctly. Unit tests are
+#   pass, that lint passes, that the change behaves correctly at runtime, or
+#   that a migration is safe to apply to the production database. Unit tests are
 #   deliberately NOT gated here yet — see below.
 #
-# ⛔ WHY TYPECHECK ONLY, FOR NOW. `test:ci` is `npm run lint && npm run
+#   On (2): the baseline is a snapshot of the current schema, not recovered
+#   history — see docs/ops/DB_BASELINE_DESIGN_NOTE.md and the
+#   DB-EMPTY-BOOTSTRAP-01 diagnosis. A green run proves reconstruction is
+#   reproducible; it makes no claim that every migration in the tree is
+#   individually replayable from empty (32 of them are not, by record).
+#
+# ⛔ WHY NO UNIT TESTS, FOR NOW. `test:ci` is `npm run lint && npm run
 # test:coverage`, which chains with `&&` and so already has honest exit
 # semantics — the defect is only that both existing call sites invoke it as
 # `|| true`. But its present state on `clean-main-no-secrets` is UNMEASURED:
@@ -73,3 +85,51 @@ jobs:
       # left the program while still existing on disk.
       - name: Run TypeScript no-regression gate
         run: npm run typecheck
+
+  database-bootstrap:
+    name: Empty database reconstruction
+    runs-on: ubuntu-latest
+
+    # pgvector/pgvector:pg17 — NOT stock postgres:17. The canonical baseline
+    # declares `CREATE EXTENSION vector` (member embeddings are vector(1536)),
+    # and the official image does not ship pgvector, so the baseline load would
+    # fail on its 52nd line. Same PostgreSQL 17 server, extension available.
+    services:
+      postgres:
+        image: pgvector/pgvector:pg17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      PGHOST: 127.0.0.1
+      PGPORT: 5432
+      PGUSER: postgres
+      PGPASSWORD: postgres
+
+    steps:
+      - name: Checkout PR head
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Falsifier for DB-EMPTY-BOOTSTRAP-01. Creates and drops its own database,
+      # builds only from committed artifacts, and never reads maia_consciousness.
+      # No `|| true`, no `continue-on-error`.
+      - name: Verify empty database reconstruction
+        run: npm run db:verify-bootstrap
