@@ -3558,8 +3558,21 @@ translator's rendering.*
 mediation/bibliography defect alongside `FAMOUS-WORK SUBSTITUTION` and
 `SPURIOUS SUPPORT`.
 
-> **STANDING RULE: naming a translator is a provenance claim, and must be verified
-> against the PRINTED ENGLISH — not merely against the original work.**
+> **STANDING RULE (strengthened): a named translator must be verified against the
+> EXACT ENGLISH PRINTED IN THE MANUSCRIPT. Naming a respected translator can
+> create false confidence when the manuscript actually carries a different — and
+> sometimes materially distorted — translation lineage.**
+
+**Canonical high-severity specimen: the Kalama Sutta (L186)** — the only case
+where **all three layers diverge**:
+1. the **source text is genuine**;
+2. the **named translator is real and appropriate to the text**;
+3. the **printed English is not his**, and the popular rendering **changes the
+   teaching's emphasis**.
+
+**Positive control: Rilke (L161)** — translator naming **can** be done correctly.
+So the class can be **neither trusted nor dismissed wholesale**; the
+printed-English test is required in every case.
 
 Distinct from the established classes:
 - not `FAMOUS-WORK SUBSTITUTION` — the **work** is right;
@@ -3593,7 +3606,10 @@ Hours: Love Poems to God*, trans. **Anita Barrows and Joanna Macy** (Riverhead,
 1996; the bibliography's 2005 is the anniversary edition). German original: "Du
 dunkler Grund, geduldig erträgst du die Mauern."
 **First translator-naming entry to PASS the printed-English test.**
-**Rights: `LIKELY PROTECTED` · `HIGH`** — in-copyright poetry translation.
+**Rights: `LIKELY PROTECTED` · `HIGH`** — and the bookkeeping matters for the
+permissions pass: **the rights-relevant textual object is the Barrows–Macy English
+expression**, not "Rilke poetry" in the abstract. Rilke died in 1926; the 1996
+translation is the protected work.
 
 **L186 · Preface · Buddha, Kalama Sutta — "Do not believe in anything simply because you have heard it…"**
 
@@ -3619,11 +3635,11 @@ followed by one's own sense of right and wrong.
 > **The bibliography credits a scholar for a rendering he has publicly rejected as
 > a distortion.**
 
-**And the popular version alters the teaching in a host-aligned direction** — it
-reads as an endorsement of individual discernment, which is more congenial to a
-modern self-trust framing than the sutta's actual test. Compare
-`HOST-ALIGNED ALTERATION`; here the drift occurred in general circulation, well
-before this manuscript.
+**Host-alignment — recorded as a functional observation only.** The popular
+version reads as an endorsement of individual discernment, more congenial to a
+modern self-trust framing than the sutta's actual test. **The manuscript inherits
+an already-circulating version; there is no evidence it created the alteration.**
+The observation describes the variant's fit, not the manuscript's agency.
 
 **Rights:** the Pali is public domain; **which English is printed remains
 unresolved** (the popular version traces toward the Soma Thera lineage).
