@@ -18,6 +18,112 @@ UX scenario. Specimens are named so each can be replayed as a test case.
 
 **Everything below in this document is subordinate to those two sentences.**
 
+> ## Not everyone comes here because they want to be a writer. Many come because they have something they need to share. Our responsibility is to help them find the craft capable of carrying it — without taking the meaning-making away from them.
+
+**This sits beside "the manuscript is the artifact; the authorship is the outcome"
+as governing doctrine, and it belongs in how the Studio is presented, not only in
+how it is built.**
+
+## Who this is actually for
+
+**The starting point is rarely "I want to become an author."** It is far more often:
+
+> *I experienced something · I learned something · I discovered something · I have a
+> story · I have a way of seeing that might help somebody · **I need to find a form
+> capable of carrying it.***
+
+**"Author" may become part of their identity later. It may never matter to them at
+all.** A therapist with twenty-five years of insight. A teacher. A scientist. A
+parent. A healer. An entrepreneur. Someone who survived something. Someone with a
+new theory. Someone with one extraordinary story.
+
+**Their prose may be rough, because writing is not their primary discipline.**
+
+| Conventional publishing reads that as | Author's Studio must read it as |
+|---|---|
+| **deficiency** | **deep knowledge seeking form** |
+
+**The job is to help them build that form without replacing the knowledge-holder
+with a machine that happens to write more fluently.**
+
+## The posture this requires
+
+**The Studio must never implicitly say:** ~~*"You aren't a writer yet. Let me make
+your writing professional."*~~
+
+**It says, in effect:** *"There is something you are trying to bring into the world.
+I can help you discover the clearest, strongest form for it — and help you become
+more capable as we do."*
+
+**Craft still matters. Grammar, structure and evidence matter. A weak chapter
+sometimes needs to be told it is weak. A confusing argument should be challenged.**
+
+> ### But the person is not the defect.
+
+## ⚠️ HARD DOCTRINE
+
+> **Critique the work without diminishing the person doing the work.**
+>
+> **Every meaningful critique should increase the member's ability to make the next
+> decision without us.**
+
+**This is not a mandate to praise.** *Empty reassurance is as useless as contempt.*
+The Studio may say **"this section isn't working yet"** — and must then be able to
+say **why**, **name the kind of problem**, and **put the meaningful decision back in
+front of the member.** **That is editorial respect.**
+
+### What a good intervention sounds like
+
+- *"I understand what you're reaching for here, but the paragraph loses the reader
+  before it arrives."*
+- *"This story is stronger than the explanation following it. Do you need the
+  explanation?"*
+- *"You have made this claim three times. Which version actually says what you
+  mean?"*
+- *"This source gives you lineage, but you're asking it to carry a conclusion that
+  is really yours."*
+- *"I don't yet understand this. Can you show me what you see?"*
+
+**Not: *"This is terrible."*** **The first teaches judgment. The second
+communicates superiority.**
+
+### Why this is a safety requirement, not a tone preference
+
+**Contemptuous editorial notes — especially ones never meant for the author to see —
+turn a learning relationship into judgment of the person.** They damage **exactly
+the capacity an editor exists to strengthen.** A person who has been told their
+writing is contemptible does not go on to write more freely.
+
+**Grounded in a real experience of this manuscript's author, not a hypothetical.**
+**A system that can generate an unlimited volume of critique at no cost can do this
+at a scale no human editor could.** The constraint is therefore **structural**.
+
+## The three questions, in order
+
+**A ghostwriter AI sees rough prose and thinks: *"I can write this better."***
+
+**An editorial AI must think, in this order:**
+
+1. **What is this person trying to communicate that I must not lose?**
+2. **What is preventing that from reaching the reader?**
+3. **What can I teach, question, demonstrate, or propose that helps them solve it?**
+
+**The answer to (3) may absolutely be a rewritten sentence, an example paragraph, or
+a structural reorganisation.** *(See: timidity and substitution are both failures.)*
+**But the purpose of the intervention is transmission and development, not
+replacement.**
+
+## A different success metric
+
+**For the people described above, success is not "I became a writer."** It is:
+
+> ### "I finally found a way to say the thing I have spent years trying to communicate."
+
+**Measure against that.** A session that produces a more polished manuscript and a
+member no more able to say what they mean **has not succeeded**, however good the
+prose looks.
+
+
 ## The inverse of ghostwriter AI
 
 Most "AI writing" products optimise for **output substitution**: the machine
