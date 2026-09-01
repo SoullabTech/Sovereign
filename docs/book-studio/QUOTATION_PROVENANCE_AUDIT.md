@@ -1312,10 +1312,15 @@ origin status → transmission pattern → rights status → bibliography relati
 
 **L1213 · "Michael Pollen" — "Our task in life consists precisely in a form of letting go of fear and expectations, an attempt to purely give oneself to the impact of the present."**
 
-**The byline is misspelled.** The bibliography has it right — "Pollan, Michael.
-*How to Change Your Mind.* Penguin Press, 2018" — while the in-text attribution
-reads **"Michael Pollen"**. A definite, trivially fixable defect independent of
-provenance.
+**Two separate items — do not let one close the other.**
+
+**(a) Mechanical correction, settled:** `Michael Pollen` → `Michael Pollan`. The
+bibliography already has it right.
+
+**(b) Quotation provenance, OPEN.** The bibliography proving *Pollan is intended*
+does not prove *Pollan authored the sentence*. **Fixing a name typo does not
+close quotation provenance** — this distinction must survive into the repair
+batch, where a corrected byline could otherwise look like a resolved item.
 
 `UNVERIFIED — source lead unresolved`. The line is placed in *How to Change Your
 Mind* (2018) and the bibliography cites it correctly. **But flag the risk:** the
@@ -1337,13 +1342,29 @@ from **"Anthem," on *The Future* (1992)** — a **song**, twenty-four years afte
 that collection. So this is not a 1968 poem excerpt but **song lyrics**:
 **`LIKELY PROTECTED` · `HIGH`.**
 
-*This is the second time a wrong-work citation concealed a rights exposure* — the
-first being the Barks translation quoted as bare "Rumi". A misfiled source does
-not merely misinform the reader; it can hide a permissions obligation.
+### `SOURCE-FORM MISCLASSIFICATION` — the general hazard
 
-**Peter Gabriel L1153 — song identified.** The Ch6 bibliography names it:
-**"Darkness," *Up*, Real World Records, 2002.** Correctly cited. That closes one
-of the three Gabriel identifications for the permissions review.
+Cohen and Barks/Rumi are **not the same defect**. Cohen is a true
+`WRONG SOURCE/WORK`: a real Cohen work is named, just the wrong one. Barks/Rumi
+is mediation/attribution collapse — a translator's copyrighted expression
+presented as its public-domain original author.
+
+What they share is the consequence, and it deserves its own name:
+
+> **`SOURCE-FORM MISCLASSIFICATION`** — an attribution or citation that presents
+> **protected modern expression as older or public-domain material**. It conceals
+> a permissions obligation rather than merely misinforming the reader.
+
+Instances so far: **Cohen** (1992 song cited as a 1968 poetry collection);
+**Barks/Rumi L1666** (a 1995 copyrighted rendering presented as thirteenth-century
+Rumi). A reconstruction that corrected either bibliography entry **without
+re-deriving rights** would leave both exposures standing.
+
+**Peter Gabriel L1153 — source metadata resolved, not a new item.** The Ch6
+bibliography names it: **"Darkness," *Up*, Real World Records, 2002.** Correctly
+cited. This item was already counted among the three Gabriel quotations; **the
+permissions count is unchanged.** Keep *item count* separate from *items whose
+exact source has been resolved.*
 
 ### Chapter 6 bibliography — first observations
 
@@ -1371,7 +1392,10 @@ works created after 1978 are generally protected for the author's life plus 70
 years. **Permission versus removal is not decided inside the provenance
 census.**
 
-### Permissions inventory — seven flagged instances so far
+### Permissions inventory
+
+**8 instances at `HIGH` priority**, plus 4 at `STANDARD`. Counted as *items*;
+resolving an item's source metadata does not change the count.
 
 | Item | Rights | Priority |
 |---|---|---|
