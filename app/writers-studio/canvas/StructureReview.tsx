@@ -75,8 +75,10 @@ import type { OutlineEntry } from '@/lib/writersStudio/outlineOrder';
 import { promoteShape, reviewDiff } from '@/lib/manuscript/structure/review';
 import type { PromoteShape, ReviewOperation, ReviewedUnit } from '@/lib/manuscript/structure/review';
 import type {
-  EditorialQuestion, EditorialSynthesis, ProposedUnit,
+  EditorialQuestion, EditorialSynthesis, ProposedUnit, UncertainRegion,
 } from '@/lib/manuscript/structure/interpret';
+import AskMaia from './AskMaia';
+import type { AskAnchor } from '@/lib/manuscript/ask/anchor';
 
 /** Prose measure. Long lines cost comprehension; this is the usual 65–75ch. */
 const MEASURE = '70ch';
@@ -294,15 +296,43 @@ export default function StructureReview({
   const questionsFor = useMemo(() => {
     const at = new Map(view?.sections.map((s) => [s.id, s.position]) ?? []);
     const qs = view?.interpretation.editorialSynthesis?.questionsForAuthor ?? [];
-    return (u: ProposedUnit | undefined): EditorialQuestion[] => {
+    /* THE INDEX TRAVELS WITH THE QUESTION. An anchor names a position in the
+       FROZEN reading, not a position in this unit's filtered list — those
+       differ the moment a division holds the second question rather than the
+       first, and an anchor off by one would open a conversation about a
+       question the writer did not click. */
+    return (u: ProposedUnit | undefined): { q: EditorialQuestion; index: number }[] => {
       if (!u) return [];
       const a = at.get(u.fromSectionId);
       const b = at.get(u.toSectionId);
       if (a === undefined || b === undefined) return [];
-      return qs.filter((q) => (q.sectionIds ?? []).some((id) => {
-        const p = at.get(id);
-        return p !== undefined && p >= a && p <= b;
-      }));
+      return qs.map((q, index) => ({ q, index })).filter(({ q }) =>
+        (q.sectionIds ?? []).some((id) => {
+          const p = at.get(id);
+          return p !== undefined && p >= a && p <= b;
+        }));
+    };
+  }, [view]);
+
+  /* The frozen UncertainRegions that fall inside a division, each carrying its
+     index in the reading for the same reason questions do. These are a
+     DIFFERENT OBJECT from a unit's `uncertainty` tags: a region is a place she
+     could not settle, with her words for why; a tag is the kind of doubt. Only
+     a region is anchorable as one, so only a region gets an `uncertainty`
+     anchor — the tags are talked about through the division. */
+  const regionsFor = useMemo(() => {
+    const at = new Map(view?.sections.map((s) => [s.id, s.position]) ?? []);
+    const rs = view?.interpretation.uncertainRegions ?? [];
+    return (u: ProposedUnit | undefined): { r: UncertainRegion; index: number }[] => {
+      if (!u) return [];
+      const a = at.get(u.fromSectionId);
+      const b = at.get(u.toSectionId);
+      if (a === undefined || b === undefined) return [];
+      return rs.map((r, index) => ({ r, index })).filter(({ r }) => {
+        const x = at.get(r.fromSectionId);
+        const y = at.get(r.toSectionId);
+        return x !== undefined && y !== undefined && x <= b && y >= a;
+      });
     };
   }, [view]);
 
@@ -416,6 +446,8 @@ export default function StructureReview({
             <Inspector unit={selectedUnit}
               positionOf={(id) => headingOf(id)?.position}
               questions={questionsFor(selectedUnit)}
+              regions={regionsFor(selectedUnit)}
+              manuscriptId={manuscriptId} proposalId={proposalId}
               busy={busy} onGesture={gesture} promotion={promotion} />
           </div>
         </div>
@@ -614,12 +646,35 @@ function Orientation({
  * share an affordance — they shared one for exactly one commit, and it was the
  * clearest thing wrong with the room.
  */
+/**
+ * The one way into a conversation, so every mark opens the same room.
+ *
+ * A BUTTON, NOT A LINK: it opens a room in place and navigates nowhere, and a
+ * writer who middle-clicks a link expecting a tab would lose the reading.
+ */
+function TalkButton({ label, onClick }: { label: string; onClick: () => void }) {
+  return (
+    <button type="button" onClick={onClick} data-talk-with-maia
+      style={{ display: 'block', marginTop: SPACE.hairline, padding: 0,
+        background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left' }}>
+      <StudioText role="metadata" as="span" style={{ textDecoration: 'underline' }}>
+        {label}
+      </StudioText>
+    </button>
+  );
+}
+
 function Inspector({
-  unit, positionOf, questions, busy, onGesture, promotion,
+  unit, positionOf, questions, regions, manuscriptId, proposalId,
+  busy, onGesture, promotion,
 }: {
   unit: ProposedUnit | undefined;
   positionOf: (id: string) => number | undefined;
-  questions: EditorialQuestion[];
+  /** Each carries its index in the FROZEN reading, which is what an anchor names. */
+  questions: { q: EditorialQuestion; index: number }[];
+  regions: { r: UncertainRegion; index: number }[];
+  manuscriptId: string;
+  proposalId: string;
   busy: boolean;
   onGesture: (op: ReviewOperation, previewFirst: boolean) => void;
   /** What moving this division out would do — absent when it is top-level. */
@@ -628,6 +683,12 @@ function Inspector({
     grandparentName: string | null; shape: PromoteShape;
   } | null;
 }) {
+  /* ONE CONVERSATION OPEN AT A TIME IN THIS PANEL, and it is identified by what
+     it is about rather than by a boolean, so opening a second mark replaces the
+     first rather than stacking rooms the writer did not ask for. Declared before
+     the early return below because hooks are unconditional. */
+  const [asking, setAsking] = useState<{ anchor: AskAnchor; about: string } | null>(null);
+
   if (!unit) {
     return (
       <aside className="ws2sr-inspector" data-inspector="empty">
@@ -660,25 +721,76 @@ function Inspector({
         <Panel label="how she reads it">{unit.rationale}</Panel>
       )}
 
-      {unit.uncertainty.length > 0 && (
-        <Panel label="what she left open" data-inspector-uncertainty>
-          {unit.uncertainty.map((u) => UNCERTAINTY_SAYS[u] ?? u).join(' · ')}
-        </Panel>
+      {(unit.uncertainty.length > 0 || regions.length > 0) && (
+        <div data-inspector-uncertainty style={{ marginTop: SPACE.base }}>
+          <StudioText role="panelLabel" style={{ display: 'block' }}>
+            what she left open
+          </StudioText>
+
+          {/* THE ROW SAID "left open: where this ends +2 more" AND STOPPED
+              THERE. It communicated that something was open and then had
+              nowhere to go. Each open thing is now its own line, and each line
+              can be taken up. */}
+          {unit.uncertainty.map((u) => (
+            <StudioText key={u} role="quiet" data-open-tag={u}
+              style={{ display: 'block', marginTop: SPACE.hairline }}>
+              {UNCERTAINTY_SAYS[u] ?? u}
+            </StudioText>
+          ))}
+
+          {regions.map(({ r, index }) => (
+            <div key={index} data-open-region={index} style={{ marginTop: SPACE.snug }}>
+              <StudioText role="quiet" style={{ display: 'block' }}>{r.why}</StudioText>
+              <TalkButton
+                label="Talk with MAIA about this"
+                onClick={() => setAsking({
+                  anchor: { on: 'uncertainty', proposalId, regionIndex: index },
+                  about: r.why,
+                })} />
+            </div>
+          ))}
+
+          {/* A DIVISION'S TAGS ARE NOT A REGION, so they are taken up through
+              the division rather than pretending to be an anchor they are not. */}
+          {unit.uncertainty.length > 0 && regions.length === 0 && (
+            <TalkButton
+              label="Talk with MAIA about this"
+              onClick={() => setAsking({
+                anchor: { on: 'division', proposalId, unitId: unit.id },
+                about: `what she left open in ${
+                  divisionName(unit.title, unit.editorialLabel ?? null, unit.kind)}`,
+              })} />
+          )}
+        </div>
       )}
 
       {unit.evidenceRefs.length > 0 && (
         <Panel label="what she reasoned from">{unit.evidenceRefs.join(' · ')}</Panel>
       )}
 
-      {questions.map((q, i) => (
-        <div key={i} data-inspector-question style={{ marginTop: SPACE.base }}>
+      {questions.map(({ q, index }) => (
+        <div key={index} data-inspector-question={index} style={{ marginTop: SPACE.base }}>
           <StudioText role="panelLabel" style={{ display: 'block' }}>
             a question for you
           </StudioText>
           <StudioText role="navItem" style={{ display: 'block' }}>{q.label}</StudioText>
           <StudioText role="quiet" style={{ display: 'block' }}>{q.explanation}</StudioText>
+          {/* SHE ASKED; NOW IT CAN BE ANSWERED. The anchor names the question's
+              position in the frozen reading, so the conversation opens on the
+              exact entry the writer is looking at. */}
+          <TalkButton
+            label="Talk with MAIA about this"
+            onClick={() => setAsking({
+              anchor: { on: 'question', proposalId, questionIndex: index },
+              about: q.label,
+            })} />
         </div>
       ))}
+
+      {asking && (
+        <AskMaia manuscriptId={manuscriptId} anchor={asking.anchor}
+          about={asking.about} onClose={() => setAsking(null)} />
+      )}
 
       {promotion && (
         /* THE GESTURE IS DESCRIBED BY ITS CONSEQUENCE, NOT BY THE TREE.
