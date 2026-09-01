@@ -2191,80 +2191,6 @@ There is also a horizontal axis moving between our inner experience and engageme
 
 Our inner and outer lives continuously affect one another. The quality of our energy influences emotion. Emotion affects the body. The body shapes perception. Our thoughts influence our feelings and relationships, and our relationships alter the way we understand ourselves. Spiralogic gives us a way of attending to these movements without requiring them to become fixed categories.
 
-### States and Phases
-
-Each element contains its own developmental movement, and Spiralogic describes that movement through states and phases. The **states** describe changes in the quality of consciousness as we move more deeply through an element. The **phases** describe how that movement is experienced and lived, moving from initiation through immersion toward integration. They are not separate systems, but different ways of looking at the same elemental process.
-
-### Fire — Activating, Amplifying, Actualizing
-
-Fire begins through **Activating**, when something awakens within us. We notice a spark of possibility, a vision, desire, question, calling, or sense that something more is trying to emerge. Fire illuminates our awareness and turns our attention toward the future, asking us to imagine beyond the limits of what is currently visible.
-
-This is where the **If** begins. If this were possible, what might follow? If I lived more fully from what I know, what could change? Activating Fire does not yet provide the answers. Its work is to illuminate possibility strongly enough that we begin moving toward it.
-
-Fire then moves into **Amplifying** as the initial spark gains energy through engagement with life. We explore, play, try new things, encounter other people, test our assumptions, and discover which parts of the vision carry life. Some possibilities lose intensity when they meet actual experience. Others deepen as we become increasingly aware of what brings coherence and vitality.
-
-Finally, Fire moves toward **Actualizing** as what began as a possibility increasingly becomes something we can live from. The distance between what we envision and how we actually participate in life becomes smaller. Actualization does not mean perfection or completion; it means that what has been illuminated has become sufficiently integrated to begin shaping the way we live.
-
-The experiential phases of Fire are **Purpose, Play, and Practice**. Purpose gives direction to the initiating spark. Play allows experimentation, imagination, and discovery without requiring immediate certainty. Practice carries what has been discovered into everyday life through ritual, discipline, learning, and repetition.
-
-### Water — Being, Balancing, Becoming
-
-Water begins with **Being**. Where Fire turns toward possibility, Water turns toward interior experience and asks us to become present with what we are actually feeling. It brings us into relationship with emotion, memory, imagination, longing, vulnerability, and the deeper movements of psyche.
-
-Our experiences in the outer world can activate dimensions of our inner world that have not yet been fully understood. Relationships become mirrors, strong emotional reactions reveal places that need attention, and what we encounter outside ourselves can give us access to something waiting within.
-
-Water then moves into **Balancing**. As awareness deepens, we recognize patterns among emotions, memories, projections, wounds, and relationships. We learn to distinguish what belongs to the present from what may be carried forward from the past, and shadow work becomes increasingly important.
-
-The shadow is not simply everything negative within us. It includes dimensions of our nature that have not yet found a conscious place within the whole. Some have been rejected, some hidden, and others developed as ways of protecting or adapting ourselves. Balancing does not mean suppressing these movements; it means bringing them into relationship. In the old alchemical image, this is where the old king drowns so that something new can eventually be born.
-
-Water moves finally toward **Becoming** as what has been felt, reflected upon, and integrated begins changing how we are in the world. Emotional experience becomes more than reaction and begins contributing to wisdom. Our relationship with ourselves deepens, and the boundaries we once defended may soften enough for a larger experience of relationship and interconnectedness to emerge.
-
-The experiential phases of Water are **Heart, Healing, and Holy**. Heart brings us into authentic feeling. Healing asks us to remain with the emotional material deeply enough for transformation to occur. Holy opens our personal experience toward something larger, allowing what has been integrated individually to become part of our relationship with life as a whole.
-
-### Earth — Cultivating, Crystallizing, Creating
-
-Earth asks what can become real. Something has been illuminated in Fire and distilled through Water. Now what has been discovered must enter the conditions of the material world.
-
-Earth begins through **Cultivating**. As we emerge from Water, we carry what I think of as inner gold or elixir: something essential recovered through our descent into experience. But inner gold is not yet a life. It is more like a seed. Cultivation is the preparation of the ground in which that seed might grow. We develop skills, build practices, create greater stability, and become more aware of what is required to support the thing that wants to emerge.
-
-The initiating phase of **Mission** asks how what we have discovered within ourselves might become meaningful in the world. It gives direction to our purpose and begins translating inner understanding into a path of service, work, creation, or contribution.
-
-The second Earth state is **Crystallizing**, as the emerging vision begins gathering structure. Plans develop, resources are gathered, relationships form around the work, ideas become designs, and designs become methods. The image of mycelium is useful here: beneath the visible surface, networks spread outward, connecting resources and preparing the ground before much of anything can yet be seen.
-
-The immersive phase of **Method** asks us to discover how the mission will actually be carried. We develop practices and processes, gather resources, establish structures and ethical foundations, and learn through experience what works and what requires refinement.
-
-Earth moves finally toward **Creating**, when cultivation and development begin taking recognizable form. What started as insight becomes something another person can encounter: a practice, a work, a service, a teaching, a creation, or a way of contributing to the world.
-
-This is where the integrative phase of **Medicine** appears. Medicine is what becomes possible when something we have experienced, lived, practiced, and refined can serve beyond ourselves. Mission gives the work direction, Method gives it form, and Medicine gives it away.
-
-### Air — Directing, Developing, Discerning
-
-Air carries what has taken form into relationship. It begins through **Directing**, when something that was once primarily inner becomes communicable. We speak, listen, name what we have learned, offer an experience to another person, and discover what happens when it enters relationship with another consciousness.
-
-Air clarifies the **What** of our understanding: What is this? What have I learned? What am I trying to communicate? Yet its developmental movement also opens into **With**: With whom does this understanding now enter relationship, and what happens when my experience meets yours?
-
-The initiating phase of **Connection** begins as a duet. One person speaks and another responds. We begin with our own experience and allow another person to bring theirs beside it. Communication becomes more than transmission; it becomes relationship.
-
-Air then moves into **Developing**. As more perspectives enter, understanding expands. Individual experience begins participating in something larger, which is the immersive phase of **Community**. A community forms when people remain in relationship around something that matters, held together not by complete agreement but by continued participation in a shared field of concern, curiosity, creativity, or purpose.
-
-The drum circle offers a simple image. Each person carries an individual rhythm. As those rhythms enter relationship, something emerges that belongs to the group rather than to any single player. The collective experience contains each individual contribution while becoming more than any one of them could produce alone. This is one way collective intelligence begins.
-
-Air moves finally toward **Discerning**, as perspectives gathered through relationship become more coherent. We recognize patterns, synthesize what has been learned, and allow insights to become concepts, shared practices, systems, organizations, or ways of understanding that can extend beyond the original conversation.
-
-This is the integrative phase of **Consciousness**. Connection opens the relationship, Community develops the shared field, and Consciousness allows what has been learned together to become available at a larger scale.
-
-### Aether — Emanation, Elevation, Equilibrium
-
-Aether is different from the other elements because it is not simply another movement beside them. It is the field within which the other movements occur.
-
-Aether begins through **Emanation**. Within stillness there is always the possibility that something will arise. A thought appears, an intuition arrives, energy begins to move, and something comes into awareness from a place we could not have consciously manufactured.
-
-The second state is **Elevation**, where awareness opens beyond its ordinary identifications. Thought may quiet, time can feel different, and we become aware not only of the contents of consciousness but of the spaciousness within which those contents arise. This need not be dramatic or mystical. It may be as simple as a moment when we stop trying to solve experience and become present enough to receive it.
-
-Aether moves toward **Equilibrium**, which is not a frozen state of perfect balance but a living relationship among the elements. Fire can illuminate without consuming everything, Water can move without overwhelming the whole, Earth can create structure without becoming rigid, and Air can expand into thought and relationship without losing contact with body and feeling.
-
-Unlike the other four elements, Aether does not carry a separate sequence of experiential phases. Its movement is integrative rather than sequential. It does not take its turn after the others; it is present throughout the whole elemental process as the field through which the elements arise, interact, and return.
-
 ### The Alchemical Sequence
 
 The elemental movements of Spiralogic also correspond with the ancient symbolic language of alchemy. Fire carries **calcinatio**, the burning and illuminating process through which what no longer belongs may be exposed and transformed. Water corresponds with **solutio**, dissolution and the loosening of what has become fixed. Earth carries **coagulatio**, through which something becomes embodied, grounded, and given material form. Air corresponds with **sublimatio**, elevation into perspective, understanding, language, and communication. Aether carries **coniunctio**, the bringing together of what had previously existed as opposites or separate parts.
@@ -2285,7 +2211,7 @@ The architecture can appear complex when its different parts are viewed separate
 
 ## V. Living the Spiral
 
-A map becomes meaningful only when we return to the territory. We can understand the elemental movements intellectually, recognize the states and phases, and learn the symbolic language of alchemy, but the real work begins when life presents us with something we did not plan for: an emotional reaction, an unexpected loss, a conflict, a recurring fear, a relationship that unsettles us, a period of uncertainty, or simply the realization that something within us is no longer in balance.
+A map becomes meaningful only when we return to the territory. We can understand the elemental movements intellectually and learn the symbolic language of alchemy, but the real work begins when life presents us with something we did not plan for: an emotional reaction, an unexpected loss, a conflict, a recurring fear, a relationship that unsettles us, a period of uncertainty, or simply the realization that something within us is no longer in balance.
 
 This is where Spiralogic becomes less a system to understand and more a practice of attention.
 
