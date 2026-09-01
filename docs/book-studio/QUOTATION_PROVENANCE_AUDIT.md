@@ -1790,10 +1790,14 @@ external-circulation search with positive local-origin evidence remaining.**
 Two chapters have now been entered specifically to test the Fire phenomenon, and
 neither reproduced it.
 
-> **Attribution hardening is a Chapter 5 phenomenon.** It is not the general
-> explanation for the book's quotation problems, and it must be adjudicated
-> separately from them — a compositional/authorship question, not a transmission
-> question.
+> ## CLOSED CONCLUSION — attribution hardening is localized
+>
+> **Attribution hardening is a Chapter 5-specific provenance problem nested
+> inside a broader book-wide quotation problem.**
+
+The four Fire cases stay in their **own authorship-recovery lane**. The theory
+**must not be used to explain later unverified quotations** unless new positive
+evidence independently earns the classification for that item.
 
 ### Famous-work substitution — eight instances across three chapters
 
@@ -1803,9 +1807,46 @@ Mother Teresa (*A Simple Path* ← *No Greater Love*) · Cohen (*Selected Poems*
 "Anthem") · Gawain (*Creative Visualization* ← *Living in the Light*) · Tagore
 (*The Home and the World* ← probably *Sadhana*).
 
-**In every case the bibliography names the author's better-known work.** This is
-now the audit's most consistent single finding, and the one most invisible to any
-check that does not verify at the quotation level.
+**In every case the bibliography names the author's better-known work.**
+
+> ## CLOSED CONCLUSION — `FAMOUS-WORK SUBSTITUTION` is a systematic defect
+>
+> **Subtype of `WRONG SOURCE/WORK`:** the bibliography supplies a *recognizable or
+> canonical* work by the **correct author** instead of the **actual source**.
+>
+> **Mechanism:** correct author → plausible famous title → actual quotation comes
+> from a different work or source. Dangerous precisely because **the bibliography
+> looks credible**; a reader spot-checking it finds the right author and a real
+> book every time.
+
+**Mandatory reconstruction rule — the census's single most important mechanical
+lesson so far:**
+
+> **Never infer a quotation's source from an author's bibliography entry. Derive
+> the bibliographic work from verified quotation provenance.**
+
+Eight independent instances across three chapters. No longer incidental.
+
+---
+
+## Census position — 76 of 137 (55%)
+
+**Three elemental chapters complete: Fire → Air → Water.** They have demonstrated
+**three different provenance profiles**, not one monolithic defect:
+
+- **Fire** — suspicious locally congruent language that may have acquired
+  external authority. The only chapter with internal-origin candidates.
+- **Air** — externally circulating sayings accumulating altered wording,
+  prestigious names, and spurious bibliographic support. Worst rates.
+- **Water** — best-sourced; failures tractable; the only clean reattribution
+  candidate; and the demonstration that faithful sourcing can coexist with large
+  permissions exposure.
+
+**Still findings-only. No repair batch. No bibliography reconstruction.**
+
+**Next: Chapter 7 — Earth (16), then Chapter 9 — Aether (12)**, completing the
+five-element provenance picture before the lower-volume chapters.
+
 
 ---
 
