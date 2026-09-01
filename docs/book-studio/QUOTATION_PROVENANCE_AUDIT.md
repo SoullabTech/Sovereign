@@ -2,7 +2,7 @@
 
 **Source of record:** `docs/book-studio/ELEMENTAL_ALCHEMY_FROM_ORIGINAL_FULL.md`
 **Opened:** 2026-09-01, after Chapter 10 closed developmental adjudication.
-**Status:** IN PROGRESS — 40 of 137 adjudicated. **Chapter 5 CLOSED (30/30).**
+**Status:** IN PROGRESS — 43 of 137 adjudicated. **Chapter 5 CLOSED (30/30).** Chapter 8: 7 of 23.
 
 ## Scope
 
@@ -438,6 +438,10 @@ wrong works → remove confirmed orphans → normalize bibliographic form.
 - `WRONG SOURCE/WORK` — dependency exists, bibliography points somewhere incorrect.
 - `ORPHAN CANDIDATE` — no quotation occurrence; body dependency still to be checked.
 - `ORPHAN CONFIRMED` — no remaining chapter dependency at all.
+- `FABRICATED SUPPORT` — the entry exists to support a quotation the audit finds
+  misattributed. Not correctable to a right work; removed with the quotation.
+- Form inconsistency (same title cited differently in different sections) is
+  handled by the normalization step, not by these statuses.
 
 The candidate/confirmed split exists so a source is never deleted merely because
 an epigraph was removed while prose still depends on it.
@@ -679,6 +683,78 @@ quotation.
 
 ---
 
+## Chapter 8 — Air (23 quotations; 7 adjudicated)
+
+Four were adjudicated in the first tranche: L1684 Twain, L1754 Gandhi,
+L1758 Socrates/Solomon, L1770 Aristotle. Three more below.
+
+### MISATTRIBUTED
+
+**L1654 · George Bernard Shaw — "The single biggest problem in communication is the illusion that it has taken place."**
+No substantive evidence Shaw ever said it; the ascription is recent. Earliest
+located source: **William H. Whyte**, "Is Anybody Listening?", *Fortune*, 1950 —
+and Whyte's own wording differs: "The great enemy of communication, we find, is
+the illusion of it. We have talked enough; but we have not listened." The
+manuscript's wording matches **neither Shaw nor Whyte**. → **doctrine rule 3**.
+
+**L1628 · Richard Feynman — "Reality is not only stranger than you think, but stranger than you can think."**
+Origin is **J. B. S. Haldane**, *Possible Worlds* (1927): "the Universe is not
+only queerer than we suppose, but queerer than we can suppose." Ascriptions to
+Heisenberg, Eddington and Priestley are all post-1927 and spurious; Feynman is a
+further modern drift. The manuscript's wording matches no documented form. →
+**doctrine rule 3**.
+
+*Auditor's note:* my own prior on this one was Heisenberg — which Quote
+Investigator names explicitly as one of the spurious ascriptions. The check
+corrected the auditor, not just the manuscript.
+
+### PARAPHRASE/ADAPTED + rights
+
+**L1666 · "— Rumi" — "Out beyond ideas of wrongdoing and rightdoing, there is a field. I'll meet you there."**
+
+This is **Coleman Barks with John Moyne**, *The Essential Rumi* (HarperCollins),
+**copyright © 1995 Coleman Barks**. And it is a loose rendering, not a
+translation: Barks renders the Persian terms for *kufr* (disbelief) and *islām*
+(submission) as "wrongdoing" and "rightdoing," which are not equivalent. Rumi's
+original names two religious positions and sets a mystical field beyond both;
+the English universalises and loses the Sufi argument.
+
+**Rights: `LIKELY PROTECTED` · `HIGH`** — a verbatim quotation of an explicitly
+copyrighted poetic translation. **The strongest rights exposure found so far**,
+stronger than the Ch5 Barks item, which turned out to be a paraphrase.
+
+**Internal inconsistency in the book's own practice.** Ch5's L1052 honestly
+labels its Barks-derived line "Adapted from Rumi, after Coleman Barks." Ch8's
+L1666 gives a bare "— Rumi" for a line that is *more* Barks's own composition,
+not less. **The book already knows the correct labelling and applies it in one
+place and not the other.**
+
+### Bibliography defects — a worse class than famous-work substitution
+
+**Fabricated support for a misattribution.** The Ch8 bibliography lists
+**"Feynman, Richard. *The Character of Physical Law.* MIT Press, 1965"** — a real
+book, cited in support of a quotation **Feynman did not say**. This is more
+damaging than naming the wrong work: the bibliography does not merely misfile a
+source, it **lends scholarly credibility to a false attribution**. A reader
+checking the citation finds a plausible Feynman title and stops.
+
+New status value required: **`FABRICATED SUPPORT`** — a bibliography entry that
+exists to support a quotation the audit finds misattributed. It cannot be
+corrected to a right work, because there is no right work; it must be removed
+with the quotation.
+
+**`MISSING`** — Ch8 quotes Barks's copyrighted translation verbatim and carries
+**no Rumi or Barks entry at all**.
+
+**Bibliographic form inconsistency.** The same book is cited two different ways:
+- L2612 — "Rumi. *The Essential Rumi.* Translated by Coleman Barks. **HarperCollins**, 1995."
+- L2681 — "Rumi, Jalal ad-Din. *The Essential Rumi.* Translated by Coleman Barks. **HarperOne**, 1995."
+
+Different author form and different publisher for one title. Add form
+normalization to the reconstruction workflow.
+
+---
+
 ## Quoted-material copyright / permissions review — publication/legal
 
 *Renamed from "copyrighted-lyrics rights clearance."* The three Gabriel lyrics
@@ -700,6 +776,7 @@ census.**
 | Peter Gabriel ×3 (L713, L1153, L1911) | `LIKELY PROTECTED` | `HIGH` |
 | Mary Oliver (L872) | `LIKELY PROTECTED` | `HIGH` |
 | Bear Heart (L926) — paragraph-length | `LIKELY PROTECTED` | `HIGH` |
+| Coleman Barks / Rumi (L1666) — verbatim © 1995 | `LIKELY PROTECTED` | `HIGH` |
 | John O'Donohue (L1106) | `LIKELY PROTECTED` | `HIGH` |
 | Emma Craufurd / Weil (L1062) | `TERM UNCERTAIN` | `STANDARD` |
 | Maya Angelou (L1042) | `PROTECTABILITY UNCERTAIN` | `STANDARD` |
