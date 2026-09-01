@@ -2543,3 +2543,76 @@ rights holder. No bibliography entry, no provenance chase.
 **Standing after batch 3:** 124 active · 34 historical · **158 total** (frozen
 130 + 28) · block lifecycle 137 = 108 active + 29 inactive · **CLOSURE GATE PASSED ·
 FREEZE GATE PASSED**.
+
+---
+
+## Stage 4 closed (2026-09-01)
+
+**Every quotation in the manuscript has received an editorial ruling.** Zero unadjudicated
+records remain.
+
+| Pass | What it ruled |
+|---|---|
+| **4A** | section-opening epigraphs |
+| **4I** | inline quotations, 21 records, family-aware |
+| **4B** | argument-carriers — which quotations were carrying reasoning the book should carry itself |
+| **4C** | the remaining block epigraphs, chapter by chapter |
+
+**Final standing: 74 active · 84 historical · 158 total** (frozen population 130 + 28)
+· block lifecycle **137 = 61 active + 76 inactive** · both gates pass.
+
+Historical layer: **74 removed · 10 reclaimed as author prose.**
+By stage: 4C 42 · 4A 19 · 4I 9 · Stage 3 9 · 4B 5.
+
+### What 4C actually found
+
+The default settled in Chapter 5 held for the whole book:
+
+> Verified and worthwhile → **KEEP** · Misattributed → **REPAIR or REMOVE** · Unverified but
+> genuinely relational → **honest frame, may keep** · Unverified and decorative → **REMOVE**
+
+Roughly half the epigraph population did not survive it — **and almost none of the removals
+were on argument grounds.** Nearly every one was *unverifiable and doing nothing*. That is
+the finding, not a quota: no chapter was made to match another's ratio, and the results
+ranged from Water (7 of 11 kept) to Air (6 of 15).
+
+### The repair patterns that recurred
+
+- **Host-aligned alteration** — the change that makes a quotation fit is the tell. Plutarch's
+  *wood* became *fire* in the Fire chapter; Lao Tzu's *It* became *Nature* in Earth; the
+  medieval infinite *sphere* became a *circle* in *The Circle: A Model of Wholeness*.
+  **When the alteration is what makes the quotation fit, restore the source and let the
+  author claim the fit.**
+- **Restore the ancestor when it exists.** Carson's real sentence replaced its polished
+  descendant; Plutarch's real image replaced the modern contraction. Distinct from Goethe and
+  Kierkegaard, where no single authoritative English exists and the honest move is to hedge.
+- **Name what you received rather than quote it.** C. Michael Smith and Sadhguru both moved
+  from quotation to credited prose — *the most truthful way to honour a source is sometimes
+  not to quote it, but to name what you received and make clear what you did with it.*
+- **Drop the speaker, keep the thought.** Aesop became a proverb; the "Chinese proverb"
+  became a familiar saying; Black Elk was removed rather than rescued — **recovery should
+  serve the manuscript, not rescue a quotation.**
+- **Rule individually, review together.** Five McKenna removals that agree are not one family
+  judgment. Two Watts records took different verdicts; two Kellers, two Tolles and two
+  Blakes each split. A uniform verdict is not a shared transmission mechanism.
+
+### What Stage 4 hands downstream
+
+- **Rights (Stage 6)** — 46 survivors carry a rights class: 7 `likely_protected_high`,
+  4 `song_lyric_high` (four separate permissions), 1 `legal_review` (King), 1
+  `consent_required_not_permissions` (Stephen Clayton), plus the uncertain-term group.
+- **Recovery obligations (3)** — Wendell Berry (provenance never established, and it greets
+  the reader in the Preface), the Kalama Sutta English (`WRONG TRANSLATOR CITED`), and
+  St. John of the Cross (rendering unidentified).
+- **Bibliography (Stage 7)** — 27 flags: wrong translator ×2, wrong book ×2, wrong work
+  (Cohen, Carson), MISSING entries (Tolle, Plato, Tart, Cusa), Blake present for the wrong
+  work, and one verdict explicitly **flagged as untrustworthy** (Jung — written during the
+  bibliography-scope error).
+- **Held structural QA** — the duplicated disclaimer passage must be resolved **before** the
+  bibliography is final, since consolidating it changes which occurrences survive. Plus the
+  Fire and Air continuous reads.
+- **Two open authorial obligations** — Nussbaum (own the premise) and Smith (own the
+  definition), both deliberately undrafted.
+- **Model-originated prose awaiting the author's wording** — the Hermetic derivation, the
+  Permaculture transition, the Smith lineage sentence, the Sadhguru lineage sentence, and the
+  Cusa sphere/circle passage.

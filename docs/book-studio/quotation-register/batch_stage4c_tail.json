@@ -1,0 +1,38 @@
+{
+  "_comment": "Stage 4C - the twelve-record tail. 6 survive, 6 leave. With this batch every quotation in the manuscript has received an editorial ruling.",
+  "entries": [
+    {
+      "match": "plunge into it, move with it, and join the dance",
+      "editorial_status": "KEEP. Verified exact, bibliography correct; opens The Torus of Change on the chapter's actual subject. Rights term_uncertain_standard for Stage 6.",
+      "evidence_location": "4C tail ruling",
+      "occurrence": 1
+    },
+    {
+      "match": "there is only circumambulation of the self",
+      "editorial_status": "KEEP. Verified variant; the published text reads 'there is only A circumambulation' and the manuscript drops the article - Stage 7 apparatus.",
+      "evidence_location": "4C tail ruling",
+      "notes": "The bibliography verdict on this record is FLAGGED, NOT TRUSTED: the audit's MISSING was written during the systematic bibliography-scope error and needs re-checking rather than acting on.",
+      "occurrence": 1
+    },
+    {
+      "match": "The spiral is a spiritualized circle",
+      "editorial_status": "KEEP. Verified exact; closes Ch3 on the spiral, which is the chapter. The census records its own correction here - the earlier fiction/speaker suspicion was wrong, the speaker is clean. Rights likely_protected_standard for Stage 6; bibliography entry owed.",
+      "evidence_location": "4C tail ruling",
+      "occurrence": 1
+    },
+    {
+      "match": "essential unity of the world with the conscious soul of man",
+      "editorial_status": "KEEP. Verified exact and public domain - the cleanest record in the tail. It also resolves the standing 'check, do not assume' flag on Tagore's English: there is no mediation layer here, unlike Rumi, Lao Tzu, Nietzsche, Weil or Coelho.",
+      "evidence_location": "4C tail ruling",
+      "occurrence": 1
+    },
+    {
+      "match": "At the evening of life, you will be examined in Love",
+      "editorial_status": "KEEP - THRESHOLD + LINEAGE. It earns the privilege of opening the Conclusion: it introduces love as the final measure, and the Conclusion immediately develops the book toward sacred love. That is threshold work, not decorative authority. The attribution is sound; what remains uncertain is the exact English rendering, and the byline does not pretend otherwise - no translator is named. The editorial ruling does not wait on the recovery.",
+      "provenance_review_state": "edition_check_required",
+      "recovery_note": "Stage 6/7: identify the English rendering currently printed, or substitute a sourced translation. Variants exist - 'when evening comes' against 'at the evening of life'.",
+      "evidence_location": "4C tail ruling",
+      "occurrence": 1
+    }
+  ]
+}

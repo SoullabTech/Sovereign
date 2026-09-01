@@ -236,8 +236,6 @@ Take what resonates, leave what doesn't, and may your path be illuminated with j
 > far greater
 > than we can imagine.*
 
-*"The Soul should always stand ajar, ready to welcome the ecstatic experience." – Emily Dickinson*
-
 The night air was crisp with the first hints of autumn as I tended to the crackling flames before me. My son Augusten and I had made this backyard campfire a nightly ritual during the final stretches of summer. There was something profoundly grounding about watching the mesmerizing dance of the flames that kindled a sense of presence and enchantment.
 
 As I added another piece of wood to the fire, I couldn't help but smile at the spirited orange sparks swirling into the abyss of the inky sky. My mind brought me back to a cherished memory of being a young man, huddled around the fire with my teacher and medicine man, Johan, deep in the hollow of a sacred canyon. We were preparing for a sleepless week of fasting, prayer, and invoking a guiding vision for my future. His gravelly voice invoked worlds unseen—of magic, spirits, and the elemental forces pulsating through all of creation.
@@ -311,8 +309,6 @@ Campbell's language has stayed with me because becoming who we are is not a retr
 For those who walk with the five elemental spheres and their three-phase developments, what often emerges is a quiet, profound transformation—a deepening into one's own truth, a widening of conscious awareness. The journey, in time, touches every aspect of consciousness, bringing it into closer step with the natural rhythms of life.
 
 What I have witnessed, again and again, is that those who give themselves to this soul-directed mystery school come into a radiant embodiment of their own purpose—inspired, creative, emotionally intelligent, grounded, adaptable, awakened to the interconnected beauty of our shared experience.
-
-*"The aim of life is to live, and to live means to be aware, joyously, drunkenly, serenely, divinely aware." – Henry Miller*
 
 This book represents a synergy of diverse wisdom lineages—from ancient metaphysical traditions like alchemy, shamanism, Taoism, Hermeticism, Tantra, and Sufism to modern psychological principles and wellness modalities. My role is simply that of a storytelling cartographer, weaving experiences and teachings into a lived tapestry that unlocks your multidimensional potentials.
 
@@ -390,7 +386,7 @@ In a ceremonial circle, all are one. When we enter the circle, we are asked to b
 
 Everything circles, cycles, and dances around a center of being. Each of us has our own unique center, as do individual cells to galaxies. Our expansion into our outer world and our contracting back into the center of our being is part of a universal dance of life. The center of our being holds the wisdom of our infinite nature, which is continuously engaging with the elements of experience.
 
-*"God is an infinite circle, whose circumference is nowhere, and whose center is everywhere." – Nicholas of Cusa*
+A figure that runs through medieval philosophy—used by Alain de Lille, Bonaventure and Nicholas of Cusa alike—describes God as an infinite sphere whose circumference is nowhere and whose center is everywhere. In this book I take that figure into two dimensions and work with it as a circle.
 
 As imaginal beings, we find simple symbols helpful in managing the complexity of our experience. We rely on symbolic representations of our world to ground us and guide our decisions. We also thrive when we identify parallels to our own experience in nature. The circle depicts the path of adapting to the elements of our reality. The circle is always whole, so symbolically, it is the model for our inherent wholeness. Each moment along its arc is both a beginning and an end—a turning that is also a becoming.
 
@@ -409,8 +405,6 @@ Each time we come back to a problem of the same sort, we are given the opportuni
 *"There is no linear evolution; there is only circumambulation of the self. Uniform development exists, at most, only at the beginning; later everything points towards the center." – Carl Jung*
 
 ### Using Sacred Geometry to Find Order and Create Meaning Amid the Chaos of Living
-
-*"Geometry is the archetype of the beauty of the world." — Johannes Kepler*
 
 The purpose of this work is to bring us into closer contact with the foundational elements of life—seeing them, feeling them, engaging with them. As these patterns become more visible—something many already sense in different ways—a deeper mystery tends to come into view, one that holds both our unique individuality and our connection to the greater whole.
 
@@ -562,8 +556,6 @@ Western alchemy presents a triadic model through the principles of Sulfur, Salt,
 **Mercury (Balance)**: Mercury reflects the wisdom of Sattva, weaving the two movements of expansion and contraction into a process, a cycle of life dependent on these two movements to maintain a constant state of harmony and balance. As the fluid, adaptable agent, Mercury facilitates the alchemical process of transmutation by bridging the volatile and the fixed.
 
 ### The Elemental Lens
-
-*"The four elements: water, air, fire, earth must be woven together in your being for you to become a spiritual being." – Sai Baba*
 
 At the core of this work is the belief that we as embodied souls are multidimensional beings comprising the five elements, each representing a facet of our consciousness, experiences, and expressions:
 
@@ -1917,8 +1909,6 @@ This is where the image of the spiral becomes useful. A cycle describes the natu
 
 This is the living movement at the heart of Spiralogic. The purpose is not to finish the cycles of our nature or rise beyond ordinary human experience. It is to become increasingly aware of the patterns moving through our lives and to participate in them with greater consciousness. We may return to something we have known before without being condemned to meet it in exactly the same way.
 
-*"We must give reverence and credence to Nature and Nature's methods because no other methods will allow us to work our way out of the present mess we're in." — Terence McKenna*
-
 Throughout this book, we have explored Fire, Water, Earth, Air, and Aether as distinct elemental dimensions of human experience. Separating them allows us to become familiar with their different qualities and recognize their movements more clearly. In lived experience, however, they rarely exist separately. They move together, continually influencing and reshaping one another.
 
 An intuitive spark can immediately awaken an emotional response. Emotion alters the body: our breathing changes, our muscles tighten or soften, and our senses become more or less alert. What we experience physically influences our thinking, and our thoughts shape how we interpret what is happening around us. That interpretation affects the way we communicate and relate to others. A conversation can stir a memory, a memory can change a feeling, and a feeling can reveal something the conscious mind had not yet understood. A single human moment can contain intuition, emotion, sensation, memory, thought, relationship, instinct, and meaning all at once.
@@ -2072,8 +2062,6 @@ The elemental movements of Spiralogic also correspond with the ancient symbolic 
 Inner and outer, spirit and matter, conscious and unconscious, individual and collective are brought into relationship. The aim is not for one side to defeat the other, but for a more inclusive whole to become possible.
 
 The original inspiration for this dimension of the Spiralogic model came in part through the *Book of Lambspring*, one of the alchemical works drawn upon by Carl Jung, and through Edward F. Edinger's *Anatomy of the Psyche: Alchemical Symbolism in Psychotherapy*. Edinger treats seven major alchemical operations; I draw on five of them here, because those five correspond to the five-element architecture of this book. The selection is mine, not his. Alchemical imagery gives us a symbolic way of understanding processes that can otherwise be difficult to describe: Fire burns, Water dissolves, Earth forms, Air rises, and what has been separated comes again into relationship.
-
-*"Alchemy is a kind of philosophy: a kind of thinking that leads to a way of understanding." — Marcel Duchamp*
 
 ### Sulfur, Salt, and Mercury
 
