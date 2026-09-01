@@ -37,9 +37,12 @@ whether permission is required:
 - `NONE` — public-domain source.
 - `LEGAL REVIEW` — status or use ambiguous.
 
-**Translation sub-rule.** A translation is a separately copyrighted work even
-when the original is public domain. Weil's *Gravity and Grace* (French, 1947)
-carries the Crawford English translation's own term; Rumi is public domain but
+**Translation sub-rule.** U.S. law treats a translation as a **derivative work**
+whose new original expression can be separately protected, so rights attach to
+the **translated expression actually quoted**, not to the original author's
+dates. This does not mean every translation is protected — an older translation
+may have fallen out of term, which is what `TERM UNCERTAIN` is for. Weil's *Gravity and Grace* (French, 1947)
+carries the Craufurd English translation's own term; Rumi is public domain but
 **Coleman Barks's renderings are not**; the same applies to modern Plutarch and
 classical translations. Flag rights on the **text actually quoted**, not on the
 original author's dates.
@@ -401,6 +404,9 @@ with the manuscript's current source usage**.
 about process from a pattern of defects. Provenance discipline forbids asserting
 it unless drafting history confirms it.
 
+**Workflow.** quotation / source dependency → actual work → actual edition or
+translation → attribution verdict → rights flag → bibliography reconciliation.
+
 **Task shape.** Reconstruct from actual manuscript dependencies outward, not
 entry-by-entry patching. Per chapter: inventory quotations *and* substantive
 source dependencies → establish correct work/edition → add missing → correct
@@ -515,11 +521,17 @@ both directions, in the same book. Adjudicate the two together.
 
 **L1062 · Simone Weil — "Love is not consolation, it is light."**
 `VERIFIED VARIANT/TRANSLATION`. *Gravity and Grace* (*La pesanteur et la grâce*,
-1947, posthumous), Emma Crawford translation; p. 14 in the Routledge edition.
+1947, posthumous), Emma Craufurd translation; p. 14 in the Routledge edition.
 Published wording uses a full stop — "Love is not consolation. It is light." —
 where the manuscript uses a comma splice. Minor punctuation variant.
-**Rights: `LIKELY PROTECTED` · `STANDARD`** — via the Crawford translation, not
-via Weil, who died in 1943. See the translation sub-rule.
+**Rights: `TERM UNCERTAIN` · `STANDARD`.** Not automatically `LIKELY PROTECTED`.
+U.S. law treats a translation as a derivative work whose new original expression
+can be separately protected — so rights do not follow Weil's 1943 death. But the
+English translation was **first published in 1952**, and for U.S. publications
+from 1950–1963 continued protection depended on **timely renewal**. Present
+status cannot be inferred from the translation credit alone; it requires a
+renewal-record check. Recorded as uncertain rather than guessed in either
+direction.
 
 **L1106 · John O'Donohue — "May the light of your soul guide you."**
 `VERIFIED EXACT`. The opening line of the blessing in *Anam Cara: A Book of
@@ -588,7 +600,17 @@ works created after 1978 are generally protected for the author's life plus 70
 years. **Permission versus removal is not decided inside the provenance
 census.**
 
-**`LIKELY PROTECTED` · `HIGH` — three Peter Gabriel lyrics**, located precisely.
+### Permissions inventory — seven flagged instances so far
+
+| Item | Rights | Priority |
+|---|---|---|
+| Peter Gabriel ×3 (L713, L1153, L1911) | `LIKELY PROTECTED` | `HIGH` |
+| Mary Oliver (L872) | `LIKELY PROTECTED` | `HIGH` |
+| Coleman Barks / Rumi (L1052) | `LIKELY PROTECTED` | `HIGH` |
+| John O'Donohue (L1106) | `LIKELY PROTECTED` | `HIGH` |
+| Emma Craufurd / Weil (L1062) | `TERM UNCERTAIN` | `STANDARD` |
+
+**Three Peter Gabriel lyrics**, located precisely.
 
 - **L713 · Ch4** — "One dot, that's on or off, defines what is and what is not…"
 - **L1153 · Ch6** — "I own my fear / So it doesn't own me."
