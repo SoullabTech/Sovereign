@@ -356,8 +356,6 @@ What we seek is a disciplined attunement to the elements that inform and guide o
 
 ### Rediscovering Ancient Wisdom
 
-*"Ancient wisdom echoes through the ages, whispering the truths of our interconnectedness with nature and the cosmos. It calls us back to our roots, reminding us that the answers we seek are not found in the noise of the world but in the silence of our souls." — Adapted from Lao Tzu*
-
 Have you ever felt that unsettling sense of disconnect—from your purpose, your inner truth, the world around you? That deep longing for something more meaningful, more vibrant than the pursuit of endless consumption and artificial constructs? So many of us have lost touch with the most precious wisdom—the kind that courses through all of nature, including our own human nature. We've been taught that constant stimulation and chasing grandiose accomplishments are paths to happiness, when in truth, the answers we seek have been inside us all along, waiting to be rediscovered.
 
 From the beginning of time, these insights have been our birthright—simple yet profound understandings passed down through our connection to the rhythms of life itself. But we've been conditioned to ignore or obscure them in favor of complication, perpetual busyness, relentless soul-numbing distraction, and the false notion that more is always better.
@@ -370,7 +368,9 @@ We've been waiting for this, the moment of return. There has never been a more c
 
 ### The Torus of Being and Becoming
 
-*"Like a torus, life is an ongoing balance of expansion and contraction, giving and receiving, integrating and differentiating. This universal pattern reflects the continuous dance of becoming and being, illustrating how we, as living systems, harmonize the dualities of constancy and change." — Adapted from Nassim Haramein*
+Like a torus, life is an ongoing balance of expansion and contraction, giving and receiving, integrating and differentiating. This universal pattern reflects the continuous dance of becoming and being, illustrating how we, as living systems, harmonize the dualities of constancy and change.
+
+The model of the torus as a fundamental energy-flow geometry—patterning the universe at every scale, from the proton to the galaxy—comes from the work of Nassim Haramein. The reading of that geometry as a pattern of balance, development, and living transformation is my own.
 
 Our own anatomy mirrors this toroidal pattern, with our central digestive system flowing in and out through the center of our being. The torus represents harmonic, unified space—a model of wholeness formed by the complementary processes of involution and evolution, growth and stability. We are living, conscious processes of a universe that contains all life, dancing through the elements of existence as we navigate our way towards more fulfilling, meaningful lives. Like a breath in and a breath out are part of natural breathing, or waking and sleeping are integral aspects of healthy consciousness, there is this natural interplay between dynamic, complementary forces that are supporting all of life. Within the torus, we see the natural harmony and rhythm of the universe revealed within ourselves and our world revealed in the cosmos.
 
@@ -386,8 +386,6 @@ We can see the dynamics of spiraling growth in the interplay of elemental forces
 
 #### The Circle: A Model of Wholeness
 
-*"The circle is a reminder that each moment, each step of the journey, is both a beginning and an end, a process of becoming whole." — Adapted from Black Elk*
-
 While sitting in a circle of participants around a ceremonial fire in a teepee as a young man, I became entranced by a half-circle of clay arcing out of, and back into, the earth. The presence of this symbolic structure drew me in and anchored me in the ritual. Twelve hours of sitting in a circle with devoted and courageous souls revealed lifetimes of wisdom about the spiritual path.
 
 In a ceremonial circle, all are one. When we enter the circle, we are asked to bring our authentic, present, witnessing selves to be parts of the dynamic whole. Within the circle, our individuality resonates to a central prayer, focus, or ritual held by the glowing fire at the center.
@@ -396,13 +394,13 @@ Everything circles, cycles, and dances around a center of being. Each of us has 
 
 *"God is an infinite circle, whose circumference is nowhere, and whose center is everywhere." – Nicholas of Cusa*
 
-As imaginal beings, we find simple symbols helpful in managing the complexity of our experience. We rely on symbolic representations of our world to ground us and guide our decisions. We also thrive when we identify parallels to our own experience in nature. The circle depicts the path of adapting to the elements of our reality. The circle is always whole, so symbolically, it is the model for our inherent wholeness.
+As imaginal beings, we find simple symbols helpful in managing the complexity of our experience. We rely on symbolic representations of our world to ground us and guide our decisions. We also thrive when we identify parallels to our own experience in nature. The circle depicts the path of adapting to the elements of our reality. The circle is always whole, so symbolically, it is the model for our inherent wholeness. Each moment along its arc is both a beginning and an end—a turning that is also a becoming.
+
+This way of seeing is not original to me. Black Elk, the Lakota holy man whose teachings John G. Neihardt recorded in *Black Elk Speaks*, taught that the world's power moves in circles: that the seasons turn and come back to where they started, that a human life traces the same shape, and that a people are held together by a sacred hoop. That teaching is his. The reading of the circle through the elements, and everything I make of it in the pages that follow, is mine.
 
 #### The Spiral: A Model of Change
 
-*"The spiral is a symbol of the transformative journey of life, inviting us to continually evolve and expand our understanding." — Adapted from Carl Jung*
-
-As we undergo personal and collective development, we cycle through the four elemental states of awareness repeatedly while reaching new levels with them. The spiral is a metaphor for how we form new, more refined relationships with the elements.
+As we undergo personal and collective development, we cycle through the four elemental states of awareness repeatedly while reaching new levels with them. The spiral is a symbol of the transformative journey of life and a metaphor for how we form new, more refined relationships with the elements, inviting us to continually evolve and expand our understanding.
 
 The ideal trajectory for personal development and collective evolution is a shape found everywhere in nature—the phi spiral, associated with the Fibonacci sequence or golden mean. It can also be traced in our emotional movement ever closer to our soul center, the intangible fifth element of aether. As life on Earth goes through constant cycles and spirals, so do we.
 
@@ -475,8 +473,6 @@ This experience birthed an elemental understanding that I have faithfully explor
 The truth is, until we actually embark on the journey of life, we don't have all the answers. Our authentic path is a mystery continually unfolding before us. In the face of the unknown, we must rely on our intuition, feelings, senses, and thoughts to guide us, even when information is limited.
 
 ### The Spiraling Path of Personal Development
-
-*"The path to wisdom and personal transformation is often winding and spiraling, inviting us to revisit and refine our understanding continually." — Adapted from Lao Tzu*
 
 Over twenty-five years ago, I diverged from my prescribed path to pursue a mystery unfolding. This vision, based on a cyclical, spiraling elemental process, has guided me through phases of personal development and learning. Though challenging, this path has offered opportunities for transformation beyond imagination.
 
@@ -753,15 +749,11 @@ Having understood the elements and their role in achieving wholeness, it's time 
 
 # Chapter 5: Fire — The Element of Spirit and Energy
 
-*"It is the eternal flame of becoming that animates each kaleidoscopic universe sparkling to life like fireflies winking in the infinite night." – Rumi*
-
 ### The Sacred Flame
 
 In the primordial dawn before time's first breath, a brilliant spark leapt forth—the primal flame of pure potential blazing through the cosmic womb. This was the holy fire of creation itself, the living source lighting the way for all possibility to emanate into being.
 
 From this primordial furnace, the elements emerged—earth's solid body, air's vital breath, water's flowing tides. Yet fire alone remains unbounded, its spiritual light too radiant to be contained in any form. It embodies infinite transformation, creating new realities moment by moment. When we look inward, we find this brilliant Source reflected within—a sacred light glowing at our core. This divine radiance of our soul illuminates our highest visions and dreams, revealing paths of growth and transformation beyond our current understanding.
-
-*"In the fire's eternal dance, we glimpse ourselves as we truly are—not separate beings but lively sparks whirling in the flames of an infinite spiritual bonfire." – Clarissa Pinkola Estés*
 
 ### Introduction
 
@@ -843,7 +835,7 @@ It is up to us to envision our future, or it will be predetermined for us, eithe
 
 When the world is at its darkest, our imaginations shine through. No objective reality exists. One of the most amazing aspects of consciousness is that each of us creates a different world, like a simulation designed to offer bespoke experiences. In this way, we have the free will to live whatever experiences we choose. Yet, there is a very real world of context interwoven into our reality, like a cell connected to all other cells in a body, presenting challenges to navigate and opportunities to develop wisdom from the experience.
 
-*"Our senses provide a subjective view of our surroundings, not an objective accounting. Our subjective awareness and imaginative psyches create impressions on all we experience. In other words, nothing you experience is outside the influence of your imagination. It is always present and central to consciousness. All that you experience is, in this sense, imagined." – Carl Jung*
+Our senses provide a subjective view of our surroundings, not an objective accounting. Our subjective awareness and imaginative psyches create impressions on all we experience. In other words, nothing you experience is outside the influence of your imagination. It is always present and central to consciousness. All that you experience is, in this sense, imagined. Jung spent a career on this point: the psyche is not a passive window onto the world but a participant in what the world becomes for us.
 
 #### Focusing Imagination on Aspirations, Not Fears
 
@@ -1069,9 +1061,7 @@ A vision for this book inspired me to challenge myself with exploring a new worl
 
 The secret fire within us is always there to encourage us to hold the light of possibilities even when the world doesn't yet reflect our vision in the same way we experience it within. Much time is spent in trial and error until the spark has become a full movement. If we answer the call to what inspires us most, we will be rewarded, no matter the outcome of our creation.
 
-The evolution of the soul is not based on awards, plaudits, or outward marks of achievement; rather, it is dependent on the ability to adapt and progress. Whatever the case may be, the creative act is critical because it allows us to be recreated. If we are to advance in life, we must change. If we are seeking to reach an ideal state of being, we must change often. In this process of living into our secret fire, we rely on inner metrics more than we do on outer measures. It is a form of "soulplay," where we are acting in the world by living out our soul's yearning.
-
-*"Soulplay is the act of expressing ourselves authentically and intuitively in the world. It arises from a place of inner knowing and truth, rather than external expectation or obligation." – Ken Wilber*
+The evolution of the soul is not based on awards, plaudits, or outward marks of achievement; rather, it is dependent on the ability to adapt and progress. Whatever the case may be, the creative act is critical because it allows us to be recreated. If we are to advance in life, we must change. If we are seeking to reach an ideal state of being, we must change often. In this process of living into our secret fire, we rely on inner metrics more than we do on outer measures. It is a form of *soulplay*—the act of expressing ourselves authentically and intuitively in the world, acting out our soul's yearning. Soulplay arises from a place of inner knowing and truth, rather than external expectation or obligation.
 
 Answering the soul's calling to express itself in the world, to play is the medicine of fire. Many people with great ideas or ambitions struggle with believing in themselves enough to pursue them. "Who am I to dare identify with something so marvelous and amazing?" Anything worth pursuing will demand much of us. We will change and change is hard. And because inspiring ideas necessarily point to a world beyond our present state of being we can easily be intimidated by them. As Miles Davis is quoted as saying, "It's not the note you play that's the wrong note, it's the note you play afterwards that makes it right or wrong."
 

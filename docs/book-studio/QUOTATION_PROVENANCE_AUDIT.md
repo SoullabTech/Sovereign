@@ -7,9 +7,21 @@
 *Verified by enumeration: every one of the 137 epigraph lines in the canonical
 manuscript is referenced in this record.* **Ch2 CLOSED (10/10).** adjudicated. **Chapter 5 CLOSED (30/30). Chapter 8 CLOSED (23/23).**
 
+> **RESOLVED SINCE THE CENSUS — nine items.** L756, L764, L846, L1074 (Ch5) and
+> L359, L373, L389, L403, L479 (Ch2) were carried out of this census as
+> `INTERNAL-ORIGIN CANDIDATE` / `UNSUPPORTED ADAPTATION CLAIM`. They were settled
+> by **authorial ruling** and repaired in the manuscript on **2026-09-01**. The
+> census entries below are preserved **as the evidentiary record that produced
+> those rulings** — they no longer describe the manuscript's current state. See
+> `STAGE3_ATTRIBUTION_RECLAMATION.md` for the rulings as executed.
+>
+> **The quotation count is now 128**, not 137: five epigraphs were removed
+> outright and four were reclaimed as prose.
+
 ## Scope
 
-137 attributed block quotations.
+137 attributed block quotations **as censused**; 128 remain in the manuscript
+after the Stage 3 repairs.
 
 | Section | Count | | Section | Count |
 |---|--:|---|---|--:|

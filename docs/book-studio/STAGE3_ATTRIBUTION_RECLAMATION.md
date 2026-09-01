@@ -2,6 +2,8 @@
 
 *Renamed from "Authorship recovery." **The authorship question is resolved.***
 
+**Status: ✅ CLOSED — all nine ruled by the author and executed 2026-09-01.**
+
 ## AUTHORIAL RULING — 2026-09-01
 
 > **These passages are the author's own words.** He wrote the book. **Engaging a
@@ -272,3 +274,44 @@ the formulation as the book's own.**
 
 **All nine now stand at the same evidentiary standard.** Adjudication follows —
 definitions and load-bearing material separately from decorative epigraphs.
+
+---
+
+## AUTHORIAL RULINGS — ISSUED AND EXECUTED 2026-09-01
+
+**All nine ruled by the author. Implemented in a single local pass across
+Chapters 2 and 5. Stage 3 rulings are closed.**
+
+| Item | Ruling | Executed as |
+|---|---|---|
+| **L846** Jung | `RECLAIM + ACKNOWLEDGE INFLUENCE` | quotation frame and byline removed; the five sentences stand as prose, closed by an accurate prose acknowledgement of Jung's actual position (no quotation, no CW citation forced into an epigraph) |
+| **L373** Haramein | `RECLAIM + ACKNOWLEDGE CONCEPTUAL DEBT` | `Adapted from` removed; formulation retained as prose; a second paragraph credits Haramein for **the toroidal energy-flow model** and states that the developmental reading is the author's |
+| **L389** Black Elk | `REMOVE → RECAST WITH ACCURATE ACKNOWLEDGMENT` | invented quotation removed; its one distinctive idea recast in the author's prose at the section's close; a following paragraph names Black Elk and Neihardt's *Black Elk Speaks*, states the teaching in paraphrase, and marks the boundary — **"That teaching is his. The reading of the circle through the elements … is mine."** The authentic passage is **not** quoted, so no permission is triggered |
+| **L1074** Soulplay / Wilber | `RECLAIM AS AUTHORIAL DEFINITION` | Wilber removed entirely; definition folded into the coining sentence as ordinary prose; **no replacement attribution** |
+| **L403** Spiral / Jung | `RECLAIM AS AUTHORIAL DEFINITION` | `Adapted from Carl Jung` removed; definition merged into the section's existing opening paragraph, eliminating the duplicated "The spiral is…" lead |
+| **L359** Lao Tzu | `REMOVE` | epigraph deleted, no replacement |
+| **L479** Lao Tzu | `REMOVE` | epigraph deleted, no replacement |
+| **L756** Rumi | `REMOVE` | epigraph deleted, no replacement |
+| **L764** Estés | `REMOVE` | epigraph deleted, no replacement |
+
+**Governing principle recorded by the author:** *reclamation does not mean
+preserving every sentence discovered to be the author's. Once borrowed authority
+disappears, the sentence still has to earn its place.* Four did not.
+
+**Net effect on the book:** four formulations reclaimed as the book's own
+thinking · two genuine intellectual debts preserved without assigning the
+author's formulations to the source · one Indigenous source relationship made
+explicit instead of falsified · four decorative authority frames removed. **Nine
+items, and not one idea lost.**
+
+### Structural consequence to carry forward — flagged, not repaired
+
+Removing L756 leaves **Chapter 5 opening with no epigraph.** Eight of the ten
+chapters open with an attributed quotation; **Chapter 3 already opens without
+one**, so Chapter 5 is now the second such chapter, not an anomaly of one.
+
+**No repair attempted, by ruling:** the author directed that the opening be
+reread from the existing **Sacred Flame** prose, and that *if that reread reveals
+a genuine hole, we address the hole — we do not restore the quotation by
+reflex.* Recorded here for the final QA pass, where chapter-opening consistency
+is decided book-wide rather than site by site.
