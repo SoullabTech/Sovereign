@@ -3527,28 +3527,39 @@ mechanism.
 
 **L129 · Preface · Zhuangzi — "Once upon a time, I, Zhuangzi, was unconscious of my individuality as a man…"**
 
-`VERIFIED TO THE ZHUANGZI / BUTTERFLY DREAM` (the text's most famous passage) —
-**but the printed English appears NOT to be the cited translator's.**
+**CLOSED — source text `VERIFIED` · printed English `VERIFIED` to **Herbert A.
+Giles (1889)** · **`WRONG TRANSLATOR CITED`: Burton Watson** · bibliography
+correction required.**
 
-**Candidate finding — `WRONG TRANSLATOR CITED`.**
+- **Giles 1889** carries the manuscript's distinctive wording: first person,
+  "fluttering **hither and thither**," "my **individuality as a man**."
+- **Watson** is structurally different — third person, "Zhuang Zhou dreamt he was
+  a butterfly," different diction throughout.
 
-- **Bibliography cites:** "Zhuangzi. *The Complete Works of Chuang Tzu.*
-  **Translated by Burton Watson.** Columbia University Press, 1968."
-- **Watson's rendering is third person:** "Once, Zhuang Zhou dreamed he was a
-  butterfly… He didn't know that he was Zhuang Zhou."
-- **The manuscript's wording is first person**, with "hither and thither" and
-  "individuality as a man" — the signature of **Herbert Giles's** 1889 rendering
-  ("Once upon a time, I, Chuang Tzu, dreamt I was a butterfly…"), with *Chuang
-  Tzu* modernized to *Zhuangzi*.
+**Rights consequence — running the OPPOSITE way from Barks and Bahm.** The actual
+**Giles English is public-domain-era material**, while the bibliography points
+toward **Watson's modern translation**. So the error creates **no additional
+permissions exposure** — it *overstates* it.
 
-**Not asserted — flagged for edition check.** The distinguishing test is simple
-and decisive: **does Watson's 1968 text use first or third person?** If third,
-the manuscript is quoting Giles under Watson's name.
+> **Getting the mediator right matters even when the error does not create
+> additional rights exposure.** Provenance accuracy is not merely a rights
+> instrument.
 
-### Possible new subtype — `WRONG TRANSLATOR CITED`
+**Why this defect is particularly instructive: the bibliography looked *better*
+than an unattributed translation would have.** It named a respected translator —
+and the named translator was wrong.
+
+### `WRONG TRANSLATOR CITED` — confirmed as a mediation/bibliography defect
 
 *A real, named translator is credited, but the printed English is a different
 translator's rendering.*
+
+**No new transmission class is required** — this works cleanly as a
+mediation/bibliography defect alongside `FAMOUS-WORK SUBSTITUTION` and
+`SPURIOUS SUPPORT`.
+
+> **STANDING RULE: naming a translator is a provenance claim, and must be verified
+> against the PRINTED ENGLISH — not merely against the original work.**
 
 Distinct from the established classes:
 - not `FAMOUS-WORK SUBSTITUTION` — the **work** is right;
@@ -3562,8 +3573,16 @@ transparent form this audit has been recommending. **A wrongly named translator
 looks like exemplary provenance and is not** — the same trap as the "Adapted
 from" label doing false work.
 
-**One candidate instance. Not named as a class**, pending (a) the Watson edition
-check and (b) a second independent specimen.
+**Confirmed on its first instance** by direct comparison of the two translations —
+the check was decisive rather than probabilistic, so the usual second-specimen
+threshold does not apply here.
+
+**Applies to every translator-naming entry in the book:** Watson (Zhuangzi) ·
+Barrows–Macy (Rilke) · Thanissaro Bhikkhu (Kalama Sutta) · John Ireland (Udana) ·
+Mitchell (Tao Te Ching) · Barks (Rumi) · Craufurd (Weil) · Aiton (Kepler) ·
+Winston (Jung) · Easwaran (Dhammapada) · Ward (Amiel). **Each names a translator
+and each is therefore making a claim that must be checked against the printed
+English.**
 
 
 ---
