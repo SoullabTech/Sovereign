@@ -3221,24 +3221,60 @@ absorbing sources whose quotations appear in later chapters.
 **Ford · Shaw · Mark Jenkins · Mies van der Rohe · Socrates/Plato · Aesop ·
 Ken Wilber.**
 
-## What this changes
+## Containment — what the error does and does not affect
 
-1. **`MISFILED SOURCE` is far more prevalent than recorded.** I had it at "one
-   confirmed instance plus a candidate." It is in fact **the dominant
-   bibliography defect**, alongside famous-work substitution.
-2. **The bibliography is more *complete* than I reported, and more *misfiled*.**
-   That is a materially different reconstruction problem: fewer entries to write,
-   more to relocate.
-3. **Several conclusions drawn from `MISSING` counts are unsafe** — including my
-   Ch2 "five orphans / five candidates" numerical observation, which was already
-   held as a lead and should now be treated as weaker still.
+### Two questions, previously collapsed
+
+- **`GLOBAL PRESENCE`** — does the correct source appear **anywhere** in the
+  bibliography?
+- **`LOCAL ALIGNMENT`** — is it located **where the bibliography architecture says
+  it belongs**?
+
+**`MISFILED SOURCE` requires both**: present globally **and** demonstrably in the
+wrong place. But we have **not yet established what the 13 sections mean** — in
+particular whether the 22 front-matter entries are scoped to front matter or
+function as a **general source pool**.
+
+> **Interim status: `PRESENT ELSEWHERE · PLACEMENT UNRESOLVED`** — used until the
+> reconstruction establishes the sections' intended scope. *Memories, Dreams,
+> Reflections* is **not** `MISSING`, and **not yet** confirmed `MISFILED`.
+
+### UNCHANGED — the entire quotation-provenance layer
+
+**No underlying quotation verdict changes.** Jung is still verified. Ford is
+still globally absent. Barks is still a modern mediator. `SPURIOUS SUPPORT`
+stands. All rights flags stand. All transmission patterns stand. All
+internal-origin candidates stand.
+
+**Famous-work substitution survives completely** — those are cases where an
+**actual wrong work was named**, not cases where the right source existed
+elsewhere. Ten instances, unaffected.
+
+### RESET — bibliography-count conclusions only
+
+- **Ch2 orphan symmetry (5 orphans / 5 candidates) — WITHDRAWN as evidence.** Its
+  numerical basis is no longer trustworthy.
+- **Every earlier "Chapter X has N missing sources" statistic is STALE** until
+  global reconciliation.
+
+### Sequencing — do not rebuild now
+
+**Finish the remaining 19 quotations first.** Then run **one dedicated
+bibliography reconciliation** from the completed provenance map:
+
+> surviving quotation → verified source/work/edition → global bibliography
+> presence → intended section → move / correct / add / remove
+
+That will establish whether `MISFILED SOURCE` is genuinely dominant **without
+guessing what the front-matter pool means**.
+
 
 ## Method correction, binding for the remainder
 
 > **An author is `MISSING` only when absent from the ENTIRE bibliography.**
-> Absence from the expected chapter section, with presence elsewhere, is
-> **`MISFILED SOURCE`** — a different defect with a different repair
-> (relocate/duplicate per the per-chapter convention, not author afresh).
+> Absence from the expected chapter section **with presence elsewhere** is
+> **`PRESENT ELSEWHERE · PLACEMENT UNRESOLVED`** — promoted to `MISFILED SOURCE`
+> only once the sections' intended scope is established.
 
 **All prior `MISSING` verdicts are re-checked above.** No further `MISSING` call
 is to be made without a whole-bibliography check.
