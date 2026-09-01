@@ -310,6 +310,8 @@ What I have witnessed, again and again, is that those who give themselves to thi
 
 This book represents a synergy of diverse wisdom lineages—from ancient metaphysical traditions like alchemy, shamanism, Taoism, Hermeticism, Tantra, and Sufism to modern psychological principles and wellness modalities. My role is simply that of a storytelling cartographer, weaving experiences and teachings into a lived tapestry that unlocks your multidimensional potentials.
 
+The model that eventually became Spiralogic first came to me in a dream during graduate school—a crystalline structure of infinite facets, which I describe in Chapter 2. I knew what I had seen, but I could not yet explain it to anyone. What arrived in one night took thirty years to learn. Along the way I was taught by many people—in ceremony and in study, in the body and on the land—from Luata Bray, my first teacher, to Dr. C. Michael Smith. There are more people in that lineage than I could name here. The dream gave me the shape; they helped teach me the practices, disciplines, and ways of seeing through which that shape could become something lived, tested, and eventually offered to others.
+
 Ultimately, the real mystery school is your own being. All answers you'll ever need lie within your authentic resonance as a vibrantly elemental soul. These pages are offered as openings.
 
 The path ahead has a way of unlocking, awakening, and empowering—each person, in their own time, finding the radiant elemental nature that was theirs all along. The first step is inward; the light blazes outward of its own.
