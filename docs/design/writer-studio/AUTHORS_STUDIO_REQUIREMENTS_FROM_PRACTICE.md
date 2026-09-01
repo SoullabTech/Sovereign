@@ -154,3 +154,20 @@ composition begins.
 **Scope checks globally before declaring absence.**
 *Specimen: a dozen `MISSING` verdicts corrected once the whole bibliography was
 checked rather than one section.*
+
+**Thematic fit proves nothing — and models are especially vulnerable here.**
+*"That sounds like something Duchamp / Jung / Rumi would say"* is the single most
+dangerous reasoning step in provenance work, because it is fluent, confident, and
+frequently correct-sounding. The Studio must treat thematic compatibility as
+**neither evidence for nor against** an attribution, and must never let a
+plausibility judgment substitute for a source check.
+*Specimens: Duchamp — documented alchemical preoccupations, sentence unlocatable.
+Sai Baba — an apparent doctrinal contradiction that dissolved once the tradition's
+own internal distinction was checked.*
+
+**Identity disambiguation precedes source verification.** Where a name is
+ambiguous, resolve *which person* before verifying *what they said* — otherwise
+the system produces its worst false positive: real person, real source, wrong
+individual.
+*Specimens: two John Perkinses; two Thomas Fullers.*
+

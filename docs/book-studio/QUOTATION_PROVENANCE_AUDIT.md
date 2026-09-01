@@ -3365,6 +3365,31 @@ as verified. **Thematic fit is not provenance**, in either direction.
 | L693 | 4 | John Perkins — "What we forget we can also remember." | `UNVERIFIED — source lead unresolved`. Perkins is real and the subject area is exactly his: *Shapeshifting: Shamanic Techniques for Global and Personal Transformation*, *The World Is As You Dream It*, *Psychonavigation*, *Spirit of the Shuar*. Sentence not located. Bibliography present. |
 | L139 | Preface | Michael A. Singer — "If your heart is truly open…" | `UNVERIFIED — source lead unresolved`. Not located in *The Untethered Soul* (2007) sources. **`MISSING` — the only genuinely globally absent author in this batch.** |
 
+### RULE — identity disambiguation precedes source verification
+
+> **When an attributed name is ambiguous, resolve the person's identity BEFORE
+> verifying the quotation.**
+
+A **verification prerequisite**, not another provenance failure class. Without it
+the audit can produce its worst false positive: **real person + real source +
+wrong individual.**
+
+### RULE — thematic fit proves nothing
+
+> **Thematic compatibility is neither evidence for nor evidence against
+> attribution.**
+
+A quotation can fit someone's documented worldview perfectly and still be
+invented (**Duchamp** — genuinely alchemical preoccupations, sentence
+unlocatable). Conversely, what looks doctrinally inconsistent can become
+compatible once the source tradition is understood properly (**Sai Baba** —
+four-element formulation, five-element teaching, and the tradition's own
+perceptible/ground distinction reconciles them).
+
+**Named translators are provenance metadata, not advance verification.**
+Zhuangzi/Watson, Rilke/Barrows–Macy, Kalama Sutta/Thanissaro are still checked
+against the actual printed English.
+
 **Disambiguation hazard — two John Perkinses.** The author (b. 1945, shamanism /
 *Confessions of an Economic Hit Man*) and **John M. Perkins** (1930–2026, civil
 rights leader, *Let Justice Roll Down*). Initial searches returned the wrong one.
