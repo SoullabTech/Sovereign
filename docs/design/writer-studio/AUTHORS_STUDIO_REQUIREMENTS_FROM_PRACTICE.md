@@ -389,6 +389,8 @@ the standard every other requirement in this document should be read against.
 
 ### Capability — never collapse suggestion, edit, and adoption into "generated content"
 
+*⚠️ Read this section under THE COLLABORATION DOCTRINE at the end of this document, which governs it. The four states below are **developmental history, not a disclosure regime** — and the boundary that matters is authorial sovereignty versus unexamined substitution, not author words versus editor words.*
+
 > **Suggested language does not become part of the book merely because an editor or
 > a model generated it. It becomes part of the authored manuscript when the author
 > consciously accepts it.**
@@ -421,3 +423,89 @@ provenance audit.**
   system that places it.
 - **`AUTHOR-ORIGINATED` must be the default assumption for any span traceable to
   the author's own message**, and the system must not claim credit by default.
+
+---
+
+# THE COLLABORATION DOCTRINE — governing, ratified 2026-09-01
+
+**This supersedes any purity framing elsewhere in this document, including the
+defensive posture in the four-state capability above.**
+
+## The boundary is not where it looks
+
+> **The important boundary is not `author words vs. editor words`.**
+> **It is `authorial sovereignty vs. unexamined substitution`.**
+
+A real author–editor relationship has **never** meant every sentence originates in
+isolation from one mind. Editors suggest language, challenge structure, sharpen
+distinctions, propose transitions, ask better questions, and sometimes offer a
+sentence the author reads and says *"yes — that is exactly what I mean."*
+
+**Once knowingly adopted, shaped, or authorized, it is part of the authored work.**
+
+## What the system may and may not do
+
+| MAIA **may** | MAIA **may not** |
+|---|---|
+| propose | let anything **silently** become canonical |
+| help formulate | substitute for a judgment the author did not make |
+| challenge, develop, clarify | mark adopted language with a scarlet letter |
+
+**The author may accept language exactly, revise it, combine it with their own, or
+reject it.** All four are authorship. **Only the unexamined path is not.**
+
+## Provenance serves the author
+
+**Internal provenance is preserved — because it helps everyone understand how a
+passage developed.** But **that record exists to support the author, never to
+undermine authorship.**
+
+> **Once deliberately accepted, adopted language becomes part of the manuscript
+> without needing a label announcing that a system was involved in its formulation.**
+
+The four states above are therefore **developmental history, not a disclosure
+regime.** They answer *how did this passage come to be?* — a question that helps
+revision. They do not answer *who is allowed to claim this?* — a question already
+settled by the act of conscious adoption.
+
+## The traditional-editor analogy that governs
+
+| Stage | Meaning |
+|---|---|
+| **Suggested** | the editor offered it |
+| **Reworked** | author and editor shaped it together |
+| **Adopted** | the author says *this expresses what I mean; it belongs* |
+| **Canonical** | it is part of the book |
+
+**That is collaboration**, and it is what a publishing house has always done. **The
+Studio is not inventing a new category of authorship. It is instrumenting an old
+one.**
+
+## ⚠️ The Studio's voice requirement — revised
+
+**Not:**
+
+> ~~"Preserve the author's original voice."~~
+
+**But:**
+
+> **Help the author develop a voice they recognize as their own — even when that
+> voice emerges through dialogue, challenge, and collaboration.**
+
+**The first formulation is an artificial purity test**, and it is the wrong target.
+It would freeze an author at whatever voice they arrived with and treat every
+editorial exchange as contamination — the opposite of what an editorial
+relationship is for.
+
+**The revised formulation describes what actually happened to *Elemental Alchemy*.**
+The book's voice at the close of Stage 4A is not the voice it had at the start; it
+is more clearly the author's *because* of the dialogue, not despite it. Sources
+became sources. Synthesis became claimed. Certification fell away. **None of that
+happened by preservation.**
+
+## The test that matters
+
+> **By the end, the author stands behind every sentence and recognizes the book as
+> theirs.**
+
+**That is the standard** — not the provenance of any individual phrase.
