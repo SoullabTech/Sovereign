@@ -2449,21 +2449,48 @@ Elk** (L1871, this chapter) and **Bear Heart** (L926, Fire), both named
 individuals with published works. The failure is confined to the unattributable
 "legend" form.
 
-### Candidate pattern — `FALSE CULTURAL ATTRIBUTION`
+### RULED — a cross-cutting cultural-attribution flag, not a sixth pattern
 
-*A saying of modern or Western origin attributed to a non-Western or Indigenous
-tradition, where no connection to that tradition can be established.*
+**Not a transmission pattern.** It overlaps `FLOATING APHORISM` too heavily and
+would blur the taxonomy. It is a **cross-cutting flag on the attribution
+target**, orthogonal to how the quotation travelled:
 
-**Second independent instance**, which meets the taxonomy threshold:
-- **L1531 (Ch7)** — "Chinese Proverb": traced to a Cleveland councilman, 1967;
-  the "Chinese proverb" label first appears in 1985.
-- **L1933 (Ch9)** — "Sioux Legend": no Sioux connection located.
+> **How did the quotation travel?** → transmission pattern
+> **What is wrong with the attribution target?** → cultural-attribution flag
 
-**Proposed but not applied — authorial ruling requested.** It may belong as a
-named class, or as a severity characteristic within `FLOATING APHORISM`. I have
-not decided it, but I record that this pattern carries consequences the other
-patterns do not: reputational, ethical, and — given the book's stated commitments
-— constitutional.
+**Two tiers, and the distinction is evidentiary:**
+
+- **`UNSUPPORTED CULTURAL ATTRIBUTION`** — a saying is assigned to a people,
+  culture, tradition, or Indigenous community **without evidence that the
+  tradition actually holds it**.
+- **`FALSE CULTURAL ATTRIBUTION`** — upgrade **only** when a **different origin
+  is positively established**.
+
+> **Unsupported ≠ proven false.**
+
+**The two specimens take different statuses:**
+
+| | Flag | Transmission pattern |
+|---|---|---|
+| **L1531 · "Chinese Proverb"** | **`FALSE CULTURAL ATTRIBUTION`** — the Cleveland source is recoverable (1967) and the "Chinese" label appears later (1985) | `EVOLVED APHORISM` |
+| **L1933 · "Sioux Legend"** | **`UNSUPPORTED CULTURAL ATTRIBUTION`** — no Sioux source established, and no definitive originating author or text either | `FLOATING APHORISM / SOURCE UNRESOLVED` |
+
+### The remedy is stricter here
+
+An unsupported **personal** attribution can sometimes be repaired by finding the
+real author. An unsupported **cultural** attribution **must not be "fixed" by
+broadening it** — to "Native American proverb," "Indigenous wisdom," "Eastern
+saying." **That intensifies the laundering** rather than resolving it.
+
+**Default for L1933:** **remove the "Sioux Legend" attribution** unless a
+defensible Sioux / Lakota / Dakota / Nakota source is established. If the
+sentence itself is essential, judge it separately **as unattributed prose** — but
+**do not retain borrowed cultural authority because the sentiment fits Aether.**
+
+This carries greater ethical weight than an ordinary floating quotation because
+the manuscript explicitly values cultural sovereignty **and elsewhere
+demonstrates the better practice**: named Indigenous authors, named works,
+verifiable sources.
 
 ---
 
