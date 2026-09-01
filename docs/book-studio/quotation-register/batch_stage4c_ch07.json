@@ -1,0 +1,34 @@
+{
+  "_comment": "Stage 4C - Chapter 7 (Earth). 11 records: 4 survive, 7 leave. The chapter has its own result; Fire and Air's removal ratio was not imposed on it.",
+  "entries": [
+    {
+      "match": "The best time to plant a tree",
+      "editorial_status": "KEEP THE THOUGHT - DROP THE CULTURAL ATTRIBUTION - ILLUMINATION. 'A familiar saying' rather than 'a proverb', because even proverb-status has a relatively modern transmission history here. This preserves what actually earns the interruption - the image of planting now - without manufacturing Chinese ancestry or ancient provenance.",
+      "actual_author": "unknown - modern saying",
+      "former_form": "block",
+      "attributed_as_note": "cultural attribution removed; carried as a familiar saying with no claimed origin",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md (earliest strong match: Cleveland councilman George W. White, Cleveland Plain Dealer 1967, who disclaimed credit; the 'Chinese proverb' label first appears in a Nebraska newspaper in 1985); 4C Chapter 7 ruling",
+      "notes": "FORM CHANGE: was a block epigraph, now runs as prose. Wording also modernised from '20 years ago' to 'twenty years ago'.",
+      "occurrence": 1
+    },
+    {
+      "match": "He who has a 'why' to live",
+      "editorial_status": "KEEP. Verified variant, bibliography correct at work level. Evolved aphorism - the printed English is a mediated rendering rather than the standard translation - but it opens Method and Medicine, where why-before-how is the section's actual content. Apparatus note to Stage 7.",
+      "evidence_location": "4C Chapter 7 ruling",
+      "occurrence": 1
+    },
+    {
+      "match": "Adopt the pace of nature",
+      "editorial_status": "KEEP. Verified variant, genuine; the fuller sentence begins 'Leave this military hurry'. Clean.",
+      "evidence_location": "4C Chapter 7 ruling",
+      "occurrence": 1
+    },
+    {
+      "match": "The function of education is to teach one to think intensively",
+      "editorial_status": "KEEP. Verified exact, confirmed against the King Institute at Stanford. Rights legal_review - Stage 6.",
+      "evidence_location": "4C Chapter 7 ruling",
+      "notes": "The census contrast is preserved deliberately: the removed 'Faith is taking the first step' item was UNVERIFIED. Same author, opposite outcomes, ruled individually.",
+      "occurrence": 1
+    }
+  ]
+}

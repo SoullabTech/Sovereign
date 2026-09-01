@@ -324,22 +324,10 @@
     "id": "EA-Q-0067"
   },
   {
-    "text": "The archaic mind understood and perceived that nature is conscious, nature is alive, nature is an organism full of intent.",
-    "display_form": "block_epigraph",
-    "attributed_as": "Terence McKenna",
-    "id": "EA-Q-0068"
-  },
-  {
     "text": "He who has a 'why' to live can bear almost any 'how.'",
     "display_form": "block_epigraph",
     "attributed_as": "Friedrich Nietzsche",
     "id": "EA-Q-0070"
-  },
-  {
-    "text": "Adaptability is about the powerful difference between adapting to cope and adapting to win.",
-    "display_form": "block_epigraph",
-    "attributed_as": "Max McKeown",
-    "id": "EA-Q-0071"
   },
   {
     "text": "Adopt the pace of nature: her secret is patience.",
@@ -354,40 +342,16 @@
     "id": "EA-Q-0073"
   },
   {
-    "text": "Nature does not hurry, yet everything is accomplished.",
-    "display_form": "block_epigraph",
-    "attributed_as": "Lao Tzu",
-    "id": "EA-Q-0074"
-  },
-  {
-    "text": "The earth has music for those who listen.",
-    "display_form": "block_epigraph",
-    "attributed_as": "George Santayana",
-    "id": "EA-Q-0075"
-  },
-  {
     "text": "Alone we can do so little; together we can do so much.",
     "display_form": "block_epigraph",
     "attributed_as": "Helen Keller",
     "id": "EA-Q-0256"
   },
   {
-    "text": "The best and most efficient pharmacy is within your own system.",
-    "display_form": "block_epigraph",
-    "attributed_as": "Robert C. Peale",
-    "id": "EA-Q-0077"
-  },
-  {
-    "text": "The best time to plant a tree was 20 years ago. The second best time is now.",
-    "display_form": "block_epigraph",
-    "attributed_as": "Chinese Proverb",
+    "text": "The best time to plant a tree was twenty years ago. The second best time is now.",
+    "display_form": "inline_plain_lead",
+    "attributed_as": null,
     "id": "EA-Q-0078"
-  },
-  {
-    "text": "God is in the details.",
-    "display_form": "block_epigraph",
-    "attributed_as": "Ludwig Mies van der Rohe",
-    "id": "EA-Q-0079"
   },
   {
     "text": "The function of education is to teach one to think intensively and to think critically. Intelligence plus character—that is the goal of true education.",

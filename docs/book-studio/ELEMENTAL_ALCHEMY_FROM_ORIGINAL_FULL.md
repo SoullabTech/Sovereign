@@ -1320,8 +1320,6 @@ Balancing fluid water and solid Earth, we will experience life both deeply groun
 
 # Chapter 7: Earth — The Element of Stability and Groundedness
 
-*"The archaic mind understood and perceived that nature is conscious, nature is alive, nature is an organism full of intent." — Terence McKenna*
-
 In this chapter, we will explore the stabilizing and concretizing dynamics of earth.
 
 ### Introduction to Earth
@@ -1364,8 +1362,6 @@ Despite missing so many details on this trip—such as realizing too late that f
 
 Our latest trip helped us realize we were equally bad at planning and packing. I left my sleeping bag, and he left behind the chessboard and his favorite fishing pole. And again, our latest trip made it to the top three holidays for us. This experience reminded me of Charles Darwin's quote about survival going to the most adaptive, not the smartest or strongest. I count on this adaptability as well as keeping a sense of humor and adventure.
 
-*"Adaptability is about the powerful difference between adapting to cope and adapting to win." — Max McKeown*
-
 Life doesn't always work out the way we plan, even when we do plan. Earth intelligence invites us to be practical and sensible so we can make the most out of the world as it is and as we are. Without this sense of presence, what can be will never come to be. This is the wisdom of the earth element. Techniques, strategies, and a series of ongoing lessons and learning are all part of the process. He was thrilled to be hanging out, talking, and playing pool. We were able to take a few local hikes and even walked on a frozen lake, but it was our ability to adapt to the environment as it is which made all the difference. We have learned to laugh at our foibles and make a game of discovering all the things we forgot on our trips into town or once we settle into a fishing spot. We may never remember everything but in reality we do learn and spiral through new levels of competencies as we live and learn.
 
 #### Embracing the Earth Element
@@ -1392,15 +1388,11 @@ As an image, the body carries something similar: a fascial, interstitial field t
 
 Earth is a sensual realm where the soil giving birth to all living things teems with energy, sentience, and the spirits of infinite realms and layers of reality. From mineral to vegetable, insect, and animal, the soil's dense layers accumulate the wisdom of living, life force, adaptation, and survival. The earth realm contains relationships of affinity and struggle, expressed as the will to power and position of the strong, and the struggle for resources and remedies of the weakened—these are living dynamics of predator and prey, of wisdom and naivete. Earth consciousness is an elemental field that functions like an akashic library of holotropic memories, constantly swirling and moving toward wholeness, which is always merely a breath away from being resurrected through our innate, instinctive, and instructive behavior.
 
-*"Nature does not hurry, yet everything is accomplished." — Lao Tzu*
-
 Nature has provided us all with everything we need to survive as well as thrive, from mineral to metaphysics, from nutritious plants to illuminating plant medicines. Whereas the fire element lifts us into lofty ambitions and bright futures and the water element draws us down into the depths of our souls, it is the earth element that calls us to remember who we are as natural creatures and bring our vital resources to the surface to respond to life in the moment. Earth enlightens us with instincts, embodied sensibility, grounded reality, realism, systematic processes, habits, stability, and a methodical, systematic, and diligent approach to bringing our aspirations to life.
 
 Earth is the "be here now" element of presence. It invites us into sensual engagement with the reality of life as a planetary being. Each of us is a holon. We are whole unto ourselves and also part of the larger whole of our shared mother, Mother Earth. It is the wisdom of the birds to fly through the sky in flocks, and the wisdom of the bees to gather in mutual support to sustain the integrity of their communal hives. We are planted in the same soil that develops and nourishes all other living forms on an orb spinning in and spiraling through space, supporting an infinite variety of life forms and functions. As earthly beings, regardless of how we evolve—aware and awakening—we still will be mundane animals as much as mysterious, otherworldly beings.
 
 We are like all the rest of the planetary inhabitants. Every cell of our being and the spaces between, synapsing with interstitial wisdom shared unimpeded with the infinite galaxies holographically whole and connected. Both our nature and the natural environment around us are imbued with Earth's inherent tenacity, flexibility, and intelligence for survival and growth.
-
-*"The earth has music for those who listen." — George Santayana*
 
 Earth consciousness encourages us to be fully engaged in the present moment with the world as it exists and unfolds, and to approach our lives with sensible awareness and a concrete, reality-based strategy. We learn, grow, and progress when we show up in our lives in a deliberate, discerning, and systematic manner. To manifest well, we must be in the moment and engaged with it. Earth provides us with the wisdom to stabilize and regulate our mind-body systems, and the know-how we need to transform our lives into soulful works of art.
 
@@ -1428,8 +1420,6 @@ The earth experience varies for each person. Some thrive in structure, while oth
 
 The need for precision, decisiveness, discipline, and boundaries imposes restrictions on our creative ideals. Yet, no good will come without some degree of deference and acceptance of earth's demand for accountability, reliability, and definability. Many great ideas dissolve into the dustbin of time because they weren't properly managed in the earth realm.
 
-*"Alone we can do so little; together we can do so much." — Helen Keller*
-
 Recognizing our limitations and seeking support is crucial. Earth wisdom emphasizes the importance of collaboration, mutual support, and shared goals. Together, we create a collaborative whole, each contributing unique talents to a common mission.
 
 ### Earth Shadow Work: The Heavy Burden of Embodied Living
@@ -1454,8 +1444,6 @@ Some of the most brilliant, mystical, and iconoclastic people I know also have c
 
 We are because we are embodied. Our bodies are the keepers of earth wisdom. When we tune into the wisdom of our bodies, we activate the necessary guidance of earth. Taking a walk in the woods, eating a healthy meal, relaxing with friends and loved ones, and being fully present in this moment deliver the medicine for all that ails us.
 
-*"The best and most efficient pharmacy is within your own system." — Robert C. Peale*
-
 Of course, our goal in this journey is to develop as much of the elements within our own nature. At the very least, we strive to have the functional awareness of areas that are 'out of our element' so that we can gather the support from those who are "in their element."
 
 In fact, after all these years of exploring, learning, and growing, I firmly believe that much of this earth experience is about remembering the value of our greatest resource: each other. It seems we are destined to exit the isolation and limitations of an individualistic culture that has imperiled not only our own futures but that of our planet. We can no longer think in terms of self-needs alone but must develop a way of being that is in harmony and in union with all other sentient beings that share this planet.
@@ -1474,7 +1462,7 @@ Earth creativity slows us down and focuses our energies on the growth and develo
 
 The earthly wisdom I have developed, mostly out of necessity, has come to me through trial and error—though I did well enough in school, studying from books, to be accepted into a graduate program in psychology. The Earth—meaning, life on our planet—has been teaching me all along how to be human, how to be practical, and how to achieve what it is that I'm here to live into and through.
 
-*"The best time to plant a tree was 20 years ago. The second best time is now." — Chinese Proverb*
+A familiar saying puts it plainly: "The best time to plant a tree was twenty years ago. The second best time is now."
 
 Akin to this is the earth state in which I have learned about organization, process, Systems Theory, metaphysics, computer programming, developmental theory, many forms of healing practice, and now, the art of writing a book. Earth is the element associated with how things get done.
 
@@ -1485,8 +1473,6 @@ When you enter the earth state of being or earth phase of personal development y
 If these are missing in your life process, the earth element offers a course correction. It may not be fun or easy, but it is necessary for a sustainable path.
 
 Watching my clients awaken due to a realization that they have "wasted years at a job they hate" is a phase in development that can be slightly uncomfortable but is ultimately liberating. And, although, this state of awareness can feel like regression it is actually progress. As much as it is good to know what is possible it is equally important to know what is viable. Earthing this epiphany is where the essential creative work begins. All else is immaterial fantasy.
-
-*"God is in the details." — Ludwig Mies van der Rohe*
 
 For many of us intuitive, empathic, and visionary type people, we are often challenged by the demands of earth to be detailed and organized. It is one of the paradoxes of personal development that you need to be able to think outside the box, see beyond what is obvious, and let go of all that is known to receive insight into what is not yet known.
 
