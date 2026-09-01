@@ -2,7 +2,7 @@
 
 **Source of record:** `docs/book-studio/ELEMENTAL_ALCHEMY_FROM_ORIGINAL_FULL.md`
 **Opened:** 2026-09-01, after Chapter 10 closed developmental adjudication.
-**Status:** IN PROGRESS — 31 of 137 adjudicated (Ch5: 21 of 30).
+**Status:** IN PROGRESS — 32 of 137 adjudicated (Ch5: 22 of 30).
 
 ## Scope
 
@@ -45,6 +45,25 @@ visible.
 Primary text or authoritative edition first; official artist/source pages where
 applicable; reputable scholarly/provenance research second. Quote sites may
 locate a lead but never close a finding.
+
+**Traditional-authority rule.** For orally transmitted or composite corpora
+(Aesop, and comparable cases), distinguish **verification to the textual
+tradition** from **verification as the historical person's exact words**. A
+saying located in a specific ancient witness or Perry-indexed fable can be
+verified to the Aesopic tradition, ideally citing that witness; it should not
+thereby be presented as words the historical Aesop spoke or wrote. A modern
+rendering of a genuine fable's moral is `PARAPHRASE/ADAPTED` from that fable. A
+later proverb merely labelled "Aesop," with no traceable fable behind it,
+remains `UNVERIFIED`. In short: *historical-author verification ≠
+traditional-corpus verification.*
+
+**Source-lead rule.** An item with a credible named text or edition stays **open
+until that lead is checked**. General-search failure alone cannot close an item
+as `UNVERIFIED` — that manufactures false negatives, since general web search
+indexes books poorly. If the named source is accessible and confirms the
+wording, classify accordingly; if it cannot be inspected after reasonable
+attempts, record `UNVERIFIED — source lead unresolved` **naming the proposed
+edition**, so the lead survives for later checking.
 
 
 ## Governing doctrine for misattributed quotations
@@ -394,21 +413,24 @@ assumption that the misalignment is structural, not incidental.
 All Ages* under "Passions," and circulates in a second form ("The passions are
 like fire and water…"). No Aesopic fable contains it.
 
-**Structural note on Aesop.** No writings by Aesop survive, and his historical
-existence is uncertain; the fables are a centuries-long accretion attributed to
-him. A verbatim sentence ascribed to "Aesop" therefore **cannot reach
-`VERIFIED EXACT` in principle** — the ceiling for any Aesop attribution in this
-book is `UNVERIFIED`, or `PARAPHRASE/ADAPTED` where a fable's moral is being
-rendered. Worth a single policy decision rather than per-instance rulings, as
-with Campbell.
+**Aesop policy — settled.** Not a blanket ceiling. "Aesop" as the verbatim
+historical speaker has a very low verification ceiling; the **Aesopic textual
+tradition does not**. See the traditional-authority rule above. For L864
+specifically, `UNVERIFIED` / `UNKNOWN` stands: finding it in a later proverb
+compilation filed under Aesop does not establish an Aesopic source.
 
 **L1012 · Leonardo da Vinci — "The desire to know is natural to good men."**
-`UNVERIFIED`, strong lead. Consistently placed in *The Notebooks of Leonardo da
-Vinci* (Richter's compilation), but attested in this search only on quote sites,
-which cannot close a finding. Needs an edition check against Richter. Note the
-line echoes the opening of Aristotle's *Metaphysics* ("All men by nature desire
-to know"); whether Leonardo is quoting, adapting, or independently arriving
-there is unresolved and bears on how it should be cited.
+**`VERIFIED VARIANT/TRANSLATION`.** Closed by edition check, not by general
+search. Museo Galileo's Leonardo project locates the thought in the **Codex
+Atlanticus**, among Leonardo's notes on types of knowledge, rendering it as
+essentially "a good man possesses a natural desire to know." The manuscript's
+wording is a conventional English rendering of a documented Leonardo sentence,
+not an invented attribution.
+
+*This item is the reason the source-lead rule exists:* general search returned
+only quote sites and would have produced a false `UNVERIFIED`. The line does
+echo the opening of Aristotle's *Metaphysics*; that relationship is a question
+about Leonardo's sources, not about this attribution.
 
 **L840 · Terence McKenna — "The imagination is the golden pathway to everywhere."**
 `UNVERIFIED` + `UNKNOWN`. Quote-site attestation only; no talk, lecture, book or
