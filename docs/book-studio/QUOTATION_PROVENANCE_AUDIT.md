@@ -3663,9 +3663,8 @@ The rule was established on Zhuangzi alone because the evidence was binary. The
 
 **L173 · Preface · Sadhguru — "Life is a game of just five ingredients. Even a pizza requires more ingredients!…"**
 
-`UNVERIFIED — source lead unresolved` on the **exact printed wording**; the
-**concept and structure are verified to Sadhguru** via his own institution's
-official channel.
+**Recorded status: source/concept `VERIFIED` · wording `VARIANT / EDITION CHECK
+REQUIRED` · rights `LIKELY PROTECTED` · `HIGH`.**
 
 **Isha Foundation** (isha.sadhguru.org — the *quoted* author's institution, so
 legitimate attestation) carries "**Life Is a Five-Cornered Game**": *"It is a
@@ -3674,22 +3673,39 @@ five-cornered game – just five ingredients"* … *"Even if you want to make
 
 **The manuscript reads "pizza." The official text reads "sambar."**
 
-#### Observation — culturally localized substitution
+#### Observation, NOT a flag — possible audience-aligned substitution
 
-A **concrete image is exchanged for one legible to a different readership** —
-a South Indian dish for an Italian-American one — while the argument is untouched.
+> A culturally specific illustration (*sambar*) appears as a culturally familiar
+> one (*pizza*) while the underlying argument remains unchanged. **Agency and
+> point of substitution unresolved.**
 
-**Distinct from `HOST-ALIGNED ALTERATION`**, which concerns a variant fitting the
-host *argument*. This concerns a variant fitting the host *audience*. The claim
-is unchanged; only the illustration is domesticated.
+**Do not call it manuscript localization.** The edition check has **three
+possible outcomes**:
 
-**Agency unestablished.** Sadhguru speaks constantly to Western audiences and may
-well have said "pizza" himself; *Inner Engineering* (2016) may carry either form.
-**The edition check decides both the wording and whether any substitution
-happened in this manuscript at all.**
+1. ***Inner Engineering* itself says "pizza"** → the manuscript may be exact; the
+   observation dissolves.
+2. **Sadhguru has independently used both examples** → a legitimate spoken/source
+   variant.
+3. **The source consistently says "sambar" and the manuscript alone says
+   "pizza"** → *then* we have evidence of audience-directed domestication.
 
-**Rights: `LIKELY PROTECTED` · `HIGH`** — the epigraph runs ~80 words of
-in-copyright prose, the longest quotation in the front matter.
+**Even under outcome 3, this does not become a transmission class on one
+specimen.** It would become a **cross-cutting editorial flag**, analogous to
+`HOST-ALIGNED ALTERATION` but aimed at **reader legibility** rather than
+argumentative fit:
+
+| Flag | The mutation makes the quotation… |
+|---|---|
+| `HOST-ALIGNED ALTERATION` | …support the surrounding **argument** better |
+| *(prospective)* audience-aligned | …culturally more **familiar to the intended reader** |
+
+**Both would require explicit adjudication if established, because neither can
+remain disguised as somebody else's exact words.**
+
+**Rights: `LIKELY PROTECTED` · `HIGH`** — ~80 words of in-copyright prose, the
+longest quotation in the front matter. **The specific protected English prose is
+the object for permissions review regardless of whether *sambar* or *pizza*
+proves canonical.**
 
 
 ---
