@@ -2246,19 +2246,34 @@ resolved, not assumed.
 Tiger*, 1947** — confirmed against the **Martin Luther King, Jr. Research and
 Education Institute at Stanford** (the King Papers), the authoritative archive.
 
-**Bibliography exact and correct.** This is the audit's citation exemplar, and it
-now verifies at the quotation level too — apparatus and quotation both sound, the
-only item so far where that is fully established.
+**Bibliography exact and correct.**
+
+*Correction to an earlier claim of mine:* this is **not** the only item where
+quotation and apparatus are both established — Brown/*Daring Greatly*,
+Lorde/*Sister Outsider*, Chödrön/*When Things Fall Apart* and Nussbaum/*Upheavals
+of Thought* all qualify. What is exceptional here is the **precision of the
+apparatus**: exact article, periodical and year, verified against the King
+Papers.
 
 **Rights: `TERM UNCERTAIN` · `LEGAL REVIEW`** — the audit's **first `LEGAL
-REVIEW` flag**, and it is deliberate. The extract is short, but the King estate's
-enforcement posture toward his writings is well documented and distinctive, which
-makes ordinary short-quotation triage inappropriate here. This is a question for
-publication counsel, not for the census.
+REVIEW` flag**, and deliberate. Stanford's King Institute states explicitly that
+it **cannot grant permission** for King's writings and directs permissions
+inquiries to **Intellectual Properties Management**, the Estate's exclusive
+licensor. That notice does **not** itself determine the copyright status of this
+particular 1947 *Maroon Tiger* article — which is precisely why `LEGAL REVIEW` is
+correct and both `LIKELY PROTECTED` and `PUBLIC DOMAIN` would be assertions
+beyond the evidence.
 
-> **Second confirmation of the Water lesson, and a sharper one: the audit's
-> best-sourced, best-cited item is also the one most likely to need legal
-> attention.** Verification and publication-readiness are orthogonal.
+**Framed precisely:** this is the **first item requiring source-specific legal
+review because of a known licensing/estate regime** — *not* the book's largest
+legal question. The Gabriel lyrics, the Oliver poem, the Chödrön paragraph and
+the Bear Heart block may all present greater permissions exposure; **no legal
+adjudication has been done.**
+
+> **Rights doctrine — rights triage cannot be inferred from provenance quality.**
+> A perfectly verified quotation may still need counsel; a badly sourced
+> quotation may turn out to carry no meaningful copyright exposure. The two axes
+> are orthogonal and must be scored separately.
 
 ### Chapter 7 bibliography — three findings and one exemplar
 
