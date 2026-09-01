@@ -52,17 +52,6 @@
       "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md - Rumi table, L182"
     },
     {
-      "match": "Do not believe in anything simply",
-      "occurrence": 1,
-      "provenance_status": "verified_variant",
-      "actual_author": "attributed to the Buddha",
-      "work": "Kalama Sutta, Anguttara Nikaya",
-      "translator_or_mediator": "NOT Thanissaro Bhikkhu - the printed English does not match the cited translation",
-      "bibliography_relationship": "WRONG TRANSLATOR CITED - second confirmed instance",
-      "notes": "Audit: bibliography cites Thanissaro Bhikkhu (Access to Insight, 1994), whose actual rendering begins 'Now, Kalamas, don't go by reports, by legends...' - materially different from the printed text.",
-      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L186"
-    },
-    {
       "match": "Soul should always stand ajar",
       "occurrence": 1,
       "provenance_status": "misattributed",

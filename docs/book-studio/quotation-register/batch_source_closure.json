@@ -1,0 +1,57 @@
+{
+  "_comment": "Source and authorial closure pass, 2026-09-01. Recovery outcomes for the three obligations Stage 4 handed downstream. Two resolved, one reopened a 4C ruling.",
+  "entries": [
+    {
+      "match": "When evening comes, you will be examined in love",
+      "provenance_status": "verified_exact",
+      "work": "Sayings of Light and Love (numbering NOT settled - secondary sources disagree; USCCB gives no. 60 while others number it differently, so the number must be taken from the ICS edition actually cited)",
+      "translator_or_mediator": "Kieran Kavanaugh and Otilio Rodriguez, The Collected Works of St. John of the Cross (rev. edn 1991, ICS Publications)",
+      "rights_status": "likely_protected_standard",
+      "bibliography_relationship": "ENTRY OWED - name the ICS edition and confirm the saying number from it",
+      "provenance_review_state": "migrated",
+      "editorial_status": "KEEP - RESOLVED TO ONE REAL TRANSMISSION. The manuscript had been printing a HYBRID of two genuine but distinct forms: the scholarly Kavanaugh/Rodriguez maxim ('When evening comes, you will be examined in love') and the Catechism's devotional rendering ('At the evening of life, we shall be judged on our love'). A hybrid could not honestly be called traditional. The scholarly wording is now printed and attributed, and it does the same threshold work at the opening of the Conclusion.",
+      "evidence_location": "Source closure pass 2026-09-01: USCCB 'The Hope of Eternal Life' cites the Kavanaugh/Rodriguez wording to Sayings of Light and Love; Catechism 1022 carries the devotional form",
+      "occurrence": 1,
+      "provenance_history": [
+        {
+          "verdict": "verified_variant",
+          "stage": "Stage 2 census",
+          "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md (St John of the Cross)",
+          "note": "Applied to the hybrid wording 'At the evening of life, you will be examined in Love', which mixed the Kavanaugh/Rodriguez maxim with the Catechism's devotional form. The closure pass replaced it with one real transmission.",
+          "superseded_by": "verified_exact"
+        }
+      ]
+    },
+    {
+      "match": "when we no longer know what to do we have come to our real work",
+      "provenance_status": "verified_variant",
+      "actual_author": "Wendell Berry",
+      "work": "prose from the essay 'Poetry and Marriage: The Use of Old Forms', collected in Standing by Words (1983) - NOT a poem. The widely circulated verse form is a later versification of Berry's prose",
+      "bibliography_relationship": "Standing by Words is CORRECT at work level; the entry should name the essay and treat the source as prose, not verse",
+      "provenance_review_state": "edition_check_required",
+      "recovery_note": "WORDING HELD, NOT CHANGED. The manuscript reads 'we have BEGUN our real journey'; the circulating versified form reads 'we have COME TO our real journey'. Witnesses exist for both, and a Cambridge University Press publication quoting the 1983 North Point Press edition at pp. 204-205 gives BEGUN, as do sources naming the original essay. The manuscript's wording may therefore be closer to the original prose than the popular form. Do not 'restore' it until the specific edition is inspected.",
+      "editorial_status": "KEEP - source object resolved, exact wording still owed an edition check. Provenance moves from never-established to verified variant.",
+      "evidence_location": "Source closure pass 2026-09-01",
+      "occurrence": 1
+    },
+    {
+      "match": "Do not believe in anything simply because you have heard it",
+      "editorial_status": "4C RULING REOPENED AND REVISED - KEEP, RESTORE SOURCE, REPLACE THE FALSE PARAPHRASE. The threshold function still earns its place at the entrance to the book, but the printed English is not a translation of the Kalama Sutta: it is the widely circulated paraphrase, and it does not merely simplify the sutta, it changes its epistemology. The discourse (Anguttara Nikaya 3.65) lists logical conjecture and inference among the ten grounds NOT to go by, and its positive criterion is that qualities are skillful, blameless, praised by the wise, and lead to welfare and happiness. The paraphrase's ending - 'when you find that anything agrees with reason' - promotes as a test one of the very things the sutta sets aside. Same defect class as the removed Udana 'Buddha' line in Water: not a wrong name, a reversed meaning. REPLACEMENT NOT YET APPLIED - see recovery_note.",
+      "provenance_status": "misattributed",
+      "actual_author": "not the Buddha as rendered - a popular English paraphrase, catalogued as such on Fake Buddha Quotes",
+      "provenance_review_state": "migrated",
+      "recovery_note": "APPLY: replace with a genuine translation of AN 3.65, preferably Bhikkhu Sujato's on SuttaCentral, whose Nikaya translations carry a CC0 public-domain dedication and so create no permissions problem. Thanissaro Bhikkhu's and Soma Thera's renderings on Access to Insight are the alternatives. The verbatim replacement text was NOT captured in this session: the project's context-mode rules deny WebFetch, the ctx_* replacements are not present in this environment, and web search returns summaries rather than reliable verbatim - so no translation was printed on recall alone. SEAM CHECK OWED AFTER REPLACEMENT: the following sentence, 'nothing replaces your own experiences', may need sharpening, because the authentic sutta is subtler than experience-over-authority - it is closer to testing teachings in lived consequence while also attending to ethical qualities and the judgement of the wise.",
+      "evidence_location": "Source closure pass 2026-09-01: Thanissaro and Soma Thera renderings (Access to Insight); Thanissaro's 'Faith in Awakening' warns specifically against reading the discourse as licence to trust one's own rational judgement; Fake Buddha Quotes entry on this wording",
+      "occurrence": 1,
+      "provenance_history": [
+        {
+          "verdict": "verified_variant",
+          "stage": "Stage 2 census",
+          "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md (Kalama Sutta)",
+          "note": "Treated the printed English as a variant rendering of AN 3.65 whose defect was the translator cited. The source closure pass found the wording is a popular paraphrase that alters the discourse's criterion, not a rendering of it.",
+          "superseded_by": "misattributed"
+        }
+      ]
+    }
+  ]
+}

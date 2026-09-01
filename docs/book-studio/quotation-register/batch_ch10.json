@@ -39,17 +39,6 @@
       "notes": "Audit: quote-site attestation only; no primary source. Duchamp's alchemical interests ARE scholarly-documented (Moffitt, Alchemist of the Avant-Garde, SUNY) but that supports the THEME, not the sentence. Recorded as the INVERSE of the Sai Baba case: there a documented framework initially looked contradicted and turned out compatible; here the documented preoccupation makes the sentence PLAUSIBLE, which is exactly why it must not be treated as verified. Thematic fit is not provenance, in either direction."
     },
     {
-      "match": "evening of life, you will be examined",
-      "occurrence": 1,
-      "provenance_status": "verified_variant",
-      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L2282",
-      "actual_author": "St. John of the Cross",
-      "work": "Sayings of Light and Love, saying 57; also quoted in the Catechism of the Catholic Church 1022",
-      "translator_or_mediator": "MEDIATED TRANSLATION Spanish to English, translator unidentified; the standard modern English is Kavanaugh-Rodriguez (ICS)",
-      "rights_status": "term_uncertain",
-      "notes": "Audit: variants exist - 'when evening comes' against 'at the evening of life'."
-    },
-    {
       "match": "What is above is like what is below",
       "occurrence": 1,
       "family_role": "ancestor",

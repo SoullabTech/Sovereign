@@ -2139,7 +2139,7 @@ It had gradually revealed who she had always been becoming.
 
 As embodied souls, we are the elements exploring reality through us, as us. We are the elements dancing together into, and as, life. This has been the heart of our journey—recognizing that the elemental forces of fire, water, earth, air, and aether are not just metaphors but portals into the very depths of our psyche, our means of experiencing and shaping reality itself.
 
-*"At the evening of life, you will be examined in Love." — St. John of the Cross*
+*"When evening comes, you will be examined in love." — St. John of the Cross, Sayings of Light and Love, trans. Kavanaugh and Rodriguez*
 
 Our immersion into these primordial elements is an initiation into a sacred love—love for ourselves, love for this world, and love for the cosmos that blessed us with the profound gift of existence.
 
