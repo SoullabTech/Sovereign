@@ -1,7 +1,19 @@
 # WS2-05B-8B-02c-2 · LOCAL RUNTIME WITNESS — fresh run, Execution Clarification #3
 
-**Status of the prior run:** `HOLD / INCOMPLETE — Step 2 stop`. Not superseded, not
-continued. Its Step 8 evidence block is the record of that run and stands on its own.
+> **DO NOT START THIS RUN YET.** A second Mac Studio session
+> (`session_01Dxk7Q9RFrEPK9W3joK4vPd`) reached **Step 6** before stopping on a failed
+> assertion. It may already have passed Step 3, applied migration 6, and written to the
+> ledger, the schema, and `ask_threads` / `ask_turns`. Its evidence must be extracted and
+> adjudicated first. Launching from this prompt before then would reason from an obsolete
+> database state. Clarification #3's migration-6 premise ("unledgered and absent from
+> schema") is itself one of the things that adjudication must re-confirm.
+
+**Status of the prior runs:**
+
+| Session | Stop | Standing |
+|---|---|---|
+| `session_012vWvD8jt9DucdD28bvs5iF` | Step 2 | `HOLD / INCOMPLETE`. Not superseded, not continued. Its Step 8 block is the record of that run and stands on its own. |
+| `session_01Dxk7Q9RFrEPK9W3joK4vPd` | Step 6 assertion failure | Evidence **not yet extracted**. Blocks this rerun. |
 
 **Host requirement (charter, verbatim):** *Mac Studio (local Postgres,
 `maia_consciousness`). **Not** minisforum. **Not** a cloud container.*
@@ -42,7 +54,11 @@ schema. **Proceed to Step 3 before applying it.**
 
 ### Immediate goal — Step 3
 
-Step 3 has never been measured. Measure it and stop there for adjudication:
+Step 3 is the first gate this lane must actually measure. Measure it, then branch on the
+verdict — **Step-3 STOP halts the lane; Step-3 GO continues into migration 6 and the
+witness.** Do not halt on a GO.
+
+Probes, all scoped to `$MANUSCRIPT_ID`:
 
 | Probe | Required value |
 |---|---|
@@ -51,12 +67,13 @@ Step 3 has never been measured. Measure it and stop there for adjudication:
 | `round_trip_ok` | true? |
 | proposal `e6cabcc4-a506-4ea7-aa89-9b23b450ca74` | belongs to manuscript `a3ae67fd-a21e-4948-8766-4c397d2e4712`? |
 
-All queries scoped to `$MANUSCRIPT_ID`. Then:
+Then:
 
-- **STOP** → report the exact Step 3 evidence verbatim and halt. Do not apply
-  migration 6.
-- **GO** → apply **only** `20260901000001_ask_threads.sql`, then continue through
-  the runtime witness and the paid Ask, per the charter.
+- **Step-3 STOP** → report the exact Step 3 evidence verbatim and **halt**. Do not apply
+  migration 6. Do not continue.
+- **Step-3 GO** → apply **only** `20260901000001_ask_threads.sql`, then **continue**
+  through the runtime witness and the paid Ask, per the charter. Do not stop for
+  re-adjudication at this point.
 
 ### Standing constraints (unchanged)
 
@@ -71,6 +88,30 @@ All queries scoped to `$MANUSCRIPT_ID`. Then:
 - Authorized writes only: migration 6 under GO; the `ask_threads` / `ask_turns` rows
   the witness produces; the whole-thread `DELETE` of the disposable refusal-mode
   thread at Step 6. **The Work is read-only for the entire lane.**
-- Stop conditions — report, never work around: wrong SHA · dirty worktree · any STOP
-  row in the Step 2 matrix · STOP at Step 3 · any non-mutation fingerprint that moves ·
-  any instrument assertion that FAILs · an Ask refusal outside the designed set.
+- Stop conditions — report, never work around: wrong SHA · dirty worktree ·
+  **a Step-2 STOP row, as narrowed below** · STOP at Step 3 · any non-mutation
+  fingerprint that moves · any instrument assertion that FAILs · an Ask refusal outside
+  the designed set.
+
+### Step-2 stop conditions, as narrowed for this rerun only
+
+Clarification #3 exempts five rows that the unmodified charter would stop on. This
+narrowing is what makes the exemption operative — without it the lane stops on exactly
+the rows #3 accepted.
+
+```
+Step-2 rows 1-5:
+  PRE-EXISTING BEHAVIORALLY WITNESSED SUBSTRATE
+  ledger anomaly recorded
+  NOT a STOP
+  do not reapply
+  do not backfill
+
+Migration 6:
+  evaluate normally from current DB state
+
+All other Step-2 STOP conditions remain active.
+```
+
+The narrowing is scoped to Step-2 rows 1–5 on this Mac Studio development database, for
+this rerun. It does not amend the charter and does not carry to any other lane or host.
