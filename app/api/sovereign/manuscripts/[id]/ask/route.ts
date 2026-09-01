@@ -24,9 +24,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { checkAnchor, type AskAnchor, type AnchorRefusal } from '@/lib/manuscript/ask/anchor';
 import {
-  loadFrozenReading, loadSectionHeads, measureNow,
+  loadFrozenReading, loadSectionHeads, measureNow, memberOwnsWork,
 } from '@/lib/manuscript/ask/frozenReading';
-import { computeStaleness } from '@/lib/manuscript/ask/staleness';
+import { computeStaleness, frozenSideFor } from '@/lib/manuscript/ask/staleness';
 import { canonicalFingerprint } from '@/lib/manuscript/structure/canonicalFingerprint';
 import { askMaia } from '@/lib/manuscript/ask/askReader';
 import {
@@ -87,6 +87,12 @@ export async function GET(
   const memberId = await getMemberIdFromRequest(req);
   if (!memberId) return NextResponse.json({ error: 'unauthenticated' }, { status: 401 });
 
+  /* OWNERSHIP FIRST, FOR EVERY ANCHOR. Not a consequence of whichever read
+     happened to run. See `memberOwnsWork`. */
+  if (!(await memberOwnsWork(id, memberId))) {
+    return NextResponse.json({ refusal: 'not_found' }, { status: 404 });
+  }
+
   const threadId = req.nextUrl.searchParams.get('thread');
   if (threadId) {
     const t = await loadThread(threadId, memberId);
@@ -118,6 +124,13 @@ export async function POST(
   const { id } = await params;
   const memberId = await getMemberIdFromRequest(req);
   if (!memberId) return NextResponse.json({ error: 'unauthenticated' }, { status: 401 });
+
+  /* OWNERSHIP FIRST, BEFORE ANY READ OR ANY THREAD WRITE. A `work` anchor loads
+     no proposal, so without this a request could reach `openThread` having
+     proved only that the caller is some member and the id is some Work. */
+  if (!(await memberOwnsWork(id, memberId))) {
+    return NextResponse.json({ refusal: 'not_found' }, { status: 404 });
+  }
 
   let raw: unknown;
   try { raw = await req.json(); } catch {
@@ -168,21 +181,42 @@ export async function POST(
   /* Measured, or honestly reported as unmeasured. Never assumed. */
   let canonicalNow: string | null = null;
   try { canonicalNow = await canonicalFingerprint(id); } catch { canonicalNow = null; }
-  const now = await measureNow(id);
+  const now = await measureNow(id, memberId);
 
-  const canonicalAtOpen = existing
-    ? existing.canonicalAtOpen
-    : (canonicalNow ?? 'unmeasured-at-open');
+  /* NO FABRICATED BASELINE. An earlier draft stored the literal string
+     'unmeasured-at-open' when the fingerprint could not be taken, and a real
+     fingerprint would later compare unequal to it and report CHANGED - the exact
+     defect the three-state shape was corrected to remove, reintroduced through
+     the back door. A thread that cannot establish its BEFORE does not open. */
+  if (!existing && canonicalNow === null) {
+    return NextResponse.json({ refusal: 'canonical_unmeasurable' }, { status: 503 });
+  }
+  const canonicalAtOpen = existing ? existing.canonicalAtOpen : canonicalNow!;
 
-  const staleness = computeStaleness({
-    frozen: reading ? {
+  /* FROZEN COMES FROM THE THREAD, CURRENT FROM THE FRESH LOAD.
+     Taking both sides from the freshly loaded proposal compared the current
+     revision to itself, so editing the reviewed structure while a thread was
+     open still reported `unchanged`. The thread already stores what the author
+     was looking at; that is the only honest `was`. */
+  const frozenIdentity = frozenSideFor({
+    stored: existing?.reading ?? null,
+    fresh: reading ? {
+      proposalId: reading.proposalId,
       interpretationInputHash: reading.interpretationInputHash,
       sectionTopologyHash: reading.sectionTopologyHash,
       reviewRevision: reading.reviewRevision,
     } : null,
+  });
+
+  const staleness = computeStaleness({
+    frozen: frozenIdentity ? {
+      interpretationInputHash: frozenIdentity.interpretationInputHash,
+      sectionTopologyHash: frozenIdentity.sectionTopologyHash,
+      reviewRevision: frozenIdentity.reviewRevision,
+    } : null,
     canonicalAtOpen,
     now: { ...now, reviewRevision: reading?.reviewRevision ?? null, canonicalFingerprint: canonicalNow },
-    frozenProposalId: reading?.proposalId ?? null,
+    frozenProposalId: frozenIdentity?.proposalId ?? null,
   });
 
   const liveThreadId = existing ? existing.id : await openThread({
@@ -217,7 +251,11 @@ export async function POST(
     {
       anchor: check.anchor,
       interpretation: reading.interpretation,
-      sections: await loadSectionHeads(id),
+      evidence: reading.evidence,
+      coverage: reading.coverage,
+      reviewed: reading.reviewed,
+      reviewRevision: reading.reviewRevision,
+      sections: await loadSectionHeads(id, memberId),
       staleness,
     },
     (existing?.turns ?? []).map((t) => ({ speaker: t.speaker, body: t.body })),

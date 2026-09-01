@@ -134,3 +134,40 @@ export function computeStaleness(input: {
     canonicalMoved,
   };
 }
+
+/**
+ * Which side of the comparison is "was".
+ *
+ * THE FROZEN SIDE COMES FROM THE THREAD, ALWAYS. On a resumed thread the route
+ * reloads the proposal to learn what is true NOW; taking the frozen side from
+ * that same fresh load compared the current revision to itself, so a member
+ * could edit their reviewed structure with a conversation open and still be told
+ * nothing had moved. The thread stores what the author was actually looking at
+ * when they opened it, and that is the only honest `was`.
+ *
+ * A pure function so this is checkable without a database — the defect lived in
+ * the wiring, so the wiring is what has to be testable.
+ */
+export function frozenSideFor(input: {
+  /** `ReadingIdentity` stored on the thread, when it is a resumed thread. */
+  stored: {
+    proposalId: string;
+    interpretationInputHash: string;
+    sectionTopologyHash: string;
+    reviewRevision: number;
+  } | null;
+  /** The freshly loaded proposal, used only when the thread is being opened. */
+  fresh: {
+    proposalId: string;
+    interpretationInputHash: string;
+    sectionTopologyHash: string;
+    reviewRevision: number;
+  } | null;
+}): {
+  proposalId: string;
+  interpretationInputHash: string;
+  sectionTopologyHash: string;
+  reviewRevision: number;
+} | null {
+  return input.stored ?? input.fresh ?? null;
+}

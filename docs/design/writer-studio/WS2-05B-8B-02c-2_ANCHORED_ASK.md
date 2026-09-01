@@ -106,3 +106,97 @@ describes a change in prose and names where the author makes it.
   above is static, unit-level or structural. The first real-row witness — click
   a question on the `e6cab…` proposal, get an answer, confirm nothing moved — has
   to run on the Mac Studio.
+
+---
+
+# SOURCE CLOSEOUT — seven defects repaired
+
+Found by founder source review of `1a5524cd`, before the migration reached the
+real book. Architecture unchanged; scope not expanded. Each defect has a
+falsifying test in `__tests__/askSourceCloseout.test.ts`, and **each was shown
+capable of failing** by a controlled probe that reverted it, all reverted with
+byte-identity re-verified.
+
+1. **The marks were still inert.** `Talk with MAIA about this` existed only after
+   selecting a division and finding the inspector — a second, hidden affordance.
+   Both outline marks are now controls (`data-mark-question`, `data-mark-open`).
+   The conversation state moved to the parent so a mark opens the same room the
+   inspector does. Clicking resolves directly to the one thing it names, or
+   selects the division and lists several, each with its own way in — choosing
+   for the writer which of three open readings they meant would be a guess.
+   Where a unit tag has no `UncertainRegion` behind it, the conversation opens on
+   the **division**, truthfully, rather than minting a region index.
+
+2. **Wrong section identity — the blocker.** Ask read `manuscript_sections.id`;
+   the reading was run against `manuscript_draft_sections.id`. Every heading
+   handed to MAIA carried an id from a namespace her own divisions never used,
+   and `sectionTopologyHash` would report movement merely from the mismatch.
+   Now the **same query the structure/proposals route makes**, including
+   `section_addressable_at IS NOT NULL`, joining `manuscript_sections` only for
+   heading text. Still no body.
+
+3. **`reviewMoved` compared now to now.** On a resumed thread both sides came
+   from the freshly loaded proposal, so editing the reviewed tree with a
+   conversation open still reported `unchanged`. The frozen side now comes from
+   the thread's stored `ReadingIdentity`, via a pure `frozenSideFor` — extracted
+   precisely because the defect lived in the wiring, so the wiring is what must
+   be testable without a database.
+
+4. **A fabricated fingerprint.** `canonicalNow ?? 'unmeasured-at-open'` stored a
+   literal as a baseline; a real fingerprint would later compare unequal and
+   report CHANGED — the defect the three-state shape was corrected to remove,
+   re-entering through the back door. Removed. A thread that cannot establish its
+   BEFORE now **refuses to open** (`canonical_unmeasurable`, 503).
+
+5. **The prompt promised evidence the host never sent.** She was told she could
+   draw on "the evidence you recorded at the time" while receiving only the
+   interpretation — which would have turned *"why did you put 82 in Water?"* into
+   an invitation to rationalise. Frozen `evidence` and `coverage` are now loaded
+   and rendered, along with the author's own `reviewed` tree and its revision.
+   Neither is a body read.
+
+6. **Ownership hole on non-reading anchors.** A `work` anchor loads no proposal,
+   so the proposal query — which carried the only member scope — never ran, and
+   the boundary accepted it. `memberOwnsWork` is now an **unconditional check on
+   both verbs, before any read or thread write**. The durable answer, as the
+   later `section`/`concern` anchors will need it too.
+
+7. **A failed answer orphaned the question.** The author's turn is persisted
+   before the model is called; on failure the server returns the `threadId` but
+   the panel ignored it, so a retry opened a *second* thread holding the same
+   question. The panel now holds `threadId` separately from the rendered thread
+   and adopts it on the refusal path — the copy says the words are "held here",
+   and resuming that thread is what makes it true.
+
+## Gates after repair
+
+```
+ask suite              46 passed (5 structural · 10 anchor · 9 staleness · 22 closeout)
+all affected suites    474 passed · 30 suites
+typecheck              no regressions · baseline not re-recorded
+negative gate          39/39 intact
+canvas/page · Worktable · WritingSurface · OracleConversation   byte-unchanged
+```
+
+## Convergence gap found during this repair — for adjudication
+
+`manuscript_draft_sections` and `manuscript_working_drafts.section_addressable_at`
+are created by **no migration on this branch**. They come from the lane-only
+`20260830000001_manuscript_draft_sections.sql`, which was **Tier C** and
+deliberately excluded at 02c-0.
+
+Canonical's own `structure/proposals` route already depends on them, so this
+predates Ask and is not introduced by it — on the Mac Studio database the tables
+exist, which is why the 02a witness passed. But **a database built from this
+branch's migrations alone cannot run the review route or Ask.** Ask now shares
+that dependency by design, because the alternative was the wrong identity.
+
+Whether to converge that migration is a custody decision, not one this repair
+should make quietly.
+
+## Still outstanding
+
+- **Sanctuary has no Studio gate.** Unchanged: nothing to gate on, no gate faked.
+- **Unwitnessed at runtime.** Still no database in this session. The migration is
+  unapplied and no thread has ever been opened. Every proof remains static,
+  unit-level or structural.

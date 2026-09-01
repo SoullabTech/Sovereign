@@ -31,6 +31,19 @@ export interface FrozenReading {
   proposalId: string;
   manuscriptId: string;
   interpretation: StructureInterpretation;
+  /**
+   * What she actually reasoned FROM, frozen with the reading.
+   *
+   * SUPPLIED BECAUSE THE PROMPT CLAIMS IT. The standing instructions tell her
+   * she may draw on "the evidence you recorded at the time"; sending only the
+   * interpretation left that a lie, and "why did you put 82 in Water?" would
+   * have been answered by fresh rationalisation rather than by what she saw -
+   * the exact failure the anchored room exists to prevent. Neither field is a
+   * body read: `evidence` is observations over headings and `coverage` is a
+   * record of which ids were supplied, not their prose.
+   */
+  evidence: unknown;
+  coverage: unknown;
   reviewed: ReviewedStructure;
   reviewRevision: number;
   interpretationInputHash: string;
@@ -57,7 +70,8 @@ export async function loadFrozenReading(
   manuscriptId: string, proposalId: string, memberId: string,
 ): Promise<FrozenReading | null> {
   const r = await query(
-    `SELECT p.id, p.manuscript_id, p.interpretation, p.reviewed, p.review_revision,
+    `SELECT p.id, p.manuscript_id, p.interpretation, p.evidence, p.coverage,
+            p.reviewed, p.review_revision,
             p.interpretation_input_hash, p.section_topology_hash,
             p.reader_provenance, p.adopted_at
        FROM manuscript_structure_proposals p
@@ -72,6 +86,8 @@ export async function loadFrozenReading(
     proposalId: row.id as string,
     manuscriptId: row.manuscript_id as string,
     interpretation: row.interpretation as StructureInterpretation,
+    evidence: (row.evidence as unknown) ?? null,
+    coverage: (row.coverage as unknown) ?? null,
     reviewed: row.reviewed as ReviewedStructure,
     reviewRevision: Number(row.review_revision),
     interpretationInputHash: row.interpretation_input_hash as string,
@@ -81,16 +97,63 @@ export async function loadFrozenReading(
   };
 }
 
-/** Headings and positions for the Work. No bodies, by construction. */
-export async function loadSectionHeads(manuscriptId: string): Promise<SectionHead[]> {
+/**
+ * Headings and positions for the Work, IN THE IDENTITY THE READING USED.
+ *
+ * THE ID NAMESPACE IS `manuscript_draft_sections.id`, NOT
+ * `manuscript_sections.id`. The reader was run against the section-addressable
+ * working draft, so every id inside a frozen division, question or uncertain
+ * region is a draft-section id. Reading the source table instead returned a
+ * DIFFERENT namespace: the headings handed to MAIA would not match the ids in
+ * her own divisions, and `sectionTopologyHash` would report movement whenever
+ * the two namespaces merely differ - which is always.
+ *
+ * This is deliberately the same query the structure/proposals route already
+ * makes, including `section_addressable_at IS NOT NULL`, because two seams that
+ * are supposed to address the same sections must not be written twice.
+ *
+ * IT ALSO PROVES OWNERSHIP, through `member_manuscripts.member_id`. That is a
+ * property of this query and not a substitute for the route's own unconditional
+ * check - an anchor that never reaches here must not thereby skip it.
+ *
+ * Still no bodies: `manuscript_sections.body` is not selected, and the heading
+ * is joined from the source row only.
+ */
+export async function loadSectionHeads(
+  manuscriptId: string, memberId: string,
+): Promise<SectionHead[]> {
   const r = await query(
-    `SELECT id, position, heading FROM manuscript_sections
-      WHERE manuscript_id = $1 ORDER BY position`, [manuscriptId]);
+    `SELECT s.id, s.position, ms.heading
+       FROM manuscript_draft_sections s
+       JOIN manuscript_working_drafts d ON d.id = s.draft_id
+       JOIN member_manuscripts m ON m.id = d.manuscript_id
+       LEFT JOIN manuscript_sections ms ON ms.id = s.source_section_id
+      WHERE d.manuscript_id = $1 AND m.member_id = $2
+        AND d.section_addressable_at IS NOT NULL
+      ORDER BY s.position ASC`, [manuscriptId, memberId]);
   return r.rows.map((s: Record<string, unknown>) => ({
     id: s.id as string,
     position: Number(s.position),
     heading: (s.heading as string | null) ?? null,
   }));
+}
+
+/**
+ * Does this Work belong to this member.
+ *
+ * UNCONDITIONAL AT THE ROUTE, for every anchor. A `work` anchor loads no
+ * proposal, so the proposal query - which carries its own member scope - never
+ * runs, and without this a request could reach `openThread` having proved only
+ * that the caller is SOME member and the id is SOME Work. Ownership is not an
+ * incidental property of whichever read happened to occur.
+ */
+export async function memberOwnsWork(
+  manuscriptId: string, memberId: string,
+): Promise<boolean> {
+  const r = await query(
+    `SELECT 1 FROM member_manuscripts WHERE id = $1 AND member_id = $2 LIMIT 1`,
+    [manuscriptId, memberId]);
+  return r.rows.length > 0;
 }
 
 /** The newest proposal for this Work, for the supersession dimension. */
@@ -111,12 +174,12 @@ export async function newestProposalId(manuscriptId: string): Promise<string | n
  * keep. A cheaper stand-in computed from headings alone would be a different
  * measurement wearing the same name.
  */
-export async function measureNow(manuscriptId: string): Promise<{
+export async function measureNow(manuscriptId: string, memberId: string): Promise<{
   sectionTopologyHash: string | null;
   newestProposalId: string | null;
   interpretationInputHash: null;
 }> {
-  const heads = await loadSectionHeads(manuscriptId);
+  const heads = await loadSectionHeads(manuscriptId, memberId);
   return {
     sectionTopologyHash: sectionTopologyHash(
       heads.map((h) => ({ ...h, body: '' })) as never),

@@ -276,8 +276,8 @@ export default function StructureReview({
     };
     if (view && 'units' in view.interpretation) walk(view.interpretation.units, 0);
 
-    const marks = new Map<string, EditorialQuestion[]>();
-    for (const q of qs) {
+    const marks = new Map<string, { q: EditorialQuestion; index: number }[]>();
+    for (const [index, q] of qs.entries()) {
       const owners = new Set<string>();
       for (const sid of q.sectionIds ?? []) {
         const p = at.get(sid);
@@ -288,7 +288,7 @@ export default function StructureReview({
         }
         if (best) owners.add(best.id);
       }
-      for (const id of owners) marks.set(id, [...(marks.get(id) ?? []), q]);
+      for (const id of owners) marks.set(id, [...(marks.get(id) ?? []), { q, index }]);
     }
     return marks;
   }, [view]);
@@ -320,6 +320,11 @@ export default function StructureReview({
      could not settle, with her words for why; a tag is the kind of doubt. Only
      a region is anchorable as one, so only a region gets an `uncertainty`
      anchor — the tags are talked about through the division. */
+  /* THE CONVERSATION LIVES HERE, NOT IN THE INSPECTOR, because a mark in the
+     outline must be able to open it. Held in the parent it is one room, opened
+     from either place, and clicking a second mark replaces the first. */
+  const [asking, setAsking] = useState<{ anchor: AskAnchor; about: string } | null>(null);
+
   const regionsFor = useMemo(() => {
     const at = new Map(view?.sections.map((s) => [s.id, s.position]) ?? []);
     const rs = view?.interpretation.uncertainRegions ?? [];
@@ -349,6 +354,51 @@ export default function StructureReview({
   const anyLabel = [...proposedById.values()]
     .some((u) => typeof u.editorialLabel === 'string' && u.editorialLabel.length > 0);
   const selectedUnit = selected ? proposedById.get(selected) : undefined;
+
+  /**
+   * A MARK IN THE OUTLINE TAKES UP WHAT IT NAMES.
+   *
+   * The marks used to say "a question for you" and "left open: ..." and then do
+   * nothing — the room told the writer something was there and gave them
+   * nowhere to go. Clicking one now selects its division AND, where the mark
+   * resolves to exactly one thing, opens the conversation about that thing
+   * directly. Where it names several, the division is selected and each is
+   * listed separately with its own way in, because choosing for them which of
+   * three open readings they meant would be a guess.
+   *
+   * A UNIT TAG IS NOT A REGION. Where a division's doubt has no `UncertainRegion`
+   * behind it there is no region index to name, so the conversation opens on the
+   * DIVISION — truthfully — rather than fabricating a region anchor.
+   */
+  const takeUpMark = useCallback((unitId: string, mark: 'question' | 'open') => {
+    setSelected(unitId);
+    const unit = proposedById.get(unitId);
+    if (!unit) return;
+
+    if (mark === 'question') {
+      const qs = questionsFor(unit);
+      setAsking(qs.length === 1
+        ? { anchor: { on: 'question', proposalId, questionIndex: qs[0].index },
+            about: qs[0].q.label }
+        : null);
+      return;
+    }
+
+    const rs = regionsFor(unit);
+    if (rs.length === 1) {
+      setAsking({ anchor: { on: 'uncertainty', proposalId, regionIndex: rs[0].index },
+        about: rs[0].r.why });
+      return;
+    }
+    if (rs.length === 0 && unit.uncertainty.length > 0) {
+      setAsking({ anchor: { on: 'division', proposalId, unitId: unit.id },
+        about: `what she left open in ${
+          divisionName(unit.title, unit.editorialLabel ?? null, unit.kind)}` });
+      return;
+    }
+    setAsking(null);
+  }, [proposalId, questionsFor, regionsFor, proposedById]);
+
 
   return (
     <div data-structure-review data-form={form} style={{ padding: SPACE.comfortable }}>
@@ -440,7 +490,7 @@ export default function StructureReview({
                   positionOf={(id) => headingOf(id)?.position}
                   openOverride={openOverride} onToggleOpen={toggleOpen}
                   selected={selected} onSelect={setSelected}
-                  questionMarks={questionMarks} />
+                  questionMarks={questionMarks} onMark={takeUpMark} />
               ))}
             </div>
             <Inspector unit={selectedUnit}
@@ -448,6 +498,7 @@ export default function StructureReview({
               questions={questionsFor(selectedUnit)}
               regions={regionsFor(selectedUnit)}
               manuscriptId={manuscriptId} proposalId={proposalId}
+              asking={asking} setAsking={setAsking}
               busy={busy} onGesture={gesture} promotion={promotion} />
           </div>
         </div>
@@ -666,7 +717,7 @@ function TalkButton({ label, onClick }: { label: string; onClick: () => void }) 
 
 function Inspector({
   unit, positionOf, questions, regions, manuscriptId, proposalId,
-  busy, onGesture, promotion,
+  asking, setAsking, busy, onGesture, promotion,
 }: {
   unit: ProposedUnit | undefined;
   positionOf: (id: string) => number | undefined;
@@ -675,6 +726,10 @@ function Inspector({
   regions: { r: UncertainRegion; index: number }[];
   manuscriptId: string;
   proposalId: string;
+  /* ONE CONVERSATION AT A TIME, OWNED BY THE PARENT so a mark in the outline can
+     open the same room this panel does. */
+  asking: { anchor: AskAnchor; about: string } | null;
+  setAsking: (a: { anchor: AskAnchor; about: string } | null) => void;
   busy: boolean;
   onGesture: (op: ReviewOperation, previewFirst: boolean) => void;
   /** What moving this division out would do — absent when it is top-level. */
@@ -683,12 +738,6 @@ function Inspector({
     grandparentName: string | null; shape: PromoteShape;
   } | null;
 }) {
-  /* ONE CONVERSATION OPEN AT A TIME IN THIS PANEL, and it is identified by what
-     it is about rather than by a boolean, so opening a second mark replaces the
-     first rather than stacking rooms the writer did not ask for. Declared before
-     the early return below because hooks are unconditional. */
-  const [asking, setAsking] = useState<{ anchor: AskAnchor; about: string } | null>(null);
-
   if (!unit) {
     return (
       <aside className="ws2sr-inspector" data-inspector="empty">
@@ -880,7 +929,7 @@ function Panel({
 
 function Entry({
   entry, depth, headingOf, proposedById, positionOf,
-  openOverride, onToggleOpen, selected, onSelect, questionMarks,
+  openOverride, onToggleOpen, selected, onSelect, questionMarks, onMark,
 }: {
   entry: OutlineEntry;
   depth: number;
@@ -891,7 +940,9 @@ function Entry({
   onToggleOpen: (unitId: string, current: boolean) => void;
   selected: string | null;
   onSelect: (unitId: string) => void;
-  questionMarks: ReadonlyMap<string, EditorialQuestion[]>;
+  questionMarks: ReadonlyMap<string, { q: EditorialQuestion; index: number }[]>;
+  /** Take up the mark that was clicked. See `takeUpMark` in the parent. */
+  onMark: (unitId: string, mark: 'question' | 'open') => void;
 }) {
   const pad = depth * SPACE.roomy;
 
@@ -998,23 +1049,36 @@ function Entry({
             several open readings the first is shown with a count of the rest,
             and the inspector still lists every one. */}
         {qs.length > 0 && (
-          <span className="ws2sr-mark">
+          <button type="button" className="ws2sr-mark" data-mark-question
+            onClick={(e) => { e.stopPropagation(); onMark(node.id, 'question'); }}
+            aria-label={qs.length === 1
+              ? `Talk with MAIA about her question: ${qs[0].q.label}`
+              : `Talk with MAIA about her ${qs.length} questions here`}
+            style={{ background: 'none', border: 'none', padding: 0,
+              cursor: 'pointer', font: 'inherit', textAlign: 'left' }}>
             <StudioText role="metadata" tone="quiet" as="span" data-row-state="question">
               {qs.length === 1 ? 'a question for you' : `${qs.length} questions for you`}
             </StudioText>
-          </span>
+          </button>
         )}
         {doubts.length > 0 && (
-          <span className="ws2sr-mark" data-uncertainty={doubts.join(',')}
-            aria-label={`MAIA left open: ${doubts
+          /* A MARK THAT NAMES SOMETHING OPEN CAN BE TAKEN UP. It said what was
+             left open and then went nowhere; the writer's next move — asking
+             her about it — had no way in from the thing that raised it. */
+          <button type="button" className="ws2sr-mark" data-mark-open
+            data-uncertainty={doubts.join(',')}
+            onClick={(e) => { e.stopPropagation(); onMark(node.id, 'open'); }}
+            aria-label={`Talk with MAIA about what she left open: ${doubts
               .map((u) => UNCERTAINTY_SAYS[u] ?? u).join(', ')}`}
             title={`MAIA left open: ${doubts
-              .map((u) => UNCERTAINTY_SAYS[u] ?? u).join(', ')}`}>
+              .map((u) => UNCERTAINTY_SAYS[u] ?? u).join(', ')}`}
+            style={{ background: 'none', border: 'none', padding: 0,
+              cursor: 'pointer', font: 'inherit', textAlign: 'left' }}>
             <StudioText role="metadata" tone="quiet" as="span" data-row-state="uncertain">
               left open: {UNCERTAINTY_SAYS[doubts[0]] ?? doubts[0]}
               {doubts.length > 1 ? ` +${doubts.length - 1} more` : ''}
             </StudioText>
-          </span>
+          </button>
         )}
       </div>
 
@@ -1042,7 +1106,8 @@ function Entry({
           <Entry key={entryKey(e)} entry={e} depth={grouped ? 0 : depth + 1}
             headingOf={headingOf} proposedById={proposedById} positionOf={positionOf}
             openOverride={openOverride} onToggleOpen={onToggleOpen}
-            selected={selected} onSelect={onSelect} questionMarks={questionMarks} />
+            selected={selected} onSelect={onSelect} questionMarks={questionMarks}
+            onMark={onMark} />
         ))}
       </div>
       {entry.empty.map((c) => (

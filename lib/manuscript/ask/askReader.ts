@@ -21,6 +21,7 @@
 import { createHash } from 'crypto';
 import Anthropic from '@anthropic-ai/sdk';
 import type { StructureInterpretation } from '../structure/interpret';
+import type { ReviewedStructure } from '../structure/review';
 import type { AskAnchor } from './anchor';
 import { type StalenessState, isCurrent, mustNotAssertCurrent } from './staleness';
 
@@ -74,7 +75,17 @@ export type AskOutcome =
 export interface AskContext {
   anchor: AskAnchor;
   interpretation: StructureInterpretation;
-  /** Headings and positions. Never bodies. */
+  /**
+   * What she reasoned from at the time. The prompt promises her this; sending
+   * only the interpretation made that promise false and turned "why did you put
+   * 82 in Water?" into an invitation to rationalise.
+   */
+  evidence: unknown;
+  coverage: unknown;
+  /** The author's own tree, so advice recognises what THEY have made of it. */
+  reviewed: ReviewedStructure;
+  reviewRevision: number;
+  /** Headings and positions, in the draft-section identity. Never bodies. */
   sections: readonly { id: string; position: number; heading: string | null }[];
   staleness: StalenessState;
 }
@@ -160,6 +171,20 @@ function readingSays(ctx: AskContext): string {
   if (i.uncertainRegions.length) {
     parts.push(`What you left open:\n${i.uncertainRegions.map((u) => `  - ${u.why} (${u.fromSectionId}–${u.toSectionId})`).join('\n')}`);
   }
+  if (ctx.evidence) {
+    parts.push(`WHAT YOU REASONED FROM (frozen with the reading — these are the observations you actually had):\n${
+      JSON.stringify(ctx.evidence, null, 1)}`);
+  }
+  if (ctx.coverage) {
+    parts.push(`HOW MUCH OF THE WORK YOU HAD WHEN YOU READ (which sections' text you were given, and which you were not):\n${
+      JSON.stringify(ctx.coverage, null, 1)}`);
+  }
+  /* THEIR TREE, NOT ONLY YOURS. Advice that ignores what the author has already
+     changed reads as not having looked at their book. */
+  parts.push(`WHAT THE AUTHOR HAS MADE OF IT SINCE (their structure, revision ${ctx.reviewRevision}):\n${
+    ctx.reviewed.units.map((u) =>
+      `  - ${u.title ?? '(untitled)'} [${u.id}] sections ${u.fromSectionId}–${u.toSectionId}`).join('\n')
+      || '  (they have not changed it)'}`);
   parts.push(`The Work's sections, by heading only (you do NOT have their text):\n${
     ctx.sections.map((s) => `  ${s.position}. ${s.heading ?? '(no heading)'} [${s.id}]`).join('\n')}`);
   return parts.join('\n\n');

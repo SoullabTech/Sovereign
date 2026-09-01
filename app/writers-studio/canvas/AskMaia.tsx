@@ -66,6 +66,17 @@ export default function AskMaia({
   onClose: () => void;
 }) {
   const [thread, setThread] = useState<AskThreadView | null>(null);
+  /**
+   * HELD SEPARATELY FROM `thread`, because a failed answer still has one.
+   *
+   * When the author's turn is persisted and MAIA cannot be reached, the server
+   * returns the threadId with the refusal. Keeping it only inside `thread` -
+   * which is only set on success - meant a retry had no thread locally and
+   * opened a SECOND one holding the same question. The copy says the words are
+   * "held here"; resuming the thread that actually holds them is what makes
+   * that true.
+   */
+  const [threadId, setThreadId] = useState<string | null>(null);
   const [staleness, setStaleness] = useState<StalenessState | null>(null);
   const [draft, setDraft] = useState('');
   const [busy, setBusy] = useState(false);
@@ -82,9 +93,10 @@ export default function AskMaia({
     const r = await ask({
       manuscriptId,
       question: q,
-      ...(thread ? { threadId: thread.id } : { anchor }),
+      ...(threadId ? { threadId } : { anchor }),
     });
     if (r.ok) {
+      setThreadId(r.threadId);
       setThread(r.thread);
       setStaleness(r.staleness);
       setDraft('');
@@ -92,9 +104,12 @@ export default function AskMaia({
       /* THE QUESTION IS NOT CLEARED ON A REFUSAL. The words are the writer's and
          the room does not eat them because the wire failed. */
       setRefusal(r.refusal);
+      /* And if the turn was persisted before the failure, adopt that thread so
+         the retry continues it rather than starting a second one beside it. */
+      if (r.threadId) setThreadId(r.threadId);
     }
     setBusy(false);
-  }, [draft, busy, manuscriptId, anchor, thread]);
+  }, [draft, busy, manuscriptId, anchor, threadId]);
 
   const line = stalenessLine(staleness);
 
@@ -158,6 +173,7 @@ export default function AskMaia({
           if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); void send(); }
         }}
         placeholder={thread ? 'say more…' : 'Why are you unsure about this?'}
+        data-ask-resuming={threadId ?? undefined}
         rows={3}
         aria-label="ask MAIA about this"
         style={{
