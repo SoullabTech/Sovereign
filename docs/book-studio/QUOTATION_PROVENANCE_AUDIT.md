@@ -2,7 +2,7 @@
 
 **Source of record:** `docs/book-studio/ELEMENTAL_ALCHEMY_FROM_ORIGINAL_FULL.md`
 **Opened:** 2026-09-01, after Chapter 10 closed developmental adjudication.
-**Status:** IN PROGRESS — 34 of 137 adjudicated (Ch5: 24 of 30).
+**Status:** IN PROGRESS — 32 of 137 adjudicated (Ch5: 22 of 30, 8 open).
 
 ## Scope
 
@@ -24,6 +24,28 @@
 
 **Origin status**, recorded only when attribution fails:
 `EXTERNAL SOURCE` · `INTERNAL-ORIGIN CANDIDATE` · `UNKNOWN`
+
+**Rights status** — recorded for **every** quotation, independent of attribution:
+`PUBLIC DOMAIN` · `LIKELY PROTECTED` · `TERM UNCERTAIN` ·
+`PERMISSION-OR-LICENSE CONFIRMED`
+
+**Rights-review priority** — because copyright status alone does not answer
+whether permission is required:
+- `HIGH` — poetry, song lyrics, or other highly creative short works, where even
+  a small excerpt may represent a meaningful part of the original.
+- `STANDARD` — ordinary short prose quotation from a protected work.
+- `NONE` — public-domain source.
+- `LEGAL REVIEW` — status or use ambiguous.
+
+This is a **triage field, not a legal verdict**. The U.S. Copyright Office is
+explicit that there is no fixed safe number of words or percentage for
+quotation: fair use is contextual, the creative nature of the work matters, and
+even a small portion can weigh heavily where it represents an important part of
+the original.
+
+**Every remaining quotation receives the rights flag during the same lookup**, so
+the legal handoff inherits a complete inventory rather than requiring a second
+pass over the same 137 items.
 
 The second axis exists to stop "I cannot find X saying this" from silently
 becoming "the author wrote it." An empty external search is **not** evidence of
@@ -482,7 +504,7 @@ Three separate defects in one epigraph:
 (where her own words appear under "Buddha"). The same author, mishandled in
 both directions, in the same book. Adjudicate the two together.
 
-### Chapter 5 — still open (6 of 30)
+### Chapter 5 — still open (8 of 30)
 
 All have a named primary work, most already in the chapter bibliography.
 Under the source-lead rule each requires an edition check before any
@@ -519,14 +541,44 @@ quotation.
 
 ---
 
-## Separately tracked — copyrighted lyrics
+## Quoted-material copyright / permissions review — publication/legal
 
-Three Peter Gabriel quotations, now located precisely. Rights clearance, not
-editorial provenance.
+*Renamed from "copyrighted-lyrics rights clearance."* The three Gabriel lyrics
+are part of this task; Mary Oliver proves they are not the whole of it. The
+audit is surfacing in-copyright material it was not looking for, which is why
+the rights axis now runs across the whole census.
+
+**`LIKELY PROTECTED` · `HIGH` — L872 · Mary Oliver**, "The Buddha's Last
+Instruction" (*House of Light*, 1990), currently misattributed to Sharon
+Salzberg. A 1990 poem sits comfortably inside the ordinary modern U.S. term —
+works created after 1978 are generally protected for the author's life plus 70
+years. **Permission versus removal is not decided inside the provenance
+census.**
+
+**`LIKELY PROTECTED` · `HIGH` — three Peter Gabriel lyrics**, located precisely.
 
 - **L713 · Ch4** — "One dot, that's on or off, defines what is and what is not…"
 - **L1153 · Ch6** — "I own my fear / So it doesn't own me."
 - **L1911 · Ch9** — "Turn up the signal. Wipe out the noise."
+
+### Salzberg attribution inversion — one false credit, one missing credit
+
+Recorded as a pattern; **the two repairs are determined independently**, not
+forced to match.
+
+- **L872** — apparent Mary Oliver language wrongly credited to Salzberg.
+  Continue the edition check against *House of Light*; if confirmed,
+  `MISATTRIBUTED`, plus the protected-poetry rights flag above.
+- **L1253** — Salzberg's own language wrongly credited to the Buddha. If her
+  exact wording verifies, `MISATTRIBUTED → reattribution candidate`, with an
+  ordinary `LIKELY PROTECTED` · `STANDARD` prose rights flag.
+
+### Count correction
+
+An earlier revision of this record stated Ch5 at 24 of 30 and the book total at
+34. The correct figures are **Ch5 22 of 30 with 8 open** (22 + 8 = 30) and **32
+of 137** overall. Recorded because this file is the audit's record and its
+arithmetic has to be checkable.
 
 ## Sources
 
