@@ -2,7 +2,7 @@
 
 **Source of record:** `docs/book-studio/ELEMENTAL_ALCHEMY_FROM_ORIGINAL_FULL.md`
 **Opened:** 2026-09-01, after Chapter 10 closed developmental adjudication.
-**Status:** IN PROGRESS — 118 of 137. **Ch2 CLOSED (10/10).** adjudicated. **Chapter 5 CLOSED (30/30). Chapter 8 CLOSED (23/23).**
+**Status:** IN PROGRESS — 119 of 137. **Ch2 CLOSED (10/10).** adjudicated. **Chapter 5 CLOSED (30/30). Chapter 8 CLOSED (23/23).**
 
 ## Scope
 
@@ -3278,6 +3278,40 @@ guessing what the front-matter pool means**.
 
 **All prior `MISSING` verdicts are re-checked above.** No further `MISSING` call
 is to be made without a whole-bibliography check.
+
+
+---
+
+## Chapter 1 — L245 Emily Dickinson: pattern 4 confirmed as recurring
+
+**L245 · "The Soul should always stand ajar, ready to welcome the ecstatic experience." — Emily Dickinson**
+
+**`MISATTRIBUTED`** · pattern **`COMPOSITE ATTRIBUTION`**.
+
+Dickinson's poem (Franklin/Johnson **1055**) opens:
+
+> "The Soul should always stand ajar
+> That if the Heaven inquire
+> He will not be obliged to wait…"
+
+**"ready to welcome the ecstatic experience" is not in the poem.** It is a modern
+interpretive gloss that has been **welded onto Dickinson's genuine opening line**
+and presented as one Dickinson quotation.
+
+**Second independent specimen of `COMPOSITE ATTRIBUTION`**, after Socrates /
+Robert C. Solomon (L1758) — which was previously the class's only instance. The
+pattern is now **confirmed as recurring**, on the same taxonomy threshold applied
+to the others.
+
+**Same structural consequence as Socrates/Solomon: there is no single correct
+byline.** Reattributing to Dickinson would be false for half the sentence;
+reattributing to the glossator would be false for the other half. Per doctrine,
+the remedy is **removal as a quotation**, with the option of quoting Dickinson's
+actual line instead — which is public domain and says something adjacent but
+different.
+
+**Rights:** Dickinson's line `PUBLIC DOMAIN` · `NONE`; the gloss is of unknown
+authorship and unknown status, which is itself a reason not to retain it.
 
 
 ---
