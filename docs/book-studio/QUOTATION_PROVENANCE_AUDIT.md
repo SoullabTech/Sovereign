@@ -2,7 +2,7 @@
 
 **Source of record:** `docs/book-studio/ELEMENTAL_ALCHEMY_FROM_ORIGINAL_FULL.md`
 **Opened:** 2026-09-01, after Chapter 10 closed developmental adjudication.
-**Status:** IN PROGRESS — 63 of 137 adjudicated. **Chapter 5 CLOSED (30/30). Chapter 8 CLOSED (23/23).**
+**Status:** IN PROGRESS — 65 of 137 adjudicated. **Chapter 5 CLOSED (30/30). Chapter 8 CLOSED (23/23).**
 
 ## Scope
 
@@ -1452,6 +1452,64 @@ instances. The third and fourth changed the picture: three share a real pattern
 > *inside* a set that had legitimately earned provisional grouping.
 
 **Adjudicate L834, L1028, L1115 together as a provenance family. Exclude L313.**
+
+### Chapter 6 — second tranche
+
+**L1269 · "Prasad Mahes" — "The mind is like water. When it's turbulent, it's difficult to see. When it's calm, everything becomes clear."**
+`UNVERIFIED` · `UNKNOWN` · pattern **`FLOATING APHORISM / SOURCE UNRESOLVED`**.
+**Name left exactly as printed — not normalized**, per ruling.
+
+**The purest floating case in the audit.** No book, no publication, no dated
+utterance. The line circulates entirely on social media, Pinterest, Wattpad, a
+Tripadvisor photo caption and a cosmetics brand's video. The only identification
+offered anywhere for the attributed person is "wealth management professional,"
+from a motivational-quote site.
+
+*Characteristic worth noting within the pattern, not as a new pattern:* this is
+the first item where **the attributed person cannot be verified to exist as an
+author at all** — distinct from every other case, where a real author was wrongly
+credited. The underlying image (mind as water, turbulent versus still) is an
+ancient Buddhist and Taoist commonplace; a modern name has attached to a
+traditional figure.
+**Rights: `PROTECTABILITY UNCERTAIN` · `STANDARD`.** **`MISSING`** from the
+bibliography.
+
+**L1261 · Lao Tzu — "Nothing is softer or more flexible than water, yet nothing can resist it."**
+
+**The two axes stay separate, and both must be recorded:**
+
+- **Ancient source — VERIFIED.** The passage is ***Tao Te Ching*, chapter 78**.
+  The attribution "Lao Tzu" is correct *at the level of the source text*, and the
+  classical Chinese is public domain.
+- **Printed English — `UNVERIFIED`.** **No translator is identified**, in the
+  manuscript or anywhere the line circulates. The wording is markedly more
+  compressed than the standard scholarly renderings — Legge's "There is nothing
+  in the world more soft and weak than water, and yet for attacking things that
+  are firm and strong there is nothing that can take precedence of it" — which
+  suggests a loose modern rendering, or a paraphrase of one.
+- **Rights: `TERM UNCERTAIN` · `STANDARD` — and unresolvable until the translator
+  is.** Legge (1891) is public domain; D. C. Lau (1963) and later renderings are
+  not. **The rights status is a property of the translation, not of Lao Tzu.**
+
+**`MISSING`** — no Lao Tzu entry in the Ch6 bibliography.
+
+### Rule — translated classical sources carry two source facts
+
+> For any translated classical source the audit records **two** facts, never one:
+> **(1) the original work** — governs attribution; **(2) the translation actually
+> printed** — governs rights *and* wording fidelity.
+>
+> An attribution can be **correct** while the printed English is **unverified and
+> its rights unresolved.** Collapsing the two either credits a translator's
+> copyrighted expression to an ancient author, or dismisses a sound attribution
+> because its English cannot be placed.
+
+This is the Barks/Rumi structure in cleaner form — there, the translator was
+identifiable and copyrighted; here no translator can be found at all.
+
+**Affected items across the book:** Lao Tzu (×2), Rumi (several), Plutarch, Weil,
+Tagore, Confucius, the Buddha texts, Aristotle, Socrates/Plato. Each needs the
+printed English placed, not merely the original work named.
 
 ---
 
