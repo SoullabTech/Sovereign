@@ -2,7 +2,7 @@
 
 **Source of record:** `docs/book-studio/ELEMENTAL_ALCHEMY_FROM_ORIGINAL_FULL.md`
 **Opened:** 2026-09-01, after Chapter 10 closed developmental adjudication.
-**Status:** IN PROGRESS — 114 of 137. **Ch2 CLOSED (10/10).** adjudicated. **Chapter 5 CLOSED (30/30). Chapter 8 CLOSED (23/23).**
+**Status:** IN PROGRESS — 116 of 137. **Ch2 CLOSED (10/10).** adjudicated. **Chapter 5 CLOSED (30/30). Chapter 8 CLOSED (23/23).**
 
 ## Scope
 
@@ -3049,6 +3049,47 @@ this is the same shape as the dash hypothesis, and the same discipline applies.
 Recorded as a **lead requiring drafting-history evidence**, not a finding. Note
 also that Ch2's James orphan may equally be a `MISFILED SOURCE` for **Ch4's**
 James quotation (L632), which has no entry of its own.
+
+
+---
+
+## RUMI — complete picture, 7 of 7. The book's most-quoted author.
+
+| Line | Chapter | Status | Rights |
+|---|---|---|---|
+| **L182** | Preface | `UNVERIFIED` · `UNKNOWN` — no Persian source | `PROTECTABILITY UNCERTAIN` · `STANDARD` |
+| **L536** | Ch3 | `UNVERIFIED` · `UNKNOWN` — variant family ("The universe" / "This universe") | `PROTECTABILITY UNCERTAIN` · `STANDARD` |
+| **L776** | Ch5 Fire | `UNVERIFIED` · `UNKNOWN` | `PROTECTABILITY UNCERTAIN` · `STANDARD` |
+| **L1052** | Ch5 Fire | `PARAPHRASE/ADAPTED` — **honestly labelled** "after Coleman Barks" | `PROTECTABILITY UNCERTAIN` · `STANDARD` |
+| **L1666** | Ch8 Air | **verbatim Barks**, bare "— Rumi" | **`LIKELY PROTECTED` · `HIGH`** |
+| **L1867** | Ch9 Aether | **verbatim Barks**, bare "— Rumi" | **`LIKELY PROTECTED` · `HIGH`** |
+| **L1977** | Ch9 Aether | `UNVERIFIED` — competing **Ram Dass** attribution | `PROTECTABILITY UNCERTAIN` · `STANDARD` |
+
+**Four unverified with no locatable Persian source · two verbatim Barks under a
+bare medieval byline · one honest label.**
+
+### The specialist instrument for resolving the four
+
+**Ibrahim Gamard's dar-al-masnavi.org**, including "Three Fake Rumi Verses," is a
+scholarly resource tracking spurious Rumi attributions. It is the right tool for
+closing L182, L536, L776 and L1977, and should be used before the repair batch
+rather than general search.
+
+### Why Rumi is structurally the hardest case in the book
+
+Rumi attributions pass through **four layers** that collapse into one byline:
+Persian original → scholarly translation → adaptive "re-Englishing" → internet
+circulation. The label "Rumi" survives all four, even where **no identifiable
+Persian source exists**.
+
+This is the `MEDIATED TRANSLATION` problem at maximum depth, compounded by
+`SOURCE-FORM MISCLASSIFICATION` — a 1995 copyrighted rendering presented as a
+thirteenth-century text.
+
+**Not declared a single provenance family**, per the McKenna correction: the two
+verbatim Barks items have a demonstrated mechanism; the four unverified ones do
+not yet share a demonstrated one, only a shared absence. **Coordinated resolution
+task; per-item adjudication.**
 
 
 ---
