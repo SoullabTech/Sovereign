@@ -164,7 +164,7 @@ Like my own children, I was conscious enough to ask critical questions in my you
 
 Now I can see that, as hard as my life has been at times, everything that has occurred over the years has made me a better person. As much as I'd like to go back and take away my younger self's suffering in certain challenging circumstances, if I did, I'd be denying myself the opportunity to become the more soulful, fully human person I am today. How I've worked with the challenges of earthly living, rather than wishing them away, is a blessing. I've learned that it isn't about avoiding life's challenges and its twists and turns, but about the quality of our presence, the way we show up for these experiences, and how we manage them that matters most.
 
-Sadhguru's teaching that both the human body and the cosmos can be understood through five elements was one of the expressions of this ancient framework that stayed with me.
+Sadhguru's teaching that both the human body and the cosmos can be understood through five elements was one contemporary expression of an older elemental framework that stayed with me.
 
 ### Reflection and Interaction
 
@@ -175,7 +175,9 @@ Sadhguru's teaching that both the human body and the cosmos can be understood th
 
 This book is a collection of interconnected insights, conversations, and experiences I wish had been shared with me when I started my journey of awakening. It honors the power of direct experience and directed, developed attention. The advice, strategies, and ways of interpreting reality are offered as insights from my experience. They may not fit your own reality tunnel. As the Buddha advises in the Kalama Sutta:
 
-*"Do not believe in anything simply because you have heard it. Do not believe in traditions because they have been handed down for many generations. Do not believe anything because it is spoken and rumored by many. Do not believe in anything simply because it is found written in your religious books. Do not believe in anything merely on the authority of your teachers and elders. But after observation and analysis, when you find that anything agrees with reason and is conducive to the good and benefit of one and all, then accept it and live up to it." – Buddha*
+*"When you know for yourselves: ‘These things are skillful, blameless, praised by sensible people, and when you undertake them, they lead to welfare and happiness.’" — the Buddha, Kālāma Sutta (Aṅguttara Nikāya 3.65), trans. Bhikkhu Sujato*
+
+For me, the point is not to replace one authority with another, but to test what we are given in lived experience: what does it produce in us, in our relationships, and in the life we create?
 
 While my goal is to honor your path and offer support, please remember that nothing replaces your own experiences, sensibilities, and the wisdom from others who have dedicated their lives to supporting intrepid souls like you. Always seek advice and counsel from wise elders, colleagues, trusted professionals, and experts in health, wellness, spiritual, psychological, energetic, and emotional matters—especially the shaman, poets and mystics. Yet always follow your inner knowing. Think of this as honoring and supporting your Inner Guides in harmony with external experts, ensuring you have the best support possible.
 
@@ -382,7 +384,7 @@ In a ceremonial circle, all are one. When we enter the circle, we are asked to b
 
 Everything circles, cycles, and dances around a center of being. Each of us has our own unique center, as do individual cells to galaxies. Our expansion into our outer world and our contracting back into the center of our being is part of a universal dance of life. The center of our being holds the wisdom of our infinite nature, which is continuously engaging with the elements of experience.
 
-A figure that runs through medieval philosophy—used by Alain de Lille, Bonaventure and Nicholas of Cusa alike—describes God as an infinite sphere whose circumference is nowhere and whose center is everywhere. In this book I take that figure into two dimensions and work with it as a circle.
+A figure that recurs through medieval philosophy—used by Alain de Lille, Bonaventure, and Nicholas of Cusa—describes God as an infinite sphere whose center is everywhere and whose circumference is nowhere. In this book, I work with the two-dimensional analogue of that sphere: the circle.
 
 As imaginal beings, we find simple symbols helpful in managing the complexity of our experience. We rely on symbolic representations of our world to ground us and guide our decisions. We also thrive when we identify parallels to our own experience in nature. The circle depicts the path of adapting to the elements of our reality. The circle is always whole, so symbolically, it is the model for our inherent wholeness. Each moment along its arc is both a beginning and an end—a turning that is also a becoming.
 
@@ -600,6 +602,8 @@ While doing Chi Kung, my breath, movements, imagination, and intentions calibrat
 ### Integrating the Elements
 
 *"Wholeness-making is that dimension of individuation whereby you recognize, accept, love, and care for all those parts of yourself split-off during the period of socialization, so you could become acceptable and fit in." – C. Michael Smith*
+
+C. Michael Smith's work on wholeness-making has influenced how I think about integration. In Elemental Alchemy, I use wholeness-making to mean bringing the parts of ourselves we have split off, neglected, or disowned back into relationship—not to erase their differences, but so they can participate in a more coherent whole.
 
 Everyone can benefit from having a practice that integrates the four main facets of their being—the physical, energetic, mental, and spiritual—so they can reach conscious awareness of the fifth element, aether. That is the godlike stuff of the true self—the inner observer, discoverer, and creator.
 
@@ -1080,6 +1084,8 @@ Feeling and thinking represent polar opposites: right and left hemispheric funct
 
 *"Emotions are not just the fuel that powers the psychological mechanism of a reasoning creature; they are also parts, highly complex and messy parts, of this creature's reasoning itself." — Martha Nussbaum*
 
+Emotion is not the opposite of reason; it is one of the ways we perceive what matters and organize our response to the world.
+
 ### The Alchemy of Water: Cleansing Emotional Impurities
 
 The alchemy of water is the process of cleansing ourselves of emotional impurities. Water is associated with love, compassion, and rebirth. As such, it holds the potential for all forms of redemption through the selfless act of letting go and receiving what is wanting to be grown within us.
@@ -1358,7 +1364,7 @@ In winter, all of life consolidates into what is most necessary and essential. M
 
 *"Earth care, people care, fair share." — Permaculture principle*
 
-As an image, the body carries something similar: a fascial, interstitial field that behaves like the other earth systems around it. Our connection with nature is a window into our connection with ourselves. As individual organic operating systems fully integrated into the greater, more inclusive operating system of Planet Earth, we each possess the algorithms necessary for surviving and thriving on this planet.
+I use this as an image for the body as well: fascia and the spaces between our tissues remind me that embodiment, too, is organized through relationship. Our connection with nature is a window into our connection with ourselves. As individual organic operating systems fully integrated into the greater, more inclusive operating system of Planet Earth, we each possess the algorithms necessary for surviving and thriving on this planet.
 
 ### The Dynamics of Your Inner Earth
 
@@ -1864,7 +1870,7 @@ Between stillness and movement, mindfulness and no-mindedness, and action and re
 
 ### The Goal of Aether
 
-C. Michael Smith's work has given me language for this territory—particularly his thinking about the Daimon, the Dream Maker, and the inner axis mundi: a center of orientation and guidance that is felt in the heart rather than deduced. The goal of engaging with our aether nature as Self is to cultivate a state of coherence where our inner and outer worlds harmonize. This involves embracing stillness and silence while trusting the unfolding of our life's path. By integrating the qualities of our aetheric nature into our daily practice, we bridge the space between our connection to our true selves and the interconnected web of existence.
+C. Michael Smith's work has given me language for this territory—particularly his thinking about the Daimon, the Dream Maker, and the inner axis mundi. I understand this inner axis as a center of orientation and guidance that is felt in the heart rather than deduced. The goal of engaging with our aether nature as Self is to cultivate a state of coherence where our inner and outer worlds harmonize. This involves embracing stillness and silence while trusting the unfolding of our life's path. By integrating the qualities of our aetheric nature into our daily practice, we bridge the space between our connection to our true selves and the interconnected web of existence.
 
 *"And, when you want something, all the universe conspires in helping you to achieve it." — Paulo Coelho*
 
@@ -2045,7 +2051,7 @@ Different traditions name these dimensions differently. In the shamanic training
 
 There is also a horizontal axis moving between our inner experience and engagement with the outer world. We move inward toward contemplation and outward toward action. We receive and express, listen and communicate, imagine and create, withdraw into ourselves and return again to relationship. Temperament, experience, circumstance, and development influence where we are most comfortable along this axis. Neither inwardness nor outwardness is inherently better; the work is becoming conscious of the movement and of the relationship between them.
 
-The Emerald Tablet gives the correspondence as above and below. Spiralogic extends it inward: as within, so without. Our inner and outer lives continuously affect one another. The quality of our energy influences emotion. Emotion affects the body. The body shapes perception. Our thoughts influence our feelings and relationships, and our relationships alter the way we understand ourselves. Spiralogic gives us a way of attending to these movements without requiring them to become fixed categories.
+The Emerald Tablet gives us the correspondence of above and below. In Spiralogic, I extend that correspondence into the relationship between inner and outer: as within, so without. Our inner and outer lives continuously affect one another. The quality of our energy influences emotion. Emotion affects the body. The body shapes perception. Our thoughts influence our feelings and relationships, and our relationships alter the way we understand ourselves. Spiralogic gives us a way of attending to these movements without requiring them to become fixed categories.
 
 ### The Alchemical Sequence
 

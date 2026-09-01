@@ -24,9 +24,12 @@ print("FREEZE GATE\n")
 # under management; adjudication moves records between the active and historical
 # layers and must not read as a breach. The invariant is the sum.
 FROZEN_POPULATION = 158  # 130 active + 28 historical at the moment of freezing
+adm = [r["id"] for r in R if r.get("admitted_after_freeze")]
 check("frozen population reconciles across both layers",
-      len(R) + len(H) == FROZEN_POPULATION,
-      f"{len(R)} active + {len(H)} historical = {len(R) + len(H)} (frozen {FROZEN_POPULATION})")
+      len(R) + len(H) - len(adm) == FROZEN_POPULATION,
+      f"{len(R)} active + {len(H)} historical - {len(adm)} admitted after the freeze "
+      f"= {len(R) + len(H) - len(adm)} (frozen {FROZEN_POPULATION})"
+      + (f" | post-freeze admissions: {adm}" if adm else ""))
 check("zero pending_migration",
       not [r for r in R if r["provenance_review_state"] == "pending_migration"])
 attr_ni = [r["id"] for r in R
@@ -57,7 +60,8 @@ check("families reconciled", not orphan_fams, f"{len(fams)} families across both
 
 check("every current record has an explicit review state",
       all(r.get("provenance_review_state") for r in R))
-ab = sum(1 for r in R if r["display_form"] == "block_epigraph" or r.get("former_form") == "block")
+ab = sum(1 for r in R if (r["display_form"] == "block_epigraph" or r.get("former_form") == "block")
+         and not r.get("admitted_after_freeze"))
 ib = sum(1 for r in H if r.get("former_form", "block") == "block")
 check("block lifecycle closes against the original census",
       ab + ib == 137, f"137 = {ab} active block + {ib} inactive block")

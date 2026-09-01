@@ -16,10 +16,9 @@
       "occurrence": 1
     },
     {
-      "match": "Do not believe in anything simply because you have heard it",
-      "editorial_status": "KEEP - THRESHOLD / EPISTEMIC LINEAGE. It earns the privilege of greeting the reader because the Preface immediately answers it: test what you are given against experience. That is not borrowed gravitas; it establishes the epistemic relationship the book wants with its reader. It is also the one genuine Buddha item among the five fake ones now removed. REPAIR OWED BEFORE PUBLICATION: the translator problem is NOT solved by deleting the translator while continuing to print that translator's English. The sutta is ancient; the English sentence is not. Either identify and credit the actual English rendering currently printed, or replace it with a verified rendering whose provenance and rights are clean. The citation may include Kalama Sutta, Anguttara Nikaya 3.65, but that does not replace attribution for the English expression.",
-      "provenance_review_state": "edition_check_required",
-      "recovery_note": "Identify the English rendering actually printed, or substitute a cleanly sourced one. Bibliography currently names Thanissaro Bhikkhu (Access to Insight, 1994), whose rendering begins 'Now, Kalamas, don't go by reports, by legends' - materially different from the printed text. WRONG TRANSLATOR CITED, second confirmed instance.",
+      "match": "These things are skillful, blameless, praised by sensible people",
+      "editorial_status": "KEEP - THRESHOLD / EPISTEMIC LINEAGE. It earns the privilege of greeting the reader because the Preface immediately answers it: test what you are given against experience. That is not borrowed gravitas; it establishes the epistemic relationship the book wants with its reader. It is also the one genuine Buddha item among the five fake ones now removed. REPAIR APPLIED at the source closure pass: the printed paraphrase was replaced with Bhikkhu Sujato's verbatim rendering of AN 3.65, so the English is now sourced, CC0-licensed, and carries the sutta's actual criterion.",
+      "provenance_review_state": "migrated",
       "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md (Kalama Sutta); 4C Preface ruling",
       "occurrence": 1
     }

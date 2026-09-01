@@ -1,0 +1,17 @@
+{
+  "_comment": "Authorial closure pass, 2026-09-01. The two open authorial obligations are discharged and the model-originated passages are accepted or revised by the author. Every sentence below is now AUTHOR-ADOPTED: origin EDITOR/MODEL-ORIGINATED where noted, then author-revised or accepted as written.",
+  "entries": [
+    {
+      "match": "they are also parts, highly complex and messy parts",
+      "editorial_status": "OBLIGATION DISCHARGED. The book now states the premise in its own terms directly after the epigraph - 'Emotion is not the opposite of reason; it is one of the ways we perceive what matters and organize our response to the world.' Nussbaum is therefore distinguished agreement rather than evidentiary scaffolding, which is what the 4B ruling required.",
+      "evidence_location": "Authorial closure pass 2026-09-01",
+      "occurrence": 1
+    },
+    {
+      "match": "Wholeness-making is that dimension of individuation",
+      "editorial_status": "OBLIGATION DISCHARGED. The lineage is located in prose and the term is then defined by the author: Smith's work influenced how the book thinks about integration, and Elemental Alchemy uses wholeness-making to mean bringing split-off, neglected or disowned parts back into relationship - not to erase their differences, but so they can participate in a more coherent whole. Smith gives the book a lineage; he no longer carries its definition.",
+      "evidence_location": "Authorial closure pass 2026-09-01",
+      "occurrence": 1
+    }
+  ]
+}

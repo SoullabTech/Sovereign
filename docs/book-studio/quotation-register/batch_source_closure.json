@@ -35,12 +35,11 @@
       "occurrence": 1
     },
     {
-      "match": "Do not believe in anything simply because you have heard it",
-      "editorial_status": "4C RULING REOPENED AND REVISED - KEEP, RESTORE SOURCE, REPLACE THE FALSE PARAPHRASE. The threshold function still earns its place at the entrance to the book, but the printed English is not a translation of the Kalama Sutta: it is the widely circulated paraphrase, and it does not merely simplify the sutta, it changes its epistemology. The discourse (Anguttara Nikaya 3.65) lists logical conjecture and inference among the ten grounds NOT to go by, and its positive criterion is that qualities are skillful, blameless, praised by the wise, and lead to welfare and happiness. The paraphrase's ending - 'when you find that anything agrees with reason' - promotes as a test one of the very things the sutta sets aside. Same defect class as the removed Udana 'Buddha' line in Water: not a wrong name, a reversed meaning. REPLACEMENT NOT YET APPLIED - see recovery_note.",
-      "provenance_status": "misattributed",
-      "actual_author": "not the Buddha as rendered - a popular English paraphrase, catalogued as such on Fake Buddha Quotes",
+      "match": "These things are skillful, blameless, praised by sensible people",
+      "editorial_status": "APPLIED - KEEP, SOURCE RESTORED, FALSE PARAPHRASE REPLACED. The 4C ruling was reopened because the printed English was not a translation but the widely circulated paraphrase, and it changed the discourse's epistemology: AN 3.65 lists logical conjecture and inference among the grounds NOT to go by, while the paraphrase made agreement with reason the test. Same defect class as the removed Udana line - not a wrong name, a reversed meaning. The epigraph now carries Sujato's verbatim positive criterion rather than reproducing the long list of what not to rely on, which also gives a very clean rights object: Sujato's Nikāya translations are published under CC0. SEAM CLOSED: the sentence after it no longer rests on experience alone - 'For me, the point is not to replace one authority with another, but to test what we are given in lived experience: what does it produce in us, in our relationships, and in the life we create?' - which matches a sutta whose criteria include ethical quality, lived consequence, and the judgement of sensible people.",
+      "provenance_status": "verified_exact",
+      "actual_author": "the Buddha, as rendered by Bhikkhu Sujato",
       "provenance_review_state": "migrated",
-      "recovery_note": "APPLY: replace with a genuine translation of AN 3.65, preferably Bhikkhu Sujato's on SuttaCentral, whose Nikaya translations carry a CC0 public-domain dedication and so create no permissions problem. Thanissaro Bhikkhu's and Soma Thera's renderings on Access to Insight are the alternatives. The verbatim replacement text was NOT captured in this session: the project's context-mode rules deny WebFetch, the ctx_* replacements are not present in this environment, and web search returns summaries rather than reliable verbatim - so no translation was printed on recall alone. SEAM CHECK OWED AFTER REPLACEMENT: the following sentence, 'nothing replaces your own experiences', may need sharpening, because the authentic sutta is subtler than experience-over-authority - it is closer to testing teachings in lived consequence while also attending to ethical qualities and the judgement of the wise.",
       "evidence_location": "Source closure pass 2026-09-01: Thanissaro and Soma Thera renderings (Access to Insight); Thanissaro's 'Faith in Awakening' warns specifically against reading the discourse as licence to trust one's own rational judgement; Fake Buddha Quotes entry on this wording",
       "occurrence": 1,
       "provenance_history": [
@@ -48,10 +47,15 @@
           "verdict": "verified_variant",
           "stage": "Stage 2 census",
           "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md (Kalama Sutta)",
-          "note": "Treated the printed English as a variant rendering of AN 3.65 whose defect was the translator cited. The source closure pass found the wording is a popular paraphrase that alters the discourse's criterion, not a rendering of it.",
-          "superseded_by": "misattributed"
+          "note": "Treated the printed paraphrase as a variant rendering of AN 3.65 whose defect was the translator cited. The source closure pass found the wording was a popular paraphrase that altered the discourse's criterion, not a rendering of it; the paraphrase was then replaced with Sujato's text and the record re-verified against it.",
+          "superseded_by": "verified_exact"
         }
-      ]
+      ],
+      "work": "Kālāma Sutta / Kesamutti Sutta, Aṅguttara Nikāya 3.65",
+      "translator_or_mediator": "Bhikkhu Sujato, SuttaCentral",
+      "rights_status": "public_domain",
+      "bibliography_relationship": "REPLACE the Access to Insight / Thanissaro entry with SuttaCentral, Bhikkhu Sujato, Aṅguttara Nikāya 3.65",
+      "admitted_after_freeze": true
     }
   ]
 }

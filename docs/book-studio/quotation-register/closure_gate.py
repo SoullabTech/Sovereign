@@ -37,10 +37,12 @@ ruled_no_prov = [r["id"] for r in R if r["editorial_review_state"] == "migrated"
                  and r["provenance_review_state"] != "migrated"]
 print(f"  NOTE  {len(ruled_no_prov)} record(s) editorially ruled with provenance still open: {ruled_no_prov}")
 
-blk = sum(1 for r in R if r["display_form"] == "block_epigraph" or r.get("former_form") == "block")
+blk = sum(1 for r in R if (r["display_form"] == "block_epigraph" or r.get("former_form") == "block")
+          and not r.get("admitted_after_freeze"))
 pend = sum(1 for r in R if r["provenance_review_state"] == "pending_migration")
 def _is_blk(r):
-    return r["display_form"] == "block_epigraph" or r.get("former_form") == "block"
+    return ((r["display_form"] == "block_epigraph" or r.get("former_form") == "block")
+            and not r.get("admitted_after_freeze"))
 
 
 mig_blk = sum(1 for r in R if _is_blk(r) and r["provenance_review_state"] == "migrated")
@@ -51,8 +53,12 @@ check("block reconciliation: total = migrated + pending + documented not_investi
       f"{blk} = {mig_blk} migrated + {pend} pending + {ni_blk} documented-deferred")
 hb2 = sum(1 for h in H if h.get("former_form", "block") == "block")
 hi2 = sum(1 for h in H if h.get("former_form") == "inline")
+adm = [r["id"] for r in R if r.get("admitted_after_freeze")]
 check("current field reconciles against the frozen population",
-      len(R) + len(H) == 130 + 28, f"{len(R)} active + {len(H)} historical = {len(R)+len(H)} (frozen 130 + 28)")
+      len(R) + len(H) - len(adm) == 130 + 28,
+      f"{len(R)} active + {len(H)} historical - {len(adm)} admitted after the freeze "
+      f"= {len(R)+len(H)-len(adm)} (frozen 130 + 28)"
+      + (f" | post-freeze admissions: {adm}" if adm else ""))
 check("historical entries all matched exactly one lifecycle record",
       not rep.get("historical_unmatched"), str(rep.get("historical_unmatched", [])))
 # ---- Stage 4A tombstone integrity gate ----
@@ -71,7 +77,7 @@ check("authoring corrections are represented in provenance_history, not silently
       f"{len(corrected)} corrected record(s) carry their superseded value"
       + ("  [VACUOUS - no corrections found where at least one is known]" if not corrected else ""))
 check("editorial removal status untouched by the integrity pass",
-      all(h.get("record_state") in ("removed", "reclaimed_as_author_prose") for h in H))
+      all(h.get("record_state") in ("removed", "reclaimed_as_author_prose", "superseded") for h in H))
 check("bibliography and rights remain on their own axes",
       all(not (h.get("bibliography_relationship") and
                h["bibliography_relationship"] == h.get("provenance_status")) for h in H))

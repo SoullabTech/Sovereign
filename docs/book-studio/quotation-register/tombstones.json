@@ -1200,6 +1200,28 @@
       "editorial_status": "REMOVE - MISATTRIBUTED. Not located in the Aristotelian corpus; the family's other occurrence was removed at 4A and this one survived only because 4A's scope was section-opening epigraphs. The Path of Knowing already opens strongly on the author's own twenty-year account of developing the model, so there was no independent editorial reason to preserve the saying. No replacement prose. This closes the fam-know-thyself asymmetric-repair obligation and, with it, the last deferred quotation ruling in the book.",
       "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L1340 and L1770; batch 8 family finding (provenance); Stage 4C structural-QA sweep (editorial)",
       "notes": "HOW IT WAS NEARLY MISSED, recorded because the lesson generalises: this record's provenance_review_state read 'migrated' while its editorial_status was not a ruling but a deferral - 'requires Stage 4C adjudication'. A zero-unadjudicated COUNT was therefore technically clean while the MEANING of the status was not. The closure gate had been printing the record under ASYMMETRIC REPAIR throughout; the count was read and the report was not. A state field records that something was written, never that what was written was a decision."
+    },
+    {
+      "state": "superseded",
+      "stage": "Source closure pass",
+      "former_form": "block",
+      "last_location": "Preface - Call to Adventure",
+      "text": "Do not believe in anything simply because you have heard it. Do not believe in traditions because they have been handed down for many generations. Do not believe anything because it is spoken and rumored by many. Do not believe in anything simply because it is found written in your religious books. Do not believe in anything merely on the authority of your teachers and elders. But after observation and analysis, when you find that anything agrees with reason and is conducive to the good and benefit of one and all, then accept it and live up to it.",
+      "attributed_as": "Buddha",
+      "provenance_status": "misattributed",
+      "actual_author": "not the Buddha as rendered - a widely circulated English paraphrase",
+      "editorial_status": "SUPERSEDED by Bhikkhu Sujato's verbatim rendering of AN 3.65. Retired rather than merely corrected: the printed English was not a translation of the sutta but a paraphrase that altered its epistemology, making agreement with reason the test where the discourse lists logical conjecture and inference among the grounds not to go by.",
+      "evidence_location": "Source closure pass 2026-09-01; QUOTATION_PROVENANCE_AUDIT.md (Kalama Sutta, WRONG TRANSLATOR CITED)",
+      "notes": "The replacement object EA-Q-0270 is a POST-FREEZE ADMISSION: a different text, a different translator and a different rights class occupying the same slot. Identity matching correctly refused to treat it as the same object - similarity fell far below the threshold - which is the designed behaviour, not a fault.",
+      "provenance_history": [
+        {
+          "verdict": "verified_variant",
+          "stage": "Stage 2 census",
+          "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md (Kalama Sutta)",
+          "note": "Read the paraphrase as a variant rendering whose defect was the translator cited.",
+          "superseded_by": "misattributed"
+        }
+      ]
     }
   ]
 }
