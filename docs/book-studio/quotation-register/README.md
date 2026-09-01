@@ -1742,3 +1742,90 @@ reconciling to the frozen 130 + 28.
 **Inline lifecycle: 19 active + 2 inactive**
 
 **4I remaining: 18 records** — Teasdale next.
+
+---
+
+# 4I · FAMILY CARD 2 — `fam-teasdale` · three occurrences
+
+## A · Chapter 10 opening — **CONTROL, settled, read-only**
+
+> *"To be spiritual means essentially to take responsibility for our inner journey
+> while using all the resources from all the traditions available to us…"*
+> **`KEEP · KINSHIP + DIALOGUE · VERIFIED EXACT · RIGHTS HOLD`**
+
+**The relationship is already named on the page**, in the author-adopted paragraph
+beneath it: *"Teasdale's vision resonates deeply with my own. Elemental Alchemy is
+not an attempt to collapse our differences… Our differences need not divide us; held
+in relationship, they can become the very means through which a greater wholeness is
+revealed."*
+
+**This is the only occurrence with a closed source. It is also the only one where
+the book answers him.** Both facts matter for what follows.
+
+---
+
+## B · L1654 — *Refining the Air of Mindful Communication*
+
+> *"Spiritual maturity is not about pursuing salvation alone; it is about
+> contributing to the salvation or enlightenment of others."* — **`UNVERIFIED`**
+
+**Immediate context:** a paragraph on the *"interrelated, interdependent, mycelial,
+interwoven mind"* and its tendency to **collapse into a shared field of mutual
+agreement** — and the quotation is followed immediately by the heading **"Groupthink
+vs. Collaborative Intelligence."**
+
+**My reading:** **this is a different relationship from A, and a genuinely relevant
+one.** A is about **drawing across traditions**; B is about **maturity being
+outward-turned rather than solitary** — which is precisely the hinge the section
+needs between *interwoven mind* and *groupthink versus collaboration*. **It is not
+repeating A's relationship.**
+
+**But it sits at a section boundary doing transitional work**, and **the source is
+unverified.** So the honest position is: *the voice may belong; the sourcing does not
+currently support it.*
+
+**Under your ordering — belonging first, provenance second — B is the occurrence
+where that ordering actually bites.** If his voice belongs here, the sourcing has to
+be made to support it, and *A Monk in the World* and *The Mystic Heart* were both
+checked without finding it.
+
+---
+
+## C · L2258 — the **Conclusion**
+
+> *"The real religion of humankind can be said to be spirituality itself,"*
+> proclaimed Wayne Teasdale — **`UNVERIFIED`**
+
+**Immediate context:** the Conclusion's culminating paragraph — *"we are not
+isolated beings but kaleidoscopic refractions of the infinite source… temporary
+crystallizations of the primordial quintessence."*
+
+**My reading: this one repeats A's relationship rather than adding to it.** *"The
+real religion of humankind is spirituality itself"* is **the same claim as A's
+"resources from all the traditions… our common heritage"** — universality across
+traditions — **stated more flatly, in the book's final pages, without the dialogue A
+carries.**
+
+**And the position works against it.** A **opens** Chapter 10 and the book answers
+it. C **arrives inside the Conclusion's own crescendo**, interrupting the author's
+most fully-voiced passage with an outside voice **making a point he has already
+earned across ten chapters.**
+
+> **That is certification, and at the one location where the book least needs it.**
+
+**Under the test you set — *does Teasdale create a new relationship here?* — my
+answer for C is no.**
+
+---
+
+## The distinction the family makes visible
+
+**Three Teasdale occurrences. Only A both has a source and does something the book
+answers.** B may earn its place on function but **cannot currently earn it on
+evidence**. C is the same relationship as A **at the moment the book is strongest in
+its own voice.**
+
+> **Repeated source presence must add a new relationship, not repeat an established
+> one** — and **the closer to the book's own crescendo, the higher the bar.**
+
+**Neither B nor C is ruled.** Both are yours. **A stands untouched.**
