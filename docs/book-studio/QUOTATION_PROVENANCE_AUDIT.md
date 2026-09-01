@@ -2,7 +2,7 @@
 
 **Source of record:** `docs/book-studio/ELEMENTAL_ALCHEMY_FROM_ORIGINAL_FULL.md`
 **Opened:** 2026-09-01, after Chapter 10 closed developmental adjudication.
-**Status:** IN PROGRESS — 80 of 137 adjudicated. **Chapter 5 CLOSED (30/30). Chapter 8 CLOSED (23/23).**
+**Status:** IN PROGRESS — 81 of 137 adjudicated. **Chapter 5 CLOSED (30/30). Chapter 8 CLOSED (23/23).**
 
 ## Scope
 
@@ -1844,7 +1844,7 @@ Eight independent instances across three chapters. No longer incidental.
 
 **Still findings-only. No repair batch. No bibliography reconstruction.**
 
-**Chapter 7 — Earth: 6 of 16 in progress. Next after: Chapter 9 — Aether (12), then Chapter 9 — Aether (12)**, completing the
+**Chapter 7 — Earth: 7 of 16 in progress. Next after: Chapter 9 — Aether (12), then Chapter 9 — Aether (12)**, completing the
 five-element provenance picture before the lower-volume chapters.
 
 
@@ -2019,6 +2019,45 @@ At repair time: if expendable → remove; if it genuinely earns its place → us
 an **unattributed traditional saying** or fold into prose; **do not write "—
 Mies"**; and avoid "— Anonymous" unless dealing with an actual anonymous
 historical text.
+
+**L1449 · Lao Tzu — "Nature does not hurry, yet everything is accomplished."**
+`PARAPHRASE/ADAPTED` · pattern `EVOLVED APHORISM / RECOVERABLE ANCESTOR`.
+
+**Recoverable ancestor: Archie J. Bahm's 1958 translation of *Tao Te Ching*
+chapter 73** — "**It** does not hurry; yet everything is accomplished."
+
+Two findings inside one line:
+- **The circulating form substitutes "Nature" for "It."** In chapter 73 the
+  subject is the way of Heaven / the Tao — not "nature" as a modern ecological
+  concept. The substitution converts a metaphysical claim into a naturalistic
+  one, which is precisely what an Earth chapter on patience and natural pace
+  wants it to say.
+- **It is chapter 73, not 37.** The chapter number circulating online with this
+  line is itself wrong.
+
+*Restoration test:* the claim — unhurried accomplishment — survives restoration,
+so **pattern 2**. But note that "It does not hurry" cannot stand alone as an
+epigraph without its antecedent, and the manuscript's use leans on "Nature" being
+the subject. The substitution is doing editorial work; flag it for the author.
+
+**Rights: `TERM UNCERTAIN` · `STANDARD`** — Bahm's 1958 translation is likely
+protected, but the manuscript's wording is a paraphrase *of* that translation
+rather than a quotation of it. **`MISSING`** — no Lao Tzu entry in Ch7 (as in
+Ch6).
+
+#### A legitimate provenance family — the two Lao Tzu quotations
+
+The first family formed since Campbell, and **earned by evidence, not by name**.
+L1261 (Ch6) and L1449 (Ch7) share a demonstrable transmission mechanism:
+
+- both are **loose modern renderings** of *Tao Te Ching* passages;
+- both circulate **without translator credit**;
+- in both, the manuscript wording **matches no scholarly translation**;
+- both carry **no bibliography entry** in their chapter.
+
+They should be adjudicated together **as a translation problem**, not as two
+separate attribution problems — and the translation-resolution queue should
+treat them as one task.
 
 ### Chapter 7 bibliography — three findings and one exemplar
 
