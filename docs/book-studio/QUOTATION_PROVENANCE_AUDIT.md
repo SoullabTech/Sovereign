@@ -1867,11 +1867,10 @@ popular form — two words dropped — so reattribution under rule 1 is **not**
 cleanly available.
 **Rights: `PROTECTABILITY UNCERTAIN` · `STANDARD`.**
 
-**L1485 · Helen Keller — duplicate of L1706 (Ch8).** Same quotation, same
-attribution, in Earth and Air. Verdict inherits from L1706: `VERIFIED VARIANT`
-(the early-1920s vaudeville line, per Lash 1980). **Recorded as a duplicate
-placement** — the second cross-chapter duplicate after the Aristotle
-"Knowing yourself" pair (L1340/L1770).
+**L1485 · Helen Keller — `CROSS-CHAPTER DUPLICATE`.** Provenance already closed
+at L1706 (`VERIFIED VARIANT`, the early-1920s vaudeville line per Lash 1980).
+**No re-sourcing required. Placement decision deferred to the repair batch.**
+Second cross-chapter duplicate after the Aristotle pair (L1340/L1770).
 
 ---
 
@@ -1902,6 +1901,13 @@ tools** — a material signal about assembly provenance, independent of content.
 *(It is also a copy-editing item for the render: attribution punctuation should
 be normalized before publication.)*
 
+**Caution on interpretation.** Dash style can be a **formatting artifact
+introduced by a later normalization pass**. Even if the correlation survives, it
+establishes an **assembly-layer marker** — not "different hands" and not
+different authorship. Whether it marks an earlier/later layer, an editor or tool
+boundary, or an import source is a separate investigation, only worth opening if
+the prediction holds.
+
 ### Pre-registered prediction — stated before Ch7 and Ch9 are censused
 
 The two **en-dash** elemental chapters are the two **worst-sourced** censused
@@ -1919,8 +1925,27 @@ Ch9 (em) should be better-sourced than Ch5 and Ch8**, resembling Ch6.
 **This is a hypothesis, not a finding.** n = 3 censused chapters; correlation is
 not causation; the dash could track something incidental. It is recorded **now,
 before** Earth and Aether are audited, so the test is honest rather than
-retrofitted. If Ch7 and Ch9 come out poorly sourced, the correlation dissolves
-and should be struck.
+retrofitted.
+
+**Test protocol — binding:**
+1. **Do not change the audit procedure because of the prediction.** Same
+   risk-first order, same source hierarchy, same evidence standard.
+2. Compare only **after** Earth and Aether close: verified / unverified /
+   misattributed rates **and** bibliography defect classes.
+3. **If they do not track, strike the hypothesis.**
+4. If they do track, only then investigate what the marker corresponds to.
+
+### Open classification question — Santayana, pattern 1 or 2?
+
+Recorded as `EVOLVED APHORISM` (pattern 2). Flagged because it was suggested as a
+`SOURCE DISPLACEMENT` (pattern 1) specimen.
+
+**The discriminator is whether the manuscript's wording belongs to the true
+source.** In the pattern-1 specimen (Oliver → Salzberg) the wording **is** Oliver's
+exactly, which is why reattribution repairs it. Here Holmes wrote "The earth has
+**its** music for those who **will** listen" and the manuscript has neither word —
+which is why simple reattribution is unavailable, the defining feature of pattern
+2. **Held at pattern 2 pending authorial ruling.**
 
 ---
 
