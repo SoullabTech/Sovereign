@@ -3433,9 +3433,10 @@ Medium publication**. It corroborates nothing.
 > **Self-publication may establish internal circulation and chronology; it cannot
 > independently verify external attribution.**
 
-**Covered:** Soullab-owned sites · author-written Medium/Substack posts · Book
-Studio pages · **earlier versions of the manuscript** · promotional excerpts
-derived from the manuscript.
+**Covered — author- OR publisher-controlled sources:** **Soullab Press LLC**
+materials · Soullab-owned websites · Book Studio pages · author-written
+Medium/Substack posts · **earlier versions of the manuscript** · promotional
+excerpts derived from the manuscript · catalogue and marketing copy.
 
 These remain **useful for chronology and provenance history**. They simply cannot
 serve as evidence that Rumi, Jung, Teasdale or Wilber actually said something.
@@ -3482,7 +3483,8 @@ quoted author's**.
   attestation**, same class as **Plum Village** for Thich Nhat Hanh, Tolle's
   official accounts, the **Joseph Campbell Foundation**, the **Santayana
   Edition**, the **King Institute**.
-- **Soullab / Book Studio / author Medium posts** (quoting author) → **excluded**.
+- **Soullab Press LLC / Soullab sites / Book Studio / author Medium posts**
+  (quoting author **and publisher**) → **excluded**.
 
 Without this distinction the rule would have discarded some of the audit's
 strongest verifications.
