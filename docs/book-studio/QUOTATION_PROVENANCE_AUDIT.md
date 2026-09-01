@@ -3140,22 +3140,51 @@ establish what the manuscript wording derives from.
 
 ---
 
-## AUTHORIAL DOCTRINE — the book's own elemental ontology
+## CANONICAL PRINCIPLE — the Aether doctrine
 
-Recorded because it governs how the audit reads four- versus five-element
-language anywhere in the manuscript:
+*Authorial canon, 2026-09-01. Supersedes the shorter ontology note. Governs the
+audit, the repair batch, and Writer's Studio.*
 
-> **In *Elemental Alchemy*, Aether is not simply a fifth material element
-> alongside four others. It is the divine appearing — the unifying spiritual
-> presence through and within elemental manifestation.**
+> **Aether is the divine field within and beyond the four elements — the God
+> within, weaving Fire, Water, Earth, and Air into and out of relationship, form,
+> and existence as reality manifests in the physical world.**
 
-The four manifest elements are the differentiated world; Aether is the
-source/field becoming perceptible through them.
+Aether is **not** element number five, sitting beside the others as a fifth
+equivalent category. **It is what allows the four to become a world.**
 
-**Consequence for the census:** a four-element formulation in a source is **not**
-by itself evidence of mismatch with this book, nor with traditions that
-distinguish perceptible elements from their ground. Do not treat the count as a
-provenance signal.
+### Three simultaneous functions
+
+| | |
+|---|---|
+| **Source** | the unmanifest potential from which elemental form emerges |
+| **Weaver** | the relational field through which the four elements combine, separate, transform, and reorganize |
+| **Return** | the field into which forms dissolve as they pass out of manifestation |
+
+### Where Aether becomes perceptible
+
+Fire, Water, Earth and Air are not merely four separate substances or functions.
+**Their connection, coherence and living interplay is where Aether becomes
+perceptible.** So Aether is both:
+
+- **within** the four elements, as their sacred ground; and
+- **revealed between** them, as they come into relationship.
+
+**When all four become coherent and relational, Aether is revealed through their
+integration. When physical form dissolves, those differentiated elemental
+expressions return toward Aether — the unifying field from which new expression
+can emerge.**
+
+### Standing interpretive rule for four-/five-element sources
+
+> **A four-element source does not imply missing Aether.** Where Aether functions
+> as the divine coherence within and among the four, a fourfold formulation may
+> be describing exactly the manifest field through which Aether discloses itself.
+
+**Consequence for the census, binding:** the element count in a quoted source is
+**not a provenance signal** and must not be treated as evidence of mismatch,
+compression, or error. This is what dissolved the Sai Baba `DOCTRINAL MISMATCH`
+flag, and it applies to every remaining four-/five-element source in the book.
+
 
 ---
 
