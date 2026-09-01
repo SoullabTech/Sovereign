@@ -2,7 +2,7 @@
 
 **Source of record:** `docs/book-studio/ELEMENTAL_ALCHEMY_FROM_ORIGINAL_FULL.md`
 **Opened:** 2026-09-01, after Chapter 10 closed developmental adjudication.
-**Status:** IN PROGRESS — 61 of 137 adjudicated. **Chapter 5 CLOSED (30/30). Chapter 8 CLOSED (23/23).**
+**Status:** IN PROGRESS — 63 of 137 adjudicated. **Chapter 5 CLOSED (30/30). Chapter 8 CLOSED (23/23).**
 
 ## Scope
 
@@ -474,7 +474,8 @@ evidence or author recognition, else remove.
   where you didn't know they were going to be." The "universe… only walls" form
   is not among them.
 
-**Joseph Campbell quotation set — HOLD FOR SET-LEVEL ADJUDICATION.**
+**Joseph Campbell quotation set — RESOLVED, AND THE GROUPING PARTLY DISSOLVES.**
+*(See the completed four-instance table below; this note is superseded.)*
 Campbell appears twice in PARAPHRASE/ADAPTED (L834, L1028) and is quoted four
 times across the book. Both failures are the same kind: a genuine Campbell
 thought circulating in a tightened form he did not say. With two independently
@@ -1375,6 +1376,52 @@ exact source has been resolved.*
   Search of a Soul*): listed, with no matching Ch6 quotation found.
 - **`MISSING`** — Thoreau, Lao Tzu, Buddha, Angelou, Thich Nhat Hanh, "Prasad
   Mahes", Aristotle (×2).
+
+### The Campbell set — complete, and it does not converge
+
+All four instances are now sourced independently. The set was held together on
+two converging paraphrases. With all four in hand, **it splits.**
+
+| | Quotation | Verdict |
+|---|---|---|
+| **L313 · Ch1** | "The privilege of a lifetime is being who you are." | **`VERIFIED EXACT`** |
+| L834 · Ch5 | "Follow your bliss and the universe will open doors…" | `PARAPHRASE/ADAPTED` |
+| L1028 · Ch5 | "The cave you fear to enter holds the treasure you seek." | `PARAPHRASE/ADAPTED` |
+| L1115 · Ch6 | "All the gods, all the heavens, all the hells, are within us." | `PARAPHRASE/ADAPTED` |
+
+**L313 — `VERIFIED EXACT`.** *A Joseph Campbell Companion: Reflections on the Art
+of Living*, ed. Diane K. Osbon (1991), confirmed on the Joseph Campbell
+Foundation's official channel.
+**`WRONG SOURCE/WORK` + cross-chapter misfiling:** the quotation sits in Chapter
+1, whose bibliography lists *The Hero with a Thousand Faces*; the *Companion* is
+listed under **Chapter 2**. The right book is in the bibliography, under the
+wrong chapter.
+
+**L1115 — `PARAPHRASE/ADAPTED`** · pattern `EVOLVED APHORISM`. Campbell's text in
+*The Power of Myth* reads: "Heaven and hell are within us, and all the gods are
+within us… **All the gods, all the heavens, all the world, are within us.**" The
+manuscript substitutes **"hells" for "world"**, narrowing a claim about the
+interiority of *the whole world* into a heaven/hell symmetry.
+*Restoration test:* restoring "all the world" still supports an interiority
+claim, so **pattern 2, not 5** — though the substitution does shift emphasis
+toward the moralized reading, which suits a Water chapter on emotional depths.
+Apply the test against the local context at repair time.
+
+### Rule — grouping is recomputed on completion, not fixed at formation
+
+Campbell was the **only** author set that had held, and it held on two converging
+instances. The third and fourth changed the picture: three share a real pattern
+(genuine Campbell thoughts in tightened later forms) and **one is exact**.
+
+> **A set's membership must be recomputed when the set completes.** Adjudicating
+> Campbell after two instances would have condemned L313 by association — the
+> precise failure the clustering rule exists to prevent, arriving this time from
+> *inside* a set that had legitimately earned provisional grouping.
+
+**Adjudicate L834, L1028, L1115 together. Exclude L313 — it is sound.**
+
+**Tally of author sets tested: four formed, three dissolved (Keller, Shaw,
+Campbell-in-part), none survived intact.**
 
 ---
 
