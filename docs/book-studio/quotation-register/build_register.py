@@ -184,6 +184,8 @@ def build():
                 # from "not_investigated" (nobody has looked), and both from
                 # "pending_migration" (verdict exists elsewhere, not yet copied).
                 "provenance_review_state": "not_investigated",
+                "rights_review_state": "not_investigated",
+                "editorial_review_state": "not_investigated",
                 "evidence_location": None,
                 "rights_status": None,
                 "bibliography_relationship": None,
@@ -225,10 +227,15 @@ MANUAL = [{
     "attributed_as": "Lao Tzu", "attribution_state": "attributed",
     "actual_author": None, "internal_speaker": None, "work": None,
     "translator_or_mediator": None,
-    "provenance_status": "not_yet_recorded",
-    "rights_status": "not_yet_recorded",
-    "bibliography_relationship": "not_yet_recorded",
+    "provenance_status": None,
+    "provenance_review_state": "not_investigated",
+    "rights_review_state": "not_investigated",
+    "editorial_review_state": "not_investigated",
+    "evidence_location": None,
+    "rights_status": None,
+    "bibliography_relationship": None,
     "family": None, "editorial_status": "unadjudicated",
+    "record_state": "confirmed", "identity_match_score": None,
     "notes": ("Interrupted attribution: quotation split across two spans with the "
               "attribution between them. Asserted manually - no detector can pair "
               "this. On inspection does not appear to be a Tao Te Ching passage; "

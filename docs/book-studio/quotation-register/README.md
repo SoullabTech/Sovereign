@@ -199,3 +199,65 @@ restores from that.
 **Studio requirement:** *any operation that modifies a manuscript to test something
 must operate on a copy.* A system that can generate and run its own verification
 code needs this as a hard boundary, not a habit.
+
+---
+
+# MIGRATION — STEP 1 · the session control set · 2026-09-01
+
+> **Migration is not extraction. It is the transfer of earned knowledge into a new
+> authority.**
+
+**33 hand-authored entries in `session_verdicts.json`. No prose parsed. Nothing
+re-adjudicated.** Each entry cites the record that earned its verdict. `migrate.py`
+**never opens the manuscript** — verification and migration have no write path to
+the canonical artifact.
+
+**Result: 33 matched · 0 unmatched · 0 ambiguous · 0 conflicts. `GATE PASSED`.**
+
+## ⚠️ The gate failed first, and both failures were real
+
+**It was not relaxed to pass.** Two genuine schema defects, both found by the gate
+rather than by inspection:
+
+### 1 · Review state must be per axis, not global
+
+Three records were marked `migrated` while carrying **no provenance verdict** — the
+**song lyrics**. Their **rights class and editorial ruling are established; their
+provenance was never investigated.** That is not an error in the data; it was an
+error in the schema, which had one review state trying to describe three axes.
+
+**Split into `provenance_review_state` · `rights_review_state` ·
+`editorial_review_state`.** **Migrating a rights class must never assert that
+provenance was investigated.** The gate now reports these explicitly:
+
+> `NOTE  2 record(s) editorially ruled with provenance still open: EA-Q-0024, EA-Q-0111`
+
+**That is a true and useful statement about the book** — two quotations are
+editorially settled and provenance-open — and the old schema could not express it.
+
+### 2 · Block reconciliation was off by one
+
+`109 = 17 migrated + 91 pending` — **108.** The missing record was **Salzberg**, a
+block epigraph deliberately left `not_investigated` pending the Mary Oliver nesting
+check. **The arithmetic had no term for "documented as deliberately uninvestigated."**
+Corrected: **`109 = 14 migrated + 91 pending + 4 not_investigated`.**
+
+## Standing after step 1
+
+| Review state | Records |
+|---|---|
+| `migrated` | **27** |
+| `not_investigated` | **12** — 6 newly found attributed items · 2 boundary spans · Salzberg · second Teasdale · TTC 33 · interrupted Lao Tzu |
+| `pending_migration` | **91** — block epigraphs awaiting chapter-batch migration |
+| **TOTAL** | **130** |
+
+**Families established:** `fam-perfect-laugh` **(3)** — the fake-Buddha saying in two
+wordings across block and inline · `fam-song-lyrics` **(3, plus Cohen)** ·
+`fam-teasdale` **(2)**.
+
+**`pending_migration` will not reach zero until the final chapter batch closes.**
+
+## Next
+
+**Chapter-by-chapter migration of the historical census, in manuscript order,
+with the closure gate run after each chapter.** No bulk prose parser.

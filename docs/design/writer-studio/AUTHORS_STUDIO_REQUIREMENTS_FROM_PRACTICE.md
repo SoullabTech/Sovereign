@@ -1086,3 +1086,39 @@ restoration.**
 whenever the test mutates the artifact.** This is a hard boundary, not a habit — the
 failure is silent, instant, and indistinguishable from success until something reads
 the file.
+
+### Requirement — review state is per axis, and migration is not extraction
+
+> **Migration is not extraction. It is the transfer of earned knowledge into a new
+> authority.** It deserves human-reviewable boundaries: hand-authored entries, a
+> closure gate after each batch, and no bulk parsing of prose findings into a
+> semantic store.
+
+**Grounding event:** migrating ~30 verdicts into the quotation register, the closure
+gate **failed on its first run** and both failures were real. Three records were
+`migrated` with **no provenance verdict** — song lyrics whose **rights and editorial
+status were settled while provenance had never been investigated.** One review state
+was trying to describe three independent axes.
+
+**Requirement: `provenance_review_state`, `rights_review_state` and
+`editorial_review_state` are separate.** Establishing rights must never assert that
+provenance was checked. A system with a single "reviewed" flag **cannot express the
+true and common state: editorially settled, provenance open.**
+
+**Second failure:** the reconciliation arithmetic had **no term for "documented as
+deliberately uninvestigated"** and was off by one. **Every count must reconcile as
+`total = migrated + pending + explicitly documented exclusions/deferrals`** —
+deferral is a recorded state, not an absence.
+
+> **Do not relax a gate to make it pass.** Both defects were in the schema, not the
+> gate. A gate that gets loosened on first failure is decoration.
+
+### Requirement — verification operates on immutable input
+
+**Not "make a backup."** The verification process must **lack the capability** to
+alter the canonical artifact: a copy, temp worktree, snapshot, or read-only mount is
+the correct execution environment.
+
+**If MAIA generates code, transformations, or automated manuscript operations, the
+tool performing the test must not possess the power to damage the thing being
+tested.**
