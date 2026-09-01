@@ -409,3 +409,76 @@ a record**, which is a different and much smaller task.
 or Chapter 1.**
 
 **→ Batch 2: Chapter 2.**
+
+---
+
+# BATCH 2 — Chapter 2 · 2026-09-01
+
+**Faithful transfer. No re-investigation, no adjudication, no manuscript edits.**
+**`GATE PASSED`. 4 records, zero `pending_migration` remaining in scope.**
+
+| Record | Verdict migrated |
+|---|---|
+| **Alan Watts** L337 | `VERIFIED EXACT` — *The Wisdom of Insecurity* (1951) ch. 3. Bibliography **correct** |
+| **Nicholas of Cusa** L399 | `PARAPHRASE/ADAPTED` · `EVOLVED APHORISM / RECOVERABLE ANCESTOR`. **Cusa used the figure but did not originate it** — the ancestor is the pseudo-Hermetic *Liber XXIV Philosophorum* (12th c.). Bibliography `MISSING` |
+| **Carl Jung** L415 | `VERIFIED VARIANT` · `MEDIATED TRANSLATION` (fifth instance) — *Memories, Dreams, Reflections*, Winston translation |
+| **Johannes Kepler** L419 | `UNVERIFIED — source lead unresolved` · `MEDIATED TRANSLATION`. **Bibliography names the Aiton translation, which the audit called good practice** — the sentence still needs finding in it |
+
+## The Cusa finding is worth restating
+
+**Two alterations, and one of them changes the image.** The manuscript reverses the
+clause order — cosmetic — and changes ***sphaera* → circle**, which is not:
+**the sphere is the point of the figure, infinity in every direction.** A circle
+flattens it to a plane.
+
+**And the ancestor is genuinely recoverable**, which makes this a `SOURCE
+RESTORATION OPPORTUNITY` rather than a deletion: Cusa, Alain de Lille, Bonaventure,
+Pascal and Voltaire all *used* it. **Attributing it to Cusa is not false so much as
+insufficiently deep.**
+
+## ⚠️ One migrated verdict that I believe is wrong — moved anyway
+
+**The Jung entry records the bibliography relationship as `MISSING`** — *"the
+correct work, Memories, Dreams, Reflections, appears nowhere in the book."*
+
+**That verdict was written during the systematic bibliography-scope error**, when
+each chapter's bibliography was checked in isolation. **MDR is in fact present in
+the front matter.**
+
+**It was migrated exactly as written.** Under the standing rule — *migrate
+faithfully, flag separately, never improve a finding in transit* — the correction
+belongs to Stage 7's bibliography reconstruction, **not to a migration pass.**
+Silently fixing it here would have made migration into a second provenance audit,
+and the register would then contain a verdict no record ever earned.
+
+**The concern is in the record's `notes`, where a Stage 7 reader will find it.**
+
+## Recovery metadata added — Berry
+
+> **Unknown because nobody investigated ≠ unknown because the investigation record
+> cannot currently be recovered.**
+
+The `verdict_not_locatable_in_source` state now carries a **`recovery_note`**: what
+was searched, what was expected, and where to look instead. **So the next pass does
+not repeat the same failed search.**
+
+## The safety property, kept hard
+
+**Failure to attach is safer than plausible attachment to the wrong semantic
+object.** The Berry mismatch in batch 1 proved the property holds: **a wrong
+guess fails loudly as `unmatched` rather than silently binding a verdict to the
+wrong quotation.**
+
+## Standing after batch 2
+
+| | |
+|---|---|
+| `migrated` | **38** |
+| `not_investigated` | **12** |
+| `verdict_not_locatable_in_source` | **1** |
+| `pending_migration` | **79** |
+| **current / historical** | **130 / 28** |
+
+**`109 = 25 migrated + 79 pending + 5 documented-deferred`** ✅ · **`137 = 109 + 28`** ✅
+
+**→ Batch 3: Chapter 3.**

@@ -1,0 +1,36 @@
+{
+  "_comment": "BATCH 2 - Chapter 2, manuscript order. Faithful transfer from QUOTATION_PROVENANCE_AUDIT.md. No re-investigation. Where a migrated finding now looks incomplete, it is moved AS WRITTEN and the concern is flagged in notes rather than corrected in transit.",
+  "entries": [
+    {"match": "make sense out of change", "occurrence": 1,
+     "provenance_status": "verified_exact", "actual_author": "Alan Watts",
+     "work": "The Wisdom of Insecurity (1951), ch. 3",
+     "rights_status": "term_uncertain_standard",
+     "bibliography_relationship": "CORRECT",
+     "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L333"},
+
+    {"match": "infinite circle, whose circumference", "occurrence": 1,
+     "provenance_status": "paraphrase_adapted", "actual_author": "NOT originated by Nicholas of Cusa",
+     "work": "ancestor: pseudo-Hermetic Liber XXIV Philosophorum (12th c.) - 'DEUS EST SPHAERA INFINITA CUIUS CENTRUM EST UBIQUE, CIRCUMFERENTIA NUSQUAM'",
+     "rights_status": "public_domain",
+     "bibliography_relationship": "MISSING - no Cusa entry in Ch2",
+     "family": "fam-infinite-sphere",
+     "notes": "Audit: EVOLVED APHORISM / RECOVERABLE ANCESTOR. Cusa USED the figure (De Docta Ignorantia I.23) but did not originate it; so did Alain de Lille, Bonaventure, Pascal and Voltaire. TWO alterations in the manuscript: sphere changed to circle, and the clause order reversed. Sphaera is the point of the image - infinity in every direction.",
+     "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L397"},
+
+    {"match": "no linear evolution", "occurrence": 1,
+     "provenance_status": "verified_variant", "actual_author": "C. G. Jung",
+     "work": "Memories, Dreams, Reflections, ed. Aniela Jaffe",
+     "translator_or_mediator": "Richard and Clara Winston - MEDIATED TRANSLATION, fifth instance",
+     "bibliography_relationship": "MIGRATED AS WRITTEN: audit recorded MISSING",
+     "notes": "Published text reads 'there is only A circumambulation'; the manuscript drops the article. FLAG, NOT A CORRECTION: the audit's MISSING verdict was written during the systematic bibliography-scope error, and Memories, Dreams, Reflections is in fact present in the FRONT MATTER. The verdict is migrated as written per the no-improvement rule; the bibliography relationship needs re-checking at Stage 7, not here. Audit also left an open lead: whether Ch6's orphan Modern Man in Search of a Soul migrated from here.",
+     "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L413"},
+
+    {"match": "archetype of the beauty", "occurrence": 1,
+     "provenance_status": "unverified", "attributed_as_note": "Johannes Kepler",
+     "work": "LEAD (open): Harmonices Mundi (1619) - related ideas only",
+     "translator_or_mediator": "MEDIATED TRANSLATION Latin to English; bibliography names the Aiton translation, which is good practice",
+     "rights_status": "public_domain_translation_open_standard",
+     "notes": "Audit: exact sentence NOT located. Kepler expresses closely related ideas - 'God has established nothing without geometrical beauty', and geometry 'coeternal with God... supplied patterns to God' - but the manuscript's sentence is not confirmed. The sentence still needs finding in the named translation.",
+     "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L417"}
+  ]
+}

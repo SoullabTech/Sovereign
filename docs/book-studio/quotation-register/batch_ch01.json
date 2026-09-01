@@ -28,7 +28,8 @@
       "rights_status": "likely_protected_high",
       "notes": "RIGHTS ONLY. Audit rights table: Wendell Berry, 'The Real Work' - poetry, living author. PROVENANCE VERDICT NOT LOCATED in the audit narrative; deliberately NOT inferred. Provenance stays pending_migration.",
       "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md - rights table row 'Wendell Berry, The Real Work (L167)'",
-      "provenance_review_state": "verdict_not_locatable_in_source"
+      "provenance_review_state": "verdict_not_locatable_in_source",
+      "recovery_note": "Searched QUOTATION_PROVENANCE_AUDIT.md for: Berry entry headings, 'The Real Work', 'Wendell Berry —', and the L167 line marker. Found ONLY the rights-table row (poetry, living author). Expected location: a Preface tranche entry alongside Rilke L161 and Sadhguru L173. Do not repeat this search - look instead for an unheaded Preface paragraph or a verdict recorded only in a summary table."
     },
     {
       "match": "game of just five ingredients",

@@ -18,7 +18,7 @@ TOMB = HERE / "tombstones.json"
 ALLOWED = {"provenance_status", "actual_author", "internal_speaker", "work",
            "translator_or_mediator", "rights_status", "bibliography_relationship",
            "family", "editorial_status", "notes", "evidence_location",
-           "provenance_review_state", "attributed_as_note"}
+           "provenance_review_state", "attributed_as_note", "recovery_note"}
 
 
 def norm(t):
