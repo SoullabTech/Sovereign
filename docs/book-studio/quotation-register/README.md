@@ -1952,3 +1952,125 @@ says a voice must earn each return.**
 
 **4I: 21 → 16 remaining.** Three families with a single member (Descartes, TTC 33,
 Goethe) and thirteen singles.
+
+---
+
+# 4I · BATCH 1 of 4 — four cards · 2026-09-01
+
+---
+
+## 1 · Descartes — `EA-Q-0094` · Ch8 *Mapping Reality*
+
+> *The air element of cognition allows us to create meaningful symbols and symbolic
+> language, enabling us to navigate complex issues and come together to envision
+> better worlds.* **"I think therefore I am"** *reflects our collective existence
+> through shared thoughts.*
+
+**What it's doing:** the book **turns Descartes**. His cogito grounds certainty in
+the *solitary* thinker; the sentence redirects it to **collective existence through
+shared thoughts.** Later in the chapter the book coins its own answer —
+**"I know therefore I am."**
+
+**What materially matters:** `VERIFIED EXACT` · public domain · **currently
+unattributed** — the sentence names no one. `fam-cogito`, role **ancestor**, with the
+book's counter-formula as its authored response.
+
+> **The one question: if the reader doesn't know this is Descartes, does the turn
+> still land?**
+
+**My recommendation — and it is mine, not a verdict: `CORRECT`.** Name him. The move
+here is dialogue, and **dialogue needs an interlocutor the reader can identify.**
+Four words would do it. I'd resist anything longer, because the paragraph's economy
+is part of why the turn works.
+
+---
+
+## 2 · Goethe — `EA-Q-0040` · Ch5 *The Dark Side of Fire*
+
+> *…fire inspires us with visions of what's possible, but it also casts shadows on
+> cave walls that we imagine are reality.* **There is a saying: "The greater the
+> light, the deeper the shadow."**
+
+**What it's doing:** it names the chapter section's whole thesis in one line, sitting
+directly after a Platonic cave allusion.
+
+**What materially matters:** it is **Goethe** — *Götz von Berlichingen*, Act I
+(1773), *"Wo viel Licht ist, ist starker Schatten"* — **presented as anonymous.**
+Public domain. **Two further facts:** the source is a **play**, so the line is
+**spoken by a character**; and the English is an **evolved variant** matching no
+standard translation.
+
+> **The one question: does this line gain or lose by being anchored to Goethe?**
+
+**My recommendation: `CORRECT`.** My reading is that it **gains** — an anonymous
+"there is a saying" asks the reader to accept folk authority, while Goethe's name
+places it in the Romantic lineage the chapter is already working in. **But I hold
+this loosely**: proverbial framing is a legitimate choice, and if you meant it as a
+saying rather than a citation, that's a real position and the line can stay
+anonymous.
+
+*(The character-speaker fact is worth knowing but I don't think it bites here — the
+line isn't ironised by its speaker the way Polonius or Satan are.)*
+
+---
+
+## 3 · Tao Te Ching 33 — `EA-Q-0126` · Conclusion
+
+> *The waters of our emotional depths teach us to honor the vast ocean of our
+> feelings…* **"He who knows others is wise; he who knows himself is enlightened,"
+> wrote Lao Tzu.** *By developing our emotional intelligence, we learn to truly know
+> ourselves…*
+
+**What it's doing:** it supplies the **hinge from knowing others to knowing
+oneself** in the Conclusion's water passage — the sentence after it depends on the
+distinction the quotation draws.
+
+**What materially matters:** **genuinely *Tao Te Ching* 33** — one of only three real
+Laozi attributions in the book. **The English rendering is unidentified**, and
+**demonstrably not Legge**, whose text reads *"discerning… intelligent."* Original is
+public domain; the translation's status is open.
+
+> **The one question: this one is load-bearing and the source is real — is there any
+> editorial reason not to keep it?**
+
+**My recommendation: `KEEP`**, with the translator recovery left as a provenance
+task. **I don't see an editorial argument against it.** *(Worth noting beside the
+Teasdale C removal: both sit in the Conclusion, and this one earns its place because
+the following sentence needs it. Position alone was never the objection.)*
+
+---
+
+## 4 · Jung, belief → experience — `EA-Q-0099` · Ch8 *Beyond Belief*
+
+> *It's easy to argue theories and beliefs, but challenging to dispute someone's
+> experience.* **Information leads to knowledge; experience leads to wisdom.
+> As Carl Jung said, "I don't have beliefs, I have experiences."**
+
+**What it's doing:** it **closes the paragraph's argument** — that experience
+outranks belief — by putting the claim in Jung's mouth.
+
+**What materially matters:** **Jung's actual distinction is belief versus
+*knowledge*** — *"I don't need to believe. I know"* (BBC *Face to Face*, 1959). **The
+manuscript substitutes *experience* for *knowledge*** — and the surrounding paragraph
+is an argument for **experience** over belief.
+
+> **The diagnostic: restoring the authentic wording would not serve the paragraph.
+> The quotation was moved toward the claim it is being used to support.**
+
+> **The one question: the paragraph's argument is yours — does Jung need to be the
+> one to say it?**
+
+**My recommendation: `RECLAIM`.** My reading is that the paragraph already makes the
+case in your own voice — *"Information leads to knowledge; experience leads to
+wisdom"* is the sharper sentence, and it's yours. **`CORRECT` is available**, but
+restoring *"I don't need to believe. I know"* would leave Jung arguing something
+adjacent to, and slightly against, the paragraph.
+
+**Held loosely.** If Jung's presence matters to you here as lineage rather than
+support, **`CORRECT` + a short frame** is a legitimate third path — the Chapter 10
+Teasdale shows that shape working.
+
+---
+
+**Four cards. None ruled.** Rulings available: `KEEP` · `CORRECT` · `CONNECT` ·
+`REFRAME` · `RECLAIM` · `REMOVE` · `DEFER`.
