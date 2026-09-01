@@ -341,20 +341,13 @@ export default function StructureReview({
     };
   }, [view]);
 
-  if (!view) {
-    return (
-      <div data-review-state="loading" style={{ padding: SPACE.comfortable }}>
-        <StudioText role="metadata">{notice ?? 'reading the proposal…'}</StudioText>
-      </div>
-    );
-  }
-
-  const form = view.interpretation.form;
-  const syn = view.interpretation.editorialSynthesis;
-  const anyLabel = [...proposedById.values()]
-    .some((u) => typeof u.editorialLabel === 'string' && u.editorialLabel.length > 0);
-  const selectedUnit = selected ? proposedById.get(selected) : undefined;
-
+  /* THIS HOOK MUST RUN ON EVERY RENDER, INCLUDING THE LOADING ONE. It used
+     to sit below the `if (!view)` return, so the first render (view null)
+     ran twenty hooks and the loaded render ran twenty-one — "Rendered more
+     hooks than during the previous render", which took the whole surface to
+     the error boundary and made every mark below unreachable. Witnessed at
+     runtime on the Mac Studio against 93216567; see WS2-05B-8B-02c-2.
+     Nothing about what it DOES changed. Keep it above the return. */
   /**
    * A MARK IN THE OUTLINE TAKES UP EXACTLY WHAT IT NAMES.
    *
@@ -399,6 +392,19 @@ export default function StructureReview({
     });
   }, [proposalId, questionMarks, proposedById]);
 
+  if (!view) {
+    return (
+      <div data-review-state="loading" style={{ padding: SPACE.comfortable }}>
+        <StudioText role="metadata">{notice ?? 'reading the proposal…'}</StudioText>
+      </div>
+    );
+  }
+
+  const form = view.interpretation.form;
+  const syn = view.interpretation.editorialSynthesis;
+  const anyLabel = [...proposedById.values()]
+    .some((u) => typeof u.editorialLabel === 'string' && u.editorialLabel.length > 0);
+  const selectedUnit = selected ? proposedById.get(selected) : undefined;
 
   return (
     <div data-structure-review data-form={form} style={{ padding: SPACE.comfortable }}>
