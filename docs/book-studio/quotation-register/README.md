@@ -882,3 +882,72 @@ not be able to turn "I inferred this earlier" into "the record establishes this.
 **`137 = 109 + 28`** ✅ · **`GATE PASSED`**
 
 **→ Chapter 7.**
+
+---
+
+# BATCH 7 — Chapter 7 · 2026-09-01
+
+**`GATE PASSED`.** 13 active verdicts migrated. **Zero `pending_migration` in
+Chapter 7.** The three Chapter 7 historical records (Gandhi, Ramana Maharshi,
+Nehru) were **vouched in the integrity pass** and were not re-migrated.
+
+## The chapter with the most floating attributions
+
+**Chapter 7 carries the book's densest concentration of unlocatable sources.**
+
+**Two `FLOATING APHORISM` cases where the attributed name itself has no locatable
+existence** — *"Robert C. Peale"* (the pharmacy line) joins *"Prasad Mahes"* from
+Chapter 6 as the **second instance of that severity characteristic.** No biography,
+no work, no publication; circulation confined to wellness quote lists.
+
+**`God is in the details`** — three competing attributions across three languages,
+**none established.** Mies comes from his *New York Times* obituary and is generally
+accepted as a **user, not the originator**; Aby Warburg's German form is a competing
+candidate. Bibliography `MISSING`.
+
+**`UNSUPPORTED CULTURAL ATTRIBUTION` — the "Chinese Proverb".** Not Chinese in any
+documented sense. Earliest strong match is **Cleveland city councilman George W.
+White**, *Cleveland Plain Dealer*, 1967 — **who disclaimed credit.** The "Chinese
+proverb" label first appears in a **Nebraska newspaper in 1985.**
+
+## Three findings that sharpen existing patterns
+
+**Santayana — closed by an authoritative source, not by absence.** The **Santayana
+Edition** (Indiana University's critical edition) published *"Citation and the
+Challenges of Misattribution"* **specifically on this line**, and found no sign of it
+in his works. **That is a different evidentiary class from "not located"** — a
+dedicated scholarly denial rather than a failed search.
+
+**Van der Kolk — an object-type question, not an attribution failure.** *"The body
+keeps the score"* — **the attribution is sound; what is unresolved is what kind of
+object is being quoted.** It is the **book's title**; a genuine sentence of that
+wording in the text is **not established**. The census separated three possible
+provenance objects and declined to collapse them.
+
+**MLK — same author, opposite outcomes.** *"The function of education…"* is
+**`VERIFIED EXACT`**, confirmed against the **King Institute at Stanford**. The
+removed *"Faith is taking the first step"* was `UNVERIFIED`. **Ruled individually,
+as the retired author-set doctrine requires.**
+
+## Two spoken-saying specimens now agree
+
+**Helen Keller's *"Alone we can do so little"*** is `VERIFIED VARIANT` for **exactly
+the reason Angelou's was corrected to variant**: a **spoken** line with documentary
+evidence — Joseph P. Lash, *Helen and Teacher* (1980), placing it in the early-1920s
+vaudeville performances — but no fixed printed original.
+
+**That is now a consistent rule across the register**, and it was arrived at from
+two directions: the Keller verdict was already right in the census; the Angelou
+verdict I had authored wrongly and the integrity pass corrected. **Spoken
+transmission yields `VERIFIED VARIANT`, not `VERIFIED EXACT`.**
+
+## Standing after batch 7
+
+**87 migrated · 31 pending · 12 deferred · 130 current · 28 historical.**
+**`137 = 109 + 28`** ✅
+
+**Families:** `fam-floating-aphorisms` **2 (new)** · `fam-mckenna-unresolved` **2** ·
+`fam-song-lyrics` 4 · `fam-campbell` 3 · `fam-rumi-unsourced` 3 · `fam-perfect-laugh`
+3 · `fam-laotzu-evolved` **1 (new)** · plus 6 others.
+
+**→ Batch 8: Chapter 8.**

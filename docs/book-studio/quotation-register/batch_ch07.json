@@ -1,0 +1,125 @@
+{
+  "_comment": "BATCH 7 - Chapter 7. Faithful transfer only. Ch7 historical records (Gandhi, Ramana, Nehru) were vouched in the tombstone integrity pass and are not re-migrated.",
+  "entries": [
+    {
+      "match": "archaic mind understood",
+      "occurrence": 1,
+      "provenance_status": "unverified",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L1369",
+      "actual_author": "Terence McKenna",
+      "family": "fam-mckenna-unresolved",
+      "notes": "Audit: UNVERIFIED, UNKNOWN. No source located. The only attestation is a Facebook page, which also carries a SHORTER VARIANT - 'The archaic mind understood that nature is conscious...' - without the manuscript's 'and perceived'."
+    },
+    {
+      "match": "body keeps the score",
+      "occurrence": 1,
+      "provenance_status": "unverified",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L1377",
+      "actual_author": "Bessel van der Kolk - ATTRIBUTION SOUND, object type unresolved",
+      "work": "The Body Keeps the Score (2014) - the TITLE, not an established sentence in the text",
+      "notes": "Audit: 'The attribution is sound; the OBJECT TYPE is the question.' Three distinct provenance objects were possible and the evidence separates them; a genuine sentence he writes in the text is NOT established - the search surfaced the concept framed in the book but not this sentence. A source-form question, not an attribution failure."
+    },
+    {
+      "match": "who has a 'why' to live",
+      "occurrence": 1,
+      "provenance_status": "verified_variant",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L1405",
+      "actual_author": "Friedrich Nietzsche",
+      "work": "Twilight of the Idols (1889), 'Maxims and Arrows' 12",
+      "translator_or_mediator": "the printed English has a mediator; Kaufmann's standard translation reads 'If we have our own why in life...'",
+      "bibliography_relationship": "CORRECT at the work level",
+      "notes": "Audit: EVOLVED APHORISM. Genuine source, but the printed English is a mediated rendering rather than the standard translation."
+    },
+    {
+      "match": "Adaptability is about the powerful",
+      "occurrence": 1,
+      "provenance_status": "unverified",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L1419",
+      "actual_author": "Max McKeown",
+      "notes": "Audit: UNVERIFIED - source lead unresolved. The phrase 'powerful difference between adapting to cope and adapting to win' appears verbatim in the BOOK'S PUBLISHED DESCRIPTION, not located in the text itself. The manuscript's sentence is a compression of it."
+    },
+    {
+      "match": "Adopt the pace of nature",
+      "occurrence": 1,
+      "provenance_status": "verified_variant",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L1437",
+      "actual_author": "Ralph Waldo Emerson",
+      "work": "'Education', in Lectures and Biographical Sketches",
+      "notes": "Audit: genuine. The fuller sentence begins 'Leave this military hurry...'"
+    },
+    {
+      "match": "Earth care, people care",
+      "occurrence": 1,
+      "provenance_status": "verified_exact",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L1441",
+      "actual_author": "permaculture movement (Mollison/Holmgren tradition)",
+      "work": "the standard formulation of permaculture's three ethics",
+      "notes": "Audit: VERIFIED, and ATTRIBUTED TO A MOVEMENT RATHER THAN A PERSON, ACCURATELY SO. Minor precision point, not a provenance failure: these are permaculture's three ETHICS; Holmgren's PRINCIPLES are a separate set."
+    },
+    {
+      "match": "Nature does not hurry",
+      "occurrence": 1,
+      "provenance_status": "paraphrase_adapted",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L1449",
+      "actual_author": "not Laozi as printed",
+      "work": "recoverable ancestor: Archie J. Bahm's 1958 translation of Tao Te Ching 73 - 'IT does not hurry; yet everything is accomplished'",
+      "translator_or_mediator": "Archie J. Bahm (1958)",
+      "family": "fam-laotzu-evolved",
+      "notes": "Audit: EVOLVED APHORISM / RECOVERABLE ANCESTOR. Two findings inside one line: the circulating form substitutes 'Nature' for 'It', and the ancestor is a specific modern translation rather than the Chinese text."
+    },
+    {
+      "match": "earth has music for those",
+      "occurrence": 1,
+      "provenance_status": "misattributed",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L1457",
+      "actual_author": "not George Santayana",
+      "notes": "Audit: MISATTRIBUTED, EVOLVED APHORISM / RECOVERABLE ANCESTOR. CLOSED BY AN AUTHORITATIVE SOURCE - the Santayana Edition (Indiana University's critical edition) published 'Citation and the Challenges of Misattribution' specifically on this line, and their editors found no sign of it in his works."
+    },
+    {
+      "match": "Alone we can do so little",
+      "occurrence": 1,
+      "provenance_status": "verified_variant",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L1706",
+      "actual_author": "Helen Keller",
+      "work": "spoken to audiences during the vaudeville performances she and Anne Sullivan gave in the early 1920s; documented in Joseph P. Lash, Helen and Teacher (1980)",
+      "notes": "Audit: a SPOKEN saying with substantive documentary evidence - variant rather than exact for the same reason as the Angelou item."
+    },
+    {
+      "match": "best and most efficient pharmacy",
+      "occurrence": 1,
+      "provenance_status": "unverified",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L1511",
+      "actual_author": "unknown",
+      "family": "fam-floating-aphorisms",
+      "notes": "Audit: UNVERIFIED, UNKNOWN, FLOATING APHORISM / SOURCE UNRESOLVED. Name left exactly as printed. No biography, no work, no publication. SECOND instance of the severity characteristic first seen with 'Prasad Mahes' - the attributed name itself has no locatable existence."
+    },
+    {
+      "match": "best time to plant a tree",
+      "occurrence": 1,
+      "provenance_status": "misattributed",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L1531",
+      "actual_author": "not Chinese in any documented sense",
+      "notes": "Audit: UNSUPPORTED CULTURAL ATTRIBUTION. Earliest strong match is Cleveland city councilman George W. White, Cleveland Plain Dealer, 1967, WHO DISCLAIMED CREDIT. The 'Chinese proverb' label first appears in a Nebraska newspaper in 1985. Variants circulated through North American newspapers 1967-1985."
+    },
+    {
+      "match": "God is in the details",
+      "occurrence": 1,
+      "provenance_status": "unverified",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L1543",
+      "actual_author": "unknown - three competing attributions across three languages, none established",
+      "bibliography_relationship": "MISSING - no bibliography entry",
+      "family": "fam-floating-aphorisms",
+      "notes": "Audit: FLOATING APHORISM / SOURCE UNRESOLVED. Mies is from his New York Times obituary and is generally accepted as a USER, not the originator; Aby Warburg's German form is a competing candidate."
+    },
+    {
+      "match": "function of education is to teach",
+      "occurrence": 1,
+      "provenance_status": "verified_exact",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L1595",
+      "actual_author": "Martin Luther King Jr.",
+      "work": "'The Purpose of Education', Morehouse College Maroon Tiger, 1947",
+      "rights_status": "legal_review",
+      "notes": "Audit: confirmed against the Martin Luther King, Jr. Research and Education Institute at Stanford. Contrast the removed 'Faith is taking the first step' item, which was UNVERIFIED - same author, opposite outcomes, ruled individually."
+    }
+  ]
+}
