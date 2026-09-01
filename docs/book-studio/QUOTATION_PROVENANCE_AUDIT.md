@@ -2,7 +2,7 @@
 
 **Source of record:** `docs/book-studio/ELEMENTAL_ALCHEMY_FROM_ORIGINAL_FULL.md`
 **Opened:** 2026-09-01, after Chapter 10 closed developmental adjudication.
-**Status:** IN PROGRESS — 127 of 137. **Ch2 CLOSED (10/10).** adjudicated. **Chapter 5 CLOSED (30/30). Chapter 8 CLOSED (23/23).**
+**Status:** IN PROGRESS — 128 of 137. **Ch2 CLOSED (10/10).** adjudicated. **Chapter 5 CLOSED (30/30). Chapter 8 CLOSED (23/23).**
 
 ## Scope
 
@@ -3503,6 +3503,49 @@ a shared resolution path are not the same as a demonstrated shared transmission
 mechanism.
 
 **Author-set tally: seven formed · six split · one unsplit and unresolved.**
+
+
+### Final batch — tranche 5
+
+**L129 · Preface · Zhuangzi — "Once upon a time, I, Zhuangzi, was unconscious of my individuality as a man…"**
+
+`VERIFIED TO THE ZHUANGZI / BUTTERFLY DREAM` (the text's most famous passage) —
+**but the printed English appears NOT to be the cited translator's.**
+
+**Candidate finding — `WRONG TRANSLATOR CITED`.**
+
+- **Bibliography cites:** "Zhuangzi. *The Complete Works of Chuang Tzu.*
+  **Translated by Burton Watson.** Columbia University Press, 1968."
+- **Watson's rendering is third person:** "Once, Zhuang Zhou dreamed he was a
+  butterfly… He didn't know that he was Zhuang Zhou."
+- **The manuscript's wording is first person**, with "hither and thither" and
+  "individuality as a man" — the signature of **Herbert Giles's** 1889 rendering
+  ("Once upon a time, I, Chuang Tzu, dreamt I was a butterfly…"), with *Chuang
+  Tzu* modernized to *Zhuangzi*.
+
+**Not asserted — flagged for edition check.** The distinguishing test is simple
+and decisive: **does Watson's 1968 text use first or third person?** If third,
+the manuscript is quoting Giles under Watson's name.
+
+### Possible new subtype — `WRONG TRANSLATOR CITED`
+
+*A real, named translator is credited, but the printed English is a different
+translator's rendering.*
+
+Distinct from the established classes:
+- not `FAMOUS-WORK SUBSTITUTION` — the **work** is right;
+- not `MEDIATED TRANSLATION` alone — that names the *presence* of a mediator, not
+  a **misidentified** one;
+- not `SPURIOUS SUPPORT` — the source genuinely contains the passage, just not in
+  this English.
+
+**Consequential because it inverts good practice:** naming a translator is the
+transparent form this audit has been recommending. **A wrongly named translator
+looks like exemplary provenance and is not** — the same trap as the "Adapted
+from" label doing false work.
+
+**One candidate instance. Not named as a class**, pending (a) the Watson edition
+check and (b) a second independent specimen.
 
 
 ---
