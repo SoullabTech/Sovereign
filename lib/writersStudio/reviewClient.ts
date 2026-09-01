@@ -73,6 +73,41 @@ export async function fetchProposalSummaries(
   }
 }
 
+/**
+ * THE INVOCATION. One member gesture asks MAIA to read the Work.
+ *
+ * Nothing about the Work goes up this wire — no text, no sections, no proposed
+ * tree. The body is empty on purpose: the server owns the read, and a client
+ * that could describe the Work could publish a structure under MAIA's name.
+ *
+ * A failure is reported AS a failure. It is never rendered as a reading in
+ * which MAIA found nothing, because those are different facts about a member's
+ * book and only one of them is about the book.
+ */
+export type ReadingOutcome =
+  | { ok: true; proposalId: string; form: StructureInterpretation['form'];
+      account: string; reviewPath: string }
+  | { ok: false; refusal: string; reason?: string };
+
+export async function requestStructureReading(
+  manuscriptId: string,
+): Promise<ReadingOutcome> {
+  try {
+    const res = await apiFetch(
+      `/api/sovereign/manuscripts/${manuscriptId}/structure/read`, { method: 'POST' });
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      return { ok: false, refusal: String(body?.refusal ?? `http_${res.status}`),
+        ...(body?.reason ? { reason: String(body.reason) } : {}) };
+    }
+    return { ok: true, ...(await res.json()) };
+  } catch {
+    /* The reading did not happen. That is all this knows, and all it says. */
+    return { ok: false, refusal: 'reading_failed',
+      reason: 'the reading did not complete' };
+  }
+}
+
 const url = (manuscriptId: string, proposalId: string) =>
   `/api/sovereign/manuscripts/${manuscriptId}/structure/proposals/${proposalId}`;
 
