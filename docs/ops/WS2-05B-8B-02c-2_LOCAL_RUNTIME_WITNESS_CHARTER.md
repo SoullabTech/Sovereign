@@ -1,10 +1,18 @@
 # WS2-05B-8B-02c-2 · LOCAL RUNTIME WITNESS — lane charter
 
-**Revision 2** — supersedes `2145814`, which must not be run. Source review found
-four load-bearing defects in revision 1: the authentication header would have
+**Revision 3 — final.** Supersedes `f124f5b`, which supersedes `2145814`.
+
+Revision 1 carried four load-bearing defects: the authentication header would have
 401'd every call, the schema census omitted a required migration, the queries were
-unscoped, and Jest was allowed to stand in for a runtime witness. Each is repaired
-below and re-grounded in source read at the frozen SHA.
+unscoped, and Jest was allowed to stand in for a runtime witness. Revision 2
+repaired those.
+
+Revision 3 repairs four smaller **epistemic** ones — each a way the lane could have
+reported a stronger result than it earned: a lawful refusal counted as a closed
+witness; refusal mode attributed to a module Ask no longer calls; a proposal
+fingerprint that omitted most of what it claimed to protect; and a browser credited
+with observing a request it cannot see. Every correction is re-grounded in source
+read at the frozen SHA.
 
 **Lane name:** Jarvis — 02c Local Runtime Witness
 **Lane identity:** `WS2-05B-8B-02c-2 · LOCAL RUNTIME WITNESS`
@@ -247,22 +255,31 @@ If the matrix marked none eligible, **skip this step and say so.** Re-run the st
 
 Take this **before** anything is asked, and identically **after** step 7.
 
+**FULL ROWS, NOT CHOSEN COLUMNS.** Revision 2 hand-picked fields and thereby
+omitted `evidence`, `coverage`, `reviewed`, `interpretation_input_hash`,
+`reader_provenance` and `adopted_review_revision` — most of what the claim actually
+covers. If the claim is *"the Work did not move,"* then timestamps, provenance links
+and metadata moving are mutations too. `to_jsonb(row)` cannot omit a column, and a
+column added later is covered automatically.
+
 ```sql
-SELECT 'draft' AS what, md5(d.content) AS fp
+SELECT 'proposal' AS what, md5(to_jsonb(p)::text) AS fp
+  FROM manuscript_structure_proposals p WHERE p.id = :'pid'
+UNION ALL
+SELECT 'draft', md5(to_jsonb(d)::text)
   FROM manuscript_working_drafts d WHERE d.manuscript_id = :'mid'
 UNION ALL
-SELECT 'sections', md5(coalesce(string_agg(s.id::text||':'||s.position||':'||md5(s.text), '|' ORDER BY s.position),''))
+SELECT 'sections', md5(coalesce(string_agg(md5(to_jsonb(s)::text), '|' ORDER BY s.position, s.id),''))
   FROM manuscript_draft_sections s JOIN manuscript_working_drafts d ON d.id = s.draft_id
  WHERE d.manuscript_id = :'mid'
 UNION ALL
-SELECT 'source', md5(coalesce(string_agg(ms.id::text||':'||coalesce(ms.heading,''), '|' ORDER BY ms.id),''))
-  FROM manuscript_sections ms WHERE ms.manuscript_id = :'mid'
-UNION ALL
-SELECT 'proposal', md5(p.id::text||':'||p.review_revision||':'||coalesce(p.reviewed_at::text,'-')
-                    ||':'||coalesce(p.adopted_at::text,'-')||':'||md5(p.interpretation::text)
-                    ||':'||p.section_topology_hash)
-  FROM manuscript_structure_proposals p WHERE p.id = :'pid';
+SELECT 'source', md5(coalesce(string_agg(md5(to_jsonb(ms)::text), '|' ORDER BY ms.id),''))
+  FROM manuscript_sections ms WHERE ms.manuscript_id = :'mid';
 ```
+
+Record the four hashes verbatim. If one moves, also print the offending row's
+`to_jsonb` before and after, so the report names *which field* moved rather than
+only that something did.
 
 Also record the canonical fingerprint the route computes (`canonicalFingerprint`),
 and — scoped to this Work — `count(*)` of `ask_threads` and `ask_turns`. Those two
@@ -300,16 +317,56 @@ non-GET the page attempts and re-reads afterwards to assert nothing moved).
 9. **The submitted request carries the exact frozen `questionIndex`** the mark rendered. `takeUpMark` consumes `questionMarks` — the questions owned by that row, by deepest containing division — and opens directly only when the row owns exactly one. Same frozen indices in, same conversation out.
 10. **An open-tag marker routes to `division`, never an inferred `UncertainRegion`.** Click `data-mark-open` (line 1068) and assert the outgoing anchor is `{on:'division', proposalId, unitId}`. A tag is not a region, and a click must not launder one into the other.
 11. **Thread ownership** — the persisted `ask_threads` row carries the correct `manuscript_id` and `member_id`.
-12. **Frozen reading identity and a real `canonicalAtOpen`** persist — `canonical_at_open` non-empty and equal to the fingerprint measured at step 5, never a fabricated baseline. (A thread that cannot establish its BEFORE refuses to open with `canonical_unmeasurable` / 503 — that is correct behaviour, not a failure.)
-13. **Ask has no body-read or tool capability** — `askReader` omits the `tools` key entirely rather than setting it empty; assert the absence on the outgoing request.
-14. **Before/after fingerprints unchanged** — draft, sections, proposal, canonical.
+12. **Frozen reading identity and a real `canonicalAtOpen`** persist. **Binary — a lawful refusal is not a pass.** The route measures the canonical fingerprint *before* `openThread` and returns 503 when it cannot establish the baseline, so **no thread is persisted** in that case (`route.ts:212`, `:242`).
+
+    ```
+    PASS         thread persisted
+                 canonical_at_open non-empty
+                 canonical_at_open == the Step-5 canonical fingerprint
+
+    INCOMPLETE   canonical_unmeasurable 503
+    /HOLD        no thread opened
+    ```
+
+    INCOMPLETE means the route behaved lawfully and the witness did not close. Record it as HOLD, never as a green assertion 12.
+
+13. **Ask has no body-read or tool capability — recorded in two evidence classes, never merged.** A browser instrument observes the browser → Ask HTTP request. It cannot ordinarily see the server-internal `StructuredRequest` handed to `runStructured`, nor the provider wire request. Crediting it with that would be the same inflation this lane exists to refuse.
+
+    ```
+    runtime (the instrument observes)
+      the browser's Ask request carries only the expected
+      envelope — anchor (or threadId) and question, nothing else
+
+    machine / source contract (a test proves, on this exact SHA)
+      lib/manuscript/__tests__/providerSeamMigration.test.ts:217
+        "sends exactly the four keys the asker sent, and no fifth"
+        — askReader.ts:228 OMITS the tools key rather than emptying it
+      lib/manuscript/ask/frozenReading.ts:122
+        loadSectionHeads selects s.id, s.position, ms.heading only —
+        no body column is reachable from the read at all
+    ```
+
+    Run that targeted test on the Mac Studio at `93216567` and report it under its own heading. It is useful supplemental evidence; it is **not** a browser-runtime observation and must not be labelled one.
+
+14. **Before/after full-row fingerprints unchanged** — draft, sections, source, proposal (step 5), plus the canonical fingerprint.
 
 ### The retry witness, before any paid call
 
-Run a temporary instance with `MAIA_INFERENCE_MODE=sovereign` (refusal mode —
-`lib/ai/modelService.ts:83`). Submit **the same question twice**. Prove **one
-thread and one author turn**, not a duplicate: `isHeldRetry` requires the last turn
-to be the author's and byte-identical, and a reworded question is lawfully a new turn.
+**Where refusal mode actually comes from.** Revision 2 cited
+`lib/ai/modelService.ts:83`. That attribution is stale: after the provider
+migration Ask calls `runStructured` (`lib/manuscript/ask/askReader.ts:22`, `:232`),
+whose mode is resolved by `resolveStructuredMode` in `lib/ai/structured/policy.ts:38`
+— unset or empty → `primary`; an explicit `sovereign` / `local_only` → that mode.
+The procedure below is unchanged; only the source is corrected.
+
+Run a temporary instance with `MAIA_INFERENCE_MODE=sovereign`. Submit **the same
+question twice**. Prove **one thread and one author turn**, not a duplicate:
+`isHeldRetry` requires the last turn to be the author's and byte-identical, and a
+reworded question is lawfully a new turn.
+
+This works precisely because the author's words are recorded **before** the model is
+called (`route.ts:266`), so a refused inference loses the answer and never the
+question — the thread and its author turn persist under a 502.
 
 Then delete that disposable thread **whole**:
 
@@ -322,7 +379,8 @@ refuses turn rewrites, `ask_threads_no_repoint` refuses re-pointing, and the
 migration's own comment states DELETE exists so an author may remove their record
 whole. Do not UPDATE either table.
 
-Restart the instance with `MAIA_INFERENCE_MODE` unset (or `primary`) for step 7.
+Restart the instance with `MAIA_INFERENCE_MODE` unset (or `primary`) for step 7 —
+by `resolveStructuredMode`, those are the same resolution.
 
 ---
 
@@ -353,14 +411,41 @@ Record the HTTP status, the answer or refusal, then:
 SELECT id, manuscript_id, member_id, anchor, canonical_at_open, initiated_by, opened_at
   FROM ask_threads WHERE manuscript_id = :'mid' ORDER BY opened_at DESC LIMIT 1;
 SELECT thread_id, turn_index, speaker, left(body,200) AS body, staleness, answer_provenance, created_at
-  FROM ask_turns ORDER BY created_at DESC LIMIT 4;
+  FROM ask_turns WHERE thread_id = '<thread>' ORDER BY turn_index ASC;
 ```
 
-A refusal is **not** a failure if it is one of the designed ones —
-`anchor_requires_reading` (422), `anchor_reading_mismatch` (409),
-`anchor_unresolved` (404), `anchor_unknown` (422), `canonical_unmeasurable` (503).
-Record which and why the runtime took that branch. Anything outside that set, or a
-500, is a defect finding.
+### Acceptance semantics — three outcomes, and only one closes 02c
+
+A designed refusal proves the route behaved **lawfully**. It does not close this
+slice. Revision 2 blurred the two; revision 3 separates them.
+
+```
+ACCEPTED — 02c-2 witnessed at runtime. All of:
+  HTTP 200
+  exactly one real thread on the target Work
+  author turn present
+  MAIA turn present
+  answer_provenance present
+  the exact clicked anchor persisted (frozen questionIndex, or division+unitId)
+  all four Work fingerprints unchanged
+
+HOLD / INCOMPLETE — lawful behaviour, witness not closed. Any of:
+  anchor_requires_reading 422 · anchor_reading_mismatch 409
+  anchor_unresolved 404 · anchor_unknown 422
+  canonical_unmeasurable 503   (no thread persisted — route.ts:212)
+  unreachable / empty_answer 502 (route.ts:299 — the model did not answer;
+    the thread and the author turn DO persist, the MAIA turn does not)
+  Record which, and why the runtime took that branch. Not necessarily a
+  product defect. Not an ACCEPTED run either.
+
+DEFECT — stop and report. Any of:
+  a 500, or any status outside the two sets above
+  a refusal whose branch the source does not explain
+  any Work fingerprint moved
+  the persisted anchor differs from the one the marker rendered
+```
+
+Report the outcome by name. **"Green" is reserved for ACCEPTED.**
 
 Then re-run step 5 and compare. Then delete `/tmp/ws2-05b-02c-2-runtime-witness.ts`.
 
@@ -381,11 +466,16 @@ section_addressable_at  <timestamp | NULL>
 round_trip_ok           true | false
 GO / STOP               <verdict, and the row that decided it>
 Migrations applied      <exactly which, or NONE>
-Fingerprints before     draft / sections / source / proposal / canonical
-Instrument              14 assertions: PASS/FAIL each
+Fingerprints before     draft / sections / source / proposal (full-row) / canonical
+Instrument              14 assertions: PASS / FAIL / INCOMPLETE each
+                        (assertion 12 is binary — a 503 is INCOMPLETE, not PASS)
 Retry witness           one thread + one author turn? · disposable thread deleted whole?
-Ask call                status · refusal-or-answer · thread id · turn indexes
+Ask call                ACCEPTED | HOLD(<which refusal>) | DEFECT(<what>)
+                        status · thread id · turn indexes · answer_provenance present?
+                        persisted anchor == the anchor the marker rendered?
                         (session verified: yes · token NOT recorded)
+Seam contract test      providerSeamMigration.test.ts on this SHA — pass/fail
+                        (machine/source evidence, NOT a browser observation)
 Fingerprints after      same five — EQUAL / NOT EQUAL
 ask_threads/ask_turns   before → after (target Work only)
 Instrument removed      /tmp/ws2-05b-02c-2-runtime-witness.ts deleted? yes/no
@@ -402,9 +492,13 @@ then Kelly:
   "Is MAIA actually talking intelligently about the thing I clicked?"
 ```
 
-The second line has no machine witness and none should be built to fake one. The
-lane's success condition is **an honest report**, not a GO. A STOP at step 3 with
-the real row count named is a complete run.
+The second line has no machine witness and none should be built to fake one, and
+the first line is only reached on an **ACCEPTED** run — a HOLD stops short of it and
+must say so.
+
+The lane's success condition is **an honest report**, not a GO and not an ACCEPTED.
+A STOP at step 3 with the real row count named is a complete run. So is a HOLD at
+step 7 with the refusal branch named.
 
 ---
 
@@ -415,7 +509,10 @@ Postgres port closed, no Mac Studio and no minisforum reachable. Every step is
 grounded in source read at `93216567` — `lib/auth/getMemberFromRequest.ts:30-66`,
 `lib/manuscript/ask/frozenReading.ts:76,122`,
 `app/writers-studio/canvas/StructureReview.tsx:378-400,1052,1068`,
-`lib/manuscript/ask/askReader.ts:228`, `lib/ai/modelService.ts:83`,
+`app/api/sovereign/manuscripts/[id]/ask/route.ts:212,242,266,299`,
+`lib/manuscript/ask/askReader.ts:22,228,232`,
+`lib/ai/structured/policy.ts:38-43`,
+`lib/manuscript/__tests__/providerSeamMigration.test.ts:217`,
 `database/migrations/20260830000003…sql:56,120`,
 `database/migrations/20260831000001…sql:37,43`,
 `database/migrations/20260901000001_ask_threads.sql:100-146`,
