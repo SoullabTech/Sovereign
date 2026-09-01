@@ -1,0 +1,29 @@
+{
+  "_comment": "Bookkeeping only, no new judgments: the editorial axis for records ruled in Stage 4I batches 1-2 (2026-08-31/09-01) and applied to the manuscript, but never written back to the register. Found because the register was reporting 4I as unfinished when it was not. Every verdict below is transcribed from the ruling that was already applied.",
+  "entries": [
+    {"match": "The greater the light, the deeper the shadow",
+     "editorial_status": "KEEP - REFRAME. Under-attribution not repaired by CORRECT: the English is an evolved formulation, so a citation would manufacture precision the evidence does not support.",
+     "evidence_location": "4I batch 1 ruling", "occurrence": 1},
+    {"match": "persist in his folly",
+     "editorial_status": "KEEP - REFRAME. Frame now names the source work: 'Blake's Proverbs of Hell puts it provocatively:'.",
+     "evidence_location": "4I batch 2 ruling", "occurrence": 1},
+    {"match": "I think therefore I am",
+     "editorial_status": "KEEP - CORRECT + REFRAME. Turned from a warrant into actual dialogue: the book states the cogito and then answers it.",
+     "evidence_location": "4I batch 1 ruling", "occurrence": 1},
+    {"match": "The mind is its own place",
+     "editorial_status": "KEEP - REFRAME. Internal speaker identified; the line is stronger once it is Satan who says it.",
+     "evidence_location": "4I batch 2 ruling", "occurrence": 1},
+    {"match": "We put thirty spokes together",
+     "editorial_status": "KEEP. Carries an argument the book uses. Apparatus repaired to name Waley's rendering; rights remain HIGH - attribution is not permission.",
+     "evidence_location": "4I batch 2 ruling", "occurrence": 1},
+    {"match": "Be in the world but not of it",
+     "editorial_status": "KEEP - CORRECT by reduction. Verse citation removed rather than corrected; the phrase is a traditional formulation, not a quotable verse.",
+     "evidence_location": "4I batch 2 ruling", "occurrence": 1},
+    {"match": "He who knows others is wise",
+     "editorial_status": "KEEP. Load-bearing; no change required.",
+     "evidence_location": "4I batch 1 ruling", "occurrence": 1},
+    {"match": "if we were good, we would keep growing",
+     "editorial_status": "NOT ADJUDICATED - ruled out of scope at the boundary pass; not a provenance object.",
+     "evidence_location": "boundary_rulings.json", "occurrence": 1}
+  ]
+}
