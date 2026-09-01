@@ -2,7 +2,7 @@
 
 **Source of record:** `docs/book-studio/ELEMENTAL_ALCHEMY_FROM_ORIGINAL_FULL.md`
 **Opened:** 2026-09-01, after Stage 3b closed.
-**Status: 🟡 4A WORKED 45/45 — awaiting authorial ruling · 4B, 4C NOT STARTED.**
+**Status: ✅ 4A CLOSED 45/45 · 🟡 4B NEXT · 4C NOT STARTED.**
 
 ## The governing question
 
@@ -884,3 +884,99 @@ record of a provenance audit.
 adoption → canonical prose.* What this instance adds is that the pipeline must also
 record **who originated the wording**, because the same four steps look identical
 from the outside whether the first one was the model's or the author's.
+
+---
+
+# 4A · CLOSED — 2026-09-01
+
+## McGilchrist — `CORRECT` → `KEEP` ✅ *(applied)*
+
+**The paraphrase is replaced with McGilchrist's own sentence:**
+
+> *"The right hemisphere sees things whole, and in their context."*
+> — Iain McGilchrist, *The Master and His Emissary*
+
+Sourced by the author to *The Master and His Emissary* (c. p. 27, original
+edition), with the wording reproduced on McGilchrist's own channel. **A longer
+authentic passage exists at c. p. 174** — the right hemisphere's world as
+*"individual, changing, evolving, interconnected…"* — **and was deliberately not
+used.** The shorter sentence does more with less and **leaves the chapter room to
+make its own spiritual and elemental interpretation.**
+
+### Why the replacement is better than a closer paraphrase
+
+The removed epigraph opened *"Our consciousness is deeply connected to the natural
+world… the beauty and complexity of nature."* **That is the book's thesis, and it
+was in McGilchrist's mouth.** Searching for an authentic sentence about the beauty
+of nature would have preserved the original error in a verified form.
+
+**The exact sentence does three things the paraphrase could not:**
+1. It is **actually McGilchrist**.
+2. It states **the neurological distinction the book is invoking** — without making
+   him responsible for the Nature thesis.
+3. It **lands beneath "Wholeness: The Essence of Love"** more precisely at a
+   quarter of the length.
+
+### The boundary, stated as Stage 3b requires
+
+> **McGilchrist supplies:** empirically grounded whole-and-context perception.
+> ***Elemental Alchemy* supplies:** the movement from that mode of perception into
+> Nature, wholeness, elemental consciousness, and the divine.
+>
+> **Let the source be the source. Let the synthesis be the author's.**
+
+### One observation, not a recommendation
+
+The removed paraphrase was doing **bridging work** — badly, by attributing the
+bridge to McGilchrist. The exact sentence is sharper but **more elliptical**, and
+the prose beneath it opens cosmologically (*"In the sacred silence before
+creation's first breath…"*) rather than neurologically.
+
+**This may be a `KEEP + CONNECT` site.** The boundary the author articulated in
+the ruling — *he supplies the perception, the book supplies the movement into
+Nature* — would make a truthful one-sentence connector, and it passes the
+restraint's fourth test independently.
+
+**Not written.** The ruling issued was `CORRECT → KEEP`, and composing the
+connector would author a relationship the author did not ask to have placed.
+**Flagged for the author; a one-line addition if wanted, nothing lost if not.**
+
+---
+
+# STAGE 4A — FINAL STANDING · CLOSED
+
+| Disposition | Count |
+|---|---|
+| `REMOVE` — applied | **19** |
+| `KEEP + CONNECT` — applied | **1** (Campbell) |
+| `CORRECT` — applied | **4** (Whyte · Rumi/Barks · Pollan · McGilchrist) |
+| `KEEP AS IS` — confirmed | **15** |
+| `KEEP` · `RIGHTS HOLD` | **5** (Bear Heart · Teasdale · Weil · Gabriel ×2) |
+| → Stage 7 | **1** (Zhuangzi — bibliography, wrong translator) |
+| **TOTAL** | **45** ✅ |
+
+**Epigraph count: 128 → 109.** **No editorial holds remain.** The five rights
+holds are publication questions and do not block closure; the Zhuangzi defect
+belongs to bibliography reconstruction.
+
+## What 4A actually did
+
+**Nineteen section openings stopped being decorated by authority and began in the
+book's own voice.** Seven of those removals were provenance failures the editorial
+test would have caught anyway — **the two instruments converged rather than
+competing**, which is the strongest available evidence that neither was bent to
+suit the other.
+
+**The survivors are the ones that challenge, historicize, define, turn, or offer
+kinship.** Not the ones that agree.
+
+**Four chapters now open without an epigraph** (1, 3, 5, 8). **Not a defect and not
+to be repaired for symmetry** — judged at final QA only on whether each opening
+arrives.
+
+---
+
+**→ STAGE 4B — argument-carrying quotations.** Read semantically out of the 81
+mid-prose items; the structural parser finds only 2 and that is not the population.
+**Higher stakes than 4A: removing an argument-carrier can change what the book
+appears able to claim.**

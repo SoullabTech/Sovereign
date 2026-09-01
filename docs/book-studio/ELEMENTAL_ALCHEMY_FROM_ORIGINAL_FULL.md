@@ -488,7 +488,7 @@ Elemental alchemy connects us with wisdom beyond the reactive, fixated mind. Suc
 
 ### Wholeness: The Essence of Love
 
-*"Our consciousness is deeply connected to the natural world. The right hemisphere, in particular, helps us to perceive the beauty and complexity of nature, to see the whole rather than just the parts." – Iain McGilchrist*
+*"The right hemisphere sees things whole, and in their context." — Iain McGilchrist, *The Master and His Emissary**
 
 In the sacred silence before creation's first breath, we already existed—unborn potentials waiting to emerge from the fertile void. Our souls pulsed as latent realities, inscribed upon the vast, mysterious source. We were luminous seeds cradled in emptiness, poised to awaken to the eternal song of being. We were the nascent mysteries, pregnant with all worlds yet to be dreamed, all forms yet to become—spaces, times, and realms shimmering as visionary mandalas floating upon an infinite ocean of endless becoming.
 
