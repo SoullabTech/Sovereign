@@ -666,7 +666,7 @@ Ideally, we have a balance of all available modes. We all have our preferred mod
 
 Our beliefs about reality can predetermine how we engage it. If someone believes they are unemotional, they will naturally avoid emotional signals. If a person doesn't believe in telepathy, they will disregard telepathic messages as "mind chatter." Beliefs inform, persuade, color, and transform our world into a smaller, more predictable, yet less realistic version by filtering out anything that doesn't fit the mold. Our capacity to shift between elemental states of awareness fluidly and consciously helps us escape the limitations of our biases and beliefs, because every new elemental state presents us with new insights and challenges our habitual—fixated—ways of being.
 
-Embrace the unity of opposites. This reminds us that duality exists for the purpose of growth and transcendence. By embracing and integrating both the light and the dark aspects within ourselves, we can achieve wholeness and balance.
+The tension between opposites can become a place of growth and transformation when we learn to hold both sides consciously. By embracing and integrating both the light and the dark aspects within ourselves, we can achieve wholeness and balance.
 
 ### The I Ching and Nature's Wisdom
 
@@ -2201,7 +2201,7 @@ It does not live in isolation.
 
 What you have encountered in these pages is not a set of ideas, nor a method to be applied. It is a way of seeing, a way of being, a way of participating in the unfolding of life itself. And while it can be recognized alone, it does not deepen alone.
 
-There was a time when human life was held within structures that supported this kind of knowing. In community, in ritual, in shared language and shared silence, the movements of the soul were witnessed, reflected, and guided. Those environments did not make the process happen, but they allowed it to be sustained.
+Across different times and cultures, communities have created structures that support this kind of knowing. In community, in ritual, in shared language and shared silence, the movements of the soul were witnessed, reflected, and guided. Those environments did not make the process happen, but they allowed it to be sustained.
 
 Much of that has dissolved.
 
@@ -2241,7 +2241,7 @@ Our ancestors practiced these arts for eons, even through dark periods of ignora
 
 Our practices have faced lifetimes of challenges, including misunderstanding and skepticism. They have often been seen as unconventional, quaint, or even controversial. However, despite these challenges, we have persevered and found ways to bridge gaps, fostering mutual support and collaboration across our diverse yet interconnected fields.
 
-Western medicine excels in addressing pathology but often falls short in leading the field of wellness. It has always benefited from the insights and results of traditional, indigenous, and metaphysical arts, drawing from their foundations both by choice and in response to patient demand. There is a science and art that extends beyond the molecular, into the energetic field that informs our material existence, from cells to our senses. Here, the imaginal, energetic, emotional, sensory, and phenomenological aspects of reality interplay with the biological world, allowing true health, wellness, and development to unfold in life's fullness.
+Western medicine excels in addressing pathology but often falls short in leading the field of wellness. It has always benefited from the insights and results of traditional, indigenous, and metaphysical arts, drawing from their foundations both by choice and in response to patient demand. I approach healing as both science and art, attending not only to the molecular processes of material life but also to the energetic and relational dimensions through which I experience it. Here, the imaginal, energetic, emotional, sensory, and phenomenological aspects of reality interplay with the biological world, allowing true health, wellness, and development to unfold in life's fullness.
 
 Many of you have worked tirelessly to integrate this work into mainstream treatments, therapies, and interventions. You have made a significant impact in a culture that resisted this work with fervent opposition, overcoming the odds by making your work accessible in clinics, schools, and insurable practices. The exponential growth in this field underscores its importance and the need in our society, which battles against massive change, depersonalization, and a growing sense of isolation. How we think, intuit, feel, and sense profoundly matters. These elements shape the world we live in and engage with.
 
@@ -2373,11 +2373,11 @@ For readers who orient themselves through elemental temperament, the following e
 
 ### Aether Chapter
 
-- **Fire Type:** The Aether chapter inspires you to envision a grand unity that transcends earthly life. It encourages you to engage with Cosmic Reality tangibly, transforming your heart's vision into reality. You carry within you the seeds of your true destiny, ready to blossom and fulfill their potential.
+- **Fire Type:** The Aether chapter inspires you to envision a grand unity that transcends earthly life. It encourages you to explore how Aether can be experienced tangibly through presence, relationship, and the ordinary texture of daily life, transforming your heart's vision into reality. You carry within you the seeds of your true destiny, ready to blossom and fulfill their potential.
 - **Water Type:** The Aether chapter invites you to dive deeply into your soul and connect with universal unity. By opening emotionally and spiritually, you transcend human limitations and gain profound insights into your humanity. This merging of inner and outer realities allows you to experience a deep, spiritual connection with all that is.
 - **Earth Type:** Grounding the concept of unity, the Aether chapter guides you to create harmonious environments that reflect the interconnectedness of all things. It encourages you to design spaces, build bridges, and develop infrastructure that honor the unity of existence, fostering a sense of wholeness and interconnectedness in your daily life.
 - **Air Type:** The Aether chapter, centered on unity and transcendence, invites you to explore intellectual and expansive realms. It encourages you to articulate the intuition of oneness, communicate this experience to others, and embrace the complexity of expressing unity through words. This chapter teaches you to convey the essence of interconnectedness and shared existence.
-- **Aether Type:** The Aether chapter brings you into the heart of unity, where you fully awaken to the oneness of all things. It reveals the seamless dance of the finite and infinite, guiding you to live in supreme balance and poise. This chapter helps you embody the true meaning of being spiritualized, experiencing the blessing of creation and living in harmony with the cosmic dance.
+- **Aether Type:** The Aether chapter invites you into an exploration of unity, where our differences can be experienced within a larger field of relationship and wholeness. It reveals the seamless dance of the finite and infinite, guiding you to live in supreme balance and poise. This chapter helps you embody the true meaning of being spiritualized, experiencing the blessing of creation and living in harmony with the cosmic dance.
 
 ---
 
@@ -2419,6 +2419,8 @@ For readers who orient themselves through elemental temperament, the following e
 
 ### The Four Elements in Astrology
 
+In the Spiralogic model, I draw on the traditional astrological relationships among signs, elements, and modalities while using them within my own developmental reading of the elements and their movement through human experience.
+
 #### Fire — Inspiration & Intention
 
 The fire element represents our spiritual aspirations, vision, and will. It fuels our purpose and ignites our passion. Fire energy initiates new cycles of growth.
@@ -2453,7 +2455,7 @@ The air element governs our social connections, ideas, and intellect. It circula
 
 ### The Spiral Journey of Astrology
 
-By cycling through the four elements, we gain mastery of all facets of being human. Each element offers lessons to learn and soul gifts to develop.
+Through this framework, we can deepen our awareness of and relationship with the many facets of being human. Each element offers lessons to learn and soul gifts to develop.
 
 The three modalities of Cardinal, Fixed, and Mutable within each element provide distinct phases of growth, represented by the astrological signs.
 

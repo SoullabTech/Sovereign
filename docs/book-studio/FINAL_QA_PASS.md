@@ -126,7 +126,7 @@ provenance rather than correspondence: **did Aristotle hold this**, and is the e
 clause **his reasoning or the book's interpretation?** An unquoted attribution, so outside the
 quotation register — the Buber class. Verify with the bibliography obligations.
 
-### Batch 12 — back matter: Chapter Summaries · Spiralogic Profile · Elemental Astrology · Afterword — **open**
+### Batch 12 — back matter: Chapter Summaries · Spiralogic Profile · Elemental Astrology · Afterword — **closed**
 
 Four sections read as a group, each against the test appropriate to it. Two sections clean, two
 carrying findings. Findings 29–34; finding 35 is out-of-batch and reported rather than silently
@@ -206,3 +206,46 @@ Ch7 physics sentences (20) and the Ch8 material (24) — and the ruling there wa
 correlation, not cut**. This section was not in the batch-12 scope; flagged because closure QA
 covers the whole book. **Recommend REFRAME** on the finding-20 pattern, or confirm it stands as
 the author's declaration of allegiance rather than a claim about the state of science.
+
+**Batch 12 ruled and applied — 29 REVISE · 30 REVISE · 31 FRAME · 32 SOFTEN · 33 SOFTEN ·
+34 REVISE · 35 REFRAME.** All seven repairs use the author's own wording. Two grafts are recorded
+rather than absorbed:
+
+- **30** was supplied as a standalone sentence; the surrounding sentence's trailing clause
+  *"transforming your heart's vision into reality"* was preserved rather than discarded, so the
+  entry keeps its original shape. Confirm or cut on the next read.
+- **34** was supplied as one sentence; the paragraph's second sentence
+  *"we can achieve wholeness and balance"* was **left untouched**. It was briefly softened to
+  "move toward" and reverted — it carries an outcome promise of the same family as 29, but it was
+  not ruled on, and no unruled sentence changes silently.
+
+On **35**, the applied wording states the author's approach rather than the state of a science.
+The nuance recorded with the ruling stands open: if a stronger claim about the objective reality
+of energetic phenomena is wanted, it belongs stated as a **working ontology**, not under "science."
+
+---
+
+# FINAL MANUSCRIPT QA — CLOSED
+
+Thirty-five findings across twelve batches; every one ruled by the author; every ruling applied.
+Two findings withdrawn under scrutiny rather than pressed (the Ch3 gunas chain, already declared;
+the Ch7 physics sentences, reframed rather than cut after the QA lens was corrected). The
+orphan-commentary sweep found one true orphan in 2,675 lines, and it predated this engagement.
+
+**The manuscript is editorially ready to freeze**, subject only to what was never QA's to settle:
+
+**Blocking freeze — author-owned**
+1. **Chapter 1 method contract** — the seven questions, drafted first by the author.
+2. **Final wording of the book's closing three lines** —
+   *AUTHORIAL REVIEW REQUIRED BEFORE MANUSCRIPT FREEZE.*
+
+**Blocking freeze — outside QA**
+3. **Bibliography emission** — held on six referents (Teasdale ×2, Smith concept→work, Giles
+   imprint, Campbell printing, Rilke edition) plus the Berry `begun` check. No placeholders.
+   Then reverse reconciliation → orphan removal → BIBLIOGRAPHY CLOSED.
+4. **Permissions outcomes.**
+5. **The foreword** — and with it the held C. Michael Smith acknowledgment.
+6. **Second Edition ISBNs** — confirm which first-edition hardcover shipped (`-1-7` vs `-2-4`),
+   fix the `LIving` typo at Bowker, assign `-3-1` paperback / `-4-8` hardcover.
+
+Nothing on that list is an editorial question. QA is done.
