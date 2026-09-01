@@ -30,7 +30,7 @@ distinct_to_room: the Canvas is where the writer is writing, and it must stay th
 screenshot_desktop: docs/design/contracts/screenshots/writers-studio-canvas-structure-desktop.png
 screenshot_mobile: docs/design/contracts/screenshots/writers-studio-canvas-structure-mobile.png
 experience_verification: >-
-  AUTHENTICATED WALK of the pushed implementation (242194a7f), 2026-09-01, Mac Studio. Real
+  AUTHENTICATED WALK of the pushed implementation (3e5ea9e57), 2026-09-01, Mac Studio. Real
   `maia_session` cookie, real Canvas route, real server, real structured-inference seam. Scratch
   database maia_ws2_02c_2r_mac_58ac95a77 holding a synthetic 14-section Work — no member's real
   Work was read. Desktop 1440x900 and mobile 390x844, deviceScaleFactor 2.
@@ -63,6 +63,10 @@ experience_verification: >-
   simulated. Its path is covered by the route's 502 branch and the client's catch; a visual witness
   of "MAIA couldn't complete the reading. Your work hasn't changed." remains outstanding. Also
   owed: a real member on a real device, and a Work whose prose is not filler.
+  SHA NOTE — the walk was taken against 242194a7f, which was afterwards rewritten to
+  3e5ea9e57 to drop commit trailers. The two trees are byte-identical (empty diff), so the
+  walk stands; the citation names the reachable commit because 242194a7f is no longer an
+  ancestor of this branch and would not exist in a fresh clone.
 ---
 
 # Writer Canvas — Structure drawer Experience Contract
@@ -103,5 +107,20 @@ a single-section draft is never offered a reading of divisions it does not have.
 
 ## What the drawer must never become
 
-It must not render a reading. The moment this drawer draws units, alternatives, or MAIA's account,
-there are two structure surfaces drawn from different payloads, and they will eventually disagree.
+**It must never render a reading.** The moment this drawer draws units, alternatives, or MAIA's
+account, there are two structure surfaces drawn from different payloads, and they will eventually
+disagree.
+
+**It must never change canonical structure.** A reading may propose; only an explicit author act may
+adopt or alter. Today that holds structurally rather than by intention — there is no adoption call
+on this path and nothing reachable from here writes `manuscript_structure_units` — and it must keep
+holding that way when Stage 6 gives the author a command that can.
+
+**It must never initiate a reading without the member's explicit gesture.** No reading on arrival,
+on drawer open, on a timer, or on a heuristic about how long the Work has gone unread. MAIA does not
+inspect a member's book because the moment seemed right to the system.
+
+**It must never accept client-supplied Work text, structure, or interpretation as MAIA's reading.**
+Evidence gathering and interpretation remain server-owned. A client that could describe the Work
+could publish a structure under MAIA's name that MAIA never produced, and the member would have no
+way to tell the difference — which is why the request body is empty rather than merely ignored.
