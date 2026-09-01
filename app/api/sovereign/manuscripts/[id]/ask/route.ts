@@ -45,20 +45,38 @@ const ANCHOR_STATUS: Record<AnchorRefusal, number> = {
 
 const MAX_QUESTION = 4000;
 
-/** Closed parse. An unknown key is a refusal, not something to ignore. */
+/**
+ * Closed parse. An unknown key is a refusal, not something to ignore.
+ *
+ * THE BOUNDARY ACCEPTS ONLY WHAT THIS SLICE HAS PROVED.
+ *
+ * `AskAnchor` is the CONTRACT vocabulary and knows the whole union; this parser
+ * is the RUNTIME boundary and knows only the three kinds 02c-2 actually built:
+ * `question`, `uncertainty`, and the truthful `division` conversation. The two
+ * are deliberately not the same list.
+ *
+ * WHY `work` AND `proposal` CAME OUT. A `work` anchor loads no proposal, so a
+ * raw POST could open and PERSIST a thread and only then return `no_reading` -
+ * an author-originated Work thread entering through HTTP before the slice that
+ * defines what such a thread is. The type may know the future union; the
+ * boundary must not. `section` and `concern` were never parseable for the same
+ * reason.
+ *
+ * A shape the boundary accepts before its surface exists is a shape nobody has
+ * proved, and the row it writes is evidence of a conversation nobody designed.
+ */
+const SUPPORTED_ANCHORS = ['question', 'uncertainty', 'division'] as const;
+
 function parseAnchor(v: unknown): AskAnchor | null {
   if (typeof v !== 'object' || v === null) return null;
   const o = v as Record<string, unknown>;
+  if (!(SUPPORTED_ANCHORS as readonly string[]).includes(o.on as string)) return null;
+
   const keys = Object.keys(o).sort().join(',');
   const s = (k: string) => typeof o[k] === 'string' && (o[k] as string).length > 0;
   const n = (k: string) => Number.isInteger(o[k]) && (o[k] as number) >= 0;
 
   switch (o.on) {
-    case 'work':
-      return keys === 'on' ? { on: 'work' } : null;
-    case 'proposal':
-      return keys === 'on,proposalId' && s('proposalId')
-        ? { on: 'proposal', proposalId: o.proposalId as string } : null;
     case 'division':
       return keys === 'on,proposalId,unitId' && s('proposalId') && s('unitId')
         ? { on: 'division', proposalId: o.proposalId as string, unitId: o.unitId as string } : null;
@@ -68,13 +86,14 @@ function parseAnchor(v: unknown): AskAnchor | null {
     case 'uncertainty':
       return keys === 'on,proposalId,regionIndex' && s('proposalId') && n('regionIndex')
         ? { on: 'uncertainty', proposalId: o.proposalId as string, regionIndex: o.regionIndex as number } : null;
-    /* `section` and `concern` are NOT parseable in 02c-2. Author-originated
-       section-level concerns are a later slice, and a shape the boundary accepts
-       before the surface exists is a shape nobody has proved. */
     default:
       return null;
   }
 }
+
+/** Exported for the boundary test: the runtime surface, not the contract union. */
+export const __supportedAnchorsForTest = SUPPORTED_ANCHORS;
+export const __parseAnchorForTest = parseAnchor;
 
 /**
  * GET — the threads already open on an anchor, so the surface may offer to
@@ -250,9 +269,10 @@ export async function POST(
   }
 
   if (!reading) {
-    /* No reading, no frozen material to answer from. 02c-2 has no author-
-       originated slice yet, so this is unreachable from the surface; refusing is
-       still the honest answer rather than inventing context. */
+    /* UNREACHABLE WHILE THE BOUNDARY ACCEPTS ONLY PROPOSAL-BEARING ANCHORS, and
+       kept for exactly that reason: it is the honest answer the day a
+       reading-less anchor is added, and deleting it would mean the first such
+       anchor arrives at a route with no opinion about having nothing to read. */
     return NextResponse.json({ threadId: liveThreadId, refusal: 'no_reading' }, { status: 422 });
   }
 
