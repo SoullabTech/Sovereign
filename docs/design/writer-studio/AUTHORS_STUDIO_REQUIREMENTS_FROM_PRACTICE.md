@@ -1201,3 +1201,18 @@ families** that had not been noticed by hand.
 **This is the clearest case for semantic identity over document workflow.** A
 chapter-by-chapter process cannot see it; a family can. **It is exactly the kind of
 thing a system should quietly remember on the writer's behalf.**
+
+### Requirement — families are lineages, not just duplicate sets
+
+**A provenance family must represent relationships, not merely sameness:**
+`duplicate` · **`ancestor`** · **`composite_descendant`** · `variant` · `translation`.
+
+**Grounding event:** the manuscript carries the accurate Emerald Tablet form in one
+chapter and a **composite descendant** in the next — a fusion of that verse with a
+half originating roughly eleven centuries later. **Calling those two occurrences
+"duplicates" would lose the only fact that matters about them: one is the source of
+the other's corruption.**
+
+The same shape appeared with a mediator's rendering labelled honestly in one chapter
+and left under a bare byline in another. **A family whose only relation is
+"the same words appear twice" cannot express either case.**

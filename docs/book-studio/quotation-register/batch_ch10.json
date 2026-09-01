@@ -1,0 +1,59 @@
+{
+  "_comment": "BATCH 10 - Chapter 10 and back matter. FINAL historical migration batch.",
+  "entries": [
+    {
+      "match": "reverence and credence to Nature",
+      "occurrence": 1,
+      "provenance_status": "unverified",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L2038",
+      "actual_author": "Terence McKenna",
+      "family": "fam-mckenna-unresolved",
+      "notes": "Audit: UNVERIFIED, UNKNOWN. Fifth and last of the McKenna cluster - 5 of 5 currently UNVERIFIED. The audit records its own correction alongside this row: A UNIFORM VERDICT IS NOT A SHARED TRANSMISSION MECHANISM, and it had collapsed the two. Coordinated resolution rather than coordinated adjudication."
+    },
+    {
+      "match": "map is not the territory",
+      "occurrence": 1,
+      "provenance_status": "verified_variant",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L2058",
+      "actual_author": "Alfred Korzybski",
+      "work": "Science and Sanity: An Introduction to Non-Aristotelian Systems and General Semantics (1933), p. 58",
+      "notes": "Audit: the source reads 'A map is not the territory it represents, but, if correct, it has a similar structure to the territory, which accounts for its usefulness.' The manuscript carries the standard compressed form. Recorded during the census as a SOURCE RESTORATION OPPORTUNITY - the fuller sentence says more than the compression."
+    },
+    {
+      "match": "As within, so without",
+      "occurrence": 1,
+      "provenance_status": "misattributed",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L2184",
+      "actual_author": "two halves, two origins, roughly eleven centuries apart",
+      "family": "fam-hermetic",
+      "notes": "Audit: COMPOSITE ATTRIBUTION - third confirmed instance - and also SOURCE-FORM MISCLASSIFICATION. 'As above, so below' is a popular modern paraphrase of the Emerald Tablet's second verse; the other half has a separate and much later origin. THE BOOK ALSO CARRIES THE ACCURATE EMERALD TABLET FORM IN CH9 - ancestor and composite descendant, one chapter apart.",
+      "family_role": "composite_descendant"
+    },
+    {
+      "match": "Alchemy is a kind of philosophy",
+      "occurrence": 1,
+      "provenance_status": "unverified",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L2196",
+      "actual_author": "Marcel Duchamp",
+      "rights_status": "protectability_uncertain_standard",
+      "notes": "Audit: quote-site attestation only; no primary source. Duchamp's alchemical interests ARE scholarly-documented (Moffitt, Alchemist of the Avant-Garde, SUNY) but that supports the THEME, not the sentence. Recorded as the INVERSE of the Sai Baba case: there a documented framework initially looked contradicted and turned out compatible; here the documented preoccupation makes the sentence PLAUSIBLE, which is exactly why it must not be treated as verified. Thematic fit is not provenance, in either direction."
+    },
+    {
+      "match": "evening of life, you will be examined",
+      "occurrence": 1,
+      "provenance_status": "verified_variant",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L2282",
+      "actual_author": "St. John of the Cross",
+      "work": "Sayings of Light and Love, saying 57; also quoted in the Catechism of the Catholic Church 1022",
+      "translator_or_mediator": "MEDIATED TRANSLATION Spanish to English, translator unidentified; the standard modern English is Kavanaugh-Rodriguez (ICS)",
+      "rights_status": "term_uncertain",
+      "notes": "Audit: variants exist - 'when evening comes' against 'at the evening of life'."
+    },
+    {
+      "match": "What is above is like what is below",
+      "occurrence": 1,
+      "family_role": "ancestor",
+      "notes": "FAMILY ROLE: ancestor. The accurate Emerald Tablet form. Its composite descendant in Ch10 fuses it with a much later half. A family is not always a set of duplicates - it can be a lineage."
+    }
+  ]
+}

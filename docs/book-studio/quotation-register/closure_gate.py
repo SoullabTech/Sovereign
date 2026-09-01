@@ -102,6 +102,12 @@ for f, m in fam_all.items():
         surv = [r for r in m["active"] if r.get("provenance_status") in bad]
         if surv:
             asym.append((f, [r["id"] for r in surv]))
+roles = {}
+for r in R + H:
+    if r.get("family_role"): roles.setdefault(r["family"], []).append((r["id"], r["family_role"]))
+if roles:
+    print("\n  FAMILY LINEAGE - relationships beyond duplication:")
+    for f, v in roles.items(): print(f"      {f}: {v}")
 if asym:
     print("\n  ASYMMETRIC REPAIR - family members repaired elsewhere, these survive with the same defect class:")
     for f, ids in asym:

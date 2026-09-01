@@ -1102,3 +1102,112 @@ checked has a correct entry with the right work.
 **22 families; 5 spanning both layers; 3 flagged asymmetric.**
 
 **→ Final migration batch: Chapter 10 + back matter (5 pending).**
+
+---
+
+# BATCH 10 — Chapter 10 + back matter · FINAL MIGRATION BATCH · 2026-09-01
+
+# ✅ HISTORICAL MIGRATION COMPLETE — `pending_migration: 0`
+
+**`GATE PASSED`.** All 5 remaining verdicts migrated. **Every Stage 2 verdict the
+census earned now lives in the register, traced to its evidence.**
+
+## The last five
+
+**Korzybski** — `VERIFIED VARIANT`. *Science and Sanity* (1933) p. 58 reads *"**A**
+map is not the territory it represents, **but, if correct, it has a similar
+structure to the territory, which accounts for its usefulness.**"* **The manuscript
+carries the standard compressed form**, and the census flagged it as a
+**`SOURCE RESTORATION OPPORTUNITY`** — the fuller sentence says more than the
+compression does.
+
+**The Hermetic composite.** `COMPOSITE ATTRIBUTION` — **third confirmed instance** —
+plus `SOURCE-FORM MISCLASSIFICATION`. *"As within, so without. As above, so below."*
+**The two halves are separated by roughly eleven centuries.**
+
+**Duchamp — the inverse of the Sai Baba case, and the census said so explicitly.**
+His alchemical preoccupations **are** scholarly-documented (Moffitt, *Alchemist of
+the Avant-Garde*), which **supports the theme, not the sentence**. Sai Baba's
+documented framework initially looked *contradicted* and turned out compatible; here
+the documented preoccupation makes the sentence **plausible** — *"which is exactly
+why it must not be treated as verified."*
+
+> **Thematic fit is not provenance, in either direction.**
+
+**McKenna closes at 5 of 5 `UNVERIFIED`** — and the census's own correction travels
+with the final row: ***a uniform verdict is not a shared transmission mechanism***,
+and it had collapsed the two.
+
+**St. John of the Cross** — `VERIFIED VARIANT`, *Sayings of Light and Love* 57, also
+in the *Catechism* §1022. `MEDIATED TRANSLATION`, translator unidentified.
+
+## Family lineage — implemented
+
+**The Emerald Tablet pair forced it.** A family is **not always a set of
+duplicates**; it can be a **lineage**:
+
+| | |
+|---|---|
+| **`EA-Q-0108`** (Ch9) | **`ancestor`** — the accurate Emerald Tablet form |
+| **`EA-Q-0122`** (Ch10) | **`composite_descendant`** — fused with a half eleven centuries later |
+
+**`family_role` now runs in the gate.** *The book contains the true form and its
+corruption, one chapter apart, and the register can now say which is which.*
+
+---
+
+# HISTORICAL MIGRATION — FINAL RECONCILIATION
+
+| Current semantic field | |
+|---|---|
+| active block epigraphs | **109** |
+| inline attributed | **19** |
+| unattributed boundary records | **2** |
+| **current records** | **130** |
+
+| Review state | |
+|---|---|
+| `migrated` | **120** |
+| `not_investigated` | **9** — the newly discovered objects and boundary spans |
+| `verdict_not_locatable_in_source` | **1** — Berry, with a recovery note |
+| **`pending_migration`** | **0** ✅ |
+
+| Historical lifecycle | |
+|---|---|
+| `removed` | **24** |
+| `reclaimed_as_author_prose` | **4** |
+| **block lifecycle** | **137 = 109 active + 28 inactive** ✅ |
+
+**Attributed quotation occurrences ever identified: 156** — 137 historical block +
+19 inline — **plus 2 unattributed boundary objects held separately.**
+
+**22 families · 5 cross-layer · 3 asymmetric · 1 lineage pair.**
+
+## What the migration cost and produced
+
+**Ten batches. Six schema extensions, every one forced by the data:** per-axis
+review states · documented deferral · `verdict_not_locatable_in_source` ·
+`provenance_history` · family lineage roles · the asymmetric-repair check.
+
+**Four authoring errors of my own, all caught by gates**, not by review: Perkins,
+Gawain, Alcott, Angelou. **Three surfaced by cross-layer conflict; one by the
+integrity pass.** The nine records no collision could ever reach were **8 of 9
+correct** — which is why the integrity check had to exist independently of the
+contradiction check.
+
+**Three findings no chapter-bounded process could have produced:** a misattributed
+Aristotle surviving where its twin was removed · two more asymmetric families the
+check found after I found one by hand · the Emerald Tablet ancestor and its
+composite descendant sitting one chapter apart.
+
+> **The manuscript renders quotations. The register knows what they are.**
+
+## What remains — not migration
+
+1. **Verify the newly discovered objects** — 6 attributed inline items found by the
+   first-principles scan, still `not_investigated`.
+2. **Rule the 2 unattributed boundary cases** — a scope question, not a verdict.
+3. **Freeze the semantic population.**
+4. **Adjudicate the complete inline field** — 12 verified, awaiting Stage 4.
+5. **4B proper**, then **4C** — which now inherits three explicit asymmetric-repair
+   obligations.
