@@ -2473,16 +2473,50 @@ Formed on evidence, and it forms cleanly:
 | **L1867** | Ch9 Aether | **verbatim Barks** | bare "— Rumi" | `LIKELY PROTECTED` · `HIGH` |
 | L1052 | Ch5 Fire | paraphrase of Barks | **"Adapted from Rumi, after Coleman Barks"** | `PROTECTABILITY UNCERTAIN` · `STANDARD` |
 
-**Shared mechanism, shared remedy** for the first two: a **copyrighted 1995
-poetic translation quoted verbatim under the name of its thirteenth-century
-source**. The third instance is in the same book and gets it right.
+**Terminology:** Barks does not read Persian; his versions are built from other
+translations and are commonly described as **"re-Englishings."** Use **rendering**
+or **version**, not *translation*.
 
-> **The manuscript contains both the failure and its correction.** The remedy for
-> L1666 and L1867 is already written, three chapters away, in the book's own
-> hand.
+#### One doctrine, TWO repair forms — correction to my earlier framing
 
-Both are `SOURCE-FORM MISCLASSIFICATION`: protected modern expression presented
-as public-domain material.
+I wrote that the remedy for L1666 and L1867 was "already written, three chapters
+away, in the book's own hand." **That is wrong, and the error matters.**
+
+- **L1052 (Fire)** — the manuscript itself **paraphrases** Barks. "Adapted from
+  Rumi, after Coleman Barks" is **accurate**.
+- **L1666, L1867** — the manuscript reproduces **Barks's English verbatim**.
+  Labelling those "Adapted from…" would be **inaccurate in the opposite
+  direction**: the manuscript did not adapt them.
+
+**They need the mediator credited, not the adaptation flagged:**
+> *"Rumi, rendered by Coleman Barks"* — or *"Coleman Barks's rendering of Rumi"* —
+> with ***The Essential Rumi*** identified as the actual English source.
+
+**Doctrine:**
+> **Paraphrased mediator → "Adapted from…"**
+> **Verbatim mediator → explicitly credit the mediator's rendering.**
+
+So Fire supplies the correct **convention**, but **not the literal template** for
+the two verbatim passages. The positive control is more useful than I claimed and
+less directly transferable.
+
+**And correcting the byline does not solve the permissions issue.** L1666 and
+L1867 remain `LIKELY PROTECTED` · `HIGH` **after** the attribution is fixed. The
+two axes stay orthogonal.
+
+### `SOURCE-FORM MISCLASSIFICATION` — established as a cross-cutting flag
+
+Not another transmission pattern. Established now across **distinct mechanisms**:
+
+- **Cohen (L1231)** — a modern song lyric represented through an older *poetry
+  collection* citation.
+- **Barks / Rumi ×2 (L1666, L1867)** — modern copyrighted English represented as
+  though it were simply medieval Rumi.
+
+> **Common harm: the apparent source form makes protected modern expression look
+> older or less rights-sensitive than it actually is.**
+
+Retained as a **cross-cutting flag**, alongside the cultural-attribution flag.
 
 ### RULED — a cross-cutting cultural-attribution flag, not a sixth pattern
 
