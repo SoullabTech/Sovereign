@@ -2908,17 +2908,48 @@ the chapter where the phenomenon was first identified: **4 of 30, or 13%**.
 **Chapter 2, not Chapter 5, is the concentration point.** Fire was identified
 first only because the census began there.
 
-**What distinguishes them:** Fire's four are **bare attributions** in an
-ornamental register; Chapter 2's five are **"Adapted from" claims** in a
-developmental-prose register. Both are manuscript-like language wearing external
-authority — but they are stylistically distinct, which is consistent with
-different manuscript layers rather than one uniform practice.
-
 **Consequence for the authorship-recovery lane:** it now holds **nine items
-across two chapters**, not four in one. That is large enough that the eventual
-question — whether this language is the author's own, and whether it should be
-reclaimed as prose — is a substantive compositional decision about the book, not
-a cleanup of stray epigraphs.
+across two chapters**, not four in one — large enough that the eventual question
+is a substantive compositional decision about the book, not a cleanup of stray
+epigraphs.
+
+### RESTRAINT — layers are a hypothesis, not a finding
+
+**Established:** the concentration (5/10 vs 4/30 vs 0), and that the lane is
+large enough to affect composition rather than citation hygiene.
+
+**Not established:** that the two forms represent **different manuscript layers**.
+The stylistic difference makes that a good provenance hypothesis —
+
+> Ch2: labelled adaptations in developmental prose
+> Ch5: bare attributions in ornamental/cosmological prose
+
+— but "different layer" requires **drafting-history evidence**.
+
+**Recorded as: `POSSIBLE DISTINCT COMPOSITIONAL LAYERS — provenance history
+required`.**
+
+*This is the same discipline that killed the dash hypothesis: stylistic
+clustering must not be converted into assembly history without independent
+evidence.*
+
+### The authorship-recovery lane — one bounded adjudication, two surface forms
+
+All nine items are adjudicated **together as a single lane**, while **preserving
+the two surface forms**. For each item:
+
+1. **Is there actually an external ancestor we missed?**
+2. If not, **can manuscript history establish where the wording originated?**
+3. **Does the language deserve to remain** without borrowed authority?
+4. If yes, **how does reclaiming it as prose affect the surrounding chapter?**
+5. If no, **does its removal leave a compositional hole?**
+
+**Question 5 is why this is not nine isolated citations.** In Chapters 2 and 5
+these epigraphs may be doing **structural work** — Fire's pair brackets the
+chapter's opening prose; Chapter 2's five are distributed across its argument.
+Removing them is a compositional act, not a deletion.
+
+
 
 ### Chapter 2 bibliography — two notes
 
