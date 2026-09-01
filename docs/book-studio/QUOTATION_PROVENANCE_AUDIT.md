@@ -1261,6 +1261,53 @@ conceptual fit; independent source trail predating the manuscript). Every Chapte
 > every bad quotation. The two problems need different remedies and should not be
 > merged in the repair batch.
 
+### Closed evidence carried forward from Chapters 5 and 8
+
+1. **Book-wide quotation unreliability** — confirmed across two fully censused
+   high-exposure chapters.
+2. **Bibliographic unreliability** — confirmed, but **mixed, not blanket**.
+   Correct citations and misleading ones coexist in the same section.
+3. **`SPURIOUS SUPPORT`** — established as a real defect class.
+4. **Attribution hardening** — *not* a general explanation. It survives as a
+   distinct Chapter 5 phenomenon requiring independent replication.
+5. **The internal-origin test** — strengthened by two false-positive withdrawals.
+   **External-circulation search now precedes stylistic or conceptual inference.**
+6. **Author clustering** — disproven as a default adjudication method by Keller
+   and Shaw. Campbell remains grouped only because its investigations
+   independently converged.
+
+**Fire and Air have different provenance ecologies.** Air is not "more broken
+Fire." Fire contains suspicious *locally congruent* language that may have
+acquired external authority. Air is dominated by sayings **already circulating
+externally** and accumulating altered wording, prestigious names, or plausible
+bibliographic support.
+
+> **This is why the repair batch must not contain a generic "fix bad quote"
+> operation.**
+
+## Chapter 6 — Water: entry conditions
+
+Entered with **no presumption that hardening will replicate.** The test is
+narrow:
+
+> Does Chapter 6 independently produce unlocatable language for which **external
+> circulation has first been excluded** and **positive local-origin evidence
+> remains**?
+
+Only then does an item become an `INTERNAL-ORIGIN CANDIDATE`.
+
+**Mature census order for every item:**
+quotation → external circulation → primary/named source → attribution verdict →
+origin status → transmission pattern → rights status → bibliography relationship.
+
+**The three Water items already adjudicated stay where they are:**
+- **L1253 Salzberg/Buddha** — provenance failure established; repair downstream.
+- **L1129 Aristotle "whole/sum"** — `PARAPHRASE/ADAPTED`.
+- **L1340 Aristotle "Knowing yourself…"** — `UNVERIFIED`. Its Air duplicate
+  (L1770) was already examined; **the duplicate must not create additional
+  confidence.** One unsupported saying copied twice is still one unsupported
+  saying.
+
 ---
 
 ## Quoted-material copyright / permissions review — publication/legal
