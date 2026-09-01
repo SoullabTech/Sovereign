@@ -1910,7 +1910,7 @@ In recognition of this fact, the Taoist sage Lao Tzu writes: *"We put thirty spo
 
 ### Return to Flow
 
-*"Turn up the signals. Wipe out the noise." — Peter Gabriel*
+*"Turn up the signal. Wipe out the noise." — Peter Gabriel*
 
 At the heart of all our perceptions and experiences, whether we are struggling with something hard like an opiate addiction, anxiety, or depression, working tirelessly to attain our personal aspirations, or navigating the intricacies of a challenging relationship, on some level, we are all seeking a gift of grace that would free us from pain and suffering and ease our burden while reminding us of a fundamental truth that helps us transcend our worldly concerns.
 
@@ -1925,10 +1925,6 @@ There is a flow-state, a mystical moment of duende, where the dividing line betw
 The term "duende" originates from Spanish folklore, where it refers to a mysterious and magical spirit. The poet Federico García Lorca popularized it in the context of art, especially flamenco, describing it as a powerful, almost otherworldly force that grips both the artist and the audience. Duende is distinct from mere technique; it is a burst of magic that allows the artist to endure and admit the presence of the creative force in their work. In the very best instances, it makes it possible for the artist to channel this transcendental energy, allowing the spirit of everything to take hold and transform the person who contains it. It is communion with the divine, the dance, the duende—an explosion of musicality, movement, murmur, and breath.
 
 When duende strikes, it is fleeting, but it's a moment that lives on forever. In an instant, duende transforms personal experiences into a shared experience and time into an eternal moment. It is the music that surpasses the world, reminding us of our deepest essence. Even with our remaining time on Earth, we will never lose sight of who we truly are when touched by duende.
-
-### Madhu Vidya: The Sweet Essence of Aether
-
-In the ethereal realm of Aether, Madhu Vidya, meaning *'honey knowledge'* in sanskrit, emerges as a profound spiritual wisdom that resonates deeply with the essence of this elusive element. Madhu Vidya, at its core, teaches us about the intrinsic sweetness and bliss that pervades all of creation, mirroring Aether, which represents the subtle, all-encompassing space binding the elements of fire, water, earth, and air. This sacred knowledge emphasizes the underlying unity and interconnectedness of all things, reminding us that beneath the surface of our everyday experiences lies a sweet, pervasive energy connecting us to the universe and each other.
 
 ### Mind-Body Coherence: The Aetheric Way of the Heart
 
@@ -2857,6 +2853,7 @@ A working bibliography organized by chapter. Where the same source informs multi
 - Smith, C. Michael. *Jung and Shamanism in Dialogue.* Paulist Press, 1997.
 - Coelho, Paulo. *The Alchemist.* HarperCollins, 1988.
 - Baldwin, James. *The Fire Next Time.* Dial Press, 1963.
+- Gabriel, Peter. "Signal to Noise." *Up.* Real World Records, 2002.
 
 ### Chapter 10: The Living Spiral
 
