@@ -2,7 +2,7 @@
 
 **Source of record:** `docs/book-studio/ELEMENTAL_ALCHEMY_FROM_ORIGINAL_FULL.md`
 **Opened:** 2026-09-01, after Chapter 10 closed developmental adjudication.
-**Status:** IN PROGRESS — 110 of 137. **Ch2 CLOSED (10/10).** adjudicated. **Chapter 5 CLOSED (30/30). Chapter 8 CLOSED (23/23).**
+**Status:** IN PROGRESS — 114 of 137. **Ch2 CLOSED (10/10).** adjudicated. **Chapter 5 CLOSED (30/30). Chapter 8 CLOSED (23/23).**
 
 ## Scope
 
@@ -2961,6 +2961,78 @@ the transparent form the Barks items need, and the book already contains it.
 **Translated by Stephen Mitchell**." Mitchell, like Barks, does not read the
 source language; his *Tao Te Ching* is a **version**, not a translation. The entry
 names him — good — but the mediation layer is the same shape as Barks/Rumi.
+
+---
+
+## Batch — Ch4 and Ch10 high-risk items
+
+**L632 · Ch4 · William James — "The greatest discovery of any generation is that a human being can alter his life by altering his attitude."**
+**`MISATTRIBUTED`** · pattern `EVOLVED APHORISM / RECOVERABLE ANCESTOR`.
+Quote Investigator covers it specifically: **not from James's writings.** The
+earliest related text is **Harry Granison Hill**, *Cincinnati Enquirer*, **1928**,
+attributing a similar idea *to* James. Also misattributed to Albert Schweitzer.
+The manuscript reads "of **any** generation" where the common circulating form is
+"of **my** generation" — a further variant.
+**Both William James quotations now fail** — L1616 (Ch8) `UNVERIFIED`, L632
+`MISATTRIBUTED`.
+
+---
+
+## THE McKENNA SET — COMPLETE, and it does not split
+
+| | Chapter | Status |
+|---|---|---|
+| **L701** | Ch4 | `UNVERIFIED — source lead unresolved` |
+| **L840** | Ch5 Fire | `UNVERIFIED` · `UNKNOWN` |
+| **L1369** | Ch7 Earth | `UNVERIFIED` · `UNKNOWN` |
+| **L1790** | Ch8 Air | `UNVERIFIED` · `UNKNOWN` |
+| **L2038** | Ch10 | `UNVERIFIED` · `UNKNOWN` |
+
+**Five of five unresolved.** The family forms with **all five members and no
+non-member** — the outcome the Campbell lesson said to test for, and it comes out
+the opposite way.
+
+**L701 — the long-standing open item from the first tranche, now resolved to a
+checkable state.** McKenna discussed the I Ching / 64-codon correspondence
+throughout his work and notably in his **final 1998 interview**. The bibliography
+cites ***The Archaic Revival*** (1991). **Possible `WRONG SOURCE/WORK`** — 1998
+interview versus 1991 book. The full text of *The Archaic Revival* is available
+on archive.org, so **this one is directly checkable** and should be resolved
+before the repair batch.
+
+**L2038 — `UNVERIFIED`.** Not located, including in the organism.earth archive.
+
+### Why McKenna is the exception among author sets
+
+**Every other multi-instance author tested has split**: Keller (1 verified, 1
+unverified), Shaw (1 verified, 1 misattributed), Campbell (1 verified, 3
+paraphrase), Angelou (1 verified, 1 misattributed), Gandhi (2 unverified — but on
+different leads), Thoreau (2 verified, both mis-cited), Jung (2 verified, 1
+unverified), Watts (2 verified).
+
+**McKenna is uniform across five instances in five chapters** — and his corpus is
+**unusually well transcribed**, which makes the uniformity more meaningful, not
+less. This is a genuine provenance family requiring **one adjudication**, not five.
+
+---
+
+## OPEN LEAD — Chapter 2's orphans and its internal-origin candidates
+
+Ch2 has **5 orphan bibliography entries** (James, Einstein, Buddha, Redfield,
+Balfour — listed, quoted nowhere in Ch2) and **5 internal-origin candidates**
+(quoted, sourced nowhere). Both counts are five.
+
+**A hypothesis worth stating and NOT acting on:** the "Adapted from" epigraphs may
+have **replaced earlier real quotations** whose bibliography entries survived.
+That would be drafting-history evidence bearing directly on the
+`POSSIBLE DISTINCT COMPOSITIONAL LAYERS` question.
+
+**But the matching counts are numerical coincidence until shown otherwise** —
+this is the same shape as the dash hypothesis, and the same discipline applies.
+Recorded as a **lead requiring drafting-history evidence**, not a finding. Note
+also that Ch2's James orphan may equally be a `MISFILED SOURCE` for **Ch4's**
+James quotation (L632), which has no entry of its own.
+
 
 ---
 
