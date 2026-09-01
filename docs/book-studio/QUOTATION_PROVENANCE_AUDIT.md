@@ -2,7 +2,7 @@
 
 **Source of record:** `docs/book-studio/ELEMENTAL_ALCHEMY_FROM_ORIGINAL_FULL.md`
 **Opened:** 2026-09-01, after Chapter 10 closed developmental adjudication.
-**Status:** IN PROGRESS — 117 of 137. **Ch2 CLOSED (10/10).** adjudicated. **Chapter 5 CLOSED (30/30). Chapter 8 CLOSED (23/23).**
+**Status:** IN PROGRESS — 118 of 137. **Ch2 CLOSED (10/10).** adjudicated. **Chapter 5 CLOSED (30/30). Chapter 8 CLOSED (23/23).**
 
 ## Scope
 
@@ -3156,6 +3156,64 @@ source/field becoming perceptible through them.
 by itself evidence of mismatch with this book, nor with traditions that
 distinguish perceptible elements from their ground. Do not treat the count as a
 provenance signal.
+
+---
+
+# ⚠ SYSTEMATIC AUDITOR ERROR — `MISSING` verdicts must be re-checked
+
+## What I did wrong
+
+Throughout the census I checked each chapter's bibliography **section** in
+isolation and recorded `MISSING` when an author was absent **from that section**
+— **without checking whether the entry existed elsewhere in the bibliography.**
+
+The bibliography has **13 sections** including **Preface (8)** and **Introduction
+(14)** — 22 front-matter entries that function partly as a **general pool**,
+absorbing sources whose quotations appear in later chapters.
+
+## What the check found
+
+| Author | I recorded | Actually |
+|---|---|---|
+| **Jung, *Memories, Dreams, Reflections*** | "appears **nowhere** in the book" | **Present** — front matter. **Flatly wrong.** |
+| **Nicholas of Cusa** | `MISSING` (Ch2) | Present — front matter, honestly worded "As reported in *The Theosophical Quarterly*" |
+| **Barks / *The Essential Rumi*** | `MISSING` (Ch8) | Present ×2 — front matter and Ch5 |
+| **Ram Dass, *Be Here Now*** | `MISSING` (Ch5) | Present — front matter |
+| **Helen Keller** | `MISSING` (Ch8) | Present — Ch7 |
+| **Lao Tzu** (Mitchell) | `MISSING` (Ch6, Ch7) | Present — Ch2 |
+| **Maya Angelou** | `MISSING` (Ch6) | Present — Ch5 |
+| **Thich Nhat Hanh** | `MISSING` (Ch6) | Present — Ch5 |
+| **Terence McKenna** | `MISSING` (Ch5, Ch7, Ch8) | Present ×2 — Ch4, Ch10 |
+| **Eckhart Tolle** | `MISSING` (Ch5) | Present ×2 |
+| **Einstein** | `MISSING` (Ch5) | Present — Ch2 |
+| **Thoreau** | `MISSING` (Ch6) | Present — Ch5 (wrong work: *Walden*) |
+
+**`MISSING` verdicts that STAND** (absent from the entire bibliography):
+**Ford · Shaw · Mark Jenkins · Mies van der Rohe · Socrates/Plato · Aesop ·
+Ken Wilber.**
+
+## What this changes
+
+1. **`MISFILED SOURCE` is far more prevalent than recorded.** I had it at "one
+   confirmed instance plus a candidate." It is in fact **the dominant
+   bibliography defect**, alongside famous-work substitution.
+2. **The bibliography is more *complete* than I reported, and more *misfiled*.**
+   That is a materially different reconstruction problem: fewer entries to write,
+   more to relocate.
+3. **Several conclusions drawn from `MISSING` counts are unsafe** — including my
+   Ch2 "five orphans / five candidates" numerical observation, which was already
+   held as a lead and should now be treated as weaker still.
+
+## Method correction, binding for the remainder
+
+> **An author is `MISSING` only when absent from the ENTIRE bibliography.**
+> Absence from the expected chapter section, with presence elsewhere, is
+> **`MISFILED SOURCE`** — a different defect with a different repair
+> (relocate/duplicate per the per-chapter convention, not author afresh).
+
+**All prior `MISSING` verdicts are re-checked above.** No further `MISSING` call
+is to be made without a whole-bibliography check.
+
 
 ---
 
