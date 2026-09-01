@@ -3950,26 +3950,46 @@ works created after 1978 are generally protected for the author's life plus 70
 years. **Permission versus removal is not decided inside the provenance
 census.**
 
-### Permissions inventory
+### Permissions inventory — REGENERATED at census close
 
-**8 instances at `HIGH` priority**, plus 4 at `STANDARD`. Counted as *items*;
-resolving an item's source metadata does not change the count.
+**The earlier "8 HIGH + 4 STANDARD" summary was STALE.** Items were added after it
+was written (Berry, Rilke, Sadhguru, Chödrön, Cohen, the second Barks) and never
+folded in. Arithmetic reconciliation only — **no provenance verdict changes.**
 
-| Item | Rights | Priority |
+#### `HIGH` — 13 objects
+
+| Item | Ch | Why HIGH |
 |---|---|---|
-| Peter Gabriel ×3 (L713, L1153, L1911) | `LIKELY PROTECTED` | `HIGH` |
-| Mary Oliver (L872) | `LIKELY PROTECTED` | `HIGH` |
-| Bear Heart (L926) — paragraph-length | `LIKELY PROTECTED` | `HIGH` |
-| Pema Chödrön (L1185) — full paragraph, ~75 words | `LIKELY PROTECTED` | `HIGH` |
-| Martin Luther King Jr. (L1595) | `TERM UNCERTAIN` | **`LEGAL REVIEW`** |
-| Coleman Barks / Rumi (L1666) — verbatim © 1995 | `LIKELY PROTECTED` | `HIGH` |
-| Coleman Barks / Rumi (L1867) — verbatim © 1995 | `LIKELY PROTECTED` | `HIGH` |
-| Dery Dyer (L1696) | `LIKELY PROTECTED` | `STANDARD` |
-| Leonard Cohen, "Anthem" (L1231) — lyrics | `LIKELY PROTECTED` | `HIGH` |
-| John O'Donohue (L1106) | `LIKELY PROTECTED` | `HIGH` |
-| Emma Craufurd / Weil (L1062) | `TERM UNCERTAIN` | `STANDARD` |
-| Maya Angelou (L1042) | `PROTECTABILITY UNCERTAIN` | `STANDARD` |
-| Mother Teresa (L894) | `PROTECTABILITY UNCERTAIN` | `STANDARD` |
+| Peter Gabriel, "Growing Up" (L713) | 4 | song lyrics |
+| Peter Gabriel, "Darkness" (L1153) | 6 | song lyrics |
+| Peter Gabriel, "Signal to Noise" (L1911) | 9 | song lyrics |
+| Mary Oliver, *House of Light* (L872) | 5 | poetry |
+| Bear Heart (L926) | 5 | paragraph-length block |
+| John O'Donohue, *Anam Cara* (L1106) | 5 | benediction / poetic form |
+| Wendell Berry, "The Real Work" (L167) | Preface | poetry, living author |
+| Barrows–Macy Rilke translation (L161) | Preface | poetry **translation** is the rights object |
+| Sadhguru (L173) | Preface | ~80 words in-copyright prose |
+| Leonard Cohen, "Anthem" (L1231) | 6 | song lyrics |
+| Pema Chödrön (L1185) | 6 | full paragraph, ~75 words |
+| Coleman Barks rendering (L1666) | 8 | verbatim © 1995 translation |
+| Coleman Barks rendering (L1867) | 9 | verbatim © 1995 translation |
+
+#### `LEGAL REVIEW` — 1 object
+
+**Martin Luther King Jr. (L1595, Ch7)** — not an ordinary permissions verdict.
+The King Estate's licensing regime requires counsel regardless of extract length.
+
+#### `STANDARD` / term-resolution — numerous
+
+Modern prose, translations and short aphorisms: Weil/Craufurd · Dyer · Angelou ·
+Mother Teresa · Nabokov · Watts ×2 · Teasdale · Coelho/Clarke · McGilchrist ·
+Lorde · Nussbaum · Brown · Tolle ×2 · Bennett · Jung/Winston · Nietzsche · and
+others.
+
+> **Do not enumerate `STANDARD` by hand.** The inventory is **regenerated once
+> from the 137 final rights flags** at the start of the permissions pass. Rights
+> are **independent of attribution** — a removed quotation carries no exposure; a
+> verified one may carry a great deal.
 
 **Three Peter Gabriel lyrics**, located precisely.
 
