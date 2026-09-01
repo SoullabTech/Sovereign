@@ -896,8 +896,14 @@ from the outside whether the first one was the model's or the author's.
 > *"The right hemisphere sees things whole, and in their context."*
 > — Iain McGilchrist, *The Master and His Emissary*
 
-Sourced by the author to *The Master and His Emissary* (c. p. 27, original
-edition), with the wording reproduced on McGilchrist's own channel. **A longer
+**Printed text established at *The Master and His Emissary*, pp. 27–28**, confirmed
+against scholarly citation of the printed edition and McGilchrist's own site.
+**Rights: `STANDARD` publication check** — a very short excerpt from a modern
+copyrighted work. **It does not hold up the editorial ruling**, per the standing
+separation of editorial judgment from publication viability.
+
+*Page reference recorded here and carried to Stage 7 apparatus; the epigraph
+itself carries author and work only, per the book's convention.* **A longer
 authentic passage exists at c. p. 174** — the right hemisphere's world as
 *"individual, changing, evolving, interconnected…"* — **and was deliberately not
 used.** The shorter sentence does more with less and **leaves the chapter room to
@@ -980,3 +986,95 @@ arrives.
 mid-prose items; the structural parser finds only 2 and that is not the population.
 **Higher stakes than 4A: removing an argument-carrier can change what the book
 appears able to claim.**
+
+---
+
+# 4B · OPENED AND IMMEDIATELY SUSPENDED — census scope gap found 2026-09-01
+
+## What happened
+
+The first 4B move was a signal scan across the 83 non-opening quotations for the
+prose that **leans on** a quotation — *"As X said," "eloquently articulated,"
+"this quote encapsulates," "underscores," "confirms."* Those markers are how an
+argument-carrying quotation announces itself.
+
+**Result: 0 of 83.**
+
+**That is not a finding about the book. It is a finding about the census.**
+
+## The gap
+
+**The Stage 2 census enumerated only *block-level* quotations** — lines beginning
+`*"` in the source file. **Quotations embedded inside a sentence were never
+counted, never verified, and are absent from all 137 records.**
+
+**Nine inline quotations exist.** They are exactly where argument-carrying
+quotations live, because prose that leans on a source embeds it mid-sentence:
+
+| L | Attribution | Lead-in |
+|---|---|---|
+| **47** | the Buddha | *"As the Buddha says…"* |
+| **190** | the Buddha | **same quotation, second occurrence** |
+| **1125** | Carl Jung | *"As Carl Jung once said…"* — **followed by "This quote beautifully encapsulates…"** |
+| **1606** | Charles Tart | *"As Charles Tart aptly put it…"* |
+| **1684** | Søren Kierkegaard | *"As Søren Kierkegaard said…"* |
+| **1746** | Carl Jung | *"As Carl Jung said…"* |
+| **1752** | John Milton | *"As John Milton aptly noted…"* |
+| **1867** | Lao Tzu | *"the Taoist sage Lao Tzu writes:"* |
+| **2382** | Stephen Clayton | *"In your words…"* — Acknowledgements, **personal communication, a different class** |
+
+**Every one carries an explicit lean-in verb.** The block quotations, by contrast,
+almost never do — which is why the scan came back empty and why **4A's population
+was the decorative end of the spectrum while 4B's real population was never
+enumerated.**
+
+## Corrected counts
+
+| | |
+|---|---|
+| Attributed quotations censused in Stage 2 | 137 (block only) |
+| **Never censused** | **9 (inline)** |
+| **True original population** | **146** |
+| **Current, after 4A** | **109 block + 9 inline = 118** |
+
+**The 137/128/109 figures are correct for what they measure and were never wrong
+as stated** — the scope was block quotations. **But "the whole-book quotation
+census" was a broader claim than the enumeration supported.**
+
+## Same class as the Stage 3b gap
+
+**This is the second scope gap of the same shape.** Stage 3b existed because the
+census counted quotations and missed *narrative* dependencies. This one exists
+because it counted *block* quotations and missed *inline* ones.
+
+**Both were found by trying to use the census for the next stage, not by auditing
+it.** A census is tested by what depends on it.
+
+## Immediate consequences
+
+1. **4B is suspended.** It cannot adjudicate argument-carriers before they are
+   enumerated and their provenance is known.
+2. **Nine items need Stage 2 treatment first** — verdict, origin, rights — under
+   the same rules as the other 137. **Two are one saying: the Buddha quotation at
+   L47 and L190 is a single unsupported item occurring twice.**
+3. **First impressions, recorded as leads and not verdicts:** the L1125 Jung
+   chemical-substances line is genuinely his (*Modern Man in Search of a Soul*);
+   *"I don't have beliefs, I have experiences"* is a widely circulated Jung
+   attribution with a weak source trail; the Milton is real (*Paradise Lost* I) and
+   public domain; the Lao Tzu is *Tao Te Ching* 11 and needs its translator
+   identified; the Buddha attribution is the least likely to survive verification.
+4. **L2382 is a different class** — a personal communication quoted with the
+   speaker's consent in the Acknowledgements. Not a provenance item.
+
+**No repair, no verification, and no 4B adjudication performed. Findings only.**
+
+## Recorded for the Author's Studio
+
+> **An enumeration is only as good as its pattern. A system that counts quotations
+> by their typographic form will silently miss the ones that matter most —
+> because the decorative ones sit alone on a line, and the load-bearing ones are
+> woven into the sentence that depends on them.**
+
+**The failure is invisible from inside the census** — 137 of 137 verified is a true
+statement and a complete-looking one. It became visible only when the *next* stage
+asked a question the census could not answer.

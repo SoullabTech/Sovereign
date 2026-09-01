@@ -509,3 +509,48 @@ happened by preservation.**
 > theirs.**
 
 **That is the standard** — not the provenance of any individual phrase.
+
+---
+
+### Capability — editing versus ghostwriting, and the enumeration trap
+
+> **Editing reveals and develops the author's choices. Ghostwriting substitutes for
+> them.**
+
+The dividing line is **not whether the editor ever offers words** — editors do that
+constantly. **It is who owns the judgment.** A real editor helps the author see
+choices: *this argument is unclear · this source is doing too much work · this
+paragraph repeats itself · this image is stronger than the explanation around it ·
+this quote adds lineage, this one only adds prestige · this section needs a bridge ·
+this sentence could be sharper.* **Then the author decides.** A ghostwriter supplies
+the underlying prose as the service; the client may approve it, but the expression
+is being created on their behalf.
+
+**The system test:**
+
+> **After this intervention, does the member understand their manuscript and their
+> own decision better — or did the system simply make the decision for them?**
+
+**If the second, the Studio has crossed from editorial collaboration toward
+ghostwriting.** This does not mean MAIA may never suggest a sentence. It means the
+suggestion must sit inside a process where the member can understand **why it was
+suggested, what problem it solves, what alternatives exist, and whether it actually
+expresses what they mean.**
+
+### Capability — test every enumeration by what depends on it
+
+> **An enumeration is only as good as its pattern. A system that counts quotations
+> by typographic form will silently miss the ones that matter most — the decorative
+> ones sit alone on a line; the load-bearing ones are woven into the sentence that
+> depends on them.**
+
+**Grounding event:** the Stage 2 census reported **137 of 137 complete** — true, and
+complete-looking. It had enumerated block-level quotations only. **Nine inline
+quotations, every one carrying an explicit lean-in verb, were never counted.** The
+gap was invisible from inside the census and became visible only when Stage 4B
+asked a question the census could not answer — **the second scope gap of exactly
+this shape**, after narrative dependencies produced Stage 3b.
+
+**Requirement:** a census must declare its **matching pattern** alongside its count,
+and the system must **re-test that pattern whenever a later stage depends on it.**
+"N of N complete" without a stated scope is a claim the enumeration cannot support.

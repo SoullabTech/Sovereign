@@ -17,6 +17,13 @@ manuscript is referenced in this record.* **Ch2 CLOSED (10/10).** adjudicated. *
 >
 > **The quotation count is now 128**, not 137: five epigraphs were removed
 > outright and four were reclaimed as prose.
+>
+> **⚠️ SCOPE GAP — found 2026-09-01 during Stage 4B.** This census enumerated
+> **block-level quotations only** (lines beginning `*"`). **Nine inline
+> quotations — embedded mid-sentence, each with an explicit lead-in verb — were
+> never counted or verified.** They are recorded in
+> `STAGE4_QUOTATION_ADJUDICATION.md` and **still owe Stage 2 treatment.** True
+> original population: **146, not 137.**
 
 ## Scope
 
