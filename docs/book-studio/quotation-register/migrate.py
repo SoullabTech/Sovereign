@@ -18,7 +18,7 @@ TOMB = HERE / "tombstones.json"
 ALLOWED = {"provenance_status", "actual_author", "internal_speaker", "work",
            "translator_or_mediator", "rights_status", "bibliography_relationship",
            "family", "editorial_status", "notes", "evidence_location",
-           "provenance_review_state", "attributed_as_note", "recovery_note", "family_role"}
+           "provenance_review_state", "attributed_as_note", "recovery_note", "family_role", "object_class"}
 
 
 def norm(t):
@@ -32,6 +32,9 @@ def main():
     entries = json.loads(SRC.read_text())["entries"]
     for b in sorted(HERE.glob("batch_*.json")):
         entries += json.loads(b.read_text())["entries"]
+    bd = HERE / "boundary_rulings.json"
+    if bd.exists():
+        entries += json.loads(bd.read_text())["entries"]
     report = {"migrated": [], "ambiguous": [], "unmatched": [], "conflicts": []}
 
     for e in entries:
@@ -53,7 +56,9 @@ def main():
                 rec[k] = v
         # Per-axis review state. Migrating a rights class or an editorial ruling
         # does NOT assert that provenance was investigated.
-        if e.get("provenance_status"):
+        if e.get("provenance_review_state") == "ruled_out_of_scope":
+            rec["provenance_review_state"] = "ruled_out_of_scope"
+        elif e.get("provenance_status"):
             rec["provenance_review_state"] = "migrated"
         elif e.get("provenance_review_state"):
             rec["provenance_review_state"] = e["provenance_review_state"]

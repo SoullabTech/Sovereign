@@ -1211,3 +1211,84 @@ composite descendant sitting one chapter apart.
 4. **Adjudicate the complete inline field** — 12 verified, awaiting Stage 4.
 5. **4B proper**, then **4C** — which now inherits three explicit asymmetric-repair
    obligations.
+
+---
+
+# BOUNDARY RULINGS + MIGRATION GAP CLOSURE · 2026-09-01
+
+## The two boundary objects — ruled from context, no source hunting
+
+### L519 → **`AUTHORIAL_VOICED_SPEECH`** · outside the census
+
+> *"Unlike a straight line, **which suggests that** 'if we were good, we would keep
+> growing in a direct and unbroken, upward fashion,' the spiral works in cycles."*
+
+**The quotation marks voice a proposition implied by a position** — the assumption
+the linear model makes — **which the author states in order to reject it.** It is
+attributed to a **view**, not to a person.
+
+**No speaker is claimed and none is missing.** There is nothing to verify, because
+nothing was cited. Outside the attributed-quotation census.
+
+### L1686 → **`UNATTRIBUTED_EXTERNAL_QUOTATION`** · enters the workflow
+
+> *"I think therefore I am" reflects our **collective** existence through **shared**
+> thoughts.*
+
+**The formulaic-language exemption does not apply.** The book does **not** use the
+cogito proverbially — **it reinterprets it**, redirecting Descartes's individualism
+outward into the collective. **That move only lands if the reader knows whose
+position is being turned.** It is genuinely his sentence, quoted verbatim, with the
+attribution absent.
+
+**And it has a paired object.** The book coins its **own counter-formula** later in
+the same chapter — *"I know therefore I am"* — which stays **excluded as authorial
+coinage**, but is now recorded as the **authored response to this ancestor**.
+`fam-cogito`, role `ancestor`.
+
+> **A family can hold a source and the book's answer to it, not only a source and
+> its corruptions.**
+
+## ⚠️ Two migration gaps found while triaging the queue
+
+**"Historical migration complete" was premature by two records.**
+
+**Peter Gabriel L707** and **Leonard Cohen L1211** carried **rights and editorial
+status** from the session control set, and **I treated them as fully handled.** Both
+had **census provenance verdicts that were never migrated.**
+
+**The Cohen verdict is not minor:**
+
+> `VERIFIED VARIANT` — the actual lyric is *"There is a crack, **a crack** in
+> everything / That's how the light gets in"*; **the manuscript drops the
+> repetition.** And **`WRONG SOURCE/WORK`, which changes the rights profile
+> entirely**: the bibliography cites *Selected Poems, 1956–1968* (Viking, 1968), but
+> the line is from **"Anthem," on *The Future* (1992)** — a **song, twenty-four
+> years later.** Not a poem excerpt. **`LIKELY PROTECTED · HIGH`.**
+
+**This also corrects my own earlier claim.** During the speaker sweep I reported the
+Cohen lyric as a **rights reclassification I had noticed** — *"four song lyrics, not
+three."* **The census had already found it, and had found more than I did:** the
+dropped repetition, the wrong work, and the source-form misclassification driving
+the rights change.
+
+> **Fourth instance of the same pattern: I presented as new something the record
+> already held.** The register is what makes that visible each time.
+
+## Standing
+
+| Review state | |
+|---|---|
+| `migrated` | **121** |
+| `not_investigated` | **7** — the verification queue |
+| `ruled_out_of_scope` | **1** |
+| `verdict_not_locatable_in_source` | **1** |
+| **total** | **130** ✅ |
+
+**`GATE PASSED`.** The *"editorially ruled with provenance still open"* note is now
+**0** — both records that produced it are closed.
+
+**The verification queue is 7, not 6:** the six newly discovered inline objects
+**plus Descartes**, which the boundary ruling admitted.
+
+**→ Verify the seven. Then freeze.**

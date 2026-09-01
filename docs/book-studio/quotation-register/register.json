@@ -1,7 +1,7 @@
 {
   "records": [
     {
-      "id": "EA-Q-0222",
+      "id": "EA-Q-0230",
       "occurrence": 1,
       "text": "If you knew how perfect it all is you'd throw your head up at the clouds and laugh.",
       "line_at_build": 47,
@@ -219,7 +219,7 @@
       "notes": "Audit: bibliography cites Thanissaro Bhikkhu (Access to Insight, 1994), whose actual rendering begins 'Now, Kalamas, don't go by reports, by legends...' - materially different from the printed text."
     },
     {
-      "id": "EA-Q-0223",
+      "id": "EA-Q-0231",
       "occurrence": 2,
       "text": "If you knew how perfect it all is you'd throw your head up at the clouds and laugh.",
       "line_at_build": 190,
@@ -477,18 +477,19 @@
       "internal_speaker": null,
       "work": null,
       "translator_or_mediator": null,
-      "provenance_status": null,
-      "provenance_review_state": "not_investigated",
+      "provenance_status": "not_a_provenance_object",
+      "provenance_review_state": "ruled_out_of_scope",
       "rights_review_state": "not_investigated",
       "editorial_review_state": "not_investigated",
-      "evidence_location": null,
+      "evidence_location": "manuscript L519 context",
       "rights_status": null,
       "bibliography_relationship": null,
       "family": null,
       "editorial_status": "unadjudicated",
       "record_state": "confirmed",
       "identity_match_score": 1.0,
-      "notes": null
+      "notes": "RULED FROM CONTEXT: 'Unlike a straight line, WHICH SUGGESTS THAT \"if we were good...\", the spiral works in cycles.' The quotation marks voice a PROPOSITION IMPLIED BY A POSITION - the assumption the linear model makes - which the author states in order to reject it. It is attributed to a VIEW, not to a person. No speaker is claimed and none is missing. Outside the attributed-quotation census.",
+      "object_class": "AUTHORIAL_VOICED_SPEECH"
     },
     {
       "id": "EA-Q-0019",
@@ -640,20 +641,20 @@
       "attribution_state": "attributed",
       "actual_author": "Peter Gabriel",
       "internal_speaker": null,
-      "work": null,
+      "work": "'Growing Up', Up (Real World Records, 2002)",
       "translator_or_mediator": null,
-      "provenance_status": null,
-      "provenance_review_state": "not_investigated",
+      "provenance_status": "verified_exact",
+      "provenance_review_state": "migrated",
       "rights_review_state": "migrated",
       "editorial_review_state": "migrated",
-      "evidence_location": "STAGE4 4A group B",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L713 / Ch9 batch table",
       "rights_status": "song_lyric_high",
-      "bibliography_relationship": null,
+      "bibliography_relationship": "CORRECT",
       "family": "fam-song-lyrics",
       "editorial_status": "EDITORIAL KEEP - RIGHTS HOLD",
       "record_state": "confirmed",
       "identity_match_score": 1.0,
-      "notes": "Song lyric - most restrictive licensing class. Clear or drop the four lyrics as a set."
+      "notes": "All three Gabriel songs identified in the census; no further song identification needed."
     },
     {
       "id": "EA-Q-0025",
@@ -1587,20 +1588,20 @@
       "attribution_state": "attributed",
       "actual_author": "Leonard Cohen",
       "internal_speaker": null,
-      "work": "Anthem",
+      "work": "'Anthem', on The Future (1992)",
       "translator_or_mediator": null,
-      "provenance_status": null,
-      "provenance_review_state": "not_investigated",
+      "provenance_status": "verified_variant",
+      "provenance_review_state": "migrated",
       "rights_review_state": "migrated",
       "editorial_review_state": "not_investigated",
-      "evidence_location": "STAGE4 speaker sweep - rights observation",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L1231",
       "rights_status": "song_lyric_high",
-      "bibliography_relationship": null,
+      "bibliography_relationship": "WRONG SOURCE/WORK - bibliography cites Selected Poems 1956-1968 (Viking, 1968); the line is from a song released twenty-four years later",
       "family": "fam-song-lyrics",
       "editorial_status": "unadjudicated",
       "record_state": "confirmed",
       "identity_match_score": 1.0,
-      "notes": "FOURTH song lyric, never grouped with the Gabriels. Rights must reason from song lyrics as a source form, not from Peter Gabriel as an author set."
+      "notes": "Audit: the actual lyric is 'There is a crack, A CRACK in everything / That's how the light gets in' - the manuscript drops the repetition. SOURCE-FORM MISCLASSIFICATION, and it CHANGES THE RIGHTS PROFILE ENTIRELY: not a 1968 poem excerpt but song lyrics, LIKELY PROTECTED HIGH. This is why I flagged the fourth song lyric during the speaker sweep - the census had already found it, and had found more."
     },
     {
       "id": "EA-Q-0060",
@@ -2035,7 +2036,7 @@
       "notes": "Audit: MISATTRIBUTED, EVOLVED APHORISM / RECOVERABLE ANCESTOR. CLOSED BY AN AUTHORITATIVE SOURCE - the Santayana Edition (Indiana University's critical edition) published 'Citation and the Challenges of Misattribution' specifically on this line, and their editors found no sign of it in his works."
     },
     {
-      "id": "EA-Q-0224",
+      "id": "EA-Q-0232",
       "occurrence": 1,
       "text": "Alone we can do so little; together we can do so much.",
       "line_at_build": 1453,
@@ -2440,7 +2441,7 @@
       "notes": "Audit: UNVERIFIED, UNKNOWN. Shows BOTH instability markers at once - a competing attribution (Hale, 1822-1909, whose death predates the attribution) and no primary source."
     },
     {
-      "id": "EA-Q-0225",
+      "id": "EA-Q-0233",
       "occurrence": 2,
       "text": "Alone we can do so little; together we can do so much.",
       "line_at_build": 1672,
@@ -2538,14 +2539,16 @@
       "provenance_review_state": "not_investigated",
       "rights_review_state": "not_investigated",
       "editorial_review_state": "not_investigated",
-      "evidence_location": null,
+      "evidence_location": "manuscript L1686 context; counter-formula at L1810",
       "rights_status": null,
       "bibliography_relationship": null,
-      "family": null,
+      "family": "fam-cogito",
       "editorial_status": "unadjudicated",
       "record_state": "confirmed",
       "identity_match_score": 1.0,
-      "notes": null
+      "notes": "RULED FROM CONTEXT: enters the provenance workflow. It is genuinely Descartes's sentence, quoted verbatim, with the attribution absent. The formulaic-language exemption does NOT apply, because the book does not use it proverbially - it REINTERPRETS it: 'reflects our COLLECTIVE existence through SHARED thoughts', redirecting Descartes's individualism outward. That move only lands if the reader knows whose position is being turned. PAIRED OBJECT: the book coins its own counter-formula 'I know therefore I am' later in the same chapter - excluded from the census as authorial coinage, but recorded here as the authored response to this ancestor.",
+      "object_class": "UNATTRIBUTED_EXTERNAL_QUOTATION",
+      "family_role": "ancestor"
     },
     {
       "id": "EA-Q-0095",
@@ -4195,8 +4198,8 @@
   ],
   "migration_report": {
     "migrated": [
-      "EA-Q-0222",
-      "EA-Q-0223",
+      "EA-Q-0230",
+      "EA-Q-0231",
       "EA-Q-0113",
       "EA-Q-0055",
       "EA-Q-0082",
@@ -4284,7 +4287,7 @@
       "EA-Q-0073",
       "EA-Q-0074",
       "EA-Q-0075",
-      "EA-Q-0224",
+      "EA-Q-0232",
       "EA-Q-0077",
       "EA-Q-0078",
       "EA-Q-0079",
@@ -4306,7 +4309,7 @@
       "EA-Q-0103",
       "EA-Q-0104",
       "EA-Q-0098",
-      "EA-Q-0225",
+      "EA-Q-0233",
       "EA-Q-0106",
       "EA-Q-0107",
       "EA-Q-0108",
@@ -4323,7 +4326,11 @@
       "EA-Q-0122",
       "EA-Q-0123",
       "EA-Q-0124",
-      "EA-Q-0108"
+      "EA-Q-0108",
+      "EA-Q-0024",
+      "EA-Q-0059",
+      "EA-Q-0018",
+      "EA-Q-0094"
     ],
     "ambiguous": [],
     "unmatched": [],

@@ -1,0 +1,25 @@
+{
+  "_comment": "BOUNDARY RULINGS - object class decided from manuscript context only. No source investigation. Determines what the freeze covers.",
+  "entries": [
+    {
+      "match": "if we were good, we would keep growing",
+      "occurrence": 1,
+      "object_class": "AUTHORIAL_VOICED_SPEECH",
+      "provenance_status": "not_a_provenance_object",
+      "provenance_review_state": "ruled_out_of_scope",
+      "notes": "RULED FROM CONTEXT: 'Unlike a straight line, WHICH SUGGESTS THAT \"if we were good...\", the spiral works in cycles.' The quotation marks voice a PROPOSITION IMPLIED BY A POSITION - the assumption the linear model makes - which the author states in order to reject it. It is attributed to a VIEW, not to a person. No speaker is claimed and none is missing. Outside the attributed-quotation census.",
+      "evidence_location": "manuscript L519 context"
+    },
+    {
+      "match": "I think therefore I am",
+      "occurrence": 1,
+      "object_class": "UNATTRIBUTED_EXTERNAL_QUOTATION",
+      "provenance_status": null,
+      "provenance_review_state": "not_investigated",
+      "family": "fam-cogito",
+      "family_role": "ancestor",
+      "notes": "RULED FROM CONTEXT: enters the provenance workflow. It is genuinely Descartes's sentence, quoted verbatim, with the attribution absent. The formulaic-language exemption does NOT apply, because the book does not use it proverbially - it REINTERPRETS it: 'reflects our COLLECTIVE existence through SHARED thoughts', redirecting Descartes's individualism outward. That move only lands if the reader knows whose position is being turned. PAIRED OBJECT: the book coins its own counter-formula 'I know therefore I am' later in the same chapter - excluded from the census as authorial coinage, but recorded here as the authored response to this ancestor.",
+      "evidence_location": "manuscript L1686 context; counter-formula at L1810"
+    }
+  ]
+}
