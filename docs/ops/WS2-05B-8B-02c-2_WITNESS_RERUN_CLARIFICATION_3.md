@@ -26,24 +26,75 @@ DO-NOT-START state, its migration assumptions, or its witness procedure.
 
 ---
 
-> **DO NOT START THIS RUN YET.** A second Mac Studio session
-> (`session_01Dxk7Q9RFrEPK9W3joK4vPd`) reached **Step 6** before stopping on a failed
-> assertion. It may already have passed Step 3, applied migration 6, and written to the
-> ledger, the schema, and `ask_threads` / `ask_turns`. Its evidence must be extracted and
-> adjudicated first. Launching from this prompt before then would reason from an obsolete
-> database state. Clarification #3's migration-6 premise ("unledgered and absent from
-> schema") is itself one of the things that adjudication must re-confirm.
+> **DO NOT START THIS RUN YET** — but the reason has changed. The original block was
+> *"we do not know what the database holds."* That is now answered: the database was read
+> directly on 2026-09-01 and Steps 2 and 3 are settled from live evidence (below). The
+> remaining block is narrower and real: **nobody knows why `session_01Dxk7Q9RFrEPK9W3joK4vPd`
+> failed its Step-6 assertion.** A fresh run from this prompt would execute Steps 1–5 against
+> an already-satisfied database and arrive at the same unexplained Step 6. Extract that
+> session's Step-6 evidence first.
 
 **Status of the prior runs:**
 
 | Session | Stop | Standing |
 |---|---|---|
-| `session_012vWvD8jt9DucdD28bvs5iF` | Step 2 | `HOLD / INCOMPLETE`. Not superseded, not continued. Its Step 8 block is the record of that run and stands on its own. |
-| `session_01Dxk7Q9RFrEPK9W3joK4vPd` | Step 6 assertion failure | Evidence **not yet extracted**. Blocks this rerun. |
+| `session_012vWvD8jt9DucdD28bvs5iF` | Step 2 | `HOLD / INCOMPLETE`. Not superseded, not continued. Its Step 8 block stands as that run's record, but is **no longer load-bearing** — its census was re-derived from the database directly. |
+| `session_01Dxk7Q9RFrEPK9W3joK4vPd` | Step 6 assertion failure | Its **database effects are now known** (it applied migration 6 at 03:27:09 UTC). Its **Step-6 assertion is still unextracted**, and is the sole remaining blocker. |
 
-**Host requirement (charter, verbatim):** *Mac Studio (local Postgres,
-`maia_consciousness`). **Not** minisforum. **Not** a cloud container.*
-This run must be started **on the Mac Studio**. A cloud session cannot execute it.
+---
+
+## Evidence adjudication — 2026-09-01, read directly from the database
+
+Read-only queries against `maia_consciousness` on the Mac Studio. This supersedes both
+witness transcripts as the source of truth for database state; a transcript is a memory of
+the database, the database is the database.
+
+**Step 2 · six-migration census — COMPLETE**
+
+| # | Migration | Ledger row | Schema object | Verdict |
+|---|---|---|---|---|
+| 1 | `20260830000001_manuscript_draft_sections` | absent | `manuscript_draft_sections` + both draft columns present | unledgered substrate |
+| 2 | `20260830000002_manuscript_structure` | absent | `manuscript_structure_units`, `manuscript_structure_members` present | unledgered substrate |
+| 3 | `20260830000003_manuscript_structure_contiguity` | absent | `manuscript_structure_units_sibling_order` + both contiguity triggers present | unledgered substrate |
+| 4 | `20260830000005_manuscript_structure_proposals` | absent | `manuscript_structure_proposals` present | unledgered substrate |
+| 5 | `20260831000001_structure_proposal_reader_provenance` | absent | `reader_provenance` present **and** freeze function body covers it (`true`) | unledgered substrate |
+| 6 | `20260901000001_ask_threads` | **present**, `applied_at 2026-08-31 23:27:09-04` | `ask_threads`, `ask_turns`, `ask_turns_no_update`, `ask_threads_no_repoint` all present | **already applied · checksum matches · DO NOT RERUN** |
+
+Migration 6 checksum, both sides: `f439254d1cf3190a0963b524fcb01e397d35049ca47b495340a824f26682aca8`.
+No ledger/checksum conflict anywhere. The five absent ledger rows are absent *uniformly*;
+their schema objects are *uniformly* present.
+
+*Inference, not evidence:* the asymmetry is most simply explained by migration 6 going in
+through the migration runner (which records a ledger row) while 1–5 went in by some path
+that did not. Nothing in the database establishes this. Do not carry it as a finding.
+
+**Step 3 · GO — measured, not assumed**
+
+```
+section_addressable_at   2026-08-30 13:13:48-04    NOT NULL   OK
+section_rows             174                       exactly    OK
+round_trip_ok            t                                    OK
+proposal e6cabcc4…       manuscript_id = a3ae67fd…            OK
+```
+
+Draft `48ccfc89-23f8-4c73-bc58-4d28441be9ac`, 380,343 content chars, revision 6,
+`section_conversion_version` 25. Proposal `review_revision` 0, `reviewed_at` and
+`adopted_at` both null, `reader_provenance` present. **All four charter GO conditions met.**
+
+**Who applied migration 6.** `03:27:09Z` falls inside `01Dxk7Q9`'s window
+(03:24:31Z–03:38:01Z) and after `012vWvD8` had already stopped (03:21:07Z). `01Dx` applied
+it, three minutes into its run. Since the charter permits that only under a Step-3 GO, `01Dx`
+very likely passed Step 3 — *inference from the charter, not evidence; the transcript must
+confirm it.*
+
+**`ask_threads` and `ask_turns` are both empty (0 rows).** Either no thread was ever created,
+or one was created and removed under the Step-6 whole-thread `DELETE` the charter authorizes.
+Row counts cannot separate these. **UNKNOWN** — only the transcript settles it.
+
+**Open lead, not a finding.** The frozen proposal carries `question_count = 0`. If the
+Step-5/6 witness asserts that a held question is asked, or that a question mark is reachable,
+it would fail against a proposal with no questions. This fits the Step-6 failure; there is no
+evidence for it. Read `01Dx` with it in mind, do not assume it.
 
 ---
 
@@ -68,21 +119,32 @@ file   docs/ops/WS2-05B-8B-02c-2_LOCAL_RUNTIME_WITNESS_CHARTER.md
 
 Execute the charter as written, with one addition.
 
-### Execution Clarification #3
+### Execution Clarification #3 — as amended 2026-09-01
 
-For this Mac Studio development database only, migrations 1–5 are accepted as
-pre-existing, behaviorally witnessed substrate despite missing ledger rows. Record
-the ledger anomaly, but **do not reapply those migrations and do not backfill their
-ledger entries.**
+**First paragraph — SUPPORTED by the census, stands unchanged:**
 
-Migration 6 (`20260901000001_ask_threads.sql`) remains unledgered and absent from
-schema. **Proceed to Step 3 before applying it.**
+For this Mac Studio development database only, migrations 1–5 are accepted as pre-existing,
+behaviourally witnessed substrate despite missing ledger rows. Record the ledger anomaly, but
+do not reapply those migrations and do not backfill their ledger entries.
 
-### Immediate goal — Step 3
+**Second paragraph — CONTRADICTED by the census, WITHDRAWN.** It read: *"Migration 6 remains
+unledgered and absent from schema. Proceed to Step 3 before applying it."* Both halves are
+false. Migration 6 is ledgered, present, and checksum-clean; Step 3 already passes. It is
+replaced by:
 
-Step 3 is the first gate this lane must actually measure. Measure it, then branch on the
-verdict — **Step-3 STOP halts the lane; Step-3 GO continues into migration 6 and the
-witness.** Do not halt on a GO.
+> Migration 6 is already applied, with a matching checksum. Under the Step-2 matrix this is
+> *"ledger row + matching checksum → already applied; DO NOT RERUN."* Nothing in the six-row
+> matrix is eligible to apply. **Step 4 has nothing to do.**
+
+**Consequence for the shape of any fresh run.** Steps 2 and 3 are settled. A rerun re-verifies
+them cheaply (read-only, ten seconds) and must **not** treat re-measurement as new evidence if
+it agrees. The substantive work begins at Step 5.
+
+### Step 3 — already measured; re-verify only
+
+Step 3 was measured against the live database on 2026-09-01 and returned **GO**. A fresh run
+re-runs these read-only probes to confirm nothing drifted, and continues. **Agreement is not a
+new finding.** Disagreement is a real one: report it and stop.
 
 Probes, all scoped to `$MANUSCRIPT_ID`:
 
