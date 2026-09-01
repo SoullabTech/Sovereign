@@ -114,3 +114,100 @@ adjudicate seam → converge into 02c → migrate maiaReader (prove equivalence)
 → migrate askReader (prove equivalence) → check:no-direct-anthropic GREEN there
 → apply migrations → FIRST real persisted Ask conversation
 ```
+
+---
+
+# CLOSEOUT — three rulings applied
+
+Applied to `3b098666`. Neither reader migrated; no Writer's Studio file touched;
+no paid reading run. Each ruling has a falsifying test and was probed by
+reverting it, all reverted.
+
+## 1 · Mode policy — the caller does not choose
+
+```ts
+runStructured(request)          // production: one argument, no mode
+```
+
+Policy is resolved in `lib/ai/structured/policy.ts` from platform configuration:
+
+```
+MAIA_INFERENCE_MODE unset   → primary       (zero behaviour change for today's callers)
+primary / sovereign / local_only → passed through
+anything else               → invalid_inference_mode · REFUSED, never defaulted
+```
+
+**Unset means primary, for structured requests only.** The plain-text seam treats
+unset as "skip the sovereign path — zero behaviour change"; for the two
+structured callers that exist today the equivalent of zero behaviour change *is*
+a pinned Anthropic call with no fallback, because that is exactly what they do
+now. So the governance correction lands **only where someone has explicitly asked
+for it**, and an explicitly sovereign deployment becomes actually sovereign.
+
+**An invalid mode refuses rather than defaulting** — defaulting a typo would
+silently select the most permissive policy and turn a sovereign deployment into a
+primary one.
+
+The test seam is `__runStructuredWithPolicyForTest`, named so a production caller
+reaching for it is visible in review. `runStructured.length === 1` is asserted.
+
+## 2 · Transport is not semantics
+
+`stream` is **removed** from `StructuredRequest`. In its place, a provider-neutral
+execution requirement:
+
+```ts
+execution?: { completion: 'ordinary' | 'long-running' }   // omitted means ordinary
+```
+
+The Anthropic adapter maps it, and the mapping is its own business:
+
+```
+ordinary      → messages.create()
+long-running  → messages.stream(...).finalMessage()
+```
+
+`maiaReader` is `long-running`; Ask is ordinary (omits the field entirely). Proved:
+the requirement never appears in the wire params, and both mechanisms return an
+**identical** neutral `StructuredResult` — asserted by comparing two runs of the
+same reply body across the two paths.
+
+The distinction matters because the reader does not consume a stream as part of
+its cognition; it consumes one completed message. A future provider may honour
+the same requirement by long-polling or by simply not having the timeout.
+
+## 3 · Gate evidence discipline — recorded, checker unchanged
+
+`docs/ops/GATE_EVIDENCE_DISCIPLINE.md`:
+
+> New source files must be tracked before a repo-wide gate's result counts as
+> evidence about them.
+
+The checker was **not** modified: `git ls-files` is the right corpus, and
+scanning untracked files would make the guard depend on working-tree litter. The
+defect was in the procedure for producing evidence.
+
+The doc also records the generalisation, which is the part worth keeping: *a gate
+you have not seen fail is a gate you have not verified is watching* — the absence
+of a probe failure was the finding here, not a passing check.
+
+## Closeout gates — all run with new source files TRACKED
+
+```
+lib/ai/structured                43 passed (24 equivalence · 9 mode policy · 10 isolation)
+check:no-direct-anthropic        GREEN · approved: 2 · probed RED by delisting
+typecheck no-regression          PASS · baseline not re-recorded
+modelService · sovereignRouter · claudeClient · types   byte-identical to canonical
+changed paths                    lib/ai/structured/** · allowlist · two docs
+```
+
+Probes, all reverted: caller allowed to name the mode again → 2 fail; invalid
+mode defaulted to primary → 2 fail; `long-running` ignored → 2 fail; adapter
+delisted from the allowlist → guard RED naming it.
+
+## Preserved, unchanged by this closeout
+
+Pinned caller model · exact system and messages · exact tool schema and
+`tool_choice` · exact max-token limits · missing tool call detectable ·
+role-preserving Ask history · `tools` key **absent** for Ask · `stop_reason` and
+usage · structured inference non-fallbackable · plain-text stack byte-identical.

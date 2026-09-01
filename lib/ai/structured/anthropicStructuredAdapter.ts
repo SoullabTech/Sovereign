@@ -87,10 +87,13 @@ export function anthropicStructuredProvider(
       const params = toAnthropicParams(req);
       const t0 = Date.now();
 
-      /* STREAMING IS PART OF THE REQUEST'S MEANING, not a transport detail this
-         adapter may choose: for a long reading it is the difference between an
-         answer and a timeout. Consumed whole either way. */
-      const message = req.stream
+      /* THE REQUIREMENT IS NEUTRAL; THE MECHANISM IS THIS ADAPTER'S CHOICE.
+         The caller asks that a long completion not be cut off. For Anthropic
+         today that means streaming and taking the final message — a different
+         provider may honour the same requirement by long-polling a job or by
+         simply not having the timeout. Consumed whole either way, so the
+         neutral result is identical. */
+      const message = req.execution?.completion === 'long-running'
         ? await (client.messages.stream(params as never)).finalMessage()
         : await client.messages.create(params as never) as Anthropic.Message;
 

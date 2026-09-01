@@ -19,9 +19,15 @@
  *   sovereign / local_only → structured_inference_unavailable, until a local
  *                            provider exists that can honour the same contract
  *
- * NO MODEL POLICY RUNS HERE. `selectClaudeModel` is deliberately not reachable:
- * the caller pinned the model, and the seam's job is to send it, not to have an
- * opinion about it.
+ * THE CALLER DOES NOT NAME THE MODE. `runStructured` takes the request and
+ * nothing else; the mode is resolved from platform configuration by
+ * `resolveStructuredMode`. A cognitive surface that could pass `primary` could
+ * opt itself out of sovereign policy, which is the boundary this seam exists to
+ * hold. The test seam below is deliberately named so it cannot be mistaken for
+ * the production API.
+ *
+ * NO MODEL POLICY RUNS HERE. `selectClaudeModel` is unreachable: the caller
+ * pinned the model, and the seam's job is to send it, not to have an opinion.
  *
  * NO SDK IMPORT. The Anthropic adapter is loaded lazily and only in the mode
  * that may use it, so this module names no vendor and no vendor code is pulled
@@ -29,6 +35,7 @@
  */
 
 import type { InferenceMode } from '../types';
+import { resolveStructuredMode } from './policy';
 import type {
   StructuredOutcome, StructuredProvider, StructuredRequest,
 } from './types';
@@ -51,10 +58,33 @@ async function defaultProvider(): Promise<StructuredProvider> {
   return anthropicStructuredProvider();
 }
 
+/**
+ * THE PRODUCTION API. One argument: what to ask. Policy is not the caller's.
+ */
 export async function runStructured(
   req: StructuredRequest,
+): Promise<StructuredOutcome> {
+  const policy = resolveStructuredMode();
+  if (!policy.ok) {
+    return { ok: false, refusal: policy.refusal, detail: policy.detail };
+  }
+  return route(req, policy.mode);
+}
+
+/**
+ * Test-only seam. Named so it cannot be mistaken for the production API, and so
+ * a production caller reaching for it is visible in review.
+ */
+export async function __runStructuredWithPolicyForTest(
+  req: StructuredRequest,
+  override: { mode: InferenceMode; provider?: StructuredProvider },
+): Promise<StructuredOutcome> {
+  return route(req, override.mode, override.provider);
+}
+
+async function route(
+  req: StructuredRequest,
   mode: InferenceMode,
-  /** Injected in tests, and the seam for a future local structured provider. */
   provider?: StructuredProvider,
 ): Promise<StructuredOutcome> {
   if (!EXTERNAL_AUTHORIZED.includes(mode)) {

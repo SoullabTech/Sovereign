@@ -51,15 +51,29 @@ export interface StructuredRequest {
   tools?: StructuredTool[];
   toolChoice?: StructuredToolChoice;
   /**
-   * Streamed and consumed whole.
+   * HOW LONG THE COMPLETION MAY TAKE — an execution requirement, not a request.
    *
-   * NOT A PERFORMANCE FLAG. A long reading with adaptive thinking can outrun a
-   * non-streaming HTTP timeout, so for one caller streaming is the difference
-   * between a reading and an error. It is part of the request's meaning and is
-   * therefore expressed here rather than decided for the caller.
+   * SEPARATED FROM THE SEMANTIC CONTRACT DELIBERATELY. An earlier cut carried
+   * `stream: true` here, which mistook one vendor's transport for the meaning of
+   * the inference: the caller that needs it does not consume a stream as part of
+   * its cognition, it consumes one completed message. What it actually requires
+   * is that a long completion not be cut off — and a future provider might
+   * satisfy that by streaming, by long-polling a job, or by simply not having
+   * the same timeout.
+   *
+   * So the neutral vocabulary states the REQUIREMENT and each adapter chooses
+   * its own mechanism. Omitted means `ordinary`, which is the common case.
    */
-  stream?: boolean;
+  execution?: { completion: CompletionRequirement };
 }
+
+/**
+ * `ordinary`     — a normal completion.
+ * `long-running` — may take long enough that an ordinary request would be cut
+ *                  off. For one caller this is the difference between a reading
+ *                  and a timeout, so it is part of what it asked for.
+ */
+export type CompletionRequirement = 'ordinary' | 'long-running';
 
 export type StructuredBlock =
   | { type: 'text'; text: string }
@@ -93,6 +107,12 @@ export type StructuredRefusal =
   | 'structured_inference_unavailable'
   /** The authorized provider failed. NOT a cue to try something else. */
   | 'provider_unavailable'
+  /**
+   * The deployment's inference mode is not a mode. Refused rather than defaulted,
+   * because defaulting a typo would silently pick the most permissive policy and
+   * turn a sovereign deployment into a primary one.
+   */
+  | 'invalid_inference_mode'
   | 'not_configured';
 
 export type StructuredOutcome =

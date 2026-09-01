@@ -33,7 +33,7 @@
  */
 
 import { anthropicStructuredProvider, toAnthropicParams } from '../anthropicStructuredAdapter';
-import { runStructured } from '../router';
+import { __runStructuredWithPolicyForTest as routeForTest } from '../router';
 import type { StructuredRequest } from '../types';
 
 /** Captures exactly what the adapter would send, and by which method. */
@@ -77,7 +77,7 @@ const readerRequest: StructuredRequest = {
   maxTokens: 32_000,
   tools: READER_TOOLS,
   toolChoice: { type: 'any' },
-  stream: true,
+  execution: { completion: 'long-running' },
 };
 
 const askRequest: StructuredRequest = {
@@ -128,7 +128,7 @@ describe('maiaReader request equivalence', () => {
     expect(params.messages).toEqual([{ role: 'user', content: 'BUILT REQUEST' }]);
   });
 
-  it('streams and consumes the whole message, as the reader does', async () => {
+  it('honours long-running by streaming and taking the final message', async () => {
     const { client, seen } = capturingClient();
     await anthropicStructuredProvider({ client }).execute(readerRequest);
     expect(seen).toHaveLength(1);
@@ -183,7 +183,7 @@ describe('Ask MAIA request equivalence', () => {
     expect(params.max_tokens).toBe(1200);
   });
 
-  it('does not stream, as Ask does not', async () => {
+  it('uses an ordinary completion when none is required', async () => {
     const { client, seen } = capturingClient();
     await anthropicStructuredProvider({ client }).execute(askRequest);
     expect(seen[0].method).toBe('create');
@@ -202,12 +202,12 @@ describe('the ruling: structured inference is non-fallbackable', () => {
     execute: async () => { throw new Error('529 overloaded'); } };
 
   it('a provider failure REFUSES and calls nothing else', async () => {
-    const r = await runStructured(readerRequest, 'primary', failing);
+    const r = await routeForTest(readerRequest, { mode: 'primary', provider: failing });
     expect(r).toEqual({ ok: false, refusal: 'provider_unavailable', detail: '529 overloaded' });
   });
 
   it('refuses rather than returning a degraded or templated answer', async () => {
-    const r = await runStructured(askRequest, 'primary', failing);
+    const r = await routeForTest(askRequest, { mode: 'primary', provider: failing });
     expect(r.ok).toBe(false);
     expect('result' in r).toBe(false);
   });
@@ -217,7 +217,7 @@ describe('the ruling: structured inference is non-fallbackable', () => {
       /* A provider IS supplied, to prove the mode refuses before reaching it —
          the mode is honoured, not merely unserved. */
       const spy = { name: 'anthropic' as const, execute: jest.fn() };
-      const r = await runStructured(readerRequest, mode, spy);
+      const r = await routeForTest(readerRequest, { mode, provider: spy });
       expect(r).toEqual({
         ok: false,
         refusal: 'structured_inference_unavailable',
@@ -230,9 +230,38 @@ describe('the ruling: structured inference is non-fallbackable', () => {
     const { client } = capturingClient({
       content: [{ type: 'tool_use', id: 't', name: 'propose_structure', input: { form: 'flat' } }],
     });
-    const r = await runStructured(readerRequest, 'primary', anthropicStructuredProvider({ client }));
+    const r = await routeForTest(readerRequest,
+      { mode: 'primary', provider: anthropicStructuredProvider({ client }) });
     expect(r.ok).toBe(true);
     expect(r.ok && r.result.content[0]).toEqual(
       { type: 'tool_use', id: 't', name: 'propose_structure', input: { form: 'flat' } });
+  });
+});
+
+describe('transport is the adapter\'s choice; the requirement is the caller\'s', () => {
+  it('the semantic request carries no vendor transport flag', () => {
+    /* `stream` was removed from StructuredRequest: it named one provider's
+       mechanism, not the meaning of the inference. */
+    expect('stream' in readerRequest).toBe(false);
+    expect(toAnthropicParams(readerRequest).stream).toBeUndefined();
+  });
+
+  it('a long-running requirement never leaks into the wire params', () => {
+    /* The requirement selects the METHOD; it is not itself sent. */
+    expect(Object.keys(toAnthropicParams(readerRequest))).not.toContain('execution');
+  });
+
+  it('the two mechanisms return the identical neutral result shape', async () => {
+    const body = { content: [{ type: 'text', text: 'same' }],
+      stop_reason: 'end_turn', usage: { input_tokens: 3, output_tokens: 4 } };
+    const a = capturingClient(body);
+    const b = capturingClient(body);
+    const long = await anthropicStructuredProvider({ client: a.client })
+      .execute({ ...askRequest, execution: { completion: 'long-running' } });
+    const ord = await anthropicStructuredProvider({ client: b.client }).execute(askRequest);
+    expect(a.seen[0].method).toBe('stream');
+    expect(b.seen[0].method).toBe('create');
+    expect({ ...long, provenance: { ...long.provenance, latencyMs: 0 } })
+      .toEqual({ ...ord, provenance: { ...ord.provenance, latencyMs: 0 } });
   });
 });
