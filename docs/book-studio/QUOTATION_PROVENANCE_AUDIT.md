@@ -2,7 +2,7 @@
 
 **Source of record:** `docs/book-studio/ELEMENTAL_ALCHEMY_FROM_ORIGINAL_FULL.md`
 **Opened:** 2026-09-01, after Chapter 10 closed developmental adjudication.
-**Status:** IN PROGRESS — 85 of 137 adjudicated. **Chapter 5 CLOSED (30/30). Chapter 8 CLOSED (23/23).**
+**Status:** IN PROGRESS — 87 of 137 adjudicated. **Chapter 5 CLOSED (30/30). Chapter 8 CLOSED (23/23).**
 
 ## Scope
 
@@ -1844,7 +1844,7 @@ Eight independent instances across three chapters. No longer incidental.
 
 **Still findings-only. No repair batch. No bibliography reconstruction.**
 
-**Chapter 7 — Earth: 11 of 16 in progress. Next after: Chapter 9 — Aether (12), then Chapter 9 — Aether (12)**, completing the
+**Chapter 7 — Earth: 13 of 16 in progress. Next after: Chapter 9 — Aether (12), then Chapter 9 — Aether (12)**, completing the
 five-element provenance picture before the lower-volume chapters.
 
 
@@ -2230,6 +2230,36 @@ intermediary whose name appears nowhere — but three different repairs.
 public domain; **the familiar modern English wording is not automatically so.**
 Short aphoristic sentence, so `STANDARD`, not `HIGH`.
 
+**L1391 · Ramana Maharshi — "Your own self-realization is the greatest service you can render the world."**
+`UNVERIFIED — source lead unresolved`. Attribution consistent across sources; one
+places it in "Teachings of Bhagavan Sri Ramana Maharshi in His Own Words," the
+last chapter of *Ramana Smriti*. The Ch7 bibliography cites ***Be As You Are***
+(ed. David Godman, Penguin, 1985) with **no confirmation the line is there** —
+**possible `WRONG SOURCE/WORK`**.
+**Also a `MEDIATED TRANSLATION` item:** Ramana taught in Tamil; his words reach
+English through devotee transcription and translation. The English layer must be
+resolved, not assumed.
+**Rights: `TERM UNCERTAIN` · `STANDARD`** — depends which English source.
+
+**L1595 · Martin Luther King Jr. — "The function of education is to teach one to think intensively and to think critically… Intelligence plus character—that is the goal of true education."**
+**`VERIFIED EXACT`.** "The Purpose of Education," ***Morehouse College Maroon
+Tiger*, 1947** — confirmed against the **Martin Luther King, Jr. Research and
+Education Institute at Stanford** (the King Papers), the authoritative archive.
+
+**Bibliography exact and correct.** This is the audit's citation exemplar, and it
+now verifies at the quotation level too — apparatus and quotation both sound, the
+only item so far where that is fully established.
+
+**Rights: `TERM UNCERTAIN` · `LEGAL REVIEW`** — the audit's **first `LEGAL
+REVIEW` flag**, and it is deliberate. The extract is short, but the King estate's
+enforcement posture toward his writings is well documented and distinctive, which
+makes ordinary short-quotation triage inappropriate here. This is a question for
+publication counsel, not for the census.
+
+> **Second confirmation of the Water lesson, and a sharper one: the audit's
+> best-sourced, best-cited item is also the one most likely to need legal
+> attention.** Verification and publication-readiness are orthogonal.
+
 ### Chapter 7 bibliography — three findings and one exemplar
 
 **Third `SPURIOUS SUPPORT`.** "Santayana, George. *The Sense of Beauty.*
@@ -2294,6 +2324,7 @@ resolving an item's source metadata does not change the count.
 | Mary Oliver (L872) | `LIKELY PROTECTED` | `HIGH` |
 | Bear Heart (L926) — paragraph-length | `LIKELY PROTECTED` | `HIGH` |
 | Pema Chödrön (L1185) — full paragraph, ~75 words | `LIKELY PROTECTED` | `HIGH` |
+| Martin Luther King Jr. (L1595) | `TERM UNCERTAIN` | **`LEGAL REVIEW`** |
 | Coleman Barks / Rumi (L1666) — verbatim © 1995 | `LIKELY PROTECTED` | `HIGH` |
 | Dery Dyer (L1696) | `LIKELY PROTECTED` | `STANDARD` |
 | Leonard Cohen, "Anthem" (L1231) — lyrics | `LIKELY PROTECTED` | `HIGH` |
