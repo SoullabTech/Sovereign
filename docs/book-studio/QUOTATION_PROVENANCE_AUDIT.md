@@ -2,7 +2,10 @@
 
 **Source of record:** `docs/book-studio/ELEMENTAL_ALCHEMY_FROM_ORIGINAL_FULL.md`
 **Opened:** 2026-09-01, after Chapter 10 closed developmental adjudication.
-**Status:** IN PROGRESS — 134 of 137. **Ch2 CLOSED (10/10).** adjudicated. **Chapter 5 CLOSED (30/30). Chapter 8 CLOSED (23/23).**
+**Status: ✅ ATTRIBUTED QUOTATION PROVENANCE CENSUS — 137 / 137 COMPLETE.**
+
+*Verified by enumeration: every one of the 137 epigraph lines in the canonical
+manuscript is referenced in this record.* **Ch2 CLOSED (10/10).** adjudicated. **Chapter 5 CLOSED (30/30). Chapter 8 CLOSED (23/23).**
 
 ## Scope
 
@@ -3881,6 +3884,54 @@ this book. That **strengthens** the L1736 lead. **It does not close it:** an
 author having one aphorism in a work does not place another there. L1736 still
 requires its own check against the *Sadhana* text — which is freely available on
 Wikisource, making it directly resolvable.
+
+
+### Final batch — tranche 10: the last two
+
+**L677 · Ch4 · Eckhart Tolle — "Awareness is the greatest agent for change."**
+**`VERIFIED`.** Attested on **Tolle's own official channels** — his X account, the
+Eckhart Tolle Foundation, and official Facebook — which is the quoted-author's-
+channel evidence class. Goodreads places it in *A New Earth*; the official
+channels carry it **without a book citation**, so it may be a spoken/teaching line
+rather than a book passage. **Book placement unconfirmed; attribution sound.**
+**Rights: `PROTECTABILITY UNCERTAIN` · `STANDARD`.**
+*Both Tolle items are now verified (L938 Ch6, L677 Ch4) — an author set that does
+not split.*
+
+**L2184 · Ch10 · "As within, so without. As above, so below." — *Hermetic Principle***
+
+**`COMPOSITE ATTRIBUTION` — third confirmed instance** · also
+`SOURCE-FORM MISCLASSIFICATION`.
+
+**The two halves have different origins, separated by roughly eleven centuries:**
+
+| | Origin |
+|---|---|
+| **"As above, so below"** | popular modern paraphrase of the **Emerald Tablet's second verse** — "That which is above is like to that which is below…" — from an Arabic source of the late 8th / early 9th century |
+| **"As within, so without"** | ***The Kybalion*** (**1908**), published pseudonymously by "the Three Initiates" — a New Thought synthesis that *claims* to transmit Hermes Trismegistus |
+
+**The "Hermetic Principle" label fuses an ancient axiom with a 1908 extension
+under one traditional-sounding attribution.** The Kybalion's self-presentation as
+ancient Hermeticism is precisely what scholarship disputes — so adopting its
+framing reproduces the laundering rather than reporting it.
+
+**Note the composite mechanism differs from the other two.** Socrates/Solomon and
+Dickinson both fused *authentic source + modern gloss*. This fuses *ancient
+source + modern text that claims ancient authority* — a related but distinct
+route to the same defect.
+
+**Rights: `PUBLIC DOMAIN` · `NONE`** — both components (Emerald Tablet; Kybalion
+1908).
+
+#### The manuscript already contains its own correct version
+
+**L1893 (Ch9)** quotes the Emerald Tablet **accurately and without the Kybalion
+extension**: "What is above is like what is below, and what is below is like what
+is above" — attributed to **"The Emerald Tablet."**
+
+> **The book holds both the accurate ancient form and the composite modern-extended
+> form, one chapter apart.** The same shape as the Barks case, where the correct
+> labelling and the failure both appear in the manuscript's own hand.
 
 
 ---
