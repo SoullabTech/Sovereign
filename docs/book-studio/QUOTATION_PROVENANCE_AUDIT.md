@@ -2,7 +2,7 @@
 
 **Source of record:** `docs/book-studio/ELEMENTAL_ALCHEMY_FROM_ORIGINAL_FULL.md`
 **Opened:** 2026-09-01, after Chapter 10 closed developmental adjudication.
-**Status:** IN PROGRESS — 72 of 137 adjudicated. **Chapter 5 CLOSED (30/30). Chapter 8 CLOSED (23/23).**
+**Status:** IN PROGRESS — 76 of 137 adjudicated. **Chapter 5 CLOSED (30/30). Chapter 8 CLOSED (23/23).**
 
 ## Scope
 
@@ -1729,6 +1729,83 @@ the author, an editor, a model, or an earlier assembly process.
 > **The Chapter 5 question remains: where did the language originate, and when and
 > how did the external attribution enter?** — not "why didn't the author label it
 > correctly?" 
+
+### Chapter 6 — final tranche
+
+**L1137 · Martha Nussbaum** — `VERIFIED VARIANT`. *Upheavals of Thought: The
+Intelligence of Emotions* (Cambridge UP, 2001). Bibliography correct. Published
+text reads "reasoning creature, **they are** parts"; the manuscript has
+"creature; **they are also** parts". Minor variant.
+**Rights: `PROTECTABILITY UNCERTAIN` · `STANDARD`.**
+
+**L1221 · Shakti Gawain** — `VERIFIED` wording, **`WRONG SOURCE/WORK`**. The line
+is from ***Living in the Light*** (New World Library), p. 217 — **not**
+*Creative Visualization*, which the Ch6 bibliography cites. *Creative
+Visualization* (1978) is Gawain's best-known book. **Famous-work substitution
+again.**
+
+**L1283 · Thomas Fuller** — `VERIFIED TO GNOMOLOGIA (1732) / COMPILED PROVERB`.
+Bibliography correct. Two qualifications, both in the Aesop/Laozi family:
+- ***Gnomologia* is a compilation** — "Adagies and Proverbs; wise sentences and
+  witty sayings, ancient and modern, foreign and British." Fuller **collected**
+  this proverb; he did not compose it. A Scottish variant exists ("We'll never
+  know the worth of water till the well goes dry").
+- **There are two Thomas Fullers** — 1608–1661 (*Worthies of England*) and
+  1654–1734 (*Gnomologia*) — and sources disagree about which. The bibliography's
+  1732 date correctly implies the second.
+**Rights: `PUBLIC DOMAIN` · `NONE`.** Fifth public-domain classification.
+
+---
+
+## Chapter 6 CLOSED — and Water is the best-sourced chapter
+
+| Verdict | Ch5 Fire (30) | Ch6 Water (19) | Ch8 Air (23) |
+|---|--:|--:|--:|
+| `MISATTRIBUTED` | 3 — 10% | 2 — 11% | 4 — 17% |
+| `VERIFIED` exact + variant | 10 — 33% | **9 — 47%** | 4 — 17% |
+| `PARAPHRASE/ADAPTED` | 4 — 13% | 3 — 16% | 2 — 9% |
+| `UNVERIFIED` | 13 — 43% | **5 — 26%** | 13 — 57% |
+
+Water has the **highest verification rate and the lowest unverified rate** of the
+three censused chapters. Its failures are also more *tractable*: two
+misattributions, one of which (Zantamata) is the audit's only clean
+reattribution candidate.
+
+### Replication verdict across three chapters, 76 quotations
+
+**Attribution hardening does NOT replicate. Fire remains unique.**
+
+| | Internal-origin candidates |
+|---|--:|
+| **Ch5 Fire** | **4** |
+| Ch6 Water | **0** |
+| Ch8 Air | **0** |
+
+Every unverified item in Water resolved to external circulation: "Prasad Mahes"
+circulates widely on social media, Lao Tzu is ancient, Thich Nhat Hanh is
+verified to the author through his own community's channel, Pollan is placed in
+a real book, Aristotle circulates independently. **No Water item survived the
+external-circulation search with positive local-origin evidence remaining.**
+
+Two chapters have now been entered specifically to test the Fire phenomenon, and
+neither reproduced it.
+
+> **Attribution hardening is a Chapter 5 phenomenon.** It is not the general
+> explanation for the book's quotation problems, and it must be adjudicated
+> separately from them — a compositional/authorship question, not a transmission
+> question.
+
+### Famous-work substitution — eight instances across three chapters
+
+Thoreau (*Walden* ← *Maine Woods*) · Shakespeare (*Part 2* ← *Part 1*) · Weil
+(*Waiting for God* ← *Gravity and Grace*) · Angelou (*Caged Bird* ← spoken) ·
+Mother Teresa (*A Simple Path* ← *No Greater Love*) · Cohen (*Selected Poems* ←
+"Anthem") · Gawain (*Creative Visualization* ← *Living in the Light*) · Tagore
+(*The Home and the World* ← probably *Sadhana*).
+
+**In every case the bibliography names the author's better-known work.** This is
+now the audit's most consistent single finding, and the one most invisible to any
+check that does not verify at the quotation level.
 
 ---
 
