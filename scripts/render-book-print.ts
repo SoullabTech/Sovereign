@@ -29,7 +29,12 @@ import { pathToFileURL } from 'node:url';
 import { renderHtmlToPdf } from '../lib/manuscript/render/pagedPdf';
 
 const REPO_ROOT = process.cwd();
-const MD_PATH = path.join(REPO_ROOT, 'docs/book-studio/ELEMENTAL_ALCHEMY_FROM_ORIGINAL_FULL.md');
+// Default source is the canonical Second Edition manuscript. The interim
+// current-edition production file is rendered by pointing BOOK_MD at
+// ELEMENTAL_ALCHEMY_CURRENT_EDITION.md, so both editions render through the
+// identical pipeline, CSS, and trim - the only variable is the manuscript.
+const MD_PATH = path.join(REPO_ROOT,
+  process.env.BOOK_MD ?? 'docs/book-studio/ELEMENTAL_ALCHEMY_FROM_ORIGINAL_FULL.md');
 const CSS_PATH = path.join(REPO_ROOT, 'lib/manuscript/render/print-book.css');
 const OUT_DIR = path.join(REPO_ROOT, 'exports/elemental-alchemy');
 const VERSION = process.argv[2] ?? 'v1';
