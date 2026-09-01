@@ -2,7 +2,7 @@
 
 **Source of record:** `docs/book-studio/ELEMENTAL_ALCHEMY_FROM_ORIGINAL_FULL.md`
 **Opened:** 2026-09-01, after Chapter 10 closed developmental adjudication.
-**Status:** IN PROGRESS — 53 of 137 adjudicated. **Chapter 5 CLOSED (30/30).** Chapter 8: 17 of 23.
+**Status:** IN PROGRESS — 55 of 137 adjudicated. **Chapter 5 CLOSED (30/30).** Chapter 8: 19 of 23.
 
 ## Scope
 
@@ -928,10 +928,10 @@ for either line.
   self-published is different from nonexistent.* Verify the exact manuscript
   wording against the book or Bennett's own publication before ruling.
 
-### Chapter 8 — still open (6 of 23)
+### Chapter 8 — still open (4 of 23)
 
-L1690 Wayne Teasdale · L1714 Rachel Carson · L1736 Tagore · L1746 William Arthur
-Ward · L1790 Terence McKenna · L1828 Roy T. Bennett.
+L1736 Tagore · L1746 William Arthur Ward · L1790 Terence McKenna · L1828 Roy T.
+Bennett.
 
 ### Chapter 8 — third tranche: the bibliography-as-lead test, run both ways
 
@@ -1071,6 +1071,60 @@ invert it.
 public-domain classification.*
 **`MISSING`** — no Shaw entry in the Ch8 bibliography; *Man and Superman* is the
 correct one.
+
+**L1690 · Wayne Teasdale — "Spiritual maturity is not about pursuing salvation alone; it is about contributing to the world…"**
+`UNVERIFIED — source lead unresolved`. Teasdale is a real author and the thought
+matches his interspiritual, engaged-monastic thesis exactly. Not located in
+either major work. Proposed editions: ***A Monk in the World: Cultivating a
+Spiritual Life*** (New World Library, 2002) — which the Ch8 bibliography cites —
+and ***The Mystic Heart*** (New World Library, 1999).
+**Rights: `PROTECTABILITY UNCERTAIN` · `STANDARD`.**
+*Note:* Teasdale is quoted again at **L2024, the Chapter 10 epigraph**. Per the
+clustering rule, source that instance independently before considering the pair.
+
+**L1714 · Rachel Carson — "The human race is challenged more than ever before to demonstrate our mastery, not over nature but of ourselves."**
+`PARAPHRASE/ADAPTED` · pattern `EVOLVED APHORISM / RECOVERABLE ANCESTOR`.
+
+A documented Carson original exists, recorded in **Paul Brooks, *The House of
+Life: Rachel Carson at Work* (1972)**:
+
+> "Now I truly believe that we in this generation must come to terms with nature,
+> and I think we're challenged, as mankind has never been challenged before, to
+> prove our maturity and our mastery, not **of** nature but of ourselves."
+
+The manuscript carries a compressed later form, and shifts "not **of** nature" to
+"not **over** nature". Quote sites place the manuscript's wording at *Silent
+Spring* p. 51; that cannot close the finding, and the bibliography's *Silent
+Spring* entry needs an edition check — this may be `WRONG SOURCE/WORK`.
+**Rights: `PROTECTABILITY UNCERTAIN` · `STANDARD`.**
+
+### Taxonomy sharpening — patterns 2 and 5 can both have same-author ancestors
+
+Carson's ancestor is **Carson herself**, as Einstein's is Einstein. That does not
+make this `SAME-AUTHOR DISTORTION`.
+
+> **The discriminator between patterns 2 and 5 is whether the claim changed
+> materially — not whose the ancestor is.**
+
+- **Carson** — compressed, and one preposition altered; *the claim is intact*
+  (mastery of ourselves rather than of nature). → pattern 2.
+- **Einstein** — the *subject* was swapped, from the separation of past, present
+  and future to "reality"; *the claim is different*, and the manuscript relies on
+  the altered claim. → pattern 5.
+
+Same-author ancestry is common in pattern 2 and is not diagnostic on its own.
+
+### Count correction — Chapter 8 confirmed misattributions
+
+An earlier reply of mine put Chapter 8 at five confirmed misattributions. **The
+correct figure is four**: L1654 Shaw, L1628 Feynman, L1858 Hawking, L1758
+Socrates/Solomon. **L1770 Aristotle remains `UNVERIFIED`**, not confirmed, as do
+L1684 Twain and L1754 Gandhi.
+
+**No chapter-to-chapter rate comparison until Chapter 8 is complete.** Chapter 8
+has been audited **risk-first**, so the adjudicated subset is deliberately
+enriched for suspicious quotations; Chapter 5 is complete at 30/30. Comparing the
+two now would compare a biased sample against a full census.
 
 ### The Shaw pair does not group either
 
