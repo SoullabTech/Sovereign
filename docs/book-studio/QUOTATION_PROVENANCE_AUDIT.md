@@ -2,7 +2,7 @@
 
 **Source of record:** `docs/book-studio/ELEMENTAL_ALCHEMY_FROM_ORIGINAL_FULL.md`
 **Opened:** 2026-09-01, after Chapter 10 closed developmental adjudication.
-**Status:** IN PROGRESS — 128 of 137. **Ch2 CLOSED (10/10).** adjudicated. **Chapter 5 CLOSED (30/30). Chapter 8 CLOSED (23/23).**
+**Status:** IN PROGRESS — 130 of 137. **Ch2 CLOSED (10/10).** adjudicated. **Chapter 5 CLOSED (30/30). Chapter 8 CLOSED (23/23).**
 
 ## Scope
 
@@ -3583,6 +3583,64 @@ Mitchell (Tao Te Ching) · Barks (Rumi) · Craufurd (Weil) · Aiton (Kepler) ·
 Winston (Jung) · Easwaran (Dhammapada) · Ward (Amiel). **Each names a translator
 and each is therefore making a claim that must be checked against the printed
 English.**
+
+
+### Final batch — tranche 6: the printed-English test, applied
+
+**L161 · Preface · Rainer Maria Rilke — "May what I do flow from me like a river…"**
+**`VERIFIED EXACT` — and the translator claim is CORRECT.** *Rilke's Book of
+Hours: Love Poems to God*, trans. **Anita Barrows and Joanna Macy** (Riverhead,
+1996; the bibliography's 2005 is the anniversary edition). German original: "Du
+dunkler Grund, geduldig erträgst du die Mauern."
+**First translator-naming entry to PASS the printed-English test.**
+**Rights: `LIKELY PROTECTED` · `HIGH`** — in-copyright poetry translation.
+
+**L186 · Preface · Buddha, Kalama Sutta — "Do not believe in anything simply because you have heard it…"**
+
+**`WRONG TRANSLATOR CITED` — SECOND CONFIRMED INSTANCE.**
+
+- **Bibliography cites:** "Buddha. *Kalama Sutta.* Anguttara Nikaya, translated by
+  **Thanissaro Bhikkhu**. Access to Insight, 1994."
+- **Thanissaro's actual translation:** "Now, Kalamas, **don't go by reports, by
+  legends, by traditions, by scripture, by logical conjecture, by inference, by
+  analogies**…"
+- **The manuscript's wording** is the popular "Do not believe in anything simply
+  because…" rendering — a different translation lineage entirely.
+
+#### A sharper characteristic — the cited translator REPUDIATES this version
+
+**Thanissaro Bhikkhu has publicly criticized precisely this circulating text**,
+writing that the many internet variations "seem to cancel out everything else the
+Buddha taught." His translator's note argues the discourse says **something much
+more rigorous** than the popular reading: views must be tested by the results they
+yield in practice **and checked against the experience of the wise** — not simply
+followed by one's own sense of right and wrong.
+
+> **The bibliography credits a scholar for a rendering he has publicly rejected as
+> a distortion.**
+
+**And the popular version alters the teaching in a host-aligned direction** — it
+reads as an endorsement of individual discernment, which is more congenial to a
+modern self-trust framing than the sutta's actual test. Compare
+`HOST-ALIGNED ALTERATION`; here the drift occurred in general circulation, well
+before this manuscript.
+
+**Rights:** the Pali is public domain; **which English is printed remains
+unresolved** (the popular version traces toward the Soma Thera lineage).
+`TERM UNCERTAIN` · `STANDARD`.
+
+### `WRONG TRANSLATOR CITED` — now recurrent, not merely decisive
+
+Two confirmed instances (**Zhuangzi/Watson→Giles**, **Kalama/Thanissaro→popular
+lineage**), both in the **Preface**, both in entries that name a translator — i.e.
+in the entries that *looked* most rigorous.
+
+**Formation rule applied:** pattern/class formation normally needs recurrence;
+**verification prerequisites can be established by a single conclusive failure.**
+The rule was established on Zhuangzi alone because the evidence was binary. The
+**class** is now independently recurrent as well.
+
+**Nine translator-naming entries remain unchecked.**
 
 
 ---
