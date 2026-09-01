@@ -12,7 +12,12 @@ const page_errors = [];
 const failed_requests = [];
 
 const browser = await puppeteer.launch({
-  executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome',
+  /* Host-supplied. The literal is the container binary that produced the
+     remote witness; CHROMIUM_PATH lets another host run these exact bytes
+     unchanged rather than editing the instrument after extraction. */
+  executablePath:
+    process.env.CHROMIUM_PATH ||
+    '/opt/pw-browsers/chromium-1194/chrome-linux/chrome',
   headless: true,
   args: ['--no-sandbox', '--disable-dev-shm-usage'],
 });
