@@ -792,3 +792,22 @@ tenth.**
 rule?* A feature that delivers rules produces compliance. A feature that creates
 moments produces judgment — **and judgment is the thing the member keeps after the
 book is finished.**
+
+### Heuristic — a fixed pattern is not a right pattern
+
+> **Fixing a detection pattern once does not make it correct. Test the pattern
+> against the corpus, not against the case that exposed it.**
+
+**Grounding event:** the quotation census was extended twice and was wrong both
+times. Block-only missed inline quotations — **a real ontological gap.** The
+corrected inline pattern then missed two further punctuation forms — **not an
+ontological gap at all, just a bad regex.** Three typographic forms of quotation
+existed; the count moved 137 → 146 → 150.
+
+**Requirement:** when a scope gap is found, **re-derive the pattern from the corpus
+and re-run it whole.** Patching for the discovered instance leaves the same class of
+gap in place, and the next probe will find it.
+
+**Corollary for the manuscript itself:** where a corpus permits several
+typographic conventions for the same object, **normalising the convention is a
+structural fix worth more than any single recount.**

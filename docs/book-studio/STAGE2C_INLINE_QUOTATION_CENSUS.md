@@ -2,7 +2,7 @@
 
 **Bounded addendum to `QUOTATION_PROVENANCE_AUDIT.md`. Opened and worked
 2026-09-01.**
-**Status: ✅ COMPLETE — 9 / 9 occurrences.**
+**Status: ⚠️ REOPENED as 2c-ii — 9 worked, 4 more found 2026-09-01. See THIRD SCOPE DISCOVERY at the end.**
 
 > **Stage 2 did not fail. It completed exactly what it enumerated: attributed
 > *block* quotations. What failed was the *scope claim*.** This addendum extends
@@ -234,3 +234,75 @@ Polonius item**) · `WRONG TRANSLATOR RISK` ×3 (Jung/chemical, Kierkegaard, Lao
 | After 4A | **109 block + 9 inline = 118 current** |
 
 **→ 4B may now resume** against the actual argument-carrying population.
+
+---
+
+# ⚠️ THIRD SCOPE DISCOVERY — 2026-09-01, before the eight adjudications
+
+**The eight inline adjudications are held.** Adjudicating on a field now known to
+be incomplete would repeat, for a third time, the exact error already diagnosed
+twice.
+
+## What happened
+
+The speaker sweep surfaced **"Be in the world but not of it" — John 17:16**, which
+**was not among the Stage 2c nine.** That prompted a re-scan of my own detector
+rather than a re-scan of the book — and the detector had **two further gaps.**
+
+**Three typographic forms of quotation exist in this manuscript. The census has now
+been extended twice and was wrong both times.**
+
+| Form | Example | Caught by |
+|---|---|---|
+| **Block** — line begins `*"` | most epigraphs | Stage 2 (137) |
+| **Inline, emphasis closes on the quote** | *"…" * | Stage 2c (9) |
+| **Inline, attribution inside the emphasis** | *"…" — John 17:16* | **missed — 1** |
+| **Plain quotation marks, no emphasis at all** | "…" | **missed — 3** |
+
+## The four newly found occurrences
+
+| L | Quotation | Preliminary identification — **leads, not verdicts** |
+|---|---|---|
+| **1951** | *"Be in the world but not of it" — John 17:16* | Already worked in the speaker sweep: **fair traditional summary, false verse citation** |
+| **978** | *"If a fool persists in his folly he becomes wise."* — introduced only as **"As it is said"** | **⚠️ This is William Blake**, *The Marriage of Heaven and Hell* — "Proverbs of Hell." Original: *"If the fool would persist in his folly he would become wise."* **Two defects: a real authored line demoted to an anonymous proverb, and — the Proverbs of Hell are voiced by a devil in Blake's satirical frame.** `SPEAKER` context applies. **Fourth specimen of the pattern**, and the first found by *under*-attribution rather than over-attribution |
+| **1060** | *"It's not the note you play that's the wrong note…"* — **"As Miles Davis is quoted as saying"** | **The hedge is itself a provenance signal** — the manuscript is already flagging uncertainty. Needs the ordinary check |
+| **2256** | *"I believe in God, only I spell it Nature."* — Frank Lloyd Wright | Widely attributed to Wright; source not yet located |
+
+## Corrected accounting
+
+| | |
+|---|---|
+| Block occurrences | 109 |
+| Inline occurrences | **13**, not 9 |
+| **Current total** | **122**, not 118 |
+| **Original total** | **150**, not 146 |
+
+## What this changes about the lesson
+
+**The first correction was substantive — block versus inline is a real distinction
+between kinds of object.** The second and third are not: **they are the same object
+in different punctuation.** My detector pattern was wrong twice in ways that had
+nothing to do with the ontology.
+
+> **Fixing a pattern once does not make it right. A pattern must be tested against
+> the corpus, not against the case that exposed it.**
+
+**Both new gaps were found by a probe aimed at something else** — the speaker sweep,
+looking for dramatic context, returned a census defect. **That is now three
+consecutive times a downstream operation has exposed an upstream inventory**, and
+the strongest available argument for the *"run a thin downstream probe"* principle.
+
+## Immediate consequences
+
+1. **Stage 2c reopens as 2c-ii** for the four newly found occurrences, at the same
+   evidence standard. Small.
+2. **The eight adjudications wait** until the inline field is closed. **The Buddha
+   family is the precedent**: a ruling that looked complete at two occurrences was
+   wrong until the third was linked.
+3. **The Blake item joins the dramatic-speaker set** — Polonius, Satan, Hotspur, and
+   now a devil in Blake's *Proverbs of Hell*. **Four specimens.**
+4. **A structural fix is owed, not just a recount:** the manuscript should adopt
+   **one consistent typographic convention for quotations**, so that no future pass
+   can miss a form. Carried to final QA.
+
+**No adjudication, no repair, no verification performed in this entry.**
