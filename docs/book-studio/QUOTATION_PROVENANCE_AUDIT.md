@@ -2,7 +2,7 @@
 
 **Source of record:** `docs/book-studio/ELEMENTAL_ALCHEMY_FROM_ORIGINAL_FULL.md`
 **Opened:** 2026-09-01, after Chapter 10 closed developmental adjudication.
-**Status:** IN PROGRESS — 69 of 137 adjudicated. **Chapter 5 CLOSED (30/30). Chapter 8 CLOSED (23/23).**
+**Status:** IN PROGRESS — 72 of 137 adjudicated. **Chapter 5 CLOSED (30/30). Chapter 8 CLOSED (23/23).**
 
 ## Scope
 
@@ -1657,6 +1657,51 @@ exist:
 `MISFILED SOURCE` therefore still rests on **one confirmed instance** (Campbell's
 *A Joseph Campbell Companion*) plus this candidate.
 
+### Chapter 6 — fifth tranche
+
+**L1185 · Pema Chödrön — "Things falling apart is a kind of testing and also a kind of healing…"**
+**`VERIFIED EXACT`.** *When Things Fall Apart: Heart Advice for Difficult Times*
+(Shambhala, 1997). Bibliography correct — **fourth correctly-supported citation
+in Chapter 6.**
+
+*A fidelity indicator:* the manuscript includes "**It's just like that.**", which
+the widely circulated online version **omits**. That is evidence the passage was
+taken from the book rather than from a quote site.
+
+**Rights: `LIKELY PROTECTED` · `HIGH`.** The manuscript quotes the **full
+paragraph** — roughly 75 words, verbatim, from an in-copyright 1997 book. This is
+the **second paragraph-length block quotation** in the audit after Bear Heart, and
+it belongs in the permissions inventory on length.
+
+**L1277 · Louisa May Alcott — "I am not afraid of storms for I am learning how to sail my ship."**
+`VERIFIED VARIANT/TRANSLATION`. *Little Women*, **chapter 44, "My Lord and
+Lady"** — spoken by Amy March. Wikiquote notes the line "has sometimes been
+slightly misquoted"; the manuscript carries the polished popular form.
+Bibliography correct.
+**Rights: `PUBLIC DOMAIN` · `NONE`** (1868). Fourth public-domain classification.
+
+**L1314 · "Healer, heal thyself." — *adapted from Luke 4:23***
+`PARAPHRASE/ADAPTED`, **and correctly self-labelled.** The KJV reads "Physician,
+heal thyself"; the manuscript's substitution is acknowledged in the byline itself.
+**Rights: `PUBLIC DOMAIN` · `NONE`.** No repair required.
+
+### A real pattern in the manuscript's habits — labelled adaptations are accurate
+
+The book now contains **two explicitly labelled adaptations**, and **both are
+accurate**:
+- **L1052** — "Adapted from Rumi, after Coleman Barks" — correct: the wording is
+  a paraphrase of a Barks rendering, and the label says so.
+- **L1314** — "adapted from Luke 4:23" — correct: the substitution is
+  acknowledged.
+
+**Every provenance failure in the audit so far occurs in an *unlabelled*
+attribution.** Where the author signalled adaptation, the signal was truthful.
+
+This matters for the repair batch and for the authorship question: the manuscript
+demonstrably **possesses** the correct provenance form and applies it accurately
+when it is applied at all. The defect is not an inability to label — it is that
+most quotations were never treated as requiring one.
+
 ---
 
 ## Quoted-material copyright / permissions review — publication/legal
@@ -1683,6 +1728,7 @@ resolving an item's source metadata does not change the count.
 | Peter Gabriel ×3 (L713, L1153, L1911) | `LIKELY PROTECTED` | `HIGH` |
 | Mary Oliver (L872) | `LIKELY PROTECTED` | `HIGH` |
 | Bear Heart (L926) — paragraph-length | `LIKELY PROTECTED` | `HIGH` |
+| Pema Chödrön (L1185) — full paragraph, ~75 words | `LIKELY PROTECTED` | `HIGH` |
 | Coleman Barks / Rumi (L1666) — verbatim © 1995 | `LIKELY PROTECTED` | `HIGH` |
 | Dery Dyer (L1696) | `LIKELY PROTECTED` | `STANDARD` |
 | Leonard Cohen, "Anthem" (L1231) — lyrics | `LIKELY PROTECTED` | `HIGH` |
