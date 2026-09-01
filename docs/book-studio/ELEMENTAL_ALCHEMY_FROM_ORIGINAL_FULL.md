@@ -1080,7 +1080,7 @@ In this chapter, we'll dive into the element of water and its transformative jou
 
 The water realm of feelings stands in contrast to the fixed, knowable world of our thoughts. It is, in a real sense, the antidote to excessive thought and the limiting notion that we fully understand reality and the present moment. A certain amount of humility is needed if we aspire towards greater wisdom.
 
-Feeling and thinking represent polar opposites: right and left hemispheric functionality, the unknown and the known worlds. Our task is to let go of all we think we know to embrace what can be experienced and gained as wisdom.
+Feeling and thinking can orient us toward different aspects of experience: the unknown and the known worlds. Our task is to let go of all we think we know to embrace what can be experienced and gained as wisdom.
 
 *"Emotions are not just the fuel that powers the psychological mechanism of a reasoning creature; they are also parts, highly complex and messy parts, of this creature's reasoning itself." — Martha Nussbaum*
 
