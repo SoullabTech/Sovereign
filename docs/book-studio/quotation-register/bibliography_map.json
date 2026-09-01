@@ -1,7 +1,8 @@
 {
   "_comment": "Hand-authored mapping: surviving source object -> exact bibliographic object. The matcher proposes; this file decides. Rows are added batch by batch as the author rules them. 'unresolved' names a bibliographic detail still owed - a correct author/work pair is NOT a specific bibliographic object, and the emitter requires the latter.",
   "batches_ruled": [
-    1
+    1,
+    2
   ],
   "rows": [
     {
@@ -111,6 +112,107 @@
         "Tagore, Rabindranath. *The Home and the World.* Macmillan, 1919."
       ],
       "drop_reason": "No surviving relationship requires it.",
+      "rights": "public_domain"
+    },
+    {
+      "id": "EA-Q-0022",
+      "source": "C. Michael Smith, wholeness-making definition",
+      "relationship": "quotation + conceptual dependency",
+      "decision": "RECOVERY REQUIRED",
+      "object": "Smith, C. Michael. *Jung and Shamanism in Dialogue: Retrieving the Soul / Retrieving the Sacred.* Paulist Press, 1997. - PROVISIONAL, see unresolved",
+      "evidence": "Register UNVERIFIED with leads open to cmichaelsmith.com and Jung and Shamanism in Dialogue. The live bibliography relationship is not in doubt; the work carrying the vocabulary is.",
+      "unresolved": "DO NOT assign the wholeness-making / Daimon / Dream Maker / inner axis mundi vocabulary to that work until Smith confirms it. Psychotherapy and the Sacred (1995) is the other candidate.",
+      "merge": "Two entries exist for one book, with and without the subtitle. One canonical entry."
+    },
+    {
+      "id": "EA-Q-0024",
+      "source": "Peter Gabriel, 'One dot, that's on or off'",
+      "relationship": "quotation, song lyric",
+      "object": "Gabriel, Peter. \"Growing Up.\" *Up.* Real World Records, 2002.",
+      "decision": "KEEP",
+      "evidence": "VERIFIED EXACT; bibliography relationship CORRECT.",
+      "also_drop": [
+        "Gabriel, Peter. \"Signal to Noise.\" *Up.* Real World Records, 2002."
+      ],
+      "drop_reason": "Two Gabriel tracks survive - 'Growing Up' here and 'Darkness' in Ch6. 'Signal to Noise' disappears unless a later surviving object claims it; confirm at the reverse check.",
+      "rights": "song_lyric_high"
+    },
+    {
+      "id": "EA-Q-0027",
+      "source": "Thoreau, 'The fire is the main comfort of the camp'",
+      "relationship": "quotation",
+      "object": "Thoreau, Henry David. \"Chesuncook.\" In *The Maine Woods.* Ticknor and Fields, 1864, p. 38.",
+      "decision": "CORRECT",
+      "evidence": "Register names work and page; the existing entry says Walden. Confirmed wrong-book flag.",
+      "supersedes": "Thoreau, Henry David. *Walden; Or, Life in the Woods.* Ticknor and Fields, 1854.",
+      "rights": "public_domain"
+    },
+    {
+      "id": "EA-Q-0028",
+      "source": "Plutarch, 'not a vessel to be filled, but wood that needs kindling'",
+      "relationship": "quotation, translated",
+      "decision": "RECOVERY REQUIRED",
+      "object": "Plutarch. \"On Listening to Lectures.\" In *Moralia.* - translation not yet named",
+      "evidence": "Work identified. The restored English follows the sense of the standard renderings but names no translator; the existing entry is a bare 'Plutarch. Moralia.' with neither translator nor edition.",
+      "unresolved": "IDENTIFY THE TRANSLATION FROM THE PRINTED WORDING. The sequence is printed wording -> identify the closest or exact translation -> cite that translation -> THEN assess its rights. Rights must NOT decide which translation we claim the manuscript uses: 'Babbitt is easier legally' is not evidence. If neither Waterfield (Penguin 1992) nor the Loeb Babbitt (1927) matches what is printed, adopting a named translation becomes a conscious textual replacement in the manuscript, not bibliography cleanup."
+    },
+    {
+      "id": "EA-Q-0034",
+      "source": "the proverb, 'good servants but bad masters'",
+      "relationship": "carried as a proverb with no claimed speaker",
+      "object": null,
+      "decision": "NO ENTRY REQUIRED",
+      "evidence": "Aesop attribution removed at 4C. Recorded explicitly so the absence does not read as debt."
+    },
+    {
+      "id": "EA-Q-0036",
+      "source": "Mother Teresa, 'To keep a lamp burning'",
+      "relationship": "quotation, evolved wording with a real ancestor",
+      "object": "Teresa, Mother. *No Greater Love.* New World Library, 1997.",
+      "decision": "ADD",
+      "evidence": "The repaired byline reads 'after Mother Teresa, No Greater Love'; the audit located the lamp-and-oil image in that book.",
+      "also_drop": [
+        "Teresa, Mother. *A Simple Path.* Ballantine Books, 1995."
+      ],
+      "drop_reason": "A DIFFERENT BOOK, not an edition slip. A correct author does not make a wrong work correct. Drop unless another surviving relationship requires it.",
+      "note": "The entry became visible only because 4C repaired the byline to name its source - the repair produced the evidence that exposed the wrong entry."
+    },
+    {
+      "id": "EA-Q-0037",
+      "source": "Magritte, 'Everything that is visible hides something that is invisible'",
+      "relationship": "quotation, translated from French",
+      "object": "Magritte, René. (As cited in collected interviews and writings.)",
+      "decision": "KEEP AS HEDGED",
+      "evidence": "UNVERIFIED; the census ruled this hedge the appropriate form when no specific source is found.",
+      "note": "The hedge IS the decision. It is the only entry in the book that admits its own limit, and it survives emission unchanged."
+    },
+    {
+      "id": "EA-Q-0038",
+      "source": "Thomas Berry, 'a communion of subjects, not a collection of objects'",
+      "relationship": "quotation",
+      "decision": "RECOVERY REQUIRED",
+      "object": "Berry, Thomas. - work not yet fixed to a verified textual witness",
+      "evidence": "VERIFIED EXACT as a formulation; Berry states it repeatedly across The Dream of the Earth, The Universe Story and The Great Work.",
+      "unresolved": "EXACT TEXTUAL WITNESS, not an author-level choice. Do not select The Great Work merely because the formulation appears there and that entry already exists; point at a witness actually verified, ideally the one this manuscript's wording was taken from if recoverable. Identity settled, formulation verified, bibliographic object owed.",
+      "note": "The second Berry. The matcher offers Wendell's entry for Thomas and Thomas's for Wendell - no string rule fixes this, which is why the pass is hand-authored."
+    },
+    {
+      "id": "EA-Q-0039",
+      "source": "Bear Heart, 'Both the sweat lodge and the tipi are round'",
+      "relationship": "quotation",
+      "object": "Bear Heart. *The Wind Is My Mother: The Life and Teachings of a Native American Shaman.* Berkley Books, 1996.",
+      "decision": "KEEP",
+      "evidence": "VERIFIED EXACT; the byline names the work in-text.",
+      "rights": "likely_protected_high"
+    },
+    {
+      "id": "EA-Q-0040",
+      "source": "Goethe, 'The greater the light, the deeper the shadow'",
+      "relationship": "quotation, evolved English",
+      "object": "Goethe, Johann Wolfgang von. *Gotz von Berlichingen.* 1773.",
+      "decision": "ADD",
+      "evidence": "Original Act I: 'Wo viel Licht ist, ist starker Schatten'. No Goethe entry exists at all.",
+      "note": "PRESERVE THE EVOLVED-ENGLISH STATUS rather than inventing a translator. Documented renderings differ from the manuscript's wording, which is exactly why 4I ruled REFRAME rather than CORRECT.",
       "rights": "public_domain"
     }
   ]
