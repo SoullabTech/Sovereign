@@ -2,7 +2,7 @@
 
 **Source of record:** `docs/book-studio/ELEMENTAL_ALCHEMY_FROM_ORIGINAL_FULL.md`
 **Opened:** 2026-09-01, after Chapter 10 closed developmental adjudication.
-**Status:** IN PROGRESS — 126 of 137. **Ch2 CLOSED (10/10).** adjudicated. **Chapter 5 CLOSED (30/30). Chapter 8 CLOSED (23/23).**
+**Status:** IN PROGRESS — 127 of 137. **Ch2 CLOSED (10/10).** adjudicated. **Chapter 5 CLOSED (30/30). Chapter 8 CLOSED (23/23).**
 
 ## Scope
 
@@ -3460,6 +3460,47 @@ trail exists.
 *Second-instance note:* Teasdale is now 1 verified (L2024) and 1 unverified
 (L1690, Ch8) — another author set that **splits**. C. Michael Smith (2 instances)
 remains the last such set open.
+
+
+### Final batch — tranche 4
+
+**L622 · Ch4 · C. Michael Smith — "Wholeness-making is that dimension of individuation whereby you recognize…"**
+`UNVERIFIED — source lead unresolved`. The **concept is documented as his** on
+**cmichaelsmith.com** — "Wholeness-making is an ongoing process organized around
+the Center of your being" — but the manuscript's specific sentence is not
+located. Leads: that site and *Jung and Shamanism in Dialogue* (Paulist, 1997).
+
+### RULE CLARIFICATION — whose domain matters
+
+The self-corroboration rule applies to **the quoting author's** domains, **not the
+quoted author's**.
+
+> **The quoted author's own official channel is among the strongest evidence
+> available.** The quoting author's own channel is no evidence at all.
+
+- **cmichaelsmith.com** (Smith's site, quoted author) → **legitimate
+  attestation**, same class as **Plum Village** for Thich Nhat Hanh, Tolle's
+  official accounts, the **Joseph Campbell Foundation**, the **Santayana
+  Edition**, the **King Institute**.
+- **Soullab / Book Studio / author Medium posts** (quoting author) → **excluded**.
+
+Without this distinction the rule would have discarded some of the audit's
+strongest verifications.
+
+### C. Michael Smith — coordinated resolution, not a declared family
+
+Both instances resolve identically: **L622 (Ch4)** and **L2001 (Ch9)** are
+`UNVERIFIED — source lead unresolved`, both with the **constituent concepts
+documented as Smith's on his own site** while the **combined sentences are not
+located**, and both resolvable by the **same two checks** (his site;
+*Jung and Shamanism in Dialogue*).
+
+**This is the first multi-instance author set that does not split.** Recorded as a
+**coordinated resolution task** — per the McKenna correction, a shared verdict and
+a shared resolution path are not the same as a demonstrated shared transmission
+mechanism.
+
+**Author-set tally: seven formed · six split · one unsplit and unresolved.**
 
 
 ---

@@ -184,3 +184,14 @@ been imported from a now-lost source and then propagated only internally.
 *Specimens: the "Soulplay" definition findable only on the author's Book Studio
 page; a Teasdale attribution whose top result was the author's own Medium
 publication (independent listings rescued that one).*
+
+**Whose domain matters — the inverse of the circularity rule.** The exclusion
+applies to **the quoting author's** domains only. **The quoted author's own
+official channel is among the strongest evidence available**, and a system that
+distrusted author-controlled sources generically would discard its best
+verifications.
+*Specimens accepted: Plum Village (Thich Nhat Hanh) · cmichaelsmith.com · Tolle's
+official accounts · Joseph Campbell Foundation · the Santayana Edition · the King
+Institute. Specimens excluded: the quoting author's own Book Studio and Medium
+pages.*
+
