@@ -1,0 +1,117 @@
+{
+  "_comment": "Hand-authored mapping: surviving source object -> exact bibliographic object. The matcher proposes; this file decides. Rows are added batch by batch as the author rules them. 'unresolved' names a bibliographic detail still owed - a correct author/work pair is NOT a specific bibliographic object, and the emitter requires the latter.",
+  "batches_ruled": [
+    1
+  ],
+  "rows": [
+    {
+      "id": "EA-Q-0002",
+      "source": "Zhuangzi, butterfly dream",
+      "relationship": "quotation, translated",
+      "object": "Zhuangzi. Translated by Herbert A. Giles.",
+      "decision": "CORRECT",
+      "evidence": "Register VERIFIED EXACT with translator Giles; the printed English carries Giles's phrasing ('unconscious of my individuality as a man', 'the transition is called Metempsychosis'), none of which is Watson's.",
+      "supersedes": "Zhuangzi. *The Complete Works of Chuang Tzu.* Translated by Burton Watson. Columbia University Press, 1968.",
+      "unresolved": "Exact Giles edition: 1889, the revised 1926 Kelly & Walsh, or the 1961 Allen & Unwin issue. Name the one the text was taken from. Giles d. 1935, so public domain either way."
+    },
+    {
+      "id": "EA-Q-0004",
+      "source": "Rilke, 'May what I do flow from me like a river'",
+      "relationship": "quotation, translated",
+      "object": "Rilke, Rainer Maria. *Rilke's Book of Hours: Love Poems to God.* Translated by Anita Barrows and Joanna Macy.",
+      "decision": "CORRECT",
+      "evidence": "Register: translator claim correct - the rights-relevant object is the Barrows-Macy English.",
+      "unresolved": "WHICH EDITION THE MANUSCRIPT ACTUALLY USED. Do not prefer the 1996 first printing automatically; if the text was sourced from the 2005 anniversary edition, 2005 is the legitimate citation.",
+      "rights": "likely_protected_high"
+    },
+    {
+      "id": "EA-Q-0005",
+      "source": "Wendell Berry, 'our real work'",
+      "relationship": "quotation, prose not verse",
+      "object": "Berry, Wendell. \"Poetry and Marriage: The Use of Old Forms.\" In *Standing by Words: Essays.* North Point Press, 1983.",
+      "decision": "CORRECT",
+      "evidence": "Work correct at book level; essay identified and prose status established at the source-closure pass. The circulating verse form is a later versification.",
+      "unresolved": "Wording check against the 1983 edition: the manuscript reads 'begun our real journey', the versified form reads 'come to'. Leave 'begun' untouched until inspected.",
+      "rights": "likely_protected_high"
+    },
+    {
+      "id": "EA-Q-0270",
+      "source": "The Buddha, Kalama Sutta",
+      "relationship": "quotation, translated",
+      "object": "The Buddha. *Kesamutti (Kalama) Sutta*, Anguttara Nikaya 3.65. Translated by Bhikkhu Sujato. SuttaCentral.",
+      "decision": "CORRECT",
+      "evidence": "Applied at source closure; Sujato's Nikaya translations carry a CC0 dedication.",
+      "supersedes": "Buddha. *Kalama Sutta.* Anguttara Nikaya, translated by Thanissaro Bhikkhu. Access to Insight, 1994.",
+      "also_drop": [
+        "Buddha. *Udana.* Translated by John Ireland. Buddhist Publication Society, 1990.",
+        "Buddha. *The Dhammapada.* Translated by Eknath Easwaran. Nilgiri Press, 1985."
+      ],
+      "drop_reason": "Both belonged to removed fake-Buddha quotations.",
+      "rights": "public_domain"
+    },
+    {
+      "id": "EA-Q-0011",
+      "source": "Joseph Campbell, 'The privilege of a lifetime is being who you are.'",
+      "relationship": "quotation",
+      "object": "Campbell, Joseph. *A Joseph Campbell Companion: Reflections on the Art of Living.* Edited by Diane K. Osbon.",
+      "decision": "KEEP",
+      "evidence": "Attested to the Companion, drawn from the 1984 Esalen workshop Osbon attended.",
+      "unresolved": "PRINTING NOT GUESSED: the existing entry says HarperCollins 1991, secondary sources give HarperPerennial 1995. Resolve before emission.",
+      "also_drop": [
+        "Campbell, Joseph. *The Hero with a Thousand Faces.* Princeton University Press, 1949.",
+        "Campbell, Joseph. *The Power of Myth.* Anchor, 1991."
+      ],
+      "drop_reason": "No surviving Campbell source object uses either; confirm at the reverse check.",
+      "rights": "likely_protected_standard"
+    },
+    {
+      "id": "EA-Q-0013",
+      "source": "Alan Watts, 'plunge into it, move with it, and join the dance'",
+      "relationship": "quotation",
+      "object": "Watts, Alan. *The Wisdom of Insecurity: A Message for an Age of Anxiety.* Vintage Books, 1951.",
+      "decision": "KEEP",
+      "evidence": "Register VERIFIED EXACT, ch. 3; bibliography relationship CORRECT.",
+      "merge": "The same book is listed twice, with and without its subtitle. One canonical entry.",
+      "rights": "term_uncertain_standard"
+    },
+    {
+      "id": "EA-Q-0015",
+      "source": "C. G. Jung, 'only a circumambulation of the self'",
+      "relationship": "quotation, translated",
+      "object": "Jung, C. G. *Memories, Dreams, Reflections.* Edited by Aniela Jaffe. Translated by Richard and Clara Winston. Vintage Books, 1961.",
+      "decision": "CORRECT",
+      "evidence": "The audit's MISSING verdict is CLOSED as a chapter-scoping error - the entry existed under Introduction while the quotation sits in Ch2. The real defect is the absent translator, the fifth mediated-translation instance.",
+      "hold": "Do NOT drop 'Modern Man in Search of a Soul' or 'The Red Book' yet. Later surviving Jung objects must reconcile first; drop only if the complete reverse check proves them orphaned."
+    },
+    {
+      "id": "EA-Q-0017",
+      "source": "Iain McGilchrist, 'The right hemisphere sees things whole'",
+      "relationship": "quotation",
+      "object": "McGilchrist, Iain. *The Master and His Emissary: The Divided Brain and the Making of the Western World.* Yale University Press, 2009, pp. 27-28.",
+      "decision": "KEEP",
+      "evidence": "VERIFIED EXACT with the page range supplied by the author at 4A."
+    },
+    {
+      "id": "EA-Q-0020",
+      "source": "Vladimir Nabokov, 'The spiral is a spiritualized circle'",
+      "relationship": "quotation",
+      "object": "Nabokov, Vladimir. *Speak, Memory: An Autobiography Revisited.* G. P. Putnam's Sons, 1966.",
+      "decision": "KEEP",
+      "evidence": "VERIFIED EXACT; autobiography, not fiction - the census's own corrected suspicion.",
+      "rights": "likely_protected_standard"
+    },
+    {
+      "id": "EA-Q-0021",
+      "source": "Rabindranath Tagore, 'the essential unity of the world'",
+      "relationship": "quotation",
+      "object": "Tagore, Rabindranath. *Sadhana: The Realisation of Life.* Macmillan, 1913, p. 109.",
+      "decision": "KEEP",
+      "evidence": "VERIFIED EXACT, public domain, and NO mediation layer - Tagore wrote Sadhana in English himself, which closes the standing 'check, do not assume' flag on his English.",
+      "also_drop": [
+        "Tagore, Rabindranath. *The Home and the World.* Macmillan, 1919."
+      ],
+      "drop_reason": "No surviving relationship requires it.",
+      "rights": "public_domain"
+    }
+  ]
+}
