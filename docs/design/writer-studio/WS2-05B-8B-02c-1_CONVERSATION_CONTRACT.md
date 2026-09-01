@@ -270,41 +270,81 @@ once. A tagged union would force a surface to pick one and drop the rest — the
 exact collapse this section exists to forbid.
 
 ```ts
+/** Two-valued dimensions. `unmeasured` is a THIRD state, never a falsy second. */
+type ChangeFlag =
+  | { state: 'unchanged' }
+  | { state: 'changed' }
+  | { state: 'unmeasured' };
+
+/** Carries its numbers only when it actually has them. */
+type ReviewChange =
+  | { state: 'unchanged' }
+  | { state: 'changed'; was: number; now: number }
+  | { state: 'unmeasured' };
+
+type Supersession =
+  | { state: 'not-superseded' }
+  | { state: 'superseded'; by: string | null }
+  | { state: 'unmeasured' };
+
 interface StalenessState {
-  /** null = could not be measured. Three states, not two. */
-  inputMoved: boolean | null;
-  topologyMoved: boolean | null;
-  reviewMoved: { was: number; now: number } | null;
-  readingSuperseded: { supersededBy: string | null } | null;
+  inputMoved: ChangeFlag;
+  topologyMoved: ChangeFlag;
+  reviewMoved: ReviewChange;
+  readingSuperseded: Supersession;
   /** BEFORE == AFTER against `AskThread.canonicalAtOpen`. */
-  canonicalMoved: boolean | null;
+  canonicalMoved: ChangeFlag;
 }
 ```
 
-`null` means *could not measure*, following the precedent `reviewClient` already
-sets for `staleAsRead`: *"True, false, or NULL when the server could not measure
-it. Three states, because a surface that cannot say 'I do not know' will say
-'no'."* An unmeasured digest must never present as an unmoved one.
+**All five dimensions are genuinely three-state.** The earlier shape used `null`
+for *could not measure* on two dimensions while `reviewMoved` and
+`readingSuperseded` used `null` for *measured and unchanged* — so those two could
+not distinguish "I checked, nothing moved" from "I could not check", and an
+absent measurement read as a clean one. `{ state }` makes the third case
+unrepresentable-as-absence, and lets `ReviewChange` carry `was`/`now` only in the
+one case that has them.
 
-"Current" is **derived, never stored** — every field falsy/null. Storing a
-summary flag alongside the parts is how the parts drift out of agreement.
+This follows the precedent `reviewClient` already sets for `staleAsRead`: *"True,
+false, or NULL when the server could not measure it. Three states, because a
+surface that cannot say 'I do not know' will say 'no'."*
+
+**`unmeasured` is never `unchanged`.** The derivation is:
+
+```
+CURRENT  =  every required signal was successfully measured
+            AND every measured signal is unchanged
+
+UNKNOWN  ≠  CURRENT
+```
+
+If any required dimension is `unmeasured`, the thread is **not current** — it is
+*unknown*, which is its own answer and must render and reason as one. A surface
+may say "I could not check whether the text moved"; it may **never** answer as
+though it had checked. MAIA is under the same constraint as for a measured
+change: she may say what she saw, and may not assert what the text now says.
+
+"Current" is **derived, never stored** — a stored summary flag beside the parts
+is how the parts drift out of agreement with it.
 
 Rulings:
 
 - **`inputMoved` / `topologyMoved` is not a warning banner, it is a constraint
-  on MAIA.** She is told, in the turn, that the prose underneath her reading has
-  changed. She may
-  continue to explain *what she saw*, and she may **not** assert what the text
-  *currently says* about a moved region without re-reading it under §3.
+  on MAIA.** When either reads `changed`, she is told so in the turn: the prose
+  underneath her reading has moved. She may continue to explain *what she saw*,
+  and she may **not** assert what the text *currently says* about a moved region
+  without re-reading it under §3.
 - **`reviewMoved`** means the author has been editing the reviewed tree since the
   thread opened. Her advice must be recomputed against the current
   `reviewRevision` or explicitly marked as advice about an older tree.
 - **`readingSuperseded`** means a newer proposal exists. The thread does **not**
   re-point to it. It stays a thread about the reading it was opened on, and the
   surface offers to open a new thread on the new reading.
-- **Never quietly reattach old reasoning to new text.** Where any signal is set,
-  an answer that depends on the moved material must either re-read it or say it
-  is reasoning about what she read then.
+- **Never quietly reattach old reasoning to new text.** Where any signal is
+  `changed` — **or `unmeasured`** — an answer that depends on that material must
+  either re-read it or say it is reasoning about what she read then. An
+  unverifiable assumption of freshness is the same defect as a known-stale one,
+  arrived at more quietly.
 
 `canonicalMoved` is the **BEFORE == AFTER assertion for the whole thread**,
 against the `canonicalAtOpen` baseline pinned in §1: canonical structure must be
