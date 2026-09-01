@@ -372,6 +372,19 @@
       "editorial_status": "REMOVE - CERTIFICATION / REDUNDANT",
       "evidence_location": "4I family card 2; author ruling 2026-09-01",
       "notes": "Repeats the relationship established more powerfully at the Chapter 10 opener; introduces no new tension, distinction or lineage; and arrives during the passage where the book's own cosmology reaches its fullest expression, asking an outside voice to validate what ten chapters have demonstrated. PROVENANCE UNCERTAINTY MADE REMOVAL EASIER BUT WAS NOT THE REASON. Seam repaired by REPUNCTUATION ONLY - the surviving clause 'for in the aether we merge...' had lost its main clause, so the preceding full stop became a comma. No new prose composed."
+    },
+    {
+      "state": "reclaimed_as_author_prose",
+      "stage": "Stage 4I",
+      "former_form": "inline",
+      "last_location": "Ch8 - Beyond Belief",
+      "text": "I don't have beliefs, I have experiences.",
+      "attributed_as": "Carl Jung",
+      "provenance_status": "paraphrase_adapted",
+      "family": "fam-host-aligned",
+      "editorial_status": "RECLAIM - AUTHORIAL CLAIM. Quotation removed; the paragraph closes on the author's own sentence.",
+      "evidence_location": "STAGE2C_INLINE_QUOTATION_CENSUS.md #6; 4I batch 1 ruling",
+      "notes": "HOST-ALIGNED ALTERATION, textbook case. Jung's distinction is belief versus KNOWLEDGE - 'I don't need to believe. I know' - and the manuscript substituted EXPERIENCE inside a paragraph arguing for experience over belief. The authentic statement does not make the argument; the altered one does. The book already had the stronger sentence. Seam clean, no replacement prose."
     }
   ]
 }

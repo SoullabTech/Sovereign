@@ -1464,3 +1464,22 @@ letting it contaminate an editorial reading; presenting four findings as new tha
 record already held; predicting a broad failure rate from three collisions.
 **Each was corrected by the author, and each correction improved the work.** That is
 the relationship the posture protects.
+
+### Requirement — an editorial repair must not make its own object undetectable
+
+**Grounding event:** a `REFRAME` changed *"There is a saying:"* to *"There is a
+saying, evolved from Goethe:"* — a correct, four-word repair. **The detector stopped
+recognising the object**, because it matched on the lead-in phrase the repair had
+just changed. The record vanished and the gate caught it as a count mismatch.
+
+**The identity ledger could not save it:** identity persists across revision **only
+for candidates the detector still emits.** A repair that changes the recognition
+surface removes the object before identity is consulted.
+
+> **Every repair the system suggests must be tested against the system's own
+> recognition of the object it repaired.** A tool that cannot see what it has just
+> fixed will report the fix as a deletion.
+
+**This is the third failure of the same shape** — positional identity, a
+count-based gate, and now a recognition-surface repair. **Each worked perfectly until
+the manuscript changed**, which is the one thing an editing system exists to do.

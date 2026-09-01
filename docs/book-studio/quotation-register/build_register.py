@@ -22,7 +22,11 @@ TRAIL = re.compile(r"^\s*,?\s*(?:as\s+)?" + VERB + r"\s+(" + NAME + r")")
 TRAIL2 = re.compile(r"^\s*,?\s*as\s+(" + NAME + r")\s+" + VERB)
 INTERRUPT = re.compile(r"^\s*,?\s*(" + NAME + r")\s+" + VERB)
 POSSESSIVE = re.compile(r"(?:In (?:your|his|her|their) words)[,:]?\s*$", re.I)
-ANON = re.compile(r"(There is a saying|It is said|As it is said|The\s+\w+\s+admonition)[,:]?\s*$", re.I)
+# Allow an attribution phrase between the marker and the colon: an editorial
+# repair can legitimately change "There is a saying:" to "There is a saying,
+# evolved from Goethe:" and must not thereby make the object undetectable.
+ANON = re.compile(r"(There is a saying|It is said|As it is said|The\s+\w+\s+admonition)"
+                  r"[^:\"]{0,60}[,:]?\s*$", re.I)
 
 
 BOUNDARY_TEXT = ("if we were good, we would keep growing",

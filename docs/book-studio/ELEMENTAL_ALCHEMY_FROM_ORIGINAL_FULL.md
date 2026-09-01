@@ -921,7 +921,7 @@ Tend to your spiritual fire throughout the day and night, as a sacred ceremony, 
 
 ### The Dark Side of Fire
 
-Like all the elements, fire has a dual nature. On one side, it brings life, sustains life, and provides warmth. On the other side, it destroys, burns, and takes life. On a spiritual level, fire inspires us with visions of what's possible, but it also casts shadows on cave walls that we imagine are reality. There is a saying: "The greater the light, the deeper the shadow." From fired-up to burned-out, shining bright to ashes, the light that illuminates the path can also lead to the blinding light of overwhelm.
+Like all the elements, fire has a dual nature. On one side, it brings life, sustains life, and provides warmth. On the other side, it destroys, burns, and takes life. On a spiritual level, fire inspires us with visions of what's possible, but it also casts shadows on cave walls that we imagine are reality. There is a saying, evolved from Goethe: "The greater the light, the deeper the shadow." From fired-up to burned-out, shining bright to ashes, the light that illuminates the path can also lead to the blinding light of overwhelm.
 
 *"As long as the ego runs your life, most of your thoughts, emotions, and actions arise from desire and fear." – Eckhart Tolle*
 
@@ -1741,7 +1741,7 @@ My own experiences added nuances to the dynamics I'd learned about. It's one thi
 
 We learn best from stories and lived experiences. Living our teachings adds context, nuance, and a human touch. Successful conversations involve energy, emotions, sensations, and ideas, making us fully human and connected.
 
-Experiences expand us beyond our beliefs, biases, and concepts of reality. Relationships transform thoughts and ideas into shared experiences, transcending self-doubts and enriching with lived wisdom. It's easy to argue theories and beliefs, but challenging to dispute someone's experience. Information leads to knowledge; experience leads to wisdom. As Carl Jung said, *"I don't have beliefs, I have experiences."*
+Experiences expand us beyond our beliefs, biases, and concepts of reality. Relationships transform thoughts and ideas into shared experiences, transcending self-doubts and enriching with lived wisdom. It's easy to argue theories and beliefs, but challenging to dispute someone's experience. Information leads to knowledge; experience leads to wisdom.
 
 ### The Dark Side of Air
 

@@ -2074,3 +2074,83 @@ Teasdale shows that shape working.
 
 **Four cards. None ruled.** Rulings available: `KEEP` · `CORRECT` · `CONNECT` ·
 `REFRAME` · `RECLAIM` · `REMOVE` · `DEFER`.
+
+---
+
+# 4I · BATCH 1 — RULED · 2026-09-01
+
+| Record | Ruling | Applied |
+|---|---|---|
+| **Descartes** | `CORRECT + REFRAME` · **DIALOGUE / CHALLENGE** | ⏸ **wording proposed, awaiting adoption** |
+| **Goethe** | `REFRAME` · **ILLUMINATION / LINEAGE** | ✅ |
+| **Tao Te Ching 33** | `KEEP` · **LINEAGE + ILLUMINATION** | ✅ *(no change needed)* |
+| **Jung, belief→experience** | `RECLAIM` · **AUTHORIAL CLAIM** | ✅ |
+
+## The distinction the batch produced
+
+> ### Correct attribution is not enough if correction would imply more textual certainty than the evidence supports.
+
+**Two under-attributions, two different repairs.** I had recommended `CORRECT` for
+both, and **that was the error the ruling caught**: naming Goethe would have fixed
+under-attribution **by manufacturing false precision**, because the English is an
+evolved formulation and not an established translation.
+
+**Descartes needs the relationship clarified. Goethe needs the lineage clarified.**
+
+---
+
+## ✅ Jung — `RECLAIM`, applied
+
+**Quotation removed. The paragraph now closes on the author's own sentence:**
+
+> *"It's easy to argue theories and beliefs, but challenging to dispute someone's
+> experience. Information leads to knowledge; experience leads to wisdom."*
+
+**Seam clean — no repair needed, and none attempted.** The idea was always the
+book's; Jung was being made to certify it with words he did not use.
+
+## ✅ Goethe — `REFRAME`, applied
+
+> *There is a saying, **evolved from Goethe**: "The greater the light, the deeper
+> the shadow."*
+
+**Four words.** It preserves the aphoristic register the author chose **and** names
+the lineage **without claiming the English is Goethe's.** *If the phrasing isn't
+right, the ruling stands and only the four words change.*
+
+## ✅ Tao Te Ching 33 — `KEEP`
+
+**No manuscript change.** Translator recovery remains owed **as a provenance task,
+independent of the editorial ruling.**
+
+**And it settles something about the Teasdale removal:** *"a quote can belong in the
+culmination if it still advances the book."* **The Conclusion was never the
+objection** — Teasdale C repeated an established relationship; Laozi opens a
+distinction the next sentence immediately uses.
+
+---
+
+## ⏸ Descartes — `CORRECT + REFRAME` · wording proposed, **not adopted**
+
+**The ruling is clear and I agree with it.** The current sentence claims the cogito
+*"reflects our collective existence through shared thoughts."* **It doesn't** —
+Descartes begins from the solitary thinking subject. **The book is turning him
+outward, and that turn should be visible as the book's own.**
+
+**Proposed replacement — `EDITOR/MODEL SUGGESTION`, requires your yes, revision, or
+rejection:**
+
+> The air element of cognition allows us to create meaningful symbols and symbolic
+> language, enabling us to navigate complex issues and come together to envision
+> better worlds. Descartes grounded existence in the solitary thinker — *"I think
+> therefore I am."* I would turn it outward: what we are, we are together, through
+> thoughts we hold in common.
+
+**What it does:** names him · **states his position accurately** (solitary) · marks
+the turn as **yours** (*"I would turn it outward"*) · and leaves the later
+*"I know therefore I am"* reading as **an authored response rather than an
+unexplained echo.**
+
+**Where I'd expect you to push back:** *"what we are, we are together"* is a
+cadence, and it may be more mine than yours. **The structure is the ruling; the
+sentence is a draft.**
