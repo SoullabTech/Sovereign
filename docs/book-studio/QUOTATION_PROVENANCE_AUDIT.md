@@ -2,7 +2,7 @@
 
 **Source of record:** `docs/book-studio/ELEMENTAL_ALCHEMY_FROM_ORIGINAL_FULL.md`
 **Opened:** 2026-09-01, after Chapter 10 closed developmental adjudication.
-**Status:** IN PROGRESS — 106 of 137 adjudicated. **Chapter 5 CLOSED (30/30). Chapter 8 CLOSED (23/23).**
+**Status:** IN PROGRESS — 108 of 137 (Ch2: 8 of 10) adjudicated. **Chapter 5 CLOSED (30/30). Chapter 8 CLOSED (23/23).**
 
 ## Scope
 
@@ -2782,6 +2782,66 @@ remaining 31 items must be checked for **both** forms.
 
 **This finding changes the book-wide model of the provenance problem.** It is not
 a chapter exception.
+
+### Chapter 2 — remaining items (8 of 10 adjudicated)
+
+**L397 · Nicholas of Cusa — "God is an infinite circle, whose circumference is nowhere, and whose center is everywhere."**
+`PARAPHRASE/ADAPTED` · pattern `EVOLVED APHORISM / RECOVERABLE ANCESTOR`.
+**Ancestor:** the pseudo-Hermetic ***Liber XXIV Philosophorum*** (12th c.) —
+"DEUS EST **SPHAERA** INFINITA CUIUS CENTRUM EST UBIQUE, CIRCUMFERENTIA NUSQUAM."
+Cusa **used** the figure (*De Docta Ignorantia* I.23) but did not originate it; so
+did Alain de Lille, Bonaventure, Pascal and Voltaire.
+**Two alterations:** the manuscript changes **sphere → circle**, and reverses the
+clause order. *Sphaera* is the point of the image — infinity in every direction.
+**`MISSING`** — no Cusa entry in Ch2. **Rights: `PUBLIC DOMAIN` · `NONE`.**
+
+**L413 · Carl Jung — "There is no linear evolution; there is only circumambulation of the self…"**
+`VERIFIED VARIANT` · `MEDIATED TRANSLATION` (fifth instance). *Memories, Dreams,
+Reflections*, ed. Aniela Jaffé, trans. Richard and Clara Winston. Published text
+reads "there is only **a** circumambulation"; the manuscript drops the article.
+**Bibliography:** the correct work (*MDR*) appears **nowhere in the book**. Ch6
+lists Jung's *Modern Man in Search of a Soul* as an `ORPHAN CANDIDATE` with no
+matching Ch6 quotation — **that orphan is probably a misfiled Ch2 entry**, though
+it also names the wrong work. `MISSING` + likely `MISFILED SOURCE`.
+**Rights: `LIKELY PROTECTED` · `STANDARD`** — the Winston translation.
+
+**Still open in Ch2 (2):** L333 Alan Watts and L417 Johannes Kepler. Both have
+plausible, correctly-named bibliography entries (*The Wisdom of Insecurity*;
+*Harmonices Mundi*, trans. E. J. Aiton). **Not yet checked — recorded as open
+rather than assumed**, per the standing correction against impression hardening
+into verdict.
+
+---
+
+## DOCTRINE-RELEVANT FINDING — alterations drift toward the local argument
+
+Three verified-source quotations across three chapters were each altered in a way
+that **moves the sentence toward the thesis of the chapter it sits in**:
+
+| Item | Source wording | Manuscript wording | Chapter thesis served |
+|---|---|---|---|
+| **L1115 Campbell** (Ch6 Water) | "all the **world**" | "all the **hells**" | emotional depths, shadow |
+| **L1449 Lao Tzu** (Ch7 Earth) | "**It** does not hurry" | "**Nature** does not hurry" | natural pace, ecology |
+| **L397 Cusa** (Ch2 Torus) | "infinite **sphere**" | "infinite **circle**" | circles, torus, spiral |
+
+In each case the alteration is small, defensible-looking, and **directional** —
+it makes the quotation fit its host chapter better than the original did.
+
+**Why this matters:** transmission drift is normally *undirected* — words fall
+out, clauses simplify, registers smooth. **Drift that consistently moves toward
+the quoting text's argument is not transmission; it is selection or adjustment at
+the point of use.** It does not establish who made the change, or whether it was
+made deliberately, or whether the manuscript inherited an already-altered form
+that happened to suit.
+
+But it is a distinct signal from the hardening cases, and it affects the
+restoration test: **where an alteration is directional, restoring the authentic
+wording will predictably weaken the local argument** — which is precisely when an
+author is most tempted to keep the altered form. Flag these for explicit
+authorial attention rather than routine repair.
+
+**Three instances. Recorded as an observation, not yet a named class** — and to
+be watched for across the remaining items.
 
 ### Chapter 2 bibliography — two notes
 
