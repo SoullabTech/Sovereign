@@ -2,7 +2,7 @@
 
 **Source of record:** `docs/book-studio/ELEMENTAL_ALCHEMY_FROM_ORIGINAL_FULL.md`
 **Opened:** 2026-09-01, after Chapter 10 closed developmental adjudication.
-**Status:** IN PROGRESS — 87 of 137 adjudicated. **Chapter 5 CLOSED (30/30). Chapter 8 CLOSED (23/23).**
+**Status:** IN PROGRESS — 90 of 137 adjudicated. **Chapter 5 CLOSED (30/30). Chapter 8 CLOSED (23/23).**
 
 ## Scope
 
@@ -1844,7 +1844,7 @@ Eight independent instances across three chapters. No longer incidental.
 
 **Still findings-only. No repair batch. No bibliography reconstruction.**
 
-**Chapter 7 — Earth: 13 of 16 in progress. Next after: Chapter 9 — Aether (12), then Chapter 9 — Aether (12)**, completing the
+**Chapter 7 CLOSED (16/16).** Next after: Chapter 9 — Aether (12), then Chapter 9 — Aether (12)**, completing the
 five-element provenance picture before the lower-volume chapters.
 
 
@@ -2274,6 +2274,75 @@ adjudication has been done.**
 > A perfectly verified quotation may still need counsel; a badly sourced
 > quotation may turn out to carry no meaningful copyright exposure. The two axes
 > are orthogonal and must be scored separately.
+
+**L1419 · Max McKeown** — `UNVERIFIED — source lead unresolved`. The phrase
+"powerful difference between adapting to cope and adapting to win" appears
+verbatim in the **book's published description**: "The ability to adapt faster
+and smarter than the situation is what makes the powerful difference between
+adapting to cope and adapting to win." The manuscript's sentence is a
+**condensation of that blurb**, not a confirmed text passage. Bibliography cites
+the correct book.
+**Rights: `PROTECTABILITY UNCERTAIN` · `STANDARD`.**
+
+**Possible second instance of the paratext mechanism — ruling needed.** van der
+Kolk is *title*-derived; McKeown may be *blurb*-derived. Both are **paratext
+rather than book text**, which would generalize the candidate mechanism from
+`TITLE-DERIVED` to **`PARATEXT-DERIVED QUOTATION`**. But they are not identical,
+and naming a class on a broadened definition risks the stretching the taxonomy
+discipline forbids. **Held as a candidate; not named.**
+
+**L1429 · Jawaharlal Nehru** — `UNVERIFIED — source lead unresolved`. Attributed
+on Wikiquote; **not confirmed in *The Discovery of India***, which the Ch7
+bibliography cites. Possible `WRONG SOURCE/WORK`.
+**Rights: `TERM UNCERTAIN` · `STANDARD`.**
+
+**L1441 · "Earth care, people care, fair share." — *Permaculture principle***
+**`VERIFIED`** as the standard formulation of permaculture's three ethics
+(Mollison/Holmgren tradition). **Attributed to a movement rather than a person,
+and accurately so.**
+*Minor precision point, not a provenance failure:* these are permaculture's three
+**ethics**; Holmgren's **principles** are a separate set of twelve.
+**Rights: `PROTECTABILITY UNCERTAIN` · `NONE`** — a three-phrase slogan.
+
+**Positive control now three for three.** "Adapted from Rumi, after Coleman
+Barks" · "adapted from Luke 4:23" · "Permaculture principle". **Every time the
+manuscript declines to name a person or flags mediation, it is accurate.** The
+failures remain confined to unlabelled personal attributions.
+
+---
+
+## Chapter 7 CLOSED — and the dash hypothesis FAILS
+
+| Verdict | Ch5 Fire *(en)* | Ch6 Water *(em)* | **Ch7 Earth *(em)*** | Ch8 Air *(en)* |
+|---|--:|--:|--:|--:|
+| `MISATTRIBUTED` | 10% | 11% | **13%** | 17% |
+| `VERIFIED` | 33% | **47%** | **31%** | 17% |
+| `PARAPHRASE/ADAPTED` | 13% | 16% | **6%** | 9% |
+| `UNVERIFIED` | 43% | **26%** | **50%** | 57% |
+
+**Earth is an em-dash chapter that performs like the en-dash chapters.** At 31%
+verified and 50% unverified it sits between Fire and Air, and does **not**
+resemble Water. On unverified rate it is **worse than Fire**.
+
+### PREDICTION: FAILED
+
+The pre-registered prediction was that Ch7 and Ch9, both em-dash blocks, would be
+**better-sourced than Fire and Air and resemble Water**. Earth falsifies it.
+
+**Per the binding protocol: the correlation is struck.** The dash blocking
+remains a real **material observation** about assembly — the distribution is
+genuinely non-random — but it has **no demonstrated relationship to quotation
+provenance quality**, and must not be used to predict, explain, or triage
+anything.
+
+**No explanation will be invented for why the dash blocks differ.** Aether will
+still be censused, but under the ordinary procedure and with no hypothesis
+riding on it.
+
+> **This is what pre-registration was for.** The theory was attractive, tidy, and
+> would have licensed exactly the kind of shortcut this audit exists to prevent —
+> inferring provenance quality from a formatting artifact. The evidence killed it
+> in one chapter.
 
 ### Chapter 7 bibliography — three findings and one exemplar
 
