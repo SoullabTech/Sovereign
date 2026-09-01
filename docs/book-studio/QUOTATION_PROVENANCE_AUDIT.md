@@ -2,7 +2,7 @@
 
 **Source of record:** `docs/book-studio/ELEMENTAL_ALCHEMY_FROM_ORIGINAL_FULL.md`
 **Opened:** 2026-09-01, after Chapter 10 closed developmental adjudication.
-**Status:** IN PROGRESS — 67 of 137 adjudicated. **Chapter 5 CLOSED (30/30). Chapter 8 CLOSED (23/23).**
+**Status:** IN PROGRESS — 69 of 137 adjudicated. **Chapter 5 CLOSED (30/30). Chapter 8 CLOSED (23/23).**
 
 ## Scope
 
@@ -1598,6 +1598,49 @@ Had "Angelou ×2" been treated as an author set, the grouping would have risked
 either condemning the genuine quotation or admitting the false one. **Fifth
 independent case in which author identity would have produced the wrong
 adjudication.**
+
+### Chapter 6 — fourth tranche
+
+**L1239 · Henry David Thoreau — "You must live in the present, launch yourself on every wave, find your eternity in each moment."**
+**`VERIFIED EXACT`.** Thoreau's **Journal, 24 April 1859**; reproduced in Jeffrey
+S. Cramer, ed., *I to Myself: An Annotated Selection from the Journal of Henry D.
+Thoreau* (Yale UP, 2007), p. 395.
+**Rights: `PUBLIC DOMAIN` · `NONE`** — the 1859 journal text. *(Cramer's 2007
+apparatus is protected; the journal text is not.)* Third public-domain
+classification.
+**`MISSING`** — no Thoreau entry in the Ch6 bibliography.
+
+**Cross-chapter note.** Thoreau is quoted twice in the book and **neither
+instance is correctly supported**: Ch5's quotation is from *The Maine Woods* but
+cited as *Walden*; Ch6's is from the *Journal* and cited nowhere.
+
+**L1358 · Thich Nhat Hanh — "Walk as if you are kissing the Earth with your feet."**
+`UNVERIFIED — source lead unresolved` on the **printed wording**; the
+**attribution is well-founded**.
+
+The **Plum Village** official site — his own community's channel, which meets the
+official-source standard — carries his walking-meditation poem containing "**Kiss
+the Earth with your feet.**" That verifies the image and the author. It does
+**not** verify the manuscript's longer sentence, which is attested only on quote
+sites, consistently citing *Peace Is Every Step* (1991). Edition check required.
+
+**Translation layer — check, do not assume.** Thich Nhat Hanh wrote in
+Vietnamese and French as well as English; whether the printed sentence is his own
+English or a translation must be established, the same caveat as Tagore.
+**Rights: `PROTECTABILITY UNCERTAIN` · `STANDARD`.**
+
+#### Second `MISFILED SOURCE` instance
+
+**Ch5's bibliography lists "Nhat Hanh, Thich. *Peace Is Every Step.* Bantam,
+1991."** — but Ch5's Thich Nhat Hanh quotation (L812, "From a spark to a flame,
+fire is life") is `UNVERIFIED` and not placed in that book. **Ch6's** quotation is
+the one that plausibly comes from it, and Ch6 has no entry at all.
+
+The right book is in the bibliography, **under the wrong chapter** — exactly the
+Campbell/*Companion* shape. Two independent instances now, in different chapters
+and different authors. `MISFILED SOURCE` is a real recurring defect, not a
+one-off, and confirms that the reconstruction must reconcile **source ↔ actual
+usage location**.
 
 ---
 
