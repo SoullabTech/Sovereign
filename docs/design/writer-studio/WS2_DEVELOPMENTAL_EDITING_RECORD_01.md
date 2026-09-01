@@ -334,3 +334,52 @@ ripening event. The epigraph provenance audit is a **book-level job discovered
 from a declined chapter-level finding** — it exists because a stylistic finding
 was rejected and the real work underneath it became visible. Neither is a note,
 and neither attaches to a division.
+
+---
+
+## New failure class — external attribution concealing internal composition
+
+Discovered 2026-09-01, during the whole-book quotation provenance audit that
+followed the close of all ten chapters.
+
+**The class.** An epigraph attributed to a famous external authority may in fact
+be manuscript language that later acquired that attribution. The false name does
+not merely misstate a source — it *conceals the fact that the passage is the
+author's own composition*, and it borrows authority the passage never earned.
+
+**Why it is new.** Every earlier finding in this record treats provenance as
+fact-checking: is this quotation accurately worded and correctly sourced? This
+class inverts the instrument. Here provenance review becomes an
+**authorship-recovery instrument**: it recovers writing that the manuscript had
+externalized, and returns the question of whether that writing deserves to
+stand.
+
+**Why a failed lookup is not the evidence.** "I cannot find Ken Wilber saying
+this" does not establish that the author wrote it. The audit therefore carries
+two axes — attribution status and, separately, origin status — so that absence
+of external evidence defaults to `UNKNOWN`, never to a claim of internal
+authorship. `INTERNAL-ORIGIN CANDIDATE` requires positive textual evidence.
+
+**The signature, as first observed.** Chapter 5 opens with two epigraphs
+attributed to Rumi and to Clarissa Pinkola Estés that bracket a passage of the
+manuscript's own prose. All three share an ornamental compound-adjective
+register, the same cosmological diction, and the same cadence. Neither epigraph
+is locatable in any source, and authentic Estés material on the same theme reads
+nothing like it. Separately, a "Ken Wilber" epigraph *defines* a term —
+"soulplay" — that the manuscript's own prose coins two sentences earlier.
+
+**What the class costs if undetected.** The passage keeps borrowed authority; a
+real writer is credited with words they did not write; and a compositional
+problem stays hidden, because three consecutive passages in one voice look like
+a conversation between sources rather than what they may be — one voice,
+repeated.
+
+**Instrument change this produces.** Provenance review belongs *after*
+developmental adjudication, not before: only once the prose is settled can
+stylistic continuity between an epigraph and its neighbours be read reliably.
+And it must be run as a census, not quote-by-quote — the pattern is only visible
+across instances.
+
+**Status.** Not yet a book-wide conclusion. Under test against Chapters 8 and 6,
+which together carry 42 of the remaining attributed quotations.
+

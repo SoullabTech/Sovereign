@@ -73,6 +73,46 @@ all approved repairs.
 Ch5 (30) → Ch8 (23) → Ch6 (19) → Ch7 (16) → Ch9 (12) → Ch2 (10) → Preface (7)
 → Ch4 (7) → Ch10 (5) → Ch3 (4) → Ch1 (3) → back matter (1).
 
+## Emerging provenance pattern — attribution hardening
+
+**Recorded narrowly. Not a book-wide conclusion.**
+
+Some unverified quotations may have originated as manuscript/compositional
+language and later acquired attribution to an external authority.
+
+Evidence requires **more than a failed source lookup**. It requires at least one
+of: stylistic/lexical continuity with surrounding manuscript prose; local
+conceptual coinage that the "quotation" then defines; or drafting-history
+evidence. The Chapter 5 opening pair qualifies on a three-part convergence —
+no locatable external source; register matching the immediately adjacent prose;
+and placement that makes the attributed line function as an externally
+authorized continuation of the manuscript's own voice.
+
+This establishes a plausible local provenance pathway that a bare `UNVERIFIED`
+label would erase. It does **not** prove authorship by anyone in particular.
+
+**Test:** whether the signature replicates in Ch8 and Ch6. If it does, the
+remedy should be one systematic authorial decision, not quote-by-quote
+improvisation.
+
+**Likely eventual rule** (`INTERNAL-ORIGIN CANDIDATE` + no external source):
+1. First decide whether the language itself deserves to remain.
+2. If yes — remove the false external authority and reclaim it as unquoted
+   manuscript prose, where authorship and provenance permit.
+3. If no — remove it.
+4. Never retain an attribution merely because the words are attractive.
+
+**Reclamation is not changing `— Rumi` to `— Kelly`.** In most cases it means
+dissolving the quotation frame altogether and letting the thought stand, if it
+belongs, as part of the author's prose.
+
+**Held observation, for after the census.** If the Chapter 5 opening pair proves
+internally originated, a second editorial question sits behind the provenance
+one: three consecutive passages in effectively one voice may be too much even
+once the false names are gone. Provenance recovery could expose a compositional
+redundancy that the external attributions currently disguise. Hold both
+epigraphs untouched until the census closes.
+
 ---
 
 ## Adjudicated
