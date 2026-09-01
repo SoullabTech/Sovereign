@@ -304,3 +304,83 @@ conditional on an authorial answer, never assert them.**
 **Grounding event:** applied to six reopened Stage 4A items, the restraint moved
 only two. Without it, all six could have been rescued with plausible-sounding
 prose.
+
+---
+
+# THE HEURISTIC LIBRARY — the central product conclusion
+
+**Ratified 2026-09-01, at the close of Stage 4A.**
+
+> **For a first-time author, the hard part is usually not generating more prose. It
+> is knowing what kind of decision they are looking at.**
+
+**Heuristics turn an overwhelming manuscript into a sequence of understandable
+judgments.** That — not drafting, not polishing — is the Studio's central function.
+
+Every heuristic below was **earned through an actual editorial event on a real
+manuscript**, not designed in the abstract. The grounding event is named so none
+of them can drift into slogan.
+
+## The library
+
+| # | Heuristic | Earned at |
+|---|---|---|
+| 1 | **A quote must earn the interruption of another voice.** | Stage 4's governing question |
+| 2 | **If the relationship is real but unclear, unite the quote to the manuscript with the smallest truthful frame.** | Teasdale · Campbell |
+| 3 | **If the quote is gratuitous or misplaced, remove it — then ask whether the manuscript needs more meaning in its own voice.** | the 19 4A removals |
+| 4 | **Let sources be sources; let synthesis belong to the author.** | Stage 3b north star |
+| 5 | **A quotation plus its frame is the unit of judgment, not the quotation alone.** | the same sixty Teasdale words read as certification, then as kinship, untouched |
+| 6 | **Do not confuse agreement with lineage.** | the Teasdale reversal |
+| 7 | **Do not use authority merely to certify something the manuscript has already earned.** | the `CERTIFICATION` function |
+| 8 | **A source can deepen, challenge, historicize, illuminate, locate the work in lineage, or enter into dialogue.** | the six-function model |
+| 9 | **A detected problem is not automatically permission to rewrite it.** | findings-only discipline across Stages 2, 3b, 4 |
+| 10 | **A missing heading, bridge, epigraph, or symmetrical structure is not automatically a defect.** | Chapters 1/3/5/8 opening without epigraphs; the Chapter 10 H2 flattening |
+| 11 | **If a source relationship is borrowed but the interpretation is yours, make the boundary visible.** | Haramein · Four Yogis · Edinger's seven operations to five |
+| 12 | **Lived experience is not a source dependency. A fictional composite is not a disguised citation problem.** | the ceremonial thread · Maya |
+| 13 | **Provenance, editorial value, and rights are three different questions.** | Bear Heart — `EDITORIAL KEEP · RIGHTS HOLD` |
+| 14 | **Plausibility is not evidence. "That sounds like Jung" is not provenance.** | the whole internal-origin lane |
+| 15 | **When evidence disproves an attractive theory, kill the theory.** | the pre-registered dash hypothesis, falsified by Earth and struck |
+
+## How they must be delivered — coaching, not rules
+
+**These must not appear as a rulebook dumped on the member.** They should surface
+as **contextual coaching at the moment of the decision**, phrased as questions the
+member answers — never as verdicts the system issues.
+
+| The member does this… | …the Studio quietly asks |
+|---|---|
+| inserts an epigraph | **What is this voice doing here — illuminating something you cannot say alone, locating you in a lineage, or simply agreeing with you?** |
+| cites a thinker | **Which part comes from them, and which part is your own synthesis?** |
+| a section feels thin after a quotation is removed | **Did the quote leave a genuine hole, or did it reveal that the section already stands on its own?** |
+| feels anxious that one chapter doesn't match the others | **Is this a structural defect, or is this chapter allowed to have its own form?** |
+
+**Each question maps to a heuristic, but the member never has to learn the
+heuristic to benefit from it.** They learn it by making the judgment.
+
+## The binding constraint — no literary ideology
+
+> **The heuristics must help the member see the choices an experienced editor
+> sees, while keeping the decision with them.**
+
+This is a **hard constraint, not a preference.** A system that encodes a house
+style, a prose ideal, or a citation posture will produce manuscripts that converge.
+The heuristics above are **diagnostic, not prescriptive**: every one of them names a
+*distinction* the author then rules on. **None of them contains a preferred answer.**
+
+**Test for any future heuristic:** *does it tell the member what to choose, or does
+it show them what kind of choice they are making?* **Only the second may ship.**
+
+## Why this is the real promise
+
+> **For a first book especially, this is the difference between**
+> **"AI helped me produce a manuscript"**
+> **and**
+> **"I learned how to become the author of my book."**
+
+**That is the Studio's actual product.** The manuscript is the artifact; **the
+authorship is the outcome.** A system optimizing for the first will reliably
+undermine the second — it will make the decisions rather than reveal them, and the
+member will finish with a better book and no more capacity than they started with.
+
+**This makes the Studio a teacher of authorship rather than an editor**, and it is
+the standard every other requirement in this document should be read against.
