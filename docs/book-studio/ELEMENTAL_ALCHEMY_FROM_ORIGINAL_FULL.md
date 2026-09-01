@@ -320,6 +320,8 @@ What I have witnessed, again and again, is that those who give themselves to thi
 
 This book represents a synergy of diverse wisdom lineages—from ancient metaphysical traditions like alchemy, shamanism, Taoism, Hermeticism, Tantra, and Sufism to modern psychological principles and wellness modalities. My role is simply that of a storytelling cartographer, weaving experiences and teachings into a lived tapestry that unlocks your multidimensional potentials.
 
+A word about how I came by any of this. The ceremonies, dreams, and practices I describe in these pages are my own—I was there for them—but I did not find my way to them alone. My formation in the shamanic and healing arts began more than thirty years ago with Luata Bray, my first true teacher, and has been deepened since through the work and friendship of Dr. C. Michael Smith. Where this book speaks with any authority about ceremony, it is because I was taught, and then spent decades practicing what I was taught. I name them here once so that I do not have to interrupt every story that follows.
+
 Ultimately, the real mystery school is your own being. All answers you'll ever need lie within your authentic resonance as a vibrantly elemental soul. These pages are offered as openings.
 
 The path ahead has a way of unlocking, awakening, and empowering—each person, in their own time, finding the radiant elemental nature that was theirs all along. The first step is inward; the light blazes outward of its own.
@@ -508,7 +510,7 @@ The Agency is the medium through which the Agent engages its creative power. It 
 
 #### The Manifestation: The Creation
 
-From the Agent and Agency comes the Manifestation—the tangible outcome resulting from their union. This is the realization of our engagement with our intuitions, feelings, senses, and thoughts in the physical world—the actions we take and the reality we create. In Christian theology, this is reflected in the understanding that "From the Father and the Son comes the Holy Spirit," the breath of life and animating force that brings visions and ideas to fruition. This interpretation offers one perspective on the divine mystery, but similar dynamics are observed across cultures and systems of practice, supporting the notion that these sacred processes, while mysterious, also mirror fundamental human experiences.
+From the Agent and Agency comes the Manifestation—the tangible outcome resulting from their union. This is the realization of our engagement with our intuitions, feelings, senses, and thoughts in the physical world—the actions we take and the reality we create. In Western, Latin Christian theology, this is reflected in the understanding that "From the Father and the Son comes the Holy Spirit"—a formulation the Eastern churches do not share—the breath of life and animating force that brings visions and ideas to fruition. This interpretation offers one perspective on the divine mystery, but similar dynamics are observed across cultures and systems of practice, supporting the notion that these sacred processes, while mysterious, also mirror fundamental human experiences.
 
 ### The Refining Nature of the Spiral
 
@@ -546,6 +548,8 @@ In Vedic philosophy, the gunas are the three facets or strands that compose all 
 ### The 'Gunas' of Astrology
 
 Astrology also reflects a triadic structure through its modalities: cardinal, fixed, and mutable. Each modality represents a different phase in the cycle of growth and transformation, analogous to the three gunas in Vedic philosophy.
+
+A word about what follows. The three systems I am about to set beside one another—the gunas of Vedic philosophy, the modalities of astrology, and the sulfur, salt, and mercury of Western alchemy—are each inherited, and each is old. **The correspondence I draw among them is my own.** No tradition hands these three down as equivalents. I set them together because, working with all three over many years, I kept meeting the same movement wearing different clothes: something expands, something holds, something moves between them.
 
 **Cardinal (Rajas)**: The cardinal movements symbolize the initiating, acting, and expressing nature of the elements.
 
@@ -653,7 +657,7 @@ That is the joke. And that is also the teaching.
 
 #### The Four Paths, the Four Elements
 
-The four yogis are not strangers. They are us. Each embodies one of the four classical paths of yoga — and, just beneath that, one of the four elements of consciousness:
+The four yogis are not strangers. They are us. In the story as Sadhguru tells it, each embodies one of the four classical paths of yoga. The correspondence I want to draw is the next step: beneath each path, one of the four elements of consciousness.
 
 - **Kriya yoga**, the path of inner energy and transformation, is the way of **Fire** — spirit, vision, ignition.
 - **Bhakti yoga**, the path of devotion, is the way of **Water** — feeling, longing, surrender.
@@ -692,17 +696,19 @@ With its system of 64 hexagrams, each composed of broken (yin) and unbroken (yan
 
 Modern science reveals a related pattern in the very constituents of life itself. The molecules of life, the building blocks of all existence—DNA—form an alphabet of instruction composed of 64 codons. These combinations of three nucleotides comprise the text of the genome that contains instructions for producing proteins, which perform all the biological functions of a living being.
 
-Terence McKenna eloquently articulated this profound connection:
+This numerical correspondence was first argued at book length by Martin Schönberger in *The I Ching and the Genetic Code: The Hidden Key to Life* (1973), and Terence McKenna later developed it in his own work. McKenna put it this way:
 
 *"The DNA codons are based on a system of 64, exactly like the I Ching. My belief is that someone, some group of people thousands of years ago, looked into the human organism and saw an ebb and flow, an energy field in a constant state of flux. They asked themselves how many elements are necessary to describe this energy field, and the answer was 64. Out of 64 subtypes of time, you can create everything. So, the I Ching is not just a book of Chinese mysticism; it's a book of molecular dynamics that sees through biology to the physics that allowed biology to come into existence."*
 
-This association between the I Ching and the 64 codons underscores that the wisdom of ancient sages and the insights of modern science describe an underlying organizing principle in the Universe—the same cosmic mandala that governs heaven, earth, and humanity. The I Ching and DNA, both defined by 64, illustrate the matrix of order and disorder, stability and transformation that characterizes our human condition.
+Schönberger proposed the correspondence; McKenna developed it. It should be said plainly that what they identified is a **numerical** correspondence—two systems that each arrive at sixty-four—and not a demonstrated causal relationship between an ancient Chinese oracle and the genetic code. Biology has established no such link, and the argument does not need one.
+
+What interests me is what the correspondence suggests when it is viewed through the elemental and developmental lens of this book. Two systems, separated by every conceivable distance, each settle on sixty-four as the number of distinguishable states required to describe a living process in flux. Whether or not one is derived from the other, both are describing an underlying organizing principle—the same cosmic mandala that governs heaven, earth, and humanity. The I Ching and DNA, both defined by 64, illustrate the matrix of order and disorder, stability and transformation that characterizes our human condition.
 
 The true wisdom of the I Ching lies in its deep adherence to the rhythms and cycles of nature. By studying these patterns, we enhance our ability to flow with the ebb and flow of energy, aligning ourselves with the natural world. This alignment fosters a deeper connection with the environment, promoting harmony and balance in our lives.
 
 By linking the genetic code to the I Ching's 64 hexagrams, we glimpse the limitless and novel ways in which things can be put together. It's an exercise in seeing the rules of the universe rather than relying on random chance. This promotes a holistic, naturalist philosophy of life, encouraging us to live in awareness of the intricate web of life that envelops the universe.
 
-Engaging in a dialogue with the I Ching allows us to participate in a venerable tradition that connects us with the primal flux of dreamtime, where we have our origins—and where, if we are fortunate, we can still return. Pulling these threads together and finding their connections puts us in touch with our own origins. It guides us toward a future where our perspective aligns more closely with the wisdom of the Dreamtime, one in which humanity and the natural world coexist in harmony.
+Engaging in a dialogue with the I Ching allows us to participate in a venerable tradition that connects us with the primal flux from which we have our origins—and to which, if we are fortunate, we can still return. Pulling these threads together and finding their connections puts us in touch with our own beginnings. It guides us toward a future in which humanity and the natural world coexist in harmony.
 
 ### Conscious Awareness: The One, The Two, The Three, and The Four
 
@@ -1617,7 +1623,7 @@ Fire and Water, on the other hand, represent the right hemisphere, embracing the
 
 *"Reality is not only stranger than you think, but stranger than you can think." – Richard Feynman*
 
-Fire and Water reveal deeper truths by purging falsehoods, distilling an inner elixir of insight. This inner gold is then planted in the Earth, where it takes form and develops into our created selfhood. From the Earth, it rises into the Air, connecting with the world and becoming part of a greater collective wisdom.
+Fire and Water reveal deeper truths by purging falsehoods, distilling an inner elixir of insight. I take the term *inner gold* from the Jungian analyst Robert A. Johnson, who used it for the value we carry but cannot yet see in ourselves, and who wrote about how often we hand it to someone else to hold. This inner gold is then planted in the Earth, where it takes form and develops into our created selfhood. From the Earth, it rises into the Air, connecting with the world and becoming part of a greater collective wisdom.
 
 Air represents the culmination of these regressive and progressive processes, embodying all the preparatory work and delivering essential insights to the world. It transcends mere matter, reflecting the essence of what truly matters. By reconnecting with others, it shares and communicates wisdom, synthesizing greater understanding through dialectic exchange. This process ignites new hypotheses and visions, perpetuating the spiral of growth and refining us toward the center of our being, where our true nature awaits.
 
@@ -1876,7 +1882,7 @@ Imagine Aether as the space that allows a symphony to arise from silence, the ca
 
 ### The Higher Self
 
-In Taoism from China and in other shamanic systems originating in other places, the etheric self represents the spiritual Self, which presides over the conscious self and the lower, subconscious self. It exists in different terms in Islamic, Hindu, Christian, and new age conceptions of the aetheric Self, which is in the world but not of the world, which manifests an ego-self but is not the ego personality, beyond the emotional, material, and mental self. In all shamanic traditions, an important goal is to connect consciously with our higher selves—that spiritual aspect of us which exists beyond the physical body—so that we may live in coherence with this deepest, highest, and most divine source of wisdom.
+I encountered the three-part self through my own shamanic training, and I have worked with it for most of my adult life. It is worth being accurate about where it comes from: this particular basic self / conscious self / higher Self vocabulary is not an ancient Taoist or universal shamanic doctrine but a modern formulation, associated most closely with the Huna material of Max Freedom Long and carried from there into a good deal of contemporary shamanic and energy practice. In it, the etheric self represents the spiritual Self, which presides over the conscious self and the lower, subconscious self. It exists in different terms in Islamic, Hindu, Christian, and new age conceptions of the aetheric Self, which is in the world but not of the world, which manifests an ego-self but is not the ego personality, beyond the emotional, material, and mental self. In all shamanic traditions, an important goal is to connect consciously with our higher selves—that spiritual aspect of us which exists beyond the physical body—so that we may live in coherence with this deepest, highest, and most divine source of wisdom.
 
 There is most often a three-part self: the lower self being the basic self, belonging to the earth realm; the middle self being an ephemeral, momentary manifestation of the presence of a unique, ego-augmented soul living a lifetime journeying on earth yet connected to heaven; and the higher Self (with a capital S to denote its sacredness). The latter is our aetheric, metaconscious Self, which oversees our earthwalk. Other religious traditions might call this aspect our being the soul—an embodied spirit. Ultimately, the soul is the dreamer who is dreaming a life into being from the aether which bridges the spaces between the immaterial realms and the material world.
 
@@ -2167,7 +2173,7 @@ We are always changing whether we consciously attend to the process or not. Yet 
 
 The elemental movements of Spiralogic unfold across both inner and outer dimensions of experience. At a deep level of being, we can imagine a vertical axis of selfhood, moving from the more immediate personality and conscious self toward deeper aspects of psyche, soul, and spiritual awareness.
 
-Different traditions name these dimensions differently. In shamanic awareness we may speak of the higher Self, the conscious self, and the basic self. Jung described a relationship between the ego and the larger Self. Mystical traditions often speak of movements between ordinary awareness and a more encompassing ground of being. The language differs, but there are dimensions of ourselves that are immediately available to consciousness and others that reveal themselves slowly through dreams, intuition, emotional experience, spiritual practice, relationship, crisis, creativity, and reflection.
+Different traditions name these dimensions differently. In the shamanic training I came through, we speak of the higher Self, the conscious self, and the basic self—a modern three-part formulation rather than an ancient one, as noted earlier. Jung described a relationship between the ego and the larger Self. Mystical traditions often speak of movements between ordinary awareness and a more encompassing ground of being. The language differs, but there are dimensions of ourselves that are immediately available to consciousness and others that reveal themselves slowly through dreams, intuition, emotional experience, spiritual practice, relationship, crisis, creativity, and reflection.
 
 There is also a horizontal axis moving between our inner experience and engagement with the outer world. We move inward toward contemplation and outward toward action. We receive and express, listen and communicate, imagine and create, withdraw into ourselves and return again to relationship. Temperament, experience, circumstance, and development influence where we are most comfortable along this axis. Neither inwardness nor outwardness is inherently better; the work is becoming conscious of the movement and of the relationship between them.
 
@@ -2181,7 +2187,7 @@ The elemental movements of Spiralogic also correspond with the ancient symbolic 
 
 Inner and outer, spirit and matter, conscious and unconscious, individual and collective are brought into relationship. The aim is not for one side to defeat the other, but for a more inclusive whole to become possible.
 
-The original inspiration for this dimension of the Spiralogic model came in part through the *Book of Lambspring*, one of the alchemical works drawn upon by Carl Jung, and through Edward F. Edinger's *Anatomy of the Psyche: Alchemical Symbolism in Psychotherapy*. Alchemical imagery gives us a symbolic way of understanding processes that can otherwise be difficult to describe: Fire burns, Water dissolves, Earth forms, Air rises, and what has been separated comes again into relationship.
+The original inspiration for this dimension of the Spiralogic model came in part through the *Book of Lambspring*, one of the alchemical works drawn upon by Carl Jung, and through Edward F. Edinger's *Anatomy of the Psyche: Alchemical Symbolism in Psychotherapy*. Edinger treats seven major alchemical operations; I draw on five of them here, because those five correspond to the five-element architecture of this book. The selection is mine, not his. Alchemical imagery gives us a symbolic way of understanding processes that can otherwise be difficult to describe: Fire burns, Water dissolves, Earth forms, Air rises, and what has been separated comes again into relationship.
 
 *"Alchemy is a kind of philosophy: a kind of thinking that leads to a way of understanding." — Marcel Duchamp*
 
