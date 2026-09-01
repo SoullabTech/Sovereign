@@ -2040,15 +2040,28 @@ so **pattern 2**. But note that "It does not hurry" cannot stand alone as an
 epigraph without its antecedent, and the manuscript's use leans on "Nature" being
 the subject. The substitution is doing editorial work; flag it for the author.
 
-**Rights: `TERM UNCERTAIN` · `STANDARD`** — Bahm's 1958 translation is likely
-protected, but the manuscript's wording is a paraphrase *of* that translation
-rather than a quotation of it. **`MISSING`** — no Lao Tzu entry in Ch7 (as in
-Ch6).
+**Recorded verdict:** `PARAPHRASE/ADAPTED` · Pattern 2 · *Tao Te Ching* 73 /
+traditional Laozi attribution · **recoverable English ancestor: Archie J. Bahm
+(1958)** · popular form substitutes "Nature" for "It".
 
-#### A legitimate provenance family — the two Lao Tzu quotations
+**Rights: `PROTECTABILITY UNCERTAIN` · `STANDARD`.** Now that the mediator is
+known: Bahm's English rendering is modern and appears to have remained under
+copyright — later editions claim it explicitly, and the 1958 version is reported
+renewed. But the manuscript uses only a **short aphoristic sentence**, and a
+paraphrase of it at that, so this is `STANDARD`, **not `HIGH`**.
+**`MISSING`** — no Lao Tzu entry in Ch7 (as in Ch6).
 
-The first family formed since Campbell, and **earned by evidence, not by name**.
-L1261 (Ch6) and L1449 (Ch7) share a demonstrable transmission mechanism:
+#### A shared translation/mediation provenance family — the two Lao Tzu quotations
+
+The first family formed since Campbell, **earned by evidence, not by name**.
+
+**Not one identical failure — a shared *mediation* problem.** L1261 still has an
+**unidentified** English source; L1449 has resolved specifically to **Bahm →
+popular alteration**. They belong in **one resolution task** because both require
+recovering the **English mediation layer**, but **each keeps its individual
+verdict**.
+
+Shared mechanism:
 
 - both are **loose modern renderings** of *Tao Te Ching* passages;
 - both circulate **without translator credit**;
