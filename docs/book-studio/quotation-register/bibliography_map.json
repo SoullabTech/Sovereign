@@ -156,10 +156,16 @@
       "id": "EA-Q-0028",
       "source": "Plutarch, 'not a vessel to be filled, but wood that needs kindling'",
       "relationship": "quotation, translated",
-      "decision": "RECOVERY REQUIRED",
+      "decision": "RECOVERY CLOSED - NOT IDENTIFIABLE BY DEFINITION; AUTHOR CHOICE OWED",
       "object": "Plutarch. \"On Listening to Lectures.\" In *Moralia.* - translation not yet named",
       "evidence": "Work identified. The restored English follows the sense of the standard renderings but names no translator; the existing entry is a bare 'Plutarch. Moralia.' with neither translator nor edition.",
-      "unresolved": "IDENTIFY THE TRANSLATION FROM THE PRINTED WORDING. The sequence is printed wording -> identify the closest or exact translation -> cite that translation -> THEN assess its rights. Rights must NOT decide which translation we claim the manuscript uses: 'Babbitt is easier legally' is not evidence. If neither Waterfield (Penguin 1992) nor the Loeb Babbitt (1927) matches what is printed, adopting a named translation becomes a conscious textual replacement in the manuscript, not bibliography cleanup."
+      "unresolved": "IDENTIFY THE TRANSLATION FROM THE PRINTED WORDING. The sequence is printed wording -> identify the closest or exact translation -> cite that translation -> THEN assess its rights. Rights must NOT decide which translation we claim the manuscript uses: 'Babbitt is easier legally' is not evidence. If neither Waterfield (Penguin 1992) nor the Loeb Babbitt (1927) matches what is printed, adopting a named translation becomes a conscious textual replacement in the manuscript, not bibliography cleanup.",
+      "research_outcome": "The printed English is the BOOK'S OWN. It was composed at 4C to carry Plutarch's real image after the host-aligned 'fire' was removed, and the register recorded it as 'the restored English follows the sense of the standard renderings'. There is no source translation to find. Moralia 48C, De recta ratione audiendi.",
+      "options": [
+        "A - Babbitt, Loeb Classical Library 1927 (public domain in the US): 'For the mind does not require filling like a bottle, but rather, like wood, it only requires kindling to create in it an impulse to think independently and an ardent desire for the truth.' Long; replaces an epigraph with a sentence.",
+        "B - Waterfield, Penguin 1992 (in copyright, a permission): 'not a vessel that needs filling, but wood that needs igniting'. Closest to what is printed.",
+        "C - RECOMMENDED. Reclaim as the book's own prose, no quotation marks: 'Plutarch's image is not a vessel to be filled but wood that needs kindling.' No permission, no false translator - the Smith and Sadhguru doctrine applied to a translation."
+      ]
     },
     {
       "id": "EA-Q-0034",
@@ -283,11 +289,13 @@
       "id": "EA-Q-0048",
       "source": "Simone Weil, 'Love is not consolation, it is light'",
       "relationship": "quotation, translated",
-      "decision": "RECOVERY REQUIRED",
-      "object": "Weil, Simone. - work not identified",
+      "decision": "RECOVERY CLOSED - CORRECT",
+      "object": "Weil, Simone. *Gravity and Grace.* Translated by Emma Crawford. Routledge and Kegan Paul, 1963 (French edition 1947).",
       "evidence": "VERIFIED VARIANT, but the register records NO work. The existing entry proposes Waiting for God; the line is at least as commonly placed in Gravity and Grace.",
-      "unresolved": "WORK AND TRANSLATOR TOGETHER. This is not a trivial edition choice: the work determines the source object and the translator determines the English expression. Keep genuinely open.",
-      "rights": "term_uncertain_likely_protected"
+      "unresolved": null,
+      "rights": "term_uncertain_likely_protected",
+      "supersedes": "Weil, Simone. *Waiting for God.* Harper & Row, 1951.",
+      "research_outcome": "Located in Gravity and Grace, not Waiting for God - another wrong-work case. Fuller passage: 'To love God through and across the destruction of Troy and of Carthage - and with no consolation. Love is not consolation, it is light.' Translator Emma Crawford; the translation is in copyright."
     },
     {
       "id": "EA-Q-0049",
@@ -384,11 +392,17 @@
       "id": "EA-Q-0061",
       "source": "Laozi, 'Nothing is softer or more flexible than water'",
       "relationship": "quotation, translated",
-      "decision": "RECOVERY REQUIRED",
+      "decision": "RECOVERY CLOSED - NOT IDENTIFIABLE; DELIBERATE REPLACEMENT OWED",
       "object": "Laozi. *Tao Te Ching* 78. - English mediator unresolved",
       "evidence": "VERIFIED EXACT against the chapter; the rendering is unnamed. No Tao Te Ching entry exists - the only one was Mitchell's, dropped when its quotation left at Stage 3.",
       "unresolved": "DO NOT ATTACH A TRANSLATOR BY RESEMBLANCE. The manuscript's wording does not cleanly match the named translations checked - Cleary reads 'more flexible and yielding', Waley and others differ materially. If the exact rendering cannot be identified, replace it deliberately with a named translation later. Source identity settled, English mediator unresolved.",
-      "rights": "public_domain_original_translation_uncertain"
+      "rights": "public_domain_original_translation_uncertain",
+      "research_outcome": "NOT A TRANSLATION. The wording appears only on quote sites - Goodreads, BrainyQuote, Quozio, Tribune - with no translator anywhere, and matches none of the named renderings checked (Rosenthal, Lin Yutang, Cleary, Waley, Kunesh). A circulating compression, the same evidence class as the removed Foch and the kept-but-hedged Miles Davis.",
+      "options": [
+        "A - RECOMMENDED. Replace with a named translation of Tao Te Ching 78 the book can cite.",
+        "B - Keep the wording and drop the Lao Tzu attribution, carrying it as a saying - the Aesop and tree-planting treatment.",
+        "C - Remove the quotation."
+      ]
     },
     {
       "id": "EA-Q-0063",
@@ -616,9 +630,16 @@
       "source": "The Emerald Tablet, 'What is above is like what is below'",
       "relationship": "quotation, translated - rendering unidentified",
       "object": null,
-      "decision": "RECOVERY REQUIRED",
+      "decision": "RECOVERY CLOSED - NOT IDENTIFIABLE; DELIBERATE CHOICE OWED",
       "evidence": "VERIFIED VARIANT, public domain. The bibliography flag reads CORRECT but no Emerald Tablet entry exists for it to be correct about.",
-      "unresolved": "Identify the English rendering, or consciously replace it with a named rendering. Newton's 'That which is below is like that which is above' is a candidate, but choosing Newton BECAUSE he is identifiable and public domain would repeat the mistake refused with Plutarch. First determine whether the current English belongs to a known rendering."
+      "unresolved": "Identify the English rendering, or consciously replace it with a named rendering. Newton's 'That which is below is like that which is above' is a candidate, but choosing Newton BECAUSE he is identifiable and public domain would repeat the mistake refused with Plutarch. First determine whether the current English belongs to a known rendering.",
+      "research_outcome": "No named rendering matches. Holmyard's Jabir reads 'That which is above is from that which is below'; Newton reads 'That which is below is like that which is above & that which is above is like that which is below'; the standard Latin-derived English reads 'That which is above is like to that which is below'. The manuscript's 'What is above is like what is below' is a modernised paraphrase of the Newton-family form, not any of them.",
+      "options": [
+        "A - Adopt Newton's rendering verbatim and cite it (public domain, King's College Cambridge alchemical papers). Closest in structure to what is printed.",
+        "B - Adopt the standard Latin-derived English and cite the edition used.",
+        "C - Keep the modernised wording and frame it as the book's own rendering of the Tablet's second precept, no quotation marks - consistent with the Ch10 Hermetic reframe already applied.",
+        "D - NOT PERMITTED: choosing Newton because he is identifiable and public domain, rather than because the printed English is his. The Plutarch principle."
+      ]
     },
     {
       "id": "EA-Q-0110",
@@ -703,10 +724,17 @@
       "source": "Laozi, 'He who knows others is wise'",
       "relationship": "quotation, translated",
       "object": "Laozi. *Tao Te Ching* 33. - English mediator unidentified",
-      "decision": "RECOVERY REQUIRED",
+      "decision": "RECOVERY CLOSED - MATCHED BUT NOT UNIQUELY; AUTHOR CHOICE OWED",
       "evidence": "VERIFIED VARIANT; demonstrably NOT Legge, whose text reads 'He who knows other men is discerning; he who knows himself is intelligent'.",
       "unresolved": "Exact English mediator. If it cannot be identified, replace the rendering deliberately with a named translation.",
-      "rights": "public_domain_original_translation_open"
+      "rights": "public_domain_original_translation_open",
+      "research_outcome": "The printed wording is VERBATIM in two named renderings - Stan Rosenthal (1984) and Cheng Lin - so it cannot be attributed to one translator by wording alone. Cleary, John C. Wu, Suzuki/Carus and Legge all differ materially.",
+      "options": [
+        "A - Cite Rosenthal (1984), whose rendering is freely distributed.",
+        "B - Cite Cheng Lin, The Works of Lao Tzyy.",
+        "C - Name no translator and cite Tao Te Ching 33 alone, on the ground that the wording is not uniquely attributable.",
+        "D - Replace deliberately with a translation the book can name with confidence."
+      ]
     }
   ],
   "findings": [
