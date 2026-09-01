@@ -2,7 +2,7 @@
 
 **Source of record:** `docs/book-studio/ELEMENTAL_ALCHEMY_FROM_ORIGINAL_FULL.md`
 **Opened:** 2026-09-01, after Chapter 10 closed developmental adjudication.
-**Status:** IN PROGRESS — 94 of 137 adjudicated. **Chapter 5 CLOSED (30/30). Chapter 8 CLOSED (23/23).**
+**Status:** IN PROGRESS — 101 of 137 adjudicated. **Chapter 5 CLOSED (30/30). Chapter 8 CLOSED (23/23).**
 
 ## Scope
 
@@ -2595,6 +2595,46 @@ This carries greater ethical weight than an ordinary floating quotation because
 the manuscript explicitly values cultural sovereignty **and elsewhere
 demonstrates the better practice**: named Indigenous authors, named works,
 verifiable sources.
+
+### Chapter 9 — remaining seven (batch)
+
+| Line | Attribution | Verdict | Rights | Bibliography |
+|---|---|---|---|---|
+| L1881 | William Blake | `VERIFIED EXACT` — *The Marriage of Heaven and Hell* (c.1790) | `PUBLIC DOMAIN` · `NONE` | correct |
+| L1893 | The Emerald Tablet | `VERIFIED TO THE TEXT / TRADITIONAL` — English rendering unidentified (cf. Newton's "That which is below is like that which is above") | `PUBLIC DOMAIN` · `NONE` | correct |
+| L1903 | Jiddu Krishnamurti | `UNVERIFIED — source lead unresolved` — register suggests spoken talks rather than the cited book | `TERM UNCERTAIN` · `STANDARD` | *The First and Last Freedom* (1954) — plausible, unconfirmed |
+| L1911 | Peter Gabriel | `VERIFIED` — **"Signal to Noise," *Up*, 2002**, named in the bibliography | `LIKELY PROTECTED` · `HIGH` | correct |
+| L1983 | Alan Watts | `VERIFIED VARIANT` — *The Wisdom of Insecurity* (1951), p. 77; published text reads "It must be obvious, **from the start**, that…" | `TERM UNCERTAIN` · `STANDARD` | correct |
+| L2001 | C. Michael Smith | `UNVERIFIED — source lead unresolved` — Smith is real, and "inner axis mundi," "Dream Maker" and "Daimon" are all documented as his; the combined sentence was not located | `LIKELY PROTECTED` · `STANDARD` | *Jung and Shamanism in Dialogue* (Paulist, 1997) — correct work |
+| L2005 | Paulo Coelho | `VERIFIED` — *The Alchemist*; **`MEDIATED TRANSLATION`** — the English is Alan R. Clarke's (1993), not Coelho's Portuguese | `LIKELY PROTECTED` · `STANDARD` | correct |
+
+**Third Gabriel song identified** — "Signal to Noise." All three lyrics are now
+sourced: "Darkness" (Ch6), "Signal to Noise" (Ch9), and L713 (Ch4) still to place.
+
+**Ch9's bibliography is the best-matched in the book so far.** Every quoted author
+checked has a correct entry, with the right work. `ORPHAN CANDIDATE` ×9 — Arthur
+M. Young (×2), Peter J. Carroll, Sun Tzu, Max Planck, Gibran, McCraty, Lorca,
+Baldwin — several of which likely support body prose rather than epigraphs.
+
+---
+
+## Chapter 9 CLOSED — the five-element picture is complete
+
+| | Fire (30) | Water (19) | Earth (16) | Air (23) | **Aether (12)** |
+|---|--:|--:|--:|--:|--:|
+| `VERIFIED` | 33% | **47%** | 31% | 17% | **42%** |
+| `UNVERIFIED` | 43% | **26%** | 50% | **57%** | 42% |
+| `MISATTRIBUTED` | 10% | 11% | 13% | **17%** | **8%** |
+| `PARAPHRASE/ADAPTED` | 13% | 16% | 6% | 9% | 8% |
+
+**Aether is second-best sourced**, and has the **lowest misattribution rate** in
+the book. Its failures are concentrated in `UNVERIFIED` items with real named
+sources awaiting edition checks — Black Elk, Krishnamurti, C. Michael Smith — a
+materially more tractable position than Air's.
+
+**Five chapters, five different profiles.** No two elemental chapters behave
+alike on any measure. The book-wide census was necessary; no sample would have
+modelled the whole.
 
 ---
 
