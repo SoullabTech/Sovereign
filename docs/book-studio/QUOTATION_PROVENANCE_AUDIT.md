@@ -2,7 +2,7 @@
 
 **Source of record:** `docs/book-studio/ELEMENTAL_ALCHEMY_FROM_ORIGINAL_FULL.md`
 **Opened:** 2026-09-01, after Chapter 10 closed developmental adjudication.
-**Status:** IN PROGRESS — 132 of 137. **Ch2 CLOSED (10/10).** adjudicated. **Chapter 5 CLOSED (30/30). Chapter 8 CLOSED (23/23).**
+**Status:** IN PROGRESS — 134 of 137. **Ch2 CLOSED (10/10).** adjudicated. **Chapter 5 CLOSED (30/30). Chapter 8 CLOSED (23/23).**
 
 ## Scope
 
@@ -3849,6 +3849,38 @@ divine appearing only through their joining** — is a close external witness to
 **canonical Aether doctrine**: *Aether is the God within, revealed through the
 relationship and integration of the four.* Possibly the clearest external
 corroboration of the book's own architecture anywhere in the manuscript.
+
+
+### Final batch — tranche 9
+
+**L493 · Ch3 · Iain McGilchrist — "Our consciousness is deeply connected to the natural world. The right hemisphere…"**
+`UNVERIFIED — source lead unresolved`. The sentence was not located. His
+documented positions are **compatible** — the right hemisphere's world as "all
+flowing and changing, provisional, interconnected, embodied, living" — **but per
+the thematic-fit rule, compatibility proves nothing.** Leads: *The Master and His
+Emissary* (Yale, 2009; bibliography present) and *The Matter with Things* (2021).
+**Rights: `LIKELY PROTECTED` · `STANDARD`.**
+
+**L608 · Ch4 · Rabindranath Tagore — "We try to realize the essential unity of the world with the conscious soul of man…"**
+**`VERIFIED EXACT`.** ***Sadhana: The Realisation of Life*** (1913), **p. 109** —
+in the passage on the Gayatri meditation verse. Full text on Wikisource.
+**Rights: `PUBLIC DOMAIN` · `NONE`** — sixth public-domain classification.
+
+**This also resolves the standing "check, do not assume" flag on Tagore's
+English.** He wrote and translated *Sadhana* into English himself, so there is
+**no mediation layer** here — unlike Rumi, Lao Tzu, Nietzsche, Weil or Coelho.
+
+#### Strengthens, but does not close, the Chapter 8 Tagore item
+
+**L1736 (Ch8)** is `UNVERIFIED` with a proposed lead to *Sadhana*, and its
+bibliography entry cites ***The Home and the World*** — a **novel** — which was
+flagged as probable `WRONG SOURCE/WORK`.
+
+*Sadhana* is now **confirmed** as the source of a different Tagore quotation in
+this book. That **strengthens** the L1736 lead. **It does not close it:** an
+author having one aphorism in a work does not place another there. L1736 still
+requires its own check against the *Sadhana* text — which is freely available on
+Wikisource, making it directly resolvable.
 
 
 ---
