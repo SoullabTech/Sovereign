@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { apiFetch } from '@/lib/http/apiBase';
 import { PRESS, SERIF } from '../pressTheme';
 import { IMPORT_HREF, SOURCE_HREF } from '../studioMap';
@@ -17,6 +18,7 @@ import {
 import Worktable from './Worktable';
 import WorkDrawer from './WorkDrawer';
 import MaterialsDrawer from './MaterialsDrawer';
+import { requestStructureReading } from '@/lib/writersStudio/reviewClient';
 
 /**
  * Writer Canvas — the room. v0.1 of the environment all Writer Studio entry
@@ -103,6 +105,13 @@ export default function WriterCanvasPage() {
       : null;
 
   const [drawer, setDrawer] = useState<DrawerId | null>(null);
+
+  /* The reading gesture. THREE STATES, and 'failed' is its own — a reading
+     that did not happen is a fact about the machine, never a reading in
+     which MAIA found nothing. Those are different facts about a member's
+     book and only one of them is about the book. */
+  const router = useRouter();
+  const [reading, setReading] = useState<'idle' | 'reading' | 'failed'>('idle');
   const [windowOpen, setWindowOpen] = useState(false);
   const [draftMeta, setDraftMeta] = useState<{
     updatedAt: string | null;
@@ -224,6 +233,57 @@ export default function WriterCanvasPage() {
             >
               Read them in the Source
             </Link>
+
+            {/* THE INVOCATION. Nothing about the Work goes up this wire — the
+                server owns the read end to end, and this button contributes the
+                gesture and the member's identity, nothing else.
+
+                The sentence beneath it is not reassurance copy. A member is
+                about to let something read their book, and the true thing to
+                say is that a reading changes nothing until they decide. It
+                stays visible while the reading runs, because that is exactly
+                when it is load-bearing. */}
+            <div
+              className="mt-6 pt-5 border-t"
+              style={{ borderColor: PRESS.ruleSoft }}
+            >
+              <button
+                onClick={async () => {
+                  setReading('reading');
+                  const outcome = await requestStructureReading(manuscript.id);
+                  /* Navigate to the path the SERVER returned. Constructing it
+                     here would be a second copy of a contract that already has
+                     one home.
+
+                     The path is checked, not assumed: the outcome's success
+                     shape is asserted over parsed JSON rather than validated,
+                     so a missing path would otherwise reach router.push as
+                     undefined and throw in front of the member. A reading we
+                     cannot open is a reading that did not land. */
+                  if (outcome.ok && outcome.reviewPath) router.push(outcome.reviewPath);
+                  else setReading('failed');
+                }}
+                disabled={reading === 'reading'}
+                aria-busy={reading === 'reading'}
+                className="text-[13px] underline underline-offset-4 opacity-75 hover:opacity-100 disabled:opacity-40 disabled:no-underline"
+              >
+                {reading === 'reading' ? 'MAIA is reading…' : 'Ask MAIA to read the structure'}
+              </button>
+
+              <p className="text-[12.5px] leading-relaxed opacity-55 mt-2.5">
+                MAIA will bring back a reading of how the work seems to be
+                organized. Nothing changes until you decide.
+              </p>
+
+              {/* No refusal code on screen. A failed reading has no taxonomy
+                  that means anything about a book, and the second sentence is
+                  the half that matters. */}
+              {reading === 'failed' && (
+                <p className="text-[12.5px] leading-relaxed opacity-75 mt-3" role="status">
+                  MAIA couldn&rsquo;t complete the reading. Your work hasn&rsquo;t changed.
+                </p>
+              )}
+            </div>
           </>
         ) : null;
       case 'history':
