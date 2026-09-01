@@ -258,8 +258,41 @@ authoring it would be reconstruction presented as recovery. O3 stays rejected as
 primary architecture. Class B ordering defects remain recorded and untouched;
 the baseline subsumes them.
 
-Outstanding, and the only thing between here and PASS: `database/baseline/schema.sql`
-must be captured from the known-good database. It cannot be synthesized from the
-repository — that is the defect itself — so it is one read-only `pg_dump` on the
-host that holds `maia_consciousness`. The gate reports and does not enforce until
-that file lands.
+### Baseline captured, 2026-09-01
+
+Captured on minisforum by read-only `pg_dump --schema-only` against
+`maia_consciousness` (`d0fda6446`): 47,578 lines, **504 migrations subsumed**. The
+bootstrap phase applied it into an empty database, stamped all 504, and the runner
+skipped every one of them.
+
+### What the gate caught on its first real run
+
+The replay then failed forward of the baseline:
+
+```text
+20260830000002_manuscript_structure.sql:109
+ERROR: relation "manuscript_draft_sections" does not exist
+```
+
+Not a test artifact. `20260830000001_manuscript_draft_sections.sql` exists only on
+`fix/ws2-05b-02c-2r-structure-review-hook-order` (PR #1164). Trunk carries its three
+dependents — `20260830000002`, `_000003`, `_000005` — and nothing on trunk creates the
+table they need. This is the diagnosed class, live on trunk, found by the new gate
+rather than by a future disaster recovery.
+
+Two runs one file apart, on PostgreSQL 16 + pgvector:
+
+```text
+trunk as-is                     FAIL  at 20260830000002:109
+trunk + 20260830000001          PASS  457 on disk · 508 recorded
+                                      all 4 required_migrations.txt entries recorded
+                                      application schema gate accepts the schema
+```
+
+So the repair holds, and §5b is reconciled: `runtime-required` and
+`constructible-from-source` name the same set again.
+
+**Remaining:** merging PR #1164 lands `20260830000001` ahead of its dependents and the
+gate goes green on its own. No file is duplicated onto another branch to force it. Until
+then the gate is red on any branch carrying the baseline — correctly, and for a defect
+that is really there.
