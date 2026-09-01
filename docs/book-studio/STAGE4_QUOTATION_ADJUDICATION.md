@@ -584,3 +584,104 @@ restraint is doing its job — the frame form is not rescuing the set.
 **45/45 worked. Two rulings issued** (Teasdale `KEEP`; the paragraph applied).
 **Forty-three recommendations awaiting authorial ruling.** 4A does not close until
 those are ruled; **4B begins only after.**
+
+---
+
+# 4A · APPLIED — 2026-09-01
+
+## Standing directive that authorized this pass
+
+> **If there is a need to unite a quote, rightfully, with the context and it is a
+> small addition, we should do it. If the quote feels gratuitous or misplaced we
+> should remove it and possibly add meaning.**
+
+**Two operating rules, both now in force for the rest of Stage 4:**
+
+1. **A small uniting addition is not a "frame written to save a quotation."** Where
+   a quotation genuinely belongs but its relationship to the passage is unstated, a
+   **small** addition making that relationship explicit is ordinary editorial work
+   and should simply be done. The `FRAME/ANSWER` restraint still governs — but the
+   **scale** is a sentence or two, not a paragraph of manufactured relationship.
+2. **Removal may be accompanied by adding meaning.** Taking out a gratuitous
+   epigraph does not oblige the section to open on nothing; if the removal reveals
+   something the passage actually needed to say, say it.
+
+**Epigraph count: 128 → 110.**
+
+## Applied — 18 `REMOVE`
+
+**Provenance-driven (7)** — misattributed or unsupported, editorially weak as well:
+Aristotle ×2 (*"Knowing yourself…"*, *"The whole is greater…"*) · pseudo-Socrates ·
+MLK (`UNVERIFIED` **and** encumbered) · Gandhi · Ramana Maharshi · William James
+(*"Thoughts become perception…"*, Chapter 8 opener).
+
+**Editorially-driven (11)** — certification, redundancy, or weak fit:
+Shakespeare/Polonius · Nehru · Angelou (*"Do the best you can…"*) · Thoreau ·
+Rumi (*"The universe is not outside of you…"*) · William James (*"The greatest
+discovery…"*) · John Perkins · Campbell (*"The cave you fear to enter…"*) ·
+Gawain · Alcott · Tagore (*"Love is the only reality…"*).
+
+**Three openings that gained by it, checked on the page:**
+- **"Choosing an Authentic Path"** now opens on *"Life is full of pivotal
+  decisions…"* — the section gains authority by losing Polonius.
+- **"The Path of Knowing"** now opens on *"I've been developing this model of the
+  five elements of human experience for more than twenty years"* — the author's own
+  standing, where a garbled Socrates used to stand.
+- **"Culture Is Our Soul's Operating System"** now opens directly on the seasonal
+  scene, which needed no warrant.
+
+## Applied — 2 `CORRECT`
+
+- **"The single biggest problem in communication is the illusion that it has taken
+  place."** — reattributed from **George Bernard Shaw** to **William H. Whyte**,
+  its actual author. The line stays; it is one of the sharpest openings in the book.
+- **Chapter 9 Rumi** — now *"— Rumi, rendered by Coleman Barks,"* per the Stage 2
+  mediation doctrine for verbatim use of a mediator's English. **Rights position
+  unchanged: Barks's renderings are in copyright.**
+
+## Held, not applied
+
+| Item | Why held |
+|---|---|
+| **Campbell — "The privilege of a lifetime is being who you are"** | `KEEP + FRAME/ANSWER` **candidate, conditional on test 2.** Only the author can say whether the relationship to Campbell's claim is real |
+| **Tolle — "Awareness is the greatest agent for change"** | Same |
+| **McGilchrist** | `SOURCE RESOLUTION REQUIRED` — the wording must be traced to a real sentence before anything is done to it |
+| **"Michael Pollen"** | Misspelling is trivial; **the register mismatch is not.** Source lead unresolved |
+| **Zhuangzi** | `WRONG TRANSLATOR CITED` is a **bibliography** defect — the text names no translator. **Stage 7, not a text repair** |
+| **All `RIGHTS HOLD` items** | Bear Heart · Teasdale · Weil · Gabriel ×2. Editorially ruled; permissions decide |
+
+### ⚠️ Process note — an error made and corrected inside this pass
+
+**Campbell L313 was removed in the first execution and restored immediately.** It
+was one of the two items explicitly held pending test 2, and including it
+contradicted the guardrail set one entry earlier: *a system must not assert an
+authorial relationship the author has not confirmed.* Caught on the count check
+(19 removals against 18 recommended) rather than by re-reading the list.
+
+**Recorded because it is exactly the failure the guardrail exists to prevent, and
+it happened anyway.** The count check caught it; the intention did not.
+
+## Structural consequence — flagged, not repaired
+
+**Chapter 8 (Air) now opens without an epigraph**, joining Chapters 1, 3 and 5.
+**Four of ten chapters now open in the book's own voice.**
+
+The removal was correct on its own terms — the William James attribution is
+unsupported. But this is the first chapter opening to lose its epigraph on
+**provenance** grounds rather than editorial ones, which means **Chapter 8 may
+genuinely want a replacement** in a way Chapter 5 did not. **No symmetry repair;
+judged on whether the opening works.** Carried to final QA.
+
+## 4A standing
+
+| | |
+|---|---|
+| Applied | **18 `REMOVE` · 2 `CORRECT`** |
+| Held pending authorial test 2 | 2 |
+| Held pending source resolution | 2 |
+| Held pending rights | 5 |
+| `KEEP` — confirmed on the page | 26 |
+| Epigraph count | **128 → 110** |
+
+**4A is applied but not closed.** It closes when the eleven held items are ruled.
+**4B begins after.**
