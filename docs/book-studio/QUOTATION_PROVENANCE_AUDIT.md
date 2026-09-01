@@ -1618,29 +1618,44 @@ cited as *Walden*; Ch6's is from the *Journal* and cited nowhere.
 `UNVERIFIED — source lead unresolved` on the **printed wording**; the
 **attribution is well-founded**.
 
-The **Plum Village** official site — his own community's channel, which meets the
-official-source standard — carries his walking-meditation poem containing "**Kiss
-the Earth with your feet.**" That verifies the image and the author. It does
-**not** verify the manuscript's longer sentence, which is attested only on quote
-sites, consistently citing *Peace Is Every Step* (1991). Edition check required.
+**`ATTRIBUTION VERIFIED TO THICH NHAT HANH`; exact English / source-form
+unresolved.** There are **two authentic source trails**, not one quotation with
+one obvious home:
+
+- **Plum Village** (his own community's channel) gives the **poem** form —
+  including "Kiss the Earth with your feet" — and sources it explicitly to
+  ***Call Me by My True Names: The Collected Poems of Thich Nhat Hanh*** (2005).
+- A bibliographic quotation source independently places a **longer
+  walking-meditation formulation**, essentially the manuscript's sentence, in
+  ***Peace Is Every Step*, p. 28**.
+
+**`SOURCE LEAD`: *Peace Is Every Step* — edition check required.**
 
 **Translation layer — check, do not assume.** Thich Nhat Hanh wrote in
 Vietnamese and French as well as English; whether the printed sentence is his own
 English or a translation must be established, the same caveat as Tagore.
 **Rights: `PROTECTABILITY UNCERTAIN` · `STANDARD`.**
 
-#### Second `MISFILED SOURCE` instance
+#### `MISFILED SOURCE CANDIDATE` — not yet confirmed
 
 **Ch5's bibliography lists "Nhat Hanh, Thich. *Peace Is Every Step.* Bantam,
-1991."** — but Ch5's Thich Nhat Hanh quotation (L812, "From a spark to a flame,
-fire is life") is `UNVERIFIED` and not placed in that book. **Ch6's** quotation is
-the one that plausibly comes from it, and Ch6 has no entry at all.
+1991."** — but Ch5's Thich Nhat Hanh quotation (L812) is `UNVERIFIED` and not
+placed in that book, while **Ch6's** quotation may be. That would make it the
+Campbell/*Companion* shape: right book, wrong chapter.
 
-The right book is in the bibliography, **under the wrong chapter** — exactly the
-Campbell/*Companion* shape. Two independent instances now, in different chapters
-and different authors. `MISFILED SOURCE` is a real recurring defect, not a
-one-off, and confirms that the reconstruction must reconcile **source ↔ actual
-usage location**.
+**But it cannot be confirmed at work level**, because two authentic variants
+exist:
+- If the Ch6 wording matches the ***Peace Is Every Step*** text on edition check
+  → **second confirmed `MISFILED SOURCE`**.
+- If it tracks the **poem** instead → the correct work is ***Call Me by My True
+  Names***, and the Ch5 entry is something else entirely.
+
+> **This strengthens the reconstruction doctrine rather than weakening it: even a
+> correct author with two authentic variants can defeat a work-level citation
+> check.** Only wording-level comparison against the actual editions resolves it.
+
+`MISFILED SOURCE` therefore still rests on **one confirmed instance** (Campbell's
+*A Joseph Campbell Companion*) plus this candidate.
 
 ---
 
