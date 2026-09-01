@@ -2,7 +2,7 @@
 
 **Source of record:** `docs/book-studio/ELEMENTAL_ALCHEMY_FROM_ORIGINAL_FULL.md`
 **Opened:** 2026-09-01, after Chapter 10 closed developmental adjudication.
-**Status:** IN PROGRESS — 83 of 137 adjudicated. **Chapter 5 CLOSED (30/30). Chapter 8 CLOSED (23/23).**
+**Status:** IN PROGRESS — 85 of 137 adjudicated. **Chapter 5 CLOSED (30/30). Chapter 8 CLOSED (23/23).**
 
 ## Scope
 
@@ -1844,7 +1844,7 @@ Eight independent instances across three chapters. No longer incidental.
 
 **Still findings-only. No repair batch. No bibliography reconstruction.**
 
-**Chapter 7 — Earth: 9 of 16 in progress. Next after: Chapter 9 — Aether (12), then Chapter 9 — Aether (12)**, completing the
+**Chapter 7 — Earth: 11 of 16 in progress. Next after: Chapter 9 — Aether (12), then Chapter 9 — Aether (12)**, completing the
 five-element provenance picture before the lower-volume chapters.
 
 
@@ -2137,6 +2137,16 @@ that nature is conscious…" — without the manuscript's "and perceived."
 **`MISSING`** — no McKenna entry in the Ch7 bibliography.
 **Rights: `PROTECTABILITY UNCERTAIN` · `STANDARD`.**
 
+#### General principle — negative evidence scales with corpus coverage
+
+> **Negative evidence has different weight depending on corpus coverage.** Where
+> an author's material survives densely and searchably, nonappearance is more
+> probative. Where speech survives sparsely, it is much less so.
+>
+> **But absence still does not prove non-authorship.** `UNVERIFIED` remains the
+> correct verdict in these cases — never `MISATTRIBUTED`. Only positive evidence
+> of a different origin moves an item to `MISATTRIBUTED`.
+
 #### Why absence is unusually meaningful for McKenna
 
 McKenna's corpus is **exceptionally well transcribed** — the organism.earth
@@ -2163,6 +2173,42 @@ media and quote sites.
 **Not formed until L2040 is sourced independently** — the Campbell lesson: a
 family's membership must be recomputed on completion, and Campbell split four
 ways at exactly this point. L701 is already the likely non-member.
+
+**L1383 · Mahatma Gandhi — "The best way to find yourself is to lose yourself in the service of others."**
+`UNVERIFIED` · `UNKNOWN`. **Goodreads tags it explicitly "attributed-no-source."**
+No primary source located; requires a check against the *Collected Works of
+Mahatma Gandhi*.
+
+**Correction to my own earlier record.** In the first tranche I listed this among
+items "sound as attributed," alongside Socrates *Apology* 38a and the Kalama
+Sutta. **That was wrong** — it was an impression, not a check. It is unverified.
+
+**Apparatus note:** Ch7 cites *The Words of Gandhi* (Newmarket Press, 1982) — a
+**compilation**, not a primary source. Not `SPURIOUS SUPPORT` (the compilation may
+well contain the line), but a secondary source standing in for primary
+verification.
+
+**Both Gandhi quotations are now `UNVERIFIED`** — L1383 here and L1754 in Air —
+sharing one resolution task: the *Collected Works*. A two-member family forming
+on a shared mechanism, not on the name.
+
+**L1405 · Friedrich Nietzsche — "He who has a 'why' to live can bear almost any 'how.'"**
+`VERIFIED VARIANT/TRANSLATION` · pattern `EVOLVED APHORISM`.
+
+Genuine source: ***Twilight of the Idols*** (1889), "Maxims and Arrows" §12.
+**Bibliography correct at the work level.**
+
+**But the printed English has a mediator.** Kaufmann's standard translation reads
+"If we have our own why in life, we shall get along with almost any how." The
+manuscript's wording is the form **popularized by Viktor Frankl** in *Man's
+Search for Meaning* — not a standard scholarly translation of Nietzsche.
+
+*Third instance of the translation-mediation pattern*, after Barks/Rumi and
+Bahm/Lao Tzu: **a genuine ancient or classic source reaching the manuscript
+through a modern populariser whose name appears nowhere.**
+**Rights: `PROTECTABILITY UNCERTAIN` · `STANDARD`** — the German is public
+domain; the English rendering's status depends on the mediator, but the extract
+is a short aphorism.
 
 ### Chapter 7 bibliography — three findings and one exemplar
 
