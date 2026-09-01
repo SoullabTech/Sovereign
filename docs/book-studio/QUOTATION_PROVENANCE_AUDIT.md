@@ -2,7 +2,7 @@
 
 **Source of record:** `docs/book-studio/ELEMENTAL_ALCHEMY_FROM_ORIGINAL_FULL.md`
 **Opened:** 2026-09-01, after Chapter 10 closed developmental adjudication.
-**Status:** IN PROGRESS — 131 of 137. **Ch2 CLOSED (10/10).** adjudicated. **Chapter 5 CLOSED (30/30). Chapter 8 CLOSED (23/23).**
+**Status:** IN PROGRESS — 132 of 137. **Ch2 CLOSED (10/10).** adjudicated. **Chapter 5 CLOSED (30/30). Chapter 8 CLOSED (23/23).**
 
 ## Scope
 
@@ -3706,6 +3706,26 @@ remain disguised as somebody else's exact words.**
 longest quotation in the front matter. **The specific protected English prose is
 the object for permissions review regardless of whether *sambar* or *pizza*
 proves canonical.**
+
+
+### Final batch — tranche 8
+
+**L2058 · Ch10 · Alfred Korzybski — "The map is not the territory."**
+**`VERIFIED VARIANT`.** ***Science and Sanity: An Introduction to
+Non-Aristotelian Systems and General Semantics*** (1933), **p. 58**: "**A** map is
+not the territory it represents, but, if correct, it has a similar structure to
+the territory, which accounts for its usefulness."
+
+The manuscript carries the **standard compressed form**, which Korzybski and the
+general-semantics tradition themselves use. Bibliography present.
+**Rights: `PROTECTABILITY UNCERTAIN` · `STANDARD`** — a five-word aphorism.
+
+*Editorial note, not a defect:* Chapter 10 uses this as the epigraph for its
+map/territory argument, and the **full sentence is more useful to that argument
+than the compression** — "if correct, it has a similar structure to the
+territory, which accounts for its usefulness" is precisely the chapter's claim
+about what a developmental map is for. Worth the author's attention at repair
+time as an **opportunity**, not a correction.
 
 
 ---
