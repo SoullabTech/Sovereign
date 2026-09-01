@@ -1896,8 +1896,6 @@ There is most often a three-part self: the lower self being the basic self, belo
 
 The realm of aether is a challenging energy field to speak about since it is where our nonlocal beingness synapses with the physical world to bring it to life. Here, in the midst of the four elements of fire, water, earth, and air resides an intelligence that weaves these elements into a personal and collective experience.
 
-An ancient alchemist might have said that it is sulfur that dissolves and salt that coagulates, woven by mercury into a harmonious dance of life. Aether flows things into and out of being, like our lungs breathing in and breathing out. In the middle of everything, there is also our soul weaving our bodies into being.
-
 In this realm, all opposites unite in a singular effort of being. All duality concedes to the creative life force of our aether nature. At the heart of all of our doing and living is our abiding, true Self. This self is at the center of our stillness when we're in a state associated with the element of aether and connects us with "more than this." This state is the still point and no-mind state of Zen meditation. It is called wuji in Taoism, prana in Hinduism, and the inner kingdom in Christianity.
 
 Like the unknowable quantum world manifests our knowable universe, there is an element of our being that is etheric, fine, and subtle which dances between the worlds of potential nonduality and manifest states of duality, like the dancing Tibetan deity Hevajra.
@@ -2203,7 +2201,7 @@ The original inspiration for this dimension of the Spiralogic model came in part
 
 ### Sulfur, Salt, and Mercury
 
-The old alchemical language offers another way of imagining the inner process through sulfur, salt, and mercury. An ancient alchemist might have said that sulfur dissolves and salt coagulates, woven by mercury into the continuing movement of transformation. Something must loosen, something must hold, and something must move between them.
+The old alchemical language offers another way of imagining the inner process through sulfur, salt, and mercury. Sulfur initiates and expands, salt stabilizes and gives cohesion, and mercury mediates between them. Something must open, something must hold, and something must move between them.
 
 Aether breathes this process into and out of being, like lungs breathing in and breathing out. Somewhere in the middle of everything is soul, weaving our experiences into body, relationship, meaning, and life.
 
