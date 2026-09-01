@@ -308,26 +308,6 @@
       "attributed_as_note": "Sharon Salzberg",
       "notes": "LEAD ONLY, not a verdict. 'Make of yourself a light, said the Buddha, before he died' opens Mary Oliver's poem The Buddha's Last Instruction. Possible three-layer nesting: Oliver -> Salzberg -> the Buddha. Do not repair until the nesting is demonstrated.",
       "evidence_location": "STAGE4 speaker sweep #4"
-    },
-    {
-      "match": "Nothing is softer or more flexible than water",
-      "occurrence": 1,
-      "provenance_status": "verified_exact",
-      "actual_author": "Laozi",
-      "work": "Tao Te Ching 78",
-      "translator_or_mediator": "UNIDENTIFIED - printed-English rule applies",
-      "rights_status": "public_domain_original_translation_uncertain",
-      "editorial_status": "KEEP - HISTORICIZATION - SOURCE RESOLUTION REQUIRED",
-      "notes": "One of only two genuine Lao Tzu attributions in the manuscript. Contrast the four 'Adapted from Lao Tzu' items dissolved in Stage 3.",
-      "evidence_location": "STAGE4 4A batch 2"
-    },
-    {
-      "match": "He who knows others is wise",
-      "occurrence": 1,
-      "provenance_status": null,
-      "provenance_review_state": "not_investigated",
-      "notes": "Found by the first-principles scan. Genuinely Tao Te Ching 33; translator unnamed. Verification owed.",
-      "evidence_location": "STAGE2C-ii Part B"
     }
   ]
 }

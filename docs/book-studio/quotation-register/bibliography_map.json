@@ -156,8 +156,8 @@
       "id": "EA-Q-0028",
       "source": "Plutarch, 'not a vessel to be filled, but wood that needs kindling'",
       "relationship": "quotation, translated",
-      "decision": "RECOVERY CLOSED - NOT IDENTIFIABLE BY DEFINITION; AUTHOR CHOICE OWED",
-      "object": "Plutarch. \"On Listening to Lectures.\" In *Moralia.* - translation not yet named",
+      "decision": "CLOSED - RECLAIMED AS CREDITED PROSE",
+      "object": null,
       "evidence": "Work identified. The restored English follows the sense of the standard renderings but names no translator; the existing entry is a bare 'Plutarch. Moralia.' with neither translator nor edition.",
       "unresolved": "IDENTIFY THE TRANSLATION FROM THE PRINTED WORDING. The sequence is printed wording -> identify the closest or exact translation -> cite that translation -> THEN assess its rights. Rights must NOT decide which translation we claim the manuscript uses: 'Babbitt is easier legally' is not evidence. If neither Waterfield (Penguin 1992) nor the Loeb Babbitt (1927) matches what is printed, adopting a named translation becomes a conscious textual replacement in the manuscript, not bibliography cleanup.",
       "research_outcome": "The printed English is the BOOK'S OWN. It was composed at 4C to carry Plutarch's real image after the host-aligned 'fire' was removed, and the register recorded it as 'the restored English follows the sense of the standard renderings'. There is no source translation to find. Moralia 48C, De recta ratione audiendi.",
@@ -392,11 +392,11 @@
       "id": "EA-Q-0061",
       "source": "Laozi, 'Nothing is softer or more flexible than water'",
       "relationship": "quotation, translated",
-      "decision": "RECOVERY CLOSED - NOT IDENTIFIABLE; DELIBERATE REPLACEMENT OWED",
-      "object": "Laozi. *Tao Te Ching* 78. - English mediator unresolved",
+      "decision": "RECOVERY CLOSED - REPLACED WITH WALEY",
+      "object": "Laozi. *Tao Te Ching* 78. In *The Way and Its Power*, translated by Arthur Waley. George Allen and Unwin, 1934.",
       "evidence": "VERIFIED EXACT against the chapter; the rendering is unnamed. No Tao Te Ching entry exists - the only one was Mitchell's, dropped when its quotation left at Stage 3.",
-      "unresolved": "DO NOT ATTACH A TRANSLATOR BY RESEMBLANCE. The manuscript's wording does not cleanly match the named translations checked - Cleary reads 'more flexible and yielding', Waley and others differ materially. If the exact rendering cannot be identified, replace it deliberately with a named translation later. Source identity settled, English mediator unresolved.",
-      "rights": "public_domain_original_translation_uncertain",
+      "unresolved": null,
+      "rights": "term_uncertain_high - one Waley permission now covers chapters 11, 33 and 78",
       "research_outcome": "NOT A TRANSLATION. The wording appears only on quote sites - Goodreads, BrainyQuote, Quozio, Tribune - with no translator anywhere, and matches none of the named renderings checked (Rosenthal, Lin Yutang, Cleary, Waley, Kunesh). A circulating compression, the same evidence class as the removed Foch and the kept-but-hedged Miles Davis.",
       "options": [
         "A - RECOMMENDED. Replace with a named translation of Tao Te Ching 78 the book can cite.",
@@ -630,7 +630,7 @@
       "source": "The Emerald Tablet, 'What is above is like what is below'",
       "relationship": "quotation, translated - rendering unidentified",
       "object": null,
-      "decision": "RECOVERY CLOSED - NOT IDENTIFIABLE; DELIBERATE CHOICE OWED",
+      "decision": "CLOSED - RECLAIMED AS CREDITED PROSE",
       "evidence": "VERIFIED VARIANT, public domain. The bibliography flag reads CORRECT but no Emerald Tablet entry exists for it to be correct about.",
       "unresolved": "Identify the English rendering, or consciously replace it with a named rendering. Newton's 'That which is below is like that which is above' is a candidate, but choosing Newton BECAUSE he is identifiable and public domain would repeat the mistake refused with Plutarch. First determine whether the current English belongs to a known rendering.",
       "research_outcome": "No named rendering matches. Holmyard's Jabir reads 'That which is above is from that which is below'; Newton reads 'That which is below is like that which is above & that which is above is like that which is below'; the standard Latin-derived English reads 'That which is above is like to that which is below'. The manuscript's 'What is above is like what is below' is a modernised paraphrase of the Newton-family form, not any of them.",
@@ -723,11 +723,11 @@
       "id": "EA-Q-0126",
       "source": "Laozi, 'He who knows others is wise'",
       "relationship": "quotation, translated",
-      "object": "Laozi. *Tao Te Ching* 33. - English mediator unidentified",
-      "decision": "RECOVERY CLOSED - MATCHED BUT NOT UNIQUELY; AUTHOR CHOICE OWED",
+      "object": "Laozi. *Tao Te Ching* 33. In *The Way and Its Power*, translated by Arthur Waley. George Allen and Unwin, 1934.",
+      "decision": "RECOVERY CLOSED - REPLACED WITH WALEY",
       "evidence": "VERIFIED VARIANT; demonstrably NOT Legge, whose text reads 'He who knows other men is discerning; he who knows himself is intelligent'.",
-      "unresolved": "Exact English mediator. If it cannot be identified, replace the rendering deliberately with a named translation.",
-      "rights": "public_domain_original_translation_open",
+      "unresolved": null,
+      "rights": "term_uncertain_high - covered by the same Waley permission",
       "research_outcome": "The printed wording is VERBATIM in two named renderings - Stan Rosenthal (1984) and Cheng Lin - so it cannot be attributed to one translator by wording alone. Cleary, John C. Wu, Suzuki/Carus and Legge all differ materially.",
       "options": [
         "A - Cite Rosenthal (1984), whose rendering is freely distributed.",
@@ -738,6 +738,7 @@
     }
   ],
   "findings": [
-    "WATER IS THE CONTROL CHAPTER. Chapter 6 carried four CORRECT bibliography relationships and one correctly self-labelled adaptation - a notably high concentration of sound source relationships before this audit began. The apparatus was not uniformly weak, and the final record should say so."
+    "WATER IS THE CONTROL CHAPTER. Chapter 6 carried four CORRECT bibliography relationships and one correctly self-labelled adaptation - a notably high concentration of sound source relationships before this audit began. The apparatus was not uniformly weak, and the final record should say so.",
+    "ONE TAO TE CHING TRANSLATOR, ONE TEXTUAL VOICE, THREE CHAPTERS. Waley was chosen on fidelity first, editorial fit second, rights third - never for convenience. He already carried chapter 11, so the coherence is a secondary benefit rather than a manufactured consistency, and Stage 6 now faces one Waley permission instead of three separate translation situations."
   ]
 }

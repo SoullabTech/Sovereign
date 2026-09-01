@@ -1202,7 +1202,7 @@ It can be rewarding to help someone else, almost as if we've addressed our own m
 
 ### The Dynamics of Your Inner Water
 
-*"Nothing is softer or more flexible than water, yet nothing can resist it." — Lao Tzu*
+*"Nothing under heaven is softer or more yielding than water; but when it attacks things hard and resistant there is not one of them that can prevail." — Lao Tzu, Tao Te Ching 78, in Arthur Waley's rendering*
 
 Water is the form and force of consciousness drawing us beneath the surface of ego-based, waking consciousness into awareness of all that lies below it. This is the realm of emotional intelligence, wisdom that reminds us of our interconnectivity and invites us to embrace a shared destiny with the caveat that we must do so as a self-aware and authentically expressed individual. Past, present, and future also come together as a single network of profound presence.
 
@@ -2153,7 +2153,7 @@ In the fires of our spiritual passion, we find the spark to illuminate our soul'
 
 Maya discovered that this fire was never merely ambition. It became the quiet courage to continue saying yes to the life that was asking to emerge through her.
 
-The waters of our emotional depths teach us to honor the vast ocean of our feelings, to surrender to their currents, and discover the pearls of wisdom they contain. "He who knows others is wise; he who knows himself is enlightened," wrote Lao Tzu. By developing our emotional intelligence, we learn to truly know ourselves and ride the tides of life with resilience and flow, embodying the enlightenment that comes through vulnerability.
+The waters of our emotional depths teach us to honor the vast ocean of our feelings, to surrender to their currents, and discover the pearls of wisdom they contain. "To understand others is to have knowledge; To understand oneself is to be illumined," wrote Lao Tzu, in Arthur Waley's rendering. By developing our emotional intelligence, we learn to truly know ourselves and ride the tides of life with resilience and flow, embodying the enlightenment that comes through vulnerability.
 
 Maya learned that every emotion she once feared eventually became another doorway into compassion—for herself and for others.
 
