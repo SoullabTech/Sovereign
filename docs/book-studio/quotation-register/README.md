@@ -122,3 +122,80 @@ freeze.
 **structural normalisation ✅ → whole-manuscript reconciliation ✅ → migrate existing
 verdicts → verify the six newly found → rule the 2 boundary cases → freeze the
 population → adjudicate the complete inline field → 4B**
+
+---
+
+# SAFEGUARDS IMPLEMENTED — before migration · 2026-09-01
+
+## 1 · Identity now survives editing — and the first attempt did not
+
+> **IDENTITY INVARIANT: a quotation's id is assigned once and persists through
+> manuscript revision. Wording, location, attribution and typography are mutable
+> properties of that identity, never inputs to it.**
+
+**The original scheme was a content hash and would have failed.** ⚠️ **Tested, not
+assumed:** correcting the Blake quotation to its authentic wording — *"If a fool
+persists in his folly he becomes wise"* → *"If the fool would persist in his folly
+he would become wise"* — **produced a brand-new id and orphaned the record.** That
+is precisely the repair the register exists to hold, and the identifier could not
+survive it.
+
+**Replaced with similarity matching** (Jaccard over significant words, threshold
+0.45) against a persistent `identity.json` ledger. **Re-tested: the same
+restoration now returns `EA-Q-0043` at score 0.50, identity preserved.**
+
+**Below the threshold the builder returns `record_state: new_candidate`, never a
+confirmed object.** A changed quotation and a new quotation are **indistinguishable
+to a detector** and must be separated by a person.
+
+> **Detection proposes objects. Reconciliation establishes them. The register owns
+> them thereafter.**
+
+## 2 · Three independent axes, no longer conflated
+
+**`not_yet_recorded` described the register's state while sitting in a field named
+for the quotation's state.** Split:
+
+| Axis | Field | Values |
+|---|---|---|
+| **What is true of the quotation** | `provenance_status` | `verified_exact` · `verified_variant` · `paraphrase_adapted` · `misattributed` · `unverified` · `personal_communication` |
+| **What the register knows** | `provenance_review_state` | `migrated` · `pending_migration` · `not_investigated` |
+| **What was editorially decided** | `editorial_status` | independent — **a `VERIFIED` quotation that Stage 4 removed is `VERIFIED` + `REMOVED`** |
+
+> **`unverified` (investigated, no source found) must never collapse into
+> `not_investigated` (nobody has looked) — or into `pending_migration` (the verdict
+> exists, it just has not been copied here).** All three would otherwise read as
+> "we don't know," and only one of them means that.
+
+Plus `evidence_location`, so every migrated verdict points back at the record that
+earned it.
+
+## 3 · Negative knowledge persists
+
+`NOT_QUOTATIONS` and the nine documented non-records **are not debris around the
+census — they are findings.** *"We examined this span and determined what it is."*
+
+**This is what stops `"thoughtland"` becoming a fresh provenance alert every time a
+detector changes.** The same persistence is owed to **declined findings · protected
+asymmetries · intentional repetition · known false positives** — otherwise the
+system repeatedly rediscovers questions the author has already answered, **which is
+a failure of respect for the member's attention.**
+
+## ⚠️ Process incident — the manuscript was briefly truncated
+
+**During the first identity test I wrote `open(MS,'w').write(open(MS).read()...)`.
+The `'w'` truncates before the inner read executes.** The manuscript was emptied.
+
+**Recovered immediately and completely** — a backup had been copied one line
+earlier, and `git diff` against HEAD confirms the restored file is **byte-identical**
+to the committed version. 2,766 lines, 109 block epigraphs. **No content lost.**
+
+**Recorded because the near-miss is instructive, not because it caused harm.** The
+test was run **against the live manuscript instead of a copy**, for no reason other
+than convenience. **A verification procedure must never be able to damage the
+artifact it verifies.** The corrected test reads the original into memory first and
+restores from that.
+
+**Studio requirement:** *any operation that modifies a manuscript to test something
+must operate on a copy.* A system that can generate and run its own verification
+code needs this as a hard boundary, not a habit.

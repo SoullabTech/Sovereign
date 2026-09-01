@@ -36,15 +36,66 @@ def norm(t):
     return re.sub(r"[^a-z0-9 ]", "", t.lower()).strip()
 
 
-def qid(text, ordinal):
-    h = hashlib.sha256((norm(text) + f"#{ordinal}").encode()).hexdigest()[:8]
-    return f"EA-Q-{h}"
+IDENTITY = Path(__file__).resolve().parent / "identity.json"
+
+
+def load_identity():
+    if IDENTITY.exists():
+        return json.loads(IDENTITY.read_text())
+    return {"assigned": {}, "next": 1}
+
+
+def similarity(a, b):
+    """Jaccard overlap of significant word sets. Survives the repairs this
+    register exists to record: variant restoration, translator substitution,
+    spelling modernisation, punctuation change."""
+    A, B = set(norm(a).split()), set(norm(b).split())
+    if not A or not B:
+        return 0.0
+    return len(A & B) / len(A | B)
+
+
+MATCH_THRESHOLD = 0.45
+
+
+def qid(text, ordinal, ledger, taken):
+    """Return this quotation's persistent id.
+
+    IDENTITY INVARIANT: a quotation's id is assigned once and persists through
+    manuscript revision. Wording, location, attribution and typography are
+    MUTABLE PROPERTIES of that identity, never inputs to it.
+
+    Matching is by similarity, not by exact text, so that correcting a
+    quotation's wording - the single most common repair this register exists to
+    record - does not orphan its provenance and rulings.
+
+    Below the threshold the builder returns an UNMATCHED CANDIDATE. It never
+    silently manufactures a new confirmed object, because a changed quotation
+    and a new quotation are indistinguishable to a detector and must be told
+    apart by a person. Detection proposes; reconciliation establishes; the
+    register owns thereafter.
+    """
+    best, score = None, 0.0
+    for known_text, meta in ledger["assigned"].items():
+        if meta["id"] in taken or meta["ordinal"] != ordinal:
+            continue
+        sc = similarity(text, known_text)
+        if sc > score:
+            best, score = meta, sc
+    if best and score >= MATCH_THRESHOLD:
+        return best["id"], "matched", round(score, 3)
+    new = f"EA-Q-{ledger['next']:04d}"
+    ledger["assigned"][text] = {"id": new, "ordinal": ordinal}
+    ledger["next"] += 1
+    return new, "new_candidate", None
 
 
 def build():
     lines = MS.read_text().split("\n")
     chapter = section = None
     seen, records = {}, []
+    ledger = load_identity()
+    taken = set()
 
     for i, raw in enumerate(lines, start=1):
         line = raw.rstrip()
@@ -107,8 +158,10 @@ def build():
         for text, form, attr in found:
             key = norm(text)
             seen[key] = seen.get(key, 0) + 1
+            _id, _state, _score = qid(text, seen[key], ledger, taken)
+            taken.add(_id)
             records.append({
-                "id": qid(text, seen[key]),
+                "id": _id,
                 "occurrence": seen[key],
                 "text": text,
                 "line_at_build": i,
@@ -122,13 +175,27 @@ def build():
                 "internal_speaker": None,
                 "work": None,
                 "translator_or_mediator": None,
-                "provenance_status": "not_yet_recorded",
-                "rights_status": "not_yet_recorded",
-                "bibliography_relationship": "not_yet_recorded",
+                # AXIS 1 - what is true of the quotation
+                "provenance_status": None,          # verified_exact / verified_variant /
+                                                    # paraphrase_adapted / misattributed /
+                                                    # unverified / personal_communication
+                # AXIS 2 - what the register knows about it. Never conflate:
+                # "unverified" (investigated, no source found) must stay distinct
+                # from "not_investigated" (nobody has looked), and both from
+                # "pending_migration" (verdict exists elsewhere, not yet copied).
+                "provenance_review_state": "not_investigated",
+                "evidence_location": None,
+                "rights_status": None,
+                "bibliography_relationship": None,
                 "family": None,
+                # AXIS 3 - editorial disposition, independent of provenance.
+                # A VERIFIED quotation that Stage 4 removed is VERIFIED + REMOVED.
                 "editorial_status": "unadjudicated",
+                "record_state": "confirmed" if _state == "matched" else "new_candidate",
+                "identity_match_score": _score,
                 "notes": None,
             })
+    IDENTITY.write_text(json.dumps(ledger, indent=2, ensure_ascii=False))
     return records
 
 

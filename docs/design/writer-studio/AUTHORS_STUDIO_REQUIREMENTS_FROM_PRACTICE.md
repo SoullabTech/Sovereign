@@ -1049,3 +1049,40 @@ help making this say what I mean."**
 > **They should not have to understand professional editing taxonomy before we can
 > help them. We understand the taxonomy. They tell us what they need. We translate
 > that into an editorial relationship they understand and control.**
+
+### Requirement — identity, three axes, and negative knowledge
+
+**Identity invariant:** *a quotation's id is assigned once and persists through
+manuscript revision.* Wording, location, attribution and typography are **mutable
+properties of that identity, never inputs to it.** **Grounding event:** the first
+id scheme was a content hash; correcting a quotation to its authentic wording
+**orphaned the record and all its rulings.** Caught by testing the repair rather
+than assuming the scheme.
+
+**Detection proposes objects. Reconciliation establishes them. The register owns
+them thereafter.** Below a match threshold the system must return a **candidate**,
+never a confirmed object — *a changed quotation and a new quotation are
+indistinguishable to a detector and must be separated by a person.*
+
+**Three axes, never conflated:** what is true of the object · what the system knows
+about it · what was editorially decided. **`unverified` must never collapse into
+`not_investigated`, and neither into "verdict exists but not yet migrated."** All
+three read as "we don't know"; only one is.
+
+**Negative knowledge must persist.** Declined findings, protected asymmetries,
+intentional repetition, known false positives and not-a-quotation determinations are
+**findings, not debris.** Without persistence the system repeatedly rediscovers
+questions the author has already answered — **a failure of respect for the member's
+attention.**
+
+### Requirement — verification must never be able to damage the artifact
+
+**Grounding event:** a self-written identity test truncated the live manuscript
+through an evaluation-order bug (`open(f,'w').write(open(f).read())`). Recovered
+completely from a backup taken one line earlier; **git confirmed byte-identical
+restoration.**
+
+**A system that generates and runs its own verification code must operate on a copy
+whenever the test mutates the artifact.** This is a hard boundary, not a habit — the
+failure is silent, instant, and indistinguishable from success until something reads
+the file.
