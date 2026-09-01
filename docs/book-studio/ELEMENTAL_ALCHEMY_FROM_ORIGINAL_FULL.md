@@ -1366,7 +1366,7 @@ Balancing fluid water and solid Earth, we will experience life both deeply groun
 
 # Chapter 7: Earth — The Element of Stability and Groundedness
 
-*"The archaic mind understood and perceived that nature is conscious, nature is alive, nature is an organism full of intent." — Terrence McKenna*
+*"The archaic mind understood and perceived that nature is conscious, nature is alive, nature is an organism full of intent." — Terence McKenna*
 
 In this chapter, we will explore the stabilizing and concretizing dynamics of earth.
 
@@ -1395,8 +1395,6 @@ Each of us is here to be in service in our own way. There are countless ways to 
 ### Earth Wisdom
 
 In the midst of stirring the roux for the gumbo (a lengthy process), Sophie asks me if I bought the seeds for this coming year's garden. We've been plotting a design for a new garden since our last one was a mixed success. It's not what I'm used to, so I need to adjust the style of planting I employ. I still garden as if I live in Louisiana, but the soil in Connecticut where I live today with my wife and kids is much different. The weather patterns and humidity are different. The flowers and vegetables that grow best here are a bit different. Sure, there are similarities, but also many clear distinctions. My local friends and neighbors who know this land well are teaching me when to plant, what to plant, and how to tend the garden appropriately. Accommodating the demands and limitations of time and place is earth wisdom.
-
-*"Do not go where the path may lead, go instead where there is no path and leave a trail." — Ralph Waldo Emerson*
 
 ### Method and Medicine
 
@@ -1522,9 +1520,7 @@ The beauty of this challenge is that the solution is not in the stars alone, but
 
 The ancient Taoist philosophers believed that metaphysical reality is woven into material reality as the creative source of the physical world. So, to be a good Taoist is to live the Earth realm well. Likewise, my interest in metaphysics is not purely transcendental or motivated by a desire to escape reality. Modern physicists have discovered that the quantum field underlies the atoms which comprise everything in the physical world. The quantum field is therefore an extraordinary dimension of ordinary reality. From studying metaphysics, I am aware of many extraordinary realms, each with its own laws, experiences, and dynamics.
 
-The elements of earth, air, fire, and water are four of these realms, but I am aware that to most people they are mainly abstract, symbolic principles. To be of any practical value to us the elements must be related and integrate into the world of earthly matter.
-
-Or else they don't truly matter. Not on a practical level, which is Earth realm sensibility. We are created as spirits out of the soil of Earth and this lifetime is to live an earthly experience as long, and fully as we can. The idea of transcendence remains a practical consideration of how to make the best of this lifetime.
+The elements of earth, air, fire, and water are four of these realms, but I am aware that to most people they are mainly abstract, symbolic principles. To be of any practical value to us the elements must be related and integrate into the world of earthly matter. Or else they don't truly matter. Not on a practical level, which is Earth realm sensibility. We are created as spirits out of the soil of Earth and this lifetime is to live an earthly experience as long, and fully as we can. The idea of transcendence remains a practical consideration of how to make the best of this lifetime.
 
 It's here in the earth element where heaven and Earth join together in an orchestrated dance of life. Earth offers both substance and container for all possibility and probability to manifest. It is the point at which all of life's subtle dimensions concentrate into a denser form. This dimension of our psychological experience is where the magic of creating a better world begins. All else is projective or reflective.
 
@@ -1570,27 +1566,15 @@ None of us can be all things at all times yet earth continues to push us to stri
 
 The mother of diversity embodies renewable love, endlessly creative and producing new life from her ultimate bond with herself, becoming love without limits. This love that binds the mother of diversity is the soul of the earth, encompassing everything from pebbles and fallen trees to the hippopotamus, the ant, the stork, and human beings.
 
-#### The Divine Love of Mother Earth
-
 Mother Earth's creative process is not just sensible, organized, resourceful, and practical. It is a labor of love—a manifestation of divine care she extends to her children. Every new leaf, flower bud, and life on Earth is an expression of her abundant nurturing as the source of all that is.
-
-#### The Womb of Creation
 
 The womb of Mother Earth is the deepest valley that receives the energy of all the elements, transforming it daily in the cosmic process—the portal that gives origin to life. This event is not limited to physical birth but includes the unique way souls are formed. The earth's womb is the canvas of her thoughts, with soil teeming with life, influenced by the desires of the Sun and Moon, combined with the heat of the mountains and the air. This ethereal substance transforms inorganic matter, turning every fruit and animal into something perfect.
 
-#### Unconditional Positive Regard
-
 Mother Earth's love is unconditional. She does not discriminate between the stone and the stork, the insect and the man. She loves all created beings equally, honoring each as valuable. This divine love sustains and nourishes all existence, making the earth fruitful and providing a place where the soul of every being can grow.
-
-#### The Fertile Ground of Being
 
 The soul of the earth lives in the soil. This fertile, life-giving matter is more than just soil; it is life itself, with an intimate community of forms embodying the mind of the earth. This delicate, dynamic, interdependent web of relationships is vital for the whole, with each being playing its part.
 
-#### Embodying the Soul of Earth
-
 To honor Mother Earth is to honor and manifest her creative spirit. It means moving in harmony with her rhythms, loving and serving others, being present, and creating with integrity. By aligning with her abundance, we can manifest a world that reflects our highest aspirations.
-
-#### The Sensibilities of Creation
 
 She continually demonstrates the principles of balance, harmony, and respect for Life on all levels. She invites us to cultivate our sensibilities, teaching us to pay attention, act, and create from a place of love and relationship, rather than disregard for our bodies, other species, and the world around us.
 
@@ -1604,7 +1588,7 @@ We are limited in our power to achieve our potential to make our lives better, r
 
 Woven into our everyday life is this level of intelligence knowing how to move forward. How we are in relationship with this aspect of our wisdom determines our experience. The goal is to be in resonance with the earth element and all of the other elements of experience. To put it another way, being conscious of how we live our lives while also being mindful of our beliefs, passions, goals, and intent for acting and being in the world is what earth balance is all about.
 
-Training, seminars, workshops, and apprenticeships are all ways to improve our capacity to blend the form and function of what we're learning so that we can achieve our life goals. A good editor transforms esoteric ideas and rantings into coherent and readable passages. A good coach helps us transform concepts, techniques, and achievement goals into higher level performance. A good teacher sees our potential, our style of learning, and our potential and guides us into a systematic process of learning needed to achieve our goals. A good guide supports our journey into authentic experiences and expressions while helping us learn the lessons and advance in wisdom.
+Training, seminars, workshops, and apprenticeships are all ways to improve our capacity to blend the form and function of what we're learning so that we can achieve our life goals. A good editor transforms esoteric ideas and rantings into coherent and readable passages. A good coach helps us transform concepts, techniques, and achievement goals into higher level performance. A good teacher sees our potential, our style of learning, and guides us into a systematic process of learning needed to achieve our goals. A good guide supports our journey into authentic experiences and expressions while helping us learn the lessons and advance in wisdom.
 
 Each of us has our own way of making sense of the world and engaging it. Earth wisdom is being aware of our unique way of processing and developing. Some are gifted at organization and systems thinking while others have more organic and fluid ways of developing. Earth intelligence asks us to work within the structure of our innate way of being. Like a good teacher, our earth element intelligence senses our potential, our style of learning, and guides us into a systematic process of learning based on our true nature.
 
