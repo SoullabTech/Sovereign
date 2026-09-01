@@ -1,0 +1,81 @@
+{
+  "_comment": "STAGE 2d - final provenance queue. Seven records. Novelty class recorded on every finding.",
+  "entries": [
+    {
+      "match": "one thing, many; one, because",
+      "provenance_status": "unverified",
+      "actual_author": "attributed to Hermes Trismegistus",
+      "work": "LEAD (open): Corpus Hermeticum / The Divine Pymander - John Everard's 1650 English translation is the likeliest home for this register; exact wording NOT located",
+      "translator_or_mediator": "MEDIATED TRANSLATION, Greek to English via an early-modern rendering - the 'one thing, many' construction is 17th-century English, not modern",
+      "notes": "NOVELTY: NEW EVIDENCE. The census mentions Hermes Trismegistus once, but only regarding the Kybalion's claim to transmit him - a different object entirely.",
+      "evidence_location": "Stage 2d verification, 2026-09-01",
+      "occurrence": 1
+    },
+    {
+      "match": "greater the light, the deeper the shadow",
+      "provenance_status": "paraphrase_adapted",
+      "actual_author": "Johann Wolfgang von Goethe",
+      "work": "Gotz von Berlichingen, Act I (1773) - 'Wo viel Licht ist, ist starker Schatten'",
+      "translator_or_mediator": "the manuscript's English is an evolved variant; documented renderings include 'Where there is much light, the shadow is deep' and 'Where the light is brightest, the shadows are deepest'",
+      "internal_speaker": "a character in the play - the line is dramatic speech, not authorial statement",
+      "rights_status": "public_domain",
+      "family": "fam-under-attributed",
+      "notes": "NOVELTY: NEW EVIDENCE. RECOVERABLE ANCESTOR found. The manuscript presents it as 'There is a saying:' - UNDER-ATTRIBUTED, the same class as the Blake Proverbs of Hell item. Two further facts travel with it: the ancestor is a PLAY, so the line is spoken by a character rather than stated by Goethe; and the English is an evolved variant rather than any standard translation. Three defects in one anonymous line.",
+      "evidence_location": "Stage 2d verification, 2026-09-01",
+      "occurrence": 1
+    },
+    {
+      "match": "And yet",
+      "provenance_status": "unverified",
+      "actual_author": "unknown",
+      "notes": "NOVELTY: NEW EVIDENCE. No source located. NOT a Tao Te Ching passage - the interrupted attribution 'Lao Tzu reminds us' is not supported. Same class as the four 'Adapted from Lao Tzu' items dissolved at Stage 3, but this one carries a direct attribution rather than an adaptation label.",
+      "evidence_location": "Stage 2d verification, 2026-09-01",
+      "occurrence": 1
+    },
+    {
+      "match": "I think therefore I am",
+      "provenance_status": "verified_exact",
+      "actual_author": "Rene Descartes",
+      "work": "Discourse on the Method (1637), 'je pense, donc je suis'; Latin 'cogito, ergo sum' in Principles of Philosophy (1644)",
+      "translator_or_mediator": "MEDIATED TRANSLATION, French/Latin to English - the manuscript carries the standard English rendering",
+      "rights_status": "public_domain",
+      "family": "fam-cogito",
+      "family_role": "ancestor",
+      "notes": "NOVELTY: CONFIRMS EXISTING RECORD - the boundary ruling already identified this as Descartes's sentence; verification closes the source. Its authored response, the book's own 'I know therefore I am', remains excluded as authorial coinage.",
+      "evidence_location": "Stage 2d verification, 2026-09-01",
+      "occurrence": 1
+    },
+    {
+      "match": "When you bring more attention",
+      "provenance_status": "verified_exact",
+      "actual_author": "Dr. Baskaran Pillai",
+      "work": "Pillai Center teaching material - the quoted author's own institutional channel",
+      "rights_status": "likely_protected_standard",
+      "notes": "NOVELTY: NEW EVIDENCE. Attribution sound - Baskaran Pillai is a real, documented teacher and the wording is attested on his centre's own teaching material, which is the quoted-author's-channel evidence class the census used for Tolle and Roy T. Bennett. EVIDENCE LIMITATION RECORDED: the attestation came through search rather than direct inspection of the primary page, a weaker warrant than the Tolle case where multiple official channels were named. Bibliography presence not yet checked.",
+      "evidence_location": "Stage 2d verification, 2026-09-01",
+      "occurrence": 1
+    },
+    {
+      "match": "knows others is wise",
+      "provenance_status": "verified_variant",
+      "actual_author": "Laozi",
+      "work": "Tao Te Ching 33",
+      "translator_or_mediator": "ENGLISH RENDERING UNIDENTIFIED - and demonstrably NOT Legge, whose text reads 'He who knows other men is discerning; he who knows himself is intelligent'",
+      "rights_status": "public_domain_original_translation_open",
+      "family": "fam-laotzu-genuine",
+      "notes": "NOVELTY: NEW EVIDENCE. Same verdict shape as the Emerald Tablet item - verified to the text, English rendering unidentified. This is the THIRD genuine Laozi attribution in the manuscript, alongside Tao Te Ching 78 and 11, against four dissolved 'Adapted from Lao Tzu' items and one unverified interrupted attribution.",
+      "evidence_location": "Stage 2d verification, 2026-09-01",
+      "occurrence": 1
+    },
+    {
+      "match": "real religion of humankind",
+      "provenance_status": "unverified",
+      "actual_author": "Wayne Teasdale",
+      "work": "LEAD (open): The Mystic Heart: Discovering a Universal Spirituality in the World's Religions (1999); sentence NOT located",
+      "family": "fam-teasdale",
+      "notes": "NOVELTY: NEW EVIDENCE for this object; CONFIRMS AN EXISTING PATTERN for the family. The thought matches Teasdale's interspiritual thesis exactly - which is precisely why it cannot be treated as verified. THEMATIC FIT PROVES NOTHING. Identical verdict shape to the Ch8 Teasdale item: real author, matching thesis, sentence not located. Two of the three Teasdale occurrences are now unverified; the Chapter 10 opener is the only one with a closed source.",
+      "evidence_location": "Stage 2d verification, 2026-09-01",
+      "occurrence": 1
+    }
+  ]
+}

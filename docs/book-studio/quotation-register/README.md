@@ -1292,3 +1292,106 @@ the rights change.
 **plus Descartes**, which the boundary ruling admitted.
 
 **→ Verify the seven. Then freeze.**
+
+---
+
+# STAGE 2d — final provenance queue · 7 records · 2026-09-01
+
+**Every finding carries an explicit novelty class**, per the standing rule that
+*new to the current investigation is not necessarily new to the record.*
+
+| Record | Verdict | Novelty |
+|---|---|---|
+| **Goethe** *(the "saying")* | `PARAPHRASE/ADAPTED` — **recoverable ancestor found** | **`NEW EVIDENCE`** |
+| **Descartes** | `VERIFIED EXACT` — *Discourse on the Method* (1637) | **`CONFIRMS EXISTING RECORD`** |
+| **Laozi, TTC 33** | `VERIFIED VARIANT` — rendering unidentified | **`NEW EVIDENCE`** |
+| **Dr. Baskaran Pillai** | `VERIFIED EXACT` — quoted-author's-channel | **`NEW EVIDENCE`** |
+| **Hermes Trismegistus** | `UNVERIFIED` — *Divine Pymander* lead open | **`NEW EVIDENCE`** |
+| **Lao Tzu** *(interrupted)* | `UNVERIFIED` — **not a Tao Te Ching passage** | **`NEW EVIDENCE`** |
+| **Teasdale** *(Conclusion)* | `UNVERIFIED` — *The Mystic Heart* lead open | **`NEW EVIDENCE` for the object · `CONFIRMS` the family pattern** |
+
+## The find of the pass — three defects in one anonymous line
+
+**"The greater the light, the deeper the shadow"** is presented as **"There is a
+saying:"** It has a **recoverable ancestor**:
+
+> **Goethe, *Götz von Berlichingen*, Act I (1773)** — *"Wo viel Licht ist, ist
+> starker Schatten."*
+
+**Three findings travel together in a line the manuscript attributes to nobody:**
+
+1. **`UNDER-ATTRIBUTED`** — a real author reduced to an anonymous saying. **Same
+   class as the Blake *Proverbs of Hell* item.**
+2. **The ancestor is a play** — the line is **spoken by a character**, not stated by
+   Goethe. `internal_speaker` applies, as with Polonius, Satan, Hotspur, Amy March
+   and Blake's devil.
+3. **The English is an evolved variant**, matching no standard translation.
+
+## Teasdale — the pattern the family made visible
+
+**Identical verdict shape to the Chapter 8 item**: real author, thesis matches
+*exactly*, sentence not located. **Which is precisely why it cannot be verified.**
+
+> **Thematic fit proves nothing** — and the tighter the fit, the more carefully that
+> rule has to hold.
+
+**Two of three Teasdale occurrences are now unverified.** Only the Chapter 10 opener
+— the `KINSHIP + DIALOGUE` epigraph — has a closed source.
+
+## One sequencing defect, and it was not schema pressure
+
+**The Descartes verdict was silently overwritten.** The boundary ruling that
+*admitted* the object to the workflow ran **after** verification, resetting it to
+`not_investigated`.
+
+**Ordering, not modelling.** Fixed structurally: **ontology rulings now run before
+verification**, so *what kind of object this is* can never overwrite *what we found
+out about it.*
+
+> ### And the answer to the question this pass was set to test: **all seven fit the existing model. No schema extension was required.**
+
+**After six extensions in ten migration batches, ordinary provenance work now lands
+in the register without deforming it.** That is the maturity evidence we were
+looking for.
+
+---
+
+# ✅ WHOLE-BOOK QUOTATION POPULATION FROZEN
+
+**All ten freeze criteria pass.**
+
+| | |
+|---|---|
+| current semantic records | **130** |
+| `migrated` | **128** |
+| `ruled_out_of_scope` | **1** — the voiced proposition |
+| `verdict_not_locatable_in_source` | **1** — Berry, **with a recovery note** |
+| `pending_migration` · attributed `not_investigated` | **0 · 0** |
+| historical lifecycle | **28** — 24 removed, 4 reclaimed as prose |
+| block lifecycle | **137 = 109 active + 28 inactive** |
+| documented non-quotations | **9** |
+| families | **25**, across both layers |
+
+**The word means something different from the earlier census closure.**
+
+**Not:** *"our detector found everything."*
+**But:** **every quotation-like object in the canonical manuscript has been
+semantically reconciled into, or explicitly excluded from, the register — and every
+identity carries an explicit state.**
+
+**That is a defensible closure criterion, and it is the first one this project has
+had.** Four separate times a detector reported a complete population and was wrong.
+**The freeze does not rest on a pattern; it rests on reconciliation.**
+
+## What the whole provenance effort produced
+
+**156 attributed quotation occurrences ever identified** — 137 historical block + 19
+inline — **plus 2 unattributed boundary objects, ruled individually.**
+
+**Every one now has:** a stable identity that survives revision · an explicit
+provenance verdict or a documented reason it lacks one · independent rights and
+editorial axes · recoverable evidence lineage · family relationships including
+lineage roles · and, where superseded, its own verdict history.
+
+**→ Stage 4 adjudication of the complete inline field, with family context beside
+each record. Then 4B, then 4C.**

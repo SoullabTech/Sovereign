@@ -30,11 +30,13 @@ def norm(t):
 def main():
     data = json.loads(REG.read_text())
     entries = json.loads(SRC.read_text())["entries"]
-    for b in sorted(HERE.glob("batch_*.json")):
-        entries += json.loads(b.read_text())["entries"]
+    # Ontology rulings first: what KIND of object this is must be settled before
+    # any verdict is written, so a class decision can never overwrite a verdict.
     bd = HERE / "boundary_rulings.json"
     if bd.exists():
         entries += json.loads(bd.read_text())["entries"]
+    for b in sorted(HERE.glob("batch_*.json")):
+        entries += json.loads(b.read_text())["entries"]
     report = {"migrated": [], "ambiguous": [], "unmatched": [], "conflicts": []}
 
     for e in entries:
