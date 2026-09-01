@@ -2,7 +2,7 @@
 
 **Source of record:** `docs/book-studio/ELEMENTAL_ALCHEMY_FROM_ORIGINAL_FULL.md`
 **Opened:** 2026-09-01, after Chapter 10 closed developmental adjudication.
-**Status:** IN PROGRESS — 93 of 137 adjudicated. **Chapter 5 CLOSED (30/30). Chapter 8 CLOSED (23/23).**
+**Status:** IN PROGRESS — 94 of 137 adjudicated. **Chapter 5 CLOSED (30/30). Chapter 8 CLOSED (23/23).**
 
 ## Scope
 
@@ -2462,6 +2462,41 @@ from the ***Divan-e Shams-e Tabrizi***. Attributed in the manuscript as bare
 "— Rumi."
 `PARAPHRASE/ADAPTED` · `MEDIATED TRANSLATION` · attribution incomplete and false
 in form · **Rights: `LIKELY PROTECTED` · `HIGH`.**
+
+**L1871 · Black Elk — "The heart is a sanctuary at the center of which is a little space wherein the Great Spirit dwells."**
+`UNVERIFIED — source lead unresolved`. **Lead:** ***The Sacred Pipe: Black Elk's
+Account of the Seven Rites of the Oglala Sioux***, recorded by **Joseph Epes
+Brown**, 1953 (University of Oklahoma Press). Not confirmed in the search; the
+book's full text needs checking.
+
+#### Two-layer scrutiny — a longer mediation chain than Rumi or Lao Tzu
+
+Black Elk spoke **Lakota**. The printed English passed through **interpretation**
+(family members interpreting), then **recording and editorial shaping** by a white
+author — **John Neihardt** for *Black Elk Speaks* (1932), **Joseph Epes Brown**
+for *The Sacred Pipe* (1953). Neihardt's shaping in particular is the subject of
+substantial scholarship, and the underlying transcripts were later published
+separately (*The Sixth Grandfather*, ed. Raymond DeMallie, 1984), which is what
+makes the differences visible.
+
+So this chain has **three layers, not two**: original speech → interpretation →
+editorial composition. **Which layer the manuscript is quoting matters for both
+accuracy and rights**, and cannot be assumed.
+**Rights: `LIKELY PROTECTED` · `STANDARD`** — the 1953 Brown text.
+
+#### The honest counterpart to the "Sioux Legend" finding
+
+**Black Elk is a real, named, published Indigenous source** — legitimately
+attributable, and the book is right to cite him. Contrast **L1933 "Sioux
+Legend"**, which names no one and cannot be checked.
+
+> **The remedy for an unsupported cultural attribution is not to avoid Indigenous
+> sources. It is to cite the ones that are real, named, and traceable —
+> acknowledging the mediation layer where one exists.**
+
+The manuscript already does this twice: **Black Elk** here and **Bear Heart**
+(*The Wind Is My Mother*) in Fire. Both are named authors with published works.
+Neither is the problem; the unattributable "legend" is.
 
 ### PROVENANCE FAMILY — Barks renderings presented as bare "Rumi"
 
