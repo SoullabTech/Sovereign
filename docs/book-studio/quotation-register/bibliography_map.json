@@ -2,7 +2,8 @@
   "_comment": "Hand-authored mapping: surviving source object -> exact bibliographic object. The matcher proposes; this file decides. Rows are added batch by batch as the author rules them. 'unresolved' names a bibliographic detail still owed - a correct author/work pair is NOT a specific bibliographic object, and the emitter requires the latter.",
   "batches_ruled": [
     1,
-    2
+    2,
+    3
   ],
   "rows": [
     {
@@ -214,6 +215,104 @@
       "evidence": "Original Act I: 'Wo viel Licht ist, ist starker Schatten'. No Goethe entry exists at all.",
       "note": "PRESERVE THE EVOLVED-ENGLISH STATUS rather than inventing a translator. Documented renderings differ from the manuscript's wording, which is exactly why 4I ruled REFRAME rather than CORRECT.",
       "rights": "public_domain"
+    },
+    {
+      "id": "EA-Q-0041",
+      "source": "Eckhart Tolle, 'As long as the ego runs your life'",
+      "relationship": "quotation",
+      "object": "Tolle, Eckhart. *A New Earth: Awakening to Your Life's Purpose.* Plume, 2006.",
+      "decision": "KEEP",
+      "evidence": "VERIFIED EXACT, confirmed on Tolle's own official channels. The entry already existed; the flag 'Ch5 carries no Tolle entry' was chapter scoping - the SECOND false MISSING produced by the chapter-grouped bibliography, after Jung.",
+      "hold": "Do NOT drop 'The Power of Now' yet. Held until the complete reverse check. The bibliography is being built from the whole book precisely so that chapter-local decisions are not made prematurely.",
+      "rights": "protectability_uncertain_standard"
+    },
+    {
+      "id": "EA-Q-0042",
+      "source": "Shakespeare, 'Out of this nettle, danger, we pluck this flower, safety'",
+      "relationship": "quotation, character voice",
+      "object": "Shakespeare, William. *Henry IV, Part 1*, II.iii.",
+      "decision": "CORRECT",
+      "evidence": "Register names play and scene. Hotspur speaks it, justifying the rebellion that kills him.",
+      "hold": "The three listed plays - Hamlet, Henry IV Part 2, As You Like It - do NOT support this active quotation, but another surviving or historical Shakespeare relationship may still account for Hamlet. Held until the complete reverse check. The bibliography is being built from the whole book precisely so that chapter-local decisions are not made prematurely.",
+      "note": "The inverse of a missing entry, and worse: three entries, none correct. A missing entry announces itself; this one looks complete and sends the reader to the wrong play.",
+      "rights": "public_domain"
+    },
+    {
+      "id": "EA-Q-0043",
+      "source": "Blake, 'If the fool would persist in his folly he would become wise'",
+      "relationship": "quotation",
+      "object": "Blake, William. *The Marriage of Heaven and Hell.* c.1790.",
+      "decision": "KEEP",
+      "evidence": "VERIFIED VARIANT; the byline names 'Blake's Proverbs of Hell' since the 4I reframe. The flag 'Blake present for a different work' referred to the doors-of-perception quotation - both surviving Blake objects come from THIS SAME BOOK, so one entry legitimately serves both.",
+      "note": "The family that was asymmetric at 4I now shares one honest entry.",
+      "rights": "public_domain"
+    },
+    {
+      "id": "EA-Q-0044",
+      "source": "C. G. Jung, 'Your vision will become clear only when you can look into your own heart'",
+      "relationship": "quotation",
+      "object": "Jung, C. G. *Letters, Vol. 1: 1906-1950.* Princeton University Press, 1973, p. 33 - letter to Fanny Bowditch.",
+      "decision": "ADD",
+      "evidence": "Register names letter, volume, publisher and page. No entry for the Letters exists.",
+      "hold": "This Jung object uses none of the listed Jung works, so after two of three Jung objects 'The Red Book' and 'Modern Man in Search of a Soul' remain unclaimed. Keep both unresolved until the final Jung object is mapped."
+    },
+    {
+      "id": "EA-Q-0046",
+      "source": "Leonardo da Vinci, 'The desire to know is natural to good men'",
+      "relationship": "quotation, translated",
+      "object": "Leonardo da Vinci. *Codex Atlanticus.*",
+      "decision": "ADD",
+      "evidence": "VERIFIED VARIANT, closed by an EDITION CHECK against Museo Galileo's Leonardo project rather than by general search. No da Vinci entry exists.",
+      "note": "Treat the English explicitly as a conventional or evolved rendering rather than pretending to know a translator - the same shape as Goethe."
+    },
+    {
+      "id": "EA-Q-0047",
+      "source": "Rumi, 'The wound is the place where the Light enters you'",
+      "relationship": "quotation, loose rendering honestly labelled",
+      "object": "Rumi. *The Essential Rumi.* Translated by Coleman Barks.",
+      "decision": "KEEP",
+      "evidence": "Mathnawi I.3150-3175, rendered by Barks. The book's specimen of honest labelling - the manuscript's own byline is already correct.",
+      "merge": "Duplicate entries exist, HarperCollins 1995 and HarperOne 1995 for one book. Merge, retaining the edition and imprint actually used.",
+      "rights": "Barks rendering - Stage 6"
+    },
+    {
+      "id": "EA-Q-0048",
+      "source": "Simone Weil, 'Love is not consolation, it is light'",
+      "relationship": "quotation, translated",
+      "decision": "RECOVERY REQUIRED",
+      "object": "Weil, Simone. - work not identified",
+      "evidence": "VERIFIED VARIANT, but the register records NO work. The existing entry proposes Waiting for God; the line is at least as commonly placed in Gravity and Grace.",
+      "unresolved": "WORK AND TRANSLATOR TOGETHER. This is not a trivial edition choice: the work determines the source object and the translator determines the English expression. Keep genuinely open.",
+      "rights": "term_uncertain_likely_protected"
+    },
+    {
+      "id": "EA-Q-0049",
+      "source": "Miles Davis, 'the note you play afterwards'",
+      "relationship": "quotation, unverified and knowingly kept",
+      "object": null,
+      "decision": "NO ENTRY REQUIRED",
+      "evidence": "UNVERIFIED, no primary source; kept at 4I on the manuscript's own hedge, 'is quoted as saying'.",
+      "note": "The manuscript deliberately preserves attribution uncertainty. Inventing a bibliography object would contradict that honesty - a bibliography entry would assert a source the book explicitly declines to claim.",
+      "rights": "none_as_stands"
+    },
+    {
+      "id": "EA-Q-0050",
+      "source": "Socrates via Plato, 'The unexamined life is not worth living'",
+      "relationship": "quotation, translated",
+      "object": "Plato. *Apology* 38a.",
+      "decision": "ADD - source identity settled, bibliographic specificity unresolved",
+      "evidence": "VERIFIED EXACT with the Stephanus reference. No Plato entry exists anywhere in the book.",
+      "unresolved": "TRANSLATOR RECOVERY. Apology 38a identifies the textual object; the printed English still needs its mediator identified. Same sequencing as Plutarch: printed English -> identify mediator -> cite mediator -> rights. No translator guessing merely because the Greek source is public domain."
+    },
+    {
+      "id": "EA-Q-0052",
+      "source": "John O'Donohue, 'May the light of your soul guide you'",
+      "relationship": "quotation",
+      "object": "O'Donohue, John. *Anam Cara: A Book of Celtic Wisdom.* Harper Perennial, 1997.",
+      "decision": "KEEP",
+      "evidence": "VERIFIED EXACT; the register names the work and the line's position as the blessing's opening.",
+      "hold": "Hold 'The Four Elements' until reverse reconciliation confirms it has no other live relationship.",
+      "rights": "likely_protected_high"
     }
   ]
 }
