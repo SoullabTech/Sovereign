@@ -107,5 +107,20 @@ a single-section draft is never offered a reading of divisions it does not have.
 
 ## What the drawer must never become
 
-It must not render a reading. The moment this drawer draws units, alternatives, or MAIA's account,
-there are two structure surfaces drawn from different payloads, and they will eventually disagree.
+**It must never render a reading.** The moment this drawer draws units, alternatives, or MAIA's
+account, there are two structure surfaces drawn from different payloads, and they will eventually
+disagree.
+
+**It must never change canonical structure.** A reading may propose; only an explicit author act may
+adopt or alter. Today that holds structurally rather than by intention — there is no adoption call
+on this path and nothing reachable from here writes `manuscript_structure_units` — and it must keep
+holding that way when Stage 6 gives the author a command that can.
+
+**It must never initiate a reading without the member's explicit gesture.** No reading on arrival,
+on drawer open, on a timer, or on a heuristic about how long the Work has gone unread. MAIA does not
+inspect a member's book because the moment seemed right to the system.
+
+**It must never accept client-supplied Work text, structure, or interpretation as MAIA's reading.**
+Evidence gathering and interpretation remain server-owned. A client that could describe the Work
+could publish a structure under MAIA's name that MAIA never produced, and the member would have no
+way to tell the difference — which is why the request body is empty rather than merely ignored.
