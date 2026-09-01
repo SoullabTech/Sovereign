@@ -527,3 +527,41 @@ tell which claims have been closed by evidence and which are merely standing
 unchallenged. A system that renders both in the same voice reproduces exactly
 this failure at scale.
 
+---
+
+## A falsified structural correlation — why material patterns generate questions, not authority
+
+Midway through the provenance census, a genuine material pattern surfaced: the
+em-dash / en-dash split in epigraph attributions falls in **contiguous chapter
+blocks**, not randomly. Chapters 5 and 8 are overwhelmingly en-dash; 6, 7, 9 and
+10 overwhelmingly or exclusively em-dash. That is real evidence about assembly.
+
+It also correlated, at the time, with provenance quality: the two en-dash
+elemental chapters were the two worst-sourced, and the em-dash chapter censused
+so far was the best. A tidy theory was available — that the dash blocks marked
+assembly layers of differing rigor.
+
+**The prediction was pre-registered before the next two chapters were audited**,
+with a binding protocol: do not change the audit procedure because of it, score
+only on completed chapters, and strike it if it fails.
+
+**It failed in one chapter.** Earth — an em-dash block — came in at 31% verified
+and 50% unverified, sitting between Fire and Air and worse than Fire on
+unverified rate. Nothing like Water. The correlation was struck, and **no
+explanation was invented** for why the blocks differ.
+
+**The lesson for a developmental editing tool** is not that structural analysis
+is useless — the dash blocking remains true and may still matter for
+understanding the manuscript's assembly. It is:
+
+> **Material and structural correlations should generate questions, never
+> editorial authority.** A tool that surfaced "these chapters were assembled
+> differently, and differently-assembled chapters have worse sourcing" would have
+> been reporting a real pattern and a false inference in the same breath — and
+> the inference would have licensed exactly the shortcut the audit exists to
+> prevent: judging provenance from formatting.
+
+Pre-registration is what made the difference. Had the correlation been noticed
+*after* Earth and Aether were audited, it would have been trivially easy to
+narrate the data into supporting it.
+

@@ -2344,6 +2344,35 @@ riding on it.
 > inferring provenance quality from a formatting artifact. The evidence killed it
 > in one chapter.
 
+### Locked after Earth
+
+1. **Dash blocking = material/assembly evidence only.** It cannot be used as a
+   provenance signal.
+2. **Positive control, strengthened.** Where the manuscript explicitly signals
+   mediation, or uses a tradition/movement attribution instead of falsely precise
+   personal authorship, it has so far been **accurate without exception**.
+3. **McKeown stays `UNVERIFIED` with a paratext lead.** Do **not** broaden
+   `TITLE-DERIVED` into a generic paratext category unless another independent
+   specimen earns it.
+4. **Permaculture is a model, not an anomaly.** *Attribution does not always
+   require a named individual.* A tradition, movement, text, or corpus can be the
+   truthful source object — and is preferable to a falsely precise personal
+   byline.
+
+### Why the book-wide census was necessary
+
+Four elemental chapters are complete, and they **do not behave as one homogeneous
+source layer**:
+
+- **Fire** — uniquely contains internal-origin candidates.
+- **Water** — substantially better sourced.
+- **Air** — dominated by external transmission failures.
+- **Earth** — high unresolved provenance, despite different assembly formatting.
+
+> **Sampling one or two chapters would have produced the wrong model of the whole
+> manuscript** — and would have licensed a repair strategy fitted to the wrong
+> defect.
+
 ### Chapter 7 bibliography — three findings and one exemplar
 
 **Third `SPURIOUS SUPPORT`.** "Santayana, George. *The Sense of Beauty.*
