@@ -1,0 +1,13 @@
+{
+  "_comment": "Waley restoration completed during bibliography mapping, 2026-09-01.",
+  "entries": [
+    {
+      "match": "We put thirty spokes together",
+      "translator_or_mediator": "Arthur Waley, The Way and Its Power (1934) - NAMED in the manuscript; wording now restored in full",
+      "editorial_status": "KEEP - WALEY RESTORED IN FULL. The 4I repair changed 'usefulness' to 'utility' at wheel, vessel and house but left the closing sentence, which still read 'we should recognize the usefulness of what is not'. All four instances now carry Waley's word. Once the translator is known there is no editorial reason to keep a one-word alteration, and leaving it would have produced the worst middle state: an identifiable translation, altered wording, and a byline implying fidelity to Waley.",
+      "notes": "A PARTIAL REPAIR IS ITS OWN DEFECT CLASS. Three of four instances were fixed and the fourth survived because nobody counted them; the register's note still described the pre-repair state, so the record read as altered while the text read as mostly restored. Sequence now clean: restore exact wording, cite Waley accurately, then assess rights on the actual surviving object.",
+      "evidence_location": "Bibliography mapping batch 7",
+      "occurrence": 1
+    }
+  ]
+}

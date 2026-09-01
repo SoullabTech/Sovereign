@@ -6,7 +6,8 @@
     3,
     4,
     5,
-    6
+    6,
+    7
   ],
   "rows": [
     {
@@ -609,6 +610,103 @@
       "decision": "KEEP",
       "evidence": "VERIFIED EXACT, bibliography CORRECT. Confirms the earlier row: both surviving Blake objects legitimately resolve to this one entry.",
       "rights": "public_domain"
+    },
+    {
+      "id": "EA-Q-0108",
+      "source": "The Emerald Tablet, 'What is above is like what is below'",
+      "relationship": "quotation, translated - rendering unidentified",
+      "object": null,
+      "decision": "RECOVERY REQUIRED",
+      "evidence": "VERIFIED VARIANT, public domain. The bibliography flag reads CORRECT but no Emerald Tablet entry exists for it to be correct about.",
+      "unresolved": "Identify the English rendering, or consciously replace it with a named rendering. Newton's 'That which is below is like that which is above' is a candidate, but choosing Newton BECAUSE he is identifiable and public domain would repeat the mistake refused with Plutarch. First determine whether the current English belongs to a known rendering."
+    },
+    {
+      "id": "EA-Q-0110",
+      "source": "Laozi, 'We put thirty spokes together'",
+      "relationship": "quotation, translated",
+      "object": "Laozi. *Tao Te Ching* 11. In *The Way and Its Power*, translated by Arthur Waley. George Allen and Unwin, 1934.",
+      "decision": "ADD + RESTORE WORDING",
+      "evidence": "VERIFIED EXACT, and the only one of the three Tao Te Ching objects whose translator is identified.",
+      "manuscript_repair": "APPLIED. The 4I repair had changed 'usefulness' to 'utility' at wheel, vessel and house but left the closing sentence. All four instances now carry Waley's word.",
+      "note": "Once the translator is known there is no editorial reason to keep a one-word alteration. Leaving it would have produced the worst middle state: identifiable translation, altered wording, and a byline implying fidelity to Waley. A PARTIAL REPAIR IS ITS OWN DEFECT CLASS - three of four fixed, the fourth surviving because nobody counted them.",
+      "rights": "term_uncertain_high - assessed downstream on the restored object"
+    },
+    {
+      "id": "EA-Q-0111",
+      "source": "Peter Gabriel, 'Turn up the signal. Wipe out the noise.'",
+      "relationship": "quotation, song lyric",
+      "object": "Gabriel, Peter. \"Signal to Noise.\" *Up.* Real World Records, 2002.",
+      "decision": "KEEP",
+      "evidence": "VERIFIED EXACT; bibliography CORRECT.",
+      "note": "HELD DROP RELEASED IN THE OPPOSITE DIRECTION. 'Signal to Noise' looked orphaned at batch 2 and is claimed here in Ch9, so all three Gabriel tracks survive and none drops. This is why reverse reconciliation belongs AFTER the complete forward map.",
+      "rights": "song_lyric_high"
+    },
+    {
+      "id": "EA-Q-0115",
+      "source": "Alan Watts, 'a contradiction in wanting to be perfectly secure'",
+      "relationship": "quotation",
+      "object": "Watts, Alan. *The Wisdom of Insecurity: A Message for an Age of Anxiety.* Vintage Books, 1951, p. 77.",
+      "decision": "KEEP + add page",
+      "evidence": "VERIFIED VARIANT; the published text reads 'It must be obvious, FROM THE START'. Second Watts object; both use one book.",
+      "merge": "Merge the duplicate Wisdom of Insecurity entries.",
+      "rights": "term_uncertain_standard"
+    },
+    {
+      "id": "EA-Q-0116",
+      "source": "'Be in the world but not of it'",
+      "relationship": "traditional formulation",
+      "object": null,
+      "decision": "NO ENTRY REQUIRED",
+      "evidence": "MISATTRIBUTED: it summarises John 17:14-16 and does not appear at John 17:16. The verse citation was removed at 4I because it asserted a precision the text cannot support.",
+      "note": "An entry would reintroduce the citation 4I deleted."
+    },
+    {
+      "id": "EA-Q-0118",
+      "source": "Paulo Coelho, 'all the universe conspires in helping you'",
+      "relationship": "quotation, translated, spoken by Melchizedek",
+      "object": "Coelho, Paulo. *The Alchemist.* Translated by Alan R. Clarke. HarperCollins, 1993.",
+      "decision": "CORRECT",
+      "evidence": "VERIFIED EXACT; the bibliography is correct at work level but names no translator, and the English is Clarke's rather than Coelho's Portuguese.",
+      "merge": "The Alchemist is listed twice, identically. Merge.",
+      "rights": "likely_protected_standard"
+    },
+    {
+      "id": "EA-Q-0119",
+      "source": "Wayne Teasdale, 'To be spiritual means essentially to take responsibility'",
+      "relationship": "quotation",
+      "object": null,
+      "decision": "RECOVERY REQUIRED",
+      "evidence": "VERIFIED EXACT - stronger than the Ch8 Teasdale - but no work is recorded, and three entries exist for two books.",
+      "unresolved": "Resolve together with the Ch8 Teasdale from the author's own copies. If they come from different books both entries survive; if the same, one does.",
+      "rights": "likely_protected_standard"
+    },
+    {
+      "id": "EA-Q-0121",
+      "source": "Alfred Korzybski, 'The map is not the territory'",
+      "relationship": "quotation",
+      "object": "Korzybski, Alfred. *Science and Sanity: An Introduction to Non-Aristotelian Systems and General Semantics.* Institute of General Semantics, 1933, p. 58.",
+      "decision": "KEEP + add page",
+      "evidence": "VERIFIED VARIANT; the entry exists and is right. The 4B control specimen - the epigraph the book then does three paragraphs of work with."
+    },
+    {
+      "id": "EA-Q-0124",
+      "source": "St. John of the Cross, 'When evening comes, you will be examined in love'",
+      "relationship": "quotation, translated",
+      "object": "John of the Cross, St. *Sayings of Light and Love.* In *The Collected Works of St. John of the Cross*, translated by Kieran Kavanaugh and Otilio Rodriguez. Rev. edn, ICS Publications, 1991.",
+      "decision": "ADD - specificity owed",
+      "evidence": "Resolved at source closure; work, translators, publisher and edition are all established, which is enough to cite the source honestly.",
+      "unresolved": "The saying number, read off the actual ICS edition - USCCB gives no. 60, others differ. This is owed SPECIFICITY, not source-identity uncertainty, and must not turn the whole source back into RECOVERY REQUIRED.",
+      "rights": "likely_protected_standard - the translation is in copyright"
+    },
+    {
+      "id": "EA-Q-0126",
+      "source": "Laozi, 'He who knows others is wise'",
+      "relationship": "quotation, translated",
+      "object": "Laozi. *Tao Te Ching* 33. - English mediator unidentified",
+      "decision": "RECOVERY REQUIRED",
+      "evidence": "VERIFIED VARIANT; demonstrably NOT Legge, whose text reads 'He who knows other men is discerning; he who knows himself is intelligent'.",
+      "unresolved": "Exact English mediator. If it cannot be identified, replace the rendering deliberately with a named translation.",
+      "rights": "public_domain_original_translation_open"
     }
   ],
   "findings": [

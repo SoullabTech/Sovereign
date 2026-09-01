@@ -1754,7 +1754,7 @@
     {
       "id": "EA-Q-0110",
       "occurrence": 1,
-      "text": "We put thirty spokes together and call it a wheel; But it is on the space where there is nothing that the utility of the wheel depends. We turn clay to make a vessel; But it is on the space where there is nothing that the utility of the vessel depends. We pierce doors and windows to make a house; And it is on these spaces where there is nothing that the utility of the house depends. Therefore, just as we take advantage of what is, We should recognize the usefulness of what is not.",
+      "text": "We put thirty spokes together and call it a wheel; But it is on the space where there is nothing that the utility of the wheel depends. We turn clay to make a vessel; But it is on the space where there is nothing that the utility of the vessel depends. We pierce doors and windows to make a house; And it is on these spaces where there is nothing that the utility of the house depends. Therefore, just as we take advantage of what is, We should recognize the utility of what is not.",
       "line_at_build": 1785,
       "chapter": "Chapter 9: Aether — The Infinite Self at Play",
       "section": "The Alchemical Properties of Aether",
@@ -1764,19 +1764,19 @@
       "actual_author": "Laozi",
       "internal_speaker": null,
       "work": "Tao Te Ching 11",
-      "translator_or_mediator": "Arthur Waley, The Way and Its Power (1934) - UNNAMED; 'usefulness' substituted for Waley's 'utility'",
+      "translator_or_mediator": "Arthur Waley, The Way and Its Power (1934) - NAMED in the manuscript; wording now restored in full",
       "provenance_status": "verified_exact",
       "provenance_review_state": "migrated",
       "rights_review_state": "migrated",
       "editorial_review_state": "migrated",
-      "evidence_location": "4I batch 2 ruling",
+      "evidence_location": "Bibliography mapping batch 7",
       "rights_status": "term_uncertain_high",
       "bibliography_relationship": null,
       "family": null,
-      "editorial_status": "KEEP. Carries an argument the book uses. Apparatus repaired to name Waley's rendering; rights remain HIGH - attribution is not permission.",
+      "editorial_status": "KEEP - WALEY RESTORED IN FULL. The 4I repair changed 'usefulness' to 'utility' at wheel, vessel and house but left the closing sentence, which still read 'we should recognize the usefulness of what is not'. All four instances now carry Waley's word. Once the translator is known there is no editorial reason to keep a one-word alteration, and leaving it would have produced the worst middle state: an identifiable translation, altered wording, and a byline implying fidelity to Waley.",
       "record_state": "confirmed",
-      "identity_match_score": 0.977,
-      "notes": "Longest quotation in the manuscript (~90 words) and its highest rights exposure - and it sat outside the census entirely."
+      "identity_match_score": 0.953,
+      "notes": "A PARTIAL REPAIR IS ITS OWN DEFECT CLASS. Three of four instances were fixed and the fourth survived because nobody counted them; the register's note still described the pre-repair state, so the record read as altered while the text read as mostly restored. Sequence now clean: restore exact wording, cite Waley accurately, then assess rights on the actual surviving object."
     },
     {
       "id": "EA-Q-0111",
@@ -4157,6 +4157,7 @@
       "EA-Q-0093",
       "EA-Q-0129",
       "EA-Q-0049",
+      "EA-Q-0110",
       "EA-Q-0088"
     ],
     "ambiguous": [],
