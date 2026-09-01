@@ -615,3 +615,93 @@ A single "reviewed" flag could not express that, and a system that treated
 **`109 = 29 migrated + 75 pending + 5 documented-deferred`** ✅ · **`137 = 109 + 28`** ✅
 
 **→ Batch 5: Chapter 5 — the largest, at 30 censused occurrences.**
+
+---
+
+# BATCH 5 — Chapter 5 · the largest chapter · 2026-09-01
+
+**`GATE PASSED`.** 21 active + 3 historical verdicts migrated. **Zero
+`pending_migration` in Chapter 5.**
+
+## ⚠️ Schema pressure — stopped on, not accommodated
+
+**Two conflicts fired: `EA-Q-T004` (Rumi) and `EA-Q-T005` (Estés) — existing
+`no_ancestor` vs incoming `unverified`.**
+
+**Neither is an error.** They are **two verdicts from two stages**:
+
+| Stage | Verdict |
+|---|---|
+| **Stage 2 census** | `UNVERIFIED` + `INTERNAL-ORIGIN CANDIDATE` |
+| **Stage 3 ancestor check** | `NO ANCESTOR` — after a dedicated external search |
+
+**That is supersession, not contradiction.** And the standing rule says **withdrawn
+and superseded findings remain part of the evidence history** — so rejecting the
+earlier verdict would have destroyed exactly what the rule protects.
+
+**The schema had no provenance history.** Added: **`provenance_history`** — an
+ordered list of `{verdict, stage, evidence_location, note, superseded_by}`.
+`provenance_status` remains the **standing** verdict; the history records how it was
+reached. **Gated:** every historical verdict must name what superseded it.
+
+> **Fourth time the schema was too weak rather than the check too strict.** The
+> pattern is now unmistakable: **the register keeps discovering that the work
+> contains distinctions the model did not.**
+
+## Findings worth surfacing from Chapter 5
+
+**`SAME-AUTHOR DISTORTION` — Einstein.** The verified 21 March 1955 Besso letter
+reads *"the separation between past, present and future has only the meaning of an
+illusion, albeit a tenacious one."* **The circulating version changes the subject
+from *time* to *reality*** — and **it is the changed meaning the chapter relies on.**
+
+**`MISATTRIBUTED` — Drucker.** Origin is **Dennis Gabor**, *Inventing the Future*
+(1963); **Alan Kay** coined the popular form and dates it to 1971. The Drucker
+ascription, with *create* for *invent*, appears by 1986.
+
+**`MISATTRIBUTED` — Foch.** Earliest documented ascription is an **American
+divisional history published 27 years after his death.** No French primary source.
+
+**`PARAPHRASE/ADAPTED` — Plutarch.** Source right, wording a modern contraction.
+**His analogy is wood that needs igniting, not a fire to be kindled.**
+
+**The honest-labelling specimen.** *"Adapted from Rumi, after Coleman Barks"* —
+**the manuscript's own label is already correct.** This is the item every other
+Barks case was measured against.
+
+## Two of my Stage 4 "findings" were already in the census
+
+**I should record this plainly.**
+
+- **Salzberg / Mary Oliver.** My speaker sweep logged this as a *new lead*. The
+  census had already closed it: ***"attributed to Sharon Salzberg — MISATTRIBUTED
+  to Mary Oliver."***
+- **Hotspur.** My sweep presented the speaker as a discovery. The census entry
+  reads ***"VERIFIED EXACT — Hotspur, Henry IV Part 1, Act II sc. iii"*** — **and
+  additionally caught that the bibliography cites *Part 2*, the wrong play.**
+
+**Neither was new.** What the sweep genuinely added was **the editorial question** —
+whether presenting Hotspur as Shakespearean wisdom distorts the passage. **The
+provenance facts were on record the whole time.**
+
+> **This is the third specimen of: having the data is not the same as knowing what
+> question to ask of it.** And it is a caution about my own reporting: **I called
+> both "new" without checking whether the census already held them.**
+
+## Standing after batch 5
+
+| | |
+|---|---|
+| `migrated` | **63** |
+| `pending_migration` | **55** |
+| `not_investigated` + `not_locatable` | **12** |
+| **current / historical** | **130 / 28** |
+
+**`109 = 50 migrated + 55 pending + 4 documented-deferred`** ✅ · **`137 = 109 + 28`** ✅
+
+**Families now:** `fam-rumi-unsourced` **3** · `fam-perfect-laugh` 3 ·
+`fam-song-lyrics` 3 · `fam-campbell` **2 (cross-layer)** · `fam-teasdale` 2 ·
+`fam-laotzu-adaptation` 2 · `fam-rumi-barks` 1 · `fam-mckenna-unresolved` 1 ·
+`fam-infinite-sphere` 1
+
+**→ Batch 6: Chapter 6.**

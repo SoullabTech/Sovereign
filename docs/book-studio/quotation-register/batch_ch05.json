@@ -1,0 +1,228 @@
+{
+  "_comment": "BATCH 5 - Chapter 5, the largest chapter. Faithful transfer only.",
+  "entries": [
+    {
+      "match": "Your task is not to seek for love",
+      "occurrence": 1,
+      "provenance_status": "unverified",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L776",
+      "family": "fam-rumi-unsourced",
+      "notes": "Audit: quote-site attestation only. No scholarly source located; not checked against the Persian corpus or Barks's renderings. Note the manuscript elsewhere labels a Barks-derived line honestly as 'Adapted from Rumi, after Coleman Barks'; this one carries a bare byline."
+    },
+    {
+      "match": "fire is the main comfort",
+      "occurrence": 1,
+      "provenance_status": "verified_variant",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L792",
+      "actual_author": "Henry David Thoreau",
+      "work": "The Maine Woods (1864), 'Chesuncook', p. 38",
+      "bibliography_relationship": "BIBLIOGRAPHY NAMES THE WRONG BOOK",
+      "notes": "Truncated from a longer sentence but accurate."
+    },
+    {
+      "match": "mind is not a vessel",
+      "occurrence": 1,
+      "provenance_status": "verified_variant",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L798",
+      "actual_author": "Plutarch",
+      "work": "Moralia, 'On Listening to Lectures'",
+      "translator_or_mediator": "modern contraction of the Greek",
+      "notes": "Audit: source is right, wording is a modern contraction. Plutarch's analogy is WOOD THAT NEEDS IGNITING, not a fire to be kindled - Waterfield (Penguin 1992) 'not a vessel that needs filling, but wood that needs igniting'; Loeb (1927) 'does not require filling like a bottle, but...'"
+    },
+    {
+      "match": "From a spark to a flame",
+      "occurrence": 1,
+      "provenance_status": "unverified",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L812",
+      "actual_author": "Thich Nhat Hanh",
+      "notes": "Audit: no source located. He used flame and candle imagery extensively, but this sentence is not among his located writings or talks."
+    },
+    {
+      "match": "flame that burns within each of us",
+      "occurrence": 1,
+      "provenance_status": "unverified",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L828",
+      "actual_author": "Ram Dass",
+      "notes": "Audit: no source located, including in the Ram Dass archives. Related genuine material exists ('In each of us there once was a fire'; 'As you find the light in you, you begin to see the light in everyone else') but not this sentence. Part of the Chapter 5 opening pair flagged UNVERIFIED + INTERNAL-ORIGIN CANDIDATE."
+    },
+    {
+      "match": "Follow your bliss",
+      "occurrence": 1,
+      "provenance_status": "paraphrase_adapted",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L834",
+      "actual_author": "Joseph Campbell",
+      "work": "The Power of Myth (recorded wordings differ)",
+      "family": "fam-campbell",
+      "notes": "Audit: the idea is unmistakably Campbell's, but this is the popularized contraction. Recorded wordings run 'follow your bliss and don't be afraid, and doors will open where you didn't know they were going to be'. The 'universe... only walls' form is not among them."
+    },
+    {
+      "match": "imagination is the golden pathway",
+      "occurrence": 1,
+      "provenance_status": "unverified",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L840",
+      "actual_author": "unknown",
+      "family": "fam-mckenna-unresolved",
+      "notes": "Audit: quote-site attestation only; no talk, lecture, book or interview located. Circulates widely outside this manuscript, so there is NO local-coinage evidence - UNKNOWN, not INTERNAL-ORIGIN CANDIDATE. Two of five McKenna quotations sit unresolved."
+    },
+    {
+      "match": "Reality is merely an illusion",
+      "occurrence": 1,
+      "provenance_status": "misattributed",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L852",
+      "actual_author": "Albert Einstein (distorted)",
+      "work": "21 March 1955 Besso condolence letter",
+      "notes": "Audit: SAME-AUTHOR DISTORTION. The verified letter reads 'For us believing physicists, the separation between past, present and future has only the meaning of an illusion, albeit a tenacious one.' The circulating version changes the subject from TIME to REALITY - a material change of meaning, and it is the changed meaning the chapter relies on."
+    },
+    {
+      "match": "with our passions, as it is with fire",
+      "occurrence": 1,
+      "provenance_status": "unverified",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L864",
+      "actual_author": "unknown - no Aesopic fable contains it",
+      "notes": "Audit: UNVERIFIED + UNKNOWN. Appears in Bartleby's Proverbs, Maxims and Phrases of All Ages under 'Passions', and circulates in a second form. Aesop policy settled: 'Aesop' as verbatim historical speaker has a low ceiling; verification to a textual tradition is not verification as a historical person's words."
+    },
+    {
+      "match": "Make of yourself a light",
+      "occurrence": 1,
+      "provenance_status": "misattributed",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L872",
+      "actual_author": "Mary Oliver",
+      "work": "'The Buddha's Last Instruction'",
+      "notes": "Audit ALREADY CLOSED THIS: 'attributed to Sharon Salzberg - MISATTRIBUTED to Mary Oliver.' The first sentence is verbatim Oliver, the opening of her poem. My Stage-4 speaker sweep recorded this as a new lead; it was not new. The data was already in the census."
+    },
+    {
+      "match": "keep a lamp burning",
+      "occurrence": 1,
+      "provenance_status": "unverified",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L894",
+      "actual_author": "Mother Teresa",
+      "notes": "Audit: UNVERIFIED - source lead unresolved. The attribution is not in doubt, but the located language sits in No Greater Love, which carries a passage on a lamp burning 'through the continuous input of small drops of oil'. The manuscript's sentence reads as a compression, which would make it PARAPHRASE/ADAPTED on confirmation."
+    },
+    {
+      "match": "Everything that is visible hides",
+      "occurrence": 1,
+      "provenance_status": "unverified",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L906",
+      "actual_author": "Rene Magritte",
+      "translator_or_mediator": "translation from French",
+      "bibliography_relationship": "bibliography hedges honestly - '(As cited in collected interviews and writings.)'",
+      "notes": "Audit: circulates widely as Magritte; no specific interview or writing located. The bibliography's hedge is the appropriate form when no specific source is found."
+    },
+    {
+      "match": "universe is a communion of subjects",
+      "occurrence": 1,
+      "provenance_status": "verified_exact",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L922",
+      "actual_author": "Thomas Berry",
+      "work": "stated repeatedly across The Dream of the Earth, The Universe Story, The Great Work",
+      "bibliography_relationship": "Ch5 choice of The Great Work should be confirmed as a text where the sentence appears",
+      "notes": "Audit: Berry's signature formulation; attribution sound."
+    },
+    {
+      "match": "As long as the ego runs your life",
+      "occurrence": 1,
+      "provenance_status": "verified_exact",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L938",
+      "actual_author": "Eckhart Tolle",
+      "work": "A New Earth (2005), confirmed on Tolle's own official channels",
+      "rights_status": "protectability_uncertain_standard",
+      "bibliography_relationship": "MISSING - Ch5 bibliography carries no Tolle entry at all"
+    },
+    {
+      "match": "vision will become clear",
+      "occurrence": 1,
+      "provenance_status": "verified_variant",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L990",
+      "actual_author": "C. G. Jung",
+      "work": "letter to Fanny Bowditch, Letters Vol. 1, p. 33 (Princeton UP, 1973)",
+      "notes": "Audit: genuine. The manuscript drops an intervening sentence ('Without, everything seems discordant; only within does it coalesce into unity') but what remains is accurate. Contrast with the reclaimed L846 item - a genuine Jung sentence yields a clean primary trail."
+    },
+    {
+      "match": "best way to predict the future",
+      "occurrence": 1,
+      "provenance_status": "misattributed",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L998",
+      "actual_author": "Dennis Gabor / Alan Kay, not Peter Drucker",
+      "work": "Gabor, Inventing the Future (1963): 'The future cannot be predicted, but futures can be invented'",
+      "notes": "Audit: Alan Kay states he coined the popular form - 'the best way to predict the future is to invent it' - from 1971. The Drucker ascription, with CREATE replacing INVENT, appears by 1986."
+    },
+    {
+      "match": "desire to know is natural",
+      "occurrence": 1,
+      "provenance_status": "verified_variant",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L1012",
+      "actual_author": "Leonardo da Vinci",
+      "work": "Codex Atlanticus, notes on types of knowledge",
+      "translator_or_mediator": "conventional English rendering",
+      "notes": "Audit: closed by EDITION CHECK, not by general search. Museo Galileo's Leonardo project renders the thought as essentially 'a good man possesses a natural desire to know'."
+    },
+    {
+      "match": "wound is the place where the Light enters",
+      "occurrence": 1,
+      "provenance_status": "paraphrase_adapted",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L1052",
+      "actual_author": "Rumi, rendered by Coleman Barks",
+      "work": "Mathnawi I.3150-3175",
+      "translator_or_mediator": "Coleman Barks",
+      "family": "fam-rumi-barks",
+      "notes": "Audit: PARAPHRASE/ADAPTED, and THE MANUSCRIPT'S OWN LABEL IS ALREADY CORRECT. Barks reads 'That's where the light enters you'; the circulated Persian form is zakhm ja-ye vorud-e nur ast. This is the specimen of honest labelling the other Barks items were measured against."
+    },
+    {
+      "match": "unexamined life is not worth living",
+      "occurrence": 1,
+      "provenance_status": "verified_exact",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L1088",
+      "actual_author": "Socrates, via Plato",
+      "work": "Apology 38a",
+      "bibliography_relationship": "MISSING - Ch5 bibliography carries no Plato entry"
+    },
+    {
+      "match": "most powerful weapon on earth",
+      "occurrence": 1,
+      "provenance_status": "unverified",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L1098",
+      "actual_author": "not evidenced as Ferdinand Foch",
+      "work": "earliest documented ascription: Harold Whittle Blakeley, The 32d Infantry Division in World War II (1956), p. 3",
+      "notes": "Audit: an American divisional history published 27 years after Foch's death. No French primary source located."
+    },
+    {
+      "match": "May the light of your soul guide you",
+      "occurrence": 1,
+      "provenance_status": "verified_exact",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L1106",
+      "actual_author": "John O'Donohue",
+      "work": "Anam Cara: A Book of Celtic Wisdom (1997) - the opening line of the blessing",
+      "rights_status": "likely_protected_high",
+      "notes": "Audit: a benediction is a poetic work and O'Donohue died in 2008. Only one line is quoted, which is modest, but the form raises the rights profile."
+    }
+  ],
+  "historical_entries": [
+    {
+      "match": "eternal flame of becoming",
+      "occurrence": 1,
+      "provenance_status": "unverified",
+      "notes": "Audit: UNVERIFIED + INTERNAL-ORIGIN CANDIDATE, the Chapter 5 opening pair. Resolved by authorial ruling at Stage 3: the words are the author's. Removed as redundant with the opening prose.",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L756",
+      "prior_verdict": true,
+      "verdict_stage": "Stage 2 census"
+    },
+    {
+      "match": "fire's eternal dance",
+      "occurrence": 1,
+      "provenance_status": "unverified",
+      "notes": "Audit: UNVERIFIED + INTERNAL-ORIGIN CANDIDATE, the Chapter 5 opening pair.",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L764",
+      "prior_verdict": true,
+      "verdict_stage": "Stage 2 census"
+    },
+    {
+      "match": "cave you fear to enter",
+      "occurrence": 1,
+      "provenance_status": "paraphrase_adapted",
+      "actual_author": "Joseph Campbell",
+      "family": "fam-campbell",
+      "notes": "Audit: popularized contraction. Same family as the surviving 'Follow your bliss' item, which is also PARAPHRASE/ADAPTED - two Campbell contractions, one removed and one retained, ruled individually.",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L1028"
+    }
+  ]
+}

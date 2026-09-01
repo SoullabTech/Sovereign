@@ -48,6 +48,10 @@ check("block reconciliation: total = migrated + pending + documented not_investi
 check("current-field total", len(R) == 130, f"{len(R)} active records")
 check("historical entries all matched exactly one lifecycle record",
       not rep.get("historical_unmatched"), str(rep.get("historical_unmatched", [])))
+hist_hist = [h for h in H if h.get("provenance_history")]
+check("superseded verdicts are preserved, not discarded",
+      all(all(v.get("superseded_by") for v in h["provenance_history"]) for h in hist_hist),
+      f"{len(hist_hist)} record(s) carry a verdict history")
 print(f"  NOTE  historical records with a migrated provenance verdict: "
       f"{sum(1 for h in H if h['provenance_review_state'] == 'migrated')} of {len(H)}")
 check("historical records carry no active manuscript span",

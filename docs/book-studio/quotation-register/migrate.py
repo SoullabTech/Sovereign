@@ -105,6 +105,16 @@ def main():
                 {"match": e["match"], "hits": len(hits)})
             continue
         t = hits[0]
+        if e.get("prior_verdict"):
+            t.setdefault("provenance_history", []).append({
+                "verdict": e.get("provenance_status"),
+                "stage": e.get("verdict_stage", "Stage 2 census"),
+                "evidence_location": e.get("evidence_location"),
+                "note": e.get("notes"),
+                "superseded_by": t.get("provenance_status"),
+            })
+            report.setdefault("prior_verdicts_recorded", []).append(t["id"])
+            continue
         if t.get("provenance_status") and e.get("provenance_status") \
                 and t["provenance_status"] != e["provenance_status"]:
             report["conflicts"].append({"id": t["id"], "existing": t["provenance_status"],
