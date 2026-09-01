@@ -647,3 +647,89 @@ the right population returns findings outside its own axis.* The speaker sweep
 produced two speaker defects — and also a false verse citation, a three-layer nested
 attribution, a duplicate-linkage discovery, and a rights reclassification. **Narrow,
 well-aimed passes are worth more than broad re-verification.**
+
+---
+
+# THE INTERACTION MODEL — ratified 2026-09-01
+
+> **The heuristics are the interaction model of the Studio, not a reference page
+> buried in settings.**
+
+**The failure to avoid: a checklist that nags the writer.** The member should
+experience the heuristics as **timely editorial questions arising from the
+manuscript itself**, at the moment the manuscript raises them.
+
+## The loop
+
+1. **In the manuscript** — MAIA notices something: a quotation, a repeated image, a
+   weak transition, a source dependency, a structural asymmetry.
+2. **In the margin / review rail** — **not** *"Remove this quote."* Instead:
+   **"What is this voice doing here — adding insight, locating you in a lineage, or
+   confirming something you already say?"**
+3. **When the member answers** — the Studio offers the relevant choices —
+   **Keep · Connect · Reframe · Remove** — **without privileging one.**
+4. **If they choose Connect** — MAIA can help articulate the relationship, but the
+   proposed prose is **visibly suggested, never silently canonical.**
+5. **Once accepted** — it becomes part of the manuscript, and **the ruling ledger
+   records the decision so the same question is not repeatedly reopened.**
+6. **Behind the scenes** — provenance, rights, bibliography and editorial history
+   stay available **without cluttering the writing surface.**
+
+## Three depths
+
+| Depth | Contains | Character |
+|---|---|---|
+| **Writing surface** | the book | **quiet.** The book remains primary |
+| **Editorial layer** | contextual questions, findings, options, comparisons, local decisions | active only where the manuscript raises something |
+| **Author's record** | ruling ledger · provenance graph · source relationships · declined and deferred findings · permissions · bibliography · publication state · how passages developed | complete, and never in the way |
+
+**This is what lets a first-time author work simply while an experienced author
+opens the deeper machinery.** The depth is available, not imposed.
+
+## Heuristics that deserve dedicated UX patterns
+
+| Object | Pattern |
+|---|---|
+| a quotation | **"What relationship does this voice have to yours?"** |
+| a source-dependent passage | **visually separate `Source` / `Your synthesis`** |
+| a structural finding | **"Potential asymmetry detected"** — *never* "Missing heading" |
+| a speculative pattern | marked **`Hypothesis`**, with a way to **test it and later kill it** |
+| a proposed sentence | **`Suggested → Revised → Adopted`**, *never implying that collaboration diminishes authorship* |
+
+## ⚠️ The governing UX constraint
+
+> ### The coaching question cannot contain the verdict.
+
+**This governs the entire interface.** Every one of the patterns above is
+constructed so the system **reveals what kind of choice the member is making, then
+lets them make it.** *"Potential asymmetry detected"* and *"Missing heading"*
+describe the same observation; **only the first leaves the judgment with the
+author.**
+
+## The product progression
+
+| Stage | The member is… |
+|---|---|
+| **Write** | making something |
+| **Develop** | discovering what it is becoming |
+| **Explore** | testing possibilities and relationships |
+| **Review** | seeing the manuscript clearly and making decisions |
+| **Publish / Author** | establishing provenance, rights, apparatus, editions, canonical authorship |
+
+**The same heuristics appear differently at each stage.** Early on they are **gentle
+prompts**. Later they become **rigorous publication gates.** *A quotation's
+relationship is a curiosity in Develop and a clearance requirement in Publish —
+the same question, different force.*
+
+**This is how the Studio serves a first book without being dumbed down for a
+tenth.**
+
+## The closing standard
+
+> **The UI should not teach fifteen rules. It should create fifteen kinds of moments
+> in which the member gradually learns to think like an author.**
+
+**Test for any proposed feature:** *does it create a moment, or does it deliver a
+rule?* A feature that delivers rules produces compliance. A feature that creates
+moments produces judgment — **and judgment is the thing the member keeps after the
+book is finished.**
