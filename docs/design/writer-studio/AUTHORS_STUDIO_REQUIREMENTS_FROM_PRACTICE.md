@@ -8,6 +8,65 @@ UX scenario. Specimens are named so each can be replayed as a test case.
 > book. It should be **an environment in which an author can think with an editor
 > while remaining sovereign over the manuscript.**
 
+---
+
+# PRODUCT DOCTRINE — governing · ratified 2026-09-01
+
+> # Author's Studio is not an AI ghostwriter. It is an editorial environment designed to develop the writer while developing the work.
+>
+> ## The manuscript is the artifact. The authorship is the outcome.
+
+**Everything below in this document is subordinate to those two sentences.**
+
+## The inverse of ghostwriter AI
+
+Most "AI writing" products optimise for **output substitution**: the machine
+writes faster, cleaner, more persuasively — and **the person becomes increasingly
+peripheral to the work.**
+
+This optimises for **author development.** **The manuscript gets better because
+the writer gets better at seeing, choosing, and claiming what they mean.**
+
+| A ghostwriter system asks | Author's Studio asks |
+|---|---|
+| **"What can I write for you?"** | **"What are you trying to say, what kind of decision are you facing, and how can I help you see it clearly enough to make it yourself?"** |
+
+**That difference determines the entire UX:**
+
+- MAIA **reveals** choices instead of hiding them.
+- Suggestions **remain suggestions** until consciously adopted.
+- The system **explains what kind of editorial decision is happening.**
+- It **remembers rulings**, so authors develop continuity and judgment.
+- It can **challenge** the writer **without taking sovereignty.**
+- It **distinguishes collaboration from substitution.**
+- **Success is not measured only by manuscript quality**, but by whether the member
+  has become **more capable of authoring the next page, chapter, or book.**
+
+## ⚠️ This does not require a timid AI
+
+**A great editor is highly active** — proposing a sentence, finding a structural
+problem, challenging an argument, identifying a false attribution, suggesting a
+different architecture. **All of that is in scope, and holding back from it would
+be its own failure.**
+
+> **The distinction is not how much the system does. It is who ultimately does the
+> meaning-making.**
+
+**Timidity and substitution are both failures, in opposite directions.** A system
+that will not challenge an author serves them as poorly as one that decides for
+them.
+
+## Why this is a differentiated position
+
+**It treats authorship as a human capacity worth strengthening rather than a
+bottleneck to automate away.**
+
+Every requirement in this document exists to serve that. Where a requirement could
+be read two ways, **read it the way that leaves more capacity with the member.**
+
+---
+
+
 ## Two continuous modes, one memory
 
 **Writer's Studio** — where the work is still becoming: writing, developing,
