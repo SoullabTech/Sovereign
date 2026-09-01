@@ -30,7 +30,7 @@ distinct_to_room: the Canvas is where the writer is writing, and it must stay th
 screenshot_desktop: docs/design/contracts/screenshots/writers-studio-canvas-structure-desktop.png
 screenshot_mobile: docs/design/contracts/screenshots/writers-studio-canvas-structure-mobile.png
 experience_verification: >-
-  AUTHENTICATED WALK of the pushed implementation (242194a7f), 2026-09-01, Mac Studio. Real
+  AUTHENTICATED WALK of the pushed implementation (3e5ea9e57), 2026-09-01, Mac Studio. Real
   `maia_session` cookie, real Canvas route, real server, real structured-inference seam. Scratch
   database maia_ws2_02c_2r_mac_58ac95a77 holding a synthetic 14-section Work — no member's real
   Work was read. Desktop 1440x900 and mobile 390x844, deviceScaleFactor 2.
@@ -63,6 +63,10 @@ experience_verification: >-
   simulated. Its path is covered by the route's 502 branch and the client's catch; a visual witness
   of "MAIA couldn't complete the reading. Your work hasn't changed." remains outstanding. Also
   owed: a real member on a real device, and a Work whose prose is not filler.
+  SHA NOTE — the walk was taken against 242194a7f, which was afterwards rewritten to
+  3e5ea9e57 to drop commit trailers. The two trees are byte-identical (empty diff), so the
+  walk stands; the citation names the reachable commit because 242194a7f is no longer an
+  ancestor of this branch and would not exist in a fresh clone.
 ---
 
 # Writer Canvas — Structure drawer Experience Contract
