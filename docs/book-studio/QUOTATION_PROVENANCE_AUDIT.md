@@ -3720,12 +3720,29 @@ The manuscript carries the **standard compressed form**, which Korzybski and the
 general-semantics tradition themselves use. Bibliography present.
 **Rights: `PROTECTABILITY UNCERTAIN` · `STANDARD`** — a five-word aphorism.
 
-*Editorial note, not a defect:* Chapter 10 uses this as the epigraph for its
-map/territory argument, and the **full sentence is more useful to that argument
-than the compression** — "if correct, it has a similar structure to the
-territory, which accounts for its usefulness" is precisely the chapter's claim
-about what a developmental map is for. Worth the author's attention at repair
-time as an **opportunity**, not a correction.
+#### `SOURCE RESTORATION OPPORTUNITY`
+
+> **The manuscript's shortened form is legitimate, but restoring more of the
+> authenticated source would materially improve the passage's function.**
+
+**Distinct from `HOST-ALIGNED ALTERATION` — and the inverse of it:**
+
+| | |
+|---|---|
+| `HOST-ALIGNED ALTERATION` | an **inaccurate mutation** makes the quote fit better → **authorial problem** |
+| `SOURCE RESTORATION OPPORTUNITY` | the **authentic fuller source** fits better than the legitimate compression → **editorial opportunity** |
+
+**Korzybski is close to a perfect specimen.** Chapter 10 does not merely argue
+*the map is not the territory*. It argues that **a map can still be valuable
+because its structure meaningfully corresponds to what it maps** — and the fuller
+sentence supplies **both halves** of that proposition:
+
+> "A map is not the territory it represents, **but, if correct, it has a similar
+> structure to the territory, which accounts for its usefulness.**"
+
+**At repair time, strongly consider restoring the caution *and* the usefulness
+clause** rather than retaining only the famous aphorism. **No action during the
+census.**
 
 
 ---
