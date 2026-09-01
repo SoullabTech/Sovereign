@@ -2,7 +2,7 @@
 
 **Source of record:** `docs/book-studio/ELEMENTAL_ALCHEMY_FROM_ORIGINAL_FULL.md`
 **Opened:** 2026-09-01, after Chapter 10 closed developmental adjudication.
-**Status:** IN PROGRESS — 78 of 137 adjudicated. **Chapter 5 CLOSED (30/30). Chapter 8 CLOSED (23/23).**
+**Status:** IN PROGRESS — 80 of 137 adjudicated. **Chapter 5 CLOSED (30/30). Chapter 8 CLOSED (23/23).**
 
 ## Scope
 
@@ -1844,7 +1844,7 @@ Eight independent instances across three chapters. No longer incidental.
 
 **Still findings-only. No repair batch. No bibliography reconstruction.**
 
-**Chapter 7 — Earth: 2 of 16 in progress. Next after: Chapter 9 — Aether (12), then Chapter 9 — Aether (12)**, completing the
+**Chapter 7 — Earth: 6 of 16 in progress. Next after: Chapter 9 — Aether (12), then Chapter 9 — Aether (12)**, completing the
 five-element provenance picture before the lower-volume chapters.
 
 
@@ -1946,6 +1946,74 @@ exactly, which is why reattribution repairs it. Here Holmes wrote "The earth has
 **its** music for those who **will** listen" and the manuscript has neither word —
 which is why simple reattribution is unavailable, the defining feature of pattern
 2. **Held at pattern 2 pending authorial ruling.**
+
+### Chapter 7 — second tranche
+
+**L1511 · "Robert C. Peale" — "The best and most efficient pharmacy is within your own system."**
+`UNVERIFIED` · `UNKNOWN` · `FLOATING APHORISM / SOURCE UNRESOLVED`.
+**Name left exactly as printed.** No biography, no work, no publication. Circulates
+on health-and-wellness quote lists and Pinterest.
+
+**Second instance of the severity characteristic** first seen with "Prasad
+Mahes": **the attributed person cannot be verified to exist as an author at
+all.** Both sit in the same wellness-aphorism register.
+
+**New defect — text/apparatus name divergence.** The Ch7 bibliography lists
+**"Peale, Norman Vincent. *The Power of Positive Thinking.* Prentice Hall,
+1952."** The in-text byline says **"Robert C. Peale."** *The bibliography and the
+text name different people.* This is not `MISFILED SOURCE`, `WRONG SOURCE/WORK`
+or `SPURIOUS SUPPORT` — it is a divergence between the manuscript's two records of
+the same attribution, and neither can be shown to have written the line.
+
+**L1543 · Ludwig Mies van der Rohe — "God is in the details."**
+`UNVERIFIED` · `UNKNOWN` · `FLOATING APHORISM / SOURCE UNRESOLVED`.
+**`MISSING`** — no bibliography entry.
+
+Three competing attributions across three languages, none established:
+- **Mies** — from his *New York Times* obituary; generally accepted as a *user*,
+  not the originator.
+- **Aby Warburg** — "Der liebe Gott steckt im Detail," the subtitle of a seminar
+  he taught at Hamburg, winter 1925–26. Gombrich, his biographer, is **not
+  certain** it originated with him.
+- **Flaubert** — "Le bon Dieu est dans le détail."
+
+**Bartlett's Familiar Quotations lists the author as anonymous.**
+
+#### Doctrine question — is an authoritative finding of anonymity different?
+
+The doctrine says: *do not "solve" a floating aphorism with "— Anonymous"; that
+launders the provenance problem.* That was written for cases where **the audit
+cannot find a source**.
+
+Mies is different: **Bartlett's has affirmatively concluded anonymity after
+investigation.** A reference work's positive finding of anonymous origin is
+evidence, not a shrug — which may make "traditional" or "anonymous" labelling
+*accurate here* rather than laundering.
+
+**Authorial ruling needed.** I have not applied it either way.
+
+### Chapter 7 bibliography — three findings and one exemplar
+
+**Third `SPURIOUS SUPPORT`.** "Santayana, George. *The Sense of Beauty.*
+Scribner's, 1896" is cited in support of a line the **Santayana Edition's own
+editors could not find in his documents**. A real book by the right author,
+lending documentary appearance to an attribution its critical editors reject.
+
+**Famous-work substitution — two more, bringing the total to ten:**
+- **Emerson** — bibliography cites ***Nature*** (1836), his most famous work; the
+  quotation is from "Education," *Lectures and Biographical Sketches*.
+- **Helen Keller** — bibliography cites ***The Story of My Life*** (1903); the
+  quotation is the early-1920s vaudeville remark documented in Lash (1980).
+
+**An exemplar worth naming.** "King Jr., Martin Luther. **'The Purpose of
+Education.'** *Morehouse College Maroon Tiger*, **1947**." — a precisely cited
+article, in the right periodical, with the right year. **This is what the whole
+bibliography should look like**, and it demonstrates the apparatus is capable of
+it.
+
+**`ORPHAN CANDIDATE` ×7** — Robert A. Johnson, H. Jackson Brown Jr., Churchill,
+Arthur Ashe, Darwin, Winona LaDuke, Marlee Matlin: listed with no matching
+epigraph. Each needs a body-dependency check.
 
 ---
 
