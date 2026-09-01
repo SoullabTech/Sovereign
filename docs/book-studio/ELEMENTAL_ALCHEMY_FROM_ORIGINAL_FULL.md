@@ -9,7 +9,7 @@ Hamden, Connecticut
 
 ---
 
-## Permissions
+## Copyright
 
 Copyright © 2026 Kelly W. Nezat
 
@@ -134,6 +134,8 @@ This dream reminds me that the natural world is the foundation of all human cons
 
 My being, my heart, and my aspirations all arise from a field of presence, which feels both vast and intimate, infinite and finite. Whatever felt foreign, alien, or disconnected in me before has now resolved into an expansive state of peace, harmony, and love.
 
+Sadhguru's teaching that both the human body and the cosmos can be understood through five elements was one contemporary expression of an older elemental framework that stayed with me.
+
 Reflecting on my dream, I am enchanted by this direct experience of the elements and how they give rise to the most basic aspects of my human awareness. My intuition, like fire, enlightens my being. My emotions, like water, flow deeply. My senses, like the earth, are rooted and embodied. My mind, like air, permeates everything, with thoughts swirling around me.
 
 At the heart of everything is my soul's constant presence, ephemeral like aether, still, formless, and abiding, brought to life by the divine orchestration of the other elements dancing around and through me.
@@ -163,8 +165,6 @@ There was a stark contrast between their experience and mine. We were in differe
 Like my own children, I was conscious enough to ask critical questions in my youth about my parents' unhappiness, like *What's wrong here? How did they become like this? Will this also be my fate when I am an adult? Is this what my children will one day see in me? If so, can I change it?*
 
 Now I can see that, as hard as my life has been at times, everything that has occurred over the years has made me a better person. As much as I'd like to go back and take away my younger self's suffering in certain challenging circumstances, if I did, I'd be denying myself the opportunity to become the more soulful, fully human person I am today. How I've worked with the challenges of earthly living, rather than wishing them away, is a blessing. I've learned that it isn't about avoiding life's challenges and its twists and turns, but about the quality of our presence, the way we show up for these experiences, and how we manage them that matters most.
-
-Sadhguru's teaching that both the human body and the cosmos can be understood through five elements was one contemporary expression of an older elemental framework that stayed with me.
 
 ### Reflection and Interaction
 
@@ -240,7 +240,7 @@ As I added another piece of wood to the fire, I couldn't help but smile at the s
 
 Those sacred campfire nights awakened a lifelong fascination in me with the symbolic and energetic underpinnings of reality. I'd spend hours meditating on the flickering flames, allowing my vision to diffract into the spaces between, until I perceived layers upon layers of spiritual geometries and luminous webs. Elemental patterns would arise and disperse, winking at me with the promise of deeper unity.
 
-In those mystical reveries, I intuited what philosophers and sages across cultures had realized: we humans are multidimensional beings woven from the primordial tapestries of fire, water, earth, air, and aether itself. We are not merely physical creatures treading the earth but cosmic alchemists birthed from the interplay of these primeval elemental essences. Our finite human forms belie our true nature as vibrantly elemental souls on an infinite journey of evolution and self-discovery.
+In those mystical reveries, I began to recognize something many traditions have expressed in their own elemental languages: that we are multidimensional beings, woven from fire, water, earth, air, and aether. Those traditions gave me the vocabulary; the particular relationships among the five that I develop in this book are the map I have drawn from them and from my own experience. We are not merely physical creatures treading the earth but cosmic alchemists birthed from the interplay of these primeval elemental essences. Our finite human forms belie our true nature as vibrantly elemental souls on an infinite journey of evolution and self-discovery.
 
 Awakened by the wonder and enchantment of each moment, I embarked on a lifelong journey to integrate these elemental experiences for personal growth and spiritual development. This book is the result of that journey—an invitation to reclaim your birthright as a masterful creator of your identity and reality.
 
@@ -248,7 +248,7 @@ Augusten's voice pulled me back to the present moment as he excitedly pointed to
 
 This led to discussions about cymatics and the emergence of universal patterns based on frequencies, emphasizing that all of life is rooted in frequencies. All matter, at its base, is the dance of frequencies, ephemeral and ever-changing.
 
-The space between imagination and reality is indeterminable, as we discover that our known reality is based on our attention, intentions, and imagination. The notion of an objective world experienced by an objective witness is an illusion. We are determined by forces, filters, and focus that are primarily subconsciously driven. The more conscious we are of the fluid nature of reality and the fact that we are 'making it up' allows us to begin to choose what we create and how we create it. We become conscious co-creators of our lives when we own this fact.
+The space between imagination and reality is indeterminable, as we discover that our known reality is based on our attention, intentions, and imagination. Our experience of reality is never purely objective; it is always mediated through perception, interpretation, memory, imagination, and relationship. We are determined by forces, filters, and focus that are primarily subconsciously driven. The more conscious we are of the fluid nature of reality and the fact that we are 'making it up' allows us to begin to choose what we create and how we create it. We become conscious co-creators of our lives when we own this fact.
 
 When working with clients, I often remind them that everything they believe to be real is, in some fundamental sense, constructed by their imagination. When I ask them to imagine a positive outcome in a situation, a common concern arises: they feel like they are just 'making it up.' I assure them that they are making it up. Then they quickly respond, "But you said what I imagine is real." I affirm that it is. The power of our imagination and beliefs shapes our reality, and by envisioning positive outcomes, we can influence our experiences and invoke those imagined scenarios into our tangible world. This is not unusual behavior or abilities but a standard human process. The unusual part for most people is doing it consciously and deliberately. This is where the alchemy plays a role. When we bring the ordinary world of chaos into order, magic takes place.
 
@@ -807,7 +807,7 @@ It is up to us to envision our future, or it will be predetermined for us, eithe
 
 #### The Subjective Nature of Reality
 
-When the world is at its darkest, our imaginations shine through. No objective reality exists. One of the most amazing aspects of consciousness is that each of us creates a different world, like a simulation designed to offer bespoke experiences. In this way, we have the free will to live whatever experiences we choose. Yet, there is a very real world of context interwoven into our reality, like a cell connected to all other cells in a body, presenting challenges to navigate and opportunities to develop wisdom from the experience.
+When the world is at its darkest, our imaginations shine through. No perception of reality is purely objective; what we take as the world is always mediated through attention, interpretation, memory, and imagination. One of the most amazing aspects of consciousness is that each of us creates a different world, like a simulation designed to offer bespoke experiences. In this way, we have the free will to live whatever experiences we choose. Yet, there is a very real world of context interwoven into our reality, like a cell connected to all other cells in a body, presenting challenges to navigate and opportunities to develop wisdom from the experience.
 
 Our senses provide a subjective view of our surroundings, not an objective accounting. Our subjective awareness and imaginative psyches create impressions on all we experience. In other words, nothing you experience is outside the influence of your imagination. It is always present and central to consciousness. All that you experience is, in this sense, imagined. Jung spent a career on this point: the psyche is not a passive window onto the world but a participant in what the world becomes for us.
 
