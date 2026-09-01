@@ -307,8 +307,9 @@ evidence or author recognition, else remove.
   letter to Fanny Bowditch, *Letters* Vol. 1, p. 33 (Princeton UP, 1973). The
   manuscript drops an intervening sentence ("Without, everything seems
   discordant; only within does it coalesce into unity") but what remains is
-  accurate. *Note the contrast with L846: Jung is easy to source when the words
-  are his.*
+  accurate. *Contrast with L846 — a genuine Jung sentence yields a clean
+  primary/edition trail, which makes L846's source vacuum more suspicious
+  alongside its manuscript-like register. Evidence, not a verdict.*
 
 **PARAPHRASE/ADAPTED**
 - **L798 · Plutarch** — "The mind is not a vessel to be filled but a fire to be
@@ -325,35 +326,66 @@ evidence or author recognition, else remove.
   where you didn't know they were going to be." The "universe… only walls" form
   is not among them.
 
-**Shared-source note.** Campbell now appears twice in PARAPHRASE/ADAPTED (L834,
-L1028) and is quoted four times across the book. Both failures are the same
-kind: a genuine Campbell thought circulating in a tightened form he did not say.
-Adjudicate the Campbell quotations as a set, not individually.
+**Joseph Campbell quotation set — HOLD FOR SET-LEVEL ADJUDICATION.**
+Campbell appears twice in PARAPHRASE/ADAPTED (L834, L1028) and is quoted four
+times across the book. Both failures are the same kind: a genuine Campbell
+thought circulating in a tightened form he did not say. With two independently
+demonstrated telescopings, individual rulings would miss the pattern.
+
+Verify all four instances first, then sort them into: exact Campbell · legitimate
+edited/abridged Campbell · later popular paraphrase · false attribution. The
+question to decide at set level is whether this book wants **Campbell's
+documented language** or **familiar Campbellisms**. Do not rule on any single
+Campbell instance before the set is complete.
 
 ---
 
-## Bibliography defects surfaced by the Chapter 5 provenance work
+## Bibliography reconstruction audit — pre-publication
 
-These belong to the bibliography-completeness audit. Recorded here because
-provenance work found them, and because together they suggest the Chapter 5
-bibliography was **not built from that chapter's actual quotations**.
+Renamed from "bibliography completeness." The Chapter 5 evidence shows this is
+not a fill-the-gaps job.
 
-**Class 1 — wrong work named (famous-work substitution).** Both name a more
-famous title than the one actually quoted:
+**What the evidence establishes:** the bibliography is **not reliably aligned
+with the manuscript's current source usage**.
+
+**What it does not establish:** how the bibliography was originally constructed.
+"It was not built from the actual quotations" is plausible but is an inference
+about process from a pattern of defects. Provenance discipline forbids asserting
+it unless drafting history confirms it.
+
+**Task shape.** Reconstruct from actual manuscript dependencies outward, not
+entry-by-entry patching. Per chapter: inventory quotations *and* substantive
+source dependencies → establish correct work/edition → add missing → correct
+wrong works → remove confirmed orphans → normalize bibliographic form.
+
+**Status vocabulary:**
+- `MISSING` — manuscript dependency exists, bibliography entry absent.
+- `WRONG SOURCE/WORK` — dependency exists, bibliography points somewhere incorrect.
+- `ORPHAN CANDIDATE` — no quotation occurrence; body dependency still to be checked.
+- `ORPHAN CONFIRMED` — no remaining chapter dependency at all.
+
+The candidate/confirmed split exists so a source is never deleted merely because
+an epigraph was removed while prose still depends on it.
+
+**`WRONG SOURCE/WORK` — famous-work substitution.** Both name a more
+famous title than the one actually quoted. These are the most probative defects:
+they show the chapter bibliography cannot be trusted as a source map.
 - **Thoreau** — bibliography cites *Walden* (1854). The quotation is from *The
   Maine Woods* (1864).
 - **Shakespeare** — bibliography cites *Henry IV, Part 2*. The quotation is
   Hotspur, *Henry IV, **Part 1***, II.iii.
 
-**Class 2 — orphan entries.** Listed under Chapter 5, quoted nowhere in it:
-Merton, Proust, Feynman, Aristotle, Emerson.
+**`ORPHAN CANDIDATE` — not yet confirmed.** Listed under Chapter 5, quoted
+nowhere in it: Merton, Proust, Feynman, Aristotle, Emerson. "Quoted nowhere" is
+not sufficient to call an entry orphaned — each must be checked against unquoted
+prose, adapted material, and other source-dependent claims in the chapter before
+promotion to `ORPHAN CONFIRMED`.
 
-**Class 3 — missing entries.** Quoted in Chapter 5, listed nowhere in its
-section: Einstein, Jung, Campbell, Wilber, Tolle, Ram Dass, da Vinci, Socrates,
-Aesop, McKenna.
+**`MISSING`.** Quoted in Chapter 5, listed nowhere in its section: Einstein,
+Jung, Campbell, Wilber, Tolle, Ram Dass, da Vinci, Socrates, Aesop, McKenna.
 
-All three classes in a single chapter. The bibliography audit should be scoped
-on the assumption that this is structural, not incidental.
+Three defect classes in a single chapter. Scope the reconstruction on the
+assumption that the misalignment is structural, not incidental.
 
 ### Chapter 5 — still open (13 of 30)
 
