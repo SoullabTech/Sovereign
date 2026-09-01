@@ -7,7 +7,68 @@ Both to be carried consistently in publication metadata, bibliography front
 matter, copyright page, title page, cover and the final KDP and distribution
 files.
 
-**Position as of 2026-09-01:** stage 2 of 10. The large creative and
+## GOVERNING EDITORIAL PRINCIPLE — ratified 2026-09-01
+
+> ### Make the intellectual lineage more truthful so the original thesis can stand more fully in its own authority.
+>
+> **Let the sources be sources. Let the synthesis be yours.**
+
+This governs **everything that remains** — stages 4 through 10, and any question
+that arises inside them.
+
+*"Increasingly mine"* does **not** mean stripping away Jung, Black Elk, Sadhguru,
+McGilchrist, alchemy, Taoism, or the other traditions that genuinely shaped the
+work. It means something more rigorous: making the boundary clear between **what
+was received, what others taught, what was experienced, what was synthesized, and
+what was created.**
+
+The provenance work has demonstrated the thesis gets *stronger* as those
+boundaries sharpen. The book does not need borrowed authority to make its central
+claim.
+
+**The thesis, stated plainly:** *Human beings can learn to orient themselves
+through the living intelligence of Nature. Fire, Water, Earth and Air are not
+merely concepts but ways of noticing and participating in experience; Aether is
+the deeper coherence that reveals itself through their relationship. By becoming
+attentive to those elemental movements — in ourselves, between us, and in the
+world — we can become less captured by abstraction, fragmentation and noise, and
+more present to what life is actually asking of us.*
+
+**That synthesis is the author's. Nobody else needs to have said it first for it
+to matter.**
+
+### The five-part editorial test
+
+1. **Protect** the author's lived observations, metaphors, stories, and elemental
+   synthesis.
+2. **Credit** genuine intellectual lineage precisely — without allowing a source
+   to appear to author conclusions that are actually the author's.
+3. **Remove** decorative authority when the prose already carries the insight.
+4. **Prefer** the author's direct formulation when an outside quotation merely
+   says approximately what the book already says better.
+5. **Keep** external voices where they genuinely **deepen, challenge, historicize
+   or illuminate** the thesis — **not merely certify it.**
+
+### The load-bearing distinction
+
+> **A quotation does not remain because "Jung agrees with me." It remains
+> because Jung introduces something that changes or deepens what the reader can
+> see. Otherwise the author's voice should carry it.**
+
+**This is the operative test for Stage 4**, where 128 quotations are adjudicated
+one at a time. *Certification is not a reason to keep a quotation.*
+
+### For the Author's Studio
+
+A system built on this must **not** optimize a manuscript toward more citations,
+more authorities, more polish, more apparent erudition. It must help the author
+distinguish:
+
+**lineage from authority · influence from ownership · information from lived knowing.**
+
+---
+
+**Position as of 2026-09-01:** stage 3b of 10 (stages 2 and 3 closed). The large creative and
 developmental work is behind us.
 
 > In plain language: **the book itself is edited.** What remains is making sure

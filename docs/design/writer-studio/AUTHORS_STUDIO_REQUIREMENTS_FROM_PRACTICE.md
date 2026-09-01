@@ -212,3 +212,50 @@ someone else's?" — and the verdict set changes with it. The Studio must be abl
 **re-scope a workstream on an authorial ruling**, not merely record the ruling and
 carry on with the old questions.
 
+---
+
+## Governing principle for the whole system — ratified 2026-09-01
+
+> **Make the intellectual lineage more truthful so the original thesis can stand
+> more fully in its own authority.**
+>
+> **Let the sources be sources. Let the synthesis be the author's.**
+
+**The Studio must not optimize toward more citations, more authorities, more
+polish, or more apparent erudition.** A system that rewards visible scholarship
+will push every author toward borrowed authority, which is the exact failure this
+manuscript's census found. The Studio's job is the opposite: help the author
+distinguish **lineage from authority, influence from ownership, and information
+from lived knowing.**
+
+**Operative test it must encode:** *a quotation stays because it deepens,
+challenges, historicizes or illuminates — not because it certifies.* "An
+authority agrees with me" is not a reason to keep a quotation.
+
+### Capability — three provenance categories the system must hold apart
+
+Established by authorial ruling during the Stage 3b pass:
+
+> **source dependency ≠ lived-experience synthesis ≠ fictional composite.**
+
+- **Source dependency** — the work takes something identifiable from outside
+  itself. *Auditable.*
+- **Lived-experience synthesis** — the author's own participation, memory,
+  practice or clinical observation. **Has no external source to cite.** A
+  ceremony attended is not a text retold.
+- **Fictional composite** — an overtly constructed character or example. **Has no
+  provenance question at all.**
+
+**Grounding event:** entering Stage 3b, the ceremonial thread (five passages) and
+the composite figure Maya were the largest candidate sets. **Both dissolved** —
+not for lack of evidence, but because they were never the audited category. A
+system that flags every non-literal passage as potentially borrowed would have
+generated a large volume of false findings and taught the author to distrust
+their own lived material.
+
+### Capability — a five-part editorial test the system can apply per passage
+
+**Protect** lived observation and original synthesis · **Credit** lineage
+precisely · **Remove** decorative authority the prose already carries ·
+**Prefer** the author's formulation over a quotation that says it less well ·
+**Keep** only external voices that deepen rather than certify.
