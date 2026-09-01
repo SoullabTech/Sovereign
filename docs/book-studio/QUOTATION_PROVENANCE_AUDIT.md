@@ -2,7 +2,7 @@
 
 **Source of record:** `docs/book-studio/ELEMENTAL_ALCHEMY_FROM_ORIGINAL_FULL.md`
 **Opened:** 2026-09-01, after Chapter 10 closed developmental adjudication.
-**Status:** IN PROGRESS — 36 of 137 adjudicated (Ch5: 26 of 30, 4 open).
+**Status:** IN PROGRESS — 40 of 137 adjudicated. **Chapter 5 CLOSED (30/30).**
 
 ## Scope
 
@@ -609,15 +609,45 @@ is now the dominant defect class in Chapter 5 — more common than missing entri
 and more consequential than orphans, because a wrong work reads as a real
 citation and will not be caught by any completeness check.
 
-### Chapter 5 — still open (4 of 30)
+### Chapter 5 — final tranche (chapter closed, 30/30)
 
-All have a named primary work, most already in the chapter bibliography.
-Under the source-lead rule each requires an edition check before any
-`UNVERIFIED` verdict:
-L906 Magritte (bibliography already hedges: "as cited in collected interviews
-and writings") · L926 Bear Heart (*The Wind Is My Mother*; the in-text
-attribution already names the work) · L938 Eckhart Tolle · L1052 Rumi/Barks
-(attribution open; rights already flagged `LIKELY PROTECTED` · `HIGH`).
+**L938 · Eckhart Tolle — "As long as the ego runs your life, most of your thoughts, emotions, and actions arise from desire and fear…"**
+`VERIFIED EXACT`. *A New Earth: Awakening to Your Life's Purpose* (2005),
+confirmed on Tolle's own official channels.
+**Rights: `PROTECTABILITY UNCERTAIN` · `STANDARD`** — a single sentence.
+**`MISSING`** — the Ch5 bibliography carries no Tolle entry at all.
+
+**L1052 · "Adapted from Rumi, after Coleman Barks" — "The wound is the place where the Light enters you."**
+`PARAPHRASE/ADAPTED`, **and the manuscript's own label is already correct.** The
+exact phrasing is not verbatim in Rumi. Barks's *Mathnawi* I.3150–3175 rendering
+reads "That's where the light enters you"; the widely circulated Persian form is
+*zakhm jā-ye vorud-e nur ast*. The manuscript's "Adapted from… after Coleman
+Barks" is an accurate description of what the line is. **No repair needed** —
+this is the book's one instance of provenance already handled well, and it is
+worth preserving as the model for how adapted material should be labelled.
+
+**Rights correction.** I previously flagged this `LIKELY PROTECTED` · `HIGH` on
+the assumption it was a verbatim Barks rendering. It is not — it is a short
+popular paraphrase that Barks did not write in this form. Corrected to
+**`PROTECTABILITY UNCERTAIN` · `STANDARD`**, and removed from the high-priority
+permissions list.
+
+**L926 · Bear Heart — the sweat lodge / circle passage.**
+`UNVERIFIED — source lead unresolved`. Proposed edition: *The Wind Is My Mother:
+The Life and Teachings of a Native American Shaman* (Berkley, 1996), which the
+in-text attribution already names. Attribution is not in doubt; the wording needs
+an edition check.
+**Rights: `LIKELY PROTECTED` · `HIGH`** — this is a **paragraph-length block
+quotation** from a 1996 book, by some margin the longest single quotation
+examined so far. Length, not creative form, puts it in the high band.
+
+**L906 · René Magritte — "Everything that is visible hides something that is invisible."**
+`UNVERIFIED — source lead unresolved`. Circulates widely as Magritte; no specific
+interview or writing located, and the line is a translation from French. The Ch5
+bibliography already hedges honestly — "(As cited in collected interviews and
+writings.)" — which is the appropriate form if no specific source is found.
+**Rights: `PROTECTABILITY UNCERTAIN` · `STANDARD`.**
+
 
 *Note:* the Ch5 bibliography lists Weil as *Waiting for God*; the quotation is
 from *Gravity and Grace*. That is a third `WRONG SOURCE/WORK` instance in this
@@ -669,7 +699,7 @@ census.**
 |---|---|---|
 | Peter Gabriel ×3 (L713, L1153, L1911) | `LIKELY PROTECTED` | `HIGH` |
 | Mary Oliver (L872) | `LIKELY PROTECTED` | `HIGH` |
-| Coleman Barks / Rumi (L1052) | `LIKELY PROTECTED` | `HIGH` |
+| Bear Heart (L926) — paragraph-length | `LIKELY PROTECTED` | `HIGH` |
 | John O'Donohue (L1106) | `LIKELY PROTECTED` | `HIGH` |
 | Emma Craufurd / Weil (L1062) | `TERM UNCERTAIN` | `STANDARD` |
 | Maya Angelou (L1042) | `PROTECTABILITY UNCERTAIN` | `STANDARD` |
