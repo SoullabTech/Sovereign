@@ -2,7 +2,7 @@
 
 **Source of record:** `docs/book-studio/ELEMENTAL_ALCHEMY_FROM_ORIGINAL_FULL.md`
 **Opened:** 2026-09-01, after Chapter 10 closed developmental adjudication.
-**Status:** IN PROGRESS — 116 of 137. **Ch2 CLOSED (10/10).** adjudicated. **Chapter 5 CLOSED (30/30). Chapter 8 CLOSED (23/23).**
+**Status:** IN PROGRESS — 117 of 137. **Ch2 CLOSED (10/10).** adjudicated. **Chapter 5 CLOSED (30/30). Chapter 8 CLOSED (23/23).**
 
 ## Scope
 
@@ -3102,6 +3102,41 @@ thirteenth-century text.
 
 Per the McKenna correction: not one family. Coordinated resolution task,
 per-item adjudication.
+
+
+---
+
+## Chapter 3 — L574 Sai Baba, with a distinctive marker
+
+**L574 · "The four elements: water, air, fire, earth must be woven together in your life…" — Sai Baba**
+`UNVERIFIED` · `UNKNOWN` · `MEDIATED TRANSLATION` (discourses delivered in Telugu).
+
+**Not merely unlocated — the attributed content contradicts the attributed
+teacher's documented framework.** Sathya Sai Baba taught **five** elements —
+*pruthvi* (earth), *jala* (water), *agni* (fire), *vayu* (air), *akasa* (ether) —
+consistently, across the *Sathya Sai Speaks* volumes and the official discourse
+archive. The manuscript attributes to him a **four-element** formulation.
+
+**Corpus density applies** (the McKenna principle): an official searchable corpus
+exists at saispeaks.sathyasai.org and in the published *Sathya Sai Speaks*
+volumes, so absence from it is more probative than absence from an author whose
+speech survives sparsely.
+
+**A note on the irony, which is also evidence:** *Elemental Alchemy* is itself a
+five-element book including Aether. A four-element quotation attributed to a
+five-element teacher fits **neither** framework — which weakens any reading that
+the manuscript was faithfully compressing a real Sai Baba passage.
+
+### Observation — `DOCTRINAL MISMATCH` as a provenance marker
+
+*The attributed content contradicts the attributed source's documented position.*
+
+This is a **stronger negative signal than absence alone**: it is not that the
+passage cannot be found, but that the teacher taught otherwise.
+
+**One instance. Recorded as an observation, NOT named as a class** — per the
+taxonomy discipline requiring a second independent specimen. To be watched for
+across the remaining items.
 
 
 ---
