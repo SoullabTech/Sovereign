@@ -3303,12 +3303,39 @@ Robert C. Solomon (L1758) — which was previously the class's only instance. Th
 pattern is now **confirmed as recurring**, on the same taxonomy threshold applied
 to the others.
 
-**Same structural consequence as Socrates/Solomon: there is no single correct
-byline.** Reattributing to Dickinson would be false for half the sentence;
-reattributing to the glossator would be false for the other half. Per doctrine,
-the remedy is **removal as a quotation**, with the option of quoting Dickinson's
-actual line instead — which is public domain and says something adjacent but
-different.
+### `COMPOSITE ATTRIBUTION` — definition tightened on two specimens
+
+> **Independently authored textual objects are fused into a single apparent
+> quotation and assigned one byline, such that no single attribution can make the
+> combined object truthful.**
+
+**Recurring mechanism observed so far, narrower than the class:**
+> *authentic source language + later interpretive gloss → welded quotation*
+> - Socratic material + **Solomon** commentary
+> - Dickinson verse + **modern explanatory gloss**
+
+Recorded as a **subtype observation**, not a further taxonomy class — no new class
+unless a meaningfully different composite appears.
+
+### Repair doctrine — and the trap inside it
+
+**Remove the composite as a quotation.** Then decide **separately**:
+1. does the **authentic source fragment** deserve to remain as an accurate
+   quotation?
+2. does the **gloss** express something the manuscript itself wants to say **as
+   prose**?
+3. or does neither earn its place?
+
+> **Never "repair" a composite by automatically trimming off the false half.**
+> The surviving authentic quotation still has to earn its editorial function on
+> its own — it was selected for the composite's effect, not its own.
+
+### Why this is a Writer's Studio specimen
+
+**A conventional quote checker would recognize Dickinson's opening words and mark
+the whole block verified.** A serious provenance system has to operate **below
+the byline level**, identifying where authentic source text ends and later
+composition begins.
 
 **Rights:** Dickinson's line `PUBLIC DOMAIN` · `NONE`; the gloss is of unknown
 authorship and unknown status, which is itself a reason not to retain it.
