@@ -1,0 +1,1038 @@
+
+> spiralogic-oracle-system@1.2.0 db:migrate
+> bash scripts/apply-migrations.sh
+
+
+🔎 DB identity:
+                db                 | host | port |  user   
+-----------------------------------+------+------+---------
+ maia_ws2_02c_2r_witness_58ac95a77 |      |      | soullab
+(1 row)
+
+
+🔒 Acquiring migration lock (724001)...
+ got_lock 
+----------
+ t
+(1 row)
+
+✅ Lock acquired.
+
+CREATE TABLE
+psql:/var/folders/_l/jnp2qzr17j73n3q0yr1vym2c0000gn/T/maia-migrations.XXXXXX.psql.HQrVhm2omJ:20: NOTICE:  column "checksum" of relation "schema_migrations" already exists, skipping
+ALTER TABLE
+
+— 014_relationship_memory_tables.sql
+ not_applied | no_checksum | sha_match | md5_match 
+-------------+-------------+-----------+-----------
+ t           | f           | f         | f
+(1 row)
+
+➡️  Applying...
+BEGIN
+CREATE TABLE
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+COMMENT
+COMMENT
+CREATE TABLE
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+COMMENT
+COMMENT
+CREATE TABLE
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+COMMENT
+COMMENT
+CREATE FUNCTION
+psql:/private/tmp/ws2-02c-2r-runtime-witness/database/migrations/014_relationship_memory_tables.sql:139: NOTICE:  trigger "update_conversation_themes_updated_at" for relation "conversation_themes" does not exist, skipping
+DROP TRIGGER
+CREATE TRIGGER
+psql:/private/tmp/ws2-02c-2r-runtime-witness/database/migrations/014_relationship_memory_tables.sql:144: NOTICE:  trigger "update_breakthrough_moments_updated_at" for relation "breakthrough_moments" does not exist, skipping
+DROP TRIGGER
+CREATE TRIGGER
+psql:/private/tmp/ws2-02c-2r-runtime-witness/database/migrations/014_relationship_memory_tables.sql:149: NOTICE:  trigger "update_relationship_patterns_updated_at" for relation "relationship_patterns" does not exist, skipping
+DROP TRIGGER
+CREATE TRIGGER
+COMMIT
+psql:/private/tmp/ws2-02c-2r-runtime-witness/database/migrations/014_relationship_memory_tables.sql:164: NOTICE:  Migration 014: Relationship Memory Tables created successfully
+psql:/private/tmp/ws2-02c-2r-runtime-witness/database/migrations/014_relationship_memory_tables.sql:164: NOTICE:    - conversation_themes: Track recurring topics
+psql:/private/tmp/ws2-02c-2r-runtime-witness/database/migrations/014_relationship_memory_tables.sql:164: NOTICE:    - breakthrough_moments: Store key insights
+psql:/private/tmp/ws2-02c-2r-runtime-witness/database/migrations/014_relationship_memory_tables.sql:164: NOTICE:    - relationship_patterns: Identify recurring patterns
+psql:/private/tmp/ws2-02c-2r-runtime-witness/database/migrations/014_relationship_memory_tables.sql:164: NOTICE:  MAIA can now remember and reference relational evolution!
+DO
+INSERT 0 1
+✅ Applied
+
+— 015_conversation_turns.sql
+ not_applied | no_checksum | sha_match | md5_match 
+-------------+-------------+-----------+-----------
+ t           | f           | f         | f
+(1 row)
+
+➡️  Applying...
+BEGIN
+CREATE TABLE
+CREATE INDEX
+CREATE INDEX
+COMMENT
+COMMIT
+psql:/private/tmp/ws2-02c-2r-runtime-witness/database/migrations/015_conversation_turns.sql:32: NOTICE:  Migration 015: conversation_turns table created successfully
+DO
+INSERT 0 1
+✅ Applied
+
+— 016_cognitive_turn_events.sql
+ not_applied | no_checksum | sha_match | md5_match 
+-------------+-------------+-----------+-----------
+ t           | f           | f         | f
+(1 row)
+
+➡️  Applying...
+CREATE EXTENSION
+CREATE TABLE
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+COMMENT
+INSERT 0 1
+✅ Applied
+
+— 017_add_req_id_to_cognitive_turn_events.sql
+ not_applied | no_checksum | sha_match | md5_match 
+-------------+-------------+-----------+-----------
+ t           | f           | f         | f
+(1 row)
+
+➡️  Applying...
+ALTER TABLE
+CREATE INDEX
+INSERT 0 1
+✅ Applied
+
+— 020_ain_shape_telemetry.sql
+ not_applied | no_checksum | sha_match | md5_match 
+-------------+-------------+-----------+-----------
+ t           | f           | f         | f
+(1 row)
+
+➡️  Applying...
+CREATE TABLE
+CREATE INDEX
+CREATE INDEX
+INSERT 0 1
+✅ Applied
+
+— 021_add_menu_mode_to_telemetry.sql
+ not_applied | no_checksum | sha_match | md5_match 
+-------------+-------------+-----------+-----------
+ t           | f           | f         | f
+(1 row)
+
+➡️  Applying...
+ALTER TABLE
+CREATE INDEX
+INSERT 0 1
+✅ Applied
+
+— 022_add_menu_signals_to_telemetry.sql
+ not_applied | no_checksum | sha_match | md5_match 
+-------------+-------------+-----------+-----------
+ t           | f           | f         | f
+(1 row)
+
+➡️  Applying...
+ALTER TABLE
+COMMENT
+INSERT 0 1
+✅ Applied
+
+— 022_maia_training_tables.sql
+ not_applied | no_checksum | sha_match | md5_match 
+-------------+-------------+-----------+-----------
+ t           | f           | f         | f
+(1 row)
+
+➡️  Applying...
+BEGIN
+CREATE TABLE
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE TABLE
+CREATE INDEX
+CREATE INDEX
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE VIEW
+CREATE VIEW
+COMMIT
+psql:/private/tmp/ws2-02c-2r-runtime-witness/database/migrations/022_maia_training_tables.sql:229: NOTICE:  Migration 022: maia_turns and maia_turn_feedback tables + functions created successfully
+DO
+INSERT 0 1
+✅ Applied
+
+— 20241201000001_create_community_bbs_tables.sql
+ not_applied | no_checksum | sha_match | md5_match 
+-------------+-------------+-----------+-----------
+ t           | f           | f         | f
+(1 row)
+
+➡️  Applying...
+ALTER DATABASE
+CREATE TABLE
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE TABLE
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE TABLE
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE TABLE
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE TABLE
+CREATE INDEX
+CREATE INDEX
+CREATE TABLE
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE TABLE
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE FUNCTION
+psql:/private/tmp/ws2-02c-2r-runtime-witness/database/migrations/20241201000001_create_community_bbs_tables.sql:280: NOTICE:  trigger "update_community_channels_updated_at" for relation "community_channels" does not exist, skipping
+DROP TRIGGER
+CREATE TRIGGER
+psql:/private/tmp/ws2-02c-2r-runtime-witness/database/migrations/20241201000001_create_community_bbs_tables.sql:282: NOTICE:  trigger "update_community_threads_updated_at" for relation "community_threads" does not exist, skipping
+DROP TRIGGER
+CREATE TRIGGER
+psql:/private/tmp/ws2-02c-2r-runtime-witness/database/migrations/20241201000001_create_community_bbs_tables.sql:284: NOTICE:  trigger "update_community_replies_updated_at" for relation "community_replies" does not exist, skipping
+DROP TRIGGER
+CREATE TRIGGER
+psql:/private/tmp/ws2-02c-2r-runtime-witness/database/migrations/20241201000001_create_community_bbs_tables.sql:286: NOTICE:  trigger "update_community_profiles_updated_at" for relation "community_profiles" does not exist, skipping
+DROP TRIGGER
+CREATE TRIGGER
+psql:/private/tmp/ws2-02c-2r-runtime-witness/database/migrations/20241201000001_create_community_bbs_tables.sql:288: NOTICE:  trigger "update_community_presence_updated_at" for relation "community_presence" does not exist, skipping
+DROP TRIGGER
+CREATE TRIGGER
+CREATE FUNCTION
+psql:/private/tmp/ws2-02c-2r-runtime-witness/database/migrations/20241201000001_create_community_bbs_tables.sql:312: NOTICE:  trigger "update_thread_reply_count_on_insert" for relation "community_replies" does not exist, skipping
+DROP TRIGGER
+CREATE TRIGGER
+psql:/private/tmp/ws2-02c-2r-runtime-witness/database/migrations/20241201000001_create_community_bbs_tables.sql:314: NOTICE:  trigger "update_thread_reply_count_on_delete" for relation "community_replies" does not exist, skipping
+DROP TRIGGER
+CREATE TRIGGER
+CREATE FUNCTION
+psql:/private/tmp/ws2-02c-2r-runtime-witness/database/migrations/20241201000001_create_community_bbs_tables.sql:363: NOTICE:  trigger "update_reaction_counts_on_insert" for relation "community_reactions" does not exist, skipping
+DROP TRIGGER
+CREATE TRIGGER
+psql:/private/tmp/ws2-02c-2r-runtime-witness/database/migrations/20241201000001_create_community_bbs_tables.sql:365: NOTICE:  trigger "update_reaction_counts_on_delete" for relation "community_reactions" does not exist, skipping
+DROP TRIGGER
+CREATE TRIGGER
+CREATE FUNCTION
+psql:/private/tmp/ws2-02c-2r-runtime-witness/database/migrations/20241201000001_create_community_bbs_tables.sql:389: NOTICE:  trigger "update_channel_stats_on_insert" for relation "community_threads" does not exist, skipping
+DROP TRIGGER
+CREATE TRIGGER
+psql:/private/tmp/ws2-02c-2r-runtime-witness/database/migrations/20241201000001_create_community_bbs_tables.sql:391: NOTICE:  trigger "update_channel_stats_on_delete" for relation "community_threads" does not exist, skipping
+DROP TRIGGER
+CREATE TRIGGER
+ALTER TABLE
+ALTER TABLE
+ALTER TABLE
+ALTER TABLE
+ALTER TABLE
+ALTER TABLE
+ALTER TABLE
+psql:/private/tmp/ws2-02c-2r-runtime-witness/database/migrations/20241201000001_create_community_bbs_tables.sql:408: NOTICE:  policy "Public channels are viewable by everyone" for relation "community_channels" does not exist, skipping
+DROP POLICY
+CREATE POLICY
+psql:/private/tmp/ws2-02c-2r-runtime-witness/database/migrations/20241201000001_create_community_bbs_tables.sql:412: NOTICE:  policy "Public threads are viewable by everyone" for relation "community_threads" does not exist, skipping
+DROP POLICY
+CREATE POLICY
+psql:/private/tmp/ws2-02c-2r-runtime-witness/database/migrations/20241201000001_create_community_bbs_tables.sql:414: NOTICE:  policy "Users can create threads" for relation "community_threads" does not exist, skipping
+DROP POLICY
+CREATE POLICY
+psql:/private/tmp/ws2-02c-2r-runtime-witness/database/migrations/20241201000001_create_community_bbs_tables.sql:416: NOTICE:  policy "Users can update their own threads" for relation "community_threads" does not exist, skipping
+DROP POLICY
+CREATE POLICY
+psql:/private/tmp/ws2-02c-2r-runtime-witness/database/migrations/20241201000001_create_community_bbs_tables.sql:420: NOTICE:  policy "Replies are viewable by everyone" for relation "community_replies" does not exist, skipping
+DROP POLICY
+CREATE POLICY
+psql:/private/tmp/ws2-02c-2r-runtime-witness/database/migrations/20241201000001_create_community_bbs_tables.sql:422: NOTICE:  policy "Users can create replies" for relation "community_replies" does not exist, skipping
+DROP POLICY
+CREATE POLICY
+psql:/private/tmp/ws2-02c-2r-runtime-witness/database/migrations/20241201000001_create_community_bbs_tables.sql:424: NOTICE:  policy "Users can update their own replies" for relation "community_replies" does not exist, skipping
+DROP POLICY
+CREATE POLICY
+psql:/private/tmp/ws2-02c-2r-runtime-witness/database/migrations/20241201000001_create_community_bbs_tables.sql:428: NOTICE:  policy "Reactions are viewable by everyone" for relation "community_reactions" does not exist, skipping
+DROP POLICY
+CREATE POLICY
+psql:/private/tmp/ws2-02c-2r-runtime-witness/database/migrations/20241201000001_create_community_bbs_tables.sql:430: NOTICE:  policy "Users can manage their own reactions" for relation "community_reactions" does not exist, skipping
+DROP POLICY
+CREATE POLICY
+psql:/private/tmp/ws2-02c-2r-runtime-witness/database/migrations/20241201000001_create_community_bbs_tables.sql:434: NOTICE:  policy "Field state is viewable by everyone" for relation "community_field_state" does not exist, skipping
+DROP POLICY
+CREATE POLICY
+psql:/private/tmp/ws2-02c-2r-runtime-witness/database/migrations/20241201000001_create_community_bbs_tables.sql:438: NOTICE:  policy "Presence is viewable by everyone" for relation "community_presence" does not exist, skipping
+DROP POLICY
+CREATE POLICY
+psql:/private/tmp/ws2-02c-2r-runtime-witness/database/migrations/20241201000001_create_community_bbs_tables.sql:440: NOTICE:  policy "Users can manage their own presence" for relation "community_presence" does not exist, skipping
+DROP POLICY
+CREATE POLICY
+psql:/private/tmp/ws2-02c-2r-runtime-witness/database/migrations/20241201000001_create_community_bbs_tables.sql:444: NOTICE:  policy "Profiles are viewable by everyone" for relation "community_profiles" does not exist, skipping
+DROP POLICY
+CREATE POLICY
+psql:/private/tmp/ws2-02c-2r-runtime-witness/database/migrations/20241201000001_create_community_bbs_tables.sql:446: NOTICE:  policy "Users can manage their own profile" for relation "community_profiles" does not exist, skipping
+DROP POLICY
+CREATE POLICY
+INSERT 0 8
+INSERT 0 8
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+                       result                        
+-----------------------------------------------------
+ Community BBS database schema created successfully!
+(1 row)
+
+INSERT 0 1
+✅ Applied
+
+— 20241202000001_create_session_memory_tables.sql
+ not_applied | no_checksum | sha_match | md5_match 
+-------------+-------------+-----------+-----------
+ t           | f           | f         | f
+(1 row)
+
+➡️  Applying...
+CREATE EXTENSION
+CREATE TABLE
+CREATE INDEX
+psql:/private/tmp/ws2-02c-2r-runtime-witness/database/migrations/20241202000001_create_session_memory_tables.sql:52: NOTICE:  ivfflat index created with little data
+DETAIL:  This will cause low recall.
+HINT:  Drop the index until the table has more data.
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE TABLE
+CREATE INDEX
+psql:/private/tmp/ws2-02c-2r-runtime-witness/database/migrations/20241202000001_create_session_memory_tables.sql:94: NOTICE:  ivfflat index created with little data
+DETAIL:  This will cause low recall.
+HINT:  Drop the index until the table has more data.
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE TABLE
+psql:/private/tmp/ws2-02c-2r-runtime-witness/database/migrations/20241202000001_create_session_memory_tables.sql:137: NOTICE:  ivfflat index created with little data
+DETAIL:  This will cause low recall.
+HINT:  Drop the index until the table has more data.
+CREATE INDEX
+CREATE INDEX
+CREATE TABLE
+CREATE INDEX
+psql:/private/tmp/ws2-02c-2r-runtime-witness/database/migrations/20241202000001_create_session_memory_tables.sql:177: NOTICE:  ivfflat index created with little data
+DETAIL:  This will cause low recall.
+HINT:  Drop the index until the table has more data.
+CREATE INDEX
+CREATE INDEX
+CREATE TABLE
+CREATE INDEX
+CREATE INDEX
+psql:/private/tmp/ws2-02c-2r-runtime-witness/database/migrations/20241202000001_create_session_memory_tables.sql:214: NOTICE:  ivfflat index created with little data
+DETAIL:  This will cause low recall.
+HINT:  Drop the index until the table has more data.
+CREATE INDEX
+CREATE TABLE
+CREATE INDEX
+CREATE INDEX
+CREATE FUNCTION
+psql:/private/tmp/ws2-02c-2r-runtime-witness/database/migrations/20241202000001_create_session_memory_tables.sql:268: NOTICE:  trigger "update_user_session_patterns_updated_at" for relation "user_session_patterns" does not exist, skipping
+DROP TRIGGER
+CREATE TRIGGER
+psql:/private/tmp/ws2-02c-2r-runtime-witness/database/migrations/20241202000001_create_session_memory_tables.sql:273: NOTICE:  trigger "update_user_relationship_context_updated_at" for relation "user_relationship_context" does not exist, skipping
+DROP TRIGGER
+CREATE TRIGGER
+CREATE FUNCTION
+psql:/private/tmp/ws2-02c-2r-runtime-witness/database/migrations/20241202000001_create_session_memory_tables.sql:297: NOTICE:  trigger "update_session_count_on_insert" for relation "user_session_patterns" does not exist, skipping
+DROP TRIGGER
+CREATE TRIGGER
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+ALTER TABLE
+ALTER TABLE
+ALTER TABLE
+ALTER TABLE
+ALTER TABLE
+ALTER TABLE
+psql:/private/tmp/ws2-02c-2r-runtime-witness/database/migrations/20241202000001_create_session_memory_tables.sql:395: NOTICE:  policy "Users can access their own session patterns" for relation "user_session_patterns" does not exist, skipping
+DROP POLICY
+CREATE POLICY
+psql:/private/tmp/ws2-02c-2r-runtime-witness/database/migrations/20241202000001_create_session_memory_tables.sql:401: NOTICE:  policy "Users can access their own insights" for relation "conversation_insights" does not exist, skipping
+DROP POLICY
+CREATE POLICY
+psql:/private/tmp/ws2-02c-2r-runtime-witness/database/migrations/20241202000001_create_session_memory_tables.sql:407: NOTICE:  policy "Users can access their own context" for relation "user_relationship_context" does not exist, skipping
+DROP POLICY
+CREATE POLICY
+psql:/private/tmp/ws2-02c-2r-runtime-witness/database/migrations/20241202000001_create_session_memory_tables.sql:413: NOTICE:  policy "Users can access their own patterns" for relation "pattern_connections" does not exist, skipping
+DROP POLICY
+CREATE POLICY
+psql:/private/tmp/ws2-02c-2r-runtime-witness/database/migrations/20241202000001_create_session_memory_tables.sql:419: NOTICE:  policy "Users can access their own expansion events" for relation "consciousness_expansion_events" does not exist, skipping
+DROP POLICY
+CREATE POLICY
+psql:/private/tmp/ws2-02c-2r-runtime-witness/database/migrations/20241202000001_create_session_memory_tables.sql:425: NOTICE:  policy "Users can access their own spiral transitions" for relation "spiral_stage_transitions" does not exist, skipping
+DROP POLICY
+CREATE POLICY
+SET
+INSERT 0 1
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+                                  result                                  
+--------------------------------------------------------------------------
+ Session memory and spiral dynamics database schema created successfully!
+(1 row)
+
+INSERT 0 1
+✅ Applied
+
+— 20251221_create_consciousness_traces_and_rules.sql
+ not_applied | no_checksum | sha_match | md5_match 
+-------------+-------------+-----------+-----------
+ t           | f           | f         | f
+(1 row)
+
+➡️  Applying...
+CREATE TABLE
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE TABLE
+CREATE INDEX
+CREATE FUNCTION
+psql:/private/tmp/ws2-02c-2r-runtime-witness/database/migrations/20251221_create_consciousness_traces_and_rules.sql:61: NOTICE:  trigger "trg_touch_consciousness_rules_updated_at" for relation "consciousness_rules" does not exist, skipping
+DROP TRIGGER
+CREATE TRIGGER
+INSERT 0 1
+✅ Applied
+
+— 20251221_seed_default_consciousness_rules.sql
+ not_applied | no_checksum | sha_match | md5_match 
+-------------+-------------+-----------+-----------
+ t           | f           | f         | f
+(1 row)
+
+➡️  Applying...
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+✅ Applied
+
+— 20251223_create_episodes_table.sql
+ not_applied | no_checksum | sha_match | md5_match 
+-------------+-------------+-----------+-----------
+ t           | f           | f         | f
+(1 row)
+
+➡️  Applying...
+psql:/private/tmp/ws2-02c-2r-runtime-witness/database/migrations/20251223_create_episodes_table.sql:4: NOTICE:  extension "pgcrypto" already exists, skipping
+CREATE EXTENSION
+CREATE TABLE
+CREATE INDEX
+CREATE INDEX
+CREATE FUNCTION
+INSERT 0 1
+✅ Applied
+
+— 20251223_create_holoflower_tables.sql
+ not_applied | no_checksum | sha_match | md5_match 
+-------------+-------------+-----------+-----------
+ t           | f           | f         | f
+(1 row)
+
+➡️  Applying...
+CREATE TABLE
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE TABLE
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE TABLE
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE FUNCTION
+psql:/private/tmp/ws2-02c-2r-runtime-witness/database/migrations/20251223_create_holoflower_tables.sql:150: NOTICE:  trigger "update_journal_updated_at" for relation "holoflower_journal_entries" does not exist, skipping
+DROP TRIGGER
+CREATE TRIGGER
+psql:/private/tmp/ws2-02c-2r-runtime-witness/database/migrations/20251223_create_holoflower_tables.sql:156: NOTICE:  trigger "update_patterns_updated_at" for relation "soul_patterns" does not exist, skipping
+DROP TRIGGER
+CREATE TRIGGER
+psql:/private/tmp/ws2-02c-2r-runtime-witness/database/migrations/20251223_create_holoflower_tables.sql:162: NOTICE:  trigger "update_essence_updated_at" for relation "relationship_essences" does not exist, skipping
+DROP TRIGGER
+CREATE TRIGGER
+INSERT 0 1
+✅ Applied
+
+— 20251229000001_create_selflet_chain_tables.sql
+ not_applied | no_checksum | sha_match | md5_match 
+-------------+-------------+-----------+-----------
+ t           | f           | f         | f
+(1 row)
+
+➡️  Applying...
+psql:/private/tmp/ws2-02c-2r-runtime-witness/database/migrations/20251229000001_create_selflet_chain_tables.sql:8: NOTICE:  extension "pgcrypto" already exists, skipping
+CREATE EXTENSION
+psql:/private/tmp/ws2-02c-2r-runtime-witness/database/migrations/20251229000001_create_selflet_chain_tables.sql:21: NOTICE:  extension "vector" already exists, skipping
+DO
+CREATE TABLE
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+psql:/private/tmp/ws2-02c-2r-runtime-witness/database/migrations/20251229000001_create_selflet_chain_tables.sql:58: NOTICE:  ivfflat index created with little data
+DETAIL:  This will cause low recall.
+HINT:  Drop the index until the table has more data.
+CREATE INDEX
+CREATE TABLE
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE TABLE
+CREATE INDEX
+CREATE INDEX
+CREATE TABLE
+CREATE INDEX
+CREATE INDEX
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+psql:/private/tmp/ws2-02c-2r-runtime-witness/database/migrations/20251229000001_create_selflet_chain_tables.sql:271: NOTICE:  Grants applied to maia role
+DO
+INSERT 0 1
+✅ Applied
+
+— 20251229000002_selflet_embedding_dim_768.sql
+ not_applied | no_checksum | sha_match | md5_match 
+-------------+-------------+-----------+-----------
+ t           | f           | f         | f
+(1 row)
+
+➡️  Applying...
+BEGIN
+DROP INDEX
+ALTER TABLE
+ALTER TABLE
+psql:/private/tmp/ws2-02c-2r-runtime-witness/database/migrations/20251229000002_selflet_embedding_dim_768.sql:21: NOTICE:  ivfflat index created with little data
+DETAIL:  This will cause low recall.
+HINT:  Drop the index until the table has more data.
+CREATE INDEX
+COMMIT
+INSERT 0 1
+✅ Applied
+
+— 20251229000003_create_selflet_boundaries.sql
+ not_applied | no_checksum | sha_match | md5_match 
+-------------+-------------+-----------+-----------
+ t           | f           | f         | f
+(1 row)
+
+➡️  Applying...
+BEGIN
+psql:/private/tmp/ws2-02c-2r-runtime-witness/database/migrations/20251229000003_create_selflet_boundaries.sql:8: NOTICE:  extension "pgcrypto" already exists, skipping
+CREATE EXTENSION
+CREATE TABLE
+DO
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+DO
+COMMIT
+INSERT 0 1
+✅ Applied
+
+— 20251229000004_selflet_indexes.sql
+ not_applied | no_checksum | sha_match | md5_match 
+-------------+-------------+-----------+-----------
+ t           | f           | f         | f
+(1 row)
+
+➡️  Applying...
+BEGIN
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+COMMIT
+INSERT 0 1
+✅ Applied
+
+— 20251229000005_selflet_reinterpretations_origin.sql
+ not_applied | no_checksum | sha_match | md5_match 
+-------------+-------------+-----------+-----------
+ t           | f           | f         | f
+(1 row)
+
+➡️  Applying...
+BEGIN
+ALTER TABLE
+CREATE INDEX
+COMMIT
+INSERT 0 1
+✅ Applied
+
+— 20251229000006_selflet_message_join_index.sql
+ not_applied | no_checksum | sha_match | md5_match 
+-------------+-------------+-----------+-----------
+ t           | f           | f         | f
+(1 row)
+
+➡️  Applying...
+BEGIN
+CREATE INDEX
+COMMIT
+INSERT 0 1
+✅ Applied
+
+— 20251229000007_selflet_delivery_context.sql
+ not_applied | no_checksum | sha_match | md5_match 
+-------------+-------------+-----------+-----------
+ t           | f           | f         | f
+(1 row)
+
+➡️  Applying...
+BEGIN
+ALTER TABLE
+CREATE INDEX
+CREATE INDEX
+COMMIT
+INSERT 0 1
+✅ Applied
+
+— 20251229000008_selflet_snooze_archive.sql
+ not_applied | no_checksum | sha_match | md5_match 
+-------------+-------------+-----------+-----------
+ t           | f           | f         | f
+(1 row)
+
+➡️  Applying...
+ALTER TABLE
+CREATE INDEX
+INSERT 0 1
+✅ Applied
+
+— 20251229000009_selflet_redelivery_tracking.sql
+ not_applied | no_checksum | sha_match | md5_match 
+-------------+-------------+-----------+-----------
+ t           | f           | f         | f
+(1 row)
+
+➡️  Applying...
+ALTER TABLE
+INSERT 0 1
+✅ Applied
+
+— 20251230000001_bardic_embeddings.sql
+ not_applied | no_checksum | sha_match | md5_match 
+-------------+-------------+-----------+-----------
+ t           | f           | f         | f
+(1 row)
+
+➡️  Applying...
+BEGIN
+psql:/private/tmp/ws2-02c-2r-runtime-witness/database/migrations/20251230000001_bardic_embeddings.sql:8: NOTICE:  extension "vector" already exists, skipping
+CREATE EXTENSION
+CREATE TABLE
+CREATE INDEX
+CREATE INDEX
+CREATE FUNCTION
+psql:/private/tmp/ws2-02c-2r-runtime-witness/database/migrations/20251230000001_bardic_embeddings.sql:42: NOTICE:  trigger "bardic_embeddings_updated_at" for relation "bardic_episode_embeddings" does not exist, skipping
+DROP TRIGGER
+CREATE TRIGGER
+COMMIT
+INSERT 0 1
+✅ Applied
+
+— 20251230000002_bardic_cues.sql
+ not_applied | no_checksum | sha_match | md5_match 
+-------------+-------------+-----------+-----------
+ t           | f           | f         | f
+(1 row)
+
+➡️  Applying...
+BEGIN
+psql:/private/tmp/ws2-02c-2r-runtime-witness/database/migrations/20251230000002_bardic_cues.sql:8: NOTICE:  extension "pgcrypto" already exists, skipping
+CREATE EXTENSION
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE FUNCTION
+psql:/private/tmp/ws2-02c-2r-runtime-witness/database/migrations/20251230000002_bardic_cues.sql:77: NOTICE:  trigger "bardic_cues_updated_at" for relation "bardic_cues" does not exist, skipping
+DROP TRIGGER
+CREATE TRIGGER
+COMMIT
+INSERT 0 1
+✅ Applied
+
+— 20251230000003_bardic_episode_links.sql
+ not_applied | no_checksum | sha_match | md5_match 
+-------------+-------------+-----------+-----------
+ t           | f           | f         | f
+(1 row)
+
+➡️  Applying...
+BEGIN
+psql:/private/tmp/ws2-02c-2r-runtime-witness/database/migrations/20251230000003_bardic_episode_links.sql:7: NOTICE:  extension "pgcrypto" already exists, skipping
+CREATE EXTENSION
+CREATE TABLE
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE TABLE
+CREATE INDEX
+CREATE INDEX
+ALTER TABLE
+COMMIT
+INSERT 0 1
+✅ Applied
+
+— 20251230000003_episode_links.sql
+ not_applied | no_checksum | sha_match | md5_match 
+-------------+-------------+-----------+-----------
+ t           | f           | f         | f
+(1 row)
+
+➡️  Applying...
+BEGIN
+psql:/private/tmp/ws2-02c-2r-runtime-witness/database/migrations/20251230000003_episode_links.sql:12: NOTICE:  extension "pgcrypto" already exists, skipping
+CREATE EXTENSION
+psql:/private/tmp/ws2-02c-2r-runtime-witness/database/migrations/20251230000003_episode_links.sql:52: NOTICE:  episode_links table and indexes created successfully
+DO
+COMMIT
+INSERT 0 1
+✅ Applied
+
+— 20251230000004_bardic_microacts.sql
+ not_applied | no_checksum | sha_match | md5_match 
+-------------+-------------+-----------+-----------
+ t           | f           | f         | f
+(1 row)
+
+➡️  Applying...
+BEGIN
+psql:/private/tmp/ws2-02c-2r-runtime-witness/database/migrations/20251230000004_bardic_microacts.sql:7: NOTICE:  extension "pgcrypto" already exists, skipping
+CREATE EXTENSION
+CREATE TABLE
+CREATE TABLE
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE FUNCTION
+psql:/private/tmp/ws2-02c-2r-runtime-witness/database/migrations/20251230000004_bardic_microacts.sql:55: NOTICE:  trigger "bardic_microacts_updated_at" for relation "bardic_microacts" does not exist, skipping
+DROP TRIGGER
+CREATE TRIGGER
+COMMIT
+INSERT 0 1
+✅ Applied
+
+— 20251230000004_teleology.sql
+ not_applied | no_checksum | sha_match | md5_match 
+-------------+-------------+-----------+-----------
+ t           | f           | f         | f
+(1 row)
+
+➡️  Applying...
+BEGIN
+psql:/private/tmp/ws2-02c-2r-runtime-witness/database/migrations/20251230000004_teleology.sql:8: NOTICE:  extension "pgcrypto" already exists, skipping
+CREATE EXTENSION
+CREATE TABLE
+CREATE TABLE
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+COMMIT
+INSERT 0 1
+✅ Applied
+
+— 20251230000005_bardic_teloi.sql
+ not_applied | no_checksum | sha_match | md5_match 
+-------------+-------------+-----------+-----------
+ t           | f           | f         | f
+(1 row)
+
+➡️  Applying...
+BEGIN
+psql:/private/tmp/ws2-02c-2r-runtime-witness/database/migrations/20251230000005_bardic_teloi.sql:7: NOTICE:  extension "pgcrypto" already exists, skipping
+CREATE EXTENSION
+CREATE TABLE
+CREATE TABLE
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE FUNCTION
+psql:/private/tmp/ws2-02c-2r-runtime-witness/database/migrations/20251230000005_bardic_teloi.sql:56: NOTICE:  trigger "bardic_teloi_updated_at" for relation "bardic_teloi" does not exist, skipping
+DROP TRIGGER
+CREATE TRIGGER
+COMMIT
+INSERT 0 1
+✅ Applied
+
+— 20251230000005_field_records.sql
+ not_applied | no_checksum | sha_match | md5_match 
+-------------+-------------+-----------+-----------
+ t           | f           | f         | f
+(1 row)
+
+➡️  Applying...
+BEGIN
+psql:/private/tmp/ws2-02c-2r-runtime-witness/database/migrations/20251230000005_field_records.sql:8: NOTICE:  extension "pgcrypto" already exists, skipping
+CREATE EXTENSION
+CREATE TABLE
+CREATE TABLE
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+COMMIT
+INSERT 0 1
+✅ Applied
+
+— 20251230000006_episode_links_view.sql
+ not_applied | no_checksum | sha_match | md5_match 
+-------------+-------------+-----------+-----------
+ t           | f           | f         | f
+(1 row)
+
+➡️  Applying...
+BEGIN
+DO
+psql:/private/tmp/ws2-02c-2r-runtime-witness/database/migrations/20251230000006_episode_links_view.sql:38: NOTICE:  view "episode_links" does not exist, skipping
+DROP VIEW
+CREATE VIEW
+CREATE FUNCTION
+psql:/private/tmp/ws2-02c-2r-runtime-witness/database/migrations/20251230000006_episode_links_view.sql:78: NOTICE:  trigger "episode_links_insert_trigger" for relation "episode_links" does not exist, skipping
+DROP TRIGGER
+CREATE TRIGGER
+COMMIT
+INSERT 0 1
+✅ Applied
+
+— 20251230000007_improvement_hypotheses.sql
+ not_applied | no_checksum | sha_match | md5_match 
+-------------+-------------+-----------+-----------
+ t           | f           | f         | f
+(1 row)
+
+➡️  Applying...
+DO
+DO
+psql:/private/tmp/ws2-02c-2r-runtime-witness/database/migrations/20251230000007_improvement_hypotheses.sql:48: NOTICE:  enum label "approved" already exists, skipping
+psql:/private/tmp/ws2-02c-2r-runtime-witness/database/migrations/20251230000007_improvement_hypotheses.sql:48: NOTICE:  enum label "failed" already exists, skipping
+DO
+DO
+CREATE TABLE
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE TABLE
+CREATE INDEX
+CREATE FUNCTION
+CREATE VIEW
+COMMENT
+INSERT 0 1
+✅ Applied
+
+— 20251230000008_voice_tier_telemetry.sql
+ not_applied | no_checksum | sha_match | md5_match 
+-------------+-------------+-----------+-----------
+ t           | f           | f         | f
+(1 row)
+
+➡️  Applying...
+CREATE TABLE
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+INSERT 0 1
+✅ Applied
+
+— 20251230100000_community_commons_forum.sql
+ not_applied | no_checksum | sha_match | md5_match 
+-------------+-------------+-----------+-----------
+ t           | f           | f         | f
+(1 row)
+
+➡️  Applying...
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+INSERT 0 1
+INSERT 0 3
+INSERT 0 1
+INSERT 0 4
+INSERT 0 1
+INSERT 0 5
+INSERT 0 1
+INSERT 0 4
+INSERT 0 1
+INSERT 0 4
+INSERT 0 1
+INSERT 0 4
+INSERT 0 1
+INSERT 0 3
+INSERT 0 1
+INSERT 0 3
+CREATE FUNCTION
+psql:/private/tmp/ws2-02c-2r-runtime-witness/database/migrations/20251230100000_community_commons_forum.sql:310: NOTICE:  trigger "posts_updated_at" for relation "community_posts" does not exist, skipping
+DROP TRIGGER
+CREATE TRIGGER
+psql:/private/tmp/ws2-02c-2r-runtime-witness/database/migrations/20251230100000_community_commons_forum.sql:314: NOTICE:  trigger "comments_updated_at" for relation "community_comments" does not exist, skipping
+DROP TRIGGER
+CREATE TRIGGER
+psql:/private/tmp/ws2-02c-2r-runtime-witness/database/migrations/20251230100000_community_commons_forum.sql:318: NOTICE:  trigger "territories_updated_at" for relation "community_territories" does not exist, skipping
+DROP TRIGGER
+CREATE TRIGGER
+CREATE FUNCTION
+psql:/private/tmp/ws2-02c-2r-runtime-witness/database/migrations/20251230100000_community_commons_forum.sql:334: NOTICE:  trigger "posts_territory_stats" for relation "community_posts" does not exist, skipping
+DROP TRIGGER
+CREATE TRIGGER
+CREATE FUNCTION
+psql:/private/tmp/ws2-02c-2r-runtime-witness/database/migrations/20251230100000_community_commons_forum.sql:350: NOTICE:  trigger "comments_post_stats" for relation "community_comments" does not exist, skipping
+DROP TRIGGER
+CREATE TRIGGER
+CREATE FUNCTION
+psql:/private/tmp/ws2-02c-2r-runtime-witness/database/migrations/20251230100000_community_commons_forum.sql:374: NOTICE:  trigger "hearts_count_trigger" for relation "community_hearts" does not exist, skipping
+DROP TRIGGER
+CREATE TRIGGER
+INSERT 0 1
+✅ Applied
+
+— 20251230120000_reorganize_technical_territories.sql
+ not_applied | no_checksum | sha_match | md5_match 
+-------------+-------------+-----------+-----------
+ t           | f           | f         | f
+(1 row)
+
+➡️  Applying...
+UPDATE 1
+UPDATE 1
+UPDATE 1
+UPDATE 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+ALTER TABLE
+UPDATE 10
+UPDATE 1
+UPDATE 1
+UPDATE 1
+UPDATE 1
+UPDATE 1
+UPDATE 1
+UPDATE 1
+UPDATE 1
+ALTER TABLE
+UPDATE 41
+UPDATE 1
+UPDATE 9
+INSERT 0 1
+✅ Applied
+
+— 20251231_memory_architecture_enhancements.sql
+ not_applied | no_checksum | sha_match | md5_match 
+-------------+-------------+-----------+-----------
+ t           | f           | f         | f
+(1 row)
+
+➡️  Applying...
+CREATE TABLE
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE TABLE
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+psql:/private/tmp/ws2-02c-2r-runtime-witness/database/migrations/20251231_memory_architecture_enhancements.sql:123: ERROR:  relation "developmental_memories" does not exist
