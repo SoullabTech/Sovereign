@@ -383,3 +383,55 @@ across instances.
 **Status.** Not yet a book-wide conclusion. Under test against Chapters 8 and 6,
 which together carry 42 of the remaining attributed quotations.
 
+---
+
+## Product finding — the developmental editor needs the ruling ledger
+
+Writer's Studio produced a structural read of this manuscript on 2026-09-01,
+after the ten-chapter developmental pass closed. Six questions; the pattern in
+which ones were useful is the finding.
+
+**Three were already adjudicated.** Where Part Two begins, whether Water's
+forward-looking conclusion has drifted, whether "Integrated Reflection" closes
+Aether — each was decided during the pass, with reasons, and protected. Studio
+re-raised all three because it can see structural ambiguity but **cannot see
+that the author has already ruled on it**.
+
+That is not a detection failure. Studio's readings were defensible; the seams
+genuinely are ambiguous from headings alone. The failure is that a settled
+question was returned as an open one, which costs the author the same decision
+twice and — worse — invites re-litigation of protected material.
+
+**What a mature Studio should emit instead:**
+
+> *Potential ambiguity detected — previously adjudicated and protected. Not
+> re-raised.*
+
+This requires the developmental editor to read a **ruling ledger**: the record
+of what has been decided, on what evidence, and with what persistence class.
+This record already models the persistence classes (finding expires · decline
+persists · deferral persists conditionally · lock can be superseded · applied
+edit persists only insofar as the passage survives). The ledger is the missing
+input that would let a tool consume them.
+
+**Two were genuinely next-order work**, and would have been lost without the
+tool: the appendix promises "The Four Grades of the Elements" while carrying
+only Water, Earth and Air, and the back-matter architecture had never received
+a canonical read. Studio found real work in exactly the region the human pass
+had not reached.
+
+**One was factually wrong, and the error is diagnostic.** Studio reported that
+the Four Grades tables "begin abruptly with no appendix heading of their own."
+The canonical manuscript carries an explicit `# Appendix` H1 immediately above
+them. Studio is either not reading the canonical file or is dropping H1
+divisions from its section map — and several of its other seam questions sit at
+H1 boundaries, so the same fault may be generating them.
+
+**The composite lesson.** A structural reader without the ruling ledger produces
+three kinds of output at once — settled questions re-asked, real gaps found, and
+artifacts of its own parsing — and presents them identically. The author cannot
+tell them apart without re-deriving the whole architecture. Ledger access would
+suppress the first class; provenance about which file was parsed would expose
+the third; and what remained would be the second, which is the only class worth
+the author's attention.
+
