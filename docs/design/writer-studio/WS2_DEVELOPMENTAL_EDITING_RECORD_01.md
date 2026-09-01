@@ -435,3 +435,32 @@ suppress the first class; provenance about which file was parsed would expose
 the third; and what remained would be the second, which is the only class worth
 the author's attention.
 
+---
+
+## Provenance as a brake on both false completion and false simplification
+
+The back-matter pass produced the cleanest demonstration so far that provenance
+discipline cuts in *two* directions, not one.
+
+**It prevented false completion.** The appendix carries the Four Grades of Water,
+Earth and Air. Symmetry argues loudly for writing Fire *and* Aether. An earlier
+assembly record describing the section as **"Four Grades (Fire–Air)"** converted
+a symmetry argument into a provenance argument: Fire is a genuinely lost member;
+Aether was never in the schema. Writing both would have fabricated doctrine and
+called it restoration.
+
+**It prevented false simplification.** The adjacent section is titled "The 12
+Facets of the Spiralogic Profile" and appeared to contain five. The obvious fix —
+retitle to match the count — would have destroyed a real model. Reading the
+entries showed Fire, Water, Earth and Air each carry three tagged facets
+(*vector / intelligence*, *circle / intention*, *spiral / goal*): 4 x 3 = 12,
+exactly as titled. Aether is structurally different and had merely been formatted
+as item 5 of the same list. The repair was to the numbering, not the doctrine.
+
+**The generalizable point.** Two adjacent sections, two apparent completeness
+defects, two opposite correct remedies — and in both cases the naive fix was
+wrong in the direction the surface evidence pointed. What distinguished them was
+not editorial judgement but *recoverable history*: an assembly note in one case,
+the entries' own tagging in the other. A completeness checker sees only counts,
+and would have been wrong twice.
+

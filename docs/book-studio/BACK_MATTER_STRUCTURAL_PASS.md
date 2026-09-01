@@ -153,6 +153,41 @@ manuscript defect**, as is its generated "Summary" division.
 **One authoring task:** write the missing Four Grades of Fire (after the
 provenance census).
 
-**One question unresolved:** are Conclusion / Afterword / A Message to My Fellow
-Healers / Acknowledgments **body or back matter**? They sit between Ch10 and
-`# Appendix` at H1 with no part heading over them. Not yet ruled.
+### Back-matter boundary — RULED, pass closed
+
+**The Conclusion remains part of the book proper. Back matter begins with the
+Afterword.**
+
+```
+Part Three / Chapter 10
+  Conclusion — Embracing Your Elemental Soul      <- main text ends here
+  ────────────────────────────────────────────────────
+  Afterword — The Field                            <- back matter begins
+  A Message to My Fellow Healers, Mystics, …
+  Acknowledgments
+  Appendix                                         <- subdivision of back matter
+  Bibliography / Additional Resources
+```
+
+This matches what each piece does: the Conclusion completes the book's argument
+and emotional arc; an Afterword is by definition post-text reflection; the
+Message addresses a specific practitioner community *after* the general-reader
+book has concluded; Acknowledgments are conventional back matter; and the
+**Appendix is a subdivision of back matter, not its beginning**.
+
+**No visible `# Back Matter` heading is added.** The boundary is semantic and the
+reader does not need a divider printed to feel it. The ruling lives in the ledger,
+not in the manuscript.
+
+**Diagnostic for Writer's Studio.** Studio placed the back-matter boundary at the
+Four Grades tables — i.e. it treated *appendix* as synonymous with *all back
+matter*. Combined with the earlier `# Appendix` miss, this suggests its
+structural reader infers class **principally from explicit sectional headings**.
+A competent manuscript reader must distinguish
+
+> main text → conclusion → post-text / back matter → appendix / reference matter
+
+even where no divider is printed. Function, not signage.
+
+**Pass closed**, except the deliberately sequenced Four Grades of Fire authorial
+completion.
