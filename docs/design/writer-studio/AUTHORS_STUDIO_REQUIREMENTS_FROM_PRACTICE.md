@@ -1252,3 +1252,94 @@ by characters** in works that frame them ironically.
 > **Responsible sourcing sometimes means adding an author and a context, not
 > stripping authority away.** A system that only ever looks for over-attribution will
 > never see this class.
+
+---
+
+# THE TRANSLATION LAYER — system truth to human meaning · ratified 2026-09-01
+
+> ### The code should carry the complexity. The writer should carry the judgment.
+
+**Everything the editorial lane has built — register states, provenance history,
+families, gates, lifecycle records, asymmetric repairs — is technically necessary
+and almost none of it belongs on the primary writing surface.**
+
+> ## Never make the member translate the system in order to participate in their own work.
+
+## ⚠️ THE MOST IMPORTANT DISTINCTION IN THE INTERFACE
+
+**Three voices the system must keep visually and grammatically separate**, because
+**evidence, editorial judgment, and authorial choice are different things:**
+
+| Voice | Example | What it is |
+|---|---|---|
+| **MAIA knows** | *"This quotation is misattributed."* | **evidence** — checkable, and the system stands behind it |
+| **MAIA thinks** | *"I don't think the quotation is helping this paragraph."* | **editorial judgment** — arguable, and the author may simply disagree |
+| **MAIA asks** | *"Do you want this outside voice here, or would you rather make the point yourself?"* | **authorial choice** — not the system's to make |
+
+**If these look the same in the interface, the member cannot tell which they are
+free to overrule.** That is how a system with good manners still takes sovereignty.
+
+## The four layers of a finding
+
+**1 · What I noticed** — plain language, no verdict.
+> *"This quotation is genuine, but it was spoken by a character rather than stated
+> directly by the author."*
+
+**2 · Why it might matter** — the stakes, still not a verdict.
+> *"The character is actually demonstrating the problem your section is describing.
+> Keeping that context could make the passage stronger."*
+
+**3 · Your decision** — clear authorial choices, none privileged.
+> **Keep as is · Add context · Reframe it · Remove it · Explore with MAIA**
+
+**4 · Details** — only when wanted.
+> Source · Exact wording · Translator · Rights · Other occurrences · Editorial
+> history
+
+**All the machinery lives in layer 4. Most members should rarely need to open it.**
+
+## Translations — system language to writer language
+
+| System | Writer |
+|---|---|
+| `WRONG_SOURCE_WORK` | *"This quotation is genuine, but your bibliography points to the wrong book."* |
+| `SAME_AUTHOR_DISTORTION` | *"Einstein said something related, but not this. The changed wording makes a different claim — and your paragraph relies on that difference."* |
+| `SPEAKER_MISATTRIBUTION` | *"These are Milton's words in the sense that he wrote them, but Satan is the one speaking them. In this section, that context may actually strengthen your point."* |
+| `verdict_not_locatable_in_source` | *"This quotation was researched earlier, but I can't currently recover the conclusion. I won't pretend that means nobody checked it."* |
+| `fam-know-thyself` has an asymmetric repair obligation | *"You use this quotation twice. We corrected the attribution in another chapter, but this occurrence still uses the old one. Would you like to review them together?"* |
+
+**Same intelligence. One is database language; the other supports authorship.**
+
+## Orientation, not only findings
+
+**At any point the member should be able to answer:** *What are we doing? Why? What
+needs my judgment? What is MAIA handling? What can wait?*
+
+**Not a migration dashboard:**
+> ~~121 migrated · 7 not investigated · 1 out of scope~~
+
+**But:**
+> **Source review — almost complete.** MAIA has reviewed the quotations across your
+> manuscript. Most sources are settled · 7 still need research · 1 passage turned
+> out not to be an outside quotation at all · **Nothing has been changed without
+> your decision.**
+> **Next:** resolve the remaining sources, then we'll review which quotations
+> genuinely belong in the book.
+
+## Progress in human terms
+
+| Technical record *(retained for auditability)* | What the member experiences |
+|---|---|
+| Stage 2c-ii complete | *"We've now identified every quotation in the manuscript."* |
+| semantic population frozen | ***"The source map is complete. From here forward, we're deciding what belongs — not discovering what we missed."*** |
+| asymmetric family obligations detected | *"A few quotations were corrected in one place but still appear differently elsewhere. Let's review those together."* |
+
+**The stages stay exact in the record. The member experiences the meaning of the
+stage.**
+
+## The shape of every interaction
+
+> **Here is what I noticed.**
+> **Here is why it matters.**
+> **Here is what I can help with.**
+> **Here is the choice that is yours.**
