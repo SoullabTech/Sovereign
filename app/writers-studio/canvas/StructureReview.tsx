@@ -356,19 +356,24 @@ export default function StructureReview({
   const selectedUnit = selected ? proposedById.get(selected) : undefined;
 
   /**
-   * A MARK IN THE OUTLINE TAKES UP WHAT IT NAMES.
+   * A MARK IN THE OUTLINE TAKES UP EXACTLY WHAT IT NAMES.
    *
-   * The marks used to say "a question for you" and "left open: ..." and then do
-   * nothing — the room told the writer something was there and gave them
-   * nowhere to go. Clicking one now selects its division AND, where the mark
-   * resolves to exactly one thing, opens the conversation about that thing
-   * directly. Where it names several, the division is selected and each is
-   * listed separately with its own way in, because choosing for them which of
-   * three open readings they meant would be a guess.
+   * THE CLICK CONSUMES THE SET THAT RENDERED THE MARK. The question mark is
+   * drawn from `questionMarks` — the questions assigned to THIS row, by deepest
+   * containing division. Recomputing from `questionsFor`, which is the
+   * inspector's broader overlap context, meant a row could visibly say "a
+   * question for you" from one owned question while the click saw several
+   * contextual ones and opened none — or, worse, opened a different one. Same
+   * frozen indices in, same conversation out.
    *
-   * A UNIT TAG IS NOT A REGION. Where a division's doubt has no `UncertainRegion`
-   * behind it there is no region index to name, so the conversation opens on the
-   * DIVISION — truthfully — rather than fabricating a region anchor.
+   * A TAG IS NOT A REGION, AND A CLICK MUST NOT CONVERT ONE INTO THE OTHER.
+   * The `left open: …` mark is rendered from a division's `uncertainty` TAGS.
+   * An earlier version, finding exactly one `UncertainRegion` overlapping the
+   * division, opened a conversation about that REGION — laundering a tag into a
+   * region it has no identity relation to, which is the exact distinction this
+   * slice was careful to establish. So this mark always opens the DIVISION,
+   * truthfully. Region-specific conversation stays where a region is actually
+   * named on screen: the inspector, which lists each region with its own way in.
    */
   const takeUpMark = useCallback((unitId: string, mark: 'question' | 'open') => {
     setSelected(unitId);
@@ -376,28 +381,23 @@ export default function StructureReview({
     if (!unit) return;
 
     if (mark === 'question') {
-      const qs = questionsFor(unit);
-      setAsking(qs.length === 1
-        ? { anchor: { on: 'question', proposalId, questionIndex: qs[0].index },
-            about: qs[0].q.label }
+      const marked = questionMarks.get(unitId) ?? [];
+      /* One owned question opens directly. Several are listed in the inspector,
+         each with its own way in, because choosing between them would be a
+         guess about which one the writer meant. */
+      setAsking(marked.length === 1
+        ? { anchor: { on: 'question', proposalId, questionIndex: marked[0].index },
+            about: marked[0].q.label }
         : null);
       return;
     }
 
-    const rs = regionsFor(unit);
-    if (rs.length === 1) {
-      setAsking({ anchor: { on: 'uncertainty', proposalId, regionIndex: rs[0].index },
-        about: rs[0].r.why });
-      return;
-    }
-    if (rs.length === 0 && unit.uncertainty.length > 0) {
-      setAsking({ anchor: { on: 'division', proposalId, unitId: unit.id },
-        about: `what she left open in ${
-          divisionName(unit.title, unit.editorialLabel ?? null, unit.kind)}` });
-      return;
-    }
-    setAsking(null);
-  }, [proposalId, questionsFor, regionsFor, proposedById]);
+    setAsking({
+      anchor: { on: 'division', proposalId, unitId: unit.id },
+      about: `what she left open in ${
+        divisionName(unit.title, unit.editorialLabel ?? null, unit.kind)}`,
+    });
+  }, [proposalId, questionMarks, proposedById]);
 
 
   return (

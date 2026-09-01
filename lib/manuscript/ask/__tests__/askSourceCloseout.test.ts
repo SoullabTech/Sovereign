@@ -11,6 +11,7 @@
 import { readFileSync } from 'fs';
 import { join } from 'path';
 import { frozenSideFor, computeStaleness } from '../staleness';
+import { isHeldRetry, historyFor } from '../retry';
 
 const ROOT = join(__dirname, '..', '..', '..', '..');
 const read = (p: string) => readFileSync(join(ROOT, p), 'utf8')
@@ -37,10 +38,27 @@ describe('defect 1 · the outline marks are functional, not inert', () => {
     expect(REVIEW).not.toMatch(/<span className="ws2sr-mark" data-uncertainty=/);
   });
 
-  it('a division tag with no region opens the DIVISION, never a fabricated region', () => {
-    /* rs.length === 0 with tags present must not mint a regionIndex. */
-    expect(REVIEW).toMatch(
-      /rs\.length === 0 && unit\.uncertainty\.length > 0[\s\S]{0,220}on: 'division'/);
+  it('the click consumes the SAME frozen set that rendered the question mark', () => {
+    /* questionMarks is per-row; questionsFor is the inspector's broader overlap
+       context. Using the latter let a row show one owned question while the
+       click saw several and opened none. */
+    expect(REVIEW).toMatch(/takeUpMark[\s\S]{0,900}questionMarks\.get\(unitId\)/);
+    expect(REVIEW).not.toMatch(/takeUpMark[\s\S]{0,900}questionsFor\(unit\)/);
+  });
+
+  it('the open-tag mark opens the DIVISION and never infers a region', () => {
+    /* A tag is not an UncertainRegion. The handler must not reach regionsFor at
+       all — finding one overlapping region and opening it would launder a tag
+       into a region it has no identity relation to. */
+    const handler = REVIEW.slice(REVIEW.indexOf('const takeUpMark'));
+    const body = handler.slice(0, handler.indexOf('}, [proposalId'));
+    expect(body).not.toContain('regionsFor');
+    expect(body).toMatch(/on: 'division'/);
+  });
+
+  it('region-specific conversation still exists where a region is named on screen', () => {
+    /* The inspector lists each frozen region with its own way in. */
+    expect(REVIEW).toMatch(/data-open-region[\s\S]{0,400}on: 'uncertainty'/);
   });
 });
 
@@ -149,5 +167,68 @@ describe('defect 7 · a failed answer does not orphan the question', () => {
   it('the client surfaces threadId on the refusal path at all', () => {
     const client = read('lib/writersStudio/askClient.ts');
     expect(client).toMatch(/threadId:\s*\(json as Record<string, unknown>\)\.threadId/);
+  });
+});
+
+describe('defect 8 · a retry of a held question does not duplicate it', () => {
+  const held = [
+    { speaker: 'author' as const, body: 'Why are you unsure?' },
+    { speaker: 'maia' as const, body: 'Because the seam is ambiguous.' },
+    { speaker: 'author' as const, body: 'Could you be wrong?' },
+  ];
+
+  it('recognises the unanswered question at the end of the thread', () => {
+    expect(isHeldRetry(held, 'Could you be wrong?')).toBe(true);
+  });
+
+  it('does not treat a reworded question as a retry — that is new thinking', () => {
+    expect(isHeldRetry(held, 'Could you be wrong about this?')).toBe(false);
+  });
+
+  it('does not treat a question as held when MAIA already answered it', () => {
+    const answered = [...held, { speaker: 'maia' as const, body: 'I could be.' }];
+    expect(isHeldRetry(answered, 'Could you be wrong?')).toBe(false);
+  });
+
+  it('an empty thread is never a retry', () => {
+    expect(isHeldRetry([], 'anything')).toBe(false);
+  });
+
+  it('drops the held turn from history so MAIA is not asked twice', () => {
+    const h = historyFor(held, 'Could you be wrong?');
+    expect(h).toHaveLength(2);
+    expect(h[h.length - 1].speaker).toBe('maia');
+  });
+
+  it('leaves history untouched for a genuinely new question', () => {
+    expect(historyFor(held, 'Something else entirely')).toHaveLength(3);
+  });
+
+  it('the route skips the append when the question is already held', () => {
+    expect(ROUTE).toMatch(/retryingHeld = isHeldRetry\(priorTurns, question\)/);
+    expect(ROUTE).toMatch(/if \(!retryingHeld\) \{[\s\S]{0,200}appendTurn\(/);
+  });
+
+  it('the route replays history through historyFor, not the raw turns', () => {
+    expect(ROUTE).toContain('historyFor(priorTurns');
+    expect(ROUTE).not.toMatch(/\(existing\?\.turns \?\? \[\]\)\.map\(\(t\) => \(\{ speaker/);
+  });
+});
+
+describe('schema custody · the branch describes the schema its routes require', () => {
+  it('the draft-sections migration is present', () => {
+    expect(() => readFileSync(join(ROOT,
+      'database/migrations/20260830000001_manuscript_draft_sections.sql'), 'utf8'))
+      .not.toThrow();
+  });
+
+  it('it establishes schema and converts no draft', () => {
+    const m = readFileSync(join(ROOT,
+      'database/migrations/20260830000001_manuscript_draft_sections.sql'), 'utf8')
+      .replace(/--.*$/gm, '');
+    expect(m).toContain('CREATE TABLE IF NOT EXISTS manuscript_draft_sections');
+    expect(m).toContain('section_addressable_at');
+    /* No conversion: the table is created empty and no draft is rewritten. */
+    expect(m).not.toMatch(/^\s*(INSERT|UPDATE|DELETE)\s/im);
   });
 });

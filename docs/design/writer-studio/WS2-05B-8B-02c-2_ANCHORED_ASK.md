@@ -200,3 +200,85 @@ should make quietly.
 - **Unwitnessed at runtime.** Still no database in this session. The migration is
   unapplied and no thread has ever been opened. Every proof remains static,
   unit-level or structural.
+
+---
+
+# FINAL SOURCE CLOSEOUT + SCHEMA CUSTODY
+
+Three source fixes and one custody correction, on top of `b9e55c7e`. Each is
+pinned by a falsifying test and **each was probed** by reverting it, all reverted
+with byte-identity re-verified.
+
+## 1 · The question mark now consumes the set that rendered it
+
+The mark is drawn from `questionMarks` — the questions assigned to *that row*, by
+deepest containing division. The click recomputed `questionsFor(unit)`, the
+inspector's broader *overlap* context. A row could therefore show
+`a question for you` from its one owned question while the click saw several and
+opened none — or opened a different one. `takeUpMark` now reads
+`questionMarks.get(unitId)`. Same frozen indices in, same conversation out.
+
+## 2 · The open-tag mark can no longer launder a tag into a region
+
+`left open: …` is rendered from a division's `uncertainty` **tags**. The handler
+searched `regionsFor(unit)` and, on exactly one overlapping `UncertainRegion`,
+opened a conversation about *that region* — converting a tag into a region it has
+no identity relation to, which is precisely the distinction this slice
+established. The handler no longer references `regionsFor` at all: the mark opens
+the **division**, truthfully.
+
+Region-specific conversation is unchanged and still available where a region is
+actually named on screen — the inspector lists each frozen region with its own
+way in.
+
+## 3 · A retry of a held question no longer duplicates it
+
+The author's turn is persisted before the model call, so a failure leaves the
+question on the thread — that is what "held here" means. But the retry appended
+the identical question a second time, and since prior turns are replayed as
+history while the question is sent separately, MAIA could receive it **twice in
+one request**.
+
+`lib/manuscript/ask/retry.ts` is pure and narrow: only the **last** turn counts,
+it must be the author's, and byte-identical to what was submitted. Then the
+append is skipped and the held turn is dropped from the replayed history, because
+`question` already carries it.
+
+**A reworded question is a new turn.** Rewording is thinking, and a thread that
+folded a rephrasing into the previous question would lose the record of what was
+actually asked first.
+
+## 4 · Schema custody — reclassification accepted
+
+`database/migrations/20260830000001_manuscript_draft_sections.sql` converged,
+**byte-identical to `eeb452dcb`**, and **no other Tier C material**.
+
+```
+OLD  Tier C · deferred, believed needed only for section-level interaction
+NEW  shared WS2 schema prerequisite, already required by canonical 05B and now by Ask
+```
+
+The old classification rested on an assumption this slice falsified: 02c-2 cannot
+address the frozen reading correctly without `manuscript_draft_sections`, and
+canonical's own proposal review route already carried the same dependency.
+
+**It performs no conversion.** It creates the table, adds
+`section_addressable_at` / `section_conversion_version`, and installs the
+round-trip invariant functions. No draft is rewritten; the table is created
+empty. This is not reopening 04A — it is making the branch describe the schema
+its own canonical routes require.
+
+## Gates
+
+```
+ask suite              58 passed
+all affected suites    486 passed · 30 suites
+typecheck              no regressions · baseline not re-recorded
+negative gate          39/39 intact
+canvas/page · Worktable · WritingSurface · OracleConversation   byte-unchanged
+lib/manuscript/sections/**                                       still absent
+```
+
+Unchanged and still outstanding: **Sanctuary has no Studio gate** (named, not
+faked), and this remains **unwitnessed at runtime** — no database in this session,
+migration unapplied, no thread ever opened.

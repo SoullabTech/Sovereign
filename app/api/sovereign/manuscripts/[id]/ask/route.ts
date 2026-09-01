@@ -32,6 +32,7 @@ import { askMaia } from '@/lib/manuscript/ask/askReader';
 import {
   openThread, appendTurn, loadThread, threadsOnAnchor,
 } from '@/lib/manuscript/ask/threadStore';
+import { isHeldRetry, historyFor } from '@/lib/manuscript/ask/retry';
 
 export const dynamic = 'force-dynamic';
 
@@ -236,9 +237,17 @@ export async function POST(
     initiatedBy: 'author',
   });
 
-  await appendTurn({
-    threadId: liveThreadId, memberId, speaker: 'author', body: question, staleness,
-  });
+  /* A RETRY OF A HELD QUESTION REUSES THE TURN IT IS RETRYING. Appending again
+     would put the same words on the thread twice and — because prior turns are
+     replayed as history while the question is sent separately — hand MAIA the
+     same question twice in one request. A reworded question is a new turn. */
+  const priorTurns = existing?.turns ?? [];
+  const retryingHeld = isHeldRetry(priorTurns, question);
+  if (!retryingHeld) {
+    await appendTurn({
+      threadId: liveThreadId, memberId, speaker: 'author', body: question, staleness,
+    });
+  }
 
   if (!reading) {
     /* No reading, no frozen material to answer from. 02c-2 has no author-
@@ -258,7 +267,8 @@ export async function POST(
       sections: await loadSectionHeads(id, memberId),
       staleness,
     },
-    (existing?.turns ?? []).map((t) => ({ speaker: t.speaker, body: t.body })),
+    /* The held turn is dropped from history because `question` carries it. */
+    historyFor(priorTurns.map((t) => ({ speaker: t.speaker, body: t.body })), question),
     question,
   );
 
