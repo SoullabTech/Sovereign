@@ -484,7 +484,7 @@ For we are the multidimensional quintessence made flesh, every atom and neuron s
 
 It's essential to recognize the interplay of various forces within us. Just as the three gunas—sattva, rajas, and tamas—create a balance and dynamic tension that shapes our experiences, the concept of the Trinity offers another layer of understanding our inner dynamics.
 
-The Trinity, found in many spiritual, philosophical, and shamanic traditions, provides a profound framework for understanding the process of transformation and the interplay between different aspects of our nature. In the spirit of the Spiralogic Process, the Trinity can be seen as the dynamic interaction between three essential aspects of our nature: Agent, Agency, and Manifestation.
+Threefold patterns appear across many spiritual, philosophical, and shamanic traditions, and they offer a profound framework for understanding transformation and the interplay between different aspects of our nature. In Spiralogic, I work with one such pattern as Agent, Agency, and Manifestation: the one who acts, the capacity through which action moves, and what takes form through that movement.
 
 #### The Agent: The Creative Force
 
