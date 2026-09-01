@@ -259,3 +259,27 @@ their own lived material.
 precisely · **Remove** decorative authority the prose already carries ·
 **Prefer** the author's formulation over a quotation that says it less well ·
 **Keep** only external voices that deepen rather than certify.
+
+### Capability — judge a quotation together with its frame, never alone
+
+> **A quotation's function is not fixed by the quotation. It is fixed by what the
+> prose around it does.**
+
+**Grounding event (Stage 4A, 2026-09-01):** the same sixty words of Wayne Teasdale
+opening Chapter 10 were ruled `REMOVE` as certification, reversed to `KEEP` as
+philosophical kinship, and then **made** kinship on the page by a paragraph the
+author wrote beneath them. **The quotation never changed.**
+
+**Requirements this generates:**
+- The unit of provenance judgment is **the quotation plus its frame.** A system
+  that adjudicates quotations in isolation cannot see the difference between
+  borrowed warrant and named kinship, and will remove the second as if it were the
+  first.
+- **Certification and kinship must be distinguishable** in the model: *"X agrees,
+  therefore I am legitimate"* versus *"X articulates an orientation I share and I
+  want their voice in the conversation."*
+- **A third repair form must exist** beside remove and reattribute: **write the
+  frame that makes the real relationship visible.** The strongest signal that a
+  quotation is not a warrant is that **the author answers it** — Teasdale speaks of
+  traditions as common heritage; the paragraph accepts the company and declines the
+  collapse.

@@ -380,3 +380,73 @@ redundancy, misattribution, or weak fit rather than on agreement-as-warrant — 
 
 **Rulings issued: 1** (Teasdale, `KEEP`). **Forty-four recommendations still
 awaiting authorial ruling.** Nothing applied to the manuscript.
+
+---
+
+# 4A · Teasdale — APPLIED · authorial kinship paragraph placed 2026-09-01
+
+**Ruling completed, not merely recorded.** The kinship reading is now **on the
+page** rather than held in the adjudication file. Placed verbatim as the author
+wrote it, immediately beneath the Chapter 10 epigraph:
+
+> Teasdale's vision resonates deeply with my own. *Elemental Alchemy* is not an
+> attempt to collapse our differences into a single way of seeing, but to discover
+> what can bring us into relationship across them. The elements give us a language
+> for honoring the distinct ways we experience and understand life while
+> remembering the deeper ground we share. Our differences need not divide us; held
+> in relationship, they can become the very means through which a greater
+> wholeness is revealed.
+
+**Authorial prose, placed unedited.** Not a Stage 5 repair — this is authoring, and
+an author's own new paragraph is not queued behind a repair batch.
+
+## What the paragraph does structurally
+
+**It converts the epigraph's function on the page, not merely in the record.**
+Before it, a reader had only the quotation and had to guess why Teasdale was
+there — and the most available guess is certification. After it, the relationship
+is stated: *kinship, named as kinship.*
+
+**It also does something the Stage 4 test did not anticipate.** The paragraph
+draws a **distinction** from Teasdale rather than agreement with him:
+
+> *not an attempt to collapse our differences into a single way of seeing, but to
+> discover what can bring us into relationship across them.*
+
+Teasdale's line speaks of drawing on **"all the resources from all the
+traditions"** as **"common heritage."** The paragraph accepts the company and then
+**declines the collapse** — differences are not dissolved into a shared heritage;
+they are **held in relationship**. That is not certification's opposite by degree.
+It is a different act entirely: **the book positions itself beside a kindred
+thinker and specifies where it stands differently.**
+
+**A quotation that the author answers cannot be functioning as a warrant.**
+Recorded as the sharpest available demonstration of the kinship/certification
+distinction.
+
+## And it prepares Aether without re-teaching it
+
+*"Held in relationship, they can become the very means through which a greater
+wholeness is revealed"* is **the Aether doctrine — Source · Weaver · Return —
+stated in the register of the chapter opening**, without restating the model.
+
+This matters for Chapter 10's architecture. The chapter must recall Aether for a
+reader arriving at the end of the book **without re-teaching five elements.** The
+paragraph does that in one clause, and does it as a consequence of the kinship
+point rather than as exposition.
+
+**Epigraph count unchanged at 128** — prose was added, no quotation.
+
+## Doctrine recorded for the Author's Studio
+
+> **A quotation's function is not fixed by the quotation. It is fixed by what the
+> prose around it does.**
+
+The same sixty words of Teasdale were **certification** before this paragraph and
+**kinship** after it — with the quotation itself untouched. **The unit of
+provenance judgment is therefore the quotation *plus its frame*, never the
+quotation alone.** A system that adjudicates quotations in isolation cannot see
+this, and would have removed Teasdale on a defensible-looking reading.
+
+**A third repair form now exists** alongside remove and reattribute: **write the
+frame that makes the real relationship visible.**
