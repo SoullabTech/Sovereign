@@ -14,11 +14,12 @@
       "id": "EA-Q-0002",
       "source": "Zhuangzi, butterfly dream",
       "relationship": "quotation, translated",
-      "object": "Zhuangzi. Translated by Herbert A. Giles.",
+      "object": "Zhuangzi. *Chuang Tzu: Taoist Philosopher and Chinese Mystic.* Translated by Herbert A. Giles. Revised edition, 1926.",
       "decision": "CORRECT",
       "evidence": "Register VERIFIED EXACT with translator Giles; the printed English carries Giles's phrasing ('unconscious of my individuality as a man', 'the transition is called Metempsychosis'), none of which is Watson's.",
       "supersedes": "Zhuangzi. *The Complete Works of Chuang Tzu.* Translated by Burton Watson. Columbia University Press, 1968.",
-      "unresolved": "Exact Giles edition: 1889, the revised 1926 Kelly & Walsh, or the 1961 Allen & Unwin issue. Name the one the text was taken from. Giles d. 1935, so public domain either way."
+      "unresolved": "Confirm the imprint against the copy consulted - the revised text circulates under Kelly and Walsh (1926) and later Allen and Unwin reissues. Giles died in 1935, so public domain either way.",
+      "research_outcome": "The printed wording - including 'Between a man and a butterfly there is necessarily a barrier. The transition is called Metempsychosis' - is attested in Giles's REVISED text, published as Chuang Tzu: Taoist Philosopher and Chinese Mystic (1926), not under the 1889 first edition's title, Chuang Tzu: Mystic, Moralist, and Social Reformer."
     },
     {
       "id": "EA-Q-0004",
@@ -59,16 +60,17 @@
       "id": "EA-Q-0011",
       "source": "Joseph Campbell, 'The privilege of a lifetime is being who you are.'",
       "relationship": "quotation",
-      "object": "Campbell, Joseph. *A Joseph Campbell Companion: Reflections on the Art of Living.* Edited by Diane K. Osbon.",
+      "object": "Campbell, Joseph. *A Joseph Campbell Companion: Reflections on the Art of Living.* Edited by Diane K. Osbon. HarperCollins, 1991.",
       "decision": "KEEP",
       "evidence": "Attested to the Companion, drawn from the 1984 Esalen workshop Osbon attended.",
-      "unresolved": "PRINTING NOT GUESSED: the existing entry says HarperCollins 1991, secondary sources give HarperPerennial 1995. Resolve before emission.",
+      "unresolved": "Cite the printing actually consulted. If the copy to hand is the paperback, HarperPerennial 1995 is the correct entry, not the 1991 hardcover.",
       "also_drop": [
         "Campbell, Joseph. *The Hero with a Thousand Faces.* Princeton University Press, 1949.",
         "Campbell, Joseph. *The Power of Myth.* Anchor, 1991."
       ],
       "drop_reason": "No surviving Campbell source object uses either; confirm at the reverse check.",
-      "rights": "likely_protected_standard"
+      "rights": "likely_protected_standard",
+      "research_outcome": "Publication history resolved: first published in hardcover by Harper/HarperCollins in 1991, reissued as the first HarperPerennial paperback in May 1995. Both dates in circulation are real; they are different printings of one book, drawn from the March 1984 Esalen workshops."
     },
     {
       "id": "EA-Q-0013",
@@ -312,9 +314,15 @@
       "source": "Socrates via Plato, 'The unexamined life is not worth living'",
       "relationship": "quotation, translated",
       "object": "Plato. *Apology* 38a.",
-      "decision": "ADD - source identity settled, bibliographic specificity unresolved",
+      "decision": "ADD - MATCHED BUT NOT UNIQUELY; AUTHOR CHOICE OWED",
       "evidence": "VERIFIED EXACT with the Stephanus reference. No Plato entry exists anywhere in the book.",
-      "unresolved": "TRANSLATOR RECOVERY. Apology 38a identifies the textual object; the printed English still needs its mediator identified. Same sequencing as Plutarch: printed English -> identify mediator -> cite mediator -> rights. No translator guessing merely because the Greek source is public domain."
+      "unresolved": "Which of the above. Not a research question any longer.",
+      "research_outcome": "The printed English matches Jowett (1871) AND Tredennick (Penguin 1954) verbatim. Grube reads 'the unexamined life is not worth living for men'; Rouse reads 'Life without enquiry is not worth living for a man'. Same shape as Tao Te Ching 33: the wording cannot say whose English the book prints.",
+      "options": [
+        "A - RECOMMENDED. Cite Jowett: the wording matches, and the 1871 translation is public domain, so the choice is made on fidelity with clean rights following rather than leading.",
+        "B - Cite Apology 38a with no translator, on the ground that this English is a commonplace no single translator owns.",
+        "C - Replace with a rendering the book can attribute unambiguously."
+      ]
     },
     {
       "id": "EA-Q-0052",
@@ -500,12 +508,13 @@
       "id": "EA-Q-0083",
       "source": "William H. Whyte, 'The single biggest problem in communication'",
       "relationship": "quotation",
-      "object": "Whyte, William H. *Fortune*, 1950.",
-      "decision": "ADD - source identity settled, bibliographic specificity owed",
+      "object": "Whyte, William H. \"Is Anybody Listening?\" *Fortune*, September 1950, pp. 77ff. (the passage at p. 174). Expanded as *Is Anybody Listening?* Simon and Schuster, 1952.",
+      "decision": "ADD - SPECIFICITY RESOLVED, BUT A PROVENANCE FINDING SURFACED",
       "evidence": "VERIFIED EXACT. This is the record the census REATTRIBUTED FROM GEORGE BERNARD SHAW; the entry never followed the correction.",
-      "unresolved": "Exact article title and issue. Author, magazine and year identify the relationship but do not yet make an ideal bibliographic object. This is bibliographic specificity, not provenance uncertainty.",
+      "unresolved": "AUTHOR RULING OWED, and it is provenance rather than specificity: restore Whyte's actual sentence, or keep the circulating form and frame it as an evolved formulation of his. The Goethe and Carson precedents point opposite ways - Goethe kept the evolved English under a REFRAME because no authoritative original English exists, Carson was restored because the original is recoverable. Whyte's original IS recoverable, which argues for restoration.",
       "note": "A CLASS WORTH NAMING: speaker corrections create bibliography obligations, and nothing was tracking that until this pass. Several Stage 4 speaker repairs may carry the same debt.",
-      "rights": "term_uncertain"
+      "rights": "term_uncertain",
+      "research_outcome": "ARTICLE LOCATED - and Whyte's actual sentence is 'The great enemy of communication, we find, is the illusion of it.' The manuscript prints 'The single biggest problem in communication is the illusion that it has taken place', which is an EVOLVED PARAPHRASE, not his wording. The Stage 4 reattribution correctly moved the line from George Bernard Shaw to Whyte as its ANCESTOR; it did not establish that the printed English is his."
     },
     {
       "id": "EA-Q-0084",
