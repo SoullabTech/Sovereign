@@ -17,6 +17,7 @@ import {
 import Worktable from './Worktable';
 import WorkDrawer from './WorkDrawer';
 import MaterialsDrawer from './MaterialsDrawer';
+import StructureReadingGesture from './StructureReadingGesture';
 
 /**
  * Writer Canvas — the room. v0.1 of the environment all Writer Studio entry
@@ -218,6 +219,8 @@ export default function WriterCanvasPage() {
             <p className="text-[13px] leading-relaxed opacity-70 mb-3">
               {manuscript.sectionCount} sections, carried in with your import.
             </p>
+            <StructureReadingGesture manuscriptId={manuscript.id} />
+            <div className="mt-4" />
             <Link
               href={byIdentity(SOURCE_HREF, manuscript.id)}
               className="text-[13px] underline underline-offset-4 opacity-60 hover:opacity-90"
