@@ -951,3 +951,81 @@ transmission yields `VERIFIED VARIANT`, not `VERIFIED EXACT`.**
 3 · `fam-laotzu-evolved` **1 (new)** · plus 6 others.
 
 **→ Batch 8: Chapter 8.**
+
+---
+
+# BATCH 8 — Chapter 8 · 2026-09-01
+
+**`GATE PASSED`.** 18 active + 1 historical family link. **Zero `pending_migration`
+in Chapter 8.**
+
+## ⚠️ A misattributed quotation survives in the manuscript
+
+**`fam-know-thyself` now spans both layers, and the finding is uncomfortable:**
+
+> ***"Knowing yourself is the beginning of all wisdom" — Aristotle.*** **The Chapter
+> 6 occurrence was removed at 4A. The Chapter 8 occurrence is still in the book.**
+
+**Same saying, verbatim, same attribution, same `MISATTRIBUTED` verdict.** It
+survives because **4A's scope was section-opening epigraphs**, and the two
+occurrences differ in function — one opened a section, the other does not.
+
+**This is not a 4A error.** The scope was correct and the ruling was correct for
+what it covered. **But the manuscript currently contains a quotation the register
+knows to be misattributed, at a location no completed pass has examined.** The
+family link is now in place so the surviving occurrence cannot be lost sight of at
+4C.
+
+**It is also the strongest argument yet for the register.** Nothing in the
+chapter-by-chapter workflow would have surfaced this — **it took cross-layer
+family linking to see that one half of a pair had been repaired and the other had
+not.**
+
+## The narrowed spoken-transmission rule — corrected
+
+**My previous formulation was too broad.** *"Spoken transmission yields
+`VERIFIED VARIANT`"* would wrongly downgrade a recorded speech, interview, or
+contemporaneous transcript. The accurate rule:
+
+> **When provenance rests on reported or recollected spoken transmission *without a
+> fixed primary recording or transcript*, classify the wording as `VERIFIED
+> VARIANT`, not `VERIFIED EXACT`.**
+
+**That preserves the evidentiary reason** — the absence of a fixed primary — **rather
+than turning two specimens into a rule about speech itself.** Keller and Angelou
+both qualify on the *evidence*, not on the *medium*.
+
+## Findings of note
+
+**Feynman → Haldane.** `MISATTRIBUTED` · `SOURCE DISPLACEMENT`. Origin is **J. B. S.
+Haldane, *Possible Worlds* (1927)**. Ascriptions to Heisenberg, Eddington and
+Priestley are all post-1927 and spurious. **Recorded in the census as the specimen
+where verification had to overturn the auditor's own prior** — I had believed the
+line was Heisenberg's.
+
+**A second bare-byline Barks.** *"Out beyond ideas of wrongdoing and rightdoing"* is
+**Barks with John Moyne, © 1995**, and **a loose rendering, not a translation** —
+Barks renders *kufr* and *islām* as "wrongdoing" and "rightdoing." **`LIKELY
+PROTECTED · HIGH`**, under a bare byline. Contrast Ch5's correctly labelled
+*"Adapted from Rumi, after Coleman Barks."*
+
+**Shaw splits again.** *"Beware of false knowledge"* is `VERIFIED VARIANT` — genuine
+*Man and Superman* (1903) — while the Ch8 communication line was reattributed to
+**Whyte**. **Two Shaw occurrences, opposite outcomes.**
+
+**Hawking → Megginson.** No evidence Hawking said it; the *Washington Post*
+investigated the attribution specifically (2018). The nearest ancestor is a **Leon
+C. Megginson paraphrase of Darwin (1963)** that later hardened into a pseudo-Darwin
+quotation.
+
+**Two auditor self-corrections migrated intact:** the Jenkins internal-origin flag
+**withdrawn** once an external source trail appeared (*The Hard Way*, 2003), and the
+Bennett **suspicion-by-genre withdrawn** — he had been doubted because his book is
+an aphorism collection.
+
+## Standing after batch 8
+
+**105 migrated · 13 pending · 12 deferred · 130 current · 28 historical.**
+**`109 = 92 + 13 + 4`** ✅ · **`137 = 109 + 28`** ✅
+
+**→ Batch 9: Chapter 9, then Chapter 10 and back matter.**

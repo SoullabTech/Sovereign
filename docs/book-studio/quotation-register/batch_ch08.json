@@ -1,0 +1,183 @@
+{
+  "_comment": "BATCH 8 - Chapter 8. Faithful transfer only. Ch8 historical records were vouched in the integrity pass.",
+  "entries": [
+    {
+      "match": "stranger than you can think",
+      "occurrence": 1,
+      "provenance_status": "misattributed",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L1628",
+      "actual_author": "J. B. S. Haldane, not Feynman",
+      "work": "Possible Worlds (1927): 'the Universe is not only queerer than we suppose, but queerer than we can suppose'",
+      "family": "fam-haldane-displacement",
+      "notes": "Audit: SOURCE DISPLACEMENT. Ascriptions to Heisenberg, Eddington and Priestley are all post-1927 and spurious. Recorded in the census as the specimen where verification had to overturn the AUDITOR'S OWN PRIOR, not only the manuscript's claim - I had believed the line was Heisenberg's."
+    },
+    {
+      "match": "Vulnerability sounds like truth",
+      "occurrence": 1,
+      "provenance_status": "verified_exact",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L1660",
+      "actual_author": "Brene Brown",
+      "work": "Daring Greatly (2012), p. 37",
+      "rights_status": "protectability_uncertain_standard",
+      "bibliography_relationship": "CORRECT",
+      "notes": "Wording exact including the second sentence."
+    },
+    {
+      "match": "Out beyond ideas of wrongdoing",
+      "occurrence": 1,
+      "provenance_status": "paraphrase_adapted",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L1666",
+      "actual_author": "Rumi, rendered by Coleman Barks with John Moyne",
+      "work": "The Essential Rumi (HarperCollins), copyright 1995 Coleman Barks",
+      "translator_or_mediator": "Coleman Barks - NOT NAMED in the manuscript, which carries a bare byline",
+      "rights_status": "likely_protected_high",
+      "family": "fam-rumi-barks",
+      "notes": "Audit: a LOOSE RENDERING, not a translation - Barks renders the Persian terms for kufr and islam as 'wrongdoing' and 'rightdoing'. Verbatim use of a mediator's English under a bare byline; contrast the correctly labelled 'Adapted from Rumi, after Coleman Barks' item in Ch5."
+    },
+    {
+      "match": "Beware of false knowledge",
+      "occurrence": 1,
+      "provenance_status": "verified_variant",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L1678",
+      "actual_author": "George Bernard Shaw",
+      "work": "Man and Superman (1903), 'Maxims for Revolutionists'",
+      "family": "fam-shaw-split",
+      "notes": "Audit: the original reads 'Beware of HIS false knowledge', following 'A learned man is an idler who kills time with study'. The standalone form was standardised by Laurence J. Peter's Peter's Quotations (1977). Snopes rates the attribution correct. Same author as the reattributed Whyte item - two Shaw occurrences, opposite outcomes."
+    },
+    {
+      "match": "An open mind leaves a chance",
+      "occurrence": 1,
+      "provenance_status": "unverified",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L1684",
+      "actual_author": "unknown",
+      "notes": "Audit: absent from twainquotes.com and from Wikiquote's sourced Twain sections. Twain is a magnet for unsourced attribution."
+    },
+    {
+      "match": "Spiritual maturity is not about",
+      "occurrence": 1,
+      "provenance_status": "unverified",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L1690",
+      "actual_author": "Wayne Teasdale",
+      "work": "proposed editions: A Monk in the World and The Mystic Heart - not located in either",
+      "family": "fam-teasdale",
+      "notes": "Audit: UNVERIFIED - source lead unresolved. Teasdale is a real author and the thought matches his interspiritual, engaged-monastic thesis exactly. THEMATIC FIT PROVES NOTHING."
+    },
+    {
+      "match": "Ancient spiritual traditions and now",
+      "occurrence": 1,
+      "provenance_status": "unverified",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L1696",
+      "actual_author": "Dery Dyer",
+      "work": "The Return of Collective Intelligence (Bear & Company, 2020) - subject matches, sentence not located",
+      "notes": "Audit: Dyer is a real author, former editor of Costa Rica's Tico Times."
+    },
+    {
+      "match": "Coming together is a beginning",
+      "occurrence": 1,
+      "provenance_status": "unverified",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L1700",
+      "actual_author": "unknown - competing attribution to Edward Everett Hale",
+      "notes": "Audit: UNVERIFIED, UNKNOWN. Shows BOTH instability markers at once - a competing attribution (Hale, 1822-1909, whose death predates the attribution) and no primary source."
+    },
+    {
+      "match": "human race is challenged more",
+      "occurrence": 1,
+      "provenance_status": "paraphrase_adapted",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L1714",
+      "actual_author": "Rachel Carson",
+      "work": "documented original in Paul Brooks, The House of Life: Rachel Carson at Work (1972)",
+      "notes": "Audit: EVOLVED APHORISM / RECOVERABLE ANCESTOR. A documented Carson original exists and the manuscript's wording departs from it."
+    },
+    {
+      "match": "Maps are essential",
+      "occurrence": 1,
+      "provenance_status": "unverified",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L1726",
+      "actual_author": "Mark Jenkins",
+      "work": "SOURCE LEAD: Mark Jenkins, The Hard Way (2003)",
+      "notes": "Audit: UNVERIFIED, origin UNKNOWN, with a source lead. WITHDRAWN AS AN INTERNAL-ORIGIN CANDIDATE - it had been flagged on conceptual fit with the book's own thesis, and the external source trail dissolved that. Specimen for the rule that external-circulation search runs BEFORE the internal-origin flag, not after."
+    },
+    {
+      "match": "seek to discover the best in others",
+      "occurrence": 1,
+      "provenance_status": "unverified",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L1746",
+      "actual_author": "William Arthur Ward",
+      "work": "proposed edition: Fountains of Faith (1970)",
+      "bibliography_relationship": "MISSING - no Ward entry",
+      "notes": "Audit: Ward (1921-1994) is a real and heavily anthologised writer of inspirational maxims; the line is consistently his, but no work or page is attested."
+    },
+    {
+      "match": "ability to reach unity in diversity",
+      "occurrence": 1,
+      "provenance_status": "unverified",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L1754",
+      "actual_author": "Mahatma Gandhi",
+      "bibliography_relationship": "'Young India' cited without volume or date",
+      "notes": "Audit: quote-site attestation only. Needs checking against the Collected Works of Mahatma Gandhi."
+    },
+    {
+      "match": "Our own decision to view the universe",
+      "occurrence": 1,
+      "provenance_status": "unverified",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L1790",
+      "actual_author": "Terence McKenna",
+      "family": "fam-mckenna-unresolved",
+      "notes": "Audit: not located in Wikiquote, Goodreads, or the organism.earth McKenna transcript archive - a substantial searchable library of his talks. ABSENCE THERE IS MORE MEANINGFUL THAN ABSENCE FROM QUOTE SITES (corpus-density principle)."
+    },
+    {
+      "match": "past is a place of reference",
+      "occurrence": 1,
+      "provenance_status": "verified_exact",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L1828",
+      "actual_author": "Roy T. Bennett",
+      "work": "The Light in the Heart",
+      "bibliography_relationship": "CORRECT - third correctly-supported citation in Ch8",
+      "notes": "Audit: confirmed on the author's own publication channel, which meets the official-source standard. The census records its own correction here: Bennett had been flagged as a figure of uncertain identity because the book is an aphorism collection, and that suspicion-by-genre was withdrawn."
+    },
+    {
+      "match": "only thing worse than being blind",
+      "occurrence": 1,
+      "provenance_status": "unverified",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L1854",
+      "actual_author": "unknown",
+      "notes": "Audit: UNVERIFIED, origin UNKNOWN. No primary source locatable for this wording, and it sits inside a FAMILY OF COMPETING PHRASINGS - the signature of a saying polished in transmission."
+    },
+    {
+      "match": "Intelligence is the ability to adapt",
+      "occurrence": 1,
+      "provenance_status": "misattributed",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L1858",
+      "actual_author": "not Stephen Hawking - nearest ancestor is a Leon C. Megginson paraphrase of Darwin (1963)",
+      "family": "fam-darwin-megginson",
+      "notes": "Audit: no evidence Hawking said it; the Washington Post ran a piece specifically investigating the attribution (2018). The Megginson paraphrase later hardened into a pseudo-Darwin quotation."
+    },
+    {
+      "match": "Knowing yourself is the beginning",
+      "occurrence": 1,
+      "provenance_status": "misattributed",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L1340 and L1770",
+      "actual_author": "not Aristotle",
+      "family": "fam-know-thyself",
+      "notes": "SECOND OCCURRENCE, still active. The Ch6 occurrence was removed at 4A; this one survives because 4A's scope was section-opening epigraphs and the two occurrences differ in function. Audit: not located in the Aristotelian corpus; quote sites variously credit Aristotle, Plato, Socrates and Laozi. The underlying maxim is the Delphic 'Know thyself'."
+    },
+    {
+      "match": "Alone we can do so little",
+      "occurrence": 2,
+      "provenance_status": "verified_variant",
+      "actual_author": "Helen Keller",
+      "family": "fam-keller-spoken",
+      "notes": "Second occurrence of the same saying, Ch8. Spoken line documented in Lash, Helen and Teacher (1980).",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L1706"
+    }
+  ],
+  "historical_entries": [
+    {
+      "match": "Knowing yourself is the beginning",
+      "occurrence": 1,
+      "family": "fam-know-thyself",
+      "notes": "Ch6 occurrence, removed at 4A. Its Ch8 twin is STILL ACTIVE - same misattributed saying, verbatim, same attribution. Family link added so the surviving occurrence cannot be lost sight of.",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L1340 and L1770"
+    }
+  ]
+}
