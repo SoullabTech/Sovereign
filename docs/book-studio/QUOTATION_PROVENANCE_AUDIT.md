@@ -2,7 +2,7 @@
 
 **Source of record:** `docs/book-studio/ELEMENTAL_ALCHEMY_FROM_ORIGINAL_FULL.md`
 **Opened:** 2026-09-01, after Chapter 10 closed developmental adjudication.
-**Status:** IN PROGRESS — 43 of 137 adjudicated. **Chapter 5 CLOSED (30/30).** Chapter 8: 7 of 23.
+**Status:** IN PROGRESS — 47 of 137 adjudicated. **Chapter 5 CLOSED (30/30).** Chapter 8: 11 of 23.
 
 ## Scope
 
@@ -782,6 +782,74 @@ Physical Law*; otherwise it becomes an `ORPHAN CANDIDATE`.
 Different author form and different publisher for one title. Add form
 normalization to the reconstruction workflow.
 
+### Chapter 8 — second tranche
+
+**L1858 · Stephen Hawking — "Intelligence is the ability to adapt to change."**
+`MISATTRIBUTED`. No evidence Hawking said it; the *Washington Post* ran a piece
+specifically investigating the attribution (2018). The nearest real ancestor is
+a **Leon C. Megginson** paraphrase of Darwin (1963), later hardened into a
+pseudo-Darwin quotation — so the line is a misattribution twice over.
+**Second `SPURIOUS SUPPORT`:** the Ch8 bibliography lists *A Brief History of
+Time* (Bantam, 1988) in apparent support.
+
+**L1616 · William James — "Thoughts become perception, perception becomes reality. Alter your thoughts, alter your reality."**
+`UNVERIFIED` · origin `UNKNOWN`. Quote-site and merchandise attestation only;
+nothing scholarly, and the register is modern self-help rather than James's
+prose. **But it circulates widely outside this manuscript**, which rules out
+local coinage. *Auditor's correction:* I had flagged this as a likely
+internal-origin candidate on register alone. Register is not evidence of origin
+when the line is mass-circulated elsewhere.
+
+**L1696 · Dery Dyer — "Ancient spiritual traditions and now science tell us that each of us is a member of an intricately interconnected… whole…"**
+`UNVERIFIED — source lead unresolved`. Dyer is a real author — former editor of
+Costa Rica's *Tico Times* — and *The Return of Collective Intelligence: Ancient
+Wisdom for a World out of Balance* (Bear & Company, 2020) is a real book whose
+subject matches the quotation exactly.
+**And the Ch8 bibliography cites precisely that book.** This is a **correctly
+supported citation** — worth recording, because it demonstrates the bibliography
+is not uniformly unreliable and the reconstruction must not assume it is.
+**Rights: `LIKELY PROTECTED` · `STANDARD`** — a substantial sentence from a 2020
+book.
+
+### First Chapter 8 internal-origin candidate
+
+**L1726 · Mark Jenkins — "Maps are essential. Planning a journey without a map is like building a house without drawings."**
+`UNVERIFIED` · origin **`INTERNAL-ORIGIN CANDIDATE`**, pending investigation.
+
+The signature is the Ch5 Wilber/Soulplay shape rather than the Shaw/Feynman
+shape: the line **states the book's own governing metaphor** — map, journey,
+orientation — which is the declared spine of Chapter 10's "Finding Our Place" and
+of the Spiralogic argument generally. It is attributed to a name obscure enough
+that no source is locatable, and it carries **no Ch8 bibliography entry**
+(`MISSING`), unlike the well-supported Dyer line beside it.
+
+Not yet established. Requires the same three-part convergence used for the Ch5
+opening pair: no locatable external source · register matching adjacent
+manuscript prose · placement functioning as external authorization of the book's
+own voice. Two of three are present.
+
+### Chapter 8 bibliography — mixed, not uniformly broken
+
+- `SPURIOUS SUPPORT` ×2 — Feynman *The Character of Physical Law*; Hawking
+  *A Brief History of Time*.
+- **Correct support** — Dyer *The Return of Collective Intelligence*; Brown
+  *Daring Greatly* (pending wording check).
+- `MISSING` — Rumi/Barks (verbatim copyrighted translation quoted); Mark Jenkins.
+- `ORPHAN CANDIDATE` ×6 — Rowan Williams, Confucius, Dewey, Milton, Goldsmith,
+  O'Donohue *The Four Elements*: listed under Ch8 with no matching quotation
+  found. Each requires a body-dependency check before promotion.
+- **Watch** — Roy T. Bennett, *The Light in the Heart* (Bennett Books, 2016).
+  Bennett is a figure of uncertain identity whose "book" functions largely as an
+  aphorism compilation; the L1828 quotation needs its own provenance check rather
+  than resting on that entry.
+
+### Chapter 8 — still open (12 of 23)
+
+L1660 Brené Brown · L1678 Shaw #2 · L1690 Wayne Teasdale · L1700 Henry Ford ·
+L1706 Helen Keller · L1714 Rachel Carson · L1736 Tagore · L1746 William Arthur
+Ward · L1776 Martin Luther King Jr. · L1790 Terence McKenna · L1828 Roy T.
+Bennett · L1854 Helen Keller #2.
+
 ---
 
 ## Quoted-material copyright / permissions review — publication/legal
@@ -806,6 +874,7 @@ census.**
 | Mary Oliver (L872) | `LIKELY PROTECTED` | `HIGH` |
 | Bear Heart (L926) — paragraph-length | `LIKELY PROTECTED` | `HIGH` |
 | Coleman Barks / Rumi (L1666) — verbatim © 1995 | `LIKELY PROTECTED` | `HIGH` |
+| Dery Dyer (L1696) | `LIKELY PROTECTED` | `STANDARD` |
 | John O'Donohue (L1106) | `LIKELY PROTECTED` | `HIGH` |
 | Emma Craufurd / Weil (L1062) | `TERM UNCERTAIN` | `STANDARD` |
 | Maya Angelou (L1042) | `PROTECTABILITY UNCERTAIN` | `STANDARD` |
