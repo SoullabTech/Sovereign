@@ -1567,12 +1567,27 @@ matched **neither** the claimed author nor the true source — Feynman's wording
 not Haldane's, Shaw's is not Whyte's, Drucker's is neither Gabor's nor Kay's. So
 the remedy has always been removal.
 
-**This one may be different.** Zantamata is living, identifiable, and appears to
-be the author of *this wording*. If an edition or author-channel check confirms
-the exact sentence is hers, **doctrine rule 1 applies and the quotation can
-simply be reattributed** — the first time in 67 items that the cheapest remedy is
-available. Verify the wording against Zantamata's own publication before
-applying it.
+**This one is different — and it is now the canonical rule-1 specimen.**
+
+**`MISATTRIBUTED` → `REATTRIBUTION CANDIDATE: DOE ZANTAMATA`**
+- **Transmission:** `SOURCE DISPLACEMENT`
+- **Wording:** **exact match to the Zantamata form**, reproduced as her own text
+  in *Happiness in Your Life — Book Three: Forgiveness* (2019), and circulating
+  under her name by at least 2014 — well before much of the later Angelou
+  attribution.
+- **Rights:** `PROTECTABILITY UNCERTAIN` · `STANDARD` — a very short modern
+  aphorism, not automatically a high-risk literary excerpt.
+
+**One precision:** the accessible evidence for the 2019 book is secondary
+reproduction, not a page image of the edition. **Page/edition confirmation goes
+into the bibliography reconstruction.** But the authorial provenance is already
+strong enough that the quotation should **not** be removed merely for
+misattribution.
+
+> **The manuscript chose the wrong name, but the quotation itself survives intact
+> once returned to its actual author.**
+
+That is what distinguishes rule 1 from every other case in the audit.
 
 #### The two Angelou quotations — a fifth confirmation of the retired rule
 
