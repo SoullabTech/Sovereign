@@ -1683,3 +1683,62 @@ has drifted toward what the book wants to say. The ancestor has not.**
 **One provenance failure, and the family did exactly what it was built to do:** it
 put the three side by side, and **two of them turned out not to be three occurrences
 at all.**
+
+---
+
+# 4I · BUDDHA TRIO — APPLIED · 2026-09-01
+
+**Misattribution protocol applied. All three removed.** `GATE PASSED`.
+
+| | Location | Action |
+|---|---|---|
+| **L47** | Disclaimer | quotation removed; the author's aspiration sentence now closes the paragraph **in his own voice** |
+| **L190** | Call to Adventure | quotation removed |
+| **L1899** | Mind-Body Coherence | block epigraph removed; **the section's own prior line is the better close** |
+
+**No prose was composed on the author's behalf at any of the three.** Each site
+closes on a sentence already in the manuscript.
+
+**Longchenpa conversion declined**, recorded on the lifecycle record: his thought is
+that *everything is illusion, therefore perfect, therefore laughable* — a Dzogchen
+claim about the emptiness of appearances. The section claims **the body's systems
+cohere under aether**. Importing him would attach a genuine source to an argument it
+does not support.
+
+**Still open and untouched by this ruling:** the **duplication of the disclaimer
+passage** — a structural question, not a quotation one — and the **Kalama Sutta**
+item in Call to Adventure, which carries its own `WRONG TRANSLATOR CITED` defect.
+
+## ⚠️ Two defects the removals exposed
+
+**1 · I had hardcoded line numbers in the boundary detector.** `BOUNDARY = {519,
+1686}` — so the moment the manuscript shifted, **two records silently stopped being
+detected.** The register lost them and the gate caught it as a count mismatch.
+
+**The whole reason identity is hashed rather than positional is that line numbers
+move.** I built that principle into identity and then violated it three files later
+in the detector. **Fixed: boundary records are matched by text.**
+
+**2 · The gate's current-field total was a constant.** `len(R) == 130` was true only
+while nothing had been removed — **the first real editorial action would have failed
+it.** Replaced with a reconciliation: `active + historical == frozen population`,
+which holds across removals because a removal moves a record between layers rather
+than destroying it.
+
+> **A frozen population is not a frozen count.** The freeze fixes *which objects
+> exist*; editorial work moves them between layers. **A gate that checks the count
+> mistakes the two.**
+
+**And a third, smaller:** a migration entry whose quotation has since been removed is
+**not "unmatched"** — it is **superseded by a lifecycle record.** Now reported as
+such, so a genuine mapping failure stays visible instead of being buried in expected
+noise.
+
+## Standing
+
+**127 active** (108 block + 19 inline) · **31 historical** · **158 total** —
+reconciling to the frozen 130 + 28.
+**Block lifecycle: 137 = 108 active + 29 inactive** ✅
+**Inline lifecycle: 19 active + 2 inactive**
+
+**4I remaining: 18 records** — Teasdale next.

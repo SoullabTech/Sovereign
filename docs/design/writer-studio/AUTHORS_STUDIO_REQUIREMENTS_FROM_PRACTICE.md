@@ -1362,3 +1362,45 @@ decisions, **the workflow bends and the register does not.**
 
 **Note the verb: *reviewing* together, not *ruling* together.** The honest offer is
 shared inspection; the outcome stays per-occurrence.
+
+---
+
+## MEMBER-FACING PROCESS — the whole of it
+
+**Everything the register does reduces to this on the writing surface:**
+
+> ### Review related quotes together so we can see the pattern, but decide each quote on its own.
+>
+> ## **Review together. Decide individually.**
+
+**Order of work:**
+1. **Quotes that repeat** — same source, different jobs in the book.
+2. **Quotes by the same author** where one already works — decide whether the others add anything new.
+3. **Other linked quotes.**
+4. **The remaining individual quotes.**
+
+**For every quote, two questions:**
+> **Does this voice belong here?**
+> **If yes — what is it doing for the book?**
+
+**Then one choice:** **keep it · correct it · connect it · rewrite it in your voice · remove it.**
+
+**And one standing rule that needs no deliberation:**
+> **A misattribution is edited or removed. Always.**
+
+*Nothing else about the register needs to reach the member: not families, not
+lifecycle states, not passes, not gates. **"Review together, decide individually"
+is the entire method in five words.***
+
+### Requirement — a frozen population is not a frozen count
+
+**Grounding event:** the first editorial removals after the population freeze
+**failed a gate that asserted `record_count == 130`.** The freeze fixes **which
+objects exist**; editorial work **moves them between layers**. A gate checking the
+count mistakes the two. **Reconcile `active + historical` against the frozen
+population instead.**
+
+**And in the same action, a second defect:** two boundary records were identified by
+**hardcoded line number**, so a manuscript edit silently stopped them being detected
+— in a system whose identity scheme exists *because line numbers move*. **Positional
+identity must not survive anywhere once semantic identity exists.**

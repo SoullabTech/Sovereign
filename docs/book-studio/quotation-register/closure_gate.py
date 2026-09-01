@@ -45,7 +45,10 @@ ni_blk = sum(1 for r in R if r["display_form"] == "block_epigraph" and r["proven
 check("block reconciliation: total = migrated + pending + documented not_investigated",
       blk == pend + mig_blk + ni_blk,
       f"{blk} = {mig_blk} migrated + {pend} pending + {ni_blk} documented-deferred")
-check("current-field total", len(R) == 130, f"{len(R)} active records")
+hb2 = sum(1 for h in H if h.get("former_form", "block") == "block")
+hi2 = sum(1 for h in H if h.get("former_form") == "inline")
+check("current field reconciles against the frozen population",
+      len(R) + len(H) == 130 + 28, f"{len(R)} active + {len(H)} historical = {len(R)+len(H)} (frozen 130 + 28)")
 check("historical entries all matched exactly one lifecycle record",
       not rep.get("historical_unmatched"), str(rep.get("historical_unmatched", [])))
 # ---- Stage 4A tombstone integrity gate ----
@@ -79,8 +82,11 @@ check("historical records carry no active manuscript span",
       all(h.get("active_span") is None for h in H), f"{len(H)} historical")
 check("historical ids disjoint from current ids",
       not ({h["id"] for h in H} & {r["id"] for r in R}))
-check("historical block lifecycle: 137 = 109 active + 28 inactive",
-      blk + len(H) == 137, f"{blk} active + {len(H)} inactive")
+hb = sum(1 for h in H if h.get("former_form", "block") == "block")
+check("block lifecycle: 137 = active block + inactive block",
+      blk + hb == 137, f"{blk} active + {hb} inactive = {blk + hb}")
+hi = sum(1 for h in H if h.get("former_form") == "inline")
+print(f"  NOTE  inline lifecycle: {sum(1 for r in R if r['display_form'] != 'block_epigraph')} active + {hi} inactive")
 sh = {}
 for h in H: sh[h["record_state"]] = sh.get(h["record_state"], 0) + 1
 print(f"  NOTE  historical states: {sh}")

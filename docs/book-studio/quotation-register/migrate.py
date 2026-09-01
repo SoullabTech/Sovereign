@@ -44,7 +44,13 @@ def main():
         hits = [r for r in data["records"]
                 if m in norm(r["text"]) and r["occurrence"] == occ]
         if not hits:
-            report["unmatched"].append(e["match"]); continue
+            gone = [t for t in json.loads(TOMB.read_text())["records"]
+                    if norm(e["match"]) in norm(t["text"])]
+            if gone:
+                report.setdefault("superseded_by_removal", []).append(e["match"])
+            else:
+                report["unmatched"].append(e["match"])
+            continue
         if len(hits) > 1:
             report["ambiguous"].append({"match": e["match"],
                                         "ids": [h["id"] for h in hits]}); continue
@@ -100,6 +106,7 @@ def main():
             "evidence_location": t.get("evidence_location"),
             "notes": t.get("notes"),
             "provenance_history": t.get("provenance_history", []),
+            "former_form": t.get("former_form", "block"),
             "active_span": None,
         })
     hist_entries = []

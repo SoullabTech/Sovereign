@@ -44,7 +44,7 @@ This book is intended for inspirational, informational, explorational, and educa
 
 While my goal is to honor your path and offer support, nothing replaces your own experiences, sensibilities, and those augmenting sources of wisdom from others who have dedicated their lives to supporting intrepid souls like you. Always seek advice from wise elders, colleagues, trusted professionals, and experts in health, wellness, spiritual, psychological, and emotional matters who match your sensibilities — especially the poets and mystics. Think of this as honoring and support for your Inner Guides in harmony with the experts out there, ensuring you have the best support possible.
 
-I aspire to offer guidance and support to all who seek the spiritual path and who want to explore the interconnectedness of our many ways of knowing, being, and becoming in the world. As the Buddha says, *"If you knew how perfect it all is you'd throw your head up at the clouds and laugh."*
+I aspire to offer guidance and support to all who seek the spiritual path and who want to explore the interconnectedness of our many ways of knowing, being, and becoming in the world.
 
 Take what resonates, leave what doesn't, and may your path be illuminated with joy, laughter, and profound insights.
 
@@ -186,8 +186,6 @@ This book is a collection of interconnected insights, conversations, and experie
 *"Do not believe in anything simply because you have heard it. Do not believe in traditions because they have been handed down for many generations. Do not believe anything because it is spoken and rumored by many. Do not believe in anything simply because it is found written in your religious books. Do not believe in anything merely on the authority of your teachers and elders. But after observation and analysis, when you find that anything agrees with reason and is conducive to the good and benefit of one and all, then accept it and live up to it." – Buddha*
 
 While my goal is to honor your path and offer support, please remember that nothing replaces your own experiences, sensibilities, and the wisdom from others who have dedicated their lives to supporting intrepid souls like you. Always seek advice and counsel from wise elders, colleagues, trusted professionals, and experts in health, wellness, spiritual, psychological, energetic, and emotional matters—especially the shaman, poets and mystics. Yet always follow your inner knowing. Think of this as honoring and supporting your Inner Guides in harmony with external experts, ensuring you have the best support possible.
-
-As the Buddha says, *"If you knew how perfect it all is you'd throw your head up at the clouds and laugh."*
 
 Take what resonates, leave what doesn't, and may your path be illuminated with joy, laughter, and profound insights.
 
@@ -1895,8 +1893,6 @@ It is, itself, a torus field of self-contained wisdom, a central vortex of all l
 The heart communicates with our intuition (fire) and emotions (water) to regulate our lives. It directs and aligns the systems of the body (earth) like a conductor of an orchestra, harmonizing all systems in symphony with one another.
 
 The heart's complex nervous system is functionally independent, and it communicates with the brain in a two-way communication system as they coordinate between head and heart. This is key to gaining intuitive wisdom, emotional intelligence, body consciousness, and mental mastery. When we are in harmony, we function at our best. At the heart of it all is the aether element holding the calm middle ground.
-
-*"When you realize how perfect everything is, you will tilt your head back and laugh at the sky." — Buddha*
 
 ### Breathe in the Expanded Calm
 

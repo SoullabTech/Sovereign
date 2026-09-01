@@ -320,6 +320,45 @@
       "editorial_status": "REMOVE - the book already says it better and earlier: 'Awareness is paramount'",
       "evidence_location": "STAGE4 4A reconsideration",
       "notes": "Recorded as the author's lean rather than a hard ruling. Reversible in one line if Tolle belongs to the book's philosophical company."
+    },
+    {
+      "state": "removed",
+      "stage": "Stage 4I",
+      "former_form": "inline",
+      "last_location": "Front matter - Disclaimer",
+      "text": "If you knew how perfect it all is you'd throw your head up at the clouds and laugh.",
+      "attributed_as": "the Buddha",
+      "provenance_status": "misattributed",
+      "family": "fam-perfect-laugh",
+      "editorial_status": "REMOVE - misattribution protocol. Quotation frame removed; the author's aspiration sentence now closes the paragraph in his own voice. No prose composed on his behalf.",
+      "evidence_location": "STAGE2C_INLINE_QUOTATION_CENSUS.md #1-2",
+      "notes": "Its near-duplicate at Call to Adventure was removed in the same action. THE DUPLICATION OF THE DISCLAIMER PASSAGE ITSELF REMAINS AN OPEN STRUCTURAL QUESTION, untouched by this ruling."
+    },
+    {
+      "state": "removed",
+      "stage": "Stage 4I",
+      "former_form": "inline",
+      "last_location": "Ch1 - Call to Adventure",
+      "text": "If you knew how perfect it all is you'd throw your head up at the clouds and laugh.",
+      "attributed_as": "the Buddha",
+      "provenance_status": "misattributed",
+      "family": "fam-perfect-laugh",
+      "editorial_status": "REMOVE - misattribution protocol.",
+      "evidence_location": "STAGE2C_INLINE_QUOTATION_CENSUS.md #1-2",
+      "notes": "This section still carries the Kalama Sutta quotation, which has its own WRONG TRANSLATOR CITED defect and is unadjudicated."
+    },
+    {
+      "state": "removed",
+      "stage": "Stage 4I",
+      "former_form": "block",
+      "last_location": "Ch9 - Mind-Body Coherence: The Aetheric Way of the Heart",
+      "text": "When you realize how perfect everything is, you will tilt your head back and laugh at the sky.",
+      "attributed_as": "Buddha",
+      "provenance_status": "misattributed",
+      "family": "fam-perfect-laugh",
+      "editorial_status": "REMOVE - misattribution protocol. It closed a physiological argument with a gesture of cosmic laughter, releasing the argument rather than advancing it; the section's own prior line is the better close.",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L1939",
+      "notes": "LONGCHENPA CONVERSION DECLINED. His thought - everything is illusion, therefore perfect, therefore laughable - is a Dzogchen claim about the emptiness of appearances. The section claims the body's systems cohere under aether. Importing him would attach a genuine source to an argument it does not support. A recovered ancestor is only a repair when the ancestor's actual thought belongs at that location."
     }
   ]
 }

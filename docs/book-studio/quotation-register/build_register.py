@@ -25,7 +25,8 @@ POSSESSIVE = re.compile(r"(?:In (?:your|his|her|their) words)[,:]?\s*$", re.I)
 ANON = re.compile(r"(There is a saying|It is said|As it is said|The\s+\w+\s+admonition)[,:]?\s*$", re.I)
 
 
-BOUNDARY = {519, 1686}   # unattributed quoted spans awaiting a scope ruling
+BOUNDARY_TEXT = ("if we were good, we would keep growing",
+                 "I think therefore I am")   # unattributed quoted spans, matched by text
 
 
 def norm(t):
@@ -149,7 +150,7 @@ def build():
                     form = "inline_anonymous_attribution"
                 if not attr and form is None and POSSESSIVE.search(before[-40:]):
                     form = "inline_personal_communication"
-                if form is None and i in BOUNDARY:
+                if form is None and any(b in m.group(1) for b in BOUNDARY_TEXT):
                     form = "inline_unattributed"
                 if form is None:
                     continue
