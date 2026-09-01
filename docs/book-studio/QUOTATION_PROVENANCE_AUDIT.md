@@ -2799,10 +2799,14 @@ clause order. *Sphaera* is the point of the image — infinity in every directio
 `VERIFIED VARIANT` · `MEDIATED TRANSLATION` (fifth instance). *Memories, Dreams,
 Reflections*, ed. Aniela Jaffé, trans. Richard and Clara Winston. Published text
 reads "there is only **a** circumambulation"; the manuscript drops the article.
-**Bibliography:** the correct work (*MDR*) appears **nowhere in the book**. Ch6
-lists Jung's *Modern Man in Search of a Soul* as an `ORPHAN CANDIDATE` with no
-matching Ch6 quotation — **that orphan is probably a misfiled Ch2 entry**, though
-it also names the wrong work. `MISSING` + likely `MISFILED SOURCE`.
+**Bibliography — one definite finding, one open lead.**
+- **Definite:** the correct work, *Memories, Dreams, Reflections*, appears
+  **nowhere in the book**. `MISSING`.
+- **Open lead, not closed:** Ch6 lists Jung's *Modern Man in Search of a Soul* as
+  an `ORPHAN CANDIDATE` with no matching Ch6 quotation. Whether it **migrated
+  from Ch2** is one step short of established — it also names the wrong work for
+  this quotation. **Held as a reconstruction lead until the Ch6 orphan
+  relationship is checked directly.**
 **Rights: `LIKELY PROTECTED` · `STANDARD`** — the Winston translation.
 
 **Still open in Ch2 (2):** L333 Alan Watts and L417 Johannes Kepler. Both have
@@ -2813,35 +2817,60 @@ into verdict.
 
 ---
 
-## DOCTRINE-RELEVANT FINDING — alterations drift toward the local argument
+## Cross-cutting flag — `HOST-ALIGNED ALTERATION`
 
-Three verified-source quotations across three chapters were each altered in a way
-that **moves the sentence toward the thesis of the chapter it sits in**:
+**Not a transmission pattern.** It cuts across Pattern 2, unsupported adaptation
+claims, and potentially other provenance states.
 
-| Item | Source wording | Manuscript wording | Chapter thesis served |
-|---|---|---|---|
-| **L1115 Campbell** (Ch6 Water) | "all the **world**" | "all the **hells**" | emotional depths, shadow |
-| **L1449 Lao Tzu** (Ch7 Earth) | "**It** does not hurry" | "**Nature** does not hurry" | natural pace, ecology |
-| **L397 Cusa** (Ch2 Torus) | "infinite **sphere**" | "infinite **circle**" | circles, torus, spiral |
+> **`HOST-ALIGNED ALTERATION`** — the manuscript wording differs from its
+> recoverable source in a way that makes the quotation **fit the surrounding
+> argument more closely than the source wording does**.
 
-In each case the alteration is small, defensible-looking, and **directional** —
-it makes the quotation fit its host chapter better than the original did.
+**Canonical specimens:**
 
-**Why this matters:** transmission drift is normally *undirected* — words fall
-out, clauses simplify, registers smooth. **Drift that consistently moves toward
-the quoting text's argument is not transmission; it is selection or adjustment at
-the point of use.** It does not establish who made the change, or whether it was
-made deliberately, or whether the manuscript inherited an already-altered form
-that happened to suit.
+| Item | Source → manuscript | Host argument better served |
+|---|---|---|
+| **L1115 Campbell** (Ch6) | world → **hells** | Water / emotional depths, shadow |
+| **L1449 Lao Tzu** (Ch7) | It → **Nature** | Earth / natural pace, ecology |
+| **L397 Cusa tradition** (Ch2) | sphere → **circle** | Ch2 / circle and torus architecture |
 
-But it is a distinct signal from the hardening cases, and it affects the
-restoration test: **where an alteration is directional, restoring the authentic
-wording will predictably weaken the local argument** — which is precisely when an
-author is most tempted to keep the altered form. Flag these for explicit
-authorial attention rather than routine repair.
+**The flag says nothing about who made the alteration, or when.** It may have
+entered through circulation long before the manuscript saw it. What is
+established is the **functional relationship between variant and host context**.
 
-**Three instances. Recorded as an observation, not yet a named class** — and to
-be watched for across the remaining items.
+**Formulation — evidence-backed, and deliberately narrower than an earlier draft
+of mine:**
+
+> **When a variant's departures from source consistently improve its fit with the
+> host argument, the alteration is editorially consequential and must be
+> adjudicated rather than mechanically normalized.**
+
+*(An earlier draft claimed "transmission drift is normally undirected." That is
+not established empirically — historical quotation drift can certainly be shaped
+by repeated rhetorical usefulness. Withdrawn.)*
+
+### The restoration test — now two questions
+
+1. Does restoring the authentic wording **preserve the underlying claim**?
+2. Does restoring it **materially weaken the specific editorial function** the
+   quotation currently performs?
+
+**Yes to (2) does not justify keeping the inaccurate quotation.** It means
+**`AUTHORIAL ADJUDICATION REQUIRED`** — the manuscript has become **dependent on
+the mutation**.
+
+The later choices are then:
+- restore the authentic wording and accept the weaker or different local fit;
+- **rewrite the surrounding prose** so it no longer depends on the mutation;
+- retain the underlying idea as clearly adapted material — **only where a genuine
+  source relationship supports that label**;
+- or remove the quotation.
+
+> **What cannot be done: preserve the altered wording as a direct quotation
+> because it happens to work better.**
+
+All three specimens are flagged for the **authorial repair batch**, not routine
+repair.
 
 ### Chapter 2 bibliography — two notes
 
