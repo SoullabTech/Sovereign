@@ -3730,6 +3730,74 @@ time as an **opportunity**, not a correction.
 
 ---
 
+# ⚠ CENSUS SCOPE GAP — narrative source dependencies are not covered
+
+## What surfaced it
+
+**Ch4, L638–665: "The Story of the Four Yogis."** The manuscript opens it:
+*"Whenever I consider the ultimate path of the elements, I think of a story
+**Sadhguru tells** about four yogis."*
+
+**This is not a quotation and never entered the 137-item census.** It is a
+**narrative source dependency** — the manuscript retelling someone else's
+material **in its own words**, with an honest in-text attribution.
+
+> **The census covers attributed block quotations only.** Passages that draw on,
+> retell, summarize or structurally borrow from an identified source **are a
+> separate class and have never been audited.**
+
+**This is the first instance surfaced, and there are almost certainly others.**
+The Ch4 McKenna I Ching material, the Maya composite figure, the alchemical
+sequence discussions and the Spiralogic genealogy passages all likely qualify.
+
+**Required: a separate narrative-dependency pass** — after the quotation census
+closes, before the bibliography reconstruction, since these dependencies generate
+bibliography obligations the quotation map will not contain.
+
+## The Four Yogis passage specifically
+
+**Relayed evidence — NOT independently verified by me.** A YouTube recording of
+Sadhguru telling this story has been reported, with this content: Karma
+(body/action) · Jnana (intelligence) · Bhakti (emotion/devotion) · Kriya (energy);
+each path alone becomes partial and dismissive of the others; the four are forced
+together under one roof; they embrace the deity together; **God appears only when
+the four come together.**
+
+**I have not seen the recording.** Recorded as the author's report pending the
+**URL or video ID**, which is required for the citation.
+
+**If it holds, the status is:** `SADHGURU — VERIFIED SPOKEN SOURCE` for the
+four-path architecture, the temple/deity story, and the teaching that their
+integration makes the divine present. **Cite the recording itself**, not
+*Inner Engineering*, if the manuscript is drawing on the spoken telling.
+
+**Keep separate from L173.** The video does **not** verify the *sambar → pizza*
+wording unless that occurs in it or another Sadhguru source. **Two distinct
+provenance objects.**
+
+## What the manuscript adds — and it is the manuscript's own
+
+Sadhguru's four paths, as reported, map to **faculties**: body · intelligence ·
+emotion · energy. **The elemental correspondence is the book's own contribution:**
+
+> Kriya → **Fire** · Bhakti → **Water** · Karma → **Earth** · Jnana → **Air**
+
+**This is legitimate original work layered on an attributed source**, and the
+in-text framing — *"a story Sadhguru tells"* — is honest about the borrowing
+while not claiming the mapping is his. **Good practice, and worth protecting in
+repair.**
+
+## Conceptual note
+
+The story's structure — four partial paths, forced into relationship, **the
+divine appearing only through their joining** — is a close external witness to the
+**canonical Aether doctrine**: *Aether is the God within, revealed through the
+relationship and integration of the four.* Possibly the clearest external
+corroboration of the book's own architecture anywhere in the manuscript.
+
+
+---
+
 ## Quoted-material copyright / permissions review — publication/legal
 
 *Renamed from "copyrighted-lyrics rights clearance."* The three Gabriel lyrics
