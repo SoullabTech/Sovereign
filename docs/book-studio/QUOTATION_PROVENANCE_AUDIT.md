@@ -2,7 +2,7 @@
 
 **Source of record:** `docs/book-studio/ELEMENTAL_ALCHEMY_FROM_ORIGINAL_FULL.md`
 **Opened:** 2026-09-01, after Chapter 10 closed developmental adjudication.
-**Status:** IN PROGRESS — 59 of 137 adjudicated. **Chapter 5 CLOSED (30/30). Chapter 8 CLOSED (23/23).**
+**Status:** IN PROGRESS — 61 of 137 adjudicated. **Chapter 5 CLOSED (30/30). Chapter 8 CLOSED (23/23).**
 
 ## Scope
 
@@ -1308,6 +1308,53 @@ origin status → transmission pattern → rights status → bibliography relati
   confidence.** One unsupported saying copied twice is still one unsupported
   saying.
 
+### Chapter 6 — first tranche
+
+**L1213 · "Michael Pollen" — "Our task in life consists precisely in a form of letting go of fear and expectations, an attempt to purely give oneself to the impact of the present."**
+
+**The byline is misspelled.** The bibliography has it right — "Pollan, Michael.
+*How to Change Your Mind.* Penguin Press, 2018" — while the in-text attribution
+reads **"Michael Pollen"**. A definite, trivially fixable defect independent of
+provenance.
+
+`UNVERIFIED — source lead unresolved`. The line is placed in *How to Change Your
+Mind* (2018) and the bibliography cites it correctly. **But flag the risk:** the
+register is unlike Pollan's own prose — it reads as translated
+phenomenological writing — and *How to Change Your Mind* quotes many other
+voices at length. If the sentence is Pollan **quoting someone else**, attributing
+it to him is `SOURCE DISPLACEMENT`. Edition check required.
+**Rights: `LIKELY PROTECTED` · `STANDARD`.**
+
+**L1231 · Leonard Cohen — "There is a crack in everything, that's how the light gets in."**
+
+`VERIFIED VARIANT/TRANSLATION` — the actual lyric is "There is a crack, **a
+crack** in everything / That's how the light gets in"; the manuscript drops the
+repetition.
+
+**`WRONG SOURCE/WORK`, and it changes the rights profile entirely.** The
+bibliography cites ***Selected Poems, 1956–1968*** (Viking, 1968). The line is
+from **"Anthem," on *The Future* (1992)** — a **song**, twenty-four years after
+that collection. So this is not a 1968 poem excerpt but **song lyrics**:
+**`LIKELY PROTECTED` · `HIGH`.**
+
+*This is the second time a wrong-work citation concealed a rights exposure* — the
+first being the Barks translation quoted as bare "Rumi". A misfiled source does
+not merely misinform the reader; it can hide a permissions obligation.
+
+**Peter Gabriel L1153 — song identified.** The Ch6 bibliography names it:
+**"Darkness," *Up*, Real World Records, 2002.** Correctly cited. That closes one
+of the three Gabriel identifications for the permissions review.
+
+### Chapter 6 bibliography — first observations
+
+- **Correct support** — Pollan (spelling aside), Nussbaum, Chödrön, Lorde,
+  Alcott, Fuller, Gawain, Gabriel/"Darkness".
+- **`WRONG SOURCE/WORK`** — Cohen (*Selected Poems* cited; "Anthem" quoted).
+- **`ORPHAN CANDIDATE` ×2** — Gibran (*Sand and Foam*), Jung (*Modern Man in
+  Search of a Soul*): listed, with no matching Ch6 quotation found.
+- **`MISSING`** — Thoreau, Lao Tzu, Buddha, Angelou, Thich Nhat Hanh, "Prasad
+  Mahes", Aristotle (×2).
+
 ---
 
 ## Quoted-material copyright / permissions review — publication/legal
@@ -1333,6 +1380,7 @@ census.**
 | Bear Heart (L926) — paragraph-length | `LIKELY PROTECTED` | `HIGH` |
 | Coleman Barks / Rumi (L1666) — verbatim © 1995 | `LIKELY PROTECTED` | `HIGH` |
 | Dery Dyer (L1696) | `LIKELY PROTECTED` | `STANDARD` |
+| Leonard Cohen, "Anthem" (L1231) — lyrics | `LIKELY PROTECTED` | `HIGH` |
 | John O'Donohue (L1106) | `LIKELY PROTECTED` | `HIGH` |
 | Emma Craufurd / Weil (L1062) | `TERM UNCERTAIN` | `STANDARD` |
 | Maya Angelou (L1042) | `PROTECTABILITY UNCERTAIN` | `STANDARD` |
