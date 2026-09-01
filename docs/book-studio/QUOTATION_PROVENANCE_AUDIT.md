@@ -2,7 +2,7 @@
 
 **Source of record:** `docs/book-studio/ELEMENTAL_ALCHEMY_FROM_ORIGINAL_FULL.md`
 **Opened:** 2026-09-01, after Chapter 10 closed developmental adjudication.
-**Status:** IN PROGRESS — 81 of 137 adjudicated. **Chapter 5 CLOSED (30/30). Chapter 8 CLOSED (23/23).**
+**Status:** IN PROGRESS — 82 of 137 adjudicated. **Chapter 5 CLOSED (30/30). Chapter 8 CLOSED (23/23).**
 
 ## Scope
 
@@ -1844,7 +1844,7 @@ Eight independent instances across three chapters. No longer incidental.
 
 **Still findings-only. No repair batch. No bibliography reconstruction.**
 
-**Chapter 7 — Earth: 7 of 16 in progress. Next after: Chapter 9 — Aether (12), then Chapter 9 — Aether (12)**, completing the
+**Chapter 7 — Earth: 8 of 16 in progress. Next after: Chapter 9 — Aether (12), then Chapter 9 — Aether (12)**, completing the
 five-element provenance picture before the lower-volume chapters.
 
 
@@ -2071,6 +2071,46 @@ Shared mechanism:
 They should be adjudicated together **as a translation problem**, not as two
 separate attribution problems — and the translation-resolution queue should
 treat them as one task.
+
+**L1377 · Bessel van der Kolk, M.D. — "The body keeps the score."**
+
+**The attribution is sound; the *object type* is the question.** Three distinct
+provenance objects were possible, and the evidence separates them:
+
+- **(a) a genuine sentence he writes in the text** — **not established.** The
+  search surfaced the *concept* framed in the book ("the body literally keeps
+  score of traumatic experiences") but **not the bare sentence as quoted**.
+- **(b) his book title** — **established.** *The Body Keeps the Score: Brain,
+  Mind, and Body in the Healing of Trauma* (Viking, 2014).
+- **(c) a title converted by circulation into a quotation** — **the most likely
+  reading on current evidence.**
+
+**Recorded: `UNVERIFIED AS QUOTATION` · attribution to van der Kolk sound at the
+level of the phrase · `TITLE-DERIVED` candidate.**
+
+**Lead to check, not asserted:** van der Kolk is reported to have published a
+1994 paper in the *Harvard Review of Psychiatry* under the same title — "The Body
+Keeps the Score: Memory and the Evolving Psychobiology of Posttraumatic Stress."
+If confirmed, the phrase is demonstrably his twenty years before the book, which
+strengthens the attribution **without** converting a title into a quotation.
+
+**Bibliography: correct.** Ch7 cites the right book and edition. This is a case
+where **the apparatus is sound and the epigraph is still questionable** — the
+inverse of the Santayana and Emerson failures.
+
+**Rights: minimal.** Short titles are **not subject to copyright** under U.S. law
+(they may be trademarked). If the item is title-derived, there is no meaningful
+permissions exposure — which is itself a reason to settle the object type rather
+than leave it ambiguous.
+
+#### Candidate mechanism — `TITLE-DERIVED QUOTATION`
+
+*A book or article title presented as though it were a quotation, acquiring a
+byline and quotation marks it never had.*
+
+**Not named as a class yet.** Per the taxonomy discipline, a mechanism needs a
+**second independent instance** before it earns a name. Recorded as a candidate
+and to be watched for across the remaining 55 items.
 
 ### Chapter 7 bibliography — three findings and one exemplar
 
