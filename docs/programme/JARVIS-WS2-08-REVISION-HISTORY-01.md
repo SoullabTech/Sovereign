@@ -100,6 +100,30 @@ So Stage 8 waits on a lane that is itself waiting: 6A must merge and be witnesse
 Stage 7 may enter FIND, and Stage 7 must close before Stage 8 may enter 08A. Nothing in
 this document changes that, and reading it is not an event that partially lifts it.
 
+### Planning authority is not execution authority
+
+These are separate, and the separation is the thing lane documents exist to protect.
+
+```text
+planning record may exist on canonical
+        ↓
+trigger not yet satisfied
+        ↓
+NO FIND / NO BUILD
+
+6A merged + witnessed
+        ↓
+Stage 7 trigger satisfied
+        ↓
+FIND begins
+```
+
+A lane opening reaches canonical when the programme deliberately accepts it as a
+programme record — **not** as a consequence of some other stage merging. 6A merging
+satisfies Stage 7's *execution* trigger; it says nothing about when either planning
+document should land. Conversely, a lane opening sitting on canonical grants no warrant
+to begin the lane.
+
 The Canvas Structure contract (`docs/design/contracts/writer-canvas-structure.md`) remains
 the ratified constraint standing over the seam 6A will open: no reachable path writes
 `manuscript_structure_units` today, and that must keep holding "when Stage 6 gives the
@@ -332,6 +356,71 @@ member later revises section S12
 They do not establish *"O3 caused revision S12"* — unless the author explicitly
 connects them.
 
+### Declaration, not timing
+
+Provenance is established by an **explicit author declaration**, not by when that
+declaration occurs. All three of these are legitimate:
+
+```text
+before revision   "I'm revising this because of O3"
+during revision   "This change responds to O3"
+after revision    "Link this revision to O3"
+```
+
+Each is the author making the relationship explicit. None is weaker than the others.
+
+What is forbidden is the system supplying the relationship itself:
+
+```text
+revision text ≈ MAIA suggestion
+        ↓
+system infers
+"This came from O3"
+```
+
+**That is the sovereignty boundary.** Similarity is evidence of resemblance, not of
+provenance. Temporal proximity is not provenance either — a revision that follows an
+observation by ten minutes has not thereby been caused by it.
+
+### The upstream dependency on Stage 7
+
+Because declaration may come after the revision, what must exist beforehand is not the
+declaration but the **thing it refers to**. A later authored act can only point back at
+an observation that still has an identity to point at.
+
+```text
+DevelopmentalReading R7
+    └── Observation O3
+            ↓
+      explicit author declaration
+            ↓
+Revision / revision intention
+```
+
+This makes one demand on Stage 7, and it is not a demand for revision history:
+
+> **A developmental observation must have durable identity sufficient for a later explicit
+> author act to refer back to it. The system may record that declared relationship, but
+> must never infer it from textual similarity or temporal proximity.**
+
+That sentence does not prescribe any Stage 8 schema. It prevents `07C`/`07D` from choosing
+an object model in which observations are disposable UI objects whose identity vanishes
+when the page closes — a choice that would make truthful provenance impossible later, with
+no repair available at Stage 8.
+
+Stage 7 should therefore expect to need durable identity for at least:
+
+```text
+reading identity
+observation identity
+evidence identity
+```
+
+**Status of that sentence here:** it is recorded in this lane as a declared upstream
+dependency. It is authoritative for Stage 7 only once it is frozen into
+`JARVIS-WS2-07-DEVELOPMENTAL-INTELLIGENCE-01` itself. This document cannot bind that lane
+from outside it.
+
 ---
 
 ## First Stage 8 witness
@@ -410,6 +499,8 @@ That alone is a major threshold.
   inspection was performed.
 - It does not lift, weaken, or reinterpret the Canvas Structure contract's prohibition
   on non-authored structural change.
+- It does not bind Stage 7. The durable-identity constraint in 08H is recorded here as a
+  declared dependency; it governs `07C`/`07D` only once frozen into the Stage 7 lane.
 
 The next legitimate act in this lane is the closure of Stage 7 — which itself waits on
 6A merging to canonical and being witnessed. Not a line of code here.
