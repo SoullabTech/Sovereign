@@ -2,7 +2,7 @@
 
 **Source of record:** `docs/book-studio/ELEMENTAL_ALCHEMY_FROM_ORIGINAL_FULL.md`
 **Opened:** 2026-09-01, after Chapter 10 closed developmental adjudication.
-**Status:** IN PROGRESS — 19 of 137 adjudicated.
+**Status:** IN PROGRESS — 21 of 137 adjudicated.
 
 ## Scope
 
@@ -17,10 +17,28 @@
 | Ch4 | 7 | | Ch10 | 5 |
 | Ch5 Fire | 30 | | Back matter | 1 |
 
-## Verdicts
+## Verdicts — two axes
 
-`VERIFIED EXACT` · `VERIFIED VARIANT/TRANSLATION` · `PARAPHRASE/ADAPTED` ·
-`MISATTRIBUTED` · `UNVERIFIED`
+**Attribution status:** `VERIFIED EXACT` · `VERIFIED VARIANT/TRANSLATION` ·
+`PARAPHRASE/ADAPTED` · `MISATTRIBUTED` · `UNVERIFIED`
+
+**Origin status**, recorded only when attribution fails:
+`EXTERNAL SOURCE` · `INTERNAL-ORIGIN CANDIDATE` · `UNKNOWN`
+
+The second axis exists to stop "I cannot find X saying this" from silently
+becoming "the author wrote it." An empty external search is **not** evidence of
+internal origin. Default to `UNKNOWN`. Assign `INTERNAL-ORIGIN CANDIDATE` only
+on **positive textual evidence** of local coinage or attribution hardening.
+
+These lines occur in older manuscript witnesses and so did not originate in the
+2026 developmental pass, but the retrieved drafting history does not establish
+who first wrote or inserted them. Do not call them author-written or
+model-written on absence of evidence.
+
+**Operational rule for the remaining census:** no external hit → `UNVERIFIED`,
+never REMOVE, wherever the wording could plausibly have originated inside the
+manuscript. Reclaim-vs-remove is adjudicated after the whole provenance field is
+visible.
 
 ## Evidence standard
 
@@ -183,6 +201,53 @@ but this sentence is not among his located writings or talks.
 No source located, including in the Ram Dass archives. Related genuine material
 exists ("In each of us there once was a fire"; "As you find the light in you,
 you begin to see the light in everyone else") but not this sentence.
+
+### UNVERIFIED + INTERNAL-ORIGIN CANDIDATE — the Chapter 5 opening pair
+
+Chapter 5 opens with two epigraphs that are unlocatable in any source and that
+**bracket a passage of the manuscript's own prose written in an identical
+register**. This is positive textual evidence, not absence of evidence.
+
+**L756 · Rumi —** "It is the eternal flame of becoming that animates each
+kaleidoscopic universe sparkling to life like fireflies winking in the infinite
+night."
+
+**L760–762 · the manuscript's own prose —** "In the primordial dawn before
+time's first breath, a brilliant spark leapt forth—the primal flame of pure
+potential blazing through the cosmic womb."
+
+**L764 · Clarissa Pinkola Estés —** "In the fire's eternal dance, we glimpse
+ourselves as we truly are—not separate beings but lively sparks whirling in the
+flames of an infinite spiritual bonfire."
+
+The three are stylistically indistinguishable: the same ornamental
+compound-adjective construction, the same cosmological diction, the same
+cadence. No Rumi translation reads like L756; "kaleidoscopic" has no
+counterpart in the Persian corpus or in Barks. For Estés, authentic material on
+this exact theme exists and sounds nothing like L764 — *The Creative Fire* and
+"The light of the soul throws sparks, can set up flares, builds fires, causes
+proper matters to catch fire."
+
+Both → **UNVERIFIED + INTERNAL-ORIGIN CANDIDATE.** Possible manuscript language
+hardened into external attribution, the same signature as Wilber/Soulplay. Do
+not reattribute to the author yet; resolve at final adjudication by drafting
+evidence or author recognition, else remove.
+
+### Origin status on the previously recorded Chapter 5 open items
+
+- **L1074 Wilber / Soulplay** → `INTERNAL-ORIGIN CANDIDATE`. The manuscript's own
+  prose introduces the coinage — "It is a form of 'soulplay,' where we are acting
+  in the world by living out our soul's yearning" — and the supposed Wilber
+  quotation immediately follows, *defining* it. The exact definition is findable
+  only on Soullab's own Book Studio page, not in any independent Wilber source.
+- **L846 Jung "subjective view"** → `INTERNAL-ORIGIN CANDIDATE`, lower confidence.
+- **L776 Rumi "barriers"**, **L812 Thich Nhat Hanh**, **L828 Ram Dass** →
+  `UNKNOWN`. Widely circulated outside this manuscript; no local-coinage evidence.
+- **L1098 Foch** → `EXTERNAL SOURCE`, chain incomplete. **Correction to the
+  earlier framing: this is not source-empty.** Blakeley, *The 32d Infantry
+  Division in World War II* (1956), p. 3 is a real secondary attribution to Foch.
+  It does not give Foch's original utterance. Keep investigating; do not apply
+  rule 5.
 
 ### Bibliography citation error — found in passing
 
