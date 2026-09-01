@@ -2283,3 +2283,119 @@ Waley's cadence is part of why the passage works.)*
 ---
 
 **Four cards. None ruled.**
+
+---
+
+# 4I · BATCH 2 — RULED · 2026-09-01
+
+## ⚠️ Descartes label — corrected again, and I over-corrected
+
+**Origin: `EDITOR/MODEL-ORIGINATED` · Path: `AUTHOR-EDITED` · Canonical status:
+`AUTHOR-ADOPTED`.**
+
+**My first two clauses survive verbatim in the manuscript** — *"Descartes grounded
+existence in the solitary thinker—'I think therefore I am.'"* — and the author
+**revised the rest**. That is precisely the **`AUTHOR-EDITED SUGGESTION`** state in
+my own four-state model, and I reached past it to `AUTHOR-ORIGINATED`.
+
+**I was so concerned not to repeat the Campbell mislabel that I mislabelled in the
+opposite direction.** Both errors have the same root: **treating origin and adoption
+as one fact.**
+
+> ### Origin answers where language entered the process. Adoption answers whose book it became.
+>
+> **Conscious adoption does not retroactively change where the wording originated —
+> and recording it as though it did would erase collaboration at exactly the moment
+> the ledger exists to represent it.**
+
+---
+
+## ✅ 7 · John 17 — `CORRECT`, applied
+
+> *The Christian admonition, "Be in the world but not of it", is an instruction to
+> return to our center…*
+
+**Deletion only. No new prose.** The formulation names the tradition accurately
+without pretending that English imperative appears at that verse.
+
+> **The clean specimen for: sometimes the repair is *less* specificity, not more
+> sourcing.**
+
+## ✅ 8 · Lao Tzu / Waley — `KEEP` editorially · apparatus repaired
+
+> *…the Taoist sage Lao Tzu writes, **in Arthur Waley's rendering**: "We put thirty
+> spokes together… the **utility** of the wheel depends…"*
+
+**Translator named; Waley's *"utility"* restored at all three occurrences** (wheel,
+vessel, house).
+
+### ⚠️ And you corrected a real error in my recommendation
+
+**I wrote that naming Waley "materially improves the rights position." That is
+wrong.**
+
+> **Attribution is not permission.** Crediting Waley is **necessary and does not
+> reduce exposure at all.** Nor did the *utility/usefulness* variance ever affect it.
+
+**The axes stay separate — that is the whole point of having them:**
+
+| | |
+|---|---|
+| **Editorial** | `KEEP` — the wheel / vessel / room structure **is** the argument: emptiness is what lets form function |
+| **Provenance** | Waley credited; wording reconciled ✅ |
+| **Rights** | **`HIGH`, unchanged**, pending Stage 6 |
+
+**And I withdraw the Legge suggestion as premature.** If Stage 6 finds Waley
+impractical to clear, *then* compare alternatives. **Do not pre-emptively sacrifice
+the version that works editorially for a hypothetical rights solution.**
+
+---
+
+## ⏸ 5 · Blake — `REFRAME · LINEAGE + ILLUMINATION` · seam shown, wording not composed
+
+**Current:**
+> *…or we languish in our lack of will and interest in the world.* **As it is said,
+> "If a fool persists in his folly he becomes wise."**
+
+**The ruling requires three things at once:** name Blake · **preserve the *Proverbs
+of Hell* frame** · avoid presenting it as uncomplicated Blakean wisdom.
+
+**Two shapes, offered as options rather than a draft — `EDITOR/MODEL-ORIGINATED`,
+pending your wording:**
+
+**(a) minimal —** *"As Blake has it, in the Proverbs of Hell: 'If the fool would
+persist in his folly he would become wise.'"* **Nine words of apparatus.** Restores
+his tense, names the frame, lets the provocation stand unexplained.
+
+**(b) marking the provocation —** the same, plus a short clause noting the proverb
+is spoken from the devil's side. **More honest, and it risks becoming the literary
+lecture you said you didn't want.**
+
+**My lean is (a)** — *"in the Proverbs of Hell"* already signals that this is not
+plain counsel, to any reader who follows it up, without stopping the paragraph.
+
+## ⏸ 6 · Milton / Satan — `REFRAME · ILLUSTRATION + DRAMATIC CONTEXT` · seam shown
+
+**Current:**
+> *…the ego is ruled by cold logic and finds itself lost in "thoughtland."* **As John
+> Milton aptly noted, "The mind is its own place, and in itself, can make a heaven of
+> hell, a hell of heaven."**
+
+**"Milton aptly noted" has to go** — he is not stepping forward to offer wisdom.
+**Satan is rationalising his own condition**, and the section is describing exactly
+that: *ego → cold logic → enclosure in thought → internally manufactured reality.*
+
+**The move you named:** *Milton's Satan says this → notice what that voice is doing →
+this is thoughtland from inside itself.*
+
+**I am not composing it.** The sentence needs to land as diagnosis rather than
+commentary, and **that tonal judgment is yours.** What I can say is that the
+apparatus needs to carry **who is speaking** and **that he is wrong in a way the
+section has just described** — and that both can be done in one clause.
+
+> **This is the rare case where telling the truth about a source does not weaken the
+> quotation — it reveals why the quotation belonged there in the first place.**
+
+---
+
+**Applied: 2. Awaiting wording: 2.** **4I: 8 remaining after these.**

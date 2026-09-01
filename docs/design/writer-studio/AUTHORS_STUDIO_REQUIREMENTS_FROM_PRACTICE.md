@@ -1483,3 +1483,33 @@ surface removes the object before identity is consulted.
 **This is the third failure of the same shape** — positional identity, a
 count-based gate, and now a recognition-surface repair. **Each worked perfectly until
 the manuscript changed**, which is the one thing an editing system exists to do.
+
+### Requirement — origin and adoption are two fields, never one
+
+> **Origin answers where language entered the process. Adoption answers whose book it
+> became.** Conscious adoption does not retroactively change where wording
+> originated.
+
+**Grounding events, in both directions:** an author's own sentences were nearly
+logged as adopted model output; then, over-correcting, model-drafted sentences the
+author had *revised* were logged as author-originated. **Both errors have the same
+root — treating origin and adoption as one fact.**
+
+**Minimum states:** `EDITOR/MODEL-ORIGINATED` · `AUTHOR-EDITED` ·
+`AUTHOR-ORIGINATED` — **crossed with** `PROPOSED` · `ADOPTED`.
+
+**A ledger that collapses them erases collaboration at exactly the moment it exists
+to represent it.**
+
+### Requirement — attribution is not permission
+
+**Crediting a translator or author is a provenance repair. It does not reduce rights
+exposure by any amount**, and neither does reconciling a wording variance.
+
+**Grounding event:** I recommended naming a translator on the grounds that it would
+*"materially improve the rights position."* It does not. ~90 words of a protected
+translation carry the same exposure correctly credited as incorrectly credited.
+
+**And a corollary:** *do not pre-emptively sacrifice the version that works
+editorially for a hypothetical rights solution.* Compare alternatives **only if and
+when clearance actually fails.**

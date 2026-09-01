@@ -1862,7 +1862,7 @@ Like the unknowable quantum world manifests our knowable universe, there is an e
 
 By its nature, this part of us is indescribable and ephemeral. However, since it is the essence of who we are as souls and it is the source of all life within us and between us, it is worth the time and effort of trying to communicate about it. Yet how do you describe the indescribable? The formless? As always, humankind has done best by creating symbols, images, and stories that describe this ephemeral part of our nature.
 
-In recognition of this fact, the Taoist sage Lao Tzu writes: *"We put thirty spokes together and call it a wheel; But it is on the space where there is nothing that the usefulness of the wheel depends. We turn clay to make a vessel; But it is on the space where there is nothing that the usefulness of the vessel depends. We pierce doors and windows to make a house; And it is on these spaces where there is nothing that the usefulness of the house depends. Therefore, just as we take advantage of what is, We should recognize the usefulness of what is not."*
+In recognition of this fact, the Taoist sage Lao Tzu writes, in Arthur Waley's rendering: *"We put thirty spokes together and call it a wheel; But it is on the space where there is nothing that the utility of the wheel depends. We turn clay to make a vessel; But it is on the space where there is nothing that the utility of the vessel depends. We pierce doors and windows to make a house; And it is on these spaces where there is nothing that the utility of the house depends. Therefore, just as we take advantage of what is, We should recognize the usefulness of what is not."*
 
 ### Return to Flow
 
@@ -1944,7 +1944,7 @@ We find ourselves at the center of our being, and this brings us instant relief 
 
 It is easy to see why transcendence has been the goal of all major spiritual traditions. Yet, as the Taoist tradition exemplifies, the goal isn't to transcend earthly living or to be so distracted by the demands and chaos of the world that we lose ourselves. The goal seems to be somewhere in the middle, between all the elements of consciousness; the middle way, the space in-between has merits as a lifestyle. For one, this is the path where we encounter our aether nature.
 
-The Christian admonition, *"Be in the world but not of it" — John 17:16*, is an instruction to return to our center where all is quiet, serene, and harmonious.
+The Christian admonition, *"Be in the world but not of it"*, is an instruction to return to our center where all is quiet, serene, and harmonious.
 
 This equanimity, coherence, and goodness is a state we can access in the midst of conflict on a battleground or while soaking in a bathtub. It is always at our center.
 
