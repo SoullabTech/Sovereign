@@ -908,23 +908,51 @@ The form Quote Investigator treats as canonical differs from the manuscript's:
 "Take the first step in faith. You don't have to see the whole staircase, just
 take the first step."
 
-**Probable third `SPURIOUS SUPPORT`** — the bibliography cites *Strength to Love*
-(Harper & Row, 1963); no evidence places the line in it. Requires an edition
-check before the status is fixed, since unlike Feynman and Hawking the underlying
-attribution here has real oral testimony behind it.
+**Source lead — archival, and specific.** The New York State Archives holds the
+**Park-Sheraton address of 12 September 1962**, including the typed draft, and
+the New York State Museum preserves the **live audio**. Secondary sources attach
+the staircase saying to that event. The complication is real: the searchable
+typed draft contains **no "staircase" wording**, while the Museum's own
+documentation notes that King's live delivery contained words and edits absent
+from the typed copy. **Audio/transcript check required.**
+
+**Bibliography status: `SOURCE LINK UNRESOLVED` — NOT `SPURIOUS SUPPORT`.**
+Removed from that count. If the Park-Sheraton transcript confirms the saying,
+King's attribution becomes defensible and *Strength to Love* is merely
+`WRONG SOURCE/WORK`.
+
+**`SPURIOUS SUPPORT` stays reserved for the Feynman/Hawking shape**, where the
+attributed person/source relationship itself collapses. MLK is not that shape:
+oral testimony from someone who heard him, plus a named archival event, is a
+live evidentiary trail — it is unverified, not spurious.
 
 ### Chapter 8 bibliography — revised assessment
 
 | | Count | Items |
 |---|--:|---|
-| `SPURIOUS SUPPORT` | 2 (+1 probable) | Feynman, Hawking (+ MLK pending) |
+| `SPURIOUS SUPPORT` | 2 | Feynman, Hawking |
+| `SOURCE LINK UNRESOLVED` | 1 | MLK (*Strength to Love*) |
 | Correct support | 2 | Dyer, Brown |
 | `MISSING` | 2 | Rumi/Barks, Jenkins |
 | `ORPHAN CANDIDATE` | 6 | Williams, Confucius, Dewey, Milton, Goldsmith, O'Donohue |
 
-**Genuinely mixed.** The chapter's bibliography is neither reliable nor uniformly
-broken — which is precisely why every entry must be tested against the quotation
-rather than trusted or dismissed as a class.
+**Reconstruction doctrine, revised.** Not "the bibliography is broken." Rather:
+
+> **The bibliography is evidentially mixed. It cannot be trusted wholesale and it
+> cannot be discarded wholesale. Every citation must be reconciled downstream
+> from the quotation-level provenance census.**
+
+A reconstruction that discarded the apparatus would throw away the Dyer and Brown
+entries, which are correct and well chosen.
+
+### Helen Keller — treat as a mini-set
+
+L1706 ("Alone we can do so little; together we can do so much") and L1854 ("The
+only thing worse than being blind is having sight but no vision") are sourced
+**independently**, then adjudicated **together** if they show the same
+transmission pattern — the same discipline applied to the four Campbell
+instances. Keller, like Campbell, attracts polished aphorisms she may not have
+written.
 
 ---
 
