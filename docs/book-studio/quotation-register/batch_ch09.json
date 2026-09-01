@@ -1,0 +1,118 @@
+{
+  "_comment": "BATCH 9 - Chapter 9. Faithful transfer only. Also attaches the downstream obligation to the surviving Aristotle occurrence.",
+  "entries": [
+    {
+      "match": "heart is a sanctuary",
+      "occurrence": 1,
+      "provenance_status": "unverified",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L1871",
+      "actual_author": "Black Elk",
+      "work": "LEAD (unconfirmed): The Sacred Pipe: Black Elk's Account of the Seven Rites of the Oglala Sioux, recorded by Joseph Epes Brown, 1953 (University of Oklahoma Press)",
+      "family": "fam-black-elk",
+      "notes": "Audit: UNVERIFIED - source lead unresolved. Not confirmed in the search. Note: the invented 'Adapted from Black Elk' epigraph in Ch2 was removed at Stage 3 and replaced with an accurate acknowledgement; THIS occurrence is a different object with a real, if unconfirmed, source lead."
+    },
+    {
+      "match": "doors of perception were cleansed",
+      "occurrence": 1,
+      "provenance_status": "verified_exact",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md Ch9 table L1881",
+      "actual_author": "William Blake",
+      "work": "The Marriage of Heaven and Hell (c.1790)",
+      "rights_status": "public_domain",
+      "bibliography_relationship": "CORRECT",
+      "family": "fam-blake",
+      "notes": "Same work as the under-attributed 'If a fool persists in his folly' item, which the manuscript presents as an anonymous saying. Two Blake occurrences from one work, one correctly attributed and one not."
+    },
+    {
+      "match": "What is above is like what is below",
+      "occurrence": 1,
+      "provenance_status": "verified_variant",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md Ch9 table L1893",
+      "actual_author": "The Emerald Tablet (traditional)",
+      "work": "English rendering unidentified; cf. Newton's 'That which is below is like that which is above'",
+      "rights_status": "public_domain",
+      "bibliography_relationship": "CORRECT",
+      "family": "fam-hermetic",
+      "notes": "Audit: VERIFIED TO THE TEXT / TRADITIONAL. The book holds BOTH the accurate ancient form here AND a composite modern-extended form (with the Kybalion extension) one chapter apart - the same shape as the Barks case, where one occurrence is honest and another is not."
+    },
+    {
+      "match": "more you know yourself, the more clarity",
+      "occurrence": 1,
+      "provenance_status": "unverified",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md Ch9 table L1903",
+      "actual_author": "Jiddu Krishnamurti",
+      "rights_status": "term_uncertain_standard",
+      "bibliography_relationship": "The First and Last Freedom (1954) - plausible, unconfirmed",
+      "notes": "Audit: register suggests spoken talks rather than the cited book."
+    },
+    {
+      "match": "Turn up the signal",
+      "occurrence": 1,
+      "provenance_status": "verified_exact",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md Ch9 table L1911",
+      "actual_author": "Peter Gabriel",
+      "work": "'Signal to Noise', Up (Real World Records, 2002)",
+      "rights_status": "song_lyric_high",
+      "bibliography_relationship": "CORRECT - named in the bibliography",
+      "family": "fam-song-lyrics",
+      "notes": "All three Gabriel songs identified: Ch4 'Growing Up', Ch6 'Darkness', Ch9 'Signal to Noise', all from Up (2002). No further song identification needed; all remain in the permissions review."
+    },
+    {
+      "match": "longest journey you will make",
+      "occurrence": 1,
+      "provenance_status": "unverified",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L1933",
+      "actual_author": "unknown - no documentation of Sioux origin",
+      "family": "fam-cultural-attribution",
+      "notes": "Audit: UNVERIFIED, UNKNOWN. NO DOCUMENTATION OF SIOUX ORIGIN. The line circulates in contemporary spiritual and Christian devotional literature - Patheos, Dynamic Catholic, Matthew Kelly, Lenten reflections - while standard collections of actual Sioux material do not carry it. UNSUPPORTED CULTURAL ATTRIBUTION."
+    },
+    {
+      "match": "quieter you become",
+      "occurrence": 1,
+      "provenance_status": "unverified",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L1977",
+      "actual_author": "unknown - competing attribution Rumi vs Ram Dass",
+      "family": "fam-floating-aphorisms",
+      "notes": "Audit: FLOATING APHORISM / SOURCE UNRESOLVED with BOTH instability markers present - a competing attribution (Goodreads and others assign it to Ram Dass) and a variant family ('the more you CAN hear', the Ram Dass form, against the manuscript's wording)."
+    },
+    {
+      "match": "contradiction in wanting to be perfectly secure",
+      "occurrence": 1,
+      "provenance_status": "verified_variant",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md Ch9 table L1983",
+      "actual_author": "Alan Watts",
+      "work": "The Wisdom of Insecurity (1951), p. 77",
+      "rights_status": "term_uncertain_standard",
+      "bibliography_relationship": "CORRECT",
+      "notes": "Audit: published text reads 'It must be obvious, FROM THE START, that...' - the manuscript drops the phrase. Second Watts occurrence; the Ch2 one is VERIFIED EXACT. Same author, different verdicts."
+    },
+    {
+      "match": "Guardian Spirit, the Daimonion",
+      "occurrence": 1,
+      "provenance_status": "unverified",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md Ch9 table L2001",
+      "actual_author": "C. Michael Smith",
+      "rights_status": "likely_protected_standard",
+      "bibliography_relationship": "Jung and Shamanism in Dialogue",
+      "notes": "Audit: Smith is real, and 'inner axis mundi', 'Dream Maker' and 'Daimon' are ALL DOCUMENTED AS HIS - but the COMBINED SENTENCE was not located. A composite-of-genuine-elements case. Second unverified C. Michael Smith item; he is also the book's Foreword author."
+    },
+    {
+      "match": "all the universe conspires",
+      "occurrence": 1,
+      "provenance_status": "verified_exact",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md Ch9 table L2005",
+      "actual_author": "Paulo Coelho",
+      "work": "The Alchemist",
+      "translator_or_mediator": "Alan R. Clarke (1993) - the English is the translator's, not Coelho's Portuguese",
+      "rights_status": "likely_protected_standard",
+      "bibliography_relationship": "CORRECT",
+      "notes": "Audit: MEDIATED TRANSLATION. Migrated alongside the Stage 4 speaker finding already on this record - spoken by Melchizedek, King of Salem."
+    },
+    {
+      "match": "Knowing yourself is the beginning",
+      "occurrence": 1,
+      "editorial_status": "KNOWN PROVENANCE DEFECT REMAINS ACTIVE IN MANUSCRIPT - requires Stage 4C adjudication",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L1340 and L1770; batch 8 family finding"
+    }
+  ]
+}

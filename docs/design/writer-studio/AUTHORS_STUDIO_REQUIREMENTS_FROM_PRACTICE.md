@@ -1181,3 +1181,23 @@ bugs, one symptom: data loss, and a gate reporting success for finding nothing.*
 **Vacuous truth is the quietest way a gate degrades into decoration** — it reports
 PASS while verifying nothing, and it does so most reliably at exactly the moment the
 data it needed went missing.
+
+### Requirement — check the family when one member is repaired
+
+> **When one member of a provenance family receives a repair, inspect the family for
+> surviving occurrences that share the same defect.** Not *"apply the same repair
+> everywhere"* — their editorial functions may differ — but **surface them together
+> for judgment.**
+
+**Grounding event:** a misattributed Aristotle line was removed from one chapter and
+**survived in another**, because the two occurrences had different editorial
+functions and only one fell inside that pass's scope. **Both rulings were correct.
+Only the cross-manuscript family could reveal that the book still contained the same
+false attribution elsewhere.**
+
+Implemented as a gate check, it immediately found **two more asymmetrically repaired
+families** that had not been noticed by hand.
+
+**This is the clearest case for semantic identity over document workflow.** A
+chapter-by-chapter process cannot see it; a family can. **It is exactly the kind of
+thing a system should quietly remember on the writer's behalf.**

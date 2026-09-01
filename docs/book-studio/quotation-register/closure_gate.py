@@ -90,6 +90,22 @@ print("  NOTE  attributed occurrences ever identified: 137 historical block + 19
 fams = {}
 for r in R + H:
     if r.get("family"): fams.setdefault(r["family"], []).append(r["id"])
+fam_all = {}
+for r in R:
+    if r.get("family"): fam_all.setdefault(r["family"], {"active": [], "hist": []})["active"].append(r)
+for h in H:
+    if h.get("family"): fam_all.setdefault(h["family"], {"active": [], "hist": []})["hist"].append(h)
+asym = []
+for f, m in fam_all.items():
+    if m["hist"] and m["active"]:
+        bad = {"misattributed", "paraphrase_adapted", "no_ancestor", "unverified"}
+        surv = [r for r in m["active"] if r.get("provenance_status") in bad]
+        if surv:
+            asym.append((f, [r["id"] for r in surv]))
+if asym:
+    print("\n  ASYMMETRIC REPAIR - family members repaired elsewhere, these survive with the same defect class:")
+    for f, ids in asym:
+        print(f"      {f}: {ids}")
 print("\n  families:", {k: len(v) for k, v in fams.items()})
 print("\n" + ("GATE PASSED" if not fail else f"GATE FAILED: {fail}"))
 sys.exit(1 if fail else 0)

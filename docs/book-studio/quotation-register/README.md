@@ -1029,3 +1029,76 @@ an aphorism collection.
 **`109 = 92 + 13 + 4`** ✅ · **`137 = 109 + 28`** ✅
 
 **→ Batch 9: Chapter 9, then Chapter 10 and back matter.**
+
+---
+
+# BATCH 9 — Chapter 9 · 2026-09-01
+
+**`GATE PASSED`.** 10 verdicts migrated + the downstream obligation attached to the
+surviving Aristotle occurrence. **Zero `pending_migration` in Chapter 9.**
+
+## The asymmetric-repair check now runs in the gate
+
+> **When one member of a provenance family receives a repair, inspect the family for
+> surviving occurrences that share the same defect.** *Not "apply the same repair
+> everywhere" — their editorial functions may differ. Surface them together for
+> judgment.*
+
+**Implemented and immediately productive. Three families are asymmetrically
+repaired:**
+
+| Family | Survives with the same defect class |
+|---|---|
+| **`fam-know-thyself`** | **`EA-Q-0098`** — the Aristotle occurrence, now carrying **"KNOWN PROVENANCE DEFECT REMAINS ACTIVE IN MANUSCRIPT — requires Stage 4C adjudication"** |
+| **`fam-rumi-unsourced`** | **`EA-Q-0007`** (Preface) and **`EA-Q-0026`** (Ch5) — two unsourced Rumi occurrences survive; a third was removed at 4A |
+| **`fam-campbell`** | **`EA-Q-0031`** and **`EA-Q-0053`** — two `PARAPHRASE/ADAPTED` Campbell contractions survive; a third was removed at 4A |
+
+**I had found one of these by hand. The check found two more.** None is a defect in
+any prior ruling — each removal was correct within its own scope — but **the book
+currently carries five occurrences whose family twins were repaired elsewhere.**
+
+## Chapter 9 findings
+
+**A second cultural attribution dissolves.** *"Sioux Legend"* — **no documentation of
+Sioux origin.** The line circulates in **contemporary Christian devotional
+literature** (Patheos, Dynamic Catholic, Matthew Kelly, Lenten reflections) while
+standard collections of actual Sioux material do not carry it.
+
+**The Emerald Tablet pair.** Chapter 9 quotes it **accurately and without the
+Kybalion extension**; another chapter carries the **composite modern-extended form**.
+**The book holds both the accurate ancient form and the corrupted one, one chapter
+apart** — the same shape as the Barks case, where one occurrence is honestly
+labelled and another is not.
+
+**Two Blake occurrences from one work**, and only one is attributed: *"the doors of
+perception"* is `VERIFIED EXACT` with a correct bibliography entry, while *"If a
+fool persists in his folly"* is presented as **an anonymous saying**. **Same book,
+opposite defects.**
+
+**A composite of genuine elements.** The C. Michael Smith daimonion line: *"inner
+axis mundi," "Dream Maker" and "Daimon" are **all documented as his**, but **the
+combined sentence was not located.*** Genuine parts, unlocated whole.
+
+**Watts splits.** Ch2 `VERIFIED EXACT`; Ch9 `VERIFIED VARIANT` — the published text
+reads *"It must be obvious, **from the start**, that…"* **Same author, different
+verdicts, ruled individually.**
+
+**Coelho is a mediated translation** — the English is **Alan R. Clarke's (1993)**,
+not Coelho's Portuguese. That now sits on the same record as the Stage 4 speaker
+finding (**Melchizedek**), so one record carries **author · translator · internal
+speaker** as three separate facts.
+
+**All three Gabriel songs identified** — "Growing Up," "Darkness," "Signal to Noise,"
+all from *Up* (2002). **No further identification needed; all remain in permissions.**
+
+**Chapter 9's bibliography is the best-matched in the book** — every quoted author
+checked has a correct entry with the right work.
+
+## Standing after batch 9
+
+**115 migrated · 5 pending · 12 deferred · 130 current · 28 historical.**
+**`109 = 101 + 5 + 3`** ✅ · **`137 = 109 + 28`** ✅
+
+**22 families; 5 spanning both layers; 3 flagged asymmetric.**
+
+**→ Final migration batch: Chapter 10 + back matter (5 pending).**
