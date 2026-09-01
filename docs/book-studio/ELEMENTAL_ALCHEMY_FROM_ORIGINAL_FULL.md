@@ -312,6 +312,8 @@ The story of our relationship with the world is one of an ongoing process of mut
 
 *"The privilege of a lifetime is being who you are." – Joseph Campbell*
 
+Campbell's language has stayed with me because becoming who we are is not a retreat into the self. It is the work of discovering what is ours to bring into relationship with the world.
+
 For those who walk with the five elemental spheres and their three-phase developments, what often emerges is a quiet, profound transformation—a deepening into one's own truth, a widening of conscious awareness. The journey, in time, touches every aspect of consciousness, bringing it into closer step with the natural rhythms of life.
 
 What I have witnessed, again and again, is that those who give themselves to this soul-directed mystery school come into a radiant embodiment of their own purpose—inspired, creative, emotionally intelligent, grounded, adaptable, awakened to the interconnected beauty of our shared experience.
@@ -667,8 +669,6 @@ The fifth element — **Aether**, soul, the divine, whatever name you prefer —
 It is up to us to bring the four elements of our consciousness into one room, so that the fifth can come into focus.
 
 ### Mastering the Elements
-
-*"Awareness is the greatest agent for change." — Eckhart Tolle*
 
 Life can seem chaotic if we are unaware of these fundamental dynamics informing our state of being. For example, we might find ourselves flooded with emotions one moment, only to be swept away by thoughts the next. Or we might contemplate wonderful visions of the future, then be overwhelmed with physical pain or disorganization a minute later. If we are too occupied by constant thought streams, we can easily miss intuitive insights about the world around us. We can be absent-minded, aloof, spacey, tired, anxious, distracted, or depressed and miss so much occurring all around us.
 
@@ -1192,7 +1192,7 @@ To avoid the painful feelings of dark emotions, some may turn to addiction, numb
 
 ### Balancing the Water Within
 
-*"Our task in life consists precisely in a form of letting go of fear and expectations, an attempt to purely give oneself to the impact of the present." — Michael Pollen*
+*"Our task in life consists precisely in a form of letting go of fear and expectations, an attempt to purely give oneself to the impact of the present." — Michael Pollan, *How to Change Your Mind**
 
 To bring our inner water into balance, we need to learn to navigate its depths with awareness and intention, rather than drown in our feelings. This means processing and integrating our emotions rather than denying or repressing them. It's about using the capacities of compassionate, instinctive water without being swept away by its drowning, powerful, destructive qualities. When we get the balance right, we are able to let go into emotion, and adapt and thrive.
 

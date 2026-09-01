@@ -683,5 +683,156 @@ judged on whether the opening works.** Carried to final QA.
 | `KEEP` — confirmed on the page | 26 |
 | Epigraph count | **128 → 110** |
 
-**4A is applied but not closed.** It closes when the eleven held items are ruled.
+**4A is applied but not closed.** ⚠️ *"Eleven held items" was an arithmetic error — see LEDGER RECONCILED below. The correct figure at that point was nine.*
 **4B begins after.**
+
+---
+
+# 4A · REVISED NORTH STAR AND CLOSING LEDGER — 2026-09-01
+
+## The Stage 4 north star, revised
+
+> **A quotation stays when it contributes a voice worth hearing. If its
+> relationship to the book is real but unclear, make that relationship visible with
+> the smallest truthful addition. If it is gratuitous or misplaced, remove it — and
+> let the book supply whatever meaning is actually needed in its own voice.**
+
+**The goal is neither to preserve quotations nor to reduce them. It is to make
+every quotation belong.**
+
+### Three outcomes
+
+1. **`KEEP AS IS`** — it lands naturally, contributes something distinct, and the
+   surrounding prose already makes its relevance clear.
+2. **`KEEP + CONNECT`** — it earns its place, but the relationship is implicit.
+   **Add the smallest amount of the author's own prose necessary to make the
+   relationship visible.**
+3. **`REMOVE + RECLAIM THE SPACE`** — gratuitous, repetitive, misplaced, decorative
+   or merely certifying. Remove it, **then ask whether the section needs a stronger
+   transition, insight, image or statement in the author's own voice.**
+
+### The restraint
+
+> **Never write extra prose just to rescue a quotation.** A connecting sentence is
+> justified when it reveals something true and useful about the author's
+> relationship to the source. **If an elaborate explanation is required for why a
+> quotation belongs, it probably doesn't.**
+
+### The four questions
+
+1. **Does this voice contribute something the prose does not already provide?**
+   *No → remove.*
+2. **Is its relationship to the surrounding passage clear?** *Yes → keep.*
+3. **Is there a real relationship worth naming — kinship, dialogue, lineage,
+   challenge, illumination?** *Yes → add a minimal frame.*
+4. **If the quotation disappears, is something meaningful actually missing?**
+   *Yes → fill that need in the author's own voice. No → let the space breathe.*
+
+> **Question 4 matters most. Sometimes removing an epigraph does not create a
+> hole. It reveals that there never was one.**
+
+---
+
+## Rulings applied
+
+### Campbell — `KEEP + CONNECT` ✅
+
+**Ruled `KINSHIP / LINEAGE`, not certification.** Campbell's work sits naturally
+beside the book's concern with authentic path, becoming, initiation, and living
+into what is trying to emerge. **Restored** with the author's own two-sentence
+frame beneath it:
+
+> Campbell's language has stayed with me because becoming who we are is not a
+> retreat into the self. It is the work of discovering what is ours to bring into
+> relationship with the world.
+
+**Two sentences. No essay about Campbell.** And the frame passes the restraint's
+fourth test independently: *becoming is not retreat into the self but discovering
+what is ours to bring into relationship* is a statement of the book's own position,
+worth making whether or not Campbell stands above it.
+
+*Note: this reverses my own earlier reasoning. I had applied question 1 strictly
+and concluded the prose beneath ("a deepening into one's own truth") already
+provided it. **That misread the function** — Campbell is not restating the prose,
+he is the lineage the prose is standing in.*
+
+### Tolle — `REMOVE` ✅ *(applied on the author's lean, reversible)*
+
+The more demanding test applies: **is Tolle part of the lineage the reader should
+encounter, or is this simply a sentence the book agrees with?** The author's lean is
+the latter. Removed; **the section's own account of awareness now carries it.**
+
+**Recorded as a lean, not a hard ruling.** If Tolle belongs in the book's
+philosophical company the way Teasdale does, this is a one-line restoration.
+
+### Pollan — `CORRECT` ✅ *(source resolved)*
+
+Both defects closed. The name was misspelled **Pollen**, and my register objection
+was **wrong on the substance**: the line is genuinely from **Michael Pollan, *How
+to Change Your Mind***. Now reads *"— Michael Pollan, *How to Change Your Mind*."*
+
+**One sub-question left open honestly:** *How to Change Your Mind* quotes session
+reports and researchers extensively, so **whether Pollan authored this sentence or
+was quoting someone within his own book is not established.** The attribution to
+the work is correct either way; the attribution to the man is not yet closed.
+**Carried to Stage 7.**
+
+### Chapter 8 Air opening — `PROTECT NO-EPIGRAPH STATE` ✅
+
+**Do not replace.** The old opener disappeared because its provenance failed, and
+**that does not itself create a hole.** At final QA, read the opening aloud and ask
+only: **does Air arrive?** If yes, nothing is missing. **Replace only if the chapter
+wants another voice — never because the other chapters happen to have one.**
+
+---
+
+## ⚠️ LEDGER RECONCILED — the "11 held" was wrong
+
+**The count did not reconcile, and the discrepancy was internal to my own record:
+the standing table said 9, the prose above it said "eleven held items."** The table
+was right; **the prose figure was an error, and there were no unnamed carried
+items.** Zhuangzi was additionally being counted as a hold when it had already moved
+to Stage 7.
+
+**The count check has now caught two errors in this pass** — an unauthorized
+Campbell removal, and this arithmetic. **It is doing real work and stays.**
+
+### Full 4A reconciliation — 45 items, every one accounted for
+
+| Disposition | Count | Items |
+|---|---|---|
+| `REMOVE` — applied | **19** | 18 first batch + Tolle |
+| `KEEP + CONNECT` — applied | **1** | Campbell |
+| `CORRECT` — applied | **3** | Whyte (was Shaw) · Rumi/Barks · Pollan |
+| `KEEP AS IS` — confirmed | **15** | |
+| `KEEP` · `RIGHTS HOLD` | **5** | Bear Heart · Teasdale · Weil · Gabriel ×2 |
+| `KEEP` · `RESTORE REQUIRED` | **1** | McGilchrist |
+| **→ Stage 7, not a 4A hold** | **1** | Zhuangzi (wrong translator, bibliography defect) |
+| **TOTAL** | **45** | ✅ |
+
+**Epigraph count: 128 → 109.**
+
+### The single genuine 4A hold
+
+**McGilchrist.** The **doctrine is verified** — whole-versus-parts perception is
+central to *The Master and His Emissary*. **The manuscript's sentence is not his.**
+"…to see the whole rather than just the parts" fairly summarises him; "our
+consciousness is deeply connected to the natural world… the beauty and complexity
+of nature" is not his register. **`PARAPHRASE/ADAPTED`.**
+
+**Editorially this is the strongest `KEEP` in 4A** — hemispheric research is
+knowledge the book genuinely cannot supply itself. **But an exact sentence from the
+printed text is required before the repair, and I will not compose one.** Options
+at ruling: restore a real sentence · label as adaptation · recast as attributed
+prose.
+
+## 4A status
+
+**Applied and reconciled. One editorial hold (McGilchrist, awaiting an exact
+sentence), five rights holds, one item passed to Stage 7.** 4A closes when
+McGilchrist resolves; **the rights holds do not block closure** — they are
+publication questions, not editorial ones.
+
+> **The instrument this pass produced:** *remove authority when it is gratuitous ·
+> connect authority when the relationship is real · add the book's own meaning when
+> its absence reveals something still needing to be said.*
