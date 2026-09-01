@@ -1122,8 +1122,6 @@ What you feel carries great power to create your reality. At the heart of your e
 
 To surf the waves of our fluid emotional intelligence and swim deep within the oceanic field of the inner psyche, we must become fluent in the capricious element of our water state of consciousness. To better comprehend the nature of the subconscious beliefs, values, and motives that influence our thoughts, emotions, and behaviors, we must be psychologically self-aware as well as tapped into the deeper source of collective wisdom, the unconscious mind. Water is also where we connect with all that is happening beneath the surface of our consciousness in the realm of daydreams and sleeping dreams. All personal change gestates in water.
 
-Water is associated with love, compassion, and rebirth. As such, it holds the potential for all forms of redemption through selfless acts and deep emotional connections.
-
 This is to honor this divine gift by immersing ourselves in the wisdom of water, allowing its currents to cleanse and renew us, and flowing through life with empathy and grace. In doing so, we align ourselves with the fluid dance of creation, embodying the love and compassion that water so generously offers. May all we manifest be guided by this wisdom, and may we experience love flowing back to us in all our relationships, in all we create, and in all we do. Let our love be a way forward on the earth, passion for the air, and vision for our fire.
 
 ### The Depths of Emotional Intelligence and Transformation
@@ -1152,7 +1150,7 @@ Water, a life-giver that nourishes, sustains, and provides, can also be a destro
 
 This state of life is challenging, where we feel like we are drowning in heavy emotions, and all that we've built up in our lives begins to dissolve. Even if what we cling to isn't perfect or good for us, we prefer the known over letting go into nothingness, the unknown, and the unformed. This release into mystery invokes fear, grief, anxiety, and other familiar sensations. There is often a lot of crying, processing, and repenting as dark memories, insights, and impressions catch us off-guard, reminding us of things forgotten or previously unconscious. These moments offer us the opportunity to course-correct, reform, and release outdated ways of being.
 
-*"I own my fears, so they do not own me." — Peter Gabriel*
+*"I own my fear / So it doesn't own me." — Peter Gabriel*
 
 #### Personal Encounters
 
@@ -1186,11 +1184,11 @@ I see new clients often in this state where they can no longer hold it in or con
 
 *"Things falling apart is a kind of testing and also a kind of healing. We think that the point is to pass the test or to overcome the problem, but the truth is that things don't really get solved. They come together and they fall apart. Then they come together again and fall apart again. It's just like that. The healing comes from letting there be room for all of this to happen: room for grief, for relief, for misery, for joy." — Pema Chodron*
 
-#### Hyper-Emotionality and Dark Emotions
+### Patterns of Water Imbalance
 
 Water's destructive quality often manifests as hyper-emotionality. When emotions run unchecked, they can become like a thousand snakes coiling around the mind and soul, creating complex structures of integrated feelings that can break us down into a hell of rage, depression, fear, resentment, jealousy, and other unsettling emotions. Lost in this vortex, it becomes difficult to function or connect with others. Life can feel like a relentless emotional blender, churning out ferocious feelings.
 
-#### Drowning in Emotions
+#### Emotional Overwhelm
 
 Water immerses us when emotions take on a life of their own. Feelings overwhelm us—whether we acknowledge them or not. We experience our emotions as out of control, like swimming against a relentless current or being caught in a turbulent sea. We may find ourselves inundated with inexplicable and overwhelming feelings, overtaken by a tide of pain and swallowed by its waters, far from safe terrain. It can feel like being underwater for far too long, like Narcissus entranced by the aquatic mirror of our own consciousness.
 
@@ -1248,7 +1246,7 @@ As the days become shorter in the autumn, the moments of connection with this co
 
 ### Elemental Water: A Reflection of the Soul's Wisdom
 
-Our relationship with elemental water reflects the special wisdom of our soul, inviting us to return to what is most precious within our nature so we may delight in being alive. Witnessing my daughter making hot chocolate, sharing this simple yet profound moment of connection, I am reminded of the healing power of water to cleanse us of emotional impurities and guide us back to love, compassion, and rebirth.
+Our relationship with elemental water reflects the special wisdom of our soul, inviting us to return to what is most precious within our nature so we may delight in being alive.
 
 The smell of hot chocolate and the voice of my daughter offering me a warm mug full of it floods me with memories, reminding me of childhood. Sharing this moment with her fills me with loving emotions. This is why we're here, for this, for each other, for the healing power of love, I gently remind myself. This is why I love the water state of my conscious experience: It is home to me. It is a place where I am safe to let down my guard. It is restorative.
 
@@ -1270,7 +1268,7 @@ In the water realm, there is no fixed pattern. Water energy is a fluid field of 
 
 *"The mind is like water. When it's turbulent, it's difficult to see. When it's calm, everything becomes clear." — Prasad Mahes*
 
-Recognition of the dynamics of water gives the alchemist, shaman, and healer, or anyone else who can perceive the subtle grades of water, the ability to work with a bowl of water, the rain, a ceremonial baptism in a body of water, such as a river or a pond, or even a visualization of water as a potent source of self-compassion, redemption, and transformation. Symbols and rituals can anchor our awareness of the water that exists in us and in the world and subtle fields around us. Our relationship with elemental water can reflect the special wisdom of our soul, which invites us to return to what is most precious within our nature so we may delight in being alive.
+Recognition of the dynamics of water gives the alchemist, shaman, and healer, or anyone else who can perceive the subtle grades of water, the ability to work with a bowl of water, the rain, a ceremonial baptism in a body of water, such as a river or a pond, or even a visualization of water as a potent source of self-compassion, redemption, and transformation. Symbols and rituals can anchor our awareness of the water that exists in us and in the world and subtle fields around us.
 
 Upon realizing that you are in the water phase in your journey, it may be useful to answer the direct question: What in your past, present, or future do you feel passionately about? Water will inspire you by providing you with insights on your genuine truth.
 
@@ -2826,6 +2824,7 @@ A working bibliography organized by chapter. Where the same source informs multi
 - Cohen, Leonard. *Selected Poems, 1956–1968.* Viking Adult, 1968.
 - Gawain, Shakti. *Creative Visualization.* New World Library, 1978.
 - Pollan, Michael. *How to Change Your Mind.* Penguin Press, 2018.
+- Gabriel, Peter. "Darkness." *Up.* Real World Records, 2002.
 
 ### Chapter 7: Earth
 
