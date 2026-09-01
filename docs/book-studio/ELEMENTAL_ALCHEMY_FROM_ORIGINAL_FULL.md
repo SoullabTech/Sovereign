@@ -761,8 +761,6 @@ The fire guides us on the path of spiritual evolution, urging us to release what
 
 Spiritual fire shines a guiding light into the world around us and within us, revealing our future as well as our deepest aspirations. It also burns away all that is not true—not truly us, not truly our path, not truly our nature. The spiritual journey illuminates the path our souls would love us to take, revealing to us why we are here, how our unique gifts can make a difference, and what we are here to share.
 
-*"Your task is not to seek for love, but merely to seek and find all the barriers within yourself that you have built against it." – Rumi*
-
 ### Personal Anecdote: Tending the Campfire
 
 #### The Ritual of Gathering Around a Fire
@@ -783,7 +781,7 @@ All awareness seems to return to this circle around the flames, smoke, smells, a
 
 The fire always leads to this place of softness, of presence that feels mysterious and sacred. The bright, noisy, crackling of the fire gives way to embers that undulate and draw us into a quiet, abiding presence. Our senses become sharper as we open ourselves to being receptive to the more subtle aspects of life.
 
-*"The mind is not a vessel to be filled but a fire to be kindled." – Plutarch*
+*"The mind is not a vessel to be filled, but wood that needs kindling." – Plutarch*
 
 ### The Expansion of Intuition and the Enchantment of the World
 
@@ -796,8 +794,6 @@ I feel the presence of my ancestors. I feel the presence of nature and all that 
 ### The Historical Significance of Gathering Around Campfires
 
 Throughout the ages, people have gathered around flickering campfires to shed the day's burdens, connect soul to soul, and invite in the dream realm's mysteries. The fire circle is a sacred space where stories are exchanged and bonds anchored beyond the mind's busyness and sense of separateness. A sacred flame has forever blazed as the center, the heart of human life. Around its warm radiance we come together to cook, share, heal, dance, and sing, celebrating our individuality while reaffirming our unity, our commitment to serving from one shared source.
-
-*"From a spark to a flame, fire is life." – Thich Nhat Hanh*
 
 ### An Invitation to Sit Around the Campfire
 
@@ -813,19 +809,13 @@ By sharing my own experiences, I hope to create a space for you to reflect on yo
 
 The element of fire is about spiritual expression, experience, and expansion. When we are inspired and self-aware, we embrace the fiery essence of our psyches, which sparks creativity and ignites our inner vision. Fire gives the gift of unified sight by initiating us into something universal, infinite, and inspirational beyond ego consciousness.
 
-*"The flame that burns within each of us is the light of the world." – Ram Dass*
-
 ### Envisioning a Brighter Future
 
 Envision the opportunities ahead for you in terms of new experiences, openings, and possibilities. See these as the inspirational and enlightening power of fire radiating from your center into the future: encouraging you, illuminating the way forward, and burning away all that obscures the larger reality of your highest nature hiding in plain sight. Fire invites you to imagine a brighter world. It's easy to become mesmerized by the shadows of our fears. But focusing on positive possibilities and your potential marshals your imagination to support this inner knowing. It awakens you to new journeys and adventures on the horizon.
 
-*"Follow your bliss and the universe will open doors for you where there were only walls." – Joseph Campbell*
-
 ### The Power of Imagination in Shaping Our Reality
 
 It is up to us to envision our future, or it will be predetermined for us, either randomly or by forces outside our control. Either we construct a living system based in the wisdom of nature and our connection to it or we will have a disconnected and alienating one selected for us. Our imaginations serve as conduits for spiritual fire to flow through, influencing our life visions. If we guide our imagination toward the wonderful, good, and soulful, it will assist us even in the most difficult situations. Fire, reflecting our spiritual imagination shining into the world, symbolizes the potential for love, creativity, prosperity, and a meaningful life. We are being called to return to the wisdom of nature, accessed through the elements of our consciousness, in order to survive and thrive.
-
-*"The imagination is the golden pathway to everywhere." – Terence McKenna*
 
 #### The Subjective Nature of Reality
 
@@ -836,8 +826,6 @@ Our senses provide a subjective view of our surroundings, not an objective accou
 #### Focusing Imagination on Aspirations, Not Fears
 
 While your imagination can fabricate monsters and saviors from pure fantasy, it can also unveil subtle realities our raw senses overlook. Focusing your imagination on your fears is a misuse of this powerful faculty. While our fears are signals that endeavor to keep us safe, they often feed our imagination and limit our freedoms of self-expression and individuation. It is far better to focus the reality-creating power of your imagination on what you aspire to create or manifest in the world than on what you don't want to actualize.
-
-*"Reality is merely an illusion, albeit a very persistent one." – Albert Einstein*
 
 #### The Illuminating and Refining Power of Fire
 
@@ -856,8 +844,6 @@ Fire is not without its danger. Its heat can destroy a forest or a house if it i
 #### The Campfire Metaphor
 
 Tending a campfire is an excellent metaphor for tending the fire of our spiritual nature. It's an intuitive process. Many variables go into making each fire a success, and we often need to improvise. For example, it can take a while to get the fire started if the wood is still a bit damp from the previous night's rain. That dampness is like a spiritual distraction preventing us from getting back in flow with intuitive awareness in our lives. As a result, we're driven to search the shed and the shelter behind the house for any suitable dry wood.
-
-*"Make of yourself a light," said the Buddha, before he died. That is what I hope to become." – Sharon Salzberg*
 
 Fire often announces itself as a change in energy when we are motivated by a challenge in our life, signaling that something extraordinary is taking place within our spirits. Every obstacle is presented by fire as an opportunity. Never pass up the chance to shine when the world presents it to us.
 
@@ -983,8 +969,6 @@ Secret fire, as our spiritual energetic nature, expresses all of life as a quant
 
 Self-awareness, expression of one's highest callings, and willingness to be transformed by one's spiritual path are the keys to thriving in the state of fire. Fire invites us to look beyond surface level superficialities in our lives and intuit higher truths. It is the part of our nature reaching into the future, revealing what can be if we are willing to strive for a better life.
 
-*"The best way to predict the future is to create it." – Peter Drucker*
-
 ### Fire is Our Universal Connection to Spiritual Wisdom
 
 We find examples of fire's place in our connection with the divine realms. Aristotle understood fire as the one element of the four connecting us in kinship with the gods since it is the one element we could create. Prometheus, as a trickster god, stole fire from the gods and gave it to humankind to awaken us from our animal-like slumber. As a result, we were offered insight into healing, navigating by starlight, cooking, ritual, and much more. There are Polynesian gods who also stole fire and gave it to humanity. Loki, the Norse trickster god, exemplifies the mercurial and ambiguous form of our fiery creative potential.
@@ -1076,8 +1060,6 @@ The fire of becoming burns in each kaleidoscopic universe within you, with firef
 And yet — at the heart of it all, you know. You have the answer within your body, heart, and mind, knowing exactly who you are and what you are here to do.
 
 Nurture your fire, fanning its flames, so it may light your path. Let the alchemical power of fire lead you to your true essence, let your light shine through it, and let your flame ignite the world.
-
-*"The most powerful weapon on earth is the human soul on fire." – Ferdinand Foch*
 
 May you emerge cleansed and empowered from the blaze in which you are always being born. May the transmutative fire of being burn brightly, leading you toward a life of meaning, passion, and grace.
 

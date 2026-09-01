@@ -1,0 +1,66 @@
+{
+  "_comment": "Stage 4C - Chapter 5 (Fire). Governing default settled with this chapter: verified and worthwhile = keep; misattributed = repair or remove; unverified but genuinely relational = honestly frame and consider keeping; unverified and decorative = remove. An epigraph interrupts the author's voice and asks the reader to receive another voice with special weight; if the source cannot be established AND it adds no indispensable relationship, idea, challenge or illumination, the interruption has not earned itself.",
+  "entries": [
+    {
+      "match": "wood that needs kindling",
+      "editorial_status": "KEEP THE IDEA - RESTORE THE REAL IMAGE. The modern 'a fire to be kindled' wording was doing too much editorial work: wood -> fire conveniently made Plutarch fit the Fire chapter. Host-aligned alteration. The genuine image - the mind is not a vessel to fill but wood that needs igniting - works in Fire without falsifying him, and is now what the epigraph carries.",
+      "translator_or_mediator": "UNIDENTIFIED - the restored English follows the sense of the standard renderings (Waterfield, Penguin 1992: 'not a vessel that needs filling, but wood that needs igniting'); which translation to name is a Stage 7 decision.",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md (Plutarch, On Listening to Lectures); 4C Chapter 5 ruling",
+      "occurrence": 1
+    },
+    {
+      "match": "May the light of your soul guide you",
+      "editorial_status": "KEEP. The closing blessing earns the interruption: it is not certification, it changes the register of the chapter and functions as an actual benediction. Permission risk does not decide editorial value - rights remain HIGH for Stage 6.",
+      "evidence_location": "4C Chapter 5 ruling",
+      "occurrence": 1
+    },
+    {
+      "match": "The fire is the main comfort of the camp",
+      "editorial_status": "KEEP. Verified variant, accurate though truncated. Bibliography names the wrong book - Stage 7.",
+      "evidence_location": "4C Chapter 5 ruling",
+      "occurrence": 1
+    },
+    {
+      "match": "The universe is a communion of subjects",
+      "editorial_status": "KEEP. Berry's signature formulation, attribution sound. Confirm at Stage 7 that The Great Work is a text where the sentence appears.",
+      "evidence_location": "4C Chapter 5 ruling",
+      "occurrence": 1
+    },
+    {
+      "match": "Out of this nettle, danger",
+      "editorial_status": "KEEP. Verified exact, public domain. Third character-voice specimen after Polonius and Satan - Hotspur is justifying the rebellion that kills him. The wrong-play bibliography defect is a Stage 7 repair, not an editorial one.",
+      "evidence_location": "4C Chapter 5 ruling",
+      "occurrence": 1
+    },
+    {
+      "match": "Your vision will become clear only when you can look into your own heart",
+      "editorial_status": "KEEP. Genuine; an intervening sentence is dropped but what remains is accurate.",
+      "evidence_location": "4C Chapter 5 ruling",
+      "occurrence": 1
+    },
+    {
+      "match": "The desire to know is natural to good men",
+      "editorial_status": "KEEP. Verified variant, closed by edition check rather than general search.",
+      "evidence_location": "4C Chapter 5 ruling",
+      "occurrence": 1
+    },
+    {
+      "match": "The wound is the place where the Light enters you",
+      "editorial_status": "KEEP. The book's specimen of honest labelling - the manuscript's own 'Adapted from Rumi, after Coleman Barks' is already correct. Barks rights go to Stage 6.",
+      "evidence_location": "4C Chapter 5 ruling",
+      "occurrence": 1
+    },
+    {
+      "match": "The unexamined life is not worth living",
+      "editorial_status": "KEEP. Verified exact. Plato entry MISSING from the Ch5 bibliography - Stage 7.",
+      "evidence_location": "4C Chapter 5 ruling",
+      "occurrence": 1
+    },
+    {
+      "match": "Everything that is visible hides something that is invisible",
+      "editorial_status": "KEEP. Unverified, but the bibliography already hedges honestly - '(As cited in collected interviews and writings.)' - which is the appropriate form when no specific source is found, and the line is doing illumination rather than certification at The Glowing Embers.",
+      "evidence_location": "4C Chapter 5 ruling",
+      "occurrence": 1
+    }
+  ]
+}
