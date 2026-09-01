@@ -1582,3 +1582,104 @@ author-adopted. **Shown, not reopened.**
 **That is the translation layer applied to the family-crossing-pass logic** — and it
 is the honest form, because *reviewing together* is exactly what the system is
 proposing, not *ruling together*.
+
+---
+
+# 4I · FAMILY CARD 1 — `fam-perfect-laugh` · the Buddha trio
+
+## ⚠️ HOLD — the context changes the question at two of the three
+
+**Reading the passages in full, as the family card required, surfaced a structural
+fact the register could not see: L47 and L190 are not two uses of one saying. They
+sit inside a near-duplicated passage.**
+
+| Front matter · **Disclaimer** | Call to Adventure |
+|---|---|
+| *"This book is a collection of interconnected insights, conversations, and experiences I wish had been shared with me when I started my journey of awakening…"* | **same opening, 0.61 similarity** |
+| *"While my goal is to honor your path and offer support, nothing replaces your own experiences… especially the poets and mystics."* | **same paragraph, expanded to "the shaman, poets…"** |
+| *"I aspire to offer guidance and support… **As the Buddha says,** …"* | **same, 0.54 — and the same quotation** |
+| *"Take what resonates, leave what doesn't, and may your path be illuminated with joy, laughter, and profound insights."* | ***identical — similarity 1.00*** |
+
+**The quotation appears twice because the disclaimer appears twice.** The saying is
+not doing two jobs in two places; **it is riding along inside a passage the book
+prints twice, once as front matter and once inside Chapter 1.**
+
+> **This is not a quotation problem. It is a manuscript-structure problem that
+> happens to duplicate a quotation** — and it is **outside 4I's remit.**
+
+**I am not ruling L47 and L190 as separate editorial questions**, because framing
+them that way would silently accept a duplication no one has decided to keep.
+
+**Recorded for structural review, not repaired.** The prior question is: *should the
+disclaimer appear twice at all?* Once that is settled, the quotation ruling at the
+surviving location follows in one decision, not two.
+
+**Also noted:** the Call to Adventure section carries **both** Buddha items — this
+saying **and** the Kalama Sutta quotation, which has its own `WRONG TRANSLATOR
+CITED` defect. **Three Buddha attributions in one short section, two of them
+defective.**
+
+---
+
+## Shared evidence — settled, not to be reconsidered
+
+- **The Buddha attribution does not survive.** No canonical source; nothing
+  resembling it in the suttas.
+- **Earliest trace: a Usenet post, 27 November 2001**, where it was posted as
+  *"Buddhist"* — **not attributed to the Buddha.**
+- **Three occurrences, two wordings** — the manuscript carries two different corrupt
+  versions of one spurious saying.
+- **A possible ancestor exists in Longchenpa** — *"Since everything is but an
+  illusion, perfect in being what it is… one might as well burst out laughing!"*
+  **A found ancestor is not automatically a replacement.**
+
+**Therefore: none can remain as "Buddha."** That much is shared. **Everything else
+is occurrence-specific.**
+
+---
+
+## L1899 · Mind-Body Coherence — the one genuine 4I ruling
+
+**Immediate context**, ending the section:
+
+> *"The heart's complex nervous system… communicates with the brain in a two-way
+> communication system… **At the heart of it all is the aether element holding the
+> calm middle ground.**"*
+> **→ *"When you realize how perfect everything is, you will tilt your head back and
+> laugh at the sky." — Buddha***
+
+**What it is doing:** it closes a **physiological argument** — heart-brain
+coherence, the aether as calm middle ground — **with a gesture of cosmic
+laughter.** The section is making a claim about the body; the quotation answers with
+a mood.
+
+**My reading, offered as reading and not as ruling:** the saying is functioning
+**ceremonially here too, not conceptually.** It does not advance the coherence
+argument — it releases it. That is a real editorial function, but it is one the
+author's own voice can perform, and **the section's last line before the quotation
+is already the better closing sentence.**
+
+**On the Longchenpa question you raised:** I would **not** convert
+*fake Buddha → real Longchenpa* here. Longchenpa's thought is that **everything is
+illusion, therefore perfect, therefore laughable** — a Dzogchen claim about the
+emptiness of appearances. **The section's claim is that the body's systems cohere
+under aether.** Those are not the same thought, and importing Longchenpa would
+attach a genuine source to an argument it does not actually support. **The mutation
+has drifted toward what the book wants to say. The ancestor has not.**
+
+> **A recovered ancestor is only a repair when the ancestor's actual thought belongs
+> at that location.**
+
+---
+
+## Standing on this family
+
+| Occurrence | Status |
+|---|---|
+| **L47** | **HELD** — duplication question precedes the quotation question |
+| **L190** | **HELD** — same |
+| **L1899** | **Ready for ruling.** My reading favours removal or reclamation; **I have not ruled it** |
+
+**One provenance failure, and the family did exactly what it was built to do:** it
+put the three side by side, and **two of them turned out not to be three occurrences
+at all.**
