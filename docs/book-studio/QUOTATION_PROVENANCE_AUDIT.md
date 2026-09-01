@@ -2,7 +2,7 @@
 
 **Source of record:** `docs/book-studio/ELEMENTAL_ALCHEMY_FROM_ORIGINAL_FULL.md`
 **Opened:** 2026-09-01, after Chapter 10 closed developmental adjudication.
-**Status:** IN PROGRESS — 32 of 137 adjudicated (Ch5: 22 of 30).
+**Status:** IN PROGRESS — 34 of 137 adjudicated (Ch5: 24 of 30).
 
 ## Scope
 
@@ -441,11 +441,53 @@ local-coinage evidence — `UNKNOWN`, not `INTERNAL-ORIGIN CANDIDATE`.
 unresolved: this one and the Chapter 10 epigraph. The standing whole-book
 McKenna item should absorb both.
 
-### Chapter 5 — still open (9 of 30)
+### Chapter 5 — fourth tranche
 
-All have a named primary work, most already in the chapter bibliography:
-L872 Salzberg (*Lovingkindness*) · L894 Mother Teresa (*A Simple Path*) ·
-L906 Magritte (collected interviews) · L922 Thomas Berry (*The Great Work*) ·
+**L922 · Thomas Berry — "The universe is a communion of subjects, not a collection of objects."**
+`VERIFIED EXACT`. Berry's signature formulation, stated repeatedly across his
+work — *The Dream of the Earth*, *The Universe Story* (with Brian Swimme), and
+*The Great Work*. The Ch5 bibliography's choice of *The Great Work* should be
+confirmed as a text where the sentence actually appears, but the attribution
+itself is sound.
+
+**L872 · attributed to Sharon Salzberg — MISATTRIBUTED to Mary Oliver.**
+
+The manuscript reads:
+
+> *"Make of yourself a light," said the Buddha, before he died. That is what I
+> hope to become." – Sharon Salzberg*
+
+The first sentence is **verbatim Mary Oliver**, the opening of her poem **"The
+Buddha's Last Instruction"** (*House of Light*, 1990):
+
+> "Make of yourself a light,"
+> said the Buddha,
+> before he died.
+
+Three separate defects in one epigraph:
+
+1. **Wrong author.** The language is Oliver's, not Salzberg's. Confirm against
+   *House of Light* how much of the manuscript's line is Oliver's — the first
+   sentence is certain; the extent of the second needs an edition check
+   (`source-lead rule`).
+2. **Rights exposure.** Mary Oliver's poetry is in copyright. This moves the item
+   out of editorial provenance and into the **same clearance bucket as the three
+   Peter Gabriel lyrics** — a fourth rights item, and the first one the audit
+   found by accident rather than by looking for lyrics.
+3. **Malformed punctuation.** The quotation marks are unbalanced — a closing
+   quote after "become" with no opener.
+
+**Symmetry worth recording.** Sharon Salzberg is **wrongly credited** here
+(L872, for words that are Mary Oliver's) and **wrongly uncredited** at L1253
+(where her own words appear under "Buddha"). The same author, mishandled in
+both directions, in the same book. Adjudicate the two together.
+
+### Chapter 5 — still open (6 of 30)
+
+All have a named primary work, most already in the chapter bibliography.
+Under the source-lead rule each requires an edition check before any
+`UNVERIFIED` verdict:
+L894 Mother Teresa (*A Simple Path*) · L906 Magritte (collected interviews) ·
 L926 Bear Heart (*The Wind Is My Mother*) · L938 Eckhart Tolle ·
 L1042 Maya Angelou · L1052 Rumi (already honestly labelled "Adapted from…
 after Coleman Barks") · L1062 Simone Weil (*Waiting for God*) ·
