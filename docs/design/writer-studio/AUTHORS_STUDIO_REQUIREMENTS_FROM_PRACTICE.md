@@ -1513,3 +1513,30 @@ translation carry the same exposure correctly credited as incorrectly credited.
 **And a corollary:** *do not pre-emptively sacrifice the version that works
 editorially for a hypothetical rights solution.* Compare alternatives **only if and
 when clearance actually fails.**
+
+### Requirement — identity must survive the loss of the recognition surface
+
+**Recognition bootstraps identity; it must not remain the only route to it.** Once an
+object is established, **anchor its text** so the system still emits it when the
+surrounding frame changes.
+
+**Grounding event, twice:** two editorial repairs each replaced the exact phrase the
+detector matched on — *"There is a saying:"* and *"As it is said:"* — and each
+silently deleted its own record. **After the first, a requirement was written. Before
+it was applied, the second occurred.** *A recorded requirement is not an implemented
+one.*
+
+### Requirement — migration must be idempotent
+
+**A migration that mutates its target in place will, on re-run, read its own output
+as prior state and manufacture false conflicts.** **Grounding event:** a spurious
+contradiction was reported and very nearly relayed as a real finding.
+
+> **Migration is a projection of the sources onto the current population, not an
+> accumulating mutation.** Rebuild, then project. **Test by running it twice and
+> comparing.**
+
+**And the related restraint, re-earned:** a similarity fallback added to rescue a
+stale match key **attached to the wrong object.** *Failure to attach is safer than
+plausible attachment to the wrong semantic object* — a property easy to state and
+easy to trade away for convenience.

@@ -2399,3 +2399,79 @@ section has just described** — and that both can be done in one clause.
 ---
 
 **Applied: 2. Awaiting wording: 2.** **4I: 8 remaining after these.**
+
+---
+
+# 4I · BATCH 2 CLOSED — and three defects in my own tooling · 2026-09-01
+
+## ✅ Blake — `REFRAME · LINEAGE + ILLUMINATION`
+
+> **Blake's Proverbs of Hell puts it provocatively:** *"If the fool would persist in
+> his folly he would become wise."*
+
+**Authentic wording restored · Blake and the work named · *"puts it provocatively"*
+signals this is not straightforward moral instruction · and it avoids making Blake
+personally endorse the proposition.** No literary detour.
+
+**Origin: `EDITOR/MODEL-ORIGINATED` (my option (a)) → `AUTHOR-EDITED` → adopted.**
+
+## ✅ Milton / Satan — `REFRAME · ILLUSTRATION + DRAMATIC CONTEXT`
+
+> **Milton gives this enclosure a voice in Satan, who declares,** *"The mind is its
+> own place, and in itself can make a heaven of hell, a hell of heaven."*
+
+**One movement: thoughtland → enclosure → Satan speaks from inside it.** No added
+sentence explaining he is wrong — the section has already diagnosed the condition,
+and **naming him makes the quotation the specimen.**
+
+**Origin: `AUTHOR-ORIGINATED`.** *I declined to compose this one; the sentence is
+entirely the author's.* **Recorded as such against the standing rule that origin and
+adoption are separate fields.**
+
+> **This is the case that proves the doctrine: telling the truth about a source did
+> not weaken the quotation — it revealed why the quotation belonged there.**
+
+---
+
+## ⚠️ Three defects, all mine, all found by the gate
+
+### 1 · A repair made its own record undetectable — for the second time
+
+**The Blake reframe replaced *"As it is said:"*, the phrase the detector matched
+on.** The record vanished. **I recorded a requirement against exactly this two
+commits earlier — and then did not apply it.**
+
+**Architectural fix, not another regex patch.** Added **`known_quotations.json`**:
+every established record's text is anchored, and the builder **emits it whatever
+frame now surrounds it.**
+
+> **Recognition bootstraps identity; it must not remain the only route to it.** Once
+> an object is established, the record stays attached **even when its entire
+> recognition surface changes.**
+
+### 2 · A similarity fallback attached to the wrong record — reverted
+
+To rescue a migration entry keyed on the pre-repair wording, I added a
+similarity-matched fallback. **It bound the entry to the wrong quotation and the gate
+caught it as a conflict.** **Reverted immediately** and the match key updated by hand.
+
+> **Failure to attach is safer than plausible attachment to the wrong semantic
+> object.** That property was stated early and nearly traded away for convenience.
+
+### 3 · The migration was not idempotent — and manufactured a false conflict
+
+`migrate.py` mutated `register.json` **in place**. Run twice without a rebuild, it
+saw its own prior output as existing state and **reported a contradiction that never
+occurred.** I came close to reporting that spurious conflict as a real finding.
+
+**Fixed: migration now always rebuilds first.** **Migration is a projection of the
+source files onto the detected population, not an accumulating mutation.**
+**Verified idempotent — two consecutive runs, identical output.**
+
+---
+
+## Standing
+
+**125 active · 33 historical · 158 total** ✅ · **`GATE PASSED`**
+
+**Batch 2 closed. 4I: 8 remaining**, in two batches of four.

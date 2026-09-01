@@ -8,7 +8,7 @@ No prose is parsed. Nothing is re-adjudicated.
 This script never opens the manuscript at all - verification and migration
 operate on immutable input and have no write path to the canonical artifact.
 """
-import json, re, unicodedata
+import json, re, subprocess, sys, unicodedata
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
@@ -27,7 +27,16 @@ def norm(t):
     return re.sub(r"[^a-z0-9 ]", "", t.lower()).strip()
 
 
+def similarity(a, b):
+    A, B = set(norm(a).split()), set(norm(b).split())
+    return len(A & B) / len(A | B) if A and B else 0.0
+
+
 def main():
+    # Always migrate onto a freshly built register. Migration is a projection of the
+    # source files onto the detected population, not an accumulating mutation.
+    subprocess.run([sys.executable, str(HERE / "build_register.py")],
+                   check=True, capture_output=True)
     data = json.loads(REG.read_text())
     entries = json.loads(SRC.read_text())["entries"]
     # Ontology rulings first: what KIND of object this is must be settled before

@@ -95,12 +95,29 @@ def qid(text, ordinal, ledger, taken):
     return new, "new_candidate", None
 
 
+ANCHORS = Path(__file__).resolve().parent / "known_quotations.json"
+
+
+def load_anchors():
+    """Texts of quotations the register has already established.
+
+    RECOGNITION BOOTSTRAPS IDENTITY; IT MUST NOT REMAIN THE ONLY ROUTE TO IT.
+    Once an object exists in the register, its text is anchored here and the
+    builder emits it whenever it appears in the manuscript - regardless of what
+    frame surrounds it. An editorial repair may legitimately replace the entire
+    recognition surface ("As it is said:" -> "Blake's Proverbs of Hell puts it
+    provocatively:") and must not thereby delete the record.
+    """
+    return json.loads(ANCHORS.read_text()) if ANCHORS.exists() else []
+
+
 def build():
     lines = MS.read_text().split("\n")
     chapter = section = None
     seen, records = {}, []
     ledger = load_identity()
     taken = set()
+    anchors = load_anchors()
 
     for i, raw in enumerate(lines, start=1):
         line = raw.rstrip()
@@ -160,6 +177,12 @@ def build():
                     continue
                 found.append((m.group(1), form, attr))
 
+        # Anchored quotations are emitted whatever frame now surrounds them.
+        for a in anchors:
+            if a["text"][:60] in line and not any(a["text"][:40] in f[0] for f in found):
+                m2 = re.search(re.escape(a["text"][:40]) + r"[^\"*]*", line)
+                found.append((m2.group(0) if m2 else a["text"], a.get("display_form", "inline_anchored"),
+                              a.get("attributed_as") or ""))
         for text, form, attr in found:
             key = norm(text)
             seen[key] = seen.get(key, 0) + 1

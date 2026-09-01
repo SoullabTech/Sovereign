@@ -1092,13 +1092,13 @@
     {
       "id": "EA-Q-0043",
       "occurrence": 1,
-      "text": "If a fool persists in his folly he becomes wise.",
+      "text": "If the fool would persist in his folly he would become wise.",
       "line_at_build": 976,
       "chapter": "Chapter 5: Fire — The Element of Spirit and Energy",
       "section": "The Secret Fire Walk of Wisdom and Enlightenment",
-      "display_form": "inline_anonymous_attribution",
-      "attributed_as": null,
-      "attribution_state": "attribution_anonymous",
+      "display_form": "inline_plain_lead",
+      "attributed_as": "Blake's Proverbs of Hell",
+      "attribution_state": "attributed",
       "actual_author": "William Blake",
       "internal_speaker": "the devil's voice in Blake's satirical frame",
       "work": "The Marriage of Heaven and Hell (c.1790), 'Proverbs of Hell'",
@@ -1113,8 +1113,8 @@
       "family": null,
       "editorial_status": "unadjudicated",
       "record_state": "confirmed",
-      "identity_match_score": 1.0,
-      "notes": "UNDER-ATTRIBUTED ('As it is said') plus lost speaker context. Two defects pointing in opposite directions. Fourth speaker specimen and the first found by under-attribution."
+      "identity_match_score": 0.5,
+      "notes": "UNDER-ATTRIBUTED ('As it is said') plus lost speaker context. Two defects pointing in opposite directions. Fourth speaker specimen and the first found by under-attribution. | MATCH KEY UPDATED after the 4I REFRAME restored Blake's authentic wording. A similarity fallback was tried and REVERTED because it attached to the wrong record: failure to attach is safer than plausible attachment to the wrong semantic object."
     },
     {
       "id": "EA-Q-0044",
@@ -1982,7 +1982,7 @@
       "notes": "Audit: MISATTRIBUTED, EVOLVED APHORISM / RECOVERABLE ANCESTOR. CLOSED BY AN AUTHORITATIVE SOURCE - the Santayana Edition (Indiana University's critical edition) published 'Citation and the Challenges of Misattribution' specifically on this line, and their editors found no sign of it in his works."
     },
     {
-      "id": "EA-Q-0254",
+      "id": "EA-Q-0262",
       "occurrence": 1,
       "text": "Alone we can do so little; together we can do so much.",
       "line_at_build": 1451,
@@ -2396,7 +2396,7 @@
       "notes": "Audit: UNVERIFIED, UNKNOWN. Shows BOTH instability markers at once - a competing attribution (Hale, 1822-1909, whose death predates the attribution) and no primary source."
     },
     {
-      "id": "EA-Q-0255",
+      "id": "EA-Q-0263",
       "occurrence": 2,
       "text": "Alone we can do so little; together we can do so much.",
       "line_at_build": 1670,
@@ -2643,7 +2643,7 @@
     {
       "id": "EA-Q-0101",
       "occurrence": 1,
-      "text": "The mind is its own place, and in itself, can make a heaven of hell, a hell of heaven.",
+      "text": "The mind is its own place, and in itself can make a heaven of hell, a hell of heaven.",
       "line_at_build": 1750,
       "chapter": "Chapter 8: Air — The Element of the Intellect and Mind",
       "section": "The Dark Side of Air",
@@ -2887,7 +2887,7 @@
     {
       "id": "EA-Q-0110",
       "occurrence": 1,
-      "text": "We put thirty spokes together and call it a wheel; But it is on the space where there is nothing that the usefulness of the wheel depends. We turn clay to make a vessel; But it is on the space where there is nothing that the usefulness of the vessel depends. We pierce doors and windows to make a house; And it is on these spaces where there is nothing that the usefulness of the house depends. Therefore, just as we take advantage of what is, We should recognize the usefulness of what is not.",
+      "text": "We put thirty spokes together and call it a wheel; But it is on the space where there is nothing that the utility of the wheel depends. We turn clay to make a vessel; But it is on the space where there is nothing that the utility of the vessel depends. We pierce doors and windows to make a house; And it is on these spaces where there is nothing that the utility of the house depends. Therefore, just as we take advantage of what is, We should recognize the usefulness of what is not.",
       "line_at_build": 1865,
       "chapter": "Chapter 9: Aether — The Infinite Self at Play",
       "section": "The Alchemical Properties of Aether",
@@ -2908,7 +2908,7 @@
       "family": null,
       "editorial_status": "unadjudicated",
       "record_state": "confirmed",
-      "identity_match_score": 1.0,
+      "identity_match_score": 0.977,
       "notes": "Longest quotation in the manuscript (~90 words) and its highest rights exposure - and it sat outside the census entirely."
     },
     {
@@ -3027,8 +3027,8 @@
       "chapter": "Chapter 9: Aether — The Infinite Self at Play",
       "section": "Breaking Free from Attachments",
       "display_form": "inline_emphasised",
-      "attributed_as": "John 17:16",
-      "attribution_state": "attributed",
+      "attributed_as": null,
+      "attribution_state": "unattributed",
       "actual_author": "traditional Christian formulation",
       "internal_speaker": "Jesus, praying - unnamed in the citation",
       "work": "summarises John 17:14-16; the phrase does NOT appear at John 17:16",
@@ -3462,7 +3462,7 @@
     },
     {
       "line": 1750,
-      "text": " As John Milton aptly noted, *",
+      "text": " Milton gives this enclosure a voice in Satan, who declares, *",
       "context": "the ego is ruled by cold logic and finds itself lost in \"thoughtland."
     },
     {
@@ -4331,7 +4331,7 @@
       "EA-Q-0073",
       "EA-Q-0074",
       "EA-Q-0075",
-      "EA-Q-0254",
+      "EA-Q-0262",
       "EA-Q-0077",
       "EA-Q-0078",
       "EA-Q-0079",
@@ -4353,7 +4353,7 @@
       "EA-Q-0103",
       "EA-Q-0104",
       "EA-Q-0098",
-      "EA-Q-0255",
+      "EA-Q-0263",
       "EA-Q-0106",
       "EA-Q-0107",
       "EA-Q-0108",
