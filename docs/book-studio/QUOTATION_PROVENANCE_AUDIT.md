@@ -2,7 +2,7 @@
 
 **Source of record:** `docs/book-studio/ELEMENTAL_ALCHEMY_FROM_ORIGINAL_FULL.md`
 **Opened:** 2026-09-01, after Chapter 10 closed developmental adjudication.
-**Status:** IN PROGRESS — 101 of 137 adjudicated. **Chapter 5 CLOSED (30/30). Chapter 8 CLOSED (23/23).**
+**Status:** IN PROGRESS — 106 of 137 adjudicated. **Chapter 5 CLOSED (30/30). Chapter 8 CLOSED (23/23).**
 
 ## Scope
 
@@ -2644,6 +2644,83 @@ the whole.
 **achievable within this manuscript**. The reconstruction must therefore
 **preserve verified entries rather than normalize everything indiscriminately** —
 Ch9's apparatus and Ch7's MLK entry are the models to protect.
+
+---
+
+## Chapter 2 — BATCH INTERRUPTED. A finding that overturns two conclusions.
+
+**Five of Chapter 2's ten quotations carry an "Adapted from" label:**
+
+| Line | Attributed |
+|---|---|
+| L359 | Adapted from Lao Tzu |
+| L373 | Adapted from Nassim Haramein |
+| L389 | Adapted from Black Elk |
+| L403 | Adapted from Carl Jung |
+| L479 | Adapted from Lao Tzu |
+
+### The three-part convergence, with the external test run first
+
+**1. No external circulation.** A verbatim search for L403 returns **nothing** —
+only thematically similar material on spiral symbolism, none matching the wording,
+none attributed to Jung. *(Test run before the flag, per the discipline
+established after the James and Jenkins withdrawals.)*
+
+**2. Syntactic twinning across two DIFFERENT attributed authors** — the decisive
+evidence:
+
+> **L403 · "Adapted from Carl Jung"** — "…**inviting us to continually evolve and
+> expand our understanding**."
+> **L479 · "Adapted from Lao Tzu"** — "…**inviting us to revisit and refine our
+> understanding continually**."
+
+Same construction, same verb, near-identical closing, 76 lines apart, attributed
+to two authors separated by two millennia and two languages. **Genuine
+adaptations of two different sources would not converge on one sentence shape.**
+
+**3. Register mismatch with every putative source.** The *Tao Te Ching* is terse,
+paradoxical and image-based; Jung is clinical and precise; Black Elk's recorded
+speech is concrete and imagistic. All five epigraphs are **expansive modern
+inspirational prose in a single consistent voice** — the same register as the
+Chapter 5 opening pair.
+
+**Recorded: all five `UNVERIFIED` · `INTERNAL-ORIGIN CANDIDATE`.**
+
+### This overturns two established conclusions
+
+**1. The positive control is FALSIFIED.** "Explicit adaptation labelling is
+highly reliable in this book" held across three instances — Barks, Luke 4:23,
+Permaculture. It fails across these five. The label is doing **two different
+jobs**:
+- **(a) honest flagging of a real paraphrase** — Barks, Luke, Permaculture;
+- **(b) attaching a famous name to the manuscript's own composition** — apparently
+  these five.
+
+**In form (b) the label is worse than a bare attribution**, because it *looks like
+disclosure* while disclosing nothing. A reader sees provenance care and relaxes.
+
+**2. "Attribution hardening is unique to Chapter 5" is FALSIFIED** — in a
+different guise. Fire's candidates carry **bare** attributions; Chapter 2's carry
+**labelled** ones. Same underlying phenomenon, milder-looking surface.
+
+### Ruling requested
+
+Is *"Adapted from X"* over text that adapts **no identifiable passage** by X:
+- a **distinct, milder defect** deserving its own treatment, or
+- **the same attribution hardening** as Fire, differently dressed?
+
+The remedy differs. I have applied neither.
+
+### Chapter 2 bibliography — two notes
+
+**A model entry:** "**Black Elk. *Black Elk Speaks.* As told through John G.
+Neihardt.**" — the mediation is **named in the entry itself**. This is precisely
+the transparent form the Barks items need, and the book already contains it.
+
+**A mediation case correctly named but worth flagging:** "Lao Tzu. *Tao Te Ching.*
+**Translated by Stephen Mitchell**." Mitchell, like Barks, does not read the
+source language; his *Tao Te Ching* is a **version**, not a translation. The entry
+names him — good — but the mediation layer is the same shape as Barks/Rumi.
 
 ---
 
