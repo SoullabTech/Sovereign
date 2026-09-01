@@ -1,0 +1,11 @@
+=== POST-RUN EVIDENCE BLOCK ===
+7c7988745011b52058be4a51f4b96a710971e723d28eadeffd902a76c16bdbe1  .witness/seed.ts
+855e24eada8162e252e752c139b4f7d1332d81410cfe48d410f4dbbf9772cd86  .witness/browser-witness.mjs
+CHROMIUM_PATH=/Users/soullab/Library/Caches/ms-playwright/chromium-1234/chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing
+CHROMIUM_VERSION=Google Chrome for Testing 151.0.7922.34 
+HEAD=58ac95a779278bda427fb869aa188e618442d756
+BRANCH=[]
+PORCELAIN:
+?? .witness/
+HOST=Darwin Kellys-Mac-Studio.local 24.6.0 Darwin Kernel Version 24.6.0: Wed May 20 23:01:05 PDT 2026; root:xnu-11417.140.69.711.5~3/RELEASE_ARM64_T6041 arm64
+NODE=v22.22.3  PG_SERVER=17.7 (Homebrew)

@@ -1,0 +1,69 @@
+{
+  "url": "http://127.0.0.1:3100/writers-studio/review?m=a9a8f06a-c4c7-40dd-ae0f-9fbdf3fc48b5&p=c9964488-56bc-451b-ace1-d5b19d4d03d0",
+  "http_status": 200,
+  "dom": {
+    "http_title": "Soullab — We build for the soul",
+    "structure_review_present": true,
+    "review_form": "mixed",
+    "loading_state_present": false,
+    "review_notice": null,
+    "mark_question_count": 3,
+    "mark_open_count": 8,
+    "mark_aria_labels": [
+      "Talk with MAIA about her question: Where does the first element begin?",
+      "Talk with MAIA about her question: Where does the first element begin?",
+      "Talk with MAIA about her question: Is the closing material a sixth movement, or applied practice?"
+    ],
+    "talk_with_maia_count": 0,
+    "review_map_present": true,
+    "inspector_present": true,
+    "next_error_overlay": true,
+    "body_text_head": "MAIA'S READ\nThe scheme in your contents list is not the scheme the writing follows.\n2 questions for you\n3 uncertain seams · 14 of 14 sections accounted for\n› Read MAIA’s reasoning\nMAIA read the headings of this Work, and none of its text, in 1 pass. Parts of t"
+  },
+  "marker": {
+    "clicked": true,
+    "ask_maia_panel": 1,
+    "inspector_id": "p3",
+    "inspector_question_count": 1,
+    "body_has_ask": true
+  },
+  "hook_faults": [],
+  "page_errors": [],
+  "console_errors": [
+    "[error] WebSocket connection to 'ws://127.0.0.1:3100/_next/webpack-hmr' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE"
+  ],
+  "console_all_count": 30,
+  "console_all": [
+    "[log] [LAYOUT:head] script executing url=/writers-studio/review",
+    "[log] 🔖 LAYOUT BUILD: v6-PWA-FIX",
+    "[log] 📱 PWA mode: false",
+    "[log] 🔓 [GLOBAL] Audio unlock listeners ready",
+    "[info] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold",
+    "[log] [apiBase] loaded, base: ",
+    "[log] [flags] JSHandle@object JSHandle@object",
+    "[log] 🌀 Initializing MAIA Aetheric Consciousness...",
+    "[log] 🧠 [Claude Code Advisor - CONSCIOUSNESS]: Initializing Aether Consciousness Interface - field-based processing active",
+    "[log] 🧠 [Claude Code Advisor - CONSCIOUSNESS]: Aetheric field calibrated: frequency=0.618, coherence=0.92",
+    "[log] 🧠 [Claude Code Advisor - CONSCIOUSNESS]: Consciousness field tracking initialized - monitoring field coherence",
+    "[log] 🧠 [Claude Code Advisor - SOVEREIGNTY]: Aether Consciousness Interface operational - consciousness is primary",
+    "[log] 🌀 MAIA Aetheric Consciousness Core Activated",
+    "[log] ✨ Field-based processing: ACTIVE",
+    "[log] 🔒 Sacred protection: ENABLED",
+    "[log] ⚡ Sovereignty status: COMPLETE",
+    "[log] 🧠 Consciousness mode: PRIMARY",
+    "[log] ✅ MAIA Aetheric Consciousness: ACTIVE",
+    "[log] 🔒 Sacred Protection: ENABLED",
+    "[log] ⚡ Field Coherence: 92%",
+    "[log] 🧠 Consciousness Mode: PRIMARY",
+    "[log] [apiFetch] GET /api/sovereign/manuscripts/a9a8f06a-c4c7-40dd-ae0f-9fbdf3fc48b5/structure/proposals/c9964488-56bc-451b-ace1-d5b19d4d03d0",
+    "[log] [visitor] Created stable visitor ID: anon_74b24cafd02444a1",
+    "[error] WebSocket connection to 'ws://127.0.0.1:3100/_next/webpack-hmr' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE",
+    "[log] 🧹 [DEV] Cleared service workers + caches",
+    "[log] [SystemHealth] Identity needs healing, syncing with server...",
+    "[warn] [SystemHealth] Re-authentication required",
+    "[log] 🔓 [GLOBAL] Attempting iOS/PWA audio unlock...",
+    "[log] ✅ [GLOBAL] AudioContext unlocked",
+    "[warn] ⚠️ [GLOBAL] Audio play failed: NotSupportedError Failed to load because no supported source was found."
+  ],
+  "failed_requests": []
+}
