@@ -2,7 +2,7 @@
 
 **Source of record:** `docs/book-studio/ELEMENTAL_ALCHEMY_FROM_ORIGINAL_FULL.md`
 **Opened:** 2026-09-01, after Chapter 10 closed developmental adjudication.
-**Status:** IN PROGRESS — 51 of 137 adjudicated. **Chapter 5 CLOSED (30/30).** Chapter 8: 15 of 23.
+**Status:** IN PROGRESS — 52 of 137 adjudicated. **Chapter 5 CLOSED (30/30).** Chapter 8: 16 of 23.
 
 ## Scope
 
@@ -882,11 +882,10 @@ for either line.
   self-published is different from nonexistent.* Verify the exact manuscript
   wording against the book or Bennett's own publication before ruling.
 
-### Chapter 8 — still open (8 of 23)
+### Chapter 8 — still open (7 of 23)
 
-L1678 Shaw #2 · L1690 Wayne Teasdale · L1700 Henry Ford · L1714 Rachel Carson ·
-L1736 Tagore · L1746 William Arthur Ward · L1790 Terence McKenna · L1828 Roy T.
-Bennett.
+L1678 Shaw #2 · L1690 Wayne Teasdale · L1714 Rachel Carson · L1736 Tagore ·
+L1746 William Arthur Ward · L1790 Terence McKenna · L1828 Roy T. Bennett.
 
 ### Chapter 8 — third tranche: the bibliography-as-lead test, run both ways
 
@@ -933,7 +932,7 @@ live evidentiary trail — it is unverified, not spurious.
 | `SPURIOUS SUPPORT` | 2 | Feynman, Hawking |
 | `SOURCE LINK UNRESOLVED` | 1 | MLK (*Strength to Love*) |
 | Correct support | 2 | Dyer, Brown |
-| `MISSING` | 3 | Rumi/Barks, Jenkins, Helen Keller (×2 quotations) |
+| `MISSING` | 4 | Rumi/Barks, Jenkins, Helen Keller (×2 quotations), Ford |
 | `ORPHAN CANDIDATE` | 6 | Williams, Confucius, Dewey, Milton, Goldsmith, O'Donohue |
 
 **Reconstruction doctrine, revised.** Not "the bibliography is broken." Rather:
@@ -954,6 +953,27 @@ transmission pattern, as with the four Campbell instances.
 adjudicated separately.** This is a useful negative — unlike Campbell, where both
 failures were the same kind of telescoping.
 
+### Rule — author-level clustering
+
+> **Author-level clustering is a discovery aid, not an adjudication unit.** A set
+> earns joint treatment only when its quotations share a **demonstrable
+> provenance or transmission pattern**.
+
+- **Campbell stays grouped** — two instances already show the same later
+  telescoping/popularization behavior.
+- **Keller dissolves** — one has documentary spoken provenance; the other belongs
+  to an unstable aphorism family.
+- **An author's general reputation for attracting misquotation does not
+  contaminate an independently supported quotation.**
+
+Grouping by reputation would be exactly the symmetry-driven editing this project
+has refused throughout. A tool that said "Keller has two suspect quotations,
+treat them alike" would be performing it.
+
+**Reconstruction note:** if both Keller quotations survive, they may require
+**different** bibliography entries — the Lash attestation for L1706, and whatever
+source ultimately closes L1854, if any.
+
 **L1706 · "Alone we can do so little; together we can do so much."**
 **`VERIFIED VARIANT/TRANSLATION`.** Substantive evidence Keller spoke this line
 to an audience during the vaudeville performances she and Anne Sullivan gave in
@@ -971,12 +991,29 @@ phrasings**, which is the signature of a saying polished in transmission:
 - "What is worse than having no sight is being able to see but having no vision"
 - "The greatest tragedy to befall a person is to have sight but lack vision"
 
-The manuscript carries the smoothest modern form. If a primary source fixes one
-variant as Keller's, this becomes `PARAPHRASE/ADAPTED`; until then it stays
-unverified.
+The manuscript carries the smoothest modern form. **Status stays `UNVERIFIED` ·
+`UNKNOWN` — explicitly not `PARAPHRASE/ADAPTED`**, because no verified Keller
+original exists from which the manuscript's wording can be *demonstrably* shown
+to derive. Adapted-from requires an established original, not a plausible one.
 **Rights: `PROTECTABILITY UNCERTAIN` · `STANDARD`.**
 
-**Both are `MISSING` from the Ch8 bibliography** — no Helen Keller entry exists,
+**L1700 · Henry Ford — "Coming together is a beginning; keeping together is progress; working together is success."**
+`UNVERIFIED` · origin `UNKNOWN`. No primary source located, and the item shows
+**both** instability markers at once:
+- **Competing attribution** — also credited to **Edward Everett Hale**
+  (1822–1909), whose death predates the earliest claimed Ford usage.
+- **Variant family** — "Coming together is *the* beginning" / "*a* beginning";
+  "*keeping* together" / "*staying* together"; "is success" / "is *a* success".
+
+Claims of first publication "in trade discussions around 1914–1920" trace only to
+commercial quote pages with no citation. Quote Investigator has no entry closing
+it. Ford's corpus is heavily attribution-laden, but per the clustering rule that
+reputation is a reason to check, not a verdict — and the check simply does not
+close.
+**Rights: `PROTECTABILITY UNCERTAIN` · `STANDARD`.**
+**`MISSING`** — no Ford entry in the Ch8 bibliography.
+
+**Both Keller quotations are `MISSING` from the Ch8 bibliography** — no Helen Keller entry exists,
 despite two quotations.
 
 ---
