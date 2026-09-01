@@ -2,7 +2,7 @@
 
 **Source of record:** `docs/book-studio/ELEMENTAL_ALCHEMY_FROM_ORIGINAL_FULL.md`
 **Opened:** 2026-09-01, after Chapter 10 closed developmental adjudication.
-**Status:** IN PROGRESS — 55 of 137 adjudicated. **Chapter 5 CLOSED (30/30).** Chapter 8: 19 of 23.
+**Status:** IN PROGRESS — 59 of 137 adjudicated. **Chapter 5 CLOSED (30/30). Chapter 8 CLOSED (23/23).**
 
 ## Scope
 
@@ -31,12 +31,13 @@ failure happened, separately from the verdict:
 1. **`SOURCE DISPLACEMENT`** — a recoverable source exists and the wrong famous
    name got attached. *Feynman → Haldane.* Remedy: reattribute **if** the
    manuscript wording actually belongs to that source.
-2. **`EVOLVED APHORISM / RECOVERABLE ANCESTOR`** — an identifiable earlier
-   formulation exists, but repeated transmission substantially reshaped the
-   wording before another name attached. *Shaw → Whyte 1950.* Remedy: **do not**
-   simply swap the byline — Whyte did not write the manuscript's sentence. Remove
-   as a quotation, or, only if it earns its place, recast with explicit
-   provenance.
+2. **`EVOLVED APHORISM / RECOVERABLE ANCESTOR`** — a recoverable earlier
+   formulation exists, **by the same author or another**, and transmission changed
+   the wording **without materially changing the claim**. *Shaw → Whyte 1950*
+   (different author); *Carson → Carson* (same author, compressed). Most familiar
+   "cleaned-up" quotations will land here. Remedy: **do not** simply swap the
+   byline — Whyte did not write the manuscript's sentence. Remove as a quotation,
+   or, only if it earns its place, recast with explicit provenance.
 3. **`FLOATING APHORISM / SOURCE UNRESOLVED`** — competing authors, unstable
    wording family, no defensible originating text. *Ford; Keller L1854.* Remedy:
    usually remove as a quotation; if the thought is genuinely load-bearing it can
@@ -56,6 +57,15 @@ failure happened, separately from the verdict:
    say. Default remedy: do **not** "correct" it if the authentic wording no longer
    performs the manuscript's function — remove as a quotation, then decide
    independently whether the underlying idea belongs as authorial prose.
+
+   > **The restoration test (formal discriminator for 2 vs 5).** Not "did the
+   > wording change?" but: **would restoring the authentic wording still do the
+   > editorial job the manuscript uses the quotation for?**
+   > **Yes → pattern 2.** **No, because the mutation created the manuscript's
+   > claim → pattern 5.**
+   >
+   > The test measures **semantic fidelity, not author identity**. Same-author
+   > ancestry is common in pattern 2 and is not diagnostic.
 
 The five discriminate because each answers a different provenance question:
 **wrong person → drifted wording → no origin → fused objects → altered meaning.**
@@ -928,10 +938,6 @@ for either line.
   self-published is different from nonexistent.* Verify the exact manuscript
   wording against the book or Bennett's own publication before ruling.
 
-### Chapter 8 — still open (4 of 23)
-
-L1736 Tagore · L1746 William Arthur Ward · L1790 Terence McKenna · L1828 Roy T.
-Bennett.
 
 ### Chapter 8 — third tranche: the bibliography-as-lead test, run both ways
 
@@ -1174,6 +1180,86 @@ ancestor is by the same author rather than a different one.
 **Ruled:** both are recurring mechanisms, not edge cases, and each requires a
 different repair. L1758 is the canonical `COMPOSITE ATTRIBUTION` specimen; L852
 is the canonical `SAME-AUTHOR DISTORTION` specimen.
+
+### Chapter 8 — final tranche
+
+**L1828 · Roy T. Bennett — "The past is a place of reference, not a place of residence…"**
+**`VERIFIED EXACT`.** *The Light in the Heart*, confirmed on the **author's own
+publication channel**, which meets the official-source standard. Bibliography
+entry correct — **third correctly-supported citation in Chapter 8.**
+*Auditor's correction upheld:* I had flagged Bennett as a figure of uncertain
+identity because the book is an aphorism collection. That suspicion-by-genre was
+wrong. **Unconventional publication is not absent provenance.**
+**Rights: `PROTECTABILITY UNCERTAIN` · `STANDARD`.**
+
+**L1736 · Rabindranath Tagore — "Love is the only reality, and it is not a mere sentiment…"**
+`UNVERIFIED — source lead unresolved`. Quote-site attestation only. Proposed
+edition: ***Sadhana: The Realisation of Life*** (1913), the thematically closest
+work. **Probable `WRONG SOURCE/WORK`** — the bibliography cites *The Home and the
+World* (1919), a **novel**; this is a philosophical aphorism.
+**Rights: `TERM UNCERTAIN` · `STANDARD`** — public domain if *Sadhana* (1913);
+cannot be fixed until the source is.
+
+**L1790 · Terence McKenna — "Our own decision to view the universe as dead, as inanimate, as unintelligent…"**
+`UNVERIFIED` · `UNKNOWN`. Not located in Wikiquote, Goodreads, or the
+**organism.earth McKenna transcript archive** — a substantial searchable library
+of his talks. Absence there is more meaningful than absence from quote sites.
+
+**L1746 · William Arthur Ward — "When we seek to discover the best in others…"**
+`UNVERIFIED — source lead unresolved`. Ward (1921–1994) is a real and heavily
+anthologized writer of inspirational maxims; the line is consistently his, but no
+work or page is attested. Proposed edition: ***Fountains of Faith*** (1970).
+**`MISSING`** — no Ward entry in the Ch8 bibliography.
+**Rights: `PROTECTABILITY UNCERTAIN` · `STANDARD`.**
+
+**McKenna — candidate set, pending Ch10.** Three of five McKenna quotations are
+now unresolved (L840 Ch5, L1790 Ch8, L2040 Ch10 still open), all with the same
+profile: no locatable source, quote-site circulation only. If L2040 resolves the
+same way, McKenna earns set treatment as Campbell did — but **not before it is
+sourced independently.**
+
+---
+
+## Chapter 8 CLOSED — and the first fair comparison
+
+Both chapters are now complete censuses, so the rates are comparable.
+
+| Verdict | Ch5 Fire (30) | Ch8 Air (23) |
+|---|--:|--:|
+| `MISATTRIBUTED` | 3 — 10% | **4 — 17%** |
+| `VERIFIED EXACT` + `VARIANT` | **10 — 33%** | 4 — 17% |
+| `PARAPHRASE/ADAPTED` | 4 — 13% | 2 — 9% |
+| `UNVERIFIED` | 13 — 43% | **13 — 57%** |
+
+**Chapter 8 is measurably worse**: a higher misattribution rate, **half** the
+verification rate, and a higher unverified rate. The earlier instinct was right;
+it simply could not be claimed until the sample stopped being risk-enriched.
+
+### Replication verdict
+
+**Quotation-source unreliability — REPLICATED, strongly.** Both chapters show
+prestigious author → altered wording → apparatus that does not establish the
+quotation.
+
+**Spurious bibliographic support — REPLICATED within Ch8** (Feynman, Hawking).
+
+**Attribution hardening — NOT REPLICATED.**
+
+| | Internal-origin candidates |
+|---|--:|
+| Ch5 Fire | **4** — L756 Rumi, L764 Estés, L846 Jung, L1074 Wilber |
+| Ch8 Air | **0** |
+
+Chapter 8 produced two candidates and **both were withdrawn on evidence**: James
+(flagged on register; mass-circulated elsewhere) and Jenkins (flagged on
+conceptual fit; independent source trail predating the manuscript). Every Chapter
+8 failure resolved to an **external** transmission history.
+
+> **This makes the Chapter 5 phenomenon more interesting, not less.** Attribution
+> hardening is a **specific compositional/provenance failure mode nested inside**
+> a broader book-wide quotation-transmission problem — not the explanation for
+> every bad quotation. The two problems need different remedies and should not be
+> merged in the repair batch.
 
 ---
 
