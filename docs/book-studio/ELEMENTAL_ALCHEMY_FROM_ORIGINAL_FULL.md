@@ -1619,8 +1619,6 @@ As the first rays of dawn light filtered through my study window, I sat in my fa
 
 Air represents the realm of innovation and novel insights. Our thoughts, visions, dreams, and plans are lifted to the rarefied essence of concepts and ideas that can be transmitted and shared with others. This chapter delves into the breathtaking beauty of our ability to relate, share, and progress together through intelligent, shared communications.
 
-*"The wind of change carries seeds of new ideas, which bloom into the flowers of wisdom when nurtured with curiosity and openness." — Unknown*
-
 ### The Sublime Nature of Air
 
 In the alchemical process of sublimatio, the element of Air transforms the dense creations of Earth into a vapor of wisdom. This ethereal essence can then be shared, fostering dialectic synthesis and enhancing our collective understanding. Earth and Air belong to the realms of the left hemisphere, organizing and crystallizing knowledge into a collaborative, creative process.
@@ -1647,7 +1645,7 @@ In the beginning was the Word, the sound made intelligible, creating the symbol�
 
 Attuning our awareness to this eternal Breath reveals the majesty of mind, awareness, and creation. Every sight and sound becomes a message from the Sublime Architect, expressing the beauty and power of relationships. The manifesting power of communication allows us to be sacred mirrors for each other, forming sacred communities, tribes, families, and partnerships. Our ability to communicate transcends words; it is the capacity to express ourselves from the inside out. Our inner worlds flow outward through the air of our thoughts, minds, and connections, continuously creating new worlds with each shared moment and understanding.
 
-This is in honor of this divine gift by grounding ourselves in the wisdom of the earth, nurturing our dreams with its strength, and walking our path with integrity and compassion. In doing so, we align ourselves with the timeless dance of creation, embodying the harmony and balance that the earth so generously offers. May all we manifest be guided by this wisdom, and may we experience love flowing back to us in all our relations, in all we create, and in all we do.
+This is in honor of this divine gift by attuning ourselves to the wisdom of the air, giving breath to our dreams, and walking our path with integrity and compassion. In doing so, we align ourselves with the timeless dance of creation, embodying the clarity and connection that air so generously offers. May all we manifest be guided by this wisdom, and may we experience love flowing back to us in all our relations, in all we create, and in all we do.
 
 Let our lives be a song to the earth, love to the water, and a form of prayer to the fire.
 
@@ -1789,7 +1787,7 @@ Experiences expand us beyond our beliefs, biases, and concepts of reality. Relat
 
 ### The Dark Side of Air
 
-*"Our own decision to view the universe as dead, as inanimate, as unintelligent, allowed us to dissect it, use it, and deny its validity outside of human purpose." — Terrence McKenna*
+*"Our own decision to view the universe as dead, as inanimate, as unintelligent, allowed us to dissect it, use it, and deny its validity outside of human purpose." — Terence McKenna*
 
 Air can exalt the soul and free the mind, but it also harbors a corrosive element: negative, reified thinking. Intellectualizing and compulsive rationalizing without feeling give rise to unstoppable skepticism, where the ego is ruled by cold logic and finds itself lost in "thoughtland." As John Milton aptly noted, *"The mind is its own place, and in itself, can make a heaven of hell, a hell of heaven."*
 
@@ -1809,17 +1807,13 @@ Air can exalt the soul and free the mind, but it also harbors a corrosive elemen
 
 **Cognitive Distortions and Communication Problems:** Other dark side characteristics of air include egocentrism, overcontrol, and overstructure, along with communication difficulties. These can manifest as black-and-white thinking, catastrophizing, mind reading, overgeneralization, drawing conclusions based on minimal evidence, and emotional reasoning—misinterpreting emotions as facts or causes. Such cognitive distortions can lead to a skewed perception of reality.
 
-#### Detachment from Fire, Water, and Earth
-
-Air can also become detached from the other elemental attributes:
+**Detachment from Fire, Water, and Earth:** Air can also become detached from the other elemental attributes:
 
 - **Detachment from Fire:** Losing the passion, enthusiasm, and drive that fire brings. Over-reliance on intellect can quench the spirit of adventure and inspiration.
 - **Detachment from Water:** Ignoring emotional depth, intuition, and the flow of life. Air can become so focused on logic that it dismisses the importance of feelings and inner wisdom.
 - **Detachment from Earth:** Neglecting physical health, practical matters, and groundedness. Air's tendency to remain in the realm of ideas can result in a disconnection from the tangible and practical aspects of life.
 
-#### Addictions as Intellectual Avoidance
-
-Emotional and sensory experiences can be difficult and painful, and intellectual dishonesty can be uncomfortable to spot and confront. Those who shy away from these impulses are likely to fall prey to intellectual addictions—to a pursuit and even obsession with information, sheer knowledge, and mental stimulation. Information of any sort is fine in moderation, as is a voracious curiosity that sees us reading far and wide, learning and engaging in spirited debate. But this relationship becomes unhealthy when the need for knowledge and trivia becomes a way of avoiding dealing with emotional and bodily realities.
+**Addictions as Intellectual Avoidance:** Emotional and sensory experiences can be difficult and painful, and intellectual dishonesty can be uncomfortable to spot and confront. Those who shy away from these impulses are likely to fall prey to intellectual addictions—to a pursuit and even obsession with information, sheer knowledge, and mental stimulation. Information of any sort is fine in moderation, as is a voracious curiosity that sees us reading far and wide, learning and engaging in spirited debate. But this relationship becomes unhealthy when the need for knowledge and trivia becomes a way of avoiding dealing with emotional and bodily realities.
 
 ### Balancing the Air Within
 
@@ -1834,8 +1828,6 @@ When clients are too stuck in past experiences or too fixated on a fantasy for t
 *"The past is a place of reference, not a place of residence; the past is a place of learning, not a place of living." – Roy T. Bennett*
 
 ### The Transcendent Quality of Air
-
-#### A Personal Encounter with Transcendence
 
 The air realm reminds us that our relationship with reality transcends space and time. During a ceremony, I encountered Maestro Benito, an ayahuascero curandero, in spirit form as a dragonfly. This happened in my water garden in New Orleans, years after his passing. He appeared inches above my right cheek, with beautiful wings and a body shining like yellow embers. Without speaking, he pulsed multi-colored spheres of light into me, a silent, gentle, and magical moment.
 
