@@ -14,23 +14,71 @@ Different SHA, different proposition.
 
 ---
 
-## Witnessing location
+## Witnessing location — hard precondition
 
 **Every witness instruction must name the exact SHA being witnessed and the exact worktree
 from which it is being witnessed. Before Step 1, the witness must verify both
 `git rev-parse HEAD` and the worktree path. A shared checkout path is not evidence of
 repository state, and no checkout may be treated as implicitly frozen.**
 
+This lane does **not** witness from the live repair-branch tip. `58ac95a77` is currently the
+tip of `fix/ws2-05b-02c-2r-structure-review-hook-order`, and a branch tip is movable. The
+charter names a SHA, so the runtime is **structurally pinned** to that SHA rather than
+relying on everyone behaving perfectly while the branch can advance underneath them.
+
+Run from **inside** the repository (a bare `~` is not a git repo and the command will fail):
+
 ```bash
+cd /Users/soullab/MAIA-SOVEREIGN
+git worktree add --detach /private/tmp/ws2-02c-2r-runtime-witness 58ac95a77
+
+cd /private/tmp/ws2-02c-2r-runtime-witness
 pwd
 git rev-parse --show-toplevel
-git rev-parse HEAD         # MUST equal 58ac95a77…
-git status --porcelain     # MUST be empty (`?? .jarvis/` alone is tolerated)
+git rev-parse HEAD
+git status --porcelain
+git branch --show-current
 ```
 
-`/Users/soullab/MAIA-SOVEREIGN` is **not** at `93216567` any more. It carries this repair.
-Verify, never assume. (Rule earned by incident 2026-09-01; see
+**Required observations:**
+
+```
+HEAD        58ac95a77...
+branch      empty / detached HEAD
+status      clean
+worktree    /private/tmp/ws2-02c-2r-runtime-witness   (dedicated witness path)
+```
+
+> **HARD PRECONDITION.** If `HEAD` is not exactly `58ac95a77`, if the checkout is not
+> detached, or if tracked state is dirty before Step 1 — **STOP.** Do not repair the witness
+> environment in place. Report the observed state and end the run.
+
+**Repository identity is invariant for the life of the lane.** Once the detached tree
+exists, the witness may not run `git pull`, `switch`, `checkout`, `reset`, `merge`,
+`rebase`, or `cherry-pick` in it. Disposable *runtime* artifacts are permitted where this
+charter authorizes them; repository state is not one of them.
+
+`/Users/soullab/MAIA-SOVEREIGN` is **not** at `93216567` any more, and is not the witness
+tree. (Rule earned by incident 2026-09-01; see
 `WS2-05B-8B-02c-2_WITNESS_RERUN_CLARIFICATION_3.md`.)
+
+---
+
+## Three kinds of fact — keep them separate
+
+The predecessor's provenance tangle came from mixing these. They are not interchangeable,
+and no fact may be promoted across rows.
+
+| Kind | Treatment |
+|---|---|
+| Database / migration substrate, already established independently | **prerequisite — do not rerun** |
+| Predecessor runtime failure at `93216567` | **historical evidence — do not rerun** |
+| Any assertion about the behaviour of `58ac95a77` | **witness freshly** |
+
+**Every behavioural and test assertion at `58ac95a77` is a new observation — including
+`providerSeamMigration` — even where an equivalent assertion passed on the predecessor.**
+A byte-identical test in a different tree is a different proposition. Prior results are
+context, never this run's evidence, and may not be carried forward under any heading.
 
 ---
 
@@ -227,8 +275,17 @@ tree**. The instrument must establish, before any human judgement is invited:
       lib/manuscript/ask/frozenReading.ts:122
     ```
 
-    Run that targeted test at `58ac95a77` and report it under its own heading. It is **not**
-    a browser-runtime observation and must not be labelled one.
+    Run that targeted test at `58ac95a77` and report it under its own heading, in this
+    shape — the predecessor's result is context, not evidence:
+
+    ```
+    providerSeamMigration
+    PREDECESSOR: passed at 93216567
+    SUCCESSOR:   rerun at 58ac95a77
+    VERDICT:     <whatever this run actually observes>
+    ```
+
+    It is **not** a browser-runtime observation and must not be labelled one.
 14. **Before/after full-row fingerprints unchanged** — draft, sections, source, proposal,
     plus the canonical fingerprint.
 
@@ -272,6 +329,8 @@ instrument.
 
 ```
 SHA verified            <rev-parse> == 58ac95a77…            yes/no
+Detached HEAD           <branch --show-current> empty?       yes/no
+Witness worktree        /private/tmp/ws2-02c-2r-runtime-witness
 Worktree clean          <porcelain>                          yes/no
 Runtime identity        node / next / db / host / port / user
 Target                  manuscript · proposal · belongs? yes/no
@@ -284,8 +343,9 @@ Ask call                ACCEPTED | HOLD(<which refusal>) | DEFECT(<what>)
                         status · thread id · turn indexes · answer_provenance present?
                         persisted anchor == the anchor the marker rendered?
                         (session verified: yes · token NOT recorded)
-Seam contract test      providerSeamMigration.test.ts at 58ac95a77 — pass/fail
-                        (machine/source evidence, NOT a browser observation)
+Seam contract test      providerSeamMigration.test.ts — PREDECESSOR passed at 93216567 /
+                        SUCCESSOR rerun at 58ac95a77 / VERDICT <observed>
+                        (a new observation; machine-source evidence, NOT a browser one)
 Fingerprints after      same five — EQUAL / NOT EQUAL
 ask_threads/ask_turns   before → after (target Work only)
 Instrument removed      deleted? yes/no
