@@ -94,6 +94,31 @@ def main():
             "notes": t.get("notes"),
             "active_span": None,
         })
+    hist_entries = []
+    for b in sorted(HERE.glob("batch_*.json")):
+        hist_entries += json.loads(b.read_text()).get("historical_entries", [])
+    for e in hist_entries:
+        m = norm(e["match"])
+        hits = [t for t in tombs if m in norm(t["text_at_removal"])]
+        if len(hits) != 1:
+            report.setdefault("historical_unmatched", []).append(
+                {"match": e["match"], "hits": len(hits)})
+            continue
+        t = hits[0]
+        if t.get("provenance_status") and e.get("provenance_status") \
+                and t["provenance_status"] != e["provenance_status"]:
+            report["conflicts"].append({"id": t["id"], "existing": t["provenance_status"],
+                                        "incoming": e["provenance_status"], "layer": "historical"})
+            continue
+        for k, v in e.items():
+            if k in ALLOWED and v is not None:
+                t[k] = v
+        if e.get("provenance_status"):
+            t["provenance_review_state"] = "migrated"
+        if e.get("rights_status"):
+            t["rights_review_state"] = "migrated"
+        report.setdefault("historical_migrated", []).append(t["id"])
+
     data["historical_records"] = tombs
     data["migration_report"] = report
     REG.write_text(json.dumps(data, indent=2, ensure_ascii=False))

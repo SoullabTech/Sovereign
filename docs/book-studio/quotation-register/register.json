@@ -1,7 +1,7 @@
 {
   "records": [
     {
-      "id": "EA-Q-0158",
+      "id": "EA-Q-0166",
       "occurrence": 1,
       "text": "If you knew how perfect it all is you'd throw your head up at the clouds and laugh.",
       "line_at_build": 47,
@@ -219,7 +219,7 @@
       "notes": "Audit: bibliography cites Thanissaro Bhikkhu (Access to Insight, 1994), whose actual rendering begins 'Now, Kalamas, don't go by reports, by legends...' - materially different from the printed text."
     },
     {
-      "id": "EA-Q-0159",
+      "id": "EA-Q-0167",
       "occurrence": 2,
       "text": "If you knew how perfect it all is you'd throw your head up at the clouds and laugh.",
       "line_at_build": 190,
@@ -503,19 +503,20 @@
       "actual_author": null,
       "internal_speaker": null,
       "work": null,
-      "translator_or_mediator": null,
-      "provenance_status": null,
-      "provenance_review_state": "pending_migration",
+      "translator_or_mediator": "MEDIATED TRANSLATION - discourses delivered in Telugu",
+      "provenance_status": "unverified",
+      "provenance_review_state": "migrated",
       "rights_review_state": "not_investigated",
       "editorial_review_state": "not_investigated",
-      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md - chapter-batch migration owed",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L574, 'Chapter 3 - with a distinctive marker'",
       "rights_status": null,
       "bibliography_relationship": null,
       "family": null,
       "editorial_status": "unadjudicated",
       "record_state": "confirmed",
       "identity_match_score": 1.0,
-      "notes": null
+      "notes": "Audit: UNVERIFIED stands under the corpus-density principle - the official corpus (saispeaks.sathyasai.org, the published Sathya Sai Speaks volumes) is dense and searchable, so failure to locate the wording is meaningful. WITHDRAWN during the census: a DOCTRINAL MISMATCH flag was raised and then dissolved - he teaches five elements throughout, and the same corpus explicitly distinguishes the four perceptible elements from ether as ground, so the four-element formulation is not contradicted.",
+      "attributed_as_note": "Sai Baba"
     },
     {
       "id": "EA-Q-0020",
@@ -2032,7 +2033,7 @@
       "notes": null
     },
     {
-      "id": "EA-Q-0160",
+      "id": "EA-Q-0168",
       "occurrence": 1,
       "text": "Alone we can do so little; together we can do so much.",
       "line_at_build": 1453,
@@ -2437,7 +2438,7 @@
       "notes": null
     },
     {
-      "id": "EA-Q-0161",
+      "id": "EA-Q-0169",
       "occurrence": 2,
       "text": "Alone we can do so little; together we can do so much.",
       "line_at_build": 1672,
@@ -3975,15 +3976,16 @@
       "provenance_status": "unverified",
       "provenance_review_state": "migrated",
       "internal_speaker": null,
-      "rights_status": null,
-      "rights_review_state": "not_investigated",
+      "rights_status": "protectability_uncertain_standard",
+      "rights_review_state": "migrated",
       "bibliography_relationship": null,
       "editorial_status": "REMOVE - generic spiritual warrant above a section on toroidal flow",
       "editorial_review_state": "migrated",
-      "family": null,
-      "evidence_location": "STAGE4 4A batch 2",
-      "notes": null,
-      "active_span": null
+      "family": "fam-rumi-unsourced",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md - Rumi table, L536",
+      "notes": "Audit: UNVERIFIED, origin UNKNOWN, variant family ('The universe' / 'This universe'). Occurrence removed at Stage 4A; the Stage 2 provenance verdict is preserved here on the lifecycle record.",
+      "active_span": null,
+      "actual_author": "unknown"
     },
     {
       "id": "EA-Q-T022",
@@ -4128,8 +4130,8 @@
   ],
   "migration_report": {
     "migrated": [
-      "EA-Q-0158",
-      "EA-Q-0159",
+      "EA-Q-0166",
+      "EA-Q-0167",
       "EA-Q-0113",
       "EA-Q-0055",
       "EA-Q-0082",
@@ -4172,10 +4174,14 @@
       "EA-Q-0013",
       "EA-Q-0014",
       "EA-Q-0015",
-      "EA-Q-0016"
+      "EA-Q-0016",
+      "EA-Q-0019"
     ],
     "ambiguous": [],
     "unmatched": [],
-    "conflicts": []
+    "conflicts": [],
+    "historical_migrated": [
+      "EA-Q-T021"
+    ]
   }
 }

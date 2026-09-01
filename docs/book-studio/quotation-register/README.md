@@ -482,3 +482,76 @@ wrong quotation.**
 **`109 = 25 migrated + 79 pending + 5 documented-deferred`** ✅ · **`137 = 109 + 28`** ✅
 
 **→ Batch 3: Chapter 3.**
+
+---
+
+# BATCH 3 — Chapter 3 · 2026-09-01
+
+**`GATE PASSED`.** 4 records in scope; **two were already migrated in the control
+set** (McGilchrist, Nabokov), one is an **unattributed boundary record** awaiting a
+scope ruling, and **one verdict was migrated: Sai Baba.**
+
+## Sai Baba — `UNVERIFIED` · `MEDIATED TRANSLATION`
+
+`UNVERIFIED` **stands under the corpus-density principle**: the official corpus
+(saispeaks.sathyasai.org, the published *Sathya Sai Speaks* volumes) is dense and
+searchable, so **failure to locate the wording is itself meaningful evidence**
+rather than an absence of looking. Discourses delivered in Telugu — mediation
+recorded.
+
+**The withdrawn flag migrated with it.** The census raised a `DOCTRINAL MISMATCH` —
+that a four-element formulation contradicted his five-element teaching — and then
+**dissolved it**: the same corpus explicitly distinguishes **four perceptible
+elements from ether as ground.** The withdrawal is part of the record, not an
+embarrassment to be tidied away.
+
+## First migration onto a lifecycle record
+
+**The Rumi occurrence removed at 4A still carries an earned Stage 2 verdict** —
+`UNVERIFIED · UNKNOWN`, variant family (*"The universe"* / *"This universe"*),
+`PROTECTABILITY UNCERTAIN · STANDARD`.
+
+**A removed occurrence does not lose its provenance.** `migrate.py` now accepts
+`historical_entries` targeting tombstones, with **the same conflict check as the
+current layer** — a lifecycle record cannot receive a provenance verdict
+contradicting the one it already holds.
+
+**Effect: `fam-rumi-unsourced` now spans both layers** — one active occurrence, one
+removed — which is exactly what a provenance family should do. **Removal does not
+break a family link.** Cross-layer family counting is now in the gate.
+
+## Two migration rules confirmed from batch 2
+
+> **1. Known-wrong historical verdicts stay historically faithful.** Flag them for
+> later correction; never silently fix them in transit. *(The Jung `MISSING`
+> specimen.)*
+>
+> **2. Known facts are not the same as asked questions.** *(Polonius: the audit
+> recorded the speaker; what was missing was the editorial question of whether
+> presenting that speaker as Shakespearean wisdom distorted the passage.)*
+
+**The second is the more important one for the Studio:**
+
+> ### Having the data is not the same as knowing what question to ask of it.
+
+**A system can hold a perfectly accurate field and still never surface the finding**
+— which is what happened for the entire span between the census recording
+"Polonius" and 4A asking what he was doing in that sentence.
+
+## Standing after batch 3
+
+| | |
+|---|---|
+| `migrated` | **39** |
+| `not_investigated` | **12** |
+| `verdict_not_locatable_in_source` | **1** |
+| `pending_migration` | **78** |
+| **current / historical** | **130 / 28** |
+
+**`109 = 26 migrated + 78 pending + 5 documented-deferred`** ✅ · **`137 = 109 + 28`** ✅
+
+**Families across both layers:** `fam-perfect-laugh` 3 · `fam-rumi-unsourced` **2
+(cross-layer)** · `fam-laotzu-adaptation` 2 · `fam-song-lyrics` 3 · `fam-teasdale` 2
+· `fam-infinite-sphere` 1
+
+**→ Batch 4: Chapter 4.**

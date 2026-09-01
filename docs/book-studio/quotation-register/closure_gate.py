@@ -46,6 +46,10 @@ check("block reconciliation: total = migrated + pending + documented not_investi
       blk == pend + mig_blk + ni_blk,
       f"{blk} = {mig_blk} migrated + {pend} pending + {ni_blk} documented-deferred")
 check("current-field total", len(R) == 130, f"{len(R)} active records")
+check("historical entries all matched exactly one lifecycle record",
+      not rep.get("historical_unmatched"), str(rep.get("historical_unmatched", [])))
+print(f"  NOTE  historical records with a migrated provenance verdict: "
+      f"{sum(1 for h in H if h['provenance_review_state'] == 'migrated')} of {len(H)}")
 check("historical records carry no active manuscript span",
       all(h.get("active_span") is None for h in H), f"{len(H)} historical")
 check("historical ids disjoint from current ids",
@@ -59,7 +63,7 @@ print("  NOTE  attributed occurrences ever identified: 137 historical block + 19
       "2 unattributed boundary records held separately")
 
 fams = {}
-for r in R:
+for r in R + H:
     if r.get("family"): fams.setdefault(r["family"], []).append(r["id"])
 print("\n  families:", {k: len(v) for k, v in fams.items()})
 print("\n" + ("GATE PASSED" if not fail else f"GATE FAILED: {fail}"))

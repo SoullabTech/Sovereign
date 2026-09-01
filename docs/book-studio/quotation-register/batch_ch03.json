@@ -1,0 +1,18 @@
+{
+  "_comment": "BATCH 3 - Chapter 3. Faithful transfer. Includes the first migration onto a HISTORICAL (tombstone) record: the Rumi occurrence removed at 4A still has an earned Stage 2 verdict, and the lifecycle layer must carry it.",
+  "entries": [
+    {"match": "four elements: water, air, fire, earth", "occurrence": 1,
+     "provenance_status": "unverified", "attributed_as_note": "Sai Baba",
+     "translator_or_mediator": "MEDIATED TRANSLATION - discourses delivered in Telugu",
+     "notes": "Audit: UNVERIFIED stands under the corpus-density principle - the official corpus (saispeaks.sathyasai.org, the published Sathya Sai Speaks volumes) is dense and searchable, so failure to locate the wording is meaningful. WITHDRAWN during the census: a DOCTRINAL MISMATCH flag was raised and then dissolved - he teaches five elements throughout, and the same corpus explicitly distinguishes the four perceptible elements from ether as ground, so the four-element formulation is not contradicted.",
+     "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L574, 'Chapter 3 - with a distinctive marker'"}
+  ],
+  "historical_entries": [
+    {"match": "universe is not outside of you", "occurrence": 1,
+     "provenance_status": "unverified", "actual_author": "unknown",
+     "rights_status": "protectability_uncertain_standard",
+     "family": "fam-rumi-unsourced",
+     "notes": "Audit: UNVERIFIED, origin UNKNOWN, variant family ('The universe' / 'This universe'). Occurrence removed at Stage 4A; the Stage 2 provenance verdict is preserved here on the lifecycle record.",
+     "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md - Rumi table, L536"}
+  ]
+}
