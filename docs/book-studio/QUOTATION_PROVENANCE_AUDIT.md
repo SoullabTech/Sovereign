@@ -2,7 +2,7 @@
 
 **Source of record:** `docs/book-studio/ELEMENTAL_ALCHEMY_FROM_ORIGINAL_FULL.md`
 **Opened:** 2026-09-01, after Chapter 10 closed developmental adjudication.
-**Status:** IN PROGRESS — 52 of 137 adjudicated. **Chapter 5 CLOSED (30/30).** Chapter 8: 16 of 23.
+**Status:** IN PROGRESS — 53 of 137 adjudicated. **Chapter 5 CLOSED (30/30).** Chapter 8: 17 of 23.
 
 ## Scope
 
@@ -42,6 +42,27 @@ failure happened, separately from the verdict:
    usually remove as a quotation; if the thought is genuinely load-bearing it can
    become ordinary authorial prose. **Do not "solve" it with "— Anonymous"** —
    that launders the provenance problem rather than fixing it.
+
+4. **`COMPOSITE ATTRIBUTION`** — different textual objects are fused into one
+   apparent quotation under one author. *Socrates / Robert C. Solomon.* Distinct
+   because **there is no single correct byline**; reattribution cannot repair it.
+   Default remedy: remove as a quotation, then decide independently whether any
+   authentic component deserves to survive.
+5. **`SAME-AUTHOR DISTORTION`** — a genuine source by the named author is
+   transformed enough that the wording makes a **materially different claim**.
+   *Einstein / Besso letter.* More serious than an ordinary variant: the
+   attribution stays superficially plausible *because* author and source are
+   real, while the transformed sentence supports something the source does not
+   say. Default remedy: do **not** "correct" it if the authentic wording no longer
+   performs the manuscript's function — remove as a quotation, then decide
+   independently whether the underlying idea belongs as authorial prose.
+
+The five discriminate because each answers a different provenance question:
+**wrong person → drifted wording → no origin → fused objects → altered meaning.**
+
+**No further categories will be added for coverage.** A new item that fits none
+stays `OTHER / UNCLASSIFIED` until a genuinely recurring mechanism appears. A
+taxonomy that stretches to fit everything stops discriminating.
 
 > **Competing attribution + variant family is a diagnostic signal of transmission
 > drift, not itself a provenance verdict.** The next question is always whether
@@ -907,10 +928,10 @@ for either line.
   self-published is different from nonexistent.* Verify the exact manuscript
   wording against the book or Bennett's own publication before ruling.
 
-### Chapter 8 — still open (7 of 23)
+### Chapter 8 — still open (6 of 23)
 
-L1678 Shaw #2 · L1690 Wayne Teasdale · L1714 Rachel Carson · L1736 Tagore ·
-L1746 William Arthur Ward · L1790 Terence McKenna · L1828 Roy T. Bennett.
+L1690 Wayne Teasdale · L1714 Rachel Carson · L1736 Tagore · L1746 William Arthur
+Ward · L1790 Terence McKenna · L1828 Roy T. Bennett.
 
 ### Chapter 8 — third tranche: the bibliography-as-lead test, run both ways
 
@@ -957,7 +978,7 @@ live evidentiary trail — it is unverified, not spurious.
 | `SPURIOUS SUPPORT` | 2 | Feynman, Hawking |
 | `SOURCE LINK UNRESOLVED` | 1 | MLK (*Strength to Love*) |
 | Correct support | 2 | Dyer, Brown |
-| `MISSING` | 4 | Rumi/Barks, Jenkins, Helen Keller (×2 quotations), Ford |
+| `MISSING` | 5 | Rumi/Barks, Jenkins, Helen Keller (×2 quotations), Ford, Shaw |
 | `ORPHAN CANDIDATE` | 6 | Williams, Confucius, Dewey, Milton, Goldsmith, O'Donohue |
 
 **Reconstruction doctrine, revised.** Not "the bibliography is broken." Rather:
@@ -1038,6 +1059,31 @@ close.
 **Rights: `PROTECTABILITY UNCERTAIN` · `STANDARD`.**
 **`MISSING`** — no Ford entry in the Ch8 bibliography.
 
+**L1678 · George Bernard Shaw #2 — "Beware of false knowledge; it is more dangerous than ignorance."**
+**`VERIFIED VARIANT/TRANSLATION`.** Genuine Shaw — *Man and Superman* (1903),
+"Maxims for Revolutionists". The original reads "Beware of **his** false
+knowledge: it is more dangerous than ignorance," following "A learned man is an
+idler who kills time with study." The standalone form, dropping the possessive,
+was standardized by Laurence J. Peter's *Peter's Quotations* (1977). Snopes rates
+the attribution correct. The dropped "his" generalizes the maxim but does not
+invert it.
+**Rights: `PUBLIC DOMAIN` · `NONE`** — 1903 publication. *The audit's first
+public-domain classification.*
+**`MISSING`** — no Shaw entry in the Ch8 bibliography; *Man and Superman* is the
+correct one.
+
+### The Shaw pair does not group either
+
+| | Verdict | Pattern |
+|---|---|---|
+| L1654 "illusion of communication" | `MISATTRIBUTED` | `EVOLVED APHORISM` — Whyte 1950; **no Shaw connection at all** |
+| L1678 "beware of false knowledge" | `VERIFIED VARIANT` | — genuine Shaw, 1903 |
+
+Same author, opposite outcomes. **Two consecutive author-pairs have now dissolved
+— Keller, then Shaw. Only Campbell has held.** The clustering rule is earning its
+keep: had either pair been grouped on the author's name, a genuine quotation
+would have been condemned by its neighbour.
+
 **Both Keller quotations are `MISSING` from the Ch8 bibliography** — no Helen Keller entry exists,
 despite two quotations.
 
@@ -1056,7 +1102,7 @@ despite two quotations.
 | L1253 Salzberg→Buddha (Ch6) | `SOURCE DISPLACEMENT` | Salzberg, 1989 |
 | L1939 Buddha (Ch9) | `FLOATING APHORISM` | Longchenpa, speculative only |
 
-### Two items do not fit the three patterns — flagged, not forced
+### The two flagged items — now patterns 4 and 5 (ruled)
 
 **L1758 · Socrates/Solomon (Ch8) — composite.** The epigraph fuses a Socratic
 paraphrase with **Robert C. Solomon's commentary *about* Socrates** into one
@@ -1071,8 +1117,9 @@ the separation of past, present and future to "reality" — which inverts what t
 sentence claims. No displacement (right name), no floating (real source), and the
 ancestor is by the same author rather than a different one.
 
-Both may warrant a fourth pattern, or may be better handled as noted exceptions.
-**Authorial ruling needed** — I have not invented a category to absorb them.
+**Ruled:** both are recurring mechanisms, not edge cases, and each requires a
+different repair. L1758 is the canonical `COMPOSITE ATTRIBUTION` specimen; L852
+is the canonical `SAME-AUTHOR DISTORTION` specimen.
 
 ---
 
