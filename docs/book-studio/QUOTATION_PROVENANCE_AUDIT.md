@@ -2,7 +2,7 @@
 
 **Source of record:** `docs/book-studio/ELEMENTAL_ALCHEMY_FROM_ORIGINAL_FULL.md`
 **Opened:** 2026-09-01, after Chapter 10 closed developmental adjudication.
-**Status:** IN PROGRESS — 122 of 137. **Ch2 CLOSED (10/10).** adjudicated. **Chapter 5 CLOSED (30/30). Chapter 8 CLOSED (23/23).**
+**Status:** IN PROGRESS — 124 of 137. **Ch2 CLOSED (10/10).** adjudicated. **Chapter 5 CLOSED (30/30). Chapter 8 CLOSED (23/23).**
 
 ## Scope
 
@@ -3356,6 +3356,32 @@ tradition's documented framework initially looked contradicted and turned out
 compatible. Here the author's documented preoccupation **is** genuinely alchemical
 — which makes the sentence *plausible* and is exactly why it must not be treated
 as verified. **Thematic fit is not provenance**, in either direction.
+
+
+### Final batch — tranche 2
+
+| Line | Ch | Attribution | Verdict |
+|---|---|---|---|
+| L693 | 4 | John Perkins — "What we forget we can also remember." | `UNVERIFIED — source lead unresolved`. Perkins is real and the subject area is exactly his: *Shapeshifting: Shamanic Techniques for Global and Personal Transformation*, *The World Is As You Dream It*, *Psychonavigation*, *Spirit of the Shuar*. Sentence not located. Bibliography present. |
+| L139 | Preface | Michael A. Singer — "If your heart is truly open…" | `UNVERIFIED — source lead unresolved`. Not located in *The Untethered Soul* (2007) sources. **`MISSING` — the only genuinely globally absent author in this batch.** |
+
+**Disambiguation hazard — two John Perkinses.** The author (b. 1945, shamanism /
+*Confessions of an Economic Hit Man*) and **John M. Perkins** (1930–2026, civil
+rights leader, *Let Justice Roll Down*). Initial searches returned the wrong one.
+Same family as the **two Thomas Fullers** (1608–1661 and 1654–1734). **Any
+common-name attribution needs an identity check before a source check.**
+
+### Global bibliography presence — remaining items, checked under the corrected method
+
+Present somewhere in the bibliography: **Perkins · Duchamp · Miller · John of the
+Cross · Nabokov · Korzybski · Teasdale (×3) · Zhuangzi · Rilke · Sadhguru ·
+Kalama Sutta · McGilchrist · Tagore (×2) · C. Michael Smith (×2) · Hermes
+Trismegistus · Dickinson · Berry (×2).**
+
+**Globally absent — `MISSING` stands:** **Michael A. Singer.**
+
+*Every one of these was checked against the whole bibliography, not a single
+section — the corrected method applied prospectively.*
 
 
 ---
