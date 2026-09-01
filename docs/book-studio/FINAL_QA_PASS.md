@@ -17,6 +17,27 @@ questions:
 | **Meaningful synchronicity** | What did the convergence seem to reveal? |
 | **Authored relationship** | What is the book proposing, as part of its thesis? |
 
+**Sharpened again (2026-09-01), after a QA error.** The lens had drifted toward *"can this
+survive as a scientific claim?"* — which is not what the book is trying to be. The book's method
+is phenomenological: *recurring patterns are noticed across inner experience, traditions, nature,
+psychology and sometimes science, and placed in relationship to see what they reveal.* That is
+not *science proves the metaphysics*.
+
+**So the test is not** *"is this scientifically demonstrated?"* **but** *"is this offered as a
+phenomenological correlation, or is the prose accidentally making it sound like empirical
+proof?"*
+
+The structure that keeps a cross-domain resonance honest:
+
+> **source says X → I notice resonance Y → I am not claiming proof or equivalence.**
+
+None of the four objects is automatically a scientific hypothesis, and final QA must not
+sterilise the book by treating every cross-domain resonance as something that has to survive
+peer review.
+
+> **Let correlation be correlation. Let metaphor be metaphor. Let science be science. Let
+> synthesis be yours.**
+
 And the epistemic boundary that keeps the method honest:
 
 > **Correlation and synchronicity can support inquiry and interpretation. They do not by
