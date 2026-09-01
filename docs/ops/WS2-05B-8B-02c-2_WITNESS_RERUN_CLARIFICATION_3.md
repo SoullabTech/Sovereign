@@ -1,5 +1,31 @@
 # WS2-05B-8B-02c-2 · LOCAL RUNTIME WITNESS — fresh run, Execution Clarification #3
 
+## Witnessing location
+
+**Every witness instruction must name the exact SHA being witnessed and the exact worktree
+from which it is being witnessed. Before Step 1, the witness must verify both
+`git rev-parse HEAD` and the worktree path. A shared checkout path is not evidence of
+repository state, and no checkout may be treated as implicitly frozen.**
+
+```bash
+pwd                        # MUST equal the worktree the instruction names
+git rev-parse --show-toplevel
+git rev-parse HEAD         # MUST equal the SHA the instruction names
+git status --porcelain     # MUST be empty
+```
+
+Why this rule exists: on 2026-09-01, `/Users/soullab/MAIA-SOVEREIGN` was checked out at
+`93216567` and was being reasoned about by one lane as the frozen witness tree, while a
+second lane committed a repair into it. The path did not change; the repository state did.
+Hours were then spent searching for work that was never lost — it was simply in a different
+tree than the one assumed. **A location is not an identity.** Naming the SHA makes the
+assumption checkable; naming the worktree makes it addressable.
+
+This rule is procedural and applies to every witness lane. It does not alter this run's
+DO-NOT-START state, its migration assumptions, or its witness procedure.
+
+---
+
 > **DO NOT START THIS RUN YET.** A second Mac Studio session
 > (`session_01Dxk7Q9RFrEPK9W3joK4vPd`) reached **Step 6** before stopping on a failed
 > assertion. It may already have passed Step 3, applied migration 6, and written to the
