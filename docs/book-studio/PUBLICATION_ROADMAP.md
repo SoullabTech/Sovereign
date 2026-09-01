@@ -228,3 +228,38 @@ title-page verso, distribution metadata and cover.
   Stage 7 bibliography is considered final.** Removing or consolidating the passage could
   change which source occurrences survive, and the bibliography is built from surviving
   occurrences. Do not structurally rewrite it during quotation adjudication.
+
+### Second Edition — ISBN obligations (added 2026-09-01)
+
+This manuscript is the **Second Edition** of an already-published book, not an unpublished
+first edition. Soullab Press and the existing publication identity are real and stay.
+
+**A new edition is a different product and takes its own ISBN.** Substantial revision or added
+content qualifies as a new edition, and an ISBN already assigned to a published product cannot
+be reused.
+
+| Edition | Identifiers |
+|---|---|
+| **First edition** | existing paperback and hardcover ISBNs remain attached to it — now labelled as first-edition ISBNs on the copyright page |
+| **Second edition** | **new paperback ISBN · new hardcover ISBN**, plus a new ISBN for any other separately sold ISBN-bearing format |
+
+**Owed before publication**, and following the no-placeholder rule: the new ISBNs are recorded
+here as an obligation, not written into the front matter as placeholders. The edition statement
+has been corrected to *Second Soullab Press Edition* because that is already true; the
+identifiers wait until they exist.
+
+**Why Second Edition is accurate rather than promotional:** developmental work, provenance
+repair across the whole quotation population, dozens of epigraphs removed, ten passages
+reclaimed into the author's voice, intellectual lineage repaired and declared, the Four Grades
+of Fire newly written, and a foreword to come.
+
+### C. Michael Smith reading copy
+
+Front-matter block for that render only:
+
+> **ELEMENTAL ALCHEMY — SECOND EDITION MANUSCRIPT**
+> Forthcoming from Soullab Press
+> For review only — not for distribution
+
+Where the existing ISBNs appear, they are labelled **first-edition** identifiers so they cannot
+be mistaken for those of the forthcoming edition. His foreword belongs to the Second Edition.

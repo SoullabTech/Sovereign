@@ -21,10 +21,10 @@ an imprint of Soullab Media\
 Hamden, Connecticut\
 soullab.life
 
-ISBN 979-8-9967127-0-0 (paperback)\
-ISBN 979-8-9967127-2-4 (hardcover)
+ISBN 979-8-9967127-0-0 (paperback, first edition)\
+ISBN 979-8-9967127-2-4 (hardcover, first edition)
 
-First Soullab Press Edition
+Second Soullab Press Edition
 
 Printed in the United States of America
 
