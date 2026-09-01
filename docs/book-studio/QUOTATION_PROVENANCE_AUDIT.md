@@ -2,7 +2,7 @@
 
 **Source of record:** `docs/book-studio/ELEMENTAL_ALCHEMY_FROM_ORIGINAL_FULL.md`
 **Opened:** 2026-09-01, after Chapter 10 closed developmental adjudication.
-**Status:** IN PROGRESS — 21 of 137 adjudicated.
+**Status:** IN PROGRESS — 28 of 137 adjudicated (Ch5: 17 of 30).
 
 ## Scope
 
@@ -288,6 +288,79 @@ evidence or author recognition, else remove.
   Division in World War II* (1956), p. 3 is a real secondary attribution to Foch.
   It does not give Foch's original utterance. Keep investigating; do not apply
   rule 5.
+
+### Chapter 5 — further adjudications
+
+**VERIFIED EXACT**
+- **L792 · Thoreau** — "The fire is the main comfort of the camp, whether in
+  summer or winter." *The Maine Woods* (1864), "Chesuncook," p. 38. Truncated
+  from a longer sentence but accurate. **Bibliography names the wrong book** —
+  see below.
+- **L1088 · Socrates** — "The unexamined life is not worth living." Plato,
+  *Apology* 38a. Ch5 bibliography carries no Plato entry.
+- **L976 · Shakespeare** — see the citation error below; the quotation itself is
+  exact.
+
+**VERIFIED VARIANT/TRANSLATION**
+- **L990 · Jung** — "Your vision will become clear only when you can look into
+  your own heart. Who looks outside, dreams; who looks inside, awakes." Genuine:
+  letter to Fanny Bowditch, *Letters* Vol. 1, p. 33 (Princeton UP, 1973). The
+  manuscript drops an intervening sentence ("Without, everything seems
+  discordant; only within does it coalesce into unity") but what remains is
+  accurate. *Note the contrast with L846: Jung is easy to source when the words
+  are his.*
+
+**PARAPHRASE/ADAPTED**
+- **L798 · Plutarch** — "The mind is not a vessel to be filled but a fire to be
+  kindled." The source is right (*Moralia*, "On Listening to Lectures") but the
+  wording is a modern contraction. Plutarch's analogy is **wood that needs
+  igniting**, not a fire to be kindled: Waterfield (Penguin, 1992) — "not a
+  vessel that needs filling, but wood that needs igniting"; Loeb (1927) — "does
+  not require filling like a bottle, but rather, like wood, it only requires
+  kindling."
+- **L834 · Joseph Campbell** — "Follow your bliss and the universe will open
+  doors for you where there were only walls." The idea is unmistakably
+  Campbell's, but this is the popularized contraction. Recorded wordings in *The
+  Power of Myth* run "follow your bliss and don't be afraid, and doors will open
+  where you didn't know they were going to be." The "universe… only walls" form
+  is not among them.
+
+**Shared-source note.** Campbell now appears twice in PARAPHRASE/ADAPTED (L834,
+L1028) and is quoted four times across the book. Both failures are the same
+kind: a genuine Campbell thought circulating in a tightened form he did not say.
+Adjudicate the Campbell quotations as a set, not individually.
+
+---
+
+## Bibliography defects surfaced by the Chapter 5 provenance work
+
+These belong to the bibliography-completeness audit. Recorded here because
+provenance work found them, and because together they suggest the Chapter 5
+bibliography was **not built from that chapter's actual quotations**.
+
+**Class 1 — wrong work named (famous-work substitution).** Both name a more
+famous title than the one actually quoted:
+- **Thoreau** — bibliography cites *Walden* (1854). The quotation is from *The
+  Maine Woods* (1864).
+- **Shakespeare** — bibliography cites *Henry IV, Part 2*. The quotation is
+  Hotspur, *Henry IV, **Part 1***, II.iii.
+
+**Class 2 — orphan entries.** Listed under Chapter 5, quoted nowhere in it:
+Merton, Proust, Feynman, Aristotle, Emerson.
+
+**Class 3 — missing entries.** Quoted in Chapter 5, listed nowhere in its
+section: Einstein, Jung, Campbell, Wilber, Tolle, Ram Dass, da Vinci, Socrates,
+Aesop, McKenna.
+
+All three classes in a single chapter. The bibliography audit should be scoped
+on the assumption that this is structural, not incidental.
+
+### Chapter 5 — still open (13 of 30)
+
+L840 McKenna · L864 Aesop · L872 Salzberg · L894 Mother Teresa · L906 Magritte ·
+L922 Thomas Berry · L926 Bear Heart · L938 Eckhart Tolle · L1012 Leonardo da
+Vinci · L1042 Maya Angelou · L1052 Rumi (already labelled "Adapted from… after
+Coleman Barks") · L1062 Simone Weil · L1106 John O'Donohue.
 
 ### Bibliography citation error — found in passing
 
