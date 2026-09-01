@@ -2,7 +2,7 @@
 
 **Source of record:** `docs/book-studio/ELEMENTAL_ALCHEMY_FROM_ORIGINAL_FULL.md`
 **Opened:** 2026-09-01, after Chapter 10 closed developmental adjudication.
-**Status:** IN PROGRESS — 91 of 137 adjudicated. **Chapter 5 CLOSED (30/30). Chapter 8 CLOSED (23/23).**
+**Status:** IN PROGRESS — 93 of 137 adjudicated. **Chapter 5 CLOSED (30/30). Chapter 8 CLOSED (23/23).**
 
 ## Scope
 
@@ -2449,6 +2449,41 @@ Elk** (L1871, this chapter) and **Bear Heart** (L926, Fire), both named
 individuals with published works. The failure is confined to the unattributable
 "legend" form.
 
+**L1977 · "Rumi" — "The quieter you become, the more you are able to hear."**
+`UNVERIFIED` · `UNKNOWN` · `FLOATING APHORISM / SOURCE UNRESOLVED`. Both
+instability markers present: **competing attribution** (Rumi vs **Ram Dass**, to
+whom Goodreads and others assign it) and a **variant family** — "the more you
+**can** hear" (Ram Dass form) against "the more you **are able to** hear"
+(Rumi-attributed form). No Persian source located; no Barks rendering identified.
+
+**L1867 · "Rumi" — "I have lived on the lip of insanity, wanting to know reasons, knocking on a door. It opens. I've been knocking from the inside!"**
+**Verbatim Coleman Barks**, *The Essential Rumi* (1995) — rendering a quatrain
+from the ***Divan-e Shams-e Tabrizi***. Attributed in the manuscript as bare
+"— Rumi."
+`PARAPHRASE/ADAPTED` · `MEDIATED TRANSLATION` · attribution incomplete and false
+in form · **Rights: `LIKELY PROTECTED` · `HIGH`.**
+
+### PROVENANCE FAMILY — Barks renderings presented as bare "Rumi"
+
+Formed on evidence, and it forms cleanly:
+
+| | Chapter | Form | Attribution | Rights |
+|---|---|---|---|---|
+| **L1666** | Ch8 Air | **verbatim Barks** | bare "— Rumi" | `LIKELY PROTECTED` · `HIGH` |
+| **L1867** | Ch9 Aether | **verbatim Barks** | bare "— Rumi" | `LIKELY PROTECTED` · `HIGH` |
+| L1052 | Ch5 Fire | paraphrase of Barks | **"Adapted from Rumi, after Coleman Barks"** | `PROTECTABILITY UNCERTAIN` · `STANDARD` |
+
+**Shared mechanism, shared remedy** for the first two: a **copyrighted 1995
+poetic translation quoted verbatim under the name of its thirteenth-century
+source**. The third instance is in the same book and gets it right.
+
+> **The manuscript contains both the failure and its correction.** The remedy for
+> L1666 and L1867 is already written, three chapters away, in the book's own
+> hand.
+
+Both are `SOURCE-FORM MISCLASSIFICATION`: protected modern expression presented
+as public-domain material.
+
 ### RULED — a cross-cutting cultural-attribution flag, not a sixth pattern
 
 **Not a transmission pattern.** It overlaps `FLOATING APHORISM` too heavily and
@@ -2521,6 +2556,7 @@ resolving an item's source metadata does not change the count.
 | Pema Chödrön (L1185) — full paragraph, ~75 words | `LIKELY PROTECTED` | `HIGH` |
 | Martin Luther King Jr. (L1595) | `TERM UNCERTAIN` | **`LEGAL REVIEW`** |
 | Coleman Barks / Rumi (L1666) — verbatim © 1995 | `LIKELY PROTECTED` | `HIGH` |
+| Coleman Barks / Rumi (L1867) — verbatim © 1995 | `LIKELY PROTECTED` | `HIGH` |
 | Dery Dyer (L1696) | `LIKELY PROTECTED` | `STANDARD` |
 | Leonard Cohen, "Anthem" (L1231) — lyrics | `LIKELY PROTECTED` | `HIGH` |
 | John O'Donohue (L1106) | `LIKELY PROTECTED` | `HIGH` |
