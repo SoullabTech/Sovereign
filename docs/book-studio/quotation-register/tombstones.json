@@ -976,6 +976,54 @@
       "editorial_status": "REMOVE - UNVERIFIED, the purest floating case in the audit: no book, no publication, no dated utterance, and the attributed name itself unlocatable. The name was deliberately left unnormalised per earlier ruling.",
       "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L1269 (provenance); 4C Chapter 6 ruling (editorial)",
       "notes": "Audit: UNVERIFIED, UNKNOWN, pattern FLOATING APHORISM / SOURCE UNRESOLVED. THE PUREST FLOATING CASE IN THE AUDIT - no book, no publication, no dated utterance. The name is left exactly as printed and deliberately NOT normalized, per ruling."
+    },
+    {
+      "state": "removed",
+      "stage": "Stage 4C",
+      "former_form": "block",
+      "last_location": "Preface - A Vivid Dream and a New Understanding",
+      "text": "If your heart is truly open, then all of nature, life, and experience is the mystery of interconnection and opportunity for communion.",
+      "attributed_as": "Michael A. Singer",
+      "provenance_status": "unverified",
+      "actual_author": null,
+      "work": null,
+      "rights_status": null,
+      "family": null,
+      "editorial_status": "REMOVE - the epigraph stood in front of the book before the author had spoken. Unverified, not located in The Untethered Soul sources, no bibliography entry, and the dream account follows immediately in the author's own voice: spiritual atmosphere with no local consequence, removable without changing the Preface's arrival.",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md - Preface table, L139 (provenance); 4C Preface ruling (editorial)",
+      "notes": "Audit: 'UNVERIFIED - source lead unresolved'. Not located in The Untethered Soul (2007) sources."
+    },
+    {
+      "state": "removed",
+      "stage": "Stage 4C",
+      "former_form": "block",
+      "last_location": "Preface - Call to Adventure",
+      "text": "As you start to walk on the way, the way appears.",
+      "attributed_as": "Rumi",
+      "provenance_status": "unverified",
+      "actual_author": "unknown - no Persian source",
+      "work": null,
+      "rights_status": "protectability_uncertain_standard",
+      "family": "fam-rumi-unsourced",
+      "editorial_status": "REMOVE - borrowed gravitas at the entrance. Unverified with no Persian source; it greeted the reader at Call to Adventure and the paragraph that follows is the book describing itself. Consistent with the removal of its Ch5 sibling in fam-rumi-unsourced.",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md - Rumi table, L182 (provenance); 4C Preface ruling (editorial)",
+      "notes": "Audit: UNVERIFIED, origin UNKNOWN, no Persian source. One of six Rumi occurrences the audit tabled together by provenance object, not by author."
+    },
+    {
+      "state": "reclaimed_as_author_prose",
+      "stage": "Stage 4C",
+      "former_form": "block",
+      "last_location": "Preface - A Vivid Dream and a New Understanding",
+      "text": "Life is a game of just five ingredients. Even a pizza requires more ingredients! But in yoga both the human body and the cosmos are based on the magic of only five elements — earth, water, fire, air, and ether. Such a staggeringly complex phenomenon and just five variables! Not surprisingly, those who attained self-realization have often termed life a cosmic joke. . . Every spiritual practice in the world is related in some way with organizing these five elements.",
+      "attributed_as": "Sadhguru",
+      "provenance_status": "verified_variant",
+      "actual_author": "Sadhguru (Jaggi Vasudev)",
+      "work": "Isha Foundation, 'Life Is a Five-Cornered Game'",
+      "rights_status": "likely_protected_high",
+      "family": null,
+      "editorial_status": "KEEP THE LINEAGE - REFERENCE AND CONTEXTUALISE, NOT THE LONG QUOTATION. The Smith treatment rather than a shortening. What belongs at the threshold is that the author encountered a five-element understanding through a living yogic lineage, not the particular phrasing or the pizza register. The prose now credits Sadhguru's teaching and the book proceeds into what the author makes of the five elements - which also removes about eighty words of protected prose and distinguishes received framework from the Elemental Alchemy synthesis. LANGUAGE ORIGIN: sentence EDITOR/MODEL-ORIGINATED from the author's supplied structure, awaiting the author's own wording.",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L173 (provenance); 4C Preface ruling (editorial)",
+      "notes": "Audit: source/concept VERIFIED, wording VARIANT - EDITION CHECK REQUIRED. Attested on the quoted author's own institutional channel, which meets the official-source standard. ~80 words of in-copyright prose."
     }
   ]
 }

@@ -224,3 +224,7 @@ title-page verso, distribution metadata and cover.
 - **Read Chapter 8 (Air) continuously after quotation adjudication** for rhythm and arrival
   — nine of fifteen quotations left the chapter. Same terms as the Fire read: not to refill
   emptied epigraph slots, but to make sure the chapter still breathes.
+- **Resolve the duplicated disclaimer passage (front matter vs. Call to Adventure) BEFORE the
+  Stage 7 bibliography is considered final.** Removing or consolidating the passage could
+  change which source occurrences survive, and the bibliography is built from surviving
+  occurrences. Do not structurally rewrite it during quotation adjudication.

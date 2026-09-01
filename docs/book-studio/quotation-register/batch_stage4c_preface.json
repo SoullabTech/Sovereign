@@ -1,0 +1,27 @@
+{
+  "_comment": "Stage 4C - Preface. The threshold test replaces the interruption test: inside a chapter another voice must earn the interruption; at the entrance it must earn the privilege of greeting the reader first. Legitimate reasons to stay: it establishes lineage the book genuinely belongs to, it creates a threshold the Preface then fulfils, or it introduces a question the book immediately takes up.",
+  "entries": [
+    {
+      "match": "May what I do flow from me like a river",
+      "editorial_status": "KEEP - THRESHOLD, AND THE PREFACE FULFILS IT. The pages that follow are the author as a boy in the woods and the loss of exactly that unforced flow. Verified exact, and the census's first translator-naming entry to pass the printed-English test: the rights-relevant object is the Barrows-Macy English, which the bibliography correctly cites. Rights likely_protected_high - Stage 6.",
+      "evidence_location": "4C Preface ruling",
+      "occurrence": 1
+    },
+    {
+      "match": "when we no longer know what to do we have come to our real work",
+      "editorial_status": "KEEP - INTRODUCES THE QUESTION THE BOOK IMMEDIATELY TAKES UP. The Preface goes straight to the author's youthful questions about his parents' unhappiness; not-knowing as the entrance to real work is the book's own premise. PROVENANCE RECOVERY OWED: the census recorded rights only for this record and deliberately did not infer a provenance verdict. A Preface epigraph greeting the reader is the wrong place to carry an unchecked citation, so this goes near the front of the Stage 6 queue rather than the back.",
+      "provenance_review_state": "edition_check_required",
+      "recovery_note": "Provenance verdict never established. Verify the wording and source of Wendell Berry's 'The Real Work' before publication; rights likely_protected_high, poetry, living author.",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md rights table (rights only, no provenance narrative); 4C Preface ruling",
+      "occurrence": 1
+    },
+    {
+      "match": "Do not believe in anything simply because you have heard it",
+      "editorial_status": "KEEP - THRESHOLD / EPISTEMIC LINEAGE. It earns the privilege of greeting the reader because the Preface immediately answers it: test what you are given against experience. That is not borrowed gravitas; it establishes the epistemic relationship the book wants with its reader. It is also the one genuine Buddha item among the five fake ones now removed. REPAIR OWED BEFORE PUBLICATION: the translator problem is NOT solved by deleting the translator while continuing to print that translator's English. The sutta is ancient; the English sentence is not. Either identify and credit the actual English rendering currently printed, or replace it with a verified rendering whose provenance and rights are clean. The citation may include Kalama Sutta, Anguttara Nikaya 3.65, but that does not replace attribution for the English expression.",
+      "provenance_review_state": "edition_check_required",
+      "recovery_note": "Identify the English rendering actually printed, or substitute a cleanly sourced one. Bibliography currently names Thanissaro Bhikkhu (Access to Insight, 1994), whose rendering begins 'Now, Kalamas, don't go by reports, by legends' - materially different from the printed text. WRONG TRANSLATOR CITED, second confirmed instance.",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md (Kalama Sutta); 4C Preface ruling",
+      "occurrence": 1
+    }
+  ]
+}

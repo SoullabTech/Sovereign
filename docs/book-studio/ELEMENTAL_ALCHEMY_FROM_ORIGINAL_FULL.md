@@ -136,8 +136,6 @@ I am flame and ember, illuminating the dark. I am rain and dew, nurturing the bl
 
 This dream reminds me that the natural world is the foundation of all human consciousness, not just something onto which we project our thoughts, feelings, and intentions. In this moment, everything that separated me from the natural world has dissipated into a dynamic field of being, completely integrated into it, an at-oneness. For the first time in my life, I feel truly a part of it all. No longer am I certain if I am dreaming of the elements or if I am the elements dreaming me. How had I missed this knowing?
 
-*"If your heart is truly open, then all of nature, life, and experience is the mystery of interconnection and opportunity for communion." – Michael A. Singer*
-
 My being, my heart, and my aspirations all arise from a field of presence, which feels both vast and intimate, infinite and finite. Whatever felt foreign, alien, or disconnected in me before has now resolved into an expansive state of peace, harmony, and love.
 
 Reflecting on my dream, I am enchanted by this direct experience of the elements and how they give rise to the most basic aspects of my human awareness. My intuition, like fire, enlightens my being. My emotions, like water, flow deeply. My senses, like the earth, are rooted and embodied. My mind, like air, permeates everything, with thoughts swirling around me.
@@ -170,7 +168,7 @@ Like my own children, I was conscious enough to ask critical questions in my you
 
 Now I can see that, as hard as my life has been at times, everything that has occurred over the years has made me a better person. As much as I'd like to go back and take away my younger self's suffering in certain challenging circumstances, if I did, I'd be denying myself the opportunity to become the more soulful, fully human person I am today. How I've worked with the challenges of earthly living, rather than wishing them away, is a blessing. I've learned that it isn't about avoiding life's challenges and its twists and turns, but about the quality of our presence, the way we show up for these experiences, and how we manage them that matters most.
 
-*"Life is a game of just five ingredients. Even a pizza requires more ingredients! But in yoga both the human body and the cosmos are based on the magic of only five elements — earth, water, fire, air, and ether. Such a staggeringly complex phenomenon and just five variables! Not surprisingly, those who attained self-realization have often termed life a cosmic joke. . . Every spiritual practice in the world is related in some way with organizing these five elements." – Sadhguru*
+Sadhguru's teaching that both the human body and the cosmos can be understood through five elements was one of the expressions of this ancient framework that stayed with me.
 
 ### Reflection and Interaction
 
@@ -178,8 +176,6 @@ Now I can see that, as hard as my life has been at times, everything that has oc
 - Spending time with each element in awareness, in your own way, can open something quietly recognizable — the elements influencing thought, feeling, and sensation, the way they always have.
 
 ### Call to Adventure
-
-*"As you start to walk on the way, the way appears." – Rumi*
 
 This book is a collection of interconnected insights, conversations, and experiences I wish had been shared with me when I started my journey of awakening. It honors the power of direct experience and directed, developed attention. The advice, strategies, and ways of interpreting reality are offered as insights from my experience. They may not fit your own reality tunnel. As the Buddha advises in the Kalama Sutta:
 
