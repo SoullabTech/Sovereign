@@ -2,7 +2,7 @@
 
 **Source of record:** `docs/book-studio/ELEMENTAL_ALCHEMY_FROM_ORIGINAL_FULL.md`
 **Opened:** 2026-09-01, after Chapter 10 closed developmental adjudication.
-**Status:** IN PROGRESS — 65 of 137 adjudicated. **Chapter 5 CLOSED (30/30). Chapter 8 CLOSED (23/23).**
+**Status:** IN PROGRESS — 67 of 137 adjudicated. **Chapter 5 CLOSED (30/30). Chapter 8 CLOSED (23/23).**
 
 ## Scope
 
@@ -1539,6 +1539,50 @@ A quotation removed for bad provenance never needs its translator identified.
 
 **Peter Gabriel** is already provenance- and source-form-resolved. It stays in the
 permissions inventory and needs **no further research**.
+
+### Chapter 6 — third tranche
+
+**L1326 · Audre Lorde — "Our feelings are our most genuine paths to knowledge."**
+**`VERIFIED EXACT`.** *Sister Outsider: Essays and Speeches*, **p. 132**, from the
+Claudia Tate interview. The Ch6 bibliography cites *Sister Outsider* correctly —
+**third correctly-supported citation in Chapter 6.**
+**Rights: `PROTECTABILITY UNCERTAIN` · `STANDARD`.**
+
+**L1308 · attributed to Maya Angelou — "Forgive yourself for not knowing what you didn't know before you learned it."**
+**`MISATTRIBUTED`** · pattern **`SOURCE DISPLACEMENT`**.
+
+**Snopes fact-checked this specifically.** No evidence Angelou ever said or wrote
+it. The originator is **Doe Zantamata**, who has described writing it while
+thinking about self-forgiveness. The misattribution spread through social media,
+and *The Economic Times* published a variant under Angelou's name as recently as
+August 2026.
+**`MISSING`** — no Angelou entry in the Ch6 bibliography (moot, as the
+attribution fails).
+**Rights: `PROTECTABILITY UNCERTAIN` · `STANDARD`.**
+
+#### First candidate for doctrine rule 1 — reattribution actually available
+
+Every misattribution so far has failed rule 1 because the manuscript's wording
+matched **neither** the claimed author nor the true source — Feynman's wording is
+not Haldane's, Shaw's is not Whyte's, Drucker's is neither Gabor's nor Kay's. So
+the remedy has always been removal.
+
+**This one may be different.** Zantamata is living, identifiable, and appears to
+be the author of *this wording*. If an edition or author-channel check confirms
+the exact sentence is hers, **doctrine rule 1 applies and the quotation can
+simply be reattributed** — the first time in 67 items that the cheapest remedy is
+available. Verify the wording against Zantamata's own publication before
+applying it.
+
+#### The two Angelou quotations — a fifth confirmation of the retired rule
+
+- **L1042 · Ch5** — `VERIFIED VARIANT`. Genuinely hers, via *Master Class*.
+- **L1308 · Ch6** — `MISATTRIBUTED`. Not hers at all.
+
+Had "Angelou ×2" been treated as an author set, the grouping would have risked
+either condemning the genuine quotation or admitting the false one. **Fifth
+independent case in which author identity would have produced the wrong
+adjudication.**
 
 ---
 
