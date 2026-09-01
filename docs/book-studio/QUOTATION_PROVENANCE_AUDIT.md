@@ -2,7 +2,7 @@
 
 **Source of record:** `docs/book-studio/ELEMENTAL_ALCHEMY_FROM_ORIGINAL_FULL.md`
 **Opened:** 2026-09-01, after Chapter 10 closed developmental adjudication.
-**Status:** IN PROGRESS — 76 of 137 adjudicated. **Chapter 5 CLOSED (30/30). Chapter 8 CLOSED (23/23).**
+**Status:** IN PROGRESS — 78 of 137 adjudicated. **Chapter 5 CLOSED (30/30). Chapter 8 CLOSED (23/23).**
 
 ## Scope
 
@@ -1844,9 +1844,83 @@ Eight independent instances across three chapters. No longer incidental.
 
 **Still findings-only. No repair batch. No bibliography reconstruction.**
 
-**Next: Chapter 7 — Earth (16), then Chapter 9 — Aether (12)**, completing the
+**Chapter 7 — Earth: 2 of 16 in progress. Next after: Chapter 9 — Aether (12), then Chapter 9 — Aether (12)**, completing the
 five-element provenance picture before the lower-volume chapters.
 
+
+---
+
+## Chapter 7 — Earth (16 quotations)
+
+**L1457 · George Santayana — "The earth has music for those who listen."**
+**`MISATTRIBUTED`** · pattern `EVOLVED APHORISM / RECOVERABLE ANCESTOR`.
+
+**Closed by an authoritative source: the Santayana Edition** (Indiana
+University's critical edition of Santayana's works) published "Citation and the
+Challenges of Misattribution" specifically on this line. **Their editors found no
+sign of it in Santayana's documents.** It is also commonly misattributed to
+Shakespeare.
+
+True source: **Reginald Vincent Holmes**, whose wording is "The earth has **its**
+music for those who **will** listen." The manuscript carries the compressed
+popular form — two words dropped — so reattribution under rule 1 is **not**
+cleanly available.
+**Rights: `PROTECTABILITY UNCERTAIN` · `STANDARD`.**
+
+**L1485 · Helen Keller — duplicate of L1706 (Ch8).** Same quotation, same
+attribution, in Earth and Air. Verdict inherits from L1706: `VERIFIED VARIANT`
+(the early-1920s vaudeville line, per Lash 1980). **Recorded as a duplicate
+placement** — the second cross-chapter duplicate after the Aristotle
+"Knowing yourself" pair (L1340/L1770).
+
+---
+
+## Material finding — attribution dashes are blocked by chapter
+
+Not a typo distribution. The em-dash / en-dash split in epigraph attributions
+falls in **contiguous chapter blocks**:
+
+| Chapter | em-dash | en-dash |
+|---|--:|--:|
+| Preface | 2 | 6 |
+| Ch1 | 0 | 3 |
+| Ch2 | 7 | 3 |
+| Ch3 | 1 | 3 |
+| Ch4 | 2 | 4 |
+| **Ch5 Fire** | 4 | **28** |
+| **Ch6 Water** | **18** | 1 |
+| **Ch7 Earth** | **16** | 0 |
+| **Ch8 Air** | 4 | **19** |
+| **Ch9 Aether** | **12** | 0 |
+| **Ch10** | **5** | 0 |
+
+Chapters 5 and 8 are overwhelmingly **en-dash**; 6, 7, 9 and 10 are
+overwhelmingly or exclusively **em-dash**. This suggests the chapters were
+**assembled or processed at different times, by different hands or different
+tools** — a material signal about assembly provenance, independent of content.
+
+*(It is also a copy-editing item for the render: attribution punctuation should
+be normalized before publication.)*
+
+### Pre-registered prediction — stated before Ch7 and Ch9 are censused
+
+The two **en-dash** elemental chapters are the two **worst-sourced** censused
+chapters:
+
+| | dash | unverified | verified |
+|---|---|--:|--:|
+| Ch5 Fire | en | 43% | 33% |
+| Ch8 Air | en | 57% | 17% |
+| Ch6 Water | **em** | **26%** | **47%** |
+
+**Prediction:** if the dash blocking tracks assembly provenance, **Ch7 (em) and
+Ch9 (em) should be better-sourced than Ch5 and Ch8**, resembling Ch6.
+
+**This is a hypothesis, not a finding.** n = 3 censused chapters; correlation is
+not causation; the dash could track something incidental. It is recorded **now,
+before** Earth and Aether are audited, so the test is honest rather than
+retrofitted. If Ch7 and Ch9 come out poorly sourced, the correlation dissolves
+and should be struck.
 
 ---
 
