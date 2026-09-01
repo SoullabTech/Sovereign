@@ -8,6 +8,10 @@
 
 > # A quotation must earn the interruption of another voice.
 
+**It earns it by deepening, challenging, historicizing, illuminating, or locating
+the work in a genuine intellectual or spiritual lineage — never by merely
+certifying.** *(Fifth function added 2026-09-01; see "RULING REVERSED".)*
+
 The book is now clear about its lineage. Stage 4 makes sure the remaining outside
 voices are there **because the reader needs to hear them, not because the book
 needs permission to believe itself.**
@@ -216,7 +220,7 @@ author's? Is it becoming a recurring certification device? Are two instances doi
 distinct work or merely repeating tonal authority?* It never produces a shared
 verdict.
 
-## RULED — Teasdale, Chapter 10 opener → `REMOVE`
+## ~~RULED — Teasdale, Chapter 10 opener → `REMOVE`~~ ⚠️ **REVERSED — see "RULING REVERSED" below. Teasdale is `KEEP · PHILOSOPHICAL KINSHIP · RIGHTS HOLD`.**
 
 **Not because it is poor. Almost the opposite: it says too neatly what the book
 has already earned for itself.**
@@ -306,3 +310,73 @@ ruling.** Nothing applied to the manuscript — application is Stage 5.
 section-opening epigraphs come out**, and the book's openings stop being decorated
 by authority and begin in their own voice. The survivors are the ones that
 **challenge, historicize, define, or turn** — not the ones that agree.
+
+---
+
+# 4A · RULING REVERSED — Teasdale · 2026-09-01
+
+## `KEEP · PHILOSOPHICAL KINSHIP / LINEAGE · RIGHTS HOLD`
+
+**The earlier `REMOVE` ruling is withdrawn by the author as too aggressive.** It
+treated **philosophical agreement as mere certification**, and that conflation was
+the error.
+
+> **Teasdale is not there to prove the synthesis is valid. He is there because his
+> philosophy is genuinely part of the intellectual and spiritual company in which
+> the author understands his own work.**
+
+That is a legitimate Stage 4 function. The quotation tells the reader: *this way of
+seeing is not isolated; it is in conversation with a thinker whose orientation
+deeply resonates with mine.*
+
+## The Stage 4 test — expanded
+
+> A quotation earns the interruption of the author's voice when it
+> **deepens · challenges · historicizes · illuminates · or locates the work in a
+> genuine intellectual or spiritual lineage** — **but not when it merely
+> certifies.**
+
+**The distinction, which is subtle and load-bearing:**
+
+| | |
+|---|---|
+| **Certification** | *"Teasdale agrees, therefore my thesis is legitimate."* — **not a reason to keep** |
+| **Kinship / lineage** | *"Teasdale articulates a spiritual orientation I genuinely share, and I want his voice present in the conversation."* — **absolutely a reason to keep** |
+
+**This is a fifth function, not a softening of the test.** Certification remains
+disqualifying. What changed is the recognition that *shared orientation* and
+*borrowed warrant* are different things, and the earlier ruling could not tell
+them apart.
+
+## Publication position, held separately
+
+The Teasdale passage is **roughly sixty words of modern copyrighted prose.** The
+editorial ruling is **`KEEP`**; permissions remain an independent question. **If
+rights prove difficult, that is solved as a rights problem — without pretending
+the quotation failed editorially.** This is exactly the separation the refined
+ruling set was introduced to protect.
+
+## Consequence for other 4A items
+
+**Re-examination is owed** to any item recommended `REMOVE` on certification
+grounds where the real function may have been **kinship or lineage.** On review,
+the eleven-item and nine-item `REMOVE` sets are **unaffected** — they fail on
+redundancy, misattribution, or weak fit rather than on agreement-as-warrant — with
+**one item flagged for the author's attention:**
+
+- **L677 Tolle — "Awareness is the greatest agent for change."** Recommended
+  `REMOVE` because the book says it better and earlier ("Awareness is paramount").
+  **That reasoning is redundancy, which stands.** But if Tolle belongs to the
+  book's philosophical company in the way Teasdale does, the kinship test may
+  reach a different answer. **Flagged, not re-ruled.**
+
+## 4A standing, revised
+
+| Disposition | Count |
+|---|---|
+| `REMOVE` | **20** (was 21) |
+| `KEEP` — all forms | **26** (was 25) |
+| `CORRECT` / `RESTORE` | 5 |
+
+**Rulings issued: 1** (Teasdale, `KEEP`). **Forty-four recommendations still
+awaiting authorial ruling.** Nothing applied to the manuscript.
