@@ -1608,3 +1608,20 @@ that disappeared.
 comment. Gates must run on **every** subsequent edit, and a gate that fails for
 bookkeeping reasons trains authors to ignore it — which costs more than the check
 ever saved.
+
+### Requirement — Learn is a pillar, not a help centre
+
+The editorial work has been generating a curriculum the whole time. It must be delivered as
+one: two intertwined tracks (**writing craft** and **manuscript intelligence**), three
+surfaces (**the library**, **learn in the moment**, **learn from my manuscript**), and a
+refusal to teach conformity.
+
+> **The learning section is not there to train someone to conform to "proper writing." It
+> teaches them more ways to see and more choices they can consciously make.**
+
+Manuscript-intelligence lessons follow a fixed three-beat form — *what happened in your
+manuscript* → *what the writer learns* → *(optionally) why the system is built this way* —
+so a technical fact (`EA-Q-0267 → EA-Q-0268`) becomes an authorship concept (*location is
+not identity*).
+
+Full specification: **`AUTHORS_STUDIO_LEARN_PILLAR.md`**.
