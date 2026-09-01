@@ -3430,18 +3430,32 @@ Discovering a Universal Spirituality in the World's Religions*** (1999; © 2001)
 The strongest search result for the Teasdale attribution was **Soullab's own
 Medium publication**. It corroborates nothing.
 
-> **The author's own prior publications — Medium posts, Book Studio pages, site
-> content — CANNOT corroborate the manuscript's attribution.** They are the same
-> claim in another location.
+> **Self-publication may establish internal circulation and chronology; it cannot
+> independently verify external attribution.**
 
-This is the mechanism that made the **Wilber / "Soulplay"** case legible: the
-definition was findable only on Soullab's own Book Studio page, which looked like
-external attestation and was not.
+**Covered:** Soullab-owned sites · author-written Medium/Substack posts · Book
+Studio pages · **earlier versions of the manuscript** · promotional excerpts
+derived from the manuscript.
 
-**Operationally:** any search result on a domain the author controls or
-contributes to is **excluded from the evidence base** and, where it is the *only*
-attestation, is **positive evidence of internal origin**. Teasdale survives this
-because independent book listings also carry the attribution; Wilber did not.
+These remain **useful for chronology and provenance history**. They simply cannot
+serve as evidence that Rumi, Jung, Teasdale or Wilber actually said something.
+
+**The status it yields — and its limit:**
+
+> `NO INDEPENDENT EXTERNAL ATTESTATION + INTERNAL CIRCULATION ESTABLISHED`
+
+**That is NOT by itself `INTERNAL-ORIGIN CANDIDATE`.** Promotion still requires
+the existing bar: **no earlier external circulation, plus stylistic, conceptual or
+drafting evidence pointing to local composition.**
+
+*Why the distinction matters:* a quotation could have been imported from a
+now-lost external source and then propagated only through Soullab. **Circularity
+proves the search result is circular — not where the words were first written.**
+
+**Applied:** **Wilber/"Soulplay"** remains a strong candidate because it had more
+than circularity — local conceptual coinage, manuscript-language continuity, and
+no independent Wilber source. **Teasdale** survives because an independent source
+trail exists.
 
 *Second-instance note:* Teasdale is now 1 verified (L2024) and 1 unverified
 (L1690, Ch8) — another author set that **splits**. C. Michael Smith (2 instances)

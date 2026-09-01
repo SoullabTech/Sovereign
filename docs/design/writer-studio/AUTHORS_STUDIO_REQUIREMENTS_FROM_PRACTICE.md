@@ -175,10 +175,12 @@ individual.
 publications — blog posts, site pages, earlier books, studio content — routinely
 surface as top search results for their own manuscript's attributions. **They
 corroborate nothing; they are the same claim in another location.** The Studio
-must know which domains the author controls or contributes to, exclude them from
-the evidence base, and treat *sole* attestation on such a domain as **positive
-evidence of internal origin**.
+must know which domains the author controls or contributes to and exclude them
+from the evidence base. **Self-publication may establish internal circulation and
+chronology; it cannot independently verify external attribution.** Sole
+self-attestation yields `NO INDEPENDENT EXTERNAL ATTESTATION + INTERNAL
+CIRCULATION ESTABLISHED` — **not** internal origin, since a quotation may have
+been imported from a now-lost source and then propagated only internally.
 *Specimens: the "Soulplay" definition findable only on the author's Book Studio
 page; a Teasdale attribution whose top result was the author's own Medium
 publication (independent listings rescued that one).*
-
