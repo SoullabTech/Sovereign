@@ -4,7 +4,8 @@
     1,
     2,
     3,
-    4
+    4,
+    5
   ],
   "rows": [
     {
@@ -414,6 +415,101 @@
       "evidence": "VERIFIED EXACT with page, from the Claudia Tate interview.",
       "note": "Naming the interview is preferable - it is the actual textual location.",
       "rights": "protectability_uncertain_standard"
+    },
+    {
+      "id": "EA-Q-0067",
+      "source": "Thich Nhat Hanh, 'Walk as if you are kissing the Earth with your feet'",
+      "relationship": "quotation - attribution established, textual witness not",
+      "object": null,
+      "decision": "RECOVERY REQUIRED",
+      "evidence": "Register: attribution verified to Thich Nhat Hanh, exact English and source form unresolved - two authentic source trails rather than one home. The byline already reads 'a teaching associated with Thich Nhat Hanh'.",
+      "unresolved": "One bounded recovery attempt during the remaining mapping. If the two trails still cannot identify a single source object, NO ENTRY REQUIRED - teaching associated with Thich Nhat Hanh - is an acceptable FINAL state, not a failure.",
+      "note": "A legitimate distinction the map must be able to express: ATTRIBUTION RELATIONSHIP ESTABLISHED, BIBLIOGRAPHIC OBJECT NOT ESTABLISHED. The prose can truthfully hold the former without inventing the latter, and the byline already claims less than an entry would."
+    },
+    {
+      "id": "EA-Q-0070",
+      "source": "Nietzsche, \"He who has a 'why' to live\"",
+      "relationship": "quotation, evolved English",
+      "object": "Nietzsche, Friedrich. \"Maxims and Arrows\" 12, in *Twilight of the Idols.* 1889.",
+      "decision": "KEEP + SPECIFY",
+      "evidence": "VERIFIED VARIANT; bibliography CORRECT at work level. The printed English has a mediator - Kaufmann's standard translation reads 'If we have our own why in life...'.",
+      "note": "RESIST FALSE PRECISION. The Nietzsche source is established and the manuscript's English is an evolved aphoristic form, so cite work and section without attaching the printed English to a translator whose wording it does not reproduce. Same shape as Goethe and da Vinci."
+    },
+    {
+      "id": "EA-Q-0072",
+      "source": "Emerson, 'Adopt the pace of nature: her secret is patience'",
+      "relationship": "quotation",
+      "object": "Emerson, Ralph Waldo. \"Education.\" In *Lectures and Biographical Sketches.*",
+      "decision": "ADD",
+      "evidence": "VERIFIED VARIANT; register names the essay and volume. The fuller sentence begins 'Leave this military hurry'.",
+      "hold": "Hold 'Self-Reliance and Other Essays' and 'Nature' until reverse reconciliation proves they carry no other live relationship.",
+      "note": "The looks-complete-but-wrong failure class again: two real Emerson works are worse than a blank entry when neither contains the sentence. A reader finds the right author, a real book, and no line."
+    },
+    {
+      "id": "EA-Q-0073",
+      "source": "the permaculture ethic, 'Earth care, people care, fair share'",
+      "relationship": "anonymous design ethic",
+      "object": null,
+      "decision": "NO ENTRY REQUIRED",
+      "evidence": "VERIFIED EXACT as the standard formulation of permaculture's three ethics in the Mollison/Holmgren tradition; no single author."
+    },
+    {
+      "id": "EA-Q-0078",
+      "source": "the tree-planting saying",
+      "relationship": "familiar saying, no claimed origin",
+      "object": null,
+      "decision": "NO ENTRY REQUIRED",
+      "evidence": "Cultural attribution as a Chinese proverb removed at 4C. Recorded so the absence reads as the decision it is."
+    },
+    {
+      "id": "EA-Q-0080",
+      "source": "Martin Luther King Jr., 'The function of education'",
+      "relationship": "quotation",
+      "object": "King Jr., Martin Luther. \"The Purpose of Education.\" *Morehouse College Maroon Tiger*, 1947.",
+      "decision": "KEEP",
+      "evidence": "VERIFIED EXACT, confirmed against the King Institute at Stanford; the correct entry already exists.",
+      "hold": "Hold 'Strength to Love' for the final reverse check, then drop if unclaimed - it belonged to the removed 'Faith is taking the first step' item.",
+      "rights": "legal_review - the book's single most sensitive permission"
+    },
+    {
+      "id": "EA-Q-0082",
+      "source": "Charles T. Tart, 'we can only be stimulated'",
+      "relationship": "quotation",
+      "object": "Tart, Charles T. *Waking Up: Overcoming the Obstacles to Human Potential.* New Science Library, 1987.",
+      "decision": "ADD",
+      "evidence": "VERIFIED EXACT; the MISSING flag is genuine here rather than chapter-scoped - no Tart entry exists anywhere in the book.",
+      "rights": "likely_protected_standard"
+    },
+    {
+      "id": "EA-Q-0083",
+      "source": "William H. Whyte, 'The single biggest problem in communication'",
+      "relationship": "quotation",
+      "object": "Whyte, William H. *Fortune*, 1950.",
+      "decision": "ADD - source identity settled, bibliographic specificity owed",
+      "evidence": "VERIFIED EXACT. This is the record the census REATTRIBUTED FROM GEORGE BERNARD SHAW; the entry never followed the correction.",
+      "unresolved": "Exact article title and issue. Author, magazine and year identify the relationship but do not yet make an ideal bibliographic object. This is bibliographic specificity, not provenance uncertainty.",
+      "note": "A CLASS WORTH NAMING: speaker corrections create bibliography obligations, and nothing was tracking that until this pass. Several Stage 4 speaker repairs may carry the same debt.",
+      "rights": "term_uncertain"
+    },
+    {
+      "id": "EA-Q-0084",
+      "source": "Brene Brown, 'Vulnerability sounds like truth and feels like courage'",
+      "relationship": "quotation",
+      "object": "Brown, Brene. *Daring Greatly.* Gotham Books, 2012, p. 37.",
+      "decision": "KEEP + add page",
+      "evidence": "VERIFIED EXACT including the second sentence; bibliography CORRECT.",
+      "note": "The matcher proposes H. Jackson Brown Jr., a different person entirely - the third two-people-one-surname trap after Wendell and Thomas Berry.",
+      "rights": "protectability_uncertain_standard"
+    },
+    {
+      "id": "EA-Q-0085",
+      "source": "Rumi, 'Out beyond ideas of wrongdoing and rightdoing'",
+      "relationship": "quotation, loose rendering honestly labelled",
+      "object": "Rumi. *The Essential Rumi.* Translated by Coleman Barks with John Moyne. HarperCollins, 1995.",
+      "decision": "KEEP",
+      "evidence": "Reframed at 4C to the book's honest label. The register names Barks WITH JOHN MOYNE for this occurrence, where the Ch5 Rumi names Barks alone.",
+      "merge": "Same duplicate-entry merge as EA-Q-0047, preserving the Barks/Moyne mediation appropriate to this occurrence.",
+      "rights": "likely_protected_high - alongside O'Donohue and the song lyrics, one of the book's high-exposure permissions"
     }
   ],
   "findings": [
