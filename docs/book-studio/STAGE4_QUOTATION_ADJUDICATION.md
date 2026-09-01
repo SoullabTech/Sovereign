@@ -836,3 +836,51 @@ publication questions, not editorial ones.
 > **The instrument this pass produced:** *remove authority when it is gratuitous ·
 > connect authority when the relationship is real · add the book's own meaning when
 > its absence reveals something still needing to be said.*
+
+---
+
+# PROVENANCE OF THE CAMPBELL FRAME — recorded 2026-09-01
+
+**The frame stands as placed. No removal, no rewrite.** Its status is recorded
+here because a manuscript that has just spent three stages auditing attribution
+must be exact about the attribution of its own newest sentences.
+
+## ⚠️ Correction to the direction of authorship
+
+The proposed status was **`AUTHOR-ADOPTED PROSE` — "wording proposed during
+editorial collaboration and explicitly adopted by the author."** That is the right
+*category name* but **the wrong direction for this instance.**
+
+**The two sentences were written by the author**, offered in the ruling itself:
+
+> *"A very small frame is enough — something along the conceptual line of:
+> Campbell's language has stayed with me because becoming who we are is not a
+> retreat into the self. It is the work of discovering what is ours to bring into
+> relationship with the world. **Not necessarily those exact words.**"*
+
+**I did not compose them. I declined to compose them** — deliberately, because
+authoring a relationship to Campbell on the author's behalf is precisely what the
+`FRAME/ANSWER` guardrail forbids — **and placed the author's own words verbatim
+instead**, despite their being offered as provisional.
+
+**Getting this backwards would have been the exact error this stage exists to
+prevent:** recording an author's own sentences as adopted model output, inside the
+record of a provenance audit.
+
+## The accurate status
+
+> **`AUTHOR-ORIGINATED · PROVISIONALLY OFFERED · CONFIRMED CANONICAL`** — wording
+> written by the author within an editorial ruling and explicitly marked
+> provisional ("not necessarily those exact words"), placed verbatim rather than
+> paraphrased, and subsequently confirmed by the author as part of the manuscript.
+
+**The general category the author established stands and is correct as doctrine:**
+
+> **Suggested language does not become part of the book merely because an editor or
+> a model generated it. It becomes part of the authored manuscript when the author
+> consciously accepts it.**
+
+**The guardrail worked end to end:** *proposal → authorial review → explicit
+adoption → canonical prose.* What this instance adds is that the pipeline must also
+record **who originated the wording**, because the same four steps look identical
+from the outside whether the first one was the model's or the author's.

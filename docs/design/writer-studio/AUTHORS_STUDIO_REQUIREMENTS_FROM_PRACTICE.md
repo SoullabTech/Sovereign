@@ -384,3 +384,40 @@ member will finish with a better book and no more capacity than they started wit
 
 **This makes the Studio a teacher of authorship rather than an editor**, and it is
 the standard every other requirement in this document should be read against.
+
+---
+
+### Capability — never collapse suggestion, edit, and adoption into "generated content"
+
+> **Suggested language does not become part of the book merely because an editor or
+> a model generated it. It becomes part of the authored manuscript when the author
+> consciously accepts it.**
+
+**Four states must remain distinguishable for every span of text.** Collapsing them
+into "AI-generated" is both false and corrosive — it tells an author that anything
+a system touched is not theirs, which is the opposite of what this document is for.
+
+| State | Meaning |
+|---|---|
+| **`EDITOR/MODEL SUGGESTION`** | proposed, **not adopted**. Has no standing in the manuscript |
+| **`AUTHOR-EDITED SUGGESTION`** | proposed by the system, **reworked** by the author before acceptance |
+| **`AUTHOR-ADOPTED`** | proposed by the system, **accepted unchanged** after conscious review |
+| **`AUTHOR-ORIGINATED`** | **the author's own wording**, including wording offered provisionally inside a discussion and later confirmed |
+
+**Grounding event (Stage 4A, 2026-09-01):** the Campbell frame was nearly recorded
+as `AUTHOR-ADOPTED` — model-proposed, author-accepted. **It was neither.** The two
+sentences were written by the author inside a ruling, marked *"not necessarily
+those exact words,"* and placed verbatim precisely because composing a relationship
+to Campbell on the author's behalf was forbidden. **A system tracking only three
+states would have mislabelled the author's own sentences as its output, inside a
+provenance audit.**
+
+**Requirements:**
+- **Record the originator, not only the adopter.** The adoption pipeline —
+  *proposal → review → adoption → canonical* — looks identical from the outside
+  regardless of who wrote the first draft of the span.
+- **Wording an author offers provisionally inside a conversation is still theirs.**
+  Hedging it ("something along the lines of") does not transfer authorship to the
+  system that places it.
+- **`AUTHOR-ORIGINATED` must be the default assumption for any span traceable to
+  the author's own message**, and the system must not claim credit by default.
