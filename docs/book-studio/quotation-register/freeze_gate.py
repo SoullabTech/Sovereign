@@ -20,7 +20,13 @@ def check(name, ok, detail=""):
 
 
 print("FREEZE GATE\n")
-check("130 current semantic records reconciled", len(R) == 130, f"{len(R)}")
+# A FROZEN POPULATION IS NOT A FROZEN COUNT. What froze is the set of identities
+# under management; adjudication moves records between the active and historical
+# layers and must not read as a breach. The invariant is the sum.
+FROZEN_POPULATION = 158  # 130 active + 28 historical at the moment of freezing
+check("frozen population reconciles across both layers",
+      len(R) + len(H) == FROZEN_POPULATION,
+      f"{len(R)} active + {len(H)} historical = {len(R) + len(H)} (frozen {FROZEN_POPULATION})")
 check("zero pending_migration",
       not [r for r in R if r["provenance_review_state"] == "pending_migration"])
 attr_ni = [r["id"] for r in R
@@ -51,12 +57,33 @@ check("families reconciled", not orphan_fams, f"{len(fams)} families across both
 
 check("every current record has an explicit review state",
       all(r.get("provenance_review_state") for r in R))
-check("current + historical arithmetic closes",
-      sum(1 for r in R if r["display_form"] == "block_epigraph") + len(H) == 137,
-      "137 = 109 active block + 28 inactive")
+ab = sum(1 for r in R if r["display_form"] == "block_epigraph")
+ib = sum(1 for r in H if r.get("former_form", "block") == "block")
+check("block lifecycle closes against the original census",
+      ab + ib == 137, f"137 = {ab} active block + {ib} inactive block")
+# The 9 spans the reconciler still surfaces, each ruled a non-quotation with a
+# reason. Set equality, not a count: a count lets a new unexplained span hide
+# behind a disappeared one.
+DOCUMENTED_SPANS = {
+    "But you said what I imagine is real.":                   "client speech",
+    "From the Father and the Son comes the Holy Spirit":       "creedal formula",
+    "Who am I to dare identify with something":                "authorial voiced speech",
+    "Who am I not to dare to accept this new adventure":       "authorial voiced speech",
+    "emotionally inadequate,":                                 "client speech",
+    "wasted years at a job they hate":                         "client speech",
+    "I know therefore I am.":                                  "authorial coinage",
+    "being logical and consistent.":                           "definition",
+    "This is what I have experienced. What is your experience?": "authorial voiced speech",
+}
+undoc = [o["text"][:60] for o in orph
+         if not any(k in o["text"] for k in DOCUMENTED_SPANS)]
+missing = [k for k in DOCUMENTED_SPANS
+           if not any(k in o["text"] for o in orph)]
 check("detector reconciliation finds no unexplained quotation-like spans",
-      len(orph) == 9,
-      f"{len(orph)} spans, each documented as a non-quotation (voiced speech, client speech, coinage, definition, creedal formula)")
+      not undoc and not missing,
+      f"{len(orph)} spans, each documented as a non-quotation"
+      + (f" | UNDOCUMENTED: {undoc}" if undoc else "")
+      + (f" | no longer present: {missing}" if missing else ""))
 
 print()
 if fail:

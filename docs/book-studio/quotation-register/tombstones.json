@@ -385,6 +385,20 @@
       "editorial_status": "RECLAIM - AUTHORIAL CLAIM. Quotation removed; the paragraph closes on the author's own sentence.",
       "evidence_location": "STAGE2C_INLINE_QUOTATION_CENSUS.md #6; 4I batch 1 ruling",
       "notes": "HOST-ALIGNED ALTERATION, textbook case. Jung's distinction is belief versus KNOWLEDGE - 'I don't need to believe. I know' - and the manuscript substituted EXPERIENCE inside a paragraph arguing for experience over belief. The authentic statement does not make the argument; the altered one does. The book already had the stronger sentence. Seam clean, no replacement prose."
+    },
+    {
+      "state": "removed",
+      "stage": "Stage 4I",
+      "former_form": "inline",
+      "last_location": "Ch4 - Timeless Wisdom",
+      "text": "one thing, many; one, because all things have the same substantial form of Being; many, because they are divided, being separated by imagination and sense.",
+      "attributed_as": "Hermes Trismegistus",
+      "provenance_status": "unverified",
+      "work": "LEAD (open): Corpus Hermeticum / The Divine Pymander - John Everard's 1650 English translation is the likeliest home for this register; exact wording NOT located",
+      "translator_or_mediator": "MEDIATED TRANSLATION, Greek to English via an early-modern rendering - the 'one thing, many' construction is 17th-century English, not modern",
+      "editorial_status": "REMOVE - CERTIFICATION / REDUNDANT. The paragraph already carries the Hermetic relationship through 'As above, so below'; this quotation added an ancient authority after the argument had arrived.",
+      "evidence_location": "Stage 2d verification 2026-09-01 (provenance); 4I batch 3 ruling (editorial)",
+      "notes": "Three avoidable ambiguities travelled with it: exact sentence unlocated; 'Hermes Trismegistus' treated as an individual author rather than an attribution tradition; and the lead verb 'advises' inventing a speech act the evidence cannot support. Removal only - no replacement prose. SEAM NOTE: the surviving sentence opens 'This alchemical practice', whose nearest antecedent is now a principle ('As above, so below'), not a practice. Reported to the author; not repaired unilaterally."
     }
   ]
 }

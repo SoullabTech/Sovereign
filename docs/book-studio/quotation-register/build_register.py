@@ -44,10 +44,32 @@ def norm(t):
 IDENTITY = Path(__file__).resolve().parent / "identity.json"
 
 
+KEY_SEP = "\u241f"
+
+
 def load_identity():
-    if IDENTITY.exists():
-        return json.loads(IDENTITY.read_text())
-    return {"assigned": {}, "next": 1}
+    """Load the identity ledger, keyed by (occurrence, text).
+
+    IDENTITY IS PER OCCURRENCE, NOT PER TEXT. A quotation used twice is two
+    objects with two ids: they sit in different arguments, can be repaired
+    independently, and one can be removed while the other survives (the
+    asymmetric-repair case this register exists to catch). Keying the ledger by
+    text alone let the second occurrence overwrite the first, so BOTH were
+    re-minted on every build - id churn in the one structure whose whole purpose
+    is to stay still. Legacy text-only keys are migrated in place on load.
+    """
+    if not IDENTITY.exists():
+        return {"assigned": {}, "next": 1}
+    ledger = json.loads(IDENTITY.read_text())
+    migrated = {}
+    for key, meta in ledger["assigned"].items():
+        if KEY_SEP in key:
+            migrated[key] = meta
+            continue
+        meta = dict(meta, text=key)
+        migrated.setdefault(f"{meta['ordinal']}{KEY_SEP}{key}", meta)
+    ledger["assigned"] = migrated
+    return ledger
 
 
 def similarity(a, b):
@@ -81,16 +103,17 @@ def qid(text, ordinal, ledger, taken):
     register owns thereafter.
     """
     best, score = None, 0.0
-    for known_text, meta in ledger["assigned"].items():
+    for known_key, meta in ledger["assigned"].items():
         if meta["id"] in taken or meta["ordinal"] != ordinal:
             continue
-        sc = similarity(text, known_text)
+        sc = similarity(text, meta.get("text", known_key))
         if sc > score:
             best, score = meta, sc
     if best and score >= MATCH_THRESHOLD:
         return best["id"], "matched", round(score, 3)
     new = f"EA-Q-{ledger['next']:04d}"
-    ledger["assigned"][text] = {"id": new, "ordinal": ordinal}
+    ledger["assigned"][f"{ordinal}{KEY_SEP}{text}"] = {
+        "id": new, "ordinal": ordinal, "text": text}
     ledger["next"] += 1
     return new, "new_candidate", None
 
@@ -272,12 +295,27 @@ MANUAL = [{
 
 # Reconciler false positives: spans produced by quote-mark pairing across scare
 # quotes and coinages. Not quotations; recorded so they are not rediscovered.
-NOT_QUOTATIONS = {711, 1000, 1014, 1024, 1068, 1752, 1078}
+#
+# MATCHED BY TEXT, NEVER BY LINE NUMBER. A line number is a coordinate, not an
+# identity: any edit above a span silently re-admits it (or, worse, silently
+# suppresses a real quotation that drifted into the numbered slot). This set is
+# the third place in the register where hardcoded line numbers had to be
+# replaced by text - the pattern is now a standing rule, not an incident.
+NOT_QUOTATION_TEXTS = (
+    "from which all dualities and multiplicities emerge",
+    "It is said Diogenes",
+    "If we do this, then we will attain that",
+    "which draws us toward a bright imagined future",
+    "where potential buyers are welcomed in with wine and story",
+    "Milton gives this enclosure a voice in Satan",
+    "Lao Tzu reminds us",
+)
 
 
 if __name__ == "__main__":
     recs = build() + MANUAL
-    orphans = [o for o in reconcile(recs) if o["line"] not in NOT_QUOTATIONS]
+    orphans = [o for o in reconcile(recs)
+               if not any(t in o["text"] for t in NOT_QUOTATION_TEXTS)]
     OUT.write_text(json.dumps({"records": recs, "unrecorded_spans": orphans}, indent=2, ensure_ascii=False))
     forms = {}
     for r in recs:

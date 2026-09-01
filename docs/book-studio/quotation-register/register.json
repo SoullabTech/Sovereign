@@ -603,33 +603,6 @@
       "notes": "All three Gabriel songs identified in the census; no further song identification needed."
     },
     {
-      "id": "EA-Q-0025",
-      "occurrence": 1,
-      "text": "one thing, many; one, because all things have the same substantial form of Being; many, because they are divided, being separated by imagination and sense.",
-      "line_at_build": 731,
-      "chapter": "Chapter 4: The Elements of Wholeness",
-      "section": "Timeless Wisdom",
-      "display_form": "inline_plain_lead",
-      "attributed_as": "Hermes Trismegistus",
-      "attribution_state": "attributed",
-      "actual_author": "attributed to Hermes Trismegistus",
-      "internal_speaker": null,
-      "work": "LEAD (open): Corpus Hermeticum / The Divine Pymander - John Everard's 1650 English translation is the likeliest home for this register; exact wording NOT located",
-      "translator_or_mediator": "MEDIATED TRANSLATION, Greek to English via an early-modern rendering - the 'one thing, many' construction is 17th-century English, not modern",
-      "provenance_status": "unverified",
-      "provenance_review_state": "migrated",
-      "rights_review_state": "not_investigated",
-      "editorial_review_state": "not_investigated",
-      "evidence_location": "Stage 2d verification, 2026-09-01",
-      "rights_status": null,
-      "bibliography_relationship": null,
-      "family": null,
-      "editorial_status": "unadjudicated",
-      "record_state": "confirmed",
-      "identity_match_score": 1.0,
-      "notes": "NOVELTY: NEW EVIDENCE. The census mentions Hermes Trismegistus once, but only regarding the Kybalion's claim to transmit him - a different object entirely."
-    },
-    {
       "id": "EA-Q-0026",
       "occurrence": 1,
       "text": "Your task is not to seek for love, but merely to seek and find all the barriers within yourself that you have built against it.",
@@ -1982,7 +1955,7 @@
       "notes": "Audit: MISATTRIBUTED, EVOLVED APHORISM / RECOVERABLE ANCESTOR. CLOSED BY AN AUTHORITATIVE SOURCE - the Santayana Edition (Indiana University's critical edition) published 'Citation and the Challenges of Misattribution' specifically on this line, and their editors found no sign of it in his works."
     },
     {
-      "id": "EA-Q-0262",
+      "id": "EA-Q-0268",
       "occurrence": 1,
       "text": "Alone we can do so little; together we can do so much.",
       "line_at_build": 1451,
@@ -2004,8 +1977,8 @@
       "bibliography_relationship": null,
       "family": null,
       "editorial_status": "unadjudicated",
-      "record_state": "new_candidate",
-      "identity_match_score": null,
+      "record_state": "confirmed",
+      "identity_match_score": 1.0,
       "notes": "Audit: a SPOKEN saying with substantive documentary evidence - variant rather than exact for the same reason as the Angelou item."
     },
     {
@@ -2160,15 +2133,15 @@
       "provenance_status": "verified_exact",
       "provenance_review_state": "migrated",
       "rights_review_state": "migrated",
-      "editorial_review_state": "not_investigated",
-      "evidence_location": "STAGE2C #4",
+      "editorial_review_state": "migrated",
+      "evidence_location": "STAGE2C #4 (provenance); 4I batch 3 ruling (editorial)",
       "rights_status": "likely_protected_standard",
       "bibliography_relationship": "MISSING",
       "family": null,
-      "editorial_status": "unadjudicated",
+      "editorial_status": "KEEP - KINSHIP. Tart names an epistemic limit the book independently holds; he is not required to certify it. Lead-in reframed from 'As Charles Tart aptly put it' to 'Charles Tart names the same limit:' - 'aptly' evaluated him as useful confirmation; the new frame establishes a relationship between two independently held positions.",
       "record_state": "confirmed",
       "identity_match_score": 1.0,
-      "notes": null
+      "notes": "Bibliography repair (MISSING) goes to Stage 7. Rights remains an open Stage 6 review - the fair-use conclusion is NOT pre-decided from quotation length."
     },
     {
       "id": "EA-Q-0083",
@@ -2396,7 +2369,7 @@
       "notes": "Audit: UNVERIFIED, UNKNOWN. Shows BOTH instability markers at once - a competing attribution (Hale, 1822-1909, whose death predates the attribution) and no primary source."
     },
     {
-      "id": "EA-Q-0263",
+      "id": "EA-Q-0267",
       "occurrence": 2,
       "text": "Alone we can do so little; together we can do so much.",
       "line_at_build": 1670,
@@ -2418,8 +2391,8 @@
       "bibliography_relationship": null,
       "family": "fam-keller-spoken",
       "editorial_status": "unadjudicated",
-      "record_state": "new_candidate",
-      "identity_match_score": null,
+      "record_state": "confirmed",
+      "identity_match_score": 1.0,
       "notes": "Second occurrence of the same saying, Ch8. Spoken line documented in Lash, Helen and Teacher (1980)."
     },
     {
@@ -2466,15 +2439,15 @@
       "provenance_status": "verified_variant",
       "provenance_review_state": "migrated",
       "rights_review_state": "migrated",
-      "editorial_review_state": "not_investigated",
-      "evidence_location": "STAGE2C #5",
+      "editorial_review_state": "migrated",
+      "evidence_location": "STAGE2C #5 (provenance); 4I batch 3 ruling (editorial)",
       "rights_status": "term_uncertain",
       "bibliography_relationship": null,
       "family": null,
-      "editorial_status": "unadjudicated",
+      "editorial_status": "KEEP - ILLUMINATION. REFRAME with the mediated/evolved wording acknowledged. Lead-in changed from 'As Soren Kierkegaard said' to 'A familiar rendering of a thought Kierkegaard recorded in his journals puts it:' - the thought is in the journals (1843, IV A 164), but this compact English aphorism is not established as his exact wording.",
       "record_state": "confirmed",
       "identity_match_score": 1.0,
-      "notes": null
+      "notes": "Same shape as the Goethe ruling in batch 1: real ancestor, no single authoritative English sentence, so REFRAME rather than CORRECT - correction here would manufacture textual precision the evidence does not support. The frame distinguishes Kierkegaard's thought from this evolved English formulation without pretending to solve it. Identifying the translator/origin of this English form remains a provenance and rights task."
     },
     {
       "id": "EA-Q-0094",
@@ -3361,15 +3334,15 @@
       "provenance_status": "personal_communication",
       "provenance_review_state": "migrated",
       "rights_review_state": "migrated",
-      "editorial_review_state": "not_investigated",
-      "evidence_location": "STAGE2C #9",
+      "editorial_review_state": "migrated",
+      "evidence_location": "STAGE2C #9 (provenance); 4I batch 3 ruling (editorial)",
       "rights_status": "consent_required_not_permissions",
       "bibliography_relationship": null,
       "family": null,
-      "editorial_status": "unadjudicated",
+      "editorial_status": "KEEP as written - PERSONAL COMMUNICATION / RELATIONAL VOICE. Not an authority entering the argument; a person entering the acknowledgments. The existing frame 'In your words' already names the object class in the prose. No change made.",
       "record_state": "confirmed",
       "identity_match_score": 1.0,
-      "notes": "Own source class. No published source, no bibliography obligation, no permissions clearance. Confirm consent before publication."
+      "notes": "No bibliography entry and no literary provenance chase. The one remaining task is confirming consent for publication, which is a Stage 6 item addressed to the author rather than to a rights holder."
     },
     {
       "id": "EA-Q-manual01",
@@ -3411,26 +3384,6 @@
       "context": "Latin Christian theology, this is reflected in the understanding that"
     },
     {
-      "line": 709,
-      "text": " from which all dualities and multiplicities emerge. In many spiritual traditions, this un",
-      "context": "ss that serves as the source of all experience. This is the \"one thing"
-    },
-    {
-      "line": 998,
-      "text": " with an eternal flame of knowledge. It is said Diogenes (412–323 B.C.E.), a Greek Cynic p",
-      "context": "him the lit lantern or the Egyptian ankh symbolizing the \"lamp of life"
-    },
-    {
-      "line": 1012,
-      "text": " If we do this, then we will attain that. Without at least a flicker of fire, we wouldn't ",
-      "context": "ctive, future-oriented nature, fire represents the possibility of \"If."
-    },
-    {
-      "line": 1022,
-      "text": " which draws us toward a bright imagined future, the ",
-      "context": "es are taking place in you. You are the hero. Unlike a \"carrot vision,"
-    },
-    {
       "line": 1058,
       "text": "Who am I to dare identify with something so marvelous and amazing?",
       "context": "mbitions struggle with believing in themselves enough to pursue them."
@@ -3441,16 +3394,6 @@
       "context": "The solution is to ask instead,"
     },
     {
-      "line": 1066,
-      "text": " where potential buyers are welcomed in with wine and story. If it is a success then the a",
-      "context": "s their work in a gallery is subjected to the ritual of \"Opening Night"
-    },
-    {
-      "line": 1076,
-      "text": " Lao Tzu reminds us, ",
-      "context": "\"And yet,"
-    },
-    {
       "line": 1294,
       "text": "emotionally inadequate,",
       "context": "ny of the people I have coached over the years have told me they feel"
@@ -3459,11 +3402,6 @@
       "line": 1507,
       "text": "wasted years at a job they hate",
       "context": "Watching my clients awaken due to a realization that they have"
-    },
-    {
-      "line": 1750,
-      "text": " Milton gives this enclosure a voice in Satan, who declares, *",
-      "context": "the ego is ruled by cold logic and finds itself lost in \"thoughtland."
     },
     {
       "line": 1808,
@@ -4241,6 +4179,28 @@
       "provenance_history": [],
       "former_form": "inline",
       "active_span": null
+    },
+    {
+      "id": "EA-Q-T034",
+      "record_state": "removed",
+      "removed_at_stage": "Stage 4I",
+      "last_known_location": "Ch4 - Timeless Wisdom",
+      "text_at_removal": "one thing, many; one, because all things have the same substantial form of Being; many, because they are divided, being separated by imagination and sense.",
+      "attributed_as": "Hermes Trismegistus",
+      "provenance_status": "unverified",
+      "provenance_review_state": "migrated",
+      "internal_speaker": null,
+      "rights_status": null,
+      "rights_review_state": "not_investigated",
+      "bibliography_relationship": null,
+      "editorial_status": "REMOVE - CERTIFICATION / REDUNDANT. The paragraph already carries the Hermetic relationship through 'As above, so below'; this quotation added an ancient authority after the argument had arrived.",
+      "editorial_review_state": "migrated",
+      "family": null,
+      "evidence_location": "Stage 2d verification 2026-09-01 (provenance); 4I batch 3 ruling (editorial)",
+      "notes": "Three avoidable ambiguities travelled with it: exact sentence unlocated; 'Hermes Trismegistus' treated as an individual author rather than an attribution tradition; and the lead verb 'advises' inventing a speech act the evidence cannot support. Removal only - no replacement prose. SEAM NOTE: the surviving sentence opens 'This alchemical practice', whose nearest antecedent is now a principle ('As above, so below'), not a practice. Reported to the author; not repaired unilaterally.",
+      "provenance_history": [],
+      "former_form": "inline",
+      "active_span": null
     }
   ],
   "migration_report": {
@@ -4331,7 +4291,7 @@
       "EA-Q-0073",
       "EA-Q-0074",
       "EA-Q-0075",
-      "EA-Q-0262",
+      "EA-Q-0268",
       "EA-Q-0077",
       "EA-Q-0078",
       "EA-Q-0079",
@@ -4353,7 +4313,7 @@
       "EA-Q-0103",
       "EA-Q-0104",
       "EA-Q-0098",
-      "EA-Q-0263",
+      "EA-Q-0267",
       "EA-Q-0106",
       "EA-Q-0107",
       "EA-Q-0108",
@@ -4373,12 +4333,14 @@
       "EA-Q-0108",
       "EA-Q-0024",
       "EA-Q-0059",
-      "EA-Q-0025",
       "EA-Q-0040",
       "EA-Q-manual01",
       "EA-Q-0094",
       "EA-Q-0125",
       "EA-Q-0126",
+      "EA-Q-0082",
+      "EA-Q-0093",
+      "EA-Q-0129",
       "EA-Q-0088"
     ],
     "ambiguous": [],
@@ -4390,6 +4352,7 @@
       "When you realize how perfect everything is",
       "I don't have beliefs, I have experiences",
       "real religion of humankind",
+      "one thing, many; one, because",
       "real religion of humankind"
     ],
     "historical_migrated": [

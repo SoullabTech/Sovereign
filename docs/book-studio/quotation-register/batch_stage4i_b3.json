@@ -1,0 +1,26 @@
+{
+  "_comment": "Stage 4I batch 3 - authorial rulings, 2026-09-01. Four inline records of the same typographic class and four different reasons for being in the text. Editorial axis only; provenance and rights verdicts are untouched.",
+  "entries": [
+    {
+      "match": "we can only be stimulated",
+      "editorial_status": "KEEP - KINSHIP. Tart names an epistemic limit the book independently holds; he is not required to certify it. Lead-in reframed from 'As Charles Tart aptly put it' to 'Charles Tart names the same limit:' - 'aptly' evaluated him as useful confirmation; the new frame establishes a relationship between two independently held positions.",
+      "evidence_location": "STAGE2C #4 (provenance); 4I batch 3 ruling (editorial)",
+      "notes": "Bibliography repair (MISSING) goes to Stage 7. Rights remains an open Stage 6 review - the fair-use conclusion is NOT pre-decided from quotation length.",
+      "occurrence": 1
+    },
+    {
+      "match": "Life can only be understood backwards",
+      "editorial_status": "KEEP - ILLUMINATION. REFRAME with the mediated/evolved wording acknowledged. Lead-in changed from 'As Soren Kierkegaard said' to 'A familiar rendering of a thought Kierkegaard recorded in his journals puts it:' - the thought is in the journals (1843, IV A 164), but this compact English aphorism is not established as his exact wording.",
+      "evidence_location": "STAGE2C #5 (provenance); 4I batch 3 ruling (editorial)",
+      "notes": "Same shape as the Goethe ruling in batch 1: real ancestor, no single authoritative English sentence, so REFRAME rather than CORRECT - correction here would manufacture textual precision the evidence does not support. The frame distinguishes Kierkegaard's thought from this evolved English formulation without pretending to solve it. Identifying the translator/origin of this English form remains a provenance and rights task.",
+      "occurrence": 1
+    },
+    {
+      "match": "it's all about one little word",
+      "editorial_status": "KEEP as written - PERSONAL COMMUNICATION / RELATIONAL VOICE. Not an authority entering the argument; a person entering the acknowledgments. The existing frame 'In your words' already names the object class in the prose. No change made.",
+      "evidence_location": "STAGE2C #9 (provenance); 4I batch 3 ruling (editorial)",
+      "notes": "No bibliography entry and no literary provenance chase. The one remaining task is confirming consent for publication, which is a Stage 6 item addressed to the author rather than to a rights holder.",
+      "occurrence": 1
+    }
+  ]
+}

@@ -2475,3 +2475,71 @@ source files onto the detected population, not an accumulating mutation.**
 **125 active · 33 historical · 158 total** ✅ · **`GATE PASSED`**
 
 **Batch 2 closed. 4I: 8 remaining**, in two batches of four.
+
+---
+
+## Stage 4I — Batch 3 (2026-09-01)
+
+Four inline records of the same typographic class, four different reasons for being
+in the text. The batch is worth keeping as a unit because it makes the case against
+adjudicating by form: `inline_emphasised` told us nothing about what any of these
+quotations was doing.
+
+| Record | Ruling | Why it was there |
+|---|---|---|
+| **Hermes Trismegistus** `EA-Q-0025` | **REMOVE · CERTIFICATION / REDUNDANT** | Another voice arriving *after* the book already knew |
+| **Charles Tart** `EA-Q-0082` | **KEEP · KINSHIP** + reframe | Another voice independently knowing something similar |
+| **Søren Kierkegaard** `EA-Q-0093` | **KEEP · ILLUMINATION** + reframe | Another voice supplying an image the argument uses |
+| **Stephen Clayton** `EA-Q-0129` | **KEEP** as written | Another voice present because relationship belongs in the text |
+
+**Hermes.** The paragraph already carried the Hermetic relationship through *"As above,
+so below."* Three avoidable ambiguities travelled with the second quotation: the exact
+sentence was never located; *Hermes Trismegistus* was treated as an individual author
+rather than an attribution tradition; and the lead verb *"advises"* invented a speech
+act the evidence cannot support. Removed with no replacement prose.
+**Seam reported, not repaired:** the surviving sentence opens *"This alchemical
+practice"*, whose nearest antecedent is now a principle, not a practice.
+
+**Tart.** *"As Charles Tart aptly put it"* → *"Charles Tart names the same limit:"*
+— *aptly* evaluated him as useful confirmation; the new frame states a relationship
+between two independently held positions. Bibliography (MISSING) → Stage 7; rights
+remain an **open** Stage 6 review — the fair-use conclusion is *not* pre-decided from
+quotation length.
+
+**Kierkegaard.** Same shape as the Goethe ruling in batch 1: real ancestor, no single
+authoritative English sentence. *"As Søren Kierkegaard said"* → *"A familiar rendering
+of a thought Kierkegaard recorded in his journals puts it:"*, which keeps the compact
+aphorism the hinge actually needs while distinguishing **Kierkegaard's thought** from
+**this evolved English formulation**. REFRAME, not CORRECT: correction would
+manufacture textual precision the evidence does not support.
+
+**Clayton.** Not an authority entering the argument — a person entering the
+acknowledgments. *"In your words"* already names the object class in the prose. The
+only remaining task is confirming consent, which is addressed to the author, not to a
+rights holder. No bibliography entry, no provenance chase.
+
+### Infrastructure repaired in the same pass
+
+1. **`migrate.py` idempotency — verified, not assumed.** Three consecutive migrations
+   now produce byte-identical `register.json`. The first test *failed*, which is how
+   (2) was found.
+2. **Identity churn on repeated quotations.** The identity ledger was keyed by text
+   alone, so a quotation appearing twice had its first occurrence overwritten by its
+   second — and **both were re-minted on every build**. Ledger is now keyed by
+   `(occurrence, text)`; legacy keys migrate in place on load. Nothing downstream had
+   broken, because migration matches on text plus occurrence; the guarantee had been
+   quietly false regardless.
+3. **Line numbers as identity, third occurrence.** The reconciler's false-positive
+   list `NOT_QUOTATIONS` was a set of line numbers. Two lines of drift had re-admitted
+   seven resolved spans. Replaced with text matching. The dangerous direction is the
+   other one: a stale line-number exclusion can silently suppress a *real* quotation
+   that drifts into the numbered slot.
+4. **Freeze gate encoded its own snapshot.** Three of ten checks asserted the counts
+   of the freezing day, so the first removal after the freeze failed all three for
+   bookkeeping reasons. Rewritten as invariants: `active + historical == 158`;
+   `active block + inactive block == 137`; and the span check now asserts **set
+   equality against the documented nine**, not a count.
+
+**Standing after batch 3:** 124 active · 34 historical · **158 total** (frozen
+130 + 28) · block lifecycle 137 = 108 active + 29 inactive · **CLOSURE GATE PASSED ·
+FREEZE GATE PASSED**.

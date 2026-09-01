@@ -1540,3 +1540,71 @@ contradiction was reported and very nearly relayed as a real finding.
 stale match key **attached to the wrong object.** *Failure to attach is safer than
 plausible attachment to the wrong semantic object* — a property easy to state and
 easy to trade away for convenience.
+
+### Requirement — when identity is uncertain, fail unattached; never attach plausibly
+
+The two identity failures are not symmetric, and a system that treats them as one
+risk will trade the dangerous one away to reduce the annoying one.
+
+| Failure | How it presents | Cost |
+|---|---|---|
+| **Plausible attachment to the wrong object** | Silent. The verdict lands on a record and looks correct. | A provenance ruling now certifies a quotation it was never about. Unrecoverable without re-adjudication. |
+| **Refusal to attach** | Loud. The run reports an unmatched candidate. | A person spends a minute reconciling. |
+
+> **When identity is uncertain, fail unattached. Never attach plausibly.**
+
+**Grounding event:** a similarity fallback added to rescue one stale match key
+attached a verdict to the wrong record; a duplicate-migration bug in the same period
+manufactured a false conflict. The second was fixed **because** it was noisy. The
+first had to be *reverted*, because nothing would have reported it.
+
+**Design consequence:** the matching threshold is a floor, not a target. Lowering it
+to reduce unmatched candidates converts loud failures into silent ones.
+
+### Requirement — identity is per occurrence, not per text
+
+A quotation used twice is **two objects**. They sit in different arguments, can be
+repaired independently, and **one can be removed while the other survives** — the
+asymmetric-repair case the register exists to catch. An identity ledger keyed by text
+alone lets the second occurrence overwrite the first, so **both are re-minted on
+every build**: churn in the one structure whose entire purpose is to stay still.
+
+**Grounding event:** found by an idempotency test, not by reading the code. Two
+records changed id on every run for as long as the ledger had existed. Nothing
+downstream broke — migration matches on text plus occurrence — which is precisely why
+it went unseen. *A defect that harms nothing today still erodes the guarantee the
+structure was built to make.*
+
+### Requirement — a coordinate is not an identity (third occurrence)
+
+Hardcoded line numbers were replaced by text matching in the boundary detector, then
+in the anchor layer, and now in the reconciler's false-positive list. Same defect,
+three sites, in a system whose central premise is that **locations move and identities
+do not**.
+
+> **No filter, exclusion list, or suppression may be keyed to a line number.**
+
+**Why it is worse than it looks:** a stale line-number exclusion does not merely
+re-admit a resolved false positive. It can **silently suppress a real quotation** that
+drifted into the numbered slot. The failure mode is invisible in exactly the direction
+that matters.
+
+### Requirement — a gate must be re-run, or it is decoration
+
+The freeze gate passed at the moment it was written and then quietly encoded that
+moment: three of its ten checks asserted **the counts of the day** rather than the
+invariants they stood for. The first real removal after the freeze failed all three —
+correctly, in the sense that they fired; uselessly, in the sense that nothing was
+wrong.
+
+> **A frozen population is not a frozen count.** State the invariant (`active +
+> historical == frozen total`), never the snapshot.
+
+**And the sharper form, for set-membership checks:** assert **set equality against the
+documented set**, not a count. A count lets a new unexplained item hide behind one
+that disappeared.
+
+**Product consequence:** a gate that only ever runs on the day it is authored is a
+comment. Gates must run on **every** subsequent edit, and a gate that fails for
+bookkeeping reasons trains authors to ignore it — which costs more than the check
+ever saved.

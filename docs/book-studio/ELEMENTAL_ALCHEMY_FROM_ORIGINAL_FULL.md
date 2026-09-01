@@ -728,7 +728,7 @@ After engaging with the four elements, we come to the fifth: Aether, or quintess
 
 This journey—from the one to the many and back to the one—is echoed in sacred traditions and metaphysical philosophies. In Taoism, the Tao is the singular source from which the dualities of Yin and Yang arise, generating the ten thousand things through their interplay. Similarly, in Hermeticism, the principle "As above, so below" reflects the interconnectedness of all levels of reality.
 
-As Hermes Trismegistus advises, we should see every event in life as "one thing, many; one, because all things have the same substantial form of Being; many, because they are divided, being separated by imagination and sense." This alchemical practice invites us to engage with the alchemy of consciousness, constantly moving towards oneness, where the Self is aware of its place in the cosmos and its unity with the collective.
+This alchemical practice invites us to engage with the alchemy of consciousness, constantly moving towards oneness, where the Self is aware of its place in the cosmos and its unity with the collective.
 
 By embracing this journey, we become active participants in the recreation of reality, allowing us to truly live rather than merely exist. Let the elements guide you, and may the light of conscious awareness lead the way.
 
@@ -1601,7 +1601,7 @@ Our wits do not grow stronger until nature has found the right conditions for th
 
 The Elemental Journey of Air invites us to enhance our rational faculties, refine our verbal expressions, and embrace the power of words, ideas, and emotions. It harnesses the celestial influence of air to elevate consciousness, promote healthier thinking patterns, foster supportive self-talk, and initiate the inner dialogue that leads to personal and collective awakening. By embracing these elements, we cultivate a deeper intellectual and emotional understanding, contributing to our growth and the wisdom of humanity.
 
-As Charles Tart aptly put it, *"In the end we can never be given knowledge by others; we can only be stimulated. We must develop our own knowledge."* This highlights the importance of our journey with the Element of Air, as it not only encourages intellectual development but also stimulates self-discovery and personal enlightenment.
+Charles Tart names the same limit: *"In the end we can never be given knowledge by others; we can only be stimulated. We must develop our own knowledge."* This highlights the importance of our journey with the Element of Air, as it not only encourages intellectual development but also stimulates self-discovery and personal enlightenment.
 
 ### The Silence Before Creation
 
@@ -1679,7 +1679,7 @@ We can find common ground and share across differences. Nature thrives on divers
 
 ### Mapping Reality
 
-From birth, we create a map of our world. Newborns identify key supporters, toddlers navigate their surroundings, and children explore based on interests. Throughout life, we continuously discover new insights about ourselves and the increasingly complex world around us. As Søren Kierkegaard said, *"Life can only be understood backwards; but it must be lived forwards."*
+From birth, we create a map of our world. Newborns identify key supporters, toddlers navigate their surroundings, and children explore based on interests. Throughout life, we continuously discover new insights about ourselves and the increasingly complex world around us. A familiar rendering of a thought Kierkegaard recorded in his journals puts it: *"Life can only be understood backwards; but it must be lived forwards."*
 
 The air element of cognition allows us to create meaningful symbols and symbolic language, enabling us to navigate complex issues and come together to envision better worlds. Descartes grounded existence in the solitary thinker—"I think therefore I am." I want to turn that proposition outward: our existence is also relational, shaped through the thoughts, meanings, and realities we create together.
 
