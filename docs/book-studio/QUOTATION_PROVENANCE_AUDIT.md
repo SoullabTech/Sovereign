@@ -157,7 +157,24 @@ label would erase. It does **not** prove authorship by anyone in particular.
 remedy should be one systematic authorial decision, not quote-by-quote
 improvisation.
 
-**Interim result at Ch8 7/23 — keep the two problems separate.**
+**Interim result at Ch8 11/23 — four separate trends.**
+
+- **Source unreliability** — REPLICATED strongly.
+- **Spurious bibliographic support** — REPLICATED within Chapter 8 (Feynman,
+  Hawking). Two independent cases establish it as a real defect class. Its
+  consequence is structural: *the bibliography can make a bad attribution look
+  more verified than it is*, so **the provenance census, not the bibliography,
+  must remain authoritative**.
+- **Famous-work / source-map defects** — continuing.
+- **Attribution hardening** — NOT YET replicated in Chapter 8. The Jenkins
+  withdrawal makes this cleaner, not weaker: Chapter 5 holds the positive
+  local-origin evidence; Chapter 8 so far holds externally circulating
+  misattributions instead. Two different problems.
+
+**Standing instruction:** treat bibliography entries as **leads, never
+corroboration** — MLK and Brené Brown next, both of which have entries.
+
+**Earlier framing, retained:**
 Chapter 8 independently reproduces the *quotation-source unreliability* pattern:
 prestigious author → altered or popular wording → plausible bibliographic
 apparatus that does not establish the quotation. Two chapters showing this
@@ -811,22 +828,41 @@ is not uniformly unreliable and the reconstruction must not assume it is.
 **Rights: `LIKELY PROTECTED` · `STANDARD`** — a substantial sentence from a 2020
 book.
 
-### First Chapter 8 internal-origin candidate
+### L1726 Mark Jenkins — withdrawn as an internal-origin candidate
 
-**L1726 · Mark Jenkins — "Maps are essential. Planning a journey without a map is like building a house without drawings."**
-`UNVERIFIED` · origin **`INTERNAL-ORIGIN CANDIDATE`**, pending investigation.
+**"Maps are essential. Planning a journey without a map is like building a house without drawings."**
+`UNVERIFIED` · origin `UNKNOWN` · **`SOURCE LEAD`: Mark Jenkins, *The Hard Way:
+Stories of Danger, Survival, and the Soul of Adventure* (2003), reportedly p. 13.**
 
-The signature is the Ch5 Wilber/Soulplay shape rather than the Shaw/Feynman
-shape: the line **states the book's own governing metaphor** — map, journey,
-orientation — which is the declared spine of Chapter 10's "Finding Our Place" and
-of the Spiralogic argument generally. It is attributed to a name obscure enough
-that no source is locatable, and it carries **no Ch8 bibliography entry**
-(`MISSING`), unlike the well-supported Dyer line beside it.
+I flagged this as an `INTERNAL-ORIGIN CANDIDATE` because the line states the
+book's own governing metaphor — map, journey, orientation — the declared spine of
+"Finding Our Place." **That flag is withdrawn.** An independently circulating
+source trail attaches the line to a specific Jenkins title and page, predating
+this manuscript. It carries no Ch8 bibliography entry (`MISSING`), but that is a
+citation defect, not evidence of authorship.
 
-Not yet established. Requires the same three-part convergence used for the Ch5
-opening pair: no locatable external source · register matching adjacent
-manuscript prose · placement functioning as external authorization of the book's
-own voice. Two of three are present.
+Edition check required under the source-lead rule; if confirmed it likely becomes
+`VERIFIED EXACT`.
+
+### Tightening the internal-origin test
+
+Two auditor errors in Chapter 8, corrected in the same direction:
+
+- **William James (L1616)** — flagged on *register*. Withdrawn: the line is
+  mass-circulated outside the manuscript.
+- **Mark Jenkins (L1726)** — flagged on *conceptual fit with the book's own
+  argument*. Withdrawn: an independent source trail predates the manuscript.
+
+**Rule, added to the internal-origin test:**
+
+> A manuscript-specific conceptual fit is **not** evidence of local origin when an
+> independently circulating source trail predates the manuscript. Neither is
+> stylistic resemblance. Positive local-origin evidence must survive a search for
+> external circulation — and that search must be run *before* the flag, not after.
+
+Both errors ran the same way: the auditor was seduced by resemblance. The Ch5
+opening pair survives this test precisely because no external circulation exists
+for either line.
 
 ### Chapter 8 bibliography — mixed, not uniformly broken
 
@@ -838,10 +874,13 @@ own voice. Two of three are present.
 - `ORPHAN CANDIDATE` ×6 — Rowan Williams, Confucius, Dewey, Milton, Goldsmith,
   O'Donohue *The Four Elements*: listed under Ch8 with no matching quotation
   found. Each requires a body-dependency check before promotion.
-- **Watch** — Roy T. Bennett, *The Light in the Heart* (Bennett Books, 2016).
-  Bennett is a figure of uncertain identity whose "book" functions largely as an
-  aphorism compilation; the L1828 quotation needs its own provenance check rather
-  than resting on that entry.
+- **Roy T. Bennett, *The Light in the Heart*** — gets an **ordinary named-source
+  check**, not prejudgement. I had flagged him as a figure of uncertain identity
+  on the grounds that the book is an aphorism collection. That is not
+  disqualifying: there is a real edition (ISBN 9780987917768) and an
+  author-attributed site publishing under the title. *Unconventional or
+  self-published is different from nonexistent.* Verify the exact manuscript
+  wording against the book or Bennett's own publication before ruling.
 
 ### Chapter 8 — still open (12 of 23)
 
