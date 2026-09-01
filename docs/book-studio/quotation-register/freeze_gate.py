@@ -78,6 +78,7 @@ DOCUMENTED_SPANS = {
     "I know therefore I am.":                                  "authorial coinage",
     "being logical and consistent.":                           "definition",
     "This is what I have experienced. What is your experience?": "authorial voiced speech",
+    "Is Anybody Listening?":                                    "article title inside a byline",
 }
 undoc = [o["text"][:60] for o in orph
          if not any(k in o["text"] for k in DOCUMENTED_SPANS)]

@@ -1,0 +1,25 @@
+{
+  "_comment": "Whyte restored during the bibliographic-specificity pass, 2026-09-01.",
+  "entries": [
+    {
+      "match": "The great enemy of communication",
+      "provenance_status": "verified_exact",
+      "actual_author": "William H. Whyte",
+      "work": "\"Is Anybody Listening?\", Fortune, September 1950, pp. 77ff, the passage at p. 174; expanded as Is Anybody Listening? (Simon and Schuster, 1952)",
+      "rights_status": "term_uncertain",
+      "editorial_status": "RESTORE THE ORIGINAL. The manuscript printed 'The single biggest problem in communication is the illusion that it has taken place', a later paraphrase. Whyte wrote 'The great enemy of communication, we find, is the illusion of it.' The evolved form is not kept under his name; Carson's precedent applies rather than Goethe's, because Whyte's original is recoverable.",
+      "provenance_history": [
+        {
+          "verdict": "verified_exact",
+          "stage": "Stage 2 census / Stage 4 speaker sweep",
+          "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md - reattributed from George Bernard Shaw to Whyte",
+          "note": "The reattribution correctly identified Whyte as the ANCESTOR but did not establish that the printed English was his. Nobody checked, because the reattribution itself felt like the finding.",
+          "superseded_by": "verified_exact"
+        }
+      ],
+      "notes": "A SPEAKER CORRECTION IS NOT A TEXT VERIFICATION. Moving a line to its true author leaves the wording unchecked, and a correct name makes the sentence look settled.",
+      "evidence_location": "Bibliographic specificity pass, 2026-09-01",
+      "occurrence": 1
+    }
+  ]
+}

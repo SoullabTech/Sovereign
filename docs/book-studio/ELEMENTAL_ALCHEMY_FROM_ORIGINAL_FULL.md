@@ -1559,7 +1559,7 @@ Let our lives be a song to the earth, love to the water, and a form of prayer to
 
 ### Dialectics as Problem Solving: The Power of Dialogue
 
-*"The single biggest problem in communication is the illusion that it has taken place." — William H. Whyte*
+*"The great enemy of communication, we find, is the illusion of it." — William H. Whyte, "Is Anybody Listening?", Fortune, September 1950*
 
 Recently, my daughter and I had a long talk about her struggles with video conferencing for her 6th-grade class. She felt isolated and confused, unable to navigate this new way of learning. Technical difficulties, impersonal interactions, and confusing homework links compounded her frustration. Her teachers, also struggling with the new platform, perceived her lack of engagement as disinterest. These are classic air realm issues where different perspectives clash.
 

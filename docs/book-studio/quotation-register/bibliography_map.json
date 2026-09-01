@@ -313,11 +313,11 @@
       "id": "EA-Q-0050",
       "source": "Socrates via Plato, 'The unexamined life is not worth living'",
       "relationship": "quotation, translated",
-      "object": "Plato. *Apology* 38a.",
-      "decision": "ADD - MATCHED BUT NOT UNIQUELY; AUTHOR CHOICE OWED",
+      "object": "Plato. *Apology* 38a. Translated by Benjamin Jowett.",
+      "decision": "ADD - JOWETT CHOSEN DELIBERATELY",
       "evidence": "VERIFIED EXACT with the Stephanus reference. No Plato entry exists anywhere in the book.",
-      "unresolved": "Which of the above. Not a research question any longer.",
-      "research_outcome": "The printed English matches Jowett (1871) AND Tredennick (Penguin 1954) verbatim. Grube reads 'the unexamined life is not worth living for men'; Rouse reads 'Life without enquiry is not worth living for a man'. Same shape as Tao Te Ching 33: the wording cannot say whose English the book prints.",
+      "unresolved": null,
+      "research_outcome": "The familiar English is NOT uniquely Jowett's - Fowler and others also render 'the unexamined life is not worth living'. Jowett is therefore a CHOSEN TEXTUAL WITNESS, not a recovered translator. Fidelity is tied; Jowett is public domain; rights may legitimately break a tie AFTER fidelity, never before it.",
       "options": [
         "A - RECOMMENDED. Cite Jowett: the wording matches, and the 1871 translation is public domain, so the choice is made on fidelity with clean rights following rather than leading.",
         "B - Cite Apology 38a with no translator, on the ground that this English is a commonplace no single translator owns.",
@@ -509,12 +509,13 @@
       "source": "William H. Whyte, 'The single biggest problem in communication'",
       "relationship": "quotation",
       "object": "Whyte, William H. \"Is Anybody Listening?\" *Fortune*, September 1950, pp. 77ff. (the passage at p. 174). Expanded as *Is Anybody Listening?* Simon and Schuster, 1952.",
-      "decision": "ADD - SPECIFICITY RESOLVED, BUT A PROVENANCE FINDING SURFACED",
+      "decision": "CLOSED - ORIGINAL RESTORED",
       "evidence": "VERIFIED EXACT. This is the record the census REATTRIBUTED FROM GEORGE BERNARD SHAW; the entry never followed the correction.",
-      "unresolved": "AUTHOR RULING OWED, and it is provenance rather than specificity: restore Whyte's actual sentence, or keep the circulating form and frame it as an evolved formulation of his. The Goethe and Carson precedents point opposite ways - Goethe kept the evolved English under a REFRAME because no authoritative original English exists, Carson was restored because the original is recoverable. Whyte's original IS recoverable, which argues for restoration.",
+      "unresolved": null,
       "note": "A CLASS WORTH NAMING: speaker corrections create bibliography obligations, and nothing was tracking that until this pass. Several Stage 4 speaker repairs may carry the same debt.",
       "rights": "term_uncertain",
-      "research_outcome": "ARTICLE LOCATED - and Whyte's actual sentence is 'The great enemy of communication, we find, is the illusion of it.' The manuscript prints 'The single biggest problem in communication is the illusion that it has taken place', which is an EVOLVED PARAPHRASE, not his wording. The Stage 4 reattribution correctly moved the line from George Bernard Shaw to Whyte as its ANCESTOR; it did not establish that the printed English is his."
+      "research_outcome": "ARTICLE LOCATED - and Whyte's actual sentence is 'The great enemy of communication, we find, is the illusion of it.' The manuscript prints 'The single biggest problem in communication is the illusion that it has taken place', which is an EVOLVED PARAPHRASE, not his wording. The Stage 4 reattribution correctly moved the line from George Bernard Shaw to Whyte as its ANCESTOR; it did not establish that the printed English is his.",
+      "manuscript_repair": "APPLIED. Whyte's actual sentence now stands, with the article and issue named in the byline."
     },
     {
       "id": "EA-Q-0084",
@@ -582,10 +583,12 @@
       "source": "Kierkegaard, 'Life can only be understood backwards'",
       "relationship": "quotation, evolved English",
       "object": "Kierkegaard, Soren. *Journals*, 1843 (IV A 164).",
-      "decision": "ADD - source location settled, English mediator unresolved",
+      "decision": "ADD - CLOSED, NO TRANSLATOR CLAIMED",
       "evidence": "VERIFIED VARIANT; 4I ruled REFRAME precisely because no single authoritative English exists.",
-      "unresolved": "TRANSLATOR/RENDERING UNRESOLVED. Do NOT cite The Essential Kierkegaard merely because that entry is already present - it would silently attach the manuscript's evolved English to the Hong translation, which is exactly the precision 4I refused. Rights turn on which English is printed, Dru 1938 against Hong 1967-78. Less precision is more truthful until the lineage is identified.",
-      "rights": "term_uncertain"
+      "unresolved": null,
+      "rights": "term_uncertain",
+      "research_outcome": "The compact English is an evolved compression, not the journal sentence. The 1843 entry is secure, and Alexander Dru's translation gives the fuller structure - philosophy is right that life must be understood backwards, but forgets that it must be lived forwards. The short form is a recognised paraphrase.",
+      "note": "The 4I treatment stands: 'a familiar rendering of a thought Kierkegaard recorded in his journals'. The bibliography cites the journal source WITHOUT claiming the compact wording is any named translator's exact English. If an exact translated quotation is wanted later, replace deliberately with Dru's fuller wording and cite Dru."
     },
     {
       "id": "EA-Q-0094",
@@ -748,6 +751,7 @@
   ],
   "findings": [
     "WATER IS THE CONTROL CHAPTER. Chapter 6 carried four CORRECT bibliography relationships and one correctly self-labelled adaptation - a notably high concentration of sound source relationships before this audit began. The apparatus was not uniformly weak, and the final record should say so.",
-    "ONE TAO TE CHING TRANSLATOR, ONE TEXTUAL VOICE, THREE CHAPTERS. Waley was chosen on fidelity first, editorial fit second, rights third - never for convenience. He already carried chapter 11, so the coherence is a secondary benefit rather than a manufactured consistency, and Stage 6 now faces one Waley permission instead of three separate translation situations."
+    "ONE TAO TE CHING TRANSLATOR, ONE TEXTUAL VOICE, THREE CHAPTERS. Waley was chosen on fidelity first, editorial fit second, rights third - never for convenience. He already carried chapter 11, so the coherence is a secondary benefit rather than a manufactured consistency, and Stage 6 now faces one Waley permission instead of three separate translation situations.",
+    "A SPEAKER CORRECTION IS NOT A TEXT VERIFICATION. The Stage 4 sweep moved this line from George Bernard Shaw to William H. Whyte and stopped; the printed English was still a paraphrase, and it took the bibliography pass to notice. Correcting an attribution makes a sentence look settled."
   ]
 }

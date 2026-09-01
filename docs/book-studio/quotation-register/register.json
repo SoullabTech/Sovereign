@@ -1334,31 +1334,40 @@
       "notes": "Bibliography repair (MISSING) goes to Stage 7. Rights remains an open Stage 6 review - the fair-use conclusion is NOT pre-decided from quotation length."
     },
     {
-      "id": "EA-Q-0083",
+      "id": "EA-Q-0273",
       "occurrence": 1,
-      "text": "The single biggest problem in communication is the illusion that it has taken place.",
+      "text": "The great enemy of communication, we find, is the illusion of it.",
       "line_at_build": 1562,
       "chapter": "Chapter 8: Air — The Element of the Intellect and Mind",
       "section": "Dialectics as Problem Solving: The Power of Dialogue",
       "display_form": "block_epigraph",
-      "attributed_as": "William H. Whyte",
+      "attributed_as": "William H. Whyte, \"Is Anybody Listening?\", Fortune, September 1950",
       "attribution_state": "attributed",
       "actual_author": "William H. Whyte",
       "internal_speaker": null,
-      "work": "Fortune (1950)",
+      "work": "\"Is Anybody Listening?\", Fortune, September 1950, pp. 77ff, the passage at p. 174; expanded as Is Anybody Listening? (Simon and Schuster, 1952)",
       "translator_or_mediator": null,
       "provenance_status": "verified_exact",
       "provenance_review_state": "migrated",
       "rights_review_state": "migrated",
       "editorial_review_state": "migrated",
-      "evidence_location": "STAGE4 4A batch 2",
+      "evidence_location": "Bibliographic specificity pass, 2026-09-01",
       "rights_status": "term_uncertain",
       "bibliography_relationship": null,
       "family": null,
-      "editorial_status": "KEEP - CORRECTED, reattributed from George Bernard Shaw (applied)",
+      "editorial_status": "RESTORE THE ORIGINAL. The manuscript printed 'The single biggest problem in communication is the illusion that it has taken place', a later paraphrase. Whyte wrote 'The great enemy of communication, we find, is the illusion of it.' The evolved form is not kept under his name; Carson's precedent applies rather than Goethe's, because Whyte's original is recoverable.",
       "record_state": "confirmed",
       "identity_match_score": 1.0,
-      "notes": null
+      "notes": "A SPEAKER CORRECTION IS NOT A TEXT VERIFICATION. Moving a line to its true author leaves the wording unchecked, and a correct name makes the sentence look settled.",
+      "provenance_history": [
+        {
+          "verdict": "verified_exact",
+          "stage": "Stage 2 census / Stage 4 speaker sweep",
+          "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md - reattributed from George Bernard Shaw to Whyte",
+          "note": "The reattribution correctly identified Whyte as the ANCESTOR but did not establish that the printed English was his. Nobody checked, because the reattribution itself felt like the finding.",
+          "superseded_by": "verified_exact"
+        }
+      ]
     },
     {
       "id": "EA-Q-0084",
@@ -2025,6 +2034,11 @@
       "line": 1457,
       "text": "wasted years at a job they hate",
       "context": "Watching my clients awaken due to a realization that they have"
+    },
+    {
+      "line": 1562,
+      "text": "Is Anybody Listening?",
+      "context": "f communication, we find, is the illusion of it.\" — William H. Whyte,"
     },
     {
       "line": 1736,
@@ -4034,7 +4048,6 @@
       "EA-Q-0043",
       "EA-Q-0049",
       "EA-Q-0017",
-      "EA-Q-0083",
       "EA-Q-0105",
       "EA-Q-0058",
       "EA-Q-0119",
@@ -4158,6 +4171,7 @@
       "EA-Q-0110",
       "EA-Q-0271",
       "EA-Q-0272",
+      "EA-Q-0273",
       "EA-Q-0088"
     ],
     "ambiguous": [],
