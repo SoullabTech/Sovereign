@@ -1637,7 +1637,7 @@ Air corresponds to sublimatio or sublimation in alchemy, a phase where everythin
 
 Divine love in the air realm is about accepting all others as inherently sacred and good. It starts with the intention to perceive the divine within ourselves and others, centering our relations around our highest potential.
 
-In this state of openness and trust, love and wisdom flow through relationships. Martin Buber said God is more between us than within us, a truth evident when new ideas and insights emerge from connections with others. This synthesis of understanding creates a sacred space for wisdom surpassing individual insights.
+In this state of openness and trust, love and wisdom flow through relationships. Martin Buber located the divine in the between—the relational space between beings, a truth evident when new ideas and insights emerge from connections with others. This synthesis of understanding creates a sacred space for wisdom surpassing individual insights.
 
 Awareness of interpersonal dynamics enhances collaborative intelligence, conflict resolution, and diplomacy. As a therapist, I focus on the client's whole, sacred self, inviting their higher self to rise during challenges.
 
