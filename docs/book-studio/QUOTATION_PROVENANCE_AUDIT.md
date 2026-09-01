@@ -2,7 +2,7 @@
 
 **Source of record:** `docs/book-studio/ELEMENTAL_ALCHEMY_FROM_ORIGINAL_FULL.md`
 **Opened:** 2026-09-01, after Chapter 10 closed developmental adjudication.
-**Status:** IN PROGRESS — 32 of 137 adjudicated (Ch5: 22 of 30, 8 open).
+**Status:** IN PROGRESS — 34 of 137 adjudicated (Ch5: 24 of 30, 6 open).
 
 ## Scope
 
@@ -36,6 +36,13 @@ whether permission is required:
 - `STANDARD` — ordinary short prose quotation from a protected work.
 - `NONE` — public-domain source.
 - `LEGAL REVIEW` — status or use ambiguous.
+
+**Translation sub-rule.** A translation is a separately copyrighted work even
+when the original is public domain. Weil's *Gravity and Grace* (French, 1947)
+carries the Crawford English translation's own term; Rumi is public domain but
+**Coleman Barks's renderings are not**; the same applies to modern Plutarch and
+classical translations. Flag rights on the **text actually quoted**, not on the
+original author's dates.
 
 This is a **triage field, not a legal verdict**. The U.S. Copyright Office is
 explicit that there is no fixed safe number of words or percentage for
@@ -504,16 +511,42 @@ Three separate defects in one epigraph:
 (where her own words appear under "Buddha"). The same author, mishandled in
 both directions, in the same book. Adjudicate the two together.
 
-### Chapter 5 — still open (8 of 30)
+### Chapter 5 — fifth tranche
+
+**L1062 · Simone Weil — "Love is not consolation, it is light."**
+`VERIFIED VARIANT/TRANSLATION`. *Gravity and Grace* (*La pesanteur et la grâce*,
+1947, posthumous), Emma Crawford translation; p. 14 in the Routledge edition.
+Published wording uses a full stop — "Love is not consolation. It is light." —
+where the manuscript uses a comma splice. Minor punctuation variant.
+**Rights: `LIKELY PROTECTED` · `STANDARD`** — via the Crawford translation, not
+via Weil, who died in 1943. See the translation sub-rule.
+
+**L1106 · John O'Donohue — "May the light of your soul guide you."**
+`VERIFIED EXACT`. The opening line of the blessing in *Anam Cara: A Book of
+Celtic Wisdom* (1997): "May the light of your soul guide you; May the light of
+your soul bless the work you do…"
+**Rights: `LIKELY PROTECTED` · `HIGH`** — a benediction is a poetic work, and
+O'Donohue died in 2008. Only one line is quoted, which is modest, but the form
+puts it in the high-priority band for triage.
+
+**Rights flag carried forward — L1052 · Rumi "after Coleman Barks."**
+Attribution is honestly labelled and remains open, but the rights position is
+already clear: **`LIKELY PROTECTED` · `HIGH`.** Rumi's Persian is public domain;
+Barks's English renderings are his own copyrighted work, and they are poetry.
+This is a fifth item for the permissions review.
+
+### Chapter 5 — still open (6 of 30)
 
 All have a named primary work, most already in the chapter bibliography.
 Under the source-lead rule each requires an edition check before any
 `UNVERIFIED` verdict:
 L894 Mother Teresa (*A Simple Path*) · L906 Magritte (collected interviews) ·
 L926 Bear Heart (*The Wind Is My Mother*) · L938 Eckhart Tolle ·
-L1042 Maya Angelou · L1052 Rumi (already honestly labelled "Adapted from…
-after Coleman Barks") · L1062 Simone Weil (*Waiting for God*) ·
-L1106 John O'Donohue (*Anam Cara*).
+L1042 Maya Angelou · L1052 Rumi/Barks (attribution open; rights already flagged).
+
+*Note:* the Ch5 bibliography lists Weil as *Waiting for God*; the quotation is
+from *Gravity and Grace*. That is a third `WRONG SOURCE/WORK` instance in this
+chapter, after Thoreau and Shakespeare.
 
 
 ### Bibliography citation error — found in passing
