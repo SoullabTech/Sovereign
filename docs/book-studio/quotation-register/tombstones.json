@@ -442,6 +442,48 @@
       "editorial_status": "REMOVE - CERTIFICATION. The paragraph had already earned the claim about sacred corporality; an unverified famous voice arriving during recapitulation added authority rather than meaning.",
       "evidence_location": "STAGE2C-ii Part A (provenance); 4I batch 4 ruling (editorial)",
       "notes": "Consonant with Wright's documented position, but thematic fit proves nothing, and the lead-in 'intuited when he said' asserted both a speech act and an inner state. Bibliography obligation dissolves with the removal."
+    },
+    {
+      "state": "removed",
+      "stage": "Stage 4B",
+      "former_form": "block",
+      "last_location": "Ch7 - Introduction to Earth",
+      "text": "The body keeps the score.",
+      "attributed_as": "Bessel van der Kolk, M.D.",
+      "provenance_status": "unverified",
+      "actual_author": "Bessel van der Kolk - ATTRIBUTION SOUND, object type unresolved",
+      "work": "The Body Keeps the Score (2014) - the TITLE, not an established sentence in the text",
+      "editorial_status": "REMOVE - BORROWED WARRANT. A book title used as scientific warrant in a section that does not develop trauma science; the prose moves straight to coagulatio and service. If the somatic science belongs in the book, it should be cited and argued where the claim is actually made.",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L1377 (provenance); 4B batch 1 ruling (editorial)",
+      "notes": "Object type was the unresolved question, not attribution: a title, a paraphrase of the book's thesis, and a sentence he actually writes are three different provenance objects, and only the first is established."
+    },
+    {
+      "state": "removed",
+      "stage": "Stage 4B",
+      "former_form": "block",
+      "last_location": "Ch8 - Groupthink vs. Collaborative Intelligence",
+      "text": "Ancient spiritual traditions and now science tell us that each of us is a member of an intricately interconnected, infinitely complex whole that works cooperatively for the greatest good of all; each of us is a cell in a single immense organism that is continuously evolving... and intelligent.",
+      "attributed_as": "Dery Dyer",
+      "provenance_status": "unverified",
+      "actual_author": "Dery Dyer",
+      "work": "The Return of Collective Intelligence (Bear & Company, 2020) - subject matches, sentence not located",
+      "editorial_status": "REMOVE - BORROWED EVIDENTIARY WARRANT. The epigraph asserted that science says this, so the book did not have to. Quoting someone else saying 'science tells us' does not transfer the evidentiary burden; if the book wants to make a scientific claim about collective intelligence it must own and support it.",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L1696 (provenance); 4B batch 1 ruling (editorial)",
+      "notes": "The only place in the 94 block records where a quotation carried an empirical liability into the book's own argument. The paragraph defining collaborative intelligence stands without it."
+    },
+    {
+      "state": "removed",
+      "stage": "Stage 4B",
+      "former_form": "block",
+      "last_location": "Ch9 - Mind-Body Coherence: The Aetheric Way of the Heart",
+      "text": "The longest journey you will make in your life is from your head to your heart.",
+      "attributed_as": "Sioux Legend",
+      "provenance_status": "unverified",
+      "actual_author": "unknown - no documentation of Sioux origin",
+      "family": "fam-cultural-attribution",
+      "editorial_status": "REMOVE - UNSUPPORTED CULTURAL ATTRIBUTION. The attribution alone disqualifies the epigraph. Removing it also separates that provenance problem cleanly from whatever grounding the physiological claims that follow may later need.",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L1933 (provenance); 4B batch 1 ruling (editorial)",
+      "notes": "No documentation of Sioux origin; the line circulates in contemporary devotional literature. Two defects sat in one location - an unsourced cultural attribution standing in front of a passage that proceeds directly into physiological assertion."
     }
   ]
 }

@@ -1,0 +1,25 @@
+{
+  "_comment": "Stage 4B batch 1 - argument carriers, 2026-09-01. The governing question: which quotations are carrying reasoning the book should perhaps carry itself?",
+  "entries": [
+    {
+      "match": "they are also parts, highly complex and messy parts",
+      "editorial_status": "KEEP - AUTHORIAL OWNERSHIP OWED. Nussbaum genuinely carries a premise the Water chapter depends on - emotion as part of reasoning rather than its opposite - and the book proceeds as though it were established without ever asserting it. She stays, but the book must make the claim in its own terms immediately afterward so that she becomes distinguished agreement rather than evidentiary scaffolding. OPEN AUTHORIAL OBLIGATION: the sentence is not drafted; the ruling is preserved ahead of it.",
+      "evidence_location": "4B batch 1 ruling",
+      "notes": "The clearest case in the book of borrowed reasoning that ought to be owned. Nothing was written into the manuscript for this record - the obligation is deliberately left open rather than pre-drafted.",
+      "occurrence": 1
+    },
+    {
+      "match": "The map is not the territory",
+      "editorial_status": "KEEP unchanged - CONTROL SPECIMEN. The quotation names the distinction and the manuscript then does the intellectual work itself: three paragraphs on symbolic maps across traditions, ending by placing Spiralogic explicitly as a map that does not tell us who we are. This is what 4B should reward.",
+      "evidence_location": "4B batch 1 ruling",
+      "occurrence": 1
+    },
+    {
+      "match": "The DNA codons are based on a system of 64",
+      "editorial_status": "KEEP - PROTECT + DISCLOSE, CREDIT SCHONBERGER. Ruled at Stage 3b; recorded here so the editorial axis reflects it. The prose already states plainly that the correspondence is numerical rather than causal.",
+      "evidence_location": "STAGE3B_NARRATIVE_SOURCE_DEPENDENCY.md finding 2 (ruling); 4B write-back",
+      "notes": "Bookkeeping, not a new judgment. Schonberger bibliography entry remains owed at Stage 7.",
+      "occurrence": 1
+    }
+  ]
+}
