@@ -62,6 +62,8 @@
     "guard:interface-humility": "npx tsx scripts/guards/interface-humility.ts",
     "guardrails": "node scripts/check-nocheck-allowlist.js && node scripts/check-private-routes.js && node scripts/check-backend-imports.js && npm run guard:ain-v2-integration && npm run guard:phi && npm run check:no-phi-enc",
     "db:migrate": "bash scripts/apply-migrations.sh",
+    "db:bootstrap": "bash scripts/bootstrap-database.sh",
+    "db:verify-bootstrap": "bash scripts/verify-bootstrap.sh",
     "build:library-manifest": "node scripts/build-community-library-manifest.js",
     "library:index": "npx tsx scripts/build-library-index.ts",
     "library:ingest": "npx tsx scripts/ingest-library.ts",
