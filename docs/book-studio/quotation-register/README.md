@@ -1395,3 +1395,100 @@ lineage roles · and, where superseded, its own verdict history.
 
 **→ Stage 4 adjudication of the complete inline field, with family context beside
 each record. Then 4B, then 4C.**
+
+---
+
+# STAGE 4I — scoped from the frozen register · 2026-09-01
+
+**Every inherited numerical label is retired.** *"The eight," "the twelve," "the six"*
+— all were true when spoken and none survived the population changing under them.
+**The register is now queried instead.**
+
+## The authoritative population
+
+**Query: `current` + `inline` + `in-scope` + no completed Stage 4 editorial ruling.**
+
+> ### 19 records.
+
+**Plus 1 control specimen** — the Jung chemical-substances passage, already
+adjudicated and author-adopted. **It appears beside the population as the worked
+example, not as an item to reopen.** **1 record is out of scope** (the voiced
+proposition).
+
+## ⚠️ The pass structure cuts across two families
+
+**Found by checking the query rather than trusting it.** *(My first family display
+mislabelled block records as "ruled" when they were merely outside the inline
+filter. The label was wrong; the population was right — and correcting the label
+exposed something the population alone would not have shown.)*
+
+| Family | The split |
+|---|---|
+| **`fam-perfect-laugh`** | **two occurrences in 4I** · **one in 4C** — the block Buddha at L1899, **still `unadjudicated`** |
+| **`fam-teasdale`** | **one in 4I** · **one ruled at 4A** (the Chapter 10 kinship epigraph) · **one in 4C**, still `unadjudicated` |
+
+**The fake-Buddha saying cannot be adjudicated "all three together" inside 4I**,
+because its third occurrence is a **block epigraph that is not a section opening** —
+so it fell outside 4A's scope and sits in 4C's.
+
+> **The pass structure is functional (openings / inline / mid-prose). Families are
+> semantic. The two do not align, and they were never going to.**
+
+**This is the same lesson as the surviving Aristotle, one level up:** a
+*correctly-scoped pass* can still leave a family half-treated. There the cut was
+between removed and surviving; here it is **between passes.**
+
+### Proposed resolution — for your ruling, not applied
+
+**Admit the two split-family block records into 4I as family context**, so the
+Buddha trio and the Teasdale trio are each ruled in one sitting. **They keep their
+own occurrence-level rulings** — *family membership requires shared inspection, not
+shared outcome* — and they simply do not come round again at 4C.
+
+**The alternative** — rule the 4I members now and the block siblings later — **is the
+exact failure mode the register was built to prevent.** I would rather widen the
+pass by two records than adjudicate half a family twice.
+
+## The population, with what each turns on
+
+**Cross-manuscript obligations first:**
+
+| | |
+|---|---|
+| **L47 · L190** *(+ L1899 if admitted)* | the fake-Buddha saying, **two wordings, three occurrences** |
+| **L2262** *(+ L1656 if admitted)* | Teasdale — **thematic fit cannot substitute for provenance** |
+
+**Then the high-information specimens:**
+
+**L978 Blake** — under-attribution **+** unreliable speaker · **L926 Goethe** —
+under-attribution **+** dramatic speaker **+** evolved translation · **L1752
+Milton/Satan** — speaker context may **strengthen** the passage · **L1746 Jung** —
+host-aligned alteration, where correcting the quote **exposes a claim the book must
+decide whether to make** · **L1951 John 17** — **false precision, true idea** ·
+**L1867 Lao Tzu/Waley** — editorial value against substantial rights exposure ·
+**L1686 Descartes** — **authored response**, genuine dialogue rather than
+certification · **L2382 Clayton** — personal communication, consent not permissions.
+
+**And the remainder:** Hermes · Miles Davis · the interrupted Lao Tzu · Tart ·
+Kierkegaard · Pillai · TTC 33 · Frank Lloyd Wright.
+
+## The Stage 4 question, unchanged
+
+> ### What is this outside voice doing here, and does the book need it to do that work?
+
+**Actions:** `KEEP` · `CORRECT` · `CONNECT` · `REFRAME` · `RECLAIM` · `REMOVE` ·
+`DEFER`
+**Function, recorded separately:** `KINSHIP` · `DIALOGUE` · `ILLUMINATION` ·
+`HISTORICIZATION` · `CHALLENGE` · `CERTIFICATION`
+
+> **No provenance verdict decides the editorial ruling automatically.** A genuine
+> quote can still be removed. A misattributed thought can be retained after
+> correction. A corrupted quote may reveal the real claim belongs in the author's
+> voice. A literary speaker may become *more* useful once their dramatic context is
+> restored.
+
+## For the record — the 4C population is 96
+
+**Block records still unadjudicated: 96.** 13 block records carry 4A rulings. **4C
+is by far the largest remaining editorial pass**, and it now has an exact size for
+the first time.

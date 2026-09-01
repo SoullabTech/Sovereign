@@ -1216,3 +1216,39 @@ the other's corruption.**
 The same shape appeared with a mediator's rendering labelled honestly in one chapter
 and left under a bare byline in another. **A family whose only relation is
 "the same words appear twice" cannot express either case.**
+
+### Pipeline rule — ontology precedes evidence
+
+> **Determine what kind of object something is before attaching findings about it.
+> Later classification must never erase already-earned evidence.**
+
+**Grounding event:** a boundary ruling that *admitted* an object to the provenance
+workflow ran **after** that object had been verified, and silently reset its state to
+uninvestigated. **The verdict was lost to a classification step.** Fixed structurally
+by ordering ontology first in the pipeline, not by remembering to sequence it by hand.
+
+### Requirement — functional passes and semantic families do not align
+
+**Editorial passes are organised by function** (thresholds, inline evidence,
+mid-prose voices). **Provenance families are organised by identity.** **The two cut
+across each other, and a correctly-scoped pass can still leave a family
+half-treated.**
+
+**Grounding events, one level apart:** a misattributed line removed in one chapter
+survived in another because only one occurrence was a section opening; and a
+three-occurrence family split **across two different editorial passes**, so
+"adjudicate them together" was impossible inside either one.
+
+**Requirement: when a pass is scoped, query the families it touches and report
+members that fall outside it — before adjudication, not after.** The system should
+offer to widen the pass rather than let the author rule half a family twice.
+
+### Specimen — "anonymous wisdom" can itself be a distortion
+
+**Blake's *Proverbs of Hell* and Goethe's *Götz von Berlichingen* both appear in the
+manuscript as unattributed sayings.** Both are real authored lines; both are **spoken
+by characters** in works that frame them ironically.
+
+> **Responsible sourcing sometimes means adding an author and a context, not
+> stripping authority away.** A system that only ever looks for over-attribution will
+> never see this class.
