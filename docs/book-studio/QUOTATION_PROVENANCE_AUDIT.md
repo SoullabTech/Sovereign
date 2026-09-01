@@ -2088,11 +2088,29 @@ provenance objects were possible, and the evidence separates them:
 **Recorded: `UNVERIFIED AS QUOTATION` · attribution to van der Kolk sound at the
 level of the phrase · `TITLE-DERIVED` candidate.**
 
-**Lead to check, not asserted:** van der Kolk is reported to have published a
-1994 paper in the *Harvard Review of Psychiatry* under the same title — "The Body
-Keeps the Score: Memory and the Evolving Psychobiology of Posttraumatic Stress."
-If confirmed, the phrase is demonstrably his twenty years before the book, which
-strengthens the attribution **without** converting a title into a quotation.
+**Lead CONFIRMED.** Bessel A. van der Kolk, "The Body Keeps the Score: Memory
+and the Evolving Psychobiology of Posttraumatic Stress," ***Harvard Review of
+Psychiatry*, vol. 1, no. 5, Jan–Feb 1994, pp. 253–265** — confirmed in PubMed and
+the journal record. **The phrase is firmly his by 1994**, twenty years before the
+book.
+
+**Tightened verdict — `UNVERIFIED AS QUOTATION` · `TITLE-DERIVED CANDIDATE`:**
+- **Attribution to van der Kolk:** sound.
+- **Phrase provenance:** firmly his, 1994.
+- **Object type:** established as an **article title**, later a **book title**;
+  still **not** established as a standalone sentence he wrote or spoke.
+- **Bibliography:** correct for the later book — but **that does not validate
+  quotation marks.**
+- **Rights:** minimal, as a short title/phrase. **Object type is the real issue.**
+
+> **A phrase can be unquestionably someone's intellectual formulation without
+> being a quotation.**
+
+**Consequence for repair — deletion is probably not the answer.** The clean
+solution may be simply to **lose the quotation treatment** and reference it as
+van der Kolk's formulation or title, depending on how the Earth passage uses it.
+That makes this the second item in the audit (after Zantamata) whose likely
+remedy preserves rather than removes.
 
 **Bibliography: correct.** Ch7 cites the right book and edition. This is a case
 where **the apparatus is sound and the epigraph is still questionable** — the
