@@ -2,7 +2,7 @@
 
 **Source of record:** `docs/book-studio/ELEMENTAL_ALCHEMY_FROM_ORIGINAL_FULL.md`
 **Opened:** 2026-09-01, after Chapter 10 closed developmental adjudication.
-**Status:** IN PROGRESS — 47 of 137 adjudicated. **Chapter 5 CLOSED (30/30).** Chapter 8: 11 of 23.
+**Status:** IN PROGRESS — 49 of 137 adjudicated. **Chapter 5 CLOSED (30/30).** Chapter 8: 13 of 23.
 
 ## Scope
 
@@ -882,12 +882,49 @@ for either line.
   self-published is different from nonexistent.* Verify the exact manuscript
   wording against the book or Bennett's own publication before ruling.
 
-### Chapter 8 — still open (12 of 23)
+### Chapter 8 — still open (10 of 23)
 
-L1660 Brené Brown · L1678 Shaw #2 · L1690 Wayne Teasdale · L1700 Henry Ford ·
-L1706 Helen Keller · L1714 Rachel Carson · L1736 Tagore · L1746 William Arthur
-Ward · L1776 Martin Luther King Jr. · L1790 Terence McKenna · L1828 Roy T.
-Bennett · L1854 Helen Keller #2.
+L1678 Shaw #2 · L1690 Wayne Teasdale · L1700 Henry Ford · L1706 Helen Keller ·
+L1714 Rachel Carson · L1736 Tagore · L1746 William Arthur Ward · L1790 Terence
+McKenna · L1828 Roy T. Bennett · L1854 Helen Keller #2.
+
+### Chapter 8 — third tranche: the bibliography-as-lead test, run both ways
+
+Both items below carry Ch8 bibliography entries. Treated as leads, not
+corroboration — and they resolve in opposite directions, which is the point.
+
+**L1660 · Brené Brown — "Vulnerability sounds like truth and feels like courage. Truth and courage aren't always comfortable, but they're never weakness."**
+**`VERIFIED EXACT`.** *Daring Greatly* (2012), **p. 37**. The bibliography entry
+is correct and the wording is exact, including the second sentence.
+**Rights: `PROTECTABILITY UNCERTAIN` · `STANDARD`.**
+Second correctly-supported citation in Chapter 8, after Dyer.
+
+**L1776 · Martin Luther King Jr. — "Faith is taking the first step even when you don't see the whole staircase."**
+`UNVERIFIED` · origin `UNKNOWN`. Earliest published evidence is the *Cleveland
+Plain Dealer*, **1986** — eighteen years after King's death. **Marian Wright
+Edelman**, who knew King and heard him speak many times, states she heard the
+metaphor from him; that is credible oral testimony, not documentary evidence.
+The form Quote Investigator treats as canonical differs from the manuscript's:
+"Take the first step in faith. You don't have to see the whole staircase, just
+take the first step."
+
+**Probable third `SPURIOUS SUPPORT`** — the bibliography cites *Strength to Love*
+(Harper & Row, 1963); no evidence places the line in it. Requires an edition
+check before the status is fixed, since unlike Feynman and Hawking the underlying
+attribution here has real oral testimony behind it.
+
+### Chapter 8 bibliography — revised assessment
+
+| | Count | Items |
+|---|--:|---|
+| `SPURIOUS SUPPORT` | 2 (+1 probable) | Feynman, Hawking (+ MLK pending) |
+| Correct support | 2 | Dyer, Brown |
+| `MISSING` | 2 | Rumi/Barks, Jenkins |
+| `ORPHAN CANDIDATE` | 6 | Williams, Confucius, Dewey, Milton, Goldsmith, O'Donohue |
+
+**Genuinely mixed.** The chapter's bibliography is neither reliable nor uniformly
+broken — which is precisely why every entry must be tested against the quotation
+rather than trusted or dismissed as a class.
 
 ---
 
