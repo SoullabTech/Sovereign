@@ -1465,12 +1465,18 @@ Tripadvisor photo caption and a cosmetics brand's video. The only identification
 offered anywhere for the attributed person is "wealth management professional,"
 from a motivational-quote site.
 
-*Characteristic worth noting within the pattern, not as a new pattern:* this is
+*A severity characteristic within the pattern — **not** a sixth transmission
+pattern:* this is
 the first item where **the attributed person cannot be verified to exist as an
 author at all** — distinct from every other case, where a real author was wrongly
 credited. The underlying image (mind as water, turbulent versus still) is an
 ancient Buddhist and Taoist commonplace; a modern name has attached to a
 traditional figure.
+
+**Do not "repair" this by re-attributing to the Buddha or a Taoist source**
+because the metaphor resembles those traditions. That would be **provenance
+laundering** — replacing an unsupported attribution with a more respectable
+unsupported attribution.
 **Rights: `PROTECTABILITY UNCERTAIN` · `STANDARD`.** **`MISSING`** from the
 bibliography.
 
@@ -1478,9 +1484,11 @@ bibliography.
 
 **The two axes stay separate, and both must be recorded:**
 
-- **Ancient source — VERIFIED.** The passage is ***Tao Te Ching*, chapter 78**.
-  The attribution "Lao Tzu" is correct *at the level of the source text*, and the
-  classical Chinese is public domain.
+- **Source text — `VERIFIED TO TAO TE CHING 78 / TRADITIONAL LAOZI
+  ATTRIBUTION`.** Not "Lao Tzu verified exact": modern scholarship treats the
+  *Tao Te Ching* as probably composite, with the historical authorship of Laozi
+  uncertain. The passage is securely chapter 78; the *person* is a traditional
+  ascription. Classical Chinese text is public domain.
 - **Printed English — `UNVERIFIED`.** **No translator is identified**, in the
   manuscript or anywhere the line circulates. The wording is markedly more
   compressed than the standard scholarly renderings — Legge's "There is nothing
@@ -1507,9 +1515,30 @@ bibliography.
 This is the Barks/Rumi structure in cleaner form — there, the translator was
 identifiable and copyrighted; here no translator can be found at all.
 
-**Affected items across the book:** Lao Tzu (×2), Rumi (several), Plutarch, Weil,
-Tagore, Confucius, the Buddha texts, Aristotle, Socrates/Plato. Each needs the
-printed English placed, not merely the original work named.
+### Translation-resolution queue — sequenced, not a second audit
+
+This does **not** reopen the census. It is a **queue applied only to quotations
+that survive provenance**, and only where the surviving manuscript wording
+actually depends on a translation.
+
+**Efficient order:**
+> provenance → **survival decision** → translation/edition resolution *for
+> surviving quotations only* → rights review → bibliography reconstruction
+
+A quotation removed for bad provenance never needs its translator identified.
+
+| Source | In queue? |
+|---|---|
+| Rumi / Barks | Yes — definitely |
+| Lao Tzu (×2) | Yes — definitely |
+| Buddha / Pali–Sanskrit | Yes |
+| Confucius | Yes |
+| Plutarch · Aristotle · Plato-derived Socrates | Yes, where quoted as translated text |
+| Weil / Craufurd | Yes |
+| Tagore | **Check, do not assume** — he often wrote or translated into English himself |
+
+**Peter Gabriel** is already provenance- and source-form-resolved. It stays in the
+permissions inventory and needs **no further research**.
 
 ---
 
