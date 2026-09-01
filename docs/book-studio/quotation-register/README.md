@@ -2154,3 +2154,132 @@ unexplained echo.**
 **Where I'd expect you to push back:** *"what we are, we are together"* is a
 cadence, and it may be more mine than yours. **The structure is the ruling; the
 sentence is a draft.**
+
+---
+
+# 4I · Descartes applied · BATCH 2 — four cards · 2026-09-01
+
+## ✅ Descartes — applied, and the label is **`AUTHOR-ORIGINATED`**
+
+> *Descartes grounded existence in the solitary thinker—"I think therefore I am." I
+> want to turn that proposition outward: our existence is also relational, shaped
+> through the thoughts, meanings, and realities we create together.*
+
+**Recorded as `AUTHOR-ORIGINATED · PROVISIONALLY OFFERED`, not `EDITOR/MODEL
+SUGGESTION`.** **The sentences are the author's** — written inside the ruling, as
+with the Campbell frame. My draft was discarded and this replaced it. **Logging an
+author's own wording as adopted model output, inside a provenance audit, is the
+error this label set exists to prevent.**
+
+**And the revision was substantively better, not stylistically:** *"thoughts we hold
+in common"* would have **collapsed collective existence back into agreement** — the
+exact distinction the book later draws between interconnection and groupthink. *"the
+thoughts, meanings, and realities we create together"* leaves room for difference.
+**My draft would have contradicted Chapter 8 four sections early.**
+
+---
+
+# BATCH 2
+
+## 5 · Blake — `EA-Q-0043` · Ch5 *The Secret Fire Walk of Wisdom and Enlightenment*
+
+> *We either bask in the glory of our creative inspirations or we languish in our
+> lack of will and interest in the world.* **As it is said, "If a fool persists in
+> his folly he becomes wise."**
+
+**Doing:** it closes a paragraph about **committing to your own fire** with a
+paradox — persistence through folly as the route to wisdom.
+
+**Matters:** it is **William Blake**, *The Marriage of Heaven and Hell*, "Proverbs of
+Hell" — original: *"If the fool would **persist** in his folly he **would become**
+wise."* **Presented as anonymous.** Public domain. **And the Proverbs of Hell are
+voiced from the devil's side of Blake's satirical frame.**
+
+> **The one question: same shape as Goethe — does the lineage want naming, and does
+> the wording support it?**
+
+**My suggestion: `REFRAME`, following the Goethe precedent.** Unlike Goethe, **the
+manuscript's wording is close to Blake's** — a tense change, not an evolved variant
+— so *"As Blake wrote…"* would not manufacture false precision here. **But I'd
+flag the speaker:** these are **Proverbs of Hell**, and naming Blake without noting
+that may read as straightforwardly endorsing a line Blake frames ironically. *Held
+loosely — you may judge the irony immaterial here, as with Goethe.*
+
+---
+
+## 6 · Milton / Satan — `EA-Q-0101` · Ch8 *The Dark Side of Air*
+
+> *…where the ego is ruled by cold logic and finds itself lost in "thoughtland."*
+> **As John Milton aptly noted, "The mind is its own place, and in itself, can make
+> a heaven of hell, a hell of heaven."**
+
+**Doing:** it illustrates **the ego trapped in its own reasoning.**
+
+**Matters:** `VERIFIED VARIANT` · *Paradise Lost* I.254–55 · public domain. **Spoken
+by Satan**, newly fallen, insisting he can manufacture his own heaven. **Introduced
+as "Milton aptly noted."**
+
+> **The one question — and this is the one where restoring context may *strengthen*
+> the passage: the section is diagnosing exactly the pathology Satan is
+> demonstrating.**
+
+**My suggestion: `REFRAME`.** Name the speaker. **The line stops being borrowed
+wisdom and becomes the specimen** — *this is what the ego lost in thoughtland sounds
+like from the inside.* **My reading is that this is the strongest single improvement
+available in the batch**, because the correction and the argument point the same way.
+
+---
+
+## 7 · "John 17:16" — `EA-Q-0116` · Ch9 *Breaking Free from Attachments*
+
+> **The Christian admonition, "Be in the world but not of it" — John 17:16**, *is an
+> instruction to return to our center where all is quiet, serene, and harmonious.*
+
+**Doing:** it supplies the section's governing instruction.
+
+**Matters:** **the idea is a fair traditional summary of John 17:14–16.** **The
+phrase does not appear at John 17:16**, which reads *"They are not of the world, even
+as I am not of the world"* — declarative, third person. Public domain. Speaker (Jesus
+praying) unnamed.
+
+> **The one question: the idea is sound and the citation is not — so remove the
+> citation, or find the real one?**
+
+**My suggestion: `CORRECT` by *reducing* precision.** *"The Christian admonition"* is
+already accurate. **Dropping the verse number makes the sentence more truthful, not
+less** — this is the *specificity must be earned* case in its clearest form. **I'd
+resist substituting the actual verse**, because *"They are not of the world"* does
+not carry the imperative the section needs.
+
+---
+
+## 8 · Lao Tzu / Waley — `EA-Q-0110` · Ch9 *The Alchemical Properties of Aether*
+
+> *In recognition of this fact, the Taoist sage Lao Tzu writes:* **"We put thirty
+> spokes together and call it a wheel; But it is on the space where there is nothing
+> that the usefulness of the wheel depends…"** *(~90 words)*
+
+**Doing:** it is **the book's argument for aether** — usefulness residing in
+emptiness. The whole section rests on it.
+
+**Matters:** genuinely *Tao Te Ching* 11. **The English is Arthur Waley's** (*The Way
+and Its Power*, 1934), **unnamed**, and **altered** — *"usefulness"* for Waley's
+*"utility."* **`TERM UNCERTAIN` · `HIGH`** — the longest quotation in the book and
+its highest rights exposure.
+
+> **The one question: it clearly belongs — so this is a sourcing and rights decision,
+> not an editorial one.**
+
+**My suggestion: `KEEP` editorially, `CORRECT` the apparatus** — name Waley, restore
+*"utility."* **The current position is the least defensible one available**: long
+enough to matter, altered enough to notice, translator unattributed. **Naming Waley
+and restoring his word costs nothing editorially and materially improves the rights
+position.**
+
+*(A shorter public-domain translation — Legge is 1891 — is available if permissions
+prove difficult. **I'd treat that as a rights fallback, not an editorial preference**:
+Waley's cadence is part of why the passage works.)*
+
+---
+
+**Four cards. None ruled.**

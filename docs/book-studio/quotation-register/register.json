@@ -1982,7 +1982,7 @@
       "notes": "Audit: MISATTRIBUTED, EVOLVED APHORISM / RECOVERABLE ANCESTOR. CLOSED BY AN AUTHORITATIVE SOURCE - the Santayana Edition (Indiana University's critical edition) published 'Citation and the Challenges of Misattribution' specifically on this line, and their editors found no sign of it in his works."
     },
     {
-      "id": "EA-Q-0252",
+      "id": "EA-Q-0254",
       "occurrence": 1,
       "text": "Alone we can do so little; together we can do so much.",
       "line_at_build": 1451,
@@ -2396,7 +2396,7 @@
       "notes": "Audit: UNVERIFIED, UNKNOWN. Shows BOTH instability markers at once - a competing attribution (Hale, 1822-1909, whose death predates the attribution) and no primary source."
     },
     {
-      "id": "EA-Q-0253",
+      "id": "EA-Q-0255",
       "occurrence": 2,
       "text": "Alone we can do so little; together we can do so much.",
       "line_at_build": 1670,
@@ -2479,7 +2479,7 @@
     {
       "id": "EA-Q-0094",
       "occurrence": 1,
-      "text": "I think therefore I am",
+      "text": "I think therefore I am.",
       "line_at_build": 1684,
       "chapter": "Chapter 8: Air — The Element of the Intellect and Mind",
       "section": "Mapping Reality",
@@ -4331,7 +4331,7 @@
       "EA-Q-0073",
       "EA-Q-0074",
       "EA-Q-0075",
-      "EA-Q-0252",
+      "EA-Q-0254",
       "EA-Q-0077",
       "EA-Q-0078",
       "EA-Q-0079",
@@ -4353,7 +4353,7 @@
       "EA-Q-0103",
       "EA-Q-0104",
       "EA-Q-0098",
-      "EA-Q-0253",
+      "EA-Q-0255",
       "EA-Q-0106",
       "EA-Q-0107",
       "EA-Q-0108",

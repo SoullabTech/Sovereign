@@ -1681,7 +1681,7 @@ We can find common ground and share across differences. Nature thrives on divers
 
 From birth, we create a map of our world. Newborns identify key supporters, toddlers navigate their surroundings, and children explore based on interests. Throughout life, we continuously discover new insights about ourselves and the increasingly complex world around us. As Søren Kierkegaard said, *"Life can only be understood backwards; but it must be lived forwards."*
 
-The air element of cognition allows us to create meaningful symbols and symbolic language, enabling us to navigate complex issues and come together to envision better worlds. "I think therefore I am" reflects our collective existence through shared thoughts.
+The air element of cognition allows us to create meaningful symbols and symbolic language, enabling us to navigate complex issues and come together to envision better worlds. Descartes grounded existence in the solitary thinker—"I think therefore I am." I want to turn that proposition outward: our existence is also relational, shaped through the thoughts, meanings, and realities we create together.
 
 Alchemy and shamanism are rich with symbolism, guiding rituals and processes. Symbols, icons, and sigils in alchemy, and elements, objects, and images in shamanism, act as portals into different realms. Rituals, like fire purification and water cleansing, are systems within larger ceremonies, each part contributing to a holistic experience.
 
