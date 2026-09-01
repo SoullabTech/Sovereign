@@ -1,0 +1,83 @@
+{
+  "_comment": "BATCH 1 - front matter, Preface and Chapter 1, in manuscript order. Hand-authored transfer from QUOTATION_PROVENANCE_AUDIT.md. Verdicts moved FAITHFULLY: no re-verification, no reinterpretation, no improvement of findings that now look incomplete. Anything not confidently locatable stays pending_migration with a documented reason.",
+  "entries": [
+    {
+      "match": "If your heart is truly open",
+      "occurrence": 1,
+      "provenance_status": "unverified",
+      "attributed_as_note": "Michael A. Singer",
+      "bibliography_relationship": "MISSING",
+      "notes": "Audit: 'UNVERIFIED - source lead unresolved'. Not located in The Untethered Soul (2007) sources.",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md - Preface table, L139"
+    },
+    {
+      "match": "flow from me like a river",
+      "occurrence": 1,
+      "provenance_status": "verified_exact",
+      "actual_author": "Rainer Maria Rilke",
+      "work": "Rilke's Book of Hours: Love Poems to God",
+      "translator_or_mediator": "Anita Barrows and Joanna Macy (Riverhead, 1996) - translator claim CORRECT",
+      "rights_status": "likely_protected_high",
+      "bibliography_relationship": "cites the 2005 anniversary edition of the same translation",
+      "notes": "Audit: FIRST translator-naming entry to PASS the printed-English test. The rights-relevant textual object is the Barrows-Macy English, not the German original.",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L161"
+    },
+    {
+      "match": "when we no longer know what to do",
+      "occurrence": 1,
+      "rights_status": "likely_protected_high",
+      "notes": "RIGHTS ONLY. Audit rights table: Wendell Berry, 'The Real Work' - poetry, living author. PROVENANCE VERDICT NOT LOCATED in the audit narrative; deliberately NOT inferred. Provenance stays pending_migration.",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md - rights table row 'Wendell Berry, The Real Work (L167)'",
+      "provenance_review_state": "verdict_not_locatable_in_source"
+    },
+    {
+      "match": "game of just five ingredients",
+      "occurrence": 1,
+      "provenance_status": "verified_variant",
+      "actual_author": "Sadhguru (Jaggi Vasudev)",
+      "work": "Isha Foundation, 'Life Is a Five-Cornered Game'",
+      "rights_status": "likely_protected_high",
+      "notes": "Audit: source/concept VERIFIED, wording VARIANT - EDITION CHECK REQUIRED. Attested on the quoted author's own institutional channel, which meets the official-source standard. ~80 words of in-copyright prose.",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L173"
+    },
+    {
+      "match": "you start to walk on the way",
+      "occurrence": 1,
+      "provenance_status": "unverified",
+      "actual_author": "unknown - no Persian source",
+      "rights_status": "protectability_uncertain_standard",
+      "family": "fam-rumi-unsourced",
+      "notes": "Audit: UNVERIFIED, origin UNKNOWN, no Persian source. One of six Rumi occurrences the audit tabled together by provenance object, not by author.",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md - Rumi table, L182"
+    },
+    {
+      "match": "Do not believe in anything simply",
+      "occurrence": 1,
+      "provenance_status": "verified_variant",
+      "actual_author": "attributed to the Buddha",
+      "work": "Kalama Sutta, Anguttara Nikaya",
+      "translator_or_mediator": "NOT Thanissaro Bhikkhu - the printed English does not match the cited translation",
+      "bibliography_relationship": "WRONG TRANSLATOR CITED - second confirmed instance",
+      "notes": "Audit: bibliography cites Thanissaro Bhikkhu (Access to Insight, 1994), whose actual rendering begins 'Now, Kalamas, don't go by reports, by legends...' - materially different from the printed text.",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L186"
+    },
+    {
+      "match": "Soul should always stand ajar",
+      "occurrence": 1,
+      "provenance_status": "misattributed",
+      "actual_author": "Emily Dickinson (poem, altered)",
+      "work": "Franklin/Johnson 1055",
+      "rights_status": "public_domain",
+      "notes": "Audit: MISATTRIBUTED, pattern COMPOSITE ATTRIBUTION. Dickinson's poem opens 'The Soul should always stand ajar / That if the Heaven inquire' - the manuscript's continuation is not hers.",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L245"
+    },
+    {
+      "match": "aim of life is to live",
+      "occurrence": 1,
+      "provenance_status": "unverified",
+      "attributed_as_note": "Henry Miller",
+      "notes": "Audit: 'UNVERIFIED - source lead unresolved' - consistently attributed, no work identified.",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md - table row L319"
+    }
+  ]
+}

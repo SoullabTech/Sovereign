@@ -30,6 +30,8 @@ def norm(t):
 def main():
     data = json.loads(REG.read_text())
     entries = json.loads(SRC.read_text())["entries"]
+    for b in sorted(HERE.glob("batch_*.json")):
+        entries += json.loads(b.read_text())["entries"]
     report = {"migrated": [], "ambiguous": [], "unmatched": [], "conflicts": []}
 
     for e in entries:
@@ -53,8 +55,8 @@ def main():
         # does NOT assert that provenance was investigated.
         if e.get("provenance_status"):
             rec["provenance_review_state"] = "migrated"
-        elif e.get("provenance_review_state") == "not_investigated":
-            rec["provenance_review_state"] = "not_investigated"
+        elif e.get("provenance_review_state"):
+            rec["provenance_review_state"] = e["provenance_review_state"]
         if e.get("rights_status"):
             rec["rights_review_state"] = "migrated"
         if e.get("editorial_status"):

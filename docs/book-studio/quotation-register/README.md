@@ -345,3 +345,67 @@ another.
 
 **→ Chapter 1 historical provenance migration next.** Chapter → gate → chapter →
 gate. No bulk parser, no loosened gate.
+
+---
+
+# BATCH 1 — front matter · Preface · Chapter 1 · 2026-09-01
+
+**Hand-authored from `QUOTATION_PROVENANCE_AUDIT.md`. No re-verification, no new
+adjudication, no manuscript mutation.** **`GATE PASSED`.**
+
+**Scope: 10 block records.** 9 provenance verdicts migrated; **1 documented
+deferral.**
+
+| Record | Verdict migrated |
+|---|---|
+| **Rilke** L161 | `VERIFIED EXACT` · **the translator claim is CORRECT** — Barrows & Macy, Riverhead 1996. **The audit's first translator-naming entry to pass the printed-English test.** Rights object is the **English translation**, not the German. `LIKELY PROTECTED · HIGH` |
+| **Buddha / Kalama Sutta** L186 | `VERIFIED VARIANT` · **`WRONG TRANSLATOR CITED` — second confirmed instance.** The bibliography credits Thanissaro Bhikkhu, whose actual rendering begins *"Now, Kalamas, don't go by reports, by legends…"* — materially different from the printed text |
+| **Dickinson** L245 | `MISATTRIBUTED` · `COMPOSITE ATTRIBUTION` — the poem's opening is hers; the continuation is not |
+| **Sadhguru** L173 | source/concept `VERIFIED`, wording `VARIANT — EDITION CHECK REQUIRED`. Attested on the **quoted author's own institutional channel**, which meets the official-source standard |
+| **Rumi** L182 | `UNVERIFIED · UNKNOWN` — no Persian source. Family `fam-rumi-unsourced` |
+| **Singer** L139 · **Miller** L321 | `UNVERIFIED — source lead unresolved` |
+| **Zhuangzi** L129 · **Campbell** L313 | migrated earlier in the control set |
+
+## ⚠️ The one deferral, and a state that did not exist
+
+**Wendell Berry L167.** His **rights** classification is in the audit's rights table
+— *poetry, living author* — but **his provenance verdict is not locatable in the
+audit narrative.**
+
+**It was not inferred.** Under the standing rule — *migrate faithfully, flag
+separately, never improve a finding while moving it* — the record carries **rights
+migrated, provenance deferred.**
+
+**But `not_investigated` was the wrong label**, and marking it so would have been a
+quiet falsehood: *someone did investigate Berry; the verdict simply is not where I
+could find it.* **That is a third thing, and the schema had no word for it.**
+
+Added: **`verdict_not_locatable_in_source`.**
+
+> **This is the third time the schema has been too weak rather than the check too
+> strict** — after per-axis review states and the "documented deferral" term. **The
+> pattern is consistent: every place the data had to be bent to fit was a place the
+> model was missing a distinction the work actually contains.**
+
+**And it matters practically.** `not_investigated` would send someone to do work
+that has already been done. `verdict_not_locatable_in_source` sends them to **find
+a record**, which is a different and much smaller task.
+
+## Standing after batch 1
+
+| | |
+|---|---|
+| `migrated` | **34** |
+| `not_investigated` | **12** |
+| `verdict_not_locatable_in_source` | **1** |
+| `pending_migration` | **83** |
+| **current records** | **130** |
+| **historical records** | **28** |
+
+**Block reconciliation: `109 = 21 migrated + 83 pending + 5 documented-deferred`** ✅
+**Lifecycle: `137 = 109 active + 28 inactive`** ✅
+
+**Batch-scope closure: zero `pending_migration` remaining in front matter, Preface
+or Chapter 1.**
+
+**→ Batch 2: Chapter 2.**
