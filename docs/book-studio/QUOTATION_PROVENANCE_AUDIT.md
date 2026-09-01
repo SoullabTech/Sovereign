@@ -525,6 +525,15 @@ wrong works → remove confirmed orphans → normalize bibliographic form.
 - `WRONG SOURCE/WORK` — dependency exists, bibliography points somewhere incorrect.
 - `ORPHAN CANDIDATE` — no quotation occurrence; body dependency still to be checked.
 - `ORPHAN CONFIRMED` — no remaining chapter dependency at all.
+- `MISFILED SOURCE` — the **correct bibliographic work exists in the
+  bibliography**, but is assigned to a chapter where it is not the relevant
+  dependency, leaving the actual chapter apparently supported by another work, or
+  unsupported. *Specimen: Campbell's* A Joseph Campbell Companion *is listed under
+  Chapter 2; the quotation depending on it is in Chapter 1, whose section lists*
+  The Hero with a Thousand Faces. A naive reconstruction would add a duplicate
+  *Companion* entry to Ch1, leave the stray Ch2 entry standing, and never see that
+  **one source simply migrated**. The reconstruction must therefore reconcile
+  **source ↔ actual usage location**, not merely source ↔ book.
 - `SPURIOUS SUPPORT` — a **real source by the attributed author** is cited in a
   way that appears to substantiate a quotation the source does not contain.
   Materially worse than `WRONG SOURCE/WORK`: there, the author/quotation
@@ -1402,12 +1411,36 @@ wrong chapter.
 within us… **All the gods, all the heavens, all the world, are within us.**" The
 manuscript substitutes **"hells" for "world"**, narrowing a claim about the
 interiority of *the whole world* into a heaven/hell symmetry.
-*Restoration test:* restoring "all the world" still supports an interiority
-claim, so **pattern 2, not 5** — though the substitution does shift emphasis
-toward the moralized reading, which suits a Water chapter on emotional depths.
-Apply the test against the local context at repair time.
+*Restoration test — decisive:* restoring "all the world" still supports
+Campbell's core point that reality is interiorized. The substitution shifts
+emphasis and conveniently fits Water, but does not create a different
+proposition in the Einstein sense.
 
-### Rule — grouping is recomputed on completion, not fixed at formation
+> **Semantic drift here is editorially useful but not material enough for
+> pattern 5.**
+
+That makes it an authorial choice at repair time: **restore** Campbell's actual
+wording · **retain** the transformed idea as clearly adapted · or **remove** it,
+if the heaven/hell symmetry was the real reason it was selected.
+
+### Rule — author-set adjudication is RETIRED; provenance families replace it
+
+Four author sets were formed. **Three dissolved; none survived intact.** Author
+identity has failed as a grouping principle in every case tested.
+
+> **No author sets. Provenance families only** — quotations that *independently*
+> resolve to the **same transmission mechanism or source history**. A family is
+> formed **after** individual verification, never before, and is **continuously
+> recomputed** as members are investigated. Membership is evidential, never
+> permanent.
+
+Campbell therefore becomes:
+- **L313** — independent, `VERIFIED EXACT`. Not a member of anything.
+- **L834 + L1028 + L1115** — a provisional **provenance family**: genuine Campbell
+  ideas transformed into popular or compressed forms. *Earned by the evidence,
+  not by the name Campbell.*
+
+#### Why the rule needed its second half
 
 Campbell was the **only** author set that had held, and it held on two converging
 instances. The third and fourth changed the picture: three share a real pattern
@@ -1418,10 +1451,7 @@ instances. The third and fourth changed the picture: three share a real pattern
 > precise failure the clustering rule exists to prevent, arriving this time from
 > *inside* a set that had legitimately earned provisional grouping.
 
-**Adjudicate L834, L1028, L1115 together. Exclude L313 — it is sound.**
-
-**Tally of author sets tested: four formed, three dissolved (Keller, Shaw,
-Campbell-in-part), none survived intact.**
+**Adjudicate L834, L1028, L1115 together as a provenance family. Exclude L313.**
 
 ---
 
