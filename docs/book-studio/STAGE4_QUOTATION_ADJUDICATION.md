@@ -2,7 +2,7 @@
 
 **Source of record:** `docs/book-studio/ELEMENTAL_ALCHEMY_FROM_ORIGINAL_FULL.md`
 **Opened:** 2026-09-01, after Stage 3b closed.
-**Status: 🟡 4A OPEN · 4B, 4C NOT STARTED.**
+**Status: 🟡 4A WORKED 45/45 — awaiting authorial ruling · 4B, 4C NOT STARTED.**
 
 ## The governing question
 
@@ -142,8 +142,12 @@ L693 Perkins · L1026 Campbell · L1111 Campbell · L1217 Gawain · L1257 Lao Tz
 L1273 Alcott · L1304 Angelou · L1354 Thich Nhat Hanh · L1650 Shaw · L1732 Tagore ·
 L1863 Rumi · L182 Rumi
 
-**Three sub-questions already visible in this remainder, recorded so they are ruled
-as sets rather than one at a time:**
+**⚠️ SUPERSEDED — see "Author sets — retracted" below.** The three notes that
+followed here proposed ruling recurring authors as sets. That resurrected a
+retired doctrine and is withdrawn; recurring authors are reviewed together for
+cumulative effect and ruled individually.
+
+**Recurring names to review cumulatively:**
 - **Campbell appears three times in 4A alone** (313, 1026, 1111) — the census held
   a Campbell set. Rule the pattern, not the instances.
 - **Rumi appears three times in 4A** (182, 534, 1863), and the Barks mediation
@@ -170,3 +174,135 @@ disqualified most of them independently** — seven of the eleven `REMOVE`
 candidates are `MISATTRIBUTED` or `UNVERIFIED`. The editorial test and the
 provenance record are converging rather than competing, which is a good sign that
 neither is being bent to suit the other.
+
+---
+
+# 4A · CORRECTIONS AND REFINEMENTS — 2026-09-01
+
+## Ruling set refined — editorial judgment separated from publication viability
+
+**A quotation can earn its place editorially while its provenance or rights remain
+open.** Collapsing those into one verdict makes legal viability part of the
+literary judgment, which it must never be.
+
+| Ruling | Means |
+|---|---|
+| **`KEEP — provenance closed`** | earns the interruption; nothing outstanding |
+| **`KEEP — SOURCE RESOLUTION REQUIRED`** | **editorially earned**; Stage 2's source question is still open and did not disappear |
+| **`KEEP — RIGHTS HOLD`** | **editorially earned**; permissions decide whether it can ship |
+| **`CORRECT`** | stays, apparatus is wrong |
+| **`RESTORE`** | stays, wording must return to the authentic text |
+| **`REMOVE`** | |
+
+**Canonical example: Bear Heart = `EDITORIAL KEEP · RIGHTS HOLD`.** That is
+clearer than letting clearability contaminate the literary ruling.
+
+## Author sets — retracted
+
+**The previous entry proposed ruling Campbell, Rumi and Tagore "as sets." That
+resurrected a doctrine already retired during the census, and it is withdrawn.**
+
+Author identity is **not** an adjudication unit. Campbell, Keller, Shaw, Angelou
+and Teasdale all split when checked individually. **Rumi is the least suitable
+name in the book for a single ruling** — his instances are genuinely different
+provenance objects: unidentified sayings, Barks-mediated English, and correctly
+labelled adaptation.
+
+> **The rule for Stage 4: review recurring authors together for *cumulative
+> editorial effect*; rule each quotation *individually*.**
+
+The cumulative review asks only: *is this voice starting to compete with the
+author's? Is it becoming a recurring certification device? Are two instances doing
+distinct work or merely repeating tonal authority?* It never produces a shared
+verdict.
+
+## RULED — Teasdale, Chapter 10 opener → `REMOVE`
+
+**Not because it is poor. Almost the opposite: it says too neatly what the book
+has already earned for itself.**
+
+By Chapter 10, *Elemental Alchemy* has spent the entire book demonstrating that
+wisdom can be drawn across traditions without collapsing them. Teasdale therefore
+functions as **certification** — *another respected spiritual thinker confirms
+that the synthesis you just experienced is legitimate.* Under the Stage 4 north
+star that is exactly the authority the book no longer needs.
+
+**The rights burden reinforces the editorial answer rather than driving it.** The
+book will not pay permissions costs to have another author certify one of its own
+central accomplishments.
+
+**No replacement epigraph. Chapter 10 begins in the authority of the book itself.**
+
+---
+
+# 4A · REMAINING 18 — recommended dispositions
+
+## `REMOVE` (9)
+
+| L | Quotation | Why |
+|---|---|---|
+| **313** | Campbell — "The privilege of a lifetime is being who you are" | Restates the prose beneath it. Certification |
+| **534** | Rumi — "The universe is not outside of you…" | Generic spiritual warrant above a section on **toroidal flow**. It does not illuminate the torus |
+| **632** | William James — "The greatest discovery of any generation…" | A twentieth-century aphorism attributed to James; the prose beneath is about elemental neglect and barely connects |
+| **677** | Eckhart Tolle — "Awareness is the greatest agent for change" | Genuine Tolle, but **the book already says it better and earlier — Chapter 2 closes "Awareness is paramount."** Certification of the author's own line |
+| **693** | John Perkins — "What we forget we can also remember" | Weak fit, **and it carries an unresolved identity problem: the bibliography cites *Confessions of an Economic Hit Man*, while the register belongs to the shamanic John Perkins.** Removing dissolves a `FAMOUS-WORK SUBSTITUTION` rather than repairing it. *If ruled KEEP instead, the identity must be corrected first* |
+| **1026** | Campbell — "The cave you fear to enter…" | `PARAPHRASE/ADAPTED` — not his wording — **and the very next sentences restate it** ("they must go on a long and arduous journey") |
+| **1217** | Shakti Gawain — "The more light you allow within you…" | Generic. Sits above one of the strongest seasonal passages in the book |
+| **1273** | Alcott — "I am not afraid of storms…" | Apt and public domain, but the prose already sails its own ship. Economy |
+| **1732** | Tagore — "Love is the only reality…" | Widely circulated, **no located source.** Unlike L608 it brings nothing the section does not already have |
+
+## `CORRECT` (2)
+
+| L | Quotation | Repair |
+|---|---|---|
+| **1650** | "George Bernard Shaw" — "The single biggest problem in communication is the illusion that it has taken place" | **Not Shaw. The line traces to William H. Whyte (*Fortune*, 1950).** Editorially it is one of the sharpest openings in the book — the daughter's video-conferencing story illustrates it exactly. **Keep the line, reattribute it** |
+| **1863** | Rumi — "I have lived on the lip of insanity… knocking from the inside" | **This is Coleman Barks's rendering.** Under the Stage 2 Barks doctrine, verbatim use of a mediator's English must credit the rendering. **`EDITORIAL KEEP · CORRECT · RIGHTS HOLD`** — Barks's translations are in copyright |
+
+## `KEEP` (7)
+
+| L | Quotation | Status | Why it earns the interruption |
+|---|---|---|---|
+| **417** | Kepler — "Geometry is the archetype of the beauty of the world" | `KEEP — SOURCE RESOLUTION REQUIRED` | **A genuine historical anchor.** Kepler is the astronomer who actually argued geometry underlies cosmic order; the section is on sacred geometry. Wording to be traced, likely *Harmonices Mundi* |
+| **608** | Tagore — "We try to realize the essential unity of the world…" | `KEEP — provenance closed (pending confirm)` | From *Sadhana* (1913), **Tagore's own English, public domain.** Historicizes the unity claim opening Chapter 4 |
+| **1111** | Campbell — "All the gods, all the heavens, all the hells, are within us" | `KEEP — provenance closed` | Makes a **strong claim** — the inner location of the divine and the demonic — that the Water chapter then spends forty pages exploring. Not decoration |
+| **1257** | Lao Tzu — "Nothing is softer or more flexible than water, yet nothing can resist it" | `KEEP — SOURCE RESOLUTION REQUIRED` | **This is the one Lao Tzu in the book that is actually Lao Tzu** — *Tao Te Ching* 78. Historicizes, and is public domain. Translation to be identified per the printed-English rule |
+| **1304** | Maya Angelou — "Forgive yourself for not knowing what you didn't know before you learned it" | `KEEP — SOURCE RESOLUTION REQUIRED · RIGHTS HOLD` | Says something **precise** about self-forgiveness that the prose does not. Estate-controlled; source not closed |
+| **1354** | Thich Nhat Hanh — "Walk as if you are kissing the Earth with your feet" | `KEEP — RIGHTS HOLD` | **The hinge from Water into Earth**, and it does the turn in nine words. Parallax Press, in copyright |
+| **182** | Rumi — "As you start to walk on the way, the way appears" | `KEEP — SOURCE RESOLUTION REQUIRED` | Compresses the book's **method claim** — the path reveals itself only in the walking — which the prose beneath states at much greater length. Provenance-fragile; among the most circulated unsourced Rumi lines |
+
+---
+
+## Cumulative-author review — effect only, no shared verdicts
+
+**Campbell (313, 1026, 1111)** — recommended 2 `REMOVE`, 1 `KEEP`. Cumulatively
+he was becoming **the book's mythological guarantor**; the instance that survives
+is the one making a claim rather than blessing one.
+
+**Rumi (182, 534, 1863)** — three instances, **three different provenance
+objects**: an unsourced floating saying, a generic warrant, and a Barks rendering.
+Recommended `KEEP—unresolved`, `REMOVE`, `KEEP·CORRECT·RIGHTS HOLD`. **This is the
+clearest possible demonstration of why author sets fail.**
+
+**Tagore (608, 1732)** — **not doing the same work.** One is sourced, public
+domain, and historicizes; the other is unsourced and repeats tonal authority.
+Recommended `KEEP` and `REMOVE`.
+
+---
+
+# 4A · FULL STANDING · 45 / 45 worked
+
+| Disposition | Count |
+|---|---|
+| `REMOVE` | **21** (11 + 9 + Teasdale) |
+| `KEEP — provenance closed` | 10 |
+| `KEEP — SOURCE RESOLUTION REQUIRED` | 6 |
+| `KEEP — RIGHTS HOLD` | 5 |
+| `CORRECT` / `RESTORE` | 5 |
+
+**One ruling issued** (Teasdale). **Forty-four recommendations awaiting authorial
+ruling.** Nothing applied to the manuscript — application is Stage 5.
+
+**The pattern, stated plainly:** if these recommendations stand, **roughly half the
+section-opening epigraphs come out**, and the book's openings stop being decorated
+by authority and begin in their own voice. The survivors are the ones that
+**challenge, historicize, define, or turn** — not the ones that agree.
