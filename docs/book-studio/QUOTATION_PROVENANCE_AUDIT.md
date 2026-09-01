@@ -2,7 +2,7 @@
 
 **Source of record:** `docs/book-studio/ELEMENTAL_ALCHEMY_FROM_ORIGINAL_FULL.md`
 **Opened:** 2026-09-01, after Chapter 10 closed developmental adjudication.
-**Status:** IN PROGRESS — 90 of 137 adjudicated. **Chapter 5 CLOSED (30/30). Chapter 8 CLOSED (23/23).**
+**Status:** IN PROGRESS — 91 of 137 adjudicated. **Chapter 5 CLOSED (30/30). Chapter 8 CLOSED (23/23).**
 
 ## Scope
 
@@ -2409,6 +2409,61 @@ casualties of a wholesale rebuild.**
 **`ORPHAN CANDIDATE` ×7** — Robert A. Johnson, H. Jackson Brown Jr., Churchill,
 Arthur Ashe, Darwin, Winona LaDuke, Marlee Matlin: listed with no matching
 epigraph. Each needs a body-dependency check.
+
+---
+
+## Chapter 9 — Aether (12 quotations)
+
+**L1933 · "Sioux Legend" — "The longest journey you will make in your life is from your head to your heart."**
+`UNVERIFIED` · `UNKNOWN`. **No documentation of Sioux origin.** The line
+circulates in contemporary spiritual and Christian devotional literature —
+Patheos, Dynamic Catholic, Matthew Kelly, Lenten reflections. Standard collections
+of actual Sioux myths surfaced in the search with **no connection to it**. One
+source concedes only that "it's been written that it was originally a Sioux
+Indian saying."
+
+### A distinct severity characteristic — unverified attribution to a cultural tradition
+
+This is **materially different from an unverified attribution to an individual**:
+
+1. **It cannot be checked against a corpus.** A "legend" has no author to verify
+   against, so the attribution is structurally unfalsifiable — which is part of
+   what makes it durable.
+2. **It attributes a modern devotional saying to a living culture**, which
+   functions as appropriation regardless of intent.
+3. **It runs against the manuscript's own governing commitments** on cultural
+   sovereignty — not imposing frameworks, not translating others' meaning into a
+   borrowed vocabulary.
+
+### The contrast that makes this precise
+
+**Permaculture (L1441) attributed to a movement — accurate, and the right form.**
+**"Sioux Legend" (L1933) attributed to a tradition — unverified.**
+
+*The same grammatical form, opposite reliability.* Tradition-attribution is
+**truthful when the tradition genuinely holds the saying** and **appropriative
+when it does not**. The form is not the problem; the verification is.
+
+And the book **does** cite real Indigenous sources correctly elsewhere — **Black
+Elk** (L1871, this chapter) and **Bear Heart** (L926, Fire), both named
+individuals with published works. The failure is confined to the unattributable
+"legend" form.
+
+### Candidate pattern — `FALSE CULTURAL ATTRIBUTION`
+
+*A saying of modern or Western origin attributed to a non-Western or Indigenous
+tradition, where no connection to that tradition can be established.*
+
+**Second independent instance**, which meets the taxonomy threshold:
+- **L1531 (Ch7)** — "Chinese Proverb": traced to a Cleveland councilman, 1967;
+  the "Chinese proverb" label first appears in 1985.
+- **L1933 (Ch9)** — "Sioux Legend": no Sioux connection located.
+
+**Proposed but not applied — authorial ruling requested.** It may belong as a
+named class, or as a severity characteristic within `FLOATING APHORISM`. I have
+not decided it, but I record that this pattern carries consequences the other
+patterns do not: reputational, ethical, and — given the book's stated commitments
+— constitutional.
 
 ---
 
