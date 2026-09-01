@@ -420,7 +420,7 @@ they are **held in relationship**. That is not certification's opposite by degre
 It is a different act entirely: **the book positions itself beside a kindred
 thinker and specifies where it stands differently.**
 
-**A quotation that the author answers cannot be functioning as a warrant.**
+**⚠️ SUPERSEDED — too strong. See the corrected form in "MATURE METHOD" below:** *a quotation the author answers is strong evidence it is not functioning **merely** as a warrant.*
 Recorded as the sharpest available demonstration of the kinship/certification
 distinction.
 
@@ -450,3 +450,137 @@ this, and would have removed Teasdale on a defensible-looking reading.
 
 **A third repair form now exists** alongside remove and reattribute: **write the
 frame that makes the real relationship visible.**
+
+---
+
+# 4A · MATURE METHOD — functional vocabulary + the FRAME/ANSWER restraint
+
+## Correction to the previous entry
+
+The previous entry claimed *"a quotation that the author answers **cannot** be
+functioning as a warrant."* **Too strong, and withdrawn.** Human rhetoric is
+messier than that; a quotation can be answered *and* still lend authority. The
+accurate form:
+
+> **A quotation the author answers is strong evidence that it is not functioning
+> *merely* as a warrant.** Once the author agrees, distinguishes, or extends, the
+> relationship becomes **dialogical rather than one-directional.**
+
+## The six functions
+
+Replaces the earlier five-function list. A quotation may carry more than one.
+
+| Function | The source… |
+|---|---|
+| **`CERTIFICATION`** | supplies standing for the book's claim — **the only disqualifying function** |
+| **`KINSHIP`** | names a genuine intellectual or spiritual companion |
+| **`DIALOGUE`** | is responded to — the book distinguishes itself from it or extends it |
+| **`ILLUMINATION`** | makes something newly visible |
+| **`HISTORICIZATION`** | locates the idea in lineage or history |
+| **`CHALLENGE`** | complicates or resists the book's position |
+
+**Teasdale, Chapter 10 = `KINSHIP` + `DIALOGUE`.**
+
+## The third repair form — `FRAME / ANSWER`, with restraint
+
+**The adjudication unit is quotation + frame, not quotation in isolation.** But
+without a restraint, *every* unnecessary epigraph can be rescued by writing enough
+prose around it. So `FRAME / ANSWER` is available **only when all four hold:**
+
+1. the external voice **already genuinely earns a place** in the conversation;
+2. the author has a **real relationship** to what it says — agreement,
+   disagreement, lineage, tension, extension;
+3. making that relationship explicit **adds something the manuscript needs**;
+4. **the new prose would still be worth saying even if the quotation disappeared.**
+
+> **Do not write a frame merely to save a quotation. Write the frame when it
+> reveals something true about the book.**
+
+**Test 4 is the load-bearing one**, and it is the one an editor can actually apply.
+**Test 2 cannot be assessed from the manuscript** — only the author knows whether
+the relationship is real. Any `FRAME/ANSWER` recommendation below is therefore
+conditional on the author's answer to test 2.
+
+**The Teasdale paragraph passes easily.** It states a principle that matters
+independently of Teasdale: *unity through relationship without erasing difference.*
+
+**Shakespeare/Polonius is the counter-specimen.** A paragraph explaining why
+Polonius is an ironic choice would turn a clean section opening into a literary
+detour. **The frame would be serving the quotation rather than the book. `REMOVE`
+stands.**
+
+---
+
+# 4A · RECONSIDERATION — bounded, not a reopening
+
+**All 45 were already worked** (27 in the first batch, 18 in the second). This is
+**not** a re-run. Only recommendations resting **primarily on "this merely
+certifies something the book already owns"** are reopened — six items. Everything
+failing on **misattribution, unsupported source, or redundancy** stays ruled:
+*a false Socrates, an unsupported Gandhi, a bad Aristotle do not deserve new prose
+written around them to preserve their presence.*
+
+### Reopened under the three-way test
+
+| L | Item | Outcome |
+|---|---|---|
+| **313** | Campbell — "The privilege of a lifetime is being who you are" | **`KEEP + FRAME/ANSWER` candidate.** Passes test 4: the book's position is arguably *not* Campbell's — **being who you are as endpoint, versus becoming through elemental relationship.** A paragraph drawing that distinction would be worth writing independently. **Conditional on test 2** |
+| **677** | Tolle — "Awareness is the greatest agent for change" | **`KEEP + FRAME/ANSWER` candidate.** Previously flagged. Passes test 4: the book's awareness is **elemental and differentiated**, not undifferentiated presence. That distinction is worth stating on its own terms. **Conditional on test 2** |
+| **534** | Rumi — "The universe is not outside of you…" | **`REMOVE` stands.** Fails test 4 — a paragraph relating Rumi to toroidal flow would be strained and would not be worth writing on its own |
+| **1425** | Nehru — "Culture is the widening of the mind…" | **`REMOVE` stands.** Fails tests 1 and 4 |
+| **1235** | Thoreau — "You must live in the present…" | **`REMOVE` stands — the closest call.** Thoreau is a plausible companion (nature, direct experience), so test 1 may pass; **test 4 does not.** Flagged so the author can overrule |
+| **1217** | Gawain — "The more light you allow within you…" | **`REMOVE` stands.** Fails test 1 |
+
+**Net effect: 2 of 45 move from `REMOVE` to a conditional third option.** The
+restraint is doing its job — the frame form is not rescuing the set.
+
+---
+
+# 4A · the 18, re-tagged under the six functions
+
+| L | Source | Function | Recommendation |
+|---|---|---|---|
+| 182 | Rumi | `ILLUMINATION` | `KEEP — SOURCE RESOLUTION REQUIRED` |
+| 313 | Campbell | `CERTIFICATION` → possibly `DIALOGUE` | **reopened above** |
+| 417 | Kepler | `HISTORICIZATION` | `KEEP — SOURCE RESOLUTION REQUIRED` |
+| 534 | Rumi | `CERTIFICATION` | `REMOVE` |
+| 608 | Tagore | `HISTORICIZATION` | `KEEP` |
+| 632 | James | — (misattributed) | `REMOVE` |
+| 677 | Tolle | `CERTIFICATION` → possibly `DIALOGUE` | **reopened above** |
+| 693 | Perkins | — (identity unresolved) | `REMOVE` |
+| 1026 | Campbell | `ILLUMINATION` but paraphrased + restated | `REMOVE` |
+| 1111 | Campbell | `ILLUMINATION` | `KEEP` |
+| 1217 | Gawain | `CERTIFICATION` | `REMOVE` |
+| 1257 | Lao Tzu | `HISTORICIZATION` | `KEEP — SOURCE RESOLUTION REQUIRED` |
+| 1273 | Alcott | `ILLUMINATION`, redundant | `REMOVE` |
+| 1304 | Angelou | `ILLUMINATION` | `KEEP — SOURCE RESOLUTION · RIGHTS HOLD` |
+| 1354 | Thich Nhat Hanh | `ILLUMINATION` | `KEEP — RIGHTS HOLD` |
+| 1650 | "Shaw" | `ILLUMINATION` | `CORRECT` → William H. Whyte |
+| 1732 | Tagore | `CERTIFICATION` | `REMOVE` |
+| 1863 | Rumi | `KINSHIP` | `KEEP · CORRECT (Barks) · RIGHTS HOLD` |
+
+---
+
+## Stage 4 progression
+
+> **4A — Who gets to stand at the threshold of a section?**
+> **4B — Whose thinking does the argument actually depend on?**
+> **4C — Whose voice is useful enough to interrupt the prose?**
+
+**And 4A's missing answer, supplied by Teasdale:**
+
+> **Sometimes an epigraph deserves to stay not because it speaks for the book, but
+> because it gives the book someone worth speaking with.**
+
+## 4A standing
+
+| Disposition | Count |
+|---|---|
+| `REMOVE` | **18** |
+| `KEEP` — all forms | **26** |
+| `KEEP + FRAME/ANSWER` candidate *(conditional on test 2)* | **2** |
+| `CORRECT` / `RESTORE` | 5 |
+
+**45/45 worked. Two rulings issued** (Teasdale `KEEP`; the paragraph applied).
+**Forty-three recommendations awaiting authorial ruling.** 4A does not close until
+those are ruled; **4B begins only after.**

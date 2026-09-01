@@ -283,3 +283,24 @@ author wrote beneath them. **The quotation never changed.**
   quotation is not a warrant is that **the author answers it** — Teasdale speaks of
   traditions as common heritage; the paragraph accepts the company and declines the
   collapse.
+
+### Capability — a six-function model, and a restrained third repair form
+
+**Six functions a quotation may serve** (more than one at a time):
+`CERTIFICATION` (supplies standing — **the only disqualifying one**) ·
+`KINSHIP` · `DIALOGUE` · `ILLUMINATION` · `HISTORICIZATION` · `CHALLENGE`.
+
+**The `FRAME / ANSWER` repair must carry a restraint**, or the system will learn to
+rescue any weak quotation by generating prose around it. Available only when: the
+voice already earns a place · the author has a real relationship to what it says ·
+making that relationship explicit adds something the manuscript needs · **and the
+new prose would still be worth saying if the quotation disappeared.**
+
+**The fourth test is the one a system can actually apply. The second cannot be
+assessed from the manuscript at all** — only the author knows whether the
+relationship is real. **A system must therefore mark `FRAME/ANSWER` proposals as
+conditional on an authorial answer, never assert them.**
+
+**Grounding event:** applied to six reopened Stage 4A items, the restraint moved
+only two. Without it, all six could have been rescued with plausible-sounding
+prose.
