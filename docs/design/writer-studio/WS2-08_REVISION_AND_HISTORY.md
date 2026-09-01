@@ -1,0 +1,381 @@
+# WS2-08 · Revision & History — lane opening
+
+```text
+LANE            JARVIS-WS2-08-REVISION-HISTORY-01
+STATE           OPENED · BLOCKED ON TRIGGER
+TRIGGER         Stage 7 developmental intelligence is merged, witnessed, and closed
+AUTHORIZES      nothing yet
+ROADMAP STATUS  direction, not implementation authority
+OPENED          2026-09-01
+```
+
+**This document is a lane opening. It is not a spec, not a census, and not a schema.**
+It authorizes no code, no migration, no table, no route, no test, and no census.
+It exists so the direction is recorded before it is needed, and so that the first
+person who reaches this lane does not begin by inventing version control.
+
+---
+
+## Jarvis header
+
+> Do not begin Stage 8 by building version control. Begin by discovering what the
+> Writer's Studio already means when the Work changes.
+>
+> Use **FIND → UNDERSTAND → DECIDE → BUILD → PROVE → DONE**.
+>
+> Finding a defect during the census does not authorize its repair.
+>
+> A save is not necessarily a revision. A fingerprint is not necessarily a version.
+> A suggestion is not authorship. A restore must never erase history.
+>
+> **The history of the Work must remain as sovereign as the Work itself.**
+
+---
+
+## Mission
+
+Build the system by which a writer can change a Work without losing the history of
+what the Work was, why it changed, or who made the change.
+
+The governing idea:
+
+> **Revision should deepen authorship, not erase provenance.**
+
+Stage 7 gives MAIA the ability to perceive and discuss development. Stage 8 answers
+the next question: **what happens when the author actually begins changing the
+manuscript in response?**
+
+---
+
+## Stage relationship
+
+```text
+6A   AuthorStructureCommand
+ ↓
+7    Developmental Intelligence
+ ↓
+8    Revision & History
+```
+
+### Why this lane is blocked
+
+The trigger is Stage 7 closure — merged, witnessed, and closed.
+
+As of this opening, **Stage 7 is not merely unclosed; it is not yet opened as a lane
+in this repository.** No Stage 7 lane document exists under `docs/design/writer-studio/`
+or `docs/design/author-studio/`. Stage 6 is likewise named-but-unbuilt: the ratified
+Canvas Structure contract (`docs/design/contracts/writer-canvas-structure.md`) records
+that no reachable path writes `manuscript_structure_units`, and that this must keep
+holding "when Stage 6 gives the author a command that can."
+
+So the block is doubly held. Nothing in this document changes that, and reading it is
+not an event that partially lifts it.
+
+---
+
+## 08A — FIND: revision census
+
+Jarvis starts read-only. **Do not begin with Git-like versioning architecture,
+snapshots, CRDTs, diffs, or "undo history."** First discover what exists.
+
+### Census targets
+
+```text
+manuscript persistence        revision/version tables
+draft sections                snapshots
+source sections               restore code
+working draft                 comparison utilities
+history drawer                content hashes/fingerprints
+autosave                      Ask MAIA thread state
+save boundaries               proposal provenance
+timestamps                    structure revision state
+import provenance             editor undo/redo
+conflict/reconnect behavior   multi-tab behavior
+```
+
+### Classification vocabulary
+
+Every mechanism found is classified as exactly one of:
+
+```text
+EXISTS · PARTIAL · LEGACY · DUPLICATE · EPHEMERAL
+PERSISTED · AUTHORITATIVE · NOT AUTHORITATIVE · MISSING · DO NOT REUSE
+```
+
+### Questions FIND must answer
+
+- What is currently persisted when prose changes?
+- Is there any recoverable historical text?
+- Does autosave overwrite the previous state?
+- What exactly does the History drawer currently represent?
+- Are histories manuscript-wide or section-local?
+- Are changes attributable to member / MAIA / import / system?
+- Is there an existing revision identifier?
+- Are fingerprints being used as versions when they are only change detectors?
+- What happens if two tabs edit the same Work?
+- What happens after reconnect?
+- Can any existing "restore" path destroy newer work?
+- What provenance already survives a rewrite?
+
+### Stop rule
+
+**Discovering a revision defect does not authorize repairing it.** The census
+records the defect and stops. Repair is a separate authorized act.
+
+---
+
+## 08B — UNDERSTAND: the ontology of change
+
+Before implementing history, separate things that are easy to collapse.
+
+```text
+WORK STATE  →  EDIT  →  REVISION EVENT  →  REVISION STATE  →  HISTORY
+```
+
+These are not synonyms. A keystroke is not necessarily a revision. An autosave is not
+necessarily a revision. A database row update is not necessarily an authorially
+meaningful revision. **A hash is not a version identity.**
+
+Jarvis must determine the existing semantics before choosing new ones.
+
+### Four kinds of change
+
+1. **Ordinary writing** — the writer types *"She walked home."* then changes it to
+   *"She returned home before dawn."* This may be continuous composition, not a named
+   revision event.
+2. **Deliberate revision** — the author intentionally revises a passage, chapter, or
+   larger movement. This may deserve a durable boundary.
+3. **Structural change** — a chapter moves, sections merge, structure changes. This is
+   history too, but it is not identical to prose revision.
+4. **MAIA-assisted change** — MAIA may have helped generate a possibility, but the
+   author decides whether anything enters the Work.
+
+### Constitutional boundary
+
+Stage 8 inherits the sovereignty doctrine directly:
+
+> A developmental insight is not a revision. A generated possibility is not a revision.
+> **Only a change to the authored Work becomes revision history.**
+
+And:
+
+> **History must record what actually happened, not infer authorship from textual
+> similarity.**
+
+The second sentence is load-bearing. Provenance must never collapse
+`MAIA suggested → member considered → member authored change` into
+`MAIA changed the manuscript`. If MAIA suggested *"The house had gone quiet."* and the
+member later wrote *"By midnight the entire house was silent."*, the system must not
+manufacture a provenance claim that MAIA wrote that sentence because the two resemble
+one another.
+
+---
+
+## 08C — DECIDE: the minimal revision object
+
+**Do not freeze this schema before FIND.** Stage 8 should expect to need concepts
+equivalent to the following — these are conceptual placeholders, **not schema
+authorization**:
+
+```ts
+RevisionIdentity
+RevisionScope
+RevisionActor
+RevisionReason
+RevisionParent
+RevisionTimestamp
+RevisionProvenance
+```
+
+The census determines whether the canonical unit is a snapshot, an event, a patch, a
+section revision, a manuscript revision, a checkpoint, or some hybrid.
+
+**Rule.** Do not let "revision" become synonymous with every autosave. That produces
+technically exhaustive history and humanly useless history.
+
+---
+
+## 08D — HISTORY
+
+The writer should eventually be able to answer:
+
+```text
+What did this chapter look like yesterday?
+What changed?  When?
+What did I deliberately revise?
+What came from an imported source?
+What structure did the Work have then?
+Was MAIA involved?
+Can I see the previous version?
+Can I recover it?
+```
+
+History should feel like **memory of the Work**, not database telemetry.
+
+---
+
+## 08E — COMPARE
+
+Eventually, `VERSION A ↕ VERSION B` at several useful scales:
+
+```text
+passage · section · chapter · whole Work · structure
+```
+
+Jarvis must discover what comparison infrastructure exists before choosing diff
+semantics. A textual diff may be appropriate for prose and terrible for structural
+history. **Do not presume one comparison mechanism fits both.**
+
+---
+
+## 08F — RESTORE
+
+This is the sharp Stage 8 boundary. A restore is **not** `DELETE CURRENT; COPY OLD OVER IT`.
+
+> **Restoring a prior state must itself create history; it must never erase the states
+> that came after it.**
+
+```text
+A → B → C   ·   restore A   ·   must become   A → B → C → A'
+```
+
+not:
+
+```text
+A            (where B and C mysteriously disappear)
+```
+
+A restored state is a **new authored present derived from an earlier state**, not time
+travel.
+
+---
+
+## 08G — MAIA + REVISION
+
+Only after revision history itself is trustworthy should MAIA gain revision-oriented
+capabilities. Potential future gestures:
+
+```text
+Show me what changed in this chapter
+Why did we revise this section?
+What unresolved developmental issues remain?
+Compare this version with the earlier one
+Where did this motif strengthen or disappear?
+```
+
+And eventually: *Help me revise this passage.*
+
+That last gesture approaches another sovereignty threshold. **MAIA may generate
+revision possibilities. She must not silently choose and install one.**
+
+---
+
+## 08H — DEVELOPMENTAL REVISION BRIDGE
+
+Where Stage 7 developmental intelligence meets Stage 8 authored change:
+
+```text
+Developmental observation
+        ↓
+member judgment
+        ↓
+revision intention
+        ↓
+member authors change
+        ↓
+revision history
+```
+
+The system should preserve those relationships **without pretending causation it cannot
+establish.** These facts may coexist:
+
+```text
+developmental reading R7
+member marks observation O3 useful
+member later revises section S12
+```
+
+They do not establish *"O3 caused revision S12"* — unless the author explicitly
+connects them.
+
+---
+
+## First Stage 8 witness
+
+A real manuscript and a meaningful revision.
+
+```text
+initial Work state A
+       ↓ member changes real prose
+state B persists
+       ↓
+A remains recoverable
+       ↓ compare A ↔ B
+restore A
+       ↓
+new state C matches A's content
+       ↓
+B still exists
+       ↓
+history says restore occurred
+       ↓
+authorship/provenance remain truthful
+```
+
+### Falsifiers
+
+```text
+autosave destroys only recoverable prior state            FAIL
+restore deletes later history                             FAIL
+MAIA suggestion is recorded as authored prose             FAIL
+member-written revision is attributed to MAIA             FAIL
+history claims causation it cannot establish              FAIL
+two revisions become indistinguishable                    FAIL
+comparison uses wrong manuscript/section version          FAIL
+reconnect silently overwrites newer authored work         FAIL
+structure history and prose history contradict            FAIL
+```
+
+---
+
+## DONE for Stage 8.1
+
+Do not require the whole vision. **Stage 8.1 closes when:**
+
+> A writer can make a meaningful change to a real Work, recover the prior state,
+> understand what changed, and restore an earlier state without destroying any later
+> history or confusing authorship.
+
+That alone is a major threshold.
+
+---
+
+## Suggested Stage 8 sequence
+
+```text
+08A  REVISION CENSUS      What persistence/history machinery really exists?
+08B  REVISION ONTOLOGY    What counts as a Work state, change, revision, checkpoint?
+08C  REVISION IDENTITY    Establish durable revision identity and provenance.
+08D  HISTORY              Expose meaningful history to the author.
+08E  COMPARE              Compare authored states truthfully.
+08F  RESTORE              Restore without destroying subsequent history.
+08G  CROSS-SCALE HISTORY  Passage ↔ section ↔ chapter ↔ structure ↔ whole Work.
+08H  DEVELOPMENTAL BRIDGE Connect Stage 7 insight to Stage 8 revision without
+                          inventing causation.
+```
+
+---
+
+## What this lane does not do
+
+- It does not authorize `08A`. The census begins only after the trigger is met.
+- It does not name tables, columns, migrations, routes, or components.
+- It does not classify any existing mechanism. Every classification above is a
+  vocabulary, not a finding.
+- It does not assert that any revision defect exists in the Studio today. No such
+  inspection was performed.
+- It does not lift, weaken, or reinterpret the Canvas Structure contract's prohibition
+  on non-authored structural change.
+
+The next legitimate act in this lane is the closure of Stage 7 — not a line of code
+here.
