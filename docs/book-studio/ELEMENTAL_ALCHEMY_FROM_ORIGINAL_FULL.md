@@ -1434,7 +1434,7 @@ The beauty of this challenge is that the solution is not in the stars alone, but
 
 ### The Solid State of Earth
 
-The ancient Taoist philosophers believed that metaphysical reality is woven into material reality as the creative source of the physical world. So, to be a good Taoist is to live the Earth realm well. Likewise, my interest in metaphysics is not purely transcendental or motivated by a desire to escape reality. Modern physicists have discovered that the quantum field underlies the atoms which comprise everything in the physical world. The quantum field is therefore an extraordinary dimension of ordinary reality. From studying metaphysics, I am aware of many extraordinary realms, each with its own laws, experiences, and dynamics.
+The ancient Taoist philosophers believed that metaphysical reality is woven into material reality as the creative source of the physical world. So, to be a good Taoist is to live the Earth realm well. Likewise, my interest in metaphysics is not purely transcendental or motivated by a desire to escape reality. From studying metaphysics, I am aware of many extraordinary realms, each with its own laws, experiences, and dynamics.
 
 The elements of earth, air, fire, and water are four of these realms, but I am aware that to most people they are mainly abstract, symbolic principles. To be of any practical value to us the elements must be related and integrate into the world of earthly matter. Or else they don't truly matter. Not on a practical level, which is Earth realm sensibility. We are created as spirits out of the soil of Earth and this lifetime is to live an earthly experience as long, and fully as we can. The idea of transcendence remains a practical consideration of how to make the best of this lifetime.
 
