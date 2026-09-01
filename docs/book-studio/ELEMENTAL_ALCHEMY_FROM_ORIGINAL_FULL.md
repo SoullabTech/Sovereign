@@ -1076,8 +1076,6 @@ Rise, blaze, and transform in the sacred dance of the elements. Dance with fire.
 
 # Chapter 6: Water — The Depths of Emotional Intelligence and Transformation
 
-*"All the gods, all the heavens, all the hells, are within us." — Joseph Campbell*
-
 Diving into one's inner experience is the gateway to fully engaging with the world. By embracing this simple yet profound truth, you unlock the potential to journey far and achieve great things. When you understand and align with your inner self, you are better equipped to navigate and impact the outer world with authenticity and purpose.
 
 What you feel carries great power to create your reality. At the heart of your emotions are source feelings that reveal inner knowing, certainty, conviction, and authenticity. The true gift is to be conscious of this inner power to emotionally connect and animate our lives.
@@ -1188,7 +1186,7 @@ Many healers and empaths feel most at home in the water realm. It offers both so
 
 I experience some of the most important life lessons in my home life. Being a parent and a partner in a committed relationship is the experience of a lifetime. It is the most important and beautiful aspect of my life, yet it naturally has its challenges. It is a constant flow of adjusting, assessing, evaluating, and seeking soulful moments with my family. My responsibility as a parent and husband offers a constant need to check in with how I engage them. My nature is to be soulful and loving, yet I know that the other elements of experience are important too. I need to offer guidance and advice, attend to necessary chores and schedules, and set a good example for my kids. Additionally, I need to develop better communication skills and be better organized in my partnership with my wife. This leaves me constantly aware of not only my inner experience but also how I am in relation to my family, both in the moment and across time, considering the different states of development we are all going through. It is a real laboratory of soul building.
 
-*"There is a crack in everything, that's how the light gets in." — Leonard Cohen*
+*"There is a crack, a crack in everything, that's how the light gets in." — Leonard Cohen, "Anthem," The Future (1992)*
 
 Even so, I'm perfectly imperfect. I can be forgetful, inappropriate, sometimes messy, grumpy, and immersed in my own world. I find myself acting in ways that are totally different from what I profess or preach to my kids. I act like a child at times and become terribly self-centered occasionally. I let the world and all its problems seep into my soul, and all of this affects my family life. I see it clearly yet continue to spiral into and out of these states between unconscious reactionism and conscious creative engagement. I know that living isn't about achieving perfection but striving to live more harmoniously and in balance. I'm blessed to have this experience and strive to be more present, soulful, and authentic in my life.
 
@@ -1208,8 +1206,6 @@ Our relationship with elemental water reflects the special wisdom of our soul, i
 
 The smell of hot chocolate and the voice of my daughter offering me a warm mug full of it floods me with memories, reminding me of childhood. Sharing this moment with her fills me with loving emotions. This is why we're here, for this, for each other, for the healing power of love, I gently remind myself. This is why I love the water state of my conscious experience: It is home to me. It is a place where I am safe to let down my guard. It is restorative.
 
-*"You yourself, as much as anybody in the entire universe, deserve your love and affection." — Buddha*
-
 While emotional depth is an important part of our humanity, it also comes with a cost. Anyone who devotes their lives to understanding and relieving others' emotional burdens will understand the tension I am writing about. Oftentimes empathetic and caring people have grown such a strong attunement to others' needs that they neglect their own needs. If you are a counselor, coach, therapist or healer by trade, you might recognise yourself in this. You tend to analyze and treat others, rather than supporting yourself. We are each personally responsible for taking care of ourselves.
 
 It can be rewarding to help someone else, almost as if we've addressed our own mental and emotional needs. But focusing on another being—a relative, friend, or patient—is not the same as looking inward at yourself. The realm of water needs our direct engagement. Our emotional, watery essence craves our presence and the intimacy of our attention much like children hunger for the attention of their parents.
@@ -1223,8 +1219,6 @@ Water is the form and force of consciousness drawing us beneath the surface of e
 When we drop into our hearts, we dissolve the separation between inner and outer, above and below, past and future, self and other. On an emotional level, we feel our interrelatedness with everything in existence. Remembering that we are more than just our aspirations empowers us to live soulful lives filled with empathy for our fellow humans. We are like drops of water returning to the ocean and recognizing how it lives inside us already. Water is both embracing and expansive.
 
 In the water realm, there is no fixed pattern. Water energy is a fluid field of psychic information that stimulates our emotions so we will attend to them. How we respond to our feelings and the narrative content that is associated with them is part of the art of emotional intelligence. The power of water to drown out the noise of superficiality, busyness, and struggle opens the floodgates of a deeper order of wisdom and self-awareness to expand our consciousness beyond the limitations of temporal earthly living.
-
-*"The mind is like water. When it's turbulent, it's difficult to see. When it's calm, everything becomes clear." — Prasad Mahes*
 
 Recognition of the dynamics of water gives the alchemist, shaman, and healer, or anyone else who can perceive the subtle grades of water, the ability to work with a bowl of water, the rain, a ceremonial baptism in a body of water, such as a river or a pond, or even a visualization of water as a potent source of self-compassion, redemption, and transformation. Symbols and rituals can anchor our awareness of the water that exists in us and in the world and subtle fields around us.
 
@@ -1260,8 +1254,6 @@ This water way of knowing is sensuous, spacious, and life-nurturing. I'm here no
 When our hearts are experienced by other hearts, the world feels more enchanted, kind, and loving. At the heart of water is pure love. Love offers us a reason or purpose for being alive. Water consciousness raises our EI and reminds us we are here in service to the world and must dream of better ways to operate and reconnect with our shared humanity.
 
 ### Letting Go of Regrets and Resentment — Healing
-
-*"Forgive yourself for not knowing what you didn't know before you learned it." — Maya Angelou*
 
 In the second phase, we begin to transform the shadows we once projected onto our world into integrated parts of our nature. These shadows, initially seen as obstacles or negative aspects, become allies and helpers as we acknowledge and embrace them. This transformation allows us to harmonize with our inner self, fostering a deeper connection with our emotional landscape and enabling us to manifest our intentions more authentically.
 
@@ -1309,7 +1301,7 @@ Water is the state of being in which we explore what it means to be alive, to be
 
 ### Conclusion: Embarking on the Journey of Earth
 
-*"Walk as if you are kissing the Earth with your feet." — Thich Nhat Hanh*
+*"Walk as if you are kissing the Earth with your feet." — a teaching associated with Thich Nhat Hanh*
 
 Following the pure path of water, we conclude this journey refreshed, cleansed, and renewed to the essence of soulful living. This journey through the water element has shown us how to explore our world at the emotional depths with our Soul Language and to discover our soul medicine in service to others.
 

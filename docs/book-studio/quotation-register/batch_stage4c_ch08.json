@@ -46,7 +46,8 @@
       "match": "Alone we can do so little",
       "editorial_status": "KEEP. Verified variant; the spoken line is documented in Lash, Helen and Teacher (1980). Ruled apart from the unverified Keller record in the same chapter.",
       "evidence_location": "4C Chapter 8 ruling",
-      "occurrence": 2
+      "occurrence": 1,
+      "notes": "ID NOTE: this record was EA-Q-0267 while two occurrences existed. Removing the Ch7 duplicate at Stage 4C made this the first occurrence, so it now carries EA-Q-0268. For identical texts the id tracks occurrence order, not the individual record's history; no verdict is affected because both occurrences carried the same verified verdict."
     },
     {
       "match": "Beware of false knowledge",

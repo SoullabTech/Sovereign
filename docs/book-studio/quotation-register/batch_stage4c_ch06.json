@@ -1,0 +1,62 @@
+{
+  "_comment": "Stage 4C - Chapter 6 (Water). 11 records: 7 survive, 4 leave. Water keeps the voices that genuinely change the chapter's register or illuminate its subject, and drops the one that mainly decorated the threshold. Rights cost was not allowed to decide Stage 4.",
+  "entries": [
+    {
+      "match": "There is a crack, a crack in everything",
+      "editorial_status": "KEEP - ILLUMINATION, with repair. The image of the crack and the entering light is unusually well suited to vulnerability, rupture, healing and emotional permeability; it is not famous decoration. Kept on that basis, then repaired: Cohen's actual repetition restored, and the source corrected from a 1968 poetry volume to the song. RIGHTS HOLD: song lyric, HIGH, for Stage 6 - if permission proves impractical the editorial choice is revisited with that real constraint in hand, not pre-empted by it.",
+      "provenance_status": "verified_exact",
+      "work": "\"Anthem,\" The Future (1992)",
+      "rights_status": "song_lyric_high",
+      "bibliography_relationship": "CORRECTED at the epigraph; the Ch6 bibliography entry citing Selected Poems 1956-1968 must be replaced at Stage 7",
+      "provenance_history": [
+        {
+          "verdict": "verified_variant",
+          "stage": "Stage 2 census",
+          "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md (Cohen)",
+          "note": "Applied to the manuscript's shortened wording, which dropped the lyric's repetition; the Stage 4C restoration removed that form from the book.",
+          "superseded_by": "verified_exact"
+        }
+      ],
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md (Cohen: SOURCE-FORM MISCLASSIFICATION, wrong work, rights profile changes entirely); 4C Chapter 6 ruling",
+      "occurrence": 1
+    },
+    {
+      "match": "I own my fear",
+      "editorial_status": "KEEP - ILLUMINATION / DIALOGUE. No provenance problem; the line does something specific for Water, turning the relationship to fear from suppression into conscious possession. Rights remain song_lyric_high.",
+      "evidence_location": "4C Chapter 6 ruling",
+      "notes": "Stage 6 should evaluate the aggregate song-lyric burden across fam-song-lyrics, but not by pretending four separate editorial judgments are one. Four permissions may prove impractical; that is a publication constraint applied after editorial value is known.",
+      "occurrence": 1
+    },
+    {
+      "match": "kissing the Earth with your feet",
+      "editorial_status": "KEEP - BENEDICTION / KINSHIP, honestly framed. Not an anonymous floating aphorism: the relationship to Thich Nhat Hanh is real and the unresolved issue is the exact English and source form, so the byline now reads 'a teaching associated with Thich Nhat Hanh' rather than claiming more textual certainty than exists. At the chapter close the line performs as a benediction rather than certification. The exact sentence does not need solving at Stage 4; if the source trail later yields a cleaner truthful formulation, use that.",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md (attribution verified to Thich Nhat Hanh; exact English/source-form unresolved, two authentic source trails); 4C Chapter 6 ruling",
+      "occurrence": 1
+    },
+    {
+      "match": "Things falling apart is a kind of testing",
+      "editorial_status": "KEEP. Verified exact, bibliography correct. Rights likely_protected_high - Stage 6.",
+      "evidence_location": "4C Chapter 6 ruling",
+      "notes": "Textual witness worth preserving: the manuscript includes 'It's just like that.', which the widely circulated online form drops.",
+      "occurrence": 1
+    },
+    {
+      "match": "Our feelings are our most genuine paths to knowledge",
+      "editorial_status": "KEEP. Verified exact, bibliography correct. Clean.",
+      "evidence_location": "4C Chapter 6 ruling",
+      "occurrence": 1
+    },
+    {
+      "match": "We never know the worth of water till the well is dry",
+      "editorial_status": "KEEP. Verified variant to Gnomologia, bibliography correct. Apparatus note for Stage 7: Fuller COLLECTED this proverb, he did not compose it - the same shape as Aesop and Laozi.",
+      "evidence_location": "4C Chapter 6 ruling",
+      "occurrence": 1
+    },
+    {
+      "match": "Healer, heal thyself",
+      "editorial_status": "KEEP, no repair. Paraphrase/adapted and correctly self-labelled - the substitution is acknowledged in the byline itself. Public domain. The census cites this as a positive control that the book's labelling practice is reliable.",
+      "evidence_location": "4C Chapter 6 ruling",
+      "occurrence": 1
+    }
+  ]
+}

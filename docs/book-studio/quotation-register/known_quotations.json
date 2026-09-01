@@ -234,12 +234,6 @@
     "id": "EA-Q-0052"
   },
   {
-    "text": "All the gods, all the heavens, all the hells, are within us.",
-    "display_form": "block_epigraph",
-    "attributed_as": "Joseph Campbell",
-    "id": "EA-Q-0053"
-  },
-  {
     "text": "Emotions are not just the fuel that powers the psychological mechanism of a reasoning creature; they are also parts, highly complex and messy parts, of this creature's reasoning itself.",
     "display_form": "block_epigraph",
     "attributed_as": "Martha Nussbaum",
@@ -270,16 +264,10 @@
     "id": "EA-Q-0058"
   },
   {
-    "text": "There is a crack in everything, that's how the light gets in.",
+    "text": "There is a crack, a crack in everything, that's how the light gets in.",
     "display_form": "block_epigraph",
-    "attributed_as": "Leonard Cohen",
+    "attributed_as": "Leonard Cohen, \"Anthem,\" The Future (1992)",
     "id": "EA-Q-0059"
-  },
-  {
-    "text": "You yourself, as much as anybody in the entire universe, deserve your love and affection.",
-    "display_form": "block_epigraph",
-    "attributed_as": "Buddha",
-    "id": "EA-Q-0060"
   },
   {
     "text": "Nothing is softer or more flexible than water, yet nothing can resist it.",
@@ -288,22 +276,10 @@
     "id": "EA-Q-0061"
   },
   {
-    "text": "The mind is like water. When it's turbulent, it's difficult to see. When it's calm, everything becomes clear.",
-    "display_form": "block_epigraph",
-    "attributed_as": "Prasad Mahes",
-    "id": "EA-Q-0062"
-  },
-  {
     "text": "We never know the worth of water till the well is dry.",
     "display_form": "block_epigraph",
     "attributed_as": "Thomas Fuller",
     "id": "EA-Q-0063"
-  },
-  {
-    "text": "Forgive yourself for not knowing what you didn't know before you learned it.",
-    "display_form": "block_epigraph",
-    "attributed_as": "Maya Angelou",
-    "id": "EA-Q-0064"
   },
   {
     "text": "Healer, heal thyself.",
@@ -320,7 +296,7 @@
   {
     "text": "Walk as if you are kissing the Earth with your feet.",
     "display_form": "block_epigraph",
-    "attributed_as": "Thich Nhat Hanh",
+    "attributed_as": "a teaching associated with Thich Nhat Hanh",
     "id": "EA-Q-0067"
   },
   {

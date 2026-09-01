@@ -11,18 +11,6 @@
       "bibliography_relationship": "CORRECT",
       "notes": "All three Gabriel songs identified in the census; no further song identification needed.",
       "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L713 / Ch9 batch table"
-    },
-    {
-      "match": "crack in everything",
-      "occurrence": 1,
-      "provenance_status": "verified_variant",
-      "actual_author": "Leonard Cohen",
-      "work": "'Anthem', on The Future (1992)",
-      "rights_status": "song_lyric_high",
-      "bibliography_relationship": "WRONG SOURCE/WORK - bibliography cites Selected Poems 1956-1968 (Viking, 1968); the line is from a song released twenty-four years later",
-      "family": "fam-song-lyrics",
-      "notes": "Audit: the actual lyric is 'There is a crack, A CRACK in everything / That's how the light gets in' - the manuscript drops the repetition. SOURCE-FORM MISCLASSIFICATION, and it CHANGES THE RIGHTS PROFILE ENTIRELY: not a 1968 poem excerpt but song lyrics, LIKELY PROTECTED HIGH. This is why I flagged the fourth song lyric during the speaker sweep - the census had already found it, and had found more.",
-      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L1231"
     }
   ]
 }

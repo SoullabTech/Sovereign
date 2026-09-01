@@ -291,16 +291,6 @@
       "evidence_location": "STAGE4 4A group B"
     },
     {
-      "match": "There is a crack in everything",
-      "occurrence": 1,
-      "actual_author": "Leonard Cohen",
-      "work": "Anthem",
-      "rights_status": "song_lyric_high",
-      "family": "fam-song-lyrics",
-      "notes": "FOURTH song lyric, never grouped with the Gabriels. Rights must reason from song lyrics as a source form, not from Peter Gabriel as an author set.",
-      "evidence_location": "STAGE4 speaker sweep - rights observation"
-    },
-    {
       "match": "Once upon a time, I, Zhuangzi",
       "occurrence": 1,
       "provenance_status": "verified_exact",
