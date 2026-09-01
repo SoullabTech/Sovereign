@@ -1982,7 +1982,7 @@
       "notes": "Audit: MISATTRIBUTED, EVOLVED APHORISM / RECOVERABLE ANCESTOR. CLOSED BY AN AUTHORITATIVE SOURCE - the Santayana Edition (Indiana University's critical edition) published 'Citation and the Challenges of Misattribution' specifically on this line, and their editors found no sign of it in his works."
     },
     {
-      "id": "EA-Q-0246",
+      "id": "EA-Q-0248",
       "occurrence": 1,
       "text": "Alone we can do so little; together we can do so much.",
       "line_at_build": 1451,
@@ -2322,15 +2322,15 @@
       "provenance_status": "author_reports_direct_source",
       "provenance_review_state": "edition_check_required",
       "rights_review_state": "not_investigated",
-      "editorial_review_state": "not_investigated",
+      "editorial_review_state": "migrated",
       "evidence_location": "Author testimony, 2026-09-01; supersedes QUOTATION_PROVENANCE_AUDIT.md L1690",
       "rights_status": null,
       "bibliography_relationship": null,
       "family": "fam-teasdale",
-      "editorial_status": "unadjudicated",
+      "editorial_status": "KEEP - DIALOGUE / ETHICAL HINGE - SOURCE RECOVERY REQUIRED",
       "record_state": "confirmed",
       "identity_match_score": 1.0,
-      "notes": "STATE CORRECTED 2026-09-01. Previously UNVERIFIED on the basis that the sentence was not located in A Monk in the World or The Mystic Heart via search. That is a failure of OUR matching, not an absence of source. Next action is an edition check against the author's own copy, not further web search.",
+      "notes": "STATE CORRECTED 2026-09-01. Previously UNVERIFIED on the basis that the sentence was not located in A Monk in the World or The Mystic Heart via search. That is a failure of OUR matching, not an absence of source. Next action is an edition check against the author's own copy, not further web search. | RULED KEEP. Teasdale turns spirituality OUTWARD - from individual attainment toward participation in the wellbeing or awakening of others - which the Chapter 10 occurrence does not. That is the hinge the surrounding prose needs: interdependence, the danger of mere agreement, collaborative intelligence. It introduces an ethical proposition the next section tests. NOT certification. Do not rewrite; do not remove because a source search failed. Recover the source.",
       "provenance_history": [
         {
           "verdict": "unverified",
@@ -2396,7 +2396,7 @@
       "notes": "Audit: UNVERIFIED, UNKNOWN. Shows BOTH instability markers at once - a competing attribution (Hale, 1822-1909, whose death predates the attribution) and no primary source."
     },
     {
-      "id": "EA-Q-0247",
+      "id": "EA-Q-0249",
       "occurrence": 2,
       "text": "Alone we can do so little; together we can do so much.",
       "line_at_build": 1670,
@@ -3372,42 +3372,6 @@
       "notes": "Consonant with Wright's documented position - but thematic fit proves nothing."
     },
     {
-      "id": "EA-Q-0128",
-      "occurrence": 1,
-      "text": "The real religion of humankind can be said to be spirituality itself,",
-      "line_at_build": 2258,
-      "chapter": "Conclusion — Embracing Your Elemental Soul",
-      "section": null,
-      "display_form": "inline_plain_trailing",
-      "attributed_as": "Wayne Teasdale",
-      "attribution_state": "attributed",
-      "actual_author": "Wayne Teasdale",
-      "internal_speaker": null,
-      "work": "LEAD (open): The Mystic Heart: Discovering a Universal Spirituality in the World's Religions (1999); sentence NOT located",
-      "translator_or_mediator": null,
-      "provenance_status": "author_reports_direct_source",
-      "provenance_review_state": "edition_check_required",
-      "rights_review_state": "not_investigated",
-      "editorial_review_state": "not_investigated",
-      "evidence_location": "Author testimony, 2026-09-01; supersedes Stage 2d verification",
-      "rights_status": null,
-      "bibliography_relationship": null,
-      "family": "fam-teasdale",
-      "editorial_status": "unadjudicated",
-      "record_state": "confirmed",
-      "identity_match_score": 1.0,
-      "notes": "STATE CORRECTED 2026-09-01. Same correction as the Chapter 8 occurrence. The editorial question at this location - whether it repeats the relationship already established at the Chapter 10 opener - is separate and unaffected.",
-      "provenance_history": [
-        {
-          "verdict": "unverified",
-          "stage": "search-based verification",
-          "note": "Superseded by author testimony about how the material entered the manuscript.",
-          "superseded_by": "author_reports_direct_source"
-        }
-      ],
-      "member_testimony": "Author reports taking this directly from a Wayne Teasdale book. Exact edition and page not yet matched."
-    },
-    {
       "id": "EA-Q-0129",
       "occurrence": 1,
       "text": "It's so simple—it's all about one little word: L.O.V.E.",
@@ -4260,6 +4224,28 @@
       "provenance_history": [],
       "former_form": "block",
       "active_span": null
+    },
+    {
+      "id": "EA-Q-T032",
+      "record_state": "removed",
+      "removed_at_stage": "Stage 4I",
+      "last_known_location": "Conclusion - Embracing Your Elemental Soul",
+      "text_at_removal": "The real religion of humankind can be said to be spirituality itself.",
+      "attributed_as": "Wayne Teasdale",
+      "provenance_status": "author_reports_direct_source",
+      "provenance_review_state": "migrated",
+      "internal_speaker": null,
+      "rights_status": null,
+      "rights_review_state": "not_investigated",
+      "bibliography_relationship": null,
+      "editorial_status": "REMOVE - CERTIFICATION / REDUNDANT",
+      "editorial_review_state": "migrated",
+      "family": "fam-teasdale",
+      "evidence_location": "4I family card 2; author ruling 2026-09-01",
+      "notes": "Repeats the relationship established more powerfully at the Chapter 10 opener; introduces no new tension, distinction or lineage; and arrives during the passage where the book's own cosmology reaches its fullest expression, asking an outside voice to validate what ten chapters have demonstrated. PROVENANCE UNCERTAINTY MADE REMOVAL EASIER BUT WAS NOT THE REASON. Seam repaired by REPUNCTUATION ONLY - the surviving clause 'for in the aether we merge...' had lost its main clause, so the preceding full stop became a comma. No new prose composed.",
+      "provenance_history": [],
+      "former_form": "inline",
+      "active_span": null
     }
   ],
   "migration_report": {
@@ -4280,7 +4266,6 @@
       "EA-Q-0105",
       "EA-Q-0058",
       "EA-Q-0119",
-      "EA-Q-0128",
       "EA-Q-0011",
       "EA-Q-0042",
       "EA-Q-0118",
@@ -4352,7 +4337,7 @@
       "EA-Q-0073",
       "EA-Q-0074",
       "EA-Q-0075",
-      "EA-Q-0246",
+      "EA-Q-0248",
       "EA-Q-0077",
       "EA-Q-0078",
       "EA-Q-0079",
@@ -4374,7 +4359,7 @@
       "EA-Q-0103",
       "EA-Q-0104",
       "EA-Q-0098",
-      "EA-Q-0247",
+      "EA-Q-0249",
       "EA-Q-0106",
       "EA-Q-0107",
       "EA-Q-0108",
@@ -4400,9 +4385,7 @@
       "EA-Q-0094",
       "EA-Q-0125",
       "EA-Q-0126",
-      "EA-Q-0128",
-      "EA-Q-0088",
-      "EA-Q-0128"
+      "EA-Q-0088"
     ],
     "ambiguous": [],
     "unmatched": [],
@@ -4410,7 +4393,9 @@
     "superseded_by_removal": [
       "If you knew how perfect it all is",
       "If you knew how perfect it all is",
-      "When you realize how perfect everything is"
+      "When you realize how perfect everything is",
+      "real religion of humankind",
+      "real religion of humankind"
     ],
     "historical_migrated": [
       "EA-Q-T021",

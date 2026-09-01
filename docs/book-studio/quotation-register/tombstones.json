@@ -359,6 +359,19 @@
       "editorial_status": "REMOVE - misattribution protocol. It closed a physiological argument with a gesture of cosmic laughter, releasing the argument rather than advancing it; the section's own prior line is the better close.",
       "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L1939",
       "notes": "LONGCHENPA CONVERSION DECLINED. His thought - everything is illusion, therefore perfect, therefore laughable - is a Dzogchen claim about the emptiness of appearances. The section claims the body's systems cohere under aether. Importing him would attach a genuine source to an argument it does not support. A recovered ancestor is only a repair when the ancestor's actual thought belongs at that location."
+    },
+    {
+      "state": "removed",
+      "stage": "Stage 4I",
+      "former_form": "inline",
+      "last_location": "Conclusion - Embracing Your Elemental Soul",
+      "text": "The real religion of humankind can be said to be spirituality itself.",
+      "attributed_as": "Wayne Teasdale",
+      "provenance_status": "author_reports_direct_source",
+      "family": "fam-teasdale",
+      "editorial_status": "REMOVE - CERTIFICATION / REDUNDANT",
+      "evidence_location": "4I family card 2; author ruling 2026-09-01",
+      "notes": "Repeats the relationship established more powerfully at the Chapter 10 opener; introduces no new tension, distinction or lineage; and arrives during the passage where the book's own cosmology reaches its fullest expression, asking an outside voice to validate what ten chapters have demonstrated. PROVENANCE UNCERTAINTY MADE REMOVAL EASIER BUT WAS NOT THE REASON. Seam repaired by REPUNCTUATION ONLY - the surviving clause 'for in the aether we merge...' had lost its main clause, so the preceding full stop became a comma. No new prose composed."
     }
   ]
 }

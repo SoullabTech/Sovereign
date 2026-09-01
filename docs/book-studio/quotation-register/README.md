@@ -1895,3 +1895,60 @@ made.**
 **And the gate caught the arithmetic:** `edition_check_required` is a **documented,
 deliberate state**, not missing data — the third time the *"deliberately unresolved
 must be counted"* lesson has surfaced. Added to the reconciliation.
+
+---
+
+# 4I · `fam-teasdale` CLOSED — same author, opposite outcomes · 2026-09-01
+
+| | Ruling | Why |
+|---|---|---|
+| **A · Ch10 opening** | **`KEEP`** | Kinship + dialogue; **the book answers him** |
+| **B · Mindful Communication** | **`KEEP` · `DIALOGUE / ETHICAL HINGE` · `SOURCE RECOVERY REQUIRED`** | **A new relationship**: spirituality turned outward, hinging into collaborative intelligence |
+| **C · Conclusion** | **`REMOVE` · `CERTIFICATION / REDUNDANT`** | Repeats an established relationship at the book's own culmination |
+
+**B stays and is not rewritten.** Teasdale turns spirituality **outward** — from
+individual attainment toward participation in the awakening of others — which A does
+not. That is exactly the hinge the surrounding prose needs: **interdependence → the
+danger of mere agreement → collaborative intelligence.** It introduces an ethical
+proposition the next section tests. **Not certification.**
+
+**The provenance task remains open and does not touch the editorial ruling:** the
+task changed from *"does Teasdale actually say this?"* to **"recover the exact place
+it was read and reconcile the wording."**
+
+## C — removed, and the seam did need repair
+
+**Removal left a genuine defect.** The quotation sat mid-sentence, and the clause
+after it — *"for in the aether we merge with the mystical headwaters from which all
+faith traditions spring"* — **lost its main clause.**
+
+**Repaired by repunctuation only.** The full stop before the quotation became a
+comma:
+
+> *"…temporary crystallizations of the primordial quintessence that animates all
+> existence**,** for in the aether we merge with the mystical headwaters from which
+> all faith traditions spring."*
+
+**Every word is the author's and already on the page. Nothing was composed.**
+
+**And the provenance uncertainty made removal easier but was not the reason for it** —
+recorded on the lifecycle record so that distinction survives.
+
+## The heuristic this family produced
+
+> ### Every return of a voice must deepen the relationship.
+>
+> **Repeated source presence must add a new relationship, not merely repeat an
+> established one — and the closer we are to the book's own culmination, the higher
+> the bar for interrupting it with another voice.**
+
+**It does not say *quote people less*.** A appears, B appears, and both stay. **It
+says a voice must earn each return.**
+
+## Standing
+
+**126 active · 32 historical · 158 total** — reconciling to the frozen population.
+**`GATE PASSED`.**
+
+**4I: 21 → 16 remaining.** Three families with a single member (Descartes, TTC 33,
+Goethe) and thirteen singles.

@@ -2255,7 +2255,7 @@ Through the realm of air, we exercise the mind's power to shape our realities th
 
 As Maya found her own authentic voice, she discovered that her greatest contribution was not perfection. It was presence. The more fully she became herself, the more permission others found to become themselves.
 
-At the core, the aether reminds us that we are not isolated beings but kaleidoscopic refractions of the infinite source—that our elemental energies are but temporary crystallizations of the primordial quintessence that animates all existence. "The real religion of humankind can be said to be spirituality itself," proclaimed Wayne Teasdale, for in the aether we merge with the mystical headwaters from which all faith traditions spring.
+At the core, the aether reminds us that we are not isolated beings but kaleidoscopic refractions of the infinite source—that our elemental energies are but temporary crystallizations of the primordial quintessence that animates all existence, for in the aether we merge with the mystical headwaters from which all faith traditions spring.
 
 As we complete this alchemical odyssey, we do not simply return to where we began. We have undergone a metamorphosis, a sacred re-patterning of our inner lens that can never be reversed. The elements are no longer just poetic metaphors but lived experiences that we embody with every breath. We move as living vortices of their dynamic interplay, elemental alchemists weaving the strands of spirit, psyche, and matter into the tapestry of our destiny.
 

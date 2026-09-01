@@ -1,17 +1,15 @@
 {
   "_comment": "MEMBER TESTIMONY as material provenance evidence. The author reports taking these quotations directly from Teasdale's book. That is first-person evidence about how the material entered the manuscript, and it changes the investigation. UNVERIFIED was the wrong state: it implies searched-and-not-found with no counter-evidence. Here there IS counter-evidence - the author's own account.",
   "entries": [
-    {"match": "Spiritual maturity is not about", "occurrence": 1,
-     "provenance_status": "author_reports_direct_source",
-     "provenance_review_state": "edition_check_required",
-     "member_testimony": "Author reports taking this directly from a Wayne Teasdale book. Exact edition and page not yet matched.",
-     "notes": "STATE CORRECTED 2026-09-01. Previously UNVERIFIED on the basis that the sentence was not located in A Monk in the World or The Mystic Heart via search. That is a failure of OUR matching, not an absence of source. Next action is an edition check against the author's own copy, not further web search.",
-     "evidence_location": "Author testimony, 2026-09-01; supersedes QUOTATION_PROVENANCE_AUDIT.md L1690"},
-    {"match": "real religion of humankind", "occurrence": 1,
-     "provenance_status": "author_reports_direct_source",
-     "provenance_review_state": "edition_check_required",
-     "member_testimony": "Author reports taking this directly from a Wayne Teasdale book. Exact edition and page not yet matched.",
-     "notes": "STATE CORRECTED 2026-09-01. Same correction as the Chapter 8 occurrence. The editorial question at this location - whether it repeats the relationship already established at the Chapter 10 opener - is separate and unaffected.",
-     "evidence_location": "Author testimony, 2026-09-01; supersedes Stage 2d verification"}
+    {
+      "match": "Spiritual maturity is not about",
+      "occurrence": 1,
+      "provenance_status": "author_reports_direct_source",
+      "provenance_review_state": "edition_check_required",
+      "member_testimony": "Author reports taking this directly from a Wayne Teasdale book. Exact edition and page not yet matched.",
+      "notes": "STATE CORRECTED 2026-09-01. Previously UNVERIFIED on the basis that the sentence was not located in A Monk in the World or The Mystic Heart via search. That is a failure of OUR matching, not an absence of source. Next action is an edition check against the author's own copy, not further web search. | RULED KEEP. Teasdale turns spirituality OUTWARD - from individual attainment toward participation in the wellbeing or awakening of others - which the Chapter 10 occurrence does not. That is the hinge the surrounding prose needs: interdependence, the danger of mere agreement, collaborative intelligence. It introduces an ethical proposition the next section tests. NOT certification. Do not rewrite; do not remove because a source search failed. Recover the source.",
+      "evidence_location": "Author testimony, 2026-09-01; supersedes QUOTATION_PROVENANCE_AUDIT.md L1690",
+      "editorial_status": "KEEP - DIALOGUE / ETHICAL HINGE - SOURCE RECOVERY REQUIRED"
+    }
   ]
 }
