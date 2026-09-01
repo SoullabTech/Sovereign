@@ -1404,7 +1404,7 @@ In winter, all of life consolidates into what is most necessary and essential. M
 
 *"Earth care, people care, fair share." — Permaculture principle*
 
-This wisdom is integrated into our physical being as a fascial, interstitial field operating under the same principles guiding all other earth systems. Our connection with nature is a window into our connection with ourselves. As individual organic operating systems fully integrated into the greater, more inclusive operating system of Planet Earth, we each possess the algorithms necessary for surviving and thriving on this planet.
+As an image, the body carries something similar: a fascial, interstitial field that behaves like the other earth systems around it. Our connection with nature is a window into our connection with ourselves. As individual organic operating systems fully integrated into the greater, more inclusive operating system of Planet Earth, we each possess the algorithms necessary for surviving and thriving on this planet.
 
 ### The Dynamics of Your Inner Earth
 
@@ -2133,9 +2133,7 @@ Different traditions name these dimensions differently. In the shamanic training
 
 There is also a horizontal axis moving between our inner experience and engagement with the outer world. We move inward toward contemplation and outward toward action. We receive and express, listen and communicate, imagine and create, withdraw into ourselves and return again to relationship. Temperament, experience, circumstance, and development influence where we are most comfortable along this axis. Neither inwardness nor outwardness is inherently better; the work is becoming conscious of the movement and of the relationship between them.
 
-*"As within, so without. As above, so below." — Hermetic Principle*
-
-Our inner and outer lives continuously affect one another. The quality of our energy influences emotion. Emotion affects the body. The body shapes perception. Our thoughts influence our feelings and relationships, and our relationships alter the way we understand ourselves. Spiralogic gives us a way of attending to these movements without requiring them to become fixed categories.
+The Emerald Tablet gives the correspondence as above and below. Spiralogic extends it inward: as within, so without. Our inner and outer lives continuously affect one another. The quality of our energy influences emotion. Emotion affects the body. The body shapes perception. Our thoughts influence our feelings and relationships, and our relationships alter the way we understand ourselves. Spiralogic gives us a way of attending to these movements without requiring them to become fixed categories.
 
 ### The Alchemical Sequence
 

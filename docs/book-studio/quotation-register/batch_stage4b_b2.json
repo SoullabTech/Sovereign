@@ -1,0 +1,33 @@
+{
+  "_comment": "Stage 4B batch 2 - the remaining argument carriers. Closes the argument-carrier pass.",
+  "entries": [
+    {
+      "match": "What is above is like what is below",
+      "editorial_status": "KEEP - LINEAGE. The genuine ancestor, correctly labelled, public domain. Editorially clean; it gives the Ch10 derivation an honest foundation without the two occurrences becoming duplicates. Translation and source apparatus reconcile later.",
+      "evidence_location": "4B batch 2 ruling",
+      "occurrence": 1
+    },
+    {
+      "match": "Wholeness-making is that dimension of individuation",
+      "editorial_status": "KEEP - LINEAGE, + AUTHORIAL OWNERSHIP OWED. Smith's relationship to the author and the expected foreword make lineage credible editorially, but the definition is load-bearing: Smith can give the book a lineage; he should not carry the book's definition by himself. The book should state how it understands and uses 'wholeness-making' in its own terms. OPEN AUTHORIAL OBLIGATION - sentence deliberately undrafted.",
+      "evidence_location": "4B batch 2 ruling",
+      "notes": "EDITORIAL CONTEXT, NOT EVIDENCE: the foreword creates a real intellectual relationship; it does not verify quotations attributed to Smith elsewhere. Those still need their own provenance. The foreword text is also not yet present in the canonical manuscript - it is pending front matter, so nothing may be reasoned from its contents.",
+      "occurrence": 1
+    },
+    {
+      "match": "different names for the Inner Axis Mundi",
+      "editorial_status": "KEEP CONCEPTUAL LINEAGE - EXACT QUOTATION PENDING CONFIRMATION. Three outcomes, to be settled by asking Smith directly: (a) he confirms this exact combined wording - KEEP as quotation; (b) he confirms the concepts but not the sentence - remove the quotation marks and credit the terminology and lineage in prose; (c) he does not recognise it - reclaim or remove accordingly. The quotation marks do not stand indefinitely on 'probably Smith'.",
+      "evidence_location": "4B batch 2 ruling",
+      "notes": "Composite-of-genuine-elements: 'inner axis mundi', 'Dream Maker' and 'Daimon' are all documented as his, but the combined sentence was not located. The foreword relationship makes asking him unusually easy; it does not lower the truth standard.",
+      "recovery_note": "Confirm exact wording with C. Michael Smith before publication; outcome determines whether the quotation marks survive.",
+      "occurrence": 1
+    },
+    {
+      "match": "Earth care, people care, fair share",
+      "editorial_status": "KEEP - ILLUMINATION / ANALOGY. A genuine anonymous design ethic, correctly labelled, no rights issue. The repair was to the transition, not the quotation: the following sentence inherited empirical warrant from an ethical principle by beginning 'This wisdom is integrated into our physical being as...'. It now reads as an image rather than a physiological claim resting on a permaculture slogan.",
+      "evidence_location": "4B batch 2 ruling",
+      "notes": "THE 4B ISSUE IN ONE LINE: an ethical principle cannot become empirical warrant merely because the next sentence begins 'This wisdom...'. LANGUAGE ORIGIN: replacement transition EDITOR/MODEL-ORIGINATED, awaiting the author's own wording.",
+      "occurrence": 1
+    }
+  ]
+}

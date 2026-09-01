@@ -484,6 +484,21 @@
       "editorial_status": "REMOVE - UNSUPPORTED CULTURAL ATTRIBUTION. The attribution alone disqualifies the epigraph. Removing it also separates that provenance problem cleanly from whatever grounding the physiological claims that follow may later need.",
       "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md L1933 (provenance); 4B batch 1 ruling (editorial)",
       "notes": "No documentation of Sioux origin; the line circulates in contemporary devotional literature. Two defects sat in one location - an unsourced cultural attribution standing in front of a passage that proceeds directly into physiological assertion."
+    },
+    {
+      "state": "reclaimed_as_author_prose",
+      "stage": "Stage 4B",
+      "former_form": "block",
+      "last_location": "Ch10 - The Alchemical Axis of Life",
+      "text": "As within, so without. As above, so below.",
+      "attributed_as": "Hermetic Principle",
+      "provenance_status": "misattributed",
+      "actual_author": "two halves, two origins, roughly eleven centuries apart",
+      "family": "fam-hermetic",
+      "family_role": "composite_descendant",
+      "editorial_status": "REFRAME - LINEAGE + AUTHORIAL DERIVATION. The composite formula no longer stands as a quotation with a source. The chapter now names the tradition and then names its own extension of it: 'The Emerald Tablet gives the correspondence as above and below. Spiralogic extends it inward: as within, so without.' This tells the reader where tradition ends and the model begins, which saving the popular formula would not.",
+      "evidence_location": "QUOTATION_PROVENANCE_AUDIT.md (composite attribution, third confirmed instance); 4B batch 2 ruling (editorial)",
+      "notes": "COMPOSITE ATTRIBUTION plus SOURCE-FORM MISCLASSIFICATION: 'As above, so below' is a modern popular paraphrase of the Emerald Tablet's second precept, and 'Hermetic Principle' names a source form that does not exist as a citable work. Its ancestor EA-Q-0108 (the accurate Emerald Tablet form, Ch9, public domain) is KEPT unchanged and is what makes this reframe possible. LANGUAGE ORIGIN: derivation sentence EDITOR/MODEL-ORIGINATED, awaiting the author's own wording."
     }
   ]
 }
