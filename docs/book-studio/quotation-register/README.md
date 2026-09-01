@@ -1,0 +1,124 @@
+# Quotation Register — canonical record layer
+
+**Built 2026-09-01.** `build_register.py` → `register.json`.
+
+> **Normalise the representation, not the presentation.** Block epigraph, inline
+> quotation, dialogue with a source and quoted personal communication **legitimately
+> look different, because their typography carries rhetorical meaning.** That is
+> preserved as the `display_form` field. **Nothing in the manuscript was changed.**
+
+## Constraints honoured
+
+**No quotation wording changed · no attribution adjudicated or repaired · no
+epigraph forced into inline form or vice versa · nothing applied to the
+manuscript.** This pass creates records and reconciles. Nothing else.
+
+## Record shape
+
+`id` · `occurrence` · `text` · `line_at_build` · `chapter` · `section` ·
+**`display_form`** · `attributed_as` · **`attribution_state`** · `actual_author` ·
+**`internal_speaker`** · `work` · `translator_or_mediator` · `provenance_status` ·
+`rights_status` · `bibliography_relationship` · `family` · `editorial_status` ·
+`notes`
+
+**`attribution_state` is data, never inferred from punctuation:**
+`attributed` · `attribution_anonymous` · `unattributed`
+
+**Stable identity:** `EA-Q-<hash8>` over normalised quotation text plus occurrence
+ordinal. **Line numbers shift; ids do not.** Variants and duplicates are linked
+explicitly through `family` rather than rediscovered.
+
+### Why this shape — the Blake case
+
+The register holds **simultaneously**, without contradiction:
+
+| Field | Value |
+|---|---|
+| `display_form` | `inline_anonymous_attribution` |
+| `attributed_as` | *(none — "As it is said")* |
+| `actual_author` | **William Blake** |
+| `work` | *The Marriage of Heaven and Hell*, "Proverbs of Hell" |
+| `internal_speaker` | **the devil's voice in Blake's satirical frame** |
+| `provenance_status` | `verified_variant` |
+| `editorial_status` | **under-attribution + lost speaker context** |
+
+**No regex can represent that.** A record can.
+
+## Population — 130 occurrences
+
+| Display form | Count |
+|---|---|
+| `block_epigraph` | **109** |
+| `inline_emphasised` | 10 |
+| `inline_plain_lead` | 3 |
+| `inline_plain_trailing` | 3 |
+| `inline_anonymous_attribution` | 2 |
+| `inline_interrupted` | **1 — asserted manually** |
+| `inline_unattributed` | **2 — boundary cases** |
+| **TOTAL** | **130** |
+
+**128 attributed + 2 unattributed boundary spans.**
+
+### ⚠️ The manual record is the architectural proof
+
+**`inline_interrupted` (L1078 — *"And yet," Lao Tzu reminds us, "at the heart of it
+all, you know."*) is asserted by hand because no detector can pair it.** The
+quotation is split across two spans with the attribution between them.
+
+**This is the point, not a workaround.** **The register is the authority; detection
+is only a bootstrap.** Any architecture that treats the pattern match as the source
+of truth cannot hold this occurrence at all — which is precisely how four
+successive inventories each looked complete and each was wrong.
+
+## Reconciliation — whole manuscript
+
+**Every quotation-like span was re-derived from the manuscript and checked against
+the records.** Two categories were excluded, both deliberately and by name:
+
+**Quote-pairing artefacts (7 lines)** — spans produced by quote marks pairing
+*across* scare quotes and coinages (`"one thing"`, `"lamp of life"`, `"carrot
+vision,"`, `"thoughtland"`). **Not quotations.** Listed in `NOT_QUOTATIONS` so they
+are never rediscovered as findings.
+
+**Nine spans that are quoted but are not attributed quotations:**
+
+| L | Span | Why not a record |
+|---|---|---|
+| 263 · 1060 · 1062 · 2110 | *"Who am I to dare…"*, *"This is what I have experienced…"* | **the author's own voiced or imagined speech** |
+| 1296 · 1509 | *"emotionally inadequate"*, *"wasted years at a job they hate"* | **anonymised client speech** |
+| 1810 | *"I know therefore I am."* | **the book's own coinage**, set against Descartes |
+| 1889 | *"being logical and consistent."* | dictionary definition |
+| 513 | *"From the Father and the Son comes the Holy Spirit"* | **creedal formula**, already handled in prose at Stage 3b |
+
+**Reconciliation is clean: no quotation-like span in the manuscript is unaccounted
+for.**
+
+## Two boundary cases — records created, ruling owed
+
+Per instruction, **records exist for both**; their status is a scope question, not a
+verdict:
+
+- **`EA-Q-6d797a17`** · L519 — *"if we were good, we would keep growing in a direct
+  and unbroken, upward fashion"* — **quoted, no attribution of any kind.** Is
+  unattributed quoted material a census object?
+- **`EA-Q-0ca34438`** · L1686 — *"I think therefore I am"* — **Descartes,
+  unattributed.** Does a phrase this canonical require attribution?
+
+## What is NOT yet in the register
+
+**Every record currently carries `provenance_status: not_yet_recorded`.** The
+verdicts from Stage 2, 2c, 2c-ii, the speaker sweep and 4A **exist in the
+markdown records and have not yet been migrated into the register.**
+
+**That migration is mechanical and is the next step** — followed by verification of
+the six newly found attributed items, the two boundary rulings, and only then the
+freeze.
+
+> **The register is not the truth yet. It is the place where the truth can finally
+> be held.**
+
+## Sequence from here
+
+**structural normalisation ✅ → whole-manuscript reconciliation ✅ → migrate existing
+verdicts → verify the six newly found → rule the 2 boundary cases → freeze the
+population → adjudicate the complete inline field → 4B**
