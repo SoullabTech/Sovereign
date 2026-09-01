@@ -1,0 +1,16 @@
+{
+  "_comment": "Speaker correction found during bibliography mapping, 2026-09-01. The container source was right and the speaker was wrong - the nonfiction equivalent of the Polonius, Satan, Hotspur and Melchizedek character-voice cases.",
+  "entries": [
+    {
+      "match": "Our task in life consists precisely",
+      "actual_author": "Richard Boothby",
+      "internal_speaker": "Richard Boothby, speaking in Michael Pollan's How to Change Your Mind",
+      "work": "quoted in Michael Pollan, How to Change Your Mind (Penguin Press, 2018)",
+      "provenance_status": "verified_exact",
+      "editorial_status": "CORRECT - SPEAKER REPAIRED. The manuscript attributed the sentence to Pollan while citing the right book. Pollan's surrounding text introduces Richard Boothby, describes how he converted his insight about letting go into an ethic, and then gives the passage. Byline now reads 'Richard Boothby, quoted in Michael Pollan, How to Change Your Mind'.",
+      "notes": "CORRECT BOOK DOES NOT IMPLY CORRECT SPEAKER. The quotation census could not see this: the attribution named a real author and a real work, and the sentence is genuinely in that work - it just is not his. Found only when the bibliography pass asked what exact object the source relationship points to. Bibliography keeps Pollan, because that is where the manuscript obtains Boothby's words; rights carry to Stage 6 under the corrected object.",
+      "evidence_location": "Bibliography mapping batch 4, verified against How to Change Your Mind",
+      "occurrence": 1
+    }
+  ]
+}

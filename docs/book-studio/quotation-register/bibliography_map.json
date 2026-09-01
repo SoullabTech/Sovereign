@@ -3,7 +3,8 @@
   "batches_ruled": [
     1,
     2,
-    3
+    3,
+    4
   ],
   "rows": [
     {
@@ -313,6 +314,106 @@
       "evidence": "VERIFIED EXACT; the register names the work and the line's position as the blessing's opening.",
       "hold": "Hold 'The Four Elements' until reverse reconciliation confirms it has no other live relationship.",
       "rights": "likely_protected_high"
+    },
+    {
+      "id": "EA-Q-0054",
+      "source": "Martha Nussbaum, 'Emotions are not just the fuel'",
+      "relationship": "quotation",
+      "object": "Nussbaum, Martha. *Upheavals of Thought: The Intelligence of Emotions.* Cambridge University Press, 2001.",
+      "decision": "KEEP",
+      "evidence": "Bibliography relationship sound and already CORRECT.",
+      "note": "Register records VERIFIED VARIANT rather than exact; the wording check is final-text QA, not a bibliography matter.",
+      "rights": "protectability_uncertain_standard"
+    },
+    {
+      "id": "EA-Q-0055",
+      "source": "C. G. Jung, 'The meeting of two personalities'",
+      "relationship": "quotation, translated",
+      "object": "Jung, C. G. *Modern Man in Search of a Soul.* Translated by W. S. Dell and Cary F. Baynes. Harcourt Brace, 1933.",
+      "decision": "CORRECT",
+      "evidence": "Register names the work, CW 16, and the translators - unnamed in the manuscript.",
+      "note": "THIRD AND FINAL JUNG OBJECT. Three objects, three different sources: MDR (Ch2), Letters Vol. 1 (Ch5), Modern Man (Ch6). Modern Man is claimed after all and stays. Both real Jung defects were the same thing twice - missing translators, not missing entries.",
+      "hold": "The Red Book is now provisionally orphaned - no surviving object claims it - pending the final reverse check.",
+      "rights": "term_uncertain_standard"
+    },
+    {
+      "id": "EA-Q-0056",
+      "source": "Peter Gabriel, 'I own my fear / So it doesn't own me'",
+      "relationship": "quotation, song lyric",
+      "object": "Gabriel, Peter. \"Darkness.\" *Up.* Real World Records, 2002.",
+      "decision": "KEEP - RECOVERY CLOSED",
+      "evidence": "Gabriel's official Bandcamp page for 'Darkness' prints the exact line and identifies the track as from Up (2002).",
+      "hold": "'Signal to Noise' can go at reverse reconciliation if no later surviving object uses it - both surviving Gabriel objects are now mapped, to 'Growing Up' and 'Darkness'.",
+      "rights": "song_lyric_high"
+    },
+    {
+      "id": "EA-Q-0057",
+      "source": "Pema Chodron, 'Things falling apart'",
+      "relationship": "quotation",
+      "object": "Chodron, Pema. *When Things Fall Apart: Heart Advice for Difficult Times.* Shambhala, 1997.",
+      "decision": "KEEP",
+      "evidence": "VERIFIED EXACT; bibliography CORRECT.",
+      "note": "Textual witness worth preserving: the manuscript keeps \"It's just like that.\", which the circulated online form drops.",
+      "rights": "likely_protected_high"
+    },
+    {
+      "id": "EA-Q-0058",
+      "source": "Richard Boothby, 'Our task in life consists precisely in a form of letting go'",
+      "relationship": "quotation, speaker quoted inside a container work",
+      "object": "Pollan, Michael. *How to Change Your Mind.* Penguin Press, 2018.",
+      "decision": "CORRECT",
+      "evidence": "Pollan's surrounding text introduces Richard Boothby, describes how he converted his insight about letting go into an ethic, and then gives the passage. The manuscript byline named Pollan.",
+      "manuscript_repair": "APPLIED. Byline now reads 'Richard Boothby, quoted in Michael Pollan, How to Change Your Mind'.",
+      "note": "CORRECT BOOK DOES NOT IMPLY CORRECT SPEAKER - the nonfiction equivalent of the Polonius, Satan, Hotspur and Melchizedek cases. The quotation census could not see it: the attribution named a real author and a real work and the sentence is genuinely in that work. It surfaced only when the bibliography pass asked what exact object the source relationship points to. Pollan stays in the bibliography because that is where the manuscript obtains Boothby's words.",
+      "rights": "likely_protected_standard - carry to Stage 6 under the corrected object"
+    },
+    {
+      "id": "EA-Q-0059",
+      "source": "Leonard Cohen, 'There is a crack, a crack in everything'",
+      "relationship": "quotation, song lyric",
+      "object": "Cohen, Leonard. \"Anthem.\" *The Future.* Columbia, 1992.",
+      "decision": "CORRECT",
+      "evidence": "Applied at 4C; the byline carries it. The existing entry cites a 1968 poetry volume for a song released twenty-four years later.",
+      "supersedes": "Cohen, Leonard. *Selected Poems, 1956-1968.* Viking Adult, 1968.",
+      "rights": "song_lyric_high"
+    },
+    {
+      "id": "EA-Q-0061",
+      "source": "Laozi, 'Nothing is softer or more flexible than water'",
+      "relationship": "quotation, translated",
+      "decision": "RECOVERY REQUIRED",
+      "object": "Laozi. *Tao Te Ching* 78. - English mediator unresolved",
+      "evidence": "VERIFIED EXACT against the chapter; the rendering is unnamed. No Tao Te Ching entry exists - the only one was Mitchell's, dropped when its quotation left at Stage 3.",
+      "unresolved": "DO NOT ATTACH A TRANSLATOR BY RESEMBLANCE. The manuscript's wording does not cleanly match the named translations checked - Cleary reads 'more flexible and yielding', Waley and others differ materially. If the exact rendering cannot be identified, replace it deliberately with a named translation later. Source identity settled, English mediator unresolved.",
+      "rights": "public_domain_original_translation_uncertain"
+    },
+    {
+      "id": "EA-Q-0063",
+      "source": "Thomas Fuller, 'We never know the worth of water till the well is dry'",
+      "relationship": "quotation",
+      "object": "Fuller, Thomas. *Gnomologia: Adagies and Proverbs, Wise Sentences and Witty Sayings.* 1732.",
+      "decision": "KEEP",
+      "evidence": "VERIFIED VARIANT; bibliography CORRECT.",
+      "note": "Apparatus note, not a change: Fuller COMPILED this proverb, he did not compose it - the same shape as Aesop and Laozi."
+    },
+    {
+      "id": "EA-Q-0065",
+      "source": "'Healer, heal thyself', adapted from Luke 4:23",
+      "relationship": "self-labelled adaptation",
+      "object": null,
+      "decision": "NO ENTRY REQUIRED",
+      "evidence": "PARAPHRASE/ADAPTED and correctly self-labelled in the byline; KJV reads 'Physician, heal thyself'. The census's positive control on the book's labelling practice.",
+      "rights": "public_domain"
+    },
+    {
+      "id": "EA-Q-0066",
+      "source": "Audre Lorde, 'Our feelings are our most genuine paths to knowledge'",
+      "relationship": "quotation",
+      "object": "Lorde, Audre. \"Interview with Claudia Tate.\" In *Sister Outsider: Essays and Speeches.* Crossing Press, 1984, p. 132.",
+      "decision": "KEEP",
+      "evidence": "VERIFIED EXACT with page, from the Claudia Tate interview.",
+      "note": "Naming the interview is preferable - it is the actual textual location.",
+      "rights": "protectability_uncertain_standard"
     }
   ]
 }

@@ -1160,7 +1160,7 @@ To avoid the painful feelings of dark emotions, some may turn to addiction, numb
 
 ### Balancing the Water Within
 
-*"Our task in life consists precisely in a form of letting go of fear and expectations, an attempt to purely give oneself to the impact of the present." — Michael Pollan, *How to Change Your Mind**
+*"Our task in life consists precisely in a form of letting go of fear and expectations, an attempt to purely give oneself to the impact of the present." — Richard Boothby, quoted in Michael Pollan, *How to Change Your Mind**
 
 To bring our inner water into balance, we need to learn to navigate its depths with awareness and intention, rather than drown in our feelings. This means processing and integrating our emotions rather than denying or repressing them. It's about using the capacities of compassionate, instinctive water without being swept away by its drowning, powerful, destructive qualities. When we get the balance right, we are able to let go into emotion, and adapt and thrive.
 
