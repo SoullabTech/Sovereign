@@ -28,8 +28,9 @@ distinct_to_room: this is the editorial table between MAIA's perception and the 
   Questions and uncertainty are invitations to inspect or converse, not commands. Review may
   reshape the proposal, but nothing becomes authored structure implicitly; crossing that boundary
   requires the writer's separate explicit act.
-structural_rationale: This change moves an existing useCallback above the component's loading
-  return so React executes the same hooks in the same order on loading and loaded renders. It
+structural_rationale: This change moves the loading return below the hook block, so every
+  useCallback is invoked unconditionally on every render and React executes the same hooks in the
+  same order on the loading and the loaded render. It
   changes no rendered copy, layout, styling, gesture, anchor semantics, editorial behaviour, or
   information hierarchy. The callback body and member-visible behaviour are unchanged; the repair
   only allows the already-designed loaded state to render without violating React's hook-order
