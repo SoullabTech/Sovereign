@@ -1,6 +1,6 @@
 # MIPA Phase 0 — Sovereignty Prerequisites Specification
 
-**Status**: Specification, plus **P2 and P3a–P3d executed and certified**, and **P3-CSC performed (outcome C)**. **P3 remains OPEN.** P1, P4–P6 and P2b remain specification only.
+**Status**: Specification, plus **P2 and P3a–P3e executed and certified**, and **P3-CSC performed (outcome C)**. **P3 known surfaces COMPLETE; global Grade A deferred to the canonical seam. P1 is unblocked.** P4–P6 and P2b remain specification only.
 **Authorized**: 2026-09-02 (founder) — bounded to P1–P6, sequencing, acceptance criteria, migration prerequisites.
 **Semantic adjudication**: 2026-09-02 (founder) — all five blocking questions closed (§6).
 **§7 adjudication**: 2026-09-02 (founder) — all eight contradictions resolved (§7); **P2 authorized to execute**, P3 repair class authorized with execution gated behind P2's evidence.
@@ -422,13 +422,27 @@ It did **not** establish:
 > | **P3c — MemoryBundle Developmental Bucket** | ✅ Certified · **Grade A** (B for cast-bypass) · **R26** |
 > | **P3d — Member Web pattern / session-essence inference** | ✅ Certified · **Grade A** · **R27** · 26/26 · 6 mutations |
 > | **P3-CSC — Closed-Set Certification** | ⚖️ **PERFORMED · OUTCOME C** (architectural ceiling), with a **B finding** (P3e) |
-> | **P3e — continuity-summary topic derivation** | 🔴 **OPEN** — found during P3-CSC |
+> | **P3e — continuity-summary topic derivation** | ✅ Certified · **Grade A** · 17/17 · 6 mutations |
 >
 > ### 🔴 P3 REMAINS OPEN. P3a's certification discovered a second live instance of its own failure class — `breakthrough_moments`, mixed authority, different composer — and that could not be demoted to an "upgrade path" merely because R24's detector did not cover it. P3's claim is not *"this one composer no longer leaks inference"*; it is:
 >
 > > **Material whose authorship/authority cannot be certified may not acquire participation merely by travelling through a memory composer.**
 >
-> Four sub-prerequisites are certified and the closed-set certification has been performed. **Its outcome is C: no enforceable closed set exists over prompt producers without the canonical-seam promotion.** P3 therefore **cannot receive a global Grade A under the present architecture** — and a fifth live exposure (P3e) was found en route.
+> ### ⚖️ P3 FINAL STATE — known/enumerable surfaces complete; global certification deferred
+>
+> ```
+>    P3a  R24  certified          P3d  R27  certified
+>    P3b  R25  certified          P3e       certified
+>    P3c  R26  certified
+>    ─────────────────────────────────────────────────
+>    P3 known/enumerable surfaces        COMPLETE
+>    P3 global Grade A                   ARCHITECTURAL CEILING
+>                                        pending canonical seam
+> ```
+>
+> **This is not an unresolved defect requiring endless manual census, and it is not a global Grade A.** Manual hunting for P3f, P3g, P3h is explicitly stopped: P3-CSC established *why* it cannot produce constitutional closure — another trace might find another defect, but the absence of a further discovery would still not prove absence.
+>
+> The remaining dependency is architectural: **canonical turn construction must make the full composition producer set structurally enumerable.** At seam promotion, P3 global certification is rerun against that new boundary.
 >
 > **Discovery enlarges the obligation; it does not shrink the claim.** Marking P3 complete while a discovered live path in its own failure class remains unadjudicated would collapse the distinction between *certifying a detector's scope* and *certifying a prerequisite's property* — the distinction this program exists to hold.
 
@@ -865,6 +879,45 @@ Live on the canonical route (FAST, via `memoryContext`). **Named, not repaired.*
 
 ---
 
+### P3e-E — Continuity-summary derivation · execution record
+
+One composed bullet held **two representations of different authorship**:
+
+```
+   • User: "<verbatim>" → MAIA responded about <extractTopicHint(...)>
+     └── member testimony ──┘  └── machine-derived label ──┘
+```
+
+**The member's authorship of the quotation does not confer authority on the derived label beside it.** Applied through the **shared** `adjudicateDerivation` boundary — no P3e-specific exception. `TopicHintSnapshot` is a discriminated union; `hint` exists only on the admitted arm.
+
+**The verbatim quotation keeps its `MEMBER_AUTHORED` standing and still composes.** Excluding it because it once shared a container with a derivation would discard the member's own words — the over-correction in the opposite direction.
+
+**`extractTopicHint` is deliberately left intact.** It was never the defect; composing its output ungoverned was. Deleting it would hide the derivation rather than govern it, and would make a future reintroduction look like new work instead of a restoration the gate must refuse.
+
+#### Falsification — six mutations, all verified failing, application confirmed by call-site delta
+
+| # | Mutation | Result |
+|---|---|---|
+| E1 | Direct restoration of `extractTopicHint` into the prompt | ❌ 3 failed |
+| E2 | Renamed restoration — `[subject: <hint>]` | ❌ 2 failed |
+| E3 | Classify the derived label as member testimony | ❌ 3 failed |
+| E4 | Construct an admitted snapshot inline, wrapping the derivation | ❌ 3 failed |
+| E5 | Bypass `adjudicateDerivation` | ❌ 4 failed |
+| E6 | Transform to `category: <first word>, confidence 0.8` | ❌ 1 failed |
+| — | Restored | ✅ **17/17** |
+
+> ### ⚠️ TWO OF SIX INITIALLY PASSED — ONE ROOT
+>
+> **E2 and E6 both restored the same derived object under different wording**, and both walked through a suite that checked **output strings**. A wording check is defeated by rewording.
+>
+> Replaced with a **call-site closed set**: `extractTopicHint` may be invoked from exactly one place — the adjudicator. That check does not care how the result is phrased, and a new call site fails *because it is new*. It catches E1, E2 and E6 uniformly.
+>
+> A third assertion compared the hint of the **untruncated** assistant content while the composer sees a 60-char snippet, so the values never matched.
+>
+> And the **mutation-application probe itself** reported `APPLIED: False` for three mutations that had in fact applied — it inspected a slice the docblock also matched. Application is now confirmed by **call-site delta**. *An application probe needs the same scrutiny as the gate it serves.*
+
+---
+
 ### P4 — A correction path exists
 
 **PURPOSE** — Prevents a system that can hold a member's history but not their revision of it. Without correction, W1 (explicit recollection) can only return what was *said*, never what is *true* — and Case 4 has no answer beyond temporal disclosure.
@@ -1211,23 +1264,25 @@ Conceptual only. No migration is authorized, written, or named.
 
 ## STOP
 
-**P3a–P3d certified. P3-CSC performed — outcome C. P3 REMAINS OPEN.**
+**P3a–P3e certified. P3's known/enumerable surfaces are complete. Global certification deferred to the canonical seam.**
 
 | | |
 |---|---|
 | **P2** | ✅ **R23** |
 | **P3a–P3d** | ✅ **R24 · R25 · R26 · R27** |
-| **P3-CSC** | ⚖️ **Outcome C** — bounded closed set; no global Grade A without the seam |
-| **P3e** | 🔴 **OPEN** — `buildContinuitySummary` topic derivation |
-| **P1, P4, P5, P6, P2b** | Specification only |
+| **P3e** | ✅ certified |
+| **P3 known surfaces** | ✅ **COMPLETE** |
+| **P3 global Grade A** | ⚖️ **architectural ceiling** — rerun at seam promotion |
+| **P1** | 🟢 **unblocked** — not started |
+| **P4, P5, P6, P2b** | Specification only |
 
-**Presented for adjudication:**
+**The standing constraint remains**: no widening of historical retrieval or broader intelligence-field participation while P3-global is uncertified. Sovereignty work may continue; intelligence expansion may not outrun the future composition boundary.
 
-1. **Outcome C, with its evidence.** The ceiling is structural, not effort-limited: 142 template expressions in one file, and no source-level property separates a prompt template from a log template. Demonstrated in both directions — a heuristic that excluded the material P3 governs, and included a block that turns out to be dead code.
-2. **What was nonetheless built** — a genuine bounded certification: compiler-derived discovery of 45 producers, exhaustive classification, `UNKNOWN` failing closed, six verified mutations including a meta-invariant that fails red on zero discovery.
-3. **P3e** — a fifth live exposure, found by doing the work rather than by asking whether more remained.
-4. **A tier divergence** — `journalContextAddendum` and `captureContextAddendum` compose on CORE/DEEP and not FAST. Whether tiers may differ in composed member material is already an open architectural question.
+**Presented:**
 
-**P3 cannot be proposed complete.** Not for want of effort on the closed set, but because the closed set says so.
+1. **P3e certified** as a field-level partition — the member's words compose, the machine label does not, governed by the shared derivation rule.
+2. **Two of six mutations initially passed**, with one root: wording checks lose to rewording. Replaced by a call-site closed set. The application probe itself was also wrong and is now a call-site delta.
+3. **Manual exposure hunting is stopped**, per the adjudication. The ceiling is the finding, not a backlog.
+4. **The FAST/CORE-DEEP producer divergence** is recorded as evidence for the seam/tier question and deliberately **not** repaired under P3.
 
-**P1 not started.**
+**Next: P1** — export coverage. Not started.

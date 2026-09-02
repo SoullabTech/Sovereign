@@ -137,9 +137,24 @@ describe('P3c §2 — the alternate reader converges on the SAME gate', () => {
   });
 
   it('declares exactly one adjudicator import for the whole module', () => {
-    const imports = src().split('\n').filter(l => /^import /.test(l));
-    const gateImports = imports.filter(l => /participationGate/.test(l));
+    // Multiline-aware. A line-oriented scan (`split('\n').filter(/^import /)`)
+    // reported ZERO gate imports the moment the import was reformatted across
+    // lines — a formatting change altering the verdict, which is precisely the
+    // boundary-control class. The property never changed; the instrument did.
+    const gateImports = [...src().matchAll(/^import\s[\s\S]*?from\s+'[^']+';/gm)]
+      .map((m) => m[0])
+      .filter((decl) => /participationGate/.test(decl));
     expect(gateImports).toHaveLength(1);
+  });
+
+  it('the import scan is format-independent (boundary control)', () => {
+    const single = "import { a } from '../maia/participationGate';";
+    const multi = "import {\n  a,\n  b,\n} from '../maia/participationGate';";
+    const scan = (t: string) =>
+      [...t.matchAll(/^import\s[\s\S]*?from\s+'[^']+';/gm)]
+        .filter((m) => /participationGate/.test(m[0])).length;
+    expect(scan(single)).toBe(1);
+    expect(scan(multi)).toBe(1);
   });
 
   it('defines no second provenance model in this module', () => {

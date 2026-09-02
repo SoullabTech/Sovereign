@@ -16,7 +16,12 @@ import { generateLocalEmbedding } from './embeddings';
 import { calculateDecayedConfidence } from './confidenceDecay';
 import { ConversationMemoryUsesStore } from './stores/ConversationMemoryUsesStore';
 import { memberRef } from '../privacy/memberRef';
-import { adjudicateParticipation, type ProvenanceClaim, type ExclusionReason } from '../maia/participationGate';
+import {
+  adjudicateParticipation,
+  adjudicateDerivation,
+  type ProvenanceClaim,
+  type ExclusionReason,
+} from '../maia/participationGate';
 
 // ═══════════════════════════════════════════════════════════════
 // TYPES
@@ -80,6 +85,35 @@ export interface MemoryBullet {
  * `content` exists only on the admitted arm, so composing it without narrowing
  * is a compile error.
  */
+/**
+ * P3e (MIPA Phase 0) — FIELD-LEVEL PROVENANCE INSIDE ONE COMPOSED LINE.
+ *
+ * `buildContinuitySummary` composed a single bullet holding TWO representations
+ * of different authorship:
+ *
+ *     • User: "<verbatim>" → MAIA responded about <extractTopicHint(...)>
+ *       └─ member testimony ─┘  └─ machine-derived topic label ─┘
+ *
+ * The member's authorship of the quotation does not confer authority on the
+ * derived label sitting beside it:
+ *
+ *     Authority follows the smallest representation whose authorship can
+ *     actually be certified. The container does not confer authorship on
+ *     everything inside it.
+ *
+ * `extractTopicHint` is a regex/keyword classifier over MAIA's prior response —
+ * `SYSTEM_DERIVATION`, adjudicated through the SHARED `adjudicateDerivation`
+ * boundary, not a P3e-specific exception. `hint` exists only on the admitted
+ * arm, so composing it without narrowing is a compile error.
+ *
+ * The verbatim member quotation KEEPS its MEMBER_AUTHORED standing and still
+ * composes. Excluding it because it once shared a container with a derivation
+ * would be the over-correction that discards the member's own words.
+ */
+export type TopicHintSnapshot =
+  | { participation: 'admitted'; hint: string }
+  | { participation: 'excluded'; exclusionReason: ExclusionReason };
+
 export interface DevelopmentalRowBase {
   id: string;
   significance: number;
@@ -714,7 +748,13 @@ export const MemoryBundleService = {
       if (userTurn?.role === 'user') {
         const userSnippet = userTurn.content.substring(0, 60) + (userTurn.content.length > 60 ? '...' : '');
         const assistantSnippet = assistantTurn?.content?.substring(0, 60) || '';
-        bullets.push(`• User: "${userSnippet}" → MAIA responded about ${this.extractTopicHint(assistantSnippet)}`);
+        // P3e — the derived half is adjudicated separately from the quotation.
+        const topic = this.adjudicateTopicHint(assistantSnippet);
+        bullets.push(
+          topic.participation === 'admitted'
+            ? `• Prior member words: "${userSnippet}" → MAIA responded about ${topic.hint}`
+            : `• Prior member words: "${userSnippet}"`,
+        );
       }
     }
 
@@ -803,6 +843,33 @@ export const MemoryBundleService = {
       similarity: 0,
       compositeScore: 0,
     }));
+  },
+
+  /**
+   * P3e — adjudicate the derived topic label.
+   *
+   * The label is machine-authored about the conversation, and no member act
+   * endorses it, so `adjudicateParticipation` excludes it as unendorsed
+   * inference. It is then passed through `adjudicateDerivation` because that is
+   * the ratified boundary for derived representations — the shared rule, not a
+   * P3e-specific one.
+   *
+   * `extractTopicHint` is deliberately LEFT INTACT below. It is not the defect;
+   * composing its output without adjudication was. Deleting it would hide the
+   * derivation rather than govern it, and would make a future reintroduction
+   * look like new work instead of a restoration the gate must refuse.
+   */
+  adjudicateTopicHint(assistantSnippet: string): TopicHintSnapshot {
+    const derived = adjudicateParticipation({
+      provenance: { authoredBy: 'maia', authorityClass: 'inference' },
+      endorsement: 'none',
+    });
+    const verdict = adjudicateDerivation([derived]);
+    if (!verdict.admitted) {
+      // No `hint` on this arm — by type, not convention.
+      return { participation: 'excluded', exclusionReason: verdict.reason };
+    }
+    return { participation: 'admitted', hint: this.extractTopicHint(assistantSnippet) };
   },
 
   extractTopicHint(text: string): string {
