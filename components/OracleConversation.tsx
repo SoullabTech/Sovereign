@@ -12,6 +12,7 @@ import { ContinuousConversation, ContinuousConversationRef } from './voice/Conti
 import { getContinuityBuffer } from '@/lib/voice/conversationContinuityBuffer';
 import { VoiceHUD } from './voice/VoiceHUD';
 import { VoiceInteractionBar } from './voice/VoiceInteractionBar';
+import { isCaptureStalled, CAPTURE_STALL_MS } from '@/lib/voice/captureHeartbeat';
 import { useStreamingVoice, type StreamingVoicePlaybackSignal } from '@/hooks/useStreamingVoice';
 // Phase 1.5B — Conversational Keep affordance (sidecar, feature-flagged; client flag default-off)
 import { KeepAffordance, type KeepIntent } from '@/components/psyche/KeepAffordance';
@@ -849,6 +850,17 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
 
   const [voiceAmplitude, setVoiceAmplitude] = useState(0);
   const [userVoiceState, setUserVoiceState] = useState<VoiceState | null>(null);
+
+  // ── Capture heartbeat ────────────────────────────────────────────────
+  // `isListening` says capture was REQUESTED and believed to have started. It
+  // does not say audio is still arriving, so a mic that dies underneath keeps
+  // a green "listening" dot pulsing while the member talks into nothing —
+  // "I can't tell when it is no longer hearing me". Both capture paths call
+  // `onAudioLevelChange` continuously while frames are being delivered, so the
+  // arrival of those calls is the evidence. See lib/voice/captureHeartbeat.ts.
+  const lastAudioFrameAtRef = useRef(0);
+  const captureArmedAtRef = useRef(0);
+  const [captureStalled, setCaptureStalled] = useState(false);
 
   // Derived UI voice state for VoiceInteractionBar
   const voiceInteractionState: import('./voice/VoiceInteractionBar').VoiceInteractionState =
@@ -1791,6 +1803,17 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     }
     setIsActivating(false); // Clear activating state - we now know the truth
     setIsListening(isRecording);
+    // Capture-heartbeat bookkeeping. Arming resets the frame clock so the
+    // grace window in `isCaptureStalled` is measured from THIS arm, and the
+    // stall flag is cleared on every transition so a stall from a previous
+    // cycle can never outlive the mic that produced it.
+    if (isRecording) {
+      captureArmedAtRef.current = Date.now();
+      lastAudioFrameAtRef.current = 0;
+    } else {
+      captureArmedAtRef.current = 0;
+    }
+    setCaptureStalled(false);
     if (isRecording) {
       console.log('✅ Mic is LIVE - orange dot should be visible');
       // 🎯 Mark as activated when user starts listening - hides welcome screen
@@ -1817,6 +1840,10 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   // Prevent infinite render loop by throttling setState calls
   const handleAudioLevelChange = useCallback((amplitude: number, isSpeaking: boolean) => {
     const now = Date.now();
+    // Recorded BEFORE the throttle: this is the capture-liveness heartbeat, and
+    // sampling it at 10fps would make the stall verdict depend on a UI
+    // smoothing decision rather than on whether audio is actually arriving.
+    lastAudioFrameAtRef.current = now;
     // Only update state every 100ms (10fps) to avoid render loop
     if (now - lastAudioCallbackUpdateRef.current > 100) {
       setVoiceAmplitude(amplitude);
@@ -3805,6 +3832,37 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     pushScrollDebug(`clearance-resettle(${composerClearancePx}px)`);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [composerClearancePx]);
+
+  // Poll the capture heartbeat while we believe we are listening.
+  //
+  // A poll rather than a timeout because the question is "have frames stopped",
+  // and the absence of an event cannot itself schedule anything. The interval
+  // exists only while listening, so an idle app does no work.
+  useEffect(() => {
+    if (!isListening) {
+      setCaptureStalled(false);
+      return;
+    }
+    const tick = () => {
+      const stalled = isCaptureStalled({
+        now: Date.now(),
+        lastFrameAt: lastAudioFrameAtRef.current,
+        listening: true,
+        armedAt: captureArmedAtRef.current,
+      });
+      setCaptureStalled(prev => {
+        if (prev === stalled) return prev;
+        if (stalled) {
+          console.warn(
+            `🔇 [capture] No audio frames for ${CAPTURE_STALL_MS}ms while listening — surfacing mic-not-responding`
+          );
+        }
+        return stalled;
+      });
+    };
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [isListening]);
 
   // Smooth audio level changes for accessibility (prevents flashing from sudden spikes)
   useEffect(() => {
@@ -10158,6 +10216,7 @@ I'm not sure what I'm feeling yet.`;
         <VoiceInteractionBar
           voiceState={voiceInteractionState}
           interimTranscript={interimTranscript}
+          captureStalled={captureStalled}
           onStop={() => {
             streamVoice.stop();
             voiceSession.methods.stopListening();

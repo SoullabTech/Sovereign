@@ -58,9 +58,27 @@ function useKeyboardBottomInset(): number {
   return inset;
 }
 
+/**
+ * How tall the live transcript may grow before it scrolls instead.
+ *
+ * The transcript used to be one `truncate` line: a long thought was clipped to
+ * an ellipsis, so the member could not see what MAIA had actually heard and had
+ * no way of telling a mis-hear from a drop. Four lines is enough to read the
+ * shape of the current sentence without the bar eating the conversation above
+ * it; past that it scrolls, pinned to the newest words.
+ */
+const TRANSCRIPT_MAX_HEIGHT_PX = 84;
+
 interface VoiceInteractionBarProps {
   voiceState: VoiceInteractionState;
   interimTranscript: string;
+  /**
+   * True when the app believes it is listening but audio frames have stopped
+   * arriving — see lib/voice/captureHeartbeat.ts. This is evidence that the
+   * capture pipeline died, NOT that the member fell silent, and it is the only
+   * thing here allowed to contradict the `listening` label.
+   */
+  captureStalled?: boolean;
   onStop: () => void;
   onInterrupt: () => void;
   onTextSubmit: (text: string) => void;
@@ -68,7 +86,19 @@ interface VoiceInteractionBarProps {
 }
 
 // State dot: small animated indicator
-function StateDot({ state }: { state: VoiceInteractionState }) {
+function StateDot({ state, stalled }: { state: VoiceInteractionState; stalled?: boolean }) {
+  // A stalled capture must not keep pulsing green. The pulse is the member's
+  // only continuous evidence that the microphone is alive, so leaving it
+  // running over a dead pipeline is the indicator actively lying.
+  if (stalled && state === 'listening') {
+    return (
+      <motion.span
+        className="w-2 h-2 rounded-full bg-amber-400 flex-shrink-0"
+        animate={{ opacity: [1, 0.25, 1] }}
+        transition={{ duration: 0.7, repeat: Infinity, ease: 'easeInOut' }}
+      />
+    );
+  }
   if (state === 'listening') {
     return (
       <motion.span
@@ -114,8 +144,14 @@ function StateDot({ state }: { state: VoiceInteractionState }) {
   );
 }
 
-// State label text
-function stateLabel(state: VoiceInteractionState): string {
+// State label text.
+//
+// The stalled wording is deliberate. "not hearing you" would be read as a claim
+// about the member's silence; the evidence only supports a claim about the
+// microphone. "mic not responding" says what we actually know, and names
+// something the member can act on (tap to re-arm).
+function stateLabel(state: VoiceInteractionState, stalled?: boolean): string {
+  if (stalled && state === 'listening') return 'mic not responding';
   switch (state) {
     case 'listening': return 'listening';
     case 'thinking': return 'thinking';
@@ -125,7 +161,8 @@ function stateLabel(state: VoiceInteractionState): string {
   }
 }
 
-function stateLabelClass(state: VoiceInteractionState): string {
+function stateLabelClass(state: VoiceInteractionState, stalled?: boolean): string {
+  if (stalled && state === 'listening') return 'text-amber-400';
   switch (state) {
     case 'listening': return 'text-emerald-400';
     case 'thinking': return 'text-amber-300';
@@ -137,6 +174,7 @@ function stateLabelClass(state: VoiceInteractionState): string {
 export function VoiceInteractionBar({
   voiceState,
   interimTranscript,
+  captureStalled = false,
   onStop,
   onInterrupt,
   onTextSubmit,
@@ -146,6 +184,24 @@ export function VoiceInteractionBar({
   const [textValue, setTextValue] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
   const keyboardInset = useKeyboardBottomInset();
+  const transcriptScrollRef = useRef<HTMLDivElement>(null);
+
+  // Keep the newest words in view as speech accumulates.
+  //
+  // No "respect the member's scroll position" guard here, deliberately, and
+  // unlike the conversation transcript above: this box holds the sentence
+  // being spoken RIGHT NOW, it lives for the length of one utterance, and its
+  // whole purpose is to show what the microphone is hearing at this instant.
+  // There is no history in it worth scrolling back to, and a member cannot
+  // meaningfully read backwards through their own speech while still speaking.
+  // `scrollTop` assignment rather than `scrollIntoView`: this element is inside
+  // a `position: fixed` bar, and `scrollIntoView` would walk up and scroll the
+  // ancestors too.
+  useEffect(() => {
+    const el = transcriptScrollRef.current;
+    if (!el) return;
+    el.scrollTop = el.scrollHeight;
+  }, [interimTranscript]);
 
   const handleKeyboardToggle = useCallback(() => {
     setShowTextInput((v) => {
@@ -195,20 +251,41 @@ export function VoiceInteractionBar({
         pointerEvents: 'auto',
       }}
     >
-      {/* Transcript row — fades in while listening */}
+      {/* Live transcript — the whole utterance, scrolling with speech.
+          Stays up through a stall (state is still `listening` then), so the
+          member can read exactly how far the microphone got before it died. */}
       <AnimatePresence>
         {voiceState === 'listening' && interimTranscript.length > 0 && (
           <motion.div
             key="transcript"
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
+            // Opacity only — NOT the `height: 0 → auto` tween the other rows
+            // use. That tween measures the element once, on reveal, and this
+            // row grows line by line as speech accumulates; the wrapper would
+            // stay locked at its first-measured one-line height and clip the
+            // very scrolling this exists to provide. The row sizes naturally
+            // and the inner box owns the cap.
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
             transition={{ duration: 0.15 }}
-            className="overflow-hidden"
           >
-            <p className="px-5 pt-2 text-sm italic text-stone-300/75 truncate">
-              {interimTranscript}
-            </p>
+            <div
+              ref={transcriptScrollRef}
+              // `overscroll-contain` stops a flick at the end of this small box
+              // from chaining into the conversation behind the bar.
+              className="px-5 pt-2 overflow-y-auto overscroll-contain scrollbar-hide"
+              style={{ maxHeight: TRANSCRIPT_MAX_HEIGHT_PX }}
+              // Announced politely rather than assertively: this updates on
+              // every recognized word, and an assertive region would interrupt
+              // a screen reader continuously while the member speaks.
+              aria-live="polite"
+              aria-atomic="false"
+              aria-label="Live transcript"
+            >
+              <p className="text-sm italic leading-relaxed text-stone-300/75 whitespace-pre-wrap break-words">
+                {interimTranscript}
+              </p>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -259,9 +336,16 @@ export function VoiceInteractionBar({
       <div className="flex items-center gap-3 px-4 pt-3 pb-1 h-14">
         {/* State chip: dot + label */}
         <div className="flex items-center gap-2 flex-1 min-w-0">
-          <StateDot state={voiceState} />
-          <span className={`text-sm font-light truncate transition-colors duration-200 ${stateLabelClass(voiceState)}`}>
-            {stateLabel(voiceState)}
+          <StateDot state={voiceState} stalled={captureStalled} />
+          <span
+            className={`text-sm font-light truncate transition-colors duration-200 ${stateLabelClass(voiceState, captureStalled)}`}
+            // The label carries the only warning the member gets that capture
+            // died, so it is announced when it changes rather than left as
+            // decoration next to a dot.
+            role="status"
+            aria-live="polite"
+          >
+            {stateLabel(voiceState, captureStalled)}
           </span>
         </div>
 

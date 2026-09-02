@@ -27,6 +27,12 @@ import {
 } from '@/lib/voice/captureForensics';
 import { getContinuityBuffer } from '@/lib/voice/conversationContinuityBuffer';
 import {
+  createNativePartialState,
+  applyNativePartial,
+  sealNativeSegment,
+  type NativePartialState,
+} from '@/lib/voice/nativePartialAccumulator';
+import {
   recordDispatch,
   resetDispatchProvenance,
   type TranscriptDispatchSource,
@@ -76,6 +82,28 @@ export type MicState =
   | 'PLAYING_TTS'           // MAIA speaking, mic off (native) or suppressed (web)
   | 'INTERRUPTED'           // iOS audio interruption (phone call, Siri, etc.)
   | 'ERROR';                // Recoverable error state
+
+/**
+ * How long to hold a native utterance open after iOS reports the recognition
+ * task stopped, before treating the stop as the end of the member's turn.
+ *
+ * A recognition task ending is an INFRASTRUCTURE event, not a member-intent
+ * event. iOS ends tasks constantly — Apple's per-task audio ceiling, `isFinal`
+ * on any pause, `kAFAssistantErrorDomain` faults, the plugin's own cleanup
+ * between `start()` calls — and turnover accelerates through a long session.
+ * Treating each one as "the member finished speaking" is what produced the
+ * field report: MAIA interrupting a third of the way into a thought, answering
+ * the fragment, then answering the next fragment with no memory of the first.
+ * Turn-end belongs to SILENCE, which the two silence timers already own.
+ *
+ * So the stop only ARMS a close. Any partial from the restarted task cancels
+ * it and the utterance continues, joined. Chosen to clear a normal hands-free
+ * re-arm (the 800ms/1500ms backoff steps plus the first partial) while still
+ * closing the turn promptly when the mic is genuinely not coming back — at the
+ * 2500ms backoff step the recognizer has already failed twice and closing is
+ * the honest reading.
+ */
+const NATIVE_TURN_CLOSE_MS = 2500;
 
 /** Conversation-alive gate: is the conversation still active? */
 function isConversationAlive(ctx: {
@@ -345,6 +373,31 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
   const micStreamRef = useRef<MediaStream | null>(null);
   const lastSpeechTime = useRef<number>(0); // 0 = no speech detected yet (NOT Date.now() which causes false positives)
   const accumulatedTranscript = useRef<string>("");
+  // iOS native capture only. `partialResults` carries the current
+  // SFSpeechRecognitionTask's full text and NOTHING older, so the old straight
+  // assignment into `accumulatedTranscript` deleted everything spoken before a
+  // recognizer restart — the field report of MAIA "taking a third of what I
+  // said and starting over from there". This holds the sealed segments so a
+  // boundary becomes a join. Web capture never touches it.
+  // See lib/voice/nativePartialAccumulator.ts.
+  const nativePartialStateRef = useRef<NativePartialState>(createNativePartialState());
+
+  /**
+   * Clear the utterance buffer. ALWAYS use this instead of assigning `""` to
+   * `accumulatedTranscript.current`: on the native path the visible transcript
+   * is DERIVED from `nativePartialStateRef`, so clearing one without the other
+   * leaves sealed segments alive and the next turn opens carrying the previous
+   * turn's words. Refs are stable, so this is safe to capture in the
+   * build-once recognition handlers.
+   */
+  const clearAccumulatedTranscript = useCallback(() => {
+    accumulatedTranscript.current = "";
+    nativePartialStateRef.current = createNativePartialState();
+  }, []);
+
+  // iOS native capture only. Armed when the recognizer's `listeningState`
+  // reports `stopped`; cancelled by the next partial. See NATIVE_TURN_CLOSE_MS.
+  const nativeTurnCloseTimerRef = useRef<NodeJS.Timeout | null>(null);
   const isProcessingRef = useRef(false);
   const isSpeakingRef = useRef(false); // Track isSpeaking via ref to avoid stale closures
   const isListeningRef = useRef(false); // Track isListening via ref to avoid stale closures
@@ -811,7 +864,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
         continuationRestartRef.current = false;
         console.log('🔗 [onstart] Continuation restart — preserving accumulated transcript:', accumulatedTranscript.current);
       } else {
-        accumulatedTranscript.current = "";
+        clearAccumulatedTranscript();
       }
 
       // Clear conversation timeout when user starts speaking
@@ -1530,7 +1583,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
       try { text = getContinuityBuffer().getPending()?.text?.trim() ?? ''; } catch { text = ''; }
     }
     if (!text) return false;
-    accumulatedTranscript.current = '';
+    clearAccumulatedTranscript();
     try { getContinuityBuffer().clearPending(); } catch { /* best-effort */ }
     logVoiceEvent('voice_transcript_salvaged', { cause, chars: text.length });
     console.log(`💾 [salvage] Preserving ${text.length} chars lost to ${cause}`);
@@ -1968,7 +2021,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
       if (accumulatedTranscript.current) {
         console.log('🧹 Discarding accumulated transcript (MAIA started):',
           accumulatedTranscript.current.substring(0, 50));
-        accumulatedTranscript.current = '';
+        clearAccumulatedTranscript();
       }
 
       // Clear timers to prevent delayed processing
@@ -2146,7 +2199,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
         epoch: recognitionEpochRef.current,
         turnCommitId: turnCommitIdRef.current,
       });
-      accumulatedTranscript.current = ""; // Clear duplicate
+      clearAccumulatedTranscript(); // Clear duplicate
       // Release the concurrency latch taken at the top of this function. Every
       // other early return does; this one did not, so the FIRST time this guard
       // fired, `isCallingProcessRef` stayed true and the guard at the top
@@ -2173,7 +2226,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
           epoch: recognitionEpochRef.current,
           turnCommitId: turnCommitIdRef.current,
         });
-        accumulatedTranscript.current = ""; // Clear duplicate
+        clearAccumulatedTranscript(); // Clear duplicate
         isCallingProcessRef.current = false;
         return;
       }
@@ -2194,7 +2247,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
 
     if (looksLikeMaiaVoice && normalizedTranscript.split(' ').length < 15) {
       console.log('🔇 [ECHO BLOCK] Transcript looks like MAIA\'s voice:', transcript);
-      accumulatedTranscript.current = ""; // Clear echo
+      clearAccumulatedTranscript(); // Clear echo
       isCallingProcessRef.current = false;
       return;
     }
@@ -2205,7 +2258,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     isProcessingRef.current = true;
 
     // CRITICAL: Clear accumulated transcript IMMEDIATELY to prevent double-send
-    accumulatedTranscript.current = "";
+    clearAccumulatedTranscript();
     continuationRestartRef.current = false; // turn submitted — next start is a fresh turn
     // 🧵 The turn is genuinely sent: move it out of pending into the continuity
     // log, so a later loss cannot hand it back as an unsent draft and cause the
@@ -2905,6 +2958,13 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
             });
             console.log('📝 [Native] Partial:', transcript);
             addDebug(`🗣️ HEARD: "${transcript.slice(0, 40)}${transcript.length > 40 ? '...' : ''}"`);
+            // The member is still talking: the recognizer stop that armed this
+            // was a task boundary, not the end of a turn.
+            if (nativeTurnCloseTimerRef.current) {
+              clearTimeout(nativeTurnCloseTimerRef.current);
+              nativeTurnCloseTimerRef.current = null;
+              console.log('🫱 [Native] Turn-close cancelled — utterance continues');
+            }
             lastSpeechTime.current = Date.now();
             lastHighAudioTimeRef.current = Date.now(); // Also update for fallback silence detection
             lastSpeechHeardAtRef.current = Date.now(); // 🎙️ Track for hands-free staleness check
@@ -2914,13 +2974,42 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
             // 🔥 FIX: Reset restart counter when user actually speaks - prevents stopping during valid conversation
             consecutiveRestartCount.current = 0;
 
-            // Send interim transcript
-            if (onInterimTranscript) {
-              onInterimTranscript(transcript);
+            // ── Segment-aware accumulation ────────────────────────────
+            // `transcript` is the CURRENT SFSpeechRecognitionTask's full text
+            // and nothing older. This used to be assigned straight into
+            // `accumulatedTranscript`, which meant every recognizer restart —
+            // Apple's per-task audio ceiling, an isFinal on a pause, a
+            // kAFAssistantErrorDomain fault, the plugin's own cleanup between
+            // start() calls — silently deleted everything spoken before it.
+            // The member heard MAIA answer the last few words of a long
+            // thought as if the rest had never been said, worsening through a
+            // session as task turnover accelerates.
+            //
+            // A boundary is now a JOIN. `sealNativeSegment` on the lifecycle
+            // events is the primary authority; the prefix test inside
+            // `applyNativePartial` is the secondary net for in-task resets
+            // that emit no lifecycle event at all.
+            const folded = applyNativePartial(nativePartialStateRef.current, transcript);
+            nativePartialStateRef.current = folded.state;
+            accumulatedTranscript.current = folded.text;
+
+            if (folded.boundary) {
+              // Lengths only — never content. This is the event that says
+              // "iOS restarted recognition mid-utterance and we kept the
+              // words", and it is the one to count if the symptom returns.
+              logVoiceEvent('ios_voice_segment_boundary_joined', {
+                committedChars: folded.state.committed.length,
+                segmentChars: folded.state.segment.length,
+                joinedChars: folded.text.length,
+              });
+              console.log('🔗 [Native] Recognizer segment boundary — joined, not reset');
             }
 
-            // Accumulate transcript
-            accumulatedTranscript.current = transcript;
+            // Send interim transcript — the JOINED text, so the live display
+            // shows the whole utterance rather than the current fragment.
+            if (onInterimTranscript) {
+              onInterimTranscript(folded.text);
+            }
 
             // 🔥 FALLBACK SILENCE DETECTION: Reset timer on each partial
             // If no partials for 2.5s after speech, auto-submit (audio levels may not fire on iOS)
@@ -2936,10 +3025,16 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
                 });
                 console.log('⏱️ [Native] Fallback silence timeout - auto-submitting:', finalTranscript);
                 addDebug('⏱️ Auto-submit (2.5s silence)');
-                accumulatedTranscript.current = '';
+                clearAccumulatedTranscript();
                 isProcessingRef.current = true;
                 setIsRecording(false);
                 isRecordingRef.current = false;
+                // A silence timer owns this turn; a close armed by an earlier
+                // recognizer stop must not fire over the next utterance.
+                if (nativeTurnCloseTimerRef.current) {
+                  clearTimeout(nativeTurnCloseTimerRef.current);
+                  nativeTurnCloseTimerRef.current = null;
+                }
                 witnessDispatch('native_silence', 'silence_timer', finalTranscript, recognitionEpochRef.current, turnCommitIdRef.current);
                 onTranscript(finalTranscript);
                 // Stop native recognition
@@ -3034,10 +3129,16 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
                     });
                   }
                   console.log('⏱️ [Native] Silence timeout - auto-submitting:', finalTranscript);
-                  accumulatedTranscript.current = '';
+                  clearAccumulatedTranscript();
                   isProcessingRef.current = true;
                   setIsRecording(false);
                   isRecordingRef.current = false;
+                  // A silence timer owns this turn; a close armed by an earlier
+                  // recognizer stop must not fire over the next utterance.
+                  if (nativeTurnCloseTimerRef.current) {
+                    clearTimeout(nativeTurnCloseTimerRef.current);
+                    nativeTurnCloseTimerRef.current = null;
+                  }
                   witnessDispatch('native_audio_silence', 'silence_timer', finalTranscript, recognitionEpochRef.current, turnCommitIdRef.current);
                   onTranscript(finalTranscript);
                 }
@@ -3089,15 +3190,49 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
             // wantsContinuousConversationRef persists the user's intent to continue conversation
             const wantsToListen = isListeningRef.current || wantsContinuousConversationRef.current;
 
-            // Process accumulated transcript (only if we were actively listening)
-            if (isListeningRef.current && accumulatedTranscript.current.trim()) {
-              const finalTranscript = accumulatedTranscript.current.trim();
-              console.log('✅ [Native] Final transcript:', finalTranscript);
-              accumulatedTranscript.current = '';
-              setIsRecording(false);
-              isRecordingRef.current = false;
-              witnessDispatch('native_stop', 'native_stop', finalTranscript, recognitionEpochRef.current, turnCommitIdRef.current);
-              onTranscript(finalTranscript);
+            // ── The recognition task ended. That is NOT the member's turn ──
+            // This used to dispatch `accumulatedTranscript` to MAIA the instant
+            // iOS reported `stopped`. iOS stops constantly and mid-sentence, so
+            // that submitted a third of a thought, answered it, and opened the
+            // next task with an empty buffer — the exact reported symptom, and
+            // the reason it worsened over a long session as task turnover rose.
+            //
+            // Seal instead. The segment is preserved so the restarted task's
+            // partials JOIN it rather than replace it, and turn-end is left to
+            // the authority that actually knows about it: silence. The close
+            // below is only a fallback for a mic that does not come back —
+            // the next partial cancels it.
+            nativePartialStateRef.current = sealNativeSegment(nativePartialStateRef.current);
+            const heldAtStop = accumulatedTranscript.current.trim();
+
+            if (heldAtStop) {
+              logVoiceEvent('ios_voice_turn_held_open', {
+                heldChars: heldAtStop.length,
+                closeAfterMs: NATIVE_TURN_CLOSE_MS,
+                wasListening: isListeningRef.current,
+              });
+              console.log(`🫱 [Native] Recognizer stopped mid-utterance — holding ${heldAtStop.length} chars open`);
+              addDebug(`🫱 Holding turn open (${heldAtStop.length} chars)`);
+
+              if (nativeTurnCloseTimerRef.current) clearTimeout(nativeTurnCloseTimerRef.current);
+              nativeTurnCloseTimerRef.current = setTimeout(() => {
+                nativeTurnCloseTimerRef.current = null;
+                const finalTranscript = accumulatedTranscript.current.trim();
+                // Nothing left to send: a silence timer already committed this
+                // turn while the close was pending. Not an error — two paths
+                // watch the same buffer and the first one to fire owns it.
+                if (!finalTranscript) return;
+                // MAIA holding the floor is not a reason to discard words. Keep
+                // them held; the next partial or stop re-arms this close.
+                if (isProcessingRef.current || isSpeakingRef.current) {
+                  console.log('🫱 [Native] Turn-close deferred — MAIA is responding; words held');
+                  return;
+                }
+                console.log('✅ [Native] Turn closed after recognizer stop:', finalTranscript.length, 'chars');
+                clearAccumulatedTranscript();
+                witnessDispatch('native_stop', 'native_stop', finalTranscript, recognitionEpochRef.current, turnCommitIdRef.current);
+                onTranscript(finalTranscript);
+              }, NATIVE_TURN_CLOSE_MS);
             }
 
             // 🔥 FIX: Only handle restart logic if user wants continuous conversation
@@ -3294,6 +3429,11 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
         // Start native speech recognition
         console.log('🎙️ [ContinuousConversation] About to call NativeSpeechRecognition.start()...');
         addDebug('🎙️ Calling SR.start(popup:false)...');
+        // A new SFSpeechRecognitionTask restarts partials at the empty string.
+        // Sealing here is EVIDENCE of a segment boundary (as opposed to the
+        // prefix heuristic's inference), so whatever the new task opens with —
+        // even the same first word — cannot overwrite what came before it.
+        nativePartialStateRef.current = sealNativeSegment(nativePartialStateRef.current);
         try {
           const startOptions = {
             language: 'en-US',
@@ -3780,7 +3920,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
         witnessDispatch('manual_stop', 'manual', finalTranscript, recognitionEpochRef.current, turnCommitIdRef.current);
         onTranscript(finalTranscript);
       }
-      accumulatedTranscript.current = '';
+      clearAccumulatedTranscript();
     }
     if (options?.userExitMode) {
       // Explicit exit closes the engagement the comparator is scoped to.
@@ -3841,6 +3981,12 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
         if (nativeSilenceTimerRef.current) {
           clearTimeout(nativeSilenceTimerRef.current);
           nativeSilenceTimerRef.current = null;
+        }
+
+        // Clear the turn-close fallback armed by a recognizer stop
+        if (nativeTurnCloseTimerRef.current) {
+          clearTimeout(nativeTurnCloseTimerRef.current);
+          nativeTurnCloseTimerRef.current = null;
         }
 
         // Final cleanup - remove any remaining listeners

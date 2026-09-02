@@ -129,6 +129,19 @@ export type VoiceDiagEvent =
   | 'ios_voice_error'
   | 'ios_voice_listening_stopped'
 
+  // ── iOS segment-boundary repair (transcript loss on recognizer restart) ──
+  // iOS `partialResults` are monotonic only WITHIN one SFSpeechRecognitionTask.
+  // These two name the boundary that used to destroy speech silently:
+  //
+  //   ios_voice_segment_boundary_joined  a task restarted mid-utterance and the
+  //                                      earlier words were kept, not replaced
+  //   ios_voice_turn_held_open           a recognizer stop was treated as a task
+  //                                      boundary rather than the member's turn
+  //
+  // Lengths only — never transcript content.
+  | 'ios_voice_segment_boundary_joined'
+  | 'ios_voice_turn_held_open'
+
   // ── VOICE-CAPTURE-01B-OBS dispatch provenance ───────────────────────────
   // `processAccumulatedTranscript` is one of EIGHT `onTranscript(...)` call
   // sites in ContinuousConversation, and the only one behind the two dedup
