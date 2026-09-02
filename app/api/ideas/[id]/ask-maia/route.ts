@@ -13,6 +13,15 @@ import {
   storeRecognitionEvent,
   type RecognitionOutcome,
 } from '@/lib/maia/decisionChangeRecognition';
+import {
+  ATTEMPT_ID_HEADER,
+  emit,
+  failureFields,
+  newRequestId,
+  resolveAttemptId,
+  runStage,
+  type AttemptContext,
+} from '@/lib/ideas/attemptInstrument';
 import { isIdeaStance, type IdeaStance } from '@/lib/maia/ideaStances';
 
 // Server-side enablement gate for MAIA Decision/Change recognition.
@@ -89,14 +98,40 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  /* Fault localization (T1). The client proposes an attempt id spanning this
+     request and the autosave that preceded it; a malformed one is rejected
+     SILENTLY and replaced with a server-minted id marked as such — a
+     correlation header must never fail a member's request. `request_id` is
+     minted here, once, and separates this execution from a retry that reuses
+     the same attempt id.
+     ⛔ Neither identifier authorizes, selects, or mutates anything. Member and
+     idea scope are set below from getCurrentSession() and the ownership-checked
+     query, and from nowhere else. */
+  const { attemptId, source: attemptIdSource } =
+    resolveAttemptId(request.headers.get(ATTEMPT_ID_HEADER));
+  const attempt: AttemptContext = {
+    attemptId,
+    attemptIdSource,
+    requestId: newRequestId(),
+    memberId: null,
+    ideaId: null,
+    stance: null,
+  };
+
   try {
-    const session = await getCurrentSession();
+    const session = await runStage(attempt, 'session_resolve', 'auth',
+      () => getCurrentSession());
     if (!session?.memberId) {
+      emit(attempt, 'session_resolve', 'failed', { error_class: 'auth' });
+      emit(attempt, 'attempt_close', 'failed', { error_class: 'auth' });
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+    /* SERVER-RESOLVED ONLY. */
+    attempt.memberId = session.memberId;
 
     const { id: ideaId } = await params;
     if (!UUID_RE.test(ideaId)) {
+      emit(attempt, 'attempt_close', 'failed', { error_class: 'validation' });
       return NextResponse.json({ error: 'Invalid idea id' }, { status: 400 });
     }
 
@@ -117,24 +152,33 @@ export async function POST(
         }
       }
     } catch {
+      emit(attempt, 'attempt_close', 'failed', { error_class: 'validation' });
       return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
     }
+    attempt.stance = stance ?? null;
 
     // Ownership + idea context in one fetch
-    const ideaResult = await query<IdeaRow>(
-      `SELECT id, title, framing
+    const ideaResult = await runStage(attempt, 'idea_fetch', 'db_read', () =>
+      query<IdeaRow>(
+        `SELECT id, title, framing
          FROM member_ideas
         WHERE id = $1 AND member_id = $2`,
-      [ideaId, session.memberId]
-    );
+        [ideaId, session.memberId]
+      ));
     if (ideaResult.rows.length === 0) {
+      emit(attempt, 'idea_fetch', 'failed', { error_class: 'not_found' });
+      emit(attempt, 'attempt_close', 'failed', { error_class: 'not_found' });
       return NextResponse.json({ error: 'Idea not found' }, { status: 404 });
     }
     const idea = ideaResult.rows[0];
+    /* Ownership has now been established by the query above. Only here does the
+       idea id enter the record — never from the URL alone. */
+    attempt.ideaId = ideaId;
 
     // Last 4 member-authored blocks (exclude prior maia_reflection blocks so
     // we don't recursively reflect on reflections).
-    const recentResult = await query<BlockRow>(
+    const recentResult = await runStage(attempt, 'context_read_blocks', 'db_read', () =>
+      query<BlockRow>(
       `SELECT id, block_type, content, metadata, created_at
          FROM member_idea_blocks
         WHERE idea_id = $1
@@ -142,32 +186,35 @@ export async function POST(
         ORDER BY created_at DESC
         LIMIT 6`,
       [ideaId]
-    );
+    ));
     // Re-order oldest-first so the primitive sees chronological flow
     const recentBlocks = [...recentResult.rows].reverse();
 
     // Most recent decision (may or may not be in the 4-block slice)
-    const decisionResult = await query<{ content: string }>(
-      `SELECT content
+    const decisionResult = await runStage(attempt, 'context_read_decision', 'db_read', () =>
+      query<{ content: string }>(
+        `SELECT content
          FROM member_idea_blocks
         WHERE idea_id = $1 AND block_type = 'decision'
         ORDER BY created_at DESC
         LIMIT 1`,
-      [ideaId]
-    );
+        [ideaId]
+      ));
     const lastDecision =
       decisionResult.rows.length > 0 ? decisionResult.rows[0].content : null;
 
     // Last 3 prior MAIA reflections — for anti-repetition. Fetched DESC,
     // reversed to oldest-first for prompt shape.
-    const priorReflectionsResult = await query<{ content: string }>(
-      `SELECT content
+    const priorReflectionsResult = await runStage(
+      attempt, 'context_read_reflections', 'db_read', () =>
+      query<{ content: string }>(
+        `SELECT content
          FROM member_idea_blocks
         WHERE idea_id = $1 AND block_type = 'maia_reflection'
         ORDER BY created_at DESC
         LIMIT 3`,
-      [ideaId]
-    );
+        [ideaId]
+      ));
     const priorMaiaReflections = [...priorReflectionsResult.rows]
       .reverse()
       .map((r) => r.content);
@@ -176,12 +223,14 @@ export async function POST(
     // sampled slice instead of the thread was part of why threads looped:
     // a thread twelve reflections deep looked, to the model, like a thread
     // two reflections deep.
-    const reflectionCountResult = await query<{ count: string }>(
-      `SELECT COUNT(*)::text AS count
+    const reflectionCountResult = await runStage(
+      attempt, 'context_read_count', 'db_read', () =>
+      query<{ count: string }>(
+        `SELECT COUNT(*)::text AS count
          FROM member_idea_blocks
         WHERE idea_id = $1 AND block_type = 'maia_reflection'`,
-      [ideaId]
-    );
+        [ideaId]
+      ));
     const reflectionCount = parseInt(reflectionCountResult.rows[0]?.count ?? '0', 10);
 
     // Shape the context for the primitive
@@ -199,6 +248,10 @@ export async function POST(
     });
 
     // Generate — single-shot, no streaming, bounded output
+    /* model_client_init / model_call / model_parse are emitted INSIDE the
+       primitive, at the three seams themselves — C1, C2 and C3 are only
+       distinguishable there. This call is not wrapped in a fourth seam, which
+       would re-collapse them from the outside. */
     const reflection = await generateThreadReflection({
       ideaTitle: idea.title,
       ideaFraming: idea.framing,
@@ -207,7 +260,7 @@ export async function POST(
       priorMaiaReflections,
       reflectionCount,
       stance,
-    });
+    }, attempt);
 
     // ── Decision/Change recognition (flag-gated, post-response) ──────────────
     // Invariant: this runs AFTER the reflection is generated. It does not
@@ -235,13 +288,14 @@ export async function POST(
           ).length
         : undefined;
 
-      recognition = runRecognition({
-        userText,
-        priorTurnCount: Math.max(0, recentBlocks.length - 1),
-        sanctuaryMode,
-        recentEvents,
-        memberBlocksSinceLastNaming,
-      });
+      recognition = await runStage(attempt, 'recognition', 'recognition', () =>
+        runRecognition({
+          userText,
+          priorTurnCount: Math.max(0, recentBlocks.length - 1),
+          sanctuaryMode,
+          recentEvents,
+          memberBlocksSinceLastNaming,
+        }));
     }
 
     // Reflection body stays pure. The naming line, when recognition fires,
@@ -272,12 +326,13 @@ export async function POST(
           : {}),
       };
     }
-    const insertResult = await query<BlockRow>(
-      `INSERT INTO member_idea_blocks (idea_id, member_id, block_type, content, metadata)
+    const insertResult = await runStage(attempt, 'persist_reflection', 'db_write', () =>
+      query<BlockRow>(
+        `INSERT INTO member_idea_blocks (idea_id, member_id, block_type, content, metadata)
        VALUES ($1, $2, 'maia_reflection', $3, $4)
        RETURNING id, block_type, content, metadata, created_at`,
-      [ideaId, session.memberId, reflectionContent, JSON.stringify(metadata)]
-    );
+        [ideaId, session.memberId, reflectionContent, JSON.stringify(metadata)]
+      ));
 
     // Fire-and-forget event logging. Recorded after the reflection is
     // successfully persisted so block_id can be referenced in future analysis.
@@ -320,16 +375,25 @@ export async function POST(
     }
 
     // Touch last_entered_at so the idea bubbles up
-    await query(
-      `UPDATE member_ideas SET last_entered_at = NOW() WHERE id = $1`,
-      [ideaId]
-    );
+    await runStage(attempt, 'touch_idea', 'db_write', () =>
+      query(
+        `UPDATE member_ideas SET last_entered_at = NOW() WHERE id = $1`,
+        [ideaId]
+      ));
 
+    emit(attempt, 'attempt_close', 'completed');
+    /* ⛔ The response is untouched. No stage, class, or identifier appears in
+       any body or header — this instrument is operator-only by construction. */
     return NextResponse.json(
       { success: true, block: insertResult.rows[0] },
       { status: 201 }
     );
   } catch (error) {
+    /* The seam that raised has already emitted its own classified `failed`
+       event. This terminal record closes the attempt; its class is `unknown`
+       because at this depth the raising seam is no longer identifiable, and
+       `unknown` is a real outcome rather than a placeholder. */
+    emit(attempt, 'attempt_close', 'failed', failureFields(error, 'unknown'));
     console.error('[ideas/ask-maia] failed:', error);
     return NextResponse.json(
       { error: 'Failed to generate reflection' },

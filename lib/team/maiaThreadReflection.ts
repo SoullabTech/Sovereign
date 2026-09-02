@@ -24,6 +24,11 @@
 
 import Anthropic from '@anthropic-ai/sdk';
 import {
+  emit,
+  failureFields,
+  type AttemptContext,
+} from '@/lib/ideas/attemptInstrument';
+import {
   STANCE_DIRECTIVES,
   type IdeaStance,
 } from '@/lib/maia/ideaStances';
@@ -255,10 +260,43 @@ export function latestBlockHasCorrection(recentBlocks: ThreadBlockSummary[]): bo
 // Primary entry point
 // ═══════════════════════════════════════════════════════════════
 
+/**
+ * Fault-localization seams C1/C2/C3.
+ *
+ * `model_client_init`, `model_call` and `model_parse` are bracketed SEPARATELY
+ * and by hand — not through one helper around the whole function — because they
+ * are three of INV-2's ranked candidates and are today indistinguishable at the
+ * boundary. Collapsing them is the drift this instrument exists to prevent.
+ *
+ * The parameter is OPTIONAL and defaults to no instrumentation, so the
+ * primitive's behavior is identical when it is absent. Nothing here reads the
+ * prompt or the response into a record: `prompt_chars` is a size.
+ */
 export async function generateThreadReflection(
-  ctx: ThreadReflectionContext
+  ctx: ThreadReflectionContext,
+  attempt?: AttemptContext
 ): Promise<string> {
-  const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+  const t0 = Date.now();
+
+  /* C1 — client construction. Its own seam because a missing or malformed
+     ANTHROPIC_API_KEY fails HERE, and that is `model_config`, not an upstream
+     fault. ⛔ The record never carries the variable's value. */
+  let client: Anthropic;
+  if (attempt) emit(attempt, 'model_client_init', 'entered');
+  try {
+    client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+  } catch (err) {
+    if (attempt) {
+      emit(attempt, 'model_client_init', 'failed', {
+        ...failureFields(err, 'model_config'),
+        duration_ms: Date.now() - t0,
+      });
+    }
+    throw err;
+  }
+  if (attempt) {
+    emit(attempt, 'model_client_init', 'completed', { duration_ms: Date.now() - t0 });
+  }
 
   const correctionDetected = latestBlockHasCorrection(ctx.recentBlocks);
   const stage = progressionStage(
@@ -276,18 +314,69 @@ export async function generateThreadReflection(
 
   const userMessage = composeUserMessage(ctx);
 
-  const response = await client.messages.create({
-    model: 'claude-haiku-4-5-20251001',
-    max_tokens: 300,
-    system: systemPrompt,
-    messages: [{ role: 'user', content: userMessage }],
-  });
-
-  const content = response.content[0];
-  if (content.type !== 'text') {
-    throw new Error('Unexpected response type from thread reflection');
+  /* C2 — the provider call. `prompt_chars` records the SIZE of what was sent;
+     nothing records its substance. The upstream status, request id, error type
+     and whether the SDK retries that class are captured on failure — that is
+     the single set of fields that converts C2 from open to decidable. */
+  const promptChars = systemPrompt.length + userMessage.length;
+  const tCall = Date.now();
+  if (attempt) emit(attempt, 'model_call', 'entered');
+  let response: Awaited<ReturnType<typeof client.messages.create>>;
+  try {
+    response = await client.messages.create({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 300,
+      system: systemPrompt,
+      messages: [{ role: 'user', content: userMessage }],
+    });
+  } catch (err) {
+    if (attempt) {
+      emit(attempt, 'model_call', 'failed', {
+        ...failureFields(err, 'model_upstream'),
+        prompt_chars: promptChars,
+        duration_ms: Date.now() - tCall,
+      });
+    }
+    throw err;
   }
-  return content.text.trim();
+  if (attempt) {
+    emit(attempt, 'model_call', 'completed', {
+      prompt_chars: promptChars,
+      duration_ms: Date.now() - tCall,
+    });
+  }
+
+  /* C3 — response block selection. Its own seam so an empty `content` array or
+     a non-text first block is OBSERVED as `model_parse` rather than surfacing
+     as an indistinguishable 500. ⛔ The instrument does not repair C3: the
+     behavior below, including the thrown error, is unchanged. */
+  const tParse = Date.now();
+  if (attempt) emit(attempt, 'model_parse', 'entered');
+  try {
+    /* ⛔ THE EXPRESSION BELOW IS UNCHANGED, DELIBERATELY. On an empty `content`
+       array `content` is `undefined` and `content.type` raises a TypeError.
+       That is C3, and the instrument's job is to OBSERVE it, not to repair it —
+       a `content === undefined` guard here would be a fix smuggled in under an
+       observability change. Both the TypeError and the explicit throw below are
+       classified `model_parse`, so the seam is localized either way while the
+       defect stands exactly as witnessed. */
+    const content = response.content[0];
+    if (content.type !== 'text') {
+      throw new Error('Unexpected response type from thread reflection');
+    }
+    if (attempt) {
+      emit(attempt, 'model_parse', 'completed', { duration_ms: Date.now() - tParse });
+    }
+    return content.text.trim();
+  } catch (err) {
+    if (attempt) {
+      emit(attempt, 'model_parse', 'failed', {
+        ...failureFields(err, 'model_parse'),
+        duration_ms: Date.now() - tParse,
+      });
+    }
+    throw err;
+  }
 }
 
 function composeUserMessage(ctx: ThreadReflectionContext): string {

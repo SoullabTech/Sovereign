@@ -43,6 +43,12 @@ import {
 } from 'lucide-react';
 import { apiFetch } from '@/lib/http/apiBase';
 import {
+  ATTEMPT_ID_HEADER,
+  emit,
+  newAttemptId,
+  type AttemptContext,
+} from '@/lib/ideas/attemptInstrument';
+import {
   IDEA_BLOCK_MAX_CHARS,
   IDEA_BLOCK_COUNTER_THRESHOLD,
 } from '@/lib/ideas/constants';
@@ -322,6 +328,26 @@ export default function IdeaWorkspacePage() {
     if (!idea || askingMaia || saving) return;
     setAskingMaia(true);
     setComposerError(null);
+
+    /* Fault localization (T1) — `attempt_open`.
+       THE MEMBER ACT IS THE UNIT. One act — write, choose a stance, ask —
+       crosses two HTTP requests, and the client is the only participant that
+       sees the whole of it, so the correlating id must originate here. That is
+       also exactly why the server treats it as untrusted input: it is a join
+       key for reading records after the fact and nothing more.
+       ⛔ No request_id is minted here; that authority is the server's. */
+    const attempt: AttemptContext = {
+      attemptId: newAttemptId(),
+      attemptIdSource: 'client',
+      requestId: null,
+      memberId: null,
+      ideaId: null,
+      stance: stance ?? null,
+    };
+    const attemptHeaders = { [ATTEMPT_ID_HEADER]: attempt.attemptId };
+    emit(attempt, 'attempt_open', 'entered');
+    let closed = false;
+
     try {
       // Autosave-on-Ask-MAIA (2026-04-22):
       // If the composer has pending draft text, save it as a note first so
@@ -334,6 +360,7 @@ export default function IdeaWorkspacePage() {
       if (pendingDraft) {
         const saveRes = await apiFetch(`/api/ideas/${idea.id}/blocks`, {
           method: 'POST',
+          headers: attemptHeaders,
           body: JSON.stringify({
             block_type: 'note',
             content: pendingDraft,
@@ -348,6 +375,8 @@ export default function IdeaWorkspacePage() {
           setComposerError(
             await describeFailure(saveRes, "Couldn't save that entry. Your words are still here — try again.")
           );
+          emit(attempt, 'attempt_close', 'failed', { error_class: 'db_write' });
+          closed = true;
           return;
         }
         const saveData = await saveRes.json();
@@ -358,12 +387,15 @@ export default function IdeaWorkspacePage() {
         } else {
           // Unexpected success=false; abort rather than proceeding on stale state
           setComposerError("Couldn't save that entry. Your words are still here — try again.");
+          emit(attempt, 'attempt_close', 'failed', { error_class: 'db_write' });
+          closed = true;
           return;
         }
       }
 
       const res = await apiFetch(`/api/ideas/${idea.id}/ask-maia`, {
         method: 'POST',
+        headers: attemptHeaders,
         // Stance is sent for this turn only. Plain Ask MAIA sends none and
         // behaves exactly as it did before stances existed.
         body: JSON.stringify(stance ? { stance } : {}),
@@ -372,6 +404,8 @@ export default function IdeaWorkspacePage() {
         setComposerError(
           await describeFailure(res, "MAIA couldn't respond just now. Your thread is unchanged.")
         );
+        emit(attempt, 'attempt_close', 'failed', { error_class: 'unknown' });
+        closed = true;
       } else {
         const data = await res.json();
         if (data.success && data.block) {
@@ -383,9 +417,16 @@ export default function IdeaWorkspacePage() {
         }
       }
     } catch (err) {
+      emit(attempt, 'attempt_close', 'failed', { error_class: 'unknown' });
+      closed = true;
       console.error('[ideas/workspace] ask-maia failed:', err);
       setComposerError("MAIA couldn't respond just now. Your thread is unchanged.");
     } finally {
+      /* Every path through this handler closes the attempt exactly once,
+         including the two early returns where the autosave refused — those are
+         member acts that ended, and an attempt left open would be read under
+         T2 as an interrupted seam that never happened. */
+      if (!closed) emit(attempt, 'attempt_close', 'completed');
       setAskingMaia(false);
       // The stance governed one response. It clears — no sticky mode, hidden
       // or otherwise. The next Ask MAIA starts from no stance again.

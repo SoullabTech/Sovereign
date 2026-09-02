@@ -1,0 +1,11 @@
+{
+  "extends": "./tsconfig.ship.json",
+  "include": [
+    "lib/ideas/**/*.ts",
+    "lib/team/maiaThreadReflection.ts",
+    "app/api/ideas/[id]/ask-maia/route.ts",
+    "app/api/ideas/[id]/blocks/route.ts",
+    "app/maia/ideas/[id]/page.tsx"
+  ],
+  "exclude": ["**/node_modules/**"]
+}

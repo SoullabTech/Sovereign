@@ -4,6 +4,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentSession } from '@/lib/auth/serverSessions';
 import { query } from '@/lib/db/postgres';
 import { storeRecognitionEvent } from '@/lib/maia/decisionChangeRecognition';
+import {
+  ATTEMPT_ID_HEADER,
+  emit,
+  newRequestId,
+  resolveAttemptId,
+  runStage,
+  type AttemptContext,
+} from '@/lib/ideas/attemptInstrument';
 import { IDEA_BLOCK_MAX_CHARS } from '@/lib/ideas/constants';
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -81,12 +89,32 @@ export async function POST(
       return NextResponse.json({ error: 'Idea not found' }, { status: 404 });
     }
 
-    const result = await query(
-      `INSERT INTO member_idea_blocks (idea_id, member_id, block_type, content, metadata)
+    /* Fault localization (T1) — the `autosave_write` seam.
+       This is the FIRST of the two requests one member act crosses. The client
+       sends the same attempt id here and on ask-maia, which is what makes the
+       autosave that SUCCEEDED and the reflection that FAILED legible as one
+       act rather than two unrelated events.
+       ⛔ The seam is scoped to the INSERT alone. Member and idea scope were
+       established above by getCurrentSession() and the ownership query; the
+       attempt id selects, authorizes and mutates nothing. */
+    const { attemptId, source: attemptIdSource } =
+      resolveAttemptId(request.headers.get(ATTEMPT_ID_HEADER));
+    const attempt: AttemptContext = {
+      attemptId,
+      attemptIdSource,
+      requestId: newRequestId(),
+      memberId: session.memberId,
+      ideaId,
+      stance: null,
+    };
+
+    const result = await runStage(attempt, 'autosave_write', 'db_write', () =>
+      query(
+        `INSERT INTO member_idea_blocks (idea_id, member_id, block_type, content, metadata)
        VALUES ($1, $2, $3, $4, $5)
        RETURNING id, block_type, content, metadata, created_at`,
-      [ideaId, session.memberId, blockType, content, JSON.stringify(metadata)]
-    );
+        [ideaId, session.memberId, blockType, content, JSON.stringify(metadata)]
+      ));
 
     // Touch last_entered_at so the idea bubbles up in the list
     await query(
