@@ -36,7 +36,7 @@ import {
  * here checkpoints on their behalf.
  */
 
-type Phase = 'loading' | 'ready' | 'no-source' | 'unauthorized' | 'error' | 'conflict' | 'refused';
+type Phase = 'loading' | 'ready' | 'no-source' | 'unauthorized' | 'error' | 'conflict' | 'refused' | 'unreadable';
 
 /**
  * What the writer is editing, in the shape the draft actually has.
@@ -212,6 +212,11 @@ export default function Worktable({ manuscriptId, onMeta, onCheckpointed }: Work
       if (loaded.kind === 'ok') return settle(loaded);
       if (loaded.kind === 'unauthorized') return setPhase('unauthorized');
       if (loaded.kind === 'error') return setPhase('error');
+      /* ⛔ NOT a fall-through to beginDraft. The server claims section
+         authority and its section state could not be established: the draft
+         EXISTS, so beginning would answer 'exists' and loop, and nothing here
+         may guess at the boundaries in the meantime. */
+      if (loaded.kind === 'unreadable') return setPhase('unreadable');
       // 'none' — first entry for an imported book: found the draft on its
       // Source, verbatim. (A blank page creates its draft at birth.)
       const begun = await beginDraft(apiFetch, manuscriptId);
@@ -221,8 +226,10 @@ export default function Worktable({ manuscriptId, onMeta, onCheckpointed }: Work
         const again = await loadDraft(apiFetch, manuscriptId);
         if (cancelled) return;
         if (again.kind === 'ok') return settle(again);
+        if (again.kind === 'unreadable') return setPhase('unreadable');
         return setPhase('error');
       }
+      if (begun.kind === 'unreadable') return setPhase('unreadable');
       if (begun.kind === 'no-sections') return setPhase('no-source');
       if (begun.kind === 'unauthorized') return setPhase('unauthorized');
       setPhase('error');
@@ -346,6 +353,21 @@ export default function Worktable({ manuscriptId, onMeta, onCheckpointed }: Work
       </p>
     );
   }
+  if (phase === 'unreadable') {
+    return (
+      <div className="max-w-md">
+        <p className="text-[15px] opacity-80 leading-relaxed mb-3">
+          This draft could not be opened safely.
+        </p>
+        <p className="text-[14px] opacity-55 leading-relaxed">
+          Your manuscript is arranged in sections, and the worktable could not read that
+          arrangement — so it will not offer to write over it. Nothing is lost and nothing was
+          changed. Reopen the room to try again.
+        </p>
+      </div>
+    );
+  }
+
   if (phase === 'refused') {
     return (
       <div className="max-w-md">

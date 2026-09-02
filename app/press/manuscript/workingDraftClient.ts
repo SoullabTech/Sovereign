@@ -93,10 +93,28 @@ export interface DraftRepresentation {
   content: string;
 }
 
+/**
+ * `unreadable` — the server says this draft is SECTION-AUTHORITATIVE, and its
+ * section state could not be established.
+ *
+ * ⛔ THIS EXISTS BECAUSE THE ALTERNATIVE FAILS OPEN. Folding the case into a
+ * content-authoritative representation would answer "the client cannot parse
+ * this draft's sections" with "then treat it as an old whole-document draft" —
+ * and that answer opens the legacy writable editor onto a draft whose writing
+ * authority is the Canvas. The writer would then type into a surface whose
+ * every save the server refuses, or worse, into one whose picture of their book
+ * is missing boundaries.
+ *
+ * It is distinct from `error` because the writer's situation is different:
+ * nothing is broken about the network and nothing they wrote is lost — this
+ * client and the server disagree about what the draft IS. Reopening is safe and
+ * re-evaluates; typing is not offered.
+ */
 export type LoadResult =
   | ({ kind: 'ok'; revisionCount: number; revisionId: number; updatedAt: string | null }
       & DraftRepresentation)
   | { kind: 'none' }
+  | { kind: 'unreadable' }
   | { kind: 'unauthorized' }
   | { kind: 'error' };
 
@@ -104,6 +122,7 @@ export type BeginResult =
   | ({ kind: 'ok'; revisionCount: number; revisionId: number } & DraftRepresentation)
   | { kind: 'exists' }
   | { kind: 'no-sections' }
+  | { kind: 'unreadable' }
   | { kind: 'unauthorized' }
   | { kind: 'error' };
 
@@ -173,21 +192,32 @@ function readRefusal(data: Record<string, unknown>) {
  * Read the draft's representation from a load or begin response.
  *
  * ⛔ SECTIONS ARE ACCEPTED ONLY WHEN THE SERVER SAYS THE DRAFT IS
- * SECTION-ADDRESSABLE, and only when every entry is a well-formed `{id, text}`.
+ * SECTION-ADDRESSABLE, and only when EVERY entry is a well-formed `{id, text}`.
  * A partially-parsed section list would give the editor a picture of the draft
  * that is missing boundaries, and the very first save from it would be refused
  * as an incomplete payload — after the member had already typed into it.
+ *
+ * ⛔ AND IT FAILS CLOSED. When the server claims section authority and the
+ * section state cannot be established, this returns `null` — never a
+ * content-authoritative representation. Downgrading here would hand the legacy
+ * whole-document editor a draft the Canvas owns: the ONE outcome the Press
+ * handoff exists to prevent. Absence of a usable section list is not evidence
+ * that the draft is a legacy one; it is evidence that we do not know what this
+ * draft is, and the safe answer to that is to write nothing.
  */
-function readRepresentation(data: Record<string, unknown>): DraftRepresentation {
+function readRepresentation(data: Record<string, unknown>): DraftRepresentation | null {
   const content = typeof data.content === 'string' ? data.content : '';
-  if (data.sectionAddressable !== true || !Array.isArray(data.sections)) {
+  if (data.sectionAddressable !== true) {
+    /* The server did not claim section authority. `sections` may be absent or
+       anything at all; a legacy draft is written by content and that is that. */
     return { sectionAddressable: false, sections: null, content };
   }
+  if (!Array.isArray(data.sections) || data.sections.length === 0) return null;
   const sections: DraftSection[] = [];
   for (const raw of data.sections as unknown[]) {
     const r = asRecord(raw);
     if (typeof r.id !== 'string' || r.id.length === 0 || typeof r.text !== 'string') {
-      return { sectionAddressable: false, sections: null, content };
+      return null;
     }
     sections.push({ id: r.id, text: r.text });
   }
@@ -262,9 +292,11 @@ export async function loadDraft(http: Http, manuscriptId: string): Promise<LoadR
     if (res.status === 404) return { kind: 'none' };
     if (!res.ok) return { kind: 'error' };
     const data = asRecord(await res.json());
+    const representation = readRepresentation(data);
+    if (!representation) return { kind: 'unreadable' };
     return {
       kind: 'ok',
-      ...readRepresentation(data),
+      ...representation,
       revisionCount: typeof data.revisionCount === 'number' ? data.revisionCount : 0,
       revisionId: typeof data.revisionId === 'number' ? data.revisionId : 1,
       updatedAt: typeof data.updatedAt === 'string' ? data.updatedAt : null,
@@ -280,9 +312,11 @@ export async function beginDraft(http: Http, manuscriptId: string): Promise<Begi
     if (res.status === 401) return { kind: 'unauthorized' };
     if (res.ok) {
       const data = asRecord(await res.json());
+      const representation = readRepresentation(data);
+      if (!representation) return { kind: 'unreadable' };
       return {
         kind: 'ok',
-        ...readRepresentation(data),
+        ...representation,
         revisionCount: typeof data.revisionCount === 'number' ? data.revisionCount : 1,
         revisionId: typeof data.revisionId === 'number' ? data.revisionId : 1,
       };

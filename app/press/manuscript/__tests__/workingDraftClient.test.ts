@@ -458,7 +458,11 @@ describe('loadDraft — the D9 representation', () => {
 
   it('refuses a partially-formed section list rather than a partial picture', async () => {
     /* A dropped section would make the editor's very first save an incomplete
-       payload — refused AFTER the member had already typed into it. */
+       payload — refused AFTER the member had already typed into it.
+       This originally asserted a DOWNGRADE to a content-authoritative draft,
+       which was the fail-open defect: it answered "the client cannot read this
+       draft's sections" with "then let the legacy writable editor have it".
+       The answer is `unreadable`; the exhaustive controls are below. */
     for (const bad of [
       [{ id: 's-1', text: 'a' }, { id: 's-2' }],
       [{ id: 's-1', text: 'a' }, { text: 'b' }],
@@ -468,7 +472,7 @@ describe('loadDraft — the D9 representation', () => {
       const http = jest.fn(async () => resp(200, {
         sectionAddressable: true, sections: bad, content: 'ab',
       }));
-      expect(await loadDraft(http, ID)).toMatchObject({ sectionAddressable: false, sections: null });
+      expect(await loadDraft(http, ID)).toEqual({ kind: 'unreadable' });
     }
   });
 });
@@ -625,5 +629,85 @@ describe('createDraftSaver — sections travel the same single-flight lane', () 
     saver.flush();
     await saver.whenIdle();
     expect(seen).toEqual([{ refusal: 'unknown_section_id', detail: 's-9' }]);
+  });
+});
+
+/* ── failing CLOSED on an unreadable section representation ───────────────── */
+
+/**
+ * The server claims section authority; the section state cannot be established.
+ *
+ * ⛔ The one answer that must never be produced here is a content-authoritative
+ * representation. That answer opens the legacy whole-document editor onto a
+ * draft the Canvas owns — the single outcome the Press handoff exists to
+ * prevent — and the writer discovers it only when a save they already made is
+ * refused, or worse, when a boundary the client never saw is written over.
+ */
+const MALFORMED: [string, unknown][] = [
+  ['sections absent entirely', undefined],
+  ['sections null', null],
+  ['sections not an array', { '0': { id: 'a', text: 'x' } }],
+  ['sections empty', []],
+  ['an entry that is not an object', ['a string']],
+  ['an entry that is null', [null]],
+  ['an entry missing id', [{ text: 'x' }]],
+  ['an entry with an empty id', [{ id: '', text: 'x' }]],
+  ['an entry with a non-string id', [{ id: 7, text: 'x' }]],
+  ['an entry missing text', [{ id: 'a' }]],
+  ['an entry with non-string text', [{ id: 'a', text: 7 }]],
+  ['one good entry and one malformed', [{ id: 'a', text: 'x' }, { id: 'b' }]],
+];
+
+describe('loadDraft — fails CLOSED when section state cannot be established', () => {
+  for (const [name, sections] of MALFORMED) {
+    it(`${name} → unreadable, never a writable legacy draft`, async () => {
+      const body: Record<string, unknown> = { sectionAddressable: true, content: 'the whole draft' };
+      if (sections !== undefined) body.sections = sections;
+      const r = await loadDraft(jest.fn(async () => resp(200, body)), ID);
+      expect(r.kind).toBe('unreadable');
+      /* The load-bearing half of the assertion: not merely "not ok", but never
+         a representation any surface would treat as content-authoritative. */
+      expect((r as { sectionAddressable?: boolean }).sectionAddressable).toBeUndefined();
+    });
+  }
+
+  it('a draft the server does NOT call section-addressable stays writable', async () => {
+    /* The fail-closed rule is about a claim the client cannot honour. Where no
+       claim is made, a legacy draft is written by content, and a stray
+       `sections` key changes nothing about that. */
+    const r = await loadDraft(jest.fn(async () => resp(200, {
+      content: 'legacy', sections: 'nonsense',
+    })), ID);
+    expect(r).toMatchObject({ kind: 'ok', sectionAddressable: false, sections: null });
+  });
+});
+
+describe('beginDraft — fails CLOSED on the same responses', () => {
+  for (const [name, sections] of MALFORMED) {
+    it(`${name} → unreadable, so a NEW draft never lands in the legacy editor`, async () => {
+      const body: Record<string, unknown> = { id: 'd', sectionAddressable: true, content: 'x' };
+      if (sections !== undefined) body.sections = sections;
+      const r = await beginDraft(jest.fn(async () => resp(201, body)), ID);
+      expect(r.kind).toBe('unreadable');
+      expect((r as { sectionAddressable?: boolean }).sectionAddressable).toBeUndefined();
+    });
+  }
+
+  it('a well-formed section-addressable create reports its authority', async () => {
+    /* The positive control the fail-closed cases are measured against: this is
+       the response a Press begin must route to the read-only handoff, NOT to
+       the writable editor. */
+    const r = await beginDraft(jest.fn(async () => resp(201, {
+      id: 'd', sectionAddressable: true, sections: SECTIONS,
+      content: flattenDraftSections(SECTIONS), revisionCount: 1, revisionId: 1,
+    })), ID);
+    expect(r).toMatchObject({ kind: 'ok', sectionAddressable: true, sections: SECTIONS });
+  });
+
+  it('a legacy create still reports content authority', async () => {
+    const r = await beginDraft(jest.fn(async () => resp(201, {
+      id: 'd', content: '# A\n\nbody', revisionCount: 1,
+    })), ID);
+    expect(r).toMatchObject({ kind: 'ok', sectionAddressable: false, sections: null });
   });
 });

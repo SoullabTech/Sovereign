@@ -49,7 +49,7 @@ import {
  * words — NEVER a timed prompt or a system nudge.
  */
 
-type Phase = 'loading' | 'ready' | 'no-source' | 'unauthorized' | 'error' | 'conflict' | 'refused';
+type Phase = 'loading' | 'ready' | 'no-source' | 'unauthorized' | 'error' | 'conflict' | 'refused' | 'unreadable';
 
 /**
  * What the writer is editing, in the shape the draft actually has.
@@ -366,7 +366,8 @@ const WritingSurface = forwardRef<WritingSurfaceHandle, WritingSurfaceProps>(
           if (again.kind === 'ok') return settle(again);
           return setPhase('error');
         }
-        if (begun.kind === 'no-sections') return setPhase('no-source');
+        if (begun.kind === 'unreadable') return setPhase('unreadable');
+      if (begun.kind === 'no-sections') return setPhase('no-source');
         if (begun.kind === 'unauthorized') return setPhase('unauthorized');
         setPhase('error');
       })();
@@ -460,6 +461,20 @@ const WritingSurface = forwardRef<WritingSurfaceHandle, WritingSurfaceProps>(
       }
     };
 
+    if (phase === 'unreadable') {
+      return (
+        <div className="w-full max-w-md pt-20">
+          <p className="text-[15px] opacity-80 leading-relaxed mb-3">
+            This draft could not be opened safely.
+          </p>
+          <p className="text-[14px] opacity-55 leading-relaxed">
+            Your manuscript is arranged in sections, and the sheet could not read that
+            arrangement — so it will not offer to write over it. Nothing is lost and nothing was
+            changed. Reopen the room to try again.
+          </p>
+        </div>
+      );
+    }
     if (phase === 'refused') {
       return (
         <div className="w-full max-w-md pt-20">

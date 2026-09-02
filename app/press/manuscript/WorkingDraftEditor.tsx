@@ -75,7 +75,11 @@ interface WorkingDraftEditorProps {
   onInsertDone?: (ok: boolean) => void;
 }
 
-type Phase = 'loading' | 'none' | 'ready' | 'unauthorized' | 'error' | 'section-addressable';
+type Phase =
+  | 'loading' | 'none' | 'ready' | 'unauthorized' | 'error'
+  | 'section-addressable'
+  /** The server claims section authority and its section state is unreadable. */
+  | 'unreadable';
 
 /**
  * SECTION-ADDRESSABLE DRAFTS ARE NOT WRITTEN HERE.
@@ -185,7 +189,7 @@ export default function WorkingDraftEditor({
          declined would be worse than saying so before they start. */
       setPhase(r.sectionAddressable ? 'section-addressable' : 'ready');
     } else {
-      setPhase(r.kind); // 'none' | 'unauthorized' | 'error'
+      setPhase(r.kind); // 'none' | 'unreadable' | 'unauthorized' | 'error'
     }
   }, [http, manuscriptId]);
 
@@ -379,9 +383,18 @@ export default function WorkingDraftEditor({
       revisionIdRef.current = r.revisionId;
       setUpdatedAt(null);
       setSaveState('idle');
-      setPhase('ready');
+      /* ⛔ FAIL CLOSED ON THE WAY IN. New drafts are now born
+         section-addressable, so an unconditional `ready` here would drop the
+         member straight into the legacy writable editor on a draft the Canvas
+         owns — and they would find out when a save they had already made was
+         refused. The phase comes from the representation the server just
+         returned, so the writable surface is never even mounted for a draft
+         that does not belong to it. */
+      setPhase(r.sectionAddressable ? 'section-addressable' : 'ready');
     } else if (r.kind === 'exists') {
       await reload();
+    } else if (r.kind === 'unreadable') {
+      setPhase('unreadable');
     } else if (r.kind === 'unauthorized') {
       setPhase('unauthorized');
     } else if (r.kind === 'no-sections') {
@@ -616,6 +629,33 @@ export default function WorkingDraftEditor({
         </a>{' '}
         to write.
       </p>
+    );
+  }
+
+  if (phase === 'unreadable') {
+    return (
+      <div className="max-w-xl">
+        <p className="text-[15px] leading-relaxed opacity-75 mb-4">
+          This draft could not be opened here safely.
+        </p>
+        <p className="text-[14px] leading-relaxed opacity-55 mb-6">
+          Nothing is lost and nothing was changed. Your manuscript is arranged in sections, and
+          this page could not read that arrangement — so it will not offer to write over it.
+        </p>
+        <a
+          href={canvasForManuscript('/writers-studio/canvas', manuscriptId)}
+          className="text-[14px] underline underline-offset-4"
+          style={{ color: '#C9A227' }}
+        >
+          Open on the Canvas
+        </a>
+        <button
+          onClick={() => void reload()}
+          className="ml-6 text-[13px] underline underline-offset-4 opacity-60"
+        >
+          Try again
+        </button>
+      </div>
     );
   }
 
