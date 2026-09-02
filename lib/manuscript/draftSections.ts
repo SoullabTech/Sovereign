@@ -290,3 +290,112 @@ export function validateSectionSave(
 export function flattenSections(sections: readonly DraftSectionState[]): string {
   return sections.map((s) => s.text).join('');
 }
+
+/* ── the section↔revision relation ────────────────────────────────────────── */
+
+/**
+ * One section's character range within an immutable revision's content.
+ *
+ * AUTHORIZED SCOPE. This is the relation the BUILD-07A recoverability ruling
+ * chose (option 2, mechanism (d)): freeze `(revisionNumber, charRange)` against
+ * the append-only `working_draft_revisions` rather than duplicating manuscript
+ * prose into a second custody domain. It carries NO TEXT — ids and offsets
+ * only — so the Work's words continue to exist in exactly one place, with one
+ * deletion cascade, one retention answer and one Sanctuary boundary.
+ *
+ * ⛔ OFFSETS ARE ONLY STABLE BECAUSE THE TARGET IS IMMUTABLE. A revision is
+ * append-only and never rewritten, so a range into it means the same characters
+ * forever. The same offsets against LIVE draft content would rot on the next
+ * keystroke. Never carry these ranges over to `manuscript_working_drafts`.
+ */
+export interface RevisionSectionRange {
+  sectionId: string;
+  /** Inclusive start offset, in UTF-16 code units, into the revision content. */
+  start: number;
+  /** Exclusive end offset. */
+  end: number;
+}
+
+export type RestoreRefusal = 'partition_not_recorded' | 'topology_change_requires_explicit_command';
+
+export type RestoreCheck =
+  | { ok: true; value: DraftSectionState[] }
+  | { ok: false; refusal: RestoreRefusal; detail: string };
+
+const refuseRestore = (refusal: RestoreRefusal, detail: string): RestoreCheck =>
+  ({ ok: false, refusal, detail });
+
+/**
+ * The partition to freeze alongside a revision, derived from the exact sections
+ * that produced its content.
+ *
+ * Derived from the same array the content was flattened from, in one pass, so
+ * the ranges cannot describe a different partition than the one saved.
+ */
+export function partitionFromSections(
+  sections: readonly DraftSectionState[],
+): RevisionSectionRange[] {
+  const out: RevisionSectionRange[] = [];
+  let cursor = 0;
+  for (const s of sections) {
+    out.push({ sectionId: s.id, start: cursor, end: cursor + s.text.length });
+    cursor += s.text.length;
+  }
+  return out;
+}
+
+/**
+ * Rebuild a revision's sections from its frozen partition.
+ *
+ * ⛔ NOTHING IS INFERRED HERE. If the partition was not recorded, this refuses
+ * rather than re-partitioning the older content — re-partitioning yields
+ * boundaries with NO id continuity to the sections that exist now, which is the
+ * failure mode option (c) was rejected for. A restore that silently reassigns
+ * identities is worse than a restore that will not run.
+ */
+export function sectionsFromPartition(
+  content: string,
+  partition: readonly RevisionSectionRange[] | null | undefined,
+  currentOrderedIds: readonly string[],
+): RestoreCheck {
+  if (!partition || partition.length === 0) {
+    return refuseRestore('partition_not_recorded',
+      'this revision predates the draft becoming section-addressable, '
+      + 'so its section boundaries were never recorded and cannot be inferred');
+  }
+
+  /* Contiguous, zero-based, and covering the content exactly. A partition that
+     does not is not a weaker record of the same thing — it is a record of a
+     different text, and restoring from it would drop or duplicate characters
+     the member wrote. */
+  let cursor = 0;
+  for (const [i, r] of partition.entries()) {
+    if (r.start !== cursor || r.end < r.start) {
+      return refuseRestore('partition_not_recorded',
+        `the recorded partition is not contiguous at index ${i}`);
+    }
+    cursor = r.end;
+  }
+  if (cursor !== content.length) {
+    return refuseRestore('partition_not_recorded',
+      `the recorded partition covers ${cursor} of ${content.length} characters`);
+  }
+
+  /* Restoring a partition whose identities differ from the draft's own is a
+     topology change — sections appearing, disappearing or reordering. Explicit
+     topology commands are not part of this slice, so it is refused rather than
+     performed silently. */
+  const sameSet =
+    partition.length === currentOrderedIds.length
+    && partition.every((r, i) => r.sectionId === currentOrderedIds[i]);
+  if (!sameSet) {
+    return refuseRestore('topology_change_requires_explicit_command',
+      'this revision was partitioned into a different set or order of sections '
+      + 'than the draft now holds');
+  }
+
+  return {
+    ok: true,
+    value: partition.map((r) => ({ id: r.sectionId, text: content.slice(r.start, r.end) })),
+  };
+}

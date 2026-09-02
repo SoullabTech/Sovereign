@@ -8,7 +8,8 @@
 
 import {
   composeDraftSlices, planConversion, validateSectionSave, flattenSections,
-  type SourceSection,
+  partitionFromSections, sectionsFromPartition,
+  type SourceSection, type DraftSectionState,
 } from '../draftSections';
 
 let seq = 0;
@@ -265,5 +266,123 @@ describe('flattenSections', () => {
     const edited = state.map((s, i) => i === 0 ? { ...s, text: s.text.replace('a', 'a much longer passage') } : s);
     expect(flattenSections(edited)).toBe(edited.map((s) => s.text).join(''));
     expect(edited.map((s) => s.id)).toEqual(state.map((s) => s.id));
+  });
+});
+
+/* ── the section↔revision relation ────────────────────────────────────────── */
+
+describe('partitionFromSections', () => {
+  const sections: DraftSectionState[] = [
+    { id: 'a', text: 'One\n\nfirst body\n\n' },
+    { id: 'b', text: 'Two\n\nsecond body\n' },
+  ];
+
+  it('covers the flattened content exactly, with no gaps and no overlap', () => {
+    const content = flattenSections(sections);
+    const part = partitionFromSections(sections);
+    expect(part[0].start).toBe(0);
+    expect(part[part.length - 1].end).toBe(content.length);
+    for (let i = 1; i < part.length; i += 1) {
+      expect(part[i].start).toBe(part[i - 1].end);
+    }
+  });
+
+  it('each range slices back to exactly the section text it came from', () => {
+    const content = flattenSections(sections);
+    for (const r of partitionFromSections(sections)) {
+      const s = sections.find((x) => x.id === r.sectionId)!;
+      expect(content.slice(r.start, r.end)).toBe(s.text);
+    }
+  });
+
+  it('carries ids and offsets only — never any prose', () => {
+    /* The whole reason a second durable prose store was rejected. If a text
+       field ever appears here, the Work exists in two custody domains. */
+    for (const r of partitionFromSections(sections)) {
+      expect(Object.keys(r).sort()).toEqual(['end', 'sectionId', 'start']);
+    }
+  });
+
+  it('records an empty section as a real zero-width position', () => {
+    const withEmpty: DraftSectionState[] = [
+      { id: 'a', text: 'x' },
+      { id: 'b', text: '' },
+      { id: 'c', text: 'y' },
+    ];
+    const part = partitionFromSections(withEmpty);
+    expect(part.map((r) => [r.start, r.end])).toEqual([[0, 1], [1, 1], [1, 2]]);
+  });
+});
+
+describe('sectionsFromPartition', () => {
+  const sections: DraftSectionState[] = [
+    { id: 'a', text: 'One\n\nfirst body\n\n' },
+    { id: 'b', text: 'Two\n\nsecond body\n' },
+  ];
+  const content = flattenSections(sections);
+  const ids = sections.map((s) => s.id);
+
+  it('round-trips a frozen partition back to the exact sections', () => {
+    const r = sectionsFromPartition(content, partitionFromSections(sections), ids);
+    expect(r).toEqual({ ok: true, value: sections });
+  });
+
+  it('REFUSES rather than re-partitioning when no partition was recorded', () => {
+    /* Option (c) — re-partitioning an older revision — was rejected because the
+       boundaries it produces have no id continuity with the sections that exist
+       now. A restore that silently reassigns identities is worse than one that
+       will not run. */
+    for (const absent of [null, undefined, []]) {
+      const r = sectionsFromPartition(content, absent as never, ids);
+      expect(r.ok).toBe(false);
+      expect((r as { refusal: string }).refusal).toBe('partition_not_recorded');
+    }
+  });
+
+  it('refuses a partition with a gap', () => {
+    const r = sectionsFromPartition(content, [
+      { sectionId: 'a', start: 0, end: 3 },
+      { sectionId: 'b', start: 5, end: content.length },
+    ], ids);
+    expect(r).toMatchObject({ ok: false, refusal: 'partition_not_recorded' });
+  });
+
+  it('refuses a partition that does not reach the end of the content', () => {
+    const r = sectionsFromPartition(content, [
+      { sectionId: 'a', start: 0, end: 3 },
+      { sectionId: 'b', start: 3, end: content.length - 1 },
+    ], ids);
+    expect(r).toMatchObject({ ok: false, refusal: 'partition_not_recorded' });
+  });
+
+  it('refuses a partition that overruns the content', () => {
+    const r = sectionsFromPartition(content, [
+      { sectionId: 'a', start: 0, end: 3 },
+      { sectionId: 'b', start: 3, end: content.length + 1 },
+    ], ids);
+    expect(r).toMatchObject({ ok: false, refusal: 'partition_not_recorded' });
+  });
+
+  it('refuses when the revision names a different set of sections', () => {
+    const r = sectionsFromPartition(content, partitionFromSections([
+      { id: 'a', text: content },
+    ]), ids);
+    expect(r).toMatchObject({ ok: false, refusal: 'topology_change_requires_explicit_command' });
+  });
+
+  it('refuses when the revision names the same ids in a different order', () => {
+    const r = sectionsFromPartition(content, [
+      { sectionId: 'b', start: 0, end: 3 },
+      { sectionId: 'a', start: 3, end: content.length },
+    ], ids);
+    expect(r).toMatchObject({ ok: false, refusal: 'topology_change_requires_explicit_command' });
+  });
+
+  it('the restored sections flatten back to the revision content', () => {
+    const r = sectionsFromPartition(content, partitionFromSections(sections), ids);
+    expect(r.ok).toBe(true);
+    /* The round-trip trigger checks exactly this at COMMIT, so a restore that
+       fails it would surface to a member as a 500. */
+    expect(flattenSections((r as { value: DraftSectionState[] }).value)).toBe(content);
   });
 });

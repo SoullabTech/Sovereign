@@ -44,6 +44,7 @@ import {
 import {
   composeDraftSlices,
   flattenSections,
+  partitionFromSections,
   planConversion,
   validateSectionSave,
   type DraftSectionState,
@@ -184,18 +185,26 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
         [draftId, slices.map((s) => s.text), slices.map((s) => s.sourceSectionId)]
       );
 
-      await tx.query(
-        `INSERT INTO working_draft_revisions (draft_id, revision_number, content, saved_by, note)
-         VALUES ($1, 1, $2, $3, 'Initialized verbatim from source')`,
-        [draftId, content, memberId]
-      );
-
+      /* Read back BEFORE the revision is written: the ids are server-minted
+         here, and the revision's partition is expressed in them. Writing the
+         revision first would leave the draft's very first state unrecoverable
+         at section granularity — the one revision every later comparison is
+         measured from. */
       const written = await tx.query(
         `SELECT id, text FROM manuscript_draft_sections
           WHERE draft_id = $1 ORDER BY position ASC`,
         [draftId]
       );
-      return { draftId, sections: written.rows as DraftSectionState[] };
+      const sectionRows = written.rows as DraftSectionState[];
+
+      await tx.query(
+        `INSERT INTO working_draft_revisions
+           (draft_id, revision_number, content, saved_by, note, section_partition)
+         VALUES ($1, 1, $2, $3, 'Initialized verbatim from source', $4::jsonb)`,
+        [draftId, content, memberId, JSON.stringify(partitionFromSections(sectionRows))]
+      );
+
+      return { draftId, sections: sectionRows };
     });
 
     return NextResponse.json(
@@ -274,6 +283,11 @@ async function convertExistingDraft(
 
     return await loadSections(tx.query, draft.id);
   });
+
+  /* ⛔ NO BACKFILL. The revisions written before this conversion were partitioned
+     by nothing — their boundaries were never observed, and NULL says so. Stamping
+     today's partition onto them would be an inference wearing a record's clothes,
+     and restore would then rebuild sections the member never had. */
 
   return NextResponse.json({
     id: draft.id,
@@ -609,10 +623,16 @@ async function saveSectionAddressable(args: {
        the one BUILD-07A will locate evidence into; a checkpoint that could
        commit without its section write would break that locator. */
     if (checkpoint) {
+      /* The partition is frozen FROM THE SECTIONS THIS SAVE ACCEPTED, not
+         re-derived from the content afterwards. Re-deriving would be a second
+         claim about the same boundaries, and the two could differ exactly
+         where it matters least visibly. */
       await tx.query(
-        `INSERT INTO working_draft_revisions (draft_id, revision_number, content, saved_by, note)
-         VALUES ($1, $2, $3, $4, $5)`,
-        [draftId, updated.rows[0].revision_count, content, memberId, note]
+        `INSERT INTO working_draft_revisions
+           (draft_id, revision_number, content, saved_by, note, section_partition)
+         VALUES ($1, $2, $3, $4, $5, $6::jsonb)`,
+        [draftId, updated.rows[0].revision_count, content, memberId, note,
+         JSON.stringify(partitionFromSections(sections))]
       );
     }
 
