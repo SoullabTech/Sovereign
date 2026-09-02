@@ -1,6 +1,6 @@
 # MIPA Phase 0 — Sovereignty Prerequisites Specification
 
-**Status**: Specification, plus **P2, P3a, P3b and P3c executed and certified**. **P3 remains OPEN (P3d).** P1, P4–P6 and P2b remain specification only.
+**Status**: Specification, plus **P2 and P3a–P3d executed and certified**. **P3 remains OPEN** pending its closed-set certification. P1, P4–P6 and P2b remain specification only.
 **Authorized**: 2026-09-02 (founder) — bounded to P1–P6, sequencing, acceptance criteria, migration prerequisites.
 **Semantic adjudication**: 2026-09-02 (founder) — all five blocking questions closed (§6).
 **§7 adjudication**: 2026-09-02 (founder) — all eight contradictions resolved (§7); **P2 authorized to execute**, P3 repair class authorized with execution gated behind P2's evidence.
@@ -420,13 +420,14 @@ It did **not** establish:
 > | **P3a — Memory Orchestrator Inference Exclusion** | ✅ Certified · **Grade A (scoped)** · **R24** |
 > | **P3b — Breakthrough Provenance / Participation** | ✅ Certified · **Grade A** (B for cast-bypass) · **R25** |
 > | **P3c — MemoryBundle Developmental Bucket** | ✅ Certified · **Grade A** (B for cast-bypass) · **R26** |
-> | **P3d — Member Web / Living Context composer** | 🔴 **OPEN** — discovered by P3c's closing sweep (§4.P3-SWEEP) |
+> | **P3d — Member Web pattern / session-essence inference** | ✅ Certified · **Grade A** · **R27** · 26/26 · 6 mutations |
+> | **P3 Closed-Set Certification** | 🔴 **NOT YET PERFORMED** — required before P3 may be proposed complete |
 >
 > ### 🔴 P3 REMAINS OPEN. P3a's certification discovered a second live instance of its own failure class — `breakthrough_moments`, mixed authority, different composer — and that could not be demoted to an "upgrade path" merely because R24's detector did not cover it. P3's claim is not *"this one composer no longer leaks inference"*; it is:
 >
 > > **Material whose authorship/authority cannot be certified may not acquire participation merely by travelling through a memory composer.**
 >
-> Three sub-prerequisites are certified and a fourth live path in the same failure class has been found. **P3 is not complete.**
+> Four sub-prerequisites are certified. **P3 is still not complete**: the closed-set certification that would license the claim *"no further producer remains"* has not been performed, and a manual survey cannot certify absence.
 >
 > **Discovery enlarges the obligation; it does not shrink the claim.** Marking P3 complete while a discovered live path in its own failure class remains unadjudicated would collapse the distinction between *certifying a detector's scope* and *certifying a prerequisite's property* — the distinction this program exists to hold.
 
@@ -742,6 +743,73 @@ Machine-inferred statements about the member **carrying a rendered confidence pe
 **Not repaired here.** Recorded as the open obligation that keeps P3 open, per the precedent P3b and P3c set.
 
 **Honest limit of this sweep**: it enumerated composers reachable from the canonical route's addenda and the MemoryBundle. It is a *survey*, not a compiler-derived closed set. A closed set over "everything that composes member-derived material into a prompt" would be the right instrument and does not exist yet. Until it does, *"no further path remains"* is **not a claim this evidence can support** — which is itself a reason P3 stays open.
+
+---
+
+### P3d-E — Member Web · execution record
+
+#### Topology, established before repair
+
+`formatMemberWebForPrompt` is live on the canonical route as `memberWebAddendum`. It composed **five** sections:
+
+| Section | Material | Verdict |
+|---|---|---|
+| Active Patterns | `pattern_ledger` → `P1 [87% \| scope \| date]: <statement>` | 🔴 machine detects, machine authors, machine scores |
+| Recent Session Arcs | summary pipeline → `<essence> → <nextStep>` | 🔴 machine-authored interpretation |
+| Recent Journal | `quick_journal_entries` / `elemental_journal_entries` | ✅ **member-authored** |
+| Candidate recurrence | `member_theme_signals` (R24-excluded) | 🔴 derivation over excluded |
+| Field condition | `deriveFieldState(journal, themes, patterns, sessions)` + `confidence=0.87` | 🔴 derivation, least-certified governs |
+
+#### The partition
+
+**Solving P3d by deleting the formatter would have removed the member's own journal alongside MAIA's inferences about them** — a constitutional failure in the opposite direction. `formatMemberWebForPrompt` now takes `CertifiedMemberWeb`, a type that **structurally does not contain** the excluded classes. Reaching them is a compile error.
+
+Journal authorship is structurally certifiable: those tables hold only member-supplied content written through authenticated member gestures, exactly as `conversation_turns.role='user'` is certifiable. Its **`themes` annotation does not survive** — nothing establishes who authored those tags, and never-guess applies at field granularity.
+
+#### The two rulings this implements
+
+**Transformation creates a newly authored object.**
+
+```
+   member testimony --machine summarizes--> MAIA-AUTHORED SUMMARY
+                                       NOT  MEMBER TESTIMONY
+```
+
+Every sentence a session essence summarizes may have been the member's. The summary is not. **Authorship attaches to the representation, not merely to the raw material it was derived from** — which is what prevents intelligent synthesis from quietly becoming autobiographical authority.
+
+**The derivation rule**, now a gate function (`adjudicateDerivation`) rather than a per-site check:
+
+> A derived representation cannot acquire greater participation authority than the material required to produce it.
+
+A confidence percentage does not elevate epistemic standing. It only makes the inference sound as though it had been measured.
+
+#### Falsification — six mutations, all verified failing, reverted
+
+| # | Mutation | Result |
+|---|---|---|
+| D1 | Declare a renamed pattern field on `CertifiedMemberWeb` | ❌ 1 failed |
+| **D2** | **Mandated laundering** — *"Your strongest recurring pattern is water, with 0.87 confidence"* | ❌ 1 failed |
+| D3 | Derivation rule admits despite an excluded input | ❌ 2 failed |
+| D4 | Reclassify session essences as member testimony | ❌ 1 failed |
+| D5 | Sweep the member's journal into the exclusion | ❌ 3 failed |
+| D6 | Route passes the raw context through an `as any` cast | ❌ 1 failed |
+| — | Restored | ✅ **26/26** |
+
+> ### ⚠️ THREE OF THESE SIX INITIALLY PASSED
+>
+> **D1** — the check was name-based and knew only `activePatterns`; a field named `patterns` walked through. Replaced with a closed set over declared fields.
+> **D4** — nothing composed sessions either way, so the *classification* went unpinned even though it is load-bearing for the derivation rule. Now pinned directly.
+> **D6** — the check denied one *spelling* of the bypass (`formatMemberWebForPrompt(memberLiveCtx)`) and missed `(memberLiveCtx as any)`. Replaced by pinning the call **argument**.
+>
+> And a fourth reported a pass because **the mutation never applied** — the false-green class again. Every mutation is now confirmed applied before its result is recorded.
+>
+> **All four were detector gaps, not property gaps.** This is hostile mutations earning their keep by failing to fail, and it is the strongest argument yet for the instrument rule.
+
+#### Capability contraction, quantified
+
+On the canonical route, `memberWebAddendum` loses four of its five sections. For a member with patterns and session summaries, the block shrinks from roughly a dozen composed lines — pattern statements with confidence scores, session essences with next-steps, candidate recurrence, and a field-condition line — to **their own journal entries alone**, or to **nothing at all** if they have not journalled.
+
+Authorized, and not to be restored to preserve prior conversational behavior. The removed material survived only through Grade-C instructional restraint (*"use as background awareness, do not recite"*), plus one epistemic caveat added by ruling in July.
 
 ---
 
@@ -1091,24 +1159,24 @@ Conceptual only. No migration is authorized, written, or named.
 
 ## STOP
 
-**P3a, P3b and P3c certified. P3 REMAINS OPEN.**
+**P3a–P3d certified. P3 REMAINS OPEN — the closed-set certification has not been performed.**
 
 | | |
 |---|---|
-| **P2** | ✅ **Grade A (scoped)** · **R23** · 14/14 · 5 mutations · full-tree verified |
-| **P3a** | ✅ **Grade A (scoped)** · **R24** · 24/24 · 6 mutations |
-| **P3b** | ✅ **Grade A** (B for cast) · **R25** · 18/18 · 5 mutations |
-| **P3c** | ✅ **Grade A** (B for cast) · **R26** · 25/25 · 5 mutations |
-| **P3d** | 🔴 **OPEN** — `formatMemberWebForPrompt`, live, machine-inferred pattern statements with confidence percentages |
-| **P1, P4, P5, P6, P2b** | Specification only — not repaired |
-| Gestures · seam · retrieval · clients · deployment | Untouched |
+| **P2** | ✅ **R23** · Grade A (scoped) |
+| **P3a** | ✅ **R24** · Grade A (scoped) |
+| **P3b** | ✅ **R25** · Grade A / B for cast |
+| **P3c** | ✅ **R26** · Grade A / B for cast |
+| **P3d** | ✅ **R27** · Grade A |
+| **P3 Closed-Set Certification** | 🔴 **not performed** |
+| **P1, P4, P5, P6, P2b** | Specification only |
+
+**Verification**: typecheck 231 vs baseline 239, 0 new, 0 regressions · **331/331 across 16 suites**.
 
 **Presented for review:**
 
-1. **P3c certified** — and the finding that motivated it: R24's contraction had been **partially undone by an alternate reader on the same rows**, composing verbatim where the prime was a hint.
-2. **The alternate-reader invariant is enforceable at composition, not at read** — ~32 SQL touch-points make the read-boundary form an overbroad gate. Answered locally for P3; not deferred to the seam.
-3. **P3 stays open.** The closing sweep found **P3d** live on the canonical route. Consistent with the standing rule rather than an exception to it.
-4. **A fourth instrument defect**, of the false-green kind: the body extractor never matched `async`, so assertions about that method passed vacuously. The boundary corpus now covers modifiers.
-5. **The sweep's own limit stated**: it is a survey, not a compiler-derived closed set. *"No further path remains"* is not a claim this evidence can support.
+1. **P3d certified as a partition** — the member's journal survives; four machine-authored or derived classes do not. The derivation rule is now a gate function, generalizing P3b's breakthrough-count result instead of restating it per site.
+2. **Three of six mutations initially passed** — all detector gaps, all closed and re-verified, plus a fourth that reported a pass because it never applied. Recorded prominently: this is the clearest evidence yet for the instrument rule.
+3. **P3 stays open** for the closed-set certification, not for a known further exposure. A survey can discover; it cannot certify absence.
 
-**Next**: P3d, if authorized. **P1 not started.**
+**Next**: the P3 Closed-Set Certification, if authorized to proceed directly. **P1 not started.**

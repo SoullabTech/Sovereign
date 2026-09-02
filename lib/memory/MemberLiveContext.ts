@@ -320,6 +320,11 @@ import { loadSpiralState } from '@/lib/consciousness/spiralStatePersistence';
 import { getRecentSummaries } from '@/lib/scribe/sovereignSummarizer';
 import { getActivePatternContext } from '@/lib/patterns/PatternOfferingService';
 import { loadJournals } from '@/lib/memory/SignificantMomentsService';
+import {
+  adjudicateParticipation,
+  adjudicateDerivation,
+  type ProvenanceClaim,
+} from '@/lib/maia/participationGate';
 import { loadRelationshipEssence } from '@/lib/consciousness/RelationshipAnamnesisPostgres';
 import { getRecentThemes, findRecurringThemes } from '@/lib/consciousness/participatoryRealityHelper';
 import type { ThemeRecurrence } from '@/lib/consciousness/participatoryReality';
@@ -428,93 +433,155 @@ export async function buildMemberLiveContext(
 }
 
 /**
- * Format a MemberLiveContext into a compact "Member Web" prompt block.
+ * P3d (MIPA Phase 0) — THE COMPOSITION-ELIGIBLE VIEW OF THE MEMBER WEB.
  *
- * Caps: 4 patterns, 3 sessions, 5 journals. Hard limits prevent prompt bloat.
- * Format is stable across turns — MAIA knows where to look in the prompt.
+ * `formatMemberWebForPrompt` no longer takes a `MemberLiveContext`. It takes
+ * THIS type, which structurally does not contain the excluded classes — so the
+ * formatter cannot reach `activePatterns`, `recentSessions`, `recurringThemes`
+ * or `fieldState` at all. Not filtered: absent.
+ *
+ * WHAT WAS EXCLUDED, AND WHY (partition, not deletion):
+ *
+ *   activePatterns   `pattern_ledger` — machine detects the pattern, machine
+ *                    authors the statement, machine assigns the confidence, and
+ *                    the formatter rendered `P1 [87% | scope | date]: …`. The
+ *                    percentage does not increase authority; it makes the
+ *                    inference SOUND authoritative. SYSTEM_INFERENCE.
+ *
+ *   recentSessions   Machine-generated session essences. Every sentence
+ *                    summarized may have been the member's — the SUMMARY is
+ *                    not. Transformation creates a newly authored object:
+ *
+ *                        member testimony --machine summarizes--> MAIA-AUTHORED
+ *
+ *                    Authorship attaches to the representation, not merely to
+ *                    the raw material it was derived from.
+ *
+ *   recurringThemes  Derived from `member_theme_signals`, already excluded by
+ *                    R24. A derivation over excluded material stays excluded.
+ *                    (Its prompt text already carried an epistemic caveat from
+ *                    the 2026-07-17 R4 ruling — Grade C instructional restraint.
+ *                    P3d makes it structural.)
+ *
+ *   fieldState       `deriveFieldState({ recentJournal, recurringThemes,
+ *                    activePatterns, recentSessions })` with a rendered
+ *                    `confidence=0.72`. Three of its four inputs are excluded,
+ *                    so the derivation rule excludes it. This is precisely the
+ *                    laundering case: never composing `pattern.statement` while
+ *                    composing "dominant_theme=… confidence=0.87".
+ *
+ * WHAT SURVIVES:
+ *
+ *   recentJournal    The member's own writing, from `quick_journal_entries` and
+ *                    `elemental_journal_entries` — tables written only by
+ *                    authenticated member gestures with member-supplied
+ *                    content. Authorship is structurally certifiable from the
+ *                    write path, exactly as `conversation_turns.role = 'user'`
+ *                    is. MEMBER_AUTHORED, and it composes.
+ *
+ *                    Its `themes` annotation does NOT survive: nothing
+ *                    establishes who authored those tags, and unknown
+ *                    provenance is excluded rather than guessed — the
+ *                    never-guess rule applied at field granularity.
+ *
+ * P3d is a partition. Solving it by deleting the formatter would have removed
+ * the member's own journal alongside MAIA's inferences about them, which is a
+ * constitutional failure in the opposite direction.
  */
-export function formatMemberWebForPrompt(ctx: MemberLiveContext): string {
-  if (
-    ctx.activePatterns.length === 0 &&
-    ctx.recentSessions.length === 0 &&
-    ctx.recentJournal.length === 0 &&
-    (ctx.recurringThemes?.length ?? 0) === 0
-  ) {
-    return ''; // Nothing to inject — don't add noise
+export interface CertifiedMemberWeb {
+  /** Member-authored journal content. Themes deliberately not carried. */
+  journal: Array<{ createdAt: Date | string; content: string }>;
+  /** Observability only — never composed. */
+  excluded: {
+    patterns: number;
+    sessions: number;
+    themes: number;
+    fieldState: boolean;
+  };
+}
+
+/**
+ * Adjudicate a MemberLiveContext into its composition-eligible view.
+ *
+ * Every class is adjudicated through the SAME `adjudicateParticipation` /
+ * `adjudicateDerivation` gate that P3a, P3b and P3c use. No parallel model.
+ */
+export function certifyMemberWeb(ctx: MemberLiveContext): CertifiedMemberWeb {
+  // ── Machine-authored classes. `pattern_ledger` and the summary pipeline
+  //    record no member authorship, so the claim is null — never guessed.
+  const patternsVerdict = adjudicateParticipation({
+    provenance: null as ProvenanceClaim,
+    endorsement: 'none',
+  });
+  const sessionsVerdict = adjudicateParticipation({
+    provenance: { authoredBy: 'maia', authorityClass: 'inference' },
+    endorsement: 'none',
+  });
+  const themesVerdict = adjudicateParticipation({
+    provenance: null as ProvenanceClaim,
+    endorsement: 'none',
+  });
+
+  // ── The member's own writing. Authorship is structurally certifiable from
+  //    the write path: these tables hold only member-supplied content written
+  //    through authenticated member gestures.
+  const journalVerdict = adjudicateParticipation({
+    provenance: { authoredBy: 'member', authorityClass: 'testimony' },
+    endorsement: 'none',
+  });
+
+  // ── The derivation. Its inputs are journal + themes + patterns + sessions;
+  //    the least-certified governs, so it is excluded regardless of the journal.
+  const fieldStateVerdict = adjudicateDerivation([
+    journalVerdict,
+    themesVerdict,
+    patternsVerdict,
+    sessionsVerdict,
+  ]);
+
+  return {
+    journal: journalVerdict.admitted
+      ? (ctx.recentJournal ?? []).slice(0, 5).map((j) => ({
+          createdAt: j.createdAt,
+          content: j.content,
+        }))
+      : [],
+    excluded: {
+      patterns: patternsVerdict.admitted ? 0 : (ctx.activePatterns?.length ?? 0),
+      sessions: sessionsVerdict.admitted ? 0 : (ctx.recentSessions?.length ?? 0),
+      themes: themesVerdict.admitted ? 0 : (ctx.recurringThemes?.length ?? 0),
+      fieldState: !fieldStateVerdict.admitted && !!ctx.fieldState,
+    },
+  };
+}
+
+/**
+ * Format the composition-eligible Member Web into a prompt block.
+ *
+ * P3d: takes `CertifiedMemberWeb`, not `MemberLiveContext`. The excluded
+ * classes are not in scope — reaching them is a compile error, not an omission
+ * a reviewer must notice.
+ */
+export function formatMemberWebForPrompt(web: CertifiedMemberWeb): string {
+  if (web.journal.length === 0) {
+    return ''; // Nothing certified to surface — silence, not an empty scaffold.
   }
 
-  const patternsBlock = ctx.activePatterns.length > 0
-    ? ctx.activePatterns.slice(0, 4).map((p, i) => {
-        const conf = (p.confidence * 100).toFixed(0);
-        const when = p.lastEvidenceAt ? p.lastEvidenceAt.slice(0, 10) : 'unknown';
-        return `  P${i + 1} [${conf}% | ${p.scope} | ${when}]: ${p.statement}`;
-      }).join('\n')
-    : '  None recorded yet.';
-
-  const summariesBlock = ctx.recentSessions.length > 0
-    ? ctx.recentSessions.slice(0, 3).map(s => {
-        const date = s.completedAt instanceof Date
-          ? s.completedAt.toISOString().slice(0, 10)
-          : String(s.completedAt).slice(0, 10);
-        const rem = s.summary;
-        const essence = rem.essence ? rem.essence.slice(0, 140) : 'Session completed';
-        const topThemes = rem.themes?.slice(0, 3).join(', ') || '';
-        const next = rem.nextStep ? ` → ${rem.nextStep.slice(0, 60)}` : '';
-        return `  [${date}]${topThemes ? ` (${topThemes})` : ''}: ${essence}${next}`;
-      }).join('\n')
-    : '  No summaries yet — session history builds over time.';
-
-  const journalsBlock = ctx.recentJournal.length > 0
-    ? ctx.recentJournal.slice(0, 5).map(j => {
-        const date = j.createdAt instanceof Date
+  const journalsBlock = web.journal
+    .map((j) => {
+      const date =
+        j.createdAt instanceof Date
           ? j.createdAt.toISOString().slice(0, 10)
           : String(j.createdAt).slice(0, 10);
-        const preview = j.content.replace(/\s+/g, ' ').trim().slice(0, 200);
-        const themes = j.themes?.slice(0, 3).join(', ') || '';
-        return `  [${date}]${themes ? ` (${themes})` : ''} — ${preview}`;
-      }).join('\n')
-    : '  No journal entries yet.';
-
-  const themesLines = ctx.recurringThemes && ctx.recurringThemes.length > 0
-    ? ctx.recurringThemes.slice(0, 3).map(t => {
-        const label = t.theme.replace(/_/g, ' ');
-        const last = t.last_seen ? String(t.last_seen).slice(0, 10) : '';
-        return `  ${label} (×${t.count}${last ? `, last ${last}` : ''}, ${t.dominant_signal_type})`;
-      }).join('\n')
-    : null;
-
-  // Epistemic label correction (2026-07-17, Kelly ruling R4): these themes are
-  // SYSTEM-INFERRED keyword detections, not member self-observations. They must
-  // read as candidate recurrence — never as recognized, confirmed, or
-  // member-known — until the member ratifies them.
-  const themesSection = themesLines
-    ? `\nCandidate recurrence — system-noticed, not yet confirmed by the member (treat as tentative questions, never as facts about the member):\n${themesLines}\n`
-    : '';
-
-  let fieldConditionBlock = '';
-  if (ctx.fieldState) {
-    const { fieldState } = ctx;
-    const confidenceLabel = fieldState.confidence > 0.6 ? 'current field condition' : 'background signal';
-    const parts = [
-      fieldState.dominantTone  ? `dominant_tone=${fieldState.dominantTone}` : null,
-      fieldState.dominantTheme ? `dominant_theme=${fieldState.dominantTheme}` : null,
-      fieldState.activePattern ? `active_pattern=${fieldState.activePattern}` : null,
-      `recency=${fieldState.recency}`,
-      `confidence=${fieldState.confidence.toFixed(2)}`,
-      fieldState.tension       ? `tension=${fieldState.tension}` : null,
-    ].filter(Boolean);
-    fieldConditionBlock = `\n## ${confidenceLabel}\n${parts.join('; ')}\n`;
-  }
+      // Content only. No `themes` annotation — its authorship is unestablished.
+      const preview = j.content.replace(/\s+/g, ' ').trim().slice(0, 200);
+      return `  [${date}] — ${preview}`;
+    })
+    .join('\n');
 
   return `🕸️ MEMBER WEB (Silent context — use as background awareness, do not recite):
-Active Patterns (recurring structures in their life):
-${patternsBlock}
-
-Recent Session Arcs (what we've been working on):
-${summariesBlock}
-
-Recent Journal:
+Recent Journal (the member's own writing):
 ${journalsBlock}
-${themesSection}${fieldConditionBlock}
+
 Instruction: Before responding, silently check these threads. If relevant, reflect them briefly and propose one integration step. Do not quote this block directly.`;
 }

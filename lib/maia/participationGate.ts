@@ -92,7 +92,8 @@ export interface ParticipationInput {
 export type ExclusionReason =
   | 'uncertified_provenance'
   | 'unendorsed_inference'
-  | 'routing_state_not_composable';
+  | 'routing_state_not_composable'
+  | 'derived_from_excluded';
 
 export type ParticipationVerdict =
   | { admitted: true; provenance: CertifiedProvenance }
@@ -131,6 +132,54 @@ export function adjudicateParticipation(
   return { admitted: true, provenance };
 }
 
+/**
+ * THE DERIVATION RULE (founder-adopted, 2026-09-02).
+ *
+ *   A derived representation cannot acquire greater participation authority
+ *   than the material required to produce it.
+ *
+ * Counts, summaries, elemental dominance, confidence scores, trends,
+ * classifications, session essences and similar derivations over excluded
+ * inference remain excluded. **Transformation does not launder provenance.**
+ *
+ * Without this rule a developer complies with the letter of P3 by never
+ * composing `pattern.statement`, while composing:
+ *
+ *     "Your strongest recurring pattern is Water, with 87% confidence."
+ *
+ * — the same inference, laundered through derivation. This generalizes the
+ * breakthrough-count result (P3b) rather than restating it per site.
+ *
+ * A derivation over ZERO inputs is not a derivation; it is an assertion, and it
+ * is excluded. Silence is the honest form of having nothing certified.
+ */
+export function adjudicateDerivation(
+  inputs: ParticipationVerdict[],
+): ParticipationVerdict {
+  if (inputs.length === 0) {
+    return { admitted: false, reason: 'derived_from_excluded' };
+  }
+  const firstExcluded = inputs.find((v) => !v.admitted);
+  if (firstExcluded && !firstExcluded.admitted) {
+    // The least-certified input governs. Reported as derived_from_excluded so
+    // the trace distinguishes "this material was excluded" from "this material
+    // was computed FROM excluded material" — different repairs.
+    return { admitted: false, reason: 'derived_from_excluded' };
+  }
+  // Every input admitted. The derivation inherits the LOWEST standing present:
+  // a summary of member testimony is MAIA-authored, never member testimony.
+  const admitted = inputs.filter(
+    (v): v is Extract<ParticipationVerdict, { admitted: true }> => v.admitted,
+  );
+  const anyInference = admitted.some((v) => v.provenance.authorityClass === 'inference');
+  return {
+    admitted: true,
+    provenance: anyInference
+      ? { authoredBy: 'maia', authorityClass: 'inference' }
+      : admitted[0].provenance,
+  };
+}
+
 /** Human-readable exclusion reasons for observability. Never member-facing. */
 export const EXCLUSION_REASON_TEXT: Record<ExclusionReason, string> = {
   uncertified_provenance:
@@ -139,4 +188,6 @@ export const EXCLUSION_REASON_TEXT: Record<ExclusionReason, string> = {
     'MAIA-authored inference without a member endorsement relation; no participation authority',
   routing_state_not_composable:
     'system-derived routing state; steers machinery, never composes as a claim about the member',
+  derived_from_excluded:
+    'computed from material that does not participate; transformation does not launder provenance',
 };

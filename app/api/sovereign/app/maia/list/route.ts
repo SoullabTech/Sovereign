@@ -104,7 +104,7 @@ import { resolveMemoryMode, type MemoryMode } from '@/lib/memory/MemoryGate';
 import { processNameChangeIfDetected } from '@/lib/consciousness/nameChangeDetection';
 import { resolveMemberIdentity } from './resolveIdentity';
 import { getRelationshipAnamnesis, saveRelationshipEssence, loadRelationshipEssence } from '@/lib/consciousness/RelationshipAnamnesisPostgres';
-import { buildMemberLiveContext, formatMemberWebForPrompt, describeLiveContext } from '@/lib/memory/MemberLiveContext';
+import { buildMemberLiveContext, certifyMemberWeb, formatMemberWebForPrompt, describeLiveContext } from '@/lib/memory/MemberLiveContext';
 import { MemoryWritebackService } from '@/lib/memory/MemoryWriteback';
 import { getAstrologyContextForUser, type AstrologyContext } from '@/lib/services/maiaAstrologyContextService';
 // Conversational Keep — explicit member-instruction filing only (no salience offers).
@@ -735,7 +735,18 @@ export async function POST(req: NextRequest) {
         maxPatterns: 4,
         maxJournal: 5,
       });
-      memberWebAddendum = formatMemberWebForPrompt(memberLiveCtx);
+      // P3d — the context is adjudicated into its composition-eligible view
+      // before it can be formatted. `formatMemberWebForPrompt` no longer accepts
+      // a raw MemberLiveContext, so machine-inferred patterns, machine-authored
+      // session essences, candidate recurrence and the derived field state
+      // cannot reach the prompt from here. The member's own journal does.
+      const certifiedWeb = certifyMemberWeb(memberLiveCtx);
+      memberWebAddendum = formatMemberWebForPrompt(certifiedWeb);
+      console.log('[MAIA/sovereign] member-web participation', {
+        userId: memberRef(effectiveUserId),
+        journalAdmitted: certifiedWeb.journal.length,
+        excluded: certifiedWeb.excluded,
+      });
       const t_web_ms = Date.now() - t_web_start;
       const ctxDesc = describeLiveContext(memberLiveCtx);
       console.log(
