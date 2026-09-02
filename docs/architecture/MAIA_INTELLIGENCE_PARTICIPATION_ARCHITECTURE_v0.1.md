@@ -93,7 +93,10 @@ versus the inverse, which the same rule forbids:
                                → inference may itself be invalidated
 ```
 
-> **Standing gates who may write a validity edge. Time decides which wins among those who may.** Both of Kelly's requirements hold simultaneously: a later member revision invalidates an earlier member Keep, and no computation ever promotes a system inference into greater autobiographical authority than member testimony.
+> **STANDING RULE (ratified 2026-09-02).** *Standing determines who may write a validity edge; time resolves among actors with sufficient standing.*
+>
+> Later member correction → may invalidate an earlier member claim or Keep.
+> System inference → cannot invalidate member testimony. Both of Kelly's requirements hold simultaneously: a later member revision invalidates an earlier member Keep, and no computation ever promotes a system inference into greater autobiographical authority than member testimony.
 
 ### 2.4 VALIDITY as a resolved value
 
@@ -158,9 +161,29 @@ Applying that predicate to the actual classes produces a non-obvious and load-be
 | **Conversation history** | ❌ **none exists** | ❌ **no — structurally** |
 | System inference | ❌ machine-authored | ❌ **no** |
 
-> **`conversation_turns` can never generate a contextual offer.** There is no member-authored doorway text and no place to put one — every candidate description would be system-authored *about* the member's history. Conversation history participates **only under explicit warrant** (§4.1).
+> **`conversation_turns` cannot generate a *candidate-specific* contextual offer.** There is no consented resurfacing text attached to an ordinary turn, so any candidate description would be system-authored *about* the member's history. A doorway reading *"that painful thing with Karen may be relevant again…"* **has already disclosed the memory** — calling it restraint would be a category error.
 
-This is a derived result, not a policy choice, and it explains something the census observed without explaining: **`return_preference` lives on atoms and not on turns.** It was never an oversight. A turn has nothing that could carry a consented doorway.
+**Refined 2026-09-02 — three dispositions, not two.** The leak correction rules out candidate-specific doorways. It does not prove that ordinary history can never participate contextually under any architecture. A **content-free** doorway discloses no person, topic, event, age, sentiment, or inferred meaning:
+
+> *"A prior part of our conversation may be relevant here. Would you like me to look back?"*
+
+That is a different object, and it should not be automatically permitted either — an unprompted ambient nag is its own intrusion. But it may become legitimate under an explicit member opt-in.
+
+```
+conversation_turns
+    │
+    ├── W1 explicit recollection ─────────────► ELIGIBLE
+    │
+    ├── candidate-specific contextual doorway ► PROHIBITED
+    │     (discloses the memory in the act of offering it)
+    │
+    └── content-free contextual doorway ──────► MEMBER OPT-IN ONLY
+          (new preference: historical_recall_doorways)
+```
+
+**`historical_recall_doorways`** is a proposed member-level preference, default **off**, distinct from every existing gate: `conversational_recall_enabled` governs whether recent turns *enter the prompt*; this governs whether MAIA may *announce that history exists* without naming any of it. It is not in scope for Phase 0 and is recorded as a design candidate.
+
+**Epistemic note on a claim withdrawn.** An earlier draft asserted that `return_preference` living on atoms and not on turns "was never an oversight." **Source history does not establish that intent.** The migrations (`20260521000001`, `20260523000001`, `20260702000003`) document the consent model and its default flip; none states why turns were excluded. The honest claim is weaker and sufficient: **the omission is *consistent* with this architecture** — a turn has nothing that could carry a consented doorway — but consistency is not evidence of design intent, and the census's own discipline forbids the stronger reading.
 
 ### 3.3 A live finding this exposes
 
@@ -210,7 +233,18 @@ Historical MAIA inference **never** silently becomes autobiographical fact throu
 
 An inference may remain **explicitly an inference** — potentially useful for present reasoning, rendered under S5 framing — but it may never be presented as *"something I remember about you."*
 
-**Class change requires a member act**: subsequent endorsement, or joint establishment. Neither gesture exists in the product today (§10.1), which means **today the only honest disposition for S5 is either explicit-inference framing or exclusion.**
+**Endorsement does not change class.** *(Adjudicated 2026-09-02.)* When a member endorses something MAIA inferred, the result is a **member-endorsed interpretation** — never a member statement:
+
+```
+   MAIA inference  ──member endorses──►  MEMBER-ENDORSED INTERPRETATION
+   MAIA inference  ──member endorses──►  MEMBER STATEMENT          ✗ prohibited
+```
+
+Modelled so that laundering is **unrepresentable rather than merely forbidden**: the standing class is *immutable*, and endorsement is an **additive edge** carrying the endorsing member and timestamp. It changes **permission and framing**, never **authorship**. An endorsed inference may be spoken as *"an interpretation you've agreed with"*; it may never be spoken as *"you told me."*
+
+> Otherwise the system launders provenance at exactly the moment sovereignty is exercised — and the loss would be invisible for years, because the laundered object looks like ordinary member history.
+
+**Class change is therefore not available at all.** Neither the endorse gesture nor joint establishment exists in the product today (§10.1), which means **the only honest disposition for S5 today is explicit-inference framing or exclusion.**
 
 **This resolves Case 6**, and names why it is currently a *live* exposure: `developmental_memories` reaches the prompt as `memoryInfluenceAddendum` with no field marking it as inference.
 
