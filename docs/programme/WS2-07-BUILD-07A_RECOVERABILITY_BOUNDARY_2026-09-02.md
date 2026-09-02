@@ -30,11 +30,32 @@ manuscript_draft_sections      the section-addressable partition: id, position, 
 
 ## 2 · Three findings, in ascending order of consequence
 
-**B1 · The draft write path never touches sections.**
+**B1 · Once converted, a draft cannot be changed through the current save route.**
 `app/api/sovereign/manuscripts/[id]/draft/route.ts` writes `working_draft_revisions` and
-`manuscript_working_drafts.content`. It contains no statement touching
-`manuscript_draft_sections`. So a draft that *were* section-addressable would have its sections go
-stale against its own content on the next save, with no re-partition recorded.
+`manuscript_working_drafts.content`, and contains no statement touching
+`manuscript_draft_sections`.
+
+**Corrected 2026-09-02, founder.** The first draft of this finding said sections would "go stale
+against content" — they would not. `20260830000001` installs **two deferred constraint triggers**,
+one on each side, and both raise when a section-addressable draft's content is not the exact
+flattening of its sections:
+
+```text
+manuscript_draft_sections_round_trip_check     AFTER INSERT/UPDATE/DELETE on sections
+manuscript_working_drafts_round_trip_check     AFTER INSERT/UPDATE on drafts
+```
+
+So a content-only save against a converted draft **fails at commit**. The committed state is never
+inconsistent. **This is a safety result and a sharper liveness defect than the one first
+reported:** the substrate does not decay, it becomes unwritable through the only save route that
+exists.
+
+The migration anticipated exactly this. Conversion was deliberately withheld until a section-aware
+WRITE path existed, because converting sooner would have created two writable truths.
+
+⛔ **A content-only request against an addressable draft would today surface as a database
+exception, not a typed refusal** — a generic 500 rather than a statement of what the caller must
+supply.
 
 **B2 · No per-section history exists anywhere.**
 Revisions store the whole draft as one `content` text. `manuscript_draft_sections.text` is mutable
@@ -87,7 +108,36 @@ construction. The distinction is the whole difference between the two.
 
 ## 4 · The decision required
 
-**This is a manuscript-custody question, not an implementation detail**, which is why it is
+**RULED 2026-09-02.** Recorded here beneath the options as they were put, so the reasoning that
+produced the ruling survives alongside it.
+
+```text
+1 · second durable prose store           REJECTED
+2 · establish section↔revision relation  AUTHORIZED, as a prerequisite that
+                                         completes the section-addressable write path
+3 · narrow BUILD-07A                     REJECTED
+4 · B3 as a reachability finding         ACCEPTED — correct the programme state,
+                                         do not reopen 6A
+```
+
+**Why (1) was rejected.** A per-section snapshot or history table would duplicate manuscript prose
+into a second custody domain, requiring its own deletion, retention, export and Sanctuary
+guarantees — while still not solving B3 and still not making the writing route capable of
+maintaining sections. The highest sovereignty cost, paid to leave the substrate unfinished.
+
+**Why (3) was rejected.** Recoverability is not an optional fifth feature; it is what lets an
+author inspect what MAIA reasoned from after the Work changes. Typed references and coverage
+without exact recovery would produce an evidence object that *appears* trustworthy and cannot
+support its own claims — worse than an explicit block.
+
+**BUILD-07A remains open and pauses.** INV-7b stays binding. No partial closure at 4 of 6
+outcomes.
+
+---
+
+## 4 · The decision, as it was put
+
+**This is a manuscript-custody question, not an implementation detail**, which is why it was
 reported rather than resolved:
 
 ```text
@@ -109,8 +159,8 @@ reported rather than resolved:
     recoverability falsifiers (1 and 2) could not yet be demonstrated
 ```
 
-⛔ **I am not choosing between these.** Each has a different blast radius, and two of the three
-reach outside BUILD-07A.
+⛔ **This session did not choose between these.** Each has a different blast radius, and two of
+the three reach outside BUILD-07A. The ruling above is the founder's.
 
 ---
 
@@ -126,5 +176,20 @@ because no member-facing path converts their draft. This was not visible from FI
 censused what exists rather than what is reachable.
 
 Recorded here because it was found while investigating something else, and because it bears on
-what "Stage 6 COMPLETE" means for a member as opposed to for the code. **It is not repaired here,
-and no repair is proposed.**
+what "Stage 6 COMPLETE" means for a member as opposed to for the code.
+
+**RULED: accepted as a reachability finding.** 6A is not reopened — its command, provenance,
+non-consent boundary and founder witness remain valid. What changes is that the *unit* and the
+*member capability* are stated apart:
+
+```text
+6A AuthorStructureCommand    CLOSED · mechanically and experientially verified
+                             against a real converted substrate
+
+Stage 6 member capability    PARTIAL · not ordinarily reachable
+                             BLOCKED ON section-addressable draft liveness
+```
+
+*"Stage 6 COMPLETE"* without that qualification is no longer an honest product-state claim. It is
+the distinction this programme keeps needing: **built and witnessed on a valid substrate ≠
+reachable through the ordinary member journey.**

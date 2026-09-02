@@ -40,12 +40,17 @@ LAST UPDATED       2026-09-02
 Stage state, set from canonical evidence — 6A's merge at `4b8b34bcf`, not from intention:
 
 ```text
-Stage 6   COMPLETE
+Stage 6   6A UNIT      CLOSED · mechanically + experientially verified
+          MEMBER REACH PARTIAL · not ordinarily reachable
+                       BLOCKED ON section-addressable draft liveness
 Stage 7   ACTIVE
           FIND        CLOSED · canonical @ cc9788e4f
           UNDERSTAND  CLOSED · canonical @ 5670163e6
-          DECIDE      AUTHORIZED
-          BUILD       unauthorized · BUILD-07A–07H not started
+          DECIDE      CLOSED · canonical @ 838eabfd8
+          BUILD       ACTIVE
+          BUILD-07A   OPEN · PAUSED — blocked on prerequisite
+          PREREQ      SECTION-ADDRESSABLE DRAFT LIVENESS · AUTHORIZED
+          BUILD-07B–H unauthorized
 Stage 8   BLOCKED ON STAGE 7 CLOSURE
 ```
 

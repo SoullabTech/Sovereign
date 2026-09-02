@@ -1,6 +1,6 @@
 # JARVIS-WS2-07-DEVELOPMENTAL-INTELLIGENCE-01
 
-> **Lane active. BUILD-07A authorized. Nothing beyond it is.**
+> **Lane active. BUILD-07A open but PAUSED, blocked on a prerequisite. Nothing beyond it is.**
 >
 > This document defined the lane before it was entered, and it still authorizes **no code, no
 > schema, no route, no prompt**. Entering FIND required the trigger below to be satisfied on
@@ -8,10 +8,10 @@
 
 ```text
 LANE               JARVIS-WS2-07-DEVELOPMENTAL-INTELLIGENCE-01
-STATE              ACTIVE · BUILD-07A AUTHORIZED
+STATE              ACTIVE · BUILD-07A PAUSED · PREREQUISITE AUTHORIZED
 TRIGGER            Stage 6A AuthorStructureCommand merged to canonical and witnessed
 TRIGGER SATISFIED  clean-main-no-secrets @ 4b8b34bcf
-AUTHORIZES         BUILD-07A DEVELOPMENTAL EVIDENCE only. No reader, no model.
+AUTHORIZES         SECTION-ADDRESSABLE DRAFT LIVENESS (prerequisite). No reader, no model.
 NORMATIVE          docs/programme/WRITERS_STUDIO_MASTER_BRIEF.md
 CAPABILITY         docs/programme/DEVELOPMENTAL_EDITOR_CAPABILITY.md
 LIVE STATE         docs/programme/WRITERS_STUDIO_PROGRAMME_BOARD.md
@@ -87,14 +87,73 @@ AUTHORIZATION AT DECIDE
                        BUILD       unauthorized
                        BUILD-07A–07H  not started
 
-CURRENT AUTHORIZATION  2026-09-02
-                       FIND        CLOSED · canonical @ cc9788e4f
-                       UNDERSTAND  CLOSED · canonical @ 5670163e6
+AUTHORIZATION AT BUILD OPENING
+                       2026-09-02
                        DECIDE      CLOSED · canonical @ 838eabfd8
                        BUILD       ACTIVE
                        BUILD-07A   AUTHORIZED — DEVELOPMENTAL EVIDENCE only
                        BUILD-07B–H unauthorized
+
+CURRENT AUTHORIZATION  2026-09-02, after the recoverability boundary ruling
+                       FIND        CLOSED · canonical @ cc9788e4f
+                       UNDERSTAND  CLOSED · canonical @ 5670163e6
+                       DECIDE      CLOSED · canonical @ 838eabfd8
+                       BUILD       ACTIVE
+                       BUILD-07A   OPEN · PAUSED — blocked on the prerequisite below
+                       PREREQ      SECTION-ADDRESSABLE DRAFT LIVENESS · AUTHORIZED
+                       BUILD-07B–H unauthorized
 ```
+
+## Prerequisite — SECTION-ADDRESSABLE DRAFT LIVENESS
+
+**Not a new lane.** A bounded prerequisite inside this one. Its own branch and PR are appropriate
+because it touches every draft save; the programme flow does not change.
+
+> **Purpose: complete the existing section-addressable substrate so it is reachable, and remains
+> true through ordinary member writing.**
+
+Governing decision: **finish the section-addressable writing substrate. Do not duplicate the Work,
+and do not weaken recoverability to keep Stage 7 moving.**
+
+```text
+A · CONVERSION IS A PRODUCTION OPERATION
+    a member draft becomes section-addressable without a witness script.
+    Automatic only where the partition is LOSSLESS. Where stable boundaries
+    cannot be recovered unambiguously → typed refusal, or member-assisted
+    boundary confirmation.
+    ⛔ never infer section identity from headings, similarity, or a fresh re-partition
+
+B · CONVERTED DRAFTS REMAIN WRITABLE
+    one transaction updates sections + content + version/idempotency state
+    + checkpoint revision when requested. The flattening invariant stays
+    enforced by PostgreSQL.
+    A full-string-only request against an addressable draft gets a TYPED REFUSAL,
+    never a database exception surfacing as a 500.
+
+C · STABLE IDENTITIES SURVIVE ORDINARY WRITING
+    editing text inside a section preserves that section's id.
+    Split, merge, move and boundary changes have explicit semantics.
+    ⛔ no heuristic may silently reassign identity — later evidence and authored
+    structure depend on it
+
+D · NEW DRAFTS DO NOT BEGIN IN THE DEAD STATE
+    once the write path can maintain sections, new drafts receive their lossless
+    source-derived partition atomically
+
+E · MEMBER REACHABILITY IS PROVEN
+    the witness begins through the ordinary member path, not a seed script:
+      member opens/creates draft → becomes section-addressable → edits and saves
+      → content equals the flattening → identities remain valid
+      → Structure reading reachable → 6A authorial threshold reachable
+    A liveness witness. It does not re-prove 6A's internal invariants.
+```
+
+**When the prerequisite is live, BUILD-07A resumes on option (d):** an exact immutable whole-draft
+revision, plus metadata mapping a stable section id to its exact range in that revision. **The
+mapping stores no prose.** A capture may use only a revision that exactly matches the state read —
+it may not attach current section ranges to an older checkpoint because that checkpoint is
+convenient. Byte ranges, another exact locator, or a metadata relation are all open; a digest
+alone remains insufficient.
 
 ⛔ **BUILD-07A establishes evidence. It does not produce MAIA's reading of that evidence.** No
 model call, no reader, no prompt, no interpretation, no `DevelopmentalReading` persistence, no
