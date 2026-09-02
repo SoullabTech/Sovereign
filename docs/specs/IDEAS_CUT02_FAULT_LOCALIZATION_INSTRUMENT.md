@@ -167,7 +167,9 @@ upstream_error_type   text | null   provider error type slug (e.g. overloaded_er
 retryable             bool | null   whether the class is SDK-retried (§3.2)
 stack_fingerprint     text | null   §4.5 — hash, not a stack
 source_frames         text[]| null  §4.5 — allowlisted repo-relative frames only
-git_commit            text          running build identifier (§3.3)
+runtime_revision      object        composite runtime identity (§3.3) —
+                                    { git_commit, source_state, build_digest,
+                                      source_digest, digest_scope }
 taxonomy_version      int           stage/error-class schema version (§3.3)
 duration_ms           int  | null   null on `entered`
 stance                enum | null   already recorded in block metadata
@@ -190,22 +192,74 @@ Closed enum. Assigned at the seam that raised, never inferred later:
 gap in this table and is an amendment trigger — and an amendment increments
 `taxonomy_version` (§3.3).
 
-### 3.3 Evidence is bound to the runtime that produced it *(binding precision 3)*
+### 3.3 Evidence is bound to the runtime that produced it *(binding precision 3, amended)*
 
-Every event carries **`git_commit`** (the running build) and
-**`taxonomy_version`** (the version of the stage and error-class vocabularies
-that assigned it).
+Every event carries **`runtime_revision`** (the composite identity of the code
+that actually executed) and **`taxonomy_version`** (the version of the stage and
+error-class vocabularies that assigned it).
 
-*Why `git_commit`:* evidence without the SHA that produced it cannot support a
-runtime claim. A record from a build whose identity is unknown cannot be used to
-say what the running system did — it can only say what *some* system did. This
-is the same discipline the deploy lane already enforces
-(`CLAUDE.md` §Verify after deploy: `printenv GIT_COMMIT` must return the
-deployed SHA, never `unknown`), now made load-bearing for the instrument:
-**an event carrying `git_commit = unknown` is not admissible evidence for any
-runtime claim, and must be reported as such rather than silently ranked.**
-The instrument reads the value the container already exposes; it does not
-introduce a second provenance mechanism.
+#### 3.3.1 Why a composite, not a SHA *(evidence-integrity amendment, 2026-09-02)*
+
+The first ratified draft bound events to `git_commit` alone. **A SHA does not
+uniquely identify a local-dev runtime.** A dev server executes whatever is on
+disk, and Fast Refresh replaces modules inside a live process — so it can report
+the last committed SHA while running code that commit never contained. An event
+bound to `git_commit` alone would then appear *admissibly* bound to code it did
+not run.
+
+This is not hypothetical for this investigation. **The only occurrence in
+evidence — the witnessed 500 — happened on exactly this runtime class**, on a
+dev server, and cleared after that process was restarted. Binding its successor
+events to a bare SHA would reproduce, inside the evidence layer, the same
+runtime/tree confusion this programme has already met in the deploy lane
+(`GIT_COMMIT=unknown`, and the 2026-07-27 shared-checkout incident that produced
+the immutable-SHA deploy).
+
+#### 3.3.2 `runtime_revision`
+
+| Field | Meaning |
+|---|---|
+| `git_commit` | SHA reported by the running process |
+| `source_state` | `clean` · `dirty` · `unknown` — whether the served tree matches that commit |
+| `build_digest` | immutable build/image digest **when available** (container image digest in production) |
+| `source_digest` | exact source-or-patch digest, required for dirty evidence to be admissible |
+| `digest_scope` | `emission` · `process_start` — when the digest was computed (§3.3.4) |
+
+In production the deploy lane already supplies what this needs: an immutable
+image built from a `git archive` snapshot of a named SHA, with a fail-closed
+post-swap provenance verify. The instrument **reads** that identity; it does not
+introduce a second provenance mechanism. The composite exists for the runtimes
+the deploy lane does not govern.
+
+#### 3.3.3 Admissibility ladder
+
+| Revision | Admissible for |
+|---|---|
+| **Clean and verifiable** — `source_state: clean` with `build_digest`, or a clean tree at a known `git_commit` | **Claims about a committed or deployed runtime.** Full admissibility |
+| **Dirty with an exact `source_digest`** | Claims about **that digest only** — never about a committed or deployed runtime. The digest is the referent, not the branch it sat on |
+| **Dirty or `unknown` with no digest** | **Immediate diagnosis only.** May guide a live investigation; may not support any claim about committed or deployed code, and may not be ranked as though it could |
+
+The middle row is the one that keeps dev evidence usable without letting it
+inflate: a fault reproduced on a dirty tree is real, and it is evidence *about
+that tree*. Naming the tree exactly is what separates it from evidence about
+`main`.
+
+#### 3.3.4 The Fast Refresh caveat
+
+A digest computed at process start can be **stale by the time an event is
+emitted** — Fast Refresh mutates the served modules inside a live process.
+`digest_scope` records which was captured. `process_start` scope on a dev
+runtime therefore **cannot reach the top row** of §3.3.3 no matter how clean the
+tree was when the process began; it establishes what the process *started* as,
+not what it *ran*.
+
+#### 3.3.5 Reporting rule
+
+An inadmissible or partially admissible revision must be **surfaced as such** at
+the point of use — reported, not silently ranked. Evidence that cannot support a
+runtime claim must never be quietly counted as though it could; that is the
+inflation this programme refuses in every other layer, and the evidence layer
+gets no exemption.
 
 *Why `taxonomy_version`:* stage names and error classes will be amended as
 `unknown` faults are discovered. Without a version, records from before and
@@ -340,7 +394,7 @@ condition §4.3 refuses.
 | **P13** | A process killed mid-seam leaves a durable `entered` with no resolution, and that record **names the seam** (T2; §2.1) |
 | **P14** | A telemetry path that throws, rejects, or is unavailable leaves the member's status, response body, saved note, and reflection outcome **bit-for-bit unchanged** (§4.0) |
 | **P15** | `attempt_id` and `request_id` are proven non-authorizing: a forged, replayed, or foreign `attempt_id` selects, authorizes, and mutates **nothing** — scope is asserted to come only from `getCurrentSession()` and the ownership-checked idea (§1.1) |
-| **P16** | Every event carries `git_commit` and `taxonomy_version`; a record with `git_commit = unknown` is surfaced as **inadmissible for runtime claims**, not silently ranked (§3.3) |
+| **P16** | Every event carries a complete `runtime_revision` and `taxonomy_version`. The §3.3.3 ladder is enforced: clean-and-verifiable is admissible; dirty **with** an exact `source_digest` is admissible **only as a claim about that digest**; dirty or `unknown` **without** a digest is surfaced as **diagnosis-only and inadmissible for any committed-or-deployed runtime claim**, never silently ranked. `digest_scope: process_start` on a dev runtime cannot be reported as fully admissible (§3.3.4) |
 | **P17** | No record contains a serialized `Error`, response body, prompt, raw stack, or absolute path. `stack_fingerprint` is stable across occurrences of the same fault and carries no message; `source_frames` are repo-relative only, and an un-normalizable stack yields `null`, never a partial dump (§4.0, §4.5) |
 
 ---
@@ -409,7 +463,7 @@ precisions, incorporated above:
 |---|---|---|
 | 1 | Two identifiers, two authorities; neither authorizes, selects, or mutates | §1.1 |
 | 2 | `entered` then `completed`/`failed`; last durable `entered` localizes an interrupted seam | §2.1, §5 T2, P13 |
-| 3 | Every event bound to `git_commit` + `taxonomy_version` | §3.3, P16 |
+| 3 | Every event bound to `runtime_revision` + `taxonomy_version` *(amended 2026-09-02: composite, not a bare SHA — a SHA does not identify a dev runtime)* | §3.3, P16 |
 | 4 | Allowlist-only construction; no wholesale serialization; instrument failure cannot alter the member's outcome | §4.0, §4.5, P14, P17 |
 
 **What ratification authorizes:** finalizing this specification. Nothing else.
