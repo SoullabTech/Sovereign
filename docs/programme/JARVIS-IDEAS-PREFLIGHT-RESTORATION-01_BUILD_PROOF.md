@@ -452,3 +452,70 @@ The earlier FIND-only branch at `a6ebf9a`
 (`feature/preflight-restoration-01`) is preserved as historical investigation
 custody and is not part of this integration. It is not merged, not combined,
 and not altered.
+
+---
+
+## 13. WITNESS — full preflight, real environment
+
+Taken on the Mac main checkout (`/Users/soullab/MAIA-SOVEREIGN`) with the real
+`.env.docker`, against this branch's exact head. No synthetic values, no
+modification to `.env.docker`, no source change.
+
+```text
+HEAD=8677838c99d49238780a01eb87d80f1cce46946b
+.env.docker=REAL_PRESENT
+
+🔍 Checking for dark-text opacity footguns...
+✅ No dark-text opacity footguns found.
+✅ No Supabase detected.
+✅ No direct @anthropic-ai/sdk imports outside allowlist.
+   approved: 2 · operational: 1 · grandfathered: 55
+✅ No vendor voice names in UI code.          (1493 UI-facing files scanned)
+✅ voice-provenance: no cloud backend impersonating a sovereign voice.
+✅ No new OpenAI surface. Migration debt on allowlist: 53 file(s).
+✅ Boundary holds. 3 member-owned tables have no application reader.
+                                              (5993 application files scanned)
+ PASS  scripts/ci/maia-route-guard.test.ts
+Test Suites: 1 passed, 1 total
+Tests:       6 passed, 6 total
+WARN[0000] docker-compose.yml: the attribute `version` is obsolete…
+✅ Preflight passed: opacity + supabase + direct-anthropic + vendor voices +
+   voice-provenance + provider-governance + member-owned-boundary +
+   route-guard + docker checks clean
+PREFLIGHT_EXIT=0
+```
+
+### The host-dependence defect is empirically closed
+
+This witness ran on **macOS**. The pre-repair gate reached its verdict there via
+the `grep -E` fallback (no PCRE) and reported green, while on GNU grep it
+reported red on the same tree (§2). The repaired single-path detector now
+returns the **same verdict on both hosts**:
+
+```text
+GNU grep 3.11 / Linux container   dark-text gate ✅ EXIT 0
+macOS main checkout               dark-text gate ✅ EXIT 0
+```
+
+Same tree, same answer, two greps. That is the defect this unit set out to
+remove, demonstrated rather than argued.
+
+### Deviation recorded
+
+`git status --porcelain` was **not** empty before the switch. It reported one
+pre-existing local modification unrelated to this lane:
+
+```text
+M docs/design/now-what/reconciliation/NOW_WHAT_MASTER_PROGRAMME.md
+```
+
+`git switch --detach` carried it across, so it was present in the working tree
+during the run. The witness stands: that file is a design document under
+`docs/design/`, outside every input any preflight step reads — the dark-text
+guard's eight scoped directories, the UI-facing and application file sets, and
+the compose config. It is noted rather than omitted, because "the checkout was
+clean" would not be a true statement about this run.
+
+```text
+PROVE   PASS
+```
