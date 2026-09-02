@@ -32,8 +32,9 @@ screenshot_desktop: docs/design/contracts/screenshots/writer-structure-review-de
 screenshot_mobile: docs/design/contracts/screenshots/writer-structure-review-mobile.png
 witnessed_sha: 869e559c9
 experience_verification: >
-  Founder walk, 2026-09-02, authenticated, against a real manuscript with a real unadopted
-  Structure Review, on the exact SHA 869e559c9. Desktop and mobile (390x844), each walked
+  Founder walk, 2026-09-02, authenticated, on the exact SHA 869e559c9, against a seeded
+  witness database (`maia_ws2_06a_witness`) carrying a SYNTHETIC reading authored to exercise
+  the authorial threshold — not the founder's own manuscript, and not a reading MAIA produced. Desktop and mobile (390x844), each walked
   before the crossing, through it, and after it, with the database read directly afterwards.
   What was looked for: whether "Make this my structure" reads as an act of authorship rather
   than another MAIA suggestion or an ordinary review edit; and whether, after the act, the room
@@ -44,7 +45,10 @@ experience_verification: >
   /adopt: hard reload produced no call; the explicit button click produced a call stack of
   <button> -> cross() -> authorStructure(). Database after the mobile act: adopted true,
   adopted_review_revision 3, 4 canonical units, 14 memberships, Work content unchanged, second
-  invocation refused already_adopted. Full record:
+  invocation refused already_adopted, with the four canonical units reached through
+  adopted_from_proposal_id, so the provenance column was exercised rather than merely counted.
+  SCOPE: this establishes the threshold, not how the crossing reads against MAIA's real
+  perception of a real Work — that remains owed. Full record:
   docs/programme/WS2-06A_RUNTIME_WITNESS_2026-09-02.md
 ---
 

@@ -3,8 +3,11 @@
 ```text
 WITNESSED SHA   869e559c9
 DATE            2026-09-02
-WALKED BY       the founder, authenticated, against a real manuscript and a real
-                unadopted Structure Review
+WALKED BY       the founder, authenticated
+ENVIRONMENT     dedicated witness database `maia_ws2_06a_witness`, seeded fixture
+                ids (member ...0601 · manuscript ...0602 · proposal ...0603),
+                with a SYNTHETIC reading authored to exercise the threshold —
+                not the founder's own manuscript in the live Studio
 SURFACES        desktop · mobile 390x844
 RESULT          PASS — no redesign indicated
 ```
@@ -14,13 +17,19 @@ RESULT          PASS — no redesign indicated
 **Read this first, because the record's value depends on it.**
 
 The runs below were performed by the founder on their own machine, against a local
-PostgreSQL and a running Studio. **This session did not perform them and did not observe
-the database.** The results are recorded here as founder-reported, in their words and
-figures, because that is what they are.
+PostgreSQL and a running Studio. **This session did not perform them and did not observe the
+database live.**
 
-Two things in this record are first-hand for this session, and are marked `[SEEN]`: a
-screenshot of the mobile after-state, and a screenshot of the armed `/adopt` XHR breakpoint.
-Everything else is `[REPORTED]`.
+Three evidence classes are distinguished:
+
+```text
+[SEEN]        this session viewed it directly — a screenshot
+[TRANSCRIPT]  this session read the verbatim shell/psql output, pasted
+[REPORTED]    summarised by the founder; no primary output reached this session
+```
+
+A pasted transcript is stronger than a summary and weaker than running the query: it can be
+read and checked, but this session cannot rule out that it was edited in transit.
 
 The distinction is kept because a witness record that blurs who observed what is the same
 failure the 6A rebuild exists to correct — a claim carried forward without the thing that
@@ -51,17 +60,51 @@ Mobile 390x844 before                           PASS   [REPORTED]
 Reload with /adopt breakpoint → no adoption     PASS   [SEEN, armed]
 Explicit click → /adopt call stack              PASS   [REPORTED]
 Mobile after                                    PASS   [SEEN]
-Mobile database truth                           PASS   [REPORTED]
+Mobile database truth                           PASS   [TRANSCRIPT]
 ```
 
-Final database state after the mobile act:
+### The reset that precedes the falsifier
 
 ```text
-adopted                  true
-adopted_review_revision  3
-canonical_units          4
-memberships              14
+BEGIN
+DELETE FROM manuscript_structure_units WHERE manuscript_id = '…0602';   DELETE 4
+UPDATE manuscript_structure_proposals SET adopted_at = NULL,
+       adopted_review_revision = NULL WHERE id = '…0603';               UPDATE 1
+COMMIT
 ```
+
+and the state it left, confirming the reload produced no adoption:
+
+```text
+ canonical_units | adopted_at | adopted_review_revision
+-----------------+------------+-------------------------
+               0 |            |
+```
+
+### Final database state after the mobile act
+
+```sql
+SELECT p.adopted_at IS NOT NULL AS adopted, p.adopted_review_revision,
+       count(DISTINCT u.id) AS canonical_units,
+       count(sm.draft_section_id) AS memberships
+  FROM manuscript_structure_proposals p
+  JOIN manuscript_structure_units u ON u.adopted_from_proposal_id = p.id
+  LEFT JOIN manuscript_structure_members sm ON sm.unit_id = u.id
+ WHERE p.id = '00000000-0000-0000-0000-000000000603'
+ GROUP BY p.adopted_at, p.adopted_review_revision;
+```
+
+```text
+ adopted | adopted_review_revision | canonical_units | memberships
+---------+-------------------------+-----------------+-------------
+ t       |                       3 |               4 |          14
+```
+
+**The join is the load-bearing part.** Units are reached through
+`u.adopted_from_proposal_id = p.id`, so the four canonical units are counted *because they
+carry the provenance written by this command* — not merely because four rows exist on the
+manuscript. That makes this the first live exercise of the new provenance column, not only a
+count.
 
 ## 2 · What this session saw directly
 
@@ -118,13 +161,26 @@ control.
 > an ordinary review edit. After the act, the room communicates that the writer authored the
 > structure from the reviewed reading, rather than that MAIA changed the Work.**
 
-And no further: it says nothing about how the room behaves for a member who is not the
-founder, on a Work other than the one walked, or at viewport sizes between the two witnessed.
+And no further. In particular it says nothing about:
+
+- how the room behaves for a member who is not the founder;
+- **how the crossing reads against a real manuscript and a reading MAIA actually produced.**
+  The reading walked was synthetic, authored to exercise the threshold, and its own copy said
+  so on screen. The experiential claim is about the threshold, not about MAIA's editorial
+  perception of a real book;
+- viewport sizes between 390x844 and the desktop width walked;
+- anything at all in production. The witness database is `maia_ws2_06a_witness`, seeded.
 
 **No redesign is indicated.** The authorial threshold did what it was designed to do.
 
 ## 6 · What remains owed
 
-Nothing for the walk. The design-canon gate additionally requires the two witness screenshots
+**A walk against a real Work.** This witness establishes the threshold mechanically and
+experientially against a synthetic reading. Whether "Make this my structure" holds when the
+divisions are MAIA's real perception of a real manuscript — where the writer may actually
+disagree with the reading — is not established here, and is the natural first thing to look at
+once 6A is merged and the Studio has a real proposal to adopt.
+
+Nothing else for the walk. The design-canon gate additionally requires the two witness screenshots
 to exist on disk at the paths the Experience Contract names; they are held by the founder and
 are not in this session's reach.
