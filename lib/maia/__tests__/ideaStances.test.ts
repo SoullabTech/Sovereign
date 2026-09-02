@@ -11,7 +11,6 @@
  * the member's position".
  */
 
-import { describe, it, expect } from 'vitest';
 import {
   IDEA_STANCES,
   STANCE_LABELS,

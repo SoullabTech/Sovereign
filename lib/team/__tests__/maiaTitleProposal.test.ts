@@ -7,7 +7,6 @@
  * contract that keeps a name a handle rather than a verdict.
  */
 
-import { describe, it, expect } from 'vitest';
 import {
   parseTitleCandidates,
   TITLE_PROPOSAL_SYSTEM_PROMPT,
