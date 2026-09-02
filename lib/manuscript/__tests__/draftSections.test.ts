@@ -1,0 +1,388 @@
+/**
+ * WS2-07 prerequisite — the ruled save contract, proven without a database.
+ *
+ * Every refusal in this contract is decided by a pure function, so a defect in
+ * it is a unit-test failure rather than a 500 a member discovers. The database
+ * round-trip triggers remain the backstop; nothing here relies on reaching them.
+ */
+
+import {
+  composeDraftSlices, planConversion, validateSectionSave, flattenSections,
+  partitionFromSections, sectionsFromPartition,
+  type SourceSection, type DraftSectionState,
+} from '../draftSections';
+
+let seq = 0;
+const src = (heading: string | null, body: string): SourceSection =>
+  ({ id: `src-${seq += 1}`, heading, body });
+
+/* The composition the draft route has always used, kept here verbatim as the
+   oracle. If composeDraftSlices ever drifts from it, these tests fail rather
+   than the conversion silently partitioning a different string. */
+function legacyComposeDraftText(sections: readonly { heading: string | null; body: string }[]): string {
+  const parts: string[] = [];
+  for (const s of sections) {
+    const heading = s.heading?.trim();
+    if (heading) { parts.push(heading); parts.push(''); }
+    parts.push(s.body);
+    parts.push('');
+  }
+  return parts.join('\n');
+}
+
+describe('composeDraftSlices', () => {
+  const cases: { name: string; sections: SourceSection[] }[] = [
+    { name: 'one section with a heading', sections: [src('Chapter One', 'It began.')] },
+    { name: 'one section, no heading', sections: [src(null, 'It began.')] },
+    { name: 'two sections', sections: [src('One', 'a'), src('Two', 'b')] },
+    { name: 'mixed headings', sections: [src('One', 'a'), src(null, 'b'), src('Three', 'c')] },
+    { name: 'empty body', sections: [src('One', ''), src('Two', 'b')] },
+    { name: 'whitespace-only heading is dropped', sections: [src('   ', 'a'), src('Two', 'b')] },
+    { name: 'multi-line bodies', sections: [src('One', 'a\n\nb'), src('Two', 'c\nd')] },
+    { name: 'fourteen sections', sections: Array.from({ length: 14 }, (_, i) => src(`H${i}`, `body ${i}`)) },
+  ];
+
+  it.each(cases)('slices concatenate to the content: $name', ({ sections }) => {
+    const { content, slices } = composeDraftSlices(sections);
+    expect(slices.map((s) => s.text).join('')).toBe(content);
+  });
+
+  it.each(cases)('every slice carries its SOURCE section id, not its position: $name',
+    ({ sections }) => {
+      const { slices } = composeDraftSlices(sections);
+      expect(slices.map((s) => s.sourceSectionId)).toEqual(sections.map((s) => s.id));
+    });
+
+  it.each(cases)('composes exactly what the draft route always composed: $name', ({ sections }) => {
+    expect(composeDraftSlices(sections).content).toBe(legacyComposeDraftText(sections));
+  });
+
+  it.each(cases)('produces one slice per source section: $name', ({ sections }) => {
+    expect(composeDraftSlices(sections).slices).toHaveLength(sections.length);
+  });
+
+  it('the last slice ends with a single newline, the others with a blank line', () => {
+    /* The non-uniform boundary this module exists to get right. Hand-deriving it
+       is what would put every section id one character out of place. */
+    const { slices } = composeDraftSlices([src('One', 'a'), src('Two', 'b')]);
+    expect(slices[0].text).toBe('One\n\na\n\n');
+    expect(slices[1].text).toBe('Two\n\nb\n');
+  });
+
+  it('handles a single section, where first and last are the same slice', () => {
+    const { content, slices } = composeDraftSlices([src('One', 'a')]);
+    expect(slices.map((s) => s.text)).toEqual([content]);
+  });
+});
+
+describe('planConversion — lossless means mechanically exact', () => {
+  const sections = [src('One', 'a'), src('Two', 'b')];
+
+  it('converts when the draft is byte-identical to its source partition', () => {
+    const { content } = composeDraftSlices(sections);
+    const plan = planConversion(content, sections);
+    expect(plan.status).toBe('lossless');
+    if (plan.status === 'lossless') {
+      expect(plan.slices.map((s) => s.text).join('')).toBe(content);
+      /* The mapping survives the conversion plan, so the route never has to
+         re-establish it by array position. */
+      expect(plan.slices.map((s) => s.sourceSectionId)).toEqual(sections.map((s) => s.id));
+    }
+  });
+
+  it('REFUSES an edited draft rather than re-partitioning it', () => {
+    const { content } = composeDraftSlices(sections);
+    const plan = planConversion(content + ' and then more', sections);
+    expect(plan.status).toBe('refused');
+    if (plan.status === 'refused') expect(plan.refusal).toBe('boundary_confirmation_required');
+  });
+
+  it('REFUSES a one-character difference — no tolerance, no similarity', () => {
+    const { content } = composeDraftSlices(sections);
+    const plan = planConversion(content.replace('a', 'A'), sections);
+    expect(plan.status).toBe('refused');
+  });
+
+  it('REFUSES a difference that is invisible on screen', () => {
+    /* A trailing space. Any similarity-based rule would call this the same
+       document; byte comparison does not, which is the point. */
+    const { content } = composeDraftSlices(sections);
+    const plan = planConversion(content + ' ', sections);
+    expect(plan.status).toBe('refused');
+  });
+
+  it('REFUSES a canonically-equivalent but differently-encoded draft', () => {
+    /* "é" as one code point vs "e" + combining accent. Normalizing before
+       comparison would let a partition off by an invisible character call
+       itself exact. */
+    const composed = [src('One', 'café')];
+    const decomposed = composeDraftSlices(composed).content.normalize('NFD');
+    const plan = planConversion(decomposed, composed);
+    expect(plan.status).toBe('refused');
+  });
+
+  it('REFUSES a manuscript with no source sections', () => {
+    const plan = planConversion('anything', []);
+    expect(plan.status).toBe('refused');
+  });
+});
+
+describe('validateSectionSave', () => {
+  const ids = ['s1', 's2', 's3'];
+  const ok = (over: { id: string; text: string }[]) => ({ sections: over });
+
+  it('accepts a complete, ordered payload', () => {
+    const r = validateSectionSave(
+      ok([{ id: 's1', text: 'a' }, { id: 's2', text: 'b' }, { id: 's3', text: 'c' }]), ids);
+    expect(r.ok).toBe(true);
+  });
+
+  it('refuses a content-only save against a converted draft', () => {
+    const r = validateSectionSave({ content: 'the whole thing' }, ids);
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.refusal).toBe('section_state_required');
+  });
+
+  it('refuses a payload carrying BOTH content and sections', () => {
+    const r = validateSectionSave(
+      { content: 'x', sections: [{ id: 's1', text: 'a' }] }, ids);
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.refusal).toBe('ambiguous_write_authority');
+  });
+
+  it('OMISSION IS NOT A DELETION — a short list is refused, and says so', () => {
+    const r = validateSectionSave(ok([{ id: 's1', text: 'a' }, { id: 's2', text: 'b' }]), ids);
+    expect(r.ok).toBe(false);
+    if (!r.ok) {
+      expect(r.refusal).toBe('topology_change_requires_explicit_command');
+      expect(r.detail).toContain('Omission is not a deletion');
+      expect(r.detail).toContain('s3');
+    }
+  });
+
+  it('refuses a reordered payload', () => {
+    const r = validateSectionSave(
+      ok([{ id: 's2', text: 'b' }, { id: 's1', text: 'a' }, { id: 's3', text: 'c' }]), ids);
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.refusal).toBe('topology_change_requires_explicit_command');
+  });
+
+  it('refuses a duplicated id', () => {
+    const r = validateSectionSave(
+      ok([{ id: 's1', text: 'a' }, { id: 's1', text: 'b' }, { id: 's3', text: 'c' }]), ids);
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.refusal).toBe('topology_change_requires_explicit_command');
+  });
+
+  it('refuses an id that does not belong to this draft', () => {
+    const r = validateSectionSave(
+      ok([{ id: 's1', text: 'a' }, { id: 'someone-elses', text: 'b' }, { id: 's3', text: 'c' }]), ids);
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.refusal).toBe('unknown_section_id');
+  });
+
+  it('refuses an added id as unknown_section_id — precedence is frozen', () => {
+    /* An id this draft does not own is ALWAYS unknown_section_id, checked before
+       any topology reasoning. A typed contract cannot say "either is fine": a
+       client mapping refusals to member-facing behaviour needs one answer. */
+    const r = validateSectionSave(
+      ok([{ id: 's1', text: 'a' }, { id: 's2', text: 'b' }, { id: 's3', text: 'c' },
+          { id: 's4', text: 'd' }]), ids);
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.refusal).toBe('unknown_section_id');
+  });
+
+  it('topology refusals are reserved for payloads whose ids are ALL known', () => {
+    for (const payload of [
+      [{ id: 's1', text: 'a' }, { id: 's2', text: 'b' }],                              // omission
+      [{ id: 's1', text: 'a' }, { id: 's1', text: 'b' }, { id: 's3', text: 'c' }],     // duplicate
+      [{ id: 's2', text: 'b' }, { id: 's1', text: 'a' }, { id: 's3', text: 'c' }],     // reorder
+    ]) {
+      const r = validateSectionSave(ok(payload), ids);
+      expect(r.ok).toBe(false);
+      if (!r.ok) expect(r.refusal).toBe('topology_change_requires_explicit_command');
+    }
+  });
+
+  it('COMPETING AUTHORITY is detected by field presence, not by valid type', () => {
+    /* The bug this closes: `typeof body.content === 'string'` would let a
+       non-string content through, silently discarding a representation the
+       caller believed was writable and accepting the section write anyway. */
+    for (const content of [123, null, undefined, {}, [], false, '']) {
+      const r = validateSectionSave(
+        { content, sections: [{ id: 's1', text: 'a' }, { id: 's2', text: 'b' },
+                              { id: 's3', text: 'c' }] } as never, ids);
+      expect(r.ok).toBe(false);
+      if (!r.ok) expect(r.refusal).toBe('ambiguous_write_authority');
+    }
+  });
+
+  it('ambiguity is decided BEFORE the sections are validated', () => {
+    /* Otherwise a malformed sections array would make the ambiguity vanish into
+       a shape refusal, and the caller would never learn content was rejected. */
+    const r = validateSectionSave({ content: 123, sections: 'not an array' } as never, ids);
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.refusal).toBe('ambiguous_write_authority');
+  });
+
+  it('asserts text rather than coercing it — a missing text is refused, not emptied', () => {
+    const r = validateSectionSave(
+      { sections: [{ id: 's1' }, { id: 's2', text: 'b' }, { id: 's3', text: 'c' }] }, ids);
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.refusal).toBe('section_state_required');
+  });
+
+  it('accepts an empty section text — an empty section is a real position', () => {
+    const r = validateSectionSave(
+      ok([{ id: 's1', text: '' }, { id: 's2', text: 'b' }, { id: 's3', text: 'c' }]), ids);
+    expect(r.ok).toBe(true);
+  });
+
+  it('every refusal writes nothing — the function is pure and returns a value', () => {
+    const before = [...ids];
+    validateSectionSave({ content: 'x' }, ids);
+    validateSectionSave(ok([{ id: 'nope', text: 'a' }]), ids);
+    expect(ids).toEqual(before);
+  });
+});
+
+describe('flattenSections', () => {
+  it('is the exact concatenation, with no separator invented', () => {
+    expect(flattenSections([{ id: 'a', text: 'One\n\na\n\n' }, { id: 'b', text: 'Two\n\nb\n' }]))
+      .toBe('One\n\na\n\nTwo\n\nb\n');
+  });
+
+  it('round-trips a converted draft: compose → slice → flatten', () => {
+    const sections = [src('One', 'a'), src(null, 'b'), src('Three', 'c')];
+    const { content, slices } = composeDraftSlices(sections);
+    const state = slices.map((s, i) => ({ id: `s${i}`, text: s.text }));
+    expect(flattenSections(state)).toBe(content);
+  });
+
+  it('an ordinary edit changes content but preserves the flattening invariant', () => {
+    const sections = [src('One', 'a'), src('Two', 'b')];
+    const { slices } = composeDraftSlices(sections);
+    const state = slices.map((s, i) => ({ id: `s${i}`, text: s.text }));
+    const edited = state.map((s, i) => i === 0 ? { ...s, text: s.text.replace('a', 'a much longer passage') } : s);
+    expect(flattenSections(edited)).toBe(edited.map((s) => s.text).join(''));
+    expect(edited.map((s) => s.id)).toEqual(state.map((s) => s.id));
+  });
+});
+
+/* ── the section↔revision relation ────────────────────────────────────────── */
+
+describe('partitionFromSections', () => {
+  const sections: DraftSectionState[] = [
+    { id: 'a', text: 'One\n\nfirst body\n\n' },
+    { id: 'b', text: 'Two\n\nsecond body\n' },
+  ];
+
+  it('covers the flattened content exactly, with no gaps and no overlap', () => {
+    const content = flattenSections(sections);
+    const part = partitionFromSections(sections);
+    expect(part[0].start).toBe(0);
+    expect(part[part.length - 1].end).toBe(content.length);
+    for (let i = 1; i < part.length; i += 1) {
+      expect(part[i].start).toBe(part[i - 1].end);
+    }
+  });
+
+  it('each range slices back to exactly the section text it came from', () => {
+    const content = flattenSections(sections);
+    for (const r of partitionFromSections(sections)) {
+      const s = sections.find((x) => x.id === r.sectionId)!;
+      expect(content.slice(r.start, r.end)).toBe(s.text);
+    }
+  });
+
+  it('carries ids and offsets only — never any prose', () => {
+    /* The whole reason a second durable prose store was rejected. If a text
+       field ever appears here, the Work exists in two custody domains. */
+    for (const r of partitionFromSections(sections)) {
+      expect(Object.keys(r).sort()).toEqual(['end', 'sectionId', 'start']);
+    }
+  });
+
+  it('records an empty section as a real zero-width position', () => {
+    const withEmpty: DraftSectionState[] = [
+      { id: 'a', text: 'x' },
+      { id: 'b', text: '' },
+      { id: 'c', text: 'y' },
+    ];
+    const part = partitionFromSections(withEmpty);
+    expect(part.map((r) => [r.start, r.end])).toEqual([[0, 1], [1, 1], [1, 2]]);
+  });
+});
+
+describe('sectionsFromPartition', () => {
+  const sections: DraftSectionState[] = [
+    { id: 'a', text: 'One\n\nfirst body\n\n' },
+    { id: 'b', text: 'Two\n\nsecond body\n' },
+  ];
+  const content = flattenSections(sections);
+  const ids = sections.map((s) => s.id);
+
+  it('round-trips a frozen partition back to the exact sections', () => {
+    const r = sectionsFromPartition(content, partitionFromSections(sections), ids);
+    expect(r).toEqual({ ok: true, value: sections });
+  });
+
+  it('REFUSES rather than re-partitioning when no partition was recorded', () => {
+    /* Option (c) — re-partitioning an older revision — was rejected because the
+       boundaries it produces have no id continuity with the sections that exist
+       now. A restore that silently reassigns identities is worse than one that
+       will not run. */
+    for (const absent of [null, undefined, []]) {
+      const r = sectionsFromPartition(content, absent as never, ids);
+      expect(r.ok).toBe(false);
+      expect((r as { refusal: string }).refusal).toBe('partition_not_recorded');
+    }
+  });
+
+  it('refuses a partition with a gap', () => {
+    const r = sectionsFromPartition(content, [
+      { sectionId: 'a', start: 0, end: 3 },
+      { sectionId: 'b', start: 5, end: content.length },
+    ], ids);
+    expect(r).toMatchObject({ ok: false, refusal: 'partition_not_recorded' });
+  });
+
+  it('refuses a partition that does not reach the end of the content', () => {
+    const r = sectionsFromPartition(content, [
+      { sectionId: 'a', start: 0, end: 3 },
+      { sectionId: 'b', start: 3, end: content.length - 1 },
+    ], ids);
+    expect(r).toMatchObject({ ok: false, refusal: 'partition_not_recorded' });
+  });
+
+  it('refuses a partition that overruns the content', () => {
+    const r = sectionsFromPartition(content, [
+      { sectionId: 'a', start: 0, end: 3 },
+      { sectionId: 'b', start: 3, end: content.length + 1 },
+    ], ids);
+    expect(r).toMatchObject({ ok: false, refusal: 'partition_not_recorded' });
+  });
+
+  it('refuses when the revision names a different set of sections', () => {
+    const r = sectionsFromPartition(content, partitionFromSections([
+      { id: 'a', text: content },
+    ]), ids);
+    expect(r).toMatchObject({ ok: false, refusal: 'topology_change_requires_explicit_command' });
+  });
+
+  it('refuses when the revision names the same ids in a different order', () => {
+    const r = sectionsFromPartition(content, [
+      { sectionId: 'b', start: 0, end: 3 },
+      { sectionId: 'a', start: 3, end: content.length },
+    ], ids);
+    expect(r).toMatchObject({ ok: false, refusal: 'topology_change_requires_explicit_command' });
+  });
+
+  it('the restored sections flatten back to the revision content', () => {
+    const r = sectionsFromPartition(content, partitionFromSections(sections), ids);
+    expect(r.ok).toBe(true);
+    /* The round-trip trigger checks exactly this at COMMIT, so a restore that
+       fails it would surface to a member as a 500. */
+    expect(flattenSections((r as { value: DraftSectionState[] }).value)).toBe(content);
+  });
+});

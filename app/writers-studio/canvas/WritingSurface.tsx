@@ -12,15 +12,21 @@ import { apiFetch } from '@/lib/http/apiBase';
 import { PRESS, SERIF } from '../pressTheme';
 import {
   AUTOSAVE_DELAY_MS,
+  applySectionEdit,
   beginDraft,
   createDraftSaver,
   createExitGuard,
+  flattenDraftSections,
   formatWhen,
   loadDraft,
   newIdempotencyKey,
   pageEstimate,
   putDraft,
+  putDraftSections,
+  sectionIndexAtOffset,
+  type DraftRepresentation,
   type DraftSaver,
+  type DraftSection,
   type SaverState,
 } from '../../press/manuscript/workingDraftClient';
 
@@ -43,7 +49,40 @@ import {
  * words — NEVER a timed prompt or a system nudge.
  */
 
-type Phase = 'loading' | 'ready' | 'no-source' | 'unauthorized' | 'error' | 'conflict';
+type Phase = 'loading' | 'ready' | 'no-source' | 'unauthorized' | 'error' | 'conflict' | 'refused' | 'unreadable';
+
+/**
+ * What the writer is editing, in the shape the draft actually has.
+ *
+ * ⛔ ONE CONTINUOUS PAGE IS THE EXPERIENCE, NOT THE DATA MODEL. A
+ * section-addressable draft is held as real section nodes with server-minted
+ * identities. The alternative — one field plus an invisible offset ledger — was
+ * rejected by name: the ledger becomes a second fallible claim about the same
+ * text, and when it is wrong a durable identity moves silently.
+ *
+ * The sheet still LOOKS like one page. Section nodes carry no card, no border,
+ * no gap and no label; they are where the characters live, not a visible
+ * decomposition of the writer's book.
+ */
+type Editable =
+  | { addressable: false; content: string }
+  | { addressable: true; sections: DraftSection[] };
+
+/** The whole draft as text — for page counts and heading extraction only. */
+function editableText(e: Editable): string {
+  return e.addressable ? flattenDraftSections(e.sections) : e.content;
+}
+
+/** The value the save lane carries: the section array, or the whole string. */
+function editablePayload(e: Editable): DraftSection[] | string {
+  return e.addressable ? e.sections : e.content;
+}
+
+function editableFrom(r: DraftRepresentation): Editable {
+  return r.sectionAddressable && r.sections
+    ? { addressable: true, sections: r.sections }
+    : { addressable: false, content: r.content };
+}
 
 /** The writer's papers. The sheet and its ink change; the room never repaints. */
 const WRITING_SURFACES = {
@@ -123,18 +162,20 @@ interface WritingSurfaceProps {
 const WritingSurface = forwardRef<WritingSurfaceHandle, WritingSurfaceProps>(
   function WritingSurface({ manuscriptId, head, onMeta, onCheckpointed, onHeadings }, ref) {
     const [phase, setPhase] = useState<Phase>('loading');
-    const [content, setContent] = useState('');
+    const [editable, setEditable] = useState<Editable>({ addressable: false, content: '' });
     const [saveState, setSaveState] = useState<SaverState>('idle');
     const [updatedAt, setUpdatedAt] = useState<string | null>(null);
     const [keeping, setKeeping] = useState(false);
     const [kept, setKept] = useState(false);
     const [surface, setSurface] = useState<SurfaceId>('warm');
 
-    const saverRef = useRef<DraftSaver | null>(null);
+    const saverRef = useRef<DraftSaver<DraftSection[] | string> | null>(null);
     const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const baseRef = useRef(1);
-    const contentRef = useRef('');
-    const fieldRef = useRef<HTMLTextAreaElement | null>(null);
+    const editableRef = useRef<Editable>({ addressable: false, content: '' });
+    /* One node per section, in document order. The first is also the anchor the
+       navigator scrolls from on an unconverted draft. */
+    const fieldsRef = useRef<(HTMLTextAreaElement | null)[]>([]);
     const cbRef = useRef({ onMeta, onCheckpointed, onHeadings });
     cbRef.current = { onMeta, onCheckpointed, onHeadings };
 
@@ -150,22 +191,34 @@ const WritingSurface = forwardRef<WritingSurfaceHandle, WritingSurfaceProps>(
      * case: typing within a line).
      */
     const rafRef = useRef<number | null>(null);
-    const lastHeightRef = useRef(0);
-    const autosize = () => {
+    const lastHeightsRef = useRef<number[]>([]);
+    /**
+     * Grow the nodes to their content so the sheet reads as one page.
+     *
+     * `only` resizes the single node the writer is typing in — the common case.
+     * Sizing every node on every keystroke would re-lay-out the whole book, and
+     * a 209-page manuscript would get visibly heavier as they typed. Passing
+     * nothing sizes all of them, which is what a load or a restore needs.
+     */
+    const autosize = (only?: number) => {
       if (rafRef.current !== null) return;
       rafRef.current = requestAnimationFrame(() => {
         rafRef.current = null;
-        const el = fieldRef.current;
-        if (!el) return;
-        const prev = el.style.height;
-        el.style.height = 'auto';
-        const next = el.scrollHeight;
-        if (next === lastHeightRef.current && prev) {
-          el.style.height = prev;
-          return;
+        const nodes = fieldsRef.current;
+        const range = only === undefined ? nodes.map((_, i) => i) : [only];
+        for (const i of range) {
+          const el = nodes[i];
+          if (!el) continue;
+          const prev = el.style.height;
+          el.style.height = 'auto';
+          const next = el.scrollHeight;
+          if (next === lastHeightsRef.current[i] && prev) {
+            el.style.height = prev;
+            continue;
+          }
+          lastHeightsRef.current[i] = next;
+          el.style.height = `${next}px`;
         }
-        lastHeightRef.current = next;
-        el.style.height = `${next}px`;
       });
     };
     useEffect(() => {
@@ -174,7 +227,7 @@ const WritingSurface = forwardRef<WritingSurfaceHandle, WritingSurfaceProps>(
         if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
         rafRef.current = null;
       };
-    }, [content, phase]);
+    }, [editable, phase]);
 
     useEffect(() => {
       setSurface(loadSurfaceChoice(manuscriptId));
@@ -182,10 +235,22 @@ const WritingSurface = forwardRef<WritingSurfaceHandle, WritingSurfaceProps>(
 
     useImperativeHandle(ref, () => ({
       jumpTo(offset: number) {
-        const el = fieldRef.current;
+        const e = editableRef.current;
+        /* On a section-addressable draft the landing is EXACT to the section
+           and estimated only within it — a real improvement over estimating
+           across the whole book, and it comes from the identities the server
+           gave us rather than from any offset ledger we keep. */
+        let index = 0;
+        let local = offset;
+        if (e.addressable) {
+          index = sectionIndexAtOffset(e.sections, offset);
+          if (index < 0) return;
+          for (let i = 0; i < index; i += 1) local -= e.sections[i].text.length;
+        }
+        const el = fieldsRef.current[index];
         const scroller = el?.closest('main');
-        const len = contentRef.current.length || 1;
         if (!el || !scroller) return;
+        const len = (e.addressable ? e.sections[index].text.length : e.content.length) || 1;
         /* Measure in the scroller's own content coordinates — offsetTop is
            relative to the nearest positioned ancestor, which is not the
            easel, and silently produced a no-op scroll. Landing is an
@@ -195,7 +260,7 @@ const WritingSurface = forwardRef<WritingSurfaceHandle, WritingSurfaceProps>(
           el.getBoundingClientRect().top -
           scroller.getBoundingClientRect().top +
           scroller.scrollTop;
-        const target = top + (offset / len) * el.scrollHeight;
+        const target = top + (Math.max(0, local) / len) * el.scrollHeight;
         scroller.scrollTo({ top: Math.max(0, target - 120), behavior: 'smooth' });
       },
     }));
@@ -214,13 +279,24 @@ const WritingSurface = forwardRef<WritingSurfaceHandle, WritingSurfaceProps>(
     useEffect(() => {
       let cancelled = false;
 
-      const saver = createDraftSaver(
+      /* ONE LANE, TWO SHAPES. The single-flight sequencing guarantee is the
+         same whether the draft is written by sections or by content, so it is
+         not duplicated — the branch is only about WHICH write the server will
+         accept for this draft. Sending content to a section-addressable draft
+         is refused, not merged. */
+      const saver = createDraftSaver<DraftSection[] | string>(
         (value) =>
-          putDraft(apiFetch, manuscriptId, {
-            content: value,
-            baseRevisionId: baseRef.current,
-            idempotencyKey: newIdempotencyKey(),
-          }),
+          Array.isArray(value)
+            ? putDraftSections(apiFetch, manuscriptId, {
+                sections: value,
+                baseRevisionId: baseRef.current,
+                idempotencyKey: newIdempotencyKey(),
+              })
+            : putDraft(apiFetch, manuscriptId, {
+                content: value,
+                baseRevisionId: baseRef.current,
+                idempotencyKey: newIdempotencyKey(),
+              }),
         {
           onState: (s) => {
             if (!cancelled) setSaveState(s);
@@ -237,6 +313,14 @@ const WritingSurface = forwardRef<WritingSurfaceHandle, WritingSurfaceProps>(
           onConflict: () => {
             if (!cancelled) setPhase('conflict');
           },
+          onRefused: () => {
+            /* The server declined the SHAPE of the write: this surface's
+               picture of the draft is wrong. Nothing was written and nothing
+               was lost, but retrying would refuse identically, so the writer is
+               told to reopen rather than left watching a save that cannot
+               land. */
+            if (!cancelled) setPhase('refused');
+          },
         },
       );
       saverRef.current = saver;
@@ -245,20 +329,26 @@ const WritingSurface = forwardRef<WritingSurfaceHandle, WritingSurfaceProps>(
         timerRef.current = null;
       });
 
-      const settle = (r: {
-        content: string;
+      const settle = (r: DraftRepresentation & {
         revisionCount: number;
         revisionId: number;
         updatedAt?: string | null;
       }) => {
+        const next = editableFrom(r);
+        /* Drop node refs and cached heights past the new section count. React
+           clears the ref of an unmounted node, but the trailing SLOTS stay, and
+           a stale height would then be compared against a different section. */
+        const count = next.addressable ? next.sections.length : 1;
+        fieldsRef.current.length = count;
+        lastHeightsRef.current.length = count;
         baseRef.current = r.revisionId;
-        contentRef.current = r.content;
+        editableRef.current = next;
         if (cancelled) return;
-        setContent(r.content);
+        setEditable(next);
         setUpdatedAt(r.updatedAt ?? null);
         setPhase('ready');
         cbRef.current.onMeta?.({ updatedAt: r.updatedAt ?? null, revisionCount: r.revisionCount });
-        cbRef.current.onHeadings?.(extractHeadings(r.content));
+        cbRef.current.onHeadings?.(extractHeadings(editableText(next)));
       };
 
       (async () => {
@@ -276,7 +366,8 @@ const WritingSurface = forwardRef<WritingSurfaceHandle, WritingSurfaceProps>(
           if (again.kind === 'ok') return settle(again);
           return setPhase('error');
         }
-        if (begun.kind === 'no-sections') return setPhase('no-source');
+        if (begun.kind === 'unreadable') return setPhase('unreadable');
+      if (begun.kind === 'no-sections') return setPhase('no-source');
         if (begun.kind === 'unauthorized') return setPhase('unauthorized');
         setPhase('error');
       })();
@@ -296,13 +387,31 @@ const WritingSurface = forwardRef<WritingSurfaceHandle, WritingSurfaceProps>(
       };
     }, [manuscriptId]);
 
-    const edit = (value: string) => {
-      setContent(value);
-      contentRef.current = value;
+    /**
+     * A keystroke lands in exactly one place.
+     *
+     * On a section-addressable draft that place is named by the SECTION'S OWN
+     * ID, not by an offset — so nothing has to work out afterwards which
+     * boundary the change fell inside. `sectionId` null means the draft is not
+     * addressable and the whole string is the writable truth.
+     */
+    const edit = (sectionId: string | null, value: string) => {
+      const prev = editableRef.current;
+      const next: Editable =
+        sectionId === null
+          ? { addressable: false, content: value }
+          : prev.addressable
+            /* An id this draft does not own changes nothing. The client has no
+               authority to bring a boundary into existence. */
+            ? { addressable: true, sections: applySectionEdit(prev.sections, sectionId, value) }
+            : prev;
+      if (next === prev) return;
+      editableRef.current = next;
+      setEditable(next);
       setKept(false);
       const saver = saverRef.current;
       if (!saver) return;
-      saver.queue(value);
+      saver.queue(editablePayload(next));
       if (timerRef.current) clearTimeout(timerRef.current);
       timerRef.current = setTimeout(() => saver.flush(), AUTOSAVE_DELAY_MS);
     };
@@ -314,24 +423,35 @@ const WritingSurface = forwardRef<WritingSurfaceHandle, WritingSurfaceProps>(
       setKept(false);
       try {
         await saver.beginExclusive();
-        const value = contentRef.current;
-        const res = await putDraft(apiFetch, manuscriptId, {
-          content: value,
-          checkpoint: true,
-          baseRevisionId: baseRef.current,
-          idempotencyKey: newIdempotencyKey(),
-        });
+        const current = editableRef.current;
+        const value = editablePayload(current);
+        const res = current.addressable
+          ? await putDraftSections(apiFetch, manuscriptId, {
+              sections: current.sections,
+              checkpoint: true,
+              baseRevisionId: baseRef.current,
+              idempotencyKey: newIdempotencyKey(),
+            })
+          : await putDraft(apiFetch, manuscriptId, {
+              content: current.content,
+              checkpoint: true,
+              baseRevisionId: baseRef.current,
+              idempotencyKey: newIdempotencyKey(),
+            });
         if (res.kind === 'ok') {
           if (res.revisionId !== null) baseRef.current = res.revisionId;
           setUpdatedAt(res.updatedAt);
           setKept(true);
           cbRef.current.onMeta?.({ updatedAt: res.updatedAt, revisionCount: res.revisionCount });
           cbRef.current.onCheckpointed?.();
-          cbRef.current.onHeadings?.(extractHeadings(value));
+          cbRef.current.onHeadings?.(extractHeadings(editableText(current)));
           saver.endExclusive({ persisted: value });
         } else if (res.kind === 'conflict') {
           saver.endExclusive({ flushPending: false });
           setPhase('conflict');
+        } else if (res.kind === 'refused') {
+          saver.endExclusive({ flushPending: false });
+          setPhase('refused');
         } else {
           saver.endExclusive();
           setSaveState('error');
@@ -341,6 +461,33 @@ const WritingSurface = forwardRef<WritingSurfaceHandle, WritingSurfaceProps>(
       }
     };
 
+    if (phase === 'unreadable') {
+      return (
+        <div className="w-full max-w-md pt-20">
+          <p className="text-[15px] opacity-80 leading-relaxed mb-3">
+            This draft could not be opened safely.
+          </p>
+          <p className="text-[14px] opacity-55 leading-relaxed">
+            Your manuscript is arranged in sections, and the sheet could not read that
+            arrangement — so it will not offer to write over it. Nothing is lost and nothing was
+            changed. Reopen the room to try again.
+          </p>
+        </div>
+      );
+    }
+    if (phase === 'refused') {
+      return (
+        <div className="w-full max-w-md pt-20">
+          <p className="text-[15px] opacity-80 leading-relaxed mb-3">
+            This surface and the draft disagree about how the manuscript is arranged.
+          </p>
+          <p className="text-[14px] opacity-55 leading-relaxed">
+            Nothing was written and nothing was lost. Reopen the room to continue from the
+            manuscript as it stands.
+          </p>
+        </div>
+      );
+    }
     if (phase !== 'ready' && phase !== 'conflict') {
       return (
         <div className="w-full max-w-md pt-20 text-[15px] leading-relaxed opacity-70">
@@ -411,7 +558,8 @@ const WritingSurface = forwardRef<WritingSurfaceHandle, WritingSurfaceProps>(
           style={{ fontFamily: 'ui-sans-serif, system-ui, sans-serif' }}
         >
           <span>
-            ~{pageEstimate(content.length)} page{pageEstimate(content.length) === 1 ? '' : 's'}
+            ~{pageEstimate(editableText(editable).length)} page
+            {pageEstimate(editableText(editable).length) === 1 ? '' : 's'}
           </span>
           {/* W-4: a save that FAILED is not a dim marginal fact — this line
               is otherwise held at low opacity until hovered. */}
@@ -495,15 +643,47 @@ const WritingSurface = forwardRef<WritingSurfaceHandle, WritingSurfaceProps>(
           }}
         >
           {head}
-          <textarea
-            ref={fieldRef}
-            value={content}
-            onChange={(e) => edit(e.target.value)}
-            aria-label="Working draft"
-            rows={1}
-            className="w-full bg-transparent outline-none resize-none overflow-hidden text-[16.5px] leading-[1.9]"
-            style={{ fontFamily: SERIF, color: s.ink, caretColor: s.caret }}
-          />
+          {/* THE SHEET IS ONE PAGE. On a section-addressable draft the writer's
+              characters live in one node per section — real client state with
+              the server's own identities, which is what makes a save able to
+              say WHICH boundary changed without anything having to work it out
+              afterwards.
+
+              None of that is drawn. No card, no border, no gap, no label, no
+              rule between them: the nodes are transparent and share the sheet's
+              type, so the page reads exactly as it did as a single field. The
+              writer is working on a book, not filling in a form with a row per
+              chapter.
+
+              ⛔ Boundaries do not move here. Merging two sections with a
+              backspace, or splitting one with a return, are topology commands
+              this slice does not implement — so they simply do not happen
+              rather than happening approximately. The characters within a
+              section are entirely the writer's. */}
+          {editable.addressable ? (
+            editable.sections.map((sec, i) => (
+              <textarea
+                key={sec.id}
+                ref={(el) => { fieldsRef.current[i] = el; }}
+                value={sec.text}
+                onChange={(e) => { edit(sec.id, e.target.value); autosize(i); }}
+                aria-label={i === 0 ? 'Working draft' : undefined}
+                rows={1}
+                className="block w-full bg-transparent outline-none resize-none overflow-hidden text-[16.5px] leading-[1.9] p-0 m-0 border-0"
+                style={{ fontFamily: SERIF, color: s.ink, caretColor: s.caret }}
+              />
+            ))
+          ) : (
+            <textarea
+              ref={(el) => { fieldsRef.current[0] = el; }}
+              value={editable.content}
+              onChange={(e) => { edit(null, e.target.value); autosize(0); }}
+              aria-label="Working draft"
+              rows={1}
+              className="w-full bg-transparent outline-none resize-none overflow-hidden text-[16.5px] leading-[1.9]"
+              style={{ fontFamily: SERIF, color: s.ink, caretColor: s.caret }}
+            />
+          )}
         </div>
       </div>
     );

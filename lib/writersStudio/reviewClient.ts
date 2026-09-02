@@ -12,6 +12,7 @@
  */
 
 import { apiFetch } from '@/lib/http/apiBase';
+import type { StructureTreeDTO } from './structureClient';
 import type { StructureInterpretation } from '@/lib/manuscript/structure/interpret';
 import type { ReviewedStructure, ReviewOperation } from '@/lib/manuscript/structure/review';
 import type { ChangeRow } from './reviewPresentation';
@@ -35,6 +36,13 @@ export type ReviewOutcome =
   | { ok: false; refusal: string; detail?: string;
       /** Returned on a stale revision, so the surface can reload rather than retry. */
       current?: { reviewed: ReviewedStructure; reviewRevision: number } };
+
+export type AuthorOutcome =
+  | { ok: true; unitCount: number; sectionCount: number; adoptedReviewRevision: number;
+      /** The Work's structure as it now stands. Null only if the read after the
+          write refused; the act stands either way and the surface reloads. */
+      structure: StructureTreeDTO | null }
+  | { ok: false; refusal: string; detail?: string };
 
 export type PreviewOutcome =
   /** `reviewed` is the post-image the commit will store, returned so the two
@@ -189,6 +197,49 @@ export async function applyGesture(
   }
 }
 
+/**
+ * WS2-06A — the authorial crossing.
+ *
+ * ONE POST, ONE GESTURE. This is called from a click handler and from nowhere
+ * else: no effect, no timer, no retry, no reload path. The member's explicit act
+ * is the only thing that can reach it, which is what makes the crossing theirs.
+ *
+ * THE ONLY THING SENT IS THE REVISION THE SCREEN WAS SHOWING. No tree, no ids,
+ * no titles. Everything about the structure comes from the reading the server
+ * already holds.
+ *
+ * THE RESPONSE CARRIES THE STRUCTURE THAT PERSISTED, so the room shows what was
+ * written rather than what was requested.
+ */
+export async function authorStructure(
+  manuscriptId: string, proposalId: string, expectedReviewRevision: number,
+): Promise<AuthorOutcome> {
+  try {
+    const res = await apiFetch(`${url(manuscriptId, proposalId)}/adopt`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ expectedReviewRevision }),
+    });
+    const json = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      return {
+        ok: false,
+        refusal: String(json.refusal ?? `http_${res.status}`),
+        detail: json.detail as string | undefined,
+      };
+    }
+    return {
+      ok: true,
+      unitCount: Number(json.unitCount),
+      sectionCount: Number(json.sectionCount),
+      adoptedReviewRevision: Number(json.adoptedReviewRevision),
+      structure: (json.structure ?? null) as StructureTreeDTO | null,
+    };
+  } catch {
+    return { ok: false, refusal: 'unreachable' };
+  }
+}
+
 /** What a refusal means, in the member's terms. Never a code on screen. */
 export function reviewRefusalCopy(refusal: string): string {
   switch (refusal) {
@@ -220,6 +271,16 @@ export function reviewRefusalCopy(refusal: string): string {
       return 'Give the division a name, or say what kind of division it is.';
     case 'unknown_alternative':
       return 'That reading is no longer available.';
+    case 'structure_exists':
+      return 'This Work already has a structure. Making this one part of the Work would replace it, which is not something this can do yet.';
+    case 'topology_changed':
+      return 'The Work has been reorganised since this reading was made, so it no longer describes your sections. Ask for a new reading.';
+    case 'nothing_to_adopt':
+      return 'This reading found no divisions, so there is nothing to make part of the Work.';
+    case 'unknown_section':
+      return 'This reading refers to a part of the Work that is no longer there. Ask for a new reading.';
+    case 'duplicate_unit_id':
+      return 'This reading names the same division twice, so it cannot be written as it stands.';
     case 'unreachable':
       return 'The proposal could not be reached just now. Your writing is not affected.';
     default:
