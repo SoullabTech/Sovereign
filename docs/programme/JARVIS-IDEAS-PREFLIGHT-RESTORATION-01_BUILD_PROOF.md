@@ -275,3 +275,88 @@ T1 / eb0a7af                  FROZEN — not present in clone, untouched
 
 **Open finding carried out of this unit** (§5): the gate does not scan
 template-literal or expression classNames. Needs its own authorization.
+
+---
+
+## 9. INTEGRATE — custody
+
+**Canonical moved during this lane.** At FIND, `origin/clean-main-no-secrets`
+pointed at `750f492b`. On re-fetch at integration time it points at `90f401c1`
+— the tip this lane's work was already built on. The "97 commits ahead"
+custody concern was an artifact of a stale remote ref, and it dissolves against
+current canonical:
+
+```text
+BASE (current canonical)  origin/clean-main-no-secrets @ 90f401c1
+INTEGRATION BRANCH        feature/preflight-restoration-01-repair
+COMMITS AHEAD             1
+```
+
+**Conflict check against current canonical.** All three authorized source files
+are unchanged on canonical between the witness base `750f492b` and the current
+tip `90f401c1`, so the repair applies to current canonical without
+re-adjudication:
+
+```text
+unchanged   scripts/check-dark-text-opacity.sh
+unchanged   app/studio/layout.tsx
+unchanged   app/studio/calendar/page.tsx
+```
+
+**Bounded diff — `git diff origin/clean-main-no-secrets...HEAD`:**
+
+```text
+app/studio/calendar/page.tsx                        |   8 +-
+app/studio/layout.tsx                               |   2 +-
+scripts/check-dark-text-opacity.sh                  |  62 ++++-
+docs/programme/…_BUILD_PROOF.md                     | 277 +++++
+docs/programme/…_FIND.md                            | 271 +++++
+5 files changed, 610 insertions(+), 10 deletions(-)
+```
+
+Only the authorized surface. `app/studio/field/page.tsx` byte-unchanged against
+canonical.
+
+**`feature/preflight-restoration-01` was not used and not touched.** It exists
+on origin at `a6ebf9a`, based on the same canonical tip, carrying a *different*
+document from a parallel lane
+(`…/JARVIS_PREFLIGHT_RESTORATION_01_FIND.md`, underscore-named, 150 lines).
+Pushing this repair onto it would have overwritten another lane's record, so a
+separate integration branch was cut. **The two FIND documents should be
+reconciled before merge** — that is a custody decision, not this unit's to make.
+
+**Re-proved on the integration branch:**
+
+```text
+six negative controls     hold (0 probe residue)
+ci:guard                  EXIT 0
+npm run typecheck         EXIT 0 — no regressions
+npm run preflight         all seven repository gates ✅, stops at the final
+                          compose step
+```
+
+### The one outstanding witness
+
+`npm run preflight` cannot return 0 in this container, and no source change
+would alter that:
+
+```text
+ssh              not installed — the main checkout is unreachable from here
+docker daemon    not reachable
+.env.docker      absent (gitignored, .gitignore:303)
+```
+
+No `.env.docker` was synthesized. The witness must be taken where the real file
+and a live docker daemon exist:
+
+```bash
+cp /Users/soullab/MAIA-SOVEREIGN/.env.docker <checkout>/.env.docker   # do not commit
+cd <checkout> && git checkout feature/preflight-restoration-01-repair
+npm run preflight        # must EXIT 0
+```
+
+```text
+PREFLIGHT RESTORATION   NOT CLOSED
+BLOCKING                one real-environment preflight witness
+THEN                    PR → canonical merge → canonical gate witness → CLOSED
+```
