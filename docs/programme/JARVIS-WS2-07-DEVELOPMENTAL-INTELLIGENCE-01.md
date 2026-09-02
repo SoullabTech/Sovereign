@@ -12,11 +12,12 @@ STATE              ACTIVE · 07A FIND AUTHORIZED
 TRIGGER            Stage 6A AuthorStructureCommand merged to canonical and witnessed
 TRIGGER SATISFIED  clean-main-no-secrets @ 4b8b34bcf
 AUTHORIZES         07A FIND — a read-only census. Nothing further.
-NORMATIVE       docs/programme/WRITERS_STUDIO_MASTER_BRIEF.md
-CAPABILITY      docs/programme/DEVELOPMENTAL_EDITOR_CAPABILITY.md
-LIVE STATE      docs/programme/WRITERS_STUDIO_PROGRAMME_BOARD.md
-ROADMAP         docs/programme/WRITERS_STUDIO_ROADMAP_STAGE_6_TO_15.md
-OPENED          2026-09-01
+NORMATIVE          docs/programme/WRITERS_STUDIO_MASTER_BRIEF.md
+CAPABILITY         docs/programme/DEVELOPMENTAL_EDITOR_CAPABILITY.md
+LIVE STATE         docs/programme/WRITERS_STUDIO_PROGRAMME_BOARD.md
+ROADMAP            docs/programme/WRITERS_STUDIO_ROADMAP_STAGE_6_TO_15.md
+OPENED             2026-09-01
+ACTIVATED          2026-09-02
 ```
 
 ## Programme state at this checkpoint
