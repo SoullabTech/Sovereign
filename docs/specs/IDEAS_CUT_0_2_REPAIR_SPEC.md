@@ -245,9 +245,17 @@ Deliverable 4. Findings A, B, C; Result 11.
 cannot mean one turn. An episode:
 
 - **opens** when the member invokes repair, or when detection fires;
+- **carries explicit contested targets** — the frames or formulations the member has named
+  as not theirs;
 - **stays open** across turns — stance and progression remain suspended throughout;
 - **closes only** when the member explicitly closes it or chooses to resume ordinary
   participation.
+
+**The episode's contested targets are what §3.3 binds to.** They are a **Layer-1** object,
+distinct from `rejected` standing: a member may contest a frame in the course of a turn
+without performing the separate Layer-2 act of selecting a passage and choosing *Not what I
+mean*. Without contested targets, a correction the member never converts into a `reject`
+would leave §3.3 nothing to enforce against.
 
 **A prior stance may be preserved as a visible pending direction, but must never resume
 automatically.** Resumption is a member act. This is also what makes §6/F5 coherent: the
@@ -280,8 +288,10 @@ declare rupture without guessing the vocabulary.
 
 Specific responsibility-taking is possible and healthy, and is **not** the generic apology
 preamble the current addendum forbids. But acknowledgment does not govern participation.
-The repaired turn must **relinquish the frame**, and the frames it must stop using are
-those the member has moved to `rejected` (§1).
+The repaired turn must **relinquish the frame**. **What it must stop using is the set of
+contested targets on the open repair episode (§3), plus anything the member has moved to
+`rejected` standing (§1).** The first governs immediately; the second persists beyond the
+episode.
 
 **Note the limit honestly:** this closes the *deliberate* return case. It does not address
 drift — see §7.1.
@@ -296,10 +306,17 @@ automatically.**
 - A **general relational correction** — *"I never said his issue was speed"* — **may offer**
   the member a rejection selection. **It may not infer one.**
 
-The consequence is deliberate and must not be quietly closed later: **§3.3's "stop using
-the relinquished frame" binds only to frames the member actually rejected.** A correction
-that the member never converts into a `reject` leaves nothing structural to enforce — the
-episode governs participation, and that is all. See §5.4.
+**What the episode does carry is its explicit contested targets** (§3), and those govern
+what MAIA must stop using for the duration. So a correction the member never converts into
+a `reject` still binds MAIA within the episode — it simply does not create a **persistent**
+negative constraint. Persistence requires the Layer-2 act.
+
+Two distinct durations, deliberately:
+
+| | Object | Layer | Duration |
+|---|---|---|---|
+| contested target | on the repair episode | 1 | while the episode is open |
+| `rejected` proposition | in the standing store | 2 | for the life of the Idea |
 
 ---
 
@@ -345,9 +362,12 @@ the last three on every turn. A prior MAIA block may return **only** when the me
 **explicitly references it** or **invokes repair upon it**, and it remains **non-ground**
 when it does.
 
-**Anti-repetition needs a different mechanism.** It must be met by a **separate move ledger
-or post-generation comparison** — something that records *what move was already made*
-without making the prior wording into ground. Two instructions in the witnessed build did
+**Anti-repetition needs a different mechanism.** It must be met by a **separate
+move / deduplication ledger or post-generation comparison** — something that records *what
+move was already made* without making the prior wording into ground. **The ledger must be
+incapable of becoming a positive premise**: it may say *this move has been made*, never
+*this is established*. When MAIA text does return, it returns through a
+**provenance-labelled, non-ground channel** (§1.1). Two instructions in the witnessed build did
 the opposite: authored to stop looping, they bought it by promoting MAIA's output to
 settled structure.
 
@@ -363,12 +383,14 @@ mechanism that **cannot** promote epistemic status. **Continuity is not ratifica
 
 Connect must emit **either**:
 
-- a source **with an external receipt** — retrieval result or member-supplied source,
-  carrying identifiable provenance; or
-- an explicitly labelled **`maia_analogy`**; or
-- a statement that **no verified source is available**.
+- a source **with an external receipt** — a **retrieval receipt** or an **identified
+  member-provided source**, carrying identifiable provenance; **or**
+- output **machine-typed `maia_analogy`**.
 
-Machine-readable, not a stylistic convention. The observed failure attributed MAIA's own
+**There is no third type.** Without evidence, the output **must** be typed `maia_analogy` —
+saying *"no verified source is available"* is prose that may appear **within** that type,
+never a type of its own. A free-text disclaimer is exactly the kind of control that passes
+review and fails under load. The observed failure attributed MAIA's own
 analogy to *"what negotiation theorists call…"* with no identifiable theorist. **A
 self-certifying gate would have passed it** — the model was confident. Only an external
 receipt distinguishes the cases.
@@ -388,12 +410,17 @@ from becoming *future* ground. It does **nothing** to stop MAIA from saying, in 
 
 1. **Any claim about a member-held position must reference `current` proposition IDs.**
    Unreferenced member-attribution is not permitted.
-2. **Any new formulation must be emitted and persisted as an `open` MAIA offering** —
-   addressable, with standing, and therefore available for `adopt` / `revise` / `reject`.
-3. **Unsupported member-attribution is rejected before persistence.** The response does not
-   reach the thread.
+2. **Exact member wording remains attributable to the member.** Quoting or reusing the
+   member's own words carries their attribution intact — MAIA restating a member's phrase
+   does not convert it into MAIA's formulation, and must not be re-emitted as a MAIA
+   offering.
+3. **Every new MAIA formulation must be emitted and persisted as an `open` MAIA
+   offering** — addressable, with standing, and therefore available for `adopt` / `revise`
+   / `reject`.
+4. **Unsupported member-attribution fails before persistence.** The response does not reach
+   the thread.
 
-> ⚠️ **If (3) cannot yet be enforced, this part of Finding D remains explicitly
+> ⚠️ **If (4) cannot yet be enforced structurally, Finding D remains explicitly
 > UNRESOLVED.** It must **not** be declared repaired by the standing model. The standing
 > model governs ground; this contract governs assertion, and they fail independently — as
 > the witness showed, in the same thread.
@@ -443,7 +470,7 @@ concern** — standing that depends on a transmission the member cannot verify.
 - the **stance**
 - the **repair-episode state** (§3)
 
-The attempt then resolves to **`completed`** or **`failed`**.
+The attempt carries an **attempt status**, completed as **`succeeded`** or **`failed`**.
 
 This single object is what makes the rest possible rather than aspirational:
 
@@ -529,7 +556,7 @@ All five are decided; see the table at the head of this document. Where each lan
 
 - **D-5 evaluation** must be run per stance against real threads before any model is
   ratified. *Stay with this* is the case where the format-bound assumption is least safe.
-- **§5.3(3)** — enforcement of unsupported member-attribution rejection. If it cannot be
+- **§5.3(4)** — enforcement of unsupported member-attribution rejection. If it cannot be
   built, that part of Finding D stays **explicitly unresolved**.
 
 ---
@@ -544,7 +571,7 @@ This specification is complete when:
 3. ~~D-1 through D-5 are adjudicated.~~ **Done 2026-09-02** (§8).
 4. No implementation, migration, or prompt edit exists on this lane.
 5. Any control that **cannot** be enforced is marked unresolved rather than described as
-   repaired — currently **§5.3(3)**, **§7.1** and **§7.2**.
+   repaired — currently **§5.3(4)**, **§7.1** and **§7.2**.
 
 **Then**: founder ratification → implementation → **a new technical and lived witness of
 Cuts 0–2** → only if green, consider merge or deployment.
