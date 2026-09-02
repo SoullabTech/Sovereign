@@ -37,31 +37,50 @@ NEXT EXECUTABLE    P0-D
 LAST UPDATED       2026-09-02
 ```
 
-Stage state, set from canonical evidence — 6A's merge at `4b8b34bcf`, not from intention:
+Stage state, set from canonical evidence — the prerequisite's merge at `0fa4158e7` and its Unicode
+repair at `9411ddc41`, not from intention:
 
 ```text
 Stage 6   6A UNIT      CLOSED · mechanically + experientially verified
-          MEMBER REACH PARTIAL · not ordinarily reachable
-                       BLOCKED ON section-addressable draft liveness
+          MEMBER REACH COMPLETE · canonical @ 9411ddc41
+                       new drafts are section-addressable from birth, and
+                       POST { convert: true } converts an existing one
 Stage 7   ACTIVE
           FIND        CLOSED · canonical @ cc9788e4f
           UNDERSTAND  CLOSED · canonical @ 5670163e6
           DECIDE      CLOSED · canonical @ 838eabfd8
           BUILD       ACTIVE
-          BUILD-07A   OPEN · PAUSED — prerequisite discharged, unit not closed
-          PREREQ      SECTION-ADDRESSABLE DRAFT LIVENESS
-                      BUILT + WITNESSED on branch · NOT ON CANONICAL
+          BUILD-07A   OPEN · RESUMED — prerequisite closed; INV-7b and the
+                      original falsifiers still to prove
+          PREREQ      SECTION-ADDRESSABLE DRAFT LIVENESS · CLOSED
+                      canonical @ 0fa4158e7 (PR #1174)
+                      + Unicode repair @ 9411ddc41 (PR #1175)
           BUILD-07B–H unauthorized
 Stage 8   BLOCKED ON STAGE 7 CLOSURE
 ```
 
-⛔ **The prerequisite is on a branch, not on canonical.** Stage 6's MEMBER REACH row and
-BUILD-07A's pause both stay as they read until it merges — this board is set from canonical
-evidence, and a witnessed branch is not that. What is true on
-`feature/ws2-section-addressable-draft-liveness` is recorded in
-`WS2-07-PREREQ_SAVE_CONTRACT_OPTIONS_2026-09-02.md` §7 and awaits a merge ruling. One item in it is
-a member-facing capability change (`app/press/manuscript` becomes read-only on a section-addressable
-draft) and is flagged there for a founder ruling rather than assumed.
+**Why this correction has two commits and not one.** `0fa4158e7` was witnessed 41/41 and merged. A
+founder review of the handoff into BUILD-07A then found a real defect in the section↔revision
+locator: the migration recorded its offsets as UTF-16 code units, but its own trigger validates
+against PostgreSQL `length(text)`, which counts Unicode CODE POINTS. `'A😀B'` is 4 to JavaScript and
+3 to PostgreSQL — so an author writing an emoji had ordinary draft creation fail. `9411ddc41`
+repairs it and records the correction forward.
+
+⛔ **The lesson is about the witness, not the bug.** The 41/41 walk proved the FIXTURE, not the
+claim: its prose was entirely BMP, so it passed under either unit. A green witness over
+unrepresentative material is not evidence for the general case, and the board was — accidentally —
+right to stay `PARTIAL` while that was true. The witness now carries astral prose and asserts that
+the two units genuinely differ on it BEFORE relying on that, so an all-BMP fixture can never again
+pass for a proof. 47 checks, 0 failures, from an empty database on canonical.
+
+⛔ **MEMBER REACH COMPLETE is about reachability, not use.** It says a member can now cross the
+structure threshold through the ordinary product path. It does not claim any member has. The Press
+manuscript page is readable rather than writable on a section-addressable draft — ratified
+2026-09-02 as convergence, with the Author Studio ⇄ Book Studio publishing boundary left open.
+
+⛔ **The prerequisite closing does not close BUILD-07A.** It removes the blocker under it. `INV-7b`
+stays binding and the ten falsifiers still have to run; the unit stands at 0 of 6 outcomes
+demonstrated, not 4 of 6.
 
 Writer's Studio mode reflects **this programme only**. Unrelated Jarvis incidents may sit ahead of
 it in the global work queue without becoming Writer's Studio state.
