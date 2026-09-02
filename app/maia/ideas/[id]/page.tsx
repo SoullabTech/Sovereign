@@ -41,7 +41,15 @@ import {
   X,
   RotateCcw,
 } from 'lucide-react';
-import { apiFetch } from '@/lib/http/apiBase';
+import { apiFetch, BUILD_STAMP } from '@/lib/http/apiBase';
+import {
+  ATTEMPT_ID_HEADER,
+  clientRuntimeRevision,
+  emitStage,
+  newAttemptId,
+  type ClientSeam,
+  type StageContext,
+} from '@/lib/ideas/faultLocalization';
 
 // --- types -------------------------------------------------------------------
 
@@ -269,6 +277,25 @@ export default function IdeaWorkspacePage() {
   const handleAskMaia = useCallback(async () => {
     if (!idea || askingMaia || saving) return;
     setAskingMaia(true);
+
+    // T1 fault localization (client side). One attempt_id per Ask MAIA
+    // gesture, carried on every request this gesture makes so the client and
+    // server seam records join. The client cannot mint or supply a
+    // request_id — that authority is the server's alone.
+    const attemptId = newAttemptId();
+    const t1: StageContext = {
+      side: 'client',
+      requestId: null,
+      attemptId,
+      runtimeRevision: clientRuntimeRevision(BUILD_STAMP.commit),
+    };
+    const t1Headers = { [ATTEMPT_ID_HEADER]: attemptId };
+    // Tracks which seam is in flight so the outer catch attributes a throw to
+    // the seam it actually came from. Without this, an autosave transport
+    // failure and a render parse failure both read as `client.ask_request` —
+    // exactly the collapse this lane exists to remove.
+    let t1Seam: ClientSeam = 'client.autosave';
+
     try {
       // Autosave-on-Ask-MAIA (2026-04-22):
       // If the composer has pending draft text, save it as a note first so
@@ -278,9 +305,11 @@ export default function IdeaWorkspacePage() {
       // never raw draft state. If the save fails, abort Ask MAIA so the
       // user's thought stays in the composer and they can retry.
       const pendingDraft = draft.trim();
+      emitStage(t1, 'client.autosave', 'entered', { draft_present: pendingDraft.length > 0 });
       if (pendingDraft) {
         const saveRes = await apiFetch(`/api/ideas/${idea.id}/blocks`, {
           method: 'POST',
+          headers: t1Headers,
           body: JSON.stringify({
             block_type: 'note',
             content: pendingDraft,
@@ -288,6 +317,10 @@ export default function IdeaWorkspacePage() {
           }),
         });
         if (!saveRes.ok) {
+          emitStage(t1, 'client.autosave', 'failed', {
+            reason: 'http_not_ok',
+            status: saveRes.status,
+          });
           console.error(
             '[ideas/workspace] autosave before ask-maia failed:',
             saveRes.status
@@ -299,26 +332,50 @@ export default function IdeaWorkspacePage() {
           setBlocks((prev) => [...prev, saveData.block]);
           setLastCreatedBlockId(saveData.block.id);
           setDraft('');
+          emitStage(t1, 'client.autosave', 'completed', { block_present: true });
         } else {
           // Unexpected success=false; abort rather than proceeding on stale state
+          emitStage(t1, 'client.autosave', 'failed', { reason: 'success_false' });
           return;
         }
+      } else {
+        emitStage(t1, 'client.autosave', 'completed', { block_present: false });
       }
 
+      t1Seam = 'client.ask_request';
+      emitStage(t1, 'client.ask_request', 'entered');
       const res = await apiFetch(`/api/ideas/${idea.id}/ask-maia`, {
         method: 'POST',
+        headers: t1Headers,
       });
       if (res.ok) {
+        emitStage(t1, 'client.ask_request', 'completed', { status: res.status });
+        t1Seam = 'client.render';
+        emitStage(t1, 'client.render', 'entered');
         const data = await res.json();
         if (data.success && data.block) {
           setBlocks((prev) => [...prev, data.block]);
+          emitStage(t1, 'client.render', 'completed', { block_present: true });
           // lastCreatedBlockId is intentionally NOT updated — MAIA blocks
           // don't carry Convert actions, and the prior note's Convert
           // actions should remain visible so the thought can still be
           // structured after MAIA responds.
+        } else {
+          // The request succeeded but carried nothing renderable. Distinct
+          // from a transport failure, and previously indistinguishable.
+          emitStage(t1, 'client.render', 'failed', { reason: 'no_block_in_response' });
         }
+      } else {
+        emitStage(t1, 'client.ask_request', 'failed', {
+          reason: 'http_not_ok',
+          status: res.status,
+        });
       }
     } catch (err) {
+      emitStage(t1, t1Seam, 'failed', {
+        reason: 'threw',
+        error_name: err instanceof Error ? err.name : 'unknown',
+      });
       console.error('[ideas/workspace] ask-maia failed:', err);
     } finally {
       setAskingMaia(false);

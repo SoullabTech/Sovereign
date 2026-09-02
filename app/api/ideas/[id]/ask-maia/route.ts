@@ -13,6 +13,11 @@ import {
   storeRecognitionEvent,
   type RecognitionOutcome,
 } from '@/lib/maia/decisionChangeRecognition';
+import {
+  serverStageContext,
+  emitStage,
+  stage,
+} from '@/lib/ideas/faultLocalization';
 
 // Server-side enablement gate for MAIA Decision/Change recognition.
 //
@@ -85,94 +90,153 @@ interface BlockRow {
  * Returns: { success: true, block: <the new maia_reflection block> }
  */
 export async function POST(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  // T1 fault localization. Observational only: the context is minted here,
+  // every seam below is bracketed with entered/completed/failed, and nothing
+  // in this instrument touches the response, the prompt, or control flow.
+  // The client may propose an attempt_id via header; request_id is minted
+  // server-side and is not influenceable from the request.
+  const { ctx: t1, attemptIdRejected } = serverStageContext(request.headers);
+
+  // The auth seam is bracketed by hand rather than via stage() so the
+  // single `entered` event can carry the attempt_id verdict. A rejected
+  // client-proposed id is recorded, not silently treated as absent.
+  emitStage(t1, 'server.auth', 'entered', { attempt_id_rejected: attemptIdRejected });
+
   try {
-    const session = await getCurrentSession();
-    if (!session?.memberId) {
+    let resolvedSession: Awaited<ReturnType<typeof getCurrentSession>>;
+    try {
+      resolvedSession = await getCurrentSession();
+    } catch (authError) {
+      emitStage(t1, 'server.auth', 'failed', {
+        reason: 'session_lookup_threw',
+        error_name: authError instanceof Error ? authError.name : 'unknown',
+      });
+      throw authError;
+    }
+    if (!resolvedSession?.memberId) {
+      emitStage(t1, 'server.auth', 'failed', { reason: 'unauthorized', status: 401 });
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+    emitStage(t1, 'server.auth', 'completed', { member_present: true });
+    // Re-bound as a const so the narrowing survives into the closures below.
+    const session = resolvedSession;
 
     const { id: ideaId } = await params;
+    emitStage(t1, 'server.validate', 'entered');
     if (!UUID_RE.test(ideaId)) {
+      emitStage(t1, 'server.validate', 'failed', { reason: 'invalid_idea_id', status: 400 });
       return NextResponse.json({ error: 'Invalid idea id' }, { status: 400 });
     }
+    emitStage(t1, 'server.validate', 'completed');
 
     // Ownership + idea context in one fetch
-    const ideaResult = await query<IdeaRow>(
-      `SELECT id, title, framing
+    const ideaResult = await stage(
+      t1,
+      'server.idea_fetch',
+      () =>
+        query<IdeaRow>(
+          `SELECT id, title, framing
          FROM member_ideas
         WHERE id = $1 AND member_id = $2`,
-      [ideaId, session.memberId]
+          [ideaId, session.memberId]
+        ),
+      (r) => ({ row_count: r.rows.length })
     );
     if (ideaResult.rows.length === 0) {
+      emitStage(t1, 'server.idea_fetch', 'failed', { reason: 'idea_not_found', status: 404 });
       return NextResponse.json({ error: 'Idea not found' }, { status: 404 });
     }
     const idea = ideaResult.rows[0];
 
-    // Last 4 member-authored blocks (exclude prior maia_reflection blocks so
-    // we don't recursively reflect on reflections).
-    const recentResult = await query<BlockRow>(
-      `SELECT id, block_type, content, metadata, created_at
+    // Context assembly is one seam: three reads plus the shaping that turns
+    // them into the primitive's input. A fault anywhere inside it is a
+    // context-assembly fault, distinguishable from a fetch or a model fault.
+    const assembled = await stage(
+      t1,
+      'server.context_assemble',
+      async () => {
+        // Last 4 member-authored blocks (exclude prior maia_reflection blocks
+        // so we don't recursively reflect on reflections).
+        const recentResult = await query<BlockRow>(
+          `SELECT id, block_type, content, metadata, created_at
          FROM member_idea_blocks
         WHERE idea_id = $1
           AND block_type IN ('note', 'decision', 'change')
         ORDER BY created_at DESC
         LIMIT 4`,
-      [ideaId]
-    );
-    // Re-order oldest-first so the primitive sees chronological flow
-    const recentBlocks = [...recentResult.rows].reverse();
+          [ideaId]
+        );
+        // Re-order oldest-first so the primitive sees chronological flow
+        const recentBlocks = [...recentResult.rows].reverse();
 
-    // Most recent decision (may or may not be in the 4-block slice)
-    const decisionResult = await query<{ content: string }>(
-      `SELECT content
+        // Most recent decision (may or may not be in the 4-block slice)
+        const decisionResult = await query<{ content: string }>(
+          `SELECT content
          FROM member_idea_blocks
         WHERE idea_id = $1 AND block_type = 'decision'
         ORDER BY created_at DESC
         LIMIT 1`,
-      [ideaId]
-    );
-    const lastDecision =
-      decisionResult.rows.length > 0 ? decisionResult.rows[0].content : null;
+          [ideaId]
+        );
+        const lastDecision =
+          decisionResult.rows.length > 0 ? decisionResult.rows[0].content : null;
 
-    // Last 2 prior MAIA reflections — for progression heuristic + anti-
-    // repetition. Fetched DESC, reversed to oldest-first for prompt shape.
-    const priorReflectionsResult = await query<{ content: string }>(
-      `SELECT content
+        // Last 2 prior MAIA reflections — for progression heuristic + anti-
+        // repetition. Fetched DESC, reversed to oldest-first for prompt shape.
+        const priorReflectionsResult = await query<{ content: string }>(
+          `SELECT content
          FROM member_idea_blocks
         WHERE idea_id = $1 AND block_type = 'maia_reflection'
         ORDER BY created_at DESC
         LIMIT 2`,
-      [ideaId]
-    );
-    const priorMaiaReflections = [...priorReflectionsResult.rows]
-      .reverse()
-      .map((r) => r.content);
+          [ideaId]
+        );
+        const priorMaiaReflections = [...priorReflectionsResult.rows]
+          .reverse()
+          .map((r) => r.content);
 
-    // Shape the context for the primitive
-    const summaries: ThreadBlockSummary[] = recentBlocks.map((b) => {
-      const rawOutcome =
-        b.block_type === 'change' && typeof b.metadata?.outcome === 'string'
-          ? (b.metadata.outcome as string)
-          : undefined;
-      return {
-        type: b.block_type as 'note' | 'decision' | 'change',
-        label: BLOCK_LABELS[b.block_type as 'note' | 'decision' | 'change'],
-        content: b.content,
-        outcome: rawOutcome ? OUTCOME_LABELS[rawOutcome] ?? rawOutcome : undefined,
-      };
-    });
+        // Shape the context for the primitive
+        const summaries: ThreadBlockSummary[] = recentBlocks.map((b) => {
+          const rawOutcome =
+            b.block_type === 'change' && typeof b.metadata?.outcome === 'string'
+              ? (b.metadata.outcome as string)
+              : undefined;
+          return {
+            type: b.block_type as 'note' | 'decision' | 'change',
+            label: BLOCK_LABELS[b.block_type as 'note' | 'decision' | 'change'],
+            content: b.content,
+            outcome: rawOutcome ? OUTCOME_LABELS[rawOutcome] ?? rawOutcome : undefined,
+          };
+        });
+
+        return { recentBlocks, lastDecision, priorMaiaReflections, summaries };
+      },
+      (a) => ({
+        block_count: a.summaries.length,
+        prior_reflection_count: a.priorMaiaReflections.length,
+        last_decision_present: a.lastDecision !== null,
+        framing_present: idea.framing !== null,
+      })
+    );
+    const { recentBlocks, lastDecision, priorMaiaReflections, summaries } = assembled;
 
     // Generate — single-shot, no streaming, bounded output
-    const reflection = await generateThreadReflection({
-      ideaTitle: idea.title,
-      ideaFraming: idea.framing,
-      lastDecision,
-      recentBlocks: summaries,
-      priorMaiaReflections,
-    });
+    const reflection = await stage(
+      t1,
+      'server.model_call',
+      () =>
+        generateThreadReflection({
+          ideaTitle: idea.title,
+          ideaFraming: idea.framing,
+          lastDecision,
+          recentBlocks: summaries,
+          priorMaiaReflections,
+        }),
+      (text) => ({ reflection_len: typeof text === 'string' ? text.length : -1 })
+    );
 
     // ── Decision/Change recognition (flag-gated, post-response) ──────────────
     // Invariant: this runs AFTER the reflection is generated. It does not
@@ -180,33 +244,45 @@ export async function POST(
     // attaches an invitation affordance when the spec allows.
     let recognition: RecognitionOutcome | null = null;
     if (isRecognitionEnabled(session.memberId) && recentBlocks.length > 0) {
-      const latestUserBlock = recentBlocks[recentBlocks.length - 1];
-      const userText = latestUserBlock.content ?? '';
-      const sanctuaryMode = isSanctuaryModeActive(session.memberId, ideaId);
-      const recentEvents = await getRecentRecognitionEvents(ideaId);
+      recognition = await stage(
+        t1,
+        'server.recognition',
+        async () => {
+          const latestUserBlock = recentBlocks[recentBlocks.length - 1];
+          const userText = latestUserBlock.content ?? '';
+          const sanctuaryMode = isSanctuaryModeActive(session.memberId, ideaId);
+          const recentEvents = await getRecentRecognitionEvents(ideaId);
 
-      // Count member blocks created AFTER the most recent naming_fired event.
-      // This drives the cooldown rule (released once N new member blocks exist
-      // since the last naming) and replaces the old event-index logic that
-      // created a circular permanent-cooldown bug.
-      const lastNamingFired = recentEvents.find(
-        (e) => e.event_type === 'naming_fired'
+          // Count member blocks created AFTER the most recent naming_fired event.
+          // This drives the cooldown rule (released once N new member blocks exist
+          // since the last naming) and replaces the old event-index logic that
+          // created a circular permanent-cooldown bug.
+          const lastNamingFired = recentEvents.find(
+            (e) => e.event_type === 'naming_fired'
+          );
+          const memberBlocksSinceLastNaming = lastNamingFired
+            ? recentBlocks.filter(
+                (b) =>
+                  new Date(b.created_at).getTime() >
+                  new Date(lastNamingFired.fired_at).getTime()
+              ).length
+            : undefined;
+
+          return runRecognition({
+            userText,
+            priorTurnCount: Math.max(0, recentBlocks.length - 1),
+            sanctuaryMode,
+            recentEvents,
+            memberBlocksSinceLastNaming,
+          });
+        },
+        (r) => ({
+          naming_fired: Boolean(r?.namingLine),
+          recognition_kind: r?.signal.kind ?? null,
+          recognition_strength: r?.signal.strength ?? null,
+          invitation_offered: Boolean(r?.offerInvitation),
+        })
       );
-      const memberBlocksSinceLastNaming = lastNamingFired
-        ? recentBlocks.filter(
-            (b) =>
-              new Date(b.created_at).getTime() >
-              new Date(lastNamingFired.fired_at).getTime()
-          ).length
-        : undefined;
-
-      recognition = runRecognition({
-        userText,
-        priorTurnCount: Math.max(0, recentBlocks.length - 1),
-        sanctuaryMode,
-        recentEvents,
-        memberBlocksSinceLastNaming,
-      });
     }
 
     // Reflection body stays pure. The naming line, when recognition fires,
@@ -233,11 +309,17 @@ export async function POST(
           : {}),
       };
     }
-    const insertResult = await query<BlockRow>(
-      `INSERT INTO member_idea_blocks (idea_id, member_id, block_type, content, metadata)
+    const insertResult = await stage(
+      t1,
+      'server.persist',
+      () =>
+        query<BlockRow>(
+          `INSERT INTO member_idea_blocks (idea_id, member_id, block_type, content, metadata)
        VALUES ($1, $2, 'maia_reflection', $3, $4)
        RETURNING id, block_type, content, metadata, created_at`,
-      [ideaId, session.memberId, reflectionContent, JSON.stringify(metadata)]
+          [ideaId, session.memberId, reflectionContent, JSON.stringify(metadata)]
+        ),
+      (r) => ({ block_present: r.rows.length > 0 })
     );
 
     // Fire-and-forget event logging. Recorded after the reflection is
@@ -281,9 +363,8 @@ export async function POST(
     }
 
     // Touch last_entered_at so the idea bubbles up
-    await query(
-      `UPDATE member_ideas SET last_entered_at = NOW() WHERE id = $1`,
-      [ideaId]
+    await stage(t1, 'server.touch', () =>
+      query(`UPDATE member_ideas SET last_entered_at = NOW() WHERE id = $1`, [ideaId])
     );
 
     return NextResponse.json(
