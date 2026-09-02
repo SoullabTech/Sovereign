@@ -16,6 +16,8 @@
  * `docker logs maia-sovereign` (no DB table until volume justifies one).
  */
 
+import { apiUrl } from '@/lib/http/apiBase';
+
 export type VoiceDiagEvent =
   // Web path (Web Speech API, see components/voice/ContinuousConversation.tsx web branch)
   // Lifecycle events follow the spec order: granted → start → audiostart →
@@ -205,9 +207,19 @@ export function logVoiceEvent(event: VoiceDiagEvent, metadata: Meta = {}): void 
   // eslint-disable-next-line no-console
   console.log('[voice-diag]', event, payload.metadata);
 
-  // Server-side log via /api/telemetry/client
+  // Server-side log via /api/telemetry/client.
+  //
+  // apiUrl(), NOT a bare relative path. On the native iOS build the origin is
+  // `capacitor://localhost` and the static export contains no API routes, so a
+  // relative POST resolved into the local bundle, 404'd, and was swallowed by
+  // the catch below. Every ios_voice_* event ever emitted on device went to the
+  // WebView console and nowhere else — an instrument that never crossed the
+  // native boundary, silently, for as long as the native path has existed.
+  //
+  // The browser console.log above deliberately stays BEFORE this, so Safari Web
+  // Inspector still sees every event even if the transport fails again.
   try {
-    fetch('/api/telemetry/client', {
+    fetch(apiUrl('/api/telemetry/client'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
