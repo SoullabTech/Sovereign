@@ -1,6 +1,6 @@
 # JARVIS-WS2-07-DEVELOPMENTAL-INTELLIGENCE-01
 
-> **Lane active. DECIDE authorized. Nothing beyond it is.**
+> **Lane active. BUILD-07A authorized. Nothing beyond it is.**
 >
 > This document defined the lane before it was entered, and it still authorizes **no code, no
 > schema, no route, no prompt**. Entering FIND required the trigger below to be satisfied on
@@ -8,10 +8,10 @@
 
 ```text
 LANE               JARVIS-WS2-07-DEVELOPMENTAL-INTELLIGENCE-01
-STATE              ACTIVE · DECIDE AUTHORIZED
+STATE              ACTIVE · BUILD-07A AUTHORIZED
 TRIGGER            Stage 6A AuthorStructureCommand merged to canonical and witnessed
 TRIGGER SATISFIED  clean-main-no-secrets @ 4b8b34bcf
-AUTHORIZES         DECIDE — the object and its invariants. No implementation.
+AUTHORIZES         BUILD-07A DEVELOPMENTAL EVIDENCE only. No reader, no model.
 NORMATIVE          docs/programme/WRITERS_STUDIO_MASTER_BRIEF.md
 CAPABILITY         docs/programme/DEVELOPMENTAL_EDITOR_CAPABILITY.md
 LIVE STATE         docs/programme/WRITERS_STUDIO_PROGRAMME_BOARD.md
@@ -80,12 +80,26 @@ running.
 ```text
 INITIAL ACTIVATION     FIND only — UNDERSTAND, DECIDE, BUILD, PROVE and DONE
                        unauthorized at that time
-CURRENT AUTHORIZATION  FIND        CLOSED · canonical @ cc9788e4f
+AUTHORIZATION AT DECIDE
+                       FIND        CLOSED · canonical @ cc9788e4f
                        UNDERSTAND  CLOSED · canonical @ 5670163e6
                        DECIDE      AUTHORIZED — object + invariants, no implementation
                        BUILD       unauthorized
                        BUILD-07A–07H  not started
+
+CURRENT AUTHORIZATION  2026-09-02
+                       FIND        CLOSED · canonical @ cc9788e4f
+                       UNDERSTAND  CLOSED · canonical @ 5670163e6
+                       DECIDE      CLOSED · canonical @ 838eabfd8
+                       BUILD       ACTIVE
+                       BUILD-07A   AUTHORIZED — DEVELOPMENTAL EVIDENCE only
+                       BUILD-07B–H unauthorized
 ```
+
+⛔ **BUILD-07A establishes evidence. It does not produce MAIA's reading of that evidence.** No
+model call, no reader, no prompt, no interpretation, no `DevelopmentalReading` persistence, no
+route, no surface, no manuscript mutation. Canonical structure may be loaded *into the evidence
+substrate*; making it available to a model is BUILD-07B.
 
 The initial line is kept because it was true when written. The current line is what governs.
 
