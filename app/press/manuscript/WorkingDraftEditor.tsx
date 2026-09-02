@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { apiFetch } from '@/lib/http/apiBase';
+import { canvasForManuscript } from '../../writers-studio/canvasIdentity';
 import WriterField, { type WriterFieldHandle } from './WriterField';
 import {
   headingAtOffset,
@@ -74,7 +75,29 @@ interface WorkingDraftEditorProps {
   onInsertDone?: (ok: boolean) => void;
 }
 
-type Phase = 'loading' | 'none' | 'ready' | 'unauthorized' | 'error';
+type Phase = 'loading' | 'none' | 'ready' | 'unauthorized' | 'error' | 'section-addressable';
+
+/**
+ * SECTION-ADDRESSABLE DRAFTS ARE NOT WRITTEN HERE.
+ *
+ * This surface is one CodeMirror document, and five separate contracts read
+ * whole-draft integer offsets out of it: Explicit Insertion at a caret offset,
+ * `returningState`'s caret and scroll, `headingAtOffset`, the revision store,
+ * and `base_source_hash`. Making it section-native means one node per section
+ * and rewriting all five together.
+ *
+ * ⛔ THE SHORTCUT IS THE THING THAT WAS RULED OUT. Keeping one field and
+ * mapping its offsets back onto section boundaries is a hidden offset ledger —
+ * "Option 2 wearing Option 3's name" — and the ledger becomes a second fallible
+ * claim about the same text. When it is wrong, a durable identity that authored
+ * structure and developmental evidence both depend on moves silently, and
+ * nothing detects it at write time.
+ *
+ * So this surface tells the truth instead: it shows the draft and says where it
+ * is written. The Canvas holds real section nodes. Unconverted drafts — every
+ * draft that existed before this shipped — are untouched and still written
+ * here.
+ */
 
 export default function WorkingDraftEditor({
   manuscriptId,
@@ -156,7 +179,11 @@ export default function WorkingDraftEditor({
       revisionIdRef.current = r.revisionId;
       setUpdatedAt(r.updatedAt);
       setSaveState('idle');
-      setPhase('ready');
+      /* Read-only rather than a broken write. A content save against a
+         section-addressable draft is refused by the server with nothing
+         written; letting the writer type into a field whose every save will be
+         declined would be worse than saying so before they start. */
+      setPhase(r.sectionAddressable ? 'section-addressable' : 'ready');
     } else {
       setPhase(r.kind); // 'none' | 'unauthorized' | 'error'
     }
@@ -589,6 +616,42 @@ export default function WorkingDraftEditor({
         </a>{' '}
         to write.
       </p>
+    );
+  }
+
+  if (phase === 'section-addressable') {
+    return (
+      <div className="max-w-xl">
+        <h2 className="text-2xl mb-4" style={{ fontFamily: SERIF }}>
+          This manuscript is written on the Canvas.
+        </h2>
+        <p className="text-[15px] leading-relaxed opacity-75 mb-4">
+          Your draft is arranged in sections, so the Canvas is where it is written — it holds
+          each section as its own place in the manuscript rather than as a position in one long
+          string.
+        </p>
+        <p className="text-[14px] leading-relaxed opacity-55 mb-6">
+          Nothing here is lost or changed. This page can still show you the words and your saved
+          versions.
+        </p>
+        <a
+          /* The canonical builder, not a hand-written query string: the
+             Canvas reads `m`, and a link that spelled it differently would
+             open the Canvas on a DIFFERENT manuscript. That is pinned by
+             canvasParamPin across this boundary. */
+          href={canvasForManuscript('/writers-studio/canvas', manuscriptId)}
+          className="text-[14px] underline underline-offset-4"
+          style={{ color: '#C9A227' }}
+        >
+          Open on the Canvas
+        </a>
+        <div
+          className="writing-surface mt-10 whitespace-pre-wrap"
+          style={{ maxWidth: '38rem', fontFamily: SERIF, fontSize: '17px', lineHeight: 1.8, opacity: 0.75 }}
+        >
+          {content}
+        </div>
+      </div>
     );
   }
 
