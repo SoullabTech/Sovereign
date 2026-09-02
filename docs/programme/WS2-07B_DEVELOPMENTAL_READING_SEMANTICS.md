@@ -38,17 +38,24 @@ AUTHOR JUDGMENT           what the author decides — not MAIA's layer at all
 
 Not the wording. **What would have to be true for the claim to be false.**
 
-| Layer | Falsified by | Who can falsify it |
-|---|---|---|
-| Evidence | re-running the measurement | anyone, mechanically |
-| Observation | pointing at the evidence and showing it does not say that | anyone, from the record |
-| Interpretation | the author saying "no, that is not what it does here" | **only the author** |
-| Possibility | nothing — it proposes, it does not assert | nobody; it is not a claim |
-| Judgment | — | it *is* the author's, and is not MAIA's to make |
+| Layer | Epistemic status |
+|---|---|
+| Evidence | **mechanically falsifiable** — re-run the measurement |
+| Observation | **falsifiable against evidence** — point at the record and show it does not say that |
+| Interpretation | **contestable; not mechanically settled** |
+| Possibility | **proposes rather than asserts** |
+| Judgment | **belongs to the author** |
 
 The line that matters sits between **observation** and **interpretation**: it is where a claim
-stops being checkable against the manuscript and starts being answerable only by the person who
-wrote it. A system that blurs it makes the author argue with a measurement.
+stops being settled by the manuscript. A system that blurs it makes the author argue with a
+measurement.
+
+⛔ **Contestable is not the same as author-falsified.** The author has final authority over what
+the Work means to them and over what they do about it — but they are not the sole possible knower
+of reader effect. *"This may make a first-time reader lose orientation"* is not proven false
+because the author says no. The author may **reject or adjudicate** an interpretation; that is a
+different act from disproving it, and conflating the two would make the reading either servile or
+argumentative depending on which way the conflation ran.
 
 ### The four claims, distinguished
 
@@ -69,9 +76,14 @@ POSSIBILITY    you might echo it earlier — or decide the disappearance is inte
                ── must offer at least one option that is "change nothing"
 ```
 
-**The possibility layer carries a specific obligation.** A possibility that only ever proposes
-change is a recommendation wearing a question mark. If a possibility cannot name a version in
-which the author does nothing and is right, it is an interpretation asserting itself.
+**The possibility layer carries a specific obligation, and it is structural rather than
+lexical.** A set of possibilities must preserve no-change as a legitimate author choice, and must
+never imply that intervention is required. Where the only options offered are ways of changing
+the Work, the set is a recommendation wearing a question mark.
+
+⛔ This is **not** a requirement that every sentence append "or leave it". A rule satisfied by a
+ritual phrase produces ritual hedging, which reads as evasion and teaches the author to skip the
+last clause. The obligation is on the option set, not on the wording.
 
 ### Downward silence
 
@@ -253,19 +265,53 @@ and neither is true.
 > **A lens is an editorial function. A phenomenon is what evidence shows. One phenomenon may be
 > seen through more than one lens, and one lens may draw on more than one phenomenon.**
 
-They are two layers, not two vocabularies:
+They are two independent lists, and the relation between them is many-to-many. Set out as two
+columns they would read as a mapping, so they are set out apart:
 
 ```text
-PHENOMENON  (what the evidence shows)      LENS  (what is being asked)
-───────────────────────────────────────    ─────────────────────────────
-recurrence · absence-after-introduction    STRUCTURE     does this belong here
-prospective reference · term drift         DEVELOPMENT   is this developed
-positional asymmetry · density             CONTINUITY    does time hold
-register shift                             ARC           what journey
-first-mention / re-explanation             VOICE         is this the Work's voice
-                                           COHERENCE     does it hold together
-                                           READER        what does the reader know
+PHENOMENA — what the reading notices
+  recurrence
+  unresolved thread
+  register shift
+  prospective reference
+  re-explanation / first-mention
+  movement
+  term drift
+  positional asymmetry
+
+LENSES — what is being asked
+  Structure     does this belong here
+  Development   is this developed
+  Continuity    does time hold
+  Arc           what journey
+  Voice         is this the Work's voice
+  Coherence     does it hold together
+  Reader        what does the reader already know
 ```
+
+The relation is what carries the meaning, and it is a **crossing**, not a lookup:
+
+```text
+recurrence       × Structure     → does this repetition belong here?
+recurrence       × Development   → does this repetition advance the idea?
+unresolved thread × Reader       → what is the reader still waiting for?
+unresolved thread × Development  → has this idea stopped developing?
+register shift   × Voice         → has the Work's voice changed here?
+register shift   × Arc           → is this a movement, or a lapse?
+```
+
+Same phenomenon, different lens, different question, and often different answers. Neither column
+is derivable from the other.
+
+### Where "phenomenon" sits epistemically
+
+⛔ **Phenomenon is a classification of developmental observation. It is not a new epistemic
+layer.** The six layers of §1 are unchanged, and nothing sits between evidence and observation.
+
+Saying "recurrence" is saying what *kind* of observation this is; it adds no claim the observation
+did not already make. If 07C were to make `Phenomenon` an object between `Evidence` and
+`Observation`, it would create a layer with nothing to falsify it — the failure §1 exists to
+prevent.
 
 The right-hand column is the capability spec's seven, unchanged. **The seven stand.** The lane's
 v1 list is reclassified: it was naming phenomena, and it is preserved as an input to the
@@ -284,18 +330,45 @@ whether the repetition is misplaced. The same repetition through *Development* a
 advances. Same evidence, two different editorial questions, two different answers. Making
 Repetition a lens would force a choice between them and lose one.
 
-**Is Unresolved Threads distinct from "abandoned"?** **The same phenomenon; not the same claim.**
-Both name a thread introduced and not carried. "Abandoned" adds a verdict the evidence cannot
-support — it says the author gave up. **`Unresolved` is the correct name**, because a thread may
-be deliberately left open, and only the author knows which. This is the observation/interpretation
-line from §1 falling exactly on a word, and it is the clearest case in this document of why the
-layers may not collapse.
+**Is Unresolved Threads distinct from "abandoned"?** **They are the same phenomenon named at two
+different layers**, and both names are legitimate where they belong:
+
+```text
+OBSERVABLE          the thread is introduced and not subsequently developed
+                    → "unresolved" · "no further development observed"
+
+INTERPRETATION      the thread appears to have been abandoned
+
+AUTHOR JUDGMENT     yes, I abandoned that thread
+```
+
+So **`unresolved` is the phenomenon name** — it is what the evidence supports — while
+**`abandoned` remains valid at the interpretation and judgment layers**, which is exactly where
+the capability spec uses it, under *Development*. Nothing in the spec is edited by this document;
+the term is placed rather than replaced.
+
+The distinction is not pedantry. *Abandoned* says the author gave up, and a thread may be
+deliberately left open — only the author knows which, and that is the difference between an
+observation and an interpretation falling on a single word.
 
 **What do Arc and Movement mean?** **Arc is the lens; movement is the phenomenon.** Arc asks what
 journey a chapter takes a reader through and what journey the whole Work has taken. Movement is
 the observable: where intensity, orientation or register shifts. Arc reasons about movements;
-movement is not itself an editorial question. Note that Arc is **structure-aware** by §3 — "what
-journey has the whole book taken" presupposes a Work the member has declared the shape of.
+movement is not itself an editorial question. **Arc is scope-sensitive, not uniformly structure-aware.** An editorial function is not available
+or unavailable as a whole; its availability follows the scope of the claim:
+
+```text
+local movement / local arc   structure-INDEPENDENT — a bounded passage has a
+                             shape whether or not the Work has declared divisions
+division / chapter arc       requires authored DIVISION IDENTITY — "this chapter"
+                             presupposes the member has said what a chapter is
+whole-Work arc               requires authoritative Work Structure
+```
+
+Stated this way because the alternative makes an entire editorial function unavailable to early
+Works, which contradicts the capability spec's maturity gradient — *"parts of it can arrive before
+structure exists, and must, because that is where most writing begins."* The gradient constrains
+what may be **asserted at a given scope**, not which lenses exist.
 
 ### What is NOT settled here
 
@@ -315,16 +388,18 @@ The four epistemic acts of §1, restated as a rule that can be checked against a
 | **Evidence** | "X appears at 18–21 and at 47" | a recoverable reference | evaluate |
 | **Observation** | "X is absent for 26 sections" | the evidence it rests on | say whether that is good |
 | **Interpretation** | "this may weaken continuity" | hedged modality, and the observation | assert a defect as fact |
-| **Possibility** | "you might echo it earlier — or leave it" | at least one do-nothing option | recommend, rank, or prefer |
+| **Possibility** | "you might echo it earlier" | a set in which no-change stays legitimate | recommend, rank, prefer, or imply intervention is required |
 
 ### Five prohibitions
 
 ⛔ **No verdict vocabulary.** *weak · flawed · broken · needs work · should* assert defect. What
 is available is: what is there, what is absent, where, and what that might do to a reader.
 
-⛔ **No prose that could be pasted into the Work.** The moment MAIA writes a sentence in the
-author's register that could be dropped in, she has authored. *Reframe* is the boundary the
-capability spec draws, and it works from the writer's existing language.
+⛔ **The developmental reading itself generates no replacement prose.** The moment a reading
+emits a sentence in the author's register that could be dropped into the Work, it has authored.
+This is a constraint on the *reading*, not a prohibition on the capability spec's `Reframe`: any
+later Reframe is a separate, author-invoked act, working from the writer's existing language, and
+it is neither authorized nor defined by 07B.
 
 ⛔ **No confidence scoring of the Work.** Uncertainty about MAIA's own reading is honest and
 required. A number attached to the manuscript's quality is a verdict with a decimal point.
@@ -340,9 +415,21 @@ answers "is my book good yet" — a question the system must decline to have an 
 > **Could the author read this and reasonably say "no, that is not what it does" — and would the
 > system then have been wrong about a fact, or wrong about a meaning?**
 
-Wrong about a fact → the claim was evidence or observation, and it is a defect. Wrong about a
-meaning → the claim was interpretation, correctly labelled, and the author has just done the
-thing the reading is for.
+**Wrong about a fact** → the claim was evidence or observation. A defect, unambiguously.
+
+**Wrong about a meaning** → **not automatically a defect, and not automatically fine.** The claim
+was an interpretation, and interpretations are contestable by §1. Three things still have to hold,
+and a bad interpretation does not become good merely because it was labelled correctly:
+
+```text
+evidence-grounded   it rests on an observation that rests on evidence
+scoped              it claims only at the scope its reading covered
+explicitly framed   it presents itself as interpretation, not as finding
+```
+
+An interpretation that fails any of these is a defect even though the author "merely disagreed" —
+and one that holds all three is the reading working correctly, with the author doing exactly what
+the reading is for.
 
 ---
 
