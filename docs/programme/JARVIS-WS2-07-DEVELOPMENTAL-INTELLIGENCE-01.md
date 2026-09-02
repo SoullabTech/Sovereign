@@ -62,6 +62,14 @@ No repair, schema, route, prompt, or build work authorized by activation.
 07D+            not authorized
 ```
 
+```text
+NUMBERING LINEAGE
+In the dated entries above, 07A / 07B / 07C / 07D+ are retained as
+contemporaneous pre-ruling names for FIND / UNDERSTAND / DECIDE / BUILD+.
+They do NOT name BUILD-07A–07H, which were unauthorized throughout and
+remain so.
+```
+
 ⛔ **These are steps inside this lane, not lanes of their own.** A step advancing does not open a
 new Jarvis flow, and no working branch used to carry a step's output is a lane.
 
@@ -70,7 +78,8 @@ none of it; UNDERSTAND resolves semantics and builds nothing. A step does not op
 running.
 
 ```text
-INITIAL ACTIVATION     07A only — 07B-07H unauthorized at that time
+INITIAL ACTIVATION     FIND only — UNDERSTAND, DECIDE, BUILD, PROVE and DONE
+                       unauthorized at that time
 CURRENT AUTHORIZATION  FIND        CLOSED · canonical @ cc9788e4f
                        UNDERSTAND  CLOSED · canonical @ 5670163e6
                        DECIDE      AUTHORIZED — object + invariants, no implementation

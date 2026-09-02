@@ -22,21 +22,27 @@ for a shape, **not because a file is being specified.** Field names are proposal
 ## 1 · The reading
 
 ```ts
-DevelopmentalReading {
+type DevelopmentalReading = {
   id                  // durable, server-minted, outlives the response
   workId
-  outcome             // 'reading' | 'none'
   scope               // what was asked about
   structureContext?   // authoritative structure supplied to this reading, if any
   readState           // what the Work was when she read it
   coverage            // what she actually read, per section
-  observations[]      // may be empty only when outcome is 'none'
   provenance          // who read, which version, under which contract
-}
+} & (
+  | { outcome: 'reading'; observations: NonEmptyArray<DevelopmentalObservation> }
+  | { outcome: 'none';    observations: readonly [] }
+)
 ```
 
-Six decisions are load-bearing. Each is stated as an invariant that an implementation either
-satisfies or does not.
+**INV-0 · The outcome discriminates the observations, in both directions.** A `'reading'` with no
+observations and a `'none'` carrying observations are both unconstructible. Prose saying
+"observations may be empty only when outcome is `none`" leaves the second case open; a union
+closes both. A refusal remains a different result entirely — see §10.
+
+The decisions below are load-bearing. Each is stated as an invariant that an implementation
+either satisfies or does not.
 
 ---
 
@@ -83,31 +89,35 @@ cannot change.
 
 ## 3 · EvidenceRef — what it points to
 
-**INV-5 · An `EvidenceRef` points at a draft section by its stable identity, never at a character
-offset in prose, and never at a heading string.**
+⛔ **DECIDE does not define `EvidenceRef`.** The lane reserves that for **BUILD-07A**, and the
+first draft froze it as `{ sectionId, quote? }` — a scope collision, and too narrow besides: this
+document permits heading-, topology- and structure-derived evidence, and a section-only reference
+cannot name an authored-structure relation. `divisionRef` is contextual metadata about an
+observation, not evidence provenance, and cannot stand in for it.
 
-```ts
-EvidenceRef {
-  sectionId        // manuscript_draft_sections.id — the identity the Work already uses
-  quote?           // an exact substring, for display and for re-finding
-}
+**INV-5 · What an `EvidenceRef` must be, whatever its concrete variants turn out to be:**
+
+```text
+TYPED           the kind of evidence is part of the reference, not inferred from
+                which optional fields happen to be populated
+DURABLE         it addresses something with a stable identity, never a character
+                offset in live prose and never a heading string
+RECOVERABLE     it resolves through its reading's frozen state (§4), so what the
+                observation rested on can still be shown
+EXPRESSIVE      it can name textual evidence AND authored-structure evidence
 ```
 
-Three consequences, in the order they matter:
+**Deferred to BUILD-07A:** the concrete reference variants, their locator fields, and quote
+policy — whether a quote is carried, and what a failed re-find means operationally.
 
-**Section identity is the only durable address the Work has.** Positions renumber when a section
-is inserted; headings are edited; character offsets move on every keystroke. The draft section id
-is what 05A, 05B and 6A all already address, and adding a fourth addressing scheme for
-developmental evidence would create the divergence 07A found between proposal-internal and
-canonical unit identity.
+**INV-6 · A ref carries no version of its own.** Versioning lives on the reading (§4), once.
+Per-ref versions would let one observation claim currency its own reading cannot support.
 
-**A quote is evidence for a human, not an address for a machine.** It is optional, it may fail to
-re-find after an edit, and **failing to re-find is a finding, not an error to paper over** — it
-means the passage the observation rested on has changed. An implementation that silently
-fuzzy-matches a moved quote has invented evidence.
-
-**INV-6 · A ref carries no version of its own.** Versioning lives on the reading (§4), once. Per-ref
-versions would let one observation claim currency its own reading cannot support.
+**Why "durable" excludes what it excludes.** Positions renumber when a section is inserted;
+headings are edited; character offsets move on every keystroke. Draft section identity is what
+05A, 05B and 6A all already address, and a fourth addressing scheme for developmental evidence
+would recreate the divergence FIND recorded between proposal-internal and canonical unit
+identity.
 
 ---
 
@@ -132,9 +142,22 @@ to *today's* section. After an edit it no longer resolves to what MAIA read. An 
 prove **that** something changed; it cannot recover **what she read**, and an observation whose
 evidence cannot be recovered is an assertion the author cannot check.
 
-`SectionState` is an immutable per-section identity — a revision id, a content digest, or an
-equivalent — and **naming which is BUILD-07A work.** What DECIDE fixes is the requirement: an
-`EvidenceRef` resolves *through its reading's frozen state*, never through the live section.
+**INV-7b · `SectionState` and `structureContext` must RESOLVE to the exact immutable state read,
+not merely detect that it changed.**
+
+A bare content digest satisfies comparison and **not** recoverability: it proves the live text
+differs from what was read, while being unable to reconstruct what was read. Recoverability
+requires either an immutable revision identity, or a digest under a guarantee that the retained
+content remains retrievable by it. The same holds for authored structure —
+`structureFingerprint` detects change, but unless `structureContext` is itself frozen or points
+at a durable immutable snapshot, a superseded structure-dependent observation cannot show the
+author the structure it actually reasoned from.
+
+**Which mechanism provides that is BUILD-07A work.** What DECIDE fixes is that a mechanism which
+only compares does not satisfy the invariant.
+
+An `EvidenceRef` therefore resolves *through its reading's frozen state*, never through the live
+section.
 
 ```text
 reading.readState
@@ -146,6 +169,22 @@ EvidenceRef → section B
 
 This preserves INV-6 — the ref still carries no version, because the reading carries it — and it
 is what makes the scoped supersession in §9 computable rather than merely stated.
+
+**Two different operations, named apart.** Conflating them is how "resolves through frozen state"
+and "may fail after an edit" both appeared true of one thing:
+
+```text
+HISTORICAL DISPLAY    show what the observation rested on
+                      → resolves against the reading's frozen state
+                      → must always succeed, or the reading was never recoverable
+
+CURRENT LOCATION      find that same passage in the Work as it stands now
+                      → may fail
+                      → failure is a SUPERSESSION SIGNAL, not an error
+```
+
+An implementation that silently fuzzy-matches a moved passage to keep the second operation
+succeeding has invented evidence for the first.
 
 ⛔ **`inputFingerprint` is deliberately not named `interpretationInputHash`.** That is a
 StructureReader-specific hash over headings plus supplied bodies, and UNDERSTAND §2 declined to
@@ -161,7 +200,7 @@ authored structure; a count would miss a renamed division or a section moved bet
 
 ## 5 · Coverage — at the granularity the claim is made at
 
-07B requires that coverage be reported at the granularity of the claim. That is a constraint on
+UNDERSTAND requires that coverage be reported at the granularity of the claim. That is a constraint on
 what must be **derivable**, and it is satisfied by recording depth per section rather than a
 percentage.
 
@@ -200,7 +239,7 @@ spanning positions 18–47 whose coverage holds bodies for 18, 19 and 47 has an 
 
 ## 6 · Lens and phenomenon — held apart structurally
 
-07B ruled these are two independent lists related many-to-many. The object must not quietly
+UNDERSTAND ruled these are two independent lists related many-to-many. The object must not quietly
 reintroduce a mapping.
 
 ```ts
@@ -211,6 +250,7 @@ DevelopmentalObservation {
   evidenceRefs        // NonEmptyArray<EvidenceRef>
   observation         // required — what the evidence shows
   interpretation?     // optional — what it may mean
+  questions?          // optional — what MAIA is asking the author; see INV-13a
   possibilities?      // optional — what the author might consider
   uncertainty?        // optional — what the reading could not settle
   divisionRef?        // required iff this observation is structure-aware
@@ -226,7 +266,7 @@ answers — `recurrence × Structure` asks whether the repetition belongs; `recu
 asks whether it advances. Merging them would force one answer to be discarded.
 
 **INV-12 · `phenomenon` is a classification of the observation, not a layer beneath it.** There is
-no `Phenomenon` object between evidence and observation. 07B settled this; the object must not
+no `Phenomenon` object between evidence and observation. UNDERSTAND settled this; the object must not
 reopen it by giving phenomena their own identity or their own evidence.
 
 ⛔ **Neither the lens set nor the phenomenon set is frozen here.** The seven lenses stand as
@@ -241,12 +281,36 @@ actually be established.
 optional.** An observation that stops at evidence and observation is complete and honest. A
 required interpretation field manufactures interpretation to fill it.
 
+**INV-13a · Questions attach to an observation, and inherit its evidence and its address.**
+
+The lane requires both `questions[]` on the reading and an optional `question` on an observation.
+The first draft carried `possibilities?` and no representation for the QUESTION half of the
+canonical `QUESTION / POSSIBILITY` layer at all. DECIDE rules where they live:
+
+```text
+questions attach to an OBSERVATION
+  → inherit its evidenceRefs
+  → inherit its durable (readingId, observationKey) address
+  → may arise from the observation OR from its uncertainty
+  → do NOT require an interpretation to exist
+```
+
+A question may be the honest end of a reading that reached no interpretation — *"is this
+deliberate?"* rests on an observation and needs nothing above it. That is why questions are
+exempt from the containment rule below while possibilities are not.
+
+⛔ **A reading-level `questions[]` is a DERIVED presentation, never a second authoritative copy.**
+Two stored lists diverge, and the divergence is invisible until someone answers a question that
+no longer matches the observation it came from.
+
 **INV-14 · Authority moves upward only, and the encoding enforces it.**
 
 ```text
 possibilities   present only if interpretation is present
 interpretation  present only if observation is present
 observation     present only if evidenceRefs is non-empty (by type)
+
+questions       rest on the observation, not on the interpretation — see INV-13a
 ```
 
 A possibility rests on an interpretation; an interpretation rests on an observation; an
@@ -262,7 +326,7 @@ the author's standing freedom to do nothing is already sovereign; inventing a se
 rule is satisfied produces filler, and filler is a worse failure than brevity. The field is plural
 because a reading may offer several — not because it must.
 
-⛔ **No `severity`, `priority`, `confidence`, `score` or `rank` field.** 07B's prohibitions are
+⛔ **No `severity`, `priority`, `confidence`, `score` or `rank` field.** UNDERSTAND's prohibitions are
 enforced by absence: a field that exists will be populated, and a schema with a severity column
 has already decided that MAIA rates the Work.
 
@@ -276,13 +340,23 @@ A reading may carry `structureContext` when authoritative structure was supplied
 observation declares whether it actually depends on that structure. The two are different facts
 and were previously conflated:
 
-```ts
-DevelopmentalObservation {
-  …
-  dependsOnStructure  // boolean — did THIS observation reason from authored structure
-  divisionRef?        // required iff dependsOnStructure
-}
+```text
+structureDependency
+  ├─ independent
+  └─ authored-structure
+       → non-empty recoverable structural evidence
+       → may concern ONE unit, SEVERAL units, or WHOLE TOPOLOGY
 ```
+
+⛔ **Not a boolean plus a singular ref.** `dependsOnStructure: boolean` with `divisionRef?`
+admits `false + divisionRef` and `true + no divisionRef` however firmly the prose says "required
+iff" — and a single `unitId` cannot express a relationship *between* two divisions, a sequence
+*across* several, or a whole-topology claim. §9 supersedes on exactly that last dependency, so a
+representation that cannot name it makes its own supersession rule uncomputable.
+
+A discriminated relation makes the invalid states unconstructible instead of merely discouraged.
+**The concrete structural-reference variants are BUILD-07A work**, alongside the rest of
+`EvidenceRef`.
 
 **This was a contradiction in the first draft.** A reading-level `scopeMode` cannot coexist with
 scoped supersession (§9), which explicitly preserves structure-independent observations while
@@ -295,16 +369,11 @@ supplied.** Where it was not, such observations are **ABSENT, not degraded** —
 reason from the proposal, and may not treat draft section order as a member declaration of
 division order.
 
-**INV-17 · A structure-dependent observation carries `divisionRef`, and it names a canonical unit.**
+**INV-17 · Structural evidence names member-authored structure — a canonical unit, a set of them,
+or the authored topology — never a proposal id and never a reviewed unit key.**
 
-```ts
-divisionRef {
-  unitId    // manuscript_structure_units.id — a member-authored division
-}
-```
-
-Not a proposal id, not a reviewed unit key. This is the direct answer to 07A's F2: the reading
-reasons about what the member declared the Work to be.
+This is the direct answer to FIND's F2: the reading reasons about what the member declared the
+Work to be, not about MAIA's own earlier perception of it.
 
 **INV-18 · Scope is per-reading, not per-session.** A reading is commissioned for a purpose and
 its scope derives from that purpose. There is no standing grant and no accumulation across turns.
@@ -338,7 +407,8 @@ staleness vocabulary across the Studio rather than two that drift.
 a section's state changed  → observations whose evidence depends on THAT section's
                              frozen state are superseded. Others are not
 
-authored structure changed → observations with dependsOnStructure are superseded.
+authored structure changed → observations whose structureDependency is authored-
+                             structure are superseded.
                              Structure-independent observations in the same reading
                              are NOT
 
@@ -384,7 +454,8 @@ with no coverage is indistinguishable from a reading that never ran.
 
 ## 11 · Provenance
 
-**INV-25 · Every reading records what read it, under which contract.**
+**INV-25 · A reading records what read it, under which contract: at minimum provider, resolved
+model, reader version, prompt/contract hash, and a server-stamped freeze time.**
 
 **The whole existing vocabulary, not a narrowed one.** `ReaderProvenance` already carries five
 fields, and the first draft kept three:
@@ -399,9 +470,6 @@ provenance {
 }
 ```
 
-**INV-25 · A reading records at minimum provider, resolved model, reader version, prompt/contract
-hash, and a server-stamped freeze time.**
-
 Dropping `provider` and `model` would have been the costly omission. The resolved model is what
 makes *"which reader said this"* answerable after a model changes underneath the same reader
 version — and a developmental reading is exactly the artifact someone will later want to ask that
@@ -413,27 +481,37 @@ structure store does it: a caller-supplied timestamp is a claim, not a record.
 ## 12 · The invariants, collected
 
 ```text
+INV-0   outcome discriminates observations both ways: 'reading' is non-empty,
+        'none' is empty; neither other combination is constructible
 INV-1   reading identity is minted, not derived from content
 INV-2   an observation is addressed as (readingId, observationKey)
 INV-3   observation identity outlives the response and the surface
 INV-4   a frozen reading is never corrected in place; a correction is a new reading
-INV-5   EvidenceRef points at a draft section id; quote is optional and non-authoritative
+INV-5   an EvidenceRef is typed, durable, recoverable through the reading's frozen
+        state, and able to name textual AND authored-structure evidence.
+        Concrete variants and quote policy are BUILD-07A
 INV-6   an EvidenceRef carries no version of its own
 INV-7   a reading freezes topology, input fingerprint, and structure fingerprint when supplied
 INV-7a  a reading freezes the exact state of every section it covered, per section
+INV-7b  SectionState and structureContext must RESOLVE to the state read, not only
+        detect that it changed; a bare digest compares but does not recover
 INV-8   evidence must be backed by coverage at the depth THAT evidence requires;
         prose-derived evidence requires body depth
 INV-9   an observation's unread span is derivable and presentable, never stored
 INV-10  lens and phenomenon are separate, neither derivable from the other
 INV-11  one observation is one (lens, phenomenon) pairing
 INV-12  phenomenon classifies the observation; it is not a layer beneath it
-INV-13  observation required; interpretation, possibilities, uncertainty optional
+INV-13  observation required; interpretation, questions, possibilities, uncertainty optional
+INV-13a questions attach to an observation, inherit its evidence and address, and do
+        not require an interpretation; a reading-level list is derived, never stored
 INV-14  authority upward only: possibility ⊂ interpretation ⊂ observation ⊂ evidence
 INV-15  possibilities must leave no-change legitimate; a second option is never manufactured
-INV-16  structure-dependence is a property of the OBSERVATION, not of the reading
+INV-16  structure-dependence is a property of the OBSERVATION, not of the reading,
+        and is a discriminated relation — never a boolean plus a singular ref
 INV-16a structure-dependent observations exist only where authoritative structure was supplied;
         absent, not degraded
-INV-17  a structure-dependent observation names a canonical unit, never a proposal unit
+INV-17  structural evidence names member-authored structure — one unit, several, or
+        the authored topology — never a proposal id or reviewed unit key
 INV-18  scope is per-reading, never per-session
 INV-19  a reading is never re-anchored
 INV-20  staleness is three-state: current · superseded · unmeasured
@@ -447,9 +525,10 @@ INV-25  provenance records at minimum provider, resolved model, reader version,
 
 **Falsifiable by construction.** INV-8, INV-11, INV-14 and INV-15 can each be violated by a shape
 that type-checks, which is why they are stated as invariants rather than left to the field list.
-INV-2, INV-3, INV-7a and INV-19 cannot be repaired downstream if the first implementation gets
-them wrong — and INV-7a is the one whose absence would be discovered latest, when someone first
-tries to show an author the evidence behind an old observation.
+INV-2, INV-3, INV-7a, INV-7b and INV-19 cannot be repaired downstream if the first implementation
+gets them wrong — and INV-7b is the one whose absence would be discovered latest, when someone
+first tries to show an author the evidence behind an old observation and finds the system can
+only report that it changed.
 
 ---
 
@@ -459,7 +538,9 @@ tries to show an author the evidence behind an old observation.
 no table · no migration · no route · no prompt · no surface · no reader
 no TypeScript file · no frozen lens enum · no frozen phenomenon list
 no context regime — what a developmental reader may receive is still open (UNDERSTAND §2)
-no naming of SectionState, or of the fingerprint implementation
+no definition of EvidenceRef, its variants, or quote policy — BUILD-07A
+no naming of SectionState, the recoverability mechanism, or the fingerprint implementation
+no concrete structural-reference variants
 no repair of FIND's F1, F2 or F3
 no authorization of BUILD
 ```

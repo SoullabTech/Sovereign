@@ -15,7 +15,7 @@ numbering collision was adjudicated. Content lineage is unchanged.
 
 ⛔ **A defect found here is recorded in its row and left alone.** Several rows below name real
 problems. None of them is authorized to be fixed by this document, and no later step is
-unauthorized.
+authorized.
 
 **What a row means.** `EXISTS` is production code with live callers. `PARTIAL` works for a
 narrower case than its name suggests. `MISSING` was looked for and not found. `DO NOT REUSE`
