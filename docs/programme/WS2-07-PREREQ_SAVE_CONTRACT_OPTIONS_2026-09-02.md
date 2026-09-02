@@ -3,8 +3,9 @@
 ```text
 LANE       JARVIS-WS2-07-DEVELOPMENTAL-INTELLIGENCE-01
 UNIT       SECTION-ADDRESSABLE DRAFT LIVENESS · requirement C
-STATUS     RULED 2026-09-02 · Option 3 ratified · D1–D9 frozen
-           A + B + D + E BUILT AND WITNESSED 2026-09-02 (see §7)
+STATUS     CLOSED 2026-09-02 · canonical @ 0fa4158e7 · PR #1174
+           Option 3 ratified · D1–D9 frozen · A + B + D + E built,
+           witnessed on branch and re-witnessed on canonical (see §7)
 AUTHORIZES A + B + D + E as one vertical slice, on
            feature/ws2-section-addressable-draft-liveness
 DATE       2026-09-02
@@ -341,3 +342,37 @@ separate unit if the founder wants that page writable for section-addressable dr
 **B3 is closed as a reachability finding.** A member-facing path now converts a draft, and new
 drafts are addressable from birth, so the structure path built in 05A/05B/6A is reachable without a
 witness script.
+
+---
+
+## 8 · CLOSED — canonical @ `0fa4158e7`
+
+Merged as PR #1174 with all eight CI checks green, **Empty database reconstruction** among them —
+the consequential one here, because the revision-partition migration has to be reconstructible from
+zero rather than merely working against whatever schema happened to exist during development.
+
+**Re-witnessed on canonical after the merge**, not carried over from the branch:
+`scripts/ws2-07-liveness-witness.ts` — 41 checks, 0 failures, against a database built from an empty
+cluster by canonical's own migration chain.
+
+**The Press authority edge, ratified and closed.** Two fail-open defects were found and fixed before
+merge, both on the path this boundary exists to guard:
+
+```text
+begin() set 'ready' unconditionally      a new draft — now born addressable —
+                                         placed the member in the legacy
+                                         writable editor, to be refused later
+malformed section authority downgraded   "the client cannot read this draft's
+to a content-authoritative draft         sections" answered with "then let the
+                                         legacy writable editor have it"
+```
+
+Both now fail closed, the second to a distinct `unreadable` state. The boundary is enforced by
+ABSENCE, not refusal: a correct 409 does not protect a writer who has already typed for ten minutes.
+Witnessed at `scripts/ws2-07-press-handoff-witness.ts` — 14 checks, 0 failures — with a negative
+control proving the gate detects the precise regression it claims to prevent.
+
+⛔ **What this closure does NOT say.** It does not close BUILD-07A: `INV-7b` stays binding and the
+ten falsifiers still have to run. It does not claim any member has crossed the structure threshold —
+only that the path exists. And it does not decide the future Press / publishing role, which stays
+open.

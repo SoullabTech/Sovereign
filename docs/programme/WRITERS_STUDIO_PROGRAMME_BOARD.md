@@ -37,31 +37,36 @@ NEXT EXECUTABLE    P0-D
 LAST UPDATED       2026-09-02
 ```
 
-Stage state, set from canonical evidence — 6A's merge at `4b8b34bcf`, not from intention:
+Stage state, set from canonical evidence — the prerequisite's merge at `0fa4158e7`, not from
+intention:
 
 ```text
 Stage 6   6A UNIT      CLOSED · mechanically + experientially verified
-          MEMBER REACH PARTIAL · not ordinarily reachable
-                       BLOCKED ON section-addressable draft liveness
+          MEMBER REACH COMPLETE · canonical @ 0fa4158e7
+                       new drafts are section-addressable from birth, and
+                       POST { convert: true } converts an existing one
 Stage 7   ACTIVE
           FIND        CLOSED · canonical @ cc9788e4f
           UNDERSTAND  CLOSED · canonical @ 5670163e6
           DECIDE      CLOSED · canonical @ 838eabfd8
           BUILD       ACTIVE
-          BUILD-07A   OPEN · PAUSED — prerequisite discharged, unit not closed
-          PREREQ      SECTION-ADDRESSABLE DRAFT LIVENESS
-                      BUILT + WITNESSED on branch · NOT ON CANONICAL
+          BUILD-07A   OPEN · RESUMED — prerequisite closed; INV-7b and the
+                      original falsifiers still to prove
+          PREREQ      SECTION-ADDRESSABLE DRAFT LIVENESS · CLOSED
+                      canonical @ 0fa4158e7 · PR #1174
           BUILD-07B–H unauthorized
 Stage 8   BLOCKED ON STAGE 7 CLOSURE
 ```
 
-⛔ **The prerequisite is on a branch, not on canonical.** Stage 6's MEMBER REACH row and
-BUILD-07A's pause both stay as they read until it merges — this board is set from canonical
-evidence, and a witnessed branch is not that. What is true on
-`feature/ws2-section-addressable-draft-liveness` is recorded in
-`WS2-07-PREREQ_SAVE_CONTRACT_OPTIONS_2026-09-02.md` §7 and awaits a merge ruling. One item in it is
-a member-facing capability change (`app/press/manuscript` becomes read-only on a section-addressable
-draft) and is flagged there for a founder ruling rather than assumed.
+**Post-merge witness on canonical, 2026-09-02.** `scripts/ws2-07-liveness-witness.ts` — 41 checks,
+0 failures, against a PostgreSQL 16 database built from ZERO by canonical's own migration chain, on
+`0fa4158e7`. The route's private `composeDraftText` is absent from canonical; only the comment
+recording its deletion remains. B1, B2 and B3 are closed as canonical facts, not branch facts.
+
+⛔ **Stage 6 MEMBER REACH COMPLETE is about reachability, not about use.** It says a member can now
+cross the structure threshold through the ordinary product path. It does not claim any member has.
+The Press manuscript page is readable rather than writable on a section-addressable draft — ratified
+2026-09-02 as convergence, with the Author Studio ⇄ Book Studio publishing boundary left open.
 
 Writer's Studio mode reflects **this programme only**. Unrelated Jarvis incidents may sit ahead of
 it in the global work queue without becoming Writer's Studio state.
