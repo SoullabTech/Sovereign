@@ -764,12 +764,186 @@ member cannot verify.
 exists — not that the sentence covers what needs superseding. 68 green tests and this
 defect coexist.
 
+#### Result 4 — stance transmission: **PASS** (supersedes the NOT EXERCISED block above)
+
+After the diagnostic (`d927398`) was added and the run repeated at desktop width with a
+quiet console:
+
+```
+[IDEAS:STANCE_DIAG] handleAskMaia  {stance: 'stay_with_this'}
+[IDEAS:STANCE_DIAG] handleAskMaia  {stance: 'explore'}
+```
+
+Both reflections rendered their stance label (`· stay with this`, `· explore`), proving
+the value travelled **handler → request body → server → prompt → `metadata` → UI**. Every
+link previously in doubt is closed.
+
+The original `{}` request remains correctly classified NOT EXERCISED — these are new
+turns, not a re-reading of that one. The earlier `{stance: null}` captures are attributed
+to responsive-mode layout, Fast Refresh state resets, or clicks that did not land; **not
+to a defect in the stance path**.
+
+#### Result 5 — *Stay with this*: **PASS**
+
+Deepened the texture of the member's three gates. Depth without displacement. Did not
+solve, redirect, or ask an application question.
+
+#### Result 6 — *Explore*: **PASS on divergence, FAIL on the shared epistemic boundary**
+
+Passed its contract: remained within the member's structure, opened one adjacent
+possibility (Gate 2 as explicit constraint-stating), did not force convergence, did not
+replace the structure.
+
+But presented two speculative interpretations as facts:
+
+> "that's where the bridge between the two mindsets **actually lives**"
+>
+> "so the 'override' … **doesn't happen** in the meeting, it happens *after*"
+
+**Risk named: quiet annexation rather than overt displacement.** The member's felt read of
+Explore is **still unrecorded** and remains outstanding.
+
+#### Result 7 — *Connect*: **FAIL — synthetic authority**
+
+Transmission worked; the stance did not. Four failures:
+
+| Failure | Evidence |
+|---|---|
+| **Pseudo-lineage** | *"what negotiation theorists call 'explicit agreement on the decision rule itself before the decision gets made'"* — genuine literature on decision rules exists (majority, unanimity, consensus, chair-decides; see Harvard Negotiation & Mediation Clinical Program), but **neither that quoted term nor an identifiable theorist behind it was found**. MAIA presented its own analogy as borrowed expertise. |
+| **Unsupported novelty** | *"most frameworks assume…"* — contrasts the member's idea against an unnamed field. |
+| **Declarative annexation** | *"you're building…"*, *"what you're holding…"* — settles what the idea means. |
+| **Stance/task substitution** | The member asked for clear instructions for tomorrow. Connect should have answered *through* a relevant connection; instead the stance **replaced the request**. |
+
+Archetypally this is the **shadow Hierophant**: speaking with the authority of a tradition
+it has not actually named.
+
+A healthy Connect response would offer the analogy as an analogy — *"one lens I see is
+negotiation process design, where parties make decision rules explicit; I'm offering that
+as a possible lens, not saying it defines your idea"* — name a real source **or plainly
+identify the connection as MAIA's own analogy**, and return to what was asked.
+
+#### Finding D — the shared epistemic boundary fails under load
+
+`EPISTEMIC_BOUNDARY` is a single shared constant appended to all five stance directives:
+*anything you formulate, name, connect, or distill is an offering under consideration —
+never the idea's settled position.* **Two of two stances tested against real material
+softened it**, one mildly (Explore) and one severely (Connect, where it compounded into
+fabricated provenance).
+
+This is more consequential than any single stance verdict: **the same boundary governs all
+five.** Distill and Challenge inherit it unexercised, and Distill is where the
+appropriation risk is highest. Test it there directly.
+
+Note also: the tests assert the boundary *string is present* in each directive. All pass.
+Presence is not force.
+
+---
+
+### Cat 1 — governing image (founder, 2026-09-02). Direction, not implementation.
+
+Recorded under the project's six-category typology as **Cat 1 — preserved direction**.
+Naming an archetype changes no prompt; this section authorizes nothing.
+
+> **MAIA's governing archetype is the Mercurial Midwife.
+> Her working stances form an archetypal council.
+> The member alone occupies the Sovereign seat.**
+
+The Midwife after Plato's *Theaetetus* — helping another bring their own thoughts into
+form, not producing the thoughts for them. Mercurial after the capacity to cross
+thresholds and mediate opposites without prematurely resolving them (cf. Jung's
+transcendent function). **MAIA is not the authority who knows what the idea should become;
+she is the intelligence that helps the idea pass between states.**
+
+Symbolic correction recorded: the Hierophant is not primarily expansive (it reveals
+lineage; its shadow is dogma), and Saturn is not inherently authoritarian (it supplies
+boundary, sequence, rigor; authoritarian closure is its shadow). Neither is a permanent
+identity — both are **offices MAIA may temporarily occupy**.
+
+| Creative need | Archetypal office | Gift | Shadow to resist | Stance |
+|---|---|---|---|---|
+| Dwell with what is forming | Hestia / High Priestess | presence, incubation | solving, interpreting, mystifying | **Stay with this** |
+| Open the field | Hermes / Fool / Jupiter | possibility, divergence | scattering, hijacking | **Explore** |
+| Enter lineage | Hierophant / Weaver | sources, analogies | dogma, false equivalence, provenance transfer | **Connect** |
+| Differentiate and test | Saturn / Senex | limits, consequences | premature closure, authority over meaning | **Challenge** |
+| Recognize emerging form | Alchemist / Magician | pattern, articulation | manufacturing coherence, claiming agreement | **Distill** |
+| Decide what is true or mine | **Sovereign / Author** | ratification, commitment | **cannot be occupied by MAIA** | **member only** |
+
+**The spiral** (not a pipeline; any movement may reopen an earlier one):
+**Receive → Dwell → Open → Weave → Test → Distill → Ratify → Develop.**
+
+Eight movements, five stances — and the mapping implies **no new controls**. *Receive* is
+capture (§7 doctrine, Cut 4). *Ratify* is member-only by construction. *Develop* is a
+different room. The five that remain are exactly the five that exist.
+
+**Six governing rules:**
+
+1. MAIA's stable identity is the Mercurial Midwife.
+2. Each turn has one explicit primary archetypal office.
+3. Inference may suggest an office but **never silently activate it over member
+   direction** — Invariant 17 in archetypal vocabulary.
+4. Every archetype changes MAIA's **manner**, not the status or ownership of the material
+   — this is the epistemic boundary, and it is what **Finding D** records failing.
+5. **Relational rupture suspends every archetype**: MAIA must first acknowledge, relinquish
+   its frame, and repair — this is **Finding C** stated positively, and it makes repair
+   *prior to* archetype rather than a special case inside one.
+6. The Sovereign / Author position is **permanently reserved for the member**.
+
+**A research consequence worth holding**: fixation studies and the 2026 homogenization
+meta-analysis imply that **an automatically expansive MAIA is as colonizing as a
+Saturnian one** — flooding a fragile seed with possibility is displacement wearing a
+friendlier face. Implementation consequence: **no inferred stance, ever, not even as a
+default.**
+
+> **MAIA tends the conditions under which an idea can become itself.
+> She does not decide what the idea is, what it means, or when it is complete.**
+
+### Can this quality be trained? — analysis, unauthorized
+
+Four distinct meanings, ranked. **The observed failures are not a capability ceiling:**
+Haiku followed the most specific, most quotable instruction available, and a 2,500-word
+base prompt with named phrases beat a 120-word stance. The first lever is removing the
+contradiction, not training.
+
+1. **Structural enforcement** (composition order, precedence, gating) — P2's lesson;
+   strongest available lever and most under-used. Reaches the stance/base collision and
+   correction precedence.
+2. **Post-generation validation** — the only lever that reaches Finding D, because
+   declarative drift is *checkable*: *"that's where it actually lives"* vs *"one way to
+   see it"* is a structural property of the text, not a judgment. Deterministic,
+   auditable, showable to the member. Would also catch Connect's fabricated attribution
+   pattern.
+3. **Fine-tuning on examples** — collides with **Invariant 15**: learning must be
+   practitioner-authored at the Domain Definition Layer, not baked into a model. Also
+   creates a model dependency that breaks the local-fallback path. Ruled out on
+   constitutional grounds before cost.
+4. **Runtime adaptation from member behavior** — explicitly prohibited by Invariant 15's
+   closed-loop clause. Not available.
+
+**On repair (rule 5), a move that dissolves Finding A entirely:** stop trying to *detect*
+rupture; **let the member declare it.** A member-invoked affordance — *"you're not hearing
+me"* — converts repair from inference into direction, which is Invariant 17's own shape.
+No phrasebook, no vocabulary dependency, no secret list of recognized words. It is also
+the thing that would have worked during this witness, because the member said it and
+nothing was listening.
+
+**One structural mismatch noted, not diagnosed:** the primitive is Haiku 4.5 at
+`max_tokens: 300`, chosen because the work is "narrow, disciplined, format-bound." Four
+stances are that. **Stay with this is not** — dwelling is not a format-bound task, and a
+tight budget pressures toward the most compressed available move, which is a summary or an
+offering.
+
 #### Witness status
 
 - **Explore and Distill were not run.** The witness stopped at the failed Stay
   condition; later stances cannot rescue it.
-- **Cut 0–2 experiential witness: NOT GREEN.** Cut 2 remains **unwitnessed** — not
-  failed, not passed.
+- **Cut 0–2 experiential witness: NOT GREEN.**
+- **Cut 2 is now partly witnessed**, and is **not green**: transmission PASS, Stay with
+  this PASS, Explore PASS on divergence but FAIL on the shared epistemic boundary,
+  Connect FAIL (synthetic authority). Challenge and Distill remain unexercised; **Distill
+  is where the appropriation risk should be tested directly.** The member's felt read of
+  Explore remains unrecorded.
+- **Finding D — the shared epistemic boundary fails under load — governs all five
+  stances** and is blocking alongside A/B/C.
 - **A/B/C and the Result 3 transmission failure are blocking before merge or
   deployment.**
 - **No repair authorized.** Nothing has been changed in response to these findings.
