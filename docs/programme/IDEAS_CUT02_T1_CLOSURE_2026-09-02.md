@@ -225,8 +225,16 @@ T1 HAS NO PATH TO deployed_runtime ADMISSIBILITY.
 ```
 
 `DEPLOYED_RUNTIME_REACHABLE` is **derived** from that registry rather than
-asserted, so it flips on its own the day a real mechanism lands and not one
-moment before. Four controls: the bare-subject case named in the adjudication;
+asserted. The derivation is what prevents field-value self-assertion — it is
+**not** an authorization:
+
+```
+DEPLOYED_RUNTIME_REACHABLE is derived from the registry.
+A promotable registry entry remains a governed provenance change
+and requires its own proof before landing.
+```
+
+Four controls: the bare-subject case named in the adjudication;
 a `loaded_modules` subject paired with a hand-supplied digest under the
 disk-tree algorithm; an unrecognized `digest_alg`; and an exhaustive sweep over
 the whole field space (972 combinations × both runtime classes) asserting that

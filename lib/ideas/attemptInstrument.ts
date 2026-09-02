@@ -356,12 +356,17 @@ export function __resetDigestMemoForTests(): void {
  *
  *     T1 HAS NO PATH TO `deployed_runtime` ADMISSIBILITY.
  *
- * That is the honest state of the instrument, and `DEPLOYED_RUNTIME_REACHABLE`
- * below is DERIVED from this table rather than asserted, so it flips on its own
- * the day a real mechanism is added — and not one moment earlier.
+ * That is the honest state of the instrument. `DEPLOYED_RUNTIME_REACHABLE` below
+ * is DERIVED from this table rather than asserted, which is what prevents a
+ * record's own field values from synthesizing an execution claim.
  *
- * ⛔ Do not add an entry here to satisfy the enum. An entry is a claim that the
- * mechanism exists and produces the digest it names.
+ * ⛔ THE DERIVATION IS NOT AN AUTHORIZATION. It stops self-assertion; it does
+ * not make adding a row automatic or approved. A promotable registry entry is a
+ * GOVERNED PROVENANCE CHANGE and requires its own proof before landing — the
+ * mechanism must exist, must produce the digest it names, and must be shown to
+ * cover what actually executed. An entry added without that proof reintroduces
+ * exactly the self-assertion this table was built to refuse, one level further
+ * out.
  */
 interface DigestMechanism {
   /** The subject this mechanism actually digests. */
