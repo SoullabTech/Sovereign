@@ -1337,6 +1337,156 @@ unratified language a persistent home — the exact failure at larger scale.
 
 **Cut 3 and Cut 4 remain NOT AUTHORIZED.**
 
+---
+
+### Ratification — founder adjudication, 2026-09-02
+
+**Docs-only record of decisions. No implementation authorized. The repair lane is closed.**
+
+This is the first repair-lane specification decision. It answers what Requirement 3 (*MAIA
+language remains an offering until ratified*) presupposes, and Requirements 1, 4 and 6
+bottom out in it.
+
+#### The governing rule
+
+> **Ratification is an explicit, member-only state transition applied to a specific,
+> versioned proposition. It is never inferred from engagement, praise, continuation,
+> silence, or usefulness.**
+
+MAIA and practitioners may **propose**; they may not ratify on the member's behalf.
+
+#### Three kinds of authority — kept distinct
+
+| Layer | Governed by | Controls |
+|---|---|---|
+| **Current relational direction** | explicit member instruction | what MAIA answers, and how it participates |
+| **Current idea ground** | proposition standing | what MAIA may treat as presently held |
+| **Context and lineage** | provenanced blocks and prior propositions | what may be recalled, with attribution |
+
+These are the three axes the witness found unconstrained. Layer 1 covers **Findings B, C,
+E** and Invariant 17; Layer 2 covers **Findings D and F**; Layer 3 is the §7 capture
+doctrine.
+
+This resolves an apparent contradiction: *"I don't know if this is the best approach"*
+**immediately governs MAIA's participation** (Layer 1) and is **not thereby a settled
+proposition** within the Idea (Layer 2).
+
+**Struck: the earlier rule "member-authored language: ground."** ⚠️ **Origin establishes
+attribution; it does not establish standing.** A member's own words can be exploratory,
+hypothetical, or a position since abandoned. Exploration, doubt, hypothesis, and current
+position must not be collapsed merely because they share an author.
+
+#### One proposition-standing model across all origins
+
+Not separate machines for member and MAIA. **Raw blocks remain authored context; standing
+attaches only to addressable propositions.**
+
+```
+origin    : member | maia | imported source | practitioner
+standing  : open | current | rejected | superseded | withdrawn
+events    : offer · hold/adopt · revise · reject · supersede · withdraw · revisit
+```
+
+The **event** differs by origin — MAIA language is *adopted*, the member's own formulation
+is *held* — but both can reach `current`.
+
+**Revise is an event, not a standing.** It creates a **new** proposition with
+`origin: member` linked by `derived_from`; the original is superseded.
+
+#### Standing semantics
+
+| Standing | Meaning | Grounds current synthesis? | Retained? |
+|---|---|---|---|
+| `open` | offered, untouched | **NO — excluded from authoritative member ground** | yes, as provenance-labelled history |
+| `current` | member-endorsed, presently held | yes | yes |
+| `rejected` | *"not what I mean"* — creates a **negative constraint** | no | yes, as provenance |
+| `superseded` | a later formulation now outranks this | no | yes, as lineage |
+| `withdrawn` | once current, no longer held | no | yes, visible in provenance |
+
+`open` is an **exclusion, not a label** — this is the rule that actually addresses Finding
+F. An untouched offering may remain available as conversational history; it **cannot enter
+current synthesis as something the member holds.**
+
+#### Adopted vs revised — equal semantic authority, different provenance authority
+
+Discounting adopted language would quietly overrule the member's explicit choice merely
+because MAIA originated it. But adoption **cannot retroactively make MAIA's wording
+member-authored.**
+
+| | Adopted MAIA formulation | Revised formulation |
+|---|---|---|
+| Current meaning | member-endorsed ground | member-endorsed ground |
+| Linguistic origin | MAIA | member |
+| Evidence of member's natural voice | **no** | **yes** |
+| May be quoted as the member's original words | **no** | **yes** |
+| Provenance link | original MAIA offering | `derived_from` the MAIA offering |
+
+**Revision is the visually primary path, adoption secondary** — not because adoption is
+weaker once chosen, but because **revision returns articulation to the member.**
+
+#### Interaction contract
+
+Member-facing actions on a selected offered passage:
+
+- **Make this part of my idea** → `adopt`
+- **Revise in my words** → `revise` (new member-origin proposition)
+- **Not what I mean** → `reject`
+
+#### Nomination — MAIA may nominate, only the member materializes
+
+> **MAIA may nominate a possible proposition. Nomination creates no standing and changes no
+> ground. Only the member can materialize a nomination as part of the Idea.**
+
+**MAIA nominating and MAIA ratifying are different acts, and both are now governed** — the
+second forbidden, the first constrained:
+
+- Nomination is **member-invoked** — via Distill or a deliberate *"Surface what may be
+  forming"* action — **never ambient.**
+- Nominating an **exact member passage** preserves `origin: member` while recording
+  `nominated_by: maia`.
+- **Any paraphrase or synthesis is `origin: maia`**, even when derived from member language.
+- **Ignoring or dismissing a nomination is not rejection of its meaning.**
+- Member selection remains available **without** MAIA nomination.
+- Until the member acts, a nomination is **excluded from authoritative ground.**
+
+This lets MAIA reduce curation burden without acquiring authority to decide what counts as
+the member's position.
+
+**Guard, recorded beside nomination: declining importance is not rejecting meaning.**
+*"Not central"* and *"Not what I mean"* must remain **different member acts.**
+
+#### Revisit and supersede
+
+- **`revisit`** returns rejected material to **`open`**, linked to its history. A fresh
+  member `hold`/`adopt` is required before it becomes `current`. **Revisit can never
+  directly restore `current` standing.** It governs **deliberate return only** — by itself
+  it does nothing against semantic drift.
+- **`supersede`** is a **binary relation**, not a unary transition: it requires
+  `predecessor_id` and `successor_id`, performed **atomically** when the successor becomes
+  current. **`derived_from` records genealogy; `supersedes` records authority ordering.**
+  They may coincide; they are not the same relation.
+
+#### Still open
+
+**Semantic return remains unsolved.** A rejected-frame blocklist would reproduce **Finding
+A** at another layer — the chain `pace → speed → CEO speed → move fast` carried a frame
+across four turns **with no shared token**. The contract requires an explicit `revisit`
+before rejected material regains standing; **how semantic recurrence is reliably detected
+is a separate, unresolved enforcement question.**
+
+#### Shared primitive
+
+This is likely the same domain primitive Writer's Studio needs: **a versioned, addressable
+unit with origin, standing, derivation, and member-governed transitions.** The **semantic
+contract should be specified once.** Whether both products use the same physical tables is
+a **later engineering decision, not to be presumed.**
+
+#### First deliverable, when the lane opens
+
+**The ratification state machine and interaction contract — not prompt edits.**
+
+**The repair lane remains closed. No implementation is authorized.**
+
 **Finding B, witnessed under collision.** With a stance selected, composition is
 `base → STANCE_DIRECTIVES.challenge → PROGRESSION_FLOOR → CORRECTION_ADDENDUM`. The
 correction is appended alongside the stance rather than suspending it. Observed result:
