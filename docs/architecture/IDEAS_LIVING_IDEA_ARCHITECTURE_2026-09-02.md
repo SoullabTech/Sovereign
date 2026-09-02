@@ -2,8 +2,17 @@
 
 **Date**: 2026-09-02
 **Surface**: `/maia/ideas`, `/maia/ideas/[id]`
-**Status**: Cuts 0–2 implemented and pushed — **not yet verified** (no populated
-environment available; see §9). Cut 3 specified and deliberately **not built**.
+**Status** (adjudicated 2026-09-02):
+
+| Cut | State |
+|---|---|
+| Cut 0 — defects | implemented, **unverified** |
+| Cut 1 — seed / name separation | implemented, **unverified** |
+| Cut 2 — relational stances | implemented, **unverified** |
+| Cut 3 — Current Understanding | **explicitly NOT AUTHORIZED** |
+
+**Next threshold**: verification (§9) → real consciousness-thread witness (§5) →
+architectural adjudication.
 **Founder direction**: 2026-09-02 — *"The core is already right. I would not redesign
 this. I would let it acquire a second dimension."*
 
@@ -85,6 +94,69 @@ Concretely, every synthesis object carries:
 A `proposed` field renders visibly provisional and is never spoken as the member's
 position. Nothing downstream (prompt context, exports, Writer's Studio drafts) may
 read a `proposed` field as settled.
+
+---
+
+## 1a. Durable principles (adjudicated 2026-09-02)
+
+Three principles fell out of building Cuts 1–2. They are recorded as durable, not as
+notes on this feature.
+
+### P1 — Explicit member stance outranks inferred progression
+
+```
+member's explicit relational instruction
+              ↓
+     inferred conversational stage
+              ↓
+        generic MAIA behavior
+```
+
+An inference about where the member is in a process may **never** override what the
+member has just asked MAIA to do. This surfaced as a concrete collision — Cut 0's
+`close_and_offer` directive against Cut 2's *Stay with this* — and the resolution
+(`PROGRESSION_FLOOR`) is the general form.
+
+*This principle reaches past Ideas.* Any surface where MAIA infers a stage, phase,
+element, or readiness and also accepts an explicit member instruction inherits the
+same ordering. Whether it belongs in
+`docs/canon/MAIA_SOVEREIGNTY_INVARIANTS.md` is a founder decision, not this lane's —
+flagged, not authored.
+
+### P2 — Ratification needs structural enforcement, not prompting
+
+```
+MAIA   →  proposed_titles
+member →  title
+```
+
+Encoding the boundary into route topology is stronger than instructing "MAIA must not
+rename things", because the architecture makes the epistemic distinction real: there
+is no code path from a suggestion to the name, and acceptance is constrained to an
+actually stored proposal. When Cut 3 is authorized it inherits the identical pattern:
+
+```
+MAIA notices → proposed recognition → member accepts / edits / ignores → ratified understanding
+```
+
+### P3 — Capture and interpretation separate cleanly
+
+> **We do not need to know what something means in order to preserve what it was and
+> where it came from.**
+
+`seed` + `seed_block_id` is the first concrete instance. It generalizes to every kind
+of material coming later — conversation imports, source passages, voice dumps, copied
+material, files, and material brought in from another Idea. See §7.
+
+### Corollary — the bias toward preserving possible human authorship
+
+The `LENGTH(title) >= 60` guard in migration `20260902000001` is retained
+deliberately. The two error directions are not equivalent harms: a false negative
+leaves an awkward title in place, correctable by ordinary member action; a false
+positive rewrites the system's interpretation of something a member may have
+deliberately authored. **Under-demotion is preferable to falsely demoting member
+authorship** — and that bias is correct for the whole system, not just this migration.
+The rationale is written into the migration itself so it is not "optimized" later.
 
 ---
 
@@ -188,35 +260,89 @@ overridden by a stage the system *inferred*.
 
 ---
 
-## 5. Witness before Cut 3
+## 5. The witness — experiential, not technical
 
-**Do not build Current Understanding yet.** Use the live consciousness thread as the
-witness and ask:
+**Do not build Current Understanding yet.** After verification (§9) is green, the
+consciousness thread is used as the witness, approached the way a naïve member would
+approach it — not as a test harness.
 
-- Does **Stay with this** actually stop the product-manager reflex?
-- Does **Explore** let the inquiry open without scattering?
-- Does **Distill** recognize development without prematurely freezing it?
-- Do you naturally begin wanting to see a persistent representation of *what I now
-  think*?
+**The acceptance criterion is not that the prompt contains the correct instructions.**
+It is what the member experiences.
 
-If the answer to the last one is yes, Current Understanding has **earned its existence
-from use rather than from an architecture diagram** — and by then we will know what
-actually needs persistence, which makes it far easier to design.
+### Step 1 — three ordinary Ask MAIA turns, no stance
+
+This isolates Cut 0. We need to know whether the computed progression stage removed
+the repetitive product-manager behavior **independently of the stance system**. If it
+did not, Cut 2 would be masking a defect rather than adding a capacity.
+
+### Step 2 — write something genuinely exploratory, then choose *Stay with this*
+
+Not a test sentence. Real material. The criterion:
+
+> *Yes. MAIA remained with the thing I was trying to perceive rather than dragging me
+> toward an outcome.*
+
+### Step 3 — *Explore* on the same inquiry
+
+The experiential distinction should be obvious:
+
+```
+Stay with this  →  depth without displacement
+Explore         →  movement without forced convergence
+```
+
+**If those two feel almost identical, the stance architecture is not yet doing enough
+work.** That is a real failure result, not a tuning note — it would mean the
+directives are being flattened somewhere between the prompt and the response, and the
+right response is to diagnose that rather than to add a sixth stance.
+
+### Step 4 — *Distill*, watching for the constitutional failure
+
+The thing to watch is not quality. It is:
+
+> Does MAIA describe what appears to be emerging, or does she start telling me what I
+> now believe?
+
+The former is **recognition**. The latter is **appropriation**. Distill is the stance
+where that line is thinnest, which is why its resist clause is the strictest of the
+five.
+
+### What authorizes Cut 3
+
+Not "the stance test passed." The authorization is a **felt moment**: after several
+good turns, finding yourself thinking —
+
+> *This is working — but where have we actually arrived?*
+
+That is the requirement. It tells us Current Understanding would be solving a real
+phenomenological problem — **the difficulty of maintaining gestalt while thought
+continues to unfold** — rather than filling a box on an architecture diagram.
 
 ---
 
 ## 6. Cut 3 — Current Understanding (NOT AUTHORIZED)
 
-When authorized, the **first cut is deliberately small**: three fields only —
-**Emerging proposition · Live tension · Open question**. Not the branches/sources/
-concepts apparatus.
+When authorized, the **first cut is deliberately small**: three fields only. Not the
+branches/sources/concepts apparatus.
+
+**Which three is not settled.** The current proposal is *Emerging proposition · Live
+tension · Open question*. The thread may instead want:
+
+- **What seems to be emerging**
+- **What remains alive**
+- **What has changed**
+
+— which is more phenomenological and less propositional, and closer to how the
+material in the witness thread actually moves. **Use will tell us.** Do not fix the
+field set before §5 has run; picking it from the diagram is exactly the error this
+whole sequencing is designed to avoid.
 
 Schema — `member_idea_understanding`, one row per field, append-only with a
 supersede pointer, never a mutable blob:
 
 ```
 id, idea_id, member_id,
-field_key        TEXT   -- proposition | tension | question
+field_key        TEXT   -- field set decided by the witness, not in advance
 content          TEXT
 state            TEXT   -- proposed | ratified | member_authored
 proposed_by      TEXT   -- maia | member
@@ -389,9 +515,13 @@ verified.* Before stacking further behavioral work:
 
 ## 10. Sequencing
 
-1. ~~Cut 0 — defects~~ implemented 2026-09-02
-2. ~~Cut 1 — seed / name separation~~ implemented 2026-09-02
-3. ~~Cut 2 — relational stances~~ implemented 2026-09-02
-4. **Verify (§9), then witness (§5)** ← current position
-5. Cut 3 — Current Understanding, three fields only, *if* use earns it
+1. ~~Cut 0 — defects~~ implemented 2026-09-02, unverified
+2. ~~Cut 1 — seed / name separation~~ implemented 2026-09-02, unverified
+3. ~~Cut 2 — relational stances~~ implemented 2026-09-02, unverified
+4. **Verify (§9) → witness (§5) → adjudicate** ← current position
+5. Cut 3 — Current Understanding, three fields only, field set chosen by the witness,
+   *if* use earns it. **NOT AUTHORIZED** until the felt moment in §5 arrives.
 6. Cut 4 — imported material, lineage view, branches, sources — under the §7 doctrine
+
+Nothing in step 5 or 6 begins on the strength of this document. The document records
+what was decided and what remains open; the next authorization comes from use.

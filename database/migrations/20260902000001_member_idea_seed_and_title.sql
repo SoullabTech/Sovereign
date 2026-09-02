@@ -85,6 +85,22 @@ UPDATE member_ideas i
 -- The title text is NOT changed here. Only its status. The UI decides how to
 -- render an unnamed inquiry; the member's words stay untouched in the seed and
 -- in the block itself.
+--
+-- The LENGTH(title) >= 60 guard is deliberate and must NOT be loosened.
+-- Adjudicated 2026-09-02: the two error directions are not equivalent harms.
+--
+--   False negative — a short auto-derived title survives as a title.
+--     Harm: an awkward heading. Historical residue, correctable at any time by
+--     ordinary member action.
+--
+--   False positive — a title a member deliberately authored is demoted to
+--     'auto_seed' and re-rendered as "Unnamed inquiry".
+--     Harm: the system has overwritten its own interpretation of an act of
+--     member authorship.
+--
+-- In a sovereignty-preserving system, under-demotion is preferable to falsely
+-- demoting member authorship. Do not make this migration more aggressive to
+-- catch the remaining short titles; they do not justify the risk.
 
 WITH first_block AS (
   SELECT DISTINCT ON (b.idea_id)
