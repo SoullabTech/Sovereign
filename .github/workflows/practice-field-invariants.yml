@@ -1,0 +1,45 @@
+name: Practice Field Invariants
+
+# Binds lib/practiceField/'s executable invariants (governance containment ordering,
+# single-writer containment, attributed actor, the two-refusal distinction, readiness/
+# containment conjunction, release-authority rules) into the delivery path.
+#
+# WHY THIS EXISTS (Q1 Sustained-rung repair, 2026-08-10): these tests already existed and
+# already discriminated real regressions under mutation — but nothing in the required-checks
+# path executed them. deploy.yml and mobile-deploy.yml DO run this suite, but wrap the result
+# in `|| true` / `|| echo`, discarding failure, AND trigger only on branch `main`, which is
+# thousands of commits behind this repo's actual trunk and unused by real PRs. Loss detection
+# existed; delivery binding did not. This workflow is the binding — a small, focused, real gate,
+# not a fix to the broader (and differently-scoped) deploy pipeline.
+#
+# Scoped to lib/practiceField/ deliberately, not the whole jest suite: this is exactly the area
+# investigated and proven in the Q1 rehabilitation. Widening scope to require ALL tests here
+# would import unaudited risk from unrelated areas of the codebase into this specific gate.
+
+on:
+  pull_request:
+  push:
+    branches: [clean-main-no-secrets]
+
+concurrency:
+  group: practice-field-invariants-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  practice-field-invariants:
+    name: Practice Field Invariants
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run practice-field invariant suite
+        # No `|| true`. A failing invariant fails this job, on purpose.
+        run: npx jest lib/practiceField/ --ci
