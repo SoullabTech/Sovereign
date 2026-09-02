@@ -49,9 +49,10 @@ experience_verification: >
   invocation refused already_adopted, with the four canonical units reached through
   adopted_from_proposal_id, so the provenance column was exercised rather than merely counted.
   The two screenshots depict the threshold as offered — desktop and mobile 390x844 before the
-  crossing, the mobile one with the /adopt breakpoint armed and unpaused. SCOPE: this
-  establishes the threshold, not how the crossing reads when the divisions are MAIA's
-  perception of a Work the writer actually wrote and may disagree with — that remains owed.
+  crossing, the mobile one with the /adopt breakpoint armed and unpaused. SCOPE, by design: the
+  synthetic Work is the instrument, not a shortfall — the mechanics were exercised without
+  risking a real Work, and the machinery under them was entirely real. A later walk against a
+  non-fixture manuscript is useful field validation, not part of this acceptance boundary.
   Full record:
   docs/programme/WS2-06A_RUNTIME_WITNESS_2026-09-02.md
 ---

@@ -175,14 +175,23 @@ And no further. In particular it says nothing about:
 
 **No redesign is indicated.** The authorial threshold did what it was designed to do.
 
-## 6 · What remains owed
+## 6 · The acceptance boundary
 
-**A walk against a real Work.** The machinery is fully exercised: a real unadopted proposal, a
-real command, a real database. What is synthetic is the manuscript beneath it. Whether "Make
-this my structure" holds when the divisions are MAIA's perception of a book the writer actually
-wrote — where they may genuinely disagree with the reading — is not established here, and is
-the natural first thing to look at once 6A is merged.
+**Nothing is owed. The synthetic Work is the design of this witness, not a shortfall in it.**
 
-Nothing else for the walk. The design-canon gate additionally requires the two witness screenshots
+6A was deliberately scoped and walked against synthetic prose so the authorial mechanics could
+be exercised without risking a real Work. The machinery was fully real — a real unadopted
+proposal, the real route, the real command, a real database — and only the manuscript beneath
+it was fixture. That is the correct instrument for proving a threshold: the thing under test is
+whether adoption requires the member's act, and a real book adds risk without adding evidence
+about that question.
+
+A later walk against a writer's non-fixture manuscript is **useful field validation, not part
+of this acceptance boundary.** It would tell us something different — how the crossing reads
+when the divisions are MAIA's perception of a book the writer actually wrote and may disagree
+with — and that belongs to the ordinary life of the room, not to closing 6A.
+
+Remaining before 6A closure: CI green · merge to `clean-main-no-secrets` · canonical post-merge
+witness. Nothing else. The design-canon gate additionally requires the two witness screenshots
 to exist on disk at the paths the Experience Contract names; they are held by the founder and
 are not in this session's reach.
