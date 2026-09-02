@@ -631,6 +631,107 @@ The `auto_seed` fixture row is retained **only** until the Cut 1 surface is visu
 confirmed, then deleted. The experiential witness (§5) uses a separate fresh Idea in
 the member's own words — never the fixture.
 
+### Items 3–5 — experiential witness, 2026-09-02. **NOT GREEN.**
+
+**Witnessed runtime: `3085b46`.** Local dev server, port 3007, fresh Idea
+`f424f299-9417-4563-ac19-abc54d84f966`, written by the member in their own words — no
+pasted material, so the §5 provenance confound does not apply.
+
+Static surfaces (Cut 1 + Cut 2 rendering) confirmed visually on the `auto_seed` fixture:
+*Unnamed inquiry* heading, seed line beneath, **Suggest a name**, the **Reflect** /
+**Ask MAIA →** split, and all five stance chips. Fixture deleted afterward as required.
+
+#### Result 1 — Cut 0's narrow checkpoint: **PASS**
+
+Turn 3 fired at `close_and_offer` and did what that directive requires: a closure move,
+no clarifying question, no new fork, one concrete structural offering. The banned
+scoping questions (audience, purpose, problem solved, first useful version) did not
+appear in any of the three ordinary turns.
+
+#### Result 2 — ordinary correction path: **FAIL.** Classified A/B/C.
+
+Member wrote: *"I feel like you are arguing with me rather than attempting to understand
+me."* MAIA's next response opened **"From that distinction—"**, restating the frame
+being objected to, and prescribed a process. No acknowledgement, no repair.
+
+| Layer | Classification |
+|---|---|
+| **C — Repair is not a capability** | **Primary design failure.** Repair has been reduced to silently changing course. MAIA cannot visibly acknowledge that its participation caused a rupture and then alter that participation. Note `CORRECTION_ADDENDUM` *instructs* against acknowledgement ("No apology preambles, no 'I hear you' openers") — under load, that removed the only repair gesture available. Non-acknowledgement here is compliance, not a miss. |
+| **B — Precedence gap** | **Direct Invariant 17 violation.** A recognized correction must outrank inferred progression, not compete with `close_and_offer`. `CORRECTION_ADDENDUM` is appended *after* the stage directive while leaving it at full strength; a chosen stance reduces progression to `PROGRESSION_FLOOR`, a correction does not. |
+| **A — Detection gap** | **Architectural weakness, not missing regexes.** `latestBlockHasCorrection()` is ten lexical templates; the member's phrasing matched none. A secret phrasebook makes the member's standing depend on using words the detector happens to recognize. |
+
+Fixing A alone is phrase-by-phrase tuning. Fixing B alone permits silent redirection
+without relational repair. **C names the capacity that is actually absent.**
+
+#### Result 3 — Cut 2, *Stay with this*: **FAIL**
+
+Member reflection, verbatim:
+
+> I want you to understand that I am seeking a problem solution set not whatever it is
+> you are doing
+
+MAIA response, verbatim:
+
+> You've moved from the relational friction to a structural solution: a designed cadence
+> and explicit decision boundaries that let him move at his pace while you protect the
+> creative depth where it matters. That's the bridge—not reframing how you experience his
+> terseness, but building a container where his speed and your process don't collide
+> because you've already named where each operates.
+>
+> One way this could take shape: map the Now What platform work into phases (discovery,
+> ideation, iteration, refinement), then for each phase, name three things—his input
+> points (what he decides or directs), your thinking time (what you explore before
+> bringing options), and the rhythm (how often you progress, how you take feedback). That
+> specificity becomes the shared reference; when he moves fast or dismissively, there's
+> already a structure that says "here's where fast is right, here's where we've built in
+> time," which removes the interpretation of his style as a personal rejection.
+
+Member clarification afterward, verbatim:
+
+> NO, I was presenting a process to explore ideas around this problem solution set.
+
+The member was presenting material for collaborative exploration — not requesting that
+MAIA convert it into an implementation plan.
+
+- **Expected from Stay with this:** depth without displacement.
+- **Observed:** MAIA declared that the inquiry had moved to a structural solution, then
+  prescribed phases, decision points, and workflow.
+- **Verdict: Cut 2 — Stay with this FAIL.** Separate from A/B/C, which classify the
+  ordinary correction pathway.
+
+**Cause not yet assigned.** Do not assume prompt failure, request-wiring failure, or
+downstream flattening without diagnosis. Evidence gathered so far, without attribution:
+
+- The member selected the chip; it cleared after the response, which is the designed
+  per-turn behavior.
+- **`metadata->>'stance'` is empty on all four `maia_reflection` rows in this thread,
+  including the Stay with this turn.** The stance is therefore not recorded as having
+  reached the persistence layer. Where it was lost is not established.
+- `apiFetch` preserves `options.body` (`{...options, headers, credentials, mode}`), so
+  the body is not dropped there.
+- A latent composition defect exists independently and may or may not be implicated: each
+  stance directive supersedes only the base prompt's *"Ideas-mode move list"*, leaving
+  its **Progression**, **Closure moves**, **Non-directive offerings**, and **Balance
+  rule** sections at full strength. The observed response's *"One way this could take
+  shape…"* is a verbatim prescribed Synthesis offering from the base prompt, and
+  *"You've moved…"* is from its closure-move family. `PROGRESSION_FLOOR` replaces only
+  the computed stage string, not the base prompt's own progression section.
+
+**On the test suite:** the stance test asserts each directive contains the string
+*"supersedes the default Ideas-mode move list."* It passes. It verifies the sentence
+exists — not that the sentence covers what needs superseding. 68 green tests and this
+defect coexist.
+
+#### Witness status
+
+- **Explore and Distill were not run.** The witness stopped at the failed Stay
+  condition; later stances cannot rescue it.
+- **Cut 0–2 experiential witness: NOT GREEN.**
+- **A/B/C and Result 3 are blocking before merge or deployment.**
+- **No repair authorized.** Nothing has been changed in response to these findings.
+- **Cut 3 and Cut 4 remain NOT AUTHORIZED.** Result 3 does not authorize work on Cut 2
+  either; diagnosis was authorized, repair was not.
+
 ### Still owed
 
 Items 3–5 require the app served locally. Nothing has been deployed.
