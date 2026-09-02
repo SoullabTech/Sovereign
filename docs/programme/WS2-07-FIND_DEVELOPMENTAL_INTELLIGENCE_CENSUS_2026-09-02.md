@@ -1,15 +1,21 @@
-# WS2-07A · Developmental Intelligence Census
+# WS2-07 · FIND — Developmental Intelligence Census
 
 ```text
-LANE        JARVIS-WS2-07-DEVELOPMENTAL-INTELLIGENCE-01 · 07A FIND
+LANE        JARVIS-WS2-07-DEVELOPMENTAL-INTELLIGENCE-01 · FIND
 CANONICAL   clean-main-no-secrets @ 2f8d97297
 METHOD      read-only. Nothing was repaired, wired, renamed or deleted.
 DATE        2026-09-02
 ```
 
+```text
+NUMBERING NOTE
+Originally filed as WS2-07A before the flow/build-unit
+numbering collision was adjudicated. Content lineage is unchanged.
+```
+
 ⛔ **A defect found here is recorded in its row and left alone.** Several rows below name real
-problems. None of them is authorized to be fixed by this document, and 07B–07H remain
-unauthorized.
+problems. None of them is authorized to be fixed by this document, and no later step is
+authorized.
 
 **What a row means.** `EXISTS` is production code with live callers. `PARTIAL` works for a
 narrower case than its name suggests. `MISSING` was looked for and not found. `DO NOT REUSE`
@@ -90,7 +96,7 @@ There is no Develop room. `studioMap` declares `home`, `current-book` (canvas ·
 and `threshold` (import) — no Develop, Explore, Review or Publish room exists. The one review
 surface, `StructureReview.tsx`, is mounted at `/writers-studio/review`, a route deliberately
 outside the map because "the machine harness needs to open a proposal directly". **This census
-does not choose an owner** — that is 07D's question, and choosing here would be architecture.
+does not choose an owner** — that is BUILD-07D's question, and choosing here would be architecture.
 
 **9 · Are there duplicate or legacy developmental paths?**
 No duplicates. `maiaReader` and `askReader` each define their own version constant, prompt hash
@@ -204,13 +210,13 @@ bodies under a ruled ceiling; the Ask runtime may read none. What this census es
 that **two incompatible regimes exist today** — it does not establish that a developmental reader
 must adopt one of them.
 
-07B must determine what manuscript context a developmental reader may truthfully receive. **This
+UNDERSTAND must determine what manuscript context a developmental reader may truthfully receive. **This
 census does not choose that regime**, and the existing pair must not be treated as one by default.
 
 **F4 · The capability spec's dependency note is already load-bearing.** It says whole-Work
 knowledge is *Work Structure* — member-declared — and that this is a dependency of the
 structure-aware lenses **only**. With 6A merged, member-declared structure now exists for the
-first time. Which lenses actually need it is an 07B/07C question.
+first time. Which lenses actually need it is an UNDERSTAND/DECIDE question.
 
 **F5 · The two accepted documents do not use the same lens vocabulary.** The capability spec names
 **seven**; the Stage 7 lane's provisional v1 names **eight**, under a different decomposition.
@@ -240,7 +246,7 @@ Two of the three mismatches are substantive rather than lexical:
   raises REPETITION to a lens of its own. Likewise the spec's *abandoned* (under Development) and
   the lane's UNRESOLVED THREADS appear to name one phenomenon from two decompositions.
 
-07B must reconcile the semantics before any lens object is frozen. **This census does not choose
+UNDERSTAND must reconcile the semantics before any lens object is frozen. **This census does not choose
 between them**, and choosing by adopting one file's list would settle a real question by accident.
 
 ---
@@ -251,7 +257,7 @@ between them**, and choosing by adopting one file's list would settle a real que
 - does not propose an architecture, an object model, a schema, a route, or a prompt
 - does not choose which surface owns a developmental result
 - does not rank the lenses, select a first one, or reconcile the two lens vocabularies
-- does not authorize 07B or anything beyond it
+- does not authorize UNDERSTAND or anything beyond it
 
 The next legitimate act is **UNDERSTAND** — defining what "developmental reading" means for this
 system — and it opens on its own authorization, not because this census exists.

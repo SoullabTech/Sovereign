@@ -1,16 +1,22 @@
-# WS2-07B · Developmental Reading Semantics
+# WS2-07 · UNDERSTAND — Developmental Reading Semantics
 
 ```text
-LANE        JARVIS-WS2-07-DEVELOPMENTAL-INTELLIGENCE-01 · 07B UNDERSTAND
-INPUT       WS2-07A census, canonical @ cc9788e4f
+LANE        JARVIS-WS2-07-DEVELOPMENTAL-INTELLIGENCE-01 · UNDERSTAND
+INPUT       FIND census, canonical @ cc9788e4f
 AUTHORITY   docs/programme/DEVELOPMENTAL_EDITOR_CAPABILITY.md
             docs/canon/CONSTITUTIONAL_DIRECTION_OF_AUTHORITY.md
 AUTHORIZES  nothing to be built
 DATE        2026-09-02
 ```
 
-⛔ **No schema, table, route, prompt, surface, reader, or lens code is defined here, and no 07A
-finding is repaired.** This document resolves meaning so that 07C can define one object without
+```text
+NUMBERING NOTE
+Originally filed as WS2-07B before the flow/build-unit
+numbering collision was adjudicated. Content lineage is unchanged.
+```
+
+⛔ **No schema, table, route, prompt, surface, reader, or lens code is defined here, and no FIND
+finding is repaired.** This document resolves meaning so that DECIDE can define one object without
 settling five unrelated questions by accident.
 
 ---
@@ -90,7 +96,7 @@ last clause. The obligation is on the option set, not on the wording.
 Authority moves upward only. **An interpretation may never manufacture the evidence it needs.**
 The operational form: a developmental reading is assembled bottom-up, and no layer may be
 authored before the layer beneath it exists. This is `CONSTITUTIONAL_DIRECTION_OF_AUTHORITY`
-applied to a manuscript, and it is why the object model (07C) will need evidence to be structural
+applied to a manuscript, and it is why the object model (DECIDE) will need evidence to be structural
 rather than conventional — the 05B `evidenceRefs` non-empty-by-type constraint is the precedent.
 
 ### An observation with no interpretation is a complete reading
@@ -109,7 +115,7 @@ is a complete answer, not an empty result. The structure reader already holds th
 
 ### The finding this resolves
 
-07A F3: two incompatible context regimes exist today.
+FIND's F3: two incompatible context regimes exist today.
 
 ```text
 STRUCTURE READER   headings + mechanical observations; then FULL BODIES for at
@@ -124,12 +130,12 @@ member-initiated act on a specific question*. Developmental reading is a differe
 capability spec calls whole-Work awareness "the requirement, not a nicety" — and a regime built
 for one shape must not be inherited by the other because it is the one that already exists.
 
-What is settled here is the **principle that governs whichever regime 07C proposes**:
+What is settled here is the **principle that governs whichever regime DECIDE proposes**:
 
 > **MAIA may read what she must, may hold only what she is reading, and may never be given more
 > because more would be convenient.**
 
-Three consequences, each stated so 07C can be checked against them:
+Three consequences, each stated so DECIDE can be checked against them:
 
 **1 · Read scope is per-question, not per-session.** A developmental reading is commissioned for
 a purpose, and its scope is derived from that purpose. There is no standing grant, and no
@@ -158,7 +164,7 @@ what "coverage" is measured in for a claim spanning many sections
 whether a reading is one pass or several
 ```
 
-These are 07C's, and each requires the object to exist before it can be answered honestly.
+These are DECIDE's, and each requires the object to exist before it can be answered honestly.
 
 ---
 
@@ -166,7 +172,7 @@ These are 07C's, and each requires the object to exist before it can be answered
 
 ### The finding this resolves
 
-07A F2: 6A gave the Work a canonical authored structure, and no MAIA path can consume it.
+FIND's F2: 6A gave the Work a canonical authored structure, and no MAIA path can consume it.
 
 ### Three objects, and they are not interchangeable
 
@@ -225,14 +231,14 @@ order as though the member had declared it to be the Work's order. Section order
 the draft; division order is a member's declaration. The two must not be quietly equated.
 
 ⛔ **A reading may not be re-anchored.** An observation made against authored structure does not
-survive that structure changing by being re-pointed at the new one. What happens then is 07C's
+survive that structure changing by being re-pointed at the new one. What happens then is DECIDE's
 question; that it cannot be done silently is settled here.
 
 ### What is NOT settled here
 
 Whether MAIA reads authored structure as a tree, a flat list, or a digest; what identity an
 observation uses to reference a division; whether the proposal remains readable *as provenance*
-alongside authored structure. All 07C.
+alongside authored structure. All DECIDE.
 
 ---
 
@@ -240,7 +246,7 @@ alongside authored structure. All 07C.
 
 ### The finding this resolves
 
-07A F5: the capability spec names seven lenses; the lane's provisional v1 names eight, under a
+FIND's F5: the capability spec names seven lenses; the lane's provisional v1 names eight, under a
 different decomposition, and two mismatches are substantive.
 
 ### The diagnosis
@@ -309,7 +315,7 @@ is derivable from the other.
 layer.** The six layers of §1 are unchanged, and nothing sits between evidence and observation.
 
 Saying "recurrence" is saying what *kind* of observation this is; it adds no claim the observation
-did not already make. If 07C were to make `Phenomenon` an object between `Evidence` and
+did not already make. If DECIDE were to make `Phenomenon` an object between `Evidence` and
 `Observation`, it would create a layer with nothing to falsify it — the failure §1 exists to
 prevent.
 
@@ -373,9 +379,9 @@ what may be **asserted at a given scope**, not which lenses exist.
 ### What is NOT settled here
 
 The phenomenon list is **not** frozen — the left column above is illustrative, drawn from the two
-existing documents, and 07C decides which phenomena are actually detectable and worth naming. No
+existing documents, and DECIDE decides which phenomena are actually detectable and worth naming. No
 `DevelopmentLens` enum is defined here. Which lenses are structure-aware is stated for Arc only,
-because §3 forced it; the rest is 07C's.
+because §3 forced it; the rest is DECIDE's.
 
 ---
 
@@ -399,7 +405,7 @@ is available is: what is there, what is absent, where, and what that might do to
 emits a sentence in the author's register that could be dropped into the Work, it has authored.
 This is a constraint on the *reading*, not a prohibition on the capability spec's `Reframe`: any
 later Reframe is a separate, author-invoked act, working from the writer's existing language, and
-it is neither authorized nor defined by 07B.
+it is neither authorized nor defined by UNDERSTAND.
 
 ⛔ **No confidence scoring of the Work.** Uncertainty about MAIA's own reading is honest and
 required. A number attached to the manuscript's quality is a verdict with a decimal point.
@@ -440,14 +446,14 @@ no schema · no table · no migration
 no route · no prompt · no surface
 no reader implementation · no lens code
 no DevelopmentLens enum · no frozen phenomenon list
-no repair of 07A F1, F2 or F3
-no authorization of 07C
+no repair of FIND's F1, F2 or F3
+no authorization of DECIDE
 ```
 
 Two of the three findings it resolves stay open as *engineering* problems: F2 and F3 are answered
 here as questions of meaning only. Nothing above makes authored structure reachable from a MAIA
 path, and nothing above defines a context regime.
 
-**07C DECIDE opens on its own authorization**, and its job is one object: the smallest
+**DECIDE opens on its own authorization**, and its job is one object: the smallest
 `DevelopmentalReading` that satisfies §1's layering, §3's object ruling, and §5's claim
 discipline.

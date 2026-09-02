@@ -42,7 +42,10 @@ Stage state, set from canonical evidence — 6A's merge at `4b8b34bcf`, not from
 ```text
 Stage 6   COMPLETE
 Stage 7   ACTIVE
-07A       FIND
+          FIND        CLOSED · canonical @ cc9788e4f
+          UNDERSTAND  CLOSED · canonical @ 5670163e6
+          DECIDE      AUTHORIZED
+          BUILD       unauthorized · BUILD-07A–07H not started
 Stage 8   BLOCKED ON STAGE 7 CLOSURE
 ```
 
