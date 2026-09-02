@@ -360,3 +360,95 @@ PREFLIGHT RESTORATION   NOT CLOSED
 BLOCKING                one real-environment preflight witness
 THEN                    PR → canonical merge → canonical gate witness → CLOSED
 ```
+
+---
+
+## 10. PROVE — expression/template className census (read-only)
+
+The repaired guard's bare-opacity branch scans only literal `className="..."`
+strings (§5). Before calling this tree green, a **read-only** census asked
+whether that blindness hides a real violation. No code was changed.
+
+**Method.** Across the same eight scoped directories the guard covers, every
+`className={...}` / `class={...}` expression was extracted by brace-matching
+(template literals and nested `${}` included) and tokenized. An expression was
+collected as a candidate if it contained **both** a bare `opacity-N` token
+(no variant prefix) **and** a foreground token (`text-*` or `currentColor`).
+
+```text
+scoped files scanned            198
+expression classNames scanned   635
+candidates                        8
+```
+
+**Classification — 8 candidates, 0 genuine violations.**
+
+| # | Location | Condition | Class |
+|---|---|---|---|
+| 1 | `app/labtools/admin/system/page.tsx:377` | `saving === 'maintenance_mode'` | in-flight save |
+| 2 | `app/labtools/admin/system/page.tsx:495` | `saving \|\| !bannerText` | in-flight / invalid input |
+| 3 | `app/labtools/admin/system/page.tsx:574` | `saving === setting.key` | in-flight save |
+| 4 | `app/labtools/navigator/page.tsx:338` | `isProcessing ? 'opacity-50 cursor-not-allowed'` | disabled |
+| 5 | `app/labtools/rlm/page.tsx:304` | `mode !== 'ask' ? 'opacity-40 cursor-not-allowed'` | disabled |
+| 6 | `app/studio/clients/import/page.tsx:349` | `!isNative ? 'opacity-50 cursor-not-allowed'` | unavailable platform |
+| 7 | `app/studio/settings/page.tsx:900` | `isComingSoon ? 'cursor-default opacity-60'` | unavailable feature |
+| 8 | `components/account/AccountSettings.tsx:2208` | `serverDisabled ? 'opacity-50 cursor-not-allowed'` | disabled |
+
+Every one dims a **whole control that is unavailable** — the semantics the
+guard's header already names as allowed (`disabled:opacity-50 (button disabled
+state — fine)`), written as a conditional class string rather than the
+`disabled:` variant. None dims text that is meant to remain readable, which is
+the family the guard exists to prohibit.
+
+Two honest qualifications:
+
+- The census **over-collects by design**. In 4 of the 8, the only "foreground"
+  token was `text-left` or `text-sm` — alignment and size, not colour. They were
+  read in full rather than filtered out.
+- **#5 is the nearest to the line**: `opacity-40` on a `<label>` containing text.
+  It still classifies as disabled — its `<input>` carries
+  `disabled={mode !== 'ask'}`, and the label dims with the control it belongs
+  to, replacing the enabled `text-white/80` rather than stacking on it.
+
+```text
+expression/template coverage gap   OPEN FOLLOW-UP (own authorization)
+current integration tree           NO HIDDEN KNOWN VIOLATION
+```
+
+The gap does not block this lane.
+
+---
+
+## 11. Correction — the daemon was never the blocker
+
+An earlier note in this record listed an unreachable docker daemon among the
+reasons `npm run preflight` could not complete here. That was wrong.
+`scripts/preflight-compose-config.sh` runs `docker compose config`, which is a
+client-side parse. Demonstrated in this container, with no daemon reachable:
+
+```text
+$ docker compose -f docker-compose.yml config
+warning /home/user/Sovereign/docker-compose.yml: the attribute `version` is obsolete…
+env file /home/user/Sovereign/.env.docker not found: stat …: no such file or directory
+EXIT=1
+```
+
+It parsed the compose file and failed on **one thing only**: the absent
+`.env.docker`.
+
+```text
+SOLE BLOCKER   the real .env.docker (gitignored, .gitignore:303),
+               which exists only in the main checkout
+```
+
+`ssh` is not installed in this container, so the main checkout is unreachable
+from here and no real `.env.docker` can be obtained. None was synthesized.
+
+---
+
+## 12. Superseded FIND custody
+
+The earlier FIND-only branch at `a6ebf9a`
+(`feature/preflight-restoration-01`) is preserved as historical investigation
+custody and is not part of this integration. It is not merged, not combined,
+and not altered.
