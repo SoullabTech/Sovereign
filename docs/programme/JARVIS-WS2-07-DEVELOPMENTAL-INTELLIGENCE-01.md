@@ -18,6 +18,28 @@ ROADMAP         docs/programme/WRITERS_STUDIO_ROADMAP_STAGE_6_TO_15.md
 OPENED          2026-09-01
 ```
 
+## Programme state at this checkpoint
+
+Founder-stated at the `75760ba` planning checkpoint. **Recorded here, not written into the
+Programme Board** — the board sets node states from canonical evidence only, and these have not
+been censused.
+
+```text
+6A       ACTIVE · awaiting authenticated Experience Contract walk
+Stage 7  OPENED · BLOCKED ON 6A MERGE
+07A      NOT STARTED
+6→15     DIRECTIONAL ROADMAP
+```
+
+⛔ **`6→15` is direction, not authorization.** A stage appearing on an accepted roadmap is not a
+warrant to begin it. Stage 10 in particular — *Deep MAIA Creative Companion* — names memory and
+context machinery that must not be started because it is on a roadmap someone approved. Each stage
+opens through its own lane and its own trigger.
+
+⛔ **No reason to expand Stage 7 further before FIND.** Finish 6A, close its authorial threshold,
+then let the first genuine Stage 7 act be the discovery of what developmental intelligence already
+exists — before deciding what to build.
+
 ## Operating instruction — read before anything else
 
 > **Do not begin Stage 7 by building an editor. Begin by discovering what a trustworthy
@@ -205,20 +227,38 @@ DevelopmentalReading {
 ```
 
 ```ts
-DevelopmentalObservation {
-  id
-  lens
-  evidenceRefs[]
-  observation
-  interpretation?
-  uncertainty?
-  question?
+type NonEmptyArray<T> = readonly [T, ...T[]];
+
+interface DevelopmentalObservation {
+  id: string;
+  lens: DevelopmentLens;
+  evidenceRefs: NonEmptyArray<EvidenceRef>;
+  observation: string;
+  interpretation?: string;
+  uncertainty?: EvidenceNonConclusion;
+  question?: string;
 }
 ```
 
-`interpretation`, `uncertainty` and `question` are **optional by design**. An observation that
-carries only evidence and observation is a complete, honest object. An observation that carries an
-interpretation with no `evidenceRefs` is not.
+Two properties of this shape are load-bearing, and they are different in kind.
+
+**`evidenceRefs` is non-empty by type.** This is what makes the layering structural rather than
+prompt discipline:
+
+> **No developmental observation exists without recoverable evidence.**
+
+⛔ `evidenceRefs: string[]` does **not** establish that invariant — an empty array satisfies it.
+The optional interpretation/question fields do not establish it either. Only the non-empty
+evidence relation does. An observation that cannot be constructed without evidence cannot be
+serialized without evidence, and cannot survive a round-trip that lost it.
+
+**`interpretation`, `uncertainty` and `question` are optional by design.** An observation that
+stops at evidence and observation is a complete, honest object. MAIA does not have to manufacture
+an interpretation because the schema has a place for one.
+
+`EvidenceRef` and `DevelopmentLens` are named here, not defined. Defining `EvidenceRef` — what a
+recoverable pointer into the manuscript actually is, and against which version — is **07A work**,
+downstream of the census.
 
 ### Initial lenses — v1 is bounded
 
@@ -270,6 +310,15 @@ WHOLE-WORK STRUCTURAL CONTEXT
 
 Considerably more useful than isolated chunks; considerably safer than pretending we already have
 infinite whole-book cognition. Whole-Work reading is **07G**, not 07A.
+
+⛔ **"Whole-Work structural context" is deliberately left undefined here.** It is a **scope
+promise, not an implementation claim.** Whether it resolves to authored topology, headings,
+summaries, selected neighbouring bodies, complete manuscript evidence, or something else is a
+**FIND output** — determined by what already exists, not chosen in advance.
+
+Naming a context-assembly strategy in this lane would smuggle an architecture past the census
+under the appearance of scope. If a strategy appears in a Stage 7 design document before the
+census has run, that is the defect, regardless of how good the strategy is.
 
 ---
 
