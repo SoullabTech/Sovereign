@@ -1,6 +1,6 @@
 # JARVIS-WS2-07-DEVELOPMENTAL-INTELLIGENCE-01
 
-> **Lane active. 07B UNDERSTAND authorized. Nothing beyond it is.**
+> **Lane active. DECIDE authorized. Nothing beyond it is.**
 >
 > This document defined the lane before it was entered, and it still authorizes **no code, no
 > schema, no route, no prompt**. Entering FIND required the trigger below to be satisfied on
@@ -8,10 +8,10 @@
 
 ```text
 LANE               JARVIS-WS2-07-DEVELOPMENTAL-INTELLIGENCE-01
-STATE              ACTIVE · 07B UNDERSTAND AUTHORIZED
+STATE              ACTIVE · DECIDE AUTHORIZED
 TRIGGER            Stage 6A AuthorStructureCommand merged to canonical and witnessed
 TRIGGER SATISFIED  clean-main-no-secrets @ 4b8b34bcf
-AUTHORIZES         07B UNDERSTAND — semantics only. Nothing further.
+AUTHORIZES         DECIDE — the object and its invariants. No implementation.
 NORMATIVE          docs/programme/WRITERS_STUDIO_MASTER_BRIEF.md
 CAPABILITY         docs/programme/DEVELOPMENTAL_EDITOR_CAPABILITY.md
 LIVE STATE         docs/programme/WRITERS_STUDIO_PROGRAMME_BOARD.md
@@ -71,12 +71,31 @@ running.
 
 ```text
 INITIAL ACTIVATION     07A only — 07B-07H unauthorized at that time
-CURRENT AUTHORIZATION  07A CLOSED · canonical @ cc9788e4f
-                       07B UNDERSTAND AUTHORIZED
-                       07C+ unauthorized
+CURRENT AUTHORIZATION  FIND       CLOSED · canonical @ cc9788e4f
+                       UNDERSTAND CLOSED · canonical @ 5670163e6
+                       DECIDE     AUTHORIZED — object + invariants, no implementation
+                       BUILD+     unauthorized
 ```
 
 The initial line is kept because it was true when written. The current line is what governs.
+
+⛔ **TWO NUMBERING SYSTEMS COLLIDE IN THIS FILE, and the collision is live.** The Jarvis flow
+above runs `TRIGGER → FIND → UNDERSTAND → DECIDE → BUILD → PROVE → DONE`. The Stage 7 sequence
+below letters *build units* `07A DEVELOPMENTAL EVIDENCE · 07B DEVELOPMENTAL READER ·
+07C DEVELOPMENTAL READING · 07D DEVELOP SURFACE …`. They are different axes, and the same tokens
+mean different things in each:
+
+```text
+"07A"   flow reading → FIND, the census        ✗   NOT the same thing
+        letter reading → DEVELOPMENTAL EVIDENCE, a build unit
+```
+
+Two canonical documents were filed under the flow reading — `WS2-07A_…_CENSUS` and
+`WS2-07B_…_SEMANTICS` — so the collision is already in canon. **Provisional resolution, pending
+a founder ruling:** the flow stages govern Stage 7's progress; the lettered `07A–07H` are build
+units that live *inside* BUILD. Under that reading every existing sentence is consistent — "07A–07D
+closes Stage 7.1", "defining `EvidenceRef` is 07A work", and "this binds 07C and 07D" all refer to
+build units — and only the two filenames are misleading. **Nothing is renamed on this basis.**
 
 The 6A evidence this rests on: the AuthorStructureCommand, its provenance migration, the adopt
 route and the member gesture are on canonical; Gates 1 and 2 and the non-consent boundary are
