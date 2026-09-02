@@ -8,7 +8,7 @@
 
 import {
   composeDraftSlices, planConversion, validateSectionSave, flattenSections,
-  partitionFromSections, sectionsFromPartition,
+  partitionFromSections, sectionsFromPartition, codePointLength,
   type SourceSection, type DraftSectionState,
 } from '../draftSections';
 
@@ -384,5 +384,117 @@ describe('sectionsFromPartition', () => {
     /* The round-trip trigger checks exactly this at COMMIT, so a restore that
        fails it would surface to a member as a 500. */
     expect(flattenSections((r as { value: DraftSectionState[] }).value)).toBe(content);
+  });
+});
+
+/* ── the section↔revision locator speaks PostgreSQL's unit ────────────────── */
+
+/**
+ * THE UNIT MISMATCH THIS EXISTS TO PREVENT.
+ *
+ * PostgreSQL's `length(text)` counts Unicode CODE POINTS; JavaScript's
+ * `String.prototype.length` counts UTF-16 CODE UNITS. They agree on every
+ * character in the Basic Multilingual Plane and disagree on every astral one —
+ * emoji, CJK extensions, most historic scripts:
+ *
+ *     "A😀B"    JavaScript .length = 4     PostgreSQL length() = 3
+ *
+ * The round-trip trigger validates total coverage against `length(text)`. So a
+ * partition measured in code units is perfectly self-consistent inside the
+ * application and REJECTED by the database the moment a member writes an emoji
+ * — during ordinary draft creation, since revision 1 already records one.
+ *
+ * These cases are the falsifier. If `partitionFromSections` ever counts code
+ * units again, or `sectionsFromPartition` ever slices with code-point indices,
+ * they fail.
+ */
+describe('the locator counts code points, not UTF-16 code units', () => {
+  const BMP = 'café\n\n';
+  const ASTRAL = 'A😀B\n\n';
+  const NFD = 'café\n\n'; // e + COMBINING ACUTE — two code points, like PostgreSQL
+
+  it('codePointLength matches what PostgreSQL length() would count', () => {
+    expect(codePointLength('A😀B')).toBe(3);
+    expect('A😀B'.length).toBe(4); // the trap, pinned
+    expect(codePointLength('café')).toBe(4);
+    expect(codePointLength('café')).toBe(5); // combining marks count separately, as in PG
+    expect(codePointLength('')).toBe(0);
+  });
+
+  it('an astral partition covers the code-point length, not the code-unit length', () => {
+    const sections: DraftSectionState[] = [
+      { id: 'a', text: ASTRAL },
+      { id: 'b', text: 'plain\n' },
+    ];
+    const content = flattenSections(sections);
+    const part = partitionFromSections(sections);
+    /* This equality is exactly what the database trigger asserts. */
+    expect(part[part.length - 1].end).toBe(codePointLength(content));
+    expect(part[part.length - 1].end).not.toBe(content.length);
+  });
+
+  it('BMP-only text is unaffected — the two units agree there', () => {
+    const sections: DraftSectionState[] = [{ id: 'a', text: BMP }, { id: 'b', text: 'plain\n' }];
+    const content = flattenSections(sections);
+    expect(partitionFromSections(sections)[1].end).toBe(content.length);
+    expect(codePointLength(content)).toBe(content.length);
+  });
+
+  it.each([
+    ['BMP', [{ id: 'a', text: BMP }, { id: 'b', text: 'second\n' }]],
+    ['NFD-decomposed', [{ id: 'a', text: NFD }, { id: 'b', text: 'second\n' }]],
+    ['astral', [{ id: 'a', text: ASTRAL }, { id: 'b', text: 'second\n' }]],
+    ['emoji immediately before a boundary', [{ id: 'a', text: 'ends here 😀' }, { id: 'b', text: 'starts here\n' }]],
+    ['emoji immediately after a boundary', [{ id: 'a', text: 'ends here\n\n' }, { id: 'b', text: '😀 starts here\n' }]],
+    ['a section that is only an emoji', [{ id: 'a', text: '😀' }, { id: 'b', text: 'x' }]],
+    ['adjacent astral characters', [{ id: 'a', text: '😀😀' }, { id: 'b', text: '😀\n' }]],
+    ['an empty section between astral ones', [
+      { id: 'a', text: '😀' }, { id: 'b', text: '' }, { id: 'c', text: '😀' }]],
+  ] as [string, DraftSectionState[]][])(
+    'round-trips %s byte-for-byte through a frozen partition',
+    (_name, sections) => {
+      const content = flattenSections(sections);
+      const part = partitionFromSections(sections);
+      const back = sectionsFromPartition(content, part, sections.map((s) => s.id));
+      expect(back.ok).toBe(true);
+      const value = (back as { value: DraftSectionState[] }).value;
+      /* Byte-for-byte, not merely equal-looking: a code-point range resolved
+         with slice() would return a LONE SURROGATE where a character was, and
+         that is a different byte sequence for the same-looking output. */
+      for (let i = 0; i < sections.length; i += 1) {
+        expect(Buffer.from(value[i].text, 'utf8').equals(Buffer.from(sections[i].text, 'utf8')))
+          .toBe(true);
+      }
+      expect(flattenSections(value)).toBe(content);
+    },
+  );
+
+  it('recovers a section that BEGINS at an astral boundary without splitting it', () => {
+    /* The specific corruption: slicing a code-point index as a code-unit index
+       lands mid-surrogate-pair. */
+    const sections: DraftSectionState[] = [
+      { id: 'a', text: '😀😀😀' },
+      { id: 'b', text: 'after\n' },
+    ];
+    const content = flattenSections(sections);
+    const back = sectionsFromPartition(content, partitionFromSections(sections), ['a', 'b']);
+    const value = (back as { value: DraftSectionState[] }).value;
+    expect(value[0].text).toBe('😀😀😀');
+    expect(value[1].text).toBe('after\n');
+    /* No lone surrogate survived anywhere. */
+    for (const s of value) expect(/[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/.test(s.text)).toBe(false);
+  });
+
+  it('still refuses a partition whose coverage is wrong in code points', () => {
+    const sections: DraftSectionState[] = [{ id: 'a', text: '😀' }, { id: 'b', text: 'x' }];
+    const content = flattenSections(sections);
+    /* The code-UNIT partition the defect used to produce: 2 + 1 = 3 against a
+       code-point length of 2. It must be refused, not silently accepted. */
+    const codeUnitPartition = [
+      { sectionId: 'a', start: 0, end: 2 },
+      { sectionId: 'b', start: 2, end: 3 },
+    ];
+    expect(sectionsFromPartition(content, codeUnitPartition, ['a', 'b']))
+      .toMatchObject({ ok: false, refusal: 'partition_not_recorded' });
   });
 });
