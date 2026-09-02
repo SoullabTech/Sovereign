@@ -104,3 +104,38 @@ export async function loadCurrentSection(
   }
   return { ok: true, value: { id: r.rows[0].id, text: r.rows[0].text } };
 }
+
+/**
+ * The divisions the MEMBER authored — the only admissible structural identities.
+ *
+ * ⛔ THE MASQUERADE THIS EXISTS TO STOP IS SUBTLE. A proposal id is a `uuid`,
+ * exactly like a unit id, so a structural reference carrying one is
+ * indistinguishable by shape from a legitimate reference. Only membership in
+ * THIS set can tell them apart. (A reviewed unit key — `p1`, `p3` — is
+ * proposal-internal and not even a uuid, so it fails on sight; the dangerous
+ * case is the one that looks right.)
+ *
+ * ⛔ ADOPTED UNITS ARE CANONICAL. A unit carrying `adopted_from_proposal_id` was
+ * authored by the member from a reviewed reading; the provenance records where
+ * it descended from and does not demote it. Excluding adopted units would be the
+ * mirror error of admitting proposals — it would tell an author that structure
+ * they explicitly authored is not their own.
+ *
+ * `origin = 'proposed'` is excluded on principle although nothing writes it any
+ * more (05B moved proposals into their own table). The exclusion costs nothing
+ * and the alternative is trusting that no future migration reintroduces the row
+ * shape 05A once had.
+ */
+export async function loadCanonicalUnitIds(
+  manuscriptId: string,
+  memberId: string,
+): Promise<ReadonlySet<string>> {
+  const r = await query<{ id: string }>(
+    `SELECT u.id
+       FROM manuscript_structure_units u
+       JOIN member_manuscripts m ON m.id = u.manuscript_id
+      WHERE u.manuscript_id = $1 AND m.member_id = $2 AND u.origin <> 'proposed'`,
+    [manuscriptId, memberId],
+  );
+  return new Set(r.rows.map((x) => x.id));
+}
