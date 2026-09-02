@@ -133,6 +133,34 @@ support its own claims — worse than an explicit block.
 **BUILD-07A remains open and pauses.** INV-7b stays binding. No partial closure at 4 of 6
 outcomes.
 
+**Prerequisite discharged, 2026-09-02.** Option 2 is built, witnessed and recorded in
+`WS2-07-PREREQ_SAVE_CONTRACT_OPTIONS_2026-09-02.md` §7. `working_draft_revisions.section_partition`
+now freezes `(revisionNumber, charRange)` per section against the append-only revision store — ids
+and offsets, no prose, exactly mechanism (d). What that means for BUILD-07A:
+
+```text
+B1  a converted draft was UNWRITABLE          closed — the write path maintains
+    (content-only save aborts at COMMIT)      sections; witnessed under load
+B2  no relation from a section id to a
+    range in any revision                     closed — the relation exists and
+                                              is enforced at write time
+B3  no member-facing path converted a
+    draft; only witness scripts did           closed — new drafts are born
+                                              addressable; POST { convert: true }
+                                              converts an existing one
+(c) re-partitioning an old revision           still REJECTED, and now refused in
+                                              code: a revision with no recorded
+                                              partition returns
+                                              `partition_not_recorded` rather
+                                              than inventing boundaries
+```
+
+⛔ **This does not close BUILD-07A.** It removes the blocker under it. INV-7b still has to be
+demonstrated by the evidence object itself, and the ten falsifiers still have to run. What has
+changed is that "what did section X contain at revision N" is now an answerable question against
+stored provenance rather than a re-derivation — which is the precondition the ruling named, not the
+outcome it required.
+
 ---
 
 ## 4 · The decision, as it was put
