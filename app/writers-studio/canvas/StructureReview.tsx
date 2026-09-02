@@ -67,7 +67,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { GROUND, INK, RADIUS, RULE, SPACE } from '../studioTheme';
 import { StudioText } from '../studio/StudioType';
 import {
-  fetchProposal, applyGesture, previewGesture, reviewRefusalCopy,
+  fetchProposal, applyGesture, previewGesture, reviewRefusalCopy, authorStructure,
   type ProposalView,
 } from '@/lib/writersStudio/reviewClient';
 import { orderReview, type ChangeRow } from '@/lib/writersStudio/reviewPresentation';
@@ -114,6 +114,14 @@ const CSS = `
    copied out of the page. */
 .ws2sr-mark{flex:0 0 auto;padding-left:${SPACE.snug}px;
   border-left:1px solid ${RULE.quiet}}
+/* The crossing. Deliberately not a gold call to action: a bordered, quiet
+   control the writer chooses, sized for a real target on touch. */
+.ws2sr-cross{background:${GROUND.raised};border:1px solid ${RULE.quiet};
+  color:${INK.primary};font:inherit;cursor:pointer;border-radius:${RADIUS.base}px;
+  padding:${SPACE.base}px ${SPACE.comfortable}px;min-height:44px}
+.ws2sr-cross:hover:not(:disabled){background:${GROUND.active}}
+.ws2sr-cross:disabled{cursor:default;color:${INK.quiet}}
+.ws2sr-cross:focus-visible{outline:2px solid ${INK.secondary};outline-offset:2px}
 @media (max-width:900px){
   .ws2sr-split{display:block}
   .ws2sr-inspector{flex:none;position:static;border-left:none;padding-left:0;
@@ -133,6 +141,8 @@ export default function StructureReview({
   const [openOverride, setOpenOverride] = useState<ReadonlyMap<string, boolean>>(new Map());
   const [selected, setSelected] = useState<string | null>(null);
   const [reasoningOpen, setReasoningOpen] = useState(false);
+  /** Set only by the member's crossing gesture succeeding. Never by a load. */
+  const [authored, setAuthored] = useState<{ unitCount: number; sectionCount: number } | null>(null);
   const questionsRef = useRef<HTMLDivElement | null>(null);
 
   const toggleOpen = useCallback((unitId: string, current: boolean) => {
@@ -172,6 +182,30 @@ export default function StructureReview({
       setView({ ...view, reviewed: r.current.reviewed, reviewRevision: r.current.reviewRevision });
     }
   }, [manuscriptId, proposalId, view]);
+
+  /**
+   * WS2-06A — the authorial crossing.
+   *
+   * CALLED FROM A CLICK AND NOWHERE ELSE. Not from an effect, a timer, a retry,
+   * a reload, or the end of a reading. Arriving in this room, leaving it,
+   * continuing to write, saying nothing, and declining to reject the proposal
+   * all leave the Work exactly as it was. There is no path from any of them to
+   * this function.
+   *
+   * ONE POST PER GESTURE. `busy` returns early rather than queueing, so a
+   * double click cannot become two attempts; the second would be refused as
+   * `already_adopted` anyway, but the member should not have to be protected by
+   * a refusal from a request their hand did not intend to make.
+   */
+  const cross = useCallback(async () => {
+    if (!view || busy || authored) return;
+    setBusy(true);
+    setNotice(null);
+    const r = await authorStructure(manuscriptId, proposalId, view.reviewRevision);
+    setBusy(false);
+    if (!r.ok) { setNotice(reviewRefusalCopy(r.refusal)); return; }
+    setAuthored({ unitCount: r.unitCount, sectionCount: r.sectionCount });
+  }, [manuscriptId, proposalId, view, busy, authored]);
 
   const ordered = useMemo(
     () => view ? orderReview(view.reviewed, view.sections) : null,
@@ -515,6 +549,12 @@ export default function StructureReview({
         <OpenQuestions view={view} headingOf={headingOf} proposedById={proposedById} />
       </div>
 
+      {/* ── CROSS. The only act on this page that changes the Work. ─────── */}
+      <AuthorialCrossing
+        available={view.adoptedAt === null && form !== 'none'
+          && (ordered?.status !== 'refused')}
+        authored={authored} busy={busy} onCross={() => void cross()} />
+
       {delta && (delta.added.length || delta.removed.length || delta.changed.length) ? (
         <StudioText role="metadata" data-review-delta
           style={{ display: 'block', marginTop: SPACE.comfortable }}>
@@ -525,6 +565,64 @@ export default function StructureReview({
           ].filter(Boolean).join(', ')}.
         </StudioText>
       ) : null}
+    </div>
+  );
+}
+
+/**
+ * WS2-06A — where review ends and authorship begins.
+ *
+ * THE COPY IS THE BOUNDARY, not decoration. "Make this my structure" says whose
+ * act it is; the sentence under it says what the act does and, in its own words,
+ * that MAIA cannot perform it. A member who reads only the button still learns
+ * the two things that matter.
+ *
+ * NO ACCENT. Gold is not spent here. An invitation styled to be taken is a
+ * system leaning on a decision that is the writer's alone — the surface should
+ * make the act available and completely unhurried, not attractive. The crossing
+ * earns its weight from position and from the rule above it: it is the last
+ * thing on the page, after everything that might change the member's mind.
+ *
+ * ABSENT, NOT DISABLED, WHEN THERE IS NOTHING TO AUTHOR. A greyed button for a
+ * reading with no divisions would offer an act that does not exist.
+ */
+function AuthorialCrossing({
+  available, authored, busy, onCross,
+}: {
+  available: boolean;
+  authored: { unitCount: number; sectionCount: number } | null;
+  busy: boolean;
+  onCross: () => void;
+}) {
+  if (authored) {
+    return (
+      <div data-authored-structure
+        style={{ marginTop: SPACE.section, paddingTop: SPACE.base,
+          borderTop: `1px solid ${RULE.quiet}`, maxWidth: MEASURE }}>
+        <StudioText role="workIdentity" as="span">This is your structure now.</StudioText>
+        <StudioText role="quiet" style={{ display: 'block', marginTop: SPACE.snug }}>
+          You made {authored.unitCount} division{authored.unitCount === 1 ? '' : 's'} part
+          of your Work, holding {authored.sectionCount} section
+          {authored.sectionCount === 1 ? '' : 's'}. You wrote this structure from the
+          reading you reviewed.
+        </StudioText>
+      </div>
+    );
+  }
+
+  if (!available) return null;
+
+  return (
+    <div data-authorial-crossing
+      style={{ marginTop: SPACE.section, paddingTop: SPACE.base,
+        borderTop: `1px solid ${RULE.quiet}`, maxWidth: MEASURE }}>
+      <button type="button" className="ws2sr-cross" onClick={onCross} disabled={busy}
+        data-cross-structure>
+        Make this my structure
+      </button>
+      <StudioText role="quiet" style={{ display: 'block', marginTop: SPACE.snug }}>
+        This writes the structure you reviewed into your Work. MAIA cannot do this for you.
+      </StudioText>
     </div>
   );
 }
