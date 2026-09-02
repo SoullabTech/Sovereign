@@ -583,9 +583,59 @@ the start rather than retrofitted.
 
 ## 9. Verification owed
 
-`node_modules` is empty in the build environment these cuts were written in, so
-**nothing here has been executed**. Status is precise: *implemented and pushed, not yet
-verified.* Before stacking further behavioral work:
+### Completed 2026-09-02 (Mac Studio, local dev DB)
+
+**Item 1 — static gates: PASS.**
+
+- `npm run typecheck` — 231 errors vs baseline 239, 8 fixed, 0 new. No regressions.
+- Jest, 3 suites, **68 tests passing**.
+
+One correction was required to get here: the two new suites were written against
+vitest in a Jest repo (`"test": "jest --config jest.config.js"`), so neither could
+load and all 22 of their assertions silently never ran. Fixed in `3085b46` by deleting
+the two `vitest` import lines — test harness only, no assertion or source change.
+Running the suites under vitest instead produces 47 failures that are **not** code
+defects: vitest is an unconfigured devDependency here (no config file, so no globals,
+no `@/` alias, and no exclude for the ~46 stale `.claude/worktrees` copies). Jest
+supplies all three.
+
+**Item 2 — migration: fixture-verified backfill logic.**
+
+*Not verification against real member data.* `member_ideas` on the dev DB was **empty
+(0 rows)**, so applying the migration as-is would have exercised the DDL and left the
+backfill — the part carrying the actual judgment — untouched, while reporting all-zero
+counts that could be misread as proof. A three-row fixture was inserted first,
+reproducing the exact decision boundary, then the **unmodified** migration was applied
+twice:
+
+| title | length | first block | expected | result |
+|---|---|---|---|---|
+| "I want to look at some ideas…" | 86 | title is a literal prefix | `auto_seed` | `auto_seed` ✓ |
+| "A completely different heading…" | 86 | not a prefix | `member` | `member` ✓ |
+| "Short named idea" | 16 | title is a literal prefix | `member` | `member` ✓ |
+
+- **All three title md5 hashes identical before and after** — the migration changed no
+  title text, as designed.
+- `seed` and `seed_block_id` populated on **all three**. Seed backfill is not
+  length-gated; only `title_source` is. Correct, not a miss.
+- **Idempotent replay confirmed**: first run `UPDATE 3` / `UPDATE 1` / `INSERT 0 1`;
+  second run `UPDATE 0` / `UPDATE 0` / `INSERT 0 0`, with `IF NOT EXISTS` notices only.
+- The `>=60` guard held: the short prefix-matching title was correctly left alone,
+  which is the asymmetry recorded in §1a.
+
+Preflight output was partly lost to terminal scroll, but its conditions are proven
+retroactively: `schema_migrations` exists (the migration's final `INSERT 0 1`
+succeeded) and `members` is non-empty (the fixture insert succeeded).
+
+The `auto_seed` fixture row is retained **only** until the Cut 1 surface is visually
+confirmed, then deleted. The experiential witness (§5) uses a separate fresh Idea in
+the member's own words — never the fixture.
+
+### Still owed
+
+Items 3–5 require the app served locally. Nothing has been deployed.
+
+
 
 1. `npm run typecheck` (no-regression gate) and `npx vitest run lib/maia lib/team`.
 2. Apply `20260902000001_member_idea_seed_and_title.sql`; confirm the backfill marked
