@@ -274,12 +274,31 @@ Consequences for §3.3.3:
 | `digest_subject` | Ceiling |
 |---|---|
 | `loaded_modules` | May support the row its `source_state` and `digest_scope` allow |
-| `disk_tree`, on a runtime with **no** module-replacement mechanism (production container, `next start`) | Equivalence is structural, so it may support the same rows |
-| `disk_tree`, on a runtime **with** Fast Refresh or any hot-replacement | **Diagnosis only.** It is honest evidence about a tree, and is not evidence about an execution |
+| `disk_tree` whose **enumerated input set contains the executable artifacts actually loaded**, **or** which a **verified build attestation** binds to the immutable `build_digest` the process is executing | May support the same rows |
+| `disk_tree` of **source only** — including on a runtime with no module replacement | **Claims about the disk tree only** |
+| `disk_tree` on a runtime **with** Fast Refresh or any hot-replacement | **Diagnosis only.** Honest evidence about a tree; not evidence about an execution |
 
-The production path is unaffected: an immutable image has no module-replacement
-mechanism, so `disk_tree` there *is* what ran. The distinction bites exactly
-where the witnessed 500 occurred.
+**Absence of module replacement proves stability, not equivalence** *(tightened
+2026-09-03).* A stable process still executes **compiled artifacts** whose bytes
+differ from the source tree — Next.js serves a build output, not the `.tsx`
+files it was produced from. A source digest on such a runtime says the tree did
+not change while the process ran; it does not say the process was running that
+tree. The bridge is one of two things and never an inference: **the artifacts
+are inside the covered input set**, or **an attestation verifiably binds that
+exact tree to the `build_digest` being executed**.
+
+*What the deploy lane already gives, and what it does not.* Production is
+well-placed to satisfy the second condition: the immutable-SHA deploy builds
+from a `git archive` snapshot of a named commit, so a definite tree exists to
+attest to. But the post-swap verify compares the container's reported
+`GIT_COMMIT` — a **build-arg label**. A label is a *claim about* provenance, not
+an attestation *of* it: it proves the build was tagged with that SHA, not that
+the image bytes derive from that tree. For this instrument's purposes, that
+distinction is the whole question, so a production `disk_tree` digest sits in
+the third row until the binding is verified rather than labelled.
+
+The dev-server case remains the fourth row regardless — which is where the
+witnessed 500 occurred.
 
 #### 3.3.6 The digest must be canonical and reproducible
 
@@ -300,10 +319,22 @@ implementation must therefore declare, in `digest_alg`:
 **What the input set excludes is part of the claim.** A source-only digest does
 not cover `node_modules`, the lockfile, or environment. This is not academic
 here: **C2's rankability turns on which error classes the SDK retries**, which
-is dependency behavior, not source behavior. A source-only digest therefore
-cannot support a claim about SDK-level conduct; a claim of that kind needs the
-lockfile digest inside the covered set. Any use of a digest must be read against
-what it covers, and a digest must never be cited past its input set.
+is dependency behavior, not source behavior.
+
+**A lockfile is necessary but not sufficient** *(tightened 2026-09-03).* A
+lockfile digest proves the **declared dependency resolution** — what an install
+*should* produce. It does not prove what the process **loaded**: an install can
+be stale, partially applied, patched after the fact, resolved against a
+different registry, or overridden by a local link. Runtime conduct therefore
+requires one of:
+
+- the **loaded dependency identity or artifact** — the resolved version and
+  artifact digest of the package actually imported at the seam; or
+- an **attested build digest whose covered inputs include the installed
+  dependencies**, not merely the manifest that declares them.
+
+A digest must never be cited past its input set, and a declaration must never be
+cited as an observation.
 
 #### 3.3.5 Reporting rule
 
@@ -447,8 +478,8 @@ condition §4.3 refuses.
 | **P14** | A telemetry path that throws, rejects, or is unavailable leaves the member's status, response body, saved note, and reflection outcome **bit-for-bit unchanged** (§4.0) |
 | **P15** | `attempt_id` and `request_id` are proven non-authorizing: a forged, replayed, or foreign `attempt_id` selects, authorizes, and mutates **nothing** — scope is asserted to come only from `getCurrentSession()` and the ownership-checked idea (§1.1) |
 | **P16** | Every event carries a complete `runtime_revision` and `taxonomy_version`. The §3.3.3 ladder is enforced: clean-and-verifiable is admissible; dirty **with** an exact `source_digest` is admissible **only as a claim about that digest**; dirty or `unknown` **without** a digest is surfaced as **diagnosis-only and inadmissible for any committed-or-deployed runtime claim**, never silently ranked. `digest_scope: process_start` on a dev runtime cannot be reported as fully admissible (§3.3.4) |
-| **P18** | `digest_subject` is recorded and enforced: a `disk_tree` digest is never reported as evidence of loaded modules on a hot-replacement runtime, and is capped at diagnosis-only there (§3.3.4) |
-| **P19** | `digest_alg` names a pinned hash and an explicitly enumerated input set; the digest is byte-exact and **recomputable by a third party** from the same inputs, on a different machine and checkout path. A claim about dependency-level behavior (e.g. SDK retry classes, C2) is refused unless the lockfile is inside the covered set (§3.3.6) |
+| **P18** | `digest_subject` is recorded and enforced. A `disk_tree` digest is capped at diagnosis-only on a hot-replacement runtime, **and** — the negative case — a **stable** runtime whose executed artifact bytes differ from the source tree is capped at *disk-tree claims only*: absence of module replacement must not be accepted as equivalence. Promotion requires the artifacts inside the covered input set or a verified attestation binding that tree to the executed `build_digest` (§3.3.4) |
+| **P19** | `digest_alg` names a pinned hash and an explicitly enumerated input set; the digest is byte-exact and **recomputable by a third party** from the same inputs, on a different machine and checkout path. A claim about dependency-level behavior (e.g. SDK retry classes, C2) is refused unless the loaded dependency identity/artifact is recorded, or an attested build digest covers the **installed** dependencies — **and** — the negative case — a covered lockfile **alone** does not lift that refusal: declared resolution is not loaded identity (§3.3.6) |
 | **P17** | No record contains a serialized `Error`, response body, prompt, raw stack, or absolute path. `stack_fingerprint` is stable across occurrences of the same fault and carries no message; `source_frames` are repo-relative only, and an un-normalizable stack yields `null`, never a partial dump (§4.0, §4.5) |
 
 ---
