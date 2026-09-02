@@ -1,6 +1,6 @@
 # MIPA Phase 0 — Sovereignty Prerequisites Specification
 
-**Status**: Specification, plus **P2, P3a and P3b executed and certified**. P1, P4–P6 and P2b remain specification only.
+**Status**: Specification, plus **P2, P3a, P3b and P3c executed and certified**. **P3 remains OPEN (P3d).** P1, P4–P6 and P2b remain specification only.
 **Authorized**: 2026-09-02 (founder) — bounded to P1–P6, sequencing, acceptance criteria, migration prerequisites.
 **Semantic adjudication**: 2026-09-02 (founder) — all five blocking questions closed (§6).
 **§7 adjudication**: 2026-09-02 (founder) — all eight contradictions resolved (§7); **P2 authorized to execute**, P3 repair class authorized with execution gated behind P2's evidence.
@@ -417,14 +417,18 @@ It did **not** establish:
 >
 > | Sub-prerequisite | State |
 > |---|---|
-> | **P3a — Memory Orchestrator Inference Exclusion** | ✅ Certified · **Grade A (scoped)** · **R24** · 24/24 · 6 mutations |
-> | **P3b — Breakthrough Provenance / Participation** | ✅ Certified · **Grade A** (B for the cast-bypass) · **R25** · 18/18 · 5 mutations |
+> | **P3a — Memory Orchestrator Inference Exclusion** | ✅ Certified · **Grade A (scoped)** · **R24** |
+> | **P3b — Breakthrough Provenance / Participation** | ✅ Certified · **Grade A** (B for cast-bypass) · **R25** |
+> | **P3c — MemoryBundle Developmental Bucket** | ✅ Certified · **Grade A** (B for cast-bypass) · **R26** |
+> | **P3d — Member Web / Living Context composer** | 🔴 **OPEN** — discovered by P3c's closing sweep (§4.P3-SWEEP) |
 >
-> **P3 is complete only with both.** P3a's certification discovered a second live instance of its own failure class — `breakthrough_moments`, mixed authority, different composer — and that could not be demoted to an "upgrade path" merely because R24's detector did not cover it. P3's claim is not *"this one composer no longer leaks inference"*; it is:
+> ### 🔴 P3 REMAINS OPEN. P3a's certification discovered a second live instance of its own failure class — `breakthrough_moments`, mixed authority, different composer — and that could not be demoted to an "upgrade path" merely because R24's detector did not cover it. P3's claim is not *"this one composer no longer leaks inference"*; it is:
 >
 > > **Material whose authorship/authority cannot be certified may not acquire participation merely by travelling through a memory composer.**
 >
-> **Discovery enlarges the obligation; it does not shrink the claim.**
+> Three sub-prerequisites are certified and a fourth live path in the same failure class has been found. **P3 is not complete.**
+>
+> **Discovery enlarges the obligation; it does not shrink the claim.** Marking P3 complete while a discovered live path in its own failure class remains unadjudicated would collapse the distinction between *certifying a detector's scope* and *certifying a prerequisite's property* — the distinction this program exists to hold.
 
 **PURPOSE** — Prevents the highest-consequence failure in the architecture: MAIA's interpretation of a member being presented back to them as their own history. **This is live exposure today, not a future risk.**
 
@@ -654,6 +658,90 @@ On `/api/sovereign/app/maia/list` FAST and `/api/voice/stream-conversation`, the
 #### Scope, stated narrowly
 
 R25 closes the `breakthrough_moments` → MemoryBundle path. It does **not** close MemoryBundle's **developmental** bucket (`getSemanticMemories`, selecting from `developmental_memories` into the same `formatForPrompt`) — **a third live instance of P3's failure class**, recorded as open obligation in R25's upgrade path per the precedent this sub-prerequisite just set. Naming it here rather than discovering it later is the point.
+
+---
+
+### P3c-E — MemoryBundle Developmental Bucket · execution record
+
+#### Topology, established from source before any change
+
+| | |
+|---|---|
+| **Storage** | `developmental_memories` — **the same table as P3a** |
+| **Column** | `content_text` — **the same column** P3a's `directional_cue` came from |
+| **Reader** | `MemoryBundle.getSemanticMemories`, sole caller `build()` (`:222`) |
+| **Live?** | **Yes** — `build()` runs on `/api/sovereign/app/maia/list`; its `formatForPrompt` output reaches the **FAST** tier as `memoryContext` |
+| **Composition** | `• [developmental] <content_text truncated to 150>` — **verbatim** |
+| **Provenance** | none at write time, none at read time |
+| **Class** | **not** a second inference class — an **alternate reader** to material R24 already excluded |
+
+> **The finding: R24's capability contraction was partially undone by a second reader on the same rows** — and reaching the prompt *more* directly than the prime R24 removed, since a bullet is verbatim content where the prime was a directional hint. This is exactly why "certify the detector's scope" and "certify the prerequisite's property" had to stay separate.
+
+#### Repair: convergence, not a parallel mechanism
+
+`adjudicateDevelopmentalRow` calls **the same `adjudicateParticipation`** P3a and P3b use. No second provenance model, no second adjudicator — an alternate reader must reach the *same* boundary, or the boundary is decorative. Pinned by §2 of the suite.
+
+Both branches are gated, **including the doubly-dead vector branch** (unreachable when the non-vector branch returns rows; empty because `MemoryWriteback` writes `vector_embedding` NULL). Gated rather than deleted so that if embeddings ever appear the material cannot walk back in ungoverned.
+
+#### Why the invariant is enforced at composition, not at read
+
+The tempting form of *"no composer may bypass the certified representation and reread the backing store"* is a closed set over **readers** of `developmental_memories`. There are **~32 SQL touch-points across 13 files**, most legitimately non-composing: export, the patterns UI, feedback routes, stale-preference review. Gating all of them is the overbroad-detector failure that ends in a disabled gate.
+
+The enforceable boundary is **composition**: every site constructing a `source: 'developmental'` candidate. That set has **exactly one** member, and §4 pins it — a second construction site fails *because it is new*, whatever it does.
+
+> **Answer to the standing question**: the alternate-reader invariant belongs to P3 **locally**, in its composition-boundary form. Its read-boundary form is not enforceable at acceptable cost and would belong to the later canonical-seam work if ever.
+
+#### Out of class, and why it matters
+
+`turnsToCandidate` filters `role === 'user'` — the member's own words. Authorship is **structurally certifiable from the schema's `role` column**, not guessed. Member testimony is S2 under the lattice and legitimately composes. §5 pins that boundary so a future over-correction cannot sweep the member's own speech into the exclusion — which would be a constitutional failure in the opposite direction.
+
+#### Falsification — five mutations, verified failing, reverted
+
+| # | Mutation | Result |
+|---|---|---|
+| **C1** | Honest bypass — map `content` straight into a candidate | ❌ **`TS2339: Property 'content' does not exist on type 'DevelopmentalRowSnapshot'`**; forcing it needs a cast, then **2 tests fail** |
+| **C2** | **Alternate reader** — a second composer builds developmental candidates | ❌ 1 failed (composition closed set) |
+| **C3** | Parallel adjudicator instead of convergence | ❌ 4 failed |
+| **C4** | Unknown provenance defaults to `authoredBy: 'member'` | ❌ 4 failed |
+| **C5** | Ungate the dead vector branch | ❌ 1 failed |
+| — | Restored | ✅ **25/25**, 0 `MemoryBundle` type errors |
+
+*Recorded honestly*: C5's first attempt produced `Tests: 0 total` — the suite failed to compile, which is **not** a falsification result. Re-run as a compiling mutation before being accepted as evidence.
+
+#### The fourth instrument defect
+
+The suite's own `methodBody` extractor matched a bare method name and **never found `async getSemanticMemories`** — so every assertion about that method's body would have passed **vacuously**. False-green class again. The boundary controls written for R25 did not catch it because every method they exercised was synchronous. Fixed in the extractor, and `async` added to the boundary corpus in both R25's and R26's suites.
+
+> **A control corpus is only as good as its coverage of modifiers, ordering and syntax variants.** Recorded in the registry's instrument rule.
+
+---
+
+### P3-SWEEP — the closing closed-set question
+
+Per the adjudication, P3 may be marked complete only when the evidence supports the claim that **no further live path in its failure class remains.** The sweep was run over live memory composers. **It does not support that claim.**
+
+| Composer | Material | Status |
+|---|---|---|
+| `buildMemoryPromptBlock` (orchestrator) | `developmental_memories`, `member_theme_signals` | ✅ R24 |
+| `formatForPrompt` — breakthroughs | `breakthrough_moments` | ✅ R25 |
+| `formatForPrompt` — developmental bullets | `developmental_memories` | ✅ R26 |
+| `formatForPrompt` — turn bullets | `conversation_turns`, `role='user'` | ✅ out of class — authorship structurally certifiable |
+| `formatAtomsForPrompt` | `member_memory_atoms` | ✅ out of class — member act, epistemic status carried |
+| `formatPriorExchangesForPrompt` | `conversation_turns` verbatim | ✅ out of class — member/MAIA words, provenance rendered |
+| `formatMarkedEpisodesForPrompt` | `episodic_memories`, `marked_by_member` | ✅ out of class — member act, R18-provenanced |
+| **`formatMemberWebForPrompt`** | **`pattern_ledger` + session summaries + recurring themes** | 🔴 **IN CLASS — OPEN (P3d)** |
+
+**P3d — the Member Web / Living Context composer.** Live on the canonical route at `app/api/sovereign/app/maia/list/route.ts:738` (`memberWebAddendum`). `formatMemberWebForPrompt` (`lib/memory/MemberLiveContext.ts:436`) composes:
+
+```
+  P1 [87% | personal | 2026-05-12]: <machine-inferred pattern statement>
+```
+
+Machine-inferred statements about the member **carrying a rendered confidence percentage** — which reads as measurement while carrying no provenance a reader could interrogate. It also composes machine-summarized session essences (`rem.essence`) and recurring themes. This is P3's failure class, and arguably its most exposed instance: the confidence number is precisely the "sounds statistical and settled" problem identified for breakthrough aggregates, made explicit.
+
+**Not repaired here.** Recorded as the open obligation that keeps P3 open, per the precedent P3b and P3c set.
+
+**Honest limit of this sweep**: it enumerated composers reachable from the canonical route's addenda and the MemoryBundle. It is a *survey*, not a compiler-derived closed set. A closed set over "everything that composes member-derived material into a prompt" would be the right instrument and does not exist yet. Until it does, *"no further path remains"* is **not a claim this evidence can support** — which is itself a reason P3 stays open.
 
 ---
 
@@ -1003,22 +1091,24 @@ Conceptual only. No migration is authorized, written, or named.
 
 ## STOP
 
-**P2, P3a and P3b are complete and certified. Nothing else has been touched.**
+**P3a, P3b and P3c certified. P3 REMAINS OPEN.**
 
 | | |
 |---|---|
 | **P2** | ✅ **Grade A (scoped)** · **R23** · 14/14 · 5 mutations · full-tree verified |
-| **P3a** | ✅ **Grade A (scoped)** · **R24** · 24/24 · 6 mutations, mandated one fails at compile time |
-| **P3b** | ✅ **Grade A** (B for cast-bypass) · **R25** · 18/18 · 5 mutations, both mandated ones fail |
+| **P3a** | ✅ **Grade A (scoped)** · **R24** · 24/24 · 6 mutations |
+| **P3b** | ✅ **Grade A** (B for cast) · **R25** · 18/18 · 5 mutations |
+| **P3c** | ✅ **Grade A** (B for cast) · **R26** · 25/25 · 5 mutations |
+| **P3d** | 🔴 **OPEN** — `formatMemberWebForPrompt`, live, machine-inferred pattern statements with confidence percentages |
 | **P1, P4, P5, P6, P2b** | Specification only — not repaired |
-| Endorsement gesture · UI gestures · `historical_recall_doorways` | Not added |
-| Seam · retrieval · history embedding · clients · deployment | Untouched |
+| Gestures · seam · retrieval · clients · deployment | Untouched |
 
 **Presented for review:**
 
-1. **P3 certified as a whole**, both sub-prerequisites. The discovery enlarged the obligation rather than narrowing the claim.
-2. **A third instance named, not deferred** — MemoryBundle's `getSemanticMemories` developmental bucket reaches the same composer and is **not** closed by R25. Recorded as open obligation in the upgrade path, following the precedent P3b just set. It is a candidate P3c.
-3. **The certification-instrument rule is now in the registry**, with all three instrument failures preserved as its evidence. Negative-control sections added to R23, R24 and R25.
-4. **Verification stated as differential**, not as a clean gate: typecheck 231 vs 239 baseline, 0 new, 0 regressions; preflight red on base from an unrelated opacity failure, seven remaining checks green individually.
+1. **P3c certified** — and the finding that motivated it: R24's contraction had been **partially undone by an alternate reader on the same rows**, composing verbatim where the prime was a hint.
+2. **The alternate-reader invariant is enforceable at composition, not at read** — ~32 SQL touch-points make the read-boundary form an overbroad gate. Answered locally for P3; not deferred to the seam.
+3. **P3 stays open.** The closing sweep found **P3d** live on the canonical route. Consistent with the standing rule rather than an exception to it.
+4. **A fourth instrument defect**, of the false-green kind: the body extractor never matched `async`, so assertions about that method passed vacuously. The boundary corpus now covers modifiers.
+5. **The sweep's own limit stated**: it is a survey, not a compiler-derived closed set. *"No further path remains"* is not a claim this evidence can support.
 
-**Next**: P1 (export coverage) — still not started.
+**Next**: P3d, if authorized. **P1 not started.**

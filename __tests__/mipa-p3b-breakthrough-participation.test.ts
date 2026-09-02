@@ -103,12 +103,20 @@ const relData = { encounterCount: 40, firstSeen: new Date(), lastSeen: new Date(
  *
  * Terminating on the method's own closing `\n  },` is position-independent.
  */
-function methodBody(src: string, name: string): string {
-  const start = src.indexOf(`\n  ${name}(`);
-  expect({ method: name, found: start >= 0 }).toEqual({ method: name, found: true });
-  const end = src.indexOf('\n  },', start);
+function methodBody(source: string, name: string): string {
+  // Matches an optional `async` modifier. Without it, `async getSemanticMemories(`
+  // never matches and the helper silently misses the method — the FOURTH
+  // instrument defect in this program, and one the boundary controls below did
+  // not catch because every method they exercised was synchronous. A helper
+  // that fails to find its target is a false-green generator, which is the more
+  // dangerous half of the detector rule.
+  const decl = new RegExp('\\n  (?:async )?' + name + '\\(');
+  const m = decl.exec(source);
+  expect({ method: name, found: m !== null }).toEqual({ method: name, found: true });
+  const start = m!.index;
+  const end = source.indexOf('\n  },', start);
   expect({ method: name, terminated: end > start }).toEqual({ method: name, terminated: true });
-  return src.slice(start, end);
+  return source.slice(start, end);
 }
 
 // ── §1 — ambiguous provenance cannot silently compose ────────────────────────

@@ -61,6 +61,54 @@ export interface MemoryBullet {
  * `insight` and `element` exist ONLY on the admitted arm, so composing them
  * without narrowing on the discriminant is a compile error.
  */
+/**
+ * P3c (MIPA Phase 0) — THE DEVELOPMENTAL BUCKET IS THE SAME MATERIAL R24 EXCLUDED.
+ *
+ * `getSemanticMemories` selects `content_text` from `developmental_memories` —
+ * the same table AND the same column that P3a adjudicated as uncertified
+ * inference. This is not a second inference class. It is an ALTERNATE READER to
+ * material already excluded, reaching the prompt through a different composer
+ * (`formatForPrompt` memory bullets) and, unlike the `directional_cue` prime
+ * R24 removed, reaching it VERBATIM.
+ *
+ * Per the adjudication: converge onto the same participation boundary rather
+ * than inventing a parallel provenance or adjudication mechanism. The claim is
+ * `null` here for the same reason it is null in `memoryLoaders` — the table
+ * records no authorship, and inferring it from the probable writer is the guess
+ * the backfill policy forbids.
+ *
+ * `content` exists only on the admitted arm, so composing it without narrowing
+ * is a compile error.
+ */
+export interface DevelopmentalRowBase {
+  id: string;
+  significance: number;
+  timestamp: Date;
+  facet?: string;
+  similarity: number;
+  compositeScore: number;
+}
+
+export interface AdmittedDevelopmentalRow extends DevelopmentalRowBase {
+  participation: 'admitted';
+  content: string;
+}
+
+export interface ExcludedDevelopmentalRow extends DevelopmentalRowBase {
+  participation: 'excluded';
+  exclusionReason: ExclusionReason;
+}
+
+export type DevelopmentalRowSnapshot =
+  | AdmittedDevelopmentalRow
+  | ExcludedDevelopmentalRow;
+
+/** P3c — the developmental bucket reports what it withheld, not only what it yielded. */
+export interface DevelopmentalBucketResult {
+  candidates: MemoryCandidate[];
+  excludedCount: number;
+}
+
 export interface BreakthroughBase {
   id: string;
   integrated: boolean;
@@ -127,6 +175,8 @@ export interface MemoryBundle {
     turnsSameSession: number;      // Turns from current session
     turnsCrossSession: number;     // Turns from other sessions
     semanticHits: number;
+    /** P3c observability — reported after adjudication, never an input to it. */
+    developmentalExcluded: number;
     breakthroughsFound: number;
     /**
      * P3b observability. Reported AFTER adjudication, never an input to it —
@@ -167,7 +217,7 @@ export const MemoryBundleService = {
     console.log(`📦 [MemoryBundle] Building for user: ${memberRef(userId)}`);
 
     // Parallel retrieval from all buckets
-    const [recentTurns, semanticMemories, breakthroughs, relationshipData] = await Promise.all([
+    const [recentTurns, developmentalBucket, breakthroughs, relationshipData] = await Promise.all([
       this.getRecentTurns(userId, sessionId, scope),
       this.getSemanticMemories(userId, currentInput, facet),
       this.getBreakthroughs(userId),
@@ -177,7 +227,7 @@ export const MemoryBundleService = {
     // Merge and rank all candidates
     const allCandidates = [
       ...this.turnsToCandidate(recentTurns),
-      ...semanticMemories,
+      ...developmentalBucket.candidates,
       ...this.breakthroughsToCandidate(breakthroughs),
     ];
 
@@ -247,7 +297,8 @@ export const MemoryBundleService = {
         turnsRetrieved: recentTurns.length,
         turnsSameSession,
         turnsCrossSession,
-        semanticHits: semanticMemories.length,
+        semanticHits: developmentalBucket.candidates.length,
+        developmentalExcluded: developmentalBucket.excludedCount,
         breakthroughsFound: breakthroughs.filter(b => b.participation === 'admitted').length,
         breakthroughsExcluded: breakthroughs.filter(b => b.participation === 'excluded').length,
         totalCandidates: allCandidates.length,
@@ -300,7 +351,7 @@ export const MemoryBundleService = {
     userId: string,
     queryText: string,
     facet?: string
-  ): Promise<MemoryCandidate[]> {
+  ): Promise<DevelopmentalBucketResult> {
     try {
       // First try non-vector ranking with confidence decay (works even when tables are empty/no embeddings)
       // NOTE (2026-04-09): scope/authority clauses removed — columns do not exist in the production schema.
@@ -339,17 +390,26 @@ export const MemoryBundleService = {
       const nonVectorResult = await query(nonVectorSql, [userId]);
 
       if (nonVectorResult.rows && nonVectorResult.rows.length > 0) {
-        console.log(`[MemoryBundle] Non-vector retrieval: ${nonVectorResult.rows.length} memories`);
-        return nonVectorResult.rows.map(row => ({
-          id: row.id,
-          content: row.content_text,
-          source: 'developmental' as const,
-          significance: parseFloat(row.significance) || 0.5,
-          timestamp: new Date(row.formed_at),
-          facet: row.facet_code,
-          similarity: 0,
-          compositeScore: parseFloat(row.score) || 0,
-        }));
+        const adjudicated = nonVectorResult.rows.map((row) =>
+          this.adjudicateDevelopmentalRow({
+            id: row.id,
+            content_text: row.content_text,
+            significance: parseFloat(row.significance) || 0.5,
+            formed_at: row.formed_at,
+            facet_code: row.facet_code,
+            similarity: 0,
+            score: parseFloat(row.score) || 0,
+          }),
+        );
+        const excludedCount = adjudicated.filter(r => r.participation === 'excluded').length;
+        console.log(
+          `[MemoryBundle] Non-vector retrieval: ${nonVectorResult.rows.length} rows, ` +
+          `${excludedCount} excluded by participation gate (P3c)`,
+        );
+        return {
+          candidates: this.developmentalToCandidates(adjudicated),
+          excludedCount,
+        };
       }
 
       // If non-vector returns nothing, try vector search (for future when embeddings exist)
@@ -357,7 +417,7 @@ export const MemoryBundleService = {
 
       if (embedding.length === 0) {
         console.log('[MemoryBundle] No embedding generated, returning empty');
-        return [];
+        return { candidates: [], excludedCount: 0 };
       }
 
       // NOTE (2026-04-09): scope/authority removed from SELECT and WHERE — see non-vector query above.
@@ -385,21 +445,87 @@ export const MemoryBundleService = {
 
       const vectorResult = await query(vectorSql, [`[${embedding.join(',')}]`, userId]);
 
-      return (vectorResult.rows || []).map(row => ({
-        id: row.id,
-        content: row.content_text || '',
-        source: 'developmental' as const,
-        significance: parseFloat(row.significance) || 0.5,
-        timestamp: new Date(row.formed_at),
-        facet: row.facet_code,
-        similarity: parseFloat(row.similarity) || 0,
-        compositeScore: parseFloat(row.composite_score) || 0,
-      }));
+      // P3c — the vector branch is doubly dead today (unreachable when the
+      // non-vector branch returns rows; and MemoryWriteback writes
+      // vector_embedding as NULL). It is gated rather than deleted so that if
+      // embeddings ever appear, the material does not walk back in ungoverned.
+      const vectorAdjudicated = (vectorResult.rows || []).map((row) =>
+          this.adjudicateDevelopmentalRow({
+            id: row.id,
+            content_text: row.content_text || '',
+            significance: parseFloat(row.significance) || 0.5,
+            formed_at: row.formed_at,
+            facet_code: row.facet_code,
+            similarity: parseFloat(row.similarity) || 0,
+            score: parseFloat(row.composite_score) || 0,
+          }),
+        );
+      return {
+        candidates: this.developmentalToCandidates(vectorAdjudicated),
+        excludedCount: vectorAdjudicated.filter(r => r.participation === 'excluded').length,
+      };
 
     } catch (err) {
       console.warn('[MemoryBundle] Memory retrieval failed:', err);
-      return [];
+      return { candidates: [], excludedCount: 0 };
     }
+  },
+
+  /**
+   * P3c — the single certified adjudication point for a developmental row.
+   *
+   * Converges onto `adjudicateParticipation`, the same gate P3a and P3b use. No
+   * parallel provenance model, no second adjudicator: an alternate reader must
+   * reach the SAME boundary, or the boundary is decorative.
+   */
+  adjudicateDevelopmentalRow(row: {
+    id: string;
+    content_text: string | null;
+    significance: number;
+    formed_at: string | Date;
+    facet_code?: string | null;
+    similarity: number;
+    score: number;
+  }): DevelopmentalRowSnapshot {
+    const base = {
+      id: row.id,
+      significance: row.significance,
+      timestamp: new Date(row.formed_at),
+      facet: row.facet_code ?? undefined,
+      similarity: row.similarity,
+      compositeScore: row.score,
+    };
+
+    // Same reasoning as lib/maia/memoryLoaders.ts: `developmental_memories`
+    // records no authorship, so nothing here can establish it. Never guessed,
+    // never defaulted to member.
+    const provenance: ProvenanceClaim = null;
+
+    const verdict = adjudicateParticipation({ provenance, endorsement: 'none' });
+    if (!verdict.admitted) {
+      // No `content` on this arm — by type, not convention.
+      return { ...base, participation: 'excluded', exclusionReason: verdict.reason };
+    }
+    return { ...base, participation: 'admitted', content: row.content_text ?? '' };
+  },
+
+  /**
+   * P3c — admitted developmental rows become candidates; excluded ones do not.
+   * `content: r.content` does not typecheck against the union.
+   */
+  developmentalToCandidates(rows: DevelopmentalRowSnapshot[]): MemoryCandidate[] {
+    return rows
+      .filter((r): r is AdmittedDevelopmentalRow => r.participation === 'admitted')
+      .map((r) => ({
+        id: r.id,
+        content: r.content,
+        source: 'developmental' as const,
+        significance: r.significance,
+        timestamp: r.timestamp,
+        facet: r.facet,
+        similarity: r.similarity,
+        compositeScore: r.compositeScore,
+      }));
   },
 
   /**
