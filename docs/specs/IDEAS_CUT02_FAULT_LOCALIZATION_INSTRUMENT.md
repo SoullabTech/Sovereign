@@ -3,8 +3,8 @@
 **Lane:** `feature/ideas-cut02-fault-localization-instrument`
 **Base:** `33b83fe` (narrowed INV-2), which contains `65dd0aa` (ratified Cut 0–2 repair contract)
 **Opened:** 2026-09-02
-**Status:** SPECIFICATION — **not ratified, not implemented**
-**Authorization:** Specification only. No code, prompt, schema, migration, merge, or deployment change under this lane.
+**Status:** **RATIFIED SPECIFICATION CONTRACT** (2026-09-02) — **not implemented**
+**Authorization:** Ratification authorizes **finalizing this specification only**. It does **not** authorize T1 or T2 implementation, schema work, fault repair, merge, or deployment.
 
 ---
 
@@ -49,18 +49,35 @@ No server-side identifier spans both. The autosave that *succeeded* and the
 reflection that *failed* are, to an operator, unrelated events. This is why the
 instrument is defined over an **attempt**, not a request.
 
-### 1.1 Attempt ID
+### 1.1 Two identifiers, two authorities *(binding precision 1)*
 
-One `attempt_id` (UUIDv4) is minted **client-side** in `handleAskMaia`, before
-the autosave, and sent on both requests as a header:
+The instrument carries **two** identifiers with **different origins and
+different trust**. They are never interchangeable.
+
+| | `attempt_id` | `request_id` |
+|---|---|---|
+| Minted by | **client**, in `handleAskMaia`, before the autosave | **server**, once per HTTP request |
+| Spans | the whole member act (both requests) | exactly one request |
+| Trust | **untrusted input** | server-authoritative |
+| Answers | *"which member act was this?"* | *"which execution was this?"* |
+
+`attempt_id` (UUIDv4) is sent on both requests as a header:
 
 ```
 x-idea-attempt-id: <uuid-v4>
 ```
 
-The client is the only participant that sees the whole member act, so the ID
-must originate there. That makes it **untrusted input**, with three
-non-negotiable consequences:
+The client is the only participant that sees the whole member act, so that ID
+must originate there — which is exactly why it cannot be trusted. `request_id`
+exists because a retried or duplicated `attempt_id` would otherwise make two
+distinct executions indistinguishable in the record.
+
+**Neither identifier may authorize, select, or mutate member data.** Member and
+idea scope come **only** from authenticated server context
+(`getCurrentSession()` → `member_id`, and the ownership-checked `idea_id`). This
+is absolute and applies to both IDs equally.
+
+Three further consequences follow for `attempt_id` specifically:
 
 1. **Shape-validated** against the existing `UUID_RE` and **rejected silently**
    (the attempt proceeds; the record is written with a server-minted ID and a
@@ -71,14 +88,36 @@ non-negotiable consequences:
    after the fact, nothing more.
 3. **Never a cross-member join key.** Every read of these records is scoped by
    server-resolved `member_id`. A client that replays another attempt's ID
-   correlates only within its own member scope.
+   correlates only within its own member scope, and `request_id` still separates
+   the executions.
 
 ---
 
-## 2. Stage map
+## 2. Stage map and lifecycle
 
-Each seam emits at most one record. The stage vocabulary is closed — a new seam
-requires an amendment to this table, not an ad-hoc string.
+### 2.1 Entry and resolution *(binding precision 2)*
+
+Every risky seam emits **`entered` first**, then **`completed` or `failed`**.
+
+A single terminal record per seam is not sufficient: a process that dies
+*between* two calls emits nothing at all, and the seam it died in stays
+invisible — which is the exact shape of the witnessed incident, where a restart
+preceded the successful retry. Paired events make interruption legible as
+interruption.
+
+**Under T2, the last durable `entered` event with no matching resolution
+localizes an interrupted seam.** This is the property that converts "the process
+died somewhere in this route" into "the process died in `model_call`", and it is
+the single strongest reason T2 is not optional.
+
+An `entered` with no resolution is therefore **not** a defect in the
+instrument — it is the instrument's most informative output. Readers of these
+records must not treat unresolved entries as missing data.
+
+### 2.2 Stages
+
+The stage vocabulary is closed — a new seam requires an amendment to this table,
+not an ad-hoc string.
 
 | Stage | Seam | Location |
 |---|---|---|
@@ -102,6 +141,10 @@ requires an amendment to this table, not an ad-hoc string.
 deliberately: they are three of INV-2's ranked candidates (C1, C2, C3) and are
 today indistinguishable at the boundary.
 
+`attempt_open` and `attempt_close` are the outer bracket; the twelve seams
+between them are the ones that emit paired `entered`/resolution events per
+§2.1.
+
 ---
 
 ## 3. Record shape
@@ -110,22 +153,31 @@ Operator-facing only. Every field is either a fixed enum, a numeric measure, or
 an identifier — **never content**.
 
 ```
-attempt_id            uuid          correlation key (§1.1)
+attempt_id            uuid          member-act correlation, client-minted (§1.1)
 attempt_id_source     enum          client | server
-member_id             uuid          server-resolved, never client-supplied
-idea_id               uuid
-stage                 enum          §2
-outcome               enum          ok | fail
-error_class           enum | null   §3.1
+request_id            uuid          server-minted, one per HTTP request (§1.1)
+member_id             uuid          server-resolved ONLY, never client-supplied
+idea_id               uuid          ownership-checked server context ONLY
+stage                 enum          §2.2 — closed vocabulary
+event                 enum          entered | completed | failed  (§2.1)
+error_class           enum | null   §3.1 — set only when event = failed
 upstream_status       int  | null   HTTP status from the model provider
 upstream_request_id   text | null   provider request id, verbatim
 upstream_error_type   text | null   provider error type slug (e.g. overloaded_error)
-retryable             bool | null   whether the class is SDK-retried (see §3.2)
-duration_ms           int
+retryable             bool | null   whether the class is SDK-retried (§3.2)
+stack_fingerprint     text | null   §4.5 — hash, not a stack
+source_frames         text[]| null  §4.5 — allowlisted repo-relative frames only
+git_commit            text          running build identifier (§3.3)
+taxonomy_version      int           stage/error-class schema version (§3.3)
+duration_ms           int  | null   null on `entered`
 stance                enum | null   already recorded in block metadata
 prompt_chars          int  | null   size only, on model_call — never the prompt
 occurred_at           timestamptz
 ```
+
+`outcome` from the pre-ratification draft is replaced by `event`, which carries
+the §2.1 lifecycle. There is no separate ok/fail field: `completed` and `failed`
+*are* the outcome.
 
 ### 3.1 Error classification
 
@@ -135,7 +187,31 @@ Closed enum. Assigned at the seam that raised, never inferred later:
 `model_config` · `model_upstream` · `model_parse` · `recognition` · `unknown`
 
 `unknown` is a real outcome, not a placeholder. A fault that lands there is a
-gap in this table and is an amendment trigger.
+gap in this table and is an amendment trigger — and an amendment increments
+`taxonomy_version` (§3.3).
+
+### 3.3 Evidence is bound to the runtime that produced it *(binding precision 3)*
+
+Every event carries **`git_commit`** (the running build) and
+**`taxonomy_version`** (the version of the stage and error-class vocabularies
+that assigned it).
+
+*Why `git_commit`:* evidence without the SHA that produced it cannot support a
+runtime claim. A record from a build whose identity is unknown cannot be used to
+say what the running system did — it can only say what *some* system did. This
+is the same discipline the deploy lane already enforces
+(`CLAUDE.md` §Verify after deploy: `printenv GIT_COMMIT` must return the
+deployed SHA, never `unknown`), now made load-bearing for the instrument:
+**an event carrying `git_commit = unknown` is not admissible evidence for any
+runtime claim, and must be reported as such rather than silently ranked.**
+The instrument reads the value the container already exposes; it does not
+introduce a second provenance mechanism.
+
+*Why `taxonomy_version`:* stage names and error classes will be amended as
+`unknown` faults are discovered. Without a version, records from before and
+after an amendment silently mean different things while looking identical —
+which would reproduce, in the evidence layer, exactly the provenance-blind
+continuity named as Finding F in the Cut 0–2 witness.
 
 ### 3.2 The `retryable` field earns its place
 
@@ -150,6 +226,25 @@ is the single field that converts C2 from open to decidable.
 ## 4. Boundaries (hard)
 
 These are refusals, not preferences.
+
+**0. Sanitize structurally, not by review** *(binding precision 4).* The
+instrument **never serializes an `Error`, a response body, a prompt, a stack, or
+member text wholesale** — not truncated, not redacted, not "cleaned". There is
+no path from a raw object to a record.
+
+Construction is **allowlist-only**: a record is assembled field-by-field from
+§3's list, and a field that is not on that list has no way to be written. This
+is a structural property, not a discipline — `JSON.stringify(error)`,
+spreading an error object, or persisting `error.message` are all absent from
+the design rather than discouraged in it. The distinction matters because
+redaction is a review activity that fails silently, while an allowlist fails
+closed.
+
+**Instrument failure must not alter the member's request outcome.** A telemetry
+write that throws, times out, or is unavailable changes nothing the member
+experiences: not the status, not the body, not whether their note persisted, not
+whether a reflection was produced. The instrument is strictly observational at
+the boundary (see §5 T2's fire-and-forget shape, and P11/P14).
 
 1. **No member text.** Not block content, not `framing`, not `title`, not the
    composed prompt, not the model's output. `prompt_chars` records size; nothing
@@ -169,7 +264,20 @@ These are refusals, not preferences.
    memory. `isSanctuaryModeActive` is nonetheless honored: under Sanctuary the
    durable tier (§5, T2) is not written and only the ephemeral tier remains,
    consistent with "log that a session occurred, never content."
-5. **Not memory.** These records are operational telemetry. They are never read
+5. **Sanitized stack evidence only** *(§4.5).* A raw stack is never persisted.
+   Two derived artifacts are permitted, both computed at the raising seam:
+   - `stack_fingerprint` — a stable hash over the normalized top frames, with
+     `node_modules` frames collapsed to their package name. It answers *"is this
+     the same fault as last time?"* without carrying what the fault said.
+   - `source_frames` — an allowlisted array of **repo-relative `path:line`
+     frames only**. Absolute paths, home directories, and any frame outside the
+     repository are dropped, not rewritten.
+
+   Neither may contain an error message, an argument value, or interpolated
+   text. A stack whose frames cannot be normalized yields `null`, never a
+   partial dump.
+
+6. **Not memory.** These records are operational telemetry. They are never read
    into any prompt, never surfaced to MAIA, never enter atoms, semantic memory,
    or any member-facing surface, and they carry a bounded retention window
    (proposed: 30 days) rather than accumulating indefinitely.
@@ -189,10 +297,14 @@ durability: stdout is exactly the store that dies with the restart which
 repeatedly precedes a successful retry.
 
 **T2 — durable operator table (requires migration + separate ratification).**
-`idea_reflection_attempts`, indexed on `(member_id, occurred_at)` and
-`(attempt_id)`, written fire-and-forget on the `decisionChangeRecognition`
-pattern — a `void`-returning function with an internal `.catch()`, so a
-telemetry write **can never fail a member's reflection**. Closes **durability**.
+`idea_reflection_attempts`, indexed on `(member_id, occurred_at)`,
+`(attempt_id)` and `(request_id)`, written fire-and-forget on the
+`decisionChangeRecognition` pattern — a `void`-returning function with an
+internal `.catch()`, so a telemetry write **can never fail a member's
+reflection** (§4.0, P11, P14). Closes **durability**, and with it the
+interrupted-seam property of §2.1: the last durable `entered` with no
+resolution names the seam a dying process was inside. T1 cannot provide this,
+because the process death takes the stdout with it.
 
 T1 may ship first. **The defect is not closed until T2 is live**, and this
 document should not be cited as having closed it before then.
@@ -213,7 +325,7 @@ condition §4.3 refuses.
 
 | # | Obligation |
 |---|---|
-| **P1** | Each stage in §2 emits exactly one record; no seam is silent, none double-emits |
+| **P1** | Each seam in §2.2 emits exactly one `entered` and exactly one resolution (`completed` or `failed`); no seam is silent, none double-emits |
 | **P2** | Each induced failure yields the correct `error_class`; classes do not collapse into one another |
 | **P3** | `model_client_init`, `model_call`, and `model_parse` are **mutually distinguishable** — the C1/C2/C3 discrimination that motivates the lane |
 | **P4** | An empty `content` array is classified `model_parse` **without repairing C3** — the instrument observes the defect, it does not fix it |
@@ -225,6 +337,11 @@ condition §4.3 refuses.
 | **P10** | The autosave-then-abort ordering is unchanged: the note persists, no partial `maia_reflection` is written, the member-facing string is unchanged |
 | **P11** | A telemetry write failure does not fail the reflection (T2 fire-and-forget) |
 | **P12** | Under Sanctuary, T2 is not written and no content appears in T1 |
+| **P13** | A process killed mid-seam leaves a durable `entered` with no resolution, and that record **names the seam** (T2; §2.1) |
+| **P14** | A telemetry path that throws, rejects, or is unavailable leaves the member's status, response body, saved note, and reflection outcome **bit-for-bit unchanged** (§4.0) |
+| **P15** | `attempt_id` and `request_id` are proven non-authorizing: a forged, replayed, or foreign `attempt_id` selects, authorizes, and mutates **nothing** — scope is asserted to come only from `getCurrentSession()` and the ownership-checked idea (§1.1) |
+| **P16** | Every event carries `git_commit` and `taxonomy_version`; a record with `git_commit = unknown` is surfaced as **inadmissible for runtime claims**, not silently ranked (§3.3) |
+| **P17** | No record contains a serialized `Error`, response body, prompt, raw stack, or absolute path. `stack_fingerprint` is stable across occurrences of the same fault and carries no message; `source_frames` are repo-relative only, and an un-normalizable stack yields `null`, never a partial dump (§4.0, §4.5) |
 
 ---
 
@@ -232,7 +349,7 @@ condition §4.3 refuses.
 
 All must hold. Any single failure means the instrument does not ship.
 
-- P1–P12 pass under `npm test`.
+- P1–P17 pass under `npm test`.
 - `npm run typecheck` green — **no-regression**, not "everything typechecks"
   (`CLAUDE.md` §Before Making Changes).
 - `npm run check:no-supabase` and `npm run preflight` clean.
@@ -283,10 +400,36 @@ discipline.
 
 ---
 
-## 9. Status
+## 9. Status and standing
 
-**SPECIFICATION — awaiting ratification.** Nothing here is implemented. On
-ratification, T1 and its proof obligations may be built on this lane; T2's
-migration requires its own authorization.
+**RATIFIED SPECIFICATION CONTRACT — 2026-09-02.** Ratified with four binding
+precisions, incorporated above:
+
+| # | Precision | Where |
+|---|---|---|
+| 1 | Two identifiers, two authorities; neither authorizes, selects, or mutates | §1.1 |
+| 2 | `entered` then `completed`/`failed`; last durable `entered` localizes an interrupted seam | §2.1, §5 T2, P13 |
+| 3 | Every event bound to `git_commit` + `taxonomy_version` | §3.3, P16 |
+| 4 | Allowlist-only construction; no wholesale serialization; instrument failure cannot alter the member's outcome | §4.0, §4.5, P14, P17 |
+
+**What ratification authorizes:** finalizing this specification. Nothing else.
+
+**What it does not authorize** — each still requires its own act:
+
+| | Status |
+|---|---|
+| T1 implementation | **not authorized** |
+| T2 implementation / schema / migration | **not authorized** |
+| Reproducing the witnessed 500 | **not authorized** — gated behind §0, witnessing the instrument |
+| Repairing C3 or C5 | **not authorized** — demonstrated defects, not causal findings |
+| Merge or deployment | **not authorized** |
+
+**Standing of the surrounding lanes, restated on ratification:**
+
+- **T1** closes seam distinction **only**.
+- **T2** closes durable preservation, subject to retention and operator access.
+- **INV-2 incident** remains **open**; this occurrence remains **unassignable**.
+- **C3 and C5** are independently demonstrated, **not causal findings**, and
+  **not authorized for repair**.
 
 *No code, prompt, schema, migration, merge, or deployment change was made.*
