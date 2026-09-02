@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentSession } from '@/lib/auth/serverSessions';
 import { query } from '@/lib/db/postgres';
+import { IDEA_BLOCK_MAX_CHARS } from '@/lib/ideas/constants';
 
 /**
  * POST /api/ideas/capture — Compat wrapper for the in-conversation idea capture toast.
@@ -71,7 +72,7 @@ export async function POST(request: NextRequest) {
       await query(
         `INSERT INTO member_idea_blocks (idea_id, member_id, block_type, content, metadata)
          VALUES ($1, $2, 'note', $3, $4)`,
-        [idea.id, session.memberId, sourceText.slice(0, 4000), JSON.stringify(metadata)]
+        [idea.id, session.memberId, sourceText.slice(0, IDEA_BLOCK_MAX_CHARS), JSON.stringify(metadata)]
       );
     }
 

@@ -42,6 +42,10 @@ import {
   RotateCcw,
 } from 'lucide-react';
 import { apiFetch } from '@/lib/http/apiBase';
+import {
+  IDEA_BLOCK_MAX_CHARS,
+  IDEA_BLOCK_COUNTER_THRESHOLD,
+} from '@/lib/ideas/constants';
 
 // --- types -------------------------------------------------------------------
 
@@ -180,6 +184,10 @@ export default function IdeaWorkspacePage() {
   // post-hoc via the Convert actions on the just-saved block.
   const [draft, setDraft] = useState('');
   const [saving, setSaving] = useState(false);
+  // Composer-level failure surface. Previously every save/ask failure was
+  // console.error only — the member's words appeared to vanish with no
+  // explanation. Nothing in this room may fail silently.
+  const [composerError, setComposerError] = useState<string | null>(null);
 
   // Transient highlight on a block (triggered by decision-strip click)
   const [highlightedBlockId, setHighlightedBlockId] = useState<string | null>(null);
@@ -266,9 +274,28 @@ export default function IdeaWorkspacePage() {
   // The member does not author the prompt.
   const [askingMaia, setAskingMaia] = useState(false);
 
+  // Read a server error body into a member-legible sentence.
+  const describeFailure = useCallback(
+    async (res: Response, fallback: string): Promise<string> => {
+      try {
+        const body = await res.json();
+        if (body?.max_chars && body?.received_chars) {
+          const over = body.received_chars - body.max_chars;
+          return `This entry is ${over.toLocaleString()} characters over the limit. Nothing was lost — split it into two entries, or trim it here.`;
+        }
+        if (typeof body?.error === 'string') return body.error;
+      } catch {
+        /* non-JSON body */
+      }
+      return fallback;
+    },
+    []
+  );
+
   const handleAskMaia = useCallback(async () => {
     if (!idea || askingMaia || saving) return;
     setAskingMaia(true);
+    setComposerError(null);
     try {
       // Autosave-on-Ask-MAIA (2026-04-22):
       // If the composer has pending draft text, save it as a note first so
@@ -292,6 +319,9 @@ export default function IdeaWorkspacePage() {
             '[ideas/workspace] autosave before ask-maia failed:',
             saveRes.status
           );
+          setComposerError(
+            await describeFailure(saveRes, "Couldn't save that entry. Your words are still here — try again.")
+          );
           return;
         }
         const saveData = await saveRes.json();
@@ -301,6 +331,7 @@ export default function IdeaWorkspacePage() {
           setDraft('');
         } else {
           // Unexpected success=false; abort rather than proceeding on stale state
+          setComposerError("Couldn't save that entry. Your words are still here — try again.");
           return;
         }
       }
@@ -308,7 +339,11 @@ export default function IdeaWorkspacePage() {
       const res = await apiFetch(`/api/ideas/${idea.id}/ask-maia`, {
         method: 'POST',
       });
-      if (res.ok) {
+      if (!res.ok) {
+        setComposerError(
+          await describeFailure(res, "MAIA couldn't respond just now. Your thread is unchanged.")
+        );
+      } else {
         const data = await res.json();
         if (data.success && data.block) {
           setBlocks((prev) => [...prev, data.block]);
@@ -320,12 +355,13 @@ export default function IdeaWorkspacePage() {
       }
     } catch (err) {
       console.error('[ideas/workspace] ask-maia failed:', err);
+      setComposerError("MAIA couldn't respond just now. Your thread is unchanged.");
     } finally {
       setAskingMaia(false);
       // Refocus the composer so the user continues naturally after MAIA.
       window.setTimeout(() => composerRef.current?.focus(), 0);
     }
-  }, [idea, askingMaia, saving, draft]);
+  }, [idea, askingMaia, saving, draft, describeFailure]);
 
   // --- block composer -------------------------------------------------------
 
@@ -338,27 +374,35 @@ export default function IdeaWorkspacePage() {
     if (!content) return;
 
     setSaving(true);
+    setComposerError(null);
     try {
       const res = await apiFetch(`/api/ideas/${idea.id}/blocks`, {
         method: 'POST',
         body: JSON.stringify({ block_type: 'note', content, metadata: {} }),
       });
-      if (res.ok) {
-        const data = await res.json();
-        if (data.success && data.block) {
-          setBlocks((prev) => [...prev, data.block]);
-          setLastCreatedBlockId(data.block.id);
-          setDraft('');
-          // Refocus so the cursor stays in the flow
-          window.setTimeout(() => composerRef.current?.focus(), 0);
-        }
+      if (!res.ok) {
+        setComposerError(
+          await describeFailure(res, "Couldn't save that entry. Your words are still here — try again.")
+        );
+        return;
+      }
+      const data = await res.json();
+      if (data.success && data.block) {
+        setBlocks((prev) => [...prev, data.block]);
+        setLastCreatedBlockId(data.block.id);
+        setDraft('');
+        // Refocus so the cursor stays in the flow
+        window.setTimeout(() => composerRef.current?.focus(), 0);
+      } else {
+        setComposerError("Couldn't save that entry. Your words are still here — try again.");
       }
     } catch (err) {
       console.error('[ideas/workspace] save note failed:', err);
+      setComposerError("Couldn't save that entry. Your words are still here — try again.");
     } finally {
       setSaving(false);
     }
-  }, [idea, saving, draft]);
+  }, [idea, saving, draft, describeFailure]);
 
   // Convert a note block in place → decision or shift. The PATCH endpoint
   // enforces that only 'note' blocks may be converted, and only to
@@ -585,6 +629,12 @@ export default function IdeaWorkspacePage() {
       console.error('[ideas/workspace] header save failed:', err);
     }
   };
+
+  // --- composer limits ------------------------------------------------------
+
+  const draftLength = draft.length;
+  const overLimit = draftLength > IDEA_BLOCK_MAX_CHARS;
+  const nearLimit = !overLimit && draftLength >= IDEA_BLOCK_COUNTER_THRESHOLD;
 
   // --- render ---------------------------------------------------------------
 
@@ -885,9 +935,15 @@ export default function IdeaWorkspacePage() {
           <textarea
             ref={composerRef}
             value={draft}
-            onChange={(e) => setDraft(e.target.value)}
+            onChange={(e) => {
+              setDraft(e.target.value);
+              if (composerError) setComposerError(null);
+            }}
             placeholder="Continue thinking..."
-            maxLength={4000}
+            /* No maxLength. A hard maxLength silently clipped long entries
+               mid-sentence — the member lost their own words with no signal,
+               and MAIA then reflected on the amputated text. The limit is now
+               shown and enforced visibly below. */
             className="min-h-[88px] w-full resize-none bg-transparent text-stone-100 placeholder-stone-500 outline-none font-light leading-relaxed"
             onKeyDown={(e) => {
               if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
@@ -896,12 +952,50 @@ export default function IdeaWorkspacePage() {
             }}
           />
 
-          <div className="mt-3 flex items-center justify-between">
+          {(composerError || overLimit || nearLimit) && (
+            <div className="mt-2 space-y-1">
+              {composerError && (
+                <p className="text-xs text-red-300/80 font-light leading-relaxed">
+                  {composerError}
+                </p>
+              )}
+              {overLimit ? (
+                <p className="text-xs text-red-300/80 font-light">
+                  {draftLength.toLocaleString()} / {IDEA_BLOCK_MAX_CHARS.toLocaleString()} characters
+                  — nothing is lost, but this entry needs to be split or trimmed before it can be
+                  saved.
+                </p>
+              ) : (
+                nearLimit && (
+                  <p className="text-xs text-stone-500 font-light">
+                    {draftLength.toLocaleString()} / {IDEA_BLOCK_MAX_CHARS.toLocaleString()} characters
+                  </p>
+                )
+              )}
+            </div>
+          )}
+
+          {/* Two distinct acts, held apart on purpose.
+              Reflect = the member thinks, and nothing answers.
+              Ask MAIA = the member invites a response.
+              Solitude inside relationship: MAIA does not speak merely because
+              words entered the space. */}
+          <div className="mt-3 flex items-center justify-between gap-3">
+            <button
+              type="button"
+              onClick={handleSaveNote}
+              disabled={!draft.trim() || saving || overLimit}
+              className="rounded-full px-4 py-2 text-sm text-amber-300 ring-1 ring-amber-400/30 hover:bg-amber-400/5 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              aria-label="Save this as your own reflection, without a MAIA response"
+            >
+              {saving ? 'Saving...' : 'Reflect'}
+            </button>
+
             <button
               type="button"
               onClick={handleAskMaia}
-              disabled={askingMaia}
-              className="text-sm text-stone-400 hover:text-stone-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+              disabled={askingMaia || overLimit}
+              className="rounded-full px-4 py-2 text-sm text-stone-300 ring-1 ring-white/10 hover:text-stone-100 hover:bg-white/[0.03] disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
               aria-label="Ask MAIA for a reflection on this thread"
             >
               {askingMaia ? (
@@ -910,17 +1004,8 @@ export default function IdeaWorkspacePage() {
                   <span>Listening...</span>
                 </>
               ) : (
-                'Ask MAIA'
+                'Ask MAIA →'
               )}
-            </button>
-
-            <button
-              type="button"
-              onClick={handleSaveNote}
-              disabled={!draft.trim() || saving}
-              className="rounded-full px-4 py-2 text-sm text-amber-300 ring-1 ring-amber-400/30 hover:bg-amber-400/5 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-              {saving ? 'Saving...' : 'Save'}
             </button>
           </div>
         </div>

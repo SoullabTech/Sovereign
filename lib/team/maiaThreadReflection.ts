@@ -36,10 +36,35 @@ export interface ThreadReflectionContext {
   ideaFraming: string | null;
   lastDecision: string | null;    // content of the most recent decision, or null
   recentBlocks: ThreadBlockSummary[]; // last 3–4, oldest first
-  // Up to 2 prior MAIA reflections, oldest first. Used by the progression
+  // Up to 3 prior MAIA reflections, oldest first. Used by the progression
   // heuristic to decide whether to clarify or close-and-offer, and to
   // prevent re-slicing of structure MAIA has already named.
   priorMaiaReflections?: string[];
+  // TOTAL number of MAIA reflections already in this thread (not just the
+  // ones passed above). Progression was previously left to the model to
+  // infer from the sample it was given — it drifted, and threads looped on
+  // the same clarifying move. The stage is now computed here and stated to
+  // the model as a directive.
+  reflectionCount?: number;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Bounded context
+//
+// Block bodies can now be long (see lib/ideas/constants.ts). The prompt
+// must stay bounded regardless, and — critically — the member's MOST RECENT
+// block is the one MAIA is answering, so it gets the largest budget.
+// Older blocks are excerpted and MARKED as excerpts, so the model is never
+// silently reasoning over a clipped body it believes is complete.
+// ═══════════════════════════════════════════════════════════════
+
+export const LATEST_BLOCK_CHAR_BUDGET = 6000;
+export const OLDER_BLOCK_CHAR_BUDGET = 1200;
+export const PRIOR_REFLECTION_CHAR_BUDGET = 800;
+
+export function excerpt(text: string, budget: number): { text: string; truncated: boolean } {
+  if (text.length <= budget) return { text, truncated: false };
+  return { text: `${text.slice(0, budget).trimEnd()}…`, truncated: true };
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -150,6 +175,38 @@ export const CORRECTION_ADDENDUM = `The member has JUST corrected you or pushed 
 - Keep it short. No apology preambles, no "I hear you" openers. Just the grounded next question or reframing.`;
 
 // ═══════════════════════════════════════════════════════════════
+// Progression stage — computed, not inferred
+//
+// The system prompt describes a name → question → close → offer pattern and
+// tiers it by prior-reflection count. Leaving that inference to the model
+// produced observed looping: several consecutive reflections repeating the
+// same clarifying move on a thread that had long since given enough to work
+// with. The stage is now derived from thread state and stated as a directive
+// appended to the system prompt. It constrains the MOVE, never the content.
+// ═══════════════════════════════════════════════════════════════
+
+export type ProgressionStage = 'clarify' | 'clarify_or_close' | 'close_and_offer';
+
+export function progressionStage(reflectionCount: number): ProgressionStage {
+  if (reflectionCount <= 0) return 'clarify';
+  if (reflectionCount === 1) return 'clarify_or_close';
+  return 'close_and_offer';
+}
+
+export const PROGRESSION_DIRECTIVES: Record<ProgressionStage, string> = {
+  clarify: `PROGRESSION — this is your FIRST reflection in this thread.
+Ask ONE clarifying question. Do not stack frameworks.`,
+
+  clarify_or_close: `PROGRESSION — you have reflected ONCE in this thread already.
+Either ask one final clarifying question OR close the loop and offer structure. Err toward closing and offering.`,
+
+  close_and_offer: `PROGRESSION — you have already reflected on this thread more than once. The clarifying phase is OVER.
+This response MUST NOT ask what the idea is for, who it serves, what problem it solves, where someone gets stuck, or what the first useful version is. Those questions have been asked. Asking any of them again is a failure of this response.
+Work with what the member has actually written. Close the loop (a closure move such as "You've already identified…" / "That's enough to work from…" / "From that…") and then make ONE concrete structural offering — a synthesis, a sequence, a distinction between options they have named, or the framing of the decision that now stands in front of them.
+If the member has developed conceptual or philosophical material, develop it structurally on its own terms — distinguish, sequence, name what follows from what, test the model against a case they gave. Do not redirect a conceptual thread into a scoping question.`,
+};
+
+// ═══════════════════════════════════════════════════════════════
 // Correction detection
 //
 // Belt-and-suspenders alongside the system-prompt correction rule.
@@ -187,9 +244,13 @@ export async function generateThreadReflection(
   const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
   const correctionDetected = latestBlockHasCorrection(ctx.recentBlocks);
-  const systemPrompt = correctionDetected
-    ? `${IDEAS_REFLECTION_SYSTEM_PROMPT}\n\n${CORRECTION_ADDENDUM}`
-    : IDEAS_REFLECTION_SYSTEM_PROMPT;
+  const stage = progressionStage(
+    ctx.reflectionCount ?? ctx.priorMaiaReflections?.length ?? 0
+  );
+
+  const systemParts = [IDEAS_REFLECTION_SYSTEM_PROMPT, PROGRESSION_DIRECTIVES[stage]];
+  if (correctionDetected) systemParts.push(CORRECTION_ADDENDUM);
+  const systemPrompt = systemParts.join('\n\n');
 
   const userMessage = composeUserMessage(ctx);
 
@@ -221,15 +282,23 @@ function composeUserMessage(ctx: ThreadReflectionContext): string {
   }
 
   if (ctx.recentBlocks.length > 0) {
-    const lines = ctx.recentBlocks.map((b) => {
+    const lastIdx = ctx.recentBlocks.length - 1;
+    const lines = ctx.recentBlocks.map((b, i) => {
       const suffix = b.outcome ? ` (${b.outcome})` : '';
-      return `- [${b.label}${suffix}] ${b.content}`;
+      const budget = i === lastIdx ? LATEST_BLOCK_CHAR_BUDGET : OLDER_BLOCK_CHAR_BUDGET;
+      const { text, truncated } = excerpt(b.content, budget);
+      const mark = truncated ? ' — excerpt, truncated' : '';
+      return `- [${b.label}${suffix}${mark}] ${text}`;
     });
-    parts.push(`Recent thread (oldest first):\n${lines.join('\n')}`);
+    parts.push(
+      `Recent thread (oldest first; the LAST entry is what the member just wrote and is what you are responding to):\n${lines.join('\n')}`
+    );
   }
 
   if (ctx.priorMaiaReflections && ctx.priorMaiaReflections.length > 0) {
-    const lines = ctx.priorMaiaReflections.map((r, i) => `[${i + 1}] ${r}`);
+    const lines = ctx.priorMaiaReflections.map(
+      (r, i) => `[${i + 1}] ${excerpt(r, PRIOR_REFLECTION_CHAR_BUDGET).text}`
+    );
     parts.push(
       `Your prior reflections in this thread (oldest first). Do NOT restate or re-slice any structure named here; advance from them:\n${lines.join('\n\n')}`
     );

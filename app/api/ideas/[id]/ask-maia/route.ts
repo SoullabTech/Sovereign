@@ -119,7 +119,7 @@ export async function POST(
         WHERE idea_id = $1
           AND block_type IN ('note', 'decision', 'change')
         ORDER BY created_at DESC
-        LIMIT 4`,
+        LIMIT 6`,
       [ideaId]
     );
     // Re-order oldest-first so the primitive sees chronological flow
@@ -137,19 +137,31 @@ export async function POST(
     const lastDecision =
       decisionResult.rows.length > 0 ? decisionResult.rows[0].content : null;
 
-    // Last 2 prior MAIA reflections — for progression heuristic + anti-
-    // repetition. Fetched DESC, reversed to oldest-first for prompt shape.
+    // Last 3 prior MAIA reflections — for anti-repetition. Fetched DESC,
+    // reversed to oldest-first for prompt shape.
     const priorReflectionsResult = await query<{ content: string }>(
       `SELECT content
          FROM member_idea_blocks
         WHERE idea_id = $1 AND block_type = 'maia_reflection'
         ORDER BY created_at DESC
-        LIMIT 2`,
+        LIMIT 3`,
       [ideaId]
     );
     const priorMaiaReflections = [...priorReflectionsResult.rows]
       .reverse()
       .map((r) => r.content);
+
+    // TOTAL reflection count drives the progression stage. Counting the
+    // sampled slice instead of the thread was part of why threads looped:
+    // a thread twelve reflections deep looked, to the model, like a thread
+    // two reflections deep.
+    const reflectionCountResult = await query<{ count: string }>(
+      `SELECT COUNT(*)::text AS count
+         FROM member_idea_blocks
+        WHERE idea_id = $1 AND block_type = 'maia_reflection'`,
+      [ideaId]
+    );
+    const reflectionCount = parseInt(reflectionCountResult.rows[0]?.count ?? '0', 10);
 
     // Shape the context for the primitive
     const summaries: ThreadBlockSummary[] = recentBlocks.map((b) => {
@@ -172,6 +184,7 @@ export async function POST(
       lastDecision,
       recentBlocks: summaries,
       priorMaiaReflections,
+      reflectionCount,
     });
 
     // ── Decision/Change recognition (flag-gated, post-response) ──────────────

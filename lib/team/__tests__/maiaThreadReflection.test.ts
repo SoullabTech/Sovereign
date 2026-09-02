@@ -20,7 +20,12 @@
 import {
   IDEAS_REFLECTION_SYSTEM_PROMPT,
   CORRECTION_ADDENDUM,
+  PROGRESSION_DIRECTIVES,
   latestBlockHasCorrection,
+  progressionStage,
+  excerpt,
+  LATEST_BLOCK_CHAR_BUDGET,
+  OLDER_BLOCK_CHAR_BUDGET,
   type ThreadBlockSummary,
 } from '../maiaThreadReflection';
 
@@ -270,5 +275,84 @@ describe('IDEAS_REFLECTION_SYSTEM_PROMPT — progression guardrails', () => {
     expect(IDEAS_REFLECTION_SYSTEM_PROMPT).toMatch(
       /drop the prior interpretive frame/i
     );
+  });
+});
+
+
+// ─── progression stage (computed, not inferred) ─────────────────────────────
+//
+// Regression guard for the observed loop: a thread several reflections deep
+// receiving the same scoping question turn after turn. The stage is derived
+// from thread state so the model cannot drift past it.
+
+describe('progressionStage', () => {
+  it('opens in clarify on the first reflection', () => {
+    expect(progressionStage(0)).toBe('clarify');
+  });
+
+  it('allows one more clarification after a single reflection', () => {
+    expect(progressionStage(1)).toBe('clarify_or_close');
+  });
+
+  it('forces close_and_offer from the third reflection onward', () => {
+    expect(progressionStage(2)).toBe('close_and_offer');
+    expect(progressionStage(3)).toBe('close_and_offer');
+    expect(progressionStage(12)).toBe('close_and_offer');
+  });
+
+  it('treats a negative or absent count as the first turn', () => {
+    expect(progressionStage(-1)).toBe('clarify');
+  });
+});
+
+describe('PROGRESSION_DIRECTIVES', () => {
+  it('names every stage', () => {
+    expect(Object.keys(PROGRESSION_DIRECTIVES).sort()).toEqual([
+      'clarify',
+      'clarify_or_close',
+      'close_and_offer',
+    ]);
+  });
+
+  it('bans the repeated scoping questions once clarification is over', () => {
+    const d = PROGRESSION_DIRECTIVES.close_and_offer;
+    expect(d).toMatch(/MUST NOT ask what the idea is for/);
+    expect(d).toMatch(/who it serves/);
+    expect(d).toMatch(/what problem it solves/);
+    expect(d).toMatch(/first useful version/);
+  });
+
+  it('permits conceptual material to be developed on its own terms', () => {
+    expect(PROGRESSION_DIRECTIVES.close_and_offer).toMatch(
+      /conceptual or philosophical material/
+    );
+    expect(PROGRESSION_DIRECTIVES.close_and_offer).toMatch(
+      /Do not redirect a conceptual thread into a scoping question/
+    );
+  });
+
+  it('still asks for exactly one clarifying question on the first turn', () => {
+    expect(PROGRESSION_DIRECTIVES.clarify).toMatch(/ONE clarifying question/);
+  });
+});
+
+// ─── bounded context ────────────────────────────────────────────────────────
+
+describe('excerpt', () => {
+  it('returns short text untouched and unmarked', () => {
+    const r = excerpt('a short block', 100);
+    expect(r.text).toBe('a short block');
+    expect(r.truncated).toBe(false);
+  });
+
+  it('marks truncation so the model knows it is reading a fragment', () => {
+    const r = excerpt('x'.repeat(500), 100);
+    expect(r.truncated).toBe(true);
+    expect(r.text.endsWith('…')).toBe(true);
+    expect(r.text.length).toBeLessThanOrEqual(101);
+  });
+
+  it('gives the latest block a larger budget than older ones', () => {
+    expect(LATEST_BLOCK_CHAR_BUDGET).toBeGreaterThan(OLDER_BLOCK_CHAR_BUDGET);
   });
 });

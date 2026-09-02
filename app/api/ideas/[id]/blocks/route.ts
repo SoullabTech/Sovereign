@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentSession } from '@/lib/auth/serverSessions';
 import { query } from '@/lib/db/postgres';
 import { storeRecognitionEvent } from '@/lib/maia/decisionChangeRecognition';
+import { IDEA_BLOCK_MAX_CHARS } from '@/lib/ideas/constants';
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -60,8 +61,15 @@ export async function POST(
     if (!content) {
       return NextResponse.json({ error: 'Content is required' }, { status: 400 });
     }
-    if (content.length > 4000) {
-      return NextResponse.json({ error: 'Content too long (max 4000 chars)' }, { status: 400 });
+    if (content.length > IDEA_BLOCK_MAX_CHARS) {
+      return NextResponse.json(
+        {
+          error: `Content too long (max ${IDEA_BLOCK_MAX_CHARS} chars)`,
+          max_chars: IDEA_BLOCK_MAX_CHARS,
+          received_chars: content.length,
+        },
+        { status: 400 }
+      );
     }
 
     // Verify ownership before inserting a child row
