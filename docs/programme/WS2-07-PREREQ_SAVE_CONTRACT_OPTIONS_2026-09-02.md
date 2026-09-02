@@ -3,8 +3,9 @@
 ```text
 LANE       JARVIS-WS2-07-DEVELOPMENTAL-INTELLIGENCE-01
 UNIT       SECTION-ADDRESSABLE DRAFT LIVENESS · requirement C
-STATUS     RULED 2026-09-02 · Option 3 ratified · D1–D9 frozen
-           A + B + D + E BUILT AND WITNESSED 2026-09-02 (see §7)
+STATUS     CLOSED 2026-09-02 · canonical @ 9411ddc41
+           PR #1174 (the slice) + PR #1175 (the Unicode repair)
+           Option 3 ratified · D1–D9 frozen · see §8
 AUTHORIZES A + B + D + E as one vertical slice, on
            feature/ws2-section-addressable-draft-liveness
 DATE       2026-09-02
@@ -341,3 +342,75 @@ separate unit if the founder wants that page writable for section-addressable dr
 **B3 is closed as a reachability finding.** A member-facing path now converts a draft, and new
 drafts are addressable from birth, so the structure path built in 05A/05B/6A is reachable without a
 witness script.
+
+---
+
+## 8 · CLOSED — canonical @ `9411ddc41`
+
+Two merges, and the second is the honest part of this record.
+
+```text
+#1174  0fa4158e7   A + B + D + E, witnessed 41/41
+#1175  9411ddc41   the section↔revision locator's Unicode unit, repaired
+```
+
+### What #1174 landed
+
+`POST { convert: true }` as an explicit conversion admitting only byte-identical proof; the
+section-native save validating before a single write and deriving content by flattening; new drafts
+born section-addressable; the D9 discriminated load; and the section↔revision relation
+(`working_draft_revisions.section_partition` — ids and offsets, no prose) so restore recovers rather
+than re-partitions.
+
+The Press handoff was ratified alongside it as convergence: Canvas is the writing authority for a
+section-addressable draft, the Press surface is readable, the legacy unconverted path is intact, and
+the future Press / publishing role stays open. Two fail-open cases were found and closed before
+merge — `begin()` routing a newly-created (now addressable) draft into the legacy writable editor,
+and a malformed section response downgrading to a content-authoritative draft. The boundary is
+enforced by ABSENCE, not refusal: a correct 409 does not protect a writer who has already typed for
+ten minutes.
+
+### What #1175 repaired, and why it matters more than its size
+
+Migration `20260902000002` recorded the partition's offsets as UTF-16 code units. Its own trigger
+validates coverage against PostgreSQL `length(text)`, which counts Unicode CODE POINTS.
+
+```text
+'A😀B'     JavaScript .length = 4      PostgreSQL length() = 3
+```
+
+Revision 1 already records a partition, so this was not a future-reader concern: **an author writing
+an emoji had ordinary draft creation fail with a 500.** Reproduced on canonical before repairing —
+`section_partition covers 12 of 11 characters`.
+
+The locator now counts code points, and resolves ranges through a boundary table rather than
+`slice()`, which on astral text returned a **lone surrogate** where a character had been — prose the
+member never wrote, in the one path whose whole purpose is exactness. `20260902000002` is not
+rewritten; `20260902000003` corrects the record forward. No data needed repair: any partition that
+would have differed was never storable.
+
+### ⛔ The lesson is about the witness
+
+The 41/41 walk was not wrong; it was **unrepresentative**. Its prose was entirely BMP, so it passed
+under either unit and proved the fixture rather than the claim. A green witness over material that
+cannot exhibit the failure is not evidence for the general case.
+
+Two disciplines follow, and both are now in the code:
+
+```text
+the fixture must be able to fail    the witness carries astral prose, and ASSERTS
+                                    that PostgreSQL and JavaScript genuinely
+                                    disagree on it before relying on that
+the falsifier must live where the   the pure module cannot falsify a unit
+two sides meet                      mismatch — reverted wholesale it stays
+                                    self-consistent. Only the database sees the
+                                    disagreement, so the witness carries it
+```
+
+Canonical witness after the repair: 47 checks, 0 failures, from an empty database.
+
+### ⛔ What this closure does NOT say
+
+It does not close BUILD-07A: `INV-7b` stays binding and the ten falsifiers still have to run. It
+does not claim any member has crossed the structure threshold — only that the path exists. And it
+does not decide the future Press / publishing role.
