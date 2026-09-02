@@ -1000,6 +1000,96 @@ Classified:**
 
 Diagnosis only. No repair authorized for any of the above.
 
+#### Result 9 — *Distill*: exercised end-to-end; exposes the structural root cause
+
+| Aspect | Verdict |
+|---|---|
+| Stance transmission | **PASS** — `{stance: 'distill'}` reached the handler; response labelled `· distill` |
+| Provisional-language surface | **PASS** — opens *"One possible formulation of what's firmed up across this thread…"*, closes on *"What's still forming is…"* |
+| **Task fidelity** | **FAIL** — Finding E, repeated |
+| **Epistemic provenance** | **FAIL** — Finding F, below |
+
+**Task fidelity (Finding E, second occurrence).** The member asked *"How do we create a
+process that is effective for me to follow?"* MAIA did not answer *how*. It replaced the
+task with a synthesis. Finding E is therefore not Connect-specific — it has now recurred
+under a different stance, which confirms it as a gap in the shared architecture rather
+than a defect in one directive.
+
+**Member's felt read, verbatim:**
+
+> The reeding feels like a distillation
+
+Recorded as given. **This does not resolve the provenance question** it was asked
+alongside — whether the formulation was recognised or received — and Finding F does not
+depend on it. Explore was *"Yes, it helped"* and still carried drift: **usefulness is
+evidence about value, never about ownership.**
+
+---
+
+### Finding F — proposal self-ratification through provenance-blind continuity
+
+**Structural root cause. Not a Distill wording failure.**
+
+Anti-repetition treats prior **MAIA-authored** formulations as settled ground. MAIA later
+advances from its own unratified proposal and reports the resulting synthesis as something
+established across the member's thread.
+
+**Observed chain:** Connect introduced *"shared protocol"* and made the override
+*"legible."* Three turns later Distill reported *"what's firmed up across this thread:
+you're building a protocol for legibility."* **The member never authored or ratified that
+formulation.** Saying the earlier response was helpful did not make its language their
+position.
+
+**Mechanism — two instructions, both authored during Cut 0 to stop the looping failure.**
+Pinned by content and by commit, since line numbers drift:
+
+*File* `lib/team/maiaThreadReflection.ts`, unchanged since **`b03f97c`**
+(blob `2b61c98cedcd`). Witnessed runtime **`3085b46`** plus the `d927398` diagnostic.
+
+```
+line 165   - Never stack multiple frameworks or re-label settled structure
+
+line 325   `Your prior reflections in this thread (oldest first).
+            Do NOT restate or re-slice any structure named here; advance from them:`
+```
+
+Together these say: *your own prior framings are settled structure, and you should advance
+from them.* Neither distinguishes member-authored structure from MAIA-authored structure.
+
+**The provenance is present in the data and erased by the instruction.** Member blocks
+enter the prompt labelled `[Reflection]` / `[Decision]` / `[Shift]`; prior reflections
+enter under *"Your prior reflections in this thread."* The model can see whose language is
+whose. Nothing tells it that its own prior framings are not the member's position — and
+line 325 actively instructs the opposite.
+
+**This is the ratification invariant (P2) inverted, inside the prompt.** P2: MAIA
+proposes, the member ratifies. Observed: MAIA proposes, MAIA later encounters its own
+proposal, MAIA ratifies it.
+
+**Cost of a trade made without seeing it.** The anti-repetition instruction *was* the fix
+for the disjunctive looping found in the first witness, and it works — Distill did not
+re-slice. It bought that by promoting MAIA's prior output to ground, and the question of
+what happens when the structure "not to be re-sliced" is MAIA's own invention was never
+asked.
+
+**Principles recorded:**
+
+- **Continuity is not ratification.**
+- Anti-repetition may prevent MAIA from redundantly **restating** its proposal; it may not
+  promote that proposal's **epistemic status**.
+- **Member-authored or explicitly ratified structure may be treated as ground.**
+- **Unratified MAIA language must remain identified as an earlier MAIA offering.**
+- *"Yes, it helped"* ratifies **usefulness** — not authorship, meaning, or agreement.
+- **A linguistic hedge cannot repair falsified provenance.** *"One possible formulation"*
+  attached to MAIA's own recycled language hedges the wrong axis.
+
+**Structural consequence:** there is no ratified-language store, so *any* prior MAIA
+phrasing is equally available as "settled." This **strengthens lever 1** (structural
+enforcement): the distinction has to exist in what the prompt is permitted to treat as
+ground, not in an instruction asking the model to remember whose words are whose.
+
+**Blocking. Does not authorize implementation, Cut 3, or Cut 4.**
+
 #### Witness status
 
 - **Explore and Distill were not run.** The witness stopped at the failed Stay
@@ -1015,8 +1105,14 @@ Diagnosis only. No repair authorized for any of the above.
   stances** and is blocking alongside A/B/C.
 - **Finding E — stance/task substitution** — a stance must not replace what the member
   asked to have answered. A third axis, uncovered by any existing directive, and blocking.
-- **Distill is BLOCKED by a 500**, cause unassigned pending the server trace. Challenge
-  remains unexercised.
+- **Distill is now exercised** (Result 9): transmission PASS, provisional surface PASS,
+  task fidelity FAIL, epistemic provenance FAIL. **Challenge remains the only unexercised
+  stance**; all five other transmissions are proven.
+- **Finding F — proposal self-ratification through provenance-blind continuity** — the
+  structural root cause, blocking.
+- **The earlier 500 remains independently unresolved.** No trace was ever captured; the
+  retry succeeded after a server restart. Recorded as an **unexplained transient**, not
+  closed. "It worked the second time" is not a diagnosis.
 - **A/B/C and the Result 3 transmission failure are blocking before merge or
   deployment.**
 - **No repair authorized.** Nothing has been changed in response to these findings.
