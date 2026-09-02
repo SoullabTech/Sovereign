@@ -256,6 +256,29 @@ serialized without evidence, and cannot survive a round-trip that lost it.
 stops at evidence and observation is a complete, honest object. MAIA does not have to manufacture
 an interpretation because the schema has a place for one.
 
+**Identity must be durable.** This is the third load-bearing property, and it is the one most
+easily lost by accident:
+
+> **A developmental observation must have durable identity sufficient for a later explicit author
+> act to refer back to it. The system may record that declared relationship, but must never infer
+> it from textual similarity or temporal proximity.**
+
+The author act that refers back may come at any time — before, during, or after the act it refers
+to. What must exist beforehand is therefore not the declaration but **the thing being declared
+about.** An observation the author can no longer name unambiguously cannot be referred to later,
+and no downstream stage can repair that.
+
+`id: string` above is a field, not a guarantee. It satisfies this only if the identity it carries
+outlives the response that produced it and the surface that displayed it.
+
+This binds **07C** and **07D**. 07C must not freeze a reading whose observations are addressable
+only within the payload that generated them. 07D must not be the place where an observation's
+identity originates or ends — a reading the member encounters is not a disposable UI object whose
+identity vanishes when the page closes.
+
+What durable identity actually requires — for reading, observation, and evidence alike — is
+downstream of the census. Naming the requirement here is not choosing its mechanism.
+
 `EvidenceRef` and `DevelopmentLens` are named here, not defined. Defining `EvidenceRef` — what a
 recoverable pointer into the manuscript actually is, and against which version — is **07A work**,
 downstream of the census.
