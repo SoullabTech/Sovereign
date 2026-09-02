@@ -4,8 +4,11 @@
 SUBJECT      origin/feature/ws2-06a-adopt-structure @ 7f5acfa9b
              "feat(ws2-06a): the member can make a reviewed reading canonical"
 DIFF         2 files, +290 / -0 — server only, zero surface files
-VERDICT      DO NOT MERGE AS FINAL 6A
-VALUE        archaeology + a carry-forward list
+VERDICT      FORMALLY SUPERSEDED · DO NOT MERGE
+VALUE        adversarial specimen + a carry-forward list + two acceptance gates
+CUSTODY      6A. Recorded on the Stage 8 branch only because that is the branch
+             this session may push; cherry-pick onto the final 6A ref, then
+             delete from Stage 8. Do not rewrite the pushed lane's history.
 METHOD       read-only. Nothing repaired, nothing rewritten, no commit to that branch.
 REVIEWED     2026-09-02
 ```
@@ -215,4 +218,61 @@ absent (does the later command refuse before any write, or throw rather than ret
 first insert?; **D3** as a refusal-surface question; **D4** and **D5** as small cleanups if
 the code was carried across.
 
-Nothing here authorises a repair to `7f5acfa9b`.
+Nothing here authorises a repair to `7f5acfa9b`. It is **formally superseded**: useful only
+as an adversarial specimen and as a source of properties worth preserving.
+
+---
+
+## 6 · Acceptance gates for the final 6A command
+
+**Founder ruling, 2026-09-02.** D1 and D2 are not observations carried forward for
+consideration. They are **negative requirements** the replacement implementation must
+satisfy before 6A can close.
+
+### GATE 1 — a refusal writes nothing, proven after a write point
+
+```text
+reviewed unit 1   valid
+reviewed unit 2   invalid / refused
+        ↓
+command refuses
+        ↓
+canonical units          = 0
+structure memberships    = 0
+proposal                 remains unadopted (adopted_at IS NULL)
+```
+
+⛔ **The proof must exercise a failure that occurs after a potential write point.** A test
+whose refusal is decided before the first insert — bad revision, wrong owner, topology
+mismatch, `nothing_to_adopt` — does not touch the defect and must not be presented as
+covering it. The failing unit has to come after at least one unit that would otherwise have
+been written.
+
+Either discipline satisfies the gate, and the implementation should say which it uses:
+refuse before any write is possible (full validation precedes the first insert), or throw
+rather than return so `transaction()` rolls back. What does not satisfy it is returning a
+refusal after `insertUnits` has begun, which is what `7f5acfa9b` does.
+
+⛔ Passing because the deferred contiguity trigger happened to raise is **not** passing.
+The partial tree in the fixture must be one that would commit cleanly on its own.
+
+### GATE 2 — the reviewed tree is validated before the first canonical insert
+
+The final command must call `validateReviewed` — or a validator explicitly documented as
+equivalent — against the **current** draft sections, before any row is written. These must
+be impossible to reach the database with:
+
+```text
+unknown_section
+inverted_range
+overlapping_siblings
+child_outside_parent
+duplicate_unit_id
+```
+
+Per-unit `sectionRun` materialisation does not satisfy this: it normalises an inverted
+range instead of refusing it, and it cannot see overlap or containment at all.
+
+Each must surface as a **typed refusal**. A case that reaches DB enforcement — the deferred
+contiguity trigger or the sibling-order constraint — and arrives at the member as a 500 has
+failed this gate even though nothing was corrupted (D3).
