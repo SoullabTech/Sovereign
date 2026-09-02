@@ -1,19 +1,24 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { apiFetch } from '@/lib/http/apiBase';
 import { PRESS, SERIF } from '../pressTheme';
 import {
   AUTOSAVE_DELAY_MS,
+  applySectionEdit,
   beginDraft,
   createDraftSaver,
   createExitGuard,
+  flattenDraftSections,
   formatWhen,
   loadDraft,
   newIdempotencyKey,
   pageEstimate,
   putDraft,
+  putDraftSections,
+  type DraftRepresentation,
   type DraftSaver,
+  type DraftSection,
   type SaverState,
 } from '../../press/manuscript/workingDraftClient';
 
@@ -31,7 +36,37 @@ import {
  * here checkpoints on their behalf.
  */
 
-type Phase = 'loading' | 'ready' | 'no-source' | 'unauthorized' | 'error' | 'conflict';
+type Phase = 'loading' | 'ready' | 'no-source' | 'unauthorized' | 'error' | 'conflict' | 'refused';
+
+/**
+ * What the writer is editing, in the shape the draft actually has.
+ *
+ * ⛔ ONE CONTINUOUS PAGE IS THE EXPERIENCE, NOT THE DATA MODEL. A
+ * section-addressable draft is held as real section nodes carrying the server's
+ * own identities. The alternative — one field plus an invisible offset ledger —
+ * was rejected by name: the ledger becomes a second fallible claim about the
+ * same text, and when it is wrong a durable identity moves silently.
+ *
+ * The worktable still LOOKS like one page. The nodes carry no card, no border,
+ * no gap and no label; they are where the characters live, not a visible
+ * decomposition of the writer's book.
+ */
+type Editable =
+  | { addressable: false; content: string }
+  | { addressable: true; sections: DraftSection[] };
+
+/** The whole draft as text — for the page count only. */
+const editableText = (e: Editable): string =>
+  e.addressable ? flattenDraftSections(e.sections) : e.content;
+
+/** The value the save lane carries: the section array, or the whole string. */
+const editablePayload = (e: Editable): DraftSection[] | string =>
+  e.addressable ? e.sections : e.content;
+
+const editableFrom = (r: DraftRepresentation): Editable =>
+  r.sectionAddressable && r.sections
+    ? { addressable: true, sections: r.sections }
+    : { addressable: false, content: r.content };
 
 interface WorktableProps {
   manuscriptId: string;
@@ -43,31 +78,86 @@ interface WorktableProps {
 
 export default function Worktable({ manuscriptId, onMeta, onCheckpointed }: WorktableProps) {
   const [phase, setPhase] = useState<Phase>('loading');
-  const [content, setContent] = useState('');
+  const [editable, setEditable] = useState<Editable>({ addressable: false, content: '' });
   const [saveState, setSaveState] = useState<SaverState>('idle');
   const [updatedAt, setUpdatedAt] = useState<string | null>(null);
   const [keeping, setKeeping] = useState(false);
   const [kept, setKept] = useState(false);
 
-  const saverRef = useRef<DraftSaver | null>(null);
+  const saverRef = useRef<DraftSaver<DraftSection[] | string> | null>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const baseRef = useRef(1);
-  const contentRef = useRef('');
+  const editableRef = useRef<Editable>({ addressable: false, content: '' });
+  /* One node per section, in document order. */
+  const fieldsRef = useRef<(HTMLTextAreaElement | null)[]>([]);
   // Latest callbacks without re-running the mount effect (which would tear
   // down and re-create the saver mid-session).
   const cbRef = useRef({ onMeta, onCheckpointed });
   cbRef.current = { onMeta, onCheckpointed };
 
+  /**
+   * Grow the nodes to their content so the column reads as one page.
+   *
+   * `only` sizes the single node being typed in — the common case. Sizing every
+   * node on every keystroke would re-lay-out the whole book, and a 209-page
+   * manuscript would get visibly heavier as its author typed. Passing nothing
+   * sizes all of them, which is what a load or a restore needs.
+   */
+  const rafRef = useRef<number | null>(null);
+  const lastHeightsRef = useRef<number[]>([]);
+  const autosize = (only?: number) => {
+    if (rafRef.current !== null) return;
+    rafRef.current = requestAnimationFrame(() => {
+      rafRef.current = null;
+      const nodes = fieldsRef.current;
+      const range = only === undefined ? nodes.map((_, i) => i) : [only];
+      for (const i of range) {
+        const el = nodes[i];
+        if (!el) continue;
+        const prev = el.style.height;
+        el.style.height = 'auto';
+        const next = el.scrollHeight;
+        if (next === lastHeightsRef.current[i] && prev) {
+          el.style.height = prev;
+          continue;
+        }
+        lastHeightsRef.current[i] = next;
+        el.style.height = `${next}px`;
+      }
+    });
+  };
+  /* Layout effect, not effect: sizing after paint would show the writer one
+     collapsed line per section for a frame on every open. */
+  useLayoutEffect(() => {
+    autosize();
+    return () => {
+      if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
+      rafRef.current = null;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editable, phase]);
+
   useEffect(() => {
     let cancelled = false;
 
-    const saver = createDraftSaver(
+    /* ONE LANE, TWO SHAPES. The single-flight sequencing guarantee is identical
+       whether the draft is written by sections or by content, so it is not
+       duplicated — the branch is only about WHICH write the server will accept
+       for this draft. Sending content to a section-addressable draft is
+       refused, not merged. */
+    const saver = createDraftSaver<DraftSection[] | string>(
       (value) =>
-        putDraft(apiFetch, manuscriptId, {
-          content: value,
-          baseRevisionId: baseRef.current,
-          idempotencyKey: newIdempotencyKey(),
-        }),
+        Array.isArray(value)
+          ? putDraftSections(apiFetch, manuscriptId, {
+              sections: value,
+              baseRevisionId: baseRef.current,
+              idempotencyKey: newIdempotencyKey(),
+            })
+          : putDraft(apiFetch, manuscriptId, {
+              content: value,
+              baseRevisionId: baseRef.current,
+              idempotencyKey: newIdempotencyKey(),
+            }),
       {
         onState: (s) => {
           if (!cancelled) setSaveState(s);
@@ -83,6 +173,13 @@ export default function Worktable({ manuscriptId, onMeta, onCheckpointed }: Work
           // or this client reused a key. Only the writer can decide.
           if (!cancelled) setPhase('conflict');
         },
+        onRefused: () => {
+          /* The server declined the SHAPE of the write: this surface's picture
+             of the draft is wrong. Nothing was written and nothing was lost,
+             but retrying would refuse identically, so the writer is told to
+             reopen rather than left watching a save that cannot land. */
+          if (!cancelled) setPhase('refused');
+        },
       },
     );
     saverRef.current = saver;
@@ -91,16 +188,19 @@ export default function Worktable({ manuscriptId, onMeta, onCheckpointed }: Work
       timerRef.current = null;
     });
 
-    const settle = (r: {
-      content: string;
+    const settle = (r: DraftRepresentation & {
       revisionCount: number;
       revisionId: number;
       updatedAt?: string | null;
     }) => {
+      const next = editableFrom(r);
+      /* Drop node refs past the new section count. React clears the ref of an
+         unmounted node, but the trailing SLOTS stay. */
+      fieldsRef.current.length = next.addressable ? next.sections.length : 1;
       baseRef.current = r.revisionId;
-      contentRef.current = r.content;
+      editableRef.current = next;
       if (cancelled) return;
-      setContent(r.content);
+      setEditable(next);
       setUpdatedAt(r.updatedAt ?? null);
       setPhase('ready');
       cbRef.current.onMeta?.({ updatedAt: r.updatedAt ?? null, revisionCount: r.revisionCount });
@@ -144,13 +244,31 @@ export default function Worktable({ manuscriptId, onMeta, onCheckpointed }: Work
     };
   }, [manuscriptId]);
 
-  const edit = (value: string) => {
-    setContent(value);
-    contentRef.current = value;
+  /**
+   * A keystroke lands in exactly one place.
+   *
+   * On a section-addressable draft that place is named by the SECTION'S OWN ID,
+   * not by an offset — so nothing has to work out afterwards which boundary the
+   * change fell inside. `sectionId` null means the draft is not addressable and
+   * the whole string is the writable truth.
+   */
+  const edit = (sectionId: string | null, value: string) => {
+    const prev = editableRef.current;
+    const next: Editable =
+      sectionId === null
+        ? { addressable: false, content: value }
+        : prev.addressable
+          /* An id this draft does not own changes nothing: the client has no
+             authority to bring a boundary into existence. */
+          ? { addressable: true, sections: applySectionEdit(prev.sections, sectionId, value) }
+          : prev;
+    if (next === prev) return;
+    editableRef.current = next;
+    setEditable(next);
     setKept(false);
     const saver = saverRef.current;
     if (!saver) return;
-    saver.queue(value);
+    saver.queue(editablePayload(next));
     if (timerRef.current) clearTimeout(timerRef.current);
     timerRef.current = setTimeout(() => saver.flush(), AUTOSAVE_DELAY_MS);
   };
@@ -162,13 +280,21 @@ export default function Worktable({ manuscriptId, onMeta, onCheckpointed }: Work
     setKept(false);
     try {
       await saver.beginExclusive();
-      const value = contentRef.current;
-      const res = await putDraft(apiFetch, manuscriptId, {
-        content: value,
-        checkpoint: true,
-        baseRevisionId: baseRef.current,
-        idempotencyKey: newIdempotencyKey(),
-      });
+      const current = editableRef.current;
+      const value = editablePayload(current);
+      const res = current.addressable
+        ? await putDraftSections(apiFetch, manuscriptId, {
+            sections: current.sections,
+            checkpoint: true,
+            baseRevisionId: baseRef.current,
+            idempotencyKey: newIdempotencyKey(),
+          })
+        : await putDraft(apiFetch, manuscriptId, {
+            content: current.content,
+            checkpoint: true,
+            baseRevisionId: baseRef.current,
+            idempotencyKey: newIdempotencyKey(),
+          });
       if (res.kind === 'ok') {
         if (res.revisionId !== null) baseRef.current = res.revisionId;
         setUpdatedAt(res.updatedAt);
@@ -179,6 +305,9 @@ export default function Worktable({ manuscriptId, onMeta, onCheckpointed }: Work
       } else if (res.kind === 'conflict') {
         saver.endExclusive({ flushPending: false });
         setPhase('conflict');
+      } else if (res.kind === 'refused') {
+        saver.endExclusive({ flushPending: false });
+        setPhase('refused');
       } else {
         saver.endExclusive();
         setSaveState('error');
@@ -217,6 +346,20 @@ export default function Worktable({ manuscriptId, onMeta, onCheckpointed }: Work
       </p>
     );
   }
+  if (phase === 'refused') {
+    return (
+      <div className="max-w-md">
+        <p className="text-[15px] opacity-80 leading-relaxed mb-3">
+          This worktable and the draft disagree about how the manuscript is arranged.
+        </p>
+        <p className="text-[14px] opacity-55 leading-relaxed">
+          Nothing was written and nothing was lost. Reopen the room to continue from the
+          manuscript as it stands.
+        </p>
+      </div>
+    );
+  }
+
   if (phase === 'conflict') {
     return (
       <div className="max-w-md">
@@ -250,7 +393,8 @@ export default function Worktable({ manuscriptId, onMeta, onCheckpointed }: Work
           the one versioning gesture. */}
       <div className="flex items-baseline gap-4 mb-4 text-[12px]">
         <span className="opacity-40">
-          ~{pageEstimate(content.length)} page{pageEstimate(content.length) === 1 ? '' : 's'}
+          ~{pageEstimate(editableText(editable).length)} page
+          {pageEstimate(editableText(editable).length) === 1 ? '' : 's'}
         </span>
         {/* W-4: a save that FAILED is not a dim marginal fact. Everything
             else on this line stays quiet; this does not. */}
@@ -309,13 +453,49 @@ export default function Worktable({ manuscriptId, onMeta, onCheckpointed }: Work
           {keeping ? 'keeping…' : 'Keep a version'}
         </button>
       </div>
-      <textarea
-        value={content}
-        onChange={(e) => edit(e.target.value)}
-        aria-label="Working draft"
-        className="flex-1 w-full bg-transparent outline-none resize-none text-[17px] leading-[1.8]"
-        style={{ fontFamily: SERIF, color: PRESS.text, caretColor: PRESS.accent }}
-      />
+      {/* THE WORKTABLE IS ONE PAGE. On a section-addressable draft the writer's
+          characters live in one node per section — real client state carrying
+          the server's own identities, which is what lets a save say WHICH
+          boundary changed without anything having to work it out afterwards.
+
+          None of that is drawn. No card, no border, no gap, no label, no rule
+          between them: the nodes are transparent and share the page's type, so
+          the surface reads exactly as it did as a single field. The writer is
+          working on a book, not filling in a form with a row per chapter.
+
+          ⛔ Boundaries do not move here. Merging two sections with a backspace,
+          or splitting one with a return, are topology commands this slice does
+          not implement — so they do not happen rather than happening
+          approximately. The characters within a section are entirely the
+          writer's.
+
+          The nodes size to their own content and the COLUMN scrolls, so the
+          page grows continuously instead of each section owning a scrollbar. */}
+      {editable.addressable ? (
+        <div className="flex-1 w-full overflow-y-auto">
+          {editable.sections.map((sec, i) => (
+            <textarea
+              key={sec.id}
+              ref={(el) => { fieldsRef.current[i] = el; }}
+              value={sec.text}
+              onChange={(e) => { edit(sec.id, e.target.value); autosize(i); }}
+              aria-label={i === 0 ? 'Working draft' : undefined}
+              rows={1}
+              className="block w-full bg-transparent outline-none resize-none overflow-hidden text-[17px] leading-[1.8] p-0 m-0 border-0"
+              style={{ fontFamily: SERIF, color: PRESS.text, caretColor: PRESS.accent }}
+            />
+          ))}
+        </div>
+      ) : (
+        <textarea
+          ref={(el) => { fieldsRef.current[0] = el; }}
+          value={editable.content}
+          onChange={(e) => edit(null, e.target.value)}
+          aria-label="Working draft"
+          className="flex-1 w-full bg-transparent outline-none resize-none text-[17px] leading-[1.8]"
+          style={{ fontFamily: SERIF, color: PRESS.text, caretColor: PRESS.accent }}
+        />
+      )}
     </div>
   );
 }
