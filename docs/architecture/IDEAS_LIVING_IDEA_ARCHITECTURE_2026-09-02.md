@@ -1301,9 +1301,41 @@ was present; changed participation was absent.*
 > **Repair is demonstrated by what MAIA stops doing next — not by the acknowledgment
 > sentence itself.**
 
-This is also the more testable criterion: an acknowledgment sentence can be pattern-matched
-and therefore performed, while *ceasing to use a relinquished frame* is observable across
-subsequent turns and cannot be faked by phrasing. **The experiential item is closed.**
+An acknowledgment sentence can be pattern-matched and therefore performed; *ceasing to use
+a relinquished frame* cannot be faked by phrasing.
+
+⚠️ **But observable does not mean validator-enforceable**, and an earlier note here claimed
+it did. The chain `pace → speed → CEO speed → move fast` carries a frame across four turns
+**with no shared token**. Lexical validation would pass every step. **Semantic persistence
+is invisible to string matching**, so the criterion is a criterion — not, by itself, a
+control. **The experiential item is closed.**
+
+---
+
+### Next threshold — Cut 0–2 repair architecture, not Cut 3
+
+**Direction recorded 2026-09-02. Authorizes nothing.**
+
+**The primary control must be structural.** Frames need **represented status** —
+**offered · ratified · unresolved · rejected** — and **a rejected frame must be removed
+from what MAIA can treat as ground.** Validation is the **second line**, not the first.
+That ordering follows from the finding above: a validator can only see what is said, and
+the failure travels through what is meant.
+
+Six requirements:
+
+1. **Repair interrupts stance and progression.** (Findings B, C — repair precedence)
+2. **The member's task remains the answerable anchor.** (Finding E — task substitution)
+3. **MAIA language remains an offering until ratified.** (Findings D, F)
+4. **Rejected frames cease governing subsequent turns.** (Finding F, Result 11)
+5. **Connect uses verified provenance or an explicit MAIA analogy.** (Connect, source gate)
+6. **Failure preserves the member's words and chosen direction.** (Result 8, findings 2–3)
+
+**The next Ideas work is repairing Cuts 0–2, not building Cut 3.** A Living Idea layer
+built on an unrepaired substrate would inherit every finding above and give MAIA's
+unratified language a persistent home — the exact failure at larger scale.
+
+**Cut 3 and Cut 4 remain NOT AUTHORIZED.**
 
 **Finding B, witnessed under collision.** With a stance selected, composition is
 `base → STANCE_DIRECTIVES.challenge → PROGRESSION_FLOOR → CORRECTION_ADDENDUM`. The
