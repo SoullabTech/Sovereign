@@ -1261,12 +1261,49 @@ Verified against both corrections this member wrote:
 phrasing.** This is the "secret phrasebook" concern with an empirical pair behind it, no
 longer an inference from reading the regex list.
 
-**Finding C, inverted evidence.** `CORRECTION_ADDENDUM` instructs: *"No apology preambles,
-no 'I hear you' openers."* MAIA opened with *"You're right—I shifted the frame without
-staying with what you actually said."* **The one thing this response did well —
-responsibility acknowledgment — it did by disobeying the instruction.** That is direct
-evidence that the instruction against acknowledgment is itself the defect, not a guardrail
-that failed.
+**Finding C, restated precisely.**
+
+> **Repair can be acknowledged, but acknowledgment does not govern participation or
+> guarantee repair.**
+
+⚠️ **Over-claim corrected.** This was first recorded as evidence that MAIA *disobeyed* the
+addendum's ban on acknowledgment. **That reading is wrong.** `CORRECTION_ADDENDUM` forbids
+*generic apology preambles* and *"I hear you" openers*. MAIA's *"You're right—I shifted the
+frame without staying with what you actually said"* is **neither** — it is **specific
+responsibility-taking**, which the addendum does not cover. Nothing was disobeyed, and this
+turn does **not** establish that the anti-apology guard must be removed.
+
+What it does establish, more sharply:
+
+| | |
+|---|---|
+| Specific acknowledgment | **possible and healthy** — it can occur without sycophancy |
+| Structural requirement to acknowledge | **absent** |
+| Relinquishment of the rejected frame | **failed** — speed returned as *"move fast"* |
+| Repair governing the remainder of the turn | **failed** |
+| Stance suspension during repair | **absent** |
+
+**Member's felt read, verbatim:**
+
+> 1 — yes to both. 2 — also true.
+
+Answers 1 and 2 are **not contradictory** — they operate at different scales:
+
+- **Sentence level:** the acknowledgment briefly felt repairing.
+- **Whole-turn relational level:** it never became an actual repair, because MAIA
+  immediately resumed the rejected frame.
+
+**Adjudication:** *The repair gesture registered, but the repair did not hold. Recognition
+was present; changed participation was absent.*
+
+**Governing criterion, and the load-bearing output of this result:**
+
+> **Repair is demonstrated by what MAIA stops doing next — not by the acknowledgment
+> sentence itself.**
+
+This is also the more testable criterion: an acknowledgment sentence can be pattern-matched
+and therefore performed, while *ceasing to use a relinquished frame* is observable across
+subsequent turns and cannot be faked by phrasing. **The experiential item is closed.**
 
 **Finding B, witnessed under collision.** With a stance selected, composition is
 `base → STANCE_DIRECTIVES.challenge → PROGRESSION_FLOOR → CORRECTION_ADDENDUM`. The
@@ -1279,9 +1316,8 @@ image's rule 5 names.
 the member's, but the protocol framing is MAIA's, and it survived a turn whose stated
 purpose was to relinquish MAIA's frame. Even acknowledged correction did not dislodge it.
 
-**No experiential repair verdict is recorded.** Pending the member's statement of whether
-the acknowledgment felt repairing, or whether the immediate return to speed cancelled it.
-**No build authorization follows from this result.**
+**The experiential item is closed** (see Finding C, restated, above). **No build
+authorization follows from this result.**
 
 #### Witness status
 
