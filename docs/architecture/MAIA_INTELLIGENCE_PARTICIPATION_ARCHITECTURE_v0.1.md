@@ -100,7 +100,11 @@ versus the inverse, which the same rule forbids:
 
 ### 2.4 VALIDITY as a resolved value
 
-`VALIDITY ∈ { current · superseded · retracted · contradicted-unresolved }`
+`VALIDITY ∈ { current · superseded · corrected · retracted · contradicted-unresolved }`
+
+*(Refined 2026-09-02: `superseded` and `corrected` are distinct — CHANGE preserves historical validity, CORRECT does not. See Phase 0 §3.1–3.2.)*
+
+> ⚖️ **AMENDED — pending v0.2.** Phase 0 §7.4 establishes that validity resolution is **temporal scoping, not filtering**. A CHANGE-superseded representation *remains historically valid* and is the correct answer to a past-tense question; only CORRECT-invalidated material is excluded at every time. The "at most one `current` representation" rule below is right for present-tense questions and wrong for the Spiralogic case (*"how have I changed about this?"*), which needs both representations and the relation between them. See `docs/specs/MIPA_PHASE_0_SOVEREIGNTY_PREREQUISITES_SPEC.md` §7.4.
 
 **Adjudicated: supersession resolves *before* participation.** The system must not hand cognition three contradictory representations and rely on the language model to adjudicate autobiographical truth. Stage 3 emits at most one `current` representation per resolved claim.
 
