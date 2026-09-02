@@ -310,10 +310,55 @@ export function flattenSections(sections: readonly DraftSectionState[]): string 
  */
 export interface RevisionSectionRange {
   sectionId: string;
-  /** Inclusive start offset, in UTF-16 code units, into the revision content. */
+  /**
+   * Inclusive start offset into the revision content, in UNICODE CODE POINTS.
+   *
+   * ⛔ NOT `String.prototype.length`. JavaScript counts UTF-16 code units, so an
+   * astral character — an emoji, most CJK extension ideographs, many historic
+   * scripts — counts 2 there and 1 in PostgreSQL's `length(text)`, which is the
+   * unit the round-trip trigger enforces. A partition measured in code units is
+   * therefore self-consistent in the application and REJECTED by the database
+   * the moment a member writes an emoji: `"A😀B"` is 4 to JavaScript and 3 to
+   * PostgreSQL. Code points are the unit both sides can agree on, and PostgreSQL
+   * is the side already enforcing it.
+   */
   start: number;
-  /** Exclusive end offset. */
+  /** Exclusive end offset, in the same unit. */
   end: number;
+}
+
+/**
+ * The UTF-16 index at which each code point of `s` begins, plus a final entry
+ * equal to `s.length`.
+ *
+ * This is the bridge between the two units. A code-point range cannot be handed
+ * to `String.prototype.slice`, which indexes code units — `"A😀B".slice(0, 2)`
+ * returns a LONE SURROGATE, a broken half-character that is not what the member
+ * wrote and cannot be stored as UTF-8. Ranges are resolved through this table
+ * instead, so a slice always lands on a whole character.
+ *
+ * An unpaired surrogate already in the string counts as one code point here,
+ * matching `Array.from`. PostgreSQL cannot store one, so it never arrives from
+ * the database; the function stays total rather than relying on that.
+ */
+function codePointBoundaries(s: string): number[] {
+  const out: number[] = [];
+  let i = 0;
+  while (i < s.length) {
+    out.push(i);
+    i += (s.codePointAt(i) as number) > 0xffff ? 2 : 1;
+  }
+  out.push(s.length);
+  return out;
+}
+
+/** The number of Unicode code points in `s` — what PostgreSQL's `length()` counts. */
+export function codePointLength(s: string): number {
+  let n = 0;
+  for (let i = 0; i < s.length; n += 1) {
+    i += (s.codePointAt(i) as number) > 0xffff ? 2 : 1;
+  }
+  return n;
 }
 
 export type RestoreRefusal = 'partition_not_recorded' | 'topology_change_requires_explicit_command';
@@ -338,8 +383,13 @@ export function partitionFromSections(
   const out: RevisionSectionRange[] = [];
   let cursor = 0;
   for (const s of sections) {
-    out.push({ sectionId: s.id, start: cursor, end: cursor + s.text.length });
-    cursor += s.text.length;
+    /* Code points, not `.text.length`. The database validates total coverage
+       against `length(text)`, which counts code points, so a code-unit count
+       makes an otherwise perfect partition unstorable as soon as the member
+       writes an emoji. */
+    const len = codePointLength(s.text);
+    out.push({ sectionId: s.id, start: cursor, end: cursor + len });
+    cursor += len;
   }
   return out;
 }
@@ -368,6 +418,11 @@ export function sectionsFromPartition(
      does not is not a weaker record of the same thing — it is a record of a
      different text, and restoring from it would drop or duplicate characters
      the member wrote. */
+  /* Built once, and BEFORE any range is trusted, so the coverage check below is
+     made in the same unit the ranges are expressed in. */
+  const boundaries = codePointBoundaries(content);
+  const contentLength = boundaries.length - 1;
+
   let cursor = 0;
   for (const [i, r] of partition.entries()) {
     if (r.start !== cursor || r.end < r.start) {
@@ -376,9 +431,9 @@ export function sectionsFromPartition(
     }
     cursor = r.end;
   }
-  if (cursor !== content.length) {
+  if (cursor !== contentLength) {
     return refuseRestore('partition_not_recorded',
-      `the recorded partition covers ${cursor} of ${content.length} characters`);
+      `the recorded partition covers ${cursor} of ${contentLength} characters`);
   }
 
   /* Restoring a partition whose identities differ from the draft's own is a
@@ -394,8 +449,17 @@ export function sectionsFromPartition(
       + 'than the draft now holds');
   }
 
+  /* ⛔ NEVER `content.slice(r.start, r.end)`. Those are code-point indices and
+     slice takes code-unit indices; on any text containing an astral character
+     the two disagree, and the result would be prose the member never wrote —
+     silently, with a lone surrogate where a character used to be. The
+     boundaries table converts the units, so every slice lands on a whole
+     character. */
   return {
     ok: true,
-    value: partition.map((r) => ({ id: r.sectionId, text: content.slice(r.start, r.end) })),
+    value: partition.map((r) => ({
+      id: r.sectionId,
+      text: content.slice(boundaries[r.start], boundaries[r.end]),
+    })),
   };
 }

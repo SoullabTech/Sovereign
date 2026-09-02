@@ -90,11 +90,22 @@ async function main() {
     `INSERT INTO member_manuscripts (member_id, title) VALUES ($1, 'WS2-07 witness fixture')
      RETURNING id`, [memberId]);
   const manuscriptId = ms.rows[0].id;
+  /* ⛔ THE FIXTURE CARRIES ASTRAL TEXT ON PURPOSE. The section partition's
+     offsets are UNICODE CODE POINTS, because that is what PostgreSQL's
+     length(text) counts and what the round-trip trigger enforces. JavaScript's
+     String.length counts UTF-16 code units, and the two disagree on every
+     astral character — 'A😀B' is 4 to JavaScript and 3 to PostgreSQL. An
+     all-BMP fixture proves the fixture and not the claim: it passes under both
+     units, which is exactly how the mismatch survived the first witness. A
+     member who writes an emoji had ordinary draft creation fail.
+     Also included: an NFD-decomposed é, where a combining mark makes JavaScript
+     and PostgreSQL agree on TWO code points — the control that the repair
+     counts code points rather than grapheme clusters. */
   await query(
     `INSERT INTO manuscript_sections (manuscript_id, position, heading, body) VALUES
-       ($1, 0, 'The First Movement', 'Synthetic fixture prose, first section.'),
-       ($1, 1, 'The Second Movement', 'Synthetic fixture prose, second section.'),
-       ($1, 2, NULL, 'Synthetic fixture prose, an unheaded third section.')`,
+       ($1, 0, 'The First Movement 😀', 'Synthetic fixture prose, first section. It carries an emoji 😀 mid-sentence and one at the end 🌒'),
+       ($1, 1, 'The Second Movement', 'Synthetic fixture prose, second section, with an NFD-decomposed cafe\u0301 and an astral pair 𝔘𝔫.'),
+       ($1, 2, NULL, '😀 Synthetic fixture prose, an unheaded third section that BEGINS with an emoji.')`,
     [manuscriptId]);
 
   const params = { params: Promise.resolve({ id: manuscriptId }) };
@@ -154,6 +165,42 @@ async function main() {
     check('revision 1 froze its section partition',
       Array.isArray(firstRev.rows[0].partition)
       && (firstRev.rows[0].partition as unknown[]).length === 3);
+
+    /* ── the Unicode unit, asserted against PostgreSQL itself ─────────── */
+    const { codePointLength, sectionsFromPartition } =
+      await import('@/lib/manuscript/draftSections');
+    const astral = await query<{ pg_len: number }>(
+      `SELECT length(r.content) AS pg_len
+         FROM working_draft_revisions r
+         JOIN manuscript_working_drafts d ON d.id = r.draft_id
+        WHERE d.manuscript_id = $1 AND r.revision_number = 1`, [manuscriptId]);
+    const pgLen = Number(astral.rows[0].pg_len);
+    const jsLen = firstRev.rows[0].content.length;
+    /* The difference IS the astral count — each astral character is one code
+       point to PostgreSQL and two code units to JavaScript. A fixture where
+       these agree proves the fixture and not the claim, which is exactly how
+       the mismatch survived the first witness, so it is asserted rather than
+       assumed. */
+    check('the fixture actually contains astral characters — otherwise this proves nothing',
+      jsLen > pgLen, `${jsLen - pgLen} astral char(s)`);
+    check('the two units genuinely differ on this prose',
+      pgLen !== jsLen, `PostgreSQL ${pgLen} · JavaScript ${jsLen}`);
+    check('the partition is expressed in PostgreSQL\'s unit, not JavaScript\'s',
+      codePointLength(firstRev.rows[0].content) === pgLen
+      && (firstRev.rows[0].partition as { end: number }[]).slice(-1)[0].end === pgLen,
+      `partition ends at ${(firstRev.rows[0].partition as { end: number }[]).slice(-1)[0].end}`);
+
+    const recovered = sectionsFromPartition(
+      firstRev.rows[0].content,
+      firstRev.rows[0].partition as never,
+      (createdBody.sections as { id: string }[]).map((s) => s.id));
+    check('revision 1 recovers section-for-section from what the DATABASE returned',
+      recovered.ok === true);
+    check('and byte-for-byte, with no split surrogate',
+      recovered.ok
+      && (recovered as { value: { text: string }[] }).value.every((v, i) =>
+        Buffer.from(v.text, 'utf8').equals(
+          Buffer.from((createdBody.sections as { text: string }[])[i].text, 'utf8'))));
 
     /* ── 3 · the round trip the triggers enforce ─────────────────────────── */
     console.log('\n3 · the round trip, as bytes');

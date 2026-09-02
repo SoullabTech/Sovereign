@@ -262,6 +262,12 @@ export function applySectionEdit(
  * stale on the next keystroke — they are never sent to the server and never
  * stored. The durable form of this relation is the revision partition, which is
  * only stable because its target is immutable.
+ *
+ * They are UTF-16 code units, matching `extractHeadings` and the DOM, and that
+ * is correct HERE because both ends of the mapping are JavaScript. ⛔ It is not
+ * correct anywhere the offset crosses into PostgreSQL: the revision partition
+ * counts CODE POINTS, because `length(text)` does. Never feed one of these into
+ * a partition — 'A😀B' is 4 here and 3 there.
  */
 export function sectionOffsets(sections: readonly DraftSection[]): number[] {
   const out: number[] = [];
