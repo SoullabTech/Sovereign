@@ -28,7 +28,7 @@ returned **HTTP 500**. Recorded conditions:
 
 ## 2. The governing finding
 
-> **The 500 is unassignable by construction.**
+> **The current route does not guarantee durable, stage-localizing evidence.**
 
 `app/api/ideas/[id]/ask-maia/route.ts` wraps the entire handler — ~240 lines,
 five database reads, one third-party API call, one insert, one update — in a
@@ -49,13 +49,27 @@ act that appears to "fix" it.**
 
 This is a **Cut 0-class observability defect**, of the same family as the silent
 12,000-character truncation: a failure the system experiences but does not
-report. INV-2 therefore cannot be closed by evidence, because the system does
-not produce evidence of this failure. That is the finding, not a limitation of
-the investigation.
+report.
 
-**Corollary:** the fault classes in §4 can be *ranked* but not *assigned*.
-Any statement of the form "the 500 was caused by X" would be inference presented
-as observation — the exact failure mode this lane exists to refuse.
+**The claim is bounded — narrowed on ratification 2026-09-02.** It is *not*
+that no future occurrence could ever be assigned. A captured stack frame or an
+upstream `request_id` would assign a future failure on its own. The defect is
+narrower and structural, and it has two parts:
+
+1. **Not stage-localized.** Session resolution, five context reads, the model
+   call, response parsing, and MAIA persistence are indistinguishable at the
+   boundary. The response says which *route* failed, never which *seam*.
+2. **Not durable.** The only cause-bearing record is process stdout, which
+   does not survive the restart that repeatedly precedes a successful retry.
+
+Assignment is therefore left to chance — whether an operator happens to be
+watching the right process at the right moment — rather than guaranteed by the
+system. That is the finding.
+
+**Corollary for the incident:** the fault classes in §4 can be *ranked* but not
+*assigned*, because for **this** occurrence no such evidence was preserved. Any
+statement of the form "the 500 was caused by X" would be inference presented as
+observation — the exact failure mode this lane exists to refuse.
 
 ---
 
@@ -132,12 +146,16 @@ environment variable directly.
 429 / 500 / 529 / connection reset rejects the promise → generic catch.
 
 *Fit:* strongest against (ii); explains (i) weakly via payload size (see C5).
-*Counter-evidence — and this is the part that lowers C2 below its intuitive rank:*
-the SDK retries 429/5xx/connection failures by default (`maxRetries: 2`, not
-overridden here). A transient upstream fault would have to survive **three**
-attempts within one request, then clear before a manual retry. Possible during a
-sustained incident; unremarkable-transient does not fit.
-*Does not explain (iii) at all.*
+*Standing:* **UNRANKED without the original error** — corrected on ratification
+2026-09-02. An earlier draft of this document demoted C2 on the grounds that the
+SDK's default `maxRetries: 2` would have absorbed a transient fault. That
+reasoning was too broad: **the SDK retries only particular error classes** —
+connection failures and specific statuses (408, 409, 429, 5xx). A
+**non-retried** class rejects on the **first** attempt with no retry at all.
+Since the original error was never captured, its class is unknown, and the retry
+argument therefore cannot be applied. C2 is neither promoted nor demoted; it is
+held open pending the error itself.
+*Does not explain (iii).*
 *Discriminating evidence:* an `APIError` with `status` and `request_id` in the log line.
 
 ---
@@ -166,8 +184,10 @@ future lane, not repaired here.)
 
 *Fit:* explains (ii) — a subsequent call returns normal content. Does not
 explain (iii).
-*Standing:* **this is a defect whether or not it caused this 500.** Recorded as
-such. Not repaired under this lane's authorization.
+*Standing:* **independently demonstrated defect; NOT established as the cause of
+the witnessed 500, and held outside the incident verdict.** Its standing rests on
+reading the code, not on the incident, and the incident's verdict does not rest
+on it. Not repaired under this lane's authorization.
 
 ---
 
@@ -204,11 +224,12 @@ other block obeys. `ideaFraming` is likewise unbounded.
 An API-side 400 on an oversized request rejects the promise and surfaces as
 **this exact generic 500**.
 
-*Honest assessment:* the realistic ceiling (~26,000 chars ≈ 7k tokens) sits far
-below the model's limits, so this is an **unlikely cause of this 500**. It is
-recorded because it is a **genuine incompleteness in the Cut 0 bounding work**
-— the excerpt discipline was applied to the block slice and not to the two
-fields that reach the prompt outside it.
+*Standing:* **independently demonstrated defect; NOT established as the cause of
+the witnessed 500, and held outside the incident verdict.** The realistic ceiling
+(~26,000 chars ≈ 7k tokens) sits far below the model's limits, so as an incident
+cause it is unlikely. It is recorded on its own evidence: a **genuine
+incompleteness in the Cut 0 bounding work** — the excerpt discipline was applied
+to the block slice and not to the two fields that reach the prompt outside it.
 
 *Also note:* the route fetches `LIMIT 6` (143) while the surrounding comments
 and the primitive's docblock both say "last 3–4". The code and its
@@ -253,8 +274,11 @@ describes evidence, not repairs**, and implements nothing.
 | C6 | `pg` error code (`ECONNRESET`, `53300`, pool-timeout) and the failing query |
 | C7 | Stack frame inside `serverSessions` |
 
-**Precondition for INV-2 to be closable at all:** the fault must survive the
-process that produced it. Today it does not.
+**Precondition for assignment:** the evidence above must be (a) **separated by
+stage**, so a failure names its seam and not merely its route, and (b)
+**durable**, surviving the process that produced it. Today it is neither —
+which is why *this* occurrence is unassignable, and why assignment of a *future*
+occurrence is left to chance rather than guaranteed.
 
 ---
 
@@ -276,17 +300,29 @@ Recorded now so it is not lost between lanes:
 
 ## 7. Verdict
 
-**INV-2: OPEN — UNASSIGNABLE ON CURRENT EVIDENCE.**
+**INV-2: OPEN — THIS OCCURRENCE UNASSIGNABLE ON PRESERVED EVIDENCE.**
 
 The event is real, the member-facing containment held, and the member's words
-were preserved. The cause cannot be assigned, and — more importantly — **cannot
-be assigned by any future occurrence either**, until the handler stops
-collapsing seven distinct fault classes into one opaque string in a volatile
-process.
+were preserved. For **this** occurrence no cause-bearing evidence survived, so
+no candidate in §4.2 can be assigned. **C2 is held unranked** pending the
+original error class.
 
-Two defects were found while looking and stand independent of the verdict:
+The structural finding is narrower than "unknowable": **the current route does
+not guarantee durable, stage-localizing evidence.** A captured stack or upstream
+`request_id` could assign a future failure. What the route does not do is
+*separate* that evidence by seam or *preserve* it across restart — so assignment
+depends on an operator being present at the right process at the right moment.
+
+**Two defects stand outside this verdict.** They were found by reading the code,
+not by the incident, and neither is established as its cause:
 **C3** (unguarded `content[0]`, contradicting the repository's own convention)
 and **C5** (unbounded `lastDecision` / `ideaFraming` bypassing Cut 0's excerpt
-discipline). Neither is repaired under this lane.
+discipline). They may be scheduled on their own evidence. They do not close
+INV-2 and INV-2 does not depend on them.
+
+**Sequencing (ratified 2026-09-02):** the next legitimate lane is a **bounded
+fault-localization instrument, not repair** — specified in
+`IDEAS_CUT02_FAULT_LOCALIZATION_INSTRUMENT.md`. Only after that instrument is
+**witnessed** may the 500 be reproduced or any candidate repaired.
 
 *No code, prompt, schema, migration, merge, or deployment change was made.*
