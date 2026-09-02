@@ -34,7 +34,22 @@
 
 set -euo pipefail
 
-PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+# Normally the repo this script lives in. But the script is often run from a
+# copy outside the repo (git show > /tmp/... , to avoid mutating a checkout
+# that has dirty worktrees), where dirname/.. resolves to "/" and every
+# `git -C "$PROJECT_DIR" worktree ...` call silently fails. So: validate it,
+# and fall back to the repo containing the current directory.
+PROJECT_DIR="${AIN_PROJECT_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
+if ! git -C "$PROJECT_DIR" rev-parse --git-dir >/dev/null 2>&1; then
+    _detected="$(git rev-parse --show-toplevel 2>/dev/null || true)"
+    if [ -n "$_detected" ]; then
+        PROJECT_DIR="$_detected"
+    else
+        echo "[ain-worktree-claim] cannot locate the repo." >&2
+        echo "   Run from inside it, or set AIN_PROJECT_DIR=/path/to/repo." >&2
+        exit 2
+    fi
+fi
 AIN_HOME="${AIN_DELEGATION_HOME:-$HOME/.claude/ain-delegation}"
 LOCKS_DIR="$AIN_HOME/locks"
 WORKTREES_ROOT="${AIN_WORKTREES_ROOT:-$HOME/.claude/worktrees}"
@@ -119,11 +134,16 @@ _strip_caches() {
 
 _remove_worktree() {
     local wt="$1" force="$2"
-    if [ "$force" = "yes" ]; then
-        git -C "$PROJECT_DIR" worktree remove --force "$wt" >/dev/null 2>&1 || rm -rf "$wt"
-    else
-        git -C "$PROJECT_DIR" worktree remove "$wt" >/dev/null 2>&1 || rm -rf "$wt"
+    local git_force=""
+    [ "$force" = "yes" ] && git_force="--force"
+    if git -C "$PROJECT_DIR" worktree remove $git_force "$wt" >/dev/null 2>&1; then
+        return 0
     fi
+    # git declined (tree it does not track, or already detached from the repo).
+    # Say so rather than deleting silently — a quiet rm -rf here is how a
+    # mislocated PROJECT_DIR would look exactly like success.
+    echo "     (git worktree remove declined; removing directory directly)" >&2
+    rm -rf "$wt"
 }
 
 _refuse() {
