@@ -69,16 +69,42 @@ manuscript in response?**
 
 ### State of the chain
 
-Founder-stated, 2026-09-01. **Recorded here, not written into the Programme Board** — the
-board sets node states from canonical evidence only, and these have not been censused.
+**Corrected 2026-09-02 against evidence.** The earlier record here read
+`6A BUILT LOCALLY · awaiting authenticated walk + merge`. That was founder-stated and is
+not supported: seven independent checks establish that the ratified 6A implementation was
+never committed to any repository.
 
 ```text
-6A   BUILT LOCALLY · awaiting authenticated walk + merge
+6A   NOT BUILT AS RATIFIED · rebuild required
+     7f5acfa9b is server-only, FORMALLY SUPERSEDED · DO NOT MERGE
  ↓
-7    OPENED · BLOCKED ON 6A MERGE
+7    OPENED · PLANNING CLOSED · EXECUTION BLOCKED ON 6A MERGE + WITNESS
  ↓
 8    OPENED · BLOCKED ON STAGE 7 CLOSURE
 ```
+
+**The checks, 2026-09-02.** On `Kellys-Mac-Studio` and against the remote:
+
+```text
+git branch --contains 028ad9f3c        malformed object name — absent from the main
+                                       repo's object store, shared by ~150 worktrees
+clone sweep, depth 6, ~ + /private/tmp  no repository holds the commit
+grep *.tsx  "make this my structure"    no file contains the gesture copy
+grep *.sql  adopted_from_review_unit_key  the ratified provenance migration
+                                       was never written
+git reflog (back to 2026-08-05)         no 06a or adopt work passed through the repo
+remote                                  8e01dac09 · 028ad9f3c · ec99d821d all absent
+remote sessions (162)                   none titled for 6A adoption work
+```
+
+Four of the seven are content-based rather than SHA-based, so this is not misremembered
+hashes pointing at real work. The provenance schema, the AuthorStructureCommand, and the
+route + client + gesture do not exist.
+
+**Why this is recorded rather than quietly fixed.** A lane document carried an unverified
+build state as fact. That is the failure this project's own anchor names — *declaration is
+not liveness; built ≠ wired* — reaching the planning records themselves. The correction is
+kept visible so the record shows what was believed and what was measured.
 
 ### Why this lane is blocked
 
