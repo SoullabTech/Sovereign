@@ -28,6 +28,7 @@
  *   BASE=http://localhost:3105 npx tsx scripts/ws2-07-press-handoff-witness.ts
  */
 import { randomUUID } from 'crypto';
+import { memberRef } from '@/lib/privacy/memberRef';
 import puppeteer, { type Page } from 'puppeteer';
 
 const BASE = process.env.BASE ?? 'http://localhost:3105';
@@ -227,7 +228,14 @@ async function main() {
   } finally {
     await browser.close();
     if (process.env.KEEP_FIXTURE === '1') {
-      console.log(`  fixture kept: member ${memberId}`);
+      /* ⛔ NOT the member id. A raw identifier in a log is the pattern the
+         member-identifier gate exists to stop, and CI logs are durable — the
+         fact that THIS member is synthetic does not make the habit safe, and a
+         truncation would still be a fragment of the real thing. The username
+         this run invented is enough to find the fixture:
+             SELECT id FROM members WHERE username = 'press-<tag>'
+         and memberRef is the correlating handle if one is wanted. */
+      console.log(`  fixture kept: username press-${tag} · ref ${memberRef(memberId)}`);
     } else {
       await query(`DELETE FROM member_manuscripts WHERE member_id = $1`, [memberId]);
       await query(`DELETE FROM members WHERE id = $1`, [memberId]);

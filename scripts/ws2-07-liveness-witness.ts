@@ -32,6 +32,7 @@
  */
 import { createHash } from 'crypto';
 import { randomUUID } from 'crypto';
+import { memberRef } from '@/lib/privacy/memberRef';
 import Module from 'module';
 
 /* An empty cookie jar, standing in for a client whose cookies are blocked.
@@ -399,7 +400,14 @@ async function main() {
     process.exitCode = failures === 0 ? 0 : 1;
   } finally {
     if (process.env.KEEP_FIXTURE === '1') {
-      console.log(`  fixture kept: member ${memberId}`);
+      /* ⛔ NOT the member id. A raw identifier in a log is the pattern the
+         member-identifier gate exists to stop, and CI logs are durable — the
+         fact that THIS member is synthetic does not make the habit safe, and a
+         truncation would still be a fragment of the real thing. The username
+         this run invented is enough to find the fixture:
+             SELECT id FROM members WHERE username = 'ws207-<tag>'
+         and memberRef is the correlating handle if one is wanted. */
+      console.log(`  fixture kept: username ws207-${tag} · ref ${memberRef(memberId)}`);
     } else {
       /* By the ids this run created. Never by name, never by pattern.
          Manuscripts first: member_manuscripts.member_id is ON DELETE RESTRICT,
