@@ -66,26 +66,47 @@ Default for any item without an explicit value is **`never`**. Absence is not pe
 ### Added 2026-09-02 — from NW-D02 talk-derivation review
 
 Two founder-supplied analyses of Larry's Tiger 21 presentation were reviewed against the built system
-(`docs/design/now-what/reconciliation/NW_D02_TALK_DERIVATION_REVIEW_2026-09-02.md`). Both are **derived**; neither
-cites a held source. They surfaced the following, recorded here as gaps — **not** as inventory rows, and **not** as
-candidate values:
+(`docs/design/now-what/reconciliation/NW_D02_TALK_DERIVATION_REVIEW_2026-09-02.md`). Both are **derived readings**.
+A **transcript of the talk has been supplied; its governed preservation under `00_PROVENANCE/` is pending.**
 
-- **`leisure` as a domain** — appears in both analyses; absent from the enforced six and from the fuller six in §0
-  above. Ask openly: *what do you call the part of life that isn't work and isn't obligation?* Do not offer the word.
-- **`money` as a domain** — appears in the second analysis, which drops `time` to make room for it. The enforced list
-  and §0 both hold `time` / Time Affluence and no money domain. Ask about both without naming either as expected.
-- **Seven vs six** — two derived documents produced two *different* seven-item lists in one session. Treat any
-  seven-item framing as unverified. The count itself is an open question for Larry, not a settled fact to confirm.
-- **The Tiger 21 presentation as an item** — the analyses respond to a talk that is still not held on disk (compounding
-  the deck gap above). Establish at the sitting whether a recording or transcript exists and who holds it, **before**
-  any question about its content.
+Recorded here as gaps — **not** as inventory rows, and **not** as candidate values:
+
+- **Governed preservation of the transcript** — place it unchanged under `00_PROVENANCE/` with a source note
+  (how produced, by whom, from what, when) **before** the sitting. Audio is not held.
+- **Speaker attribution within the transcript is unverified.** Both analyses quote group discussion
+  ("one participant says…", "his mother raises…"). Which words are Larry's is not established line by line, and
+  Class A / B / C turns on exactly that. Do not classify any passage until attribution is resolved.
+- **`leisure` and `money` — status unknown, not absence.** The transcript contains a leisure discussion and the
+  phrase "time and money well spent." The open question is therefore not whether Larry uses these concepts, but
+  **what status each holds**: a domain, an aspect of another domain, a practice, an illustrative example, or
+  something else. See the question sequence below.
+- **Seven vs six** — two derived documents produced two *different* seven-item lists in one session. Treat any count
+  as unverified. The number of dimensions is Larry's to state, not ours to confirm.
 - **"Now What?" as Larry's term** — used throughout both analyses as a name for the threshold, the business, and the
   product. Its provenance class (A / B / D) is unestablished. Raise it in §1 Origin, in his words, before it is used
   as a product name anywhere member-facing.
 
+#### Question sequence for the taxonomy — order is binding
+
+⛔ An earlier draft of this section proposed: *"What do you call the part of life that isn't work and isn't
+obligation?"* That question is **leading** — it presumes such a category exists and belongs in the taxonomy, and
+invites Larry to name a slot we built. It is withdrawn. Use this instead:
+
+**First — open, unprompted. Let him finish completely before anything else is said:**
+
+> "When Now What names the dimensions of flourishing, what are they — in your own words?"
+
+**Only after Larry has completed that answer:**
+
+> "In the presentation, you also discussed leisure and 'time and money well spent.' How do those ideas relate, if at
+> all, to the dimensions you just named?"
+
+"If at all" is load-bearing and must be spoken. The second question tests relation, not membership; "they don't" is a
+complete and final answer, and records as such.
+
 ⛔ Reminder for the facilitator: none of the above may be read to Larry as a list. Each is a question to be reached
 through §1 Origin, not a proposition to confirm. The instrument's leading-question failure (§0) is exactly what
-produced the drift these rows record.
+produced the drift these rows record — and the withdrawn question above shows how easily it recurs.
 
 ---
 
