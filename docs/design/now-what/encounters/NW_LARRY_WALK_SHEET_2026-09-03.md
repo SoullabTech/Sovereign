@@ -1,6 +1,7 @@
 # Larry Encounter — Walk Sheet & Capture Instrument
 
-**Date:** 2026-09-03 · **Inspected trunk:** `2f8d97297` (2026-09-02) · **Deployed SHA:** `________` (record before the walk)
+**Date:** 2026-09-03 · **Inspected trunk:** `2f8d97297` (2026-09-02) · **Deployed SHA:** `fc66b477a` (2026-08-31)
+**Drift check: PASSED** — production is 52 commits behind trunk, but every surface this walk touches is byte-identical. See §0.
 **Type:** ⭐ **evidence-gathering**, not design approval
 **Status:** authorizes no route, no code, no production change. Records what Larry reveals.
 
@@ -21,7 +22,20 @@ The inspected branch establishes **code truth**, not production truth. Record an
 ssh soullab@minisforum 'docker exec maia-sovereign printenv GIT_COMMIT'
 ```
 
-Write that SHA in the header above. Then confirm the middleware behaviour **on the deployed build** — not from the source read here — by walking the signed-out redirect once yourself. If the deployed SHA differs from `2f8d97297`, the route findings in §2 are provisional until re-checked against it.
+**Result, verified 2026-09-02:** deployed `fc66b477a` (2026-08-31), an **ancestor** of the inspected trunk `2f8d97297`. Production is **52 commits behind** — but not in anything this walk touches:
+
+| Path | deployed `fc66b477a` vs trunk `2f8d97297` |
+|---|---|
+| `middleware.ts` | **identical** |
+| `app/now-what` | **identical** |
+| `components/now-what` | **identical** |
+| `lib/nowWhat` | **identical** |
+
+(Tree-hash comparison, with a positive control: 94 files changed overall between the two, so the comparison is live, not a silent no-op.)
+
+**Therefore the route map in §1 and the routing findings in §2 hold on the deployed build.** They are no longer provisional.
+
+⚠️ One residue: code identity is not a behavioural check. Environment variables, build args and runtime config do not appear in a tree diff. So still walk the signed-out redirect **once yourself** on the deployed build before Larry arrives — that is preflight condition 2 below, and it costs thirty seconds.
 
 ### Establish the entry condition
 
