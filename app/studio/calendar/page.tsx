@@ -978,7 +978,13 @@ function WeekView({
                     >
                       <div className="font-medium truncate">{event.title}</div>
                       {height > 30 && (
-                        <div className="text-[10px] opacity-70">
+                        <div
+                          className={`text-[10px] ${event.source === 'maia'
+                            ? 'text-amber-400'
+                            : event.source === 'studio'
+                              ? 'text-slate-300'
+                              : 'text-teal-400'}`}
+                        >
                           {formatEventTime(event.start)}
                         </div>
                       )}

@@ -110,7 +110,7 @@ function DraggableNavItem({
         type="button"
         aria-label={`Reorder ${mod.label}`}
         onPointerDown={(e) => controls.start(e)}
-        className="px-1 py-2 text-slate-600 hover:text-slate-400 cursor-grab active:cursor-grabbing opacity-50 group-hover:opacity-100 transition-opacity touch-none"
+        className="px-1 py-2 text-slate-600 group-hover:text-slate-400 cursor-grab active:cursor-grabbing transition-colors touch-none"
       >
         <GripVertical className="w-3.5 h-3.5" />
       </button>

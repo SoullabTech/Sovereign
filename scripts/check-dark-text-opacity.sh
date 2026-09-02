@@ -54,14 +54,59 @@ if [ -n "${HITS}" ]; then
   FAILED=1
 fi
 
-# 2) Catch bare opacity-* (not prefixed with disabled:/hover:/group-hover:/bg-)
-#    used alongside text-* in the same class string.
-#    The negative lookbehind excludes variant-prefixed opacity which is intentional.
-HITS=$(echo "${FILES}" | xargs grep -nP 'class(?:Name)?="[^"]*text-(?!opacity)[a-zA-Z0-9/:-]+[^"]*(?<![a-z]:)\bopacity-[0-9]+' 2>/dev/null || true)
-# Fallback: filter out known-safe patterns if perl regex not available
-if [ -z "${HITS}" ]; then
-  HITS=$(echo "${FILES}" | xargs grep -nE 'class(Name)?="[^"]*text-[a-zA-Z0-9/:-]+[^"]*\bopacity-[0-9]+' 2>/dev/null | grep -vE 'disabled:opacity|hover:opacity|group-hover:opacity|focus:opacity|active:opacity|bg-opacity|bg-black bg-opacity|data-\[' || true)
-fi
+# 2) Catch bare opacity-* used to dim a foreground element, in a class
+#    string that also carries a text-* token.
+#
+#    Single deterministic path (no PCRE). The previous implementation had a
+#    `grep -P` primary with a `grep -E` fallback whose filter list disagreed
+#    with it on the same input, so this gate's verdict depended on whether
+#    the host grep was built with PCRE support: red on GNU grep, green on a
+#    grep without -P. A gate that answers differently per host is not
+#    truthful on any host. See docs/programme/
+#    JARVIS-IDEAS-PREFLIGHT-RESTORATION-01_FIND.md.
+#
+#    The exemption is exactly the reveal pattern this file documents above,
+#    and nothing wider:
+#
+#      opacity-0 + group-hover:opacity-100   → allowed (hidden until hover)
+#      opacity-50 + group-hover:opacity-100  → STILL A VIOLATION
+#
+#    i.e. the only bare opacity token permitted is `opacity-0`, and only when
+#    `group-hover:opacity-100` appears in the same class string. Bare opacity
+#    at any other value dims a foreground element that is visible at rest —
+#    the footgun this guard exists to prohibit — regardless of what hover
+#    state accompanies it. Variant-prefixed opacity (`disabled:`, `hover:`,
+#    `group-hover:`, `focus:`, `active:`, `data-[...]:`) and `bg-opacity-*`
+#    are not bare and are never flagged.
+HITS=$(echo "${FILES}" | xargs awk '
+function scan(inner,   n, toks, i, t, hasText, bareOther, bareZero, hasReveal) {
+  n = split(inner, toks, /[ \t]+/)
+  hasText = 0; bareOther = 0; bareZero = 0; hasReveal = 0
+  for (i = 1; i <= n; i++) {
+    t = toks[i]
+    if (t ~ /^text-/ && t !~ /^text-opacity-/) { hasText = 1 }
+    else if (t ~ /^opacity-[0-9]+$/) {
+      if (t == "opacity-0") { bareZero++ } else { bareOther++ }
+    }
+    else if (t == "group-hover:opacity-100") { hasReveal = 1 }
+  }
+  if (!hasText) return 0
+  if (bareOther > 0) return 1
+  if (bareZero > 0 && !hasReveal) return 1
+  return 0
+}
+{
+  rest = $0
+  re = "class(Name)?=\"[^\"]*"
+  while (match(rest, re)) {
+    seg = substr(rest, RSTART, RLENGTH)
+    rest = substr(rest, RSTART + RLENGTH)
+    p = index(seg, "=\"")
+    inner = substr(seg, p + 2)
+    if (scan(inner)) { print FILENAME ":" FNR ":" $0; next }
+  }
+}
+' 2>/dev/null || true)
 if [ -n "${HITS}" ]; then
   echo ""
   echo "❌ Found bare 'opacity-*' combined with 'text-*' in a class string:"
@@ -69,6 +114,7 @@ if [ -n "${HITS}" ]; then
   echo ""
   echo "   Replace opacity-based text dimming with explicit text color tokens."
   echo "   e.g. 'text-sm opacity-70' → 'text-sm text-stone-400'"
+  echo "   Reveal-on-hover controls: use 'opacity-0 group-hover:opacity-100'."
   FAILED=1
 fi
 
