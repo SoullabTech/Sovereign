@@ -223,7 +223,9 @@ the immutable-SHA deploy).
 | `source_state` | `clean` · `dirty` · `unknown` — whether the served tree matches that commit |
 | `build_digest` | immutable build/image digest **when available** (container image digest in production) |
 | `source_digest` | exact source-or-patch digest, required for dirty evidence to be admissible |
-| `digest_scope` | `emission` · `process_start` — when the digest was computed (§3.3.4) |
+| `digest_scope` | `emission` · `process_start` — **when** the digest was computed (§3.3.4) |
+| `digest_subject` | `disk_tree` · `loaded_modules` — **what** was digested (§3.3.4) |
+| `digest_alg` | canonical algorithm + input-set identifier, e.g. `sha256/src-v1` (§3.3.6) |
 
 In production the deploy lane already supplies what this needs: an immutable
 image built from a `git archive` snapshot of a named SHA, with a fail-closed
@@ -244,14 +246,64 @@ inflate: a fault reproduced on a dirty tree is real, and it is evidence *about
 that tree*. Naming the tree exactly is what separates it from evidence about
 `main`.
 
-#### 3.3.4 The Fast Refresh caveat
+#### 3.3.4 Two independent axes: *when* and *what*
 
-A digest computed at process start can be **stale by the time an event is
-emitted** — Fast Refresh mutates the served modules inside a live process.
-`digest_scope` records which was captured. `process_start` scope on a dev
-runtime therefore **cannot reach the top row** of §3.3.3 no matter how clean the
-tree was when the process began; it establishes what the process *started* as,
-not what it *ran*.
+A digest is under-specified by timing alone. Two orthogonal questions must both
+be answered, and answering one does not answer the other.
+
+**`digest_scope` — when.** A digest computed at process start can be **stale by
+the time an event is emitted**; Fast Refresh mutates the served modules inside a
+live process. `process_start` scope on a dev runtime therefore **cannot reach
+the top row** of §3.3.3 no matter how clean the tree was at boot: it establishes
+what the process *started* as, not what it *ran*.
+
+**`digest_subject` — what** *(amended 2026-09-03).* `emission` timing does not
+by itself close the gap, because a digest taken at emission is still, in the
+ordinary implementation, a digest of **files on disk** — and disk is not the
+process. Under Fast Refresh the two can diverge in both directions: a module
+compiled into the live process may predate an edit already on disk, and an edit
+on disk may have failed to apply to the running process at all.
+
+> **A `disk_tree` digest may never be described as a digest of the modules
+> actually loaded or served.** It may be *labelled* `disk_tree` and used as
+> such. It may be treated as equivalent to `loaded_modules` **only where that
+> equivalence is proven** — which, under Fast Refresh, it is not.
+
+Consequences for §3.3.3:
+
+| `digest_subject` | Ceiling |
+|---|---|
+| `loaded_modules` | May support the row its `source_state` and `digest_scope` allow |
+| `disk_tree`, on a runtime with **no** module-replacement mechanism (production container, `next start`) | Equivalence is structural, so it may support the same rows |
+| `disk_tree`, on a runtime **with** Fast Refresh or any hot-replacement | **Diagnosis only.** It is honest evidence about a tree, and is not evidence about an execution |
+
+The production path is unaffected: an immutable image has no module-replacement
+mechanism, so `disk_tree` there *is* what ran. The distinction bites exactly
+where the witnessed 500 occurred.
+
+#### 3.3.6 The digest must be canonical and reproducible
+
+A digest that cannot be recomputed is an identifier, not evidence. Any
+implementation must therefore declare, in `digest_alg`:
+
+1. **The hash function**, pinned.
+2. **The covered input set**, explicitly enumerated — not "the repo". Path
+   ordering, path normalization (repo-relative, never absolute), and the
+   treatment of untracked and ignored files are all part of the definition.
+3. **Byte-exactness.** Content is hashed as bytes. Normalizing line endings or
+   formatting would make the digest describe a *rendering* of the tree rather
+   than the tree, and two different executions could then share one digest.
+4. **Reproducibility.** The same tree yields the same digest on any machine, any
+   OS, any checkout path, at any later date. If it cannot be recomputed by a
+   third party from the same inputs, it does not discharge §3.3.3's middle row.
+
+**What the input set excludes is part of the claim.** A source-only digest does
+not cover `node_modules`, the lockfile, or environment. This is not academic
+here: **C2's rankability turns on which error classes the SDK retries**, which
+is dependency behavior, not source behavior. A source-only digest therefore
+cannot support a claim about SDK-level conduct; a claim of that kind needs the
+lockfile digest inside the covered set. Any use of a digest must be read against
+what it covers, and a digest must never be cited past its input set.
 
 #### 3.3.5 Reporting rule
 
@@ -395,6 +447,8 @@ condition §4.3 refuses.
 | **P14** | A telemetry path that throws, rejects, or is unavailable leaves the member's status, response body, saved note, and reflection outcome **bit-for-bit unchanged** (§4.0) |
 | **P15** | `attempt_id` and `request_id` are proven non-authorizing: a forged, replayed, or foreign `attempt_id` selects, authorizes, and mutates **nothing** — scope is asserted to come only from `getCurrentSession()` and the ownership-checked idea (§1.1) |
 | **P16** | Every event carries a complete `runtime_revision` and `taxonomy_version`. The §3.3.3 ladder is enforced: clean-and-verifiable is admissible; dirty **with** an exact `source_digest` is admissible **only as a claim about that digest**; dirty or `unknown` **without** a digest is surfaced as **diagnosis-only and inadmissible for any committed-or-deployed runtime claim**, never silently ranked. `digest_scope: process_start` on a dev runtime cannot be reported as fully admissible (§3.3.4) |
+| **P18** | `digest_subject` is recorded and enforced: a `disk_tree` digest is never reported as evidence of loaded modules on a hot-replacement runtime, and is capped at diagnosis-only there (§3.3.4) |
+| **P19** | `digest_alg` names a pinned hash and an explicitly enumerated input set; the digest is byte-exact and **recomputable by a third party** from the same inputs, on a different machine and checkout path. A claim about dependency-level behavior (e.g. SDK retry classes, C2) is refused unless the lockfile is inside the covered set (§3.3.6) |
 | **P17** | No record contains a serialized `Error`, response body, prompt, raw stack, or absolute path. `stack_fingerprint` is stable across occurrences of the same fault and carries no message; `source_frames` are repo-relative only, and an un-normalizable stack yields `null`, never a partial dump (§4.0, §4.5) |
 
 ---
@@ -403,7 +457,7 @@ condition §4.3 refuses.
 
 All must hold. Any single failure means the instrument does not ship.
 
-- P1–P17 pass under `npm test`.
+- P1–P19 pass under `npm test`.
 - `npm run typecheck` green — **no-regression**, not "everything typechecks"
   (`CLAUDE.md` §Before Making Changes).
 - `npm run check:no-supabase` and `npm run preflight` clean.
@@ -456,14 +510,15 @@ discipline.
 
 ## 9. Status and standing
 
-**RATIFIED SPECIFICATION CONTRACT — 2026-09-02.** Ratified with four binding
-precisions, incorporated above:
+**RATIFIED SPECIFICATION CONTRACT — 2026-09-02**, amended 2026-09-02
+(`runtime_revision`) and 2026-09-03 (`digest_subject` + canonical digest).
+Ratified with four binding precisions, incorporated above:
 
 | # | Precision | Where |
 |---|---|---|
 | 1 | Two identifiers, two authorities; neither authorizes, selects, or mutates | §1.1 |
 | 2 | `entered` then `completed`/`failed`; last durable `entered` localizes an interrupted seam | §2.1, §5 T2, P13 |
-| 3 | Every event bound to `runtime_revision` + `taxonomy_version` *(amended 2026-09-02: composite, not a bare SHA — a SHA does not identify a dev runtime)* | §3.3, P16 |
+| 3 | Every event bound to `runtime_revision` + `taxonomy_version` *(amended 2026-09-02: composite, not a bare SHA — a SHA does not identify a dev runtime; amended 2026-09-03: `digest_subject` separates disk from process, and the digest must be canonical and reproducible)* | §3.3, P16, P18, P19 |
 | 4 | Allowlist-only construction; no wholesale serialization; instrument failure cannot alter the member's outcome | §4.0, §4.5, P14, P17 |
 
 **What ratification authorizes:** finalizing this specification. Nothing else.
