@@ -117,11 +117,30 @@ member has just asked MAIA to do. This surfaced as a concrete collision — Cut 
 `close_and_offer` directive against Cut 2's *Stay with this* — and the resolution
 (`PROGRESSION_FLOOR`) is the general form.
 
-*This principle reaches past Ideas.* Any surface where MAIA infers a stage, phase,
-element, or readiness and also accepts an explicit member instruction inherits the
-same ordering. Whether it belongs in
-`docs/canon/MAIA_SOVEREIGNTY_INVARIANTS.md` is a founder decision, not this lane's —
-flagged, not authored.
+**Canonized 2026-09-02** as **Invariant 17 —
+`EXPLICIT_MEMBER_DIRECTION_PRECEDES_INFERRED_STATE`** in
+`docs/canon/MAIA_SOVEREIGNTY_INVARIANTS.md`. The canonical statement carries a
+qualification this shorthand does not, and the qualification is load-bearing: the
+precedence holds *provided the instruction remains within hard safety, consent,
+privacy, and system-integrity boundaries*. It governs MAIA's interpretations of the
+member — it is **not** "the latest member instruction overrides everything", and it
+does not sit above the Oath or the safety floor. Full hierarchy:
+
+```
+hard constitutional / safety / consent boundaries
+                    ↓
+explicit member relational direction
+                    ↓
+member-ratified meaning and preferences
+                    ↓
+MAIA-inferred stage / readiness / pattern
+                    ↓
+generic conversational heuristics
+```
+
+Any surface that both infers something about the member and accepts an explicit
+instruction now inherits Invariant 17's design test: ask what happens when they
+disagree.
 
 ### P2 — Ratification needs structural enforcement, not prompting
 
