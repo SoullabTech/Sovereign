@@ -319,7 +319,6 @@ export default function IdeaWorkspacePage() {
   );
 
   const handleAskMaia = useCallback(async () => {
-    console.info('[IDEAS:STANCE_DIAG] handleAskMaia', { stance });
     if (!idea || askingMaia || saving) return;
     setAskingMaia(true);
     setComposerError(null);
