@@ -11,12 +11,14 @@ import {
   type SourceSection,
 } from '../draftSections';
 
-const src = (heading: string | null, body: string): SourceSection => ({ heading, body });
+let seq = 0;
+const src = (heading: string | null, body: string): SourceSection =>
+  ({ id: `src-${seq += 1}`, heading, body });
 
 /* The composition the draft route has always used, kept here verbatim as the
    oracle. If composeDraftSlices ever drifts from it, these tests fail rather
    than the conversion silently partitioning a different string. */
-function legacyComposeDraftText(sections: readonly SourceSection[]): string {
+function legacyComposeDraftText(sections: readonly { heading: string | null; body: string }[]): string {
   const parts: string[] = [];
   for (const s of sections) {
     const heading = s.heading?.trim();
@@ -41,8 +43,14 @@ describe('composeDraftSlices', () => {
 
   it.each(cases)('slices concatenate to the content: $name', ({ sections }) => {
     const { content, slices } = composeDraftSlices(sections);
-    expect(slices.join('')).toBe(content);
+    expect(slices.map((s) => s.text).join('')).toBe(content);
   });
+
+  it.each(cases)('every slice carries its SOURCE section id, not its position: $name',
+    ({ sections }) => {
+      const { slices } = composeDraftSlices(sections);
+      expect(slices.map((s) => s.sourceSectionId)).toEqual(sections.map((s) => s.id));
+    });
 
   it.each(cases)('composes exactly what the draft route always composed: $name', ({ sections }) => {
     expect(composeDraftSlices(sections).content).toBe(legacyComposeDraftText(sections));
@@ -56,13 +64,13 @@ describe('composeDraftSlices', () => {
     /* The non-uniform boundary this module exists to get right. Hand-deriving it
        is what would put every section id one character out of place. */
     const { slices } = composeDraftSlices([src('One', 'a'), src('Two', 'b')]);
-    expect(slices[0]).toBe('One\n\na\n\n');
-    expect(slices[1]).toBe('Two\n\nb\n');
+    expect(slices[0].text).toBe('One\n\na\n\n');
+    expect(slices[1].text).toBe('Two\n\nb\n');
   });
 
   it('handles a single section, where first and last are the same slice', () => {
     const { content, slices } = composeDraftSlices([src('One', 'a')]);
-    expect(slices).toEqual([content]);
+    expect(slices.map((s) => s.text)).toEqual([content]);
   });
 });
 
@@ -73,7 +81,12 @@ describe('planConversion — lossless means mechanically exact', () => {
     const { content } = composeDraftSlices(sections);
     const plan = planConversion(content, sections);
     expect(plan.status).toBe('lossless');
-    if (plan.status === 'lossless') expect(plan.slices.join('')).toBe(content);
+    if (plan.status === 'lossless') {
+      expect(plan.slices.map((s) => s.text).join('')).toBe(content);
+      /* The mapping survives the conversion plan, so the route never has to
+         re-establish it by array position. */
+      expect(plan.slices.map((s) => s.sourceSectionId)).toEqual(sections.map((s) => s.id));
+    }
   });
 
   it('REFUSES an edited draft rather than re-partitioning it', () => {
@@ -167,15 +180,48 @@ describe('validateSectionSave', () => {
     if (!r.ok) expect(r.refusal).toBe('unknown_section_id');
   });
 
-  it('refuses an added id — a new section is a topology change', () => {
+  it('refuses an added id as unknown_section_id — precedence is frozen', () => {
+    /* An id this draft does not own is ALWAYS unknown_section_id, checked before
+       any topology reasoning. A typed contract cannot say "either is fine": a
+       client mapping refusals to member-facing behaviour needs one answer. */
     const r = validateSectionSave(
       ok([{ id: 's1', text: 'a' }, { id: 's2', text: 'b' }, { id: 's3', text: 'c' },
           { id: 's4', text: 'd' }]), ids);
     expect(r.ok).toBe(false);
-    /* Caught as unknown before it can be counted as a topology change; either
-       refusal is honest, and neither writes. */
-    if (!r.ok) expect(['unknown_section_id', 'topology_change_requires_explicit_command'])
-      .toContain(r.refusal);
+    if (!r.ok) expect(r.refusal).toBe('unknown_section_id');
+  });
+
+  it('topology refusals are reserved for payloads whose ids are ALL known', () => {
+    for (const payload of [
+      [{ id: 's1', text: 'a' }, { id: 's2', text: 'b' }],                              // omission
+      [{ id: 's1', text: 'a' }, { id: 's1', text: 'b' }, { id: 's3', text: 'c' }],     // duplicate
+      [{ id: 's2', text: 'b' }, { id: 's1', text: 'a' }, { id: 's3', text: 'c' }],     // reorder
+    ]) {
+      const r = validateSectionSave(ok(payload), ids);
+      expect(r.ok).toBe(false);
+      if (!r.ok) expect(r.refusal).toBe('topology_change_requires_explicit_command');
+    }
+  });
+
+  it('COMPETING AUTHORITY is detected by field presence, not by valid type', () => {
+    /* The bug this closes: `typeof body.content === 'string'` would let a
+       non-string content through, silently discarding a representation the
+       caller believed was writable and accepting the section write anyway. */
+    for (const content of [123, null, undefined, {}, [], false, '']) {
+      const r = validateSectionSave(
+        { content, sections: [{ id: 's1', text: 'a' }, { id: 's2', text: 'b' },
+                              { id: 's3', text: 'c' }] } as never, ids);
+      expect(r.ok).toBe(false);
+      if (!r.ok) expect(r.refusal).toBe('ambiguous_write_authority');
+    }
+  });
+
+  it('ambiguity is decided BEFORE the sections are validated', () => {
+    /* Otherwise a malformed sections array would make the ambiguity vanish into
+       a shape refusal, and the caller would never learn content was rejected. */
+    const r = validateSectionSave({ content: 123, sections: 'not an array' } as never, ids);
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.refusal).toBe('ambiguous_write_authority');
   });
 
   it('asserts text rather than coercing it — a missing text is refused, not emptied', () => {
@@ -208,14 +254,14 @@ describe('flattenSections', () => {
   it('round-trips a converted draft: compose → slice → flatten', () => {
     const sections = [src('One', 'a'), src(null, 'b'), src('Three', 'c')];
     const { content, slices } = composeDraftSlices(sections);
-    const state = slices.map((text, i) => ({ id: `s${i}`, text }));
+    const state = slices.map((s, i) => ({ id: `s${i}`, text: s.text }));
     expect(flattenSections(state)).toBe(content);
   });
 
   it('an ordinary edit changes content but preserves the flattening invariant', () => {
     const sections = [src('One', 'a'), src('Two', 'b')];
     const { slices } = composeDraftSlices(sections);
-    const state = slices.map((text, i) => ({ id: `s${i}`, text }));
+    const state = slices.map((s, i) => ({ id: `s${i}`, text: s.text }));
     const edited = state.map((s, i) => i === 0 ? { ...s, text: s.text.replace('a', 'a much longer passage') } : s);
     expect(flattenSections(edited)).toBe(edited.map((s) => s.text).join(''));
     expect(edited.map((s) => s.id)).toEqual(state.map((s) => s.id));

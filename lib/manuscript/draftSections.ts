@@ -29,8 +29,23 @@
 
 /** A source section as stored in `manuscript_sections`. */
 export interface SourceSection {
+  id: string;
   heading: string | null;
   body: string;
+}
+
+/**
+ * One source section's exact contribution to the composed draft.
+ *
+ * THE MAPPING IS STRUCTURAL, NOT POSITIONAL. `manuscript_draft_sections` already
+ * carries `source_section_id` as provenance — which Source section a boundary
+ * came from. Returning bare strings would make the route re-establish that by
+ * array position (`slices[i] belongs to sourceRows[i]`), an external convention
+ * that no test holds and that a later `ORDER BY` change would silently break.
+ */
+export interface ComposedDraftSlice {
+  sourceSectionId: string;
+  text: string;
 }
 
 /** One section of a section-addressable draft, as the client holds it. */
@@ -75,7 +90,7 @@ const refuse = <T>(refusal: SaveRefusal, detail?: string): SaveCheck<T> =>
  */
 export function composeDraftSlices(sections: readonly SourceSection[]): {
   content: string;
-  slices: string[];
+  slices: ComposedDraftSlice[];
 } {
   const parts: string[] = [];
   /** Index into `parts` at which each section's contribution begins. */
@@ -98,7 +113,7 @@ export function composeDraftSlices(sections: readonly SourceSection[]): {
      parts occupy, separators included. Working in the joined string rather than
      re-joining per section is what keeps the boundary between "\n\n" and the
      final "\n" correct without special-casing it. */
-  const slices: string[] = [];
+  const slices: ComposedDraftSlice[] = [];
   let cursor = 0;
   for (let i = 0; i < starts.length; i += 1) {
     const from = starts[i];
@@ -108,7 +123,7 @@ export function composeDraftSlices(sections: readonly SourceSection[]): {
     let len = 0;
     for (let j = from; j < to; j += 1) len += parts[j].length + (j > from ? 1 : 0);
     if (to < parts.length) len += 1;
-    slices.push(content.slice(cursor, cursor + len));
+    slices.push({ sourceSectionId: sections[i].id, text: content.slice(cursor, cursor + len) });
     cursor += len;
   }
 
@@ -118,7 +133,7 @@ export function composeDraftSlices(sections: readonly SourceSection[]): {
 /* ── conversion ──────────────────────────────────────────────────────────── */
 
 export type ConversionPlan =
-  | { status: 'lossless'; slices: string[] }
+  | { status: 'lossless'; slices: ComposedDraftSlice[] }
   | { status: 'refused'; refusal: 'boundary_confirmation_required'; detail: string };
 
 /**
@@ -189,16 +204,24 @@ export function validateSectionSave(
   body: SectionSaveRequest,
   currentOrderedIds: readonly string[],
 ): SaveCheck<DraftSectionState[]> {
-  const hasContent = typeof body.content === 'string';
-  const hasSections = Array.isArray(body.sections);
+  /* PRESENCE, NOT VALID TYPE. Checking `typeof body.content === 'string'` would
+     let `{ content: 123, sections: [...] }` through: the content is not a valid
+     string, so it is silently ignored and the section write proceeds. But the
+     caller DID supply content — it believes content is writable authority, and
+     on a converted draft it is not. The ratified rule is about the key, so the
+     check is about the key. */
+  const contentSupplied = Object.prototype.hasOwnProperty.call(body, 'content');
+  const sectionsSupplied = Object.prototype.hasOwnProperty.call(body, 'sections');
 
   /* Both supplied: which one is authority? The server will not pick, because
-     picking is how a stale editor silently overwrites a section-aware save. */
-  if (hasContent && hasSections) {
+     picking is how a stale editor silently overwrites a section-aware save.
+     Decided before either value is validated, so a malformed one cannot make
+     the ambiguity disappear. */
+  if (contentSupplied && sectionsSupplied) {
     return refuse('ambiguous_write_authority',
       'a converted draft is written by sections; content is derived and must not be sent');
   }
-  if (!hasSections) {
+  if (!sectionsSupplied || !Array.isArray(body.sections)) {
     return refuse('section_state_required',
       'this draft is section-addressable: send ordered sections [{ id, text }]');
   }
@@ -221,6 +244,12 @@ export function validateSectionSave(
     parsed.push({ id, text });
   }
 
+  /* REFUSAL PRECEDENCE, FROZEN. An id this draft does not own is
+     `unknown_section_id`, always — checked before any topology reasoning.
+     Topology refusals are reserved for payloads whose ids are ALL known and
+     whose set or order is nonetheless wrong. Without a fixed order an added id
+     could return either refusal depending on evaluation order, and a client
+     cannot map an ambiguous refusal to member-facing behaviour. */
   const known = new Set(currentOrderedIds);
   for (const s of parsed) {
     if (!known.has(s.id)) {
