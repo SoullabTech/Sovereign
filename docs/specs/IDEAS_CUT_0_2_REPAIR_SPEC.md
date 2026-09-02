@@ -6,6 +6,19 @@
 **Authorized**: 2026-09-02
 **Cuts 3 and 4**: NOT AUTHORIZED — out of scope for this lane.
 
+**Amendment pass 1 — 2026-09-02.** Architecture approved in principle; nine corrections
+applied and D-1–D-5 adjudicated. Documentation only.
+
+### D-1 – D-5, adjudicated
+
+| | Decision |
+|---|---|
+| **D-1 · Salience** | **Out of scope for Cuts 0–2.** Dismissing a nomination creates no proposition and no standing event. **No salience field is added** — that belongs with the later Living Idea architecture and must not smuggle in Cut 3. |
+| **D-2 · Correction / rejection** | A correction opens a **Layer-1 repair episode**; it **never** changes Layer-2 standing automatically. If the member explicitly selects a MAIA span and chooses **Not what I mean**, that act itself creates `reject`. A general relational correction **may offer** the member a rejection selection; it **cannot infer one**. |
+| **D-3 · Granularity** | Default to an **exact member-selected contiguous span**. Sentence expansion may be a UI convenience; the **stored object retains the exact snapshot, block ID, offsets, and version**. Any synthesis across passages is a **new MAIA-origin offering**. |
+| **D-4 · Prior MAIA text** | **Do not automatically send the last three MAIA reflections.** A prior MAIA block may return **only** when the member explicitly references it or invokes repair upon it, and it remains **non-ground**. Anti-repetition needs a **separate move ledger or post-generation comparison**. |
+| **D-5 · Model / budget** | Resolve as a **per-stance evaluation gate**, not one global constant. **Haiku 4.5 is a baseline candidate, not a ratified choice.** Compare against a stronger supported model for *Stay with this*; **Connect additionally requires retrieval**. **`300` must not remain a universal output ceiling.** |
+
 ---
 
 ## 0. What this lane is, and what it is not
@@ -65,8 +78,13 @@ Deliverable 1. Adjudicated 2026-09-02; restated here as contract.
 | Grounds synthesis? | **never** | only when `current` |
 | Granularity | whole entry | a span, or an authored formulation |
 
-> **Standing attaches only to propositions. A block is evidence of what was said; it is
-> never evidence of what is held.**
+> **Block text never enters `current_idea_ground`.** The **current member turn**,
+> **explicitly referenced offerings**, and **repair targets** remain readable through
+> **separate provenance-preserving input channels**.
+
+A block is evidence of what was **said**; it is never evidence of what is **held**. The
+distinction is between *ground* and *readable turn context* — **not** between readable and
+unreadable. The member's newest reflection must always be readable.
 
 ### 1.2 Origin and standing are independent
 
@@ -102,17 +120,29 @@ Deliverable 2. **Every transition to `current`, `rejected`, or `withdrawn` is me
 | `hold` | `open` → `current` | **member only** | for `origin: member` |
 | `adopt` | `open` → `current` | **member only** | for `origin: maia` |
 | `revise` | creates new proposition | **member only** | see 1.5 |
-| `reject` | any → `rejected` | **member only** | creates a negative constraint |
+| `reject` | `open` → `rejected` | **member only** | creates a negative constraint |
 | `supersede` | `current` → `superseded` | **member only** | binary; see 1.6 |
 | `withdraw` | `current` → `withdrawn` | **member only** | |
 | `revisit` | `rejected` → `open` | **member only** | **never directly to `current`** |
 
 **MAIA's only permitted event is `offer`.** It may never cause any other transition.
 
+**Exit paths from `current`.** A once-`current` proposition leaves **only** through
+`withdraw` or `supersede`. `reject` applies to `open` material — *"not what I mean"* is a
+judgement on something offered, not a retraction of something held. Retraction of a held
+position is `withdraw`.
+
 ### 1.5 Revise is an event, not a standing
 
-`revise` creates a **new** proposition with `origin: member`, linked by `derived_from`, and
-supersedes the original **atomically**.
+`revise` creates a **new** proposition with `origin: member`, linked by `derived_from`.
+What happens to the original **depends on its standing**:
+
+| Original standing | Result |
+|---|---|
+| `open` | new member-origin proposition becomes `current`. The original **stays `open`** — nothing is superseded, because nothing was ever current. |
+| `current` | new member-origin proposition becomes `current` and **atomically supersedes** the original. |
+
+Superseding an `open` offering would assert that it once held authority. It never did.
 
 **Adopted and revised carry equal semantic authority and different provenance authority:**
 
@@ -143,14 +173,23 @@ forbidden, the first constrained.
 - **Member-invoked only** — via Distill or a deliberate *"Surface what may be forming"*
   action. **Never ambient.**
 - Nominating an **exact member span** preserves `origin: member` and records
-  `nominated_by: maia`.
+  `nominated_by: maia`. **Default granularity is an exact member-selected contiguous span**
+  (D-3): sentence expansion may be a UI convenience, but the **stored object retains the
+  exact snapshot, block ID, span offsets, and block version**. **Any synthesis across
+  passages is a new MAIA-origin offering**, never a nomination.
 - **Any paraphrase or synthesis is `origin: maia`**, however derived.
 - **Dismissing a nomination is not rejection of its meaning.** A dismissed nomination
   produces **no event and no proposition**.
 - Direct member selection remains available without nomination.
 
 **Guard: declining importance is not rejecting meaning.** *"Not central"* and *"Not what I
-mean"* are different acts. See **D-1**.
+mean"* are different acts and must never collapse into one.
+
+**D-1 adjudicated: salience is out of scope for Cuts 0–2.** No salience field is added.
+Dismissing a nomination creates **no proposition and no standing event** — which is what
+keeps the guard honest without inventing a field. A member declining importance on a
+`current` proposition belongs to the later Living Idea architecture; **adding it here would
+smuggle in Cut 3.**
 
 ### 1.8 Interaction contract
 
@@ -174,18 +213,20 @@ by this document.**
 
 | # | Invariant |
 |---|---|
-| **I1** | Standing attaches only to propositions. No query that grounds synthesis may read block text directly. |
+| **I1** | **Block text never enters `current_idea_ground`.** Ground is composed only of `current` propositions. The current member turn, explicitly referenced offerings, and repair targets are supplied through **separate provenance-preserving input channels** and are **never merged into ground**. |
 | **I2** | Only an authenticated member may cause a transition to `current`, `rejected`, `superseded`, or `withdrawn`. Enforced at the persistence boundary, not in a route handler. |
 | **I3** | **`open` is excluded from ground by construction** — the grounding query must be incapable of returning it. Not a filter that can be forgotten. |
-| **I4** | Transitions are **append-only**. Standing is derived from the event log; it is never overwritten in place. |
+| **I4** | Transitions are **append-only** **while the Idea exists**. Standing is derived from the event log, never overwritten in place. **This does not prohibit member-authorized deletion, account erasure, or applicable retention rules** — see I13. |
 | **I5** | `revise` is atomic: successor created and predecessor superseded in one transaction, or neither. |
 | **I6** | `supersede` requires both `predecessor_id` and `successor_id`. |
 | **I7** | `revisit` may target only `rejected` and may produce only `open`. |
 | **I8** | `origin` is immutable. No event may change it. |
-| **I9** | Any paraphrase or synthesis is `origin: maia`, regardless of source material. |
-| **I10** | `rejected` propositions are retained permanently and are never deleted. |
+| **I9** | **Any wording generated by MAIA is `origin: maia`**, regardless of source material. A member's own revision is `origin: member` even when it began from a MAIA offering. |
+| **I10** | `rejected` propositions are retained **for the life of the Idea** and are not deleted by ordinary operation — they are the negative-constraint set. **Subject to I13.** |
 | **I11** | `nominated_by: maia` is permitted only when `origin: member` **and** the content is an exact span of a member block. Verifiable, and should be verified. |
-| **I12** | Every proposition traces to a block and span, or to an authored formulation with a recorded actor. No orphans. |
+| **I12** | Every proposition traces to a **block ID, span offsets, and block version**, or to an authored formulation with a recorded actor. No orphans. |
+| **I13** | **Permanence is scoped to sovereignty, not above it.** I4 and I10 hold while the Idea exists and **cannot override member-authorized deletion, account erasure, or applicable retention rules.** A member may always delete their own material. |
+| **I14** | `imported_source` and `practitioner` are **reserved origin values only**. Their workflows are **out of scope for this lane** and **their reservation does not authorize Cut 4.** |
 
 **Shared primitive.** This is likely the same domain object Writer's Studio needs: a
 versioned, addressable unit with origin, standing, derivation, and member-governed
@@ -198,7 +239,19 @@ the same physical tables is a **later engineering decision** and is not presumed
 
 Deliverable 4. Findings A, B, C; Result 11.
 
-> **Repair suspends stance and progression until shared ground is restored.**
+> **Repair suspends stance and progression for the duration of a repair episode.**
+
+**A repair episode is a lifecycle, not a response.** *"Until shared ground is restored"*
+cannot mean one turn. An episode:
+
+- **opens** when the member invokes repair, or when detection fires;
+- **stays open** across turns — stance and progression remain suspended throughout;
+- **closes only** when the member explicitly closes it or chooses to resume ordinary
+  participation.
+
+**A prior stance may be preserved as a visible pending direction, but must never resume
+automatically.** Resumption is a member act. This is also what makes §6/F5 coherent: the
+member's direction is held rather than discarded, and its return is theirs to choose.
 
 ### 3.1 Suspension, not addition
 
@@ -233,13 +286,20 @@ those the member has moved to `rejected` (§1).
 **Note the limit honestly:** this closes the *deliberate* return case. It does not address
 drift — see §7.1.
 
-### 3.4 Open decision
+### 3.4 Correction and rejection — D-2, adjudicated
 
-**D-2 — does a correction create a rejection offer?** A correction governs **Layer 1**
-(relational direction) immediately. It is not, by itself, a **Layer 2** act — standing is
-member-only. But if the corrected frame never reaches `rejected`, §3.3 has nothing to bind
-to. Candidate: the correction governs the turn **and** surfaces a rejection *offer* the
-member may take. **Founder decision; not assumed here.**
+**A correction opens a Layer-1 repair episode. It never changes Layer-2 standing
+automatically.**
+
+- If the member **explicitly selects a MAIA span** and chooses **Not what I mean**, that
+  act itself creates `reject`.
+- A **general relational correction** — *"I never said his issue was speed"* — **may offer**
+  the member a rejection selection. **It may not infer one.**
+
+The consequence is deliberate and must not be quietly closed later: **§3.3's "stop using
+the relinquished frame" binds only to frames the member actually rejected.** A correction
+that the member never converts into a `reject` leaves nothing structural to enforce — the
+episode governs participation, and that is all. See §5.4.
 
 ---
 
@@ -251,18 +311,24 @@ not a universal defect.
 > **A stance may govern *how* MAIA answers. It may never change *what* the member asked her
 > to answer.**
 
-**Required:**
+**Task extraction must not become another hidden interpretation.**
 
-1. The member's task — the question or request in the most recent member block — is
-   **identified as a distinct element** of the request, not left implicit in prose.
-2. The response contract requires the task to be addressed.
-3. If a stance cannot answer the task in good faith, MAIA **says so** rather than
+1. **The canonical task is the member's exact block or selected span — never MAIA's
+   paraphrase of it.** A paraphrase is a MAIA-origin artifact (I9) and cannot stand in for
+   what was asked.
+2. **Any inferred task is a candidate only.** It may be shown for confirmation; it never
+   silently replaces the canonical task.
+3. The task carries a **`source_task_id`** referencing that block or span, and **both the
+   request and the persisted response carry it**, so a stance cannot silently replace what
+   was asked and the substitution is detectable after the fact.
+4. The response contract requires the canonical task to be addressed.
+5. If a stance cannot answer the task in good faith, MAIA **says so** rather than
    substituting a different question.
-4. The task is a **Layer 1** object: it governs the turn and does not become a proposition.
+6. The task is a **Layer 1** object: it governs the turn and never becomes a proposition.
 
-**Limit, stated honestly:** whether a response addressed the task is only weakly checkable
-after the fact. The structural control is making the task explicit in the request, not
-grading the answer.
+**Limit, stated honestly:** whether a response *addressed* the task is only weakly
+checkable after the fact. The structural controls are the exact-span canonical task and the
+`source_task_id` on both sides of the exchange — not grading the answer.
 
 ---
 
@@ -274,28 +340,65 @@ Deliverables 3 and 6. Findings D, F; Connect.
 
 **Only `current` propositions ground synthesis.**
 
-Prior MAIA reflections may be supplied as history **only** when labelled as MAIA offerings,
-and **no instruction may direct MAIA to advance from its own prior formulations as settled
-ground.** Two instructions in the witnessed build did exactly that; they were authored to
-stop looping and bought it by promoting MAIA's output to ground.
+**Prior MAIA reflections are NOT automatically supplied** (D-4). The witnessed build sent
+the last three on every turn. A prior MAIA block may return **only** when the member
+**explicitly references it** or **invokes repair upon it**, and it remains **non-ground**
+when it does.
+
+**Anti-repetition needs a different mechanism.** It must be met by a **separate move ledger
+or post-generation comparison** — something that records *what move was already made*
+without making the prior wording into ground. Two instructions in the witnessed build did
+the opposite: authored to stop looping, they bought it by promoting MAIA's output to
+settled structure.
 
 **Required property, not a wording change:** the anti-repetition objective must be met by a
-mechanism that **cannot** promote epistemic status. Continuity is not ratification.
+mechanism that **cannot** promote epistemic status. **Continuity is not ratification.**
 
 ### 5.2 Connect: verified source or explicit analogy
 
-**Structural gate, ahead of validation.** Connect must emit **either**:
+**Structural gate, ahead of validation. Verification must be external to MAIA.**
 
-- a **verified source with provenance**, or
-- an explicitly labelled **`maia_analogy`**
+> **A source is "verified" only when accompanied by a retrieval or member-source receipt
+> with identifiable provenance. MAIA cannot certify its own attribution.**
+
+Connect must emit **either**:
+
+- a source **with an external receipt** — retrieval result or member-supplied source,
+  carrying identifiable provenance; or
+- an explicitly labelled **`maia_analogy`**; or
+- a statement that **no verified source is available**.
 
 Machine-readable, not a stylistic convention. The observed failure attributed MAIA's own
-analogy to *"what negotiation theorists call…"* with no identifiable theorist — pseudo-
-lineage, which no prompt instruction caught.
+analogy to *"what negotiation theorists call…"* with no identifiable theorist. **A
+self-certifying gate would have passed it** — the model was confident. Only an external
+receipt distinguishes the cases.
+
+**Consequence for D-5:** Connect therefore **requires retrieval**, which is a capability
+question, not only a model-choice question.
 
 **Validation is the second line**, not the first.
 
-### 5.3 The epistemic boundary
+### 5.3 Immediate appropriation — the control Finding D still needs
+
+**The standing model does not close Finding D on its own.** It prevents unratified language
+from becoming *future* ground. It does **nothing** to stop MAIA from saying, in the
+**current response**, *"you're building…"* or *"what you believe is…"*.
+
+**Required response contract:**
+
+1. **Any claim about a member-held position must reference `current` proposition IDs.**
+   Unreferenced member-attribution is not permitted.
+2. **Any new formulation must be emitted and persisted as an `open` MAIA offering** —
+   addressable, with standing, and therefore available for `adopt` / `revise` / `reject`.
+3. **Unsupported member-attribution is rejected before persistence.** The response does not
+   reach the thread.
+
+> ⚠️ **If (3) cannot yet be enforced, this part of Finding D remains explicitly
+> UNRESOLVED.** It must **not** be declared repaired by the standing model. The standing
+> model governs ground; this contract governs assertion, and they fail independently — as
+> the witness showed, in the same thread.
+
+### 5.4 The epistemic boundary
 
 The boundary is currently one shared sentence appended to five directives. Both stances
 tested against real material softened it, and **the tests assert the sentence is present,
@@ -330,6 +433,48 @@ direction for **a turn that never happened**, and requiring re-selection to retr
 **F6.** A silently dropped direction is currently indistinguishable from a working one: the
 chip clears either way, and a lost stance erases its own evidence. This is an **Invariant 17
 concern** — standing that depends on a transmission the member cannot verify.
+
+### 6.1 The ask attempt — what makes F2–F6 structurally possible
+
+**Before generation**, durably establish an **attempt** carrying:
+
+- the **member block**
+- the **canonical task** (`source_task_id`, §4)
+- the **stance**
+- the **repair-episode state** (§3)
+
+The attempt then resolves to **`completed`** or **`failed`**.
+
+This single object is what makes the rest possible rather than aspirational:
+
+| Enables | How |
+|---|---|
+| **F5 — preserve direction** | the stance lives on the attempt, not only in component state that clears in a `finally` block |
+| **F6 — receipt** | the attempt **is** the receipt; the member can see their direction was received |
+| **faithful retry** | retry re-runs *the recorded attempt*, not a reconstruction |
+| **INV-2 — diagnosis** | a failed attempt is a durable record with its inputs, which is exactly what the unexplained 500 lacked |
+
+Without it, the witnessed failure repeats: the member's direction vanished, no receipt
+existed, the retry required re-selection, and nothing was left to diagnose.
+
+### 6.2 Truncated model output must not be persisted as a complete reflection
+
+The witnessed primitive sets `max_tokens: 300` and **never inspects `stop_reason`**. In the
+Messages API, `stop_reason: "max_tokens"` means the response **was truncated at the ceiling**
+— the documented responses are to raise the ceiling or continue the response, not to treat
+the fragment as finished.
+
+**Required:**
+
+1. `stop_reason` is inspected on every response.
+2. `stop_reason == "max_tokens"` **fails the attempt** (§6.1) or triggers continuation. It
+   is **never** persisted as a complete reflection.
+3. `stop_reason == "refusal"` is handled distinctly from a generation failure.
+4. **`300` must not remain a universal output ceiling** (D-5). Ceilings are per-stance.
+
+**Also noted for the implementation lane, not fixed here:** the primitive pins
+`claude-haiku-4-5-20251001`. Current guidance is to use the exact published model ID without
+a date suffix. A code change, therefore out of scope for this documentation pass.
 
 ---
 
@@ -368,17 +513,24 @@ worked the second time"* is not a diagnosis.
 
 ---
 
-## 8. Open decisions — founder ratification required
+## 8. Decisions — adjudicated 2026-09-02
 
-Specification cannot proceed past these without adjudication.
+All five are decided; see the table at the head of this document. Where each landed:
 
-| # | Decision |
-|---|---|
-| **D-1** | **Salience is a separate axis from standing.** *"Not central"* must not be expressible only as `reject`. Is salience an attribute of a `current` proposition, a separate event, or out of scope for this lane? |
-| **D-2** | **Does a correction surface a rejection offer?** (§3.4) Without it, §3.3 has no `rejected` set to bind to; with it, a Layer 1 act reaches into Layer 2. |
-| **D-3** | **Default proposition granularity.** A span, a sentence, a paragraph? This determines whether the member curates comfortably or not at all. |
-| **D-4** | **Should prior MAIA reflections be supplied to the prompt at all** once grounding is structural? They exist to prevent repetition; that objective may be servable from `current` propositions plus a much smaller history window. |
-| **D-5** | **Model and budget fit.** The primitive is Haiku 4.5 at `max_tokens: 300`, chosen for work that is "narrow, disciplined, format-bound." Four stances are that; **Stay with this is not** — a tight budget pressures toward the most compressed move, which is a summary or an offering. |
+| # | Adjudication | Where applied |
+|---|---|---|
+| **D-1** | Salience out of scope; no field added | §1.7 |
+| **D-2** | Correction opens a Layer-1 episode; explicit span selection creates `reject`; a general correction may offer, never infer | §3.4 |
+| **D-3** | Exact member-selected contiguous span; snapshot + block ID + offsets + version stored | §1.7 |
+| **D-4** | No automatic prior-reflection window; return only on explicit member reference or repair, non-ground; anti-repetition via move ledger or post-generation comparison | §5.1 |
+| **D-5** | Per-stance evaluation gate; Haiku 4.5 a baseline candidate only; Connect requires retrieval; `300` is not a universal ceiling | §5.2, §6.2 |
+
+### Carried forward as design work, not blocking decisions
+
+- **D-5 evaluation** must be run per stance against real threads before any model is
+  ratified. *Stay with this* is the case where the format-bound assumption is least safe.
+- **§5.3(3)** — enforcement of unsupported member-attribution rejection. If it cannot be
+  built, that part of Finding D stays **explicitly unresolved**.
 
 ---
 
@@ -389,8 +541,10 @@ This specification is complete when:
 1. Every finding A–F maps to a named structural control — **not** to a prompt instruction.
 2. Every control is expressible as an invariant enforceable at a boundary, or is explicitly
    marked as an unresolved investigation.
-3. D-1 through D-5 are adjudicated.
+3. ~~D-1 through D-5 are adjudicated.~~ **Done 2026-09-02** (§8).
 4. No implementation, migration, or prompt edit exists on this lane.
+5. Any control that **cannot** be enforced is marked unresolved rather than described as
+   repaired — currently **§5.3(3)**, **§7.1** and **§7.2**.
 
 **Then**: founder ratification → implementation → **a new technical and lived witness of
 Cuts 0–2** → only if green, consider merge or deployment.
