@@ -971,7 +971,14 @@ transmitting correctly. `POST /ask-maia` returned **500 Internal Server Error**.
 response was produced. **This is a runtime failure, not a stance-quality result**, and
 Distill remains unexercised. Server-side stack trace not yet captured; cause unassigned.
 
-**Incidental result — Cut 0's no-silent-failure fix, tested by an unplanned failure:**
+**Incidental result — Cut 0's no-silent-failure fix, tested by an unplanned failure.
+Classified:**
+
+| # | Finding | Verdict |
+|---|---|---|
+| 1 | **No-silent-failure** | **PASS** |
+| 2 | **Failure-state truthfulness** | **FAIL** — internal server language leaked, the intended fallback was bypassed, and that fallback misdescribes the persisted state |
+| 3 | **Failed-turn direction loss** | **FAIL** — the stance clears although its requested MAIA turn never occurred, leaving no receipt and no stance-preserving retry path |
 
 - **No-silent-failure behaviour: PASS.** An error reached the member in the composer
   rather than console-only. Before Cut 0 every ask failure was `console.error` and
@@ -985,11 +992,11 @@ Distill remains unexercised. Server-side stack trace not yet captured; cause una
   is unchanged"* asserts something false: the autosave had already committed the member's
   block, so the thread **had** changed. Both strings misdescribe the state. A truthful
   formulation is: **"Your reflection was saved, but MAIA couldn't respond."**
-- **The stance cleared on failure.** `setStance(null)` runs in the `finally` block, so a
-  failed ask discards the member's direction exactly as a successful one does. To retry
-  they must re-select. This compounds the **no-receipt** finding: the member's explicit
-  direction is thrown away by a failure that was not theirs, with no indication it was
-  ever received.
+- **Failed-turn direction loss.** `setStance(null)` runs in the `finally` block, so the
+  stance clears **although the MAIA turn it requested never occurred**. The member is left
+  with no receipt that the direction was received and no stance-preserving retry path — to
+  try again they must re-select. This compounds the **no-receipt** finding: an explicit
+  member direction is discarded by a failure that was not theirs.
 
 Diagnosis only. No repair authorized for any of the above.
 
