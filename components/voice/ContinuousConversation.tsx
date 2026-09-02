@@ -33,6 +33,12 @@ import {
   type NativePartialState,
 } from '@/lib/voice/nativePartialAccumulator';
 import {
+  mayResumeSilenceClock,
+  mayArmSilenceClock,
+  shouldDeferTurnClose,
+  MAX_TURN_CLOSE_DEFERRALS,
+} from '@/lib/voice/silenceClockAuthority';
+import {
   recordDispatch,
   resetDispatchProvenance,
   type TranscriptDispatchSource,
@@ -363,6 +369,52 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
   const nativeAudioLevelListenerRef = useRef<any>(null); // Store audioLevel listener handle for UV visualizer
   const nativeSilenceTimerRef = useRef<NodeJS.Timeout | null>(null); // Silence detection timer for auto-submit
   const nativeStatusRef = useRef<'started' | 'stopped'>('stopped'); // 🔑 Single source of truth for native listening state
+
+  // ── Silence clocks are suspended while the recognizer is not capturing ────
+  //
+  // GOVERNING RULE: only evidence of MEMBER silence may end the member's turn.
+  // Absence of audio because the recognition task is restarting is not silence.
+  //
+  // Both native silence clocks (2.5s no-partials, 1.5s low-audio) measure the
+  // ABSENCE of something. Neither can tell "the member stopped talking" from
+  // "the microphone stopped listening" — and iOS stops the microphone
+  // constantly, for 800ms to 2500ms at a time. A clock armed by the last word
+  // before a task died kept counting through the gap and committed the turn
+  // mid-sentence, attributing a machine pause to the speaker. Sealing the
+  // transcript (which this branch already does) preserves the WORDS across that
+  // gap but does not stop the turn from being ended inside it.
+  //
+  // So on `listeningState: stopped` the clocks are cleared and suspended, and
+  // they resume only on evidence that capture is genuinely live again:
+  // recognition confirmed started AND a frame or partial actually arriving.
+  // A straggling frame from the dead task does not qualify — hence the
+  // `nativeStatusRef` half of the test.
+  //
+  // The 1.5s/2.5s thresholds themselves are deliberately untouched here. How
+  // patient MAIA should be with a real human pause is a turn-taking question,
+  // and mixing it into this repair would make the device witness unable to
+  // separate "transport cut the utterance" from "the threshold is too eager".
+  const silenceClockSuspendedRef = useRef(false);
+
+  /**
+   * Resume silence measurement — but only on real capture evidence.
+   *
+   * Two conditions, both required. `nativeStatusRef === 'started'` says the
+   * recognizer confirmed it is running (not merely that `start()` resolved —
+   * the state handler sets this from the native event). The call site says a
+   * frame or a partial actually arrived. Either alone is insufficient: a
+   * straggling audio frame from the task that just died would otherwise lift
+   * the suspension inside the very gap it exists to cover.
+   */
+  const resumeSilenceClockOnCaptureEvidence = useCallback((source: 'partial' | 'audio_frame') => {
+    if (!mayResumeSilenceClock({
+      suspended: silenceClockSuspendedRef.current,
+      nativeStatus: nativeStatusRef.current,
+    })) return;
+    silenceClockSuspendedRef.current = false;
+    logVoiceEvent('ios_voice_silence_clock_resumed', { source });
+    console.log(`▶️ [Native] Silence clock resumed — capture live (${source})`);
+  }, []);
   const smoothedAudioLevelRef = useRef<number>(0); // EMA-smoothed audio level for UV visualizer
   const lastHighAudioTimeRef = useRef<number>(0); // Track when we last had speech (for silence detection)
   const silenceTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -2958,6 +3010,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
             });
             console.log('📝 [Native] Partial:', transcript);
             addDebug(`🗣️ HEARD: "${transcript.slice(0, 40)}${transcript.length > 40 ? '...' : ''}"`);
+            resumeSilenceClockOnCaptureEvidence('partial');
             // The member is still talking: the recognizer stop that armed this
             // was a task boundary, not the end of a turn.
             if (nativeTurnCloseTimerRef.current) {
@@ -3015,33 +3068,42 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
             // If no partials for 2.5s after speech, auto-submit (audio levels may not fire on iOS)
             if (nativeSilenceTimerRef.current) {
               clearTimeout(nativeSilenceTimerRef.current);
-            }
-            nativeSilenceTimerRef.current = setTimeout(() => {
-              const finalTranscript = accumulatedTranscript.current.trim();
-              if (finalTranscript && !isProcessingRef.current && !isSpeakingRef.current) {
-                logVoiceEvent('ios_voice_final_result_received', {
-                  source: 'partial_silence_timeout_2500ms',
-                  transcriptLength: finalTranscript.length,
-                });
-                console.log('⏱️ [Native] Fallback silence timeout - auto-submitting:', finalTranscript);
-                addDebug('⏱️ Auto-submit (2.5s silence)');
-                clearAccumulatedTranscript();
-                isProcessingRef.current = true;
-                setIsRecording(false);
-                isRecordingRef.current = false;
-                // A silence timer owns this turn; a close armed by an earlier
-                // recognizer stop must not fire over the next utterance.
-                if (nativeTurnCloseTimerRef.current) {
-                  clearTimeout(nativeTurnCloseTimerRef.current);
-                  nativeTurnCloseTimerRef.current = null;
-                }
-                witnessDispatch('native_silence', 'silence_timer', finalTranscript, recognitionEpochRef.current, turnCommitIdRef.current);
-                onTranscript(finalTranscript);
-                // Stop native recognition
-                NativeSpeechRecognition.stop().catch(() => {});
-              }
               nativeSilenceTimerRef.current = null;
-            }, 2500); // 2.5s of no partials = end of speech
+            }
+            if (!mayArmSilenceClock({ suspended: silenceClockSuspendedRef.current })) {
+              // Capture is not confirmed live. A clock started here would be
+              // measuring the recognizer's absence, not the member's, and the
+              // turn-close armed at the stop already covers a mic that never
+              // returns — see silenceClockSuspendedRef.
+              console.log('⏸️ [Native] Silence clock suspended — not arming (capture not live)');
+            } else {
+              nativeSilenceTimerRef.current = setTimeout(() => {
+                const finalTranscript = accumulatedTranscript.current.trim();
+                if (finalTranscript && !isProcessingRef.current && !isSpeakingRef.current) {
+                  logVoiceEvent('ios_voice_final_result_received', {
+                    source: 'partial_silence_timeout_2500ms',
+                    transcriptLength: finalTranscript.length,
+                  });
+                  console.log('⏱️ [Native] Fallback silence timeout - auto-submitting:', finalTranscript);
+                  addDebug('⏱️ Auto-submit (2.5s silence)');
+                  clearAccumulatedTranscript();
+                  isProcessingRef.current = true;
+                  setIsRecording(false);
+                  isRecordingRef.current = false;
+                  // A silence timer owns this turn; a close armed by an earlier
+                  // recognizer stop must not fire over the next utterance.
+                  if (nativeTurnCloseTimerRef.current) {
+                    clearTimeout(nativeTurnCloseTimerRef.current);
+                    nativeTurnCloseTimerRef.current = null;
+                  }
+                  witnessDispatch('native_silence', 'silence_timer', finalTranscript, recognitionEpochRef.current, turnCommitIdRef.current);
+                  onTranscript(finalTranscript);
+                  // Stop native recognition
+                  NativeSpeechRecognition.stop().catch(() => {});
+                }
+                nativeSilenceTimerRef.current = null;
+              }, 2500); // 2.5s of no partials = end of speech
+            }
           } else {
             logVoiceEvent('ios_voice_result_empty');
             addDebug('⚠️ partialResults fired but no matches');
@@ -3054,6 +3116,8 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
         nativeAudioLevelListenerRef.current = await (NativeSpeechRecognition as any).addListener('audioLevel', (data: { level: number }) => {
           const rawLevel = data.level || 0;
           const now = Date.now();
+
+          resumeSilenceClockOnCaptureEvidence('audio_frame');
 
           // 🔊 AMPLIFY: iOS native mic levels are inherently quiet (0.001-0.03 range)
           // Amplify by 30x to scale into visualizer range (0-1)
@@ -3114,7 +3178,8 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
           const hasRecentSpeech = (now - lastHighAudioTimeRef.current) < 2000; // 2s window for natural pauses
           const hasAnyTranscript = transcript.length > 0;
 
-          if (rawLevel < 0.01 && hasAnyTranscript && hasRecentSpeech) {
+          if (rawLevel < 0.01 && hasAnyTranscript && hasRecentSpeech &&
+              mayArmSilenceClock({ suspended: silenceClockSuspendedRef.current })) {
             // Start silence timer if not already running
             if (!nativeSilenceTimerRef.current) {
               console.log('🔕 [Native] Silence detected after speech, starting 1.5s timer');
@@ -3205,6 +3270,26 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
             nativePartialStateRef.current = sealNativeSegment(nativePartialStateRef.current);
             const heldAtStop = accumulatedTranscript.current.trim();
 
+            // ── Stop the silence clocks. Machine silence is not human silence ──
+            // Sealing preserves the WORDS across the gap; this preserves the
+            // TURN. Both native clocks measure an absence, and neither can tell
+            // "the member stopped talking" from "the microphone stopped
+            // listening". A clock armed by the last word before this stop would
+            // keep counting through an 800–2500ms restart and commit the turn
+            // mid-sentence — the machine pause read as the speaker's.
+            if (nativeSilenceTimerRef.current) {
+              clearTimeout(nativeSilenceTimerRef.current);
+              nativeSilenceTimerRef.current = null;
+            }
+            if (!silenceClockSuspendedRef.current) {
+              silenceClockSuspendedRef.current = true;
+              logVoiceEvent('ios_voice_silence_clock_suspended', {
+                heldChars: heldAtStop.length,
+                wasListening: isListeningRef.current,
+              });
+              console.log('⏸️ [Native] Silence clock suspended — recognizer stopped, not the member');
+            }
+
             if (heldAtStop) {
               logVoiceEvent('ios_voice_turn_held_open', {
                 heldChars: heldAtStop.length,
@@ -3214,11 +3299,14 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
               console.log(`🫱 [Native] Recognizer stopped mid-utterance — holding ${heldAtStop.length} chars open`);
               addDebug(`🫱 Holding turn open (${heldAtStop.length} chars)`);
 
-              if (nativeTurnCloseTimerRef.current) clearTimeout(nativeTurnCloseTimerRef.current);
-              nativeTurnCloseTimerRef.current = setTimeout(() => {
+              // Self-arming so a deferral can extend the hold. An inline
+              // `setTimeout(() => …)` cannot re-schedule itself, and the
+              // deferral below needs exactly that.
+              let closeDeferrals = 0;
+              const closeTurnAfterRecognizerStop = () => {
                 nativeTurnCloseTimerRef.current = null;
                 const finalTranscript = accumulatedTranscript.current.trim();
-                // Nothing left to send: a silence timer already committed this
+                // Nothing left to send: a silence clock already committed this
                 // turn while the close was pending. Not an error — two paths
                 // watch the same buffer and the first one to fire owns it.
                 if (!finalTranscript) return;
@@ -3228,11 +3316,48 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
                   console.log('🫱 [Native] Turn-close deferred — MAIA is responding; words held');
                   return;
                 }
+                // The silence-clock rule, applied to the close itself. Capture
+                // is confirmed live and the member is audibly STILL SPEAKING —
+                // recognition simply has not produced the new task's first
+                // partial yet. Closing here would end a sentence mid-breath on
+                // the strength of a transcription lag.
+                //
+                // Bounded: if audio stays live but recognition produces nothing
+                // at all, extending forever would hold the member's words
+                // hostage to a recognizer that is not working. After the cap the
+                // turn closes and the words go, which is the recoverable
+                // failure. A working recognizer never reaches this path — its
+                // partials cancel the close outright.
+                if (shouldDeferTurnClose({
+                  now: Date.now(),
+                  nativeStatus: nativeStatusRef.current,
+                  lastHighAudioAt: lastHighAudioTimeRef.current,
+                  deferrals: closeDeferrals,
+                })) {
+                  closeDeferrals++;
+                  logVoiceEvent('ios_voice_turn_close_deferred', {
+                    heldChars: finalTranscript.length,
+                    deferral: closeDeferrals,
+                    maxDeferrals: MAX_TURN_CLOSE_DEFERRALS,
+                  });
+                  console.log(`🫱 [Native] Turn-close deferred (${closeDeferrals}/${MAX_TURN_CLOSE_DEFERRALS}) — member still audible`);
+                  nativeTurnCloseTimerRef.current = setTimeout(
+                    closeTurnAfterRecognizerStop,
+                    NATIVE_TURN_CLOSE_MS
+                  );
+                  return;
+                }
                 console.log('✅ [Native] Turn closed after recognizer stop:', finalTranscript.length, 'chars');
                 clearAccumulatedTranscript();
                 witnessDispatch('native_stop', 'native_stop', finalTranscript, recognitionEpochRef.current, turnCommitIdRef.current);
                 onTranscript(finalTranscript);
-              }, NATIVE_TURN_CLOSE_MS);
+              };
+
+              if (nativeTurnCloseTimerRef.current) clearTimeout(nativeTurnCloseTimerRef.current);
+              nativeTurnCloseTimerRef.current = setTimeout(
+                closeTurnAfterRecognizerStop,
+                NATIVE_TURN_CLOSE_MS
+              );
             }
 
             // 🔥 FIX: Only handle restart logic if user wants continuous conversation

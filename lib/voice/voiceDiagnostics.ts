@@ -142,6 +142,19 @@ export type VoiceDiagEvent =
   | 'ios_voice_segment_boundary_joined'
   | 'ios_voice_turn_held_open'
 
+  // Silence clocks vs. recognizer restarts. Both native clocks measure an
+  // ABSENCE and cannot distinguish "the member stopped talking" from "the
+  // microphone stopped listening", so they are suspended across a restart:
+  //
+  //   ios_voice_silence_clock_suspended  a recognizer stop halted turn-timing
+  //   ios_voice_silence_clock_resumed    capture confirmed live again
+  //   ios_voice_turn_close_deferred      audio live, recognition silent — held
+  //
+  // Lengths and counts only — never transcript content.
+  | 'ios_voice_silence_clock_suspended'
+  | 'ios_voice_silence_clock_resumed'
+  | 'ios_voice_turn_close_deferred'
+
   // ── VOICE-CAPTURE-01B-OBS dispatch provenance ───────────────────────────
   // `processAccumulatedTranscript` is one of EIGHT `onTranscript(...)` call
   // sites in ContinuousConversation, and the only one behind the two dedup
