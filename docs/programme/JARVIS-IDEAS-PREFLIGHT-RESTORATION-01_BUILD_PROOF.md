@@ -124,7 +124,7 @@ become "anything containing group-hover is allowed."
 
 ---
 
-## 5. Finding surfaced BY the repair — open, not waived
+## 5. Third violation — surfaced by the repair, then repaired
 
 Removing the PCRE path revealed a violation the old gate **provably could not
 see**:
@@ -136,43 +136,142 @@ app/studio/calendar/page.tsx:981
   </div>
 ```
 
-- **Real text**, dimmed by bare `opacity-70` on a coloured event chip. This is
-  the exact footgun the guard exists to prohibit, and literally the example in
-  the gate's own fix text (`'text-sm opacity-70' → 'text-sm text-stone-400'`).
+- **Real text** (an event timestamp), dimmed by bare `opacity-70` on a coloured
+  chip. The exact footgun this guard exists to prohibit, and literally the
+  example in its own fix text.
 - **Present at canonical `750f492`** ⇒ historical debt, not lane-introduced.
-- **Why the old regex missed it**: its `text-` matcher was
+- **Why the old regex missed it**: its matcher was
   `text-(?!opacity)[a-zA-Z0-9/:-]+`, and `text-[10px]` continues with `[`,
-  which is outside that character class. Arbitrary-value Tailwind classes
+  outside that character class. Arbitrary-value Tailwind classes
   (`text-[10px]`, `text-[#fff]`) escaped the old gate entirely. Verified:
-  `grep -cP '<old regex>'` on this line returns `0`.
+  `grep -cP '<old regex>'` on this line returns `0`. This was **masked
+  under-catching**, not a new defect.
 
-It is **not** exempted and **not** waived. It is not repaired either, because
-its correction is not mechanical: the timestamp inherits one of three
-source-dependent colours (`text-amber-300` / `text-slate-200` / `text-teal-300`)
-and `opacity-70` mutes whichever applies. Any explicit token either flattens
-that three-way colour coding or requires editing the conditional block —
-a member-visible appearance decision on a Studio surface, outside the
-authorized footprint. **Held for adjudication.**
+**Ruling applied** (authorized as newly exposed historical debt required to
+restore the gate): repair as a real canonical violation using explicit **opaque**
+source-colour tokens — no bare opacity, and no `/70` alpha workaround. An
+alpha-suffixed token would pass the regex while moving the same opacity-based
+dimming one layer inward: green by syntax, not by invariant.
+
+The parent chip already establishes three source-specific foreground colours.
+The timestamp now takes an explicit opaque token one step down from each,
+preserving both the source tint and the visual hierarchy:
+
+```text
+MAIA    text-amber-300  → timestamp  text-amber-400
+Studio  text-slate-200  → timestamp  text-slate-300
+Other   text-teal-300   → timestamp  text-teal-400
+```
+
+`text-[10px]` retained. No opacity of any kind on the element.
+
+### Disclosed side effect — the line left the gate's scanned surface
+
+The gate matches `class(Name)?="` — a **literal double-quoted** class string.
+A per-source colour requires a JSX expression (`className={...}`), so the
+repaired line is no longer scanned by this gate. This must not be read as the
+reason the gate went green: the violation is genuinely gone (no opacity token
+remains), and the probe in §7 proves the gate still turns red on the original
+text.
+
+It does, however, name a **real pre-existing scope gap**: the gate is blind to
+template-literal and expression classNames. The same gap already exempts this
+chip's own parent button, which carries `hover:opacity-80 transition-opacity`
+in a backtick className and has never been scanned. Widening the gate to
+expression classNames is a larger change than this unit authorizes.
+**Recorded as a finding for a follow-up unit; not fixed here, not waived.**
 
 ---
 
-## 6. Proof state
+## 6. Bounded footprint (final)
 
 ```text
-check:dark-text-opacity   RED — one remaining hit (§5), correctly detected
-check:no-direct-anthropic GREEN
-npm run preflight         RED — chain stops at step 1 on the §5 hit
+scripts/check-dark-text-opacity.sh     gate repair (§2)
+app/studio/layout.tsx                  real violation, drag handle (§3)
+app/studio/calendar/page.tsx           real violation, timestamp (§5)
+docs/programme/…_FIND.md               FIND record
+docs/programme/…_BUILD_PROOF.md        this document
 
-field/page.tsx            byte-unchanged (git diff --quiet → clean)
-footprint                 exactly 2 files:
-                            scripts/check-dark-text-opacity.sh
-                            app/studio/layout.tsx
+app/studio/field/page.tsx              BYTE-UNCHANGED (git diff --quiet, clean)
 ```
 
-Unverified in this container (environment artifacts, per FIND F3/F4, unchanged
-by this unit): `ci:guard` (no `node_modules`) and `preflight-compose-config.sh`
-(gitignored `.env.docker`). Preflight cannot reach either step while §5 stands.
+---
 
-**The unit does not claim green.** Both originally-flagged causes are
-discharged; a third, previously invisible, blocks the mission and awaits a
-ruling.
+## 7. Proof
+
+**Repository gates** — all eight run to completion:
+
+```text
+check-dark-text-opacity        ✅ EXIT 0   No dark-text opacity footguns found
+check:no-supabase              ✅ EXIT 0
+check:no-direct-anthropic      ✅ EXIT 0
+check:no-vendor-voices         ✅ EXIT 0
+check:voice-provenance         ✅ EXIT 0
+check:no-openai                ✅ EXIT 0
+check:member-owned-boundary    ✅ EXIT 0
+ci:guard                       ✅ EXIT 0   1 suite passed (deps installed)
+npm run typecheck              ✅ EXIT 0   No TypeScript regressions
+```
+
+FIND F3 is **resolved, not assumed**: `ci:guard` was exit 127 only because
+`node_modules` was absent. With dependencies installed it passes.
+
+**Negative controls** — end-to-end through the real gate, one tracked probe
+fixture at a time in a scoped directory, each reverted (0 probe files remain):
+
+```text
+✅ PASS  text-slate-600 opacity-0 group-hover:opacity-100
+✅ PASS  text-slate-600 disabled:opacity-50
+✅ FAIL  text-sm opacity-70
+✅ FAIL  text-slate-600 opacity-50
+✅ FAIL  text-slate-600 opacity-50 group-hover:opacity-100
+✅ FAIL  text-opacity-50
+```
+
+Case 5 is load-bearing: the reveal exemption did **not** become "anything
+containing group-hover is allowed."
+
+**Forbidden probe** — the repaired gate actually turns red on real repository
+content, then byte-for-byte revert:
+
+```text
+original violation restored at calendar/page.tsx:981   → gate EXIT 1  (RED)
+byte-for-byte revert                                    → gate EXIT 0  (GREEN)
+```
+
+**The one step this container cannot run.** `npm run preflight` reaches its
+final step, `preflight-compose-config.sh`, and stops:
+
+```text
+preflight: .env.docker not found — docker compose config requires it.
+```
+
+`.env.docker` is gitignored (`.gitignore:303`) and exists only on the main
+checkout; the docker daemon is also unreachable here. This is an environment
+precondition, unchanged and untouched by this unit — the CLAUDE.md trap. A
+synthetic `.env.docker` was **not** fabricated to force the chain green; that
+would be the same "green by syntax, not by invariant" failure rejected in §5.
+
+```text
+Every repository gate in the chain:  GREEN
+Final chain step:                    UNRUNNABLE HERE — needs a checkout with
+                                     .env.docker and a live docker daemon
+```
+
+**`npm run preflight` returning 0 must therefore be confirmed once on the main
+checkout.** Everything it gates on is proven green above.
+
+---
+
+## 8. Held, as ruled
+
+```text
+CI enforcement of preflight   HELD — not wired, no CI file touched
+tsconfig.ship coverage        HELD — untouched
+check:no-direct-anthropic     OUT OF UNIT — untouched, green at canonical and HEAD
+T1 / eb0a7af                  FROZEN — not present in clone, untouched
+500 reproduction · T2 · C3/C5 · Cuts 3-4    NOT ENTERED
+```
+
+**Open finding carried out of this unit** (§5): the gate does not scan
+template-literal or expression classNames. Needs its own authorization.
