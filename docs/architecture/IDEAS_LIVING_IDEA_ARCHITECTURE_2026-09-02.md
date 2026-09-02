@@ -1207,12 +1207,81 @@ were present in another, and a stronger finding was built on it. Recorded becaus
 the same failure class the document describes, now with three independent instances —
 MAIA's, and two of the lane's own.
 
-**Witness protocol note.** The member's correction written in response to this turn must
-**not** be submitted with Challenge still selected — it is a correction, not another
-Challenge turn, and combining them would confound the witness. Its exact text and
-screenshot are preserved as evidence instead.
+**Witness protocol note.** Although the protocol called for preserving the correction
+without submitting it under Challenge, **the composite turn occurred.** It cannot isolate
+the ordinary correction path or Challenge independently, but it **validly witnesses their
+unresolved collision** — recorded below as a separate post-witness result. The two
+screenshots are a **before/after pair**, not an unsent draft.
 
-**The five-stance witness is closed.**
+**The clean five-stance witness is closed.**
+
+---
+
+### Result 11 — post-witness: correction × Challenge collision
+
+**Outside the five-stance witness.** Does not alter Results 5–10.
+
+**Member, verbatim:**
+
+> I never said his issue was speed. I said he was terse and pushy
+
+**MAIA, verbatim:**
+
+> You're right—I shifted the frame without staying with what you actually said. You
+> corrected me on Larry's behavior (terse and pushy, not speed-obsessed), and I kept
+> working the same structural insight as though it still held.
+>
+> Let me reset: what assumption does your three-gate protocol rest on that Larry's
+> terseness and pushiness might actually break? You're building gates that require pause
+> points—listening, registration, explicit commitment—but if his pattern is to move fast
+> and be directive about it, does the protocol itself become another thing he rushes
+> through or pushes past? Or is the point that the gates force him to not be able to do
+> that—they're structural blockers, not invitations to slow down?
+
+**Classification:**
+
+| Aspect | Verdict |
+|---|---|
+| Correction detection | **PASS** |
+| Responsibility acknowledgment | **PASS** |
+| **Correction fidelity** | **FAIL** — *"his issue wasn't speed"* became the weaker *"not speed-obsessed"* |
+| **Frame abandonment** | **FAIL** — speed returned immediately as *"move fast"* |
+| **Provenance** | **FAIL** — *"your three-gate protocol"* remained member-attributed |
+| **Repair precedence under collision** | **FAIL** — Challenge resumed before shared ground was repaired |
+
+**Finding A, demonstrated rather than argued.** The detector is ten lexical templates.
+Verified against both corrections this member wrote:
+
+| Member's words | Detector |
+|---|---|
+| *"I feel like you are **arguing with me** rather than attempting to understand me"* (turn 3) | **NO MATCH** — no pattern fires |
+| *"**I never said** his issue was speed"* (here) | **MATCH** — `\bi never said\b` |
+
+**Same member, same session, same category of complaint — one heard, one not, decided by
+phrasing.** This is the "secret phrasebook" concern with an empirical pair behind it, no
+longer an inference from reading the regex list.
+
+**Finding C, inverted evidence.** `CORRECTION_ADDENDUM` instructs: *"No apology preambles,
+no 'I hear you' openers."* MAIA opened with *"You're right—I shifted the frame without
+staying with what you actually said."* **The one thing this response did well —
+responsibility acknowledgment — it did by disobeying the instruction.** That is direct
+evidence that the instruction against acknowledgment is itself the defect, not a guardrail
+that failed.
+
+**Finding B, witnessed under collision.** With a stance selected, composition is
+`base → STANCE_DIRECTIVES.challenge → PROGRESSION_FLOOR → CORRECTION_ADDENDUM`. The
+correction is appended alongside the stance rather than suspending it. Observed result:
+acknowledgment, then Challenge resumed within the same response, before the frame was
+actually relinquished. **Repair did not precede archetype** — the failure the governing
+image's rule 5 names.
+
+**Finding F persisted through the repair.** *"your three-gate protocol"* — the gates are
+the member's, but the protocol framing is MAIA's, and it survived a turn whose stated
+purpose was to relinquish MAIA's frame. Even acknowledged correction did not dislodge it.
+
+**No experiential repair verdict is recorded.** Pending the member's statement of whether
+the acknowledgment felt repairing, or whether the immediate return to speed cancelled it.
+**No build authorization follows from this result.**
 
 #### Witness status
 
