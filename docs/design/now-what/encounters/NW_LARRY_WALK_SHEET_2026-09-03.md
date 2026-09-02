@@ -59,7 +59,21 @@ ssh soullab@minisforum 'docker exec maia-sovereign printenv GIT_COMMIT'
 | 2 | **Exact invitation URL** | the real link, not a hand-typed path |
 | 3 | **`fieldContext` verified present** | read it in the URL before the meeting |
 | 4 | **Working sign-in** | tested end-to-end on the deployed build |
-| 5 | **Larry-relevant demo identity, no Kelly material** | confirm the account's kept acts and coach name are his context, not yours |
+| 5 | **Fictional demo identity** | see the constraint below — this is the strictest condition and the easiest to fail |
+
+### The demo identity must be fictional
+
+The account Larry is shown must contain **invented content only**. "Larry-relevant" means *plausible for his clientele* — it does not license using his material or anyone's real life.
+
+⛔ Must NOT appear in the demo account:
+
+- **Unlicensed source material.** No text, phrasing, domain names, or framing drawn from Larry's talk, deck, or transcript. The Materials Agreement is unsigned and Attachment A §3 is empty — nothing of his is licensed for display, including back to him.
+- **Real client information.** No actual member's kept acts, reflections, questions, or coaching content, from any field. Not anonymised, not lightly edited.
+- **Kelly's own material.** Not because it is unlicensed, but because it makes the walk about the wrong person.
+
+✅ What it should contain: invented kept acts, an invented carried thread, an invented coach name, written fresh for this walk.
+
+The demo is a **vessel showing the shape of the product**, not a sample of its content. If Larry recognises his own language in it, the walk has demonstrated the one thing the governance work exists to prevent.
 
 ### The stop rule
 
