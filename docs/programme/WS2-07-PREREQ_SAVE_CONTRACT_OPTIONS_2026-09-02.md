@@ -3,12 +3,16 @@
 ```text
 LANE       JARVIS-WS2-07-DEVELOPMENTAL-INTELLIGENCE-01
 UNIT       SECTION-ADDRESSABLE DRAFT LIVENESS · requirement C
-STATUS     OPTIONS + RECOMMENDATION · founder ruling required
-AUTHORIZES nothing to be built
+STATUS     RULED 2026-09-02 · Option 3 ratified · D1–D9 frozen
+AUTHORIZES A + B + D + E as one vertical slice, on
+           feature/ws2-section-addressable-draft-liveness
 DATE       2026-09-02
 ```
 
-⛔ **No implementation. A/B/D/E are held until C is ruled**, because C decides what the writable
+✅ **RULED. A/B/D/E are authorized as one vertical slice.** The reasoning below is preserved as
+it was put, with the ruling and its three amendments recorded in §6.
+
+⛔ *(as written before the ruling)* **No implementation. A/B/D/E are held until C is ruled**, because C decides what the writable
 object *is* after conversion, and the other four inherit that decision:
 
 ```text
@@ -189,3 +193,85 @@ any repair of FIND's F1
 
 **Once C is ruled, A + B + D + E build as one vertical slice** rather than four pieces waiting to
 learn what they mean.
+
+
+---
+
+## 6 · RULING — 2026-09-02
+
+```text
+SECTION-NATIVE CLIENT STATE
++ SERVER-DERIVED WHOLE-DRAFT CONTENT
++ EXPLICIT TOPOLOGY COMMANDS
++ NO INFERRED BOUNDARY MUTATION
+```
+
+**Option 3 ratified. D1–D8 ratified with three amendments, and D9 added.**
+
+Options 1 and 2 are not selected. Inferred boundaries are prohibited outright. A monolithic editor
+plus a hidden offset map stays admissible in theory and is not the chosen architecture, because
+**the offset map becomes a second fallible claim about the same text.**
+
+### Amendment 1 — "lossless" means mechanically exact
+
+Automatic conversion of an existing draft is allowed **only** where the server can compose the
+source-derived partition and prove, byte for byte:
+
+```text
+current draft content  ==  flatten(source-derived section slices)
+```
+
+Anything needing heading matching, similarity, inferred boundaries or diff attribution returns
+`boundary_confirmation_required`. ⛔ **No heuristic may be described as "lossless."** A
+member-assisted boundary-confirmation experience remains possible later; it is not required for
+this slice.
+
+### Amendment 2 — a partial section list is never a deletion
+
+The ordinary save is a **complete-state** payload: every current section present exactly once, in
+current order. Omission does **not** mean the member asked to remove a section — it means the
+payload is incomplete or is attempting a topology change this endpoint cannot perform. **Refuse
+with zero writes. Never infer intent from absence.**
+
+### Amendment 3 — "first" means document order
+
+```text
+split   the original id stays with the LEADING slice in pre-command document order;
+        the trailing slice receives a new server-minted id
+merge   the EARLIER section in document order survives; the later id is retired
+move    identities do not change
+```
+
+Contracts for the later explicit topology commands. **Split, merge and move are not part of this
+slice.**
+
+### D9 — the section-native LOAD contract
+
+The client cannot hold section-native state unless the server first gives it the identities.
+
+```ts
+type DraftRepresentation =
+  | { sectionAddressable: false; content: string }
+  | { sectionAddressable: true;
+      sections: readonly { id: string; text: string }[];
+      content: string }   // derived display projection only
+```
+
+Names may vary; these rules may not:
+
+```text
+the server supplies stable section ids
+the client never invents or re-derives them
+a converted save sends sections, never content
+a request supplying BOTH writable content AND sections is refused
+legacy unconverted drafts stay writable under their existing contract
+conversion is never smuggled into an ordinary content save
+```
+
+### The UI boundary
+
+A visually continuous manuscript remains the desired experience. But **a single textarea plus an
+invisible offset ledger is Option 2 wearing Option 3's name.** The implementation needs real
+section nodes in client state beneath one continuous-looking page. Section-native is not
+permission to draw a card around every section, and it is not satisfied by hiding an offset map
+behind one field.
