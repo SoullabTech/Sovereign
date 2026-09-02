@@ -17,6 +17,8 @@
  * semantic/body/cycle logic yet.
  */
 
+import type { ExclusionReason } from '../participationGate';
+
 /** Known memory sources the orchestrator can select from. */
 export type MemorySource =
   | 'conversation_history'
@@ -50,15 +52,56 @@ export type MemoryInfluenceStrength = 'none' | 'low' | 'medium' | 'high';
  * orchestrator. Only the fields the orchestrator actually uses — not the
  * full DB row. Callers can shape their own row into this.
  */
-export interface DevelopmentalMemorySnapshot {
+/**
+ * Fields common to a developmental memory snapshot regardless of whether it may
+ * participate. Deliberately carries NOTHING that could compose into a prompt.
+ */
+export interface DevelopmentalMemoryBase {
   id: string;
   memory_type?: string | null;
   facet_code?: string | null;
   significance: number;
   formed_at: string | Date;
-  /** Optional distilled directional cue (preferred over raw content). */
+}
+
+/**
+ * A snapshot the participation gate ADMITTED. This is the only shape that
+ * carries `directional_cue`.
+ */
+export interface AdmittedDevelopmentalMemory extends DevelopmentalMemoryBase {
+  participation: 'admitted';
+  /** Distilled directional cue. Present ONLY on an admitted snapshot. */
   directional_cue?: string | null;
 }
+
+/**
+ * A snapshot the participation gate EXCLUDED. It has no `directional_cue`
+ * field at all — not a null one, not an optional one. Absent.
+ */
+export interface ExcludedDevelopmentalMemory extends DevelopmentalMemoryBase {
+  participation: 'excluded';
+  exclusionReason: ExclusionReason;
+}
+
+/**
+ * P3 (MIPA Phase 0) — THE COMPOSER CANNOT REACH AN EXCLUDED CUE.
+ *
+ * This is a discriminated union, not a flag. `snapshot.directional_cue` does
+ * not typecheck until `snapshot.participation === 'admitted'` has narrowed it,
+ * because the excluded arm has no such property. The hostile-fork mutation
+ *
+ *     composer += developmentalMemory.directional_cue
+ *
+ * therefore fails to compile rather than failing a review — which is the
+ * difference between Grade A and Grade C.
+ *
+ * The previous shape carried `directional_cue?: string | null` unconditionally,
+ * and the only thing standing between it and the prompt was an adjacent
+ * instruction telling the model not to reference it.
+ */
+export type DevelopmentalMemorySnapshot =
+  | AdmittedDevelopmentalMemory
+  | ExcludedDevelopmentalMemory;
 
 /**
  * Minimal shape for a spiral state snapshot. Matches what loadSpiralState
@@ -76,13 +119,33 @@ export interface SpiralStateSnapshot {
  * Minimal shape for a theme signal snapshot (member_theme_signals row).
  * Only the fields the orchestrator uses.
  */
-export interface ThemeSignalSnapshot {
+/** Fields common to a theme signal regardless of participation. */
+export interface ThemeSignalBase {
   theme: string;
   signal_type?: string;
   resonance_strength?: number | null;
   element?: string | null;
   detected_at?: string | Date;
 }
+
+/** A theme signal the participation gate admitted. */
+export interface AdmittedThemeSignal extends ThemeSignalBase {
+  participation: 'admitted';
+}
+
+/** A theme signal the participation gate excluded. */
+export interface ExcludedThemeSignal extends ThemeSignalBase {
+  participation: 'excluded';
+  exclusionReason: ExclusionReason;
+}
+
+/**
+ * P3 — theme signals are machine inference about the member (scored
+ * `resonance_strength`, no provenance trail to what produced it). They compose
+ * no content today, but presence alone is still participation: an uncertified
+ * inference shaping tone is what the invariant excludes.
+ */
+export type ThemeSignalSnapshot = AdmittedThemeSignal | ExcludedThemeSignal;
 
 /**
  * Input accepted by buildMemoryInfluencePlan.

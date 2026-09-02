@@ -1,6 +1,6 @@
 # MIPA Phase 0 — Sovereignty Prerequisites Specification
 
-**Status**: Specification, plus **P2 executed and certified** (§4.P2-E). P1, P3–P6 remain specification only.
+**Status**: Specification, plus **P2 and P3 executed and certified** (§4.P2-E, §4.P3-E). P1, P4–P6 and P2b remain specification only.
 **Authorized**: 2026-09-02 (founder) — bounded to P1–P6, sequencing, acceptance criteria, migration prerequisites.
 **Semantic adjudication**: 2026-09-02 (founder) — all five blocking questions closed (§6).
 **§7 adjudication**: 2026-09-02 (founder) — all eight contradictions resolved (§7); **P2 authorized to execute**, P3 repair class authorized with execution gated behind P2's evidence.
@@ -413,6 +413,10 @@ It did **not** establish:
 
 ### P3 — Inferred layers carry provenance or do not participate
 
+> ### ✅ P3 EXECUTED AND CERTIFIED — 2026-09-02 · **Grade A (scoped)** · Refusal **R24**
+>
+> `__tests__/mipa-p3-participation-gate.test.ts` — **18/18**, with **six hostile-fork mutations verified failing** and reverted, including the mandated one. Evidence in §4.P3-E.
+
 **PURPOSE** — Prevents the highest-consequence failure in the architecture: MAIA's interpretation of a member being presented back to them as their own history. **This is live exposure today, not a future risk.**
 
 **INVARIANT** — No object participates in cognition without an explicit `(authored_by, authority_class)` pair.
@@ -487,6 +491,76 @@ It did **not** establish:
 **DEPENDENCIES** — Disposition (a) depends on the **endorse** semantics (§3.2) being settled — done here — and on P2's invariant for its gate. Disposition (b) has no dependencies.
 
 **NOT AUTHORIZED** — Writing the migration. Backfilling. Adding the endorse gesture. Removing the layers.
+
+---
+
+### P3-E — Execution record and certification evidence
+
+**The repair is exclusion, not labelling** — as adjudicated. Attaching `authored_by: maia` to the developmental prime and leaving it in the prompt would have improved provenance while still violating participation.
+
+| Change | File |
+|---|---|
+| **New** — the adjudicator: two-field provenance × endorsement → verdict | `lib/maia/participationGate.ts` |
+| `DevelopmentalMemorySnapshot` / `ThemeSignalSnapshot` become **discriminated unions**; `directional_cue` exists only on the admitted arm | `lib/maia/types/memoryOrchestrator.ts` |
+| Loaders adjudicate each row; claim is explicitly `null` | `lib/maia/memoryLoaders.ts` |
+| Source selection admits only `participation: 'admitted'`; the one cue read sits behind the discriminant | `lib/maia/memoryOrchestrator.ts` |
+| **New** — certification | `__tests__/mipa-p3-participation-gate.test.ts` |
+| **New** — registry row R24 | `docs/architecture/REFUSAL_REGISTRY.md` |
+
+#### The four required proofs
+
+| # | Required | How it is met |
+|---|---|---|
+| **1** | The ungoverned `directional_cue` path is **structurally gone or Grade A/B guarded** | **Grade A.** The excluded arm of the union declares no `directional_cue`. Reading it without narrowing does not fail review — **it fails to compile** |
+| **2** | Uncertified legacy material is **excluded, never guessed** | `developmental_memories` and `member_theme_signals` carry no provenance columns, so the loaders assert `ProvenanceClaim = null`. It is *very likely* MemoryWriteback authored every developmental row — **inferring that from the probable writer is exactly the guess the backfill policy forbids.** The gate excludes on absence of evidence, not on a supposition about authorship |
+| **3** | Inference **cannot gain authority from age or repetition** | `ParticipationInput` has no `formed_at`, `recall_count`, `surfaced_count`, `last_recalled_at`, or `significance` field. A datum the adjudicator cannot see is a rule it cannot be tuned to break. Asserted by test §3 |
+| **4** | A hostile fork reintroducing uncertified material **fails certification** | Verified below — at compile time *and* in the suite |
+
+#### Falsification — six mutations applied, verified failing, reverted
+
+| # | Mutation | Result |
+|---|---|---|
+| **M1** | **The mandated one** — `composer += developmentalMemory.directional_cue` | ❌ **`TS2339: Property 'directional_cue' does not exist on type 'DevelopmentalMemorySnapshot'`** *and* 1 test failed |
+| M2 | Loader asserts `authoredBy: 'maia'` instead of leaving it uncertified | ❌ 1 failed |
+| M3 | Add `formed_at` / `recall_count` to `ParticipationInput` | ❌ 1 failed |
+| M4 | Drop the admitted-only filter in source selection | ❌ 1 failed |
+| M5 | Read `directional_cue` from another module | ❌ 1 failed |
+| M6 | Make the gate admit `provenance: null` | ❌ 2 failed |
+| — | Restored | ✅ **18/18** |
+
+**M1 is the acceptance test, and it fails harder than required.** The mandate asked that the mutation fail certification. It also fails the compiler — which is the difference between a gate that detects the violation and an architecture in which the violation cannot be written.
+
+#### The behavior change, stated precisely
+
+Authorized in advance, and **larger than the cue line alone**. Measured per call site:
+
+| Route | Sources it could select | After P3 |
+|---|---|---|
+| **`/api/sovereign/app/maia/list`** (canonical live) | `developmental_memory`, `theme_signals` only — it passes `conversationHistory: []`, no `spiralState`, both context flags `false` | **both excluded → `selectedSources` empty → `shouldUseMemory: false` → the entire `## MEMORY INFLUENCE (runtime plan)` block no longer reaches the prompt** |
+| `/api/sovereign/app/maia` | same shape | same — block gone |
+| `/api/between/chat` | also `conversation_history`, `relationship_anamnesis`, `member_live_context` | block survives, **minus** the two inference sources and the cue line |
+
+> **On the canonical live route P3 removes the whole orchestrator addendum, not merely the cue** — because on that route the only two sources were uncertified inference. This is the authorized reduction; it is stated at full magnitude rather than left to be discovered. The removed influence survived only through Grade-C instructional restraint, which the registry defines as not certifiable.
+
+**Not touched**, per the mandate: developmental intelligence is not redesigned, no new developmental memory is generated, no endorsement UI, no P2b, no seam promotion, no historical retrieval, no unrelated memory class, no client wiring, no deployment.
+
+#### Scope, stated narrowly (R23 precedent)
+
+R24 closes the **memory-orchestrator** composition path. It does **not** cover `breakthrough_moments` — the third class named in P3's current state, which mixes member-marked and system-inferred rows with no separating column and travels a **different composer** (`MemoryBundle` → `formatForPrompt`), nor MemoryBundle's own developmental bucket. Applying the gate there is named in R24's upgrade path. **P3 is not "all inference is gated"; it is "this path is gated."**
+
+#### Verification
+
+| Gate | Result |
+|---|---|
+| `npm run typecheck` | ✅ **No regressions** — 231 vs baseline 239 |
+| P3 certification | ✅ **18/18** + six verified mutations |
+| Memory-area regression (14 suites) | ✅ **270/270** |
+| `check:no-supabase` · `no-direct-anthropic` · `no-vendor-voices` · `voice-provenance` · `no-openai` · `member-owned-boundary` · `ci:guard` | ✅ all pass |
+| `check-dark-text-opacity` | ⚠️ **pre-existing failure**, unrelated files, red on a clean tree |
+
+#### One detector note, again
+
+The suite's first run failed on its own explanation: the check for *"the excluded arm declares no `directional_cue`"* sliced from the interface to the next export and swept in the docblock **describing** the property. Fixed in the detector, not the assertion — the same imprecision that made P2's scan read `setPreferences(` as a SQL write. **Two for two: the instruments needed falsifying before the properties did.**
 
 ---
 
@@ -836,24 +910,25 @@ Conceptual only. No migration is authorized, written, or named.
 
 ## STOP
 
-**P2 is complete and certified. Nothing else has been touched.**
+**P2 and P3 are complete and certified. Nothing else has been touched.**
 
 | | |
 |---|---|
-| **P2** | ✅ Executed · **Grade A** · Refusal **R23** · 10/10 with five verified hostile-fork failures |
-| **P1, P3, P4, P5, P6** | Specification only — not repaired |
-| Member gestures | Not added to any UI |
+| **P2** | ✅ Certified · **Grade A (scoped)** · **R23** · 10/10 · 5 verified mutations · full-tree verified |
+| **P3** | ✅ Certified · **Grade A (scoped)** · **R24** · 18/18 · 6 verified mutations, the mandated one failing at compile time |
+| **P1, P4, P5, P6, P2b** | Specification only — not repaired |
+| Endorsement gesture · member gestures in UI | Not added |
 | `historical_recall_doorways` | Not created |
 | Runtime-context seam | Not promoted |
-| Semantic retrieval / history embedding | Not activated |
-| Prompt composition · live return behavior | Unchanged |
+| Semantic retrieval · history embedding | Not activated |
+| `breakthrough_moments` · MemoryBundle composer | **Not gated** — named in R24's upgrade path |
 | Clients · deployment | Untouched |
 
-**Presented for review before P3:**
+**Presented for review:**
 
-1. **P2's certification evidence** (§4.P2-E) — the method Kelly asked P2 to prove: a closed set drawn where the defect originates, a Grade-A structural property, and five falsification mutations each verified failing.
-2. **A third gate found by the method, not by inspection** — `recurrence_recall_enabled`, parked in `DECLARED_UNREAD_GATES` under a falsifiable zero-readers condition rather than exposed, because a toggle for an unwired layer would be a UI claim without verified state.
-3. **P2b, recommended and deliberately not taken** — `episodic_recall_enabled` is writable by API and still not discoverable in the settings surface. Adding the toggle would have crossed the standing not-authorized line, so it was left for explicit authorization.
-4. **Two verification gaps stated plainly** — `npm run typecheck` and `npm run preflight` could not run here (minimal dependency set); one adjacent test fails **pre-existing**, verified identical on a clean tree.
+1. **P3's four proofs and six mutations** (§4.P3-E). The mandated mutation fails the compiler, not just the suite.
+2. **The behavior change at full magnitude** — on the canonical live route the *entire* `## MEMORY INFLUENCE` block is gone, because there the only two sources were uncertified inference. Larger than the cue line, and stated rather than discovered.
+3. **R24's scope stated narrowly**, per the R23 correction — `breakthrough_moments` and the MemoryBundle composer are a different path and are **not** closed.
+4. **Two verification facts that are not P2's or P3's**: `check-dark-text-opacity` fails on three unrelated `app/studio/` files, red on a clean tree, which means `npm run preflight` currently gates nothing; and the `episodes/mark sanctuaryGuard` suite has one pre-existing failure. Both recorded, neither absorbed, neither repaired.
 
-**P3 remains authorized in class and gated on this evidence.** Awaiting review before it executes — and per §7.5, its repair is **exclusion from canonical composition**, not a better label on the same live prime.
+**Next in sequence**: P1 (export coverage) — no dependencies, largest sovereignty gain, and the row that most directly gates Phases 4–5. Not started.

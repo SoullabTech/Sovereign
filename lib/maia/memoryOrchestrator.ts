@@ -139,8 +139,14 @@ function buildMemoryPromptBlock(
   }
 
   if (plan.selectedSources.includes('developmental_memory')) {
-    const dm = (input.recentDevelopmentalMemories ?? [])[0];
-    if (dm?.directional_cue) {
+    // P3 — the narrowing below is not defensive style; it is the only way to
+    // reach `directional_cue` at all. The excluded arm of the union has no such
+    // property, so removing this guard does not "let more through" — it stops
+    // the file compiling.
+    const dm = (input.recentDevelopmentalMemories ?? []).find(
+      (d) => d.participation === 'admitted',
+    );
+    if (dm && dm.participation === 'admitted' && dm.directional_cue) {
       // Only pass a pre-distilled directional cue if the caller provided one
       roleLines.push(`- Prior developmental direction: ${dm.directional_cue}. Use as a background prime only, not as content to reference.`);
     } else {
@@ -230,8 +236,22 @@ export function buildMemoryInfluencePlan(
     reasoning.push(`conversation_history: ${historyLen} prior turns present → continuity`);
   }
 
-  // 2. Developmental memory (only if the caller passed pre-loaded snapshots)
-  const dms = input.recentDevelopmentalMemories ?? [];
+  // 2. Developmental memory — ADMITTED snapshots only.
+  //
+  // P3: an excluded snapshot does not become a source, does not take a role,
+  // and does not count toward influence strength. Exclusion means it does not
+  // participate — not that it participates more quietly.
+  const allDms = input.recentDevelopmentalMemories ?? [];
+  const dms = allDms.filter(
+    (d): d is Extract<typeof d, { participation: 'admitted' }> =>
+      d.participation === 'admitted',
+  );
+  const excludedDmCount = allDms.length - dms.length;
+  if (excludedDmCount > 0) {
+    reasoning.push(
+      `developmental_memory: ${excludedDmCount} snapshot(s) excluded by participation gate → not composed`,
+    );
+  }
   if (dms.length > 0) {
     selectedSources.push('developmental_memory');
     sourceRoles.developmental_memory = 'directional_prime';
@@ -257,8 +277,15 @@ export function buildMemoryInfluencePlan(
     reasoning.push('relationship_anamnesis: present → relational_field');
   }
 
-  // 5. Theme signals (pre-loaded by caller if available)
-  const themes = input.recentThemeSignals ?? [];
+  // 5. Theme signals — ADMITTED only (P3, same rule as developmental memory).
+  const allThemes = input.recentThemeSignals ?? [];
+  const themes = allThemes.filter((t) => t.participation === 'admitted');
+  const excludedThemeCount = allThemes.length - themes.length;
+  if (excludedThemeCount > 0) {
+    reasoning.push(
+      `theme_signals: ${excludedThemeCount} signal(s) excluded by participation gate → not composed`,
+    );
+  }
   if (themes.length > 0) {
     selectedSources.push('theme_signals');
     sourceRoles.theme_signals = 'pattern_cue';

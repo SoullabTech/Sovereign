@@ -30,6 +30,7 @@
 
 import { query } from '@/lib/db/postgres';
 import { readConsentGate } from './consentGates';
+import { adjudicateParticipation, type ProvenanceClaim } from './participationGate';
 import type {
   DevelopmentalMemorySnapshot,
   ThemeSignalSnapshot,
@@ -108,18 +109,40 @@ export async function loadRecentDevelopmentalMemories(
       [userId, limit],
     );
     return result.rows.map((r) => {
-      // Guard: pass content_text through format validator before surfacing as signal.
-      // Pre-X4 rows with noisy entity-extraction output will fail the guard and
-      // become null → orchestrator falls back to generic presence prime.
-      const candidate = r.content_text;
-      const directional_cue = isValidDistilledSignal(candidate) ? candidate : null;
-      return {
+      const base = {
         id: r.id,
         memory_type: r.memory_type,
         facet_code: r.facet_code,
         significance: typeof r.significance === 'string' ? parseFloat(r.significance) : r.significance,
         formed_at: r.formed_at,
-        directional_cue,
+      };
+
+      // P3 — PROVENANCE IS NEVER GUESSED.
+      //
+      // `developmental_memories` has no `authored_by` and no `authority_class`
+      // column; the table predates the two-field provenance model. It is very
+      // likely that MemoryWriteback authored every row — and inferring that
+      // from the probable writer is precisely what the backfill policy forbids
+      // (Phase 0 §6, adjudication 3). So the claim is null: uncertified.
+      //
+      // This is not a placeholder awaiting a better guess. Until the write path
+      // records provenance, these rows are outside the certified participation
+      // set, and the gate excludes them on that ground rather than on a
+      // supposition about who wrote them.
+      const provenance: ProvenanceClaim = null;
+
+      const verdict = adjudicateParticipation({ provenance, endorsement: 'none' });
+
+      if (!verdict.admitted) {
+        // No `directional_cue` on this arm — by type, not by convention.
+        return { ...base, participation: 'excluded' as const, exclusionReason: verdict.reason };
+      }
+
+      const candidate = r.content_text;
+      return {
+        ...base,
+        participation: 'admitted' as const,
+        directional_cue: isValidDistilledSignal(candidate) ? candidate : null,
       };
     });
   } catch (err) {
@@ -154,13 +177,21 @@ export async function loadRecentThemeSignals(
        LIMIT $2`,
       [userId, limit],
     );
-    return result.rows.map((r) => ({
-      theme: r.theme,
-      signal_type: r.signal_type,
-      resonance_strength: r.resonance_strength,
-      element: r.element,
-      detected_at: r.detected_at,
-    }));
+    return result.rows.map((r) => {
+      const base = {
+        theme: r.theme,
+        signal_type: r.signal_type,
+        resonance_strength: r.resonance_strength,
+        element: r.element,
+        detected_at: r.detected_at,
+      };
+      // P3 — same reasoning as developmental memories. `member_theme_signals`
+      // carries a machine score and no provenance columns; uncertified.
+      const verdict = adjudicateParticipation({ provenance: null, endorsement: 'none' });
+      return verdict.admitted
+        ? { ...base, participation: 'admitted' as const }
+        : { ...base, participation: 'excluded' as const, exclusionReason: verdict.reason };
+    });
   } catch (err) {
     console.warn('[memoryLoaders] loadRecentThemeSignals failed (non-fatal):', err);
     return [];
