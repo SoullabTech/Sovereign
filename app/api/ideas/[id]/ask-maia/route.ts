@@ -119,10 +119,13 @@ export async function POST(
   };
 
   try {
+    /* The seam fails by RETURNING null, not by throwing, so the refusal is
+       classified inside runStage. Emitting `failed` from the branch below
+       would resolve this seam twice. */
     const session = await runStage(attempt, 'session_resolve', 'auth',
-      () => getCurrentSession());
+      () => getCurrentSession(),
+      { refusal: (s) => (s?.memberId ? null : 'auth') });
     if (!session?.memberId) {
-      emit(attempt, 'session_resolve', 'failed', { error_class: 'auth' });
       emit(attempt, 'attempt_close', 'failed', { error_class: 'auth' });
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -158,15 +161,18 @@ export async function POST(
     attempt.stance = stance ?? null;
 
     // Ownership + idea context in one fetch
+    /* Zero rows is a successful query and a refused act. `not_found` is the
+       seam's single resolution — a `db_read` failure is a different fault and
+       stays distinguishable from it. */
     const ideaResult = await runStage(attempt, 'idea_fetch', 'db_read', () =>
       query<IdeaRow>(
         `SELECT id, title, framing
          FROM member_ideas
         WHERE id = $1 AND member_id = $2`,
         [ideaId, session.memberId]
-      ));
+      ),
+      { refusal: (r) => (r.rows.length === 0 ? 'not_found' : null) });
     if (ideaResult.rows.length === 0) {
-      emit(attempt, 'idea_fetch', 'failed', { error_class: 'not_found' });
       emit(attempt, 'attempt_close', 'failed', { error_class: 'not_found' });
       return NextResponse.json({ error: 'Idea not found' }, { status: 404 });
     }
@@ -266,37 +272,47 @@ export async function POST(
     // Invariant: this runs AFTER the reflection is generated. It does not
     // touch the prompt or steer MAIA's voice. It only names a moment and
     // attaches an invitation affordance when the spec allows.
-    let recognition: RecognitionOutcome | null = null;
-    if (isRecognitionEnabled(session.memberId) && recentBlocks.length > 0) {
-      const latestUserBlock = recentBlocks[recentBlocks.length - 1];
-      const userText = latestUserBlock.content ?? '';
-      const sanctuaryMode = isSanctuaryModeActive(session.memberId, ideaId);
-      const recentEvents = await getRecentRecognitionEvents(ideaId);
+    /* THE WHOLE PHASE IS THE SEAM, including its prerequisite read.
+       `getRecentRecognitionEvents()` used to run outside the boundary, so a
+       throw there landed only at the outer catch and the `recognition` seam
+       stayed silent about a fault that was entirely its own.
+       The disabled and no-blocks cases resolve `completed` rather than
+       emitting nothing: P1 says no seam is silent, and "the gate was closed"
+       is a real observation, distinguishable from an absent record. */
+    const recognition: RecognitionOutcome | null = await runStage(
+      attempt, 'recognition', 'recognition',
+      async () => {
+        if (!isRecognitionEnabled(session.memberId) || recentBlocks.length === 0) {
+          return null;
+        }
+        const latestUserBlock = recentBlocks[recentBlocks.length - 1];
+        const userText = latestUserBlock.content ?? '';
+        const sanctuaryMode = isSanctuaryModeActive(session.memberId, ideaId);
+        const recentEvents = await getRecentRecognitionEvents(ideaId);
 
-      // Count member blocks created AFTER the most recent naming_fired event.
-      // This drives the cooldown rule (released once N new member blocks exist
-      // since the last naming) and replaces the old event-index logic that
-      // created a circular permanent-cooldown bug.
-      const lastNamingFired = recentEvents.find(
-        (e) => e.event_type === 'naming_fired'
-      );
-      const memberBlocksSinceLastNaming = lastNamingFired
-        ? recentBlocks.filter(
-            (b) =>
-              new Date(b.created_at).getTime() >
-              new Date(lastNamingFired.fired_at).getTime()
-          ).length
-        : undefined;
+        // Count member blocks created AFTER the most recent naming_fired event.
+        // This drives the cooldown rule (released once N new member blocks exist
+        // since the last naming) and replaces the old event-index logic that
+        // created a circular permanent-cooldown bug.
+        const lastNamingFired = recentEvents.find(
+          (e) => e.event_type === 'naming_fired'
+        );
+        const memberBlocksSinceLastNaming = lastNamingFired
+          ? recentBlocks.filter(
+              (b) =>
+                new Date(b.created_at).getTime() >
+                new Date(lastNamingFired.fired_at).getTime()
+            ).length
+          : undefined;
 
-      recognition = await runStage(attempt, 'recognition', 'recognition', () =>
-        runRecognition({
+        return runRecognition({
           userText,
           priorTurnCount: Math.max(0, recentBlocks.length - 1),
           sanctuaryMode,
           recentEvents,
           memberBlocksSinceLastNaming,
-        }));
-    }
+        });
+      });
 
     // Reflection body stays pure. The naming line, when recognition fires,
     // lives only in metadata.recognition.naming_line and is rendered by the

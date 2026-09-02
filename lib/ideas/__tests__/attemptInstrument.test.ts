@@ -102,10 +102,15 @@ describe('§1.1 — attempt_id is shape-validated and silently replaced', () => 
 // ═══════════════════════════════════════════════════════════════
 
 describe('P16 — the ladder is enforced, not left to the reader', () => {
-  it('admits a clean, verifiable, attested production runtime', () => {
+  it('admits a clean production runtime only when the digest covers what executed', () => {
     prodEnv();
-    const v = admissibility(rev({ source_state: 'clean', build_digest: 'sha256:abc' }));
-    expect(v.level).toBe('deployed_runtime');
+    expect(admissibility(rev({
+      source_state: 'clean', digest_subject: 'loaded_modules',
+    })).level).toBe('deployed_runtime');
+    // A label-only runtime is honest evidence about a tree, and no more.
+    expect(admissibility(rev({
+      source_state: 'clean', build_digest: 'sha256:abc',
+    })).level).toBe('disk_tree_only');
   });
 
   it('caps a dirty tree WITH an exact digest at claims about that digest only', () => {
@@ -168,14 +173,51 @@ describe('P18 — digest_subject is recorded and enforced', () => {
     expect(v.reason).toContain('stability, not equivalence');
   });
 
-  it('promotes only on loaded_modules or an attested build digest', () => {
+  it('THE NEGATIVE CONTROL — a build_digest LABEL does not promote a disk_tree subject', () => {
+    // The ratified amendment: an image/build label is not itself a verified
+    // binding from the source tree to the executed artifact. The post-swap
+    // deploy verify compares that same label, so it cannot supply the binding.
+    prodEnv();
+    const v = admissibility(rev({
+      source_state: 'clean',
+      build_digest: 'sha256:img',
+      digest_subject: 'disk_tree',
+      source_digest: 'abc',
+      digest_scope: 'emission',
+      digest_alg: DIGEST_ALG,
+    }));
+    expect(v.level).not.toBe('deployed_runtime');
+    expect(v.level).toBe('disk_tree_only');
+    expect(v.reason).toContain('rather than a verified binding');
+  });
+
+  it('promotes ONLY on loaded_modules — the one binding that exists today', () => {
     prodEnv();
     expect(admissibility(rev({
       source_state: 'clean', digest_subject: 'loaded_modules',
     })).level).toBe('deployed_runtime');
+    // And a label alone never reaches it, with or without a source digest.
+    for (const r of [
+      rev({ source_state: 'clean', build_digest: 'sha256:img' }),
+      rev({ source_state: 'clean', build_digest: 'sha256:img', digest_subject: 'disk_tree' }),
+    ]) {
+      expect(admissibility(r).level).toBe('disk_tree_only');
+    }
+  });
+
+  it('offers no self-asserted escape hatch — no env flag can promote a disk_tree subject', () => {
+    // Guards against "fixing" the ceiling by moving the unsupported assertion
+    // one field over.
+    prodEnv();
+    for (const flag of ['ATTESTED', 'BUILD_ATTESTED', 'IDEAS_ATTEMPT_ATTESTED']) {
+      process.env[flag] = '1';
+    }
     expect(admissibility(rev({
       source_state: 'clean', build_digest: 'sha256:img', digest_subject: 'disk_tree',
-    })).level).toBe('deployed_runtime');
+    })).level).toBe('disk_tree_only');
+    for (const flag of ['ATTESTED', 'BUILD_ATTESTED', 'IDEAS_ATTEMPT_ATTESTED']) {
+      delete process.env[flag];
+    }
   });
 });
 
@@ -224,6 +266,7 @@ describe('P19 — digest_alg names a pinned hash and an enumerated input set', (
     // behavior, not source behavior. Declared resolution is not loaded identity.
     prodEnv();
     for (const r of [
+      rev({ source_state: 'clean', digest_subject: 'loaded_modules' }),
       rev({ source_state: 'clean', build_digest: 'sha256:img' }),
       rev({ source_state: 'dirty', source_digest: 'abc', digest_alg: DIGEST_ALG }),
     ]) {

@@ -378,18 +378,31 @@ export function admissibility(rev: RuntimeRevision): AdmissibilityVerdict {
     && (rev.build_digest !== null || rev.git_commit !== UNKNOWN);
 
   if (cleanAndVerifiable && !hot) {
-    /* Even here the subject caps the claim. A `disk_tree` digest may be treated
-       as equivalent to `loaded_modules` ONLY where that equivalence is proven,
-       and a build-arg LABEL is a claim about provenance, not an attestation of
-       it. Absence of module replacement proves stability, not equivalence. */
-    if (rev.digest_subject === 'loaded_modules' || rev.build_digest !== null) {
+    /* ⛔ A BUILD DIGEST IS A LABEL, NOT AN ATTESTATION.
+       `build_digest` is a build-arg the deploy lane stamps. It proves the image
+       was TAGGED with that identity; it does not prove the image bytes derive
+       from the tree that was digested. The post-swap verify compares that same
+       label, so it cannot supply the missing binding either.
+       Promotion therefore requires the executed artifacts to be inside the
+       covered input set — which today means `digest_subject: 'loaded_modules'`.
+       Nothing else in this codebase can supply that binding yet, so everything
+       else FAILS CLOSED to a disk-tree claim.
+       ⛔ Do not add an `attested` flag to lift this. A self-asserted flag moves
+       the unsupported assertion one field over; the promotion may only come
+       from a verification that actually exists. */
+    if (rev.digest_subject === 'loaded_modules') {
       return { ...base, level: 'deployed_runtime',
-        reason: 'clean and verifiable runtime identity' };
+        reason: 'clean, stable runtime with a loaded_modules digest: the '
+          + 'executed modules are themselves the covered input set' };
     }
     return { ...base, level: 'disk_tree_only',
-      reason: 'stable runtime, but the executed artifacts are not inside the '
-        + 'covered input set and no attestation binds this tree to the executed '
-        + 'build; absence of module replacement proves stability, not equivalence' };
+      reason: rev.build_digest !== null
+        ? 'stable runtime with a build_digest LABEL, which is a claim about '
+          + 'provenance rather than a verified binding from this tree to the '
+          + 'executed artifact; capped until such a binding exists'
+        : 'stable runtime, but the executed artifacts are not inside the '
+          + 'covered input set and no attestation binds this tree to the executed '
+          + 'build; absence of module replacement proves stability, not equivalence' };
   }
 
   if (hot && rev.digest_subject === 'disk_tree') {
@@ -699,20 +712,58 @@ export function failureFields(err: unknown, errorClass: ErrorClass): StageFields
  * re-thrown UNCHANGED after `failed` is emitted. Nothing here alters control
  * flow or the member's outcome.
  */
+export interface RunStageOptions<T> {
+  /**
+   * Classify a RETURNED result as a refusal.
+   *
+   * ⛔ THIS EXISTS TO KEEP P1 STRUCTURAL. Several seams fail by RETURNING —
+   * `getCurrentSession()` resolves to `null`, an ownership query succeeds with
+   * zero rows — rather than by throwing. Without this, the seam resolves
+   * `completed` and the call site then emits a second `failed`, giving one seam
+   * TWO resolutions and breaking the invariant that makes an unresolved
+   * `entered` meaningful under T2.
+   *
+   * Returning an `ErrorClass` here resolves the seam as `failed` INSTEAD of
+   * `completed` — never in addition to it. The result is still returned
+   * unchanged, so the caller's control flow and response are untouched.
+   */
+  refusal?: (result: T) => ErrorClass | null;
+  completedFields?: (result: T) => StageFields;
+}
+
 export async function runStage<T>(
   ctx: AttemptContext,
   stage: Stage,
   errorClass: ErrorClass,
   fn: () => Promise<T> | T,
-  completedFields?: (result: T) => StageFields,
+  options?: RunStageOptions<T> | ((result: T) => StageFields),
 ): Promise<T> {
+  const opts: RunStageOptions<T> =
+    typeof options === 'function' ? { completedFields: options } : options ?? {};
   const started = ctx.now ? ctx.now() : Date.now();
   emit(ctx, stage, 'entered');
   try {
     const result = await fn();
+
+    /* Exactly one resolution. A returned refusal resolves the seam as failed;
+       it does not add a second event after a completed one. */
+    let refusedAs: ErrorClass | null = null;
+    try {
+      refusedAs = opts.refusal ? opts.refusal(result) : null;
+    } catch {
+      refusedAs = null;
+    }
+    if (refusedAs !== null) {
+      emit(ctx, stage, 'failed', {
+        error_class: refusedAs,
+        duration_ms: (ctx.now ? ctx.now() : Date.now()) - started,
+      });
+      return result;
+    }
+
     let extra: StageFields = {};
     try {
-      extra = completedFields ? completedFields(result) : {};
+      extra = opts.completedFields ? opts.completedFields(result) : {};
     } catch {
       extra = {};
     }

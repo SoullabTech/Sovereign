@@ -346,7 +346,19 @@ export default function IdeaWorkspacePage() {
     };
     const attemptHeaders = { [ATTEMPT_ID_HEADER]: attempt.attemptId };
     emit(attempt, 'attempt_open', 'entered');
-    let closed = false;
+
+    /* WHO OWNS attempt_close.
+         BEFORE the ask request is dispatched — the client is the only
+           participant that knows the member act ended, so it closes an attempt
+           that aborts during autosave.
+         ONCE dispatched — the SERVER owns attempt_close, and the client does
+           NOT mirror it. Mirroring produced two terminal records per act on
+           every successful Ask.
+       ⛔ A response lost in transport after dispatch is deliberately NOT given
+       a taxonomy here. That is a separate observability question and must not
+       acquire semantics as a side effect of this repair. */
+    let askDispatched = false;
+    let closedByClient = false;
 
     try {
       // Autosave-on-Ask-MAIA (2026-04-22):
@@ -376,7 +388,7 @@ export default function IdeaWorkspacePage() {
             await describeFailure(saveRes, "Couldn't save that entry. Your words are still here — try again.")
           );
           emit(attempt, 'attempt_close', 'failed', { error_class: 'db_write' });
-          closed = true;
+          closedByClient = true;
           return;
         }
         const saveData = await saveRes.json();
@@ -388,11 +400,12 @@ export default function IdeaWorkspacePage() {
           // Unexpected success=false; abort rather than proceeding on stale state
           setComposerError("Couldn't save that entry. Your words are still here — try again.");
           emit(attempt, 'attempt_close', 'failed', { error_class: 'db_write' });
-          closed = true;
+          closedByClient = true;
           return;
         }
       }
 
+      askDispatched = true;
       const res = await apiFetch(`/api/ideas/${idea.id}/ask-maia`, {
         method: 'POST',
         headers: attemptHeaders,
@@ -404,8 +417,6 @@ export default function IdeaWorkspacePage() {
         setComposerError(
           await describeFailure(res, "MAIA couldn't respond just now. Your thread is unchanged.")
         );
-        emit(attempt, 'attempt_close', 'failed', { error_class: 'unknown' });
-        closed = true;
       } else {
         const data = await res.json();
         if (data.success && data.block) {
@@ -417,16 +428,22 @@ export default function IdeaWorkspacePage() {
         }
       }
     } catch (err) {
-      emit(attempt, 'attempt_close', 'failed', { error_class: 'unknown' });
-      closed = true;
+      /* Only when the act ended before dispatch. After dispatch the server has
+         already written the terminal record for this attempt. */
+      if (!askDispatched) {
+        emit(attempt, 'attempt_close', 'failed', { error_class: 'unknown' });
+        closedByClient = true;
+      }
       console.error('[ideas/workspace] ask-maia failed:', err);
       setComposerError("MAIA couldn't respond just now. Your thread is unchanged.");
     } finally {
-      /* Every path through this handler closes the attempt exactly once,
-         including the two early returns where the autosave refused — those are
-         member acts that ended, and an attempt left open would be read under
-         T2 as an interrupted seam that never happened. */
-      if (!closed) emit(attempt, 'attempt_close', 'completed');
+      /* Exactly one attempt_close per member act. If the ask was dispatched,
+         the server wrote it; if it was not, the client wrote it above. This
+         branch closes only the remaining case: the act ended before dispatch
+         without taking either explicit path. */
+      if (!askDispatched && !closedByClient) {
+        emit(attempt, 'attempt_close', 'completed');
+      }
       setAskingMaia(false);
       // The stance governed one response. It clears — no sticky mode, hidden
       // or otherwise. The next Ask MAIA starts from no stance again.

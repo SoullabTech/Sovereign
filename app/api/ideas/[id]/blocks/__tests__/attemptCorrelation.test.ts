@@ -153,3 +153,90 @@ describe('P6 — one attempt_id joins the autosave and the reflection', () => {
     expect(records().every((r) => r.attempt_id_source === 'server')).toBe(true);
   });
 });
+
+
+// ═══════════════════════════════════════════════════════════════
+// The outer bracket — exactly one open, exactly one close, per ACT
+// ═══════════════════════════════════════════════════════════════
+
+describe('attempt_open / attempt_close is one bracket per member act', () => {
+  it('the successful two-request act produces exactly one attempt_close', async () => {
+    // Driven across BOTH real routes with one attempt id, the way the act runs.
+    await BLOCKS_POST(blocksReq({ [ATTEMPT_ID_HEADER]: ATTEMPT }), params);
+    const askRes = await ASK_POST(askReq({ [ATTEMPT_ID_HEADER]: ATTEMPT }), params);
+    expect(askRes.status).toBe(201);
+
+    const act = records().filter((r) => r.attempt_id === ATTEMPT);
+    const closes = act.filter((r) => r.stage === 'attempt_close');
+    expect(closes).toHaveLength(1);
+    expect(closes[0].event).toBe('completed');
+  });
+
+  it('the autosave request does not close the act — the ask is still to come', async () => {
+    await BLOCKS_POST(blocksReq({ [ATTEMPT_ID_HEADER]: ATTEMPT }), params);
+    expect(records().filter((r) => r.stage === 'attempt_close')).toHaveLength(0);
+  });
+
+  it('a failed reflection still closes the act exactly once', async () => {
+    await BLOCKS_POST(blocksReq({ [ATTEMPT_ID_HEADER]: ATTEMPT }), params);
+    mockCreate.mockRejectedValue(new Error('boom'));
+    await ASK_POST(askReq({ [ATTEMPT_ID_HEADER]: ATTEMPT }), params);
+    const closes = records()
+      .filter((r) => r.attempt_id === ATTEMPT && r.stage === 'attempt_close');
+    expect(closes).toHaveLength(1);
+    expect(closes[0].event).toBe('failed');
+  });
+
+  it('two acts do not share a bracket', async () => {
+    const OTHER = '55555555-5555-4555-8555-555555555555';
+    await ASK_POST(askReq({ [ATTEMPT_ID_HEADER]: ATTEMPT }), params);
+    await ASK_POST(askReq({ [ATTEMPT_ID_HEADER]: OTHER }), params);
+    for (const id of [ATTEMPT, OTHER]) {
+      expect(records().filter((r) => r.attempt_id === id && r.stage === 'attempt_close'))
+        .toHaveLength(1);
+    }
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════
+// Client-side ownership of attempt_close
+//
+// STRUCTURAL, and stated as such: handleAskMaia lives in a React page
+// component that is not rendered here. What is locked is the ruled precision —
+// before dispatch the client may terminally close an act that aborts during
+// autosave; ONCE DISPATCHED the server owns attempt_close and the client does
+// not mirror it. Mirroring produced two terminal records on every successful
+// Ask, which the server-side test above cannot see.
+// ═══════════════════════════════════════════════════════════════
+
+describe('client does not mirror attempt_close after dispatch', () => {
+  const src = require('fs').readFileSync(
+    require('path').join(process.cwd(), 'app/maia/ideas/[id]/page.tsx'), 'utf8');
+
+  it('marks the dispatch boundary before the ask request', () => {
+    const mark = src.indexOf('askDispatched = true');
+    const ask = src.indexOf('/ask-maia`', mark);
+    expect(mark).toBeGreaterThan(-1);
+    expect(ask).toBeGreaterThan(mark);
+  });
+
+  it('guards every post-dispatch close on the dispatch flag', () => {
+    // Each client attempt_close must sit under a !askDispatched guard or be a
+    // pre-dispatch autosave abort.
+    const closes = [...src.matchAll(/emit\(attempt, 'attempt_close'/g)].map((m) => m.index!);
+    expect(closes.length).toBeGreaterThan(0);
+    const dispatchMark = src.indexOf('askDispatched = true');
+    for (const idx of closes) {
+      if (idx < dispatchMark) continue; // pre-dispatch autosave abort: allowed
+      const preceding = src.slice(Math.max(0, idx - 400), idx);
+      expect(preceding).toContain('!askDispatched');
+    }
+  });
+
+  it('does not emit an unconditional close in the finally block', () => {
+    const fin = src.indexOf('} finally {', src.indexOf('askDispatched = true'));
+    const tail = src.slice(fin, fin + 600);
+    expect(tail).not.toMatch(/emit\(attempt, 'attempt_close'[^)]*\);\s*\n\s*setAskingMaia/);
+    expect(tail).toContain('!askDispatched');
+  });
+});

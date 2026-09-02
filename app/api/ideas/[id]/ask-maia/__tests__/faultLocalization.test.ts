@@ -52,9 +52,10 @@ jest.mock('@anthropic-ai/sdk', () => ({
 }));
 
 const mockRunRecognition = jest.fn<() => unknown>();
+const mockGetRecentRecognitionEvents = jest.fn<() => Promise<unknown[]>>();
 jest.mock('@/lib/maia/decisionChangeRecognition', () => ({
   runRecognition: () => mockRunRecognition(),
-  getRecentRecognitionEvents: async () => [],
+  getRecentRecognitionEvents: () => mockGetRecentRecognitionEvents(),
   storeRecognitionEvent: () => undefined,
 }));
 
@@ -120,6 +121,9 @@ beforeEach(() => {
   mockQuery.mockImplementation((sql) => happyQuery(sql));
   mockCreate.mockResolvedValue({ content: [{ type: 'text', text: MODEL_OUTPUT }] });
   mockRunRecognition.mockReturnValue(null);
+  mockGetRecentRecognitionEvents.mockResolvedValue([]);
+  delete process.env.FEATURE_MAIA_IDEAS_DECISION_RECOGNITION;
+  delete process.env.FEATURE_MAIA_IDEAS_DECISION_RECOGNITION_MEMBER_IDS;
 });
 afterAll(() => { console.log = realLog; console.error = realError; });
 
@@ -163,6 +167,62 @@ describe('P1 — one entered and one resolution per seam, none silent, none doub
     await POST(req(), params());
     expect(at('attempt_close')).toHaveLength(1);
     expect(at('attempt_close')[0].event).toBe('completed');
+  });
+
+  it('NEGATIVE CONTROL — an unauthenticated session resolves session_resolve exactly once', async () => {
+    // The defect this catches: runStage completing the seam because
+    // getCurrentSession() RETURNED null, and the route then emitting a second
+    // `failed`. One seam, two resolutions, breaking the invariant that makes an
+    // unresolved `entered` meaningful under T2.
+    mockGetCurrentSession.mockResolvedValue(null);
+    await POST(req(), params());
+    const rs = at('session_resolve');
+    expect(rs.filter((r) => r.event === 'entered')).toHaveLength(1);
+    expect(rs.filter((r) => r.event === 'failed')).toHaveLength(1);
+    expect(rs.filter((r) => r.event === 'completed')).toHaveLength(0);
+  });
+
+  it('NEGATIVE CONTROL — a missing idea resolves idea_fetch exactly once', async () => {
+    // Zero rows is a SUCCESSFUL query and a REFUSED act. It must not complete
+    // the seam and then fail it.
+    mockQuery.mockImplementation((sql) =>
+      sql.includes('FROM member_ideas') && !sql.includes('UPDATE')
+        ? Promise.resolve({ rows: [] }) : happyQuery(sql));
+    await POST(req(), params());
+    const rs = at('idea_fetch');
+    expect(rs.filter((r) => r.event === 'entered')).toHaveLength(1);
+    expect(rs.filter((r) => r.event === 'failed')).toHaveLength(1);
+    expect(rs.filter((r) => r.event === 'completed')).toHaveLength(0);
+  });
+
+  it('no seam anywhere ever carries two resolutions, on any path', async () => {
+    const paths: Array<() => void> = [
+      () => {},
+      () => { mockGetCurrentSession.mockResolvedValue(null); },
+      () => { mockQuery.mockImplementation((sql) =>
+        sql.includes('FROM member_ideas') && !sql.includes('UPDATE')
+          ? Promise.resolve({ rows: [] }) : happyQuery(sql)); },
+      () => { mockCreate.mockRejectedValue(new Error('boom')); },
+      () => { mockCreate.mockResolvedValue({ content: [] }); },
+      () => { mockQuery.mockImplementation((sql) => sql.includes('INSERT')
+        ? Promise.reject(new Error('w')) : happyQuery(sql)); },
+    ];
+    for (const setup of paths) {
+      captured = [];
+      mockGetCurrentSession.mockResolvedValue({ memberId: MEMBER });
+      mockQuery.mockImplementation((sql) => happyQuery(sql));
+      mockCreate.mockResolvedValue({ content: [{ type: 'text', text: MODEL_OUTPUT }] });
+      setup();
+      await POST(req(), params());
+      const byStage = new Map<string, number>();
+      for (const r of records()) {
+        if (r.event === 'entered') continue;
+        byStage.set(r.stage, (byStage.get(r.stage) ?? 0) + 1);
+      }
+      for (const [stage, count] of byStage) {
+        expect([stage, count]).toEqual([stage, 1]);
+      }
+    }
   });
 
   it('uses only the closed stage vocabulary', async () => {
@@ -623,5 +683,57 @@ describe('P16 — every event carries a complete runtime_revision and taxonomy_v
   it('reports source_state as unknown when it was never established', async () => {
     await POST(req(), params());
     expect(records().every((r) => r.runtime_revision.source_state === 'unknown')).toBe(true);
+  });
+});
+
+
+// ═══════════════════════════════════════════════════════════════
+// P1 · recognition — the whole phase is the seam
+// ═══════════════════════════════════════════════════════════════
+
+describe('P1 — the recognition seam is never silent and never partial', () => {
+  it('completes honestly when the gate is closed, rather than emitting nothing', async () => {
+    // "The gate was closed" is a real observation, distinguishable from an
+    // absent record. A silent seam is indistinguishable from a lost one.
+    await POST(req(), params());
+    const rs = at('recognition');
+    expect(rs.map((r) => r.event)).toEqual(['entered', 'completed']);
+  });
+
+  it('NEGATIVE CONTROL — a throwing prerequisite read fails AT recognition', async () => {
+    // getRecentRecognitionEvents() used to run outside the boundary, so a
+    // throw there landed only at the outer catch and this seam stayed silent
+    // about a fault that was entirely its own.
+    process.env.FEATURE_MAIA_IDEAS_DECISION_RECOGNITION = 'true';
+    process.env.FEATURE_MAIA_IDEAS_DECISION_RECOGNITION_MEMBER_IDS = MEMBER;
+    mockGetRecentRecognitionEvents.mockRejectedValue(new Error('events read failed'));
+    await POST(req(), params());
+    const rs = at('recognition');
+    expect(rs.filter((r) => r.event === 'entered')).toHaveLength(1);
+    const failed = rs.find((r) => r.event === 'failed');
+    expect(failed?.error_class).toBe('recognition');
+    expect(rs.filter((r) => r.event === 'completed')).toHaveLength(0);
+  });
+
+  it('NEGATIVE CONTROL — a throwing runRecognition fails AT recognition', async () => {
+    process.env.FEATURE_MAIA_IDEAS_DECISION_RECOGNITION = 'true';
+    process.env.FEATURE_MAIA_IDEAS_DECISION_RECOGNITION_MEMBER_IDS = MEMBER;
+    mockGetRecentRecognitionEvents.mockResolvedValue([]);
+    mockRunRecognition.mockImplementation(() => { throw new Error('recognition failed'); });
+    await POST(req(), params());
+    const failed = at('recognition').find((r) => r.event === 'failed');
+    expect(failed?.error_class).toBe('recognition');
+    // Distinct from the model seams — the reflection had already succeeded.
+    expect(at('model_call').find((r) => r.event === 'completed')).toBeDefined();
+  });
+
+  it('a recognition fault does not change the member-facing failure copy', async () => {
+    process.env.FEATURE_MAIA_IDEAS_DECISION_RECOGNITION = 'true';
+    process.env.FEATURE_MAIA_IDEAS_DECISION_RECOGNITION_MEMBER_IDS = MEMBER;
+    mockGetRecentRecognitionEvents.mockResolvedValue([]);
+    mockRunRecognition.mockImplementation(() => { throw new Error('recognition failed'); });
+    const res = await POST(req(), params());
+    expect(res.status).toBe(500);
+    expect(await res.json()).toEqual({ error: 'Failed to generate reflection' });
   });
 });
