@@ -339,6 +339,55 @@ export function __resetDigestMemoForTests(): void {
 // support a runtime claim must never be quietly counted as though it could.
 // ═══════════════════════════════════════════════════════════════
 
+/**
+ * The provenance mechanisms THIS BUILD ACTUALLY IMPLEMENTS, keyed by the
+ * `digest_alg` each one stamps.
+ *
+ * ⛔ THIS TABLE — NOT A FIELD VALUE — IS WHAT PERMITS PROMOTION.
+ * `digest_subject: 'loaded_modules'` is a LABEL, exactly as `build_digest` is a
+ * label. Treating it as proof that loaded modules were digested is the same
+ * self-assertion one level over: a record can claim any subject, and a claim is
+ * not a mechanism. Promotion therefore requires an entry here, whose declared
+ * subject must MATCH the record's, and whose `canPromote` is true.
+ *
+ * Today exactly one mechanism exists, and it digests FILES ON DISK. There is no
+ * loaded-modules digest implementation in this codebase, and no verifier that
+ * binds a tree to an executed artifact. Consequently:
+ *
+ *     T1 HAS NO PATH TO `deployed_runtime` ADMISSIBILITY.
+ *
+ * That is the honest state of the instrument, and `DEPLOYED_RUNTIME_REACHABLE`
+ * below is DERIVED from this table rather than asserted, so it flips on its own
+ * the day a real mechanism is added — and not one moment earlier.
+ *
+ * ⛔ Do not add an entry here to satisfy the enum. An entry is a claim that the
+ * mechanism exists and produces the digest it names.
+ */
+interface DigestMechanism {
+  /** The subject this mechanism actually digests. */
+  subject: DigestSubject;
+  /** Whether its output can support a claim about the executed runtime. */
+  canPromote: boolean;
+  /** Why, in operator-facing words. */
+  note: string;
+}
+
+export const IMPLEMENTED_DIGEST_MECHANISMS: Readonly<Record<string, DigestMechanism>> = {
+  [DIGEST_ALG]: {
+    subject: 'disk_tree',
+    canPromote: false,
+    note: 'digests five enumerated source files on disk; it does not cover the '
+      + 'executable artifacts the process loaded',
+  },
+};
+
+/**
+ * Whether ANY implemented mechanism can currently reach `deployed_runtime`.
+ * Derived, never asserted. `false` today.
+ */
+export const DEPLOYED_RUNTIME_REACHABLE: boolean =
+  Object.values(IMPLEMENTED_DIGEST_MECHANISMS).some((m) => m.canPromote);
+
 export type Admissibility =
   /** Claims about a committed or deployed runtime. */
   | 'deployed_runtime'
@@ -368,33 +417,59 @@ export function admissibility(rev: RuntimeRevision): AdmissibilityVerdict {
     + 'resolution is not loaded identity';
 
   const base = { supportsDependencyClaim: false as const, dependencyRefusal };
-
   const hot = hasHotReplacement();
 
-  /* Top row: clean AND verifiable. `build_digest` is the immutable identity the
-     deploy lane supplies; a clean tree at a known commit is the other form. */
+  /* ── Does this record carry a digest that is EVIDENCE at all? ──────────
+     §3.3.6: a digest that cannot be recomputed is an identifier, not evidence.
+     So a digest counts only when all three hold:
+       - an actual digest value is present
+       - its `digest_alg` names a mechanism this build implements
+       - the record's `digest_subject` matches what that mechanism digests
+     A record claiming a subject its algorithm does not produce is describing a
+     mechanism rather than reporting one, and is disregarded. */
+  const mechanism = rev.digest_alg
+    ? IMPLEMENTED_DIGEST_MECHANISMS[rev.digest_alg] ?? null
+    : null;
+  const digestIsEvidence =
+    rev.source_digest !== null
+    && mechanism !== null
+    && mechanism.subject === rev.digest_subject;
+
+  /* ── Promotion ────────────────────────────────────────────────────────
+     Requires a real implemented mechanism whose output can support a claim
+     about the executed runtime. No combination of self-reported fields —
+     `build_digest`, `digest_subject: 'loaded_modules'`, or any flag — can
+     substitute for one. Today no such mechanism exists, so this branch is
+     unreachable, and the tests assert that it is. */
+  if (digestIsEvidence && mechanism!.canPromote && rev.source_state === 'clean' && !hot) {
+    return { ...base, level: 'deployed_runtime',
+      reason: `clean, stable runtime digested by ${rev.digest_alg}, whose covered `
+        + 'input set includes what actually executed' };
+  }
+
+  /* A subject claimed without an implementing mechanism behind it. Reported as
+     the unsubstantiated claim it is, rather than silently downgraded. */
+  if (rev.digest_subject === 'loaded_modules' && !digestIsEvidence) {
+    return { ...base, level: 'diagnosis_only',
+      reason: mechanism === null
+        ? 'the record claims a loaded_modules subject, but its digest_alg names '
+          + 'no mechanism this build implements — a claimed subject is not a '
+          + 'digest of loaded modules'
+        : `digest_alg ${rev.digest_alg} digests ${mechanism.subject}, not `
+          + 'loaded_modules; the record describes a mechanism rather than '
+          + 'reporting one' };
+  }
+
   const cleanAndVerifiable =
     rev.source_state === 'clean'
     && (rev.build_digest !== null || rev.git_commit !== UNKNOWN);
 
   if (cleanAndVerifiable && !hot) {
-    /* ⛔ A BUILD DIGEST IS A LABEL, NOT AN ATTESTATION.
-       `build_digest` is a build-arg the deploy lane stamps. It proves the image
-       was TAGGED with that identity; it does not prove the image bytes derive
-       from the tree that was digested. The post-swap verify compares that same
-       label, so it cannot supply the missing binding either.
-       Promotion therefore requires the executed artifacts to be inside the
-       covered input set — which today means `digest_subject: 'loaded_modules'`.
-       Nothing else in this codebase can supply that binding yet, so everything
-       else FAILS CLOSED to a disk-tree claim.
-       ⛔ Do not add an `attested` flag to lift this. A self-asserted flag moves
-       the unsupported assertion one field over; the promotion may only come
-       from a verification that actually exists. */
-    if (rev.digest_subject === 'loaded_modules') {
-      return { ...base, level: 'deployed_runtime',
-        reason: 'clean, stable runtime with a loaded_modules digest: the '
-          + 'executed modules are themselves the covered input set' };
-    }
+    /* ⛔ A BUILD DIGEST IS A LABEL, NOT AN ATTESTATION. It proves the image was
+       TAGGED with that identity, not that its bytes derive from the digested
+       tree; the post-swap deploy verify compares that same label, so it cannot
+       supply the binding either. Absence of module replacement proves
+       stability, not equivalence. Fails closed to a disk-tree claim. */
     return { ...base, level: 'disk_tree_only',
       reason: rev.build_digest !== null
         ? 'stable runtime with a build_digest LABEL, which is a claim about '
@@ -411,7 +486,7 @@ export function admissibility(rev: RuntimeRevision): AdmissibilityVerdict {
         + 'about a tree, not about an execution' };
   }
 
-  if (rev.source_digest !== null) {
+  if (digestIsEvidence) {
     if (rev.digest_scope === 'process_start' && hot) {
       return { ...base, level: 'diagnosis_only',
         reason: 'process_start digest on a hot-replacement runtime establishes '
@@ -420,6 +495,13 @@ export function admissibility(rev: RuntimeRevision): AdmissibilityVerdict {
     return { ...base, level: 'digest_only',
       reason: 'dirty or unverifiable tree with an exact source_digest: the '
         + 'digest is the referent, not the branch it sat on' };
+  }
+
+  if (rev.source_digest !== null) {
+    return { ...base, level: 'diagnosis_only',
+      reason: 'a digest is present but cannot be recomputed — its digest_alg '
+        + 'names no mechanism this build implements, so it is an identifier '
+        + 'rather than evidence' };
   }
 
   return { ...base, level: 'diagnosis_only',

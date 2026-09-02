@@ -90,7 +90,7 @@ structurally cannot provide, because the process death takes stdout with it.
 
 | Gate | Result |
 |---|---|
-| P-obligations under `jest` | ✅ 99/99 (T1 obligations only) |
+| P-obligations under `jest` | ✅ 103/103 (T1 obligations only) |
 | `npm run typecheck` | ✅ no regressions (231 vs 239 baseline; baseline deliberately not re-recorded) |
 | `npm run check:no-supabase` | ✅ clean |
 | `npm run preflight` | ❌ **red at the pristine base** — see below. **NOT WAIVABLE** |
@@ -168,12 +168,19 @@ ONCE dispatched                      → the server owns attempt_close;
                                        the client does not mirror it
 ```
 
+The precise claim, which is narrower than "one close per act":
+
+```
+exactly one attempt_close on every covered path
+transport loss after dispatch remains deliberately unclassified
+```
+
 ⛔ A response lost in transport after dispatch is deliberately **not** given a
-taxonomy here. That is a separate observability question and must not acquire
-semantics as a side effect of this repair. A whole-act test drives both real
-routes and asserts exactly one `attempt_close` per act; the client half is a
-structural guard, stated as such, because the handler is an unrendered React
-component.
+taxonomy. That is a separate observability question and must not acquire
+semantics as a side effect of this repair — so the hole is stated rather than
+papered over. A whole-act test drives both real routes and asserts one
+`attempt_close` per act on the covered paths; the client half is a structural
+guard, stated as such, because the handler is an unrendered React component.
 
 **4 · P18 promoted a label as though it were an attestation.** `admissibility()`
 reached `deployed_runtime` whenever `build_digest !== null`, even with a
@@ -192,8 +199,40 @@ verified build attestation      → may promote, once such a proof exists
 ```
 
 No `attested=true` flag was added — that would move the unsupported assertion
-one field over. A negative control asserts the exact case, and a further control
-proves no environment flag can promote a `disk_tree` subject.
+one field over.
+
+**4b · The replacement rule moved the same defect one level over
+(adjudication 3).** Promotion was then gated on `digest_subject ===
+'loaded_modules'` — with no requirement that a loaded-modules digest existed.
+`digest_subject` is a **label** exactly as `build_digest` is: a record can claim
+any subject, and a claimed subject is not a digest of loaded modules. The test
+that blessed it supplied no `source_digest`, no `digest_scope` and no
+`digest_alg`. T1 has no loaded-modules digest implementation at all; its only
+mechanism digests five enumerated source files on disk.
+
+Promotion is now gated on a registry of the mechanisms this build **actually
+implements**, keyed by the `digest_alg` each one stamps. A digest counts as
+evidence only when a value is present, its `digest_alg` names an implemented
+mechanism, **and** the record's `digest_subject` matches what that mechanism
+digests — a record claiming a subject its algorithm does not produce is
+*describing* a mechanism rather than reporting one, and is disregarded per
+§3.3.6 (a digest that cannot be recomputed is an identifier, not evidence).
+
+The honest consequence, stated plainly:
+
+```
+T1 HAS NO PATH TO deployed_runtime ADMISSIBILITY.
+```
+
+`DEPLOYED_RUNTIME_REACHABLE` is **derived** from that registry rather than
+asserted, so it flips on its own the day a real mechanism lands and not one
+moment before. Four controls: the bare-subject case named in the adjudication;
+a `loaded_modules` subject paired with a hand-supplied digest under the
+disk-tree algorithm; an unrecognized `digest_alg`; and an exhaustive sweep over
+the whole field space (972 combinations × both runtime classes) asserting that
+**no combination of self-reported fields reaches the top row**. That is what
+makes the ceiling structural rather than a chain of individually-correct
+branches.
 
 ## 4 · Held, as ruled
 
@@ -203,8 +242,11 @@ AUTHORIZED BRANCH    PASS
 PRIOR SPECIMEN       PRESERVED at d2a2aa7, untouched
 15-STAGE MAP         PASS — single-resolution and recognition defects repaired
 ATTEMPT-ID CONTRACT  PASS
-COMPOSITE REVISION   PASS — attestation ceiling now fails closed
-OUTER BRACKET        PASS — one attempt_close per act, ownership frozen at dispatch
+COMPOSITE REVISION   PASS — promotion gated on implemented mechanisms;
+                     deployed_runtime is UNREACHABLE in T1, by derivation
+OUTER BRACKET        PASS — one attempt_close on every covered path; ownership
+                     frozen at dispatch; transport loss after dispatch is
+                     deliberately unclassified and stated as open
 
 T1 IMPLEMENTATION    NOT CLOSED — awaiting adjudication of these repairs
 T1 MAY SHIP          NO — preflight red, and the red is not waivable
@@ -244,4 +286,7 @@ document must not be cited as having closed it.
    exist, that every reached seam resolves exactly once, that nothing
    instrument-related appears in the UI or any HTTP response, and that the
    runtime evidence reports its admissibility ceiling correctly (on a dev
-   runtime that ceiling is `diagnosis_only`, and it should say so).
+   runtime that ceiling is `diagnosis_only`, and it should say so). Note that
+   **no runtime can currently reach `deployed_runtime`**, so the witness should
+   confirm the ceiling is reported honestly, not look for admissibility it
+   cannot have.

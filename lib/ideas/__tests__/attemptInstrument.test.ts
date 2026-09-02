@@ -11,7 +11,8 @@
  */
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import {
-  DIGEST_ALG, DIGEST_INPUT_SET, ERROR_CLASSES, STAGES, TAXONOMY_VERSION,
+  DEPLOYED_RUNTIME_REACHABLE, DIGEST_ALG, DIGEST_INPUT_SET,
+  ERROR_CLASSES, IMPLEMENTED_DIGEST_MECHANISMS, STAGES, TAXONOMY_VERSION,
   admissibility, buildRecord, computeSourceDigest, resolveAttemptId,
   runtimeRevision, sourceFrames, stackFingerprint, upstreamFields,
   __resetDigestMemoForTests, type AttemptContext, type RuntimeRevision,
@@ -102,12 +103,17 @@ describe('§1.1 — attempt_id is shape-validated and silently replaced', () => 
 // ═══════════════════════════════════════════════════════════════
 
 describe('P16 — the ladder is enforced, not left to the reader', () => {
-  it('admits a clean production runtime only when the digest covers what executed', () => {
+  it('has NO path to deployed_runtime, because no mechanism implements one', () => {
+    // The honest state of T1: its only digest implementation digests files on
+    // disk. Derived from the registry, not asserted — this flips on its own the
+    // day a real mechanism lands, and not before.
+    expect(DEPLOYED_RUNTIME_REACHABLE).toBe(false);
+    expect(Object.values(IMPLEMENTED_DIGEST_MECHANISMS).every((m) => !m.canPromote))
+      .toBe(true);
+  });
+
+  it('caps a clean production runtime with a build_digest LABEL at disk-tree claims', () => {
     prodEnv();
-    expect(admissibility(rev({
-      source_state: 'clean', digest_subject: 'loaded_modules',
-    })).level).toBe('deployed_runtime');
-    // A label-only runtime is honest evidence about a tree, and no more.
     expect(admissibility(rev({
       source_state: 'clean', build_digest: 'sha256:abc',
     })).level).toBe('disk_tree_only');
@@ -117,7 +123,7 @@ describe('P16 — the ladder is enforced, not left to the reader', () => {
     prodEnv();
     const v = admissibility(rev({
       source_state: 'dirty', source_digest: 'abc123',
-      digest_scope: 'emission', digest_subject: 'loaded_modules', digest_alg: DIGEST_ALG,
+      digest_scope: 'emission', digest_subject: 'disk_tree', digest_alg: DIGEST_ALG,
     }));
     expect(v.level).toBe('digest_only');
     expect(v.reason).toContain('the digest is the referent');
@@ -154,10 +160,10 @@ describe('P18 — digest_subject is recorded and enforced', () => {
     devEnv();
     const v = admissibility(rev({
       source_state: 'clean', source_digest: 'abc',
-      digest_scope: 'process_start', digest_subject: 'loaded_modules', digest_alg: DIGEST_ALG,
+      digest_scope: 'process_start', digest_subject: 'disk_tree', digest_alg: DIGEST_ALG,
     }));
     expect(v.level).toBe('diagnosis_only');
-    expect(v.reason).toContain('what the process started as, not what it ran');
+    expect(v.reason).toContain('not about an execution');
   });
 
   it('THE NEGATIVE CASE — a stable runtime is capped at disk-tree claims only', () => {
@@ -191,17 +197,70 @@ describe('P18 — digest_subject is recorded and enforced', () => {
     expect(v.reason).toContain('rather than a verified binding');
   });
 
-  it('promotes ONLY on loaded_modules — the one binding that exists today', () => {
+  it('THE NEGATIVE CONTROL — a bare loaded_modules SUBJECT does not promote', () => {
+    // The same self-assertion one field over: a record can claim any subject,
+    // and a claimed subject is not a digest of loaded modules.
     prodEnv();
-    expect(admissibility(rev({
-      source_state: 'clean', digest_subject: 'loaded_modules',
-    })).level).toBe('deployed_runtime');
-    // And a label alone never reaches it, with or without a source digest.
-    for (const r of [
-      rev({ source_state: 'clean', build_digest: 'sha256:img' }),
-      rev({ source_state: 'clean', build_digest: 'sha256:img', digest_subject: 'disk_tree' }),
-    ]) {
-      expect(admissibility(r).level).toBe('disk_tree_only');
+    const v = admissibility({
+      git_commit: 'abc123',
+      source_state: 'clean',
+      build_digest: null,
+      source_digest: null,
+      digest_scope: null,
+      digest_subject: 'loaded_modules',
+      digest_alg: null,
+    });
+    expect(v.level).not.toBe('deployed_runtime');
+    expect(v.level).toBe('diagnosis_only');
+    expect(v.reason).toContain('a claimed subject is not a digest of loaded modules');
+  });
+
+  it('a loaded_modules subject does NOT promote even with a hand-supplied digest', () => {
+    // DIGEST_ALG names the disk-tree input set. A record pairing it with a
+    // loaded_modules subject describes a mechanism rather than reporting one.
+    prodEnv();
+    const v = admissibility(rev({
+      source_state: 'clean', source_digest: 'abc',
+      digest_scope: 'emission', digest_subject: 'loaded_modules',
+      digest_alg: DIGEST_ALG,
+    }));
+    expect(v.level).not.toBe('deployed_runtime');
+    expect(v.reason).toContain('describes a mechanism rather than reporting one');
+  });
+
+  it('an unrecognized digest_alg is an identifier, not evidence', () => {
+    prodEnv();
+    const v = admissibility(rev({
+      source_state: 'dirty', source_digest: 'abc',
+      digest_scope: 'emission', digest_subject: 'loaded_modules',
+      digest_alg: 'sha256/invented-loaded-modules-v9',
+    }));
+    expect(v.level).toBe('diagnosis_only');
+    expect(v.reason).toContain('no mechanism this build implements');
+  });
+
+  it('no combination of self-reported fields reaches deployed_runtime', () => {
+    // Exhaustive sweep over the field space. While no mechanism can promote,
+    // NOTHING may reach the top row — that is what makes the ceiling structural
+    // rather than a chain of individually-correct branches.
+    for (const source_state of ['clean', 'dirty', 'unknown'] as const) {
+      for (const build_digest of [null, 'sha256:img']) {
+        for (const source_digest of [null, 'abc']) {
+          for (const digest_scope of [null, 'emission', 'process_start'] as const) {
+            for (const digest_subject of [null, 'disk_tree', 'loaded_modules'] as const) {
+              for (const digest_alg of [null, DIGEST_ALG, 'sha256/made-up-v1']) {
+                for (const env of [prodEnv, devEnv]) {
+                  env();
+                  expect(admissibility({
+                    git_commit: 'abc123', source_state, build_digest,
+                    source_digest, digest_scope, digest_subject, digest_alg,
+                  }).level).not.toBe('deployed_runtime');
+                }
+              }
+            }
+          }
+        }
+      }
     }
   });
 
@@ -215,6 +274,9 @@ describe('P18 — digest_subject is recorded and enforced', () => {
     expect(admissibility(rev({
       source_state: 'clean', build_digest: 'sha256:img', digest_subject: 'disk_tree',
     })).level).toBe('disk_tree_only');
+    expect(admissibility(rev({
+      source_state: 'clean', digest_subject: 'loaded_modules',
+    })).level).not.toBe('deployed_runtime');
     for (const flag of ['ATTESTED', 'BUILD_ATTESTED', 'IDEAS_ATTEMPT_ATTESTED']) {
       delete process.env[flag];
     }
@@ -266,9 +328,9 @@ describe('P19 — digest_alg names a pinned hash and an enumerated input set', (
     // behavior, not source behavior. Declared resolution is not loaded identity.
     prodEnv();
     for (const r of [
-      rev({ source_state: 'clean', digest_subject: 'loaded_modules' }),
       rev({ source_state: 'clean', build_digest: 'sha256:img' }),
-      rev({ source_state: 'dirty', source_digest: 'abc', digest_alg: DIGEST_ALG }),
+      rev({ source_state: 'dirty', source_digest: 'abc',
+            digest_subject: 'disk_tree', digest_alg: DIGEST_ALG }),
     ]) {
       const v = admissibility(r);
       expect(v.supportsDependencyClaim).toBe(false);
