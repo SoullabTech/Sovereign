@@ -2,7 +2,23 @@
 
 **Lane**: JARVIS — Long-Term Memory Participation (Cat-5)
 **Predecessor**: `MAIA_LONG_TERM_MEMORY_CURRENT_STATE_CENSUS.md` (2026-09-02)
-**Status**: Architecture only. Nothing implemented, nothing wired, nothing deployed, no sovereignty defect repaired.
+**Status**: **ADJUDICATED 2026-09-02 — Candidate D approved with refinements.** Architecture only. Nothing implemented, nothing wired, nothing deployed, no sovereignty defect repaired.
+
+> ### ⚖️ ADJUDICATION NOTICE
+>
+> Candidate D is approved as the architecture to carry forward into specification. **This is not authorization to implement.**
+>
+> Four parts of this document were **superseded by the adjudication** and are marked inline below. The refined architecture is specified in
+> **`MAIA_INTELLIGENCE_PARTICIPATION_ARCHITECTURE_v0.1.md`**, which is now the operative artifact. This document is retained as the **comparison record** — the reasoning that eliminated A, B and C — and should not be read as the current architecture.
+>
+> | § | Claim here | Disposition |
+> |---|---|---|
+> | §2.2 | Standing as a single vertical ordering | **Superseded** — refined into a five-property authority lattice (spec §2) |
+> | §2.5 | AVAILABLE reaches the prompt as a pointer carrying class, age and coarse subject | **Superseded — the pointer leaks.** Corrected (spec §3) |
+> | §3.3 | Seam promotion recommended | **Approved**, with unbypassable-by-construction strengthened from convention to invariant (spec §5) |
+> | §C7.1 | AVAILABLE → OFFERED promotion rule unresolved | **Resolved** — two warrants + three constraints (spec §4) |
+>
+> The seam-location divergence (§3.3) and the stage-4 gate-placement divergence (§2.1) were both **accepted**.
 **Date**: 2026-09-02
 **Branch**: `claude/maia-long-term-memory-fda5gf`
 
@@ -179,6 +195,8 @@ Two consequences follow immediately, and both are structural rather than stylist
 
 ### 2.2 Q1 — How differently authoritative classes participate without one score
 
+> ⚖️ **SUPERSEDED IN PART.** The three mechanisms (standing classes, intra-class ranking, per-class budgets) are **approved**. The single vertical ordering below is **not**: it conflates epistemic standing with temporal validity and present relevance. A member correction made yesterday must be able to invalidate a Keep made a year ago, which a strict standing hierarchy forbids. See spec §2 for the authority lattice that replaces it.
+
 **The answer: standing is structural, ranking is intra-class, composition is budgeted.**
 
 Three mechanisms, none of which is a weight:
@@ -247,6 +265,8 @@ Therefore:
 **S3 is rejected on canon**: a system that decides which of a member's statements is no longer true has taken authorship of their self-account. **S1 is the floor and should ship with any retrieval.** S2 is the real answer and is a product-design question, not an engineering one (§C7).
 
 ### 2.5 Q2 — Stage 6, and what makes restraint structural
+
+> ⚖️ **SUPERSEDED IN PART.** The three-state model is **approved and strengthened**. The AVAILABLE definition below is **wrong and unsafe**: a pointer reading "painful event involving Karen, 14 months ago" discloses more than the member invited. The adjudicated rule is that the speaking model receives *nothing*, a *disclosure-safe OFFER envelope*, or *admitted material* — and coarse subject metadata is not assumed safe. See spec §3.
 
 **The problem.** Census §5.5: all suppression is pre-composition; once composed, material is in the prompt and restraint is natural-language instruction. Case 5 — a painful, semantically relevant, uninvoked memory — has no architectural answer.
 
@@ -541,7 +561,7 @@ Ordered by how much they could change the architecture.
 
 **Could change the architecture**
 
-1. **What promotes AVAILABLE → OFFERED?** (§2.5) Member invocation only is safest but cannot serve Case 1, where the member *is* invoking. Explicit-query match at stage 2 is plausible. A sensitivity classifier is machine judgment about what is painful and probably falls to the same objection as S3. **This is where D could still go wrong.**
+1. ~~**What promotes AVAILABLE → OFFERED?**~~ ⚖️ **RESOLVED 2026-09-02.** Not a choice between member-invocation and automatic doorway — they are two different *warrants*, and both are legitimate in their own scope. See spec §4. The framing error here was treating one rule as needing to cover both cases.
 2. **Does stage 2 require model inference?** (§2.3) "That relationship I told you about" may not be structurally resolvable. If it needs a model, machine judgment enters *before* epistemic adjudication and D violates its own ordering — which would need either a reordering or an explicit, bounded exception.
 3. **Is there a latency budget for D at FAST?** Unmeasured. FAST targets <2s and already parallelises three subsystems. If D does not fit, either tiering changes or the architecture does.
 4. **May tier vary the field?** (§C5) Unanswered, and it determines whether the parity contract is meaningful or vacuous.
