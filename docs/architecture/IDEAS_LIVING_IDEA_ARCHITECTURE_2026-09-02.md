@@ -11,8 +11,14 @@
 | Cut 2 — relational stances | implemented, **unverified** |
 | Cut 3 — Current Understanding | **explicitly NOT AUTHORIZED** |
 
-**Next threshold**: verification (§9) → real consciousness-thread witness (§5) →
+**Next threshold**: verification (§9) → experiential witness on a **fresh** Idea (§5) →
 architectural adjudication.
+
+**Authorization boundaries, explicit:**
+- **Cut 3 — NOT AUTHORIZED.**
+- **Cut 4 — NOT AUTHORIZED.** Naming imported-material provenance as a known live
+  defect (§5, §8) changes its **evidentiary status, not its authorization status**. A
+  defect being real is not permission to fix it in this lane.
 **Founder direction**: 2026-09-02 — *"The core is already right. I would not redesign
 this. I would let it acquire a second dimension."*
 
@@ -320,9 +326,23 @@ MAIA's *manner*; it cannot change what the block claims to be.
 **Why this matters for the witness:** if MAIA speaks pasted material back as the
 member's position during Steps 2–4, that is this defect surfacing, **not** a stance
 failure — do not read it as one, and do not tune the stances in response. Record it and
-carry it to adjudication. The cleanest protection is to conduct the witness on
-**newly written** material rather than pasted material; if pasted material is used, note
-it explicitly in the record.
+carry it to adjudication.
+
+**Two separate witnesses, on two separate threads** (founder correction, 2026-09-02):
+
+| Thread | What it witnesses |
+|---|---|
+| The **existing** consciousness thread + screenshots | The **provenance defect**. Preserved as before-state evidence. |
+| A **fresh Idea**, current edge of the inquiry written directly in the member's own words | **Cut 0–2**. |
+
+Writing new material *inside the existing thread is not sufficient protection* — it
+still inherits the pasted passage through context. `ask-maia` composes from the last 6
+member blocks and the last 3 reflections regardless of who authored the source
+material, so a new entry in a contaminated thread is read alongside the contamination.
+Only a fresh Idea gives Cut 0–2 a clean read.
+
+Keeping the two witnesses separate is what prevents either failure from being mistaken
+for the other.
 
 It is also the precise case Invariant 17's *manner, not status* clause was written for:
 direction changes how MAIA participates, never what the member is taken to have meant or
