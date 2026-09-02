@@ -11,6 +11,7 @@
  */
 
 import { query as dbQuery } from '@/lib/db/postgres';
+import { adjudicateParticipation, adjudicateDerivation } from '@/lib/maia/participationGate';
 import { lattice } from './ConsciousnessMemoryLattice';
 import { memberRef } from '../privacy/memberRef';
 
@@ -575,46 +576,103 @@ export async function saveRelationshipPattern(
  * it is loaded and carried but never composed into this prompt; whether it
  * carries authority elsewhere is a separate, still-open question.
  */
-export function formatRelationshipMemoryForPrompt(memory: RelationshipMemoryContext): string {
-  if (!memory.essence) {
-    return ""; // First encounter, no context needed
+/**
+ * P1c (MIPA Phase 0) — THE COMPOSITION-ELIGIBLE VIEW OF RELATIONSHIP MEMORY.
+ *
+ * COVENANT: MAIA may not have durable participatory access to a representation
+ * about the member that the member has neither meaningful access to nor
+ * meaningful sovereignty over.
+ *
+ * `formatRelationshipMemoryForPrompt` composed four things on the LIVE FAST
+ * path (and more at DEEP, which loads `includePatterns: true`, `maxThemes: 10`,
+ * `maxBreakthroughs: 5`):
+ *
+ *   summary            raw recurrence fact + member's own name
+ *   themes             `conversation_themes`     — machine-detected
+ *   recentBreakthrough `breakthrough_moments`    — machine-extracted, VERBATIM
+ *   emergingPatterns   `relationship_patterns`   — machine-inferred
+ *
+ * The last three are SYSTEM_REPRESENTATION_ABOUT_MEMBER in the P1b corpus and
+ * the member cannot see any of them: none is exported, none is inspectable.
+ * MAIA was using interpretations about a person that the person could neither
+ * discover nor govern. That is the covenant violation P1c exists to close.
+ *
+ * ── AND IT WAS AN ALTERNATE-READER BYPASS ───────────────────────────────────
+ *
+ * `breakthrough_moments` is the representation **R25 excluded** — machine
+ * inference with no member authorship, whose sole live writer fires on a
+ * significance threshold plus a heuristic and stores a machine-extracted
+ * string. R25 closed the `MemoryBundle` composer and **scoped its claim to
+ * that path**. This is a different composer, so R25's claim was never wrong —
+ * but the REPRESENTATION kept participating. That is precisely why disposition
+ * has to attach per-representation and not per-path.
+ *
+ * ── A PARTITION, NOT A REMOVAL ──────────────────────────────────────────────
+ *
+ * `summary` SURVIVES. A founder ruling already disciplined it (2026-08-14): the
+ * raw recurrence fact — how many conversations, over how many days — may be
+ * stated, while the derived relational label may not, because `relationshipPhase`
+ * is computed from a frequency counter and emitting it converts counting into
+ * relational meaning. That ruling stands; P1c does not reopen it, and removing
+ * the whole block would discard the member's own name and their own
+ * conversation count along with MAIA's inferences about them.
+ */
+export interface CertifiedRelationshipMemory {
+  /** Raw recurrence fact + member's own name, per the 2026-08-14 ruling. */
+  summary: string;
+  hasEssence: boolean;
+  /** Observability only — never composed. */
+  excluded: { themes: number; breakthroughs: number; patterns: number };
+}
+
+/**
+ * Adjudicate relationship memory into its composition-eligible view.
+ *
+ * Converges on the SAME `adjudicateParticipation` / `adjudicateDerivation`
+ * gate P3a-P3e use. No parallel model, no local exception.
+ */
+export function certifyRelationshipMemory(
+  memory: RelationshipMemoryContext,
+): CertifiedRelationshipMemory {
+  // `conversation_themes`, `breakthrough_moments`, `relationship_patterns`:
+  // machine-authored, no member authorship column, not member-accessible.
+  const machine = adjudicateParticipation({
+    provenance: { authoredBy: 'maia', authorityClass: 'inference' },
+    endorsement: 'none',
+  });
+  // The summary is a derivation, but over the member's own encounter record —
+  // and it is already bounded by the 2026-08-14 ruling.
+  const summaryVerdict = adjudicateDerivation([
+    { admitted: true, provenance: { authoredBy: 'member', authorityClass: 'testimony' } },
+  ]);
+
+  return {
+    summary: summaryVerdict.admitted ? memory.summary : '',
+    hasEssence: !!memory.essence,
+    excluded: {
+      themes: machine.admitted ? 0 : memory.themes.length,
+      breakthroughs: machine.admitted ? 0 : memory.breakthroughs.length,
+      patterns: machine.admitted ? 0 : memory.emergingPatterns.length,
+    },
+  };
+}
+
+/**
+ * Format the composition-eligible relationship memory into a prompt block.
+ *
+ * P1c: takes `CertifiedRelationshipMemory`, not `RelationshipMemoryContext`.
+ * The excluded representations are not in scope — reaching them is a compile
+ * error, not an omission a reviewer must notice.
+ */
+export function formatRelationshipMemoryForPrompt(memory: CertifiedRelationshipMemory): string {
+  if (!memory.hasEssence || !memory.summary) {
+    return ""; // First encounter, or nothing certified. Silence, not a scaffold.
   }
 
   const parts: string[] = [];
 
   parts.push(`\n\n🌊 RELATIONSHIP MEMORY:`);
   parts.push(memory.summary);
-
-  // Themes with context.
-  //
-  // Authority note (founder ruling, 2026-08-14): what follows is disclosed
-  // because the CALLER explicitly requested it (`includeThemes`,
-  // `includeBreakthroughs`, `includePatterns`, `maxThemes`, `maxBreakthroughs`
-  // — set per processing tier), never because a resonance score crossed a
-  // threshold. Do not reintroduce a score-derived condition here.
-  if (memory.themes.length > 0) {
-    parts.push(`\nRecurring themes we've explored:`);
-    memory.themes.slice(0, 3).forEach(theme => {
-      if (theme.context) {
-        parts.push(`  - ${theme.theme}: ${theme.context}`);
-      } else {
-        parts.push(`  - ${theme.theme} (${theme.occurrences} times)`);
-      }
-    });
-  }
-
-  // Recent breakthrough
-  if (memory.recentBreakthrough) {
-    parts.push(`\nRecent breakthrough: "${memory.recentBreakthrough.insight}"`);
-    if (!memory.recentBreakthrough.integrated) {
-      parts.push(`  (Still integrating this insight)`);
-    }
-  }
-
-  // Emerging patterns
-  if (memory.emergingPatterns.length > 0) {
-    parts.push(`\nEmerging patterns: ${memory.emergingPatterns.join(', ')}`);
-  }
 
   return parts.join('\n');
 }

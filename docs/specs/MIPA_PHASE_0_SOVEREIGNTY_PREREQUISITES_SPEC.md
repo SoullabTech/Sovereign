@@ -413,6 +413,103 @@ Ten sources, including **two with no writer anywhere in source** (`episode_links
 
 ---
 
+### P1c-E — Sovereign Corpus Disposition · execution record
+
+> ### ✅ P1c CERTIFIED — 2026-09-02 · **Grade A (scoped)** · Refusal **R28**
+>
+> Certification: `__tests__/mipa-p1c-sovereign-disposition.test.ts` — **52/52 passing**, with **ten hostile mutations verified failing**, each application confirmed by a structural witness, each reverted, and the restored suite re-run green.
+
+#### What P1b left open
+
+```text
+CLASSIFIED  ≠  MEMBER-ACCESSIBLE  ≠  MEMBER-GOVERNABLE  ≠  PARTICIPATION-EXCLUDED
+```
+
+P1b said what the 40 representations are and deliberately had no runtime authority. P1c assigns each one an **enforceable** disposition and makes the export a function of that ledger.
+
+#### The policy — derived, not inherited from the class counts
+
+P1b's preliminary arithmetic was *"16 canonical + 10 system = 26 owed."* That is a class count. The obligation is derived instead:
+
+| Class | Rule applied |
+|---|---|
+| `CANONICAL_MEMBER_RECORD` | `EXPORT`, always |
+| `SYSTEM_REPRESENTATION_ABOUT_MEMBER` | `EXCLUDE` alone suffices **only** where every reader inside the live composition closure is covered by a certified exclusion. Otherwise the covenant closes on the **access** side: `EXPORT`, with authorship and epistemic class stated |
+| `DERIVED_IMPLEMENTATION_ARTIFACT` | `EXEMPT` requires **all three** proofs. A historical log is not regenerable, so two of the three do not qualify |
+| `OPERATIONAL_OR_SECURITY` | `EXEMPT` from MAIA-memory export; truthful connection **state**, never the secret |
+| `UNKNOWN` | no permissive default — certified non-participation, or an unresolved P1 blocker |
+
+#### The real obligation, after policy
+
+| | |
+|---|---|
+| Representations disposed | **40 / 40** |
+| `EXPORT` | **27** — 23 newly wired as logical objects · 4 served by the pre-existing sections |
+| `EXCLUDE` | **13** — 11 by reachability · 2 by certified gate |
+| `INSPECT` | **1** |
+| `EXEMPT` | **2** |
+| Unresolved P1 blockers | **0** |
+
+**The standing obligation is now 27 owed · 27 reached**, replacing *"26 owed · 4 reached."* The preliminary figure was a class count used as policy; this one is the obligation the policy actually produces.
+
+#### How non-participation is proven, and where the ceiling is
+
+Exactly two bases are accepted:
+
+- **`certified_gate`** — a named refusal whose certification suite exists on disk and covers the reader.
+- **`not_reachable`** — no module reading the representation lies in the import closure of the declared live composition entry points. Sound in the **safe** direction: with no import path, there can be no call. The closure is recomputed by the suite, so adding one import flips the verdict.
+
+`not_reachable` is an over-approximation the other way: **a module being in the closure is not proof that it composes.** That is the P3-CSC ceiling (outcome C) restated, and P1c never converts in-closure into an exclusion claim. Such a representation is closed on the access side instead.
+
+#### Three findings
+
+**1 — `breakthrough_moments` had a third composer.** R25 closed the `MemoryBundle` path and P1c closes the `RelationshipMemoryService` path; `lib/memory/MemoryOrchestrator.ts` composes a `RECENT BREAKTHROUGHS` block from `BreakthroughStore` and is imported by `lib/sovereign/maiaService.ts`. Neither prior claim was wrong — both were correctly scoped per-path — but **the representation kept participating**. This is why disposition attaches per representation and not per path. Non-participation is therefore not claimable for it, and the covenant closes on the access side.
+
+**2 — `state_vectors` was misclassified, and the defect was in the instrument.** P1b recorded it as UNKNOWN on the evidence *"NO WRITER FOUND in source."* The writer search matched `INSERT INTO <table>`; the table is written through the `insertOne('state_vectors', row)` helper. **Thirty-four tables are written by that helper family and were invisible to the scan.** The real path is fully establishable — MAIA emits a fenced `STATE_VECTOR` block in its own response, `parseStateVector` reads it back, `storeStateVector` persists it — so it is a MAIA-authored inference and is reclassified `SYSTEM_REPRESENTATION_ABOUT_MEMBER`. The widened search was then applied to the whole UNKNOWN set, not only to the entry that improved the numbers: `episode_links` remains genuinely writer-less and its UNKNOWN verdict stands on corrected evidence. **Revised distribution: CANONICAL 16 · SYSTEM 11 · DERIVED 3 · OPERATIONAL 1 · UNKNOWN 9.** The P1b execution record above stands as written for the base it ran against; this is a correction recorded, not a rewrite.
+
+**3 — Two "derived artifacts" do not qualify for exemption.** `conversation_memory_uses` (which memories were retrieved into which turn) and `memory_links` (an assertion that two of the member's memories are related) are historical records: not regenerable from a sovereign source, and the second is an independent claim. `EXEMPT` is refused for both and they are exported. Only `living_field_affinities` satisfies all three conditions.
+
+#### Capability contraction, quantified
+
+`formatRelationshipMemoryForPrompt` composed four things on the live FAST path — and more at DEEP, which loads `includePatterns: true`, `maxThemes: 10`, `maxBreakthroughs: 5`:
+
+| Composed before | Source | After |
+|---|---|---|
+| `summary` — raw recurrence fact + member's name | member encounter record | **kept** |
+| `themes` | `conversation_themes` (machine-detected) | removed |
+| `recentBreakthrough` | `breakthrough_moments` (machine-extracted, verbatim) | removed |
+| `emergingPatterns` | `relationship_patterns` (machine-inferred) | removed |
+
+It is a **partition, not a removal**. The 2026-08-14 founder ruling already disciplined the summary — the raw recurrence fact may be stated, the derived relational label may not — and that ruling is untouched. The formatter now takes `CertifiedRelationshipMemory`, so reaching a machine inference from it is a **type error**, not an omission a reviewer must notice.
+
+#### Falsification — ten mutations, all verified failing, each with a structural witness
+
+| # | Mutation | Witness (before → after) | Result |
+|---|---|---|---|
+| M1 | A new representation added to the census, never disposed | corpus entries 40 → 41 | ❌ 2 failed |
+| M2 | `EXEMPT` claimed with an empty regenerability proof | exemption-proof chars 468 → 369 | ❌ 1 failed |
+| M3 | A canonical member record dropped from `EXPORT` | `not_reachable` claims 12 → 13 | ❌ 2 failed |
+| M4 | Exclusion cites a certification suite that does not exist | suites existing 2 → 1 | ❌ 1 failed |
+| M5 | The certified view regains a machine-detected field | certified-interface fields 3 → 4 | ❌ 1 failed |
+| M6 | An `UNKNOWN` representation relabelled as member testimony | `authorityClass: 'unresolved'` 1 → 0 | ❌ 2 failed |
+| M7 | A credential column added to an export spec | forbidden columns 1 → 2 | ❌ 2 failed |
+| M8 | A failed read returns `[]` instead of `null` | null-on-failure 1 → 0 | ❌ 1 failed |
+| M9 | A fictional column enters an export spec | spec select columns 205 → 206 | ❌ 1 failed |
+| **M10** | A `not_reachable` module imported into a live composer | **closure size 391 → 393, contains `SelfletChain` false → true** | ❌ 2 failed |
+| — | Restored | content-identical to snapshot | ✅ **52/52** |
+
+Every run reported a nonzero test total, so none is the R26 failure mode where a suite that did not compile is mistaken for a falsification result.
+
+> **An instrument defect found in the harness, not the gate.** The first falsification run restored mutated files with `git checkout --`. Two of the P1c artifacts are new and untracked, so the restore both failed *and* silently reverted an unrelated tracked file to `HEAD`, discarding the corpus correction. The next run's baseline showed four failures with no mutation applied — the tell. Restoration is now **content-snapshot based and verified by content**, because a restore that cannot see part of the tree is not a restore.
+
+#### What P1c did NOT prove
+
+- It does not prove that any in-closure representation composes, only that non-participation is not claimable for it. That asymmetry is the P3-CSC ceiling and it is stated rather than worked around.
+- It does not build correction, endorsement or retraction. Where those are absent, Phase 0's standard is access plus appropriate exclusion, and that is what was delivered.
+- `INSPECT` is claimed for exactly **one** representation, because exactly one has an authenticated member-scoped route serving it. The rest satisfy the covenant by export, not by a surface that does not exist.
+
+---
+
 ### P2 — Every consent gate that is read is member-writable
 
 > ### ✅ P2 CERTIFIED — 2026-09-02 · **Grade A (scoped)** · Refusal **R23**

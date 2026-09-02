@@ -3,7 +3,7 @@
 import { type MemberProfile, type WisdomAdaptation } from '../consciousness/member-archetype-system';
 import { buildComprehensiveVoicePrompt, buildAdaptiveVoicePrompt, type ComprehensiveVoiceAnalysis, type InputComplexityAnalysis } from './intelligentVoiceAdaptation';
 import { awarenessLanguageAdapter, type AwarenessLevel } from '../consciousness/awareness-language-adapter';
-import { type RelationshipMemoryContext, formatRelationshipMemoryForPrompt } from '../memory/RelationshipMemoryService';
+import { type RelationshipMemoryContext, formatRelationshipMemoryForPrompt, certifyRelationshipMemory } from '../memory/RelationshipMemoryService';
 import { buildSelfAwareContext } from '../consciousness/maiaArchitectureContext';
 import { PLATFORM_KNOWLEDGE_ADDENDUM } from './platformKnowledge';
 
@@ -870,7 +870,10 @@ IMPORTANT: If the user asks about something mentioned in the conversation above,
 
   // 🌊 RELATIONSHIP MEMORY: Add relational continuity
   if (context.relationshipMemory) {
-    const relationshipContext = formatRelationshipMemoryForPrompt(context.relationshipMemory);
+    // P1c — adjudicated into its composition-eligible view before formatting.
+    const relationshipContext = formatRelationshipMemoryForPrompt(
+      certifyRelationshipMemory(context.relationshipMemory),
+    );
     if (relationshipContext) {
       adaptedPrompt += relationshipContext;
       console.log(`🌊 [Relationship Memory] Included in prompt: ${context.relationshipMemory.totalEncounters} encounters, ${context.relationshipMemory.themes.length} themes`);

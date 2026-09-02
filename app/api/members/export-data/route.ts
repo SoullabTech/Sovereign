@@ -4,6 +4,12 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
 import { getCurrentSession } from '@/lib/auth/serverSessions';
+import { buildSovereignExport } from '@/lib/maia/sovereignExport';
+import {
+  SOVEREIGN_DISPOSITION,
+  OWED_LOGICAL_EXPORTS,
+  LEGACY_SERVED_EXPORTS,
+} from '@/lib/maia/sovereignDisposition';
 
 /** Whitelist settings fields for export (exclude internal id) */
 function pickSettingsForExport(row: Record<string, unknown>) {
@@ -58,13 +64,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Fetch all member data
+    // Fetch all member data.
+    //
+    // P1c (MIPA Phase 0) — THE SECTIONS BELOW ARE NOT THE WHOLE EXPORT.
+    //
+    // They are the five that predate the sovereign corpus work. Everything
+    // else the member is owed comes from `buildSovereignExport`, which is
+    // driven by `SOVEREIGN_DISPOSITION` rather than written out here. An owed
+    // representation cannot silently vanish from the export, because there is
+    // no second list for the ledger to drift away from.
     const [
       memberResult,
       settingsResult,
       sessionsResult,
       memoriesResult,
       googleResult,
+      sovereignObjects,
     ] = await Promise.all([
       // Basic profile
       query(
@@ -134,6 +149,8 @@ export async function POST(request: NextRequest) {
         console.error('[Export API] google_calendar_credentials query failed:', err);
         return { rows: null as unknown as Record<string, unknown>[] };
       }),
+      // P1c — every other logical representation owed to the member.
+      buildSovereignExport(memberId),
     ]);
 
     if (memberResult.rows.length === 0) {
@@ -154,6 +171,23 @@ export async function POST(request: NextRequest) {
               'This section could not be read and is INCOMPLETE. It is not empty because you have no developmental memories — the export failed to retrieve them. Please report this.',
           }
         : {}),
+      // P1c — the sovereign corpus, as logical representations rather than
+      // database topology. Each object states what it is, who authored it, its
+      // epistemic class, the write-path evidence behind that verdict, and,
+      // where provenance is unresolved, says so instead of presenting an
+      // unknown as a fact.
+      sovereignCorpus: sovereignObjects,
+      // What this export does and does not cover, stated rather than implied.
+      // A member cannot audit an omission they were never told about.
+      coverage: {
+        logicalRepresentationsIncluded: OWED_LOGICAL_EXPORTS.length + LEGACY_SERVED_EXPORTS.length,
+        servedByLegacySections: LEGACY_SERVED_EXPORTS,
+        notExported: Object.keys(SOVEREIGN_DISPOSITION).filter(
+          (k) => !SOVEREIGN_DISPOSITION[k as keyof typeof SOVEREIGN_DISPOSITION].export,
+        ),
+        notExportedExplanation:
+          'These are either operational/security material (never exported as memory) or representations MAIA is structurally barred from using about you. They are named here so the omission is visible rather than silent.',
+      },
       connectedServices: {
         // P1 — three states, not two. "unknown" is the honest answer when the
         // read failed; reporting `connected: false` would assert something the

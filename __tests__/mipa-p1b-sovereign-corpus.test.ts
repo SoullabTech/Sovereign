@@ -27,10 +27,20 @@
  *
  * ── UNKNOWN IS A VERDICT, NOT A GAP ─────────────────────────────────────────
  *
- * Ten sources are UNKNOWN, including two — `episode_links`, `state_vectors` —
- * with NO WRITER anywhere in source. Under the covenant they fail closed for
- * new participatory authority. Resolving them by table name or probable caller
- * is the guess the backfill policy forbids.
+ * Ten sources were UNKNOWN, including two — `episode_links`, `state_vectors` —
+ * recorded as having NO WRITER anywhere in source. Under the covenant they fail
+ * closed for new participatory authority. Resolving them by table name or
+ * probable caller is the guess the backfill policy forbids.
+ *
+ * CORRECTED IN P1c: `state_vectors` DOES have a writer. The search that
+ * produced that evidence matched `INSERT INTO <table>` and was blind to the
+ * `insertOne('state_vectors', row)` helper family — thirty-four tables are
+ * written that way. It is a MAIA-authored inference and is now classified
+ * SYSTEM_REPRESENTATION_ABOUT_MEMBER; the UNKNOWN count is nine. The widened
+ * search was applied to the whole set, and `episode_links` remains genuinely
+ * writer-less. The expectations below are updated to the corrected census; the
+ * P1b execution record in the spec stands as written for the base it ran
+ * against.
  */
 
 import * as fs from 'fs';
@@ -170,7 +180,9 @@ describe('P1b §2 — UNKNOWN is a verdict that fails closed', () => {
     // Read-but-never-written. "Nothing writes it" is not evidence of what it
     // holds — it is evidence that this tree cannot say.
     expect(SOVEREIGN_CORPUS.episode_links.class).toBe('UNKNOWN');
-    expect(SOVEREIGN_CORPUS.state_vectors.class).toBe('UNKNOWN');
+    // `state_vectors` was here until P1c found its writer. Left named rather
+    // than deleted, so the correction is visible in the instrument too.
+    expect(SOVEREIGN_CORPUS.state_vectors.class).toBe('SYSTEM_REPRESENTATION_ABOUT_MEMBER');
     expect(SOVEREIGN_CORPUS.episode_links.evidence).toMatch(/NO WRITER FOUND/);
   });
 });
@@ -217,10 +229,10 @@ describe('P1b §4 — the sovereign-corpus ledger', () => {
     for (const e of Object.values(SOVEREIGN_CORPUS)) counts[e.class] = (counts[e.class] ?? 0) + 1;
     expect(counts).toEqual({
       CANONICAL_MEMBER_RECORD: 16,
-      SYSTEM_REPRESENTATION_ABOUT_MEMBER: 10,
+      SYSTEM_REPRESENTATION_ABOUT_MEMBER: 11,
       DERIVED_IMPLEMENTATION_ARTIFACT: 3,
       OPERATIONAL_OR_SECURITY: 1,
-      UNKNOWN: 10,
+      UNKNOWN: 9,
     });
   });
 
@@ -228,9 +240,15 @@ describe('P1b §4 — the sovereign-corpus ledger', () => {
     const owed = Object.entries(SOVEREIGN_CORPUS)
       .filter(([, e]) => EXPORT_REQUIRED_CLASSES.includes(e.class));
     const reached = owed.filter(([, e]) => e.exportedToday);
-    // 26 representations are owed to the member; 4 are reached today. The gap
-    // is the standing obligation, pinned so it cannot quietly disappear.
-    expect(owed.length).toBe(26);
+    // SUPERSEDED BY P1c AS A STATEMENT OF OBLIGATION.
+    //
+    // This counts CLASSES, and a class count is not a policy. P1c derives the
+    // real obligation from disposition — 27 EXPORT, all 27 reached — and
+    // `__tests__/mipa-p1c-sovereign-disposition.test.ts` is where it is pinned.
+    // Kept here as the class arithmetic it always was, updated for the
+    // `state_vectors` reclassification (16 + 11 = 27), and kept honest about
+    // what the pre-P1c export sections reached on their own: four.
+    expect(owed.length).toBe(27);
     expect(reached.length).toBe(4);
     expect(reached.map(([t]) => t).sort()).toEqual([
       'developmental_memories', 'member_sessions', 'member_settings', 'members',

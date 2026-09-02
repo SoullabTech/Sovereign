@@ -54,6 +54,7 @@ import {
 import {
   loadRelationshipMemory,
   formatRelationshipMemoryForPrompt,
+  certifyRelationshipMemory,
   type RelationshipMemoryContext
 } from '../memory/RelationshipMemoryService';
 import { TurnsStore } from '../memory/stores/TurnsStore';
@@ -1223,7 +1224,8 @@ Do NOT mention Bloom's Taxonomy explicitly. The scaffolding should feel organic 
 
   // 🌊 FORMAT RELATIONSHIP MEMORY for prompt
   const relationshipContext = relationshipMemory
-    ? formatRelationshipMemoryForPrompt(relationshipMemory)
+    // P1c — adjudicated into its composition-eligible view before formatting.
+    ? formatRelationshipMemoryForPrompt(certifyRelationshipMemory(relationshipMemory))
     : '';
 
   // 🔒 SANCTUARY PROMPT RULE: When in sanctuary mode, prohibit memory language

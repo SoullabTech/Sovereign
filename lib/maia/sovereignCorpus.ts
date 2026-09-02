@@ -41,7 +41,29 @@
  * Where the write path does not establish authorship, the answer is UNKNOWN and
  * it fails closed for NEW participatory authority. It is not resolved by table
  * name, by probable caller, or by what would make the coverage count prettier.
- * Twelve of these are UNKNOWN. That number is evidence, not embarrassment.
+ * Nine of these are UNKNOWN. That number is evidence, not embarrassment.
+ *
+ * ── CORRECTION RECORDED IN P1c (2026-09-02) ─────────────────────────────────
+ *
+ * `state_vectors` was classified UNKNOWN on the evidence "NO WRITER FOUND in
+ * source". That evidence was WRONG, and the defect was in the instrument: the
+ * writer search matched `INSERT INTO <table>`, and this table is written
+ * through the `insertOne('state_vectors', row)` helper in `lib/db/postgres.ts`.
+ * A whole family of writers — thirty-four tables — is invisible to an
+ * `INSERT INTO` scan.
+ *
+ * The real write path is fully establishable and is now recorded below: MAIA
+ * emits a fenced STATE_VECTOR block in its own response, `parseStateVector`
+ * reads it back out, and `storeStateVector` persists it. Authorship is MAIA;
+ * authority class is inference. It is a SYSTEM representation, not an unknown
+ * one.
+ *
+ * `episode_links` was re-checked under the same widened search and remains
+ * genuinely writer-less: `LinkingRepo` writes `bardic_links`, a different
+ * table. Its UNKNOWN verdict stands on corrected evidence.
+ *
+ * The correction is recorded rather than quietly applied, because a census that
+ * silently improves its own numbers is not a census.
  */
 
 /** Classification buckets, ratified 2026-09-02. */
@@ -69,7 +91,7 @@ export interface CorpusEntry {
   exportedToday?: true;
 }
 
-export const SOVEREIGN_CORPUS: Record<string, CorpusEntry> = {
+export const SOVEREIGN_CORPUS = {
   // ── CANONICAL MEMBER RECORD — export required ─────────────────────────────
   members: { class: 'CANONICAL_MEMBER_RECORD', evidence: 'member profile; member-supplied at registration', exportedToday: true },
   member_settings: { class: 'CANONICAL_MEMBER_RECORD', evidence: 'member-chosen preferences written through the authenticated settings surface', exportedToday: true },
@@ -108,6 +130,10 @@ export const SOVEREIGN_CORPUS: Record<string, CorpusEntry> = {
   user_relationship_context: { class: 'SYSTEM_REPRESENTATION_ABOUT_MEMBER', evidence: 'SessionMemoryService / SpiralStateService — machine-maintained relational state' },
   selflet_nodes: { class: 'SYSTEM_REPRESENTATION_ABOUT_MEMBER', evidence: 'SelfletChain writes machine-derived phase/element/archetypes/dominant_emotions/continuity_score' },
   reflection_capsules: { class: 'SYSTEM_REPRESENTATION_ABOUT_MEMBER', evidence: 'capsuleService writes a `summary` — a machine summarisation of member material' },
+  state_vectors: {
+    class: 'SYSTEM_REPRESENTATION_ABOUT_MEMBER',
+    evidence: 'MAIA emits a fenced STATE_VECTOR block in its own response; parseStateVector reads it back and storeStateVector persists it via insertOne(). MAIA-authored inference about the member — reclassified from UNKNOWN in P1c after the INSERT INTO writer scan was found blind to the insertOne() helper family',
+  },
 
   // ── DERIVED IMPLEMENTATION ARTIFACT ───────────────────────────────────────
   conversation_memory_uses: { class: 'DERIVED_IMPLEMENTATION_ARTIFACT', evidence: 'retrieval audit trail; regenerable bookkeeping about which candidates were considered' },
@@ -127,12 +153,19 @@ export const SOVEREIGN_CORPUS: Record<string, CorpusEntry> = {
   teloi: { class: 'UNKNOWN', evidence: 'TeleologyRepo stores a `phrase` with machine `strength`/`signals`; phrase origin not established' },
   episodes: { class: 'UNKNOWN', evidence: 'episodeService writes place/sense cues and affect valence; not established whether the member supplied them or they were extracted' },
   episode_links: { class: 'UNKNOWN', evidence: 'NO WRITER FOUND in source; read paths exist. Read-but-never-written in this tree' },
-  state_vectors: { class: 'UNKNOWN', evidence: 'NO WRITER FOUND in source; trajectory routes read it. Read-but-never-written in this tree' },
   selflet_messages: { class: 'UNKNOWN', evidence: 'SelfletChain writes `title`/`content`/`ritual_trigger`; member-facing archive/snooze routes exist, but no source evidence establishes who AUTHORS the message' },
   selflet_boundaries: { class: 'UNKNOWN', evidence: 'SelfletChain writer; authorship not established' },
   selflet_metamorphosis: { class: 'UNKNOWN', evidence: 'SelfletChain writer; authorship not established' },
   selflet_reinterpretations: { class: 'UNKNOWN', evidence: 'SelfletChain writer; authorship not established' },
-};
+  // `satisfies`, not an annotation: the key set stays LITERAL so P1c's
+  // disposition ledger can be a total function over it at COMPILE time. An
+  // annotation of `Record<string, CorpusEntry>` widens the keys to `string`
+  // and a missing disposition becomes a runtime discovery instead of a build
+  // failure.
+} satisfies Record<string, CorpusEntry>;
+
+/** Every classified representation, as a literal union. */
+export type CorpusKey = keyof typeof SOVEREIGN_CORPUS;
 
 /** Classes for which the member must be able to obtain or inspect the material. */
 export const EXPORT_REQUIRED_CLASSES: readonly CorpusClass[] = [
