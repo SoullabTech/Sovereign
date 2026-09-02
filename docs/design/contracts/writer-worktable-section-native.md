@@ -64,3 +64,9 @@ experience_verification: >-
   browser; it is exercised by the handler witness (a content-only save against a converted draft is
   refused typed, with zero writes) and read in the diff. Split, merge and move are not implemented
   in this unit and were not walked.
+---
+
+# Writer Canvas — the Worktable, section-native
+
+The body of this contract is its frontmatter: the room, what it shares with the House, what is
+distinct to it, and the walk that verified it. Nothing below is load-bearing.
