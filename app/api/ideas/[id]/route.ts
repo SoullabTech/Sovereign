@@ -6,6 +6,14 @@ import { query } from '@/lib/db/postgres';
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
+// Single column list so every response shape stays identical. seed / title_source
+// / proposed_titles are Cut 1 (20260902000001) — the seed records where the
+// inquiry began, the title records what it has become, and they are allowed to
+// diverge without either overwriting the other.
+const IDEA_COLUMNS = `id, title, framing, status, tags, created_at, updated_at,
+       last_entered_at, last_decision_at, seed, seed_block_id, title_source,
+       proposed_titles, proposed_titles_at`;
+
 /**
  * GET /api/ideas/[id]
  *
@@ -32,7 +40,7 @@ export async function GET(
       `UPDATE member_ideas
           SET last_entered_at = NOW()
         WHERE id = $1 AND member_id = $2
-      RETURNING id, title, framing, status, tags, created_at, updated_at, last_entered_at, last_decision_at`,
+      RETURNING ${IDEA_COLUMNS}`,
       [ideaId, session.memberId]
     );
 
@@ -84,10 +92,39 @@ export async function PATCH(
       title?: unknown;
       framing?: unknown;
       status?: unknown;
+      accept_proposed_title?: unknown;
+      dismiss_proposed_titles?: unknown;
     };
 
     const updates: string[] = [];
     const values: unknown[] = [];
+
+    // ── The ratification boundary ────────────────────────────────────────────
+    // Renaming happens here and only here. `accept_proposed_title` is the
+    // member accepting one of MAIA's suggestions — and it is verified against
+    // the stored proposals, so an arbitrary string cannot be laundered through
+    // this path as if MAIA had offered it.
+    if (typeof body.accept_proposed_title === 'string') {
+      const chosen = body.accept_proposed_title.trim();
+      const stored = await query<{ proposed_titles: string[] }>(
+        `SELECT proposed_titles FROM member_ideas WHERE id = $1 AND member_id = $2`,
+        [ideaId, session.memberId]
+      );
+      if (stored.rows.length === 0) {
+        return NextResponse.json({ error: 'Idea not found' }, { status: 404 });
+      }
+      if (!(stored.rows[0].proposed_titles ?? []).includes(chosen)) {
+        return NextResponse.json(
+          { error: 'That name is not one of the current suggestions' },
+          { status: 400 }
+        );
+      }
+      values.push(chosen);
+      updates.push(`title = $${values.length}`);
+      updates.push(`title_source = 'maia_accepted'`);
+      updates.push(`proposed_titles = '{}'`);
+      updates.push(`proposed_titles_at = NULL`);
+    }
 
     if (typeof body.title === 'string') {
       const title = body.title.trim();
@@ -99,6 +136,16 @@ export async function PATCH(
       }
       values.push(title);
       updates.push(`title = $${values.length}`);
+      // A person typed it. Whatever it was before — auto-derived or accepted —
+      // it is now named.
+      updates.push(`title_source = 'member'`);
+      updates.push(`proposed_titles = '{}'`);
+      updates.push(`proposed_titles_at = NULL`);
+    }
+
+    if (body.dismiss_proposed_titles === true) {
+      updates.push(`proposed_titles = '{}'`);
+      updates.push(`proposed_titles_at = NULL`);
     }
 
     if (body.framing !== undefined) {
@@ -124,7 +171,7 @@ export async function PATCH(
       `UPDATE member_ideas
           SET ${updates.join(', ')}
         WHERE id = $${values.length - 1} AND member_id = $${values.length}
-      RETURNING id, title, framing, status, tags, created_at, updated_at, last_entered_at, last_decision_at`,
+      RETURNING ${IDEA_COLUMNS}`,
       values
     );
 

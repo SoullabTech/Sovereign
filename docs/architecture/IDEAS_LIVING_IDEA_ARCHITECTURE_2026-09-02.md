@@ -2,8 +2,15 @@
 
 **Date**: 2026-09-02
 **Surface**: `/maia/ideas`, `/maia/ideas/[id]`
-**Status**: Cut 0 landed (defects). Cuts 1–3 specified, not built.
-**Founder direction**: 2026-09-02 — *"The core is already right. I would not redesign this. I would let it acquire a second dimension."*
+**Status**: Cuts 0–2 implemented and pushed — **not yet verified** (no populated
+environment available; see §9). Cut 3 specified and deliberately **not built**.
+**Founder direction**: 2026-09-02 — *"The core is already right. I would not redesign
+this. I would let it acquire a second dimension."*
+
+**Mandate for this lane** (founder, 2026-09-02): *Take Cut 1 + Cut 2. Seed/name
+separation first, then per-turn relational stances. Do not build Current
+Understanding yet. Preserve Reflect as silent. Preserve "MAIA may propose; only the
+member ratifies." Then witness the consciousness thread before authorizing Cut 3.*
 
 ---
 
@@ -98,103 +105,243 @@ recedes to being the default-stance behavior.
 
 ---
 
-## 3. Cut 1 — the idea acquires a name
+## 3. Cut 1 — the idea acquires a name (IMPLEMENTED 2026-09-02, unverified)
 
-**Problem**: the enormous serif heading is the truncated first sentence of the
-opening entry (`description.split('\n')[0].slice(0, 120)` in the capture route).
-That was the **seed**, not the title. The member reads it as *I am still inside the
-note I wrote forty minutes ago* rather than *this is becoming something*.
+**Problem**: the large serif heading was the truncated first sentence of the opening
+entry (`description.split('\n')[0].slice(0, 120)` in the capture route). That was the
+**seed**, not the title. The member reads the room as *I am still inside the note I
+wrote forty minutes ago* rather than *this is becoming something*.
 
-**Shape**:
+**Built** — migration `20260902000001_member_idea_seed_and_title.sql`:
 
-- Migration: `member_ideas.seed TEXT` — preserves the opening words permanently.
-  Backfill from the current title where the title was auto-derived.
-- Title becomes a real name, freely editable, allowed to evolve.
-- Seed renders quietly beneath: *Seed: "I want to look at some ideas, some
-  qualities, stages…"*
-- MAIA gesture: **Suggest a name** → proposes 2–3 candidate names drawn from the
-  thread. Member picks, edits, or ignores. Proposal only; the member's choice is
-  the act. Never auto-renames.
-- Capture route stops writing a truncated sentence into `title`; it writes `seed`
-  and leaves the idea provisionally *Unnamed*.
+| Column | Meaning |
+|---|---|
+| `seed` | Display excerpt (≤400 chars) of where the inquiry began. Never rewritten as the title evolves. |
+| `seed_block_id` | FK to the authored block the seed came from — provenance by reference, not duplication. `ON DELETE SET NULL`, so the link is nulled honestly rather than dangling. |
+| `title_source` | `member` \| `auto_seed` \| `maia_accepted`. |
+| `proposed_titles` | MAIA's suggestions. Never read as the idea's name. |
 
-Small cut. Highest felt-change per line of code in this list.
+- **Backfill is exact, not heuristic.** The capture route wrote the title as a literal
+  prefix of the first block; where the current title still *is* that prefix, no human
+  ever named the idea, so it is marked `auto_seed`. **No title text is rewritten by the
+  migration** — an unnamed idea is demoted in the UI, never erased.
+- UI: an `auto_seed` idea renders as *Unnamed inquiry* (muted italic) with
+  `Seed: "…"` beneath, in both the workspace and the list. The pencil offers an
+  **empty** field rather than asking the member to edit a sentence into a name.
+- `POST /api/ideas/[id]/suggest-title` → Haiku returns 2–3 candidates
+  (`lib/team/maiaTitleProposal.ts`). Names are handles, not verdicts: noun phrases in
+  the member's own vocabulary, forbidden from summarizing or asserting what the idea
+  means.
+- Proposals render **dashed, muted, prefixed "MAIA suggests — not yet the name"**.
+
+**The ratification boundary is enforced by route shape, not discipline**:
+`suggest-title` writes only `proposed_titles`; `PATCH /api/ideas/[id]` is the only
+writer of `title`, and `accept_proposed_title` is verified against the stored
+proposals so an arbitrary string cannot be laundered through that path as if MAIA had
+offered it. There is no code path from a suggestion to the idea's name that does not
+pass through a member's click.
 
 ---
 
-## 4. Cut 2 — Current Understanding (the living idea)
+## 4. Cut 2 — relational stances (IMPLEMENTED 2026-09-02, unverified)
 
-**The biggest missing piece.** Not a summary, not another MAIA message — a compact
-persistent representation of where the idea currently stands, so the member can
-wander without having to remember where the center is.
+Five verbs governing **one MAIA turn**. `lib/maia/ideaStances.ts`.
 
-Fields (each independently proposable, ratifiable, editable, and dismissable):
+| Stance | MAIA's job | MAIA resists |
+|---|---|---|
+| **Stay with this** | deepen, reflect, notice, remain close to what is emerging | solving, redirecting, application questions |
+| **Explore** | follow implications and adjacent possibilities | premature convergence |
+| **Challenge** | test assumptions, contradictions, excluded possibilities | contrarianism for its own sake |
+| **Connect** | identify conceptual / source / prior-idea relationships | turning connection into equivalence |
+| **Distill** | articulate what has actually become clearer | manufacturing closure, claiming member agreement |
 
-| Field | Question it answers |
-|---|---|
-| Emerging proposition | What is the idea claiming right now? |
-| Current structure | What shape does it have? |
-| Related formulation | What parallel framing is in play? |
-| Live tension | What is unresolved? |
-| Open question | What is it reaching toward? |
+**Held by shape, not by intention:**
 
-**Schema** — `member_idea_understanding`, one row per field, append-only history
-with a current-pointer, never a mutable blob:
+- **Per-turn, never a mode.** The stance lives in one request body and one piece of
+  component state that clears in the `finally` block of the ask. Nothing persists it
+  on `member_ideas`. There is no sticky state, hidden or otherwise.
+- **No default.** Plain `Ask MAIA →` sends no stance and behaves exactly as before.
+  A member who wants company does not have to operate a control panel to get it.
+- **Reflect stays MAIA-silent.** Stances attach to Ask MAIA only — Reflect does not
+  call MAIA at all, so a stance cannot reach it.
+- An unrecognized stance is **rejected (400)**, never silently ignored: a member never
+  gets a different relation than the one they chose.
+- The stance is recorded in the reflection block's metadata, so a thread reads back
+  with its relations visible.
+
+**The constitutional rule**, appended to every stance directive from a single shared
+constant so it cannot drift between them:
+
+> A stance may change MAIA's **manner of participation**. It may never change the
+> **epistemic status** of the member's material.
+
+So Distill may say *"one possible formulation I'm hearing is…"*. It may not turn that
+formulation into the idea's position. Connect may surface McGilchrist or Wilson;
+proximity is not provenance and citing a thinker is not endorsement by that thinker.
+
+**Interaction with the Cut 0 progression floor**: when a stance is chosen, the member
+has taken the wheel — the stance governs the move and progression reduces to
+`PROGRESSION_FLOOR` (anti-repetition only). Without this, `close_and_offer` ("close the
+loop and make a structural offering") would directly contradict Stay with this ("do not
+offer structure they did not ask for"), and a stance the member *chose* would be
+overridden by a stage the system *inferred*.
+
+---
+
+## 5. Witness before Cut 3
+
+**Do not build Current Understanding yet.** Use the live consciousness thread as the
+witness and ask:
+
+- Does **Stay with this** actually stop the product-manager reflex?
+- Does **Explore** let the inquiry open without scattering?
+- Does **Distill** recognize development without prematurely freezing it?
+- Do you naturally begin wanting to see a persistent representation of *what I now
+  think*?
+
+If the answer to the last one is yes, Current Understanding has **earned its existence
+from use rather than from an architecture diagram** — and by then we will know what
+actually needs persistence, which makes it far easier to design.
+
+---
+
+## 6. Cut 3 — Current Understanding (NOT AUTHORIZED)
+
+When authorized, the **first cut is deliberately small**: three fields only —
+**Emerging proposition · Live tension · Open question**. Not the branches/sources/
+concepts apparatus.
+
+Schema — `member_idea_understanding`, one row per field, append-only with a
+supersede pointer, never a mutable blob:
 
 ```
 id, idea_id, member_id,
-field_key       TEXT   -- proposition | structure | formulation | tension | question
-content         TEXT
-state           TEXT   -- proposed | ratified | member_authored
-proposed_by     TEXT   -- maia | member
+field_key        TEXT   -- proposition | tension | question
+content          TEXT
+state            TEXT   -- proposed | ratified | member_authored
+proposed_by      TEXT   -- maia | member
 source_block_ids UUID[]
-superseded_by   UUID   -- previous version pointer; edits never destroy history
+superseded_by    UUID   -- edits never destroy history
 created_at
 ```
 
-**Behavior**:
-- MAIA proposes a field only when the thread gives it grounds, and never
-  unprompted more than once per N blocks — the panel must not become a synthesis
-  faucet.
-- Proposed fields render provisional (dashed, muted, "MAIA suggests").
-- Panel is **dismissable to zero**. The thinking space must stay quiet when the
-  member wants to think.
-- Member-authored fields are the ordinary case; MAIA proposal is the assist.
+Behavior: proposed fields render provisional; the panel is dismissable to zero (the
+thinking space must stay quiet when the member wants to think); MAIA proposes only
+when the thread gives it grounds, and rate-limited, so the panel never becomes a
+synthesis faucet.
 
-**Risk to hold**: this is the room's synthesis-drift vector. If proposed fields ever
-render as settled, or feed prompt context as the member's position, the system has
-started thinking on the member's behalf. The `state` column is the guard and must
-be honored at every read site.
+**Risk to hold**: this is the room's synthesis-drift vector. If a `proposed` field ever
+renders as settled, or feeds prompt context as the member's position, the system has
+started thinking on the member's behalf. The `state` column is the guard and must be
+honored at every read site.
 
 ---
 
-## 5. Cut 3 — relational stances
+## 7. Capture doctrine (founder, 2026-09-02) — governs Cut 4 and after
 
-Not twenty AI buttons. Five modes of relationship to an emerging idea, selected by
-the member before asking:
+> **Ideas should adapt to how people actually think before asking them to conform to
+> how the system organizes thought.**
 
-| Stance | What MAIA does |
-|---|---|
-| **Stay with this** | Doesn't solve it. Reflects what seems alive or unresolved. |
-| **Explore** | Follows implications, associations, questions. |
-| **Challenge** | Finds assumptions, contradictions, counterexamples. |
-| **Connect** | Relates this to other ideas, thinkers, previous work, sources. |
-| **Distill** | Asks what has actually become clearer. |
+People will paste chat conversations, voice transcripts, half-written notes, book
+passages, emails to themselves, screenshots, fragments from MAIA, things they wrote
+three years ago, and huge unruly blobs. Making them classify all of that before
+capture would make Ideas less fertile.
 
-**Implementation**: `POST /api/ideas/[id]/ask-maia` takes an optional `stance`.
-Each stance is a directive block appended to the system prompt, same mechanism as
-`PROGRESSION_DIRECTIVES`. Stance is recorded in the reflection block's metadata so
-threads can be read back later with the relation visible. Default (no stance chosen)
-= current Ideas-mode behavior under the progression floor.
+**Separate capture from interpretation. Capture first, meaning later.** The first
+system response to a long paste is *Got it. Nothing lost.* — not *what kind of
+artifact is this?*
 
-**Why this is the real fix for defect 4**: the member gets the wheel. A member
-dwelling with an emerging perception selects *Stay with this*, and the system stops
-demanding the idea justify itself. Sovereignty: the member directs the relation
-rather than writing more prose in the hope of being read differently.
+```
+CAPTURE      anything that enters the field
+   ↓
+WORKING      what I am actively thinking with
+   ↓
+RECOGNITION  what I have come to believe / formulate / create
+```
+
+That distinction dissolves most of the provenance problem. A pasted conversation is
+not yet *my idea* — it is material entering my field of thought. Two truths held
+simultaneously: *this matters to my thinking*, and *not every sentence in it
+originated with me or represents what I believe*.
+
+**The provenance rule**: don't solve authorship by preventing messy input —
+**preserve origin at ingestion; determine meaning through use.** A block knows its
+`origin`, `participants`, `captured`, `source`, and `status: source_material`.
+Operations on it — *continue from this, pull into reflection, mark as important,
+connect, extract questions, distill with MAIA* — never alter the original. A member's
+rewrite of a sentence has its own provenance. A MAIA formulation the member explicitly
+affirms becomes ratified. The messy genealogy is preserved, not pretended away.
+
+Cut 1's `seed` / `seed_block_id` is this doctrine in miniature and its first
+implementation: origin preserved by reference at ingestion, meaning (the name)
+determined later through use.
+
+### Dynamic UI — the honest definition
+
+Dynamic must **not** mean the UI rearranges itself because a model thinks it knows
+better; that is disorienting. It means:
+
+> **The workspace reveals the affordances appropriate to the member's present act.**
+
+Composer promiscuous by design — type, speak, paste, drop a file, import a
+conversation, add an image, add a link — without deciding what kind of thinker the
+system wants you to be today. Then the UI quietly adapts: a two-sentence thought stays
+a reflection; a 9,000-character essay is treated as long-form; a multi-speaker paste is
+recognized as a conversation; a URL becomes a source; a voice ramble becomes a
+transcript; disconnected snippets stay fragments. Capabilities appear when behavior
+makes them relevant, instead of one permanent toolbar.
+
+### Learning the member's process
+
+Not *Kelly likes dark mode*, but *this member opens with long associative reflections,
+brings prior conversations in, explores widely before wanting synthesis, and often
+needs MAIA to stay with an intuition longer before converting it into an application.*
+The system can then foreground **Stay with this · Explore · Connect** during an
+opening run and leave **Distill** available but quieter. Someone else works
+`fragment → question → research → synthesis`, or `voice dump → distill → outline →
+develop`, or `source → annotation → contradiction → thesis`. Ideas must not require
+everyone to use one person's process; it should discover theirs and support it.
+
+**The firm boundary**: the interface may adapt to behavior, and MAIA may infer which
+*operation* might be useful — but neither may silently infer **authorship,
+endorsement, or meaning**. *"You often paste conversations — want me to preserve these
+as imported conversation blocks?"* is fine. *"This appears to be your current thesis"*
+must remain a proposal.
+
+> MAIA may recognize, suggest, connect, organize and propose.
+> The member determines what something means to them.
+
+### Design doctrine
+
+> **Meet the member where their creative process actually occurs, preserve what they
+> bring without distortion, and gradually offer structures that increase their capacity
+> to notice, develop, connect and give form to what is emerging.**
+
+*Offer structures* is load-bearing. This is not merely reproducing habits: if someone
+has fifty disconnected notes, Ideas should not congratulate them on having fifty
+disconnected notes — it can make relationships visible. If someone converges
+prematurely, MAIA can help reopen the field. If someone endlessly explores,
+distillation becomes available. If someone forgets where an insight came from,
+provenance restores the lineage.
+
+```
+honor the natural process
+        ↓
+make the process visible
+        ↓
+expand its available moves
+        ↓
+help the member become more conscious of how they themselves create
+```
+
+Which returns the room to the material that started it: Ideas can itself embody
+**Awareness → Attending → Allowance**. *Awareness*: here is what has arisen.
+*Attending*: here is what I choose to stay with. *Allowance*: I don't have to know what
+it is yet.
 
 ---
 
-## 6. Cut 4 — lineage, branches, sources (later)
+## 8. Cut 4 — lineage, branches, sources (later, under §7)
 
 **Evolution history.** Ratified Changes become the idea's spine — not conversation
 history but **intellectual provenance**:
@@ -206,48 +353,45 @@ Seed        Consciousness as Awareness → Attending → Allowance
  ↓ Change 3 AAA and PEL may operate at different levels
 ```
 
-Already half-built: `member_idea_blocks` where `block_type = 'change'`, ordered.
-Needs a lineage view, nothing more.
+Already half-built: `member_idea_blocks` where `block_type = 'change'`, ordered. Needs
+a lineage view, nothing more.
 
-**Branches.** Highlight → *Branch*. A branch is its own thought stream inside the
-same idea. Restrained by default; no node graph until a map becomes useful. Schema:
-`member_ideas.parent_idea_id` + `branch_label`, or a `member_idea_branches` join —
-decide when built, not now.
+**Imported material.** Block `origin` / `participants` / `status: source_material`,
+collapsed rendering with exchange counts, and operations that never alter the original.
+This is the first real test of §7.
 
-**Sources / lineage.** Wilson, McKenna, McGilchrist, De Jaegher & Di Paolo should
-not disappear inside MAIA prose. An idea gradually acquires a sources layer with the
-invariant **source influence ≠ author's idea** — the same provenance discipline
-being worked out in Writer's Studio, and it should be designed correctly here from
+**Branches.** Highlight → *Branch*: its own thought stream inside the same idea.
+Restrained by default; no node graph until a map becomes useful.
+
+**Sources / lineage.** Wilson, McKenna, McGilchrist, De Jaegher & Di Paolo should not
+disappear inside MAIA prose. Invariant: **source influence ≠ author's idea** — the same
+provenance discipline being worked out in Writer's Studio, designed correctly here from
 the start rather than retrofitted.
 
 ---
 
-## 7. Product boundary this clarifies
+## 9. Verification owed
 
-| Space | Fundamental act |
-|---|---|
-| **Ideas** | *Something is becoming thinkable.* |
-| **Explore** | *What else is connected to this?* |
-| **Develop** | *What could this become?* |
-| **Review** | *What have I actually made?* |
-| **Writer's Studio** | *How do I give this enduring form?* |
-| **MAIA conversation** | *What is happening with me now?* |
+`node_modules` is empty in the build environment these cuts were written in, so
+**nothing here has been executed**. Status is precise: *implemented and pushed, not yet
+verified.* Before stacking further behavioral work:
 
-**Ideas is pre-form.** The interface must not become structured too soon: just
-enough structure to make emergence visible, never enough to force premature
-crystallization. Every cut above is measured against that line.
+1. `npm run typecheck` (no-regression gate) and `npx vitest run lib/maia lib/team`.
+2. Apply `20260902000001_member_idea_seed_and_title.sql`; confirm the backfill marked
+   the expected rows `auto_seed` and **changed no title text**.
+3. On a real thread: paste a long entry (>4,000 chars) and confirm nothing is clipped
+   and the counter appears; force a save failure and confirm it is visible.
+4. Ask MAIA three times with no stance on a live thread and confirm the third response
+   does not re-ask a scoping question.
+5. Ask with **Stay with this** on the consciousness thread — the case-study control.
 
 ---
 
-## 8. Sequencing
+## 10. Sequencing
 
-1. ~~Cut 0 — defects~~ **landed 2026-09-02**
-2. Cut 1 — seed / name separation *(small, high felt-change)*
-3. Cut 3 — relational stances *(the real fix for the case-study failure; no schema)*
-4. Cut 2 — Current Understanding *(largest; carries the ratification invariant)*
-5. Cut 4 — lineage view, then branches, then sources
-
-Cut 3 before Cut 2 deliberately: stances are cheap, fix the observed failure, and
-generate the thread quality that makes a Current Understanding panel worth
-synthesizing from. Building the panel first would mean synthesizing over threads
-still being steered wrong.
+1. ~~Cut 0 — defects~~ implemented 2026-09-02
+2. ~~Cut 1 — seed / name separation~~ implemented 2026-09-02
+3. ~~Cut 2 — relational stances~~ implemented 2026-09-02
+4. **Verify (§9), then witness (§5)** ← current position
+5. Cut 3 — Current Understanding, three fields only, *if* use earns it
+6. Cut 4 — imported material, lineage view, branches, sources — under the §7 doctrine

@@ -13,6 +13,7 @@ import {
   storeRecognitionEvent,
   type RecognitionOutcome,
 } from '@/lib/maia/decisionChangeRecognition';
+import { isIdeaStance, type IdeaStance } from '@/lib/maia/ideaStances';
 
 // Server-side enablement gate for MAIA Decision/Change recognition.
 //
@@ -85,7 +86,7 @@ interface BlockRow {
  * Returns: { success: true, block: <the new maia_reflection block> }
  */
 export async function POST(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
@@ -97,6 +98,26 @@ export async function POST(
     const { id: ideaId } = await params;
     if (!UUID_RE.test(ideaId)) {
       return NextResponse.json({ error: 'Invalid idea id' }, { status: 400 });
+    }
+
+    // Optional relational stance for THIS turn (Cut 2). The body may be absent
+    // entirely — plain "Ask MAIA" posts no body and keeps the prior behavior.
+    // An unrecognized stance is rejected rather than silently ignored, so a
+    // member never gets a different relation than the one they chose.
+    let stance: IdeaStance | undefined;
+    try {
+      const raw = await request.text();
+      if (raw.trim().length > 0) {
+        const body = JSON.parse(raw) as { stance?: unknown };
+        if (body.stance !== undefined && body.stance !== null) {
+          if (!isIdeaStance(body.stance)) {
+            return NextResponse.json({ error: 'Unknown stance' }, { status: 400 });
+          }
+          stance = body.stance;
+        }
+      }
+    } catch {
+      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
     }
 
     // Ownership + idea context in one fetch
@@ -185,6 +206,7 @@ export async function POST(
       recentBlocks: summaries,
       priorMaiaReflections,
       reflectionCount,
+      stance,
     });
 
     // ── Decision/Change recognition (flag-gated, post-response) ──────────────
@@ -234,6 +256,10 @@ export async function POST(
     const metadata: Record<string, unknown> = {
       source: 'maia',
       invoked_from: 'idea_thread',
+      // Recorded so a thread can be read back later with the relation visible:
+      // what kind of company was asked for at this moment. Per-turn only —
+      // nothing here makes the stance sticky for the next call.
+      ...(stance ? { stance } : {}),
     };
     if (recognition && recognition.namingLine) {
       metadata.recognition = {

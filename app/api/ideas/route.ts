@@ -38,6 +38,8 @@ export async function GET(request: NextRequest) {
         i.updated_at,
         i.last_entered_at,
         i.last_decision_at,
+        i.seed,
+        i.title_source,
         (SELECT COUNT(*)::int FROM member_idea_blocks b WHERE b.idea_id = i.id) AS block_count,
         (SELECT MAX(b.created_at) FROM member_idea_blocks b WHERE b.idea_id = i.id) AS last_block_at
       FROM member_ideas i
@@ -95,9 +97,10 @@ export async function POST(request: NextRequest) {
     }
 
     const result = await query(
-      `INSERT INTO member_ideas (member_id, title, framing)
-       VALUES ($1, $2, $3)
-       RETURNING id, title, framing, status, tags, created_at, updated_at, last_entered_at, last_decision_at`,
+      `INSERT INTO member_ideas (member_id, title, framing, title_source)
+       VALUES ($1, $2, $3, 'member')
+       RETURNING id, title, framing, status, tags, created_at, updated_at,
+                 last_entered_at, last_decision_at, seed, title_source, proposed_titles`,
       [session.memberId, title, framing || null]
     );
 

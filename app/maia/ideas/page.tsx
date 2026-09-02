@@ -29,6 +29,10 @@ interface IdeaListItem {
   last_decision_at: string | null;
   block_count: number;
   last_block_at: string | null;
+  // Cut 1 — an 'auto_seed' title was derived from the opening entry and never
+  // chosen by anyone; the list shows it as unnamed with its seed beneath.
+  seed?: string | null;
+  title_source?: 'member' | 'auto_seed' | 'maia_accepted';
 }
 
 export default function IdeasListPage() {
@@ -218,15 +222,25 @@ export default function IdeasListPage() {
                   <div className="flex items-start justify-between gap-4">
                     <div className="min-w-0 flex-1 pr-8">
                       <h3
-                        className="text-base text-amber-200/90 group-hover:text-amber-100 font-light truncate"
+                        className={`text-base font-light truncate ${
+                          idea.title_source === 'auto_seed'
+                            ? 'text-stone-500 italic'
+                            : 'text-amber-200/90 group-hover:text-amber-100'
+                        }`}
                         style={{ fontFamily: 'Spectral, Georgia, serif' }}
                       >
-                        {idea.title}
+                        {idea.title_source === 'auto_seed' ? 'Unnamed inquiry' : idea.title}
                       </h3>
-                      {idea.framing && (
-                        <p className="text-xs text-stone-500 mt-1 line-clamp-2 leading-relaxed">
-                          {idea.framing}
+                      {idea.title_source === 'auto_seed' && idea.seed ? (
+                        <p className="text-xs text-stone-500 mt-1 line-clamp-2 leading-relaxed italic">
+                          “{idea.seed}”
                         </p>
+                      ) : (
+                        idea.framing && (
+                          <p className="text-xs text-stone-500 mt-1 line-clamp-2 leading-relaxed">
+                            {idea.framing}
+                          </p>
+                        )
                       )}
                       <div className="flex items-center gap-3 mt-3 text-[11px] text-stone-600">
                         <span className="flex items-center gap-1">

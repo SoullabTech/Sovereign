@@ -46,6 +46,12 @@ import {
   IDEA_BLOCK_MAX_CHARS,
   IDEA_BLOCK_COUNTER_THRESHOLD,
 } from '@/lib/ideas/constants';
+import {
+  IDEA_STANCES,
+  STANCE_LABELS,
+  STANCE_DESCRIPTIONS,
+  type IdeaStance,
+} from '@/lib/maia/ideaStances';
 
 // --- types -------------------------------------------------------------------
 
@@ -69,6 +75,8 @@ interface RecognitionMetadata {
 }
 
 interface BlockMetadata {
+  // Relational stance the member chose for this MAIA turn, if any (Cut 2).
+  stance?: IdeaStance;
   outcome?: Outcome;
   tested?: boolean;
   // Capture metadata from the conversation toast flow — see /api/ideas/capture
@@ -100,6 +108,16 @@ interface Idea {
   updated_at: string;
   last_entered_at: string;
   last_decision_at: string | null;
+  // Cut 1 — seed / name separation.
+  // seed records where the inquiry began; title records what it has become.
+  // They are allowed to diverge, and neither overwrites the other.
+  seed?: string | null;
+  seed_block_id?: string | null;
+  // 'auto_seed' means no one ever named this idea — the heading was the
+  // truncated first sentence of the opening entry. Rendered provisionally.
+  title_source?: 'member' | 'auto_seed' | 'maia_accepted';
+  // MAIA's suggestions, awaiting a member decision. Never the idea's name.
+  proposed_titles?: string[];
 }
 
 // --- UI labels (softer surface for internal block types) --------------------
@@ -188,6 +206,14 @@ export default function IdeaWorkspacePage() {
   // console.error only — the member's words appeared to vanish with no
   // explanation. Nothing in this room may fail silently.
   const [composerError, setComposerError] = useState<string | null>(null);
+
+  // Relational stance for the NEXT Ask MAIA only. Cleared after every response —
+  // this is a per-turn verb, never a mode. Nothing persists it.
+  const [stance, setStance] = useState<IdeaStance | null>(null);
+
+  // MAIA title suggestions, in flight / errored.
+  const [suggestingTitle, setSuggestingTitle] = useState(false);
+  const [titleError, setTitleError] = useState<string | null>(null);
 
   // Transient highlight on a block (triggered by decision-strip click)
   const [highlightedBlockId, setHighlightedBlockId] = useState<string | null>(null);
@@ -338,6 +364,9 @@ export default function IdeaWorkspacePage() {
 
       const res = await apiFetch(`/api/ideas/${idea.id}/ask-maia`, {
         method: 'POST',
+        // Stance is sent for this turn only. Plain Ask MAIA sends none and
+        // behaves exactly as it did before stances existed.
+        body: JSON.stringify(stance ? { stance } : {}),
       });
       if (!res.ok) {
         setComposerError(
@@ -358,10 +387,13 @@ export default function IdeaWorkspacePage() {
       setComposerError("MAIA couldn't respond just now. Your thread is unchanged.");
     } finally {
       setAskingMaia(false);
+      // The stance governed one response. It clears — no sticky mode, hidden
+      // or otherwise. The next Ask MAIA starts from no stance again.
+      setStance(null);
       // Refocus the composer so the user continues naturally after MAIA.
       window.setTimeout(() => composerRef.current?.focus(), 0);
     }
-  }, [idea, askingMaia, saving, draft, describeFailure]);
+  }, [idea, askingMaia, saving, draft, describeFailure, stance]);
 
   // --- block composer -------------------------------------------------------
 
@@ -594,11 +626,88 @@ export default function IdeaWorkspacePage() {
     }, 80);
   }, [idea]);
 
+  // --- name: propose / accept / dismiss --------------------------------------
+  //
+  // The ratification boundary, in three handlers:
+  //   suggestTitle  → MAIA writes to proposed_titles. The name does not change.
+  //   acceptTitle   → the member's click is what renames the idea.
+  //   dismissTitles → the suggestions go away and the name is untouched.
+  // There is no fourth path.
+
+  const suggestTitle = useCallback(async () => {
+    if (!idea || suggestingTitle) return;
+    setSuggestingTitle(true);
+    setTitleError(null);
+    try {
+      const res = await apiFetch(`/api/ideas/${idea.id}/suggest-title`, {
+        method: 'POST',
+      });
+      const data = await res.json().catch(() => null);
+      if (!res.ok || !data?.success) {
+        setTitleError(
+          typeof data?.error === 'string'
+            ? data.error
+            : "MAIA couldn't suggest a name just now. Nothing was changed."
+        );
+        return;
+      }
+      setIdea((prev) =>
+        prev ? { ...prev, proposed_titles: data.proposed_titles ?? [] } : prev
+      );
+    } catch (err) {
+      console.error('[ideas/workspace] suggest-title failed:', err);
+      setTitleError("MAIA couldn't suggest a name just now. Nothing was changed.");
+    } finally {
+      setSuggestingTitle(false);
+    }
+  }, [idea, suggestingTitle]);
+
+  const acceptTitle = useCallback(
+    async (chosen: string) => {
+      if (!idea) return;
+      setTitleError(null);
+      try {
+        const res = await apiFetch(`/api/ideas/${idea.id}`, {
+          method: 'PATCH',
+          body: JSON.stringify({ accept_proposed_title: chosen }),
+        });
+        const data = await res.json().catch(() => null);
+        if (!res.ok || !data?.success) {
+          setTitleError("Couldn't apply that name. Try again.");
+          return;
+        }
+        setIdea(data.idea);
+      } catch (err) {
+        console.error('[ideas/workspace] accept title failed:', err);
+        setTitleError("Couldn't apply that name. Try again.");
+      }
+    },
+    [idea]
+  );
+
+  const dismissTitles = useCallback(async () => {
+    if (!idea) return;
+    // Optimistic — dismissing suggestions is inconsequential and reversible
+    // (the member can ask again).
+    setIdea((prev) => (prev ? { ...prev, proposed_titles: [] } : prev));
+    setTitleError(null);
+    try {
+      await apiFetch(`/api/ideas/${idea.id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ dismiss_proposed_titles: true }),
+      });
+    } catch (err) {
+      console.error('[ideas/workspace] dismiss titles failed:', err);
+    }
+  }, [idea]);
+
   // --- header edit ----------------------------------------------------------
 
   const startEditHeader = () => {
     if (!idea) return;
-    setDraftTitle(idea.title);
+    // An auto-derived title is the seed sentence, not a name. Offer an empty
+    // field rather than asking the member to edit a sentence into a title.
+    setDraftTitle(idea.title_source === 'auto_seed' ? '' : idea.title);
     setDraftFraming(idea.framing || '');
     setEditingHeader(true);
   };
@@ -631,6 +740,10 @@ export default function IdeaWorkspacePage() {
   };
 
   // --- composer limits ------------------------------------------------------
+
+  // An auto-derived title was never chosen by anyone. Treat it as unnamed.
+  const unnamed = idea?.title_source === 'auto_seed';
+  const proposedTitles = idea?.proposed_titles ?? [];
 
   const draftLength = draft.length;
   const overLimit = draftLength > IDEA_BLOCK_MAX_CHARS;
@@ -686,24 +799,97 @@ export default function IdeaWorkspacePage() {
         {!editingHeader ? (
           <div className="group mb-6">
             <div className="flex items-start justify-between gap-4">
-              <h1
-                className="text-3xl text-amber-200 font-light leading-tight"
-                style={{ fontFamily: 'Spectral, Georgia, serif' }}
-              >
-                {idea.title}
-              </h1>
+              {/* An idea nobody ever named shows as unnamed. The old heading was
+                  the truncated first sentence of the opening entry — that is the
+                  seed, and it now renders below as the seed. Nothing is deleted;
+                  the text simply stops being mistaken for the idea's identity. */}
+              {unnamed ? (
+                <h1
+                  className="text-2xl text-stone-500 font-light leading-tight italic"
+                  style={{ fontFamily: 'Spectral, Georgia, serif' }}
+                >
+                  Unnamed inquiry
+                </h1>
+              ) : (
+                <h1
+                  className="text-3xl text-amber-200 font-light leading-tight"
+                  style={{ fontFamily: 'Spectral, Georgia, serif' }}
+                >
+                  {idea.title}
+                </h1>
+              )}
               <button
                 onClick={startEditHeader}
-                className="opacity-0 group-hover:opacity-100 text-stone-500 hover:text-amber-400/70 transition-all"
-                aria-label="Edit idea"
+                className={`${unnamed ? '' : 'opacity-0 group-hover:opacity-100'} text-stone-500 hover:text-amber-400/70 transition-all flex-shrink-0 mt-1.5`}
+                aria-label={unnamed ? 'Name this inquiry' : 'Edit idea'}
               >
                 <Edit3 size={14} />
               </button>
             </div>
+
+            {/* Seed — where the inquiry began. Never rewritten as the title
+                evolves. This is the line that says: what this has become is not
+                identical to where it started. */}
+            {idea.seed && (
+              <p className="mt-2 text-xs text-stone-500 font-light leading-relaxed line-clamp-2">
+                <span className="uppercase tracking-wider text-stone-600 mr-1.5">Seed</span>
+                <span className="italic">“{idea.seed}”</span>
+              </p>
+            )}
+
             {idea.framing && (
               <p className="text-sm text-stone-400 mt-3 leading-relaxed whitespace-pre-wrap">
                 {idea.framing}
               </p>
+            )}
+
+            {/* Name affordance. MAIA writes only to proposed_titles; the member's
+                click is what renames the idea. */}
+            <div className="mt-3 flex items-center gap-4">
+              <button
+                onClick={suggestTitle}
+                disabled={suggestingTitle}
+                className={`text-xs transition-colors flex items-center gap-1.5 font-light disabled:opacity-50 ${
+                  unnamed
+                    ? 'text-amber-400/70 hover:text-amber-300'
+                    : 'text-stone-500 hover:text-amber-400/80 opacity-0 group-hover:opacity-100'
+                }`}
+              >
+                <Sparkles className="w-3 h-3" />
+                <span>{suggestingTitle ? 'Thinking of names...' : 'Suggest a name'}</span>
+              </button>
+            </div>
+
+            {titleError && (
+              <p className="mt-2 text-xs text-red-300/80 font-light">{titleError}</p>
+            )}
+
+            {/* Proposals stay visually provisional — dashed, muted, prefixed —
+                until a member accepts one. They are never the idea's name. */}
+            {proposedTitles.length > 0 && (
+              <div className="mt-3 rounded-xl border border-dashed border-amber-500/25 bg-amber-500/[0.02] p-3">
+                <p className="text-[10px] uppercase tracking-wider text-amber-500/50 font-medium mb-2">
+                  MAIA suggests — not yet the name
+                </p>
+                <ul className="flex flex-wrap gap-2">
+                  {proposedTitles.map((candidate) => (
+                    <li key={candidate}>
+                      <button
+                        onClick={() => acceptTitle(candidate)}
+                        className="rounded-full border border-dashed border-amber-500/30 px-3 py-1 text-xs text-amber-200/80 hover:text-amber-200 hover:border-amber-400/50 hover:bg-amber-400/5 transition-colors text-left"
+                      >
+                        {candidate}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+                <button
+                  onClick={dismissTitles}
+                  className="mt-2 text-[11px] text-stone-500 hover:text-stone-400 transition-colors"
+                >
+                  Dismiss
+                </button>
+              </div>
             )}
           </div>
         ) : (
@@ -847,6 +1033,15 @@ export default function IdeaWorkspacePage() {
                           >
                             {BLOCK_LABELS[block.block_type]}
                           </span>
+                          {/* The relation the member asked for at this moment,
+                              so a thread reads back with its stances visible. */}
+                          {block.block_type === 'maia_reflection' &&
+                            block.metadata?.stance &&
+                            STANCE_LABELS[block.metadata.stance] && (
+                              <span className="text-[10px] tracking-wide text-stone-500 font-light">
+                                · {STANCE_LABELS[block.metadata.stance].toLowerCase()}
+                              </span>
+                            )}
                           {tested && (
                             <span className="text-[10px] uppercase tracking-wider text-emerald-500/70 bg-emerald-500/10 border border-emerald-500/25 rounded px-1.5 py-0.5">
                               Tested
@@ -974,6 +1169,39 @@ export default function IdeaWorkspacePage() {
               )}
             </div>
           )}
+
+          {/* Relational stances — five verbs, each governing ONE turn.
+              None is selected by default: plain Ask MAIA → still works and
+              behaves exactly as before. The stance clears after the response,
+              so there is no sticky mode to get lost in. These belong to Ask
+              MAIA alone — Reflect stays MAIA-silent. */}
+          <div className="mt-3 flex flex-wrap items-center gap-1.5">
+            {IDEA_STANCES.map((option) => {
+              const selected = stance === option;
+              return (
+                <button
+                  key={option}
+                  type="button"
+                  onClick={() => setStance(selected ? null : option)}
+                  disabled={askingMaia}
+                  title={STANCE_DESCRIPTIONS[option]}
+                  aria-pressed={selected}
+                  className={`rounded-full px-2.5 py-1 text-[11px] font-light transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${
+                    selected
+                      ? 'text-amber-200 ring-1 ring-amber-400/40 bg-amber-400/5'
+                      : 'text-stone-500 ring-1 ring-white/[0.06] hover:text-stone-300 hover:ring-white/15'
+                  }`}
+                >
+                  {STANCE_LABELS[option]}
+                </button>
+              );
+            })}
+            {stance && (
+              <span className="ml-1 text-[11px] text-stone-500 font-light">
+                {STANCE_DESCRIPTIONS[stance]}
+              </span>
+            )}
+          </div>
 
           {/* Two distinct acts, held apart on purpose.
               Reflect = the member thinks, and nothing answers.

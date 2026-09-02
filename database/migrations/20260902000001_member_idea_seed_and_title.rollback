@@ -1,0 +1,18 @@
+-- Rollback: 20260902000001_member_idea_seed_and_title.sql
+--
+-- Drops the Cut 1 columns. Member-authored content is NOT lost: seed is a
+-- display excerpt of a block that still exists, and titles were never rewritten
+-- by the migration. Only title_source / proposed_titles state is discarded.
+
+ALTER TABLE member_ideas DROP CONSTRAINT IF EXISTS member_ideas_seed_block_fk;
+ALTER TABLE member_ideas DROP CONSTRAINT IF EXISTS member_ideas_title_source_check;
+
+ALTER TABLE member_ideas
+  DROP COLUMN IF EXISTS seed,
+  DROP COLUMN IF EXISTS seed_block_id,
+  DROP COLUMN IF EXISTS title_source,
+  DROP COLUMN IF EXISTS proposed_titles,
+  DROP COLUMN IF EXISTS proposed_titles_at;
+
+DELETE FROM schema_migrations
+ WHERE filename = '20260902000001_member_idea_seed_and_title.sql';

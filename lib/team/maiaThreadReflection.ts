@@ -23,6 +23,10 @@
  */
 
 import Anthropic from '@anthropic-ai/sdk';
+import {
+  STANCE_DIRECTIVES,
+  type IdeaStance,
+} from '@/lib/maia/ideaStances';
 
 export interface ThreadBlockSummary {
   type: 'note' | 'decision' | 'change';
@@ -46,6 +50,10 @@ export interface ThreadReflectionContext {
   // the same clarifying move. The stage is now computed here and stated to
   // the model as a directive.
   reflectionCount?: number;
+  // Relational stance for THIS turn only (Cut 2). Undefined = plain Ask MAIA,
+  // which keeps the pre-existing default behavior exactly. Never persisted as
+  // a mode — the route reads it from one request and it is gone.
+  stance?: IdeaStance;
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -193,6 +201,15 @@ export function progressionStage(reflectionCount: number): ProgressionStage {
   return 'close_and_offer';
 }
 
+// When the member has explicitly chosen a stance, they have taken the wheel:
+// the stance governs the move, and progression reduces to its anti-repetition
+// floor. Without this, close_and_offer ("close the loop and make a structural
+// offering") would directly contradict Stay with this ("do not offer structure
+// they did not ask for") — and a stance the member chose must not be overridden
+// by a stage the system inferred.
+export const PROGRESSION_FLOOR = `PROGRESSION — the member has chosen the stance for this response, so follow the stance rather than any default sequence.
+Two things still hold: do not restate or re-slice a structural distinction you already named in a prior reflection, and do not re-ask a question you have already asked in this thread.`;
+
 export const PROGRESSION_DIRECTIVES: Record<ProgressionStage, string> = {
   clarify: `PROGRESSION — this is your FIRST reflection in this thread.
 Ask ONE clarifying question. Do not stack frameworks.`,
@@ -248,7 +265,12 @@ export async function generateThreadReflection(
     ctx.reflectionCount ?? ctx.priorMaiaReflections?.length ?? 0
   );
 
-  const systemParts = [IDEAS_REFLECTION_SYSTEM_PROMPT, PROGRESSION_DIRECTIVES[stage]];
+  const systemParts = [IDEAS_REFLECTION_SYSTEM_PROMPT];
+  if (ctx.stance) {
+    systemParts.push(STANCE_DIRECTIVES[ctx.stance], PROGRESSION_FLOOR);
+  } else {
+    systemParts.push(PROGRESSION_DIRECTIVES[stage]);
+  }
   if (correctionDetected) systemParts.push(CORRECTION_ADDENDUM);
   const systemPrompt = systemParts.join('\n\n');
 
@@ -304,7 +326,11 @@ function composeUserMessage(ctx: ThreadReflectionContext): string {
     );
   }
 
-  parts.push('Offer a reflection on what is here. Stay at the level of the idea.');
+  parts.push(
+    ctx.stance
+      ? 'Respond to what is here, in the stance the member chose.'
+      : 'Offer a reflection on what is here. Stay at the level of the idea.'
+  );
 
   return parts.join('\n\n');
 }

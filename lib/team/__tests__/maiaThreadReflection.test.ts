@@ -21,6 +21,7 @@ import {
   IDEAS_REFLECTION_SYSTEM_PROMPT,
   CORRECTION_ADDENDUM,
   PROGRESSION_DIRECTIVES,
+  PROGRESSION_FLOOR,
   latestBlockHasCorrection,
   progressionStage,
   excerpt,
@@ -354,5 +355,30 @@ describe('excerpt', () => {
 
   it('gives the latest block a larger budget than older ones', () => {
     expect(LATEST_BLOCK_CHAR_BUDGET).toBeGreaterThan(OLDER_BLOCK_CHAR_BUDGET);
+  });
+});
+
+
+// ─── stance / progression interaction ───────────────────────────────────────
+//
+// When the member chooses a stance they have taken the wheel. The progression
+// stage the system inferred must not override the relation they asked for —
+// close_and_offer ("close the loop and make a structural offering") would
+// directly contradict Stay with this ("do not offer structure they did not ask
+// for"). PROGRESSION_FLOOR is what remains: anti-repetition only.
+
+describe('PROGRESSION_FLOOR', () => {
+  it('defers the move to the stance the member chose', () => {
+    expect(PROGRESSION_FLOOR).toMatch(/follow the stance rather than any default sequence/);
+  });
+
+  it('keeps the anti-repetition floor', () => {
+    expect(PROGRESSION_FLOOR).toMatch(/do not restate or re-slice a structural distinction/);
+    expect(PROGRESSION_FLOOR).toMatch(/do not re-ask a question you have already asked/);
+  });
+
+  it('does not carry the close-and-offer demand that would override a stance', () => {
+    expect(PROGRESSION_FLOOR).not.toMatch(/structural offering/);
+    expect(PROGRESSION_FLOOR).not.toMatch(/Close the loop/);
   });
 });

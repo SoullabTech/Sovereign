@@ -48,16 +48,27 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Use title if provided, otherwise synthesize one from the first line of description
+    // Use title if provided, otherwise synthesize one from the first line of
+    // description. A synthesized title is marked 'auto_seed': no one named this
+    // inquiry, and the UI must render it provisionally rather than as the
+    // idea's identity. The text is kept, not discarded — it is just not
+    // mistaken for a name.
+    const titleWasProvided = title.length > 0;
     const ideaTitle = title || (description ? description.split('\n')[0].slice(0, 120) : 'Untitled idea');
     const ideaFraming = description && description !== ideaTitle ? description : null;
+    const titleSource = titleWasProvided ? 'member' : 'auto_seed';
+
+    // The seed is where the inquiry began: the captured text if we have it,
+    // otherwise the description. Kept as a display excerpt; the authored block
+    // below carries the provenance.
+    const seedText = (sourceText || description || ideaTitle).slice(0, 400);
 
     // Create the idea
     const ideaResult = await query(
-      `INSERT INTO member_ideas (member_id, title, framing)
-       VALUES ($1, $2, $3)
+      `INSERT INTO member_ideas (member_id, title, framing, title_source, seed)
+       VALUES ($1, $2, $3, $4, $5)
        RETURNING id, title, framing, created_at`,
-      [session.memberId, ideaTitle.slice(0, 200), ideaFraming]
+      [session.memberId, ideaTitle.slice(0, 200), ideaFraming, titleSource, seedText]
     );
     const idea = ideaResult.rows[0];
 
@@ -69,10 +80,17 @@ export async function POST(request: NextRequest) {
         conversationId: body.conversationId || null,
         confidence: typeof body.confidence === 'number' ? body.confidence : null,
       };
-      await query(
+      const blockResult = await query<{ id: string }>(
         `INSERT INTO member_idea_blocks (idea_id, member_id, block_type, content, metadata)
-         VALUES ($1, $2, 'note', $3, $4)`,
+         VALUES ($1, $2, 'note', $3, $4)
+         RETURNING id`,
         [idea.id, session.memberId, sourceText.slice(0, IDEA_BLOCK_MAX_CHARS), JSON.stringify(metadata)]
+      );
+      // Point the seed at the block it came from, so the origin stays traceable
+      // as the title evolves away from it.
+      await query(
+        `UPDATE member_ideas SET seed_block_id = $1 WHERE id = $2`,
+        [blockResult.rows[0].id, idea.id]
       );
     }
 
