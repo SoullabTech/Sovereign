@@ -29,6 +29,7 @@
  */
 
 import { query } from '@/lib/db/postgres';
+import { readConsentGate } from './consentGates';
 import type {
   DevelopmentalMemorySnapshot,
   ThemeSignalSnapshot,
@@ -235,22 +236,13 @@ export async function loadPriorCrossSessionExchanges(
  * block is suppressed entirely (count still feeds memoryHealth for observability
  * but no content reaches MAIA's prompt).
  *
- * Graceful: returns true (default) on missing input or DB error so the
- * conversation never blocks on preference lookup.
+ * P2 (MIPA Phase 0): the read is delegated to lib/maia/consentGates.ts so the
+ * gate this loader reads is, by construction, a gate the member can write.
+ * Behavior is unchanged — same column, same default-on semantics, same
+ * graceful fallback. See that module's header for why one list replaced two.
  */
 export async function loadConversationalRecallPref(userId: string): Promise<boolean> {
-  if (!userId) return true;
-  try {
-    const result = await query<{ conversational_recall_enabled: boolean | null }>(
-      `SELECT conversational_recall_enabled FROM members WHERE id = $1 LIMIT 1`,
-      [userId],
-    );
-    if (result.rows.length === 0) return true; // member not found → default-on
-    return result.rows[0].conversational_recall_enabled !== false;
-  } catch (err) {
-    console.warn('[memoryLoaders] loadConversationalRecallPref failed (non-fatal):', err);
-    return true; // graceful: default-on
-  }
+  return readConsentGate(userId, 'conversational_recall_enabled');
 }
 
 /**
@@ -322,20 +314,10 @@ export async function loadRecentMarkedEpisodes(
  * (added by database/migrations/20260531000001_episodic_member_marked_provenance.sql,
  * §5) — this loader is the first reader of it.
  *
- * Graceful: returns true (default) on missing input or DB error so the
- * conversation never blocks on preference lookup.
+ * P2 (MIPA Phase 0): delegated to lib/maia/consentGates.ts. This loader is
+ * the one the census found reading a gate no member surface exposed — the
+ * defect P2 exists to make structurally impossible. Behavior unchanged.
  */
 export async function loadEpisodicRecallPref(userId: string): Promise<boolean> {
-  if (!userId) return true;
-  try {
-    const result = await query<{ episodic_recall_enabled: boolean | null }>(
-      `SELECT episodic_recall_enabled FROM members WHERE id = $1 LIMIT 1`,
-      [userId],
-    );
-    if (result.rows.length === 0) return true; // member not found → default-on
-    return result.rows[0].episodic_recall_enabled !== false;
-  } catch (err) {
-    console.warn('[memoryLoaders] loadEpisodicRecallPref failed (non-fatal):', err);
-    return true; // graceful: default-on
-  }
+  return readConsentGate(userId, 'episodic_recall_enabled');
 }

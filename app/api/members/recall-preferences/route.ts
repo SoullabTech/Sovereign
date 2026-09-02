@@ -4,6 +4,11 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
 import { getCurrentSession } from '@/lib/auth/serverSessions';
+import {
+  CONSENT_GATE_NAMES,
+  isConsentGateName,
+  type ConsentGateName,
+} from '@/lib/maia/consentGates';
 
 /**
  * /api/members/recall-preferences
@@ -13,13 +18,19 @@ import { getCurrentSession } from '@/lib/auth/serverSessions';
  * conferral + provenance + corrigibility + right-to-abstain as four
  * orthogonal walls; this endpoint exposes the fourth wall to members).
  *
- * Currently exposes:
- *   - conversational_recall_enabled (Phase 2 conversational layer)
+ * P2 (MIPA Phase 0), 2026-09-02 — THE GATE LIST NO LONGER LIVES HERE.
  *
- * Future layers attach here as additional Boolean fields without route churn:
- *   - episodic_recall_enabled        (when episodic Phase 2 lands)
- *   - developmental_recall_enabled   (when developmental Phase 2 lands)
- *   - somatic_recall_enabled         (when/if somatic Phase 2 lands; default FALSE)
+ * This route previously held its own `RECALL_PREFERENCE_COLUMNS`, documented as
+ * "the single source of truth for which gates exist". It was not: the loaders
+ * held a second, longer list. `episodic_recall_enabled` existed in schema, was
+ * read on every authenticated turn, and was absent here — so a member could not
+ * turn off a gate the system consulted about them (census §6.1).
+ *
+ * Both surfaces now derive from `lib/maia/consentGates.ts`. The read-set and
+ * the write-set are the same object rather than two lists asserted to match, so
+ * a gate that is readable is writable by construction.
+ *
+ * Adding a layer's gate is one entry in that module — not a change here.
  *
  * Validation discipline: only keys this endpoint knows about may be written.
  * Unknown keys in PATCH bodies are silently ignored (not errored) so that
@@ -37,20 +48,16 @@ import { getCurrentSession } from '@/lib/auth/serverSessions';
  * with /api/members/settings).
  */
 
-// Known consent-gate columns. Adding a new layer's gate requires one line here
-// + one column in the members table + one entry in the UI section. The single
-// source of truth for which gates exist lives in this constant.
-const RECALL_PREFERENCE_COLUMNS = [
-  'conversational_recall_enabled',
-] as const;
+// Gate columns come from lib/maia/consentGates.ts — the same object the loaders
+// read through. Not re-declared here: a second list is how the episodic gate
+// went unexposed for three months.
+const RECALL_PREFERENCE_COLUMNS = CONSENT_GATE_NAMES;
 
-type RecallPreferenceKey = (typeof RECALL_PREFERENCE_COLUMNS)[number];
+type RecallPreferenceKey = ConsentGateName;
 
 type RecallPreferences = Partial<Record<RecallPreferenceKey, boolean>>;
 
-function isKnownKey(key: string): key is RecallPreferenceKey {
-  return (RECALL_PREFERENCE_COLUMNS as readonly string[]).includes(key);
-}
+const isKnownKey = isConsentGateName;
 
 async function resolveMemberId(request: NextRequest): Promise<string | null> {
   const session = await getCurrentSession();
