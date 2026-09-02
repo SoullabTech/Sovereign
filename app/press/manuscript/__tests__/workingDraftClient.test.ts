@@ -15,6 +15,12 @@ import {
   restoreRevision,
   createDraftSaver,
   pageEstimate,
+  putDraftSections,
+  applySectionEdit,
+  flattenDraftSections,
+  sectionOffsets,
+  sectionIndexAtOffset,
+  type DraftSection,
   type HttpResponse,
   type SaveResult,
   type SaverState,
@@ -46,6 +52,8 @@ describe('loadDraft — opening the surface', () => {
     const http = jest.fn(async () => resp(200, { content: 'hi', revisionCount: 2, updatedAt: 't' }));
     expect(await loadDraft(http, ID)).toEqual({
       kind: 'ok',
+      sectionAddressable: false,
+      sections: null,
       content: 'hi',
       revisionCount: 2,
       revisionId: 1,
@@ -80,6 +88,8 @@ describe('beginDraft — initialization from source', () => {
     const http = jest.fn(async () => resp(201, { id: 'd', content: '# A\n\nbody', revisionCount: 1 }));
     expect(await beginDraft(http, ID)).toEqual({
       kind: 'ok',
+      sectionAddressable: false,
+      sections: null,
       content: '# A\n\nbody',
       revisionCount: 1,
       revisionId: 1,
@@ -160,7 +170,30 @@ describe('loadRevisions', () => {
   it('returns the revisions array newest-first as given by the API', async () => {
     const revs = [{ revisionNumber: 2, note: 'n', contentChars: 10, createdAt: 't2' }];
     const http = jest.fn(async () => resp(200, { draftId: 'd', revisions: revs }));
-    expect(await loadRevisions(http, ID)).toEqual({ kind: 'ok', revisions: revs });
+    /* `restorable` defaults true where the server omits it: on an unconverted
+       draft every revision is restorable under the existing contract. */
+    expect(await loadRevisions(http, ID)).toEqual({
+      kind: 'ok',
+      revisions: [{ ...revs[0], restorable: true }],
+    });
+  });
+
+  it('carries a section-addressable draft\'s non-restorable revisions through', async () => {
+    /* A revision written before the conversion has no recorded partition, so
+       the server marks it non-restorable. Losing that flag here would offer the
+       member a restore that can only be refused. */
+    const http = jest.fn(async () => resp(200, {
+      draftId: 'd',
+      sectionAddressable: true,
+      revisions: [
+        { revisionNumber: 2, note: null, contentChars: 4, createdAt: 't2', restorable: true },
+        { revisionNumber: 1, note: null, contentChars: 4, createdAt: 't1', restorable: false },
+      ],
+    }));
+    const r = await loadRevisions(http, ID);
+    expect(r.kind).toBe('ok');
+    expect((r as { revisions: { restorable: boolean }[] }).revisions.map((x) => x.restorable))
+      .toEqual([true, false]);
   });
 
   it('reports error on failure', async () => {
@@ -392,5 +425,205 @@ describe('createDraftSaver — a conflict stops the lane', () => {
     expect(states).toContain('conflict');
     expect(conflicts).toEqual([{ reason: 'stale_base', currentRevisionId: 9 }]);
     expect(saver.hasPending()).toBe(true); // the writer's text is still held
+  });
+});
+
+/* ── the section-addressable draft ────────────────────────────────────────── */
+
+const SECTIONS: DraftSection[] = [
+  { id: 's-1', text: 'One\n\nfirst\n\n' },
+  { id: 's-2', text: 'Two\n\nsecond\n' },
+];
+
+describe('loadDraft — the D9 representation', () => {
+  it('carries server-minted section identities through', async () => {
+    const http = jest.fn(async () => resp(200, {
+      sectionAddressable: true,
+      sections: SECTIONS,
+      content: flattenDraftSections(SECTIONS),
+      revisionCount: 3,
+      revisionId: 7,
+    }));
+    const r = await loadDraft(http, ID);
+    expect(r).toMatchObject({ kind: 'ok', sectionAddressable: true, sections: SECTIONS });
+  });
+
+  it('does NOT treat a draft as section-addressable on sections alone', async () => {
+    /* The server discriminates; the client must not sniff for a key. A draft
+       that is not addressable is writable by content, and guessing otherwise
+       would send sections the server refuses. */
+    const http = jest.fn(async () => resp(200, { sections: SECTIONS, content: 'x' }));
+    expect(await loadDraft(http, ID)).toMatchObject({ sectionAddressable: false, sections: null });
+  });
+
+  it('refuses a partially-formed section list rather than a partial picture', async () => {
+    /* A dropped section would make the editor's very first save an incomplete
+       payload — refused AFTER the member had already typed into it. */
+    for (const bad of [
+      [{ id: 's-1', text: 'a' }, { id: 's-2' }],
+      [{ id: 's-1', text: 'a' }, { text: 'b' }],
+      [{ id: '', text: 'a' }],
+      [{ id: 's-1', text: 3 }],
+    ]) {
+      const http = jest.fn(async () => resp(200, {
+        sectionAddressable: true, sections: bad, content: 'ab',
+      }));
+      expect(await loadDraft(http, ID)).toMatchObject({ sectionAddressable: false, sections: null });
+    }
+  });
+});
+
+describe('putDraftSections', () => {
+  it('sends sections and NEVER content', async () => {
+    const http = jest.fn(async () => resp(200, { revisionId: 5 }));
+    await putDraftSections(http, ID, { sections: SECTIONS, ...GUARD });
+    const body = JSON.parse((http.mock.calls[0][1] as RequestInit).body as string);
+    expect(body.sections).toEqual(SECTIONS);
+    /* Content on a converted draft is derived server-side. Sending it too is
+       two claims about the same text, and the server refuses that outright. */
+    expect(Object.prototype.hasOwnProperty.call(body, 'content')).toBe(false);
+  });
+
+  it('sends only id and text — no client-side extras ride along', async () => {
+    const http = jest.fn(async () => resp(200, {}));
+    await putDraftSections(http, ID, {
+      sections: [{ id: 's-1', text: 'a', dirty: true } as DraftSection & { dirty: boolean }],
+      ...GUARD,
+    });
+    const body = JSON.parse((http.mock.calls[0][1] as RequestInit).body as string);
+    expect(body.sections).toEqual([{ id: 's-1', text: 'a' }]);
+  });
+
+  it('reads a typed refusal as a refusal, not as a stale_base conflict', async () => {
+    /* Both arrive as 409. Reporting a refusal as stale_base would tell the
+       writer another tab overwrote them when nothing did. */
+    const http = jest.fn(async () => resp(409, {
+      refusal: 'unknown_section_id', detail: 's-9',
+    }));
+    expect(await putDraftSections(http, ID, { sections: SECTIONS, ...GUARD }))
+      .toEqual({ kind: 'refused', refusal: 'unknown_section_id', detail: 's-9' });
+  });
+
+  it('still reads a real conflict as a conflict', async () => {
+    const http = jest.fn(async () => resp(409, { reason: 'stale_base', currentRevisionId: 9 }));
+    expect(await putDraftSections(http, ID, { sections: SECTIONS, ...GUARD }))
+      .toEqual({ kind: 'conflict', reason: 'stale_base', currentRevisionId: 9 });
+  });
+});
+
+describe('applySectionEdit', () => {
+  it('replaces one section and leaves the rest byte-identical', () => {
+    const next = applySectionEdit(SECTIONS, 's-2', 'changed');
+    expect(next[0]).toBe(SECTIONS[0]);
+    expect(next[1]).toEqual({ id: 's-2', text: 'changed' });
+  });
+
+  it('returns a NEW array for a real edit — the saver compares by identity', () => {
+    expect(applySectionEdit(SECTIONS, 's-1', 'x')).not.toBe(SECTIONS);
+  });
+
+  it('returns the SAME array for a no-op, so nothing is queued needlessly', () => {
+    expect(applySectionEdit(SECTIONS, 's-1', SECTIONS[0].text)).toBe(SECTIONS);
+  });
+
+  it('an unknown id changes nothing — the client cannot mint a boundary', () => {
+    /* Appending would create an identity the draft does not own, and the save
+       carrying it would be refused as unknown_section_id. */
+    const next = applySectionEdit(SECTIONS, 's-99', 'ghost');
+    expect(next).toBe(SECTIONS);
+    expect(next).toHaveLength(2);
+  });
+
+  it('never changes the number or order of sections', () => {
+    const next = applySectionEdit(SECTIONS, 's-1', 'x');
+    expect(next.map((s) => s.id)).toEqual(SECTIONS.map((s) => s.id));
+  });
+});
+
+describe('flattenDraftSections', () => {
+  it('adds no separator — any separator would be a character nobody wrote', () => {
+    expect(flattenDraftSections([{ id: 'a', text: 'x' }, { id: 'b', text: 'y' }])).toBe('xy');
+  });
+
+  it('matches the content the server derives from the same sections', () => {
+    expect(flattenDraftSections(SECTIONS)).toBe('One\n\nfirst\n\nTwo\n\nsecond\n');
+  });
+});
+
+describe('sectionOffsets / sectionIndexAtOffset', () => {
+  it('offsets start at zero and advance by each section length', () => {
+    expect(sectionOffsets(SECTIONS)).toEqual([0, SECTIONS[0].text.length]);
+  });
+
+  it('maps a whole-draft offset onto the section holding it', () => {
+    const start = SECTIONS[0].text.length;
+    expect(sectionIndexAtOffset(SECTIONS, 0)).toBe(0);
+    expect(sectionIndexAtOffset(SECTIONS, start - 1)).toBe(0);
+    expect(sectionIndexAtOffset(SECTIONS, start)).toBe(1);
+    expect(sectionIndexAtOffset(SECTIONS, 10_000)).toBe(1);
+  });
+
+  it('answers -1 when there are no sections rather than inventing one', () => {
+    expect(sectionIndexAtOffset([], 0)).toBe(-1);
+  });
+});
+
+describe('createDraftSaver — sections travel the same single-flight lane', () => {
+  const states: SaverState[] = [];
+  const drain = () => new Promise<void>((r) => setTimeout(r, 0));
+
+  beforeEach(() => { states.length = 0; });
+
+  it('persists the NEWEST section state last when an edit lands mid-save', async () => {
+    const seen: DraftSection[][] = [];
+    let release: (() => void) | null = null;
+    const saver = createDraftSaver<DraftSection[]>(async (v) => {
+      seen.push(v);
+      if (seen.length === 1) await new Promise<void>((r) => { release = r; });
+      return { kind: 'ok', revisionCount: 1, revisionId: seen.length + 1, updatedAt: null };
+    }, { onState: (s) => states.push(s) });
+
+    const first = applySectionEdit(SECTIONS, 's-1', 'A');
+    saver.queue(first);
+    saver.flush();
+    await drain();
+    const second = applySectionEdit(first, 's-1', 'AB');
+    saver.queue(second);
+    release!();
+    await saver.whenIdle();
+
+    expect(seen).toEqual([first, second]);
+    expect(states[states.length - 1]).toBe('saved');
+  });
+
+  it('a typed refusal closes the lane and keeps the words queued', async () => {
+    const saver = createDraftSaver<DraftSection[]>(
+      async () => ({ kind: 'refused', refusal: 'section_state_required', detail: null }),
+      { onState: (s) => states.push(s) },
+    );
+    saver.queue(SECTIONS);
+    saver.flush();
+    await saver.whenIdle();
+
+    expect(states).toContain('refused');
+    /* Nothing the member wrote is dropped — but retrying the identical payload
+       would refuse identically, so the lane does not reopen on its own. */
+    expect(saver.hasPending()).toBe(true);
+    saver.queue(applySectionEdit(SECTIONS, 's-1', 'more'));
+    saver.flush();
+    await saver.whenIdle();
+    expect(states.filter((x) => x === 'saving')).toHaveLength(1);
+  });
+
+  it('reports the refusal so the surface can name it', async () => {
+    const seen: { refusal: string; detail: string | null }[] = [];
+    const saver = createDraftSaver<DraftSection[]>(
+      async () => ({ kind: 'refused', refusal: 'unknown_section_id', detail: 's-9' }),
+      { onState: () => {}, onRefused: (i) => seen.push(i) },
+    );
+    saver.queue(SECTIONS);
+    saver.flush();
+    await saver.whenIdle();
+    expect(seen).toEqual([{ refusal: 'unknown_section_id', detail: 's-9' }]);
   });
 });
