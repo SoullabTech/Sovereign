@@ -1,6 +1,6 @@
 # MIPA Phase 0 — Sovereignty Prerequisites Specification
 
-**Status**: **P1, P2 and P3a–P3e executed and certified**; **P3-CSC performed (outcome C)**. P3 known surfaces COMPLETE; global Grade A deferred to the canonical seam. P4–P6 and P2b remain specification only.
+**Status**: **P1a, P1b, P2 and P3a–P3e executed and certified**; **P3-CSC performed (outcome C)**. P3 known surfaces COMPLETE; global Grade A deferred to the canonical seam. P4–P6 and P2b remain specification only.
 **Authorized**: 2026-09-02 (founder) — bounded to P1–P6, sequencing, acceptance criteria, migration prerequisites.
 **Semantic adjudication**: 2026-09-02 (founder) — all five blocking questions closed (§6).
 **§7 adjudication**: 2026-09-02 (founder) — all eight contradictions resolved (§7); **P2 authorized to execute**, P3 repair class authorized with execution gated behind P2's evidence.
@@ -260,7 +260,16 @@ No UI. No schema. No enum. No route. No migration. The primitives are specified 
 
 ### P1 — Member can obtain their full corpus
 
-> ### ✅ P1 EXECUTED AND CERTIFIED — 2026-09-02 · **Grade A (scoped)**
+> ### ⚖️ P1 STATUS
+>
+> | | |
+> |---|---|
+> | **P1a — Export Truthfulness / Failure Integrity** | ✅ Certified · Grade A (scoped) · 19/19 |
+> | **P1b — Sovereign Corpus Classification** | ✅ Certified · Grade A (scoped) · 19/19 |
+>
+> **P1 is proposed COMPLETE**, with one standing obligation surfaced rather than silently chosen: **26 representations are owed to the member; 4 are reached today.** Closing that is a product decision the covenant permits either way.
+>
+> ### ✅ P1a — 2026-09-02 · **Grade A (scoped)**
 >
 > `__tests__/mipa-p1-export-coverage.test.ts` — **19/19**, six mutations verified failing, application witnessed by operative-occurrence delta.
 >
@@ -330,6 +339,77 @@ Pinned as a ledger assertion so the number cannot drift without a deliberate edi
 > **Two of six initially passed, one root.** F4 kept every expected string and made the branch unreachable with `false ? … : …` — **presence of text says nothing about reachability**. The suite now pins the **operative discriminant** rather than its wording. And the application probe reported `APPLIED: False` for a mutation that had applied, because the repair's own docblock contains the identifier it searched for; application is now witnessed by **operative-occurrence delta** over comment-stripped source.
 >
 > A third instance of the standing hazard also appeared: the silent-catch scan fired on the docblock **quoting the defect it forbids**. Comment-stripping is now a boundary control that asserts both directions — present in prose, absent in code.
+
+---
+
+### P1b-E — Sovereign Corpus Classification · execution record
+
+#### The covenant, ratified
+
+> **MAIA may not have durable participatory access to a representation about the member that the member has neither meaningful access to nor meaningful sovereignty over.**
+>
+> *MAIA's durable participatory corpus ⊆ member-governable corpus*
+
+Operational/security state and fully regenerable artifacts may be exempt — **exemption never confers additional epistemic or participatory authority.**
+
+#### Not an export specification
+
+The 37-table figure is a **discovery set**. A table is an implementation object; the member is owed an account of the **representations** held about them.
+
+> Data portability is not sovereignty if the machine exports tables the member cannot understand while quietly retaining unexported interpretations that affect the relationship.
+
+#### The classified corpus — 37 discovered, 40 classified
+
+| Class | Count | Disposition |
+|---|---|---|
+| `CANONICAL_MEMBER_RECORD` | **16** | export required |
+| `SYSTEM_REPRESENTATION_ABOUT_MEMBER` | **10** | inspectability required before participation may exceed exclusion |
+| `DERIVED_IMPLEMENTATION_ARTIFACT` | **3** | raw export not required |
+| `OPERATIONAL_OR_SECURITY` | **1** | never dumped as memory |
+| **`UNKNOWN`** | **10** | **fails closed** |
+
+Every entry carries **write-path evidence**. None is classified by name.
+
+#### Representation-sensitive, not table-sensitive
+
+Three sources carry member- and system-authored fields **in one row**:
+
+| Source | member-authored | system-authored |
+|---|---|---|
+| `member_daily_anchors` | `response` | `prompt_shown` |
+| `member_lens_passes` | `member_response` | `prompt`, `lens` |
+| `bardic_cues` | `user_words` | `cue_type`, `metadata` |
+
+A table-level verdict on any of them would **either discard the member's own words or launder the system's framing into their record.**
+
+#### UNKNOWN is a verdict, not a gap
+
+Ten sources, including **two with no writer anywhere in source** (`episode_links`, `state_vectors`). *"Nothing writes it"* is evidence that this tree cannot say — **not** evidence that it is empty. UNKNOWN is neither export-required nor export-exempt, and may carry no participation gate.
+
+#### Two findings
+
+**`member_sessions` is exported today and holds a machine-generated summary.** It is owed to the member *and* must not read as their own account. Classification makes that visible; the logical-object contract is where it gets labelled.
+
+**Classification grants nothing.** It is a sovereignty statement, not a gate — the module has no runtime consumer, asserted so it cannot become a filter by accident.
+
+#### The standing obligation
+
+**26 representations owed · 4 reached today.** Surfaced for adjudication rather than chosen silently: the covenant permits widening export *or* narrowing participation.
+
+#### Falsification — seven mutations, all verified failing
+
+| # | Mutation | Result |
+|---|---|---|
+| **G1** | A **real** new member-scoped source appears unclassified | ❌ 1 failed |
+| G2 | Delete a classification while its source is discovered | ❌ 3 failed |
+| G3 | Reclassify a machine representation as canonical member record | ❌ 1 failed |
+| G4 | Make `UNKNOWN` export-exempt | ❌ 1 failed |
+| G5 | Give an `UNKNOWN` source a participation gate | ❌ 1 failed |
+| G6 | Classify credentials as exportable memory | ❌ 3 failed |
+| G7 | Strip a mixed-authorship annotation | ❌ 1 failed |
+| — | Restored | ✅ **19/19** |
+
+> **G1 — the load-bearing one — initially passed.** The probe used `bardic_reentries`, which does not exist in the schema, so the filter correctly ignored it and nothing changed. **The mutation was invalid, not the gate.** Re-run with a real table and witnessed by **discovery-set delta 37 → 38**, it fails. *An `APPLIED: True` measured on text presence is not an application witness* — the meta-invariant applied to itself again.
 
 ---
 
@@ -1318,23 +1398,25 @@ Conceptual only. No migration is authorized, written, or named.
 
 ## STOP
 
-**P1 certified. P2 and P3a–P3e certified. P3 global deferred to the canonical seam.**
+**P1a + P1b certified. P1 proposed COMPLETE. P2 and P3a–P3e certified.**
 
 | | |
 |---|---|
-| **P1** | ✅ **Grade A (scoped)** · 19/19 · 6 mutations |
+| **P1a** | ✅ export truthfulness / failure integrity |
+| **P1b** | ✅ sovereign corpus classification |
+| **P1** | ✅ **proposed complete** — one obligation surfaced, not chosen |
 | **P2** | ✅ **R23** |
 | **P3a–P3e** | ✅ **R24 · R25 · R26 · R27** + P3e |
-| **P3 known surfaces** | ✅ COMPLETE |
-| **P3 global Grade A** | ⚖️ architectural ceiling — rerun at seam |
-| **P4, P5, P6, P2b** | Specification only — not started |
+| **P3 global** | ⚖️ architectural ceiling — rerun at seam |
+| **P4, P5, P6, P2b** | Specification only |
 
-**Verification**: typecheck 231 vs baseline 239, 0 new, 0 regressions · **386/386 across 19 suites**.
+**Verification**: typecheck 231 vs baseline 239, 0 new, 0 regressions. Whole-repo suite **identical to a clean tree** — 34 suites / 92 tests fail on both, all pre-existing; my changes add **+19 passing**. MIPA suites: **180/180 across 9**.
 
-**Presented:**
+**Presented for adjudication:**
 
-1. **P1's defect was worse than the census recorded.** The census said the export covered developmental memories; it did not — five fictional columns behind a catch meant for a missing table. Members received a silently-empty section. A second instance reported a false *disconnection*.
-2. **The coverage ledger**: 37 member-scoped tables read against 5 exported. Pinned so it cannot drift. Closing it is a product decision between widening export and narrowing retrieval-eligibility — not this repair's call.
-3. **Two of six mutations initially passed**, one root: presence of text says nothing about reachability. The suite now pins operative discriminants, and application is witnessed by occurrence delta.
+1. **The classified sovereign corpus** — 37 discovered, 40 classified, all with write-path evidence. Three sources are field-mixed, which is why table-level verdicts were refused.
+2. **10 UNKNOWN, failing closed** — including two with no writer in source. Resolving them needs write-path evidence that does not exist yet, not a better guess.
+3. **26 owed · 4 reached.** The choice between widening export and narrowing participation is yours; the covenant permits either.
+4. **`member_sessions` is a machine summary already in the export** — owed, but requiring a label the current raw-row export cannot give it.
 
-**Next**: P4, P5 or P6 — none started. The 32-table coverage gap awaits adjudication.
+**Recommended next: P6** (doorway-consent integrity) — a live inconsistency in existing behavior, ahead of the product-heavy P4/P5. Not started.
