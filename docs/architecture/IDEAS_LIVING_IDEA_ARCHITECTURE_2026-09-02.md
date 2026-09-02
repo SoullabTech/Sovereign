@@ -288,6 +288,49 @@ approach it — not as a test harness.
 **The acceptance criterion is not that the prompt contains the correct instructions.**
 It is what the member experiences.
 
+### Before-state baseline
+
+The 2026-09-02 screenshots are the **before state**, not a Cut 0–2 witness. Confirmed
+by the surface itself: the opening reflection still renders as the giant title, the
+composer still reads `Ask MAIA / Save`, there are no per-turn stance controls, and
+there is no seed/name separation. They are preserved as the comparison baseline.
+
+Two failures they document:
+
+1. **Inferred progression pulling toward product-manager closure.** MAIA recognizes the
+   conceptual inquiry and then redirects it toward application — what problem does this
+   solve, what difference for helpers, where does someone get stuck — and keeps doing so
+   as the member moves into reality tunnels, collective conditioning, free will, and
+   degrees of consciousness. This is what Cut 0 and Cut 2 target.
+2. **Pasted material treated as the member's position** — see the confound below. This
+   is **not** fixed by Cut 0–2.
+
+### One confound the witness must hold apart
+
+In the baseline, material pasted from another conversation is labeled **REFLECTION** and
+MAIA responds to it as the member's own — *"you're holding this phenomenology"* — when
+the passage entered from elsewhere. **The act of pasting means *bring this into my
+field*, not *ratify every sentence as mine*.**
+
+This is a **provenance defect, not a stance defect, and Cut 0–2 does not fix it.** Every
+member-authored entry is still a single undifferentiated `note`; nothing in the schema
+distinguishes material the member wrote from material they brought in. A stance changes
+MAIA's *manner*; it cannot change what the block claims to be.
+
+**Why this matters for the witness:** if MAIA speaks pasted material back as the
+member's position during Steps 2–4, that is this defect surfacing, **not** a stance
+failure — do not read it as one, and do not tune the stances in response. Record it and
+carry it to adjudication. The cleanest protection is to conduct the witness on
+**newly written** material rather than pasted material; if pasted material is used, note
+it explicitly in the record.
+
+It is also the precise case Invariant 17's *manner, not status* clause was written for:
+direction changes how MAIA participates, never what the member is taken to have meant or
+agreed to. The fix belongs to §7 — `origin` / `participants` / `status: source_material`
+at ingestion — and is the first real test of that doctrine in §8.
+
+---
+
 ### Step 1 — three ordinary Ask MAIA turns, no stance
 
 This isolates Cut 0. We need to know whether the computed progression stage removed
@@ -503,7 +546,10 @@ a lineage view, nothing more.
 
 **Imported material.** Block `origin` / `participants` / `status: source_material`,
 collapsed rendering with exchange counts, and operations that never alter the original.
-This is the first real test of §7.
+This is the first real test of §7 — and it closes a **known live defect**, not a
+hypothetical one: pasted assistant material is currently labeled *Reflection* and spoken
+back to the member as their own position (§5, "One confound"). Until this ships, a
+member's field and a member's position are the same object in the schema.
 
 **Branches.** Highlight → *Branch*: its own thought stream inside the same idea.
 Restrained by default; no node graph until a map becomes useful.
