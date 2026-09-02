@@ -907,11 +907,19 @@ contradiction, not training.
 1. **Structural enforcement** (composition order, precedence, gating) — P2's lesson;
    strongest available lever and most under-used. Reaches the stance/base collision and
    correction precedence.
-2. **Post-generation validation** — the only lever that reaches Finding D, because
+2. **Post-generation validation** — reaches Finding D, because
    declarative drift is *checkable*: *"that's where it actually lives"* vs *"one way to
    see it"* is a structural property of the text, not a judgment. Deterministic,
    auditable, showable to the member. Would also catch Connect's fabricated attribution
    pattern.
+
+   **Correction (founder, 2026-09-02): validation is not the only prevention, and Connect
+   strengthens this lever without proving its exclusivity.** A **structural source gate**
+   would sit ahead of it: Connect must use either **a verified source with provenance**,
+   or an explicitly labeled `maia_analogy`. That is lever 1 applied to a specific stance —
+   the boundary encoded in what the stance is permitted to emit, per P2 — with validation
+   as the **second line of defence** rather than the first. Recorded so the Connect
+   failure is not read as an argument for validation alone.
 3. **Fine-tuning on examples** — collides with **Invariant 15**: learning must be
    practitioner-authored at the Domain Definition Layer, not baked into a model. Also
    creates a model dependency that breaks the local-fallback path. Ruled out on
