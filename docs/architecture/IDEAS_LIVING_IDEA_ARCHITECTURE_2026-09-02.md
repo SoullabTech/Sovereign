@@ -1015,14 +1015,39 @@ task with a synthesis. Finding E is therefore not Connect-specific — it has no
 under a different stance, which confirms it as a gap in the shared architecture rather
 than a defect in one directive.
 
-**Member's felt read, verbatim:**
+**Felt read — RELAY-SUPPLIED, direct member confirmation PENDING:**
 
-> The reeding feels like a distillation
+> The reading feels like a distillation
 
-Recorded as given. **This does not resolve the provenance question** it was asked
-alongside — whether the formulation was recognised or received — and Finding F does not
-depend on it. Explore was *"Yes, it helped"* and still carried drift: **usefulness is
-evidence about value, never about ownership.**
+⚠️ **Provenance correction (2026-09-02).** This string was first recorded here as
+*"Member's felt read, verbatim."* **That attribution was wrong.** It reached the
+engineering lane through the relay and was never confirmed by the member directly. It is
+marked relay-supplied until the member confirms authorship.
+
+**The record briefly reenacted the failure it describes** — a formulation acquired
+"settled" status through continuity rather than through ratification. Recorded rather than
+quietly fixed, because it is evidence that Finding F is not a model-specific defect:
+**proximity plus continuity produces false attribution in any relay, human or otherwise.**
+
+**Distill classification:**
+
+| Aspect | Verdict |
+|---|---|
+| Distillative quality | **PASS** — *"The reading feels like a distillation"* (relay-supplied) |
+| Ownership / recognition | **MIXED / UNCERTAIN** |
+| Ratification | **NOT GIVEN** |
+| Finding F | **Stands independently** — the system treated prior MAIA language as *"firmed up"* without member ratification |
+| **Distill overall** | **Useful, but not sovereignty-green** |
+
+> **Uncertainty must never be interpreted as assent.**
+> **That uncertainty is the finding; it must not be forced into agreement.**
+
+Finding F does not depend on the felt read either way. Explore was *"Yes, it helped"* and
+still carried drift: **usefulness is evidence about value, never about ownership.**
+
+**Open question to the member, unanswered:** did they personally say this, and did they
+recognise the formulation as already theirs, or find the response merely well-shaped?
+**Challenge waits until that is clear.**
 
 ---
 
@@ -1106,8 +1131,9 @@ ground, not in an instruction asking the model to remember whose words are whose
 - **Finding E — stance/task substitution** — a stance must not replace what the member
   asked to have answered. A third axis, uncovered by any existing directive, and blocking.
 - **Distill is now exercised** (Result 9): transmission PASS, provisional surface PASS,
-  task fidelity FAIL, epistemic provenance FAIL. **Challenge remains the only unexercised
-  stance**; all five other transmissions are proven.
+  task fidelity FAIL, epistemic provenance FAIL. **Four of five stance transmissions are
+  proven** — Stay with this, Explore, Connect, Distill. **Challenge is the fifth and
+  remains unexercised.** Stance-less Ask MAIA is a separate path, not a sixth stance.
 - **Finding F — proposal self-ratification through provenance-blind continuity** — the
   structural root cause, blocking.
 - **The earlier 500 remains independently unresolved.** No trace was ever captured; the
