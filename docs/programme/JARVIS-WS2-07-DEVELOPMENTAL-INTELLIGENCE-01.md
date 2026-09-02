@@ -1,16 +1,17 @@
 # JARVIS-WS2-07-DEVELOPMENTAL-INTELLIGENCE-01
 
-> **Lane opened. Not authorized. Not started.**
+> **Lane active. 07A FIND authorized. Nothing beyond it is.**
 >
-> This document exists so the lane is defined before it is entered. It authorizes **no code, no
-> schema, no route, no prompt**. Entering FIND requires the trigger below to be satisfied on
-> canonical — not asserted in a session.
+> This document defined the lane before it was entered, and it still authorizes **no code, no
+> schema, no route, no prompt**. Entering FIND required the trigger below to be satisfied on
+> canonical rather than asserted in a session — and on 2026-09-02 canonical satisfied it.
 
 ```text
-LANE            JARVIS-WS2-07-DEVELOPMENTAL-INTELLIGENCE-01
-STATE           OPENED · BLOCKED ON TRIGGER
-TRIGGER         Stage 6A AuthorStructureCommand merged to canonical and witnessed
-AUTHORIZES      nothing yet — FIND opens when the trigger is satisfied
+LANE               JARVIS-WS2-07-DEVELOPMENTAL-INTELLIGENCE-01
+STATE              ACTIVE · 07A FIND AUTHORIZED
+TRIGGER            Stage 6A AuthorStructureCommand merged to canonical and witnessed
+TRIGGER SATISFIED  clean-main-no-secrets @ 4b8b34bcf
+AUTHORIZES         07A FIND — a read-only census. Nothing further.
 NORMATIVE       docs/programme/WRITERS_STUDIO_MASTER_BRIEF.md
 CAPABILITY      docs/programme/DEVELOPMENTAL_EDITOR_CAPABILITY.md
 LIVE STATE      docs/programme/WRITERS_STUDIO_PROGRAMME_BOARD.md
@@ -39,6 +40,28 @@ opens through its own lane and its own trigger.
 ⛔ **No reason to expand Stage 7 further before FIND.** Finish 6A, close its authorial threshold,
 then let the first genuine Stage 7 act be the discovery of what developmental intelligence already
 exists — before deciding what to build.
+
+## Activation record
+
+**The section above is historical.** It records what was believed when the lane was opened, and
+is not amended. This section records the transition that followed.
+
+```text
+2026-09-02
+Stage 6A merged and witnessed on canonical @ 4b8b34bcf.
+07A FIND authorized as a read-only census.
+No repair, schema, route, prompt, or build work authorized by activation.
+```
+
+⛔ **Activation authorizes 07A and nothing else.** FIND classifies what exists and repairs none
+of it; discovering a defect during the census does not authorize fixing it. 07B–07H remain
+unauthorized, and none of them opens because 07A ran.
+
+The 6A evidence this rests on: the AuthorStructureCommand, its provenance migration, the adopt
+route and the member gesture are on canonical; Gates 1 and 2 and the non-consent boundary are
+pinned by tests that run there; the Experience Contract carries `change_class: experiential`
+with desktop and mobile evidence, witnessed at `869e559c9`. Record:
+`docs/programme/WS2-06A_RUNTIME_WITNESS_2026-09-02.md`.
 
 ## Operating instruction — read before anything else
 
@@ -75,6 +98,11 @@ act, that act is on canonical, and a witness exists. Until then Stage 7 has no r
 map to read against, and any developmental reading would be reading a proposal rather than a Work.
 
 ⛔ A session narration that 6A "is done" is not the trigger. The merge on canonical is.
+
+**SATISFIED** — `4b8b34bcf` on `clean-main-no-secrets`, 2026-09-02, the merge of PR #1169.
+Verified by post-merge witness: every 6A artifact present on canonical, 503 tests passing there,
+the typecheck no-regression gate green, and the Ask-runtime guard still naming
+`structure/authorStructure` so MAIA cannot reach the canonical write.
 
 ## The flow
 
