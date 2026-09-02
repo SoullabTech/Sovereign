@@ -663,7 +663,17 @@ being objected to, and prescribed a process. No acknowledgement, no repair.
 Fixing A alone is phrase-by-phrase tuning. Fixing B alone permits silent redirection
 without relational repair. **C names the capacity that is actually absent.**
 
-#### Result 3 — Cut 2, *Stay with this*: **FAIL**
+#### Result 3 — Cut 2, *Stay with this*: **NOT EXERCISED**
+
+> **Reclassified 2026-09-02 on decisive evidence.** Initially recorded as a Cut 2 FAIL.
+> A subsequent DevTools observation showed the POST to `/api/ideas/[id]/ask-maia`
+> returned **201** with a **Request Payload of `{}`, no properties**. The stance was
+> therefore never transmitted. **Cut 2 was not exercised.** The exchange below is an
+> ordinary `close_and_offer` response, not a failed *Stay with this* response.
+> Server-side parsing, stance composition, and stance persistence are **not implicated**
+> by this request. The exchange is retained in full because it remains the evidence for
+> the reclassification, and because it independently documents `close_and_offer`
+> behaviour under load.
 
 Member reflection, verbatim:
 
@@ -696,20 +706,52 @@ MAIA convert it into an implementation plan.
 - **Expected from Stay with this:** depth without displacement.
 - **Observed:** MAIA declared that the inquiry had moved to a structural solution, then
   prescribed phases, decision points, and workflow.
-- **Verdict: Cut 2 — Stay with this FAIL.** Separate from A/B/C, which classify the
-  ordinary correction pathway.
+- **Verdict: Cut 2 — NOT EXERCISED, blocked by client-side stance transmission failure.**
+  The displacement observed above is `close_and_offer` behaviour. A/B/C remain valid and
+  separate, classifying the ordinary correction pathway.
 
-**Cause not yet assigned.** Do not assume prompt failure, request-wiring failure, or
-downstream flattening without diagnosis. Evidence gathered so far, without attribution:
+**Evidence establishing the reclassification:**
 
-- The member selected the chip; it cleared after the response, which is the designed
-  per-turn behavior.
-- **`metadata->>'stance'` is empty on all four `maia_reflection` rows in this thread,
-  including the Stay with this turn.** The stance is therefore not recorded as having
-  reached the persistence layer. Where it was lost is not established.
-- `apiFetch` preserves `options.body` (`{...options, headers, credentials, mode}`), so
-  the body is not dropped there.
-- A latent composition defect exists independently and may or may not be implicated: each
+- **Request Payload `{}` with no properties; response 201.** Decisive. The current
+  handler is `body: JSON.stringify(stance ? { stance } : {})` — an empty object means the
+  new code ran and `stance` was falsy at call time. (The pre-stance handler sent no body
+  at all, which would present as no payload rather than `{}`.)
+- `metadata->>'stance'` empty on all four `maia_reflection` rows, consistent with the
+  above.
+- `apiFetch` preserves `options.body` (`{...options, headers, credentials, mode}`).
+- The member selected the chip; it cleared after the response. **That clearing proves
+  nothing** — `setStance(null)` runs in the `finally` block regardless of whether the
+  stance was ever sent.
+
+**Read-only source trace (2026-09-02).** Every link in the client path is sound on
+inspection and the loss point is **not provable from source**:
+
+| Link | `app/maia/ideas/[id]/page.tsx` | Status |
+|---|---|---|
+| state | `const [stance, setStance] = useState<IdeaStance \| null>(null)` | line 212, correct |
+| chip click | `onClick={() => setStance(selected ? null : option)}` | line 1185, correct |
+| handler read | `body: JSON.stringify(stance ? { stance } : {})` | line 369, correct |
+| closure freshness | `useCallback` deps include `stance` | correct — no stale capture |
+| button binding | `onClick={handleAskMaia}`, same component, inline | line 1223, correct |
+| clear | `setStance(null)` in `finally` | line 392, correct |
+
+Remaining explanations are runtime-only and cannot be distinguished statically: the chip
+was not in selected state when Ask was clicked; a stale dev bundle for this component; or
+a remount between the two clicks. **Instrumentation authorization is required to proceed;
+none has been granted and none has been added.**
+
+**Independent static finding — no receipt for member direction.** Whatever the cause, a
+silently dropped stance is **indistinguishable from a working one from the member's
+chair**. Selected and unselected chips both carry a ring (`ring-amber-400/40` vs
+`ring-white/[0.06]`); the stance clears silently after every turn; and the stance label on
+a MAIA block renders only if metadata carries it — so a lost stance also loses its own
+evidence. The member's explicit direction can vanish with no signal. This is an
+**Invariant 17 concern in its own right**, a sibling of finding A: there, standing
+depended on words the detector recognised; here, standing depends on a transmission the
+member cannot verify.
+
+- A latent composition defect exists independently and is **not implicated in this
+  request**, since no stance reached the server: each
   stance directive supersedes only the base prompt's *"Ideas-mode move list"*, leaving
   its **Progression**, **Closure moves**, **Non-directive offerings**, and **Balance
   rule** sections at full strength. The observed response's *"One way this could take
@@ -726,8 +768,10 @@ defect coexist.
 
 - **Explore and Distill were not run.** The witness stopped at the failed Stay
   condition; later stances cannot rescue it.
-- **Cut 0–2 experiential witness: NOT GREEN.**
-- **A/B/C and Result 3 are blocking before merge or deployment.**
+- **Cut 0–2 experiential witness: NOT GREEN.** Cut 2 remains **unwitnessed** — not
+  failed, not passed.
+- **A/B/C and the Result 3 transmission failure are blocking before merge or
+  deployment.**
 - **No repair authorized.** Nothing has been changed in response to these findings.
 - **Cut 3 and Cut 4 remain NOT AUTHORIZED.** Result 3 does not authorize work on Cut 2
   either; diagnosis was authorized, repair was not.
