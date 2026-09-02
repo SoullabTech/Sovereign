@@ -35,14 +35,31 @@ distinct_to_room: the Worktable is where the writer is writing, and the ONE thin
   around every section — the nodes carry no border, no ground, no gap, no label. Boundaries also do
   not MOVE here: merging with a backspace or splitting with a return are topology commands this
   unit does not implement, so they do not happen rather than happening approximately.
-  The Press manuscript page is the counterpart decision. It is one CodeMirror document with five
+  The Press manuscript page is the counterpart decision, RATIFIED 2026-09-02 as convergence rather
+  than regression: Canvas is the primary writing environment, and the manuscript page is
+  implementation scaffolding whose persistence, revision and concurrency engine should survive
+  while its old writing surface is not optimized into permanence. Writing authority is what this
+  settles; the Author Studio ⇄ Book Studio publishing boundary stays open and is NOT decided here.
+  ```text
+  UNCONVERTED LEGACY DRAFT    Press whole-document editor remains writable
+  SECTION-ADDRESSABLE DRAFT   Canvas is the writing authority; the Press surface is
+                              readable, not writable, and points to the same Work
+  FUTURE PRESS / PUBLISHING   unresolved — not decided by this prerequisite
+  ```
+  The reason is the one the branch found on its own: that page is one CodeMirror document with five
   contracts reading whole-draft offsets out of it, so it cannot be section-native without rewriting
-  all five — and the shortcut that avoids that IS the offset ledger. Rather than accept keystrokes
-  into a field whose every save the server will decline, it shows the words read-only and says
-  where they are written. Unconverted drafts — every draft that existed before this — are untouched
-  and still written there.
+  all five — and the shortcut that avoids that IS the hidden offset ledger this architecture
+  rejects. ⛔ The boundary is enforced by ABSENCE, not by refusal. A correct 409 does not protect a
+  writer who has already typed for ten minutes into a surface that cannot save, so no writable field
+  is mounted at all — and the same rule governs the way IN: a NEW draft begun from Press is born
+  section-addressable, so `begin` routes on the representation the server returns rather than
+  assuming the legacy editor. Where the server claims section authority and the client cannot
+  establish the section state, every surface fails CLOSED to an `unreadable` state rather than
+  downgrading to a content-authoritative draft — absence of a readable section list is not evidence
+  that a draft is legacy.
 screenshot_desktop: docs/design/contracts/screenshots/ws2-07-writing-surface-section-native-desktop.png
 screenshot_mobile: docs/design/contracts/screenshots/ws2-07-writing-surface-section-native-mobile.png
+screenshot_alt_desktop: docs/design/contracts/screenshots/ws2-07-press-handoff-readonly-desktop.png
 experience_verification: >-
   AUTHENTICATED BROWSER WALK, 2026-09-02, by scripts/ws2-07-liveness-browser-witness.ts. Real
   `maia_session` cookie against a real auth_sessions row, real Canvas route, real Next server,
@@ -60,10 +77,24 @@ experience_verification: >-
   `content`, which the server derives. After a full reload the added characters were in the second
   section and only there (221/230/116 against 221/185/116 before), and the boundaries were still
   invisible.
-  WHAT THIS WALK DOES NOT COVER — the Press manuscript page's read-only state was not captured in a
-  browser; it is exercised by the handler witness (a content-only save against a converted draft is
-  refused typed, with zero writes) and read in the diff. Split, merge and move are not implemented
-  in this unit and were not walked.
+  THE PRESS AUTHORITY EDGE, WALKED — scripts/ws2-07-press-handoff-witness.ts, 2026-09-02, 14
+  checks, 0 failures, 1440x900, same real session and server, three synthetic fixtures covering the
+  three rows of the ratified table.
+  SECTION-ADDRESSABLE IN PRESS — the words are visible; ZERO writable fields are mounted (0
+  textarea, 0 contenteditable, 0 CodeMirror — the widget is named explicitly so a future swap of it
+  cannot quietly pass); the handoff is stated and its href is exactly
+  /writers-studio/canvas?m=<this manuscript>, so it opens the same Work rather than a different one.
+  Typing anyway produced ZERO PUTs and left zero writable fields.
+  BEGUN FROM PRESS — the member's own begin gesture created a draft that IS section-addressable and
+  landed immediately in the read-only handoff, with no writable field and no write of its own.
+  NEGATIVE CONTROL: restoring the unconditional `setPhase('ready')` failed exactly this check, with
+  1 contenteditable and 2 CodeMirror nodes mounted on a Canvas-owned draft. Reverting restored 14/14.
+  UNCONVERTED LEGACY — the whole-document editor is still mounted, still saves by content (1 PUT),
+  and writing it did not convert it behind the writer.
+  WHAT THIS WALK DOES NOT COVER — the `unreadable` fail-closed state is proven by 24 unit negative
+  controls across load and begin, not in a browser: producing it requires a malformed server
+  response. Split, merge and move are not implemented in this unit and were not walked. The Press
+  read-only state was captured at desktop only.
 ---
 
 # Writer Canvas — the Worktable, section-native
