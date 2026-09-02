@@ -4,6 +4,7 @@
 LANE       JARVIS-WS2-07-DEVELOPMENTAL-INTELLIGENCE-01
 UNIT       SECTION-ADDRESSABLE DRAFT LIVENESS · requirement C
 STATUS     RULED 2026-09-02 · Option 3 ratified · D1–D9 frozen
+           A + B + D + E BUILT AND WITNESSED 2026-09-02 (see §7)
 AUTHORIZES A + B + D + E as one vertical slice, on
            feature/ws2-section-addressable-draft-liveness
 DATE       2026-09-02
@@ -275,3 +276,68 @@ invisible offset ledger is Option 2 wearing Option 3's name.** The implementatio
 section nodes in client state beneath one continuous-looking page. Section-native is not
 permission to draw a card around every section, and it is not satisfied by hiding an offset map
 behind one field.
+
+---
+
+## 7 · BUILT AND WITNESSED — 2026-09-02
+
+Recorded beneath the ruling, not in place of it.
+
+```text
+A  conversion     POST { convert: true } — an EXPLICIT command, never smuggled
+                  into a save. Byte-identical proof only; anything else returns
+                  boundary_confirmation_required with zero writes.
+B  typed refusal  the section-native save validates through the pure contract
+                  before a single write, derives content by flattening, and
+                  writes sections + content in ONE transaction.
+D  new drafts     born section-addressable: working draft, partition and
+                  immutable first revision in one transaction.
+D9 load           GET discriminates on `sectionAddressable` and ships
+                  server-minted ids.
+E  witness        two walks — handlers (41 checks) and browser (32 checks).
+```
+
+**What had to be added that the ruling did not name.** Restore did a bare content write, which on a
+draft made addressable by D onwards would ABORT at COMMIT — a member's undo arriving as a 500. The
+fix is the **section↔revision relation**, which the BUILD-07A ruling had already authorized as
+"a prerequisite that completes the section-addressable write path" (option 2, mechanism (d)).
+`working_draft_revisions.section_partition` carries section ids and character ranges. No prose. So
+restore RECOVERS the exact sections a revision was saved from rather than re-partitioning older
+text, and where the partition was never observed it refuses, typed, and the listing marks the
+revision non-restorable **before** the member chooses it.
+
+**Evidence.**
+
+```text
+handler walk    scripts/ws2-07-liveness-witness.ts — 41 checks, 0 failures.
+                Real route handlers, real auth_sessions lookup, PostgreSQL 16
+                built from an EMPTY database by the real migration chain.
+                Opens by proving the gate is CLOSED (401 unauthenticated, 401
+                on an unrecognised token) before anything else is attempted.
+browser walk    scripts/ws2-07-liveness-browser-witness.ts — 32 checks, 0
+                failures, 1440x900 and 390x844, real maia_session cookie
+                against a real session row and the real Next server.
+migration       applies clean from empty; the partition trigger refuses gap,
+                short coverage, non-zero start and empty array; documented
+                rollback drops column, trigger and function with every revision
+                row intact; re-apply after rollback and a second consecutive
+                apply both clean.
+unit tests      69 pure-contract cases; 47 client cases; 585 green across the
+                manuscript surfaces. Typecheck no-regression gate clean.
+design canon    3 member-facing surfaces, 1 Experience Contract
+                (docs/design/contracts/writer-worktable-section-native.md).
+```
+
+**One scope call made inside the slice, named for a ruling.** `app/press/manuscript` is one
+CodeMirror document with five contracts reading whole-draft integer offsets out of it (Explicit
+Insertion, `returningState`, `headingAtOffset`, the revision store, `base_source_hash`).
+Section-native means one node per section and rewriting all five together; the shortcut that avoids
+that IS the hidden offset ledger the ruling named and rejected. So on a **section-addressable**
+draft that page now shows the words read-only and points to the Canvas. Unconverted drafts — every
+draft that existed before this — are untouched and still written there. ⛔ This is a member-facing
+capability change on an existing surface and is flagged as such: converting it properly is a
+separate unit if the founder wants that page writable for section-addressable drafts.
+
+**B3 is closed as a reachability finding.** A member-facing path now converts a draft, and new
+drafts are addressable from birth, so the structure path built in 05A/05B/6A is reachable without a
+witness script.
