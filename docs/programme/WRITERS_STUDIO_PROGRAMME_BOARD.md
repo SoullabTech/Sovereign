@@ -40,14 +40,28 @@ LAST UPDATED       2026-09-02
 Stage state, set from canonical evidence — 6A's merge at `4b8b34bcf`, not from intention:
 
 ```text
-Stage 6   COMPLETE
+Stage 6   6A UNIT      CLOSED · mechanically + experientially verified
+          MEMBER REACH PARTIAL · not ordinarily reachable
+                       BLOCKED ON section-addressable draft liveness
 Stage 7   ACTIVE
           FIND        CLOSED · canonical @ cc9788e4f
           UNDERSTAND  CLOSED · canonical @ 5670163e6
-          DECIDE      AUTHORIZED
-          BUILD       unauthorized · BUILD-07A–07H not started
+          DECIDE      CLOSED · canonical @ 838eabfd8
+          BUILD       ACTIVE
+          BUILD-07A   OPEN · PAUSED — prerequisite discharged, unit not closed
+          PREREQ      SECTION-ADDRESSABLE DRAFT LIVENESS
+                      BUILT + WITNESSED on branch · NOT ON CANONICAL
+          BUILD-07B–H unauthorized
 Stage 8   BLOCKED ON STAGE 7 CLOSURE
 ```
+
+⛔ **The prerequisite is on a branch, not on canonical.** Stage 6's MEMBER REACH row and
+BUILD-07A's pause both stay as they read until it merges — this board is set from canonical
+evidence, and a witnessed branch is not that. What is true on
+`feature/ws2-section-addressable-draft-liveness` is recorded in
+`WS2-07-PREREQ_SAVE_CONTRACT_OPTIONS_2026-09-02.md` §7 and awaits a merge ruling. One item in it is
+a member-facing capability change (`app/press/manuscript` becomes read-only on a section-addressable
+draft) and is flagged there for a founder ruling rather than assumed.
 
 Writer's Studio mode reflects **this programme only**. Unrelated Jarvis incidents may sit ahead of
 it in the global work queue without becoming Writer's Studio state.
