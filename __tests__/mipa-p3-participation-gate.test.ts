@@ -310,3 +310,79 @@ describe('P3 §5 — the only cue read is guarded by a discriminant check', () =
     expect({ readers: out }).toEqual({ readers: [] });
   });
 });
+
+// ── §6 — ANTI-RESTORATION GUARD ─────────────────────────────────────────────
+//
+// AUTHORIZED CAPABILITY CONTRACTION (founder, 2026-09-02).
+//
+// On `/api/sovereign/app/maia/list` and `/api/sovereign/app/maia`, the entire
+// `## MEMORY INFLUENCE (runtime plan)` block stopped reaching the prompt,
+// because on those routes the only two selectable sources were
+// `developmental_memory` and `theme_signals` — both uncertified inference.
+//
+//   Canonical MAIA routes may exhibit less implicit developmental continuity
+//   because previously participating inference lacks certifiable participation
+//   authority.
+//
+// This is NOT a regression. Restoring the block so MAIA "still feels
+// remembering" would restore exactly the behavior P3 exists to prohibit — and
+// a future developer seeing the missing block could plausibly file it as one.
+// So the restoration is itself a hostile fork, and it fails here.
+
+describe('P3 §6 — restoring the removed block is a hostile fork, not a fix', () => {
+  it('uncertified sources alone produce no memory influence block', () => {
+    const plan = buildMemoryInfluencePlan({
+      message: 'the same thing keeps coming up',
+      userId: 'u1',
+      conversationHistory: [],              // as /maia/list passes
+      recentDevelopmentalMemories: [excludedSnapshot('a'), excludedSnapshot('b')],
+      recentThemeSignals: [
+        { theme: 't', signal_type: 'recurring', resonance_strength: 0.8, element: 'fire',
+          detected_at: new Date(), participation: 'excluded', exclusionReason: 'uncertified_provenance' },
+      ],
+      hasMemberLiveContext: false,          // as /maia/list passes
+      hasRelationshipAnamnesis: false,      // as /maia/list passes
+    });
+    // The exact live-route shape. Anything that makes this non-empty again has
+    // re-admitted uncertified inference.
+    expect(plan.promptBlock).toBe('');
+    expect(plan.shouldUseMemory).toBe(false);
+    expect(plan.selectedSources).toEqual([]);
+  });
+});
+
+// ── §7 — NEGATIVE CONTROLS (innocent lookalikes must NOT trip) ──────────────
+//
+// This suite's own instrument failed twice before the property did: once
+// reading the docblock that DESCRIBED `directional_cue` as a declaration of it,
+// once slicing method bodies on an assumed file ordering. Controls below.
+
+describe('P3 §7 — detector negative controls', () => {
+  it('prose naming the forbidden property is not a declaration of it', () => {
+    const types = fs.readFileSync(path.join(REPO, 'lib/maia/types/memoryOrchestrator.ts'), 'utf8');
+    // The docblock legitimately explains why the excluded arm lacks the field.
+    expect(types).toMatch(/directional_cue/);
+    const start = types.indexOf('export interface ExcludedDevelopmentalMemory');
+    const body = types.slice(start, types.indexOf('\n}', start));
+    expect(body).not.toMatch(/directional_cue/);
+  });
+
+  it('a comment mentioning the cue is not a read of it', () => {
+    const commentLine = "  // P3 — the narrowing below is not defensive style; .directional_cue";
+    expect(/^\s*(\/\/|\*)/.test(commentLine)).toBe(true);
+  });
+
+  it('an admitted snapshot legitimately exposes the cue', () => {
+    const s = admittedSnapshot('a', 'movement; toward; quiet');
+    expect(s.participation).toBe('admitted');
+    if (s.participation === 'admitted') expect(s.directional_cue).toBe('movement; toward; quiet');
+  });
+
+  it('reading non-composing fields from an excluded snapshot is legitimate', () => {
+    // Overbroad gates get switched off. `significance` and `formed_at` live on
+    // the base arm deliberately: they do not compose.
+    const s = excludedSnapshot('a');
+    expect(s.significance).toBe(0.9);
+    expect(s.id).toBe('a');
+  });
+});

@@ -1,6 +1,6 @@
 # MIPA Phase 0 — Sovereignty Prerequisites Specification
 
-**Status**: Specification, plus **P2 and P3 executed and certified** (§4.P2-E, §4.P3-E). P1, P4–P6 and P2b remain specification only.
+**Status**: Specification, plus **P2, P3a and P3b executed and certified**. P1, P4–P6 and P2b remain specification only.
 **Authorized**: 2026-09-02 (founder) — bounded to P1–P6, sequencing, acceptance criteria, migration prerequisites.
 **Semantic adjudication**: 2026-09-02 (founder) — all five blocking questions closed (§6).
 **§7 adjudication**: 2026-09-02 (founder) — all eight contradictions resolved (§7); **P2 authorized to execute**, P3 repair class authorized with execution gated behind P2's evidence.
@@ -413,9 +413,18 @@ It did **not** establish:
 
 ### P3 — Inferred layers carry provenance or do not participate
 
-> ### ✅ P3 EXECUTED AND CERTIFIED — 2026-09-02 · **Grade A (scoped)** · Refusal **R24**
+> ### ⚖️ P3 STATUS — 2026-09-02
 >
-> `__tests__/mipa-p3-participation-gate.test.ts` — **18/18**, with **six hostile-fork mutations verified failing** and reverted, including the mandated one. Evidence in §4.P3-E.
+> | Sub-prerequisite | State |
+> |---|---|
+> | **P3a — Memory Orchestrator Inference Exclusion** | ✅ Certified · **Grade A (scoped)** · **R24** · 24/24 · 6 mutations |
+> | **P3b — Breakthrough Provenance / Participation** | ✅ Certified · **Grade A** (B for the cast-bypass) · **R25** · 18/18 · 5 mutations |
+>
+> **P3 is complete only with both.** P3a's certification discovered a second live instance of its own failure class — `breakthrough_moments`, mixed authority, different composer — and that could not be demoted to an "upgrade path" merely because R24's detector did not cover it. P3's claim is not *"this one composer no longer leaks inference"*; it is:
+>
+> > **Material whose authorship/authority cannot be certified may not acquire participation merely by travelling through a memory composer.**
+>
+> **Discovery enlarges the obligation; it does not shrink the claim.**
 
 **PURPOSE** — Prevents the highest-consequence failure in the architecture: MAIA's interpretation of a member being presented back to them as their own history. **This is live exposure today, not a future risk.**
 
@@ -494,7 +503,7 @@ It did **not** establish:
 
 ---
 
-### P3-E — Execution record and certification evidence
+### P3a-E — Memory Orchestrator Inference Exclusion · execution record
 
 **The repair is exclusion, not labelling** — as adjudicated. Attaching `authored_by: maia` to the developmental prime and leaving it in the prompt would have improved provenance while still violating participation.
 
@@ -540,7 +549,13 @@ Authorized in advance, and **larger than the cue line alone**. Measured per call
 | `/api/sovereign/app/maia` | same shape | same — block gone |
 | `/api/between/chat` | also `conversation_history`, `relationship_anamnesis`, `member_live_context` | block survives, **minus** the two inference sources and the cue line |
 
-> **On the canonical live route P3 removes the whole orchestrator addendum, not merely the cue** — because on that route the only two sources were uncertified inference. This is the authorized reduction; it is stated at full magnitude rather than left to be discovered. The removed influence survived only through Grade-C instructional restraint, which the registry defines as not certifiable.
+> ### ⚖️ AUTHORIZED CAPABILITY CONTRACTION (founder, 2026-09-02)
+>
+> **Canonical MAIA routes may temporarily exhibit less implicit developmental continuity, because previously participating inference lacks certifiable participation authority.**
+>
+> This is **not a MIPA regression.** Those routes were receiving their memory influence solely from sources now determined not to be constitutionally entitled to participate. Preserving the block so MAIA *"still feels remembering"* would preserve precisely the behavior P3 exists to prohibit.
+>
+> **Recorded so a future developer cannot legitimately restore the old block as a regression repair** — and the restoration is itself a hostile-fork case, pinned at `__tests__/mipa-p3-participation-gate.test.ts` §6, which reproduces the exact live-route input shape and asserts the block stays empty.
 
 **Not touched**, per the mandate: developmental intelligence is not redesigned, no new developmental memory is generated, no endorsement UI, no P2b, no seam promotion, no historical retrieval, no unrelated memory class, no client wiring, no deployment.
 
@@ -550,17 +565,95 @@ R24 closes the **memory-orchestrator** composition path. It does **not** cover `
 
 #### Verification
 
-| Gate | Result |
-|---|---|
-| `npm run typecheck` | ✅ **No regressions** — 231 vs baseline 239 |
-| P3 certification | ✅ **18/18** + six verified mutations |
-| Memory-area regression (14 suites) | ✅ **270/270** |
-| `check:no-supabase` · `no-direct-anthropic` · `no-vendor-voices` · `voice-provenance` · `no-openai` · `member-owned-boundary` · `ci:guard` | ✅ all pass |
-| `check-dark-text-opacity` | ⚠️ **pre-existing failure**, unrelated files, red on a clean tree |
+> **Verification vocabulary (founder correction, 2026-09-02).** Do not describe repository-wide typecheck or preflight as *globally green* where the base branch itself is red. The accurate claim is **no-regression against the current dirty repository baseline** — which is sufficient evidence for a scoped repair, and is a different claim from a clean gate.
+>
+> ```
+>   TYPECHECK DIFFERENTIAL          PREFLIGHT
+>     baseline      239               overall            RED on base
+>     branch        231               P2/P3-caused       NONE FOUND
+>     new errors      0               remaining checks   PASS individually
+>     regressions     0
+> ```
+>
+> That distinction will matter when the baseline debt is repaired.
 
 #### One detector note, again
 
 The suite's first run failed on its own explanation: the check for *"the excluded arm declares no `directional_cue`"* sliced from the interface to the next export and swept in the docblock **describing** the property. Fixed in the detector, not the assertion — the same imprecision that made P2's scan read `setPreferences(` as a SQL write. **Two for two: the instruments needed falsifying before the properties did.**
+
+---
+
+### P3b-E — Breakthrough Provenance / Participation · execution record
+
+**Discovered by P3a's own scope statement**, and adjudicated inside P3 rather than deferred: a second live path carrying the identical constitutional failure class.
+
+#### Topology, established from source before any change
+
+**Schema** — `breakthrough_moments` has **no provenance column of any kind**: `id`, `user_id`, `timestamp`, `insight`, `element`, `integrated`, `related_themes`, `conversation_id`, `created_at`, `updated_at`. Row-level authorship is therefore **not certifiable at read time**, whatever wrote the row.
+
+**Writers** — three exist; exactly **one** is live:
+
+| Writer | Callers | Character |
+|---|---|---|
+| `BreakthroughStore.addBreakthrough` | **0** | dead |
+| `RelationshipMemoryService.saveBreakthroughMoment` | **0** (tests only) | dead |
+| `MemoryWriteback.writeBreakthroughMoment` | **1** — `MemoryWriteback.ts:384-390` | **system inference end to end** |
+
+The live one fires on `significance >= 0.5 \|\| isBreakthroughPattern(userMessage, assistantResponse)` and stores a machine-`extractInsight`ed string. **A computed threshold and a heuristic decide that a member had a breakthrough, and the machine writes the insight text.** No member act anywhere in the path.
+
+**Composers** — three channels reached the prompt, not one:
+
+| # | Channel | What it emitted |
+|---|---|---|
+| 1 | `breakthroughsToCandidate` → memory bullets | `• [breakthrough] <insight>` — verbatim |
+| 2 | `recentBreakthroughs` → `⭐ RECENT BREAKTHROUGHS` | verbatim again, second channel |
+| 3 | `breakthroughCount` + `dominantElement` | `N breakthroughs recorded (water dominant)` — an **aggregate claim** |
+
+Channel 3 is the subtle one. An aggregate over uncertified inference is still uncertified inference — arguably worse, because a count reads as established fact while carrying no provenance a reader could interrogate. It is gated with the other two.
+
+#### The five required proofs
+
+| # | Required | How it is met |
+|---|---|---|
+| **1** | Ambiguous provenance cannot silently compose | Discriminated union; `insight`/`element` exist only on the admitted arm |
+| **2** | Certifiable member-marked material is not collapsed into the inferred class | **Nothing member-authored is excluded, because no member-authored class exists here.** No writer in the repository can express member marking for this table; the member-marked breakthrough class is `member_memory_atoms.is_breakthrough` — schema-constrained member-only, on the atoms path, **untouched**. Pinned at §3 of the suite |
+| **3** | No heuristic or default provenance backfill | The claim is `null`. Suite §2 asserts no `authoredBy: 'member'`, no `'testimony'`, and no derivation from content, wording, timestamps or writer identity anywhere in the gate region |
+| **4** | Direct raw-composer bypass fails certification | Verified — and the *honest* bypass does not compile |
+| **5** | Defaulting unknown provenance to member authority fails **hard** | Verified — mutation N2 |
+
+#### Why the exclusion is robust rather than resting on the ambiguity
+
+Both branches converge:
+
+```
+   live writer      → would be maia/inference even WITH a provenance column
+                      → excluded as unendorsed
+   legacy rows      → indeterminate
+                      → excluded rather than guessed
+```
+
+The verdict does not depend on resolving which is which — which is what makes it safe to apply without knowing.
+
+#### Falsification — five mutations, verified failing, reverted
+
+| # | Mutation | Result |
+|---|---|---|
+| **N1** | **Mandated** — raw bypass, feed breakthroughs straight to the composer | ❌ the honest form is **`TS2339: Property 'insight' does not exist on type 'BreakthroughSnapshot'`**; forcing it needs an explicit `as any[]`, and then **2 tests fail** |
+| **N2** | **Mandated** — unknown provenance defaults to `authoredBy: 'member'` | ❌ 2 failed |
+| N3 | Snapshot counts excluded rows again | ❌ 5 failed |
+| N4 | Prompt asserts `0 breakthroughs recorded` instead of omitting | ❌ 1 failed |
+| N5 | Derive provenance heuristically from insight text | ❌ 3 failed |
+| — | Restored | ✅ **18/18**, 0 `MemoryBundle` type errors |
+
+**Grade, stated precisely**: **A** for the honest path (it does not compile); **B** for the cast-bypass (`as any[]` compiles, and the suite catches it). Not claimed as unqualified A.
+
+#### Behavior change
+
+On `/api/sovereign/app/maia/list` FAST and `/api/voice/stream-conversation`, the `⭐ RECENT BREAKTHROUGHS` block and every `[breakthrough]` memory bullet stop reaching the prompt, and the `🧠 RELATIONSHIP:` line loses its breakthrough clause entirely — **omitted, not zeroed.** Same authorized contraction as P3a, same anti-restoration reasoning.
+
+#### Scope, stated narrowly
+
+R25 closes the `breakthrough_moments` → MemoryBundle path. It does **not** close MemoryBundle's **developmental** bucket (`getSemanticMemories`, selecting from `developmental_memories` into the same `formatForPrompt`) — **a third live instance of P3's failure class**, recorded as open obligation in R25's upgrade path per the precedent this sub-prerequisite just set. Naming it here rather than discovering it later is the point.
 
 ---
 
@@ -910,25 +1003,22 @@ Conceptual only. No migration is authorized, written, or named.
 
 ## STOP
 
-**P2 and P3 are complete and certified. Nothing else has been touched.**
+**P2, P3a and P3b are complete and certified. Nothing else has been touched.**
 
 | | |
 |---|---|
-| **P2** | ✅ Certified · **Grade A (scoped)** · **R23** · 10/10 · 5 verified mutations · full-tree verified |
-| **P3** | ✅ Certified · **Grade A (scoped)** · **R24** · 18/18 · 6 verified mutations, the mandated one failing at compile time |
+| **P2** | ✅ **Grade A (scoped)** · **R23** · 14/14 · 5 mutations · full-tree verified |
+| **P3a** | ✅ **Grade A (scoped)** · **R24** · 24/24 · 6 mutations, mandated one fails at compile time |
+| **P3b** | ✅ **Grade A** (B for cast-bypass) · **R25** · 18/18 · 5 mutations, both mandated ones fail |
 | **P1, P4, P5, P6, P2b** | Specification only — not repaired |
-| Endorsement gesture · member gestures in UI | Not added |
-| `historical_recall_doorways` | Not created |
-| Runtime-context seam | Not promoted |
-| Semantic retrieval · history embedding | Not activated |
-| `breakthrough_moments` · MemoryBundle composer | **Not gated** — named in R24's upgrade path |
-| Clients · deployment | Untouched |
+| Endorsement gesture · UI gestures · `historical_recall_doorways` | Not added |
+| Seam · retrieval · history embedding · clients · deployment | Untouched |
 
 **Presented for review:**
 
-1. **P3's four proofs and six mutations** (§4.P3-E). The mandated mutation fails the compiler, not just the suite.
-2. **The behavior change at full magnitude** — on the canonical live route the *entire* `## MEMORY INFLUENCE` block is gone, because there the only two sources were uncertified inference. Larger than the cue line, and stated rather than discovered.
-3. **R24's scope stated narrowly**, per the R23 correction — `breakthrough_moments` and the MemoryBundle composer are a different path and are **not** closed.
-4. **Two verification facts that are not P2's or P3's**: `check-dark-text-opacity` fails on three unrelated `app/studio/` files, red on a clean tree, which means `npm run preflight` currently gates nothing; and the `episodes/mark sanctuaryGuard` suite has one pre-existing failure. Both recorded, neither absorbed, neither repaired.
+1. **P3 certified as a whole**, both sub-prerequisites. The discovery enlarged the obligation rather than narrowing the claim.
+2. **A third instance named, not deferred** — MemoryBundle's `getSemanticMemories` developmental bucket reaches the same composer and is **not** closed by R25. Recorded as open obligation in the upgrade path, following the precedent P3b just set. It is a candidate P3c.
+3. **The certification-instrument rule is now in the registry**, with all three instrument failures preserved as its evidence. Negative-control sections added to R23, R24 and R25.
+4. **Verification stated as differential**, not as a clean gate: typecheck 231 vs 239 baseline, 0 new, 0 regressions; preflight red on base from an unrelated opacity failure, seven remaining checks green individually.
 
-**Next in sequence**: P1 (export coverage) — no dependencies, largest sovereignty gain, and the row that most directly gates Phases 4–5. Not started.
+**Next**: P1 (export coverage) — still not started.

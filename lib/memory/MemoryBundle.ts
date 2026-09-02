@@ -16,6 +16,7 @@ import { generateLocalEmbedding } from './embeddings';
 import { calculateDecayedConfidence } from './confidenceDecay';
 import { ConversationMemoryUsesStore } from './stores/ConversationMemoryUsesStore';
 import { memberRef } from '../privacy/memberRef';
+import { adjudicateParticipation, type ProvenanceClaim, type ExclusionReason } from '../maia/participationGate';
 
 // ═══════════════════════════════════════════════════════════════
 // TYPES
@@ -29,6 +30,56 @@ export interface MemoryBullet {
   timestamp: Date;
   facet?: string;       // Spiralogic facet if available
 }
+
+/**
+ * P3b (MIPA Phase 0) — BREAKTHROUGH SNAPSHOTS ARE PARTICIPATION-TYPED.
+ *
+ * `breakthrough_moments` carries NO provenance column — not `authored_by`, not
+ * `marked_by_member`, not `source_turn_id`. Its columns are id, user_id,
+ * timestamp, insight, element, integrated, related_themes, conversation_id.
+ * Row-level authorship is therefore not certifiable at read time, whatever
+ * wrote the row.
+ *
+ * Both branches of the ambiguity converge on the same verdict, which is why the
+ * exclusion is robust rather than resting on the uncertainty:
+ *
+ *   - The SOLE live writer (`MemoryWriteback.ts:384-390`) fires on
+ *     `significance >= 0.5 || isBreakthroughPattern(...)` and stores a
+ *     machine-`extractInsight`ed string. That is system inference end to end;
+ *     even with a provenance column it would be `maia`/`inference` and would
+ *     still be excluded as unendorsed.
+ *   - LEGACY rows are indeterminate, and indeterminate provenance is excluded
+ *     rather than guessed.
+ *
+ * NOTHING MEMBER-AUTHORED IS EXCLUDED BY THIS. No writer in the repository can
+ * express member marking for this table (`addBreakthrough` and
+ * `saveBreakthroughMoment` both have zero callers, and neither ever took a
+ * member-marked input). The member-marked breakthrough class is
+ * `member_memory_atoms.is_breakthrough` — schema-constrained member-only, on
+ * the atoms path, untouched by this change.
+ *
+ * `insight` and `element` exist ONLY on the admitted arm, so composing them
+ * without narrowing on the discriminant is a compile error.
+ */
+export interface BreakthroughBase {
+  id: string;
+  integrated: boolean;
+  timestamp: Date;
+  relatedThemes: string[];
+}
+
+export interface AdmittedBreakthrough extends BreakthroughBase {
+  participation: 'admitted';
+  insight: string;
+  element?: string;
+}
+
+export interface ExcludedBreakthrough extends BreakthroughBase {
+  participation: 'excluded';
+  exclusionReason: ExclusionReason;
+}
+
+export type BreakthroughSnapshot = AdmittedBreakthrough | ExcludedBreakthrough;
 
 export interface RelationshipSnapshot {
   encounterCount: number;
@@ -77,6 +128,12 @@ export interface MemoryBundle {
     turnsCrossSession: number;     // Turns from other sessions
     semanticHits: number;
     breakthroughsFound: number;
+    /**
+     * P3b observability. Reported AFTER adjudication, never an input to it —
+     * same discipline as `selectionTrace`. Distinguishes "the member has no
+     * breakthroughs" from "breakthroughs existed and did not participate".
+     */
+    breakthroughsExcluded: number;
     totalCandidates: number;
     afterRanking: number;
   };
@@ -191,7 +248,8 @@ export const MemoryBundleService = {
         turnsSameSession,
         turnsCrossSession,
         semanticHits: semanticMemories.length,
-        breakthroughsFound: breakthroughs.length,
+        breakthroughsFound: breakthroughs.filter(b => b.participation === 'admitted').length,
+        breakthroughsExcluded: breakthroughs.filter(b => b.participation === 'excluded').length,
         totalCandidates: allCandidates.length,
         afterRanking: topBullets.length,
       },
@@ -348,14 +406,7 @@ export const MemoryBundleService = {
    * BUCKET C: Breakthroughs (prefer not integrated, most recent)
    * Uses exact SQL from user guidance
    */
-  async getBreakthroughs(userId: string): Promise<Array<{
-    id: string;
-    insight: string;
-    element?: string;
-    integrated: boolean;
-    timestamp: Date;
-    relatedThemes: string[];
-  }>> {
+  async getBreakthroughs(userId: string): Promise<BreakthroughSnapshot[]> {
     try {
       const result = await query(`
         SELECT id, timestamp, insight, element, integrated, related_themes
@@ -365,14 +416,29 @@ export const MemoryBundleService = {
         LIMIT 5
       `, [userId]);
 
-      return (result.rows || []).map(row => ({
-        id: row.id,
-        insight: row.insight,
-        element: row.element,
-        integrated: row.integrated,
-        timestamp: new Date(row.timestamp),
-        relatedThemes: row.related_themes || [],
-      }));
+      return (result.rows || []).map((row): BreakthroughSnapshot => {
+        const base = {
+          id: row.id,
+          integrated: row.integrated,
+          timestamp: new Date(row.timestamp),
+          relatedThemes: row.related_themes || [],
+        };
+
+        // P3b — PROVENANCE IS NEVER GUESSED, AND NEVER DEFAULTED TO MEMBER.
+        //
+        // The table has no provenance column, so nothing here can establish
+        // authorship. Defaulting to `member` would be the most dangerous
+        // possible "compatibility fix": it would convert machine inference into
+        // member testimony silently, at the top of the authority lattice.
+        const provenance: ProvenanceClaim = null;
+
+        const verdict = adjudicateParticipation({ provenance, endorsement: 'none' });
+        if (!verdict.admitted) {
+          // No `insight`, no `element` on this arm — by type, not convention.
+          return { ...base, participation: 'excluded', exclusionReason: verdict.reason };
+        }
+        return { ...base, participation: 'admitted', insight: row.insight, element: row.element };
+      });
     } catch (err) {
       console.warn('[MemoryBundle] Breakthrough fetch failed:', err);
       return [];
@@ -536,8 +602,19 @@ export const MemoryBundleService = {
    */
   buildRelationshipSnapshot(
     relationshipData: { encounterCount: number; firstSeen: Date | null; lastSeen: Date | null; sessionCount: number },
-    breakthroughs: Array<{ insight: string; element?: string; integrated: boolean }>
+    allBreakthroughs: BreakthroughSnapshot[]
   ): RelationshipSnapshot {
+
+    // P3b — EVERY breakthrough-derived field is computed from ADMITTED rows only.
+    //
+    // Including the COUNT. "7 breakthroughs recorded (water dominant)" is an
+    // aggregate claim about the member's development, and an aggregate over
+    // uncertified inference is still uncertified inference — it is arguably
+    // worse, because a count reads as established fact while carrying no
+    // provenance a reader could interrogate.
+    const breakthroughs = allBreakthroughs.filter(
+      (b): b is AdmittedBreakthrough => b.participation === 'admitted',
+    );
 
     const integratedCount = breakthroughs.filter(b => b.integrated).length;
     const integrationRate = breakthroughs.length > 0
@@ -585,8 +662,12 @@ export const MemoryBundleService = {
       }));
   },
 
-  breakthroughsToCandidate(breakthroughs: Array<{ id: string; insight: string; element?: string; timestamp: Date }>): MemoryCandidate[] {
-    return breakthroughs.map(b => ({
+  breakthroughsToCandidate(breakthroughs: BreakthroughSnapshot[]): MemoryCandidate[] {
+    // P3b — the filter is not defensive style. `content: b.insight` does not
+    // typecheck against the union, because the excluded arm has no `insight`.
+    return breakthroughs
+      .filter((b): b is AdmittedBreakthrough => b.participation === 'admitted')
+      .map(b => ({
       id: b.id,
       content: b.insight,
       source: 'breakthrough' as const,
@@ -629,7 +710,13 @@ export const MemoryBundleService = {
     // Relationship context (brief)
     if (bundle.relationshipSnapshot.encounterCount > 0) {
       const rs = bundle.relationshipSnapshot;
-      parts.push(`🧠 RELATIONSHIP: ${rs.encounterCount} turns across sessions. ${rs.breakthroughCount} breakthroughs recorded${rs.dominantElement ? ` (${rs.dominantElement} dominant)` : ''}.`);
+      // P3b — when no breakthrough is admitted, the clause is OMITTED rather
+      // than rendered as "0 breakthroughs recorded". Asserting zero is still
+      // asserting; silence is the honest form of having nothing certified.
+      const bt = rs.breakthroughCount > 0
+        ? ` ${rs.breakthroughCount} breakthroughs recorded${rs.dominantElement ? ` (${rs.dominantElement} dominant)` : ''}.`
+        : '';
+      parts.push(`🧠 RELATIONSHIP: ${rs.encounterCount} turns across sessions.${bt}`);
     }
 
     // Recent continuity

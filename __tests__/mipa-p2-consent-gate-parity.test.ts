@@ -254,3 +254,46 @@ describe('P2 §5 — default-on opt-out semantics unchanged', () => {
     expect(mod).toMatch(/!== false/);
   });
 });
+
+// ── §6 — NEGATIVE CONTROLS (innocent lookalikes must NOT trip) ───────────────
+//
+// Founder rule, 2026-09-02: a constitutional detector requires both hostile
+// positive mutations AND innocent negative controls. A detector that rejects
+// valid lookalikes is not a stronger gate — it is an eventual disablement risk,
+// the same social failure that ruled out pinning 75 `members` call sites.
+//
+// This suite's own instrument failed exactly this way on its first run:
+// `setPreferences({ ...prev })` matched `SET` without a word boundary, so a
+// React state update read as a SQL write. Preserved here as a control.
+
+describe('P2 §6 — detector negative controls', () => {
+  const sqlish = (name: string) =>
+    new RegExp(
+      String.raw`\b(SELECT|UPDATE|WHERE|SET|RETURNING|INSERT)\b[^\n]*\b${name}\b|\b${name}\b[^\n]*(FROM\s+members|=\s*\$)`,
+      'i',
+    );
+
+  it('a React state setter is not a SQL SET', () => {
+    const g = 'conversational_recall_enabled';
+    expect(sqlish(g).test('setPreferences({ ...preferences, conversational_recall_enabled: next })')).toBe(false);
+    expect(sqlish(g).test('const [preferences, setPreferences] = useState(null)')).toBe(false);
+  });
+
+  it('a JSON request body naming a gate is not a SQL read', () => {
+    const g = 'conversational_recall_enabled';
+    expect(sqlish(g).test("body: JSON.stringify({ conversational_recall_enabled: next })")).toBe(false);
+  });
+
+  it('but a real SQL read still trips', () => {
+    const g = 'conversational_recall_enabled';
+    expect(sqlish(g).test('SELECT conversational_recall_enabled FROM members WHERE id = $1')).toBe(true);
+    expect(sqlish(g).test('UPDATE members SET conversational_recall_enabled = $2')).toBe(true);
+  });
+
+  it('a gate named only inside a comment is not a read', () => {
+    const g = 'recurrence_recall_enabled';
+    const line = '   *     The caller MUST gate this behind members.recurrence_recall_enabled before it';
+    const stripped = line.replace(/^\s*(\/\/|\*|\/\*).*/, '');
+    expect(stripped.includes(g)).toBe(false);
+  });
+});
