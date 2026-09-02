@@ -281,9 +281,26 @@ No UI. No schema. No enum. No route. No migration. The primitives are specified 
 
 ### P2 — Every consent gate that is read is member-writable
 
-> ### ✅ P2 EXECUTED AND CERTIFIED — 2026-09-02 · **Grade A** · Refusal **R23**
+> ### ✅ P2 CERTIFIED — 2026-09-02 · **Grade A (scoped)** · Refusal **R23**
 >
-> Certification: `__tests__/mipa-p2-consent-gate-parity.test.ts` — **10/10 passing**, with **all five hostile-fork mutations verified failing** and reverted. Evidence in §4.P2-E below.
+> Certification: `__tests__/mipa-p2-consent-gate-parity.test.ts` — **10/10 passing**, with **all five hostile-fork mutations verified failing** and reverted. Evidence in §4.P2-E.
+>
+> **⚖️ SCOPE, stated narrowly (founder, 2026-09-02).** R23 certifies (a) every **boolean** column on **`members`** is classified, and (b) every **registered** gate shares one read/write registry. It does **not** certify that all consent mechanisms everywhere are closed-set — consent also lives in enums on other tables (`return_preference`, `surface_preference`), and could live in relation tables or scoped policies. **Do not let the row universalize past the domain the detector closes.**
+>
+> **⚖️ FULL-TREE VERIFICATION COMPLETE — 2026-09-02.** Dependencies installed and the gate run in order:
+>
+> | Gate | Result |
+> |---|---|
+> | `npm run typecheck` | ✅ **No regressions** — 231 errors vs baseline 239 (8 fixed, 0 new); 4121 program files vs baseline 3965 |
+> | `npm run preflight` | ⚠️ **Blocked by a pre-existing failure, not by P2** — see below |
+> | R23 certification | ✅ **10/10** |
+> | Adjacent regression | ✅ **124/125** — the one failure is the pre-existing `sanctuaryGuard` case |
+>
+> **On preflight.** The chain's *first* check, `check-dark-text-opacity.sh`, fails on three `app/studio/` files (`field/page.tsx:1003,1085`, `layout.tsx:113`) last touched by `37bbf0c`. Verified **pre-existing**: it exits 1 on a clean tree with these changes stashed. Because the chain is `&&`-joined, that one failure prevents every later check from running — so the remaining seven were run individually and **all pass**: `no-supabase`, `no-direct-anthropic`, `no-vendor-voices`, `voice-provenance`, `no-openai`, `member-owned-boundary`, `ci:guard`. (`preflight-compose-config.sh` needs a gitignored `.env.docker` absent from this container — the documented worktree trap, not a result.)
+>
+> **Finding worth separating from P2**: `npm run preflight` is currently red on the base branch. Until those three files are fixed, "preflight passes" cannot gate any merge — P2's or anyone's. Recorded, not repaired: the files are unrelated to this lane.
+>
+> The pre-existing `sanctuaryGuard` failure stays **outside** P2 — recorded, never absorbed.
 
 **PURPOSE** — Prevents a consent gate that exists in schema and in code but is unreachable by the person it belongs to. A gate the member cannot set is not consent; it is a default with a consent-shaped name.
 
@@ -358,6 +375,42 @@ A gate reachable only by `curl` is writable in the API sense and not in the sens
 **Not run**: `npm run typecheck` and `npm run preflight` — this container has only a minimal dependency set installed (jest, ts-jest, typescript, pg), not the full tree. The three touched TypeScript files should be typechecked in a full environment before the change is considered merge-ready.
 
 ---
+### P2b — Member Exercise Surface
+
+> **Recorded 2026-09-02. NOT authorized to implement. This is not UI authorization.**
+
+**PURPOSE** — Prevents treating a gate as sovereign because an API can mutate it. Mechanical writability and lived exercisability are **different properties**, and only the second is what the member actually has.
+
+**INVARIANT** *(founder-authored)* —
+
+> **A live member-governable participation gate must be both mechanically writable AND discoverably exercisable by the member before the corresponding intelligence layer may be considered sovereignly available.**
+
+**CURRENT STATE** — P2 established:
+
+```
+   gate can be read  ⇅  same canonical registry  ⇅  gate can be written through API
+```
+
+It did **not** establish:
+
+```
+   member can discover and exercise the sovereignty control
+```
+
+`members.episodic_recall_enabled` is writable via `PATCH /api/members/recall-preferences` and absent from `components/settings/MemoryConsentSection.tsx`, which renders one hardcoded toggle.
+
+**REQUIRED CAPABILITY** — Toggles rendered from `MEMBER_CONSENT_GATES` so the member-facing surface cannot drift from the read and write surfaces either.
+
+**EXPLICIT NON-REQUIREMENT** — `recurrence_recall_enabled` **stays unexposed** while its layer has no verified live participation. A control over behavior that does not participate is **sovereignty theater: a switch over nothing.** This is the same doctrine that keeps it out of `MEMBER_CONSENT_GATES` — and it is a *reason not to build*, not a defect to fix.
+
+**ACCEPTANCE EVIDENCE** — deferred with the prerequisite.
+
+**DEPENDENCIES** — P2 complete (it is, pending full-tree verification).
+
+**NOT AUTHORIZED** — All of it. Recorded so the gap is not mistaken for closed, and so it is not silently folded into P2 or reopened as an R23 defect. **It is neither.**
+
+---
+
 ### P3 — Inferred layers carry provenance or do not participate
 
 **PURPOSE** — Prevents the highest-consequence failure in the architecture: MAIA's interpretation of a member being presented back to them as their own history. **This is live exposure today, not a future risk.**
@@ -410,7 +463,24 @@ A gate reachable only by `curl` is writable in the API sense and not in the sens
 >
 > **Consequence**: P3's *repair* requires authorization beyond "Phase 0 approved," because it necessarily alters what MAIA receives. Recorded as a dependency (§7.5), not resolved here.
 
-**ACCEPTANCE EVIDENCE** — Registry row, **Grade A**: *"No unlabelled object reaches cognition"* — the participation adjudicator admits only objects carrying both fields. **Hostile fork must change**: admit an object with a null provenance pair. Plus, per class, either a labelling migration with a stated backfill policy, or an enforced exclusion.
+**ACCEPTANCE EVIDENCE** — *(founder-specified 2026-09-02.)* Grade A or B evidence proving **four** things:
+
+| # | Must prove |
+|---|---|
+| **1** | The existing ungoverned `directional_cue` composition path is **structurally gone or guarded at Grade A/B** — not merely accompanied by stronger instructions |
+| **2** | Uncertified legacy material is **excluded**, never guessed |
+| **3** | MAIA-authored inference **cannot acquire autobiographical authority** by having existed a long time or appeared in prompts repeatedly |
+| **4** | A hostile fork that **directly reintroduces uncertified developmental material into canonical composition fails certification** |
+
+**Required falsification mutation** — an effect-equivalent of:
+
+```
+   composer += developmentalMemory.directional_cue
+```
+
+> **If that mutation passes, P3 is not certified.** This is the acceptance test, not an illustration of one.
+
+**Expected behavior change, authorized in advance**: since the member has no endorsement gesture, MAIA-authored developmental inference **ordinarily terminates at EXCLUDED** under the presently reachable architecture. *That reduction in live influence is expected, not a regression* — the present influence survives only through Grade-C instructional restraint, which the registry defines as not certifiable.
 
 **FAIL-CLOSED** — **Absent provenance → excluded.** Never "assume member," never "assume system," never infer from content.
 
