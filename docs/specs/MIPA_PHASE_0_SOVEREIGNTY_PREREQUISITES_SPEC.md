@@ -1,6 +1,6 @@
 # MIPA Phase 0 — Sovereignty Prerequisites Specification
 
-**Status**: Specification, plus **P2 and P3a–P3d executed and certified**. **P3 remains OPEN** pending its closed-set certification. P1, P4–P6 and P2b remain specification only.
+**Status**: Specification, plus **P2 and P3a–P3d executed and certified**, and **P3-CSC performed (outcome C)**. **P3 remains OPEN.** P1, P4–P6 and P2b remain specification only.
 **Authorized**: 2026-09-02 (founder) — bounded to P1–P6, sequencing, acceptance criteria, migration prerequisites.
 **Semantic adjudication**: 2026-09-02 (founder) — all five blocking questions closed (§6).
 **§7 adjudication**: 2026-09-02 (founder) — all eight contradictions resolved (§7); **P2 authorized to execute**, P3 repair class authorized with execution gated behind P2's evidence.
@@ -421,13 +421,14 @@ It did **not** establish:
 > | **P3b — Breakthrough Provenance / Participation** | ✅ Certified · **Grade A** (B for cast-bypass) · **R25** |
 > | **P3c — MemoryBundle Developmental Bucket** | ✅ Certified · **Grade A** (B for cast-bypass) · **R26** |
 > | **P3d — Member Web pattern / session-essence inference** | ✅ Certified · **Grade A** · **R27** · 26/26 · 6 mutations |
-> | **P3 Closed-Set Certification** | 🔴 **NOT YET PERFORMED** — required before P3 may be proposed complete |
+> | **P3-CSC — Closed-Set Certification** | ⚖️ **PERFORMED · OUTCOME C** (architectural ceiling), with a **B finding** (P3e) |
+> | **P3e — continuity-summary topic derivation** | 🔴 **OPEN** — found during P3-CSC |
 >
 > ### 🔴 P3 REMAINS OPEN. P3a's certification discovered a second live instance of its own failure class — `breakthrough_moments`, mixed authority, different composer — and that could not be demoted to an "upgrade path" merely because R24's detector did not cover it. P3's claim is not *"this one composer no longer leaks inference"*; it is:
 >
 > > **Material whose authorship/authority cannot be certified may not acquire participation merely by travelling through a memory composer.**
 >
-> Four sub-prerequisites are certified. **P3 is still not complete**: the closed-set certification that would license the claim *"no further producer remains"* has not been performed, and a manual survey cannot certify absence.
+> Four sub-prerequisites are certified and the closed-set certification has been performed. **Its outcome is C: no enforceable closed set exists over prompt producers without the canonical-seam promotion.** P3 therefore **cannot receive a global Grade A under the present architecture** — and a fifth live exposure (P3e) was found en route.
 >
 > **Discovery enlarges the obligation; it does not shrink the claim.** Marking P3 complete while a discovered live path in its own failure class remains unadjudicated would collapse the distinction between *certifying a detector's scope* and *certifying a prerequisite's property* — the distinction this program exists to hold.
 
@@ -813,6 +814,57 @@ Authorized, and not to be restored to preserve prior conversational behavior. Th
 
 ---
 
+### P3-CSC — Closed-Set Certification · outcome and evidence
+
+**Outcome: C — architectural ceiling, with a B finding attached.** Reporting both is not evasion: **C** is the architectural determination the exercise was authorized to make, and **P3e** is a specimen found while making it. Both need adjudication.
+
+#### What was built, and what it certifies
+
+Discovery is **compiler-derived**, not regex — after four detector defects, regex had stopped being an honest instrument for parsing. The TypeScript AST is walked for template spans in the FAST system-prompt template and for `field:` properties of `ADDENDA_SPECS`. **45 producers** discovered; every one must carry an explicit class in `lib/maia/promptProducerClassification.ts`, with `UNKNOWN` failing closed and exemptions requiring a stated reason.
+
+**The two lists are not asserted equal.** The derived set is the authority on *what exists*; the table supplies only *treatment*. A new producer changes the derived set, finds no treatment, and fails — the R23 pattern done right rather than its defect shape repeated.
+
+**Six hostile mutations verified failing**, each confirmed applied: a new unclassified producer on either path, an inference reclassified as member testimony, a dropped gate, member testimony swept into inference, and a **meta-invariant** case that renames the discovery anchor and correctly fails **red on zero discovery** rather than passing vacuously.
+
+#### Why the outcome is C
+
+The anchor set of assembly sites **cannot itself be derived**, and the reason is structural rather than a limitation of effort:
+
+> `lib/sovereign/maiaService.ts` alone contains **142 template expressions**, and **no source-level property distinguishes a template that becomes prompt text from one that becomes a console line.** Both are `TemplateExpression` nodes interpolating member-derived identifiers. Telling them apart requires following the string to the model call — dataflow that the canonical seam would make structural and that no parser can supply today.
+
+Two demonstrations, in **opposite** directions, both from this exercise:
+
+| Heuristic | Failure | Consequence |
+|---|---|---|
+| `spans > 8` | **excluded** `${memoryContext}` (6 spans) and `${recentContext}` (5 spans) | false negatives — and on exactly the material P3 governs |
+| `spans > 8` | **included** `fieldIntelligence` / `wisdomMove` from a prompt-shaped block at `:1030` rendering *"Detection confidence: 87%"* | false positive — `fieldAwareness` is assigned and **never used**, dead since the note at `:1134` |
+
+Establishing which was true required **tracing uses by hand, in both directions**. That is the ceiling, demonstrated rather than asserted.
+
+> **P3 cannot receive a global Grade A under the present architecture.** Per the adjudication, this is recorded as an architectural finding — not closed with a brittle detector manufactured so P3 could carry a green badge.
+
+**What the certification does establish** is real and worth keeping: **CLOSED within** the two named registries — drift inside them fails, on either path — and **OPEN across** the codebase.
+
+#### A divergence worth naming separately
+
+The two assembly paths carry **materially different** context: 23 producers reach FAST only, 7 reach CORE/DEEP only — including **`journalContextAddendum`** and **`captureContextAddendum`**, which are member-history material composed on CORE/DEEP and absent from FAST. Pinned by the certification. Whether tiers *may* differ in composed member material is the open question already recorded at §C5 of the architecture document.
+
+#### P3e — the B finding
+
+`MemoryBundle.buildContinuitySummary` composes, into `formatForPrompt` via `recentContinuity`:
+
+```
+  • User: "<verbatim 60 chars>" → MAIA responded about <extractTopicHint(...)>
+```
+
+The member's words are testimony and compose legitimately. **`extractTopicHint` is a machine-derived topic label**, composed with no adjudication — a `SYSTEM_DERIVATION` inside a member-authored container. It is the exact field-level analogue of P3d's journal `themes` case, and it falls under the rule ratified there:
+
+> **Authority follows the smallest representation whose authorship can actually be certified.** The container does not confer authorship on everything inside it.
+
+Live on the canonical route (FAST, via `memoryContext`). **Named, not repaired.**
+
+---
+
 ### P4 — A correction path exists
 
 **PURPOSE** — Prevents a system that can hold a member's history but not their revision of it. Without correction, W1 (explicit recollection) can only return what was *said*, never what is *true* — and Case 4 has no answer beyond temporal disclosure.
@@ -1159,24 +1211,23 @@ Conceptual only. No migration is authorized, written, or named.
 
 ## STOP
 
-**P3a–P3d certified. P3 REMAINS OPEN — the closed-set certification has not been performed.**
+**P3a–P3d certified. P3-CSC performed — outcome C. P3 REMAINS OPEN.**
 
 | | |
 |---|---|
-| **P2** | ✅ **R23** · Grade A (scoped) |
-| **P3a** | ✅ **R24** · Grade A (scoped) |
-| **P3b** | ✅ **R25** · Grade A / B for cast |
-| **P3c** | ✅ **R26** · Grade A / B for cast |
-| **P3d** | ✅ **R27** · Grade A |
-| **P3 Closed-Set Certification** | 🔴 **not performed** |
+| **P2** | ✅ **R23** |
+| **P3a–P3d** | ✅ **R24 · R25 · R26 · R27** |
+| **P3-CSC** | ⚖️ **Outcome C** — bounded closed set; no global Grade A without the seam |
+| **P3e** | 🔴 **OPEN** — `buildContinuitySummary` topic derivation |
 | **P1, P4, P5, P6, P2b** | Specification only |
 
-**Verification**: typecheck 231 vs baseline 239, 0 new, 0 regressions · **331/331 across 16 suites**.
+**Presented for adjudication:**
 
-**Presented for review:**
+1. **Outcome C, with its evidence.** The ceiling is structural, not effort-limited: 142 template expressions in one file, and no source-level property separates a prompt template from a log template. Demonstrated in both directions — a heuristic that excluded the material P3 governs, and included a block that turns out to be dead code.
+2. **What was nonetheless built** — a genuine bounded certification: compiler-derived discovery of 45 producers, exhaustive classification, `UNKNOWN` failing closed, six verified mutations including a meta-invariant that fails red on zero discovery.
+3. **P3e** — a fifth live exposure, found by doing the work rather than by asking whether more remained.
+4. **A tier divergence** — `journalContextAddendum` and `captureContextAddendum` compose on CORE/DEEP and not FAST. Whether tiers may differ in composed member material is already an open architectural question.
 
-1. **P3d certified as a partition** — the member's journal survives; four machine-authored or derived classes do not. The derivation rule is now a gate function, generalizing P3b's breakthrough-count result instead of restating it per site.
-2. **Three of six mutations initially passed** — all detector gaps, all closed and re-verified, plus a fourth that reported a pass because it never applied. Recorded prominently: this is the clearest evidence yet for the instrument rule.
-3. **P3 stays open** for the closed-set certification, not for a known further exposure. A survey can discover; it cannot certify absence.
+**P3 cannot be proposed complete.** Not for want of effort on the closed set, but because the closed set says so.
 
-**Next**: the P3 Closed-Set Certification, if authorized to proceed directly. **P1 not started.**
+**P1 not started.**
