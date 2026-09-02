@@ -5,8 +5,22 @@
 **Type:** ⭐ **evidence-gathering**, not design approval
 **Status:** authorizes no route, no code, no production change. Records what Larry reveals.
 
-> Brief, concrete, one decision at a time. Show → watch → ask → record.
-> **Do not rescue the experience by explaining it unless Larry asks.**
+## Structure — 25 minutes, three parts, in this order
+
+| # | Part | Time | What it is | Evidence class |
+|---|---|---|---|---|
+| **1** | **Current build** | 5 min | "This is what works today." A walk of the deployed product. | **Encounter** — what he does |
+| **2** | **Eight-state candidate** | 10 min | "This is the client experience we are considering. **It is not built.**" | **Reaction** — what he says about a proposal |
+| **3** | **Scope Grid** | 10 min | Larry marks YES / NO / MAYBE. | **Instruction** — what he wants |
+
+⛔ **Parts 1 and 2 produce different kinds of evidence and must never be merged in the record.** What a person does inside a working thing and what a person says about a described thing are not the same claim, and part 2 will feel more impressive than part 1 precisely because nothing in it can disappoint him yet.
+
+⛔ **There is no built candidate.** The eight-state journey exists as a document — `NW_CLIENT_JOURNEY_DESIGN_CANDIDATE_2026-09-02.md` — with no routes and no screens behind it. Part 2 is reading and discussing a document. Say "not built" **out loud** at the top of part 2; a candidate shown minutes after the real product reads as built unless the boundary is spoken.
+
+> Brief, concrete, one decision at a time.
+> Part 1: show → watch → ask → record. **Do not rescue the experience by explaining it unless Larry asks.**
+> Part 2: state the boundary, then walk the document.
+> Part 3: he marks; you write.
 
 ---
 
@@ -58,7 +72,9 @@ A reaction to a refusal screen is evidence about our preflight, not about the pr
 
 ---
 
-## 1. The shortest possible walk
+# PART 1 — Current build (5 minutes)
+
+**Opening line:** *"This is what works today."* Nothing more. No framing, no roadmap.
 
 Six stops. Two states observed separately. Each stop: **show it, say nothing, watch, then ask the one question.**
 
@@ -132,15 +148,46 @@ Verbatim beats paraphrase. A paraphrase is already a reading.
 
 ---
 
-## 4. Mark each candidate claim
+# PART 2 — Eight-state candidate (10 minutes)
 
-The client-journey candidate under examination — a **dated design candidate**, not settled architecture:
+**Opening line, spoken before anything is shown:**
+
+> *"This is the client experience we are considering. It is not built yet — there are no screens behind this. I want your reaction to the shape."*
+
+The candidate under discussion — a **dated design candidate**, not settled architecture:
 
 ```
 LANDING → SIGN-IN → CHECK-IN → TODAY ⇄ FIELD → CONVERSATION → KEEP → RETURN → TODAY
 ```
 
 Shared skeleton, one meaningful gesture per state, four marked fracture points.
+
+⚠️ **Before the meeting:** confirm the eight states in `NW_CLIENT_JOURNEY_DESIGN_CANDIDATE_2026-09-02.md` match the line above. That document lives outside this branch and was not read when this sheet was written — if it has drifted, the document governs and this line is corrected to match it, not the other way round.
+
+### How to run part 2
+
+- Walk the states **in order**, briefly. Do not defend any of them.
+- The four fracture points are the valuable part. Name them as open, not as solved.
+- If he asks "can I see it?" — the answer is **"not yet, it isn't built"**, not a jump back to part 1.
+- If he starts designing, let him. Record it verbatim; do not steer it toward the candidate.
+
+### What NOT to do in part 2
+
+- Do not explain the full AIN vision. He has reacted to one concrete thing; that reaction is the asset.
+- Do not present the eight states as decided, sequenced, or scheduled.
+- Do not let part 1's screens stand in as illustrations of part 2's states. They are not the same product.
+
+---
+
+# PART 3 — Scope Grid (10 minutes)
+
+Handled in §5 below. He marks; you write. One row at a time.
+
+---
+
+# AFTER — classify the evidence
+
+## 4. Mark each candidate claim
 
 After the walk, mark every claim with exactly one:
 
@@ -151,6 +198,8 @@ After the walk, mark every claim with exactly one:
 | **NEW EVIDENCE** | something we had not anticipated |
 | **STILL UNKNOWN** | the walk did not test it — the honest and most common mark |
 | **PREFLIGHT BLOCKED** | the walk never reached a valid doorway; nothing observed after that point is encounter evidence |
+
+**Tag every mark with which part produced it — `[P1]`, `[P2]`, `[P3]`.** A claim confirmed in part 2 is confirmed as *a thing Larry liked the sound of*, which is a weaker fact than the same claim confirmed in part 1, where he met it. Untagged marks silently promote the weaker to the stronger.
 
 ⚠️ **STILL UNKNOWN is not a failure.** An eight-state journey cannot be validated in one sitting; recording six unknowns is a better outcome than manufacturing six confirmations.
 
@@ -194,6 +243,8 @@ Carry these. Do **not** open them as topics unless Larry raises them.
 
 ## The whole job
 
-**Prepare the shortest possible walk. Let Larry encounter what exists. Preserve what he actually reveals.**
+**Show what exists. Describe what is being considered, marked clearly as unbuilt. Let him mark what matters. Preserve what he actually reveals.**
 
-If the meeting produces only verbatim quotes and a column of STILL UNKNOWN, it succeeded.
+If the meeting produces only verbatim quotes, a column of STILL UNKNOWN, and a marked grid, it succeeded.
+
+The one failure mode worth naming: **leaving with him believing the eight-state journey exists.** That is not a communication slip, it is the inflation drift this project's claim discipline exists to prevent — and it happens by omission, not by assertion.
