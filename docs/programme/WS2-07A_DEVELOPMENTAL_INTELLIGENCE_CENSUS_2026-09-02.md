@@ -60,9 +60,10 @@ cannot currently see.
 
 **5 · Can she address the whole Work?**
 **Partially, and only in the weak sense.** `AskAnchor` has `{on: 'work'}`, so she can be *anchored*
-on the Work — but with headings only, and with the structural reading bounded to 8 sections, she
-cannot *read* it. Whole-Work perception, which the capability spec calls "the requirement, not a
-nicety", has no substrate today.
+on the Work — but with headings only there, and with the structure reader hard-refusing beyond 8
+sections, no existing path lets her *read* it. Whole-Work perception, which the capability spec
+calls "the requirement, not a nicety", has no substrate today. The 8-section ceiling is a fact
+about `REAL-STRUCTURE-READER-01`, not a ruling about Stage 7.
 
 **6 · What evidence types already exist?**
 Six mechanical observation types in `evidence.ts` — `StructuralLabel`, `NumberingPattern`,
@@ -157,7 +158,8 @@ developmental observation object      no type, no table, no route
 developmental reading                 no equivalent of StructureInterpretation for development
 chronology across the Work            the Continuity lens requires it; nothing computes it
 MAIA ↔ authored structure             no module reads manuscript_structure_units into any prompt
-whole-Work body access                bounded by ruling to 8 sections / 60k chars
+whole-Work body access                no existing path provides it; the current StructureReader
+                                      hard-refuses beyond 8 sections / 60k chars
 ```
 
 ### DUPLICATE
@@ -187,19 +189,59 @@ None found. The two reader paths are parallel by design, not duplicated.
 reach."* Since 6A that is false: the adopt endpoint exists and the crossing is on that surface.
 The file's comment is stale, not the boundary — the boundary held and was witnessed.
 
-**F2 · The gap 6A opened.** 6A gave the Work a canonical authored structure, and no MAIA path can
-see it. Every reading MAIA can currently give is anchored to a *proposal*, not to what the member
-actually authored. This is the single largest structural fact facing Stage 7, and naming it is not
-the same as deciding what to do about it.
+**F2 · The gap 6A opened.** 6A gave the Work a canonical authored structure, and **no MAIA path
+can consume it.** Structure-aware *division* addressing remains proposal-relative: `AskAnchor`'s
+division anchor names a reviewed unit inside a proposal, and nothing resolves a canonical
+`manuscript_structure_units` row into any prompt.
 
-**F3 · Two context regimes, one system.** The structure reader may read bodies under a ruled
-ceiling; the Ask runtime may read none. Any developmental capability will have to sit in one
-regime or the other, and the choice is a sovereignty decision rather than a technical one.
+Stated precisely, because the weaker claim is false: MAIA is not confined to proposals in general
+— `{on: 'work'}` and `{on: 'section'}` anchors exist and are not proposal-dependent. What she
+cannot reach is *authored structure itself*. This is the single largest structural fact facing
+Stage 7, and naming it is not the same as deciding what to do about it.
+
+**F3 · Two context regimes, and they are not interchangeable.** The structure reader may read
+bodies under a ruled ceiling; the Ask runtime may read none. What this census establishes is only
+that **two incompatible regimes exist today** — it does not establish that a developmental reader
+must adopt one of them.
+
+07B must determine what manuscript context a developmental reader may truthfully receive. **This
+census does not choose that regime**, and the existing pair must not be treated as one by default.
 
 **F4 · The capability spec's dependency note is already load-bearing.** It says whole-Work
 knowledge is *Work Structure* — member-declared — and that this is a dependency of the
 structure-aware lenses **only**. With 6A merged, member-declared structure now exists for the
 first time. Which lenses actually need it is an 07B/07C question.
+
+**F5 · The two accepted documents do not use the same lens vocabulary.** The capability spec names
+**seven**; the Stage 7 lane's provisional v1 names **eight**, under a different decomposition.
+Neither has any implementation, so nothing is broken — but the semantics are not reconcilable by
+renaming.
+
+```text
+CAPABILITY SPEC (7)        STAGE 7 LANE v1 (8)
+Structure              ~   STRUCTURE
+Arc                    ~   MOVEMENT / ARC
+Continuity             ~   CONTINUITY
+Coherence              ~   COHERENCE
+Voice                  ~   VOICE / REGISTER
+Reader                 ~   READER ORIENTATION
+Development            ✗   (no counterpart)
+(none)                 ✗   REPETITION
+(none)                 ✗   UNRESOLVED THREADS
+```
+
+Two of the three mismatches are substantive rather than lexical:
+
+- **Development has no counterpart in the lane list**, and it is the lens the capability spec
+  describes most fully — *underdeveloped · sufficiently developed · overexplained · introduced too
+  late · abandoned · repeated without advancing*.
+- **The same phenomena are distributed differently.** "What repeats?" sits inside the spec's
+  *Structure* lens and "repeated without advancing" inside its *Development* lens, while the lane
+  raises REPETITION to a lens of its own. Likewise the spec's *abandoned* (under Development) and
+  the lane's UNRESOLVED THREADS appear to name one phenomenon from two decompositions.
+
+07B must reconcile the semantics before any lens object is frozen. **This census does not choose
+between them**, and choosing by adopting one file's list would settle a real question by accident.
 
 ---
 
@@ -208,7 +250,7 @@ first time. Which lenses actually need it is an 07B/07C question.
 - does not repair F1, or anything else
 - does not propose an architecture, an object model, a schema, a route, or a prompt
 - does not choose which surface owns a developmental result
-- does not rank the lenses or select a first one
+- does not rank the lenses, select a first one, or reconcile the two lens vocabularies
 - does not authorize 07B or anything beyond it
 
 The next legitimate act is **UNDERSTAND** — defining what "developmental reading" means for this
