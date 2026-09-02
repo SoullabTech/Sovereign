@@ -110,9 +110,16 @@ The response is emitted as **typed segments** rather than free prose:
 
 | Segment type | Requirement | Persistence |
 |---|---|---|
-| `attribution` | **must** carry `proposition_id` | rejected unless the id resolves to `current` **for this member, in this idea** |
-| `offering` | none | persisted as an `open` MAIA proposition (§5.3(3)) |
+| `attribution` — *"you hold / believe / want…"* | **must** carry `proposition_id` | rejected unless the id resolves to `current` **for this member, in this idea** |
+| `citation` — *"you wrote…"* | **must** carry `block_id` + span offsets + version | rejected unless the span matches the stored block exactly |
+| `offering` | none | persisted as an `open` MAIA proposition (§5.3(3)); **must render provisionally** |
 | `question` / `connective` | none | no standing |
+
+**`citation` is a separate type by ratification (precision 4c).** *"You wrote X"* is a claim
+about the **historical record**, verifiable by exact match against a stored block — a
+different and cheaper check than *"you hold X"*, which requires a `current` proposition.
+**Quotation provenance is not ratification:** that the member said something is not evidence
+they hold it, and the two must never share a code path.
 
 **The referenced half is fully, structurally enforceable.** *"Does this id resolve to a
 `current` proposition scoped to this member and idea?"* is a foreign-key and status check at
@@ -169,6 +176,21 @@ one does not.
 > attribution is not blocked — it is **converted into an `open` offering** the member may
 > adopt, revise, or reject.
 
+**RATIFIED 2026-09-02 with three binding precisions**, now carried into §5.3(4):
+
+| | Precision |
+|---|---|
+| **4a** | **An offering is not confirmation.** The boundary is `open` standing **plus a later explicit member act**. Display, usefulness, continued conversation and silence **never** confirm. Routing discharges nothing on its own. |
+| **4b** | **Conversion cannot be metadata-only.** The **member-facing language must become provisional too.** An `open` proposition rendered as *"you are building…"* **still performs annexation.** Standing governs the store; wording governs the encounter. |
+| **4c** | **Historical utterance ≠ present standing.** *"You wrote…"* is permitted with an exact block/span citation. *"You hold / believe / want…"* requires a valid `current` reference. **Quotation provenance is not ratification.** |
+
+**4b is the precision that changes the topology**, and the investigation as first written was
+weaker than the ratification. It treated conversion as a **persistence** question —
+`open` rather than `current` in the store. That is insufficient: the witnessed harm was
+**what the member read**, not what a row said. A stored `open` proposition rendered in
+assertive second person reproduces Finding D exactly, with a compliant database behind it.
+**P7 below is added for it.**
+
 **Why not ENFORCEABLE.** The referenced half is fully structural. The unreferenced half
 depends on a **syntactic gate over MAIA's own output whose recall is empirical, not proven**.
 Until measured, "no unsupported attribution reaches persistence" is a claim about a
@@ -188,15 +210,20 @@ answer, not a missing component.
 | **P4** | On detection: regenerate or downgrade to `offering`; bounded retry; then fail the attempt (§6.1) | structural |
 | **P5** | Gate tuned to over-block: false positive = one retry; false negative = Finding D recurrence | policy |
 | **P6** | P3's measured recall is **published with the green verdict**. Cuts 0–2 cannot be called green on an unmeasured detector. | evidentiary |
+| **P7** | **Rendering, not only persistence.** An `open` offering must **render provisionally** in the member-facing surface. A response asserting *"you are building…"* fails P7 **even when its stored standing is `open`.** Precision 4b. | structural |
+| **P8** | `citation` and `attribution` are **separate types with separate checks** and must not share a code path. A citation may never satisfy an attribution requirement. Precision 4c. | structural |
+| **P9** | **No implicit confirmation.** No display, dwell, scroll, subsequent turn, expression of usefulness, or silence may advance an `open` proposition. Only an explicit member act. Precision 4a. | structural |
 
 ### Consequences for the ratified contract
 
-- **§5.3(4) stands** — amended in reading from *"fails before persistence"* to **"cannot be
-  emitted as an assertion; is converted to an `offering`."** Docs amendment, when authorized.
-- **Finding D's attribution half** moves from *unresolved* to *conditionally resolved,
-  pending P3*.
-- **Finding D's declarative half** (§1.4 boundary case) remains **unresolved and out of scope
-  here**.
+- **§5.3(4) amended and ratified** (this lane): *"An unsupported claim about the member's
+  present position cannot persist **or render** as an assertion. It must be routed into an
+  explicitly provisional `open` offering requiring a later member act."* Precisions 4a–4c
+  attached.
+- **Finding D's attribution half** moves from *unresolved* to **conditionally resolved,
+  pending P1–P6 including published measured recall.**
+- **Finding D's broader declarative-authority failure** (§1.4 boundary case) **remains
+  open.** This investigation resolved the attribution half only.
 - **§7.1 semantic drift** remains untouched and separate — confirmed by the negative control.
 
 **Next**: INV-2, the unexplained 500. INV-1 stays closed until this verdict is ratified.

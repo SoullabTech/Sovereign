@@ -431,8 +431,29 @@ from becoming *future* ground. It does **nothing** to stop MAIA from saying, in 
    be emitted and persisted as an `open` MAIA offering** — addressable, with standing, and
    therefore available for `adopt` / `revise` / `reject`. **Ordinary connective language and
    questions are not propositions** and must not accidentally acquire standing.
-4. **Unsupported member-attribution fails before persistence.** The response does not reach
-   the thread.
+4. **An unsupported claim about the member's *present position* cannot persist *or render*
+   as an assertion. It must be routed into an explicitly provisional `open` offering
+   requiring a later member act.** (Amended 2026-09-02 following INV — see
+   `IDEAS_CUT02_INV_ATTRIBUTION_ENFORCEABILITY.md`. Verdict: **PARTIALLY ENFORCEABLE**,
+   conditionally resolved pending P1–P6.)
+
+   Three binding precisions govern the routing:
+
+   **(4a) An offering is not confirmation.** The boundary is the **combination** of `open`
+   standing **and a later explicit member act**. **Display, usefulness, continued
+   conversation, and silence never confirm it.** Routing a claim into an offering discharges
+   nothing by itself.
+
+   **(4b) Conversion cannot be metadata-only.** The **member-facing language must also
+   become provisional.** An `open` proposition rendered as *"you are building…"* **still
+   performs annexation** regardless of its stored status. Standing governs the store;
+   **wording governs the encounter**, and both must change together.
+
+   **(4c) Historical utterance is distinct from present standing.** MAIA **may** say *"you
+   wrote…"* when citing an **exact member block or span**. It may say *"you hold / believe /
+   want…"* **only** with a valid `current` proposition reference. **Quotation provenance must
+   never be mistaken for ratification** — that a member said something is not evidence they
+   hold it.
 
 > ⚠️ **If (4) cannot yet be enforced structurally, Finding D remains explicitly
 > UNRESOLVED.** It must **not** be declared repaired by the standing model. The standing
