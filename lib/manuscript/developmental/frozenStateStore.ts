@@ -23,6 +23,11 @@
 import { query } from '@/lib/db/postgres';
 import type { DraftSectionState, RevisionSectionRange } from '@/lib/manuscript/draftSections';
 import type { RevisionSnapshot } from './frozenState';
+import {
+  proveExactReadRevision,
+  type ReadStateAdmissibility,
+  type CandidateRevision,
+} from './exactReadState';
 
 export type LoadFailure =
   /** No such draft for this member, or no such revision of it. */
@@ -138,4 +143,71 @@ export async function loadCanonicalUnitIds(
     [manuscriptId, memberId],
   );
   return new Set(r.rows.map((x) => x.id));
+}
+
+/**
+ * SEAM A, at the custody boundary — find the frozen revision the current Work
+ * exactly equals, if the member has frozen one.
+ *
+ * ⛔ IT WRITES NOTHING. Not a revision, not a checkpoint, not a flag. Asking
+ * whether a frozen version exists must never be the act of creating one.
+ *
+ * The SQL narrows to byte-identical candidates and no further: PostgreSQL's `=`
+ * on text is collation-dependent and may be nondeterministic, so the comparison
+ * is on bytea — the same discipline the round-trip trigger uses, for the same
+ * reason. Every candidate is then proven whole in the pure predicate, partition
+ * included, because identical prose cut at different boundaries is a different
+ * input.
+ *
+ * ⛔ NOT "the latest revision". A writer may change a sentence and restore it;
+ * the frozen version they are again standing on could be any of them. Taking
+ * the newest would refuse a Work that is character-for-character frozen.
+ */
+export async function findExactReadRevision(
+  draftId: string,
+  memberId: string,
+  currentSections: readonly DraftSectionState[],
+): Promise<ReadStateAdmissibility> {
+  const candidates = await query<{ revision_number: number; content: string; section_partition: unknown }>(
+    `SELECT r.revision_number, r.content, r.section_partition
+       FROM working_draft_revisions r
+       JOIN manuscript_working_drafts d ON d.id = r.draft_id
+      WHERE r.draft_id = $1 AND d.member_id = $2
+        AND convert_to(r.content, 'UTF8') = convert_to(d.content, 'UTF8')
+      ORDER BY r.revision_number DESC`,
+    [draftId, memberId],
+  );
+
+  if (candidates.rows.length === 0) {
+    return {
+      ok: false,
+      refusal: 'checkpoint_required',
+      detail: 'no frozen version of this Work matches it as it now stands',
+    };
+  }
+
+  /* REFUSAL PRECEDENCE, FROZEN. When several revisions hold this exact prose and
+     none survives the whole proof, the reported reason is the one from the
+     MOST RECENT of them — the rows arrive `ORDER BY revision_number DESC`, so
+     that is the first refusal seen and it is the one kept.
+     ⛔ Keeping the LAST instead would make the answer depend on how many older
+     revisions happen to share the same prose: a member could see
+     `partition_not_recorded` one day and `partition_mismatch` the next without
+     touching their Work. A client cannot map an order-dependent refusal to
+     member-facing behaviour, and this is the same discipline the section-save
+     contract froze for its own refusals. */
+  let firstRefusal: ReadStateAdmissibility | null = null;
+  for (const row of candidates.rows) {
+    const candidate: CandidateRevision = {
+      revisionNumber: row.revision_number,
+      content: row.content,
+      partition: (row.section_partition ?? null) as CandidateRevision['partition'],
+    };
+    const proof = proveExactReadRevision(candidate, currentSections);
+    if (proof.ok) return proof;
+    if (firstRefusal === null) firstRefusal = proof;
+  }
+  /* Prose matched and nothing survived the whole proof. The refusal reports WHY
+     the most recent candidate failed rather than flattening to "no". */
+  return firstRefusal as ReadStateAdmissibility;
 }
