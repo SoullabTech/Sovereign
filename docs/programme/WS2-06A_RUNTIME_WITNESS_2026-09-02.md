@@ -4,10 +4,11 @@
 WITNESSED SHA   869e559c9
 DATE            2026-09-02
 WALKED BY       the founder, authenticated
-ENVIRONMENT     dedicated witness database `maia_ws2_06a_witness`, seeded fixture
-                ids (member ...0601 · manuscript ...0602 · proposal ...0603),
-                with a SYNTHETIC reading authored to exercise the threshold —
-                not the founder's own manuscript in the live Studio
+ENVIRONMENT     a synthetic 14-section witness Work with a REAL unadopted
+                Structure Review persisted in scratch Postgres
+                (`maia_ws2_06a_witness`; member ...0601 · manuscript ...0602 ·
+                proposal ...0603). The runtime, route, command and database were
+                real; the manuscript was deliberately synthetic.
 SURFACES        desktop · mobile 390x844
 RESULT          PASS — no redesign indicated
 ```
@@ -164,10 +165,11 @@ control.
 And no further. In particular it says nothing about:
 
 - how the room behaves for a member who is not the founder;
-- **how the crossing reads against a real manuscript and a reading MAIA actually produced.**
-  The reading walked was synthetic, authored to exercise the threshold, and its own copy said
-  so on screen. The experiential claim is about the threshold, not about MAIA's editorial
-  perception of a real book;
+- **how the crossing reads when the divisions are MAIA's perception of a Work the writer
+  actually wrote.** The proposal was real and really unadopted, and the whole persistence path
+  is therefore exercised — but the Work beneath it was a 14-section synthetic, and the
+  reading's own copy said so on screen. The experiential claim is about the threshold, not
+  about meeting a reading one might genuinely disagree with;
 - viewport sizes between 390x844 and the desktop width walked;
 - anything at all in production. The witness database is `maia_ws2_06a_witness`, seeded.
 
@@ -175,11 +177,11 @@ And no further. In particular it says nothing about:
 
 ## 6 · What remains owed
 
-**A walk against a real Work.** This witness establishes the threshold mechanically and
-experientially against a synthetic reading. Whether "Make this my structure" holds when the
-divisions are MAIA's real perception of a real manuscript — where the writer may actually
-disagree with the reading — is not established here, and is the natural first thing to look at
-once 6A is merged and the Studio has a real proposal to adopt.
+**A walk against a real Work.** The machinery is fully exercised: a real unadopted proposal, a
+real command, a real database. What is synthetic is the manuscript beneath it. Whether "Make
+this my structure" holds when the divisions are MAIA's perception of a book the writer actually
+wrote — where they may genuinely disagree with the reading — is not established here, and is
+the natural first thing to look at once 6A is merged.
 
 Nothing else for the walk. The design-canon gate additionally requires the two witness screenshots
 to exist on disk at the paths the Experience Contract names; they are held by the founder and
