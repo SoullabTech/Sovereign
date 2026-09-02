@@ -1019,10 +1019,17 @@ than a defect in one directive.
 
 > The reading feels like a distillation
 
-⚠️ **Provenance correction (2026-09-02).** This string was first recorded here as
-*"Member's felt read, verbatim."* **That attribution was wrong.** It reached the
-engineering lane through the relay and was never confirmed by the member directly. It is
-marked relay-supplied until the member confirms authorship.
+⚠️ **Provenance correction, then resolution (2026-09-02).** This string was first
+recorded here as *"Member's felt read, verbatim."* **That attribution was wrong** — it
+reached the engineering lane through the relay, not from the member directly.
+
+**Subsequently resolved by direct member confirmation.** Asked whether he personally said
+it, Kelly answered **"I did."** Asked whether the formulation was already his or merely
+useful, he answered **"Mixed / uncertain."**
+
+**Precise provenance: relay-supplied wording, subsequently confirmed by Kelly as his own
+words.** It must **not** be classified as originally captured verbatim in this thread.
+The distinction is the whole point of the finding it illustrates.
 
 **The record briefly reenacted the failure it describes** — a formulation acquired
 "settled" status through continuity rather than through ratification. Recorded rather than
@@ -1115,6 +1122,56 @@ ground, not in an instruction asking the model to remember whose words are whose
 
 **Blocking. Does not authorize implementation, Cut 3, or Cut 4.**
 
+#### Result 10 — *Challenge*: exercised. **Witness complete; all five stances tested.**
+
+**Transmission 5/5 proven.** Active chip, console `{ stance: 'challenge' }`, response
+label, and resulting text all align.
+
+| Aspect | Verdict |
+|---|---|
+| Challenge function | **PASS** |
+| Task fidelity (Finding E) | **PASS** |
+| **Epistemic ownership** | **FAIL** |
+| **Challenge overall** | **Useful, but not sovereignty-green** |
+
+**What worked.** It tested three genuine vulnerabilities — visibility may not create
+alignment, Larry may not participate in the protocol, and the member may lack the leverage
+to make the gates consequential. It answered the member's uncertainty rather than
+substituting another task.
+
+Note that **Finding E did not recur here.** Task substitution is 2 of 5 (Connect,
+Distill), not universal — which supports treating it as an unconstrained axis rather than
+a defect present in every response.
+
+**Finding F recurred, in its most consequential form yet.**
+
+The member had just classified *"protocol for legibility"* as **mixed / uncertain** and
+**explicitly did not ratify it**. MAIA's next response opened:
+
+> "you've built a protocol for legibility"
+
+It then challenged an assumption it attributed to the member — *"visibility itself creates
+alignment"* — without first offering that assumption provisionally. **MAIA pressure-tested
+its own inherited framing as though it were the member's.**
+
+**This escalates Finding F.** Earlier instances showed unratified language being *promoted*
+to settled through continuity. This instance shows something stronger:
+
+> **Explicit non-ratification did not demote it.**
+
+The member's uncertainty was recorded in the thread and had no effect on how MAIA treated
+the phrase. There is no ratified-language store — and, equally, **no un-ratification
+path**. A member cannot withdraw MAIA's language from the pool of what gets treated as
+ground, because the pool is not represented anywhere; it is just whatever appeared earlier
+in the thread.
+
+Under Challenge this compounds: the stance is licensed to apply pressure, and it applied
+that pressure to a frame the member had declined to own.
+
+**Outstanding felt question, unanswered:** *did it feel like MAIA challenged the member's
+actual idea, or a frame it had placed around the idea?* **"Both" is a valid answer.** This
+is the last open item of the witness.
+
 #### Witness status
 
 - **Explore and Distill were not run.** The witness stopped at the failed Stay
@@ -1130,10 +1187,15 @@ ground, not in an instruction asking the model to remember whose words are whose
   stances** and is blocking alongside A/B/C.
 - **Finding E — stance/task substitution** — a stance must not replace what the member
   asked to have answered. A third axis, uncovered by any existing directive, and blocking.
-- **Distill is now exercised** (Result 9): transmission PASS, provisional surface PASS,
-  task fidelity FAIL, epistemic provenance FAIL. **Four of five stance transmissions are
-  proven** — Stay with this, Explore, Connect, Distill. **Challenge is the fifth and
-  remains unexercised.** Stance-less Ask MAIA is a separate path, not a sixth stance.
+- **All five stances are now exercised. Transmission 5/5 proven.** The experiential
+  witness is complete.
+- **Distill is exercised** (Result 9): transmission PASS, provisional surface PASS,
+  task fidelity FAIL, epistemic provenance FAIL. **All five transmissions proven** — Stay
+  with this, Explore, Connect, Distill, Challenge. Stance-less Ask MAIA is a separate
+  path, not a sixth stance.
+- **Challenge** (Result 10): function PASS, task fidelity PASS, epistemic ownership FAIL.
+  **Finding F recurred in its strongest form — explicit non-ratification did not demote
+  the language.**
 - **Finding F — proposal self-ratification through provenance-blind continuity** — the
   structural root cause, blocking.
 - **The earlier 500 remains independently unresolved.** No trace was ever captured; the
