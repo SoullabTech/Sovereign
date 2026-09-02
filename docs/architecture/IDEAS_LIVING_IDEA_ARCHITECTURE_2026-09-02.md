@@ -1143,30 +1143,40 @@ Note that **Finding E did not recur here.** Task substitution is 2 of 5 (Connect
 Distill), not universal — which supports treating it as an unconstrained axis rather than
 a defect present in every response.
 
-**Finding F recurred, in its most consequential form yet.**
+**Finding F recurred. Supported statement:**
 
-The member had just classified *"protocol for legibility"* as **mixed / uncertain** and
-**explicitly did not ratify it**. MAIA's next response opened:
+> **Challenge reused an unratified MAIA formulation as member-owned ground and then
+> pressure-tested assumptions derived from it. With no represented ratification state,
+> continuity promoted the formulation.**
 
-> "you've built a protocol for legibility"
+MAIA's response opened *"you've built a protocol for legibility"* — language MAIA itself
+introduced under Connect — and then challenged an assumption attributed to the member,
+*"visibility itself creates alignment"*, without first offering that assumption
+provisionally.
 
-It then challenged an assumption it attributed to the member — *"visibility itself creates
-alignment"* — without first offering that assumption provisionally. **MAIA pressure-tested
-its own inherited framing as though it were the member's.**
+⚠️ **Over-claim corrected (2026-09-02).** This was first recorded as an *escalation* of
+Finding F, on the claim that explicit non-ratification failed to demote the formulation.
+**That claim is not supported by this turn.** The member's *"mixed / uncertain"* was stated
+**in the engineering conversation, not inside the MAIA Idea thread — MAIA could not see
+it.** This witness therefore does **not** establish that:
 
-**This escalates Finding F.** Earlier instances showed unratified language being *promoted*
-to settled through continuity. This instance shows something stronger:
+- explicit non-ratification failed to demote the formulation;
+- the member's uncertainty was present in MAIA's thread;
+- an attempted withdrawal was ignored.
 
-> **Explicit non-ratification did not demote it.**
+Further: **"mixed / uncertain" means ratification was absent, not that the member rejected
+the language.** Absence of ratification is not rejection.
 
-The member's uncertainty was recorded in the thread and had no effect on how MAIA treated
-the phrase. There is no ratified-language store — and, equally, **no un-ratification
-path**. A member cannot withdraw MAIA's language from the pool of what gets treated as
-ground, because the pool is not represented anywhere; it is just whatever appeared earlier
-in the thread.
+**The missing un-ratification path may remain a valid architectural finding from code
+inspection — there is no represented ratification state to withdraw from — but this
+runtime turn did not exercise it.** It is held as an inspection-level observation, not a
+witnessed result.
 
-Under Challenge this compounds: the stance is licensed to apply pressure, and it applied
-that pressure to a frame the member had declined to own.
+**Second cross-channel provenance error by the engineering lane**, after the relay
+attribution corrected above: information present in one channel was treated as though it
+were present in another, and a stronger finding was built on it. Recorded because it is
+the same failure class the document describes, now with three independent instances —
+MAIA's, and two of the lane's own.
 
 **Outstanding felt question, unanswered:** *did it feel like MAIA challenged the member's
 actual idea, or a frame it had placed around the idea?* **"Both" is a valid answer.** This
@@ -1194,8 +1204,10 @@ is the last open item of the witness.
   with this, Explore, Connect, Distill, Challenge. Stance-less Ask MAIA is a separate
   path, not a sixth stance.
 - **Challenge** (Result 10): function PASS, task fidelity PASS, epistemic ownership FAIL.
-  **Finding F recurred in its strongest form — explicit non-ratification did not demote
-  the language.**
+  **Finding F recurred**: Challenge reused an unratified MAIA formulation as member-owned
+  ground and pressure-tested assumptions derived from it. The un-ratification path is an
+  **inspection-level observation, not witnessed** — the member's uncertainty was never
+  visible to MAIA.
 - **Finding F — proposal self-ratification through provenance-blind continuity** — the
   structural root cause, blocking.
 - **The earlier 500 remains independently unresolved.** No trace was ever captured; the
