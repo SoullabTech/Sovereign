@@ -1129,10 +1129,39 @@ label, and resulting text all align.
 
 | Aspect | Verdict |
 |---|---|
-| Challenge function | **PASS** |
-| Task fidelity (Finding E) | **PASS** |
+| Transmission | **PASS** |
+| Challenge mechanics | **PASS** |
+| Task form | **PASS** |
+| **Target fidelity** | **FAIL** |
 | **Epistemic ownership** | **FAIL** |
-| **Challenge overall** | **Useful, but not sovereignty-green** |
+| **Experiential verdict** | **FAIL — challenged MAIA's frame, not the member's idea** |
+| **Challenge overall** | **Not sovereignty-green** |
+
+**Experiential verdict (founder-adjudicated).** The member's read closes the last open
+item of the witness: **MAIA challenged its own frame, not the actual idea.** The member
+described Larry as terse and pushy; MAIA introduced *speed*, promoted it into *"CEO
+speed"*, and then challenged assumptions built on that invention.
+
+**The lexical chain is traceable in the thread transcript:**
+
+| Turn | Language | Author |
+|---|---|---|
+| Member's opening | *"terse, ADHD, pushy, dismissive and reactive"* | **member** |
+| MAIA, turn 1 | *"his terse mode triggering your defensiveness"* | member's word, retained |
+| MAIA, turn 2 | *"where you stay responsive to his **pace**"* | **MAIA introduces** |
+| MAIA, turn 3 | *"his **speed** and your process don't collide"* | **MAIA** |
+| MAIA, Connect | *"the faster party (**CEO speed**) needs to slow down"* | **MAIA coins the compound** |
+| MAIA, Distill | *"when he's choosing CEO speed"* | MAIA's own, reused |
+| MAIA, Challenge | assumptions derived from it, tested as the member's | **MAIA's frame, member-attributed** |
+
+Precisely: *CEO* is the member's word — it is in the Idea's own title. ***Speed* is
+MAIA's.** *"CEO speed"* is MAIA's fusion of the two, and it is that fusion, not the
+member's description, that Challenge pressure-tested.
+
+**This is the clearest runtime evidence for Finding F: MAIA-generated language became the
+ground on which subsequent reasoning operated.** Not a single displaced sentence — a
+four-step promotion across five turns, ending with the invention being tested as though
+the member had asserted it.
 
 **What worked.** It tested three genuine vulnerabilities — visibility may not create
 alignment, Larry may not participate in the protocol, and the member may lack the leverage
@@ -1178,9 +1207,12 @@ were present in another, and a stronger finding was built on it. Recorded becaus
 the same failure class the document describes, now with three independent instances —
 MAIA's, and two of the lane's own.
 
-**Outstanding felt question, unanswered:** *did it feel like MAIA challenged the member's
-actual idea, or a frame it had placed around the idea?* **"Both" is a valid answer.** This
-is the last open item of the witness.
+**Witness protocol note.** The member's correction written in response to this turn must
+**not** be submitted with Challenge still selected — it is a correction, not another
+Challenge turn, and combining them would confound the witness. Its exact text and
+screenshot are preserved as evidence instead.
+
+**The five-stance witness is closed.**
 
 #### Witness status
 
