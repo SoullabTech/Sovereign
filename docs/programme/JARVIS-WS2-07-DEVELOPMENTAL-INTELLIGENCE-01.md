@@ -8,10 +8,10 @@
 
 ```text
 LANE               JARVIS-WS2-07-DEVELOPMENTAL-INTELLIGENCE-01
-STATE              ACTIVE · 07A FIND AUTHORIZED
+STATE              ACTIVE · 07B UNDERSTAND AUTHORIZED
 TRIGGER            Stage 6A AuthorStructureCommand merged to canonical and witnessed
 TRIGGER SATISFIED  clean-main-no-secrets @ 4b8b34bcf
-AUTHORIZES         07A FIND — a read-only census. Nothing further.
+AUTHORIZES         07B UNDERSTAND — semantics only. Nothing further.
 NORMATIVE          docs/programme/WRITERS_STUDIO_MASTER_BRIEF.md
 CAPABILITY         docs/programme/DEVELOPMENTAL_EDITOR_CAPABILITY.md
 LIVE STATE         docs/programme/WRITERS_STUDIO_PROGRAMME_BOARD.md
@@ -52,7 +52,18 @@ is not amended. This section records the transition that followed.
 Stage 6A merged and witnessed on canonical @ 4b8b34bcf.
 07A FIND authorized as a read-only census.
 No repair, schema, route, prompt, or build work authorized by activation.
+
+2026-09-02
+07A FIND        CLOSED · canonical @ cc9788e4f
+                docs/programme/WS2-07A_DEVELOPMENTAL_INTELLIGENCE_CENSUS_2026-09-02.md
+07B UNDERSTAND  AUTHORIZED — resolve the semantics of developmental reading
+                from the canonical 07A findings. No build or repair authority.
+07C DECIDE      not authorized
+07D+            not authorized
 ```
+
+⛔ **These are steps inside this lane, not lanes of their own.** A step advancing does not open a
+new Jarvis flow, and no working branch used to carry a step's output is a lane.
 
 ⛔ **Activation authorizes 07A and nothing else.** FIND classifies what exists and repairs none
 of it; discovering a defect during the census does not authorize fixing it. 07B–07H remain
