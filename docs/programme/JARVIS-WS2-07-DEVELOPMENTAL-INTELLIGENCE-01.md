@@ -55,7 +55,7 @@ No repair, schema, route, prompt, or build work authorized by activation.
 
 2026-09-02
 07A FIND        CLOSED · canonical @ cc9788e4f
-                docs/programme/WS2-07A_DEVELOPMENTAL_INTELLIGENCE_CENSUS_2026-09-02.md
+                docs/programme/WS2-07-FIND_DEVELOPMENTAL_INTELLIGENCE_CENSUS_2026-09-02.md
 07B UNDERSTAND  AUTHORIZED — resolve the semantics of developmental reading
                 from the canonical 07A findings. No build or repair authority.
 07C DECIDE      not authorized
@@ -71,31 +71,38 @@ running.
 
 ```text
 INITIAL ACTIVATION     07A only — 07B-07H unauthorized at that time
-CURRENT AUTHORIZATION  FIND       CLOSED · canonical @ cc9788e4f
-                       UNDERSTAND CLOSED · canonical @ 5670163e6
-                       DECIDE     AUTHORIZED — object + invariants, no implementation
-                       BUILD+     unauthorized
+CURRENT AUTHORIZATION  FIND        CLOSED · canonical @ cc9788e4f
+                       UNDERSTAND  CLOSED · canonical @ 5670163e6
+                       DECIDE      AUTHORIZED — object + invariants, no implementation
+                       BUILD       unauthorized
+                       BUILD-07A–07H  not started
 ```
 
 The initial line is kept because it was true when written. The current line is what governs.
 
-⛔ **TWO NUMBERING SYSTEMS COLLIDE IN THIS FILE, and the collision is live.** The Jarvis flow
-above runs `TRIGGER → FIND → UNDERSTAND → DECIDE → BUILD → PROVE → DONE`. The Stage 7 sequence
-below letters *build units* `07A DEVELOPMENTAL EVIDENCE · 07B DEVELOPMENTAL READER ·
-07C DEVELOPMENTAL READING · 07D DEVELOP SURFACE …`. They are different axes, and the same tokens
-mean different things in each:
+## Numbering — ratified 2026-09-02
+
+This lane runs **two axes**, and they are not interchangeable. Founder ruling:
 
 ```text
-"07A"   flow reading → FIND, the census        ✗   NOT the same thing
-        letter reading → DEVELOPMENTAL EVIDENCE, a build unit
+FLOW — how Stage 7 progresses
+  FIND · UNDERSTAND · DECIDE · BUILD · PROVE · DONE
+
+BUILD UNITS — what gets built, inside BUILD
+  BUILD-07A  DEVELOPMENTAL EVIDENCE      BUILD-07E  DEVELOPMENTAL DIALOGUE
+  BUILD-07B  DEVELOPMENTAL READER        BUILD-07F  DEVELOPMENTAL DECISIONS
+  BUILD-07C  DEVELOPMENTAL READING       BUILD-07G  WHOLE-WORK DEVELOPMENT
+  BUILD-07D  DEVELOP SURFACE             BUILD-07H  REVISION BRIDGE
 ```
 
-Two canonical documents were filed under the flow reading — `WS2-07A_…_CENSUS` and
-`WS2-07B_…_SEMANTICS` — so the collision is already in canon. **Provisional resolution, pending
-a founder ruling:** the flow stages govern Stage 7's progress; the lettered `07A–07H` are build
-units that live *inside* BUILD. Under that reading every existing sentence is consistent — "07A–07D
-closes Stage 7.1", "defining `EvidenceRef` is 07A work", and "this binds 07C and 07D" all refer to
-build units — and only the two filenames are misleading. **Nothing is renamed on this basis.**
+⛔ **`07A`–`07H` are reserved for BUILD units.** Where prose could be ambiguous, write
+`BUILD-07A`, `BUILD-07C`. A flow stage is named by its word, never by a letter.
+
+**The collision that produced this ruling.** Two documents were filed as `WS2-07A` (the census)
+and `WS2-07B` (the semantics) under a flow reading of the letters, while the lane's own sentences
+— *"defining `EvidenceRef` is 07A work"*, *"this binds 07C and 07D"*, *"07A–07D closes Stage 7.1"*
+— only cohere under the build-unit reading. Both files were renamed to `WS2-07-FIND_…` and
+`WS2-07-UNDERSTAND_…` on ratification, with a lineage note preserved in each.
 
 The 6A evidence this rests on: the AuthorStructureCommand, its provenance migration, the adopt
 route and the member gesture are on canonical; Gates 1 and 2 and the non-consent boundary are
@@ -339,8 +346,8 @@ and no downstream stage can repair that.
 `id: string` above is a field, not a guarantee. It satisfies this only if the identity it carries
 outlives the response that produced it and the surface that displayed it.
 
-This binds **07C** and **07D**. 07C must not freeze a reading whose observations are addressable
-only within the payload that generated them. 07D must not be the place where an observation's
+This binds **BUILD-07C** and **BUILD-07D**. BUILD-07C must not freeze a reading whose observations are addressable
+only within the payload that generated them. BUILD-07D must not be the place where an observation's
 identity originates or ends — a reading the member encounters is not a disposable UI object whose
 identity vanishes when the page closes.
 
@@ -348,7 +355,7 @@ What durable identity actually requires — for reading, observation, and eviden
 downstream of the census. Naming the requirement here is not choosing its mechanism.
 
 `EvidenceRef` and `DevelopmentLens` are named here, not defined. Defining `EvidenceRef` — what a
-recoverable pointer into the manuscript actually is, and against which version — is **07A work**,
+recoverable pointer into the manuscript actually is, and against which version — is **BUILD-07A work**,
 downstream of the census.
 
 ### Initial lenses — v1 is bounded
@@ -556,24 +563,24 @@ That is enough. **Do not require the entire developmental-editor vision to close
 
 ---
 
-## Stage 7 sequence
+## BUILD units
 
 ```text
-07A  DEVELOPMENTAL EVIDENCE      What can MAIA establish mechanically?
-07B  DEVELOPMENTAL READER        Can MAIA make a disciplined reading?
-07C  DEVELOPMENTAL READING       Freeze reading + coverage + provenance.
-07D  DEVELOP SURFACE             Member explicitly invokes the reading.
-07E  DEVELOPMENTAL DIALOGUE      Talk with MAIA about observations.
-07F  DEVELOPMENTAL DECISIONS     Keep / dismiss / unresolved / investigate.
-07G  WHOLE-WORK DEVELOPMENT      Cross-division patterns, manuscript-scale intelligence.
-07H  REVISION BRIDGE             Author deliberately takes an insight into revision.
+BUILD-07A  DEVELOPMENTAL EVIDENCE   What can MAIA establish mechanically?
+BUILD-07B  DEVELOPMENTAL READER     Can MAIA make a disciplined reading?
+BUILD-07C  DEVELOPMENTAL READING    Freeze reading + coverage + provenance.
+BUILD-07D  DEVELOP SURFACE          Member explicitly invokes the reading.
+BUILD-07E  DEVELOPMENTAL DIALOGUE   Talk with MAIA about observations.
+BUILD-07F  DEVELOPMENTAL DECISIONS  Keep / dismiss / unresolved / investigate.
+BUILD-07G  WHOLE-WORK DEVELOPMENT   Cross-division patterns, manuscript-scale intelligence.
+BUILD-07H  REVISION BRIDGE          Author deliberately takes an insight into revision.
 ```
 
-**07A–07D closes Stage 7.1.** 07E–07G extend it.
+**BUILD-07A–07D closes Stage 7.1.** BUILD-07E–07G extend it.
 
-⛔ **07H is another sovereignty threshold and is not designed here.** It is the point at which an
-observation is permitted to become prose. Designing it prematurely — while 07A is unbuilt — is how
-the reading boundary gets negotiated away before it has ever been tested.
+⛔ **BUILD-07H is another sovereignty threshold and is not designed here.** It is the point at
+which an observation is permitted to become prose. Designing it prematurely — while BUILD-07A is
+unbuilt — is how the reading boundary gets negotiated away before it has ever been tested.
 
 ---
 
