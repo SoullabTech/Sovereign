@@ -97,10 +97,44 @@ export interface CodePointSpan {
 export type EvidenceRef =
   /** Derived from the member's prose. Requires body depth. */
   | { kind: 'textual'; sectionId: string; span: CodePointSpan }
-  /** Derived from the member's own heading line. Requires heading depth. */
-  | { kind: 'heading'; sectionId: string }
-  /** Derived from authored structure. Requires no section coverage at all. */
+  /**
+   * Derived from authored structure. Requires no section coverage.
+   *
+   * ⛔ TYPED AND GUARDED, BUT NOT YET HISTORICALLY RECOVERABLE. See
+   * `FrozenReadState.structure`: a fingerprint compares, it does not recover.
+   * `resolveEvidence` refuses this kind rather than returning something that
+   * looks like recovered structure.
+   */
   | { kind: 'authored-structure'; reference: StructuralReference };
+
+/* ── ⛔ HEADING EVIDENCE IS HELD UNAVAILABLE ──────────────────────────────────
+ *
+ * There was a `{ kind: 'heading'; sectionId }` variant here, and it OVERCLAIMED.
+ * Its historical display returned the whole frozen section — so a heading-only
+ * reading could produce a reference whose display showed prose it was never
+ * allowed to have read. The coverage check was right; the resolver made its
+ * claim false.
+ *
+ * ⛔ THE TEMPTING FIX IS THE FORBIDDEN ONE. "The first line is the heading" is
+ * an inferred identity, and inferring identity from the shape of prose is what
+ * this whole substrate exists to refuse. `composeDraftSlices` knows where a
+ * heading ended at the moment a draft was composed, but nothing PERSISTS that
+ * boundary: `manuscript_draft_sections` stores `text` and nothing else, and
+ * after the member edits, the heading may not exist at all.
+ * `manuscript_sections.heading` is the SOURCE's heading — a different object
+ * from what the draft now holds.
+ *
+ * So the variant is removed rather than left typed-but-broken. A shape that
+ * type-checks and can be stored, then fails at display time, is exactly the
+ * INV-7b failure "discovered latest" — when someone first tries to show an
+ * author the evidence behind an old observation.
+ *
+ * TO RESTORE IT, one thing is needed and it is not a heuristic: a mechanically
+ * authoritative heading boundary, frozen as an exact code-point span, from a
+ * source that records where the member's heading ended. `ReadDepth`'s `heading`
+ * level stays regardless — a section CAN be read at heading depth; what does
+ * not yet exist is evidence that rests on the heading itself.
+ * ────────────────────────────────────────────────────────────────────────── */
 
 /**
  * What a piece of structural evidence is ABOUT.
@@ -127,8 +161,6 @@ export function requiredDepth(ref: EvidenceRef): ReadDepth | null {
       /* The forbidden mismatch INV-8 names: a prose-derived claim resting on
          prose she did not read. */
       return 'body';
-    case 'heading':
-      return 'heading';
     case 'authored-structure':
       /* Not a claim about any section's contents, so no section coverage is
          required. Its dependency is on authored structure instead, checked
@@ -174,6 +206,19 @@ export interface FrozenReadState {
 /**
  * Authored structure, digested at the granularity supersession is scoped at.
  *
+ * ⛔ THIS IS COMPARISON, NOT RECOVERY. DECIDE ruled it explicitly:
+ * `structureFingerprint` detects change, but unless the structure context is
+ * itself frozen or points at a durable immutable snapshot, a superseded
+ * structure-dependent observation cannot show the author the structure it
+ * reasoned from. Per-unit digests make SUPERSESSION scoped — they do not make
+ * the structure recoverable, and no number of digests would.
+ *
+ * The structural analogue of `FrozenSectionState` does not exist yet. It needs
+ * a durable address to an exact structure snapshot alongside this fingerprint,
+ * and finding the immutable object that can serve as that address is open
+ * BUILD-07A work. Until then, structural evidence is typed and guarded and NOT
+ * historically recoverable.
+ *
  * ⛔ ONE WHOLE-STRUCTURE DIGEST IS NOT ENOUGH. §9 preserves structure-independent
  * observations while superseding structure-aware ones in the same reading, and
  * the same discipline applies WITHIN structural evidence: renaming division 3
@@ -212,7 +257,14 @@ export type ResolveFailure =
   /** The revision no longer contains a section this reading covered. */
   | 'section_absent_from_revision'
   /** The span reaches past the section it addresses. */
-  | 'span_out_of_range';
+  | 'span_out_of_range'
+  /**
+   * Structural evidence cannot yet be recovered — only compared.
+   *
+   * ⛔ This is INV-7b's structural half, and it is OPEN. It is a statement about
+   * what the substrate can currently prove, not a defect in a caller's request.
+   */
+  | 'structure_not_historically_recoverable';
 
 export type Resolved<T> =
   | { ok: true; value: T }
@@ -281,14 +333,20 @@ export function resolveEvidence(
   ref: EvidenceRef,
 ): Resolved<string> {
   if (ref.kind === 'authored-structure') {
-    return fail('section_not_in_read_state',
-      'structural evidence resolves against the frozen structure, not against a section');
+    /* ⛔ INV-7b IS UNMET FOR STRUCTURAL EVIDENCE, and this refusal is where that
+       is said out loud rather than papered over. A fingerprint detects that the
+       structure moved; it cannot reconstruct the structure that was read. Until
+       a durable immutable snapshot of the authored structure exists, a
+       superseded structure-dependent observation cannot show the author what it
+       actually reasoned from — so this returns nothing rather than something
+       that would look like recovered structure. */
+    return fail('structure_not_historically_recoverable',
+      'the reading froze a fingerprint of the authored structure, which compares but does not '
+      + 'recover; no durable snapshot of the structure as read exists yet');
   }
 
   const section = resolveHistorical(state, snapshot, ref.sectionId);
   if (!section.ok) return section as Resolved<string>;
-
-  if (ref.kind === 'heading') return { ok: true, value: section.value.text };
 
   const total = codePointLength(section.value.text);
   if (ref.span.start < 0 || ref.span.end < ref.span.start || ref.span.end > total) {

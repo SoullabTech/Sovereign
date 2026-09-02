@@ -171,9 +171,14 @@ describe('evidence resolution — spans are code points', () => {
       .toMatchObject({ ok: false, failure: 'span_out_of_range' });
   });
 
-  it('heading evidence resolves to the section it addresses', () => {
-    const r = resolveEvidence(READ_STATE, frozen, { kind: 'heading', sectionId: S1 });
-    expect(r).toEqual({ ok: true, value: 'before 😀 change' });
+  it('structural evidence REFUSES historical recovery — it was only ever compared', () => {
+    /* INV-7b's structural half is open. A refusal here is the substrate saying
+       what it cannot prove, rather than returning something that would look like
+       recovered structure. */
+    const withStructure: FrozenReadState = { ...READ_STATE, structure: STRUCTURE_BEFORE };
+    expect(resolveEvidence(withStructure, frozen,
+      { kind: 'authored-structure', reference: { scope: 'topology' } }))
+      .toMatchObject({ ok: false, failure: 'structure_not_historically_recoverable' });
   });
 });
 
@@ -188,17 +193,13 @@ describe('INV-8 — coverage must back the evidence at the depth it requires', (
       .toMatchObject({ ok: false, refusal: 'evidence_exceeds_coverage_depth' });
   });
 
-  it('heading evidence on heading coverage is accepted', () => {
-    expect(checkCoverage(headingOnly, { kind: 'heading', sectionId: S1 })).toEqual({ ok: true });
-  });
-
   it('body coverage satisfies a heading requirement, not the reverse', () => {
     expect(depthSatisfies('body', 'heading')).toBe(true);
     expect(depthSatisfies('heading', 'body')).toBe(false);
   });
 
   it('evidence on a section that was never covered is refused', () => {
-    expect(checkCoverage(headingOnly, { kind: 'heading', sectionId: S2 }))
+    expect(checkCoverage(headingOnly, { kind: 'textual', sectionId: S2, span: { start: 0, end: 1 } }))
       .toMatchObject({ ok: false, refusal: 'evidence_without_coverage' });
   });
 
@@ -349,5 +350,68 @@ describe('falsifier 10 — the structural gate', () => {
        member's sentences. */
     const state = { sectionId: 'sec-1', depth: 'body' as const };
     expect(Object.keys(state).sort()).toEqual(['depth', 'sectionId']);
+  });
+});
+
+describe('heading evidence is HELD UNAVAILABLE, and the fixture can now say why', () => {
+  /**
+   * ⛔ THE FIXTURE HAS TO CONTAIN THE DISTINCTION THE CLAIM DEPENDS ON.
+   *
+   * The earlier heading test used a section whose entire text was
+   * "before 😀 change" — no heading, no body, no boundary between them. A
+   * resolver returning the WHOLE SECTION for heading evidence therefore looked
+   * correct. It was not: a heading-only reading could produce a reference whose
+   * historical display showed prose it was never allowed to have read.
+   *
+   * This is the same lesson the Unicode repair taught, in a second place.
+   */
+  const HEADED: DraftSectionState[] = [
+    { id: S1, text: 'The First Movement 😀\n\nProse the reading was not allowed to see.\n\n' },
+  ];
+  const frozen = snapshotOf(HEADED, 7);
+  const headingOnly: FrozenReadState = {
+    draftId: 'draft-1',
+    revisionNumber: 7,
+    sections: [{ sectionId: S1, depth: 'heading' }],
+    structure: null,
+  };
+
+  it('the fixture holds a real heading/body boundary the old one lacked', () => {
+    const text = HEADED[0].text;
+    expect(text).toContain('The First Movement');
+    expect(text).toContain('Prose the reading was not allowed to see.');
+    expect(text.indexOf('The First Movement'))
+      .toBeLessThan(text.indexOf('Prose the reading was not allowed to see.'));
+  });
+
+  it('there is NO heading EvidenceRef to construct', () => {
+    /* Removed rather than left typed-but-broken: a shape that type-checks and
+       can be stored, then fails at display time, is exactly the INV-7b failure
+       discovered latest — when someone first tries to show an author the
+       evidence behind an old observation. */
+    const kinds: EvidenceRef['kind'][] = ['textual', 'authored-structure'];
+    expect(kinds).toHaveLength(2);
+    // @ts-expect-error — the heading variant is deliberately not constructible
+    const attempted: EvidenceRef = { kind: 'heading', sectionId: S1 };
+    expect(attempted).toBeDefined();
+  });
+
+  it('and nothing else silently returns the whole section in its place', () => {
+    /* The defect, pinned: textual evidence on a heading-only reading is refused
+       by coverage, so no path returns this section's prose to a reading that
+       only saw its heading. */
+    expect(checkCoverage(headingOnly, { kind: 'textual', sectionId: S1, span: { start: 0, end: 5 } }))
+      .toMatchObject({ ok: false, refusal: 'evidence_exceeds_coverage_depth' });
+    /* And the whole-section resolver is not evidence resolution: it is the
+       mechanism evidence resolution is built ON, and it still answers, because
+       recovering the frozen section is what INV-7b requires. What it must never
+       do is answer a HEADING claim. */
+    expect((resolveHistorical(headingOnly, frozen, S1) as { value: DraftSectionState }).value.text)
+      .toBe(HEADED[0].text);
+  });
+
+  it('ReadDepth keeps its heading level — a section CAN be read at heading depth', () => {
+    expect(depthSatisfies('heading', 'heading')).toBe(true);
+    expect(depthSatisfies('heading', 'body')).toBe(false);
   });
 });
