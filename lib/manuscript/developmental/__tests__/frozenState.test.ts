@@ -17,8 +17,9 @@
  */
 import {
   resolveHistorical, resolveEvidence, locateCurrent, locateCurrentStructure,
-  checkCoverage, depthSatisfies, requiredDepth,
+  checkCoverage, depthSatisfies, requiredDepth, checkStructuralReference,
   type FrozenReadState, type RevisionSnapshot, type EvidenceRef,
+  type FrozenStructure, type StructuralReference,
 } from '../frozenState';
 import {
   partitionFromSections, flattenSections, codePointLength,
@@ -50,8 +51,19 @@ const READ_STATE: FrozenReadState = {
   draftId: 'draft-1',
   revisionNumber: 7,
   sections: [{ sectionId: S1, depth: 'body' }, { sectionId: S2, depth: 'body' }],
-  structureFingerprint: null,
+  structure: null,
 };
+
+const STRUCTURE_BEFORE: FrozenStructure = {
+  topologyFingerprint: 'topo-1',
+  unitFingerprints: { 'unit-a': 'a1', 'unit-b': 'b1', 'unit-c': 'c1' },
+};
+/** Only unit-a moved. */
+const STRUCTURE_AFTER: FrozenStructure = {
+  topologyFingerprint: 'topo-2',
+  unitFingerprints: { 'unit-a': 'a2', 'unit-b': 'b1', 'unit-c': 'c1' },
+};
+const CANONICAL = new Set(['unit-a', 'unit-b', 'unit-c']);
 
 describe('INV-7b — the frozen state RESOLVES, it does not merely compare', () => {
   const frozen = snapshotOf(AT_READING, 7);
@@ -191,40 +203,118 @@ describe('INV-8 — coverage must back the evidence at the depth it requires', (
   });
 
   it('structural evidence requires no section coverage — an honest class of observation', () => {
-    const withStructure: FrozenReadState = { ...READ_STATE, structureFingerprint: 'fp-1' };
-    expect(requiredDepth({ kind: 'authored-structure', unitId: 'u-1' })).toBeNull();
-    expect(checkCoverage(withStructure, { kind: 'authored-structure', unitId: 'u-1' }))
-      .toEqual({ ok: true });
+    const withStructure: FrozenReadState = { ...READ_STATE, structure: STRUCTURE_BEFORE };
+    const ref: EvidenceRef = { kind: 'authored-structure', reference: { scope: 'topology' } };
+    expect(requiredDepth(ref)).toBeNull();
+    expect(checkCoverage(withStructure, ref)).toEqual({ ok: true });
   });
 
   it('falsifier 5 — structure-dependent evidence with NO authored structure is refused', () => {
-    expect(checkCoverage(READ_STATE, { kind: 'authored-structure', unitId: 'u-1' }))
-      .toMatchObject({ ok: false, refusal: 'structure_dependent_without_authored_structure' });
+    expect(checkCoverage(READ_STATE, {
+      kind: 'authored-structure', reference: { scope: 'unit', unitId: 'unit-a' },
+    })).toMatchObject({ ok: false, refusal: 'structure_dependent_without_authored_structure' });
   });
 });
 
-describe('falsifier 8 — a structure change supersedes structural evidence ONLY', () => {
-  it('the structure moving does not touch evidence resting on unchanged prose', () => {
-    const withStructure: FrozenReadState = { ...READ_STATE, structureFingerprint: 'fp-before' };
-    const frozen = snapshotOf(AT_READING, 7);
+describe('falsifier 8 — supersession is SCOPED, within structure as well as across it', () => {
+  const frozen = snapshotOf(AT_READING, 7);
+  const withStructure: FrozenReadState = { ...READ_STATE, structure: STRUCTURE_BEFORE };
 
-    expect(locateCurrentStructure(withStructure.structureFingerprint, 'fp-after'))
-      .toBe('superseded');
-
-    /* The same reading's textual evidence on an unchanged section stays current.
-       Superseding a whole reading because one part of it moved would tell the
+  it('a structure change does not touch evidence resting on unchanged prose', () => {
+    /* Superseding a whole reading because one part of it moved would tell the
        author that observations still true of their Work are stale. */
     const text = (resolveHistorical(withStructure, frozen, S2) as { value: DraftSectionState })
       .value.text;
     expect(locateCurrent(text, AFTER_EDIT.find((s) => s.id === S2)!)).toBe('current');
   });
 
-  it('an unchanged structure reports current', () => {
-    expect(locateCurrentStructure('fp-1', 'fp-1')).toBe('current');
+  it('THE SCOPED CASE: unit-a moved, so evidence about unit-b stays CURRENT', () => {
+    /* With one whole-structure digest this is impossible to express — every
+       structural observation in the reading would go stale together. */
+    expect(locateCurrentStructure(STRUCTURE_BEFORE, STRUCTURE_AFTER,
+      { scope: 'unit', unitId: 'unit-a' })).toBe('superseded');
+    expect(locateCurrentStructure(STRUCTURE_BEFORE, STRUCTURE_AFTER,
+      { scope: 'unit', unitId: 'unit-b' })).toBe('current');
   });
 
-  it('structure that no longer exists is no_longer_locatable', () => {
-    expect(locateCurrentStructure('fp-1', null)).toBe('no_longer_locatable');
+  it('a whole-topology claim supersedes when the topology moves at all', () => {
+    expect(locateCurrentStructure(STRUCTURE_BEFORE, STRUCTURE_AFTER, { scope: 'topology' }))
+      .toBe('superseded');
+  });
+
+  it('a relationship supersedes when ANY division it relates moves', () => {
+    expect(locateCurrentStructure(STRUCTURE_BEFORE, STRUCTURE_AFTER,
+      { scope: 'units', unitIds: ['unit-a', 'unit-b'] })).toBe('superseded');
+    expect(locateCurrentStructure(STRUCTURE_BEFORE, STRUCTURE_AFTER,
+      { scope: 'units', unitIds: ['unit-b', 'unit-c'] })).toBe('current');
+  });
+
+  it('a division that no longer exists is no_longer_locatable, never re-matched', () => {
+    const gone: FrozenStructure = {
+      topologyFingerprint: 'topo-3',
+      unitFingerprints: { 'unit-b': 'b1', 'unit-c': 'c1' },
+    };
+    expect(locateCurrentStructure(STRUCTURE_BEFORE, gone, { scope: 'unit', unitId: 'unit-a' }))
+      .toBe('no_longer_locatable');
+  });
+
+  it('INV-20 — "we did not check" is UNMEASURED, not "your division was deleted"', () => {
+    /* Collapsing these makes a surface that cannot say which it means. */
+    expect(locateCurrentStructure(null, STRUCTURE_AFTER, { scope: 'topology' })).toBe('unmeasured');
+    expect(locateCurrentStructure(STRUCTURE_BEFORE, null, { scope: 'topology' })).toBe('unmeasured');
+    expect(locateCurrentStructure(STRUCTURE_BEFORE, STRUCTURE_AFTER,
+      { scope: 'unit', unitId: 'unit-never-read' })).toBe('unmeasured');
+  });
+});
+
+describe('falsifier 4 — INV-17: structural evidence names AUTHORED structure', () => {
+  it('a proposal-local key is REJECTED', () => {
+    /* FIND's F2, answered: the reading reasons about what the member declared
+       the Work to be, not about MAIA's own earlier perception of it. */
+    expect(checkStructuralReference({ scope: 'unit', unitId: 'proposal-b048f603-div-2' }, CANONICAL))
+      .toMatchObject({ ok: false, refusal: 'not_a_canonical_unit' });
+  });
+
+  it('a reviewed unit key inside a set is rejected, even beside canonical ones', () => {
+    expect(checkStructuralReference(
+      { scope: 'units', unitIds: ['unit-a', 'reviewed-key-7'] }, CANONICAL))
+      .toMatchObject({ ok: false, refusal: 'not_a_canonical_unit' });
+  });
+
+  it('canonical units are accepted, singly and in relation', () => {
+    expect(checkStructuralReference({ scope: 'unit', unitId: 'unit-a' }, CANONICAL))
+      .toEqual({ ok: true });
+    expect(checkStructuralReference({ scope: 'units', unitIds: ['unit-a', 'unit-b'] }, CANONICAL))
+      .toEqual({ ok: true });
+  });
+
+  it('the topology needs no unit membership', () => {
+    expect(checkStructuralReference({ scope: 'topology' }, new Set())).toEqual({ ok: true });
+  });
+
+  it('a "relationship" among fewer than two divisions is refused', () => {
+    /* One division is scope 'unit'. Two representations of the same fact is how
+       a discriminated relation stops being one. */
+    expect(checkStructuralReference({ scope: 'units', unitIds: ['unit-a'] }, CANONICAL))
+      .toMatchObject({ ok: false, refusal: 'degenerate_unit_set' });
+    expect(checkStructuralReference({ scope: 'units', unitIds: [] }, CANONICAL))
+      .toMatchObject({ ok: false, refusal: 'degenerate_unit_set' });
+  });
+
+  it('a division cannot stand in a relationship with itself', () => {
+    expect(checkStructuralReference({ scope: 'units', unitIds: ['unit-a', 'unit-a'] }, CANONICAL))
+      .toMatchObject({ ok: false, refusal: 'duplicate_unit_in_set' });
+  });
+
+  it('INV-16 — a single unitId cannot express what the ruling requires', () => {
+    /* The shape assertion behind the discriminated relation: three scopes exist
+       because a relationship BETWEEN divisions and a claim about the WHOLE
+       topology are not expressible as one id — and §9 supersedes on exactly
+       that last dependency. */
+    const scopes = (['unit', 'units', 'topology'] as const).map((scope) => scope);
+    expect(scopes).toHaveLength(3);
+    const topology: StructuralReference = { scope: 'topology' };
+    expect('unitId' in topology).toBe(false);
   });
 });
 

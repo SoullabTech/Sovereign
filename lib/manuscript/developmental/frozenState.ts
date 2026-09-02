@@ -100,7 +100,25 @@ export type EvidenceRef =
   /** Derived from the member's own heading line. Requires heading depth. */
   | { kind: 'heading'; sectionId: string }
   /** Derived from authored structure. Requires no section coverage at all. */
-  | { kind: 'authored-structure'; unitId: string };
+  | { kind: 'authored-structure'; reference: StructuralReference };
+
+/**
+ * What a piece of structural evidence is ABOUT.
+ *
+ * ⛔ NOT A SINGLE `unitId`. INV-16 rejects that shape by name: one id cannot
+ * express a relationship BETWEEN two divisions, a sequence ACROSS several, or a
+ * claim about the whole topology. And §9 supersedes on exactly that last
+ * dependency — so a representation unable to name it makes its own supersession
+ * rule uncomputable. A discriminated relation makes the invalid states
+ * unconstructible rather than merely discouraged.
+ */
+export type StructuralReference =
+  /** One authored division. */
+  | { scope: 'unit'; unitId: string }
+  /** A relationship among several — an ordering, a pairing, a sequence. */
+  | { scope: 'units'; unitIds: readonly string[] }
+  /** The authored topology as a whole. */
+  | { scope: 'topology' };
 
 /** The coverage depth a given kind of evidence must be backed by (INV-8). */
 export function requiredDepth(ref: EvidenceRef): ReadDepth | null {
@@ -117,6 +135,8 @@ export function requiredDepth(ref: EvidenceRef): ReadDepth | null {
          separately — an observation that a division's sections are ordered
          oddly needs structure, not paragraphs. */
       return null;
+    /* No default. A new kind must decide its own coverage requirement here,
+       rather than inheriting whichever branch happened to be last. */
   }
 }
 
@@ -142,11 +162,31 @@ export interface FrozenReadState {
   revisionNumber: number;
   sections: readonly FrozenSectionState[];
   /**
-   * The authored structure as it stood, digested. Present only when the reading
-   * was given authored structure to reason from; `null` says it was not, which
-   * is why structure-dependent evidence is refused rather than absent-by-shape.
+   * The authored structure as it stood. Present only when the reading was given
+   * authoritative structure to reason from; `null` says it was not, which is why
+   * structure-dependent evidence is refused rather than absent-by-shape
+   * (INV-16a: absent, never degraded — it may not reason from the proposal, and
+   * may not read draft section order as a declaration of division order).
    */
-  structureFingerprint: string | null;
+  structure: FrozenStructure | null;
+}
+
+/**
+ * Authored structure, digested at the granularity supersession is scoped at.
+ *
+ * ⛔ ONE WHOLE-STRUCTURE DIGEST IS NOT ENOUGH. §9 preserves structure-independent
+ * observations while superseding structure-aware ones in the same reading, and
+ * the same discipline applies WITHIN structural evidence: renaming division 3
+ * must not supersede an observation about the ordering of divisions 7 and 8.
+ * With only a topology digest, every structural observation in the reading goes
+ * stale together — which tells the author that observations still true of their
+ * Work are not.
+ */
+export interface FrozenStructure {
+  /** Digest of the authored topology as a whole. */
+  topologyFingerprint: string;
+  /** Digest per authored unit, so unit-scoped evidence supersedes on its own. */
+  unitFingerprints: Readonly<Record<string, string>>;
 }
 
 /**
@@ -284,7 +324,22 @@ function spanBoundaries(s: string): number[] {
  * Work. `no_longer_locatable` says the section itself is gone — a stronger form
  * of the same fact, never an invitation to guess where it went.
  */
-export type Currentness = 'current' | 'superseded' | 'no_longer_locatable';
+export type Currentness =
+  /** The frozen evidence still describes today's Work exactly. */
+  | 'current'
+  /** The Work has moved on. The observation stays inspectable; it no longer describes today. */
+  | 'superseded'
+  /** What the evidence addressed is gone. A stronger form of the same fact. */
+  | 'no_longer_locatable'
+  /**
+   * The comparison could not be made.
+   *
+   * ⛔ NOT THE SAME AS `no_longer_locatable`, and the distinction is load-bearing
+   * (INV-20's third state). "Your passage was deleted" and "we did not check"
+   * are different things to tell an author, and collapsing them makes a surface
+   * that cannot say which it means.
+   */
+  | 'unmeasured';
 
 /**
  * CURRENT LOCATION — does the frozen evidence still describe today's Work?
@@ -317,12 +372,114 @@ export function locateCurrent(
  * their Work are stale.
  */
 export function locateCurrentStructure(
-  frozenFingerprint: string | null,
-  currentFingerprint: string | null,
+  frozen: FrozenStructure | null,
+  current: FrozenStructure | null,
+  reference: StructuralReference,
 ): Currentness {
-  if (frozenFingerprint === null) return 'no_longer_locatable';
-  if (currentFingerprint === null) return 'no_longer_locatable';
-  return frozenFingerprint === currentFingerprint ? 'current' : 'superseded';
+  /* The reading never held structure, so there is nothing to compare — which is
+     a different fact from "the structure is gone", and saying so is the point of
+     the third state. */
+  if (frozen === null) return 'unmeasured';
+  if (current === null) return 'unmeasured';
+
+  switch (reference.scope) {
+    case 'topology':
+      return frozen.topologyFingerprint === current.topologyFingerprint
+        ? 'current' : 'superseded';
+
+    case 'unit': {
+      const before = frozen.unitFingerprints[reference.unitId];
+      const after = current.unitFingerprints[reference.unitId];
+      if (before === undefined) return 'unmeasured';
+      /* The division the observation was about no longer exists. ⛔ Never
+         matched to a similarly-named one: that would re-anchor the observation
+         to a division the member may have created for another purpose. */
+      if (after === undefined) return 'no_longer_locatable';
+      return before === after ? 'current' : 'superseded';
+    }
+
+    case 'units': {
+      /* A claim ABOUT a relationship: it survives only while every division it
+         relates survives unchanged. One of them moving changes the relationship,
+         which is the whole content of the observation. */
+      let sawMissing = false;
+      for (const id of reference.unitIds) {
+        const before = frozen.unitFingerprints[id];
+        const after = current.unitFingerprints[id];
+        if (before === undefined) return 'unmeasured';
+        if (after === undefined) { sawMissing = true; continue; }
+        if (before !== after) return 'superseded';
+      }
+      return sawMissing ? 'no_longer_locatable' : 'current';
+    }
+  }
+}
+
+/* ── INV-17 — structural evidence names AUTHORED structure ───────────────── */
+
+export type StructuralRefusal =
+  /** A proposal id, a reviewed unit key, or any id the Work does not declare. */
+  | 'not_a_canonical_unit'
+  /** A relationship among fewer than two divisions is not a relationship. */
+  | 'degenerate_unit_set'
+  /** The same division named twice inside one relationship. */
+  | 'duplicate_unit_in_set';
+
+export type StructuralCheck =
+  | { ok: true }
+  | { ok: false; refusal: StructuralRefusal; detail: string };
+
+/**
+ * INV-17 — structural evidence names member-authored structure: a canonical
+ * unit, a set of them, or the authored topology. Never a proposal id, and never
+ * a reviewed unit key.
+ *
+ * ⛔ THIS IS FIND's F2, ANSWERED. A reading must reason about what the MEMBER
+ * declared the Work to be — not about MAIA's own earlier perception of it. A
+ * proposal-local key names a division inside a reading MAIA produced; it does
+ * not name anything in the Work, it does not survive adoption, and evidence
+ * resting on one would be evidence about the machine's previous opinion.
+ *
+ * `canonicalUnitIds` is the authored set, supplied by the caller: the rule is
+ * decided here so it is provable without a database, and the membership is a
+ * fact only the database holds.
+ */
+export function checkStructuralReference(
+  reference: StructuralReference,
+  canonicalUnitIds: ReadonlySet<string>,
+): StructuralCheck {
+  if (reference.scope === 'topology') return { ok: true };
+
+  const ids = reference.scope === 'unit' ? [reference.unitId] : reference.unitIds;
+
+  if (reference.scope === 'units') {
+    if (ids.length < 2) {
+      return {
+        ok: false,
+        refusal: 'degenerate_unit_set',
+        detail: 'a relationship among divisions needs at least two; one division is scope "unit"',
+      };
+    }
+    if (new Set(ids).size !== ids.length) {
+      return {
+        ok: false,
+        refusal: 'duplicate_unit_in_set',
+        detail: 'a division cannot stand in a relationship with itself',
+      };
+    }
+  }
+
+  for (const id of ids) {
+    if (!canonicalUnitIds.has(id)) {
+      return {
+        ok: false,
+        refusal: 'not_a_canonical_unit',
+        detail: `${id} is not a division the member authored — a proposal id or reviewed `
+          + 'unit key names MAIA\'s earlier perception of the Work, not the Work',
+      };
+    }
+  }
+  return { ok: true };
 }
 
 /* ── coverage validation ─────────────────────────────────────────────────── */
@@ -352,7 +509,7 @@ export function checkCoverage(state: FrozenReadState, ref: EvidenceRef): Coverag
   if (ref.kind === 'authored-structure') {
     /* Falsifier 5: structure-dependent evidence with no authored structure is
        refused, not quietly treated as absent. */
-    return state.structureFingerprint === null
+    return state.structure === null
       ? {
           ok: false,
           refusal: 'structure_dependent_without_authored_structure',
