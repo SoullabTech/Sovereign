@@ -827,6 +827,20 @@ Transmission worked; the stance did not. Four failures:
 Archetypally this is the **shadow Hierophant**: speaking with the authority of a tradition
 it has not actually named.
 
+**Finding E — stance/task substitution (distinct from Finding D).** Confirmed at source:
+the member's reflection immediately preceding the Connect response reads *"Considering all
+of this what would clear instructions be for tomorrow's meeting?"* — a request for
+instructions. Connect answered with a framing instead. The stance did not merely colour
+the manner; it **replaced what was answered**.
+
+> **A relational stance may govern *how* MAIA answers; it must not replace *what* the
+> member asked her to answer.**
+
+This is a **third axis**, covered by neither the epistemic boundary (Finding D, which
+governs the *status* of what MAIA says) nor any resist clause (which governs *manner*).
+Nothing in the current directives constrains **which question gets answered**. All five
+stances are exposed to it; Connect is simply where it surfaced.
+
 A healthy Connect response would offer the analogy as an analogy — *"one lens I see is
 negotiation process design, where parties make decision rules explicit; I'm offering that
 as a possible lens, not saying it defines your idea"* — name a real source **or plainly
@@ -950,6 +964,35 @@ stances are that. **Stay with this is not** — dwelling is not a format-bound t
 tight budget pressures toward the most compressed available move, which is a summary or an
 offering.
 
+#### Result 8 — *Distill*: **BLOCKED / NOT EXERCISED**
+
+`{stance: 'distill'}` reached the handler and `POST /blocks` succeeded — a fourth stance
+transmitting correctly. `POST /ask-maia` returned **500 Internal Server Error**. No MAIA
+response was produced. **This is a runtime failure, not a stance-quality result**, and
+Distill remains unexercised. Server-side stack trace not yet captured; cause unassigned.
+
+**Incidental result — Cut 0's no-silent-failure fix, tested by an unplanned failure:**
+
+- **No-silent-failure behaviour: PASS.** An error reached the member in the composer
+  rather than console-only. Before Cut 0 every ask failure was `console.error` and
+  vanished. First Cut 0 repair verified against a real failure rather than a contrived
+  one.
+- **Error-state accuracy: FAIL.** The member saw *"Failed to generate reflection"* — the
+  route's internal string, surfaced because `describeFailure` prefers `body.error` over
+  the local fallback. Engineer-facing register, and it omits the one thing the member
+  needs: what happened to their words.
+- **The intended fallback was also wrong.** *"MAIA couldn't respond just now. Your thread
+  is unchanged"* asserts something false: the autosave had already committed the member's
+  block, so the thread **had** changed. Both strings misdescribe the state. A truthful
+  formulation is: **"Your reflection was saved, but MAIA couldn't respond."**
+- **The stance cleared on failure.** `setStance(null)` runs in the `finally` block, so a
+  failed ask discards the member's direction exactly as a successful one does. To retry
+  they must re-select. This compounds the **no-receipt** finding: the member's explicit
+  direction is thrown away by a failure that was not theirs, with no indication it was
+  ever received.
+
+Diagnosis only. No repair authorized for any of the above.
+
 #### Witness status
 
 - **Explore and Distill were not run.** The witness stopped at the failed Stay
@@ -963,6 +1006,10 @@ offering.
   founder-adjudicated as an experiential PASS, with declarative drift held open.
 - **Finding D — the shared epistemic boundary fails under load — governs all five
   stances** and is blocking alongside A/B/C.
+- **Finding E — stance/task substitution** — a stance must not replace what the member
+  asked to have answered. A third axis, uncovered by any existing directive, and blocking.
+- **Distill is BLOCKED by a 500**, cause unassigned pending the server trace. Challenge
+  remains unexercised.
 - **A/B/C and the Result 3 transmission failure are blocking before merge or
   deployment.**
 - **No repair authorized.** Nothing has been changed in response to these findings.
