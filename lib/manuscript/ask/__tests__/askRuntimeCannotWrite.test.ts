@@ -51,6 +51,7 @@ describe('the Ask runtime cannot write to the Work', () => {
     'structure/proposalStore',
     'structure/structureService',
     'structure/reviewOperationParser',
+    'structure/authorStructure',
     'writersStudio/reviewClient',
   ];
 
@@ -66,7 +67,14 @@ describe('the Ask runtime cannot write to the Work', () => {
 
   it('names no adoption or apply path anywhere in its code', () => {
     for (const { path, code } of askFiles()) {
-      for (const forbidden of ['applyGesture', 'updateReviewed', 'adoptProposal', 'applyReviewOperation']) {
+      /* Both names are guarded. `adoptProposal` is the superseded 7f5acfa9b
+         symbol and `authorStructureFromProposal` is the rebuilt command; a
+         rename must never be able to quietly retire this prohibition, and
+         guarding a symbol that no longer exists costs nothing. */
+      for (const forbidden of [
+        'applyGesture', 'updateReviewed', 'applyReviewOperation',
+        'adoptProposal', 'authorStructureFromProposal', 'planAuthoredStructure',
+      ]) {
         expect(`${path}::${code}`.includes(forbidden)).toBe(false);
       }
     }
