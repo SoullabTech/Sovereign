@@ -1,6 +1,6 @@
 # Larry Encounter — Walk Sheet & Capture Instrument
 
-**Date:** 2026-09-03 · **Trunk:** `2f8d97297` (2026-09-02)
+**Date:** 2026-09-03 · **Inspected trunk:** `2f8d97297` (2026-09-02) · **Deployed SHA:** `________` (record before the walk)
 **Type:** ⭐ **evidence-gathering**, not design approval
 **Status:** authorizes no route, no code, no production change. Records what Larry reveals.
 
@@ -9,13 +9,36 @@
 
 ---
 
-## 0. Before he arrives — three checks, 5 minutes
+## 0. Preflight — the entry condition is controlled, not discovered
 
-| # | Check | Why | If it fails |
-|---|---|---|---|
-| 1 | Open the walk URL **in a private window**, signed out | The signed-out surface is the one finding we most need and the easiest to accidentally skip by using an already-authenticated browser | Use a second device |
-| 2 | Confirm the invitation link carries `fieldContext` | Middleware sends every unauthenticated `/now-what/*` to `/now-what/arrive?next=…`. A URL without field context may land on the refusal path rather than the arrival | Get a link that carries it; do not walk the refusal path as though it were the door |
-| 3 | Have the authenticated account ready in a second window | So the sign-in step can be observed *without* the walk stalling on a password | Pre-sign-in the second window |
+**Routing is preflight evidence. Larry's response is encounter evidence.** They are different classes and must not be mixed. Which surface he lands on is never left to cookie chance — it is established before he arrives.
+
+### Bind the walk to the runtime, not the branch
+
+The inspected branch establishes **code truth**, not production truth. Record and verify what is actually deployed:
+
+```bash
+ssh soullab@minisforum 'docker exec maia-sovereign printenv GIT_COMMIT'
+```
+
+Write that SHA in the header above. Then confirm the middleware behaviour **on the deployed build** — not from the source read here — by walking the signed-out redirect once yourself. If the deployed SHA differs from `2f8d97297`, the route findings in §2 are provisional until re-checked against it.
+
+### Establish the entry condition
+
+| # | Condition | Verified how |
+|---|---|---|
+| 1 | **Clean Incognito session** | fresh private window, no prior cookies |
+| 2 | **Exact invitation URL** | the real link, not a hand-typed path |
+| 3 | **`fieldContext` verified present** | read it in the URL before the meeting |
+| 4 | **Working sign-in** | tested end-to-end on the deployed build |
+| 5 | **Larry-relevant demo identity, no Kelly material** | confirm the account's kept acts and coach name are his context, not yours |
+
+### The stop rule
+
+> **If the refusal path appears, stop and classify the walk as PREFLIGHT BLOCKED.**
+> Do not proceed. Do not interpret Larry's reaction to the wrong doorway as UX evidence.
+
+A reaction to a refusal screen is evidence about our preflight, not about the product.
 
 **Do not touch anything visual today.** Refinement before he sees it destroys the evidence.
 
@@ -27,7 +50,7 @@ Six stops. Two states observed separately. Each stop: **show it, say nothing, wa
 
 | # | Stop | Route | The one question, asked only after silence |
 |---|---|---|---|
-| 1 | **Signed-out arrival** | `/now-what` → redirects to `/now-what/arrive` | "What do you think this is?" |
+| 1 | **Signed-out arrival** | `/now-what` → redirects to `/now-what/arrive` (see §2) | "What do you think this is?" |
 | 2 | **Sign in** | `/now-what/arrive` | "What did you expect to happen next?" |
 | 3 | **Today** (authenticated home) | `/now-what` | "What's here?" — then wait. Longer than is comfortable. |
 | 4 | **The Room** | `/now-what/room` | "What would you say to it?" |
@@ -54,7 +77,9 @@ Do not tour the rooms. A tour turns an encounter into a demo.
 
 Finding: the screenshot was the **authenticated Return state**. Signed-out entry is a different surface and must be watched on its own.
 
-Three distinct signed-out surfaces exist. Which one Larry meets depends on cookie state:
+**Unauthenticated requests to every *protected* `/now-what/*` route redirect to `/now-what/arrive?next=…`.** `/now-what/arrive` and `/now-what/welcome` remain publicly reachable — exemptions come from the middleware route matcher, so exactly which routes are protected is a **preflight check on the deployed build**, not a claim to carry into the room.
+
+Three distinct signed-out surfaces exist. §0 fixes which one Larry meets; it is not left to cookie state:
 
 | Surface | Reached how | Status |
 |---|---|---|
@@ -62,7 +87,9 @@ Three distinct signed-out surfaces exist. Which one Larry meets depends on cooki
 | `NowWhatThreshold` in `ClientHome` | renders when a request passes middleware but the client resolves `session === 'out'` | **reachability unverified** — do not claim it is dead, do not claim it is live |
 | `/now-what/welcome` | public landing, **zero inbound links by design** | outward face for a share card or deck CTA; not on the client path |
 
-Walk **`/now-what/arrive`**. Note which of the three he actually lands on — that itself is evidence.
+Walk **`/now-what/arrive`**, and only that.
+
+⛔ **`/now-what/welcome` and `NowWhatThreshold` are not on tomorrow's walk.** Both remain **STILL UNKNOWN** and stay that way. Adding either to the tour would trade a controlled encounter for two unvalidated surfaces, and would answer a routing question with Larry's time — the wrong instrument. Their reachability is preflight work for another day.
 
 ---
 
@@ -109,6 +136,7 @@ After the walk, mark every claim with exactly one:
 | **CHALLENGED** | his behaviour or words contradicted it |
 | **NEW EVIDENCE** | something we had not anticipated |
 | **STILL UNKNOWN** | the walk did not test it — the honest and most common mark |
+| **PREFLIGHT BLOCKED** | the walk never reached a valid doorway; nothing observed after that point is encounter evidence |
 
 ⚠️ **STILL UNKNOWN is not a failure.** An eight-state journey cannot be validated in one sitting; recording six unknowns is a better outcome than manufacturing six confirmations.
 
