@@ -1,6 +1,6 @@
 # MIPA Phase 0 — Sovereignty Prerequisites Specification
 
-**Status**: Specification, plus **P2 and P3a–P3e executed and certified**, and **P3-CSC performed (outcome C)**. **P3 known surfaces COMPLETE; global Grade A deferred to the canonical seam. P1 is unblocked.** P4–P6 and P2b remain specification only.
+**Status**: **P1, P2 and P3a–P3e executed and certified**; **P3-CSC performed (outcome C)**. P3 known surfaces COMPLETE; global Grade A deferred to the canonical seam. P4–P6 and P2b remain specification only.
 **Authorized**: 2026-09-02 (founder) — bounded to P1–P6, sequencing, acceptance criteria, migration prerequisites.
 **Semantic adjudication**: 2026-09-02 (founder) — all five blocking questions closed (§6).
 **§7 adjudication**: 2026-09-02 (founder) — all eight contradictions resolved (§7); **P2 authorized to execute**, P3 repair class authorized with execution gated behind P2's evidence.
@@ -260,6 +260,12 @@ No UI. No schema. No enum. No route. No migration. The primitives are specified 
 
 ### P1 — Member can obtain their full corpus
 
+> ### ✅ P1 EXECUTED AND CERTIFIED — 2026-09-02 · **Grade A (scoped)**
+>
+> `__tests__/mipa-p1-export-coverage.test.ts` — **19/19**, six mutations verified failing, application witnessed by operative-occurrence delta.
+>
+> **Scope**: P1 certifies the export **cannot lie**. It does **not** certify that the export is **complete** — see the ledger below.
+
 **PURPOSE** — Prevents the inversion the covenant forbids: MAIA gaining reach over the member's history that the member does not have over their own. This is the prerequisite that most directly gates the lane, because the Louisiana corpus is precisely what Phase 4–5 would make machine-reachable.
 
 **INVARIANT** — For every table from which MIPA may retrieve, the member can obtain their own rows.
@@ -276,6 +282,54 @@ No UI. No schema. No enum. No route. No migration. The primitives are specified 
 **DEPENDENCIES** — None. P1 is startable today.
 
 **NOT AUTHORIZED** — Building the export. Adding a download UI. Deciding export format. Touching retrieval.
+
+---
+
+### P1-E — Execution record
+
+#### The defect, worse than the census recorded
+
+My own census stated that `/api/members/export-data` **covers** `developmental_memories`. **It did not.** The query named five columns that do not exist — `event_type`, `cognitive_level`, `intensity`, `content`, `created_at` — so it threw on every call, and a `.catch(() => ({ rows: [] }))` written for a **missing table** silently swallowed a **broken query**.
+
+The member downloaded a file named `maia-data-export-<date>.json` containing `"memories": []`, with no way to tell the section was empty because the read failed rather than because they had nothing.
+
+> **An export that silently omits is worse than one that openly does not cover.** The first is a false claim about the member's own record — in the one surface whose entire purpose is telling the member the truth about what is held.
+
+A **second instance** had a worse shape still: a failed `google_calendar_credentials` read rendered `connected: false`. Not an omission — a **false statement about their account**. Its table and all three columns exist, so that catch guarded nothing while standing ready to convert any failure into a wrong answer.
+
+#### The repair
+
+Columns corrected. Both catches now distinguish **failure** (`null` rows) from **absence** (`[]`) and surface an explicit member-readable error; Google reports `connected: 'unknown'` with a note that it does *not* mean disconnected. A section may be empty; it may never be **silently** empty.
+
+#### The coverage ledger — quantified, not forgotten
+
+A source-derived scan of member-scoped SELECTs across `lib/maia`, `lib/memory`, `lib/anchor` and `lib/psyche`, filtered against the real schema:
+
+| | |
+|---|---|
+| Member-scoped tables read by memory modules | **37** |
+| Tables the export covers | **5** |
+| Gap | **32** |
+
+The census recorded five omissions. The derived topology says the gap is an order of magnitude larger — **and that one of the five "covered" tables did not work.**
+
+Pinned as a ledger assertion so the number cannot drift without a deliberate edit. **Closing it is a product decision** between widening export coverage and narrowing retrieval-eligibility — P1's fail-closed rule permits either, and choosing is not this repair's to make.
+
+#### Falsification — six mutations, all verified failing
+
+| # | Mutation | Result |
+|---|---|---|
+| F1 | Reintroduce a fictional column | ❌ 3 failed |
+| F2 | Restore the blanket silent catch | ❌ 2 failed |
+| F3 | Remove the memories error branch | ❌ 3 failed |
+| F4 | Make the google branch unreachable with a constant guard | ❌ 1 failed |
+| F5 | Rename a covered table out of the export | ❌ 1 failed |
+| F6 | Swap the memories guard to a constant | ❌ 2 failed |
+| — | Restored | ✅ **19/19** |
+
+> **Two of six initially passed, one root.** F4 kept every expected string and made the branch unreachable with `false ? … : …` — **presence of text says nothing about reachability**. The suite now pins the **operative discriminant** rather than its wording. And the application probe reported `APPLIED: False` for a mutation that had applied, because the repair's own docblock contains the identifier it searched for; application is now witnessed by **operative-occurrence delta** over comment-stripped source.
+>
+> A third instance of the standing hazard also appeared: the silent-catch scan fired on the docblock **quoting the defect it forbids**. Comment-stripping is now a boundary control that asserts both directions — present in prose, absent in code.
 
 ---
 
@@ -1264,25 +1318,23 @@ Conceptual only. No migration is authorized, written, or named.
 
 ## STOP
 
-**P3a–P3e certified. P3's known/enumerable surfaces are complete. Global certification deferred to the canonical seam.**
+**P1 certified. P2 and P3a–P3e certified. P3 global deferred to the canonical seam.**
 
 | | |
 |---|---|
+| **P1** | ✅ **Grade A (scoped)** · 19/19 · 6 mutations |
 | **P2** | ✅ **R23** |
-| **P3a–P3d** | ✅ **R24 · R25 · R26 · R27** |
-| **P3e** | ✅ certified |
-| **P3 known surfaces** | ✅ **COMPLETE** |
-| **P3 global Grade A** | ⚖️ **architectural ceiling** — rerun at seam promotion |
-| **P1** | 🟢 **unblocked** — not started |
-| **P4, P5, P6, P2b** | Specification only |
+| **P3a–P3e** | ✅ **R24 · R25 · R26 · R27** + P3e |
+| **P3 known surfaces** | ✅ COMPLETE |
+| **P3 global Grade A** | ⚖️ architectural ceiling — rerun at seam |
+| **P4, P5, P6, P2b** | Specification only — not started |
 
-**The standing constraint remains**: no widening of historical retrieval or broader intelligence-field participation while P3-global is uncertified. Sovereignty work may continue; intelligence expansion may not outrun the future composition boundary.
+**Verification**: typecheck 231 vs baseline 239, 0 new, 0 regressions · **386/386 across 19 suites**.
 
 **Presented:**
 
-1. **P3e certified** as a field-level partition — the member's words compose, the machine label does not, governed by the shared derivation rule.
-2. **Two of six mutations initially passed**, with one root: wording checks lose to rewording. Replaced by a call-site closed set. The application probe itself was also wrong and is now a call-site delta.
-3. **Manual exposure hunting is stopped**, per the adjudication. The ceiling is the finding, not a backlog.
-4. **The FAST/CORE-DEEP producer divergence** is recorded as evidence for the seam/tier question and deliberately **not** repaired under P3.
+1. **P1's defect was worse than the census recorded.** The census said the export covered developmental memories; it did not — five fictional columns behind a catch meant for a missing table. Members received a silently-empty section. A second instance reported a false *disconnection*.
+2. **The coverage ledger**: 37 member-scoped tables read against 5 exported. Pinned so it cannot drift. Closing it is a product decision between widening export and narrowing retrieval-eligibility — not this repair's call.
+3. **Two of six mutations initially passed**, one root: presence of text says nothing about reachability. The suite now pins operative discriminants, and application is witnessed by occurrence delta.
 
-**Next: P1** — export coverage. Not started.
+**Next**: P4, P5 or P6 — none started. The 32-table coverage gap awaits adjudication.

@@ -86,23 +86,54 @@ export async function POST(request: NextRequest) {
          ORDER BY started_at DESC`,
         [memberId]
       ),
-      // Developmental memories (if exists)
+      // Developmental memories.
+      //
+      // P1 (MIPA Phase 0) — THIS QUERY NAMED FIVE COLUMNS THAT DO NOT EXIST.
+      //
+      // `event_type`, `cognitive_level`, `intensity`, `content` and
+      // `created_at` are not columns of `developmental_memories`; the real ones
+      // are `memory_type`, `significance`, `content_text` and `formed_at`. The
+      // query therefore threw on every call — and a `.catch(() => ({ rows: [] }))`
+      // written for a MISSING TABLE silently swallowed a BROKEN QUERY.
+      //
+      // The member downloaded a file named `maia-data-export-<date>.json`
+      // containing `"memories": []`, with no way to tell that the section was
+      // empty because the query failed rather than because they had none. An
+      // export that silently omits is worse than one that openly does not
+      // cover: the first is a false claim about the member's own record.
+      //
+      // Columns corrected below, and the blanket catch replaced by one that
+      // SURFACES the failure into the payload (see `memoriesError`). A section
+      // may be empty; it may never be silently empty.
       query(
-        `SELECT id, facet_code, event_type, cognitive_level, intensity,
-                content, vector_embedding IS NOT NULL as has_embedding,
-                created_at
+        `SELECT id, memory_type, facet_code, significance, content_text,
+                entity_tags, confirmed_by_user, recall_count,
+                vector_embedding IS NOT NULL as has_embedding,
+                valid_from, valid_to, formed_at
          FROM developmental_memories
          WHERE user_id = $1
-         ORDER BY created_at DESC`,
+         ORDER BY formed_at DESC`,
         [memberId]
-      ).catch(() => ({ rows: [] })), // Table might not exist
-      // Google credentials (sanitized)
+      ).catch((err: unknown) => {
+        console.error('[Export API] developmental_memories query failed:', err);
+        return { rows: null as unknown as Record<string, unknown>[] };
+      }),
+      // Google credentials (sanitized).
+      //
+      // P1 — the same silent-failure pattern, smaller blast radius but a worse
+      // shape: this section renders `connected: false`, so a failed query does
+      // not merely omit — it makes a FALSE STATEMENT about the member's account.
+      // The table and all three columns exist, so the old catch guarded nothing
+      // real while standing ready to convert any failure into a wrong answer.
       query(
         `SELECT user_id, created_at, updated_at
          FROM google_calendar_credentials
          WHERE user_id = $1`,
         [memberId]
-      ).catch(() => ({ rows: [] })),
+      ).catch((err: unknown) => {
+        console.error('[Export API] google_calendar_credentials query failed:', err);
+        return { rows: null as unknown as Record<string, unknown>[] };
+      }),
     ]);
 
     if (memberResult.rows.length === 0) {
@@ -114,11 +145,29 @@ export async function POST(request: NextRequest) {
       profile: memberResult.rows[0],
       settings: pickSettingsForExport(settingsResult.rows[0]),
       sessions: sessionsResult.rows,
-      memories: memoriesResult.rows,
+      // P1 — `null` rows means the query FAILED, which is reported rather than
+      // rendered as an empty section. `[]` means the member genuinely has none.
+      memories: memoriesResult.rows ?? [],
+      ...(memoriesResult.rows === null
+        ? {
+            memoriesError:
+              'This section could not be read and is INCOMPLETE. It is not empty because you have no developmental memories — the export failed to retrieve them. Please report this.',
+          }
+        : {}),
       connectedServices: {
-        google: googleResult.rows.length > 0
-          ? { connected: true, connectedAt: googleResult.rows[0].created_at }
-          : { connected: false },
+        // P1 — three states, not two. "unknown" is the honest answer when the
+        // read failed; reporting `connected: false` would assert something the
+        // export does not know.
+        google:
+          googleResult.rows === null
+            ? {
+                connected: 'unknown' as const,
+                error:
+                  'This could not be read. It does NOT mean the service is disconnected — the export failed to check. Please report this.',
+              }
+            : googleResult.rows.length > 0
+              ? { connected: true, connectedAt: googleResult.rows[0].created_at }
+              : { connected: false },
       },
     };
 
