@@ -806,6 +806,8 @@ RULING (founder, 2026-09-03)
 
 **Standing rule from this incident:** *serialization is not authorization; a deploy lane must refuse a SHA that is not the currently authorized deployment object.* Recorded here as requirement, not implemented here.
 
+**Restore + second window · 2026-09-03 17:07–17:1x UTC.** Path B restored **through the lane** (`pre-deploy-gate.sh deploy-maia 3e31bc0ff…`; Co-Lab gate 33/33; container created 17:07:32; provenance verified). Running-container check: `GIT_COMMIT=3e31bc0ff` · `DEPLOY_LANE=deploy-lane` · `CMT_SHADOW_WITNESS=1` · `/app/lib/maia/turn/shadowWitness.ts` present · compiled `/list` route contains the marker string — provenance and executable witness name the same candidate. (Before this restore the container already reported `3e31bc0ff` / flag `1`: a lane restore had occurred between 14:12 and 17:07; that container's logs were not retained across the recreate.) **Second window: EMPTY, not invalid** — Caddy counted **0** `/list` requests in the hour; zero witness lines is therefore *no traffic*, not *no divergence*. Route B: none. Window closed as a lane act (flag `0`, `deploy-maia` same SHA, provenance verified). *Instrument finding:* the `git.commit` **image label is not produced by the build** (`{{index .Config.Labels "git.commit"}}` is empty on every image and on the container), so `deploy-production.sh rollback`'s `CURRENT_SHA`/`PREVIOUS_SHA` reads resolve to "unknown"; the `GIT_COMMIT` ENV is the only provenance carrier. For the deploy-governance lane, not this recovery. **Next window must include deliberate authenticated `/list` turns by the operator; "ordinary turns > 0" is a precondition, not an outcome.**
+
 ---
 
 ## 13. Why the constructor is the right place for what comes after
