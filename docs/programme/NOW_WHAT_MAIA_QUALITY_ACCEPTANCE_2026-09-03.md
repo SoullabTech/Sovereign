@@ -192,6 +192,58 @@ Whether that is what he actually met is **Gate 1**, and it is unrun. Until then 
 
 ---
 
+## F. What Larry's route actually runs today
+
+Four separate questions, four different answers. Conflating them is how a
+customer gets told something untrue.
+
+| | Status |
+|---|---|
+| **Larry's full IP / library** | ⛔ **NOT active.** Not "not loaded" — *hard-closed in code.* |
+| **Current MAIA memory / field / grammar intelligence** | ✅ **Wired.** The route composes the constitutional prompt, developmental memory, member atoms, cross-session recall, field context, program position, and the Now What? grammar — through the shared room-composition layer, in one turn. |
+| **Canonical MAIA Turn (CMT-01)** | ⚠️ **On main, not powering his conversation.** M0–M2 only: closed turn object, participation contract, manifest, refusals 25–31, and a **shadow** on `/list`. The canonical renderer had zero live callers; legacy remains response-producing. M3 — the cognition cutover — was never authorized. |
+| **Highest conversational quality** | ⛔ **Unproven.** Register and history defect both unqualified. |
+
+### F.1 The corpus channel is closed at the function, not merely empty
+
+```ts
+// lib/practiceField/practiceFieldService.ts:289
+export function corpusIsComposable(_field: PracticeField): boolean {
+  return false;
+}
+```
+
+`active_field_content` cannot reach MAIA's prompt today, whatever a field holds. What *can* compose is narrow and self-descriptive: the practitioner's own about / how-we-work text, `how_maia_supports` past its governance check, and field guidance past its validator — each only once ratified.
+
+The header records why, and the reasoning generalises well beyond this field:
+
+> *"a revision proves a practitioner **changed something**, never that they **reviewed what MAIA may compose**. That signal is provenance, not permission."*
+
+> *"When ratification lands, this becomes a real check; **it does not become `true`**."*
+
+The closure followed an incident in which ~63,861 characters of candidate material sat in a Now What? field. No Larry-authored IP and no third-party text reached runtime.
+
+⚠️ **Unknown from source alone:** whether his materials are already sitting in the production database or vault awaiting authorization. That needs a runtime/database witness. It changes nothing about composition — the gate refuses regardless — but it changes the custody question.
+
+### F.2 Four gates before "finished"
+
+Non-negotiable, in dependency order:
+
+1. **Larry corpus** — build the explicit authorization/ratification seam, then attach *only* what he has actually approved. The seam is the work; the attaching is trivial after it.
+2. **High-register provider** — his client-facing conversation must reliably reach the qualified register, not drop to `qwen2.5:7b` because of host configuration. (§B, §D)
+3. **Conversation continuity** — repair the shared `generateSimple()` history defect regardless of which provider Larry normally reaches. A provider change must never silently convert "whole conversation" into "last message only." (§A)
+4. **Canonical intelligence** — decide whether Now What? enters the CMT-01 spine when M3 is ready, rather than leaving this specialised interview route as a parallel intelligence-construction path indefinitely.
+
+Gates 2 and 3 are independent: fixing the pin does not fix the defect, and fixing the defect does not guarantee the register.
+
+### F.3 What may and may not be said to Larry
+
+✅ **May be said:** his conversation runs on MAIA's real engine — constitutional prompt, memory, field context, and a response grammar that forbids generic coaching questions.
+
+⛔ **May not be said:** that it is trained on, grounded in, or knows his work. It is not, and it cannot perform knowledge it was never given. Telling him otherwise would be a claim the code actively refuses to make true.
+
+---
+
 ## Provenance
 
 - `scripts/witness/now-what-register-and-history.ts` — W1–W5 + W2b, 6/6 confirmed, deterministic, no production or model server required.
