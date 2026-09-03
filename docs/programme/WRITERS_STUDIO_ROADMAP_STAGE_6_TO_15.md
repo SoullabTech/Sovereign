@@ -217,7 +217,7 @@ reached, and only from canonical.
 ```text
 DEVELOPMENTAL PRIVATE BETA   Stage 7 DONE / PROVED  +  Stage 8 CLOSED / ACCEPTED
                              5–15 trusted writers · real Works · production · real creative
-                             episodes (Master Brief §## 22–23. Beta episodes and success) · the six beta acceptances:
+                             episodes (Master Brief §22–23) · the six beta acceptances:
                              Arrive · Write · Structure · Develop · Revise safely · Return
 
 PUBLIC WRITER'S STUDIO 1.0   Stages 7–10 CLOSED / ACCEPTED  +  live capability census

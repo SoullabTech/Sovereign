@@ -64,7 +64,7 @@ the boundary of what it delivers.
 | Deployment | exact SHA; running `GIT_COMMIT` == released SHA (`docs/ops/IMMUTABLE_SHA_DEPLOY.md`) |
 | Rollback | demonstrated once against the released image |
 | UX | founder felt-gate (A1.10): *did I forget the software and feel like I was writing my book?* |
-| Beta users | a real human episode per Master Brief §## 22–23. Beta episodes and success creative-episode classes |
+| Beta users | a real human episode per Master Brief §22–23 creative-episode classes |
 
 ## Sequence when entered
 
