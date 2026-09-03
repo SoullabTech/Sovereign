@@ -4,12 +4,18 @@
 `608e3ac` (implementation) + `6bfc5d2` (governing record) on
 `claude/layer-2-recognition-upgrade-99d1re`. Not a promotion candidate. The
 development act *in this environment* is closed; **the lane is not.** Its
-terminal state is assigned only after the Mac witness, and is one of:
-`CLOSED — LEGACY RETAINED` · `CLOSED — MODERN EXPERIMENTAL` · `CLOSED — PROMOTION RECOMMENDED`.
+terminal state is assigned only after the Mac witness, and is one of
+(**vocabulary revised by founder ruling after §9, see §10**):
+`CLOSED — NATIVE CANDIDATE REJECTED` · `CLOSED — NATIVE CANDIDATE EXPERIMENTAL` · `CLOSED — PRODUCTION INTEGRATION RECOMMENDED`.
+(Superseded names: legacy retained / modern experimental / promotion recommended.)
 No further building before then (founder ruling 2026-09-03, §8).
 **Remote pre-witness pass recorded 2026-09-03 (§9):** provenance resolved on the
 committed record, JS gates green, native compile + device witness **blocked** in
 that environment (no Apple toolchain). Decision **NOT REACHED**. Mac handoff in §9.6.
+**Founder ruling after §9 (§10):** the witness question is narrowed to *does the new
+native recognition subsystem compile and behave well enough to become MAIA's
+candidate recognition subsystem* — not *should production flip to SpeechAnalyzer*.
+The Mac continues from `5a5ad687` on this branch.
 **Authorized:** 2026-09-03, founder directive (this document is the ruling the
 Voice Ecology Roadmap §5 recorded as *not recovered*; it is dated here, not
 back-dated).
@@ -424,3 +430,127 @@ grep -E "error:|warning: .*Speech" /tmp/recognition-compile.log
 
 Then Steps 6–15 as written in the run. F1–F10, O1–O6, the comparison table
 and the terminal `CLOSED — …` state belong to that pass, not this one.
+
+
+---
+
+## 10 · Founder ruling after the provenance result — 2026-09-03
+
+*Recorded from the founder's revised continuation run, issued after reading §9.
+This section governs the Mac witness. It replaces the adjudication vocabulary
+in §8 and reinterprets O6; it does not reopen development.*
+
+### 10.1 What the provenance result changed
+
+The lane was framed as *existing native path → engine abstraction → compare
+old vs modern → maybe flip default*. §9.4 shows that framing was not
+established: the live MAIA conversation has been running through the
+community speech-recognition plugin, and `VoiceController.swift` has never
+compiled into a committed build.
+
+```
+LIVE MAIA CONVERSATION                      NEW NATIVE EXPERIMENT
+        ↓                                           ↓
+@capacitor-community/speech-recognition      VoiceController
+        ↓                                           ↓
+existing production recognition path        RecognitionEngine
+                                              ↙            ↘
+                                    LegacySFSpeech      SpeechAnalyzer
+```
+
+Consequence: flipping `legacy_until_witnessed` would not, by itself, change
+what a member hears MAIA hear. The witness is therefore
+
+**FIRST NATIVE ACCEPTANCE + COMPARATIVE WITNESS OF THE NEW RECOGNITION SUBSYSTEM**
+
+and its governing question is:
+
+> Does the new native recognition architecture compile and behave well enough
+> to become the candidate recognition subsystem for MAIA?
+
+It is *not*: should MAIA production flip to SpeechAnalyzer. Success on the Mac
+must not be described as production recognition being upgraded.
+
+### 10.2 Terminal states (revised)
+
+| State | Meaning | Production path |
+|---|---|---|
+| `CLOSED — NATIVE CANDIDATE REJECTED` | new subsystem not sufficiently viable | unchanged |
+| `CLOSED — NATIVE CANDIDATE EXPERIMENTAL` | works, but evidence incomplete or lifecycle uncertain | unchanged |
+| `CLOSED — PRODUCTION INTEGRATION RECOMMENDED` | compiles cleanly; witness shows quality, liveness, transcript integrity and turn sovereignty sufficient to warrant integration work | unchanged — **not** authorization to modify production recognition |
+
+**O6 is reinterpreted:** *sufficient comparative evidence exists to decide
+whether the new native subsystem merits production-integration work.* It does
+not mean the subsystem is integrated into live conversation.
+
+### 10.3 The new boundary (Step 10 of the continuation)
+
+If the Mac reaches `PRODUCTION INTEGRATION RECOMMENDED`, **do not** create or
+execute a "modern default promotion" change. The next authorized programme, if
+the founder approves it, must address the seam
+
+```
+LIVE CONVERSATION  →  ENGINE-NEUTRAL RECOGNITION BOUNDARY
+```
+
+and decide how the community-plugin production path is replaced, wrapped, or
+retained as fallback — preserving working production voice until separately
+witnessed. Candidate name: `VOICE-RECOGNITION-PRODUCTION-INTEGRATION-01`.
+Not created, not executed, in this lane.
+
+### 10.4 Remote-side checks made against the revised run (2026-09-03, same container)
+
+Executed from the same environment as §9; the Mac-only steps remain the Mac's.
+
+**Continuation state (Step 0, repo side).** Branch
+`claude/voice-recognition-acceptance-witness-ffeadt` at `5a5ad687`, tree clean.
+The Mac-local half of Step 0 (uncommitted Xcode registration; literal build
+number in `Info.plist`) cannot be answered here — it is the first thing the
+Mac records. If the Mac finds neither, hypothesis B in §9.4 closes as
+unsupported.
+
+**CI is not a compile substitute.** `.github/workflows/mobile-deploy.yml`
+has a `macos-14` job, but on any ref other than `main` or a `v*` tag it runs
+only `pod install` and `cap sync ios`; `xcodebuild` is gated behind signing
+secrets and those refs. The workflow also triggers on `main`, which is not
+this repository's default branch. Not triggered; it would prove nothing.
+
+**One correction to "the lane does not touch the live path" — bounded, and
+material for Step 1.** The lane's M1 change to `AudioSessionManager.swift`
+lives inside `performFullTeardown()`, which all three plugin methods the live
+conversation calls (`prepareForListening`, `prepareForSpeaking`,
+`stopAllAudio` — call sites in `ContinuousConversation.tsx`,
+`OracleConversation.tsx`, `ttsWithFallback.ts`, `capacitorRecorder.ts`)
+execute. Read against the pre-lane routine:
+
+- The SFSpeech task/request cancellation it removed was state the live path
+  never populated (the community plugin owns its own recognizer and its own
+  `AVAudioEngine`), so nothing the live path relied on is gone.
+- `engine.stop()` / `engine.reset()` / `audioEngine = nil` are unchanged.
+- The only behavioural delta: `removeTap(onBus: 0)` on the manager's **own**
+  private engine is now skipped unless the manager installed a tap. For the
+  live path that is a no-op removal skipped — benign, intended-equivalent,
+  and unverified until a device runs it.
+- The exposure that matters is **compile-time**: `AudioSessionManager.swift`
+  now references `RecognitionTeardownHandle`, declared in
+  `Recognition/RecognitionEngine.swift`. If any `Recognition/` file fails to
+  compile, the whole `App` target fails — including the live conversation
+  build. A Step 1 failure is therefore never "just the experiment".
+
+The four plugin method signatures and the `CAPPluginMethod` list are
+byte-identical pre/post lane; no JS-visible surface changed.
+
+Recommended addition to the Mac walk, offered for the founder to accept or
+strike (it is a smoke, not new scope): after installing the witness build and
+before the A/B, open the ordinary `/maia` conversation once and confirm the
+mic lifecycle behaves as on build 2511. That is the direct check that the
+teardown delta is as benign as the reading says.
+
+### 10.5 Status after this pass
+
+Unchanged: **IMPLEMENTATION COMPLETE — NATIVE ACCEPTANCE AND DEVICE WITNESS
+PENDING.** Decision NOT REACHED. Live MAIA conversation recognition path:
+**not changed by this lane** (source in a shared Swift file changed with
+intended-equivalent behaviour; see §10.4). No Swift, pbxproj, default, or
+routing modified in this pass. Mac entry point: §9.6 commands, starting from
+`5a5ad687` or later on this branch; adjudicate in §10.2 vocabulary.
