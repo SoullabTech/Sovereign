@@ -5,7 +5,24 @@
 
 ---
 
-## 0. The finding
+## 0. The product split (founder ruling, 2026-09-02)
+
+Two products, not one. This resolves a tension that had been costing design time: Larry was being asked to be the design client for a product whose value proposition exceeds what he wants.
+
+| | **Now What?** | **Soullab practitioner product** |
+|---|---|---|
+| For | Larry, and coaches who want simplicity | Practitioners who want the structure |
+| Interface | A branded landing and one conversation | Rooms, coaching surfaces, the relational architecture |
+| The client's decision | *"Do I want to talk?"* | Where in their work to go |
+| Demo | `docs/design/now-what/encounters/now-what-larry-simple.html` | `part2-rooms-mockup.html`, `part2-chatbot-mockup.html` |
+
+Both run on the same architecture. Memory, retrieval, the room ontology and the coach field remain live under the simple cut as **capabilities of the conversation, never destinations in the interface.**
+
+**Nothing built so far is wasted.** The sophisticated environment stops being a thing to persuade one customer to want and becomes the product sold to practitioners who already want it. The assessment below is about that product.
+
+---
+
+## 1. The finding
 
 **The platform is already multi-practitioner. Larry is a tenant, not the architecture.**
 
@@ -19,7 +36,7 @@
 
 ---
 
-## 1. What you are actually selling
+## 2. What you are actually selling
 
 Not a flourishing framework. **Relational infrastructure that a practitioner brings their own method to.**
 
@@ -37,7 +54,7 @@ The differentiated assets, all built and live:
 
 ---
 
-## 2. The one thing you cannot sell
+## 3. The one thing you cannot sell
 
 ⛔ **The flourishing taxonomy.**
 
@@ -47,11 +64,11 @@ The six domains are Larry-derived, **unratified**, and **unlicensed** — the Ma
 
 > **The practitioner brings the method. The platform brings the relationship.**
 
-Required: make `flourishing_dimension` per-field configuration rather than a global CHECK constraint. That is the single largest technical item, and it is what makes the product sellable rather than what makes it late.
+Required for the practitioner product: make `flourishing_dimension` per-field configuration rather than a global CHECK constraint. That is the single largest technical item, and it is what makes the product sellable rather than what makes it late.
 
 ---
 
-## 3. Work to package
+## 4. Work to package
 
 | # | Item | Size |
 |---|---|---|
@@ -66,7 +83,7 @@ Items 1 and 3–5 are packaging. Item 2 is the product decision. Item 6 is the s
 
 ---
 
-## 4. Sequence
+## 5. Sequence
 
 1. **Freeze nothing tonight.** Tomorrow's encounter is evidence for this decision too — watch whether Larry values the *method* or the *relational infrastructure*. His answer sizes the market.
 2. Name the generic product.
@@ -76,6 +93,6 @@ Items 1 and 3–5 are packaging. Item 2 is the product decision. Item 6 is the s
 
 ---
 
-## 5. What this does not change
+## 6. What this does not change
 
 Attachment A §3 stays empty. The taxonomy stays unratified. Transcript custody stays unresolved. **Selling the platform to others does not require any of Larry's material — and must not include it.**
