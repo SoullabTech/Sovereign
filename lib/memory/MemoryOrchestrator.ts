@@ -5,6 +5,11 @@ import { generateLocalEmbedding } from './embeddings';
 import { RelationshipContextStore, type RelationshipContext } from './stores/RelationshipContextStore';
 import { TurnsStore } from './stores/TurnsStore';
 import { BreakthroughStore } from './stores/BreakthroughStore';
+import {
+  admittedBreakthroughs,
+  excludedBreakthroughCount,
+  type BreakthroughSnapshot,
+} from './breakthroughParticipation';
 import { containsSensitiveData } from './sensitivePatterns';
 import { memberRef } from '../privacy/memberRef';
 
@@ -17,7 +22,22 @@ const prisma = new PrismaClient();
 export interface SessionRecallContext {
   relationshipContext?: RelationshipContext;
   recentTurns?: Array<{ role: 'user' | 'assistant'; content: string; createdAt: string }>;
-  recentBreakthroughs?: Array<{ insight: string; element?: string; integrated: boolean; createdAt: string }>;
+  /**
+   * P3f — the CERTIFIED union, not raw rows.
+   *
+   * The excluded arm carries no `insight` and no `element`. There is no filter
+   * to forget and no flag to flip: the string never leaves the store, so a
+   * composer here has nothing to render even if it tries.
+   *
+   * NOTE ON THIS FILE'S `@ts-nocheck`: the header suppresses type checking, so a
+   * type-level gate placed HERE would be decorative. That is precisely why the
+   * load-bearing gate is at the representation boundary in
+   * `./breakthroughParticipation`, which IS checked, and why this field's shape
+   * is a consequence of that boundary rather than a promise made locally.
+   */
+  recentBreakthroughs?: BreakthroughSnapshot[];
+  /** Observability only — reported after adjudication, never an input to it. */
+  breakthroughsExcluded?: number;
 }
 
 export interface MemoryContext {
@@ -231,6 +251,7 @@ export class MemoryOrchestrator {
         relationshipContext: relationshipContext ?? undefined,
         recentTurns,
         recentBreakthroughs,
+        breakthroughsExcluded: excludedBreakthroughCount(recentBreakthroughs),
       };
     } catch (error) {
       console.error('Session recall error:', error);
@@ -271,9 +292,21 @@ export class MemoryOrchestrator {
       }
     }
 
-    // Recent breakthroughs
-    if (recall.recentBreakthroughs?.length) {
-      const breakthroughLines = recall.recentBreakthroughs.map(b => {
+    // Recent breakthroughs — P3f.
+    //
+    // This block composed `breakthrough_moments` verbatim into a live prompt:
+    // machine-detected, machine-extracted, unendorsed system inference, already
+    // adjudicated EXCLUDED at R25 in a different reader. Composition is now
+    // reachable only through `admittedBreakthroughs`, and under the current
+    // adjudication nothing is admitted — the representation has no provenance
+    // column, so authorship cannot be established for any row.
+    //
+    // Kept as a governed path rather than deleted. Deleting it would hide the
+    // composition instead of gating it, and would make a future reintroduction
+    // look like new work rather than a restoration the gate must refuse.
+    const admitted = admittedBreakthroughs(recall.recentBreakthroughs ?? []);
+    if (admitted.length > 0) {
+      const breakthroughLines = admitted.map(b => {
         const elementTag = b.element ? ` [${b.element}]` : '';
         const statusTag = b.integrated ? '' : ' (still integrating)';
         return `- ${b.insight}${elementTag}${statusTag}`;
@@ -281,7 +314,11 @@ export class MemoryOrchestrator {
       sections.push(`RECENT BREAKTHROUGHS:\n${breakthroughLines.join('\n')}`);
     }
 
-    // Recent conversation turns (condensed)
+    // Recent conversation turns (condensed).
+    //
+    // P3f PARTITION: this is `conversation_turns` — the member's own words, with
+    // `role` discriminating them from MAIA's. Member testimony is not swept away
+    // to remove a machine inference that happened to share a composer.
     if (recall.recentTurns?.length) {
       const turnLines = recall.recentTurns.slice(-6).map(t =>
         `${t.role.toUpperCase()}: ${t.content.slice(0, 200)}${t.content.length > 200 ? '...' : ''}`

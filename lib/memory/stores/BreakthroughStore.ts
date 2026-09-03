@@ -2,10 +2,38 @@
  * Breakthrough Store
  *
  * Retrieves and stores breakthrough moments / key insights.
- * These are the "aha" moments worth remembering across sessions.
+ *
+ * ── P3f — EVERY READ PATH IS ADJUDICATED, NOT JUST THE ONE WITH A COMPOSER ──
+ *
+ * `breakthrough_moments` is machine-detected and machine-extracted: a
+ * significance threshold plus a heuristic decide that something was a
+ * breakthrough, and a machine writes the wording. R25 settled its epistemic
+ * status as unendorsed system inference, EXCLUDED from canonical cognition.
+ *
+ * Until P3f this store handed out the raw `insight` string, and
+ * `lib/memory/MemoryOrchestrator.ts` composed it into a live prompt as a
+ * `RECENT BREAKTHROUGHS` block. R25 was never wrong — it gated a different
+ * reader and said so — but the REPRESENTATION kept participating through this
+ * one.
+ *
+ * All THREE read methods now return the certified union, including the two that
+ * currently have no caller. A gate that covers only the reader someone happened
+ * to notice is the defect being repaired, so "no caller today" is not a reason
+ * to leave a raw insight reachable tomorrow.
+ *
+ * The writes are untouched: exclusion governs PARTICIPATION, not storage. The
+ * member can still see every one of these — P1c disposed the representation
+ * EXPORT — and being able to see an inference is not MAIA being entitled to
+ * think with it.
  */
 
 import { query } from '../../db/postgres';
+import {
+  adjudicateBreakthroughRow,
+  type BreakthroughSnapshot,
+} from '../breakthroughParticipation';
+
+export type { BreakthroughSnapshot };
 
 export interface BreakthroughMoment {
   id?: string;
@@ -22,17 +50,16 @@ export const BreakthroughStore = {
   /**
    * Get recent breakthroughs for a user
    */
-  async getRecentBreakthroughs(
-    userId: string,
-    limit: number = 5
-  ): Promise<Array<{ insight: string; element?: string; integrated: boolean; createdAt: string }>> {
-    const result = await query<{ insight: string; element?: string; integrated: boolean; createdAt: string }>(
+  async getRecentBreakthroughs(userId: string, limit: number = 5): Promise<BreakthroughSnapshot[]> {
+    const result = await query(
       `
       SELECT
+        id,
         insight,
         element,
         integrated,
-        timestamp as "createdAt"
+        related_themes,
+        timestamp
       FROM breakthrough_moments
       WHERE user_id = $1
       ORDER BY timestamp DESC
@@ -41,7 +68,7 @@ export const BreakthroughStore = {
       [userId, limit]
     );
 
-    return result.rows ?? [];
+    return (result.rows ?? []).map(adjudicateBreakthroughRow);
   },
 
   /**
@@ -50,13 +77,16 @@ export const BreakthroughStore = {
   async getUnintegratedBreakthroughs(
     userId: string,
     limit: number = 3
-  ): Promise<Array<{ insight: string; element?: string; createdAt: string }>> {
-    const result = await query<{ insight: string; element?: string; createdAt: string }>(
+  ): Promise<BreakthroughSnapshot[]> {
+    const result = await query(
       `
       SELECT
+        id,
         insight,
         element,
-        timestamp as "createdAt"
+        integrated,
+        related_themes,
+        timestamp
       FROM breakthrough_moments
       WHERE user_id = $1 AND integrated = FALSE
       ORDER BY timestamp DESC
@@ -65,7 +95,7 @@ export const BreakthroughStore = {
       [userId, limit]
     );
 
-    return result.rows ?? [];
+    return (result.rows ?? []).map(adjudicateBreakthroughRow);
   },
 
   /**
@@ -116,13 +146,15 @@ export const BreakthroughStore = {
     userId: string,
     element: string,
     limit: number = 5
-  ): Promise<Array<{ insight: string; integrated: boolean; createdAt: string }>> {
-    const result = await query<{ insight: string; integrated: boolean; createdAt: string }>(
+  ): Promise<BreakthroughSnapshot[]> {
+    const result = await query(
       `
       SELECT
+        id,
         insight,
         integrated,
-        timestamp as "createdAt"
+        related_themes,
+        timestamp
       FROM breakthrough_moments
       WHERE user_id = $1 AND element = $2
       ORDER BY timestamp DESC
@@ -131,6 +163,6 @@ export const BreakthroughStore = {
       [userId, element, limit]
     );
 
-    return result.rows ?? [];
+    return (result.rows ?? []).map(adjudicateBreakthroughRow);
   },
 };

@@ -13,6 +13,13 @@
  */
 
 import { query as dbQuery } from '@/lib/db/postgres';
+import {
+  adjudicateBreakthroughRow,
+  admittedBreakthroughs,
+  excludedBreakthroughCount,
+  type BreakthroughSnapshot,
+  type AdmittedBreakthrough,
+} from './breakthroughParticipation';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // TYPES
@@ -46,11 +53,12 @@ export interface JournalEntry {
 
 export interface SignificantMoments {
   captures: CaptureNote[];
-  breakthroughs: BreakthroughMoment[];
+  breakthroughs: BreakthroughSnapshot[];
   journals: JournalEntry[];
   summary: {
     totalCaptures: number;
     totalBreakthroughs: number;
+    breakthroughsExcluded?: number;
     totalJournals: number;
     recentThemes: string[];
   };
@@ -100,10 +108,22 @@ export async function loadCaptures(
 /**
  * Load breakthrough moments for a user
  */
+/**
+ * P3f — ADJUDICATED AT THE REPRESENTATION BOUNDARY, LIKE EVERY OTHER READER.
+ *
+ * This loader handed out the raw machine-extracted `insight`, and
+ * `formatSignificantMomentsAddendum` composed it verbatim as
+ * `## Breakthrough Moments`. R25 had already settled the epistemic status of
+ * `breakthrough_moments`; this reader had simply never passed through it.
+ *
+ * It was found by P3f's own requirement that no ALTERNATE reader be able to
+ * reconstruct the excluded representation — not by resuming general exposure
+ * hunting. Same representation, same rule, one boundary.
+ */
 export async function loadBreakthroughs(
   userId: string,
   limit = 10
-): Promise<BreakthroughMoment[]> {
+): Promise<BreakthroughSnapshot[]> {
   try {
     const result = await dbQuery<{
       id: string;
@@ -120,14 +140,7 @@ export async function loadBreakthroughs(
       LIMIT $2
     `, [userId, limit]);
 
-    return result.rows.map(row => ({
-      id: row.id,
-      insight: row.insight,
-      element: row.element || undefined,
-      createdAt: new Date(row.created_at),
-      integrated: row.integrated,
-      sessionId: row.conversation_id || undefined
-    }));
+    return result.rows.map(adjudicateBreakthroughRow);
   } catch (error) {
     console.warn('[SignificantMoments] Error loading breakthroughs:', error);
     return [];
@@ -220,7 +233,7 @@ export async function loadSignificantMoments(
   ]);
 
   // Extract themes from captures and breakthroughs
-  const recentThemes = extractThemes(captures, breakthroughs);
+  const recentThemes = extractThemes(captures, admittedBreakthroughs(breakthroughs));
 
   return {
     captures,
@@ -229,6 +242,8 @@ export async function loadSignificantMoments(
     summary: {
       totalCaptures: captures.length,
       totalBreakthroughs: breakthroughs.length,
+      // Observability only — reported after adjudication, never composed.
+      breakthroughsExcluded: excludedBreakthroughCount(breakthroughs),
       totalJournals: journals.length,
       recentThemes
     }
@@ -247,11 +262,18 @@ export function formatSignificantMomentsAddendum(
 ): string {
   const sections: string[] = [];
 
-  // Breakthroughs (most important - insights and patterns)
-  if (moments.breakthroughs.length > 0) {
-    const breakthroughLines = moments.breakthroughs.map(b => {
+  // Breakthroughs — P3f.
+  //
+  // Composition is reachable only through the certified accessor. Under the
+  // current adjudication nothing is admitted: the table has no provenance
+  // column, so authorship cannot be established for any row. Kept as a governed
+  // path rather than deleted, so a future reintroduction reads as the
+  // restoration the gate must refuse.
+  const admittedMoments = admittedBreakthroughs(moments.breakthroughs);
+  if (admittedMoments.length > 0) {
+    const breakthroughLines = admittedMoments.map(b => {
       const elementTag = b.element ? ` [${b.element}]` : '';
-      const date = formatRelativeDate(b.createdAt);
+      const date = formatRelativeDate(b.timestamp);
       return `- "${b.insight}"${elementTag} (${date})`;
     });
     sections.push(`## Breakthrough Moments\n${breakthroughLines.join('\n')}`);
@@ -309,9 +331,17 @@ Reference these patterns and insights naturally, not mechanically.
 // HELPERS
 // ═══════════════════════════════════════════════════════════════════════════
 
+/**
+ * P3f — a theme extracted from an excluded insight is still that insight.
+ *
+ * The derivation rule: a derived representation cannot acquire greater
+ * participation authority than the material required to produce it. So this
+ * takes ADMITTED breakthroughs only; deriving a keyword from an excluded one
+ * would smuggle the inference back as a category.
+ */
 function extractThemes(
   captures: CaptureNote[],
-  breakthroughs: BreakthroughMoment[]
+  breakthroughs: AdmittedBreakthrough[]
 ): string[] {
   // Simple keyword extraction - could be enhanced with NLP
   const allText = [

@@ -415,6 +415,33 @@ Ten sources, including **two with no writer anywhere in source** (`episode_links
 
 ### P1c-E — Sovereign Corpus Disposition · execution record
 
+> ### ✅ P1 COMPLETE — 2026-09-03 · founder closure
+>
+> ```text
+> P1a  Export truthfulness / failure integrity     ✅
+> P1b  Sovereign corpus classification             ✅
+> P1c  Enforceable corpus disposition              ✅
+> ───────────────────────────────────────────────────
+> P1    COMPLETE
+> ```
+>
+> **The claim is bounded and stays bounded.** P1 is complete *within the
+> source-derived member-memory corpus*: 40/40 logical representations carry an
+> enforceable disposition. It does **not** mean every piece of member-related
+> data anywhere in the repository has been classified.
+>
+> Operative ledger: **27 EXPORT · 13 EXCLUDE · 1 INSPECT · 2 EXEMPT · 0
+> unresolved blockers.** A representation may carry more than one disposition,
+> so these counts are not expected to sum to 40.
+>
+> **Accepted with the closure:** the field-level classifications; the
+> `state_vectors` correction (widened write-path discovery changes the CURRENT
+> classification, while the earlier P1b witness remains historically true for the
+> tree it ran on); the refusal of exemption for `conversation_memory_uses` and
+> `memory_links`; and the safe-direction reachability rule — *proven
+> non-reachability may support EXCLUDE; mere presence in a dependency closure is
+> never proof of participation.*
+
 > ### ✅ P1c CERTIFIED — 2026-09-02 · **Grade A (scoped)** · Refusal **R28**
 >
 > Certification: `__tests__/mipa-p1c-sovereign-disposition.test.ts` — **52/52 passing**, with **ten hostile mutations verified failing**, each application confirmed by a structural witness, each reverted, and the restored suite re-run green.
@@ -507,6 +534,99 @@ Every run reported a nonzero test total, so none is the R26 failure mode where a
 - It does not prove that any in-closure representation composes, only that non-participation is not claimable for it. That asymmetry is the P3-CSC ceiling and it is stated rather than worked around.
 - It does not build correction, endorsement or retraction. Where those are absent, Phase 0's standard is access plus appropriate exclusion, and that is what was delivered.
 - `INSPECT` is claimed for exactly **one** representation, because exactly one has an authenticated member-scoped route serving it. The rest satisfy the covenant by export, not by a surface that does not exist.
+
+---
+
+### P3f-E — BreakthroughStore / MemoryOrchestrator composition exclusion · execution record
+
+> ### ✅ P3f CERTIFIED — 2026-09-03 · **Grade A (scoped)** · Refusal **R29**
+>
+> Certification: `__tests__/mipa-p3f-breakthrough-orchestrator.test.ts` — **34/34 passing**, with **ten hostile mutations verified failing**, each application confirmed by a structural witness, each reverted by content snapshot, and the restored suite re-run green.
+
+#### Why P3 reopened, and why this is not a resumed hunt
+
+P1c's authorized work established a live composition path for a representation whose epistemic status was already settled:
+
+```text
+breakthrough_moments → BreakthroughStore → lib/memory/MemoryOrchestrator.ts
+    → "RECENT BREAKTHROUGHS" → MAIA cognition
+```
+
+R25 was never wrong. It gated `MemoryBundle` and **scoped its claim to that reader**. The lesson is structural and generalizes past breakthroughs: *a gate placed inside one reader can be walked around by opening a second one.*
+
+```text
+known/enumerable surfaces COMPLETE AS OF P3e
+        ↓
+new exposure discovered during P1c
+        ↓
+P3f — repaired and certified
+        ↓
+known/enumerable exposures complete as of the current tree
+```
+
+The global architectural ceiling is unchanged and general exposure hunting was not resumed.
+
+#### The three rights this record keeps apart
+
+```text
+I CAN SEE THAT MAIA HOLDS THIS       ← P1   breakthrough_moments: EXPORT
+             ≠
+MAIA IS ENTITLED TO THINK WITH THIS  ← P3   this record: EXCLUDED
+             ≠
+MAIA IS ENTITLED TO SAY THIS         ← MIPA speaking eligibility
+```
+
+P1c made every recorded breakthrough visible to the member. That closed the covenant on the access side and conferred **no** participation authority.
+
+#### The repair — one boundary, no new policy
+
+The rule is R25's, unchanged: *machine-detected · machine-extracted · unendorsed system inference → EXCLUDED.* What moved is its **location**. `lib/memory/breakthroughParticipation.ts` now holds the union and the adjudication; `MemoryBundle` re-exports it rather than declaring a rival; every reader consumes it.
+
+| Reader | Before | After |
+|---|---|---|
+| `MemoryBundle.getBreakthroughs` | adjudicated locally (R25) | delegates to the shared boundary |
+| `BreakthroughStore` × **3 methods** | raw `insight` | certified union — **including the two with no caller today** |
+| `MemoryOrchestrator.formatRecallForPrompt` | composed verbatim | composes only through `admittedBreakthroughs` |
+| `SignificantMomentsService` | raw `insight` → `## Breakthrough Moments` | adjudicated; `extractThemes` takes admitted only |
+| `RelationshipMemoryService` | raw `insight` → summary | adjudicated |
+
+The excluded arm of the union carries no `insight` and no `element`. Not a filter and not a flag — **the string never leaves the boundary**, so a downstream composer has nothing to render, rename, reformat, cast or summarise.
+
+#### Two further findings
+
+**1 — Two more live composers, found by P3f's own alternate-reader proof.** `SignificantMomentsService` emitted `## Breakthrough Moments` with the insight quoted verbatim (reached from `app/api/between/chat/route.ts`), and its `extractThemes` derived keywords from those insights — a derivation inheriting authority it could not have. Both are now adjudicated. These came from the proof obligation, not from resumed hunting.
+
+**2 — A hole in P1c's own repair.** P1c partitioned `recentBreakthrough` out of the composed relationship block and **kept `summary`** as composition-eligible, on the 2026-08-14 ruling that the raw recurrence fact may be stated. But `generateRelationshipSummary` *builds* that summary, and it was interpolating `Recent insight: "<machine-extracted insight>"` directly into it. The representation P1c excluded from one field was travelling into the prompt inside another. Closed here.
+
+#### Where the load-bearing gate is, and why not in the composer
+
+`lib/memory/MemoryOrchestrator.ts` carries `// @ts-nocheck`. A type-level gate placed there would be **decorative** — the compiler is not reading the file. Removing the suppression would introduce four pre-existing diagnostics and fail the no-regression gate, which is scope beyond this repair boundary. So the gate sits at `breakthroughParticipation.ts`, which **is** type-checked, and the composer's behaviour is a consequence of that boundary rather than a promise made locally. Stated rather than glossed.
+
+#### Falsification — ten mutations, all verified failing, each structurally witnessed
+
+| # | Mutation | Witness (before → after) | Result |
+|---|---|---|---|
+| **N1** | `composer += rawBreakthrough.insight` — the direct read restored | orchestrator raw reads 1 → 3 | ❌ 5 failed |
+| N2 | Alternate spelling — the same object under a different heading | orchestrator raw reads 1 → 3 | ❌ 1 failed |
+| N3 | Cast-based bypass | orchestrator raw reads 1 → 2 | ❌ 1 failed |
+| N4 | A derived COUNT over the excluded material | orchestrator raw reads 1 → 3 | ❌ 2 failed |
+| N5 | The store hands out raw rows again | store adjudications 3 → 2 | ❌ 1 failed |
+| N6 | An alternate reader un-adjudicated and self-admitted | `SignificantMoments` adjudications 1 → 0 | ❌ 2 failed |
+| N7 | The excluded arm regains an `insight` field | excluded-arm fields 2 → 3 | ❌ 1 failed |
+| N8 | A brand-new un-adjudicated reader of the representation | raw-insight readers 5 → 6 | ❌ 1 failed |
+| N9 | The rule forked — a rival union beside the shared one | local unions 0 → 1 | ❌ 1 failed |
+| **N10** | The P1c summary hole reopened | unsanctioned raw reads 0 → 2 | ❌ 2 failed |
+| — | Restored | content-identical to snapshot | ✅ **34/34** |
+
+> **N10 initially PASSED, and the defect was in the gate.** The mutation left the `admittedBreakthroughs(...)` line standing and simply read the raw array beside it — so a proximity check would have passed too. The repair had been made in the code and **never certified**: the single-read-path assertion was written for the orchestrator and not for the other two composers. *A repair without a gate is a state, not a property.* Both missing assertions were added, plus one that pins the summary builder's insight read to an accessor-bound identifier.
+>
+> A second instrument defect surfaced with them: the function-body slicer took `indexOf('{')` from the declaration and landed inside an **inline parameter object type**, reading a type annotation as executable code. It now balances the parameter list first.
+
+#### What P3f did NOT prove
+
+- It does not certify a codebase-global non-participation claim for `breakthrough_moments`. It certifies that every reader **in this tree** consumes the shared boundary, and that a new one fails **because it is new**.
+- `app/api/maia/field/route.ts` still reads the raw insight. It is an **access** surface, not a composition path — a Next.js route handler is a leaf that nothing imports, and the suite asserts that. P1, not P3.
+- The global architectural ceiling (P3-CSC, outcome C) is untouched.
 
 ---
 

@@ -12,6 +12,11 @@
 
 import { query as dbQuery } from '@/lib/db/postgres';
 import { adjudicateParticipation, adjudicateDerivation } from '@/lib/maia/participationGate';
+import {
+  adjudicateBreakthroughRow,
+  admittedBreakthroughs,
+  type BreakthroughSnapshot,
+} from './breakthroughParticipation';
 import { lattice } from './ConsciousnessMemoryLattice';
 import { memberRef } from '../privacy/memberRef';
 
@@ -107,14 +112,14 @@ export interface ConversationTheme {
   context?: string; // Brief context about this theme
 }
 
-export interface BreakthroughMoment {
-  id: string;
-  timestamp: Date;
-  insight: string;
-  element?: string;
-  integrated: boolean;
-  relatedThemes: string[];
-}
+/**
+ * P3f — this reader now uses the certified union, like every other one.
+ *
+ * The local shape carried a raw `insight` on every row. Re-exported under the
+ * old name so existing importers keep resolving, but the type IS the boundary's:
+ * the excluded arm has no insight to read.
+ */
+export type BreakthroughMoment = BreakthroughSnapshot;
 
 export interface RelationshipPattern {
   pattern: string;
@@ -204,7 +209,10 @@ export async function loadRelationshipMemory(
 
   if (includeBreakthroughs) {
     breakthroughs = await loadBreakthroughMoments(userId, maxBreakthroughs);
-    recentBreakthrough = breakthroughs.find(b =>
+    // P3f — only an ADMITTED row can become the "recent breakthrough". An
+    // excluded one has no insight, and selecting it would produce a labelled
+    // slot that reads as content while carrying none.
+    recentBreakthrough = admittedBreakthroughs(breakthroughs).find(b =>
       Date.now() - b.timestamp.getTime() < 7 * 24 * 60 * 60 * 1000 // Within last 7 days
     );
   }
@@ -308,14 +316,7 @@ async function loadBreakthroughMoments(userId: string, limit: number): Promise<B
       LIMIT $2
     `, [userId, limit]);
 
-    return result.rows.map(row => ({
-      id: row.id,
-      timestamp: row.timestamp,
-      insight: row.insight,
-      element: row.element,
-      integrated: row.integrated,
-      relatedThemes: row.related_themes || []
-    }));
+    return result.rows.map(adjudicateBreakthroughRow);
   } catch (error) {
     console.warn('⚠️ Could not load breakthrough moments:', error);
     return [];
@@ -455,9 +456,22 @@ function generateRelationshipSummary(data: {
     parts.push(`Working with: ${themeList}.`);
   }
 
-  // Recent breakthrough
-  if (breakthroughs.length > 0 && breakthroughs[0]) {
-    const recent = breakthroughs[0];
+  // Recent breakthrough — P3f.
+  //
+  // THIS WAS A HOLE IN P1c'S OWN REPAIR, found by P3f's alternate-reader proof.
+  //
+  // P1c partitioned `recentBreakthrough` out of the composed relationship block
+  // and KEPT `summary` as composition-eligible, on the 2026-08-14 ruling that
+  // the raw recurrence fact may be stated. But this function BUILDS that
+  // summary, and it was interpolating the machine-extracted insight verbatim
+  // into it — so the representation P1c excluded from one field was travelling
+  // into the prompt inside another.
+  //
+  // Composition is now reachable only through the certified accessor. The
+  // excluded arm has no `insight` to interpolate.
+  const admittedRecent = admittedBreakthroughs(breakthroughs);
+  if (admittedRecent.length > 0) {
+    const recent = admittedRecent[0];
     const daysAgo = Math.floor((Date.now() - recent.timestamp.getTime()) / (1000 * 60 * 60 * 24));
     if (daysAgo <= 7) {
       parts.push(`Recent insight: "${recent.insight}"`);

@@ -17,6 +17,11 @@ import { calculateDecayedConfidence } from './confidenceDecay';
 import { ConversationMemoryUsesStore } from './stores/ConversationMemoryUsesStore';
 import { memberRef } from '../privacy/memberRef';
 import {
+  adjudicateBreakthroughRow,
+  type BreakthroughSnapshot as BreakthroughSnapshotT,
+  type AdmittedBreakthrough as AdmittedBreakthroughT,
+} from './breakthroughParticipation';
+import {
   adjudicateParticipation,
   adjudicateDerivation,
   type ProvenanceClaim,
@@ -143,25 +148,26 @@ export interface DevelopmentalBucketResult {
   excludedCount: number;
 }
 
-export interface BreakthroughBase {
-  id: string;
-  integrated: boolean;
-  timestamp: Date;
-  relatedThemes: string[];
-}
-
-export interface AdmittedBreakthrough extends BreakthroughBase {
-  participation: 'admitted';
-  insight: string;
-  element?: string;
-}
-
-export interface ExcludedBreakthrough extends BreakthroughBase {
-  participation: 'excluded';
-  exclusionReason: ExclusionReason;
-}
-
-export type BreakthroughSnapshot = AdmittedBreakthrough | ExcludedBreakthrough;
+/**
+ * P3f — THE BREAKTHROUGH UNION NOW LIVES AT THE REPRESENTATION BOUNDARY.
+ *
+ * R25 declared and applied it here. That gated THIS reader and correctly scoped
+ * its claim to this reader — and P1c then found a third composer reaching the
+ * same representation through `BreakthroughStore`, which had never passed
+ * through this file at all.
+ *
+ * A gate placed inside one reader can be walked around by opening a second one.
+ * The adjudication therefore moved to `./breakthroughParticipation`, which every
+ * reader consumes. The rule is byte-for-byte R25's; only its location changed.
+ * Re-exported here so R25's certification and every existing importer keep
+ * pointing at the same types.
+ */
+export type {
+  BreakthroughBase,
+  AdmittedBreakthrough,
+  ExcludedBreakthrough,
+  BreakthroughSnapshot,
+} from './breakthroughParticipation';
 
 export interface RelationshipSnapshot {
   encounterCount: number;
@@ -566,7 +572,7 @@ export const MemoryBundleService = {
    * BUCKET C: Breakthroughs (prefer not integrated, most recent)
    * Uses exact SQL from user guidance
    */
-  async getBreakthroughs(userId: string): Promise<BreakthroughSnapshot[]> {
+  async getBreakthroughs(userId: string): Promise<BreakthroughSnapshotT[]> {
     try {
       const result = await query(`
         SELECT id, timestamp, insight, element, integrated, related_themes
@@ -576,29 +582,9 @@ export const MemoryBundleService = {
         LIMIT 5
       `, [userId]);
 
-      return (result.rows || []).map((row): BreakthroughSnapshot => {
-        const base = {
-          id: row.id,
-          integrated: row.integrated,
-          timestamp: new Date(row.timestamp),
-          relatedThemes: row.related_themes || [],
-        };
-
-        // P3b — PROVENANCE IS NEVER GUESSED, AND NEVER DEFAULTED TO MEMBER.
-        //
-        // The table has no provenance column, so nothing here can establish
-        // authorship. Defaulting to `member` would be the most dangerous
-        // possible "compatibility fix": it would convert machine inference into
-        // member testimony silently, at the top of the authority lattice.
-        const provenance: ProvenanceClaim = null;
-
-        const verdict = adjudicateParticipation({ provenance, endorsement: 'none' });
-        if (!verdict.admitted) {
-          // No `insight`, no `element` on this arm — by type, not convention.
-          return { ...base, participation: 'excluded', exclusionReason: verdict.reason };
-        }
-        return { ...base, participation: 'admitted', insight: row.insight, element: row.element };
-      });
+      // P3f — one adjudicator, shared with every other reader of this
+      // representation. The provenance reasoning it carries is R25's, unchanged.
+      return (result.rows || []).map(adjudicateBreakthroughRow);
     } catch (err) {
       console.warn('[MemoryBundle] Breakthrough fetch failed:', err);
       return [];
@@ -768,7 +754,7 @@ export const MemoryBundleService = {
    */
   buildRelationshipSnapshot(
     relationshipData: { encounterCount: number; firstSeen: Date | null; lastSeen: Date | null; sessionCount: number },
-    allBreakthroughs: BreakthroughSnapshot[]
+    allBreakthroughs: BreakthroughSnapshotT[]
   ): RelationshipSnapshot {
 
     // P3b — EVERY breakthrough-derived field is computed from ADMITTED rows only.
@@ -779,7 +765,7 @@ export const MemoryBundleService = {
     // worse, because a count reads as established fact while carrying no
     // provenance a reader could interrogate.
     const breakthroughs = allBreakthroughs.filter(
-      (b): b is AdmittedBreakthrough => b.participation === 'admitted',
+      (b): b is AdmittedBreakthroughT => b.participation === 'admitted',
     );
 
     const integratedCount = breakthroughs.filter(b => b.integrated).length;
@@ -828,11 +814,11 @@ export const MemoryBundleService = {
       }));
   },
 
-  breakthroughsToCandidate(breakthroughs: BreakthroughSnapshot[]): MemoryCandidate[] {
+  breakthroughsToCandidate(breakthroughs: BreakthroughSnapshotT[]): MemoryCandidate[] {
     // P3b — the filter is not defensive style. `content: b.insight` does not
     // typecheck against the union, because the excluded arm has no `insight`.
     return breakthroughs
-      .filter((b): b is AdmittedBreakthrough => b.participation === 'admitted')
+      .filter((b): b is AdmittedBreakthroughT => b.participation === 'admitted')
       .map(b => ({
       id: b.id,
       content: b.insight,
