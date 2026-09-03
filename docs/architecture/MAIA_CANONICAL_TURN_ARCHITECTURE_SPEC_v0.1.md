@@ -614,6 +614,109 @@ ssh soullab@minisforum 'docker logs maia-sovereign --since 30m 2>&1 | grep -F "[
 
 ---
 
+### Deploy candidate lineage · ADJUDICATED 2026-09-03 (Path B ratified)
+
+**The question.** Taking the bounded production reading requires deploying a SHA, and deployment authority binds to the SHA that will run, not to the last commit's intent. `b7722d2` sits 25 commits ahead of / 5 behind `clean-main-no-secrets @ a4305f4` (merge-base `90f401c`). Was there a narrower certified ancestry that carries the witness?
+
+**The finding.** No.
+
+```text
+DEPLOY CANDIDATE LINEAGE
+
+Strict runtime/import closure is narrower than the branch
+(witness closure 68 files ⊂ /list closure 404; 13 of 16 code
+commits are transitive git-level dependencies of b7722d2 —
+P6 and P1 enter only through shared test files, not runtime
+imports), but no narrower certified Git ancestry can be derived
+without hand-resolving governing documents and producing a new,
+uncertified semantic object.
+
+  strict 13 code commits             conflict (Phase 0 spec absent)
+  22 = 13 + docs, minus 3            conflict at P3e: REFUSAL_REGISTRY.md +
+                                     Phase 0 spec, both edited by the excluded
+                                     P3 closed-set certification commit
+  23 = all minus the B-retirement    conflict at b7722d2: this spec's own §12a
+  full lineage ∪ canonical           CLEAN
+
+Therefore the production-reading candidate is:
+
+  full CMT/MIPA lineage through Step 3b
+        +
+  canonical a4305f4d6ec408e34efc5dae49d9664b981d4323
+
+Local integration specimen:
+  933a7f4
+  parents: b7722d2 + a4305f4
+  typecheck 228 vs baseline 239 · 19 suites / 450 tests green
+
+933a7f4 is evidence of clean integrability, not yet a
+production-deployable remote SHA.
+```
+
+The governing decision: the candidate is the full certified lineage *not because every commit is a runtime dependency of the shadow witness, but because that is the smallest history that preserves the certified object without reconstruction.* P6, for example, is not required by the shadow read path; it is required by the certified lineage we are choosing not to rewrite. Path A (a reconstructed slice) is **rejected**: it would manufacture a new lineage and then pretend it inherited proof from the old one.
+
+**The production surface, in three bands — not a blob.** 34 runtime files (+5,255 / −828), one migration, one route retired. The five canonical commits absorbed touch `app/studio/calendar`, `app/studio/layout`, one script and two docs — zero file overlap with the lineage.
+
+| Band | Content | Disposition |
+|---|---|---|
+| **1 — Phase 0** | P1 · P1b · P1c · P2 · P3 · P3b · P3c · P3d · P3e · P3f · P6 (closed by founder adjudication). Some of it **changes behaviour deliberately**, by removing or narrowing authority — P3 removed uncertified inference from composition; P6 changes return authority. Named, not hidden under "prerequisite" | **authorized as production surface** |
+| **2 — CMT Steps 1–2** | constructor / certification machinery; no caller; cognition authority unmoved | **deployable** · canonical cutover NO · new capability NO |
+| **3 — Steps 3a + 3b** | 3a: B is an explicit 410 (`ROUTE_RETIRED`, successor `/list`) — retirement, not deletion. 3b: flag-gated · fire-and-forget · legacy cognition authoritative · read-only shadow providers · no cutover · no zero-diff claim before observation | **deployable for the bounded shadow reading** · 3a adds a live obligation: **retired route B hits = 0 expected**; traffic there is evidence against the "structurally retired" premise — record it and stop the M3 inference, do not repair in the window |
+
+**P6 migration — `20260903000001_return_authority_fail_closed.sql` — production deployment AUTHORIZED as written.** It does exactly two things: schema default `contextual_doorway → member_pulled`; bounded backfill of rows where `source_type = 'practitioner_observation' AND generated_by = 'practitioner-observation' AND return_preference = 'contextual_doorway'` → `member_pulled`. It rewrites no authorship / provenance field. Rationale: the existing value represents future-return permission the practitioner could not confer; uncertainty resolves fail-closed, and the member retains an existing act for allowing return again. This authorizes **this exact migration as part of this exact candidate** — it does not generalize; broader memory migration and P4 / P5 remain NOT authorized. Pre-deploy, one read-only blast-radius count is recorded (it records consequence; it does not decide):
+
+```sql
+SELECT COUNT(*) AS rows_to_reseal
+FROM member_memory_atoms
+WHERE source_type = 'practitioner_observation'
+  AND generated_by = 'practitioner-observation'
+  AND return_preference = 'contextual_doorway';
+-- after migration the same query must return 0
+```
+
+**Exact-SHA gates before deploy** (on the pushed candidate, not the local specimen): 19 relevant suites / 450 tests green · `npm run typecheck` no regression · `npm run preflight` EXIT 0 with the real `.env.docker` · migration reconstruction / gates green · working-tree contamination disclosed. If canonical moves before candidate construction: stop, overlap / divergence check only — this adjudication is pinned to `a4305f4`.
+
+**Live acceptance window — for every comparable `/list` turn observed, not "some green turns":**
+
+```text
+canonical construction failure     0
+unexpected provider divergence     0
+unexpected disposition divergence  0
+unexpected reason divergence       0
+unexpected provenance divergence   0
+unexpected section/order diff      0
+unexpected digest diff             0
+
+expected, reported, not counted as parity failure:
+  relationship     unobserved:below_seam
+  session_recall   unobserved:below_seam
+
+also collected:
+  route B 410 hits                 expected 0
+  P6 post-migration target rows    0
+  successful ordinary /list turns  > 0
+```
+
+One unexpected comparison → the live reading is not zero-diff. Capture it. Do not repair it under the authority to witness. The structured divergence record is preserved; it is never collapsed back to a single boolean.
+
+**What a clean reading buys:** `Step 3b live parity PASS → M3 adjudication READY`. Not M3 authorized, not cutover authorized, not P3-global closed. Those remain separate decisions.
+
+```text
+LINEAGE QUESTION          CLOSED
+PATH A · reconstructed    REJECTED
+PATH B · full lineage     RATIFIED
+P6 MIGRATION              PRODUCTION-AUTHORIZED AS WRITTEN
+STEPS 1–2                 DEPLOYABLE
+STEP 3a                   DEPLOYABLE · 410 witness required
+STEP 3b                   DEPLOYABLE FOR BOUNDED SHADOW READING
+REMOTE CANDIDATE          NEXT
+DEPLOY                    AUTHORIZED AFTER EXACT-SHA GATES
+M3                        NOT AUTHORIZED
+CUTOVER                   NOT AUTHORIZED
+```
+
+---
+
 ## 13. Why the constructor is the right place for what comes after
 
 Dreams, relationships, decisions, Spiralogic phases, ideas, changes, somatic processes — each becomes a **governed intelligence provider** feeding one participation architecture, rather than a feature bolted onto MAIA with its own private path to the prompt. The provider contract in §3.3 is the shape they will take. But not yet.
