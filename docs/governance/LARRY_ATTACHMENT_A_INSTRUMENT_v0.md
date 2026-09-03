@@ -63,6 +63,51 @@ Default for any item without an explicit value is **`never`**. Absence is not pe
 - **The six domains** — must be captured in Larry's own language, not confirmed against ours.
 - **Client/session material** — his coaching practice is the highest-value layer *and* the one carrying third-party consent exposure. Only Larry teaching *about* his practice is inventoriable here. Client records are not Larry's to license.
 
+### Added 2026-09-02 — from NW-D02 talk-derivation review
+
+Two founder-supplied analyses of Larry's Tiger 21 presentation were reviewed against the built system
+(`docs/design/now-what/reconciliation/NW_D02_TALK_DERIVATION_REVIEW_2026-09-02.md`). Both are **derived readings**.
+A **transcript of the talk has been supplied; its governed preservation under `00_PROVENANCE/` is pending.**
+
+Recorded here as gaps — **not** as inventory rows, and **not** as candidate values:
+
+- **Governed preservation of the transcript** — place it unchanged under `00_PROVENANCE/` with a source note
+  (how produced, by whom, from what, when) **before** the sitting. Audio is not held.
+- **Speaker attribution within the transcript is unverified.** Both analyses quote group discussion
+  ("one participant says…", "his mother raises…"). Which words are Larry's is not established line by line, and
+  Class A / B / C turns on exactly that. Do not classify any passage until attribution is resolved.
+- **`leisure` and `money` — status unknown, not absence.** The transcript contains a leisure discussion and the
+  phrase "time and money well spent." The open question is therefore not whether Larry uses these concepts, but
+  **what status each holds**: a domain, an aspect of another domain, a practice, an illustrative example, or
+  something else. See the question sequence below.
+- **Seven vs six** — two derived documents produced two *different* seven-item lists in one session. Treat any count
+  as unverified. The number of dimensions is Larry's to state, not ours to confirm.
+- **"Now What?" as Larry's term** — used throughout both analyses as a name for the threshold, the business, and the
+  product. Its provenance class (A / B / D) is unestablished. Raise it in §1 Origin, in his words, before it is used
+  as a product name anywhere member-facing.
+
+#### Question sequence for the taxonomy — order is binding
+
+⛔ An earlier draft of this section proposed: *"What do you call the part of life that isn't work and isn't
+obligation?"* That question is **leading** — it presumes such a category exists and belongs in the taxonomy, and
+invites Larry to name a slot we built. It is withdrawn. Use this instead:
+
+**First — open, unprompted. Let him finish completely before anything else is said:**
+
+> "When Now What names the dimensions of flourishing, what are they — in your own words?"
+
+**Only after Larry has completed that answer:**
+
+> "In the presentation, you also discussed leisure and 'time and money well spent.' How do those ideas relate, if at
+> all, to the dimensions you just named?"
+
+"If at all" is load-bearing and must be spoken. The second question tests relation, not membership; "they don't" is a
+complete and final answer, and records as such.
+
+⛔ Reminder for the facilitator: none of the above may be read to Larry as a list. Each is a question to be reached
+through §1 Origin, not a proposition to confirm. The instrument's leading-question failure (§0) is exactly what
+produced the drift these rows record — and the withdrawn question above shows how easily it recurs.
+
 ---
 
 ## 5. Gate
