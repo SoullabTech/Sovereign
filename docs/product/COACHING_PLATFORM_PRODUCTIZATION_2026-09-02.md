@@ -11,10 +11,20 @@ Two products, not one. This resolves a tension that had been costing design time
 
 | | **Now What?** | **Soullab practitioner product** |
 |---|---|---|
-| For | Larry, and coaches who want simplicity | Practitioners who want the structure |
-| Interface | A branded landing and one conversation | Rooms, coaching surfaces, the relational architecture |
-| The client's decision | *"Do I want to talk?"* | Where in their work to go |
-| Demo | `docs/design/now-what/encounters/now-what-larry-simple.html` | `part2-rooms-mockup.html`, `part2-chatbot-mockup.html` |
+| Core model | Branded relational MAIA | Full practitioner environment |
+| Primary gesture | **Talk** | Work within a coaching relationship |
+| Visible surfaces | **Talk · Return · Keep** | Rooms + richer coaching surfaces |
+| Organization | Lightweight session history and categories | Practitioner-defined architecture |
+| Practitioner UI | **None** | Yes |
+| Intelligence | Mostly invisible | May be explicitly surfaced |
+| Demo | `now-what-larry-simple.html` | `part2-rooms-mockup.html`, `part2-chatbot-mockup.html` |
+
+**Keep is the one piece of the sophisticated architecture that belongs in even the simplest version.** Conversation gives Now What? immediacy; Keep gives it continuity and ownership. Without it Larry has a branded chatbot. With it he has a relational place his clients return to — and he never has to understand the machinery that makes it possible.
+
+Two rules hold the boundary:
+
+- **Categories are archive organization, never product navigation.** A title and category are suggested *after* a conversation and can be changed. The person is never asked to classify themselves before speaking. Conversation first, organization second.
+- **Keep is member-authored significance, not everything MAIA remembers.** Memory sustains the relationship; Keep is the person saying *this matters to me*. Collapsing the two would turn a drawer into a dashboard.
 
 Both run on the same architecture. Memory, retrieval, the room ontology and the coach field remain live under the simple cut as **capabilities of the conversation, never destinations in the interface.**
 

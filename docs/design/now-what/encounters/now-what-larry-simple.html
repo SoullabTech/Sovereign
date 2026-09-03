@@ -34,6 +34,9 @@ body{margin:0;color:var(--ink);font:400 16px/1.65 Inter,-apple-system,BlinkMacSy
   color:var(--gold);font:inherit;font-size:14px;letter-spacing:.1em;padding:15px 34px;cursor:pointer;
   transition:background .2s,color .2s;}
 .begin:hover{background:var(--gold);color:var(--bg2);}
+.quiet{position:absolute;top:18px;right:22px;background:none;border:0;color:var(--faint);
+  font:inherit;font-size:12px;letter-spacing:.1em;cursor:pointer;opacity:.7;}
+.quiet:hover{color:var(--gold);opacity:1;}
 .by{position:absolute;bottom:32px;font-size:9.5px;letter-spacing:.24em;text-transform:uppercase;
   color:var(--faint);opacity:.65;}
 
@@ -75,6 +78,11 @@ body{margin:0;color:var(--ink);font:400 16px/1.65 Inter,-apple-system,BlinkMacSy
 .ic{background:none;border:0;color:var(--gold2);font-size:17px;cursor:pointer;padding:0 2px;}
 .ic:hover{color:var(--gold);}
 
+.filter{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:38px;}
+.filter button{background:none;border:1px solid var(--rule);border-radius:14px;color:var(--faint);
+  font:inherit;font-size:11px;letter-spacing:.08em;padding:6px 13px;cursor:pointer;}
+.filter button:hover{color:var(--ink);}
+.filter button.on{color:var(--gold);border-color:var(--gold2);}
 h2{font-size:9.5px;letter-spacing:.26em;text-transform:uppercase;color:var(--gold);
   margin:0 0 22px;font-weight:400;}
 h2+h2,.sec+.sec h2{margin-top:0;}
@@ -102,6 +110,7 @@ h2+h2,.sec+.sec h2{margin-top:0;}
   <div class="with">with Larry Closs</div>
   <p class="say">A place to talk through what&rsquo;s happening and what comes next.</p>
   <button class="begin" id="go">Start a conversation</button>
+  <button class="quiet" id="landKeep">Keep</button>
   <div class="by">Powered by MAIA</div>
 </section>
 
@@ -124,6 +133,7 @@ h2+h2,.sec+.sec h2{margin-top:0;}
   <div class="top"><span class="m" id="home2">Now What?</span>
     <nav><button class="act">Keep</button><button id="back">Conversation</button></nav></div>
   <div class="body"><div class="inner">
+    <div class="filter" id="filter"></div>
     <div class="sec"><h2>Conversations</h2><div id="convs"></div></div>
     <div class="sec"><h2>Things I&rsquo;ve kept</h2><div id="kepts"></div></div>
   </div></div>
@@ -154,10 +164,17 @@ var kepts=[
  {q:"I don't actually need to decide yet.",f:'From: The decision about my role'},
  {q:'[ Placeholder reflection exercise ]',f:'From: Aug 28 conversation'}];
 
+var CATS=['All','Work','Decisions','Relationships','Coaching','Other'],cat='All';
 function render(){
-  document.getElementById('convs').innerHTML=convs.map(function(c){
+  document.getElementById('filter').innerHTML=CATS.map(function(c){
+    return '<button class="'+(c===cat?'on':'')+'" data-c="'+c+'">'+c+'</button>';}).join('');
+  [].forEach.call(document.querySelectorAll('.filter button'),function(x){
+    x.onclick=function(){cat=x.dataset.c;render();};});
+  var vis=convs.filter(function(c){return cat==='All'||c.c===cat;});
+  document.getElementById('convs').innerHTML=vis.length?vis.map(function(c){
     return '<div class="item"><div class="t">'+c.t+'</div>'+
-      '<div class="s">'+c.d+' &middot; <b>'+c.c+'</b></div></div>';}).join('');
+      '<div class="s">'+c.d+' &middot; <b>'+c.c+'</b></div></div>';}).join('')
+    :'<p class="empty">Nothing here yet.</p>';
   var k=document.getElementById('kepts');
   k.innerHTML=kepts.length?kepts.map(function(x){
     return '<div class="kept"><div class="q">'+x.q+'</div><div class="f">'+x.f+'</div></div>';
@@ -194,16 +211,29 @@ function add(cls,txt){
   }
   tbody.scrollTop=tbody.scrollHeight;
 }
+var live=null;
+/* A conversation saves itself. The title and category are SUGGESTED from what
+   was said, after the fact, and the person can change them -- never asked for
+   before they speak. */
+function suggest(t){t=t.toLowerCase();
+  if(/team|colleague|staff|sarah|report/.test(t))return['Something with my team','Relationships'];
+  if(/decision|choose|deciding|leaving|role/.test(t))return['The decision I\u2019m sitting with','Decisions'];
+  if(/larry|session|coaching|exercise/.test(t))return['To bring to Larry','Coaching'];
+  if(/work|board|business|company/.test(t))return['Something at work','Work'];
+  return ['Today\u2019s conversation','Other'];}
 function send(){var v=inp.value.trim();if(!v)return;
-  hi.style.display='none';add('me',v);inp.value='';inp.style.height='auto';
+  hi.style.display='none';add('me',v);
+  if(!live){var g=suggest(v);live={t:g[0],d:'Today',c:g[1]};convs.unshift(live);render();}
+  inp.value='';inp.style.height='auto';
   setTimeout(function(){add('ai',reply(v));},560);}
 
 document.getElementById('go').onclick=function(){show('talk');setTimeout(function(){inp.focus();},60);};
 document.getElementById('send').onclick=send;
 document.getElementById('toKeep').onclick=function(){show('keep');};
+document.getElementById('landKeep').onclick=function(){show('keep');};
 document.getElementById('back').onclick=function(){show('talk');};
 document.getElementById('new').onclick=function(){
-  log.innerHTML='';hi.style.display='';inp.value='';inp.focus();};
+  log.innerHTML='';hi.style.display='';inp.value='';live=null;inp.focus();};
 document.getElementById('home1').onclick=function(){show('land');};
 document.getElementById('home2').onclick=function(){show('land');};
 inp.addEventListener('keydown',function(e){
