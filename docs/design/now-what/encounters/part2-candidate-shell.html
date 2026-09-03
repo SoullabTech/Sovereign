@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Now What? — One Conversation Candidate</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+@page{size:letter landscape;margin:0}
+:root{
+  --ink:#f4f2ec;
+  --dim:#c3cadb;
+  --faint:#8793ac;
+  --gold:#d3b264;
+  --gold2:#b8963f;
+  --bg1:#1b2547;
+  --bg2:#141c38;
+  --rule:rgba(244,242,236,.14);
+  --glow:rgba(211,178,100,.11);
+}
+*{box-sizing:border-box}
+html,body{min-height:100%;margin:0}
+body{
+  color:var(--ink);
+  background:
+    radial-gradient(ellipse 75% 65% at 72% 0%,var(--glow),transparent 62%),
+    linear-gradient(150deg,var(--bg1),var(--bg2) 68%);
+  font:400 15px/1.55 Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  -webkit-print-color-adjust:exact;
+  print-color-adjust:exact;
+}
+.shell{
+  min-height:100dvh;
+  padding:40px;
+  display:grid;
+  grid-template-columns:minmax(300px,.78fr) minmax(390px,1.22fr);
+  gap:44px;
+  align-items:center;
+  max-width:1440px;
+  margin:0 auto;
+}
+.copy{max-width:510px;padding:18px 0 24px}
+.meta{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  margin-bottom:38px;
+  color:var(--faint);
+  font-size:9.5px;
+  letter-spacing:.2em;
+  text-transform:uppercase;
+}
+.meta .rule{width:34px;height:1px;background:var(--gold2)}
+.eyebrow{
+  color:var(--gold);
+  font-size:10px;
+  font-weight:600;
+  letter-spacing:.25em;
+  text-transform:uppercase;
+  margin-bottom:16px;
+}
+h1{
+  margin:0;
+  max-width:7.5em;
+  font-family:"Cormorant Garamond",Georgia,serif;
+  font-size:clamp(52px,5.1vw,76px);
+  line-height:.98;
+  font-weight:400;
+  letter-spacing:-.025em;
+}
+h1 em{color:var(--gold);font-weight:400}
+.lede{
+  max-width:39em;
+  margin:25px 0 0;
+  color:var(--dim);
+  font-size:16px;
+  line-height:1.7;
+}
+.reduction{
+  margin:34px 0 0;
+  padding:22px 0;
+  border-top:1px solid var(--rule);
+  border-bottom:1px solid var(--rule);
+}
+.reduction div{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  min-height:31px;
+  color:var(--dim);
+  font-size:13px;
+}
+.reduction span{
+  width:5px;height:5px;flex:0 0 5px;
+  border-radius:50%;background:var(--gold2);
+}
+.question{
+  margin-top:30px;
+  padding-left:18px;
+  border-left:2px solid var(--gold2);
+}
+.question .label{
+  margin-bottom:7px;
+  color:var(--gold);
+  font-size:9px;
+  font-weight:600;
+  letter-spacing:.2em;
+  text-transform:uppercase;
+}
+.question p{
+  margin:0;
+  color:var(--ink);
+  font-family:"Cormorant Garamond",Georgia,serif;
+  font-size:21px;
+  font-style:italic;
+  line-height:1.45;
+}
+.note{
+  margin-top:26px;
+  color:var(--faint);
+  font-size:10.5px;
+  line-height:1.55;
+}
+.demo{min-width:0}
+.device{
+  position:relative;
+  width:min(100%,680px);
+  height:min(820px,calc(100dvh - 80px));
+  min-height:620px;
+  margin:0 auto;
+  padding:10px;
+  border:1px solid rgba(244,242,236,.2);
+  border-radius:30px;
+  background:rgba(8,13,28,.64);
+  box-shadow:0 30px 90px rgba(0,0,0,.34);
+}
+.device::before{
+  content:"";
+  position:absolute;
+  z-index:2;
+  left:50%;top:7px;
+  width:54px;height:4px;
+  transform:translateX(-50%);
+  border-radius:4px;
+  background:rgba(244,242,236,.22);
+  pointer-events:none;
+}
+iframe{
+  display:block;
+  width:100%;height:100%;
+  border:0;
+  border-radius:21px;
+  background:var(--bg2);
+}
+.open{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  margin:13px 12px 0;
+  color:var(--gold);
+  font-size:10px;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+  text-decoration:none;
+}
+.open:hover{text-decoration:underline}
+@media (max-width:900px){
+  .shell{grid-template-columns:1fr;padding:30px 22px 44px;gap:30px}
+  .copy{max-width:680px;margin:0 auto;padding-top:8px}
+  h1{font-size:clamp(48px,11vw,70px);max-width:9em}
+  .lede{font-size:15px}
+  .device{height:760px;min-height:640px;width:min(100%,660px)}
+}
+@media (max-width:520px){
+  .shell{padding:22px 14px 34px}
+  .meta{margin-bottom:28px}
+  h1{font-size:48px}
+  .device{height:720px;min-height:620px;padding:6px;border-radius:24px}
+  iframe{border-radius:18px}
+  .open{margin-left:6px}
+}
+@media print{
+  body{width:11in;height:8.5in;overflow:hidden}
+  .shell{width:11in;height:8.5in;min-height:0;padding:.48in .55in;gap:.45in;grid-template-columns:.78fr 1.22fr}
+  h1{font-size:55px}
+  .meta{margin-bottom:26px}
+  .lede{font-size:13px;margin-top:18px}
+  .reduction{margin-top:24px;padding:15px 0}
+  .question{margin-top:21px}
+  .note{font-size:9px;margin-top:18px}
+  .device{height:7.35in;min-height:0;padding:7px;border-radius:20px;box-shadow:none}
+  .open{display:none}
+}
+</style>
+</head>
+<body>
+<main class="shell">
+  <section class="copy">
+    <div class="meta"><span>Now What?</span><span class="rule"></span><span>Design candidate &middot; 2026-09-03</span></div>
+    <div class="eyebrow">The entire client experience</div>
+    <h1>One branded <em>conversation.</em></h1>
+    <p class="lede">The client opens one place and says what&rsquo;s happening. The sophistication stays underneath: Larry&rsquo;s licensed material can ground the conversation, remember relevant context, and support continuity without asking the client to learn a platform.</p>
+
+    <div class="reduction" aria-label="What has been removed from the visible experience">
+      <div><span></span>No rooms to understand.</div>
+      <div><span></span>No pathways to choose.</div>
+      <div><span></span>No software vocabulary to learn.</div>
+      <div><span></span>Just open it, talk, and continue.</div>
+    </div>
+
+    <div class="question">
+      <div class="label">The only question for Larry</div>
+      <p>Does this feel like a natural extension of your work?</p>
+    </div>
+
+    <div class="note">Prototype language is invented for the demo. No unlicensed Larry source material is embedded here. Once rights are in place, his corpus becomes the grounding layer behind the same simple interface.</div>
+  </section>
+
+  <section class="demo" aria-label="Live chatbot candidate">
+    <div class="device">
+      <iframe src="./part2-chatbot-mockup.html" title="Now What? chatbot design candidate"></iframe>
+    </div>
+    <a class="open" href="./part2-chatbot-mockup.html" target="_blank" rel="noopener">Open conversation full screen &rarr;</a>
+  </section>
+</main>
+</body>
+</html>

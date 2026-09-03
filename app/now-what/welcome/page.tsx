@@ -1,40 +1,106 @@
 import type { Metadata } from 'next';
-import { SECTIONS } from '@/lib/og/ogCard';
-import { PublicSectionLanding } from '@/components/landing/PublicSectionLanding';
+import Link from 'next/link';
 
 /**
- * Public landing for Now What?. Deliberately additive: /now-what keeps its
- * room-as-entry edge redirect (2026-07-08 decision — a person here to
- * practice lands in the practice), and the prospect deck stays at
- * /now-what/pitch. This page is the outward face a share card or deck CTA
- * can point at without hitting a login wall. Copy audited against
- * MARKETING_CLAIM_DISCIPLINE — see
- * docs/pitch/PUBLIC_LANDINGS_CLAIM_AUDIT_2026-07-10.md.
+ * Now What? — the branded arrival.
+ *
+ * The public face of the environment: what it is, and one way in. It is the
+ * only Now What? surface a person can meet without an account, so it carries
+ * the whole first impression and nothing else.
+ *
+ * WHY THIS ROUTE. `config/accessMatrix.ts` declares `/now-what/welcome`
+ * public; every other `/now-what/*` path redirects an unauthenticated visitor
+ * to `/now-what/arrive`. So this is where a landing can live without touching
+ * middleware or the access matrix.
+ *
+ * WHAT IT DOES NOT DO. It does not authenticate. Sign-in lives at
+ * `/now-what/arrive` — the environment's own door (Kelly ruling 2026-07-16),
+ * already wired to `/api/now-what/signin`. This page hands off to it and holds
+ * no credential fields of its own, so there is one auth surface rather than two
+ * that drift.
+ *
+ * NO REGISTRATION LINK, DELIBERATELY. `arrive` branches on `fieldContext`:
+ * without one it renders `ArrivalSignInOnly`, which has no registration form
+ * and no tab to reach one. A link from here carries no field context, so a
+ * "create your key" affordance would land a new member on a sign-in form with
+ * nothing to create. It was removed rather than repaired: the invitation is the
+ * gate, so registration belongs to the invitation link that carries the field
+ * context — not to the public landing.
+ *
+ * REGISTER. Warm charcoal and bronze, per the 2026-08-05 ruling that Now What?
+ * is coherent brown. `app/now-what/layout.tsx` re-inks the legacy slate ramp
+ * around this page; the values here are the brand's own rather than utility
+ * classes, so the arrival does not depend on that re-inking to look right.
  */
 
-const s = SECTIONS['now-what'];
-const title = `${s.eyebrow} — ${s.title}`;
-
 export const metadata: Metadata = {
-  title,
-  description: s.subtitle,
-  openGraph: { title, description: s.subtitle },
-  twitter: { card: 'summary_large_image', title, description: s.subtitle },
+  title: 'Now What?',
+  description: 'A place to talk through what is happening and what comes next.',
 };
+
+const GOLD = '#c9a35e';
+const INK = '#e9e2d4';
+const DIM = '#b6ac9a';
+const FAINT = '#857c6c';
 
 export default function NowWhatWelcomePage() {
   return (
-    <PublicSectionLanding
-      section="now-what"
-      paragraphs={[
-        'A live room where you bring the actual thing — the decision, the overwhelm, the question that keeps coming back — and work with it until a next real step appears.',
-        'You speak; MAIA listens and works with you — plainly, without scripts or diagnosis. When the step is clear, the room lets you go. The point is your life, not the session.',
-        'Private by design: self-hosted, consent-first, nothing sold, nothing farmed.',
-      ]}
-      ctas={[
-        { label: 'Enter the room', href: '/now-what', primary: true },
-        { label: 'Program overview', href: '/now-what/pitch' },
-      ]}
-    />
+    <main
+      className="min-h-screen flex flex-col items-center justify-center px-6 py-16 text-center"
+      style={{
+        background:
+          'radial-gradient(ellipse 90% 42% at 50% 0%, rgba(196,164,110,0.08), transparent 62%),' +
+          ' linear-gradient(#211d18, #1b1815)',
+        color: INK,
+      }}
+    >
+      <h1
+        className="font-light"
+        style={{ fontFamily: 'Georgia, "Times New Roman", serif', fontSize: 'clamp(42px, 9vw, 58px)', lineHeight: 1.05 }}
+      >
+        Now What?
+      </h1>
+
+      <p
+        className="mt-4 uppercase"
+        style={{ color: GOLD, fontSize: 10, letterSpacing: '0.32em' }}
+      >
+        with Larry Closs
+      </p>
+
+      <p
+        className="mt-14 font-light"
+        style={{
+          fontFamily: 'Georgia, "Times New Roman", serif',
+          fontSize: 'clamp(21px, 4.5vw, 27px)',
+          lineHeight: 1.5,
+          color: DIM,
+          maxWidth: '16em',
+        }}
+      >
+        A place to talk through what&rsquo;s happening and what comes next.
+      </p>
+
+      <Link
+        href="/now-what/arrive"
+        className="mt-14 inline-block rounded-full transition-colors"
+        style={{
+          border: `1px solid rgba(201,163,94,0.5)`,
+          color: GOLD,
+          fontSize: 14,
+          letterSpacing: '0.1em',
+          padding: '15px 34px',
+        }}
+      >
+        Sign in
+      </Link>
+
+      <p
+        className="absolute uppercase"
+        style={{ bottom: 34, color: FAINT, fontSize: 9.5, letterSpacing: '0.24em', opacity: 0.7 }}
+      >
+        Powered by MAIA
+      </p>
+    </main>
   );
 }

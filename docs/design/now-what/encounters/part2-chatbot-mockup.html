@@ -1,0 +1,414 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#141c38">
+<title>Now What? — Conversation Candidate</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#f4f2ec;
+  --dim:#c3cadb;
+  --faint:#8793ac;
+  --gold:#d3b264;
+  --gold-deep:#b8963f;
+  --bg:#141c38;
+  --bg-top:#1b2547;
+  --panel:#1d2949;
+  --panel-soft:rgba(255,255,255,.045);
+  --rule:rgba(244,242,236,.13);
+  --glow:rgba(211,178,100,.11);
+  --shadow:0 24px 80px rgba(0,0,0,.28);
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{
+  color:var(--ink);
+  background:
+    radial-gradient(ellipse 85% 50% at 50% -8%,var(--glow),transparent 64%),
+    linear-gradient(180deg,var(--bg-top),var(--bg));
+  font:400 15px/1.55 Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+button,textarea{font:inherit}
+button{color:inherit}
+.app{
+  min-height:100dvh;
+  width:min(100%,760px);
+  margin:0 auto;
+  display:grid;
+  grid-template-rows:auto 1fr auto;
+  background:linear-gradient(180deg,rgba(20,28,56,.12),rgba(20,28,56,.58));
+}
+.topbar{
+  position:sticky;
+  top:0;
+  z-index:5;
+  min-height:68px;
+  padding:calc(13px + env(safe-area-inset-top)) 18px 13px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+  border-bottom:1px solid var(--rule);
+  background:rgba(20,28,56,.88);
+  backdrop-filter:blur(18px);
+  -webkit-backdrop-filter:blur(18px);
+}
+.brand{min-width:0}
+.brand-name{
+  font-family:"Cormorant Garamond",Georgia,serif;
+  font-size:24px;
+  line-height:1;
+  letter-spacing:.02em;
+}
+.brand-name em{color:var(--gold);font-weight:400}
+.brand-sub{
+  margin-top:5px;
+  color:var(--faint);
+  font-size:9px;
+  letter-spacing:.17em;
+  text-transform:uppercase;
+  white-space:nowrap;
+}
+.new-chat{
+  min-height:40px;
+  padding:8px 10px;
+  border:0;
+  background:transparent;
+  color:var(--dim);
+  font-size:12px;
+  cursor:pointer;
+  border-radius:9px;
+}
+.new-chat:hover{background:var(--panel-soft);color:var(--ink)}
+.chat{
+  width:100%;
+  padding:34px 18px 28px;
+  overflow:auto;
+  scroll-behavior:smooth;
+}
+.intro{
+  max-width:540px;
+  margin:3vh auto 34px;
+  text-align:center;
+}
+.kicker{
+  color:var(--gold);
+  font-size:9.5px;
+  font-weight:600;
+  letter-spacing:.22em;
+  text-transform:uppercase;
+  margin-bottom:13px;
+}
+h1{
+  margin:0;
+  font-family:"Cormorant Garamond",Georgia,serif;
+  font-size:36px;
+  line-height:1.12;
+  font-weight:400;
+  letter-spacing:-.015em;
+}
+h1 em{color:var(--gold);font-weight:400}
+.intro p{
+  max-width:420px;
+  margin:14px auto 0;
+  color:var(--dim);
+  font-size:13.5px;
+}
+.thread{max-width:600px;margin:0 auto}
+.message{display:flex;gap:10px;margin:0 0 18px;align-items:flex-end}
+.message.user{justify-content:flex-end}
+.avatar{
+  width:28px;height:28px;flex:0 0 28px;
+  border:1px solid rgba(211,178,100,.4);
+  border-radius:50%;
+  display:grid;place-items:center;
+  color:var(--gold);
+  font-family:"Cormorant Garamond",Georgia,serif;
+  font-size:16px;
+  background:rgba(211,178,100,.05);
+}
+.bubble{white-space:pre-wrap;
+  max-width:min(84%,470px);
+  padding:13px 15px;
+  border-radius:16px 16px 16px 5px;
+  background:var(--panel-soft);
+  border:1px solid rgba(244,242,236,.07);
+  color:var(--ink);
+  font-size:14px;
+}
+.message.user .bubble{
+  border-radius:16px 16px 5px 16px;
+  background:rgba(211,178,100,.12);
+  border-color:rgba(211,178,100,.18);
+}
+.starters{
+  max-width:600px;
+  margin:28px auto 0;
+  display:grid;
+  gap:9px;
+}
+.starter-label{
+  color:var(--faint);
+  font-size:10px;
+  letter-spacing:.15em;
+  text-transform:uppercase;
+  margin:0 2px 3px;
+}
+.starter{
+  width:100%;
+  min-height:48px;
+  padding:12px 14px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  text-align:left;
+  border:1px solid var(--rule);
+  border-radius:12px;
+  background:rgba(255,255,255,.025);
+  cursor:pointer;
+  transition:background .15s,border-color .15s,transform .15s;
+}
+.starter span:first-child{color:var(--dim);font-size:13px}
+.starter span:last-child{color:var(--gold);font-size:17px}
+.starter:hover{background:var(--panel-soft);border-color:rgba(211,178,100,.28);transform:translateY(-1px)}
+.demo-note{
+  max-width:600px;
+  margin:26px auto 0;
+  padding-top:17px;
+  border-top:1px solid var(--rule);
+  color:var(--faint);
+  font-size:10.5px;
+  line-height:1.55;
+  text-align:center;
+}
+.composer-wrap{
+  position:sticky;
+  bottom:0;
+  z-index:5;
+  padding:12px 14px calc(12px + env(safe-area-inset-bottom));
+  background:linear-gradient(180deg,rgba(20,28,56,0),rgba(20,28,56,.92) 18%,var(--bg) 52%);
+}
+.composer{
+  max-width:620px;
+  margin:0 auto;
+  display:grid;
+  grid-template-columns:1fr auto;
+  gap:8px;
+  align-items:end;
+  padding:7px 7px 7px 13px;
+  border:1px solid rgba(244,242,236,.18);
+  border-radius:16px;
+  background:#202c4c;
+  box-shadow:0 12px 34px rgba(0,0,0,.18);
+}
+textarea{
+  min-height:40px;
+  max-height:128px;
+  resize:none;
+  padding:9px 0 7px;
+  border:0;
+  outline:0;
+  background:transparent;
+  color:var(--ink);
+  line-height:1.45;
+}
+textarea::placeholder{color:#8c97ad}
+.send{
+  width:40px;height:40px;
+  border:1px solid rgba(211,178,100,.42);
+  border-radius:11px;
+  background:rgba(211,178,100,.14);
+  display:grid;place-items:center;
+  color:var(--gold);
+  cursor:pointer;
+  transition:background .15s,transform .15s;
+}
+.send:hover{background:rgba(211,178,100,.22);transform:translateY(-1px)}
+.send:disabled{opacity:.35;cursor:default;transform:none}
+.micro{
+  max-width:620px;
+  margin:7px auto 0;
+  color:var(--faint);
+  font-size:9.5px;
+  text-align:center;
+}
+@media (min-width:700px){
+  body{padding:26px}
+  .app{
+    min-height:calc(100dvh - 52px);
+    max-height:calc(100dvh - 52px);
+    border:1px solid var(--rule);
+    border-radius:24px;
+    overflow:hidden;
+    box-shadow:var(--shadow);
+  }
+  .topbar{padding:15px 22px}
+  .chat{padding:42px 28px 32px}
+  h1{font-size:43px}
+  .composer-wrap{padding:13px 22px 16px}
+}
+.resource{margin-top:12px;border:1px solid rgba(211,178,100,.28);border-left:2px solid var(--gold);
+  border-radius:6px;padding:13px 15px;background:var(--panel-soft);}
+.resource .k{font-size:8.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);}
+.resource .t{font-size:16px;margin-top:5px;color:var(--ink);}
+.resource .d{font-size:12px;color:var(--dim);margin-top:5px;opacity:.85;}
+@media (hover:none){.starter:hover,.send:hover,.new-chat:hover{transform:none;background:inherit}}
+@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-name">NOW <em>WHAT?</em></div>
+      <div class="brand-sub">Your coaching conversation</div>
+    </div>
+    <button class="new-chat" id="newChat" type="button">New conversation</button>
+  </header>
+
+  <main class="chat" id="chat" aria-live="polite">
+    <section class="intro" id="intro">
+      <div class="kicker">Between sessions, start here</div>
+      <h1>What are you <em>working through?</em></h1>
+      <p>No menus to learn. Say what&rsquo;s going on, and use the conversation to get oriented before you decide what comes next.</p>
+    </section>
+
+    <div class="thread" id="thread">
+      <div class="message assistant">
+        <div class="avatar" aria-hidden="true">N</div>
+        <div class="bubble">Good to see you. Start wherever it feels useful. What&rsquo;s on your mind?</div>
+      </div>
+    </div>
+
+    <section class="starters" id="starters" aria-label="Conversation starters">
+      <div class="starter-label">Or begin with</div>
+      <button class="starter" type="button" data-prompt="I need to think through a decision."><span>I need to think through a decision.</span><span>&rsaquo;</span></button>
+      <button class="starter" type="button" data-prompt="Something feels off, but I can't quite name it."><span>Something feels off, but I can&rsquo;t quite name it.</span><span>&rsaquo;</span></button>
+      <button class="starter" type="button" data-prompt="I'm not sure what comes next."><span>I&rsquo;m not sure what comes next.</span><span>&rsaquo;</span></button>
+      <button class="starter" type="button" data-prompt="Help me prepare for my next conversation with Larry."><span>Help me prepare for my next conversation with Larry.</span><span>&rsaquo;</span></button>
+    </section>
+
+    <div class="demo-note">Design candidate &middot; demo language is invented &middot; Larry&rsquo;s licensed material can become the grounding context behind this conversation without adding more interface.</div>
+  </main>
+
+  <div class="composer-wrap">
+    <form class="composer" id="composer">
+      <textarea id="input" rows="1" aria-label="Message" placeholder="What&rsquo;s on your mind?"></textarea>
+      <button class="send" id="send" type="submit" aria-label="Send message">&#8593;</button>
+    </form>
+    <div class="micro">One place to think between meaningful conversations.</div>
+  </div>
+</div>
+
+<script>
+(function(){
+  var chat=document.getElementById('chat');
+  var thread=document.getElementById('thread');
+  var starters=document.getElementById('starters');
+  var intro=document.getElementById('intro');
+  var input=document.getElementById('input');
+  var form=document.getElementById('composer');
+  var newChat=document.getElementById('newChat');
+
+  var opening='<div class="message assistant"><div class="avatar" aria-hidden="true">N</div><div class="bubble">Good to see you. Start wherever it feels useful. What&rsquo;s on your mind?</div></div>';
+
+  function escapeHtml(s){
+    return s.replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c];});
+  }
+
+  function addResource(c){
+    var row=document.createElement('div');
+    row.className='message assistant';
+    row.innerHTML='<div class="avatar" aria-hidden="true"></div><div class="resource">'+
+      '<div class="k">'+escapeHtml(c.k)+'</div><div class="t">'+escapeHtml(c.t)+'</div>'+
+      '<div class="d">'+escapeHtml(c.d)+'</div></div>';
+    thread.appendChild(row);
+    requestAnimationFrame(function(){chat.scrollTop=chat.scrollHeight;});
+  }
+
+  function addMessage(role,text){
+    var row=document.createElement('div');
+    row.className='message '+role;
+    if(role==='assistant'){
+      row.innerHTML='<div class="avatar" aria-hidden="true">N</div><div class="bubble">'+escapeHtml(text)+'</div>';
+    }else{
+      row.innerHTML='<div class="bubble">'+escapeHtml(text)+'</div>';
+    }
+    thread.appendChild(row);
+    requestAnimationFrame(function(){chat.scrollTop=chat.scrollHeight;});
+  }
+
+  /* The three moments that communicate the product: it coaches, it
+     retrieves from their work together, it remembers across sessions.
+     Placeholder content only -- no coach's material is approved. */
+  function replyFor(text){
+    var t=text.toLowerCase();
+    if(/team|colleague|staff|direct report/.test(t)){
+      return {text:'Say more about the trouble. Is it that they are not doing what you need \u2014 or that something between you has gone quiet?\n\nYou described this team once as the part of the business you were proudest of. What changed?'};
+    }
+    if(/exercise|assigned|gave me|worksheet|homework/.test(t)){
+      return {text:'This one. You started it three weeks ago and stopped after the second part.',
+              card:{k:'From your work together',t:'[ Placeholder exercise ]',d:'Assigned 12 Aug \u00b7 2 of 4 parts complete'}};
+    }
+    if(/last week|told you|considering leaving|something changed|i think something/.test(t)){
+      return {text:'You said the decision felt like it was being made for you, and that you wanted to get in front of it.\n\nWhat changed?'};
+    }
+    if(t.indexOf('decision')>-1 || t.indexOf('choose')>-1){
+      return {text:'Let’s stay with the decision before trying to solve it. What are the two or three possibilities you’re actually choosing between?'};
+    }
+    if(t.indexOf('next')>-1 || t.indexOf('stuck')>-1){
+      return {text:'Before we decide what comes next, what feels most alive or unresolved in where you are now?'};
+    }
+    if(t.indexOf('larry')>-1 || t.indexOf('session')>-1 || t.indexOf('conversation')>-1){
+      return {text:'What would make that conversation useful for you? Name the one thing you most want to leave clearer about.'};
+    }
+    if(t.indexOf('off')>-1 || t.indexOf('feel')>-1){
+      return {text:'You don’t have to name it perfectly yet. What have you been noticing — in your attention, energy, work, or relationships — that tells you something is off?'};
+    }
+    return {text:'Tell me a little more. What feels most important about this right now?'};
+  }
+
+  function submitText(text){
+    text=(text||'').trim();
+    if(!text)return;
+    starters.hidden=true;
+    intro.style.marginBottom='24px';
+    addMessage('user',text);
+    input.value='';
+    input.style.height='40px';
+    window.setTimeout(function(){
+      var r=replyFor(text);
+      addMessage('assistant',r.text);
+      if(r.card) window.setTimeout(function(){addResource(r.card);},240);
+    },260);
+  }
+
+  form.addEventListener('submit',function(e){e.preventDefault();submitText(input.value);});
+  input.addEventListener('keydown',function(e){
+    if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();submitText(input.value);}
+  });
+  input.addEventListener('input',function(){
+    this.style.height='40px';
+    this.style.height=Math.min(this.scrollHeight,128)+'px';
+  });
+  document.querySelectorAll('.starter').forEach(function(btn){
+    btn.addEventListener('click',function(){submitText(btn.dataset.prompt);});
+  });
+  newChat.addEventListener('click',function(){
+    thread.innerHTML=opening;
+    starters.hidden=false;
+    intro.style.marginBottom='34px';
+    input.value='';
+    chat.scrollTop=0;
+    input.focus();
+  });
+})();
+</script>
+</body>
+</html>

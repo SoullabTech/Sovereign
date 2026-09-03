@@ -1,11 +1,26 @@
 # Larry Encounter — Walk Sheet & Capture Instrument
 
-**Date:** 2026-09-03 · **Inspected trunk:** `2f8d97297` (2026-09-02) · **Deployed SHA:** `________` (record before the walk)
+**Date:** 2026-09-03 · **Inspected trunk:** `2f8d97297` (2026-09-02) · **Deployed SHA:** `fc66b477a` (2026-08-31)
+**Drift check: PASSED** — production is 52 commits behind trunk, but every surface this walk touches is byte-identical. See §0.
 **Type:** ⭐ **evidence-gathering**, not design approval
 **Status:** authorizes no route, no code, no production change. Records what Larry reveals.
 
-> Brief, concrete, one decision at a time. Show → watch → ask → record.
-> **Do not rescue the experience by explaining it unless Larry asks.**
+## Structure — 25 minutes, three parts, in this order
+
+| # | Part | Time | What it is | Evidence class |
+|---|---|---|---|---|
+| **1** | **Current build** | 5 min | "This is what works today." A walk of the deployed product. | **Encounter** — what he does |
+| **2** | **Eight-state candidate** | 10 min | "This is the client experience we are considering. **It is not built.**" | **Reaction** — what he says about a proposal |
+| **3** | **Scope Grid** | 10 min | Larry marks YES / NO / MAYBE. | **Instruction** — what he wants |
+
+⛔ **Parts 1 and 2 produce different kinds of evidence and must never be merged in the record.** What a person does inside a working thing and what a person says about a described thing are not the same claim, and part 2 will feel more impressive than part 1 precisely because nothing in it can disappoint him yet.
+
+⛔ **There is no built candidate.** The eight-state journey exists as a document — `NW_CLIENT_JOURNEY_DESIGN_CANDIDATE_2026-09-02.md` — with no routes and no screens behind it. Part 2 is reading and discussing a document. Say "not built" **out loud** at the top of part 2; a candidate shown minutes after the real product reads as built unless the boundary is spoken.
+
+> Brief, concrete, one decision at a time.
+> Part 1: show → watch → ask → record. **Do not rescue the experience by explaining it unless Larry asks.**
+> Part 2: state the boundary, then walk the document.
+> Part 3: he marks; you write.
 
 ---
 
@@ -21,7 +36,20 @@ The inspected branch establishes **code truth**, not production truth. Record an
 ssh soullab@minisforum 'docker exec maia-sovereign printenv GIT_COMMIT'
 ```
 
-Write that SHA in the header above. Then confirm the middleware behaviour **on the deployed build** — not from the source read here — by walking the signed-out redirect once yourself. If the deployed SHA differs from `2f8d97297`, the route findings in §2 are provisional until re-checked against it.
+**Result, verified 2026-09-02:** deployed `fc66b477a` (2026-08-31), an **ancestor** of the inspected trunk `2f8d97297`. Production is **52 commits behind** — but not in anything this walk touches:
+
+| Path | deployed `fc66b477a` vs trunk `2f8d97297` |
+|---|---|
+| `middleware.ts` | **identical** |
+| `app/now-what` | **identical** |
+| `components/now-what` | **identical** |
+| `lib/nowWhat` | **identical** |
+
+(Tree-hash comparison, with a positive control: 94 files changed overall between the two, so the comparison is live, not a silent no-op.)
+
+**Therefore the route map in §1 and the routing findings in §2 hold on the deployed build.** They are no longer provisional.
+
+⚠️ One residue: code identity is not a behavioural check. Environment variables, build args and runtime config do not appear in a tree diff. So still walk the signed-out redirect **once yourself** on the deployed build before Larry arrives — that is preflight condition 2 below, and it costs thirty seconds.
 
 ### Establish the entry condition
 
@@ -31,7 +59,32 @@ Write that SHA in the header above. Then confirm the middleware behaviour **on t
 | 2 | **Exact invitation URL** | the real link, not a hand-typed path |
 | 3 | **`fieldContext` verified present** | read it in the URL before the meeting |
 | 4 | **Working sign-in** | tested end-to-end on the deployed build |
-| 5 | **Larry-relevant demo identity, no Kelly material** | confirm the account's kept acts and coach name are his context, not yours |
+| 5 | **Fictional demo identity** | see the constraint below — this is the strictest condition and the easiest to fail |
+
+### Freeze the architecture. Clean the content.
+
+Two things must not be confused in the hours before the meeting:
+
+| | |
+|---|---|
+| **FREEZE** — the information architecture | Layout, composition, the fold, the rooms' placement, copy. Untouched. This is what is under observation. |
+| **CLEAN** — the identity and content | The account's kept acts, carried thread, coach name. Must be fictional. This contaminates a different test and must be fixed. |
+
+The founder's screenshot carried *"The Writer's Studio and the Desktop MAIA"* — unmistakably live Kelly context. That is the thing to change. **Changing anything else is changing the experiment.**
+
+### The demo identity must be fictional
+
+The account Larry is shown must contain **invented content only**. "Larry-relevant" means *plausible for his clientele* — it does not license using his material or anyone's real life.
+
+⛔ Must NOT appear in the demo account:
+
+- **Unlicensed source material.** No text, phrasing, domain names, or framing drawn from Larry's talk, deck, or transcript. The Materials Agreement is unsigned and Attachment A §3 is empty — nothing of his is licensed for display, including back to him.
+- **Real client information.** No actual member's kept acts, reflections, questions, or coaching content, from any field. Not anonymised, not lightly edited.
+- **Kelly's own material.** Not because it is unlicensed, but because it makes the walk about the wrong person.
+
+✅ What it should contain: invented kept acts, an invented carried thread, an invented coach name, written fresh for this walk.
+
+The demo is a **vessel showing the shape of the product**, not a sample of its content. If Larry recognises his own language in it, the walk has demonstrated the one thing the governance work exists to prevent.
 
 ### The stop rule
 
@@ -44,7 +97,9 @@ A reaction to a refusal screen is evidence about our preflight, not about the pr
 
 ---
 
-## 1. The shortest possible walk
+# PART 1 — Current build (5 minutes)
+
+**Opening line:** *"This is what works today."* Nothing more. No framing, no roadmap.
 
 Six stops. Two states observed separately. Each stop: **show it, say nothing, watch, then ask the one question.**
 
@@ -56,6 +111,39 @@ Six stops. Two states observed separately. Each stop: **show it, say nothing, wa
 | 4 | **The Room** | `/now-what/room` | "What would you say to it?" |
 | 5 | **Keep** | gesture inside The Room | "What just happened to what you wrote?" |
 | 6 | **Return** | back to `/now-what` | "What is it asking you?" |
+
+### ⭐ The one thing to watch at stops 3 and 6 — pre-recorded, 2026-09-02
+
+**Finding, from the founder's own encounter with the deployed Home:**
+
+> **Home visually declares itself finished before the product has revealed its architecture.**
+
+The five rooms — My Question · My Work · My Coaching · My Story · The Room — render correctly, but **below the fold by design**. `ClientHome.tsx:366`: *"Everything below this rule is out of the first viewport by design: the rooms stay reachable, demoted, never competing with the return."* The return section takes `min-height: calc(100vh - 90px)`, so the first viewport is full by construction.
+
+What the eye meets: the carried thread, "What happened since?", the input — then a large field of empty space. **No partial card, no section edge, no heading, no background change, no chevron.** The composition reinforces closure rather than continuation.
+
+**Why this outranks a navigation nit:** the rooms are what communicate *what Now What is capable of being*. If Larry never sees them, the honest description of what he encountered is **"MAIA gives me a prompt and somewhere to journal."** That is a perceptual loss about the product's nature, not a wayfinding inconvenience.
+
+**The founder — who designed the five-room ontology — looked at the first viewport and read it as a journal.** Larry has none of that prior knowledge.
+
+#### The question to answer, without coaching him
+
+> **Does he scroll unprompted? If not, at what point does he decide he has seen everything?**
+
+Both outcomes are findings:
+
+| He does | It means |
+|---|---|
+| Presses into the input, writes, or sits — believing he has arrived | Home's composition is doing the talking, and it is saying *finished* |
+| Scrolls and finds the rooms | The demotion works; the concern was the founder's context, not the design |
+
+⛔ **Do not prompt the scroll.** Do not say "there's more below." One sentence from you destroys the only clean run of this test that exists.
+
+⛔ **Do not repair it tonight.** A fix made the evening before replaces the strongest available evidence with an untested guess.
+
+**Preserved direction, NOT authorized** — if the problem reproduces with Larry, the repair is not a "↓ scroll for more" cue. It is likely architectural: let the next world **peek into the first viewport** so the page itself communicates continuation. Recorded as direction only; no design or code authority follows from it.
+
+---
 
 **Stop 6 is the state in the screenshot.** It is the *authenticated Return state*, not the whole product. If it reads thin to Larry when shown cold, that is evidence about the walk's framing, not proof the screen is defective.
 
@@ -118,15 +206,46 @@ Verbatim beats paraphrase. A paraphrase is already a reading.
 
 ---
 
-## 4. Mark each candidate claim
+# PART 2 — Eight-state candidate (10 minutes)
 
-The client-journey candidate under examination — a **dated design candidate**, not settled architecture:
+**Opening line, spoken before anything is shown:**
+
+> *"This is the client experience we are considering. It is not built yet — there are no screens behind this. I want your reaction to the shape."*
+
+The candidate under discussion — a **dated design candidate**, not settled architecture:
 
 ```
 LANDING → SIGN-IN → CHECK-IN → TODAY ⇄ FIELD → CONVERSATION → KEEP → RETURN → TODAY
 ```
 
 Shared skeleton, one meaningful gesture per state, four marked fracture points.
+
+⚠️ **Before the meeting:** confirm the eight states in `NW_CLIENT_JOURNEY_DESIGN_CANDIDATE_2026-09-02.md` match the line above. That document lives outside this branch and was not read when this sheet was written — if it has drifted, the document governs and this line is corrected to match it, not the other way round.
+
+### How to run part 2
+
+- Walk the states **in order**, briefly. Do not defend any of them.
+- The four fracture points are the valuable part. Name them as open, not as solved.
+- If he asks "can I see it?" — the answer is **"not yet, it isn't built"**, not a jump back to part 1.
+- If he starts designing, let him. Record it verbatim; do not steer it toward the candidate.
+
+### What NOT to do in part 2
+
+- Do not explain the full AIN vision. He has reacted to one concrete thing; that reaction is the asset.
+- Do not present the eight states as decided, sequenced, or scheduled.
+- Do not let part 1's screens stand in as illustrations of part 2's states. They are not the same product.
+
+---
+
+# PART 3 — Scope Grid (10 minutes)
+
+Handled in §5 below. He marks; you write. One row at a time.
+
+---
+
+# AFTER — classify the evidence
+
+## 4. Mark each candidate claim
 
 After the walk, mark every claim with exactly one:
 
@@ -137,6 +256,8 @@ After the walk, mark every claim with exactly one:
 | **NEW EVIDENCE** | something we had not anticipated |
 | **STILL UNKNOWN** | the walk did not test it — the honest and most common mark |
 | **PREFLIGHT BLOCKED** | the walk never reached a valid doorway; nothing observed after that point is encounter evidence |
+
+**Tag every mark with which part produced it — `[P1]`, `[P2]`, `[P3]`.** A claim confirmed in part 2 is confirmed as *a thing Larry liked the sound of*, which is a weaker fact than the same claim confirmed in part 1, where he met it. Untagged marks silently promote the weaker to the stronger.
 
 ⚠️ **STILL UNKNOWN is not a failure.** An eight-state journey cannot be validated in one sitting; recording six unknowns is a better outcome than manufacturing six confirmations.
 
@@ -180,6 +301,8 @@ Carry these. Do **not** open them as topics unless Larry raises them.
 
 ## The whole job
 
-**Prepare the shortest possible walk. Let Larry encounter what exists. Preserve what he actually reveals.**
+**Show what exists. Describe what is being considered, marked clearly as unbuilt. Let him mark what matters. Preserve what he actually reveals.**
 
-If the meeting produces only verbatim quotes and a column of STILL UNKNOWN, it succeeded.
+If the meeting produces only verbatim quotes, a column of STILL UNKNOWN, and a marked grid, it succeeded.
+
+The one failure mode worth naming: **leaving with him believing the eight-state journey exists.** That is not a communication slip, it is the inflation drift this project's claim discipline exists to prevent — and it happens by omission, not by assertion.
