@@ -1,6 +1,6 @@
 # VOICE-RECOGNITION-ENGINE-01 — Layer 2 recognition upgrade
 
-**Status:** **IMPLEMENTATION COMPLETE — NATIVE ACCEPTANCE AND DEVICE WITNESS PENDING.**
+**Status:** **FIRST NATIVE COMPILE COMPLETE — ONE CLASS A SDK MISMATCH IDENTIFIED — REPAIR APPLIED — SECOND COMPILE PENDING** (§11). Device witness pending.
 `608e3ac` (implementation) + `6bfc5d2` (governing record) on
 `claude/layer-2-recognition-upgrade-99d1re`. Not a promotion candidate. The
 development act *in this environment* is closed; **the lane is not.** Its
@@ -150,7 +150,8 @@ without starting; **Close turn** is the MAIA-authority act.
 `finalizeAndFinishThroughEndOfInput()`, `cancelAndFinishNow()`, `AnalyzerInput(buffer:)`,
 `SpeechTranscriber(locale:transcriptionOptions:reportingOptions:attributeOptions:)`,
 `DictationTranscriber(locale:contentHints:transcriptionOptions:reportingOptions:attributeOptions:)`,
-`.isAvailable`, `.supportedLocales`, `.results` (`text: AttributedString`, `isFinal`),
+`SpeechTranscriber.isAvailable` (**not** `DictationTranscriber.isAvailable` — the SDK has no such
+member; first native compile, §11), `.supportedLocales`, `.results` (`text: AttributedString`, `isFinal`),
 `AssetInventory.assetInstallationRequest(supporting:)`. If a signature differs
 in the shipped SDK, the fix belongs in `SpeechAnalyzerEngine.swift` /
 `RecognitionEngineSelector.swift` only; the boundary does not move.
@@ -554,3 +555,131 @@ PENDING.** Decision NOT REACHED. Live MAIA conversation recognition path:
 intended-equivalent behaviour; see §10.4). No Swift, pbxproj, default, or
 routing modified in this pass. Mac entry point: §9.6 commands, starting from
 `5a5ad687` or later on this branch; adjudicate in §10.2 vocabulary.
+
+
+---
+
+## 11 · First native compile, Class A repair, accepted live-path gate — 2026-09-03
+
+### 11.1 Evidence provenance
+
+Items marked **[Mac, relayed]** originate from the Mac session
+(`/Users/soullab/maia-ds01-witness`) and were relayed by the founder into the
+remote session that wrote this section. The remote session did not compile
+and could not; it applied the authorized repair and re-ran the Node gates.
+
+### 11.2 Compile 1 — **[Mac, relayed]**
+
+```
+Xcode / iOS SDK compile:  FAILED
+Error count:              1
+Classification:           CLASS A — Apple API/signature mismatch
+
+ios/App/App/Recognition/RecognitionEngineSelector.swift:90:71
+  type 'DictationTranscriber' has no member 'isAvailable'
+```
+
+Exactly one diagnostic. Nothing in `SpeechAnalyzerEngine.swift`,
+`LegacySFSpeechEngine.swift`, `RecognitionEngine.swift`,
+`VoiceController.swift` or the shared `AudioSessionManager.swift` was
+rejected by the compiler. Line 90 col 71 in the committed file is exactly
+`caps.dictationTranscriberAvailable = DictationTranscriber.isAvailable`.
+
+### 11.3 Mac-local worktree provenance — **[Mac, relayed]**, bounded
+
+`git status --short` in the witness worktree showed only:
+
+```
+M ios/App/Podfile
+M ios/App/Podfile.lock
+```
+
+No modified `project.pbxproj`, no modified `Info.plist`. Therefore:
+
+```
+Current Mac worktree contains no uncommitted VoiceController registration
+and no uncommitted tracked Info.plist build-number change.
+
+Historical local registration remains unsupported, not disproven.
+```
+
+This closes the *present-worktree* form of hypothesis B (§9.4). It does not
+speak to what a worktree may have carried in May–August. The Podfile /
+Podfile.lock drift is CocoaPods canonicalization noise from `pod install` and
+must not be absorbed into a recognition commit.
+
+### 11.4 Repair — authorized, applied remotely, one file
+
+Commit `fix(recognition): drop DictationTranscriber.isAvailable` on this
+branch. Diff confined to `RecognitionEngineSelector.swift`:
+
+- probe no longer reads a device-availability member for the dictation module;
+  `dictationTranscriberAvailable` stays `nil` and the struct documents why
+- `dictationReady = speechAnalyzerApiPresent && dictationTranscriberLocaleSupported == true`
+  (`DictationTranscriber.supportedLocales` retained)
+- four selection-reason strings reworded so none claims a device-availability
+  test occurred
+
+Unchanged: capability schema and telemetry keys (`dictationTranscriberAvailable`
+is still emitted, as `NSNull`), SpeechTranscriber availability path, legacy
+engine, `legacy_until_witnessed`, deployment floor 16.0, turn authority,
+production routing. Podfile / Podfile.lock untouched.
+
+Gates after the repair (remote): recognition suites **37/37**
+(the boundary gate initially caught a *doc comment* naming
+`DictationTranscriber.` outside an availability region — reworded; the code
+change was never the failure). Voice suites and typecheck: voice suites 10 PASS / 1 FAIL
+(`voice-response-toggle-mobile`, pre-existing, classification unchanged — 163/165);
+typecheck no-regression gate PASS (231 vs baseline 239, 0 new diagnostics).
+
+### 11.5 Compile 2 — PENDING (Mac)
+
+```bash
+xcodebuild -workspace ios/App/App.xcworkspace -scheme App -configuration Debug \
+  -sdk iphoneos26.2 -destination 'generic/platform=iOS' CODE_SIGNING_ALLOWED=NO \
+  build 2>&1 | tee /tmp/second-compile.log
+grep -E "BUILD (SUCCEEDED|FAILED)" /tmp/second-compile.log; grep -cE "error:" /tmp/second-compile.log
+```
+
+BUILD FAILED → stop at the next diagnostic, classify, no speculative batch
+repair of SpeechAnalyzer. BUILD SUCCEEDED → `O1 native viability: provisionally PASS`.
+
+### 11.6 Live MAIA shared-seam smoke — **ACCEPTED as a gate** (founder, 2026-09-03)
+
+Reason: `AudioSessionManager.swift` is shared (§10.4), so the lane has a small
+behavioural exposure to the live conversation path even though live
+recognition still comes from the community plugin. Not scope creep.
+
+Two questions, kept separate — the smoke is **not** a third recognition comparator:
+
+```
+/maia smoke   → did our shared Swift seam damage today's working product?
+native A/B    → is the new recognition subsystem good enough to merit integration?
+```
+
+Order on the witness build: **/maia smoke before /voice-controller-test.**
+
+| Step | Act | Expected |
+|---|---|---|
+| S1 | start the normal MAIA microphone | starts normally; existing production recognizer operates |
+| S2 | speak a short phrase | existing conversation transcription behaves as before |
+| S3 | stop / complete the mic lifecycle | no crash, no hung audio session, no teardown regression |
+| S4 | start the microphone a second time | second capture starts normally |
+
+Record `LIVE PATH SMOKE: PASS / FAIL`. FAIL → STOP; classify as a possible
+lane-caused integration regression before any A/B. A working
+`/voice-controller-test` is not grounds to proceed past a failed smoke.
+
+### 11.7 Remaining Mac sequence
+
+1. Preserve worktree evidence (§11.3 commands) before pulling anything.
+2. `git fetch origin claude/voice-recognition-acceptance-witness-ffeadt`; ensure HEAD contains the repair commit.
+3. Compile 2 (§11.5).
+4. Install the exact build; record SHA · app version · build number · device · iOS · Xcode · SDK · locale · install method. Do not force the build number to equal 2515.
+5. `/maia` smoke S1–S4 (§11.6).
+6. `/voice-controller-test` Probe: requested engine · resolved engine · API availability · locale support · selection reason. Modern must not silently execute legacy while reporting modern.
+7. Same-device A/B baseline → modern → baseline → modern; F1–F10; O1–O6 (O6 per §10.2).
+8. Adjudicate in §10.2 vocabulary. `PRODUCTION INTEGRATION RECOMMENDED` → STOP; routing untouched; next seam is `VOICE-RECOGNITION-PRODUCTION-INTEGRATION-01`, not opened.
+9. Record here; commit evidence separately from any further source fix.
+
+Production recognition routing: **not changed** by anything in §11.
