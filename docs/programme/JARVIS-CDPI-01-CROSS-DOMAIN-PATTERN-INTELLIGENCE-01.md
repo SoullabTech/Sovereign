@@ -16,9 +16,10 @@ TRIGGER            see §Trigger — four predecessors, each bound to a named ar
                    no SHA yet exists for any of them
 SEAM RULING        2026-09-03 — READING B for CDPI v1 (evidence persists; interpretation does
                    not become durable member-form before encounter). Reading C deferred.
-PARTICIPATION      surfacing binds to the canonical participation/admission contract for
-                   SYSTEM_INFERENCE (AVAILABLE / OFFERED / ADMITTED / EXCLUDED) — not to "MIPA"
-                   as a carried-forward term. See §Participation contract.
+PARTICIPATION      binds to docs/programme/CMT-01_PARTICIPATION_DISPOSITION_CONTRACT.md
+                   (AVAILABLE / HELD / OFFERED / ADMITTED / EXCLUDED · typed form
+                   lib/memory/participation/participationDisposition.ts · pdc-1).
+                   CDPI depends on HELD; CDPI may not define it.
 AUTHORIZES         nothing
 LIVES IN           MAIA (participant surface) — ⛔ not JARVIS, not the operator graph
 STEWARDED BY       JARVIS flow (this lane) · JARVIS study (held direction, separately unauthorized)
@@ -214,7 +215,7 @@ provider candidates
        ↓
 participation adjudication
        ↓
-AVAILABLE / OFFERED / ADMITTED / EXCLUDED
+AVAILABLE / HELD / OFFERED / ADMITTED / EXCLUDED
        ↓
 canonical composition
 ```
@@ -225,6 +226,17 @@ The activation requirement is therefore stated falsifiably, not nominally:
 > named repo artifact and an implementation boundary.** CDPI then references that artifact —
 > not a term carried forward from conversation.
 
+**Named artifact (2026-09-03):** `docs/programme/CMT-01_PARTICIPATION_DISPOSITION_CONTRACT.md`,
+typed as `lib/memory/participation/participationDisposition.ts` (`pdc-1`). The **contract half**
+of the requirement is met. The **implementation boundary** — a canonical constructor that
+actually adjudicates candidates into these dispositions — is CMT-01 Step 2 and is not yet on
+canonical; this half stays open.
+
+**`HELD` is the disposition CDPI depends on.** A computed `PatternHypothesis` with no surfacing
+warrant is `HELD` — legitimately considered, deliberately kept out of this turn's encounter,
+ephemeral, non-persisting, no gain in authority. `HELD ≠ EXCLUDED`: excluded means not
+constitutionally eligible; held means *not now*. ⛔ CDPI does not define `HELD`; it imports it.
+
 Standing-consent precedents that contract may build on, for FIND to census (they are precedents,
 not the contract):
 
@@ -233,8 +245,9 @@ not the contract):
 - `conversational_recall_enabled` opt-out surface (Phase 2)
 - Sanctuary Mode — absolute non-formation boundary
 
-⛔ Until the participation contract has a named repo artifact, no BUILD unit that surfaces
-anything may open — and BUILD-CDPI-E binds to that artifact by path.
+⛔ Until the participation contract has an **implementation boundary** on canonical (Step 2),
+no BUILD unit that surfaces anything may open — and BUILD-CDPI-E binds to
+`lib/memory/participation/participationDisposition.ts` by path, never to a lane-local enum.
 
 ---
 
@@ -768,10 +781,13 @@ F11  AUTHORITY CANNOT BE PROMOTED
 F12  JARVIS GRAPH DOES NOT INGEST
      no PatternHypothesis, DomainObservation, or elemental label reaches the operator
      graph's data model (R2, R4). Pinned by a schema-level test.
-F13  NO PRE-ENCOUNTER MEMBER-FORM (Reading B)
+F13  NO PRE-ENCOUNTER MEMBER-FORM (Reading B) — the dual proof
      substrate on, analysis run, no encounter → the database holds DomainObservations and
-     EvidenceRelations only; zero rows of any interpretive object about the member.
-     Proven from an empty database, before and after a run that DID compute a hypothesis.
+     EvidenceRelations only; zero rows of any interpretive object about the member — AND the
+     turn manifest carries { epistemicClass: cross_domain_hypothesis, disposition: HELD,
+     count ≥ 1, reasonCode } with no body. Together these prove that MAIA genuinely performed
+     cross-domain intelligence and did not secretly create a durable interpretation of the
+     member. Proven from an empty database, before and after a run that DID compute a hypothesis.
 ```
 
 The **evidence staircase** from the held direction governs what "proven" means at each stage:
@@ -851,4 +867,12 @@ unit re-answers for its own scope.
              ARCHITECTURE CDPI = intelligence provider under participation adjudication,
                           not a prompt addendum
              AUTHORIZED   still nothing
+
+2026-09-03   PARTICIPATION CONTRACT NAMED (CMT-01 amendment, founder-authorized)
+             ARTIFACT     docs/programme/CMT-01_PARTICIPATION_DISPOSITION_CONTRACT.md
+                          + lib/memory/participation/participationDisposition.ts (pdc-1)
+             HELD         added to the canonical disposition set; CDPI depends on it,
+                          does not define it; F13 becomes the dual proof
+             REQUIREMENT  contract half MET · implementation-boundary half OPEN (Step 2)
+             AUTHORIZED   still nothing in this lane
 ```
