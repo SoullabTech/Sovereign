@@ -264,6 +264,80 @@ So when Larry wants to add to the build — his corpus, uploads, richer continui
 
 ---
 
+## G. Founder ruling — intelligence completion (2026-09-03)
+
+> **Now What? is not finished unless MAIA remembers the client and knows Larry's approved work.**
+> The simple interface can stay simple. **The intelligence underneath cannot be thin.**
+
+These cease to be gates-in-analysis and become **release requirements**. The UI is unchanged and stays unchanged — no rooms, dashboards, practitioner navigation or other surfaces return. **All remaining work is underneath the conversation.**
+
+### G.1 The conjunction that is the product
+
+| | Gives MAIA |
+|---|---|
+| **Memory** | knowledge of **the person** |
+| **Larry's corpus** | knowledge of **the practice** |
+
+- Without the corpus → a good relational assistant wearing his branding.
+- Without memory → a knowledgeable chatbot that forgets the person.
+- **The product being sold is the conjunction:** MAIA knows the person, knows the practitioner's work, and holds the relationship between them over time.
+
+### G.2 Release requirements
+
+**A · Memory and continuity — active, not merely available**
+
+Runtime proof that Larry's conversation receives: full current-conversation history · cross-session conversational recall · developmental memory influence where authorized · member-authored atoms and kept material · continuity across returns.
+
+And the §A repair: **every provider receives the same conversational-history contract.** A weaker provider may be less capable. It may not silently receive *less of the conversation.*
+
+**B · Corpus authority — real, not bypassed**
+
+⛔ **Do not solve this by making `corpusIsComposable()` return `true`.** That destroys the governance deliberately built after the 63,861-character incident.
+
+Implement the seam its own contract anticipates:
+
+```
+Larry approves corpus revision X for MAIA use
+              ↓
+   authorization record: approved_by · approved_at ·
+   authorization_version · the exact revision approved
+              ↓
+   current field revision MATCHES that authorization
+              ↓
+   corpusIsComposable(field) = a verified check
+```
+
+If his existing agreement already grants this use, **record that authorization against the corpus.** If it does not, **obtain explicit written approval.** Then his library may compose.
+
+**C · Corpus content**
+
+Inventory and ingest only what he is authorized to provide: talks · transcripts · writings · frameworks · exercises · worksheets · program material · other approved resources. **Source provenance preserved per item.** MAIA should know what is in the corpus and visibly not fabricate what is not.
+
+**D · Qualified register**
+
+A qualified high-capability provider **with full conversation context, or explicit unavailability.** No invisible cognitive downgrade. Witness `served.provider` / `served.model` from actual turns — never from configuration.
+
+**E · Acceptance tests the conjunction, not the parts**
+
+Not *"does MAIA remember?"* nor *"can she retrieve Larry's material?"* but:
+
+> **Can she remember this particular client while intelligently bringing Larry's body of work into the conversation — without impersonating Larry, forcing his framework onto the person, or inventing what she does not have?**
+
+A real authenticated member must be able to:
+
+1. refer to something said earlier in the same conversation, and MAIA remembers it
+2. return later, and MAIA appropriately remembers prior context
+3. ask about something genuinely in Larry's corpus and get an accurate answer
+4. ask about something **absent** from it and have MAIA **refuse to invent**
+5. meet his material brought in naturally, not as generic retrieval
+6. **remain the author of their own meaning** rather than being interpreted through his framework
+
+Requirement 6 is the sovereignty invariant surviving contact with a practitioner corpus. It is the one most easily lost by making retrieval work well.
+
+⛔ **No UI expansion in this lane.**
+
+---
+
 ## Provenance
 
 - `scripts/witness/now-what-register-and-history.ts` — W1–W5 + W2b, 6/6 confirmed, deterministic, no production or model server required.
