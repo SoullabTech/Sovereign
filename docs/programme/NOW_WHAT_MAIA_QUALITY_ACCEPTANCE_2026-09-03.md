@@ -4,8 +4,66 @@
 **Status:** ⚠️ **DEFECT CONFIRMED (contract) · RUNTIME UNPROVEN**
 **Witness:** `npx tsx scripts/witness/now-what-register-and-history.ts` — **6 confirmed · 0 unconfirmed**
 
+> ## Founder ruling
+>
+> **Now What? will not create the appearance that MAIA knows a client or knows Larry's work unless the runtime can demonstrate that she actually does.** Memory, authorized practitioner corpus, full conversational context and qualified conversational intelligence are **release requirements, not enhancements.**
+>
+> The objective is not merely to satisfy Larry's complaint. The objective is to give his clients something **substantially better than the conventional branded chatbot he could build elsewhere.**
+
+> **We do not ship the appearance of intelligence. We ship the conditions that make intelligent relationship possible.**
+
+The beautiful simple interface is close to irrelevant unless what sits underneath it is real. The illusion is easy to assemble and hard to see from outside:
+
+```
+  beautiful Now What? interface  +  Larry's name  +  AI responses  =  looks finished
+
+  but underneath:  no corpus  ·  or no memory  ·  or 7B with missing history
+
+                                                  =  not the product
+```
+
+**That cannot happen again.**
+
 > The system prompt may know how to be relational.
 > **The model cannot relate to a conversation it cannot see.**
+
+---
+
+## Completion — three things simultaneously true
+
+**1 · MAIA knows the person.** Legitimate conversational continuity, appropriate cross-session memory, member-authored Keep, developmental context where authorized, full current-turn history.
+
+**2 · MAIA knows Larry's work.** His approved talks, writings, frameworks, exercises, programs and resources, as an explicitly authorized corpus with source provenance. She draws on them accurately **and can tell when something is not in his material.**
+
+**3 · MAIA brings the two together intelligently.** Not retrieving a PDF. Not remembering a name. Recognising what *this* client is wrestling with and bringing the relevant part of Larry's work into the living conversation — **without pretending to be Larry or forcing his framework onto the person.**
+
+**The product is the third thing.** One and two are its preconditions.
+
+### The acceptance bar is experiential
+
+The founder must be able to sit with it and have this work:
+
+> *"Last week I told you about what was happening with Sarah. Something changed."*
+
+— and MAIA knows what is meant. Then:
+
+> *"Larry talked about something that might help with this. What was it?"*
+
+— and she finds the right thing from his **actual authorized** work, explains it naturally, and connects it to what has been discussed. Then, deliberately, something Larry never said:
+
+> — and she **does not manufacture Larry.** *"I don't have that in the material Larry has shared here."*
+
+**That is trustworthy intelligence.** All three moments, in one sitting, or the product is not done.
+
+### No silent degradation
+
+If the qualified conversational system cannot run, **Now What? says it is temporarily unavailable.** It does not quietly serve a substantially weaker system and call that MAIA.
+
+### `/nowwhat-demo` is not evidence
+
+The public scripted demo is a legitimate design prototype — it says its replies are scripted, on every screen. ⛔ **It must never be cited as evidence that Now What? is ready.** It calls no model, holds no memory, and carries no corpus.
+
+The real acceptance surface is **`/now-what/conversation`**, authenticated, with *full history → memory → Larry corpus → qualified model → provenance* all witnessed on actual turns.
 
 ---
 
