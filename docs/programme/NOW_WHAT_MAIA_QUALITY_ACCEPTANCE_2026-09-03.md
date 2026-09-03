@@ -238,9 +238,29 @@ Gates 2 and 3 are independent: fixing the pin does not fix the defect, and fixin
 
 ### F.3 What may and may not be said to Larry
 
-✅ **May be said:** his conversation runs on MAIA's real engine — constitutional prompt, memory, field context, and a response grammar that forbids generic coaching questions.
+⚠️ **The distinction this whole document exists to protect: the capability existing in the route is not evidence the deployed experience is receiving it.** Presence and memory depend on runtime configuration; field composition depends on authorization and on what is actually ratified. Tonight demonstrated exactly how far apart those two things can drift.
 
-⛔ **May not be said:** that it is trained on, grounded in, or knows his work. It is not, and it cannot perform knowledge it was never given. Telling him otherwise would be a claim the code actively refuses to make true.
+✅ **May say:** Now What? uses MAIA's real conversational engine, not a separate chatbot. It is **built to support** continuity, member memory, practitioner field context, and the governed Now What? conversational grammar.
+
+⛔ **May not yet say:** that his current deployed experience is using the full memory/presence stack · that his field material is being composed · that MAIA is trained on or grounded in his work · that the Canonical MAIA Turn architecture is powering his conversations. **Each of those requires runtime evidence or further implementation.**
+
+The honest sentence available today:
+
+> *"I built the application. I am now qualifying the intelligence underneath it before I put your clients into it."*
+
+Given what §A found, that is not caution. It is the accurate statement.
+
+### F.4 Memory headroom — a design constraint on the simple product
+
+A simple interface does not need deep memory **surfaced**. It must not have memory **removed**.
+
+The Larry cut is a presentation decision, never a capability decision. `/now-what/conversation` calls the same `POST /api/now-what/interview` the richer room calls, so developmental memory, member atoms, cross-session recall and field context compose underneath a screen that shows none of them. Nothing was stripped to make the product simple; the surface was quietened.
+
+**This is load-bearing and easy to lose.** The obvious next "simplification" — giving the thin route its own lighter model call, or trimming composition it appears not to use — would buy a little latency and permanently cap what the product can become. Adding memory back later is not a UI change; it is a re-architecture.
+
+> **The simple product's ceiling must stay as high as the sophisticated one's. Only its floor is quieter.**
+
+So when Larry wants to add to the build — his corpus, uploads, richer continuity, practitioner surfaces — the answer should be *turn it on*, not *rebuild it*. Every gate in §F.2 is written to be satisfiable without touching his interface.
 
 ---
 
