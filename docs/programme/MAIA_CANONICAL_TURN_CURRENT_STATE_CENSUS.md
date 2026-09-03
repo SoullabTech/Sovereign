@@ -512,3 +512,75 @@ Per the flow, work stops here. Two decisions are Kelly's:
 
 **Nothing in this census authorizes a change to the seam, a repair of D1, or an expansion of
 MAIA's intelligence field.**
+
+---
+
+## ADDENDUM — 2026-09-03, post-adjudication targeted reads
+
+Kelly's ruling (Candidate C; A retained as instrumentation; B as scaffolding only; MIPA = (b);
+D1 = first implementation gate) directed three targeted reads before the spec. Their results
+amend §10 as follows. Full treatment: `MAIA_CANONICAL_TURN_ARCHITECTURE_SPEC_v0.1.md`.
+
+**Unknown 3 — `lib/maia/roomComposition.ts` (337 lines) — RESOLVED.** Prior art for four of
+the spec's moves: (i) unconditional constitutional floor, NW-I01 — *"A floor a flag can remove is
+not a floor"*; (ii) authorization checked before composition (`memberMayComposeField`, refusal
+default); (iii) provenance carried on the reply (`RoomFieldProvenance`, `source: 'request' |
+'room-default'`, *"no silent composition either way"*); (iv) a shared composer extracted so two
+sibling routes cannot drift. It is also the **sole embodiment** of a further prior-art artifact
+the census missed: `lib/maia/context-assembly/contextAssembly.ts` — a CANDIDATE interface
+(2026-07-08) stating *"no encounter surface constructs its own conversational intelligence"*,
+authority zero, with `AssembledBlock {key, text}` + `sources[]` + `hasAnything`. Its two cited
+adjudication documents (`CONTEXT_ASSEMBLY_INVARIANT_CANDIDATE_2026-07-08.md`,
+`CONTEXT_ASSEMBLY_SEAM_GAP_2026-07-08.md`) **do not exist in this tree** — the same absence
+pattern as MIPA. The spec absorbs the candidate (§3.4).
+
+**Unknown 4 — `lib/maia/context/buildMaiaContext.ts` (101 lines) — RESOLVED.** Identity-layer
+continuity only (astrology addendum, display name, pronouns, `hasBirthData`), "fill missing
+only", non-blocking. It is a **producer**, not an assembler; it registers as
+`retrieved.astrology` + identity display fields. Its header records the exact bug class the
+seam exists for: *"a conversation flowing through a newer/alternative route… silently loses the
+natal chart that the original oracle route loaded."*
+
+**Unknown 5 — member-resolution mechanisms — RESOLVED, and upgraded to a PROVEN DEPENDENCY.**
+Five mechanisms serve MAIA-claiming cognition, two of which honor an unverified claim:
+
+| Mechanism | Verified? | Honors bare claim? | Where |
+|---|---|---|---|
+| `lib/auth/getMemberFromRequest.getMemberIdFromRequest` (claim must match session) | ✅ | ❌ | `/list`, `sovereign/app/maia` |
+| `lib/scribe/scribeAuth.getMemberIdFromRequest` (same name, no claim-match) | ✅ | ❌ | `now-what/interview` (+30 importers) |
+| `getCurrentSession()` cookie-only, then `explorerId` / `anon:` | ✅ | ❌ | `between/chat`, `relational-navigation` |
+| `probeAuthPosture()` — log-only, **returns bare `x-member-id`** | ❌ | ✅ | all 9 `living-field/*` incl. `encounter`, `refine` |
+| `bodyUserId \|\| getMemberIdFromRequest` — body **first** | partial | ✅ | `voice/stream-conversation:637` → `MemoryBundleService.build({ userId })` `:1194` |
+
+Refusal-03 (`tests/constitutional/refusal-registry/refusal-03-body-userid-not-trusted.ts:22`)
+disclaims exactly this: *"passingDoesNotAuthorize: that every route USES this resolver."* Two
+MAIA-claiming ingresses therefore compose member material off an identity the system did not
+verify. A `CanonicalTurn` whose `identity.status === 'verified'` can be populated from a claim
+would make the manifest false on those routes — so one-resolver identity is a precondition of
+the seam, not an optional repair. The spec binds to the already-ratified
+`docs/specs/AUTH_POSTURE_X_MEMBER_ID_2026-07-11.md` §4 and sequences its Phase 1 as the
+onboarding step for those ingresses (spec §4.1). No auth work beyond that is authorized.
+
+**Direct-Anthropic ingress classification (was: pattern-match set in §1.1) — RESOLVED.**
+
+| Route | Claims MAIA participation? | Member memory composed? | Disposition |
+|---|---|---|---|
+| `portal/[slug]/chat` | **No** — virtual practitioner for public visitors; no member identity; `'claude-sonnet-5'` inline | no | G5 allowlist |
+| `anthropic/ping`, `build/alert` | No — infrastructure | no | G5 allowlist |
+| `studio/with-me/*/synthesize` | No — facilitator tool over session events | no (facilitator-scoped) | G5 allowlist |
+| `practitioner/practice-field/draft` | Bounded drafting tool (mirror invariant) | practitioner's own material | G5 allowlist v1 — Kelly decision |
+| `maia/relational-navigation` | **Yes** — MAIA room; own `systemPrompt`; no memory loaders; no `MAIA_RUNTIME_PROMPT` | no | must construct a turn (`room_direct`) |
+| `maia/living-field/*/encounter`, `/refine` | **Yes** — MAIA room; `buildEncounterContext` loads `personal_living_fields`, versions, `personal_states`, `living_field_affinities` | **yes, off unverified id** | must construct a turn; identity onboarding = auth-posture Phase 1 |
+| `now-what/interview`, `vision-studio/interview` | **Yes** — via `roomComposition` (floor + presence + field + position + lesson) | yes (atoms, memory-influence, conversational recall) | must construct a turn; `roomPolicy.persists=false` |
+| `voice/stream-conversation` | **Yes** — `ClaudeService.buildMaiaSystemPrompt` (**0** references to `MAIA_RUNTIME_PROMPT`: a third MAIA system-prompt source) + `MemoryBundleService` + `buildMaiaContext` | **yes, off body-first id** | retire or onboard — Kelly decision |
+
+**Corrected count.** The census §0 said "four distinct turn-construction mechanisms." With
+`ClaudeService.buildMaiaSystemPrompt` and `buildEncounterContext` now read, the honest count of
+**MAIA-claiming prompt-composition mechanisms** in the tree is **six**: route pre-assembly
+(`/list`, `between/chat`), `ADDENDA_SPECS`/`appendAllContextAddenda`, the FAST template literal,
+`roomComposition`, `ClaudeService.buildMaiaSystemPrompt`, and `living-field/encounterContext`.
+The `meta` bag (200 `(meta as any)` casts, 62 distinct keys, `MaiaRequest.meta?: Record<string,
+unknown>` at `maiaService.ts:590`) is the single open channel beneath the first three; the other
+three never touch it and are governed by nothing shared. The spec's §0 names closing that
+channel as the load-bearing move and §8 G5 as the partition that brings the other three under
+the same boundary.
