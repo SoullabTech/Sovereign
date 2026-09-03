@@ -13,6 +13,7 @@
  *   R28  G4  identity provenance at the boundary     — green from M1
  *   R29  G6  manifest completeness / content-free    — green from M1
  *   R30  G9  no expansion beyond the adjudicated seed — green from M1
+ *   R31  M2  shadow path is observational (pre-deploy condition) — green from M2
  */
 import { runCheck, type RefusalCheck, type Tally } from './harness.ts';
 import { check as r25 } from './refusal-25-canonical-floor-invariance.ts';
@@ -21,8 +22,9 @@ import { check as r27 } from './refusal-27-canonical-producer-closure.ts';
 import { check as r28 } from './refusal-28-canonical-identity-provenance.ts';
 import { check as r29 } from './refusal-29-canonical-manifest-completeness.ts';
 import { check as r30 } from './refusal-30-canonical-no-expansion.ts';
+import { check as r31 } from './refusal-31-canonical-shadow-observational.ts';
 
-const CHECKS: RefusalCheck[] = [r25, r26, r27, r28, r29, r30];
+const CHECKS: RefusalCheck[] = [r25, r26, r27, r28, r29, r30, r31];
 const EXPECTED_RED_UNTIL_M3 = new Set(['R25', 'R26']);
 
 const BOLD = '\x1b[1m';
