@@ -19,11 +19,22 @@
  * because a digest can only show that nothing moved, never that nothing could.
  */
 
-import { createHash } from 'crypto';
 import { query } from '@/lib/db/postgres';
+import {
+  fingerprintStructureRows,
+  type CanonicalMemberRow,
+  type CanonicalUnitRow,
+} from './structureDigest';
 
+/**
+ * BUILD-07A NOTE. The digest itself lives in `structureDigest.ts`, pure, so the
+ * developmental-evidence capture can fingerprint the rows it has already read
+ * under its own lock with the SAME algorithm. This function is the database
+ * reader; it selects exactly the columns it always has, in the same order, and
+ * hands them to the one digest. The value it returns is unchanged.
+ */
 export async function canonicalFingerprint(manuscriptId: string): Promise<string> {
-  const units = await query(
+  const units = await query<CanonicalUnitRow>(
     `SELECT id, parent_id, position, kind, title, origin, adopted_from_id
        FROM manuscript_structure_units
       WHERE manuscript_id = $1
@@ -32,14 +43,12 @@ export async function canonicalFingerprint(manuscriptId: string): Promise<string
   /* Memberships are joined through units so the scope is the same manuscript,
      and ordered by both columns so two identical structures digest identically
      whatever order the planner returns rows in. */
-  const members = await query(
+  const members = await query<CanonicalMemberRow>(
     `SELECT m.unit_id, m.draft_section_id
        FROM manuscript_structure_members m
        JOIN manuscript_structure_units u ON u.id = m.unit_id
       WHERE u.manuscript_id = $1
       ORDER BY m.unit_id, m.draft_section_id`, [manuscriptId]);
 
-  return createHash('sha256')
-    .update(JSON.stringify({ units: units.rows, members: members.rows }))
-    .digest('hex');
+  return fingerprintStructureRows(units.rows, members.rows);
 }
