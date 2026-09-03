@@ -20,6 +20,7 @@ import { digest } from '../../../memory/provenance/turnMemoryProvenance';
 import {
   CanonicalTurnRefused,
   ROOM_POLICIES,
+  assertManifestEntry,
   candidatesFromLegacyAddenda,
   compareLegacyToCanonical,
   constructCanonicalTurn,
@@ -115,7 +116,7 @@ describe('MIPA — eligibility and restraint', () => {
     const id = await anonymous();
     const turn = constructCanonicalTurn(baseInputs(id, candidatesFromLegacyAddenda(LEGACY)));
     expect(turn.participation.admitted.map((p) => p.producerId)).not.toContain('member.atoms');
-    expect(turn.participation.excluded).toContainEqual({ producerId: 'member.atoms', reason: 'no_verified_member' });
+    expect(turn.participation.excluded).toContainEqual(expect.objectContaining({ producerId: 'member.atoms', disposition: 'EXCLUDED', reason: 'no_verified_member', authoredBy: 'member' }));
     // house/collective material still participates
     expect(turn.participation.admitted.map((p) => p.producerId)).toContain('house.place');
   });
@@ -124,13 +125,13 @@ describe('MIPA — eligibility and restraint', () => {
     const turn = constructCanonicalTurn(baseInputs(id, candidatesFromLegacyAddenda(LEGACY), {
       sovereignty: { sanctuary: true, memoryMode: 'ephemeral', allowCrossSessionMemory: false },
     }));
-    expect(turn.participation.held).toContainEqual({ producerId: 'member.atoms', reason: 'sanctuary' });
+    expect(turn.participation.held).toContainEqual(expect.objectContaining({ producerId: 'member.atoms', disposition: 'HELD', reason: 'sanctuary' }));
     expect(turn.participation.admitted.map((p) => p.producerId)).not.toContain('member.atoms');
   });
   it('records eligible-but-absent producers as held:no_material (not silently absent)', async () => {
     const id = await verified();
     const turn = constructCanonicalTurn(baseInputs(id, candidatesFromLegacyAddenda(LEGACY)));
-    expect(turn.participation.held).toContainEqual({ producerId: 'member.relational_context', reason: 'no_material' });
+    expect(turn.participation.held).toContainEqual(expect.objectContaining({ producerId: 'member.relational_context', disposition: 'HELD', reason: 'no_material' }));
   });
   it('pp-1: between does not admit atoms; sovereign_chat does (no levelling-up)', () => {
     expect(producersForRoom('between')).not.toContain('member.atoms');
@@ -140,9 +141,10 @@ describe('MIPA — eligibility and restraint', () => {
     const id = await verified();
     const turn = constructCanonicalTurn(baseInputs(id, candidatesFromLegacyAddenda(LEGACY)));
     const mi = turn.participation.admitted.find((p) => p.producerId === 'inferred.memory_influence');
-    expect(mi).toMatchObject({ authoredBy: 'system', participationClass: 'inferred', authority: 'infer' });
+    expect(mi).toMatchObject({ authoredBy: 'system', participationClass: 'inferred', authority: 'infer', disposition: 'ADMITTED', reason: 'eligible' });
     const atoms = turn.participation.admitted.find((p) => p.producerId === 'member.atoms');
-    expect(atoms).toMatchObject({ authoredBy: 'member', participationClass: 'placed', authority: 'situate' });
+    expect(atoms).toMatchObject({ authoredBy: 'member', participationClass: 'placed', authority: 'situate', disposition: 'ADMITTED', reason: 'member_placed' });
+    expect(turn.participation.offered).toEqual([]);
   });
 });
 
@@ -151,7 +153,11 @@ describe('G6 — manifest completeness, content-free', () => {
     const id = await verified();
     const turn = constructCanonicalTurn(baseInputs(id, candidatesFromLegacyAddenda(LEGACY)));
     const m = turn.manifest;
-    expect(m.admitted.length).toBe(turn.participation.admitted.length);
+    // pdc-1: manifest.admitted = floor rows (mandatory_floor) + field rows; every row a contract entry.
+    expect(m.admitted.length).toBe(turn.participation.admitted.length + turn.floor.blocks.length);
+    expect(m.admitted.filter((r) => r.reason === 'mandatory_floor').length).toBe(turn.floor.blocks.length);
+    for (const r of [...m.admitted, ...m.held, ...m.excluded]) expect(() => assertManifestEntry(r)).not.toThrow();
+    expect(m.counts.offered).toBe(0);
     const recomputed = digest(turn.participation.admitted.map((p) => `${p.producerId}:${digest(p.text)}`).join('|'));
     expect(m.fieldDigest).toBe(recomputed);
     const json = JSON.stringify(m);

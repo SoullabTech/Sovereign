@@ -12,12 +12,15 @@
 
 import { digest } from '../../memory/provenance/turnMemoryProvenance';
 import { PRODUCER_REGISTRY, producerRegistryFingerprint, type ProducerId } from './producerRegistry';
+import { assertTurnDispositioned } from './participationDisposition';
 import { PARTICIPATION_POLICY_VERSION, producersForRoom } from './policy';
 import {
   CANONICAL_TURN_CONTRACT_VERSION,
   MANIFEST_CONTRACT_VERSION,
+  type AdmittedRow,
   type ConstitutionalFloor,
   type MemberIdentity,
+  type OfferedRow,
   type ParticipationClass,
   type Participation,
   type PresentEncounter,
@@ -54,18 +57,42 @@ export function buildManifest(input: BuildManifestInput): TurnParticipationManif
     new Set<ParticipationClass>(considered.map((id: ProducerId) => PRODUCER_REGISTRY[id].participationClass)),
   );
 
-  const admitted = participation.admitted.map((p) => ({
+  // Rendered rows (pdc-1): axes + disposition + basis + chars + blockDigest. Never text.
+  const renderedRow = (p: (typeof participation.admitted)[number]) => ({
     producerId: p.producerId,
     authoredBy: p.authoredBy,
     participationClass: p.participationClass,
     authority: p.authority,
+    disposition: p.disposition,
+    reason: p.reason,
     chars: p.text.length,
     ...(p.itemCount !== undefined ? { itemCount: p.itemCount } : {}),
     blockDigest: must(digest(p.text)),
-  }));
+  });
+  const fieldRows = participation.admitted.map(renderedRow) as AdmittedRow[];
+  const offered = participation.offered.map(renderedRow) as OfferedRow[];
+  // The floor is ADMITTED by mandate — it is evidence too, and it must be provable per turn.
+  const floorRows: AdmittedRow[] = floor.blocks.map((b) => {
+    const spec = PRODUCER_REGISTRY[b.producerId];
+    return {
+      producerId: b.producerId,
+      authoredBy: spec.authoredBy,
+      participationClass: spec.participationClass,
+      authority: spec.authority,
+      disposition: 'ADMITTED',
+      reason: 'mandatory_floor',
+      chars: b.text.length,
+      blockDigest: must(digest(b.text)),
+    };
+  });
+  const admitted: AdmittedRow[] = [...floorRows, ...fieldRows];
 
-  const fieldDigest = must(digest(admitted.map((a) => `${a.producerId}:${a.blockDigest}`).join('|')));
-  const floorDigest = must(digest(floor.blocks.map((b) => `${b.producerId}:${must(digest(b.text))}`).join('|')));
+  // fieldDigest is over the NON-floor field (G7 compares it across surfaces); floorDigest separately (G1).
+  const fieldDigest = must(digest(fieldRows.map((a) => `${a.producerId}:${a.blockDigest}`).join('|')));
+  const floorDigest = must(digest(floorRows.map((b) => `${b.producerId}:${b.blockDigest}`).join('|')));
+
+  // pdc-1 invariants: every row is a contract entry; nothing AVAILABLE survives a completed turn.
+  assertTurnDispositioned([...participation.held, ...offered, ...admitted, ...participation.excluded]);
 
   return {
     contractVersion: MANIFEST_CONTRACT_VERSION,
@@ -87,12 +114,14 @@ export function buildManifest(input: BuildManifestInput): TurnParticipationManif
     },
     producersConsidered: considered,
     participationClassesConsidered: classes,
-    admitted,
     held: participation.held,
+    offered,
+    admitted,
     excluded: participation.excluded,
     counts: {
-      admitted: participation.admitted.length,
       held: participation.held.length,
+      offered: offered.length,
+      admitted: admitted.length,
       excluded: participation.excluded.length,
     },
     floorDigest,

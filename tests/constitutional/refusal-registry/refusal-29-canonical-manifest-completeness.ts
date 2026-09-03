@@ -31,11 +31,15 @@ export const check: RefusalCheck = {
     if (/\b(text|body|content|prompt)\s*\??\s*:/.test(manifestType)) io.fail('manifest type carries a content field');
     else io.pass('manifest type has no content-bearing field');
 
-    if (/const admitted = participation\.admitted\.map\(/.test(m)) io.pass('manifest rows map over the full admitted set');
+    if (/const fieldRows = participation\.admitted\.map\(renderedRow\)/.test(m)) io.pass('manifest rows map over the full admitted set');
     else io.fail('manifest rows not mapped 1:1 from admitted');
 
     if (/blockDigest: must\(digest\(p\.text\)\)/.test(m)) io.pass('rows carry digests, not text');
     else io.fail('rows do not digest block text');
+
+    // pdc-1: every row validated as a contract entry; nothing AVAILABLE survives a completed turn.
+    if (/assertTurnDispositioned\(\[\.\.\.participation\.held, \.\.\.offered, \.\.\.admitted, \.\.\.participation\.excluded\]\)/.test(m)) io.pass('every row validated against pdc-1 (assertTurnDispositioned)');
+    else io.fail('manifest rows not validated against the participation contract');
 
     if (/INSERT INTO|UPDATE |query\(|pool\./.test(m)) io.fail('manifest module writes to the database', 'Decision 6: emission only');
     else io.pass('no database write in manifest module (emission only)');

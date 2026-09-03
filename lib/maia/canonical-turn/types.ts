@@ -15,6 +15,17 @@
  */
 
 import type { ProducerId } from './producerRegistry';
+import type {
+  AdmittedEntry, AdmittedReason, AuthoredBy, Authority, ExcludedEntry, ExcludedReason,
+  HeldEntry, HeldReason, OfferedEntry, OfferedReason, ParticipationClass, ParticipationDisposition,
+} from './participationDisposition';
+
+// The participation vocabulary is the pdc-1 contract (participationDisposition.ts) — imported,
+// never redeclared. Re-exported here so the turn's consumers have one import surface.
+export type {
+  AuthoredBy, Authority, ParticipationClass, ParticipationDisposition,
+  HeldReason, OfferedReason, AdmittedReason, ExcludedReason,
+};
 
 export const CANONICAL_TURN_CONTRACT_VERSION = 'ct-1' as const;
 
@@ -89,22 +100,7 @@ export interface CognitionRequest {
   readonly voiceProfile?: 'default' | 'intimate' | 'wise' | 'grounded';
 }
 
-// ── Participation axis (Decision 2 — amended; three properties, three fields) ─
-/** Who authored the material. Never rewritten by a member gesture. */
-export type AuthoredBy = 'house' | 'member' | 'practitioner' | 'system' | 'collective';
-/** How the material participates in the turn. */
-export type ParticipationClass =
-  | 'constitutional'
-  | 'authored'
-  | 'placed'
-  | 'marked'
-  | 'declared'
-  | 'retrieved'
-  | 'computed'
-  | 'inferred'
-  | 'collective';
-/** What the material is allowed to do: situate, compute, or infer about the member. */
-export type Authority = 'situate' | 'compute' | 'infer';
+// ── Participation axis — see pdc-1 (imported above) ───────────────────────────
 
 // ── Candidate → Participant ───────────────────────────────────────────────────
 /** What a producer hands to MIPA. `text` is the only content-bearing field in the lane. */
@@ -115,42 +111,29 @@ export interface CandidateBlock {
   readonly itemCount?: number;
 }
 
+/** A rendered participant (ADMITTED or OFFERED): the only place block text lives in the turn. */
 export interface Participant {
   readonly producerId: ProducerId;
   readonly authoredBy: AuthoredBy;
   readonly participationClass: ParticipationClass;
   readonly authority: Authority;
+  readonly disposition: 'ADMITTED' | 'OFFERED';
+  readonly reason: AdmittedReason | OfferedReason;
   readonly text: string;
   readonly itemCount?: number;
 }
 
-export type HeldReason =
-  | 'sanctuary'
-  | 'recall_pref_off'
-  | 'no_material'
-  | 'loader_error'
-  | 'inference_cap'
-  | 'restraint';
+/** Contract rows narrowed to the closed ProducerId (pdc-1 leaves producerId as string until M1). */
+export type HeldParticipant = Omit<HeldEntry, 'producerId'> & { readonly producerId: ProducerId };
+export type ExcludedParticipant = Omit<ExcludedEntry, 'producerId'> & { readonly producerId: ProducerId };
+export type AdmittedRow = Omit<AdmittedEntry, 'producerId'> & { readonly producerId: ProducerId };
+export type OfferedRow = Omit<OfferedEntry, 'producerId'> & { readonly producerId: ProducerId };
 
-export type ExcludedReason =
-  | 'no_verified_member'
-  | 'room_forbids'
-  | 'not_registered_for_room'
-  | 'consent_absent';
-
-export interface HeldParticipant {
-  readonly producerId: ProducerId;
-  readonly reason: HeldReason;
-  readonly errorClass?: string;
-}
-
-export interface ExcludedParticipant {
-  readonly producerId: ProducerId;
-  readonly reason: ExcludedReason;
-}
-
+/** pdc-1: AVAILABLE → HELD | OFFERED | ADMITTED | EXCLUDED. A completed turn leaves nothing AVAILABLE. */
 export interface Participation {
   readonly admitted: readonly Participant[];
+  /** Disclosure-safe doorways only. Empty under pp-1 — no doorway producer exists yet (W1). */
+  readonly offered: readonly Participant[];
   readonly held: readonly HeldParticipant[];
   readonly excluded: readonly ExcludedParticipant[];
 }
@@ -193,18 +176,13 @@ export interface TurnParticipationManifest {
 
   readonly producersConsidered: readonly ProducerId[];
   readonly participationClassesConsidered: readonly ParticipationClass[];
-  readonly admitted: readonly {
-    readonly producerId: ProducerId;
-    readonly authoredBy: AuthoredBy;
-    readonly participationClass: ParticipationClass;
-    readonly authority: Authority;
-    readonly chars: number;
-    readonly itemCount?: number;
-    readonly blockDigest: string;
-  }[];
+  /** pdc-1 rows: axes + disposition + basis; chars/blockDigest only where something rendered.
+   *  `admitted` includes the mandatory floor rows (reason: mandatory_floor). */
   readonly held: readonly HeldParticipant[];
+  readonly offered: readonly OfferedRow[];
+  readonly admitted: readonly AdmittedRow[];
   readonly excluded: readonly ExcludedParticipant[];
-  readonly counts: { readonly admitted: number; readonly held: number; readonly excluded: number };
+  readonly counts: { readonly held: number; readonly offered: number; readonly admitted: number; readonly excluded: number };
 
   readonly floorDigest: string;
   readonly fieldDigest: string;

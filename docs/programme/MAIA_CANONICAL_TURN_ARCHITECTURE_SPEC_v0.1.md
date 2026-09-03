@@ -16,6 +16,11 @@ Target      not "everything calls one function" — every turn that CLAIMS MAIA 
 ```
 
 **Status**: **APPROVED v0.1 (2026-09-03) subject to the §5.2 amendment below. Implementation authorized M0–M2 only.** M3 (authoritative cognition cutover) requires M0–M2 evidence presented and adjudicated. See §14-A.
+**Amended 2026-09-03 (founder ruling — participation contract)**: §5.2 epistemic axis *ratified as
+amended* into three axes; §6.1/§6.3 disposition set is `AVAILABLE → HELD | OFFERED | ADMITTED |
+EXCLUDED` with a structural basis on every final state; §7.2 manifest rows carry the axes; §14.2
+resolved. Typed form: `lib/maia/canonical-turn/participationDisposition.ts` (`pdc-1`); contract
+document: `CMT-01_PARTICIPATION_DISPOSITION_CONTRACT.md`. Nothing else in this spec changed.
 
 ---
 
@@ -280,7 +285,8 @@ producer set in the tree — into the single declaration of everything that can 
 ```ts
 export const PRODUCER_REGISTRY = {
   'memory.atoms': {
-    epistemicClass: 'member_placed',
+    authoredBy: 'member',
+    participationClass: 'placed',
     authority: 'situate',
     provenance: 'member_gesture',
     consentBasis: 'atoms.return_preference',
@@ -303,7 +309,21 @@ alone is not a gate there; G2 covers both).
 Registry convention inherits `MAIA_ROUTE_REGISTRY`'s discipline verbatim: *adding an entry to
 silence a failure is the wrong action* (`maiaRuntimeContext.ts:41–58`).
 
-### 5.2 Epistemic class axis (proposed — ratify)
+### 5.2 Provenance axes — RATIFIED AS AMENDED 2026-09-03
+
+The scalar class below is **superseded**: it conflated authorship, participation mechanism and
+authority. Every producer now declares three closed axes (`pdc-1`):
+
+```text
+authoredBy           house | member | practitioner | system | collective
+participationClass   constitutional | authored | placed | marked | declared |
+                     retrieved | computed | inferred | collective
+authority            situate | compute | infer
+```
+
+The original table is kept as the seed's vocabulary; `LEGACY_EPISTEMIC_CLASS_TO_AXES` in the typed
+module maps each scalar to its axes (e.g. `member_placed` → `{member, placed, situate}`;
+`system_inferred` → `{system, inferred, infer}`) so §5.3 transcribes without re-deciding a row.
 
 | Class | Meaning | Example producers |
 |---|---|---|
@@ -319,40 +339,27 @@ silence a failure is the wrong action* (`maiaRuntimeContext.ts:41–58`).
 | `practitioner_authored` | a practitioner's field/program, authorized for this member | practice field, lesson, studio, position |
 | `collective` | AIN / knowledge-gate / corpus-derived, not about this member | knowledge gate, AIN knowledge chunks, field wisdom (collective half) |
 
-The `system_inferred` class is the one MIPA treats most restrictively (§6.3), and it is the class
-CDPI will eventually produce into. Its participation contract is the artifact CDPI's activation
-gate names.
+`{system, inferred, infer}` is the cell MIPA treats most restrictively (§6.3), and the cell CDPI
+(parked) would eventually produce into. The participation contract (`pdc-1`) is the artifact
+CDPI's activation gate names; its implementation boundary is M1.
 
 
-### 5.2-A — AMENDED AXIS (Decision 2, 2026-09-03) — supersedes the single scalar above
+### 5.2-A — Implementation binding of the amended axis (Decision 2)
 
-The table in §5.2 mixed three properties into one field: who authored it, how it was formed,
-and what authority it carries. That risks re-laundering what Phase 0 separated. The closed
-runtime type carries **three fields**, never one scalar and never a slash-compound value:
+The ratified three-axis text is §5.2 above and the typed contract is `pdc-1`
+(`lib/maia/canonical-turn/participationDisposition.ts`, `CMT-01_PARTICIPATION_DISPOSITION_CONTRACT.md`).
+M1 **imports** that contract; it does not redeclare it. Rules the binding makes structural:
 
-```text
-authoredBy           house | member | practitioner | system | collective
-participationClass   constitutional | authored | placed | marked | declared
-                     | retrieved | computed | inferred | collective
-authority            situate | compute | infer
-+ provenance, consentBasis (unchanged)
-```
-
-Rules the axis makes structural:
-
-- **A member gesture alters participation/authority, never authorship.** A member-marked MAIA
-  interpretation is `authoredBy: system · participationClass: marked · authority: infer`. A
-  journal the system retrieved is `authoredBy: member · participationClass: retrieved ·
-  authority: situate`.
-- **Mixed producers partition** into separately classifiable `CandidateBlock`s before MIPA.
-  Registry entries that carry mixed material today (`member.episodic_recall`,
-  `retrieved.conversational_recall`, `retrieved.significant_moments` — each block holds member
-  and MAIA text) are marked `partitionPending` and owe a partition at M3.
-- The manifest records **both** `authoredBy` and `participationClass` per admitted row.
-
-Implemented: `lib/maia/canonical-turn/types.ts` (`AuthoredBy`, `ParticipationClass`,
-`Authority`), `producerRegistry.ts` (38 producers, each on all three fields), R27 (structural:
-every entry carries both; no slash values).
+- **A member gesture alters participation/authority, never authorship** (member-marked MAIA
+  interpretation = `{system, marked, infer}`; system-retrieved journal = `{member, retrieved, situate}`).
+- **Mixed producers partition** before MIPA. Registry entries carrying mixed material today
+  (`member.episodic_recall`, `retrieved.conversational_recall`, `retrieved.significant_moments`)
+  are marked `partitionPending` and owe a partition at M3.
+- Manifest rows are `ParticipationManifestEntry` (axes + disposition + basis; `chars`/`blockDigest`
+  only where something rendered), validated by `assertManifestEntry` and
+  `assertTurnDispositioned` — nothing AVAILABLE survives a completed turn.
+- `OFFERED` is representable from M1 and **empty under pp-1**: no doorway producer exists yet.
+  The first `OFFERED` row is W1's (member-invoked recollection), not this lane's.
 
 ### 5.3 v1 seed — the currently authorized field, and nothing more
 
@@ -423,7 +430,7 @@ export function adjudicateParticipation(input: {
   encounter: PresentEncounter;
   sovereignty: SovereigntyState;
   policy: ParticipationPolicy;           // versioned; pp-1
-}): Participation;                       // { admitted, held, excluded }
+}): Participation;                       // { held, offered, admitted, excluded } — nothing AVAILABLE remains
 
 // PURE. No I/O. No loader calls. No clock beyond what is passed. Deterministic for a fixture.
 ```
@@ -437,25 +444,39 @@ Purity is what makes MIPA certifiable by fixture and makes the manifest reproduc
 | **provenance** | where did this come from, and is that chain intact? | producer spec + loader-reported provenance |
 | **authority** | does it situate or does it synthesize? | producer spec `authority: 'situate' \| 'compute' \| 'infer'` |
 | **eligibility** | is it permitted for this identity status / room / sovereignty state? | producer `requires` ∩ turn state |
-| **restraint** | even if eligible, does policy hold it for this turn? | policy rules (e.g. cap on `system_inferred` per turn; sanctuary; recall prefs) |
+| **restraint** | even if eligible, does policy hold it for this turn? | policy rules (e.g. cap on `authority: 'infer'` per turn; sanctuary; recall prefs) |
 
 ### 6.3 Outcomes and reason codes
 
+Ratified 2026-09-03 as the five-state contract `pdc-1` (typed in
+`lib/maia/canonical-turn/participationDisposition.ts`):
+
 ```text
-ADMITTED   { producerId, block, reason: 'eligible' }
-HELD       { producerId, reason: 'loader_error' | 'restraint:<rule>' | 'sanctuary' | 'recall_pref_off'
-             | 'room_policy' | 'inference_cap' }                  // eligible in principle; not this turn
-EXCLUDED   { producerId, reason: 'no_verified_member' | 'room_forbids' | 'consent_absent'
-             | 'not_registered_for_room' }                         // not eligible here
-REFUSED    (turn-level) 'unregistered_producer' | 'identity_unverifiable' | 'floor_missing' | 'unknown_input'
+AVAILABLE  a CandidateBlock's state on entering adjudication — never "quietly withheld";
+           a completed turn leaves nothing here (assertTurnDispositioned)
+
+HELD       { producerId, axes, reason: HeldReason }        // considered; kept out of THIS encounter
+OFFERED    { producerId, axes, reason: OfferedReason, chars, blockDigest }   // disclosure-safe doorway only
+ADMITTED   { producerId, axes, reason: AdmittedReason, chars, blockDigest }  // participates in cognition
+EXCLUDED   { producerId, axes, reason: ExcludedReason }    // not eligible here
+
+REFUSED    (turn-level, unchanged) 'unregistered_producer' | 'identity_unverifiable' | 'floor_missing' | 'unknown_input'
 ```
+
+**Every final disposition carries a machine-readable basis.** `OFFERED` is a permission-bearing
+disclosure act and `ADMITTED` a participation act — both must be provable later (member
+invocation vs conferred doorway vs product policy vs accident), so neither is exempt. Reason
+families are closed and pairwise disjoint; the v1 seed (`loader_error`, `sanctuary`,
+`recall_pref_off`, `room_policy`, `inference_cap`, `restraint:<rule>` … / `member_contextual_doorway`
+… / `eligible`, `member_placed`, `mandatory_floor` … / `no_verified_member`, `room_forbids`,
+`consent_absent`, `not_registered_for_room` …) grows in M1, never into free text.
 
 `HELD` is the class the flow's manifest asks for and CC-A lacks. `loader_error → HELD` (not
 silently absent) is what turns *"present but empty"* vs *"absent"* — the distinction CC-A was
 built to see — into a first-class outcome.
 
-`system_inferred` producers are the ones `restraint` governs most: v1 policy carries an explicit
-per-turn `inference_cap` and requires `authority !== 'infer'` for any producer admitted into a
+`{system, inferred, infer}` producers are the ones `restraint` governs most: v1 policy carries an
+explicit per-turn `inference_cap` and requires `authority !== 'infer'` for any producer admitted into a
 `roomPolicy.memberAboutAllowed === false` room. This is the executable form of *"a surface may
 situate, never synthesize"* — and the exact contract CDPI's `PatternHypothesis`
 (`authority = SYSTEM_INFERENCE`) will later have to satisfy to be OFFERED rather than HELD.
@@ -526,11 +547,12 @@ interface TurnParticipationManifest {
   sovereignty: { sanctuary: boolean; memoryMode: string; gatesApplied: string[] };
 
   producersConsidered: ProducerId[];
-  epistemicClassesConsidered: EpistemicClass[];
-  admitted: Array<{ producerId; epistemicClass; chars; itemCount?; blockDigest }>;
-  held:     Array<{ producerId; reason }>;
-  excluded: Array<{ producerId; reason }>;
-  counts: { admitted: number; held: number; excluded: number };
+  // rows are ParticipationManifestEntry (pdc-1): three provenance axes + disposition + basis
+  held:     HeldEntry[];                    // { producerId, authoredBy, participationClass, authority, reason }
+  offered:  OfferedEntry[];                 // + chars, blockDigest
+  admitted: AdmittedEntry[];                // + chars, blockDigest, itemCount?
+  excluded: ExcludedEntry[];
+  counts: { held: number; offered: number; admitted: number; excluded: number };
 
   floorDigest: string;                      // digest of rendered floor.* — G1 compares across tiers
   fieldDigest: string;                      // digest of ordered admitted blockDigests — G7 compares across surfaces
@@ -723,7 +745,8 @@ Inherited from the flow and reaffirmed against the reads:
 
 1. **§6.4(2)** — `computed.forward_readiness` and `inferred.memory_influence` on CORE/DEEP:
    admit (recommended) or hold.
-2. **§5.2** — ratify the epistemic-class axis, or amend.
+2. ~~**§5.2** — ratify the epistemic-class axis, or amend.~~ **RESOLVED 2026-09-03: amended** —
+   three provenance axes; five-state disposition contract with structural basis (`pdc-1`).
 3. **§11 M5** — `voice/stream-conversation`: retire the cognition path or onboard.
 4. **§11 M5** — `sovereign/app/maia`: retire or onboard.
 5. **§8 allowlist** — `practitioner/practice-field/draft`: allowlist (recommended v1) or onboard.
