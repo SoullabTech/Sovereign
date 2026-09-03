@@ -11,8 +11,14 @@
 ```text
 LANE               JARVIS-CDPI-01-CROSS-DOMAIN-PATTERN-INTELLIGENCE-01
 WORKING NAME       Consciousness Cartography
-STATE              OPENED · NOT ACTIVE · TRIGGER NOT SATISFIED
-TRIGGER            see §Trigger — four founder-named predecessors, none yet located on canonical
+STATE              OPENED · PARKED · NOT ACTIVE · TRIGGER NOT SATISFIED
+TRIGGER            see §Trigger — four predecessors, each bound to a named artifact class;
+                   no SHA yet exists for any of them
+SEAM RULING        2026-09-03 — READING B for CDPI v1 (evidence persists; interpretation does
+                   not become durable member-form before encounter). Reading C deferred.
+PARTICIPATION      surfacing binds to the canonical participation/admission contract for
+                   SYSTEM_INFERENCE (AVAILABLE / OFFERED / ADMITTED / EXCLUDED) — not to "MIPA"
+                   as a carried-forward term. See §Participation contract.
 AUTHORIZES         nothing
 LIVES IN           MAIA (participant surface) — ⛔ not JARVIS, not the operator graph
 STEWARDED BY       JARVIS flow (this lane) · JARVIS study (held direction, separately unauthorized)
@@ -84,7 +90,7 @@ graph.
 
 ---
 
-## The constitutional seam this lane sits on — named, not ruled
+## The constitutional seam this lane sits on — named, and adjudicated for v1
 
 The **Longitudinal Memory Category Gradient** classifies:
 
@@ -105,10 +111,8 @@ question is already sanctioned. The open question is narrower and sharper:
 > accumulate evidence, contradictions and time — or does persistence-before-encounter constitute
 > formation of a non-form category?**
 
-Three readings exist. ⛔ **This lane does not pick one.** UNDERSTAND must resolve it and DECIDE
-must encode the resolution structurally; if it cannot be resolved within the gradient's text, it
-is a `CONSTITUTIONAL_AMBIGUITY` gate for the founder, and the gradient is revised *in canon* before
-any implementation layer is touched (per that document's own falsifiability clause).
+Three readings were recorded when the lane opened. **The founder adjudicated on 2026-09-03 —
+see §Ruling below.** The readings are kept as written so the choice stays legible.
 
 ```text
 READING A   STRICT NON-FORM
@@ -134,21 +138,103 @@ READING C   HYPOTHESIS PERSISTS AS A NON-AUTHORITATIVE, MEMBER-INVISIBLE-UNTIL-G
 ⭐ The anti-pattern guard the gradient names first — *"useful, therefore should form"* — is
 precisely the pressure this lane will feel. It is recorded here so it can be refused by name.
 
+### Ruling — 2026-09-03 (founder, session-stated; binding on DECIDE)
+
+**CDPI v1 implements READING B.** Evidence may persist. System interpretation does not become a
+durable member-form before the relational encounter.
+
+```text
+PERSIST — descriptions of evidence
+  dream observations · decisions · member words · relationship events
+  Spiralogic phase observations · somatic reports · temporal relations
+  cross-domain EVIDENCE LINKS  (A resembles / process-relates-to B · B transitions-to C ·
+                                A and C share threshold form)
+
+DO NOT YET PERSIST AS MEMBER-FORM — interpretations of the person
+  "Kelly has pattern X"
+  "this means Y"
+  "the underlying process is Z"
+```
+
+MAIA **may compute** a `PatternHypothesis` during analysis — `evidence[] · domains[] ·
+relation_type · possible_pattern · alternatives[] · contradictions[] · confidence ·
+authority = SYSTEM_INFERENCE` — and may *say*: *"There may be the same threshold movement
+appearing in your dream, your decision about work, and your relationship."* Until it crosses the
+relational threshold it remains **analytical hypothesis**, not member-form. After encounter:
+
+```text
+member rejects it          → remains / refines as MAIA hypothesis
+member explores it         → jointly investigated
+member recognizes it       → member-recognized insight
+member reformulates it     → member-authored formulation
+later evidence changes it  → developmental history
+```
+
+That post-encounter space is where a future Reading C may become legitimate.
+
+```text
+CDPI v1        READING B — evidence persists; interpretation does not become durable
+               member-form before encounter
+future CDPI    READING C may be considered ONLY after endorsement / validity /
+               participation machinery exists (P4 / P5 — they did not block W1; they
+               do bear on this)
+```
+
+**Why B now:** the member-facing purpose is not *MAIA accumulates increasingly elaborate theories
+about me*. It is *MAIA helps me become conscious of implicit processes*. **The encounter is part of
+the epistemology.**
+
+⛔ **"Non-persistent hypothesis" does not mean "stateless pattern recognition."** MAIA needs
+longitudinal structure to recognize form across time. Evidence nodes and the relations *between
+evidence nodes* are durable — because they describe evidence, not the person:
+
+```text
+dream_32:         motif = doorway                    member_reported = true
+decision_14:      state = delayed commitment         member_reported = true
+relationship_8:   event = withdrawal after approach  member_reported = true
+
+dream_32   shares-threshold-form   decision_14
+decision_14 process-relates-to     relationship_8
+```
+
+CDPI can discover a possible shared form across these. The durable system does not store
+*"Kelly has a threshold-avoidance pattern."* That is the ontological line v1 protects.
+
 ---
 
-## Undefined term — MIPA
+## Participation contract — the term "MIPA" and what CDPI actually binds to
 
 The founder's articulation gates surfacing on *"only when MIPA permits it."* **`MIPA` does not
-appear anywhere in this repository** (docs, lib, app — searched 2026-09-03). UNDERSTAND must either
-define it as a named object or bind the gate to an existing standing-consent mechanism. The
-nearest live precedents, for FIND to census:
+appear anywhere in this repository** (docs, lib, app — searched 2026-09-03). Founder ruling,
+2026-09-03: ⛔ **CDPI does not invent its own definition.** The canonical-turn work (CMT-01) is
+where participation becomes concrete:
+
+```text
+provider candidates
+       ↓
+participation adjudication
+       ↓
+AVAILABLE / OFFERED / ADMITTED / EXCLUDED
+       ↓
+canonical composition
+```
+
+The activation requirement is therefore stated falsifiably, not nominally:
+
+> **The canonical participation/admission contract governing `SYSTEM_INFERENCE` must have a
+> named repo artifact and an implementation boundary.** CDPI then references that artifact —
+> not a term carried forward from conversation.
+
+Standing-consent precedents that contract may build on, for FIND to census (they are precedents,
+not the contract):
 
 - `member_daily_anchors.surface_preference` (default `member_pulled`; opt-in `contextual_doorway`) — standing consent originating from a member act, deploy flag as kill-switch only
 - atoms `return_preference` model
 - `conversational_recall_enabled` opt-out surface (Phase 2)
 - Sanctuary Mode — absolute non-formation boundary
 
-⛔ Until MIPA is defined, no BUILD unit that surfaces anything may open.
+⛔ Until the participation contract has a named repo artifact, no BUILD unit that surfaces
+anything may open — and BUILD-CDPI-E binds to that artifact by path.
 
 ---
 
@@ -177,19 +263,33 @@ divergent DEEP-tier prompt builder, no FAST/CORE/DEEP addenda-channel split); W1
 without those is recognizing form across a fragmented, short, surface-dependent record — a
 pattern engine for artifacts of the architecture rather than of the person.
 
+⛔ **Do not weaken the trigger because canonical does not yet use these conversational names.**
+Founder ruling 2026-09-03: bind each conceptual predecessor to an actual artifact class, and
+activate only on SHAs.
+
 ```text
-PREDECESSOR                  LOCATED ON CANONICAL?          NEAREST EXISTING ANALOG (not equivalent)
-CANONICAL MAIA TURN          ⛔ not under that name         ADDENDA_CHANNEL_DIVERGENCE §V (unresolved fork);
-                                                            voice-non-degradation convergence point
-P3 GLOBAL PARTICIPATION      ⛔ not under that name         Corpus Callosum substrate (Cat 6, unknowns preserved)
-W1 LONG-TERM RECOLLECTION    ⛔ not under that name         conversational Phase 2 (branch-only), atoms loader,
-                                                            EpisodicMemoryService (Cat 3, 0 callers)
-CROSS-SURFACE PARITY         ⛔ not under that name         —
+PREDECESSOR               BINDS TO (artifact class)                          SHA
+CANONICAL TURN            CMT-01 implementation + certification               —
+P3 GLOBAL                 post-seam global participation certification        —
+W1                        explicit MEMBER-INVOKED long-term recollection       —
+CROSS-SURFACE PARITY      Desktop / PWA / iOS participation-manifest witness   —
+
+NEAREST EXISTING ANALOGS (orientation only — none is the artifact above)
+CANONICAL TURN            ADDENDA_CHANNEL_DIVERGENCE §V (unresolved fork);
+                          voice-non-degradation convergence point
+P3 GLOBAL                 Corpus Callosum substrate (Cat 6, unknowns preserved)
+W1                        conversational Phase 2 (branch-only), atoms loader,
+                          EpisodicMemoryService (Cat 3, 0 callers)
+CROSS-SURFACE PARITY      —
 ```
 
-**Trigger, mechanically:** each of the four predecessors is bound to a lane or artifact on
-canonical, each is closed there with a witness, and the SHAs are written into the header block of
-this file. ⛔ A session narrating that memory "works" is not the trigger. Four SHAs are.
+**Trigger, mechanically:** all four SHA cells above are filled from canonical, each artifact is
+closed there with a witness, and the same SHAs are written into the header block. ⛔ A session
+narrating that memory "works" is not the trigger. Four SHAs are.
+
+**Why parking is right:** cross-domain pattern intelligence before canonical cognition and
+trustworthy recollection would be a more sophisticated version of the fragmentation this
+programme has spent its effort removing.
 
 ---
 
@@ -427,14 +527,25 @@ enum:
 
 ```text
 RECURRENCE       the same movement repeats
-DEVELOPMENT      the movement changes over time
+TRANSFORMATION   the movement changes over time
 COMPENSATION     one domain expresses what another suppresses
-SYNCHRONY        different domains enter similar phases simultaneously
 POLARITY         two domains occupy complementary positions
-TRANSITION       multiple systems reorganize around a threshold
+SYNCHRONY        different domains enter similar phases simultaneously
+SEQUENCE         one movement reliably follows another
+THRESHOLD        multiple systems reorganize around a threshold
 INTEGRATION      previously separated patterns become consciously related
-NOVEL EMERGENCE  something appears that the prior pattern does NOT explain
+CONTRADICTION    evidence that the current reading cannot hold together
+NOVEL_EMERGENCE  the previous map no longer adequately explains what is happening
 ```
+
+Operator family per founder ruling 2026-09-03 — *"at least"* these ten. Lineage: the lane opened
+with eight; `DEVELOPMENT` → `TRANSFORMATION`, `TRANSITION` → `THRESHOLD`, and `SEQUENCE` and
+`CONTRADICTION` were added.
+
+⭐ **A named research problem of Consciousness Cartography:** *semantic similarity ≠
+structural / process similarity.* Two things using the word "door" are not necessarily one
+process. BUILD-CDPI-C must be able to tell them apart, and F8 is the negative control that proves
+it can.
 
 ⭐ **NOVEL EMERGENCE is first-class, not an error path.** A bad pattern system becomes a machine
 for proving its own theories. A good one must be able to return: *this person is becoming
@@ -462,8 +573,8 @@ not migrate to the JARVIS graph (R4), and a recurring elemental phase never beco
 
 ### Questions UNDERSTAND must resolve
 
-1. **The seam** (§above): which reading — A, B, or C — and can the gradient's text bear it? If not, gate to founder.
-2. **MIPA**: define it, or bind surfacing to a named existing standing-consent mechanism.
+1. **The seam** — ruled: READING B for v1. UNDERSTAND encodes it: which objects are *descriptions of evidence* (durable) and which are *interpretations of the person* (analytic until encounter), with no object in between.
+2. **Participation** — bind BUILD-CDPI-E to the canonical participation/admission contract's repo artifact (AVAILABLE / OFFERED / ADMITTED / EXCLUDED). No lane-local definition.
 3. What is the minimum evidence for a hypothesis? (Working floor: ≥ 2 distinct domains, each with ≥ 1 provenance-bearing observation. Lexical overlap alone is a negative control, never evidence.)
 4. What is a **domain**, structurally? Closed enum or member-extensible? What are its provenance fields?
 5. What is the temporal architecture — how does a hypothesis carry `noticed → explored → recognized → contradicted → reformulated → current`, and does W1 supply it?
@@ -491,10 +602,20 @@ interface DomainObservation {
   ref: EvidenceRef;               // recoverable pointer; no prose duplicated here
 }
 
+// DURABLE under Reading B — a description of evidence, never of the person
+interface EvidenceRelation {
+  from: DomainObservation['id'];
+  to: DomainObservation['id'];
+  kind: 'resembles' | 'process_relates_to' | 'transitions_to' | 'shares_form';
+  form?: string;                  // the shared movement, in process language
+  recordedAt: string;
+}
+
+// ANALYTIC under Reading B — computed; persisted only after a relational encounter
 interface PatternHypothesis {
   id: string;
-  relation: RelationType;         // RECURRENCE | DEVELOPMENT | COMPENSATION | SYNCHRONY | POLARITY
-                                  // | TRANSITION | INTEGRATION | NOVEL_EMERGENCE
+  relation: RelationType;         // RECURRENCE | TRANSFORMATION | COMPENSATION | POLARITY | SYNCHRONY
+                                  // | SEQUENCE | THRESHOLD | INTEGRATION | CONTRADICTION | NOVEL_EMERGENCE
   evidence: NonEmptyArray<DomainObservation>;   // ≥ 2 distinct domains — enforced, not requested
   domains: NonEmptyArray<Domain>;
   temporalSpan: { from: string; to: string };
@@ -531,6 +652,10 @@ Load-bearing properties, each different in kind:
   result the system can produce.
 - **Identity is durable.** A member's later explicit act — *"yes, that one"*, *"no, that's not
   it"* — must be able to refer to exactly the hypothesis and the evidence it was shown.
+- **Persistence boundary (Reading B).** `DomainObservation` and `EvidenceRelation` persist.
+  `PatternHypothesis` is computed at analysis time and is written durably only when an encounter
+  occurs — at which point `memberStance` and `history` begin. Before that, `memberStance: 'none'`
+  describes an in-memory object, not a row.
 
 DECIDE also rules: which of readings A/B/C this object implements; the `Domain` enum; the
 `EvidenceRef` shape (reuse the Writer's Studio triad if FIND confirms it fits); and what the
@@ -548,7 +673,8 @@ BUILD-CDPI-A   DOMAIN EVIDENCE           provenance-preserving DomainObservation
 BUILD-CDPI-B   DOMAIN-LOCAL RECURRENCE   what repeats within one domain. No cross-domain step.
 BUILD-CDPI-C   CROSS-DOMAIN RESONANCE    isomorphism of movement across ≥ 2 domains. Negative control
                                          for lexical similarity is part of this unit, not PROVE's.
-BUILD-CDPI-D   HYPOTHESIS OBJECT         PatternHypothesis persistence — ⛔ blocked on the seam ruling.
+BUILD-CDPI-D   HYPOTHESIS OBJECT         analytic PatternHypothesis (Reading B): computed, not persisted
+                                         before encounter; durable EvidenceRelation links are BUILD-CDPI-A/C.
 BUILD-CDPI-E   ENCOUNTER GATE            MIPA / standing consent; the question gesture; rejection holds.
 BUILD-CDPI-F   CONSCIOUS MAP             member-authored counterpart; history chain; map(t) surface.
 BUILD-CDPI-G   CONTRADICTION + NOVEL EMERGENCE
@@ -563,6 +689,41 @@ authorization written into this file's authorization ledger — never by the pre
 ⛔ **BUILD-CDPI-A establishes evidence. It does not produce MAIA's reading of that evidence.**
 No model call, no prompt, no resonance, no surface. Loading domain material *into the evidence
 substrate* is A; making it available to a model is C.
+
+### Where CDPI plugs in — preserved future architecture
+
+⛔ **CDPI is not another prompt-addendum service.** It is an intelligence *provider* whose
+products are governed by the same canonical participation architecture as every other
+member-about inference.
+
+```text
+                   CANONICAL TURN
+                         │
+       ┌─────────────────┼─────────────────┐
+       ▼                 ▼                 ▼
+    Memory         Relationships      Dream evidence
+       │                 │                 │
+       └────────┬────────┴────────┬────────┘
+                ▼                 ▼
+          DOMAIN PROVIDERS / PROCESS EVIDENCE
+                         │
+                         ▼
+               CDPI ANALYTIC OPERATOR
+                         │
+                  pattern candidates
+                         │
+                         ▼
+             PARTICIPATION ADJUDICATION
+        (AVAILABLE / OFFERED / ADMITTED / EXCLUDED)
+                         │
+                 ┌───────┴────────┐
+                 ▼                ▼
+              HELD             OFFERED /
+           hypothesis           ADMITTED
+                                  │
+                                  ▼
+                          relational encounter
+```
 
 ---
 
@@ -607,6 +768,10 @@ F11  AUTHORITY CANNOT BE PROMOTED
 F12  JARVIS GRAPH DOES NOT INGEST
      no PatternHypothesis, DomainObservation, or elemental label reaches the operator
      graph's data model (R2, R4). Pinned by a schema-level test.
+F13  NO PRE-ENCOUNTER MEMBER-FORM (Reading B)
+     substrate on, analysis run, no encounter → the database holds DomainObservations and
+     EvidenceRelations only; zero rows of any interpretive object about the member.
+     Proven from an empty database, before and after a run that DID compute a hypothesis.
 ```
 
 The **evidence staircase** from the held direction governs what "proven" means at each stage:
@@ -672,4 +837,18 @@ unit re-answers for its own scope.
              DECIDE       not authorized
              BUILD        not authorized · BUILD-CDPI-A–H not started
              PROVE / DONE not authorized
+
+2026-09-03   FOUNDER RULINGS (session-stated; recorded, not promoted by recording)
+             STATE        OPENED · PARKED — correctly not activated
+             TRIGGER      bound to four artifact classes (CMT-01 cert · P3-global cert ·
+                          W1 member-invoked recollection · cross-surface manifest witness);
+                          SHAs still absent → trigger still unsatisfied
+             SEAM         READING B for CDPI v1 · READING C deferred behind P4/P5 machinery
+             PARTICIPATION"MIPA" replaced by: canonical participation/admission contract for
+                          SYSTEM_INFERENCE must have a named repo artifact + boundary
+             OPERATORS    family widened to ten; NOVEL_EMERGENCE stays first-class
+             INVARIANTS   ≥ 2-domain construction + F8 lexical negative control affirmed
+             ARCHITECTURE CDPI = intelligence provider under participation adjudication,
+                          not a prompt addendum
+             AUTHORIZED   still nothing
 ```

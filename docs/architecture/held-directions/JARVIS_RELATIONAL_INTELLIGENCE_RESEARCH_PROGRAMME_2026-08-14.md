@@ -239,3 +239,12 @@ The first unit is therefore:
 > would be genuinely new → **STOP before redesign.**
 
 ⛔ Do not begin from conversation alone.
+
+---
+
+## Pointer — 2026-09-03
+
+**Cross-Domain Pattern Intelligence / Consciousness Cartography:** parked architecture lane at
+`docs/programme/JARVIS-CDPI-01-CROSS-DOMAIN-PATTERN-INTELLIGENCE-01.md`. Activation requires
+certified canonical turn construction (CMT-01), P3-global, W1 explicit recollection, and
+cross-surface parity. ⛔ No implementation authorized. This pointer is not a specification.
