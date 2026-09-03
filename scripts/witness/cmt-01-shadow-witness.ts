@@ -10,7 +10,13 @@
  *     | grep -E "\[MAIA/(shadow|manifest)\]|canonical construction failed|GIT_COMMIT" \
  *     | npx tsx scripts/witness/cmt-01-shadow-witness.ts --sha 2fafaa4 --start "<start>" --end "<end>"
  *
- *   or:  npx tsx scripts/witness/cmt-01-shadow-witness.ts --file shadow.log --sha 2fafaa4 ...
+ *   or:  npx tsx scripts/witness/cmt-01-shadow-witness.ts --file shadow.log --sha <R> --anchor 2fafaa4 ...
+ *
+ * --sha     the RUNTIME SHA the witness must observe in every manifest (the deploy-chain
+ *           repair commit R, whose history contains the CMT M2 implementation)
+ * --anchor  the CMT M2 implementation anchor (2fafaa4) — recorded, never substituted for --sha.
+ *           CMT application behaviour is unchanged between anchor and R; only deployment
+ *           provenance machinery differs. Say both; never let the evidence read cleaner than it is.
  *
  * Acceptance (whole set): every [MAIA/shadow] line has
  *   zeroDiff:true · missingInCanonical:[] · missingInLegacy:[] · digestMismatch:[]
@@ -59,6 +65,7 @@ const accepted = shadows.length > 0 && nonZero.length === 0 && failures.length =
 
 const record = {
   witness: 'CMT-01 M2 production parity',
+  cmtImplementationAnchor: opt('--anchor') ?? null,
   deployedSha: { expected: expectedSha ?? null, observedInManifests: shas, match: shaOk },
   window: { start: opt('--start') ?? null, end: opt('--end') ?? null },
   shadowComparisons: shadows.length,

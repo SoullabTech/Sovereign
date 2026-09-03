@@ -112,7 +112,14 @@ services:
       PORT: "3000"
       HOSTNAME: "0.0.0.0"
       NEXT_TELEMETRY_DISABLED: "1"
-      GIT_COMMIT: ${GIT_COMMIT:-unknown}
+      # GIT_COMMIT is deliberately NOT set here. The IMAGE owns build provenance:
+      # Dockerfile bakes ENV GIT_COMMIT from the build arg the deploy lane stamps
+      # from the asserted SHA, and the container inherits it. A runtime override
+      # here let a launcher rewrite an immutable image's identity — on 2026-09-03
+      # a correctly stamped image (2fafaa4c4) ran as GIT_COMMIT=unknown because
+      # this line was interpolated at `up` without the variable. The deploy gate
+      # now REFUSES any compose file that sets GIT_COMMIT under services:
+      # (deploy_ctx_refuse_compose_runtime_override, scripts/deploy-context.sh).
       # Audit trail (lib/security/auditLog.ts) — node-writable, volume-backed
       # so entries survive container swaps on deploy.
       AUDIT_LOG_DIR: /app/data/audit-logs

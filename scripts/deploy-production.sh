@@ -442,16 +442,21 @@ cmd_deploy() {
 
     # Build image first (never rebuild while down!) — from the immutable snapshot
     # (compose reads MAIA_BUILD_CONTEXT for every build `context:`).
-    docker compose -f "$COMPOSE_FILE" build \
+    # Build + swap use the SNAPSHOT's compose file (deploy_ctx_compose) — the
+    # deployment structure is the authorized commit's (2026-09-03 provenance repair).
+    deploy_ctx_compose build \
         --build-arg GIT_COMMIT="$GIT_COMMIT" \
         --build-arg APP_VERSION="$APP_VERSION" \
         --build-arg BUILD_DATE="$BUILD_DATE"
+
+    # PRE-swap: the built image must carry the asserted stamp; abort before any swap.
+    deploy_ctx_verify_image "$GIT_COMMIT" "$MAIA_IMAGE_REPO:prod" || exit 1
 
     # Tag images for rollback capability BEFORE starting
     tag_images_for_rollback "$GIT_COMMIT"
 
     log_info "Starting containers..."
-    docker compose -f "$COMPOSE_FILE" up -d
+    deploy_ctx_compose up -d
 
     log_info "Waiting for services to be healthy..."
     sleep 10
@@ -467,7 +472,7 @@ cmd_deploy() {
 
     # Run migrations
     log_info "Running database migrations..."
-    if ! docker compose -f "$COMPOSE_FILE" --profile migrate run --rm migrate; then
+    if ! deploy_ctx_compose --profile migrate run --rm migrate; then
         echo ""
         log_warn "════════════════════════════════════════════════════════════════"
         log_warn "⚠️  DATABASE MIGRATIONS FAILED"
@@ -546,16 +551,20 @@ cmd_update() {
     # build dies at metadata write after minutes and can exit 0 through ssh).
     "$SCRIPT_DIR/pre-deploy-gate.sh" disk
 
-    # Build image first (never rebuild while down!) — from the immutable snapshot.
-    docker compose -f "$COMPOSE_FILE" build \
+    # Build + swap from the immutable snapshot — code AND compose structure
+    # (deploy_ctx_compose; 2026-09-03 provenance repair).
+    deploy_ctx_compose build \
         --build-arg GIT_COMMIT="$GIT_COMMIT" \
         --build-arg APP_VERSION="$APP_VERSION" \
         --build-arg BUILD_DATE="$BUILD_DATE"
 
+    # PRE-swap: the built image must carry the asserted stamp; abort before any swap.
+    deploy_ctx_verify_image "$GIT_COMMIT" "$MAIA_IMAGE_REPO:prod" || exit 1
+
     # Tag images for rollback capability BEFORE restarting
     tag_images_for_rollback "$GIT_COMMIT"
 
-    docker compose -f "$COMPOSE_FILE" up -d
+    deploy_ctx_compose up -d
 
     # Post-swap: assert the running container is the commit we authorized.
     sleep 10
@@ -568,7 +577,7 @@ cmd_update() {
     fi
 
     log_info "Running migrations..."
-    if ! docker compose -f "$COMPOSE_FILE" --profile migrate run --rm migrate; then
+    if ! deploy_ctx_compose --profile migrate run --rm migrate; then
         echo ""
         log_warn "════════════════════════════════════════════════════════════════"
         log_warn "⚠️  DATABASE MIGRATIONS FAILED"
