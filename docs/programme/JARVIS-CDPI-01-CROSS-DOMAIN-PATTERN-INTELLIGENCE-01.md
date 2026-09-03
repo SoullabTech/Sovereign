@@ -18,7 +18,7 @@ SEAM RULING        2026-09-03 — READING B for CDPI v1 (evidence persists; inte
                    not become durable member-form before encounter). Reading C deferred.
 PARTICIPATION      binds to docs/programme/CMT-01_PARTICIPATION_DISPOSITION_CONTRACT.md
                    (AVAILABLE / HELD / OFFERED / ADMITTED / EXCLUDED · typed form
-                   lib/memory/participation/participationDisposition.ts · pdc-1).
+                   lib/maia/canonical-turn/participationDisposition.ts · pdc-1).
                    CDPI depends on HELD; CDPI may not define it.
 AUTHORIZES         nothing
 LIVES IN           MAIA (participant surface) — ⛔ not JARVIS, not the operator graph
@@ -227,7 +227,7 @@ The activation requirement is therefore stated falsifiably, not nominally:
 > not a term carried forward from conversation.
 
 **Named artifact (2026-09-03):** `docs/programme/CMT-01_PARTICIPATION_DISPOSITION_CONTRACT.md`,
-typed as `lib/memory/participation/participationDisposition.ts` (`pdc-1`). The **contract half**
+typed as `lib/maia/canonical-turn/participationDisposition.ts` (`pdc-1`). The **contract half**
 of the requirement is met. The **implementation boundary** — a canonical constructor that
 actually adjudicates candidates into these dispositions — is CMT-01 Step 2 and is not yet on
 canonical; this half stays open.
@@ -247,7 +247,7 @@ not the contract):
 
 ⛔ Until the participation contract has an **implementation boundary** on canonical (Step 2),
 no BUILD unit that surfaces anything may open — and BUILD-CDPI-E binds to
-`lib/memory/participation/participationDisposition.ts` by path, never to a lane-local enum.
+`lib/maia/canonical-turn/participationDisposition.ts` by path, never to a lane-local enum.
 
 ---
 
@@ -870,9 +870,16 @@ unit re-answers for its own scope.
 
 2026-09-03   PARTICIPATION CONTRACT NAMED (CMT-01 amendment, founder-authorized)
              ARTIFACT     docs/programme/CMT-01_PARTICIPATION_DISPOSITION_CONTRACT.md
-                          + lib/memory/participation/participationDisposition.ts (pdc-1)
+                          + lib/maia/canonical-turn/participationDisposition.ts (pdc-1)
              HELD         added to the canonical disposition set; CDPI depends on it,
                           does not define it; F13 becomes the dual proof
              REQUIREMENT  contract half MET · implementation-boundary half OPEN (Step 2)
              AUTHORIZED   still nothing in this lane
 ```
+
+2026-09-03   SECOND VOCABULARY REMOVED
+             The pre-amendment copy of the contract this branch carried under
+             lib/memory/participation/ (scalar epistemicClass; OFFERED/ADMITTED without
+             basis) is deleted. CMT-01 owns the contract on its own branch, amended per
+             the founder ruling (three axes; basis on every final state; HELD ≠ EXCLUDED).
+             CDPI binds by path only and carries no copy.
