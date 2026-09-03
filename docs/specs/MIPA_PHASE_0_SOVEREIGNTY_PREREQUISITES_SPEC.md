@@ -630,6 +630,37 @@ The excluded arm of the union carries no `insight` and no `element`. Not a filte
 
 ---
 
+### PHASE 0 — CLOSED 2026-09-03 · founder adjudication
+
+```text
+PHASE 0 — CONSTITUTIONAL FLOOR
+
+P1  Sovereign corpus                         ✅
+P2  Member consent gates                     ✅
+P3  Known/enumerable inference exposures     ✅
+    Global closure                           ⏳ canonical seam
+P6  Doorway return authority                 ✅
+
+P4/P5 member gestures                        deliberately deferred
+```
+
+**P4/P5 are not prerequisites for the first safe long-term recollection.** Their
+three gestures — CORRECT/CHANGE/RETRACT, ENDORSE/WITHDRAW, contextual
+constraints — are product and relationship design, and their interaction shape
+is adjudicated before they become database mechanics. Deferred by decision, not
+by omission.
+
+The next lane is **Canonical MAIA Turn Construction**, not more memory cleanup
+and not retrieval. Its purpose is to eliminate the architectural condition that
+produced most of the P3 discoveries: *different routes assemble different MAIAs
+before reaching the same cognition.* Discovery for that lane:
+`docs/architecture/CANONICAL_TURN_SEAM_TOPOLOGY.md`.
+
+Sequence: canonical turn seam → P3-global recertification → W1 explicit
+long-term recall → desktop/PWA/iOS parity witness → P4/P5.
+
+---
+
 ### P6-E — Doorway Consent Integrity · execution record
 
 > ### ✅ P6 CERTIFIED — 2026-09-03 · **Grade A construction · Grade B on the cast arm** · Refusal **R30**
