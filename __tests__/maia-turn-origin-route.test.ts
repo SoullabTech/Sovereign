@@ -115,9 +115,17 @@ describe('R1: each serving route declares its own literal at the HTTP boundary',
     expect(src).toContain(`originRoute: '${LIST_ROUTE}'`);
   });
 
-  it('the sibling route declares its own path to getMaiaResponse', () => {
-    const src = read('app/api/sovereign/app/maia/route.ts');
-    expect(src).toContain(`originRoute: '${SIBLING_ROUTE}'`);
+  it('the retired sibling route reaches no cognition and declares no originRoute', () => {
+    // CMT-01 Step 3: the sibling is structurally retired. The invariant this
+    // test guards — no route path appearing that nobody declared — is best
+    // served by the sibling declaring nothing, because it calls nothing.
+    const raw = read('app/api/sovereign/app/maia/route.ts');
+    // Its header explains what was removed by naming it; strip comments so the
+    // explanation is not mistaken for the thing it explains.
+    const src = raw.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
+    expect(src).not.toMatch(/getMaiaResponse\(/);
+    expect(src).not.toContain(`originRoute: '${SIBLING_ROUTE}'`);
+    expect(src).toMatch(/status: 410/);
   });
 
   it('maiaService forwards originRoute to logMaiaTurn with no fallback', () => {

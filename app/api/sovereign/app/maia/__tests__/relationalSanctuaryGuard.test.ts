@@ -28,10 +28,23 @@
 import { readFileSync } from 'fs';
 import path from 'path';
 
-/** Live MAIA conversation routes that perform relational observation. */
+/**
+ * Live MAIA conversation routes that perform relational observation.
+ *
+ * CMT-01 Step 3 (2026-09-03): `app/api/sovereign/app/maia/route.ts` — the route
+ * this test was written FOR — is structurally retired. It performs no relational
+ * observation, declares no sanctuary state, and reaches no cognition. It is
+ * removed from this set because there is nothing left in it to contain, and
+ * `RETIRED_ROUTES` below asserts that stays true. This does not weaken RU-0:
+ * every relational write that still exists is still governed.
+ */
 const ROUTES = [
-  'app/api/sovereign/app/maia/route.ts',
   'app/api/sovereign/app/maia/list/route.ts',
+] as const;
+
+/** Retired conversation routes: must contain NO relational write at all. */
+const RETIRED_ROUTES = [
+  'app/api/sovereign/app/maia/route.ts',
 ] as const;
 
 /** Calls that PERSIST relational material derived from a conversation turn. */
@@ -83,6 +96,13 @@ function sanctuaryGuardedRanges(lines: string[]): Array<[number, number]> {
   });
   return ranges;
 }
+
+describe('relational sanctuary containment — retired routes', () => {
+  it.each(RETIRED_ROUTES)('%s performs no relational observation', (rel) => {
+    const writes = readRoute(rel).filter((l) => RELATIONAL_WRITES.some((w) => l.includes(w)));
+    expect(writes).toEqual([]);
+  });
+});
 
 describe('relational sanctuary containment — parsing sanity', () => {
   it.each(ROUTES)('%s declares isSanctuary', (rel) => {

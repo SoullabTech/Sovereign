@@ -69,9 +69,26 @@ describe('Beta Core — Authentication', () => {
   });
 });
 
+describe('Beta Core — retired conversation route', () => {
+  // CMT-01 Step 3 (2026-09-03): /api/sovereign/app/maia is structurally
+  // retired. It answers 410 with a pointer to the successor — never a 404, so
+  // an unexpected caller learns where to go rather than guessing why.
+  test('answers 410 and names the successor', async () => {
+    const res = await apiFetch('/api/sovereign/app/maia', {
+      method: 'POST',
+      body: JSON.stringify({ message: 'Hello' }),
+    });
+    expect(res.status).toBe(410);
+    expect(res.headers.get('X-Recommended-Endpoint')).toBe('/api/sovereign/app/maia/list');
+    const data = await res.json();
+    expect(data.code).toBe('ROUTE_RETIRED');
+    expect(data.successor).toBe('/api/sovereign/app/maia/list');
+  });
+});
+
 describe('Beta Core — MAIA Conversation', () => {
   test('rejects request without message', async () => {
-    const res = await apiFetch('/api/sovereign/app/maia', {
+    const res = await apiFetch('/api/sovereign/app/maia/list', {
       method: 'POST',
       body: JSON.stringify({}),
     });
@@ -82,7 +99,7 @@ describe('Beta Core — MAIA Conversation', () => {
   });
 
   test('responds to a simple message with correct shape', async () => {
-    const res = await apiFetch('/api/sovereign/app/maia', {
+    const res = await apiFetch('/api/sovereign/app/maia/list', {
       method: 'POST',
       body: JSON.stringify({
         message: 'Hello',
@@ -101,7 +118,7 @@ describe('Beta Core — MAIA Conversation', () => {
 
     // Route metadata
     expect(data.route).toBeDefined();
-    expect(data.route.endpoint).toBe('/api/sovereign/app/maia');
+    expect(data.route.endpoint).toBe('/api/sovereign/app/maia/list');
     expect(data.route.operational).toBe(true);
 
     // Session tracking
@@ -118,7 +135,7 @@ describe('Beta Core — MAIA Conversation', () => {
     const sessionId = `test-continuity-${Date.now()}`;
 
     // First turn
-    const res1 = await apiFetch('/api/sovereign/app/maia', {
+    const res1 = await apiFetch('/api/sovereign/app/maia/list', {
       method: 'POST',
       body: JSON.stringify({
         message: 'Remember the word: sovereignty',
@@ -130,7 +147,7 @@ describe('Beta Core — MAIA Conversation', () => {
     expect(data1.session.id).toBe(sessionId);
 
     // Second turn — same session
-    const res2 = await apiFetch('/api/sovereign/app/maia', {
+    const res2 = await apiFetch('/api/sovereign/app/maia/list', {
       method: 'POST',
       body: JSON.stringify({
         message: 'What word did I just mention?',

@@ -542,6 +542,22 @@ No historical retrieval. No new intelligence provider. No reactivation of P3-exc
 
 ---
 
+### Step 3a — Route B structurally retired · CERTIFIED 2026-09-03
+
+`app/api/sovereign/app/maia/route.ts` is now a **70-line 410 boundary**: `POST` and `GET` answer `410` with `code: 'ROUTE_RETIRED'`, `successor: '/api/sovereign/app/maia/list'`, and headers `X-Recommended-Endpoint` + `X-Route-Retired`. Both cognition call sites, every intelligence loader, the relational writes, and the session/cognitive-profile machinery are gone; the file no longer needs `@ts-nocheck`. The cognition call-site closed set is **six → four** (`/list`: 1; `maiaOrchestrator`: 3).
+
+Three suites read B's source and had to change, each for a stated reason, none silenced: the RU-0 sanctuary test drops B from the routes it contains and **adds** an assertion that B performs no relational write at all; the origin-route test now asserts B declares no route to cognition; the beta-core smoke expects 410 from B and moves the conversation contract to `/list`. The authority map records `retired`, the witness, and the log-retention caveat; the `maiaRuntimeContext` registry entry is left stale by design (`callsMaiaResponse: true` over-claims rather than hides) pending its elimination in §9.
+
+**Certification** — `__tests__/cmt-01-step3-b-retirement.test.ts` plus the two source-reading suites, **31/31**; the full MIPA + CMT set 371/371; differentially clean. Seven mutations refused, each witnessed, restored by content: a cognition call restored behind a flag (sites 5 → 6) · 410 → 404 · successor pointer dropped · a relational write re-entering B · a **new route** reaching cognition (sites 5 → 6, the closed set growing) · the file **deleted** (a silent 404, refused: retirement is an explicit boundary) · the authority map quietly reverting to `dormant`.
+
+> **Two instrument defects, both text-is-not-code.** `lib/maia/maiaRuntimeContext.ts:96` describes B inside a *string literal* — `'… code still calls getMaiaResponse()'` — and the call-site scan counted the description as a fifth call (R23's lesson: strings are text). And the origin-route assertion read raw source, so B's own header explaining what was removed matched the pattern for the thing removed. Both detectors now strip strings and comments.
+
+**Topology correction.** The discovery record said `getMaiaResponse()` is "defined once." It is defined **twice**: `lib/learning/enhanced-maia-service.ts:400` exports its own, wrapping `getEnhancedMaiaResponse` → `learningOrchestrator.generateMaiaResponse` — a **distinct cognition path**, with the same untyped `meta` bag. Its only in-tree importer is `lib/consultation/deep-path-with-consultation.ts`, which itself has **no importer**. So: a second cognition entry exists in source and is unreached from any route by import. The name-matching call-site scan cannot see a future caller that imports `getEnhancedMaiaResponse` instead, so the certification now **pins the importer set** (exactly one, itself unimported) and a new reacher fails because it is new. Its disposition — retire, or classify under §1 — is an open item for adjudication; it is not counted among the four and it is not assumed dead.
+
+**Next: Step 3b** — A (`/list`) into shadow beside its legacy assembly, gated by the §4.1 zero-diff witness before C.
+
+---
+
 ## 13. Why the constructor is the right place for what comes after
 
 Dreams, relationships, decisions, Spiralogic phases, ideas, changes, somatic processes — each becomes a **governed intelligence provider** feeding one participation architecture, rather than a feature bolted onto MAIA with its own private path to the prompt. The provider contract in §3.3 is the shape they will take. But not yet.

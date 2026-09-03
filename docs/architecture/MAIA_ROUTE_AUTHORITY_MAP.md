@@ -178,17 +178,17 @@ The import is now commented out (commit `5eabe290c`) and the canonical route is 
 | Field | Value |
 |-------|-------|
 | **File** | `app/api/sovereign/app/maia/route.ts` |
-| **Status** | `dormant` (reclassified 2026-05-23 from `live-secondary ⚠️`) |
-| **Lines** | ~445 (now includes dormant docblock) |
-| **Traffic evidence** | 48h production-log audit on 2026-05-23: **0 hits** (vs 99 for `/list`). Audit method: `docker logs maia-sovereign --since 48h \| grep "/api/sovereign/app/maia"` — only `/list/route` references returned. |
-| **Calls getMaiaResponse()** | ✅ YES (no-op — route never invoked in production) |
+| **Status** | **`retired`** — STRUCTURALLY RETIRED 2026-09-03 (CMT-01 Step 3; previously `dormant` since 2026-05-23). Answers **HTTP 410** with `X-Recommended-Endpoint: /api/sovereign/app/maia/list`. |
+| **Lines** | ~70 (410 boundary only) |
+| **Traffic evidence** | 2026-05-23 48h audit: 0 hits. **2026-09-03 30-day witness** (`docker logs --since 720h maia-caddy`, exact path, excluding `/list`): **zero matching entries in retained logs** (container logs are capped at 10m × 3; the 2026-08-10 RU-0 audit had recorded 3,388 runs/30d, so "retained" is load-bearing). Plus source census: no first-party client; remaining references from deprecated paths. |
+| **Calls getMaiaResponse()** | ❌ **NO** — both call sites removed. Pinned by `__tests__/cmt-01-step3-b-retirement.test.ts`. |
 | **memoryHealth wired** | ❌ NO |
 | **memoryAtomsLoader wired** | ❌ NO |
 | **Provider routing** | Indirect via `getMaiaResponse()` → `modelService.ts` |
 | **Orientation wiring** | ❌ NO |
 | **@ts-nocheck** | ⚠️ YES |
 | **Owner thread** | `legacy-ref` (reclassified from `de-frag`) |
-| **Allowed future edits** | **None to wiring.** Patches will not reach live traffic. If full removal is desired later, do so via a deletion commit that updates this map in the same diff. |
+| **Allowed future edits** | **None.** A later deletion of the file is a separate decision (spec §2.2: explicit 410 first); until then the route must keep answering 410 with the successor. Re-adding conversation logic fails certification. |
 | **Notes** | Phase 1.5 memory orchestrator wiring was added in commit `930cc412e` under the misapprehension that this was the canonical route. The wiring is preserved as a no-op reference; it has never fired in production. The supersession docblock at the top of `route.ts` cross-references this map and Divergence Pattern #5. **First real application of Pattern #5's supersession protocol.** |
 
 ### `/api/oracle/conversation`
