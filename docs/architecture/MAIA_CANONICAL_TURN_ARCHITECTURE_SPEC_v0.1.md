@@ -717,6 +717,97 @@ CUTOVER                   NOT AUTHORIZED
 
 ---
 
+### Production shadow-window incident · 2026-09-03 · RECORDED (ruling: Path B stands)
+
+Four separate failures. They are recorded separately so they do not collapse into "the deployment went weird."
+
+```text
+PRODUCTION SHADOW-WINDOW INCIDENT · 2026-09-03
+
+AUTHORIZED CANDIDATE
+  3e31bc0ff4e050f9cfd35bdc68c70fbcb772e56c   (parents 93f8b38 + canonical a4305f4)
+
+INITIAL DEPLOY (13:43–13:50 UTC, deploy-production.sh deploy, immutable snapshot)
+  Mac Studio preflight                 PASS (EXIT 0 at 3e31bc0, real .env.docker)
+  P6 pre-census rows_to_reseal         0
+  image maia-sovereign:3e31bc0ff       created 13:48:25
+  running-container provenance         GIT_COMMIT=3e31bc0ff == asserted   (13:50:23)
+  migrations                           10 applied (P6 + nine canonical manuscript/ask migrations
+                                       production had not yet applied; 504 already applied)
+  smoke + constitutional verification  PASS
+
+COLLISION (~13:52 UTC)
+  a parallel CMT-01 session (branch claude/canonical-maia-turn-j92opb) deployed
+  2fafaa4c4e8d22cca62a2d12b1a9808b0d95368b through the same serialized deploy lane.
+  Its image had been built at 13:33:16 (an earlier deploy of the same SHA); the
+  redeploy was fully cached, so the image kept that timestamp. Its deploy-tag step
+  moved 3e31bc0ff to :previous and 2fafaa4c4 to :current/:prod; the container swapped.
+  It deployed a SHA that was not the SHA authorized for this bounded Step 3b reading.
+
+FINDING
+  the deploy-lane lock SERIALIZED the concurrent deploys correctly
+  it did not ENFORCE which SHA was authorized — serialization is not authorization
+
+WITNESS CONSEQUENCE
+  2fafaa4c4 contains no lib/maia/turn/shadowWitness.ts and its /list has no
+  runShadowWitness call; therefore the zero "[CMT-01] shadow-witness" lines observed
+  are NON-EVIDENCE.
+    STEP 3b PRODUCTION WINDOW   INVALID
+    zero-diff                   NOT TESTED
+    non-zero-diff               NOT TESTED
+    route-B 410 witness         NOT TESTED
+    ordinary /list traffic      NOT ESTABLISHED
+  This is a provenance failure, not a parity result. It is NOT a failed Step 3b witness.
+
+SECOND PROVENANCE REGRESSION (14:12:06 UTC)
+  the window-close command supplied by this session ran
+  `docker compose up -d --no-build maia` OUTSIDE the deploy lane. It reused the
+  mutable maia-sovereign:prod tag (then = 2fafaa4c4), recreated maia-sovereign
+  without GIT_COMMIT materialization, and — because compose saw config drift —
+  recreated maia-postgres as well. Running container afterwards:
+    GIT_COMMIT=unknown · DEPLOY_LANE=deploy-lane (baked into the other lane's image)
+    · CMT_SHADOW_WITNESS=0 · image created 14:12:06.
+  The Dockerfile tripwire guards builds; `up --no-build` is not a build.
+
+DATABASE
+  persistent volume retained; postgres restarted twice (deploy, window-close)
+  P6: pre-count 0 / UPDATE 0 / post-count 0 — schema default applied, data blast radius zero
+  P6 rollback NOT WARRANTED; the nine canonical migrations stay applied
+  no data-loss claim made
+  NOTE: while 2fafaa4c4 code runs on the post-P6 schema, its practitioner bridge
+  (app/api/studio/with-me/sessions/[sessionId]/route.ts:148) still INSERTs the literal
+  'contextual_doorway', overriding the new default — P6 is held by the schema, not by
+  the running writer, until Path B code is restored.
+
+EVIDENCE PRESERVED (minisforum, 14:1x UTC)
+  docker image inspect: [maia-sovereign:2fafaa4c4 :current :prod] created 13:33:16
+                        [maia-sovereign:3e31bc0ff :previous]       created 13:48:25
+  running container:    sha256:6c28d6de3baa…5770572 created 14:12:06
+  /tmp maia-deploy-ctx remnants: none (contexts cleaned by their exit handlers)
+  repo reflog: checkout unmoved since 2026-08-25 (immutable-SHA deploys touch no checkout)
+
+RULING (founder, 2026-09-03)
+  Path B / 3e31bc0 lineage                    STANDS — canonical for this CMT-01 line
+  2fafaa4c4 parallel M0–M2 / pdc-1 lineage    SUPERSEDED FOR CMT-01 AUTHORITY
+                                              preserve as evidence / alternate design;
+                                              not deleted; no further deploy; no cutover;
+                                              no production-authority claim; importing any
+                                              of its material requires a separate
+                                              reconciliation decision — proximity of
+                                              concepts does not transfer authority
+  parity conclusion from this window          NONE
+  M3                                          NOT AUTHORIZED
+  deploy SHA-authorization guard              VALID FINDING · SEPARATE GOVERNANCE LANE,
+                                              after restore + reading (do not change the
+                                              deploy mechanism while recovering with it)
+```
+
+**Recovery order (ratified):** (1) hold notice to the parallel session; (2) this record; (3) preserve evidence (above); (4) restore **through the deploy lane only** — `scripts/pre-deploy-gate.sh deploy-maia 3e31bc0ff4e050f9cfd35bdc68c70fbcb772e56c` (migrations already applied; the gate swaps with `--force-recreate --no-deps` under `--env-file .env.production`, so flag changes travel through the lane too); (5) verify the **running container itself**: `GIT_COMMIT` == `3e31bc0ff`, image label `git.commit` == same, `DEPLOY_LANE` present, `CMT_SHADOW_WITNESS=1`, and the Step 3b instrument is executable in the image — `/app/lib/maia/turn/shadowWitness.ts` present AND the compiled route `/app/.next/server/app/api/sovereign/app/maia/list/route.js` contains the marker string. *Provenance label and executable witness must both identify the same candidate; a `GIT_COMMIT` string alone did not save this incident, a tag alone certainly would not.* (6) a NEW bounded window. **Closing a window is a lane act** — set the flag in `.env.production`, then `deploy-maia` the same SHA — never a bare `compose up`.
+
+**Standing rule from this incident:** *serialization is not authorization; a deploy lane must refuse a SHA that is not the currently authorized deployment object.* Recorded here as requirement, not implemented here.
+
+---
+
 ## 13. Why the constructor is the right place for what comes after
 
 Dreams, relationships, decisions, Spiralogic phases, ideas, changes, somatic processes — each becomes a **governed intelligence provider** feeding one participation architecture, rather than a feature bolted onto MAIA with its own private path to the prompt. The provider contract in §3.3 is the shape they will take. But not yet.
