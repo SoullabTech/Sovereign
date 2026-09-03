@@ -135,6 +135,17 @@ import { formatMarkedEpisodesForPrompt, summarizeMarkedEpisodesForLog } from '@/
 import { buildMaiaRuntimeContext, formatRuntimeContextForResponse } from '@/lib/maia/maiaRuntimeContext';
 // 🔐 De-frag step 5 — provider health guard: throws before generation, never soft-returns
 import { assertProviderAvailable, ProviderUnavailableError } from '@/lib/maia/assertProviderAvailable';
+// 🧭 CMT-01 M2 — canonical turn SHADOW (spec §11 M2; authorized 2026-09-03). Zero live
+// response authority: the legacy assembly below remains response-producing; the canonical
+// object is constructed from the SAME loaded material and structurally compared.
+import {
+  resolveCanonicalIdentity,
+  constructCanonicalTurn,
+  candidatesFromLegacyAddenda,
+  compareLegacyToCanonical,
+  emitShadowDiff,
+  ROOM_POLICIES,
+} from '@/lib/maia/canonical-turn';
 // 🌀 Cut 2 — Spiral Orientation (read-only developmental context)
 // PARKED: Cut 2 is design-only / parked. Orientation must not enter the MAIA
 // prompt automatically yet (preserves Path B: Journey surfaces orientation first,
@@ -1152,6 +1163,87 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
         episodic: episodicRecallAddendum,
       },
     });
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // 🧭 CMT-01 M2 — CANONICAL TURN SHADOW
+    //
+    // Spec: docs/programme/MAIA_CANONICAL_TURN_ARCHITECTURE_SPEC_v0.1.md §11 M2 / §8 G8.
+    // Ruling (2026-09-03): construct CanonicalTurn on /list in shadow mode while legacy
+    // assembly remains response-producing. Acceptance = paired legacy/canonical structural
+    // zero-diff witness ([MAIA/shadow] zeroDiff:true on live turns) + the hostile mutation
+    // in lib/maia/canonical-turn/__tests__ proving the comparison goes non-zero when one
+    // side loses a provider.
+    //
+    // WHAT THIS DOES: identity via the ONE canonical resolver (same auth_sessions lookup
+    // resolveMemberIdentity already ran — a second indexed select, removed at M3 when the
+    // route resolves once through the canonical path); the 13 route-supplied addenda lifted
+    // into typed CandidateBlocks; MIPA adjudication; floor composed; manifest emitted under
+    // [MAIA/manifest]; structural diff emitted under [MAIA/shadow]. Content never leaves
+    // this block — digests only.
+    //
+    // WHAT THIS DOES NOT DO: touch `meta`, the prompt, the response, or any write. Any
+    // failure here is caught and logged; the legacy turn proceeds untouched.
+    //
+    // MAIA_CANONICAL_SHADOW=0 is an ops kill-switch for the INSTRUMENT only. It gates no
+    // floor and no gate — there is nothing here yet to remove from the member's turn.
+    // ═══════════════════════════════════════════════════════════════════════════
+    if (process.env.MAIA_CANONICAL_SHADOW !== '0') {
+      try {
+        const shadowIdentity = await resolveCanonicalIdentity(req, { guestKey: userId ? undefined : session.id });
+        const legacyAddenda = {
+          memoryInfluenceAddendum,
+          forwardReadinessAddendum,
+          atomsAddendum,
+          conversationalRecallAddendum,
+          episodicRecallAddendum,
+          relationalContextAddendum,
+          placeAddendum,
+          wuxingSnapshotAddendum: wuxingAddendum,
+          studioAddendum,
+          practiceFieldAddendum,
+          knowledgeGateAddendum,
+          memberWebAddendum: memberWebAddendum || undefined,
+          astrologyAddendum: astrologyAddendum || undefined,
+        };
+        const requestedMode = (meta as any)?.mode;
+        const shadowTurn = constructCanonicalTurn({
+          ingressId: 'sovereign/app/maia/list',
+          identity: shadowIdentity,
+          surface: {
+            // Modality proxy: the canonical voice path requests audio (includeAudio: true).
+            // The request carries no explicit modality today; the §9.4 parity witness needs one (M3).
+            modality: includeAudio ? 'spoken' : 'typed',
+            client: 'unknown',
+            transport: 'http',
+            streaming: false,
+          },
+          encounter: { input: message, sessionRef: session.id, exchangeId, room: ROOM_POLICIES.sovereign_chat },
+          sovereignty: {
+            sanctuary: isSanctuary || false,
+            memoryMode,
+            allowCrossSessionMemory: allowCrossSessionMemory || false,
+          },
+          cognitionRequest: {
+            mode: requestedMode === 'counsel' || requestedMode === 'scribe' ? requestedMode : 'dialogue',
+            requestedDepth: 'auto',
+            includeAudio: includeAudio || false,
+            voiceProfile,
+          },
+          candidates: candidatesFromLegacyAddenda(legacyAddenda),
+          // Gates the route applied UPSTREAM of this seam (evidence only): sanctuary skip,
+          // recall preferences, memory-mode resolution. At M3 these move inside MIPA.
+          gatesApplied: ['route:sanctuary', 'route:recall_pref', 'route:memory_mode', 'route:field_safety'],
+          cognitionPath: 'shadow',
+          turnId: exchangeId,
+        });
+        emitShadowDiff(shadowTurn.turnId, compareLegacyToCanonical(legacyAddenda, shadowTurn));
+      } catch (shadowErr) {
+        console.warn(
+          '[MAIA/shadow] canonical construction failed (non-fatal; legacy turn unaffected):',
+          shadowErr instanceof Error ? `${shadowErr.name}: ${shadowErr.message}` : String(shadowErr),
+        );
+      }
+    }
 
     // 🌀 Cut 2 — Spiral Orientation: read-only developmental context (no writes, no assertions)
     // PARKED: orientation thread is design-only until spine is verified. See import

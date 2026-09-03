@@ -187,3 +187,37 @@ the durable record.
   `node_modules` (~sub-GB); it is cleaned up on process exit (crash-safe EXIT
   trap that also preserves the deploy's exit status). The pre-deploy disk gate
   remains the backstop for total storage.
+
+## Addendum — 2026-09-03: launch provenance (the second half of "deploy this commit")
+
+**Incident.** Deploying `2fafaa4` through `pre-deploy-gate.sh deploy-maia`: the built image
+`maia-sovereign:current` carried `GIT_COMMIT=2fafaa4c4` (build stamp intact), the running container
+reported `GIT_COMMIT=unknown`. The stamp survived image creation and was **overwritten at container
+construction**: the checkout's `docker-compose.production.yml` set `environment: GIT_COMMIT:
+${GIT_COMMIT:-unknown}` on the `maia` service, interpolated at `up` without the variable. Two defects:
+
+1. A launcher could rewrite an immutable image's identity.
+2. The build used the **snapshot** but the swap used the **checkout's** compose file — a two-source
+   deploy. The §"What is decoupled — and what is intentionally NOT" boundary above ("runtime is
+   unchanged") is superseded **for the compose file only**.
+
+**Repair (founder-authorized, bounded, no application-logic change).**
+
+| # | Requirement | Where |
+|---|---|---|
+| 1 | Image owns build provenance — compose runtime override removed; `GIT_COMMIT` is inherited from the image | `docker-compose.production.yml` (maia `environment:`) |
+| 2 | Deployment structure binds to the authorized commit — build **and** swap use the snapshot's compose via `deploy_ctx_compose` (`--project-directory $PROJECT_DIR` keeps `.env.production` and bind-mounts on the project dir) | `deploy-context.sh`, `pre-deploy-gate.sh deploy-maia`, `deploy-production.sh deploy/update` |
+| 3 | Pre-swap refusal — built image `Config.Env GIT_COMMIT == SHA` or abort before tags move | `deploy_ctx_verify_image` |
+| 4 | Post-swap refusal — running container `Config.Env` **and** `printenv` `== SHA` or deployment failure | `deploy_ctx_verify_running` (dual channel) |
+| 5 | Env collision refusal — `.env.production` defining `GIT_COMMIT` fails the gate; compose defining `GIT_COMMIT` under `services:` fails the gate | `deploy_ctx_refuse_env_collision`, `deploy_ctx_refuse_compose_runtime_override` (both run inside `materialize`) |
+
+**Certification.** `npm run verify:deploy-provenance` (`scripts/verify-deploy-provenance.sh`) — hermetic,
+27 assertions: each hostile mutation (override reintroduced · env-file `GIT_COMMIT=unknown` · compose
+outside the snapshot · image stamp ≠ SHA · container stamp ≠ SHA on either channel) turns the gate RED
+on a throwaway copy, the innocent control stays GREEN, and the real tree's sha256 is proven unchanged.
+The pre-existing `verify-deploy-context.sh` (18) stays green.
+
+**Not repaired (named, not hidden).** `deploy-production.sh rollback` / hot-swap paths still launch
+with the checkout's compose (they have no snapshot). Once the checkout carries this commit they are
+safe; before that, a rollback `up -d maia` on a stale checkout would reproduce the incident. Bring the
+production checkout forward before relying on rollback.

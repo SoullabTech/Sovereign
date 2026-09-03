@@ -241,20 +241,28 @@ cmd_deploy_maia() {
     gate_disk
     gate_colab
 
-    log_info "Building maia at $GIT_COMMIT (context: $MAIA_BUILD_CONTEXT) ..."
-    docker compose -p maia-sovereign \
-        -f "$PROJECT_DIR/docker-compose.production.yml" \
-        --env-file "$PROJECT_DIR/.env.production" \
-        build maia
+    # Build AND swap use the SNAPSHOT's compose file (deploy_ctx_compose): the
+    # deployment structure is the authorized commit's, never the checkout's
+    # (2026-09-03 provenance repair — a two-source deploy is refused).
+    log_info "Building maia at $GIT_COMMIT (context: $MAIA_BUILD_CONTEXT, compose: $DEPLOY_COMPOSE_FILE) ..."
+    deploy_ctx_compose build maia
+
+    # PRE-swap: the image we just built must carry the asserted stamp. Mismatch
+    # aborts here — before rollback tags move and before the running container
+    # is touched.
+    deploy_ctx_verify_image "$GIT_COMMIT" "$MAIA_IMAGE_REPO:prod" || exit 1
+
     tag_images_for_rollback "$GIT_COMMIT"
     log_info "Swapping maia container (--force-recreate --no-deps) ..."
-    docker compose -p maia-sovereign \
-        -f "$PROJECT_DIR/docker-compose.production.yml" \
-        --env-file "$PROJECT_DIR/.env.production" \
-        up -d --force-recreate --no-deps maia
+    deploy_ctx_compose up -d --force-recreate --no-deps maia
 
-    # Post-swap: the live image must be the commit we authorized, not a stale one.
-    deploy_ctx_verify_running "$GIT_COMMIT" "$CONTAINER"
+    # POST-swap: the running container must report the asserted SHA on both
+    # channels (Config.Env + printenv). Mismatch = deployment failure.
+    if ! deploy_ctx_verify_running "$GIT_COMMIT" "$CONTAINER"; then
+        log_block "Post-swap provenance verification FAILED. The swap already happened;"
+        log_block "roll back:  ./scripts/deploy-production.sh rollback"
+        exit 1
+    fi
 }
 
 case "${1:-help}" in

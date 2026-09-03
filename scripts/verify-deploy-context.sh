@@ -51,6 +51,18 @@ echo "[selftest] Setting up throwaway repo: commit1(marker=COMMIT_ONE) → commi
 mkdir -p "$REPO"
 git -C "$REPO" init -q
 printf 'FROM scratch\n'        > "$REPO/Dockerfile"       # materialize's presence check
+# 2026-09-03 provenance repair: materialize also requires the snapshot's compose file
+# and refuses a runtime GIT_COMMIT override — give the fixture a minimal clean one.
+cat > "$REPO/docker-compose.production.yml" <<'YML'
+x-maia-build: &maia_build
+  context: ${MAIA_BUILD_CONTEXT:-.}
+  args:
+    GIT_COMMIT: ${GIT_COMMIT:-unknown}
+services:
+  maia:
+    build: *maia_build
+    image: maia-sovereign:prod
+YML
 printf '{"version":"9.9.9"}\n' > "$REPO/package.json"
 printf 'COMMIT_ONE\n'          > "$REPO/marker.txt"
 git_repo add -A
@@ -130,13 +142,13 @@ unset DEPLOY_ALLOW_HEAD
 
 # ── 6. Post-swap running-provenance verify (Option 5) ──────────────────────────
 echo "[selftest] 6. Post-swap verify — match passes, mismatch is caught"
-if DEPLOY_VERIFY_PRINTENV_CMD="printf '%s' '$SHORT1'" DEPLOY_VERIFY_RETRIES=1 \
+if DEPLOY_VERIFY_PRINTENV_CMD="printf '%s' '$SHORT1'" DEPLOY_VERIFY_INSPECT_CMD="printf '%s' '$SHORT1'" DEPLOY_VERIFY_RETRIES=1 \
         deploy_ctx_verify_running "$SHORT1" fake-container; then
     ok "verify passes when the running GIT_COMMIT matches the asserted SHA"
 else
     fail "verify rejected a matching running GIT_COMMIT"
 fi
-if DEPLOY_VERIFY_PRINTENV_CMD="printf '%s' 'cafe1234'" DEPLOY_VERIFY_RETRIES=1 \
+if DEPLOY_VERIFY_PRINTENV_CMD="printf '%s' 'cafe1234'" DEPLOY_VERIFY_INSPECT_CMD="printf '%s' 'cafe1234'" DEPLOY_VERIFY_RETRIES=1 \
         deploy_ctx_verify_running "$SHORT1" fake-container; then
     fail "verify accepted a MISMATCHED running GIT_COMMIT"
 else
@@ -151,7 +163,7 @@ echo "[selftest] 7. deploy/update verification mismatch fails closed BEFORE migr
 
 # (a) Behavioral: model the exact entry-point control flow around verify_running.
 sim_entry() {  # $1 = the value the 'running container' reports
-    if ! DEPLOY_VERIFY_PRINTENV_CMD="printf '%s' '$1'" DEPLOY_VERIFY_RETRIES=1 \
+    if ! DEPLOY_VERIFY_PRINTENV_CMD="printf '%s' '$1'" DEPLOY_VERIFY_INSPECT_CMD="printf '%s' '$1'" DEPLOY_VERIFY_RETRIES=1 \
             deploy_ctx_verify_running "$SHORT1" fake-container >/dev/null 2>&1; then
         echo "ABORTED_BEFORE_MIGRATIONS"; return 0
     fi
