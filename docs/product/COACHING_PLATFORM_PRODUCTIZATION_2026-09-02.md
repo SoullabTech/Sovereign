@@ -21,6 +21,22 @@ Two products, not one. This resolves a tension that had been costing design time
 
 **Keep is the one piece of the sophisticated architecture that belongs in even the simplest version.** Conversation gives Now What? immediacy; Keep gives it continuity and ownership. Without it Larry has a branded chatbot. With it he has a relational place his clients return to — and he never has to understand the machinery that makes it possible.
 
+> ### ⚠️ Invitation-carried `fieldContext` is transitional routing context, not practitioner-membership authority.
+
+Three separate facts, and conflating them is how a shortcut becomes an architecture:
+
+| | |
+|---|---|
+| **Authentication** | establishes **who** the member is |
+| **The invitation** | establishes **which** experience was requested |
+| **Neither** | proves durable membership in a practitioner's field |
+
+`/now-what/conversation` (Lane B, shipped 2026-09-02) is reached through an invitation carrying `fieldContext` — exactly how Now What? invitations already operate. It is the bounded delivery path for the Larry conversational experience, **not** the Larry tenancy model.
+
+**What this means today:** the public `/now-what/welcome` sign-in cannot know a member belongs to Larry's field. So `welcome → sign in → Larry conversation` is **not solved**, and must not be claimed. The honest path is `invitation → existing auth → conversation`.
+
+**Lane A, next:** a `practice_field_members` relation — field, member, status, role, joined_at — rather than a `field_id` column on `members`, because a member may participate in more than one practitioner or program field over time. Server-side resolution then answers *"given this authenticated member, which field contexts are they entitled to?"*, and `welcome → sign in → resolve membership → the right experience` becomes trustworthy. That seam serves both products, so it is not Larry-specific debt — it is the multi-practitioner architecture.
+
 Two rules hold the boundary:
 
 - **Categories are archive organization, never product navigation.** A title and category are suggested *after* a conversation and can be changed. The person is never asked to classify themselves before speaking. Conversation first, organization second.
