@@ -1,290 +1,200 @@
 <!doctype html>
 <meta charset="utf-8">
 <title>Now What? — Eight-State Candidate</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
-  @page { size: letter landscape; margin: 0.5in; }
-  * { box-sizing: border-box; }
-  body { margin:0; font: 15px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, sans-serif;
-         color:#2b2620; background:#f7f5f1; }
-  .state { page-break-after: always; min-height: 6.6in; padding: 0.55in 0.7in;
-           display:flex; flex-direction:column; }
-  .state:last-child { page-break-after: auto; }
-  .flag { display:inline-block; font-size:11px; letter-spacing:.14em; text-transform:uppercase;
-          font-weight:700; color:#8a2f2f; border:1.5px solid #8a2f2f; border-radius:3px;
-          padding:3px 9px; margin-bottom:22px; align-self:flex-start; }
-  .num { font-size:12px; letter-spacing:.18em; text-transform:uppercase; color:#9a8f80; margin-bottom:6px; }
-  h1 { font-size:40px; font-weight:600; margin:0 0 6px; letter-spacing:-0.01em; }
-  .q { font-size:20px; color:#6b6154; font-style:italic; margin:0 0 30px; }
-  .grid { display:grid; grid-template-columns:1fr 1fr; gap:26px 40px; flex:1; }
-  h2 { font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:#9a8f80;
-       margin:0 0 8px; font-weight:700; }
-  .fill { border-bottom:1px dashed #c9bfae; min-height:1.5em; color:#b9ae9d; }
-  .fill em { color:#b9ae9d; font-style:normal; }
-  .frac { margin-top:18px; padding:12px 16px; background:#f0ebe1; border-left:3px solid #b08a3c; }
-  .frac h2 { color:#8a6a25; }
-  footer { margin-top:auto; padding-top:16px; border-top:1px solid #ddd5c8;
-           font-size:11px; color:#9a8f80; display:flex; justify-content:space-between; }
-  .cover { background:#2b2620; color:#f2ede4; }
-  .cover h1 { font-size:52px; color:#fff; }
-  .cover .q { color:#c4b9a6; font-size:22px; }
-  .cover .flag { color:#e8a0a0; border-color:#e8a0a0; }
-  .chain { font: 13px/2 ui-monospace, SFMono-Regular, Menlo, monospace; color:#c4b9a6;
-           margin-top:24px; letter-spacing:.02em; }
-  .note { margin-top:26px; font-size:14px; color:#c4b9a6; max-width:46em; }
+  @page { size: letter landscape; margin: 0; }
+  :root{
+    --ink:#e9e2d4; --ink-dim:#b6ac9a; --ink-faint:#857c6c;
+    --gold:#c9a35e; --gold-deep:#a8823f;
+    --bg1:#211d18; --bg2:#1b1815; --rule:rgba(233,226,212,0.13);
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg2);color:var(--ink);
+       font:400 15px/1.6 Inter,-apple-system,BlinkMacSystemFont,sans-serif;
+       -webkit-print-color-adjust:exact; print-color-adjust:exact;}
+  .sheet{page-break-after:always; min-height:7.5in; padding:0.7in 0.85in;
+         display:flex; flex-direction:column; position:relative;
+         background:radial-gradient(ellipse 80% 45% at 50% 0%, rgba(196,164,110,0.07), transparent 60%),
+                    linear-gradient(var(--bg1),var(--bg2));}
+  .sheet:last-child{page-break-after:auto;}
+  .eyebrow{font-size:10px; letter-spacing:.28em; text-transform:uppercase;
+           color:var(--gold); font-weight:500; margin-bottom:auto;}
+  .flag{position:absolute; top:0.7in; right:0.85in; font-size:9px; letter-spacing:.2em;
+        text-transform:uppercase; color:var(--gold-deep); font-weight:600;
+        border:1px solid var(--gold-deep); border-radius:2px; padding:4px 10px;}
+  h1{font-family:"Cormorant Garamond",Georgia,serif; font-weight:400;
+     font-size:66px; line-height:1.02; margin:0 0 10px; letter-spacing:-0.01em;}
+  h1 .g{color:var(--gold); font-style:italic;}
+  .q{font-family:"Cormorant Garamond",Georgia,serif; font-style:italic;
+     font-size:26px; color:var(--ink-dim); margin:0 0 44px; font-weight:300;}
+  .num{position:absolute; left:0.85in; top:2.35in;
+       font-family:"Cormorant Garamond",Georgia,serif; font-size:15px;
+       color:var(--gold-deep); letter-spacing:.1em;}
+  .grid{display:grid; grid-template-columns:1fr 1fr; gap:34px 56px; margin-top:auto;}
+  h2{font-size:9.5px; letter-spacing:.2em; text-transform:uppercase;
+     color:var(--gold); margin:0 0 10px; font-weight:600;}
+  .fill{border-bottom:1px solid var(--rule); min-height:2.1em; padding-bottom:6px;
+        color:var(--ink-faint); font-size:13px; font-style:italic;}
+  .frac{margin-top:30px; padding:14px 20px; border-left:2px solid var(--gold-deep);
+        background:rgba(196,164,110,0.05);}
+  .frac h2{color:var(--gold);}
+  footer{margin-top:34px; padding-top:14px; border-top:1px solid var(--rule);
+         font-size:9.5px; letter-spacing:.16em; text-transform:uppercase;
+         color:var(--ink-faint); display:flex; justify-content:space-between;}
+  /* cover */
+  .cover{justify-content:center; text-align:center; align-items:center;}
+  .cover h1{font-size:92px; margin:0;}
+  .cover .rule{width:64px; height:1px; background:var(--gold); margin:30px 0;}
+  .cover .say{font-family:"Cormorant Garamond",Georgia,serif; font-style:italic;
+              font-size:25px; line-height:1.5; color:var(--ink-dim);
+              max-width:22em; font-weight:300;}
+  .chain{margin-top:44px; font-size:10.5px; letter-spacing:.24em;
+         text-transform:uppercase; color:var(--ink-faint); line-height:2.4;}
+  .chain b{color:var(--gold); font-weight:500;}
 </style>
 
-<section class="state cover">
-  <span class="flag">Not built · design candidate</span>
-  <div class="num">Now What? · 2026-09-03 · Part 2 of 3</div>
-  <h1>The eight-state candidate</h1>
-  <p class="q">"This is the client experience we are considering. It is not built yet — there are no screens behind this. I want your reaction to the shape."</p>
-  <div class="chain">
-    LANDING → SIGN-IN → CHECK-IN → TODAY ⇄ FIELD →<br>
-    CONVERSATION → KEEP → RETURN → TODAY
-  </div>
-  <p class="note">Shared skeleton. One meaningful gesture per state. Four fracture points, marked open.</p>
-  <footer><span>Design candidate 2026-09-02 · not ratified</span><span>Nothing here is built</span></footer>
-</section>
-
-<section class="state">
+<section class="sheet cover">
   <span class="flag">Not built</span>
-  <div class="num">State 01 of 8</div>
-  <h1>Landing</h1>
+  <div class="eyebrow" style="margin-bottom:34px">Now What? &middot; Design Candidate &middot; 2026-09-03</div>
+  <h1>The Eight<br><span class="g">States</span></h1>
+  <div class="rule"></div>
+  <p class="say">&ldquo;This is the client experience we are considering. It is not built yet &mdash; there are no screens behind this. I want your reaction to the shape.&rdquo;</p>
+  <div class="chain">
+    Landing &middot; Sign-in &middot; Check-in &middot; <b>Today</b><br>
+    Field &middot; Conversation &middot; Keep &middot; <b>Return</b>
+  </div>
+  <footer style="position:absolute;bottom:0.7in;left:0.85in;right:0.85in">
+    <span>Candidate 2026-09-02 &middot; not ratified</span><span>Nothing here is built</span>
+  </footer>
+</section>
+<section class="sheet">
+  <span class="flag">Not built</span>
+  <div class="eyebrow">State 01 of 8</div>
+  <div class="num">01</div>
+  <h1><span class="g">Landing</span></h1>
   <p class="q">What is this place?</p>
   <div class="grid">
-    <div>
-      <h2>What the member meets</h2>
-      <div class="fill"><em>— from the candidate document —</em></div>
-    </div>
-    <div>
-      <h2>The one gesture</h2>
-      <div class="fill"><em>— one only —</em></div>
-    </div>
-    <div>
-      <h2>What it must not do</h2>
-      <div class="fill"><em>—</em></div>
-    </div>
-    <div>
-      <h2>Open question for Larry</h2>
-      <div class="fill"><em>—</em></div>
-    </div>
+    <div><h2>What the member meets</h2><div class="fill">&mdash; from the candidate document &mdash;</div></div>
+    <div><h2>The one gesture</h2><div class="fill">&mdash; one only &mdash;</div></div>
+    <div><h2>What it must not do</h2><div class="fill">&nbsp;</div></div>
+    <div><h2>Open question for Larry</h2><div class="fill">&nbsp;</div></div>
   </div>
-  <div class="frac">
-    <h2>Fracture point</h2>
-    <div class="fill"><em>delete this block if this state is not one of the four</em></div>
-  </div>
-  <footer><span>Landing · design candidate</span><span>Not built</span></footer>
+  <div class="frac"><h2>Fracture point</h2>
+    <div class="fill">delete this block if this state is not one of the four</div></div>
+  <footer><span>Landing</span><span>Not built &middot; design candidate</span></footer>
 </section>
-
-<section class="state">
+<section class="sheet">
   <span class="flag">Not built</span>
-  <div class="num">State 02 of 8</div>
-  <h1>Sign-in</h1>
+  <div class="eyebrow">State 02 of 8</div>
+  <div class="num">02</div>
+  <h1><span class="g">Sign-in</span></h1>
   <p class="q">Is this mine?</p>
   <div class="grid">
-    <div>
-      <h2>What the member meets</h2>
-      <div class="fill"><em>— from the candidate document —</em></div>
-    </div>
-    <div>
-      <h2>The one gesture</h2>
-      <div class="fill"><em>— one only —</em></div>
-    </div>
-    <div>
-      <h2>What it must not do</h2>
-      <div class="fill"><em>—</em></div>
-    </div>
-    <div>
-      <h2>Open question for Larry</h2>
-      <div class="fill"><em>—</em></div>
-    </div>
+    <div><h2>What the member meets</h2><div class="fill">&mdash; from the candidate document &mdash;</div></div>
+    <div><h2>The one gesture</h2><div class="fill">&mdash; one only &mdash;</div></div>
+    <div><h2>What it must not do</h2><div class="fill">&nbsp;</div></div>
+    <div><h2>Open question for Larry</h2><div class="fill">&nbsp;</div></div>
   </div>
-  <div class="frac">
-    <h2>Fracture point</h2>
-    <div class="fill"><em>delete this block if this state is not one of the four</em></div>
-  </div>
-  <footer><span>Sign-in · design candidate</span><span>Not built</span></footer>
+  <div class="frac"><h2>Fracture point</h2>
+    <div class="fill">delete this block if this state is not one of the four</div></div>
+  <footer><span>Sign-in</span><span>Not built &middot; design candidate</span></footer>
 </section>
-
-<section class="state">
+<section class="sheet">
   <span class="flag">Not built</span>
-  <div class="num">State 03 of 8</div>
-  <h1>Check-in</h1>
+  <div class="eyebrow">State 03 of 8</div>
+  <div class="num">03</div>
+  <h1><span class="g">Check-in</span></h1>
   <p class="q">Where am I now?</p>
   <div class="grid">
-    <div>
-      <h2>What the member meets</h2>
-      <div class="fill"><em>— from the candidate document —</em></div>
-    </div>
-    <div>
-      <h2>The one gesture</h2>
-      <div class="fill"><em>— one only —</em></div>
-    </div>
-    <div>
-      <h2>What it must not do</h2>
-      <div class="fill"><em>—</em></div>
-    </div>
-    <div>
-      <h2>Open question for Larry</h2>
-      <div class="fill"><em>—</em></div>
-    </div>
+    <div><h2>What the member meets</h2><div class="fill">&mdash; from the candidate document &mdash;</div></div>
+    <div><h2>The one gesture</h2><div class="fill">&mdash; one only &mdash;</div></div>
+    <div><h2>What it must not do</h2><div class="fill">&nbsp;</div></div>
+    <div><h2>Open question for Larry</h2><div class="fill">&nbsp;</div></div>
   </div>
-  <div class="frac">
-    <h2>Fracture point</h2>
-    <div class="fill"><em>delete this block if this state is not one of the four</em></div>
-  </div>
-  <footer><span>Check-in · design candidate</span><span>Not built</span></footer>
+  <div class="frac"><h2>Fracture point</h2>
+    <div class="fill">delete this block if this state is not one of the four</div></div>
+  <footer><span>Check-in</span><span>Not built &middot; design candidate</span></footer>
 </section>
-
-<section class="state">
+<section class="sheet">
   <span class="flag">Not built</span>
-  <div class="num">State 04 of 8</div>
-  <h1>Today</h1>
+  <div class="eyebrow">State 04 of 8</div>
+  <div class="num">04</div>
+  <h1><span class="g">Today</span></h1>
   <p class="q">What's here?</p>
   <div class="grid">
-    <div>
-      <h2>What the member meets</h2>
-      <div class="fill"><em>— from the candidate document —</em></div>
-    </div>
-    <div>
-      <h2>The one gesture</h2>
-      <div class="fill"><em>— one only —</em></div>
-    </div>
-    <div>
-      <h2>What it must not do</h2>
-      <div class="fill"><em>—</em></div>
-    </div>
-    <div>
-      <h2>Open question for Larry</h2>
-      <div class="fill"><em>—</em></div>
-    </div>
+    <div><h2>What the member meets</h2><div class="fill">&mdash; from the candidate document &mdash;</div></div>
+    <div><h2>The one gesture</h2><div class="fill">&mdash; one only &mdash;</div></div>
+    <div><h2>What it must not do</h2><div class="fill">&nbsp;</div></div>
+    <div><h2>Open question for Larry</h2><div class="fill">&nbsp;</div></div>
   </div>
-  <div class="frac">
-    <h2>Fracture point</h2>
-    <div class="fill"><em>delete this block if this state is not one of the four</em></div>
-  </div>
-  <footer><span>Today · design candidate</span><span>Not built</span></footer>
+  <div class="frac"><h2>Fracture point</h2>
+    <div class="fill">delete this block if this state is not one of the four</div></div>
+  <footer><span>Today</span><span>Not built &middot; design candidate</span></footer>
 </section>
-
-<section class="state">
+<section class="sheet">
   <span class="flag">Not built</span>
-  <div class="num">State 05 of 8</div>
-  <h1>Field</h1>
+  <div class="eyebrow">State 05 of 8</div>
+  <div class="num">05</div>
+  <h1><span class="g">Field</span></h1>
   <p class="q">What is becoming, over time?</p>
   <div class="grid">
-    <div>
-      <h2>What the member meets</h2>
-      <div class="fill"><em>— from the candidate document —</em></div>
-    </div>
-    <div>
-      <h2>The one gesture</h2>
-      <div class="fill"><em>— one only —</em></div>
-    </div>
-    <div>
-      <h2>What it must not do</h2>
-      <div class="fill"><em>—</em></div>
-    </div>
-    <div>
-      <h2>Open question for Larry</h2>
-      <div class="fill"><em>—</em></div>
-    </div>
+    <div><h2>What the member meets</h2><div class="fill">&mdash; from the candidate document &mdash;</div></div>
+    <div><h2>The one gesture</h2><div class="fill">&mdash; one only &mdash;</div></div>
+    <div><h2>What it must not do</h2><div class="fill">&nbsp;</div></div>
+    <div><h2>Open question for Larry</h2><div class="fill">&nbsp;</div></div>
   </div>
-  <div class="frac">
-    <h2>Fracture point</h2>
-    <div class="fill"><em>delete this block if this state is not one of the four</em></div>
-  </div>
-  <footer><span>Field · design candidate</span><span>Not built</span></footer>
+  <div class="frac"><h2>Fracture point</h2>
+    <div class="fill">delete this block if this state is not one of the four</div></div>
+  <footer><span>Field</span><span>Not built &middot; design candidate</span></footer>
 </section>
-
-<section class="state">
+<section class="sheet">
   <span class="flag">Not built</span>
-  <div class="num">State 06 of 8</div>
-  <h1>Conversation</h1>
+  <div class="eyebrow">State 06 of 8</div>
+  <div class="num">06</div>
+  <h1><span class="g">Conversation</span></h1>
   <p class="q">Can I think this through, now?</p>
   <div class="grid">
-    <div>
-      <h2>What the member meets</h2>
-      <div class="fill"><em>— from the candidate document —</em></div>
-    </div>
-    <div>
-      <h2>The one gesture</h2>
-      <div class="fill"><em>— one only —</em></div>
-    </div>
-    <div>
-      <h2>What it must not do</h2>
-      <div class="fill"><em>—</em></div>
-    </div>
-    <div>
-      <h2>Open question for Larry</h2>
-      <div class="fill"><em>—</em></div>
-    </div>
+    <div><h2>What the member meets</h2><div class="fill">&mdash; from the candidate document &mdash;</div></div>
+    <div><h2>The one gesture</h2><div class="fill">&mdash; one only &mdash;</div></div>
+    <div><h2>What it must not do</h2><div class="fill">&nbsp;</div></div>
+    <div><h2>Open question for Larry</h2><div class="fill">&nbsp;</div></div>
   </div>
-  <div class="frac">
-    <h2>Fracture point</h2>
-    <div class="fill"><em>delete this block if this state is not one of the four</em></div>
-  </div>
-  <footer><span>Conversation · design candidate</span><span>Not built</span></footer>
+  <div class="frac"><h2>Fracture point</h2>
+    <div class="fill">delete this block if this state is not one of the four</div></div>
+  <footer><span>Conversation</span><span>Not built &middot; design candidate</span></footer>
 </section>
-
-<section class="state">
+<section class="sheet">
   <span class="flag">Not built</span>
-  <div class="num">State 07 of 8</div>
-  <h1>Keep</h1>
+  <div class="eyebrow">State 07 of 8</div>
+  <div class="num">07</div>
+  <h1><span class="g">Keep</span></h1>
   <p class="q">What do I want to hold onto?</p>
   <div class="grid">
-    <div>
-      <h2>What the member meets</h2>
-      <div class="fill"><em>— from the candidate document —</em></div>
-    </div>
-    <div>
-      <h2>The one gesture</h2>
-      <div class="fill"><em>— one only —</em></div>
-    </div>
-    <div>
-      <h2>What it must not do</h2>
-      <div class="fill"><em>—</em></div>
-    </div>
-    <div>
-      <h2>Open question for Larry</h2>
-      <div class="fill"><em>—</em></div>
-    </div>
+    <div><h2>What the member meets</h2><div class="fill">&mdash; from the candidate document &mdash;</div></div>
+    <div><h2>The one gesture</h2><div class="fill">&mdash; one only &mdash;</div></div>
+    <div><h2>What it must not do</h2><div class="fill">&nbsp;</div></div>
+    <div><h2>Open question for Larry</h2><div class="fill">&nbsp;</div></div>
   </div>
-  <div class="frac">
-    <h2>Fracture point</h2>
-    <div class="fill"><em>delete this block if this state is not one of the four</em></div>
-  </div>
-  <footer><span>Keep · design candidate</span><span>Not built</span></footer>
+  <div class="frac"><h2>Fracture point</h2>
+    <div class="fill">delete this block if this state is not one of the four</div></div>
+  <footer><span>Keep</span><span>Not built &middot; design candidate</span></footer>
 </section>
-
-<section class="state">
+<section class="sheet">
   <span class="flag">Not built</span>
-  <div class="num">State 08 of 8</div>
-  <h1>Return</h1>
+  <div class="eyebrow">State 08 of 8</div>
+  <div class="num">08</div>
+  <h1><span class="g">Return</span></h1>
   <p class="q">What happened since?</p>
   <div class="grid">
-    <div>
-      <h2>What the member meets</h2>
-      <div class="fill"><em>— from the candidate document —</em></div>
-    </div>
-    <div>
-      <h2>The one gesture</h2>
-      <div class="fill"><em>— one only —</em></div>
-    </div>
-    <div>
-      <h2>What it must not do</h2>
-      <div class="fill"><em>—</em></div>
-    </div>
-    <div>
-      <h2>Open question for Larry</h2>
-      <div class="fill"><em>—</em></div>
-    </div>
+    <div><h2>What the member meets</h2><div class="fill">&mdash; from the candidate document &mdash;</div></div>
+    <div><h2>The one gesture</h2><div class="fill">&mdash; one only &mdash;</div></div>
+    <div><h2>What it must not do</h2><div class="fill">&nbsp;</div></div>
+    <div><h2>Open question for Larry</h2><div class="fill">&nbsp;</div></div>
   </div>
-  <div class="frac">
-    <h2>Fracture point</h2>
-    <div class="fill"><em>delete this block if this state is not one of the four</em></div>
-  </div>
-  <footer><span>Return · design candidate</span><span>Not built</span></footer>
+  <div class="frac"><h2>Fracture point</h2>
+    <div class="fill">delete this block if this state is not one of the four</div></div>
+  <footer><span>Return</span><span>Not built &middot; design candidate</span></footer>
 </section>
-
 
 </html>
