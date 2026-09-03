@@ -1,6 +1,6 @@
 # VOICE-RECOGNITION-ENGINE-01 — Layer 2 recognition upgrade
 
-**Status:** built on branch `claude/layer-2-recognition-upgrade-99d1re` · **awaiting compile + device witness**
+**Status:** `608e3ac` on `claude/layer-2-recognition-upgrade-99d1re` — **architecture + implementation complete / native acceptance pending.** Not a promotion candidate. No further building in this lane (founder ruling 2026-09-03, §8).
 **Authorized:** 2026-09-03, founder directive (this document is the ruling the
 Voice Ecology Roadmap §5 recorded as *not recovered*; it is dated here, not
 back-dated).
@@ -148,3 +148,81 @@ WhisperKit / Faster-Whisper / Voxtral benchmarking (2B — after Apple is
 witnessed), LiveKit / semantic end-of-utterance (Layer 3 — sits above the
 winning Layer 2 output and is where the contemplative-pause problem is solved),
 continuous restart, background recovery, integration into `OracleConversation`.
+
+---
+
+## 8 · Closure record — founder ruling 2026-09-03 (after `608e3ac`)
+
+**Classification:** *architecture + implementation complete / native acceptance
+pending.* Jest + typecheck validate the contract, the policy, and the JS turn
+authority. They cannot establish that the iOS 26 Speech APIs have the
+signatures, actor requirements, availability behaviour, audio formats, or
+lifecycle semantics the Swift assumes. **No Swift compiler has yet accepted the
+new path.** That is why the lane stopped here.
+
+**What is proven:** recognition ≠ turn authority; modern recognition can be
+introduced without replacing the known baseline; engines are allowed different
+transcript semantics (`cumulative` vs `incremental`) instead of being forced
+through a false common model.
+
+**The next act is four things only, in this order, on the Mac with Xcode:**
+
+1. **Compile the branch without repairing architecture.** Learn whether Apple's
+   SDK accepts what was written. Any API-signature correction stays local to
+   `SpeechAnalyzerEngine.swift` / `RecognitionEngineSelector.swift`.
+2. **Resolve the `VoiceController.swift` Xcode-project finding.** Was the
+   committed pbxproj genuinely missing it, or did the working Xcode project
+   carry an uncommitted registration? This decides how earlier device evidence
+   may be read.
+3. **Establish the actual baseline build.** Repo says `2511`; the historical
+   witness says `2515`. Record the SHA and build installed on the test phone
+   before comparing engines. Do not paper over the difference.
+4. **Run the same-device A/B witness.** Same phone, locale, microphone
+   conditions, spoken passage. `baseline → modern` — not two builds, not two
+   environments.
+
+**Evidence to capture** (liveness, not a dictation benchmark):
+
+| Evidence | Baseline | Modern |
+|---|---:|---:|
+| finalized textual fidelity | | |
+| volatile update behaviour | | |
+| recognition stalls | | |
+| capture interruptions | | |
+| duplicate segments | | |
+| dropped phrase endings | | |
+| restart behaviour | | |
+| latency to usable text | | |
+| **transcript state when the human manually closes the turn** | | |
+
+**Do not flip `legacy_until_witnessed`** — even if SpeechAnalyzer sounds
+obviously better in the first test. The default changes only after the modern
+engine behaves correctly across the whole lifecycle:
+`start → speech → stalls/interruption → continued speech → explicit turn closure → next turn`.
+That lifecycle is where the previous voice system actually hurt.
+
+**Do not open another recognition-architecture lane.** Unless the compile
+exposes a genuinely architectural flaw, stay in this lane through the witness:
+
+```
+608e3ac  IMPLEMENTATION COMPLETE
+   ↓
+XCODE COMPILE
+   ↓
+DEVICE A/B WITNESS
+   ↓
+ADJUDICATION
+  ↙          ↘
+keep legacy   authorize modern default / next slice
+default       (a separate, very small follow-on lane:
+              promotion policy + production integration —
+              not smuggled into this one)
+```
+
+**Provenance caveat to preserve prominently:** `VoiceController.swift` apparently
+not being compiled before this lane may revise the interpretation of Phase 1
+evidence. It does not invalidate the current work, but until build provenance
+is resolved (step 2), earlier TestFlight behaviour must not be reasoned about
+as though it is known to have come through the native controller.
+
+**Ruling in one line:** *compile, witness, adjudicate. No more building.*
