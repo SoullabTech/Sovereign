@@ -87,7 +87,9 @@ enum RecognitionEngineSelector {
         if #available(iOS 26.0, *) {
             caps.speechAnalyzerApiPresent = true
             caps.speechTranscriberAvailable = SpeechTranscriber.isAvailable
-            caps.dictationTranscriberAvailable = DictationTranscriber.isAvailable
+            // DictationTranscriber exposes no device-availability signal in the
+            // iOS 26.2 SDK (Xcode 26.3). Leave `dictationTranscriberAvailable`
+            // nil = "not exposed by the SDK"; locale support is its only gate.
 
             let wanted = locale.identifier(.bcp47)
             let stLocales = await SpeechTranscriber.supportedLocales
@@ -133,8 +135,9 @@ enum RecognitionEngineSelector {
         let transcriberReady = caps.speechAnalyzerApiPresent
             && caps.speechTranscriberAvailable == true
             && caps.speechTranscriberLocaleSupported == true
+        // No SDK availability signal exists for DictationTranscriber; locale
+        // support is the only eligibility the SDK actually exposes.
         let dictationReady = caps.speechAnalyzerApiPresent
-            && caps.dictationTranscriberAvailable == true
             && caps.dictationTranscriberLocaleSupported == true
 
         switch preference {
@@ -147,7 +150,7 @@ enum RecognitionEngineSelector {
                 return (.speechAnalyzerTranscriber, "SpeechTranscriber available and locale supported")
             }
             if dictationReady {
-                return (.speechAnalyzerDictation, "SpeechTranscriber unavailable; DictationTranscriber available")
+                return (.speechAnalyzerDictation, "SpeechTranscriber unavailable; DictationTranscriber locale supported")
             }
             if !caps.speechAnalyzerApiPresent {
                 return (.legacySFSpeech, "SpeechAnalyzer API absent (iOS < 26)")
@@ -156,12 +159,12 @@ enum RecognitionEngineSelector {
 
         case .dictation:
             if dictationReady {
-                return (.speechAnalyzerDictation, "DictationTranscriber requested and available")
+                return (.speechAnalyzerDictation, "DictationTranscriber requested; locale supported")
             }
             if !caps.speechAnalyzerApiPresent {
                 return (.legacySFSpeech, "SpeechAnalyzer API absent (iOS < 26)")
             }
-            return (.legacySFSpeech, "DictationTranscriber requested but unavailable for device/locale")
+            return (.legacySFSpeech, "DictationTranscriber requested but locale unsupported (or API absent)")
         }
     }
 }
