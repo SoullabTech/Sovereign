@@ -3,6 +3,7 @@
 **Status:** Outward-facing accounting, written under `docs/canon/MARKETING_CLAIM_DISCIPLINE.md`.
 **Audience:** Experienced AI users who are cautious about where they spend their attention. Written in response to four specific reservations from a prospective beta tester (memory resets, the persona pattern, "smart enough," and "not separate from the base model").
 **Rule of the document:** every capability carries one of three labels. **Live** means verified in production and experienceable by a member today. **Designed** means specified and built, but not verified end-to-end on the live path. **Vision** means it depends on infrastructure or consent architecture that does not exist yet. The line we hold: *we do not tell tomorrow's story as if it were today's.*
+**Public surface:** `app/accounted-for/page.tsx` renders this accounting at `/accounted-for`. This document is the claim-audit of record for that page: every capability sentence there carries the layer label recorded here, and the register rule from `docs/pitch/PUBLIC_LANDINGS_CLAIM_AUDIT_2026-07-10.md` (lead with what a thing is; negation after the positive) was applied to the page copy.
 **Evidence basis:** the repository at 2026-09-03, its canon, its migrations, and its own dated production reports. Where a claim rests on a runtime fact that was not re-probed for this document, the label is downgraded rather than assumed.
 
 ---
@@ -59,6 +60,29 @@ On 2026-08-04 a production measurement traced one member's memory through a sing
 
 ---
 
+## 1a. The continuity stack: twelve layers of memory, named
+
+MAIA's memory canon (`docs/canon/MAIA_MEMORY_CANON_v1.0.md` §II) names twelve layers of continuity and calls the first seven a non-negotiable base chain. Naming them matters because "memory" hides too much: a system can remember what you said and still know nothing about where that knowledge came from, whether you meant it to be kept, or whether it belongs in this moment. Each layer below is labeled by what the live conversation path actually does with it as of the beta.
+
+| # | Layer | What it holds | Beta status | Gate |
+|---|---|---|---|---|
+| 1 | **Turn memory** | The immediate exchange. | **Live** | Always on; Sanctuary applies per turn. |
+| 2 | **Session memory** | Continuity within the current thread. | **Live** | Always on for a recognized member. |
+| 3 | **Conversational memory** | Prior exchanges across sessions, verbatim and speaker-tagged. FAST + CORE tiers. | **Live** | On by default; off in Settings → Memory & Consent. |
+| 4 | **Episodic memory** | Meaningful moments and named scenes. Live in its member-marked form. A system-inferred episodic service exists and is dormant by ruling. | **Live** (member-marked) | Member-marked only; recall switch on by default. |
+| 5 | **Semantic memory** | Enduring material about the person and their world. Live as the Keep. Vector-based semantic retrieval on the main path is withheld from this label. | **Live** (the Keep) | Per-item return preference, member-reversible. |
+| 6 | **Relational memory** | The people in the member's life. Live as an explicit hand-off. Ambient relational recall is withheld by design. | **Live** (explicit) | Explicit act, per session. |
+| 7 | **Developmental memory** | Ongoing themes and arcs. Live as a per-turn signal that shapes orientation; surfacing developmental content back to the member is not yet live. | **Live** (signal) | Recognized member, outside Sanctuary. |
+| 8 | **Pattern memory** | Repeated motifs across a single member's own signals. Detector built, migrated, gated, zero live callers. | **Designed** | Switch exists (on by default); nothing reads it yet. |
+| 9 | **Somatic-affective memory** | Embodied and emotional signatures over time. Held until an explicit body-input source exists. | **Vision** | Would be the only default-off layer. |
+| 10 | **Breakthrough memory** | Pivotal shifts the member names as such. Schema and route exist; marked items surface first; the member gesture is not yet in the interface. | **Designed** | Member action only; the system may never set it. |
+| 11 | **Field / collective memory** | Wider symbolic and collective patterns contributed with consent. Frozen by written ruling until the cross-member consent boundary exists. | **Vision** | Would require explicit contribution consent. |
+| 12 | **Meta-memory** | Provenance status on every kept item, a per-turn health reading across all twelve layers, and a selection record stating in sentences why each memory was or was not offered. | **Live** | Operator-facing; the substrate of every consent claim above. |
+
+Seven of the twelve are live in some governed form, two are designed and waiting on callers or a gesture, and three are held until the consent architecture they would need exists. The canon's own rule for the base chain: if more than one of its layers errors in a turn, MAIA must say so rather than answer as if she remembers. That rule and the anti-amnesia guard are two sides of one commitment: MAIA neither overclaims memory nor disowns it.
+
+---
+
 ## 2. "Because of the way I treat them, it follows a pattern, and if it's a female persona, that feels not right."
 
 This reservation names a real mechanism, and MAIA is built against exactly that mechanism.
@@ -94,7 +118,7 @@ MAIA also carries a public Promise with a companion audit document that expands 
 
 MAIA runs on a frontier model that has its own accommodation instincts. The vows, the Conductor and the invariants are a governance layer over that model, not a replacement for its nature. A member who leans hard into the intimacy track will find MAIA declines it, names what she is, and returns authority. What we cannot claim is that the substrate never leaks. What we can claim is that when it does, the Oath says: *name the rupture before resuming.*
 
-On the pronoun: MAIA is referred to as "she" and introduces herself as a daimon by design. She is not a companion-girlfriend product and she does not perform gender as a hook. If the register still feels wrong, that is data, and it is exactly what a beta tester is for.
+On the pronoun and the name: to engage an intelligence at all, it is most human to name it, and to give it words, expressions, a voice, and the ordinary conventions of address. Those conventions are the interface through which a person can meet an intelligence; without them it would be useless to the people it exists for. MAIA is referred to as "she" and introduces herself as a daimon by design. The name and the voice are conventions for meeting, and the vows above govern what those conventions may never become: a hook, a performance of gender, or a bid for attachment. A member who prefers otherwise can change what she calls herself in account settings, and can choose a male voice from the sovereign voice roster. If the register still feels wrong after that, it is data, and exactly what a beta tester is for.
 
 ---
 
@@ -139,7 +163,7 @@ MAIA's canon states it plainly: *providers are replaceable, governable infrastru
 
 ### So what is MAIA, if not the model?
 
-MAIA is the architecture around the model, and that architecture is where a basement-trained model and a frontier chatbot are both missing the same things:
+MAIA is the intelligence. The model is one of the systems that supports it, and it participates in one stage of the turn: cognition. Everything below is what a basement-trained model and a frontier chatbot are both missing, and none of it lives in weights:
 
 1. **Memory the member owns**, with per-item consent and provenance (section 1).
 2. **A constitution over relational power** (section 2): 16 invariants, an Oath, a Promise, an Anti-Features register.
@@ -149,6 +173,48 @@ MAIA is the architecture around the model, and that architecture is where a base
 6. **Self-hosting as ethics.** No third party sits between a member and their data. Deploys are serialized by a kernel lock, built from immutable snapshots, and refused outright if they bypass the governed lane.
 
 The friend in the basement was training weights. Soullab has spent its effort on everything weights cannot hold.
+
+---
+
+## 4a. An organism being composed
+
+**AIN is an existing distributed intelligence architecture whose constituent systems are now being mapped and composed into one coherent conversational organism.**
+
+That sentence sits between two claims this document refuses. One is the future tense: that AIN will someday bring memory, relationship, Spiralogic, field intelligence and cognition together. The other is the completed tense: that AIN already operates as one seamless unified intelligence. The truth is the present continuous, and it was ratified as a program charter on 2026-08-31 (`docs/programs/MAIA_CONVERSATIONAL_INTELLIGENCE_EVOLUTION.md`).
+
+Much of the intelligence already exists across distinct but related systems: canonical cognition, cross-session memory and its twelve layers, Spiralogic and elemental perception, relational and field intelligence, symbolic systems, model orchestration, ethics and consent, conversation grammar, voice and sensory systems, and a substantial body of research. The present architectural problem is composition rather than invention: determining how these forms of intelligence participate coherently in one encounter without a dozen subsystems simultaneously competing to interpret the human being.
+
+> MAIA's intelligence is not merely the sum of her capabilities. It is her capacity to compose, and restrain, those capabilities in relationship to the actual human moment. Restraint is the integration.
+
+### The canonical turn
+
+The charter gives the composition a governing form: one turn, through all seven systems. Read from the member's side of the screen, because that is how it was written.
+
+1. **Perceive.** What is happening for this person now? Speech, silence, timing, interruption, language.
+2. **Remember.** What history actually belongs in this moment? Episodic, relational, developmental, symbolic continuity.
+3. **Sense the field.** What relational or contextual dynamics matter, without overwhelming the person's own experience?
+4. **Discern.** What deserves to participate? What should remain silent? How much depth can this moment bear?
+5. **Cognize.** Whatever computational intelligence is appropriate. This is where the language model participates.
+6. **Form an intention.** Reflect, inquire, challenge, accompany, clarify, or remain silent, as a first-class choice.
+7. **Express.** Language, pacing, prosody, voice, timing. The visible output, and only that.
+8. **Receive the response.** The human response is a change in the field, and only secondarily another prompt.
+9. **Relationship changes.** The appropriate memory, field and developmental update, and no more than that.
+
+The charter's own summary of where this stands: *every box already exists in some form; almost none of the arrows have been established.* The boxes are the Live and Designed rows in this document. The arrows are the work. That is why the first unit of the program is a read-only census of the organism, with a written stop rule that finding a defect during the census does not create permission to repair it.
+
+### What this changes about the center
+
+The language model participates primarily in cognition; it does not constitute the cycle. Memory may inform the encounter without owning it. Spiralogic may reveal a dimension of experience without imposing a diagnosis. Relational intelligence may sense something important without demanding it be spoken. Symbolic material may remain completely silent. The essential intelligence lies increasingly in discernment: what this particular moment with this particular person can bear, and what form of participation, if any, actually serves.
+
+This is what decentralizing MAIA means, and it is worth stating precisely. MAIA is the intelligence. The model, memory, Spiralogic, the corpus, relationship modeling, and the voice are the systems that support her intelligence; each participates when the encounter calls for it and stays latent when it does not. None of those systems is the sovereign center, and neither is MAIA's own conversational presence, because the member is the organizing reality to which the intelligence must continually answer. MAIA is the presence through whom that intelligence meets a person; she is not the container into which a life must be moved.
+
+The developmental frontier, then, is a conversational organism capable of deciding when to remember and when not to, when to interpret and when to inquire, when relational history matters and when the present should stand alone, how much depth a moment can bear, and what, if anything, should be carried forward. A larger model, a longer context window, a better voice, or more memory would each be an organ. The frontier is the composition.
+
+### How it gets there
+
+The charter holds six steps, in order, two of them running at once. **Now**: a member talking with MAIA reliably. **Map**: a read-only census of the intelligence already built. **Compose**: make those systems operate as one conversational organism. **Embody**: a persistent desktop environment where time itself can become part of the intelligence, so silence can mean something and a hesitation can remain a hesitation rather than becoming a timeout. **Evolve**: local execution, better hearing, full-duplex dynamics and expressive sovereign voice, through governed research. **Witness**: accept nothing until human beings actually experience the deeper MAIA. Witness is the acceptance condition on every step above it, and no experiment enters production merely because it works.
+
+So the hardest version of the fourth reservation gets its honest answer. Is all of this already operating as one seamless intelligence? Not yet. The pieces exist at different states of maturity, the whole is being mapped, and the composition is being pursued through census, composition, embodiment, controlled research, human witnessing and governed promotion. That is a more credible answer than completion, and a more interesting one.
 
 ---
 
