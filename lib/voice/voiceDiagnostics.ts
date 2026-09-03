@@ -16,6 +16,8 @@
  * `docker logs maia-sovereign` (no DB table until volume justifies one).
  */
 
+import { apiUrl } from '../http/apiBase';
+
 export type VoiceDiagEvent =
   // Web path (Web Speech API, see components/voice/ContinuousConversation.tsx web branch)
   // Lifecycle events follow the spec order: granted → start → audiostart →
@@ -109,9 +111,16 @@ export function logVoiceEvent(event: VoiceDiagEvent, metadata: Meta = {}): void 
   // eslint-disable-next-line no-console
   console.log('[voice-diag]', event, payload.metadata);
 
-  // Server-side log via /api/telemetry/client
+  // Server-side log via /api/telemetry/client.
+  //
+  // apiUrl() is REQUIRED, not decorative. Under Capacitor the WebView origin is
+  // not the API origin, so a relative path resolves against the local bundle
+  // and the POST dies at the native boundary — silently, because the .catch()
+  // below swallows it. Every voice diagnostic emitted from the iOS app was lost
+  // that way, which is exactly the population we most need traces from. Same
+  // correction already applied in healIdentity.ts and OraclePersonalizationContext.
   try {
-    fetch('/api/telemetry/client', {
+    fetch(apiUrl('/api/telemetry/client'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),

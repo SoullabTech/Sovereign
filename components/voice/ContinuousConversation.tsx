@@ -11,6 +11,7 @@ import { getFeatureFlag } from '@/lib/features/flags';
 import { logVoiceEvent, resetVoiceSession } from '@/lib/voice/voiceDiagnostics';
 import { pushVoiceDebug } from '@/lib/voice/voiceDebugBus';
 import { WebSpeechRecognitionSession, classifyRecognitionError } from '@/lib/voice/webSpeechLifecycle';
+import { voiceEndurance } from '@/lib/voice/enduranceInstrument';
 import {
   createUtteranceGuardState,
   beginUtterance,
@@ -282,6 +283,11 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     if (prev === newState) return;
     micStateRef.current = newState;
     console.log(`🔄 [MicState] ${prev} → ${newState} (via ${source})`);
+    // 👁️ OBSERVABILITY ONLY. Reported from inside the authoritative setter so
+    // the endurance trace records exactly what the state machine decided —
+    // including its `source` — rather than forming a second opinion elsewhere
+    // about whether the mic is live. It never influences the transition.
+    voiceEndurance.noteMicStateChange(newState, source);
   }, []);
   const recognitionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const lastSentRef = useRef<string>("");
@@ -305,6 +311,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     const decision = trySubmitUtterance(utteranceGuardRef.current, text);
     if (!decision.admitted) {
       console.log(`🚫 [UTTERANCE] Refused (${decision.reason}) from ${source}`);
+      voiceEndurance.noteUtterance(false, null, source);
       logVoiceEvent('voice_utterance_submission_refused', {
         source,
         reason: decision.reason,
@@ -315,6 +322,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     console.log(
       `📤 [UTTERANCE] Admitted from ${source} utterance=${decision.utteranceId.slice(0, 8)}`
     );
+    voiceEndurance.noteUtterance(true, decision.utteranceId, source);
     logVoiceEvent('voice_utterance_submission_admitted', {
       source,
       utteranceId: decision.utteranceId,
@@ -2119,6 +2127,9 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
 
               if (consecutiveRestartCount.current > MAX_NATIVE_RESTARTS) {
                 console.log(`🛑 [Native] Stopping after ${consecutiveRestartCount.current} restart attempts - user must tap mic`);
+                // The conversation ends here until the member taps. In a 60-minute
+                // witness this is the definition of "MAIA stopped hearing me".
+                voiceEndurance.noteTapRequiredFallback('max_native_restarts', consecutiveRestartCount.current);
                 setIsListening(false);
                 isListeningRef.current = false;
                 wantsContinuousConversationRef.current = false;

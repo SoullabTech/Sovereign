@@ -58,6 +58,17 @@ function useKeyboardBottomInset(): number {
   return inset;
 }
 
+/**
+ * How tall the live transcript may grow before it scrolls instead.
+ *
+ * The transcript used to be one `truncate` line: a long thought was clipped to
+ * an ellipsis, so the member could not see what MAIA had actually heard and had
+ * no way of telling a mis-hear from a drop. Four lines is enough to read the
+ * shape of the current sentence without the bar eating the conversation above
+ * it; past that it scrolls, pinned to the newest words.
+ */
+const TRANSCRIPT_MAX_HEIGHT_PX = 84;
+
 interface VoiceInteractionBarProps {
   voiceState: VoiceInteractionState;
   interimTranscript: string;
@@ -147,6 +158,25 @@ export function VoiceInteractionBar({
   const inputRef = useRef<HTMLInputElement>(null);
   const keyboardInset = useKeyboardBottomInset();
 
+  const transcriptScrollRef = useRef<HTMLDivElement>(null);
+
+  // Keep the newest words in view as speech accumulates.
+  //
+  // No "respect the member's scroll position" guard here, deliberately, and
+  // unlike the conversation transcript above: this box holds the sentence
+  // being spoken RIGHT NOW, it lives for the length of one utterance, and its
+  // whole purpose is to show what the microphone is hearing at this instant.
+  // There is no history in it worth scrolling back to, and a member cannot
+  // meaningfully read backwards through their own speech while still speaking.
+  // `scrollTop` assignment rather than `scrollIntoView`: this element is inside
+  // a `position: fixed` bar, and `scrollIntoView` would walk up and scroll the
+  // ancestors too.
+  useEffect(() => {
+    const el = transcriptScrollRef.current;
+    if (!el) return;
+    el.scrollTop = el.scrollHeight;
+  }, [interimTranscript]);
+
   const handleKeyboardToggle = useCallback(() => {
     setShowTextInput((v) => {
       if (!v) setTimeout(() => inputRef.current?.focus(), 50);
@@ -200,15 +230,34 @@ export function VoiceInteractionBar({
         {voiceState === 'listening' && interimTranscript.length > 0 && (
           <motion.div
             key="transcript"
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
+            // Opacity only — NOT height. An animated height tween measures the
+            // element once, on reveal; this row grows line by line as speech
+            // accumulates, so the wrapper would stay locked at its
+            // first-measured one-line height and clip the very scrolling this
+            // exists to provide. The row sizes naturally; the inner box owns
+            // the cap.
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
             transition={{ duration: 0.15 }}
-            className="overflow-hidden"
           >
-            <p className="px-5 pt-2 text-sm italic text-stone-300/75 truncate">
-              {interimTranscript}
-            </p>
+            <div
+              ref={transcriptScrollRef}
+              // `overscroll-contain` stops a flick at the end of this small box
+              // from chaining into the conversation behind the bar.
+              className="px-5 pt-2 overflow-y-auto overscroll-contain scrollbar-hide"
+              style={{ maxHeight: TRANSCRIPT_MAX_HEIGHT_PX }}
+              // Announced politely rather than assertively: this updates on
+              // every recognized word, and an assertive region would interrupt
+              // a screen reader continuously while the member speaks.
+              aria-live="polite"
+              aria-atomic="false"
+              aria-label="Live transcript"
+            >
+              <p className="text-sm italic leading-relaxed text-stone-300/75 whitespace-pre-wrap break-words">
+                {interimTranscript}
+              </p>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

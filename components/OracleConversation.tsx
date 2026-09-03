@@ -6508,6 +6508,13 @@ I'm not sure what I'm feeling yet.`;
     const utteranceId = meta?.utteranceId;
     console.log('🎤 handleVoiceTranscript called', utteranceId ? `utterance=${utteranceId.slice(0, 8)}` : '(no id)');
 
+    // Clear the live transcript BEFORE the guard can return. A final transcript
+    // has arrived for this episode either way; if the guard then refuses it as a
+    // duplicate, an early return would leave the member's last words frozen in
+    // the bar with nothing coming — the display would assert that MAIA is still
+    // hearing that sentence when the episode is already over.
+    setInterimTranscript('');
+
     // 🔒 IDENTITY GUARD — one listening episode yields one turn.
     // Every recognition callback in an episode carries that episode's id, so
     // iOS re-emitting its hypothesis capitalized and punctuated is refused
@@ -6526,7 +6533,6 @@ I'm not sure what I'm feeling yet.`;
         if (oldest) submittedUtteranceIdsRef.current.delete(oldest);
       }
     }
-    setInterimTranscript(''); // Clear interim display on final submit
     const t = transcript?.trim();
     if (!t) {
       console.log('⚠️ Empty transcript, returning');
@@ -8890,11 +8896,18 @@ I'm not sure what I'm feeling yet.`;
         {/* Tap to Speak / Listening label - below holoflower */}
         {!isResponding && !isAudioPlaying && !isProcessing && (
           <div className="pointer-events-none text-center w-full" style={{ marginTop: 8 }}>
+            {/* Legibility (founder, device walk 2026-08-17): at 85% opacity and
+                text-xs this sat over the holoflower's own glow and read as
+                decoration rather than an instruction — the one control that
+                tells a member how to start talking. Raised to full opacity,
+                one size up, with a stronger shadow so it holds against the
+                bright centre of the flower. Still recessive, still uppercase
+                and letterspaced; louder, not different. */}
             <span
-              className="text-amber-200/85 text-xs font-medium tracking-widest uppercase"
+              className="text-amber-100 text-sm font-semibold tracking-widest uppercase"
               style={{
                 letterSpacing: '0.16em',
-                textShadow: '0 0 12px rgba(0,0,0,0.45), 0 1px 2px rgba(0,0,0,0.35)',
+                textShadow: '0 0 16px rgba(0,0,0,0.75), 0 1px 3px rgba(0,0,0,0.6)',
               }}
             >
               {micRequestState === 'failed'
