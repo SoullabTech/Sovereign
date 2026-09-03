@@ -7,6 +7,9 @@ development act *in this environment* is closed; **the lane is not.** Its
 terminal state is assigned only after the Mac witness, and is one of:
 `CLOSED — LEGACY RETAINED` · `CLOSED — MODERN EXPERIMENTAL` · `CLOSED — PROMOTION RECOMMENDED`.
 No further building before then (founder ruling 2026-09-03, §8).
+**Remote pre-witness pass recorded 2026-09-03 (§9):** provenance resolved on the
+committed record, JS gates green, native compile + device witness **blocked** in
+that environment (no Apple toolchain). Decision **NOT REACHED**. Mac handoff in §9.6.
 **Authorized:** 2026-09-03, founder directive (this document is the ruling the
 Voice Ecology Roadmap §5 recorded as *not recovered*; it is dated here, not
 back-dated).
@@ -95,6 +98,8 @@ stitching, restart machinery, cumulative-composition re-send handling.
    `VoiceController.swift` plus the four `Recognition/` files (new group
    `Recognition`, ids `A8D00020260903…`). If the local project already had
    `VoiceController.swift` added, expect a trivial pbxproj merge on that line.
+   **Resolved on the committed record in §9.4** (2026-09-03): never registered
+   before this lane; and the conversation surface never bound to it at all.
 2. **Build number.** `project.pbxproj` carries `CURRENT_PROJECT_VERSION = 2511`.
    The 2515 baseline named in the directive is not in the repo — it is either a
    local archive counter or a TestFlight build number set outside git. M0 is
@@ -236,3 +241,186 @@ is resolved (step 2), earlier TestFlight behaviour must not be reasoned about
 as though it is known to have come through the native controller.
 
 **Ruling in one line:** *compile, witness, adjudicate. No more building.*
+
+
+---
+
+## 9 · Remote pre-witness pass — 2026-09-03 (no Apple toolchain)
+
+*Run against the "NATIVE ACCEPTANCE + DEVICE WITNESS" instructions. This
+environment is a remote Linux container: Steps 0, 3, 4, 5 (partial), 14, 15
+executed; Steps 1, 2 (no Swift touched — invariants held by the gates),
+6–13 could not execute. Nothing below claims a compile or a device result.*
+
+### 9.1 Starting state (Step 0)
+
+```
+Mac:            none — remote Linux x86_64 container (kernel 6.18), no xcodebuild / swift
+macOS:          n/a
+Xcode:          n/a
+iOS SDK:        n/a
+branch:         claude/voice-recognition-acceptance-witness-ffeadt
+                (fast-forward of claude/layer-2-recognition-upgrade-99d1re @ 2d74c20;
+                 contains 608e3ac + 6bfc5d2 + 2d74c20 — verified with git cat-file)
+starting HEAD:  2d74c20
+working tree:   clean (nothing to classify)
+clone depth:    shallow at start (boundary cc1f1ea); deepened to 4,389 commits
+                before any provenance claim below was made
+```
+
+### 9.2 Native compile (Step 1) — **NOT WITNESSED**
+
+No Swift was modified. A desk reading of `SpeechAnalyzerEngine.swift` and
+`RecognitionEngineSelector.swift` against the iOS 26 Speech API surface as
+documented found every symbol the lane relies on (§6 list) matching its
+documented signature: `SpeechAnalyzer(modules:)`,
+`bestAvailableAudioFormat(compatibleWith:)`, `start(inputSequence:)`,
+`finalizeAndFinishThroughEndOfInput()`, `cancelAndFinishNow()`,
+`AnalyzerInput(buffer:)`, both transcriber initialisers, `isAvailable`,
+`supportedLocales` (async), `results` (`text: AttributedString`, `isFinal`),
+`AssetInventory.assetInstallationRequest(supporting:)` → `downloadAndInstall()`.
+
+That is a reading, not a compiler result. Class A (API/signature) failures
+remain possible and are the Mac's to observe first. Notes for whoever runs
+`xcodebuild`:
+
+- `SWIFT_VERSION = 5.0` in the project → strict-concurrency diagnostics are
+  warnings, not errors; non-`Sendable` `self` captured inside `Task` blocks
+  will warn, not fail. Do not "fix" warnings in this lane.
+- `AsyncStream.makeStream()` sits inside the `@available(iOS 26.0, *)` class;
+  no back-deployment concern.
+- `ensureAssets(for: [any SpeechModule])` passes an existential array; the
+  documented parameter type is the same.
+
+### 9.3 Gates (Step 3)
+
+```
+Native compile:      NOT RUN (no toolchain)
+Recognition gates:   PASS — boundary 24/24 · turn-authority 13/13 (37/37)
+Voice regressions:   10 suites PASS · 1 suite FAIL (pre-existing, see below)
+Typecheck:           PASS — no-regression gate green (231 errors vs baseline 239, 0 new
+                     diagnostics, 0 in lane files). First run in this container failed with
+                     46 `@prisma/client` diagnostics because `npm ci` had not generated the
+                     Prisma client; `npx prisma generate` then a clean re-run — an install
+                     artifact, not a lane regression.
+```
+
+`__tests__/voice-response-toggle-mobile.test.ts` — 2 failures, class **D**
+(pre-existing). Proof it is not lane-caused: the suite reads exactly one
+source file, `components/OracleConversation.tsx`, and that file is
+byte-identical between `a4305f4` (pre-lane base) and HEAD
+(`git diff --quiet a4305f4 HEAD -- components/OracleConversation.tsx` → clean).
+The assertion looks for the old top-bar marker
+`onClick={() => setShowChatInterface(false)}`; the component's input-mode
+switch was relocated by earlier work. Not repaired here.
+
+### 9.4 `VoiceController.swift` provenance (Step 4) — **REVISED**
+
+```
+VoiceController file introduced:        4d1d2610 · 2026-05-14 · "feat(voice): Phase 1 — Swift
+                                        VoiceController scaffold + smoke test". That commit added
+                                        the file, registered 'VoiceController' in
+                                        capacitor.config.ts packageClassList, and did NOT touch
+                                        project.pbxproj.
+VoiceController first registered:       608e3ac · 2026-09-03 (this lane). It is the only commit
+                                        in the full history whose pbxproj contains the string
+                                        "VoiceController" (git log -S over all 4,389 commits).
+previous committed build membership:    NONE. Every committed pbxproj from 2026-05-14 to a4305f4
+                                        lists exactly AppDelegate, AudioSessionManager,
+                                        HandwritingOCR in the Sources phase. The committed
+                                        build-2510 (425c11ec) and build-2511 (8614db7c) pbxprojs
+                                        carry that same three-file phase.
+local uncommitted membership evidence:  NOT DETERMINABLE FROM THIS ENVIRONMENT. Only
+                                        `git status -- ios/App/App.xcodeproj` on the Mac can
+                                        close this (hypothesis B).
+alternate inclusion mechanism:          NONE THAT COMPILES IT. packageClassList is a runtime
+                                        NSClassFromString lookup of an already-compiled class —
+                                        an unregistered Swift file yields "plugin not
+                                        implemented" at the bridge, it does not get compiled.
+                                        `npx cap sync ios` (scripts/build-ios.sh:186) syncs web
+                                        assets and pods; CocoaPods cannot add app-target
+                                        sources. No xcodegen / project.yml in ios/App.
+                                        (hypothesis C ruled out)
+conclusion:                             A on the committed record — no committed iOS build ever
+                                        compiled VoiceController.swift. B is the sole remaining
+                                        route by which it could have compiled, and only the
+                                        Mac can test it.
+confidence:                             HIGH for the committed record; B open.
+```
+
+**Attribution finding (stronger than "not established").** The live
+conversation surface never bound to `VoiceController` at all:
+
+- `components/voice/ContinuousConversation.tsx:9` imports
+  `SpeechRecognition` from `@capacitor-community/speech-recognition`
+  (CocoaPod, `ios/App/Podfile:16`); `VoiceMirror.tsx` likewise.
+- The build-2510 ARMING trace (`8614db7c`; contract
+  `docs/design/contracts/conversation-room-mic-lifecycle.md`) names
+  `NativeSpeechRecognition.start()` — the community plugin.
+- `VoiceController` was reachable only from `/voice-controller-test`
+  (founder-gated), and **no document in the repository records a device
+  result from that page**; the Phase 1 commit's "acceptance test (manual,
+  on Kelly's iPhone via TestFlight)" has no recorded outcome.
+
+Therefore:
+
+```
+Observed device behaviour (builds 2510/2511 mic lifecycle): established.
+Attribution to VoiceController:                            not established —
+   and for the conversation path, contradicted by the import graph.
+```
+
+Consequence for the witness: `Recognition/` engines and the reworked
+`VoiceController` are code no member has ever run. The Step 8 A/B is a
+**first-run** of both engines, not a regression comparison against prior
+`VoiceController` behaviour. Its "baseline" (`LegacySFSpeechEngine` inside
+`VoiceController`) is itself first-compiled; the production baseline members
+actually experienced is a third path (community plugin). O6 must be read with
+that in view — it does not widen this lane's scope.
+
+### 9.5 Build-number lineage (Step 5, repo side only)
+
+```
+authority:  CURRENT_PROJECT_VERSION in project.pbxproj (since 425c11ec, 2026-08-17);
+            Info.plist CFBundleVersion = $(CURRENT_PROJECT_VERSION)
+2496        Info.plist literal (pre-425c11ec); pbxproj said 743 at the same time
+2497–2509   no git source; App Store Connect's highest accepted was 2509 (per 425c11ec message)
+2510        425c11ec  2026-08-17
+2511        8614db7c  2026-08-17  ← repo value at HEAD; the lane does not change it
+2512–2515   NOT IN GIT
+```
+
+Most probable mechanism for 2515: the fastlane `bump_build` lane
+(`ios/App/fastlane/Fastfile:105`) writes a **literal** `CFBundleVersion` into
+`Info.plist` via PlistBuddy, replacing `$(CURRENT_PROJECT_VERSION)` in the Mac
+working tree without a commit. That is inference, not proof.
+
+**Ruling:** *Build 2515 observed historically; exact source SHA not established.*
+
+The Mac must therefore record, before Step 6: `git status -- ios/App/App/Info.plist`
+(a literal there means the tree is bumped outside git) and the actual
+`CFBundleVersion` of the installed witness build.
+
+### 9.6 Withheld / blocked — and the Mac handoff
+
+Not executed here, not claimable: Step 1 compile · Step 6 install + Probe ·
+Steps 7–11 passage, A/B walk, run records, F1–F10, comparison table ·
+Step 12 O1–O6 · Step 13 adjudication. **Decision: NOT REACHED.** Status
+line unchanged. No Swift, no default, no routing, no Xcode project change was
+made in this pass.
+
+Mac sequence (picks up at Step 0 with §9.1–9.5 already banked):
+
+```bash
+git fetch origin claude/voice-recognition-acceptance-witness-ffeadt
+git checkout claude/voice-recognition-acceptance-witness-ffeadt
+git status -- ios/App/App.xcodeproj ios/App/App/Info.plist     # closes hypothesis B; reveals any literal build number
+sw_vers && xcodebuild -version && xcodebuild -showsdks | grep iphoneos
+cd ios/App && pod install
+xcodebuild -workspace App.xcworkspace -scheme App -configuration Debug \
+  -destination 'generic/platform=iOS' -sdk iphoneos build 2>&1 | tee /tmp/recognition-compile.log
+grep -E "error:|warning: .*Speech" /tmp/recognition-compile.log
+```
+
+Then Steps 6–15 as written in the run. F1–F10, O1–O6, the comparison table
+and the terminal `CLOSED — …` state belong to that pass, not this one.
