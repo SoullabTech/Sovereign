@@ -133,7 +133,13 @@ Working name for the lane: **Larry response build** (not "tomorrow's demo" — t
 
 ### Sequence
 
-1. **Reconcile the production host.** Seven uncommitted deploy-tooling files on minisforum, host 90+ commits behind. Establish a trustworthy deployable state first — not UI, not Lane A.
+1. **Reconcile the two branches — then the host.** ⚠️ Amended after the finding below: the host is downstream, not the problem.
+
+   **Production runs `eeb3fbb6c`, which is not on main.** It lives on `claude/canonical-maia-turn-j92opb` — 7 commits and ~4,966 lines main does not have: the Canonical MAIA Turn programme (closed turn object, participation disposition contract, shadow deployment on `/list`, refusals 25–31, a witness script) plus the deploy tooling. The seven "uncommitted" files on minisforum **are that branch's work**, so reconciling the branch cleans the host.
+
+   ⛔ **Deploying main would roll production backwards** — off a live shadow deployment and seven constitutional refusals another lane is mid-flight on. Do not deploy either branch until they are merged properly, through the four required status checks (both pushes of 2026-09-03 bypassed them, so CI has not witnessed those SHAs).
+
+   Note the convergence: that branch and this one fixed the same compose provenance defect independently and reached the same shape — `GIT_COMMIT` only under `build.args`. Lucky, not designed. Two agents deploying to one production host from an unversioned checkout is the underlying condition; the deploy lock serializes them but nothing coordinates *what* they deploy.
 2. **Deploy and witness `/now-what/conversation`.** Prove the actual path end to end.
 3. **Let Larry encounter the thin product.** Only then can his feedback be sorted into three classes: complaints that vanish because the practitioner UI vanished · actual conversational defects · genuinely missing capabilities.
 4. **Address his requests from evidence**, not from impressions attached to a retired UX.
