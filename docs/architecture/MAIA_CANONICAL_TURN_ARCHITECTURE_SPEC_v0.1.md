@@ -1,6 +1,8 @@
 # MAIA Canonical Turn Architecture — Specification v0.1
 
-**Status: ARCHITECTURE SPECIFICATION. Authorized 2026-09-03 (CMT-01 adjudication). Implementation is NOT authorized by this document.**
+**Status: APPROVED for migration design and implementation — CMT-01 architecture-spec adjudication, 2026-09-03 — subject to the refinements marked `[CMT-01/R]` below. Implementation begins only after the B liveness witness (§2.1) has been run.**
+
+Revision 0.1.1 — the five approved refinements are inserted in place rather than appended, so the specification reads as one document.
 
 Discovery record: `docs/architecture/CANONICAL_TURN_SEAM_TOPOLOGY.md`
 Predecessor canon: `docs/canon/MAIA_CONVERSATIONAL_INTELLIGENCE_NON_DEGRADATION.md` (spoken/typed convergence — generalized here, not superseded)
@@ -62,6 +64,29 @@ type CognitionInvocation =
 - A `SYSTEM_COGNITION_PROBE` invocation reaching any member-context provider fails certification.
 - A cast to the branded `CanonicalTurn` outside the constructor is **detected** (Grade B arm, stated), as at P6.
 
+### 1.4 `[CMT-01/R]` A probe cannot select member-scoped providers — by registry, not only by absence
+
+The missing `memberId` field is necessary and not sufficient. A future provider could find identity through a global or request context and turn a health check into a synthetic person. So the provider registry itself carries the constraint:
+
+```ts
+interface IntelligenceProvider<C> {
+  readonly scope: 'member' | 'probe_safe';   // declared, certified, not inferred
+  …
+}
+```
+
+The probe arm's selector is typed over `probe_safe` providers only; a `member`-scoped provider is **unselectable** for it at the type level, and certification asserts every provider in the Stage 1 registry (§3.2) is `member`-scoped except those explicitly adjudicated probe-safe (none at Stage 1). A probe manifest therefore reads:
+
+```text
+invocation           SYSTEM_COGNITION_PROBE
+member identity      unavailable by construction
+member providers     unavailable
+member memory        unavailable
+probe-safe context   permitted
+```
+
+Certified additionally: no member sovereignty context reaches the probe arm masquerading as synthetic test data.
+
 ---
 
 ## 2. Route B — disposition protocol
@@ -83,17 +108,26 @@ Never *"dormant but still independently assembling MAIA."* And the choice is **n
 | Legitimate current external consumer | production access log | **Not obtainable from this environment.** Requires the minisforum-side check below. |
 | Dormant status | 2026-05-23 48h traffic audit (registry entry) | zero production hits — **historical**, must be re-run |
 
-The check that closes this:
+The check that closes this — `[CMT-01/R]` a 30-day window, every Caddy container, exact-path match that excludes `/list` and `/voice`:
 
 ```bash
-# On minisforum — B's hit count over a bounded window, distinguished from /list
-ssh soullab@minisforum 'docker logs maia-caddy --since 168h 2>&1 \
-  | grep -E "sovereign/app/maia(\"|\?| )" | grep -v "/list" | wc -l'
+ssh soullab@minisforum '
+echo "=== exact B-route hits in Caddy logs, last 30 days ==="
+for c in $(docker ps --format "{{.Names}}" | grep -Ei "caddy"); do
+  echo "--- $c ---"
+  docker logs --since 720h "$c" 2>&1 \
+    | grep -E "/api/sovereign/app/maia([?\" ]|$)" \
+    | grep -vE "/api/sovereign/app/maia/list" \
+    || true
+done
+'
 ```
+
+B's exact pathname is `/api/sovereign/app/maia` (`app/api/sovereign/app/maia/route.ts`). `/api/sovereign/app/maia/voice` is a sibling and is correctly excluded by the character class. Zero hits is **bounded evidence for the 30-day window**, not proof nobody has ever called it; combined with the source and client census it is sufficient for the retirement decision. This witness cannot be run from the development environment; it is run on minisforum and its output is pasted into the migration record verbatim.
 
 ### 2.2 Decision rule
 
-- Zero legitimate hits over the window **and** no contract that must remain → **STRUCTURALLY RETIRED**: the route returns an explicit retired response (410 with a pointer to `/list`), its two cognition call sites are **deleted**, and certification asserts the file contains no cognition invocation. Two bypasses disappear without migration effort.
+- Zero legitimate hits over the window **and** no contract that must remain → **STRUCTURALLY RETIRED**: `[CMT-01/R]` an **explicit 410 boundary first**, not a silent handler deletion — an unexpected external caller gets an intelligible refusal with a pointer to `/list`, never a mysterious 404. The route's two cognition call sites are **deleted**, and certification asserts the file contains no cognition invocation. Two bypasses disappear without migration effort.
 - Any legitimate consumer → **CONVERGED**: B enters the constructor like every other member-turn path, under a legacy profile (§5), and is retired later only through the same protocol.
 
 Retirement is preferred. It is not assumed.
@@ -157,6 +191,10 @@ Every row is an **existing** call. The table is the Stage 1 registry; a provider
 interface IntelligenceProvider<Candidate> {
   /** Stable id, used in the Participation Manifest. */
   readonly id: ProviderId;
+  /** `[CMT-01/R]` Declared, certified. `member` providers are unselectable for a probe (§1.4). */
+  readonly scope: 'member' | 'probe_safe';
+  /** `[CMT-01/R]` Stage 1 only: an epistemic class not yet proved is marked, never invented (§8). */
+  readonly participationStatus: 'certified' | 'LEGACY_UNCERTIFIED';
   /** The gate(s) that govern this domain — recorded, never re-implemented here. */
   readonly governedBy: readonly CertifiedGate[];
   /**
@@ -223,6 +261,43 @@ interface CanonicalTurn {                // BRANDED — unconstructable outside 
 ```
 
 `constructCanonicalTurn(frame): Promise<CanonicalTurn>` is the **only** producer of the branded type. Sanctuary is honoured **inside** the constructor: a sanctuary frame invokes no durable-memory provider and the manifest records every provider as `held: sanctuary` — so sanctuary is a property of construction, not a flag each route remembers to check.
+
+### 4.1 `[CMT-01/R]` Shadow construction — the empirical witness for "zero behaviour change"
+
+Before the constructor becomes authoritative, it runs **in shadow beside** the existing route-local assembly, for the same member turn:
+
+```text
+LEGACY ASSEMBLY ──────────────► current cognition   (response-producing)
+       │
+       │ same turn, same frame
+       ▼
+CANONICAL CONSTRUCTOR
+       │
+       ▼
+shadow bundle + manifest                              (never reaches cognition)
+       │
+       ▼
+COMPARE
+```
+
+During the shadow phase the legacy assembly remains the sole producer of the live response. The constructor emits its typed bundle and Participation Manifest and **affects nothing**. For each turn the two are compared on **semantic bundle structure**:
+
+| Compared | Legacy source | Canonical source |
+|---|---|---|
+| providers invoked | which loaders the route actually called | manifest `invoked` |
+| gates applied | consent reads, `return_preference`, attribution guards | manifest `held` + per-provider `governedBy` |
+| candidate / result counts | loader return lengths | manifest `returned` |
+| admitted / excluded state | union arms after adjudication | manifest `admitted` / `excluded` |
+| composed sections | which addenda were non-empty | bundle fields present |
+| tier / profile | FAST / CORE / DEEP + route | manifest `profile` + processing path |
+| provider failures | caught errors, silent empties | manifest `error` per provider |
+| route-specific inputs | anything the route added that no provider produced | **must be zero**, or documented as observability-only |
+
+**Model-output prose equality is not the parity criterion.** It is neither expected nor a useful seam proof; two runs of the same bundle produce different prose. Structure is what convergence is about.
+
+Stage 1 acceptance for a route: a **zero-diff witness** across those rows for currently authorized capability, with any residual difference explicitly documented as observability-only. Only after that witness may canonical construction become authoritative for that route. This turns "zero behaviour change" from a migration intention into an empirical record — the same move P1a made for exports and the manifest makes for participation.
+
+The shadow comparison itself is an instrument, and the harness meta-invariant applies to it: a shadow diff that reports zero must be shown to report non-zero when a provider is deliberately withheld from one side.
 
 Relationship to the existing `buildMaiaRuntimeContext`: it is **absorbed**, not duplicated. Its eight-field observability record becomes a section of the manifest; its route registry is superseded by the invocation class + surface descriptor (§9). It stops being a wrapper the caller must remember to call, because there is no longer a caller who assembles anything.
 
@@ -335,6 +410,8 @@ Scope of the claim, stated precisely: **every intelligence source that can enter
 
 Two providers enter Stage 1 **uncertified**: `loadSelfletContext` (C) and `retrieveForMode` AIN knowledge (C). They are retained under legacy profile C because Stage 1 changes no capability, and they are named here so that P3-global recertification cannot pass while either lacks an adjudicated provenance class. Their disposition is a Stage 2 decision (§6), not a Stage 1 one.
 
+`[CMT-01/R]` They carry `participationStatus: 'LEGACY_UNCERTIFIED'` in the registry and the manifest renders it verbatim. **No epistemic class is inferred or invented to satisfy the manifest** — an unproved class is marked, not guessed, which is the backfill rule applied to providers. Consequences, certified: a `LEGACY_UNCERTIFIED` provider may survive Stage 1 only under a legacy profile; it **may not be PROMOTED** in Stage 2 until independently certified; and P3-global cannot pass while uncertified member-about material from either enters member cognition.
+
 ---
 
 ## 9. Structural bypass refusal
@@ -392,7 +469,20 @@ Rollback boundaries:
 
 - **Steps 1–2** add types and a constructor with **no live caller**. Rollback is deletion.
 - **Step 3** is the first behavioural boundary and is done **one route at a time**, A first (it already passes through the wrapper), then C, with B's disposition settled before either. Each route migration must show a **zero-diff manifest** against its legacy profile before the next begins — the Stage 1 acceptance test is that no surface's capability changed.
-- **Step 5** is the point of no return: after it, a route cannot be reverted to self-assembly without failing certification. That is the intent.
+- **Step 5** is the point of no return, and `[CMT-01/R]` it has **preconditions**, every one witnessed before cutover:
+
+  ```text
+  1. every supported MEMBER_TURN path has a canonical shadow path        (§4.1)
+  2. legacy ↔ canonical structural parity witnessed, zero-diff           (§4.1)
+  3. member-turn bypass refusal certified green                          (§9)
+  4. rollback BEFORE cutover demonstrated — the shadow path removed and
+     the legacy path shown unaffected
+  5. manifest evidence truthful and complete for the Stage 1 provider set (§7)
+          ↓
+     THEN authoritative cutover
+  ```
+
+  At cutover the constructor becomes the source of truth and route-local assembly **ceases to be authoritative** — it is removed, not disabled. After cutover, rollback means a **controlled code/version rollback of the seam migration**, never a feature flag that re-enables route-local assembly. A switchable second architecture kept alive "for safety" would recreate exactly what the seam removes: two ways to assemble MAIA, one of them unwatched. Architectural duality is not a rollback mechanism.
 - **Steps 7–9** change capability and are each individually reversible to the previous profile state.
 
 ---
@@ -401,7 +491,7 @@ Rollback boundaries:
 
 No historical retrieval. No new intelligence provider. No reactivation of P3-excluded intelligence. No P4/P5 gesture. No P2b work. No client redesign. No deployment.
 
-And no implementation of this specification until it is adjudicated.
+`[CMT-01/R]` Stage 1 converges architecture only. After authoritative canonical construction is certified, the sequence is: P3-global recertification → Stage 2 provider convergence adjudication → removal of temporary surface-specific profiles → W1 explicit member-invoked long-term recollection → Desktop / PWA / iOS parity witness. **Stop before W1 unless separately authorized.**
 
 ---
 
