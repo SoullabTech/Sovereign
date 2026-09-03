@@ -7,6 +7,7 @@ import {
   generateThreadReflection,
   type ThreadBlockSummary,
 } from '@/lib/team/maiaThreadReflection';
+import { isIdeaStance, type IdeaStance } from '@/lib/maia/ideaStances';
 import {
   runRecognition,
   getRecentRecognitionEvents,
@@ -85,7 +86,7 @@ interface BlockRow {
  * Returns: { success: true, block: <the new maia_reflection block> }
  */
 export async function POST(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
@@ -110,6 +111,26 @@ export async function POST(
       return NextResponse.json({ error: 'Idea not found' }, { status: 404 });
     }
     const idea = ideaResult.rows[0];
+
+    // Optional relational stance for THIS turn (Cut 2). The body may be absent
+    // entirely — plain "Ask MAIA" posts no body and keeps the prior behavior.
+    // An unrecognized stance is rejected rather than silently ignored, so a
+    // member never gets a different relation than the one they chose.
+    let stance: IdeaStance | undefined;
+    try {
+      const raw = await request.text();
+      if (raw.trim().length > 0) {
+        const body = JSON.parse(raw) as { stance?: unknown };
+        if (body.stance !== undefined && body.stance !== null) {
+          if (!isIdeaStance(body.stance)) {
+            return NextResponse.json({ error: 'Unknown stance' }, { status: 400 });
+          }
+          stance = body.stance;
+        }
+      }
+    } catch {
+      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+    }
 
     // Last 4 member-authored blocks (exclude prior maia_reflection blocks so
     // we don't recursively reflect on reflections).
@@ -151,6 +172,18 @@ export async function POST(
       .reverse()
       .map((r) => r.content);
 
+    // TOTAL reflection count drives the progression stage. Counting the
+    // sampled slice instead of the thread was part of why threads looped:
+    // a thread twelve reflections deep looked, to the model, like a thread
+    // two reflections deep.
+    const reflectionCountResult = await query<{ count: string }>(
+      `SELECT COUNT(*)::text AS count
+         FROM member_idea_blocks
+        WHERE idea_id = $1 AND block_type = 'maia_reflection'`,
+      [ideaId]
+    );
+    const reflectionCount = parseInt(reflectionCountResult.rows[0]?.count ?? '0', 10);
+
     // Shape the context for the primitive
     const summaries: ThreadBlockSummary[] = recentBlocks.map((b) => {
       const rawOutcome =
@@ -172,6 +205,8 @@ export async function POST(
       lastDecision,
       recentBlocks: summaries,
       priorMaiaReflections,
+      reflectionCount,
+      stance,
     });
 
     // ── Decision/Change recognition (flag-gated, post-response) ──────────────
@@ -221,6 +256,10 @@ export async function POST(
     const metadata: Record<string, unknown> = {
       source: 'maia',
       invoked_from: 'idea_thread',
+      // Recorded so a thread can be read back later with the relation visible:
+      // what kind of company was asked for at this moment. Per-turn only —
+      // nothing here makes the stance sticky for the next call.
+      ...(stance ? { stance } : {}),
     };
     if (recognition && recognition.namingLine) {
       metadata.recognition = {

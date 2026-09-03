@@ -20,7 +20,10 @@
 import {
   IDEAS_REFLECTION_SYSTEM_PROMPT,
   CORRECTION_ADDENDUM,
+  PROGRESSION_DIRECTIVES,
+  PROGRESSION_FLOOR,
   latestBlockHasCorrection,
+  progressionStage,
   type ThreadBlockSummary,
 } from '../maiaThreadReflection';
 
@@ -270,5 +273,81 @@ describe('IDEAS_REFLECTION_SYSTEM_PROMPT — progression guardrails', () => {
     expect(IDEAS_REFLECTION_SYSTEM_PROMPT).toMatch(
       /drop the prior interpretive frame/i
     );
+  });
+});
+
+
+// ─── progression stage (computed, not inferred) ─────────────────────────────
+//
+// Regression guard for the observed loop: a thread several reflections deep
+// receiving the same scoping question turn after turn. The stage is derived
+// from thread state so the model cannot drift past it.
+
+describe('progressionStage', () => {
+  it('opens in clarify on the first reflection', () => {
+    expect(progressionStage(0)).toBe('clarify');
+  });
+
+  it('allows one more clarification after a single reflection', () => {
+    expect(progressionStage(1)).toBe('clarify_or_close');
+  });
+
+  it('forces close_and_offer from the third reflection onward', () => {
+    expect(progressionStage(2)).toBe('close_and_offer');
+    expect(progressionStage(3)).toBe('close_and_offer');
+    expect(progressionStage(12)).toBe('close_and_offer');
+  });
+
+  it('treats a negative or absent count as the first turn', () => {
+    expect(progressionStage(-1)).toBe('clarify');
+  });
+});
+
+describe('PROGRESSION_DIRECTIVES', () => {
+  it('names every stage', () => {
+    expect(Object.keys(PROGRESSION_DIRECTIVES).sort()).toEqual([
+      'clarify',
+      'clarify_or_close',
+      'close_and_offer',
+    ]);
+  });
+
+  it('bans the repeated scoping questions once clarification is over', () => {
+    const d = PROGRESSION_DIRECTIVES.close_and_offer;
+    expect(d).toMatch(/MUST NOT ask what the idea is for/);
+    expect(d).toMatch(/who it serves/);
+    expect(d).toMatch(/what problem it solves/);
+    expect(d).toMatch(/first useful version/);
+  });
+
+  it('permits conceptual material to be developed on its own terms', () => {
+    expect(PROGRESSION_DIRECTIVES.close_and_offer).toMatch(
+      /conceptual or philosophical material/
+    );
+    expect(PROGRESSION_DIRECTIVES.close_and_offer).toMatch(
+      /Do not redirect a conceptual thread into a scoping question/
+    );
+  });
+
+  it('still asks for exactly one clarifying question on the first turn', () => {
+    expect(PROGRESSION_DIRECTIVES.clarify).toMatch(/ONE clarifying question/);
+  });
+});
+
+// ─── bounded context ────────────────────────────────────────────────────────
+
+describe('PROGRESSION_FLOOR', () => {
+  it('defers the move to the stance the member chose', () => {
+    expect(PROGRESSION_FLOOR).toMatch(/follow the stance rather than any default sequence/);
+  });
+
+  it('keeps the anti-repetition floor', () => {
+    expect(PROGRESSION_FLOOR).toMatch(/do not restate or re-slice a structural distinction/);
+    expect(PROGRESSION_FLOOR).toMatch(/do not re-ask a question you have already asked/);
+  });
+
+  it('does not carry the close-and-offer demand that would override a stance', () => {
+    expect(PROGRESSION_FLOOR).not.toMatch(/structural offering/);
+    expect(PROGRESSION_FLOOR).not.toMatch(/Close the loop/);
   });
 });

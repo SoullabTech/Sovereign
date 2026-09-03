@@ -42,6 +42,12 @@ import {
   RotateCcw,
 } from 'lucide-react';
 import { apiFetch } from '@/lib/http/apiBase';
+import {
+  IDEA_STANCES,
+  STANCE_LABELS,
+  STANCE_DESCRIPTIONS,
+  type IdeaStance,
+} from '@/lib/maia/ideaStances';
 
 // --- types -------------------------------------------------------------------
 
@@ -265,6 +271,9 @@ export default function IdeaWorkspacePage() {
   // Haiku-backed primitive, and persists a `maia_reflection` block.
   // The member does not author the prompt.
   const [askingMaia, setAskingMaia] = useState(false);
+  // Relational stance for the NEXT Ask MAIA only. Cleared after every response —
+  // there is no sticky mode.
+  const [stance, setStance] = useState<IdeaStance | null>(null);
 
   const handleAskMaia = useCallback(async () => {
     if (!idea || askingMaia || saving) return;
@@ -307,6 +316,9 @@ export default function IdeaWorkspacePage() {
 
       const res = await apiFetch(`/api/ideas/${idea.id}/ask-maia`, {
         method: 'POST',
+        // Stance is sent for this turn only. Plain Ask MAIA sends none and
+        // behaves exactly as it did before stances existed.
+        body: JSON.stringify(stance ? { stance } : {}),
       });
       if (res.ok) {
         const data = await res.json();
@@ -322,10 +334,13 @@ export default function IdeaWorkspacePage() {
       console.error('[ideas/workspace] ask-maia failed:', err);
     } finally {
       setAskingMaia(false);
+      // The stance governed one response. It clears — no sticky mode, hidden
+      // or otherwise. The next Ask MAIA starts from no stance again.
+      setStance(null);
       // Refocus the composer so the user continues naturally after MAIA.
       window.setTimeout(() => composerRef.current?.focus(), 0);
     }
-  }, [idea, askingMaia, saving, draft]);
+  }, [idea, askingMaia, saving, draft, stance]);
 
   // --- block composer -------------------------------------------------------
 
@@ -895,6 +910,39 @@ export default function IdeaWorkspacePage() {
               }
             }}
           />
+
+          {/* Relational stances — five verbs, each governing ONE turn.
+              None is selected by default: plain Ask MAIA still works and
+              behaves exactly as before. The stance clears after the response,
+              so there is no sticky mode to get lost in. These belong to Ask
+              MAIA alone — Save stays MAIA-silent. */}
+          <div className="mt-3 flex flex-wrap items-center gap-1.5">
+            {IDEA_STANCES.map((option) => {
+              const selected = stance === option;
+              return (
+                <button
+                  key={option}
+                  type="button"
+                  onClick={() => setStance(selected ? null : option)}
+                  disabled={askingMaia}
+                  title={STANCE_DESCRIPTIONS[option]}
+                  aria-pressed={selected}
+                  className={`rounded-full px-2.5 py-1 text-[11px] font-light transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${
+                    selected
+                      ? 'text-amber-200 ring-1 ring-amber-400/40 bg-amber-400/5'
+                      : 'text-stone-500 ring-1 ring-white/[0.06] hover:text-stone-300 hover:ring-white/15'
+                  }`}
+                >
+                  {STANCE_LABELS[option]}
+                </button>
+              );
+            })}
+            {stance && (
+              <span className="ml-1 text-[11px] text-stone-500 font-light">
+                {STANCE_DESCRIPTIONS[stance]}
+              </span>
+            )}
+          </div>
 
           <div className="mt-3 flex items-center justify-between">
             <button

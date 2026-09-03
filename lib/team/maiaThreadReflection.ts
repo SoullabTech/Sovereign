@@ -23,6 +23,10 @@
  */
 
 import Anthropic from '@anthropic-ai/sdk';
+import {
+  STANCE_DIRECTIVES,
+  type IdeaStance,
+} from '@/lib/maia/ideaStances';
 
 export interface ThreadBlockSummary {
   type: 'note' | 'decision' | 'change';
@@ -40,6 +44,16 @@ export interface ThreadReflectionContext {
   // heuristic to decide whether to clarify or close-and-offer, and to
   // prevent re-slicing of structure MAIA has already named.
   priorMaiaReflections?: string[];
+  // TOTAL number of MAIA reflections already in this thread (not just the
+  // ones passed above). Progression was previously left to the model to
+  // infer from the sample it was given — it drifted, and threads looped on
+  // the same clarifying move. The stage is now computed here and stated to
+  // the model as a directive.
+  reflectionCount?: number;
+  // Relational stance for THIS turn only (Cut 2). Undefined = plain Ask MAIA,
+  // which keeps the pre-existing default behavior exactly. Never persisted as
+  // a mode — the route reads it from one request and it is gone.
+  stance?: IdeaStance;
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -181,15 +195,66 @@ export function latestBlockHasCorrection(recentBlocks: ThreadBlockSummary[]): bo
 // Primary entry point
 // ═══════════════════════════════════════════════════════════════
 
+// ═══════════════════════════════════════════════════════════════
+// Progression stage — computed, not inferred
+//
+// The system prompt describes a name → question → close → offer pattern and
+// tiers it by prior-reflection count. Leaving that inference to the model
+// produced observed looping: several consecutive reflections repeating the
+// same clarifying move on a thread that had long since given enough to work
+// with. The stage is now derived from thread state and stated as a directive
+// appended to the system prompt. It constrains the MOVE, never the content.
+// ═══════════════════════════════════════════════════════════════
+
+export type ProgressionStage = 'clarify' | 'clarify_or_close' | 'close_and_offer';
+
+export function progressionStage(reflectionCount: number): ProgressionStage {
+  if (reflectionCount <= 0) return 'clarify';
+  if (reflectionCount === 1) return 'clarify_or_close';
+  return 'close_and_offer';
+}
+
+// When the member has explicitly chosen a stance, they have taken the wheel:
+// the stance governs the move, and progression reduces to its anti-repetition
+// floor. Without this, close_and_offer ("close the loop and make a structural
+// offering") would directly contradict Stay with this ("do not offer structure
+// they did not ask for") — and a stance the member chose must not be overridden
+// by a stage the system inferred.
+export const PROGRESSION_FLOOR = `PROGRESSION — the member has chosen the stance for this response, so follow the stance rather than any default sequence.
+Two things still hold: do not restate or re-slice a structural distinction you already named in a prior reflection, and do not re-ask a question you have already asked in this thread.`;
+
+export const PROGRESSION_DIRECTIVES: Record<ProgressionStage, string> = {
+  clarify: `PROGRESSION — this is your FIRST reflection in this thread.
+Ask ONE clarifying question. Do not stack frameworks.`,
+
+  clarify_or_close: `PROGRESSION — you have reflected ONCE in this thread already.
+Either ask one final clarifying question OR close the loop and offer structure. Err toward closing and offering.`,
+
+  close_and_offer: `PROGRESSION — you have already reflected on this thread more than once. The clarifying phase is OVER.
+This response MUST NOT ask what the idea is for, who it serves, what problem it solves, where someone gets stuck, or what the first useful version is. Those questions have been asked. Asking any of them again is a failure of this response.
+Work with what the member has actually written. Close the loop (a closure move such as "You've already identified…" / "That's enough to work from…" / "From that…") and then make ONE concrete structural offering — a synthesis, a sequence, a distinction between options they have named, or the framing of the decision that now stands in front of them.
+If the member has developed conceptual or philosophical material, develop it structurally on its own terms — distinguish, sequence, name what follows from what, test the model against a case they gave. Do not redirect a conceptual thread into a scoping question.`,
+};
+
+
 export async function generateThreadReflection(
   ctx: ThreadReflectionContext
 ): Promise<string> {
   const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
   const correctionDetected = latestBlockHasCorrection(ctx.recentBlocks);
-  const systemPrompt = correctionDetected
-    ? `${IDEAS_REFLECTION_SYSTEM_PROMPT}\n\n${CORRECTION_ADDENDUM}`
-    : IDEAS_REFLECTION_SYSTEM_PROMPT;
+  const stage = progressionStage(
+    ctx.reflectionCount ?? ctx.priorMaiaReflections?.length ?? 0
+  );
+
+  const systemParts = [IDEAS_REFLECTION_SYSTEM_PROMPT];
+  if (ctx.stance) {
+    systemParts.push(STANCE_DIRECTIVES[ctx.stance], PROGRESSION_FLOOR);
+  } else {
+    systemParts.push(PROGRESSION_DIRECTIVES[stage]);
+  }
+  if (correctionDetected) systemParts.push(CORRECTION_ADDENDUM);
+  const systemPrompt = systemParts.join('\n\n');
 
   const userMessage = composeUserMessage(ctx);
 
@@ -235,7 +300,11 @@ function composeUserMessage(ctx: ThreadReflectionContext): string {
     );
   }
 
-  parts.push('Offer a reflection on what is here. Stay at the level of the idea.');
+  parts.push(
+    ctx.stance
+      ? 'Respond to what is here, in the stance the member chose.'
+      : 'Offer a reflection on what is here. Stay at the level of the idea.'
+  );
 
   return parts.join('\n\n');
 }
