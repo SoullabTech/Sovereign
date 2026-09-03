@@ -78,7 +78,7 @@ import { SOVEREIGN_CORPUS, type CorpusKey } from './sovereignCorpus';
 export type Disposition = 'EXPORT' | 'INSPECT' | 'EXCLUDE' | 'EXEMPT';
 
 /** Refusals whose certification suites exist on disk. */
-export type CertifiedGate = 'R24' | 'R25' | 'R26' | 'R27' | 'P3e' | 'P1c';
+export type CertifiedGate = 'R24' | 'R25' | 'R26' | 'R27' | 'P3e' | 'P1c' | 'CMT-01';
 
 export type ExclusionBasis =
   | {
@@ -729,9 +729,11 @@ export const SOVEREIGN_DISPOSITION: Record<CorpusKey, DispositionEntry> = {
     rationale:
       'Machine-derived phase, element, archetypes, emotions and a continuity score. Its only reader, SelfletChain, is outside the live composition closure.',
     exclusion: {
-      kind: 'not_reachable',
-      readers: ['lib/memory/selflet/SelfletChain.ts'],
-      scope: NOT_REACHABLE_SCOPE,
+      kind: 'certified_gate',
+      gates: ['CMT-01'],
+      suites: ['__tests__/cmt-01-canonical-turn-steps-1-2.test.ts'],
+      scope:
+        'CMT-01 Step 3b: the provider registry (lib/maia/turn/providers.ts → SelfletIntegration → SelfletChain) enters the live import closure through /list, so reachability no longer excludes this. The constructor is now the gate: `selflet` is LEGACY_UNCERTIFIED, held not_in_profile under legacy:A and canonical, and invoked only under legacy:C, which is not wired. The suite pins all three facts',
     },
   },
 
@@ -969,9 +971,11 @@ export const SOVEREIGN_DISPOSITION: Record<CorpusKey, DispositionEntry> = {
     rationale:
       'Member-facing archive and snooze routes exist, but no source evidence establishes who authors the message. Fails closed; certified non-participation.',
     exclusion: {
-      kind: 'not_reachable',
-      readers: ['lib/memory/selflet/SelfletChain.ts'],
-      scope: NOT_REACHABLE_SCOPE,
+      kind: 'certified_gate',
+      gates: ['CMT-01'],
+      suites: ['__tests__/cmt-01-canonical-turn-steps-1-2.test.ts'],
+      scope:
+        'CMT-01 Step 3b: the provider registry (lib/maia/turn/providers.ts → SelfletIntegration → SelfletChain) enters the live import closure through /list, so reachability no longer excludes this. The constructor is now the gate: `selflet` is LEGACY_UNCERTIFIED, held not_in_profile under legacy:A and canonical, and invoked only under legacy:C, which is not wired. The suite pins all three facts',
     },
   },
 
@@ -980,9 +984,11 @@ export const SOVEREIGN_DISPOSITION: Record<CorpusKey, DispositionEntry> = {
     rationale:
       'Written by SelfletChain, whose write path does not establish who authors the content. Fails closed; non-participation certified by reachability.',
     exclusion: {
-      kind: 'not_reachable',
-      readers: ['lib/memory/selflet/SelfletChain.ts'],
-      scope: NOT_REACHABLE_SCOPE,
+      kind: 'certified_gate',
+      gates: ['CMT-01'],
+      suites: ['__tests__/cmt-01-canonical-turn-steps-1-2.test.ts'],
+      scope:
+        'CMT-01 Step 3b: the provider registry (lib/maia/turn/providers.ts → SelfletIntegration → SelfletChain) enters the live import closure through /list, so reachability no longer excludes this. The constructor is now the gate: `selflet` is LEGACY_UNCERTIFIED, held not_in_profile under legacy:A and canonical, and invoked only under legacy:C, which is not wired. The suite pins all three facts',
     },
   },
 
@@ -991,9 +997,11 @@ export const SOVEREIGN_DISPOSITION: Record<CorpusKey, DispositionEntry> = {
     rationale:
       'Written by SelfletChain, whose write path does not establish who authors the content. Fails closed; non-participation certified by reachability.',
     exclusion: {
-      kind: 'not_reachable',
-      readers: ['lib/memory/selflet/SelfletChain.ts'],
-      scope: NOT_REACHABLE_SCOPE,
+      kind: 'certified_gate',
+      gates: ['CMT-01'],
+      suites: ['__tests__/cmt-01-canonical-turn-steps-1-2.test.ts'],
+      scope:
+        'CMT-01 Step 3b: the provider registry (lib/maia/turn/providers.ts → SelfletIntegration → SelfletChain) enters the live import closure through /list, so reachability no longer excludes this. The constructor is now the gate: `selflet` is LEGACY_UNCERTIFIED, held not_in_profile under legacy:A and canonical, and invoked only under legacy:C, which is not wired. The suite pins all three facts',
     },
   },
 
@@ -1002,9 +1010,11 @@ export const SOVEREIGN_DISPOSITION: Record<CorpusKey, DispositionEntry> = {
     rationale:
       'Written by SelfletChain, whose write path does not establish who authors the content. Fails closed; non-participation certified by reachability.',
     exclusion: {
-      kind: 'not_reachable',
-      readers: ['lib/memory/selflet/SelfletChain.ts'],
-      scope: NOT_REACHABLE_SCOPE,
+      kind: 'certified_gate',
+      gates: ['CMT-01'],
+      suites: ['__tests__/cmt-01-canonical-turn-steps-1-2.test.ts'],
+      scope:
+        'CMT-01 Step 3b: the provider registry (lib/maia/turn/providers.ts → SelfletIntegration → SelfletChain) enters the live import closure through /list, so reachability no longer excludes this. The constructor is now the gate: `selflet` is LEGACY_UNCERTIFIED, held not_in_profile under legacy:A and canonical, and invoked only under legacy:C, which is not wired. The suite pins all three facts',
     },
   },
 };

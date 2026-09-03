@@ -57,6 +57,10 @@ export interface ProviderManifestEntry {
   /** Admitted ONLY because a legacy profile lists an uncertified provider. Never under 'canonical'. */
   admittedLegacyUncertified: number;
   composed: number;
+  /** authored_by × authority_class over THIS provider's admitted material. */
+  provenanceClasses: Partial<Record<`${AuthoredBy}:${AuthorityClass}`, number>>;
+  /** The certified formatter withheld a block after material was admitted (e.g. session-resumption). */
+  suppressed?: string;
   error?: string;
 }
 
@@ -78,6 +82,8 @@ export interface ParticipationManifest {
   policyVersion: string;
   runtimeContextVersion: string;
   providers: ProviderManifestEntry[];
+  /** Every consent gate READ this turn, with its value. */
+  consent: Partial<Record<string, boolean>>;
   /** authored_by × authority_class, aggregated over admitted material. */
   provenanceClasses: Partial<Record<`${AuthoredBy}:${AuthorityClass}`, number>>;
   cognition: { kind: 'MEMBER_TURN'; invoked: false };

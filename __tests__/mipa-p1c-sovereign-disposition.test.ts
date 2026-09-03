@@ -193,8 +193,15 @@ describe('P1c §0 — the instrument found its subject', () => {
     // It must contain the entry points themselves and the known live composers.
     expect(CLOSURE.has('lib/sovereign/maiaService.ts')).toBe(true);
     expect(CLOSURE.has('lib/memory/MemoryBundle.ts')).toBe(true);
+    // CMT-01 Step 3b closure flip: /list → shadowWitness → constructor →
+    // providers → SelfletIntegration → SelfletChain. The five selflet_* P1c
+    // dispositions moved from `not_reachable` to `certified_gate: CMT-01` for
+    // exactly this reason (the constructor is now the gate on that path).
+    expect(CLOSURE.has('lib/memory/selflet/SelfletChain.ts')).toBe(true);
     // …and must NOT be the whole repository, or "not reachable" means nothing.
-    expect(CLOSURE.has('lib/memory/selflet/SelfletChain.ts')).toBe(false);
+    // `deep-path-with-consultation` has no importer (pinned by the Step 3a suite).
+    expect(CLOSURE.has('lib/consultation/deep-path-with-consultation.ts')).toBe(false);
+    expect(CLOSURE.has('lib/learning/enhanced-maia-service.ts')).toBe(false);
   });
 
   it('the schema reader finds real columns, and does not invent them', () => {

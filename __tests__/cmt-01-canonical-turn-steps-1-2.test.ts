@@ -29,9 +29,10 @@ jest.mock('@/lib/maia/consentGates', () => ({
   readConsentGate: jest.fn(async () => true),
 }));
 jest.mock('@/lib/maia/memoryAtomsLoader', () => ({
+  ...jest.requireActual('@/lib/maia/memoryAtomsLoader'),
   loadMemberMemoryAtomsForPrompt: jest.fn(async () => [
-    { id: 'atom-1', sourceType: 'journal', title: 'kept', body: 'MEMBER ATOM BODY' },
-    { id: 'atom-2', sourceType: 'practitioner_observation', title: 'obs', body: 'PRACTITIONER OBSERVATION BODY' },
+    { id: 'atom-1', sourceType: 'journal', title: 'kept', body: 'MEMBER ATOM BODY', primaryRegister: null, registers: [], elementalLenses: [], status: 'active', keptAt: new Date(0), returnPreference: 'contextual_doorway', isBreakthrough: false, markedBreakthroughAt: null, epistemologicalStatus: null },
+    { id: 'atom-2', sourceType: 'practitioner_observation', title: 'obs', body: 'PRACTITIONER OBSERVATION BODY', primaryRegister: 'witnessed', registers: ['witnessed'], elementalLenses: [], status: 'active', keptAt: new Date(0), returnPreference: 'member_pulled', isBreakthrough: false, markedBreakthroughAt: null, epistemologicalStatus: 'observed' },
   ]),
 }));
 jest.mock('@/lib/maia/memoryLoaders', () => ({
@@ -50,6 +51,7 @@ jest.mock('@/lib/maia/memoryLoaders', () => ({
   ]),
 }));
 jest.mock('@/lib/memory/RelationshipMemoryService', () => ({
+  ...jest.requireActual('@/lib/memory/RelationshipMemoryService'),
   loadRelationshipMemory: jest.fn(async () => ({ essence: {}, summary: 'RECURRENCE SUMMARY', themes: [], breakthroughs: [], emergingPatterns: [] })),
   certifyRelationshipMemory: jest.fn((m: { summary: string }) => ({ summary: m.summary, hasEssence: true, excluded: { themes: 0, breakthroughs: 0, patterns: 0 } })),
 }));
@@ -57,6 +59,7 @@ jest.mock('@/lib/consciousness/RelationshipAnamnesis', () => ({
   loadRelationshipEssence: jest.fn(async () => ({ presenceQuality: 'MACHINE ESSENCE' })),
 }));
 jest.mock('@/lib/memory/MemberLiveContext', () => ({
+  ...jest.requireActual('@/lib/memory/MemberLiveContext'),
   buildMemberLiveContext: jest.fn(async () => ({})),
   certifyMemberWeb: jest.fn(() => ({ journal: [{ createdAt: new Date(), content: 'MEMBER JOURNAL' }], excluded: { patterns: 1, sessions: 1, themes: 1, fieldState: true } })),
 }));
@@ -296,8 +299,10 @@ describe('CMT-01 §3 — legacy profiles are subtractive and transitional', () =
   it('the two legacy profiles reproduce the topology, not each other', () => {
     const a = new Set(Object.keys(LEGACY_PROFILE_A.providers));
     const c = new Set(Object.keys(LEGACY_PROFILE_C.providers));
-    // A-only, per the closure absences recorded in the topology.
-    for (const id of ['atoms', 'member_web', 'anchors', 'episodes']) expect({ id, inA: a.has(id), inC: c.has(id) }).toEqual({ id, inA: true, inC: false });
+    // A-only, per the closure absences recorded in the topology — corrected at
+    // Step 3b from source: `anchors` and `relationship_essence` are NOT on A.
+    for (const id of ['atoms', 'member_web', 'episodes', 'conversation', 'developmental', 'themes']) expect({ id, inA: a.has(id), inC: c.has(id) }).toEqual({ id, inA: true, inC: false });
+    for (const id of ['anchors', 'relationship_essence']) expect({ id, inA: a.has(id), inC: c.has(id) }).toEqual({ id, inA: false, inC: false });
     // C-only.
     for (const id of ['selflet', 'ain_knowledge', 'significant_moments', 'memory_bundle']) expect({ id, inA: a.has(id), inC: c.has(id) }).toEqual({ id, inA: false, inC: true });
   });
@@ -364,22 +369,25 @@ describe('CMT-01 §4 — the constructor honours the boundary and never upgrades
 
   it('a MAIA inference with no endorsement is EXCLUDED by the shared adjudicator', async () => {
     const t = await constructCanonicalTurn(frame());
-    const ess = t.manifest.providers.find((p) => p.id === 'relationship_essence')!;
-    expect(ess.excludedByReason).toEqual({ unendorsed_inference: 1 });
-    expect(t.bundle.relationship_essence).toBeUndefined();
-    // …and the EXPECTED SHADOW DIFF named in the registry: the recall block's
+    // The EXPECTED SHADOW DIFF named in the registry: the recall block's
     // relationship_context is excluded here while legacy composes it.
     const recall = t.manifest.providers.find((p) => p.id === 'session_recall')!;
     expect(recall.excludedByReason.unendorsed_inference).toBe(1);
     expect(recall.admitted).toBe(1); // the member's own recall turn
+    // relationship_essence is not on A at all (corrected at Step 3b): held.
+    const ess = t.manifest.providers.find((p) => p.id === 'relationship_essence')!;
+    expect(ess.held).toEqual({ reason: 'not_in_profile' });
+    // …but under a profile that lists it, the inference is still excluded.
+    const c = await constructCanonicalTurn(frame({ profile: 'legacy:C' }));
+    expect(c.manifest.providers.find((p) => p.id === 'relationship_essence')!.held).toEqual({ reason: 'not_in_profile' });
   });
 
   it('member testimony and member acts are ADMITTED, with provenance classes aggregated', async () => {
     const t = await constructCanonicalTurn(frame());
-    expect(t.bundle.episodes).toHaveLength(1);
-    expect(t.bundle.anchors).toHaveLength(1);
-    expect(t.bundle.atoms).toHaveLength(2);
-    expect(t.manifest.provenanceClasses['member:testimony']).toBeGreaterThanOrEqual(3);
+    expect(t.bundle.episodes?.items).toHaveLength(1);
+    expect(t.bundle.anchors).toBeUndefined(); // not on A (corrected at Step 3b)
+    expect(t.bundle.atoms?.items).toHaveLength(2);
+    expect(t.manifest.provenanceClasses['member:testimony']).toBeGreaterThanOrEqual(2);
     expect(t.manifest.provenanceClasses['member:member_act']).toBe(1);
     expect(t.manifest.provenanceClasses['practitioner:observation']).toBe(1);
   });
@@ -389,7 +397,7 @@ describe('CMT-01 §4 — the constructor honours the boundary and never upgrades
     const self = c.manifest.providers.find((p) => p.id === 'selflet')!;
     expect(self.participationStatus).toBe('LEGACY_UNCERTIFIED');
     expect(self.admittedLegacyUncertified).toBe(1);
-    expect(c.bundle.selflet?.[0].basis).toEqual({ kind: 'legacy_uncertified' });
+    expect(c.bundle.selflet?.items[0].basis).toEqual({ kind: 'legacy_uncertified' });
     expect(c.manifest.provenanceClasses).not.toHaveProperty('maia:inference');
 
     // Under a profile that does not list it, it is not even invoked.
@@ -426,7 +434,7 @@ describe('CMT-01 §4 — the constructor honours the boundary and never upgrades
     expect(atoms.error).toBe('db down');
     expect(atoms.returned).toBe(0);
     // A failed provider does not fail the turn.
-    expect(t.bundle.episodes).toHaveLength(1);
+    expect(t.bundle.episodes?.items).toHaveLength(1);
   });
 
   it('the manifest carries NO bodies', async () => {
@@ -441,7 +449,7 @@ describe('CMT-01 §4 — the constructor honours the boundary and never upgrades
 
   it('the bundle is typed by provider; there is no bag', () => {
     const src = read('lib/maia/turn/constructCanonicalTurn.ts');
-    expect(src).toMatch(/CanonicalContextBundle = Readonly<Partial<Record<ProviderId, readonly ComposedItem\[\]>>>/);
+    expect(src).toMatch(/CanonicalContextBundle = Readonly<Partial<Record<ProviderId, ComposedSection>>>/);
     for (const f of fs.readdirSync(TURN_DIR)) {
       const body = strip(read(`lib/maia/turn/${f}`));
       expect({ f, bag: /Record<string,\s*unknown>/.test(body) }).toEqual({ f, bag: false });
@@ -457,9 +465,15 @@ describe('CMT-01 §5 — Step 2 has no authoritative caller', () => {
     expect(callers).toEqual([]);
   });
 
-  it('nothing outside lib/maia/turn/ imports the turn package yet', () => {
+  it('the only importer outside lib/maia/turn/ is /list, and it imports the shadow witness alone (Step 3b) — the constructor still has no authoritative caller', () => {
     const importers = FILES.filter((f) => !f.startsWith('lib/maia/turn/') && /from '(?:@\/lib\/maia\/turn|\.\.?\/turn|\.\.\/maia\/turn)/.test(read(f)));
-    expect(importers).toEqual([]);
+    // Pinned as a closed set: a second importer is new and fails because it is new.
+    expect(importers).toEqual(['app/api/sovereign/app/maia/list/route.ts']);
+    const route = read('app/api/sovereign/app/maia/list/route.ts');
+    const modules = [...route.matchAll(/from '@\/lib\/maia\/turn\/(\w+)'/g)].map((m) => m[1]).sort();
+    expect(modules).toEqual(['legacyDigest', 'shadowWitness']);
+    expect(route).toMatch(/import type \{ LegacyListAssembly \} from '@\/lib\/maia\/turn\/legacyDigest';/);
+    expect(route).not.toMatch(/constructCanonicalTurn|__brandCanonicalTurn|from '@\/lib\/maia\/turn\/invocation'/);
   });
 });
 

@@ -1,40 +1,52 @@
 /**
- * The canonical turn constructor — CMT-01, Step 2. SHADOW ONLY.
+ * The canonical turn constructor — CMT-01, Step 2 → 3b. SHADOW ONLY.
  *
  * Authority: docs/architecture/MAIA_CANONICAL_TURN_ARCHITECTURE_SPEC_v0.1.md §4, §4.1, §7
  *
- * ── WHAT THIS IS AT STEP 2 ──────────────────────────────────────────────────
+ * ── WHAT THIS IS ────────────────────────────────────────────────────────────
  *
- * The one place a member turn is assembled — and, at this step, a place with
- * NO AUTHORITATIVE CALLER. It constructs a typed bundle and a Participation
- * Manifest and hands them back. It does not invoke cognition. It does not
- * change any route's capability. It does not produce a response. Rollback is
- * deletion.
- *
- * Step 3 runs it in SHADOW beside each route's legacy assembly for the same
- * turn and compares structure. Only after a zero-diff witness does it become
- * authoritative (§11, step 5), and at that point route-local assembly is
- * removed — not flagged off.
+ * The one place a member turn is assembled — and, until authoritative cutover
+ * (§11 step 5), a place with NO response-producing caller. It constructs a
+ * typed bundle and a Participation Manifest and hands them back. It does not
+ * invoke cognition.
  *
  * ── WHAT IT OWNS ────────────────────────────────────────────────────────────
  *
- *   WHICH providers are invited      ← by profile, subtractive
+ *   WHICH providers are invited      ← by profile, subtractive, IN PROFILE ORDER
  *           ↓
- *   candidate acquisition            ← providers, in parallel, frame only
+ *   candidate acquisition            ← providers, frame only
  *           ↓
  *   MIPA adjudication                ← the SHARED gate; verdicts carried, never upgraded
  *           ↓
- *   composition                      ← typed bundle; excluded arms have no body
+ *   composition                      ← the SAME certified formatters the legacy path uses
  *           ↓
  *   participation evidence           ← the manifest
  *
+ * ── WHY COMPOSITION USES THE LEGACY FORMATTERS (Step 3b) ────────────────────
+ *
+ * Step 2 composed raw candidate bodies. That could never be compared with the
+ * legacy path, which composes FORMATTED prompt blocks — the shadow comparator's
+ * block digests could not agree by construction. Composition here now means:
+ * the certified formatter for that domain, applied to the admitted material,
+ * in the profile's declared order. The formatter is the same function legacy
+ * calls; only who calls it moved. That is what makes a zero-diff on block
+ * digests a statement about construction rather than luck.
+ *
  * Sanctuary is honoured HERE: a sanctuary frame invokes no member-scoped
- * provider and the manifest records every one as held. Sanctuary is a property
- * of construction, not a flag each route remembers to check.
+ * provider and the manifest records every one as held.
  */
 
 import { adjudicateParticipation } from '../participationGate';
 import type { ExclusionReason, AuthoredBy, AuthorityClass } from '../participationGate';
+import { formatAtomsForPrompt, type MemoryAtomSnapshot } from '../memoryAtomsLoader';
+import { formatPriorExchangesForPrompt, computeLastPriorSessionMinutesAgo } from '../conversationalRecallBlock';
+import { formatMarkedEpisodesForPrompt } from '../episodicRecallBlock';
+import { buildMemoryInfluencePlan } from '../memoryOrchestrator';
+import { formatMemberWebForPrompt, type CertifiedMemberWeb } from '@/lib/memory/MemberLiveContext';
+import { formatRelationshipMemoryForPrompt, type CertifiedRelationshipMemory } from '@/lib/memory/RelationshipMemoryService';
+import type { PriorExchangeSnapshot, MarkedEpisodeSnapshot } from '../memoryLoaders';
+import type { DevelopmentalMemorySnapshot, ThemeSignalSnapshot } from '../types/memoryOrchestrator';
+
 import { __brandCanonicalTurn, type CanonicalTurn } from './invocation';
 import {
   STAGE1_PROVIDER_REGISTRY,
@@ -48,7 +60,7 @@ import { TURN_PROFILES } from './profiles';
 import { idPrefix, type ParticipationManifest, type ProviderManifestEntry } from './manifest';
 
 export const POLICY_VERSION = 'mipa-phase0-closed-2026-09-03';
-export const RUNTIME_CONTEXT_VERSION = 'cmt-01.step2';
+export const RUNTIME_CONTEXT_VERSION = 'cmt-01.step3b';
 
 /** How a composed item earned its place. Auditable, never a body. */
 export type AdmissionBasis =
@@ -62,13 +74,21 @@ export interface ComposedItem {
   body: unknown;
 }
 
+export interface ComposedSection {
+  /** Admitted material, one item per admitted candidate. */
+  items: readonly ComposedItem[];
+  /** The formatted block, exactly as the certified formatter produced it. '' when it suppressed. */
+  section: string;
+  /** The formatter's own suppression verdict, when it withheld a block after admission. */
+  suppressed?: string;
+}
+
 /**
- * Typed by provider. There is no `meta`; there is no `Record<string, unknown>`.
- * A provider absent from the profile is absent from the bundle — not present
- * and empty, because "not invited" and "invited and found nothing" are
- * different facts and the manifest keeps them apart.
+ * Typed by provider. There is no `meta`; there is no string-keyed bag. A
+ * provider absent from the profile is absent from the bundle — "not invited"
+ * and "invited and found nothing" are different facts.
  */
-export type CanonicalContextBundle = Readonly<Partial<Record<ProviderId, readonly ComposedItem[]>>>;
+export type CanonicalContextBundle = Readonly<Partial<Record<ProviderId, ComposedSection>>>;
 
 export interface Adjudicated {
   admitted: ComposedItem[];
@@ -79,9 +99,9 @@ export interface Adjudicated {
 
 /**
  * Exported for certification. The `profileIsLegacy` guard on the
- * LEGACY_UNCERTIFIED arm is unreachable through the public constructor at
- * Stage 1 — the canonical profile lists no providers — and a guard nothing
- * reaches is not certified. Mutation K6 removed it and every test passed.
+ * LEGACY_UNCERTIFIED arm is unreachable through the public constructor while
+ * the canonical profile lists no providers, and a guard nothing reaches is not
+ * certified (mutation K6).
  */
 export function adjudicateCandidates(
   provider: IntelligenceProvider,
@@ -89,33 +109,21 @@ export function adjudicateCandidates(
   profileIsLegacy: boolean,
 ): Adjudicated {
   const out: Adjudicated = { admitted: [], excludedByReason: {}, admittedUpstream: 0, admittedLegacyUncertified: 0 };
-  const exclude = (r: ExclusionReason) => {
-    out.excludedByReason[r] = (out.excludedByReason[r] ?? 0) + 1;
-  };
-
+  const exclude = (r: ExclusionReason) => { out.excludedByReason[r] = (out.excludedByReason[r] ?? 0) + 1; };
   for (const c of candidates) {
     const a = c.adjudication;
     if (a.kind === 'upstream') {
-      // A certified gate spoke. Carried, never upgraded.
       if (a.verdict === 'excluded') exclude(a.reason ?? 'uncertified_provenance');
-      else {
-        out.admittedUpstream++;
-        out.admitted.push({ id: c.id, basis: { kind: 'upstream', gate: a.gate }, body: c.body });
-      }
+      else { out.admittedUpstream++; out.admitted.push({ id: c.id, basis: { kind: 'upstream', gate: a.gate }, body: c.body }); }
       continue;
     }
     if (a.kind === 'legacy_uncertified') {
-      // Composable ONLY under a legacy profile that lists an uncertified
-      // provider. Under 'canonical' this is a refusal, not a pass-through.
       if (profileIsLegacy && provider.participationStatus === 'LEGACY_UNCERTIFIED') {
         out.admittedLegacyUncertified++;
         out.admitted.push({ id: c.id, basis: { kind: 'legacy_uncertified' }, body: c.body });
-      } else {
-        exclude('uncertified_provenance');
-      }
+      } else exclude('uncertified_provenance');
       continue;
     }
-    // No gate has spoken: the shared adjudicator decides.
     const v = adjudicateParticipation({ provenance: a.provenance, endorsement: a.endorsement });
     if (!v.admitted) exclude(v.reason);
     else out.admitted.push({ id: c.id, basis: { kind: 'canonical', provenance: v.provenance }, body: c.body });
@@ -123,102 +131,166 @@ export function adjudicateCandidates(
   return out;
 }
 
+// ── Composition — the certified formatters, applied by the constructor ───────
+
+interface ComposeCtx {
+  frame: TurnFrame;
+  consent: Partial<Record<string, boolean>>;
+  /** Admitted material of OTHER providers this turn (joint sections only). Never raw candidates. */
+  admittedOf: (id: ProviderId) => readonly ComposedItem[];
+}
+
+type Composer = (admitted: readonly ComposedItem[], ctx: ComposeCtx) => { section: string; suppressed?: string };
+
+const bodies = <T,>(items: readonly ComposedItem[]) => items.map((i) => i.body as T);
+const suppression = (r: string | undefined) => (r && r !== 'empty' ? { suppressed: r } : {});
+
+/**
+ * One composer per provider that legacy composes into the prompt. A provider
+ * with no composer contributes admitted items to the bundle and no block.
+ */
+const COMPOSERS: Partial<Record<ProviderId, Composer>> = {
+  atoms: (admitted) => ({ section: formatAtomsForPrompt(bodies<MemoryAtomSnapshot>(admitted)) }),
+
+  conversation: (admitted, ctx) => {
+    const rows = bodies<PriorExchangeSnapshot>(admitted);
+    const r = formatPriorExchangesForPrompt(rows, {
+      recallEnabled: ctx.consent.conversational_recall_enabled ?? true,
+      mode: ctx.frame.encounter.sanctuary ? 'Sanctuary' : null,
+      currentSessionTurnCount: ctx.frame.encounter.sessionTurnCount ?? 0,
+      lastPriorSessionMinutesAgo: computeLastPriorSessionMinutesAgo(rows),
+    });
+    return { section: r.block, ...suppression(r.suppressedReason) };
+  },
+
+  episodes: (admitted, ctx) => {
+    const r = formatMarkedEpisodesForPrompt(bodies<MarkedEpisodeSnapshot>(admitted), {
+      recallEnabled: ctx.consent.episodic_recall_enabled ?? true,
+      mode: ctx.frame.encounter.sanctuary ? 'Sanctuary' : null,
+    });
+    return { section: r.block, ...suppression(r.suppressedReason) };
+  },
+
+  // Legacy composes developmental + themes as ONE memory-influence block. The
+  // joint section is keyed on `developmental`; `themes` contributes admitted
+  // material without a block of its own — mirrored exactly in the legacy digest.
+  developmental: (admitted, ctx) => {
+    const plan = buildMemoryInfluencePlan({
+      message: ctx.frame.encounter.input,
+      userId: ctx.frame.identity.memberId,
+      conversationHistory: [],
+      recentDevelopmentalMemories: bodies<DevelopmentalMemorySnapshot>(admitted),
+      recentThemeSignals: bodies<ThemeSignalSnapshot>(ctx.admittedOf('themes')),
+      hasMemberLiveContext: false,
+      hasRelationshipAnamnesis: false,
+    });
+    return { section: plan.promptBlock || '' };
+  },
+
+  member_web: (admitted) => {
+    const web = bodies<CertifiedMemberWeb>(admitted)[0];
+    return { section: web ? formatMemberWebForPrompt(web) : '' };
+  },
+
+  relationship: (admitted) => {
+    const m = bodies<CertifiedRelationshipMemory>(admitted)[0];
+    return { section: m ? formatRelationshipMemoryForPrompt(m) : '' };
+  },
+};
+
+// ── The constructor ──────────────────────────────────────────────────────────
+
 export async function constructCanonicalTurn(frame: TurnFrame): Promise<CanonicalTurn> {
   const profile = TURN_PROFILES[frame.profile];
   const profileIsLegacy = profile.id !== 'canonical';
-  const entries: ProviderManifestEntry[] = [];
-  const bundle: Partial<Record<ProviderId, ComposedItem[]>> = {};
+  const bundle: Partial<Record<ProviderId, ComposedSection>> = {};
   const provenanceClasses: ParticipationManifest['provenanceClasses'] = {};
+  const consent: Partial<Record<string, boolean>> = {};
+  const admittedById: Partial<Record<ProviderId, ComposedItem[]>> = {};
 
-  const invocations = (Object.keys(STAGE1_PROVIDER_REGISTRY) as ProviderId[]).map(async (id) => {
-    const provider = STAGE1_PROVIDER_REGISTRY[id];
-    const entry: ProviderManifestEntry = {
-      id,
-      scope: provider.scope,
-      participationStatus: provider.participationStatus,
-      governedBy: provider.governedBy,
-      invoked: false,
-      returned: 0,
-      excluded: 0,
-      excludedByReason: {},
-      admitted: 0,
-      admittedUpstream: 0,
-      admittedLegacyUncertified: 0,
-      composed: 0,
+  // Profile order first — composition order is structure — then the rest of
+  // the registry, held.
+  const profileOrder = Object.keys(profile.providers) as ProviderId[];
+  const rest = (Object.keys(STAGE1_PROVIDER_REGISTRY) as ProviderId[]).filter((id) => !profileOrder.includes(id));
+  const order: ProviderId[] = [...profileOrder, ...rest];
+
+  const blank = (id: ProviderId): ProviderManifestEntry => {
+    const p = STAGE1_PROVIDER_REGISTRY[id];
+    return {
+      id, scope: p.scope, participationStatus: p.participationStatus, governedBy: p.governedBy,
+      invoked: false, returned: 0, excluded: 0, excludedByReason: {}, admitted: 0,
+      admittedUpstream: 0, admittedLegacyUncertified: 0, composed: 0, provenanceClasses: {},
     };
+  };
 
-    const params = profile.providers[id];
-    if (!params) {
-      entry.held = { reason: 'not_in_profile' };
-      return entry;
-    }
-    if (frame.encounter.sanctuary && provider.scope === 'member') {
-      entry.held = { reason: 'sanctuary' };
-      return entry;
-    }
-    if (provider.consentGate) {
-      const allowed = await consentAllows(frame.identity.memberId, provider.consentGate);
-      if (!allowed) {
-        entry.held = { reason: 'consent_gate_off', gate: provider.consentGate };
-        return entry;
+  // Acquisition + adjudication, in parallel.
+  const acquired = await Promise.all(
+    order.map(async (id) => {
+      const provider = STAGE1_PROVIDER_REGISTRY[id];
+      const entry = blank(id);
+      const params = profile.providers[id];
+      if (!params) { entry.held = { reason: 'not_in_profile' }; return { entry, adj: null as Adjudicated | null }; }
+      if (frame.encounter.sanctuary && provider.scope === 'member') { entry.held = { reason: 'sanctuary' }; return { entry, adj: null }; }
+      if (provider.consentGate) {
+        const allowed = await consentAllows(frame.identity.memberId, provider.consentGate);
+        consent[provider.consentGate] = allowed;
+        if (!allowed) { entry.held = { reason: 'consent_gate_off', gate: provider.consentGate }; return { entry, adj: null }; }
       }
-    }
-
-    entry.invoked = true;
-    const result = await provider.retrieve(frame, params);
-    if (result.error) entry.error = result.error;
-    entry.returned = result.candidates.length;
-
-    const adj = adjudicateCandidates(provider, result.candidates, profileIsLegacy);
-    entry.excludedByReason = adj.excludedByReason;
-    entry.excluded = Object.values(adj.excludedByReason).reduce((a, b) => a + (b ?? 0), 0);
-    entry.admitted = adj.admitted.length;
-    entry.admittedUpstream = adj.admittedUpstream;
-    entry.admittedLegacyUncertified = adj.admittedLegacyUncertified;
-
-    if (adj.admitted.length > 0) {
-      bundle[id] = adj.admitted;
-      entry.composed = adj.admitted.length;
+      entry.invoked = true;
+      const result = await provider.retrieve(frame, params);
+      if (result.error) entry.error = result.error;
+      entry.returned = result.candidates.length;
+      const adj = adjudicateCandidates(provider, result.candidates, profileIsLegacy);
+      entry.excludedByReason = adj.excludedByReason;
+      entry.excluded = Object.values(adj.excludedByReason).reduce((a, b) => a + (b ?? 0), 0) + (result.excludedUpstream ?? 0);
+      if (result.excludedUpstream) entry.excludedByReason.unendorsed_inference = (entry.excludedByReason.unendorsed_inference ?? 0) + result.excludedUpstream;
+      entry.admitted = adj.admitted.length;
+      entry.admittedUpstream = adj.admittedUpstream;
+      entry.admittedLegacyUncertified = adj.admittedLegacyUncertified;
+      admittedById[id] = adj.admitted;
       for (const item of adj.admitted) {
         if (item.basis.kind === 'canonical') {
           const k = `${item.basis.provenance.authoredBy}:${item.basis.provenance.authorityClass}` as const;
           provenanceClasses[k] = (provenanceClasses[k] ?? 0) + 1;
+          entry.provenanceClasses[k] = (entry.provenanceClasses[k] ?? 0) + 1;
         }
       }
-    }
-    return entry;
-  });
+      return { entry, adj };
+    }),
+  );
 
-  const settled = await Promise.all(invocations);
-  entries.push(...settled);
+  // Composition, sequentially in profile order — a joint section may read
+  // another provider's ADMITTED material, never its raw candidates.
+  const ctx: ComposeCtx = { frame, consent, admittedOf: (id) => admittedById[id] ?? [] };
+  const entries: ProviderManifestEntry[] = [];
+  for (const { entry, adj } of acquired) {
+    if (adj && adj.admitted.length > 0) {
+      const composer = COMPOSERS[entry.id];
+      const out = composer ? composer(adj.admitted, ctx) : { section: '' };
+      bundle[entry.id] = { items: adj.admitted, section: out.section, ...(out.suppressed ? { suppressed: out.suppressed } : {}) };
+      entry.composed = out.section.length > 0 ? adj.admitted.length : 0;
+      if (out.suppressed) entry.suppressed = out.suppressed;
+    }
+    entries.push(entry);
+  }
 
   const manifest: ParticipationManifest = {
     version: 'cmt-01.manifest.v1',
     mode: 'shadow',
-    identity: {
-      memberIdPrefix: idPrefix(frame.identity.memberId),
-      credentialPath: frame.identity.credentialPath,
-    },
+    identity: { memberIdPrefix: idPrefix(frame.identity.memberId), credentialPath: frame.identity.credentialPath },
     encounter: {
       sessionIdPrefix: idPrefix(frame.encounter.sessionId),
-      mode: frame.encounter.mode,
-      modality: frame.encounter.modality,
-      sanctuary: frame.encounter.sanctuary,
+      mode: frame.encounter.mode, modality: frame.encounter.modality, sanctuary: frame.encounter.sanctuary,
     },
     profile: profile.id,
     policyVersion: POLICY_VERSION,
     runtimeContextVersion: RUNTIME_CONTEXT_VERSION,
     providers: entries,
+    consent,
     provenanceClasses,
     cognition: { kind: 'MEMBER_TURN', invoked: false },
     constructedAt: new Date().toISOString(),
   };
 
-  return __brandCanonicalTurn({
-    frame,
-    bundle,
-    manifest,
-    policyVersion: POLICY_VERSION,
-    runtimeContextVersion: RUNTIME_CONTEXT_VERSION,
-  });
+  return __brandCanonicalTurn({ frame, bundle, manifest, policyVersion: POLICY_VERSION, runtimeContextVersion: RUNTIME_CONTEXT_VERSION });
 }

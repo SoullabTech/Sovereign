@@ -122,6 +122,8 @@ export interface Candidate {
 
 export interface ProviderResult {
   candidates: readonly Candidate[];
+  /** Material an upstream certified gate already withheld, counted but not carried. */
+  excludedUpstream?: number;
   /** Failure is reported, never rendered as absence. */
   error?: string;
 }
@@ -138,6 +140,9 @@ export interface PresentEncounter {
   mode: 'talk' | 'care' | 'note' | 'between' | string;
   modality: 'text' | 'voice';
   sanctuary: boolean;
+  /** Turn count within the current session — the conversational formatter's session-resumption rule reads it. */
+  sessionTurnCount?: number;
+  userName?: string;
 }
 
 export interface SurfaceDescriptor {
@@ -410,14 +415,20 @@ const memberWeb: IntelligenceProvider = {
     'certifyMemberWeb (R27): only the member\'s journal survives; patterns, session essences, themes and field state are partitioned out. Verdict carried.',
   async retrieve(frame) {
     try {
-      const ctx = await buildMemberLiveContext(frame.identity.memberId);
+      const ctx = await buildMemberLiveContext(frame.identity.memberId, {
+        displayName: frame.encounter.userName, maxSessions: 3, maxPatterns: 4, maxJournal: 5,
+      });
       const web = certifyMemberWeb(ctx);
+      // ONE candidate: the certified web object, which is what the certified
+      // formatter takes. Its excluded counts are carried so the manifest can
+      // report what R27 withheld without re-deriving it.
       return {
-        candidates: web.journal.map((j, i) => ({
-          id: `journal:${i}`,
+        candidates: [{
+          id: 'member_web:certified',
           adjudication: { kind: 'upstream', gate: 'R27', verdict: 'admitted' },
-          body: j,
-        })),
+          body: web,
+        }],
+        excludedUpstream: web.excluded.patterns + web.excluded.sessions + web.excluded.themes + (web.excluded.fieldState ? 1 : 0),
       };
     } catch (e) {
       return failed(e);

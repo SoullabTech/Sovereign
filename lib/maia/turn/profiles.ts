@@ -42,6 +42,8 @@ import type { ProviderId } from './providers';
 export type ProfileId = 'legacy:A' | 'legacy:C' | 'canonical';
 
 export interface ProviderParams {
+  /** Where the LEGACY path assembles this provider. Default 'route'. */
+  assembledAt?: 'route' | 'cognition';
   limit?: number;
   maxThemes?: number;
   maxBreakthroughs?: number;
@@ -62,17 +64,25 @@ export interface TurnProfile {
 export const LEGACY_PROFILE_A: TurnProfile = {
   id: 'legacy:A',
   reproduces: 'app/api/sovereign/app/maia/list/route.ts — currently authorized assembly',
+  // CORRECTED at Step 3b from source. Two providers first listed here are NOT
+  // on this path: `loadRecentAnchors` is called only by the dormant
+  // /api/oracle/conversation, and `loadRelationshipEssence` at /list:1488 is a
+  // post-response essence capture, not assembly. Two others ARE on the path
+  // but run INSIDE getMaiaResponse (maiaService.ts:748, :895) — below the seam.
+  // They stay in the profile (they are part of A's authorized field) and are
+  // marked so the route-level shadow reports them as unobservable rather than
+  // pretending to have compared them.
+  // KEY ORDER IS COMPOSITION ORDER — the route's own (list/route.ts:727 →
+  // :918 → :969 → :990 → :1018). Order is structure; the comparator says so.
   providers: {
+    member_web: {},
+    developmental: { limit: 3 },
+    themes: { limit: 10 },
     atoms: { limit: 8 },
     conversation: { limit: 6 },
     episodes: { limit: 5 },
-    relationship: { maxThemes: 5, maxBreakthroughs: 3, includePatterns: true },
-    relationship_essence: {},
-    developmental: { limit: 3 },
-    themes: { limit: 10 },
-    member_web: {},
-    anchors: { limit: 3 },
-    session_recall: {},
+    relationship: { maxThemes: 5, maxBreakthroughs: 3, includePatterns: true, assembledAt: 'cognition' },
+    session_recall: { assembledAt: 'cognition' },
   },
   sunset: 'Stage 2 per-provider adjudication (spec §6) — profile deleted when every A-only provider is PROMOTE/REMOVE/RETAIN/DEFER-adjudicated',
 };

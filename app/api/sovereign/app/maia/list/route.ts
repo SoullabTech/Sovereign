@@ -133,6 +133,11 @@ import { formatPriorExchangesForPrompt, summarizePriorExchangesForLog, computeLa
 import { formatMarkedEpisodesForPrompt, summarizeMarkedEpisodesForLog } from '@/lib/maia/episodicRecallBlock';
 // 🔐 De-frag step 3 — runtime contract: every getMaiaResponse() call must pass through this
 import { buildMaiaRuntimeContext, formatRuntimeContextForResponse } from '@/lib/maia/maiaRuntimeContext';
+// CMT-01 Step 3b — SHADOW WITNESS. Off unless CMT_SHADOW_WITNESS=1. Runs after
+// the response, never awaited on the response path, writes nothing, changes
+// nothing the member sees. Captures what THIS route already loaded, by value.
+import { runShadowWitness, shadowWitnessEnabled } from '@/lib/maia/turn/shadowWitness';
+import type { LegacyListAssembly } from '@/lib/maia/turn/legacyDigest';
 // 🔐 De-frag step 5 — provider health guard: throws before generation, never soft-returns
 import { assertProviderAvailable, ProviderUnavailableError } from '@/lib/maia/assertProviderAvailable';
 // 🌀 Cut 2 — Spiral Orientation (read-only developmental context)
@@ -498,6 +503,15 @@ export async function POST(req: NextRequest) {
     const effectiveUserId = isRecognizedUser ? userId : session.id;
     const allowCrossSessionMemory = isRecognizedUser && !isSanctuary;
 
+    // CMT-01 Step 3b — the legacy assembly, captured by value as it happens.
+    // Every assignment below is a copy of a value this route already holds;
+    // none changes what the route does with it.
+    const shadowCapture: LegacyListAssembly = {
+      isSanctuary, isRecognizedUser, allowCrossSessionMemory,
+      certifiedWeb: null, developmental: null, themes: null, atoms: null,
+      conversation: null, episodes: null, composed: {},
+    };
+
     // 🔍 MEMORY DEBUG: Log identity state for debugging memory issues
     console.log(`🧠 [Route/MemoryDebug] userId="${memberRef(userId)}" isRecognized=${isRecognizedUser} effectiveUserId="${memberRef(effectiveUserId)}" sanctuary=${isSanctuary} allowCross=${allowCrossSessionMemory}`);
 
@@ -742,6 +756,8 @@ export async function POST(req: NextRequest) {
       // cannot reach the prompt from here. The member's own journal does.
       const certifiedWeb = certifyMemberWeb(memberLiveCtx);
       memberWebAddendum = formatMemberWebForPrompt(certifiedWeb);
+      shadowCapture.certifiedWeb = certifiedWeb;
+      shadowCapture.composed.member_web = memberWebAddendum || undefined;
       console.log('[MAIA/sovereign] member-web participation', {
         userId: memberRef(effectiveUserId),
         journalAdmitted: certifiedWeb.journal.length,
@@ -925,6 +941,8 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
           loadRecentThemeSignals(userId, 10),
         ]);
         developmentalCount = recentDevelopmentalMemories.length;
+        shadowCapture.developmental = recentDevelopmentalMemories;
+        shadowCapture.themes = recentThemeSignals;
 
         // 🧬 Developmental block — substrate discoverability marker (matches the
         // [MAIA/sovereign] *-block ops grep pattern used by atoms / conversational).
@@ -967,11 +985,14 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
           });
         }
         memoryInfluenceAddendum = memoryPlan.promptBlock || undefined;
+        shadowCapture.composed.developmental = memoryInfluenceAddendum;
 
         // 🧬 Layer 5 — member-placed portfolio atoms (consent-gated, non-synthesized)
         const loadedAtoms = await loadMemberMemoryAtomsForPrompt(userId);
         atomsResult = loadedAtoms;
         const atomsBlock = formatAtomsForPrompt(loadedAtoms);
+        shadowCapture.atoms = loadedAtoms;
+        shadowCapture.composed.atoms = atomsBlock || undefined;
         if (atomsBlock) {
           atomsAddendum = atomsBlock;
           console.log('[MAIA/sovereign] atoms loaded:', { count: loadedAtoms.length, userId: memberRef(userId) });
@@ -999,6 +1020,11 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
           if (conversationalRecall.block) {
             conversationalRecallAddendum = conversationalRecall.block;
           }
+          shadowCapture.conversation = {
+            enabled: conversationalRecallEnabled, rows: priorCrossSessionExchanges,
+            emitted: conversationalRecall.emitted, suppressedReason: conversationalRecall.suppressedReason,
+          };
+          shadowCapture.composed.conversation = conversationalRecall.block || undefined;
           console.log('[MAIA] conversational-block', {
             candidateCount: priorCrossSessionExchanges.length,
             ...summarizePriorExchangesForLog(conversationalRecall),
@@ -1006,6 +1032,7 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
           });
         } catch (err) {
           console.warn('[MAIA] conversational-block error (non-fatal):', err);
+          (shadowCapture.errors ??= {}).conversation = err instanceof Error ? err.message : String(err);
         }
 
         // 📖 Episodic Phase 2 — member-marked moments only (never significance/
@@ -1025,6 +1052,11 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
           if (episodicRecall.block) {
             episodicRecallAddendum = episodicRecall.block;
           }
+          shadowCapture.episodes = {
+            enabled: episodicRecallEnabled, rows: markedEpisodes,
+            emitted: episodicRecall.emitted, suppressedReason: episodicRecall.suppressedReason,
+          };
+          shadowCapture.composed.episodes = episodicRecall.block || undefined;
           console.log('[MAIA] episodic-block', {
             candidateCount: markedEpisodes.length,
             ...summarizeMarkedEpisodesForLog(episodicRecall),
@@ -1032,6 +1064,7 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
           });
         } catch (err) {
           console.warn('[MAIA] episodic-block error (non-fatal):', err);
+          (shadowCapture.errors ??= {}).episodes = err instanceof Error ? err.message : String(err);
         }
 
         // 🧾 Sprint 1 (Truth Layer) — Memory Transition Records: per-source
@@ -1072,6 +1105,13 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
       } catch (memOrchErr) {
         atomsError = true;
         console.warn('[MAIA/sovereign] memory orchestrator non-fatal:', memOrchErr);
+        // CMT-01 Step 3b — a loader that failed before returning is recorded as a
+        // FAILURE on the legacy side; the digest must never read it as "empty".
+        const memOrchMsg = memOrchErr instanceof Error ? memOrchErr.message : String(memOrchErr);
+        const errs = (shadowCapture.errors ??= {});
+        if (shadowCapture.developmental === null) errs.developmental = memOrchMsg;
+        if (shadowCapture.themes === null) errs.themes = memOrchMsg;
+        if (shadowCapture.atoms === null) errs.atoms = memOrchMsg;
       }
     } else {
       console.log('[MAIA/sovereign] memory orchestrator skipped', {
@@ -1279,6 +1319,32 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
       SOVEREIGN_TIMEOUT_MS,
       start,
     );
+
+    // CMT-01 Step 3b — bounded shadow witness (spec §4.1). OFF unless
+    // CMT_SHADOW_WITNESS=1. Runs after cognition, is never awaited on the
+    // response path, writes nothing, never throws outward. Compares what this
+    // route just assembled (captured by value above) against the constructor's
+    // own read-only assembly and logs the manifest comparison. Deleted at the
+    // migration point the spec names (§11, after step 5).
+    if (shadowWitnessEnabled()) {
+      void runShadowWitness({
+        frame: {
+          identity: { memberId: effectiveUserId, credentialPath: 'unknown' },
+          encounter: {
+            sessionId: session.id,
+            input: message,
+            mode: (meta as any)?.mode ?? (meta as any)?.maiaMode?.mode ?? 'talk',
+            modality: (meta as any)?.modality === 'voice' ? 'voice' : 'text',
+            sanctuary: isSanctuary,
+            sessionTurnCount: session.turn_count ?? 0,
+            userName: (meta as any)?.userName,
+          },
+          surface: { surface: 'unknown' },
+          profile: 'legacy:A',
+        },
+        legacy: shadowCapture,
+      });
+    }
 
     const duration = Date.now() - start;
     if (duration > 500) {

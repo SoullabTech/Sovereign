@@ -359,11 +359,16 @@ describe('P3d §7 — boundary negative controls', () => {
       });
     };
     for (const r of ['lib', 'app', 'components']) walk(path.join(REPO, r));
-    // The canonical route, plus the 410-retired oracle route. A third is new
-    // and fails BECAUSE IT IS NEW.
+    // The canonical route, the 410-retired oracle route, and — since CMT-01
+    // Step 3b — the canonical-turn constructor's member_web composer, which
+    // formats the SAME CertifiedMemberWeb through the SAME formatter and is
+    // reached only through the env-gated shadow witness (no authoritative
+    // caller; spec §4.1). Classified here deliberately, not silenced: a fourth
+    // is new and fails BECAUSE IT IS NEW.
     expect(sites.sort()).toEqual([
       'app/api/oracle/conversation/route.ts:994',
-      'app/api/sovereign/app/maia/list/route.ts:744',
+      'app/api/sovereign/app/maia/list/route.ts:758',
+      'lib/maia/turn/constructCanonicalTurn.ts:192',
     ]);
   });
 

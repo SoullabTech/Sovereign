@@ -558,6 +558,62 @@ Three suites read B's source and had to change, each for a stated reason, none s
 
 ---
 
+### Step 3b — `/list` in shadow: comparator certified, witness wired, OFF · CERTIFIED (instrument) 2026-09-03 · PRODUCTION READING NOT YET TAKEN
+
+**What was built** — three modules added to `lib/maia/turn/`, the constructor rewritten to compose, and one env-gated call in `/list`:
+
+| Module | Role |
+|---|---|
+| `shadowCompare.ts` | both sides reduced to one `AssemblyDigest`: providers invoked / held-with-reason / returned / admitted / excluded-by-reason / per-provider provenance classes / formatter suppression / **error** (absent ≠ empty); sovereignty gates (sanctuary, cross-session, every consent gate read); composed sections **keyed by provider** with whitespace-normalised body digests; composition order; floor + field digests; profile. `turnId`, `builtAt`, timestamps live under `observation` and are never walked. `EXPECTED_DIVERGENCES` is a named list — matches are still reported, never counted |
+| `legacyDigest.ts` | reduces what `/list` already loaded, **by value**, to the same shape; a loader that threw is `invoked + error`, never held, never empty |
+| `shadowWitness.ts` | `CMT_SHADOW_WITNESS === '1'` exactly; refuses before construction if profile A lists any provider not declared read-only; constructs → digests → compares → logs `[CMT-01] shadow-witness`; never throws outward (the logger included); deleted at §11 after step 5 |
+| `constructCanonicalTurn.ts` | now **composes** with the certified formatters legacy uses (`formatAtomsForPrompt`, `formatPriorExchangesForPrompt` incl. its session-resumption suppression, `formatMarkedEpisodesForPrompt`, `buildMemoryInfluencePlan`, `formatMemberWebForPrompt`, `formatRelationshipMemoryForPrompt`) in **profile order**; `RUNTIME_CONTEXT_VERSION = 'cmt-01.step3b'` |
+
+**Profile A corrected from source.** The Steps 1–2 profile listed `anchors` and `relationship_essence`; `/list` loads neither (`loadRecentAnchors` is called only by the dormant `/api/oracle/conversation`; `loadRelationshipEssence` runs post-response as essence capture, not assembly). Profile A is now the route's own composition order — `member_web, developmental, themes, atoms, conversation, episodes` — plus `relationship` and `session_recall`, which `getMaiaResponse` assembles **below the seam** (`lib/sovereign/maiaService.ts:748`, `:895`). Those two are the one **expected divergence**, named in advance: legacy reports them `unobserved:below_seam`; the canonical side carries them under its own read-only retrieval; they are excluded from order comparison and reported on every run.
+
+**Closure flip, recorded.** Wiring the witness makes `providers.ts → SelfletIntegration → SelfletChain` reachable from `/list`. The five `selflet_*` P1c dispositions therefore moved from `not_reachable` to `certified_gate: CMT-01` (the constructor is now the gate on that path), and the P1c closure sentinel moved to `deep-path-with-consultation` / `enhanced-maia-service`, both pinned unimported since Step 3a. Discovery enlarged the obligation; nothing was re-labelled quieter.
+
+**Side effects — the witness must not change the record by measuring it.** Every provider profile A invokes was audited from source and declared in `SHADOW_PROVIDER_SIDE_EFFECTS`: `memoryAtomsLoader`, `memoryLoaders`, `MemberLiveContext`, both recall formatters, `memoryOrchestrator`, `consentGates` — zero write statements in the module; `loadRelationshipMemory` — no call to its module's three save functions; `getSessionRecallContext` — reads only. `selflet` (SelfletChain writes) and `memory_bundle` (`ConversationMemoryUsesStore` INSERT) are declared `writes`, on evidence the suite re-derives from the import tree, and are not on profile A. `shadowWriteRisk()` is empty; a profile that lists a writing provider is **REFUSED before construction**.
+
+**The wiring in `/list`.** Eleven by-value capture assignments and three catch-block error captures; one call site, `if (shadowWitnessEnabled()) { void runShadowWitness(…) }`, placed after `getMaiaResponse` and never awaited; the route never reads its own capture (the single read is the witness argument); the route imports `shadowWitness` + the `LegacyListAssembly` type only — not the constructor. Member-visible behaviour with the flag unset: **unchanged by construction** (no import of the constructor executes; the guard is a strict literal equality).
+
+**Certification** — `__tests__/cmt-01-step3b-shadow-comparator.test.ts` **19/19** (end-to-end: the real constructor over mocked loaders vs. the legacy digest over the same material composed by the same formatters — equal → ZERO; withheld provider → NONZERO; disposition changed → NONZERO; body changed → block/floor/field digests move; observation-only → still ZERO; restore → ZERO; failure ≠ empty) and `__tests__/cmt-01-step3b-shadow-wiring.test.ts` **44/44**; all CMT + MIPA + route suites **435/435**, typecheck 228 vs. baseline 239, no regression. **Eighteen mutations refused**, each structurally witnessed, restored by content:
+
+| # | Mutation | Witness |
+|---|---|---|
+| C1 | comparator drops provider errors — failure looks like empty | `error_in_digest` 1 → 0 |
+| C2 | a blanket expected-rule swallows every provider divergence | expected rules 1 → 2 |
+| C3 | sections stripped from comparison — bodies stop mattering | 0 → 1 |
+| C4 | composition order no longer compared | 1 → 0 |
+| C5 | body digest truncates to a prefix | normalisation 1 → 0 |
+| C6 | legacy claims to observe the below-seam providers | `unobserved:below_seam` 2 → 0 |
+| C7 | constructor composes atoms with a different formatter | 1 → 0 |
+| C8 | formatter suppression dropped from the canonical record | suppression sites 2 → 1 |
+| W1 | enable guard removed — shadow on every turn | guarded void call 1 → 0 |
+| W2 | witness awaited on the response path | await 0 → 1 |
+| W3 | enable check flips to default-on | strict equality 1 → 0 |
+| W4 | profile A gains `selflet` | 0 → 1 |
+| W5 | declaration lies: `selflet` declared read-only | 1 → 0 |
+| W6 | a conversational loader failure no longer recorded | error captures 3 → 2 |
+| W7 | legacy digest ignores a recorded failure | failed-first sites 4 → 3 |
+| W8 | witness rethrows outward | (behavioural) |
+| W9 | response path starts reading the capture | on-path reads 0 → 2 |
+| W10 | log marker drifts from the documented grep string | 1 → 0 |
+
+> **Instrument defects, recorded.** (1) C8 initially refused with **no witness** — the detector was boolean over two sites; now a count. (2) The witness module's docblock contained `add*/upsert`, which closed the comment and made the suite **fail to run** — visible only because the chain gates on jest's exit status, per the standing rule (a `tail` would have shown 19 green from the sibling suite). (3) The "never throws" test found a real hole: the catch path's own `log(…)` could rethrow if the sink threw; the logger is now wrapped. (4) A source anchor matched the route's *first* `const duration`, 28 KB above the witness; anchored after it. (5) Three closed-set instruments fired on the wiring — P3d formatter sites (2 → 3), the Steps 1–2 "no importer" pin, the P1c closure sentinel — each **re-pinned to its new deliberate member**, none widened, none silenced.
+
+**What Step 3b did NOT do.** No production reading has been taken: the paired manifest comparison exists in-suite (end-to-end over mocked loaders), **not yet under authenticated member load**. Genuine zero-diff is therefore **not claimed**. Taking the reading is a bounded ops act — `CMT_SHADOW_WITNESS=1` on the `maia` container for a handful of member turns, then off — and the deploy that sets it is not authorised by this record. No cognition cutover; no route capability changed; no provider added; no client touched. Rollback: unset the flag; or delete the three modules and the one call.
+
+```bash
+# The reading, when authorised (from Mac Studio; flag set on minisforum for a bounded window only):
+ssh soullab@minisforum 'docker logs maia-sovereign --since 30m 2>&1 | grep -F "[CMT-01] shadow-witness"'
+# expect one JSON record per /list turn: zeroDiff · unexpected[] · expected[] (relationship / session_recall) · fieldDigests · floorDigests · providerErrors · durationMs
+```
+
+**Next:** the bounded production witness, then adjudication of every observed divergence (expected and not) before Step 3c (C) or any Stage 2 PROMOTE.
+
+---
+
 ## 13. Why the constructor is the right place for what comes after
 
 Dreams, relationships, decisions, Spiralogic phases, ideas, changes, somatic processes — each becomes a **governed intelligence provider** feeding one participation architecture, rather than a feature bolted onto MAIA with its own private path to the prompt. The provider contract in §3.3 is the shape they will take. But not yet.
