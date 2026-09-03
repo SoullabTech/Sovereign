@@ -1,247 +1,229 @@
 <!doctype html>
+<html lang="en">
+<head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Now What? — Eight-State Candidate</title>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Now What? — One Conversation Candidate</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-  @page { size: letter landscape; margin: 0; }
-  :root{
-    --ink:#f4f2ec; --ink-dim:#c3cadb; --ink-faint:#8b97b0;
-    --gold:#d3b264; --gold-deep:#b8963f;
-    --bg1:#1b2547; --bg2:#141c38; --rule:rgba(244,242,236,0.15);
-  }
-  *{box-sizing:border-box;}
-  body{margin:0;background:var(--bg2);color:var(--ink);
-       font:400 15px/1.6 Inter,-apple-system,BlinkMacSystemFont,sans-serif;
-       -webkit-print-color-adjust:exact; print-color-adjust:exact;}
-  .sheet{page-break-after:always; min-height:7.5in; padding:0.7in 0.85in;
-         display:flex; flex-direction:column; position:relative;
-         background:radial-gradient(ellipse 80% 45% at 50% 0%, var(--glow,rgba(211,178,100,.11)), transparent 60%),
-                    linear-gradient(var(--bg1),var(--bg2));}
-  .sheet:last-child{page-break-after:auto;}
-  .eyebrow{font-size:10px; letter-spacing:.28em; text-transform:uppercase;
-           color:var(--gold); font-weight:500; margin-bottom:auto;}
-  .flag{position:absolute; top:0.7in; right:0.85in; font-size:9px; letter-spacing:.2em;
-        text-transform:uppercase; color:var(--gold-deep); font-weight:600;
-        border:1px solid var(--gold-deep); border-radius:2px; padding:4px 10px;}
-  h1{font-family:"Cormorant Garamond",Georgia,serif; font-weight:400;
-     font-size:66px; line-height:1.02; margin:0 0 10px; letter-spacing:-0.01em;}
-  h1 .g{color:var(--gold); font-style:italic;}
-  .q{font-family:"Cormorant Garamond",Georgia,serif; font-style:italic;
-     font-size:26px; color:var(--ink-dim); margin:0 0 44px; font-weight:300;}
-  .num{position:absolute; left:0.85in; top:2.35in;
-       font-family:"Cormorant Garamond",Georgia,serif; font-size:15px;
-       color:var(--gold-deep); letter-spacing:.1em;}
-  .grid{display:grid; grid-template-columns:1fr 1fr; gap:34px 56px; margin-top:auto;}
-  h2{font-size:9.5px; letter-spacing:.2em; text-transform:uppercase;
-     color:var(--gold); margin:0 0 10px; font-weight:600;}
-  .fill{border-bottom:1px solid var(--rule); min-height:2.1em; padding-bottom:6px;
-        color:var(--ink-faint); font-size:13px; font-style:italic;}
-  .frac{margin-top:30px; padding:14px 20px; border-left:2px solid var(--gold-deep);
-        background:var(--glow,rgba(211,178,100,.11));}
-  .frac h2{color:var(--gold);}
-  footer{margin-top:34px; padding-top:14px; border-top:1px solid var(--rule);
-         font-size:9.5px; letter-spacing:.16em; text-transform:uppercase;
-         color:var(--ink-faint); display:flex; justify-content:space-between;}
-  /* cover */
-  .cover{justify-content:center; text-align:center; align-items:center;}
-  .cover h1{font-size:92px; margin:0;}
-  .cover .rule{width:64px; height:1px; background:var(--gold); margin:30px 0;}
-  .cover .say{font-family:"Cormorant Garamond",Georgia,serif; font-style:italic;
-              font-size:25px; line-height:1.5; color:var(--ink-dim);
-              max-width:22em; font-weight:300;}
-  .chain{margin-top:44px; font-size:10.5px; letter-spacing:.24em;
-         text-transform:uppercase; color:var(--ink-faint); line-height:2.4;}
-  .chain b{color:var(--gold); font-weight:500;}
-
-  body[data-pal="warm"]{--ink:#e9e2d4;--ink-dim:#b6ac9a;--ink-faint:#857c6c;
-    --dim:#b6ac9a;--faint:#857c6c;--gold:#c9a35e;--gold-deep:#a8823f;--gold2:#a8823f;
-    --bg1:#211d18;--bg2:#1b1815;--rule:rgba(233,226,212,0.13);--glow:rgba(196,164,110,.08);}
-  body[data-pal="navy"]{--ink:#f4f2ec;--ink-dim:#c3cadb;--ink-faint:#8b97b0;
-    --dim:#c3cadb;--faint:#8b97b0;--gold:#d3b264;--gold-deep:#b8963f;--gold2:#b8963f;
-    --bg1:#1b2547;--bg2:#141c38;--rule:rgba(244,242,236,0.15);--glow:rgba(211,178,100,.11);}
-  #pal{position:fixed;top:16px;left:18px;z-index:20;display:flex;gap:7px;align-items:center;}
-  #pal button{width:15px;height:15px;border-radius:50%;cursor:pointer;padding:0;
-    border:1px solid rgba(255,255,255,.35);transition:transform .15s,box-shadow .15s;}
-  #pal button:hover{transform:scale(1.18);}
-  #pal button[aria-pressed="true"]{box-shadow:0 0 0 2px var(--gold);border-color:transparent;}
-  #pal .n{background:linear-gradient(135deg,#1b2547 55%,#d3b264 55%);}
-  #pal .w{background:linear-gradient(135deg,#211d18 55%,#c9a35e 55%);}
-  @media print{#pal{display:none;}}
-
-  /* Screen-reading on a phone. Print keeps the landscape sheets exactly. */
-  @media screen and (max-width:700px){
-    .sheet{min-height:auto;padding:44px 22px 40px;}
-    h1{font-size:38px;}
-    .cover h1{font-size:52px;}
-    .q{font-size:20px;margin-bottom:30px;}
-    .cover .say{font-size:19px;}
-    .grid{grid-template-columns:1fr;gap:24px;margin-top:28px;}
-    .num{position:static;margin-bottom:6px;}
-    .flag{position:static;display:inline-block;margin-bottom:16px;}
-    .cover footer{position:static;margin-top:34px;}
-    footer{flex-direction:column;gap:6px;}
-    .chain{font-size:9.5px;letter-spacing:.18em;}
-  }
+@page{size:letter landscape;margin:0}
+:root{
+  --ink:#f4f2ec;
+  --dim:#c3cadb;
+  --faint:#8793ac;
+  --gold:#d3b264;
+  --gold2:#b8963f;
+  --bg1:#1b2547;
+  --bg2:#141c38;
+  --rule:rgba(244,242,236,.14);
+  --glow:rgba(211,178,100,.11);
+}
+*{box-sizing:border-box}
+html,body{min-height:100%;margin:0}
+body{
+  color:var(--ink);
+  background:
+    radial-gradient(ellipse 75% 65% at 72% 0%,var(--glow),transparent 62%),
+    linear-gradient(150deg,var(--bg1),var(--bg2) 68%);
+  font:400 15px/1.55 Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  -webkit-print-color-adjust:exact;
+  print-color-adjust:exact;
+}
+.shell{
+  min-height:100dvh;
+  padding:40px;
+  display:grid;
+  grid-template-columns:minmax(300px,.78fr) minmax(390px,1.22fr);
+  gap:44px;
+  align-items:center;
+  max-width:1440px;
+  margin:0 auto;
+}
+.copy{max-width:510px;padding:18px 0 24px}
+.meta{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  margin-bottom:38px;
+  color:var(--faint);
+  font-size:9.5px;
+  letter-spacing:.2em;
+  text-transform:uppercase;
+}
+.meta .rule{width:34px;height:1px;background:var(--gold2)}
+.eyebrow{
+  color:var(--gold);
+  font-size:10px;
+  font-weight:600;
+  letter-spacing:.25em;
+  text-transform:uppercase;
+  margin-bottom:16px;
+}
+h1{
+  margin:0;
+  max-width:7.5em;
+  font-family:"Cormorant Garamond",Georgia,serif;
+  font-size:clamp(52px,5.1vw,76px);
+  line-height:.98;
+  font-weight:400;
+  letter-spacing:-.025em;
+}
+h1 em{color:var(--gold);font-weight:400}
+.lede{
+  max-width:39em;
+  margin:25px 0 0;
+  color:var(--dim);
+  font-size:16px;
+  line-height:1.7;
+}
+.reduction{
+  margin:34px 0 0;
+  padding:22px 0;
+  border-top:1px solid var(--rule);
+  border-bottom:1px solid var(--rule);
+}
+.reduction div{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  min-height:31px;
+  color:var(--dim);
+  font-size:13px;
+}
+.reduction span{
+  width:5px;height:5px;flex:0 0 5px;
+  border-radius:50%;background:var(--gold2);
+}
+.question{
+  margin-top:30px;
+  padding-left:18px;
+  border-left:2px solid var(--gold2);
+}
+.question .label{
+  margin-bottom:7px;
+  color:var(--gold);
+  font-size:9px;
+  font-weight:600;
+  letter-spacing:.2em;
+  text-transform:uppercase;
+}
+.question p{
+  margin:0;
+  color:var(--ink);
+  font-family:"Cormorant Garamond",Georgia,serif;
+  font-size:21px;
+  font-style:italic;
+  line-height:1.45;
+}
+.note{
+  margin-top:26px;
+  color:var(--faint);
+  font-size:10.5px;
+  line-height:1.55;
+}
+.demo{min-width:0}
+.device{
+  position:relative;
+  width:min(100%,680px);
+  height:min(820px,calc(100dvh - 80px));
+  min-height:620px;
+  margin:0 auto;
+  padding:10px;
+  border:1px solid rgba(244,242,236,.2);
+  border-radius:30px;
+  background:rgba(8,13,28,.64);
+  box-shadow:0 30px 90px rgba(0,0,0,.34);
+}
+.device::before{
+  content:"";
+  position:absolute;
+  z-index:2;
+  left:50%;top:7px;
+  width:54px;height:4px;
+  transform:translateX(-50%);
+  border-radius:4px;
+  background:rgba(244,242,236,.22);
+  pointer-events:none;
+}
+iframe{
+  display:block;
+  width:100%;height:100%;
+  border:0;
+  border-radius:21px;
+  background:var(--bg2);
+}
+.open{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  margin:13px 12px 0;
+  color:var(--gold);
+  font-size:10px;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+  text-decoration:none;
+}
+.open:hover{text-decoration:underline}
+@media (max-width:900px){
+  .shell{grid-template-columns:1fr;padding:30px 22px 44px;gap:30px}
+  .copy{max-width:680px;margin:0 auto;padding-top:8px}
+  h1{font-size:clamp(48px,11vw,70px);max-width:9em}
+  .lede{font-size:15px}
+  .device{height:760px;min-height:640px;width:min(100%,660px)}
+}
+@media (max-width:520px){
+  .shell{padding:22px 14px 34px}
+  .meta{margin-bottom:28px}
+  h1{font-size:48px}
+  .device{height:720px;min-height:620px;padding:6px;border-radius:24px}
+  iframe{border-radius:18px}
+  .open{margin-left:6px}
+}
+@media print{
+  body{width:11in;height:8.5in;overflow:hidden}
+  .shell{width:11in;height:8.5in;min-height:0;padding:.48in .55in;gap:.45in;grid-template-columns:.78fr 1.22fr}
+  h1{font-size:55px}
+  .meta{margin-bottom:26px}
+  .lede{font-size:13px;margin-top:18px}
+  .reduction{margin-top:24px;padding:15px 0}
+  .question{margin-top:21px}
+  .note{font-size:9px;margin-top:18px}
+  .device{height:7.35in;min-height:0;padding:7px;border-radius:20px;box-shadow:none}
+  .open{display:none}
+}
 </style>
+</head>
+<body>
+<main class="shell">
+  <section class="copy">
+    <div class="meta"><span>Now What?</span><span class="rule"></span><span>Design candidate &middot; 2026-09-03</span></div>
+    <div class="eyebrow">The entire client experience</div>
+    <h1>One branded <em>conversation.</em></h1>
+    <p class="lede">The client opens one place and says what&rsquo;s happening. The sophistication stays underneath: Larry&rsquo;s licensed material can ground the conversation, remember relevant context, and support continuity without asking the client to learn a platform.</p>
 
-<div id="pal" aria-label="Palette">
-  <button class="n" data-p="navy" aria-pressed="true" title="Navy &amp; gold"></button>
-  <button class="w" data-p="warm" aria-pressed="false" title="Warm charcoal &amp; bronze"></button>
-</div>
-<script>
-(function(){
-  var b=document.body, btns=[].slice.call(document.querySelectorAll('#pal button'));
-  function set(p){ b.dataset.pal=p; btns.forEach(function(x){
-    x.setAttribute('aria-pressed', String(x.dataset.p===p)); }); }
-  btns.forEach(function(x){ x.addEventListener('click',function(e){
-    e.stopPropagation(); set(x.dataset.p); }); });
-  document.addEventListener('keydown',function(e){
-    if(e.key==='p'||e.key==='P') set(b.dataset.pal==='navy'?'warm':'navy'); });
-  set('navy');
-})();
-</script>
-<section class="sheet cover">
-  <span class="flag">Not built</span>
-  <div class="eyebrow" style="margin-bottom:34px">Now What? &middot; Design Candidate &middot; 2026-09-03</div>
-  <h1>The Eight<br><span class="g">States</span></h1>
-  <div class="rule"></div>
-  <p class="say">&ldquo;This is the client experience we are considering. It is not built yet &mdash; there are no screens behind this. I want your reaction to the shape.&rdquo;</p>
-  <div class="chain">
-    Landing &middot; Sign-in &middot; Check-in &middot; <b>Today</b><br>
-    Field &middot; Conversation &middot; Keep &middot; <b>Return</b>
-  </div>
-  <footer style="position:absolute;bottom:0.7in;left:0.85in;right:0.85in">
-    <span>Candidate 2026-09-02 &middot; not ratified</span><span>Nothing here is built</span>
-  </footer>
-</section>
-<section class="sheet">
-  <span class="flag">Not built</span>
-  <div class="eyebrow">State 01 of 8</div>
-  <div class="num">01</div>
-  <h1><span class="g">Landing</span></h1>
-  <p class="q">What is this place?</p>
-  <div class="grid">
-    <div><h2>What the member meets</h2><div class="fill">&mdash; from the candidate document &mdash;</div></div>
-    <div><h2>The one gesture</h2><div class="fill">&mdash; one only &mdash;</div></div>
-    <div><h2>What it must not do</h2><div class="fill">&nbsp;</div></div>
-    <div><h2>Open question for Larry</h2><div class="fill">&nbsp;</div></div>
-  </div>
-  <div class="frac"><h2>Fracture point</h2>
-    <div class="fill">delete this block if this state is not one of the four</div></div>
-  <footer><span>Landing</span><span>Not built &middot; design candidate</span></footer>
-</section>
-<section class="sheet">
-  <span class="flag">Not built</span>
-  <div class="eyebrow">State 02 of 8</div>
-  <div class="num">02</div>
-  <h1><span class="g">Sign-in</span></h1>
-  <p class="q">Is this mine?</p>
-  <div class="grid">
-    <div><h2>What the member meets</h2><div class="fill">&mdash; from the candidate document &mdash;</div></div>
-    <div><h2>The one gesture</h2><div class="fill">&mdash; one only &mdash;</div></div>
-    <div><h2>What it must not do</h2><div class="fill">&nbsp;</div></div>
-    <div><h2>Open question for Larry</h2><div class="fill">&nbsp;</div></div>
-  </div>
-  <div class="frac"><h2>Fracture point</h2>
-    <div class="fill">delete this block if this state is not one of the four</div></div>
-  <footer><span>Sign-in</span><span>Not built &middot; design candidate</span></footer>
-</section>
-<section class="sheet">
-  <span class="flag">Not built</span>
-  <div class="eyebrow">State 03 of 8</div>
-  <div class="num">03</div>
-  <h1><span class="g">Check-in</span></h1>
-  <p class="q">Where am I now?</p>
-  <div class="grid">
-    <div><h2>What the member meets</h2><div class="fill">&mdash; from the candidate document &mdash;</div></div>
-    <div><h2>The one gesture</h2><div class="fill">&mdash; one only &mdash;</div></div>
-    <div><h2>What it must not do</h2><div class="fill">&nbsp;</div></div>
-    <div><h2>Open question for Larry</h2><div class="fill">&nbsp;</div></div>
-  </div>
-  <div class="frac"><h2>Fracture point</h2>
-    <div class="fill">delete this block if this state is not one of the four</div></div>
-  <footer><span>Check-in</span><span>Not built &middot; design candidate</span></footer>
-</section>
-<section class="sheet">
-  <span class="flag">Not built</span>
-  <div class="eyebrow">State 04 of 8</div>
-  <div class="num">04</div>
-  <h1><span class="g">Today</span></h1>
-  <p class="q">What's here?</p>
-  <div class="grid">
-    <div><h2>What the member meets</h2><div class="fill">&mdash; from the candidate document &mdash;</div></div>
-    <div><h2>The one gesture</h2><div class="fill">&mdash; one only &mdash;</div></div>
-    <div><h2>What it must not do</h2><div class="fill">&nbsp;</div></div>
-    <div><h2>Open question for Larry</h2><div class="fill">&nbsp;</div></div>
-  </div>
-  <div class="frac"><h2>Fracture point</h2>
-    <div class="fill">delete this block if this state is not one of the four</div></div>
-  <footer><span>Today</span><span>Not built &middot; design candidate</span></footer>
-</section>
-<section class="sheet">
-  <span class="flag">Not built</span>
-  <div class="eyebrow">State 05 of 8</div>
-  <div class="num">05</div>
-  <h1><span class="g">Field</span></h1>
-  <p class="q">What is becoming, over time?</p>
-  <div class="grid">
-    <div><h2>What the member meets</h2><div class="fill">&mdash; from the candidate document &mdash;</div></div>
-    <div><h2>The one gesture</h2><div class="fill">&mdash; one only &mdash;</div></div>
-    <div><h2>What it must not do</h2><div class="fill">&nbsp;</div></div>
-    <div><h2>Open question for Larry</h2><div class="fill">&nbsp;</div></div>
-  </div>
-  <div class="frac"><h2>Fracture point</h2>
-    <div class="fill">delete this block if this state is not one of the four</div></div>
-  <footer><span>Field</span><span>Not built &middot; design candidate</span></footer>
-</section>
-<section class="sheet">
-  <span class="flag">Not built</span>
-  <div class="eyebrow">State 06 of 8</div>
-  <div class="num">06</div>
-  <h1><span class="g">Conversation</span></h1>
-  <p class="q">Can I think this through, now?</p>
-  <div class="grid">
-    <div><h2>What the member meets</h2><div class="fill">&mdash; from the candidate document &mdash;</div></div>
-    <div><h2>The one gesture</h2><div class="fill">&mdash; one only &mdash;</div></div>
-    <div><h2>What it must not do</h2><div class="fill">&nbsp;</div></div>
-    <div><h2>Open question for Larry</h2><div class="fill">&nbsp;</div></div>
-  </div>
-  <div class="frac"><h2>Fracture point</h2>
-    <div class="fill">delete this block if this state is not one of the four</div></div>
-  <footer><span>Conversation</span><span>Not built &middot; design candidate</span></footer>
-</section>
-<section class="sheet">
-  <span class="flag">Not built</span>
-  <div class="eyebrow">State 07 of 8</div>
-  <div class="num">07</div>
-  <h1><span class="g">Keep</span></h1>
-  <p class="q">What do I want to hold onto?</p>
-  <div class="grid">
-    <div><h2>What the member meets</h2><div class="fill">&mdash; from the candidate document &mdash;</div></div>
-    <div><h2>The one gesture</h2><div class="fill">&mdash; one only &mdash;</div></div>
-    <div><h2>What it must not do</h2><div class="fill">&nbsp;</div></div>
-    <div><h2>Open question for Larry</h2><div class="fill">&nbsp;</div></div>
-  </div>
-  <div class="frac"><h2>Fracture point</h2>
-    <div class="fill">delete this block if this state is not one of the four</div></div>
-  <footer><span>Keep</span><span>Not built &middot; design candidate</span></footer>
-</section>
-<section class="sheet">
-  <span class="flag">Not built</span>
-  <div class="eyebrow">State 08 of 8</div>
-  <div class="num">08</div>
-  <h1><span class="g">Return</span></h1>
-  <p class="q">What happened since?</p>
-  <div class="grid">
-    <div><h2>What the member meets</h2><div class="fill">&mdash; from the candidate document &mdash;</div></div>
-    <div><h2>The one gesture</h2><div class="fill">&mdash; one only &mdash;</div></div>
-    <div><h2>What it must not do</h2><div class="fill">&nbsp;</div></div>
-    <div><h2>Open question for Larry</h2><div class="fill">&nbsp;</div></div>
-  </div>
-  <div class="frac"><h2>Fracture point</h2>
-    <div class="fill">delete this block if this state is not one of the four</div></div>
-  <footer><span>Return</span><span>Not built &middot; design candidate</span></footer>
-</section>
+    <div class="reduction" aria-label="What has been removed from the visible experience">
+      <div><span></span>No rooms to understand.</div>
+      <div><span></span>No pathways to choose.</div>
+      <div><span></span>No software vocabulary to learn.</div>
+      <div><span></span>Just open it, talk, and continue.</div>
+    </div>
 
+    <div class="question">
+      <div class="label">The only question for Larry</div>
+      <p>Does this feel like a natural extension of your work?</p>
+    </div>
+
+    <div class="note">Prototype language is invented for the demo. No unlicensed Larry source material is embedded here. Once rights are in place, his corpus becomes the grounding layer behind the same simple interface.</div>
+  </section>
+
+  <section class="demo" aria-label="Live chatbot candidate">
+    <div class="device">
+      <iframe src="./part2-chatbot-mockup.html" title="Now What? chatbot design candidate"></iframe>
+    </div>
+    <a class="open" href="./part2-chatbot-mockup.html" target="_blank" rel="noopener">Open conversation full screen &rarr;</a>
+  </section>
+</main>
+</body>
 </html>
