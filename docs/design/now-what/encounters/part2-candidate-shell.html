@@ -5,9 +5,9 @@
 <style>
   @page { size: letter landscape; margin: 0; }
   :root{
-    --ink:#e9e2d4; --ink-dim:#b6ac9a; --ink-faint:#857c6c;
-    --gold:#c9a35e; --gold-deep:#a8823f;
-    --bg1:#211d18; --bg2:#1b1815; --rule:rgba(233,226,212,0.13);
+    --ink:#f4f2ec; --ink-dim:#c3cadb; --ink-faint:#8b97b0;
+    --gold:#d3b264; --gold-deep:#b8963f;
+    --bg1:#1b2547; --bg2:#141c38; --rule:rgba(244,242,236,0.15);
   }
   *{box-sizing:border-box;}
   body{margin:0;background:var(--bg2);color:var(--ink);
@@ -15,7 +15,7 @@
        -webkit-print-color-adjust:exact; print-color-adjust:exact;}
   .sheet{page-break-after:always; min-height:7.5in; padding:0.7in 0.85in;
          display:flex; flex-direction:column; position:relative;
-         background:radial-gradient(ellipse 80% 45% at 50% 0%, rgba(196,164,110,0.07), transparent 60%),
+         background:radial-gradient(ellipse 80% 45% at 50% 0%, rgba(211,178,100,0.10), transparent 60%),
                     linear-gradient(var(--bg1),var(--bg2));}
   .sheet:last-child{page-break-after:auto;}
   .eyebrow{font-size:10px; letter-spacing:.28em; text-transform:uppercase;
@@ -37,7 +37,7 @@
   .fill{border-bottom:1px solid var(--rule); min-height:2.1em; padding-bottom:6px;
         color:var(--ink-faint); font-size:13px; font-style:italic;}
   .frac{margin-top:30px; padding:14px 20px; border-left:2px solid var(--gold-deep);
-        background:rgba(196,164,110,0.05);}
+        background:rgba(211,178,100,0.07);}
   .frac h2{color:var(--gold);}
   footer{margin-top:34px; padding-top:14px; border-top:1px solid var(--rule);
          font-size:9.5px; letter-spacing:.16em; text-transform:uppercase;
