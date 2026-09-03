@@ -1,6 +1,12 @@
 # Canonical MAIA Turn Construction — topology
 
-**Status: DISCOVERY. No code changed. No migration designed. Not an authorization.**
+**Status: DISCOVERY — accepted by CMT-01 adjudication (2026-09-03). No code changed.**
+
+The four open questions in §8 are adjudicated in
+`docs/architecture/MAIA_CANONICAL_TURN_ARCHITECTURE_SPEC_v0.1.md` (§1, §2, §3, §5).
+The registry discrepancy in §2.1 is recorded there as a **confirmed inaccurate
+architectural assertion**, disposition *eliminated* (§9) — not repaired
+opportunistically.
 
 Lane opened 2026-09-03, immediately after Phase 0 closure. This document answers
 one question from source: *do different routes assemble different MAIAs before
