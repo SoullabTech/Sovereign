@@ -164,11 +164,18 @@ describe('CMT-01 step 3a §3 — six call sites became four', () => {
     // distinct cognition path. The name-matching call-site scan above cannot
     // see a caller that imports getEnhancedMaiaResponse instead, so the
     // importer set is pinned here. Today: one importer, which nothing imports.
-    const importersOf = (mod: RegExp) => FILES.filter((f) => mod.test(read(f)) && !mod.test(`'${f}'`)).sort();
-    expect(importersOf(/from '[^']*learning\/enhanced-maia-service'/)).toEqual([
+    // Static `from '…'` AND dynamic `import('…')`. The deep path reaches the
+    // second entry through `await import('../learning/enhanced-maia-service')`;
+    // a static-only detector reported ZERO importers and the pin would have
+    // certified "unreached" on an instrument that could not see the reach.
+    const importersOf = (mod: string) => {
+      const re = new RegExp(`(?:from\\s+|import\\(\\s*)'[^']*${mod}'`);
+      return FILES.filter((f) => re.test(read(f))).sort();
+    };
+    expect(importersOf('learning/enhanced-maia-service')).toEqual([
       'lib/consultation/deep-path-with-consultation.ts',
     ]);
-    expect(importersOf(/from '[^']*consultation\/deep-path-with-consultation'/)).toEqual([]);
+    expect(importersOf('consultation/deep-path-with-consultation')).toEqual([]);
   });
 
   it('B is not among them', () => {
