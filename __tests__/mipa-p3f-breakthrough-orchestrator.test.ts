@@ -463,6 +463,12 @@ describe('P3f §3 — a rename, a reformat or a cast does not open the gate', ()
     // Every module that composes a breakthrough must come through here. A new
     // composer that reads the array directly fails BECAUSE IT IS NEW.
     expect(referencingFiles('admittedBreakthroughs')).toEqual([
+      // CMT-01 Step 2: the provider registry passes ADMITTED breakthroughs
+      // through as upstream-certified candidates (gate P3f) and carries the
+      // excluded ones as excluded. It composes nothing itself; the constructor
+      // does, and only from admitted material. Classified here deliberately —
+      // this closed set is exactly what noticed it.
+      'lib/maia/turn/providers.ts',
       'lib/memory/MemoryOrchestrator.ts',
       'lib/memory/RelationshipMemoryService.ts',
       'lib/memory/SignificantMomentsService.ts',

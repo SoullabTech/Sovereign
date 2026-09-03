@@ -495,6 +495,53 @@ No historical retrieval. No new intelligence provider. No reactivation of P3-exc
 
 ---
 
+## 12a. Migration record
+
+### Steps 1–2 — invocation class + shadow constructor · CERTIFIED 2026-09-03
+
+**B disposition, recorded first.** User-supplied production witness, 30-day `--since 720h` window, container `maia-caddy`, exact path `/api/sovereign/app/maia` excluding `/list`: **zero matching entries.** Interpreted narrowly, as adjudicated: zero hits in the logs actually retained and queried, not a claim that B was never called. Two facts sharpen "retained": `docker-compose.production.yml` caps container logs at `max-size: 10m · max-file: 3`, and the RU-0 audit header (`app/api/sovereign/app/maia/__tests__/relationalSanctuaryGuard.test.ts`) records B at 3,388 `agent_runs`/30d as of 2026-08-10. A rotation-independent confirmation exists in `agent_runs.origin_route` if ever wanted. Combined with the source census — no first-party client, every surface on `/list`, remaining references from deprecated paths, one already 410 — **B = STRUCTURALLY RETIRED**, executed at Step 3 as an explicit 410 boundary.
+
+**What was built** — `lib/maia/turn/`, five modules, **no authoritative caller**:
+
+| Module | Role |
+|---|---|
+| `invocation.ts` | `CognitionInvocation` = `MEMBER_TURN { turn: CanonicalTurn }` \| `SYSTEM_COGNITION_PROBE { probe }`. Brand not exported; one branding site; probe arm declares no member field |
+| `providers.ts` | Stage 1 registry — **14 providers** (the spec's 13 with developmental/themes split as the loaders are), every one `scope: 'member'`, each wrapping an existing loader and naming its governing gate and write-path basis; `selflet` and `ain_knowledge` marked `LEGACY_UNCERTIFIED` |
+| `profiles.ts` | `legacy:A`, `legacy:C` (subtractive, each with a `sunset`), `canonical` (**empty** — populated only by Stage 2 PROMOTE) |
+| `constructCanonicalTurn.ts` | orchestration → acquisition → adjudication → typed bundle → manifest; `mode: 'shadow'`, `cognition.invoked: false` |
+| `manifest.ts` | six states per provider, `held` with reason, `error` visible, no bodies |
+
+**Chain of custody, not a second adjudication model.** A candidate carries one of: a canonical provenance claim (the shared `adjudicateParticipation` decides); an **upstream verdict from a named certified gate** (carried, never upgraded); or `legacy_uncertified` (composable under a legacy profile listing an uncertified provider, refused otherwise). No epistemic class was invented — MAIA's own prior words are carried under P2's ratified conversational block, and their class is a Stage 2 item.
+
+**Expected shadow diffs, named in advance** (§4.1 will witness them, Stage 2 will adjudicate them): `session_recall`'s `relationship_context` (`user_relationship_context`, MAIA-maintained inference, P1c EXPORT with no participation gate) is excluded by the shared adjudicator while legacy composes a `RELATIONSHIP CONTEXT` block; `relationship_essence` likewise.
+
+**Certification** — `__tests__/cmt-01-canonical-turn-steps-1-2.test.ts`, **36/36** with innocent and boundary controls; all twelve MIPA suites 304/304; differentially clean against the dirty baseline. Twelve hostile mutations, all refused, each structurally witnessed, restored by content snapshot:
+
+| # | Mutation | Witness |
+|---|---|---|
+| K1 | brand symbol exported | `brand_exported` 0 → 1 |
+| K2 | cast forges a `CanonicalTurn` outside the constructor (Grade B arm) | casts 0 → 1 |
+| K3 | probe arm grows a `memberId` | probe fields 3 → 4 |
+| K4 | a member provider declared `probe_safe` | probe-safe providers 1 → 2 |
+| K5 | upstream EXCLUDED upgraded | guard expr `a.verdict === 'excluded'` → `false && …` |
+| **K6** | `LEGACY_UNCERTIFIED` composes under the canonical profile | guard expr loses `profileIsLegacy &&` |
+| K7 | uncertified provider given an invented class | `LEGACY_UNCERTIFIED` 2 → 1 |
+| K8 | sanctuary no longer holds member providers | sanctuary hold 1 → 0 |
+| K9 | manifest starts carrying bodies | bag in constructor 0 → 1 |
+| K10 | a caller wires the constructor before Step 3 | callers 0 → 1 |
+| K11 | A's assembly copied into the canonical profile | `{}` → `{ ...LEGACY_PROFILE_A.providers }` |
+| K12 | a provider reads a consent gate itself | consent reads in providers 1 → 2 |
+
+> **K6 initially PASSED.** The `profileIsLegacy &&` guard is unreachable through the public constructor at Stage 1 — the canonical profile lists no providers — so deleting it changed nothing any test could see. **A guard nothing reaches is not certified.** `adjudicateCandidates` is now exported and the guard exercised directly, with its expression pinned. Two instrument defects surfaced alongside: three witnesses were empty for semantic edits (now expression-level), and the runner crashed in its own witness function on a regex that assumed a newline an outer capture had consumed — before any mutation was applied, tree verified clean.
+>
+> The P3f `admittedBreakthroughs` closed set flagged `lib/maia/turn/providers.ts` as a new consumer. Correct: it is one. Classified there deliberately rather than silenced — that closed set noticing a new reader is the property working.
+
+**What Steps 1–2 did not do:** touch `getMaiaResponse` (asserted); produce a response; change any route's capability; add a provider; restore P3-excluded material; wire a caller. Rollback is deletion.
+
+**Next: Step 3** — B's explicit 410 retirement; then A and C into shadow beside their legacy assembly, one route at a time, each gated by a zero-diff structural witness (§4.1) before the next begins. Stop at each certification boundary.
+
+---
+
 ## 13. Why the constructor is the right place for what comes after
 
 Dreams, relationships, decisions, Spiralogic phases, ideas, changes, somatic processes — each becomes a **governed intelligence provider** feeding one participation architecture, rather than a feature bolted onto MAIA with its own private path to the prompt. The provider contract in §3.3 is the shape they will take. But not yet.
