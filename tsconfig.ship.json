@@ -17,6 +17,7 @@
     "lib/voice/**/*.ts",
     "lib/text/**/*.ts",
     "lib/memory/**/*.ts",
+    "lib/maia/canonical-turn/**/*.ts",
     "lib/ai/**/*.ts",
     "lib/capture/**/*.ts",
     "lib/oracle/MaiaSystemPrompt.ts",
