@@ -1,5 +1,6 @@
 <!doctype html>
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Now What? — Eight-State Candidate</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -67,6 +68,21 @@
   #pal .n{background:linear-gradient(135deg,#1b2547 55%,#d3b264 55%);}
   #pal .w{background:linear-gradient(135deg,#211d18 55%,#c9a35e 55%);}
   @media print{#pal{display:none;}}
+
+  /* Screen-reading on a phone. Print keeps the landscape sheets exactly. */
+  @media screen and (max-width:700px){
+    .sheet{min-height:auto;padding:44px 22px 40px;}
+    h1{font-size:38px;}
+    .cover h1{font-size:52px;}
+    .q{font-size:20px;margin-bottom:30px;}
+    .cover .say{font-size:19px;}
+    .grid{grid-template-columns:1fr;gap:24px;margin-top:28px;}
+    .num{position:static;margin-bottom:6px;}
+    .flag{position:static;display:inline-block;margin-bottom:16px;}
+    .cover footer{position:static;margin-top:34px;}
+    footer{flex-direction:column;gap:6px;}
+    .chain{font-size:9.5px;letter-spacing:.18em;}
+  }
 </style>
 
 <div id="pal" aria-label="Palette">
