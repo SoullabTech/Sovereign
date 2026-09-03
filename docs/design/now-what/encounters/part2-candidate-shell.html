@@ -15,7 +15,7 @@
        -webkit-print-color-adjust:exact; print-color-adjust:exact;}
   .sheet{page-break-after:always; min-height:7.5in; padding:0.7in 0.85in;
          display:flex; flex-direction:column; position:relative;
-         background:radial-gradient(ellipse 80% 45% at 50% 0%, rgba(211,178,100,0.10), transparent 60%),
+         background:radial-gradient(ellipse 80% 45% at 50% 0%, var(--glow), transparent 60%),
                     linear-gradient(var(--bg1),var(--bg2));}
   .sheet:last-child{page-break-after:auto;}
   .eyebrow{font-size:10px; letter-spacing:.28em; text-transform:uppercase;
@@ -37,7 +37,7 @@
   .fill{border-bottom:1px solid var(--rule); min-height:2.1em; padding-bottom:6px;
         color:var(--ink-faint); font-size:13px; font-style:italic;}
   .frac{margin-top:30px; padding:14px 20px; border-left:2px solid var(--gold-deep);
-        background:rgba(211,178,100,0.07);}
+        background:var(--glow);}
   .frac h2{color:var(--gold);}
   footer{margin-top:34px; padding-top:14px; border-top:1px solid var(--rule);
          font-size:9.5px; letter-spacing:.16em; text-transform:uppercase;
@@ -52,8 +52,39 @@
   .chain{margin-top:44px; font-size:10.5px; letter-spacing:.24em;
          text-transform:uppercase; color:var(--ink-faint); line-height:2.4;}
   .chain b{color:var(--gold); font-weight:500;}
+
+  body[data-pal="warm"]{--ink:#e9e2d4;--ink-dim:#b6ac9a;--ink-faint:#857c6c;
+    --dim:#b6ac9a;--faint:#857c6c;--gold:#c9a35e;--gold-deep:#a8823f;--gold2:#a8823f;
+    --bg1:#211d18;--bg2:#1b1815;--rule:rgba(233,226,212,0.13);--glow:rgba(196,164,110,.08);}
+  body[data-pal="navy"]{--ink:#f4f2ec;--ink-dim:#c3cadb;--ink-faint:#8b97b0;
+    --dim:#c3cadb;--faint:#8b97b0;--gold:#d3b264;--gold-deep:#b8963f;--gold2:#b8963f;
+    --bg1:#1b2547;--bg2:#141c38;--rule:rgba(244,242,236,0.15);--glow:var(--glow);}
+  #pal{position:fixed;top:16px;left:18px;z-index:20;display:flex;gap:7px;align-items:center;}
+  #pal button{width:15px;height:15px;border-radius:50%;cursor:pointer;padding:0;
+    border:1px solid rgba(255,255,255,.35);transition:transform .15s,box-shadow .15s;}
+  #pal button:hover{transform:scale(1.18);}
+  #pal button[aria-pressed="true"]{box-shadow:0 0 0 2px var(--gold);border-color:transparent;}
+  #pal .n{background:linear-gradient(135deg,#1b2547 55%,#d3b264 55%);}
+  #pal .w{background:linear-gradient(135deg,#211d18 55%,#c9a35e 55%);}
+  @media print{#pal{display:none;}}
 </style>
 
+<div id="pal" aria-label="Palette">
+  <button class="n" data-p="navy" aria-pressed="true" title="Navy &amp; gold"></button>
+  <button class="w" data-p="warm" aria-pressed="false" title="Warm charcoal &amp; bronze"></button>
+</div>
+<script>
+(function(){
+  var b=document.body, btns=[].slice.call(document.querySelectorAll('#pal button'));
+  function set(p){ b.dataset.pal=p; btns.forEach(function(x){
+    x.setAttribute('aria-pressed', String(x.dataset.p===p)); }); }
+  btns.forEach(function(x){ x.addEventListener('click',function(e){
+    e.stopPropagation(); set(x.dataset.p); }); });
+  document.addEventListener('keydown',function(e){
+    if(e.key==='p'||e.key==='P') set(b.dataset.pal==='navy'?'warm':'navy'); });
+  set('navy');
+})();
+</script>
 <section class="sheet cover">
   <span class="flag">Not built</span>
   <div class="eyebrow" style="margin-bottom:34px">Now What? &middot; Design Candidate &middot; 2026-09-03</div>
