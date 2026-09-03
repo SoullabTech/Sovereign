@@ -13,11 +13,19 @@ import Link from 'next/link';
  * to `/now-what/arrive`. So this is where a landing can live without touching
  * middleware or the access matrix.
  *
- * WHAT IT DOES NOT DO. It does not authenticate. Sign-in and account creation
- * live at `/now-what/arrive` — the environment's own door (Kelly ruling
- * 2026-07-16), already wired to `/api/now-what/signin` and
- * `/api/now-what/register`. This page hands off to it and holds no credential
- * fields of its own, so there is one auth surface rather than two that drift.
+ * WHAT IT DOES NOT DO. It does not authenticate. Sign-in lives at
+ * `/now-what/arrive` — the environment's own door (Kelly ruling 2026-07-16),
+ * already wired to `/api/now-what/signin`. This page hands off to it and holds
+ * no credential fields of its own, so there is one auth surface rather than two
+ * that drift.
+ *
+ * NO REGISTRATION LINK, DELIBERATELY. `arrive` branches on `fieldContext`:
+ * without one it renders `ArrivalSignInOnly`, which has no registration form
+ * and no tab to reach one. A link from here carries no field context, so a
+ * "create your key" affordance would land a new member on a sign-in form with
+ * nothing to create. It was removed rather than repaired: the invitation is the
+ * gate, so registration belongs to the invitation link that carries the field
+ * context — not to the public landing.
  *
  * REGISTER. Warm charcoal and bronze, per the 2026-08-05 ruling that Now What?
  * is coherent brown. `app/now-what/layout.tsx` re-inks the legacy slate ramp
@@ -86,13 +94,6 @@ export default function NowWhatWelcomePage() {
       >
         Sign in
       </Link>
-
-      <p className="mt-6" style={{ color: FAINT, fontSize: 13 }}>
-        New here?{' '}
-        <Link href="/now-what/arrive" style={{ color: DIM, textDecoration: 'underline', textUnderlineOffset: 3 }}>
-          Create your key
-        </Link>
-      </p>
 
       <p
         className="absolute uppercase"
