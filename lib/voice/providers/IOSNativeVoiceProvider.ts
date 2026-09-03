@@ -1,5 +1,5 @@
 /**
- * IOSNativeVoiceProvider — Phase 1 minimal.
+ * IOSNativeVoiceProvider.
  *
  * Wraps the Swift VoiceController Capacitor plugin. Orchestrates with the
  * existing AudioSessionManager plugin (audio session category + AVAudioEngine).
@@ -15,14 +15,11 @@
  * - Restart timing
  * - Audio session ownership
  *
- * Phase 1 scope:
- * - start, stop
- * - transcriptPartial, transcriptFinal events
- * - stateChange, error events
- * - permission helper
- *
- * Phase 2+: continuous restart, 60-sec rotation, background/foreground.
- * Phase 3+: pauseForTTS, resumeAfterTTS, interrupt.
+ * VOICE-RECOGNITION-ENGINE-01: `start()` accepts an engine preference
+ * (`baseline` default → legacy SFSpeech; `modern` → SpeechAnalyzer where
+ * supported) and a locale. Three evidence streams are exposed alongside the
+ * transcript events. None of them, and no transcript event, closes the human
+ * turn — that is `lib/voice/recognition/humanTurnAuthority.ts`.
  */
 
 import { registerPlugin, type PluginListenerHandle } from '@capacitor/core';
@@ -31,19 +28,30 @@ import type {
   VoiceState,
   VoiceTranscript,
   VoiceError,
+  VoiceStartOptions,
+  CaptureEvidence,
+  RecognitionEvidence,
+  RecognitionCapabilities,
   Unsubscribe,
 } from '../contract/MAIAVoiceProvider';
 
+type NativeEvent =
+  | 'transcriptPartial'
+  | 'transcriptFinal'
+  | 'stateChange'
+  | 'error'
+  | 'captureEvidence'
+  | 'recognitionEvidence'
+  | 'engineSelected';
+
 // Native plugin contract (matches Swift VoiceController)
 interface VoiceControllerPlugin {
-  start(): Promise<{ success: boolean; sessionId: string }>;
+  start(options?: VoiceStartOptions): Promise<{ success: boolean; sessionId: string; engine?: string }>;
   stop(): Promise<{ success: boolean; sessionId: string }>;
   getState(): Promise<{ state: VoiceState; sessionId: string }>;
+  getCapabilities(options?: VoiceStartOptions): Promise<RecognitionCapabilities>;
   requestPermission(): Promise<{ granted: boolean; status: string }>;
-  addListener(
-    eventName: 'transcriptPartial' | 'transcriptFinal' | 'stateChange' | 'error',
-    listenerFunc: (event: any) => void,
-  ): Promise<PluginListenerHandle>;
+  addListener(eventName: NativeEvent, listenerFunc: (event: any) => void): Promise<PluginListenerHandle>;
 }
 
 interface AudioSessionManagerPlugin {
@@ -61,23 +69,21 @@ export class IOSNativeVoiceProvider implements MAIAVoiceProvider {
   private finalHandlers = new Set<(t: VoiceTranscript) => void>();
   private stateHandlers = new Set<(s: VoiceState) => void>();
   private errorHandlers = new Set<(e: VoiceError) => void>();
+  private captureHandlers = new Set<(e: CaptureEvidence) => void>();
+  private recognitionHandlers = new Set<(e: RecognitionEvidence) => void>();
+  private engineHandlers = new Set<(c: RecognitionCapabilities) => void>();
   private nativeListeners: PluginListenerHandle[] = [];
   private listenersWired = false;
+  private lastCapabilities: RecognitionCapabilities | null = null;
 
   /**
-   * Start a listening session.
-   * Phase 1: prepare audio session, then start recognition. Returns a single
-   * recognition pass. Continuous restart arrives in Phase 2.
+   * Start a listening session. Prepares the audio session, then starts
+   * recognition with the requested engine preference (default: baseline).
    */
-  async start(): Promise<void> {
-    // Wire native event listeners on first start (idempotent)
+  async start(options?: VoiceStartOptions): Promise<void> {
     await this.wireListeners();
-
-    // Orchestrate: prepare audio session, then start recognition.
-    // AudioSessionManager owns the audio session + engine.
-    // VoiceController consumes the prepared engine to drive recognition.
     await AudioSessionManager.prepareForListening();
-    await VoiceController.start();
+    await VoiceController.start(options ?? {});
   }
 
   async stop(): Promise<void> {
@@ -87,6 +93,15 @@ export class IOSNativeVoiceProvider implements MAIAVoiceProvider {
 
   getState(): VoiceState {
     return this.state;
+  }
+
+  /** Capabilities reported by the most recent start(), if any. */
+  getLastSelectedCapabilities(): RecognitionCapabilities | null {
+    return this.lastCapabilities;
+  }
+
+  async getRecognitionCapabilities(options?: VoiceStartOptions): Promise<RecognitionCapabilities> {
+    return VoiceController.getCapabilities(options ?? {});
   }
 
   onTranscriptPartial(handler: (t: VoiceTranscript) => void): Unsubscribe {
@@ -117,6 +132,27 @@ export class IOSNativeVoiceProvider implements MAIAVoiceProvider {
     };
   }
 
+  onCaptureEvidence(handler: (e: CaptureEvidence) => void): Unsubscribe {
+    this.captureHandlers.add(handler);
+    return () => {
+      this.captureHandlers.delete(handler);
+    };
+  }
+
+  onRecognitionEvidence(handler: (e: RecognitionEvidence) => void): Unsubscribe {
+    this.recognitionHandlers.add(handler);
+    return () => {
+      this.recognitionHandlers.delete(handler);
+    };
+  }
+
+  onEngineSelected(handler: (c: RecognitionCapabilities) => void): Unsubscribe {
+    this.engineHandlers.add(handler);
+    return () => {
+      this.engineHandlers.delete(handler);
+    };
+  }
+
   /**
    * Tear down all listeners. Call on provider disposal.
    */
@@ -134,6 +170,9 @@ export class IOSNativeVoiceProvider implements MAIAVoiceProvider {
     this.finalHandlers.clear();
     this.stateHandlers.clear();
     this.errorHandlers.clear();
+    this.captureHandlers.clear();
+    this.recognitionHandlers.clear();
+    this.engineHandlers.clear();
   }
 
   private async wireListeners(): Promise<void> {
@@ -153,6 +192,16 @@ export class IOSNativeVoiceProvider implements MAIAVoiceProvider {
       }),
       await VoiceController.addListener('error', (e: VoiceError) => {
         this.errorHandlers.forEach((h) => h(e));
+      }),
+      await VoiceController.addListener('captureEvidence', (e: { evidence: CaptureEvidence }) => {
+        this.captureHandlers.forEach((h) => h(e.evidence));
+      }),
+      await VoiceController.addListener('recognitionEvidence', (e: { evidence: RecognitionEvidence }) => {
+        this.recognitionHandlers.forEach((h) => h(e.evidence));
+      }),
+      await VoiceController.addListener('engineSelected', (e: RecognitionCapabilities) => {
+        this.lastCapabilities = e;
+        this.engineHandlers.forEach((h) => h(e));
       }),
     );
   }

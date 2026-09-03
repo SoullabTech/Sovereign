@@ -16,6 +16,11 @@
 		504EC3121FED79650016851F /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 504EC3101FED79650016851F /* LaunchScreen.storyboard */; };
 		50B271D11FEDC1A000F3C39B /* public in Resources */ = {isa = PBXBuildFile; fileRef = 50B271D01FEDC1A000F3C39B /* public */; };
 		A8D0001526012001000D30F9 /* AudioSessionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8D0001426012001000D30F9 /* AudioSessionManager.swift */; };
+		A8D0002026090300000000A2 /* VoiceController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8D0002026090300000000A1 /* VoiceController.swift */; };
+		A8D0002026090300000000B2 /* RecognitionEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8D0002026090300000000B1 /* RecognitionEngine.swift */; };
+		A8D0002026090300000000C2 /* LegacySFSpeechEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8D0002026090300000000C1 /* LegacySFSpeechEngine.swift */; };
+		A8D0002026090300000000D2 /* SpeechAnalyzerEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8D0002026090300000000D1 /* SpeechAnalyzerEngine.swift */; };
+		A8D0002026090300000000E2 /* RecognitionEngineSelector.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8D0002026090300000000E1 /* RecognitionEngineSelector.swift */; };
 		F62F429C2F120A4B00ECB456 /* HandwritingOCR.swift in Sources */ = {isa = PBXBuildFile; fileRef = F62F429B2F120A4B00ECB456 /* HandwritingOCR.swift */; };
 /* End PBXBuildFile section */
 
@@ -32,6 +37,11 @@
 		50B271D01FEDC1A000F3C39B /* public */ = {isa = PBXFileReference; lastKnownFileType = folder; path = public; sourceTree = "<group>"; };
 		8FF0D3AF03E2CD738EA3C1A4 /* Pods_App.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_App.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		A8D0001426012001000D30F9 /* AudioSessionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioSessionManager.swift; sourceTree = "<group>"; };
+		A8D0002026090300000000A1 /* VoiceController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceController.swift; sourceTree = "<group>"; };
+		A8D0002026090300000000B1 /* RecognitionEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecognitionEngine.swift; sourceTree = "<group>"; };
+		A8D0002026090300000000C1 /* LegacySFSpeechEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LegacySFSpeechEngine.swift; sourceTree = "<group>"; };
+		A8D0002026090300000000D1 /* SpeechAnalyzerEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeechAnalyzerEngine.swift; sourceTree = "<group>"; };
+		A8D0002026090300000000E1 /* RecognitionEngineSelector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecognitionEngineSelector.swift; sourceTree = "<group>"; };
 		C61E77B2422257CC0F2BC081 /* Pods-App.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-App.release.xcconfig"; path = "Target Support Files/Pods-App/Pods-App.release.xcconfig"; sourceTree = "<group>"; };
 		F62F429B2F120A4B00ECB456 /* HandwritingOCR.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = HandwritingOCR.swift; path = App/HandwritingOCR.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -73,6 +83,8 @@
 				50379B222058CBB4000EE86E /* capacitor.config.json */,
 				504EC3071FED79650016851F /* AppDelegate.swift */,
 				A8D0001426012001000D30F9 /* AudioSessionManager.swift */,
+				A8D0002026090300000000A1 /* VoiceController.swift */,
+				A8D0002026090300000000B0 /* Recognition */,
 				504EC30B1FED79650016851F /* Main.storyboard */,
 				504EC30E1FED79650016851F /* Assets.xcassets */,
 				504EC3101FED79650016851F /* LaunchScreen.storyboard */,
@@ -98,6 +110,17 @@
 				8FF0D3AF03E2CD738EA3C1A4 /* Pods_App.framework */,
 			);
 			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		A8D0002026090300000000B0 /* Recognition */ = {
+			isa = PBXGroup;
+			children = (
+				A8D0002026090300000000B1 /* RecognitionEngine.swift */,
+				A8D0002026090300000000C1 /* LegacySFSpeechEngine.swift */,
+				A8D0002026090300000000D1 /* SpeechAnalyzerEngine.swift */,
+				A8D0002026090300000000E1 /* RecognitionEngineSelector.swift */,
+			);
+			path = Recognition;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -220,6 +243,11 @@
 				F62F429C2F120A4B00ECB456 /* HandwritingOCR.swift in Sources */,
 				504EC3081FED79650016851F /* AppDelegate.swift in Sources */,
 				A8D0001526012001000D30F9 /* AudioSessionManager.swift in Sources */,
+				A8D0002026090300000000A2 /* VoiceController.swift in Sources */,
+				A8D0002026090300000000B2 /* RecognitionEngine.swift in Sources */,
+				A8D0002026090300000000C2 /* LegacySFSpeechEngine.swift in Sources */,
+				A8D0002026090300000000D2 /* SpeechAnalyzerEngine.swift in Sources */,
+				A8D0002026090300000000E2 /* RecognitionEngineSelector.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -1,7 +1,6 @@
 import Foundation
 import Capacitor
 import AVFoundation
-import Speech
 
 /// AudioSessionManager - The iOS Audio Session Gatekeeper
 ///
@@ -9,6 +8,12 @@ import Speech
 /// ensuring TTS and speech recognition never fight over control.
 /// It implements the "full teardown" pattern required for reliable
 /// audio mode transitions on iOS.
+///
+/// VOICE-RECOGNITION-ENGINE-01 · M1: this file no longer knows what a speech
+/// recognizer is. The microphone tap hands raw `AVAudioPCMBuffer`s to a
+/// consumer closure; whatever is behind that closure is silenced during a full
+/// teardown through the engine-neutral `RecognitionTeardownHandle`. The
+/// `Speech` framework is intentionally not imported here.
 @objc(AudioSessionManager)
 public class AudioSessionManager: CAPPlugin, CAPBridgedPlugin {
     public let identifier = "AudioSessionManager"
@@ -33,9 +38,9 @@ public class AudioSessionManager: CAPPlugin, CAPBridgedPlugin {
     private let stateLock = NSLock()
 
     private var audioEngine: AVAudioEngine?
-    private var speechRecognizer: SFSpeechRecognizer?
-    private var recognitionRequest: SFSpeechAudioBufferRecognitionRequest?
-    private var recognitionTask: SFSpeechRecognitionTask?
+    /// Whatever is consuming the tap right now. Cancelled on full teardown.
+    private weak var activeRecognition: RecognitionTeardownHandle?
+    private var inputTapInstalled = false
 
     private let audioSession = AVAudioSession.sharedInstance()
 
@@ -239,25 +244,21 @@ public class AudioSessionManager: CAPPlugin, CAPBridgedPlugin {
     private func performFullTeardown() {
         NSLog("[AudioSessionManager] Performing full teardown...")
 
-        // Stop any ongoing speech recognition
-        if let task = recognitionTask {
-            task.cancel()
-            recognitionTask = nil
-            NSLog("[AudioSessionManager] Recognition task cancelled")
-        }
-
-        if let request = recognitionRequest {
-            request.endAudio()
-            recognitionRequest = nil
-            NSLog("[AudioSessionManager] Recognition request ended")
+        // Silence whatever is behind the recognition boundary
+        if let recognition = activeRecognition {
+            recognition.cancel()
+            activeRecognition = nil
+            NSLog("[AudioSessionManager] Active recognition cancelled")
         }
 
         // Stop and reset the audio engine
         if let engine = audioEngine {
             // Remove input tap if installed
-            let inputNode = engine.inputNode
-            inputNode.removeTap(onBus: 0)
-            NSLog("[AudioSessionManager] Input tap removed")
+            if inputTapInstalled {
+                engine.inputNode.removeTap(onBus: 0)
+                inputTapInstalled = false
+                NSLog("[AudioSessionManager] Input tap removed")
+            }
 
             if engine.isRunning {
                 engine.stop()
@@ -280,25 +281,30 @@ public class AudioSessionManager: CAPPlugin, CAPBridgedPlugin {
         return audioEngine
     }
 
-    /// Create and return a configured recognition request
-    public func createRecognitionRequest() -> SFSpeechAudioBufferRecognitionRequest? {
+    public typealias RawAudioBufferConsumer = (AVAudioPCMBuffer) -> Void
+
+    /// M1 — install the microphone tap and route raw buffers to `consumer`.
+    /// Returns the tap format so the consumer can prepare for it, or nil when
+    /// there is no engine to tap. The buffers are untouched: no recognition
+    /// request, no format opinion, no lifecycle coupling.
+    public func installInputTap(consumer: @escaping RawAudioBufferConsumer) -> AVAudioFormat? {
         guard let engine = audioEngine else {
-            NSLog("[AudioSessionManager] Cannot create recognition request - no audio engine")
+            NSLog("[AudioSessionManager] Cannot install input tap - no audio engine")
             return nil
         }
 
-        recognitionRequest = SFSpeechAudioBufferRecognitionRequest()
-        recognitionRequest?.shouldReportPartialResults = true
-
-        // Install tap on input node
         let inputNode = engine.inputNode
-        let recordingFormat = inputNode.outputFormat(forBus: 0)
-
-        inputNode.installTap(onBus: 0, bufferSize: 1024, format: recordingFormat) { [weak self] buffer, _ in
-            self?.recognitionRequest?.append(buffer)
+        if inputTapInstalled {
+            inputNode.removeTap(onBus: 0)
+            inputTapInstalled = false
         }
 
-        return recognitionRequest
+        let recordingFormat = inputNode.outputFormat(forBus: 0)
+        inputNode.installTap(onBus: 0, bufferSize: 1024, format: recordingFormat) { buffer, _ in
+            consumer(buffer)
+        }
+        inputTapInstalled = true
+        return recordingFormat
     }
 
     /// Start the audio engine
@@ -314,8 +320,9 @@ public class AudioSessionManager: CAPPlugin, CAPBridgedPlugin {
         NSLog("[AudioSessionManager] Audio engine started")
     }
 
-    /// Set the recognition task for tracking
-    public func setRecognitionTask(_ task: SFSpeechRecognitionTask?) {
-        recognitionTask = task
+    /// Register the consumer behind the tap so a full teardown can silence it
+    /// without knowing which engine it is.
+    public func setActiveRecognition(_ handle: RecognitionTeardownHandle?) {
+        activeRecognition = handle
     }
 }

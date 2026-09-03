@@ -28,12 +28,86 @@ export type VoiceState =
   | 'transitioning'  // Mid-state-change
   | 'error';         // Last operation failed; needs recovery
 
+// ──────────── Recognition evidence (VOICE-RECOGNITION-ENGINE-01) ────────────
+//
+// Three orthogonal facts replace started/stopped/partial/final. A fourth —
+// the human turn — is deliberately NOT something a recognizer may express.
+
+/** Are audio buffers reaching the recognition boundary? */
+export type CaptureEvidence = 'flowing' | 'unavailable';
+
+/** Is voiced audio turning into transcript segments? */
+export type RecognitionEvidence = 'producing' | 'stalled';
+
+/** May the recognizer still revise this text? */
+export type TranscriptStability = 'volatile' | 'finalized';
+
+/**
+ * How a segment's text relates to earlier segments of the same utterance.
+ * - cumulative: text is the whole utterance so far (SFSpeechRecognizer)
+ * - incremental: text is a chunk; finalized appends, volatile replaces the tail (SpeechAnalyzer)
+ */
+export type TranscriptComposition = 'cumulative' | 'incremental';
+
+/**
+ * open | complete — owned by MAIA's silence / turn authority
+ * (lib/voice/recognition/humanTurnAuthority.ts). No engine event carries it.
+ * Recognizer finality ≠ turn finality.
+ */
+export type HumanTurnState = 'open' | 'complete';
+
+export type RecognitionEngineKind =
+  | 'legacy_sfspeech'                // SFSpeechRecognizer — the baseline / control
+  | 'speech_analyzer_transcriber'    // iOS 26 SpeechAnalyzer + SpeechTranscriber
+  | 'speech_analyzer_dictation';     // iOS 26 SpeechAnalyzer + DictationTranscriber
+
+/**
+ * What the caller asks for. `baseline` is the default and resolves to the
+ * legacy engine until the modern engine wins its device witness.
+ */
+export type RecognitionEnginePreference = 'baseline' | 'modern' | 'dictation' | 'legacy';
+
+/** M7 — capability telemetry. Facts about device + choice. Never transcript content. */
+export interface RecognitionCapabilities {
+  osVersion: string;
+  localeRequested: string;
+  preference: RecognitionEnginePreference | string;
+  policy: string;
+  engineSelected: RecognitionEngineKind | string;
+  selectionReason: string;
+  speechAnalyzerApiPresent: boolean;
+  speechTranscriberAvailable: boolean | null;
+  speechTranscriberLocaleSupported: boolean | null;
+  dictationTranscriberAvailable: boolean | null;
+  dictationTranscriberLocaleSupported: boolean | null;
+  legacyAvailable: boolean;
+  sessionId?: string;
+}
+
+export interface VoiceStartOptions {
+  engine?: RecognitionEnginePreference;
+  locale?: string;
+}
+
 export interface VoiceTranscript {
   text: string;
-  confidence: number;       // 0.0–1.0; provider-specific calibration
-  isFinal: boolean;         // false = interim hypothesis; true = committed
+  confidence: number;       // 0.0–1.0; provider-specific calibration; 0 when not reported
+  /**
+   * Recognizer finality: the engine will not revise this text.
+   * NOT the end of the human turn — see HumanTurnState.
+   */
+  isFinal: boolean;
   sessionId: string;        // Correlates events within one mic-engagement
   durationMs?: number;      // Length of captured utterance (optional, Phase 2+)
+
+  // ── VOICE-RECOGNITION-ENGINE-01 additions (optional for older providers) ──
+  stability?: TranscriptStability;
+  composition?: TranscriptComposition;
+  engine?: RecognitionEngineKind;
+  /** Engine-local, monotonically increasing per session. */
+  segmentId?: number;
+  /** false when the engine reports no confidence and `confidence` is a placeholder 0. */
+  confidenceReported?: boolean;
 }
 
 export type VoiceErrorCode =
@@ -60,7 +134,7 @@ export interface MAIAVoiceProvider {
   // ──────────── Lifecycle (Phase 1) ────────────
 
   /** Begin listening. Idempotent — calling while listening is a no-op. */
-  start(): Promise<void>;
+  start(options?: VoiceStartOptions): Promise<void>;
 
   /** End the listening session entirely. Tears down audio resources. */
   stop(): Promise<void>;
@@ -94,4 +168,18 @@ export interface MAIAVoiceProvider {
 
   /** Error occurred. May or may not be recoverable per code. */
   onError(handler: (error: VoiceError) => void): Unsubscribe;
+
+  // ──────────── Recognition evidence (VOICE-RECOGNITION-ENGINE-01, optional) ────────────
+
+  /** Buffers flowing to the recognition boundary, or not. */
+  onCaptureEvidence?(handler: (e: CaptureEvidence) => void): Unsubscribe;
+
+  /** Voiced audio becoming words, or stalled. */
+  onRecognitionEvidence?(handler: (e: RecognitionEvidence) => void): Unsubscribe;
+
+  /** Which engine a session selected and why. No transcript content. */
+  onEngineSelected?(handler: (c: RecognitionCapabilities) => void): Unsubscribe;
+
+  /** Probe device capability for a preference/locale without starting. */
+  getRecognitionCapabilities?(options?: VoiceStartOptions): Promise<RecognitionCapabilities>;
 }

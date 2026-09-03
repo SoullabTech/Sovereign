@@ -130,17 +130,23 @@ runtime". The measured claim is about the Mac; production is not the Mac.
 
 ---
 
-## 5 · ⛔ NOT RECOVERED — do not invent this
+## 5 · Apple SpeechAnalyzer — ruled 2026-09-03 (was: not recovered)
 
-**Apple SpeechAnalyzer / WhisperKit.** No prior ruling has been recovered, and
-neither term appears anywhere in this repository. Founder qualification, verbatim:
+Until 2026-09-03 no prior ruling existed and this section said *do not invent
+this*. Founder qualification at the time, verbatim:
 
 > *"I have not yet recovered a prior specific ruling around Apple
 > SpeechAnalyzer/WhisperKit, so I don't want to invent that part."*
 
-Recorded as **absent**, not as pending. If an on-device Apple STT path is wanted,
-it is a new decision requiring its own argument — it may not be back-dated into
-the R&D trail. (The Apple-Silicon strand that *is* recovered is MLX, §4.)
+**The ruling now exists and is dated, not back-dated:** founder directive
+2026-09-03 authorises lane **`VOICE-RECOGNITION-ENGINE-01`**
+(`docs/programme/VOICE-RECOGNITION-ENGINE-01_LANE.md`) — a bounded engineering
+migration of the iOS Layer 2 recognizer onto an engine-neutral boundary, with
+an availability-gated SpeechAnalyzer + SpeechTranscriber engine, a
+DictationTranscriber fallback, and the legacy SFSpeechRecognizer preserved as
+the default until a same-device witness is won. **WhisperKit remains unruled**
+(2B in that lane: benchmark only after Apple is witnessed). The Apple-Silicon
+strand that was already recovered is MLX, §4, and is unaffected.
 
 ---
 
