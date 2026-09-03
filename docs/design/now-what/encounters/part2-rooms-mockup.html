@@ -1,0 +1,134 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Now What? — The Five Rooms</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#e9e2d4;--dim:#b6ac9a;--faint:#857c6c;--gold:#c9a35e;--gold2:#a8823f;
+      --bg1:#211d18;--bg2:#1b1815;--rule:rgba(233,226,212,0.13);}
+*{box-sizing:border-box;}
+body{margin:0;min-height:100vh;color:var(--ink);font:400 15px/1.6 Inter,-apple-system,sans-serif;
+     background:radial-gradient(ellipse 80% 45% at 50% 0%,rgba(196,164,110,.07),transparent 60%),
+                linear-gradient(var(--bg1),var(--bg2));background-attachment:fixed;}
+.flag{position:fixed;top:16px;right:18px;z-index:9;font-size:9px;letter-spacing:.2em;
+      text-transform:uppercase;color:var(--gold2);border:1px solid var(--gold2);
+      border-radius:2px;padding:4px 10px;background:var(--bg2);}
+.wrap{max-width:760px;margin:0 auto;padding:70px 34px 90px;}
+.eyebrow{font-size:10px;letter-spacing:.3em;text-transform:uppercase;color:var(--gold);
+         text-align:center;margin-bottom:26px;}
+h1{font-family:"Cormorant Garamond",Georgia,serif;font-weight:300;font-size:38px;
+   line-height:1.25;text-align:center;margin:0 0 12px;}
+.sub{text-align:center;color:var(--faint);font-size:13.5px;max-width:30em;margin:0 auto 54px;}
+.room{border-top:1px solid var(--rule);padding:24px 4px;cursor:pointer;
+      transition:background .18s,padding-left .18s;}
+.room:last-of-type{border-bottom:1px solid var(--rule);}
+.room:hover{background:rgba(196,164,110,.045);padding-left:12px;}
+.head{display:flex;align-items:baseline;gap:16px;}
+.name{font-family:"Cormorant Garamond",Georgia,serif;font-size:26px;font-weight:400;
+      white-space:nowrap;}
+.mean{font-size:9.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);
+      flex:1;}
+.chev{color:var(--gold2);font-size:18px;transition:transform .2s,color .18s;}
+.room:hover .chev{color:var(--gold);transform:translateX(3px);}
+.room.open .chev{transform:rotate(90deg);}
+.line{color:var(--dim);font-size:14px;margin-top:7px;}
+.fn{color:var(--faint);font-size:11.5px;letter-spacing:.06em;margin-top:9px;
+    opacity:.72;transition:opacity .18s;}
+.room:hover .fn{opacity:1;}
+.panel{display:none;margin-top:22px;padding:22px 24px;border-left:2px solid var(--gold2);
+       background:rgba(196,164,110,.05);}
+.room.open .panel{display:block;}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:30px;}
+.cols h4{font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);
+         margin:0 0 12px;font-weight:600;}
+.cols ul{margin:0;padding-left:16px;color:var(--dim);font-size:13px;line-height:1.95;}
+.enter{margin-top:20px;font-size:11px;letter-spacing:.16em;text-transform:uppercase;
+       color:var(--gold);}
+.demo{margin-top:16px;font-size:10px;letter-spacing:.12em;text-transform:uppercase;
+      color:var(--gold2);opacity:.8;}
+.priv{text-align:center;margin:56px 0 0;color:var(--dim);font-size:13.5px;
+      max-width:32em;margin-left:auto;margin-right:auto;}
+.priv b{display:block;margin-top:14px;font-size:10px;letter-spacing:.22em;
+        text-transform:uppercase;color:var(--gold);font-weight:500;}
+.quote{margin-top:64px;padding-top:32px;border-top:1px solid var(--rule);text-align:center;
+       font-family:"Cormorant Garamond",Georgia,serif;font-style:italic;font-size:19px;
+       color:var(--faint);}
+.quote span{display:block;margin-top:12px;font-style:normal;font-size:10px;
+            letter-spacing:.2em;text-transform:uppercase;}
+</style>
+<div class="flag">Not built &middot; candidate</div>
+<div class="wrap">
+  <div class="eyebrow">Your Now What? space</div>
+  <h1>Everything you need between sessions,<br>organized around what you&rsquo;re actually here to do.</h1>
+  <p class="sub">Your program, sessions, resources, reflections and conversations live inside these five places.</p>
+
+  <div class="room" onclick="this.classList.toggle('open')">
+    <div class="head"><span class="name">My Question</span><span class="mean">What you are wrestling with</span><span class="chev">&rsaquo;</span></div>
+    <div class="line">Continue thinking about what you named &mdash; in your own words.</div>
+    <div class="fn">Reflections &middot; notes &middot; questions &middot; uploads</div>
+    <div class="panel"><h4 style="font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);margin:0 0 12px;font-weight:600">For you</h4>
+      <ul style="margin:0;padding-left:16px;color:var(--dim);font-size:13px;line-height:1.95">
+        <li>Keep a question open across weeks</li><li>Add notes and uploads as they arrive</li>
+        <li>Return to what you named, in your words</li><li>Choose what to bring into a session</li></ul>
+      <div class="enter">Enter My Question &rarr;</div></div>
+  </div>
+
+  <div class="room" onclick="this.classList.toggle('open')">
+    <div class="head"><span class="name">My Work</span><span class="mean">What you are living and cultivating</span><span class="chev">&rsaquo;</span></div>
+    <div class="line">What you choose to live &mdash; created by you, never assigned.</div>
+    <div class="fn">Program &middot; practices &middot; resources &middot; recordings</div>
+    <div class="panel"><h4 style="font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);margin:0 0 12px;font-weight:600">For you</h4>
+      <ul style="margin:0;padding-left:16px;color:var(--dim);font-size:13px;line-height:1.95">
+        <li>See where you are in the program</li><li>Practices you chose, not ones assigned</li>
+        <li>Resources and recordings, when relevant</li><li>What you decided to try, and what happened</li></ul>
+      <div class="enter">Enter My Work &rarr;</div></div>
+  </div>
+
+  <div class="room open" onclick="this.classList.toggle('open')">
+    <div class="head"><span class="name">My Coaching</span><span class="mean">The human relationship</span><span class="chev">&rsaquo;</span></div>
+    <div class="line">The human relationship this environment extends.</div>
+    <div class="fn">Sessions &middot; scheduling &middot; preparation &middot; messages &middot; sharing</div>
+    <div class="panel">
+      <div class="cols">
+        <div><h4>For you</h4><ul>
+          <li>Prepare for your next session</li><li>See upcoming and previous sessions</li>
+          <li>Schedule time with Larry</li><li>Send a message</li>
+          <li>Choose what you want to share</li></ul></div>
+        <div><h4>For Larry</h4><ul>
+          <li>Know what is coming into the session</li><li>See intentionally shared reflections</li>
+          <li>Prepare with continuity</li><li>Manage sessions and scheduling</li>
+          <li>Stay connected between meetings</li></ul></div>
+      </div>
+      <div class="enter">Enter My Coaching &rarr;</div>
+      <div class="demo">Presentation treatment &mdash; the &ldquo;For Larry&rdquo; column is not shown to clients</div>
+    </div>
+  </div>
+
+  <div class="room" onclick="this.classList.toggle('open')">
+    <div class="head"><span class="name">My Story</span><span class="mean">Becoming over time</span><span class="chev">&rsaquo;</span></div>
+    <div class="line">Turning points, realizations, chapters &mdash; in your own words.</div>
+    <div class="fn">Insights &middot; reflections &middot; milestones &middot; history</div>
+    <div class="panel"><h4 style="font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);margin:0 0 12px;font-weight:600">For you</h4>
+      <ul style="margin:0;padding-left:16px;color:var(--dim);font-size:13px;line-height:1.95">
+        <li>Mark a turning point when you notice one</li><li>See what has changed across chapters</li>
+        <li>Revisit earlier reflections</li><li>Your history, authored by you</li></ul>
+      <div class="enter">Enter My Story &rarr;</div></div>
+  </div>
+
+  <div class="room" onclick="this.classList.toggle('open')">
+    <div class="head"><span class="name">The Room</span><span class="mean">A place to think</span><span class="chev">&rsaquo;</span></div>
+    <div class="line">Clarify a decision, explore a tension, listen to yourself think.</div>
+    <div class="fn">Private reflection &middot; conversation &middot; between-session support</div>
+    <div class="panel"><h4 style="font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);margin:0 0 12px;font-weight:600">For you</h4>
+      <ul style="margin:0;padding-left:16px;color:var(--dim);font-size:13px;line-height:1.95">
+        <li>Think something through, now</li><li>Available between sessions</li>
+        <li>Private unless you choose otherwise</li><li>Keep what matters; leave the rest</li></ul>
+      <div class="enter">Enter The Room &rarr;</div></div>
+  </div>
+
+  <p class="priv">Your space is yours. Nothing becomes part of your coaching relationship unless you choose to share it.
+    <b>Private by default &middot; Share intentionally</b></p>
+
+  <div class="quote">&ldquo;The price of anything is the amount of life you exchange for it.&rdquo;
+    <span>Henry David Thoreau</span></div>
+</div>
+</html>
