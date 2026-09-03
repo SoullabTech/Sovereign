@@ -61,6 +61,17 @@ ssh soullab@minisforum 'docker exec maia-sovereign printenv GIT_COMMIT'
 | 4 | **Working sign-in** | tested end-to-end on the deployed build |
 | 5 | **Fictional demo identity** | see the constraint below — this is the strictest condition and the easiest to fail |
 
+### Freeze the architecture. Clean the content.
+
+Two things must not be confused in the hours before the meeting:
+
+| | |
+|---|---|
+| **FREEZE** — the information architecture | Layout, composition, the fold, the rooms' placement, copy. Untouched. This is what is under observation. |
+| **CLEAN** — the identity and content | The account's kept acts, carried thread, coach name. Must be fictional. This contaminates a different test and must be fixed. |
+
+The founder's screenshot carried *"The Writer's Studio and the Desktop MAIA"* — unmistakably live Kelly context. That is the thing to change. **Changing anything else is changing the experiment.**
+
 ### The demo identity must be fictional
 
 The account Larry is shown must contain **invented content only**. "Larry-relevant" means *plausible for his clientele* — it does not license using his material or anyone's real life.
@@ -100,6 +111,39 @@ Six stops. Two states observed separately. Each stop: **show it, say nothing, wa
 | 4 | **The Room** | `/now-what/room` | "What would you say to it?" |
 | 5 | **Keep** | gesture inside The Room | "What just happened to what you wrote?" |
 | 6 | **Return** | back to `/now-what` | "What is it asking you?" |
+
+### ⭐ The one thing to watch at stops 3 and 6 — pre-recorded, 2026-09-02
+
+**Finding, from the founder's own encounter with the deployed Home:**
+
+> **Home visually declares itself finished before the product has revealed its architecture.**
+
+The five rooms — My Question · My Work · My Coaching · My Story · The Room — render correctly, but **below the fold by design**. `ClientHome.tsx:366`: *"Everything below this rule is out of the first viewport by design: the rooms stay reachable, demoted, never competing with the return."* The return section takes `min-height: calc(100vh - 90px)`, so the first viewport is full by construction.
+
+What the eye meets: the carried thread, "What happened since?", the input — then a large field of empty space. **No partial card, no section edge, no heading, no background change, no chevron.** The composition reinforces closure rather than continuation.
+
+**Why this outranks a navigation nit:** the rooms are what communicate *what Now What is capable of being*. If Larry never sees them, the honest description of what he encountered is **"MAIA gives me a prompt and somewhere to journal."** That is a perceptual loss about the product's nature, not a wayfinding inconvenience.
+
+**The founder — who designed the five-room ontology — looked at the first viewport and read it as a journal.** Larry has none of that prior knowledge.
+
+#### The question to answer, without coaching him
+
+> **Does he scroll unprompted? If not, at what point does he decide he has seen everything?**
+
+Both outcomes are findings:
+
+| He does | It means |
+|---|---|
+| Presses into the input, writes, or sits — believing he has arrived | Home's composition is doing the talking, and it is saying *finished* |
+| Scrolls and finds the rooms | The demotion works; the concern was the founder's context, not the design |
+
+⛔ **Do not prompt the scroll.** Do not say "there's more below." One sentence from you destroys the only clean run of this test that exists.
+
+⛔ **Do not repair it tonight.** A fix made the evening before replaces the strongest available evidence with an untested guess.
+
+**Preserved direction, NOT authorized** — if the problem reproduces with Larry, the repair is not a "↓ scroll for more" cue. It is likely architectural: let the next world **peek into the first viewport** so the page itself communicates continuation. Recorded as direction only; no design or code authority follows from it.
+
+---
 
 **Stop 6 is the state in the screenshot.** It is the *authenticated Return state*, not the whole product. If it reads thin to Larry when shown cold, that is evidence about the walk's framing, not proof the screen is defective.
 
