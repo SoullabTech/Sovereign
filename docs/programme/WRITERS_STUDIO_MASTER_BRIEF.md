@@ -95,6 +95,10 @@ The member should learn: *whatever I am creating, this is where my work develops
 
 ## 3. Programme state
 
+> **Superseded 2026-09-03 — read with Amendment 5 §A5.5.** The block below records the state at
+> the time of writing. WS-01 was later CLOSED — OVERTAKEN / SUPERSEDED and the freeze retired from
+> live state without a release act; the Programme Board carries the reconciliation. Not rewritten.
+
 ```text
 Design archaeology                  COMPLETE
 Studio grammar / C1–C6              COMPLETE
@@ -145,6 +149,9 @@ Legacy imports cannot be retrospectively certified if the original artifact is u
 **Never manufacture provenance.**
 
 ## 7. Immediate gate — WS-01
+
+> **Historical 2026-09-03 — see Amendment 5 §A5.5.** This gate was designed and never walked;
+> its substance reached canonical by another route. Kept as written.
 
 **WS-01 — Source Custody + Freeze Release.** Purpose: make the existing founder acceptance gate
 truthful and executable. **Not** to implement Phase 3A.
@@ -1139,3 +1146,81 @@ publishing utility, or the Developmental Editor alone.**
 
 Partial delivery is reported as partial delivery, against the census in the cockpit. A green suite,
 a shipped editor, and an accepted unit are **not** fruition.
+
+---
+
+# Amendment 5 — Release is not fruition (founder, 2026-09-03)
+
+Ratified by founder ruling on 2026-09-03. Preserves A4.21 in its original purpose and adds one
+distinction the programme lacked: **product release** is not **programme fruition**.
+
+## A5.1 — The distinction
+
+A scoped Writer's Studio release may occur before the entire Core Capability Mandate (Amendment 4)
+is complete.
+
+Any such release must state the capability boundary it actually delivers and carry the current
+Programme Board census (`CAPABILITY MANDATE CENSUS`) with its release record. No release may imply
+that an absent capability exists.
+
+**A4.21 governs claims of completion and programme success, not the existence of intermediate
+product releases.**
+
+`Private Beta`, `1.0`, and later product releases are milestones in the programme. They are not
+declarations that the programme has reached fruition.
+
+**Programme fruition remains unavailable while any capability required by the Core Capability
+Mandate remains materially undelivered.**
+
+## A5.2 — Release thresholds
+
+| Milestone | Threshold |
+|---|---|
+| **Developmental Private Beta** | Stage 7 **DONE / PROVED** + Stage 8 **CLOSED and ACCEPTED** |
+| **Public Writer's Studio 1.0** | Stages 7–10 **CLOSED and ACCEPTED**, with the live capability census attached to the release record and release acceptance recorded |
+| **Programme fruition** | Stage 15 complete **and** the A4 mandate census demonstrates the mandated capability set has actually been delivered and accepted |
+
+Stages 11–15 (Field View, Refine, Review, Publish, Expression) are post-1.0 expansion under this
+amendment. They remain binding programme scope; they are not a precondition of release.
+
+## A5.3 — What a release record must carry
+
+```text
+release name              Developmental Private Beta | Writer's Studio 1.0 | …
+canonical SHA             the exact commit released
+deployed provenance       GIT_COMMIT of the running container == canonical SHA
+capability boundary       what this release delivers, in the census's own vocabulary
+census snapshot           the CAPABILITY MANDATE CENSUS table as of that SHA
+absent / partial rows     listed by name — never omitted, never implied present
+founder felt-gate         A1.10 result, recorded as a human act
+release acceptance        a founder artifact, not a green suite
+```
+
+A release record that cannot carry all eight rows is not a release; it is a deploy.
+
+## A5.4 — Relation to the existing amendments
+
+- **A4.21 stands unchanged.** Narrowing Writer's Studio into a manuscript editor, an AI writing
+  assistant, a publishing utility, or the Developmental Editor alone remains prohibited as a
+  claim of success. A release under A5 is reported as partial delivery, against the census.
+- **A2.5 (definition of full fruition) stands unchanged.** A5 names when the product may be used,
+  not when the programme is finished.
+- **A3.1 stands unchanged.** A release milestone appearing on a roadmap admits no feature and
+  opens no unit. Launch work runs through its own lane and its own trigger.
+
+## A5.5 — Programme-history adjudication: WS-01 and the Canvas / Phase-1 freeze
+
+Recorded here so the brief's own §3 and §7 can be read correctly without rewriting them.
+
+> **WS-01 is CLOSED — OVERTAKEN / SUPERSEDED, not ACCEPTED.** The WS-01 acceptance path and the
+> Canvas / Phase-1 freeze attached to it were rendered obsolete by the later canonical Writer's
+> Studio architecture and the Stage 6 / 6A progression. Do not invent a WS-01 acceptance walk,
+> acceptance date, or recorded freeze-release event that did not occur. Canonical advanced while
+> the live board continued carrying an earlier freeze state; the board was reconciled on
+> 2026-09-03 to the architecture that actually became canonical. Historical records remain
+> historical and are not rewritten.
+
+Evidence: the WS-01 substance reached canonical at `cc1f1ea10` (2026-08-27) inside an unrelated
+merge; `AuthorStructureCommand` at `27729b31e` / PR #1169 (2026-09-02). No P0-D walk and no Founder
+Acceptance artifact exist. §7 below and `WS-01_SOURCE_CUSTODY_UNIT_DEFINITION.md` describe the gate
+as it was designed; the Programme Board's Reconciliation record describes what happened to it.
