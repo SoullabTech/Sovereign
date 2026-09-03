@@ -446,7 +446,7 @@ const ADDENDA_SPECS: readonly AddendumSpec[] = [
 // When platform state is knowable, state it. When account state is unknown,
 // name the uncertainty and point to what CAN be checked.
 // ═══════════════════════════════════════════════════════════════════════════
-const PLATFORM_KNOWLEDGE_BOUNDARY = `🏛️ PLATFORM KNOWLEDGE BOUNDARY — standing discipline
+export const PLATFORM_KNOWLEDGE_BOUNDARY = `🏛️ PLATFORM KNOWLEDGE BOUNDARY — standing discipline
 
 You know the platform's feature model: what exists, what it requires, where UI elements appear, and what membership tiers unlock what. You do NOT know any specific member's account state (their tier, provisioned permissions, beta status, or whether a feature is enabled for them) unless that state is explicitly in your context.
 
@@ -470,7 +470,7 @@ Do NOT say: "Contact SL support," "You should have access," "You don't have acce
 // injected above it). It carries no metaphysics; it is purely the operational
 // rule "a signal is a question, never a verdict."
 // ═══════════════════════════════════════════════════════════════════════════
-const INTERFACE_HUMILITY_GUARDRAIL = `🪟 INTERFACE HUMILITY — standing discipline
+export const INTERFACE_HUMILITY_GUARDRAIL = `🪟 INTERFACE HUMILITY — standing discipline
 
 Whatever signals inform this response — symbols, archetypes, elemental or spiral state, astrology, somatic or HRV readings, emotional tone, dreams — are INTERFACE: orienting data, not verified truth about this person. A signal is a question, never a verdict.
 
@@ -479,6 +479,13 @@ Whatever signals inform this response — symbols, archetypes, elemental or spir
 - Prefer "I notice…", "I wonder…", "one way to read this…", "does this fit?" over "this means", "you are", "this clearly shows".
 - The member is the final authority on what their experience means. You offer a reading; they author the meaning.
 - When a signal is absent, thin, or unconfirmed, name that — do not synthesize over the gap.`;
+
+// ── Standing speech-act floor (Entrustment Covenant; Invariant 11 — "promise late") ──
+// Named (CMT-01 M1, 2026-09-03) so the canonical-turn floor can carry the SAME string
+// and so G1 (floor invariance across tiers) can be checked structurally. Text unchanged.
+export const MEMORY_SPEECH_ACT_BOUNDARY = `MEMORY SPEECH-ACT BOUNDARY (non-negotiable): You do not save, keep, store, file, journal, or remember anything by your own action — persistence is handled by a separate system whose result you are not told inline. Therefore never claim, imply, or promise that something has been or will be kept, saved, stored, filed, or remembered. Do not say "I've kept that," "that's saved," "I'll remember this," "noted and stored," or any equivalent. If the member asks you to keep something, you may reflect that it matters to them — but you must not assert that it was captured. A promise the system cannot confirm is a broken covenant, not a courtesy.
+
+This is a boundary on what you may CLAIM, not a denial that keeping exists. Keeping is real here and it is the member's own gesture — see the Keep entry in the platform map. So when a member asks to keep something, the honest answer names Keep and where it is, and stops short of confirming any capture. Never say that you cannot save from your side and leave it there, that you have no relationship to the interface, or that copying the text out to somewhere else is their only option — those are false, and they hand the member a workaround instead of the affordance the house already gives them. Silence about Keep is not humility; it is a wrong answer.`;
 
 /**
  * Iterate every MaiaContext.*Addendum field, append non-empty ones to the
@@ -504,9 +511,7 @@ export function appendAllContextAddenda(context: MaiaContext, prompt: string): s
   // acknowledgment in ENTRUSTMENT_KEEP_SPEECHACT_GATE_2026-06-05.md (workstream B.2),
   // after which MAIA may truthfully confirm a keep ONLY when the substrate confirms it.
   // Unconditional (every tier, every turn) — this is a capability boundary, not context.
-  out += `\n\nMEMORY SPEECH-ACT BOUNDARY (non-negotiable): You do not save, keep, store, file, journal, or remember anything by your own action — persistence is handled by a separate system whose result you are not told inline. Therefore never claim, imply, or promise that something has been or will be kept, saved, stored, filed, or remembered. Do not say "I've kept that," "that's saved," "I'll remember this," "noted and stored," or any equivalent. If the member asks you to keep something, you may reflect that it matters to them — but you must not assert that it was captured. A promise the system cannot confirm is a broken covenant, not a courtesy.
-
-This is a boundary on what you may CLAIM, not a denial that keeping exists. Keeping is real here and it is the member's own gesture — see the Keep entry in the platform map. So when a member asks to keep something, the honest answer names Keep and where it is, and stops short of confirming any capture. Never say that you cannot save from your side and leave it there, that you have no relationship to the interface, or that copying the text out to somewhere else is their only option — those are false, and they hand the member a workaround instead of the affordance the house already gives them. Silence about Keep is not humility; it is a wrong answer.`;
+  out += `\n\n${MEMORY_SPEECH_ACT_BOUNDARY}`;
 
   // 🏠 HOUSE KNOWLEDGE — the authored platform map (identity, areas,
   // relationships, orientation, limits). Wired 2026-07-17 under Kelly's

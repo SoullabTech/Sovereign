@@ -157,3 +157,16 @@ A routing read may consume routing_state; a recognition read may only consume me
 4. **`systemPromptModifier` whitelist** (Proposed → B).
 5. **Memory caller-contract test** (Proposed → B/A).
 6. **Retire the "~49%" class** — sweep for numbers/mechanisms carrying explanatory authority without a measured substrate (one already found and struck during audit).
+
+### CMT-01 — Canonical turn gates (added 2026-09-03; runner: `tests/constitutional/refusal-registry/cmt-01-gates.ts`)
+
+Separate entrypoint from `index.ts` on purpose: R25 and R26 are **expected RED until M3** — the witnessed baseline the migration burns down, not a regression. They join `index.ts` when M3 turns them green. Spec: `docs/programme/MAIA_CANONICAL_TURN_ARCHITECTURE_SPEC_v0.1.md` §8.
+
+| Refusal | Gate | Grade | Enforced by | Test status | Hostile fork must change |
+|---|---|---|---|---|---|
+| **No cognition tier renders without the standing sovereignty floor** (speech-act boundary · platform boundary · interface humility) | G1 | Proposed | `appendAllContextAddenda` (CORE, DEEP-repair) today; `canonical-turn/render.ts` after M3 | **R25 — RED, expected until M3** (FAST builds its own template, census D1) | remove one guardrail append, or route a tier around the renderer |
+| **Cognition cannot be handed an open, untyped context channel** | G3 | Proposed | `canonical-turn/types.ts` (no index signature); `getMaiaResponse(turn: CanonicalTurn)` after M3 | **R26 — RED, expected until M3** (`(meta as any)` ×204 occurrences / 200 lines in `maiaService.ts`) | re-introduce `Record<string, unknown>` / `meta` on the turn or the request |
+| **No block enters a turn whose producer is not a `PRODUCER_REGISTRY` key** (three-field axis; no slash classes; no `as any`) | G2 | Proposed | `canonical-turn/producerRegistry.ts` (`ProducerId = keyof`), `adjudicate.ts` (runtime refusal) | **Demonstrated (R27)** ✅ + runtime in `canonical-turn/__tests__` | widen `ProducerId` to string, delete the runtime refusal, or add `as any` |
+| **A CanonicalTurn identity originates only from the one verified session resolver** | G4 | Proposed | `canonical-turn/identity.ts` (single resolver import; private mint WeakSet); `construct.ts` gate | **Demonstrated (R28)** ✅ + runtime forgery test | import a second resolver, read the body, export `mint()`, drop the gate |
+| **The participation manifest is complete over admitted and content-free; emission only** | G6 | Proposed | `canonical-turn/manifest.ts`; `TurnParticipationManifest` type | **Demonstrated (R29)** ✅ + digest-equality test | add `text` to a manifest row, filter admitted, or write a table |
+| **Migration cannot expand the authorized field — pp-1 admission = adjudicated seed** | G9 | Proposed | `canonical-turn/policy.ts` vs `fixtures/cmt-01-pp-1-admission.json` | **Demonstrated (R30)** ✅ | add a room / override cell without a policy-version bump |

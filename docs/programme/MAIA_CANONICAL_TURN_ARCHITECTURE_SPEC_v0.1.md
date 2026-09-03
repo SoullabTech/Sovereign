@@ -15,7 +15,7 @@ Target      not "everything calls one function" — every turn that CLAIMS MAIA 
             crosses one governed, enumerable participation boundary before cognition
 ```
 
-**Status**: DRAFT v0.1 — STOP for adjudication before implementation.
+**Status**: **APPROVED v0.1 (2026-09-03) subject to the §5.2 amendment below. Implementation authorized M0–M2 only.** M3 (authoritative cognition cutover) requires M0–M2 evidence presented and adjudicated. See §14-A.
 
 ---
 
@@ -322,6 +322,37 @@ silence a failure is the wrong action* (`maiaRuntimeContext.ts:41–58`).
 The `system_inferred` class is the one MIPA treats most restrictively (§6.3), and it is the class
 CDPI will eventually produce into. Its participation contract is the artifact CDPI's activation
 gate names.
+
+
+### 5.2-A — AMENDED AXIS (Decision 2, 2026-09-03) — supersedes the single scalar above
+
+The table in §5.2 mixed three properties into one field: who authored it, how it was formed,
+and what authority it carries. That risks re-laundering what Phase 0 separated. The closed
+runtime type carries **three fields**, never one scalar and never a slash-compound value:
+
+```text
+authoredBy           house | member | practitioner | system | collective
+participationClass   constitutional | authored | placed | marked | declared
+                     | retrieved | computed | inferred | collective
+authority            situate | compute | infer
++ provenance, consentBasis (unchanged)
+```
+
+Rules the axis makes structural:
+
+- **A member gesture alters participation/authority, never authorship.** A member-marked MAIA
+  interpretation is `authoredBy: system · participationClass: marked · authority: infer`. A
+  journal the system retrieved is `authoredBy: member · participationClass: retrieved ·
+  authority: situate`.
+- **Mixed producers partition** into separately classifiable `CandidateBlock`s before MIPA.
+  Registry entries that carry mixed material today (`member.episodic_recall`,
+  `retrieved.conversational_recall`, `retrieved.significant_moments` — each block holds member
+  and MAIA text) are marked `partitionPending` and owe a partition at M3.
+- The manifest records **both** `authoredBy` and `participationClass` per admitted row.
+
+Implemented: `lib/maia/canonical-turn/types.ts` (`AuthoredBy`, `ParticipationClass`,
+`Authority`), `producerRegistry.ts` (38 producers, each on all three fields), R27 (structural:
+every entry carries both; no slash values).
 
 ### 5.3 v1 seed — the currently authorized field, and nothing more
 
@@ -716,3 +747,44 @@ system, a truth record, or evidence of continuity. Does not claim parity until t
 runs on three real devices.
 
 **STOP.** Implementation requires separate authorization.
+
+---
+
+## 14-A. FOUNDER ADJUDICATION — 2026-09-03 (recorded verbatim in substance)
+
+| § | Decision | Ruling |
+|---|---|---|
+| 1 | `forward_readiness` / `memory_influence` on CORE/DEEP | **ADMIT.** Tier is cognition strategy, not participation authority. `inferred.memory_influence` remains system-originated inference under full MIPA restraint / room-policy / inference-cap treatment; admission across tiers does not elevate its authority. |
+| 2 | Epistemic-class axis | **AMEND before M1** → §5.2-A. `epistemicClass` → `participationClass` + mandatory `authoredBy`; `authority`, provenance, consent basis retained; no slash-compound values; mixed producers partition; manifest carries both. |
+| 3 | `voice/stream-conversation` | **RETIRE the independent cognition path.** Do not migrate body-first identity and separate memory/cognition assembly. Bounded production-liveness witness before the route's retirement behavior; unexpected legitimate use returns for adjudication. Future voice = transport over canonical construction, not a second mind. |
+| 4 | `sovereign/app/maia` | **STRUCTURALLY RETIRE — explicit 410 first.** Source/client census + bounded 30-day Caddy witness (zero exact-route hits) are sufficient. Do not onboard to preserve dormant architecture. |
+| 5 | `practitioner/practice-field/draft` | **ALLOWLIST v1** as NON_MAIA_COGNITION with reason `practitioner_tool · not_member_maia_turn · mirror_invariant_bounded`. Exemption expires if it claims MAIA, loads member intelligence-field material, or acts relationally toward the member. |
+| 6 | Manifest custody | **EMISSION ONLY v1.** No durable table during CMT-01. Use for seam observability, structural comparison, cross-surface witness, P3-global certification under existing operational retention. Durable content-free record → separate post-seam custody adjudication. |
+| 7 | Naming | **RATIFIED**: `lib/maia/canonical-turn/`, `CanonicalTurn`, `CandidateBlock`, `ProducerId`, `PRODUCER_REGISTRY`, `TurnParticipationManifest`, `resolveCanonicalIdentity`, `adjudicateParticipation`, `renderTurnForCognition`. MIPA stays the architecture/concept name; code uses `adjudicateParticipation`. |
+
+**Precision on identity**: the §4.1 dependency is approved but does not block M0–M4 globally.
+`/list` already uses the verified resolver. It is an onboarding prerequisite per remaining
+ingress; living-field cannot call its identity `verified` until it adopts the one resolver;
+voice avoids the work by retirement.
+
+**G5 jurisdiction confirmed**: if a route claims MAIA, direct Anthropic invocation does not
+exempt it from canonical construction; a genuinely non-MAIA tool must be explicitly
+allowlisted with a reason.
+
+### Implementation authorization
+
+```text
+M0  write and witness the expected-red constitutional falsifiers            AUTHORIZED
+M1  types · amended registry · adjudication · manifest · renderer, 0 callers AUTHORIZED
+M2  CanonicalTurn constructed on /list in SHADOW / adapter mode;
+    legacy assembly remains response-producing.
+    Acceptance: paired legacy/canonical structural zero-diff witness
+    + hostile mutation proving the comparison goes non-zero
+      when one side loses a provider.                                        AUTHORIZED
+M3  authoritative cognition cutover                                          NOT until M0–M2
+                                                                             evidence adjudicated
+```
+
+No new retrieval, CDPI, P4/P5, P2b, client redesign, or deployment is authorized.
+
+**Evidence record for M0–M2**: `docs/programme/CMT-01_M0-M2_WITNESS_2026-09-03.md`.
