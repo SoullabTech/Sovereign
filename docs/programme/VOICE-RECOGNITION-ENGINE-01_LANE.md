@@ -1,6 +1,12 @@
 # VOICE-RECOGNITION-ENGINE-01 — Layer 2 recognition upgrade
 
-**Status:** `608e3ac` on `claude/layer-2-recognition-upgrade-99d1re` — **architecture + implementation complete / native acceptance pending.** Not a promotion candidate. No further building in this lane (founder ruling 2026-09-03, §8).
+**Status:** **IMPLEMENTATION COMPLETE — NATIVE ACCEPTANCE AND DEVICE WITNESS PENDING.**
+`608e3ac` (implementation) + `6bfc5d2` (governing record) on
+`claude/layer-2-recognition-upgrade-99d1re`. Not a promotion candidate. The
+development act *in this environment* is closed; **the lane is not.** Its
+terminal state is assigned only after the Mac witness, and is one of:
+`CLOSED — LEGACY RETAINED` · `CLOSED — MODERN EXPERIMENTAL` · `CLOSED — PROMOTION RECOMMENDED`.
+No further building before then (founder ruling 2026-09-03, §8).
 **Authorized:** 2026-09-03, founder directive (this document is the ruling the
 Voice Ecology Roadmap §5 recorded as *not recovered*; it is dated here, not
 back-dated).
@@ -151,7 +157,10 @@ continuous restart, background recovery, integration into `OracleConversation`.
 
 ---
 
-## 8 · Closure record — founder ruling 2026-09-03 (after `608e3ac`)
+## 8 · Development-act record — founder ruling 2026-09-03 (after `608e3ac`)
+
+*This section closes the development act in this environment. It does not
+close `VOICE-RECOGNITION-ENGINE-01`; see the terminal states in the status line.*
 
 **Classification:** *architecture + implementation complete / native acceptance
 pending.* Jest + typecheck validate the contract, the policy, and the JS turn
@@ -174,9 +183,10 @@ through a false common model.
    committed pbxproj genuinely missing it, or did the working Xcode project
    carry an uncommitted registration? This decides how earlier device evidence
    may be read.
-3. **Establish the actual baseline build.** Repo says `2511`; the historical
-   witness says `2515`. Record the SHA and build installed on the test phone
-   before comparing engines. Do not paper over the difference.
+3. **Bind the witness to reality.** Repo says `2511`; the historical witness
+   says `2515`. Before comparing engines, record the actual: git SHA · app
+   build · device · iOS version · Xcode/SDK. Do not silently equate the
+   historical `2515` witness with repo build `2511`.
 4. **Run the same-device A/B witness.** Same phone, locale, microphone
    conditions, spoken passage. `baseline → modern` — not two builds, not two
    environments.
@@ -198,7 +208,7 @@ through a false common model.
 **Do not flip `legacy_until_witnessed`** — even if SpeechAnalyzer sounds
 obviously better in the first test. The default changes only after the modern
 engine behaves correctly across the whole lifecycle:
-`start → speech → stalls/interruption → continued speech → explicit turn closure → next turn`.
+`start → speak → hesitate → continue → recognizer events/restarts → explicit human close → next turn`.
 That lifecycle is where the previous voice system actually hurt.
 
 **Do not open another recognition-architecture lane.** Unless the compile
