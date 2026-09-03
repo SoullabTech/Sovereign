@@ -122,3 +122,38 @@ Items 1 and 3–5 are packaging. Item 2 is the product decision. Item 6 is the s
 ## 6. What this does not change
 
 Attachment A §3 stays empty. The taxonomy stays unratified. Transcript custody stays unresolved. **Selling the platform to others does not require any of Larry's material — and must not include it.**
+
+---
+
+## 7. Carry-forward after the first Larry encounter (2026-09-03)
+
+**Posture correction.** The thin conversation is not a demo of what Larry might want. It is a **response to what did not work for him in the existing experience** — which was the practitioner product, not this one. So his prior complaints are **not requirements against the new product** until he has actually encountered it.
+
+Working name for the lane: **Larry response build** (not "tomorrow's demo" — that framing is stale).
+
+### Sequence
+
+1. **Reconcile the production host.** Seven uncommitted deploy-tooling files on minisforum, host 90+ commits behind. Establish a trustworthy deployable state first — not UI, not Lane A.
+2. **Deploy and witness `/now-what/conversation`.** Prove the actual path end to end.
+3. **Let Larry encounter the thin product.** Only then can his feedback be sorted into three classes: complaints that vanish because the practitioner UI vanished · actual conversational defects · genuinely missing capabilities.
+4. **Address his requests from evidence**, not from impressions attached to a retired UX.
+
+### His three open items
+
+**Conversational identity.** `"You are MAIA"` is hardcoded in three system prompts (`app/api/now-what/interview/route.ts` 107, 144, 161). That is the real boundary; the visible label is cosmetic. The solution is **field-configurable conversational identity**, never a Larry-specific string replacement. Larry decides whether it is called Now What?, carries another name, or has no persona-name at all.
+
+**Uploads — three classes, not one bucket.** An attachment must not become durable memory merely because someone dropped it into a chat:
+
+| Who uploads | Where it lands | Why |
+|---|---|---|
+| **Practitioner** | field corpus, persistent | a deliberate act of publishing into their field |
+| **Client** | conversation context, that conversation only | dropping a file is not a decision to be remembered |
+| **Client, then Keeps it** | durable client-held material | the member's own act of significance |
+
+This is the Memory/Keep distinction (§ above) applied to files: **memory sustains the relationship; Keep is the person saying *this matters*.** A generic upload bucket would collapse them.
+
+**"Glitches."** Do not repair an unspecified complaint against a surface he has never used — `/now-what/conversation` has never been deployed, so he met the practitioner product. Removing navigation, framing transitions and room state may remove the perceived glitch outright. After deployment, ask for reproduction **against the new surface**; then it becomes an engineering observation rather than an impression.
+
+### What this protects
+
+Larry's dissatisfaction no longer determines the architecture of the practitioner product. It can inform his branded conversational product without collapsing the two back together.
