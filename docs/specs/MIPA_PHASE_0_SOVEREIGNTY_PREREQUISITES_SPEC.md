@@ -625,8 +625,118 @@ The excluded arm of the union carries no `insight` and no `element`. Not a filte
 #### What P3f did NOT prove
 
 - It does not certify a codebase-global non-participation claim for `breakthrough_moments`. It certifies that every reader **in this tree** consumes the shared boundary, and that a new one fails **because it is new**.
-- `app/api/maia/field/route.ts` still reads the raw insight. It is an **access** surface, not a composition path — a Next.js route handler is a leaf that nothing imports, and the suite asserts that. P1, not P3.
+- `app/api/maia/field/route.ts` still reads the raw insight. It is an **access** surface, not a composition path. *Founder correction, 2026-09-03:* "nothing imports it" is **not** evidence that an API route is unreachable — routes are externally addressable by construction. What the absence of importers establishes is narrower, and is all the claim needs: **no source module consumes its output**, so nothing re-enters MAIA cognition through an in-tree path. Participation would require evidence that it does. Its truthfulness, provenance framing and member-access semantics belong to **P1/access governance**, and P3 is not reopened on it without participation evidence.
 - The global architectural ceiling (P3-CSC, outcome C) is untouched.
+
+---
+
+### P6-E — Doorway Consent Integrity · execution record
+
+> ### ✅ P6 CERTIFIED — 2026-09-03 · **Grade A construction · Grade B on the cast arm** · Refusal **R30**
+>
+> Certification: `__tests__/mipa-p6-doorway-consent-integrity.test.ts` — **38/38 passing**, with **ten hostile mutations verified failing**, each application confirmed by a structural witness, each restored by content snapshot, and the restored suite re-run green.
+
+#### The three properties this separates
+
+```text
+CONTENT AUTHORSHIP     Who said or wrote this?
+         ≠
+EPISTEMIC AUTHORITY    What kind of claim is it?
+         ≠
+RETURN AUTHORITY       Who authorized MAIA to resurface it?
+```
+
+> **A `contextual_doorway` return policy requires certifiable member-conferred return authority.** Not practitioner intent. Not system inference. Not "this seems useful". Not participation in the original session. Not absence of an objection. Not a column default.
+
+#### Topology, derived from source before any repair
+
+`return_preference` is a discrete persisted field on **one** table, `member_memory_atoms`, row-wide, `CHECK ∈ {member_pulled, contextual_doorway, ritual_review_opt_in}`. That makes the certification boundary every **assignment** of the permission — a far cleaner closed set than the P3 prompt problem.
+
+| Writer | Actor | Before |
+|---|---|---|
+| `lib/psyche/portfolio.ts` — Keep `INSERT` | the member | **omitted the column** → inherited the DEFAULT |
+| `app/api/studio/with-me/…/route.ts` — practitioner bridge | the facilitator, on a **different** person's material | **hardcoded `'contextual_doorway'`** |
+| `lib/psyche/portfolio.ts` — `set_return_preference` | the member | the one member-conferred path |
+
+Readers: the ambient loader (`return_preference IN ('contextual_doorway','ritual_review_opt_in')` — the participation gate), the affinity index, the member's own portfolio and workbench views. `member_pulled` means, in the schema's own words, *"only when member asks directly (most restrictive)"* (`20260521000001`). A member-facing assignment path **does** exist: the Sealed ↔ May return toggle on `/maia/keep-capture`. No copy, import or migration path reproduces the preference.
+
+#### Two violations, not one
+
+**1 — The known one.** The practitioner bridge collapsed *facilitator authored → system stores → MAIA may resurface* into a single hardcoded value. `facilitatorId` is the authenticated caller; the subject is `session.member_id` — a different person.
+
+**2 — The one the topology pass found.** Migration `20260523000001` set the **column DEFAULT** to `contextual_doorway`. A column default does not know who is writing: *any* INSERT omitting the column inherited member-scale consent, whoever the actor was. A permissive default is a consent decision made by whoever wrote the schema and applied to everyone who ever writes a row.
+
+#### The repair — the permission is unconstructable, not merely discouraged
+
+`lib/psyche/returnAuthority.ts` holds a branded `AuthorizedReturnPreference` whose brand symbol is **not exported**: a module that cannot name the key cannot build the value. Two constructors, and only two:
+
+- `memberConferredReturn(preference, evidence)` — **throws** unless `actingMemberId === subjectMemberId`. The check is on **identity, not role**, because a role allowlist is a thing that grows.
+- `noContextualReturn(reason)` → `member_pulled`, and refuses an unstated reason.
+
+`returnPreferenceValue()` is the only way out of the branded type, so a writer that wants a permission must hold an authorization to get one. **Grade B, stated:** a deliberate `as unknown as` cast can still forge one; that escape hatch is **detected** by the suite rather than claimed impossible.
+
+The keep doctrine is preserved exactly. Member keeps still confer contextual return — now **stated at the write site** and constructed from the member's own identity, rather than inherited by omission:
+
+```text
+before: omit the column → contextual_doorway, whoever you are
+after:  omit the column → member_pulled; the permission must be constructed
+```
+
+Migration `20260903000001` flips the default to `member_pulled` and backfills the practitioner-written rows.
+
+#### The one decision with production-data consequences
+
+The backfill resets `return_preference` to `member_pulled` for rows matching `source_type='practitioner_observation' AND generated_by='practitioner-observation' AND return_preference='contextual_doorway'`. These carry a live ambient permission no member conferred.
+
+Could such a row instead reflect a member act? From the practitioner-written state the member's only available move is **Reseal** — and a resealed row is no longer in this set. The one indistinguishable case is a member who resealed and then re-allowed, and **no source-derived discriminator separates it**: `last_touched_at` is `NOT NULL DEFAULT now()`, so it does not record whether a gesture ever ran. The asymmetry decides it: leaving the rows keeps an unauthorized permission live and ambient; an over-broad reseal costs that member **one click** on an affordance that already exists — the same member-driven path `20260523000001` named for pre-existing material. Reversible by the member, never fabricating authority. Fail-closed, so it runs.
+
+**Authorship is untouched.** `source_type`, `facilitator_id`, `provenance`, `epistemological_status` and `generated_by` are not modified by any statement in the migration, and the suite proves it against the `SET` clause specifically.
+
+#### Anti-laundering, both directions
+
+```text
+authored_by = practitioner        may coexist with
+return_authorized_by = member
+```
+
+Return authority is never inferred from authorship; authorship is never rewritten from return authority. The boundary type carries **no authorship field at all** — a datum it cannot see is a rule it cannot be tuned to break.
+
+#### Capability contraction, quantified
+
+| | Before | After |
+|---|---|---|
+| Practitioner observations | written with contextual doorway | written, attributed, epistemically framed — **no contextual return** |
+| Any INSERT omitting the column | contextual doorway | `member_pulled` |
+| Member Keep | contextual doorway (by default) | contextual doorway (**by member identity, explicitly**) |
+| Member reseal / allow-return | worked | works, through the same boundary |
+
+#### Falsification — ten mutations, all verified failing, each structurally witnessed
+
+| # | Mutation | Witness (before → after) | Result |
+|---|---|---|---|
+| **Q1** | The practitioner hardcoding restored | bridge doorway literals 0 → 1 | ❌ 4 failed |
+| Q2 | The Keep INSERT drops the column and inherits the default | column named 1 → 0; bound sites 3 → 2 | ❌ 2 failed |
+| Q3 | The permissive default restored — every new atom gets doorway | resolved default `member_pulled` → `contextual_doorway` | ❌ 3 failed |
+| Q4 | The identity check made unreachable (`false &&`) | guard expression changed | ❌ 2 failed |
+| Q5 | A role allowlist added beside the identity check | guard expression changed | ❌ 2 failed |
+| Q6 | A third constructor manufacturing member authority | exported constructors 4 → 5 | ❌ 1 failed |
+| Q7 | A brand-new unclassified writer | assigners 3 → 4 | ❌ 2 failed |
+| Q8 | A doorway flag copied from another object with no evidence | bridge doorway literals 0 → 1 | ❌ 3 failed |
+| Q9 | The backfill widened, and it rewrites authorship | SET columns 1 → 2; predicates 2 → 0 | ❌ 2 failed |
+| **Q11** | `undefined` treated as a contextual doorway | bound sites 3 → 2 | ❌ 2 failed |
+| — | Restored | content-identical to snapshot | ✅ **38/38** |
+
+> **Q11 initially PASSED, and it is the N10 lesson arriving a second time.** The binding check was written at FILE scope — *does `returnPreferenceValue` appear in this module* — and the mutation left the Keep site untouched so the name still appeared, while swapping the gesture site for `gesture.preference ?? 'contextual_doorway'`. **A repair present at one site and a check written at file scope certify nothing about the other sites.** Replaced with a per-site binding assertion covering all three, plus the generalizing rule that a permission literal may appear in executable code only as the argument a member's gesture hands to `memberConferredReturn`.
+>
+> Four detector defects were caught by the suite's own controls before the mutation pass: the assignment scan read `WHERE return_preference IN (…)` in the ambient loader as an assignment — **a reader classified as a writer**, which would have made the closed set meaningless, and the §7 innocent-negative control is what caught it; and the migration check's `SET[^;]*` ran through the `WHERE` clause and read a row **selector** as a mutation of authorship.
+>
+> One further observation: the pre-existing `__tests__/studio/with-me-complete.test.ts` asserts the register, the primary register and `crossing_allowed` on that same INSERT — **and never asserted `return_preference`.** The hardcoded permission shipped inside a well-tested statement.
+
+#### What P6 did NOT do
+
+- It did not create the member-facing doorway-consent gesture for practitioner material. Until the member has a way to say *"you may bring this back"*, nobody says it for them.
+- It did not touch `member_daily_anchors.surface_preference`, which mirrors this vocabulary under **R08** and is a separate representation.
+- It did not implement P4/P5. Their three gestures — correction/change, endorsement, contextual constraint — are product primitives whose interaction design is adjudicated before they become database mechanics.
 
 ---
 

@@ -340,8 +340,17 @@ describe('P3f §2 — every reader of the representation shares one boundary', (
       'lib/memory/stores/BreakthroughStore.ts',
     ];
     // ACCESS-ONLY — P1, not P3. The member reading an inference about
-    // themselves is not MAIA thinking with it. A Next.js route handler is a
-    // leaf: nothing imports it, so it cannot be a composition path.
+    // themselves is not MAIA thinking with it.
+    //
+    // CORRECTION (founder, 2026-09-03): "nothing imports it" is NOT evidence
+    // that an API route is unreachable. Routes are externally addressable by
+    // construction, and import analysis says nothing about that. What the
+    // absence of importers DOES establish is narrower and is all this needs:
+    // no source module consumes this route's output, so its output does not
+    // re-enter MAIA cognition through any in-tree path. Participation would
+    // require evidence that it does. Its truthfulness and provenance framing
+    // belong to P1/access governance, and P3 is not reopened on it without
+    // participation evidence.
     const accessOnly = ['app/api/maia/field/route.ts'];
     expect(offenders.sort()).toEqual([...adjudicated, ...accessOnly].sort());
     for (const f of adjudicated) {
@@ -351,6 +360,9 @@ describe('P3f §2 — every reader of the representation shares one boundary', (
       });
     }
     for (const f of accessOnly) {
+      // Not "is it reachable" — an HTTP route always is. This asks whether any
+      // SOURCE MODULE consumes its output, which is the only question
+      // participation depends on.
       const importers = FILES.filter((g) => {
         if (g === f) return false;
         const spec = f.replace(/\.tsx?$/, '');
