@@ -132,7 +132,7 @@ h1 em{color:var(--gold);font-weight:400}
   font-size:16px;
   background:rgba(211,178,100,.05);
 }
-.bubble{
+.bubble{white-space:pre-wrap;
   max-width:min(84%,470px);
   padding:13px 15px;
   border-radius:16px 16px 16px 5px;
@@ -253,6 +253,11 @@ textarea::placeholder{color:#8c97ad}
   h1{font-size:43px}
   .composer-wrap{padding:13px 22px 16px}
 }
+.resource{margin-top:12px;border:1px solid rgba(211,178,100,.28);border-left:2px solid var(--gold);
+  border-radius:6px;padding:13px 15px;background:var(--panel-soft);}
+.resource .k{font-size:8.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);}
+.resource .t{font-size:16px;margin-top:5px;color:var(--ink);}
+.resource .d{font-size:12px;color:var(--dim);margin-top:5px;opacity:.85;}
 @media (hover:none){.starter:hover,.send:hover,.new-chat:hover{transform:none;background:inherit}}
 @media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
 </style>
@@ -317,6 +322,16 @@ textarea::placeholder{color:#8c97ad}
     return s.replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c];});
   }
 
+  function addResource(c){
+    var row=document.createElement('div');
+    row.className='message assistant';
+    row.innerHTML='<div class="avatar" aria-hidden="true"></div><div class="resource">'+
+      '<div class="k">'+escapeHtml(c.k)+'</div><div class="t">'+escapeHtml(c.t)+'</div>'+
+      '<div class="d">'+escapeHtml(c.d)+'</div></div>';
+    thread.appendChild(row);
+    requestAnimationFrame(function(){chat.scrollTop=chat.scrollHeight;});
+  }
+
   function addMessage(role,text){
     var row=document.createElement('div');
     row.className='message '+role;
@@ -329,21 +344,34 @@ textarea::placeholder{color:#8c97ad}
     requestAnimationFrame(function(){chat.scrollTop=chat.scrollHeight;});
   }
 
+  /* The three moments that communicate the product: it coaches, it
+     retrieves from their work together, it remembers across sessions.
+     Placeholder content only -- no coach's material is approved. */
   function replyFor(text){
     var t=text.toLowerCase();
+    if(/team|colleague|staff|direct report/.test(t)){
+      return {text:'Say more about the trouble. Is it that they are not doing what you need \u2014 or that something between you has gone quiet?\n\nYou described this team once as the part of the business you were proudest of. What changed?'};
+    }
+    if(/exercise|assigned|gave me|worksheet|homework/.test(t)){
+      return {text:'This one. You started it three weeks ago and stopped after the second part.',
+              card:{k:'From your work together',t:'[ Placeholder exercise ]',d:'Assigned 12 Aug \u00b7 2 of 4 parts complete'}};
+    }
+    if(/last week|told you|considering leaving|something changed|i think something/.test(t)){
+      return {text:'You said the decision felt like it was being made for you, and that you wanted to get in front of it.\n\nWhat changed?'};
+    }
     if(t.indexOf('decision')>-1 || t.indexOf('choose')>-1){
-      return 'Let’s stay with the decision before trying to solve it. What are the two or three possibilities you’re actually choosing between?';
+      return {text:'Let’s stay with the decision before trying to solve it. What are the two or three possibilities you’re actually choosing between?'};
     }
     if(t.indexOf('next')>-1 || t.indexOf('stuck')>-1){
-      return 'Before we decide what comes next, what feels most alive or unresolved in where you are now?';
+      return {text:'Before we decide what comes next, what feels most alive or unresolved in where you are now?'};
     }
     if(t.indexOf('larry')>-1 || t.indexOf('session')>-1 || t.indexOf('conversation')>-1){
-      return 'What would make that conversation useful for you? Name the one thing you most want to leave clearer about.';
+      return {text:'What would make that conversation useful for you? Name the one thing you most want to leave clearer about.'};
     }
     if(t.indexOf('off')>-1 || t.indexOf('feel')>-1){
-      return 'You don’t have to name it perfectly yet. What have you been noticing — in your attention, energy, work, or relationships — that tells you something is off?';
+      return {text:'You don’t have to name it perfectly yet. What have you been noticing — in your attention, energy, work, or relationships — that tells you something is off?'};
     }
-    return 'Tell me a little more. What feels most important about this right now?';
+    return {text:'Tell me a little more. What feels most important about this right now?'};
   }
 
   function submitText(text){
@@ -354,7 +382,11 @@ textarea::placeholder{color:#8c97ad}
     addMessage('user',text);
     input.value='';
     input.style.height='40px';
-    window.setTimeout(function(){addMessage('assistant',replyFor(text));},260);
+    window.setTimeout(function(){
+      var r=replyFor(text);
+      addMessage('assistant',r.text);
+      if(r.card) window.setTimeout(function(){addResource(r.card);},240);
+    },260);
   }
 
   form.addEventListener('submit',function(e){e.preventDefault();submitText(input.value);});
