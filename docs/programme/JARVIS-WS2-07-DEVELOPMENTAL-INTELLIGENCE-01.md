@@ -1,6 +1,6 @@
 # JARVIS-WS2-07-DEVELOPMENTAL-INTELLIGENCE-01
 
-> **Lane active. BUILD-07A open but PAUSED, blocked on a prerequisite. Nothing beyond it is.**
+> **Lane active. BUILD-07A OPEN / RESUMED — its prerequisite closed on canonical. Nothing beyond it is.**
 >
 > This document defined the lane before it was entered, and it still authorizes **no code, no
 > schema, no route, no prompt**. Entering FIND required the trigger below to be satisfied on
@@ -8,10 +8,12 @@
 
 ```text
 LANE               JARVIS-WS2-07-DEVELOPMENTAL-INTELLIGENCE-01
-STATE              ACTIVE · BUILD-07A PAUSED · PREREQUISITE AUTHORIZED
+STATE              ACTIVE · BUILD-07A OPEN / RESUMED
 TRIGGER            Stage 6A AuthorStructureCommand merged to canonical and witnessed
 TRIGGER SATISFIED  clean-main-no-secrets @ 4b8b34bcf
-AUTHORIZES         SECTION-ADDRESSABLE DRAFT LIVENESS (prerequisite). No reader, no model.
+AUTHORIZES         BUILD-07A DEVELOPMENTAL EVIDENCE only
+                   BUILD-07B–H unauthorized
+                   No reader, no model, no prompt, no schema, no route.
 NORMATIVE          docs/programme/WRITERS_STUDIO_MASTER_BRIEF.md
 CAPABILITY         docs/programme/DEVELOPMENTAL_EDITOR_CAPABILITY.md
 LIVE STATE         docs/programme/WRITERS_STUDIO_PROGRAMME_BOARD.md
@@ -94,7 +96,7 @@ AUTHORIZATION AT BUILD OPENING
                        BUILD-07A   AUTHORIZED — DEVELOPMENTAL EVIDENCE only
                        BUILD-07B–H unauthorized
 
-CURRENT AUTHORIZATION  2026-09-02, after the recoverability boundary ruling
+AUTHORIZATION          2026-09-02, after the recoverability boundary ruling (historical)
                        FIND        CLOSED · canonical @ cc9788e4f
                        UNDERSTAND  CLOSED · canonical @ 5670163e6
                        DECIDE      CLOSED · canonical @ 838eabfd8
@@ -102,7 +104,22 @@ CURRENT AUTHORIZATION  2026-09-02, after the recoverability boundary ruling
                        BUILD-07A   OPEN · PAUSED — blocked on the prerequisite below
                        PREREQ      SECTION-ADDRESSABLE DRAFT LIVENESS · AUTHORIZED
                        BUILD-07B–H unauthorized
+
+CURRENT AUTHORIZATION  2026-09-03
+                       FIND        CLOSED · canonical @ cc9788e4f
+                       UNDERSTAND  CLOSED · canonical @ 5670163e6
+                       DECIDE      CLOSED · canonical @ 838eabfd8
+                       BUILD       ACTIVE
+                       BUILD-07A   OPEN · RESUMED — DEVELOPMENTAL EVIDENCE only
+                       PREREQ      SECTION-ADDRESSABLE DRAFT LIVENESS · CLOSED
+                                   canonical @ 0fa4158e7
+                                   Unicode repair @ 9411ddc41
+                       BUILD-07B–H unauthorized
 ```
+
+⛔ **The 2026-09-03 record reconciles state; it grants nothing.** Documentation only — no reader,
+model, prompt, schema, route, or implementation authority is added by it. The dated blocks above it
+are history and are not amended.
 
 ## Prerequisite — SECTION-ADDRESSABLE DRAFT LIVENESS
 

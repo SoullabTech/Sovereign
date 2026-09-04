@@ -8,6 +8,9 @@
 > ROADMAP (direction)   docs/programme/WRITERS_STUDIO_ROADMAP_STAGE_6_TO_15.md
 > ACTIVE LANE           docs/programme/JARVIS-WS2-07-DEVELOPMENTAL-INTELLIGENCE-01.md
 > UNIT DEFINITION       docs/programme/WS-01_SOURCE_CUSTODY_UNIT_DEFINITION.md
+>                       (historical — WS-01 CLOSED / OVERTAKEN 2026-09-03; the
+>                       active unit is defined inside the ACTIVE LANE document)
+> LAUNCH LANE (parked)  docs/programme/WRITERS-STUDIO-PRODUCTION-LAUNCH-01.md
 > LIVE STATE (here)     docs/programme/WRITERS_STUDIO_PROGRAMME_BOARD.md
 > HISTORICAL EVIDENCE   docs/design/author-studio/WRITERS_STUDIO_MEMBER_UPGRADE_PROGRAMME_LEDGER.md
 > ```
@@ -27,15 +30,51 @@
 
 ```text
 PROGRAMME          WRITER'S STUDIO R2
-MODE               WS-01 ACCEPTANCE
-BUILD MODE         CLOSED — Canvas / Phase 1 freeze BINDING
-BOUND CANONICAL    7f0dae9484a93a2146680e11a226111081bf4982
-CURRENT UNIT       WS-01 Source Custody + Freeze Release
-CURRENT CANDIDATE  4a551d3d13a27ec442252be7822865e0f2d31978
-                   feature/ws-01-source-custody-v3  ·  PINNED / DEPLOYED
-NEXT EXECUTABLE    P0-D
-LAST UPDATED       2026-09-02
+MODE               STAGE 7 BUILD
+BUILD MODE         OPEN — BUILD-07A only · BUILD-07B–H unauthorized
+BOUND CANONICAL    6d093fb3a (clean-main-no-secrets, 2026-09-03)
+CURRENT UNIT       BUILD-07A Developmental Evidence
+                   lane: JARVIS-WS2-07-DEVELOPMENTAL-INTELLIGENCE-01
+CURRENT CANDIDATE  none pinned — BUILD-07A has no candidate branch yet
+NEXT EXECUTABLE    BUILD-07A — prove INV-7b and the ten falsifiers
+                   (0 of 6 outcomes demonstrated)
+WS-01              CLOSED — OVERTAKEN / SUPERSEDED (not accepted; see
+                   Reconciliation record below)
+CANVAS FREEZE      RETIRED FROM LIVE STATE (never released by an act; see
+                   Reconciliation record below)
+LAST UPDATED       2026-09-03
 ```
+
+## Reconciliation record — 2026-09-03 (founder adjudication of programme history)
+
+This board carried two generations of state at once. Its header still read `WS-01 ACCEPTANCE ·
+BUILD MODE CLOSED · Canvas / Phase 1 freeze BINDING` while its stage block, set from canonical,
+recorded Stage 6 closed and Stage 7 building. Both were on the same page for at least a day.
+
+**What canonical shows.** The WS-01 substance — `lib/manuscript/source/{arrivals,custody,omission}.ts`,
+migration `20260824000001_manuscript_source_custody.sql`, the `manuscript_source_arrivals` table —
+reached canonical at `cc1f1ea10` (2026-08-27) inside an unrelated merge, not through the WS-01
+acceptance walk. Stage 6A's `AuthorStructureCommand` reached canonical at `27729b31e` / PR #1169
+(2026-09-02). Section-addressable drafts followed at `0fa4158e7` / `9411ddc41`. No P0-D walk, no
+Founder Acceptance artifact, and no freeze-release act exist anywhere in the programme record.
+
+**Founder ruling (2026-09-03).**
+
+> WS-01 is **CLOSED — OVERTAKEN / SUPERSEDED**, not ACCEPTED. The WS-01 acceptance path and the
+> Canvas / Phase-1 freeze attached to it were rendered obsolete by the later canonical Writer's
+> Studio architecture and the Stage 6 / 6A progression. Do not invent a WS-01 acceptance walk, an
+> acceptance date, or a recorded freeze-release event that did not occur. This is a present
+> adjudication of the programme history: canonical advanced while the live board continued
+> carrying an earlier freeze state. The board is now reconciled to the architecture that actually
+> became canonical. Historical records remain historical and are not rewritten.
+
+Consequences applied in this commit, each from the evidence above and none from intention:
+the header now derives from the Stage 7 lane; the WS-01 and freeze-dependent rows below are reset
+to what canonical carries; the two verdicts this board held for **Work-centered Home** (`ABSENT` in
+Core Authoring, `PARTIAL` in the A4 census) collapse to the one the census already evidences.
+`WS-01_SOURCE_CUSTODY_UNIT_DEFINITION.md`, the frozen acceptance specification, and the Master
+Brief's §7 remain as written; they describe a gate the programme walked past, and that is the
+truthful record of it.
 
 Stage state, set from canonical evidence — the prerequisite's merge at `0fa4158e7` and its Unicode
 repair at `9411ddc41`, not from intention:
@@ -92,11 +131,19 @@ it in the global work queue without becoming Writer's Studio state.
 
 ## Release signal — read mechanically, never inferred
 
-BUILD MODE is closed until all three appear here, on canonical:
+Build authorization is per unit, through the active lane's own trigger. Product release is governed
+by **Amendment 5 — Release is not fruition** (Master Brief, 2026-09-03), and a release milestone
+exists only when its trigger appears here, on canonical:
 
 ```text
-WS-01 ACCEPTED  +  CANVAS FREEZE RELEASED  +  NEXT BUILD UNIT AUTHORIZED
+DEVELOPMENTAL PRIVATE BETA   Stage 7 DONE / PROVED  +  Stage 8 CLOSED / ACCEPTED
+PUBLIC WRITER'S STUDIO 1.0   Stages 7–10 CLOSED / ACCEPTED  +  this census attached
+                             to the release record  +  release acceptance
+PROGRAMME FRUITION           Stage 15 CLOSED  +  the A4 mandate census demonstrates
+                             the mandated capability set delivered and accepted
 ```
+
+Today, on canonical: none of the three. Stage 7 is building; Stage 8 is blocked on Stage 7.
 
 A green suite is not a release signal. Session narration is not a release signal. If an accepted
 state requires a canonical merge, the foundation is not available for subsequent implementation
@@ -135,10 +182,10 @@ unbuilt while the unit list reads complete. They create no WS-08+.
 
 | Node | State | Evidence / next |
 |---|---|---|
-| WS-01 Source Custody | **IN ACCEPTANCE** | candidate `e92f53239`; P0-M PASS, P0-D owed. `lib/manuscript/source/**` is **not on canonical** — candidate only |
-| Restore floor | **IN ACCEPTANCE** | required by frozen walk act **H**; rides with WS-01 |
-| Work Structure | **BLOCKED** | by WS-01. Contract ruled (Phase 3A); member-declared, no chapter schema |
-| #995 Harvest | **BLOCKED** | by Canvas freeze |
+| WS-01 Source Custody | **CLOSED — OVERTAKEN** | substance on canonical since `cc1f1ea10` (2026-08-27): `lib/manuscript/source/**` (4 files), migration `20260824000001`, `manuscript_source_arrivals`. Acceptance walk (P0-D, A–H, Founder Acceptance) **never performed**; ingest HTTP path unwitnessed. See Reconciliation record |
+| Restore floor | **PARTIAL** | append-only `working_draft_revisions` + keep-a-version in `app/press/manuscript/workingDraftClient.ts` on canonical; no member restore / compare surface (same evidence as SAFETY below). A1.6 floor, not versioning |
+| Work Structure | **LIVE** | `AuthorStructureCommand` at `27729b31e` / PR #1169; section-addressable drafts at `0fa4158e7` + `9411ddc41`; MEMBER REACH COMPLETE per stage block. Member-declared, no chapter schema. Use by a member: **UNVERIFIED** |
+| #995 Harvest | **BLOCKED** | freeze retired, but no unit authorizes it: PR #995 open since 2026-08-06 against stale base `ced4ab513`; canvas cluster still 0 importers; WS-02 never opened |
 
 ## CANVAS SUBSTRATE — the zero-caller cluster
 
@@ -157,7 +204,7 @@ unbuilt while the unit list reads complete. They create no WS-08+.
 
 | Node | State | Evidence / next |
 |---|---|---|
-| Work-centered Home | **ABSENT** | — |
+| Work-centered Home | **PARTIAL** | `app/writers-studio/{page,HomeView,homeState,useLivingWorks}.tsx/ts` + 5 test files, route live — the same evidence as A4 row 1 below; the six A4.1 questions remain **UNVERIFIED**. (Reconciled 2026-09-03: this row read `ABSENT` while the census read `PARTIAL`) |
 | Worktable (serious long-form) | **PARTIAL** | a textarea; the researched surface is the zero-caller easel |
 | Structure · Outline · Read · Compare | **ABSENT** | — |
 
@@ -181,8 +228,8 @@ unbuilt while the unit list reads complete. They create no WS-08+.
 
 | Node | State | Evidence / next |
 |---|---|---|
-| Restore floor | **IN ACCEPTANCE** | WS-01 |
-| Version history · Compare · Named snapshots | **ABSENT** | kept revisions exist; no compare, no restore UX |
+| Restore floor | **PARTIAL** | append-only `working_draft_revisions` + keep-a-version on canonical; no member restore / compare surface. WS-01's acceptance walk never ran (see Reconciliation record) |
+| Version history · Compare · Named snapshots | **ABSENT** | kept revisions exist; no compare, no restore UX — Stage 8 |
 
 ## FIELD · EXPRESSION
 
@@ -219,13 +266,13 @@ while these rows read ABSENT. A shipped manuscript editor is not fruition.
 | 2 | Manuscript-wide find · safe find/replace | **ABSENT** | `findInDraft` → **0 files**; no find/replace symbol on canonical | living manuscripts | — | Ch10 misplaced-copy search | authored on an unmerged branch only — A4.0 says that is not presence |
 | 2 | Return continuity beyond cursor position | **UNVERIFIED / TO CENSUS** | not censused | memory + provenance | — | return after a month | census before claiming either way |
 | 3 | Transcript & material intake | **PARTIAL** | `mammoth` (5), `pdf-parse` (8), `fileVault` (2), `api/book-studio/workbench/uploads/**` | — | — | real transcripts | recordings · voice notes · images **UNVERIFIED** |
-| 3 | Never silently transform an artifact into manuscript text | **IN ACCEPTANCE** | WS-01 candidate `e92f53239`; `manuscript_source_arrivals` → **0 files on canonical** | — | WS-01 | P0-D | **P0-D is the only executable proof** |
+| 3 | Never silently transform an artifact into manuscript text | **PARTIAL** | `lib/manuscript/source/{arrivals,custody,omission}.ts` + migration `20260824000001` + `manuscript_source_arrivals` on canonical since `cc1f1ea10` | — | landed outside any unit (WS-01 overtaken) | real ingest over the HTTP path — **never witnessed** | substrate present; the P0-D proof that was to bind it never ran. Witness belongs to Stage 9 (Gather) |
 | 4 | Materials distinguishable **at the data level** | **PARTIAL** | `living_work_materials`: `material_type`, `declared_by`, `relationship_sentence` — belonging is already a **declared writer act**, not a styling choice | source custody | — | C · Material field | full A4.4 vocabulary not enumerated against schema |
 | 5 | MAIA as creative companion — nine stances | **UNVERIFIED / TO CENSUS** | no Studio-scoped stance surface identified; `developmental` matches 337 files, none Studio-scoped | Work + material | — | all four classes | census what, if anything, already serves Reflect/Question/Notice/Connect |
 | 5 | `Edit` only on explicit request | **DESIGNED** | capability spec; no runtime | companion | — | D · Ch10 | ⛔ default must never be `analyze → generate replacement` |
 | 6 | **Developmental Editor** | **DESIGNED** | `DEVELOPMENTAL_EDITOR_CAPABILITY.md` carries the full genesis `STARTER CONCEPT → … → MATURE MANUSCRIPT` (L71) and all five stances; `DevelopmentalEditor` → **0 files** | canonical L58: Work Structure is a dependency of the **structure-aware lenses only** | — | A–D | remains on this board until member-facing |
 | 6 | Pre-structure stances — `DISCOVER · GATHER · SHAPE` | **DESIGNED** | canonical spec L79–L110: `DISCOVER · early GATHER` → *"no structure required"*, named **the first buildable slices**; no runtime | **none** — begins before structure | next after WS-01 | A · Seed, B · Scraps | where the A4.6 violation is *easiest*: no Work contradicts a premature declaration |
-| 6 | Structure-aware lenses — continuity · sequencing · arc | **BLOCKED** | no runtime | **requires** authoritative Work Structure | — | D · Ch10 | blocked on Work Structure, not on the editor |
+| 6 | Structure-aware lenses — continuity · sequencing · arc | **DESIGNED** | no runtime | authoritative Work Structure — **now on canonical** (`27729b31e`, Stage 6A) | — | D · Ch10 | dependency satisfied 2026-09-02; waits on BUILD-07B+ authorization, not on structure |
 | 7 | Acceptance corpus A · Seed | **ABSENT** | not authored | — | — | — | author before claiming pre-structure capability |
 | 7 | Acceptance corpus B · Scraps | **ABSENT** | not authored | — | — | — | author |
 | 7 | Acceptance corpus C · Material field | **ABSENT** | not authored | — | — | — | author |
@@ -239,19 +286,24 @@ while these rows read ABSENT. A shipped manuscript editor is not fruition.
 | 14 | Finished-looking is not finished | **ABSENT** | the eight readiness states are not in schema | Work | — | — | ⛔ MAIA may notice; **release remains a writer act** |
 | 15 | Human authorship made **visible** | **UNVERIFIED / TO CENSUS** | not censused | all of the above | — | founder experience test | boundaries must be visible, not hidden inside automation |
 
-**Reading this table.** Eight ABSENT · four PARTIAL · four UNVERIFIED · five DESIGNED · one
-ZERO-CALLERS · one BLOCKED · one IN ACCEPTANCE. The delivered mass sits in **manuscript editing and
-intake**; the gather, memory, structural, developmental, expression and authorship capabilities are
-**overwhelmingly not built**. That is precisely the imbalance A4.21 forbids declaring as success.
+**Reading this table.** Eight ABSENT · seven PARTIAL · four UNVERIFIED · five DESIGNED · one
+ZERO-CALLERS · zero BLOCKED · zero IN ACCEPTANCE — 25 rows. (Recounted 2026-09-03: the previous
+line said four PARTIAL and one BLOCKED / one IN ACCEPTANCE; the table already held six PARTIAL
+before this reconciliation.) The delivered mass sits in **manuscript editing, intake and now
+authored structure**; the gather, memory, developmental, expression and authorship capabilities are
+**overwhelmingly not built**. That is precisely the imbalance A4.21 forbids declaring as success,
+and it is the census a release record must carry under Amendment 5.
 
 ## Advancing now
 
 ```text
-WS-01 · P0-D — deploy candidate e92f53239, prove deployed identity,
-               exercise the real ingest HTTP path, record, stop.
+BUILD-07A · Developmental Evidence — prove INV-7b and the ten falsifiers
+            against canonical 6d093fb3a; 0 of 6 outcomes demonstrated.
+            Lane: JARVIS-WS2-07-DEVELOPMENTAL-INTELLIGENCE-01.
 ```
 
-Everything else is **CLOSED** until WS-01 is accepted and the freeze releases.
+Everything else is **unauthorized** until BUILD-07A closes and the lane opens the next unit.
+Release milestones are defined by Amendment 5 and read from the Release signal above.
 
 ## Board discipline
 

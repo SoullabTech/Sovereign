@@ -208,6 +208,44 @@ still attached to each.
 
 ---
 
+## Release milestones — Amendment 5 (founder, 2026-09-03)
+
+Direction, not authorization, like everything else here. The milestones name where product
+release sits on this roadmap; the Programme Board's Release signal says whether any has been
+reached, and only from canonical.
+
+```text
+DEVELOPMENTAL PRIVATE BETA   Stage 7 DONE / PROVED  +  Stage 8 CLOSED / ACCEPTED
+                             5–15 trusted writers · real Works · production · real creative
+                             episodes (Master Brief §22–23) · the six beta acceptances:
+                             Arrive · Write · Structure · Develop · Revise safely · Return
+
+PUBLIC WRITER'S STUDIO 1.0   Stages 7–10 CLOSED / ACCEPTED  +  live capability census
+                             attached to the release record  +  release acceptance
+                             soullab.life/writers-studio — the route already exists;
+                             what is behind it becomes coherent enough to invite others into
+
+PROGRAMME FRUITION           Stage 15 CLOSED  +  the A4 mandate census demonstrates the
+                             mandated capability set delivered and accepted
+```
+
+**Release is not fruition.** A release under Amendment 5 is reported as partial delivery, against
+the census, and may not imply an absent capability exists. A4.21 stands. Stages 11–15 are
+post-1.0 expansion and remain binding scope.
+
+**Why these thresholds and not others.** Stage 7 is the product threshold: without it the Studio
+is trustworthy manuscript architecture, not a developmental partner. Stage 8 makes experimentation
+safe; writers will not use Develop against a Work they cannot restore. Stage 10 is the point at
+which MAIA can hold sentence, passage, section, structure, whole Work, developmental history,
+materials and author decisions in one sustained relation while keeping *what the Work says*, *what
+MAIA noticed*, *what MAIA suggests* and *what the writer decided* distinct — the thing worth saying
+publicly.
+
+Launch work runs through `WRITERS-STUDIO-PRODUCTION-LAUNCH-01` (parked, not executable), never
+through this document.
+
+---
+
 ## The deeper product journey
 
 ```text
