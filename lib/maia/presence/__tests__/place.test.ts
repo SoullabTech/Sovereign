@@ -3,6 +3,7 @@ import {
   FULL_CONVERSATION_ROUTES,
   resolveGovernedRoom,
   isFullConversationRoute,
+  isMaiaHandleVisible,
   placeFromPathname,
   validatePlaceContext,
   buildPlaceAddendum,
@@ -35,6 +36,11 @@ describe('governed-room registry (Phase 8 inventory)', () => {
     expect(resolveGovernedRoom('/maia/moments')?.placeId).toBe('moments');
     expect(resolveGovernedRoom('/maia/anchor/history')?.placeId).toBe('anchor-history');
     expect(resolveGovernedRoom('/journal')?.placeId).toBe('journal');
+    // Reflections: the feed and one kept reflection are the same governed room.
+    // The room is governed so "Discuss this with MAIA" can open OVER the
+    // reflection instead of navigating the member to /maia.
+    expect(resolveGovernedRoom('/reflections')?.placeId).toBe('reflections');
+    expect(resolveGovernedRoom('/reflections/dc5720b0-dff0-4111-a85d-b91503410c6f')?.placeId).toBe('reflections');
     expect(resolveGovernedRoom('/guides')?.placeId).toBe('guides');
     expect(resolveGovernedRoom('/soul-portrait/some-slug')?.placeId).toBe('soul-portrait');
     expect(resolveGovernedRoom('/home')?.placeId).toBe('home');
@@ -136,5 +142,63 @@ describe('buildPlaceAddendum (facts-only prompt block)', () => {
     // Never present behavioral claims.
     expect(block.toLowerCase()).not.toContain('you seem');
     expect(block.toLowerCase()).not.toContain('dwell');
+  });
+});
+
+// ── Handle visibility ────────────────────────────────────────────────────────
+// Eligibility and affordance are separate concepts (founder ruling 2026-09-04):
+// a room may be fully MAIA-capable without every surface in it advertising
+// MAIA. These pin that they cannot collapse back into one boolean.
+
+describe('isMaiaHandleVisible (affordance, not eligibility)', () => {
+  const reflection = {
+    placeId: 'reflections',
+    placeName: 'Reflections',
+    route: '/reflections/dc5720b0-dff0-4111-a85d-b91503410c6f',
+    objectType: 'reflection',
+    objectId: 'dc5720b0-dff0-4111-a85d-b91503410c6f',
+  };
+
+  it('ACCEPTANCE 4: the reflections feed offers no handle; one open reflection does', () => {
+    // Feed — governed (MAIA may be hosted) but nothing particular in view, so
+    // an unprompted handle would claim general presence rather than "discuss
+    // THIS". No object registered, and none derivable from the route.
+    expect(resolveGovernedRoom('/reflections')?.placeId).toBe('reflections');
+    expect(isMaiaHandleVisible('/reflections', placeFromPathname('/reflections'))).toBe(false);
+
+    // Detail — a specific kept reflection is open and is the referent.
+    expect(isMaiaHandleVisible(reflection.route, reflection)).toBe(true);
+  });
+
+  it('an object-scoped room stays quiet until an object is actually open', () => {
+    // Registered place, but incomplete: type without id, or id without type,
+    // is not a referent.
+    expect(isMaiaHandleVisible(reflection.route, { ...reflection, objectId: undefined })).toBe(false);
+    expect(isMaiaHandleVisible(reflection.route, { ...reflection, objectType: undefined })).toBe(false);
+    expect(isMaiaHandleVisible(reflection.route, null)).toBe(false);
+  });
+
+  it('room-scoped rooms are unchanged — they advertise across the room', () => {
+    expect(isMaiaHandleVisible('/journal', placeFromPathname('/journal'))).toBe(true);
+    expect(isMaiaHandleVisible('/studio/decisions', placeFromPathname('/studio/decisions'))).toBe(true);
+    expect(isMaiaHandleVisible('/home', placeFromPathname('/home'))).toBe(true);
+  });
+
+  it('never widens eligibility: ungoverned routes and full surfaces stay false', () => {
+    // A registered place cannot buy a handle on a route the registry does not
+    // govern — visibility is always narrower than permission, never broader.
+    expect(isMaiaHandleVisible('/now-what', { ...reflection, route: '/now-what' })).toBe(false);
+    expect(isMaiaHandleVisible('/signin', { ...reflection, route: '/signin' })).toBe(false);
+    for (const route of FULL_CONVERSATION_ROUTES) {
+      expect(isMaiaHandleVisible(route, placeFromPathname(route))).toBe(false);
+    }
+  });
+
+  it('handleVisibility is a closed vocabulary', () => {
+    for (const room of GOVERNED_ROOMS) {
+      if (room.handleVisibility !== undefined) {
+        expect(['room', 'object']).toContain(room.handleVisibility);
+      }
+    }
   });
 });

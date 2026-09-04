@@ -13,10 +13,21 @@
  *
  * Constitutional behavior:
  *  - The handle is quiet: small, static, no pulse, no badge, never auto-opens.
+ *  - Three concepts, deliberately NOT one boolean:
+ *      canHost    — may MAIA be hosted here at all (governed room + signed-in
+ *                   member + session). Constitutional/platform permission.
+ *      showHandle — does this surface OFFER MAIA unprompted (place.ts
+ *                   handleVisibility). Experiential; narrower than canHost.
+ *      openMaiaWith — an explicit member invocation carrying a scoped
+ *                   contribution. Works wherever canHost holds, handle or not.
  *  - MAIA never speaks first from this surface; opening the sheet shows the
  *    conversation — it does not trigger a message.
  *  - Place context is held here and travels ONLY inside a message the member
  *    sends (see OracleConversation body build). Route changes transmit nothing.
+ *  - A room may hand a member-composed message straight into this conversation
+ *    (openMaiaWith) so the member stays in the room instead of being moved to
+ *    /maia. It is still member-initiated and still one conversation: the sheet
+ *    opens over the room and the message appends to the running transcript.
  *  - Suppressed on full conversation surfaces (/maia, /studio/maia, /field/talk)
  *    so there is never a second live conversation mount, and on ungoverned
  *    routes (public, onboarding, /now-what — see place.ts registry).
@@ -38,6 +49,7 @@ import { getOrCreateMaiaSessionId } from '@/lib/maia/presence/conversationIdenti
 import {
   type MaiaPlaceContext,
   isFullConversationRoute,
+  isMaiaHandleVisible,
   placeFromPathname,
   resolveGovernedRoom,
 } from '@/lib/maia/presence/place';
@@ -55,9 +67,24 @@ interface MaiaPresenceValue {
   /** Member-initiated open/close of the conversation sheet. */
   isOpen: boolean;
   openMaia: () => void;
+  /**
+   * Open the sheet AND send a message the member composed in the room — the
+   * in-place handoff (e.g. "Discuss this with MAIA" on a reflection). The room
+   * stays on screen; the conversation opens over it. Only ever called from a
+   * member gesture, and only with text the member has read: no room may push
+   * material into the conversation on its own.
+   */
+  openMaiaWith: (prompt: string) => void;
   closeMaia: () => void;
   /** Room-supplied place override (useMaiaPlace). */
   registerPlace: (place: MaiaPlaceContext | null) => void;
+  /**
+   * True when this layer can actually host the conversation here (signed-in
+   * member, governed room, not a full conversation surface). A room offering an
+   * in-place handoff reads this to decide whether to open over itself or fall
+   * back to navigating — so the gesture never dead-ends silently.
+   */
+  canHost: boolean;
 }
 
 const MaiaPresenceContext = createContext<MaiaPresenceValue | null>(null);
@@ -97,6 +124,9 @@ export function MaiaPresence({ children }: { children: React.ReactNode }) {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [memberName, setMemberName] = useState<string | undefined>(undefined);
   const [registeredPlace, setRegisteredPlace] = useState<MaiaPlaceContext | null>(null);
+  // Nonce-keyed so the same text can be sent twice and a re-render never resends.
+  const [injectedMessage, setInjectedMessage] = useState<{ text: string; nonce: number } | null>(null);
+  const injectionNonceRef = useRef(0);
 
   // Signed-in gate — client-only, checked on mount and on route change
   // (sign-in/out happens via navigation in this app).
@@ -131,18 +161,32 @@ export function MaiaPresence({ children }: { children: React.ReactNode }) {
     setHasEverOpened(true);
     setIsOpen(true);
   }, []);
+  const openMaiaWith = useCallback((prompt: string) => {
+    const text = prompt?.trim();
+    if (!text) return;
+    injectionNonceRef.current += 1;
+    setInjectedMessage({ text, nonce: injectionNonceRef.current });
+    setHasEverOpened(true);
+    setIsOpen(true);
+  }, []);
   const closeMaia = useCallback(() => setIsOpen(false), []);
   const registerPlace = useCallback((p: MaiaPlaceContext | null) => setRegisteredPlace(p), []);
-
-  const value = useMemo<MaiaPresenceValue>(
-    () => ({ place, isOpen, openMaia, closeMaia, registerPlace }),
-    [place, isOpen, openMaia, closeMaia, registerPlace],
-  );
 
   // The presence surface renders only for a signed-in member, on a governed
   // room, off the full conversation surfaces. Unauthenticated and public
   // routes get children only — no member state, no handle, nothing.
   const showPresence = hasMember && !!governedRoom && !fullSurface && !!sessionId;
+
+  // The handle is offered on a NARROWER set of surfaces than presence can host.
+  // A room may be fully MAIA-capable and still not advertise — e.g. an index or
+  // feed with no object in view. The sheet itself renders on showPresence, so a
+  // member gesture (openMaiaWith) still opens MAIA where the handle is hidden.
+  const showHandle = showPresence && isMaiaHandleVisible(pathname, place);
+
+  const value = useMemo<MaiaPresenceValue>(
+    () => ({ place, isOpen, openMaia, openMaiaWith, closeMaia, registerPlace, canHost: showPresence }),
+    [place, isOpen, openMaia, openMaiaWith, closeMaia, registerPlace, showPresence],
+  );
 
   // Close the sheet if navigation lands on a full conversation surface —
   // the page itself is now the relationship surface.
@@ -169,8 +213,9 @@ export function MaiaPresence({ children }: { children: React.ReactNode }) {
 
       {showPresence && (
         <>
-          {/* Quiet handle — static, small, clearly MAIA, never pulses or auto-opens */}
-          {!isOpen && (
+          {/* Quiet handle — static, small, clearly MAIA, never pulses or auto-opens.
+              Gated on showHandle, not showPresence: see the three concepts above. */}
+          {showHandle && !isOpen && (
             <button
               type="button"
               onClick={openMaia}
@@ -241,6 +286,7 @@ export function MaiaPresence({ children }: { children: React.ReactNode }) {
                     voiceEnabled={false}
                     initialShowChatInterface={true}
                     placeContext={place ?? undefined}
+                    injectedMessage={injectedMessage}
                   />
                 </div>
               </div>
