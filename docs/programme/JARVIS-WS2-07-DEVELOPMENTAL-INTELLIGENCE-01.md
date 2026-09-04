@@ -2,9 +2,12 @@
 
 > **Lane active. BUILD-07B IMPLEMENTATION OPEN (founder, 2026-09-04) — the contract and falsifiers are canonical @ `40532a5a5`. Closure is two-gated: Gate A structural, Gate B live reader witness. Nothing beyond BUILD-07B is authorized.**
 >
-> This document defined the lane before it was entered, and it still authorizes **no code, no
-> schema, no route, no prompt**. Entering FIND required the trigger below to be satisfied on
-> canonical rather than asserted in a session — and on 2026-09-02 canonical satisfied it.
+> This document defined the lane before it was entered. Originally it authorized **no
+> implementation**. As of the 2026-09-04 founder act recorded below, it authorizes **only the
+> exact BUILD-07B implementation enumerated there**. Route, UI / Develop surface, persistence /
+> database-schema change, and BUILD-07C+ remain unauthorized. Entering FIND required the trigger
+> below to be satisfied on canonical rather than asserted in a session — and on 2026-09-02
+> canonical satisfied it.
 
 ```text
 LANE               JARVIS-WS2-07-DEVELOPMENTAL-INTELLIGENCE-01
@@ -16,7 +19,7 @@ TRIGGER SATISFIED  clean-main-no-secrets @ 4b8b34bcf
 AUTHORIZES         exact BUILD-07B reader implementation only · structural Gate A ·
                    bounded Gate B witness machinery (see the 2026-09-04 opening block)
                    BUILD-07C–H unauthorized
-                   No reader, no model, no prompt, no schema, no route.
+NO                 route · UI / Develop surface · persistence / database-schema change · BUILD-07C+
 NORMATIVE          docs/programme/WRITERS_STUDIO_MASTER_BRIEF.md
 CAPABILITY         docs/programme/DEVELOPMENTAL_EDITOR_CAPABILITY.md
 LIVE STATE         docs/programme/WRITERS_STUDIO_PROGRAMME_BOARD.md
