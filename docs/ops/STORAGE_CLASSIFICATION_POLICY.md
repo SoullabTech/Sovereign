@@ -73,8 +73,12 @@ Rollback images and tags (`maia-sovereign:current` / `:previous` / `:<sha>` —
 - **Delayed reclamation.** Deletion and `df` movement are not simultaneous.
   21 GB of Docker build cache and 14 GB of `iOS DeviceSupport` each moved `df` by
   roughly 1 GiB at the time; the Docker space appeared later without further
-  action. Run `sync; sleep 10; df -h /System/Volumes/Data` before concluding a cut
-  failed — otherwise the lag drives over-cutting.
+  action. The cleanest instance: free space rose 11 → 15 GiB across an interval in
+  which **no deletion succeeded at all** — a `du` that errored on missing paths and
+  an `rm` that removed nothing. The blocks were from an earlier `.next` cut,
+  surfacing later. Run `sync; sleep 10; df -h /System/Volumes/Data` before
+  concluding a cut failed — otherwise the lag drives escalation to riskier cuts
+  that were never needed.
 - **Clone extents.** APFS clones (Finder copies, `cp -c`) share copy-on-write
   extents. N apparent copies of a 2.65 GB file may occupy 2.65 GB in total, and
   deleting N-1 of them frees nothing. Compare `du -sh` per file against
@@ -120,7 +124,13 @@ Three classes, each with a different failure mode:
 3. **`/private/tmp` checkouts** — subject to an **external deletion authority**:
    macOS purges that directory on a schedule, so anything unique there is under a
    countdown nothing in this repo controls. Treat as already expiring until proven
-   backed.
+   backed. On 2026-09-04 the `node_modules` under two such checkouts were found
+   already absent, with no one having deleted them — consistent with macOS purging
+   by access time, though not by itself decisive. The check that settles it is
+   whether the checkout and its object store survive:
+   `ls -ld <checkout>` and `git -C <checkout> rev-parse HEAD`. If the objects are
+   gone, the backup ref pushed beforehand is the only extant copy — which is the
+   case this class exists to prevent.
 
 ### The custody check is two questions
 
