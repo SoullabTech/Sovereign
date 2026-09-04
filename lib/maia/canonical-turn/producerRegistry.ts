@@ -49,6 +49,7 @@ export interface ProducerSpec {
 }
 
 const CMT = { registeredAt: '2026-09-03', registeredBy: 'CMT-01' } as const;
+const PARTITION01 = { registeredAt: '2026-09-04', registeredBy: 'MEMORY-PRODUCER-PARTITION-01' } as const;
 const PASS1_DIV = { registeredAt: '2026-09-03', registeredBy: 'JARVIS-MEMORY-ORGANISM-PASS1-DIVINATION-01' } as const;
 const ALL_ROOMS: readonly RoomKind[] = [
   'sovereign_chat', 'between', 'now_what', 'vision_studio', 'living_field', 'relational_navigation',
@@ -96,9 +97,21 @@ export const PRODUCER_REGISTRY = {
   },
   'member.atoms': {
     authoredBy: 'member', participationClass: 'placed', authority: 'situate',
-    provenance: 'lib/maia/memoryAtomsLoader', consentBasis: 'atoms.return_preference',
+    provenance: 'lib/maia/memoryAtomsLoader projectAtomSections().memberSection', consentBasis: 'atoms.return_preference',
     requires: { identity: 'verified', notSanctuary: true }, rooms: ['sovereign_chat', 'now_what', 'vision_studio'], mandatory: false, scope: 'route',
-    ...CMT, reason: 'member-placed portfolio atoms + witnessed practitioner observations (Layer 5)',
+    ...CMT,
+    // MEMORY-PRODUCER-PARTITION-01 (2026-09-04): the practitioner observations this
+    // reason string used to claim are now their own producer. The member section is
+    // all this producer carries; 'placed' is truthful for it and ONLY for it.
+    reason: 'member-placed portfolio atoms',
+  },
+  'practitioner.atoms_observations': {
+    authoredBy: 'practitioner', participationClass: 'authored', authority: 'situate',
+    provenance: 'lib/maia/memoryAtomsLoader projectAtomSections().practitionerSection',
+    consentBasis: 'member decline (member_response_status) — opt-out, NOT member placement',
+    requires: { identity: 'verified', notSanctuary: true }, rooms: ['sovereign_chat', 'now_what', 'vision_studio'], mandatory: false, scope: 'route',
+    ...PARTITION01,
+    reason: 'practitioner-witnessed observations, partitioned out of member.atoms',
   },
   'member.relational_context': {
     authoredBy: 'member', participationClass: 'placed', authority: 'situate',
