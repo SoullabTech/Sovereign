@@ -99,10 +99,17 @@ export interface SendEmailOptions {
    * Logical identity of the message, e.g. `AUTH_CODE:<token-id>`. Carried into
    * provider tags and logs so duplicate sends are IDENTIFIABLE.
    *
-   * NOT yet a suppression key: nothing in this module drops a second send with
-   * the same key. Deduplication requires durable state (the ledger), and
-   * claiming it before that exists would be worse than not having it —
-   * an auth code silently suppressed is a member locked out.
+   * SUPPRESSION SEMANTICS (corrected 2026-09-04, SELF-ADDRESSED-RETURN-01):
+   * this key is now passed to the provider as a real duplicate-send guarantee
+   * where the vendor offers one (Resend: `Idempotency-Key`, retained ~24h), in
+   * addition to being carried as a tag and a log field.
+   *
+   * What it still does NOT do: nothing in THIS module drops a second send. The
+   * suppression is the vendor's, so it holds only for providers that implement
+   * it and only inside the vendor's retention window. A caller needing a harder
+   * guarantee must also hold durable state of its own — the reminders worker
+   * claims its row in the database BEFORE sending, and treats this key as the
+   * second line rather than the first.
    */
   idempotencyKey?: string;
   /** Free-form operational labels. Never put member content here. */
@@ -460,6 +467,9 @@ export async function sendEmail(opts: SendEmailOptions): Promise<SendEmailResult
       replyTo: opts.replyTo,
       headers: opts.headers,
       tags,
+      // Real duplicate-send suppression at the vendor, distinct from the
+      // `idempotency_key` TAG above (which is observability only).
+      idempotencyKey: opts.idempotencyKey,
     });
 
     // THE LOAD-BEARING CHECK, now stated at the boundary rather than inside one

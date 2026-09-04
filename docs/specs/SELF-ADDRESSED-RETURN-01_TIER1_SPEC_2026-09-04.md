@@ -1,7 +1,7 @@
 # SELF-ADDRESSED-RETURN-01 — TIER 1 SPEC · "Remember for me"
 
 **Date**: 2026-09-04
-**Status**: SPEC. Authorized to build per ruling §8.9 (Tier 1 only).
+**Status**: SPEC, **amended 2026-09-04 by founder review (§6)**. Authorized to build per ruling §8.9 (Tier 1 only).
 **Governing ruling**: `docs/programme/SELF-ADDRESSED-RETURN-01_CONSTITUTIONAL_RULING_2026-09-04.md`
 **Canon**: `RIGHT_TO_REMAIN_UNPOSSESSED.md` §3 · `MAIA_CANON_v1.1.md` · Sanctuary invariants (CLAUDE.md)
 **Scope discipline**: Gentle rhythm, Walk with my practice, Responsive companion, Human connection, and the absence trigger are **NOT in this spec**. Build this loop, witness it, then stop.
@@ -237,3 +237,209 @@ the schema cannot express it (ruling F4). If we ever learn it works, we will tun
 Schema + route + worker existing = **reachable**. First member-authored reminder delivered
 under real load = **verified**. Repeated use across members = **live**. Do not let the first
 `delivered_at` row inflate into Live.
+
+---
+
+## 6. Founder review amendments (2026-09-04)
+
+Five hardenings, all adopted. Two corrections to §1–§5 found while grounding them.
+
+### 6.1 Cancel token — store a hash, and never cancel on GET
+
+`cancel_token` → **`cancel_token_hash`** (`sha256` hex, UNIQUE). The opaque token exists in the
+email and in the member's hands; the database holds only its hash. A database read cannot
+reconstruct a working cancellation link.
+
+**GET confirms, POST cancels.** Mail scanners, link previewers, and corporate security proxies
+visit URLs automatically — a GET that cancels would let a scanner silently destroy the member's
+instruction. `GET /api/reminders/cancel?t=<token>` renders a confirmation; `POST` performs it.
+Lookup is by hash of the presented token, constant-time compared. Cancel-only: neither verb
+ever discloses `delivery_text`, the schedule, or any other reminder.
+
+### 6.2 Idempotent delivery — the largest gap in the original spec
+
+Two workers racing, or the send succeeding while the claiming UPDATE fails, delivers the
+member's own words to them twice. For a self-addressed message that is not a cosmetic bug: it
+misrepresents what they authored.
+
+Defence in depth, because neither layer alone is sufficient:
+
+1. **DB claim** — `UPDATE … SET delivered_at = now() WHERE id = $1 AND delivered_at IS NULL RETURNING …`. Wins the race between workers.
+2. **Provider idempotency key** — stable, derived, never random: `self-addressed-return/<reminder-id>`. Covers the case the claim cannot: vendor accepted, our write lost.
+
+**Ground truth correction**: `sendEmail` already accepts `idempotencyKey`, but its own comment
+is explicit that it is *"NOT yet a suppression key"* — today it becomes a provider **tag** and a
+log field only, and is never sent to Resend. So this spec must **extend the provider boundary**:
+add `idempotencyKey` to `ProviderEmailMessage` and have `ResendProvider` map it to Resend's
+`Idempotency-Key` header (protection retained ~24h, per founder's citation). Vendor-neutral at
+the boundary, vendor-specific in the adapter — the rule `lib/email/providers/types.ts` states.
+The stale comment in `sendEmail.ts` gets corrected in the same change; leaving it would be a
+worse defect than the gap, since a future caller would trust a guarantee that had silently
+become real for one path only.
+
+### 6.3 Retry window — a late message violates the authored act
+
+> A reminder for Tuesday 9am must not arrive Thursday because the sender recovered.
+
+New column **`delivery_deadline TIMESTAMPTZ NOT NULL`**, defaulting to `delivery_at + 6 hours`
+in v1. The worker's due query gains no predicate for it — the deadline is evaluated at claim
+time: past deadline → terminal `expired`, **never sent**. Silence is the correct outcome of a
+missed window. Delivering late would substitute the system's judgement ("better late than
+never") for the member's ("Tuesday at 9").
+
+### 6.4 The identity seam — R32's precise boundary
+
+§3 said "no second table" while §3.2 resolved the address from `members`. That contradiction is
+exactly where an absence-read gets rationalised in later. Named precisely:
+
+> **Due-selection** reads `member_reminders` alone: three predicates, one table, no JOIN.
+> **Delivery** performs exactly one further lookup — `SELECT email FROM members WHERE id = $1` —
+> the *delivery address for a member already determined to be due*.
+
+The seam is **identity and delivery address only**. Session recency, activity, last-seen, return
+state, engagement: refused, and refused whatever table they live in. R32 asserts the shape of
+the permitted lookup (single column, single table, `WHERE id = $1`), not merely the absence of
+forbidden names — otherwise the seam is a hole shaped like whatever a future patch selects.
+
+### 6.5 Typed failure telemetry — `last_error` is not narrative
+
+`last_error TEXT` → **`failure_code TEXT`** + **`failed_at TIMESTAMPTZ`**, from a closed set:
+
+```text
+no_recipient · provider_unconfigured · provider_rejected · quota_exceeded · expired · unknown
+```
+
+No provider prose, no member email, no reminder text — provider messages can echo the payload,
+and free-text columns accrete content. Vendor detail belongs in logs (which already classify it),
+not in a row beside the member's words.
+
+**`delivery_attempts` is operational evidence and must never become an engagement signal.** R32
+asserts it is read only by the worker's own retry logic, and never joined to member behaviour.
+
+### 6.6 Correction — Sanctuary needs no flag check, and there is a real gate the spec missed
+
+§2 precondition 3 said to verify a "sanctuary flag" on the source table. **No such flag exists**,
+and its absence is correct: Sanctuary is enforced at the *write* boundary
+(`lib/sanctuary/turnPosture.ts` `contentWritable()`, refusal **R21**) — sanctuary content never
+becomes an atom or an anchor at all. So a row in `member_memory_atoms` is *already* proof of
+non-sanctuary origin. Tier 1 inherits that boundary; inventing a redundant flag check would have
+implied a guarantee this unit does not itself provide.
+
+For `member_note`, the member types their own words. That is an authored act, not an extraction,
+and detecting whether they had chosen to re-type something from a sanctuary session would require
+reading sanctuary — which is itself the violation. **No check. Stated, not silently omitted.**
+
+The real gate, which §2 missed: **`sacred_protected` atoms may not become reminders.** An atom
+carrying the `sacred_protected` register is excluded from ambient recall by R04; scheduling one
+into the member's inbox would route around that exclusion through a different door. Creation is
+refused, fail-closed, with the same SQL-level predicate idiom R04 uses.
+
+### 6.7 Amended schema delta
+
+```sql
+cancel_token       TEXT NOT NULL UNIQUE   →  cancel_token_hash  TEXT NOT NULL UNIQUE
+last_error         TEXT                   →  failure_code       TEXT CHECK (failure_code IN (...))
+                                          +  failed_at          TIMESTAMPTZ
+                                          +  delivery_deadline  TIMESTAMPTZ NOT NULL
+```
+
+Everything else in §1–§5 stands: text frozen at creation · source provenance retained · Sanctuary
+fails closed (now by inheritance, correctly named) · no suppression on return · no model call at
+delivery · R32 passes only when the negative control is caught · production witness ends the unit
+· Gentle Rhythm unopened.
+
+---
+
+## 7. Second founder review (2026-09-04) — cancel-secret lifecycle, R32-A/B/C
+
+### 7.1 Cancel-secret lifecycle — decided
+
+The rotation question was real: `HMAC(secret, reminderId)` means a rotation invalidates links
+already sitting in members' inboxes. **Both** proposed remedies are adopted, because they solve
+different halves:
+
+- **A dedicated secret**, `SELF_ADDRESSED_RETURN_CANCEL_SECRET` — never the general app secret,
+  whose rotation cadence is driven by unrelated concerns and would silently revoke members'
+  cancellation authority as a side effect of routine hygiene.
+- **A versioned keyring**: `cancel_token_version SMALLINT NOT NULL DEFAULT 1` on the row, with
+  `..._PREVIOUS` / `..._PREVIOUS_VERSION` env vars. Current signs new reminders; previous stays
+  derivable for already-issued links.
+
+Verification needs no secret at all — lookup is by stored hash — so rotation affects only
+*deriving* a token for an outbound email. A reminder whose version matches neither key fails
+**closed** with typed code `cancel_secret_unavailable` and is never sent: a message the member
+cannot cancel is not one we may deliver. Re-signing under the current key is explicitly refused,
+because it would mint a token that does not match the stored hash — the member's link would fail
+at the moment they tried to use it.
+
+**Rotation procedure**: move the live value to `..._PREVIOUS` with its version → set the new
+value and bump `..._VERSION` → retire the previous key only once no undelivered reminder still
+carries its version.
+
+### 7.2 R32 proves three separate propositions
+
+| | Proposition | Enforced as |
+|---|---|---|
+| **R32-A** | due selection is absence-blind | ratified predicates present · one table · no JOIN · no absence identifier anywhere in the unit |
+| **R32-B** | the identity seam is narrow | **exactly one** read of `members`, pinned by SELECTED COLUMN: `SELECT email FROM members WHERE id = $1`. `SELECT *` fails, and a second read of `members` fails |
+| **R32-C** | delivery result cannot become engagement evidence | no `opened` / `clicked` / `visited_after` / `returned_after` / `response_to_reminder` / `conversion*` / `engagement_delta` in unit or schema |
+
+R32-B pins the column because table-name-only matching would let `SELECT * FROM members` stay
+cosmetically green while exposing `last_login`, session timestamps, and every state field.
+
+**Detector correction**: the original identifier set was snake_case only. The tempting
+implementation is written in application code, not SQL — `member.lastActiveAt > reminder.createdAt`
+— and would have passed straight through. camelCase forms are now first-class patterns.
+
+### 7.3 Negative control — the considerate-suppression shape
+
+The fixture now sabotages all three propositions, written as the *tempting considerate
+implementation* rather than an obvious violation:
+
+```ts
+if (member.lastActiveAt > reminder.createdAt) {
+  return { skipped: 'member_already_returned' };
+}
+```
+
+That is the exact future rationalization the refusal must survive: *"we're not monitoring them,
+we're just avoiding bothering them."* It still requires the observing organ. R32 reports PASS
+only when all three sabotages are caught, including this one by its camelCase name.
+
+### 7.4 Verification performed this session
+
+| Check | Result |
+|---|---|
+| Refusal registry | **108 passed · 5 failed · 24 refusals** — R32 green on all 7 assertions. Baseline before this work: 101 passed · 5 failed · 23 refusals. **Zero new failures.** |
+| R32 live sabotage — considerate suppression in the real worker | **RED** (`last_seen, lastActiveAt`) |
+| R32 live sabotage — `SELECT *` identity seam | **RED** (`identity lookup selects *`) |
+| R32 live sabotage — engagement telemetry | **RED** (`opened =, engagement_delta`) |
+| Idempotency propagation to the vendor request | **5/5 pass**; with propagation removed, **3 fail** — the test catches the defect it exists for |
+| Cancel-token rotation lifecycle | **12/12 pass** |
+| Existing email suite (regression) | **48/48 pass** |
+| `npm run typecheck` (no-regression gate) | **clean** — 230 errors vs 239 baseline, no regressions |
+
+### 7.5 Finding outside this unit — R19 and R21 are currently RED
+
+The 5 pre-existing registry failures are **R19** (legacy oracle lane) and **R21** (Sanctuary store
+boundary). Every one reports `@NaN` line numbers, which points at broken locating logic in those
+checks rather than a demonstrated breach — but *that distinction is exactly what is not currently
+provable.*
+
+This matters to this spec specifically. **§6.6 grounds Tier 1's sanctuary safety on inheritance
+from R21**: sanctuary content never becomes an atom, so a row in `member_memory_atoms` is proof of
+non-sanctuary origin. While R21 is red, that inheritance rests on an *unproven* refusal.
+
+It does not block Tier 1 — this unit adds no sanctuary write path and no new exposure — but the
+stated basis for §6.6 is weaker than the spec claims until R21 is green. **Named, not absorbed.**
+Repairing R19/R21 is separate work and must not be folded into this unit.
+
+### 7.6 Remaining before the production witness
+
+- **Integration tests against a real database** — creation ownership, the `sacred_protected`
+  refusal, cancel idempotence, claim-before-send under concurrency. Not runnable in this session
+  (no database), and **not simulated**: a mocked integration test would assert the mock.
+- Worker service registration in `docker-compose.production.yml`.
+- `SELF_ADDRESSED_RETURN_CANCEL_SECRET` provisioned in production.
+- A member-facing surface for the gesture (API is complete; UI is not in this unit).
+- **Then** the production witness, then STOP.

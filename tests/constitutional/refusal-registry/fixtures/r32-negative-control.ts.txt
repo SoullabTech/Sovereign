@@ -1,0 +1,72 @@
+// NEGATIVE CONTROL for refusal R32 — deliberately violating code.
+//
+// NOT part of the runtime. R32 scans this fixture and must FIND every violation
+// below. If R32 reports it clean, R32 is blind and its PASS on the real unit
+// proves nothing — a green light showing only that the detector stopped
+// matching anything. Extension is .ts.txt so it is never compiled or shipped.
+//
+// The sabotage is deliberately written as THE TEMPTING CONSIDERATE
+// IMPLEMENTATION, not as an obvious violation, because that is the exact
+// future rationalization this refusal has to survive:
+//
+//     "We're not monitoring them. We're just avoiding bothering them."
+//
+// That is still the observing organ. A system that can decline to send because
+// someone came back is a system that knows they were gone.
+
+// ── R32-A sabotage: due selection made contingent on the member's absence ────
+export async function findDue_VIOLATION() {
+  return query(
+    `SELECT r.id
+       FROM member_reminders r
+       JOIN members m ON m.id = r.member_id
+      WHERE r.delivery_at <= now()
+        AND r.cancelled_at IS NULL
+        AND r.delivered_at IS NULL
+        AND m.last_seen < now() - interval '7 days'`,
+  );
+}
+
+// ── R32-A sabotage, camelCase form: the kind one ─────────────────────────────
+export function skipIfAlreadyReturned_VIOLATION(member: Member, reminder: Reminder) {
+  // Reads as consideration. Requires surveillance.
+  if (member.lastActiveAt > reminder.createdAt) {
+    return { skipped: 'member_already_returned' };
+  }
+  return null;
+}
+
+export async function suppressIfRecentlyActive_VIOLATION(memberId: string) {
+  const recent = await query(
+    `SELECT last_activity FROM sessions WHERE member_id = $1 ORDER BY created_at DESC LIMIT 1`,
+    [memberId],
+  );
+  return daysSinceLastVisit(recent) < 1;
+}
+
+// ── R32-B sabotage: the identity seam widened to SELECT * ────────────────────
+export async function resolveRecipient_VIOLATION(memberId: string) {
+  // Cosmetically "just the members table" — actually every column on it,
+  // last_login and session timestamps included.
+  return query(`SELECT * FROM members WHERE id = $1`, [memberId]);
+}
+
+// ── R32-C sabotage: delivery outcome turned into engagement evidence ─────────
+export async function recordOutcome_VIOLATION(reminderId: string, memberId: string) {
+  await query(
+    `UPDATE member_reminders
+        SET opened = true,
+            clicked = true,
+            visited_after = true,
+            engagement_delta = 1
+      WHERE id = $1`,
+    [reminderId],
+  );
+  return conversionForMember(memberId);
+}
+
+interface Member { lastActiveAt: Date }
+interface Reminder { createdAt: Date }
+declare function query(sql: string, params?: unknown[]): Promise<unknown>;
+declare function daysSinceLastVisit(rows: unknown): number;
+declare function conversionForMember(memberId: string): Promise<unknown>;

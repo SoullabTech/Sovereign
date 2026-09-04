@@ -33,6 +33,16 @@ export interface ProviderEmailMessage {
   headers?: Record<string, string>;
   /** Vendor-neutral key/value labels. Providers map these to their own tagging. */
   tags?: Array<{ name: string; value: string }>;
+  /**
+   * Vendor-neutral duplicate-send suppression. When present, a provider MUST
+   * ask the vendor to treat a repeat of the same key as the same send rather
+   * than a new one, using whatever mechanism that vendor offers.
+   *
+   * This is a real guarantee, not a label: `tags` are observability, this is
+   * behaviour. A provider that cannot honour it must ignore it rather than
+   * pretend — the caller's own claim discipline depends on knowing which.
+   */
+  idempotencyKey?: string;
 }
 
 /**

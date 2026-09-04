@@ -64,7 +64,14 @@ export class ResendProvider implements EmailProvider {
       html: message.html,
       text: message.text,
       replyTo: message.replyTo,
-      headers: message.headers,
+      headers: {
+        ...message.headers,
+        // Resend's own duplicate-send protection (retained ~24h). Sent as a
+        // header rather than an SDK option so it does not depend on the
+        // installed SDK version typing it — the vendor-specific half of the
+        // boundary's vendor-neutral `idempotencyKey`.
+        ...(message.idempotencyKey ? { 'Idempotency-Key': message.idempotencyKey } : {}),
+      },
       tags: message.tags,
     };
 
