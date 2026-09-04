@@ -57,35 +57,25 @@ function gitBlobId(path: string): string {
 /* An empty cookie jar, installed before the routes are imported, so authority
    can only come from a session token the database recognises (07A pattern). */
 const emptyCookies = { get: () => undefined, getAll: () => [], has: () => false };
-/* Passive count of provider-adapter invocations: the adapter's exported
-   factory is wrapped so each `execute` increments a counter and then delegates
-   UNCHANGED. Nothing about the request or the response is altered. */
+/* Passive count of provider calls at the HTTP layer: requests to the
+   provider's messages endpoint are counted and delegated UNCHANGED. Nothing
+   about the request or the response is altered. (A loader hook cannot see the
+   router's dynamic import under tsx, so the count is taken where the call
+   actually leaves the process.) */
 let providerCalls = 0;
+const realFetch = globalThis.fetch;
+globalThis.fetch = ((input: RequestInfo | URL, init?: RequestInit) => {
+  const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
+  if (/\/v1\/messages/.test(url)) providerCalls += 1;
+  return realFetch(input, init);
+}) as typeof fetch;
 const moduleLoader = Module as unknown as { _load: (request: string, ...rest: unknown[]) => unknown };
 const originalLoad = moduleLoader._load;
 moduleLoader._load = function (this: unknown, request: string, ...rest: unknown[]) {
   if (request === 'next/headers') {
     return { cookies: async () => emptyCookies, headers: async () => new Headers() };
   }
-  const loaded = originalLoad.call(this, request, ...rest);
-  if (/anthropicStructuredAdapter/.test(request) && loaded && typeof loaded === 'object') {
-    const real = loaded as { anthropicStructuredProvider?: (...a: unknown[]) => { name: string; execute: (req: unknown) => Promise<unknown> } };
-    if (typeof real.anthropicStructuredProvider === 'function') {
-      const factory = real.anthropicStructuredProvider;
-      return new Proxy(loaded, {
-        get(target, prop, receiver) {
-          if (prop === 'anthropicStructuredProvider') {
-            return (...a: unknown[]) => {
-              const provider = factory(...a);
-              return { ...provider, execute: (req: unknown) => { providerCalls += 1; return provider.execute(req); } };
-            };
-          }
-          return Reflect.get(target, prop, receiver);
-        },
-      });
-    }
-  }
-  return loaded;
+  return originalLoad.call(this, request, ...rest);
 };
 
 const SECTIONS = [
@@ -262,7 +252,7 @@ async function main() {
       && listed.length === 2 && (await loadReading(reading.id, memberId)) !== null,
       second?.outcome === 'frozen' ? `${reading.id.slice(0, 8)} → ${second.reading.id.slice(0, 8)} (act ${history[history.length - 1]?.act})`
         : cp.status !== 200 ? `checkpoint ${cp.status}` : `UNPROVED — ${history.map((h) => `act ${h.act}: ${h.outcome}${h.refusal ? ` ${h.stage}/${h.refusal}` : ''}`).join('; ')}`);
-    row('D12 the first commission changed no manuscript row (real before/after snapshots); exactly two provider calls (reader + classifier), no retry',
+    row('D12 the first commission changed no manuscript row (real before/after snapshots); exactly two provider calls (reader + classifier), no retry — counted at the HTTP layer',
       afterFirst === before && (reading.outcome === 'none' ? callsForFirst === 1 : callsForFirst === 2), `${callsForFirst} provider call(s)`);
 
     Object.assign(record, {
