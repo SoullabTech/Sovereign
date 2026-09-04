@@ -5,8 +5,9 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { apiFetch } from '@/lib/http/apiBase';
 import { PRESS, SERIF } from '../pressTheme';
-import { IMPORT_HREF, SOURCE_HREF } from '../studioMap';
+import { DEVELOP_HREF, IMPORT_HREF, SOURCE_HREF } from '../studioMap';
 import { UNTITLED_EXPRESSION } from '../shellIdentity';
+import { canvasForManuscript } from '../canvasIdentity';
 import { arrivalWork, useLivingWorks } from '../useLivingWorks';
 import type { CurrentManuscript } from '../useCurrentManuscript';
 import {
@@ -53,7 +54,7 @@ import { requestStructureReading } from '@/lib/writersStudio/reviewClient';
  *     draft exists, it was last touched at a time.
  */
 
-type DrawerId = 'work' | 'materials' | 'structure' | 'history';
+type DrawerId = 'work' | 'materials' | 'structure' | 'develop' | 'history';
 type ListPhase = 'loading' | 'ready' | 'none' | 'unauthorized' | 'error';
 
 /** Same rule as Studio Home: return by identity, never by position. */
@@ -193,6 +194,9 @@ export default function WriterCanvasPage() {
     ...(manuscript && manuscript.sectionCount > 1
       ? [{ id: 'structure' as DrawerId, label: 'Structure' }]
       : []),
+    // Develop exists only where there is a Work to read. The reading itself
+    // happens in its own room (BUILD-07D); this drawer is the door.
+    ...(manuscript ? [{ id: 'develop' as DrawerId, label: 'Develop' }] : []),
     { id: 'history', label: 'History' },
   ];
 
@@ -284,6 +288,25 @@ export default function WriterCanvasPage() {
                 </p>
               )}
             </div>
+          </>
+        ) : null;
+      case 'develop':
+        /* BUILD-07D — the door to the Develop room. Nothing is read from
+           here; the room is where readings are asked for and encountered,
+           by durable identity, so the door carries only the Work's id. */
+        return manuscript ? (
+          <>
+            <p className="text-[13px] leading-relaxed opacity-70 mb-3">
+              What MAIA noticed when she read this work developmentally, kept exactly as she
+              noticed it. Ask for a reading there; nothing changes unless you change it.
+            </p>
+            <Link
+              href={canvasForManuscript(DEVELOP_HREF, manuscript.id)}
+              className="text-[13px] underline underline-offset-4 opacity-75 hover:opacity-100"
+              data-develop-door
+            >
+              Open Develop
+            </Link>
           </>
         ) : null;
       case 'history':
