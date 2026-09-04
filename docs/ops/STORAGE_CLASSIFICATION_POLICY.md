@@ -106,6 +106,26 @@ to discover approved checkout roots, classify active/dirty/protected trees, and
 reclaim only regenerable artifacts from inactive ones — never source, and never
 the checkout itself, without separate authority.
 
+### Custody class: checkouts under `/private/tmp`
+
+Git checkouts living in `/private/tmp` are a custody class of their own. Unlike an
+ordinary worktree they are subject to an **external deletion authority** — macOS
+purges that directory on a schedule — so anything unique there is under a
+countdown that no one in this repo controls. Treat it as already expiring until
+proven backed.
+
+The full risk check is two questions, not one. Neither alone is sufficient:
+
+```bash
+git -C <checkout> log --oneline HEAD --not --remotes   # unpushed commits
+git -C <checkout> status --short                       # uncommitted / untracked work
+```
+
+Both silent means no git-visible unique work. Either producing output is a custody
+issue to resolve before the directory expires. In every case, deleting only that
+checkout's `node_modules` stays safe — regenerable material is never the custody
+question.
+
 ### Design constraint: reclaimable is not disposable
 
 The current classifier answers exactly one question — *could this be reconstructed
