@@ -10,8 +10,8 @@
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
-import { query } from '@/lib/db/postgres';
 import { getAuthenticatedMember } from '@/lib/practitioner/auth';
+import { cancelIfNotDispatching } from '@/lib/reminders/dispatch';
 
 export async function DELETE(
   _request: NextRequest,
@@ -27,17 +27,24 @@ export async function DELETE(
     return NextResponse.json({ error: 'reminder id required' }, { status: 400 });
   }
 
-  // Idempotent: cancelling an already-cancelled reminder succeeds quietly.
-  // A delivered reminder cannot be un-delivered, so it is left untouched.
-  await query(
-    `UPDATE member_reminders
-        SET cancelled_at = now()
-      WHERE id = $1
-        AND member_id = $2
-        AND cancelled_at IS NULL
-        AND delivered_at IS NULL`,
-    [id, member.id],
-  );
+  // Conditional on dispatch not having begun. The answer is TRUTHFUL:
+  // 'already_sending' is not an error, it is the honest report that the send
+  // has started and an email cannot be recalled. Reporting success there would
+  // be a lie the member acts on.
+  const result = await cancelIfNotDispatching({ id, memberId: member.id });
 
-  return NextResponse.json({ cancelled: true });
+  if (result === 'not_found') {
+    return NextResponse.json({ error: 'Not found' }, { status: 404 });
+  }
+  if (result === 'already_sending') {
+    return NextResponse.json(
+      {
+        cancelled: false,
+        state: 'already_sending',
+        message: 'This one is already on its way — it was sent before the cancellation reached us.',
+      },
+      { status: 409 },
+    );
+  }
+  return NextResponse.json({ cancelled: true, state: 'cancelled' });
 }

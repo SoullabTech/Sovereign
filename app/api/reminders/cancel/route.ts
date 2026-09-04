@@ -19,8 +19,8 @@
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
-import { query } from '@/lib/db/postgres';
 import { hashCancelToken } from '@/lib/reminders/cancelToken';
+import { cancelIfNotDispatching } from '@/lib/reminders/dispatch';
 
 function page(title: string, body: string, formToken?: string): NextResponse {
   const form = formToken
@@ -84,18 +84,21 @@ export async function POST(request: NextRequest) {
   }
 
   // Lookup is by hash: the token itself is never stored, so a database read
-  // cannot reconstruct a working link.
-  await query(
-    `UPDATE member_reminders
-        SET cancelled_at = now()
-      WHERE cancel_token_hash = $1
-        AND cancelled_at IS NULL
-        AND delivered_at IS NULL`,
-    [hashCancelToken(token)],
-  );
+  // cannot reconstruct a working link. Conditional on dispatch not having
+  // begun — see lib/reminders/dispatch.ts.
+  const result = await cancelIfNotDispatching({ cancelTokenHash: hashCancelToken(token) });
 
-  // The same response whether or not a row matched — an unmatched token is not
-  // distinguishable from a matched one, and nothing about the row is disclosed.
+  if (result === 'already_sending') {
+    // Truthful. We do not pretend an email can be recalled once its send began.
+    return page(
+      'Already on its way',
+      'This one had already started sending when your cancellation reached us, so it could not be stopped. Nothing else is scheduled because of it.',
+    );
+  }
+
+  // 'cancelled' and 'not_found' return the SAME page: an unmatched token must
+  // not be distinguishable from a matched one, and nothing about the row is
+  // disclosed either way.
   return page(
     'Cancelled',
     'That reminder will not be sent. Nothing here is keeping count — come back when you come back.',

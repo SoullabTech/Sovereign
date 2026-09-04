@@ -28,6 +28,7 @@ const UNIT = [
   'database/migrations/20260904000002_member_reminders.sql',
   'lib/reminders/cancelToken.ts',
   'lib/reminders/confirmation.ts',
+  'lib/reminders/dispatch.ts',
   'lib/reminders/source.ts',
   'lib/reminders/types.ts',
   'app/api/reminders/route.ts',
@@ -38,6 +39,7 @@ const UNIT = [
 ];
 
 const WORKER = 'scripts/run-member-reminders-worker.ts';
+const DISPATCH = 'lib/reminders/dispatch.ts';
 const MIGRATION = 'database/migrations/20260904000002_member_reminders.sql';
 const NEGATIVE_CONTROL = 'tests/constitutional/refusal-registry/fixtures/r32-negative-control.ts.txt';
 
@@ -156,7 +158,13 @@ export const check: RefusalCheck = {
     }
 
     const worker = stripComments(io.read(WORKER));
-    const due = worker.match(/FROM\s+member_reminders[\s\S]*?LIMIT\s+\$1/i)?.[0] ?? '';
+    const dispatch = stripComments(io.read(DISPATCH));
+
+    // The due-selection query now lives in the dispatch module, which owns the
+    // PENDING → CLAIMED → DISPATCHING → DELIVERED contract. Its shape is still
+    // the evidence: the three ratified predicates, plus lifecycle predicates
+    // that make a claim well-defined, and NO table but member_reminders.
+    const due = dispatch.match(/SELECT\s+id\s+FROM\s+member_reminders[\s\S]*?FOR UPDATE SKIP LOCKED/i)?.[0] ?? '';
     if (!due) {
       io.fail('R32-A · due-selection query not found', 'R32 cannot bound the query it exists to bound');
     } else {
@@ -165,18 +173,37 @@ export const check: RefusalCheck = {
         /cancelled_at\s+IS\s+NULL/i.test(due) &&
         /delivered_at\s+IS\s+NULL/i.test(due);
       const hasJoin = /\bJOIN\b/i.test(due);
-      const otherTable = /\bFROM\s+(?!member_reminders\b)\w+/i.test(due);
-      if (ratified && !hasJoin && !otherTable) {
+      if (ratified && !hasJoin) {
         io.pass(
           'R32-A · due-selection depends only on the reminder itself',
-          'delivery_at <= now() · cancelled_at IS NULL · delivered_at IS NULL · one table · no JOIN',
+          'delivery_at <= now() · cancelled_at IS NULL · delivered_at IS NULL · plus lifecycle · one table · no JOIN',
         );
       } else {
-        io.fail(
-          'R32-A · due-selection widened',
-          `ratifiedPredicates=${ratified} join=${hasJoin} otherTable=${otherTable}`,
-        );
+        io.fail('R32-A · due-selection widened', `ratifiedPredicates=${ratified} join=${hasJoin}`);
       }
+    }
+
+    // The whole dispatch contract must stay on member_reminders. `due` is the
+    // CTE the claim query defines; anything else named after FROM/JOIN/UPDATE
+    // would mean the reminder's lifecycle had started consulting the person.
+    // `FOR UPDATE SKIP LOCKED` is a locking clause, not a table reference —
+    // strip it first so the scan does not read "SKIP" as a table name.
+    const dispatchSql = dispatch.replace(/FOR\s+UPDATE\s+SKIP\s+LOCKED/gi, ' ');
+    const tablesTouched = [
+      ...dispatchSql.matchAll(/\b(?:FROM|JOIN|UPDATE|INTO)\s+([a-z_][a-z0-9_]*)/gi),
+    ]
+      .map((m) => m[1].toLowerCase())
+      .filter((t) => t !== 'member_reminders' && t !== 'due');
+    if (tablesTouched.length === 0) {
+      io.pass(
+        'R32-A · the dispatch contract touches only member_reminders',
+        'claim, dispatch, deliver, release, fail and cancel are all lifecycle-only',
+      );
+    } else {
+      io.fail(
+        'R32-A · dispatch contract reaches beyond the reminder',
+        `tables: ${[...new Set(tablesTouched)].join(', ')}`,
+      );
     }
 
     // ═══ R32-B — the identity seam is narrow ══════════════════════════════

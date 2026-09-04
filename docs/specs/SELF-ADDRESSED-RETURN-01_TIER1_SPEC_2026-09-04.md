@@ -561,3 +561,104 @@ member email resolved through the narrow identity seam → **pre-delivery** canc
 cancelled reminder never sends.
 
 No return measurement. No "helpful" suppression. No next support tier.
+
+---
+
+## 9. Fourth founder review — atomic dispatch authority (settled, proven)
+
+The operational contract settled before worker registration. Provider idempotency prevents a
+duplicate *email*; it says nothing about two workers both believing they own a reminder, and
+nothing about the race pre-delivery cancellation introduced — the member clicking Cancel at the
+moment a worker begins sending.
+
+### 9.1 The state machine
+
+```text
+PENDING
+   ↓  claimDue()        atomic lease (FOR UPDATE SKIP LOCKED). Member may STILL cancel.
+CLAIMED
+   ↓  beginDispatch()   ← THE LINEARIZATION POINT
+DISPATCHING             cancellation is now genuinely too late
+   ↓  markDelivered()
+DELIVERED
+```
+
+`lib/reminders/dispatch.ts` owns it. Columns added: `claimed_at`, `claim_token`,
+`claim_expires_at`, `dispatch_started_at`.
+
+**`beginDispatch` re-checks every condition inside one atomic UPDATE** — same claim, not
+cancelled, not delivered, not already dispatching, deadline valid, retry horizon valid. Notably
+`cancelled_at IS NULL` is re-checked *there*, not merely at claim time: that is what makes a
+cancellation racing a send resolve one way or the other, never both.
+
+**The lease expires** (5 min), so a worker that dies between claiming and dispatching cannot hold
+a member's reminder hostage. Throughout the lease the reminder remains cancellable, because
+CLAIMED is internal bookkeeping and carries no authority over the member.
+
+**Cancellation is conditional and TRUTHFUL.** `cancelIfNotDispatching` returns `cancelled` |
+`already_sending` | `not_found`. `already_sending` is not an error — it is the honest report that
+the send began and an email cannot be recalled. Both the authenticated route (409 + plain
+language) and the emailed token link say so. *We do not sell a cancellation that did not happen.*
+
+Four **database** CHECK constraints make the ordering structural rather than a worker convention:
+dispatch requires a claim · delivery requires a dispatch · a claim is all-or-none · **cancelled
+XOR dispatched** (a row can never be both).
+
+### 9.2 R32-A followed the query rather than passing vacuously
+
+Moving due-selection into `dispatch.ts` turned R32-A **red** — "due-selection query not found" —
+rather than green-by-absence. Repointed at the new home, and **strengthened**: a second assertion
+now proves the *entire* dispatch contract (claim, dispatch, deliver, release, fail, cancel)
+touches only `member_reminders`. The reminder's lifecycle never consults the person.
+
+One detector bug found and fixed while doing it: `FOR UPDATE SKIP LOCKED` matched the
+table-name pattern and reported "skip" as a table. Fixed in the detector, not waived by an
+allowlist.
+
+### 9.3 Real-database proof — `scripts/verify-reminders-dispatch.ts`
+
+Run against a live Postgres 16 (UTF8). **Nothing mocked** — a mocked concurrency test asserts
+the mock.
+
+| # | Case | Result |
+|---|---|---|
+| 1 | Two workers claim one due reminder | exactly one leases · exactly one dispatch transition · attempts incremented once |
+| 2 | Crash before dispatch | held lease blocks re-claim · **member can still cancel** · expired lease becomes claimable |
+| 3 | Crash after provider success, before `delivered_at` | `first_attempt_at` survives · retry permitted inside the horizon under the same idempotency key |
+| 4 | Retry crosses the 12h horizon | dispatch refused · `delivery_uncertain` · never sent |
+| 5 | Cancel races a claim | cancellation wins · worker cannot dispatch |
+| 6 | Cancel after dispatch began | `already_sending` on both surfaces · row **not** falsely marked cancelled |
+| 7 | Authored-time deadline passed | dispatch refused · never delivered late · `expired` |
+| — | Invariant sweep | no row both cancelled and dispatched · no delivery without dispatch · live table carries no absence or engagement column |
+
+**28 passed · 0 failed.**
+
+### 9.4 Full verification state
+
+| Check | Result |
+|---|---|
+| Dispatch integration proof (real DB) | **28/28** |
+| Refusal registry | **110 passed · 5 failed · 24 refusals** — R32 green on 10 assertions; the 5 remain the pre-existing R19/R21 defects, explicitly outside this unit |
+| `lib/reminders/` + `lib/email/` | **92/92**, 9 suites |
+| `npm run typecheck` | clean, no regressions |
+
+### 9.5 Remaining to closure
+
+```text
+worker / service registration in docker-compose.production.yml
+→ production secret + keyring provisioning
+→ member-facing "Remind me of this" gesture
+→ PR / sovereignty gates
+→ deploy exact accepted SHA
+→ one founder-visible production act
+→ witness record
+→ STOP
+```
+
+**The witness must prove PRESENCE, not merely absence of errors**: member authors reminder →
+approved snapshot frozen → confirmation arrives → cancellation works before dispatch →
+uncancelled reminder becomes due without any absence read → current address resolved through the
+narrow identity seam → **exactly one** email at the authorized time with **exactly** the approved
+words → no return or engagement observation exists.
+
+**Gentle Rhythm stays closed.** This loop stands on its own before anything is generalized from it.

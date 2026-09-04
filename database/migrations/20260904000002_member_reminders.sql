@@ -52,6 +52,22 @@ CREATE TABLE IF NOT EXISTS member_reminders (
 
   created_at         TIMESTAMPTZ NOT NULL DEFAULT now(),
   cancelled_at       TIMESTAMPTZ,
+
+  -- ── DISPATCH AUTHORITY ────────────────────────────────────────────────
+  -- PENDING → CLAIMED → DISPATCHING → DELIVERED.
+  --
+  -- CLAIMED is an internal lease only: the member may STILL cancel. The lease
+  -- expires so a crashed worker cannot hold a reminder hostage.
+  --
+  -- dispatch_started_at is the LINEARIZATION POINT. Once set, the send has
+  -- begun and cancellation is genuinely too late — an email cannot be recalled,
+  -- and the member is told that truthfully rather than sold a cancellation that
+  -- did not happen.
+  claimed_at         TIMESTAMPTZ,
+  claim_token        UUID,
+  claim_expires_at   TIMESTAMPTZ,
+  dispatch_started_at TIMESTAMPTZ,
+
   delivered_at       TIMESTAMPTZ,
 
   -- Operational evidence ONLY. Never an engagement signal, never joined to
@@ -86,13 +102,30 @@ CREATE TABLE IF NOT EXISTS member_reminders (
     CHECK (delivery_deadline >= delivery_at),
 
   CONSTRAINT member_reminders_failure_code_with_failed_at
-    CHECK ((failure_code IS NULL) = (failed_at IS NULL))
+    CHECK ((failure_code IS NULL) = (failed_at IS NULL)),
+
+  -- A lease is all three fields or none of them.
+  CONSTRAINT member_reminders_claim_is_whole
+    CHECK (num_nonnulls(claimed_at, claim_token, claim_expires_at) IN (0, 3)),
+
+  -- Dispatch can only follow a claim, and delivery can only follow dispatch.
+  -- The ordering is enforced by the database, not merely by worker discipline.
+  CONSTRAINT member_reminders_dispatch_requires_claim
+    CHECK (dispatch_started_at IS NULL OR claimed_at IS NOT NULL),
+  CONSTRAINT member_reminders_delivery_requires_dispatch
+    CHECK (delivered_at IS NULL OR dispatch_started_at IS NOT NULL),
+
+  -- The member's cancellation and the system's dispatch are mutually exclusive
+  -- outcomes. Both being set would mean we cancelled something already sent.
+  CONSTRAINT member_reminders_cancel_xor_dispatch
+    CHECK (cancelled_at IS NULL OR dispatch_started_at IS NULL)
 );
 
 -- The worker's only index, deliberately shaped like the only query it may run.
 CREATE INDEX IF NOT EXISTS idx_member_reminders_due
   ON member_reminders (delivery_at)
-  WHERE cancelled_at IS NULL AND delivered_at IS NULL AND failed_at IS NULL;
+  WHERE cancelled_at IS NULL AND delivered_at IS NULL AND failed_at IS NULL
+    AND dispatch_started_at IS NULL;
 
 -- The member's own list of what they have scheduled.
 CREATE INDEX IF NOT EXISTS idx_member_reminders_member
