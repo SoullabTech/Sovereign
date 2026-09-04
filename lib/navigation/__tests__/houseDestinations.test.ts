@@ -88,8 +88,12 @@ describe('classifyReachability', () => {
   });
 
   it('web-policy routes are "web" on both platforms (dispatch decides the bridge)', () => {
-    expect(classifyReachability(find('astrology'), true)).toBe('web');
-    expect(classifyReachability(find('astrology'), false)).toBe('web');
+    // Astrology used to stand here. It was reclassified 'native' on 2026-08-28
+    // (see the registry note: the route IS in the bundle, and bridging it out to
+    // Safari landed members in the wrong room). This assertion follows the
+    // policy, not the destination — Wisdom and the Writer's Studio are web.
+    expect(classifyReachability(find('wisdom'), true)).toBe('web');
+    expect(classifyReachability(find('wisdom'), false)).toBe('web');
     expect(classifyReachability(find('studio'), true)).toBe('web');
   });
 
@@ -123,8 +127,8 @@ describe('dispatchHouseDestination', () => {
 
   it('web-policy route bridges to /open-web on native', () => {
     const h = harness(true);
-    dispatchHouseDestination(find('astrology'), h.ctx);
-    expect(h.pushed).toEqual(['/open-web?to=%2Fastrology']);
+    dispatchHouseDestination(find('wisdom'), h.ctx);
+    expect(h.pushed).toEqual(['/open-web?to=%2Fwisdom-keepers%2Fwisdom']);
   });
 
   it('web-policy route pushes directly on web', () => {
@@ -244,5 +248,42 @@ describe('webBridgePath', () => {
 describe('journal route correction', () => {
   it('uses the native-bundled /journal, not founder-gated /labtools/journal', () => {
     expect(find('journal').route).toBe('/journal');
+  });
+});
+
+describe('Reflections — member route, not the lab surface', () => {
+  it('is offered to every member', () => {
+    const member = getHouseDestinations(false).map((d) => d.id);
+    expect(member).toContain('reflections');
+  });
+
+  it('points at the member home /reflections, never the founder-gated lab surface', () => {
+    expect(find('reflections').route).toBe('/reflections');
+    expect(find('reflections').route).not.toBe('/labtools/reflections');
+  });
+
+  it('sits with the member’s own life, not among the Rooms', () => {
+    expect(find('reflections').group).toBe('life');
+  });
+
+  it('bridges to the web on native, because /reflections/[id] is stripped from the bundle', () => {
+    // A client component on a dynamic segment cannot supply generateStaticParams,
+    // so capacitor-patch-routes.sh excludes it. Shipping the feed natively while
+    // every card opens nothing is the broken-button failure this registry prevents.
+    expect(classifyReachability(find('reflections'), true)).toBe('web');
+    const h = harness(true);
+    dispatchHouseDestination(find('reflections'), h.ctx);
+    expect(h.pushed).toEqual([webBridgePath('/reflections')]);
+  });
+});
+
+describe('the House never opens an instrumentation surface', () => {
+  // /labtools is ruled OUT of the House (houseDispositions → labtools:
+  // intentionally_withheld) and is hard-gated by requireFounder(). A destination
+  // routing there would advertise a place that refuses the member who taps it.
+  it('no destination routes into /labtools', () => {
+    for (const d of HOUSE_DESTINATIONS) {
+      expect(`${d.id}:${d.route ?? ''}`).not.toMatch(/:\/labtools(\/|$)/);
+    }
   });
 });
