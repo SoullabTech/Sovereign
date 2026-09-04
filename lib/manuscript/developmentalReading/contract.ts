@@ -137,8 +137,17 @@ export interface DevelopmentalObservation {
   key: string;
   /** The editorial question the reading was commissioned under (INV-10). Copied, never inferred. */
   lens: DevelopmentalLens;
-  /** What the reading noticed, classified (INV-12). From the closed v1 family. */
-  phenomenon: DevelopmentalPhenomenon;
+  /**
+   * DESCRIPTIVE, and OPTIONAL from reading contract v2 (WS2-07-F1).
+   *
+   * Absent when the classifier ran and declined this observation. Its absence
+   * never invalidates the observation: observation has ontological priority
+   * over classification — the taxonomy may describe a developmental
+   * observation, but it may neither manufacture one nor veto one.
+   *
+   * Omission is the ONLY representation of "no taxonomy claim". Never null.
+   */
+  phenomenon?: DevelopmentalPhenomenon;
   /** Re-bound against the reading's own evidence before the freeze (INV-5, INV-8). */
   evidenceRefs: NonEmptyArray<EvidenceRef>;
   /** Required. The reader's claim text, VERBATIM — 07C does not rewrite (founder ruling). */
@@ -158,11 +167,37 @@ export interface ClassifierIdentity {
   classifierVersion: string;
 }
 
-/** INV-25 — the whole vocabulary; `frozenAt` stamped by the store, once, for the reading. */
+/**
+ * The reading contract a frozen reading was admitted under — an INDEPENDENT
+ * provenance dimension from the reader and classifier versions, never inferred
+ * from either.
+ *
+ *   v1  the accepted pre-correction contract: an observation REQUIRED a
+ *       phenomenon. Identified by the ABSENCE of this field. Never backfilled —
+ *       a historical row's missing version IS the evidence of that contract.
+ *   v2  the corrected contract: an observation MAY exist without a phenomenon.
+ */
+export const READING_CONTRACT_VERSION = 'DEVELOPMENTAL-READING-CONTRACT-02';
+
+/**
+ * INV-25 (WS2-07-F1 replacement) — `classifier === null` iff classification was
+ * not invoked. A persisted reading containing observations retains classifier
+ * identity even when the classifier makes zero phenomenon claims.
+ *
+ * `commission.ts` invokes the classifier unconditionally whenever the reader
+ * returns claims, so the stronger persisted form holds:
+ *
+ *     observations present  =>  classifier !== null
+ *
+ * `frozenAt` is stamped by the store, once, for the reading.
+ */
 export interface DevelopmentalReadingProvenance {
   reader: ReaderIdentity;
-  /** Present iff the reading has observations (a `none` reading classified nothing). */
+  /** Null iff classification was not invoked — NOT "declined". A classifier
+   *  that ran and declined every observation is still identified here. */
   classifier: ClassifierIdentity | null;
+  /** Absent on v1 readings frozen before the correction. */
+  readingContractVersion?: string;
   /** ISO-8601, server-stamped at the write. Never accepted from a caller. */
   frozenAt: string;
 }

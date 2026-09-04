@@ -21,9 +21,41 @@ describe('parseClassifierBlocks', () => {
     expect(p.ok && p.phenomena).toEqual(['recurrence', 'movement']);
   });
 
-  it('unclassifiable refuses rather than inventing a category', () => {
+  it('WS2-07-F1 v2 — an unclassifiable claim no longer refuses; the decline is preserved per index', () => {
     const p = parseClassifierBlocks([cls('recurrence', 'unclassifiable')], 2);
-    expect(p.ok ? 'ok' : `${p.refusal}:${p.index}`).toBe('classifier_unclassifiable:1');
+    expect(p.ok).toBe(true);
+    if (!p.ok) return;
+    expect(p.phenomena).toEqual(['recurrence', undefined]);
+  });
+
+  it('WS2-07-F1 v2 — THE REGRESSION SPECIMEN: valid · declined · valid, all three preserved in place', () => {
+    /* This is the test that proves the taxonomy's VETO was removed, not merely
+       that the all-declined case is tolerated. B declining must not disturb
+       A or C. */
+    const p = parseClassifierBlocks([cls('movement', 'unclassifiable', 'recurrence')], 3);
+    expect(p.ok).toBe(true);
+    if (!p.ok) return;
+    expect(p.phenomena).toEqual(['movement', undefined, 'recurrence']);
+  });
+
+  it('WS2-07-F1 v2 — every claim declined still parses, and is not a refusal', () => {
+    const p = parseClassifierBlocks([cls('unclassifiable', 'unclassifiable')], 2);
+    expect(p.ok).toBe(true);
+    if (!p.ok) return;
+    expect(p.phenomena).toEqual([undefined, undefined]);
+  });
+
+  it('WS2-07-F1 v2 — a declined index still counts as answered; an unanswered one still refuses', () => {
+    /* `undefined` now means DECLINED, so it can no longer double as the
+       not-yet-answered sentinel. An index the model simply never returned is
+       still an index mismatch. */
+    expect(parseClassifierBlocks([cls('unclassifiable')], 2).ok).toBe(false);
+    expect(parseClassifierBlocks([cls('unclassifiable', 'unclassifiable')], 2).ok).toBe(true);
+  });
+
+  it('WS2-07-F1 v2 — a value outside the family is still malformed output, not a decline', () => {
+    const p = parseClassifierBlocks([cls('recurrence', 'banana')], 2);
+    expect(p.ok ? 'ok' : p.refusal).toBe('classifier_malformed');
   });
 
   it('missing, duplicated, out-of-range indexes and foreign values refuse', () => {

@@ -132,6 +132,9 @@ export type ClassifyRefusal =
   | 'classifier_malformed'
   | 'classifier_foreign_field'
   | 'classifier_index_mismatch'
+  /** WS2-07-F1 · reading contract v2: NO LONGER PRODUCED. Retained in the union
+   *  because refusal semantics elsewhere are frozen. A decline is now carried
+   *  per observation as an absent phenomenon. */
   | 'classifier_unclassifiable'
   | 'structured_inference_unavailable'
   | 'provider_unavailable'
@@ -139,7 +142,7 @@ export type ClassifyRefusal =
   | 'not_configured';
 
 export type ParsedClassification =
-  | { ok: true; phenomena: readonly DevelopmentalPhenomenon[] }
+  | { ok: true; phenomena: readonly (DevelopmentalPhenomenon | undefined)[] }
   | { ok: false; refusal: ClassifyRefusal; detail: string; index: number | null };
 
 const refuse = (refusal: ClassifyRefusal, detail: string, index: number | null = null): ParsedClassification =>
@@ -159,6 +162,7 @@ export function parseClassifierBlocks(blocks: readonly StructuredBlock[], expect
   if (!Array.isArray(o.classifications)) return refuse('classifier_malformed', 'classifications is not an array');
 
   const out: (DevelopmentalPhenomenon | undefined)[] = new Array(expected).fill(undefined);
+  const seen: boolean[] = new Array(expected).fill(false);
   for (const [i, raw] of o.classifications.entries()) {
     if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return refuse('classifier_malformed', `classifications[${i}] is not an object`, i);
     const c = raw as Record<string, unknown>;
@@ -167,20 +171,28 @@ export function parseClassifierBlocks(blocks: readonly StructuredBlock[], expect
     if (typeof c.index !== 'number' || !Number.isInteger(c.index) || c.index < 0 || c.index >= expected) {
       return refuse('classifier_index_mismatch', `classifications[${i}] names index ${JSON.stringify(c.index)}; ${expected} claim(s)`, i);
     }
-    if (out[c.index] !== undefined) return refuse('classifier_index_mismatch', `claim ${c.index} classified twice`, i);
+    if (seen[c.index]) return refuse('classifier_index_mismatch', `claim ${c.index} classified twice`, i);
+    seen[c.index] = true;
     if (c.phenomenon === UNCLASSIFIABLE) {
-      return refuse('classifier_unclassifiable', `claim ${c.index} does not fit the v1 phenomenon family; the freeze is refused rather than a category invented`, c.index);
+      /* WS2-07-F1 · reading contract v2. An honest decline is intelligence, not
+         failure: the observation survives WITHOUT a phenomenon, and the decline
+         is preserved per index rather than terminating the whole parse. This is
+         the removal of the taxonomy's veto. `out[c.index]` stays undefined. */
+      continue;
     }
     if (!isPhenomenon(c.phenomenon)) return refuse('classifier_malformed', `classifications[${i}] phenomenon ${JSON.stringify(c.phenomenon)}`, i);
     out[c.index] = c.phenomenon;
   }
-  const missing = out.map((p, i) => (p === undefined ? i : -1)).filter((i) => i >= 0);
+  /* `seen`, not `out`: undefined now means DECLINED, so it can no longer double
+     as the not-yet-answered sentinel. An index the model never answered is
+     still an index mismatch. */
+  const missing = seen.map((s, i) => (s ? -1 : i)).filter((i) => i >= 0);
   if (missing.length > 0) return refuse('classifier_index_mismatch', `claim(s) ${missing.join(', ')} not classified`);
-  return { ok: true, phenomena: out as DevelopmentalPhenomenon[] };
+  return { ok: true, phenomena: out };
 }
 
 export type ClassifyOutcome =
-  | { ok: true; phenomena: readonly DevelopmentalPhenomenon[]; classifier: ClassifierIdentity }
+  | { ok: true; phenomena: readonly (DevelopmentalPhenomenon | undefined)[]; classifier: ClassifierIdentity }
   | { ok: false; refusal: ClassifyRefusal; detail: string; index: number | null };
 
 /**

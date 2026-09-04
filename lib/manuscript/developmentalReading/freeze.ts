@@ -36,6 +36,7 @@ import { isStructural, type EvidenceRef, type NonEmptyArray } from '../developme
 import type { DevelopmentalReaderRequest, DevelopmentalReaderResult } from '../developmentalReader/contract';
 import type { ReaderIdentity } from '../structure/readerProvenance';
 import {
+  READING_CONTRACT_VERSION,
   isPhenomenon,
   observationKey,
   type ClassifierIdentity,
@@ -49,8 +50,10 @@ export interface FreezeInput {
   manuscriptId: string;
   request: DevelopmentalReaderRequest;
   result: DevelopmentalReaderResult;
-  /** One per claim, in claim order. Empty for a `none` result. */
-  phenomena: readonly DevelopmentalPhenomenon[];
+  /** One per claim, in claim order. Empty for a `none` result. `undefined` at an
+   *  index means the classifier ran and DECLINED that claim — reading contract
+   *  v2. The observation still survives; only the taxonomy claim is absent. */
+  phenomena: readonly (DevelopmentalPhenomenon | undefined)[];
   reader: ReaderIdentity;
   /** Required iff the result has claims. */
   classifier: ClassifierIdentity | null;
@@ -102,7 +105,7 @@ export function freezeReading(input: FreezeInput): FreezeOutcome {
     return { ok: true, value: {
       manuscriptId, scope,
       readState: evidence.readState, coverage: evidence.coverage,
-      provenance: { reader, classifier: null },
+      provenance: { reader, classifier: null, readingContractVersion: READING_CONTRACT_VERSION },
       outcome: 'none', observations: [],
     } };
   }
@@ -116,7 +119,10 @@ export function freezeReading(input: FreezeInput): FreezeOutcome {
   const observations: DevelopmentalObservation[] = [];
   for (const [i, claim] of result.claims.entries()) {
     const phenomenon = phenomena[i];
-    if (!isPhenomenon(phenomenon)) {
+    /* An honest decline (undefined) is permitted and omits the key. A DEFINED
+       value outside the eight is malformed output, not a decline, and still
+       refuses the whole freeze — that guard is deliberately not relaxed. */
+    if (phenomenon !== undefined && !isPhenomenon(phenomenon)) {
       return refuse('unknown_phenomenon', `claims[${i}] classified as ${JSON.stringify(phenomenon)}`, i);
     }
     if (typeof claim.text !== 'string' || claim.text.trim() === '') {
@@ -135,7 +141,9 @@ export function freezeReading(input: FreezeInput): FreezeOutcome {
     observations.push({
       key: observationKey(i),
       lens: request.commissionedLens,
-      phenomenon,
+      /* Omission, never `phenomenon: null` — one representation of "no taxonomy
+         claim", per the WS2-07-F1 ruling. */
+      ...(phenomenon !== undefined ? { phenomenon } : {}),
       evidenceRefs: bound.value.refs,
       observation: claim.text,
       doesNotEstablish: claim.doesNotEstablish,
@@ -146,7 +154,7 @@ export function freezeReading(input: FreezeInput): FreezeOutcome {
   return { ok: true, value: {
     manuscriptId, scope,
     readState: evidence.readState, coverage: evidence.coverage,
-    provenance: { reader, classifier },
+    provenance: { reader, classifier, readingContractVersion: READING_CONTRACT_VERSION },
     outcome: 'reading',
     observations: observations as unknown as NonEmptyArray<DevelopmentalObservation>,
   } };
