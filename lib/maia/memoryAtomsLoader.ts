@@ -411,13 +411,42 @@ function relativeTime(d: Date): string {
  *
  * Returns '' when atoms array is empty so the caller can safely concat.
  */
-export function formatAtomsForPrompt(atoms: MemoryAtomSnapshot[]): string {
-  if (!atoms || atoms.length === 0) return '';
+/**
+ * The two authorship sections this block is built from.
+ *
+ * MEMORY-PRODUCER-PARTITION-01 (2026-09-04): the formatter has always separated
+ * member-placed atoms from practitioner-witnessed observations into two contiguous
+ * sections and concatenated them. This projector exposes that existing boundary so
+ * BOTH projections can be built from one renderer:
+ *
+ *   legacy projection     joinAtomSections(...)  → atomsAddendum, byte-identical to before
+ *   canonical projection  each section → its own truthful producer (shadow only)
+ *
+ * Neither section is re-rendered for the canonical side: the same strings carry
+ * truthful identities, which is what makes byte parity provable rather than asserted.
+ */
+export interface AtomSections {
+  /** '# MEMBER-PLACED PORTFOLIO' — member-authored, member-placed. Absent when empty. */
+  readonly memberSection?: string;
+  /** '# PRACTITIONER OBSERVATIONS' — practitioner-authored. Absent when empty. */
+  readonly practitionerSection?: string;
+}
+
+/**
+ * The separator the legacy block has always used between the two sections
+ * (`sections.join('\n')`). Recomposition MUST use this exact value.
+ */
+export const ATOM_SECTION_SEPARATOR = '\n';
+
+/** Pure projector: atoms → the (up to two) authorship sections, in source order. */
+export function projectAtomSections(atoms: MemoryAtomSnapshot[]): AtomSections {
+  if (!atoms || atoms.length === 0) return {};
 
   const memberAtoms = atoms.filter(a => a.sourceType !== 'practitioner_observation');
   const practitionerAtoms = atoms.filter(a => a.sourceType === 'practitioner_observation');
 
-  const sections: string[] = [];
+  let memberSection: string | undefined;
+  let practitionerSection: string | undefined;
 
   // ── Member-placed portfolio ──────────────────────────────────────────────
   if (memberAtoms.length > 0) {
@@ -471,7 +500,7 @@ export function formatAtomsForPrompt(atoms: MemoryAtomSnapshot[]): string {
         'No system inference of patterns across these.',
     );
     lines.push('');
-    sections.push(lines.join('\n'));
+    memberSection = lines.join('\n');
   }
 
   // ── Practitioner-witnessed observations ─────────────────────────────────
@@ -536,10 +565,29 @@ export function formatAtomsForPrompt(atoms: MemoryAtomSnapshot[]): string {
         'do not carry it as established context until the member has responded to it.',
     );
     lines.push('');
-    sections.push(lines.join('\n'));
+    practitionerSection = lines.join('\n');
   }
 
-  return sections.join('\n');
+  return {
+    ...(memberSection !== undefined ? { memberSection } : {}),
+    ...(practitionerSection !== undefined ? { practitionerSection } : {}),
+  };
+}
+
+/**
+ * The legacy projection — the exact string /list has always put in `atomsAddendum`.
+ * Present sections joined by ATOM_SECTION_SEPARATOR, which reproduces the previous
+ * `sections.join('\n')` for every case including the single-section and empty ones.
+ */
+export function joinAtomSections(sections: AtomSections): string {
+  return [sections.memberSection, sections.practitionerSection]
+    .filter((s): s is string => typeof s === 'string')
+    .join(ATOM_SECTION_SEPARATOR);
+}
+
+/** Unchanged member-facing contract: atoms → the legacy addendum string. */
+export function formatAtomsForPrompt(atoms: MemoryAtomSnapshot[]): string {
+  return joinAtomSections(projectAtomSections(atoms));
 }
 
 /**
