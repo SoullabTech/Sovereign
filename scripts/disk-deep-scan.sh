@@ -27,18 +27,20 @@ echo "===== container / VM engines ====="
 du -sh "$HOME_DIR/.docker" "$HOME_DIR/.colima" "$HOME_DIR/.orbstack" "$HOME_DIR/.lima" \
        "$HOME_DIR/Library/Containers/com.docker.docker" 2>/dev/null || echo "(none found)"
 
+# One walk, two reports. Sizing node_modules twice meant walking a ~300 GB
+# home directory twice for the same data.
+NM_SIZES="$(mktemp "${TMPDIR:-/tmp}/nmsizes.XXXXXX")"
+trap 'rm -f "$NM_SIZES"' EXIT
+find "$HOME_DIR" -type d -name node_modules -prune -print 2>/dev/null \
+  | while IFS= read -r d; do du -sk "$d" 2>/dev/null; done > "$NM_SIZES"
+
 echo ""
 echo "===== node_modules — top 20 ====="
-find "$HOME_DIR" -type d -name node_modules -prune -print 2>/dev/null \
-  | while IFS= read -r d; do du -sk "$d" 2>/dev/null; done \
-  | sort -rn | head -20 \
-  | awk -F'\t' '{printf "%8.2f GB  %s\n", $1/1048576, $2}'
+sort -rn "$NM_SIZES" | head -20 | awk -F'\t' '{printf "%8.2f GB  %s\n", $1/1048576, $2}'
 
 echo ""
 echo "===== node_modules — total ====="
-find "$HOME_DIR" -type d -name node_modules -prune -print 2>/dev/null \
-  | while IFS= read -r d; do du -sk "$d" 2>/dev/null; done \
-  | awk -F'\t' '{s+=$1; n++} END {printf "%.2f GB across %d directories\n", s/1048576, n}'
+awk -F'\t' '{s+=$1; n++} END {printf "%.2f GB across %d directories\n", s/1048576, n+0}' "$NM_SIZES"
 
 echo ""
 echo "===== other build output (.next / target / DerivedData dirs) ====="
