@@ -132,6 +132,8 @@ No automatic leap into the next cut.
 
 Steps 2–4 are detailed in §5. The pre-Proof-9 sequence in §4 assumed `/between/chat` was the live surface; §5 records why that assumption did not survive the witness.
 
+> **SUPERSEDED 2026-09-04 by §7.** The Surface Authority Census closed PASS. The governing sequence is now the one in §7: attribution at the canonical boundary precedes between-room convergence, and "Cut 1 / Cut 2" are stable identifiers, not execution order.
+
 ## 4. Founder ruling 2026-09-04 — the live surface joins the spine before attribution
 
 Rule 4 decides the architecture. Rule 2 decides the sequencing. Bring the canonical boundary to the live room first; then perform attribution once at that boundary. **Do not implement attribution in the legacy between chain.**
@@ -207,6 +209,8 @@ Do not refactor the between-room divination cut before Proof 9. It is a legitima
 
 ### Sequence
 
+> **SUPERSEDED 2026-09-04 by §7.** Retained as the record of what was ruled before the census. Convergence-then-attribution is reversed; `e3f379530` is HELD, not merged.
+
 ```text
 CURRENT   divination between repair @ e3f379530 → Proof 9
 THEN      canonical turn between convergence   claude/canonical-turn-between-convergence-01
@@ -219,6 +223,8 @@ THEN      Pass 3
 ```
 
 ### Prerequisites before Cut 1 may be created
+
+> **SUPERSEDED 2026-09-04 by §7.** Item 2 (merge `e3f379530` to canonical) is withdrawn — the cut is HELD, do not merge as-is. Items 1, 3 and 4 survive and are carried into §7 steps 2–4.
 
 ```text
 1  Proof 9 closed and recorded
@@ -279,7 +285,11 @@ IF /list is authoritative and /between/chat is legacy or dormant
 
 Either way Cut 2 is unaffected in mission; only its prerequisite changes.
 
+> **RESOLVED 2026-09-04 by §7.** Neither branch of the fork as written. `/between/chat` is an *intentional live secondary* surface — so convergence remains required architecture (first branch), but `/list` is authoritative for ordinary conversation — so attribution happens at the already-live canonical boundary first (second branch's consequence). Record: `docs/programme/SURFACE-AUTHORITY-CENSUS_2026-09-04.md`.
+
 ### Revised prerequisites before any next build
+
+> **SUPERSEDED 2026-09-04 by §7.** Items 3 and 4 are now CLOSED; the remaining open items are carried into the §7 governing sequence.
 
 ```text
 1  Proof 9 recorded                                    DONE
@@ -428,3 +438,123 @@ Two hypotheses to census, explicitly **not** classifications: the Runes `wyrd_me
 ### Write-path convergence this cut absorbs
 
 The successful I Ching model — authenticated invocation persists exactly once, anonymous casts work and do not persist — should become the shape for Runes and Tarot too. "Save" then means favourite, mark or annotate, not a second copy of the same event.
+
+
+## 7. Founder ruling 2026-09-04 — Surface Authority Census CLOSED · PASS
+
+Record: `docs/programme/SURFACE-AUTHORITY-CENSUS_2026-09-04.md`
+
+The source-side evidence is sufficient to make the architectural classification. The remaining production correlations are useful custody/history evidence; they no longer block the route-authority decision. Founder independently verified the load-bearing pieces: the `OracleConversation` network seam posts to the passed `apiEndpoint`, not the default prop; `app/maia/page.tsx` passes `/list` and its blob SHA is identical at `b20f2742e` and `e3f379530`; the `/list` route is byte-identical between those commits; the embedded Oracle chat explicitly posts to `/between/chat`, including follow-up turns, and is actually rendered on the I Ching reading page.
+
+```text
+SURFACE AUTHORITY CENSUS       CLOSED · PASS
+
+/list
+  AUTHORITATIVE PRIMARY
+  ordinary signed-in MAIA conversation
+
+/between/chat
+  INTENTIONAL LIVE SECONDARY
+  embedded / special-mode conversation
+  not fallback
+  not globally dormant
+  carries legacy tail
+
+observed /list → between → /list
+  NOT a route-selection flip in ordinary /maia
+  traffic came from different client surfaces
+  exact historical between client remains UNPROVEN
+
+e3f379530
+  HELD
+  DO NOT MERGE AS-IS
+  useful evidence/reference for future secondary-surface convergence
+```
+
+### Cut 1 changes status, not purpose
+
+Cut 1 is no longer a prerequisite for primary MAIA memory continuity. But `/between/chat` is genuinely live, so **Rule 4 still applies**: it eventually needs to join the canonical participation spine.
+
+```text
+CUT 1 — canonical-turn-between-convergence-01
+
+REQUIRED ARCHITECTURE
+LOWER-PRIORITY SECONDARY-SURFACE WORK
+NOT A PREREQUISITE FOR PRIMARY /list MEMORY
+PARKED
+```
+
+We are not cancelling convergence. We are removing the false premise that ordinary MAIA is waiting for it.
+
+### Attribution may now precede convergence
+
+The original reason for convergence-first was: **do not implement attribution inside the legacy between chain.** That law still holds, unchanged and unweakened. But `/list` already runs through the canonical boundary, so attribution can be improved there, once, without touching the legacy `/between` assembly.
+
+```text
+Cut 2 attribution
+  → canonical boundary becomes truthfully attributed
+
+Cut 1 convergence
+  → /between joins that already-attributed boundary
+  → inherits the same vocabulary
+  → no attribution implementation in legacy code
+```
+
+Cleaner than delaying the primary surface for a secondary embedded route.
+
+**The names "Cut 1" and "Cut 2" hereby lose their chronological meaning. They are stable identifiers, not execution order.** §4's `Sequence` block and §5's `Revised prerequisites` are superseded by the governing sequence below.
+
+### Revised governing sequence
+
+```text
+1  SURFACE AUTHORITY
+   CLOSED · PASS
+
+2  RECORD CENSUS RULING
+   on Flow v2 branch
+   no code
+
+3  DEPLOY CUSTODY
+   classify the 16:30:39 b20f2742e replacement
+   still OPEN
+
+4  FLOW v2
+   merge governing document to canonical
+   verify ancestor of current canonical HEAD
+
+5  ATTRIBUTION / P6
+   canonical boundary only
+   primary /list witness
+   DO NOT modify legacy /between attribution
+
+6  BETWEEN CONVERGENCE
+   secondary live surface joins canonical boundary
+   inherits attribution
+   e3f379530 used only as evidence/reference
+
+7  PASS-1 REMAINDER / ORACLE CAPABILITY
+   according to their existing gates
+```
+
+Deploy custody stays **before** the next production build/witness cycle. An unexplained deployment that can silently replace a candidate is an evidence-integrity problem regardless of this census's outcome. It does not invalidate the census.
+
+### Two evidence gaps remain; neither blocks the ruling
+
+The exact page responsible for the earlier `/between` rows is UNWITNESSED. The I Ching embedded chat is an excellent candidate — **do not upgrade it to fact without correlation.** A stale historical browser bundle is theoretically possible, but cannot explain the architectural authority question: current production traffic, current source, and the identical `/maia` client across both candidate SHAs all agree that ordinary `/maia` owns `/list`.
+
+### Standing state after this ruling
+
+```text
+PROOF 9                CLOSED · PASS
+SURFACE AUTHORITY      CLOSED · PASS
+/list                  PRIMARY · canonical
+/between               SECONDARY · intentional · noncanonical
+DEPLOY CUSTODY         OPEN
+FLOW v2                branch-only
+ATTRIBUTION / P6       next build candidate after custody + canonical Flow
+BETWEEN CONVERGENCE    required later · parked
+ORACLE CAPABILITY      parked
+SAVE DUPLICATE         evidence-only
+```
+
+The important correction is now complete: **MAIA did not keep changing her primary nervous system. We were observing two different conversational surfaces and treating them as one.**
