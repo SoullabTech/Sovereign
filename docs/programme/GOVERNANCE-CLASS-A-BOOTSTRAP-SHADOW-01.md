@@ -232,15 +232,18 @@ toward that.
 
 ## 6. Sequence
 
+> **Superseded in part by §7.** #1199 merged on 2026-09-04 before this amendment became
+> canonical, so the merge steps below are historical rather than pending. The production
+> steps stand.
+
 ```text
 THIS LANE       reconcile · define the bridge · make canonical
-THEN            merge new canonical into #1199
-                CI reruns on the exact new #1199 head
-                record explicit Founder-Steward bootstrap-shadow sign-off
+THEN            re-derive the exact production candidate from canonical
+                (do NOT reuse bc2984e65 automatically — see §7.4)
+                record explicit Founder-Steward bootstrap-shadow production sign-off
                 verify Cut 1A still meets EVERY eligibility condition
-                merge #1199 to canonical
-                deploy the resulting CANONICAL MERGE SHA
-                bounded shadow witness · STOP
+                technical custody on the exact candidate
+                deploy · bounded shadow witness · STOP
 Cut 1B          still requires full Class A governance
 P6              CLOSED
 ```
@@ -255,3 +258,104 @@ reviewed tree = merged tree = deployed tree = witnessed tree
 ```
 
 No branch-head-versus-canonical qualification survives on the witness.
+
+---
+
+## 7. Sequence deviation — 2026-09-04
+
+### 7.1 What happened
+
+```text
+SEQUENCE DEVIATION — 2026-09-04
+
+Cut 1A (#1199) became canonical at bc2984e65
+before GOVERNANCE-CLASS-A-BOOTSTRAP-SHADOW-01 became canonical.
+```
+
+Verified at the time of recording: `7bbec9b3d` (the Cut 1A implementation) is an ancestor of
+`clean-main-no-secrets`; `906217fb2` and `7600f957e` (this amendment) are not;
+`lib/maia/orientation/contract.ts` is present on canonical.
+
+The founder's standing instruction had been *no merge until the governance amendment is
+canonical*. Canonical merge of zero-authority shadow infrastructure is one of the two things
+the bootstrap-shadow rule was written to authorize, so the merge occurred ahead of the rule
+that would have governed it.
+
+### 7.2 Classification
+
+```text
+CLASSIFICATION   canonicalized out of the intended governance sequence;
+                 NOT retroactively cured
+```
+
+Stated that way deliberately. The alternative — describing the merge as having been
+authorized after the fact — would launder a sequence deviation into authority it did not
+have at the time, which is the precise failure this lane was opened to prevent.
+
+**The authority under which the merge was performed is not recorded here, because no such
+record was made at the time.** This document does not name it Founder-Steward ratification;
+asserting a ratification that was never recorded would be a second, worse fabrication than
+the deviation itself.
+
+### 7.3 Consequences
+
+```text
+the bootstrap-shadow rule did NOT authorize the #1199 merge
+the rule is NOT applied retroactively
+the no-self-authorization clause remains intact
+Cut 1A's production promotion remains UNPERFORMED
+once this amendment is canonical, the rule may govern the remaining
+  production-shadow promotion of Cut 1A on its own merits
+```
+
+**The rule is not narrowed.** For future qualifying changes it still may authorize both
+canonical merge and production shadow promotion. Only *this one change's* history has
+foreclosed the merge half:
+
+| | Cut 1A |
+|---|---|
+| merge | already occurred before the rule → **not authorized by the rule** |
+| deploy | still pending → **may be authorized after the rule is canonical** |
+
+Rewriting the general rule around one accident would damage the constitution to tidy a
+single incident. The incident is recorded; the rule stands as written.
+
+### 7.4 Not reverted, and why
+
+Cut 1A is **not** reverted to replay the intended order. It carries zero response authority,
+is not deployed, and a revert-and-remerge would produce code churn without improving the
+factual record — the deviation would still have happened, and the history would then also
+contain a ceremonial reversal pretending otherwise.
+
+The boundary that still matters is intact:
+
+```text
+canonical code ≠ running production
+```
+
+Production remains at `293d454cf`. The repaired governance can therefore still be applied
+before the first member-facing runtime exposure of this infrastructure, which is the
+boundary the lane actually exists to protect.
+
+### 7.5 The one-time adoption act is unchanged
+
+The one-time Founder-Steward constitutional act (§5b) remains for **#1201 only**. It does
+not ratify #1199's past merge, does not satisfy Cut 1A's bootstrap sign-off, and does not
+authorize deploy, Cut 1B or P6. Its sole job remains repairing the contradictory governance
+text, and it ends the moment this amendment is canonical. Cut 1A then requires a **new,
+separate** Founder-Steward bootstrap-shadow production sign-off under the now-live rule.
+
+### 7.6 Custody consequence
+
+Because the histories crossed, **`bc2984e65` must not be reused automatically as the deploy
+candidate.** After this amendment lands, re-derive the actual canonical state. The
+production candidate must contain:
+
+```text
+Cut 1A
++ the canonical governance repair
++ whatever else legitimately became canonical meanwhile
+```
+
+and that exact SHA must earn fresh technical evidence under the new rule — not inherit
+evidence from tonight's superseded heads.
