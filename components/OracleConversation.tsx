@@ -10083,7 +10083,7 @@ I'm not sure what I'm feeling yet.`;
             return;
           }
           setShowCapturePanel(false);
-          router.push(`/labtools/reflections/${capsuleId}`);
+          router.push(`/reflections/${capsuleId}`);
         }}
       />
 

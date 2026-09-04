@@ -615,7 +615,7 @@ export const TOOL_REGISTRY: LabTool[] = [
       'Key insights extracted from your conversations with MAIA. The signal without the noise.',
     emoji: '✨',
     icon: Sparkles,
-    path: '/labtools/reflections',
+    path: '/reflections', // member home; /labtools/reflections is the lab surface
     category: 'cognitive',
     domain: 'cognitive',
     modes: ['reflect'],

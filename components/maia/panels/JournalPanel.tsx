@@ -39,7 +39,7 @@ export function JournalPanel({ explorerId, onOpenJournalSheet, onOpenShadowWork 
 
       {/* Reflections */}
       <button
-        onClick={() => router.push('/labtools/reflections')}
+        onClick={() => router.push('/reflections')}
         className="w-full flex items-start gap-3 p-3 rounded-xl bg-[#D4B896]/5 hover:bg-[#D4B896]/10 border border-[#3a2a1f]/30 hover:border-[#D4B896]/20 transition-all text-left"
       >
         <Sparkles className="w-4 h-4 text-[#D4B896]/60 mt-0.5 flex-shrink-0" />

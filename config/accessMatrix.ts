@@ -360,6 +360,13 @@ export const ACCESS_RULES: AccessRule[] = [
   { exact: '/labtools/settings', minTier: 'free', notes: 'App settings — depth' },
   { exact: '/labtools/language', minTier: 'free', notes: 'Language preferences — depth' },
   { exact: '/labtools/journal', minTier: 'free', notes: 'Daily journaling — depth (journals always saved)' },
+  // Reflections — member-owned Keeps. The member's home is /reflections; the
+  // /labtools addresses below are the founder/lab surface and are additionally
+  // gated by requireFounder() in app/labtools/layout.tsx (founder ruling
+  // 2026-09-04, Journal precedent). Mapped explicitly so strict mode does not
+  // deny a member their own reflections as an unmapped route.
+  { exact: '/reflections', minTier: 'free', notes: 'Member reflections feed' },
+  { prefix: '/reflections/', minTier: 'free', notes: 'A single member reflection' },
   { exact: '/labtools/reflections', minTier: 'free', notes: 'Reflection feed — depth' },
   { prefix: '/labtools/reflections/', minTier: 'free', notes: 'Individual reflections — depth' },
   { exact: '/labtools/favorites', minTier: 'free', notes: 'Saved items — depth' },

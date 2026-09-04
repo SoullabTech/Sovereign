@@ -41,6 +41,7 @@ import {
   Wind,
   DoorOpen,
   BookMarked,
+  Sparkles,
   Settings as SettingsIcon,
 } from 'lucide-react';
 
@@ -169,6 +170,43 @@ export const HOUSE_DESTINATIONS: HouseDestination[] = [
     nativePolicy: 'native',
     nativeReady: true, // reference implementation
     returnBehavior: 'back-to-maia',
+    group: 'life',
+  },
+  {
+    id: 'reflections',
+    label: 'Reflections',
+    icon: Sparkles,
+    tooltip: "What you've kept from conversations",
+    kind: 'route',
+    // FOUNDER RULING 2026-09-04 — the Journal precedent, applied.
+    //
+    // Reflections are MEMBER-OWNED content: /api/capsules is
+    // requireMemberId()-scoped and every capsule is the member's own Keep.
+    // Until now the only page rendering them lived under /labtools, whose
+    // layout hard-gates on requireFounder() — so members pushed there (from
+    // the Keep panel, the Sacred Lab drawer, the Journal panel) met a 403
+    // screen. Journal had exactly this shape and was resolved exactly this
+    // way: the House points at /journal, not /labtools/journal.
+    //
+    // ⛔ Do NOT repoint this at /labtools/reflections merely because that page
+    // existed first. /labtools is instrumentation and is ruled OUT of the House
+    // (houseDispositions → labtools: intentionally_withheld). Solving a member
+    // access problem by weakening that namespace boundary was considered and
+    // REJECTED. The lab surface stays founder-facing; this is the member
+    // navigation target. Same data, two addresses.
+    route: '/reflections',
+    audience: 'all',
+    // NATIVE RECONCILIATION (part of the same bounded change, not deferred):
+    // /reflections/[id] is a client component on a dynamic segment, which
+    // capacitor-patch-routes.sh strips from the iOS bundle by design (a client
+    // component cannot supply generateStaticParams). Shipping the feed natively
+    // while its detail route is absent would advertise a room whose every card
+    // opens nothing — the silent white screen this registry exists to prevent.
+    // So Reflections is an honest web destination until the detail route can be
+    // pre-rendered, and /reflections is declared web-only in the runtime
+    // allowlist so the guard agrees with the House rather than drifting from it.
+    nativePolicy: 'web',
+    returnBehavior: 'web-bridge',
     group: 'life',
   },
   {
