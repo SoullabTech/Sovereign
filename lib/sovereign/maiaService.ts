@@ -86,6 +86,13 @@ import {
 import { persistDecision, type Candidate } from '../services/decisionPersistenceService';
 import { detectAndPersistExpansion } from '../services/expansionEventService';
 import { logCorpusCallosumTrace } from '../services/corpusCallosumService';
+// MAIA-UNIFIED-COGNITION-CONVERGENCE-01 · Cut 1A — trusted orientation, shadow only.
+import {
+  resolveOrientationContract,
+  emitOrientationShadow,
+  type OrientationContract,
+  type ResolvedOrientation,
+} from '../maia/orientation/contract';
 import { TurnPosture } from '../sanctuary/turnPosture';
 import { recordConsentState } from '../provenance/consentState';
 import { VoiceDistinctionScorer } from '../spiralogic/VoiceDistinctionScorer';
@@ -600,6 +607,18 @@ type MaiaRequest = {
   // Route/profile tracing for corpus callosum filtering
   originRoute?: string;              // e.g. '/api/sovereign/app/maia', '/api/between/chat'
   processingProfileOverride?: string; // Override computed profile (e.g. 'BETWEEN')
+  /**
+   * CONVERGENCE-01 Cut 1A — the trusted orientation contract.
+   *
+   * SERVER-INTERNAL, TOP-LEVEL, AND DELIBERATELY NOT IN `meta`. `meta` starts as the
+   * client's request-body rest-spread (PBR-001), so an orientation governor read from it
+   * would be forgeable: a caller could manufacture MAIA's elemental posture, integrity
+   * risks and language hints. Only an upstream SERVER path may supply this — today
+   * /between via maiaOrchestrator. `meta.facetDecision` is never cognition authority.
+   *
+   * Absent → getMaiaResponse computes one at the shared boundary.
+   */
+  orientationContract?: OrientationContract | null;
 };
 
 /**
@@ -711,7 +730,9 @@ async function fastPathResponse(
   input: string,
   conversationHistory: any[],
   meta: Record<string, unknown>,
-  mindContext?: MindContext
+  mindContext?: MindContext,
+  // 🌀 CONVERGENCE-01 Cut 1A — resolved at the shared boundary, threaded here, SHADOW ONLY.
+  orientation?: ResolvedOrientation
 ): Promise<{ response: string; provider: ProviderMeta }> {
   console.log(`⚡ FAST PATH: Simple response with core MAIA voice`);
 
@@ -1479,6 +1500,20 @@ Current context: Simple conversation turn - respond naturally and warmly.`;
     // Field intelligence must never break the hot path
   }
 
+
+  // 🌀 CONVERGENCE-01 Cut 1A — orientation shadow. The contract reached this tier; it is
+  // NOT appended to the prompt. legacyPrompt and sentPrompt are the same expression on
+  // purpose: the identity is the cut's central claim, asserted per turn rather than argued.
+  if (orientation) {
+    emitOrientationShadow({
+      tier: 'FAST',
+      resolved: orientation,
+      legacyPrompt: baseSystemPrompt,
+      sentPrompt: baseSystemPrompt,
+      sanctuary: isSanctuary,
+    });
+  }
+
   // Use single model call with complete MAIA intelligence stack
   const { text: response, provider } = await generateText({
     systemPrompt: baseSystemPrompt,
@@ -1525,7 +1560,9 @@ async function corePathResponse(
   input: string,
   conversationHistory: any[],
   meta: Record<string, unknown>,
-  mindContext?: MindContext
+  mindContext?: MindContext,
+  // 🌀 CONVERGENCE-01 Cut 1A — resolved at the shared boundary, threaded here, SHADOW ONLY.
+  orientation?: ResolvedOrientation
 ): Promise<{ response: string; provider: ProviderMeta }> {
   console.log(`🎯 CORE PATH: Normal MAIA conversation with light awareness`);
   const coreT0 = Date.now();
@@ -1891,6 +1928,20 @@ The current user has not provided their name. Address them as "friend" or "there
     // Field intelligence must never break the hot path
   }
 
+
+  // 🌀 CONVERGENCE-01 Cut 1A — orientation shadow. The contract reached this tier; it is
+  // NOT appended to the prompt. legacyPrompt and sentPrompt are the same expression on
+  // purpose: the identity is the cut's central claim, asserted per turn rather than argued.
+  if (orientation) {
+    emitOrientationShadow({
+      tier: 'CORE',
+      resolved: orientation,
+      legacyPrompt: adaptivePrompt,
+      sentPrompt: adaptivePrompt,
+      sanctuary: isSanctuary,
+    });
+  }
+
   const { text: response, provider: coreProvider } = await generateText({
     systemPrompt: adaptivePrompt,
     userInput: input,
@@ -1964,7 +2015,9 @@ async function deepPathResponse(
   input: string,
   conversationHistory: any[],
   meta: Record<string, unknown>,
-  mindContext?: MindContext
+  mindContext?: MindContext,
+  // 🌀 CONVERGENCE-01 Cut 1A — resolved at the shared boundary, threaded here, SHADOW ONLY.
+  orientation?: ResolvedOrientation
 ): Promise<{ response: string; consciousnessData?: any; socraticValidation?: any; provider?: ProviderMeta }> {
   console.log(`🧠 DEEP PATH: Full consciousness orchestration + Claude consultation activated`);
 
@@ -2299,6 +2352,24 @@ Do NOT mention Bloom's Taxonomy explicitly. The scaffolding should feel organic 
         console.log('[MAIA] deep-consultation recall-addenda', { chars: consultationRecallAddenda.length });
       }
 
+      // 🌀 CONVERGENCE-01 Cut 1A — orientation shadow on DEEP.
+      //
+      // DEEP stage 1 (the local consciousness draft) has NO prompt seam by construction —
+      // it weaves templates rather than reading a system prompt — so no fake seam is
+      // invented for it here (founder ruling 3). The consultation's contextAddenda is the
+      // only prompt seam on DEEP-primary, so that is what the zero-diff claim is made
+      // against. How structured orientation should participate in DEEP's native cognition
+      // is a Cut 1B decision, not a string append.
+      if (orientation) {
+        emitOrientationShadow({
+          tier: 'DEEP',
+          resolved: orientation,
+          legacyPrompt: consultationRecallAddenda,
+          sentPrompt: consultationRecallAddenda,
+          sanctuary: isSanctuaryDeep,
+        });
+      }
+
       const consultation = await consultClaudeForConsciousness({
         userInput: input,
         maiaInitialResponse: maiaInitialResponse + cognitiveScaffoldingNote + knowledgeFieldNote, // 🧠 Inject scaffolding + knowledge field into context for Claude
@@ -2577,6 +2648,8 @@ function finalizeMemberFacingText(
 
 export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
   const { sessionId, input, meta = {}, includeAudio = false, voiceProfile, originRoute, processingProfileOverride } = req;
+  // NOTE: read from `req`, never from `meta`. See MaiaRequest.orientationContract.
+  const trustedOrientation = req.orientationContract ?? null;
   const startTime = Date.now();
   // SANCTUARY (S1): per-turn posture, resolved once for this request and
   // passed to every content writer (turns store, corpus callosum trace).
@@ -2621,6 +2694,17 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
   try {
     // Get conversation history for context (limited to 10 for prompt, but turnCount is authoritative)
     const conversationHistory = await getConversationHistory(sessionId, 10);
+
+    // 🌀 CONVERGENCE-01 Cut 1A — resolve ONE orientation contract for this turn, here, at
+    // the boundary both live surfaces reach. Upstream packet is used verbatim and never
+    // recomputed; absent, one is computed once. Sanctuary yields null before anything is
+    // computed or accepted. SHADOW ONLY: nothing below appends this to a prompt.
+    const orientation: ResolvedOrientation = resolveOrientationContract({
+      trusted: trustedOrientation,
+      input,
+      conversationHistory,
+      sanctuary: turnPosture.sanctuary,
+    });
 
     // 🛡️ FIELD SAFETY GATE: Check ALL paths (FAST/CORE/DEEP) before any processing
     const userId = (meta as any).userId;
@@ -3181,7 +3265,7 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
     // Route to appropriate processing path (with optional MindContext for PFI integration)
     switch (processingProfile) {
       case 'FAST': {
-        const fastResult = await fastPathResponse(sessionId, input, conversationHistory, meta, mindContext);
+        const fastResult = await fastPathResponse(sessionId, input, conversationHistory, meta, mindContext, orientation);
         rawResponse = fastResult.response;
         provider = fastResult.provider;
         // Log PFI telemetry if mind state was generated
@@ -3192,7 +3276,7 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
       }
 
       case 'CORE': {
-        const coreResult = await corePathResponse(sessionId, input, conversationHistory, meta, mindContext);
+        const coreResult = await corePathResponse(sessionId, input, conversationHistory, meta, mindContext, orientation);
         rawResponse = coreResult.response;
         provider = coreResult.provider;
         // Log PFI telemetry if mind state was generated
@@ -3203,7 +3287,7 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
       }
 
       case 'DEEP': {
-        const deepResult = await deepPathResponse(sessionId, input, conversationHistory, meta, mindContext);
+        const deepResult = await deepPathResponse(sessionId, input, conversationHistory, meta, mindContext, orientation);
         rawResponse = deepResult.response;
         consciousnessData = deepResult.consciousnessData;
         provider = deepResult.provider; // May be undefined for DEEP path
@@ -3216,7 +3300,7 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
 
       default: {
         // Fallback to FAST
-        const fallbackResult = await fastPathResponse(sessionId, input, conversationHistory, meta, mindContext);
+        const fallbackResult = await fastPathResponse(sessionId, input, conversationHistory, meta, mindContext, orientation);
         rawResponse = fallbackResult.response;
         provider = fallbackResult.provider;
         if (mindContext?.pfiMindState) {
