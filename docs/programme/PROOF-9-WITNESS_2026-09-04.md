@@ -49,16 +49,30 @@ EXPERIENCED AS CONTINUITY     PASS · asked from the present, MAIA already knew
 
 ## Open finding inside the pass
 
-`candidateCount: 2`. Only one cast was made on 2026-09-04, and the five prior readings are all older than the 60-day window. The second row is therefore most likely the Save-button duplicate flagged before the witness: `/oracle/iching` now persists on cast (Cut 1C) while the page's Save button still writes a second row through `/api/divination/save`. Read-only confirmation:
+`candidateCount: 2`. Only one cast was made on 2026-09-04, and the five prior readings are all older than the 60-day window. The likely cause is the Save-button duplicate flagged before the witness: `/oracle/iching` now persists on cast (Cut 1C) while the page's Save button still writes a second row through `/api/divination/save`.
+
+**Not yet proof.** Two rows sharing `primary_hex` would be suggestive only — two genuine casts can land on the same hexagram. The decisive read-only check compares the whole cast fingerprint:
 
 ```sql
-SELECT id, created_at, primary_hex, cast_method
+SELECT id, created_at, question, cast_method, primary_hex, relating_hex,
+       changing_lines, line_values
 FROM divination_iching_readings
 WHERE created_at > NOW() - INTERVAL '60 days'
 ORDER BY created_at DESC;
 ```
 
-Two rows with the same `primary_hex` minutes apart confirms it. Not a defect in recall — the loader truthfully surfaced what the store holds — but a write-path defect that inflates every future divination block. Held for its own cut.
+Confirmation shape: two recent rows sharing question, `line_values`, `changing_lines`, and primary/relating hexagram, separated only by the cast-to-save interval. Then:
+
+```text
+SAVE DUPLICATE
+CONFIRMED
+FIRST BROKEN LINK   WRITE PATH
+CAUSE SHAPE         cast auto-persists + Save persists the same reading again
+```
+
+Detection detail from the source: `app/oracle/iching/page.tsx` `handleSaveReading` hard-codes `cast_method: 'yarrow'`, while the cast path persists the method actually requested. So a duplicate pair may differ in `cast_method` while every cast field matches — that asymmetry is itself a signature, and it also explains why all five historical rows read `yarrow`.
+
+Read-only confirmation is allowed now. The repair is a bounded write-path cut of its own, later — not folded into recall, convergence, or attribution.
 
 ## Custody finding, unadjudicated
 
