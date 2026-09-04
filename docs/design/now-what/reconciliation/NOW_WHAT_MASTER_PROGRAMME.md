@@ -35,6 +35,10 @@ Return. One designed object — same typography, spatial grammar, navigation, em
 **Deferred by the law, recorded and not lost**: NW-A01's remaining authority questions ·
 NW-D02 (hypothesis only) · Larry scope/referral (awaiting the sitting) · safety-content floor
 (awaiting sign-off) · the production Flourishing-vocabulary query (**UNKNOWN**).
+**Also deferred, named 2026-09-04**: `COACHING-TEMPLATE-EXTRACTION-01` — extraction of the generic
+**Coaching Journey Template** (on the **Coaching Platform**) from Now What? as first specimen.
+Naming ruled, lane NOT opened: `docs/programme/COACHING-TEMPLATE-EXTRACTION-01_NAMING_RULING_2026-09-04.md`.
+The lane name `NOW-WHAT-PORTABILITY-01` is retired.
 
 ---
 
