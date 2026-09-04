@@ -68,33 +68,48 @@ GATHERING HOST    holds the container in which readers meet
 | Person | Role | Circle role | Status |
 |---|---|---|---|
 | Andrea Fagan | Gathering host | `facilitator` | **DECIDED** |
-| Kelly Nezat | author + platform steward; gathering role **not** assumed | — | **OWED — see below** |
+| Kelly Nezat | Author of the Work + platform steward; **not** gathering facilitator | none by default | **DECIDED — founder, 2026-09-04** |
 
-### C6 determination — OWED
+### C6 determination — DECIDED (founder, 2026-09-04)
 
-Constraint C6 requires the author's role to be **recorded explicitly**, precisely so that
-authorship plus platform ownership do not silently accumulate into co-facilitation. The concrete
-question, unanswered at this record:
+> **Kelly — author of the Work and platform steward; not gathering facilitator.**
 
-> Is Kelly's role in this instance **author / steward** (present as the Work's author, not holding
-> the container), **participant** (a reader among readers), **co-facilitator** (`facilitator`), or
-> **absent** from the circle?
+```text
+AUTHOR             yes
+PLATFORM STEWARD   yes
+GATHERING HOST     no
+facilitator        DECLINED
+member             optional, when actually participating; disclosed
+```
 
-**Recommendation: author / steward, not `facilitator`.** Reasons, in order of weight:
+**Author/steward is Kelly's standing role in the instance. `member` is an optional participation
+state. `facilitator` is explicitly declined.**
 
-1. C6 exists because the founder authoring the Work *and* owning the platform *and* holding the
-   container is a concentration of relational power. Two of the three are already unavoidable; the
-   third is a choice, and declining it is the cheapest structural protection available.
-2. The `facilitator` role is what gates opening a gathering's inquiry (census §4). Two facilitators
-   makes it ambiguous whose container it is — and the answer readers will assume is *the author's*.
-3. Andrea's hosting is the thing being observed. An author co-facilitating changes what the
-   instance can teach about what a human host actually needs (discovery question 1).
+⛔ **No Circle role is created for Kelly by default at instantiation.** Andrea holds the gathering
+authority as `facilitator`. If Kelly attends particular gatherings or participates in the reading,
+he enters as an ordinary `member`, with his presence disclosed to participants. That does not
+alter the C6 determination.
 
-A decision to be present as a reader is legitimate and is **not** the same as `facilitator`; it
-would be recorded as `member`, with the author's presence disclosed to the group rather than
-implicit.
+**Why — epistemic integrity of the experiment, not only concentration of authority.**
 
-⛔ **Not decided by this record.** No circle role is created for Kelly until he states it.
+Discovery question 1 is effectively: *what does a human host actually need in order to hold a
+Reading Group around someone else's authored Work?* If the author is simultaneously authorized to
+open the group's inquiries, Andrea is no longer fully hosting the container — the experiment
+becomes partly an author-led group regardless of whether that power is exercised.
+
+And `facilitator` is **not honorary metadata**. It confers the actual capability to open the
+gathering's inquiry (census §4: `canOpenInquiry = role ∈ helper | facilitator`, enforced in route
+and UI). Granting it would change the social geometry even if the button were never clicked.
+
+Authorship already carries enormous symbolic authority. That cannot and should not be designed
+away. The clean move is to **not add operational gathering authority on top of it**.
+
+**The reciprocal sentence, binding in both directions:**
+
+> **Kelly's presence as author does not confer authority over the gathering. Andrea's role as
+> facilitator does not confer authority over the Work or the platform.**
+
+Three authorities that coexist without collapsing into one another.
 
 ## C. Reading sequence
 
@@ -223,10 +238,10 @@ naming ruling → lane opened → substrate census → configuration decision
 ## Live state
 
 ```text
-CONFIGURATION DECIDED   A · C · D · E
-OWED                    B — Kelly's C6 role determination
+CONFIGURATION DECIDED   A · B · C · D · E — complete
 CREATED                 nothing
-ANDREA AGREEMENT        not established
-CO-LAB GATE             not run for this lane
+ANDREA AGREEMENT        not established        ← next blocker
+                        draft v0 written, NOT AGREED
+CO-LAB GATE             not run for this lane  ← blocks instantiation
 DISCOVERY LEDGER        empty
 ```

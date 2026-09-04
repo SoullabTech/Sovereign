@@ -163,12 +163,14 @@ An instance that runs well and produces no findings has failed at half its job.
 ```text
 STATE            INSTANCE OPEN
 SUBSTRATE        RULED — Circles; client_groups excluded (census §2, founder 2026-09-04)
-CONFIGURATION    DECIDED — A · C · D · E
-                 OWED — B, Kelly's C6 role determination
+CONFIGURATION    DECIDED — A · B · C · D · E complete
+                 C6: Kelly is author/steward, facilitator DECLINED (founder 2026-09-04)
 CREATED          nothing — no circle, memberships, invitations, routes or migrations
 GROUP RUNNING    no
 DISCOVERY LEDGER empty
 ANDREA AGREEMENT not established        ← hard gate before any real reader
+                 draft v0 written, NOT AGREED:
+                 EA-READING-GROUP-01_ANDREA_UNDERSTANDING_DRAFT_v0.md
 CO-LAB GATE      not run for this lane  ← hard gate before any real reader
 ```
 
