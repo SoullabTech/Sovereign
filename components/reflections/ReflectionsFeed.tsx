@@ -1,25 +1,26 @@
 'use client';
 
 /**
- * ReflectionsFeed — the reflection capsule feed, rendered at two addresses.
+ * ReflectionsFeed — the member's kept reflections.
  *
- * WHY THIS COMPONENT EXISTS (founder ruling 2026-09-04, Journal precedent):
- * reflections are MEMBER-OWNED content — /api/capsules is requireMemberId()-scoped
- * and every capsule is the member's own Keep. But the only page that rendered
- * them lived under app/labtools/, whose layout calls requireFounder(), so members
- * were pushed at a place that refused them. Journal had the same shape and was
- * resolved the same way: the House points at /journal, not /labtools/journal.
+ * WHY THIS LIVES AT /reflections (founder ruling 2026-09-04): reflections are
+ * MEMBER-OWNED content — /api/capsules is requireMemberId()-scoped and every
+ * capsule is the member's own Keep. The feed used to live only under
+ * app/labtools/, whose layout calls requireFounder(), so members pushed there
+ * met a 403 screen. Journal had the same shape and was resolved the same way:
+ * the House points at /journal, not /labtools/journal.
  *
- * The feed is therefore extracted here and mounted twice:
- *   /reflections          → the member's ordinary home (House destination)
- *   /labtools/reflections → unchanged founder/lab instrumentation surface
+ * The ruling went one step further than the Journal precedent: Reflections was
+ * MOVED out of Lab Tools, not mirrored. app/labtools/reflections/ is deleted
+ * and there is no second address. Lab Tools is instrumentation — a taxonomy of
+ * instruments — and is ruled out of the House
+ * (lib/navigation/houseDispositions.ts → labtools). Member content simply does
+ * not belong in that namespace.
  *
- * ⛔ Do NOT repoint the House at /labtools/reflections. The namespace boundary
- * is deliberate: /labtools is instrumentation, ruled out of the House
- * (lib/navigation/houseDispositions.ts → labtools). Member content does not
- * live there.
+ * ⛔ Do NOT reintroduce a /labtools/reflections mount. One place, one address.
  *
- * No new data, no new API, no new persistence: same member-scoped endpoint.
+ * No new data, no new API, no new persistence: the same member-scoped endpoint
+ * the lab page always used.
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
@@ -41,19 +42,7 @@ const ReflectionSymbol = ({ className }: { className?: string }) => (
 
 type FilterTab = 'all' | 'pinned' | 'drafts' | 'archived';
 
-export interface ReflectionsFeedProps {
-  /** Where an opened reflection lives — `${basePath}/${id}`. */
-  basePath?: string;
-  /** Where the back link goes. */
-  backHref?: string;
-  backLabel?: string;
-}
-
-export default function ReflectionsFeed({
-  basePath = '/reflections',
-  backHref = '/maia',
-  backLabel = 'Back to MAIA',
-}: ReflectionsFeedProps) {
+export default function ReflectionsFeed() {
   const router = useRouter();
   const [capsules, setCapsules] = useState<CapsuleDTO[]>([]);
   const [loading, setLoading] = useState(true);
@@ -138,7 +127,7 @@ export default function ReflectionsFeed({
 
   // Handle open
   const handleOpen = (id: string) => {
-    router.push(`${basePath}/${id}`);
+    router.push(`/reflections/${id}`);
   };
 
   const filterTabs: { key: FilterTab; label: string; icon: React.ReactNode }[] = [
@@ -157,11 +146,11 @@ export default function ReflectionsFeed({
         {/* Header */}
         <div className="mb-8">
           <button
-            onClick={() => router.push(backHref)}
+            onClick={() => router.push('/maia')}
             className="flex items-center gap-2 text-stone-400 hover:text-stone-600 transition-colors text-[13px] tracking-wide"
           >
             <ArrowLeft className="h-4 w-4" />
-            <span>{backLabel}</span>
+            <span>Back to MAIA</span>
           </button>
         </div>
 

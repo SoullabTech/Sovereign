@@ -73,14 +73,9 @@ function reflectionContext(capsule: CapsuleDTO): string {
 
 export interface DiscussWithMaiaProps {
   capsule: CapsuleDTO;
-  /** Where MAIA should offer to return the member afterwards. */
-  returnTo?: string;
 }
 
-export default function DiscussWithMaia({
-  capsule,
-  returnTo = '/reflections',
-}: DiscussWithMaiaProps) {
+export default function DiscussWithMaia({ capsule }: DiscussWithMaiaProps) {
   const router = useRouter();
   const context = useMemo(() => reflectionContext(capsule), [capsule]);
   const [opening, setOpening] = useState<string | null>(null);
@@ -102,7 +97,7 @@ export default function DiscussWithMaia({
       prompt,
       source: 'reflections:capsule',
       sourceLabel: capsule.title,
-      returnTo: `${returnTo}/${capsule.id}`,
+      returnTo: `/reflections/${capsule.id}`,
       contextId: capsule.id,
     });
     router.push('/maia');

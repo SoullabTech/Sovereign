@@ -364,10 +364,10 @@ export const ACCESS_RULES: AccessRule[] = [
   // /labtools tree, the DECLARED policy below (minTier 'free' — any
   // authenticated member) and the ENFORCED policy (founder only) disagree.
   //
-  // Only /labtools/reflections is reconciled here, because only it was ruled
-  // on (founder ruling 2026-09-04: member reflections moved to /reflections,
-  // the lab surface stays founder-facing). The remaining `free` entries below
-  // are NOT ratified as intent — nobody has ruled whether the layout gate or
+  // Reflections used to be the loudest instance and is now simply GONE from
+  // this tree — founder ruling 2026-09-04 moved it out of Lab Tools entirely
+  // rather than reconciling a second address (see /reflections above). The
+  // remaining `free` entries below are NOT ratified as intent — nobody has ruled whether the layout gate or
   // the declaration is the mistake, and quietly restricting a dozen routes to
   // match a gate that may itself be the accident would be a policy change
   // wearing a cleanup's clothes. They are named here so the disagreement is a
@@ -386,24 +386,13 @@ export const ACCESS_RULES: AccessRule[] = [
   // deny a member their own reflections as an unmapped route.
   { exact: '/reflections', minTier: 'free', notes: 'Member reflections feed' },
   { prefix: '/reflections/', minTier: 'free', notes: 'A single member reflection' },
-  // RECONCILED 2026-09-04. Was minTier 'free', which declared these member-facing
-  // while requireFounder() refused every member — the governance hazard being
-  // closed: a `free` declaration standing next to a founder gate misleads later
-  // routing, entitlement and audit work into "repairing" the gate.
-  //
-  // `rolesAnyOf: ['admin']` is this matrix's established vocabulary for an
-  // internal-only surface (same shape as /founder, /labtools/admin,
-  // /labtools/gifts). No new tier was invented for this.
-  //
-  // ⚠️ It APPROXIMATES the authority, it does not restate it. The real gate is
-  // requireFounder() over the FOUNDER_MEMBER_IDS env allowlist — an identity
-  // list, not a role — and the matrix has no vocabulary for member ids. The two
-  // are ANDed, not equivalent: middleware requires the admin ROLE, then the
-  // layout requires founder IDENTITY. Neither is weakened by the other, and
-  // ⛔ the runtime gate is the authority — do not relax requireFounder() to
-  // match this line.
-  { exact: '/labtools/reflections', minTier: 'free', rolesAnyOf: ['admin'], notes: 'Founder/lab reflections surface — members use /reflections' },
-  { prefix: '/labtools/reflections/', minTier: 'free', rolesAnyOf: ['admin'], notes: 'Founder/lab single reflection — members use /reflections/[id]' },
+  // ⛔ NO /labtools/reflections RULE — deliberately. Founder ruling 2026-09-04
+  // took Reflections OUT of Lab Tools; app/labtools/reflections/ is deleted.
+  // The declaration contradiction that stood here (declared 'free', enforced
+  // founder-only) is not reconciled but DISSOLVED: there is no second address
+  // to declare. Do not re-add a rule for it — a rule here would resurrect a
+  // route that no longer exists, and the matrix would once again describe a
+  // product that isn't there.
   { exact: '/labtools/favorites', minTier: 'free', notes: 'Saved items — depth' },
   { exact: '/labtools/downloads', minTier: 'free', notes: 'Downloads (content-gated separately)' },
   { exact: '/labtools/books', minTier: 'free', notes: 'Book access (content-gated separately)' },

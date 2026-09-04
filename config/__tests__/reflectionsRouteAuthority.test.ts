@@ -4,23 +4,25 @@
  * THE CONSTITUTIONAL LINE THIS BINDS (founder ruling 2026-09-04):
  * navigation, declared access, runtime authorization and native disposition
  * must describe the SAME product. Reflections is the case that proved they can
- * drift: /api/capsules is member-scoped, the House now offers a member door,
- * app/labtools/layout.tsx refuses every non-founder — and until this ruling the
- * access matrix still declared the lab surface `minTier: 'free'`, i.e.
- * member-facing. A declaration that contradicts enforcement is not harmless
- * once members stop navigating there: it misleads later routing, entitlement,
- * audit and test work into "repairing" the gate instead of the declaration.
+ * drift: /api/capsules is member-scoped, but the feed lived only under
+ * /labtools, which requireFounder() refuses to every member, while the access
+ * matrix still declared it `minTier: 'free'` — member-facing.
  *
- * So this file asserts the split itself, in both directions:
+ * The ruling resolved this by MOVING Reflections out of Lab Tools rather than
+ * reconciling a second address. So the assertions here are asymmetric on
+ * purpose:
  *
- *   /reflections           → every authenticated member          (member home)
- *   /labtools/reflections  → internal only, member refused       (lab surface)
+ *   /reflections           → every authenticated member admitted
+ *   /labtools/reflections  → does not exist, and must not come back
  *
- * ⛔ If a change makes either half fail, the fix is NOT to relax
- * requireFounder() in app/labtools/layout.tsx. That gate is the authority; the
- * matrix approximates it.
+ * ⛔ If the second half fails, the fix is NOT to add a rule for
+ * /labtools/reflections. A rule would declare a route that isn't there, which
+ * is the same failure — the matrix describing a product that does not exist —
+ * pointing the other way.
  */
-import { checkAccess } from '../accessMatrix';
+import { existsSync } from 'fs';
+import { join } from 'path';
+import { ACCESS_RULES, checkAccess } from '../accessMatrix';
 import { HOUSE_DESTINATIONS } from '@/lib/navigation/houseDestinations';
 
 /** An ordinary authenticated member: free tier, no elevated roles. */
@@ -45,28 +47,28 @@ describe('/reflections — the member home', () => {
   });
 });
 
-describe('/labtools/reflections — the founder/lab surface', () => {
-  it('refuses an ordinary member, matching the requireFounder() gate above it', () => {
-    expect(member('/labtools/reflections').allowed).toBe(false);
-    expect(member('/labtools/reflections/abc-123').allowed).toBe(false);
-  });
-
-  it('is declared internal-only by role, not by tier', () => {
-    // `minTier` alone cannot express this: every authenticated member satisfies
-    // 'free', which is exactly how the contradiction arose. The role is the
-    // matrix's established vocabulary for an internal surface (/founder,
-    // /labtools/admin, /labtools/gifts carry the same shape).
-    const denied = member('/labtools/reflections');
-    expect(denied.reason).toBe('missing-role');
-    expect(denied.rule?.rolesAnyOf).toContain('admin');
-    expect(operator('/labtools/reflections').allowed).toBe(true);
-  });
-
-  it('never declares itself member-facing again', () => {
+describe('/labtools/reflections — gone, and staying gone', () => {
+  it('has no access rule, because it has no route', () => {
     for (const path of ['/labtools/reflections', '/labtools/reflections/abc-123']) {
-      const rule = member(path).rule;
-      expect(`${path}:${rule?.rolesAnyOf?.length ?? 0}`).not.toBe(`${path}:0`);
+      const rule = ACCESS_RULES.find(
+        (r) => r.exact === path || (r.prefix && path.startsWith(r.prefix) && r.prefix.includes('reflections')),
+      );
+      expect(`${path}:${rule?.notes ?? 'no rule'}`).toBe(`${path}:no rule`);
     }
+  });
+
+  it('admits nobody — not a member, not an operator', () => {
+    // With its own rules gone the path falls through to the matrix's existing
+    // catch-all, `{ prefix: '/labtools', minTier: 'pro' }` ("remaining lab
+    // tools = practitioner infrastructure"), which refuses both. The route
+    // files are deleted, so this is belt to the 404's braces — but it means no
+    // future reader can mistake the missing rule for an accidental opening.
+    expect(member('/labtools/reflections').allowed).toBe(false);
+    expect(operator('/labtools/reflections/abc-123').allowed).toBe(false);
+  });
+
+  it('the page files are deleted, not merely unrouted', () => {
+    expect(existsSync(join(__dirname, '../../app/labtools/reflections'))).toBe(false);
   });
 });
 
@@ -80,8 +82,7 @@ describe('the House offers only what the matrix admits', () => {
 
   it('no member-visible door leads anywhere the matrix refuses a member', () => {
     // The failure this prevents: advertising a place that 403s the person who
-    // taps it — which is precisely what pointing the House at
-    // /labtools/reflections would have done.
+    // taps it — precisely what pointing the House into /labtools would do.
     for (const d of HOUSE_DESTINATIONS) {
       if (d.audience !== 'all' || d.kind !== 'route' || !d.route) continue;
       const verdict = member(d.route);

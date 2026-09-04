@@ -178,22 +178,24 @@ export const HOUSE_DESTINATIONS: HouseDestination[] = [
     icon: Sparkles,
     tooltip: "What you've kept from conversations",
     kind: 'route',
-    // FOUNDER RULING 2026-09-04 — the Journal precedent, applied.
+    // FOUNDER RULING 2026-09-04 — Reflections comes OUT of Lab Tools and into
+    // the House. Moved, not mirrored: app/labtools/reflections/ is deleted and
+    // /reflections is the only address.
     //
     // Reflections are MEMBER-OWNED content: /api/capsules is
-    // requireMemberId()-scoped and every capsule is the member's own Keep.
-    // Until now the only page rendering them lived under /labtools, whose
-    // layout hard-gates on requireFounder() — so members pushed there (from
-    // the Keep panel, the Sacred Lab drawer, the Journal panel) met a 403
-    // screen. Journal had exactly this shape and was resolved exactly this
+    // requireMemberId()-scoped and every capsule is the member's own Keep. The
+    // only page rendering them used to live under /labtools, whose layout hard-
+    // gates on requireFounder() — so members pushed there (from the Keep panel,
+    // the Sacred Lab drawer, the Journal panel) met a 403 screen on their own
+    // reflections. Journal had exactly this shape and was resolved the same
     // way: the House points at /journal, not /labtools/journal.
     //
-    // ⛔ Do NOT repoint this at /labtools/reflections merely because that page
-    // existed first. /labtools is instrumentation and is ruled OUT of the House
+    // ⛔ Do NOT repoint this at /labtools/reflections, and do not recreate that
+    // route. /labtools is instrumentation and is ruled OUT of the House
     // (houseDispositions → labtools: intentionally_withheld). Solving a member
     // access problem by weakening that namespace boundary was considered and
-    // REJECTED. The lab surface stays founder-facing; this is the member
-    // navigation target. Same data, two addresses.
+    // REJECTED; keeping a founder twin of a member surface was then rejected
+    // too. One place, one address.
     route: '/reflections',
     audience: 'all',
     // NATIVE RECONCILIATION (part of the same bounded change, not deferred):

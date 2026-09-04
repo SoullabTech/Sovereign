@@ -1,11 +1,7 @@
 'use client';
 
 /**
- * /reflections/[id] — one kept reflection, member-facing.
- *
- * Sibling of app/labtools/reflections/[id] (founder/lab surface). Both mount
- * components/reflections/ReflectionDetail over the same member-scoped
- * /api/capsules/[id]; only the address and the back path differ.
+ * /reflections/[id] — one kept reflection.
  *
  * NATIVE: this is a client component on a dynamic segment, so
  * scripts/capacitor-patch-routes.sh strips it from the iOS bundle by design
@@ -22,5 +18,5 @@ import ReflectionDetail from '@/components/reflections/ReflectionDetail';
 export default function ReflectionDetailPage() {
   const params = useParams();
   const id = params?.id as string;
-  return <ReflectionDetail id={id} basePath="/reflections" />;
+  return <ReflectionDetail id={id} />;
 }

@@ -219,11 +219,12 @@ export const DESTINATION_EXCEPTIONS: Record<string, string> = {
   reflections:
     'Member-owned reflection capsules (/api/capsules, requireMemberId-scoped). Never a ' +
     'rail boundary: the feed only ever existed inside /labtools, which is why members ' +
-    'could not reach their own Keeps. Given its own member address /reflections by ' +
-    'founder ruling 2026-09-04, following the Journal precedent. ' +
-    '⛔ This does NOT reopen the labtools disposition below: /labtools/reflections ' +
-    'remains the founder/lab surface and remains withheld from the House. The House ' +
-    'names a member place, not an instrument.',
+    'could not reach their own Keeps. MOVED OUT of Lab Tools to its own member address ' +
+    '/reflections by founder ruling 2026-09-04 — app/labtools/reflections/ is deleted, ' +
+    'there is no lab twin. ' +
+    '⛔ This does NOT reopen the labtools disposition below: Lab Tools itself remains ' +
+    'withheld from the House. Reflections left that namespace rather than dragging it ' +
+    'in. The House names a member place, not an instrument.',
   anchor: 'MAIA_WORLDS member world.',
   ideas: 'MAIA_WORLDS member world.',
   wisdom: 'MAIA_WORLDS member world.',

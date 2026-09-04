@@ -1,13 +1,12 @@
 'use client';
 
 /**
- * ReflectionDetail — one kept reflection, rendered at two addresses.
+ * ReflectionDetail — one kept reflection.
  *
- * Extracted from app/labtools/reflections/[id]/page.tsx so the member-facing
- * /reflections/[id] and the founder/lab /labtools/reflections/[id] render the
- * same surface over the same member-scoped data (/api/capsules/[id]).
- * See components/reflections/ReflectionsFeed.tsx for why the member route
- * exists at all (founder ruling 2026-09-04, Journal precedent).
+ * Extracted from the page that used to live at app/labtools/reflections/[id]
+ * when Reflections was moved out of Lab Tools into the member's own
+ * /reflections (founder ruling 2026-09-04). See ReflectionsFeed.tsx for why
+ * that namespace move happened; there is no lab twin of this view.
  *
  * The one addition beyond the extraction is the "Discuss this with MAIA"
  * section at the foot of the page — see DiscussWithMaia.tsx for the constraints
@@ -64,14 +63,9 @@ const elementColors: Record<Element, string> = {
 export interface ReflectionDetailProps {
   /** Capsule id — supplied by the route that mounts this. */
   id: string;
-  /** Address this reflection lives at: `${basePath}/${id}`. */
-  basePath?: string;
 }
 
-export default function ReflectionDetail({
-  id,
-  basePath = '/reflections',
-}: ReflectionDetailProps) {
+export default function ReflectionDetail({ id }: ReflectionDetailProps) {
   const router = useRouter();
 
   const [capsule, setCapsule] = useState<CapsuleDTO | null>(null);
@@ -210,7 +204,7 @@ export default function ReflectionDetail({
       >
         <div className="max-w-2xl mx-auto px-6 py-12">
           <button
-            onClick={() => router.push(basePath)}
+            onClick={() => router.push('/reflections')}
             className="flex items-center gap-2 text-stone-400 hover:text-stone-600 transition-colors text-[13px] tracking-wide mb-8"
           >
             <ArrowLeft className="h-4 w-4" />
@@ -220,7 +214,7 @@ export default function ReflectionDetail({
           <div className="text-center py-20">
             <p className="text-red-500 text-[14px]">{error || 'Reflection not found'}</p>
             <button
-              onClick={() => router.push(basePath)}
+              onClick={() => router.push('/reflections')}
               className="mt-4 text-[13px] text-stone-500 hover:text-stone-700 underline"
             >
               Return to reflections
@@ -244,7 +238,7 @@ export default function ReflectionDetail({
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <button
-            onClick={() => router.push(basePath)}
+            onClick={() => router.push('/reflections')}
             className="flex items-center gap-2 text-stone-400 hover:text-stone-600 transition-colors text-[13px] tracking-wide"
           >
             <ArrowLeft className="h-4 w-4" />
@@ -497,7 +491,7 @@ export default function ReflectionDetail({
         )}
 
         {/* Bring it back into conversation — member act, nothing written */}
-        <DiscussWithMaia capsule={capsule} returnTo={basePath} />
+        <DiscussWithMaia capsule={capsule} />
       </div>
     </div>
   );
