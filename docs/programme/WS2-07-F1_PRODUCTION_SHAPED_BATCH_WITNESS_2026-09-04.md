@@ -158,6 +158,51 @@ next                not a classifier tweak — deciding what these two facts imp
                     about where semantic adjudication should live
 ```
 
+## Correction — 2026-09-04
+
+The causal framing immediately above is withdrawn as stronger than the evidence
+supports. **§6 is not rewritten**: that the stronger inference was made and then
+withdrawn is itself part of the evidentiary history.
+
+In particular, the production-shaped batch witness **does not establish**
+`act3/o4` as a within-predicate semantic boundary failure. No claim in this
+evidence chain has been classified in singleton context. `act3/o4` was observed
+under two different multi-claim compositions: the 21-claim batch, where it
+classified `unresolved-thread` ×3, and seven-claim batch C, where it classified
+`term-drift` ×3.
+
+What is established is narrower:
+
+> Under batch C, `act3/o4` is stably classified as `term-drift`, and that
+> placement conflicts with the previously adjudicated semantic reading of the
+> claim.
+
+The present evidence does not establish the cause of that conflict. At least
+two causal readings remain live:
+
+1. **Semantic-boundary failure** — the classifier applies an incorrect category
+   boundary to the predicate as presented.
+2. **Residual contextual influence** — the composition of batch C affects the
+   predicate's classification, just as the 21-claim composition produced a
+   different stable placement.
+
+Accordingly, the architectural conclusion in §6 is superseded by the following
+evidentiary ceiling:
+
+> Classification is sensitive to claim-set composition, and reducing the
+> surrounding context can correct some placements while producing other stable
+> placements that conflict with prior semantic adjudication. Stability
+> therefore does not establish validity, and the present witnesses do not yet
+> locate the source of the remaining error.
+
+**A singleton-context witness is not implied or authorized by this correction.**
+Such a run would be non-production-shaped and would require its own stated
+question and justification.
+
+This correction changes the interpretation of §6 only. The observed results,
+digests, `K0-K6` result, 19/21 figure, individual claim findings, and closure
+sentence remain unchanged.
+
 **Not licensed, here as everywhere in this lane:** nothing in this run
 reproduces, confirms or corrects the original live placements. The historical
 per-claim `doesNotEstablish` was never captured, so `editorial-consequence` is a
