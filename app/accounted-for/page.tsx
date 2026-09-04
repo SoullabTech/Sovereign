@@ -10,6 +10,16 @@ import type { ReactNode } from 'react';
  * per docs/canon/MARKETING_CLAIM_DISCIPLINE.md. Source of record for the
  * copy and its evidence trail: docs/pitch/MAIA_PLATFORM_ACCOUNTING_2026-09-03.md.
  *
+ * 2026-09-04 additions, each traced to a lane record rather than to a plan:
+ *   - spontaneous cross-session recall, witnessed in production
+ *     (docs/programme/MEMORY-PRODUCER-PARTITION-01.md §14 Finding 1)
+ *   - practitioner authorship no longer inherits member semantics
+ *     (same record, §10.1 — the triple derived from the consent path)
+ *   - three producers recorded UNRESOLVED rather than falsely labelled
+ *     (same record, §9.2; enforced as data in lib/maia/canonical-turn/partition.ts)
+ * The partition itself is shadow-only: it corrects whose authority a block
+ * carries in the record, and changes nothing MAIA receives or says.
+ *
  * Server component on purpose: outward claims and nothing else — no client
  * state, no auth, no member data. Register rule (2026-07-10 landings audit):
  * a sentence leads with what a thing is; negation lands after the positive.
@@ -172,7 +182,7 @@ const MEMORY_LIVE: Row[] = [
   {
     name: 'Provenance on every kept item',
     layer: 'live',
-    what: "Each item carries its authority: observed, reported, inferred, provisional, or claimed. MAIA phrases it accordingly. A practitioner's observation the member declines is released, not kept.",
+    what: "Each item carries its authority: observed, reported, inferred, provisional, or claimed. MAIA phrases it accordingly. A practitioner's observation the member declines is released, not kept. Since 2026-09-04 a practitioner's observation also carries its own authorship in the record rather than inheriting the member's; MAIA's wording already held them apart, and the provenance now does too.",
     third: 'The member outranks the system. Declared significance beats inferred significance.',
   },
   {
@@ -456,7 +466,7 @@ export default function AccountedForPage() {
               </div>
             </div>
             <p className="mt-6 text-[0.95rem] italic text-soullab-text-muted">
-              The line we hold: we tell today&apos;s story as today&apos;s, and tomorrow&apos;s as tomorrow&apos;s. Where a claim rests on a runtime fact that was not re-probed for this page, the label is downgraded rather than assumed. Evidence basis: the repository, its canon, its migrations, and its dated production reports as of 2026-09-03.
+              The line we hold: we tell today&apos;s story as today&apos;s, and tomorrow&apos;s as tomorrow&apos;s. Where a claim rests on a runtime fact that was not re-probed for this page, the label is downgraded rather than assumed. Evidence basis: the repository, its canon, its migrations, and its dated production reports as of 2026-09-04.
             </p>
           </header>
 
@@ -492,6 +502,9 @@ export default function AccountedForPage() {
             </div>
             <P>Five were withheld by the member&apos;s own preferences. The rest were cut by a selection limit. The internal ruling on that report: <em>&ldquo;an ungoverned selection policy, not absent intelligence.&rdquo;</em> Since then every turn writes a selection record stating, in sentences rather than scores, why each memory was or was not offered. That is what governed memory looks like from the inside: less &ldquo;remember everything,&rdquo; more &ldquo;know why you brought this up.&rdquo;</P>
 
+            <P>On 2026-09-04 a second production observation ran the other way. A member asked a neutral question &mdash; nothing about memory, nothing about what MAIA was holding. An I Ching reading cast in an earlier session returned on its own, with its changing lines, joined to the member&apos;s own earlier words, and was used in the answer. The chain ran end to end inside one ordinary turn: kept, retrievable, available, admitted, used, and experienced as continuity. The defect that opened this work was the opposite case &mdash; a reading shown once and never stored, so it could not return at all.</P>
+            <Quote>The question has moved. It is no longer whether MAIA can remember. It is whether MAIA remembers truthfully, with the right human and epistemic authority attached to what it holds.</Quote>
+
             <H3>What is designed, not yet live</H3>
             <ul className="mb-5 list-disc pl-5 text-soullab-text-secondary [&_li]:mb-2.5">
               <li><strong className="text-soullab-text-primary">Ambient Daily Anchor surfacing.</strong> <Chip layer="designed" /> The member writes a daily anchor, reviews it, and controls whether MAIA may raise it; that surface is live. The injection that would carry an opted-in anchor into conversation is wired only to a retired route. Today: the anchor is yours and private, and MAIA does not yet bring it up unprompted.</li>
@@ -499,6 +512,7 @@ export default function AccountedForPage() {
               <li><strong className="text-soullab-text-primary">Structural position persistence.</strong> <Chip layer="designed" /> The record of which element and phase a member was last in exists and is read by member views, but the writer sits on the retired route. Nothing currently refreshes it.</li>
               <li><strong className="text-soullab-text-primary">The deepest processing tier.</strong> <Chip layer="designed" /> FAST and CORE, which carry most conversations, receive all memory layers in the prompt. DEEP carries them in context and observability only.</li>
               <li><strong className="text-soullab-text-primary">Mobile proof.</strong> <Chip layer="designed" /> On iOS a session identity mismatch once made every memory layer silently skip while MAIA &ldquo;answered fluently and recalled nothing.&rdquo; Repaired. Device-side proof is not yet established.</li>
+              <li><strong className="text-soullab-text-primary">Uniform authorship on every recalled block.</strong> <Chip layer="designed" /> Three kinds of recalled material still carry a single author label over material written by more than one hand: prior conversation, where the member&apos;s turns and MAIA&apos;s interleave; marked moments, where the mark records who kept the moment rather than who said every word in it; and the member web, where detected patterns, generated summaries and the member&apos;s own journal sit under one heading. Each is recorded as unresolved rather than given a precision it does not have.</li>
               <li><strong className="text-soullab-text-primary">Deletion provenance substrate.</strong> <Chip layer="designed" /> A database-level layer that makes a turn unable to persist without posture and provenance keys, with tombstones and governed restore. Built, rehearsed, not yet deployed.</li>
             </ul>
 
@@ -510,6 +524,24 @@ export default function AccountedForPage() {
             </ul>
             <Quote>MAIA may remember in service of continuity, but may not form identity around a member faster than the member participates in that formation.</Quote>
             <P>That sentence is canon, and it is the reason the synthesis layer is held.</P>
+
+            <H3>Remembering is not enough</H3>
+            <P>Continuity becomes dangerous at the moment it starts working. A system that remembers something correctly and misrepresents where it came from is worse than one that forgets, because it speaks with an authority it has not earned.</P>
+            <P>A member&apos;s own words, a practitioner&apos;s observation, an inference MAIA drew, a computed result, and material Soullab authored are not interchangeable kinds of knowing. They carry different weight, different standing to be argued with, and different claims on the member&apos;s agreement. Memory that flattens them into one voice is not neutral; it quietly promotes some of them.</P>
+            <ul className="mb-5 list-none p-0 text-soullab-text-secondary [&_li]:mb-1.5">
+              <li><strong className="text-soullab-text-primary">You said this.</strong></li>
+              <li><strong className="text-soullab-text-primary">MAIA inferred this.</strong></li>
+              <li><strong className="text-soullab-text-primary">A practitioner observed this.</strong></li>
+              <li><strong className="text-soullab-text-primary">The system computed this.</strong></li>
+              <li><strong className="text-soullab-text-primary">Soullab authored this.</strong></li>
+            </ul>
+            <Quote>This work does not widen what MAIA may know. It corrects whose authority MAIA says that knowledge carries.</Quote>
+            <P>The first repair under that principle shipped on 2026-09-04. A practitioner&apos;s observation about a member used to be recorded under the member&apos;s own authorship, as though the member had placed it there. MAIA&apos;s wording already held the two apart when speaking; the record did not. It does now. Nothing changed about what MAIA receives or says &mdash; the correction is to the account of where the material came from, which is the part a member would have no way to check.</P>
+            <P>Three kinds of recalled material still resist that treatment, and are named above as designed rather than live. Where a truthful split is not yet possible, the system records the block as unresolved instead of giving it a precision it does not have.</P>
+
+            <H3>Where this is going</H3>
+            <P>The aim is not a larger context window. It is a relationship that can hold its own history: MAIA remembering what has mattered, recognising what has changed, keeping observation distinct from inference, honouring what has been sealed or withdrawn, and meeting a person inside a life that is still unfolding.</P>
+            <P>The next stage carries these distinctions into cognition itself, so that authorship shapes how MAIA thinks and speaks rather than sitting alongside the conversation as a record of it. That stage is specified and not built. It is named here because a person deciding whether to spend attention on this deserves to know the direction, and to be able to tell the difference between the direction and the arrival.</P>
             <P><strong className="text-soullab-text-primary">Bottom line for reservation one:</strong> the conversation ends; the relationship does not have to end with it. That is live, consented, and measured. The longer longitudinal picture is being built one governed layer at a time, and each layer ships with its own off switch.</P>
           </Section>
 
