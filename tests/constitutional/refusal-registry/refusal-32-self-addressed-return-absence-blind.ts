@@ -27,12 +27,14 @@ import type { RefusalCheck } from './harness';
 const UNIT = [
   'database/migrations/20260904000002_member_reminders.sql',
   'lib/reminders/cancelToken.ts',
+  'lib/reminders/confirmation.ts',
   'lib/reminders/source.ts',
   'lib/reminders/types.ts',
   'app/api/reminders/route.ts',
   'app/api/reminders/[id]/route.ts',
   'app/api/reminders/cancel/route.ts',
   'scripts/run-member-reminders-worker.ts',
+  'scripts/check-cancel-key-retention.ts',
 ];
 
 const WORKER = 'scripts/run-member-reminders-worker.ts';
@@ -120,7 +122,7 @@ function scanForAbsenceReads(code: string): string[] {
 export const check: RefusalCheck = {
   id: 'R32',
   refusal:
-    'the reminder system may know a member asked for a future delivery; it may not know whether the member has been absent (A: due-selection · B: narrow identity seam · C: no engagement telemetry)',
+    'the reminder system may know a member asked for a future delivery; it may not know whether the member has been absent (A: due-selection · B: narrow identity seam · C: no engagement telemetry · D: source eligibility proven locally)',
   grade: 'Proposed',
   enforcedBy:
     'absence of any absence-derived read across the Tier 1 unit (migration, lib/reminders/**, app/api/reminders/**, the delivery worker), plus the asserted shape of the one permitted identity lookup',
@@ -181,24 +183,35 @@ export const check: RefusalCheck = {
     // Pin the SELECTED COLUMN, not merely the table: `SELECT * FROM members`
     // would keep a table-name-only check cosmetically green while exposing
     // last_login, session timestamps and every state field on the row.
-    const identityReads = worker.match(/SELECT[\s\S]{0,120}?FROM\s+members\b[\s\S]{0,80}?`/gi) ?? [];
+    //
+    // Scanned across the WHOLE unit, not just the worker: the scheduling
+    // confirmation resolves an address at creation time too, and a seam that is
+    // narrow in one file and wide in another is not narrow.
+    const PERMITTED_IDENTITY_READ = /^SELECT\s+email\s+FROM\s+members\s+WHERE\s+id\s*=\s*\$1$/i;
+    const identityReads: Array<{ path: string; sql: string }> = [];
+    for (const path of UNIT) {
+      if (!io.exists(path)) continue;
+      const src = stripComments(io.read(path));
+      for (const m of src.match(/SELECT[\s\S]{0,160}?FROM\s+members\b[\s\S]{0,100}?`/gi) ?? []) {
+        identityReads.push({ path, sql: m.replace(/`/g, '').replace(/\s+/g, ' ').trim() });
+      }
+    }
+
     if (identityReads.length === 0) {
       io.fail('R32-B · no identity lookup found', 'the permitted seam must be present and pinned');
-    } else if (identityReads.length > 1) {
-      io.fail(
-        'R32-B · more than one read of members',
-        `${identityReads.length} found — the seam is exactly one lookup`,
-      );
-    } else if (/SELECT\s+\*/i.test(identityReads[0])) {
-      io.fail('R32-B · identity lookup selects *', 'every column on members, not the address');
-    } else if (/^\s*SELECT\s+email\s+FROM\s+members\s+WHERE\s+id\s*=\s*\$1\s*$/i.test(
-        identityReads[0].replace(/`/g, '').trim())) {
-      io.pass('R32-B · identity seam is the delivery address only', 'SELECT email FROM members WHERE id = $1');
     } else {
-      io.fail(
-        'R32-B · identity lookup is not the permitted shape',
-        `must be exactly \`SELECT email FROM members WHERE id = $1\` — found: ${identityReads[0].slice(0, 90)}`,
-      );
+      const wide = identityReads.filter((r) => !PERMITTED_IDENTITY_READ.test(r.sql));
+      if (wide.length > 0) {
+        io.fail(
+          'R32-B · a read of members is not the permitted shape',
+          wide.map((r) => `${r.path} → ${r.sql.slice(0, 80)}`).join(' | '),
+        );
+      } else {
+        io.pass(
+          'R32-B · every read of members is the delivery address only',
+          `${identityReads.length} read(s), each exactly: SELECT email FROM members WHERE id = $1`,
+        );
+      }
     }
 
     // ═══ R32-C — delivery result cannot become engagement evidence ════════
@@ -235,6 +248,54 @@ export const check: RefusalCheck = {
       io.fail('presence or engagement column present in schema', schemaHits.join(', '));
     } else {
       io.pass('schema declares no presence, recency, or engagement column');
+    }
+
+    // ═══ R32-D — source eligibility does not depend on R21 ════════════════
+    // Tier 1 admits three source classes. Sanctuary safety for them is proven
+    // LOCALLY rather than inherited from the (currently red) global Sanctuary
+    // refusal R21:
+    //
+    //   member_note   — the member types it in the gesture itself. No stored
+    //                   source object exists, so no Sanctuary path can reach it.
+    //   memory_atom   — member_memory_atoms is written ONLY by explicit member
+    //   daily_anchor  — member_daily_anchors likewise.
+    //
+    // Sanctuary posture governs CONVERSATION-TURN persistence (TurnsStore,
+    // corpus callosum, conversation_history). Neither source table is written
+    // by that path — they are written by member gesture routes. If a future
+    // turn-path writer is added to either table, this assertion goes red and
+    // the local proof must be re-established before Tier 1 may rely on it.
+    const SOURCE_TABLES = ['member_memory_atoms', 'member_daily_anchors'];
+    const EXPECTED_WRITERS: Record<string, string[]> = {
+      member_memory_atoms: [
+        'app/api/studio/with-me/sessions/[sessionId]/route.ts',
+        'lib/psyche/portfolio.ts',
+      ],
+      member_daily_anchors: ['app/api/anchor/today/route.ts'],
+    };
+
+    let sourcesClean = true;
+    for (const table of SOURCE_TABLES) {
+      const hits = io
+        .grep(`INSERT INTO ${table}`, ['app', 'lib'])
+        .map((line) => line.split(':')[0])
+        .filter((path) => !path.includes('__tests__'));
+      const unexpected = [...new Set(hits)].filter(
+        (path) => !EXPECTED_WRITERS[table].includes(path),
+      );
+      if (unexpected.length > 0) {
+        io.fail(
+          `R32-D · unrecognised writer of ${table}`,
+          `${unexpected.join(', ')} — re-establish that Sanctuary content cannot reach this source class`,
+        );
+        sourcesClean = false;
+      }
+    }
+    if (sourcesClean) {
+      io.pass(
+        'R32-D · every Tier 1 source class is written only by member gesture',
+        'no conversation-turn writer reaches member_memory_atoms or member_daily_anchors — Sanctuary safety is local, not inherited from R21',
+      );
     }
 
     // ═══ NEGATIVE CONTROL — the detector must still see all three ═════════

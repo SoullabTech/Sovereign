@@ -57,6 +57,10 @@ CREATE TABLE IF NOT EXISTS member_reminders (
   -- Operational evidence ONLY. Never an engagement signal, never joined to
   -- member behaviour. Read by the worker's own retry logic and nothing else.
   delivery_attempts  INT NOT NULL DEFAULT 0,
+  -- When we FIRST tried. Retries are bounded relative to this, not to
+  -- delivery_at, because the risk being bounded is duplicate delivery at the
+  -- vendor — whose idempotency protection is time-limited. See the worker.
+  first_attempt_at   TIMESTAMPTZ,
   failed_at          TIMESTAMPTZ,
 
   -- Typed, closed set. No provider prose: vendor messages can echo the payload,
@@ -68,6 +72,10 @@ CREATE TABLE IF NOT EXISTS member_reminders (
     'quota_exceeded',
     'expired',
     'cancel_secret_unavailable',
+    -- The send may or may not have reached the member. Past the provider's
+    -- idempotency window we can no longer retry without risking a duplicate of
+    -- the member's own words, so we stop and say so rather than guess.
+    'delivery_uncertain',
     'unknown'
   )),
 

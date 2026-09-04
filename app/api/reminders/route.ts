@@ -25,6 +25,7 @@ import {
   hashCancelToken,
   isCancelSecretConfigured,
 } from '@/lib/reminders/cancelToken';
+import { sendSchedulingConfirmation } from '@/lib/reminders/confirmation';
 import { verifyReminderSource } from '@/lib/reminders/source';
 import {
   DEFAULT_DELIVERY_WINDOW_HOURS,
@@ -148,8 +149,45 @@ export async function POST(request: NextRequest) {
     [reminderId, hashCancelToken(deriveCancelToken(reminderId, version)), version],
   );
 
+  // PRE-DELIVERY CANCELLATION. A one-shot reminder whose only stop control
+  // rides in the delivery email cannot evidence that the member could halt the
+  // act beforehand — the link would arrive at the same moment as the thing it
+  // cancels. The authenticated list is the primary surface; this confirmation
+  // puts the same tokenised link in their inbox at scheduling time.
+  //
+  // Best-effort: a failed confirmation must not void a reminder the member
+  // successfully authored, and DELETE /api/reminders/[id] remains available
+  // either way. But the failure is logged, never swallowed.
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://soullab.life';
+  const cancelUrl = `${appUrl}/api/reminders/cancel?t=${encodeURIComponent(
+    deriveCancelToken(reminderId, version),
+  )}`;
+
+  const recipient = await query<{ email: string | null }>(
+    `SELECT email FROM members WHERE id = $1`,
+    [member.id],
+  );
+  const to = recipient.rows[0]?.email;
+  let confirmationSent = false;
+  if (to) {
+    confirmationSent = await sendSchedulingConfirmation({
+      to,
+      memberId: member.id,
+      reminderId,
+      deliveryAt: when,
+      deliveryText: text,
+      cancelUrl,
+      listUrl: `${appUrl}/maia/reminders`,
+    });
+    if (!confirmationSent) {
+      console.error(`[reminders] confirmation send failed { id: ${reminderId} }`);
+    }
+  } else {
+    console.error(`[reminders] no recipient for confirmation { id: ${reminderId} }`);
+  }
+
   return NextResponse.json(
-    { id: reminderId, deliveryAt: when.toISOString(), deliveryText: text },
+    { id: reminderId, deliveryAt: when.toISOString(), deliveryText: text, confirmationSent },
     { status: 201 },
   );
 }

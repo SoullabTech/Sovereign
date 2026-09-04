@@ -28,13 +28,35 @@ export type ReminderFailureCode =
   | 'quota_exceeded'
   | 'expired'
   | 'cancel_secret_unavailable'
+  | 'delivery_uncertain'
   | 'unknown';
 
 /** Longest a member-approved reminder text may be (mirrors the CHECK). */
 export const MAX_DELIVERY_TEXT_LENGTH = 2000;
 
-/** v1 retry window. Past this, the reminder is terminal-'expired', never sent. */
+/** v1 delivery window. Past this the reminder is terminal-'expired', never sent. */
 export const DEFAULT_DELIVERY_WINDOW_HOURS = 6;
+
+/**
+ * How long the PROVIDER remembers an idempotency key (Resend: ~24h).
+ *
+ * This is a property of the vendor, not a policy we choose — it is recorded
+ * here so the retry horizon below can be derived from it rather than guessed.
+ */
+export const PROVIDER_IDEMPOTENCY_WINDOW_HOURS = 24;
+
+/**
+ * Never retry beyond this, measured from the FIRST attempt.
+ *
+ * The dangerous sequence: send succeeds → process dies before the write commits
+ * → a much later retry finds the provider no longer remembers the key → the
+ * member receives their own words twice. Held at half the provider's window so
+ * clock skew, queue lag, and a slow batch cannot erode the margin.
+ *
+ * Past it, the outcome is genuinely unknown, and 'delivery_uncertain' says so
+ * rather than gambling on a duplicate.
+ */
+export const RETRY_HORIZON_HOURS = PROVIDER_IDEMPOTENCY_WINDOW_HOURS / 2;
 
 /** Stable, derived — never random. Spec §6.2. */
 export function reminderIdempotencyKey(reminderId: string): string {
@@ -54,6 +76,7 @@ export interface MemberReminder {
   cancelled_at: Date | null;
   delivered_at: Date | null;
   delivery_attempts: number;
+  first_attempt_at: Date | null;
   cancel_token_version: number;
   failed_at: Date | null;
   failure_code: ReminderFailureCode | null;

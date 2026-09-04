@@ -15,6 +15,7 @@ import {
   cancelTokenHashEquals,
   currentCancelTokenVersion,
   deriveCancelToken,
+  retainedCancelTokenVersions,
   hashCancelToken,
   isCancelSecretConfigured,
 } from '../cancelToken';
@@ -27,8 +28,8 @@ beforeEach(() => {
   process.env = { ...ENV };
   delete process.env.SELF_ADDRESSED_RETURN_CANCEL_SECRET;
   delete process.env.SELF_ADDRESSED_RETURN_CANCEL_SECRET_VERSION;
-  delete process.env.SELF_ADDRESSED_RETURN_CANCEL_SECRET_PREVIOUS;
-  delete process.env.SELF_ADDRESSED_RETURN_CANCEL_SECRET_PREVIOUS_VERSION;
+  delete process.env.SELF_ADDRESSED_RETURN_CANCEL_KEYS;
+  delete process.env.SELF_ADDRESSED_RETURN_CANCEL_CURRENT_VERSION;
 });
 afterEach(() => {
   process.env = ENV;
@@ -80,33 +81,66 @@ describe('derivation', () => {
   });
 });
 
-describe('rotation does not orphan links already sent', () => {
-  it('still derives a v1 token after rotating to v2', () => {
+describe('rotation retention — a key lives while a reminder depends on it', () => {
+  const KEY_C = 'c'.repeat(40);
+
+  it('keeps v1 derivable across TWO rotations, which current+previous could not', () => {
+    // The case that broke the earlier design: a reminder scheduled far enough
+    // ahead outlives more than one rotation.
     process.env.SELF_ADDRESSED_RETURN_CANCEL_SECRET = KEY_A;
     const issued = deriveCancelToken('r1', 1);
     const storedHash = hashCancelToken(issued);
 
-    // Rotate: A becomes previous@1, B becomes current@2.
-    process.env.SELF_ADDRESSED_RETURN_CANCEL_SECRET = KEY_B;
-    process.env.SELF_ADDRESSED_RETURN_CANCEL_SECRET_VERSION = '2';
-    process.env.SELF_ADDRESSED_RETURN_CANCEL_SECRET_PREVIOUS = KEY_A;
-    process.env.SELF_ADDRESSED_RETURN_CANCEL_SECRET_PREVIOUS_VERSION = '1';
+    delete process.env.SELF_ADDRESSED_RETURN_CANCEL_SECRET;
+    process.env.SELF_ADDRESSED_RETURN_CANCEL_KEYS = JSON.stringify({
+      1: KEY_A,
+      2: KEY_B,
+      3: KEY_C,
+    });
 
-    expect(currentCancelTokenVersion()).toBe(2);
-    // The already-issued link is still reproducible — the member can still cancel.
+    expect(currentCancelTokenVersion()).toBe(3);
+    expect(retainedCancelTokenVersions()).toEqual([1, 2, 3]);
+    // The member's link, issued two rotations ago, still works.
     expect(deriveCancelToken('r1', 1)).toBe(issued);
-    expect(cancelTokenHashEquals(hashCancelToken(deriveCancelToken('r1', 1)), storedHash)).toBe(true);
-    // New reminders sign under the new key.
-    expect(deriveCancelToken('r1', 2)).not.toBe(issued);
+    expect(cancelTokenHashEquals(hashCancelToken(deriveCancelToken('r1', 1)), storedHash)).toBe(
+      true,
+    );
   });
 
-  it('refuses to re-sign a v1 reminder with the current key once v1 is retired', () => {
-    // Silently re-signing would mint a token that does not match the stored
-    // hash — the member's link would fail at the moment they used it.
-    process.env.SELF_ADDRESSED_RETURN_CANCEL_SECRET = KEY_B;
-    process.env.SELF_ADDRESSED_RETURN_CANCEL_SECRET_VERSION = '2';
-
+  it('fails closed when a version was retired while still depended upon', () => {
+    process.env.SELF_ADDRESSED_RETURN_CANCEL_KEYS = JSON.stringify({ 2: KEY_B, 3: KEY_C });
     expect(() => deriveCancelToken('r1', 1)).toThrow(CancelSecretUnavailableError);
+    // The message says where to look rather than only that it broke.
+    expect(() => deriveCancelToken('r1', 1)).toThrow(/retention/);
+  });
+
+  it('never re-signs an old reminder under the current key', () => {
+    // Silently re-signing mints a token that does not match the stored hash —
+    // the member's link would fail at the moment they used it.
+    process.env.SELF_ADDRESSED_RETURN_CANCEL_KEYS = JSON.stringify({ 1: KEY_A, 2: KEY_B });
+    expect(deriveCancelToken('r1', 1)).not.toBe(deriveCancelToken('r1', 2));
+  });
+
+  it('signs new reminders with the declared current version, not merely the newest', () => {
+    process.env.SELF_ADDRESSED_RETURN_CANCEL_KEYS = JSON.stringify({ 1: KEY_A, 2: KEY_B });
+    process.env.SELF_ADDRESSED_RETURN_CANCEL_CURRENT_VERSION = '1';
+    expect(currentCancelTokenVersion()).toBe(1);
+  });
+
+  it('refuses a keyring whose current version it holds no key for', () => {
+    process.env.SELF_ADDRESSED_RETURN_CANCEL_KEYS = JSON.stringify({ 1: KEY_A });
+    process.env.SELF_ADDRESSED_RETURN_CANCEL_CURRENT_VERSION = '5';
+    expect(isCancelSecretConfigured()).toBe(false);
+  });
+
+  it('refuses a keyring containing a weak key rather than partially accepting it', () => {
+    process.env.SELF_ADDRESSED_RETURN_CANCEL_KEYS = JSON.stringify({ 1: KEY_A, 2: 'short' });
+    expect(isCancelSecretConfigured()).toBe(false);
+  });
+
+  it('refuses malformed keyring JSON', () => {
+    process.env.SELF_ADDRESSED_RETURN_CANCEL_KEYS = 'not json';
+    expect(isCancelSecretConfigured()).toBe(false);
   });
 });
 

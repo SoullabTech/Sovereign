@@ -27,7 +27,11 @@
 
 import { query, closePool } from '../lib/db/postgres';
 import { sendEmail, SENDERS } from '../lib/email/sendEmail';
-import { reminderIdempotencyKey, type ReminderFailureCode } from '../lib/reminders/types';
+import {
+  RETRY_HORIZON_HOURS,
+  reminderIdempotencyKey,
+  type ReminderFailureCode,
+} from '../lib/reminders/types';
 import {
   CancelSecretUnavailableError,
   deriveCancelToken,
@@ -46,6 +50,7 @@ interface DueReminder {
   delivery_deadline: Date;
   created_at: Date;
   delivery_attempts: number;
+  first_attempt_at: Date | null;
   cancel_token_version: number;
 }
 
@@ -57,7 +62,7 @@ interface DueReminder {
 async function findDue(): Promise<DueReminder[]> {
   const res = await query<DueReminder>(
     `SELECT id, member_id, delivery_text, delivery_deadline, created_at,
-            delivery_attempts, cancel_token_version
+            delivery_attempts, first_attempt_at, cancel_token_version
        FROM member_reminders
       WHERE delivery_at <= now()
         AND cancelled_at IS NULL
@@ -137,12 +142,29 @@ async function deliver(reminder: DueReminder): Promise<void> {
     return;
   }
 
+  // NEVER RETRY BEYOND THE PROVIDER'S IDEMPOTENCY WINDOW.
+  //
+  // The dangerous sequence: the send succeeds → this process dies before the
+  // write commits → a much later retry finds the vendor no longer remembers the
+  // key → the member receives their own words twice. Held well inside the
+  // window (RETRY_HORIZON_HOURS), so clock skew and queue lag cannot erode the
+  // margin. Past it the outcome is genuinely unknown — say so, rather than
+  // gamble on a duplicate.
+  if (reminder.first_attempt_at) {
+    const elapsedHours = (Date.now() - new Date(reminder.first_attempt_at).getTime()) / 3_600_000;
+    if (elapsedHours > RETRY_HORIZON_HOURS) {
+      await recordFailure(reminder.id, 'delivery_uncertain', true);
+      return;
+    }
+  }
+
   // CLAIM BEFORE SEND — wins the race between concurrent workers. The provider
   // idempotency key below covers the case this cannot: vendor accepted, our
   // write lost.
   const claim = await query<{ id: string }>(
     `UPDATE member_reminders
-        SET delivered_at = now()
+        SET delivered_at = now(),
+            first_attempt_at = COALESCE(first_attempt_at, now())
       WHERE id = $1 AND delivered_at IS NULL AND cancelled_at IS NULL
       RETURNING id`,
     [reminder.id],

@@ -443,3 +443,121 @@ Repairing R19/R21 is separate work and must not be folded into this unit.
 - `SELF_ADDRESSED_RETURN_CANCEL_SECRET` provisioned in production.
 - A member-facing surface for the gesture (API is complete; UI is not in this unit).
 - **Then** the production witness, then STOP.
+
+---
+
+## 8. Third founder review (2026-09-04) — retention, retry bound, pre-delivery cancellation, local Sanctuary proof
+
+### 8.1 Cancel-key RETENTION, not merely "previous"
+
+`current + previous` holds across exactly one rotation; a reminder scheduled far enough ahead
+outlives two. Adopted the first option — **retain every version while a live reminder references
+it**:
+
+> **A cancel key may be retired only when no live reminder depends on that version.**
+
+Member cancellation authority decides when a key may disappear, not infrastructure hygiene.
+
+- Keyring is now `SELF_ADDRESSED_RETURN_CANCEL_KEYS` (JSON `{version: secret}`) +
+  `..._CURRENT_VERSION`; the single-key form remains for simple deployments.
+- **`scripts/check-cancel-key-retention.ts`** answers which versions live reminders still depend
+  on, which are safe to retire, and exits non-zero if a retirement already stranded someone. Run
+  before retiring a key and in the deploy gate after a rotation.
+- A version no longer in the keyring fails **closed** (`cancel_secret_unavailable`) — the worker
+  refuses to send rather than deliver a message the member has no way to stop.
+
+### 8.2 Retries bounded by the provider's idempotency window
+
+The dangerous sequence named in review: *send succeeds → process dies before the write commits →
+a much later retry finds the vendor no longer remembers the key → the member receives their own
+words twice.*
+
+- `first_attempt_at` records when we first tried. The retry bound is measured from it, not from
+  `delivery_at`, because the risk being bounded is duplication at the vendor.
+- `PROVIDER_IDEMPOTENCY_WINDOW_HOURS = 24` (a property of Resend, recorded rather than chosen);
+  `RETRY_HORIZON_HOURS = 12` — **half** the window, so clock skew, queue lag and a slow batch
+  cannot erode the margin.
+- Past the horizon: terminal **`delivery_uncertain`**. The outcome is genuinely unknown, and the
+  code says so rather than gambling on a duplicate of the member's own words.
+
+The 6h `delivery_deadline` and the 12h retry horizon are **different invariants** and both stand:
+the deadline protects the member's authored time, the horizon protects against duplication.
+
+### 8.3 Pre-delivery cancellation — the real gap
+
+Correct catch, and a functional defect rather than a documentation one. Tier 1 is one-shot, so a
+cancel link appearing **only** in the reminder email arrives at the same moment as the act it
+would cancel — it cannot evidence that the member could stop it beforehand.
+
+Two pre-delivery surfaces now exist:
+
+1. **Authenticated**: `GET /api/reminders` (their own list) → `DELETE /api/reminders/[id]`.
+2. **`lib/reminders/confirmation.ts`** — a scheduling confirmation sent at CREATION carrying the
+   tokenised cancel link. It states what was scheduled and when, and nothing else: no
+   encouragement, no reassurance, no comment on the choice.
+
+Best-effort by design: a failed confirmation must not void a reminder the member successfully
+authored, and DELETE remains available regardless — but the failure is logged, never swallowed.
+It carries a **distinct** idempotency key from the delivery, so confirming can never suppress
+delivering at the vendor.
+
+### 8.4 Sanctuary — proven locally, no longer citing R21
+
+Adopted the second option: **prove Tier 1's source eligibility locally**, so the broken global
+detector is a separately queued defect rather than a hole in this unit's evidence chain.
+
+The proposition, now pinned as **R32-D**:
+
+> Every source class Tier 1 admits is written **only by an explicit member gesture**, never by
+> the conversation-turn persistence path that Sanctuary posture governs.
+
+| Source class | Local proof |
+|---|---|
+| `member_note` | The member types it in the gesture itself. No stored source object exists, so no Sanctuary path can reach it. |
+| `memory_atom` | `member_memory_atoms` is written only by `app/api/studio/with-me/sessions/[sessionId]/route.ts` and `lib/psyche/portfolio.ts` — member-keep gestures. |
+| `daily_anchor` | `member_daily_anchors` is written only by `app/api/anchor/today/route.ts` — the member's own anchor gesture. |
+
+Sanctuary posture governs turn stores (TurnsStore, corpus callosum, `conversation_history`).
+Neither source table is written by that path. R32-D enumerates the permitted writers, so **adding
+a turn-path writer to either table turns it red** and the local proof must be re-established
+before Tier 1 may rely on it. Tier 1 no longer cites R21 as evidence.
+
+### 8.5 R32 is now four propositions
+
+**R32-B was widened** to scan the whole unit rather than only the worker, because the scheduling
+confirmation resolves an address at creation time too — a seam narrow in one file and wide in
+another is not narrow. Both reads are pinned to `SELECT email FROM members WHERE id = $1`.
+
+### 8.6 Verification performed
+
+| Check | Result |
+|---|---|
+| Refusal registry | **109 passed · 5 failed · 24 refusals** — R32 green on all 9 assertions; the 5 remain the pre-existing R19/R21 defects |
+| R32-B sabotage via the *confirmation* path (`SELECT *`) | **RED** — the widened scope catches it in the route, not just the worker |
+| R32-D sabotage (turn-path writer added to a source table) | **RED** |
+| Keyring across two rotations, retention, fail-closed, malformed input | **19/19 pass** |
+| `lib/reminders/` + `lib/email/` suites | **92/92 pass, 9 suites** |
+| `npm run typecheck` | **clean, no regressions** |
+
+### 8.7 Remaining sequence to closure
+
+```text
+real DB integration tests
+→ concurrent-worker / idempotency proof (two workers, same reminder)
+→ cancel-key retention proof
+→ pre-delivery cancellation surface exercised end to end
+→ worker registration in docker-compose.production.yml
+→ production secret provisioning
+→ member-facing gesture UI
+→ R32 A/B/C/D green + sabotage red
+→ one real member production loop
+→ witness record
+→ STOP
+```
+
+**The production witness must positively prove**: created by member → exact approved snapshot
+persisted → due without reading absence → delivered **once** at the authorized time → current
+member email resolved through the narrow identity seam → **pre-delivery** cancellation works →
+cancelled reminder never sends.
+
+No return measurement. No "helpful" suppression. No next support tier.
