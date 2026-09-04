@@ -1,4 +1,4 @@
-import { lineOf, requireLine, type RefusalCheck } from './harness';
+import { guardDomination, linesOf, requireLines, type DominationReport, type RefusalCheck } from './harness';
 
 /**
  * Refusal 21 — Sanctuary content cannot reach the empirically-escaped stores.
@@ -29,48 +29,91 @@ export const check: RefusalCheck = {
   violationAttempted: 'find an escaped-store write path that does not pass through the posture guard, a forgeable posture, or a refusal log that carries content',
   passingAuthorizes: 'the four lanes that escaped on 2026-06-14 refuse sanctuary content at the store boundary regardless of caller behavior',
   passingDoesNotAuthorize: 'that every content store platform-wide is governed (S4–S6 remain), or that posture resolution is independent of the request flag (S5 provenance work)',
-  hostileForkMustChange: 'remove a contentWritable() call from a store, export the TurnPosture constructor, or resolve posture from session-level mode — all visible diffs',
+  hostileForkMustChange: 'remove a contentWritable() call from a store, add a content write to a scope that has no guard of its own, export the TurnPosture constructor, or resolve posture from session-level mode — all visible diffs',
 
   run(io) {
-    // (1,2) TurnsStore: guard present and BEFORE the INSERTs.
-    // lineOf/requireLine are shared (harness.ts): -1 only for a genuinely absent
-    // anchor, never NaN. A grep line that cannot be parsed raises DetectorDefect.
-    // The guards are read with lineOf (absence = breach); the INSERTs they are
-    // ordered against are read with requireLine (absence = lost anchor).
-    const turnsGuard = io.grep(GUARD, ['lib/memory/stores/TurnsStore.ts']);
-    const turnsInsert = io.grep('INSERT INTO conversation_turns', ['lib/memory/stores/TurnsStore.ts']);
-    if (
-      turnsGuard.length > 0 &&
-      lineOf(turnsGuard) < requireLine(turnsInsert, 'INSERT INTO conversation_turns in TurnsStore.ts')
-    ) {
-      io.pass('TurnsStore.addExchange refuses before any INSERT');
+    /**
+     * Domination, not line order.
+     *
+     * These three assertions used to compare the FIRST guard against the FIRST
+     * write. That is far weaker than it reads: TurnsStore.ts has 3 guards and 4
+     * INSERTs, and `113 < 125` says nothing whatever about the INSERT at 281.
+     * An unguarded write added anywhere below the first guard would have kept
+     * the check green — a gap in what the assertion proved, closing which
+     * strengthens R21 (recorded as unrepaired in
+     * docs/ops/REFUSAL_REGISTRY_DETECTOR_DEFECT_2026-09-04.md §6.1).
+     *
+     * `guardDomination` instead requires, for EVERY write independently, a
+     * guard that precedes it AND shares its innermost function scope — so a
+     * guard in `addTurn` can never be credited for an INSERT in `addExchange`.
+     * Guards are read with `linesOf` (absence = every write undominated =
+     * breach); the writes they are ordered against use `requireLines` (absence
+     * = lost anchor = DetectorDefect, which proves nothing either way).
+     */
+    const shown = (r: DominationReport) =>
+      r.dominated.map((d) => `${d.scope}: guard@${d.guardLine}→write@${d.line}`).join(', ');
+    const missing = (r: DominationReport) =>
+      r.undominated.map((u) => `write@${u.line} in ${u.scope}() has no guard in its own scope`).join('; ');
+
+    // (1,2) TurnsStore: every INSERT dominated inside its own method.
+    const turnsSrc = 'lib/memory/stores/TurnsStore.ts';
+    const turnsDom = guardDomination({
+      relPath: turnsSrc,
+      source: io.read(turnsSrc),
+      guardLines: linesOf(io.grep(GUARD, [turnsSrc])),
+      writeLines: requireLines(
+        io.grep('INSERT INTO conversation_turns', [turnsSrc]),
+        'INSERT INTO conversation_turns in TurnsStore.ts'
+      ),
+    });
+    if (turnsDom.ok) {
+      io.pass(
+        'Every TurnsStore INSERT is guard-dominated within its own method',
+        `${turnsDom.dominated.length} writes — ${shown(turnsDom)}`
+      );
     } else {
-      io.fail('TurnsStore guard missing or after INSERT', `guard@${lineOf(turnsGuard)} insert@${lineOf(turnsInsert)}`);
+      io.fail('TurnsStore INSERT not guard-dominated', missing(turnsDom));
     }
 
-    // (3,4) Corpus callosum: both writers guarded before their INSERTs.
+    // (3,4) Corpus callosum: both writers guarded, each within its own function.
     const ccSrc = 'lib/services/corpusCallosumService.ts';
     const ccGuards = io.grep(GUARD, [ccSrc]);
     const ccInserts = io.grep('INSERT INTO (agent_runs|integration_passes)', [ccSrc]);
-    if (ccGuards.length >= 2 && ccInserts.length === 2 && lineOf(ccGuards) < lineOf(ccInserts)) {
-      io.pass('logAgentRun and logIntegrationPass refuse before their INSERTs', `${ccGuards.length} guards`);
+    const ccDom = guardDomination({
+      relPath: ccSrc,
+      source: io.read(ccSrc),
+      guardLines: linesOf(ccGuards),
+      writeLines: requireLines(ccInserts, 'INSERT INTO agent_runs|integration_passes in corpusCallosumService.ts'),
+    });
+    if (ccGuards.length >= 2 && ccInserts.length === 2 && ccDom.ok) {
+      io.pass(
+        'logAgentRun and logIntegrationPass each dominate their own INSERT',
+        `${ccGuards.length} guards — ${shown(ccDom)}`
+      );
     } else {
       io.fail(
         'corpus callosum writers not both guarded',
-        `guards=${ccGuards.length}@${lineOf(ccGuards)} inserts=${ccInserts.length}@${lineOf(ccInserts)}`
+        ccDom.ok
+          ? `guards=${ccGuards.length} inserts=${ccInserts.length} (expected >=2 and ==2)`
+          : missing(ccDom)
       );
     }
 
-    // Session-history lane (the jsonb lane that escaped): guard before UPDATE.
-    const smGuard = io.grep(GUARD, ['lib/sovereign/sessionManager.ts']);
-    const smUpdate = io.grep('SET conversation_history', ['lib/sovereign/sessionManager.ts']);
-    if (
-      smGuard.length > 0 &&
-      lineOf(smGuard) < requireLine(smUpdate, 'SET conversation_history in sessionManager.ts')
-    ) {
-      io.pass('sessionManager guards conversation_history before the UPDATE');
+    // Session-history lane (the jsonb lane that escaped): UPDATE dominated.
+    const smSrc = 'lib/sovereign/sessionManager.ts';
+    const smDom = guardDomination({
+      relPath: smSrc,
+      source: io.read(smSrc),
+      guardLines: linesOf(io.grep(GUARD, [smSrc])),
+      writeLines: requireLines(
+        io.grep('SET conversation_history', [smSrc]),
+        'SET conversation_history in sessionManager.ts'
+      ),
+    });
+    if (smDom.ok) {
+      io.pass('Every conversation_history UPDATE is guard-dominated within its own function', shown(smDom));
     } else {
-      io.fail('conversation_history lane unguarded', `guard@${lineOf(smGuard)} update@${lineOf(smUpdate)}`);
+      io.fail('conversation_history lane unguarded', missing(smDom));
     }
 
     // (8) Posture is not forgeable: private constructor, frozen, no external `new`.

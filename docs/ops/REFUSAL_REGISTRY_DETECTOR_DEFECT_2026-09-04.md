@@ -137,6 +137,19 @@ This is intended — a check that cannot read its evidence must not continue iss
    hand), so this is a **gap in what the assertion proves, not a live breach**.
    Closing it would *strengthen* R21 and is a separate authorized unit — it is not
    folded into this repair.
+
+   > **CLOSED** by the follow-up unit on `fix/refusal-21-guard-domination` (stacked on
+   > this branch). R21's three ordering assertions were replaced with `guardDomination`,
+   > which requires of EVERY write independently a guard that both precedes it and
+   > shares its innermost function scope — so `addTurn`'s guard can never be credited
+   > for an `addExchange` INSERT. No assertion threshold, pattern, or logical form was
+   > relaxed, and the registry count is unchanged at 106.
+   >
+   > That unit also establishes the gap was **real, not theoretical**: reconstructing
+   > the pre-strengthening assertion shows it reported **green** both when an unguarded
+   > `INSERT` was appended to `TurnsStore.ts` and when the guard was removed from
+   > `addExchange` — the very method R21 is named for. Both now fail, naming the write
+   > and its scope. See §6 of that unit's own record.
 2. **Cosmetic-only sibling.** `refusal-02` and `refusal-17` use
    `writers[0].split(':').slice(0, 2).join(':')` for a display detail. Under GNU grep
    this printed a slightly different string; it never fed a comparison and never
