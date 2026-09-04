@@ -39,21 +39,22 @@ CURRENT UNIT       BUILD-07B Developmental Reader — IMPLEMENTATION OPEN (found
                    (Gate A structural → STRUCTURALLY PROVED; Gate B live reader
                    witness → CLOSED / ACCEPTED)
                    lane: JARVIS-WS2-07-DEVELOPMENTAL-INTELLIGENCE-01
-CURRENT CANDIDATE  none yet — implementation not begun at this record
+CURRENT CANDIDATE  421f25bd6 — GATE A PASS · STRUCTURALLY PROVED · NOT CLOSED · GATE B PENDING
+                   record: WS2-07-BUILD-07B_READER_WITNESS_2026-09-04.md
                    census:   WS2-07-BUILD-07B_READER_BOUNDARY_CENSUS_2026-09-04.md (canonical)
                    contract: WS2-07-BUILD-07B_READER_CONTRACT_2026-09-04.md (canonical;
                              F1–F20 · O1–O6; binding as merged)
 PRIOR UNIT         BUILD-07A Developmental Evidence — CLOSED / ACCEPTED (founder,
                    2026-09-04); canonical @ 27ec9f895
                    record: WS2-07-BUILD-07A_EVIDENCE_WITNESS_2026-09-03.md §9
-NEXT EXECUTABLE    BUILD-07B implementation → Gate A (F1–F20 / O1–O6, seam refusing) →
-                   structural candidate by exact SHA → bounded Gate B live witness →
-                   CLOSED / ACCEPTED → STOP. BUILD-07C stays unauthorized throughout
+NEXT EXECUTABLE    Gate B — founder-run bounded live reader witness on the Mac against
+                   candidate 421f25bd6 (scripts/ws2-07b-reader-gate-b.ts) → on PASS,
+                   BUILD-07B CLOSED / ACCEPTED → STOP. BUILD-07C stays unauthorized
 WS-01              CLOSED — OVERTAKEN / SUPERSEDED (not accepted; see
                    Reconciliation record below)
 CANVAS FREEZE      RETIRED FROM LIVE STATE (never released by an act; see
                    Reconciliation record below)
-LAST UPDATED       2026-09-04 (BUILD-07B implementation opened · two-gate closure recorded)
+LAST UPDATED       2026-09-04 (BUILD-07B candidate 421f25bd6 · Gate A PASS · Gate B pending)
 ```
 
 ## Reconciliation record — 2026-09-03 (founder adjudication of programme history)
@@ -112,7 +113,9 @@ Stage 7   ACTIVE
                       heading channel · one-way seam · eight closed non-conclusions;
                       F1–F20 / O1–O6). Closure: Gate A structural → STRUCTURALLY
                       PROVED; Gate B live reader witness on an invented fixture →
-                      CLOSED / ACCEPTED. No candidate yet.
+                      CLOSED / ACCEPTED. Candidate 421f25bd6: Gate A PASS
+                      (36/0 witness · F1–F20 · O1–O6) · STRUCTURALLY PROVED ·
+                      NOT CLOSED · Gate B pending (founder-run live witness).
           PREREQ      SECTION-ADDRESSABLE DRAFT LIVENESS · CLOSED
                       canonical @ 0fa4158e7 (PR #1174)
                       + Unicode repair @ 9411ddc41 (PR #1175)
@@ -321,8 +324,8 @@ and it is the census a release record must carry under Amendment 5.
 ```text
 BUILD-07B · Developmental Reader — IMPLEMENTATION OPEN (founder act
             2026-09-04) against the canonical contract @ 40532a5a5. Flow:
-            implement exact spec → Gate A F1–F20 / O1–O6 → structural
-            candidate by SHA → bounded Gate B live-reader witness → CLOSED.
+            candidate 421f25bd6 built; Gate A PASS (STRUCTURALLY PROVED, NOT
+            CLOSED); Gate B live-reader witness pending on the Mac → CLOSED.
             No route, surface, persistence, or 07C-shaped object.
             Lane: JARVIS-WS2-07-DEVELOPMENTAL-INTELLIGENCE-01.
 ```

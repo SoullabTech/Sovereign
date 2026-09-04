@@ -279,6 +279,26 @@ CUSTODY           single writer on the implementation branch; candidate named by
 STATE             BUILD-07B IMPLEMENTATION OPEN · no candidate yet
 ```
 
+```text
+2026-09-04 · BUILD-07B CANDIDATE — GATE A PASS · STRUCTURALLY PROVED · NOT CLOSED
+CANDIDATE         421f25bd6 (claude/writer-author-studios-roadmap-b2tqf5), built against canonical
+                  201649426; reader module lib/manuscript/developmentalReader/* — records and
+                  witness scripts only above it
+GATE A            scripts/ws2-07b-reader-gate-a.ts → 36 checks · 0 failures on 421f25bd6 (seam
+                  refusing by policy, adapter never loaded) · jest 42 + 6 (both module-graph
+                  gates, negative control red) · module typecheck clean · npm run typecheck no
+                  regression · governance checks green
+                  F1–F20 PASS · O1–O6 PASS
+READER            DEVELOPMENTAL-READER-01 · prompt-contract
+                  fe83e6326b64e1ce647e015ec0e057b7b149c96499f1667f9fdec58a4d3a5981
+RECORD            docs/programme/WS2-07-BUILD-07B_READER_WITNESS_2026-09-04.md
+GATE B            PENDING — scripts/ws2-07b-reader-gate-b.ts pinned to the candidate's reader
+                  blob ids; one invented six-section fixture; one live call; runs from the Mac
+                  (no provider key in the remote session). Dry run there: machinery proven, seam
+                  refused by provider — NOT Gate B evidence.
+STATE             BUILD-07B CANDIDATE 421f25bd6 · STRUCTURALLY PROVED · NOT CLOSED · GATE B PENDING
+```
+
 ## Prerequisite — SECTION-ADDRESSABLE DRAFT LIVENESS
 
 **Not a new lane.** A bounded prerequisite inside this one. Its own branch and PR are appropriate
