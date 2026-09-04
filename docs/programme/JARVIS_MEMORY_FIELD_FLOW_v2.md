@@ -107,31 +107,30 @@ No automatic leap into the next cut.
 > one trustworthy nervous system on the live conversation surface. Then broaden the field.
 
 ```text
-1  PROOF 9            close it — live signed-in turn, between-room block loaded the
-                      durable reading, member-experienced recall recorded
-2  MERGE DIVINATION   e3f379530 → canonical; record the witness; no refactor in the merge
-3  CUT 1              claude/canonical-turn-between-convergence-01
-                      /api/between/chat onto the single participation spine;
-                      behaviour-preserving; manifest + participation evidence on the
-                      actual live surface; no attribution redesign
-4  CUT 2              claude/memory-attribution-p6-canonical-turn-01
+1  PROOF 9            CLOSED · PASS 2026-09-04 on /list, not between
+                      record: docs/programme/PROOF-9-WITNESS_2026-09-04.md
+2  DEPLOY CUSTODY     classify the unauthorized 16:30:39 replacement of e3f379530
+3  SURFACE AUTHORITY  read-only census: which route owns ordinary MAIA conversation,
+                      and why the surface moved /list → between → /list
+4  ADJUDICATE         e3f379530 and Cut 1 from that census (see §4)
+5  CUT 2              claude/memory-attribution-p6-canonical-turn-01
                       member said ≠ MAIA inferred ≠ practitioner observed ≠ system
                       computed, surviving into cognition; practitioner writer fix if
                       the opening census confirms it
-5  PASS-1 REMAINDER   anchors · ideas/captures/organizing principles · significant
+6  PASS-1 REMAINDER   anchors · ideas/captures/organizing principles · significant
                       moments · conversational route coverage · 280-char clip ·
                       atom-selection false negatives · remaining stores
-6  CONTINUITY MODE    one standing member act; narrow / seal / retract / exclude
-7  LONGITUDINAL       5+ turns, multiple domains; score FP, FN, attribution, relevance;
+7  CONTINUITY MODE    one standing member act; narrow / seal / retract / exclude
+8  LONGITUDINAL       5+ turns, multiple domains; score FP, FN, attribution, relevance;
    WITNESS            test whether MAIA understands relationships among memories,
                       not merely retrieves them
-8  BETA PASS 2        real members; lived failures and successes populate the census
-9  PASS 3             only then: explicit recollection · cross-domain association ·
+9  BETA PASS 2        real members; lived failures and successes populate the census
+10 PASS 3             only then: explicit recollection · cross-domain association ·
                       temporal change reasoning · relationship history · correction
                       and retraction over time · salience intelligence
 ```
 
-Steps 1–4 are detailed in §4. Until `/api/between/chat` runs through the canonical participation boundary, MAIA's memory still reaches cognition two different ways.
+Steps 2–4 are detailed in §5. The pre-Proof-9 sequence in §4 assumed `/between/chat` was the live surface; §5 records why that assumption did not survive the witness.
 
 ## 4. Founder ruling 2026-09-04 — the live surface joins the spine before attribution
 
@@ -231,3 +230,61 @@ THEN      Pass 3
 Item 3 is not ceremony. Cut 1 is the first cut governed by this protocol; creating it while the protocol lives only on a branch would start it under a noncanonical governing document. Item 2 keeps Cut 1 proving convergence rather than convergence-plus-carry-forward. Neither adds a development stage — they put the rules and the capability on the floor before convergence begins.
 
 Custody note: production runs `e3f379530` (canonical `543f43708` plus the between-room cut), unmerged. Acceptable while the witness is in flight; owed to canonical once Proof 9 passes, and a prerequisite for Cut 1 so the convergence cuts from a canonical that already contains the divination capability.
+
+
+## 5. Reality correction 2026-09-04 — after Proof 9
+
+Proof 9 passed, and it passed on `/api/sovereign/app/maia/list`, not on `between`. Everything §4 sequenced rested on two premises that the witness dissolved:
+
+```text
+premise    /between/chat is the live member surface
+premise    e3f379530 must be merged to preserve the live divination capability
+```
+
+Evidence at 17:56:39Z:
+
+```text
+production        b20f2742e (canonical) — e3f379530 replaced at 16:30:39, not by this lane
+live traffic      all /api/sovereign/app/maia/list since the replacement; zero between rows
+/list divination  already canonical (b7d3dacf9 ancestor of b20f2742e — verified)
+Proof 9           PASS there, turn-bound, zeroDiff 12/12
+e3f379530         between-only repair · not running · never positively witnessed
+```
+
+### e3f379530 reclassified
+
+```text
+BUILT · previously deployed · NEVER POSITIVELY WITNESSED · NOT RUNNING
+DO NOT MERGE AS-IS
+retain as evidence and implementation reference
+```
+
+Merging an unwitnessed route-specific island because an earlier document said to would preserve exactly the architecture rule 4 exists to prevent. The prerequisite in §4 that named this merge is **stale and superseded by this section**.
+
+### Next act is a census, not a build
+
+Read-only. Why did `soullab.life/maia` reach `/between/chat` before 16:30 and `/list` after, and which route is *intended* to own ordinary MAIA conversation? Candidate causes to distinguish: deployed frontend/runtime version · account or session state · mode · client or device · feature flag · route fallback · a legacy route that should no longer be active.
+
+The fork it decides:
+
+```text
+IF /between/chat is an intended live surface
+   → Cut 1 convergence remains valid; bring it onto the canonical turn
+
+IF /list is authoritative and /between/chat is legacy or dormant
+   → do NOT build convergence to preserve a legacy path
+   → retire or redirect it instead
+   → Attribution / P6 then happens at the already-live canonical boundary
+```
+
+Either way Cut 2 is unaffected in mission; only its prerequisite changes.
+
+### Revised prerequisites before any next build
+
+```text
+1  Proof 9 recorded                                    DONE
+2  16:30:39 deploy custody classified                  OPEN
+3  live-surface authority census                       OPEN
+4  e3f379530 / Cut 1 adjudicated from that census      OPEN
+5  Flow v2 canonicalized                               OPEN
+```
