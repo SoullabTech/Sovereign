@@ -61,6 +61,22 @@ export async function requireFounder(): Promise<FounderAuthResult> {
 }
 
 /**
+ * Is this member id on the founder allowlist?
+ *
+ * Exported so a NARROWER authorization can include founders without widening
+ * this one — lib/access/labAccess.ts unions the founder allowlist with the Lab
+ * Tools allowlist so the founder never has to be listed twice.
+ *
+ * ⛔ This is a read. It is not a way to add someone to the founder allowlist:
+ * FOUNDER_MEMBER_IDS is the authority for founder-private surfaces (the
+ * /api/founder/* console, Book Studio drafts, uploads, render) and nobody
+ * should be added to it to obtain access to something else.
+ */
+export function isFounderMemberId(memberId: string): boolean {
+  return FOUNDER_MEMBER_IDS.has(memberId);
+}
+
+/**
  * For diagnostics — returns the count of configured founder member IDs.
  * Does NOT return the IDs themselves. Useful for health checks to verify
  * the env var was actually set without leaking the values.
