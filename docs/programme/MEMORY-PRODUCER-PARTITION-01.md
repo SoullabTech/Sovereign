@@ -835,3 +835,77 @@ BOTH production shape           UNOBSERVED
 Whether that ceiling is sufficient to merge and close is a **later adjudication**, not decided here and not decided by the MEMBER_ONLY result alone.
 
 Passive observation of the ordinary `[MAIA/shadow]` stream remains permitted — the witness reads only structural metadata, digests and counts. It stays **incidental observation of the normal stream, never monitoring of a particular member**.
+
+---
+
+## 14. MEMBER_ONLY production witness — PASS · NO REGRESSION (2026-09-04)
+
+Runtime `293d454cf`. One ordinary signed-in `/maia` turn, memory on, not Sanctuary, neutral prompt. Observed values, verbatim from the runtime:
+
+```text
+[MAIA/sovereign] atoms loaded: {
+  count: 8,
+  userId: '88099bb1977c',
+  memberSection: true,
+  practitionerSection: false
+}
+
+[MAIA/shadow] {
+  "turnId": "4995e876-ad29-4082-9aaa-1600744fb312",
+  "zeroDiff": true,
+  "missingInCanonical": [],
+  "missingInLegacy": [],
+  "digestMismatch": [],
+  "legacyCount": 12,
+  "canonicalCount": 12,
+  "expectedPartitionDelta": [],
+  "contentParity": null,
+  "unexpectedDiff": []
+}
+```
+
+(`userId` here is `memberRef()` output — a truncated SHA-256, pseudonymous and correlatable, never the member id.)
+
+### Verdict
+
+```text
+MEMBER_ONLY PRODUCTION WITNESS      PASS · NO REGRESSION
+
+runtime                 293d454cf
+atoms shape             MEMBER_ONLY (count 8)
+legacy cognition        unchanged
+canonical identity      unchanged — 12 legacy == 12 canonical, zero diff
+expected partition      none declared (correct: member-only needs none)
+contentParity           null (correct: nothing to recompose)
+unexpected diff         none
+stop conditions         none fired
+```
+
+`practitionerSection: true` was **structurally ruled out** by the shadow line before the atoms body arrived: the route declares a partition whenever a practitioner section exists, so a practitioner section could not have produced an empty `expectedPartitionDelta`. The atoms line then confirmed it directly.
+
+**This is the negative half of the proof.** It establishes that the cut did not disturb ordinary turns — `zeroDiff: true` still reports truthfully on a turn carrying no partitioned producer, exactly as F-PARITY requires. It does **not** establish that the partition fires.
+
+### Witness ceiling after this result — unchanged
+
+```text
+production no-regression        PASS      (this witness)
+production partition firing     UNWITNESSED
+partition firing in tests       PASS      (24 tests, §10.4/§11.1)
+BOTH production shape           UNOBSERVED IN PRODUCTION
+```
+
+The cut is **not** "production witnessed." Whether this ceiling suffices to merge and close remains a later adjudication.
+
+### Incidental: the same turn closed the divination loop
+
+The witness turn's response surfaced the member's I Ching reading unprompted (Hexagram 55 → 13, changing lines and relating hexagram) in answer to a neutral question. That is Cut 1B + Cut 1C end to end in ordinary conversation — the reading that the original defect produced and discarded now returns on its own, and returns *attributed*: the member's prior words came back marked as the member's own.
+
+`[MAIA] conversational-block` also emitted on this turn, so cross-session exchanges were surfaced alongside it.
+
+### OPEN OBSERVATION — cross-source synthesis (not a partition-lane matter)
+
+The conversational recall block's own prompt text instructs: *"Do not synthesize across them. Do not name patterns that cross sessions unless the member names them first."*
+
+The witness response **did** synthesize — joining the cast, prior member statements, and a relational reading into one interpretation, and naming the pattern rather than waiting for the member to name it. It recovered by setting the divination aside and returning the question to the member, which is the right shape.
+
+Recorded as an observation about live behaviour, **not adjudicated here**. It belongs with the attribution work (P6), not with the partition. Open question before it can be weighed: whether the recalled member statements came from this session or a prior one — within-session is not cross-session synthesis at all.
