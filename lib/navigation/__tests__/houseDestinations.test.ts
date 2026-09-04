@@ -87,15 +87,24 @@ describe('classifyReachability', () => {
     expect(classifyReachability(find('changes'), false)).toBe('sheet');
   });
 
+  // These once used 'astrology' as the web-policy exemplar. Astrology became a
+  // nativePolicy:'native' room (its entry records why — bridging it out to
+  // Safari landed the member in the Journey threshold), so the assertions were
+  // asserting the registry's old shape rather than the dispatch rule. Wisdom is
+  // the exemplar now: a genuinely web-policy room with a nested path, so the
+  // bridge's encoding is exercised too.
   it('web-policy routes are "web" on both platforms (dispatch decides the bridge)', () => {
-    expect(classifyReachability(find('astrology'), true)).toBe('web');
-    expect(classifyReachability(find('astrology'), false)).toBe('web');
+    expect(classifyReachability(find('wisdom'), true)).toBe('web');
+    expect(classifyReachability(find('wisdom'), false)).toBe('web');
     expect(classifyReachability(find('studio'), true)).toBe('web');
   });
 
   it('native-ready routes are "native" on both platforms', () => {
     expect(classifyReachability(find('journal'), true)).toBe('native');
     expect(classifyReachability(find('settings'), true)).toBe('native');
+    // Astrology is a native room, not a Safari bridge — the correction the two
+    // stale web-policy assertions above used to contradict.
+    expect(classifyReachability(find('astrology'), true)).toBe('native');
   });
 
   it('native-not-ready rooms are hidden on native, native on web', () => {
@@ -123,12 +132,20 @@ describe('dispatchHouseDestination', () => {
 
   it('web-policy route bridges to /open-web on native', () => {
     const h = harness(true);
-    dispatchHouseDestination(find('astrology'), h.ctx);
-    expect(h.pushed).toEqual(['/open-web?to=%2Fastrology']);
+    dispatchHouseDestination(find('wisdom'), h.ctx);
+    expect(h.pushed).toEqual(['/open-web?to=%2Fwisdom-keepers%2Fwisdom']);
   });
 
   it('web-policy route pushes directly on web', () => {
     const h = harness(false);
+    dispatchHouseDestination(find('wisdom'), h.ctx);
+    expect(h.pushed).toEqual(['/wisdom-keepers/wisdom']);
+  });
+
+  // The other half of the same correction: on native, a native-ready room is
+  // pushed in-app rather than handed to the bridge.
+  it('native-ready Astrology pushes in-app on native, never through the bridge', () => {
+    const h = harness(true);
     dispatchHouseDestination(find('astrology'), h.ctx);
     expect(h.pushed).toEqual(['/astrology']);
   });
