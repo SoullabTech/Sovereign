@@ -1,6 +1,6 @@
 # JARVIS-WS2-07-DEVELOPMENTAL-INTELLIGENCE-01
 
-> **Lane active. BUILD-07B IMPLEMENTATION OPEN (founder, 2026-09-04) — the contract and falsifiers are canonical @ `40532a5a5`. Closure is two-gated: Gate A structural, Gate B live reader witness. Nothing beyond BUILD-07B is authorized.**
+> **Lane active. BUILD-07C CLOSED / ACCEPTED (founder, 2026-09-04) — Gate A 27/0 and Gate B 13/0 on candidate `8a26a8971`; canonical on merge. BUILD-07D opens only by its own act.**
 >
 > This document defined the lane before it was entered. Originally it authorized **no
 > implementation**. As of the 2026-09-04 founder act recorded below, it authorizes **only the
@@ -11,15 +11,15 @@
 
 ```text
 LANE               JARVIS-WS2-07-DEVELOPMENTAL-INTELLIGENCE-01
-STATE              ACTIVE · BUILD-07B IMPLEMENTATION OPEN (founder, 2026-09-04)
-                   contract + falsifiers canonical @ 40532a5a5 (PR #1188)
+STATE              ACTIVE · BUILD-07C CLOSED / ACCEPTED (founder, 2026-09-04) · canonical on merge
+                   candidate 8a26a8971 · Gate A 27/0 · Gate B 13/0 (claude-opus-5)
                    BUILD-07A CLOSED / ACCEPTED · canonical @ 27ec9f895
 TRIGGER            Stage 6A AuthorStructureCommand merged to canonical and witnessed
 TRIGGER SATISFIED  clean-main-no-secrets @ 4b8b34bcf
-AUTHORIZES         exact BUILD-07B reader implementation only · structural Gate A ·
-                   bounded Gate B witness machinery (see the 2026-09-04 opening block)
-                   BUILD-07C–H unauthorized
-NO                 route · UI / Develop surface · persistence / database-schema change · BUILD-07C+
+AUTHORIZES         nothing — BUILD-07C is closed; BUILD-07D opens only by its own act
+                   BUILD-07D–H unauthorized
+NO                 route · UI / Develop surface · interpretation · questions · possibilities ·
+                   manuscript mutation · BUILD-07D+ (07C persistence + its migration ARE authorized)
 NORMATIVE          docs/programme/WRITERS_STUDIO_MASTER_BRIEF.md
 CAPABILITY         docs/programme/DEVELOPMENTAL_EDITOR_CAPABILITY.md
 LIVE STATE         docs/programme/WRITERS_STUDIO_PROGRAMME_BOARD.md
@@ -277,6 +277,124 @@ the architecture; a component that has never read anything is not a reader)
 CUSTODY           single writer on the implementation branch; candidate named by exact SHA;
                   founder-visible witness rerun before closure (the 07A pattern)
 STATE             BUILD-07B IMPLEMENTATION OPEN · no candidate yet
+```
+
+```text
+2026-09-04 · BUILD-07B CANDIDATE — GATE A PASS · STRUCTURALLY PROVED · NOT CLOSED
+CANDIDATE         421f25bd6 (claude/writer-author-studios-roadmap-b2tqf5), built against canonical
+                  201649426; reader module lib/manuscript/developmentalReader/* — records and
+                  witness scripts only above it
+GATE A            scripts/ws2-07b-reader-gate-a.ts → 36 checks · 0 failures on 421f25bd6 (seam
+                  refusing by policy, adapter never loaded) · jest 42 + 6 (both module-graph
+                  gates, negative control red) · module typecheck clean · npm run typecheck no
+                  regression · governance checks green
+                  F1–F20 PASS · O1–O6 PASS
+READER            DEVELOPMENTAL-READER-01 · prompt-contract
+                  fe83e6326b64e1ce647e015ec0e057b7b149c96499f1667f9fdec58a4d3a5981
+RECORD            docs/programme/WS2-07-BUILD-07B_READER_WITNESS_2026-09-04.md
+GATE B            PENDING — scripts/ws2-07b-reader-gate-b.ts pinned to the candidate's reader
+                  blob ids; one invented six-section fixture; one live call; runs from the Mac
+                  (no provider key in the remote session). Dry run there: machinery proven, seam
+                  refused by provider — NOT Gate B evidence.
+STATE             BUILD-07B CANDIDATE 421f25bd6 · STRUCTURALLY PROVED · NOT CLOSED · GATE B PENDING
+```
+
+```text
+2026-09-04 · BUILD-07B CLOSURE — Gate B PASS · founder-run
+GATE B            scripts/ws2-07b-reader-gate-b.ts on worktree @ caa11e77d (reader byte-identical
+                  to 421f25bd6) · one live runStructured call · resolved model claude-opus-5 ·
+                  10 checks · 0 failures · 24,828 ms · record in founder custody
+                  (~/maia-witness-logs/ws2-07b-gate-b.json)
+                  Two earlier runs failed at the provider layer (empty key; invalid key) and were
+                  classified as environment, not reader evidence; nothing changed between them
+                  and the pass.
+QUESTION ANSWERED did the actual reader execute the contract Gate A proved — YES. Quality of the
+                  noticing not adjudicated (07C / real-Work proof).
+RECORD            docs/programme/WS2-07-BUILD-07B_READER_WITNESS_2026-09-04.md §3–§4
+STATE             BUILD-07B CLOSED / ACCEPTED (founder, 2026-09-04) · canonical on merge of the
+                  candidate PR · BUILD-07C NOT opened by this closure
+```
+
+```text
+2026-09-04 · BUILD-07C DEVELOPMENTAL READING — OPEN (founder act; tempo ruling: opening record is
+the first commit on the implementation branch, no separate docs PR)
+TRIGGER           BUILD-07B DEVELOPMENTAL READER CLOSED / ACCEPTED on canonical
+TRIGGER SATISFIED clean-main-no-secrets @ b20f2742e (merge of PR #1190; reader blobs = candidate
+                  421f25bd6)
+MISSION           turn an accepted 07B ReaderResult into a durable, frozen DevelopmentalReading —
+                  without rereading, rewriting, or changing the Work
+CONTRACT          WS2-07-DECIDE_DEVELOPMENTAL_READING_OBJECT.md INV-0 … INV-25, binding as
+                  ratified; no re-DECIDE — a contradiction found in implementation is a ruling
+PERSISTENCE       ONE additive developmental_readings table · Class B · database-minted readingId +
+                  store-stamped frozenAt · insert-only (UPDATE refused by trigger) · observations
+                  JSONB inside the frozen reading · MAIA observation text, NEVER manuscript body prose
+                  ROLLBACK  code reverts cleanly; the table is left inert if it ever received a
+                  reading — no destructive DROP promised; no existing manuscript schema rewritten
+AUTHORIZES        DevelopmentalReading type + that persistence (migration, store, retrieval) ·
+                  server-minted readingId (INV-1) · stable (readingId, observationKey) (INV-2) ·
+                  one observation per accepted ReaderClaimDraft · observation text = the reader
+                  claim text, no rewriting · evidence refs re-bound before freeze ·
+                  commissioned lens copied onto the observation · phenomenon classification ·
+                  reader provenance preserved · server-stamped frozenAt (INV-25) · persisted
+                  'none' as a complete reading (INV-23/24) · immutable reading / observations
+                  (INV-4) · three-state current · superseded · unmeasured assessment
+                  (INV-19–22) · tests / gates / witness necessary for this unit
+V1 RULINGS        observation-only: no interpretation, questions, possibilities (canon: an
+                  observation with no interpretation is a complete, honest reading)
+                  phenomenon = the UNDERSTAND §4 family verbatim, no new taxonomy:
+                    recurrence · unresolved-thread · register-shift · prospective-reference ·
+                    re-explanation-first-mention · movement · term-drift · positional-asymmetry
+                  lens and phenomenon separate; neither derived from the other (INV-10)
+                  ONE bounded classification-only model call per reading:
+                    INPUT  claim text · commissioned lens · doesNotEstablish — NO manuscript prose
+                    OUTPUT phenomenon tag only; may not rewrite the claim
+                    MODEL  the same resolved model the reader used; no fallback
+                    PROV   DEVELOPMENTAL-PHENOMENON-01 + prompt hash + resolved model, recorded
+                           beside reader provenance (DEVELOPMENTAL-READER-01 + prompt hash +
+                           resolved model); frozenAt stamped by the store
+                    unclassifiable into the v1 set → REFUSE the freeze; never invent a category
+DOES NOT AUTHORIZE interpretation · questions · possibilities · suggestions · replacement prose ·
+                  Develop UI · route · dialogue · author decisions · manuscript mutation ·
+                  revision · re-anchoring · any change to the 07B reader or contract · BUILD-07D+
+CLOSURE           Gate A structural (falsifiers from INV-0 … INV-25 + the rulings above, seam
+                  refusing) → STRUCTURALLY PROVED · Gate B one bounded live commission on an
+                  invented fixture, frozen, retrieved by identity, then superseded by an edit and
+                  shown three-state → CLOSED / ACCEPTED
+STATE             BUILD-07C IMPLEMENTATION OPEN · no candidate yet
+```
+
+```text
+2026-09-04 · BUILD-07C CANDIDATE — GATE A PASS · STRUCTURALLY PROVED · NOT CLOSED
+CANDIDATE         8a26a8971 (claude/writer-author-studios-roadmap-b2tqf5), built against canonical
+                  b20f2742e; opening record 0f92fbb24 is the first commit on the branch
+GATE A            scripts/ws2-07c-reading-gate-a.ts → 27 checks · 0 failures on a UTF-8 scratch DB
+                  (baseline + chain through 20260904000001; seam refusing; adapter never loaded) ·
+                  jest 30 + 42 + 6 · module typecheck clean · npm run typecheck no regression ·
+                  governance checks green. C0–C22 PASS.
+SHAPE             one additive insert-only table; observations JSONB inside the reading; reader +
+                  classifier provenance apart; frozenAt by the database; Class B
+RECORD            docs/programme/WS2-07-BUILD-07C_READING_WITNESS_2026-09-04.md
+GATE B            PENDING — scripts/ws2-07c-reading-gate-b.ts pinned to the candidate; one live
+                  commission on an invented fixture → retrieve by identity → CURRENT → edit →
+                  SUPERSEDED (scoped) → UNMEASURED shown reachable
+STATE             BUILD-07C CANDIDATE 8a26a8971 · STRUCTURALLY PROVED · NOT CLOSED · GATE B PENDING
+```
+
+```text
+2026-09-04 · BUILD-07C CLOSURE — Gate B PASS · founder-run
+GATE B            scripts/ws2-07c-reading-gate-b.ts @ 68c6c8ca6 (reading + reader + migration
+                  byte-identical to 8a26a8971) · scratch DB maia_07a_witness at 20260904000001 ·
+                  13 checks · 0 failures · reader + classifier claude-opus-5 · reading 75c2e18f
+                  (7 observations) → edit → SUPERSEDED scoped (o1 o3 o4 o5 o7) · UNMEASURED
+                  reachable · retained · commission 2 lawful refusal (unclassifiable) ·
+                  commission 3 NEW reading be4b0949 · 2 provider calls, no manuscript row moved
+RUNS              run 1 reader refusal (claim_unbindable) — contract working; run 2 D11b/D12 —
+                  lawful classifier refusal + witness defect; rulings: strict D11b, witness-only
+                  fix, no prompt/family change; run 3 PASS. Record §3.
+FINDING           `unclassifiable` twice, lawful; nothing invented, nothing persisted, family not
+                  widened; left open for the founder (reliability · coverage · variance)
+STATE             BUILD-07C CLOSED / ACCEPTED (founder, 2026-09-04) · canonical on merge of the
+                  candidate PR · BUILD-07D NOT opened by this closure
 ```
 
 ## Prerequisite — SECTION-ADDRESSABLE DRAFT LIVENESS
