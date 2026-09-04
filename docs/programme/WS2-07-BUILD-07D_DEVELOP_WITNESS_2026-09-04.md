@@ -179,6 +179,22 @@ F1  PASS  the surface's own commission moved no manuscript row
 stopped: F1 unproved · 3 checks · 1 failure · record /tmp/ws2-07d-gate-b.json (Mac)
 ```
 
+**The record's own `history`, kept as the founder asked:**
+
+```json
+[
+  {"slot": "F1", "act": 1, "status": 422,
+   "body": {"refusal": "classifier_unclassifiable", "stage": "classify",
+            "detail": "claim 7 does not fit the v1 phenomenon family; the freeze is refused rather than a category invented"}},
+  {"slot": "F1", "act": 2, "status": 422,
+   "body": {"refusal": "classifier_unclassifiable", "stage": "classify",
+            "detail": "claim 7 does not fit the v1 phenomenon family; the freeze is refused rather than a category invented"}}
+]
+```
+
+Both acts named **claim 7** — the reader's last claim of eight. WS2-07C-F1 later recovered what a
+claim in that slot says, and why it is refused: see that lane's run 1.
+
 **Classification.** Not a 07D defect. Everything 07D owns behaved as proved in Gate A: the gesture
 reached the commission through the surface's route; the refusal came back typed with its stage
 (`classify`, 422); nothing was stored; no manuscript row moved. What did not happen is the thing

@@ -132,12 +132,125 @@ hypothesis."* The instrument therefore takes `--scope whole | 07c` so the two ca
 side by side on the same fixture. Measuring it settles nothing on its own; the failing claim text is
 still the first evidence.
 
+## Run 1 — 2026-09-04, founder-run, checkout `0e3924b33`, whole scope, 3 acts
+
+Model `claude-opus-5`. Every act: 8 claims from the 07B reader, one classifier call.
+
+```text
+act 1   parse ok        · no unclassifiable
+act 2   parse REFUSED   · unclassifiable [7]
+act 3   parse ok        · no unclassifiable
+        ─────────────────────────────────────
+        24 claims classified · 1 unclassifiable · 1 of 3 acts refused
+```
+
+### The failing claim, and the same claim in the acts that passed
+
+The instrument recovered what no record held. In all three acts the reader produced, as its LAST
+claim, one structural observation about the Work's regularity — same evidence refs each time
+(`section-run` + `structure-topology`):
+
+```text
+act 3  [7] → positional-asymmetry
+  "All six sections open with a spelled-out numeral heading line ("One" through "Six") and fall
+   within a narrow length band of 196 to 267 code points; the two member-authored parts each hold
+   exactly three of them, in sequence order."
+
+act 2  [7] → UNCLASSIFIABLE
+  "Each of the six sections read opens with a spelled-out ordinal on its own line ('One' through
+   'Six'), and each is between 196 and 267 code points long. The member's two divisions each hold
+   three consecutive sections, splitting the sequence at the boundary between position 2 and
+   position 3."
+
+act 1  [6] → positional-asymmetry
+  "Each section carries a spelled-out numeral heading in its first line ('One' through 'Six'), and
+   the six sections are close in length (196-267 code points), the longest being position 2 and the
+   shortest position 0. The member's structure divides them three and three at the point where the
+   river rises."
+```
+
+Acts 2 and 3 are the clean comparison: materially the same claim, opposite verdicts.
+
+### What the claim actually says, against the label that was used
+
+The claim states **uniformity**: every section opens the same way, all six sit in a narrow length
+band, each authored part holds exactly three. The only label reached for is
+`positional-asymmetry`, whose word names the opposite. Act 1's variant carries a faint asymmetry
+("the longest being position 2 and the shortest position 0"); act 3's does not, and was labelled
+`positional-asymmetry` anyway.
+
+The classifier's own instruction, verbatim from `CLASSIFIER_SYSTEM`:
+
+> *If a claim does not notice any phenomenon in this family, answer "unclassifiable" for that claim.
+> **Do not stretch a category to fit.** Do not invent one.*
+
+By that instruction **act 2 is the prompt-compliant act** and acts 1 and 3 are the deviation. This
+inverts the naive reading of the symptom: the refusals are not obviously the error.
+
+### The condition underneath all three acts: the family reaches the classifier UNDEFINED
+
+`UNDERSTAND §4` names the eight phenomena and **defines none of them** — the ratified list is eight
+bare labels (`WS2-07-UNDERSTAND_DEVELOPMENTAL_READING_SEMANTICS.md` §"The ruling"). `CLASSIFIER_SYSTEM`
+renders those labels verbatim with no gloss, which is correct fidelity to the ratified vocabulary
+and leaves the classifier mapping free prose onto eight words whose meaning it must supply itself.
+That is the condition under which one claim gets two different answers, and it is neither a prompt
+defect nor a vocabulary gap on its own — it is the absence of a definition the vocabulary never had.
+
+### The scope hypothesis — DISCONFIRMED without spending the comparison run
+
+The `--scope 07c` run is unnecessary; the 07C Gate B record is already the four-section data point:
+
+```text
+07C Gate B run 3   4 body sections → 7 claims → 1 of 3 acts refused at classify
+WS2-07C-F1 run 1   6 body sections → 8 claims → 1 of 3 acts refused at classify
+```
+
+Whole-draft scope adds **one** claim, not a materially larger refuse-whole exposure, and the
+per-act refusal rate is the same in both. Scope is not the driver. What refuse-whole does do is
+convert a small per-claim miss into a large per-reading refusal: 1 unclassifiable in 24 claims is
+about 4% per claim, which over 8 claims is roughly a 28% chance of losing the entire reading —
+matching the 1-in-3 observed, and matching 07C's own rate.
+
+### Every act refused so far names the tail claim
+
+```text
+07D Gate B act 1   claim 7 of 8      (text not recoverable — the refusal predates this instrument)
+07D Gate B act 2   claim 7 of 8
+WS2-07C-F1 act 2   claim 7 of 8      = the uniformity claim above
+```
+
+In act 1 the same uniformity claim sat at index 6 and passed; in act 3 it sat at index 7 and
+passed. So tail position does not by itself determine the outcome — but the reader reliably places
+its most marginal claim last, and that is the claim at issue every time.
+
+## Determination — proposed, for founder ruling
+
+**Not A.** An existing phenomenon does not cover the claim *without stretching its meaning*, which
+is the founder's own test. The two acts that classified it stretched a word meaning asymmetry to
+cover an observation of uniformity, against the prompt's explicit instruction not to. The
+inconsistency is real, but treating it as a reliability defect would authorize repairing the
+classifier into stretching *more* consistently.
+
+**Between C and B, and the evidence leans C.** The claim is about heading format, length band and
+even division — the Work's typographic and structural regularity. Under a `development` lens, that
+is at or over the boundary of what a phenomenon classifier should be asked to place. If such
+noticing is legitimate developmental reading, then the family lacks a value for structural
+uniformity and that is B, requiring a founder vocabulary ruling before anything is added.
+
+**And a condition neither A, B nor C names:** the eight labels are undefined in the ratified
+vocabulary and therefore undefined in the prompt. Whatever is ruled, an undefined family will keep
+producing unstable placements at its edges.
+
+Nothing here is authorized as a repair. The determination is the founder's; this lane produced the
+evidence and stops.
+
 ## Sequence
 
 ```text
-1  run the instrument (founder; --acts 3, then --scope 07c for comparison)
-2  read the failing claims in full, beside the successful classifications from the same fixture
-3  founder determines A / B / C
+1  run the instrument                                          DONE — run 1 above
+2  read the failing claims beside the successful ones           DONE — recovered and recorded
+   (--scope 07c NOT needed: 07C Gate B is already the 4-section point, and it disconfirms scope)
+3  founder determines A / B / C                                 ← HERE. Proposal recorded above.
 4  only then is a repair or a ruling authorized — in its own act, in its own lane
 ```
 
