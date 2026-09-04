@@ -46,9 +46,17 @@ CURRENT CANDIDATE  d005d59eb — Gate A 22/0 (structural, seam refusing) ·
                    both permitted acts refused at classify; nothing stored, nothing moved)
                    Gate B(b) NOT YET EXECUTABLE — the walk needs a reading to exist
                    record: WS2-07-BUILD-07D_DEVELOP_WITNESS_2026-09-04.md §2–§4
-OPEN FOLLOW-UP     WS2-07C-F1 Phenomenon Classification Coverage — DIAGNOSIS ONLY
-                   (founder act 2026-09-04). 3 of 5 commissioned acts on one fixture
-                   refused at classify. Determine A / B / C; no repair authorized yet.
+OPEN FOLLOW-UP     WS2-07-F1 Developmental Semantic Boundary Repair — OPEN (founder act
+                   2026-09-04, determination C). Act 1 semantic ratification DELIVERED,
+                   awaiting adjudication: seven lenses grounded verbatim; seven phenomena
+                   grounded with inclusion/exclusion; positional-asymmetry UNGROUNDED in
+                   the whole corpus — define (recommended) or retire.
+                   records: WS2-07-F1_SEMANTIC_BOUNDARY_REPAIR_2026-09-04.md
+                            WS2-07-F1_LENS_AND_PHENOMENON_DEFINITIONS_DRAFT_2026-09-04.md
+CLOSED FOLLOW-UP   WS2-07C-F1 Phenomenon Classification Coverage — CLOSED 2026-09-04,
+                   determination C (not A; B rejected for v1). The failing claim is
+                   mechanically re-derivable regularity, one epistemic layer below a
+                   developmental observation; the reader should not emit it.
                    record: WS2-07C-F1_PHENOMENON_CLASSIFICATION_COVERAGE_2026-09-04.md
 PRIOR UNIT         BUILD-07C Developmental Reading — CLOSED / ACCEPTED (founder,
                    2026-09-04); canonical @ 376daae06; candidate 8a26a8971;
@@ -63,17 +71,20 @@ PRIOR UNIT         BUILD-07B Developmental Reader — CLOSED / ACCEPTED (founder
 PRIOR UNIT         BUILD-07A Developmental Evidence — CLOSED / ACCEPTED (founder,
                    2026-09-04); canonical @ 27ec9f895
                    record: WS2-07-BUILD-07A_EVIDENCE_WITNESS_2026-09-03.md §9
-NEXT EXECUTABLE    WS2-07C-F1 diagnosis (founder): run
-                   scripts/ws2-07c-f1-classification-diagnosis.ts from the branch tip
-                   → read the failing claims in full → determine A / B / C → repair or
-                   ruling in its own act → rerun BUILD-07D Gate B(a) → browser walk (b)
+NEXT EXECUTABLE    WS2-07-F1 act 1 adjudication (founder): read
+                   WS2-07-F1_LENS_AND_PHENOMENON_DEFINITIONS_DRAFT_2026-09-04.md and rule
+                   on the seven lens meanings, the reader-boundary rule, the seven grounded
+                   phenomena, the register-shift ⇄ movement overlap, and
+                   positional-asymmetry (define / retire) → ratified definitions as canon
+                   → render to 07B and 07C with provenance bump → prove the repair
+                   → refresh BUILD-07D → Gate B(a) rerun → browser walk (b)
                    → CLOSED / ACCEPTED → merge #1192 on green pinned to the exact head
                    → verify canonical → STOP
 WS-01              CLOSED — OVERTAKEN / SUPERSEDED (not accepted; see
                    Reconciliation record below)
 CANVAS FREEZE      RETIRED FROM LIVE STATE (never released by an act; see
                    Reconciliation record below)
-LAST UPDATED       2026-09-04 (BUILD-07D Gate B(a) blocked by 07C · WS2-07C-F1 opened)
+LAST UPDATED       2026-09-04 (determination C · WS2-07C-F1 closed · WS2-07-F1 opened, act 1 delivered)
 ```
 
 ## Reconciliation record — 2026-09-03 (founder adjudication of programme history)

@@ -477,6 +477,45 @@ FOLLOW-UP         WS2-07C-F1 · PHENOMENON CLASSIFICATION COVERAGE — bounded, 
 STATE             BUILD-07D NOT CLOSED · blocked on WS2-07C-F1 · #1192 open, not to be merged
 ```
 
+```text
+2026-09-04 · WS2-07C-F1 CLOSED — FOUNDER DETERMINATION C · WS2-07-F1 REPAIR OPENED
+EVIDENCE          run 1 (founder-run, 0e3924b33, whole scope, 3 acts, claude-opus-5): 24 claims,
+                  1 unclassifiable, 1 of 3 acts refused. The reader produced the SAME structural-
+                  uniformity claim as its last claim in all three acts (numeral headings · 196-267
+                  code-point band · each authored part holding exactly three); act 3 labelled it
+                  positional-asymmetry, act 2 answered unclassifiable, act 1 labelled it
+                  positional-asymmetry. Scope hypothesis DISCONFIRMED (4 sections → 7 claims → 1 of
+                  3 refused; 6 sections → 8 claims → 1 of 3 refused).
+DETERMINATION     C — reader / classifier boundary. NOT A. B rejected for v1.
+                  The claim is mechanically re-derivable from the Work and its declared structure —
+                  UNDERSTAND §1 MECHANICAL EVIDENCE, one layer below developmental observation — and
+                  answers none of the six questions the Development lens asks. The reader should not
+                  have advanced it into a ReaderClaimDraft. The unclassifiable answer was contract-
+                  compliant; positional-asymmetry was a stretch and must not be made more reliable.
+SECOND FINDING    ratified: runtime semantics underdefined at BOTH boundaries — 07B receives a bare
+                  lens token, 07C receives eight bare phenomenon labels
+REFUSE-WHOLE      unchanged. unclassifiable → refuse freeze is correct fail-closed behaviour; the
+                  repair is upstream at 07B. Silently discarding such a claim would hide an
+                  epistemic boundary failure and make a reading an undocumented subset.
+REPAIR OPENED     WS2-07-F1 · DEVELOPMENTAL SEMANTIC BOUNDARY REPAIR — bounded, cross-unit.
+                  Act 1 (semantic ratification, NOT code) DELIVERED:
+                  WS2-07-F1_LENS_AND_PHENOMENON_DEFINITIONS_DRAFT_2026-09-04.md
+                  Seven lenses fully grounded (capability spec, verbatim + two riders). Seven
+                  phenomena grounded with inclusion/exclusion and accepted examples. One overlap
+                  flagged (UNDERSTAND defines movement as including REGISTER shifts, making
+                  register-shift its subset). positional-asymmetry UNGROUNDED — it appears in
+                  UNDERSTAND §4's illustrative list and nowhere else in the corpus, and it is the
+                  label at the centre of the failure; (i) define it from the fixture's three sound
+                  uses, or (ii) retire it, put to the founder, (i) recommended.
+PROVENANCE SEAM   UNDERSTAND §4 called its list ILLUSTRATIVE and left the decision to DECIDE;
+                  DECIDE defines no phenomenon. The 07C act correctly froze UNDERSTAND verbatim and
+                  thereby closed an unadjudicated list. Nobody erred; a seam between two documents did.
+NOT AUTHORIZED    ninth phenomenon · structural-uniformity · partial freeze · dropping an
+                  unclassifiable claim · retry/fallback · prompt tuning for pass rate · weakening
+                  refuse-whole · giving the reader the phenomenon taxonomy · 07D changes · 07E
+STATE             WS2-07C-F1 CLOSED · WS2-07-F1 OPEN, act 1 awaiting founder adjudication
+```
+
 ## Prerequisite — SECTION-ADDRESSABLE DRAFT LIVENESS
 
 **Not a new lane.** A bounded prerequisite inside this one. Its own branch and PR are appropriate

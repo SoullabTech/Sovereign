@@ -1,7 +1,10 @@
 # WS2-07C-F1 — PHENOMENON CLASSIFICATION COVERAGE
 
-> **Bounded follow-up, opened by founder act 2026-09-04. DIAGNOSIS ONLY. This does not reopen
-> BUILD-07C, and it authorizes no repair, no ruling and no change to any unit.**
+> **Bounded follow-up, opened by founder act 2026-09-04. DIAGNOSIS ONLY.**
+>
+> **CLOSED 2026-09-04 — founder determination: C.** Not A; B rejected for v1. The repair is opened
+> as `WS2-07-F1_SEMANTIC_BOUNDARY_REPAIR_2026-09-04.md`. This lane authorized no repair and made
+> none.
 
 ```text
 LANE              WS2-07C-F1 · PHENOMENON CLASSIFICATION COVERAGE
@@ -253,6 +256,42 @@ evidence and stops.
 3  founder determines A / B / C                                 ← HERE. Proposal recorded above.
 4  only then is a repair or a ruling authorized — in its own act, in its own lane
 ```
+
+## Founder determination — 2026-09-04 — **C**
+
+> **C.** The failing claim is on the wrong side of the developmental boundary. It is mechanically
+> true, but it is not a developmental phenomenon under the commissioned Development lens.
+>
+> The recovered claim is heading pattern, code-point length band and an even 3/3 authored division —
+> all re-derivable directly from the Work and its state without a reader. `UNDERSTAND §1` places
+> that in **MECHANICAL EVIDENCE**; a developmental observation is the next epistemic layer up. The
+> canonical Development lens asks whether ideas are underdeveloped, sufficiently developed,
+> overexplained, introduced too late, abandoned or repeated without advancing. The uniformity claim
+> says none of those things.
+>
+> **The reader should not have advanced that mechanical regularity into a `ReaderClaimDraft` under
+> the Development lens.**
+
+**Not A**, as this lane proposed: the `unclassifiable` answer followed the classifier's contract,
+and the two `positional-asymmetry` answers stretched a category the prompt forbids stretching.
+Making that stretch reliable is the wrong repair.
+
+**B rejected for v1**: no `structural-uniformity` ninth phenomenon. That would promote an
+essentially mechanical fact into the developmental ontology. If a legitimate developmental
+observation whose phenomenon genuinely is structural uniformity appears later, it returns as its own
+evidence-driven vocabulary question; this fixture does not establish one.
+
+**The undefined-family finding is ratified as a second finding**, and made a required semantic
+repair rather than a fourth answer beside A/B/C. Two vocabularies are underdefined at runtime: 07B
+receives the commissioned lens as a bare token, and 07C receives eight phenomenon names, not
+definitions. Both model acts supply semantics from the words themselves at exactly the boundary
+where reproducibility is needed.
+
+**The refusal rule stands.** Once the family is defined, a mechanical-uniformity claim reaching the
+classifier *should* produce `unclassifiable → refuse freeze` — correct fail-closed behaviour. The
+repair is upstream at 07B.
+
+**Repair opened:** `WS2-07-F1_SEMANTIC_BOUNDARY_REPAIR_2026-09-04.md`. This lane is CLOSED.
 
 ## What this lane does not do
 
