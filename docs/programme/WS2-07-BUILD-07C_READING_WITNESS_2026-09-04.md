@@ -2,7 +2,7 @@
 
 ```text
 UNIT               BUILD-07C DEVELOPMENTAL READING
-STATUS             GATE A PASS — STRUCTURALLY PROVED · NOT CLOSED · GATE B PENDING
+STATUS             CLOSED / ACCEPTED — Gate A PASS · Gate B PASS (founder-run, 2026-09-04) · canonical on merge
 CANDIDATE          8a26a8971  (claude/writer-author-studios-roadmap-b2tqf5) — supersedes 0ae75d2a2 (two-table draft, never witnessed as a candidate)
 BUILT AGAINST      canonical b20f2742e (BUILD-07B closed); opening record 0f92fbb24 (first commit on this branch)
 CONTRACT           WS2-07-DECIDE_DEVELOPMENTAL_READING_OBJECT.md INV-0 … INV-25 + the founder's
@@ -123,7 +123,7 @@ One seam Gate A found and the witness absorbed honestly: the shared 07A in-memor
 draft `draft-1`, while real drafts and the store column are `uuid`. The witness freezes its own
 fixture with a uuid draft id; the schema was not loosened to `text`.
 
-## 3 · Gate B — bounded live commission (PENDING)
+## 3 · Gate B — bounded live commission (PASS, founder-run 2026-09-04)
 
 ```text
 FIXTURE            one INVENTED manuscript created through the real draft route (section-addressable
@@ -152,15 +152,92 @@ RUN                DATABASE_URL=<UTF8 scratch> MAIA_INFERENCE_MODE= npx tsx scri
                    --out ~/maia-witness-logs/ws2-07c-gate-b.json   (provider key in the shell)
 ```
 
+### The runs — all recorded, none tuned around
+
 ```text
-GATE B             PENDING
-CLOSURE            on Gate B PASS → BUILD-07C CLOSED / ACCEPTED → STOP · BUILD-07D by its own act
+WHERE              Mac Studio · isolated worktree /Volumes/T7 Shield/maia-07c-gate-b · scratch DB
+                   maia_07a_witness (Homebrew PostgreSQL 17.7, UTF8) brought to 20260904000001 by
+                   scripts/apply-migrations.sh · key in the founder's shell · MAIA_INFERENCE_MODE unset
+CANDIDATE          8a26a8971 — the script verified the six reading files, the five reader files and
+                   the migration byte-identical before every run
+
+RUN 1  (witness 697ecee06)   FAIL at D1 · stage read · claim_unbindable: the live reader cited a
+                   position-depth section with a prose-derived ref; 07B F8 refused the whole
+                   result; nothing stored. CLASSIFIED: model-output discipline failure caught by
+                   the proved contract — not a defect. No prompt, family or coverage change.
+RUN 2  (witness 697ecee06)   D1–D11a PASS (reading 2242b0fc…, 8 observations, claude-opus-5 for
+                   reader and classifier; CURRENT → SUPERSEDED scoped → UNMEASURED; retained).
+                   D11b FAIL: the second commission's classifier answered unclassifiable → typed
+                   refusal, nothing stored — lawful under the contract. D12 FAIL: witness
+                   instrumentation counted 0 calls and compared a snapshot to itself — witness
+                   defect, not candidate. FOUNDER RULINGS: strict D11b (a later SUCCESSFUL reading
+                   must be shown; one further commissioned act after a lawful refusal, then stop);
+                   fix D12 in the witness only; touch neither the classifier prompt nor the family.
+RUN 3  (witness 68c6c8ca6)   PASS — below.
 ```
 
-## 4 · What this record does not do
+```text
+FIXTURE            "The Lantern Road" · 6 sections through the real draft route · body w1 w2 w3 w5 ·
+                   two authored parts · lens development
+D1   one commission froze a reading                              PASS   reading · 33,335 ms
+D2   id minted by the database; frozenAt stamped by the store    PASS   75c2e18f-bb22-440a-b991-9022b59bad91
+D3   retrieved by identity, equal to the commissioned reading    PASS
+D4   every observation: verbatim text · phenomenon in the family · refs re-bind ·
+     ≥1 non-conclusion · seven fields                            PASS   7 observations
+D5   reader DEVELOPMENTAL-READER-01 · classifier DEVELOPMENTAL-PHENOMENON-01 · same
+     resolved model                                              PASS   claude-opus-5 / claude-opus-5
+D6   before any edit: CURRENT                                    PASS
+D7   the author edits w1 through the draft route (no checkpoint) PASS   200
+D8   after the edit: SUPERSEDED exactly where evidence depended on w1 (section-text
+     named); everything else CURRENT                             PASS   o1 o3 o4 o5 o7 superseded · o2 o6 current
+D9   UNMEASURED distinct and reachable (Work unloadable; not this member's)  PASS
+D10  stored reading byte-identical after the edit and assessments — never
+     re-anchored, retained                                       PASS
+D11a a commission against a changed revision refused at capture, stores nothing  PASS
+     commission 2: lawful typed refusal at classify (classifier_unclassifiable); nothing persisted
+     commission 3: NEW commissioned act — fresh capture → recover → read → classify → freeze
+D11b after a checkpoint, a later SUCCESSFUL commission is a NEW reading with a new
+     id; the first remains loadable                              PASS   75c2e18f → be4b0949 (act 3)
+D12  the first commission changed no manuscript row (real before/after snapshots);
+     exactly two provider calls (reader + classifier), no retry, counted where the
+     requests leave the process                                  PASS   2 provider calls
+
+13 checks · 0 failure(s) · record ~/maia-witness-logs/ws2-07c-gate-b-rerun.json (founder custody)
+GATE B             PASS — the unit executed the proved contract on a real read
+```
+
+### Finding — `unclassifiable`, kept exactly as a finding
 
 ```text
-no closure of BUILD-07C · no claim that any reading has been made live
+Two lawful commissions produced `unclassifiable` (run 2 commission 2; run 3 commission 2).
+No phenomenon was invented.
+No reading was persisted.
+The eight-value vocabulary was not widened.
+`unclassifiable` is a refusal condition, not a phenomenon, and is not a ninth value.
+```
+
+The classifier classified 8 claims on run 2's first commission and 7 on run 3's first commission,
+and lawfully refused one claim on each second commission. That is presently evidence of model
+variability under the chosen contract, not evidence that the prompt violates it. Whether this is a
+classifier reliability matter inside 07C, an under-covering family requiring a founder ruling, or
+simply variance is left open, on the record, for the founder — it did not block closure because
+the lifecycle property was shown by commission 3.
+
+## 4 · Closure — 2026-09-04
+
+```text
+GATE A             PASS · 27 / 0 on 8a26a8971 · C0–C22                 STRUCTURALLY PROVED
+GATE B             PASS · 13 / 0 · founder-run · claude-opus-5           EXECUTED THE CONTRACT
+CANDIDATE          8a26a8971 — code unchanged since; witness and records only above it
+CLOSURE            BUILD-07C DEVELOPMENTAL READING — CLOSED / ACCEPTED (founder, 2026-09-04)
+                   canonical on merge of the candidate PR
+BUILD-07D          NOT opened by this closure; opens only by its own lane act
+```
+
+## 5 · What this record does not do
+
+```text
+no claim that any reading's observations are good — Gate B adjudicated execution of the contract only
 no route · no surface · no interpretation · no questions · no possibilities
 no change to DECIDE, the phenomenon family, or the 07B reader
 no opening of BUILD-07D

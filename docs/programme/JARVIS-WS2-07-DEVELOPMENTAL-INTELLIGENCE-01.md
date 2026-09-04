@@ -1,6 +1,6 @@
 # JARVIS-WS2-07-DEVELOPMENTAL-INTELLIGENCE-01
 
-> **Lane active. BUILD-07C DEVELOPMENTAL READING — IMPLEMENTATION OPEN (founder, 2026-09-04), triggered by BUILD-07B CLOSED / ACCEPTED on canonical `b20f2742e`. Observation-only v1. BUILD-07D+ unauthorized.**
+> **Lane active. BUILD-07C CLOSED / ACCEPTED (founder, 2026-09-04) — Gate A 27/0 and Gate B 13/0 on candidate `8a26a8971`; canonical on merge. BUILD-07D opens only by its own act.**
 >
 > This document defined the lane before it was entered. Originally it authorized **no
 > implementation**. As of the 2026-09-04 founder act recorded below, it authorizes **only the
@@ -11,12 +11,12 @@
 
 ```text
 LANE               JARVIS-WS2-07-DEVELOPMENTAL-INTELLIGENCE-01
-STATE              ACTIVE · BUILD-07C IMPLEMENTATION OPEN (founder, 2026-09-04)
-                   BUILD-07B CLOSED / ACCEPTED · canonical @ b20f2742e (PR #1190)
+STATE              ACTIVE · BUILD-07C CLOSED / ACCEPTED (founder, 2026-09-04) · canonical on merge
+                   candidate 8a26a8971 · Gate A 27/0 · Gate B 13/0 (claude-opus-5)
                    BUILD-07A CLOSED / ACCEPTED · canonical @ 27ec9f895
 TRIGGER            Stage 6A AuthorStructureCommand merged to canonical and witnessed
 TRIGGER SATISFIED  clean-main-no-secrets @ 4b8b34bcf
-AUTHORIZES         exact BUILD-07C implementation only (see the 2026-09-04 07C opening block)
+AUTHORIZES         nothing — BUILD-07C is closed; BUILD-07D opens only by its own act
                    BUILD-07D–H unauthorized
 NO                 route · UI / Develop surface · interpretation · questions · possibilities ·
                    manuscript mutation · BUILD-07D+ (07C persistence + its migration ARE authorized)
@@ -378,6 +378,23 @@ GATE B            PENDING — scripts/ws2-07c-reading-gate-b.ts pinned to the ca
                   commission on an invented fixture → retrieve by identity → CURRENT → edit →
                   SUPERSEDED (scoped) → UNMEASURED shown reachable
 STATE             BUILD-07C CANDIDATE 8a26a8971 · STRUCTURALLY PROVED · NOT CLOSED · GATE B PENDING
+```
+
+```text
+2026-09-04 · BUILD-07C CLOSURE — Gate B PASS · founder-run
+GATE B            scripts/ws2-07c-reading-gate-b.ts @ 68c6c8ca6 (reading + reader + migration
+                  byte-identical to 8a26a8971) · scratch DB maia_07a_witness at 20260904000001 ·
+                  13 checks · 0 failures · reader + classifier claude-opus-5 · reading 75c2e18f
+                  (7 observations) → edit → SUPERSEDED scoped (o1 o3 o4 o5 o7) · UNMEASURED
+                  reachable · retained · commission 2 lawful refusal (unclassifiable) ·
+                  commission 3 NEW reading be4b0949 · 2 provider calls, no manuscript row moved
+RUNS              run 1 reader refusal (claim_unbindable) — contract working; run 2 D11b/D12 —
+                  lawful classifier refusal + witness defect; rulings: strict D11b, witness-only
+                  fix, no prompt/family change; run 3 PASS. Record §3.
+FINDING           `unclassifiable` twice, lawful; nothing invented, nothing persisted, family not
+                  widened; left open for the founder (reliability · coverage · variance)
+STATE             BUILD-07C CLOSED / ACCEPTED (founder, 2026-09-04) · canonical on merge of the
+                  candidate PR · BUILD-07D NOT opened by this closure
 ```
 
 ## Prerequisite — SECTION-ADDRESSABLE DRAFT LIVENESS
