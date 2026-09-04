@@ -31,7 +31,7 @@ describe('the developmental-evidence substrate cannot act', () => {
   const FORBIDDEN_IMPORTS = [
     '@anthropic-ai', 'anthropic', 'openai', 'ollama',
     'structure/maiaReader', 'ask/askReader', 'lib/ai', 'lib/maia', 'lib/oracle',
-    'developmentalReader',
+    'developmentalReader', 'developmentalReading',
     'structure/proposalStore', 'structure/structureService', 'structure/authorStructure',
     'structure/reviewOperationParser', 'writersStudio/',
   ];
@@ -83,7 +83,12 @@ describe('the developmental-evidence substrate cannot act', () => {
   it('adds no migration — the evidence object needs no schema of its own', () => {
     /* Dated from the day BUILD-07A opened for build. Older files that happen
        to carry these words belong to other systems and are not this claim. */
+    /* BUILD-07C (opened 2026-09-04) is a different unit with its own authorized
+       schema — the reading store, not the evidence object. It is named here so
+       the claim stays exact: the EVIDENCE substrate has no table of its own. */
+    const OTHER_UNITS_SCHEMA = /^20260904000001_developmental_readings\.sql$/;
     const migrations = readdirSync(join(ROOT, 'database', 'migrations'));
-    expect(migrations.filter((f) => f >= '20260903' && /develop|evidence|reading|observation/i.test(f))).toEqual([]);
+    expect(migrations.filter((f) => f >= '20260903' && !OTHER_UNITS_SCHEMA.test(f)
+      && /develop|evidence|reading|observation/i.test(f))).toEqual([]);
   });
 });

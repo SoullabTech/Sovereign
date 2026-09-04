@@ -49,6 +49,7 @@ const FORBIDDEN_SUBSTRINGS = [
   'structure/proposalStore', 'structure/structureService', 'structure/authorStructure',
   'structure/structureDigest', 'ask/', 'app/', 'writersStudio', 'next/', '@anthropic-ai',
   'anthropicStructuredAdapter', 'lib/maia', 'lib/oracle', 'openai', 'ollama',
+  'developmentalReading',   // the reader cannot persist, classify, or reach a store (07C is downstream)
 ];
 
 export function violations(code: string): string[] {
@@ -78,6 +79,7 @@ describe('the developmental reader cannot bypass evidence', () => {
       "import { readStructureRows } from '../development/capture';",
       "import type { HeadedSection } from '../structure/evidence';",
       "import { loadFrozenReading } from '../ask/frozenReading';",
+      "import { freezeAndStore } from '../developmentalReading/store';",
     ]) {
       expect(violations(bad).length).toBeGreaterThan(0);
     }
