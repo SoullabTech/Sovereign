@@ -1382,6 +1382,17 @@ This is a sanctuary session. The user has chosen NOT to have this conversation s
     console.log(`🧬 [FAST] atoms-addendum injected: { chars: ${atomsAddendum.length} } — member-placed portfolio + practitioner observations`);
   }
 
+  // 🜨 DIVINATION RECALL (Pass 1, JARVIS-MEMORY-ORGANISM-PASS1-DIVINATION-01): the member's
+  // durable I Ching readings as three provenance-separated blocks — member question/notes,
+  // computed cast, house corpus interpretation. Built by the route via
+  // lib/maia/divinationRecallLoader.ts; user-scoped + Sanctuary-gated upstream.
+  const divinationIntentAddendum = (meta as any)?.divinationIntentAddendum as string | undefined;
+  const divinationCastAddendum = (meta as any)?.divinationCastAddendum as string | undefined;
+  const divinationInterpretationAddendum = (meta as any)?.divinationInterpretationAddendum as string | undefined;
+  if (divinationCastAddendum || divinationIntentAddendum || divinationInterpretationAddendum) {
+    console.log(`🜨 [FAST] divination-addenda injected: { intent: ${divinationIntentAddendum?.length ?? 0}, cast: ${divinationCastAddendum?.length ?? 0}, interpretation: ${divinationInterpretationAddendum?.length ?? 0} }`);
+  }
+
   // 🔗 RELATIONAL CONTEXT BRIDGE: the relationship the member explicitly handed
   // off from /relationships/[id]. A member act, so it carries higher standing
   // than system-retrieved recall and is interpolated after the atoms block.
@@ -1429,7 +1440,7 @@ ${MAIA_CENTER_OF_GRAVITY}
 
 ${PLATFORM_KNOWLEDGE_ADDENDUM}
 
-${MAIA_RUNTIME_PROMPT}${userIdentification}${placeAddendum ? '\n\n' + placeAddendum : ''}${modeAdaptation}${timeAwareness}${cognitiveScaffolding}${relationshipContext}${selfletPromptBlock ? '\n\n' + selfletPromptBlock : ''}${sanctuaryInstruction}${wisdomInjection}${knowledgeFieldAddendum}${epistemicPathAddendum ? '\n\n' + epistemicPathAddendum : ''}${spiralSnapshotAddendum ? '\n\n' + spiralSnapshotAddendum : ''}${therapeuticFrameworkAddendum ? '\n\n' + therapeuticFrameworkAddendum : ''}${reflectionLensAddendum ? '\n\n' + reflectionLensAddendum : ''}${governorAddendum ? '\n\n' + governorAddendum : ''}${maiaModeAddendum ? '\n\n' + maiaModeAddendum : ''}${scribeSessionDiscussionAddendum ? '\n\n' + scribeSessionDiscussionAddendum : ''}${wuxingSnapshotAddendum ? '\n\n' + wuxingSnapshotAddendum : ''}${astrologyAddendum ? '\n\n' + astrologyAddendum : ''}${practiceFieldAddendum ? '\n\n' + practiceFieldAddendum : ''}${studioAddendum ? '\n\n' + studioAddendum : ''}${knowledgeGateAddendum ? '\n\n' + knowledgeGateAddendum : ''}${memberWebAddendum ? '\n\n' + memberWebAddendum : ''}${fieldWisdomAddendum ? '\n\n' + fieldWisdomAddendum : ''}${conversationalRecallAddendum ? '\n\n' + conversationalRecallAddendum : ''}${episodicRecallAddendum ? '\n\n' + episodicRecallAddendum : ''}${atomsAddendum ? '\n\n' + atomsAddendum : ''}${relationalContextAddendum ? '\n\n' + relationalContextAddendum : ''}${memoryInfluenceAddendum ? '\n\n' + memoryInfluenceAddendum : ''}${forwardReadinessAddendum ? '\n\n' + forwardReadinessAddendum : ''}${stateVectorContract}${youthPromptAddendum}
+${MAIA_RUNTIME_PROMPT}${userIdentification}${placeAddendum ? '\n\n' + placeAddendum : ''}${modeAdaptation}${timeAwareness}${cognitiveScaffolding}${relationshipContext}${selfletPromptBlock ? '\n\n' + selfletPromptBlock : ''}${sanctuaryInstruction}${wisdomInjection}${knowledgeFieldAddendum}${epistemicPathAddendum ? '\n\n' + epistemicPathAddendum : ''}${spiralSnapshotAddendum ? '\n\n' + spiralSnapshotAddendum : ''}${therapeuticFrameworkAddendum ? '\n\n' + therapeuticFrameworkAddendum : ''}${reflectionLensAddendum ? '\n\n' + reflectionLensAddendum : ''}${governorAddendum ? '\n\n' + governorAddendum : ''}${maiaModeAddendum ? '\n\n' + maiaModeAddendum : ''}${scribeSessionDiscussionAddendum ? '\n\n' + scribeSessionDiscussionAddendum : ''}${wuxingSnapshotAddendum ? '\n\n' + wuxingSnapshotAddendum : ''}${astrologyAddendum ? '\n\n' + astrologyAddendum : ''}${practiceFieldAddendum ? '\n\n' + practiceFieldAddendum : ''}${studioAddendum ? '\n\n' + studioAddendum : ''}${knowledgeGateAddendum ? '\n\n' + knowledgeGateAddendum : ''}${memberWebAddendum ? '\n\n' + memberWebAddendum : ''}${fieldWisdomAddendum ? '\n\n' + fieldWisdomAddendum : ''}${conversationalRecallAddendum ? '\n\n' + conversationalRecallAddendum : ''}${episodicRecallAddendum ? '\n\n' + episodicRecallAddendum : ''}${atomsAddendum ? '\n\n' + atomsAddendum : ''}${divinationIntentAddendum ? '\n\n' + divinationIntentAddendum : ''}${divinationCastAddendum ? '\n\n' + divinationCastAddendum : ''}${divinationInterpretationAddendum ? '\n\n' + divinationInterpretationAddendum : ''}${relationalContextAddendum ? '\n\n' + relationalContextAddendum : ''}${memoryInfluenceAddendum ? '\n\n' + memoryInfluenceAddendum : ''}${forwardReadinessAddendum ? '\n\n' + forwardReadinessAddendum : ''}${stateVectorContract}${youthPromptAddendum}
 
 Current context: Simple conversation turn - respond naturally and warmly.`;
 
@@ -1744,6 +1755,10 @@ async function corePathResponse(
     // 🧬 MEMBER-PLACED PORTFOLIO + PRACTITIONER OBSERVATIONS (Layer 5): consent-gated
     // atoms + witnessed practitioner observations. Injected via appendAllContextAddenda.
     atomsAddendum: (meta as any)?.atomsAddendum as string | undefined,
+    // 🜨 DIVINATION RECALL (Pass 1): three provenance-separated blocks. Injected via appendAllContextAddenda.
+    divinationIntentAddendum: (meta as any)?.divinationIntentAddendum as string | undefined,
+    divinationCastAddendum: (meta as any)?.divinationCastAddendum as string | undefined,
+    divinationInterpretationAddendum: (meta as any)?.divinationInterpretationAddendum as string | undefined,
     relationalContextAddendum: (meta as any)?.relationalContextAddendum as string | undefined,
   };
 
@@ -2275,6 +2290,9 @@ Do NOT mention Bloom's Taxonomy explicitly. The scaffolding should feel organic 
         (meta as any)?.conversationalRecallAddendum,
         (meta as any)?.episodicRecallAddendum,
         (meta as any)?.atomsAddendum,
+        (meta as any)?.divinationIntentAddendum,
+        (meta as any)?.divinationCastAddendum,
+        (meta as any)?.divinationInterpretationAddendum,
         (meta as any)?.relationalContextAddendum,
       ].filter(Boolean).join('\n\n');
       if (consultationRecallAddenda) {
@@ -2401,6 +2419,10 @@ Do NOT mention Bloom's Taxonomy explicitly. The scaffolding should feel organic 
         // for DEEP repair too — buildMaiaComprehensivePrompt appends MaiaContext addenda
         // via appendAllContextAddenda (maiaVoice.ts), so this field reaches the prompt.
         atomsAddendum: (meta as any)?.atomsAddendum as string | undefined,
+        // 🜨 DIVINATION RECALL (Pass 1): reaches DEEP-repair via appendAllContextAddenda too.
+        divinationIntentAddendum: (meta as any)?.divinationIntentAddendum as string | undefined,
+        divinationCastAddendum: (meta as any)?.divinationCastAddendum as string | undefined,
+        divinationInterpretationAddendum: (meta as any)?.divinationInterpretationAddendum as string | undefined,
     relationalContextAddendum: (meta as any)?.relationalContextAddendum as string | undefined,
       };
 
@@ -3122,6 +3144,11 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
         forwardReadiness: isFastTier && !!m.forwardReadinessAddendum,
         studio: !!m.studioAddendum,
         episodic: !!m.episodicRecallAddendum, // Phase 2, 2026-07-13 — member-marked moments
+        // 🜨 Pass 1 divination (2026-09-03) — loaded vs injected, three blocks counted as one provider.
+        divination: {
+          loaded: m.divinationReadingsCount ?? 0,
+          injected: !!(m.divinationIntentAddendum || m.divinationCastAddendum || m.divinationInterpretationAddendum),
+        },
         dreams: false,   // layer not wired
       };
       const evidenceProviders = [
@@ -3133,6 +3160,7 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
         available.knowledgeGate && 'knowledgeGate',
         available.memoryOrchestrator && 'memoryOrchestrator',
         available.episodic && 'episodicRecall',
+        available.divination.injected && 'divinationRecall',
       ].filter(Boolean);
       console.log('[MAIA] context-inventory', {
         conversationId: sessionId,

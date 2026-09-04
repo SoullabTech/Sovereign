@@ -229,8 +229,9 @@ cmd_deploy_maia() {
     # build + tag + swap) is one serialized lane occupancy. The fd-9 flock is
     # inherited by every child, so the lock is held until docker compose finishes.
     # (acquire_deploy_lock also exports DEPLOY_LANE_TOKEN — the compose build arg
-    # the Dockerfile's deploy-lane tripwire requires.)
-    acquire_deploy_lock "pre-deploy-gate.sh deploy-maia"
+    # the Dockerfile's deploy-lane tripwire requires.) The record names the
+    # ASSERTED target — the SHA on the command line — never the checkout's HEAD.
+    acquire_deploy_lock "pre-deploy-gate.sh deploy-maia" "$ref"
 
     # Name a commit and snapshot it. Sets MAIA_BUILD_CONTEXT + GIT_COMMIT, or
     # refuses when no SHA is named. This SUPERSEDES the old gate_provenance step:

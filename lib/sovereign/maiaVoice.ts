@@ -115,6 +115,14 @@ export interface MaiaContext {
   // with epistemic framing. Higher authority than system-retrieved conversational
   // recall, so appended after it. Built by lib/maia/memoryAtomsLoader.ts → formatAtomsForPrompt.
   atomsAddendum?: string;
+  // 🜨 DIVINATION RECALL (Pass 1, JARVIS-MEMORY-ORGANISM-PASS1-DIVINATION-01): the
+  // member's durable I Ching readings as THREE blocks, because the record carries three
+  // authorships in separable columns — the member's question/notes (member-authored),
+  // the cast (system-computed under member invocation), the corpus interpretation
+  // (house-authored). Built by lib/maia/divinationRecallLoader.ts; never merged.
+  divinationIntentAddendum?: string;
+  divinationCastAddendum?: string;
+  divinationInterpretationAddendum?: string;
   // 🔗 RELATIONAL CONTEXT BRIDGE: the relationship the member explicitly handed
   // off from /relationships/[id] ("Take this to MAIA"). Member act, not ambient
   // detection. Entry kinds are member-authored; themes/tensions are system
@@ -427,6 +435,9 @@ const ADDENDA_SPECS: readonly AddendumSpec[] = [
   { field: 'conversationalRecallAddendum',    log: v => `💬 [Conversational Recall] Cross-session continuity injected (${v.length} chars)` },
   { field: 'episodicRecallAddendum',          log: v => `📖 [Episodic Recall] Member-marked moments injected (${v.length} chars)` },
   { field: 'atomsAddendum',                   log: v => `🧬 [Atoms] Member-placed portfolio + practitioner observations injected (${v.length} chars)` },
+  { field: 'divinationIntentAddendum',        log: v => `🜨 [Divination] Member's questions/notes injected (${v.length} chars)` },
+  { field: 'divinationCastAddendum',          log: v => `🜨 [Divination] Casts on record injected (${v.length} chars)` },
+  { field: 'divinationInterpretationAddendum', log: v => `🜨 [Divination] House interpretation injected (${v.length} chars)` },
   { field: 'relationalContextAddendum',       log: v => `🔗 [Relational Context] Member-handed-off relationship injected (${v.length} chars)` },
 ];
 
