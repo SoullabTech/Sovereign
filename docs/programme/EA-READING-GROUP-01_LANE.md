@@ -87,11 +87,27 @@ encountered is classified before anything is written:
 | Requires cross-member MAIA synthesis | **FORBIDDEN** |
 | Requires Andrea-derived material to become generic | **Provenance / licensing decision first** |
 
+### 5a. Feedback is not facilitation material
+
+Binding on how findings are classified, recorded 2026-09-04 before any extraction is contemplated:
+
+> **A host's feedback about what the platform needs is not the same thing as that host's
+> facilitation material.**
+>
+> *"I need to be able to see which chapter we're discussing"* is a **product requirement** Soullab
+> may learn from. A three-part inquiry sequence Andrea devises for Chapter 4 is **her material**,
+> and does not become part of a reusable template merely because it revealed a useful pattern.
+
+The last row of the table above turns on this distinction. When a finding is derived from observing
+a host at work, classify which of the two it is **before** recording it in the Discovery Ledger.
+Where it is genuinely both, or unclear, it is treated as material: ambiguous provenance does not
+generalize (`READING-ROOM-01` §7).
+
 A `STOP` is not a failure of the lane. It is the lane producing its most valuable output: a
 grounded requirement for the future capability, discovered by a real group instead of inferred.
 
-Findings accumulate in the **Discovery Ledger** (§7) and are the lane's primary deliverable
-alongside the group itself.
+Findings accumulate in the **Discovery Ledger** (§7). They are what *the lane* carries forward;
+they are not what the group is for (§7).
 
 ## 6. Constitutional constraints — inherited, binding
 
@@ -109,7 +125,12 @@ From `READING-ROOM-01_NAMING_RULING_2026-09-04.md` §4, unchanged:
 
 ## 7. Discovery questions — first-order, not settings
 
-These are **open questions this instance exists to answer**, deliberately not decided in advance.
+⛔ **The group does not exist as research for Soullab.** It exists for Andrea and the readers to
+engage the Work. These are questions Soullab is deliberately **not deciding in advance**; the
+group's ordinary life may nevertheless teach us the answers. Framing them as the group's purpose
+instrumentalizes the people in it, and that framing is forbidden in this lane's language, internal
+and external alike.
+
 Recording an answer requires observed evidence from the running group, attributed to what was
 observed — never to what the architecture expected.
 
@@ -133,8 +154,8 @@ CLUB     relational geometry  this place persists → people enter and leave →
 ```
 
 They generate **different expectations around absence, progress, notification, memory,
-facilitation and belonging**. Those are not two values of one field. EA exists in part to
-discover the actual difference before it is fossilized.
+facilitation and belonging**. Those are not two values of one field. The difference is one Soullab
+does not yet know, and will not resolve in advance of seeing how a real group actually lives.
 
 > Evidence note (census §3): `app/api/studio/groups` **already** encodes
 > `group_type ∈ {cohort, ongoing, program, category}`. That enum is a pre-made answer to this
@@ -143,20 +164,24 @@ discover the actual difference before it is fossilized.
 
 ## 8. Owed before real readers
 
-- **Andrea agreement** — plain-language written understanding of role, contribution, and what may
-  later be generalized (`READING-ROOM-01` §7). Not retroactive.
+- **Andrea agreement** — plain-language written understanding of role, contribution, time and
+  compensation, how either party stops, and what may later be generalized (`READING-ROOM-01` §7).
+  Not retroactive. Draft v0 exists and is **NOT AGREED**
+  (`EA-READING-GROUP-01_ANDREA_UNDERSTANDING_DRAFT_v0.md`). **v1 records Andrea's own terms — she
+  has genuine authorship over them, not merely assent — and v1 is the gate**, not the draft.
 - **Co-Lab release gate** — `verify-colab-boundaries.ts` at `31 passed · 0 failed · 0 warned` in
   production. Triggered by invitations/roles, sessions, sharing and memory atoms.
 - **Kelly's role recorded** — author, host, participant, or absent (C6).
 
 ## 9. Closure
 
-This lane does not close by shipping a feature. It closes when the founder judges that the
-running group has produced enough grounded evidence to state generic Reading Room requirements —
-at which point `READING-ROOM-01` becomes proposable, and this lane's Discovery Ledger is its
-input.
+This lane does not close by shipping a feature. It closes when the founder judges that enough
+grounded evidence has accumulated to state generic Reading Room requirements — at which point
+`READING-ROOM-01` becomes proposable, and this lane's Discovery Ledger is its input.
 
-An instance that runs well and produces no findings has failed at half its job.
+If the group runs well and Soullab learns little from it, **the lane** has underperformed — the
+group has not. A group that serves its readers and teaches us nothing has still done the only
+thing it exists to do.
 
 ## 10. Live state
 
