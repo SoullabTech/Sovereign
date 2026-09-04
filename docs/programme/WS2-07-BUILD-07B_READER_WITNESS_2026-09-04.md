@@ -2,7 +2,7 @@
 
 ```text
 UNIT               BUILD-07B DEVELOPMENTAL READER
-STATUS             GATE A PASS — STRUCTURALLY PROVED · NOT CLOSED · GATE B PENDING
+STATUS             CLOSED / ACCEPTED — Gate A PASS · Gate B PASS (founder-run, 2026-09-04) · canonical on merge
 CANDIDATE          421f25bd6  (claude/writer-author-studios-roadmap-b2tqf5)
 BUILT AGAINST      canonical 201649426 (implementation opened, PR #1189)
 CONTRACT           docs/programme/WS2-07-BUILD-07B_READER_CONTRACT_2026-09-04.md — binding as merged; unchanged
@@ -108,7 +108,7 @@ Note on F14 in the remote session: the seam refused by policy (`sovereign`), and
 recorded that the provider adapter was never loaded. This container also holds no provider key, so
 no live call was possible here under any mode — which is the correct state for Gate A.
 
-## 3 · Gate B — bounded live reader witness (PENDING)
+## 3 · Gate B — bounded live reader witness (PASS, founder-run 2026-09-04)
 
 Protocol (founder ruling, 2026-09-04), as `scripts/ws2-07b-reader-gate-b.ts` implements it:
 
@@ -141,15 +141,61 @@ prose recovered, the request validated (under ceiling, structure supplied), and 
 call was refused by the provider layer — B1 FAIL, recorded honestly, machinery proven. That run is
 not Gate B evidence and is not cited as such.
 
+### The run
+
 ```text
-GATE B             PENDING — awaits the founder-run live witness on the Mac
-CLOSURE            on Gate B PASS → BUILD-07B CLOSED / ACCEPTED → STOP · BUILD-07C by its own act
+WHERE              Mac Studio · isolated worktree /Volumes/T7 Shield/maia-07b-gate-b @ caa11e77d
+                   (records-only tip; reader module byte-identical to candidate 421f25bd6 — the
+                   script verified the five blob ids before proceeding)
+KEY                founder's shell environment; no .env file sourced by the run
+MODE               MAIA_INFERENCE_MODE unset → primary; one runStructured call
+FIXTURE            "The Lantern Road" · 6 sections · body w1 w2 w3 w5 · 902 / 60,000 code points ·
+                   structure supplied · lens development
+IDENTITY           DEVELOPMENTAL-READER-01 · prompt fe83e6326b64e1ce… · request 22fb7becc9a64bd6…
+RESOLVED MODEL     claude-opus-5 (recorded from the seam, B3)
+LATENCY            24,828 ms
+RECORD             /Users/soullab/maia-witness-logs/ws2-07b-gate-b.json (founder custody)
+
+B1  one real seam call completed                                   PASS
+B2  outcome is claims or a legitimate none                         PASS
+B3  resolved model recorded from the seam                          PASS  claude-opus-5
+B4  identity DEVELOPMENTAL-READER-01 + prompt-contract hash        PASS
+B5  every returned ref re-binds against the frozen evidence        PASS
+B6  every claim carries ≥ 1 closed non-conclusion                  PASS
+B7  no claim carries a foreign / 07C-shaped field                  PASS
+B8  no claim cites prose from a position-depth section             PASS
+B9  claim text is non-empty                                        PASS
+B10 exactly one read; no second capture, no scope expansion        PASS
+
+10 checks · 0 failure(s)
+GATE B             PASS — the reader executed the proved contract
 ```
 
-## 4 · What this record does not do
+Two prior runs on the same worktree are recorded as what they were: environment failures, not
+reader evidence. The first exported an empty key (`.env.local` carries none); the second used the
+Mac's `.env.docker` key, which the provider rejected as invalid (401). In both the request was
+well-formed and the candidate check passed; B1 failed at the provider layer before any read.
+Neither run was rerun until classified, and no code changed between them and the passing run.
+
+Gate B answered its one question — did the actual reader execute the contract Gate A proved —
+and nothing else. Whether the claims it drafted are *good* is not adjudicated here; that belongs
+to BUILD-07C and the eventual real-Work proof.
+
+## 4 · Closure — 2026-09-04
 
 ```text
-no closure of BUILD-07B · no claim that the reader has read anything
+GATE A             PASS · 36 / 0 on 421f25bd6 · F1–F20 · O1–O6         STRUCTURALLY PROVED
+GATE B             PASS · 10 / 0 · founder-run · claude-opus-5           EXECUTED THE CONTRACT
+CANDIDATE          421f25bd6 — code unchanged since; records only above it
+CLOSURE            BUILD-07B DEVELOPMENTAL READER — CLOSED / ACCEPTED (founder, 2026-09-04)
+                   canonical on merge of the candidate PR
+BUILD-07C          NOT opened by this closure; opens only by its own lane act
+```
+
+## 5 · What this record does not do
+
+```text
+no claim that the reader's noticing is good — Gate B adjudicated execution of the contract only
 no route · no surface · no persistence · no DevelopmentalReading · no observation · no phenomenon
 no change to the contract, the ceiling, the lens list, or the non-conclusion vocabulary
 no opening of BUILD-07C

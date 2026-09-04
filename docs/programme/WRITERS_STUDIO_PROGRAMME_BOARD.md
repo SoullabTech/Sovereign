@@ -31,30 +31,28 @@
 ```text
 PROGRAMME          WRITER'S STUDIO R2
 MODE               STAGE 7 BUILD
-BUILD MODE         OPEN — BUILD-07B Developmental Reader IMPLEMENTATION OPEN
-                   (founder act 2026-09-04); two-gate closure; 07C–H unauthorized
+BUILD MODE         OPEN — no unit currently authorized (BUILD-07B closed; 07C–H unauthorized)
 BOUND CANONICAL    40532a5a5 (clean-main-no-secrets, 2026-09-04 — 07B contract merged, PR #1188)
-CURRENT UNIT       BUILD-07B Developmental Reader — IMPLEMENTATION OPEN (founder,
-                   2026-09-04) against the canonical contract; closure two-gated
-                   (Gate A structural → STRUCTURALLY PROVED; Gate B live reader
-                   witness → CLOSED / ACCEPTED)
+CURRENT UNIT       BUILD-07B Developmental Reader — CLOSED / ACCEPTED (founder,
+                   2026-09-04); Gate A 36/0 · Gate B 10/0 (claude-opus-5);
+                   canonical on merge of the candidate PR
                    lane: JARVIS-WS2-07-DEVELOPMENTAL-INTELLIGENCE-01
-CURRENT CANDIDATE  421f25bd6 — GATE A PASS · STRUCTURALLY PROVED · NOT CLOSED · GATE B PENDING
-                   record: WS2-07-BUILD-07B_READER_WITNESS_2026-09-04.md
+CURRENT CANDIDATE  421f25bd6 — code unchanged since; records only above it
+                   record: WS2-07-BUILD-07B_READER_WITNESS_2026-09-04.md §4
                    census:   WS2-07-BUILD-07B_READER_BOUNDARY_CENSUS_2026-09-04.md (canonical)
                    contract: WS2-07-BUILD-07B_READER_CONTRACT_2026-09-04.md (canonical;
                              F1–F20 · O1–O6; binding as merged)
 PRIOR UNIT         BUILD-07A Developmental Evidence — CLOSED / ACCEPTED (founder,
                    2026-09-04); canonical @ 27ec9f895
                    record: WS2-07-BUILD-07A_EVIDENCE_WITNESS_2026-09-03.md §9
-NEXT EXECUTABLE    Gate B — founder-run bounded live reader witness on the Mac against
-                   candidate 421f25bd6 (scripts/ws2-07b-reader-gate-b.ts) → on PASS,
-                   BUILD-07B CLOSED / ACCEPTED → STOP. BUILD-07C stays unauthorized
+NEXT EXECUTABLE    merge the BUILD-07B candidate PR on green (founder Verified-by-Mentor
+                   line + merge word) → verify canonical → STOP. BUILD-07C
+                   Developmental Reading opens only by its own lane act
 WS-01              CLOSED — OVERTAKEN / SUPERSEDED (not accepted; see
                    Reconciliation record below)
 CANVAS FREEZE      RETIRED FROM LIVE STATE (never released by an act; see
                    Reconciliation record below)
-LAST UPDATED       2026-09-04 (BUILD-07B candidate 421f25bd6 · Gate A PASS · Gate B pending)
+LAST UPDATED       2026-09-04 (BUILD-07B closed / accepted · Gate B PASS)
 ```
 
 ## Reconciliation record — 2026-09-03 (founder adjudication of programme history)
@@ -114,12 +112,13 @@ Stage 7   ACTIVE
                       F1–F20 / O1–O6). Closure: Gate A structural → STRUCTURALLY
                       PROVED; Gate B live reader witness on an invented fixture →
                       CLOSED / ACCEPTED. Candidate 421f25bd6: Gate A PASS
-                      (36/0 witness · F1–F20 · O1–O6) · STRUCTURALLY PROVED ·
-                      NOT CLOSED · Gate B pending (founder-run live witness).
+                      (36/0 · F1–F20 · O1–O6) · Gate B PASS (10/0, founder-run,
+                      claude-opus-5). CLOSED / ACCEPTED 2026-09-04; canonical
+                      on merge.
           PREREQ      SECTION-ADDRESSABLE DRAFT LIVENESS · CLOSED
                       canonical @ 0fa4158e7 (PR #1174)
                       + Unicode repair @ 9411ddc41 (PR #1175)
-          BUILD-07B implementation · BUILD-07C–H unauthorized
+          BUILD-07C–H unauthorized
 Stage 8   BLOCKED ON STAGE 7 CLOSURE
 ```
 
@@ -324,8 +323,8 @@ and it is the census a release record must carry under Amendment 5.
 ```text
 BUILD-07B · Developmental Reader — IMPLEMENTATION OPEN (founder act
             2026-09-04) against the canonical contract @ 40532a5a5. Flow:
-            candidate 421f25bd6 built; Gate A PASS (STRUCTURALLY PROVED, NOT
-            CLOSED); Gate B live-reader witness pending on the Mac → CLOSED.
+            candidate 421f25bd6 · Gate A PASS · Gate B PASS (founder-run) →
+            CLOSED / ACCEPTED 2026-09-04. Awaiting merge on green.
             No route, surface, persistence, or 07C-shaped object.
             Lane: JARVIS-WS2-07-DEVELOPMENTAL-INTELLIGENCE-01.
 ```
