@@ -56,6 +56,69 @@ export const PHENOMENON_LABEL: Readonly<Record<DevelopmentalPhenomenon, string>>
   'positional-asymmetry': 'positional asymmetry',
 };
 
+/**
+ * WS2-07-F1 — the ratified MEANING of each phenomenon: what it is, and what it
+ * is not. Founder act 2026-09-04, on the WS2-07C-F1 determination (C).
+ *
+ * WHY THIS EXISTS. UNDERSTAND §4 named these eight and called the list
+ * illustrative, leaving the semantics to DECIDE; DECIDE defined none. The 07C
+ * opening act correctly froze UNDERSTAND verbatim and thereby closed a family
+ * whose meanings had never been fixed, so eight bare labels reached the
+ * classifier. WS2-07C-F1 measured the consequence: the same claim classified
+ * two ways across three acts, and `positional-asymmetry` — the only one of the
+ * eight with no basis anywhere in the corpus — stretched onto a claim about
+ * uniformity, which is its opposite.
+ *
+ * PROVENANCE OF EACH DEFINITION. `unresolved-thread` and `movement` are
+ * UNDERSTAND §4 verbatim. `recurrence` is its Repetition ruling.
+ * `prospective-reference`, `re-explanation-first-mention` and `term-drift` come
+ * from the Continuity, Reader and Coherence lenses of the capability spec.
+ * `register-shift` from the crossings plus the Voice lens.
+ * `positional-asymmetry` had no source and was DEFINED by the founder from the
+ * sound uses in the WS2-07C-F1 fixture.
+ *
+ * The family is still eight. No phenomenon was added or retired.
+ */
+export interface PhenomenonDefinition {
+  is: string;
+  isNot: string;
+}
+
+export const PHENOMENON_DEFINITION: Readonly<Record<DevelopmentalPhenomenon, PhenomenonDefinition>> = {
+  'recurrence': {
+    is: 'an element of the Work - a word, phrase, image, figure, named entity or attribute - appears at two or more SEPARATED points in what was read.',
+    isNot: 'a property holding uniformly across every unit read (that is regularity, not recurrence); a whole-Work pattern asserted from partial coverage.',
+  },
+  'unresolved-thread': {
+    is: 'something is introduced in what was read and not taken up again within it; or the text itself marks something as still withheld.',
+    isNot: 'that the author abandoned it, or why - that is an interpretation, not an observation.',
+  },
+  'register-shift': {
+    is: "the claim's content is directly a change in the MANNER OF TELLING - tense, person, narrative distance, diction, register, or mode of presentation (scene versus summary).",
+    isNot: 'a departure from any standard outside this Work; a broader trajectory in which a change of telling is only one part (that is movement).',
+  },
+  'prospective-reference': {
+    is: 'the text points FORWARD to something it defers - "later", "we will see", "as I will explain", "for now".',
+    isNot: 'a verdict on whether the forward reference is satisfied, where the span it points into was not read.',
+  },
+  're-explanation-first-mention': {
+    is: 'something is introduced as new after it has already been established, or explained again after it has been explained; or, conversely, is used as already known without having been introduced in what was read.',
+    isNot: 'what a reader actually experiences.',
+  },
+  'movement': {
+    is: 'a tracked element or quality changes state ACROSS A SPAN - intensity, orientation, disclosure, relation or placement - with the change stated in the text. A change of register may be one part of that trajectory, but the claim is not reducible to it.',
+    isNot: "the journey's meaning or value; a claim fully expressed by the change in the manner of telling (that is register-shift); uneven distribution across positions without a tracked change through the sequence (that is positional-asymmetry).",
+  },
+  'term-drift': {
+    is: 'one specific term or phrase carries a DIFFERENT SENSE at different points read.',
+    isNot: 'the same term recurring unchanged (that is recurrence); different words for one thing with no change of sense.',
+  },
+  'positional-asymmetry': {
+    is: 'an element, quality, mode or kind of material is meaningfully UNEVENLY DISTRIBUTED across comparable positions or member-authored divisions in what was read - present, direct, concentrated or explicit in one region and absent, indirect, sparse or disclaimed in another.',
+    isNot: 'uniformity or regularity; mechanical container properties such as heading format, section lengths, counts, or how many sections a division holds; one tracked thing changing state through the sequence (that is movement); merely that something was introduced and not subsequently developed (that is unresolved-thread).',
+  },
+};
+
 /* ── the observation ───────────────────────────────────────────────────── */
 
 /**

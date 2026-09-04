@@ -25,13 +25,14 @@ import type { StructuredBlock } from '../../ai/structured/types';
 import type { DevelopmentalLens, DevelopmentalNonConclusion } from '../developmentalReader/contract';
 import {
   DEVELOPMENTAL_PHENOMENA,
+  PHENOMENON_DEFINITION,
   PHENOMENON_LABEL,
   isPhenomenon,
   type ClassifierIdentity,
   type DevelopmentalPhenomenon,
 } from './contract';
 
-export const CLASSIFIER_VERSION = 'DEVELOPMENTAL-PHENOMENON-01';
+export const CLASSIFIER_VERSION = 'DEVELOPMENTAL-PHENOMENON-02';
 export const CLASSIFIER_TOOL = 'classify_phenomena';
 const UNCLASSIFIABLE = 'unclassifiable';
 
@@ -41,20 +42,32 @@ export interface ClaimToClassify {
   doesNotEstablish: readonly DevelopmentalNonConclusion[];
 }
 
+/**
+ * WS2-07-F1 — the family reaches the classifier WITH ITS MEANING. Before this
+ * it was eight bare labels and the classifier supplied the semantics from the
+ * words themselves, which is how a claim about uniformity twice acquired a
+ * label that means asymmetry.
+ */
 const FAMILY = DEVELOPMENTAL_PHENOMENA
-  .map((p) => `  ${p.padEnd(24)} ${PHENOMENON_LABEL[p]}`)
-  .join('\n');
+  .map((p) => `  ${PHENOMENON_LABEL[p]}  ("${p}")\n      IS      ${PHENOMENON_DEFINITION[p].is}\n      IS NOT  ${PHENOMENON_DEFINITION[p].isNot}`)
+  .join('\n\n');
 
 export const CLASSIFIER_SYSTEM = `You classify developmental reader claims about a manuscript by the PHENOMENON each one notices.
 
 You are given the claims only - their text, the editorial lens they were made under, and what each claim states it does not establish. You are NOT given the manuscript, and you do not need it. You do not judge, rank, interpret, or rewrite the claims.
 
 The phenomenon family is closed. Exactly these, and no others:
+
 ${FAMILY}
 
 For each claim, choose the ONE phenomenon the claim most directly notices. The lens is context, not the answer: the same phenomenon can be seen under any lens, and the lens never determines the phenomenon.
 
-If a claim does not notice any phenomenon in this family, answer "${UNCLASSIFIABLE}" for that claim. Do not stretch a category to fit. Do not invent one.
+WHEN TWO COULD APPLY, the more specific one wins:
+  register shift / movement          Choose "register-shift" if the claim's content is FULLY EXPRESSED by the change in the manner of telling. Choose "movement" only where the claim describes a broader tracked trajectory that the change in telling participates in.
+  movement / positional asymmetry    Movement is change THROUGH a sequence. Positional asymmetry is uneven DISTRIBUTION ACROSS positions. If nothing is tracked as changing, it is not movement.
+  recurrence / term drift            If the sense of the term changes, it is term drift. If it recurs unchanged, it is recurrence.
+
+If a claim does not notice any phenomenon in this family, answer "${UNCLASSIFIABLE}" for that claim. Do not stretch a category to fit. Do not invent one. A claim whose whole content is a MEASUREMENT of the container - heading format, section lengths, counts, positions, how many sections a division holds, or the evenness of any of those - notices no phenomenon in this family, however true it is.
 
 Answer ONLY through the tool, classifying every claim index exactly once.`;
 

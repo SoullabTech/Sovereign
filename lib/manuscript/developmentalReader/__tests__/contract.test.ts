@@ -424,9 +424,11 @@ describe('F17 · identity, version, prompt-contract hash, resolved model', () =>
     expect(perturbedTool).not.toBe(expected);
   });
 
-  it('identity carries DEVELOPMENTAL-READER-01, provider anthropic, and the model it was given — the seam supplies the resolved one', () => {
-    expect(READER_VERSION).toBe('DEVELOPMENTAL-READER-01');
-    expect(readerIdentity('m-1')).toEqual({ provider: 'anthropic', model: 'm-1', promptHash: promptContractHash(), readerVersion: 'DEVELOPMENTAL-READER-01' });
+  it('identity carries DEVELOPMENTAL-READER-02, provider anthropic, and the model it was given — the seam supplies the resolved one', () => {
+    /* -02 since WS2-07-F1: the lens now reaches the reader with its ratified meaning
+       and the claim boundary is in the system prompt, so the semantic contract moved. */
+    expect(READER_VERSION).toBe('DEVELOPMENTAL-READER-02');
+    expect(readerIdentity('m-1')).toEqual({ provider: 'anthropic', model: 'm-1', promptHash: promptContractHash(), readerVersion: 'DEVELOPMENTAL-READER-02' });
     expect(Object.keys(readerIdentity('m-1'))).not.toContain('frozenAt');
   });
 });

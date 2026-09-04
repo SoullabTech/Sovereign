@@ -26,12 +26,14 @@ import { createHash } from 'crypto';
 import type { FrozenStructureContext } from '../development/readState';
 import {
   DEVELOPMENTAL_NON_CONCLUSIONS,
+  LENS_MEANING,
+  LENS_RIDER,
   NON_CONCLUSION_MEANING,
   type DevelopmentalReaderRequest,
   type RecoveredBody,
 } from './contract';
 
-export const READER_VERSION = 'DEVELOPMENTAL-READER-01';
+export const READER_VERSION = 'DEVELOPMENTAL-READER-02';
 export const TOOL_NAME = 'draft_reader_claims';
 
 /* ── the prompt ──────────────────────────────────────────────────────────── */
@@ -58,10 +60,11 @@ RULES.
    "section" and "passage" may name ONLY sections whose text you were given. "section-run" may name any sections in the sequence. Structure references are permitted ONLY if an AUTHORED STRUCTURE block was given; if none was, make no structural claim.
 2. Every claim carries at least one non-conclusion from this closed vocabulary, naming what the evidence does not establish:
 ${VOCABULARY}
-3. Do not interpret, rank, score, grade, recommend, or say what should change. Do not guess the author's intent. Do not assert an effect on a reader. Do not describe a whole-Work pattern from partial coverage without saying so through the vocabulary.
-4. Do not ask for more sections, more context, or another read. What you were given is the whole of what you may read. If the commissioned question cannot be read from it, say so in claims that carry "outside-coverage", or return "none".
-5. Do not invent headings or titles. Refer to sections by id and position, and to divisions by the member's own words as given.
-6. Answer ONLY through the tool. Return outcome "none" when, after reading what you were given, there is nothing worth drafting under this lens - that is a complete answer.`;
+3. A claim may NOT consist solely of content that can be re-derived mechanically from the Work or the member's declared structure. Counts, lengths, positions, sequence, heading format, topology and how many sections a division holds are MEASUREMENTS of the container: they are mechanical evidence, one layer below what you are drafting. A claim must add a noticing whose falsity would require reading the Work, not merely rerunning a measurement. Measurements may SUPPORT a noticing; they may not BE the noticing. If all you can say about something is what a count, a length or a position would show, do not draft it.
+4. Do not interpret, rank, score, grade, recommend, or say what should change. Do not guess the author's intent. Do not assert an effect on a reader. Do not describe a whole-Work pattern from partial coverage without saying so through the vocabulary.
+5. Do not ask for more sections, more context, or another read. What you were given is the whole of what you may read. If the commissioned question cannot be read from it, say so in claims that carry "outside-coverage", or return "none".
+6. Do not invent headings or titles. Refer to sections by id and position, and to divisions by the member's own words as given.
+7. Answer ONLY through the tool. Return outcome "none" when, after reading what you were given, there is nothing worth drafting under this lens - that is a complete answer.`;
 
 /* ── the tool ────────────────────────────────────────────────────────────── */
 
@@ -179,7 +182,13 @@ export function renderRequest(request: DevelopmentalReaderRequest): string {
   });
 
   const parts: string[] = [];
-  parts.push(`COMMISSIONED LENS: ${commissionedLens}`);
+  /* WS2-07-F1: the lens reaches the reader WITH ITS MEANING. The phenomenon
+     taxonomy never does — lens and phenomenon are independent vocabularies
+     (UNDERSTAND §4), and a reader that knew the classifier's answer set would
+     collapse them. */
+  const rider = LENS_RIDER[commissionedLens];
+  parts.push(`COMMISSIONED LENS: ${commissionedLens}\n  This lens asks: ${LENS_MEANING[commissionedLens]}`
+    + (rider ? `\n  Note: ${rider}` : ''));
   parts.push(`THE WORK AS READ (draft ${readState.draftId}, revision ${readState.revisionNumber}; ${topology.length} sections in sequence):\n${sequence.join('\n')}`);
   parts.push(readState.structureContext
     ? renderStructure(readState.structureContext)
