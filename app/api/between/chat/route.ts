@@ -26,6 +26,10 @@ import { getConversationHistory, getUserConversationHistory, initializeSessionTa
 import { ensureSchemaReady } from '@/lib/db/schemaGate';
 import { loadRelationshipMemory } from '@/lib/memory/RelationshipMemoryService';
 import { loadSignificantMoments, formatSignificantMomentsAddendum } from '@/lib/memory/SignificantMomentsService';
+// 🜨 Durable divination memory in the live member room (MEMORY-DIVINATION-BETWEEN-ROOM-01).
+// Same loader, same three authorships, same bounds as the /list wiring — no second formatter.
+import { loadRecentIChingReadings, formatDivinationForPrompt, summarizeDivinationForLog } from '@/lib/maia/divinationRecallLoader';
+import { memberRef } from '@/lib/privacy/memberRef';
 import { inferAwarenessFromRelationship, type AwarenessLevel } from '@/lib/consciousness/awareness-levels';
 import { scoreKnowledgeGate, type SourceContribution, type KnowledgeGateInput } from '@/lib/ain/knowledge-gate';
 import { getAwarenessLevelDescription } from '@/lib/ain/awareness-levels';
@@ -1211,6 +1215,39 @@ This user is in guest mode (no authenticated identity).
       }
     }
 
+    // 🜨 DIVINATION RECALL (MEMORY-DIVINATION-BETWEEN-ROOM-01, 2026-09-04)
+    //
+    // The member's durable I Ching readings, rendered as THREE provenance-separated
+    // blocks because the record carries three authorships in separable columns:
+    //   member question/notes (member-authored) · the cast (system-computed under the
+    //   member's invocation) · the corpus interpretation (house-authored).
+    //
+    // Production census 2026-09-04: /api/between/chat is the live member conversation
+    // surface (agent_runs), while the divination wiring landed on /list only. Same
+    // loader, same producers, same bounds — this is a room registration, not a new
+    // memory path. Gate mirrors the memory-orchestrator block below: recognized member,
+    // not Sanctuary. The formatter refuses under Sanctuary again, and MIPA holds all
+    // three producers under Sanctuary a third time (requires.notSanctuary).
+    let divinationIntentAddendum: string | undefined;
+    let divinationCastAddendum: string | undefined;
+    let divinationInterpretationAddendum: string | undefined;
+    if (!isSanctuary && effectiveUserId && !effectiveUserId.startsWith('anon:')) {
+      try {
+        const readings = await loadRecentIChingReadings(effectiveUserId);
+        const divination = formatDivinationForPrompt(readings, { sanctuary: isSanctuary });
+        divinationIntentAddendum = divination.intent;
+        divinationCastAddendum = divination.cast;
+        divinationInterpretationAddendum = divination.interpretation;
+        console.log('[MAIA/between] divination-block', {
+          candidateCount: readings.length,
+          ...summarizeDivinationForLog(divination),
+          userId: memberRef(effectiveUserId),
+        });
+      } catch (err) {
+        console.warn('[MAIA/between] divination-block error (non-fatal):', err);
+      }
+    }
+
     // 🌀 SELFLET CONTEXT: Load temporal identity awareness
     console.log('[Chat API] 🌀 SELFLET: Starting selflet context loading for:', effectiveUserId);
     let selfletContext: SelfletLoadResult | null = null;
@@ -1793,6 +1830,10 @@ This user is in guest mode (no authenticated identity).
       epistemicPath: asSafeAddendum(epistemicPathAddendum),
       knowledgeGate: asSafeAddendum(knowledgeGateAddendum),
       fieldWisdom: asSafeAddendum(fieldWisdomAddendum),
+      // 🜨 Divination — three blocks kept separate all the way to cognition.
+      divinationIntent: asSafeAddendum(divinationIntentAddendum ?? null),
+      divinationCast: asSafeAddendum(divinationCastAddendum ?? null),
+      divinationInterpretation: asSafeAddendum(divinationInterpretationAddendum ?? null),
     };
 
     // 📊 DIAGNOSTIC: Context plumbing visibility (catches null/undefined instantly)
@@ -1962,6 +2003,11 @@ This user is in guest mode (no authenticated identity).
           knowledgeGateAddendum: safeAddenda.knowledgeGate || undefined,
           // 🌀 AIN FIELD BRIDGE: Collective Spiralogic wisdom (Phase 3)
           fieldWisdomAddendum: safeAddenda.fieldWisdom || undefined,
+          // 🜨 DIVINATION RECALL: member intent · computed cast · house interpretation.
+          // Read by maiaService (FAST template + CORE/DEEP MaiaContext) exactly as on /list.
+          divinationIntentAddendum: safeAddenda.divinationIntent || undefined,
+          divinationCastAddendum: safeAddenda.divinationCast || undefined,
+          divinationInterpretationAddendum: safeAddenda.divinationInterpretation || undefined,
           // 🧠 MEMORY ORCHESTRATOR: Runtime memory coordination plan
           memoryInfluenceAddendum,
           // ▶️ FORWARD READINESS: Counter the depth-first reflex when user signals execution-ready

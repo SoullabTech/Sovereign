@@ -107,13 +107,16 @@ describe('(4) registry — three axes from the write path, not one scalar', () =
     const s = PRODUCER_REGISTRY['house.divination_interpretation'];
     expect([s.authoredBy, s.participationClass, s.authority]).toEqual(['house', 'authored', 'situate']);
   });
-  it('all three are member-about (retrieval keyed to the member), verified-only, not-sanctuary, sovereign_chat, route-scope, lane-recorded, no partition pending', () => {
+  // Room scope was ['sovereign_chat'] when this lane landed; MEMORY-DIVINATION-BETWEEN-ROOM-01
+  // (2026-09-04) added 'between' after the production census found it is the live member
+  // surface. Everything else below is unchanged by that cut and still pinned here.
+  it('all three are member-about (retrieval keyed to the member), verified-only, not-sanctuary, route-scope, lane-recorded, no partition pending', () => {
     for (const id of DIV_PRODUCERS) {
       const s = PRODUCER_REGISTRY[id];
       expect(s.consentBasis).not.toBeNull();
       expect(s.requires.identity).toBe('verified');
       expect(s.requires.notSanctuary).toBe(true);
-      expect(s.rooms).toEqual(['sovereign_chat']);
+      expect([...s.rooms].sort()).toEqual(['between', 'sovereign_chat']);
       expect(s.scope).toBe('route');
       expect(s.mandatory).toBe(false);
       expect(s.registeredBy).toBe('JARVIS-MEMORY-ORGANISM-PASS1-DIVINATION-01');
@@ -127,10 +130,11 @@ describe('(4) registry — three axes from the write path, not one scalar', () =
     expect(LEGACY_META_KEY_TO_PRODUCER.divinationCastAddendum).toBe('computed.divination_cast');
     expect(LEGACY_META_KEY_TO_PRODUCER.divinationInterpretationAddendum).toBe('house.divination_interpretation');
   });
-  it('sovereign_chat considers all three; other rooms consider none (Pass 1 scope)', () => {
-    const chat = producersForRoom('sovereign_chat');
-    for (const id of DIV_PRODUCERS) expect(chat).toContain(id);
-    for (const room of ['between', 'now_what', 'vision_studio', 'living_field', 'relational_navigation'] as const) {
+  it('sovereign_chat and between consider all three; other rooms consider none', () => {
+    for (const room of ['sovereign_chat', 'between'] as const) {
+      for (const id of DIV_PRODUCERS) expect(producersForRoom(room)).toContain(id);
+    }
+    for (const room of ['now_what', 'vision_studio', 'living_field', 'relational_navigation'] as const) {
       for (const id of DIV_PRODUCERS) expect(producersForRoom(room)).not.toContain(id);
     }
   });
@@ -221,8 +225,10 @@ describe('(3) sanctuary and (1) identity — no bypass through the canonical lin
 
   it('a room the producers are not registered for EXCLUDES them not_registered_for_room', async () => {
     const legacy = legacyFromFormatter();
+    // now_what stands in for "a room divination is not registered for" — between became a
+    // registered room in MEMORY-DIVINATION-BETWEEN-ROOM-01 and is covered by its own suite.
     const turn = constructCanonicalTurn(inputs(await verified(), legacy, {
-      encounter: { input: 'hi', sessionRef: 'sess-1', room: ROOM_POLICIES.between },
+      encounter: { input: 'hi', sessionRef: 'sess-1', room: ROOM_POLICIES.now_what },
     }));
     for (const id of DIV_PRODUCERS) {
       expect(turn.participation.excluded).toEqual(expect.arrayContaining([expect.objectContaining({ producerId: id, reason: 'not_registered_for_room' })]));

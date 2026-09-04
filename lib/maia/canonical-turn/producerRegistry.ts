@@ -170,6 +170,11 @@ export const PRODUCER_REGISTRY = {
   },
 
   // ── ROUTE-SUPPLIED — Pass 1 divination (three producers, one table) ───────
+  // Registered for sovereign_chat AND between (MEMORY-DIVINATION-BETWEEN-ROOM-01,
+  // 2026-09-04): production census found /api/between/chat is the live member
+  // conversation surface, and durable divination must participate there too.
+  // ROOM_POLICIES.between allows member-about material; field composition is not
+  // involved. Same identity, Sanctuary and consent requirements in both rooms.
   // divination_iching_readings carries three authorships in separable columns; the
   // write path (divinationService.saveIChingReading / wuxing-enhanced-casting.persistReading)
   // fixes each: question+member_notes = member; cast columns = system-computed under member
@@ -179,19 +184,19 @@ export const PRODUCER_REGISTRY = {
   'member.divination_intent': {
     authoredBy: 'member', participationClass: 'authored', authority: 'situate',
     provenance: 'lib/maia/divinationRecallLoader (divination_iching_readings.question + member_notes)', consentBasis: 'memory mode continuity',
-    requires: { identity: 'verified', notSanctuary: true }, rooms: ['sovereign_chat'], mandatory: false, scope: 'route',
+    requires: { identity: 'verified', notSanctuary: true }, rooms: ['sovereign_chat', 'between'], mandatory: false, scope: 'route',
     ...PASS1_DIV, reason: 'the question the member brought to a cast + notes they added — their own words, quoted',
   },
   'computed.divination_cast': {
     authoredBy: 'system', participationClass: 'computed', authority: 'compute',
     provenance: 'lib/maia/divinationRecallLoader (primary_hex, line_values, changing_lines, relating_hex, trigrams, cast_method)', consentBasis: 'memory mode continuity',
-    requires: { identity: 'verified', notSanctuary: true }, rooms: ['sovereign_chat'], mandatory: false, scope: 'route',
+    requires: { identity: 'verified', notSanctuary: true }, rooms: ['sovereign_chat', 'between'], mandatory: false, scope: 'route',
     ...PASS1_DIV, reason: 'the cast as the casting engine produced it under the member\'s invocation — a computed fact of record',
   },
   'house.divination_interpretation': {
     authoredBy: 'house', participationClass: 'authored', authority: 'situate',
     provenance: 'lib/maia/divinationRecallLoader (interpretation_text + guidance_text ← lib/divination/iching/hexagrams soulInterpretation/guidance)', consentBasis: 'memory mode continuity',
-    requires: { identity: 'verified', notSanctuary: true }, rooms: ['sovereign_chat'], mandatory: false, scope: 'route',
+    requires: { identity: 'verified', notSanctuary: true }, rooms: ['sovereign_chat', 'between'], mandatory: false, scope: 'route',
     ...PASS1_DIV, reason: 'house corpus text keyed to the cast hexagram — not the member\'s words, not a prior MAIA reading',
   },
 
