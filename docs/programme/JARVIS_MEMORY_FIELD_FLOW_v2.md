@@ -315,17 +315,72 @@ MAIA RESPONSE          her relational exploration — inference, never record
 
 Cross-type synthesis ("a common theme of Z") is MAIA's inference and must be attributed as such. That is Cut 2's job, which is why this cut follows it.
 
-### Three questions to settle before it opens
+### Three founder rulings, settled 2026-09-04 (no build authorized)
 
-**1 · The conversation route becomes a write path.** Every memory cut so far kept the conversation read-only over member records. A conversational cast makes an ordinary turn write a durable member record. That is a new responsibility, not a wiring detail (CLAUDE.md growth-obligation check). It needs its own refusal surface and its own witness.
+**1 · The new responsibility, stated precisely.** Ordinary MAIA conversation already performs durable writes — the conversation turn itself, among others. What is new is narrower and sharper:
 
-**2 · Sanctuary.** A Sanctuary session may not produce stored material of any kind. So a cast requested inside Sanctuary must be either refused or ephemeral-and-unwritten — decided deliberately, pinned by a falsifier, never left to the writer's default.
+```text
+NEW RESPONSIBILITY
+An ordinary MAIA turn may, after an explicit member act, invoke a domain
+operation that creates a durable symbolic-event record.
 
-**3 · Idempotency, now unavoidable.** Earlier cuts deliberately excluded idempotency machinery because the write happened once at a page action. A conversational invocation can be retried by transport, streaming reconnect, or a repeated turn. The Save-duplicate finding is the same defect arriving early; this cut is where the question has to be answered rather than deferred.
+This is distinct from normal conversation persistence.
+```
+
+**2 · Sanctuary: ephemeral cast, never persisted.** Sanctuary means *this does not leave the room*, not *MAIA loses capabilities while I am here*.
+
+```text
+explicit member request → cast MAY occur
+                        → result may participate in the current Sanctuary turn
+                        → NO durable divination row
+                        → NO later recall
+                        → NO memory atom / developmental / symbolic-history write
+                        → NO content-bearing analytics persistence
+
+HARD FALLBACK  if the implementation cannot guarantee an unwritten cast,
+               it must REFUSE rather than risk persisting.
+
+FALSIFIER      FAIL if a Sanctuary cast produces any durable symbolic-event record.
+```
+
+*Implementation note.* The existing engines make this non-trivial. `wuxing-enhanced-casting.persistReading` writes whenever `options.userId` is set and `persist !== false`, and the oracle route persists for any recognized member. An ephemeral path must therefore call a casting function that **has no persistence side effect at all**, not one that is asked not to persist — "guaranteed unwritten" and "told not to write" are different guarantees, and only the first satisfies the falsifier.
+
+**3 · Idempotency must wrap the cast, not only the INSERT.** Divination involves randomness, so a retry that avoids a duplicate row while silently redrawing would be *worse* than the duplicate.
+
+```text
+ONE LOGICAL MEMBER INVOCATION
+  → one invocation identity → one cast/draw → one result → at most one durable record
+
+same invocation id (transport retry / reconnect / duplicate delivery)
+  → SAME cast returned · NO second draw · NO second row
+
+member explicitly says "cast again"
+  → NEW invocation id · NEW genuine cast
+```
+
+The identity must wrap `intent → random draw → persistence → response`, not merely `persistence → INSERT ONCE`.
+
+*Design fork to decide inside the cut, not now.* Two ways to make a draw survive retry: **cache** the result against the invocation id before responding, or **derive** the draw deterministically by seeding the RNG from the invocation id. Deriving is simpler and needs no store, but it makes the cast a reproducible function of an identifier rather than of the moment — which may matter symbolically for divination in a way it would not for an ordinary idempotent write. Name the choice explicitly when the cut opens.
+
+### Refusal surface
+
+```text
+no explicit member act        → no divination
+unsupported oracle / spread   → clarify or refuse; never substitute silently
+Sanctuary                     → ephemeral only
+authenticated + continuity    → persist exactly once
+anonymous / guest             → may cast, never durable member memory
+transport retry               → same invocation, same result
+explicit "cast again"         → new invocation, new result
+persistence failure           → never fabricate "saved"; the reading may still be
+                                returned; the continuity claim must say it was not retained
+```
 
 ### Prerequisite the cut inherits
 
-Runes and Tarot provenance must be assigned from their own write paths, not by analogy to I Ching. Their record shapes differ (runes carry `wyrd_message`; tarot carries positions and reversals), so the three axes must be re-derived per type before any producer is registered. Guessing provenance is the one thing the divination lane has never done.
+Runes and Tarot provenance must be assigned from their own write paths, not by analogy to I Ching. Their record shapes differ, so the FIND act establishes, field by field: who authored it · what generated it · what corpus supplied it · what MAIA added afterward. Only then are producers registered.
+
+Two hypotheses to census, explicitly **not** classifications: the Runes `wyrd_message` may turn out to be system-composed interpretation rather than house-authored corpus; Tarot card identity is plainly a different thing from its synthesized reading. Both are questions for the census. Guessing provenance is the one discipline this lane has never broken, and analogy would be a quiet way to break it.
 
 ### Write-path convergence this cut absorbs
 
