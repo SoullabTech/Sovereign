@@ -40,6 +40,14 @@
  *   the retriever's count (already wired in commit 3f0191231); this module
  *   governs emission, not the layer's health signal.
  *
+ * Continuity repair (Memory Organism Pass 1, 2026-09-03):
+ *   A production witness showed a member's decisive I Ching detail at character
+ *   ~273 of a 306-character turn. The former 280-character prefix-only clip
+ *   therefore reported the exchange as surfaced while removing the fact MAIA
+ *   was being asked to remember. Bounded recall remains, but the budget is now
+ *   materially larger and, for very long turns, preserves both beginning and end.
+ *   A prompt budget may omit a middle; it may not systematically erase the tail.
+ *
  * Drift canaries (per §V of spec):
  *   - Any future addition of cross-exchange synthesis (themes/patterns) violates
  *     the no-synthesis discipline; substrate must refuse such a PR.
@@ -75,7 +83,13 @@ export type ConversationalBlockResult = {
 
 const SESSION_RESUMPTION_WINDOW_MIN = 30;
 const SESSION_RESUMPTION_TURN_THRESHOLD = 3;
-const MAX_LINE_CONTENT_CHARS = 280;
+
+// Six retrieved exchanges at this ceiling are at most ~14.4k content chars before
+// provenance/header overhead — deliberately generous for beta continuity while
+// remaining bounded. Prefix-only truncation is forbidden because it caused a
+// witnessed false negative when the member's operative detail sat near the tail.
+const MAX_LINE_CONTENT_CHARS = 2400;
+const OMITTED_MIDDLE_MARKER = ' …[middle omitted for recall budget]… ';
 
 export function formatPriorExchangesForPrompt(
   exchanges: PriorExchangeSnapshot[],
@@ -139,11 +153,18 @@ function renderExchangeLine(ex: PriorExchangeSnapshot): string {
   const speaker = ex.role === 'user' ? 'Member' : 'MAIA';
   const content = (ex.content ?? '').trim().replace(/\s+/g, ' ');
   if (content.length === 0) return '';
-  const displayed =
-    content.length > MAX_LINE_CONTENT_CHARS
-      ? content.slice(0, MAX_LINE_CONTENT_CHARS).trimEnd() + '…'
-      : content;
-  return `- ${recency}, ${speaker}: "${displayed}"`;
+  return `- ${recency}, ${speaker}: "${boundExchangeContent(content)}"`;
+}
+
+function boundExchangeContent(content: string): string {
+  if (content.length <= MAX_LINE_CONTENT_CHARS) return content;
+
+  const available = MAX_LINE_CONTENT_CHARS - OMITTED_MIDDLE_MARKER.length;
+  const headChars = Math.ceil(available / 2);
+  const tailChars = Math.floor(available / 2);
+  const head = content.slice(0, headChars).trimEnd();
+  const tail = content.slice(content.length - tailChars).trimStart();
+  return `${head}${OMITTED_MIDDLE_MARKER}${tail}`;
 }
 
 function formatRecency(when: Date | string): string {
