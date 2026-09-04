@@ -1,6 +1,6 @@
 # JARVIS-WS2-07-DEVELOPMENTAL-INTELLIGENCE-01
 
-> **Lane active. BUILD-07A CLOSED / ACCEPTED on canonical. BUILD-07B OPEN · FIND/BOUNDARY CENSUS ONLY (founder act, 2026-09-04). Nothing beyond the census is.**
+> **Lane active. BUILD-07B OPEN — A1–A7 adjudicated, reader contract + falsifiers filed (founder, 2026-09-04). Implementation is NOT authorized; that is the next ruling.**
 >
 > This document defined the lane before it was entered, and it still authorizes **no code, no
 > schema, no route, no prompt**. Entering FIND required the trigger below to be satisfied on
@@ -8,11 +8,12 @@
 
 ```text
 LANE               JARVIS-WS2-07-DEVELOPMENTAL-INTELLIGENCE-01
-STATE              ACTIVE · BUILD-07B OPEN · FIND/BOUNDARY CENSUS ONLY (founder, 2026-09-04)
+STATE              ACTIVE · BUILD-07B OPEN · CONTRACT + FALSIFIERS FILED · IMPLEMENTATION
+                   UNAUTHORIZED (founder adjudication A1–A7, 2026-09-04)
                    BUILD-07A CLOSED / ACCEPTED · canonical @ 27ec9f895
 TRIGGER            Stage 6A AuthorStructureCommand merged to canonical and witnessed
 TRIGGER SATISFIED  clean-main-no-secrets @ 4b8b34bcf
-AUTHORIZES         read-only discovery of the developmental-reader boundary (BUILD-07B census)
+AUTHORIZES         BUILD-07B contract + falsifiers as docs/spec only (filed)
                    BUILD-07B implementation and BUILD-07C–H unauthorized
                    No reader, no model, no prompt, no schema, no route.
 NORMATIVE          docs/programme/WRITERS_STUDIO_MASTER_BRIEF.md
@@ -196,6 +197,34 @@ NEXT              founder / Jarvis adjudication of the census → define the 07B
                   falsifiers → only then authorize BUILD
 STATE             BUILD-07B OPEN · FIND/BOUNDARY CENSUS ONLY · census filed, awaiting
                   adjudication. No code.
+```
+
+```text
+2026-09-04 · BUILD-07B ADJUDICATION — A1–A7 ruled · CONTRACT + FALSIFIERS FILED
+RULINGS           A1 reader returns claim DRAFTS (text · EvidenceRef[] · doesNotEstablish[]);
+                     no id / phenomenon / interpretation / possibility / severity / persistence;
+                     uncertainty? is 07C's; no automatic promotion
+                  A2 exactly one canonical lens is REQUIRED commissioning input; no lens on a claim;
+                     phenomenon stays 07C
+                  A3 bodies YES · 60,000 Unicode code points per invocation · NO section-count
+                     ceiling · body-depth sections only · never truncate · never neighbour ·
+                     refuse whole before the seam (freshly ratified, not inherited)
+                  A4 no read-request in v1 — scope final per invocation; claims / none / refusal
+                     distinct; a larger read is a new capture
+                  A5 no heading channel — headings absent unless recoverable through the
+                     immutable evidence state; HeadedSection / live rows forbidden
+                  A6 one-way seam made structural — reader prose only from development/resolve;
+                     development/** still cannot reach reader / lib/ai
+                  A7 closed non-empty doesNotEstablish vocabulary (eight values) on every claim
+CONTRACT          docs/programme/WS2-07-BUILD-07B_READER_CONTRACT_2026-09-04.md
+                  §2 object family (Request · Result · ReaderClaimDraft · refusals · absent by
+                  construction) · §3 falsifiers F1–F20 · §4 outcomes O1–O6
+AUTHORIZED        contract + falsifiers as docs/spec only (this record)
+UNAUTHORIZED      reader implementation · model call · prompt / tool contract · route · surface ·
+                  persistence · BUILD-07C+
+NEXT              founder ruling, on this exact contract + falsifier set, whether BUILD-07B
+                  implementation opens
+STATE             BUILD-07B OPEN · CONTRACT + FALSIFIERS FILED · IMPLEMENTATION UNAUTHORIZED
 ```
 
 ## Prerequisite — SECTION-ADDRESSABLE DRAFT LIVENESS
