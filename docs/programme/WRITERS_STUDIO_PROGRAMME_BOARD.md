@@ -37,7 +37,8 @@ BOUND CANONICAL    b20f2742e (clean-main-no-secrets, 2026-09-04 — BUILD-07B me
 CURRENT UNIT       BUILD-07C Developmental Reading — IMPLEMENTATION OPEN (founder,
                    2026-09-04); observation-only v1; two-gate closure
                    lane: JARVIS-WS2-07-DEVELOPMENTAL-INTELLIGENCE-01
-CURRENT CANDIDATE  none yet
+CURRENT CANDIDATE  8a26a8971 — GATE A PASS (27/0) · STRUCTURALLY PROVED · NOT CLOSED · GATE B PENDING
+                   record: WS2-07-BUILD-07C_READING_WITNESS_2026-09-04.md
 PRIOR UNIT         BUILD-07B Developmental Reader — CLOSED / ACCEPTED (founder,
                    2026-09-04); canonical @ b20f2742e; Gate A 36/0 · Gate B 10/0
                    record: WS2-07-BUILD-07B_READER_WITNESS_2026-09-04.md §4
@@ -117,7 +118,8 @@ Stage 7   ACTIVE
                       (Gate A 36/0 · Gate B 10/0, claude-opus-5)
           BUILD-07C   IMPLEMENTATION OPEN · founder act 2026-09-04 · observation-
                       only v1 · phenomenon = UNDERSTAND §4 family · one bounded
-                      classification call · two-gate closure. No candidate yet.
+                      classification call · two-gate closure. Candidate 8a26a8971:
+                      Gate A PASS (27/0) · NOT CLOSED · Gate B pending.
           PREREQ      SECTION-ADDRESSABLE DRAFT LIVENESS · CLOSED
                       canonical @ 0fa4158e7 (PR #1174)
                       + Unicode repair @ 9411ddc41 (PR #1175)

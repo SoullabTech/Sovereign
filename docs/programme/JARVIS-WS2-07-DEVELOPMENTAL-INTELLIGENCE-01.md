@@ -325,7 +325,12 @@ MISSION           turn an accepted 07B ReaderResult into a durable, frozen Devel
                   without rereading, rewriting, or changing the Work
 CONTRACT          WS2-07-DECIDE_DEVELOPMENTAL_READING_OBJECT.md INV-0 … INV-25, binding as
                   ratified; no re-DECIDE — a contradiction found in implementation is a ruling
-AUTHORIZES        DevelopmentalReading type + minimal persistence (migration, store, retrieval) ·
+PERSISTENCE       ONE additive developmental_readings table · Class B · database-minted readingId +
+                  store-stamped frozenAt · insert-only (UPDATE refused by trigger) · observations
+                  JSONB inside the frozen reading · MAIA observation text, NEVER manuscript body prose
+                  ROLLBACK  code reverts cleanly; the table is left inert if it ever received a
+                  reading — no destructive DROP promised; no existing manuscript schema rewritten
+AUTHORIZES        DevelopmentalReading type + that persistence (migration, store, retrieval) ·
                   server-minted readingId (INV-1) · stable (readingId, observationKey) (INV-2) ·
                   one observation per accepted ReaderClaimDraft · observation text = the reader
                   claim text, no rewriting · evidence refs re-bound before freeze ·
@@ -337,14 +342,16 @@ AUTHORIZES        DevelopmentalReading type + minimal persistence (migration, st
 V1 RULINGS        observation-only: no interpretation, questions, possibilities (canon: an
                   observation with no interpretation is a complete, honest reading)
                   phenomenon = the UNDERSTAND §4 family verbatim, no new taxonomy:
-                    recurrence · unresolved thread · register shift · prospective reference ·
-                    re-explanation / first-mention · movement · term drift · positional asymmetry
+                    recurrence · unresolved-thread · register-shift · prospective-reference ·
+                    re-explanation-first-mention · movement · term-drift · positional-asymmetry
                   lens and phenomenon separate; neither derived from the other (INV-10)
                   ONE bounded classification-only model call per reading:
                     INPUT  claim text · commissioned lens · doesNotEstablish — NO manuscript prose
                     OUTPUT phenomenon tag only; may not rewrite the claim
                     MODEL  the same resolved model the reader used; no fallback
-                    PROV   classifier version + prompt hash recorded beside reader provenance
+                    PROV   DEVELOPMENTAL-PHENOMENON-01 + prompt hash + resolved model, recorded
+                           beside reader provenance (DEVELOPMENTAL-READER-01 + prompt hash +
+                           resolved model); frozenAt stamped by the store
                     unclassifiable into the v1 set → REFUSE the freeze; never invent a category
 DOES NOT AUTHORIZE interpretation · questions · possibilities · suggestions · replacement prose ·
                   Develop UI · route · dialogue · author decisions · manuscript mutation ·
@@ -354,6 +361,23 @@ CLOSURE           Gate A structural (falsifiers from INV-0 … INV-25 + the ruli
                   invented fixture, frozen, retrieved by identity, then superseded by an edit and
                   shown three-state → CLOSED / ACCEPTED
 STATE             BUILD-07C IMPLEMENTATION OPEN · no candidate yet
+```
+
+```text
+2026-09-04 · BUILD-07C CANDIDATE — GATE A PASS · STRUCTURALLY PROVED · NOT CLOSED
+CANDIDATE         8a26a8971 (claude/writer-author-studios-roadmap-b2tqf5), built against canonical
+                  b20f2742e; opening record 0f92fbb24 is the first commit on the branch
+GATE A            scripts/ws2-07c-reading-gate-a.ts → 27 checks · 0 failures on a UTF-8 scratch DB
+                  (baseline + chain through 20260904000001; seam refusing; adapter never loaded) ·
+                  jest 30 + 42 + 6 · module typecheck clean · npm run typecheck no regression ·
+                  governance checks green. C0–C22 PASS.
+SHAPE             one additive insert-only table; observations JSONB inside the reading; reader +
+                  classifier provenance apart; frozenAt by the database; Class B
+RECORD            docs/programme/WS2-07-BUILD-07C_READING_WITNESS_2026-09-04.md
+GATE B            PENDING — scripts/ws2-07c-reading-gate-b.ts pinned to the candidate; one live
+                  commission on an invented fixture → retrieve by identity → CURRENT → edit →
+                  SUPERSEDED (scoped) → UNMEASURED shown reachable
+STATE             BUILD-07C CANDIDATE 8a26a8971 · STRUCTURALLY PROVED · NOT CLOSED · GATE B PENDING
 ```
 
 ## Prerequisite — SECTION-ADDRESSABLE DRAFT LIVENESS
