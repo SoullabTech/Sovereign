@@ -37,11 +37,12 @@ CURRENT UNIT       BUILD-07A Developmental Evidence
                    lane: JARVIS-WS2-07-DEVELOPMENTAL-INTELLIGENCE-01
 CURRENT CANDIDATE  claude/build-07a-developmental-evidence-n5tm37 @ bfeb1a9
                    record: WS2-07-BUILD-07A_EVIDENCE_WITNESS_2026-09-03.md
-NEXT EXECUTABLE    founder act on BUILD-07A — ratify the reconstructed
-                   falsifier/outcome set (record §4) and re-run the witness
-                   (expected 50 / 0); then CLOSE or HOLD. On the candidate:
-                   INV-7b demonstrated, 6 of 6 outcomes, 10 of 10 falsifiers
-                   — in session, not on canonical
+NEXT EXECUTABLE    two founder checks on BUILD-07A (instrument v1 RATIFIED
+                   2026-09-04): production server_encoding = UTF8, and a
+                   founder-visible witness rerun → 50 checks · 0 failures.
+                   On both: CLOSED / ACCEPTED → PR → gates → merge on green.
+                   On the candidate: INV-7b demonstrated, 6 / 6 outcomes,
+                   10 / 10 falsifiers — in session, not on canonical
 WS-01              CLOSED — OVERTAKEN / SUPERSEDED (not accepted; see
                    Reconciliation record below)
 CANVAS FREEZE      RETIRED FROM LIVE STATE (never released by an act; see
@@ -95,7 +96,8 @@ Stage 7   ACTIVE
           BUILD       ACTIVE
           BUILD-07A   OPEN · CANDIDATE BUILT @ bfeb1a9 — INV-7b demonstrated
                       on the candidate (6 / 6 outcomes, 10 / 10 falsifiers,
-                      reconstructed instrument); NOT CLOSED, not on canonical
+                      instrument v1 ratified 2026-09-04); NOT CLOSED —
+                      awaiting encoding check + founder-visible witness
           PREREQ      SECTION-ADDRESSABLE DRAFT LIVENESS · CLOSED
                       canonical @ 0fa4158e7 (PR #1174)
                       + Unicode repair @ 9411ddc41 (PR #1175)

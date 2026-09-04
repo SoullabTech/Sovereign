@@ -151,7 +151,18 @@ context; structural refs are then refused at bind as `structure_not_supplied` �
 degraded** (INV-16a). Proposed-origin unit rows are excluded from the frozen context and from its
 fingerprint (INV-17).
 
-## 4 · The acceptance instrument — reconstructed, and why
+## 4 · The acceptance instrument — reconstructed, then ratified prospectively
+
+> **FOUNDER RULING — 2026-09-04 · BUILD-07A Acceptance Instrument v1**
+>
+> The six outcomes and ten falsifiers recorded in this section are **ratified as the governing
+> acceptance instrument for BUILD-07A**. They are **not** declared to be a verbatim reconstruction
+> of the original 2026-09-02 session list. **Their authority begins with this ruling.** If the
+> original instrument is later recovered and contains an additional criterion, that is new
+> historical evidence requiring explicit adjudication; this record is not silently rewritten.
+
+The reconstruction below is kept as it was put, so the reasoning that produced the instrument
+survives beside the ruling that gave it authority.
 
 **The unit's "ten falsifiers / six required outcomes" are not on canonical.** They were stated in
 the session that opened BUILD-07A (2026-09-02) and are referred to by the recoverability boundary
@@ -166,7 +177,9 @@ line. The two anchors the boundary record gives are honoured: falsifiers 1 and 2
 recoverability falsifiers, and the four outcomes satisfiable without recoverability are outcomes
 1, 2, 5 and 6.
 
-⛔ **This reconstruction is not the founder's list until the founder says it is.** See §6.
+⛔ **This reconstruction was not the founder's list until the founder said so.** Ratified
+prospectively on 2026-09-04 as *Acceptance Instrument v1* — see the ruling at the head of this
+section. It governs from that date; it does not claim to be the 2026-09-02 original.
 
 ### Six required outcomes
 
@@ -237,9 +250,10 @@ should return `UTF8`. If it does not, that is a finding ahead of everything in t
 
 ## 6 · Remaining uncertainty
 
-1. **The instrument is a reconstruction.** §4 maps ten falsifiers and six outcomes onto DECIDE's
-   invariants and the two anchors the boundary record gives. If the founder's original list holds
-   a falsifier this set does not cover, the unit has not run it.
+1. **The instrument is a reconstruction — RESOLVED 2026-09-04.** Ratified prospectively as
+   *Acceptance Instrument v1* (§4). Its authority begins with the ruling, not with a claim of
+   provenance. A later-recovered original with an additional criterion is new historical evidence
+   for explicit adjudication, never a silent rewrite of this record.
 2. **Witnessed in session, not by the founder.** Every result is `[RUN]` by this session on its own
    cluster. The record's value rests on the witness being re-run where the founder can see it:
    `DATABASE_URL=… npx tsx scripts/ws2-07a-evidence-witness.ts` → expected `50 checks · 0 failures`.
@@ -259,20 +273,40 @@ should return `UTF8`. If it does not, that is a finding ahead of everything in t
    supersedes refs to it. Conservative in the direction INV-21 prefers; a later ruling could narrow
    it to labels and placements.
 
-## 7 · Recommendation
+## 7 · Recommendation, and the closure gate as ruled
 
-**CLOSE BUILD-07A**, on two conditions that are the founder's to satisfy and neither of which is a
-code change:
+**CLOSE BUILD-07A**, on conditions that are the founder's to satisfy and none of which is a code
+change. The first was met on 2026-09-04 (§4 ratification). Two remain, **ruled 2026-09-04**, and
+neither can be performed from a remote session: one needs the LAN path to minisforum, the other is
+founder-visible by definition.
 
 ```text
-1  ratify §4 as the unit's falsifier / outcome set — or supply the original,
-   and this session runs whatever it adds
-2  re-run the witness where the founder can see it → 50 / 0
+CHECK 1 · production PostgreSQL is UTF-8
+  ssh soullab@minisforum 'docker exec maia-postgres psql -U soullab maia_consciousness -tAc "SHOW server_encoding"'
+  REQUIRED   UTF8
+  OTHERWISE  STOP. The database is not repaired in this lane.
+
+CHECK 2 · founder-visible witness rerun, from a clean checkout of the candidate
+  git rev-parse HEAD          → the candidate's tip (code unchanged since bfeb1a9;
+                                see the lane entry for the exact tip at closure)
+  git status --short          → empty
+  DATABASE_URL="$DATABASE_URL" npx tsx scripts/ws2-07a-evidence-witness.ts
+  REQUIRED   50 checks · 0 failures
 ```
 
-If either condition is not met, **HOLD** — the code does not change while the instrument is in
-question. **BUILD-07B does not open on this record.** Passing 07A authorizes nothing; the lane
-opens the next unit by its own act.
+**When both hold, the founder authorizes:**
+
+```text
+BUILD-07A     CLOSED / ACCEPTED
+INV-7b        DEMONSTRATED
+F1–F10        PASS
+O1–O6         PASS
+```
+
+— then the ordinary PR for `claude/build-07a-developmental-evidence-n5tm37` is opened, its gates
+run, and it merges only after green. **BUILD-07B is not begun in that closure commit or PR.**
+After 07A reaches canonical, BUILD-07B — Developmental Reader — is authorized separately, by its
+own act. If either check fails, **HOLD** — the code does not change while a gate is red.
 
 ## 8 · What this does not do
 

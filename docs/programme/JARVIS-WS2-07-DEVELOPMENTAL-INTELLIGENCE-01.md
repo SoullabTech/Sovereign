@@ -8,7 +8,7 @@
 
 ```text
 LANE               JARVIS-WS2-07-DEVELOPMENTAL-INTELLIGENCE-01
-STATE              ACTIVE · BUILD-07A OPEN · CANDIDATE BUILT (bfeb1a9) · NOT CLOSED
+STATE              ACTIVE · BUILD-07A OPEN · CANDIDATE BUILT (bfeb1a9) · INSTRUMENT v1 RATIFIED · AWAITING CHECKS 1+2
 TRIGGER            Stage 6A AuthorStructureCommand merged to canonical and witnessed
 TRIGGER SATISFIED  clean-main-no-secrets @ 4b8b34bcf
 AUTHORIZES         BUILD-07A DEVELOPMENTAL EVIDENCE only
@@ -140,7 +140,26 @@ STATE             BUILD-07A OPEN · CANDIDATE BUILT · NOT CLOSED
 
 ⛔ **The candidate does not close BUILD-07A and does not open BUILD-07B.** The unit's original
 falsifier list was never written to canonical; the record reconstructs it from DECIDE and says so.
-Ratifying that instrument, or supplying the original, precedes closure.
+
+```text
+2026-09-04 · FOUNDER RULING — BUILD-07A ACCEPTANCE INSTRUMENT v1
+RATIFIED          the six outcomes and ten falsifiers in the record's §4, as the
+                  governing acceptance instrument for BUILD-07A — PROSPECTIVELY.
+                  Not declared a verbatim reconstruction of the 2026-09-02 list;
+                  authority begins with the ruling. A later-recovered original
+                  carrying an additional criterion is new historical evidence
+                  for explicit adjudication, never a silent rewrite.
+CLOSURE GATE      CHECK 1  production PostgreSQL SHOW server_encoding = UTF8
+                           (anything else: STOP; no database repair in this lane)
+                  CHECK 2  founder-visible witness rerun from a clean checkout of
+                           the candidate tip → 50 checks · 0 failures
+ON BOTH           BUILD-07A CLOSED / ACCEPTED · INV-7b DEMONSTRATED ·
+                  F1–F10 PASS · O1–O6 PASS → ordinary PR, gates, merge on green
+BUILD-07B         not begun in the closure commit or PR; authorized separately
+                  after 07A reaches canonical
+STATE             BUILD-07A OPEN · CANDIDATE BUILT · INSTRUMENT RATIFIED ·
+                  AWAITING CHECKS 1 + 2
+```
 
 ## Prerequisite — SECTION-ADDRESSABLE DRAFT LIVENESS
 
