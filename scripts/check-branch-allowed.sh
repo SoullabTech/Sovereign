@@ -15,13 +15,14 @@ ACTION="${1:?usage: check-branch-allowed.sh <ACTION> <branch>}"
 BRANCH="${2:?usage: check-branch-allowed.sh <ACTION> <branch>}"
 
 case "$BRANCH" in
-  main|clean-main-no-secrets|phase4.6-reflective-agentics|feature/*|fix/*|chore/*)
+  main|clean-main-no-secrets|phase4.6-reflective-agentics|feature/*|fix/*|chore/*|claude/*)
     exit 0
     ;;
   *)
     echo ""
     echo "🚫 ${ACTION} BLOCKED: branch '$BRANCH' not allowed"
-    echo "   Allowed: main | clean-main-no-secrets | feature/* | fix/* | chore/*"
+    echo "   Allowed: main | clean-main-no-secrets | phase4.6-reflective-agentics |"
+    echo "            feature/* | fix/* | chore/* | claude/*"
     echo ""
     exit 1
     ;;
