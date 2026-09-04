@@ -75,11 +75,49 @@ async function row(id: string) {
   return r.rows[0];
 }
 
+/**
+ * Refuse to run destructively against anything but a disposable database.
+ *
+ * This script issues unqualified `DELETE FROM members`. Pointed at a real
+ * environment it would empty that table — so the check is a precondition, not a
+ * courtesy, and it runs BEFORE the first destructive statement.
+ *
+ * It reads `current_database()` over the live connection rather than parsing
+ * DATABASE_URL, because the URL is not authoritative about where the client
+ * actually lands: the database segment may be absent, PGDATABASE may override
+ * it, and a service/connection alias can redirect it. The connection itself is
+ * the only thing that knows.
+ */
+async function assertDisposableDatabase(): Promise<string> {
+  const r = await query<{ db: string }>(`SELECT current_database() AS db`);
+  const db = r.rows[0].db;
+  if (!/(^|_)(test|integration)$/.test(db)) {
+    console.error(
+      `\x1b[31mREFUSING TO RUN\x1b[0m — this script issues unqualified DELETEs and the ` +
+        `connected database is "${db}", which is not disposable.\n` +
+        `Its name must end in _test or _integration. No statement has been executed.`
+    );
+    await closePool().catch(() => {});
+    process.exit(2);
+  }
+  return db;
+}
+
 async function main() {
+  const dbName = await assertDisposableDatabase();
+  console.log(`\x1b[2mdatabase: ${dbName}\x1b[0m`);
+
   await query(`DELETE FROM member_reminders`);
   await query(`DELETE FROM members`);
+  // members requires passkey/username/password_hash (NOT NULL, no defaults) in
+  // the canonical migration chain — 20260103000001_members.sql, never relaxed by
+  // any later migration. An email-only insert fails 23502 against any database
+  // carrying the real schema, so the fixture supplies the full required tuple.
   const m = await query<{ id: string }>(
-    `INSERT INTO members (email) VALUES ('witness@example.test') RETURNING id`,
+    `INSERT INTO members (email, passkey, username, password_hash)
+     VALUES ('witness@example.test', 'SOULLAB-WITNESS-DISPATCH',
+             'witness_dispatch', 'not-a-real-hash')
+     RETURNING id`,
   );
   memberId = m.rows[0].id;
 

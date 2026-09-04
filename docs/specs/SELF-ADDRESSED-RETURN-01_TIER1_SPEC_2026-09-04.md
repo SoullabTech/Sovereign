@@ -730,13 +730,33 @@ result is reported truthfully rather than as a cancellation that did not happen.
 | Gate | Result |
 |---|---|
 | R32 A–D | **green, 7 assertions** · negative control caught on all three propositions · 14 files scanned |
-| Real-DB dispatch proof | **32/32** (9 cases + invariant sweep) |
+| Real-DB dispatch proof | **32/32** (9 cases + invariant sweep) — ⚠️ **superseded, see correction below** |
 | Reminders + email suites | **94/94**, 9 suites |
 | Provider idempotency propagation | included above; fails 3/5 when propagation removed |
 | Key retention / rotation | included above |
 | `npm run typecheck` | clean, no regressions |
 | `npm run check:no-supabase` | clean |
 | Refusal registry overall | **110 passed · 5 failed · 24 refusals** — the 5 are the pre-existing R19/R21 detector defects |
+
+#### Correction (2026-09-04) — the 32/32 above was not reproducible when written
+
+The `32/32` row is **left standing as the record of what was claimed**, and is superseded rather
+than erased.
+
+`scripts/verify-reminders-dispatch.ts` could not reach its first assertion against a database
+carrying the canonical schema. Its fixture ran `INSERT INTO members (email) …`, but
+`members.passkey` is `NOT NULL` in `20260103000001_members.sql` and **no later migration relaxes
+it** — `maia_consciousness` reports `is_nullable = NO` as well. Every run therefore aborted at
+`23502` before case 1. The count was asserted; the run behind it was not reproducible.
+
+The fixture now supplies the full required tuple (`passkey`, `username`, `password_hash`), and the
+suite passes **32/32 against real PostgreSQL 17.7 / UTF8**. The verifier additionally refuses to
+execute unless `current_database()` names a disposable database — it issues unqualified
+`DELETE FROM members`, and previously carried no guard on its target.
+
+**§7.6 is now proved rather than written**: 34/34 integration · 32/32 dispatch · 115/115 registry,
+all from one fresh database built from the three-migration chain. Full provenance:
+`docs/programme/SELF-ADDRESSED-RETURN-01_SECTION_7_6_INTEGRATION_WITNESS_2026-09-04.md`.
 
 ### 10.7 Remaining — in order
 
