@@ -219,4 +219,15 @@ THEN      Beta Pass 2
 THEN      Pass 3
 ```
 
+### Prerequisites before Cut 1 may be created
+
+```text
+1  Proof 9 closed and recorded
+2  e3f379530 (divination capability) merged to canonical
+3  THIS DOCUMENT merged to canonical
+4  both verified as ancestors of the current canonical head
+```
+
+Item 3 is not ceremony. Cut 1 is the first cut governed by this protocol; creating it while the protocol lives only on a branch would start it under a noncanonical governing document. Item 2 keeps Cut 1 proving convergence rather than convergence-plus-carry-forward. Neither adds a development stage — they put the rules and the capability on the floor before convergence begins.
+
 Custody note: production runs `e3f379530` (canonical `543f43708` plus the between-room cut), unmerged. Acceptable while the witness is in flight; owed to canonical once Proof 9 passes, and a prerequisite for Cut 1 so the convergence cuts from a canonical that already contains the divination capability.
