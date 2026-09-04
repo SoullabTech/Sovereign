@@ -1,8 +1,8 @@
 # LAB-IA-01 · Lab Tools census — diagnosis only
 
 ```text
-SOURCE_SHA    bdd4f736584a77623d13eeae10abc03a95f05f50  (WORKING TREE DIRTY — this output does not describe a committed state)
-GENERATED_AT  2026-09-04T19:24:18.942Z
+SOURCE_SHA    b79034e767612e722d3c543eb4af7d7b26687de0
+GENERATED_AT  2026-09-04T19:24:53.919Z
 ```
 
 ⚠️ This census describes the tree at SOURCE_SHA. It is an instrument, not a snapshot — re-run it
