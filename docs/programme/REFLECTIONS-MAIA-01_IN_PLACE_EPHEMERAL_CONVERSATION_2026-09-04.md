@@ -61,6 +61,31 @@ precise failure the Keep Authority Contract exists to prevent.
 6. Persistence or linkage between a source reflection and any later Keep is
    **not authorized yet** unless an existing contract already supplies it.
 
+## Invariant — ephemerality must be legible
+
+> **Ephemerality must be legible to the member.** The interface must not imply
+> that an in-reflection MAIA exchange has been saved when it has not. Before the
+> member leaves the exchange, the persistence status must be understandable
+> **without knowing the underlying architecture**.
+
+Bound as an invariant 2026-09-04, ahead of any implementation. It authorizes no
+copy, no UI treatment, no persistence and no build — it exists to prevent a
+future implementation from being technically sovereign while experientially
+misleading.
+
+The symmetry is the point:
+
+```text
+silent persistence      prohibited
+silent disappearance    also prohibited
+```
+
+Member authority requires both. MAIA cannot quietly write into the Keep, and the
+interface cannot quietly let a meaningful conversation vanish under the member's
+reasonable assumption that it was stored. A system that is correct in its code
+and misleading in its surface has not honoured the member — it has only honoured
+the audit.
+
 ## Existing seams (evidence, not a decision)
 
 Scoped in-place MAIA conversation already exists in three shapes on canonical:
@@ -97,3 +122,18 @@ implementation question this contract does not settle.
   significant is not silently lost either — the member must be able to see that
   nothing was saved, rather than assume it was. Ephemeral must be *legible*,
   not merely true.
+
+## Lane state — frozen here
+
+```text
+REFLECTIONS-MAIA-01
+  contract               OPEN
+  implementation         UNAUTHORIZED
+
+  source Keep            unchanged
+  MAIA exchange          ephemeral
+  automatic persistence  prohibited
+  later Keep             explicit member confirmation only
+  persistence status     must be legible
+  exact UI/copy          deferred
+```
