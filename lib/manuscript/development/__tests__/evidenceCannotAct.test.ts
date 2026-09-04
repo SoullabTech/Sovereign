@@ -31,6 +31,7 @@ describe('the developmental-evidence substrate cannot act', () => {
   const FORBIDDEN_IMPORTS = [
     '@anthropic-ai', 'anthropic', 'openai', 'ollama',
     'structure/maiaReader', 'ask/askReader', 'lib/ai', 'lib/maia', 'lib/oracle',
+    'developmentalReader',
     'structure/proposalStore', 'structure/structureService', 'structure/authorStructure',
     'structure/reviewOperationParser', 'writersStudio/',
   ];

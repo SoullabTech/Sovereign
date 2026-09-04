@@ -1,6 +1,6 @@
 # JARVIS-WS2-07-DEVELOPMENTAL-INTELLIGENCE-01
 
-> **Lane active. BUILD-07B IMPLEMENTATION OPEN (founder, 2026-09-04) — the contract and falsifiers are canonical @ `40532a5a5`. Closure is two-gated: Gate A structural, Gate B live reader witness. Nothing beyond BUILD-07B is authorized.**
+> **Lane active. BUILD-07B CLOSED / ACCEPTED (founder, 2026-09-04) — Gate A and Gate B both PASS on candidate `421f25bd6`; canonical on merge. BUILD-07C opens only by its own act.**
 >
 > This document defined the lane before it was entered. Originally it authorized **no
 > implementation**. As of the 2026-09-04 founder act recorded below, it authorizes **only the
@@ -11,13 +11,12 @@
 
 ```text
 LANE               JARVIS-WS2-07-DEVELOPMENTAL-INTELLIGENCE-01
-STATE              ACTIVE · BUILD-07B IMPLEMENTATION OPEN (founder, 2026-09-04)
-                   contract + falsifiers canonical @ 40532a5a5 (PR #1188)
+STATE              ACTIVE · BUILD-07B CLOSED / ACCEPTED (founder, 2026-09-04) · canonical on merge
+                   candidate 421f25bd6 · Gate A 36/0 · Gate B 10/0 (claude-opus-5)
                    BUILD-07A CLOSED / ACCEPTED · canonical @ 27ec9f895
 TRIGGER            Stage 6A AuthorStructureCommand merged to canonical and witnessed
 TRIGGER SATISFIED  clean-main-no-secrets @ 4b8b34bcf
-AUTHORIZES         exact BUILD-07B reader implementation only · structural Gate A ·
-                   bounded Gate B witness machinery (see the 2026-09-04 opening block)
+AUTHORIZES         nothing — BUILD-07B is closed; BUILD-07C opens only by its own act
                    BUILD-07C–H unauthorized
 NO                 route · UI / Develop surface · persistence / database-schema change · BUILD-07C+
 NORMATIVE          docs/programme/WRITERS_STUDIO_MASTER_BRIEF.md
@@ -277,6 +276,42 @@ the architecture; a component that has never read anything is not a reader)
 CUSTODY           single writer on the implementation branch; candidate named by exact SHA;
                   founder-visible witness rerun before closure (the 07A pattern)
 STATE             BUILD-07B IMPLEMENTATION OPEN · no candidate yet
+```
+
+```text
+2026-09-04 · BUILD-07B CANDIDATE — GATE A PASS · STRUCTURALLY PROVED · NOT CLOSED
+CANDIDATE         421f25bd6 (claude/writer-author-studios-roadmap-b2tqf5), built against canonical
+                  201649426; reader module lib/manuscript/developmentalReader/* — records and
+                  witness scripts only above it
+GATE A            scripts/ws2-07b-reader-gate-a.ts → 36 checks · 0 failures on 421f25bd6 (seam
+                  refusing by policy, adapter never loaded) · jest 42 + 6 (both module-graph
+                  gates, negative control red) · module typecheck clean · npm run typecheck no
+                  regression · governance checks green
+                  F1–F20 PASS · O1–O6 PASS
+READER            DEVELOPMENTAL-READER-01 · prompt-contract
+                  fe83e6326b64e1ce647e015ec0e057b7b149c96499f1667f9fdec58a4d3a5981
+RECORD            docs/programme/WS2-07-BUILD-07B_READER_WITNESS_2026-09-04.md
+GATE B            PENDING — scripts/ws2-07b-reader-gate-b.ts pinned to the candidate's reader
+                  blob ids; one invented six-section fixture; one live call; runs from the Mac
+                  (no provider key in the remote session). Dry run there: machinery proven, seam
+                  refused by provider — NOT Gate B evidence.
+STATE             BUILD-07B CANDIDATE 421f25bd6 · STRUCTURALLY PROVED · NOT CLOSED · GATE B PENDING
+```
+
+```text
+2026-09-04 · BUILD-07B CLOSURE — Gate B PASS · founder-run
+GATE B            scripts/ws2-07b-reader-gate-b.ts on worktree @ caa11e77d (reader byte-identical
+                  to 421f25bd6) · one live runStructured call · resolved model claude-opus-5 ·
+                  10 checks · 0 failures · 24,828 ms · record in founder custody
+                  (~/maia-witness-logs/ws2-07b-gate-b.json)
+                  Two earlier runs failed at the provider layer (empty key; invalid key) and were
+                  classified as environment, not reader evidence; nothing changed between them
+                  and the pass.
+QUESTION ANSWERED did the actual reader execute the contract Gate A proved — YES. Quality of the
+                  noticing not adjudicated (07C / real-Work proof).
+RECORD            docs/programme/WS2-07-BUILD-07B_READER_WITNESS_2026-09-04.md §3–§4
+STATE             BUILD-07B CLOSED / ACCEPTED (founder, 2026-09-04) · canonical on merge of the
+                  candidate PR · BUILD-07C NOT opened by this closure
 ```
 
 ## Prerequisite — SECTION-ADDRESSABLE DRAFT LIVENESS
