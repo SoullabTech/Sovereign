@@ -13,6 +13,13 @@
  *
  * Constitutional behavior:
  *  - The handle is quiet: small, static, no pulse, no badge, never auto-opens.
+ *  - Three concepts, deliberately NOT one boolean:
+ *      canHost    — may MAIA be hosted here at all (governed room + signed-in
+ *                   member + session). Constitutional/platform permission.
+ *      showHandle — does this surface OFFER MAIA unprompted (place.ts
+ *                   handleVisibility). Experiential; narrower than canHost.
+ *      openMaiaWith — an explicit member invocation carrying a scoped
+ *                   contribution. Works wherever canHost holds, handle or not.
  *  - MAIA never speaks first from this surface; opening the sheet shows the
  *    conversation — it does not trigger a message.
  *  - Place context is held here and travels ONLY inside a message the member
@@ -42,6 +49,7 @@ import { getOrCreateMaiaSessionId } from '@/lib/maia/presence/conversationIdenti
 import {
   type MaiaPlaceContext,
   isFullConversationRoute,
+  isMaiaHandleVisible,
   placeFromPathname,
   resolveGovernedRoom,
 } from '@/lib/maia/presence/place';
@@ -169,6 +177,12 @@ export function MaiaPresence({ children }: { children: React.ReactNode }) {
   // routes get children only — no member state, no handle, nothing.
   const showPresence = hasMember && !!governedRoom && !fullSurface && !!sessionId;
 
+  // The handle is offered on a NARROWER set of surfaces than presence can host.
+  // A room may be fully MAIA-capable and still not advertise — e.g. an index or
+  // feed with no object in view. The sheet itself renders on showPresence, so a
+  // member gesture (openMaiaWith) still opens MAIA where the handle is hidden.
+  const showHandle = showPresence && isMaiaHandleVisible(pathname, place);
+
   const value = useMemo<MaiaPresenceValue>(
     () => ({ place, isOpen, openMaia, openMaiaWith, closeMaia, registerPlace, canHost: showPresence }),
     [place, isOpen, openMaia, openMaiaWith, closeMaia, registerPlace, showPresence],
@@ -199,8 +213,9 @@ export function MaiaPresence({ children }: { children: React.ReactNode }) {
 
       {showPresence && (
         <>
-          {/* Quiet handle — static, small, clearly MAIA, never pulses or auto-opens */}
-          {!isOpen && (
+          {/* Quiet handle — static, small, clearly MAIA, never pulses or auto-opens.
+              Gated on showHandle, not showPresence: see the three concepts above. */}
+          {showHandle && !isOpen && (
             <button
               type="button"
               onClick={openMaia}

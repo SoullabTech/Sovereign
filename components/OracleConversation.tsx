@@ -193,6 +193,7 @@ import { ElementDiscovery } from './discovery/ElementDiscovery';
 import { WisdomCouncilPicker } from './wisdom/WisdomCouncilPicker';
 import { CurrentTeachingModal } from './wisdom/CurrentTeachingModal';
 import { consumeMaiaSeed, setReturnPath, getReturnPath, clearReturnPath, type ConsumedSeed } from '@/lib/maia/seedPrompt';
+import { decideInjection } from '@/lib/maia/presence/injection';
 import { generateWelcomeGreeting } from '@/lib/maia/welcomeGreeting';
 import { ELDER_COUNCIL_TRADITIONS, type WisdomTradition } from '@/lib/consciousness/ElderCouncilService';
 import { ConversationStylePreference } from '@/lib/preferences/conversation-style-preference';
@@ -6653,14 +6654,14 @@ I'm not sure what I'm feeling yet.`;
   // relationship from inside a room, not starting a second one.
   const lastInjectedNonceRef = useRef<number | null>(null);
   useEffect(() => {
-    if (!injectedMessage) return;
-    const { text, nonce } = injectedMessage;
-    if (lastInjectedNonceRef.current === nonce) return;
-    lastInjectedNonceRef.current = nonce;
-    const payload = text?.trim();
-    if (!payload) return;
+    const decision = decideInjection(lastInjectedNonceRef.current, injectedMessage);
+    if (decision.nonce !== null) lastInjectedNonceRef.current = decision.nonce;
+    if (!decision.send || !decision.text) return;
     setHasActivated(true); // skip the welcome screen; the member already spoke
-    handleTextMessage(payload);
+    // NOTE: no setMessages([]), no historicalMessagesRef reset, no transcript
+    // storage removal — unlike the seed processor above. The prior turns are
+    // the relationship this message is being brought INTO.
+    handleTextMessage(decision.text);
   }, [injectedMessage, handleTextMessage]);
 
   // Handle voice transcript from mic button
