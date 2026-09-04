@@ -20,10 +20,22 @@
  *    is deliberately NOT carried: the member kept a distillation, and only the
  *    distillation travels unless they type more themselves.
  *
- * 3. NO NEW PERSISTENCE. This writes nothing. It uses the existing one-shot
- *    seed-prompt channel (lib/maia/seedPrompt), the same mechanism the
- *    Relational Field and Guide already use, and hands the member a return path
- *    back to this reflection.
+ * 3. THE MEMBER DOES NOT LEAVE THE REFLECTION. The conversation opens OVER
+ *    this page through the canonical presence layer (MaiaPresence) — the same
+ *    single conversation, the same session, with the reflection still on screen
+ *    behind it. Closing the sheet returns the member to exactly where they were.
+ *    There is no navigation to /maia, so there is no return path to hand back.
+ *
+ *    The message APPENDS to the running conversation rather than starting a
+ *    fresh one: the member is bringing this reflection into the relationship
+ *    they already have, not opening a second one. (The seed-prompt channel,
+ *    which clears the transcript and navigates, is kept only as the fallback
+ *    for the case where presence cannot host the conversation here — e.g. a
+ *    surface where the sheet is suppressed.)
+ *
+ * 4. NO NEW PERSISTENCE. This writes nothing of its own. Place context tells
+ *    MAIA only that a reflection is open (type + id) — never its contents; the
+ *    contents travel solely inside the message the member reads and sends.
  *
  * Growth-obligation answers (CLAUDE.md): the uncertainty preserved is WHAT THE
  * REFLECTION MEANS — that stays with the member and is never pre-answered here.
@@ -36,6 +48,7 @@ import React, { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { MessageCircle, ArrowRight } from 'lucide-react';
 import { seedMaiaPrompt } from '@/lib/maia/seedPrompt';
+import { useMaiaPresence } from '@/components/maia/presence/MaiaPresence';
 import type { CapsuleDTO } from '@/lib/capsules/types';
 
 /**
@@ -77,6 +90,7 @@ export interface DiscussWithMaiaProps {
 
 export default function DiscussWithMaia({ capsule }: DiscussWithMaiaProps) {
   const router = useRouter();
+  const presence = useMaiaPresence();
   const context = useMemo(() => reflectionContext(capsule), [capsule]);
   const [opening, setOpening] = useState<string | null>(null);
   const [message, setMessage] = useState(context);
@@ -90,9 +104,20 @@ export default function DiscussWithMaia({ capsule }: DiscussWithMaiaProps) {
   const discuss = () => {
     const prompt = message.trim();
     if (!prompt) return;
+
+    // The conversation comes to the reflection, not the other way around: the
+    // presence sheet opens over this page with the member's message sent into
+    // the conversation they already have.
+    if (presence?.canHost) {
+      presence.openMaiaWith(prompt);
+      return;
+    }
+
+    // Fallback only — presence cannot host here (signed-out, or a surface where
+    // the sheet is suppressed). Then, and only then, the member is moved, and
+    // is given the way back to THIS reflection rather than the feed.
     // seedMaiaPrompt, not seedFromSource: the registry's generic label and
-    // return path would override the ones that matter here — this reflection's
-    // own title, and the way back to THIS reflection rather than the feed.
+    // return path would override the ones that matter here.
     seedMaiaPrompt({
       prompt,
       source: 'reflections:capsule',
@@ -113,8 +138,8 @@ export default function DiscussWithMaia({ capsule }: DiscussWithMaiaProps) {
         </h3>
       </div>
       <p className="text-stone-500 text-[13px] leading-relaxed mb-5">
-        Bring this reflection back into conversation. You choose what to ask — MAIA has not
-        read anything into it.
+        Bring this reflection back into conversation — MAIA opens here, over the reflection.
+        You choose what to ask; MAIA has not read anything into it.
       </p>
 
       {/* Openings — the member's questions, not MAIA's observations */}
@@ -150,7 +175,7 @@ export default function DiscussWithMaia({ capsule }: DiscussWithMaiaProps) {
       />
       <p className="mt-2 text-[12px] text-stone-400 leading-relaxed">
         Edit or clear this before sending. Only what you see here travels — the original
-        conversation excerpt stays here.
+        conversation excerpt stays here. The reflection stays open behind the conversation.
       </p>
 
       <button

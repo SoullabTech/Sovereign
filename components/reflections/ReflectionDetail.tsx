@@ -11,6 +11,9 @@
  * The one addition beyond the extraction is the "Discuss this with MAIA"
  * section at the foot of the page — see DiscussWithMaia.tsx for the constraints
  * it holds (no manufactured interpretation, visible transfer, no persistence).
+ * That conversation opens OVER this page via the canonical presence layer; the
+ * member is never moved to /maia. The place registered below is facts-only —
+ * MAIA learns that a reflection is open and its id, never its contents.
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
@@ -39,6 +42,7 @@ import {
 import type { LucideIcon } from 'lucide-react';
 import type { CapsuleDTO, Element } from '@/lib/capsules/types';
 import DiscussWithMaia from './DiscussWithMaia';
+import { useMaiaPlace } from '@/components/maia/presence/MaiaPresence';
 
 // Element icons mapping.
 // Typed as LucideIcon rather than React.FC<{ className?: string }> — the call
@@ -67,6 +71,17 @@ export interface ReflectionDetailProps {
 
 export default function ReflectionDetail({ id }: ReflectionDetailProps) {
   const router = useRouter();
+
+  // Facts-only place registration: which room, which object is open. No
+  // contents, no dwell time, no inference — and it transmits nothing on its
+  // own; it rides only a message the member chooses to send.
+  useMaiaPlace({
+    placeId: 'reflections',
+    placeName: 'Reflections',
+    purpose: 'The reflections this member chose to keep, and where they reopen one.',
+    objectType: 'reflection',
+    objectId: id,
+  });
 
   const [capsule, setCapsule] = useState<CapsuleDTO | null>(null);
   const [loading, setLoading] = useState(true);

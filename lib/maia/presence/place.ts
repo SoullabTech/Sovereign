@@ -34,6 +34,23 @@ export interface GoverendRoom {
   /** Route prefix that identifies this room (longest match wins). */
   routePrefix: string;
   purpose: string;
+  /**
+   * When the quiet MAIA handle is ADVERTISED in this room. Eligibility and
+   * affordance are deliberately separate concepts:
+   *
+   *   - being a governed room  → MAIA may be hosted here (permission)
+   *   - handleVisibility       → MAIA is offered unprompted here (experience)
+   *
+   * 'room'   — the whole room advertises the handle (default).
+   * 'object' — only while the member has a specific object open. A room-level
+   *            surface (an index or feed) has no particular referent, so an
+   *            unprompted handle there would say "MAIA is generally present
+   *            in this room" rather than "bring THIS thing into conversation".
+   *            The member can still reach MAIA from such a surface through an
+   *            explicit in-room gesture (openMaiaWith) — this governs only
+   *            what the room offers on its own.
+   */
+  handleVisibility?: 'room' | 'object';
 }
 
 /**
@@ -56,6 +73,12 @@ export const GOVERNED_ROOMS: readonly GoverendRoom[] = [
   { placeId: 'moments', placeName: 'Marked Moments', routePrefix: '/maia/moments', purpose: 'The moments this member chose to keep from conversation.' },
   { placeId: 'anchor-history', placeName: 'Daily Anchors', routePrefix: '/maia/anchor', purpose: 'The member\'s daily anchors and their history.' },
   { placeId: 'guides', placeName: 'Guides', routePrefix: '/guides', purpose: 'Written guides and videos about how this place works.' },
+  // Reflections is a MAIA-capable place, but only ONE kept reflection open on
+  // screen gives "discuss this" a referent — see handleVisibility above. The
+  // feed stays quiet (founder ruling 2026-09-04); whether MAIA should be
+  // generally present across Reflections is a broader product question this
+  // repair does not settle.
+  { placeId: 'reflections', placeName: 'Reflections', routePrefix: '/reflections', purpose: 'The reflections this member chose to keep, and where they reopen one.', handleVisibility: 'object' },
   { placeId: 'studio', placeName: 'Studio', routePrefix: '/studio', purpose: 'A workspace where practitioners develop their practice, programs, and projects.' },
   { placeId: 'decisions', placeName: 'Decisions', routePrefix: '/studio/decisions', purpose: 'A room for naming and reflecting on decisions.' },
   { placeId: 'changes', placeName: 'Changes', routePrefix: '/studio/changes', purpose: 'A room for noticing and reflecting on transitions over time.' },
@@ -83,6 +106,25 @@ export function resolveGovernedRoom(pathname: string): GoverendRoom | null {
 /** True when the pathname is a full conversation surface (suppress handle/sheet). */
 export function isFullConversationRoute(pathname: string): boolean {
   return FULL_CONVERSATION_ROUTES.some(r => pathname === r);
+}
+
+/**
+ * Whether the quiet MAIA handle should be OFFERED here — an experiential
+ * decision, distinct from whether MAIA may be hosted here at all (that is
+ * governed-room membership plus the runtime member/session gate, resolved in
+ * MaiaPresence). A room can be fully MAIA-capable and still not advertise.
+ *
+ * Never widens eligibility: an ungoverned route or a full conversation surface
+ * is false regardless of what place is registered.
+ */
+export function isMaiaHandleVisible(pathname: string, place: MaiaPlaceContext | null): boolean {
+  const room = resolveGovernedRoom(pathname);
+  if (!room) return false;
+  if (isFullConversationRoute(pathname)) return false;
+  if (room.handleVisibility === 'object') {
+    return Boolean(place?.objectType && place?.objectId);
+  }
+  return true;
 }
 
 /** Derive a facts-only place context from a pathname via the registry. */

@@ -193,6 +193,7 @@ import { ElementDiscovery } from './discovery/ElementDiscovery';
 import { WisdomCouncilPicker } from './wisdom/WisdomCouncilPicker';
 import { CurrentTeachingModal } from './wisdom/CurrentTeachingModal';
 import { consumeMaiaSeed, setReturnPath, getReturnPath, clearReturnPath, type ConsumedSeed } from '@/lib/maia/seedPrompt';
+import { decideInjection } from '@/lib/maia/presence/injection';
 import { generateWelcomeGreeting } from '@/lib/maia/welcomeGreeting';
 import { ELDER_COUNCIL_TRADITIONS, type WisdomTradition } from '@/lib/consciousness/ElderCouncilService';
 import { ConversationStylePreference } from '@/lib/preferences/conversation-style-preference';
@@ -502,6 +503,17 @@ interface OracleConversationProps {
   // Travels ONLY inside a message the member sends; never transmitted on
   // route change, and never derived from behavior. See lib/maia/presence/place.ts.
   placeContext?: MaiaPlaceContext;
+  // 💬 IN-PLACE HANDOFF — a message composed by the member in a room (e.g. the
+  // "Discuss this with MAIA" section of a reflection) and sent into THIS
+  // conversation without leaving the room. The nonce is what makes it fire:
+  // the same text can be sent again, and a re-render never resends.
+  //
+  // Deliberately NOT the seed-prompt channel: a seed CLEARS the transcript and
+  // starts fresh, which is right when the member navigates to /maia, and wrong
+  // here — this brings the room's material INTO the ongoing conversation rather
+  // than replacing it. Nothing is injected that the member has not read and
+  // pressed send on.
+  injectedMessage?: { text: string; nonce: number } | null;
 }
 
 interface ConversationMessage {
@@ -655,6 +667,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   askMode: askModeProp,
   onAskModeChange: onAskModeChangeProp,
   placeContext,
+  injectedMessage,
 }) => {
   // Client router — doorway navigation must be client-side so the canonical
   // MaiaPresence provider (and this conversation, when it is the global
@@ -6633,6 +6646,23 @@ I'm not sure what I'm feeling yet.`;
       }, 100);
     }
   }, [handleTextMessage, sessionId]);
+
+  // ==================== IN-PLACE MESSAGE INJECTION ====================
+  // A room handed this conversation a message the member composed and sent
+  // (see injectedMessage in the props above). Unlike the seed processor it
+  // APPENDS to the running transcript — the member is continuing one
+  // relationship from inside a room, not starting a second one.
+  const lastInjectedNonceRef = useRef<number | null>(null);
+  useEffect(() => {
+    const decision = decideInjection(lastInjectedNonceRef.current, injectedMessage);
+    if (decision.nonce !== null) lastInjectedNonceRef.current = decision.nonce;
+    if (!decision.send || !decision.text) return;
+    setHasActivated(true); // skip the welcome screen; the member already spoke
+    // NOTE: no setMessages([]), no historicalMessagesRef reset, no transcript
+    // storage removal — unlike the seed processor above. The prior turns are
+    // the relationship this message is being brought INTO.
+    handleTextMessage(decision.text);
+  }, [injectedMessage, handleTextMessage]);
 
   // Handle voice transcript from mic button
   const handleVoiceTranscript = useCallback(async (transcript: string) => {
