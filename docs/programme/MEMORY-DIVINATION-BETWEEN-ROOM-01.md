@@ -81,7 +81,7 @@ Production witness, still owed:
 
 Gates on this branch: `npm run typecheck` exit 0, no regressions · 88 tests across the divination, canonical-turn and oracle suites · locally reported, not CI-certified (this branch carries no GitHub status contexts).
 
-## 5. Open question this cut does not answer
+## 5. Open question — closed before deploy
 
 Whether `getCurrentSession()` resolves the member on `/api/between/chat` in production. If it does not, `effectiveUserId` is `anon:<sessionId>`, the gate correctly refuses, and no divination participates — which would be an identity finding on the between surface, not a defect in this cut. Read-only check while the reading from 13:52 is still inside the 60-day window:
 
@@ -89,7 +89,7 @@ Whether `getCurrentSession()` resolves the member on `/api/between/chat` in prod
 ssh soullab@minisforum 'docker logs -t maia-sovereign --since 2h 2>&1 | grep -E "\[MAIA CONTEXT\]" -A 3 | grep -E "recognized|effectiveUserId" | tail -6'
 ```
 
-`recognized: true` means the witness can pass. `recognized: false` makes the identity question the next cut, ahead of any further divination work.
+**ANSWERED 2026-09-04, before deploy.** Three between turns at 14:02:28, 14:05:18 and 14:07:35 each logged `recognized: true` with `effectiveUserId: 'ce284751...'` — the member UUID prefix that the corrected census resolved from `members.id`, and the same key `divination_iching_readings.user_id` references. The gate will pass and the loader will find the 13:52 reading (`primaryHex 55`, well inside the 60-day window). No identity cut is owed on the between surface.
 
 ## 6. Witness protocol after deploy
 
