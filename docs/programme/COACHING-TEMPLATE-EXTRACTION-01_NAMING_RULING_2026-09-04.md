@@ -134,7 +134,45 @@ that reference it, of which the MAIA-owned ones are `lib/maia/presence/place.ts`
 `lib/maia/presence/postures.ts`, `lib/maia/roomComposition.ts`). The lane's FIND unit
 re-runs the census with a stated method before anything is decided from it.
 
-## 6. What this ruling does not do
+## 6. Opening gates (founder, 2026-09-04)
+
+`COACHING-TEMPLATE-EXTRACTION-01` is correctly named and unopened. It becomes implementation
+work only when all three hold:
+
+1. **Anti-Drift condition** satisfied, or explicitly waived by the founder, after the Jondi walk.
+2. **Provenance / custody adjudicated** sufficiently to distinguish reusable platform
+   architecture from Larry-specific or otherwise licensed material. Abstraction and renaming
+   never confer Soullab ownership; only adjudication does.
+3. **Coupling census re-run reproducibly**, with method and transitive depth attached. The
+   session-only numbers in §5 are orientation, not evidence.
+
+When the lane opens, the first act is discovery, not copying code:
+
+```text
+CTE-01 FIND
+───────────
+generic platform capability
+template-configurable capability
+Now What?-specific material
+shared Soullab dependency
+MAIA intelligence dependency
+data/schema dependency
+auth dependency
+deployment dependency
+provenance status
+```
+
+Every Now What? surface, module, table and string receives one row across those columns.
+
+**Likely technical hinge: the data boundary.** The first-order census suggests the visible
+Now What? code is small and MAIA coupling is narrow. What prevents transferability is that its
+persisted state has not been made an independent product boundary.
+
+**State carried forward**: naming decided · product hierarchy decided · provenance constraint
+binding · generalization frozen · extraction not opened. Nothing further is designed around
+the lane until the condition that freezes it changes.
+
+## 7. What this ruling does not do
 
 - Does not open `COACHING-TEMPLATE-EXTRACTION-01`. Opening it requires a founder directive
   after the Anti-Drift Law's condition (Jondi walk) is met or explicitly waived.
@@ -142,7 +180,7 @@ re-runs the census with a stated method before anything is decided from it.
 - Does not classify any Now What? surface as generic or Larry-owned.
 - Does not amend the Now What? five-state UX roadmap.
 
-## 7. Cross-references
+## 8. Cross-references
 
 - Master programme (deferred list updated to carry the lane name):
   `docs/design/now-what/reconciliation/NOW_WHAT_MASTER_PROGRAMME.md`
