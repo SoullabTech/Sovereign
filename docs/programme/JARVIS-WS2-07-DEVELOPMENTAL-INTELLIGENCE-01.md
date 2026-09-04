@@ -8,10 +8,10 @@
 
 ```text
 LANE               JARVIS-WS2-07-DEVELOPMENTAL-INTELLIGENCE-01
-STATE              ACTIVE · BUILD-07A OPEN · CANDIDATE BUILT (bfeb1a9) · INSTRUMENT v1 RATIFIED · AWAITING CHECKS 1+2
+STATE              ACTIVE · BUILD-07A CLOSED / ACCEPTED (founder, 2026-09-04) · canonical on merge
 TRIGGER            Stage 6A AuthorStructureCommand merged to canonical and witnessed
 TRIGGER SATISFIED  clean-main-no-secrets @ 4b8b34bcf
-AUTHORIZES         BUILD-07A DEVELOPMENTAL EVIDENCE only
+AUTHORIZES         nothing — BUILD-07A is closed; BUILD-07B opens only by its own act
                    BUILD-07B–H unauthorized
                    No reader, no model, no prompt, no schema, no route.
 NORMATIVE          docs/programme/WRITERS_STUDIO_MASTER_BRIEF.md
@@ -159,6 +159,24 @@ BUILD-07B         not begun in the closure commit or PR; authorized separately
                   after 07A reaches canonical
 STATE             BUILD-07A OPEN · CANDIDATE BUILT · INSTRUMENT RATIFIED ·
                   AWAITING CHECKS 1 + 2
+```
+
+```text
+2026-09-04 · BUILD-07A CLOSURE — founder acceptance
+CHECK 1           production PostgreSQL server_encoding = UTF8            PASS
+CHECK 2           founder-visible witness rerun, clean checkout 623d3e766,
+                  fresh UTF8 scratch database (baseline + canonical chain,
+                  PostgreSQL 17.7 Homebrew on the host) → 50 checks · 0 failures
+                                                                          PASS
+TIP AT CLOSURE    623d3e766 — code unchanged since bfeb1a9; no implementation
+                  after the accepted candidate; the closure commit is docs only
+CUSTODY           single writer for closure (founder ruling); remote tip verified
+                  unchanged before the closure commit
+RECORD            docs/programme/WS2-07-BUILD-07A_EVIDENCE_WITNESS_2026-09-03.md §9
+STATE             BUILD-07A CLOSED / ACCEPTED · INV-7b DEMONSTRATED ·
+                  F1–F10 PASS · O1–O6 PASS
+                  BUILD-07B–H unauthorized — 07B is the next unit and opens by
+                  its own act after this closure reaches canonical
 ```
 
 ## Prerequisite — SECTION-ADDRESSABLE DRAFT LIVENESS

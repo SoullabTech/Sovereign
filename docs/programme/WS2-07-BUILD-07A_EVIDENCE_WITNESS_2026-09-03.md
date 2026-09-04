@@ -4,9 +4,10 @@
 LANE            JARVIS-WS2-07-DEVELOPMENTAL-INTELLIGENCE-01 · BUILD-07A
 BOUND CANONICAL clean-main-no-secrets @ 8d04f1b9fd0b22a16c8e5673d47279fef3ada3a2
 CANDIDATE       claude/build-07a-developmental-evidence-n5tm37 @ bfeb1a9
-STATUS          CANDIDATE BUILT · WITNESSED IN SESSION · NOT CLOSED
-DATE            2026-09-03
-AUTHORIZES      nothing. BUILD-07B–H remain unauthorized.
+STATUS          CLOSED / ACCEPTED — founder act 2026-09-04 (§9). Sections 0–8 are the
+                candidate record as written on 2026-09-03 and are not amended.
+DATE            2026-09-03 · closure 2026-09-04
+AUTHORIZES      nothing. BUILD-07B–H remain unauthorized; 07B opens by its own act.
 ```
 
 ⛔ **This record does not close BUILD-07A.** Closure is a founder act. What is recorded here is
@@ -317,3 +318,58 @@ no route · no surface · no migration · no manuscript mutation
 no second durable prose store
 no closure of BUILD-07A · no opening of BUILD-07B
 ```
+
+## 9 · Closure — founder acceptance, 2026-09-04
+
+Both conditions of the closure gate in §7 were met on 2026-09-04, each as a founder-visible act
+outside any remote session. Recorded here as witnessed, not as intended.
+
+```text
+CHECK 1 · production PostgreSQL is UTF-8
+  ssh soullab@minisforum 'docker exec maia-postgres psql -U soullab maia_consciousness -tAc "SHOW server_encoding"'
+  RETURNED   UTF8                                                     PASS
+
+CHECK 2 · founder-visible witness rerun, from a clean checkout of the candidate
+  checkout   /Volumes/T7 Shield/maia-07a-witness — detached at 623d3e766,
+             git status --short empty; node_modules linked from the main checkout
+  database   maia_07a_witness — created fresh, ENCODING 'UTF8', TEMPLATE template0;
+             scripts/bootstrap-database.sh → 634 tables, 504 ledger rows;
+             scripts/apply-migrations.sh → "All migrations applied + invariants
+             verified"; ledger 513, latest 20260902000003_section_partition_
+             codepoint_semantics.sql, 708 public tables
+  command    DATABASE_URL=postgresql://soullab@localhost:5432/maia_07a_witness
+             npx tsx scripts/ws2-07a-evidence-witness.ts
+  RETURNED   50 checks · 0 failure(s)                                  PASS
+  evidence   ~/maia-witness-logs/WS2-07-BUILD-07A/check2-witness.623d3e766.log
+             ~/maia-witness-logs/WS2-07-BUILD-07A/closure-checks.623d3e766.txt
+```
+
+**Environment provenance, recorded because it was discovered during the rerun.** The Mac hosts
+two PostgreSQL servers. `localhost:5432` is **PostgreSQL 17.7 (Homebrew)**; the `maia-postgres`
+container publishes no host port, so host-side tooling never reaches it. CHECK 2 therefore ran on
+17.7 where the in-session run of §5 ran on 16.13 — the witness now holds on both. A first scratch
+attempt created the database inside the container and could not be reached from the host; it
+produced no result and is not evidence either way. An earlier attempt to bring the ordinary
+Homebrew `maia_consciousness` dev database forward applied three canonical migrations (ledger
+499 → 502) and halted on `20260830000003` against a pre-existing constraint from that database's
+own drifted history; it is recorded as a side effect and does not touch the candidate or the
+isolated witness.
+
+**Candidate at closure.** Tip `623d3e766`. Code unchanged since `bfeb1a9` — the two commits
+above it are records only. No BUILD-07A implementation was made after the accepted candidate, and
+none is made by the closure commit.
+
+**Custody.** The candidate branch was authored by one session (2026-09-03 23:57 → 2026-09-04
+00:13 UTC). On 2026-09-04 the founder ruled a single writer for closure: the closing session
+fetched the remote, verified the tip was still `623d3e766`, and made the closure commit from it.
+Had the tip moved, the rule was to stop and inspect, never to reconcile another writer's history.
+
+```text
+BUILD-07A     CLOSED / ACCEPTED   (founder, 2026-09-04)
+INV-7b        DEMONSTRATED
+F1–F10        PASS
+O1–O6         PASS
+BUILD-07B     not begun here — authorized separately, by its own act, after this
+              record reaches canonical
+```
+
