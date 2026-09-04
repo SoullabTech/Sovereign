@@ -4,7 +4,7 @@
 **Branch**: `feature/memory-organism-pass1-divination-01` (base: canonical `clean-main-no-secrets @ 6d093fb3a` + charter `33abdb482`)
 **Lineage**: the one that lives — `lib/maia/canonical-turn/**`, pdc-1 participation vocabulary, current `/list` canonical shadow. No Path B constructor. No second shadow.
 **Authorized by**: founder directive 2026-09-03. Single writer. **No minisforum deploy during BUILD.**
-**Status**: BUILD complete on branch — awaiting founder review → deploy through the lane → production witness (acceptance 9).
+**Status**: Cut 1B BUILD ACCEPTED (founder, 2026-09-03) · Cut 1A census DONE (§6) · Cut 1C BUILD complete on branch (§9) — awaiting founder review → deploy through the lane → production witness (acceptance 9).
 
 ---
 
@@ -88,27 +88,40 @@ ssh soullab@minisforum 'docker logs maia-sovereign --since 1h 2>&1 | grep -E "di
 
 Proof 9 protocol (charter §7): the member asks about the earlier reading in an ordinary `/list` turn. Score: MAIA names the hexagram(s) from the record (not from conversational recall) → PASS. Absent → FALSE NEGATIVE, first-class defect; collect the three markers before any repair.
 
-## 6. Cut 1A — conversational census (founder runs, read-only)
+## 6. Cut 1A — production census (read-only, run by the founder 2026-09-03)
 
-Did the earlier I Ching exchange enter `conversation_turns`, and was it among the six rows the conversational loader retrieved? Candidate PRESENTED defect from the previous session: `conversationalRecallBlock.ts` clips each line at 280 chars — the member's message placed "61" at index ~273 and MAIA's reply named hexagrams past 378, so the retrieved rows may have been clipped before the hexagram text. This cut does not touch that clip (separate sub-cut, founder to authorize); it makes the *durable* reading reachable instead.
+**First attempt was INVALID** — my predicate used `user_id::text LIKE '88099bb1977c%'`, but that token is `memberRef()` = truncated SHA-256 of the id (`lib/privacy/memberRef.ts`), not a prefix. Zero rows in both tables were a query artifact. Corrected census matched by the same hash in SQL (`left(encode(sha256(user_id::bytea),'hex'),12)`), resolved the member (`ce284751…`), and returned:
 
-```sql
-SELECT to_char(created_at AT TIME ZONE 'UTC','HH24:MI:SS') AS utc, left(session_id::text,8) AS sess, role,
-       left(regexp_replace(content,'\s+',' ','g'),70) AS content
-FROM conversation_turns
-WHERE user_id::text LIKE '88099bb1977c%' AND created_at > NOW() - INTERVAL '36 hours'
-ORDER BY created_at;
+| Question | Result |
+|---|---|
+| conversation stored? | **YES** — 20 turns in 36h; the 15:59:05 member turn ("I am about to talk to Larry Closs…") and the 15:59:15 MAIA reply are in `conversation_turns`. The I Ching detail sits late in a 306-char message, i.e. past the 280-char clip in `conversationalRecallBlock.ts`. At 22:42:08 and 22:42:27 MAIA answered "I don't have the I Ching reading in front of me" while `[MAIA] conversational-block { candidateCount: 6, surfacedCount: 6 }` fired on those exact turns. **Witnessed false negative at PRESENTED/USED.** |
+| relevant durable reading? | **NO** — `divination_iching_readings` holds 5 rows all-time for this member, newest `2026-06-11` (hex 62→45). Nothing from 2026-09-02/03. |
+| all-time sanity | turns 27,661 · readings 5 — the predicate binds. |
 
--- and: is the reading durable at all?
-SELECT id, created_at, cast_method, primary_hex, relating_hex, question IS NOT NULL AS has_q, is_archived
-FROM divination_iching_readings WHERE user_id::text LIKE '88099bb1977c%' ORDER BY created_at DESC LIMIT 5;
-```
+**Outcome**: *conversation yes + relevant reading no* → Cut 1C authorized (founder's conditional authorization, condition met). Separately: the conversational clip is now a **witnessed** mechanism, not a hypothesis — still HELD by founder ruling, to be tested on its own merits after direct artifact recall works.
 
-If the second query returns zero rows, the reading was never persisted (the `/api/oracle/iching` route does not persist) and proof 9 cannot pass for that reading regardless of this cut — that is a finding about the write path, to record, not a defect in this lane.
+Note on Cut 1B's window: all five existing readings are older than 60 days, so on today's production data `[MAIA] divination-block` would report `candidateCount: 0` for this member. That is the window working, not a defect. The first in-window row arrives via Cut 1C.
+
+Note on where the 2026-09-02 reading was cast: the census cannot say. If it was cast outside the oracle route (physical coins, another app) Cut 1C would not have captured it either; 1C covers casts made through `POST /api/oracle/iching`. A member-entered ("manual") record path is a separate cut if wanted.
 
 ## 7. Exclusions honoured
 
-NO Path B constructor · NO second shadow · NO dream architecture · NO astrology expansion · NO symbolic-memory ontology redesign · NO P4/P5 · NO broad salience engine · NO M3 cutover · NO deploy-governance repair · NO change to the 280-char conversational clip · NO `memoryHealth` schema change (divination is not a health layer this cut) · NO deploy.
+NO Path B constructor · NO second shadow · NO dream architecture · NO astrology expansion · NO symbolic-memory ontology redesign · NO P4/P5 · NO broad salience engine · NO M3 cutover · NO deploy-governance repair · NO change to the 280-char conversational clip · NO `memoryHealth` schema change (divination is not a health layer this cut) · NO idempotency machinery on the oracle write · NO manual-entry reading path · NO deploy.
+
+## 9. Cut 1C — oracle I Ching persistence (BUILD complete, founder scope verbatim)
+
+Scope (founder, 2026-09-03): resolve the existing authenticated identity (never a body user_id; anonymous cast supported, does not persist) · produce the reading exactly as today · for a recognized member persist through `DivinationService.saveIChingReading()` (no new writer, table, or migration; both pre-cast and fresh-cast paths through the same seam) · persistence failure non-fatal, logged, no fabricated success · Cut 1B consumes the row unchanged · no idempotency machinery.
+
+| File | Change |
+|---|---|
+| `app/api/oracle/iching/route.ts` | identity via `getMemberIdFromRequest` (session credential only); reading construction factored into `produceFromPreCastLines` / `produceFreshCast`, each returning the unchanged member-facing response **and** a `SaveIChingInput` record; one `persistForMember` seam calling `divinationService.saveIChingReading`; response gains `persisted: boolean` and `readingId` when saved; failure → `persisted: false`, logged with `memberRef`, HTTP 200; an identity-store failure degrades to an anonymous (unpersisted) cast rather than a 500 |
+| `app/api/oracle/iching/__tests__/route.test.ts` | **new** — the nine pinned properties |
+
+Record mapping (from the cast the member was shown): `question` verbatim · `cast_method` from the request (validated against the store's set, default `yarrow`) · `primary_hex` / `primary_hex_name` (englishName, the name the response shows) · `line_values` = the pre-cast lines or `castReading.castLines` · `changing_lines` · `relating_hex` / `relating_hex_name` from the transformed hexagram · trigrams · `interpretation_text` / `guidance_text` = the house text the response carried (fresh path: `insight` / `soulGuidance`, which include the transformation note and changing-line text; pre-cast path: `soulInterpretation` / `guidance`) · `sacred_timing`. Under Cut 1B the resulting row partitions exactly as §2: question → member block, cast → computed block, interpretation/guidance → house block.
+
+Pinned (`route.test.ts`): anonymous → reading returned, writer never called (also with a body `user_id`) · member → exactly one save, scoped to the session-resolved id · body `user_id`/`userId`/`memberId` cannot choose another member (and never appear in the record) · pre-cast `line_values` persisted as sent · fresh-cast `line_values` persisted and recompute to the response hexagram · question verbatim · hexagram / relating / trigrams / changing lines / interpretation / guidance mapped from the same cast · writer null or throw → 200 with `persisted: false` · route source has no SQL, no `lib/db/postgres`, exactly one `saveIChingReading(` call, no `body.user_id` read.
+
+Production witness after deploy: cast on the oracle page as a signed-in member → `[oracle/iching] reading persisted { memberRef, readingId, primaryHex }` → next `/list` turn shows `[MAIA] divination-block { candidateCount: 1, emitted: true }` → ask MAIA about the reading (proof 9).
 
 ## 8. Growth-obligation answers (CLAUDE.md)
 
