@@ -317,8 +317,8 @@ not reach DEEP-primary at all: `memberWebAddendum`, `knowledgeGateAddendum`,
 `wuxingSnapshotAddendum`, `astrologyAddendum`, `practiceFieldAddendum`, `studioAddendum`,
 `placeAddendum`, `memoryInfluenceAddendum`, `forwardReadinessAddendum`, plus the three
 dead fields. Wu Xing — the *only* elemental contribution that reaches the prompt on
-FAST/CORE — is therefore absent on DEEP. A member who asks for depth gets less elemental
-and less contextual grounding than one who does not, and receives the full addenda set only
+FAST/CORE — is therefore absent on DEEP. A turn routed DEEP gets less elemental and less
+contextual grounding than one routed FAST or CORE, and receives the full addenda set only
 if the first attempt fails validation.
 
 `analyzeMessageComplexity` selects DEEP for the turns most likely to need orientation.
@@ -354,8 +354,8 @@ languageHints    0    0
 
 Every `posture` hit in `maiaService.ts` is either Sanctuary `TurnPosture` or the
 `governorAddendum` *text* — never the structured facet decision. **The most decision-shaped
-Spiralogic object in the system is computed on the secondary spine, handed across the
-convergence point, and dropped there unread.**
+Spiralogic orientation object traced in this census is computed on the secondary spine,
+handed across the convergence point, and dropped there unread.**
 
 The ranked memory bundle fares better but not much: `meta.memoryContext` is read at
 `maiaService.ts:861` on **FAST only**. CORE and DEEP each carry an explicit source
@@ -371,6 +371,11 @@ This is the least deeply traced item in Part 2 and is marked accordingly in §14
 
 Field key: **SR** = surface reach · **IS** = integration shape · **Alters?** = alters
 orientation / selection / intention / response formation, vs computed-contextualized-logged.
+
+**Status vocabulary is `SOURCE-*` throughout.** The call graph can establish source
+reachability; it cannot establish production witness. `SOURCE-LIVE` means *reachable on the
+live path by source*, never *witnessed in production*. Every status below remains
+`UNWITNESSED` at runtime (§16).
 
 ### Relational intelligence
 ```text
@@ -388,7 +393,7 @@ SR             /list primary; relationalContextAddendum is a separate member-han
 IS             direct model context
 EVIDENCE       source only — UNWITNESSED
 ALTERS?        contextualized only
-STATUS         LIVE
+SOURCE STATUS  SOURCE-LIVE
 ```
 
 ### Developmental intelligence
@@ -407,7 +412,7 @@ SR             both (/between shares the loaders)
 IS             direct model context (FAST) / computed-and-stranded (CORE, DEEP)
 EVIDENCE       source only — UNWITNESSED
 ALTERS?        selection at plan level; response formation only on FAST
-STATUS         PARTIAL
+SOURCE STATUS  SOURCE-PARTIAL
 ```
 
 ### Somatic-affective intelligence
@@ -420,7 +425,7 @@ SR             none
 IS             unknown / not implemented
 EVIDENCE       source only — UNWITNESSED
 ALTERS?        no
-STATUS         DORMANT — the flag exists; the intelligence does not
+SOURCE STATUS  SOURCE-DORMANT — the flag exists; the intelligence does not
 ```
 
 ### Resonant Field / Unified Field intelligence
@@ -438,19 +443,19 @@ IS             dormant
 EVIDENCE       source only — UNWITNESSED
 ALTERS?        no (enforceFieldSafety alters whether MAIA speaks at all — recorded
                separately in §7)
-STATUS         SEPARATE-SURFACE / DORMANT
+SOURCE STATUS  SOURCE-SEPARATE-SURFACE / SOURCE-DORMANT
 ```
 
 ### Symbolic intelligence beyond divination
 ```text
 DIVINATION     three provenance-separated blocks (intent / cast / interpretation) reach
                FAST, CORE and DEEP-consultation. The only symbolic material with an
-               unbroken path to cognition. STATUS: LIVE
+               unbroken path to cognition. SOURCE STATUS: SOURCE-LIVE
 I CHING (auto) buildReflectionFromConductor at maiaService.ts:~1648 (CORE) —
-               "Phase 1 — silent mapping only. No user-facing output." STATUS: SHADOW
+               "Phase 1 — silent mapping only. No user-facing output." SOURCE STATUS: SOURCE-SHADOW
 MYTHIC ATLAS   archetype/facet classification — logged; withheld from the router.
-               STATUS: SHADOW
-DREAMS         available.dreams hard-coded false — "layer not wired". STATUS: NOT WIRED
+               SOURCE STATUS: SOURCE-SHADOW
+DREAMS         available.dreams hard-coded false — "layer not wired". SOURCE STATUS: SOURCE-NOT-WIRED
 ALTERS?        divination: yes (contextualized, member-invoked). Others: no.
 ```
 
@@ -460,7 +465,7 @@ SR             both — reached through the shared getMaiaResponse, no separate 
 IS             shadow only, post-generation
 ALTERS?        no
 EVIDENCE       source only — UNWITNESSED. Least deeply traced item in Part 2.
-STATUS         SHADOW
+SOURCE STATUS  SOURCE-SHADOW
 ```
 
 ## 15. The actual graph
@@ -549,20 +554,93 @@ governor participate rather than be recomputed.
 are complementary rather than exclusive — but Gate 3 is the founder's, and Part 2 ends
 without choosing.
 
-## 18. Status
+## 18. Gate rulings — founder, 2026-09-04
+
+### Gate 2 — MET · SOURCE-COMPLETE
 
 ```text
-PART 1    ACCEPTED · amended in place (5 corrections: 2 founder-directed wording,
-          1 founder-directed count with a different verified split, 2 errors Part 2
-          exposed — the DEEP row and the /between convergence claim)
-PART 2    COMPLETE — DEEP interior · /between spine · required finding answered ·
-          5 domain evidence tables · reconciled graph · refreshed Gate 3 packet
-GATE 2    MET on source. NOT MET on runtime — every status is UNWITNESSED.
-GATE 3    packet ready for adjudication
-P6        CLOSED
-REPAIRS   none made
+GATE 2   ✅ MET · SOURCE-COMPLETE
+
+runtime corroboration   UNWITNESSED
+                        an evidence ceiling, not a blocker to architecture adjudication
 ```
 
-The comforting assumption is falsified twice over. MAIA's intelligences do not converge
-merely because they exist — and where the architecture *does* converge, at
-`getMaiaResponse()`, the richest orientation object in the system arrives and is not read.
+The census was required to map the actual source architecture and mark runtime facts
+honestly where unavailable. The governing allowance was `runtime cannot attest it →
+UNWITNESSED`, never `runtime unavailable → the census can never finish`. No second
+architecture gate requiring production traffic is created.
+
+**Runtime evidence becomes mandatory again the moment we build and claim a live behavioural
+change.** The convergence lane below inherits that obligation; the census does not discharge
+it.
+
+### Gate 3 — ADJUDICATED · **D → C′**
+
+```text
+SELECT  D → C′
+
+D   reuse the existing convergence point (getMaiaResponse)
+    reuse FacetDecisionLoop
+    reuse ranked MemoryBundle selection
+    make existing structured orientation actually participate
+
+C′  establish ONE shared participation contract across FAST / CORE / DEEP
+    WITHOUT requiring one identical prompt builder
+
+REJECT  A  unnecessary reinvention of Spiralogic intelligence that already exists
+        B  as an END STATE — provenance labels on today's accumulation make the pile
+           more truthful without making cognition unified; possibly useful as a
+           migration tactic, never the destination
+        C  as literal prompt-builder flattening
+```
+
+**Qualification carried into the ruling.** `FacetDecisionLoop` is not by itself MAIA's
+unified intelligence. It is the best existing Spiralogic orientation mechanism this census
+traced; `MemoryBundleService` adds ranked memory selection. Relational, developmental,
+symbolic, provenance and eventually field intelligence still need a truthful common
+participation contract. *We must not replace a pile of addenda with "FacetDecision owns
+everything."*
+
+**Why C became C′.** Part 2 showed DEEP has a genuinely different computational
+architecture — a local draft with no prompt seam by construction, a consultation seam, and a
+repair seam. Forcing one literal prompt-building function across FAST/CORE/DEEP would erase
+distinctions that are legitimate. What needs to converge is not the renderer but *what has
+been discerned as belonging, before rendering*:
+
+```text
+PERCEPTION / SOURCES
+  memory · relational · elemental/Spiralogic · developmental · symbolic · field when real
+        │
+        ▼
+SHARED PARTICIPATION + ORIENTATION CONTRACT
+        │
+        ├── FAST renders it appropriately
+        ├── CORE renders it appropriately
+        └── DEEP uses it through its own cognition architecture
+```
+
+One decision about what participates; potentially different legitimate ways of thinking with
+and rendering that decision.
+
+## 19. Closure
+
+```text
+CENSUS    CLOSED · SOURCE-COMPLETE
+GATE 2    ✅ MET
+GATE 3    ✅ ADJUDICATED — D → C′
+RUNTIME   UNWITNESSED (evidence ceiling, recorded in §16)
+REPAIRS   none made · 13 findings registered as a map, NOT a backlog
+P6        REMAINS CLOSED
+NEXT      MAIA-UNIFIED-COGNITION-CONVERGENCE-01
+```
+
+P6 does not open on this closure. Opening it now would ask provenance to land on fragmented
+cognition. The dependency the census changed:
+
+```text
+BEFORE    memory → truthful provenance → unified intelligence
+AFTER     memory → SHARED PARTICIPATION SEAM → truthful provenance → unified intelligence
+```
+
+The thirteen findings in §9 are a map of where the organism is fragmented. They are not a
+backlog to be swallowed whole by the next lane.
