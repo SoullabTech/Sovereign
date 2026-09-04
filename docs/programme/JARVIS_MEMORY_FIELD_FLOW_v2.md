@@ -103,16 +103,35 @@ No automatic leap into the next cut.
 
 ## 3. Current sequence under this flow
 
+> The next phase is not more memory. It is: make the memory MAIA already has flow through
+> one trustworthy nervous system on the live conversation surface. Then broaden the field.
+
 ```text
-DIVINATION            between-room repair deployed @ e3f379530 → finish Proof 9
-ATTRIBUTION / P6      claude/memory-attribution-p6-canonical-turn-01 (named, not created)
-PASS-1 COVERAGE       anchors · ideas/captures · significant moments · route scope ·
-                      280-char clip · atom-selection false negatives · remaining stores
-CONTINUITY MODE
-MULTI-DOMAIN LONGITUDINAL WITNESS
-BETA PASS 2
-PASS 3
+1  PROOF 9            close it — live signed-in turn, between-room block loaded the
+                      durable reading, member-experienced recall recorded
+2  MERGE DIVINATION   e3f379530 → canonical; record the witness; no refactor in the merge
+3  CUT 1              claude/canonical-turn-between-convergence-01
+                      /api/between/chat onto the single participation spine;
+                      behaviour-preserving; manifest + participation evidence on the
+                      actual live surface; no attribution redesign
+4  CUT 2              claude/memory-attribution-p6-canonical-turn-01
+                      member said ≠ MAIA inferred ≠ practitioner observed ≠ system
+                      computed, surviving into cognition; practitioner writer fix if
+                      the opening census confirms it
+5  PASS-1 REMAINDER   anchors · ideas/captures/organizing principles · significant
+                      moments · conversational route coverage · 280-char clip ·
+                      atom-selection false negatives · remaining stores
+6  CONTINUITY MODE    one standing member act; narrow / seal / retract / exclude
+7  LONGITUDINAL       5+ turns, multiple domains; score FP, FN, attribution, relevance;
+   WITNESS            test whether MAIA understands relationships among memories,
+                      not merely retrieves them
+8  BETA PASS 2        real members; lived failures and successes populate the census
+9  PASS 3             only then: explicit recollection · cross-domain association ·
+                      temporal change reasoning · relationship history · correction
+                      and retraction over time · salience intelligence
 ```
+
+Steps 1–4 are detailed in §4. Until `/api/between/chat` runs through the canonical participation boundary, MAIA's memory still reaches cognition two different ways.
 
 ## 4. Founder ruling 2026-09-04 — the live surface joins the spine before attribution
 
