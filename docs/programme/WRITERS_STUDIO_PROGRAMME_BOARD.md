@@ -31,13 +31,16 @@
 ```text
 PROGRAMME          WRITER'S STUDIO R2
 MODE               STAGE 7 BUILD
-BUILD MODE         OPEN — no unit currently authorized (BUILD-07B closed; 07C–H unauthorized)
-BOUND CANONICAL    40532a5a5 (clean-main-no-secrets, 2026-09-04 — 07B contract merged, PR #1188)
-CURRENT UNIT       BUILD-07B Developmental Reader — CLOSED / ACCEPTED (founder,
-                   2026-09-04); Gate A 36/0 · Gate B 10/0 (claude-opus-5);
+BUILD MODE         OPEN — no unit currently authorized (BUILD-07C closed; 07D–H unauthorized)
+BOUND CANONICAL    b20f2742e (clean-main-no-secrets, 2026-09-04 — BUILD-07B merged, PR #1190)
+CURRENT UNIT       BUILD-07C Developmental Reading — CLOSED / ACCEPTED (founder,
+                   2026-09-04); Gate A 27/0 · Gate B 13/0 (claude-opus-5);
                    canonical on merge of the candidate PR
                    lane: JARVIS-WS2-07-DEVELOPMENTAL-INTELLIGENCE-01
-CURRENT CANDIDATE  421f25bd6 — code unchanged since; records only above it
+CURRENT CANDIDATE  8a26a8971 — code unchanged since; witness + records only above it
+                   record: WS2-07-BUILD-07C_READING_WITNESS_2026-09-04.md §4
+PRIOR UNIT         BUILD-07B Developmental Reader — CLOSED / ACCEPTED (founder,
+                   2026-09-04); canonical @ b20f2742e; Gate A 36/0 · Gate B 10/0
                    record: WS2-07-BUILD-07B_READER_WITNESS_2026-09-04.md §4
                    census:   WS2-07-BUILD-07B_READER_BOUNDARY_CENSUS_2026-09-04.md (canonical)
                    contract: WS2-07-BUILD-07B_READER_CONTRACT_2026-09-04.md (canonical;
@@ -45,14 +48,14 @@ CURRENT CANDIDATE  421f25bd6 — code unchanged since; records only above it
 PRIOR UNIT         BUILD-07A Developmental Evidence — CLOSED / ACCEPTED (founder,
                    2026-09-04); canonical @ 27ec9f895
                    record: WS2-07-BUILD-07A_EVIDENCE_WITNESS_2026-09-03.md §9
-NEXT EXECUTABLE    merge the BUILD-07B candidate PR on green (founder Verified-by-Mentor
-                   line + merge word) → verify canonical → STOP. BUILD-07C
-                   Developmental Reading opens only by its own lane act
+NEXT EXECUTABLE    merge the BUILD-07C candidate PR on green (Class B: founder
+                   Verified-by-Mentor line + merge word) → verify canonical → STOP.
+                   BUILD-07D Develop Surface opens only by its own lane act
 WS-01              CLOSED — OVERTAKEN / SUPERSEDED (not accepted; see
                    Reconciliation record below)
 CANVAS FREEZE      RETIRED FROM LIVE STATE (never released by an act; see
                    Reconciliation record below)
-LAST UPDATED       2026-09-04 (BUILD-07B closed / accepted · Gate B PASS)
+LAST UPDATED       2026-09-04 (BUILD-07C closed / accepted · Gate B PASS)
 ```
 
 ## Reconciliation record — 2026-09-03 (founder adjudication of programme history)
@@ -111,14 +114,18 @@ Stage 7   ACTIVE
                       heading channel · one-way seam · eight closed non-conclusions;
                       F1–F20 / O1–O6). Closure: Gate A structural → STRUCTURALLY
                       PROVED; Gate B live reader witness on an invented fixture →
-                      CLOSED / ACCEPTED. Candidate 421f25bd6: Gate A PASS
-                      (36/0 · F1–F20 · O1–O6) · Gate B PASS (10/0, founder-run,
+                      CLOSED / ACCEPTED 2026-09-04 · canonical @ b20f2742e
+                      (Gate A 36/0 · Gate B 10/0, claude-opus-5)
+          BUILD-07C   IMPLEMENTATION OPEN · founder act 2026-09-04 · observation-
+                      only v1 · phenomenon = UNDERSTAND §4 family · one bounded
+                      classification call · two-gate closure. Candidate 8a26a8971:
+                      Gate A PASS (27/0) · Gate B PASS (13/0, founder-run,
                       claude-opus-5). CLOSED / ACCEPTED 2026-09-04; canonical
                       on merge.
           PREREQ      SECTION-ADDRESSABLE DRAFT LIVENESS · CLOSED
                       canonical @ 0fa4158e7 (PR #1174)
                       + Unicode repair @ 9411ddc41 (PR #1175)
-          BUILD-07C–H unauthorized
+          BUILD-07D–H unauthorized (07D opens by its own act after 07C is canonical)
 Stage 8   BLOCKED ON STAGE 7 CLOSURE
 ```
 
@@ -323,8 +330,12 @@ and it is the census a release record must carry under Amendment 5.
 ```text
 BUILD-07B · Developmental Reader — IMPLEMENTATION OPEN (founder act
             2026-09-04) against the canonical contract @ 40532a5a5. Flow:
-            candidate 421f25bd6 · Gate A PASS · Gate B PASS (founder-run) →
-            CLOSED / ACCEPTED 2026-09-04. Awaiting merge on green.
+            CLOSED / ACCEPTED, canonical @ b20f2742e.
+BUILD-07C · Developmental Reading — CLOSED / ACCEPTED 2026-09-04
+            (candidate 8a26a8971 · Gate A 27/0 · Gate B 13/0). A frozen,
+            durable DevelopmentalReading exists on canonical once merged:
+            identity, observations, phenomenon, provenance, immutability,
+            three-state supersession. Awaiting merge on green.
             No route, surface, persistence, or 07C-shaped object.
             Lane: JARVIS-WS2-07-DEVELOPMENTAL-INTELLIGENCE-01.
 ```
