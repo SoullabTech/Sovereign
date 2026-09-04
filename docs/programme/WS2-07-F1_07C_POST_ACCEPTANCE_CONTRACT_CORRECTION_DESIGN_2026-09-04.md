@@ -5,7 +5,17 @@ Lane: `JARVIS-WS2-07-DEVELOPMENTAL-INTELLIGENCE-01` → 07D → WS2-07-F1.
 
 ---
 
-## 0 · The defect, as ruled
+## 0 · The governing principle
+
+> **Observation has ontological priority over classification: the taxonomy may
+> describe a developmental observation, but it may neither manufacture one nor
+> veto one.**
+
+That sentence is the whole correction, and it is why per-observation absence is
+the right shape: the developmental reader owns the observation; the classifier
+owns only the optional taxonomy claim about it.
+
+## 0.0 · The defect, as ruled
 
 > A descriptive taxonomy was accidentally given veto power over developmental
 > observation.
@@ -157,11 +167,26 @@ are `READER_VERSION` (`DEVELOPMENTAL-READER-02`) and `CLASSIFIER_VERSION`
 changes neither the reader's prompt nor the classifier's; it changes the shape
 a reading is allowed to have.
 
-**Proposed**: a new `READING_CONTRACT_VERSION`, stamped into
-`DevelopmentalReadingProvenance`, `-01` for the pre-correction shape and `-02`
-after. A reading then says which contract it was frozen under, and a future
-reader of an old record can tell that its singular phenomenon was mandatory
-rather than merely present.
+**Ruled**: a new `READING_CONTRACT_VERSION` stamped into
+`DevelopmentalReadingProvenance`. The corrected contract is **v2**.
+
+**v1 is identified by the ABSENCE of the field, and is never backfilled.**
+Calling the corrected contract v1 would erase the governance history being
+preserved; stamping `-01` onto historical rows would do the same by rewriting
+them. So:
+
+```text
+v1   accepted contract — an observation REQUIRED a phenomenon classification
+     identified by: no READING_CONTRACT_VERSION field present
+     historical rows keep their existing shape, untouched
+
+v2   corrected contract — a developmental observation MAY exist without one
+     identified by: READING_CONTRACT_VERSION present, v2
+     new readings only
+```
+
+The absence of the field on a historical row is itself the evidence of the
+legacy contract. The correction moves forward; it does not reach back.
 
 **And a second provenance problem, which is easy to miss.** Today:
 
@@ -221,14 +246,149 @@ non-degrading.
 
 ---
 
-## Decisions this design puts to the founder
+## Decisions — ADJUDICATED 2026-09-04
 
-1. **Per-observation** absence rather than per-reading — §1.
-2. **Absence only**, rejecting explicit `null` — §4.
-3. **`READING_CONTRACT_VERSION`** as the place the correction is recorded — §5.
-4. **How the third provenance state is represented** — classifier ran and
-   declined, distinct from no classifier — §5.
-5. **Member-facing wording** when phenomenon is absent — §7.
+All five were put to the founder and all five are ruled. Recorded as ruled, not
+as proposed.
+
+**1 · Absence is per observation.** A reading is a collection of observations;
+classification success or refusal belongs to each independently. One declined
+classification may not erase taxonomy from its siblings. This also keeps the
+correction minimal — taxonomy loses its veto over an observation, it is not
+weakened everywhere.
+
+**2 · Absence by omission only.** `phenomenon?: DevelopmentalPhenomenon`, never
+`| null`. One representation for "no classification was assigned", so a missing
+field means precisely that and nothing else. Two serialized states with no
+semantic distinction between them is the thing being avoided.
+
+**3 · `READING_CONTRACT_VERSION` is introduced.** The correction changes neither
+what the reader prompt means nor what the classifier taxonomy means; it changes
+what constitutes a valid persisted reading. So neither existing version absorbs
+it. `DEVELOPMENTAL-READING-CONTRACT-02`, with the existing shape understood as
+`-01`. **Model provenance and reading-contract provenance are separate
+dimensions**, and the contract version is never inferred from the classifier
+version. A frozen reading should eventually be able to say which reader produced
+the claims, which classifier interpreted them, and which contract admitted them.
+
+**4 · Ran-and-declined is derived, not stored.** `classifier: null` keeps its
+meaning — *no classification act ran*. A classifier that ran and declined
+everything is still identified by `classifier`, because it did run. No
+reading-level `classifierDeclined` flag: it is derivable, and storing redundant
+state invites later contradiction with the observations themselves.
+
+```text
+no observations                  -> classifier: null
+observations, some classified    -> classifier: identity, some carry phenomenon
+observations, all declined       -> classifier: identity, none carry phenomenon
+```
+
+**5 · Member-facing: no replacement badge.** When phenomenon is present, the
+existing human-readable label stands. When absent, **nothing** is shown in its
+place — not "Unclassified", "Other", "Unknown", "No phenomenon", or "MAIA
+couldn't classify this". Each of those turns taxonomy absence into content and
+subtly degrades the observation. The observation stands on its own. Inspection
+and provenance views may state it precisely — *"Phenomenon classification: not
+assigned"* — but that belongs to provenance, not the ordinary writer
+experience. Where a surface genuinely needs explanatory microcopy, the ruled
+wording is *"No current phenomenon label applies."* — and most ordinary
+member-facing surfaces should simply omit the label rather than reach for it. The writer came to Develop to encounter what MAIA noticed, not to
+watch the taxonomy fail gracefully.
+
+### INV-25, replacement text
+
+> `classifier === null` iff classification was not invoked. A persisted reading
+> containing observations retains classifier identity even when the classifier
+> makes zero phenomenon claims.
+
+**And the stronger persisted form holds in this pipeline — verified, not
+assumed.** `commission.ts:70-78` invokes `classifyClaims` unconditionally
+whenever `result.outcome === 'claims'`, so classification is always attempted
+when there are claims. Therefore:
+
+> **observations present ⇒ `classifier !== null`**
+
+is a persistable invariant, not merely a description, and may be enforced. The
+existing `classifier_presence_mismatch` refusal already guards its converse.
+
+---
+
+## Implementation plan — bounded, NOT AUTHORIZED
+
+Nine deltas. Each names its site. Nothing here is written.
+
+### A finding that shapes the whole plan
+
+**The classifier's semantics need no change at all.** `CLASSIFIER_SYSTEM:78`
+already instructs the model to answer `unclassifiable` **for that claim** — per
+claim, not per reading. The prompt has always been right. The defect is
+entirely downstream, in what the parse does with that answer:
+
+```ts
+// classify.ts, inside parseClassifierBlocks
+if (c.phenomenon === UNCLASSIFIABLE) {
+  return refuse('classifier_unclassifiable', `claim ${c.index} ...`, c.index);
+}
+```
+
+It returns on the **first** decline and discards every later one. So a
+per-observation correction cannot be implemented outside this function: the
+refusal carries one index, and the information about the others is destroyed
+before any other module sees it.
+
+**Decision required before implementation.** `classify.ts` is frozen. This plan
+needs a return-shape change inside it — and **no change to its prompt, rules,
+family, or version**. Either:
+
+- **(i)** the freeze is understood as *semantic* — prompt, rules, taxonomy,
+  version — in which case plumbing changes are in scope for the corrective
+  unit; or
+- **(ii)** the freeze is literal on the file, and `parseClassifierBlocks` must
+  be lifted into the corrective unit's own module.
+
+I recommend **(i)**. Option (ii) fragments one classifier contract across two
+modules for a governance reason rather than a design reason, and the frozen
+thing everyone has been protecting — the semantics — is untouched either way.
+
+### The nine deltas
+
+| # | delta | site |
+| --- | --- | --- |
+| 1 | `phenomenon` becomes optional | `developmentalReading/contract.ts:141` |
+| 2 | parse returns per-index `phenomenon \| undefined` instead of refusing on first decline; `ClassifyOutcome.phenomena` widens | `classify.ts` — `parseClassifierBlocks`, `classifyClaims` |
+| 3 | freeze accepts `undefined` and omits the key; keeps refusing a defined non-member | `freeze.ts:118` (`unknown_phenomenon`) |
+| 4 | trigger permits the key's absence; still raises on unknown keys and on a present value outside the eight | new migration replacing the function in `20260904000001_developmental_readings.sql` |
+| 5 | `READING_CONTRACT_VERSION` added and stamped into `DevelopmentalReadingProvenance` | `contract.ts`, `freeze.ts` |
+| 6 | INV-25 replaced with the text above | `contract.ts` doc comment |
+| 7 | presentation emits no badge when absent | `developPresentation.ts:204-205` |
+| 8 | tests: historical rows still valid under the relaxed trigger; no backfill executed; declined observation survives; sibling keeps its label | new checks only |
+| 9 | `unknown_phenomenon` refusal preserved verbatim | `freeze.ts` — asserted, not edited |
+
+**Also touched, not in the founder's list:** `commission.ts:72-78` currently
+does `if (!phenomena.ok) return refused('classify', ...)`, which is the second
+place a decline kills the commission. It must stop treating a decline as a
+classify-stage refusal while continuing to propagate every other classifier
+refusal unchanged.
+
+**Not touched:** `store.ts` (never references `phenomenon`), `assess.ts` (never
+did), the reader, the eight, the prompt, `CLASSIFIER_VERSION`, `READER_VERSION`,
+and every 07B/07C acceptance witness with its `-01` pins.
+
+### Refusal disposition, restated for implementation
+
+```text
+classifier_unclassifiable      NO LONGER REFUSES   observation survives, phenomenon omitted
+unknown_phenomenon             STILL REFUSES       malformed output, not an honest decline
+classification_count_mismatch  STILL REFUSES       contract violation
+claim_unbindable               STILL REFUSES       evidence
+fingerprint_mismatch           STILL REFUSES       evidence
+empty_observation              STILL REFUSES       no content
+reader_refused                 STILL REFUSES       nothing to freeze
+classifier_presence_mismatch   STILL REFUSES       provenance
+```
+
+The virtue *do not stretch a category to fit* is untouched in the prompt. Only
+the consequence of honouring it changes.
 
 ## What this design does not do
 
