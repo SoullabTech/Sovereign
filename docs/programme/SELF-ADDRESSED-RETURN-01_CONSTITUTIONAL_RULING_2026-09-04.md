@@ -1,7 +1,7 @@
 # SELF-ADDRESSED-RETURN-01 — CONSTITUTIONAL RULING
 
 **Date**: 2026-09-04
-**Kind**: constitutional ruling on a tester request. **No build work is authorized by this document.**
+**Kind**: constitutional ruling on a tester request, **amended 2026-09-04 by founder directive (§8) into the governing design for _My Support Rhythm_.** §1–§7 record the refusal and its reasoning; §8 records the directive, grades it, and names what it authorizes.
 **Origin**: tester message, relayed by founder — *"I avoid engaging with Maia when I am in pain and don't want to be seen or go deep. As I am re-engaging now after some days, I was wondering if I could set up some gentle nudges for myself. Can Maia send me an email or text wooing me back? I am probably not alone in this avoidance tactic."*
 **Working lane name refused**: `maia-reengagement-nudges` (the branch this ruling is authored on). See §2.
 **Governing canon**: `docs/canon/RIGHT_TO_REMAIN_UNPOSSESSED.md` §3 (temporal sovereignty means non-pursuit); `docs/canon/MAIA_CANON_v1.1.md`; `docs/canon/CONSTITUTIONAL_DIRECTION_OF_AUTHORITY.md`; Sanctuary Mode invariants (CLAUDE.md).
@@ -213,3 +213,149 @@ The lane opens only by founder directive.
 ## 7. Status
 
 **RULED — literal request (Tier 0) REFUSED on canon, and not reachable by opt-in.** Reframe (Tier 1) named and constrained; Tier 1.5 raised as a live founder decision; Tier 2 not recommended. Lane `SELF-ADDRESSED-RETURN-01` **NOT OPENED**. F1–F8 stand as the acceptance conditions if it ever is. Founder decides whether the reframe is worth building at all — refusing it entirely is a coherent and defensible outcome, and cheaper than holding F4 forever.
+
+---
+
+## 8. Founder directive, 2026-09-04 — **My Support Rhythm**
+
+Founder answered §7 with a design. It **supersedes the §4.5 tier ladder as the product
+architecture**; the tiers survive only as the constitutional grading underneath it. Recorded
+here rather than in a separate document so the constraints cannot drift away from the design.
+
+Research citations in the directive (JITAI meta-analysis, DMHI engagement reviews, Apple
+notification-authorization guidance, FTC dark-patterns work) are **founder-supplied and not
+independently verified in this session.** They are recorded as the directive's stated basis,
+not as findings this document establishes.
+
+### 8.1 What the directive gets right that §4.5 did not
+
+1. **Modes, not volume.** Low/Medium/High is a notification-volume axis; these are *different
+   relationships to support*. A volume slider would have quietly re-imported the retention
+   frame through the UI, because volume is the axis a retention engine tunes.
+2. **"Walk with my practice" — a tier §4.5 did not have.** Genuinely personalized, yet the
+   personalization *originates in an explicit member act*. This is the strongest mode in the
+   set and the most MAIA-shaped thing in it. It satisfies
+   `CONSTITUTIONAL_DIRECTION_OF_AUTHORITY` cleanly: the member selects the item at the layer
+   they authored it, and MAIA carries it without elevating it. No Recognition-layer meaning
+   is manufactured — MAIA never decides what mattered.
+3. **Build order.** *member-selected → scheduled → personally grounded → adaptive*, explicitly
+   not *observe → infer → message*. That ordering is itself a constitutional instrument: each
+   step is shippable, and none of them builds an organ the next step needs.
+
+### 8.2 The mode lattice, graded
+
+| Mode | Reads absence | Composes | Grade |
+|---|---|---|---|
+| **Quiet** (default) | no | no | Constitutional. Must be the default, and must remain reachable in one gesture from every other mode. |
+| **Remember for me** | no | no | Tier 1. **Build first.** F1–F8 apply as written. |
+| **Gentle rhythm** | no | yes (generic) | Tier 1.5. Constitutional **only** under the non-varying-content constraint: content may not vary by member and may not reference member history, state, or absence. Directive's own "no inference about the member" is the same line. |
+| **Walk with my practice** | no | carries member-selected item | Constitutional. Strongest mode. Personalization is *authored, not inferred*. |
+| **Responsive companion** | **depends** | yes | **Conditional — see 8.3.** |
+| **Human connection** | n/a | n/a | **Separate lane.** Not this ruling. |
+
+### 8.3 "Responsive companion" — make *initially* into *structurally*
+
+The directive says signals should be *"initially self-reported/member-set rather than passive
+surveillance."* **"Initially" is precisely how the organ gets built later.** A passive-signal
+path deferred is a passive-signal path scheduled.
+
+The line must be structural, not sequenced:
+
+> **A signal is admissible only if it exists because the member performed an act to create
+> it.** A member-set state ("I'm in a hard week"), a self-report, a chosen practice — all
+> admissible, and all absence-blind. A signal derived from behavior the member did not
+> perform *as a signal* — session frequency, gaps, dwell time, time-of-day patterns — is
+> refused, and its refusal does not expire.
+
+Under that line, Responsive companion is constitutional and needs no absence-reading at all.
+Widening it to behavioral signals is a **new ruling**, never a phase of this one.
+
+### 8.4 "Human connection" is a different constitutional object
+
+A practitioner choosing to reach out is a **human act, not a system act** — the canon's
+non-pursuit binds MAIA, not people. The directive's own research points here (human guidance
+outperforms automated reminders), and it may be the highest-value mode in the set.
+
+But it is governed elsewhere: Co-Lab boundaries, explicit sharing permissions, **R05**
+(no implicit practitioner share), and the **Co-Lab Release Gate** (`verify-colab-boundaries.ts`,
+31/31, mandatory before any tester wave touching sharing). Two failure modes to name now:
+MAIA must not *prompt* the practitioner from an absence read (that is Tier 0 laundered through
+a human), and the member must know exactly what the practitioner can see. **Own lane. Not
+authorized here.**
+
+### 8.5 "Reach out if I disappear" — the amendment, costed
+
+The directive is correct and unusually honest: this *does* create an absence-reading organ,
+and it *does* require an explicit amendment to `RIGHT_TO_REMAIN_UNPOSSESSED` §3. Refusing to
+smuggle it through notification settings is the right instinct — that is exactly how such
+organs normally arrive.
+
+**There is no absence-blind way to build it.** "If I haven't visited in N days" requires a
+last-seen read; no framing removes that. So the only real question is **how small and how
+fenced** the organ can be. The minimum viable form:
+
+- **One column**, `member_presence.last_presence_at`, written on visit. No history, no
+  sequence, no session join, no derived gap column persisted anywhere.
+- **One reader.** Only the scheduled-return selector may read it, and only for members who
+  set a threshold themselves. Enforced as a refusal check (**R33**): no other query, route,
+  view, export, or analytics surface may reference the column. R08/R04 pattern — structural,
+  in SQL, not a review convention.
+- **Member sets the threshold, the channel, and the words.** MAIA composes nothing.
+- **Never any inference on top.** No "you seem to be withdrawing," no concern affect, no
+  variation by how long the gap was. The gap crosses the member's own threshold or it does
+  not; its magnitude is never read.
+- **Amendment is scoped and named** in the canon file itself — the prohibition stands for the
+  system; the single exception is a member-set threshold on a member-authored message.
+
+**My recommendation: do not amend yet.** Ship Remember-for-me, Gentle rhythm, and Walk-with-my-practice
+first. If members who use those still ask for the absence trigger, that is real evidence and
+the amendment is worth its cost. Amending in advance spends the constitution on a hypothesis.
+
+### 8.6 Measurement — one hardening
+
+*"Was this support useful?"* over *"Did this get them back?"* is right, and the directive's
+dark-patterns reasoning supports it.
+
+One addition, or "useful" becomes the new retention proxy: **the member's answer may adjust
+that member's own rhythm and nothing else.** It may not be aggregated into a system-level
+objective, and it may never be joined to whether they returned. If we can see that useful-rated
+messages correlate with return, we will optimize for useful-rated messages, and F4 is gone
+through the side door. Store it as a member-owned preference signal, not as a metric.
+
+### 8.7 Governance catch — do NOT build this into the Coaching Platform yet
+
+The directive places My Support Rhythm in the Coaching Platform as generic architecture. That
+is likely the right long-term home, **but building it there now violates the Anti-Drift Law
+freeze on generalized architecture** — `COACHING-TEMPLATE-EXTRACTION-01` is named but
+explicitly **NOT OPENED** (ruling of 2026-09-04, same day).
+
+Build v1 MAIA-side. Note the portability; do not architect for it. Extraction is a later,
+separately authorized act — exactly the sequencing the naming ruling was written to protect.
+
+### 8.8 Controls, and one constraint on the onboarding pattern
+
+Channel · cadence · timing · source permission · tone, each independent, with **pause / less
+often / change / stop reachable from inside every delivered message** — accepted in full.
+Reachable-from-the-message is the load-bearing one; a control that requires returning to the
+app to disable is a retention mechanism.
+
+The in-context ask (*"Would you like support staying with this?"* after a meaningful keep) is
+accepted, with **F5 pinned**: the offer may follow a member's authoring act, never a distress
+signal. Offering support at a detected low point is the manipulation pattern this whole ruling
+exists to prevent, and it would feel like care while doing it.
+
+**Channel note**: F8 restricted v1 to email as the pull-shaped channel. The directive's
+per-mode channel control supersedes the blanket restriction *provided* push/SMS are
+member-selected per mode, off by default, and quiet hours are honored — Apple's provisional
+delivery is a reasonable model for quiet trial. The reasoning F8 encoded still holds and
+belongs in the copy: push enters the body's attention wherever the person is.
+
+### 8.9 Status after directive
+
+**Lane `SELF-ADDRESSED-RETURN-01` OPENED** for **Remember for me (Tier 1) only**, on the
+directive's build order. Gentle rhythm and Walk-with-my-practice: designed and graded
+constitutional, not yet authorized to build. Responsive companion: authorized in shape only
+under the 8.3 structural line. Human connection: separate lane, Co-Lab-governed. Absence
+trigger: **not amended, not built** — revisit on evidence per 8.5. Setting name **My Support
+Rhythm** accepted; *"between visits"* framing accepted and load-bearing, because it treats
+absence as ordinary rather than as a lapse.
