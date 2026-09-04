@@ -343,7 +343,29 @@ HARD FALLBACK  if the implementation cannot guarantee an unwritten cast,
 FALSIFIER      FAIL if a Sanctuary cast produces any durable symbolic-event record.
 ```
 
-*Implementation note.* The existing engines make this non-trivial. `wuxing-enhanced-casting.persistReading` writes whenever `options.userId` is set and `persist !== false`, and the oracle route persists for any recognized member. An ephemeral path must therefore call a casting function that **has no persistence side effect at all**, not one that is asked not to persist — "guaranteed unwritten" and "told not to write" are different guarantees, and only the first satisfies the falsifier.
+*Architecture (founder, 2026-09-04).* The cast operation must be **pure with respect to persistence**. The caller then decides whether a returned symbolic event may be written; in Sanctuary the writer is simply not reachable. That is stronger than threading `persist: false` through a function that otherwise owns database authority.
+
+```text
+CAST CORE      inputs → symbolic event
+               no database dependency · no member-record writer · no persistence flag
+
+continuity     cast core → authorized writer → durable symbolic event
+Sanctuary      cast core → current-turn cognition → stop
+```
+
+*Read-only finding, 2026-09-04 — the boundary mostly already exists:*
+
+```text
+lib/divination/iching/casting.ts                  0 db imports   PURE
+lib/divination/runes/casting.ts                   0              PURE
+lib/divination/runes/elder-futhark.ts             0              PURE
+lib/divination/tarot/drawing.ts                   0              PURE
+lib/divination/iching/wuxing-enhanced-casting.ts  1              IMPURE (persistReading)
+```
+
+All three cast cores are already persistence-pure. The one violation is `persistReading` inside the enhanced I Ching wrapper. So the eventual cut composes an existing boundary and isolates a single exception, rather than introducing a new architecture.
+
+*Implementation note.* The existing call paths still make the guarantee non-trivial. `wuxing-enhanced-casting.persistReading` writes whenever `options.userId` is set and `persist !== false`, and the oracle route persists for any recognized member. An ephemeral path must therefore call a casting function that **has no persistence side effect at all**, not one that is asked not to persist — "guaranteed unwritten" and "told not to write" are different guarantees, and only the first satisfies the falsifier.
 
 **3 · Idempotency must wrap the cast, not only the INSERT.** Divination involves randomness, so a retry that avoids a duplicate row while silently redrawing would be *worse* than the duplicate.
 
@@ -360,7 +382,28 @@ member explicitly says "cast again"
 
 The identity must wrap `intent → random draw → persistence → response`, not merely `persistence → INSERT ONCE`.
 
+*The fork is symbolic, not only mechanical (founder, 2026-09-04).* Both options satisfy the same retry property and mean different things:
+
+```text
+CACHE               the event happened once; we remember the result of that event
+DETERMINISTIC SEED  the event is mathematically derivable from its invocation identity
+```
+
+For a payment idempotency key the difference is nothing. For an oracle, the distinction between *preserving the result of an occurrence* and *manufacturing the result from an identifier* may be constitutive of what a cast is. It belongs in the cut's DECIDE with its consequences stated — never smuggled in as an implementation convenience.
+
 *Design fork to decide inside the cut, not now.* Two ways to make a draw survive retry: **cache** the result against the invocation id before responding, or **derive** the draw deterministically by seeding the RNG from the invocation id. Deriving is simpler and needs no store, but it makes the cast a reproducible function of an identifier rather than of the moment — which may matter symbolically for divination in a way it would not for an ordinary idempotent write. Name the choice explicitly when the cut opens.
+
+### The contract this cut now carries
+
+```text
+member authorizes the symbolic act
+→ exactly one symbolic event occurs
+→ provenance remains truthful
+→ persistence occurs exactly once when lawful
+→ retries cannot change the event
+→ Sanctuary cannot leak it
+→ MAIA can think with it without becoming its author
+```
 
 ### Refusal surface
 
