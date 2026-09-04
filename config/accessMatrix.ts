@@ -354,8 +354,27 @@ export const ACCESS_RULES: AccessRule[] = [
   // Order matters: specific rules BEFORE the broad prefix fallback.
   // ─────────────────────────────────────────────────────────────────
 
-  // Lab Tools — depth (open to all authenticated users)
-  { exact: '/labtools', minTier: 'free', notes: 'Lab tools index — depth' },
+  // ── Lab Tools ────────────────────────────────────────────────────────────
+  //
+  // ⚠️ UNRECONCILED, RECORDED 2026-09-04 — read before trusting the entries
+  // below. These rules were generated from the Offerings Inventory when
+  // /labtools was member-facing "depth". It is not any more:
+  // app/labtools/layout.tsx now calls requireFounder(), which refuses every
+  // member id outside the FOUNDER_MEMBER_IDS allowlist. So for the whole
+  // /labtools tree, the DECLARED policy below (minTier 'free' — any
+  // authenticated member) and the ENFORCED policy (founder only) disagree.
+  //
+  // Only /labtools/reflections is reconciled here, because only it was ruled
+  // on (founder ruling 2026-09-04: member reflections moved to /reflections,
+  // the lab surface stays founder-facing). The remaining `free` entries below
+  // are NOT ratified as intent — nobody has ruled whether the layout gate or
+  // the declaration is the mistake, and quietly restricting a dozen routes to
+  // match a gate that may itself be the accident would be a policy change
+  // wearing a cleanup's clothes. They are named here so the disagreement is a
+  // recorded open question rather than an invitation to "fix" requireFounder()
+  // because the matrix appears to say otherwise. ⛔ Do not read a `free` entry
+  // under /labtools as evidence that the founder gate is wrong.
+  { exact: '/labtools', minTier: 'free', notes: 'Lab tools index — DECLARED free; ENFORCED founder-only by app/labtools/layout.tsx. Unreconciled, see block note.' },
   { exact: '/labtools/profile', minTier: 'free', notes: 'Profile settings — depth' },
   { exact: '/labtools/settings', minTier: 'free', notes: 'App settings — depth' },
   { exact: '/labtools/language', minTier: 'free', notes: 'Language preferences — depth' },
@@ -367,8 +386,24 @@ export const ACCESS_RULES: AccessRule[] = [
   // deny a member their own reflections as an unmapped route.
   { exact: '/reflections', minTier: 'free', notes: 'Member reflections feed' },
   { prefix: '/reflections/', minTier: 'free', notes: 'A single member reflection' },
-  { exact: '/labtools/reflections', minTier: 'free', notes: 'Reflection feed — depth' },
-  { prefix: '/labtools/reflections/', minTier: 'free', notes: 'Individual reflections — depth' },
+  // RECONCILED 2026-09-04. Was minTier 'free', which declared these member-facing
+  // while requireFounder() refused every member — the governance hazard being
+  // closed: a `free` declaration standing next to a founder gate misleads later
+  // routing, entitlement and audit work into "repairing" the gate.
+  //
+  // `rolesAnyOf: ['admin']` is this matrix's established vocabulary for an
+  // internal-only surface (same shape as /founder, /labtools/admin,
+  // /labtools/gifts). No new tier was invented for this.
+  //
+  // ⚠️ It APPROXIMATES the authority, it does not restate it. The real gate is
+  // requireFounder() over the FOUNDER_MEMBER_IDS env allowlist — an identity
+  // list, not a role — and the matrix has no vocabulary for member ids. The two
+  // are ANDed, not equivalent: middleware requires the admin ROLE, then the
+  // layout requires founder IDENTITY. Neither is weakened by the other, and
+  // ⛔ the runtime gate is the authority — do not relax requireFounder() to
+  // match this line.
+  { exact: '/labtools/reflections', minTier: 'free', rolesAnyOf: ['admin'], notes: 'Founder/lab reflections surface — members use /reflections' },
+  { prefix: '/labtools/reflections/', minTier: 'free', rolesAnyOf: ['admin'], notes: 'Founder/lab single reflection — members use /reflections/[id]' },
   { exact: '/labtools/favorites', minTier: 'free', notes: 'Saved items — depth' },
   { exact: '/labtools/downloads', minTier: 'free', notes: 'Downloads (content-gated separately)' },
   { exact: '/labtools/books', minTier: 'free', notes: 'Book access (content-gated separately)' },
