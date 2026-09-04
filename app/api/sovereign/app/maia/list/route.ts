@@ -122,7 +122,14 @@ import { buildMemoryInfluencePlan, summarizePlanForLog } from '@/lib/maia/memory
 import { loadRecentDevelopmentalMemories, loadRecentThemeSignals, loadPriorCrossSessionExchanges, loadConversationalRecallPref, loadRecentMarkedEpisodes, loadEpisodicRecallPref } from '@/lib/maia/memoryLoaders';
 import { detectForwardReadiness, buildForwardReadinessBlock } from '@/lib/maia/forwardReadiness';
 // 🧬 Cut 1 — Layer 5 (Semantic/atoms) + Layer 15 (memoryHealth)
-import { loadMemberMemoryAtomsForPrompt, formatAtomsForPrompt, type MemoryAtomSnapshot } from '@/lib/maia/memoryAtomsLoader';
+import {
+  loadMemberMemoryAtomsForPrompt,
+  projectAtomSections,
+  joinAtomSections,
+  ATOM_SECTION_SEPARATOR,
+  type MemoryAtomSnapshot,
+} from '@/lib/maia/memoryAtomsLoader';
+import type { DeclaredPartitions } from '@/lib/maia/canonical-turn/partition';
 import { buildMemoryHealth, summarizeMemoryHealthForLog, isBaseChainDegraded, type MemoryHealth } from '@/lib/maia/memoryHealth';
 import { recordMemoryTransitions } from '@/lib/maia/memoryTransitionRecord';
 // 💬 Phase 2 — Conversational recall (wire site correction per spec §IX, 2026-05-24).
@@ -858,6 +865,9 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
     let atomsResult: MemoryAtomSnapshot[] = [];
     let atomsError = false;
     let atomsAddendum: string | undefined;
+    // MEMORY-PRODUCER-PARTITION-01: the canonical-side projection of the SAME atom
+    // sections. Shadow only — never read by the legacy cognition path.
+    let declaredPartitions: DeclaredPartitions = {};
     // 💬 Phase 2 — Conversational recall (cross-session continuity, wire site
     // corrected per spec §IX). Block is built inside the if-block below, consumed
     // by maiaService.ts via meta.conversationalRecallAddendum.
@@ -983,10 +993,49 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
         // 🧬 Layer 5 — member-placed portfolio atoms (consent-gated, non-synthesized)
         const loadedAtoms = await loadMemberMemoryAtomsForPrompt(userId);
         atomsResult = loadedAtoms;
-        const atomsBlock = formatAtomsForPrompt(loadedAtoms);
+        // Two projections of ONE rendering (MEMORY-PRODUCER-PARTITION-01):
+        //   legacy    → joinAtomSections(...) — byte-identical to the previous
+        //               formatAtomsForPrompt(...); this is what cognition receives.
+        //   canonical → each section under its own truthful producer, shadow only.
+        // Practitioner observations are practitioner-AUTHORED, not member-placed:
+        // return_preference defaults to 'contextual_doorway' and member_response_status
+        // is an opt-OUT verdict the system never sets, so no member act places them.
+        const atomSections = projectAtomSections(loadedAtoms);
+        const atomsBlock = joinAtomSections(atomSections);
         if (atomsBlock) {
           atomsAddendum = atomsBlock;
-          console.log('[MAIA/sovereign] atoms loaded:', { count: loadedAtoms.length, userId: memberRef(userId) });
+          if (atomSections.memberSection && atomSections.practitionerSection) {
+            declaredPartitions = {
+              ...declaredPartitions,
+              atomsAddendum: {
+                legacyKey: 'atomsAddendum',
+                separator: ATOM_SECTION_SEPARATOR,
+                segments: [
+                  { producerId: 'member.atoms', text: atomSections.memberSection },
+                  { producerId: 'practitioner.atoms_observations', text: atomSections.practitionerSection },
+                ],
+              },
+            };
+          } else if (atomSections.practitionerSection) {
+            // Practitioner-only: the count does not rise, the IDENTITY changes.
+            declaredPartitions = {
+              ...declaredPartitions,
+              atomsAddendum: {
+                legacyKey: 'atomsAddendum',
+                separator: ATOM_SECTION_SEPARATOR,
+                segments: [
+                  { producerId: 'practitioner.atoms_observations', text: atomSections.practitionerSection },
+                ],
+              },
+            };
+          }
+          // Member-only needs no partition: member.atoms already owns those exact bytes.
+          console.log('[MAIA/sovereign] atoms loaded:', {
+            count: loadedAtoms.length,
+            userId: memberRef(userId),
+            memberSection: Boolean(atomSections.memberSection),
+            practitionerSection: Boolean(atomSections.practitionerSection),
+          });
         } else {
           console.log('[MAIA/sovereign] atoms: none surfacable for this member');
         }
@@ -1267,14 +1316,14 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
             includeAudio: includeAudio || false,
             voiceProfile,
           },
-          candidates: candidatesFromLegacyAddenda(legacyAddenda),
+          candidates: candidatesFromLegacyAddenda(legacyAddenda, declaredPartitions),
           // Gates the route applied UPSTREAM of this seam (evidence only): sanctuary skip,
           // recall preferences, memory-mode resolution. At M3 these move inside MIPA.
           gatesApplied: ['route:sanctuary', 'route:recall_pref', 'route:memory_mode', 'route:field_safety'],
           cognitionPath: 'shadow',
           turnId: exchangeId,
         });
-        emitShadowDiff(shadowTurn.turnId, compareLegacyToCanonical(legacyAddenda, shadowTurn));
+        emitShadowDiff(shadowTurn.turnId, compareLegacyToCanonical(legacyAddenda, shadowTurn, declaredPartitions));
       } catch (shadowErr) {
         console.warn(
           '[MAIA/shadow] canonical construction failed (non-fatal; legacy turn unaffected):',
