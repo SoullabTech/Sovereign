@@ -106,25 +106,36 @@ to discover approved checkout roots, classify active/dirty/protected trees, and
 reclaim only regenerable artifacts from inactive ones — never source, and never
 the checkout itself, without separate authority.
 
-### Custody class: checkouts under `/private/tmp`
+### Custody classes: "a git checkout" is not one thing
 
-Git checkouts living in `/private/tmp` are a custody class of their own. Unlike an
-ordinary worktree they are subject to an **external deletion authority** — macOS
-purges that directory on a schedule — so anything unique there is under a
-countdown that no one in this repo controls. Treat it as already expiring until
-proven backed.
+Three classes, each with a different failure mode:
 
-The full risk check is two questions, not one. Neither alone is sufficient:
+1. **Normal worktrees** — protected or reclaimable by git state plus explicit
+   lifecycle rules. The classifier in `scripts/ain-worktree-claim.sh` covers these.
+2. **External-drive checkouts** (e.g. `/Volumes/T7 Shield/...`) — everything above,
+   *plus* dependence on the device being mounted. Work here is invisible to any
+   sweep run while the drive is detached, and unreachable at the moment it is
+   needed. Evidence and artifacts belonging to such a checkout should be written to
+   internal disk so they survive the volume's lifecycle independently.
+3. **`/private/tmp` checkouts** — subject to an **external deletion authority**:
+   macOS purges that directory on a schedule, so anything unique there is under a
+   countdown nothing in this repo controls. Treat as already expiring until proven
+   backed.
+
+### The custody check is two questions
+
+Neither substitutes for the other:
 
 ```bash
-git -C <checkout> log --oneline HEAD --not --remotes   # unpushed commits
-git -C <checkout> status --short                       # uncommitted / untracked work
+git -C <checkout> log --oneline HEAD --not --remotes   # commits on no remote
+git -C <checkout> status --short                       # modified + staged + untracked
 ```
 
 Both silent means no git-visible unique work. Either producing output is a custody
-issue to resolve before the directory expires. In every case, deleting only that
-checkout's `node_modules` stays safe — regenerable material is never the custody
-question.
+issue. `status --short` omits ignored files by design, which is correct here — the
+question is unique work needing custody, not whether regenerable build artifacts
+exist. Deleting such a checkout's `node_modules` stays safe either way; regenerable
+material was never the custody question.
 
 ### Design constraint: reclaimable is not disposable
 
