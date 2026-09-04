@@ -470,3 +470,108 @@ FROZEN             LegacyAddenda shape + bytes · getMaiaResponse input
 FORBIDDEN          attribution framing · Epistemic Tone changes
                    MIPA multiplicity · M3 · /between work
 ```
+
+---
+
+## 10. Build — member.atoms partition (2026-09-04)
+
+### 10.1 The practitioner triple, DERIVED (not assumed)
+
+Founder instruction: derive `authoredBy × participationClass × authority` from source and consent semantics before registering; `placed` is not descriptive — MIPA turns it into an assertion:
+
+```ts
+const admittedReason = spec.participationClass === 'placed' ? 'member_placed' : 'eligible';
+```
+
+Consent path traced:
+
+| question | evidence | answer |
+|---|---|---|
+| Who created the observation? | `facilitator_id` required to surface (`PRACTITIONER_ATTRIBUTION_GUARD`) | a practitioner |
+| What licenses its return? | `return_preference` **DEFAULT `'contextual_doorway'`** (migration `20260523000001`) | nothing member-initiated |
+| Can the member affirmatively place it? | `member_response_status` DEFAULT NULL; *"The system NEVER sets"* it; `'confirmed'` is reserved with **no runtime writer** | no |
+| What can the member do? | eligibility is `member_response_status IS DISTINCT FROM 'rejected'` | **decline** — opt-out |
+
+Migration `20260702000002` states it plainly: *"the member's VERDICT on an observation made ABOUT them by a practitioner"*; *"declining a practitioner's claim is not a curation gesture — it is an authorship refusal."*
+
+**Practitioner authorship + system eligibility alone bring it into context.** `placed` is therefore refused: it would make the manifest assert `member_placed` over material the member never placed — manufacturing the exact false consent claim this cut exists to remove.
+
+```text
+practitioner.atoms_observations   practitioner · authored · situate
+consentBasis: member decline (member_response_status) — opt-out, NOT member placement
+```
+
+**The defect, sharpened:** `member.atoms` genuinely *is* `placed`. Practitioner rows ride the same table and the same default, inheriting member-placement semantics they never earned.
+
+### 10.2 What was built
+
+```text
+lib/maia/memoryAtomsLoader.ts        projectAtomSections()  pure projector (the existing
+                                     member/practitioner section split, exposed)
+                                     joinAtomSections()     legacy projection
+                                     formatAtomsForPrompt() = join(project(...)) — unchanged contract
+                                     ATOM_SECTION_SEPARATOR = '\n'
+
+lib/maia/canonical-turn/partition.ts SINGLE_AUTHOR / PARTITIONED / UNRESOLVED_MIXED
+                                     assertUsablePartition() refuses: empty partition ·
+                                     duplicate producer · empty segment · unregistered
+                                     producer · registry-order violation · content-parity
+                                     violation. Throws — never degrades to a weaker claim.
+                                     UNRESOLVED_MIXED_PRODUCERS records the three as DATA.
+
+lib/maia/canonical-turn/producerRegistry.ts
+                                     + practitioner.atoms_observations, declared
+                                       immediately after member.atoms so registry order
+                                       equals source order
+                                     ~ member.atoms reason corrected — it no longer claims
+                                       the practitioner observations it no longer carries;
+                                       provenance narrowed to .memberSection
+
+lib/maia/canonical-turn/shadow.ts    candidatesFromLegacyAddenda(legacy, partitions?)
+                                     compareLegacyToCanonical(legacy, turn, partitions?)
+                                     + expectedPartitionDelta · contentParity · unexpectedDiff
+
+app/api/sovereign/app/maia/list/route.ts
+                                     one rendering, two projections. atomsAddendum
+                                     byte-identical; declaredPartitions is shadow-only.
+```
+
+**`legacyAddenda` shape, `meta`, `getMaiaResponse` input, `appendAllContextAddenda`, the renderer, MIPA multiplicity: untouched.**
+
+### 10.3 A defect the tests found in the witness itself
+
+First run failed on the BOTH shape: `member.atoms` appeared in `unexpectedDiff`. The comparator treated every `digestMismatch` as unexplainable, but in the BOTH case `member.atoms` legitimately **narrows** — it owned the whole block, now owns only its section, so its digest must change.
+
+Rule corrected, and kept deliberately narrow:
+
+```ts
+const narrowedByPartition = (id) => replacedLegacyProducers.has(id) && partitionProducts.has(id);
+```
+
+A digest change is excused **only** where the legacy producer is also one of its own segments. Every other digest change stays unexpected, and `contentParity` independently proves the segments recompose to the exact bytes cognition receives. A test pins the exemption's narrowness: an unrelated producer whose bytes change is still `unexpectedDiff`.
+
+### 10.4 Local gates
+
+```text
+lib/maia/canonical-turn/ + lib/maia/__tests__/    196 passed · 10 suites
+npm run typecheck                                 ✅ no regressions (231 vs baseline 239)
+npm run check:no-supabase                         ✅ clean
+```
+
+Pre-existing failures on canonical, **not caused by this cut** — verified by stashing the diff and reproducing identically at `34cc4cad9`: `episodes/mark/sanctuaryGuard`, `manuscripts/[id]/draft/route`, `manuscripts/[id]/draft/revisions/route` (3 suites, 15 tests).
+
+Local gates are not CI certification.
+
+### 10.5 Not yet done
+
+Production witness. The three shapes must be observed on live `/list` turns:
+
+```text
+MEMBER ONLY          zeroDiff:true still healthy · no expectedPartitionDelta
+PRACTITIONER ONLY    canonicalCount stays 1 · identity moves member → practitioner
+                     contentParity:true · unexpectedDiff:[]
+BOTH                 canonicalCount rises by the declared delta
+                     contentParity:true · unexpectedDiff:[]
+```
+
+`contentParity:false` or a non-empty `unexpectedDiff` on any live turn STOPS the cut for classification — never normalize it.
