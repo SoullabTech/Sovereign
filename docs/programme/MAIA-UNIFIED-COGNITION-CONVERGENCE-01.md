@@ -186,15 +186,33 @@ no facet or risk data by construction.
 
 ```text
 [MAIA/orientation-shadow] {
-  tier, contractPresent, contractSource, contractDigest,
+  tier, contractPresent, contractSource,
   applied: false, legacyPromptDigest, sentPromptDigest, zeroPromptDiff, sanctuary
 }
 ```
 
-Content-free. The digest deliberately excludes `regulation.invitationPhrase` and
-`handoff.transitionPhrase` — the packet's only member-derived free text — so two turns
-reaching the same structural orientation share a digest without either turn's content being
-recoverable. A test asserts that property directly.
+**Two corrections after founder review of `18330ba54` (2026-09-04).** Both are proof and
+privacy corrections; neither changes scope or response behaviour.
+
+1. **`zeroPromptDiff` is literal byte equality**, not a comparison of the two digests. Both
+   full strings are in hand at the emit site, so a 48-bit truncated-digest match was
+   probabilistic evidence standing in for the exact claim the lane makes. The prompt digests
+   remain in the line as correlation telemetry and carry no authority. Two added tests hold
+   the line: a one-character difference reports `false`, and a 50,000-character pair differing
+   in its last byte reports `false`.
+
+2. **`contractDigest` is removed from production telemetry entirely.** Excluding the
+   packet's free text is not the same as being content-free: the structural state space it
+   hashed is small and enumerable — one facet from a handful, one posture, five booleans,
+   three small enums, two element pairs — so anyone holding the logs could precompute every
+   possible digest and recover the derived orientation. That is pseudonymization of the
+   orientation, not content-free telemetry. Cut 1A does not need it: the witness proves
+   transport, not what the orientation decided. `digest` was also dropped from
+   `ResolvedOrientation` so no latent path remains by which it could be logged;
+   `orientationDigest()` survives as a pure function for tests. A test asserts the emitted
+   line has exactly the eight authorized keys and no orientation vocabulary.
+
+The line now says that an orientation existed and where it came from, never what it decided.
 
 ### 9.6 Acceptance — local
 
@@ -210,7 +228,7 @@ FAST / CORE / DEEP · zeroPromptDiff, applied false  PASS
 guard-on-the-guard · appended render → diff false  PASS
 telemetry content-free                             PASS
 
-jest lib/maia          310 passed, 15 suites
+jest lib/maia          329 passed, 16 suites
 npm run typecheck      no regressions
 npm run check:no-supabase  clean
 ```

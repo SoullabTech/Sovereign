@@ -39,7 +39,6 @@ describe('/list-shaped request — no trusted packet, service computes one', () 
     });
     expect(r.source).toBe('service');
     expect(r.contract).not.toBeNull();
-    expect(r.digest).toMatch(/^[0-9a-f]{12}$/);
   });
 });
 
@@ -86,21 +85,19 @@ describe('Sanctuary — no contract produced or accepted, no orientation body lo
     });
     expect(r.contract).toBeNull();
     expect(r.source).toBe('none');
-    expect(r.digest).toBeNull();
   });
 
   it('shadow line carries no facet or risk data under sanctuary', () => {
     const spy = jest.spyOn(console, 'log').mockImplementation((() => {}) as never);
     const line = emitOrientationShadow({
       tier: 'FAST',
-      resolved: { contract: null, source: 'none', digest: null },
+      resolved: { contract: null, source: 'none' },
       legacyPrompt: 'P',
       sentPrompt: 'P',
       sanctuary: true,
     });
     expect(line.contractPresent).toBe(false);
     expect(line.applied).toBe(false);
-    expect(line.contractDigest).toBeNull();
     const emitted = JSON.stringify(spy.mock.calls);
     expect(emitted).not.toMatch(/water|fire|earth|air|aether|risk_|invitation|transition/i);
   });
@@ -128,11 +125,7 @@ describe('prompt zero-diff — the cut has no response authority', () => {
     const prompt = 'system prompt bytes as built today';
     const line = emitOrientationShadow({
       tier,
-      resolved: {
-        contract: packet(),
-        source: 'service',
-        digest: orientationDigest(packet()),
-      },
+      resolved: { contract: packet(), source: 'service' },
       legacyPrompt: prompt,
       sentPrompt: prompt,
       sanctuary: false,
@@ -141,6 +134,9 @@ describe('prompt zero-diff — the cut has no response authority', () => {
     expect(line.legacyPromptDigest).toBe(line.sentPromptDigest);
     expect(line.applied).toBe(false);
     expect(line.contractPresent).toBe(true);
+    // The orientation digest is enumerable, so it must not be in the emitted line at all.
+    expect(line).not.toHaveProperty('contractDigest');
+    expect(JSON.stringify(line)).not.toContain(orientationDigest(packet()));
   });
 
   it('would report a non-zero diff if the contract were ever appended', () => {
@@ -148,7 +144,7 @@ describe('prompt zero-diff — the cut has no response authority', () => {
     const prompt = 'system prompt';
     const line = emitOrientationShadow({
       tier: 'FAST',
-      resolved: { contract: packet(), source: 'service', digest: 'x' },
+      resolved: { contract: packet(), source: 'service' },
       legacyPrompt: prompt,
       sentPrompt: prompt + '\n\n' + renderOrientationForCognition(packet()),
       sanctuary: false,
@@ -192,5 +188,67 @@ describe('history normalization — both surface shapes', () => {
     expect(normalizeOrientationHistory([{ role: 'user', content: 'hello' }])).toEqual([
       { role: 'user', content: 'hello' },
     ]);
+  });
+});
+
+describe('zeroPromptDiff is literal byte equality, not a digest comparison', () => {
+  it('is false for a one-character difference', () => {
+    jest.spyOn(console, 'log').mockImplementation((() => {}) as never);
+    const line = emitOrientationShadow({
+      tier: 'FAST',
+      resolved: { contract: null, source: 'none' },
+      legacyPrompt: 'prompt',
+      sentPrompt: 'prompt ',
+      sanctuary: false,
+    });
+    expect(line.zeroPromptDiff).toBe(false);
+  });
+
+  it('does not derive zeroPromptDiff from the emitted digests', () => {
+    jest.spyOn(console, 'log').mockImplementation((() => {}) as never);
+    // Both digests are 12 hex characters — a truncation, so digest equality is weaker
+    // evidence than string equality. This asserts the claim is made on the strings: the
+    // line reports true only when the bytes themselves match.
+    const same = emitOrientationShadow({
+      tier: 'CORE',
+      resolved: { contract: null, source: 'none' },
+      legacyPrompt: 'x'.repeat(50000),
+      sentPrompt: 'x'.repeat(50000),
+      sanctuary: false,
+    });
+    expect(same.zeroPromptDiff).toBe(true);
+    const diff = emitOrientationShadow({
+      tier: 'CORE',
+      resolved: { contract: null, source: 'none' },
+      legacyPrompt: 'x'.repeat(50000),
+      sentPrompt: 'x'.repeat(49999) + 'y',
+      sanctuary: false,
+    });
+    expect(diff.zeroPromptDiff).toBe(false);
+  });
+});
+
+describe('production shadow line carries no orientation content', () => {
+  it('emits exactly the authorized fields', () => {
+    jest.spyOn(console, 'log').mockImplementation((() => {}) as never);
+    const line = emitOrientationShadow({
+      tier: 'FAST',
+      resolved: { contract: packet(), source: 'upstream' },
+      legacyPrompt: 'P',
+      sentPrompt: 'P',
+      sanctuary: false,
+    });
+    expect(Object.keys(line).sort()).toEqual([
+      'applied',
+      'contractPresent',
+      'contractSource',
+      'legacyPromptDigest',
+      'sanctuary',
+      'sentPromptDigest',
+      'tier',
+      'zeroPromptDiff',
+    ]);
+    const emitted = JSON.stringify(line);
+    expect(emitted).not.toMatch(/water|fire|earth|air|aether|threshold|witness|risk/i);
   });
 });

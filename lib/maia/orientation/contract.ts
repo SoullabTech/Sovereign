@@ -67,8 +67,6 @@ export function normalizeOrientationHistory(
 export interface ResolvedOrientation {
   readonly contract: OrientationContract | null;
   readonly source: OrientationSource;
-  /** Present only when a contract exists. Content-free structural digest. */
-  readonly digest: string | null;
 }
 
 export interface ResolveOrientationInput {
@@ -93,13 +91,19 @@ export interface ResolveOrientationInput {
 }
 
 /**
- * Content-free structural digest of a contract.
+ * Structural digest of a contract. **NOT emitted in production telemetry.**
  *
- * Deliberately excludes every free-text field the packet carries —
- * `regulation.invitationPhrase` and `handoff.transitionPhrase` are member-derived language
- * and never enter telemetry. Only the structural decision shape is hashed, so two turns
- * that reached the same orientation produce the same digest without either turn's content
- * being recoverable from it.
+ * It excludes the packet's free text (`regulation.invitationPhrase`,
+ * `handoff.transitionPhrase`), but excluding free text is not the same as being
+ * content-free. The structural state space it hashes is small and enumerable — one facet
+ * from a handful, one posture, five booleans, three small enums, two element pairs — so
+ * anyone holding the logs could precompute every possible digest and recover the derived
+ * orientation from it. That is pseudonymization of the orientation, not content-free
+ * telemetry (founder ruling, 2026-09-04).
+ *
+ * Cut 1A does not need that information in production at all: the witness proves
+ * transport, not what the orientation says. So this function is retained for tests and
+ * potential in-memory use, and `emitOrientationShadow` does not call it.
  */
 export function orientationDigest(contract: OrientationContract): string {
   const structural = {
@@ -129,14 +133,14 @@ export function orientationDigest(contract: OrientationContract): string {
  * all in a cut where it has no authority over the response anyway.
  */
 export function resolveOrientationContract(args: ResolveOrientationInput): ResolvedOrientation {
-  const NONE: ResolvedOrientation = { contract: null, source: 'none', digest: null };
+  const NONE: ResolvedOrientation = { contract: null, source: 'none' };
 
   // Sanctuary is absolute and is checked first: no computation, no acceptance of an
   // upstream packet, no derived state anywhere downstream.
   if (args.sanctuary) return NONE;
 
   if (args.trusted) {
-    return { contract: args.trusted, source: 'upstream', digest: orientationDigest(args.trusted) };
+    return { contract: args.trusted, source: 'upstream' };
   }
 
   try {
@@ -144,7 +148,7 @@ export function resolveOrientationContract(args: ResolveOrientationInput): Resol
       args.input,
       normalizeOrientationHistory(args.conversationHistory),
     );
-    return { contract, source: 'service', digest: orientationDigest(contract) };
+    return { contract, source: 'service' };
   } catch (err) {
     console.warn('[MAIA/orientation] compute failed — proceeding without contract:', err);
     return NONE;
@@ -185,11 +189,12 @@ export interface OrientationShadowLine {
   readonly tier: string;
   readonly contractPresent: boolean;
   readonly contractSource: OrientationSource;
-  readonly contractDigest: string | null;
   /** Cut 1A invariant: always false. The contract has no response authority. */
   readonly applied: false;
+  /** Telemetry only — correlating turns across logs. NOT the authority for zeroPromptDiff. */
   readonly legacyPromptDigest: string;
   readonly sentPromptDigest: string;
+  /** Literal byte equality of the two prompts. Not a digest comparison. */
   readonly zeroPromptDiff: boolean;
   readonly sanctuary: boolean;
 }
@@ -204,9 +209,14 @@ const promptDigest = (s: string) => createHash('sha256').update(s).digest('hex')
  * the cut's central claim, and it is asserted here per turn rather than argued in a
  * document.
  *
+ * `zeroPromptDiff` is **literal string equality**, not a comparison of the two digests.
+ * Both full strings are in hand here, so a 48-bit digest match would be probabilistic
+ * evidence standing in for an exact claim the lane actually makes. The digests remain in
+ * the line as correlation telemetry and carry no authority (founder ruling, 2026-09-04).
+ *
  * Content-free: no member text, no derived interpretation, no invitation or transition
- * phrase, no contract body. On sanctuary turns there is no contract at all, so the line
- * carries no facet or risk data by construction.
+ * phrase, no contract body, and **no contract digest** — see `orientationDigest`. The line
+ * says that an orientation existed and where it came from, never what it decided.
  */
 export function emitOrientationShadow(args: {
   tier: string;
@@ -215,17 +225,15 @@ export function emitOrientationShadow(args: {
   sentPrompt: string;
   sanctuary: boolean;
 }): OrientationShadowLine {
-  const legacyPromptDigest = promptDigest(args.legacyPrompt);
-  const sentPromptDigest = promptDigest(args.sentPrompt);
   const line: OrientationShadowLine = {
     tier: args.tier,
     contractPresent: !!args.resolved.contract,
     contractSource: args.resolved.source,
-    contractDigest: args.resolved.digest,
     applied: false,
-    legacyPromptDigest,
-    sentPromptDigest,
-    zeroPromptDiff: legacyPromptDigest === sentPromptDigest,
+    legacyPromptDigest: promptDigest(args.legacyPrompt),
+    sentPromptDigest: promptDigest(args.sentPrompt),
+    // Literal bytes, not digests. See the note above.
+    zeroPromptDiff: args.legacyPrompt === args.sentPrompt,
     sanctuary: args.sanctuary,
   };
   console.log('[MAIA/orientation-shadow]', line);
