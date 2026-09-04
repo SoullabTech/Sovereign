@@ -32,6 +32,7 @@
  */
 import { readFileSync, existsSync, readdirSync } from 'fs';
 import path from 'path';
+import { execSync } from 'child_process';
 
 const REPO = path.resolve(__dirname, '..');
 const read = (p: string) => (existsSync(path.join(REPO, p)) ? readFileSync(path.join(REPO, p), 'utf8') : '');
@@ -97,26 +98,41 @@ function matrixRule(route: string): string {
   return 'unmapped';
 }
 
-/** APIs the page calls, and whether each is member-scoped. */
-function apis(src: string): { list: string[]; memberScoped: 'yes' | 'no' | 'n/a' | 'mixed' } {
+/**
+ * APIs the page calls, and what the call site proves about SCOPE.
+ *
+ * ⚠️ SCOPE IS NOT OWNERSHIP (founder correction 2026-09-04). `getCurrentSession()`
+ * proves the request knows who is asking. It does not prove the rows being read
+ * belong to that member. Even `requireMemberId()` proves a member-scoped
+ * authority boundary, not that the persistence is bound to that id. Ownership
+ * needs the query evidence, which this scan does not read — so the ownership
+ * column stays `unclear` and a later act supplies it.
+ */
+function apiScope(src: string): { list: string[]; scope: string } {
   const found = [...src.matchAll(/['"`](\/api\/[a-zA-Z0-9\/_\-\[\]$.{}]+)['"`]/g)]
     .map((m) => m[1].replace(/\$\{[^}]*\}/g, ':id').replace(/\/$/, ''));
   const list = [...new Set(found)].slice(0, 4);
-  if (!list.length) return { list, memberScoped: 'n/a' };
+  if (!list.length) return { list, scope: 'none-found' };
   const verdicts = list.map((a) => {
     const base = a.split('/').slice(0, 4).join('/').replace(/:id.*/, '');
     for (const cand of [`app${base}/route.ts`, `app${a}/route.ts`]) {
-      const s = read(cand);
-      if (s) return /requireMemberId|getCurrentSession/.test(s) ? 'yes' : 'no';
+      const t = read(cand);
+      if (!t) continue;
+      if (/requireFounder|requireAdmin|rolesAnyOf/.test(t)) return 'privileged';
+      if (/requireMemberId/.test(t)) return 'member-scoped';
+      if (/getCurrentSession/.test(t)) return 'authenticated';   // knows WHO, not WHOSE
+      return 'public';
     }
-    return '?';
+    return 'unclear';
   });
   const uniq = [...new Set(verdicts)];
-  return { list, memberScoped: uniq.length === 1 ? (uniq[0] as any) : 'mixed' };
+  return { list, scope: uniq.length === 1 ? uniq[0] : 'mixed' };
 }
 
 /** Does the page write anything? */
-const writes = (src: string) => (/method:\s*['"](POST|PATCH|PUT|DELETE)['"]/.test(src) ? 'yes' : 'no');
+/** Literal write verbs at THIS page source only — absence proves non-detection, not absence. */
+const writes = (src: string) =>
+  /method:\s*['"](POST|PATCH|PUT|DELETE)['"]/.test(src) ? 'direct write' : 'no direct write found';
 
 const house = read('lib/navigation/houseDestinations.ts');
 const keep = (read('scripts/capacitor-patch-routes.sh').match(/MOBILE_LABTOOLS_KEEP=\(([^)]*)\)/) || [])[1] || '';
@@ -130,8 +146,7 @@ const rows = labtoolsRoutes().map((name) => {
   const route = `/labtools/${name}`;
   const src = pageSource(name);
   const reg = registryEntry(route);
-  const api = apis(src);
-  const own = api.memberScoped === 'yes' ? 'member' : api.memberScoped === 'n/a' ? 'none/static' : 'unclear';
+  const api = apiScope(src);
   const ownGate = /requireFounder|requireAdmin/.test(src) ? ' + own gate' : '';
   return [
     route,
@@ -139,11 +154,11 @@ const rows = labtoolsRoutes().map((name) => {
     reg.category ? `${reg.category}${reg.domain && reg.domain !== reg.category ? `/${reg.domain}` : ''}` : '—',
     matrixRule(route),
     layoutGate + ownGate,
-    api.list.length ? api.list.join('<br>') : '—',
-    own,
-    '',                                   // intended user — evidence-thin, left for the ruling
+    api.list.length ? api.list.join('<br>') : 'none found in page source',
+    api.scope,
+    'unclear',                            // data subject — needs query evidence, not scope
+    '',                                   // intended user — no column in the codebase states it
     writes(src),
-    api.memberScoped,
     house.includes(`'${route}'`) ? 'yes' : 'no',
     keep.includes(`"${name}"`) ? 'in iOS bundle' : '—',
     '',                                   // CLASSIFICATION — deliberately blank
@@ -151,11 +166,21 @@ const rows = labtoolsRoutes().map((name) => {
 });
 
 const HEAD = ['route', 'tool id', 'category/domain', 'declared access', 'runtime gate',
-  'primary API', 'data ownership', 'intended user', 'creates state', 'member-scoped API',
-  'in House', 'native', 'CLASSIFICATION'];
+  'API found', 'API access scope', 'data subject / ownership', 'intended user',
+  'writes', 'in House', 'native', 'CLASSIFICATION'];
+
+const sha = (() => { try { return execSync('git rev-parse HEAD', { cwd: REPO }).toString().trim(); } catch { return 'unknown'; } })();
+const dirty = (() => { try { return execSync('git status --porcelain', { cwd: REPO }).toString().trim().length > 0; } catch { return false; } })();
 
 const out = [
   `# LAB-IA-01 · Lab Tools census — diagnosis only`, '',
+  '```text',
+  `SOURCE_SHA    ${sha}${dirty ? '  (WORKING TREE DIRTY — this output does not describe a committed state)' : ''}`,
+  `GENERATED_AT  ${new Date().toISOString()}`,
+  '```', '',
+  `⚠️ This census describes the tree at SOURCE_SHA. It is an instrument, not a snapshot — re-run it`,
+  `after any change to the Lab namespace, and **update the branch onto new canonical first**: re-running`,
+  `an old checkout inspects the old tree and will silently report stale rows.`, '',
   `Generated by \`scripts/lab-ia-01-census.ts\`. **Every CLASSIFICATION cell is blank by design.**`,
   `Allowed values, for the founder ruling that follows: \`MEMBER\` · \`LAB\` · \`STUDIO\` · \`STEWARD\` · \`RETIRE\` · \`UNCLEAR\`.`, '',
   `Governing questions: **whose data does this hold or act on**, and **who is it actually for** — not "is it mature".`, '',
@@ -166,7 +191,9 @@ const out = [
   '',
   `## Reading the columns`, '',
   `- **declared access** is \`config/accessMatrix.ts\`; **runtime gate** is what actually refuses. Where they disagree, the row is the evidence — this is the "~14 free declarations" finding, in place rather than tracked separately.`,
-  `- **data ownership** is derived from whether the API the page calls resolves a member identity. \`none/static\` means the page calls no API at all.`,
+  `- **API access scope** is what the called route's own guard proves: \`member-scoped\` (requireMemberId), \`authenticated\` (getCurrentSession — knows WHO is asking, not WHOSE rows), \`privileged\` (founder/admin/role), \`public\`, \`none-found\`, \`mixed\`, \`unclear\`.`,
+  `- **data subject / ownership** is \`unclear\` in every row and stays that way until query evidence is read. Scope is not ownership: a member-scoped boundary does not establish that the persistence is bound to that member id. Allowed values for the later act: \`member\` · \`shared\` · \`platform\` · \`founder\` · \`unclear\`.`,
+  `- **API found / writes** report DETECTION at this page source only. \`none found in page source\` and \`no direct write found\` mean the scanner saw no literal — an imported hook, a server utility or browser persistence could still do either. Absence of detection is not evidence of absence.`,
   `- **intended user** is left blank: no column in the codebase states it, and inferring it from access rules would beg the question the census exists to answer.`,
   `- **creates state** records what exists today. It proposes nothing.`, '',
   `## Constraint carried into any later act`, '',
