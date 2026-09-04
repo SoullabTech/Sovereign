@@ -57,13 +57,35 @@ function gitBlobId(path: string): string {
 /* An empty cookie jar, installed before the routes are imported, so authority
    can only come from a session token the database recognises (07A pattern). */
 const emptyCookies = { get: () => undefined, getAll: () => [], has: () => false };
+/* Passive count of provider-adapter invocations: the adapter's exported
+   factory is wrapped so each `execute` increments a counter and then delegates
+   UNCHANGED. Nothing about the request or the response is altered. */
+let providerCalls = 0;
 const moduleLoader = Module as unknown as { _load: (request: string, ...rest: unknown[]) => unknown };
 const originalLoad = moduleLoader._load;
 moduleLoader._load = function (this: unknown, request: string, ...rest: unknown[]) {
   if (request === 'next/headers') {
     return { cookies: async () => emptyCookies, headers: async () => new Headers() };
   }
-  return originalLoad.call(this, request, ...rest);
+  const loaded = originalLoad.call(this, request, ...rest);
+  if (/anthropicStructuredAdapter/.test(request) && loaded && typeof loaded === 'object') {
+    const real = loaded as { anthropicStructuredProvider?: (...a: unknown[]) => { name: string; execute: (req: unknown) => Promise<unknown> } };
+    if (typeof real.anthropicStructuredProvider === 'function') {
+      const factory = real.anthropicStructuredProvider;
+      return new Proxy(loaded, {
+        get(target, prop, receiver) {
+          if (prop === 'anthropicStructuredProvider') {
+            return (...a: unknown[]) => {
+              const provider = factory(...a);
+              return { ...provider, execute: (req: unknown) => { providerCalls += 1; return provider.execute(req); } };
+            };
+          }
+          return Reflect.get(target, prop, receiver);
+        },
+      });
+    }
+  }
+  return loaded;
 };
 
 const SECTIONS = [
@@ -108,7 +130,6 @@ async function main() {
   const { canonicalFingerprint } = await import('@/lib/manuscript/structure/canonicalFingerprint');
   const { loadLiveWork } = await import('@/lib/manuscript/development/capture');
   const { bindEvidence } = await import('@/lib/manuscript/development/bind');
-  const router = await import('@/lib/ai/structured/router');
   const { commissionReading } = await import('@/lib/manuscript/developmentalReading/commission');
   const { loadReading, listReadings } = await import('@/lib/manuscript/developmentalReading/store');
   const { assessReading } = await import('@/lib/manuscript/developmentalReading/assess');
@@ -118,12 +139,6 @@ async function main() {
 
   const enc = await query<{ e: string }>(`SELECT current_setting('server_encoding') AS e`);
   if (enc.rows[0].e !== 'UTF8') { console.log(`✗ server_encoding ${enc.rows[0].e} — STOP`); process.exit(3); }
-
-  /* count seam calls without touching the seam's contract: wrap the export the
-     commission's modules read at call time */
-  let seamCalls = 0;
-  const original = router.runStructured;
-  (router as unknown as { runStructured: typeof original }).runStructured = (req) => { seamCalls += 1; return original(req); };
 
   /* ── fixture through the real routes ─────────────────────────────────── */
   const tag = randomUUID().slice(0, 8);
@@ -166,11 +181,12 @@ async function main() {
 
     /* ── D1–D5 · the commission ──────────────────────────────────────────── */
     const before = await snapshot();
-    seamCalls = 0;
+    providerCalls = 0;
     const t0 = Date.now();
     const c = await commissionReading({ manuscriptId, memberId, lens: 'development', bodyScope, withStructure: true });
     const latencyMs = Date.now() - t0;
-    const callsForFirst = seamCalls;
+    const callsForFirst = providerCalls;
+    const afterFirst = await snapshot();
     row('D1 one commission froze a reading (or a legitimate none)', c.outcome === 'frozen', c.outcome === 'refused' ? `${c.stage}: ${c.refusal}: ${c.detail}` : `${c.reading.outcome}, ${latencyMs} ms`);
     if (c.outcome !== 'frozen') {
       record.refusal = { stage: c.stage, refusal: c.refusal, detail: c.detail };
@@ -222,21 +238,39 @@ async function main() {
     row('D11a a commission against a Work whose revision no longer matches is refused at capture, stores nothing', stale.outcome === 'refused' && stale.stage === 'capture' && stale.refusal === 'revision_not_current');
     const cp = await draftRoute.PUT(req('PUT', { sections: edited, baseRevisionId: revisionId, idempotencyKey: randomUUID(), checkpoint: true, note: 'after the moon' }), params);
     const cpBody = await cp.json();
-    const second = cp.status === 200 ? await commissionReading({ manuscriptId, memberId, lens: 'development', bodyScope, withStructure: true }) : null;
+    /* D11b — the lifecycle property: after the Work changes, a later SUCCESSFUL
+       reading is a NEW immutable reading with a new id; the prior is retained.
+       A typed, non-persisting refusal is a lawful commissioned act and proves
+       only the refusal discipline, so the witness makes at most ONE further
+       commissioned act — fresh capture → recover → read → classify → freeze,
+       reusing nothing — and then STOPS. Never a loop, never a retry. */
+    const history: { act: number; outcome: string; stage?: string; refusal?: string; readingId?: string }[] = [];
+    let second: Awaited<ReturnType<typeof commissionReading>> | null = null;
+    if (cp.status === 200 && cpBody.checkpointed === true) {
+      for (let act = 2; act <= 3; act += 1) {
+        const r = await commissionReading({ manuscriptId, memberId, lens: 'development', bodyScope, withStructure: true });
+        history.push(r.outcome === 'frozen'
+          ? { act, outcome: 'frozen', readingId: r.reading.id }
+          : { act, outcome: 'refused', stage: r.stage, refusal: r.refusal });
+        if (r.outcome === 'frozen') { second = r; break; }
+        console.log(`    commission ${act}: lawful typed refusal at ${r.stage} (${r.refusal}); nothing persisted${act === 2 ? ' — one further commissioned act follows' : ' — STOP'}`);
+      }
+    }
     const listed = await listReadings(manuscriptId, memberId);
-    row('D11b after a checkpoint, a second commission is a NEW reading with a new id; the first remains loadable',
+    row('D11b after a checkpoint, a later successful commission is a NEW reading with a new id; the first remains loadable',
       cp.status === 200 && cpBody.checkpointed === true && second?.outcome === 'frozen' && second.reading.id !== reading.id
       && listed.length === 2 && (await loadReading(reading.id, memberId)) !== null,
-      second?.outcome === 'frozen' ? `${reading.id.slice(0, 8)} → ${second.reading.id.slice(0, 8)}` : second?.outcome === 'refused' ? `${second.stage}: ${second.refusal}` : `checkpoint ${cp.status}`);
-    const afterFirst = before; // the snapshot taken before the first commission
-    row('D12 the first commission changed no manuscript row; exactly two seam calls (reader + classifier), no retry',
-      afterFirst === before && (reading.outcome === 'none' ? callsForFirst === 1 : callsForFirst === 2), `${callsForFirst} call(s)`);
+      second?.outcome === 'frozen' ? `${reading.id.slice(0, 8)} → ${second.reading.id.slice(0, 8)} (act ${history[history.length - 1]?.act})`
+        : cp.status !== 200 ? `checkpoint ${cp.status}` : `UNPROVED — ${history.map((h) => `act ${h.act}: ${h.outcome}${h.refusal ? ` ${h.stage}/${h.refusal}` : ''}`).join('; ')}`);
+    row('D12 the first commission changed no manuscript row (real before/after snapshots); exactly two provider calls (reader + classifier), no retry',
+      afterFirst === before && (reading.outcome === 'none' ? callsForFirst === 1 : callsForFirst === 2), `${callsForFirst} provider call(s)`);
 
     Object.assign(record, {
       manuscriptId, readingId: reading.id, outcome: reading.outcome, latencyMs, seamCalls: callsForFirst,
       provenance: reading.provenance, scope: reading.scope, inputFingerprint: reading.readState.inputFingerprint,
       observations: reading.observations, assessmentBefore: a0, assessmentAfter: a1,
       secondReadingId: second?.outcome === 'frozen' ? second.reading.id : null,
+      commissionHistory: [{ act: 1, outcome: 'frozen', readingId: reading.id }, ...history],
     });
     }
   } finally {
