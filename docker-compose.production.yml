@@ -380,6 +380,61 @@ services:
       - maia-internal
 
   # ═════════════════════════════════════════════════════════════════════════════
+  # Self-Addressed Return Worker — SELF-ADDRESSED-RETURN-01 Tier 1
+  # ═════════════════════════════════════════════════════════════════════════════
+  # Delivers reminders a member wrote to themselves, at the time they chose.
+  #
+  # CONSTITUTIONAL NOTE: this worker is absence-blind by construction and refusal
+  # R32 proves it. It reads member_reminders (the reminder's own lifecycle) and
+  # exactly one column of members (the delivery address). It never reads
+  # sessions, activity, recency, or engagement, and it never suppresses a send
+  # because the member came back. See:
+  #   docs/programme/SELF-ADDRESSED-RETURN-01_CONSTITUTIONAL_RULING_2026-09-04.md
+  #   docs/specs/SELF-ADDRESSED-RETURN-01_TIER1_SPEC_2026-09-04.md
+  #
+  # Running MULTIPLE replicas is safe: the claim is an atomic lease taken with
+  # FOR UPDATE SKIP LOCKED, and dispatch is a single linearization point, so two
+  # workers cannot both send. Proven by scripts/verify-reminders-dispatch.ts.
+  #
+  # Requires SELF_ADDRESSED_RETURN_CANCEL_SECRET (or the _KEYS keyring) in
+  # .env.production. Without it the worker REFUSES to start rather than deliver
+  # a message the member cannot cancel.
+  #
+  # Deploy: docker compose --env-file .env.production -f docker-compose.production.yml up -d --build maia maia-reminders-worker
+  # Logs:   docker compose --env-file .env.production -f docker-compose.production.yml logs -f maia-reminders-worker
+  maia-reminders-worker:
+    build: *maia_build
+    image: *maia_image
+    container_name: maia-reminders-worker
+    restart: unless-stopped
+    logging: *default_logging
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+    env_file:
+      - .env.production
+
+    environment:
+      NODE_ENV: production
+      # DATABASE_URL, RESEND_API_KEY, NEXT_PUBLIC_APP_URL and the cancel
+      # keyring all come from .env.production. No member or activity source is
+      # configured here, and none may be added — see R32.
+
+    command: ["npx", "tsx", "scripts/run-member-reminders-worker.ts"]
+
+    healthcheck:
+      test: ["CMD-SHELL", "psql $${DATABASE_URL} -c 'SELECT 1' >/dev/null 2>&1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+    networks:
+      - maia-internal
+
+  # ═════════════════════════════════════════════════════════════════════════════
   # Session Summary Worker - Background Remembrance Generation
   # ═════════════════════════════════════════════════════════════════════════════
   # Drains session_summary_queue, generates sovereign remembrances via Claude.

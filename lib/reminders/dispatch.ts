@@ -89,7 +89,16 @@ export async function claimDue(limit: number): Promise<ClaimedReminder[]> {
 
 export type DispatchOutcome =
   | { ok: true }
-  | { ok: false; reason: 'cancelled' | 'lost_claim' | 'expired' | 'retry_horizon' | 'already_dispatched' };
+  | {
+      ok: false;
+      reason:
+        | 'cancelled'
+        | 'lost_claim'
+        | 'not_yet_due'
+        | 'expired'
+        | 'retry_horizon'
+        | 'already_dispatched';
+    };
 
 /**
  * THE LINEARIZATION POINT. Called immediately before sendEmail.
@@ -114,6 +123,11 @@ export async function beginDispatch(
         AND delivered_at IS NULL
         AND dispatch_started_at IS NULL
         AND failed_at IS NULL
+        -- NEVER BEFORE THE MEMBER'S CHOSEN TIME. Already true at claim, and
+        -- re-asserted here so the guarantee does not depend on the claim
+        -- query alone. The floor is the member's instruction; the deadline is
+        -- the ceiling.
+        AND delivery_at <= now()
         AND delivery_deadline >= now()
         AND (first_attempt_at IS NULL
              OR first_attempt_at > now() - ($3 || ' hours')::interval)
@@ -126,6 +140,7 @@ export async function beginDispatch(
   // Diagnose WHY, so a refusal is legible rather than a silent no-op. This
   // reads only the reminder's own row.
   const row = await query<{
+    delivery_at: Date;
     cancelled_at: Date | null;
     dispatch_started_at: Date | null;
     delivered_at: Date | null;
@@ -133,7 +148,7 @@ export async function beginDispatch(
     delivery_deadline: Date;
     first_attempt_at: Date | null;
   }>(
-    `SELECT cancelled_at, dispatch_started_at, delivered_at, claim_token,
+    `SELECT delivery_at, cancelled_at, dispatch_started_at, delivered_at, claim_token,
             delivery_deadline, first_attempt_at
        FROM member_reminders WHERE id = $1`,
     [reminderId],
@@ -143,6 +158,7 @@ export async function beginDispatch(
   if (r.cancelled_at) return { ok: false, reason: 'cancelled' };
   if (r.dispatch_started_at || r.delivered_at) return { ok: false, reason: 'already_dispatched' };
   if (r.claim_token !== claimToken) return { ok: false, reason: 'lost_claim' };
+  if (new Date(r.delivery_at).getTime() > Date.now()) return { ok: false, reason: 'not_yet_due' };
   if (new Date(r.delivery_deadline).getTime() < Date.now()) return { ok: false, reason: 'expired' };
   if (
     r.first_attempt_at &&

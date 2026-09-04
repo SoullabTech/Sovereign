@@ -36,6 +36,9 @@ const UNIT = [
   'app/api/reminders/cancel/route.ts',
   'scripts/run-member-reminders-worker.ts',
   'scripts/check-cancel-key-retention.ts',
+  'scripts/verify-reminders-config.ts',
+  'components/reminders/RemindMeOfThis.tsx',
+  'app/maia/reminders/page.tsx',
 ];
 
 const WORKER = 'scripts/run-member-reminders-worker.ts';

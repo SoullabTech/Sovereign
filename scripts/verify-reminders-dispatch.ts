@@ -51,9 +51,9 @@ async function makeReminder(opts: {
   const tokenHash = hashCancelToken(`tok-${Math.random()}`);
   const res = await query<{ id: string }>(
     `INSERT INTO member_reminders
-       (member_id, source_type, source_id, delivery_at, delivery_deadline,
-        delivery_text, cancel_token_hash, first_attempt_at)
-     VALUES ($1, 'member_note', NULL, $2, $3, $4, $5, $6)
+       (member_id, source_type, source_id, delivery_at, delivery_timezone,
+        delivery_deadline, delivery_text, cancel_token_hash, first_attempt_at)
+     VALUES ($1, 'member_note', NULL, $2, 'America/New_York', $3, $4, $5, $6)
      RETURNING id`,
     [
       memberId,
@@ -213,6 +213,52 @@ async function main() {
     const r = await row(id);
     expect(r.delivered_at === null, 'a late message is never sent');
     expect(r.failure_code === 'expired', 'recorded as expired', String(r.failure_code));
+  }
+
+  // ── 8. Never sent before the member's chosen time ───────────────────────
+  console.log('\n\x1b[1m8. A reminder is never sent before its chosen time\x1b[0m');
+  {
+    // Chosen time is an hour away. The floor is the member's instruction.
+    const { id } = await makeReminder({
+      deliveryAt: new Date(Date.now() + 3600_000).toISOString(),
+      deadline: new Date(Date.now() + 7 * 3600_000).toISOString(),
+    });
+    const claimed = (await claimDue(50)).filter((r) => r.id === id);
+    expect(claimed.length === 0, 'a future reminder is not claimable', `${claimed.length} claimed`);
+
+    // Even a forged claim cannot dispatch: the linearization point re-asserts
+    // delivery_at <= now(), so the guarantee does not rest on the claim query.
+    await query(
+      `UPDATE member_reminders
+          SET claimed_at = now(), claim_token = gen_random_uuid(),
+              claim_expires_at = now() + interval '5 minutes'
+        WHERE id = $1`,
+      [id],
+    );
+    const forged = await query<{ claim_token: string }>(
+      `SELECT claim_token FROM member_reminders WHERE id = $1`,
+      [id],
+    );
+    const d = await beginDispatch(id, forged.rows[0].claim_token);
+    expect(
+      !d.ok && d.reason === 'not_yet_due',
+      'dispatch refuses before the chosen time even with a valid claim',
+      d.ok ? 'DISPATCHED EARLY' : d.reason,
+    );
+    const r = await row(id);
+    expect(r.delivered_at === null && r.dispatch_started_at === null, 'nothing was sent early');
+  }
+
+  // ── 9. The authored timezone is retained verbatim ───────────────────────
+  console.log('\n\x1b[1m9. Authored timezone survives\x1b[0m');
+  {
+    const { id } = await makeReminder();
+    const r = await row(id);
+    expect(
+      r.delivery_timezone === 'America/New_York',
+      'the zone the member authored in is stored, not normalised to UTC',
+      String(r.delivery_timezone),
+    );
   }
 
   // ── Invariant sweep ─────────────────────────────────────────────────────

@@ -27,9 +27,17 @@ CREATE TABLE IF NOT EXISTS member_reminders (
                        CHECK (source_type IN ('memory_atom', 'daily_anchor', 'member_note')),
   source_id          UUID,
 
-  -- An absolute instant. The member picks a local time; the route converts ONCE,
-  -- at authoring. The worker never computes a time relative to anything.
+  -- An absolute instant. The member picks a local date/time; creation resolves
+  -- it ONCE, at authoring. The worker never computes a time relative to
+  -- anything, and later travel or timezone changes do not silently move this
+  -- one-shot act — that is what keeps Tier 1 an AUTHORED FUTURE ACT rather
+  -- than a dynamic scheduling system.
   delivery_at        TIMESTAMPTZ NOT NULL,
+
+  -- The IANA zone the member authored in (e.g. 'America/New_York'), retained so
+  -- the confirmation can truthfully show what was authorized rather than
+  -- re-deriving a local time from wherever they happen to be later.
+  delivery_timezone  TEXT NOT NULL,
 
   -- A late message violates the authored act as much as a missing one. Past this
   -- instant the reminder is terminal-'expired' and is never sent. Spec §6.3.

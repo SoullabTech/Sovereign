@@ -155,3 +155,29 @@ describe('hash comparison', () => {
     expect(cancelTokenHashEquals(hashCancelToken('t'), 'short')).toBe(false);
   });
 });
+
+describe('secrets never leak into messages', () => {
+  it('a derivation failure names the version, never the key material', () => {
+    process.env.SELF_ADDRESSED_RETURN_CANCEL_KEYS = JSON.stringify({ 2: 'b'.repeat(40) });
+    try {
+      deriveCancelToken('r1', 1);
+      throw new Error('expected a refusal');
+    } catch (err) {
+      const message = (err as Error).message;
+      expect(message).toContain('version 1');
+      // A partial secret in a log is still a disclosed secret.
+      expect(message).not.toContain('b'.repeat(8));
+    }
+  });
+
+  it('a missing-config failure does not echo the environment', () => {
+    delete process.env.SELF_ADDRESSED_RETURN_CANCEL_KEYS;
+    process.env.SELF_ADDRESSED_RETURN_CANCEL_SECRET = 'short';
+    try {
+      deriveCancelToken('r1', 1);
+      throw new Error('expected a refusal');
+    } catch (err) {
+      expect((err as Error).message).not.toContain('short');
+    }
+  });
+});

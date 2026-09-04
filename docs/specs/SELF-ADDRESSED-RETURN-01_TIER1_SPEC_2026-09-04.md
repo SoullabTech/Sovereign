@@ -662,3 +662,107 @@ narrow identity seam → **exactly one** email at the authorized time with **exa
 words → no return or engagement observation exists.
 
 **Gentle Rhythm stays closed.** This loop stands on its own before anything is generalized from it.
+
+---
+
+## 10. Time contract, registration, provisioning, gesture (2026-09-04)
+
+### 10.1 The delivery contract — what we can actually keep
+
+> **A reminder is never sent before the member's chosen time. After that time, it is
+> dispatched within the published delivery window.**
+
+Email cannot guarantee arrival at an exact second, so *"arrives at the chosen instant"* is
+explicitly **not** an acceptance criterion. Worker cadence is 60s, stated to the member as
+**"sent shortly after the time you chose."** Promising a precise instant would be a claim we
+cannot keep, which is a claim-discipline failure before it is an engineering one.
+
+The floor is enforced twice: `delivery_at <= now()` in the claim query, and **re-asserted at the
+linearization point**, so the guarantee does not rest on the claim query alone. Proven by case 8:
+a forged valid claim on a future reminder is still refused (`not_yet_due`).
+
+### 10.2 Time meaning — an authored act, not a scheduling system
+
+| | |
+|---|---|
+| Member chooses | a local date and time |
+| Creation resolves it | **once**, to an absolute `delivery_at` |
+| `delivery_timezone` retains | the IANA zone authored in (`America/New_York`) |
+| Later travel or DST | does **not** move this one-shot reminder |
+
+The confirmation renders in the authored zone — *"Tuesday, September 8 at 9:00 AM EDT"* — so it
+states what was authorized rather than re-deriving a local time from wherever the member happens
+to be when they read it. An unknown zone is **refused at creation**, never silently replaced with
+UTC, because a substituted zone misreports what the member authorized.
+
+### 10.3 Worker registration
+
+`maia-reminders-worker` in `docker-compose.production.yml`: same image, different entrypoint,
+`.env.production`, DB healthcheck, `maia-internal` network. **No member or activity source is
+configured, and none may be added.** Multiple replicas are safe — the lease plus single
+linearization point handle concurrency (proven, case 1). The service comment carries the
+constitutional note and links the ruling, so the next person to touch it reads why before how.
+
+### 10.4 Keyring provisioning — `scripts/verify-reminders-config.ts`
+
+Verifies the deployment can honour cancellation authority **before** any reminder is scheduled
+against it: keyring configured, active version explicitly resolved and present in the ring,
+Resend key present, app URL set. Fails closed with *"do NOT deploy the reminders worker."*
+
+**Secrets are never printed — not even truncated**, since a partial secret in a deploy log is
+still a disclosed secret. Two tests pin that failure messages name the *version* and never the
+key material.
+
+### 10.5 Member gesture
+
+`components/reminders/RemindMeOfThis.tsx` — before committing, the member sees the exact text
+that will be sent, the date, the time, the timezone, and the channel. **No MAIA-generated
+embellishment**: no suggested wording, no warmth composed around their words, no encouragement.
+After creation: *"Scheduled for Tuesday, September 8 at 9:00 AM EDT · You can cancel it anytime
+before sending."*
+
+`app/maia/reminders/page.tsx` — the authenticated pre-delivery cancellation surface. It states
+what is scheduled and lets them stop it. Nothing on it counts anything. An `already_sending`
+result is reported truthfully rather than as a cancellation that did not happen.
+
+### 10.6 Gate state at this head
+
+| Gate | Result |
+|---|---|
+| R32 A–D | **green, 7 assertions** · negative control caught on all three propositions · 14 files scanned |
+| Real-DB dispatch proof | **32/32** (9 cases + invariant sweep) |
+| Reminders + email suites | **94/94**, 9 suites |
+| Provider idempotency propagation | included above; fails 3/5 when propagation removed |
+| Key retention / rotation | included above |
+| `npm run typecheck` | clean, no regressions |
+| `npm run check:no-supabase` | clean |
+| Refusal registry overall | **110 passed · 5 failed · 24 refusals** — the 5 are the pre-existing R19/R21 detector defects |
+
+### 10.7 Remaining — in order
+
+1. **R19/R21 detector repair lands first, as a separate PR.** SAR's base must contain the repaired
+   harness before final acceptance, so this feature PR does not carry known false constitutional
+   reds. Queued as its own task; **not** folded into this unit.
+2. PR + sovereignty gates for the member-facing surface.
+3. Deploy the exact accepted SHA.
+4. **One founder-visible production witness**, proving PRESENCE:
+
+```text
+member explicitly selects a source
+→ sees and approves the exact snapshot
+→ schedules a future time
+→ confirmation arrives
+→ pre-delivery cancellation demonstrably works
+→ second uncancelled reminder becomes due
+→ no absence/activity read occurs
+→ only one worker obtains dispatch authority
+→ current email resolved through the narrow seam
+→ email is NOT sent before delivery_at
+→ exactly one copy is sent
+→ exact approved words arrive
+→ no return/engagement observation is written
+```
+
+5. Witness record → **close SELF-ADDRESSED-RETURN-01**.
+
+**STOP there.** No Gentle Rhythm, no adaptive support, no generalized Coaching Platform work.

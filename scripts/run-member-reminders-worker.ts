@@ -35,14 +35,20 @@ import {
   type ClaimedReminder,
 } from '../lib/reminders/dispatch';
 import { sendEmail, SENDERS } from '../lib/email/sendEmail';
-import { reminderIdempotencyKey, type ReminderFailureCode } from '../lib/reminders/types';
+import {
+  WORKER_CADENCE_SECONDS,
+  reminderIdempotencyKey,
+  type ReminderFailureCode,
+} from '../lib/reminders/types';
 import {
   CancelSecretUnavailableError,
   deriveCancelToken,
   isCancelSecretConfigured,
 } from '../lib/reminders/cancelToken';
 
-const POLL_INTERVAL_MS = 60_000;
+// The published delivery window. A reminder is never sent before the member's
+// chosen time; after it, dispatch happens within this cadence.
+const POLL_INTERVAL_MS = WORKER_CADENCE_SECONDS * 1000;
 const BATCH_SIZE = 100;
 const MAX_ATTEMPTS = 3;
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://soullab.life';
@@ -124,7 +130,7 @@ async function deliver(reminder: ClaimedReminder): Promise<void> {
       await recordTerminalFailure(reminder.id, 'delivery_uncertain');
       console.error(`[reminders] terminal failure { id: ${reminder.id}, code: delivery_uncertain }`);
     } else {
-      // cancelled / lost_claim / already_dispatched — all correct outcomes.
+      // cancelled / lost_claim / already_dispatched / not_yet_due — all correct.
       console.log(`[reminders] dispatch declined { id: ${reminder.id}, reason: ${dispatch.reason} }`);
     }
     return;

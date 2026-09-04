@@ -30,6 +30,8 @@ import { verifyReminderSource } from '@/lib/reminders/source';
 import {
   DEFAULT_DELIVERY_WINDOW_HOURS,
   MAX_DELIVERY_TEXT_LENGTH,
+  formatInAuthoredZone,
+  isValidIanaTimezone,
   isValidReminderSourceType,
 } from '@/lib/reminders/types';
 
@@ -42,8 +44,9 @@ export async function GET() {
   // Ownership-scoped. cancel_token_hash is never returned — the token is not
   // recoverable from here, by design.
   const res = await query(
-    `SELECT id, source_type, source_id, delivery_at, delivery_deadline,
-            delivery_text, created_at, cancelled_at, delivered_at, failed_at, failure_code
+    `SELECT id, source_type, source_id, delivery_at, delivery_timezone, delivery_deadline,
+            delivery_text, created_at, cancelled_at, dispatch_started_at,
+            delivered_at, failed_at, failure_code
        FROM member_reminders
       WHERE member_id = $1
       ORDER BY delivery_at DESC
@@ -67,7 +70,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
   }
 
-  const { sourceType, sourceId, deliveryAt, deliveryText } = (body ?? {}) as Record<
+  const { sourceType, sourceId, deliveryAt, deliveryText, timezone } = (body ?? {}) as Record<
     string,
     unknown
   >;
@@ -99,6 +102,15 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'deliveryAt must be in the future' }, { status: 400 });
   }
 
+  // Fails closed on an unknown zone rather than silently substituting UTC,
+  // which would misreport what the member authorized.
+  if (!isValidIanaTimezone(timezone)) {
+    return NextResponse.json(
+      { error: 'timezone must be a valid IANA zone, e.g. America/New_York' },
+      { status: 400 },
+    );
+  }
+
   const resolvedSourceId = typeof sourceId === 'string' && sourceId.length > 0 ? sourceId : null;
   const sourceCheck = await verifyReminderSource(member.id, sourceType, resolvedSourceId);
   if (!sourceCheck.ok) {
@@ -124,9 +136,9 @@ export async function POST(request: NextRequest) {
   const res = await query<{ id: string }>(
     `WITH inserted AS (
        INSERT INTO member_reminders
-         (member_id, source_type, source_id, delivery_at, delivery_deadline,
-          delivery_text, cancel_token_hash)
-       VALUES ($1, $2, $3, $4, $5, $6, gen_random_uuid()::text)
+         (member_id, source_type, source_id, delivery_at, delivery_timezone,
+          delivery_deadline, delivery_text, cancel_token_hash)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, gen_random_uuid()::text)
        RETURNING id
      )
      SELECT id FROM inserted`,
@@ -135,6 +147,7 @@ export async function POST(request: NextRequest) {
       sourceType,
       resolvedSourceId,
       when.toISOString(),
+      timezone,
       deadline.toISOString(),
       text,
     ],
@@ -175,6 +188,7 @@ export async function POST(request: NextRequest) {
       memberId: member.id,
       reminderId,
       deliveryAt: when,
+      timezone,
       deliveryText: text,
       cancelUrl,
       listUrl: `${appUrl}/maia/reminders`,
@@ -187,7 +201,15 @@ export async function POST(request: NextRequest) {
   }
 
   return NextResponse.json(
-    { id: reminderId, deliveryAt: when.toISOString(), deliveryText: text, confirmationSent },
+    {
+      id: reminderId,
+      deliveryAt: when.toISOString(),
+      timezone,
+      // What the member is told, in the zone they authored in.
+      scheduledFor: formatInAuthoredZone(when, timezone),
+      deliveryText: text,
+      confirmationSent,
+    },
     { status: 201 },
   );
 }

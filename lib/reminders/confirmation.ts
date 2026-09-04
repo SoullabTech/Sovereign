@@ -17,6 +17,7 @@
  */
 
 import { sendEmail, SENDERS } from '@/lib/email/sendEmail';
+import { DELIVERY_WINDOW_COPY, formatInAuthoredZone } from './types';
 
 function escapeHtml(s: string): string {
   return s.replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[c] as string);
@@ -27,25 +28,32 @@ export async function sendSchedulingConfirmation(opts: {
   memberId: string;
   reminderId: string;
   deliveryAt: Date;
+  timezone: string;
   deliveryText: string;
   cancelUrl: string;
   listUrl: string;
 }): Promise<boolean> {
-  const when = opts.deliveryAt.toISOString().replace('T', ' ').slice(0, 16) + ' UTC';
+  // Shown in the zone the member authored in, so the confirmation states what
+  // they actually authorized rather than re-deriving a local time from
+  // wherever they happen to be when they read it.
+  const when = formatInAuthoredZone(opts.deliveryAt, opts.timezone);
 
   const text = [
-    `We'll send you this on ${when}:`,
+    `Scheduled for ${when} — ${DELIVERY_WINDOW_COPY}:`,
     '',
     opts.deliveryText,
+    '',
+    'You can cancel it anytime before sending.',
     '',
     `Cancel it: ${opts.cancelUrl}`,
     `All your reminders: ${opts.listUrl}`,
   ].join('\n');
 
   const html = `<div style="font:16px/1.65 system-ui,sans-serif;max-width:34rem;color:#2b2b2b">
-  <p style="color:#7a7a7a;font-size:14px;margin:0 0 1.5rem">We'll send you this on ${escapeHtml(when)}:</p>
+  <p style="color:#7a7a7a;font-size:14px;margin:0 0 1.5rem">Scheduled for ${escapeHtml(when)} — ${escapeHtml(DELIVERY_WINDOW_COPY)}:</p>
   <div style="white-space:pre-wrap;border-left:2px solid #b9a06a;padding-left:1rem">${escapeHtml(opts.deliveryText)}</div>
-  <p style="color:#7a7a7a;font-size:13px;margin:1.5rem 0 0">
+  <p style="color:#7a7a7a;font-size:13px;margin:1.5rem 0 0">You can cancel it anytime before sending.</p>
+  <p style="color:#7a7a7a;font-size:13px;margin:.75rem 0 0">
     <a href="${opts.cancelUrl}" style="color:#7a7a7a">Cancel it</a> ·
     <a href="${opts.listUrl}" style="color:#7a7a7a">All your reminders</a>
   </p>

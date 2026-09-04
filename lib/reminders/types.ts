@@ -63,12 +63,63 @@ export function reminderIdempotencyKey(reminderId: string): string {
   return `self-addressed-return/${reminderId}`;
 }
 
+/**
+ * How often the worker looks for due reminders.
+ *
+ * Email cannot guarantee arrival at an exact second, so "arrives at the chosen
+ * instant" is NOT an acceptance criterion. The contract we can actually keep,
+ * and therefore the only one we state to the member:
+ *
+ *   A reminder is NEVER sent before the member's chosen time. After that time,
+ *   it is dispatched within the published delivery window.
+ */
+export const WORKER_CADENCE_SECONDS = 60;
+
+/** Member-facing phrasing for that window. Never promises a precise instant. */
+export const DELIVERY_WINDOW_COPY = 'sent shortly after the time you chose';
+
+/**
+ * Validate an IANA timezone by asking the platform, rather than pattern-matching
+ * a name. Fails closed: an unknown zone is refused at creation, never silently
+ * replaced with UTC — that would misreport what the member authorized.
+ */
+export function isValidIanaTimezone(tz: unknown): tz is string {
+  if (typeof tz !== 'string' || tz.length === 0 || tz.length > 64) return false;
+  try {
+    new Intl.DateTimeFormat('en-US', { timeZone: tz });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Render an instant in the zone the member authored in.
+ * e.g. "Tuesday, September 8 at 9:00 AM EDT"
+ */
+export function formatInAuthoredZone(at: Date, timeZone: string): string {
+  const date = new Intl.DateTimeFormat('en-US', {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
+    timeZone,
+  }).format(at);
+  const time = new Intl.DateTimeFormat('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+    timeZoneName: 'short',
+    timeZone,
+  }).format(at);
+  return `${date} at ${time}`;
+}
+
 export interface MemberReminder {
   id: string;
   member_id: string;
   source_type: ReminderSourceType;
   source_id: string | null;
   delivery_at: Date;
+  delivery_timezone: string;
   delivery_deadline: Date;
   channel: 'email';
   delivery_text: string;
