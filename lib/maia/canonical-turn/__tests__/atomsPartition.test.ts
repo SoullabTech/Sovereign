@@ -144,6 +144,31 @@ describe('partition contract', () => {
     expect(() => assertUsablePartition(swapped, legacy)).toThrow(/registry_order_violation/);
   });
 
+  it('refuses non-adjacent producers even when order increases — a gap splits the block', () => {
+    const { partition, legacy } = partitionFor([MEMBER_ATOM, PRACTITIONER_ATOM]);
+    // member.relational_context is declared AFTER practitioner.atoms_observations, so
+    // {member.atoms, member.relational_context} is increasing but gapped: the canonical
+    // renderer would place practitioner.atoms_observations between the two segments.
+    const order = PRODUCER_IDS as readonly string[];
+    expect(order.indexOf('member.relational_context'))
+      .toBeGreaterThan(order.indexOf('practitioner.atoms_observations'));
+
+    const gapped = {
+      ...partition,
+      segments: [
+        partition.segments[0],
+        { ...partition.segments[1], producerId: 'member.relational_context' as const },
+      ],
+    };
+    expect(() => assertUsablePartition(gapped, legacy)).toThrow(/registry_adjacency_violation/);
+  });
+
+  it('the atoms partition itself is adjacent — no producer is declared between its segments', () => {
+    const order = PRODUCER_IDS as readonly string[];
+    expect(order.indexOf('practitioner.atoms_observations'))
+      .toBe(order.indexOf('member.atoms') + 1);
+  });
+
   it('refuses a repeated producer id — MIPA keys one block per producer', () => {
     const { partition, legacy } = partitionFor([MEMBER_ATOM, PRACTITIONER_ATOM]);
     const dup = { ...partition, segments: [partition.segments[0], partition.segments[0]] };

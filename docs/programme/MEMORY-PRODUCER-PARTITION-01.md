@@ -575,3 +575,92 @@ BOTH                 canonicalCount rises by the declared delta
 ```
 
 `contentParity:false` or a non-empty `unexpectedDiff` on any live turn STOPS the cut for classification — never normalize it.
+
+---
+
+## 11. Pre-witness corrections (2026-09-04)
+
+### 11.1 Contract hole closed — adjacency, not merely order
+
+`assertUsablePartition()` checked that segment producers occur in **increasing** registry order but not that they are **adjacent**. Safe for atoms today only because `practitioner.atoms_observations` was deliberately declared immediately after `member.atoms` — the generic contract was weaker than the ruling it claims to enforce.
+
+A future partition could pass with positions `10, 12` while an unrelated producer sits at `11`. Canonical renders in registry order, so that producer would be inserted **between** two halves of one source block — the exact representability failure the census ruled out for interleaved sources.
+
+```ts
+if (positions[i] !== positions[i - 1] + 1) {
+  throw new PartitionRefused('registry_adjacency_violation', …);  // names what sits between
+}
+```
+
+Two tests added: a non-adjacent-but-increasing partition is refused, and the atoms partition itself is pinned adjacent (`index(practitioner.atoms_observations) === index(member.atoms) + 1`). No behaviour change to the atoms result.
+
+### 11.2 Canonical rebind — REQUIRED before witness
+
+`4c6ba725f` descended from `34cc4cad9`; canonical had moved to `cf6ce3cef`. Deploying the old tip would have put production on a tree missing the intervening canonical work.
+
+```text
+merge-base        34cc4cad9
+canonical         cf6ce3cef  (PRs #1192, #1195, WS2-07C/07D lane records)
+file overlap      NONE — canonical movement touches no file in this lane
+merge             clean, zero conflicts, nothing resolved by assumption
+```
+
+Gates rerun **after** the merge, not before:
+
+```text
+lib/maia/canonical-turn/ + lib/maia/__tests__/    198 passed · 10 suites
+npm run typecheck                                 ✅ no regressions
+npm run check:no-supabase                         ✅ clean
+```
+
+`4c6ba725f` is superseded and **must not be deployed**.
+
+### 11.3 OPEN CONSENT-COPY DEFECT — recorded, not repaired here
+
+The consent trace in §10.1 exposes a **pre-existing member-facing wording defect** in the practitioner block:
+
+```text
+current text     "approved for inclusion in MAIA context"
+                 (lib/maia/memoryAtomsLoader.ts, PRACTITIONER OBSERVATIONS section)
+
+known mechanism  return_preference DEFAULTs to 'contextual_doorway';
+                 member_response_status is an opt-OUT verdict the system never sets,
+                 with no runtime writer for 'confirmed'
+                 → default eligible unless rejected
+
+status           the copy asserts an affirmative member approval path that
+                 DOES NOT EXIST in the consent mechanism
+
+repair           separate bounded cognition-copy cut
+```
+
+**Not repaired in this cut** — the legacy-byte freeze correctly forbids touching it, since that text is inside the string cognition receives. It does not invalidate the shadow partition, which changes identity and not copy. Recorded so it cannot quietly disappear.
+
+This is the second finding of the same shape as the partition itself: the system describing a member act that the consent path does not provide.
+
+### 11.4 Production witness — the read-only census that must precede it
+
+Before deploying, census live eligible atoms for whether the three shapes exist at all:
+
+```text
+MEMBER ONLY · PRACTITIONER ONLY · BOTH
+```
+
+**Do not manufacture or modify member data to satisfy the witness** without separate authorization. A shape that does not occur naturally is recorded as unobserved, not produced.
+
+Expected on the governed deploy:
+
+```text
+MEMBER ONLY        zeroDiff true · expectedPartitionDelta [] · contentParity null
+                   unexpectedDiff []
+
+PRACTITIONER ONLY  zeroDiff false · canonicalCount == legacyCount
+                   identity member.atoms → practitioner.atoms_observations
+                   contentParity true · unexpectedDiff []
+
+BOTH               zeroDiff false · canonicalCount == legacyCount + 1
+                   member.atoms legitimately narrowed · practitioner producer added
+                   contentParity true · unexpectedDiff []
+```
+
+Any `contentParity:false` or non-empty `unexpectedDiff` is a **hard stop** for classification — never normalized, never fixed around.

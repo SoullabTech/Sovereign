@@ -67,10 +67,13 @@ export function recompose(partition: DeclaredPartition): string {
  *   - non-degenerate           at least one segment
  *   - single-instance          no producer id appears twice (ct-1 keys by producer;
  *                              MIPA's `byId.set` would silently drop the earlier one)
- *   - registry-ordered         segment order matches PRODUCER_REGISTRY declaration
- *                              order, because canonical participants are rendered in
- *                              registry order — a partition whose source order differs
- *                              would be reordered downstream
+ *   - registry-adjacent        segment producers occupy CONSECUTIVE PRODUCER_REGISTRY
+ *                              positions, in source order. Increasing-but-gapped is NOT
+ *                              enough: canonical participants render in registry order,
+ *                              so a producer declared between two segments would be
+ *                              inserted BETWEEN them, splitting one source block with
+ *                              unrelated material. Adjacency is what makes a partition
+ *                              representable, not merely ordered.
  *   - non-empty per segment    a segment whose declared authorship has no material is
  *                              a false participant (this is what sank retrieved.member_web)
  *   - byte-exact               recomposes to the legacy text, character for character
@@ -106,6 +109,17 @@ export function assertUsablePartition(partition: DeclaredPartition, legacyText: 
       throw new PartitionRefused(
         'registry_order_violation',
         `${legacyKey}: ${segments[i - 1].producerId} → ${segments[i].producerId}`,
+      );
+    }
+    // Increasing is not sufficient. A gap means some other producer is declared
+    // between these two segments, and canonical renders in registry order — so it
+    // would be inserted INTO the middle of one source block.
+    if (positions[i] !== positions[i - 1] + 1) {
+      const between = declarationOrder.slice(positions[i - 1] + 1, positions[i]).join(', ');
+      throw new PartitionRefused(
+        'registry_adjacency_violation',
+        `${legacyKey}: ${segments[i - 1].producerId} → ${segments[i].producerId}`
+        + ` (declared between them: ${between})`,
       );
     }
   }
