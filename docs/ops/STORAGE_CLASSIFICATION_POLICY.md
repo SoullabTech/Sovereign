@@ -105,3 +105,22 @@ Named follow-up — **Checkout Lifecycle GC**: extend the worktree reclamation m
 to discover approved checkout roots, classify active/dirty/protected trees, and
 reclaim only regenerable artifacts from inactive ones — never source, and never
 the checkout itself, without separate authority.
+
+### Design constraint: reclaimable is not disposable
+
+The current classifier answers exactly one question — *could this be reconstructed
+without loss?* — and that is the right question for custody. It is **not** the
+question *is this checkout still wanted?*
+
+The two diverge at a predictable moment. A tree holding unbacked work is protected
+because its work is unique; push that work and the same tree becomes `dirty=0,
+unpushed=0`, which classifies as `SAFE` and eligible for reclamation. The
+protection dissolves at the instant custody completes — correct behavior, and the
+whole point of the design, but it means securing work also removes the thing that
+was keeping the checkout around.
+
+Checkout Lifecycle GC must therefore carry **liveness as a dimension distinct from
+custody safety**. Custody safety says reclamation would lose nothing; liveness says
+someone is still working here. Reclaiming on custody safety alone destroys
+convenience the person was relying on, silently, at the moment they did the right
+thing.
