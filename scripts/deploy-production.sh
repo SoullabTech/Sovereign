@@ -385,7 +385,9 @@ cmd_setup() {
 # ═══════════════════════════════════════════════════════════════════════════════
 cmd_deploy() {
     local ref="${1:-}"
-    acquire_deploy_lock "deploy-production.sh deploy"
+    # The lock record names the ASSERTED target (the SHA on the command line),
+    # never the shared checkout's HEAD — see scripts/deploy-lock.sh.
+    acquire_deploy_lock "deploy-production.sh deploy" "$ref"
     log_info "Deploying MAIA Sovereign..."
 
     cd "$PROJECT_DIR"
@@ -506,7 +508,9 @@ cmd_deploy() {
 # UPDATE - Pull latest and redeploy
 # ═══════════════════════════════════════════════════════════════════════════════
 cmd_update() {
-    acquire_deploy_lock "deploy-production.sh update"
+    # No commit is named yet — `update` names the tip it pulls, below. The
+    # record is re-written with that SHA the moment the pull completes.
+    acquire_deploy_lock "deploy-production.sh update" "pending (tip pulled by git pull; recorded once the pull completes)"
     log_info "Updating MAIA Sovereign..."
 
     cd "$PROJECT_DIR"
@@ -521,6 +525,7 @@ cmd_update() {
     # us. Sets MAIA_BUILD_CONTEXT + GIT_COMMIT.
     local pulled_sha
     pulled_sha="$(git -C "$PROJECT_DIR" rev-parse HEAD 2>/dev/null || true)"
+    deploy_lock_record_target "$pulled_sha"
     deploy_ctx_assert_and_materialize "$pulled_sha" || exit 1
 
     log_info "Rebuilding and redeploying..."
@@ -610,7 +615,7 @@ cmd_update() {
 # MIGRATE - Run database migrations only
 # ═══════════════════════════════════════════════════════════════════════════════
 cmd_migrate() {
-    acquire_deploy_lock "deploy-production.sh migrate"
+    acquire_deploy_lock "deploy-production.sh migrate" "migrations only (no image is built)"
     log_info "Running database migrations..."
 
     cd "$PROJECT_DIR"
@@ -716,7 +721,7 @@ cmd_smoke() {
 # Two-command rollback: swap image tags, restart container
 # No rebuild required - just swap and go
 cmd_rollback() {
-    acquire_deploy_lock "deploy-production.sh rollback"
+    acquire_deploy_lock "deploy-production.sh rollback" "maia-sovereign:previous (image tag swap; no commit is built)"
     log_info "Rolling back to previous deployment..."
 
     cd "$PROJECT_DIR"
