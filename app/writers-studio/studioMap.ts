@@ -83,6 +83,8 @@ export const IMPORT_HREF = '/press/manuscript?import=1';
  * later slice and gets its own door only when it is real.
  */
 export const CANVAS_HREF = '/writers-studio/canvas';
+/** BUILD-07D — where a writer encounters MAIA's frozen developmental readings, by Work. */
+export const DEVELOP_HREF = '/writers-studio/develop';
 
 export const STUDIO_MAP: StudioGroup[] = [
   {
