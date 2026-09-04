@@ -742,3 +742,96 @@ BOTH               NO production proof available · tests remain the evidence
 ```
 
 **Hard stop, unchanged:** any `contentParity:false` or non-empty `unexpectedDiff` on any live turn stops the cut for classification. It is never explained away, never normalized, and never fixed around.
+
+---
+
+## 13. Deploy of the witness candidate (2026-09-04)
+
+### 13.1 `293d454cf` LIVE — provenance verified on both channels
+
+```text
+deploy path   ssh minisforum → scripts/pre-deploy-gate.sh deploy-maia 293d454cf
+lock          pid 1668314 · entry pre-deploy-gate.sh deploy-maia
+context       immutable git-archive snapshot of 293d454cf
+compose       carries GIT_COMMIT only as build arg (no runtime override)
+env file      does not define GIT_COMMIT
+gate          Co-Lab boundaries 33 passed · 0 failed · 0 warned (floor 31)
+image         maia-sovereign:prod GIT_COMMIT=293d454cf == asserted
+running       printenv 293d454cf == Config.Env 293d454cf == asserted
+lane          DEPLOY_LANE=deploy-lane
+rollback      :previous preserved · :current and :293d454cf tagged
+container     created 2026-09-04T20:57:03Z
+```
+
+The 2026-09-03 image/container split does not recur: both channels were verified independently and agree.
+
+### 13.2 Open deploy-lane artifact — the `:broken` tag
+
+```text
+[deploy-tag] Pruning stale rollback tag: maia-sovereign:broken (created 2026-09-04T20:25:10Z)
+```
+
+Recorded as **known facts only**:
+
+```text
+existed          yes
+created          2026-09-04T20:25:10Z (between the cf6ce3cef deploy and this one)
+pruned by        this governed deploy's retention step
+creator          UNKNOWN
+purpose          UNKNOWN
+```
+
+No lane script in this repo creates a tag by that name. **Nothing further is inferred from the name.** It does not contaminate `293d454cf`: the running image, container env, deploy lane and rollback chain are each independently bound and verified (§13.1). Same category as the 16:30:39 custody question — an unexplained deploy-lane artifact, recorded so it does not vanish.
+
+### 13.3 Pre-witness absence, correctly classified
+
+`docker logs --since 15m | grep "[MAIA/shadow]"` returned nothing on two runs.
+
+This is **absence of a turn, not absence of emission**. Two independent reasons:
+
+1. The container was recreated at 20:57:03Z, so its log can only contain post-swap lines.
+2. `[MAIA/shadow]` emits on **every** `/list` turn — the shadow construction sits outside the memory gate. Only atom *loading* is gated (`allowCrossSessionMemory && userId && !isSanctuary`). So an empty grep can only mean no `/list` turn reached this runtime.
+
+Nothing to classify. The witness has not yet been spent.
+
+### 13.4 The MEMBER_ONLY witness — conditions and acceptance
+
+Conditions for a valid turn: **signed in · cross-session memory ON · not Sanctuary · ordinary `/list` turn.** The turn need not mention memory or atoms.
+
+```bash
+ssh soullab@minisforum 'docker logs maia-sovereign --since 15m 2>&1 \
+  | grep -E "\[MAIA/shadow\]|\[MAIA/sovereign\] atoms loaded"'
+```
+
+Acceptance:
+
+```text
+atoms loaded   count: 8 · memberSection: true · practitionerSection: false
+shadow         zeroDiff: true · expectedPartitionDelta: [] ·
+               contentParity: null · unexpectedDiff: []
+
+→ MEMBER_ONLY PRODUCTION WITNESS · PASS · NO REGRESSION
+     legacy cognition   unchanged
+     canonical identity unchanged
+     partition delta    none expected
+     unexpected diff    none
+```
+
+`contentParity: null` is correct here: member-only declares no partition, so there is nothing to recompose.
+
+**Hard stop** on `contentParity: false` or a non-empty `unexpectedDiff`. And if the atoms line reports `practitionerSection: true`, it is **not** the MEMBER_ONLY shape — do not force the classification; bring the two lines back for adjudication.
+
+### 13.5 The closure ceiling — do not let it drift
+
+If MEMBER_ONLY passes and PRACTITIONER_ONLY never naturally occurs, the cut is **not** "production witnessed." The truthful state is:
+
+```text
+production no-regression        PASS
+production partition firing     UNWITNESSED
+partition firing in tests       PASS
+BOTH production shape           UNOBSERVED
+```
+
+Whether that ceiling is sufficient to merge and close is a **later adjudication**, not decided here and not decided by the MEMBER_ONLY result alone.
+
+Passive observation of the ordinary `[MAIA/shadow]` stream remains permitted — the witness reads only structural metadata, digests and counts. It stays **incidental observation of the normal stream, never monitoring of a particular member**.
