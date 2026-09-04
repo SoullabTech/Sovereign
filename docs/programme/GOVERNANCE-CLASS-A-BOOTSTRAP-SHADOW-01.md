@@ -214,25 +214,32 @@ Ends:
 
 ```text
 ADOPTION AUTHORITY     §3 Founder-Steward responsibility
-RATIFICATION STATUS    PENDING · must be explicit, after a stable green head
+RATIFICATION STATUS    PERFORMED post-hoc — see §8
+                       (read as PENDING at canonicalization; that is the deviation)
 NOT AUTHORIZED BY      Bootstrap Class A — Shadow Validation Only
 ```
 
-**The act has not been performed.** Nothing in this document constitutes it, and no sentence
-here should be read as having made it. It becomes real only as an explicit, recorded
-Founder-Steward act taken after this amendment reaches a stable green head — not as a
-clause anticipating itself.
+> **§8 supersedes the status line above as a statement of fact, and preserves it as a
+> statement of history.** At canonicalization this block read `PENDING`, and it was accurate.
+> The act came afterwards.
 
-**When performed, the act will not use the new rule.** Its authority is the Founder-Steward's
-*already existing* responsibility, held before this amendment and independent of it —
+**At canonicalization, the act had not been performed.** The canonical document therefore
+correctly recorded `PENDING` at that moment. The act was subsequently performed post-hoc and
+prospectively, as recorded in §8 and in PR #1201 comment `5547712376`; it does not reach
+backward to authorize the canonical merge.
+
+**The act as performed did not use the new rule.** Its authority was the Founder-Steward's
+already-existing responsibility, held before this amendment and independent of it —
 `GOVERNANCE_MENTOR_COVENANT.md` §3: *"The Founder-Steward holds **final responsibility** for
 MAIA's purpose, doctrine, and production legitimacy,"* including *"final sign-off on
 production releases"* and *"veto power on any change that threatens sovereignty, consent, or
 doctrine alignment."* Repairing a constitution that has become self-contradictory and
 mechanically unsatisfiable falls squarely inside that standing responsibility.
 
-The new bootstrap-shadow rule begins only **after** that act has ended. It is not invoked
-by it, does not authorize it, and gains nothing from it. That ordering is what keeps the
+**The bootstrap-shadow rule became available for governed use only after the recorded
+ratification act.** Because the amendment was already canonical, that one-time act terminated
+immediately upon being made. It did not authorize itself and contributed no authority to
+#1199. That ordering is what keeps the
 no-self-authorization clause real rather than ceremonial: the clause would be empty if the
 very act adopting the rule could lean on it.
 
@@ -370,3 +377,80 @@ Cut 1A
 
 and that exact SHA must earn fresh technical evidence under the new rule — not inherit
 evidence from tonight's superseded heads.
+
+---
+
+## 8. Adoption sequence deviation and post-hoc ratification — 2026-09-04
+
+```text
+EXPECTED
+  stable green → Founder-Steward ratification → canonical merge
+
+ACTUAL
+  stable green → canonical merge at 825a0c2a5 → ratification absent
+
+CLASSIFICATION
+  canonicalized before required adoption act
+  NOT retroactively cured
+
+POST-HOC ACT
+  Founder-Steward expressly ratified the amendment after canonicalization
+  recorded: PR #1201, comment 5547712376
+
+EFFECT
+  ratification is PROSPECTIVE from the recorded act
+  #1201's prior merge remains a recorded sequence deviation
+  #1199's prior merge remains a separate recorded sequence deviation
+  bootstrap-shadow rule available only from the ratification act forward
+```
+
+### 8.1 The heart of the correction
+
+> **Canonicalization satisfied a necessary timing condition; it did not manufacture the
+> missing adoption act.**
+
+§5 of the covenant makes the rule effective "only once this governance amendment is
+canonical," and separately requires that its adoption authority be *expressly ratified*.
+Only the first was met at `825a0c2a5`. At that moment this document still read
+`RATIFICATION STATUS PENDING · must be explicit` and *"The act has not been performed."* The
+rule was therefore **not available for governed use** between canonicalization and the
+ratification act, and production remained blocked across that whole interval.
+
+### 8.2 Post-hoc, not retroactive
+
+The distinction is load-bearing and is the reason this section exists rather than an edit
+changing `PENDING` to `RATIFIED`:
+
+```text
+POST-HOC       the act was made later than it should have been, and says so
+RETROACTIVE    the act reaches backwards and authorizes what preceded it
+```
+
+This ratification is the first and not the second. It does not authorize or cure #1201's own
+merge, does not authorize #1199's merge, and erases neither deviation. Rewriting the status
+line to imply the act had happened would have been the same fabrication §7 refuses for
+#1199 — asserting an authority that was not recorded at the time — committed inside the
+document written to prevent it.
+
+### 8.3 The constitutional clause is unchanged
+
+`GOVERNANCE_MENTOR_COVENANT.md` §5 already says the adoption authority applies *"when
+expressly ratified"* and that the rule may not authorize its own adoption. Both remain
+correct and are untouched by this section. **The defect was historical, not architectural** —
+the constitution described the right process; the process was not followed. Amending the
+clause to fit what happened would have damaged a correct rule to accommodate a deviation
+from it.
+
+### 8.4 State after this record
+
+```text
+governance repair          ADOPTED (prospective, from the recorded act)
+#1201 sequence deviation   RECORDED · not erased
+#1199 sequence deviation   RECORDED · not erased
+Cut 1A                     canonical · NOT deployed · zero response authority
+production                 293d454cf
+```
+
+Cut 1A's production promotion requires its own separate Founder-Steward bootstrap-shadow
+sign-off under the now-live rule, naming an exact deploy SHA re-derived from then-current
+canonical — never `bc2984e65` by inheritance (§7.6).
