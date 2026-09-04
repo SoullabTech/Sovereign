@@ -445,7 +445,7 @@ const MEMBER_LENS: LensRow[] = [
   },
   {
     name: 'Semantic',
-    remembers: 'What remains true',
+    remembers: 'What carries forward',
     layer: 'partial',
     what: 'Enduring material about a person and their world. Live as the Keep: items the member places, each sealed or allowed to return. Broader retrieval across a person\u2019s people, projects and concepts is not on the live path and is withheld from the label.',
     carried: 'Semantic',
@@ -454,7 +454,7 @@ const MEMBER_LENS: LensRow[] = [
     name: 'Episodic',
     remembers: 'What mattered',
     layer: 'live',
-    what: 'Moments the member kept, returning later in their own words. Not everything \u2014 only what was deliberately marked. Unmarking deletes it.',
+    what: 'Moments the member chose to keep, returning later as marked material. Not everything \u2014 only what was deliberately marked, and unmarking deletes the record. The mark establishes who kept the moment, not who authored every word inside it; that mixed authorship is one of the unresolved cases named below.',
     carried: 'Episodic',
   },
   {
@@ -489,7 +489,7 @@ const MEMBER_LENS: LensRow[] = [
     name: 'Provenance',
     remembers: 'Whose knowing this is',
     layer: 'partial',
-    what: 'Not only what is remembered, but whose knowing it represents: member speech, MAIA inference, practitioner observation, computed material, house-authored context. Live in part \u2014 producer identities and the partition contract are in production, and the practitioner correction shipped 2026-09-04. Some mixed-source memory remains unresolved, and provenance-aware canonical cognition is the next stage.',
+    what: 'Not only what is remembered, but whose knowing it represents: member speech, MAIA inference, practitioner observation, computed material, house-authored context. Live in part \u2014 producer identities and the partition contract are running in production shadow, including the practitioner and member separation. Legacy cognition is unchanged. Some mixed-source memory remains unresolved, and provenance-aware canonical cognition is the next stage.',
     carried: 'Meta-memory · producer provenance',
   },
   {
@@ -542,6 +542,10 @@ export default function AccountedForPage() {
               <div className="border border-soullab-border-subtle bg-soullab-surface px-4 py-3.5 text-[0.9rem] leading-[1.45] text-soullab-text-secondary">
                 <div className="mb-1.5"><Chip layer="live" /></div>
                 Verified in production. A member experiences it today.
+              </div>
+              <div className="border border-soullab-border-subtle bg-soullab-surface px-4 py-3.5 text-[0.9rem] leading-[1.45] text-soullab-text-secondary">
+                <div className="mb-1.5"><Chip layer="partial" /></div>
+                Verified in some governed form on the live path, and incomplete in the specific way the page names.
               </div>
               <div className="border border-soullab-border-subtle bg-soullab-surface px-4 py-3.5 text-[0.9rem] leading-[1.45] text-soullab-text-secondary">
                 <div className="mb-1.5"><Chip layer="designed" /></div>
@@ -623,7 +627,7 @@ export default function AccountedForPage() {
               <li><strong className="text-soullab-text-primary">Soullab authored this.</strong></li>
             </ul>
             <Quote>This work does not widen what MAIA may know. It corrects whose authority MAIA says that knowledge carries.</Quote>
-            <P>The first repair under that principle shipped on 2026-09-04. A practitioner&apos;s observation about a member used to be recorded under the member&apos;s own authorship, as though the member had placed it there. MAIA&apos;s wording already held the two apart when speaking; the record did not. It does now. Nothing changed about what MAIA receives or says &mdash; the correction is to the account of where the material came from, which is the part a member would have no way to check.</P>
+            <P>The first structural repair under that principle entered production shadow on 2026-09-04. Practitioner observations were already stored as practitioner observations and already spoken as practitioner observations; what could still place them under the member&apos;s own memory identity &mdash; carrying an authority the member had not granted &mdash; was the canonical provenance representation. That representation now separates them. Nothing changed about what MAIA receives or says: the correction is to the account of whose authority the material carries, which is the part a member would have no way to check.</P>
             <P>Three kinds of recalled material still resist that treatment, and are named above as designed rather than live. Where a truthful split is not yet possible, the system records the block as unresolved instead of giving it a precision it does not have.</P>
 
             <H3>Where this is going</H3>
