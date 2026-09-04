@@ -434,6 +434,26 @@ PRODUCT RULE      a superseded observation remains visible as what MAIA actually
 STATE             BUILD-07D IMPLEMENTATION OPEN · no candidate yet
 ```
 
+```text
+2026-09-04 · BUILD-07D CANDIDATE — GATE A PASS · STRUCTURALLY PROVED · NOT CLOSED
+CANDIDATE         d005d59eb (claude/writer-author-studios-roadmap-b2tqf5), built against canonical
+                  376daae06; opening record 3ed788b3b is the first commit on the branch
+SHAPE             two routes (GET list · POST one-lens commission · GET one by identity; SELECT
+                  only; ownership in every query) · pure presentation (frozen-topology labels,
+                  verbatim text, three states) · client (no poll) · the Develop room
+                  (?m=&r=; ledger · reading · observations in place · invocation · every state) ·
+                  a Canvas door. No interpretation, dialogue, decision, mutation, re-anchoring,
+                  automatic refresh.
+GATE A            scripts/ws2-07d-develop-gate-a.ts → 22 checks · 0 failures on checkout
+                  d005d59eb (UTF-8 scratch DB; seam refusing; real handlers, real session token;
+                  durable reading frozen through 07C from a real capture) · jest 19 suites / 209 ·
+                  typecheck no regression · scripts tsconfig clean · governance green
+RECORD            docs/programme/WS2-07-BUILD-07D_DEVELOP_WITNESS_2026-09-04.md
+GATE B            PENDING — founder: (a) scripts/ws2-07d-develop-gate-b.ts (live model through the
+                  surface's own routes, pinned to the candidate) · (b) browser walk D1–D8
+STATE             BUILD-07D CANDIDATE d005d59eb · STRUCTURALLY PROVED · NOT CLOSED · GATE B PENDING
+```
+
 ## Prerequisite — SECTION-ADDRESSABLE DRAFT LIVENESS
 
 **Not a new lane.** A bounded prerequisite inside this one. Its own branch and PR are appropriate

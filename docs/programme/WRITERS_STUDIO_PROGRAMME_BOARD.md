@@ -40,7 +40,9 @@ CURRENT UNIT       BUILD-07D Develop Surface — IMPLEMENTATION OPEN (founder ac
                    no interpretation, dialogue, decisions, mutation, re-anchoring
                    or automatic refresh. Closure: tests + founder witness
                    lane: JARVIS-WS2-07-DEVELOPMENTAL-INTELLIGENCE-01 (dated 07D block)
-CURRENT CANDIDATE  none yet
+CURRENT CANDIDATE  d005d59eb — Gate A 22/0 (structural, seam refusing) ·
+                   STRUCTURALLY PROVED · NOT CLOSED · Gate B (founder live walk) pending
+                   record: WS2-07-BUILD-07D_DEVELOP_WITNESS_2026-09-04.md §2–§3
 PRIOR UNIT         BUILD-07C Developmental Reading — CLOSED / ACCEPTED (founder,
                    2026-09-04); canonical @ 376daae06; candidate 8a26a8971;
                    Gate A 27/0 · Gate B 13/0 (claude-opus-5)
@@ -54,15 +56,15 @@ PRIOR UNIT         BUILD-07B Developmental Reader — CLOSED / ACCEPTED (founder
 PRIOR UNIT         BUILD-07A Developmental Evidence — CLOSED / ACCEPTED (founder,
                    2026-09-04); canonical @ 27ec9f895
                    record: WS2-07-BUILD-07A_EVIDENCE_WITNESS_2026-09-03.md §9
-NEXT EXECUTABLE    build the BUILD-07D Develop surface against canonical 376daae06:
-                   route + client wiring strictly necessary · surface · tests ·
-                   founder witness → candidate → PR → merge on green pinned to
-                   the exact head → verify canonical → STOP
+NEXT EXECUTABLE    BUILD-07D Gate B (founder): run scripts/ws2-07d-develop-gate-b.ts
+                   at d005d59eb + browser walk D1–D8 (record §3) → CLOSED / ACCEPTED
+                   → candidate PR → gates → merge on green pinned to the exact head
+                   → verify canonical → STOP
 WS-01              CLOSED — OVERTAKEN / SUPERSEDED (not accepted; see
                    Reconciliation record below)
 CANVAS FREEZE      RETIRED FROM LIVE STATE (never released by an act; see
                    Reconciliation record below)
-LAST UPDATED       2026-09-04 (BUILD-07C canonical @ 376daae06 · BUILD-07D opened)
+LAST UPDATED       2026-09-04 (BUILD-07D candidate d005d59eb · Gate A PASS · Gate B pending)
 ```
 
 ## Reconciliation record — 2026-09-03 (founder adjudication of programme history)
