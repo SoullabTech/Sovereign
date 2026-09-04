@@ -31,24 +31,27 @@
 ```text
 PROGRAMME          WRITER'S STUDIO R2
 MODE               STAGE 7 BUILD
-BUILD MODE         OPEN — BUILD-07B Developmental Reader OPEN · FIND/BOUNDARY CENSUS ONLY
-                   (founder act 2026-09-04); 07B implementation and 07C–H unauthorized
-BOUND CANONICAL    27ec9f895 (clean-main-no-secrets, 2026-09-04 — BUILD-07A merged, PR #1184)
-CURRENT UNIT       BUILD-07B Developmental Reader — OPEN · FIND/BOUNDARY CENSUS ONLY
-                   (founder, 2026-09-04); census filed, awaiting adjudication
+BUILD MODE         OPEN — BUILD-07B Developmental Reader OPEN · CONTRACT + FALSIFIERS
+                   FILED (founder adjudication A1–A7, 2026-09-04); 07B implementation
+                   and 07C–H unauthorized
+BOUND CANONICAL    543f43708 (clean-main-no-secrets, 2026-09-04 — 07B census merged, PR #1186)
+CURRENT UNIT       BUILD-07B Developmental Reader — OPEN · A1–A7 ADJUDICATED ·
+                   CONTRACT + FALSIFIERS FILED (founder, 2026-09-04) ·
+                   IMPLEMENTATION UNAUTHORIZED
                    lane: JARVIS-WS2-07-DEVELOPMENTAL-INTELLIGENCE-01
-CURRENT CANDIDATE  none — census only, no code
-                   census: WS2-07-BUILD-07B_READER_BOUNDARY_CENSUS_2026-09-04.md
+CURRENT CANDIDATE  none — spec only, no code
+                   census:   WS2-07-BUILD-07B_READER_BOUNDARY_CENSUS_2026-09-04.md (canonical)
+                   contract: WS2-07-BUILD-07B_READER_CONTRACT_2026-09-04.md (F1–F20 · O1–O6)
 PRIOR UNIT         BUILD-07A Developmental Evidence — CLOSED / ACCEPTED (founder,
                    2026-09-04); canonical @ 27ec9f895
                    record: WS2-07-BUILD-07A_EVIDENCE_WITNESS_2026-09-03.md §9
-NEXT EXECUTABLE    founder / Jarvis adjudication of the 07B census (§3 A1–A7) →
-                   07B contract + falsifiers → BUILD authorized only by lane act
+NEXT EXECUTABLE    founder ruling, on the filed contract + falsifier set exactly, whether
+                   BUILD-07B implementation opens — a lane act; nothing before it
 WS-01              CLOSED — OVERTAKEN / SUPERSEDED (not accepted; see
                    Reconciliation record below)
 CANVAS FREEZE      RETIRED FROM LIVE STATE (never released by an act; see
                    Reconciliation record below)
-LAST UPDATED       2026-09-04 (BUILD-07B opened · reader boundary census filed)
+LAST UPDATED       2026-09-04 (BUILD-07B A1–A7 adjudicated · contract + falsifiers filed)
 ```
 
 ## Reconciliation record — 2026-09-03 (founder adjudication of programme history)
@@ -100,11 +103,14 @@ Stage 7   ACTIVE
                       witness 50 / 0 on clean 623d3e766 (fresh UTF8 scratch
                       DB, baseline + chain). INV-7b DEMONSTRATED · F1–F10
                       PASS · O1–O6 PASS. Code @ bfeb1a9; canonical @ 27ec9f895
-          BUILD-07B   OPEN · FIND/BOUNDARY CENSUS ONLY · founder act 2026-09-04
-                      trigger satisfied @ 27ec9f895. Census filed:
-                      WS2-07-BUILD-07B_READER_BOUNDARY_CENSUS_2026-09-04.md
-                      (§0 boundary answer · Q1–Q10 · §3 A1–A7 for adjudication).
-                      No code. Implementation unauthorized.
+          BUILD-07B   OPEN · CONTRACT + FALSIFIERS FILED · founder act 2026-09-04
+                      trigger satisfied @ 27ec9f895; census canonical @ 543f43708;
+                      A1–A7 adjudicated: claim drafts · one lens required · 60,000
+                      code-point body ceiling, no section ceiling · no read-request ·
+                      no heading channel · one-way seam · eight closed
+                      non-conclusions. Contract F1–F20 / O1–O6:
+                      WS2-07-BUILD-07B_READER_CONTRACT_2026-09-04.md
+                      No code. Implementation unauthorized — next ruling.
           PREREQ      SECTION-ADDRESSABLE DRAFT LIVENESS · CLOSED
                       canonical @ 0fa4158e7 (PR #1174)
                       + Unicode repair @ 9411ddc41 (PR #1175)
@@ -311,15 +317,15 @@ and it is the census a release record must carry under Amendment 5.
 ## Advancing now
 
 ```text
-BUILD-07B · Developmental Reader — OPEN · FIND/BOUNDARY CENSUS ONLY
-            (founder act 2026-09-04; trigger BUILD-07A canonical @ 27ec9f895).
-            Reader boundary census filed — read-only, no model call, no code.
-            Awaiting founder / Jarvis adjudication of §3 A1–A7, then the 07B
-            contract + falsifiers, then a separate BUILD authorization.
+BUILD-07B · Developmental Reader — OPEN · A1–A7 ADJUDICATED · CONTRACT +
+            FALSIFIERS FILED (founder act 2026-09-04). Census canonical @
+            543f43708; contract F1–F20 / O1–O6 filed as spec only — no code,
+            no model call. Awaiting the founder ruling on whether BUILD-07B
+            implementation opens, taken on that exact contract.
             Lane: JARVIS-WS2-07-DEVELOPMENTAL-INTELLIGENCE-01.
 ```
 
-Everything else is **unauthorized** until the 07B contract is ruled and the lane authorizes BUILD.
+Everything else is **unauthorized** until the lane authorizes BUILD-07B implementation by its own act.
 Release milestones are defined by Amendment 5 and read from the Release signal above.
 
 ## Board discipline
