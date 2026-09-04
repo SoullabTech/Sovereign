@@ -212,15 +212,26 @@ Ends:
   immediately when this governance amendment becomes canonical
 ```
 
-**The act does not use the new rule.** Its authority is the Founder-Steward's *already
-existing* responsibility, held before this amendment and independent of it —
+```text
+ADOPTION AUTHORITY     §3 Founder-Steward responsibility
+RATIFICATION STATUS    PENDING · must be explicit, after a stable green head
+NOT AUTHORIZED BY      Bootstrap Class A — Shadow Validation Only
+```
+
+**The act has not been performed.** Nothing in this document constitutes it, and no sentence
+here should be read as having made it. It becomes real only as an explicit, recorded
+Founder-Steward act taken after this amendment reaches a stable green head — not as a
+clause anticipating itself.
+
+**When performed, the act will not use the new rule.** Its authority is the Founder-Steward's
+*already existing* responsibility, held before this amendment and independent of it —
 `GOVERNANCE_MENTOR_COVENANT.md` §3: *"The Founder-Steward holds **final responsibility** for
 MAIA's purpose, doctrine, and production legitimacy,"* including *"final sign-off on
 production releases"* and *"veto power on any change that threatens sovereignty, consent, or
 doctrine alignment."* Repairing a constitution that has become self-contradictory and
 mechanically unsatisfiable falls squarely inside that standing responsibility.
 
-The new bootstrap-shadow rule begins only **after** this act has ended. It is not invoked
+The new bootstrap-shadow rule begins only **after** that act has ended. It is not invoked
 by it, does not authorize it, and gains nothing from it. That ordering is what keeps the
 no-self-authorization clause real rather than ceremonial: the clause would be empty if the
 very act adopting the rule could lean on it.
