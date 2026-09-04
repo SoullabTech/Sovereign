@@ -168,6 +168,44 @@ the surface must carry, not a defect: the witness records it and permits exactly
 commissioned act for that slot (the 07C D11b ruling); two refusals leave the live path UNPROVED
 and the run is classified, never tuned around. The record JSON carries every act.
 
+### Run 1 — 2026-09-04, founder-run, checkout `dd4783668` — UNPROVED (lawful), classified, not rerun
+
+```text
+P0  PASS  surface + reading unit + migration byte-identical to d005d59eb
+F1  act 1: 422 classifier_unclassifiable at classify   (lawful refusal — one further act permitted)
+    act 2: 422 classifier_unclassifiable at classify   (lawful refusal — slot exhausted)
+    ✗ UNPROVED — no reading froze, so F2–F7 could not run
+F1  PASS  the surface's own commission moved no manuscript row
+stopped: F1 unproved · 3 checks · 1 failure · record /tmp/ws2-07d-gate-b.json (Mac)
+```
+
+**Classification.** Not a 07D defect. Everything 07D owns behaved as proved in Gate A: the gesture
+reached the commission through the surface's route; the refusal came back typed with its stage
+(`classify`, 422); nothing was stored; no manuscript row moved. What did not happen is the thing
+Gate B (a) exists to witness — a reading freezing through the surface — and it did not happen
+because the 07C classifier returned `unclassifiable` on both permitted acts. That is the finding
+07C's closure left open (`WS2-07-BUILD-07C_READING_WITNESS_2026-09-04.md` §3, "reliability ·
+coverage · variance"), now measured a third and fourth time on the same invented fixture:
+
+```text
+07C Gate B run 3   act 1 frozen (7 obs) · act 2 unclassifiable · act 3 frozen     lens development
+07D Gate B run 1   act 1 unclassifiable · act 2 unclassifiable                      lens development
+                   → 3 of 5 commissioned acts on The Lantern Road refused at classify
+```
+
+**One structural difference is on record, not a diagnosis.** 07C Gate B read four sections at
+body depth (w1 w2 w3 w5); the 07D route derives the scope the opening act names — the WHOLE
+addressable draft, six sections, structure supplied. More sections → more claims → and 07C
+refuses the whole freeze if ANY claim is unclassifiable (never a ninth phenomenon). Whether that
+amplifies the refusal rate is a question for the 07C finding, and the refusal detail in the record
+JSON (the claim index the classifier could not place) is the evidence to read first. Nothing in
+07D may touch the classifier prompt, the phenomenon family, or the refuse-whole rule; nothing was
+tuned around.
+
+**Standing.** Gate B (a) is blocked on the 07C finding, not on 07D. How that finding is
+adjudicated, and whether 07D closes on Gate A + the browser walk (b) with (a) recorded as
+blocked-by-07C, is a founder ruling. No rerun was made.
+
 **(b) In the browser** — the member experience, which no headless run can stand in for. On the
 Mac dev stack at the candidate, with the key in the shell env and `DATABASE_URL` pointing at a
 database that carries `20260904000001` and a member of the founder's own with a section-addressable
