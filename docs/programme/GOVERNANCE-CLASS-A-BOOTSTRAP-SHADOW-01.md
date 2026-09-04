@@ -223,21 +223,23 @@ NOT AUTHORIZED BY      Bootstrap Class A — Shadow Validation Only
 > statement of history.** At canonicalization this block read `PENDING`, and it was accurate.
 > The act came afterwards.
 
-**The act has not been performed.** Nothing in this document constitutes it, and no sentence
-here should be read as having made it. It becomes real only as an explicit, recorded
-Founder-Steward act taken after this amendment reaches a stable green head — not as a
-clause anticipating itself.
+**At canonicalization, the act had not been performed.** The canonical document therefore
+correctly recorded `PENDING` at that moment. The act was subsequently performed post-hoc and
+prospectively, as recorded in §8 and in PR #1201 comment `5547712376`; it does not reach
+backward to authorize the canonical merge.
 
-**When performed, the act will not use the new rule.** Its authority is the Founder-Steward's
-*already existing* responsibility, held before this amendment and independent of it —
+**The act as performed did not use the new rule.** Its authority was the Founder-Steward's
+already-existing responsibility, held before this amendment and independent of it —
 `GOVERNANCE_MENTOR_COVENANT.md` §3: *"The Founder-Steward holds **final responsibility** for
 MAIA's purpose, doctrine, and production legitimacy,"* including *"final sign-off on
 production releases"* and *"veto power on any change that threatens sovereignty, consent, or
 doctrine alignment."* Repairing a constitution that has become self-contradictory and
 mechanically unsatisfiable falls squarely inside that standing responsibility.
 
-The new bootstrap-shadow rule begins only **after** that act has ended. It is not invoked
-by it, does not authorize it, and gains nothing from it. That ordering is what keeps the
+**The bootstrap-shadow rule became available for governed use only after the recorded
+ratification act.** Because the amendment was already canonical, that one-time act terminated
+immediately upon being made. It did not authorize itself and contributed no authority to
+#1199. That ordering is what keeps the
 no-self-authorization clause real rather than ceremonial: the clause would be empty if the
 very act adopting the rule could lean on it.
 
