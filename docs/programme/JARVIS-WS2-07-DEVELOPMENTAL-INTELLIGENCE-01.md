@@ -1,6 +1,6 @@
 # JARVIS-WS2-07-DEVELOPMENTAL-INTELLIGENCE-01
 
-> **Lane active. BUILD-07B OPEN — A1–A7 adjudicated, reader contract + falsifiers filed (founder, 2026-09-04). Implementation is NOT authorized; that is the next ruling.**
+> **Lane active. BUILD-07B IMPLEMENTATION OPEN (founder, 2026-09-04) — the contract and falsifiers are canonical @ `40532a5a5`. Closure is two-gated: Gate A structural, Gate B live reader witness. Nothing beyond BUILD-07B is authorized.**
 >
 > This document defined the lane before it was entered, and it still authorizes **no code, no
 > schema, no route, no prompt**. Entering FIND required the trigger below to be satisfied on
@@ -8,13 +8,14 @@
 
 ```text
 LANE               JARVIS-WS2-07-DEVELOPMENTAL-INTELLIGENCE-01
-STATE              ACTIVE · BUILD-07B OPEN · CONTRACT + FALSIFIERS FILED · IMPLEMENTATION
-                   UNAUTHORIZED (founder adjudication A1–A7, 2026-09-04)
+STATE              ACTIVE · BUILD-07B IMPLEMENTATION OPEN (founder, 2026-09-04)
+                   contract + falsifiers canonical @ 40532a5a5 (PR #1188)
                    BUILD-07A CLOSED / ACCEPTED · canonical @ 27ec9f895
 TRIGGER            Stage 6A AuthorStructureCommand merged to canonical and witnessed
 TRIGGER SATISFIED  clean-main-no-secrets @ 4b8b34bcf
-AUTHORIZES         BUILD-07B contract + falsifiers as docs/spec only (filed)
-                   BUILD-07B implementation and BUILD-07C–H unauthorized
+AUTHORIZES         exact BUILD-07B reader implementation only · structural Gate A ·
+                   bounded Gate B witness machinery (see the 2026-09-04 opening block)
+                   BUILD-07C–H unauthorized
                    No reader, no model, no prompt, no schema, no route.
 NORMATIVE          docs/programme/WRITERS_STUDIO_MASTER_BRIEF.md
 CAPABILITY         docs/programme/DEVELOPMENTAL_EDITOR_CAPABILITY.md
@@ -225,6 +226,54 @@ UNAUTHORIZED      reader implementation · model call · prompt / tool contract 
 NEXT              founder ruling, on this exact contract + falsifier set, whether BUILD-07B
                   implementation opens
 STATE             BUILD-07B OPEN · CONTRACT + FALSIFIERS FILED · IMPLEMENTATION UNAUTHORIZED
+```
+
+```text
+2026-09-04 · BUILD-07B IMPLEMENTATION OPEN — founder act
+TRIGGER           reader contract F1–F20 / O1–O6 present on canonical
+TRIGGER SATISFIED clean-main-no-secrets @ 40532a5a5 (merge of PR #1188, head d9ebb34df,
+                  8 / 8 checks green on that head)
+CONTRACT          docs/programme/WS2-07-BUILD-07B_READER_CONTRACT_2026-09-04.md — binding as
+                  merged; implementation may not amend it. A change to the contract is a
+                  ruling, filed before the code that depends on it.
+AUTHORIZES        exact contract types · deterministic renderer · DEVELOPMENTAL-READER-01 ·
+                  one-tool schema · the prompt the contract requires · ReaderIdentity /
+                  prompt-contract hash · request validator · runStructured seam · output
+                  parser · bindEvidence validation ·
+                  host loop  validate → render → runStructured → parse → bind → Result ·
+                  new reader-cannot-bypass module-graph gate ·
+                  preservation of the evidence-cannot-act gate ·
+                  unit / structural / seam-refusal tests ·
+                  witness machinery necessary to exercise F1–F20 and Gate B
+DOES NOT AUTHORIZE route · UI / Develop surface · persistence · DevelopmentalReading ·
+                  observation identity · phenomenon classification · interpretation ·
+                  questions / possibilities · manuscript mutation · automatic scope
+                  expansion · new capture initiated by the model · BUILD-07C+
+CLOSURE — TWO GATES (founder ruling: twenty falsifiers passing with a refusing seam prove
+the architecture; a component that has never read anything is not a reader)
+
+  GATE A · STRUCTURAL
+    F1–F20 PASS · O1–O6 PASS · focused tests green · typecheck and constitutional
+    gates green · no forbidden imports / writes / surfaces
+        → BUILD-07B CANDIDATE · STRUCTURALLY PROVED · NOT YET CLOSED
+
+  GATE B · LIVE READER WITNESS
+    one bounded, INVENTED manuscript fixture (never a member's Work) · exact candidate
+    SHA · one real runStructured call · actual resolved model recorded · one commissioned
+    lens · frozen 07A evidence only · ≤ 60,000 code points · outcome claims OR a legitimate
+    none · every returned ref binds · every claim carries ≥ 1 closed non-conclusion ·
+    no foreign / 07C-shaped field · rendered request provenance inspectable · no second
+    read, no scope expansion
+        → BUILD-07B CLOSED / ACCEPTED
+
+  Gate B asks ONE question: did the actual reader execute the contract Gate A proved?
+  It is not authority to tune the architecture from subjective output quality; whether
+  the noticing is good belongs downstream (07C and the eventual real-Work proof).
+  A Gate B run that fails is classified before anything is changed — a defect in the
+  reader is repaired inside the unit; a defect in the contract is a ruling.
+CUSTODY           single writer on the implementation branch; candidate named by exact SHA;
+                  founder-visible witness rerun before closure (the 07A pattern)
+STATE             BUILD-07B IMPLEMENTATION OPEN · no candidate yet
 ```
 
 ## Prerequisite — SECTION-ADDRESSABLE DRAFT LIVENESS
