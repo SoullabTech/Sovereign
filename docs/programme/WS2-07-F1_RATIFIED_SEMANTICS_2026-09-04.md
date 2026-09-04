@@ -160,6 +160,45 @@ reading, not an assertion a script may make.
 
 Founder instruction, honoured: the regression does not rest on stochastic behaviour alone.
 
+### Run — 2026-09-04, founder-run, checkout `f6441b84b`, 3 acts, `claude-opus-5`
+
+```text
+G0  PASS  the four repaired files present and hashed
+          contract 430b066a · render e3f299b9 · contract d7c3746e · classify f5ba489c
+          (byte-identical to candidate 12f959a3c throughout)
+G1  PASS  3 of 3 acts froze a reading through the repaired path
+G2  PASS  every frozen reading carries DEVELOPMENTAL-READER-02 / DEVELOPMENTAL-PHENOMENON-02
+G3  PASS  REGRESSION — no claim carries the Lantern Road signature.  none.
+G4  PASS  no refusals this run
+
+5 checks · 0 failures · record ~/maia-witness-logs/ws2-07-f1.json
+```
+
+**The measurement claim is not reclassified. It is not emitted.** Before the repair the reader
+produced **8** claims per act on this fixture, the last of them the structural-uniformity claim —
+numeral headings, a 196–267 code-point band, each authored part holding exactly three. After the
+repair it produces **7** per act, three acts out of three, and that claim is absent from all of
+them. The boundary rule removed exactly the one claim it was written to remove, at the layer the
+founder's determination named: upstream, at 07B, before anything reached the classifier.
+
+**Refusals went from one act in three to none in three.** Not because the classifier stretched more
+willingly — its instruction not to stretch is unchanged and `unclassifiable` remains available and
+unused — but because the claim that could not be placed was never made.
+
+### What the run does NOT establish
+
+Placement within the family still varies between acts for materially similar subject matter — for
+example Tomas's withheld plan drew `unresolved-thread` twice and `movement` once; the "eleven"
+material drew `register-shift`, `unresolved-thread` and `term-drift` across the three acts.
+
+**This run cannot attribute that variance.** Each act is a fresh reading, so the claims differ in
+wording and emphasis before the classifier ever sees them; act 2's plan claim genuinely stresses
+*"advances by withholding"* where act 1's stresses *"gains no detail"*, and those invite different
+placements honestly. Separating reader variance from classifier variance would require classifying
+one fixed claim set repeatedly — which is what `scripts/ws2-07c-f1-classification-diagnosis.ts`
+does, and which this run deliberately did not do. Recorded as an open question, not as a defect,
+and not as a claim that the repair resolved it.
+
 ## 6 · What this does not do
 
 It does not reopen 07A, 07B or 07C as units; it changes their prompts and versions under this lane's
