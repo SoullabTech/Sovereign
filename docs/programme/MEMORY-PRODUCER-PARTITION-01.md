@@ -896,16 +896,57 @@ BOTH production shape           UNOBSERVED IN PRODUCTION
 
 The cut is **not** "production witnessed." Whether this ceiling suffices to merge and close remains a later adjudication.
 
-### Incidental: the same turn closed the divination loop
+### THREE SEPARATE FINDINGS — do not launder evidence across lanes
 
-The witness turn's response surfaced the member's I Ching reading unprompted (Hexagram 55 → 13, changing lines and relating hexagram) in answer to a neutral question. That is Cut 1B + Cut 1C end to end in ordinary conversation — the reading that the original defect produced and discarded now returns on its own, and returns *attributed*: the member's prior words came back marked as the member's own.
+The witness turn produced three distinct findings. They are recorded separately because they carry different evidentiary weight and belong to different lanes. **The partition verdict rests on the structural telemetry above and on nothing else** — the conversational response is not evidence for it, and cannot be: prose cannot establish which shape the turn was, whether the comparator stayed clean, or what happened internally.
 
-`[MAIA] conversational-block` also emitted on this turn, so cross-session exchanges were surfaced alongside it.
+#### FINDING 1 — Divination lived continuity · PASS · strong observation
 
-### OPEN OBSERVATION — cross-source synthesis (not a partition-lane matter)
+**Own lane. Not partition evidence.**
 
-The conversational recall block's own prompt text instructs: *"Do not synthesize across them. Do not name patterns that cross sessions unless the member names them first."*
+The witness turn's response surfaced the member's I Ching reading unprompted (Hexagram 55 → 13, changing lines and relating hexagram) in answer to a neutral question. The chain observed end to end:
 
-The witness response **did** synthesize — joining the cast, prior member statements, and a relational reading into one interpretation, and naming the pattern rather than waiting for the member to name it. It recovered by setting the divination aside and returning the question to the member, which is the right shape.
+```text
+persisted → retrieved → admitted → used spontaneously → experienced as continuity
+```
 
-Recorded as an observation about live behaviour, **not adjudicated here**. It belongs with the attribution work (P6), not with the partition. Open question before it can be weighed: whether the recalled member statements came from this session or a prior one — within-session is not cross-session synthesis at all.
+This is materially stronger than proving the cast exists in storage. The reading that the original defect produced and discarded now returns on its own, and returns **attributed** — prior member statements came back marked as the member's own. Cut 1B + Cut 1C, closed in ordinary conversation.
+
+#### FINDING 2 — Cross-source synthesis · UNADJUDICATED
+
+```text
+OBSERVATION
+MAIA combined divination + member language + relational interpretation,
+and named the pattern rather than waiting for the member to name it.
+The conversational recall block's own text instructs: "Do not synthesize
+across them. Do not name patterns that cross sessions unless the member
+names them first."
+
+STATUS
+UNADJUDICATED.
+
+REASON
+Session provenance of "ten years, not one acknowledgment" not established.
+
+IF SAME SESSION
+not evidence of prohibited cross-session synthesis.
+
+IF PRIOR SESSION
+review against conversational-recall conduct during P6 / attribution work.
+```
+
+**Do not investigate this inside the partition cut.** `[MAIA] conversational-block` did emit on this turn, so cross-session material was in play — but that does not establish the provenance of the specific recalled statements, and the distinction decides whether there is anything to answer for. The response did recover by setting the divination aside and returning the question to the member, which is the right shape.
+
+#### FINDING 3 — MEMBER_ONLY partition witness · PASS · NO REGRESSION
+
+Rests entirely on the telemetry recorded at the head of this section. Establishes the **negative** half only: the cut did not disturb ordinary turns, and `zeroDiff` still reports truthfully on a turn carrying no partitioned producer, as F-PARITY requires. It does not establish that the partition fires.
+
+### Standing after this witness
+
+```text
+DIVINATION LIVED CONTINUITY     PASS · strong observation
+CROSS-SESSION SYNTHESIS         UNADJUDICATED · P6, not this lane
+MEMBER_ONLY PARTITION WITNESS   PASS · no regression
+PRACTITIONER_ONLY               passive / unwitnessed
+BOTH                            production-unobserved · tests only
+```
