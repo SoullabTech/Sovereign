@@ -950,3 +950,69 @@ MEMBER_ONLY PARTITION WITNESS   PASS · no regression
 PRACTITIONER_ONLY               passive / unwitnessed
 BOTH                            production-unobserved · tests only
 ```
+
+---
+
+## 15. Merge-sufficiency adjudication — CLOSED · PASS WITH WITNESS CEILING (2026-09-04)
+
+### Ruling
+
+```text
+MEMORY-PRODUCER-PARTITION-01     MERGEABLE
+CUT STATUS                       CLOSED · PASS WITH WITNESS CEILING
+```
+
+**Not** `FULL PRODUCTION WITNESS`. The distinction is load-bearing and is preserved in §14.
+
+### Why the ceiling does not block merge
+
+The cut's production behaviour is **shadow-only**. It does not alter legacy cognition, admission, prompt content, or member-visible response behaviour. The production control has now shown precisely that: ordinary MEMBER_ONLY turns remain structurally identical — `zeroDiff: true`, `12 == 12`, no partition delta, no unexpected diff.
+
+The positive partition path is not hypothetical. It has the structural discriminator, the derived truthful triple, the adjacency contract, byte-exact recomposition, and the three-shape test suite. What is missing is only a **naturally occurring production invocation of the practitioner-only case** — and waiting on that means waiting on another member's conversation, which the §12.3 boundary explicitly refuses to induce.
+
+> **Another person's future conversation is not a merge gate.**
+
+There is also a provenance argument. `293d454cf` is **already running in production** while canonical does not yet contain the lane. Leaving a bounded, verified, currently-deployed source correction outside canonical while waiting indefinitely on an unrelated member action creates more provenance risk than merging it with its ceiling recorded.
+
+### What may be claimed after merge
+
+```text
+IMPLEMENTATION                    PASS
+REGISTRY / PROVENANCE CONTRACT    PASS
+LEGACY BYTE PARITY                PASS
+LOCAL POSITIVE PARTITION TESTS    PASS   (24 tests)
+PRODUCTION NO-REGRESSION          PASS
+PRODUCTION PARTITION FIRING       UNWITNESSED
+BOTH PRODUCTION SHAPE             UNOBSERVED
+```
+
+### No deploy accompanies the merge
+
+The runtime is already `293d454cf`. The commits merging here are the **docs-only** witness and closure records. Merging them changes no running code and requires no deploy.
+
+### The passive positive witness becomes opportunistic
+
+If ordinary telemetry at some future point naturally produces `PRACTITIONER_ONLY` with `contentParity: true` and `unexpectedDiff: []`, that upgrades the historical evidence record:
+
+```text
+production partition firing   UNWITNESSED  →  PASS
+```
+
+It is **not** a prerequisite for merge, for P6, or for closure. `BOTH` stays `UNOBSERVED IN PRODUCTION` until it naturally exists and executes; the 24 tests remain its evidence. Neither is to be induced.
+
+### P6 consequence
+
+Once this lane is canonical, the partition prerequisite has done everything it truthfully can under ct-1:
+
+```text
+member.atoms                     truthful partition AVAILABLE
+retrieved.member_web             UNRESOLVED
+retrieved.conversational_recall  UNRESOLVED
+member.episodic_recall           UNRESOLVED
+```
+
+P6 proper may reopen **after the merge is verified canonical**, and only with the three unresolved producers **explicitly excluded from any claim of truthful attribution closure**.
+
+### Standing prohibition on evidence transfer
+
+The divination continuity witness (§14 Finding 1) is a **separate programme-level success**. It is significant, and it must not be used to fill the missing positive-production cell in this partition cut. The two live in different lanes and are recorded that way.
