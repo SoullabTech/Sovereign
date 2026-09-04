@@ -119,6 +119,46 @@ Anything touching:
 
 **Gate:** Founder-Steward + 2 Council votes + 1 Mentor verification
 
+#### Bootstrap Class A — Shadow Validation Only *(temporary)*
+
+Added 2026-09-04. Available **only** while independent second-steward review is
+unavailable, and retires automatically the moment a second human steward can give
+independent approval. It does not lower the Class A gate above; it defines one narrow
+category beneath it.
+
+A change qualifies only if **all** of these hold:
+
+* explicit Founder-Steward sign-off, recorded
+* the exact candidate SHA is named — the branch head, never the implementation commit
+* all required CI green on that exact head
+* a rollback plan
+* **zero member-facing response authority**
+* no schema or data mutation
+* no consent or retention widening
+* no new PHI or member-content telemetry
+* a bounded production witness with explicit stop conditions
+
+**May authorize:** production shadow observation, and canonical merge of the same
+zero-authority shadow infrastructure.
+
+**May NOT authorize:** response influence · consent changes · memory-authority changes ·
+retention changes.
+
+The lighter bar applies to **both** merge and production promotion. Council approval that
+binds canonical code but not running code is not a boundary, so this category deliberately
+does not distinguish the two.
+
+**No self-authorization.** This rule may not authorize its own adoption. It becomes
+effective only once this governance amendment is canonical, and it confers no authority over
+the change that introduces it. Any change relying on it must postdate its canonicalization.
+This amendment may not rely on the rule it introduces for its own adoption. Its adoption
+authority, **when expressly ratified**, is the Founder-Steward's pre-existing §3
+responsibility for doctrine and production legitimacy — an authority that predates this rule
+and is unaffected by it.
+
+Rationale and the contradiction that prompted it:
+`docs/programme/GOVERNANCE-CLASS-A-BOOTSTRAP-SHADOW-01.md`.
+
 ### Class B — Structural Risk (1 mentor + release steward)
 
 * database schema/migrations
@@ -182,13 +222,15 @@ Implement branch protections on `main`:
 * `requires-council` — requires Council review
 * `class-a`, `class-b`, `class-c` — change class gate
 * `frontier-check` — requires mentor verification of external facts
-* `covenant-signoff` — **bootstrap bridge (temporary).** Explicit, logged single-operator sign-off that satisfies the founder / mentor / founder-or-release *approval* requirements when no independent second steward exists yet. It does **not** bridge classification or rollback — those are still required. Not independent review; retire once a real second operator can give independent steward approval.
+* `covenant-signoff` — **RETIRED 2026-09-04.** This was a bootstrap bridge: a logged single-operator sign-off satisfying the founder / mentor / founder-or-release *approval* requirements when no independent second steward existed. The enforcement engine behind it was removed in the 2026-07-03 covenant-gates redesign (see that workflow's header), which left this document pointing at a mechanism that no longer exists. Two further limits are worth recording rather than forgetting: it never named **Council**, so it did not discharge the two Council votes Class A requires; and it was an automated approval engine of the kind the redesign deliberately deleted for reimplementing and diverging from GitHub's own review model. Superseded for its one still-needed case by **Bootstrap Class A — Shadow Validation Only** (§5), which is a recorded founder act rather than label machinery.
 * `staging-ready` — approved + safe to test in staging
 * `release-approved` — steward signed, ready for production
 
 **Rule:** A PR cannot be labeled `release-approved` if it has `frontier-check` unresolved.
 
-**Classification is required on every PR.** Check exactly one class box in the PR template *or* apply the matching `class-*` label. A Class C (routine) change needs only its classification; Class A/B/Frontier additionally need approval, which the `covenant-signoff` label may bridge during bootstrap.
+**Classification is required on every PR.** Check exactly one class box in the PR template *or* apply the matching `class-*` label. A Class C (routine) change needs only its classification; Class A/B/Frontier additionally need approval. That approval is a human act in GitHub — CODEOWNERS plus branch protection — not a label: Covenant Gates performs constitutional validation and diagnostics only and does not count approvals. While independent second-steward review is unavailable, the sole exception is **Bootstrap Class A — Shadow Validation Only** (§5), which covers zero-authority shadow infrastructure and nothing else.
+
+**Known gap (recorded 2026-09-04, not yet repaired):** `staging-ready` and `release-approved` govern production promotion in this document, but no deploy script consults any `class-*`, `requires-*` or `frontier-*` label — the deploy path is label-blind. Governance therefore reaches production in doctrine and not in mechanism. Closing that would be a Class B change to the deploy scripts and is deliberately out of scope for the governance lane that recorded it.
 
 ---
 
