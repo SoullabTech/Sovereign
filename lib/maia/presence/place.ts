@@ -56,6 +56,7 @@ export const GOVERNED_ROOMS: readonly GoverendRoom[] = [
   { placeId: 'moments', placeName: 'Marked Moments', routePrefix: '/maia/moments', purpose: 'The moments this member chose to keep from conversation.' },
   { placeId: 'anchor-history', placeName: 'Daily Anchors', routePrefix: '/maia/anchor', purpose: 'The member\'s daily anchors and their history.' },
   { placeId: 'guides', placeName: 'Guides', routePrefix: '/guides', purpose: 'Written guides and videos about how this place works.' },
+  { placeId: 'reflections', placeName: 'Reflections', routePrefix: '/reflections', purpose: 'The reflections this member chose to keep, and where they reopen one.' },
   { placeId: 'studio', placeName: 'Studio', routePrefix: '/studio', purpose: 'A workspace where practitioners develop their practice, programs, and projects.' },
   { placeId: 'decisions', placeName: 'Decisions', routePrefix: '/studio/decisions', purpose: 'A room for naming and reflecting on decisions.' },
   { placeId: 'changes', placeName: 'Changes', routePrefix: '/studio/changes', purpose: 'A room for noticing and reflecting on transitions over time.' },

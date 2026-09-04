@@ -35,6 +35,11 @@ describe('governed-room registry (Phase 8 inventory)', () => {
     expect(resolveGovernedRoom('/maia/moments')?.placeId).toBe('moments');
     expect(resolveGovernedRoom('/maia/anchor/history')?.placeId).toBe('anchor-history');
     expect(resolveGovernedRoom('/journal')?.placeId).toBe('journal');
+    // Reflections: the feed and one kept reflection are the same governed room.
+    // The room is governed so "Discuss this with MAIA" can open OVER the
+    // reflection instead of navigating the member to /maia.
+    expect(resolveGovernedRoom('/reflections')?.placeId).toBe('reflections');
+    expect(resolveGovernedRoom('/reflections/dc5720b0-dff0-4111-a85d-b91503410c6f')?.placeId).toBe('reflections');
     expect(resolveGovernedRoom('/guides')?.placeId).toBe('guides');
     expect(resolveGovernedRoom('/soul-portrait/some-slug')?.placeId).toBe('soul-portrait');
     expect(resolveGovernedRoom('/home')?.placeId).toBe('home');
