@@ -130,16 +130,25 @@ Gate A proves the surface over a durable reading. It cannot prove that the write
 the surface reaches MAIA and comes back as one. Two acts close that, both the founder's:
 
 **(a) Headless, through the surface's own routes** — `scripts/ws2-07d-develop-gate-b.ts`, pinned
-by blob id to the candidate's six surface files and the 07C unit. Run from the Mac worktree at the
-candidate, the key in the shell env only, against the Mac scratch database (already at
+by blob id to the candidate's six surface files and the 07C unit. The script lives ABOVE the
+candidate (`f2eb733ad`), so the checkout is the branch tip, not `d005d59eb`: the pins (P0) are what
+bind the run to the candidate, and the run refuses if any pinned blob has drifted. Run from the Mac
+worktree, the key in the shell env only, against the Mac scratch database (already at
 `20260904000001`):
 
 ```bash
-cd "/Volumes/T7 Shield/maia-07c-gate-b" && git fetch origin claude/writer-author-studios-roadmap-b2tqf5 \
-  && git checkout -q d005d59eb \
-  && DATABASE_URL=postgresql://soullab@localhost:5432/maia_07a_witness \
-     npx tsx scripts/ws2-07d-develop-gate-b.ts --out /tmp/ws2-07d-gate-b.json
+cd "/Volumes/T7 Shield/maia-07c-gate-b" || exit 1
+git fetch origin claude/writer-author-studios-roadmap-b2tqf5 || exit 1
+git checkout -q dd4783668 || exit 1          # branch tip carrying the witness; P0 pins d005d59eb
+echo "HEAD: $(git rev-parse --short HEAD)"
+test -n "${ANTHROPIC_API_KEY:-}" || { echo "STOP: no ANTHROPIC_API_KEY in this shell"; exit 1; }
+DATABASE_URL="postgresql://soullab@localhost:5432/maia_07a_witness" \
+  npx tsx scripts/ws2-07d-develop-gate-b.ts --out /tmp/ws2-07d-gate-b.json
 ```
+
+*Witness-instruction defect, 2026-09-04:* the first form of this command checked out `d005d59eb`,
+where the script does not exist (`ERR_MODULE_NOT_FOUND`, founder's terminal). Corrected here; the
+candidate is untouched.
 
 ```text
 P0  surface + reading unit + migration byte-identical to d005d59eb
