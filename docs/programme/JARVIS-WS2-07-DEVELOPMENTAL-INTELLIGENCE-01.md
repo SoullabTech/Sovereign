@@ -1,6 +1,6 @@
 # JARVIS-WS2-07-DEVELOPMENTAL-INTELLIGENCE-01
 
-> **Lane active. BUILD-07A OPEN / RESUMED — its prerequisite closed on canonical. Nothing beyond it is.**
+> **Lane active. BUILD-07A CLOSED / ACCEPTED on canonical. BUILD-07B OPEN · FIND/BOUNDARY CENSUS ONLY (founder act, 2026-09-04). Nothing beyond the census is.**
 >
 > This document defined the lane before it was entered, and it still authorizes **no code, no
 > schema, no route, no prompt**. Entering FIND required the trigger below to be satisfied on
@@ -8,11 +8,12 @@
 
 ```text
 LANE               JARVIS-WS2-07-DEVELOPMENTAL-INTELLIGENCE-01
-STATE              ACTIVE · BUILD-07A CLOSED / ACCEPTED (founder, 2026-09-04) · canonical on merge
+STATE              ACTIVE · BUILD-07B OPEN · FIND/BOUNDARY CENSUS ONLY (founder, 2026-09-04)
+                   BUILD-07A CLOSED / ACCEPTED · canonical @ 27ec9f895
 TRIGGER            Stage 6A AuthorStructureCommand merged to canonical and witnessed
 TRIGGER SATISFIED  clean-main-no-secrets @ 4b8b34bcf
-AUTHORIZES         nothing — BUILD-07A is closed; BUILD-07B opens only by its own act
-                   BUILD-07B–H unauthorized
+AUTHORIZES         read-only discovery of the developmental-reader boundary (BUILD-07B census)
+                   BUILD-07B implementation and BUILD-07C–H unauthorized
                    No reader, no model, no prompt, no schema, no route.
 NORMATIVE          docs/programme/WRITERS_STUDIO_MASTER_BRIEF.md
 CAPABILITY         docs/programme/DEVELOPMENTAL_EDITOR_CAPABILITY.md
@@ -177,6 +178,24 @@ STATE             BUILD-07A CLOSED / ACCEPTED · INV-7b DEMONSTRATED ·
                   F1–F10 PASS · O1–O6 PASS
                   BUILD-07B–H unauthorized — 07B is the next unit and opens by
                   its own act after this closure reaches canonical
+```
+
+```text
+2026-09-04 · BUILD-07B OPENED — founder act · FIND/BOUNDARY CENSUS ONLY
+TRIGGER           BUILD-07A DEVELOPMENTAL EVIDENCE CLOSED / ACCEPTED and present on canonical
+TRIGGER SATISFIED clean-main-no-secrets @ 27ec9f895 (merge of PR #1184)
+AUTHORIZES        read-only discovery of the developmental-reader boundary
+DOES NOT AUTHORIZE implementation · model calls · new prompts · new schema · new persistence ·
+                  routes · surfaces · DevelopmentalReading construction · editorial
+                  recommendations · manuscript mutation · BUILD-07C+
+CENSUS            docs/programme/WS2-07-BUILD-07B_READER_BOUNDARY_CENSUS_2026-09-04.md
+                  answers the ten questions and the boundary question; classifies
+                  EXISTS / PATTERN / PARTIAL / MISSING / LEGACY / DUPLICATE / DO NOT REUSE;
+                  lists seven rulings the contract needs (§3 A1–A7)
+NEXT              founder / Jarvis adjudication of the census → define the 07B contract +
+                  falsifiers → only then authorize BUILD
+STATE             BUILD-07B OPEN · FIND/BOUNDARY CENSUS ONLY · census filed, awaiting
+                  adjudication. No code.
 ```
 
 ## Prerequisite — SECTION-ADDRESSABLE DRAFT LIVENESS

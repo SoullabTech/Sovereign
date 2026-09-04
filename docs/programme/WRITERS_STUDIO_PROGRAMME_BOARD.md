@@ -31,21 +31,24 @@
 ```text
 PROGRAMME          WRITER'S STUDIO R2
 MODE               STAGE 7 BUILD
-BUILD MODE         OPEN — no unit currently authorized (BUILD-07A closed; 07B–H unauthorized)
-BOUND CANONICAL    8d04f1b9f (clean-main-no-secrets, 2026-09-03)
-CURRENT UNIT       BUILD-07A Developmental Evidence — CLOSED / ACCEPTED
-                   (founder, 2026-09-04); canonical on merge of the closure PR
+BUILD MODE         OPEN — BUILD-07B Developmental Reader OPEN · FIND/BOUNDARY CENSUS ONLY
+                   (founder act 2026-09-04); 07B implementation and 07C–H unauthorized
+BOUND CANONICAL    27ec9f895 (clean-main-no-secrets, 2026-09-04 — BUILD-07A merged, PR #1184)
+CURRENT UNIT       BUILD-07B Developmental Reader — OPEN · FIND/BOUNDARY CENSUS ONLY
+                   (founder, 2026-09-04); census filed, awaiting adjudication
                    lane: JARVIS-WS2-07-DEVELOPMENTAL-INTELLIGENCE-01
-CURRENT CANDIDATE  claude/build-07a-developmental-evidence-n5tm37 @ 623d3e766
-                   (code @ bfeb1a9; records only above it)
+CURRENT CANDIDATE  none — census only, no code
+                   census: WS2-07-BUILD-07B_READER_BOUNDARY_CENSUS_2026-09-04.md
+PRIOR UNIT         BUILD-07A Developmental Evidence — CLOSED / ACCEPTED (founder,
+                   2026-09-04); canonical @ 27ec9f895
                    record: WS2-07-BUILD-07A_EVIDENCE_WITNESS_2026-09-03.md §9
-NEXT EXECUTABLE    none authorized. BUILD-07B Developmental Reader is the next
-                   unit and opens only by its own lane act after 07A is canonical
+NEXT EXECUTABLE    founder / Jarvis adjudication of the 07B census (§3 A1–A7) →
+                   07B contract + falsifiers → BUILD authorized only by lane act
 WS-01              CLOSED — OVERTAKEN / SUPERSEDED (not accepted; see
                    Reconciliation record below)
 CANVAS FREEZE      RETIRED FROM LIVE STATE (never released by an act; see
                    Reconciliation record below)
-LAST UPDATED       2026-09-04 (BUILD-07A closed / accepted)
+LAST UPDATED       2026-09-04 (BUILD-07B opened · reader boundary census filed)
 ```
 
 ## Reconciliation record — 2026-09-03 (founder adjudication of programme history)
@@ -96,11 +99,16 @@ Stage 7   ACTIVE
                       CHECK 1 production UTF8 · CHECK 2 founder-visible
                       witness 50 / 0 on clean 623d3e766 (fresh UTF8 scratch
                       DB, baseline + chain). INV-7b DEMONSTRATED · F1–F10
-                      PASS · O1–O6 PASS. Code @ bfeb1a9; canonical on merge
+                      PASS · O1–O6 PASS. Code @ bfeb1a9; canonical @ 27ec9f895
+          BUILD-07B   OPEN · FIND/BOUNDARY CENSUS ONLY · founder act 2026-09-04
+                      trigger satisfied @ 27ec9f895. Census filed:
+                      WS2-07-BUILD-07B_READER_BOUNDARY_CENSUS_2026-09-04.md
+                      (§0 boundary answer · Q1–Q10 · §3 A1–A7 for adjudication).
+                      No code. Implementation unauthorized.
           PREREQ      SECTION-ADDRESSABLE DRAFT LIVENESS · CLOSED
                       canonical @ 0fa4158e7 (PR #1174)
                       + Unicode repair @ 9411ddc41 (PR #1175)
-          BUILD-07B–H unauthorized
+          BUILD-07B implementation · BUILD-07C–H unauthorized
 Stage 8   BLOCKED ON STAGE 7 CLOSURE
 ```
 
@@ -303,14 +311,15 @@ and it is the census a release record must carry under Amendment 5.
 ## Advancing now
 
 ```text
-BUILD-07A · Developmental Evidence — candidate bfeb1a9 built against
-            canonical 8d04f1b9f; INV-7b demonstrated, 6 / 6 outcomes,
-            10 / 10 falsifiers on a RECONSTRUCTED instrument, witnessed in
-            session. Awaiting the founder act named in the record's §7.
+BUILD-07B · Developmental Reader — OPEN · FIND/BOUNDARY CENSUS ONLY
+            (founder act 2026-09-04; trigger BUILD-07A canonical @ 27ec9f895).
+            Reader boundary census filed — read-only, no model call, no code.
+            Awaiting founder / Jarvis adjudication of §3 A1–A7, then the 07B
+            contract + falsifiers, then a separate BUILD authorization.
             Lane: JARVIS-WS2-07-DEVELOPMENTAL-INTELLIGENCE-01.
 ```
 
-Everything else is **unauthorized** until BUILD-07A closes and the lane opens the next unit.
+Everything else is **unauthorized** until the 07B contract is ruled and the lane authorizes BUILD.
 Release milestones are defined by Amendment 5 and read from the Release signal above.
 
 ## Board discipline
