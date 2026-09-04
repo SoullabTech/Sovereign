@@ -36,10 +36,14 @@ export const metadata: Metadata = {
   twitter: { card: 'summary_large_image', title, description },
 };
 
-type Layer = 'live' | 'designed' | 'vision';
+type Layer = 'live' | 'partial' | 'designed' | 'vision';
 
 const CHIP: Record<Layer, { label: string; className: string }> = {
   live: { label: 'Live', className: 'bg-[#D4AF37] text-[#0A1628]' },
+  // Partly live earns its own chip rather than rounding to Live or Designed:
+  // some of the capability is verified on the live path and some is not, and
+  // collapsing that into either neighbour would misstate it in one direction.
+  partial: { label: 'Partly live', className: 'bg-[#B99A52] text-[#0A1628]' },
   designed: { label: 'Designed', className: 'bg-[#7C9BC4] text-[#0A1628]' },
   vision: { label: 'Vision', className: 'bg-[#8B8578] text-[#0A1628]' },
 };
@@ -421,6 +425,89 @@ const CONTINUITY_STACK: Row[] = [
   },
 ];
 
+/**
+ * The member-facing lens. A projection of the continuity architecture, not a
+ * second one: every row names the canonical layers that carry it, and its chip
+ * is earned the same way theirs are — by what the live conversational path
+ * actually does, traced against the closed producer registry (41 registered,
+ * 16 live on the sovereign route as of 2026-09-04). Where a capability has real
+ * substrate but no producer on that path, it is not marked live here.
+ */
+type LensRow = { name: string; remembers: string; layer: Layer; what: string; carried: string };
+
+const MEMBER_LENS: LensRow[] = [
+  {
+    name: 'Conversational',
+    remembers: 'What we discussed',
+    layer: 'live',
+    what: 'Prior exchanges return across sessions, speaker-tagged and verbatim, so a thread can be picked up rather than restarted.',
+    carried: 'Turn · Session · Conversational',
+  },
+  {
+    name: 'Semantic',
+    remembers: 'What remains true',
+    layer: 'partial',
+    what: 'Enduring material about a person and their world. Live as the Keep: items the member places, each sealed or allowed to return. Broader retrieval across a person\u2019s people, projects and concepts is not on the live path and is withheld from the label.',
+    carried: 'Semantic',
+  },
+  {
+    name: 'Episodic',
+    remembers: 'What mattered',
+    layer: 'live',
+    what: 'Moments the member kept, returning later in their own words. Not everything \u2014 only what was deliberately marked. Unmarking deletes it.',
+    carried: 'Episodic',
+  },
+  {
+    name: 'Recognition',
+    remembers: 'What recurs',
+    layer: 'partial',
+    what: 'Themes that come back. What reaches conversation today is candidate recurrence, phrased as a tentative question and never as a fact about the member. Detection of recurring motifs across a member\u2019s own signals is built and has no live caller. Recognising a body of work taking shape across years is not built.',
+    carried: 'Pattern · Meta-memory',
+  },
+  {
+    name: 'Reflective',
+    remembers: 'What is taking shape',
+    layer: 'partial',
+    what: 'Themes and arcs over time. A per-turn developmental signal shapes how MAIA orients. Soul Portraits express this layer, but on their own surface: no reflective producer reaches ordinary conversation.',
+    carried: 'Developmental',
+  },
+  {
+    name: 'Relational',
+    remembers: 'What we share',
+    layer: 'partial',
+    what: 'The people in a member\u2019s life. Live as an explicit hand-off \u2014 the member brings a relationship in. Ambient relational recall is withheld by design, and shared or co-authored memory between members does not exist yet.',
+    carried: 'Relational',
+  },
+  {
+    name: 'Artifact',
+    remembers: 'What we made',
+    layer: 'partial',
+    what: 'Journals, documents, manuscripts and portraits are stored and retrievable on their own surfaces. What reaches ordinary conversation is recent journal entries only; the manuscript and document stores have no conversational producer.',
+    carried: 'Semantic · Meta-memory',
+  },
+  {
+    name: 'Provenance',
+    remembers: 'Whose knowing this is',
+    layer: 'partial',
+    what: 'Not only what is remembered, but whose knowing it represents: member speech, MAIA inference, practitioner observation, computed material, house-authored context. Live in part \u2014 producer identities and the partition contract are in production, and the practitioner correction shipped 2026-09-04. Some mixed-source memory remains unresolved, and provenance-aware canonical cognition is the next stage.',
+    carried: 'Meta-memory · producer provenance',
+  },
+  {
+    name: 'Developmental',
+    remembers: 'What changed',
+    layer: 'partial',
+    what: 'Turning points and the shape of a longer journey. The per-turn signal is live; surfacing developmental content back to the member in conversation is not. Breakthroughs the member names have a route and a schema, and no gesture in the interface yet.',
+    carried: 'Developmental · Breakthrough',
+  },
+  {
+    name: 'Legacy',
+    remembers: 'What endures',
+    layer: 'vision',
+    what: 'Stories, teachings, life work \u2014 what a person leaves. Substrate exists across the writing and archive surfaces. No producer carries it into conversation, and no consent architecture for it has been designed.',
+    carried: 'None yet',
+  },
+];
+
 const CANONICAL_TURN: Array<[string, string]> = [
   ['Perceive', 'What is happening for this person now? Speech, silence, timing, interruption, language.'],
   ['Remember', 'What history actually belongs in this moment? Episodic, relational, developmental, symbolic continuity.'],
@@ -545,8 +632,28 @@ export default function AccountedForPage() {
             <P><strong className="text-soullab-text-primary">Bottom line for reservation one:</strong> the conversation ends; the relationship does not have to end with it. That is live, consented, and measured. The longer longitudinal picture is being built one governed layer at a time, and each layer ships with its own off switch.</P>
           </Section>
 
+          <Section eyebrow="What a person experiences" heading="What memory is for">
+            <P>There are two ways to describe MAIA&apos;s memory, and they are two views of one system rather than two competing models. The continuity architecture below names the <em>mechanisms</em> that carry context across time. This view names what those mechanisms let a person actually experience.</P>
+            <P>Each row carries the same kind of label as the mechanisms do, earned the same way: by what the live conversational path does, not by what a store contains. Several capabilities here have real substrate on their own surfaces and no route into ordinary conversation; those are marked partly live rather than live, because a person talking to MAIA would not meet them.</P>
+            <div className="my-6 grid grid-cols-1 gap-px border border-soullab-border-subtle bg-soullab-border-subtle">
+              {MEMBER_LENS.map((r) => (
+                <div key={r.name} className="bg-soullab-surface p-4">
+                  <div className="mb-1.5 flex flex-wrap items-baseline gap-x-3 gap-y-1.5">
+                    <span className="text-[1.05rem] text-soullab-text-primary" style={serif}>{r.name}</span>
+                    <span className="text-[0.9rem] italic text-soullab-accent-soft">{r.remembers}</span>
+                    <Chip layer={r.layer} />
+                  </div>
+                  <p className="m-0 text-[0.92rem] leading-[1.5] text-soullab-text-secondary">{r.what}</p>
+                  <p className="m-0 mt-2 text-[0.75rem] tracking-[0.04em] text-soullab-text-muted">Carried by: {r.carried}</p>
+                </div>
+              ))}
+            </div>
+            <P>Two of the ten are live without qualification. Seven are partly live: real in some governed form, incomplete in a way the row states. One is vision. That distribution is the honest shape of the system today, and it is more informative than a column of checkmarks would be.</P>
+            <Quote>What has mattered does not have to disappear between encounters &mdash; and when it returns, it should return with its history, authorship and authority intact.</Quote>
+          </Section>
+
           <Section eyebrow="The continuity stack" heading="Twelve layers of memory, named">
-            <P>MAIA&apos;s memory canon names twelve layers of continuity and calls the first seven a non-negotiable base chain. Naming them matters because &ldquo;memory&rdquo; hides too much: a system can remember what you said and still know nothing about where that knowledge came from, whether you meant it to be kept, or whether it belongs in this moment. Here is each layer as it stands in the beta, labeled by what the live conversation path actually does with it.</P>
+            <P>Beneath the view above sits the architecture that carries it. MAIA&apos;s memory canon names twelve layers of continuity and calls the first seven a non-negotiable base chain. Naming them matters because &ldquo;memory&rdquo; hides too much: a system can remember what you said and still know nothing about where that knowledge came from, whether you meant it to be kept, or whether it belongs in this moment. Here is each layer as it stands in the beta, labeled by what the live conversation path actually does with it.</P>
             <Table headers={['Layer', 'What it holds', 'Gate']} rows={CONTINUITY_STACK} />
             <P>Seven of the twelve are live in some governed form, two are designed and waiting on callers or a gesture, and three are held until the consent architecture they would need exists. The canon&apos;s own rule for the base chain: if more than one of its layers errors in a turn, MAIA must say so rather than answer as if she remembers. That rule, and the anti-amnesia guard, are the two sides of one commitment: MAIA neither overclaims memory nor disowns it.</P>
           </Section>
