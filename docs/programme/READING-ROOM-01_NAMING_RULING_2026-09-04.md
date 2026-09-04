@@ -163,10 +163,28 @@ READING-ROOM-01              generic Reading Room capability + Reading Group Tem
 EA-READING-GROUP-01          the Elemental Alchemy Reading Group with Andrea, as a
                              configured instance on existing substrate (Circles + the EA
                              content surfaces above)
-                             NOT OPENED — but it is not blocked by Stage 15, and it is the
-                             first specimen from which the generic architecture is later
-                             extracted
+                             INSTANCE OPEN — founder act 2026-09-04. Not blocked by
+                             Stage 15; the first specimen from which the generic
+                             architecture is later extracted
+                             lane: EA-READING-GROUP-01_LANE.md
 ```
+
+**Amendment 1 — founder, 2026-09-04.** `EA-READING-GROUP-01` is **OPEN**, on existing substrate,
+**before Stage 7 closes**, with instance/configuration authority only. The governing sentence:
+
+> **The product instance does not have to wait for the product abstraction.**
+
+Waiting for Stages 7–14 would make a specific human use of existing infrastructure depend on a
+future generalized authoring capability. That is backwards. The dependency runs the other way:
+
+```text
+EA-READING-GROUP-01 experience → evidence → generic requirements → Stage 15 Reading Room capability
+```
+
+The lane document carries the hard boundary, the finding-classification table, the eight discovery
+questions, and the ruling that the club/cohort distinction is held open rather than collapsed into
+a `group_type` enum. **Naming discipline, binding**: what EA is doing is *the first Reading Group
+instance running on existing Soullab substrate* — never *"a prototype Reading Room."*
 
 **Binding premise, when either opens:**
 
@@ -218,13 +236,15 @@ This capability increases reach: it puts members in relation to each other aroun
 | Reading Group Template | **Designed** — this document. No code |
 | Reading Room in Writer's Studio | **Vision** — Stage 15, roadmap direction only |
 | A reading group people can join | **Vision** — nothing is joinable today |
+| `EA-READING-GROUP-01` lane | **Live (governance)** — opened by founder act 2026-09-04; no configuration performed, no group running |
 
 Center of gravity: *a naming and placement ruling, made before the build, on top of substrate that
 already exists.* Failure test: if the lane never opens, nothing claimed here becomes false.
 
 ## 10. What this document does not do
 
-- Does not open a lane, authorize a build, or create a candidate.
+- Does not authorize a build or create a candidate. (Amendment 1 opens `EA-READING-GROUP-01`
+  as an **instance/configuration** lane only; no build authority is conferred by either document.)
 - Does not compete with `BUILD-07B`, which remains the only open Writer's Studio unit.
 - Does not lift the Canvas grammar constraints of Master Brief §2.
 - Does not establish that Andrea's material may be generalized (§7).
@@ -232,7 +252,6 @@ already exists.* Failure test: if the lane never opens, nothing claimed here bec
 
 ---
 
-**Next act (founder's, not the session's)**: decide whether `EA-READING-GROUP-01` opens as an
-instance on existing substrate *before* the generic `READING-ROOM-01` capability — the sequencing
-that produces a real specimen instead of a speculative architecture — and whether that happens
-before or after Stage 7 closes.
+**Decided (Amendment 1, founder, 2026-09-04)**: `EA-READING-GROUP-01` opens as an instance on
+existing substrate, before the generic `READING-ROOM-01` capability and before Stage 7 closes —
+the sequencing that produces a real specimen instead of a speculative architecture.
