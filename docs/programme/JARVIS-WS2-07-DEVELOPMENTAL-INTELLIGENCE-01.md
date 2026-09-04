@@ -1,6 +1,6 @@
 # JARVIS-WS2-07-DEVELOPMENTAL-INTELLIGENCE-01
 
-> **Lane active. BUILD-07B CLOSED / ACCEPTED (founder, 2026-09-04) — Gate A and Gate B both PASS on candidate `421f25bd6`; canonical on merge. BUILD-07C opens only by its own act.**
+> **Lane active. BUILD-07C DEVELOPMENTAL READING — IMPLEMENTATION OPEN (founder, 2026-09-04), triggered by BUILD-07B CLOSED / ACCEPTED on canonical `b20f2742e`. Observation-only v1. BUILD-07D+ unauthorized.**
 >
 > This document defined the lane before it was entered. Originally it authorized **no
 > implementation**. As of the 2026-09-04 founder act recorded below, it authorizes **only the
@@ -11,14 +11,15 @@
 
 ```text
 LANE               JARVIS-WS2-07-DEVELOPMENTAL-INTELLIGENCE-01
-STATE              ACTIVE · BUILD-07B CLOSED / ACCEPTED (founder, 2026-09-04) · canonical on merge
-                   candidate 421f25bd6 · Gate A 36/0 · Gate B 10/0 (claude-opus-5)
+STATE              ACTIVE · BUILD-07C IMPLEMENTATION OPEN (founder, 2026-09-04)
+                   BUILD-07B CLOSED / ACCEPTED · canonical @ b20f2742e (PR #1190)
                    BUILD-07A CLOSED / ACCEPTED · canonical @ 27ec9f895
 TRIGGER            Stage 6A AuthorStructureCommand merged to canonical and witnessed
 TRIGGER SATISFIED  clean-main-no-secrets @ 4b8b34bcf
-AUTHORIZES         nothing — BUILD-07B is closed; BUILD-07C opens only by its own act
-                   BUILD-07C–H unauthorized
-NO                 route · UI / Develop surface · persistence / database-schema change · BUILD-07C+
+AUTHORIZES         exact BUILD-07C implementation only (see the 2026-09-04 07C opening block)
+                   BUILD-07D–H unauthorized
+NO                 route · UI / Develop surface · interpretation · questions · possibilities ·
+                   manuscript mutation · BUILD-07D+ (07C persistence + its migration ARE authorized)
 NORMATIVE          docs/programme/WRITERS_STUDIO_MASTER_BRIEF.md
 CAPABILITY         docs/programme/DEVELOPMENTAL_EDITOR_CAPABILITY.md
 LIVE STATE         docs/programme/WRITERS_STUDIO_PROGRAMME_BOARD.md
@@ -312,6 +313,47 @@ QUESTION ANSWERED did the actual reader execute the contract Gate A proved — Y
 RECORD            docs/programme/WS2-07-BUILD-07B_READER_WITNESS_2026-09-04.md §3–§4
 STATE             BUILD-07B CLOSED / ACCEPTED (founder, 2026-09-04) · canonical on merge of the
                   candidate PR · BUILD-07C NOT opened by this closure
+```
+
+```text
+2026-09-04 · BUILD-07C DEVELOPMENTAL READING — OPEN (founder act; tempo ruling: opening record is
+the first commit on the implementation branch, no separate docs PR)
+TRIGGER           BUILD-07B DEVELOPMENTAL READER CLOSED / ACCEPTED on canonical
+TRIGGER SATISFIED clean-main-no-secrets @ b20f2742e (merge of PR #1190; reader blobs = candidate
+                  421f25bd6)
+MISSION           turn an accepted 07B ReaderResult into a durable, frozen DevelopmentalReading —
+                  without rereading, rewriting, or changing the Work
+CONTRACT          WS2-07-DECIDE_DEVELOPMENTAL_READING_OBJECT.md INV-0 … INV-25, binding as
+                  ratified; no re-DECIDE — a contradiction found in implementation is a ruling
+AUTHORIZES        DevelopmentalReading type + minimal persistence (migration, store, retrieval) ·
+                  server-minted readingId (INV-1) · stable (readingId, observationKey) (INV-2) ·
+                  one observation per accepted ReaderClaimDraft · observation text = the reader
+                  claim text, no rewriting · evidence refs re-bound before freeze ·
+                  commissioned lens copied onto the observation · phenomenon classification ·
+                  reader provenance preserved · server-stamped frozenAt (INV-25) · persisted
+                  'none' as a complete reading (INV-23/24) · immutable reading / observations
+                  (INV-4) · three-state current · superseded · unmeasured assessment
+                  (INV-19–22) · tests / gates / witness necessary for this unit
+V1 RULINGS        observation-only: no interpretation, questions, possibilities (canon: an
+                  observation with no interpretation is a complete, honest reading)
+                  phenomenon = the UNDERSTAND §4 family verbatim, no new taxonomy:
+                    recurrence · unresolved thread · register shift · prospective reference ·
+                    re-explanation / first-mention · movement · term drift · positional asymmetry
+                  lens and phenomenon separate; neither derived from the other (INV-10)
+                  ONE bounded classification-only model call per reading:
+                    INPUT  claim text · commissioned lens · doesNotEstablish — NO manuscript prose
+                    OUTPUT phenomenon tag only; may not rewrite the claim
+                    MODEL  the same resolved model the reader used; no fallback
+                    PROV   classifier version + prompt hash recorded beside reader provenance
+                    unclassifiable into the v1 set → REFUSE the freeze; never invent a category
+DOES NOT AUTHORIZE interpretation · questions · possibilities · suggestions · replacement prose ·
+                  Develop UI · route · dialogue · author decisions · manuscript mutation ·
+                  revision · re-anchoring · any change to the 07B reader or contract · BUILD-07D+
+CLOSURE           Gate A structural (falsifiers from INV-0 … INV-25 + the rulings above, seam
+                  refusing) → STRUCTURALLY PROVED · Gate B one bounded live commission on an
+                  invented fixture, frozen, retrieved by identity, then superseded by an edit and
+                  shown three-state → CLOSED / ACCEPTED
+STATE             BUILD-07C IMPLEMENTATION OPEN · no candidate yet
 ```
 
 ## Prerequisite — SECTION-ADDRESSABLE DRAFT LIVENESS
