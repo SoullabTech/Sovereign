@@ -148,6 +148,10 @@ The lighter bar applies to **both** merge and production promotion. Council appr
 binds canonical code but not running code is not a boundary, so this category deliberately
 does not distinguish the two.
 
+**No self-authorization.** This rule may not authorize its own adoption. It becomes
+effective only once this governance amendment is canonical, and it confers no authority over
+the change that introduces it. Any change relying on it must postdate its canonicalization.
+
 Rationale and the contradiction that prompted it:
 `docs/programme/GOVERNANCE-CLASS-A-BOOTSTRAP-SHADOW-01.md`.
 

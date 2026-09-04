@@ -177,13 +177,68 @@ founder act, not an automated approval engine** — deliberately, because the en
 deleted in the 2026-07-03 redesign was deleted for reimplementing and diverging from
 GitHub's own review model. Rebuilding one here would repeat that mistake.
 
+## 5b. Adoption — the one-time constitutional bootstrap act
+
+The bridge defined above **may not authorize its own adoption**. It becomes effective only
+once this amendment is canonical, and confers no authority over the change that introduces
+it. So adopting it raises an unavoidable, one-time problem, handled explicitly rather than
+disguised: the currently canonical Class A process is internally inconsistent and cannot be
+fulfilled with the present collaborator structure, and it defines no working bridge for
+repairing that inconsistency. The covenant gives the Founder-Steward final responsibility
+for production legitimacy while requiring Council and Mentor participation for ordinary
+Class A changes — and the mechanism that once reconciled those was deleted.
+
+```text
+ONE-TIME CONSTITUTIONAL BOOTSTRAP ACT
+
+Purpose:
+  adopt the governance repair only
+
+Authority claimed:
+  Founder-Steward constitutional ratification
+
+Authority NOT claimed:
+  Council vote
+  Mentor verification
+  production authorization for #1199
+  satisfaction of ordinary Class A requirements
+
+Reason:
+  current canonical governance is contradictory / mechanically
+  unsatisfiable and defines no working bridge for repairing
+  that contradiction
+
+Ends:
+  immediately when this governance amendment becomes canonical
+```
+
+This is materially different from using a founder exception to ship Cut 1A. One explicit
+founder act repairs the broken constitution; afterwards #1199 must satisfy the newly
+canonical bootstrap-shadow rule on its own merits, and this act contributes nothing toward
+that.
+
 ## 6. Sequence
 
 ```text
 THIS LANE       reconcile · define the bridge · make canonical
-THEN            merge new canonical into #1199 · CI reruns on the exact new head
-THEN            explicit Founder shadow sign-off naming that head
-THEN            bounded Cut 1A production deploy · witness · STOP
+THEN            merge new canonical into #1199
+                CI reruns on the exact new #1199 head
+                record explicit Founder-Steward bootstrap-shadow sign-off
+                verify Cut 1A still meets EVERY eligibility condition
+                merge #1199 to canonical
+                deploy the resulting CANONICAL MERGE SHA
+                bounded shadow witness · STOP
 Cut 1B          still requires full Class A governance
 P6              CLOSED
 ```
+
+**Merge before witness (founder ruling, 2026-09-04).** The clause permits both canonical
+merge and production shadow observation of the same zero-authority infrastructure, so
+deploying the canonical merge SHA rather than a branch head gives the cleanest provenance
+available:
+
+```text
+reviewed tree = merged tree = deployed tree = witnessed tree
+```
+
+No branch-head-versus-canonical qualification survives on the witness.
