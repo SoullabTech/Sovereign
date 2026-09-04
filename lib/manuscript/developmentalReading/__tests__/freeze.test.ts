@@ -25,7 +25,7 @@ function request(withStructure = true): DevelopmentalReaderRequest {
   return { commissionedLens: 'development', evidence, recovered: recoveredFor(evidence, revision.content) };
 }
 const READER = readerIdentity('claude-test-model');
-const CLASSIFIER: ClassifierIdentity = { provider: 'anthropic', model: 'claude-test-model', promptHash: 'h', classifierVersion: 'DEVELOPMENTAL-PHENOMENON-CLASSIFIER-01' };
+const CLASSIFIER: ClassifierIdentity = { provider: 'anthropic', model: 'claude-test-model', promptHash: 'h', classifierVersion: 'DEVELOPMENTAL-PHENOMENON-01' };
 
 const claims = (...texts: string[]): DevelopmentalReaderResult => ({
   outcome: 'claims',
@@ -46,12 +46,12 @@ describe('freezeReading', () => {
     if (!f.ok) return;
     expect(f.value.outcome).toBe('reading');
     expect(f.value.observations.map((o) => o.key)).toEqual(['o1', 'o2']);
-    expect(f.value.observations[0].observation).toBe('  The lantern is set down.  ');   // verbatim, not even trimmed
+    expect(f.value.observations[0]!.observation).toBe('  The lantern is set down.  ');   // verbatim, not even trimmed
     expect(f.value.observations.every((o) => o.lens === 'development')).toBe(true);
     expect(f.value.observations.map((o) => o.phenomenon)).toEqual(['recurrence', 'movement']);
-    expect(f.value.observations[0].structureDependency).toEqual({ kind: 'independent' });
-    expect(f.value.observations[1].structureDependency).toEqual({ kind: 'authored-structure' });
-    expect(f.value.observations[0].doesNotEstablish).toEqual(['across-unread-span']);
+    expect(f.value.observations[0]!.structureDependency).toEqual({ kind: 'independent' });
+    expect(f.value.observations[1]!.structureDependency).toEqual({ kind: 'authored-structure' });
+    expect(f.value.observations[0]!.doesNotEstablish).toEqual(['across-unread-span']);
     expect(f.value.scope).toEqual({ commissionedLens: 'development', bodyScope: ['s0', 's1'], withStructure: true });
     expect(f.value.readState).toBe(req.evidence.readState);
     expect(f.value.provenance).toEqual({ reader: READER, classifier: CLASSIFIER });
@@ -62,7 +62,7 @@ describe('freezeReading', () => {
   it('observation-only v1: no interpretation, questions, possibilities, uncertainty, severity, priority, score, confidence, rank on any observation', () => {
     const f = freezeReading({ manuscriptId: 'm1', request: request(), result: claims('x'), phenomena: ['movement'], reader: READER, classifier: CLASSIFIER });
     if (!f.ok) throw new Error(f.refusal);
-    expect(Object.keys(f.value.observations[0]).sort()).toEqual(
+    expect(Object.keys(f.value.observations[0]!).sort()).toEqual(
       ['doesNotEstablish', 'evidenceRefs', 'key', 'lens', 'observation', 'phenomenon', 'structureDependency']);
   });
 
@@ -119,7 +119,7 @@ describe('freezeReading', () => {
 
   it('the phenomenon family is exactly the eight UNDERSTAND §4 values', () => {
     expect([...DEVELOPMENTAL_PHENOMENA]).toEqual(['recurrence', 'unresolved-thread', 'register-shift', 'prospective-reference',
-      're-explanation', 'movement', 'term-drift', 'positional-asymmetry']);
+      're-explanation-first-mention', 'movement', 'term-drift', 'positional-asymmetry']);
     expect(observationKey(0)).toBe('o1');
     expect(observationKey(6)).toBe('o7');
     expect(structureDependencyOf([{ kind: 'structure-topology' }])).toEqual({ kind: 'authored-structure' });

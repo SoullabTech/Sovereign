@@ -112,7 +112,7 @@ async function main() {
   check('C11 unclassifiable → refusal (never an invented category)', !uncl.ok && uncl.refusal === 'classifier_unclassifiable');
   const seam = await classifyClaims([{ text: 'x', doesNotEstablish: ['author-intent'] }], 'voice', 'witness-model');
   check('C12 under sovereign mode the classifier seam refuses; adapter never loaded', !seam.ok && seam.refusal === 'structured_inference_unavailable' && adapterLoaded === false);
-  check('C12 classifier provenance: version + hash over system ⧺ NUL ⧺ tool', CLASSIFIER_VERSION === 'DEVELOPMENTAL-PHENOMENON-CLASSIFIER-01' && classifierPromptHash() === createHash('sha256').update(CLASSIFIER_SYSTEM, 'utf8').update('\u0000').update(JSON.stringify(classifierTool()), 'utf8').digest('hex'));
+  check('C12 classifier provenance: version + hash over system ⧺ NUL ⧺ tool', CLASSIFIER_VERSION === 'DEVELOPMENTAL-PHENOMENON-01' && classifierPromptHash() === createHash('sha256').update(CLASSIFIER_SYSTEM, 'utf8').update('\u0000').update(JSON.stringify(classifierTool()), 'utf8').digest('hex'));
 
   /* ── C13–C19 · the store (INV-1, 3, 4, 22, 25; no prose) ── */
   const tag = randomUUID().slice(0, 8);
@@ -136,16 +136,26 @@ async function main() {
     let updateRefused = false;
     try { await query(`UPDATE developmental_readings SET outcome = 'none' WHERE id = $1`, [stored.id]); } catch (e) { updateRefused = /immutable/.test(String(e)); }
     let obsUpdateRefused = false;
-    try { await query(`UPDATE developmental_observations SET observation = 'rewritten' WHERE reading_id = $1`, [stored.id]); } catch (e) { obsUpdateRefused = /immutable/.test(String(e)); }
-    check('C16 a frozen reading and its observations refuse UPDATE at the database (INV-4)', updateRefused && obsUpdateRefused);
+    try { await query(`UPDATE developmental_readings SET observations = '[]'::jsonb WHERE id = $1`, [stored.id]); } catch (e) { obsUpdateRefused = /immutable/.test(String(e)); }
+    check('C16 a frozen reading refuses UPDATE at the database — outcome and observations alike (INV-4)', updateRefused && obsUpdateRefused);
     const noneStored = await freezeAndStore(memberId, { ...(none.ok ? none.value : (() => { throw new Error('none'); })()), manuscriptId });
     check('C17 a none reading persists as a complete reading', noneStored.ok);
-    let noneObsRefused = false;
-    if (noneStored.ok) {
-      try { await query(`INSERT INTO developmental_observations (reading_id, observation_key, position, lens, phenomenon, evidence_refs, observation, does_not_establish, structure_dependency) VALUES ($1, 'o1', 0, 'development', 'movement', '[]', 'x', '[]', 'independent')`, [noneStored.id]); }
-      catch (e) { noneObsRefused = /outcome none/.test(String(e)); }
-    }
-    check('C18 a none reading cannot carry observations — trigger refuses (INV-0)', noneObsRefused);
+    const rawInsert = async (outcome: string, observations: string, classifier: string | null) => {
+      try {
+        await query(`INSERT INTO developmental_readings (manuscript_id, member_id, draft_id, revision_number, commissioned_lens, scope, read_state, coverage, input_fingerprint, outcome, observations, reader_provenance, classifier_provenance)
+                     VALUES ($1, $2, $3, 1, 'development', '{}', '{}', '{}', 'f', $4, $5::jsonb, '{}', $6::jsonb)`,
+          [manuscriptId, memberId, evidence.readState.draftId, outcome, observations, classifier]);
+        return 'inserted';
+      } catch (e) { return String(e); }
+    };
+    const goodObs = JSON.stringify([{ key: 'o1', lens: 'development', phenomenon: 'movement', evidenceRefs: [{ kind: 'section', sectionId: 's0' }], observation: 'x', doesNotEstablish: ['author-intent'], structureDependency: { kind: 'independent' } }]);
+    const noneWithObs = await rawInsert('none', goodObs, null);
+    const readingWithout = await rawInsert('reading', '[]', '{}');
+    check('C18 outcome ⇔ observations enforced by CHECK: none+observations and reading+none both refused (INV-0)', /outcome_observations/.test(noneWithObs) && /outcome_observations/.test(readingWithout));
+    const badPhen = await rawInsert('reading', goodObs.replace('"movement"', '"irony"'), '{}');
+    const foreignField = await rawInsert('reading', goodObs.replace('"observation":"x"', '"observation":"x","interpretation":"y"'), '{}');
+    const badKey = await rawInsert('reading', goodObs.replace('"key":"o1"', '"key":"o2"'), '{}');
+    check('C18 the insert trigger refuses a foreign phenomenon, a v1-unauthorized field, and a misnumbered key', /outside the v1 family/.test(badPhen) && /does not authorize/.test(foreignField) && /expected o1/.test(badKey));
     const listed = await listReadings(manuscriptId, memberId);
     check('C19 listing is newest-first summaries with observation counts', listed.length === 2 && listed.every((r) => typeof r.frozenAt === 'string') && listed.some((r) => r.outcome === 'none' && r.observationCount === 0) && listed.some((r) => r.outcome === 'reading' && r.observationCount === 2));
     const prose = assertNoProseKeys({ readState: { ...evidence.readState, sections: { s0: { text: 'leaked prose' } } } });

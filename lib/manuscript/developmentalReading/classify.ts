@@ -31,7 +31,7 @@ import {
   type DevelopmentalPhenomenon,
 } from './contract';
 
-export const CLASSIFIER_VERSION = 'DEVELOPMENTAL-PHENOMENON-CLASSIFIER-01';
+export const CLASSIFIER_VERSION = 'DEVELOPMENTAL-PHENOMENON-01';
 export const CLASSIFIER_TOOL = 'classify_phenomena';
 const UNCLASSIFIABLE = 'unclassifiable';
 

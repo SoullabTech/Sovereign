@@ -40,13 +40,13 @@ describe('developmental reading — module boundaries', () => {
     }
   });
 
-  it('the store has INSERT and SELECT only — no UPDATE, DELETE, TRUNCATE (INV-4, INV-22)', () => {
+  it('the store has INSERT and SELECT only, on ONE table — no UPDATE, DELETE, TRUNCATE (INV-4, INV-22)', () => {
     const store = modules().find((m) => m.name === 'store.ts')!.code;
     expect(/\b(UPDATE\s+[a-z_]+\s+SET|DELETE\s+FROM|TRUNCATE|ALTER\s+TABLE|DROP\s+TABLE)\b/i.test(store)).toBe(false);
     expect(/INSERT\s+INTO\s+developmental_readings/.test(store)).toBe(true);
     /* the store touches only its own two tables */
     const tables = [...store.matchAll(/\b(?:INTO|FROM|JOIN)\s+([a-z_]+)/gi)].map((m) => m[1]);
-    expect(new Set(tables)).toEqual(new Set(['developmental_readings', 'developmental_observations']));
+    expect(new Set(tables)).toEqual(new Set(['developmental_readings']));
   });
 
   it('freeze never rewrites: the observation is assigned from the claim text with no transformation', () => {
@@ -85,6 +85,7 @@ describe('developmental reading — module boundaries', () => {
       expect(`migration column ${col}: ${new RegExp(`^\\s*${col}\\s+`, 'm').test(sql)}`).toBe(`migration column ${col}: false`);
     }
     expect(sql).toMatch(/BEFORE UPDATE ON developmental_readings/);
-    expect(sql).toMatch(/BEFORE UPDATE ON developmental_observations/);
+    expect(sql).not.toMatch(/CREATE TABLE IF NOT EXISTS developmental_observations/);
+    expect(sql).toMatch(/'re-explanation-first-mention'/);
   });
 });

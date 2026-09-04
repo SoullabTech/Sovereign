@@ -65,11 +65,11 @@ describe('the classifier sees no prose', () => {
 });
 
 describe('provenance and the pinned model', () => {
-  it('classifierPromptHash is over system + tool together; version is DEVELOPMENTAL-PHENOMENON-CLASSIFIER-01', () => {
+  it('classifierPromptHash is over system + tool together; version is DEVELOPMENTAL-PHENOMENON-01', () => {
     const expected = createHash('sha256').update(CLASSIFIER_SYSTEM, 'utf8').update('\u0000')
       .update(JSON.stringify(classifierTool()), 'utf8').digest('hex');
     expect(classifierPromptHash()).toBe(expected);
-    expect(CLASSIFIER_VERSION).toBe('DEVELOPMENTAL-PHENOMENON-CLASSIFIER-01');
+    expect(CLASSIFIER_VERSION).toBe('DEVELOPMENTAL-PHENOMENON-01');
   });
 
   it('under sovereign mode the seam refuses and no fallback is attempted', async () => {
