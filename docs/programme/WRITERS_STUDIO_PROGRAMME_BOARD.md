@@ -89,9 +89,12 @@ PRIOR UNIT         BUILD-07A Developmental Evidence — CLOSED / ACCEPTED (found
                    2026-09-04); canonical @ 27ec9f895
                    record: WS2-07-BUILD-07A_EVIDENCE_WITNESS_2026-09-03.md §9
 NEXT EXECUTABLE    WS2-07-F1 founder live semantic witness (PR #1194):
-                   ANTHROPIC_API_KEY=… DATABASE_URL=… npx tsx scripts/ws2-07-f1-semantic-witness.ts
+                   ANTHROPIC_API_KEY=… DATABASE_URL=… npx tsx scripts/ws2-07-f1-semantic-witness.ts --out <file>
                    — every claim + phenomenon is printed for founder adjudication and never
-                   auto-judged → F1 CLOSED / ACCEPTED → frontier verification → merge #1194
+                   auto-judged. ⛔ `--out <file>` is REQUIRED WITNESS PROCEDURE, not a
+                   convenience: the printed claims and phenomena ARE the adjudication
+                   evidence and must survive terminal scrollback as a durable artifact.
+                   → F1 CLOSED / ACCEPTED → frontier verification → merge #1194
                    → refresh BUILD-07D (re-pin Gate B CANDIDATE_BLOBS to the repaired 07C
                    blobs) → Gate B(a) rerun → browser walk D1–D8 (b) → founder records
                    BUILD-07D CLOSED / ACCEPTED, explicitly reconciling that acceptance
