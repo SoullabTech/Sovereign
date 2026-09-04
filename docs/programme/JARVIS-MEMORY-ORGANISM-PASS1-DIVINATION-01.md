@@ -98,6 +98,8 @@ Proof 9 protocol (charter §7): the member asks about the earlier reading in an 
 | relevant durable reading? | **NO** — `divination_iching_readings` holds 5 rows all-time for this member, newest `2026-06-11` (hex 62→45). Nothing from 2026-09-02/03. |
 | all-time sanity | turns 27,661 · readings 5 — the predicate binds. |
 
+**Certifying run (founder's join form, 2026-09-03)**: the founder required a single hashing proposition — `memberRef == SHA-256(UTF-8 members.id::text)[0:12]` — resolved once against `members`, with every other table joined on the resolved id rather than re-hashed. That run (`convert_to(id::text,'UTF8')` + `JOIN target ON user_id::text = member_id`) returned the identical four result sets: member `ce284751…`, the same 20 turns, the same 5 readings (newest 2026-06-11), 27,661 / 5 all-time. The classification below rests on that run; the re-hash run is corroboration only.
+
 **Outcome**: *conversation yes + relevant reading no* → Cut 1C authorized (founder's conditional authorization, condition met). Separately: the conversational clip is now a **witnessed** mechanism, not a hypothesis — still HELD by founder ruling, to be tested on its own merits after direct artifact recall works.
 
 Note on Cut 1B's window: all five existing readings are older than 60 days, so on today's production data `[MAIA] divination-block` would report `candidateCount: 0` for this member. That is the window working, not a defect. The first in-window row arrives via Cut 1C.
