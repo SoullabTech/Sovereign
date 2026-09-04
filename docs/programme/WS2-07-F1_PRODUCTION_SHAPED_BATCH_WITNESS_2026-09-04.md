@@ -115,7 +115,7 @@ term-drift · term-drift · term-drift
 ```
 
 `unresolved-thread` ×3 under the 21-batch — defensible, since its own text says
-it does not recur. In isolation it lands on `term-drift`, which the founder
+it does not recur. In seven-claim batch C it lands on `term-drift`, which the founder
 explicitly ruled out for this exact claim: *"The numeral eleven still means
 eleven. Its narrative role changes; its lexical sense does not."* `-04`'s rule
 4 was written to close precisely this. `term-drift` went from zero placements
