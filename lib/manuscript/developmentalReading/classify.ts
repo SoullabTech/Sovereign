@@ -32,7 +32,7 @@ import {
   type DevelopmentalPhenomenon,
 } from './contract';
 
-export const CLASSIFIER_VERSION = 'DEVELOPMENTAL-PHENOMENON-03';
+export const CLASSIFIER_VERSION = 'DEVELOPMENTAL-PHENOMENON-04';
 export const CLASSIFIER_TOOL = 'classify_phenomena';
 const UNCLASSIFIABLE = 'unclassifiable';
 
@@ -71,6 +71,9 @@ WHEN TWO COULD APPLY, the more specific one wins:
   movement / term drift              "term-drift" requires THE TERM ITSELF to carry a different sense at the points read. If the referent or the narrative role changes while the term's sense stays the same, it is NOT term drift; a role tracked as changing through the sequence is "movement".
   recurrence / term drift            If the sense of the term changes, it is term drift. If it recurs unchanged, it is recurrence.
   recurrence / anything more specific  "recurrence" applies only where the REPETITION ITSELF is what the claim says is happening. A repeated textual gesture - withholding, declining to explain, pre-empting - can be a recurrence. But if any other phenomenon in this family captures the claim's predicate, that phenomenon wins.
+  recurrence / movement              Choose "movement" when the claim's developmental predicate is that a repeated element, trait, relation, gesture or quality CHANGES STATE across its appearances - including inversion, intensification, diminishment, disclosure, concealment or reversal. Choose "recurrence" when the predicate is the repetition or reappearance ITSELF, and no state change across those appearances is what the claim is asserting.
+
+UNRESOLVED THREAD, TIGHTENED. If the claim ITSELF explicitly states that the thing IS taken up again within the span read, it is not "unresolved-thread" merely because it later disappears. "unresolved-thread" requires the predicate itself to remain untaken-up, or still withheld, at the end-state the claim reaches.
 
 If a claim does not notice any phenomenon in this family, answer "${UNCLASSIFIABLE}" for that claim. Do not stretch a category to fit. Do not invent one. A claim whose whole content is a MEASUREMENT of the container - heading format, section lengths, counts, positions, how many sections a division holds, or the evenness of any of those - notices no phenomenon in this family, however true it is.
 

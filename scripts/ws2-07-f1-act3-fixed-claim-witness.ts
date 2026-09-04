@@ -6,14 +6,14 @@
  *   doesNotEstablish  editorial-consequence      (the same for all 21)
  *   model             the pinned reader model
  *   reader            NOT CALLED
- *   classifier        -03 only
+ *   classifier        -04 (the -03 run is recorded and superseded)
  *   three independent acts, exactly one classifier call each, over the
  *   identical 21-item array. NO RETRIES around `unclassifiable`.
  *
  * WHAT THIS WITNESS MAY PROVE
  *   - all three acts received byte-identical complete classifier requests
- *   - CLASSIFIER_VERSION is DEVELOPMENTAL-PHENOMENON-03
- *   - the four new disambiguation rules are rendered
+ *   - CLASSIFIER_VERSION is DEVELOPMENTAL-PHENOMENON-04
+ *   - every disambiguation rule is rendered
  *   - no family change, no reader change
  *   - whether each exact claim stabilises or still varies under identical input
  *
@@ -58,12 +58,16 @@ const EXPECTED_FAMILY = [
   're-explanation-first-mention', 'movement', 'term-drift', 'positional-asymmetry',
 ] as const;
 
-/** The four Act 3 refinements, each identified by a phrase that must render. */
+/** The Act 3 refinements, each identified by a phrase that must render.
+ *  Four landed under -03; the last two were added under -04 after the -03
+ *  fixed-claim run failed on act1/o3 and on the recurrence/movement overlap. */
 const ACT3_RULES: readonly { id: string; needle: string }[] = [
   { id: 'predicate-not-subject', needle: 'DEVELOPMENTAL PREDICATE' },
   { id: 'unresolved-thread/movement', needle: 'unresolved thread / movement' },
   { id: 'movement/term-drift', needle: 'movement / term drift' },
   { id: 'recurrence-specificity', needle: 'recurrence / anything more specific' },
+  { id: 'recurrence/movement', needle: 'recurrence / movement' },
+  { id: 'unresolved-thread-tightened', needle: 'UNRESOLVED THREAD, TIGHTENED' },
 ];
 
 const arg = (name: string, fallback: string): string => {
@@ -106,12 +110,12 @@ async function main() {
 
   /* ---- J1 classifier version -------------------------------------------- */
   check('J1', 'classifier is at the Act 3 version',
-    CLASSIFIER_VERSION === 'DEVELOPMENTAL-PHENOMENON-03',
+    CLASSIFIER_VERSION === 'DEVELOPMENTAL-PHENOMENON-04',
     `CLASSIFIER_VERSION=${CLASSIFIER_VERSION}`);
 
   /* ---- J2 the four rules render ----------------------------------------- */
   const missingRules = ACT3_RULES.filter((r) => !CLASSIFIER_SYSTEM.includes(r.needle));
-  check('J2', 'the four Act 3 disambiguation rules are rendered to the model',
+  check('J2', 'every Act 3 disambiguation rule is rendered to the model',
     missingRules.length === 0,
     missingRules.length === 0
       ? ACT3_RULES.map((r) => r.id).join(' · ')

@@ -160,9 +160,9 @@ describe('the eight phenomenon definitions reach the classifier', () => {
 });
 
 describe('provenance moved because the semantic contract moved', () => {
-  it('reader stays at -02 and the classifier moves to -03 — Act 3 is classifier-only', () => {
+  it('reader stays at -02 and the classifier moves to -04 — Act 3 is classifier-only', () => {
     expect(READER_VERSION).toBe('DEVELOPMENTAL-READER-02');
-    expect(CLASSIFIER_VERSION).toBe('DEVELOPMENTAL-PHENOMENON-03');
+    expect(CLASSIFIER_VERSION).toBe('DEVELOPMENTAL-PHENOMENON-04');
     expect(promptContractHash()).toHaveLength(64);
   });
 
@@ -175,7 +175,7 @@ describe('provenance moved because the semantic contract moved', () => {
   });
 });
 
-describe('WS2-07-F1 ACT 3 — the four disambiguation rules, structurally', () => {
+describe('WS2-07-F1 ACT 3 — the disambiguation rules, structurally', () => {
   /* Founder ruling 2026-09-04. Proved without a model: the rules must REACH
      the classifier. Whether the model then obeys them is the fixed-claim
      witness's question, and a separate one. */
@@ -207,6 +207,31 @@ describe('WS2-07-F1 ACT 3 — the four disambiguation rules, structurally', () =
     expect(DEVELOPMENTAL_PHENOMENA).toHaveLength(8);
     /* The founder declined this precedence: the examples were different claims,
        not contradictory classification of one claim. */
+    expect(CLASSIFIER_SYSTEM).not.toContain('register shift / positional asymmetry');
+  });
+});
+
+describe('WS2-07-F1 ACT 3 / -04 — the two rules the -03 fixed-claim run forced', () => {
+  /* The -03 run was valid (7/0 gates, 18/21 stable) and NOT accepted: act1/o3
+     drew unresolved-thread twice although its own text says the material IS
+     taken up again, and recurrence/movement was never adjudicated. */
+
+  it('recurrence / movement is adjudicated by state change across appearances', () => {
+    expect(CLASSIFIER_SYSTEM).toContain('recurrence / movement');
+    expect(CLASSIFIER_SYSTEM).toMatch(/CHANGES STATE across its appearances/);
+    expect(CLASSIFIER_SYSTEM).toMatch(/inversion, intensification, diminishment, disclosure, concealment or reversal/);
+    expect(CLASSIFIER_SYSTEM).toMatch(/the repetition or reappearance ITSELF/);
+  });
+
+  it('unresolved-thread cannot be chosen for a claim that says the thing IS taken up again', () => {
+    expect(CLASSIFIER_SYSTEM).toContain('UNRESOLVED THREAD, TIGHTENED');
+    expect(CLASSIFIER_SYSTEM).toMatch(/explicitly states that the thing IS taken up again/);
+    expect(CLASSIFIER_SYSTEM).toMatch(/not "unresolved-thread" merely because it later disappears/);
+  });
+
+  it('still no ninth phenomenon, no reader change, no register-shift / positional-asymmetry precedence', () => {
+    expect(DEVELOPMENTAL_PHENOMENA).toHaveLength(8);
+    expect(READER_VERSION).toBe('DEVELOPMENTAL-READER-02');
     expect(CLASSIFIER_SYSTEM).not.toContain('register shift / positional asymmetry');
   });
 });
