@@ -33,6 +33,10 @@ export const LEGACY_META_KEY_TO_PRODUCER = {
   knowledgeGateAddendum: 'collective.knowledge_gate',
   memberWebAddendum: 'retrieved.member_web',
   astrologyAddendum: 'computed.astrology',
+  // Pass 1 divination — three keys, three producers (JARVIS-MEMORY-ORGANISM-PASS1-DIVINATION-01).
+  divinationIntentAddendum: 'member.divination_intent',
+  divinationCastAddendum: 'computed.divination_cast',
+  divinationInterpretationAddendum: 'house.divination_interpretation',
 } as const satisfies Record<string, ProducerId>;
 
 export type LegacyMetaKey = keyof typeof LEGACY_META_KEY_TO_PRODUCER;

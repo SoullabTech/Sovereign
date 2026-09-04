@@ -131,6 +131,9 @@ import { formatPriorExchangesForPrompt, summarizePriorExchangesForLog, computeLa
 // 📖 Episodic Phase 2 — member-marked moments (substrate lane only; does NOT
 // open Themes/Reflections). Mirrors the conversational Phase 2 wire pattern.
 import { formatMarkedEpisodesForPrompt, summarizeMarkedEpisodesForLog } from '@/lib/maia/episodicRecallBlock';
+// 🜨 Pass 1 divination — durable I Ching readings, three provenance-separated blocks
+// (JARVIS-MEMORY-ORGANISM-PASS1-DIVINATION-01).
+import { loadRecentIChingReadings, formatDivinationForPrompt, summarizeDivinationForLog } from '@/lib/maia/divinationRecallLoader';
 // 🔐 De-frag step 3 — runtime contract: every getMaiaResponse() call must pass through this
 import { buildMaiaRuntimeContext, formatRuntimeContextForResponse } from '@/lib/maia/maiaRuntimeContext';
 // 🔐 De-frag step 5 — provider health guard: throws before generation, never soft-returns
@@ -865,6 +868,15 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
     // meta.episodicRecallAddendum. Does NOT open Themes/Reflections.
     let episodicRecallAddendum: string | undefined;
     let markedEpisodesCount = 0;
+    // 🜨 Pass 1 divination (JARVIS-MEMORY-ORGANISM-PASS1-DIVINATION-01) — the member's
+    // durable I Ching readings, rendered as THREE blocks because the table carries three
+    // authorships in separable columns (member question/notes · computed cast · house
+    // corpus interpretation). Built inside the if-block below; consumed by maiaService
+    // via meta.divination*Addendum and by the canonical shadow via the same keys.
+    let divinationIntentAddendum: string | undefined;
+    let divinationCastAddendum: string | undefined;
+    let divinationInterpretationAddendum: string | undefined;
+    let divinationReadingsCount = 0;
     // 🔗 RELATIONAL CONTEXT BRIDGE — read side.
     //
     // The member pressed "Take this to MAIA" on /relationships/[id]; the client
@@ -1034,6 +1046,26 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
           console.warn('[MAIA] episodic-block error (non-fatal):', err);
         }
 
+        // 🜨 Pass 1 divination — read-only, user-scoped, bounded (last 3 within 60 days).
+        // Same gate as every recall producer above: verified member + cross-session memory
+        // allowed (not Sanctuary). The formatter refuses under Sanctuary again, and MIPA
+        // holds all three producers under Sanctuary a third time (requires.notSanctuary).
+        try {
+          const readings = await loadRecentIChingReadings(userId);
+          divinationReadingsCount = readings.length;
+          const divination = formatDivinationForPrompt(readings, { sanctuary: isSanctuary || false });
+          divinationIntentAddendum = divination.intent;
+          divinationCastAddendum = divination.cast;
+          divinationInterpretationAddendum = divination.interpretation;
+          console.log('[MAIA] divination-block', {
+            candidateCount: readings.length,
+            ...summarizeDivinationForLog(divination),
+            userId: memberRef(userId),
+          });
+        } catch (err) {
+          console.warn('[MAIA] divination-block error (non-fatal):', err);
+        }
+
         // 🧾 Sprint 1 (Truth Layer) — Memory Transition Records: per-source
         // accountability for this turn's memory pathway (available → retrieved
         // → eligible → offered → injected, reasons as sentences, never scores).
@@ -1161,6 +1193,9 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
         // 📖 Phase 2 — episodic recall observability. Emission detail lives in
         // the [MAIA] episodic-block log line above.
         episodic: episodicRecallAddendum,
+        // 🜨 Pass 1 divination observability — three blocks summed as one layer here;
+        // per-block chars live in the [MAIA] divination-block log line above.
+        divination: [divinationIntentAddendum, divinationCastAddendum, divinationInterpretationAddendum].filter(Boolean).join('\n\n') || undefined,
       },
     });
 
@@ -1204,6 +1239,9 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
           knowledgeGateAddendum,
           memberWebAddendum: memberWebAddendum || undefined,
           astrologyAddendum: astrologyAddendum || undefined,
+          divinationIntentAddendum,
+          divinationCastAddendum,
+          divinationInterpretationAddendum,
         };
         const requestedMode = (meta as any)?.mode;
         const shadowTurn = constructCanonicalTurn({
@@ -1338,6 +1376,10 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
           atomsLoadedCount: atomsResult.length, // 🔭 context-inventory: retrieved-atom count (loaded vs injected)
           conversationalRecallAddendum, // 💬 Phase 2 — system-retrieved cross-session continuity (per spec §IX)
           episodicRecallAddendum, // 📖 Phase 2 — member-marked moments (episodic layer, substrate lane only)
+          divinationIntentAddendum, // 🜨 Pass 1 divination — member's question + notes (member-authored)
+          divinationCastAddendum, // 🜨 Pass 1 divination — the cast (system-computed under member invocation)
+          divinationInterpretationAddendum, // 🜨 Pass 1 divination — house corpus interpretation (house-authored)
+          divinationReadingsCount, // 🔭 context-inventory: retrieved-reading count (loaded vs injected)
           relationalContextAddendum, // 🔗 Relational Context Bridge — member-handed-off relationship (explicit act)
           relationalContextId, // 🔭 context-inventory: which relationship was handed off
           placeAddendum, // 🚪 House Presence — facts-only current-room orientation

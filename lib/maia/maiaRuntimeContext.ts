@@ -143,6 +143,8 @@ export type PromptBlockSummary = {
     conversational: boolean;
     /** Phase 2 episodic recall block (member-marked significant moments). */
     episodic: boolean;
+    /** Pass 1 divination recall (three provenance-separated I Ching blocks, counted as one layer). */
+    divination: boolean;
   };
 };
 
@@ -199,6 +201,8 @@ export type MaiaRuntimeContextInputs = {
     conversational?: string;
     /** Phase 2 episodic recall block (member-marked significant moments). */
     episodic?: string;
+    /** Pass 1 divination recall — the three blocks joined for sizing only (per-block detail in [MAIA] divination-block). */
+    divination?: string;
   };
 };
 
@@ -303,7 +307,8 @@ function summarizePromptBlock(
     (addenda.knowledgeGate?.length ?? 0) +
     (addenda.wuxing?.length ?? 0) +
     (addenda.conversational?.length ?? 0) +
-    (addenda.episodic?.length ?? 0);
+    (addenda.episodic?.length ?? 0) +
+    (addenda.divination?.length ?? 0);
 
   return {
     chars,
@@ -319,6 +324,7 @@ function summarizePromptBlock(
       wuxing: !!addenda.wuxing,
       conversational: !!addenda.conversational,
       episodic: !!addenda.episodic,
+      divination: !!addenda.divination,
     },
   };
 }
