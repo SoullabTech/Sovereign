@@ -1,5 +1,14 @@
 # WS2-07 · BUILD-07D — DEVELOP SURFACE · witness record
 
+> **⚠ AMENDED 2026-09-04 — MERGED / NOT ACCEPTED.** This candidate reached canonical as
+> `e0803660` (PR #1192, merged by the founder 2026-09-04T19:24Z) **before** the closure rule below
+> was satisfied. The merge is placement, not adjudication: BUILD-07D is **not accepted**, and
+> canonical presence does not confer acceptance. All eight 07D surface blobs on canonical
+> `cf6ce3cef` are byte-identical to `d005d59eb`, so Gate A carries unchanged; Gate B remains
+> UNPROVED. Full reconciliation, forward blockers and the path to a lawful acceptance:
+> **`WS2-07-BUILD-07D_MERGE_RECONCILIATION_2026-09-04.md`**. The record below is preserved as
+> written at candidate time and is not rewritten.
+>
 > **Candidate `d005d59eb` on `claude/writer-author-studios-roadmap-b2tqf5`, built against canonical
 > `376daae06` (BUILD-07C merged, PR #1191). Opening record `3ed788b3b` is the first commit on the
 > branch. Gate A PASS — 22 checks · 0 failures on the candidate checkout. Gate B PENDING — the

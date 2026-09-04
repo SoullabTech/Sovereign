@@ -6,7 +6,8 @@
 ```text
 LANE              WS2-07-F1 · DEVELOPMENTAL SEMANTIC BOUNDARY REPAIR
 PARENT            JARVIS-WS2-07-DEVELOPMENTAL-INTELLIGENCE-01
-STATE             OPEN · ACT 1 (semantic ratification) DELIVERED, AWAITING ADJUDICATION
+STATE             OPEN · ACTS 1–3 DELIVERED · candidate 12f959a3c on PR #1194 (open)
+                  structural proof GREEN · FOUNDER LIVE SEMANTIC WITNESS PENDING · NOT CLOSED
 
 TRIGGER           WS2-07C-F1 established a mechanically re-derivable structural-uniformity claim
                   crossing the 07B boundary under the Development lens, then producing unstable
@@ -125,14 +126,22 @@ Eight bare labels reached runtime. Nobody erred; a seam between two documents di
 4  render lens meaning to 07B · phenomenon meanings to 07C · provenance/version bump
 5  regression: the Lantern Road claim does not survive the reader boundary
 6  repair proved + canonical
-7  refresh BUILD-07D against the corrected dependency → Gate B(a) rerun → browser D1–D8 → CLOSED
+7  refresh BUILD-07D: RE-PIN Gate B CANDIDATE_BLOBS to the repaired 07C blobs — this lane
+   modifies developmentalReading/{classify,contract}.ts, which the 07D Gate B script pins by
+   blob id, so the rerun fails its pin before running a check unless re-pinned
+8  Gate B(a) rerun → browser D1–D8 → founder records BUILD-07D CLOSED / ACCEPTED, explicitly
+   reconciling that acceptance post-dates the (already performed) merge
 ```
 
 ## Standing of everything else
 
 ```text
 07A · 07B · 07C     CLOSED / ACCEPTED — not reopened by this lane
-BUILD-07D           candidate d005d59eb untouched · Gate A PASS · NOT CLOSED
-PR #1192            open · no mentor line · no merge
-BUILD-07E           not opened
+BUILD-07D           MERGED / NOT ACCEPTED (amended 2026-09-04) · candidate d005d59eb
+                    untouched · Gate A PASS, carries to canonical by blob identity ·
+                    Gate B UNPROVED · acceptance pending behind this lane
+PR #1192            ⚠ MERGED 2026-09-04 as e0803660, ahead of 07D closure. The line
+                    below ("open · no mentor line · no merge") was true when written and
+                    is now superseded — see WS2-07-BUILD-07D_MERGE_RECONCILIATION_2026-09-04.md
+BUILD-07E           not opened — and NOT opened by 07D code being canonical
 ```
