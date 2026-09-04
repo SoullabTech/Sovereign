@@ -4,7 +4,7 @@
 **Branch**: `feature/memory-organism-pass1-divination-01` (base: canonical `clean-main-no-secrets @ 6d093fb3a` + charter `33abdb482`)
 **Lineage**: the one that lives — `lib/maia/canonical-turn/**`, pdc-1 participation vocabulary, current `/list` canonical shadow. No Path B constructor. No second shadow.
 **Authorized by**: founder directive 2026-09-03. Single writer. **No minisforum deploy during BUILD.**
-**Status**: Cut 1B BUILD ACCEPTED (founder, 2026-09-03) · Cut 1A census DONE (§6) · Cut 1C BUILD complete on branch (§9) — awaiting founder review → deploy through the lane → production witness (acceptance 9).
+**Status**: Cut 1A CERTIFIED · Cut 1B ACCEPTED `660e53015` · Cut 1C BUILD ACCEPTED `a6384d532` · record ACCEPTED `bd50a6f30` · canonical `8d04f1b9` reconciled (§10) → exact-SHA gates → immutable deploy through the lane → production witness (acceptance 9).
 
 ---
 
@@ -121,9 +121,24 @@ Scope (founder, 2026-09-03): resolve the existing authenticated identity (never 
 
 Record mapping (from the cast the member was shown): `question` verbatim · `cast_method` from the request (validated against the store's set, default `yarrow`) · `primary_hex` / `primary_hex_name` (englishName, the name the response shows) · `line_values` = the pre-cast lines or `castReading.castLines` · `changing_lines` · `relating_hex` / `relating_hex_name` from the transformed hexagram · trigrams · `interpretation_text` / `guidance_text` = the house text the response carried (fresh path: `insight` / `soulGuidance`, which include the transformation note and changing-line text; pre-cast path: `soulInterpretation` / `guidance`) · `sacred_timing`. Under Cut 1B the resulting row partitions exactly as §2: question → member block, cast → computed block, interpretation/guidance → house block.
 
+**Truthfulness note (founder review, 2026-09-03)**: the route supplies `sacred_timing` in `SaveIChingInput`, but the existing writer's I Ching INSERT (`divinationService.saveIChingReading`, 15 columns ending at `guidance_text`) does **not** insert `sacred_timing`. Timing is therefore **not durably stored** by this cut and must not be described as such. Not a 1C blocker — the cut deliberately reuses the existing writer unmodified, and proof 9 does not depend on timing. Repairing the writer is out of scope here; a separate cut if timing is ever wanted in the durable record.
+
+**Gate-evidence note**: the `typecheck 0 / N-of-N` figures in this record are locally reported gate results; GitHub attaches no status contexts to this branch, so they are not CI certification. Gates are rerun on the exact deploy candidate SHA before production (§10).
+
 Pinned (`route.test.ts`): anonymous → reading returned, writer never called (also with a body `user_id`) · member → exactly one save, scoped to the session-resolved id · body `user_id`/`userId`/`memberId` cannot choose another member (and never appear in the record) · pre-cast `line_values` persisted as sent · fresh-cast `line_values` persisted and recompute to the response hexagram · question verbatim · hexagram / relating / trigrams / changing lines / interpretation / guidance mapped from the same cast · writer null or throw → 200 with `persisted: false` · route source has no SQL, no `lib/db/postgres`, exactly one `saveIChingReading(` call, no `body.user_id` read.
 
 Production witness after deploy: cast on the oracle page as a signed-in member → `[oracle/iching] reading persisted { memberRef, readingId, primaryHex }` → next `/list` turn shows `[MAIA] divination-block { candidateCount: 1, emitted: true }` → ask MAIA about the reading (proof 9).
+
+## 10. Deploy candidate — reconciliation with canonical `8d04f1b9`
+
+Founder custody correction (2026-09-03): canonical moved `6d093fb3a → 8d04f1b9fd0b22a16c8e5673d47279fef3ada3a2` (six commits, all Writers' Studio documentation — `docs/programme/WRITERS_STUDIO_*`, `docs/launch/*`; no MAIA runtime code). The lane merged exact `8d04f1b9` with a merge commit (no rebase, no semantic Cut 1C change). The merge commit is the deploy candidate; the exact-SHA gates are rerun on it and recorded in the commit message. Deploy (from the Mac Studio, through the lane, never a bare compose):
+
+```bash
+ssh soullab@minisforum 'cd ~/MAIA-SOVEREIGN \
+  && git fetch origin feature/memory-organism-pass1-divination-01 \
+  && scripts/pre-deploy-gate.sh deploy-maia "$(git rev-parse --short origin/feature/memory-organism-pass1-divination-01)"'
+# then: docker exec maia-sovereign printenv GIT_COMMIT   (must equal the candidate short SHA)
+```
 
 ## 8. Growth-obligation answers (CLAUDE.md)
 
