@@ -725,7 +725,7 @@ export function UnifiedJournalView({
                   <div className="[&_.capsule-card]:bg-stone-800/50 [&_.capsule-card]:border-stone-700/60 [&_.capsule-card]:text-white">
                     <CapsuleCard
                       capsule={entry.data}
-                      onOpen={(id) => router.push(`/labtools/reflections/${id}`)}
+                      onOpen={(id) => router.push(`/reflections/${id}`)}
                       onPin={handleCapsulePin}
                       onArchive={handleCapsuleArchive}
                     />

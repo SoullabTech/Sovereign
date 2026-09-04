@@ -216,6 +216,15 @@ export const DESTINATION_EXCEPTIONS: Record<string, string> = {
     'That requirement governs PLACEMENT only; it does not assert the process the ' +
     '2026-07-05 note was waiting for, and must not be read as claiming one.',
   journal: 'MAIA_WORLDS member world.',
+  reflections:
+    'Member-owned reflection capsules (/api/capsules, requireMemberId-scoped). Never a ' +
+    'rail boundary: the feed only ever existed inside /labtools, which is why members ' +
+    'could not reach their own Keeps. MOVED OUT of Lab Tools to its own member address ' +
+    '/reflections by founder ruling 2026-09-04 — app/labtools/reflections/ is deleted, ' +
+    'there is no lab twin. ' +
+    '⛔ This does NOT reopen the labtools disposition below: Lab Tools itself remains ' +
+    'withheld from the House. Reflections left that namespace rather than dragging it ' +
+    'in. The House names a member place, not an instrument.',
   anchor: 'MAIA_WORLDS member world.',
   ideas: 'MAIA_WORLDS member world.',
   wisdom: 'MAIA_WORLDS member world.',

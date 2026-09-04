@@ -224,7 +224,7 @@ export const SacredLabDrawer: React.FC<SacredLabDrawerProps> = ({
         {
           icon: Sparkles,
           label: 'Reflections',
-          action: () => onNavigate('/labtools/reflections'),
+          action: () => onNavigate('/reflections'),
           description: 'Your distilled moments and insights'
         },
         {

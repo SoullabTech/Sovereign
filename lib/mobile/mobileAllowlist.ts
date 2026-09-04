@@ -160,6 +160,14 @@ export const WEB_ONLY_PREFIXES = [
   '/pfi-monitor',
   '/model-studio',
   '/labtools',
+  // /reflections — member-facing reflections (House destination). Web-only for
+  // now, and deliberately so: /reflections/[id] is a client component on a
+  // dynamic segment, which capacitor-patch-routes.sh strips from the bundle, so
+  // the feed would ship natively with no reachable reflection behind any card.
+  // The House registers it as a web destination for the same reason; this line
+  // keeps the runtime guard saying the same thing. Lift both together once the
+  // detail route can be pre-rendered.
+  '/reflections',
   '/patterns',
   '/research',
   '/ain-evolution',
