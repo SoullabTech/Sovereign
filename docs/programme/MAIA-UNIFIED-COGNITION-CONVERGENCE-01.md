@@ -233,6 +233,28 @@ npm run typecheck      no regressions
 npm run check:no-supabase  clean
 ```
 
+### 9.6b Custody rules (standing, derived in this lane)
+
+**CI evidence belongs to the SHA returned by the check API, never to the SHA in the
+notification that caused us to look.** `get_check_runs` on a pull request reports checks for
+the PR's *current head*, which can already have moved past the SHA a wake event named. This
+lane produced one real instance of the error: an "8/8 green on `bbe5a5bb6`" report on #1197
+that was in fact the check state of its successor `716cb19c9`. The result was genuine and
+changed no decision; the attribution was wrong. Related: a red ✗ on a superseded commit is
+usually `cancelled`, not `failure` — GitHub kills in-flight runs when a new head lands and
+renders the cancellation as a red mark.
+
+**If a candidate is going to earn production witness, make the candidate current before
+witnessing it whenever the drift is known, conflict-free, and cheap to absorb.** Leaving a
+candidate behind canonical is technically defensible when the drift cannot affect the thing
+being witnessed, but it buys an avoidable provenance qualification — *witnessed tree ≠
+eventual canonical tree* — for the price of one clean merge and one CI cycle. Cut 1A took
+that cycle rather than that qualification (founder ruling, 2026-09-04).
+
+**The deploy candidate is the branch head, not the implementation commit.** `7bbec9b3d` is
+what the candidate must *contain*; the head is a merge commit carrying canonical as well.
+Both are asserted separately in the custody check, never conflated.
+
 ### 9.7 Stop condition
 
 ```text
