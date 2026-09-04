@@ -31,27 +31,29 @@
 ```text
 PROGRAMME          WRITER'S STUDIO R2
 MODE               STAGE 7 BUILD
-BUILD MODE         OPEN — BUILD-07B Developmental Reader OPEN · CONTRACT + FALSIFIERS
-                   FILED (founder adjudication A1–A7, 2026-09-04); 07B implementation
-                   and 07C–H unauthorized
-BOUND CANONICAL    543f43708 (clean-main-no-secrets, 2026-09-04 — 07B census merged, PR #1186)
-CURRENT UNIT       BUILD-07B Developmental Reader — OPEN · A1–A7 ADJUDICATED ·
-                   CONTRACT + FALSIFIERS FILED (founder, 2026-09-04) ·
-                   IMPLEMENTATION UNAUTHORIZED
+BUILD MODE         OPEN — BUILD-07B Developmental Reader IMPLEMENTATION OPEN
+                   (founder act 2026-09-04); two-gate closure; 07C–H unauthorized
+BOUND CANONICAL    40532a5a5 (clean-main-no-secrets, 2026-09-04 — 07B contract merged, PR #1188)
+CURRENT UNIT       BUILD-07B Developmental Reader — IMPLEMENTATION OPEN (founder,
+                   2026-09-04) against the canonical contract; closure two-gated
+                   (Gate A structural → STRUCTURALLY PROVED; Gate B live reader
+                   witness → CLOSED / ACCEPTED)
                    lane: JARVIS-WS2-07-DEVELOPMENTAL-INTELLIGENCE-01
-CURRENT CANDIDATE  none — spec only, no code
+CURRENT CANDIDATE  none yet — implementation not begun at this record
                    census:   WS2-07-BUILD-07B_READER_BOUNDARY_CENSUS_2026-09-04.md (canonical)
-                   contract: WS2-07-BUILD-07B_READER_CONTRACT_2026-09-04.md (F1–F20 · O1–O6)
+                   contract: WS2-07-BUILD-07B_READER_CONTRACT_2026-09-04.md (canonical;
+                             F1–F20 · O1–O6; binding as merged)
 PRIOR UNIT         BUILD-07A Developmental Evidence — CLOSED / ACCEPTED (founder,
                    2026-09-04); canonical @ 27ec9f895
                    record: WS2-07-BUILD-07A_EVIDENCE_WITNESS_2026-09-03.md §9
-NEXT EXECUTABLE    founder ruling, on the filed contract + falsifier set exactly, whether
-                   BUILD-07B implementation opens — a lane act; nothing before it
+NEXT EXECUTABLE    BUILD-07B implementation → Gate A (F1–F20 / O1–O6, seam refusing) →
+                   structural candidate by exact SHA → bounded Gate B live witness →
+                   CLOSED / ACCEPTED → STOP. BUILD-07C stays unauthorized throughout
 WS-01              CLOSED — OVERTAKEN / SUPERSEDED (not accepted; see
                    Reconciliation record below)
 CANVAS FREEZE      RETIRED FROM LIVE STATE (never released by an act; see
                    Reconciliation record below)
-LAST UPDATED       2026-09-04 (BUILD-07B A1–A7 adjudicated · contract + falsifiers filed)
+LAST UPDATED       2026-09-04 (BUILD-07B implementation opened · two-gate closure recorded)
 ```
 
 ## Reconciliation record — 2026-09-03 (founder adjudication of programme history)
@@ -103,14 +105,14 @@ Stage 7   ACTIVE
                       witness 50 / 0 on clean 623d3e766 (fresh UTF8 scratch
                       DB, baseline + chain). INV-7b DEMONSTRATED · F1–F10
                       PASS · O1–O6 PASS. Code @ bfeb1a9; canonical @ 27ec9f895
-          BUILD-07B   OPEN · CONTRACT + FALSIFIERS FILED · founder act 2026-09-04
-                      trigger satisfied @ 27ec9f895; census canonical @ 543f43708;
-                      A1–A7 adjudicated: claim drafts · one lens required · 60,000
-                      code-point body ceiling, no section ceiling · no read-request ·
-                      no heading channel · one-way seam · eight closed
-                      non-conclusions. Contract F1–F20 / O1–O6:
-                      WS2-07-BUILD-07B_READER_CONTRACT_2026-09-04.md
-                      No code. Implementation unauthorized — next ruling.
+          BUILD-07B   IMPLEMENTATION OPEN · founder act 2026-09-04
+                      census canonical @ 543f43708; contract canonical @ 40532a5a5
+                      (A1–A7: claim drafts · one lens required · 60,000 code-point
+                      body ceiling, no section ceiling · no read-request · no
+                      heading channel · one-way seam · eight closed non-conclusions;
+                      F1–F20 / O1–O6). Closure: Gate A structural → STRUCTURALLY
+                      PROVED; Gate B live reader witness on an invented fixture →
+                      CLOSED / ACCEPTED. No candidate yet.
           PREREQ      SECTION-ADDRESSABLE DRAFT LIVENESS · CLOSED
                       canonical @ 0fa4158e7 (PR #1174)
                       + Unicode repair @ 9411ddc41 (PR #1175)
@@ -317,15 +319,15 @@ and it is the census a release record must carry under Amendment 5.
 ## Advancing now
 
 ```text
-BUILD-07B · Developmental Reader — OPEN · A1–A7 ADJUDICATED · CONTRACT +
-            FALSIFIERS FILED (founder act 2026-09-04). Census canonical @
-            543f43708; contract F1–F20 / O1–O6 filed as spec only — no code,
-            no model call. Awaiting the founder ruling on whether BUILD-07B
-            implementation opens, taken on that exact contract.
+BUILD-07B · Developmental Reader — IMPLEMENTATION OPEN (founder act
+            2026-09-04) against the canonical contract @ 40532a5a5. Flow:
+            implement exact spec → Gate A F1–F20 / O1–O6 → structural
+            candidate by SHA → bounded Gate B live-reader witness → CLOSED.
+            No route, surface, persistence, or 07C-shaped object.
             Lane: JARVIS-WS2-07-DEVELOPMENTAL-INTELLIGENCE-01.
 ```
 
-Everything else is **unauthorized** until the lane authorizes BUILD-07B implementation by its own act.
+Everything else is **unauthorized**. BUILD-07C opens only by its own act after BUILD-07B closes.
 Release milestones are defined by Amendment 5 and read from the Release signal above.
 
 ## Board discipline
