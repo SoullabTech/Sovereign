@@ -288,3 +288,45 @@ Either way Cut 2 is unaffected in mission; only its prerequisite changes.
 4  e3f379530 / Cut 1 adjudicated from that census      OPEN
 5  Flow v2 canonicalized                               OPEN
 ```
+
+
+## 6. Named future cut — divination as a conversational capability
+
+```text
+BRANCH   claude/memory-divination-oracle-capability-01
+STATE    PARKED · NOT CREATED · NOT AUTHORIZED
+PLACE    Pass 1 (the engines exist), after surface authority · Flow v2 canonical · attribution
+```
+
+**Mission**: make MAIA able, upon an explicit member act, to invoke the existing I Ching, Runes and Tarot engines from ordinary conversation; persist each symbolic event exactly once; return it into the same turn; and make it available to longitudinal memory with provenance intact.
+
+Pass 1, not Pass 3: `lib/services/divinationService.ts` already writes and reads all three types and composes them chronologically; the three tables exist. What is missing is conversational invocation, not the engines.
+
+**Sovereignty boundary**: MAIA may *offer* divination; she never silently performs it. The member's yes is the authorizing act.
+
+**Four things that must not collapse** — the partition the I Ching cut established, extended:
+
+```text
+MEMBER INTENT          the question, in the member's words
+SYSTEM-COMPUTED EVENT  the cast / draw
+HOUSE INTERPRETATION   the governed corpus for those symbols
+MAIA RESPONSE          her relational exploration — inference, never record
+```
+
+Cross-type synthesis ("a common theme of Z") is MAIA's inference and must be attributed as such. That is Cut 2's job, which is why this cut follows it.
+
+### Three questions to settle before it opens
+
+**1 · The conversation route becomes a write path.** Every memory cut so far kept the conversation read-only over member records. A conversational cast makes an ordinary turn write a durable member record. That is a new responsibility, not a wiring detail (CLAUDE.md growth-obligation check). It needs its own refusal surface and its own witness.
+
+**2 · Sanctuary.** A Sanctuary session may not produce stored material of any kind. So a cast requested inside Sanctuary must be either refused or ephemeral-and-unwritten — decided deliberately, pinned by a falsifier, never left to the writer's default.
+
+**3 · Idempotency, now unavoidable.** Earlier cuts deliberately excluded idempotency machinery because the write happened once at a page action. A conversational invocation can be retried by transport, streaming reconnect, or a repeated turn. The Save-duplicate finding is the same defect arriving early; this cut is where the question has to be answered rather than deferred.
+
+### Prerequisite the cut inherits
+
+Runes and Tarot provenance must be assigned from their own write paths, not by analogy to I Ching. Their record shapes differ (runes carry `wyrd_message`; tarot carries positions and reversals), so the three axes must be re-derived per type before any producer is registered. Guessing provenance is the one thing the divination lane has never done.
+
+### Write-path convergence this cut absorbs
+
+The successful I Ching model — authenticated invocation persists exactly once, anonymous casts work and do not persist — should become the shape for Runes and Tarot too. "Save" then means favourite, mark or annotate, not a second copy of the same event.
