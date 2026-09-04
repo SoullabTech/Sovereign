@@ -8,7 +8,7 @@
 
 ```text
 LANE               JARVIS-WS2-07-DEVELOPMENTAL-INTELLIGENCE-01
-STATE              ACTIVE · BUILD-07A OPEN / RESUMED
+STATE              ACTIVE · BUILD-07A OPEN · CANDIDATE BUILT (bfeb1a9) · NOT CLOSED
 TRIGGER            Stage 6A AuthorStructureCommand merged to canonical and witnessed
 TRIGGER SATISFIED  clean-main-no-secrets @ 4b8b34bcf
 AUTHORIZES         BUILD-07A DEVELOPMENTAL EVIDENCE only
@@ -120,6 +120,27 @@ CURRENT AUTHORIZATION  2026-09-03
 ⛔ **The 2026-09-03 record reconciles state; it grants nothing.** Documentation only — no reader,
 model, prompt, schema, route, or implementation authority is added by it. The dated blocks above it
 are history and are not amended.
+
+```text
+2026-09-03 · BUILD-07A CANDIDATE
+BOUND CANONICAL   8d04f1b9fd0b22a16c8e5673d47279fef3ada3a2
+CANDIDATE         claude/build-07a-developmental-evidence-n5tm37 @ bfeb1a9
+RECORD            docs/programme/WS2-07-BUILD-07A_EVIDENCE_WITNESS_2026-09-03.md
+BUILT             lib/manuscript/development/ — evidenceRef · readState · resolve ·
+                  bind · capture; structureDigest extracted pure
+PROVEN            INV-7b demonstrated; 6 outcomes · 10 falsifiers (RECONSTRUCTED —
+                  see record §4); 66 unit cases; 50-check witness on PostgreSQL 16
+                  UTF-8 from the empty baseline; typecheck gate green
+NOT BUILT         model · reader · prompt · interpretation · reading persistence ·
+                  route · surface · migration · manuscript mutation
+STATE             BUILD-07A OPEN · CANDIDATE BUILT · NOT CLOSED
+                  closure is a founder act on the record's §7 conditions
+                  BUILD-07B–H unauthorized
+```
+
+⛔ **The candidate does not close BUILD-07A and does not open BUILD-07B.** The unit's original
+falsifier list was never written to canonical; the record reconstructs it from DECIDE and says so.
+Ratifying that instrument, or supplying the original, precedes closure.
 
 ## Prerequisite — SECTION-ADDRESSABLE DRAFT LIVENESS
 

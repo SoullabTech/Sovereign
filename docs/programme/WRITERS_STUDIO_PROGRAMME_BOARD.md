@@ -32,17 +32,21 @@
 PROGRAMME          WRITER'S STUDIO R2
 MODE               STAGE 7 BUILD
 BUILD MODE         OPEN — BUILD-07A only · BUILD-07B–H unauthorized
-BOUND CANONICAL    6d093fb3a (clean-main-no-secrets, 2026-09-03)
+BOUND CANONICAL    8d04f1b9f (clean-main-no-secrets, 2026-09-03)
 CURRENT UNIT       BUILD-07A Developmental Evidence
                    lane: JARVIS-WS2-07-DEVELOPMENTAL-INTELLIGENCE-01
-CURRENT CANDIDATE  none pinned — BUILD-07A has no candidate branch yet
-NEXT EXECUTABLE    BUILD-07A — prove INV-7b and the ten falsifiers
-                   (0 of 6 outcomes demonstrated)
+CURRENT CANDIDATE  claude/build-07a-developmental-evidence-n5tm37 @ bfeb1a9
+                   record: WS2-07-BUILD-07A_EVIDENCE_WITNESS_2026-09-03.md
+NEXT EXECUTABLE    founder act on BUILD-07A — ratify the reconstructed
+                   falsifier/outcome set (record §4) and re-run the witness
+                   (expected 50 / 0); then CLOSE or HOLD. On the candidate:
+                   INV-7b demonstrated, 6 of 6 outcomes, 10 of 10 falsifiers
+                   — in session, not on canonical
 WS-01              CLOSED — OVERTAKEN / SUPERSEDED (not accepted; see
                    Reconciliation record below)
 CANVAS FREEZE      RETIRED FROM LIVE STATE (never released by an act; see
                    Reconciliation record below)
-LAST UPDATED       2026-09-03
+LAST UPDATED       2026-09-03 (BUILD-07A candidate pinned)
 ```
 
 ## Reconciliation record — 2026-09-03 (founder adjudication of programme history)
@@ -89,8 +93,9 @@ Stage 7   ACTIVE
           UNDERSTAND  CLOSED · canonical @ 5670163e6
           DECIDE      CLOSED · canonical @ 838eabfd8
           BUILD       ACTIVE
-          BUILD-07A   OPEN · RESUMED — prerequisite closed; INV-7b and the
-                      original falsifiers still to prove
+          BUILD-07A   OPEN · CANDIDATE BUILT @ bfeb1a9 — INV-7b demonstrated
+                      on the candidate (6 / 6 outcomes, 10 / 10 falsifiers,
+                      reconstructed instrument); NOT CLOSED, not on canonical
           PREREQ      SECTION-ADDRESSABLE DRAFT LIVENESS · CLOSED
                       canonical @ 0fa4158e7 (PR #1174)
                       + Unicode repair @ 9411ddc41 (PR #1175)
@@ -297,8 +302,10 @@ and it is the census a release record must carry under Amendment 5.
 ## Advancing now
 
 ```text
-BUILD-07A · Developmental Evidence — prove INV-7b and the ten falsifiers
-            against canonical 6d093fb3a; 0 of 6 outcomes demonstrated.
+BUILD-07A · Developmental Evidence — candidate bfeb1a9 built against
+            canonical 8d04f1b9f; INV-7b demonstrated, 6 / 6 outcomes,
+            10 / 10 falsifiers on a RECONSTRUCTED instrument, witnessed in
+            session. Awaiting the founder act named in the record's §7.
             Lane: JARVIS-WS2-07-DEVELOPMENTAL-INTELLIGENCE-01.
 ```
 
