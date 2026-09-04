@@ -108,6 +108,22 @@ shared-checkout risk. Same philosophy as the lockfile and the lane token: the
 quiet path is closed, the deliberate override is greppable. `update` uses this
 model internally (its contract is "build the tip I just pulled").
 
+### Deploy-lane lock record — names the target, not the checkout
+
+The lane lock (`scripts/deploy-lock.sh`) receives the asserted target **before** it
+writes its holder record, so a refused second deploy sees what the in-flight deploy
+was *asked* to build. Fields: `pid=` · `started=` · `user=` · `entry=` ·
+`target=<exactly as named on the command line>` · `target_sha=<its resolution>` ·
+`checkout_head=<shared checkout HEAD>` — the last line is printed **only when it
+differs** from `target_sha`, labelled "informational, NOT the deploy target". With
+`DEPLOY_ALLOW_HEAD=1` and no SHA the record says `target=HEAD (… acknowledged as the
+target)` and names that tip; with no SHA and no ack it says `target=none`. `update`
+re-writes the record with the pulled tip the moment its pull completes. The former
+`git_commit=` line fell back to `git rev-parse HEAD` of the shared checkout when the
+lock was taken before `GIT_COMMIT` was exported (2026-09-03: a refusal printed a
+286-commit-stale HEAD for a deploy that was actually building the named tip) — it
+is gone. Hermetic proof: `npm run verify:deploy-lock` (25 assertions).
+
 ## Verifying the control
 
 ```bash
