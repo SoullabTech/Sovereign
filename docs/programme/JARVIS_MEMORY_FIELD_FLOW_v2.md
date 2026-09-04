@@ -516,7 +516,9 @@ Cleaner than delaying the primary surface for a secondary embedded route.
 
 3  DEPLOY CUSTODY
    classify the 16:30:39 b20f2742e replacement
-   still OPEN
+   CLOSED · CLASSIFIED 2026-09-04 — see §8
+   lane-authorized and mechanically governed;
+   human initiator UNKNOWN, founder authorization UNWITNESSED
 
 4  FLOW v2
    merge governing document to canonical
@@ -558,3 +560,75 @@ SAVE DUPLICATE         evidence-only
 ```
 
 The important correction is now complete: **MAIA did not keep changing her primary nervous system. We were observing two different conversational surfaces and treating them as one.**
+
+
+## 8. Founder adjudication 2026-09-04 — deploy custody CLOSED · CLASSIFIED
+
+Evidence: read-only host census A–E, run by the founder from the Mac Studio 2026-09-04. The `.deploy.lock` record is single-slot (`_deploy_lock_write_record` truncates with `>`); it was read before any further deploy destroyed it.
+
+```text
+16:24:38Z   pre-deploy-gate.sh deploy-maia
+            target        b20f2742e   (explicit, named on the command line)
+            target_sha    b20f2742e
+            checkout_head 2d7873c86   (shared checkout — informational, NOT the target)
+            user          soullab@soullab
+
+16:29:35Z   image b20f2742e created            sha256:478e22ec2bf8…
+16:30:39Z   container created from that image  sha256:478e22ec2bf8…
+            GIT_COMMIT    b20f2742e
+            DEPLOY_LANE   deploy-lane
+
+rollback chain
+            previous      e3f379530 image  d8ecef9bbb35  (created 14:21:31Z)
+            current/prod  b20f2742e image  478e22ec2bf8
+```
+
+### Ruling
+
+```text
+DEPLOY MECHANISM       PASS · governed deploy lane
+DEPLOY TARGET          EXPLICIT · b20f2742e
+CHECKOUT DRIFT         NOT CAUSAL
+CONTAINER RESTART      NO · fresh container
+IMAGE/CONTAINER SPLIT  NO
+e3f379530 SUPERSESSION NORMAL · preserved as :previous + SHA tag
+```
+
+The deployment was **deliberate at the machinery level**. It did not silently wander onto canonical because the shared checkout happened to be elsewhere — `checkout_head=2d7873c86` diverged from the target and the immutable-SHA snapshot correctly ignored it. This is the 2026-07-27 shared-checkout control working as designed, and the 2026-09-03 image/container split not recurring.
+
+### What A–E cannot establish
+
+```text
+DEPLOY CUSTODY
+CLOSED · CLASSIFIED
+
+mechanical provenance     KNOWN
+lane compliance           PASS
+target intent             EXPLICIT
+human initiator           UNKNOWN
+founder authorization     UNWITNESSED
+```
+
+`user=soullab@soullab` identifies the **host account** the deploy ran under, not which human or session instructed it. `last` shows no interactive login after 2026-09-02, so session attribution cannot be closed from wtmp either. (Observation, not proof: a non-interactive `ssh soullab@minisforum '…'` — the canonical deploy invocation form — leaves no wtmp entry, which is consistent with the documented one-liner having been run from the Mac Studio. It identifies a *shape*, not a person.)
+
+### Standing nuance — do not let these two claims merge
+
+> **"lane-authorized / mechanically governed" must never be rewritten as "founder personally authorized." Those are different claims.**
+
+The first is proven. The second is unwitnessed. Any later record, witness, or summary that cites this adjudication carries both halves or neither.
+
+### Why this is sufficient for the gate
+
+Custody sat ahead of the next build to rule out an **uncontrolled mechanism capable of silently replacing candidates**. That specific risk is now explained and closed: the normal lane explicitly targeted canonical and correctly rolled `e3f379530` to `:previous`. Who typed the command remains a separate forensic question; it does not block the memory programme unless deployment policy comes to require named-person authorization evidence.
+
+### Sequence after this adjudication
+
+```text
+SURFACE AUTHORITY      CLOSED · PASS
+DEPLOY CUSTODY         CLOSED · CLASSIFIED
+FLOW v2                NEXT → canonicalize
+ATTRIBUTION / P6       next build candidate after that
+BETWEEN CONVERGENCE    parked · later
+ORACLE CAPABILITY      parked
+SAVE DUPLICATE         evidence-only
+```
