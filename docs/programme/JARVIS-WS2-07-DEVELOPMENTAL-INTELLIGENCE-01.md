@@ -1,25 +1,29 @@
 # JARVIS-WS2-07-DEVELOPMENTAL-INTELLIGENCE-01
 
-> **Lane active. BUILD-07C CLOSED / ACCEPTED (founder, 2026-09-04) — Gate A 27/0 and Gate B 13/0 on candidate `8a26a8971`; canonical on merge. BUILD-07D opens only by its own act.**
+> **Lane active. BUILD-07D DEVELOP SURFACE — IMPLEMENTATION OPEN (founder act, 2026-09-04) against canonical `376daae06` (BUILD-07C merged, PR #1191). BUILD-07A, 07B and 07C are CLOSED / ACCEPTED and canonical. BUILD-07E–H unauthorized.**
 >
 > This document defined the lane before it was entered. Originally it authorized **no
-> implementation**. As of the 2026-09-04 founder act recorded below, it authorizes **only the
-> exact BUILD-07B implementation enumerated there**. Route, UI / Develop surface, persistence /
-> database-schema change, and BUILD-07C+ remain unauthorized. Entering FIND required the trigger
-> below to be satisfied on canonical rather than asserted in a session — and on 2026-09-02
-> canonical satisfied it.
+> implementation**. Each BUILD unit since has been opened by its own dated founder act, recorded
+> below in order; **the live-state block beneath this paragraph and the most recent dated block
+> govern** — earlier blocks are history, not standing authority. Entering FIND required the
+> trigger below to be satisfied on canonical rather than asserted in a session — and on
+> 2026-09-02 canonical satisfied it.
 
 ```text
 LANE               JARVIS-WS2-07-DEVELOPMENTAL-INTELLIGENCE-01
-STATE              ACTIVE · BUILD-07C CLOSED / ACCEPTED (founder, 2026-09-04) · canonical on merge
-                   candidate 8a26a8971 · Gate A 27/0 · Gate B 13/0 (claude-opus-5)
+STATE              ACTIVE · BUILD-07D DEVELOP SURFACE — IMPLEMENTATION OPEN (founder, 2026-09-04)
+                   BUILD-07C CLOSED / ACCEPTED · canonical @ 376daae06 (candidate 8a26a8971 ·
+                   Gate A 27/0 · Gate B 13/0, claude-opus-5)
+                   BUILD-07B CLOSED / ACCEPTED · canonical @ b20f2742e
                    BUILD-07A CLOSED / ACCEPTED · canonical @ 27ec9f895
 TRIGGER            Stage 6A AuthorStructureCommand merged to canonical and witnessed
 TRIGGER SATISFIED  clean-main-no-secrets @ 4b8b34bcf
-AUTHORIZES         nothing — BUILD-07C is closed; BUILD-07D opens only by its own act
-                   BUILD-07D–H unauthorized
-NO                 route · UI / Develop surface · interpretation · questions · possibilities ·
-                   manuscript mutation · BUILD-07D+ (07C persistence + its migration ARE authorized)
+AUTHORIZES         the exact BUILD-07D implementation enumerated in the dated 07D block below —
+                   a member-facing Develop surface over ALREADY FROZEN readings, and the
+                   route/client wiring strictly necessary for it · BUILD-07E–H unauthorized
+NO                 interpretation · questions / possibilities · dialogue · accept / reject / hold
+                   decisions · revision · manuscript mutation · re-anchoring · automatic refresh ·
+                   BUILD-07E+
 NORMATIVE          docs/programme/WRITERS_STUDIO_MASTER_BRIEF.md
 CAPABILITY         docs/programme/DEVELOPMENTAL_EDITOR_CAPABILITY.md
 LIVE STATE         docs/programme/WRITERS_STUDIO_PROGRAMME_BOARD.md
@@ -395,6 +399,39 @@ FINDING           `unclassifiable` twice, lawful; nothing invented, nothing pers
                   widened; left open for the founder (reliability · coverage · variance)
 STATE             BUILD-07C CLOSED / ACCEPTED (founder, 2026-09-04) · canonical on merge of the
                   candidate PR · BUILD-07D NOT opened by this closure
+```
+
+```text
+2026-09-04 · BUILD-07D DEVELOP SURFACE — OPEN (founder act; tempo ruling: opening record is the
+first commit on the implementation branch, no separate docs PR; the three stale programme lines
+named by the founder are corrected in this same commit)
+TRIGGER           BUILD-07C DEVELOPMENTAL READING CLOSED / ACCEPTED and present on canonical
+TRIGGER SATISFIED clean-main-no-secrets @ 376daae06 (merge of PR #1191; second parent 8123dc4c8 =
+                  the accepted closure head; reading blobs = candidate 8a26a8971 — verified by the
+                  founder: commission.ts 14c62a41…, migration 545cc1fb…)
+MISSION           let the writer encounter a frozen DevelopmentalReading without granting the
+                  surface authority to reinterpret, rewrite, mutate, or silently refresh it
+AUTHORIZES        member-facing Develop surface ·
+                  load / list member-owned developmental readings ·
+                  display observations by durable (readingId, observationKey) ·
+                  show lens + phenomenon ·
+                  show evidence grounding through the frozen readState ·
+                  show doesNotEstablish / limits intelligibly ·
+                  show CURRENT / SUPERSEDED / UNMEASURED state ·
+                  allow the writer to request a NEW commissioned reading ·
+                  clear none / refusal / loading / error states ·
+                  desktop + mobile member experience ·
+                  route / client wiring strictly necessary for this surface ·
+                  tests + founder witness
+DOES NOT AUTHORIZE interpretation · questions / possibilities · dialogue · accept / reject / hold
+                  decisions · revision · manuscript mutation · re-anchoring · automatic refresh ·
+                  BUILD-07E+
+INVARIANT         the surface encounters an already durable reading; identity does not originate
+                  in UI and does not disappear when UI closes (INV-1, INV-3)
+PRODUCT RULE      a superseded observation remains visible as what MAIA actually noticed THEN. It
+                  may be marked superseded; it must never silently disappear or be rewritten
+                  against the current manuscript (INV-4, INV-19–22)
+STATE             BUILD-07D IMPLEMENTATION OPEN · no candidate yet
 ```
 
 ## Prerequisite — SECTION-ADDRESSABLE DRAFT LIVENESS
