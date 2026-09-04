@@ -31,18 +31,21 @@
 ```text
 PROGRAMME          WRITER'S STUDIO R2
 MODE               STAGE 7 BUILD
-BUILD MODE         OPEN — BUILD-07A only · BUILD-07B–H unauthorized
-BOUND CANONICAL    6d093fb3a (clean-main-no-secrets, 2026-09-03)
-CURRENT UNIT       BUILD-07A Developmental Evidence
+BUILD MODE         OPEN — no unit currently authorized (BUILD-07A closed; 07B–H unauthorized)
+BOUND CANONICAL    8d04f1b9f (clean-main-no-secrets, 2026-09-03)
+CURRENT UNIT       BUILD-07A Developmental Evidence — CLOSED / ACCEPTED
+                   (founder, 2026-09-04); canonical on merge of the closure PR
                    lane: JARVIS-WS2-07-DEVELOPMENTAL-INTELLIGENCE-01
-CURRENT CANDIDATE  none pinned — BUILD-07A has no candidate branch yet
-NEXT EXECUTABLE    BUILD-07A — prove INV-7b and the ten falsifiers
-                   (0 of 6 outcomes demonstrated)
+CURRENT CANDIDATE  claude/build-07a-developmental-evidence-n5tm37 @ 623d3e766
+                   (code @ bfeb1a9; records only above it)
+                   record: WS2-07-BUILD-07A_EVIDENCE_WITNESS_2026-09-03.md §9
+NEXT EXECUTABLE    none authorized. BUILD-07B Developmental Reader is the next
+                   unit and opens only by its own lane act after 07A is canonical
 WS-01              CLOSED — OVERTAKEN / SUPERSEDED (not accepted; see
                    Reconciliation record below)
 CANVAS FREEZE      RETIRED FROM LIVE STATE (never released by an act; see
                    Reconciliation record below)
-LAST UPDATED       2026-09-03
+LAST UPDATED       2026-09-04 (BUILD-07A closed / accepted)
 ```
 
 ## Reconciliation record — 2026-09-03 (founder adjudication of programme history)
@@ -89,8 +92,11 @@ Stage 7   ACTIVE
           UNDERSTAND  CLOSED · canonical @ 5670163e6
           DECIDE      CLOSED · canonical @ 838eabfd8
           BUILD       ACTIVE
-          BUILD-07A   OPEN · RESUMED — prerequisite closed; INV-7b and the
-                      original falsifiers still to prove
+          BUILD-07A   CLOSED / ACCEPTED · founder act 2026-09-04
+                      CHECK 1 production UTF8 · CHECK 2 founder-visible
+                      witness 50 / 0 on clean 623d3e766 (fresh UTF8 scratch
+                      DB, baseline + chain). INV-7b DEMONSTRATED · F1–F10
+                      PASS · O1–O6 PASS. Code @ bfeb1a9; canonical on merge
           PREREQ      SECTION-ADDRESSABLE DRAFT LIVENESS · CLOSED
                       canonical @ 0fa4158e7 (PR #1174)
                       + Unicode repair @ 9411ddc41 (PR #1175)
@@ -297,8 +303,10 @@ and it is the census a release record must carry under Amendment 5.
 ## Advancing now
 
 ```text
-BUILD-07A · Developmental Evidence — prove INV-7b and the ten falsifiers
-            against canonical 6d093fb3a; 0 of 6 outcomes demonstrated.
+BUILD-07A · Developmental Evidence — candidate bfeb1a9 built against
+            canonical 8d04f1b9f; INV-7b demonstrated, 6 / 6 outcomes,
+            10 / 10 falsifiers on a RECONSTRUCTED instrument, witnessed in
+            session. Awaiting the founder act named in the record's §7.
             Lane: JARVIS-WS2-07-DEVELOPMENTAL-INTELLIGENCE-01.
 ```
 

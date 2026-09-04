@@ -341,7 +341,7 @@ export interface RevisionSectionRange {
  * matching `Array.from`. PostgreSQL cannot store one, so it never arrives from
  * the database; the function stays total rather than relying on that.
  */
-function codePointBoundaries(s: string): number[] {
+export function codePointBoundaries(s: string): number[] {
   const out: number[] = [];
   let i = 0;
   while (i < s.length) {

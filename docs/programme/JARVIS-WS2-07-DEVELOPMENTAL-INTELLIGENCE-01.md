@@ -8,10 +8,10 @@
 
 ```text
 LANE               JARVIS-WS2-07-DEVELOPMENTAL-INTELLIGENCE-01
-STATE              ACTIVE · BUILD-07A OPEN / RESUMED
+STATE              ACTIVE · BUILD-07A CLOSED / ACCEPTED (founder, 2026-09-04) · canonical on merge
 TRIGGER            Stage 6A AuthorStructureCommand merged to canonical and witnessed
 TRIGGER SATISFIED  clean-main-no-secrets @ 4b8b34bcf
-AUTHORIZES         BUILD-07A DEVELOPMENTAL EVIDENCE only
+AUTHORIZES         nothing — BUILD-07A is closed; BUILD-07B opens only by its own act
                    BUILD-07B–H unauthorized
                    No reader, no model, no prompt, no schema, no route.
 NORMATIVE          docs/programme/WRITERS_STUDIO_MASTER_BRIEF.md
@@ -120,6 +120,64 @@ CURRENT AUTHORIZATION  2026-09-03
 ⛔ **The 2026-09-03 record reconciles state; it grants nothing.** Documentation only — no reader,
 model, prompt, schema, route, or implementation authority is added by it. The dated blocks above it
 are history and are not amended.
+
+```text
+2026-09-03 · BUILD-07A CANDIDATE
+BOUND CANONICAL   8d04f1b9fd0b22a16c8e5673d47279fef3ada3a2
+CANDIDATE         claude/build-07a-developmental-evidence-n5tm37 @ bfeb1a9
+RECORD            docs/programme/WS2-07-BUILD-07A_EVIDENCE_WITNESS_2026-09-03.md
+BUILT             lib/manuscript/development/ — evidenceRef · readState · resolve ·
+                  bind · capture; structureDigest extracted pure
+PROVEN            INV-7b demonstrated; 6 outcomes · 10 falsifiers (RECONSTRUCTED —
+                  see record §4); 66 unit cases; 50-check witness on PostgreSQL 16
+                  UTF-8 from the empty baseline; typecheck gate green
+NOT BUILT         model · reader · prompt · interpretation · reading persistence ·
+                  route · surface · migration · manuscript mutation
+STATE             BUILD-07A OPEN · CANDIDATE BUILT · NOT CLOSED
+                  closure is a founder act on the record's §7 conditions
+                  BUILD-07B–H unauthorized
+```
+
+⛔ **The candidate does not close BUILD-07A and does not open BUILD-07B.** The unit's original
+falsifier list was never written to canonical; the record reconstructs it from DECIDE and says so.
+
+```text
+2026-09-04 · FOUNDER RULING — BUILD-07A ACCEPTANCE INSTRUMENT v1
+RATIFIED          the six outcomes and ten falsifiers in the record's §4, as the
+                  governing acceptance instrument for BUILD-07A — PROSPECTIVELY.
+                  Not declared a verbatim reconstruction of the 2026-09-02 list;
+                  authority begins with the ruling. A later-recovered original
+                  carrying an additional criterion is new historical evidence
+                  for explicit adjudication, never a silent rewrite.
+CLOSURE GATE      CHECK 1  production PostgreSQL SHOW server_encoding = UTF8
+                           (anything else: STOP; no database repair in this lane)
+                  CHECK 2  founder-visible witness rerun from a clean checkout of
+                           the candidate tip → 50 checks · 0 failures
+ON BOTH           BUILD-07A CLOSED / ACCEPTED · INV-7b DEMONSTRATED ·
+                  F1–F10 PASS · O1–O6 PASS → ordinary PR, gates, merge on green
+BUILD-07B         not begun in the closure commit or PR; authorized separately
+                  after 07A reaches canonical
+STATE             BUILD-07A OPEN · CANDIDATE BUILT · INSTRUMENT RATIFIED ·
+                  AWAITING CHECKS 1 + 2
+```
+
+```text
+2026-09-04 · BUILD-07A CLOSURE — founder acceptance
+CHECK 1           production PostgreSQL server_encoding = UTF8            PASS
+CHECK 2           founder-visible witness rerun, clean checkout 623d3e766,
+                  fresh UTF8 scratch database (baseline + canonical chain,
+                  PostgreSQL 17.7 Homebrew on the host) → 50 checks · 0 failures
+                                                                          PASS
+TIP AT CLOSURE    623d3e766 — code unchanged since bfeb1a9; no implementation
+                  after the accepted candidate; the closure commit is docs only
+CUSTODY           single writer for closure (founder ruling); remote tip verified
+                  unchanged before the closure commit
+RECORD            docs/programme/WS2-07-BUILD-07A_EVIDENCE_WITNESS_2026-09-03.md §9
+STATE             BUILD-07A CLOSED / ACCEPTED · INV-7b DEMONSTRATED ·
+                  F1–F10 PASS · O1–O6 PASS
+                  BUILD-07B–H unauthorized — 07B is the next unit and opens by
+                  its own act after this closure reaches canonical
+```
 
 ## Prerequisite — SECTION-ADDRESSABLE DRAFT LIVENESS
 
