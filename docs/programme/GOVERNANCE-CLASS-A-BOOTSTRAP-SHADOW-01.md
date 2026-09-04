@@ -212,10 +212,23 @@ Ends:
   immediately when this governance amendment becomes canonical
 ```
 
-This is materially different from using a founder exception to ship Cut 1A. One explicit
-founder act repairs the broken constitution; afterwards #1199 must satisfy the newly
-canonical bootstrap-shadow rule on its own merits, and this act contributes nothing toward
-that.
+**The act does not use the new rule.** Its authority is the Founder-Steward's *already
+existing* responsibility, held before this amendment and independent of it —
+`GOVERNANCE_MENTOR_COVENANT.md` §3: *"The Founder-Steward holds **final responsibility** for
+MAIA's purpose, doctrine, and production legitimacy,"* including *"final sign-off on
+production releases"* and *"veto power on any change that threatens sovereignty, consent, or
+doctrine alignment."* Repairing a constitution that has become self-contradictory and
+mechanically unsatisfiable falls squarely inside that standing responsibility.
+
+The new bootstrap-shadow rule begins only **after** this act has ended. It is not invoked
+by it, does not authorize it, and gains nothing from it. That ordering is what keeps the
+no-self-authorization clause real rather than ceremonial: the clause would be empty if the
+very act adopting the rule could lean on it.
+
+This is also materially different from using a founder exception to ship Cut 1A. One
+explicit founder act repairs the broken constitution; afterwards #1199 must satisfy the
+newly canonical bootstrap-shadow rule on its own merits, and this act contributes nothing
+toward that.
 
 ## 6. Sequence
 

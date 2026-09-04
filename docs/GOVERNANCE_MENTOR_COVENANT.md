@@ -151,6 +151,9 @@ does not distinguish the two.
 **No self-authorization.** This rule may not authorize its own adoption. It becomes
 effective only once this governance amendment is canonical, and it confers no authority over
 the change that introduces it. Any change relying on it must postdate its canonicalization.
+The amendment adopting it was ratified instead under the Founder-Steward's pre-existing §3
+responsibility for doctrine and production legitimacy — an authority that predates this rule
+and is unaffected by it.
 
 Rationale and the contradiction that prompted it:
 `docs/programme/GOVERNANCE-CLASS-A-BOOTSTRAP-SHADOW-01.md`.
