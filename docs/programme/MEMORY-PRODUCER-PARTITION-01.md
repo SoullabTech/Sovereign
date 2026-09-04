@@ -331,3 +331,142 @@ STOP CONDITION
 > **Do not make the old conversation more orderly in order to make provenance easier.**
 >
 > Preserve exactly what MAIA currently receives. Make the shadow representation tell the truth about whose material it is wherever the existing canonical contract can express that truth. Where it cannot, say **UNRESOLVED**.
+
+---
+
+## 9. Representability census — CLOSED · PASS · Outcome 2 (2026-09-04)
+
+Read-only, run against the §3 three-part test. Founder froze the subset the same day.
+
+### 9.1 Founder correction to the census summary — recorded
+
+> The two unresolved recall blocks are **not** currently presenting MAIA's prior speech to cognition as though it were literally the member's speech. Conversational recall explicitly labels each line `Member` or `MAIA`; episodic recall says `member-marked`, which describes **the marking act**, not authorship.
+>
+> The defect is that the **canonical participant identity** collapses the whole mixed block to `authoredBy: member`.
+>
+> Therefore P6 must exclude them from **attribution closure**, not from cognition or recall.
+
+### 9.2 Determinations
+
+```text
+member.atoms
+  discriminator       YES
+  lossless partition  YES
+  ct-1 representable  YES
+  verdict             PARTITIONABLE · BUILD IN THIS CUT
+
+retrieved.member_web
+  discriminator       YES
+  lossless partition  NO   (empty-state placeholders — §9.4)
+  ct-1 representable  NO   (house frame becomes discontiguous — §9.4)
+  verdict             UNRESOLVED · DO NOT PARTITION
+                      stop rule applied automatically per founder ruling
+
+retrieved.conversational_recall
+  discriminator       YES
+  lossless partition  NO
+  ct-1 representable  NO
+  verdict             UNRESOLVED · DO NOT PARTITION
+                      ct-1 ordering / multiplicity
+
+member.episodic_recall
+  discriminator       NO
+  lossless partition  NO
+  ct-1 representable  N/A
+  verdict             UNRESOLVED · DO NOT PARTITION
+                      no structural authorship discriminator
+```
+
+**No fifth mixed producer found.** The 12 non-mixed live `/list` producers were re-checked against their registry reason strings; none discloses hidden authorship. Scope re-adjudication not triggered.
+
+### 9.3 `member.atoms` — evidence
+
+`lib/maia/memoryAtomsLoader.ts:414-541`. The formatter already performs the partition and then concatenates it:
+
+```ts
+const memberAtoms       = atoms.filter(a => a.sourceType !== 'practitioner_observation');
+const practitionerAtoms = atoms.filter(a => a.sourceType === 'practitioner_observation');
+sections.push(memberSection)        // # MEMBER-PLACED PORTFOLIO
+sections.push(practitionerSection)  // # PRACTITIONER OBSERVATIONS
+return sections.join('\n');
+```
+
+Two contiguous sections, fixed order, no interleaving of member and practitioner **material**. Recomposition: present sections joined by `'\n'` — exact, including the single-section case. Loader eligibility (`source_type <> 'practitioner_observation' OR facilitator_id IS NOT NULL`) already refuses unattributed practitioner atoms, so the practitioner partition admits nothing the member label was hiding.
+
+### 9.4 `retrieved.member_web` — the exact ordered segment table, and why it fails
+
+`lib/memory/MemberLiveContext.ts:436-520`. Byte-exact structure (`cat -A` verified):
+
+```text
+S1  "🕸️ MEMBER WEB (Silent context — …):\n"                      house frame, opening
+S2  "Active Patterns (recurring structures in their life):\n"
+    "${patternsBlock}\n\n"                                        system · inferred
+S3  "Recent Session Arcs (what we've been working on):\n"
+    "${summariesBlock}\n\n"                                       MAIA (sovereignSummarizer)
+S4  "Recent Journal:\n${journalsBlock}\n"                         member
+S5  "${themesSection}"                                            system-noticed · conditional
+S6  "${fieldConditionBlock}"                                      system-computed · conditional
+S7  "\nInstruction: Before responding, silently check these
+     threads. … Do not quote this block directly."                house frame, closing
+```
+
+S1‖S2‖S3‖S4‖S5‖S6‖S7 recomposes the original exactly, order is fixed, and each segment could take one producer id. **It still fails, on the empty state.**
+
+```ts
+: '  None recorded yet.';                                    // patternsBlock  (L452)
+: '  No summaries yet — session history builds over time.';  // summariesBlock (L465)
+: '  No journal entries yet.';                               // journalsBlock  (L476)
+```
+
+When a family is empty its slot holds **only house placeholder text**. Two consequences, either one disqualifying:
+
+1. **A false participant.** S2 would be ADMITTED as `system · inferred` while containing zero inferences — a participant asserting an authorship it does not carry. That is precisely the defect this cut exists to remove; introducing a new instance of it is not a partition.
+2. **The house frame becomes discontiguous and turn-variable.** Folding an empty family's bytes into the frame makes the frame appear in a different number of non-adjacent runs depending on which families are empty on that turn. One producer id per segment cannot express that without either manufactured positional house identities (`house.member_web_frame_2`…), which are not derived from any source or consent semantics, or concatenating the runs, which reorders them.
+
+The distinguishing principle, recorded so it is not re-litigated: **house instructional framing that wraps a producer's material is not "mixed authorship" in the pdc-1 sense** — otherwise every producer in the registry is mixed, since all 16 carry house discipline text. What disqualifies is *member / practitioner / MAIA material being conflated*, or a segment whose declared authorship is absent from its bytes. `member.atoms` passes because its two sections separate **material**; `member_web` fails because its empty states leave segments with a declared authorship and no material.
+
+**One formatter change would make it PARTITIONABLE** — omit empty family sections so placeholders never occupy a family slot. That change alters legacy addendum bytes, which is a STOP condition here. Recorded for a future cut; **not attempted**.
+
+### 9.5 pdc-1 derivation instruction — founder
+
+> Do not classify new producers by authorship alone. A practitioner observation atom may reasonably be `practitioner · placed · situate` rather than `practitioner · authored · situate`, because the observation is practitioner-authored but reaches MAIA through the **member-controlled portfolio / return mechanism**. That exact triple must be **derived from the existing source/consent semantics before it is registered — not guessed from its prefix.**
+
+Policy check: `sovereign_chat` allows field composition and pp-1 currently has no inference cap, so current policy will not independently block a truthful split on `/list`.
+
+### 9.6 P6 consequence for the two unresolved producers
+
+```text
+retrieved.conversational_recall
+member.episodic_recall
+
+KEEP     existing retrieval · existing consent gates
+         existing legacy cognition · existing prompt wording
+
+DO NOT   wrap either whole block as MEMBER-SOURCED
+         call either truthfully-attributed
+         suppress either merely because P6 cannot yet partition it
+```
+
+> We do not improve epistemic truth by amputating continuity.
+
+Later architecture, **not this cut**: conversational recall needs ordered multi-instance representation; episodic recall needs provenance-preserving storage that retains speaker structure.
+
+### 9.7 Frozen build subset
+
+```text
+BUILD              member.atoms partition
+                   structural SINGLE_AUTHOR / PARTITIONED / UNRESOLVED_MIXED contract
+                   registry corrections
+                   partition-aware shadow witness
+                   byte-exact recomposition tests
+
+RECORD UNRESOLVED  retrieved.member_web  (§9.4 — one formatter change away)
+                   retrieved.conversational_recall
+                   member.episodic_recall
+
+FROZEN             LegacyAddenda shape + bytes · getMaiaResponse input
+                   current cognition ordering/content · admission/consent rules
+
+FORBIDDEN          attribution framing · Epistemic Tone changes
+                   MIPA multiplicity · M3 · /between work
+```
