@@ -202,9 +202,24 @@ JSON (the claim index the classifier could not place) is the evidence to read fi
 07D may touch the classifier prompt, the phenomenon family, or the refuse-whole rule; nothing was
 tuned around.
 
-**Standing.** Gate B (a) is blocked on the 07C finding, not on 07D. How that finding is
-adjudicated, and whether 07D closes on Gate A + the browser walk (b) with (a) recorded as
-blocked-by-07C, is a founder ruling. No rerun was made.
+**Standing — founder ruling, 2026-09-04.**
+
+```text
+Gate A       PASS · STRUCTURALLY PROVED
+Gate B(a)    BLOCKED BY 07C classifier-unclassifiable
+Gate B(b)    NOT YET EXECUTABLE to completion for the same reason
+STATE        NOT CLOSED
+```
+
+*"That is not a 07D failure. But it is also not enough evidence to close 07D, because the unit's
+defining claim is that a writer can ask through the surface, receive a durable reading, encounter it
+again by identity, and see it remain truthful after the Work changes. Gate A proves the surface
+around a reading; Gate B has to prove the living path actually produces one."*
+
+Ruled: **adjudicate the 07C finding first, then rerun Gate B (a).** Gate B (a) is not weakened, and
+Gate A plus the browser walk is not substituted for a live developmental reading. Gate B (b) meets
+the same wall by construction — the walk needs a reading to exist. The diagnosis is bounded in its
+own lane, `WS2-07C-F1_PHENOMENON_CLASSIFICATION_COVERAGE_2026-09-04.md`. No rerun was made.
 
 **(b) In the browser** — the member experience, which no headless run can stand in for. On the
 Mac dev stack at the candidate, with the key in the shell env and `DATABASE_URL` pointing at a
@@ -234,9 +249,18 @@ enough), the two URLs from D3, and anything that read wrong.
 
 ## 4 · Closure
 
-Not closed. Closure is a founder act on Gate B (a) and (b): **CLOSED / ACCEPTED**, then the
-candidate PR → gates → merge on green pinned to the exact head → verify canonical → STOP.
-BUILD-07E is not opened by this unit's closure.
+**NOT CLOSED**, and blocked on WS2-07C-F1 rather than on anything 07D owns:
+
+```text
+Gate A       PASS · STRUCTURALLY PROVED
+Gate B(a)    BLOCKED BY 07C classifier-unclassifiable   (run 1 recorded above, not rerun)
+Gate B(b)    NOT YET EXECUTABLE to completion — the walk needs a reading to exist
+STATE        NOT CLOSED · PR #1192 open, NOT to be merged, mentor line not written
+```
+
+The path to closure: WS2-07C-F1 diagnosis → founder determines A / B / C → repair or ruling in its
+own act → rerun Gate B (a) → browser walk (b) → **CLOSED / ACCEPTED** → PR → gates → merge on green
+pinned to the exact head → verify canonical → STOP. BUILD-07E is not opened by this unit's closure.
 
 ## 5 · What this record does not do
 

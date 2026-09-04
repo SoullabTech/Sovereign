@@ -41,8 +41,15 @@ CURRENT UNIT       BUILD-07D Develop Surface — IMPLEMENTATION OPEN (founder ac
                    or automatic refresh. Closure: tests + founder witness
                    lane: JARVIS-WS2-07-DEVELOPMENTAL-INTELLIGENCE-01 (dated 07D block)
 CURRENT CANDIDATE  d005d59eb — Gate A 22/0 (structural, seam refusing) ·
-                   STRUCTURALLY PROVED · NOT CLOSED · Gate B (founder live walk) pending
-                   record: WS2-07-BUILD-07D_DEVELOP_WITNESS_2026-09-04.md §2–§3
+                   STRUCTURALLY PROVED · NOT CLOSED
+                   Gate B(a) BLOCKED BY 07C classifier-unclassifiable (run 1, founder-run:
+                   both permitted acts refused at classify; nothing stored, nothing moved)
+                   Gate B(b) NOT YET EXECUTABLE — the walk needs a reading to exist
+                   record: WS2-07-BUILD-07D_DEVELOP_WITNESS_2026-09-04.md §2–§4
+OPEN FOLLOW-UP     WS2-07C-F1 Phenomenon Classification Coverage — DIAGNOSIS ONLY
+                   (founder act 2026-09-04). 3 of 5 commissioned acts on one fixture
+                   refused at classify. Determine A / B / C; no repair authorized yet.
+                   record: WS2-07C-F1_PHENOMENON_CLASSIFICATION_COVERAGE_2026-09-04.md
 PRIOR UNIT         BUILD-07C Developmental Reading — CLOSED / ACCEPTED (founder,
                    2026-09-04); canonical @ 376daae06; candidate 8a26a8971;
                    Gate A 27/0 · Gate B 13/0 (claude-opus-5)
@@ -56,15 +63,17 @@ PRIOR UNIT         BUILD-07B Developmental Reader — CLOSED / ACCEPTED (founder
 PRIOR UNIT         BUILD-07A Developmental Evidence — CLOSED / ACCEPTED (founder,
                    2026-09-04); canonical @ 27ec9f895
                    record: WS2-07-BUILD-07A_EVIDENCE_WITNESS_2026-09-03.md §9
-NEXT EXECUTABLE    BUILD-07D Gate B (founder): run scripts/ws2-07d-develop-gate-b.ts
-                   at d005d59eb + browser walk D1–D8 (record §3) → CLOSED / ACCEPTED
-                   → candidate PR → gates → merge on green pinned to the exact head
+NEXT EXECUTABLE    WS2-07C-F1 diagnosis (founder): run
+                   scripts/ws2-07c-f1-classification-diagnosis.ts from the branch tip
+                   → read the failing claims in full → determine A / B / C → repair or
+                   ruling in its own act → rerun BUILD-07D Gate B(a) → browser walk (b)
+                   → CLOSED / ACCEPTED → merge #1192 on green pinned to the exact head
                    → verify canonical → STOP
 WS-01              CLOSED — OVERTAKEN / SUPERSEDED (not accepted; see
                    Reconciliation record below)
 CANVAS FREEZE      RETIRED FROM LIVE STATE (never released by an act; see
                    Reconciliation record below)
-LAST UPDATED       2026-09-04 (BUILD-07D candidate d005d59eb · Gate A PASS · Gate B pending)
+LAST UPDATED       2026-09-04 (BUILD-07D Gate B(a) blocked by 07C · WS2-07C-F1 opened)
 ```
 
 ## Reconciliation record — 2026-09-03 (founder adjudication of programme history)

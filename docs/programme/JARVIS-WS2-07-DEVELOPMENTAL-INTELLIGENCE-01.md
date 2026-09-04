@@ -454,6 +454,29 @@ GATE B            PENDING — founder: (a) scripts/ws2-07d-develop-gate-b.ts (li
 STATE             BUILD-07D CANDIDATE d005d59eb · STRUCTURALLY PROVED · NOT CLOSED · GATE B PENDING
 ```
 
+```text
+2026-09-04 · BUILD-07D GATE B (a) RUN 1 — UNPROVED (lawful) · WS2-07C-F1 OPENED (founder act)
+RUN 1             founder-run at dd4783668. P0 pins PASS. F1 act 1 and act 2 both 422
+                  classifier_unclassifiable at classify; nothing stored; no manuscript row moved;
+                  F2–F7 could not run. 3 checks · 1 failure. Not rerun.
+CLASSIFIED        not a 07D defect — everything 07D owns behaved as Gate A proved. The block is the
+                  07C `unclassifiable` finding, now 3 of 5 commissioned acts on the same fixture
+                  (07C run 3: frozen · unclassifiable · frozen; 07D run 1: unclassifiable ×2)
+STANDING          Gate A PASS · Gate B(a) BLOCKED BY 07C · Gate B(b) NOT YET EXECUTABLE · NOT CLOSED
+RULING            adjudicate the 07C finding FIRST, then rerun Gate B(a). Gate B(a) is not weakened;
+                  Gate A + browser presentation is NOT substituted for a live developmental reading
+FOLLOW-UP         WS2-07C-F1 · PHENOMENON CLASSIFICATION COVERAGE — bounded, DIAGNOSIS ONLY
+                  authorizes: inspect the exact failing claim(s) · compare against the closed eight ·
+                    compare successful classifications from the same fixture · determine A / B / C
+                  does NOT authorize: prompt tuning · vocabulary expansion · changing refuse-whole ·
+                    changing 07B · changing 07D
+                  record: WS2-07C-F1_PHENOMENON_CLASSIFICATION_COVERAGE_2026-09-04.md
+                  instrument: scripts/ws2-07c-f1-classification-diagnosis.ts (the failing claim TEXT
+                    is recoverable from NO existing record — a refusal persists nothing and the
+                    detail carries only the index)
+STATE             BUILD-07D NOT CLOSED · blocked on WS2-07C-F1 · #1192 open, not to be merged
+```
+
 ## Prerequisite — SECTION-ADDRESSABLE DRAFT LIVENESS
 
 **Not a new lane.** A bounded prerequisite inside this one. Its own branch and PR are appropriate
