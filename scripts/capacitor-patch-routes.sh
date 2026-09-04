@@ -48,7 +48,7 @@ MOBILE_TOP_LEVEL=(
 )
 
 # labtools sub-dirs to KEEP (everything else in labtools/ gets excluded)
-MOBILE_LABTOOLS_KEEP=("journal" "settings" "reflections")
+MOBILE_LABTOOLS_KEEP=("journal" "settings")
 
 # account sub-dirs to KEEP
 MOBILE_ACCOUNT_KEEP=("settings")

@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 import { requireFounder } from '@/lib/founder/founderAuth';
-import FounderGateScreen from '@/components/book-studio/FounderGateScreen';
+import GateScreen from '@/components/access/FounderGateScreen';
 
 /**
  * VoiceController smoke-test harness — founder only, enforced.
@@ -15,6 +15,10 @@ import FounderGateScreen from '@/components/book-studio/FounderGateScreen';
  * This layout makes "Kelly only" behaviour rather than a comment. Identity comes
  * from the server session via requireFounder(); a client cannot assert it. The
  * founder allowlist fails closed: if FOUNDER_MEMBER_IDS is unset, nobody passes.
+ *
+ * The refusal screen used to be Book Studio's, which announced this diagnostic
+ * harness as Soullab Press's editorial workspace. It now names itself (founder
+ * ruling 2026-09-04); authorization is unchanged.
  *
  * This gate does NOT address the permissive unmapped-route default itself — that
  * is the systemic half of #717 and needs the unmapped-route inventory before a
@@ -32,7 +36,14 @@ export default async function VoiceControllerTestLayout({
     if (auth.status === 401) {
       redirect('/signin?next=/voice-controller-test');
     }
-    return <FounderGateScreen />;
+    return (
+      <GateScreen
+        eyebrow="Soullab"
+        title="Internal diagnostic"
+        description="This is a VoiceController smoke-test harness, not a product surface."
+        reason="Founder access is required."
+      />
+    );
   }
   return <>{children}</>;
 }

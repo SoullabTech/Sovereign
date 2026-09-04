@@ -1,14 +1,20 @@
 'use client';
 
 /**
- * Reflection Detail Page - Lab -> Reflections -> [id]
+ * ReflectionDetail — one kept reflection.
  *
- * Display a single reflection capsule with full details.
- * Warm Soullab aesthetic.
+ * Extracted from the page that used to live at app/labtools/reflections/[id]
+ * when Reflections was moved out of Lab Tools into the member's own
+ * /reflections (founder ruling 2026-09-04). See ReflectionsFeed.tsx for why
+ * that namespace move happened; there is no lab twin of this view.
+ *
+ * The one addition beyond the extraction is the "Discuss this with MAIA"
+ * section at the foot of the page — see DiscussWithMaia.tsx for the constraints
+ * it holds (no manufactured interpretation, visible transfer, no persistence).
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { useRouter, useParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import {
   ArrowLeft,
@@ -30,10 +36,14 @@ import {
   Wind,
   Star,
 } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import type { CapsuleDTO, Element } from '@/lib/capsules/types';
+import DiscussWithMaia from './DiscussWithMaia';
 
-// Element icons mapping
-const ElementIcon: Record<Element, React.FC<{ className?: string }>> = {
+// Element icons mapping.
+// Typed as LucideIcon rather than React.FC<{ className?: string }> — the call
+// site passes `style` for the element colour, which the narrower type rejected.
+const ElementIcon: Record<Element, LucideIcon> = {
   fire: Flame,
   water: Droplets,
   earth: Mountain,
@@ -50,10 +60,13 @@ const elementColors: Record<Element, string> = {
   aether: '#8b7aa0',
 };
 
-export default function ReflectionDetailPage() {
+export interface ReflectionDetailProps {
+  /** Capsule id — supplied by the route that mounts this. */
+  id: string;
+}
+
+export default function ReflectionDetail({ id }: ReflectionDetailProps) {
   const router = useRouter();
-  const params = useParams();
-  const id = params?.id as string;
 
   const [capsule, setCapsule] = useState<CapsuleDTO | null>(null);
   const [loading, setLoading] = useState(true);
@@ -191,7 +204,7 @@ export default function ReflectionDetailPage() {
       >
         <div className="max-w-2xl mx-auto px-6 py-12">
           <button
-            onClick={() => router.push('/labtools/reflections')}
+            onClick={() => router.push('/reflections')}
             className="flex items-center gap-2 text-stone-400 hover:text-stone-600 transition-colors text-[13px] tracking-wide mb-8"
           >
             <ArrowLeft className="h-4 w-4" />
@@ -201,7 +214,7 @@ export default function ReflectionDetailPage() {
           <div className="text-center py-20">
             <p className="text-red-500 text-[14px]">{error || 'Reflection not found'}</p>
             <button
-              onClick={() => router.push('/labtools/reflections')}
+              onClick={() => router.push('/reflections')}
               className="mt-4 text-[13px] text-stone-500 hover:text-stone-700 underline"
             >
               Return to reflections
@@ -225,7 +238,7 @@ export default function ReflectionDetailPage() {
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <button
-            onClick={() => router.push('/labtools/reflections')}
+            onClick={() => router.push('/reflections')}
             className="flex items-center gap-2 text-stone-400 hover:text-stone-600 transition-colors text-[13px] tracking-wide"
           >
             <ArrowLeft className="h-4 w-4" />
@@ -476,6 +489,9 @@ export default function ReflectionDetailPage() {
             </div>
           </motion.div>
         )}
+
+        {/* Bring it back into conversation — member act, nothing written */}
+        <DiscussWithMaia capsule={capsule} />
       </div>
     </div>
   );

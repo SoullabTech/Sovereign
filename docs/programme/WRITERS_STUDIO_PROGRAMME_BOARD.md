@@ -31,13 +31,36 @@
 ```text
 PROGRAMME          WRITER'S STUDIO R2
 MODE               STAGE 7 BUILD
-BUILD MODE         OPEN — no unit currently authorized (BUILD-07C closed; 07D–H unauthorized)
-BOUND CANONICAL    b20f2742e (clean-main-no-secrets, 2026-09-04 — BUILD-07B merged, PR #1190)
-CURRENT UNIT       BUILD-07C Developmental Reading — CLOSED / ACCEPTED (founder,
-                   2026-09-04); Gate A 27/0 · Gate B 13/0 (claude-opus-5);
-                   canonical on merge of the candidate PR
-                   lane: JARVIS-WS2-07-DEVELOPMENTAL-INTELLIGENCE-01
-CURRENT CANDIDATE  8a26a8971 — code unchanged since; witness + records only above it
+BUILD MODE         OPEN — BUILD-07D Develop Surface IMPLEMENTATION OPEN (founder act
+                   2026-09-04); 07E–H unauthorized
+BOUND CANONICAL    376daae06 (clean-main-no-secrets, 2026-09-04 — BUILD-07C merged, PR #1191;
+                   second parent 8123dc4c8 = the accepted closure head)
+CURRENT UNIT       BUILD-07D Develop Surface — IMPLEMENTATION OPEN (founder act
+                   2026-09-04): the writer encounters an already frozen reading;
+                   no interpretation, dialogue, decisions, mutation, re-anchoring
+                   or automatic refresh. Closure: tests + founder witness
+                   lane: JARVIS-WS2-07-DEVELOPMENTAL-INTELLIGENCE-01 (dated 07D block)
+CURRENT CANDIDATE  d005d59eb — Gate A 22/0 (structural, seam refusing) ·
+                   STRUCTURALLY PROVED · NOT CLOSED
+                   Gate B(a) BLOCKED BY 07C classifier-unclassifiable (run 1, founder-run:
+                   both permitted acts refused at classify; nothing stored, nothing moved)
+                   Gate B(b) NOT YET EXECUTABLE — the walk needs a reading to exist
+                   record: WS2-07-BUILD-07D_DEVELOP_WITNESS_2026-09-04.md §2–§4
+OPEN FOLLOW-UP     WS2-07-F1 Developmental Semantic Boundary Repair — OPEN (founder act
+                   2026-09-04, determination C). Act 1 semantic ratification DELIVERED,
+                   awaiting adjudication: seven lenses grounded verbatim; seven phenomena
+                   grounded with inclusion/exclusion; positional-asymmetry UNGROUNDED in
+                   the whole corpus — define (recommended) or retire.
+                   records: WS2-07-F1_SEMANTIC_BOUNDARY_REPAIR_2026-09-04.md
+                            WS2-07-F1_LENS_AND_PHENOMENON_DEFINITIONS_DRAFT_2026-09-04.md
+CLOSED FOLLOW-UP   WS2-07C-F1 Phenomenon Classification Coverage — CLOSED 2026-09-04,
+                   determination C (not A; B rejected for v1). The failing claim is
+                   mechanically re-derivable regularity, one epistemic layer below a
+                   developmental observation; the reader should not emit it.
+                   record: WS2-07C-F1_PHENOMENON_CLASSIFICATION_COVERAGE_2026-09-04.md
+PRIOR UNIT         BUILD-07C Developmental Reading — CLOSED / ACCEPTED (founder,
+                   2026-09-04); canonical @ 376daae06; candidate 8a26a8971;
+                   Gate A 27/0 · Gate B 13/0 (claude-opus-5)
                    record: WS2-07-BUILD-07C_READING_WITNESS_2026-09-04.md §4
 PRIOR UNIT         BUILD-07B Developmental Reader — CLOSED / ACCEPTED (founder,
                    2026-09-04); canonical @ b20f2742e; Gate A 36/0 · Gate B 10/0
@@ -48,14 +71,20 @@ PRIOR UNIT         BUILD-07B Developmental Reader — CLOSED / ACCEPTED (founder
 PRIOR UNIT         BUILD-07A Developmental Evidence — CLOSED / ACCEPTED (founder,
                    2026-09-04); canonical @ 27ec9f895
                    record: WS2-07-BUILD-07A_EVIDENCE_WITNESS_2026-09-03.md §9
-NEXT EXECUTABLE    merge the BUILD-07C candidate PR on green (Class B: founder
-                   Verified-by-Mentor line + merge word) → verify canonical → STOP.
-                   BUILD-07D Develop Surface opens only by its own lane act
+NEXT EXECUTABLE    WS2-07-F1 act 1 adjudication (founder): read
+                   WS2-07-F1_LENS_AND_PHENOMENON_DEFINITIONS_DRAFT_2026-09-04.md and rule
+                   on the seven lens meanings, the reader-boundary rule, the seven grounded
+                   phenomena, the register-shift ⇄ movement overlap, and
+                   positional-asymmetry (define / retire) → ratified definitions as canon
+                   → render to 07B and 07C with provenance bump → prove the repair
+                   → refresh BUILD-07D → Gate B(a) rerun → browser walk (b)
+                   → CLOSED / ACCEPTED → merge #1192 on green pinned to the exact head
+                   → verify canonical → STOP
 WS-01              CLOSED — OVERTAKEN / SUPERSEDED (not accepted; see
                    Reconciliation record below)
 CANVAS FREEZE      RETIRED FROM LIVE STATE (never released by an act; see
                    Reconciliation record below)
-LAST UPDATED       2026-09-04 (BUILD-07C closed / accepted · Gate B PASS)
+LAST UPDATED       2026-09-04 (determination C · WS2-07C-F1 closed · WS2-07-F1 opened, act 1 delivered)
 ```
 
 ## Reconciliation record — 2026-09-03 (founder adjudication of programme history)
@@ -116,16 +145,22 @@ Stage 7   ACTIVE
                       PROVED; Gate B live reader witness on an invented fixture →
                       CLOSED / ACCEPTED 2026-09-04 · canonical @ b20f2742e
                       (Gate A 36/0 · Gate B 10/0, claude-opus-5)
-          BUILD-07C   IMPLEMENTATION OPEN · founder act 2026-09-04 · observation-
+          BUILD-07C   CLOSED / ACCEPTED · founder act 2026-09-04 · observation-
                       only v1 · phenomenon = UNDERSTAND §4 family · one bounded
                       classification call · two-gate closure. Candidate 8a26a8971:
                       Gate A PASS (27/0) · Gate B PASS (13/0, founder-run,
-                      claude-opus-5). CLOSED / ACCEPTED 2026-09-04; canonical
-                      on merge.
+                      claude-opus-5). Canonical @ 376daae06 (PR #1191).
+          BUILD-07D   IMPLEMENTATION OPEN · founder act 2026-09-04 · the writer
+                      encounters an already frozen reading (list · observations by
+                      durable key · lens + phenomenon · evidence via frozen readState ·
+                      limits · CURRENT / SUPERSEDED / UNMEASURED · request a NEW
+                      reading). No interpretation, dialogue, decisions, mutation,
+                      re-anchoring, automatic refresh. Closure: tests + founder
+                      witness.
           PREREQ      SECTION-ADDRESSABLE DRAFT LIVENESS · CLOSED
                       canonical @ 0fa4158e7 (PR #1174)
                       + Unicode repair @ 9411ddc41 (PR #1175)
-          BUILD-07D–H unauthorized (07D opens by its own act after 07C is canonical)
+          BUILD-07E–H unauthorized (07E opens by its own act after 07D is canonical)
 Stage 8   BLOCKED ON STAGE 7 CLOSURE
 ```
 
@@ -333,14 +368,18 @@ BUILD-07B · Developmental Reader — IMPLEMENTATION OPEN (founder act
             CLOSED / ACCEPTED, canonical @ b20f2742e.
 BUILD-07C · Developmental Reading — CLOSED / ACCEPTED 2026-09-04
             (candidate 8a26a8971 · Gate A 27/0 · Gate B 13/0). A frozen,
-            durable DevelopmentalReading exists on canonical once merged:
+            durable DevelopmentalReading exists on canonical @ 376daae06:
             identity, observations, phenomenon, provenance, immutability,
-            three-state supersession. Awaiting merge on green.
-            No route, surface, persistence, or 07C-shaped object.
+            three-state supersession.
+BUILD-07D · Develop Surface — IMPLEMENTATION OPEN (founder act 2026-09-04).
+            The writer-visible threshold: encounter a frozen reading, by
+            durable identity, with its evidence, limits and current state;
+            request a new one. Nothing on the surface may reinterpret,
+            rewrite, mutate, re-anchor or silently refresh a reading.
             Lane: JARVIS-WS2-07-DEVELOPMENTAL-INTELLIGENCE-01.
 ```
 
-Everything else is **unauthorized**. BUILD-07C opens only by its own act after BUILD-07B closes.
+Everything else is **unauthorized**. BUILD-07E opens only by its own act after BUILD-07D closes.
 Release milestones are defined by Amendment 5 and read from the Release signal above.
 
 ## Board discipline

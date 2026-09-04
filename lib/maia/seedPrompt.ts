@@ -232,6 +232,7 @@ const SOURCE_LABELS: Record<string, { label: string; returnTo: string }> = {
   'fields:encounter': { label: 'Field Encounter', returnTo: '/maia/fields' },
   'patterns:return': { label: 'Patterns', returnTo: '/worlds/patterns' },
   'relationships:thread': { label: 'Relational Field', returnTo: '/relationships' },
+  'reflections:capsule': { label: 'Reflection', returnTo: '/reflections' },
 };
 
 /**

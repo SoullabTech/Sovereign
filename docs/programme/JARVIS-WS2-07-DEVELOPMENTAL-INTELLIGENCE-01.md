@@ -1,25 +1,29 @@
 # JARVIS-WS2-07-DEVELOPMENTAL-INTELLIGENCE-01
 
-> **Lane active. BUILD-07C CLOSED / ACCEPTED (founder, 2026-09-04) — Gate A 27/0 and Gate B 13/0 on candidate `8a26a8971`; canonical on merge. BUILD-07D opens only by its own act.**
+> **Lane active. BUILD-07D DEVELOP SURFACE — IMPLEMENTATION OPEN (founder act, 2026-09-04) against canonical `376daae06` (BUILD-07C merged, PR #1191). BUILD-07A, 07B and 07C are CLOSED / ACCEPTED and canonical. BUILD-07E–H unauthorized.**
 >
 > This document defined the lane before it was entered. Originally it authorized **no
-> implementation**. As of the 2026-09-04 founder act recorded below, it authorizes **only the
-> exact BUILD-07B implementation enumerated there**. Route, UI / Develop surface, persistence /
-> database-schema change, and BUILD-07C+ remain unauthorized. Entering FIND required the trigger
-> below to be satisfied on canonical rather than asserted in a session — and on 2026-09-02
-> canonical satisfied it.
+> implementation**. Each BUILD unit since has been opened by its own dated founder act, recorded
+> below in order; **the live-state block beneath this paragraph and the most recent dated block
+> govern** — earlier blocks are history, not standing authority. Entering FIND required the
+> trigger below to be satisfied on canonical rather than asserted in a session — and on
+> 2026-09-02 canonical satisfied it.
 
 ```text
 LANE               JARVIS-WS2-07-DEVELOPMENTAL-INTELLIGENCE-01
-STATE              ACTIVE · BUILD-07C CLOSED / ACCEPTED (founder, 2026-09-04) · canonical on merge
-                   candidate 8a26a8971 · Gate A 27/0 · Gate B 13/0 (claude-opus-5)
+STATE              ACTIVE · BUILD-07D DEVELOP SURFACE — IMPLEMENTATION OPEN (founder, 2026-09-04)
+                   BUILD-07C CLOSED / ACCEPTED · canonical @ 376daae06 (candidate 8a26a8971 ·
+                   Gate A 27/0 · Gate B 13/0, claude-opus-5)
+                   BUILD-07B CLOSED / ACCEPTED · canonical @ b20f2742e
                    BUILD-07A CLOSED / ACCEPTED · canonical @ 27ec9f895
 TRIGGER            Stage 6A AuthorStructureCommand merged to canonical and witnessed
 TRIGGER SATISFIED  clean-main-no-secrets @ 4b8b34bcf
-AUTHORIZES         nothing — BUILD-07C is closed; BUILD-07D opens only by its own act
-                   BUILD-07D–H unauthorized
-NO                 route · UI / Develop surface · interpretation · questions · possibilities ·
-                   manuscript mutation · BUILD-07D+ (07C persistence + its migration ARE authorized)
+AUTHORIZES         the exact BUILD-07D implementation enumerated in the dated 07D block below —
+                   a member-facing Develop surface over ALREADY FROZEN readings, and the
+                   route/client wiring strictly necessary for it · BUILD-07E–H unauthorized
+NO                 interpretation · questions / possibilities · dialogue · accept / reject / hold
+                   decisions · revision · manuscript mutation · re-anchoring · automatic refresh ·
+                   BUILD-07E+
 NORMATIVE          docs/programme/WRITERS_STUDIO_MASTER_BRIEF.md
 CAPABILITY         docs/programme/DEVELOPMENTAL_EDITOR_CAPABILITY.md
 LIVE STATE         docs/programme/WRITERS_STUDIO_PROGRAMME_BOARD.md
@@ -395,6 +399,121 @@ FINDING           `unclassifiable` twice, lawful; nothing invented, nothing pers
                   widened; left open for the founder (reliability · coverage · variance)
 STATE             BUILD-07C CLOSED / ACCEPTED (founder, 2026-09-04) · canonical on merge of the
                   candidate PR · BUILD-07D NOT opened by this closure
+```
+
+```text
+2026-09-04 · BUILD-07D DEVELOP SURFACE — OPEN (founder act; tempo ruling: opening record is the
+first commit on the implementation branch, no separate docs PR; the three stale programme lines
+named by the founder are corrected in this same commit)
+TRIGGER           BUILD-07C DEVELOPMENTAL READING CLOSED / ACCEPTED and present on canonical
+TRIGGER SATISFIED clean-main-no-secrets @ 376daae06 (merge of PR #1191; second parent 8123dc4c8 =
+                  the accepted closure head; reading blobs = candidate 8a26a8971 — verified by the
+                  founder: commission.ts 14c62a41…, migration 545cc1fb…)
+MISSION           let the writer encounter a frozen DevelopmentalReading without granting the
+                  surface authority to reinterpret, rewrite, mutate, or silently refresh it
+AUTHORIZES        member-facing Develop surface ·
+                  load / list member-owned developmental readings ·
+                  display observations by durable (readingId, observationKey) ·
+                  show lens + phenomenon ·
+                  show evidence grounding through the frozen readState ·
+                  show doesNotEstablish / limits intelligibly ·
+                  show CURRENT / SUPERSEDED / UNMEASURED state ·
+                  allow the writer to request a NEW commissioned reading ·
+                  clear none / refusal / loading / error states ·
+                  desktop + mobile member experience ·
+                  route / client wiring strictly necessary for this surface ·
+                  tests + founder witness
+DOES NOT AUTHORIZE interpretation · questions / possibilities · dialogue · accept / reject / hold
+                  decisions · revision · manuscript mutation · re-anchoring · automatic refresh ·
+                  BUILD-07E+
+INVARIANT         the surface encounters an already durable reading; identity does not originate
+                  in UI and does not disappear when UI closes (INV-1, INV-3)
+PRODUCT RULE      a superseded observation remains visible as what MAIA actually noticed THEN. It
+                  may be marked superseded; it must never silently disappear or be rewritten
+                  against the current manuscript (INV-4, INV-19–22)
+STATE             BUILD-07D IMPLEMENTATION OPEN · no candidate yet
+```
+
+```text
+2026-09-04 · BUILD-07D CANDIDATE — GATE A PASS · STRUCTURALLY PROVED · NOT CLOSED
+CANDIDATE         d005d59eb (claude/writer-author-studios-roadmap-b2tqf5), built against canonical
+                  376daae06; opening record 3ed788b3b is the first commit on the branch
+SHAPE             two routes (GET list · POST one-lens commission · GET one by identity; SELECT
+                  only; ownership in every query) · pure presentation (frozen-topology labels,
+                  verbatim text, three states) · client (no poll) · the Develop room
+                  (?m=&r=; ledger · reading · observations in place · invocation · every state) ·
+                  a Canvas door. No interpretation, dialogue, decision, mutation, re-anchoring,
+                  automatic refresh.
+GATE A            scripts/ws2-07d-develop-gate-a.ts → 22 checks · 0 failures on checkout
+                  d005d59eb (UTF-8 scratch DB; seam refusing; real handlers, real session token;
+                  durable reading frozen through 07C from a real capture) · jest 19 suites / 209 ·
+                  typecheck no regression · scripts tsconfig clean · governance green
+RECORD            docs/programme/WS2-07-BUILD-07D_DEVELOP_WITNESS_2026-09-04.md
+GATE B            PENDING — founder: (a) scripts/ws2-07d-develop-gate-b.ts (live model through the
+                  surface's own routes, pinned to the candidate) · (b) browser walk D1–D8
+STATE             BUILD-07D CANDIDATE d005d59eb · STRUCTURALLY PROVED · NOT CLOSED · GATE B PENDING
+```
+
+```text
+2026-09-04 · BUILD-07D GATE B (a) RUN 1 — UNPROVED (lawful) · WS2-07C-F1 OPENED (founder act)
+RUN 1             founder-run at dd4783668. P0 pins PASS. F1 act 1 and act 2 both 422
+                  classifier_unclassifiable at classify; nothing stored; no manuscript row moved;
+                  F2–F7 could not run. 3 checks · 1 failure. Not rerun.
+CLASSIFIED        not a 07D defect — everything 07D owns behaved as Gate A proved. The block is the
+                  07C `unclassifiable` finding, now 3 of 5 commissioned acts on the same fixture
+                  (07C run 3: frozen · unclassifiable · frozen; 07D run 1: unclassifiable ×2)
+STANDING          Gate A PASS · Gate B(a) BLOCKED BY 07C · Gate B(b) NOT YET EXECUTABLE · NOT CLOSED
+RULING            adjudicate the 07C finding FIRST, then rerun Gate B(a). Gate B(a) is not weakened;
+                  Gate A + browser presentation is NOT substituted for a live developmental reading
+FOLLOW-UP         WS2-07C-F1 · PHENOMENON CLASSIFICATION COVERAGE — bounded, DIAGNOSIS ONLY
+                  authorizes: inspect the exact failing claim(s) · compare against the closed eight ·
+                    compare successful classifications from the same fixture · determine A / B / C
+                  does NOT authorize: prompt tuning · vocabulary expansion · changing refuse-whole ·
+                    changing 07B · changing 07D
+                  record: WS2-07C-F1_PHENOMENON_CLASSIFICATION_COVERAGE_2026-09-04.md
+                  instrument: scripts/ws2-07c-f1-classification-diagnosis.ts (the failing claim TEXT
+                    is recoverable from NO existing record — a refusal persists nothing and the
+                    detail carries only the index)
+STATE             BUILD-07D NOT CLOSED · blocked on WS2-07C-F1 · #1192 open, not to be merged
+```
+
+```text
+2026-09-04 · WS2-07C-F1 CLOSED — FOUNDER DETERMINATION C · WS2-07-F1 REPAIR OPENED
+EVIDENCE          run 1 (founder-run, 0e3924b33, whole scope, 3 acts, claude-opus-5): 24 claims,
+                  1 unclassifiable, 1 of 3 acts refused. The reader produced the SAME structural-
+                  uniformity claim as its last claim in all three acts (numeral headings · 196-267
+                  code-point band · each authored part holding exactly three); act 3 labelled it
+                  positional-asymmetry, act 2 answered unclassifiable, act 1 labelled it
+                  positional-asymmetry. Scope hypothesis DISCONFIRMED (4 sections → 7 claims → 1 of
+                  3 refused; 6 sections → 8 claims → 1 of 3 refused).
+DETERMINATION     C — reader / classifier boundary. NOT A. B rejected for v1.
+                  The claim is mechanically re-derivable from the Work and its declared structure —
+                  UNDERSTAND §1 MECHANICAL EVIDENCE, one layer below developmental observation — and
+                  answers none of the six questions the Development lens asks. The reader should not
+                  have advanced it into a ReaderClaimDraft. The unclassifiable answer was contract-
+                  compliant; positional-asymmetry was a stretch and must not be made more reliable.
+SECOND FINDING    ratified: runtime semantics underdefined at BOTH boundaries — 07B receives a bare
+                  lens token, 07C receives eight bare phenomenon labels
+REFUSE-WHOLE      unchanged. unclassifiable → refuse freeze is correct fail-closed behaviour; the
+                  repair is upstream at 07B. Silently discarding such a claim would hide an
+                  epistemic boundary failure and make a reading an undocumented subset.
+REPAIR OPENED     WS2-07-F1 · DEVELOPMENTAL SEMANTIC BOUNDARY REPAIR — bounded, cross-unit.
+                  Act 1 (semantic ratification, NOT code) DELIVERED:
+                  WS2-07-F1_LENS_AND_PHENOMENON_DEFINITIONS_DRAFT_2026-09-04.md
+                  Seven lenses fully grounded (capability spec, verbatim + two riders). Seven
+                  phenomena grounded with inclusion/exclusion and accepted examples. One overlap
+                  flagged (UNDERSTAND defines movement as including REGISTER shifts, making
+                  register-shift its subset). positional-asymmetry UNGROUNDED — it appears in
+                  UNDERSTAND §4's illustrative list and nowhere else in the corpus, and it is the
+                  label at the centre of the failure; (i) define it from the fixture's three sound
+                  uses, or (ii) retire it, put to the founder, (i) recommended.
+PROVENANCE SEAM   UNDERSTAND §4 called its list ILLUSTRATIVE and left the decision to DECIDE;
+                  DECIDE defines no phenomenon. The 07C act correctly froze UNDERSTAND verbatim and
+                  thereby closed an unadjudicated list. Nobody erred; a seam between two documents did.
+NOT AUTHORIZED    ninth phenomenon · structural-uniformity · partial freeze · dropping an
+                  unclassifiable claim · retry/fallback · prompt tuning for pass rate · weakening
+                  refuse-whole · giving the reader the phenomenon taxonomy · 07D changes · 07E
+STATE             WS2-07C-F1 CLOSED · WS2-07-F1 OPEN, act 1 awaiting founder adjudication
 ```
 
 ## Prerequisite — SECTION-ADDRESSABLE DRAFT LIVENESS

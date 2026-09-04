@@ -1,16 +1,32 @@
 'use client';
 
 /**
- * Reflections Feed - Lab → Reflections
+ * ReflectionsFeed — the member's kept reflections.
  *
- * Display list of Reflection Capsules with search, filters, and cards.
- * Warm Soullab aesthetic.
+ * WHY THIS LIVES AT /reflections (founder ruling 2026-09-04): reflections are
+ * MEMBER-OWNED content — /api/capsules is requireMemberId()-scoped and every
+ * capsule is the member's own Keep. The feed used to live only under
+ * app/labtools/, whose layout calls requireFounder(), so members pushed there
+ * met a 403 screen. Journal had the same shape and was resolved the same way:
+ * the House points at /journal, not /labtools/journal.
+ *
+ * The ruling went one step further than the Journal precedent: Reflections was
+ * MOVED out of Lab Tools, not mirrored. app/labtools/reflections/ is deleted
+ * and there is no second address. Lab Tools is instrumentation — a taxonomy of
+ * instruments — and is ruled out of the House
+ * (lib/navigation/houseDispositions.ts → labtools). Member content simply does
+ * not belong in that namespace.
+ *
+ * ⛔ Do NOT reintroduce a /labtools/reflections mount. One place, one address.
+ *
+ * No new data, no new API, no new persistence: the same member-scoped endpoint
+ * the lab page always used.
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Search, Filter, Sparkles, Archive, Pin } from 'lucide-react';
+import { ArrowLeft, Search, Sparkles, Archive, Pin } from 'lucide-react';
 import CapsuleCard from '@/components/capsules/CapsuleCard';
 import type { CapsuleDTO } from '@/lib/capsules/types';
 
@@ -26,7 +42,7 @@ const ReflectionSymbol = ({ className }: { className?: string }) => (
 
 type FilterTab = 'all' | 'pinned' | 'drafts' | 'archived';
 
-export default function ReflectionsPage() {
+export default function ReflectionsFeed() {
   const router = useRouter();
   const [capsules, setCapsules] = useState<CapsuleDTO[]>([]);
   const [loading, setLoading] = useState(true);
@@ -111,7 +127,7 @@ export default function ReflectionsPage() {
 
   // Handle open
   const handleOpen = (id: string) => {
-    router.push(`/labtools/reflections/${id}`);
+    router.push(`/reflections/${id}`);
   };
 
   const filterTabs: { key: FilterTab; label: string; icon: React.ReactNode }[] = [
@@ -130,11 +146,11 @@ export default function ReflectionsPage() {
         {/* Header */}
         <div className="mb-8">
           <button
-            onClick={() => router.push('/labtools')}
+            onClick={() => router.push('/maia')}
             className="flex items-center gap-2 text-stone-400 hover:text-stone-600 transition-colors text-[13px] tracking-wide"
           >
             <ArrowLeft className="h-4 w-4" />
-            <span>Back to LabTools</span>
+            <span>Back to MAIA</span>
           </button>
         </div>
 
@@ -210,11 +226,9 @@ export default function ReflectionsPage() {
             <div className="w-16 h-16 mx-auto mb-6 rounded-xl bg-[#D4B896]/10 flex items-center justify-center">
               <Sparkles className="w-8 h-8 text-[#D4B896]" />
             </div>
-            <h3 className="text-lg font-light text-stone-700 mb-2">
-              Nothing has been brought into the Lab yet
-            </h3>
+            <h3 className="text-lg font-light text-stone-700 mb-2">Nothing has been kept yet</h3>
             <p className="text-stone-500 text-[14px] mb-6 max-w-sm mx-auto">
-              When you capture the spirit of a conversation with MAIA, your reflections will appear here.
+              When you keep the spirit of a conversation with MAIA, your reflections will appear here.
             </p>
             <button
               onClick={() => router.push('/maia')}
