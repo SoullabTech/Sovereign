@@ -664,3 +664,81 @@ BOTH               zeroDiff false · canonicalCount == legacyCount + 1
 ```
 
 Any `contentParity:false` or non-empty `unexpectedDiff` is a **hard stop** for classification — never normalized, never fixed around.
+
+---
+
+## 12. Live atom census + witness-boundary adjudication (2026-09-04)
+
+Read-only, run by the founder from the Mac Studio against the live `/list` selection — not against all eligible storage. Aggregates only: no titles, bodies, observations, or member identities crossed the boundary.
+
+### 12.1 Results
+
+```text
+shape               members   selected_atoms
+MEMBER_ONLY               1                8      NATURALLY PRESENT
+PRACTITIONER_ONLY         1                1      NATURALLY PRESENT
+BOTH                      —                —      UNOBSERVED
+
+members_with_rank_8_9_tie 0                       SELECTION STABLE
+```
+
+**Selection stability.** The loader's `ORDER BY is_breakthrough DESC, kept_at DESC` has no third key, so an exact tie straddling the `LIMIT 8` boundary would make the live selection nondeterministic. Zero such ties in the current live set. Ties *within* the top 8 change only internal ordering and cannot change shape classification; only an 8/9 straddle changes membership. **The hazard is latent, not absent** — re-run the canary if atom volume grows.
+
+**Production base.** `docker image inspect maia-sovereign:current` reports `GIT_COMMIT=cf6ce3cef` with `DEPLOY_LANE=deploy-lane` — the same canonical head merged in §11.2. So `293d454cf` is that exact tree **plus this bounded lane and nothing else**.
+
+### 12.2 What a production witness can and cannot prove
+
+`MEMBER_ONLY` declares **no partition at all** — member-only needs none, because `member.atoms` already owns those exact bytes. Its value is the *negative* proof: ordinary turns are unaffected.
+
+`BOTH` is the only shape exercising the hardest path — `member.atoms` narrowing (digest change) **and** the count rising. That is the behaviour whose comparator rule was wrong on first implementation and was corrected only because a test caught it (§10.3). **It cannot be proven in production and will not be manufactured.**
+
+```text
+MEMBER_ONLY        witnessable now          proves NO REGRESSION
+PRACTITIONER_ONLY  witnessable passively    proves THE CORRECTION FIRES
+                                            depends on that member conversing
+BOTH               UNOBSERVED IN PRODUCTION test-proven only
+```
+
+> **This deploy cannot yield "full production witness of the partition contract."** At best: production no-regression witnessed for MEMBER_ONLY; production identity correction witnessed for PRACTITIONER_ONLY if naturally encountered; BOTH remains test-proven and production-unobserved. **This line stays prominent in the closure record.**
+
+### 12.3 WITNESS PRIVACY BOUNDARY — founder ruling, recorded BEFORE deployment
+
+`[MAIA/shadow]` emits producer ids, counts, digests, `contentParity` and `unexpectedDiff` — **never memory text**. The witness contract needs nothing more. Passive observation of that telemetry is legitimate operability. Manufacturing contact with somebody's continuity for our proof is not.
+
+```text
+PASSIVE SHADOW OBSERVATION            ALLOWED
+
+enter another member's account        NO
+cause or request their turn           NO
+inspect atom content                  NO
+retrieve content to verify shape      NO
+target a member by identity           NO
+
+ordinary turn occurs naturally
++ telemetry contains only governed marker evidence
+→ MAY count as production witness
+```
+
+**Not targeted monitoring.** The bounded witness watches the normal `[MAIA/shadow]` stream for the required shape. If it appears naturally in the window, the marker counts. If it does not, `PRACTITIONER_ONLY` stays **production-unwitnessed** — an honest absence, not a prompt to go looking.
+
+Recorded before the candidate is live specifically so this boundary cannot quietly widen once it is.
+
+### 12.4 Authorization
+
+```text
+293d454cf   AUTHORIZED · BOUNDED SHADOW DEPLOY + WITNESS
+
+MEMBER_ONLY        production witness AUTHORIZED
+                   zeroDiff true · expectedPartitionDelta [] ·
+                   contentParity null · unexpectedDiff []
+
+PRACTITIONER_ONLY  PASSIVE production witness AUTHORIZED, natural occurrence only
+                   zeroDiff false · canonicalCount == legacyCount ·
+                   member.atoms → practitioner.atoms_observations ·
+                   contentParity true · unexpectedDiff []
+
+BOTH               NO production proof available · tests remain the evidence
+                   record explicitly as UNOBSERVED IN PRODUCTION · do not manufacture
+```
+
+**Hard stop, unchanged:** any `contentParity:false` or non-empty `unexpectedDiff` on any live turn stops the cut for classification. It is never explained away, never normalized, and never fixed around.
