@@ -7,6 +7,7 @@ AUTHORITY       instance / configuration only
 TIMING          before Stage 7 closes — deliberately, not incidentally
 NAMING RULING   docs/programme/READING-ROOM-01_NAMING_RULING_2026-09-04.md
 CENSUS          docs/programme/EA-READING-GROUP-01_SUBSTRATE_CENSUS_2026-09-04.md
+CONFIGURATION   docs/programme/EA-READING-GROUP-01_CONFIGURATION_DECISION_2026-09-04.md
 WRITER'S STUDIO unaffected — BUILD-07B remains the only open Studio unit
 ```
 
@@ -161,12 +162,14 @@ An instance that runs well and produces no findings has failed at half its job.
 
 ```text
 STATE            INSTANCE OPEN
-SUBSTRATE        ruled — see census §5
-CONFIGURATION    not begun
+SUBSTRATE        RULED — Circles; client_groups excluded (census §2, founder 2026-09-04)
+CONFIGURATION    DECIDED — A · C · D · E
+                 OWED — B, Kelly's C6 role determination
+CREATED          nothing — no circle, memberships, invitations, routes or migrations
 GROUP RUNNING    no
 DISCOVERY LEDGER empty
-ANDREA AGREEMENT not established
-CO-LAB GATE      not run for this lane
+ANDREA AGREEMENT not established        ← hard gate before any real reader
+CO-LAB GATE      not run for this lane  ← hard gate before any real reader
 ```
 
 > **Board note.** This lane is deliberately **not** written into
