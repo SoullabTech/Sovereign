@@ -137,6 +137,32 @@ question is unique work needing custody, not whether regenerable build artifacts
 exist. Deleting such a checkout's `node_modules` stays safe either way; regenerable
 material was never the custody question.
 
+### Preserve first, then classify
+
+`HEAD --not --remotes` proves *these SHAs* are on no remote. It does not prove *this
+work* is unbacked — a cherry-pick or rebase reproduces the change under a new SHA.
+So push to a backup ref first (cheap, reversible, no commit and therefore no
+pre-commit hook — the `chore/` prefix satisfies the pre-push allowlist), and only
+then determine whether the work is unique.
+
+Matching commit subjects are a **lead, not proof**: a rebase preserves the subject
+while changing the patch, and two different implementations can share one. Compare
+patches:
+
+```bash
+git show --pretty=email --patch <sha> | git patch-id --stable
+```
+
+- **Same patch-id elsewhere** → already represented; the backup ref is sufficient
+  custody and the checkout is stale infrastructure.
+- **Different or no counterpart** → genuine work needing a real lane and review
+  path. A backup ref preserves it; it does not constitute acceptance or integration.
+
+**Directory provenance is not work provenance.** Proven 2026-09-04: a
+`/private/tmp` checkout named for database bootstrap scratch held two unbacked
+`feat(ws2-05h)` commits implementing a member invocation boundary — member-facing
+consent-surface work sitting in a path macOS purges on a schedule.
+
 ### Design constraint: reclaimable is not disposable
 
 The current classifier answers exactly one question — *could this be reconstructed
