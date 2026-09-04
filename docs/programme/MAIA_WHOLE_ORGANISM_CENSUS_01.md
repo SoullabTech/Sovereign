@@ -94,7 +94,11 @@ different membership**:
 |---|---|---|---|
 | FAST | inline template literal | ~32 fields, hard-coded in the literal | `maiaService.ts:1443` |
 | CORE | `appendAllContextAddenda` iterating `ADDENDA_SPECS` | 27 declared fields | `maiaVoice.ts:414` |
-| DEEP | `buildMaiaComprehensivePrompt` → `buildComprehensiveVoicePrompt` | does **not** iterate `MaiaContext` addenda | `maiaService.ts:~2405` |
+| DEEP | three stages, three memberships — see §12 | local draft: none by construction · consultation: 7-field recall subset · repair: full `appendAllContextAddenda` | `maiaService.ts:2239`, `:2277`, `maiaVoice.ts:950` |
+
+> **Amended in Part 2.** Part 1 stated DEEP does not iterate `MaiaContext` addenda. That was
+> inherited from the session anchor rather than retraced, and is wrong: §II.B and §II.C of
+> the addenda-divergence note were both closed. §12 records what DEEP actually does.
 
 This is not one seam. It is three, inside a single route, and their memberships differ.
 
@@ -116,7 +120,13 @@ for (const spec of ADDENDA_SPECS) {
 }
 ```
 
-**The only test applied to any contribution is whether its string is non-empty.** Nothing
+**Once a contribution has reached live prompt assembly, the composition layer performs no
+common relevance or discernment adjudication; it tests presence and appends according to
+static source order.** This is a statement about the final composition seam only. Upstream
+producers do carry real governance — consent gates, eligibility filters, Sanctuary refusals,
+`return_preference`, `member_response_status`, ranked selection in `MemoryBundleService` —
+and the partition lane proved several of them. What is missing is a *shared* adjudication
+across sources at the point where they meet. Nothing at that seam
 asks whether a contribution belongs in this moment, whether two contributions conflict,
 whether one should yield to another, or whether the turn is better served by silence. There
 is no relevance test, no adjudication, no arbitration, no ordering by salience — the order
@@ -132,7 +142,12 @@ representationsOffered:    null,
 
 Considered-but-withheld is not computed, because nothing is ever withheld.
 
-### 5.3 Thirteen prompt-bearing fields the authoritative route never produces
+### 5.3 Fifteen prompt-bearing fields the authoritative route never produces
+
+> **Amended in Part 2.** Part 1 said thirteen; the block below contains fifteen. Verified
+> split at `d5741ce6c`: **12** are produced only by `app/api/between/chat/route.ts`; **3**
+> have no producer anywhere — `scribeSessionDiscussionAddendum`, `consultationAddendum`,
+> `maiaModeAddendum`.
 
 Of the ~32 fields read by the prompt builders, the following are **never assigned by
 `/list`**. They can only arrive through the client `...meta` rest-spread:
@@ -145,9 +160,10 @@ reflectionLensAddendum        epistemicPathAddendum       maiaModeAddendum
 scribeSessionDiscussionAddendum   consultationAddendum    fieldWisdomAddendum
 ```
 
-Tracing their producers repository-wide returns a single answer for most of them:
-**`app/api/between/chat/route.ts`** — the intentional live *secondary* surface. Two
-(`consultationAddendum`, `maiaModeAddendum`) have no producer on either route.
+Tracing their producers repository-wide returns a single answer for twelve of them:
+**`app/api/between/chat/route.ts`** — the intentional live *secondary* surface. Three
+(`scribeSessionDiscussionAddendum`, `consultationAddendum`, `maiaModeAddendum`) have no
+producer on either route and are read-only dead fields.
 
 The Spiralogic snapshot, the Decision Governor (Spiralogic posture constraints), Field
 Wisdom (collective field intelligence), the Spiral × Wu Xing bridge, relationship mode,
@@ -183,8 +199,11 @@ receiving effectively no live traffic.
 **Answer.** On the authoritative surface, Spiralogic/Elemental intelligence is neither
 orientation-that-changes-discernment nor state-rendered-as-context. It is
 **computed and discarded**, with one exception (Wu Xing) that enters as an undifferentiated
-context block. The element MAIA "senses" is calculated up to five times per turn by five
-different engines, reconciled zero times, and permitted to influence the response once.
+context block. There are **five distinct elemental/phase engines across the `/list` cognition
+path**, unreconciled, with any given turn invoking the applicable subset — engines 2 and 3
+are FAST-path, engine 4 is CORE-path, engines 1 and 5 are tier-independent, so no single
+execution invokes all five. What holds for every turn is that the engines never reconcile
+against one another and at most one is permitted to influence the response.
 
 ## 7. Decisive question 2 — is there one discernment authority?
 
@@ -233,10 +252,16 @@ CALLS getMaiaResponse  NO — separate spine, 2,665 lines, its own model path
 | Conversational recall, episodic recall, member web, divination, knowledge gate, practice field, studio, astrology, Wu Xing | **PRIMARY-ONLY** |
 | Corpus Callosum / ElementalOracle | UNKNOWN — not traced in this bounded pass |
 
-The two live surfaces are close to complementary: `/list` is memory-rich and
-Spiralogic-absent; `/between` is Spiralogic-rich and memory-thin. Any future claim of "one
-unified cognition seam" built only against `/list` would leave the surface that actually
-carries elemental orientation outside the map.
+The two live surfaces are close to complementary in what they *produce*: `/list` is
+memory-rich and Spiralogic-absent; `/between` is Spiralogic-rich and memory-thin.
+
+> **Amended in Part 2 — this is the census's most consequential correction.** Part 1 said
+> `/between` "does not call `getMaiaResponse` at all… a separate spine." That was inferred
+> from the route file, which imports `generateMaiaTurn`. `generateMaiaTurn` itself calls
+> `getMaiaResponse` (`lib/consciousness/maiaOrchestrator.ts:480`). **The two surfaces do
+> converge, one level deeper than Part 1 traced.** `/between` is not a parallel spine; it is
+> a richer pre-composition layer wrapping the same single model invocation. §13 records what
+> survives that hand-off and what does not.
 
 ## 9. Recorded, not repaired
 
@@ -250,55 +275,294 @@ carries elemental orientation outside the map.
 | C-6 | Deliberation hook computed and inert (`// TODO Phase 2`) | dormant arbitration |
 | C-7 | `representationsConsidered` / `representationsOffered` hard-coded `null` | unimplemented discernment telemetry |
 | C-8 | `meta.endpoint` reports `/api/sovereign/app/maia` on the `/list` route (pre-existing, already annotated in source) | false attribution |
+| C-9 *(Part 2)* | `facetDecision` — the Spiralogic circulatory governor — is passed into `getMaiaResponse` and read by nothing | dropped at convergence |
+| C-10 *(Part 2)* | Twelve fields present on FAST/CORE are absent from DEEP-primary; Wu Xing, the only elemental contribution reaching any prompt, is among them | tier-boundary semantic loss |
+| C-11 *(Part 2)* | The full addenda set reaches DEEP only via the *repair* path, i.e. only after a validation failure | inverted membership |
+| C-12 *(Part 2)* | Ranked `MemoryBundle` read on FAST only; CORE and DEEP annotate that they do not read it | stranded selection |
+| C-13 *(Part 2)* | `scribeSessionDiscussionAddendum`, `consultationAddendum`, `maiaModeAddendum` read by prompt builders, produced by nothing | dead fields |
 
-None of these were touched.
+None of these were touched. C-9 through C-13 were found in Part 2 and are registered, not
+repaired, under the same rule.
 
-## 10. Gate 3 adjudication packet — integration shape
+## 10. Superseded
 
-The census answers the shape question. It does not choose what to do about it. Three
-options are put forward, unranked, for founder adjudication:
+The preliminary A/B/C Gate 3 packet written in Part 1 is replaced by §15. It was written
+before the DEEP interior and the `/between` spine had been traced, and both traces changed
+the option set.
 
-**A · Discernment seam first.** Build a single adjudicating composition point that all tiers
-pass through, with relevance and conflict resolution, before attribution is wired. P6
-attribution then lands on one seam. Largest change; makes "unified cognition" true rather
-than described.
+---
 
-**B · Attribution on the existing accumulation.** Wire provenance framing into the three
-existing mechanisms as they stand. Smaller, reversible, and honest about what it is — but it
-attaches truthful labels to a pile, which is precisely the risk named at lane open: solving
-provenance and shipping a very sophisticated memory-fed chatbot.
-
-**C · Consolidate to one mechanism, then attribute.** Collapse FAST/CORE/DEEP onto a single
-composition mechanism (no discernment yet, one membership), then apply the attribution
-kernel. Splits the work: makes one seam exist before deciding what it should be able to
-refuse.
-
-The census's own reading is that **B alone cannot satisfy the Unified Intelligence
-Invariant**, because there is no unified path for memory to participate in — but that is an
-observation for adjudication, not a decision taken here.
-
-## 11. Status
+# PART 2
 
 ```text
-PART 1  spine · composition rule · elemental question · discernment question ·
-        /between differential · defect register                          COMPLETE
-
-REMAINING FOR PART 2 (not yet traced)
-  · per-intelligence 14-field evidence tables for relational, developmental,
-    somatic-affective, Resonant Field / Unified Field, symbolic beyond divination
-  · DEEP tier interior (buildComprehensiveVoicePrompt membership)
-  · runtime confirmation of the source-only findings above
-  · Corpus Callosum participation on /between
-
-EVIDENCE CLASS OF EVERYTHING ABOVE
-  SOURCE ONLY, at d5741ce6c. No runtime probe. No production access from this session.
-  No lived witness. Nothing here is a runtime claim.
+AUTHORIZED   2026-09-04 (founder), read-only, repairs forbidden
+BASE         same — clean-main-no-secrets @ d5741ce6c
+GOVERNING    For every intelligence: does it alter orientation, selection, intention or
+QUESTION     response formation — or is it merely computed / contextualized / logged?
 ```
 
-The stop condition — one evidence-backed graph from the live member turn to the model
-response with every major contributor truthfully labeled — is met for the spine (§7) and
-not yet met for the full domain set.
+## 12. The DEEP interior
 
-Per the lane's own terms: *if the answer turns out to be "there is no unified cognition seam
-today; there are several smart systems accumulating context before the model," that is a
-successful census result.* That is the answer.
+DEEP is not one prompt. It is three stages with three different memberships, and the tier's
+memory behaviour depends on which stage a turn reaches.
+
+| Stage | Site | What reaches it | Participation |
+|---|---|---|---|
+| 1 · local consciousness draft | `consciousnessWrapper.processConsciousnessEvolution`, `maiaService.ts:2239` | `consciousnessContext` only — depth, elementalResonance, observerLevel, temporalWindow, metaAwareness. **No addenda by construction**: source states the local orchestrator *"weaves templates, it does not read a system prompt"* | produces the draft; no memory |
+| 2 · Claude consultation | `consultClaudeForConsciousness`, `maiaService.ts:2277` | `contextAddenda` = a **7-field recall subset**: conversational recall, episodic recall, atoms, 3 divination blocks, relational context | ACTIVE — this is the only prompt seam on DEEP-primary |
+| 3 · validate & repair | `validateAndRepairResponse` → `buildMaiaComprehensivePrompt` → `appendAllContextAddenda`, `maiaVoice.ts:950` | **full** ADDENDA_SPECS membership | CONDITIONAL — runs only when validation fails |
+
+**What changes semantics at the tier boundary.** Twelve fields that reach FAST and CORE do
+not reach DEEP-primary at all: `memberWebAddendum`, `knowledgeGateAddendum`,
+`wuxingSnapshotAddendum`, `astrologyAddendum`, `practiceFieldAddendum`, `studioAddendum`,
+`placeAddendum`, `memoryInfluenceAddendum`, `forwardReadinessAddendum`, plus the three
+dead fields. Wu Xing — the *only* elemental contribution that reaches the prompt on
+FAST/CORE — is therefore absent on DEEP. A member who asks for depth gets less elemental
+and less contextual grounding than one who does not, and receives the full addenda set only
+if the first attempt fails validation.
+
+`analyzeMessageComplexity` selects DEEP for the turns most likely to need orientation.
+
+## 13. `/between` — the required Part 2 finding
+
+**Does MAIA already contain a better cognition/discernment seam on the secondary spine that
+should be extracted, shared or converged rather than rebuilt?**
+
+**Yes, partially — and its best output is destroyed at the shared convergence point.**
+
+`generateMaiaTurn` (`lib/consciousness/maiaOrchestrator.ts:245`) performs real
+pre-composition work that has no equivalent on `/list`:
+
+| Mechanism | Site | Kind of authority |
+|---|---|---|
+| `computeFacetDecision` → `FacetDecisionPacket` | `:288`, from `lib/consciousness/FacetDecisionLoop.ts:201` | **decision-shaped Spiralogic** — `activeFacet`, `posture`, `integrityFlags` (`water_rush_risk`, `threshold_collapse_risk`), `languageHints`, `handoff`, `regulation`. Labelled in source *"Spiralogic circulatory governor"* |
+| `MemoryBundleService.build` | `:145` | **ranked** multi-bucket selection, not presence-append |
+| `resolveMemoryMode` | `:115` | server-side allowlist — *"client can request, but server decides"* |
+| `retrieveForMode` | `:208` | mode-filtered knowledge retrieval (care→therapeutic, talk→jungian/philosophy, divination→astrology/enneagram) |
+| `calculateThroughline` / `assessStakes` / `getDepthConfig` | `:105-107` | conversational-kernel orientation |
+| MCP enrichment | `:174` | biometric correlation, timing guidance, task context |
+
+`facetDecision` is passed *into* the `getMaiaResponse` call at `:525`, inside the same
+object as `conversationContext`. Then:
+
+```text
+facetDecision    read in maiaService.ts: 0    read in maiaVoice.ts: 0
+activeFacet      0    0
+integrityFlags   0    0
+languageHints    0    0
+```
+
+Every `posture` hit in `maiaService.ts` is either Sanctuary `TurnPosture` or the
+`governorAddendum` *text* — never the structured facet decision. **The most decision-shaped
+Spiralogic object in the system is computed on the secondary spine, handed across the
+convergence point, and dropped there unread.**
+
+The ranked memory bundle fares better but not much: `meta.memoryContext` is read at
+`maiaService.ts:861` on **FAST only**. CORE and DEEP each carry an explicit source
+annotation that they do not read it. So `/between`'s ranked selection survives only when the
+turn routes FAST.
+
+**Corpus Callosum on `/between`** — traced to the same `logAgentRun` / `logCorpusCallosumTrace`
+services reached through `getMaiaResponse`; no separate emission path found on the
+orchestrator. Recorded as **SHARED, post-generation** rather than a distinct contributor.
+This is the least deeply traced item in Part 2 and is marked accordingly in §14.
+
+## 14. Evidence tables — remaining domains
+
+Field key: **SR** = surface reach · **IS** = integration shape · **Alters?** = alters
+orientation / selection / intention / response formation, vs computed-contextualized-logged.
+
+### Relational intelligence
+```text
+SUBSTRATE      loadRelationshipMemory + formatRelationshipMemoryForPrompt
+ENTRYPOINT     maiaService.ts:747 (FAST), :1579 (CORE), :2023 (DEEP)
+/list CALLER   yes, unconditional where userId present
+INPUT          stored relationship memory for the member
+OUTPUT         relationshipContext prose block
+SEAM           FAST template literal (unconditional ${relationshipContext}); CORE via context
+AUTHORITY      contextual
+DISCERNMENT    none — no relevance test
+PROVENANCE     none carried into the prompt text
+MODEL REACH    yes (FAST/CORE); DEEP-primary no
+SR             /list primary; relationalContextAddendum is a separate member-handed-off act
+IS             direct model context
+EVIDENCE       source only — UNWITNESSED
+ALTERS?        contextualized only
+STATUS         LIVE
+```
+
+### Developmental intelligence
+```text
+SUBSTRATE      loadRecentDevelopmentalMemories + loadRecentThemeSignals → memoryOrchestrator
+ENTRYPOINT     list/route.ts:945 → buildMemoryInfluencePlan → memoryInfluenceAddendum
+/list CALLER   yes
+OUTPUT         [MAIA/sovereign] developmental-block log + memoryInfluenceAddendum
+SEAM           FAST template literal ONLY — PBR-002 records it as structurally unable to
+               reach CORE/DEEP prompts (availableButNotComposed)
+AUTHORITY      contextual on FAST; absent elsewhere
+DISCERNMENT    plan-level candidate flags (shouldUseMemory, contradictionDetected,
+               reinforcementCandidate); no cross-source adjudication
+MODEL REACH    FAST only
+SR             both (/between shares the loaders)
+IS             direct model context (FAST) / computed-and-stranded (CORE, DEEP)
+EVIDENCE       source only — UNWITNESSED
+ALTERS?        selection at plan level; response formation only on FAST
+STATUS         PARTIAL
+```
+
+### Somatic-affective intelligence
+```text
+SUBSTRATE      memoryPlan.somaticCandidate flag only (list/route.ts:979)
+ENTRYPOINT     none — no somatic loader, no somatic addendum, no producer in the registry
+OUTPUT         a boolean inside the memory-plan log line
+MODEL REACH    none
+SR             none
+IS             unknown / not implemented
+EVIDENCE       source only — UNWITNESSED
+ALTERS?        no
+STATUS         DORMANT — the flag exists; the intelligence does not
+```
+
+### Resonant Field / Unified Field intelligence
+```text
+SUBSTRATE      lib/consciousness/field/MAIAFieldInterface.ts, QuantumFieldPersistence.ts,
+               lib/field/* (ResonanceFieldOrchestrator, fieldCoherenceTensor,
+               panconsciousFieldRouter, fieldOrchestrator)
+/list CALLER   NO. Callers are app/api/maia/memory-enhanced-response/route.ts and
+               app/api/between/chat/route.enhanced.backup.ts (a backup file)
+IN-PATH KIN    enforceFieldSafety IS in the path — but it is a safety refusal, not field
+               intelligence participating in cognition
+MODEL REACH    none on either live surface
+SR             separate surface
+IS             dormant
+EVIDENCE       source only — UNWITNESSED
+ALTERS?        no (enforceFieldSafety alters whether MAIA speaks at all — recorded
+               separately in §7)
+STATUS         SEPARATE-SURFACE / DORMANT
+```
+
+### Symbolic intelligence beyond divination
+```text
+DIVINATION     three provenance-separated blocks (intent / cast / interpretation) reach
+               FAST, CORE and DEEP-consultation. The only symbolic material with an
+               unbroken path to cognition. STATUS: LIVE
+I CHING (auto) buildReflectionFromConductor at maiaService.ts:~1648 (CORE) —
+               "Phase 1 — silent mapping only. No user-facing output." STATUS: SHADOW
+MYTHIC ATLAS   archetype/facet classification — logged; withheld from the router.
+               STATUS: SHADOW
+DREAMS         available.dreams hard-coded false — "layer not wired". STATUS: NOT WIRED
+ALTERS?        divination: yes (contextualized, member-invoked). Others: no.
+```
+
+### Corpus Callosum (re-stated with Part 2 evidence)
+```text
+SR             both — reached through the shared getMaiaResponse, no separate /between path
+IS             shadow only, post-generation
+ALTERS?        no
+EVIDENCE       source only — UNWITNESSED. Least deeply traced item in Part 2.
+STATUS         SHADOW
+```
+
+## 15. The actual graph
+
+```text
+                    ┌──────────────── /between/chat ────────────────┐
+                    │  generateMaiaTurn                             │
+                    │    facetDecision (posture, integrity, handoff)│──► DROPPED at boundary
+                    │    MemoryBundle (ranked)                      │──► FAST only
+                    │    retrieveForMode (mode-filtered)            │──┐
+                    │    throughline / stakes / depthConfig         │──┤
+                    │    12 Spiralogic+context addenda              │──┤
+                    └───────────────────────────────────────────────┘  │
+                                                                       ▼
+  /list ──► ~20 server-produced addenda ─────────────────────────► getMaiaResponse()
+                                                                       │
+                                              enforceFieldSafety ──────┤ (may refuse turn)
+                                              Mythic Atlas ────────────┤► log
+                                              routerResult ────────────┤ FAST | CORE | DEEP
+                                                                       │
+        ┌──────────────────────────────────────────────────────────────┤
+        ▼                          ▼                                   ▼
+   FAST template literal      CORE ADDENDA_SPECS loop            DEEP 3 stages
+   ~32 fields, presence       27 fields, presence                 1 no addenda
+   + ElementalOracle ► log      + ElementalOracle ► log            2 seven-field subset
+   + talkModeField ► DISCARDED  + I Ching ► log                    3 full set, on failure
+        │                          │                                   │
+        └──────────────────────────┴───────────────────────────────────┘
+                                   ▼
+                                 model
+```
+
+Contributor labels:
+
+| | ACTIVE | CONDITIONAL | CONTEXT-ONLY | SHADOW | DORMANT | SEPARATE-SURFACE |
+|---|---|---|---|---|---|---|
+| | memory atoms, conversational recall, episodic recall, divination, relational memory, member web, knowledge gate, practice field, astrology, Wu Xing, place | developmental (FAST only), ranked memory bundle (FAST only), DEEP full addenda (on validation failure) | every one of the ACTIVE column — none is adjudicated at the composition seam | Mythic Atlas, ElementalOracle / Corpus Callosum, I Ching, `representations*` telemetry | somatic, dreams, deliberation hook, `talkModeFieldIntelligence` (discarded), 3 dead fields | Resonant/Unified Field, Conductor, Bridge D spiral persistence |
+
+**UNRESOLVED:** the Corpus Callosum path on `/between` (§14); whether any client actually
+supplies the 12 `/between`-only fields to `/list` via the meta spread.
+
+## 16. Runtime confirmation
+
+**None obtained. Everything in Parts 1 and 2 is SOURCE ONLY at `d5741ce6c`.**
+
+This session has no production access: no `ssh`, no `DATABASE_URL`, the LAN is unreachable.
+The authorized runtime channels — `[MAIA] context-inventory`, `[MAIA/sovereign] *-block`,
+`[MAIA/shadow]`, `agent_runs` — can each attest part of this map without content inspection,
+data mutation, synthetic member activity or new instrumentation, and none of them was read.
+
+```text
+EVERY STATUS IN §14 AND §15   UNWITNESSED
+```
+
+Source truth does not become runtime truth by confidence. The findings most worth a runtime
+check, in order: (1) that `facetDecision` is absent from every `/list` and `/between` turn's
+effect — observable as its absence from any prompt-side log; (2) `availableButNotComposed`
+non-empty on CORE/DEEP turns, which the existing inventory line already emits; (3) DEEP
+stage-2 vs stage-3 frequency, observable from the existing `deep-consultation recall-addenda`
+line.
+
+## 17. Gate 3 packet — refreshed
+
+Part 2 changes the option set, because the answer to the required finding was yes.
+
+**A · Build a discernment seam from scratch.** Now clearly wasteful in part: `FacetDecisionLoop`
+already computes posture, integrity risk, regulation and handoff, and `MemoryBundleService`
+already ranks. A from-scratch seam would rebuild what exists.
+
+**B · Attribution on the existing accumulation.** Confirmed by both parts as unable to reach
+the completion state. Retained only as a possible *interim* step, never as an end state.
+
+**C · Consolidate `/list`'s compositions to one mechanism, then attribute.** Still coherent,
+and now measurably larger than Part 1 implied: not three memberships but five (FAST, CORE,
+DEEP×3).
+
+**D · Converge on the existing seam — extract `FacetDecisionLoop` + ranked bundle to the
+shared convergence point.** Newly available on Part 2's evidence. `getMaiaResponse` is
+already the single convergence point for both live surfaces. The work is not to invent
+discernment but to (i) make `getMaiaResponse` *read* the decision packet it is already
+handed, and (ii) give `/list` a producer for it. This is the smallest change with the
+largest architectural yield, and it is the only option that makes the existing Spiralogic
+governor participate rather than be recomputed.
+
+**Not adjudicated here.** The census's own reading is that D dominates A, and that D and C
+are complementary rather than exclusive — but Gate 3 is the founder's, and Part 2 ends
+without choosing.
+
+## 18. Status
+
+```text
+PART 1    ACCEPTED · amended in place (5 corrections: 2 founder-directed wording,
+          1 founder-directed count with a different verified split, 2 errors Part 2
+          exposed — the DEEP row and the /between convergence claim)
+PART 2    COMPLETE — DEEP interior · /between spine · required finding answered ·
+          5 domain evidence tables · reconciled graph · refreshed Gate 3 packet
+GATE 2    MET on source. NOT MET on runtime — every status is UNWITNESSED.
+GATE 3    packet ready for adjudication
+P6        CLOSED
+REPAIRS   none made
+```
+
+The comforting assumption is falsified twice over. MAIA's intelligences do not converge
+merely because they exist — and where the architecture *does* converge, at
+`getMaiaResponse()`, the richest orientation object in the system arrives and is not read.
