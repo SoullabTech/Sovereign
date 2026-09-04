@@ -242,6 +242,12 @@ function analyzeMessageComplexity(message: string, conversationHistory: any[] = 
   };
 }
 
+/**
+ * Internal sentinel — sanctuary skip is not an error and must not be logged as one.
+ * CONVERGENCE-01 Cut 1A.
+ */
+class SanctuarySkip extends Error {}
+
 export async function generateMaiaTurn(input: MaiaConsciousnessInput): Promise<MaiaConsciousnessResponse> {
   const { message, userId, sessionId, conversationHistory = [], meta = {}, context = {}, originRoute, processingProfileOverride } = input;
 
@@ -283,8 +289,26 @@ export async function generateMaiaTurn(input: MaiaConsciousnessInput): Promise<M
 
   // 🌀 FACET DECISION LOOP: Spiralogic circulatory governor
   // Determines active facet, integrity risks, and response posture
+  //
+  // 🔒 SANCTUARY GATE (CONVERGENCE-01 Cut 1A, the one authorized /between touch).
+  //
+  // computeFacetDecision derives active facet, integrity risks, handoff readiness and
+  // language hints FROM THE MEMBER'S MESSAGE. On a sanctuary turn that derivation must not
+  // happen at all — not computed, not logged, not handed downstream. The lane's sovereignty
+  // invariant is that the orientation contract is absolutely null under sanctuary, and the
+  // service boundary enforces it again; this gate stops the derivation at its source rather
+  // than relying on the downstream refusal alone.
+  //
+  // Hoisted here from its original site below (the predicate is unchanged and depends on
+  // nothing computed in between) so the gate can precede the computation.
+  const isSanctuary = (meta as any)?.sanctuary === true;
+
   let facetDecision: FacetDecisionPacket | null = null;
+  if (isSanctuary) {
+    console.log('🔒 [Sanctuary] Facet decision skipped — no orientation derived this turn');
+  }
   try {
+    if (isSanctuary) throw new SanctuarySkip();
     facetDecision = computeFacetDecision(
       message,
       conversationHistory.map(h => ({ role: h.role || 'user', content: h.content || '' })),
@@ -301,7 +325,9 @@ export async function generateMaiaTurn(input: MaiaConsciousnessInput): Promise<M
       console.log(`🔄 Handoff ready: ${facetDecision.handoff.from} → ${facetDecision.handoff.to}`);
     }
   } catch (error) {
-    console.warn('Facet decision computation failed (continuing without):', error);
+    if (!(error instanceof SanctuarySkip)) {
+      console.warn('Facet decision computation failed (continuing without):', error);
+    }
   }
 
   // 🚀 CLAUDE DEVELOPMENT MODE: Initialize development analysis context
@@ -369,7 +395,7 @@ export async function generateMaiaTurn(input: MaiaConsciousnessInput): Promise<M
   logMemoryGateDenial('Orchestrator', userId, modeResolution);
 
   // 🔒 SANCTUARY MODE: Skip all memory recall (presence-only)
-  const isSanctuary = (meta as any)?.sanctuary === true;
+  // (isSanctuary is resolved above, at the facet-decision sanctuary gate.)
   // SANCTUARY (S1): per-turn posture, resolved once at this boundary and
   // passed to every content writer below (corpus callosum logs carry content).
   const turnPosture = TurnPosture.resolve(meta);
@@ -480,6 +506,12 @@ export async function generateMaiaTurn(input: MaiaConsciousnessInput): Promise<M
     maiaResult = await getMaiaResponse({
       sessionId,
       input: message,
+      // 🌀 CONVERGENCE-01 Cut 1A — the trusted orientation contract travels TOP-LEVEL, not
+      // in `meta`. meta is client-spread at the HTTP boundary, so a governor read from
+      // there would be forgeable. Null under sanctuary by the gate above. The existing
+      // meta.facetDecision below is left in place for telemetry parity and is explicitly
+      // NOT cognition authority — getMaiaResponse never reads it.
+      orientationContract: facetDecision,
       meta: {
         ...meta,     // ✅ Include explorerId/userId from normalized meta
         ...context,
