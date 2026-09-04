@@ -160,9 +160,9 @@ describe('the eight phenomenon definitions reach the classifier', () => {
 });
 
 describe('provenance moved because the semantic contract moved', () => {
-  it('both versions are bumped to -02, and the hashes are over the new text', () => {
+  it('reader stays at -02 and the classifier moves to -03 — Act 3 is classifier-only', () => {
     expect(READER_VERSION).toBe('DEVELOPMENTAL-READER-02');
-    expect(CLASSIFIER_VERSION).toBe('DEVELOPMENTAL-PHENOMENON-02');
+    expect(CLASSIFIER_VERSION).toBe('DEVELOPMENTAL-PHENOMENON-03');
     expect(promptContractHash()).toHaveLength(64);
   });
 
@@ -172,5 +172,41 @@ describe('provenance moved because the semantic contract moved', () => {
     const src = ['contract.ts', 'freeze.ts', 'store.ts', 'assess.ts', 'commission.ts']
       .map((f) => readFileSync(join(ROOT, 'lib', 'manuscript', 'developmentalReading', f), 'utf8')).join('\n');
     expect(/readerVersion\s*===|classifierVersion\s*===/.test(src)).toBe(false);
+  });
+});
+
+describe('WS2-07-F1 ACT 3 — the four disambiguation rules, structurally', () => {
+  /* Founder ruling 2026-09-04. Proved without a model: the rules must REACH
+     the classifier. Whether the model then obeys them is the fixed-claim
+     witness's question, and a separate one. */
+
+  it('classifies the developmental predicate, not the subject', () => {
+    expect(CLASSIFIER_SYSTEM).toContain('DEVELOPMENTAL PREDICATE');
+    expect(CLASSIFIER_SYSTEM).toMatch(/NOT the subject it happens to concern/);
+  });
+
+  it('unresolved-thread / movement is adjudicated', () => {
+    expect(CLASSIFIER_SYSTEM).toContain('unresolved thread / movement');
+    expect(CLASSIFIER_SYSTEM).toMatch(/tracks a withheld state INTO a later disclosure/);
+  });
+
+  it('term-drift requires the term itself to change sense', () => {
+    expect(CLASSIFIER_SYSTEM).toContain('movement / term drift');
+    expect(CLASSIFIER_SYSTEM).toMatch(/THE TERM ITSELF to carry a different sense/);
+    expect(CLASSIFIER_SYSTEM).toMatch(/referent or the narrative role changes .* NOT term drift/);
+  });
+
+  it('recurrence yields to any more specific phenomenon, and may cover a repeated gesture', () => {
+    expect(CLASSIFIER_SYSTEM).toContain('recurrence / anything more specific');
+    expect(CLASSIFIER_SYSTEM).toMatch(/REPETITION ITSELF is what the claim says/);
+    expect(PHENOMENON_DEFINITION['recurrence'].is).toMatch(/REPEATED GESTURE/);
+    expect(PHENOMENON_DEFINITION['recurrence'].isNot).toMatch(/a more specific phenomenon in this family already captures/);
+  });
+
+  it('adds no ninth phenomenon and no register-shift / positional-asymmetry precedence', () => {
+    expect(DEVELOPMENTAL_PHENOMENA).toHaveLength(8);
+    /* The founder declined this precedence: the examples were different claims,
+       not contradictory classification of one claim. */
+    expect(CLASSIFIER_SYSTEM).not.toContain('register shift / positional asymmetry');
   });
 });

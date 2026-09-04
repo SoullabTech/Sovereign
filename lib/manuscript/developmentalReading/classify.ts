@@ -32,7 +32,7 @@ import {
   type DevelopmentalPhenomenon,
 } from './contract';
 
-export const CLASSIFIER_VERSION = 'DEVELOPMENTAL-PHENOMENON-02';
+export const CLASSIFIER_VERSION = 'DEVELOPMENTAL-PHENOMENON-03';
 export const CLASSIFIER_TOOL = 'classify_phenomena';
 const UNCLASSIFIABLE = 'unclassifiable';
 
@@ -62,10 +62,15 @@ ${FAMILY}
 
 For each claim, choose the ONE phenomenon the claim most directly notices. The lens is context, not the answer: the same phenomenon can be seen under any lens, and the lens never determines the phenomenon.
 
+WHAT YOU ARE CLASSIFYING. Classify the claim's DEVELOPMENTAL PREDICATE - what the claim says is happening developmentally - NOT the subject it happens to concern. Two claims about the same element of the Work may notice different phenomena, and that is not a contradiction. "This is still withheld here" and "this advances by withholding toward its disclosure" are different predicates about one subject, and they classify differently. Read what the claim asserts, not what it is about.
+
 WHEN TWO COULD APPLY, the more specific one wins:
   register shift / movement          Choose "register-shift" if the claim's content is FULLY EXPRESSED by the change in the manner of telling. Choose "movement" only where the claim describes a broader tracked trajectory that the change in telling participates in.
   movement / positional asymmetry    Movement is change THROUGH a sequence. Positional asymmetry is uneven DISTRIBUTION ACROSS positions. If nothing is tracked as changing, it is not movement.
+  unresolved thread / movement       If the claim tracks a withheld state INTO a later disclosure or change, that is "movement". Choose "unresolved-thread" where the predicate the claim evidences is still untaken-up or still withheld at the end-state the claim itself reaches.
+  movement / term drift              "term-drift" requires THE TERM ITSELF to carry a different sense at the points read. If the referent or the narrative role changes while the term's sense stays the same, it is NOT term drift; a role tracked as changing through the sequence is "movement".
   recurrence / term drift            If the sense of the term changes, it is term drift. If it recurs unchanged, it is recurrence.
+  recurrence / anything more specific  "recurrence" applies only where the REPETITION ITSELF is what the claim says is happening. A repeated textual gesture - withholding, declining to explain, pre-empting - can be a recurrence. But if any other phenomenon in this family captures the claim's predicate, that phenomenon wins.
 
 If a claim does not notice any phenomenon in this family, answer "${UNCLASSIFIABLE}" for that claim. Do not stretch a category to fit. Do not invent one. A claim whose whole content is a MEASUREMENT of the container - heading format, section lengths, counts, positions, how many sections a division holds, or the evenness of any of those - notices no phenomenon in this family, however true it is.
 

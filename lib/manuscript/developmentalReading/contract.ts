@@ -86,8 +86,8 @@ export interface PhenomenonDefinition {
 
 export const PHENOMENON_DEFINITION: Readonly<Record<DevelopmentalPhenomenon, PhenomenonDefinition>> = {
   'recurrence': {
-    is: 'an element of the Work - a word, phrase, image, figure, named entity or attribute - appears at two or more SEPARATED points in what was read.',
-    isNot: 'a property holding uniformly across every unit read (that is regularity, not recurrence); a whole-Work pattern asserted from partial coverage.',
+    is: 'an element OR REPEATED GESTURE of the Work - a word, phrase, image, figure, named entity, attribute, or a textual act such as withholding, declining to explain, or pre-empting its own suggestion - appears at two or more SEPARATED points in what was read, AND the repetition itself is what the claim says is happening.',
+    isNot: 'a property holding uniformly across every unit read (that is regularity, not recurrence); a whole-Work pattern asserted from partial coverage; anything a more specific phenomenon in this family already captures - a tracked state change, unresolvedness, a change in the manner of telling, a changed sense, prospective deferral, re-explanation, or uneven distribution.',
   },
   'unresolved-thread': {
     is: 'something is introduced in what was read and not taken up again within it; or the text itself marks something as still withheld.',
