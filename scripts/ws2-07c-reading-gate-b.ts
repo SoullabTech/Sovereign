@@ -30,6 +30,8 @@ import { createHash, randomUUID } from 'crypto';
 import { execSync } from 'child_process';
 import { readFileSync, writeFileSync } from 'fs';
 import { join } from 'path';
+import http from 'http';
+import https from 'https';
 import Module from 'module';
 
 const CANDIDATE = '8a26a8971';
@@ -57,18 +59,23 @@ function gitBlobId(path: string): string {
 /* An empty cookie jar, installed before the routes are imported, so authority
    can only come from a session token the database recognises (07A pattern). */
 const emptyCookies = { get: () => undefined, getAll: () => [], has: () => false };
-/* Passive count of provider calls at the HTTP layer: requests to the
-   provider's messages endpoint are counted and delegated UNCHANGED. Nothing
-   about the request or the response is altered. (A loader hook cannot see the
-   router's dynamic import under tsx, so the count is taken where the call
-   actually leaves the process.) */
+/* Passive count of provider calls where they leave the process: node's
+   http/https `request` is wrapped to count requests to the provider's
+   messages endpoint and delegate UNCHANGED. Nothing about the request or the
+   response is altered. (Probed in the remote session: 2 counted for 2 seam
+   calls. A loader hook cannot see the router's dynamic import under tsx, and
+   the SDK does not go through the global fetch or undici here.) */
 let providerCalls = 0;
-const realFetch = globalThis.fetch;
-globalThis.fetch = ((input: RequestInfo | URL, init?: RequestInit) => {
-  const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
-  if (/\/v1\/messages/.test(url)) providerCalls += 1;
-  return realFetch(input, init);
-}) as typeof fetch;
+for (const mod of [https, http] as const) {
+  const orig = mod.request.bind(mod);
+  (mod as { request: typeof mod.request }).request = ((...args: unknown[]) => {
+    const a0 = args[0] as string | URL | { path?: string; host?: string; hostname?: string };
+    const target = typeof a0 === 'string' ? a0 : a0 instanceof URL ? a0.href
+      : `${a0.hostname ?? a0.host ?? ''}${a0.path ?? ''}`;
+    if (/\/v1\/messages/.test(target)) providerCalls += 1;
+    return (orig as (...a: unknown[]) => http.ClientRequest)(...args);
+  }) as typeof mod.request;
+}
 const moduleLoader = Module as unknown as { _load: (request: string, ...rest: unknown[]) => unknown };
 const originalLoad = moduleLoader._load;
 moduleLoader._load = function (this: unknown, request: string, ...rest: unknown[]) {
@@ -252,7 +259,7 @@ async function main() {
       && listed.length === 2 && (await loadReading(reading.id, memberId)) !== null,
       second?.outcome === 'frozen' ? `${reading.id.slice(0, 8)} → ${second.reading.id.slice(0, 8)} (act ${history[history.length - 1]?.act})`
         : cp.status !== 200 ? `checkpoint ${cp.status}` : `UNPROVED — ${history.map((h) => `act ${h.act}: ${h.outcome}${h.refusal ? ` ${h.stage}/${h.refusal}` : ''}`).join('; ')}`);
-    row('D12 the first commission changed no manuscript row (real before/after snapshots); exactly two provider calls (reader + classifier), no retry — counted at the HTTP layer',
+    row('D12 the first commission changed no manuscript row (real before/after snapshots); exactly two provider calls (reader + classifier), no retry — counted where the requests leave the process',
       afterFirst === before && (reading.outcome === 'none' ? callsForFirst === 1 : callsForFirst === 2), `${callsForFirst} provider call(s)`);
 
     Object.assign(record, {
