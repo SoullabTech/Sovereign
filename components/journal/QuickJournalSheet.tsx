@@ -8,6 +8,7 @@ import { apiUrl, apiFetch } from '@/lib/http/apiBase';
 import { Capacitor } from '@capacitor/core';
 import HandwritingOCR from '@/lib/capacitor/HandwritingOCR';
 import { saveQuickJournal, getStorageDecision } from '@/lib/storage/sovereign';
+import { CaptureDisclosure } from '@/components/capture/CaptureDisclosure';
 
 interface JournalEntry {
   id: string;
@@ -68,6 +69,33 @@ export function QuickJournalSheet({
   const [liveTranscript, setLiveTranscript] = useState<string>('');
   const speechRef = useRef<SpeechRecognition | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
+
+  // Capture must not outlive the sheet. Closing or navigating away mid-recording
+  // previously left the microphone live with no indicator anywhere on screen,
+  // because tracks were only stopped inside mr.onstop.
+  useEffect(() => {
+    return () => {
+      try {
+        const mr = mediaRecorderRef.current;
+        if (mr && mr.state !== 'inactive') mr.stop();
+      } catch (e) {
+        // Ignore
+      }
+      mediaRecorderRef.current = null;
+      try {
+        speechRef.current?.stop?.();
+      } catch (e) {
+        // Ignore
+      }
+      speechRef.current = null;
+      try {
+        streamRef.current?.getTracks().forEach((t) => t.stop());
+      } catch (e) {
+        // Ignore
+      }
+      streamRef.current = null;
+    };
+  }, []);
 
   // Check OCR availability on mount
   useEffect(() => {
@@ -357,6 +385,12 @@ export function QuickJournalSheet({
       };
 
       mr.onstop = () => {
+        // The disclosure ends HERE — when the recorder has actually stopped — not in
+        // stopRecording(). Clearing it before mr.stop() left a window in which audio
+        // was still being captured with no indicator on screen, and left capture
+        // entirely undisclosed if mr.stop() threw.
+        setIsRecording(false);
+
         // Stop all tracks
         stream.getTracks().forEach((t) => t.stop());
         streamRef.current = null;
@@ -412,8 +446,6 @@ export function QuickJournalSheet({
 
   // Stop voice recording
   const stopRecording = () => {
-    setIsRecording(false);
-
     // Stop speech recognition
     try {
       speechRef.current?.stop?.();
@@ -422,10 +454,20 @@ export function QuickJournalSheet({
     }
     speechRef.current = null;
 
-    // Stop media recorder
+    // Stop media recorder. The recording disclosure is cleared by mr.onstop, so it
+    // remains visible for exactly as long as capture actually continues.
     const mr = mediaRecorderRef.current;
     if (mr && mr.state !== 'inactive') {
       mr.stop();
+    } else {
+      // Nothing is capturing — onstop will not fire, so clear the claim here.
+      setIsRecording(false);
+      try {
+        streamRef.current?.getTracks().forEach((t) => t.stop());
+      } catch (e) {
+        // Ignore
+      }
+      streamRef.current = null;
     }
   };
 
@@ -689,7 +731,7 @@ export function QuickJournalSheet({
                       disabled={isSaving}
                       className={`absolute bottom-3 right-3 p-2 rounded-lg transition-all ${
                         isRecording
-                          ? 'bg-red-500/20 text-red-400 animate-pulse'
+                          ? 'bg-red-500/20 text-red-400'
                           : recordedBlob
                           ? 'bg-green-500/20 text-green-400'
                           : 'bg-stone-700/50 text-stone-400 hover:bg-stone-600/50'
@@ -711,15 +753,11 @@ export function QuickJournalSheet({
                 <motion.div
                   initial={{ opacity: 0, y: -5 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="flex items-center gap-2 mt-2 text-red-400 text-sm"
+                  className="mt-2"
                 >
-                  <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
-                  <span>Recording... speak now</span>
-                  {liveTranscript && (
-                    <span className="text-stone-400 text-xs truncate max-w-[200px]">
-                      &quot;{liveTranscript.slice(-50)}&quot;
-                    </span>
-                  )}
+                  <CaptureDisclosure state="recording">
+                    {liveTranscript ? `“${liveTranscript.slice(-50)}”` : null}
+                  </CaptureDisclosure>
                 </motion.div>
               )}
 

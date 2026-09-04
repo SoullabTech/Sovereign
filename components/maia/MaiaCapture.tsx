@@ -11,7 +11,8 @@
 // and each surface (Living Field, Vision Studio, Practice Field) routes it to its own
 // store. One capture primitive, many destinations.
 
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { CaptureDisclosure } from '@/components/capture/CaptureDisclosure'
 
 export type CaptureSource = 'voice_note' | 'upload'
 
@@ -35,10 +36,31 @@ export function MaiaCapture({ onCapture, disabled, className }: Props) {
   const chunksRef = useRef<Blob[]>([])
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   const lastAudioBlobRef = useRef<Blob | null>(null)
+  // Held so unmount can stop capture even when onstop never runs. Without this the
+  // microphone stays live after navigation with no disclosure anywhere on screen.
+  const streamRef = useRef<MediaStream | null>(null)
+
+  // Capture must not outlive the component. On unmount we stop the recorder and
+  // every track directly, rather than relying on recorder.onstop — which does not
+  // fire if the component is torn down first.
+  useEffect(() => {
+    return () => {
+      try {
+        const rec = mediaRecorderRef.current
+        if (rec && rec.state !== 'inactive') rec.stop()
+      } catch {}
+      mediaRecorderRef.current = null
+      try {
+        streamRef.current?.getTracks().forEach((t) => t.stop())
+      } catch {}
+      streamRef.current = null
+    }
+  }, [])
 
   async function startRecording() {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      streamRef.current = stream
       const recorder = new MediaRecorder(stream)
       chunksRef.current = []
       recorder.ondataavailable = (e) => {
@@ -46,6 +68,7 @@ export function MaiaCapture({ onCapture, disabled, className }: Props) {
       }
       recorder.onstop = async () => {
         stream.getTracks().forEach((t) => t.stop())
+        streamRef.current = null
         const blob = new Blob(chunksRef.current, { type: recorder.mimeType || 'audio/webm' })
         await transcribe(blob)
       }
@@ -58,8 +81,18 @@ export function MaiaCapture({ onCapture, disabled, className }: Props) {
   }
 
   function stopRecording() {
-    mediaRecorderRef.current?.stop()
+    const rec = mediaRecorderRef.current
     mediaRecorderRef.current = null
+    // MediaRecorder.stop() leaves the 'recording' state synchronously, so the
+    // disclosure must end here — not in onstop, and not when transcription begins.
+    // Previously the status stayed 'recording' through the whole async gap, so the
+    // red indicator claimed capture was ongoing after it had already ended.
+    try {
+      if (rec && rec.state !== 'inactive') rec.stop()
+    } catch {}
+    // Transcription is a different condition with a different truth value. It gets
+    // its own copy ('Transcribing…'), never the recording disclosure.
+    setStatus({ kind: 'transcribing' })
   }
 
   async function transcribe(blob: Blob) {
@@ -129,9 +162,8 @@ export function MaiaCapture({ onCapture, disabled, className }: Props) {
         {status.kind === 'recording' ? (
           <button
             onClick={stopRecording}
-            className="px-4 py-2.5 rounded bg-red-900/40 hover:bg-red-900/60 text-red-200 text-xs border border-red-800 transition-colors flex items-center gap-1.5"
+            className="px-4 py-2.5 rounded bg-red-900/40 hover:bg-red-900/60 text-red-200 text-xs border border-red-800 transition-colors"
           >
-            <span className="w-2 h-2 rounded-full bg-red-400 animate-pulse" />
             Stop &amp; transcribe
           </button>
         ) : (
@@ -164,6 +196,9 @@ export function MaiaCapture({ onCapture, disabled, className }: Props) {
         />
       </div>
 
+      {/* Disclosure lives on its own line rather than inside the button label, so it
+          is present and announced whether or not the control is in view. */}
+      {status.kind === 'recording' && <CaptureDisclosure state="recording" />}
       {status.kind === 'transcribing' && (
         <p className="text-stone-500 text-xs">Transcribing…</p>
       )}

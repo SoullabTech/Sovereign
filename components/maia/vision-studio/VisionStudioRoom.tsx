@@ -35,6 +35,7 @@ import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { apiFetch } from '@/lib/http/apiBase';
 import { RoomHoloflower, type RoomMotionState, type SpiralElement } from './RoomHoloflower';
+import { CaptureDisclosure } from '@/components/capture/CaptureDisclosure';
 
 type Role = 'user' | 'assistant';
 interface Turn { role: Role; content: string; }
@@ -175,6 +176,10 @@ export function VisionStudioRoom({ phase = 'fire_1', fieldContext }: Props) {
   // Interim + final transcripts stream into the draft; the member always reviews and
   // sends. Nothing here is persisted, nothing leaves the device except the eventual
   // sent turn (identical to a typed one).
+  // micActivating and micListening are distinct claims. recognition.start() returns
+  // before the permission prompt resolves and before the microphone is live, so
+  // "Listening…" must not be shown until recognition.onstart actually fires.
+  const [micActivating, setMicActivating] = useState(false);
   const [micListening, setMicListening] = useState(false);
   const [micSupported, setMicSupported] = useState(false);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
@@ -294,7 +299,7 @@ export function VisionStudioRoom({ phase = 'fire_1', fieldContext }: Props) {
   // — Talk to it: start/stop dictation. Appends to whatever is already typed —
   // never overwrites it. The member always reviews before Send; nothing auto-sends.
   function startMic() {
-    if (!micSupported || micListening) return;
+    if (!micSupported || micListening || micActivating) return;
     const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SR) return;
     const recognition: SpeechRecognition = new SR();
@@ -316,11 +321,24 @@ export function VisionStudioRoom({ phase = 'fire_1', fieldContext }: Props) {
       setDraft(combined);
       if (!working) setRoomMotion(combined ? 'listening' : 'idle');
     };
-    recognition.onerror = () => {
+    // The only event that makes "Listening…" true. Until it fires the microphone is
+    // not live — the permission prompt may still be open, or may be denied.
+    recognition.onstart = () => {
+      setMicActivating(false);
+      setMicListening(true);
+    };
+    recognition.onerror = (event: any) => {
+      setMicActivating(false);
       setMicListening(false);
       recognitionRef.current = null;
+      // Denial was previously swallowed in silence: the member saw the indicator
+      // stop with no explanation of why dictation never began.
+      if (event?.error === 'not-allowed' || event?.error === 'service-not-allowed') {
+        setError('Microphone access is blocked — enable it in your browser settings to dictate.');
+      }
     };
     recognition.onend = () => {
+      setMicActivating(false);
       setMicListening(false);
       recognitionRef.current = null;
     };
@@ -328,8 +346,9 @@ export function VisionStudioRoom({ phase = 'fire_1', fieldContext }: Props) {
     try {
       recognition.start();
       recognitionRef.current = recognition;
-      setMicListening(true);
+      setMicActivating(true);
     } catch {
+      setMicActivating(false);
       setMicListening(false);
     }
   }
@@ -337,11 +356,12 @@ export function VisionStudioRoom({ phase = 'fire_1', fieldContext }: Props) {
   function stopMic() {
     try { recognitionRef.current?.stop(); } catch {}
     recognitionRef.current = null;
+    setMicActivating(false);
     setMicListening(false);
   }
 
   function toggleMic() {
-    if (micListening) stopMic();
+    if (micListening || micActivating) stopMic();
     else startMic();
   }
 
@@ -737,6 +757,14 @@ export function VisionStudioRoom({ phase = 'fire_1', fieldContext }: Props) {
             0%, 100% { opacity: 0.4; transform: scale(1); }
             50% { opacity: 0.8; transform: scale(1.04); }
           }
+          /* The ring is decoration over the "Listening…" label, which carries the
+             meaning. Removing the motion removes nothing a member needs to know. */
+          @media (prefers-reduced-motion: reduce) {
+            .room-mic-active::after {
+              animation: none;
+              opacity: 0.6;
+            }
+          }
         `}</style>
       </div>
 
@@ -922,13 +950,27 @@ export function VisionStudioRoom({ phase = 'fire_1', fieldContext }: Props) {
               <button
                 onClick={toggleMic}
                 title="Speak instead of typing"
-                aria-pressed={micListening}
+                aria-pressed={micListening || micActivating}
                 className={`text-xs underline underline-offset-2 transition-colors ${
-                  micListening ? 'text-amber-300 hover:text-amber-200' : 'text-stone-500 hover:text-stone-300'
+                  micListening || micActivating
+                    ? 'text-amber-300 hover:text-amber-200'
+                    : 'text-stone-500 hover:text-stone-300'
                 }`}
               >
-                {micListening ? 'Listening…' : 'Speak'}
+                {/* Three labels for three conditions. "Listening…" used to appear the
+                    instant the button was pressed — while the permission prompt was
+                    still open, and after a denial. */}
+                {micListening ? 'Listening…' : micActivating ? 'Starting…' : 'Speak'}
               </button>
+            )}
+            {micSupported && (micListening || micActivating) && (
+              /* The visible label lives on the button; this announces the same state
+                 change to assistive tech via role="status". Same component, so the
+                 two can never describe different conditions. */
+              <CaptureDisclosure
+                state={micListening ? 'listening' : 'activating'}
+                className="sr-only"
+              />
             )}
             <button
               onClick={() => sendTurn(draft)}
