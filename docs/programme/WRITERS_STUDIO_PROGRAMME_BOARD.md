@@ -31,29 +31,31 @@
 ```text
 PROGRAMME          WRITER'S STUDIO R2
 MODE               STAGE 7 BUILD
-BUILD MODE         OPEN — BUILD-07F Developmental Decisions OPENED (founder act
-                   2026-09-05), CENSUS FIRST; design NOT yet authorised. 07G–H unauthorized
-BOUND CANONICAL    cff8123bc (clean-main-no-secrets, 2026-09-05 — 07E closure recorded,
-                   PR #1217; the 07E code is live at 6ff0beafc)
-CURRENT UNIT       BUILD-07F Developmental Decisions — OPEN, census act only.
-                   Question: can the writer change their own standing toward something
-                   MAIA noticed, without changing what MAIA observed?
-                   census: WS2-07-BUILD-07F_STANDING_CENSUS_2026-09-05.md
-                   CENSUS VERDICT: addressing REUSES the 07E observation anchor;
-                   persistence needs ONE NEW durable object (ask_threads is append-only
-                   conversation, standing is a mutable stance). PDC-1 is NOT the spine —
-                   system-side, per-turn, explicitly no persistence. `concern` in AskAnchor
-                   is dormant and is the OPPOSITE direction of origin, not standing.
-                   Real prior art is member_memory_atoms (is_breakthrough never auto-set;
-                   return_preference enumerated with a governed default) — but its
-                   decline-twice auto-revert is FORBIDDEN here: a standing the system can
-                   revert is not the writer's standing.
-                   IDENTITY: (memberId, readingId, observationKey). memberId is redundant
-                   TODAY — manuscripts and readings are single-member — and is stored
-                   anyway so correctness does not depend on a fact Co-Lab may change.
-                   FOUR OPEN QUESTIONS for the founder in census §8 (standing history ·
-                   superseded observations · whether MAIA sees standing · are the four
-                   values final).
+BUILD MODE         OPEN — BUILD-07F Developmental Decisions; census MERGED, founder
+                   rulings FIXED, DESIGN authorised, IMPLEMENTATION not. 07G–H unauthorized
+BOUND CANONICAL    adc3b4e9f (clean-main-no-secrets, 2026-09-05 — 07F census merged, PR #1219)
+CURRENT UNIT       BUILD-07F Developmental Decisions — design boundary fixed.
+                   census:       WS2-07-BUILD-07F_STANDING_CENSUS_2026-09-05.md (merged)
+                   adjudication: WS2-07-BUILD-07F_ADJUDICATION_2026-09-05.md
+                   ONTOLOGY  observation = MAIA's frozen claim; standing = the member's
+                   mutable judgment about it. identity (memberId, readingId, observationKey);
+                   values keep | dismiss | unresolved; absence UNSET, a distinct state and
+                   NOT the same as UNRESOLVED; history RETAINED; the system never sets or
+                   reverts a standing. `investigate` is a DIFFERENT AXIS, not a standing,
+                   with no 07F persistence ruling.
+                   SUPERSESSION a standing survives with the frozen observation it addressed
+                   and never transfers to a successor; a new observation starts UNSET.
+                   THE THREE GOVERNING SENTENCES (protect Q1, Q4, Q3 from later
+                   "simplification"; keep them verbatim in any descendant record):
+                     Provenance of an act is not interpretation of the person.
+                     Different axes must not be compressed into one enum merely because the
+                       interface wants one row of buttons.
+                     Standing belongs to the writer and has no ambient route into MAIA
+                       cognition.
+                   DESIGN MUST DEMONSTRATE D1–D7 (adjudication §"What the design must
+                   demonstrate") structurally — unrepresentable-if-wrong, not promised by a
+                   service. D5 (no route from standing into MAIA context) is asserted over
+                   the module graph, as 07E's gate-7 is.
 PRIOR UNIT         BUILD-07E Developmental Dialogue — CLOSED / ACCEPTED (founder,
                    2026-09-05); walk W1–W9 passed at 6ff0beafc
                    record: WS2-07-BUILD-07E_DIALOGUE_CLOSURE_2026-09-05.md
