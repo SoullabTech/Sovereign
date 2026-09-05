@@ -22,6 +22,10 @@ const discussSource = fs.readFileSync(
   path.join(__dirname, '../../../../components/reflections/DiscussWithMaia.tsx'),
   'utf8',
 );
+const presenceSource = fs.readFileSync(
+  path.join(__dirname, '../../../../components/maia/presence/MaiaPresence.tsx'),
+  'utf8',
+);
 
 /**
  * Strip comments so these guards assert on CODE, not on prose. Without this a
@@ -120,5 +124,30 @@ describe('ACCEPTANCE 3: the member is not moved', () => {
 
   it('the fallback navigation is reached only when presence cannot host', () => {
     expect(code(discussSource)).toMatch(/if \(presence\?\.canHost\)/);
+  });
+});
+
+describe('ACCEPTANCE 4: hosted reflection conversation stays inside its sheet', () => {
+  it('the presence host explicitly requests contained, text-only presentation', () => {
+    const presenceCode = code(presenceSource);
+    expect(presenceCode).toMatch(/voiceEnabled=\{false\}/);
+    expect(presenceCode).toMatch(/initialShowChatInterface=\{true\}/);
+    expect(presenceCode).toMatch(/presentationMode="contained"/);
+  });
+
+  it('text chat remains renderable when voice is disabled', () => {
+    expect(code(oracleSource)).toMatch(/\(voiceEnabled \|\| showChatInterface\)/);
+  });
+
+  it('contained mode establishes a local fixed-position containing block', () => {
+    const oracleCode = code(oracleSource);
+    expect(oracleCode).toMatch(/isContainedPresentation \? 'h-full min-h-0' : 'min-h-screen'/);
+    expect(oracleCode).toMatch(/transform: 'translateZ\(0\)'/);
+  });
+
+  it('contained transcript and composer use host-relative widths', () => {
+    const oracleCode = code(oracleSource);
+    expect(oracleCode).toMatch(/\? 'top-2 left-0 right-0 w-full opacity-100'/);
+    expect(oracleCode).toMatch(/\? 'inset-x-0' : 'left-14 right-0 sm:inset-x-0'/);
   });
 });

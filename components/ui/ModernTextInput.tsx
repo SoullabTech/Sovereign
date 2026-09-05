@@ -29,6 +29,8 @@ interface ModernTextInputProps {
   disabled?: boolean;
   isProcessing?: boolean;
   enableVoiceInput?: boolean;
+  /** Whether the empty-input dictation affordance is offered at all. */
+  showVoiceInputButton?: boolean;
   enableVoiceInChat?: boolean;
   onVoiceInputToggle?: () => void;
   onVoiceResponseToggle?: () => void;
@@ -60,6 +62,7 @@ export const ModernTextInput = forwardRef<HTMLTextAreaElement, ModernTextInputPr
   disabled = false,
   isProcessing = false,
   enableVoiceInput = false,
+  showVoiceInputButton = true,
   enableVoiceInChat = false,
   onVoiceInputToggle,
   onVoiceResponseToggle,
@@ -252,7 +255,7 @@ export const ModernTextInput = forwardRef<HTMLTextAreaElement, ModernTextInputPr
   };
 
   const canSubmit = value.trim().length > 0 && !disabled && !isProcessing && !enableVoiceInput && !isRecording;
-  const showMic = value.trim().length === 0 && !isRecording && !disabled && !isProcessing;
+  const showMic = showVoiceInputButton && value.trim().length === 0 && !isRecording && !disabled && !isProcessing;
 
   return (
     <div className="relative w-full max-w-4xl mx-auto">
