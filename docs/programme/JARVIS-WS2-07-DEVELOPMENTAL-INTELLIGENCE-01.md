@@ -1,8 +1,8 @@
 # JARVIS-WS2-07-DEVELOPMENTAL-INTELLIGENCE-01
 
-> **Lane active. BUILD-07E DEVELOPMENTAL DIALOGUE — OPEN (founder act, 2026-09-05) against canonical `5c57e27f0` (WS2 Write ⇄ Develop repair merged, PR #1211; LIVE, dual provenance verified). BUILD-07A, 07B, 07C and 07D are CLOSED / ACCEPTED and canonical — Stage 7.1 complete. BUILD-07F–H unauthorized.**
+> **Lane active. BUILD-07E DEVELOPMENTAL DIALOGUE — CLOSED / ACCEPTED (founder act, 2026-09-05) at canonical `6ff0beafc`, LIVE. BUILD-07A, 07B, 07C, 07D and 07E are CLOSED / ACCEPTED and canonical — Stage 7.1 complete and BUILD-07E with it. BUILD-07F–H unauthorized; 07F opens only by its own act.**
 >
-> **07E is bounded by `docs/programme/WS2-07-BUILD-07E_DIALOGUE_BOUNDARY_CENSUS_2026-09-05.md`. Read it before designing: the anchored-ask spine already exists in canonical pointed at the structure proposal, and 07E extends it to the developmental address rather than authoring a second conversation model.**
+> **07E's closure evidence: `docs/programme/WS2-07-BUILD-07E_DIALOGUE_CLOSURE_2026-09-05.md` (the walk W1–W9, bound to `6ff0beafc`, with two retained production artifacts named in §3). Its boundary and build records sit beside it. The lesson worth carrying into 07F: the anchored-ask spine already existed in canonical, and reading canonical before designing is why 07E was an extension rather than a second conversation model.**
 >
 > This document defined the lane before it was entered. Originally it authorized **no
 > implementation**. Each BUILD unit since has been opened by its own dated founder act, recorded
