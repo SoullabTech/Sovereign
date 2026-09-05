@@ -1,7 +1,8 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { apiFetch } from '@/lib/http/apiBase';
 import { PRESS } from '../pressTheme';
 import {
@@ -25,8 +26,10 @@ import { StudioScrollbars } from '../studio/StudioScrollbars';
 import { StudioText } from '../studio/StudioType';
 import { IMPORT_HREF } from '../studioMap';
 import {
+  adoptRouteIdentity,
   canvasForManuscript,
   requestedManuscriptId,
+  requestedManuscriptIdFrom,
   resolveManuscript,
   type ManuscriptResolution,
 } from '../canvasIdentity';
@@ -125,7 +128,10 @@ type ColumnId = 'outline' | 'maia' | 'materials' | 'conversation';
 /** Rail destinations this room satisfies in place rather than by navigation. */
 const SATISFIED_IN_ROOM = ['materials', 'structure', 'versions', 'conversations'] as const;
 
-export default function WritersStudioPage() {
+/* Named, and no longer the default export: `useSearchParams()` reads route
+   state, so this room renders under a Suspense boundary (the default export
+   below). Without one, `next build` refuses to prerender this route. */
+function CanvasRoom() {
   const { phase: worksPhase, works, reload: reloadWorks } = useLivingWorks();
 
   const [listPhase, setListPhase] = useState<
@@ -133,11 +139,46 @@ export default function WritersStudioPage() {
   >('loading');
   const [manuscripts, setManuscripts] = useState<CurrentManuscript[]>([]);
 
-  // Read once, synchronously on the client, so the field never swaps its
-  // manuscript after mounting (the exit guard would flush a draft mid-swap).
-  const [requested, setRequested] = useState<string | null>(() =>
-    typeof window === 'undefined' ? null : requestedManuscriptId(window.location.search),
-  );
+  /* IDENTITY, FROM THE ROUTE — AND LATCHED ONCE TAKEN.
+     ─────────────────────────────────────────────────────────────────────
+     This used to be a one-shot read of `window.location.search` in a
+     `useState` initializer. Two properties were wanted and only the second
+     was obtained: take the identity the link carried, and never swap the
+     manuscript out from under a mounted draft.
+
+     The first property failed on client navigation. Studio Home's
+     "Continue writing" is a `Link` whose href comes from
+     `canvasForManuscript(...)`, so the identity was correct at the producer
+     — but on that navigation the room rendered before the browser URL
+     carried it. The initializer sampled `null`, and because nothing ever
+     looked again, `requested` STAYED null: no manuscript resolved, the
+     write-state effect returned before fetching, `chooseMount` never left
+     `loading`, and the writer got the shell with no body. A cold reload of
+     the same URL worked, because then the address bar was already correct
+     before mount. Observed in production on de0f35434, 2026-09-05.
+
+     `useSearchParams()` reads the ROUTE's params, which are committed with
+     the navigation rather than trailing it, so the identity is there to be
+     read on the first render that has one. That is a removal of the race,
+     not a wait for it: no timer, no retry, no reload.
+
+     The second property is kept explicitly, by LATCHING. Once `requested`
+     holds an id — from the route, or from the member answering the chooser
+     — a later route param never replaces it. The exit guard flushes on
+     teardown, so a silent swap underneath a mounted draft would flush one
+     manuscript's words toward another's. `prev ?? next` is the whole rule:
+     adopt when empty, never overwrite. */
+  const searchParams = useSearchParams();
+  /* `useSearchParams()` is typed nullable (it has no params to give during a
+     static prerender). No params means no requested identity — which is the
+     chooser's case, not a substitution. */
+  const routeRequested = searchParams === null ? null : requestedManuscriptIdFrom(searchParams);
+  const [requested, setRequested] = useState<string | null>(routeRequested);
+
+  useEffect(() => {
+    if (routeRequested === null) return;
+    setRequested((prev) => adoptRouteIdentity(prev, routeRequested));
+  }, [routeRequested]);
 
   useEffect(() => {
     let cancelled = false;
@@ -962,5 +1003,24 @@ function Bare({ children }: { children: React.ReactNode }) {
         </StudioText>
       </div>
     </div>
+  );
+}
+
+/**
+ * THE ROUTE. The room reads its manuscript identity from route state, which
+ * makes it a Suspense consumer; the boundary is here rather than around a
+ * fragment of the room so the whole field arrives at once, never half-drawn.
+ *
+ * The fallback paints the Studio ground and nothing else. It is on screen
+ * only between prerender and hydration, and every honest thing this room can
+ * say — loading, refusing, asking, writing — needs the identity that is not
+ * resolved yet. A spinner here would claim work was happening; a message
+ * would have to guess which one. The ground is the truthful frame.
+ */
+export default function WritersStudioCanvasRoute() {
+  return (
+    <Suspense fallback={<div style={{ minHeight: '100vh', background: GROUND.base }} />}>
+      <CanvasRoom />
+    </Suspense>
   );
 }

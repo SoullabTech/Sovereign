@@ -35,6 +35,58 @@ export function requestedManuscriptId(search: string): string | null {
   return new URLSearchParams(search).get(CANVAS_MANUSCRIPT_PARAM);
 }
 
+/**
+ * The same read, against already-parsed search params.
+ *
+ * The Canvas takes its identity from the ROUTE's params rather than from
+ * `window.location.search`, because those are not the same clock: on a client
+ * navigation the room can render before the browser URL carries the identity
+ * the link was built with, and a room that samples the address bar once has
+ * then sampled it too early — with no second look, it stays wrong. Reading
+ * the route's own params removes the race instead of racing it.
+ *
+ * Structurally typed on `get` so this accepts both `URLSearchParams` and
+ * Next's ReadonlyURLSearchParams without importing the framework into a file
+ * the identity tests exercise directly.
+ */
+export function requestedManuscriptIdFrom(
+  params: { get(name: string): string | null },
+): string | null {
+  return params.get(CANVAS_MANUSCRIPT_PARAM);
+}
+
+/**
+ * The identity the room holds, given what it already holds and what the route
+ * now says. Adopt when empty; NEVER overwrite.
+ *
+ * Both halves are load-bearing and they failed in opposite directions:
+ *
+ *   adopt      The room used to sample `window.location.search` once, in a
+ *              `useState` initializer, and never look again. On a client
+ *              navigation from Studio Home that sample was empty — the room
+ *              rendered before the browser URL carried the id the link was
+ *              built with — so `requested` stayed null forever and no
+ *              manuscript ever resolved. Looking again is the repair.
+ *
+ *   never swap A room that simply followed the route would swap the
+ *              manuscript under a draft that is already mounted. The exit
+ *              guard flushes on teardown, so that swap can carry one
+ *              manuscript's words toward another's row. Once an identity is
+ *              held — taken from the route, or given by the member answering
+ *              the chooser — it is the room's until the room unmounts.
+ *
+ * A route that goes quiet never clears a held identity: absence is not an
+ * instruction. And this never invents one, so it cannot become the
+ * fall-back-to-first substitution this contract exists to forbid — every
+ * result is either what was held or exactly what the route named.
+ */
+export function adoptRouteIdentity(
+  held: string | null,
+  fromRoute: string | null,
+): string | null {
+  return held ?? fromRoute;
+}
+
 export interface SelectableManuscript {
   id: string;
 }
