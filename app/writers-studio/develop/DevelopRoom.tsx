@@ -222,8 +222,13 @@ export default function DevelopRoom({
         />
       }
     >
-    <div className="flex-1 flex flex-col min-h-0" style={{ fontFamily: SERIF }}>
-      <div className="flex-1 flex flex-col md:flex-row min-h-0 border-t" style={{ borderColor: PRESS.rule }}>
+    {/* min-w-0 so the interior SHARES the shell's body row with the rail
+        instead of overflowing across it: a flex child's default min-width is
+        its content, and a wide reading is wide. Without it the rail is
+        rendered and then covered, which reads as the Studio disappearing at
+        exactly the moment the writer changes stance. */}
+    <div className="flex-1 min-w-0 flex flex-col min-h-0" style={{ fontFamily: SERIF }}>
+      <div className="flex-1 flex flex-col md:flex-row min-h-0">
         {/* ── Readings: the ledger of what MAIA has read, newest first ── */}
         <aside
           className="md:w-80 shrink-0 border-b md:border-b-0 md:border-r px-5 py-6 overflow-y-auto"
