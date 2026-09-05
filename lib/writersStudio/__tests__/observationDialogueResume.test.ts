@@ -12,7 +12,7 @@
 import { readFileSync } from 'fs';
 import { join } from 'path';
 import {
-  resumeDecision, sendMode, threadChoiceLabel,
+  resumeDecision, sendMode, threadChoiceLabel, dialogueSurfaceKey,
   type ResumeDecision, type ThreadSummary,
 } from '../observationDialogueResume';
 
@@ -204,13 +204,78 @@ describe('the room performs the decision rather than remembering', () => {
   });
 
   it('does not lift the thread into the parent — the parent holds only open/closed', () => {
+    /* COMMENTS STRIPPED FIRST. The room now DISCUSSES the thread identity it
+       must not hold — the Blocker C commentary names `threadId` to explain why
+       the subtree is keyed — and a check that counted prose would fail for the
+       wrong reason. Same convention as `askRuntimeCannotWrite`. */
     const ROOM = readFileSync(
-      join(__dirname, '..', '..', '..', 'app', 'writers-studio', 'develop', 'DevelopRoom.tsx'), 'utf8');
+      join(__dirname, '..', '..', '..', 'app', 'writers-studio', 'develop', 'DevelopRoom.tsx'), 'utf8')
+      .replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
     expect(ROOM).not.toContain('threadId');
     expect(ROOM).toContain('setTalking');
   });
 
   it('reads once when it opens: no timer, no refetch on focus or visibility', () => {
     expect(SRC).not.toMatch(/setInterval|setTimeout|visibilitychange|addEventListener\(\s*'focus'/);
+  });
+});
+
+/* ── BLOCKER C · a dialogue may not survive under a different reading ─────── */
+
+describe('the dialogue surface identity is (readingId, observationKey)', () => {
+  const ROOM = readFileSync(
+    join(__dirname, '..', '..', '..', 'app', 'writers-studio', 'develop', 'DevelopRoom.tsx'),
+    'utf8');
+
+  it('the frozen reading identity keys the Reading subtree', () => {
+    /* Selecting another reading opens another frozen object; everything beneath
+       it must begin from that object's identity. Without this key React reuses
+       ObservationDialogue across readings and it keeps reading A's threadId
+       while its props say reading B. */
+    expect(ROOM).toMatch(/<Reading\s+key=\{view\.id\}/);
+  });
+
+  it('and each observation carries the compound identity, not `o1` alone', () => {
+    expect(ROOM).toContain('key={dialogueSurfaceKey(view.id, o.key)}');
+    expect(ROOM).not.toMatch(/<Observation\s+key=\{o\.key\}/);
+  });
+
+  it('the key is composed by the exported function, never spelled inline', () => {
+    /* An inline template can quietly lose half of itself in a later edit. */
+    expect(ROOM).toContain("import { dialogueSurfaceKey }");
+    expect(ROOM).not.toMatch(/key=\{`\$\{view\.id\}:\$\{o\.key\}`\}/);
+  });
+
+  it('is NOT repaired by a reset effect — those run after the render that leaks', () => {
+    /* A frame in which reading B is displayed with reading A's thread is the
+       defect, and an effect cannot remove it. Identity must make it impossible. */
+    const DIALOGUE = readFileSync(
+      join(__dirname, '..', '..', '..', 'app', 'writers-studio', 'develop', 'ObservationDialogue.tsx'),
+      'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+    expect(DIALOGUE).not.toMatch(/useEffect\([^)]*setThreadId\(null\)/s);
+    expect(DIALOGUE).not.toMatch(/\}, \[readingId\]\)/);
+  });
+
+  it('the same observation key under two readings is two different surfaces', () => {
+    const a = dialogueSurfaceKey('reading-A', 'o1');
+    const b = dialogueSurfaceKey('reading-B', 'o1');
+    expect(a).not.toBe(b);
+    /* And the reading-internal key alone is insufficient, which is the whole claim. */
+    expect(a.endsWith(':o1') && b.endsWith(':o1')).toBe(true);
+  });
+
+  it('the same surface is stable across renders of one reading', () => {
+    expect(dialogueSurfaceKey('reading-A', 'o1')).toBe(dialogueSurfaceKey('reading-A', 'o1'));
+  });
+
+  it('the SHIPPED key at 1595f07e0 collides across readings; this one does not', () => {
+    /* DEFECT WITNESS, as for A1: two rules compared, not one asserted.
+       `1595f07e0` keyed each observation by `o.key`. Reading A's `o1` and
+       reading B's `o1` were therefore ONE React identity, so the dialogue
+       mounted under A was reused under B with A's threadId intact. */
+    const shipped = (_readingId: string, observationKey: string) => observationKey;
+    expect(shipped('reading-A', 'o1')).toBe(shipped('reading-B', 'o1'));
+    expect(dialogueSurfaceKey('reading-A', 'o1'))
+      .not.toBe(dialogueSurfaceKey('reading-B', 'o1'));
   });
 });

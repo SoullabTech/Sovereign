@@ -22,6 +22,8 @@ MIGRATION        NONE — E10 discharged, see §3
 FIRST CANDIDATE  3bc700c4f — founder source review, TWO BLOCKERS (§0)
 SECOND CANDIDATE 982ff9fce — Blocker B CLOSED; Blocker A reopened on two
                  remaining races in the resume path (§0.1)
+THIRD CANDIDATE  1595f07e0 — Blocker A CLOSED; Blocker C found: a dialogue
+                 could survive under a DIFFERENT reading (§0.2)
 ```
 
 ## 0 · Corrections after the founder's source review (2026-09-05)
@@ -107,6 +109,42 @@ and here a disagreement writes a row.
 control was removed. Several threads on one observation are lawful **history**; the ruling never
 established "start another conversation" as a capability, and offering it was 07E quietly
 expanding while being tested.
+
+### 0.2 · Blocker C — a dialogue could survive under a different reading
+
+The same identity invariant again, at the render boundary rather than in the send path.
+
+`DevelopRoom` rendered `<Reading view={view} …>` with no key, and keyed each observation by
+`o.key` alone. But `o1` is stable only WITHIN one reading. Selecting a different reading therefore
+let React reuse `Reading → Observation(o1) → ObservationDialogue` instead of remounting it, and
+that component holds `thread`, `threadId`, `location`, `draft`, `decision` and `refusal` — none of
+which resets synchronously when `readingId` changes.
+
+The worst reachable case:
+
+```text
+reading A · o1     → dialogue resumes thread A, threadId = A
+writer selects B   → B also has an o1 → the SAME component is reused
+                   → props now say readingId = B, local threadId still says A
+B discovery ok, 0  → decision = fresh
+sendMode(fresh, A) → resume A
+                   → the room shows B's observation; the question appends to A
+```
+
+`sendMode` cannot catch this and should not try: it correctly assumes its `threadId` belongs to
+its own anchor. And before discovery even returns, A's turns can already be rendered beneath B's
+observation.
+
+**Repaired by identity, not by a reset effect.** `<Reading key={view.id}>` — selecting another
+reading is opening another frozen object, and everything beneath it begins from that object's
+identity. Each observation additionally carries the compound key through an exported
+`dialogueSurfaceKey(readingId, observationKey)`, so the invariant is stated where it applies and
+removing one of the two does not silently reopen the fault; composing the key inline was rejected
+for the same reason, since an inline template can lose half of itself in a later edit.
+
+⛔ A `useEffect(… , [readingId])` that cleared the state would NOT be equivalent, and a standing
+guard now forbids it: effects run after render, so there remains a frame in which reading B is
+displayed with reading A's thread. Identity makes the state impossible rather than brief.
 
 **BLOCKER B — internal identifiers reached model-facing prose.** `developmentalAskReader` sent
 `section ${sectionId}`, `the authored unit ${unitId}`, and `u.title ?? u.id`. Section ids are
@@ -269,6 +307,14 @@ BLOCKER A · resume
   the parent holds open/closed and no thread state                         PASS
   one read on open: no timer, no refetch on focus or visibility            PASS
 
+BLOCKER C · (readingId, observationKey) is the surface identity
+  the frozen reading identity keys the Reading subtree                     PASS
+  each observation carries the compound identity, not `o1` alone           PASS
+  the key is composed by the exported function, never spelled inline       PASS
+  NOT repaired by a reset effect — the wrong repair is forbidden           PASS
+  one observation key under two readings is two surfaces                   PASS
+  the shipped 1595f07e0 rule, reconstructed, COLLIDES across readings      PASS (defect witness)
+
 BLOCKER A · second pass — unknown never rounds to fresh
   discovery failure is `unavailable`, never `fresh`                        PASS
   adoption window (resume decided, thread not yet loaded) → BLOCKED        PASS
@@ -292,7 +338,7 @@ BLOCKER B · no identifier reaches the model
 ```text
 ask · writersStudio · development ·
   developmentalReading ·
-  app/writers-studio                  778 passed · 51 suites · 0 failed
+  app/writers-studio                  785 passed · 51 suites · 0 failed
 typecheck (tsconfig.ship.json)        no regressions against typecheck-baseline.json
 check:no-supabase                     clean
 ```
@@ -331,6 +377,20 @@ ObservationDialogue.tsx @ 3bc700c4f
 
 The pure `resumeDecision` cases have no counterpart at `3bc700c4f` — the function did not exist —
 so they are new-capability tests and are not claimed as falsified.
+
+**The Blocker C repair was falsified against `1595f07e0`** — the three touched files restored
+from that commit:
+
+```text
+DevelopRoom.tsx + ObservationDialogue.tsx + observationDialogueResume.ts @ 1595f07e0
+  → 5 of the 6 Blocker C guards FAILED ✓
+```
+
+Three of those five fail on DIVERGENCE (the room's actual keys), two on ABSENCE
+(`dialogueSurfaceKey` did not exist). The sixth — "not repaired by a reset effect" — passed at
+`1595f07e0` because no such effect was there; it guards against the WRONG repair and is not
+evidence of this one. As with A1, the divergence is pinned as its own test: the shipped key rule
+(`o.key` alone) is reconstructed and shown to COLLIDE across readings where the new one does not.
 
 **The second-pass Blocker A repairs were falsified against `982ff9fce`** the same way — the three
 touched files restored from that commit:
@@ -378,6 +438,9 @@ W6b EDGE-CASE WITNESS, NOT A UI ACT (founder ruling). With one prior thread the 
     anchor), then reopen: the room must OFFER A CHOICE and resume neither on its own.
 W6c with the discovery GET failing (block it, or sign out mid-room), reopening must SAY it
     could not look up earlier conversations and must NOT offer to speak
+W6d open a dialogue on reading A's first observation, ask something, then SELECT ANOTHER
+    reading that also has a first observation: the dialogue must be closed and empty
+    under the new reading, never showing A's turns or continuing A's thread
 W7  the refusal state seen honestly once (key absent from the env): the question is held, not lost
 W8  narrow window / phone: the dialogue is reachable and readable
 W9  nothing MAIA says names a section or a part by an internal identifier — she says

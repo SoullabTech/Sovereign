@@ -58,10 +58,20 @@ CURRENT CANDIDATE  BUILT on claude/writer-author-studios-roadmap-b2tqf5, base 5c
                    anchor. `open` is reachable from exactly one state, asserted
                    exhaustively. The chooser's "start a new conversation" control was
                    REMOVED: several threads are lawful history, not a product capability.
+                   1595f07e0 — A CLOSED. Blocker C: switching readings could reuse the
+                   dialogue subtree (`o1` is stable only WITHIN a reading), so the room
+                   showed reading B while the question appended to reading A's thread.
+                   CURRENT — C closed by IDENTITY: <Reading key={view.id}> plus a compound
+                   dialogueSurfaceKey(readingId, observationKey). A reset effect was
+                   rejected and is forbidden by a guard — effects run after the render
+                   that leaks.
                    PROVENANCE tree base 5c57e27f0 · ancestry base dc742fe43 · zero tree
-                   drift between them (5c57e27f0 is a tree-neutral merge).
+                   drift between them (5c57e27f0 is a tree-neutral merge). Canonical has
+                   since moved to 71e52d06; the only changes since 5c57e27f0 are
+                   app/accounted-for/page.tsx and docs/canon/MAIA_SOUL_CORPUS.md, neither
+                   overlapping 07E runtime or tests (founder check, 2026-09-05).
                    NO MIGRATION (E10 discharged: anchor and reading_identity were jsonb).
-                   778 tests / 51 suites / 0 failed · typecheck no regressions.
+                   785 tests / 51 suites / 0 failed · typecheck no regressions.
                    record: WS2-07-BUILD-07E_DIALOGUE_BUILD_2026-09-05.md §5 = the walk
                    KEY FINDING (why the unit was small): the anchored-ask spine already
                    existed in canonical pointed at the STRUCTURE proposal. 07E EXTENDED it

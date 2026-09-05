@@ -109,3 +109,21 @@ export function threadChoiceLabel(t: ThreadSummary, formatWhen: (iso: string) =>
   const turns = t.turnCount === 1 ? '1 turn' : `${t.turnCount} turns`;
   return `${formatWhen(t.openedAt)} · ${turns}`;
 }
+
+/**
+ * The dialogue surface's identity.
+ *
+ * `(readingId, observationKey)` — DECIDE INV-2's address, and it is the whole
+ * of it. `o1` is stable only WITHIN one reading, so a surface keyed on the
+ * observation key alone is reused when the writer selects a different reading:
+ * the room then shows reading B's observation while the component still holds
+ * reading A's thread, and the next question appends to A's conversation.
+ * `sendMode` cannot catch that and should not try — it correctly assumes its
+ * thread belongs to its own anchor.
+ *
+ * EXPORTED SO THE ROOM CANNOT SPELL IT DIFFERENTLY. A key composed inline is a
+ * key that can quietly lose half of itself in a later edit.
+ */
+export function dialogueSurfaceKey(readingId: string, observationKey: string): string {
+  return `${readingId}:${observationKey}`;
+}
