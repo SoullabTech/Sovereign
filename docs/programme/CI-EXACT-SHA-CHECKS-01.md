@@ -146,3 +146,52 @@ deploy                         HOLD
 Cut 1A bootstrap-shadow        still requires its own separate sign-off
 composite promotion            member-facing lanes still require their own authority
 ```
+
+---
+
+## 7. Canonical rebind — 2026-09-05
+
+```text
+CANONICAL REBIND — 2026-09-05
+
+prior base       cc257f7ee
+canonical moved  1d4af7987 via #1205 (convergence provenance bar, Class C)
+overlap          NONE — no file is touched by both changesets, verified by
+                 comm -12 over the two changed-file sets, not assumed
+rebind           <new head recorded on push>
+reason           the first exercise of the repaired push paths must descend
+                 from the canonical tree they will actually receive
+```
+
+#1205 merged ahead of this lane. That is **not** recorded as a governance deviation: it was a
+Class C documentation change that depended on this lane only for a cross-reference, never for
+authority. What was lost is preferred sequencing and a planned pointer, not authorization.
+
+Consequence for evidence: the greens earned on `bbd589a295` are **superseded** for
+authorization purposes. They attested a tree that is no longer the one this lane will merge.
+The Class B Founder-Steward authorization must name the rebound head, not `bbd589a295` —
+the same rule this lane exists to serve, applied to itself.
+
+### 7.1 The post-merge falsifier, restated after the rebind
+
+The adjudication base moves with canonical, so the earlier expectation of `cc257f7ee` is
+stale. Correct expectation:
+
+```text
+PR run       base          1d4af7987
+MERGE PUSH   github.before 1d4af7987
+             logged base   1d4af7987
+             verdict       substantively equivalent to the PR run
+```
+
+The push log must literally show:
+
+```text
+Adjudication base for push: 1d4af798734a11f8be01dcf587d878e82abadc3c
+```
+
+**Stop if** the resolved base is neither the prior canonical tip at merge time nor the merge
+commit's own first parent, **or** the verdict diverges over the same effective delta. Do
+*not* stop merely because the base is `1d4af7987` rather than `cc257f7ee`: that is the
+mechanism working correctly across a canonical that moved. The claim under test is about the
+adjudicated *delta*, not about a fixed SHA.
