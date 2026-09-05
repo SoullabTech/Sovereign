@@ -114,7 +114,7 @@ import { join, resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import puppeteer from 'puppeteer';
 
-const INSTRUMENT_VERSION = '2';
+const INSTRUMENT_VERSION = '2.1';
 
 const ORIGIN = process.env.WITNESS_ORIGIN ?? 'https://soullab.life';
 const SSH_HOST = process.env.WITNESS_SSH_HOST ?? 'soullab@minisforum';
@@ -129,10 +129,46 @@ const SKIP_SHA = process.env.WITNESS_SKIP_SHA === '1';
 // renders through app/layout.tsx.
 const MEMBER_PATH = process.env.WITNESS_MEMBER_PATH ?? '/maia/privacy';
 
-// In scope per the v2 declaration: the browser plane of the production site,
-// which includes static HTML served from the same origin.
-const EXTRA_PATHS = (process.env.WITNESS_EXTRA_PATHS ?? '/now-what/preview.html')
-  .split(',').map((s) => s.trim()).filter(Boolean);
+const MEMBER_PATH_OVERRIDDEN = Boolean(process.env.WITNESS_MEMBER_PATH);
+
+/**
+ * W3 needs a POSITIVE PER-SURFACE expectation, not one global vendored witness.
+ * Without it this could pass: Spectral renders on /accounted-for, Inter
+ * silently falls back to Arial on /maia/privacy, preview renders system —
+ * because "some vendored family rasterized somewhere" was satisfied by the
+ * first surface alone. A silent fallback is exactly the failure W3 is for.
+ *
+ * `expectAnyOf` — at least one of these families must actually rasterize here.
+ * `systemOk`    — a system stack is the INTENDED result on this surface, so no
+ *                 custom face is required. Not a weakening: preview.html was
+ *                 deliberately repaired to Georgia and the OS sans, so system
+ *                 rendering there is correctness, not degradation.
+ */
+const SURFACES = [
+  {
+    path: '/accounted-for',
+    expectAnyOf: ['Spectral', 'IBM Plex Sans'],
+    why: 'the page that publishes the claim; app/fonts.css faces must rasterize here',
+  },
+  {
+    path: MEMBER_PATH,
+    // app/layout.tsx applies inter.className to <body>, so Inter is the
+    // intended face on the member path — supplied by next/font, delivered
+    // same-origin from /_next/static/media.
+    expectAnyOf: MEMBER_PATH_OVERRIDDEN ? null : ['Inter'],
+    why: MEMBER_PATH_OVERRIDDEN
+      ? 'member path overridden via WITNESS_MEMBER_PATH — no render expectation is asserted'
+      : 'root layout applies inter.className to body; next/font must actually rasterize',
+  },
+  {
+    path: '/now-what/preview.html',
+    systemOk: true,
+    why: 'repaired to Georgia / OS sans stacks deliberately; system rendering is correct here',
+  },
+  ...(process.env.WITNESS_EXTRA_PATHS ?? '')
+    .split(',').map((x) => x.trim()).filter(Boolean)
+    .map((path) => ({ path, why: 'added via WITNESS_EXTRA_PATHS — no render expectation asserted' })),
+];
 
 const REPO_ROOT =
   process.env.WITNESS_REPO_ROOT ??
@@ -145,11 +181,19 @@ const VENDORED_FAMILIES = [
 ];
 
 const GOOGLE_FONT_HOSTS = ['fonts.googleapis.com', 'fonts.gstatic.com'];
-const GOOGLE_RE = /fonts\.(googleapis|gstatic)\.com/;
-// A reference is FETCHABLE only inside url(), href= or src=. A prose mention
-// (public/fonts/LICENSES.md names the hosts to say we no longer call them)
-// is reported as informational and never fails a gate.
-const FETCHABLE_RE = /(url\(|href\s*=|src\s*=)[^)\n>]{0,200}?fonts\.(googleapis|gstatic)\.com/i;
+// A reference is FETCHABLE if it is a markup/CSS reference OR a string literal
+// holding the URL. A prose mention (public/fonts/LICENSES.md names the hosts to
+// say we no longer call them) is reported as informational and never gates.
+const MARKUP_RE = /(url\(|href\s*=|src\s*=)[^)\n>]{0,200}?fonts\.(googleapis|gstatic)\.com/i;
+// All THREE JS string delimiters. A constructed URL is a re-entry vector too:
+// lib/theme/themeCssVars.ts built `https://fonts.googleapis.com/css2?...` in a
+// module a client component imported, matching no markup literal at all. A
+// detector that covered only ' and ` would let a future double-quoted re-entry
+// be printed as a non-gating "prose mention" — exactly the defect class W4b
+// exists to catch. This also applies to compiled browser JS in W4a, where a
+// delivered bundle can construct the URL with no markup reference anywhere.
+const CONSTRUCTED_RE = /["'`]https?:\/\/fonts\.(googleapis|gstatic)\.com/;
+const isFetchable = (text) => MARKUP_RE.test(text) || CONSTRUCTED_RE.test(text);
 const FONT_EXT = /\.(woff2?|ttf|otf|eot)(\?|$)/i;
 const SIGNIN_PATH = /\/(signin|sign-in|login|auth|begin-journey)\b/i;
 
@@ -166,6 +210,12 @@ const SOURCE_ROOTS = ['app', 'components', 'public', 'styles', 'lib'];
 // lib/manuscript/render/** is server-side PDF generation (pandoc → Paged.js →
 // Puppeteer, via app/api/book-studio/render), whose HTML is never delivered to
 // a member's browser as a production web surface.
+//
+// That second exclusion is a CURRENT CALL-PATH CLASSIFICATION, not an eternal
+// property of the pathname. Nothing under lib/manuscript/render/ is
+// intrinsically server-only. If one of those stylesheets later becomes
+// client-imported, or that HTML is ever delivered to a browser rather than
+// rendered to a PDF, this exclusion becomes false and must be revisited.
 // DOCS: markdown is not source capable of being brought into the deployed
 // client by an import or a link.
 const SERVER_PLANE = [/^app\/api\//, /^lib\/manuscript\/render\//];
@@ -219,7 +269,7 @@ function sweepServed() {
       `docker exec ${CONTAINER} sh -c "grep -nE 'fonts\\.(googleapis|gstatic)\\.com' '${file}' 2>/dev/null | head -5 || true"`,
       'served line', { allowEmpty: true },
     );
-    classified.push({ file, fetchable: FETCHABLE_RE.test(body), sample: body.split('\n')[0] ?? '' });
+    classified.push({ file, fetchable: isFetchable(body), sample: body.split('\n')[0] ?? '' });
   }
   return classified;
 }
@@ -248,15 +298,10 @@ function sweepSource() {
         ['-c', `cd '${REPO_ROOT}' && grep -nE 'fonts\\.(googleapis|gstatic)\\.com' '${file}' | head -5`],
         { encoding: 'utf8', timeout: 20_000 }).trim();
     } catch { /* empty */ }
-    // A constructed URL is a vector too: lib/theme/themeCssVars.ts builds
-    // `https://fonts.googleapis.com/css2?...` in a module a client component
-    // imports. It matches no href=/url() literal, so FETCHABLE_RE alone would
-    // miss the most dangerous case in the tree.
-    const constructed = /['\`]https:\/\/fonts\.(googleapis|gstatic)\.com/.test(body);
     return {
       file,
       plane: planeOf(file),
-      fetchable: FETCHABLE_RE.test(body) || constructed,
+      fetchable: isFetchable(body),
       sample: body.split('\n')[0] ?? '',
     };
   });
@@ -352,7 +397,7 @@ async function observe(browser, url) {
     offOrigin: fontResponses.filter((r) => !sameOrigin(r)),
     servedFromCache: fontResponses.filter((r) => r.fromCache),
     // W4a on the delivered document itself, not just on disk in the container.
-    docGoogleRef: FETCHABLE_RE.test(documentHtml),
+    docGoogleRef: isFetchable(documentHtml),
     platformFonts,
   };
 }
@@ -391,8 +436,9 @@ async function run() {
       userDataDir, // fresh profile: no carried-over font cache
       args: ['--no-sandbox', '--disable-dev-shm-usage'],
     });
-    for (const path of ['/accounted-for', MEMBER_PATH, ...EXTRA_PATHS]) {
-      observations.push(await observe(browser, `${ORIGIN}${path}`));
+    for (const surface of SURFACES) {
+      const o = await observe(browser, `${ORIGIN}${surface.path}`);
+      observations.push({ ...o, surface });
     }
   } catch (err) {
     invalid.push(`browser run failed: ${err.message}`);
@@ -500,12 +546,35 @@ async function run() {
       console.log(`    ${pad(family, 26)} ${kind}  ${info.isCustomFont ? 'custom font' : 'platform   '}  ${info.glyphCount} glyphs`);
       if (isVendored) anyVendoredRenderedAnywhere = true;
     }
+
+    // W3 — POSITIVE per-surface expectation. A face that silently fell back to
+    // a system stack renders fine and proves nothing; only this catches it.
+    const expect = o.surface?.expectAnyOf ?? null;
+    if (expect) {
+      const got = expect.filter((fam) => {
+        const info = o.platformFonts.get(fam);
+        return info && info.glyphCount > 0 && info.isCustomFont;
+      });
+      console.log(`    expected face          ${expect.join(' | ')}`);
+      console.log(`    rasterized             ${mark(got.length > 0)}${got.length ? `  (${got.join(', ')})` : '  ← silent fallback'}`);
+      if (got.length === 0) {
+        failures.push(
+          `${o.url}: none of [${expect.join(', ')}] rasterized as a custom face — ` +
+          'the intended webfont fell back silently');
+      }
+    } else if (o.surface?.systemOk) {
+      console.log('    expected face          none — system stack is intended here');
+    } else {
+      console.log('    expected face          NOT ASSERTED for this surface');
+    }
+    if (o.surface?.why) console.log(`    why                    ${o.surface.why}`);
     console.log('');
   }
 
   /* W3 vendored-reach + REACH */
   console.log('W3  RENDER / ORIGIN');
   console.log(`  network-fetched fonts all same-origin   ${mark(observations.every((o) => o.offOrigin.length === 0))}`);
+  console.log(`  per-surface expectations met            ${mark(!failures.some((f) => f.includes('rasterized as a custom face')))}`);
   console.log(`  >=1 vendored /fonts face rasterized     ${mark(anyVendoredRenderedAnywhere)}`);
   if (!anyVendoredRenderedAnywhere && totalFonts > 0) {
     failures.push('no deliberately vendored /fonts/... family rasterized on any surface');
