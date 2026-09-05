@@ -27,6 +27,8 @@ Five states. The distinction between `absent` and `unverified` is load-bearing.
 | **unverified** | An *epistemic* claim: this census could not produce named evidence either way. Not a synonym for absent. |
 | **deliberately refused** | The capability was available and declined for constitutional reasons. The refusal is the finding. |
 
+**Two axes, not one.** `realization` (does the capability exist) and `verification` (can this census establish it) are separate claims and must not be compounded into a single token. For every row below, the cited evidence *is* the verification: a row marked `present` or `partial` without evidence would be a realization claim with no verification behind it, which this census does not permit. Where the two axes diverge, the row states both explicitly rather than collapsing them.
+
 **Rule the census obeys about itself:** `present` requires evidence. Where evidence could not be produced within this census's read-only scope, the row says `unverified` and says so plainly. This census must not do to Jarvis what the vendor ladder does to its readers — assert a state the subject did not author.
 
 ## 3. Foreign coordinate (comparator only)
@@ -59,11 +61,11 @@ Airtable's genuinely useful contributions, recorded and closed:
 | 7 | **Human authority** | Where are decisions reserved upward? | **present** | 36 records in `docs/governance/`, including `FOUNDER_DECISION_DOCKET_2026-07-29.md`, `FOUNDER_RULING_LIVING_SPIRAL_CONTRACT_AMENDMENT_2026-08-16.md`, `PR_1145_CLASS_A_BOOTSTRAP_EXCEPTION_2026-08-28.md`. Acceptance is a founder act; `covenant-gates.yml` enforces it in CI. Reservation is explicit and traceable. |
 | 8 | **Observability / witness** | Can action and failure be inspected? | **present** | 29 `verify-*` scripts; `scripts/witness/cmt-01-shadow-witness.ts`, `cc-a-memory-provenance-witness.ts`; the shadow-construction pattern (`lib/maia/canonical-turn/shadow.ts`) emitting per-turn diff without being response-producing; the witness-record genre across `docs/programme/`. Failure is observable *and* a single non-zero shadow line halts the witness for classification rather than being normalized. |
 | 9 | **Cross-agent coordination** | Can multiple intelligences act without divergent realities? | **partial** | Structural where it was built: the deploy lane `flock` exists **because** five processes wedged on 2026-07-09 — the file names the incident. Elsewhere coordination is *instructed, not enforced*: "BRANCH FROZEN TO A SINGLE WRITER" is prose in `CLAUDE.md` and the CMT-01 runbook, with no mechanism by which a second session would encounter it. Divergent-reality risk is unmitigated outside the deploy lane. |
-| 10 | **Accountable supersession** | Can state, models, claims and decisions be replaced without erasing their history? | **partial / unverified** | Present in specific instruments: append-only revision store with digest-verified historical recovery (`lib/manuscript/development/` — `readState.ts`, `resolve.ts`, `bind.ts`); canon pre-ratification reconciliation (`docs/canon/RELATIONSHIP_ROOM_CONSTITUTION_PRE_RATIFICATION_RECONCILIATION_2026-08-10.md`); `CORPUS_DISCIPLINE_PROTOCOL_v1.0.md`. **Unverified** as a general property: this census found no mechanism guaranteeing that a superseded programme claim retains its authority history. Superseded prose is edited in place. |
+| 10 | **Accountable supersession** | Can state, models, claims and decisions be replaced without erasing their history? | **realization: partial**<br>**verification: unverified** | Present in specific instruments: append-only revision store with digest-verified historical recovery (`lib/manuscript/development/` — `readState.ts`, `resolve.ts`, `bind.ts`); canon pre-ratification reconciliation (`docs/canon/RELATIONSHIP_ROOM_CONSTITUTION_PRE_RATIFICATION_RECONCILIATION_2026-08-10.md`); `CORPUS_DISCIPLINE_PROTOCOL_v1.0.md`. **Unverified** as a general property: this census found no mechanism guaranteeing that a superseded programme claim retains its authority history. Superseded prose is edited in place. |
 
 ### Tally
 
-`present` 4 · `partial` 5 · `partial/unverified` 1 · `absent` 0 · `deliberately refused` 0 (see §7 — refusals in this census's scope are *product* refusals, not capability refusals)
+`present` 4 · `partial` 5 · `absent` 0 · `deliberately refused` 0 · one row (10) carrying divergent axes: realization `partial`, verification `unverified` (see §7 — refusals in this census's scope are *product* refusals, not capability refusals)
 
 ## 5. Where Soullab has already left the paradigm
 
@@ -72,8 +74,8 @@ Three points where Jarvis is not further along the vendor ladder but **orthogona
 **5.1 — Constitutional boundaries are enforced architecturally, not remembered by intelligence.**
 Airtable's fourth human-in-the-loop principle is *"hard-code non-negotiables rather than trusting the model to remember them."* Soullab's version is stronger and has **three independent specimens** (rows 6, 9): a build that dies in under a second; a kernel lock that cannot be left wedged and cannot be forced without detaching itself; a producer registry that is closed rather than conventionally respected. The distinguishing move is that the boundary survives the intelligence being replaced. Recorded here as a **candidate discovered invariant supported by multiple implementations** — deliberately *not* canonized in this document. Canonization follows the normal evidence path.
 
-**5.2 — Scope discipline on what a green gate establishes.**
-`jarvis-epistemic-guard.yml` states in its own header exactly what a green run establishes *and no further*: not that claims are true, not that fabricated evidence was detected, not that inadmissible claims cannot enter by another route. A gate that publishes its own limits is a different object from a gate that reports success. No comparator material examined here does this.
+**5.2 — Bounded verification semantics.**
+`jarvis-epistemic-guard.yml` states in its own header exactly what a green run establishes *and no further*: not that claims are true, not that fabricated evidence was detected, not that inadmissible claims cannot enter by another route. A gate that publishes its own limits is a different object from a gate that reports success. No comparator material examined here does this. Named *bounded verification semantics* for reference within this census; **not canonized** — the term waits on the same evidence path as 5.1.
 
 **5.3 — Accountable supersession as the terminal problem, not orchestration.**
 Orchestration asks whether multiple agents can coordinate action. Accountable supersession asks whether the organism can change what it believes, and change what performs its cognition, **without losing the history, authority, provenance, or constitutional continuity of what came before.** The ontology this requires — claim → evidence → confidence → authority → provenance → custody → decision → supersession — is not carried by the enterprise agent-platform model. Row 10 records that Soullab has this problem *named* and partially instrumented, not solved.
@@ -82,9 +84,13 @@ Orchestration asks whether multiple agents can coordinate action. Accountable su
 
 **The bottleneck is custody, not display.**
 
+> **Jarvis's present limitation is not primarily insufficient agent capability; it is that authoritative programme state cannot yet be reconstructed mechanically from a single sovereign source.**
+
 Rows 3, 6, 7, 8 are `present`. Rows 1, 2, 9 are `partial` in a mutually reinforcing way: canonical programme state is authored in prose, distributed across at least five surfaces, with no single writer and no enforcement of the single-writer conventions that exist. Every new session reconstructs that state, and reconstructs it differently.
 
 The consequence is the observed contradiction: **the architecture is capable well beyond what its operator can presently act on, because acting requires first re-deriving where things stand.** That is not a visualization deficit. A projection built over uncustodied state would render the divergence faster and more persuasively.
+
+The row-9 split is the mechanism by which this persists. Coordination is architectural exactly where an incident forced it, and instructed everywhere else. `flock` is not a deployment convenience — it is the demonstration that **shared instruction is not shared reality**. "Single writer" written in prose does not create single-writer semantics; a new session has no causal encounter with that fact, and cannot acquire one by reading harder.
 
 **Governing constraint for any future projection surface** (recorded, not authorized):
 
@@ -103,3 +109,16 @@ Recorded so the repository does not falsely encode what problem was being solved
 ## 8. What this census does not establish
 
 It does not establish that the `present` rows work under load, that the `partial` rows are safe at their boundaries, or that row 10 is tractable. It establishes what evidence exists in this repository as of `2026-09-05`, and names where evidence could not be produced.
+
+## 9. The question this census earns (not authorized)
+
+Recorded as an open architectural question, with no schema, no design, and no authorization to begin:
+
+> Is there a **custody substrate** able to answer mechanically — What work exists? What state is it in? What evidence establishes that state? What currently holds authority to mutate it? What supersedes what?
+
+Two constraints on any future answer, recorded now while the finding is fresh:
+
+1. **Machine-readability is not custody.** Converting the 42 prose records wholesale into YAML or a table would mistake format for authority and produce a second uncustodied surface.
+2. The prior work is to discover the **minimum authoritative state that must be machine-readable**. Prose remains the rich explanatory layer around that minimum, not a competitor to it.
+
+This section names a question. It does not open a lane.
