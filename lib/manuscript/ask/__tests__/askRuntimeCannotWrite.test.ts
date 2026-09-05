@@ -18,6 +18,10 @@ const ASK_LIB = join(ROOT, 'lib', 'manuscript', 'ask');
 const ASK_ROUTE = join(ROOT, 'app', 'api', 'sovereign', 'manuscripts', '[id]', 'ask', 'route.ts');
 const ASK_CLIENT = join(ROOT, 'lib', 'writersStudio', 'askClient.ts');
 const ASK_PANEL = join(ROOT, 'app', 'writers-studio', 'canvas', 'AskMaia.tsx');
+/* BUILD-07E — the developmental lane's panel. It posts to the same endpoint and
+   is therefore part of the same runtime, gated here rather than in the 07D
+   develop-surface gate: what it may not do is a property of the Ask runtime. */
+const DEV_PANEL = join(ROOT, 'app', 'writers-studio', 'develop', 'ObservationDialogue.tsx');
 
 /* WHERE THE BOUNDARY IS, SAID PLAINLY. The Ask runtime is these files: the ask
    library, the ask route, its client and its panel. `StructureReview` is NOT in
@@ -35,7 +39,7 @@ function askFiles(): { path: string; code: string }[] {
   const files = readdirSync(ASK_LIB)
     .filter((f) => f.endsWith('.ts'))
     .map((f) => join(ASK_LIB, f));
-  files.push(ASK_ROUTE, ASK_CLIENT, ASK_PANEL);
+  files.push(ASK_ROUTE, ASK_CLIENT, ASK_PANEL, DEV_PANEL);
   return files.map((p) => ({ path: p, code: stripComments(readFileSync(p, 'utf8')) }));
 }
 
@@ -102,8 +106,53 @@ describe('the Ask runtime cannot write to the Work', () => {
   });
 
   it('sends no tools to the model, so there is no read-request path', () => {
-    const reader = stripComments(readFileSync(join(ASK_LIB, 'askReader.ts'), 'utf8'));
-    expect(reader).not.toMatch(/\btools\s*:/);
-    expect(reader).not.toContain('request_sections');
+    /* BOTH READERS. The developmental lane gets its own standing instructions
+       and its own module; a capability absent from one and present in the other
+       would be a read-request path with a different name. */
+    for (const f of ['askReader.ts', 'developmentalAskReader.ts']) {
+      const reader = stripComments(readFileSync(join(ASK_LIB, f), 'utf8'));
+      expect(`${f}: ${/\btools\s*:/.test(reader)}`).toBe(`${f}: false`);
+      expect(`${f}: ${reader.includes('request_sections')}`).toBe(`${f}: false`);
+    }
+  });
+
+  /* ── BUILD-07E ───────────────────────────────────────────────────────── */
+
+  it('the developmental lane reaches the reading through a SELECT-only loader, never its store', () => {
+    /* `developmentalReading/store` exports `freezeAndStore`, which INSERTs.
+       Importing it for a reader would put a writer in the Ask module graph —
+       the precise reason `frozenReading` and `frozenDevelopmentalReading`
+       exist instead of the stores they shadow. */
+    for (const { path, code } of askFiles()) {
+      for (const spec of importsOf(code)) {
+        const isValueImport = !/import\s+type/.test(
+          code.slice(Math.max(0, code.indexOf(spec) - 200), code.indexOf(spec)));
+        if (isValueImport) {
+          expect(`${path} :: ${spec}`).not.toContain('developmentalReading/store');
+          expect(`${path} :: ${spec}`).not.toContain('developmentalReading/freeze');
+          expect(`${path} :: ${spec}`).not.toContain('developmentalReading/commission');
+        }
+      }
+    }
+  });
+
+  it('evidence reaches the model only through recoverEvidence, never a raw slice', () => {
+    const ctx = stripComments(
+      readFileSync(join(ASK_LIB, 'developmentalContext.ts'), 'utf8'));
+    /* The laundering path, forbidden as a symbol: a context that sliced text
+       itself would be assembling evidence rather than recovering it, and the
+       digest check would no longer stand between the model and current prose. */
+    expect(ctx).not.toMatch(/\.slice\(/);
+    expect(ctx).not.toContain('codePointBoundaries');
+    expect(ctx).toContain('recoverEvidence');
+  });
+
+  it('nothing in the ask runtime can mutate a frozen developmental reading', () => {
+    for (const { path, code } of askFiles()) {
+      for (const forbidden of ['freezeAndStore', 'freezeReading', 'classifyObservations']) {
+        expect(`${path}::${forbidden}::${code.includes(forbidden)}`)
+          .toBe(`${path}::${forbidden}::false`);
+      }
+    }
   });
 });

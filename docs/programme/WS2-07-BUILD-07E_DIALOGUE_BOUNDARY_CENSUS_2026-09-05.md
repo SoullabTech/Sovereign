@@ -14,6 +14,12 @@ FOUNDER DIRECTION  "Do not redesign the architecture; build from the development
 BUILD-07F–H        UNAUTHORISED. 07F opens only by its own act.
 ```
 
+> **RULINGS RECEIVED 2026-09-05 — §6 Q1/Q2/Q3 are ANSWERED and the unit is IMPLEMENTED against
+> them. Q1 observation-only in v1 (no reading-level thread). Q2 the frozen observation plus
+> digest-verified recovered evidence. Q3 a superseded observation opens, AS superseded. The build
+> and its falsifier results: `WS2-07-BUILD-07E_DIALOGUE_BUILD_2026-09-05.md`. This census is left
+> as written — it is the boundary the unit was built against, not a running log.**
+
 The question this unit answers, in the founder's words:
 
 > Can the writer actually enter into dialogue with MAIA about what she noticed, while the Work

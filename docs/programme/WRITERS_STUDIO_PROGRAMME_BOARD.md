@@ -42,12 +42,17 @@ CURRENT UNIT       BUILD-07E Developmental Dialogue — OPEN (founder act 2026-0
                    no revision path (07H).
                    census/contract: WS2-07-BUILD-07E_DIALOGUE_BOUNDARY_CENSUS_2026-09-05.md
                    lane: JARVIS-WS2-07-DEVELOPMENTAL-INTELLIGENCE-01
-CURRENT CANDIDATE  none — boundary census recorded, not yet built
-                   KEY FINDING: the anchored-ask spine already exists in canonical
-                   (lib/manuscript/ask/*, AskMaia.tsx, ask_threads/ask_turns) pointed at
-                   the STRUCTURE proposal. `readingId`/`observationKey` appear zero times
-                   under lib/manuscript/ask/. 07E EXTENDS that spine to the developmental
-                   address; it does not author a second conversation model.
+CURRENT CANDIDATE  BUILT on claude/writer-author-studios-roadmap-b2tqf5, base 5c57e27f0 —
+                   gates green, NOT CLOSED (awaits the founder walk in the Develop room).
+                   Founder rulings Q1 observation-only · Q2 digest-verified evidence ·
+                   Q3 superseded opens AS superseded — all three implemented.
+                   NO MIGRATION (E10 discharged: anchor and reading_identity were jsonb).
+                   ask suites 104/0 · related suites 641/0 · typecheck no regressions.
+                   record: WS2-07-BUILD-07E_DIALOGUE_BUILD_2026-09-05.md §5 = the walk
+                   KEY FINDING (why the unit was small): the anchored-ask spine already
+                   existed in canonical pointed at the STRUCTURE proposal. 07E EXTENDED it
+                   to the developmental address; it did not author a second conversation
+                   model, and the 05B structure path is untouched.
 CLOSED FOLLOW-UP   WS2-07-F1 Developmental Semantic Boundary Repair — RATIFIED IN CANONICAL
                    (founder act 2026-09-04, determination C). The eight phenomena carry
                    is/isNot definitions in lib/manuscript/developmentalReading/contract.ts
