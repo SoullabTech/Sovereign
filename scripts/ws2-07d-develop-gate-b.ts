@@ -66,13 +66,37 @@ import { NextRequest } from 'next/server';
  * Nothing else in this harness moves: F1–F7, the fixture, the refusal and
  * retry rules, the provider-call limit and the success criteria are untouched.
  */
-const CANDIDATE = 'd884ee606';
+/**
+ * PIN RECONCILIATION 2 — 2026-09-05, founder-authorized, pin declaration ONLY.
+ *
+ * Gate B attempt 1 found a member-surface defect: Develop answered every
+ * capture refusal with "it needs a draft with sections", which misdescribed
+ * `revision_not_current`. The bounded repair (`2315c7994`) names that state in
+ * the member's language and offers the Writer Canvas navigation that already
+ * exists. It touches ONE pinned runtime file, `DevelopRoom.tsx`; capture, the
+ * reader, the classifier, persistence and the v2 contract are untouched, and
+ * mechanical verification of all fourteen pins showed exactly that one drift.
+ *
+ * So the runtime under acceptance has MOVED, and this is not the previous
+ * case: last time the pin was reconciled to a documentation-only head and the
+ * runtime was unchanged. Here the runtime itself changed, by authorized
+ * repair. The commit carrying this reconciliation is an acceptance-INSTRUMENT
+ * head, not a new runtime candidate — P0 exists to keep that distinction
+ * honest, by proving the descendant harness exercises exactly `2315c7994`.
+ *
+ * Gate A's 25/25 at `082ae1a74` remains valid HISTORICAL evidence for
+ * `d884ee606` and is neither erased nor relabelled. It is no longer 07D's
+ * final Gate A evidence: acceptance evidence belongs to the runtime it
+ * actually witnessed, and Gate A does not import `DevelopRoom.tsx` is a reason
+ * to expect a rerun to pass, never a licence to skip it.
+ */
+const CANDIDATE = '2315c7994';
 const CANDIDATE_BLOBS: Record<string, string> = {
   'app/api/sovereign/manuscripts/[id]/readings/route.ts': 'e0a85ed8bf0fd5e4e9f6f4534e73cfb2b66be3ca',
   'app/api/sovereign/manuscripts/[id]/readings/[readingId]/route.ts': '40bc3eacf3813153a6716953ab6c9cd3b5b4f682',
   'lib/writersStudio/developClient.ts': '42fa20def30b79acd27f0f97499ab98092eb1a7f',
   'lib/writersStudio/developPresentation.ts': 'a6e777e933c8afcc632889e4ca428805cbfab61b',
-  'app/writers-studio/develop/DevelopRoom.tsx': '3bbc718e3058cf5fc421a4f6125ff28fc3509f68',
+  'app/writers-studio/develop/DevelopRoom.tsx': '175b4de0804449991af06a530b91de42eb180825',
   'app/writers-studio/develop/page.tsx': '4292be949f66a21ee109d5fb6b63d5a1f5e9d668',
   /* the 07C reading unit — contract/freeze/classify carry the v2 correction;
      store/assess/commission stand unchanged since candidate 8a26a8971 (canonical 376daae06) */
