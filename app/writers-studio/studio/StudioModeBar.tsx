@@ -79,6 +79,11 @@ function StudioModeItem({
         letterSpacing: '0.08em',
         padding: `${SPACE.tight}px ${SPACE.base}px`,
         borderRadius: RADIUS.pill,
+        /* The bar may scroll at compact width; a label may not be broken
+           across lines or squeezed to fit, which is how a mode becomes
+           unreadable rather than merely off-screen. */
+        whiteSpace: 'nowrap',
+        flexShrink: 0,
         color: active ? INK.primary : available ? INK.secondary : INK.quiet,
         opacity: available ? 1 : 0.5,
         ...(active

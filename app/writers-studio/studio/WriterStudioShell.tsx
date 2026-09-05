@@ -99,6 +99,9 @@ export function WriterStudioShell({
         data-studio-header
         style={{
           display: 'flex', alignItems: 'center', gap: SPACE.roomy,
+          /* At compact width the bar takes a line of its own rather than
+             leaving. See the mode bar below. */
+          flexWrap: compact ? 'wrap' : 'nowrap',
           padding: `${SPACE.base}px ${SPACE.roomy}px`,
           borderBottom: `1px solid ${RULE.soft}`,
           background: GROUND.raised, flexShrink: 0,
@@ -115,13 +118,29 @@ export function WriterStudioShell({
           </StudioText>
           {workNote ? <StudioText role="quiet">{workNote}</StudioText> : null}
         </div>
-        {!compact && (
-          <StudioModeBar
-            current={currentMode}
-            manuscriptId={manuscriptId}
-            style={{ marginLeft: SPACE.roomy }}
-          />
-        )}
+        {/* THE MODE BAR IS NOT OPTIONAL AT ANY WIDTH.
+
+            It was previously dropped when the header got narrow, on the
+            reading that five labels would not fit. What that actually cost is
+            not decoration: DEVELOP is a mode, not a rail destination — the
+            rail has no `develop` entry, by design — so removing the bar left a
+            writer on a phone with no door from WRITE to DEVELOP at all. The
+            founder walk of 2026-09-05 could not be performed at that width.
+
+            So at compact the bar wraps onto its own line (`order` puts it
+            after the identity row, `flexBasis` claims the full width) and
+            scrolls horizontally if the labels outrun the viewport. A label
+            that must be scrolled to is still reachable; a bar that is not
+            rendered is not. */}
+        <StudioModeBar
+          current={currentMode}
+          manuscriptId={manuscriptId}
+          style={
+            compact
+              ? { order: 1, flexBasis: '100%', marginLeft: 0, overflowX: 'auto' }
+              : { marginLeft: SPACE.roomy }
+          }
+        />
         <span style={{ flex: 1 }} />
         {headerRight}
       </header>
