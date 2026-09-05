@@ -3,13 +3,15 @@
 ```text
 BRANCH      claude/local-fonts-sovereignty
 BASE        e854ecc49 (canonical at the time of branching)
-STATE       STATIC EVIDENCE COMPLETE · RUNTIME GATES PENDING
+SUBJECT     49be729b1e50f49682e9ea35ab6331ef0612a370
+STATE       RUNTIME GATES WITNESSED · G1a G1b G2 G3 G4a PASS · G4b DEFERRED
 DATE        2026-09-05
 ```
 
-This is an **acceptance record**, not a witness. G1–G4 have not run. After the Mac
-Studio run, results and evidence references are filled into this same versioned
-record — it is not superseded by a second document.
+This is an **acceptance record**. It was opened before the runtime gates ran and now
+carries their results, filled back into this same versioned document rather than
+recorded in a second one. §5 states what each gate observed and, equally, what it did
+not reach. A gate result here never claims more than its instrument measured.
 
 ---
 
@@ -24,8 +26,16 @@ and narrower than any offline claim.
 
 `app/globals.css`, imported by `app/layout.tsx`, opened with four
 `@import url('https://fonts.googleapis.com/...')` declarations covering five families.
-Every member page load therefore caused the browser to request a stylesheet from
-Google's font CDN and then download font binaries from Google infrastructure.
+The member UI therefore carried a **runtime dependency** on Google's font CDN: on any
+page load where the stylesheet or a font binary was not already in the browser's cache,
+the browser fetched it from Google infrastructure, disclosing the requesting IP at that
+moment.
+
+The earlier phrasing of this finding — *"every member page load"* — was withdrawn as a
+scope error. Browsers cache both the stylesheet and the binaries, and this branch never
+measured cache state. The correct statement is dependence plus disclosure-on-fetch, not
+disclosure per load. What the repair removes is the dependency itself, which is the
+architectural fact; per-load frequency was never the argument.
 
 Two distinct problems, on the same line of CSS:
 
@@ -88,22 +98,80 @@ example, a static microsite and `app/layout.tsx` are not equivalent architectura
 facts. The residual is a census result, not a reason to widen the repair. Do not
 "repair" code whose correct disposition is removal.
 
-## 5. Runtime acceptance — PENDING
+## 5. Runtime acceptance — WITNESSED
 
-Run on the Mac Studio. Nothing broader.
+Run on the Mac Studio against subject `49be729b`. Nothing broader.
 
 ```text
-G1   typecheck / build                                                 PENDING
-G2   representative visual regression, incl. /accounted-for            PENDING
-G3   browser network witness                                           PENDING
+G1a  typecheck                                                            PASS
+G1b  clean-generated-state build                                          PASS
+G2   representative visual regression, incl. /accounted-for               PASS
+G3   browser network witness                                              PASS
        → fonts served only from the AIN origin
        → zero fonts.googleapis.com / fonts.gstatic.com requests
-G4a  Google-host blocking                                              PENDING
+G4a  Google-host blocking                                                 PASS
        → page and intended typography remain correct
        → no hidden fallback dependency
-G4b  WAN unavailable, LAN / AIN origin still reachable      OPTIONAL / DEFERABLE
-       → page and intended typography remain correct
+G4b  WAN unavailable, LAN / AIN origin still reachable                DEFERRED
+       → optional by §6; not required for the permitted claim
 ```
+
+### G1b — what the witness observed
+
+G1b was first recorded PROVISIONAL, not PASS: that build ran over a `.next` left behind
+by an `ENOSPC`-aborted run, so a success could not be attributed to the source tree
+alone. It was re-run against observed clean generated state.
+
+```text
+subject              49be729b1e50f49682e9ea35ab6331ef0612a370
+tracked tree         CLEAN
+:3010                STOPPED
+:3009                PID 21415 · UNTOUCHED
+
+.next before         3.6G
+df before            2.2 GiB
+.next removed        OBSERVED ABSENT
+df after removal     5.8 GiB
+launch rule          ≥ 5.0 GiB free → build permitted
+
+build command        npm run build
+build count          EXACTLY ONE
+build exit           0
+runtime              131.53s
+.next after          3.6G
+df final             2.2 GiB
+
+tracked tree after   CLEAN
+:3010 after          STOPPED
+:3009 after          PID 21415 · UNTOUCHED
+```
+
+The claim this licenses is exactly: *observed removal of `.next`, one build of
+`49be729b`, observed successful completion.* Removal was observed rather than assumed,
+because the provisional result existed precisely because that step had failed once.
+
+**Borrowed-figure correction.** A free-space figure of 205 GB was in circulation for the
+Mac Studio. It was not the Mac Studio's. It came from the minisforum deploy gate line
+`Disk: 205 GB free on / (floor 60 GB)` — a different host, on a different lane, from a
+different act. Direct observation of the Mac Studio Data volume gave 2.2 GiB. The build
+proceeded on the observed figure after removal freed space to 5.8 GiB, not on the
+borrowed one. Recorded because a number that travels between machines without its
+subject is the same defect class as a gate result that travels beyond its instrument.
+
+### What these gates did not reach
+
+```text
+build-plane independence      NOT TESTED
+hermeticity                   NOT TESTED
+build network independence    NOT TESTED
+```
+
+G1b ran with the network available and does not establish that the build would complete
+without it. Independently of that untested question, the repository is known to use
+`next/font/google`, which fetches from Google **at build time** and self-hosts the
+result — a build-plane dependency on a different plane from the runtime one this branch
+repairs, and outside its contract. Neither the gate nor this record asserts that the
+build is Google-independent.
 
 **G2 verifies intended typography, not pixel identity.** Browser rasterization and
 platform rendering produce meaningless pixel differences even when the correct local
@@ -121,7 +189,7 @@ blocking on the two Google hosts) is the fast, isolated font-independence test a
 ## 6. Claim rule
 
 ```text
-G1–G4a PASS permits exactly:
+G1a G1b G2 G3 G4a PASS permits exactly:
 
   "Google Fonts runtime dependency has been removed and witnessed
    on the live member path."
@@ -129,6 +197,11 @@ G1–G4a PASS permits exactly:
 G4b is NOT required for that claim.
 G4b establishes the separate environmental fact of WAN-independent UI operation.
 ```
+
+**Witnessed on the Mac Studio, not in production.** The gates above ran against the
+subject on the development host. They do not establish the state of the deployed
+member path. Production earns its own witness after this branch merges and deploys, and
+the `/accounted-for` typeface row stays `External today` until that witness exists.
 
 ### Not established by this branch, under any gate outcome
 
@@ -143,7 +216,7 @@ the binary claim "works offline": it shows where dependence remains and where it
 actually been removed.
 
 ```text
-ordinary member UI       LOCAL                          (pending G3)
+ordinary member UI       LOCAL                          (witnessed — G3)
 database                 LOCAL
 speech recognition       LOCAL
 speech synthesis         LOCAL
@@ -169,8 +242,12 @@ vendored assets + applicable licenses
         ↓
 build / deployment / runtime
 
-NO reverse dependency on Google
+NO reverse dependency on Google — for the vendored faces
 ```
+
+That last line is scoped to the assets this branch vendored. It is **not** a claim that
+the build as a whole is Google-independent: `next/font/google` remains a separate
+build-time acquisition path, and build-plane independence is NOT TESTED (§5).
 
 A future maintainer can refresh fonts deliberately while an installed AIN OS remains
 independent of Google. Full provenance and licensing: `public/fonts/LICENSES.md`.
