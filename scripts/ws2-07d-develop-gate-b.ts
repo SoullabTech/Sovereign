@@ -258,6 +258,40 @@ async function main() {
     row('F5 the reading is retained byte-identical (INV-4, INV-19, INV-22)', JSON.stringify(againBody.reading) === asStored && JSON.stringify(await loadReading(firstId, memberId)) === asStored);
     record.afterEdit = states;
 
+    /* ── F5b · the guard, made deterministic ──────────────────────────────
+       MAIA reads a KEPT version of the Work. The draft has moved past its
+       last kept version, so a commission must refuse at CAPTURE with
+       revision_not_current — before any model call, storing nothing, and
+       without the surface silently checkpointing on the member's behalf.
+       Gate B attempt 1 (2026-09-04) found this by accident when F6 refused
+       409. It is an assertion now, so the circumstance that found it cannot
+       be deleted by the repair. Capture must never weaken here. */
+    const rowCount = async () => Number((await query<{ n: string }>(
+      `SELECT count(*)::text AS n FROM developmental_readings WHERE manuscript_id = $1`, [manuscriptId])).rows[0]!.n);
+    const callsBeforeGuard = providerCalls;
+    const rowsBeforeGuard = await rowCount();
+    const actsBeforeGuard = history.length;
+    const stale = await commission('F5b', 'voice');
+    const rowsAfterGuard = await rowCount();
+    row('F5b edited but not kept: the commission refuses revision_not_current AT CAPTURE — no model call, no row, one act',
+      stale.status === 409 && stale.body.refusal === 'revision_not_current' && stale.body.stage === 'capture'
+      && providerCalls === callsBeforeGuard && rowsAfterGuard === rowsBeforeGuard && history.length === actsBeforeGuard + 1,
+      `${stale.status} ${stale.body.refusal ?? ''} at ${stale.body.stage ?? '—'} · ${providerCalls - callsBeforeGuard} call(s) · ${rowsAfterGuard - rowsBeforeGuard} new row(s)`);
+    record.staleRefusal = stale.body;
+
+    /* ── F5c · the writer Keeps a version ─────────────────────────────────
+       The existing member act, through the draft route, exactly as the
+       Writer Canvas performs it. The Develop surface neither has nor gains a
+       control that changes the Work: the checkpoint is the writer's, taken
+       elsewhere, and the reading is commissioned afterwards. */
+    const draftNow = await draftRoute.GET(req('GET', '/draft'), P);
+    const draftNowBody = await draftNow.json();
+    const kept = await draftRoute.PUT(req('PUT', '/draft', { sections: edited, baseRevisionId: draftNowBody.revisionId, idempotencyKey: randomUUID(), checkpoint: true }), P);
+    row('F5c the writer Keeps a version through the draft route — the act the refusal named, taken where it lives',
+      kept.status === 200, `status ${kept.status}`);
+    row('F5c the kept version does not disturb the first reading: still byte-identical, still superseded (INV-4, INV-19)',
+      JSON.stringify(await loadReading(firstId, memberId)) === asStored);
+
     /* ── F6 · a new reading is a NEW reading ── */
     const callsBefore2 = providerCalls;
     const second = await commission('F6', 'voice');
