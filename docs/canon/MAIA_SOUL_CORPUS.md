@@ -1,10 +1,22 @@
 # MAIA Soul Corpus — The Second Brain
 
-> **Status:** **Canon candidate — founder-authored 2026-09-05.** Consistent with
-> `RATIFICATION_BOUNDARY_PRECEDENT_2026-07-26.md`, this article becomes **ratified
-> canon only through an explicit act of authorization** by the designated authority.
-> Writing it here is *preparation* (additive); it changes the governing status of no
-> other text and authorizes no implementation.
+> **Status:** **RATIFIED CANON — effective 2026-09-05.**
+>
+> **Ratified by:** Kelly Nezat, founder of Soullab and the designated authority for
+> MAIA canon, per `RATIFICATION_BOUNDARY_PRECEDENT_2026-07-26.md`.
+> **Ratifying act:** founder direction, 2026-09-05, that the Soul Corpus be
+> recognized in the canon rather than corrected only on an outward surface —
+> reaffirmed in the same session after authority was expressly confirmed. This
+> article entered the repository as a candidate in PR #1212; the merge was
+> preparation, and this record marks the separate act that ratified it.
+>
+> **What ratification establishes:** the identity and orientation claims below —
+> what the Soul Corpus **is**, whom it serves, that it is an inheritance rather than
+> an authority over the member, that it is not a ceiling, and that neither it nor any
+> model is the center.
+> **What ratification does not establish:** any runtime capability, retrieval status,
+> quantitative count, or Live designation on any surface. Those remain evidence-bound.
+> §5 and §6 are unchanged by this ratification and continue to govern.
 >
 > **Authored by:** Kelly Nezat (founder) — 2026-09-05
 > **Type:** Canon — a constitutional article of *identity and orientation*. It names
