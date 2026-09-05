@@ -125,3 +125,54 @@ covenant-gates    RED — the mentor line is the founder's alone
 The eventual 07D acceptance is to rest on three independent kinds of evidence —
 deterministic, live-model, and member-visible — recorded separately, rather
 than on one retrospective document asserting that everything worked.
+
+---
+
+## 7 · Gate A rerun on runtime candidate `2315c7994` — 2026-09-05
+
+Appended, not rewritten. §1–§6 above stand as the record of the `d884ee606`
+run and are not relabelled.
+
+Between the two runs, Gate B attempt 1 found a member-surface defect and the
+founder authorized a bounded 07D repair (`2315c7994`), which edited one runtime
+file, `app/writers-studio/develop/DevelopRoom.tsx`. The runtime under
+acceptance therefore moved.
+
+```text
+BUILD-07D · Gate A witness · rerun
+runtime candidate   2315c7994
+checkout            12c485f1a
+checkout delta      Gate B acceptance instrument only (pin declaration)
+database            the same reconstructed UTF-8 scratch database
+Gate A              25 checks · 0 failures
+E0                  server_encoding = UTF8 · GREEN
+E8 v2               3 / 3 GREEN
+result              GATE A ACCEPTED for 2315c7994
+BUILD-07D           NOT ACCEPTED / remains open
+```
+
+**Why the rerun was required.** Gate A does not import `DevelopRoom.tsx`, so
+its earlier result was almost certainly unaffected. That is a reason to expect
+a passing rerun; it is not a licence to relabel one execution as evidence of a
+different runtime. The governing rule, founder-stated:
+
+> Acceptance evidence belongs to the runtime it actually witnessed.
+
+So 07D's three gates now name one runtime:
+
+```text
+runtime candidate   2315c7994
+
+Gate A              deterministic architecture      → 2315c7994 @ 12c485f1a
+Gate B attempt 2    live MAIA workflow              → 2315c7994 via P0
+D1–D8               rendered member experience      → pending
+```
+
+```text
+d884ee606 @ 082ae1a74   valid HISTORICAL Gate A evidence · neither erased
+                        nor relabelled
+2315c7994 @ 12c485f1a   current Gate A acceptance evidence
+```
+
+§5 above applies unchanged to this run: no model participated, no
+member-visible surface was rendered, and the decline it witnesses is a fixture.
