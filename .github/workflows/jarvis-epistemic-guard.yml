@@ -19,6 +19,13 @@ name: JARVIS Epistemic Guard
 on:
   pull_request:
     branches: [clean-main-no-secrets, main]
+  # Canonical push: `Axis 1` is branch-protection-required, and a commit that is
+  # already canonical is never the head of an open PR. Adding the trigger alone
+  # would have been wrong — this gate adjudicates against a BASE commit, and the
+  # PR-only base expression has no meaning on a push. The base is resolved
+  # per-event below. Added 2026-09-05 (CI-EXACT-SHA-CHECKS-01).
+  push:
+    branches: [clean-main-no-secrets, main]
 
 permissions:
   contents: read
@@ -28,7 +35,7 @@ jobs:
     name: Axis 1 — authoritative adjudication
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout PR head with full history
+      - name: Checkout head with full history
         uses: actions/checkout@v4
         with:
           # full history: the gate reads canonical ledger state from the BASE
@@ -48,9 +55,40 @@ jobs:
       - name: CI gate fail-closed proof
         run: node scripts/builder/__tests__/epistemic-ci-proof.mjs
 
+      # The adjudication base differs by event, and naming it wrongly would
+      # change what this gate means rather than merely where it runs:
+      #   pull_request → the PR's base commit (canonical before the PR)
+      #   push         → the branch tip before this push (canonical before the merge)
+      # Fail-closed: if neither resolves to a real commit, refuse rather than
+      # adjudicate against nothing.
+      - name: Resolve adjudication base
+        id: adjbase
+        env:
+          PR_BASE: ${{ github.event.pull_request.base.sha }}
+          PUSH_BEFORE: ${{ github.event.before }}
+          EVENT_NAME: ${{ github.event_name }}
+        run: |
+          if [ "$EVENT_NAME" = "pull_request" ]; then
+            BASE="$PR_BASE"
+          else
+            BASE="$PUSH_BEFORE"
+            # A new branch or a force-push reports an all-zero `before`; for a
+            # merge commit the honest base is then its first parent.
+            if [ "$BASE" = "0000000000000000000000000000000000000000" ] \
+               || ! git cat-file -e "${BASE}^{commit}" 2>/dev/null; then
+              BASE="$(git rev-parse HEAD^ 2>/dev/null || true)"
+            fi
+          fi
+          if [ -z "$BASE" ] || ! git cat-file -e "${BASE}^{commit}" 2>/dev/null; then
+            echo "::error::no adjudication base resolves for event '$EVENT_NAME'; refusing to adjudicate" >&2
+            exit 1
+          fi
+          echo "Adjudication base for $EVENT_NAME: $BASE"
+          echo "base=$BASE" >> "$GITHUB_OUTPUT"
+
       - name: Adjudicate submitted claim records against canonical history
         env:
-          JARVIS_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          JARVIS_BASE_SHA: ${{ steps.adjbase.outputs.base }}
         run: node scripts/builder/epistemic-ci.mjs --base "$JARVIS_BASE_SHA"
 
       # Runs only when a prior step failed. `if: failure()` is the fail-closed

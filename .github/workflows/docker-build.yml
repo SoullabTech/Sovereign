@@ -2,6 +2,12 @@ name: Docker Build Check
 
 on:
   pull_request:
+  # Canonical push: the `build` check is branch-protection-required, and a commit
+  # that is already canonical is never the head of an open PR — so without this
+  # trigger the required check can never carry a check-run whose head_sha equals
+  # a deploy candidate. Added 2026-09-05 (CI-EXACT-SHA-CHECKS-01).
+  push:
+    branches: [clean-main-no-secrets]
 
 jobs:
   build:
@@ -11,7 +17,25 @@ jobs:
 
       - uses: docker/setup-buildx-action@v3
 
+      # The local tag must be meaningful on both events: on a push there is no
+      # pull_request context, and the previous `pr-${{ github.event.pull_request.number }}`
+      # would have resolved to a bare `pr-`. Added with the canonical push
+      # trigger (CI-EXACT-SHA-CHECKS-01, 2026-09-05).
+      - name: Resolve build tag
+        id: buildtag
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          if [ "$EVENT_NAME" = "pull_request" ] && [ -n "$PR_NUMBER" ]; then
+            echo "tag=pr-$PR_NUMBER" >> "$GITHUB_OUTPUT"
+          else
+            echo "tag=sha-$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Docker build (gha cache)
+        env:
+          BUILD_TAG: ${{ steps.buildtag.outputs.tag }}
         # DEPLOY_LANE_TOKEN: CI is its own declared lane — the Dockerfile's
         # deploy-lane tripwire refuses token-less builds so the raw production
         # compose path fails loudly (docs/ops/DEPLOY_LANE_TOKEN.md).
@@ -22,5 +46,5 @@ jobs:
             --cache-from type=gha \
             --cache-to type=gha,mode=max \
             --build-arg DEPLOY_LANE_TOKEN=ci-build-check \
-            -t maia-sovereign:pr-${{ github.event.pull_request.number }} \
+            -t "maia-sovereign:$BUILD_TAG" \
             .

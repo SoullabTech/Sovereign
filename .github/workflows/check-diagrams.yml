@@ -3,7 +3,10 @@ name: Check diagrams
 on:
   pull_request:
   push:
-    branches: [main]
+    # `main` has not moved since 2026-04-10; canonical work lands on
+    # clean-main-no-secrets, so the push trigger never fired on the branch we
+    # actually ship. Added 2026-09-05 (CI-EXACT-SHA-CHECKS-01).
+    branches: [main, clean-main-no-secrets]
 
 concurrency:
   group: check-diagrams-${{ github.ref }}
