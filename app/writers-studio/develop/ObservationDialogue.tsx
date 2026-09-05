@@ -35,15 +35,22 @@
  * have made the close/reopen case LOOK repaired while proving only that a
  * component stayed mounted.
  *
- * WHILE IT IS STILL FINDING OUT, IT DOES NOT SEND. A question posted before
- * discovery finished would carry an anchor instead of a thread id and open a
- * SECOND thread beside the one it was about to resume.
+ * WHILE IT IS STILL FINDING OUT, IT DOES NOT SEND, and "finding out" includes
+ * the window between deciding to resume a thread and having loaded it. A
+ * question posted in either window would carry an anchor instead of a thread id
+ * and open a SECOND thread beside the one it was about to resume. Both the
+ * permission and the payload come from ONE call to `sendMode`, so they cannot
+ * disagree — and a disagreement here writes a row.
+ *
+ * IF DISCOVERY FAILS THE ROOM SAYS SO AND DOES NOT SEND. "Could not find out
+ * whether you have talked about this before" is not "you have not", and only
+ * one of those is safe to act on.
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ask, loadThread, threadsOn, type AskThreadView } from '@/lib/writersStudio/askClient';
 import {
-  resumeDecision, threadChoiceLabel, type ResumeDecision, type ThreadSummary,
+  resumeDecision, sendMode, threadChoiceLabel, type ResumeDecision,
 } from '@/lib/writersStudio/observationDialogueResume';
 import type { CurrentLocation } from '@/lib/manuscript/development/resolve';
 import { formatWhen } from '../../press/manuscript/workingDraftClient';
@@ -128,11 +135,11 @@ export default function ObservationDialogue({
   useEffect(() => {
     let cancelled = false;
     void (async () => {
-      const found = await threadsOn(manuscriptId, {
+      const discovery = await threadsOn(manuscriptId, {
         on: 'observation', readingId, observationKey,
       });
       if (cancelled) return;
-      const d = resumeDecision(found as ThreadSummary[]);
+      const d = resumeDecision(discovery);
       setDecision(d);
       if (d.kind === 'resume') await adopt(d.threadId);
     })();
@@ -141,18 +148,21 @@ export default function ObservationDialogue({
 
   useEffect(() => { inputRef.current?.focus(); }, []);
 
+  const mode = sendMode(decision, threadId);
+
   const send = useCallback(async () => {
     const q = draft.trim();
-    /* NOT UNTIL THE STORE HAS ANSWERED, and never while a choice is open: both
-       would post an anchor and open a thread beside the one being resumed. */
-    if (!q || busy || decision === null || decision.kind === 'choose') return;
+    /* ONE RULE, FOR BOTH THE PERMISSION AND THE PAYLOAD. `blocked` covers
+       discovering, unavailable, choosing, and the adopting window in which the
+       thread to resume is decided but not yet loaded. */
+    if (!q || busy || mode.kind === 'blocked') return;
     setBusy(true);
     setRefusal(null);
     const r = await ask({
       manuscriptId,
       question: q,
-      ...(threadId
-        ? { threadId }
+      ...(mode.kind === 'resume'
+        ? { threadId: mode.threadId }
         : { anchor: { on: 'observation' as const, readingId, observationKey } }),
     });
     if (r.ok) {
@@ -168,7 +178,7 @@ export default function ObservationDialogue({
       if (r.threadId) setThreadId(r.threadId);
     }
     setBusy(false);
-  }, [draft, busy, decision, manuscriptId, readingId, observationKey, threadId]);
+  }, [draft, busy, mode, manuscriptId, readingId, observationKey]);
 
   /* Before the first turn the room has no measured location, so it falls back to
      what the reading itself already said. Shown as the reading's claim, not as a
@@ -208,6 +218,16 @@ export default function ObservationDialogue({
         </p>
       )}
 
+      {/* SAID, NOT ROUNDED. The room does not know, so it does not offer to
+          speak — a question sent now would open a thread beside one that may
+          already exist. */}
+      {decision?.kind === 'unavailable' && (
+        <p className="text-[12px] opacity-70 mt-2" data-dialogue-unavailable>
+          Earlier conversations about this observation could not be looked up just now, so this
+          room will not start a new one. Try again in a moment.
+        </p>
+      )}
+
       {/* MANY THREADS PER ANCHOR ARE LAWFUL, so the room asks rather than picks.
           Choosing here would quietly make one conversation canonical. */}
       {decision?.kind === 'choose' && (
@@ -230,17 +250,6 @@ export default function ObservationDialogue({
                 </button>
               </li>
             ))}
-            <li>
-              <button
-                type="button"
-                onClick={() => setDecision({ kind: 'fresh' })}
-                data-dialogue-choose-new
-                className="text-[12.5px] underline underline-offset-4 opacity-60"
-                style={{ cursor: 'pointer' }}
-              >
-                start a new conversation instead
-              </button>
-            </li>
           </ul>
         </div>
       )}
@@ -266,7 +275,12 @@ export default function ObservationDialogue({
         </p>
       )}
 
-      {decision?.kind !== 'choose' && (
+      {/* The composer exists only where speaking is a lawful next act. Both
+          other states say why instead of offering a disabled box to type into.
+          There is deliberately NO "start another conversation" control: several
+          threads on one observation are lawful HISTORY, and 07E was not
+          authorised to add the act that creates them. */}
+      {decision !== null && decision.kind !== 'choose' && decision.kind !== 'unavailable' && (
       <>
       <textarea
         ref={inputRef}
@@ -290,14 +304,14 @@ export default function ObservationDialogue({
         <button
           type="button"
           onClick={() => void send()}
-          disabled={busy || !draft.trim() || decision === null}
+          disabled={busy || !draft.trim() || mode.kind === 'blocked'}
           data-dialogue-send
-          data-dialogue-resuming-thread={threadId ?? undefined}
+          data-dialogue-send-mode={mode.kind === 'blocked' ? mode.why : mode.kind}
           className="border rounded-sm px-2 py-[2px] text-[12px]"
           style={{
             borderColor: PRESS.ruleSoft,
-            cursor: busy || !draft.trim() || decision === null ? 'default' : 'pointer',
-            opacity: busy || !draft.trim() || decision === null ? 0.4 : 1,
+            cursor: busy || !draft.trim() || mode.kind === 'blocked' ? 'default' : 'pointer',
+            opacity: busy || !draft.trim() || mode.kind === 'blocked' ? 0.4 : 1,
           }}
         >
           {busy ? 'asking…' : 'ask'}

@@ -47,14 +47,21 @@ CURRENT CANDIDATE  BUILT on claude/writer-author-studios-roadmap-b2tqf5, base 5c
                    Founder rulings Q1 observation-only · Q2 digest-verified evidence ·
                    Q3 superseded opens AS superseded — all three implemented.
                    W4 first-turn superseded wording ACCEPTED AS-IS on source review.
-                   FIRST CANDIDATE 3bc700c4f — founder source review found 2 blockers,
-                   both repaired (record §0): (A) W6 was unreachable — reopening opened a
-                   SECOND thread; now resumes from the store, with an explicit choice when
-                   several exist and no silent latest-wins. (B) raw UUIDs reached
-                   model-facing prose; now author-facing labels derived from the FROZEN
-                   topology, with no code path able to return an id.
+                   3bc700c4f — founder review: 2 blockers. (A) W6 unreachable — reopening
+                   opened a SECOND thread. (B) raw UUIDs in model-facing prose.
+                   982ff9fce — B CLOSED (labels derived from the FROZEN topology; no code
+                   path can return an id). A reopened on two races in the resume path.
+                   CURRENT — A closed as one invariant, "unknown never rounds to fresh":
+                   discovery returns a discriminated result (failure ≠ none) and one
+                   `sendMode` gives both permission and payload, so the adoption window
+                   (resume decided, thread not yet loaded) BLOCKS instead of opening by
+                   anchor. `open` is reachable from exactly one state, asserted
+                   exhaustively. The chooser's "start a new conversation" control was
+                   REMOVED: several threads are lawful history, not a product capability.
+                   PROVENANCE tree base 5c57e27f0 · ancestry base dc742fe43 · zero tree
+                   drift between them (5c57e27f0 is a tree-neutral merge).
                    NO MIGRATION (E10 discharged: anchor and reading_identity were jsonb).
-                   765 tests / 51 suites / 0 failed · typecheck no regressions.
+                   778 tests / 51 suites / 0 failed · typecheck no regressions.
                    record: WS2-07-BUILD-07E_DIALOGUE_BUILD_2026-09-05.md §5 = the walk
                    KEY FINDING (why the unit was small): the anchored-ask spine already
                    existed in canonical pointed at the STRUCTURE proposal. 07E EXTENDED it

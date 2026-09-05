@@ -8,10 +8,20 @@
 UNIT             BUILD-07E  DEVELOPMENTAL DIALOGUE
 STATE            BUILT · gates green · NOT CLOSED
 BRANCH           claude/writer-author-studios-roadmap-b2tqf5
-BASE             5c57e27f0 (canonical, LIVE)
+TREE BASE        5c57e27f0 · the production tree
+ANCESTRY BASE    dc742fe43 · the branch's merge-base with canonical
+TREE DRIFT       none between dc742fe43 and 5c57e27f0 — `5c57e27f0` is a
+                 tree-neutral merge commit (parents de0f35434 + dc742fe43,
+                 zero changed files against dc742fe43). The candidate is built
+                 on the same source tree production runs, though that merge
+                 commit is not in its ancestry. No rebase is needed for source
+                 correctness; this line exists so a later provenance reader
+                 does not mistake CONTENT EQUIVALENCE for ANCESTRY.
 BOUNDARY         WS2-07-BUILD-07E_DIALOGUE_BOUNDARY_CENSUS_2026-09-05.md
 MIGRATION        NONE — E10 discharged, see §3
-FIRST CANDIDATE  3bc700c4f — source-reviewed by the founder, TWO BLOCKERS (§0)
+FIRST CANDIDATE  3bc700c4f — founder source review, TWO BLOCKERS (§0)
+SECOND CANDIDATE 982ff9fce — Blocker B CLOSED; Blocker A reopened on two
+                 remaining races in the resume path (§0.1)
 ```
 
 ## 0 · Corrections after the founder's source review (2026-09-05)
@@ -48,6 +58,55 @@ decision is a pure function (`lib/writersStudio/observationDialogueResume.ts`):
 The room also refuses to send while discovery is in flight or a choice is open — otherwise a fast
 question posts an anchor and opens a second thread beside the one about to be resumed. Threads are
 offered by when and how long, never by id.
+
+### 0.1 · Blocker A, second pass — the same invariant, two more ways to violate it
+
+The founder accepted Blocker B at `982ff9fce` and found Blocker A still open. Both remaining
+faults are the same rounding, and it is 07E's rounding everywhere else:
+
+> **Unknown prior-thread state may never round to "fresh."**
+
+Rounding here does not merely mislead — it **writes**. "There are none" is the one state from
+which the room may post an anchor and open a thread.
+
+**A1 — the adoption window.** Discovery finding exactly one thread set
+`decision = { kind: 'resume' }` and only then awaited `adopt()`, which sets `threadId` after
+`loadThread` returns. In that window the decision said resume while `threadId` was still null, the
+composer was enabled, and the payload rule `threadId ? { threadId } : { anchor }` fell through to
+the anchor — a second thread. The same window opened after the writer picked one of several.
+The old structural test could not see it: it checked the guard's *text*, and the guard was correct
+about the two states it named.
+
+**A2 — discovery failure read as emptiness.** `threadsOn` mapped every error to `[]`, and
+`resumeDecision([])` was `fresh`. A transient GET failure followed by a healthy POST therefore
+created a thread beside an existing one.
+
+Repaired as two pure functions, so the dangerous states are asserted directly rather than inferred
+from a regex over JSX:
+
+```text
+DISCOVERY  (threadsOn returns a discriminated result, never a bare array)
+  success + 0        → fresh
+  success + 1        → resume
+  success + 2+       → choose
+  failure / unknown  → unavailable
+
+SENDABILITY  (sendMode — ONE answer giving both permission and payload)
+  discovering            → blocked
+  unavailable            → blocked
+  choosing               → blocked
+  resume, threadId null  → blocked  ← A1, the window
+  threadId adopted       → resume by threadId
+  fresh, nothing adopted → open by anchor      ← the ONLY state that may write
+```
+
+The permission and the payload now come from one call. Two rules were two chances to disagree,
+and here a disagreement writes a row.
+
+**One product correction fell out of this.** The chooser's "start a new conversation instead"
+control was removed. Several threads on one observation are lawful **history**; the ruling never
+established "start another conversation" as a capability, and offering it was 07E quietly
+expanding while being tested.
 
 **BLOCKER B — internal identifiers reached model-facing prose.** `developmentalAskReader` sent
 `section ${sectionId}`, `the authored unit ${unitId}`, and `u.title ?? u.id`. Section ids are
@@ -210,6 +269,16 @@ BLOCKER A · resume
   the parent holds open/closed and no thread state                         PASS
   one read on open: no timer, no refetch on focus or visibility            PASS
 
+BLOCKER A · second pass — unknown never rounds to fresh
+  discovery failure is `unavailable`, never `fresh`                        PASS
+  adoption window (resume decided, thread not yet loaded) → BLOCKED        PASS
+  same window after the writer picks one of several                        PASS
+  fresh + a thread since opened → continue it, never open again            PASS
+  `open` reachable from exactly ONE state, asserted exhaustively           PASS
+  the shipped 982ff9fce rule, reconstructed, returns `open` in that window PASS (defect witness)
+  permission and payload come from one sendMode call                       PASS
+  no act that creates a second thread on one observation                   PASS
+
 BLOCKER B · no identifier reaches the model
   sections named by their place in what she read                           PASS
   an authored part named by the author's own title                         PASS
@@ -223,7 +292,7 @@ BLOCKER B · no identifier reaches the model
 ```text
 ask · writersStudio · development ·
   developmentalReading ·
-  app/writers-studio                  765 passed · 51 suites · 0 failed
+  app/writers-studio                  778 passed · 51 suites · 0 failed
 typecheck (tsconfig.ship.json)        no regressions against typecheck-baseline.json
 check:no-supabase                     clean
 ```
@@ -263,6 +332,20 @@ ObservationDialogue.tsx @ 3bc700c4f
 The pure `resumeDecision` cases have no counterpart at `3bc700c4f` — the function did not exist —
 so they are new-capability tests and are not claimed as falsified.
 
+**The second-pass Blocker A repairs were falsified against `982ff9fce`** the same way — the three
+touched files restored from that commit:
+
+```text
+observationDialogueResume.ts + askClient.ts + ObservationDialogue.tsx @ 982ff9fce
+  → 18 of 25 guards FAILED ✓   (the 7 that passed were already true there)
+```
+
+Most of those 18 fail because `sendMode` did not exist, which is absence rather than divergence —
+a weaker witness. So the divergence is pinned as its own test: the shipped `982ff9fce` guard and
+payload rules are reconstructed inline and shown to return `open` in the adoption window where the
+new rule returns `blocked: adopting`. That test compares two rules rather than asserting one, and
+it is the actual evidence that A1 was a defect and not a preference.
+
 **Two pre-existing gates failed on this change and were repaired forward, not relaxed.**
 `askHttpBoundary` asserted ownership precedes `parseAnchor(body.anchor)`, and `askSourceCloseout`
 asserted the frozen side comes from `stored: existing?.reading`. Both literals moved — the POST
@@ -288,8 +371,13 @@ W6  close and reopen → the SAME thread resumes with its prior turns visible; a
     posts by threadId, still one ask_thread, anchor and reading_identity unchanged.
     Then: reload the page and reopen — it must still resume (the proof that this is
     persistence and not component state).
-W6b if a second thread is deliberately started on the same observation, reopening OFFERS A
-    CHOICE and resumes neither on its own
+W6b EDGE-CASE WITNESS, NOT A UI ACT (founder ruling). With one prior thread the room
+    correctly resumes automatically, and there is deliberately no product path from one
+    thread to two — 07E was not authorised to add one. To see the chooser, SEED a second
+    thread on the same anchor directly (an INSERT into ask_threads with the identical
+    anchor), then reopen: the room must OFFER A CHOICE and resume neither on its own.
+W6c with the discovery GET failing (block it, or sign out mid-room), reopening must SAY it
+    could not look up earlier conversations and must NOT offer to speak
 W7  the refusal state seen honestly once (key absent from the env): the question is held, not lost
 W8  narrow window / phone: the dialogue is reachable and readable
 W9  nothing MAIA says names a section or a part by an internal identifier — she says
