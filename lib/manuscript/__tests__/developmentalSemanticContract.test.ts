@@ -160,9 +160,14 @@ describe('the eight phenomenon definitions reach the classifier', () => {
 });
 
 describe('provenance moved because the semantic contract moved', () => {
-  it('reader stays at -02 and the classifier moves to -04 — Act 3 is classifier-only', () => {
-    expect(READER_VERSION).toBe('DEVELOPMENTAL-READER-02');
+  it('the classifier is at -04, and the reader moved later and separately', () => {
+    /* Act 3 was classifier-only: it left the reader at -02. The reader is now
+       -03 for an unrelated reason — DEVELOPMENTAL-READER-03 (2026-09-05) took
+       raw section ids out of member-facing claim prose without touching the
+       phenomenon family or the classifier. Both literals are pinned so that a
+       future move of either has to be argued for, not absorbed. */
     expect(CLASSIFIER_VERSION).toBe('DEVELOPMENTAL-PHENOMENON-04');
+    expect(READER_VERSION).toBe('DEVELOPMENTAL-READER-03');
     expect(promptContractHash()).toHaveLength(64);
   });
 
@@ -229,9 +234,13 @@ describe('WS2-07-F1 ACT 3 / -04 — the two rules the -03 fixed-claim run forced
     expect(CLASSIFIER_SYSTEM).toMatch(/not "unresolved-thread" merely because it later disappears/);
   });
 
-  it('still no ninth phenomenon, no reader change, no register-shift / positional-asymmetry precedence', () => {
+  it('still no ninth phenomenon and no register-shift / positional-asymmetry precedence', () => {
+    /* The reader-version assertion that used to sit here has moved to the
+       provenance block above. It was making a claim about a different unit:
+       that Act 3 changed no reader. That remains true of Act 3, and pinning it
+       here would have made an unrelated reader repair look like a violation of
+       a classifier rule. */
     expect(DEVELOPMENTAL_PHENOMENA).toHaveLength(8);
-    expect(READER_VERSION).toBe('DEVELOPMENTAL-READER-02');
     expect(CLASSIFIER_SYSTEM).not.toContain('register shift / positional asymmetry');
   });
 });

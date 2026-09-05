@@ -424,11 +424,14 @@ describe('F17 · identity, version, prompt-contract hash, resolved model', () =>
     expect(perturbedTool).not.toBe(expected);
   });
 
-  it('identity carries DEVELOPMENTAL-READER-02, provider anthropic, and the model it was given — the seam supplies the resolved one', () => {
-    /* -02 since WS2-07-F1: the lens now reaches the reader with its ratified meaning
-       and the claim boundary is in the system prompt, so the semantic contract moved. */
-    expect(READER_VERSION).toBe('DEVELOPMENTAL-READER-02');
-    expect(readerIdentity('m-1')).toEqual({ provider: 'anthropic', model: 'm-1', promptHash: promptContractHash(), readerVersion: 'DEVELOPMENTAL-READER-02' });
+  it('identity carries DEVELOPMENTAL-READER-03, provider anthropic, and the model it was given — the seam supplies the resolved one', () => {
+    /* -02 since WS2-07-F1: the lens reached the reader with its ratified meaning
+       and the claim boundary moved into the system prompt. -03 since 2026-09-05:
+       section ids are confined to the evidence refs and may not appear in claim
+       prose. Readings frozen under either version keep the identity they were
+       made with — the version is provenance, never a filter. */
+    expect(READER_VERSION).toBe('DEVELOPMENTAL-READER-03');
+    expect(readerIdentity('m-1')).toEqual({ provider: 'anthropic', model: 'm-1', promptHash: promptContractHash(), readerVersion: 'DEVELOPMENTAL-READER-03' });
     expect(Object.keys(readerIdentity('m-1'))).not.toContain('frozenAt');
   });
 });

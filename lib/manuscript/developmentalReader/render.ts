@@ -33,7 +33,21 @@ import {
   type RecoveredBody,
 } from './contract';
 
-export const READER_VERSION = 'DEVELOPMENTAL-READER-02';
+/**
+ * READER-03 (2026-09-05). Reader-02's rule 6 told the reader to "refer to
+ * sections by id and position", and it did: raw section UUIDs appeared inside
+ * member-facing observation prose — "introduced in section f26e8405". The
+ * evidence refs were correct and resolved correctly; it was the sentence the
+ * author reads that carried a database key.
+ *
+ * The renderer is deliberately NOT where this is fixed. A reading is kept
+ * verbatim, and frozen text cannot be corrected in place; stripping ids from
+ * prose after the fact would make the displayed observation differ from the
+ * one that was frozen. So the instruction changes, the version changes with
+ * it, and readings already frozen keep their Reader-02 provenance and their
+ * text exactly as they were made.
+ */
+export const READER_VERSION = 'DEVELOPMENTAL-READER-03';
 export const TOOL_NAME = 'draft_reader_claims';
 
 /* ── the prompt ──────────────────────────────────────────────────────────── */
@@ -63,7 +77,7 @@ ${VOCABULARY}
 3. A claim may NOT consist solely of content that can be re-derived mechanically from the Work or the member's declared structure. Counts, lengths, positions, sequence, heading format, topology and how many sections a division holds are MEASUREMENTS of the container: they are mechanical evidence, one layer below what you are drafting. A claim must add a noticing whose falsity would require reading the Work, not merely rerunning a measurement. Measurements may SUPPORT a noticing; they may not BE the noticing. If all you can say about something is what a count, a length or a position would show, do not draft it.
 4. Do not interpret, rank, score, grade, recommend, or say what should change. Do not guess the author's intent. Do not assert an effect on a reader. Do not describe a whole-Work pattern from partial coverage without saying so through the vocabulary.
 5. Do not ask for more sections, more context, or another read. What you were given is the whole of what you may read. If the commissioned question cannot be read from it, say so in claims that carry "outside-coverage", or return "none".
-6. Do not invent headings or titles. Refer to sections by id and position, and to divisions by the member's own words as given.
+6. Do not invent headings or titles. SECTION AND UNIT IDS BELONG TO THE EVIDENCE REFERENCES AND NOWHERE ELSE: cite them exactly in a claim's refs, and never write one into the claim text. In prose, name a section by its position as it was given to you, or relative to another ("the section immediately before it"), and name a division by the member's own words as given. The author reads your prose; they do not hold your keys.
 7. Answer ONLY through the tool. Return outcome "none" when, after reading what you were given, there is nothing worth drafting under this lens - that is a complete answer.`;
 
 /* ── the tool ────────────────────────────────────────────────────────────── */
