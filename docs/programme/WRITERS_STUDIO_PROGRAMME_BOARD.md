@@ -31,26 +31,34 @@
 ```text
 PROGRAMME          WRITER'S STUDIO R2
 MODE               STAGE 7 BUILD
-BUILD MODE         OPEN — BUILD-07D Develop Surface IMPLEMENTATION OPEN (founder act
-                   2026-09-04); 07E–H unauthorized
-BOUND CANONICAL    376daae06 (clean-main-no-secrets, 2026-09-04 — BUILD-07C merged, PR #1191;
-                   second parent 8123dc4c8 = the accepted closure head)
-CURRENT UNIT       BUILD-07D Develop Surface — IMPLEMENTATION OPEN (founder act
-                   2026-09-04): the writer encounters an already frozen reading;
-                   no interpretation, dialogue, decisions, mutation, re-anchoring
-                   or automatic refresh. Closure: tests + founder witness
-                   lane: JARVIS-WS2-07-DEVELOPMENTAL-INTELLIGENCE-01 (dated 07D block)
-CURRENT CANDIDATE  d005d59eb — Gate A 22/0 (structural, seam refusing) ·
-                   STRUCTURALLY PROVED · NOT CLOSED
-                   Gate B(a) BLOCKED BY 07C classifier-unclassifiable (run 1, founder-run:
-                   both permitted acts refused at classify; nothing stored, nothing moved)
-                   Gate B(b) NOT YET EXECUTABLE — the walk needs a reading to exist
-                   record: WS2-07-BUILD-07D_DEVELOP_WITNESS_2026-09-04.md §2–§4
-OPEN FOLLOW-UP     WS2-07-F1 Developmental Semantic Boundary Repair — OPEN (founder act
-                   2026-09-04, determination C). Act 1 semantic ratification DELIVERED,
-                   awaiting adjudication: seven lenses grounded verbatim; seven phenomena
-                   grounded with inclusion/exclusion; positional-asymmetry UNGROUNDED in
-                   the whole corpus — define (recommended) or retire.
+BUILD MODE         CLOSED — BUILD-07E Developmental Dialogue CLOSED / ACCEPTED
+                   (founder act 2026-09-05); 07F–H unauthorized
+BOUND CANONICAL    6ff0beafc (clean-main-no-secrets, 2026-09-05 — BUILD-07E merged, PR #1216;
+                   LIVE on minisforum, provenance PASS, Co-Lab 33/0/0)
+CURRENT UNIT       none open. BUILD-07E CLOSED / ACCEPTED at 6ff0beafc — the complete walk
+                   W1–W9 passed on the live member path, including the three fixed edge
+                   cases W6b (seeded second thread → explicit choice), W6c (discovery
+                   failure → says so, opens nothing) and W6d (reading switch → full
+                   remount, no thread leak), plus W7/W7b under a keyless fault-injection
+                   runtime built from the same deployed container filesystem.
+                   record: WS2-07-BUILD-07E_DIALOGUE_CLOSURE_2026-09-05.md
+                   build:  WS2-07-BUILD-07E_DIALOGUE_BUILD_2026-09-05.md
+                   census: WS2-07-BUILD-07E_DIALOGUE_BOUNDARY_CENSUS_2026-09-05.md
+RETAINED ARTIFACTS two production rows kept deliberately, named in the closure record §3:
+                   the W6b seed (reading B / o1 → 2 threads; no product path creates this)
+                   and the W7 thread 04c0a3c9-d897-4146-98a7-75b4cb1d36d1 (reading A / o2;
+                   turn 0 written keyless, turn 1 keyed). Do not clean these up.
+EVIDENCE CLASSES   local gates = the branch program · PR CI = the MERGE program GitHub
+                   builds · production walk = the deployed runtime. NONE substitutes for
+                   the next; a local typecheck pass is not integration evidence
+                   (closure record §4 — this cost a CI cycle on ad8bc9b7e).
+CLOSED FOLLOW-UP   WS2-07-F1 Developmental Semantic Boundary Repair — RATIFIED IN CANONICAL
+                   (founder act 2026-09-04, determination C). The eight phenomena carry
+                   is/isNot definitions in lib/manuscript/developmentalReading/contract.ts
+                   (PHENOMENON_DEFINITION); positional-asymmetry was DEFINED, not retired;
+                   the family is still eight. Reading contract v2 makes `phenomenon`
+                   optional — `unclassifiable` is a REFUSAL CONDITION, never a ninth
+                   phenomenon.
                    records: WS2-07-F1_SEMANTIC_BOUNDARY_REPAIR_2026-09-04.md
                             WS2-07-F1_LENS_AND_PHENOMENON_DEFINITIONS_DRAFT_2026-09-04.md
 CLOSED FOLLOW-UP   WS2-07C-F1 Phenomenon Classification Coverage — CLOSED 2026-09-04,
@@ -58,6 +66,13 @@ CLOSED FOLLOW-UP   WS2-07C-F1 Phenomenon Classification Coverage — CLOSED 2026
                    mechanically re-derivable regularity, one epistemic layer below a
                    developmental observation; the reader should not emit it.
                    record: WS2-07C-F1_PHENOMENON_CLASSIFICATION_COVERAGE_2026-09-04.md
+PRIOR UNIT         BUILD-07D Develop Surface — CLOSED / ACCEPTED (founder, 2026-09-05);
+                   bound runtime 5c57e27f0; six-item production smoke PASS on the live
+                   member path; F1 regression PASS; Co-Lab 33/0/0; provenance PASS.
+                   Stage 7.1 (BUILD-07A–07D) complete on the bound runtime.
+                   record: WS2-07-BUILD-07D_CLOSURE_2026-09-05.md
+                   witness: WS2-07-BUILD-07D_DEVELOP_WITNESS_2026-09-04.md (NOT back-edited;
+                            its NOT CLOSED was true of the runtime it witnessed)
 PRIOR UNIT         BUILD-07C Developmental Reading — CLOSED / ACCEPTED (founder,
                    2026-09-04); canonical @ 376daae06; candidate 8a26a8971;
                    Gate A 27/0 · Gate B 13/0 (claude-opus-5)
@@ -71,15 +86,12 @@ PRIOR UNIT         BUILD-07B Developmental Reader — CLOSED / ACCEPTED (founder
 PRIOR UNIT         BUILD-07A Developmental Evidence — CLOSED / ACCEPTED (founder,
                    2026-09-04); canonical @ 27ec9f895
                    record: WS2-07-BUILD-07A_EVIDENCE_WITNESS_2026-09-03.md §9
-NEXT EXECUTABLE    WS2-07-F1 act 1 adjudication (founder): read
-                   WS2-07-F1_LENS_AND_PHENOMENON_DEFINITIONS_DRAFT_2026-09-04.md and rule
-                   on the seven lens meanings, the reader-boundary rule, the seven grounded
-                   phenomena, the register-shift ⇄ movement overlap, and
-                   positional-asymmetry (define / retire) → ratified definitions as canon
-                   → render to 07B and 07C with provenance bump → prove the repair
-                   → refresh BUILD-07D → Gate B(a) rerun → browser walk (b)
-                   → CLOSED / ACCEPTED → merge #1192 on green pinned to the exact head
-                   → verify canonical → STOP
+NEXT EXECUTABLE    nothing authorized. BUILD-07E is closed and 07F is NOT opened by that
+                   closure — it opens only by its own founder act. When it does, its
+                   premise is already stated: the writer may change the STANDING of an
+                   observation for themselves (keep · dismiss · unresolved · investigate)
+                   without changing what MAIA originally observed.
+                   ⛔ A unit ending well is not an authorisation for the next one.
 WS-01              CLOSED — OVERTAKEN / SUPERSEDED (not accepted; see
                    Reconciliation record below)
 CANVAS FREEZE      RETIRED FROM LIVE STATE (never released by an act; see
@@ -160,7 +172,8 @@ Stage 7   ACTIVE
           PREREQ      SECTION-ADDRESSABLE DRAFT LIVENESS · CLOSED
                       canonical @ 0fa4158e7 (PR #1174)
                       + Unicode repair @ 9411ddc41 (PR #1175)
-          BUILD-07E–H unauthorized (07E opens by its own act after 07D is canonical)
+          BUILD-07E CLOSED / ACCEPTED (founder act 2026-09-05) · BUILD-07F–H unauthorized
+          (07F opens only by its own act)
 Stage 8   BLOCKED ON STAGE 7 CLOSURE
 ```
 
@@ -379,7 +392,9 @@ BUILD-07D · Develop Surface — IMPLEMENTATION OPEN (founder act 2026-09-04).
             Lane: JARVIS-WS2-07-DEVELOPMENTAL-INTELLIGENCE-01.
 ```
 
-Everything else is **unauthorized**. BUILD-07E opens only by its own act after BUILD-07D closes.
+Everything else is **unauthorized**. BUILD-07E was opened and then CLOSED / ACCEPTED by founder
+acts of 2026-09-05, bound to `6ff0beafc`. BUILD-07F opens only by its own act — 07E closing does
+not open it.
 Release milestones are defined by Amendment 5 and read from the Release signal above.
 
 ## Board discipline

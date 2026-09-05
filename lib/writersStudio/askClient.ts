@@ -16,6 +16,8 @@
 import { apiFetch } from '@/lib/http/apiBase';
 import type { AskAnchor } from '@/lib/manuscript/ask/anchor';
 import type { StalenessState } from '@/lib/manuscript/ask/staleness';
+import type { CurrentLocation } from '@/lib/manuscript/development/resolve';
+import type { ThreadDiscovery, ThreadSummary } from './observationDialogueResume';
 
 export interface AskTurnView {
   index: number;
@@ -32,8 +34,17 @@ export interface AskThreadView {
 }
 
 export type AskOutcome =
-  | { ok: true; threadId: string; thread: AskThreadView; staleness: StalenessState }
-  | { ok: false; refusal: string; detail?: string; threadId?: string };
+  | {
+      ok: true; threadId: string; thread: AskThreadView; staleness: StalenessState;
+      /**
+       * BUILD-07E. Present only on a developmental thread, and never synthesised
+       * client-side: it is the server's `observationLocation` answer, three-state.
+       * A surface that computed it here would be claiming a measurement it never
+       * made — the room has no evidence and no digests.
+       */
+      location?: CurrentLocation;
+    }
+  | { ok: false; refusal: string; detail?: string; threadId?: string; location?: CurrentLocation };
 
 const url = (manuscriptId: string) =>
   `/api/sovereign/manuscripts/${encodeURIComponent(manuscriptId)}/ask`;
@@ -67,6 +78,7 @@ export async function ask(input: {
         refusal: String((json as Record<string, unknown>).refusal ?? `http_${res.status}`),
         detail: (json as Record<string, unknown>).detail as string | undefined,
         threadId: (json as Record<string, unknown>).threadId as string | undefined,
+        location: (json as Record<string, unknown>).location as CurrentLocation | undefined,
       };
     }
     const j = json as Record<string, unknown>;
@@ -75,6 +87,7 @@ export async function ask(input: {
       threadId: j.threadId as string,
       thread: j.thread as AskThreadView,
       staleness: j.staleness as StalenessState,
+      location: j.location as CurrentLocation | undefined,
     };
   } catch {
     /* A transport failure is not an answer from MAIA and is never shown as one. */
@@ -82,18 +95,54 @@ export async function ask(input: {
   }
 }
 
-/** Threads already open on an anchor, so the surface may offer to resume one. */
+/**
+ * One thread, with its turns — the persisted conversation, not a summary.
+ *
+ * BUILD-07E. `threadsOn` answers "how many"; this answers "what was said". A
+ * room that reopened on summaries alone would show that a conversation existed
+ * and not what it was, which is not resuming.
+ */
+export async function loadThread(
+  manuscriptId: string, threadId: string,
+): Promise<AskThreadView | null> {
+  try {
+    const res = await apiFetch(
+      `${url(manuscriptId)}?thread=${encodeURIComponent(threadId)}`, { method: 'GET' });
+    if (res.status >= 400) return null;
+    const j = await res.json();
+    return (j.thread ?? null) as AskThreadView | null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Threads already open on an anchor, so the surface may offer to resume one.
+ *
+ * ⛔ FAILURE IS NOT AN EMPTY LIST. This returned `[]` on every error, which made
+ * "the server did not answer" indistinguishable from "there are none" — and the
+ * caller's next move on "there are none" is to POST an anchor and OPEN a thread.
+ * A transient GET failure could therefore author a duplicate conversation beside
+ * an existing one. The result is discriminated so that outcome is unreachable.
+ */
 export async function threadsOn(
   manuscriptId: string, anchor: AskAnchor,
-): Promise<{ id: string; openedAt: string; turnCount: number }[]> {
+): Promise<ThreadDiscovery> {
   try {
     const res = await apiFetch(
       `${url(manuscriptId)}?anchor=${encodeURIComponent(JSON.stringify(anchor))}`,
       { method: 'GET' });
-    if (res.status >= 400) return [];
+    if (res.status >= 400) {
+      return { kind: 'unavailable', reason: `http_${res.status}` };
+    }
     const j = await res.json();
-    return (j.threads ?? []) as { id: string; openedAt: string; turnCount: number }[];
+    const threads = j.threads;
+    if (!Array.isArray(threads)) {
+      /* A malformed body is not "none" either. */
+      return { kind: 'unavailable', reason: 'malformed' };
+    }
+    return { kind: 'threads', threads: threads as ThreadSummary[] };
   } catch {
-    return [];
+    return { kind: 'unavailable', reason: 'unreachable' };
   }
 }

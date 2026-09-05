@@ -33,6 +33,13 @@ import {
   openThread, appendTurn, loadThread, threadsOnAnchor,
 } from '@/lib/manuscript/ask/threadStore';
 import { isHeldRetry, historyFor } from '@/lib/manuscript/ask/retry';
+import { checkObservationAnchor, selectObservation } from '@/lib/manuscript/ask/developmentalAnchor';
+import { loadFrozenDevelopmentalReading } from '@/lib/manuscript/ask/frozenDevelopmentalReading';
+import {
+  assembleDevelopmentalContext, developmentalStaleness,
+} from '@/lib/manuscript/ask/developmentalContext';
+import { askMaiaDevelopmental } from '@/lib/manuscript/ask/developmentalAskReader';
+import { loadRevisionContent, loadLiveWork } from '@/lib/manuscript/development/capture';
 
 export const dynamic = 'force-dynamic';
 
@@ -91,9 +98,37 @@ function parseAnchor(v: unknown): AskAnchor | null {
   }
 }
 
+/**
+ * BUILD-07E — the developmental boundary, kept SEPARATE from `parseAnchor`.
+ *
+ * The structure parser above is untouched by 07E and stays that way: two frozen
+ * objects, two boundaries, neither able to admit the other's shape. `observation`
+ * is not added to SUPPORTED_ANCHORS, so a developmental anchor can never be
+ * approved by the structure path and then resolved against a proposal.
+ *
+ * v1 IS OBSERVATION-ONLY (founder ruling Q1). There is no reading-level anchor
+ * to parse, and the boundary must not know a shape whose surface does not exist.
+ */
+function parseDevelopmentalAnchor(v: unknown): AskAnchor | null {
+  if (typeof v !== 'object' || v === null) return null;
+  const o = v as Record<string, unknown>;
+  if (o.on !== 'observation') return null;
+  const keys = Object.keys(o).sort().join(',');
+  const s = (k: string) => typeof o[k] === 'string' && (o[k] as string).length > 0;
+  return keys === 'observationKey,on,readingId' && s('readingId') && s('observationKey')
+    ? { on: 'observation', readingId: o.readingId as string, observationKey: o.observationKey as string }
+    : null;
+}
+
+/** Either boundary. Each parser knows only its own object; neither widens the other. */
+function parseAnyAnchor(v: unknown): AskAnchor | null {
+  return parseAnchor(v) ?? parseDevelopmentalAnchor(v);
+}
+
 /** Exported for the boundary test: the runtime surface, not the contract union. */
 export const __supportedAnchorsForTest = SUPPORTED_ANCHORS;
 export const __parseAnchorForTest = parseAnchor;
+export const __parseDevelopmentalAnchorForTest = parseDevelopmentalAnchor;
 
 /**
  * GET — the threads already open on an anchor, so the surface may offer to
@@ -125,7 +160,7 @@ export async function GET(
   const raw = req.nextUrl.searchParams.get('anchor');
   if (!raw) return NextResponse.json({ refusal: 'malformed', detail: 'anchor' }, { status: 400 });
   let anchor: AskAnchor | null = null;
-  try { anchor = parseAnchor(JSON.parse(raw)); } catch { anchor = null; }
+  try { anchor = parseAnyAnchor(JSON.parse(raw)); } catch { anchor = null; }
   if (!anchor) return NextResponse.json({ refusal: 'anchor_unknown' }, { status: 422 });
 
   return NextResponse.json({ threads: await threadsOnAnchor(id, memberId, anchor) });
@@ -168,7 +203,7 @@ export async function POST(
   }
 
   const threadId = typeof body.threadId === 'string' ? body.threadId : null;
-  const anchor = threadId ? null : parseAnchor(body.anchor);
+  const anchor = threadId ? null : parseAnyAnchor(body.anchor);
   if (!threadId && !anchor) {
     return NextResponse.json({ refusal: 'anchor_unknown' }, { status: 422 });
   }
@@ -181,6 +216,17 @@ export async function POST(
     return NextResponse.json({ refusal: 'not_found' }, { status: 404 });
   }
   const effectiveAnchor = existing ? existing.anchor : anchor!;
+
+  /* BUILD-07E — the developmental lane. Everything above is shared (ownership,
+     envelope, thread resolution); everything below this branch is the 05B
+     structure path, unchanged. The two never meet again: a developmental anchor
+     never reaches `loadFrozenReading`, and a structure anchor never reaches
+     `loadFrozenDevelopmentalReading`. */
+  if (effectiveAnchor.on === 'observation') {
+    return developmentalTurn({
+      manuscriptId: id, memberId, anchor: effectiveAnchor, existing, question,
+    });
+  }
 
   const proposalId = 'proposalId' in effectiveAnchor
     ? (effectiveAnchor as { proposalId: string }).proposalId : null;
@@ -218,8 +264,14 @@ export async function POST(
      revision to itself, so editing the reviewed structure while a thread was
      open still reported `unchanged`. The thread already stores what the author
      was looking at; that is the only honest `was`. */
+  /* The stored identity is a union since 07E. Only a structure identity is the
+     `was` of a structure comparison; a developmental one cannot reach here
+     (the branch above returned), and narrowing says so rather than casting. */
+  const storedStructure = existing?.reading && existing.reading.kind !== 'developmental'
+    ? existing.reading : null;
+
   const frozenIdentity = frozenSideFor({
-    stored: existing?.reading ?? null,
+    stored: storedStructure,
     fresh: reading ? {
       proposalId: reading.proposalId,
       interpretationInputHash: reading.interpretationInputHash,
@@ -306,4 +358,133 @@ export async function POST(
 
   const thread = await loadThread(liveThreadId, memberId);
   return NextResponse.json({ threadId: liveThreadId, thread, staleness });
+}
+
+/**
+ * BUILD-07E — one author turn, one MAIA answer, anchored to one observation.
+ *
+ * SEPARATE FROM THE STRUCTURE FLOW, sharing only what is genuinely one thing:
+ * ownership, the envelope, thread resolution, the append-only turn record, and
+ * the canonical baseline. The reading, the coherence rule, the context and the
+ * reader are all the developmental object's own — because sharing them would
+ * mean a function holding both frozen objects, and that function is exactly
+ * where one reading's authority gets laundered onto another's content.
+ *
+ * ORDER MATTERS AND IS THE STRUCTURE PATH'S ORDER. The author's words are
+ * recorded BEFORE the model is called, so a transport failure loses the answer
+ * and never the question.
+ *
+ * A SUPERSEDED OBSERVATION OPENS (founder ruling Q3). It opens AS superseded:
+ * the location travels to the reader, which says what moved, and back to the
+ * surface in the response, which shows it. Refusing would erase a legitimate
+ * historical relationship with the Work; opening silently would present an old
+ * observation as current.
+ */
+async function developmentalTurn(input: {
+  manuscriptId: string;
+  memberId: string;
+  anchor: Extract<AskAnchor, { on: 'observation' }>;
+  existing: Awaited<ReturnType<typeof loadThread>>;
+  question: string;
+}) {
+  const { manuscriptId, memberId, anchor, existing, question } = input;
+
+  const reading = await loadFrozenDevelopmentalReading(manuscriptId, anchor.readingId, memberId);
+  const check = checkObservationAnchor(anchor, reading);
+  if (!check.ok) {
+    return NextResponse.json({ refusal: check.refusal, detail: check.detail },
+      { status: ANCHOR_STATUS[check.refusal] });
+  }
+  /* `checkObservationAnchor` has already established both. The non-null
+     assertions restate what it proved rather than re-deriving it here. */
+  const observation = selectObservation(reading!, anchor.observationKey)!;
+
+  let canonicalNow: string | null = null;
+  try { canonicalNow = await canonicalFingerprint(manuscriptId); } catch { canonicalNow = null; }
+
+  /* NO FABRICATED BASELINE — the structure path's ruling, and the same reason:
+     a thread that cannot establish its BEFORE does not open. */
+  if (!existing && canonicalNow === null) {
+    return NextResponse.json({ refusal: 'canonical_unmeasurable' }, { status: 503 });
+  }
+  const canonicalAtOpen = existing ? existing.canonicalAtOpen : canonicalNow!;
+
+  /* The revision the reading FROZE, not the newest. `recoverEvidence` verifies
+     it against the frozen digest before slicing, so a wrong or moved revision
+     yields a refusal and no text — never a substitution. */
+  const revisionContent = await loadRevisionContent(
+    reading!.readState.draftId, reading!.readState.revisionNumber);
+  const now = await loadLiveWork(manuscriptId, memberId);
+
+  const ctx = assembleDevelopmentalContext({
+    reading: reading!, observation, revisionContent, now,
+  });
+  const staleness = developmentalStaleness(
+    ctx,
+    canonicalNow === null ? { state: 'unmeasured' }
+      : canonicalAtOpen === canonicalNow ? { state: 'unchanged' } : { state: 'changed' });
+
+  const liveThreadId = existing ? existing.id : await openThread({
+    manuscriptId,
+    memberId,
+    anchor: check.anchor,
+    reading: {
+      kind: 'developmental',
+      readingId: reading!.id,
+      draftId: reading!.readState.draftId,
+      revisionNumber: reading!.readState.revisionNumber,
+      inputFingerprint: reading!.readState.inputFingerprint,
+      commissionedLens: reading!.scope.commissionedLens,
+      readerProvenance: reading!.provenance.reader,
+    },
+    canonicalAtOpen,
+    /* The author opened their mouth. That the marker was one of MAIA's
+       observations is carried by the ANCHOR, not by pretending she spoke. */
+    initiatedBy: 'author',
+  });
+
+  const priorTurns = existing?.turns ?? [];
+  const retryingHeld = isHeldRetry(priorTurns, question);
+  if (!retryingHeld) {
+    await appendTurn({
+      threadId: liveThreadId, memberId, speaker: 'author', body: question, staleness,
+    });
+  }
+
+  const outcome = await askMaiaDevelopmental(
+    ctx,
+    historyFor(priorTurns.map((t) => ({ speaker: t.speaker, body: t.body })), question),
+    question,
+  );
+
+  if (!outcome.ok) {
+    /* The question is already recorded. A failed answer is reported as a
+       failure, never rendered as one of hers. */
+    return NextResponse.json(
+      { threadId: liveThreadId, refusal: outcome.refusal, staleness, location: ctx.location },
+      { status: 502 });
+  }
+
+  await appendTurn({
+    threadId: liveThreadId, memberId, speaker: 'maia', body: outcome.answer,
+    staleness, answerProvenance: outcome.provenance,
+  });
+
+  const thread = await loadThread(liveThreadId, memberId);
+  return NextResponse.json({
+    threadId: liveThreadId,
+    thread,
+    staleness,
+    /* The developmental lane's PRIMARY vocabulary travels to the surface intact.
+       Collapsing it into `staleness` alone would hand the room five structure
+       dimensions and no answer to the question it actually has to render:
+       is what she noticed still true of this Work? */
+    location: ctx.location,
+    observation: {
+      key: ctx.observation.key,
+      lens: ctx.reading.lens,
+      frozenAt: ctx.reading.frozenAt,
+      unverifiableEvidence: ctx.evidence.filter((e) => e.kind === 'unverifiable').length,
+    },
+  });
 }
