@@ -889,7 +889,13 @@ function FieldBody({
         witnessDelayMs={witnessDelayMs}
       >
         {(writing) => (
-          <SectionSurfaceBridge writing={writing} onWriting={onWriting} />
+          <SectionSurfaceBridge
+            writing={writing}
+            onWriting={onWriting}
+            manuscriptId={manuscript.id}
+            baseVersion={writeMount.version}
+            onCheckpointed={onCheckpointed}
+          />
         )}
       </SectionWritingSession>
     );
@@ -913,15 +919,28 @@ function FieldBody({
 function SectionSurfaceBridge({
   writing,
   onWriting,
+  manuscriptId,
+  baseVersion,
+  onCheckpointed,
 }: {
   writing: SectionWriting;
   onWriting?: (w: SectionWriting | null) => void;
+  manuscriptId: string;
+  baseVersion: number;
+  onCheckpointed?: () => void;
 }) {
   useEffect(() => {
     onWriting?.(writing);
     return () => onWriting?.(null);
   }, [writing, onWriting]);
-  return <SectionWritingSurface writing={writing} />;
+  return (
+    <SectionWritingSurface
+      writing={writing}
+      manuscriptId={manuscriptId}
+      baseVersion={baseVersion}
+      onCheckpointed={onCheckpointed}
+    />
+  );
 }
 
 function Bare({ children }: { children: React.ReactNode }) {

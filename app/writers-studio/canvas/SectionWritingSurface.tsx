@@ -27,16 +27,119 @@
  */
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { apiFetch } from '@/lib/http/apiBase';
 import type { SectionWriting } from '@/lib/writersStudio/useSectionWriting';
 import type { SaveFn } from '@/lib/writersStudio/sectionSaveQueue';
-import { GROUND, RADIUS, SPACE } from '../studioTheme';
+import { GROUND, INK, RADIUS, RULE, SPACE } from '../studioTheme';
+import { newIdempotencyKey, putDraftSections } from '@/app/press/manuscript/workingDraftClient';
 import { StudioText } from '../studio/StudioType';
 
 export interface SectionWritingSurfaceProps {
   /** The shared writing session — see the header. */
   writing: SectionWriting;
+  /** The Work being written. Required to keep a version of it. */
+  manuscriptId: string;
+  /** The draft revision this session opened on — the base a keep writes from. */
+  baseVersion: number;
+  /** Told after a version is kept, so the room's version list can refresh. */
+  onCheckpointed?: () => void;
+}
+
+/**
+ * KEEP A VERSION — the writer's own act, carried into section-native writing.
+ *
+ * When writing moved from the continuous Worktable to section-native editing,
+ * this gesture did not come with it: sections autosave, but nothing set a
+ * version down. The consequence only showed at the far end of the Studio —
+ * Develop refuses to read a Work that has moved past its last kept version,
+ * sends the writer to Write to keep one, and Write had no way to do it. The
+ * loop dead-ended at exactly the boundary it exists to protect. Founder-found
+ * during the integration walk, 2026-09-05.
+ *
+ * NOT A NEW VERSIONING SYSTEM. This is the same call the Worktable makes —
+ * PUT /draft with `checkpoint: true` — against the same append-only revision
+ * store, proved by Gate B(a) F5c. Nothing here decides when to keep: only the
+ * member does. There is no autosave-as-version and no silent checkpoint,
+ * because a version the writer did not set down is not a version they chose.
+ *
+ * PENDING KEYSTROKES FIRST. `flushPending()` sends the active section before
+ * the checkpoint, so a version cannot silently omit the sentence typed two
+ * seconds ago. Being told your work is held when it is not is worse than not
+ * being told.
+ *
+ * A CONFLICT IS NOT RETRIED. If the draft moved elsewhere, the base is stale
+ * and re-sending this session's snapshot would overwrite whatever moved it.
+ * The member is told instead. Losing a keystroke to a silent overwrite is the
+ * one failure this room may not have.
+ */
+function KeepAVersion({
+  writing, manuscriptId, baseVersion, onCheckpointed,
+}: {
+  writing: SectionWriting;
+  manuscriptId: string;
+  baseVersion: number;
+  onCheckpointed?: () => void;
+}) {
+  const [phase, setPhase] = useState<'idle' | 'keeping' | 'kept' | 'moved' | 'error'>('idle');
+  const base = useRef(baseVersion);
+
+  const keep = async () => {
+    if (phase === 'keeping') return;
+    setPhase('keeping');
+    writing.flushPending();
+    const sections = writing.sections.map((s) => ({
+      id: s.id,
+      text: s.id === writing.activeId ? writing.activeBody : s.body,
+    }));
+    const res = await putDraftSections(apiFetch, manuscriptId, {
+      sections,
+      checkpoint: true,
+      baseRevisionId: base.current,
+      idempotencyKey: newIdempotencyKey(),
+    });
+    if (res.kind === 'ok') {
+      if (res.revisionId !== null) base.current = res.revisionId;
+      setPhase('kept');
+      onCheckpointed?.();
+      return;
+    }
+    setPhase(res.kind === 'conflict' ? 'moved' : 'error');
+  };
+
+  return (
+    <div style={{ display: 'flex', alignItems: 'baseline', gap: SPACE.base, justifyContent: 'flex-end' }}>
+      {phase === 'moved' && (
+        <StudioText role="metadata" tone="quiet">
+          This work moved somewhere else since you opened it. Reload before keeping a version, so nothing you wrote is overwritten.
+        </StudioText>
+      )}
+      {phase === 'error' && (
+        <StudioText role="metadata" tone="quiet">
+          The version could not be kept just now. Your writing is unchanged.
+        </StudioText>
+      )}
+      {phase === 'kept' && <StudioText role="metadata" tone="quiet">version kept</StudioText>}
+      <button
+        type="button"
+        onClick={keep}
+        disabled={phase === 'keeping'}
+        data-keep-a-version
+        style={{
+          background: 'transparent',
+          border: `1px solid ${RULE.quiet}`,
+          borderRadius: RADIUS.pill,
+          padding: `${SPACE.tight}px ${SPACE.base}px`,
+          color: INK.secondary,
+          cursor: phase === 'keeping' ? 'default' : 'pointer',
+        }}
+      >
+        <StudioText role="metadata" as="span">
+          {phase === 'keeping' ? 'keeping…' : 'Keep a version'}
+        </StudioText>
+      </button>
+    </div>
+  );
 }
 
 /**
@@ -69,7 +172,9 @@ export function makeSectionSave(manuscriptId: string, witnessDelayMs?: number): 
   };
 }
 
-export default function SectionWritingSurface({ writing }: SectionWritingSurfaceProps) {
+export default function SectionWritingSurface({
+  writing, manuscriptId, baseVersion, onCheckpointed,
+}: SectionWritingSurfaceProps) {
   const fieldRef = useRef<HTMLTextAreaElement | null>(null);
   const activeId = writing.activeId;
 
@@ -100,6 +205,12 @@ export default function SectionWritingSurface({ writing }: SectionWritingSurface
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: SPACE.base }}>
+      <KeepAVersion
+        writing={writing}
+        manuscriptId={manuscriptId}
+        baseVersion={baseVersion}
+        onCheckpointed={onCheckpointed}
+      />
       {active.heading !== null && (
         <StudioText role="chapterTitle" as="h2">
           {active.heading}

@@ -58,6 +58,16 @@ export interface SectionWriting {
   /** Leave for another section. Captures, enqueues, then switches. */
   goToSection: (nextId: string) => void;
   hasUnsavedWork: () => boolean;
+  /**
+   * Send the active section's staged text NOW, without waiting out the
+   * autosave delay.
+   *
+   * The one caller that needs this is "Keep a version": a kept version that
+   * silently omits the sentence the writer typed two seconds ago is worse than
+   * no version at all, because the member has been told their work is held.
+   * This does not checkpoint and cannot: it only stops the queue from waiting.
+   */
+  flushPending: () => void;
 }
 
 /**
@@ -244,6 +254,11 @@ export function useSectionWriting(
         ?? '')
     : '';
 
+  const flushPending = useCallback(() => {
+    if (timer.current) { clearTimeout(timer.current); timer.current = null; }
+    if (activeId) flush(activeId);
+  }, [activeId, flush]);
+
   const edit = useCallback((body: string) => {
     if (!activeId) return;
     const section = sectionsById.get(activeId);
@@ -350,7 +365,8 @@ export function useSectionWriting(
       edit,
       goToSection,
       hasUnsavedWork,
+      flushPending,
     }),
-    [initialSections, activeId, active, activeBody, statusOf, edit, goToSection, hasUnsavedWork],
+    [initialSections, activeId, active, activeBody, statusOf, edit, goToSection, hasUnsavedWork, flushPending],
   );
 }
