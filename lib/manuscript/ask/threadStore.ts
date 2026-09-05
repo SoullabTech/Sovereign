@@ -20,12 +20,71 @@ import { query } from '@/lib/db/postgres';
 import type { AskAnchor } from './anchor';
 import type { StalenessState } from './staleness';
 
-export interface ReadingIdentity {
+/**
+ * The STRUCTURE reading a thread was opened on (WS2-05B-8B-02c-2).
+ *
+ * `kind` is OPTIONAL and absent on every row written before BUILD-07E. It is
+ * never backfilled: a historical row's missing discriminant IS the evidence
+ * that it predates the second object, exactly as a v1 developmental reading's
+ * missing contract version is the evidence of its contract. `readIdentity`
+ * below normalises the absence at the read boundary, so the in-memory type is
+ * a proper union while the stored history stays as it was written.
+ */
+export interface StructureReadingIdentity {
+  kind?: 'structure';
   proposalId: string;
   interpretationInputHash: string;
   sectionTopologyHash: string;
   reviewRevision: number;
   readerProvenance: unknown | null;
+}
+
+/**
+ * The DEVELOPMENTAL reading a thread was opened on (BUILD-07E).
+ *
+ * A SEPARATE MEMBER OF A DISCRIMINATED UNION, not fields added to the
+ * structure record. The anchor module's own reason applies verbatim: a shape
+ * that cannot hold the wrong reference cannot be filled with one by a surface
+ * that forgot to check. There is no `proposalId` here to be wrong about, and
+ * no `readingId` over there.
+ *
+ * `inputFingerprint` and `revisionNumber` are the frozen side of the
+ * developmental comparison — what the Work was when she read it. They are
+ * copied at open and never re-read from the request, so a client cannot
+ * re-point a conversation by asking a second question with different pointers.
+ */
+export interface DevelopmentalReadingIdentity {
+  kind: 'developmental';
+  readingId: string;
+  draftId: string;
+  revisionNumber: number;
+  inputFingerprint: string;
+  commissionedLens: string;
+  readerProvenance: unknown | null;
+}
+
+export type ReadingIdentity = StructureReadingIdentity | DevelopmentalReadingIdentity;
+
+/**
+ * Normalise a stored `reading_identity` into the union.
+ *
+ * A ROW WITHOUT `kind` IS A STRUCTURE READING. That is a fact about when it was
+ * written, not a guess: the developmental member has carried its discriminant
+ * since it existed, so only pre-07E rows can lack one, and every pre-07E row
+ * was a structure reading. Reading it any other way would invent history.
+ */
+export function readIdentity(raw: unknown): ReadingIdentity | null {
+  if (raw === null || typeof raw !== 'object') return null;
+  const o = raw as Record<string, unknown>;
+  if (o.kind === 'developmental') return o as unknown as DevelopmentalReadingIdentity;
+  return { ...(o as unknown as StructureReadingIdentity), kind: 'structure' };
+}
+
+/** True where the thread hangs off a frozen developmental reading. */
+export function isDevelopmentalIdentity(
+  r: ReadingIdentity | null,
+): r is DevelopmentalReadingIdentity {
+  return r !== null && r.kind === 'developmental';
 }
 
 export interface AskTurn {
@@ -126,7 +185,7 @@ export async function loadThread(
     id: row.id as string,
     manuscriptId: row.manuscript_id as string,
     anchor: row.anchor as AskAnchor,
-    reading: (row.reading_identity as ReadingIdentity | null) ?? null,
+    reading: readIdentity(row.reading_identity ?? null),
     canonicalAtOpen: row.canonical_at_open as string,
     initiatedBy: row.initiated_by as 'maia' | 'author',
     openedAt: row.opened_at as Date,

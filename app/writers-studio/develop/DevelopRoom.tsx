@@ -43,6 +43,8 @@ import {
 import {
   LENS_MEANING, LENS_ORDER, readingView, type ObservationView, type ReadingView, type StateName,
 } from '@/lib/writersStudio/developPresentation';
+import ObservationDialogue from './ObservationDialogue';
+import { dialogueSurfaceKey } from '@/lib/writersStudio/observationDialogueResume';
 
 type ListPhase = 'loading' | 'ready' | 'unauthorized' | 'error';
 type ReadingPhase = 'idle' | 'loading' | 'ready' | 'not_found' | 'error';
@@ -388,7 +390,21 @@ export default function DevelopRoom({
               The reading could not be opened just now. It has not changed.
             </p>
           )}
-          {readingPhase === 'ready' && view && <Reading view={view} />}
+          {readingPhase === 'ready' && view && (
+            /* KEYED BY THE FROZEN READING'S IDENTITY.
+               Selecting another reading is opening another frozen object, and
+               everything beneath it — including which dialogues are open and
+               which thread they hold — must begin from THAT object's identity.
+               Without this key React reuses the subtree across readings, and an
+               `ObservationDialogue` mounted under reading A keeps its threadId
+               while its props say reading B: the room shows B's observation
+               while the question appends to A's conversation. `sendMode` cannot
+               catch it, and correctly so — it assumes its threadId belongs to
+               its own anchor.
+               A reset effect would NOT be equivalent: effects run after render,
+               so there is a frame in which B is displayed with A's state. */
+            <Reading key={view.id} view={view} manuscriptId={manuscriptId} />
+          )}
         </main>
       </div>
     </div>
@@ -398,7 +414,7 @@ export default function DevelopRoom({
 
 /* ── the reading ─────────────────────────────────────────────────────── */
 
-function Reading({ view }: { view: ReadingView }) {
+function Reading({ view, manuscriptId }: { view: ReadingView; manuscriptId: string }) {
   return (
     <article data-reading-id={view.id} data-reading-state={view.state} className="max-w-[70ch]">
       <header className="mb-7">
@@ -424,14 +440,41 @@ function Reading({ view }: { view: ReadingView }) {
         </p>
       ) : (
         <ol className="space-y-8" aria-label="Observations">
-          {view.observations.map((o) => <Observation key={o.key} o={o} />)}
+          {view.observations.map((o) => (
+            /* THE DIALOGUE SURFACE'S IDENTITY IS (readingId, observationKey) —
+               `o1` is stable only WITHIN one reading. The `key` on `Reading`
+               above already remounts this subtree; the compound key states the
+               same invariant where it actually applies, so removing one does
+               not silently reopen the fault. */
+            <Observation
+              key={dialogueSurfaceKey(view.id, o.key)}
+              o={o}
+              manuscriptId={manuscriptId}
+              readingId={view.id}
+            />
+          ))}
         </ol>
       )}
     </article>
   );
 }
 
-function Observation({ o }: { o: ObservationView }) {
+/**
+ * BUILD-07E — the observation, and the door into talking about it.
+ *
+ * THE DIALOGUE IS CLOSED UNTIL THE WRITER OPENS IT. A composer standing open
+ * under every observation would make conversation the room's default posture;
+ * the room's posture is encounter, and speaking is a deliberate act. This is
+ * the same reason the 07D room has exactly one act of its own.
+ *
+ * ONE AT A TIME IS NOT ENFORCED HERE, and deliberately: two observations open
+ * at once are two separate threads on two separate anchors, which is lawful and
+ * is what a writer comparing them would do.
+ */
+function Observation({
+  o, manuscriptId, readingId,
+}: { o: ObservationView; manuscriptId: string; readingId: string }) {
+  const [talking, setTalking] = useState(false);
   return (
     <li
       data-observation-key={o.key}
@@ -476,6 +519,29 @@ function Observation({ o }: { o: ObservationView }) {
 
       {o.state !== 'current' && (
         <StateLine state={o.state} label={o.stateLabel} sentence={o.stateSentence} moved={o.moved} />
+      )}
+
+      {talking ? (
+        <ObservationDialogue
+          manuscriptId={manuscriptId}
+          readingId={readingId}
+          observationKey={o.key}
+          about={o.observation}
+          /* The room already measured this when it rendered the reading, so the
+             writer is told BEFORE they speak rather than after their first turn. */
+          superseded={o.state === 'superseded'}
+          onClose={() => setTalking(false)}
+        />
+      ) : (
+        <button
+          type="button"
+          onClick={() => setTalking(true)}
+          data-observation-talk={o.key}
+          className="mt-3 text-[12px] opacity-55 underline underline-offset-4"
+          style={{ cursor: 'pointer' }}
+        >
+          talk with MAIA about this
+        </button>
       )}
     </li>
   );

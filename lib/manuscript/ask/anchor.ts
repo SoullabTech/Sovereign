@@ -17,6 +17,31 @@
  * over the whole union and splitting them across units is how they drift.
  * `concern` is NOT reachable from any surface yet - author-originated
  * section-level concerns are a later slice.
+ *
+ * ── BUILD-07E: A SECOND FROZEN OBJECT ──────────────────────────────────────
+ *
+ * `observation` addresses a DEVELOPMENTAL READING, not a structure proposal.
+ * The two frozen objects are unrelated: a structure anchor names
+ * `proposalId` and resolves inside a `StructureInterpretation`; an
+ * observation names `(readingId, observationKey)` and resolves inside a
+ * `DevelopmentalReading` (DECIDE INV-2).
+ *
+ * ITS COHERENCE RULE IS NOT IN `checkAnchor`, DELIBERATELY. That function is
+ * handed a structure reading and could not check an observation against one
+ * without being given both - and a checker holding both objects is a checker
+ * that can confuse them. `checkObservationAnchor` in `developmentalAnchor.ts`
+ * holds the developmental rule, and `checkAnchor` refuses an observation
+ * through its `default` arm rather than passing it: a structure checker that
+ * silently approved a developmental anchor would be the laundering this
+ * module exists to prevent.
+ *
+ * 07E v1 IS OBSERVATION-ONLY (founder ruling, 2026-09-05). There is no
+ * `{ on: 'reading' }` member and it is not declared here. An observation is
+ * the thing MAIA actually noticed; a reading is a container of notices, and
+ * addressing the container is an ambiguous conversational object - summary,
+ * synthesis, critique, cross-observation interpretation - before anyone has
+ * established which of those it means. Declaring the member "for coherence"
+ * would be pre-building it.
  */
 
 import type { StructureInterpretation } from '../structure/interpret';
@@ -28,7 +53,9 @@ export type AskAnchor =
   | { on: 'question'; proposalId: string; questionIndex: number }
   | { on: 'uncertainty'; proposalId: string; regionIndex: number }
   | { on: 'section'; sectionId: string }
-  | { on: 'concern'; sectionIds: string[]; unitId?: string };
+  | { on: 'concern'; sectionIds: string[]; unitId?: string }
+  /** BUILD-07E - one observation inside one frozen developmental reading. */
+  | { on: 'observation'; readingId: string; observationKey: string };
 
 /** Anchors that cannot exist without the reading they point into. */
 const PROPOSAL_DEPENDENT = ['proposal', 'division', 'question', 'uncertainty'] as const;
@@ -49,6 +76,11 @@ export type AnchorRefusal =
 export type AnchorCheck =
   | { ok: true; anchor: AskAnchor }
   | { ok: false; refusal: AnchorRefusal; detail?: string };
+
+/** True where the anchor points into a frozen DEVELOPMENTAL reading (BUILD-07E). */
+export function isDevelopmental(a: AskAnchor): a is Extract<AskAnchor, { on: 'observation' }> {
+  return a.on === 'observation';
+}
 
 /**
  * The coherence invariant, in one place.
@@ -120,6 +152,10 @@ export function checkAnchor(
       return { ok: true, anchor };
     }
 
+    /* BUILD-07E - an observation is NOT checkable here. It resolves inside a
+       DevelopmentalReading, which this function is never given. Refusing is the
+       correct answer, not a gap: `checkObservationAnchor` holds that rule. */
+    case 'observation':
     default:
       return { ok: false, refusal: 'anchor_unknown' };
   }

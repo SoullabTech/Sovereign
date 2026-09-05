@@ -105,7 +105,21 @@ describe('defect 3 · reviewMoved compares the thread against now, not now again
 
   it('the route takes the frozen side through frozenSideFor', () => {
     expect(ROUTE).toContain('frozenSideFor');
-    expect(ROUTE).toMatch(/stored:\s*existing\?\.reading/);
+    /* BUILD-07E: the stored identity became a union, so the structure path
+       narrows it first. The property this test defends is unchanged — the `was`
+       comes from the THREAD, not from a fresh load — so the assertion follows
+       the narrowing to its source rather than being relaxed. */
+    expect(ROUTE).toMatch(/const storedStructure = existing\?\.reading/);
+    expect(ROUTE).toMatch(/stored:\s*storedStructure/);
+  });
+
+  it('a developmental thread never reaches the structure frozen side', () => {
+    /* The narrowing is what makes that true, and it is asserted as text because
+       the branch above it is what keeps a developmental identity from ever
+       arriving here in the first place. */
+    expect(ROUTE).toMatch(/existing\.reading\.kind !== 'developmental'/);
+    expect(ROUTE.indexOf("effectiveAnchor.on === 'observation'"))
+      .toBeLessThan(ROUTE.indexOf('const storedStructure'));
   });
 });
 
