@@ -259,10 +259,35 @@ Both are asserted separately in the custody check, never conflated.
 
 ```text
 PRODUCTION SHADOW WITNESS       PENDING — required, not yet obtained
+PRODUCTION PROVENANCE           declared identity + runtime artifact attestation BOTH REQUIRED
 MEMBER-FACING INFLUENCE         NOT AUTHORIZED
 CUT 1B (orientation authority)  NOT OPENED
 P6                              CLOSED
 ```
+
+#### Production provenance — two separate claims
+
+Production provenance is two separate claims, and **both** are required before the Cut 1A
+shadow witness may be accepted.
+
+1. **Declared build identity** — the running container reports the exact deploy-candidate
+   SHA through `process.env.GIT_COMMIT`.
+2. **Runtime artifact attestation** — the deploy provenance chain independently binds that
+   same SHA to the artifacts actually built and running: build argument → image label →
+   post-swap image/container verification under the repaired deploy gate.
+
+**The first claim is necessary but not sufficient.** A matching `GIT_COMMIT` alone does not
+attest the loaded runtime artifacts. The 2026-09-03 incident is the worked example: the image
+was stamped while the container was not, because a stale checkout's compose applied a runtime
+`environment: GIT_COMMIT` override at `up` — so the declared identity and the built artifact
+disagreed while a single-channel check would have read as clean.
+
+If either claim is absent, contradictory, or unverified, the production shadow witness
+remains **`UNWITNESSED`**, and Cut 1B and P6 remain closed.
+
+*Recorded 2026-09-05 under founder ruling, before Step 3 opened, so the bar cannot be
+weakened by a later session reading only the shadow-line fields above. Recording it does not
+open Step 3, derive a candidate, authorize a deploy, or alter Cut 1A's behaviour.*
 
 This session has no production access, so the witness cannot be taken here. What it must
 show: `[MAIA/orientation-shadow]` on an ordinary signed-in turn with `applied: false`,
