@@ -1,4 +1,4 @@
-import type { RefusalCheck } from './harness';
+import { lineOf, requireLine, type RefusalCheck } from './harness';
 
 /**
  * Refusal 19 — The legacy oracle conversation lane cannot write content.
@@ -25,8 +25,8 @@ export const check: RefusalCheck = {
   hostileForkMustChange: 'remove or reorder the 410 refusal block so the handler reads the request body — visible diff',
 
   run(io) {
-    const lineOf = (g: string[]) => (g.length ? parseInt(g[0].split(':')[1], 10) : -1);
-
+    // lineOf/requireLine are shared (harness.ts): -1 only for a genuinely absent
+    // anchor, never NaN. A grep line that cannot be parsed raises DetectorDefect.
     const marker = io.grep('LANE DISABLED — Sanctuary S2', [ROUTE]);
     const refusal = io.grep('status: 410', [ROUTE]);
     if (marker.length > 0 && refusal.length > 0) {
@@ -39,7 +39,10 @@ export const check: RefusalCheck = {
     const bodyRead = io.grep('request\\.json\\(', [ROUTE]);
     const writers = io.grep('storeSessionPattern\\(|storeCMLayerSignal\\(', [ROUTE]).filter((l) => !/import /.test(l));
     const refusalLine = lineOf(refusal);
-    const handlerLine = lineOf(handler);
+    // The POST signature is a landmark, not a guard: if it is gone the ordering
+    // assertion is unanchored (DetectorDefect), which is not the same claim as
+    // "the body is readable before the refusal".
+    const handlerLine = requireLine(handler, `"export async function POST" in ${ROUTE}`);
 
     if (handlerLine > 0 && refusalLine > handlerLine && (bodyRead.length === 0 || refusalLine < lineOf(bodyRead))) {
       io.pass('Refusal precedes any request-body read');
