@@ -19,6 +19,7 @@ import {
 } from '../studioTheme';
 import { StudioPanel } from '../studio/StudioPanel';
 import { StudioShellRail } from '../studio/StudioRail';
+import { WriterStudioShell } from '../studio/WriterStudioShell';
 import { StudioModeBar } from '../studio/StudioModeBar';
 import { StudioScrollbars } from '../studio/StudioScrollbars';
 import { StudioText } from '../studio/StudioType';
@@ -374,54 +375,10 @@ export default function WritersStudioPage() {
     if (work) railCounts.materials = declaredMaterials;
   }
 
-  return (
-    <div
-      data-room="writers-studio"
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        height: '100vh',
-        background: GROUND.base,
-        color: INK.primary,
-        overflow: 'hidden',
-      }}
-    >
-      {/* Scoped to data-room above. See StudioScrollbars. */}
-      <StudioScrollbars />
-
-      {/* ══ HEAD OF THE STUDIO ══════════════════════════════════════════ */}
-      <header
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: SPACE.roomy,
-          padding: `${SPACE.base}px ${SPACE.roomy}px`,
-          borderBottom: `1px solid ${RULE.soft}`,
-          background: GROUND.raised,
-          flexShrink: 0,
-        }}
-      >
-        <Link href="/writers-studio" style={{ textDecoration: 'none' }}>
-          <StudioText role="bandLabel" tone="muted">
-            Soullab · Writer’s Studio
-          </StudioText>
-        </Link>
-        <div style={{ minWidth: 0 }}>
-          <StudioText role="workIdentity" style={{ opacity: named ? 1 : 0.7 }}>
-            {headline}
-          </StudioText>
-          {/* The member's own statement, in their words, only when their own
-              declaration united a Work with what is on the table. */}
-          {work?.purpose ? (
-            <StudioText role="quiet">{work.purpose}</StudioText>
-          ) : work && manuscript ? (
-            <StudioText role="quiet">
-              {manuscriptLabel} — a form of this work, declared by you
-            </StudioText>
-          ) : null}
-        </div>
-        {!compact && <StudioModeBar current="write" manuscriptId={manuscript?.id ?? null} style={{ marginLeft: SPACE.roomy }} />}
-        <span style={{ flex: 1 }} />
+  /* The header's right-hand controls are Write's own, so the shell takes them
+     as a slot rather than knowing about them. */
+  const headerRight = (
+    <>
         {/* ── WS2-03B correction: a way back to MAIA ────────────────────────
             Her panel was dismissible with no route home. Every other panel is
             re-opened from the rail, but her whole rail band is unavailable and
@@ -469,20 +426,48 @@ export default function WritersStudioPage() {
             {draftMeta.words.toLocaleString()} words
           </StudioText>
         )}
-      </header>
+    </>
+  );
 
-      {/* ══ BODY ════════════════════════════════════════════════════════ */}
-      <div
-        style={{
-          display: 'flex',
-          flexDirection: compact ? 'column' : 'row',
-          flex: 1,
-          minHeight: 0,
-          gap: compact ? SPACE.base : pct(L.gutter),
-          padding: compact ? SPACE.base : pct(L.gutter),
-          overflow: compact ? 'auto' : 'hidden',
-        }}
-      >
+  const lowerBand = (
+    <>
+      {/* ══ LOWER BAND ══════════════════════════════════════════════════ */}
+      {bandOpen && manuscript && (
+        <StudioLowerBand
+          revisions={revisions}
+          wordCount={draftMeta?.words ?? null}
+          sectionCount={
+            writeMount.mount === 'sections'
+              ? writeMount.rows.length
+              : sectionsPhase === 'ready' ? sections.length : null
+          }
+          outlineOpen={outlineOpen}
+          onShowOutline={() => summon('outline')}
+          onDismiss={() => setBandOpen(false)}
+        />
+      )}
+    </>
+  );
+
+  return (
+    <WriterStudioShell
+      currentMode="write"
+      manuscriptId={manuscript?.id ?? null}
+      workName={headline}
+      workNamed={named}
+      /* The member's own statement, in their words, only when their own
+         declaration united a Work with what is on the table. */
+      workNote={
+        work?.purpose ? work.purpose
+          : work && manuscript ? `${manuscriptLabel} — a form of this work, declared by you`
+          : null
+      }
+      headerRight={headerRight}
+      lowerBand={lowerBand}
+      bodyGutter={pct(L.gutter)}
+      compact={compact}
+    >
+
         <StudioShellRail
           hasManuscript={Boolean(manuscript)}
           counts={railCounts}
@@ -737,24 +722,7 @@ export default function WritersStudioPage() {
             />
           </StudioPanel>
         )}
-      </div>
-
-      {/* ══ LOWER BAND ══════════════════════════════════════════════════ */}
-      {bandOpen && manuscript && (
-        <StudioLowerBand
-          revisions={revisions}
-          wordCount={draftMeta?.words ?? null}
-          sectionCount={
-            writeMount.mount === 'sections'
-              ? writeMount.rows.length
-              : sectionsPhase === 'ready' ? sections.length : null
-          }
-          outlineOpen={outlineOpen}
-          onShowOutline={() => summon('outline')}
-          onDismiss={() => setBandOpen(false)}
-        />
-      )}
-    </div>
+    </WriterStudioShell>
   );
 }
 

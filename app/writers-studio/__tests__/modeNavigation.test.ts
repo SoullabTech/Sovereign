@@ -79,7 +79,27 @@ describe('the bar navigates exactly where a room exists', () => {
     expect(bar).toContain("'unavailable'");
   });
 
-  it('the Canvas hands the bar the Work it is holding', () => {
-    expect(src('canvas', 'page.tsx')).toContain('<StudioModeBar current="write" manuscriptId=');
+  /* The Canvas no longer renders the bar; the shell does. What must stay true
+     is the chain: the mode hands its Work to the shell, and the shell hands it
+     to the bar. Asserting the chain rather than one arrangement of it means the
+     next mode to be mounted inherits the binding instead of re-earning it. */
+  it('the mode hands its Work to the shell, and the shell hands it to the bar', () => {
+    const shell = src('studio', 'WriterStudioShell.tsx');
+    expect(shell).toContain('manuscriptId={manuscriptId}');
+    expect(shell).toContain('current={currentMode}');
+    for (const mode of [['canvas', 'page.tsx'], ['develop', 'DevelopRoom.tsx']] as const) {
+      const body = src(...mode);
+      expect(body).toContain('WriterStudioShell');
+      expect(body).toMatch(/manuscriptId=\{/);
+    }
+  });
+
+  it('neither mode composes the Studio chrome for itself', () => {
+    /* Two headers that merely resemble each other is the thing this refactor
+       exists to prevent, so no mode may grow its own. */
+    for (const mode of [['canvas', 'page.tsx'], ['develop', 'DevelopRoom.tsx']] as const) {
+      expect(src(...mode)).not.toContain('Soullab · Writer’s Studio');
+    }
+    expect(src('studio', 'WriterStudioShell.tsx')).toContain('Soullab · Writer’s Studio');
   });
 });

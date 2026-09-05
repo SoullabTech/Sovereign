@@ -30,7 +30,8 @@ import { apiFetch } from '@/lib/http/apiBase';
 import type { DevelopmentalLens } from '@/lib/manuscript/developmentalReader/contract';
 import { PRESS, SERIF } from '../pressTheme';
 import { CANVAS_HREF } from '../studioMap';
-import { StudioModeBar } from '../studio/StudioModeBar';
+import { WriterStudioShell } from '../studio/WriterStudioShell';
+import { StudioShellRail } from '../studio/StudioRail';
 import { INK, RULE, SPACE } from '../studioTheme';
 import { canvasForManuscript } from '../canvasIdentity';
 import { UNTITLED_EXPRESSION } from '../shellIdentity';
@@ -199,42 +200,29 @@ export default function DevelopRoom({
   const headline = title === undefined ? '' : (title ?? UNTITLED_EXPRESSION);
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ fontFamily: SERIF }}>
-      {/* ── THE STUDIO, not a room beside it ────────────────────────────
-          BUILD-07D built this room while the product's presentation had
-          already moved on, so it wore its own chrome and a back-link out.
-          A mode is a stance toward one Work, not a separate page: the
-          wordmark, the Work's name and the mode bar are the same here as in
-          Write, and the bar carries this Work onward rather than dropping it.
-          The old "← Writer Canvas" link is gone because WRITE in the bar is
-          that link, and one way back is enough. */}
-      <header
-        className="px-6 md:px-10 pt-5 pb-5 border-b"
-        style={{ borderColor: RULE.soft }}
-      >
-        <div className="flex items-baseline gap-4 flex-wrap mb-3">
-          <Link
-            href={canvasForManuscript(CANVAS_HREF, manuscriptId)}
-            className="text-[11px] tracking-[0.2em] uppercase hover:opacity-100"
-            style={{ color: INK.quiet, opacity: 0.7, textDecoration: 'none' }}
-          >
-            Soullab · Writer’s Studio
-          </Link>
-          <StudioModeBar
-            current="develop"
-            manuscriptId={manuscriptId}
-            style={{ marginLeft: SPACE.base }}
-          />
-        </div>
-        <h1 className="text-[24px] md:text-[27px] leading-snug" style={{ opacity: title ? 1 : 0.75 }}>
-          {headline}
-        </h1>
-        <p className="text-[13px] leading-relaxed opacity-55 mt-2 max-w-xl">
-          What MAIA noticed when she read this work, kept exactly as she noticed it. A reading is
-          about the work as it was then; the work is yours, and it moves.
-        </p>
-      </header>
-
+    /* ── A MODE, NOT A PAGE ───────────────────────────────────────────────
+       Develop stands inside the same Studio as Write: same wordmark, same
+       Work, same mode bar, same rail. Only the interior differs — a reading is
+       not a draft, and forcing it into Write's columns would confuse the shell
+       with the stance. There is no link back out, because WRITE in the bar is
+       that link. */
+    <WriterStudioShell
+      currentMode="develop"
+      manuscriptId={manuscriptId}
+      workName={headline}
+      workNamed={Boolean(title)}
+      workNote="What MAIA noticed when she read this work, kept exactly as she noticed it."
+      rail={
+        <StudioShellRail
+          hasManuscript
+          manuscriptId={manuscriptId}
+          current="manuscript"
+          openPanels={[]}
+          onSelect={() => {}}
+        />
+      }
+    >
+    <div className="flex-1 flex flex-col min-h-0" style={{ fontFamily: SERIF }}>
       <div className="flex-1 flex flex-col md:flex-row min-h-0 border-t" style={{ borderColor: PRESS.rule }}>
         {/* ── Readings: the ledger of what MAIA has read, newest first ── */}
         <aside
@@ -365,6 +353,7 @@ export default function DevelopRoom({
         </main>
       </div>
     </div>
+    </WriterStudioShell>
   );
 }
 
