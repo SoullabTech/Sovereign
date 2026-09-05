@@ -58,7 +58,38 @@ const INVOCATION_SENTENCE =
 function refusalSentence(o: Extract<CommissionOutcome, { ok: false }>): string {
   if (o.refusal === 'unauthorized') return 'You are signed out. Nothing has changed.';
   if (o.refusal === 'unreachable') return 'The Studio could not be reached. Nothing has changed.';
-  if (o.refusal === 'structured_inference_unavailable') return 'MAIA cannot read just now. Nothing has changed.';
+  /* NOTHING RAN. Availability and configuration failures are named by refusal
+     identity rather than by stage, because the stage does not change what the
+     member is owed: MAIA could not read, and the Work is untouched. */
+  if (
+    o.refusal === 'structured_inference_unavailable' ||
+    o.refusal === 'provider_unavailable' ||
+    o.refusal === 'not_configured' ||
+    o.refusal === 'invalid_inference_mode'
+  ) {
+    return 'MAIA cannot read just now. Nothing has changed.';
+  }
+  /* THE CLASSIFIER ANSWERED, AND ITS ANSWER VIOLATED THE TOOL CONTRACT.
+     `classifier_foreign_field` fires when the tool payload carries a key the
+     contract does not define; the other two when it is shaped wrongly or names
+     claim indices that do not line up (classify.ts). None of them mean the
+     observation fell outside the phenomenon family.
+
+     That distinction is why this branch exists. Under reading contract v2 an
+     honest decline is NOT a refusal at all: the observation is kept and its
+     phenomenon is simply absent. This room used to answer every classify-stage
+     refusal with a sentence describing that keeping path, and so gave the
+     member a false account of a malformed protocol response. Mapping a protocol
+     failure onto epistemic humility would manufacture a valid semantic state
+     out of an invalid one. The sentence is gone. The refusal is unchanged, and
+     there is no retry. */
+  if (
+    o.refusal === 'classifier_foreign_field' ||
+    o.refusal === 'classifier_malformed' ||
+    o.refusal === 'classifier_index_mismatch'
+  ) {
+    return 'MAIA’s classification response could not be read safely, so this reading was not kept. Your work has not changed.';
+  }
   /* MAIA reads a KEPT version of the Work. If the writer has changed the Work
      since the last kept version, capture refuses rather than attaching current
      ranges to an older revision — and the member is owed that state by name,
@@ -77,8 +108,11 @@ function refusalSentence(o: Extract<CommissionOutcome, { ok: false }>): string {
       return o.refusal === 'ceiling_exceeded'
         ? 'This work is longer than MAIA reads in one sitting, so she did not read it. Nothing has changed.'
         : 'MAIA’s reading did not hold to its own rules, so nothing was kept. Your work has not changed.';
-    case 'classify':
-      return 'What MAIA noticed could not be named within her vocabulary, so nothing was kept. Your work has not changed.';
+    /* No `case 'classify'`. The classify-stage refusals that have something
+       specific to say are said above, by name. Anything else that stage can
+       produce — including the legacy `classifier_unclassifiable`, which v2 no
+       longer emits — falls to the neutral sentence rather than inheriting an
+       explanation that no longer corresponds to any refusal path. */
     case 'freeze':
     case 'store':
       return 'The reading could not be kept. Your work has not changed.';
