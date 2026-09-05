@@ -33,7 +33,8 @@
  *   W3   same-origin runtime font delivery, and vendored faces rasterize
  *   W4a  no Google Fonts reference in browser-deliverable served production
  *        assets or documents                        ← claim evidence
- *   W4b  no latent Google Fonts re-entry vector in browser-targetable source
+ *   W4b  no latent Google Fonts re-entry vector in browser-targetable source,
+ *        read from EXPECT_SHA's Git objects
  *                                                   ← preventive governance
  *
  * W4a and W4b are both required for closure but support DIFFERENT claims.
@@ -90,37 +91,78 @@
  *   MEMBER   A member surface is navigated alongside /accounted-for. A
  *            redirect to sign-in means it was not reached: INVALID.
  *
+ * ── WHY v2.2 ─────────────────────────────────────────────────────────────
+ * v2.1 was never run. Two defects were found in it before it produced any
+ * evidence, both the same shape as the ones it had itself fixed in v2: the
+ * written contract was stronger than what the code enforced.
+ *
+ *   1. W4b read the WORKING TREE, so its result depended on the operator
+ *      having pointed the script at a suitably pristine directory. v2.2 reads
+ *      the Git objects of EXPECT_SHA instead. "HEAD == EXPECT_SHA and the
+ *      worktree is clean" is only a PROXY for "the source I swept is the
+ *      subject's source"; a sparse checkout, an excluded path, a partial clone
+ *      or a stray ignore rule can satisfy the proxy while hiding source from a
+ *      filesystem grep. Asking Git for the commit is the thing itself.
+ *
+ *   2. Both sweeps classified a file from `grep | head -5`. A file whose first
+ *      five matches were prose and whose sixth was a real fetchable reference
+ *      would have been reported as a non-gating prose mention. Truncation is
+ *      now display-only; classification always sees full matching content.
+ *
+ * v2.2 is also deliberately EXTERNAL to the subject: the instrument is not part
+ * of the deployed commit it measures. So it is identified by its own Git blob
+ * id, self-computed, and the acceptance record binds two identities — SUBJECT
+ * (the deployed commit) and INSTRUMENT (this blob). Neither alone makes a run
+ * reproducible; together they make it reconstructible by anyone.
+ *
  * ── USAGE ────────────────────────────────────────────────────────────────
- *   WITNESS_EXPECT_SHA=<sha> node scripts/witness/local-fonts-production-witness.mjs
+ *   WITNESS_EXPECT_SHA=<40-char sha> \
+ *   WITNESS_REPO_ROOT=/path/to/objectstore \
+ *     node local-fonts-production-witness.mjs
  *
  * ENV
+ *   WITNESS_EXPECT_SHA   REQUIRED. Full 40-character commit SHA of the subject.
+ *                        Missing or malformed = INVALID. There is no skip mode:
+ *                        a production acceptance witness without an exact
+ *                        subject has no useful mode.
+ *   WITNESS_REPO_ROOT    REQUIRED. Any Git repository or object store holding
+ *                        EXPECT_SHA. No derive-from-script fallback — the
+ *                        instrument lives outside the subject, so its own
+ *                        location says nothing about where the objects are.
+ *                        Absent commit = INVALID.
  *   WITNESS_ORIGIN       default https://soullab.life
  *   WITNESS_SSH_HOST     default soullab@minisforum
  *   WITNESS_CONTAINER    default maia-sovereign
- *   WITNESS_EXPECT_SHA   assert the deployed SHA is this one
  *   WITNESS_MEMBER_PATH  default /maia/privacy
  *   WITNESS_EXTRA_PATHS  comma-separated additional surfaces to observe
- *   WITNESS_REPO_ROOT    default: the repo containing this script
- *   WITNESS_SKIP_SHA=1   read no SHA (run is NOT SUBJECT-BOUND; never for an
- *                        acceptance-record witness)
  *
  * EXIT  0 PASS · 1 FAIL · 2 INVALID
  */
 
 import { execFileSync } from 'node:child_process';
-import { mkdtempSync, rmSync } from 'node:fs';
+import { mkdtempSync, rmSync, readFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
 import { tmpdir } from 'node:os';
-import { join, resolve, dirname } from 'node:path';
+import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import puppeteer from 'puppeteer';
 
-const INSTRUMENT_VERSION = '2.1';
+const INSTRUMENT_VERSION = '2.2';
 
 const ORIGIN = process.env.WITNESS_ORIGIN ?? 'https://soullab.life';
 const SSH_HOST = process.env.WITNESS_SSH_HOST ?? 'soullab@minisforum';
 const CONTAINER = process.env.WITNESS_CONTAINER ?? 'maia-sovereign';
+// REQUIRED. A production acceptance witness without an exact subject has no
+// useful mode, so there is no skip and no default. WITNESS_SKIP_SHA is retired.
 const EXPECT_SHA = process.env.WITNESS_EXPECT_SHA ?? null;
-const SKIP_SHA = process.env.WITNESS_SKIP_SHA === '1';
+
+// REQUIRED. No derive-from-script fallback: v2.2 lives OUTSIDE the subject, so
+// its own location says nothing about where the subject's objects are. Any Git
+// repository or object store containing EXPECT_SHA will do — v2.2 reads the
+// commit, never a checkout, so the working tree there is irrelevant.
+const REPO_ROOT = process.env.WITNESS_REPO_ROOT ?? null;
+
+const SHA40 = /^[0-9a-f]{40}$/;
 
 // The member surface must be a route an unauthenticated browser actually
 // reaches. NOT /begin — at these SHAs app/begin/page.tsx is redirect('/signin'),
@@ -170,9 +212,28 @@ const SURFACES = [
     .map((path) => ({ path, why: 'added via WITNESS_EXTRA_PATHS — no render expectation asserted' })),
 ];
 
-const REPO_ROOT =
-  process.env.WITNESS_REPO_ROOT ??
-  resolve(dirname(fileURLToPath(import.meta.url)), '../..');
+/**
+ * INSTRUMENT IDENTITY — this script's own Git blob id, computed from its bytes.
+ *
+ * v2.2 is deliberately external to the subject, so it is not identified by any
+ * commit in the subject's history. Hashing its own content gives an identity
+ * that needs no repository at all and is exactly what `git hash-object` would
+ * report, so the acceptance record can name it and anyone can reconstruct the
+ * run with `git cat-file blob <id>`.
+ *
+ * The record binds TWO identities: SUBJECT (deployed commit) and INSTRUMENT
+ * (this blob). Neither alone makes a run reproducible.
+ */
+function instrumentBlobId() {
+  try {
+    const bytes = readFileSync(fileURLToPath(import.meta.url));
+    return createHash('sha1')
+      .update(Buffer.concat([Buffer.from(`blob ${bytes.length}\0`), bytes]))
+      .digest('hex');
+  } catch {
+    return null;
+  }
+}
 
 /** Families vendored by this repair — app/fonts.css. */
 const VENDORED_FAMILIES = [
@@ -194,6 +255,12 @@ const MARKUP_RE = /(url\(|href\s*=|src\s*=)[^)\n>]{0,200}?fonts\.(googleapis|gst
 // delivered bundle can construct the URL with no markup reference anywhere.
 const CONSTRUCTED_RE = /["'`]https?:\/\/fonts\.(googleapis|gstatic)\.com/;
 const isFetchable = (text) => MARKUP_RE.test(text) || CONSTRUCTED_RE.test(text);
+/** Display helper. Prefers a line that actually gates, so the sample shown is
+ *  the evidence, not whichever line happened to sort first. */
+const firstFetchableLine = (text) => {
+  const lines = (text ?? '').split('\n').filter(Boolean);
+  return lines.find((l) => isFetchable(l)) ?? lines[0] ?? '';
+};
 const FONT_EXT = /\.(woff2?|ttf|otf|eot)(\?|$)/i;
 const SIGNIN_PATH = /\/(signin|sign-in|login|auth|begin-journey)\b/i;
 
@@ -238,7 +305,6 @@ function ssh(cmd, label, { allowEmpty = false } = {}) {
 }
 
 function readProductionSha(label) {
-  if (SKIP_SHA) return null;
   try {
     return ssh(`docker exec ${CONTAINER} printenv GIT_COMMIT`, label);
   } catch (err) {
@@ -265,11 +331,20 @@ function sweepServed() {
   const files = raw ? raw.split('\n').map((s) => s.trim()).filter(Boolean) : [];
   const classified = [];
   for (const file of files) {
+    // FULL matching content — never truncated before classification. A file
+    // whose first five matches are prose and whose sixth is a real
+    // `<link href="https://fonts.googleapis.com/...">` must not be classified
+    // as prose. Truncation is for the console only.
     const body = ssh(
-      `docker exec ${CONTAINER} sh -c "grep -nE 'fonts\\.(googleapis|gstatic)\\.com' '${file}' 2>/dev/null | head -5 || true"`,
+      `docker exec ${CONTAINER} sh -c "grep -nE 'fonts\\.(googleapis|gstatic)\\.com' '${file}' 2>/dev/null || true"`,
       'served line', { allowEmpty: true },
     );
-    classified.push({ file, fetchable: isFetchable(body), sample: body.split('\n')[0] ?? '' });
+    classified.push({
+      file,
+      fetchable: isFetchable(body),
+      matches: body ? body.split('\n').filter(Boolean).length : 0,
+      sample: firstFetchableLine(body),
+    });
   }
   return classified;
 }
@@ -278,33 +353,56 @@ function sweepServed() {
 
 function sweepSource() {
   const roots = SOURCE_ROOTS.map((r) => `'${r}'`).join(' ');
+  // Reads the COMMIT, not a checkout. Stronger than "HEAD == EXPECT_SHA and the
+  // worktree is clean": that pair is only a proxy for "the source I swept is the
+  // subject's source". A sparse checkout, an excluded path, a partial clone or a
+  // stray ignore rule can all leave a worktree clean, at the right HEAD, and
+  // still hide source from a filesystem grep. Asking Git for the commit's tree
+  // is the thing itself, so the source inspected IS the subject by construction.
   let raw = '';
   try {
     raw = execFileSync(
       'sh',
       ['-c',
-       `cd '${REPO_ROOT}' && grep -rlE 'fonts\\.(googleapis|gstatic)\\.com' ${roots} 2>/dev/null ` +
-       `| grep -v node_modules || true`],
+       `git -C '${REPO_ROOT}' grep -lE 'fonts\\.(googleapis|gstatic)\\.com' ` +
+       `'${EXPECT_SHA}' -- ${roots} 2>/dev/null || true`],
       { encoding: 'utf8', timeout: 60_000 },
     ).trim();
   } catch {
-    return null; // unreadable checkout — reported, never silently passed
+    return null; // unreadable object store — reported, never silently passed
   }
-  const files = raw ? raw.split('\n').filter(Boolean) : [];
+  // `git grep <rev>` prefixes every row with `<rev>:`; strip it to get the path.
+  const files = raw
+    ? raw.split('\n').filter(Boolean).map((row) => row.replace(/^[^:]*:/, ''))
+    : [];
   return files.map((file) => {
     let body = '';
     try {
+      // Again FULL matching content, from the object — no head, no worktree.
       body = execFileSync('sh',
-        ['-c', `cd '${REPO_ROOT}' && grep -nE 'fonts\\.(googleapis|gstatic)\\.com' '${file}' | head -5`],
+        ['-c', `git -C '${REPO_ROOT}' grep -nE 'fonts\\.(googleapis|gstatic)\\.com' ` +
+               `'${EXPECT_SHA}' -- '${file}'`],
         { encoding: 'utf8', timeout: 20_000 }).trim();
     } catch { /* empty */ }
     return {
       file,
       plane: planeOf(file),
       fetchable: isFetchable(body),
-      sample: body.split('\n')[0] ?? '',
+      matches: body ? body.split('\n').filter(Boolean).length : 0,
+      sample: firstFetchableLine(body),
     };
   });
+}
+
+/** Non-gating hygiene: what state the object store's checkout happens to be in. */
+function repoHygiene() {
+  const q = (cmd) => {
+    try {
+      return execFileSync('sh', ['-c', `git -C '${REPO_ROOT}' ${cmd} 2>/dev/null`],
+        { encoding: 'utf8', timeout: 20_000 }).trim();
+    } catch { return null; }
+  };
+  return { head: q('rev-parse HEAD'), dirty: q('status --porcelain') };
 }
 
 /* ── observation ─────────────────────────────────────────────────────── */
@@ -419,12 +517,45 @@ async function run() {
   console.log(`  run at: ${new Date().toISOString()}`);
   console.log('');
 
+  /* PREFLIGHT — the run does not begin without a bound subject and a readable
+     object store holding it. Each of these is INVALID, not FAIL: an instrument
+     that could not reach its subject has no finding in either direction. */
+  if (!EXPECT_SHA) {
+    invalid.push('WITNESS_EXPECT_SHA is required — a production acceptance witness ' +
+      'without an exact subject has no useful mode');
+  } else if (!SHA40.test(EXPECT_SHA)) {
+    invalid.push(`WITNESS_EXPECT_SHA must be a full 40-character commit SHA, got "${EXPECT_SHA}"`);
+  }
+  if (!REPO_ROOT) {
+    invalid.push('WITNESS_REPO_ROOT is required — v2.2 lives outside the subject, so ' +
+      'its own location says nothing about where the subject\'s objects are');
+  }
+  let objectPresent = false;
+  if (EXPECT_SHA && SHA40.test(EXPECT_SHA) && REPO_ROOT) {
+    try {
+      execFileSync('sh', ['-c', `git -C '${REPO_ROOT}' cat-file -e '${EXPECT_SHA}^{commit}'`],
+        { encoding: 'utf8', timeout: 20_000 });
+      objectPresent = true;
+    } catch {
+      invalid.push(`commit ${EXPECT_SHA} is not present in the object store at ${REPO_ROOT} ` +
+        '— W4b cannot read the subject\'s source, so no sweep of it is possible');
+    }
+  }
+  if (invalid.length) {
+    console.log('INVALID — preflight failed, no observation attempted:');
+    for (const m of invalid) console.log(`  · ${m}`);
+    console.log('');
+    console.log('RESULT                 INVALID');
+    console.log('');
+    return 2;
+  }
+
   /* W0a */
   let preSha = null;
   try { preSha = readProductionSha('before'); }
   catch (err) { invalid.push(err.message); }
-  if (EXPECT_SHA && preSha && preSha !== EXPECT_SHA) {
-    invalid.push(`deployed SHA ${preSha} != expected ${EXPECT_SHA}`);
+  if (preSha && preSha !== EXPECT_SHA) {
+    invalid.push(`deployed SHA ${preSha} != expected subject ${EXPECT_SHA}`);
   }
 
   const userDataDir = mkdtempSync(join(tmpdir(), 'maia-fonts-witness-'));
@@ -449,18 +580,20 @@ async function run() {
 
   /* W4a — served sweep, and W4b — source ratchet */
   let served = null;
-  if (!SKIP_SHA) {
-    try { served = sweepServed(); }
-    catch (err) { invalid.push(`served sweep failed: ${err.message}`); }
-  }
+  try { served = sweepServed(); }
+  catch (err) { invalid.push(`served sweep failed: ${err.message}`); }
   const source = sweepSource();
-  if (source === null) invalid.push(`could not read repo source at ${REPO_ROOT} for the re-entry ratchet`);
+  if (source === null) {
+    invalid.push(`could not read subject objects at ${REPO_ROOT} for the re-entry ratchet`);
+  }
+  const hygiene = repoHygiene();
 
   /* W0b */
   let postSha = null;
-  if (!SKIP_SHA) {
-    try { postSha = readProductionSha('after'); }
-    catch (err) { invalid.push(err.message); }
+  try { postSha = readProductionSha('after'); }
+  catch (err) { invalid.push(err.message); }
+  if (postSha && postSha !== EXPECT_SHA) {
+    invalid.push(`post-observation SHA ${postSha} != expected subject ${EXPECT_SHA}`);
   }
   if (preSha && postSha && preSha !== postSha) {
     invalid.push(`subject changed mid-witness: ${preSha} → ${postSha}. ` +
@@ -468,19 +601,29 @@ async function run() {
   }
 
   console.log('SUBJECT');
-  console.log(`  pre-navigation sha   ${preSha ?? (SKIP_SHA ? 'NOT READ (skipped)' : 'UNREADABLE')}`);
-  console.log(`  post-observation sha ${postSha ?? (SKIP_SHA ? 'NOT READ (skipped)' : 'UNREADABLE')}`);
-  console.log(`  subject stable       ${SKIP_SHA
-    ? 'NOT BOUND — this run cannot support an acceptance record'
-    : mark(Boolean(preSha) && preSha === postSha)}`);
+  console.log(`  expected             ${EXPECT_SHA}`);
+  console.log(`  pre-navigation sha   ${preSha ?? 'UNREADABLE'}`);
+  console.log(`  post-observation sha ${postSha ?? 'UNREADABLE'}`);
+  console.log(`  subject stable       ${mark(Boolean(preSha) && preSha === postSha && preSha === EXPECT_SHA)}`);
+  console.log(`  object store         ${REPO_ROOT}`);
+  console.log(`  commit present       ${mark(objectPresent)}`);
   console.log('');
 
   console.log('INSTRUMENT');
   console.log(`  version              v${INSTRUMENT_VERSION}`);
+  console.log(`  blob id              ${instrumentBlobId() ?? 'UNCOMPUTABLE'}`);
+  console.log('  external to subject  YES — v2.2 is not part of the deployed commit');
   console.log('  browser profile      FRESH (no carried-over font cache)');
   console.log('  browser cache        DISABLED before first navigation');
   console.log('  service workers      BYPASSED before first navigation');
   console.log(`  surfaces             ${observations.length}`);
+  console.log('');
+
+  // Hygiene only. W4b reads the commit, so none of this gates the verdict.
+  console.log('REPO HYGIENE           (informational — does NOT gate)');
+  console.log(`  checkout HEAD        ${hygiene.head ?? 'unreadable'}${
+    hygiene.head === EXPECT_SHA ? '  (== subject)' : '  (!= subject — irrelevant, objects were read)'}`);
+  console.log(`  worktree             ${hygiene.dirty === null ? 'unreadable' : hygiene.dirty ? 'dirty' : 'clean'}`);
   console.log('');
 
   let totalFonts = 0;
@@ -601,8 +744,9 @@ async function run() {
     console.log(`  roots                  ${SERVED_ROOTS.join(' ')}`);
     console.log(`  fetchable references   ${fetchable.length}`);
     console.log(`  prose mentions         ${prose.length}   (informational — never gates)`);
-    for (const f of fetchable) console.log(`      ! ${f.file}  ${f.sample.slice(0, 90)}`);
-    for (const f of prose) console.log(`      · ${f.file}`);
+    console.log('  classified on FULL matching content; samples below are display-only');
+    for (const f of fetchable) console.log(`      ! ${f.file}  [${f.matches} match(es)]  ${f.sample.slice(0, 84)}`);
+    for (const f of prose) console.log(`      · ${f.file}  [${f.matches} match(es)]`);
     if (fetchable.length) {
       failures.push(`${fetchable.length} browser-deliverable production asset(s) reference a Google font host`);
     }
@@ -618,9 +762,10 @@ async function run() {
     const server = source.filter((f) => f.fetchable && f.plane === 'server');
     const docs = source.filter((f) => f.fetchable && f.plane === 'docs');
     const prose = source.filter((f) => !f.fetchable);
+    console.log(`  source                 git objects @ ${EXPECT_SHA.slice(0, 12)} — NOT the working tree`);
     console.log(`  roots                  ${SOURCE_ROOTS.join(' ')}`);
     console.log(`  client-plane vectors   ${client.length}   ← gates closure`);
-    for (const f of client) console.log(`      ! ${f.file}  ${f.sample.slice(0, 88)}`);
+    for (const f of client) console.log(`      ! ${f.file}  [${f.matches} match(es)]  ${f.sample.slice(0, 82)}`);
     console.log(`  server-plane refs      ${server.length}   (declared OUT — reported, does not gate)`);
     for (const f of server) console.log(`      · ${f.file}`);
     console.log(`  documentation refs     ${docs.length}   (not deliverable source — does not gate)`);
@@ -657,7 +802,13 @@ async function run() {
   if (code === 0) {
     console.log('This PASS licenses exactly one claim:');
     console.log('  "The production site\'s runtime Google Fonts dependency has been');
-    console.log(`   removed and witnessed." — production subject ${preSha}, instrument v${INSTRUMENT_VERSION}`);
+    console.log(`   removed and witnessed."`);
+    console.log('');
+    console.log(`  SUBJECT     ${EXPECT_SHA}`);
+    console.log(`  INSTRUMENT  ${instrumentBlobId() ?? 'UNCOMPUTABLE'}  (v${INSTRUMENT_VERSION} blob)`);
+    console.log('');
+    console.log('  Bind BOTH to the acceptance record. Reconstruct with:');
+    console.log('    git cat-file blob <INSTRUMENT>   ·   git checkout <SUBJECT>');
     console.log('');
     console.log('It does NOT establish build-plane independence, hermeticity, offline');
     console.log('operation, server-side generation independence, or that cognition is');
