@@ -31,52 +31,27 @@
 ```text
 PROGRAMME          WRITER'S STUDIO R2
 MODE               STAGE 7 BUILD
-BUILD MODE         OPEN — BUILD-07E Developmental Dialogue OPENED (founder act
-                   2026-09-05); 07F–H unauthorized
-BOUND CANONICAL    5c57e27f0 (clean-main-no-secrets, 2026-09-05 — WS2 Write ⇄ Develop
-                   repair merged, PR #1211; LIVE on minisforum, dual provenance verified)
-CURRENT UNIT       BUILD-07E Developmental Dialogue — OPEN (founder act 2026-09-05):
-                   the writer converses with MAIA about an observation she made;
-                   the reading remains evidence and is never amended, re-classified
-                   or re-anchored by the conversation. No decisions surface (07F),
-                   no revision path (07H).
-                   census/contract: WS2-07-BUILD-07E_DIALOGUE_BOUNDARY_CENSUS_2026-09-05.md
-                   lane: JARVIS-WS2-07-DEVELOPMENTAL-INTELLIGENCE-01
-CURRENT CANDIDATE  BUILT on claude/writer-author-studios-roadmap-b2tqf5, base 5c57e27f0 —
-                   gates green, NOT CLOSED (awaits the founder walk in the Develop room).
-                   Founder rulings Q1 observation-only · Q2 digest-verified evidence ·
-                   Q3 superseded opens AS superseded — all three implemented.
-                   W4 first-turn superseded wording ACCEPTED AS-IS on source review.
-                   3bc700c4f — founder review: 2 blockers. (A) W6 unreachable — reopening
-                   opened a SECOND thread. (B) raw UUIDs in model-facing prose.
-                   982ff9fce — B CLOSED (labels derived from the FROZEN topology; no code
-                   path can return an id). A reopened on two races in the resume path.
-                   CURRENT — A closed as one invariant, "unknown never rounds to fresh":
-                   discovery returns a discriminated result (failure ≠ none) and one
-                   `sendMode` gives both permission and payload, so the adoption window
-                   (resume decided, thread not yet loaded) BLOCKS instead of opening by
-                   anchor. `open` is reachable from exactly one state, asserted
-                   exhaustively. The chooser's "start a new conversation" control was
-                   REMOVED: several threads are lawful history, not a product capability.
-                   1595f07e0 — A CLOSED. Blocker C: switching readings could reuse the
-                   dialogue subtree (`o1` is stable only WITHIN a reading), so the room
-                   showed reading B while the question appended to reading A's thread.
-                   CURRENT — C closed by IDENTITY: <Reading key={view.id}> plus a compound
-                   dialogueSurfaceKey(readingId, observationKey). A reset effect was
-                   rejected and is forbidden by a guard — effects run after the render
-                   that leaks.
-                   PROVENANCE tree base 5c57e27f0 · ancestry base dc742fe43 · zero tree
-                   drift between them (5c57e27f0 is a tree-neutral merge). Canonical has
-                   since moved to 71e52d06; the only changes since 5c57e27f0 are
-                   app/accounted-for/page.tsx and docs/canon/MAIA_SOUL_CORPUS.md, neither
-                   overlapping 07E runtime or tests (founder check, 2026-09-05).
-                   NO MIGRATION (E10 discharged: anchor and reading_identity were jsonb).
-                   785 tests / 51 suites / 0 failed · typecheck no regressions.
-                   record: WS2-07-BUILD-07E_DIALOGUE_BUILD_2026-09-05.md §5 = the walk
-                   KEY FINDING (why the unit was small): the anchored-ask spine already
-                   existed in canonical pointed at the STRUCTURE proposal. 07E EXTENDED it
-                   to the developmental address; it did not author a second conversation
-                   model, and the 05B structure path is untouched.
+BUILD MODE         CLOSED — BUILD-07E Developmental Dialogue CLOSED / ACCEPTED
+                   (founder act 2026-09-05); 07F–H unauthorized
+BOUND CANONICAL    6ff0beafc (clean-main-no-secrets, 2026-09-05 — BUILD-07E merged, PR #1216;
+                   LIVE on minisforum, provenance PASS, Co-Lab 33/0/0)
+CURRENT UNIT       none open. BUILD-07E CLOSED / ACCEPTED at 6ff0beafc — the complete walk
+                   W1–W9 passed on the live member path, including the three fixed edge
+                   cases W6b (seeded second thread → explicit choice), W6c (discovery
+                   failure → says so, opens nothing) and W6d (reading switch → full
+                   remount, no thread leak), plus W7/W7b under a keyless fault-injection
+                   runtime built from the same deployed container filesystem.
+                   record: WS2-07-BUILD-07E_DIALOGUE_CLOSURE_2026-09-05.md
+                   build:  WS2-07-BUILD-07E_DIALOGUE_BUILD_2026-09-05.md
+                   census: WS2-07-BUILD-07E_DIALOGUE_BOUNDARY_CENSUS_2026-09-05.md
+RETAINED ARTIFACTS two production rows kept deliberately, named in the closure record §3:
+                   the W6b seed (reading B / o1 → 2 threads; no product path creates this)
+                   and the W7 thread 04c0a3c9-d897-4146-98a7-75b4cb1d36d1 (reading A / o2;
+                   turn 0 written keyless, turn 1 keyed). Do not clean these up.
+EVIDENCE CLASSES   local gates = the branch program · PR CI = the MERGE program GitHub
+                   builds · production walk = the deployed runtime. NONE substitutes for
+                   the next; a local typecheck pass is not integration evidence
+                   (closure record §4 — this cost a CI cycle on ad8bc9b7e).
 CLOSED FOLLOW-UP   WS2-07-F1 Developmental Semantic Boundary Repair — RATIFIED IN CANONICAL
                    (founder act 2026-09-04, determination C). The eight phenomena carry
                    is/isNot definitions in lib/manuscript/developmentalReading/contract.ts
@@ -111,13 +86,12 @@ PRIOR UNIT         BUILD-07B Developmental Reader — CLOSED / ACCEPTED (founder
 PRIOR UNIT         BUILD-07A Developmental Evidence — CLOSED / ACCEPTED (founder,
                    2026-09-04); canonical @ 27ec9f895
                    record: WS2-07-BUILD-07A_EVIDENCE_WITNESS_2026-09-03.md §9
-NEXT EXECUTABLE    BUILD-07E founder rulings on the census §6 open questions (Q1 anchor
-                   reachability · Q2 what MAIA sees of a developmental reading · Q3 whether
-                   a superseded observation opens a thread) → implement S1–S4 against the
-                   falsifiers E1–E10 → Gate A (structural) → founder walk in the Develop
-                   room → CLOSED / ACCEPTED → PR → gates → merge on green pinned to the
-                   exact head → verify canonical → STOP
-                   ⛔ BUILD-07F is NOT opened by 07E closing.
+NEXT EXECUTABLE    nothing authorized. BUILD-07E is closed and 07F is NOT opened by that
+                   closure — it opens only by its own founder act. When it does, its
+                   premise is already stated: the writer may change the STANDING of an
+                   observation for themselves (keep · dismiss · unresolved · investigate)
+                   without changing what MAIA originally observed.
+                   ⛔ A unit ending well is not an authorisation for the next one.
 WS-01              CLOSED — OVERTAKEN / SUPERSEDED (not accepted; see
                    Reconciliation record below)
 CANVAS FREEZE      RETIRED FROM LIVE STATE (never released by an act; see
@@ -198,8 +172,8 @@ Stage 7   ACTIVE
           PREREQ      SECTION-ADDRESSABLE DRAFT LIVENESS · CLOSED
                       canonical @ 0fa4158e7 (PR #1174)
                       + Unicode repair @ 9411ddc41 (PR #1175)
-          BUILD-07E OPEN (founder act 2026-09-05) · BUILD-07F–H unauthorized
-          (07F opens by its own act after 07E closes)
+          BUILD-07E CLOSED / ACCEPTED (founder act 2026-09-05) · BUILD-07F–H unauthorized
+          (07F opens only by its own act)
 Stage 8   BLOCKED ON STAGE 7 CLOSURE
 ```
 
@@ -418,8 +392,9 @@ BUILD-07D · Develop Surface — IMPLEMENTATION OPEN (founder act 2026-09-04).
             Lane: JARVIS-WS2-07-DEVELOPMENTAL-INTELLIGENCE-01.
 ```
 
-Everything else is **unauthorized**. BUILD-07E was opened by founder act 2026-09-05 after
-BUILD-07D closed at `5c57e27f0`. BUILD-07F opens only by its own act after BUILD-07E closes.
+Everything else is **unauthorized**. BUILD-07E was opened and then CLOSED / ACCEPTED by founder
+acts of 2026-09-05, bound to `6ff0beafc`. BUILD-07F opens only by its own act — 07E closing does
+not open it.
 Release milestones are defined by Amendment 5 and read from the Release signal above.
 
 ## Board discipline
