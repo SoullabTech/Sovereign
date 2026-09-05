@@ -56,6 +56,12 @@ name: Canonical PR Quality Gate
 on:
   pull_request:
     branches: [clean-main-no-secrets]
+  # Canonical push: both jobs here are tree-local — `npm run typecheck` and
+  # `npm run db:verify-bootstrap` read only the checked-out tree and need no PR
+  # metadata — so they can attest the exact canonical SHA a deploy names.
+  # Added 2026-09-05 (CI-EXACT-SHA-CHECKS-01).
+  push:
+    branches: [clean-main-no-secrets]
 
 permissions:
   contents: read
