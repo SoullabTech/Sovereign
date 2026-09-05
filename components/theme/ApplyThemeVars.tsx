@@ -2,7 +2,7 @@
 
 import React, { useMemo } from "react";
 import type { PractitionerThemeV1 } from "@/lib/theme/practitionerTheme";
-import { themeToCssVars, getGoogleFontsUrl } from "@/lib/theme/themeCssVars";
+import { themeToCssVars } from "@/lib/theme/themeCssVars";
 
 /**
  * APPLY THEME VARS
@@ -19,13 +19,11 @@ interface ApplyThemeVarsProps {
 
 export function ApplyThemeVars({ theme, children, className = "" }: ApplyThemeVarsProps) {
   const vars = useMemo(() => themeToCssVars(theme), [theme]);
-  const fontsUrl = useMemo(() => getGoogleFontsUrl(theme), [theme]);
 
   return (
+    // No remote font stylesheet is emitted here. Typography resolves through
+    // themeToCssVars alone — see the sovereignty note in lib/theme/themeCssVars.ts.
     <>
-      {fontsUrl && (
-        <link rel="stylesheet" href={fontsUrl} />
-      )}
       <div
         style={vars as React.CSSProperties}
         className={className}

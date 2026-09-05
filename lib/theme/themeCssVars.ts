@@ -139,32 +139,24 @@ function adjustBrightness(hex: string, percent: number): string {
 }
 
 /**
- * Get Google Fonts URL for theme fonts
+ * TENANT TYPOGRAPHY — sovereignty boundary
+ *
+ * There was a getGoogleFontsUrl() here. It built a fonts.googleapis.com css2
+ * URL from a theme's FontKeys, and ApplyThemeVars rendered it into the member's
+ * DOM as <link rel="stylesheet">. Mounted nowhere yet — but the component
+ * exists to be mounted, and the first practitioner tenant to apply a theme
+ * would have had every member on that surface call Google to render the page.
+ *
+ * A member's browser must not call a third party to render this UI. That does
+ * not become acceptable because the third party is chosen by a practitioner
+ * rather than by us.
+ *
+ * Themes now resolve through fontKeyToCss() alone, which emits complete
+ * font-family stacks with local and system fallbacks. Tenants render in those
+ * until the families they want are vendored.
+ *
+ * To give a tenant a real webfont: vendor it with scripts/vendor-google-fonts.mjs
+ * into public/fonts/, add its @font-face to app/fonts.css, and add the family to
+ * that key's stack in fontKeyToCss(). Do not reintroduce a remote stylesheet.
+ * Enforced at closure by W4b in scripts/witness/local-fonts-production-witness.mjs.
  */
-export function getGoogleFontsUrl(theme: PractitionerThemeV1): string | null {
-  const googleFonts: Partial<Record<FontKey, string>> = {
-    inter: "Inter:wght@400;500;600;700",
-    dm_sans: "DM+Sans:wght@400;500;600;700",
-    space_grotesk: "Space+Grotesk:wght@400;500;600;700",
-    cormorant_garamond: "Cormorant+Garamond:wght@400;500;600;700",
-    eb_garamond: "EB+Garamond:wght@400;500;600;700",
-    merriweather: "Merriweather:wght@400;700",
-    source_serif: "Source+Serif+4:wght@400;500;600;700",
-    fraunces: "Fraunces:wght@400;500;600;700",
-    playfair_display: "Playfair+Display:wght@400;500;600;700",
-  };
-
-  const fonts = new Set<string>();
-
-  const headingFont = googleFonts[theme.theme.typography.heading];
-  const bodyFont = googleFonts[theme.theme.typography.body];
-
-  if (headingFont) fonts.add(headingFont);
-  if (bodyFont) fonts.add(bodyFont);
-
-  if (fonts.size === 0) return null;
-
-  return `https://fonts.googleapis.com/css2?${Array.from(fonts)
-    .map((f) => `family=${f}`)
-    .join("&")}&display=swap`;
-}

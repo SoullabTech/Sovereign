@@ -37,7 +37,6 @@ export {
 export {
   themeToCssVars,
   themeToCssString,
-  getGoogleFontsUrl,
 } from "./themeCssVars";
 
 // Vibe presets

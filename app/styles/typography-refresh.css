@@ -14,17 +14,18 @@
    Font Imports
    ========================================================================== */
 
-/* Inter for user messages and UI */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+/* Font imports removed — sovereignty repair.
+ * A member's browser must not call a third party to render this UI.
+ * This stylesheet is currently imported by nothing; the @import lines it
+ * carried were a latent re-entry vector — one `import` of this file would
+ * have silently restored a runtime Google Fonts dependency.
+ * Self-hosted faces live in app/fonts.css (regenerate with
+ * scripts/vendor-google-fonts.mjs). Vendor any family this file needs
+ * there; do not reintroduce a remote @import here. */
 
-/* Source Sans 3 for MAIA (warmer sans option) */
-@import url('https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@300;400;500;600;700&display=swap');
 
-/* Crimson Pro for MAIA (serif option - desktop only) */
-@import url('https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@300;400;500;600;700&display=swap');
 
-/* JetBrains Mono for code */
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap');
+
 
 /* ==========================================================================
    CSS Custom Properties
