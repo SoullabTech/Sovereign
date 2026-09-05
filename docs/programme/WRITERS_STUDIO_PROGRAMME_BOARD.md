@@ -43,8 +43,13 @@ CURRENT UNIT       BUILD-07F Developmental Decisions — design accepted, awaiti
                    event_index per (memberId, readingId, observationKey). No current row, no
                    is_current, no mutable standing. D3 and D7 stop being two invariants that
                    must agree and become one representation.
-                   UNSET = zero events, never writable, never returnable-to; a misclick is
-                   therefore permanent (accepted consequence, named in design §2).
+                   VALUES keep | dismiss | unresolved — three, mutually exclusive.
+                   `investigate` is a DIFFERENT AXIS and is NOT a standing (Q4); it has no
+                   07F persistence ruling and must not be reintroduced into the enum.
+                   UNSET = zero events, never writable, never returnable-to. The recorded
+                   ACT is permanent; its CURRENT EFFECT is not — an accidental standing is
+                   changed by taking a later one, and the earlier event is not erased
+                   (design §2).
                    CONCURRENCY the unique constraint catches SIMULTANEITY; the CAS token
                    catches STALENESS. They are not redundant — deleting either leaves a hole.
                    The expected-current test runs BEFORE the same-value no-op. No auto-retry.
@@ -59,9 +64,6 @@ CURRENT UNIT       BUILD-07F Developmental Decisions — design accepted, awaiti
                    column makes a system write unsayable, not unwritable.
                    KIN docs/canon/CLAIM_STATE_AUTHORITY.md is analogous in direction and is
                    NOT governing authority over member standing.
-PRIOR UNIT         BUILD-07E Developmental Dialogue — CLOSED / ACCEPTED (founder,
-                   2026-09-05); walk W1–W9 passed at 6ff0beafc
-                   record: WS2-07-BUILD-07E_DIALOGUE_CLOSURE_2026-09-05.md
 PRIOR UNIT         BUILD-07E Developmental Dialogue — CLOSED / ACCEPTED (founder,
                    2026-09-05); walk W1–W9 passed at 6ff0beafc
                    record: WS2-07-BUILD-07E_DIALOGUE_CLOSURE_2026-09-05.md
@@ -107,17 +109,15 @@ PRIOR UNIT         BUILD-07B Developmental Reader — CLOSED / ACCEPTED (founder
 PRIOR UNIT         BUILD-07A Developmental Evidence — CLOSED / ACCEPTED (founder,
                    2026-09-04); canonical @ 27ec9f895
                    record: WS2-07-BUILD-07A_EVIDENCE_WITNESS_2026-09-03.md §9
-NEXT EXECUTABLE    nothing authorized. BUILD-07E is closed and 07F is NOT opened by that
-                   closure — it opens only by its own founder act. When it does, its
-                   premise is already stated: the writer may change the STANDING of an
-                   observation for themselves (keep · dismiss · unresolved · investigate)
-                   without changing what MAIA originally observed.
-                   ⛔ A unit ending well is not an authorisation for the next one.
+NEXT EXECUTABLE    none currently authorised. BUILD-07F implementation requires a
+                   separate founder act. 07G–H remain unopened.
+                   ⛔ Acceptance of the design is not implementation authority.
 WS-01              CLOSED — OVERTAKEN / SUPERSEDED (not accepted; see
                    Reconciliation record below)
 CANVAS FREEZE      RETIRED FROM LIVE STATE (never released by an act; see
                    Reconciliation record below)
-LAST UPDATED       2026-09-04 (determination C · WS2-07C-F1 closed · WS2-07-F1 opened, act 1 delivered)
+LAST UPDATED       2026-09-05 (BUILD-07F design accepted and recorded; census and
+                   adjudication canonical; implementation NOT authorised)
 ```
 
 ## Reconciliation record — 2026-09-03 (founder adjudication of programme history)

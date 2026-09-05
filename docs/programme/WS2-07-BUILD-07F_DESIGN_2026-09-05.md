@@ -76,9 +76,11 @@ UNSET        the absence of a member act
 UNRESOLVED   a member act
 ```
 
-**Accepted consequence, named here rather than discovered later:** a misclick is permanent. It can
-be moved to another standing but never withdrawn. That is the correct reading of Q1 — the record
-holds what the writer did — and the surface should not imply otherwise (§10).
+**Accepted consequence, named here rather than discovered later.** The historical event is
+permanent; its **current effect is not**. An accidental standing may be changed by taking a later
+one, and the earlier recorded act is not erased — what cannot be done is returning to *never
+having ruled*. That is the correct reading of Q1: the record holds what the writer did, and the
+surface should not imply a standing can be withdrawn (§10).
 
 ---
 
@@ -201,6 +203,22 @@ DELETE the whole Work        the standing stream cascades away
 > **Deletion of the containing member-owned Work is not retroactive falsification of its history;
 > it is deletion of the record as a whole.**
 
+### The structural requirement this ruling creates
+
+The two sides of the ruling must BOTH be proved, not one proved and the other merely omitted:
+
+```text
+per-event erasure        must be structurally REFUSED or unreachable while the Work exists
+whole-Work cascade       must remain permitted
+```
+
+**Absence of an HTTP DELETE route does not satisfy D3.** `UPDATE` refusal in this lane is
+structural — the database refuses it at the row — and single-event deletion must be held to the
+same standard rather than described as "not a valid operation" and left to the absence of a
+button. The chosen mechanism is an implementation decision, but it must permit the ruled
+whole-Work cascade while refusing the deletion of an individual event, and the falsifier for D3
+(§11) must exercise both directions.
+
 Orphaned `keep` / `dismiss` / `unresolved` judgments must **not** be retained after their Work is
 gone — that would turn provenance into detached behavioural data, the exact pressure Q1 exists to
 resist.
@@ -319,7 +337,7 @@ same reason: `o1` state must not leak from reading A into reading B.
 |---|---|---|
 | **D1** ownership | `member_id` in the identity, supplied by session; member-scoped SQL predicate | Member B cannot read or create A's standing even knowing A's reading id and event id |
 | **D2** UNSET | zero events; enum holds only the three explicit values; surface separates available-empty from unavailable | A read failure never renders UNSET; `unresolved` creates an event; no path writes UNSET |
-| **D3** history | append-only events; no current row to overwrite; UPDATE refused at the row | `keep → dismiss` leaves both events with the first unchanged; no clear or single-event delete exists |
+| **D3** history | append-only events; no current row to overwrite; UPDATE refused at the row; single-event deletion structurally refused (§7) | `keep → dismiss` leaves both events with the first unchanged; deleting ONE event is refused at the row, not merely unrouted; deleting the whole Work still cascades the stream away |
 | **D4** supersession | events address only the exact frozen `(reading_id, observation_key)`; no successor, copy or clear field | A superseded observation keeps its standing; the successor reading's `o1` is UNSET |
 | **D5** cognition | standing modules excluded from the MAIA cognitive module graph | The static gate fails on any value-import of standing into reader, context, Ask route or 07G synthesis |
 | **D6** system cannot set | write path reachable only through the authenticated member route; no actor, default or revert | No background or MAIA-side module can value-import or invoke the writer; no auto-revert of the `member_memory_atoms` kind exists |
