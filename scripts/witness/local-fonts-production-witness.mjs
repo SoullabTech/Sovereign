@@ -65,7 +65,7 @@
  *   WITNESS_SSH_HOST     default soullab@minisforum
  *   WITNESS_CONTAINER    default maia-sovereign
  *   WITNESS_EXPECT_SHA   optional; assert the deployed SHA is this one
- *   WITNESS_MEMBER_PATH  default /begin
+ *   WITNESS_MEMBER_PATH  default /maia/privacy
  *   WITNESS_SKIP_SHA=1   read no SHA (renders the run NOT SUBJECT-BOUND;
  *                        never use for an acceptance-record witness)
  *
@@ -85,7 +85,19 @@ const ORIGIN = process.env.WITNESS_ORIGIN ?? 'https://soullab.life';
 const SSH_HOST = process.env.WITNESS_SSH_HOST ?? 'soullab@minisforum';
 const CONTAINER = process.env.WITNESS_CONTAINER ?? 'maia-sovereign';
 const EXPECT_SHA = process.env.WITNESS_EXPECT_SHA ?? null;
-const MEMBER_PATH = process.env.WITNESS_MEMBER_PATH ?? '/begin';
+// The second surface exists to prove the repair holds on the member path as
+// such, not on one informational page. It must therefore be a route in the
+// member namespace that an unauthenticated browser actually reaches.
+//
+// NOT /begin. At the deployed SHA app/begin/page.tsx is `redirect('/signin')`
+// (deprecated 2026-05-16) — it is public in config/accessMatrix.ts, so it is
+// never blocked, but it never arrives either. Pointing the witness there makes
+// every run report INVALID for a mechanical reason rather than a finding.
+//
+// /maia/privacy is public in the access matrix, carries no redirect, and
+// renders through app/layout.tsx — the layout that imports app/globals.css and
+// therefore app/fonts.css. That is the surface the claim is about.
+const MEMBER_PATH = process.env.WITNESS_MEMBER_PATH ?? '/maia/privacy';
 const SKIP_SHA = process.env.WITNESS_SKIP_SHA === '1';
 
 /** Families vendored by this repair — app/fonts.css. */
@@ -336,11 +348,13 @@ function main() {
         console.log('');
         continue;
       }
-      if (reachedMember && redirectedToAuth) {
+      // Applies to BOTH surfaces, not just the member one: a run that measured
+      // the sign-in page measured neither subject, whichever navigation slid.
+      if (redirectedToAuth) {
         invalid.push(
-          `member surface ${o.url} redirected to ${o.finalUrl} — the member path was not reached`,
+          `${o.url} redirected to ${o.finalUrl} — that surface was not reached`,
         );
-        console.log('  member surface       INVALID — redirected to sign-in');
+        console.log('  surface reached      INVALID — redirected to sign-in');
       } else if (reachedMember) {
         console.log('  member surface       REACHED');
       }
