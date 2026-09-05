@@ -27,6 +27,29 @@ describe('the section-native writer can keep a version', () => {
     expect(surface).toContain('onClick={keep}');
   });
 
+  it('checkpoints SERVER TRUTH, never a client-held snapshot of the Work', () => {
+    /* The 2026-09-05 defect: the payload was built from writing.sections —
+       the MOUNT-TIME bodies — so keeping a version rewrote the draft from a
+       client snapshot (496 -> 485 bytes, headings gone, leading space added).
+       The sections handed to the checkpoint must be the ones the server just
+       returned, and nothing else. */
+    expect(surface).toContain('const before = await loadDraft(');
+    expect(surface).toContain('sections: before.sections');
+    expect(surface).toContain('baseRevisionId: before.revisionId');
+    /* No reconstruction of any kind reaches the checkpoint. */
+    expect(surface).not.toMatch(/sections:\s*writing\.sections/);
+    expect(surface).not.toMatch(/sections:\s*writing\.sections\.map/);
+    expect(surface).not.toContain('flattenDraftSections');
+    expect(surface).toContain('before.sectionAddressable');
+  });
+
+  it('refuses rather than keeps a half-saved state', () => {
+    expect(surface).toContain("setPhase('unsettled')");
+    expect(surface).toContain('writing.hasUnsavedWork()');
+    /* Settle comes before the read, or the read captures pre-flush text. */
+    expect(surface.indexOf('writing.flushPending()')).toBeLessThan(surface.indexOf('const before = await loadDraft('));
+  });
+
   it('reuses the existing checkpoint rather than inventing a second one', () => {
     expect(surface).toContain('putDraftSections');
     expect(surface).toContain('checkpoint: true');
@@ -39,6 +62,11 @@ describe('the section-native writer can keep a version', () => {
     /* Order in the CALL, not in the prose above it: the doc comment names
        `checkpoint: true` before either appears in code. */
     expect(surface.indexOf('writing.flushPending()')).toBeLessThan(surface.indexOf('putDraftSections('));
+    /* The base is the server's, never one the client remembered. (makeSectionSave
+       legitimately takes a baseVersion for a SECTION save; the checkpoint may
+       not hold one of its own.) */
+    expect(surface).not.toMatch(/useRef\(baseVersion\)/);
+    expect(surface).not.toMatch(/baseRevisionId:\s*base\b/);
     expect(lib('useSectionWriting.ts')).toContain('flushPending');
   });
 
@@ -47,7 +75,7 @@ describe('the section-native writer can keep a version', () => {
        snapshot over whatever moved the draft. */
     expect(surface.match(/putDraftSections\(/g) ?? []).toHaveLength(1);
     expect(surface).toContain("res.kind === 'conflict'");
-    expect(surface).toContain('Reload before keeping a version');
+    expect(surface).toContain('Nothing was changed. Reload, then keep a version.');
   });
 });
 

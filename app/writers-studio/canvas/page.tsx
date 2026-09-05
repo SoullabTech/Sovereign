@@ -893,7 +893,6 @@ function FieldBody({
             writing={writing}
             onWriting={onWriting}
             manuscriptId={manuscript.id}
-            baseVersion={writeMount.version}
             onCheckpointed={onCheckpointed}
           />
         )}
@@ -920,13 +919,11 @@ function SectionSurfaceBridge({
   writing,
   onWriting,
   manuscriptId,
-  baseVersion,
   onCheckpointed,
 }: {
   writing: SectionWriting;
   onWriting?: (w: SectionWriting | null) => void;
   manuscriptId: string;
-  baseVersion: number;
   onCheckpointed?: () => void;
 }) {
   useEffect(() => {
@@ -937,7 +934,6 @@ function SectionSurfaceBridge({
     <SectionWritingSurface
       writing={writing}
       manuscriptId={manuscriptId}
-      baseVersion={baseVersion}
       onCheckpointed={onCheckpointed}
     />
   );
