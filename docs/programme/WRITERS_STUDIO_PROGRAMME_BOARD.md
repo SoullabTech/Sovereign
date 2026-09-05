@@ -46,8 +46,15 @@ CURRENT CANDIDATE  BUILT on claude/writer-author-studios-roadmap-b2tqf5, base 5c
                    gates green, NOT CLOSED (awaits the founder walk in the Develop room).
                    Founder rulings Q1 observation-only · Q2 digest-verified evidence ·
                    Q3 superseded opens AS superseded — all three implemented.
+                   W4 first-turn superseded wording ACCEPTED AS-IS on source review.
+                   FIRST CANDIDATE 3bc700c4f — founder source review found 2 blockers,
+                   both repaired (record §0): (A) W6 was unreachable — reopening opened a
+                   SECOND thread; now resumes from the store, with an explicit choice when
+                   several exist and no silent latest-wins. (B) raw UUIDs reached
+                   model-facing prose; now author-facing labels derived from the FROZEN
+                   topology, with no code path able to return an id.
                    NO MIGRATION (E10 discharged: anchor and reading_identity were jsonb).
-                   ask suites 104/0 · related suites 641/0 · typecheck no regressions.
+                   765 tests / 51 suites / 0 failed · typecheck no regressions.
                    record: WS2-07-BUILD-07E_DIALOGUE_BUILD_2026-09-05.md §5 = the walk
                    KEY FINDING (why the unit was small): the anchored-ask spine already
                    existed in canonical pointed at the STRUCTURE proposal. 07E EXTENDED it

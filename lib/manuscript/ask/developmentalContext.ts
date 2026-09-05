@@ -33,6 +33,7 @@
 import { recoverEvidence, observationLocation, type CurrentLocation, type Recovered, type RecoverRefusal } from '../development/resolve';
 import type { EvidenceRef } from '../development/evidenceRef';
 import type { DevelopmentalObservation, DevelopmentalReading } from '../developmentalReading/contract';
+import type { DevelopmentalReadState } from '../development/readState';
 import type { LiveWork } from '../development/resolve';
 import { requirementOf } from '../development/evidenceRef';
 import type { ChangeFlag, StalenessState } from './staleness';
@@ -49,6 +50,17 @@ export type EvidenceView =
   | { kind: 'unverifiable'; ref: EvidenceRef; refusal: RecoverRefusal; detail: string };
 
 export interface DevelopmentalAskContext {
+  /**
+   * The reading's FROZEN state, carried for one purpose: deriving author-facing
+   * names (`developmentalLabels`) so no internal identifier reaches the model.
+   *
+   * IT IS NOT PROMPT CONTENT. Nothing in this object is sent; the topology and
+   * the frozen authored titles are read to produce "Section 3" and the author's
+   * own chapter title, and the rest — digests, ranges, ids — is never rendered.
+   * The standing falsifier asserts that on the string actually sent, so a future
+   * edit that serialised this wholesale would fail rather than leak.
+   */
+  readState: DevelopmentalReadState;
   reading: {
     readingId: string;
     lens: string;
@@ -104,6 +116,7 @@ export function assembleDevelopmentalContext(input: {
   });
 
   return {
+    readState: reading.readState,
     reading: {
       readingId: reading.id,
       lens: reading.scope.commissionedLens,

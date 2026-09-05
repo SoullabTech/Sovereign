@@ -33,6 +33,7 @@ import { createHash } from 'crypto';
 import { runStructured } from '../../ai/structured/router';
 import type { StructuredBlock, StructuredMessage } from '../../ai/structured/types';
 import type { DevelopmentalAskContext, EvidenceView } from './developmentalContext';
+import { labelsFor, type AuthorFacingLabels } from './developmentalLabels';
 
 export const DEVELOPMENTAL_ASKER_VERSION = 'ws2-07e-01';
 
@@ -91,20 +92,27 @@ export type DevelopmentalAskOutcome =
   | { ok: true; answer: string; provenance: DevelopmentalAskProvenance }
   | { ok: false; refusal: 'unreachable' | 'empty_answer' };
 
-/** One reference, rendered. Verified refs carry what was read; unverified carry why not. */
-function evidenceSays(e: EvidenceView): string {
+/**
+ * One reference, rendered IN THE AUTHOR'S TERMS.
+ *
+ * No identifier reaches this string. `labels` cannot return one — see
+ * `developmentalLabels`, which is where that is made structural rather than
+ * remembered here.
+ */
+function evidenceSays(e: EvidenceView, labels: AuthorFacingLabels): string {
   if (e.kind === 'unverifiable') {
     return `  [${e.ref.kind}] COULD NOT BE VERIFIED (${e.refusal}). You do not have this evidence.`;
   }
   const r = e.recovered;
   switch (r.kind) {
     case 'text':
-      return `  [${e.ref.kind}] in section ${r.sectionId}, exactly as you read it:\n    ${r.text}`;
+      return `  [${e.ref.kind}] in ${labels.section(r.sectionId)}, exactly as you read it:\n    ${r.text}`;
     case 'sequence':
-      return `  [${e.ref.kind}] the sequence you read, in order: ${r.sectionIds.join(' → ')}`;
+      return `  [${e.ref.kind}] the sequence you read, in order: ${
+        r.sectionIds.map((id) => labels.section(id)).join(' → ')}`;
     case 'structure':
       return `  [${e.ref.kind}] the authored structure as frozen${r.whole ? ' (the whole topology)' : ''}: ${
-        r.units.map((u) => u.title ?? u.id).join(', ')}`;
+        r.units.map((u) => labels.unit(u.id)).join(', ')}`;
   }
 }
 
@@ -114,27 +122,27 @@ function evidenceSays(e: EvidenceView): string {
  * The section and unit ids are the Work's own identifiers; naming them is more
  * use to her than a count, and she is talking to the person who wrote them.
  */
-function movedSays(ctx: DevelopmentalAskContext): string {
+function movedSays(ctx: DevelopmentalAskContext, labels: AuthorFacingLabels): string {
   if (ctx.location.state !== 'superseded') return '';
   const lines = ctx.location.moved.map((m) => {
     switch (m.what) {
-      case 'section-text': return `  the text of section ${m.sectionId} has changed`;
-      case 'section-absent': return `  section ${m.sectionId} is no longer in the Work`;
-      case 'section-order': return `  the order of sections ${m.sectionIds.join(', ')} has changed`;
-      case 'structure-unit': return `  the authored unit ${m.unitId} has changed`;
-      case 'structure-unit-absent': return `  the authored unit ${m.unitId} is gone`;
+      case 'section-text': return `  the text of ${labels.section(m.sectionId)} has changed`;
+      case 'section-absent': return `  ${labels.section(m.sectionId)} is no longer in the Work`;
+      case 'section-order': return `  the order of ${labels.sections(m.sectionIds)} has changed`;
+      case 'structure-unit': return `  the authored part ${labels.unit(m.unitId)} has changed`;
+      case 'structure-unit-absent': return `  the authored part ${labels.unit(m.unitId)} is gone`;
       case 'structure-topology': return '  the authored structure of the Work has changed';
     }
   });
   return `WHAT MOVED SINCE YOU READ:\n${lines.join('\n')}`;
 }
 
-function locationSays(ctx: DevelopmentalAskContext): string {
+function locationSays(ctx: DevelopmentalAskContext, labels: AuthorFacingLabels): string {
   switch (ctx.location.state) {
     case 'current':
       return 'The material this observation rests on is unchanged since you read it.';
     case 'superseded':
-      return `${SUPERSEDED_STANDING}\n\n${movedSays(ctx)}`;
+      return `${SUPERSEDED_STANDING}\n\n${movedSays(ctx, labels)}`;
     case 'unmeasured':
       /* UNKNOWN IS SAID AS UNKNOWN — never rounded to current. This is the same
          doctrine `staleness.ts` states: a surface that cannot say "I do not
@@ -182,14 +190,7 @@ export async function askMaiaDevelopmental(
   opts: DevelopmentalAskOptions = {},
 ): Promise<DevelopmentalAskOutcome> {
   const model = opts.model ?? DEFAULT_MODEL;
-
-  const system = [
-    STANDING, '',
-    '--- THE OBSERVATION THEY ARE ASKING ABOUT ---', observationSays(ctx), '',
-    '--- THE EVIDENCE YOU RECORDED, WHERE IT COULD BE VERIFIED ---',
-    ctx.evidence.map(evidenceSays).join('\n'), '',
-    '--- HOW THIS OBSERVATION STANDS TO THE WORK NOW ---', locationSays(ctx),
-  ].join('\n');
+  const system = systemFor(ctx);
 
   const messages: StructuredMessage[] = [
     ...history.map((t) => ({
@@ -225,7 +226,24 @@ export async function askMaiaDevelopmental(
   }
 }
 
-/** Exported for the falsifiers: the assembled system prompt, without a model call. */
-export const __systemForTest = (ctx: DevelopmentalAskContext): string => [
-  STANDING, observationSays(ctx), ctx.evidence.map(evidenceSays).join('\n'), locationSays(ctx),
-].join('\n');
+/**
+ * The whole system prompt, assembled in one place.
+ *
+ * ONE ASSEMBLY, NOT TWO. An earlier cut built the production string inline and
+ * gave the falsifiers a second, similar one — so a leak added to production
+ * could pass a test that never saw it. The test entry point below now returns
+ * exactly what is sent.
+ */
+function systemFor(ctx: DevelopmentalAskContext): string {
+  const labels = labelsFor(ctx.readState);
+  return [
+    STANDING, '',
+    '--- THE OBSERVATION THEY ARE ASKING ABOUT ---', observationSays(ctx), '',
+    '--- THE EVIDENCE YOU RECORDED, WHERE IT COULD BE VERIFIED ---',
+    ctx.evidence.map((e) => evidenceSays(e, labels)).join('\n'), '',
+    '--- HOW THIS OBSERVATION STANDS TO THE WORK NOW ---', locationSays(ctx, labels),
+  ].join('\n');
+}
+
+/** Exported for the falsifiers: EXACTLY the string that is sent, without a model call. */
+export const __systemForTest = systemFor;

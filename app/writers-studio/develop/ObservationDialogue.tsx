@@ -26,11 +26,27 @@
  * THE ROOM COMPUTES NO EPISTEMIC STATE. `location` arrives from the server,
  * which measured it against frozen digests. A surface that derived it here
  * would be claiming a measurement it has no evidence to make.
+ *
+ * REOPENING RESUMES FROM THE STORE, NOT FROM MEMORY. Closing unmounts this
+ * component and everything it held; on mount it asks the server which threads
+ * exist on this anchor and loads the one it is told about. That is why the
+ * remembered thread survives a close, a reload, and a different device — it was
+ * never in React state to begin with. Lifting `threadId` into the parent would
+ * have made the close/reopen case LOOK repaired while proving only that a
+ * component stayed mounted.
+ *
+ * WHILE IT IS STILL FINDING OUT, IT DOES NOT SEND. A question posted before
+ * discovery finished would carry an anchor instead of a thread id and open a
+ * SECOND thread beside the one it was about to resume.
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ask, type AskThreadView } from '@/lib/writersStudio/askClient';
+import { ask, loadThread, threadsOn, type AskThreadView } from '@/lib/writersStudio/askClient';
+import {
+  resumeDecision, threadChoiceLabel, type ResumeDecision, type ThreadSummary,
+} from '@/lib/writersStudio/observationDialogueResume';
 import type { CurrentLocation } from '@/lib/manuscript/development/resolve';
+import { formatWhen } from '../../press/manuscript/workingDraftClient';
 import { PRESS } from '../pressTheme';
 
 const REFUSAL_SAYS: Record<string, string> = {
@@ -95,13 +111,41 @@ export default function ObservationDialogue({
   const [draft, setDraft] = useState('');
   const [busy, setBusy] = useState(false);
   const [refusal, setRefusal] = useState<string | null>(null);
+  /** `null` until the store has answered. Sending is refused until then. */
+  const [decision, setDecision] = useState<ResumeDecision | null>(null);
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
+
+  const adopt = useCallback(async (id: string) => {
+    const t = await loadThread(manuscriptId, id);
+    setThreadId(id);
+    /* A thread that could not be loaded still keeps its id: the next question
+       resumes it rather than opening a second one beside it. */
+    if (t) setThread(t);
+  }, [manuscriptId]);
+
+  /* ONE READ, WHEN THE ROOM OPENS. No timer, no refetch on focus — the 07D
+     room's standing rule, and this surface lives inside it. */
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      const found = await threadsOn(manuscriptId, {
+        on: 'observation', readingId, observationKey,
+      });
+      if (cancelled) return;
+      const d = resumeDecision(found as ThreadSummary[]);
+      setDecision(d);
+      if (d.kind === 'resume') await adopt(d.threadId);
+    })();
+    return () => { cancelled = true; };
+  }, [manuscriptId, readingId, observationKey, adopt]);
 
   useEffect(() => { inputRef.current?.focus(); }, []);
 
   const send = useCallback(async () => {
     const q = draft.trim();
-    if (!q || busy) return;
+    /* NOT UNTIL THE STORE HAS ANSWERED, and never while a choice is open: both
+       would post an anchor and open a thread beside the one being resumed. */
+    if (!q || busy || decision === null || decision.kind === 'choose') return;
     setBusy(true);
     setRefusal(null);
     const r = await ask({
@@ -124,7 +168,7 @@ export default function ObservationDialogue({
       if (r.threadId) setThreadId(r.threadId);
     }
     setBusy(false);
-  }, [draft, busy, manuscriptId, readingId, observationKey, threadId]);
+  }, [draft, busy, decision, manuscriptId, readingId, observationKey, threadId]);
 
   /* Before the first turn the room has no measured location, so it falls back to
      what the reading itself already said. Shown as the reading's claim, not as a
@@ -158,6 +202,49 @@ export default function ObservationDialogue({
         </p>
       )}
 
+      {decision === null && (
+        <p className="text-[12px] opacity-45 mt-2" data-dialogue-discovering>
+          looking for earlier conversations about this…
+        </p>
+      )}
+
+      {/* MANY THREADS PER ANCHOR ARE LAWFUL, so the room asks rather than picks.
+          Choosing here would quietly make one conversation canonical. */}
+      {decision?.kind === 'choose' && (
+        <div className="mt-3" data-dialogue-choose>
+          <p className="text-[12px] opacity-70">
+            You have talked about this observation before, more than once. Which conversation do
+            you want to continue?
+          </p>
+          <ul className="mt-2 space-y-1">
+            {decision.threads.map((t) => (
+              <li key={t.id}>
+                <button
+                  type="button"
+                  onClick={() => { setDecision({ kind: 'resume', threadId: t.id }); void adopt(t.id); }}
+                  data-dialogue-resume-choice
+                  className="text-[12.5px] underline underline-offset-4 opacity-80"
+                  style={{ cursor: 'pointer' }}
+                >
+                  {threadChoiceLabel(t, formatWhen)}
+                </button>
+              </li>
+            ))}
+            <li>
+              <button
+                type="button"
+                onClick={() => setDecision({ kind: 'fresh' })}
+                data-dialogue-choose-new
+                className="text-[12.5px] underline underline-offset-4 opacity-60"
+                style={{ cursor: 'pointer' }}
+              >
+                start a new conversation instead
+              </button>
+            </li>
+          </ul>
+        </div>
+      )}
+
       {thread && thread.turns.length > 0 && (
         <div className="mt-4 space-y-3" data-dialogue-turns>
           {thread.turns.map((t) => (
@@ -179,6 +266,8 @@ export default function ObservationDialogue({
         </p>
       )}
 
+      {decision?.kind !== 'choose' && (
+      <>
       <textarea
         ref={inputRef}
         value={draft}
@@ -201,13 +290,14 @@ export default function ObservationDialogue({
         <button
           type="button"
           onClick={() => void send()}
-          disabled={busy || !draft.trim()}
+          disabled={busy || !draft.trim() || decision === null}
           data-dialogue-send
+          data-dialogue-resuming-thread={threadId ?? undefined}
           className="border rounded-sm px-2 py-[2px] text-[12px]"
           style={{
             borderColor: PRESS.ruleSoft,
-            cursor: busy || !draft.trim() ? 'default' : 'pointer',
-            opacity: busy || !draft.trim() ? 0.4 : 1,
+            cursor: busy || !draft.trim() || decision === null ? 'default' : 'pointer',
+            opacity: busy || !draft.trim() || decision === null ? 0.4 : 1,
           }}
         >
           {busy ? 'asking…' : 'ask'}
@@ -217,6 +307,8 @@ export default function ObservationDialogue({
           done
         </button>
       </div>
+      </>
+      )}
     </div>
   );
 }

@@ -18,6 +18,8 @@ import {
 } from '../developmentalContext';
 import { __systemForTest } from '../developmentalAskReader';
 import { evidenceAtRev1, liveDraft, S, TEXTS } from '../../development/__tests__/fixture';
+import { freezeReadState } from '../../development/readState';
+import { partitionFromSections } from '@/lib/manuscript/draftSections';
 import type { DevelopmentalReading } from '../../developmentalReading/contract';
 import type { LiveWork } from '../../development/resolve';
 
@@ -261,7 +263,7 @@ describe('E8/E9 · what the reader is told, and what it is never told', () => {
     });
     const sys = __systemForTest(ctx);
     expect(sys).toContain('EARLIER STATE OF THE WORK');
-    expect(sys).toContain('the text of section s0 has changed');
+    expect(sys).toContain('the text of Section 1 has changed');
     expect(sys).toContain('You have not seen the current text.');
   });
 
@@ -284,5 +286,126 @@ describe('E8/E9 · what the reader is told, and what it is never told', () => {
       revisionContent: revision.content, now: liveNow,
     });
     expect(__systemForTest(ctx)).toContain('That is not a defect');
+  });
+});
+
+/* ── BLOCKER B · no internal identifier reaches the model ─────────────────── */
+
+/**
+ * A Work whose section and unit ids are UUID-SHAPED, as production's are.
+ *
+ * The shared 07A fixture uses `s0`…`s3`, which are readable and therefore prove
+ * nothing about leakage: a reader that emitted them raw would still pass a shape
+ * test. This fixture exists so the capability is tested, not the wording.
+ */
+const UUIDS = [
+  '5bfdd360-4124-44ce-a6d3-37286bbe816b',
+  'dca75052-1f44-46d8-92e5-f1ab5fb68c05',
+  '0186cd37-2cd7-4b35-882d-acda940f0be1',
+] as const;
+const UNIT_UUID = 'acda940f-bee8-411c-acfe-88bb4abb96e2';
+const UNTITLED_UNIT_UUID = '9ba2d93c-1211-4ec9-9c27-572ce76f7225';
+
+const UUID_SHAPED = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi;
+
+function uuidReading(): DevelopmentalReading {
+  const sections = UUIDS.map((id, i) => ({ id, text: `Movement ${i + 1} 😀\n\n` }));
+  const content = sections.map((x) => x.text).join('');
+  const frozen = freezeReadState({
+    draft: { draftId: 'draft-uuid', content, sections },
+    revision: { revisionNumber: 1, content, sectionPartition: partitionFromSections(sections) },
+    bodyScope: [UUIDS[0]],
+    structure: {
+      units: [
+        { id: UNIT_UUID, parent_id: null, position: 0, kind: 'chapter', title: 'The Lantern Road', origin: 'member', adopted_from_id: null },
+        { id: UNTITLED_UNIT_UUID, parent_id: null, position: 1, kind: 'chapter', title: null, origin: 'member', adopted_from_id: null },
+      ],
+      members: [
+        { unit_id: UNIT_UUID, draft_section_id: UUIDS[0] },
+        { unit_id: UNTITLED_UNIT_UUID, draft_section_id: UUIDS[1] },
+      ],
+    },
+  });
+  if (!frozen.ok) throw new Error(`uuid fixture failed: ${frozen.refusal} ${frozen.detail}`);
+  return {
+    ...readingOf(),
+    readState: frozen.value.readState,
+    coverage: frozen.value.coverage,
+    observations: [{
+      ...readingOf().observations[0],
+      evidenceRefs: [
+        { kind: 'passage', sectionId: UUIDS[0], range: { start: 0, end: 12 } },
+        { kind: 'section-run', sectionIds: [UUIDS[0], UUIDS[1]] },
+        { kind: 'structure-units', unitIds: [UNIT_UUID, UNTITLED_UNIT_UUID] },
+      ] as never,
+    }],
+  } as DevelopmentalReading;
+}
+
+describe('Blocker B · the model receives author-facing names, never internal identifiers', () => {
+  const r = uuidReading();
+  const revisionContent = UUIDS.map((_, i) => `Movement ${i + 1} 😀\n\n`).join('');
+
+  const ctxFor = (now: LiveWork) => assembleDevelopmentalContext({
+    reading: r, observation: r.observations[0], revisionContent, now,
+  });
+
+  const liveUuid: LiveWork = {
+    sections: UUIDS.map((id, i) => ({ id, text: `Movement ${i + 1} 😀\n\n` })),
+    structure: null,
+  };
+
+  it('names sections by their place in what she read', () => {
+    const sys = __systemForTest(ctxFor(liveUuid));
+    expect(sys).toContain('Section 1');
+    expect(sys).toContain('Section 1 → Section 2');
+  });
+
+  it('names an authored part by the title the author gave it', () => {
+    expect(__systemForTest(ctxFor(liveUuid))).toContain('"The Lantern Road"');
+  });
+
+  it('names an UNTITLED authored part positionally, never by its id', () => {
+    const sys = __systemForTest(ctxFor(liveUuid));
+    expect(sys).toContain('an untitled chapter (number 2 at its level)');
+    expect(sys).not.toContain(UNTITLED_UNIT_UUID);
+  });
+
+  it('the whole system prompt contains ZERO uuid-shaped strings', () => {
+    const sys = __systemForTest(ctxFor(liveUuid));
+    expect(sys.match(UUID_SHAPED) ?? []).toEqual([]);
+  });
+
+  it('and zero when the observation is SUPERSEDED — the moved list is the other leak path', () => {
+    const moved: LiveWork = {
+      sections: UUIDS.map((id, i) => ({
+        id, text: id === UUIDS[0] ? 'Rewritten 😀\n\n' : `Movement ${i + 1} 😀\n\n`,
+      })),
+      structure: null,
+    };
+    const sys = __systemForTest(ctxFor(moved));
+    expect(sys).toContain('WHAT MOVED SINCE YOU READ');
+    expect(sys).toContain('the text of Section 1 has changed');
+    expect(sys.match(UUID_SHAPED) ?? []).toEqual([]);
+  });
+
+  it('and zero when evidence could NOT be verified', () => {
+    const ctx = assembleDevelopmentalContext({
+      reading: r, observation: r.observations[0], revisionContent: null, now: liveUuid,
+    });
+    const sys = __systemForTest(ctx);
+    expect(sys).toContain('COULD NOT BE VERIFIED');
+    expect(sys.match(UUID_SHAPED) ?? []).toEqual([]);
+  });
+
+  it('a reference outside the frozen topology is said honestly, never as an id', () => {
+    const stray = { ...r.observations[0], evidenceRefs: [
+      { kind: 'section', sectionId: '11111111-2222-3333-4444-555555555555' },
+    ] as never };
+    const ctx = assembleDevelopmentalContext({
+      reading: r, observation: stray as never, revisionContent, now: liveUuid,
+    });
+    const sys = __systemForTest(ctx);
+    expect(sys.match(UUID_SHAPED) ?? []).toEqual([]);
   });
 });

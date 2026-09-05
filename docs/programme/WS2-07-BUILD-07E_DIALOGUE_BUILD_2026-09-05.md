@@ -11,7 +11,71 @@ BRANCH           claude/writer-author-studios-roadmap-b2tqf5
 BASE             5c57e27f0 (canonical, LIVE)
 BOUNDARY         WS2-07-BUILD-07E_DIALOGUE_BOUNDARY_CENSUS_2026-09-05.md
 MIGRATION        NONE — E10 discharged, see §3
+FIRST CANDIDATE  3bc700c4f — source-reviewed by the founder, TWO BLOCKERS (§0)
 ```
+
+## 0 · Corrections after the founder's source review (2026-09-05)
+
+The founder reviewed `3bc700c4f` before the walk and found two source blockers. Both are repaired
+here. The architecture was not changed: Q1/Q2/Q3 hold as built, and W4's first-turn superseded
+wording was reviewed and **accepted as written** — it reports the reading's existing claim until
+the first server turn returns a newly measured `location`, and does not pretend the surface
+measured anything.
+
+**BLOCKER A — W6 was unreachable.** `ObservationDialogue` mounted with `thread = null` and
+`threadId = null` and never asked the store what existed. Closing unmounted it; reopening built a
+fresh component; the next question carried an anchor and `openThread` — a plain INSERT — opened a
+**second** thread rather than resuming the first. The acceptance condition "close and reopen → the
+thread resumes" could not pass.
+
+Repaired as **persistence, not component state**, per the founder's ruling: on mount the room asks
+the store which threads exist on this anchor and loads the one it is told about. Nothing survives
+in React — which is why the resumed thread also survives a reload and a different device. Lifting
+`threadId` into the parent would have made the case *look* repaired while proving only that a
+component stayed mounted, and a standing guard now asserts the parent holds open/closed and
+nothing else.
+
+Many threads per anchor stay lawful and **no silent "latest wins" rule was invented**. The
+decision is a pure function (`lib/writersStudio/observationDialogueResume.ts`):
+
+```text
+0 threads   → fresh
+1 thread    → resume it — there is nothing to choose
+2+ threads  → the WRITER chooses; the room presents them all, in the order the
+              server gave, and picks none
+```
+
+The room also refuses to send while discovery is in flight or a choice is open — otherwise a fast
+question posts an anchor and opens a second thread beside the one about to be resumed. Threads are
+offered by when and how long, never by id.
+
+**BLOCKER B — internal identifiers reached model-facing prose.** `developmentalAskReader` sent
+`section ${sectionId}`, `the authored unit ${unitId}`, and `u.title ?? u.id`. Section ids are
+UUIDs, and the Reader-04 production gate established that no raw UUID appears in MAIA's prose;
+07E adds new prose inside the same DEVELOP mode.
+
+Repaired as a **capability removal, not an instruction**. `lib/manuscript/ask/developmentalLabels.ts`
+derives author-facing names from the reading's own FROZEN state — `sectionTopology` for order,
+`structureContext` for authored titles — and **no function in it can return an id**, including on
+the not-found path:
+
+```text
+section uuid          → "Section 3"
+outside the topology  → "a section outside what you read"
+authored unit         → the author's own title, where they gave one
+untitled unit         → "an untitled chapter (number 2 at its level)"
+unit not frozen here  → "a part of your structure that was not frozen with this reading"
+```
+
+Q2 is untouched by this: every label comes from what the Work *was* when she read it, so naming a
+section is a statement about the reading, never a fresh look at the Work. The one admitted
+exception is an authored title that happens to look like an identifier — that is the author's own
+content about their own Work, and the ruling permits a meaningful identifier.
+
+A second defect surfaced while repairing this and was fixed: the falsifiers had been reading a
+*second*, similar assembly of the system prompt. `systemFor` is now the single assembly and
+`__systemForTest` returns exactly the string that is sent, so a leak added to production cannot
+pass a test that never saw it.
 
 **Acceptance sentence, as the founder set it:**
 
@@ -135,13 +199,33 @@ E10  no migration needed                                                   DISCH
                                                                            written; `anchor` and
                                                                            `reading_identity` were
                                                                            already `jsonb`
+
+BLOCKER A · resume
+  0 / 1 / 2+ threads → fresh / resume / choose                             PASS
+  never silently resumes the newest of several                             PASS
+  drops none — many threads per anchor stay lawful                         PASS
+  a thread is offered by when and how long, never by id                    PASS
+  the room asks the store on mount and loads what it is told about         PASS
+  the room refuses to send before the store has answered                   PASS
+  the parent holds open/closed and no thread state                         PASS
+  one read on open: no timer, no refetch on focus or visibility            PASS
+
+BLOCKER B · no identifier reaches the model
+  sections named by their place in what she read                           PASS
+  an authored part named by the author's own title                         PASS
+  an untitled part named positionally, never by id                         PASS
+  ZERO uuid-shaped strings in the system prompt — current                  PASS
+  ZERO — superseded (the moved list is the other leak path)                PASS
+  ZERO — evidence that could not be verified                               PASS
+  a reference outside the frozen topology said honestly, never as an id    PASS
 ```
 
 ```text
-lib/manuscript/ask/__tests__/         104 passed · 6 suites
-related suites (writersStudio ·
-  development · developmentalReading ·
-  app/writers-studio)                 641 passed · 44 suites
+ask · writersStudio · development ·
+  developmentalReading ·
+  app/writers-studio                  765 passed · 51 suites · 0 failed
+typecheck (tsconfig.ship.json)        no regressions against typecheck-baseline.json
+check:no-supabase                     clean
 ```
 
 ## 4 · Falsification discipline
@@ -158,6 +242,26 @@ added `tools: []` to the developmental runStructured call
 ```
 
 Both were then restored and the suite re-run green.
+
+**The two blocker repairs were falsified against `3bc700c4f` itself** — the code the founder
+reviewed — by restoring each shipped file from that commit and running the new guards against it:
+
+```text
+developmentalAskReader.ts @ 3bc700c4f
+  → 6 of the 7 Blocker B guards FAILED ✓
+    (the seventh — "a reference outside the frozen topology" — passed at 3bc700c4f too,
+     because such a ref refuses at recovery and the unverifiable branch never printed an
+     id in either version. It is kept as a standing guard, NOT claimed as repair evidence.)
+
+ObservationDialogue.tsx @ 3bc700c4f
+  → 4 of the 7 Blocker A structural guards FAILED ✓
+    (threadsOn on mount · loadThread · resumeDecision · refuses to send before the store
+     answers. The other three — threadId preferred over anchor, no lifted parent state, no
+     timer — were already true at 3bc700c4f and are standing guards, not evidence.)
+```
+
+The pure `resumeDecision` cases have no counterpart at `3bc700c4f` — the function did not exist —
+so they are new-capability tests and are not claimed as falsified.
 
 **Two pre-existing gates failed on this change and were repaired forward, not relaxed.**
 `askHttpBoundary` asserted ownership precedes `parseAnchor(body.anchor)`, and `askSourceCloseout`
@@ -180,9 +284,16 @@ W3  ask "is this still true of the book now?" → she says this conversation has
 W4  a superseded observation → the room says so BEFORE the first turn; her first answer makes
     the temporal distinction and does not repeat it every turn afterwards
 W5  say "do it" → she names the gesture and says she cannot
-W6  close and reopen → the thread resumes; the anchor and reading are unchanged
+W6  close and reopen → the SAME thread resumes with its prior turns visible; asking again
+    posts by threadId, still one ask_thread, anchor and reading_identity unchanged.
+    Then: reload the page and reopen — it must still resume (the proof that this is
+    persistence and not component state).
+W6b if a second thread is deliberately started on the same observation, reopening OFFERS A
+    CHOICE and resumes neither on its own
 W7  the refusal state seen honestly once (key absent from the env): the question is held, not lost
 W8  narrow window / phone: the dialogue is reachable and readable
+W9  nothing MAIA says names a section or a part by an internal identifier — she says
+    "Section 3" and the author's own titles
 ```
 
 The reading is unchanged after all of it — that is the acceptance sentence, and it is what the

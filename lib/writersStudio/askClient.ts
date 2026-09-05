@@ -94,6 +94,27 @@ export async function ask(input: {
   }
 }
 
+/**
+ * One thread, with its turns — the persisted conversation, not a summary.
+ *
+ * BUILD-07E. `threadsOn` answers "how many"; this answers "what was said". A
+ * room that reopened on summaries alone would show that a conversation existed
+ * and not what it was, which is not resuming.
+ */
+export async function loadThread(
+  manuscriptId: string, threadId: string,
+): Promise<AskThreadView | null> {
+  try {
+    const res = await apiFetch(
+      `${url(manuscriptId)}?thread=${encodeURIComponent(threadId)}`, { method: 'GET' });
+    if (res.status >= 400) return null;
+    const j = await res.json();
+    return (j.thread ?? null) as AskThreadView | null;
+  } catch {
+    return null;
+  }
+}
+
 /** Threads already open on an anchor, so the surface may offer to resume one. */
 export async function threadsOn(
   manuscriptId: string, anchor: AskAnchor,
