@@ -167,7 +167,7 @@ describe('provenance moved because the semantic contract moved', () => {
        phenomenon family or the classifier. Both literals are pinned so that a
        future move of either has to be argued for, not absorbed. */
     expect(CLASSIFIER_VERSION).toBe('DEVELOPMENTAL-PHENOMENON-04');
-    expect(READER_VERSION).toBe('DEVELOPMENTAL-READER-03');
+    expect(READER_VERSION).toBe('DEVELOPMENTAL-READER-04');
     expect(promptContractHash()).toHaveLength(64);
   });
 

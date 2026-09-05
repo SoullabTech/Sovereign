@@ -123,7 +123,7 @@ describe('F1 · F6 · prose enters only as whole sections recovered under this f
     expect(rendered).toContain('=== SECTION s0 ·');
     expect(rendered).toContain('=== SECTION s1 ·');
     expect(rendered).not.toContain('=== SECTION s2 ·');
-    expect(rendered).toContain('2. s2 · POSITION');
+    expect(rendered).toContain('3. s2 · POSITION');
   });
 
   it('one altered code point in recovered text is an integrity failure', () => {
@@ -424,14 +424,14 @@ describe('F17 · identity, version, prompt-contract hash, resolved model', () =>
     expect(perturbedTool).not.toBe(expected);
   });
 
-  it('identity carries DEVELOPMENTAL-READER-03, provider anthropic, and the model it was given — the seam supplies the resolved one', () => {
+  it('identity carries DEVELOPMENTAL-READER-04, provider anthropic, and the model it was given — the seam supplies the resolved one', () => {
     /* -02 since WS2-07-F1: the lens reached the reader with its ratified meaning
        and the claim boundary moved into the system prompt. -03 since 2026-09-05:
        section ids are confined to the evidence refs and may not appear in claim
        prose. Readings frozen under either version keep the identity they were
        made with — the version is provenance, never a filter. */
-    expect(READER_VERSION).toBe('DEVELOPMENTAL-READER-03');
-    expect(readerIdentity('m-1')).toEqual({ provider: 'anthropic', model: 'm-1', promptHash: promptContractHash(), readerVersion: 'DEVELOPMENTAL-READER-03' });
+    expect(READER_VERSION).toBe('DEVELOPMENTAL-READER-04');
+    expect(readerIdentity('m-1')).toEqual({ provider: 'anthropic', model: 'm-1', promptHash: promptContractHash(), readerVersion: 'DEVELOPMENTAL-READER-04' });
     expect(Object.keys(readerIdentity('m-1'))).not.toContain('frozenAt');
   });
 });
