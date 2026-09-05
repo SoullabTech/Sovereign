@@ -30,7 +30,7 @@
  * through `frozenDevelopmentalReading`, whose every statement is a SELECT.
  */
 
-import { recoverEvidence, observationLocation, type CurrentLocation, type Recovered, type RecoverRefusal } from '../development/resolve';
+import { recoverEvidence, observationLocation, type CurrentLocation, type Moved, type Recovered, type RecoverRefusal } from '../development/resolve';
 import type { EvidenceRef } from '../development/evidenceRef';
 import type { DevelopmentalObservation, DevelopmentalReading } from '../developmentalReading/contract';
 import type { DevelopmentalReadState } from '../development/readState';
@@ -185,7 +185,15 @@ export function developmentalStaleness(
     return movedHere ? { state: 'changed' } : { state: 'unchanged' };
   };
 
-  const moved = ctx.location.state === 'superseded' ? ctx.location.moved : [];
+  /* ANNOTATED, NOT INFERRED. Left to inference this is
+     `NonEmptyArray<Moved> | never[]`, and `.some()` over that union resolves its
+     callback parameter to the INTERSECTION of the two signatures — `Moved &
+     never` — so `m.what` does not exist. Whether a given program surfaces that
+     depends on inference details, which is exactly why it must not be left to
+     them: the empty branch is an empty list OF MOVES, and saying so is the
+     fix. */
+  const moved: readonly Moved[] =
+    ctx.location.state === 'superseded' ? ctx.location.moved : [];
   const inputMovedHere = moved.some(
     (m) => m.what === 'section-text' || m.what === 'section-absent');
   const topologyMovedHere = moved.some(
