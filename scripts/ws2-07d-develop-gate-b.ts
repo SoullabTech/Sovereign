@@ -36,22 +36,79 @@ import https from 'https';
 import Module from 'module';
 import { NextRequest } from 'next/server';
 
-const CANDIDATE = 'd005d59eb';
+/**
+ * PIN RECONCILIATION — 2026-09-04, founder-authorized, pin declaration ONLY.
+ *
+ * The reading contract was corrected after 07C's acceptance (v2: `phenomenon`
+ * may be ABSENT — the taxonomy may no longer veto an observation). That
+ * correction changed four pinned files and added one migration, so this
+ * harness would have refused at P0 before F1 ever ran. The refusal was
+ * CORRECT: the pin was doing its job. What follows re-pins it to the runtime
+ * actually under acceptance.
+ *
+ * CANDIDATE is the RUNTIME under acceptance, not the checkout Gate B runs
+ * from. `d884ee606` is the runtime candidate; `082ae1a74`, its child, adds
+ * only the Gate A witness record and changes no runtime file. Gate B may
+ * therefore run from a later evidence checkout and still attest that the
+ * surface it exercised was byte-identical to the accepted candidate — which
+ * is exactly what P0 below verifies, since the blob map, not this label, is
+ * the real protection.
+ *
+ * Changed under the correction, re-pinned here:
+ *   developPresentation.ts  2b726813… → a6e777e9…  (no badge when absent)
+ *   contract.ts             8024937f… → b07ff694…  (phenomenon optional; v2 stamp)
+ *   freeze.ts               c7b5e3ce… → 7f2fde44…  (omit the key on decline)
+ *   classify.ts             32fec5a3… → c11985ed…  (per-claim decline survives)
+ * Unchanged, deliberately left on their existing pins: store.ts, assess.ts,
+ * commission.ts, developClient.ts, both reading routes, both Develop pages,
+ * and migration 20260904000001 — which is NOT replaced by 00002.
+ *
+ * Nothing else in this harness moves: F1–F7, the fixture, the refusal and
+ * retry rules, the provider-call limit and the success criteria are untouched.
+ */
+/**
+ * PIN RECONCILIATION 2 — 2026-09-05, founder-authorized, pin declaration ONLY.
+ *
+ * Gate B attempt 1 found a member-surface defect: Develop answered every
+ * capture refusal with "it needs a draft with sections", which misdescribed
+ * `revision_not_current`. The bounded repair (`2315c7994`) names that state in
+ * the member's language and offers the Writer Canvas navigation that already
+ * exists. It touches ONE pinned runtime file, `DevelopRoom.tsx`; capture, the
+ * reader, the classifier, persistence and the v2 contract are untouched, and
+ * mechanical verification of all fourteen pins showed exactly that one drift.
+ *
+ * So the runtime under acceptance has MOVED, and this is not the previous
+ * case: last time the pin was reconciled to a documentation-only head and the
+ * runtime was unchanged. Here the runtime itself changed, by authorized
+ * repair. The commit carrying this reconciliation is an acceptance-INSTRUMENT
+ * head, not a new runtime candidate — P0 exists to keep that distinction
+ * honest, by proving the descendant harness exercises exactly `2315c7994`.
+ *
+ * Gate A's 25/25 at `082ae1a74` remains valid HISTORICAL evidence for
+ * `d884ee606` and is neither erased nor relabelled. It is no longer 07D's
+ * final Gate A evidence: acceptance evidence belongs to the runtime it
+ * actually witnessed, and Gate A does not import `DevelopRoom.tsx` is a reason
+ * to expect a rerun to pass, never a licence to skip it.
+ */
+const CANDIDATE = '2315c7994';
 const CANDIDATE_BLOBS: Record<string, string> = {
   'app/api/sovereign/manuscripts/[id]/readings/route.ts': 'e0a85ed8bf0fd5e4e9f6f4534e73cfb2b66be3ca',
   'app/api/sovereign/manuscripts/[id]/readings/[readingId]/route.ts': '40bc3eacf3813153a6716953ab6c9cd3b5b4f682',
   'lib/writersStudio/developClient.ts': '42fa20def30b79acd27f0f97499ab98092eb1a7f',
-  'lib/writersStudio/developPresentation.ts': '2b726813fa998517cf037e61ba3a6441aa5be188',
-  'app/writers-studio/develop/DevelopRoom.tsx': '3bbc718e3058cf5fc421a4f6125ff28fc3509f68',
+  'lib/writersStudio/developPresentation.ts': 'a6e777e933c8afcc632889e4ca428805cbfab61b',
+  'app/writers-studio/develop/DevelopRoom.tsx': '175b4de0804449991af06a530b91de42eb180825',
   'app/writers-studio/develop/page.tsx': '4292be949f66a21ee109d5fb6b63d5a1f5e9d668',
-  /* the 07C reading unit, unchanged since its own candidate 8a26a8971 (canonical 376daae06) */
-  'lib/manuscript/developmentalReading/contract.ts': '8024937fc84904f169bb1131c5a08c3902b1365a',
-  'lib/manuscript/developmentalReading/freeze.ts': 'c7b5e3ce5349bbdfe106d952cea2765302b915a6',
-  'lib/manuscript/developmentalReading/classify.ts': '32fec5a3f62b28180b14ffdd7b816932282f068c',
+  /* the 07C reading unit — contract/freeze/classify carry the v2 correction;
+     store/assess/commission stand unchanged since candidate 8a26a8971 (canonical 376daae06) */
+  'lib/manuscript/developmentalReading/contract.ts': 'b07ff694ee14d2b64308d768eeb9abf29966b6b5',
+  'lib/manuscript/developmentalReading/freeze.ts': '7f2fde44198e8394086b5e474a1fa9d7636d27d3',
+  'lib/manuscript/developmentalReading/classify.ts': 'c11985edbe64544f2de4d8b6e7a67f5516e8e712',
   'lib/manuscript/developmentalReading/store.ts': 'b3b9f2906276b0622d8899661fd44dddf4fea268',
   'lib/manuscript/developmentalReading/assess.ts': 'acf40afe5bf34b1dbe1e4a04f4093628e4b8c009',
   'lib/manuscript/developmentalReading/commission.ts': '14c62a41e77ed560f1e68d11d5b129f19b3cfcac',
   'database/migrations/20260904000001_developmental_readings.sql': '545cc1fb4a7063355d7f9e0041adb57717611b7e',
+  /* v2 — the post-acceptance contract correction, added to the pin set */
+  'database/migrations/20260904000002_developmental_reading_contract_v2.sql': '5e64805af7218b792ee886011a36f16bfa791a88',
 };
 
 function gitBlobId(path: string): string {
@@ -224,6 +281,40 @@ async function main() {
     row('F5 presented in place: every observation still at its key with its VERBATIM text; superseded ones marked with what moved', view2.observations.map((o) => o.key).join(',') === obs.map((o) => o.key).join(',') && view2.observations.every((o, i) => o.observation === obs[i]!.observation && (o.state !== 'superseded' || o.moved.length > 0)));
     row('F5 the reading is retained byte-identical (INV-4, INV-19, INV-22)', JSON.stringify(againBody.reading) === asStored && JSON.stringify(await loadReading(firstId, memberId)) === asStored);
     record.afterEdit = states;
+
+    /* ── F5b · the guard, made deterministic ──────────────────────────────
+       MAIA reads a KEPT version of the Work. The draft has moved past its
+       last kept version, so a commission must refuse at CAPTURE with
+       revision_not_current — before any model call, storing nothing, and
+       without the surface silently checkpointing on the member's behalf.
+       Gate B attempt 1 (2026-09-04) found this by accident when F6 refused
+       409. It is an assertion now, so the circumstance that found it cannot
+       be deleted by the repair. Capture must never weaken here. */
+    const rowCount = async () => Number((await query<{ n: string }>(
+      `SELECT count(*)::text AS n FROM developmental_readings WHERE manuscript_id = $1`, [manuscriptId])).rows[0]!.n);
+    const callsBeforeGuard = providerCalls;
+    const rowsBeforeGuard = await rowCount();
+    const actsBeforeGuard = history.length;
+    const stale = await commission('F5b', 'voice');
+    const rowsAfterGuard = await rowCount();
+    row('F5b edited but not kept: the commission refuses revision_not_current AT CAPTURE — no model call, no row, one act',
+      stale.status === 409 && stale.body.refusal === 'revision_not_current' && stale.body.stage === 'capture'
+      && providerCalls === callsBeforeGuard && rowsAfterGuard === rowsBeforeGuard && history.length === actsBeforeGuard + 1,
+      `${stale.status} ${stale.body.refusal ?? ''} at ${stale.body.stage ?? '—'} · ${providerCalls - callsBeforeGuard} call(s) · ${rowsAfterGuard - rowsBeforeGuard} new row(s)`);
+    record.staleRefusal = stale.body;
+
+    /* ── F5c · the writer Keeps a version ─────────────────────────────────
+       The existing member act, through the draft route, exactly as the
+       Writer Canvas performs it. The Develop surface neither has nor gains a
+       control that changes the Work: the checkpoint is the writer's, taken
+       elsewhere, and the reading is commissioned afterwards. */
+    const draftNow = await draftRoute.GET(req('GET', '/draft'), P);
+    const draftNowBody = await draftNow.json();
+    const kept = await draftRoute.PUT(req('PUT', '/draft', { sections: edited, baseRevisionId: draftNowBody.revisionId, idempotencyKey: randomUUID(), checkpoint: true }), P);
+    row('F5c the writer Keeps a version through the draft route — the act the refusal named, taken where it lives',
+      kept.status === 200, `status ${kept.status}`);
+    row('F5c the kept version does not disturb the first reading: still byte-identical, still superseded (INV-4, INV-19)',
+      JSON.stringify(await loadReading(firstId, memberId)) === asStored);
 
     /* ── F6 · a new reading is a NEW reading ── */
     const callsBefore2 = providerCalls;

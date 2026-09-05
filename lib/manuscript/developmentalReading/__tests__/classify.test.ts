@@ -21,9 +21,41 @@ describe('parseClassifierBlocks', () => {
     expect(p.ok && p.phenomena).toEqual(['recurrence', 'movement']);
   });
 
-  it('unclassifiable refuses rather than inventing a category', () => {
+  it('WS2-07-F1 v2 — an unclassifiable claim no longer refuses; the decline is preserved per index', () => {
     const p = parseClassifierBlocks([cls('recurrence', 'unclassifiable')], 2);
-    expect(p.ok ? 'ok' : `${p.refusal}:${p.index}`).toBe('classifier_unclassifiable:1');
+    expect(p.ok).toBe(true);
+    if (!p.ok) return;
+    expect(p.phenomena).toEqual(['recurrence', undefined]);
+  });
+
+  it('WS2-07-F1 v2 — THE REGRESSION SPECIMEN: valid · declined · valid, all three preserved in place', () => {
+    /* This is the test that proves the taxonomy's VETO was removed, not merely
+       that the all-declined case is tolerated. B declining must not disturb
+       A or C. */
+    const p = parseClassifierBlocks([cls('movement', 'unclassifiable', 'recurrence')], 3);
+    expect(p.ok).toBe(true);
+    if (!p.ok) return;
+    expect(p.phenomena).toEqual(['movement', undefined, 'recurrence']);
+  });
+
+  it('WS2-07-F1 v2 — every claim declined still parses, and is not a refusal', () => {
+    const p = parseClassifierBlocks([cls('unclassifiable', 'unclassifiable')], 2);
+    expect(p.ok).toBe(true);
+    if (!p.ok) return;
+    expect(p.phenomena).toEqual([undefined, undefined]);
+  });
+
+  it('WS2-07-F1 v2 — a declined index still counts as answered; an unanswered one still refuses', () => {
+    /* `undefined` now means DECLINED, so it can no longer double as the
+       not-yet-answered sentinel. An index the model simply never returned is
+       still an index mismatch. */
+    expect(parseClassifierBlocks([cls('unclassifiable')], 2).ok).toBe(false);
+    expect(parseClassifierBlocks([cls('unclassifiable', 'unclassifiable')], 2).ok).toBe(true);
+  });
+
+  it('WS2-07-F1 v2 — a value outside the family is still malformed output, not a decline', () => {
+    const p = parseClassifierBlocks([cls('recurrence', 'banana')], 2);
+    expect(p.ok ? 'ok' : p.refusal).toBe('classifier_malformed');
   });
 
   it('missing, duplicated, out-of-range indexes and foreign values refuse', () => {
@@ -65,11 +97,12 @@ describe('the classifier sees no prose', () => {
 });
 
 describe('provenance and the pinned model', () => {
-  it('classifierPromptHash is over system + tool together; version is DEVELOPMENTAL-PHENOMENON-01', () => {
+  it('classifierPromptHash is over system + tool together; version is DEVELOPMENTAL-PHENOMENON-04', () => {
     const expected = createHash('sha256').update(CLASSIFIER_SYSTEM, 'utf8').update('\u0000')
       .update(JSON.stringify(classifierTool()), 'utf8').digest('hex');
     expect(classifierPromptHash()).toBe(expected);
-    expect(CLASSIFIER_VERSION).toBe('DEVELOPMENTAL-PHENOMENON-01');
+    /* -02 since WS2-07-F1: the eight phenomena now reach the classifier defined. */
+    expect(CLASSIFIER_VERSION).toBe('DEVELOPMENTAL-PHENOMENON-04');
   });
 
   it('under sovereign mode the seam refuses and no fallback is attempted', async () => {

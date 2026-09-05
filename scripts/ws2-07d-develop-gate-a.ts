@@ -158,7 +158,7 @@ async function main() {
         { text: 'The two parts split the sequence before the water.', refs: [{ kind: 'structure-units', unitIds: [u1.value.id, u2.value.id] }], doesNotEstablish: ['authored-structure-relation'] },
       ] as never,
     };
-    const fz = freezeReading({ manuscriptId, request, result, phenomena: ['recurrence', 'recurrence', 'positional-asymmetry'], reader: READER, classifier: CLASSIFIER });
+    const fz = freezeReading({ manuscriptId, request, result, phenomena: ['recurrence', undefined, 'positional-asymmetry'], reader: READER, classifier: CLASSIFIER });
     if (!fz.ok) throw new Error(`freeze ${fz.refusal}: ${fz.detail}`);
     const stored = await freezeAndStore(owner.id, fz.value);
     if (!stored.ok) throw new Error(`store ${stored.refusal}`);
@@ -180,7 +180,40 @@ async function main() {
     check('E8 presented: evidence is named through the FROZEN readState with the member\'s headings; limits carry the ratified meaning', v1.evidence[0] === 'Section 1 · “Arrival”, the whole section as read' && v1.evidence[1] === 'Section 3 · “Tomas”, characters 0–30 as read'
       && view.observations[1]!.evidence[0] === 'Sections 2–4, in the order they were read' && view.observations[2]!.evidence[0] === 'The part “Before the water” and the part “After”, as they stood in your structure'
       && v1.limits[0]!.name === 'across unread span' && v1.limits[0]!.meaning.length > 0 && view.observations[2]!.dependsOnStructure === true, JSON.stringify(view.observations.map((o) => o.evidence)));
-    check('E8 presented: coverage from the frozen coverage; provenance names reader and classifier apart', view.coverage.sentence === 'MAIA read 4 of 4 sections in full.' && view.readerVersion === 'DEVELOPMENTAL-READER-01' && view.classifierVersion === 'DEVELOPMENTAL-PHENOMENON-01' && view.withStructure === true);
+    /* WS2-07-F1 · acceptance-harness maintenance, authorized as pin reconciliation.
+       The fixture builds provenance from the LIVE constants (readerIdentity,
+       CLASSIFIER_VERSION, lines above) but this assertion compared against
+       hardcoded -01 literals, so it silently became false when the reader moved
+       to -02 and the classifier to -04. It is now asserted against the same
+       identities that were frozen — which is what the check claims to prove and
+       cannot go stale on a future version bump — plus, made explicit, the
+       "apart" the description already asserted: the two versions are carried as
+       DIFFERENT values, not one provenance blurred into both. Not weakened: the
+       surface must still surface reader and classifier provenance separately. */
+    check('E8 presented: coverage from the frozen coverage; provenance names reader and classifier apart', view.coverage.sentence === 'MAIA read 4 of 4 sections in full.' && view.readerVersion === READER.readerVersion && view.classifierVersion === CLASSIFIER.classifierVersion && view.readerVersion !== view.classifierVersion && view.withStructure === true);
+
+    /* WS2-07-F1 · reading contract v2 — the taxonomy may no longer veto an
+       observation, and the surface must not turn its absence into content.
+       o1 classified · o2 DECLINED · o3 classified, so one fixture proves both
+       branches and proves the decline does not disturb its siblings.
+
+       ABSENCE MUST REMAIN ABSENCE. `in`, not `=== undefined`: an
+       undefined-valued property would still be a presentation property, and
+       would still let a surface render an empty chip from it. The presenter
+       conditionally spreads both keys, and this is what pins that. */
+    const v2 = view.observations[1]!;
+    check('E8 v2: a DECLINED observation carries no phenomenon KEY as stored, and none reaches the presentation',
+      !('phenomenon' in oneBody.reading.observations[1])
+      && !('phenomenon' in v2) && !('phenomenonLabel' in v2),
+      `stored keys: ${Object.keys(oneBody.reading.observations[1]).join(',')} · view keys: ${Object.keys(v2).join(',')}`);
+    check('E8 v2: the declined observation is COMPLETE — its text, evidence and limits are untouched by the decline',
+      v2.observation === 'The council\'s eleven silences return as one argument.'
+      && v2.evidence[0] === 'Sections 2–4, in the order they were read'
+      && v2.limits.length === 2 && v2.limits[0]!.name === 'chronology' && v2.limits[0]!.meaning.length > 0
+      && v2.key === 'o2' && v2.lens === 'development');
+    check('E8 v2: the decline does not disturb its siblings — o1 and o3 keep their labels',
+      v1.phenomenonLabel === 'recurrence' && view.observations[2]!.phenomenonLabel === 'positional asymmetry',
+      `o1=${v1.phenomenonLabel} o3=${view.observations[2]!.phenomenonLabel}`);
 
     const notYours = await oneRoute.GET(req('GET', `/readings/${stored.id}`, other.token), P1(stored.id));
     const wrongWork = await oneRoute.GET(req('GET', `/readings/${stored.id}`, owner.token), P1(stored.id, randomUUID()));
