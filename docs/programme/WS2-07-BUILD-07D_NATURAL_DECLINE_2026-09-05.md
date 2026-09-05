@@ -2,8 +2,8 @@
 
 > **Observed at `9c27572ce`, 2026-09-05. A live reading by `claude-opus-5` produced an observation
 > the phenomenon taxonomy did not name, and the observation was KEPT — whole, evidenced, limited,
-> and unlabelled. Nothing in the commission asked for a decline. This is the first unprompted
-> decline in the lane's history.**
+> and unlabelled. Nothing in the commission asked for a decline. This is the first formally recorded
+> natural classifier decline on the accepted integration lineage — NOT the first occurrence. See §0.**
 
 ```text
 READING     acda940f-bee8-411c-acfe-88bb4abb96e2
@@ -13,6 +13,36 @@ READER      claude-opus-5      CLASSIFIER claude-opus-5
 CONTRACT    reading contract v2 — phenomenon optional per observation, omission only
 DATABASE    maia_gatea_scratch
 ```
+
+## 0 · Precedent, and why this is the record
+
+A natural decline was observed live once before this one, and it is named here so that this record
+does not claim a first it did not earn.
+
+```text
+Earlier precedent
+1a01d9a56
+Structure lens · o6 · claude-opus-5
+same four-single-word-label observation
+natural decline observed live
+```
+
+Why that occurrence is not the evidentiary record:
+
+```text
+1a01d9a56 was later rejected for the unrelated
+Keep-a-version data-integrity defect.
+
+The classifier decline itself was not implicated
+in that defect, but no durable witness record was
+made against that rejected candidate.
+```
+
+So `9c27572ce` is accurately described as the **first recorded and persistence-confirmed** witness on
+accepted lineage, not as the first time the classifier declined. That the same behaviour appeared
+twice — two runs, two SHAs, two fixtures, the same observation about the same four section labels —
+strengthens the finding rather than weakening it, and is worth more than a claim of primacy would
+have been.
 
 ## 1 · The row, not the rendering
 
@@ -43,10 +73,12 @@ eight-phenomenon family, and the family was not stretched to give it one.
 
 The governing principle of the reading contract is that **observation has ontological priority over
 classification: the taxonomy may describe a developmental observation, but it may neither manufacture
-one nor veto one.** Until now that was demonstrated only by construction — every live reading in the
-lane named a phenomenon (8 of 8 in Gate B(a), 5 of 5 in B(b)), which is precisely why the decline had
-to be seeded by script to witness the rendering at all
-(`WS2-07-BUILD-07D_V2_RENDER_WITNESS_2026-09-05.md`).
+one nor veto one.** Through the gates that demonstration was available only by construction — every live reading under
+Gate B named a phenomenon (8 of 8 in B(a), 5 of 5 in B(b)), which is precisely why the decline had to
+be seeded by script to witness the rendering at all
+(`WS2-07-BUILD-07D_V2_RENDER_WITNESS_2026-09-05.md`), and why that record's claim ceiling said it
+established nothing about live classifier behaviour. The precedent in §0 and this reading are the two
+live occurrences known to the lane; this is the one with a durable witness behind it.
 
 Here the classifier declined on its own and the reading survived intact. The taxonomy's veto is not
 merely removed in code; it has now been observed not exercising itself.
@@ -72,8 +104,11 @@ authority, and no screenshot of the fixture may migrate into a claim about live 
 
 ## 6 · What this does NOT establish
 
-- **Nothing about frequency.** One decline in one reading. It does not establish how often the
-  classifier declines, under which lenses, or on what kinds of material.
+- **Not a first occurrence.** §0 names an earlier live decline on the rejected `1a01d9a56`. This
+  record is the first durable witness, not the first event.
+- **Nothing about frequency.** Two known live declines, both under the Structure lens, both on the
+  same four section labels. It does not establish how often the classifier declines, under which
+  lenses, or on what kinds of material — and two occurrences of one observation are not a rate.
 - **Nothing about correctness of the decline.** That this observation *ought* to be unnameable within
   the family is not established here; only that the classifier declined and the system kept the
   observation whole.
