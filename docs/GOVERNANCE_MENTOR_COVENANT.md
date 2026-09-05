@@ -159,6 +159,69 @@ and is unaffected by it.
 Rationale and the contradiction that prompted it:
 `docs/programme/GOVERNANCE-CLASS-A-BOOTSTRAP-SHADOW-01.md`.
 
+#### Beta-Phase Class A — Founder-Steward Sole Authority *(temporary)*
+
+Added 2026-09-05 by founder ruling. **During the beta phase, the Class A gate above is
+satisfied by the Founder-Steward alone.** The two Council votes and one Mentor verification
+are not waived in principle; they are *not yet constituted*. This clause says so plainly
+rather than leaving a gate on the books that no one can pass.
+
+**Why this exists.** The Council and Mentor roles are designed for a launched system with
+multiple stewards. During beta there is one person: the Founder-Steward. Every CODEOWNERS
+entry names a single account, and `covenant-gates.yml` states in its own header that this
+repository is single-owner with admin-merge rather than independent two-person review. A gate
+requiring participants who do not exist is not a safeguard — it is an indefinite block that
+invites exceptions, and three were already improvised around it before this clause was
+written.
+
+**Scope.** Applies to every Class A change during beta, including member-facing behaviour.
+This is broader than **Bootstrap Class A — Shadow Validation Only**, which it subsumes for
+the duration: that narrower rule is not repealed and revives when this clause sunsets.
+
+**What does NOT change.** Only the approval arithmetic. Everything else stands:
+
+* classification is still required, and Class A still means sacred boundaries — consent,
+  privacy, retention, member sovereignty, safety, identity, memory handling, Sanctuary
+* rollback plan, migration reversibility, and testing discipline (§9) are unchanged
+* the exact candidate SHA must be named; approvals do not inherit across SHAs
+* required CI must be green on that exact SHA
+* production promotion still requires both provenance claims — declared build identity and
+  independent runtime artifact attestation
+* every authorization is an explicit recorded act stating what it authorizes **and what it
+  does not**
+
+**No self-authorization.** This clause may not authorize its own adoption. It becomes
+effective only once this amendment is canonical, and confers no authority over the change
+that introduces it. Its adoption authority, when expressly ratified, is the Founder-Steward's
+pre-existing §3 responsibility for doctrine and production legitimacy.
+
+**Sunset.** This clause expires on the earlier of:
+
+1. a second human steward holding repository access and able to give independent approval, or
+2. the system being opened beyond the beta cohort.
+
+At that point the ordinary Class A gate resumes automatically. No further act is required to
+end this clause; an act is required only to *extend* it, and extending it past either
+condition requires a recorded founder decision naming why.
+
+**What this costs, stated rather than hidden.** Independent review is the thing being given
+up, during precisely the period when real members are using the system. The compensating
+discipline is that beta Class A acts are *more* explicit, not less: exact SHA, exact scope,
+exact non-authorization, recorded where the change lives. That is a weaker guarantee than a
+second reviewer and should not be described as equivalent to one.
+
+**Growth-obligation answers** (per `RECIPROCAL_SOVEREIGNTY_INTENTION_2026-08-04.md`, required
+of any change that increases a capability — here, an increase in *authority*):
+
+* *What uncertainty does this introduce?* That a single reviewer will miss what a second
+  would have caught. It is preserved by recording every beta Class A act individually, so the
+  set of decisions made under sole authority is enumerable and reviewable later.
+* *What provenance and ownership boundaries does this require?* Each act names its exact SHA
+  and its limits; none inherits. The record must say "authorized under beta sole authority"
+  and never "approved by the Council."
+* *What new responsibility does this create?* An obligation to constitute the Council before
+  launch, not after — this clause is a bridge to that, not a substitute for it.
+
 ### Class B — Structural Risk (1 mentor + release steward)
 
 * database schema/migrations
@@ -228,7 +291,7 @@ Implement branch protections on `main`:
 
 **Rule:** A PR cannot be labeled `release-approved` if it has `frontier-check` unresolved.
 
-**Classification is required on every PR.** Check exactly one class box in the PR template *or* apply the matching `class-*` label. A Class C (routine) change needs only its classification; Class A/B/Frontier additionally need approval. That approval is a human act in GitHub — CODEOWNERS plus branch protection — not a label: Covenant Gates performs constitutional validation and diagnostics only and does not count approvals. While independent second-steward review is unavailable, the sole exception is **Bootstrap Class A — Shadow Validation Only** (§5), which covers zero-authority shadow infrastructure and nothing else.
+**Classification is required on every PR.** Check exactly one class box in the PR template *or* apply the matching `class-*` label. A Class C (routine) change needs only its classification; Class A/B/Frontier additionally need approval. That approval is a human act in GitHub — CODEOWNERS plus branch protection — not a label: Covenant Gates performs constitutional validation and diagnostics only and does not count approvals. During the beta phase, Class A approval is satisfied by the Founder-Steward alone under **Beta-Phase Class A — Founder-Steward Sole Authority** (§5), which subsumes the narrower **Bootstrap Class A — Shadow Validation Only** for the duration and sunsets automatically when a second steward exists or the system opens beyond the beta cohort.
 
 **Known gap (recorded 2026-09-04, not yet repaired):** `staging-ready` and `release-approved` govern production promotion in this document, but no deploy script consults any `class-*`, `requires-*` or `frontier-*` label — the deploy path is label-blind. Governance therefore reaches production in doctrine and not in mechanism. Closing that would be a Class B change to the deploy scripts and is deliberately out of scope for the governance lane that recorded it.
 
