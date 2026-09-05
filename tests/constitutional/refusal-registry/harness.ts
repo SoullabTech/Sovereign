@@ -47,6 +47,70 @@ export interface CheckIO {
   exists(relPath: string): boolean;
 }
 
+/**
+ * A check could not locate its own anchor, so it can prove NOTHING either way.
+ *
+ * This is a TOOLING failure, never a demonstrated breach. It exists because the
+ * opposite — a detector that silently degrades and then reports a red that reads
+ * like a constitutional violation — is worse than no detector at all: it spends
+ * the registry's credibility on noise, and it hides real breaches inside a
+ * failure everyone learns to ignore.
+ *
+ * Provenance: on 2026-09-04 five assertions across R19 and R21 reported red with
+ * `@NaN` line numbers while every guard they police was intact and correctly
+ * ordered. Cause: `lineOf()` parsed field [1] of a `path:line:text` grep line,
+ * but GNU grep OMITS the filename when `-r` is given exactly one non-directory
+ * operand (BSD grep and ugrep include it). Field [1] was therefore the source
+ * text, and `parseInt('      await …')` → NaN; every `NaN < NaN` comparison is
+ * false, so each ordering assertion failed closed and looked like a breach.
+ * Whether the registry was red depended on which grep was first on PATH.
+ */
+export class DetectorDefect extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'DetectorDefect';
+  }
+}
+
+/** The format every `grep()` result line is contractually required to have. */
+const GREP_LINE = /^(.*?):(\d+):/;
+
+/**
+ * Line number of the first match.
+ *
+ * Returns -1 for NO MATCHES — an absent anchor is a substantive result the
+ * caller must interpret (a missing guard is a breach; a missing INSERT is not).
+ * It never returns NaN: an unparseable match is a DetectorDefect, not a verdict.
+ */
+export function lineOf(matches: string[]): number {
+  if (matches.length === 0) return -1;
+  const m = GREP_LINE.exec(matches[0]);
+  if (!m) {
+    throw new DetectorDefect(
+      `grep output did not match the required "path:line:text" contract, so no line ` +
+        `number could be located. Offending line: ${JSON.stringify(matches[0])}`
+    );
+  }
+  return parseInt(m[2], 10);
+}
+
+/**
+ * Line number of the first match, where ABSENCE means the detector has lost its
+ * anchor rather than that a guard is missing. Use for structural landmarks
+ * (a handler signature, the INSERT an assertion orders a guard against) whose
+ * disappearance invalidates the assertion instead of proving a violation.
+ */
+export function requireLine(matches: string[], anchor: string): number {
+  if (matches.length === 0) {
+    throw new DetectorDefect(
+      `anchor not found: ${anchor}. This assertion orders other code against this ` +
+        `landmark; without it the assertion proves nothing either way. Re-point the ` +
+        `detector at where the construct moved — do not relax the assertion.`
+    );
+  }
+  return lineOf(matches);
+}
+
 export interface RefusalCheck {
   id: string;
   refusal: string;
@@ -75,12 +139,16 @@ const RESET = '\x1b[0m';
 
 export function grep(pattern: string, paths: string[]): string[] {
   const quotedPaths = paths.map((p) => JSON.stringify(p)).join(' ');
+  let out: string;
   try {
-    const out = execSync(`grep -rInE ${JSON.stringify(pattern)} ${quotedPaths}`, {
+    // -H is REQUIRED, not decorative: GNU grep omits the filename when -r is
+    // given exactly one non-directory operand, while BSD grep and ugrep include
+    // it. Without -H the "path:line:text" contract that every ordering
+    // assertion parses is implementation-dependent (see DetectorDefect).
+    out = execSync(`grep -rHInE ${JSON.stringify(pattern)} ${quotedPaths}`, {
       cwd: REPO_ROOT,
       encoding: 'utf8',
     });
-    return out.trim().split('\n').filter(Boolean);
   } catch (e: unknown) {
     // grep exits 1 when there are no matches — that is a valid empty result.
     if (typeof e === 'object' && e !== null && (e as { status?: number }).status === 1) {
@@ -88,6 +156,20 @@ export function grep(pattern: string, paths: string[]): string[] {
     }
     throw e;
   }
+
+  const lines = out.trim().split('\n').filter(Boolean);
+  // Tripwire: enforce the format contract at the single place it is produced,
+  // so a future grep-behaviour drift surfaces as a named tooling failure rather
+  // than silently corrupting the line arithmetic of every downstream assertion.
+  const malformed = lines.find((l) => !GREP_LINE.test(l));
+  if (malformed !== undefined) {
+    throw new DetectorDefect(
+      `grep(${JSON.stringify(pattern)}) over [${paths.join(', ')}] returned a line ` +
+        `that is not "path:line:text": ${JSON.stringify(malformed)}. The registry ` +
+        `cannot locate source positions and therefore cannot adjudicate this refusal.`
+    );
+  }
+  return lines;
 }
 
 export function read(relPath: string): string {
@@ -124,7 +206,17 @@ export function runCheck(check: RefusalCheck, tally: Tally): void {
   try {
     check.run(io);
   } catch (e: unknown) {
-    io.fail('check threw', e instanceof Error ? e.message : String(e));
+    if (e instanceof DetectorDefect) {
+      // Distinguished from a breach on purpose: this red says the instrument is
+      // broken, NOT that the refusal was violated. Repair the detector; do not
+      // relax the assertion, and do not read this as a demonstrated violation.
+      io.fail(
+        'DETECTOR DEFECT — this check could not locate its own anchor and proves NOTHING either way (tooling failure, not a demonstrated breach)',
+        e.message
+      );
+    } else {
+      io.fail('check threw', e instanceof Error ? e.message : String(e));
+    }
   }
 
   console.log(`${DIM}   ✔ a PASS authorizes: ${check.passingAuthorizes}${RESET}`);

@@ -1,4 +1,4 @@
-import type { RefusalCheck } from './harness';
+import { lineOf, requireLine, type RefusalCheck } from './harness';
 
 /**
  * Refusal 21 — Sanctuary content cannot reach the empirically-escaped stores.
@@ -33,10 +33,16 @@ export const check: RefusalCheck = {
 
   run(io) {
     // (1,2) TurnsStore: guard present and BEFORE the INSERTs.
+    // lineOf/requireLine are shared (harness.ts): -1 only for a genuinely absent
+    // anchor, never NaN. A grep line that cannot be parsed raises DetectorDefect.
+    // The guards are read with lineOf (absence = breach); the INSERTs they are
+    // ordered against are read with requireLine (absence = lost anchor).
     const turnsGuard = io.grep(GUARD, ['lib/memory/stores/TurnsStore.ts']);
     const turnsInsert = io.grep('INSERT INTO conversation_turns', ['lib/memory/stores/TurnsStore.ts']);
-    const lineOf = (g: string[]) => (g.length ? parseInt(g[0].split(':')[1], 10) : -1);
-    if (turnsGuard.length > 0 && turnsInsert.length > 0 && lineOf(turnsGuard) < lineOf(turnsInsert)) {
+    if (
+      turnsGuard.length > 0 &&
+      lineOf(turnsGuard) < requireLine(turnsInsert, 'INSERT INTO conversation_turns in TurnsStore.ts')
+    ) {
       io.pass('TurnsStore.addExchange refuses before any INSERT');
     } else {
       io.fail('TurnsStore guard missing or after INSERT', `guard@${lineOf(turnsGuard)} insert@${lineOf(turnsInsert)}`);
@@ -49,13 +55,19 @@ export const check: RefusalCheck = {
     if (ccGuards.length >= 2 && ccInserts.length === 2 && lineOf(ccGuards) < lineOf(ccInserts)) {
       io.pass('logAgentRun and logIntegrationPass refuse before their INSERTs', `${ccGuards.length} guards`);
     } else {
-      io.fail('corpus callosum writers not both guarded', `guards=${ccGuards.length} inserts=${ccInserts.length}`);
+      io.fail(
+        'corpus callosum writers not both guarded',
+        `guards=${ccGuards.length}@${lineOf(ccGuards)} inserts=${ccInserts.length}@${lineOf(ccInserts)}`
+      );
     }
 
     // Session-history lane (the jsonb lane that escaped): guard before UPDATE.
     const smGuard = io.grep(GUARD, ['lib/sovereign/sessionManager.ts']);
     const smUpdate = io.grep('SET conversation_history', ['lib/sovereign/sessionManager.ts']);
-    if (smGuard.length > 0 && smUpdate.length > 0 && lineOf(smGuard) < lineOf(smUpdate)) {
+    if (
+      smGuard.length > 0 &&
+      lineOf(smGuard) < requireLine(smUpdate, 'SET conversation_history in sessionManager.ts')
+    ) {
       io.pass('sessionManager guards conversation_history before the UPDATE');
     } else {
       io.fail('conversation_history lane unguarded', `guard@${lineOf(smGuard)} update@${lineOf(smUpdate)}`);
