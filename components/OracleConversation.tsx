@@ -6006,7 +6006,35 @@ I'm not sure what I'm feeling yet.`;
 
         // Use normalized response for consistent field access
         const normalized = normalizeAIResponse(responseData);
-        responseText = cleanMessage(normalized?.text || responseData.response || responseData.message || 'I\'m here. What wants your attention?');
+        const rawMaiaText = normalized?.text || responseData.response || responseData.message || '';
+        const cleanedMaiaText = rawMaiaText ? cleanMessage(rawMaiaText) : '';
+
+        // 🧱 F1 — AN EMPTY 200 IS A PROTOCOL FAILURE, NOT A SENTENCE.
+        //
+        // This used to end `|| "I'm here. What wants your attention?"`, which
+        // rendered a MAIA turn for a response that carried none. That fabricates
+        // precisely the turn the server refuses to write: the route persists the
+        // assistant half only `if (memberTurnDurable && sovereignText)`, so a
+        // generation that produced nothing leaves the member's utterance standing
+        // ALONE by design (app/api/sovereign/app/maia/list/route.ts, F1). A
+        // placeholder here put words in the record's mouth — visible to the
+        // member, absent from conversation_turns, and indistinguishable from a
+        // real reply.
+        //
+        // The member turn is NOT marked failed: it was delivered (200 received,
+        // and durable at acceptance before generation). What is missing is the
+        // response, and that is what the banner says. Deliberately narrow — the
+        // network-mode presence fallback below is a separate, ruled design and
+        // is left untouched.
+        if (!cleanedMaiaText.trim()) {
+          console.warn('[OracleConversation] 200 with no MAIA text — leaving the member turn to stand alone');
+          setInputSubmitError('Your message was received, but no response came back. You can ask again.');
+          setIsProcessing(false);
+          setIsResponding(false);
+          return;
+        }
+
+        responseText = cleanedMaiaText;
 
         // MAIA Central: extract CI-shaped spoken text and vocal intent (if oracle/conversation route)
         spokenTextForVoice = responseData.spokenText || responseText;
