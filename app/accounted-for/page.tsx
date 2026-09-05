@@ -508,6 +508,55 @@ const MEMBER_LENS: LensRow[] = [
   },
 ];
 
+const SOVEREIGNTY_PLANES: Row[] = [
+  {
+    name: 'Database',
+    what: 'Every member record, memory layer and consent flag. Self-hosted PostgreSQL on hardware Soullab owns.',
+    third: <>Local</>,
+  },
+  {
+    name: 'Speech to text',
+    what: 'A local Whisper container. Audio never leaves the host.',
+    third: <>Local</>,
+  },
+  {
+    name: 'Text to speech',
+    what: 'A local Kokoro engine first. An OpenAI fallback remains in an enumerated, guarded list under active removal.',
+    third: <>Local, with a named exception</>,
+  },
+  {
+    name: 'Ordinary cognition',
+    what: 'Claude via API. The one external dependency on an ordinary conversational turn, and the one this page has always named.',
+    third: <>External &middot; Anthropic</>,
+  },
+  {
+    name: 'Typefaces',
+    what: 'Until now, a member\u2019s browser fetched five typefaces from Google on every page load \u2014 including this page. A repair that serves them from this host instead is built, gated and not yet shipped.',
+    third: (
+      <>
+        <Chip layer="designed" />
+        <br />
+        External today
+      </>
+    ),
+  },
+  {
+    name: 'Account recovery',
+    what: 'Passkey recovery email, via a third-party sender. Not on the ordinary path; a local-only deployment simply has no recovery by email.',
+    third: <>Conditional external</>,
+  },
+  {
+    name: 'Certificate renewal',
+    what: 'Let\u2019s Encrypt, for TLS. A deployment and maintenance concern, not something a member\u2019s conversation depends on.',
+    third: <>Maintenance external</>,
+  },
+  {
+    name: 'Local cognition fallback',
+    what: 'An adapter for local inference exists and is exercised when the API is unavailable. The inference container is an opt-in profile in production.',
+    third: <><Chip layer="designed" /></>,
+  },
+];
+
 const CANONICAL_TURN: Array<[string, string]> = [
   ['Perceive', 'What is happening for this person now? Speech, silence, timing, interruption, language.'],
   ['Remember', 'What history actually belongs in this moment? Episodic, relational, developmental, symbolic continuity.'],
@@ -768,6 +817,15 @@ export default function AccountedForPage() {
             <P>The friend in the basement was training weights. Soullab has spent its effort on everything weights cannot hold.</P>
           </Section>
 
+          <Section eyebrow="The harder accounting" heading="Where sovereignty holds, and where it does not yet">
+            <P>Sovereignty is usually argued at the model layer, because that is where the argument is most flattering. The harder accounting is everything else, and it has to be done by plane &mdash; because the planes are not interchangeable. A dependency on an ordinary conversational turn is a different fact from one that only a rebuild touches, and collapsing them produces either false alarm or false comfort.</P>
+            <Table headers={['Layer', 'What it is', 'Plane']} rows={SOVEREIGNTY_PLANES} />
+            <P>The typeface row is the one worth dwelling on, because nobody thinks of a font as a dependency. Until this repair ships, a member&apos;s browser requests five typefaces from Google on every page load &mdash; <em>including this page</em>, which argues the sovereignty case in letterforms fetched from a third party. Google necessarily receives network-level information, including the requesting address, from a member who never chose that.</P>
+            <P>The repair vendors the exact faces, weights, italics and subsets into this host and serves them locally. It is built and gated: a browser network witness shows every font request coming from the local origin and none reaching Google, and with both Google hosts blocked the browser still reports the intended faces rendering the text. One gate remains provisional and it has not shipped, so the row above stays <em>external today</em> rather than borrowing credit from work that is finished but not live.</P>
+            <Quote>The dependencies that survive an audit are the ones that do not look like dependencies.</Quote>
+            <P>Two boundaries this accounting does not cross. Removing a runtime dependency is not the same as removing a build-time one: this application still contacts Google when it is <em>built</em>, for typefaces requested through the framework rather than through a stylesheet, and that is a deployment-plane fact left standing rather than quietly folded into the row above. And none of this amounts to offline operation. Cognition remains external on every ordinary turn. What the planes give is a map of where dependence actually sits &mdash; which is more useful, and more honest, than the binary claim.</P>
+          </Section>
+
           <Section eyebrow="The composition" heading="An organism being composed">
             <Answer>AIN is an existing distributed intelligence architecture whose constituent systems are now being mapped and composed into one coherent conversational organism.</Answer>
             <P>That sentence sits between two claims this page refuses. One is the future tense: that AIN will someday bring memory, relationship, Spiralogic, field intelligence and cognition together. The other is the completed tense: that AIN already operates as one seamless unified intelligence. The truth is the present continuous, and it was ratified as a program charter on 2026-08-31.</P>
@@ -812,6 +870,17 @@ export default function AccountedForPage() {
             </ul>
           </Section>
 
+          <Section eyebrow="The method" heading="How a claim on this page is tested">
+            <P>Every label above is the output of some instrument &mdash; a gate, a query, a production log, a person looking at a screen. An instrument has limits, and a result may only be quoted as far as those limits reach. Three questions decide that, and they fail in different directions.</P>
+            <ul className="mb-5 list-disc pl-5 text-soullab-text-secondary [&_li]:mb-2.5">
+              <li><strong className="text-soullab-text-primary">Validity &mdash; did the instrument reach the subject?</strong> A check that dies before it loads the code says nothing about the code. That is not weak evidence of failure; it is the absence of observation, and treating it as a finding would be an error in the direction of false alarm.</li>
+              <li><strong className="text-soullab-text-primary">Scope &mdash; does the conclusion lie inside what the instrument measures?</strong> This repository&apos;s type gate is a <em>no-regression</em> gate. Green means nothing got worse. It does not mean the program is clean: 230 diagnostics remain against a recorded baseline of 239. Reporting that green as &ldquo;it typechecks&rdquo; would be an error in the direction of false comfort.</li>
+              <li><strong className="text-soullab-text-primary">Non-transfer &mdash; does a pass here settle a question it never tested?</strong> A deployment verified in production attests the commit that was deployed, not the change waiting on top of it. A page rendering correctly attests that page, not the system behind it.</li>
+            </ul>
+            <Quote>An instrument that reached its subject still proves only what it measures.</Quote>
+            <P>The same discipline separates two things that are easy to merge and shouldn&apos;t be. What something <em>is</em> can be established in canon; whether it <em>runs</em> can only be established by evidence. Naming a component truthfully is not a claim that it is wired, and a document that names it does not thereby switch a label on this page from Designed to Live. Recognition and operation are different acts, and this page keeps them apart even when it would read better not to.</P>
+          </Section>
+
           <Section eyebrow="Withheld" heading="Claims this page withholds">
             <ul className="mb-5 list-none p-0 text-soullab-text-secondary">
               {[
@@ -823,6 +892,8 @@ export default function AccountedForPage() {
                 'Memory continuity on iOS as device-proven.',
                 'That MAIA carries your daily anchor into conversation unprompted.',
                 'That OpenAI is absent from the codebase.',
+                'That the application is offline-capable. Cognition is external on every ordinary turn, and a build still reaches a third party for typefaces.',
+                'That a green gate means a clean program. The type gate measures regression against a baseline, and this page quotes it only that far.',
               ].map((v) => (
                 <li key={v} className="border-l border-soullab-border-strong py-2 pl-4">{v}</li>
               ))}
@@ -843,7 +914,7 @@ export default function AccountedForPage() {
           </Section>
 
           <footer className="mt-12 border-t border-soullab-border-subtle pt-6 text-[0.88rem] italic text-soullab-text-muted">
-            Written 2026-09-03 against the repository at that date, and revised 2026-09-05 for the AIN OS framing and the whole-organism census. Every Live label above is answerable to a code path, a migration, or a dated production report. If a label turns out to be wrong, the label changes, not the story.
+            Written 2026-09-03 against the repository at that date, and revised 2026-09-05 for the AIN OS framing, the Soul Corpus, the accounting by dependency plane, and the method by which every label here is tested. Every Live label above is answerable to a code path, a migration, or a dated production report. If a label turns out to be wrong, the label changes, not the story.
           </footer>
         </div>
       </div>
