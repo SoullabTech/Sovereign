@@ -2,7 +2,7 @@
 
 **Status:** Canon. Promoted 2026-06-03 (steward directive). Governs representation across all surfaces.
 **Instruments:** Live / Designed / Vision · Center of Gravity · Failure Test.
-**Kin:** `MAIA_OATH.md`, `MAIA_SOVEREIGNTY_INVARIANTS.md`, `ANTI_FEATURES.md`.
+**Kin:** `CLAIM_STATE_AUTHORITY.md` (sibling — governs movement between these states), `MAIA_OATH.md`, `MAIA_SOVEREIGNTY_INVARIANTS.md`, `ANTI_FEATURES.md`.
 **Applied in:** `docs/pitch/CASE_STUDY_LIBRARY.md` (first validation pass).
 
 ---
