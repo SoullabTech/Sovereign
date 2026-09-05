@@ -9,6 +9,7 @@ import {
   type ReactNode,
 } from 'react';
 import { apiFetch } from '@/lib/http/apiBase';
+import { countDraftWords } from '@/lib/writersStudio/draftWords';
 import { PRESS, SERIF } from '../pressTheme';
 import {
   AUTOSAVE_DELAY_MS,
@@ -153,7 +154,12 @@ interface WritingSurfaceProps {
   manuscriptId: string;
   /** The quiet head of the work, rendered ON the sheet in its ink. */
   head?: ReactNode;
-  onMeta?: (meta: { updatedAt: string | null; revisionCount: number | null }) => void;
+  /** `words` is REQUIRED — see lib/writersStudio/draftWords.ts. */
+  onMeta?: (meta: {
+    updatedAt: string | null;
+    revisionCount: number | null;
+    words: number;
+  }) => void;
   onCheckpointed?: () => void;
   /** The member's own heading lines, for the navigator. */
   onHeadings?: (headings: Heading[]) => void;
@@ -308,6 +314,7 @@ const WritingSurface = forwardRef<WritingSurfaceHandle, WritingSurfaceProps>(
             cbRef.current.onMeta?.({
               updatedAt: meta.updatedAt,
               revisionCount: meta.revisionCount,
+              words: countDraftWords(editableText(editableRef.current)),
             });
           },
           onConflict: () => {
@@ -347,7 +354,11 @@ const WritingSurface = forwardRef<WritingSurfaceHandle, WritingSurfaceProps>(
         setEditable(next);
         setUpdatedAt(r.updatedAt ?? null);
         setPhase('ready');
-        cbRef.current.onMeta?.({ updatedAt: r.updatedAt ?? null, revisionCount: r.revisionCount });
+        cbRef.current.onMeta?.({
+          updatedAt: r.updatedAt ?? null,
+          revisionCount: r.revisionCount,
+          words: countDraftWords(editableText(next)),
+        });
         cbRef.current.onHeadings?.(extractHeadings(editableText(next)));
       };
 
@@ -442,7 +453,11 @@ const WritingSurface = forwardRef<WritingSurfaceHandle, WritingSurfaceProps>(
           if (res.revisionId !== null) baseRef.current = res.revisionId;
           setUpdatedAt(res.updatedAt);
           setKept(true);
-          cbRef.current.onMeta?.({ updatedAt: res.updatedAt, revisionCount: res.revisionCount });
+          cbRef.current.onMeta?.({
+            updatedAt: res.updatedAt,
+            revisionCount: res.revisionCount,
+            words: countDraftWords(editableText(current)),
+          });
           cbRef.current.onCheckpointed?.();
           cbRef.current.onHeadings?.(extractHeadings(editableText(current)));
           saver.endExclusive({ persisted: value });

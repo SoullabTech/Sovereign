@@ -2,6 +2,7 @@
 
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { apiFetch } from '@/lib/http/apiBase';
+import { countDraftWords } from '@/lib/writersStudio/draftWords';
 import { PRESS, SERIF } from '../pressTheme';
 import {
   AUTOSAVE_DELAY_MS,
@@ -70,8 +71,14 @@ const editableFrom = (r: DraftRepresentation): Editable =>
 
 interface WorktableProps {
   manuscriptId: string;
-  /** Authored draft facts for the room's orientation line. Facts only. */
-  onMeta?: (meta: { updatedAt: string | null; revisionCount: number | null }) => void;
+  /** Authored draft facts for the room's orientation line. Facts only.
+     `words` is REQUIRED: the consumer renders it directly, and an emitter
+     that omits it puts `undefined` on the page rather than a number. */
+  onMeta?: (meta: {
+    updatedAt: string | null;
+    revisionCount: number | null;
+    words: number;
+  }) => void;
   /** A version was kept; the History drawer re-reads. */
   onCheckpointed?: () => void;
 }
@@ -166,7 +173,11 @@ export default function Worktable({ manuscriptId, onMeta, onCheckpointed }: Work
           if (meta.revisionId !== null) baseRef.current = meta.revisionId;
           if (cancelled) return;
           setUpdatedAt(meta.updatedAt);
-          cbRef.current.onMeta?.({ updatedAt: meta.updatedAt, revisionCount: meta.revisionCount });
+          cbRef.current.onMeta?.({
+            updatedAt: meta.updatedAt,
+            revisionCount: meta.revisionCount,
+            words: countDraftWords(editableText(editableRef.current)),
+          });
         },
         onConflict: () => {
           // Not retryable (see workingDraftClient): the draft moved elsewhere,
@@ -203,7 +214,11 @@ export default function Worktable({ manuscriptId, onMeta, onCheckpointed }: Work
       setEditable(next);
       setUpdatedAt(r.updatedAt ?? null);
       setPhase('ready');
-      cbRef.current.onMeta?.({ updatedAt: r.updatedAt ?? null, revisionCount: r.revisionCount });
+      cbRef.current.onMeta?.({
+        updatedAt: r.updatedAt ?? null,
+        revisionCount: r.revisionCount,
+        words: countDraftWords(editableText(next)),
+      });
     };
 
     (async () => {
@@ -306,7 +321,11 @@ export default function Worktable({ manuscriptId, onMeta, onCheckpointed }: Work
         if (res.revisionId !== null) baseRef.current = res.revisionId;
         setUpdatedAt(res.updatedAt);
         setKept(true);
-        cbRef.current.onMeta?.({ updatedAt: res.updatedAt, revisionCount: res.revisionCount });
+        cbRef.current.onMeta?.({
+          updatedAt: res.updatedAt,
+          revisionCount: res.revisionCount,
+          words: countDraftWords(editableText(current)),
+        });
         cbRef.current.onCheckpointed?.();
         saver.endExclusive({ persisted: value });
       } else if (res.kind === 'conflict') {
