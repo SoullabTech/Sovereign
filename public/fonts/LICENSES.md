@@ -14,16 +14,20 @@ alongside its font files as `OFL.txt`, so provenance does not disappear into
 | Atkinson Hyperlegible | 400, 700 | `atkinson-hyperlegible/OFL.txt` | `google/fonts` → `ofl/atkinsonhyperlegible` |
 | Spectral | 400, 600 · normal + italic | `spectral/OFL.txt` | `google/fonts` → `ofl/spectral` |
 | Crimson Pro | 200, 300, 400, 600 | `crimson-pro/OFL.txt` | `google/fonts` → `ofl/crimsonpro` |
-| Source Sans Pro | 300, 400, 600 | `source-sans-pro/OFL.txt` | `google/fonts` → `ofl/sourcesans3` (see note) |
+| Source Sans Pro | 300, 400, 600 | `source-sans-pro/OFL.txt` | `adobe-fonts/source-sans` @ `3.006R` (see note) |
 | IBM Plex Sans | 300, 400, 500 | `ibm-plex-sans/OFL.txt` | `google/fonts` → `ofl/ibmplexsans` |
 
 **Note on Source Sans Pro.** The Google Fonts API still serves the `Source Sans Pro`
-family, but upstream `google/fonts` no longer carries an `ofl/sourcesanspro` directory —
-the family was superseded by Source Sans 3. The vendored `OFL.txt` is therefore the
-Adobe SIL OFL 1.1 text taken from `ofl/sourcesans3`, which is the same license covering
-the same Adobe originals. Recorded here rather than silently substituted. If Source Sans
-Pro is ever dropped from the API, the font binaries here keep working — that is the point
-of vendoring them.
+family, but upstream `google/fonts` no longer carries an `ofl/sourcesanspro` directory:
+Adobe renamed the project Source Sans 3. Rather than substitute the Source Sans 3
+license text, the vendored `OFL.txt` is taken from the Adobe upstream at tag `3.006R` —
+the last release carrying the Pro name, and therefore the applicable license for the
+faces actually vendored here. It is SIL OFL 1.1, as is the current Source Sans lineage.
+Recorded explicitly rather than passed off as a direct fetch.
+
+This says only what is known. It does not assert that today's Source Sans 3 binaries are
+identical to the Pro faces vendored here. If Source Sans Pro is ever dropped from the
+API, these binaries keep working — that is the point of vendoring them.
 
 ## What was preserved
 
@@ -41,3 +45,24 @@ family/weight/italic specs recorded in the script, fetches Google's own `css2` o
 with a modern browser user-agent (so `woff2` is served), downloads each face, and
 rewrites `app/fonts.css`. It is a build-time provenance tool, not a runtime path:
 nothing in the running application contacts Google.
+
+## Acquisition plane
+
+`scripts/vendor-google-fonts.mjs` is maintenance tooling, invoked by hand. It is not
+referenced by any `package.json` script, `postinstall`, Next config, Dockerfile, compose
+service, or CI build path — verified, not assumed. The only mention of it anywhere else
+in the repository is the provenance comment at the top of `app/fonts.css`.
+
+That makes the dependency direction:
+
+```
+Google
+  ↑  explicit maintenance-time acquisition only
+vendored WOFF2 + licenses
+  ↓
+AIN OS runtime
+```
+
+and not `build/runtime → Google`. The distinction is load-bearing for any later offline
+accounting: a build step that reached out would make the acquisition a deployment-plane
+dependency rather than a maintenance-plane one.
