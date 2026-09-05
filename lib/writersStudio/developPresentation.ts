@@ -180,8 +180,11 @@ export interface ObservationView {
   /** VERBATIM. Not trimmed, not shortened, not paraphrased. */
   observation: string;
   lens: DevelopmentalLens;
-  phenomenon: DevelopmentalPhenomenon;
-  phenomenonLabel: string;
+  /** Absent when the classifier declined. The surface shows NOTHING in its
+   *  place — no "unclassified", no "unknown", no degraded state. The
+   *  observation stands on its own. */
+  phenomenon?: DevelopmentalPhenomenon;
+  phenomenonLabel?: string;
   evidence: string[];
   limits: { name: string; meaning: string }[];
   dependsOnStructure: boolean;
@@ -201,8 +204,9 @@ export function observationView(
     key: o.key,
     observation: o.observation,
     lens: o.lens,
-    phenomenon: o.phenomenon,
-    phenomenonLabel: phenomenonLabel(o.phenomenon),
+    ...(o.phenomenon !== undefined
+      ? { phenomenon: o.phenomenon, phenomenonLabel: phenomenonLabel(o.phenomenon) }
+      : {}),
     evidence: o.evidenceRefs.map((r) => describeRef(r, readState, sections)),
     limits: o.doesNotEstablish.map(limitLine),
     dependsOnStructure: o.structureDependency.kind === 'authored-structure',

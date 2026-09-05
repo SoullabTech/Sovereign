@@ -19,32 +19,58 @@
 'use client';
 
 import type { CSSProperties } from 'react';
+import Link from 'next/link';
 import { GOLD, GROUND, INK, RADIUS, SPACE } from '../studioTheme';
 import { STUDIO_MODES, type StudioMode } from '../studioMap';
 import { typeStyle } from './StudioType';
+import { canvasForManuscript } from '../canvasIdentity';
 
 export interface StudioModeBarProps {
   /** The mode this room IS. */
   current: string;
   style?: CSSProperties;
+  /** The Work on the table. A mode switch may never lose or guess it. */
+  manuscriptId?: string | null;
 }
 
-export function StudioModeBar({ current, style }: StudioModeBarProps) {
+export function StudioModeBar({ current, manuscriptId = null, style }: StudioModeBarProps) {
   return (
     <nav aria-label="Studio modes" style={{ display: 'flex', gap: SPACE.tight, ...style }}>
       {STUDIO_MODES.map((m) => (
-        <StudioModeItem key={m.id} mode={m} active={m.id === current} />
+        <StudioModeItem key={m.id} mode={m} active={m.id === current} manuscriptId={manuscriptId} />
       ))}
     </nav>
   );
 }
 
-function StudioModeItem({ mode, active }: { mode: StudioMode; active: boolean }) {
+/**
+ * THREE STATES, not two. When the bar was written, Write was the only room and
+ * the writer was already standing in it, so no mode ever had to carry anyone
+ * anywhere and every mode was a span. BUILD-07D built the Develop room, so an
+ * available mode must now actually go there — and go there holding the same
+ * Work, because a mode that arrives without one lands in a room that can only
+ * say it needs one.
+ *
+ *   active        you are here
+ *   rest          built, and there is a Work to take into it   → a link
+ *   needs-work    built, but nothing is on the table yet       → unpressable
+ *   unavailable   not built; promises nothing                  → unpressable
+ *
+ * `needs-work` is deliberately not folded into `unavailable`: "not built" and
+ * "nothing to bring" are different facts, and a member is owed the difference.
+ * The href is composed by canvasForManuscript, the single definition of how a
+ * Work identity travels — see canvasIdentity.ts on why a link is not a binding.
+ */
+function StudioModeItem({
+  mode, active, manuscriptId,
+}: { mode: StudioMode; active: boolean; manuscriptId: string | null }) {
   const available = mode.availability === 'available';
-  return (
+  const navigable = available && !active && mode.href !== undefined && manuscriptId !== null;
+  const state = active ? 'active' : !available ? 'unavailable' : manuscriptId === null ? 'needs-work' : 'rest';
+  const body = (
     <span
       data-mode={mode.id}
-      data-state={active ? 'active' : available ? 'rest' : 'unavailable'}
+      data-state={state}
       {...(available ? {} : { 'aria-disabled': true })}
       style={{
         ...typeStyle('navItem'),
@@ -62,5 +88,11 @@ function StudioModeItem({ mode, active }: { mode: StudioMode; active: boolean })
     >
       {mode.label}
     </span>
+  );
+  if (!navigable) return body;
+  return (
+    <Link href={canvasForManuscript(mode.href!, manuscriptId)} style={{ textDecoration: 'none' }}>
+      {body}
+    </Link>
   );
 }

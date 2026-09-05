@@ -56,6 +56,16 @@ function refusalSentence(o: Extract<CommissionOutcome, { ok: false }>): string {
   if (o.refusal === 'unauthorized') return 'You are signed out. Nothing has changed.';
   if (o.refusal === 'unreachable') return 'The Studio could not be reached. Nothing has changed.';
   if (o.refusal === 'structured_inference_unavailable') return 'MAIA cannot read just now. Nothing has changed.';
+  /* MAIA reads a KEPT version of the Work. If the writer has changed the Work
+     since the last kept version, capture refuses rather than attaching current
+     ranges to an older revision — and the member is owed that state by name,
+     not the generic "no sections" sentence, which misdescribes it. The act
+     that clears it already exists: "Keep a version", in the Writer Canvas.
+     The Develop room does not perform it: this room's only act is asking for
+     a reading, and it holds no control that changes the Work. */
+  if (o.refusal === 'revision_not_current') {
+    return 'This work has changed since the last version you kept. Keep a version in the Writer Canvas, then ask MAIA to read again. Nothing has changed.';
+  }
   switch (o.stage) {
     case 'capture':
     case 'recover':
@@ -292,6 +302,15 @@ export default function DevelopRoom({
               {commission.phase === 'refused' && (
                 <div className="mt-3" role="status" data-develop-refused={commission.outcome.refusal}>
                   <p className="text-[12.5px] leading-relaxed opacity-75">{refusalSentence(commission.outcome)}</p>
+                  {commission.outcome.refusal === 'revision_not_current' && (
+                    <Link
+                      href={canvasForManuscript(CANVAS_HREF, manuscriptId)}
+                      data-develop-keep-a-version
+                      className="inline-block text-[12.5px] underline underline-offset-4 opacity-70 hover:opacity-100 mt-1.5"
+                    >
+                      Go to the Writer Canvas
+                    </Link>
+                  )}
                   <p className="text-[11px] opacity-40 mt-1">
                     refused{commission.outcome.stage ? ` at ${commission.outcome.stage}` : ''}: {commission.outcome.refusal}
                   </p>

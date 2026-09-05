@@ -420,7 +420,7 @@ export default function WritersStudioPage() {
             </StudioText>
           ) : null}
         </div>
-        {!compact && <StudioModeBar current="write" style={{ marginLeft: SPACE.roomy }} />}
+        {!compact && <StudioModeBar current="write" manuscriptId={manuscript?.id ?? null} style={{ marginLeft: SPACE.roomy }} />}
         <span style={{ flex: 1 }} />
         {/* ── WS2-03B correction: a way back to MAIA ────────────────────────
             Her panel was dismissible with no route home. Every other panel is

@@ -10,7 +10,7 @@ import { recoverEvidence } from '../../development/resolve';
 import type { DevelopmentalEvidence } from '../../development/readState';
 import type { DevelopmentalReaderRequest, DevelopmentalReaderResult, RecoveredBody } from '../../developmentalReader/contract';
 import { readerIdentity } from '../../developmentalReader/read';
-import { DEVELOPMENTAL_PHENOMENA, observationKey, type ClassifierIdentity } from '../contract';
+import { DEVELOPMENTAL_PHENOMENA, READING_CONTRACT_VERSION, observationKey, type ClassifierIdentity } from '../contract';
 import { freezeReading, structureDependencyOf } from '../freeze';
 
 function recoveredFor(evidence: DevelopmentalEvidence, content: string): RecoveredBody[] {
@@ -54,7 +54,7 @@ describe('freezeReading', () => {
     expect(f.value.observations[0]!.doesNotEstablish).toEqual(['across-unread-span']);
     expect(f.value.scope).toEqual({ commissionedLens: 'development', bodyScope: ['s0', 's1'], withStructure: true });
     expect(f.value.readState).toBe(req.evidence.readState);
-    expect(f.value.provenance).toEqual({ reader: READER, classifier: CLASSIFIER });
+    expect(f.value.provenance).toEqual({ reader: READER, classifier: CLASSIFIER, readingContractVersion: READING_CONTRACT_VERSION });
     expect('frozenAt' in f.value.provenance).toBe(false);
     expect('id' in f.value).toBe(false);
   });
@@ -124,5 +124,83 @@ describe('freezeReading', () => {
     expect(observationKey(6)).toBe('o7');
     expect(structureDependencyOf([{ kind: 'structure-topology' }])).toEqual({ kind: 'authored-structure' });
     expect(structureDependencyOf([{ kind: 'section', sectionId: 's0' }])).toEqual({ kind: 'independent' });
+  });
+});
+
+
+describe('WS2-07-F1 · reading contract v2 — the taxonomy may no longer veto an observation', () => {
+  /* Observation has ontological priority over classification: the taxonomy may
+     describe a developmental observation, but it may neither manufacture one
+     nor veto one. */
+
+  it('THE REGRESSION SPECIMEN — valid · declined · valid: all three observations survive, B carries no phenomenon KEY', () => {
+    const f = freezeReading({
+      manuscriptId: 'm1', request: request(),
+      result: claims('A stands.', 'B stands.', 'C stands.'),
+      phenomena: ['movement', undefined, 'recurrence'],
+      reader: READER, classifier: CLASSIFIER,
+    });
+    expect(f.ok).toBe(true);
+    if (!f.ok) return;
+
+    /* All three exist. A decline did not destroy the reading, and did not
+       destroy its siblings' taxonomy either. */
+    expect(f.value.observations.map((o) => o.key)).toEqual(['o1', 'o2', 'o3']);
+    expect(f.value.observations[0]!.phenomenon).toBe('movement');
+    expect(f.value.observations[2]!.phenomenon).toBe('recurrence');
+
+    /* Omission, not `phenomenon: undefined` — one representation of "no
+       taxonomy claim", which is what the migration's null-refusal enforces. */
+    expect('phenomenon' in f.value.observations[1]!).toBe(false);
+
+    /* The declined observation is a COMPLETE observation. Nothing about it is
+       degraded: text verbatim, evidence bound, limits carried. */
+    expect(f.value.observations[1]!.observation).toBe('B stands.');
+    expect(f.value.observations[1]!.evidenceRefs.length).toBeGreaterThan(0);
+    expect(f.value.observations[1]!.doesNotEstablish).toEqual(['across-unread-span']);
+  });
+
+  it('every observation declined — the reading is still a reading, and the classifier is still identified', () => {
+    const f = freezeReading({
+      manuscriptId: 'm1', request: request(), result: claims('one', 'two'),
+      phenomena: [undefined, undefined], reader: READER, classifier: CLASSIFIER,
+    });
+    expect(f.ok).toBe(true);
+    if (!f.ok) return;
+    expect(f.value.outcome).toBe('reading');
+    expect(f.value.observations.map((o) => 'phenomenon' in o)).toEqual([false, false]);
+    /* INV-25: null iff classification was not INVOKED. It was invoked here and
+       declined everything, so the identity stands. Ran-and-declined is derived
+       from this plus the absences above — never stored as a flag. */
+    expect(f.value.provenance.classifier).toEqual(CLASSIFIER);
+  });
+
+  it('a DEFINED value outside the eight is malformed output, not a decline, and still refuses the whole freeze', () => {
+    const f = freezeReading({
+      manuscriptId: 'm1', request: request(), result: claims('one', 'two'),
+      phenomena: ['movement', 'banana' as never], reader: READER, classifier: CLASSIFIER,
+    });
+    expect(f.ok ? 'ok' : f.refusal).toBe('unknown_phenomenon');
+  });
+
+  it('every frozen reading carries the v2 contract version; a none reading carries it too', () => {
+    const withClaims = freezeReading({
+      manuscriptId: 'm1', request: request(), result: claims('one'),
+      phenomena: [undefined], reader: READER, classifier: CLASSIFIER,
+    });
+    expect(withClaims.ok && withClaims.value.provenance.readingContractVersion)
+      .toBe(READING_CONTRACT_VERSION);
+
+    const none = freezeReading({
+      manuscriptId: 'm1', request: request(),
+      result: { outcome: 'none', reader: READER } as never,
+      phenomena: [], reader: READER, classifier: null,
+    });
+    if (none.ok) {
+      expect(none.value.provenance.readingContractVersion).toBe(READING_CONTRACT_VERSION);
+      /* INV-25 the other way: no observations, so classification was never
+         invoked, so the identity is null. */
+      expect(none.value.provenance.classifier).toBeNull();
+    }
   });
 });

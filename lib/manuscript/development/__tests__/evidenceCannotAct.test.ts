@@ -86,7 +86,11 @@ describe('the developmental-evidence substrate cannot act', () => {
     /* BUILD-07C (opened 2026-09-04) is a different unit with its own authorized
        schema — the reading store, not the evidence object. It is named here so
        the claim stays exact: the EVIDENCE substrate has no table of its own. */
-    const OTHER_UNITS_SCHEMA = /^20260904000001_developmental_readings\.sql$/;
+    /* WS2-07-F1's post-acceptance correction (2026-09-04) replaces the 07C
+       reading store's validation function so a declined phenomenon may be
+       omitted. It is the READING store again, not an evidence table, so the
+       claim below is unchanged: the EVIDENCE substrate still has no schema. */
+    const OTHER_UNITS_SCHEMA = /^20260904000001_developmental_readings\.sql$|^20260904000002_developmental_reading_contract_v2\.sql$/;
     const migrations = readdirSync(join(ROOT, 'database', 'migrations'));
     expect(migrations.filter((f) => f >= '20260903' && !OTHER_UNITS_SCHEMA.test(f)
       && /develop|evidence|reading|observation/i.test(f))).toEqual([]);
