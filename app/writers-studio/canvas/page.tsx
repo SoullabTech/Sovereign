@@ -1,79 +1,142 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { apiFetch } from '@/lib/http/apiBase';
-import { PRESS, SERIF } from '../pressTheme';
-import { DEVELOP_HREF, IMPORT_HREF, SOURCE_HREF } from '../studioMap';
-import { UNTITLED_EXPRESSION } from '../shellIdentity';
-import { canvasForManuscript } from '../canvasIdentity';
-import { arrivalWork, useLivingWorks } from '../useLivingWorks';
-import type { CurrentManuscript } from '../useCurrentManuscript';
+import { PRESS } from '../pressTheme';
 import {
-  formatWhen,
-  loadRevisions,
-  pageEstimate,
-  type RevisionSummary,
-} from '../../press/manuscript/workingDraftClient';
+  BREAKPOINT,
+  GOLD,
+  GROUND,
+  INK,
+  MAIA_ACCENT,
+  MEASURE,
+  RADIUS,
+  RULE,
+  SPACE,
+  writingFieldLayout,
+  type StudioLayout,
+} from '../studioTheme';
+import { StudioPanel } from '../studio/StudioPanel';
+import { StudioShellRail } from '../studio/StudioRail';
+import { WriterStudioShell } from '../studio/WriterStudioShell';
+import { StudioModeBar } from '../studio/StudioModeBar';
+import { StudioScrollbars } from '../studio/StudioScrollbars';
+import { StudioText } from '../studio/StudioType';
+import { IMPORT_HREF } from '../studioMap';
+import {
+  canvasForManuscript,
+  requestedManuscriptId,
+  resolveManuscript,
+  type ManuscriptResolution,
+} from '../canvasIdentity';
+import { UNTITLED_EXPRESSION } from '../shellIdentity';
+import { useLivingWorks } from '../useLivingWorks';
+import { resolveWorkContext, currentWork, mintStudioConversationId } from '../workContext';
+import type { CurrentManuscript } from '../useCurrentManuscript';
+import { loadRevisions, type RevisionSummary } from '../../press/manuscript/workingDraftClient';
 import Worktable from './Worktable';
+import SectionWritingSession from './SectionWritingSession';
+import SectionWritingSurface from './SectionWritingSurface';
+import {
+  chooseMount,
+  fetchWriteState,
+  type WriteState,
+  type WriteMount,
+} from '@/lib/writersStudio/writeStateClient';
+import type { SectionWriting } from '@/lib/writersStudio/useSectionWriting';
 import WorkDrawer from './WorkDrawer';
 import MaterialsDrawer from './MaterialsDrawer';
-import { requestStructureReading } from '@/lib/writersStudio/reviewClient';
+import ManuscriptOutline, { useManuscriptSections } from './ManuscriptOutline';
+import StructuredOutline from './StructuredOutline';
+import StructureReview from './StructureReview';
+import ReadingsEntry from './ReadingsEntry';
+import MaiaColumn from './MaiaColumn';
+import StudioConversation from './StudioConversation';
+import StudioLowerBand from './StudioLowerBand';
 
 /**
- * Writer Canvas — the room. v0.1 of the environment all Writer Studio entry
- * paths lead into.
+ * THE WRITER'S STUDIO — the persistent shell, at /writers-studio/canvas.
  *
- * Design authority: docs/design/author-studio/WRITER_CANVAS_ROOM_MAP_2026-08-05
- * .md as amended by the persona walk (A1–A6), built inside the boundary of
- * WRITER_CANVAS_V01_IMPLEMENTATION_BOUNDARY_2026-08-05.md — the room structure
- * with ONE real instrument (the Worktable writing surface). Everything else is
- * folded or absent, honestly.
+ * ── WHAT 03A WAS, AND WHY THIS IS DIFFERENT ────────────────────────────────
  *
- * Three zones (builder names; they never appear on the walls):
- *   Study Wall — folded drawer spine on the left: Work · Materials ·
- *                Structure (only when the import carried sections) · History.
- *   Worktable  — the center. The draft, mid-motion. See Worktable.tsx.
- *   Window     — MAIA's folded presence on the right. v0.1 opens to one honest
- *                sentence and nothing else: no reflection endpoint exists on
- *                this surface, and a beautiful empty panel would be worse than
- *                a folded one.
+ * WS2-03A routed the accepted WS2-02 primitives into this room and stopped.
+ * The result looked like the old Canvas because it WAS the old Canvas: a
+ * folded drawer spine showing one drawer at a time, with a rail bolted to its
+ * left edge. New paint, old composition. The founder's reading of it —
+ * "the projection seam" — is exactly right, and 03B is the composition.
  *
- * What this room deliberately does NOT claim:
- *   · that the manuscript belongs to the Work. Nothing writes
- *     living_work_expressions yet — so the head of the room names the thing
- *     ACTUALLY on the table (the manuscript), and the declared Work lives in
- *     the Work drawer, explicitly unlinked. The v0.1 shape (Work as headline,
- *     manuscript beneath it) read as belonging the moment a member had both:
- *     the persona walk's novelist found her book headlined by an unrelated
- *     work. Display may not draw a containment the data does not hold.
- *   · which of several Works the member returned to (arrivalWork declines to
- *     guess; so does this room).
- *   · any inferred state. The orientation line is authored facts only: the
- *     draft exists, it was last touched at a time.
+ * What changed structurally:
+ *
+ *   GONE  the vertical drawer spine, and the one-drawer-at-a-time rule that
+ *         made the manuscript share the room with a 288px accordion.
+ *   GONE  the folded Window, a 40px strip that had to be pried open before
+ *         MAIA had any presence at all.
+ *   NEW   the five-mode bar, the sixteen-destination shell rail, a standing
+ *         outline column, the writing field at its MEASURED share, MAIA as a
+ *         column rather than a hinge, Materials in 04's right-hand geometry,
+ *         and the lower band 04 carries and this room never had.
+ *
+ * ── GEOMETRY: THE MEASURED PROPORTIONS, AT EVERY WIDTH ─────────────────────
+ *
+ * 03A could not adjudicate column proportion, because this room had a
+ * different column set. It now has 04's. `writingFieldLayout` allocates the
+ * measured gutters first and divides the remainder in the measured ratio; the
+ * result is resolved here as PERCENTAGES rather than at one assumed viewport,
+ * so the reference proportions hold at 1680 and at 1280 alike and no layout
+ * depends on reading `window` during render.
+ *
+ * The column SET varies with what is honestly present — a dismissed panel
+ * leaves the row and its share is redivided among the rest in the same
+ * measured ratio. What never varies: the writing field is an explicit width,
+ * never a `flex: 1` remainder. That was the WS2-02B defect and it is the one
+ * failure mode this layout is built to make impossible.
+ *
+ * ── WHAT IS REAL IN THIS ROOM, REGION BY REGION ────────────────────────────
+ *
+ *   mode bar     WRITE real. Develop/Explore/Review/Publish have no rooms and
+ *                are unpressable spans.
+ *   shell rail   Home and Export are routes. Manuscript is this room.
+ *                Materials, Structure and Versions are satisfied HERE as
+ *                panels. Notes, Goals and the whole MAIA band are unavailable.
+ *   outline      REAL sections from manuscript_sections.
+ *   field        REAL. The Working Draft engine, unchanged.
+ *   MAIA         Present, honest, and holding no member material.
+ *   materials    REAL declarations only. Opens when there are some.
+ *   lower band   Versions and Statistics real; Goals has no substrate.
+ *
+ * ── IDENTITY: THE WS2-01 MINIMUM, HELD HERE ────────────────────────────────
+ *
+ * This room used to read `manuscripts.find(...) ?? manuscripts[0]`. A named
+ * manuscript that could not be found was silently replaced by whichever came
+ * back first, and the room then told the member "the most recent of your N
+ * manuscripts is on the table" — a true sentence about the wrong book.
+ *
+ * `resolveManuscript` returns a decision, and every branch of it is rendered:
+ * an unresolvable identity REFUSES, and an unnamed arrival with several
+ * manuscripts ASKS. Neither substitutes. Root-causing how a member came to be
+ * sent an id they do not own stays in the WS2-01 lane; this room's job is to
+ * stop being the place where that becomes invisible.
  */
 
-type DrawerId = 'work' | 'materials' | 'structure' | 'develop' | 'history';
-type ListPhase = 'loading' | 'ready' | 'none' | 'unauthorized' | 'error';
+/** Panels that can stand in the row beside the field. */
+type ColumnId = 'outline' | 'maia' | 'materials' | 'conversation';
 
-/** Same rule as Studio Home: return by identity, never by position. */
-const byIdentity = (href: string, manuscriptId: string) =>
-  `${href}&m=${encodeURIComponent(manuscriptId)}`;
+/** Rail destinations this room satisfies in place rather than by navigation. */
+const SATISFIED_IN_ROOM = ['materials', 'structure', 'versions', 'conversations'] as const;
 
-const WINDOW_SENTENCE =
-  'Reflection with MAIA will become available when this Work can carry its context.';
-
-export default function WriterCanvasPage() {
+export default function WritersStudioPage() {
   const { phase: worksPhase, works, reload: reloadWorks } = useLivingWorks();
-  const work = arrivalWork(worksPhase, works);
 
-  const [listPhase, setListPhase] = useState<ListPhase>('loading');
+  const [listPhase, setListPhase] = useState<
+    'loading' | 'ready' | 'unauthorized' | 'error'
+  >('loading');
   const [manuscripts, setManuscripts] = useState<CurrentManuscript[]>([]);
-  // Read once, synchronously on the client, so the table never swaps its
+
+  // Read once, synchronously on the client, so the field never swaps its
   // manuscript after mounting (the exit guard would flush a draft mid-swap).
-  const [requested] = useState<string | null>(() =>
-    typeof window === 'undefined' ? null : new URLSearchParams(window.location.search).get('m'),
+  const [requested, setRequested] = useState<string | null>(() =>
+    typeof window === 'undefined' ? null : requestedManuscriptId(window.location.search),
   );
 
   useEffect(() => {
@@ -85,10 +148,9 @@ export default function WriterCanvasPage() {
         if (res.status === 401) return setListPhase('unauthorized');
         if (!res.ok) return setListPhase('error');
         const data = await res.json();
-        const list: CurrentManuscript[] = Array.isArray(data.manuscripts) ? data.manuscripts : [];
         if (cancelled) return;
-        setManuscripts(list);
-        setListPhase(list.length > 0 ? 'ready' : 'none');
+        setManuscripts(Array.isArray(data.manuscripts) ? data.manuscripts : []);
+        setListPhase('ready');
       } catch {
         if (!cancelled) setListPhase('error');
       }
@@ -98,32 +160,87 @@ export default function WriterCanvasPage() {
     };
   }, []);
 
-  // By identity when asked; most recent otherwise — degrading, not stranding,
-  // when the asked-for id is gone.
-  const manuscript =
-    listPhase === 'ready'
-      ? (manuscripts.find((m) => m.id === requested) ?? manuscripts[0] ?? null)
-      : null;
+  const resolution = useMemo(
+    () => resolveManuscript(requested, manuscripts),
+    [requested, manuscripts],
+  );
+  const manuscript = resolution.kind === 'resolved' ? resolution.manuscript : null;
 
-  const [drawer, setDrawer] = useState<DrawerId | null>(null);
+  /* PERSISTENT WORK CONTEXT, ACROSS RELOAD.
+     The manuscript identity is pinned into the URL whenever one is resolved.
+     That is what makes reload preserve the current Work: the Work is
+     re-derived from the member's declarations for THIS manuscript, so pinning
+     the manuscript pins the Work — without storing a second, staleable copy
+     of it anywhere.
 
-  /* The reading gesture. THREE STATES, and 'failed' is its own — a reading
-     that did not happen is a fact about the machine, never a reading in
-     which MAIA found nothing. Those are different facts about a member's
-     book and only one of them is about the book. */
-  const router = useRouter();
-  const [reading, setReading] = useState<'idle' | 'reading' | 'failed'>('idle');
-  const [windowOpen, setWindowOpen] = useState(false);
+     CORRECTED after the first authenticated capture. This effect used to skip
+     whenever `wasRequested` was true, on the reasoning that an identity that
+     came FROM the URL is already in it. That reasoning had a hole: choosing a
+     manuscript in the ambiguity chooser also sets `requested`, in React state
+     and nowhere else. So the founder's own session — four manuscripts, none
+     named, one chosen — ran with a bare /writers-studio/canvas in the address
+     bar, and a reload would have dropped them back at the chooser. The
+     capture is what showed it; no test could, because the URL is the one
+     piece of state the room does not own.
+
+     The condition is now about the URL rather than about provenance: pin
+     whenever what is on the table differs from what the address bar names. */
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (resolution.kind !== 'resolved') return;
+    const id = resolution.manuscript.id;
+    if (requestedManuscriptId(window.location.search) === id) return;
+    window.history.replaceState(
+      null,
+      '',
+      canvasForManuscript(window.location.pathname, id),
+    );
+  }, [resolution]);
+
+  const workContext = resolveWorkContext(worksPhase, works, manuscript?.id ?? null);
+  const work = currentWork(workContext);
+
+  const { phase: sectionsPhase, sections } = useManuscriptSections(manuscript?.id ?? null);
+
+  /* ── WS2-04B: which engine may write this draft. Resolved by the server in
+     one response; the room never assembles it from parts. */
+  const [writePhase, setWritePhase] = useState<'loading' | 'ready' | 'error'>('loading');
+  const [writeState, setWriteState] = useState<WriteState | null>(null);
+  const [writing, setWriting] = useState<SectionWriting | null>(null);
+
+  useEffect(() => {
+    const id = manuscript?.id;
+    if (!id) { setWritePhase('loading'); setWriteState(null); return; }
+    let cancelled = false;
+    setWritePhase('loading');
+    setWriteState(null);
+    (async () => {
+      const r = await fetchWriteState(id, (url) => apiFetch(url));
+      if (cancelled) return;
+      setWritePhase(r.phase);
+      setWriteState(r.state);
+    })();
+    return () => { cancelled = true; };
+  }, [manuscript?.id]);
+
+  const writeMount = chooseMount(writePhase, writeState);
+  /* Development only, and only when a witness asks: holds the save RESPONSE so
+     a section can be seen still saving while the next opens. */
+  const witnessDelayMs =
+    typeof window === 'undefined'
+      ? undefined
+      : Number(new URLSearchParams(window.location.search).get('witnessDelayMs') ?? 0) || undefined;
+
   const [draftMeta, setDraftMeta] = useState<{
     updatedAt: string | null;
     revisionCount: number | null;
+    words: number;
   } | null>(null);
 
-  // History drawer contents — read when opened, re-read after a kept version.
   const [revisions, setRevisions] = useState<RevisionSummary[] | null>(null);
   const [historyKey, setHistoryKey] = useState(0);
   useEffect(() => {
-    if (drawer !== 'history' || !manuscript) return;
+    if (!manuscript) return;
     let cancelled = false;
     (async () => {
       const r = await loadRevisions(apiFetch, manuscript.id);
@@ -132,408 +249,717 @@ export default function WriterCanvasPage() {
     return () => {
       cancelled = true;
     };
-  }, [drawer, manuscript, historyKey]);
+  }, [manuscript, historyKey]);
 
-  // ---- Signed out ---------------------------------------------------------
+  /* ── WHAT STANDS OPEN, AND WHY ──────────────────────────────────────────
+     The outline is not contextual by contract — it is standing furniture the
+     member may dismiss. MAIA is present because §1 makes her a companion
+     across the modes, and dismissible because her panel contract says so.
+
+     MATERIALS IS THE DELICATE ONE. 04 draws it open, and the founder's rule
+     is explicit: Materials are NOT permanent furniture just because the
+     reference depicts them open. So it is not open by default and it is not
+     closed by default either — it is CONTEXTUAL, which is what its contract
+     actually says. It opens when the current Work has materials the member
+     declared, and stays shut when there is nothing real to hold. Opening an
+     empty Materials column to reach 04's five would be furniture pretending
+     to be context. */
+  const [dismissed, setDismissed] = useState<Partial<Record<ColumnId, boolean>>>({});
+  const [summoned, setSummoned] = useState<Partial<Record<ColumnId, boolean>>>({});
+  const [bandOpen, setBandOpen] = useState(true);
+  const [workOpen, setWorkOpen] = useState(false);
+  /* WS2-05B - the reading being looked at, or null. It takes the outline's
+     place rather than becoming a seventh column: a proposal is ABOUT the
+     manuscript column, and two structure columns side by side would invite the
+     reading to be mistaken for the Work. */
+  const [readingId, setReadingId] = useState<string | null>(null);
+
+  const declaredMaterials = work?.materials.length ?? 0;
+  const materialsInContext = declaredMaterials > 0;
+
+  const open = (id: ColumnId, standing: boolean) =>
+    summoned[id] === true || (standing && dismissed[id] !== true);
+
+  const outlineOpen = open('outline', sections.length > 0);
+  const maiaOpen = open('maia', true);
+  const materialsOpen = open('materials', materialsInContext);
+
+  /* 📖 WS2-03D — the conversation, open in this room rather than away from it.
+     Gated on a declared Work for the same reason Conversations is: with none
+     there is nothing to situate, and the room does not choose between several. */
+  const conversationOpen = summoned.conversation === true && Boolean(work);
+
+  /* Minted once per page life, when the panel first opens — never discovered.
+     Dismissing and reopening the panel continues the SAME exchange; a reload
+     starts a new one, because asking "which conversation was this Work's?" is
+     a most-recent question and this lane refuses those. */
+  const [conversationId] = useState(mintStudioConversationId);
+
+  const [compact, setCompact] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia(`(max-width: ${BREAKPOINT.compact - 1}px)`);
+    const sync = () => setCompact(mq.matches);
+    sync();
+    mq.addEventListener('change', sync);
+    return () => mq.removeEventListener('change', sync);
+  }, []);
+
+  /* At compact the ONE collapse either reference establishes applies:
+     Materials yields its right-hand column before the outline does, and
+     before the field gives up its measure (YIELDS_BEFORE). It is not deleted
+     — PRESENT_AT_COMPACT keeps it — it simply cannot hold a column here. */
+  const columnsShown = useMemo(() => {
+    const cols: Array<keyof StudioLayout> = ['rail'];
+    if (outlineOpen) cols.push('outlinePanel');
+    cols.push('writingField');
+    if (maiaOpen) cols.push('maiaPanel');
+    /* Reserved while conversing even though Materials is not drawn: MAIA takes
+       that share, so the writing field keeps EXACTLY its measured width.
+       Opening a conversation must never shrink the manuscript — that is the
+       whole point of speaking with MAIA beside the Work rather than instead
+       of it. */
+    if ((materialsOpen || conversationOpen) && !compact) cols.push('materialsPanel');
+    return cols as Array<'rail' | 'outlinePanel' | 'writingField' | 'maiaPanel' | 'materialsPanel'>;
+  }, [outlineOpen, maiaOpen, materialsOpen, conversationOpen, compact]);
+
+  /* Resolved at a large notional width and expressed as percentages, so the
+     MEASURED ratio holds at every viewport and nothing reads `window` during
+     render. writingFieldLayout still owns the arithmetic. */
+  const NOTIONAL = 100000;
+  const L = writingFieldLayout(NOTIONAL, columnsShown);
+  const pct = (n: number) => `${((n / NOTIONAL) * 100).toFixed(4)}%`;
+
+  const summon = useCallback((id: ColumnId) => {
+    setSummoned((s) => ({ ...s, [id]: true }));
+    setDismissed((d) => ({ ...d, [id]: false }));
+  }, []);
+  const dismiss = useCallback((id: ColumnId) => {
+    setSummoned((s) => ({ ...s, [id]: false }));
+    setDismissed((d) => ({ ...d, [id]: true }));
+  }, []);
+
+  // ── Signed out ───────────────────────────────────────────────────────────
   if (listPhase === 'unauthorized') {
     return (
-      <div
-        className="min-h-screen flex items-center justify-center px-6 text-center"
-        style={{ background: PRESS.bg, color: PRESS.text, fontFamily: SERIF }}
-      >
-        <div className="max-w-sm">
-          <p className="text-[13px] tracking-[0.25em] uppercase opacity-50 mb-3">Writer Canvas</p>
-          <p className="text-[15px] leading-relaxed opacity-70">
-            The Canvas holds your own words, so it opens only to you.{' '}
-            <a href="/signin" className="underline underline-offset-4">
-              Sign in
-            </a>{' '}
-            to enter.
-          </p>
+      <Bare>
+        The Studio holds your own words, so it opens only to you.{' '}
+        <a href="/signin" style={{ textDecoration: 'underline' }}>
+          Sign in
+        </a>{' '}
+        to enter.
+      </Bare>
+    );
+  }
+
+  const manuscriptLabel = manuscript ? (manuscript.title ?? UNTITLED_EXPRESSION) : '';
+  const headline = work?.title ?? (manuscript ? manuscriptLabel : 'Writer’s Studio');
+  const named = Boolean(work?.title ?? manuscript?.title);
+
+  /* 📖 WS2-03D — Conversations opens HERE.
+     
+     At 03C it was a link to /maia, and the founder's runtime witness showed
+     what that costs: speaking with MAIA ejected the writer from the Studio,
+     the manuscript vanished, and the Work went with it. MAIA is adjacent to
+     the Work — not a destination you abandon your book to reach.
+     
+     So Conversations joins Materials, Structure and Versions as a destination
+     this room satisfies in place. The /maia handoff is not discarded; it
+     becomes the explicit "Open in MAIA" inside the panel.
+     
+     The gate is unchanged: exactly one declared Work. None, and there is
+     nothing to situate; several, and the room does not choose. */
+  const railCounts: Record<string, number> = {};
+  if (manuscript) {
+    railCounts.structure = sections.length;
+    railCounts.versions = revisions?.length ?? 0;
+    if (work) railCounts.materials = declaredMaterials;
+  }
+
+  /* The header's right-hand controls are Write's own, so the shell takes them
+     as a slot rather than knowing about them. */
+  const headerRight = (
+    <>
+        {/* ── WS2-03B correction: a way back to MAIA ────────────────────────
+            Her panel was dismissible with no route home. Every other panel is
+            re-opened from the rail, but her whole rail band is unavailable and
+            must stay that way — so a control had to exist somewhere else.
+
+            It is deliberately a SHOW/HIDE TOGGLE and not a destination: it
+            carries aria-pressed rather than an href, it sits in the header
+            chrome rather than in the rail's grammar, and its label names the
+            panel it reveals. Putting a live "MAIA" entry in the rail would
+            have fixed the same bug by making the MAIA band look reachable,
+            which is precisely the promise WS2-03B refuses to make. */}
+        <button
+          type="button"
+          data-panel-toggle="maia"
+          aria-pressed={maiaOpen}
+          onClick={() => (maiaOpen ? dismiss('maia') : summon('maia'))}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: SPACE.snug,
+            background: maiaOpen ? GROUND.active : 'transparent',
+            border: `1px solid ${maiaOpen ? RULE.soft : RULE.quiet}`,
+            borderRadius: RADIUS.pill,
+            padding: `${SPACE.tight}px ${SPACE.base}px`,
+            cursor: 'pointer',
+            marginRight: SPACE.base,
+          }}
+        >
+          <span
+            aria-hidden="true"
+            style={{
+              width: 6,
+              height: 6,
+              borderRadius: RADIUS.pill,
+              background: maiaOpen ? MAIA_ACCENT.voice : 'transparent',
+              border: `1px solid ${MAIA_ACCENT.voice}`,
+            }}
+          />
+          <StudioText role="metadata" as="span" tone={maiaOpen ? 'secondary' : 'quiet'}>
+            MAIA
+          </StudioText>
+        </button>
+        {draftMeta && (
+          <StudioText role="metadata" as="span">
+            {draftMeta.words.toLocaleString()} words
+          </StudioText>
+        )}
+    </>
+  );
+
+  const lowerBand = (
+    <>
+      {/* ══ LOWER BAND ══════════════════════════════════════════════════ */}
+      {bandOpen && manuscript && (
+        <StudioLowerBand
+          revisions={revisions}
+          wordCount={draftMeta?.words ?? null}
+          sectionCount={
+            writeMount.mount === 'sections'
+              ? writeMount.rows.length
+              : sectionsPhase === 'ready' ? sections.length : null
+          }
+          outlineOpen={outlineOpen}
+          onShowOutline={() => summon('outline')}
+          onDismiss={() => setBandOpen(false)}
+        />
+      )}
+    </>
+  );
+
+  return (
+    <WriterStudioShell
+      currentMode="write"
+      manuscriptId={manuscript?.id ?? null}
+      workName={headline}
+      workNamed={named}
+      /* The member's own statement, in their words, only when their own
+         declaration united a Work with what is on the table. */
+      workNote={
+        work?.purpose ? work.purpose
+          : work && manuscript ? `${manuscriptLabel} — a form of this work, declared by you`
+          : null
+      }
+      headerRight={headerRight}
+      lowerBand={lowerBand}
+      bodyGutter={pct(L.gutter)}
+      compact={compact}
+    >
+
+        <StudioShellRail
+          hasManuscript={Boolean(manuscript)}
+          counts={railCounts}
+          satisfiedInRoom={manuscript ? SATISFIED_IN_ROOM : []}
+          manuscriptId={manuscript?.id ?? null}
+          current="manuscript"
+          openPanels={[
+            ...(materialsOpen ? ['materials'] : []),
+            ...(outlineOpen ? ['structure'] : []),
+            ...(bandOpen ? ['versions'] : []),
+            ...(conversationOpen ? ['conversations'] : []),
+          ]}
+          onSelect={(d) => {
+            if (d.id === 'materials') summon('materials');
+            if (d.id === 'structure') summon('outline');
+            if (d.id === 'versions') setBandOpen(true);
+            if (d.id === 'conversations') {
+              summon('conversation');
+              summon('maia');
+            }
+          }}
+          lead={
+            <button
+              type="button"
+              onClick={() => setWorkOpen((v) => !v)}
+              aria-expanded={workOpen}
+              style={{
+                display: 'block',
+                width: '100%',
+                textAlign: 'left',
+                background: workOpen ? GROUND.active : 'transparent',
+                border: `1px solid ${workOpen ? GOLD.edge : RULE.soft}`,
+                borderRadius: RADIUS.base,
+                padding: `${SPACE.tight + 1}px ${SPACE.base}px`,
+                marginBottom: SPACE.comfortable,
+                cursor: 'pointer',
+              }}
+            >
+              <StudioText role="navItem" as="span" tone={workOpen ? 'primary' : 'secondary'}>
+                This work
+              </StudioText>
+            </button>
+          }
+          style={{
+            width: compact ? '100%' : pct(L.rail),
+            flexShrink: 0,
+            borderRadius: RADIUS.panel,
+            /* WS2-03B correction 2 — the rail is a rounded column here, not a
+               flush edge, so its right-only hairline had nothing to divide.
+               It joins the quiet chrome; the writing field keeps the only
+               visible border in the row. */
+            border: `1px solid ${RULE.quiet}`,
+            borderRight: `1px solid ${RULE.quiet}`,
+          }}
+        />
+
+        {/* The Work drawer — identity and declarations, member-authored. It is
+            not a column in 04 and is not invented as one: it opens from the
+            rail's head into the outline's place. */}
+        {workOpen && (
+          <StudioPanel
+            role="manuscript-outline"
+            label="This work"
+            onDismiss={() => setWorkOpen(false)}
+            style={{ width: compact ? '100%' : pct(L.outlinePanel), flexShrink: 0 }}
+          >
+            <WorkDrawer
+              works={works}
+              unitedWork={work}
+              manuscript={manuscript ? { id: manuscript.id, title: manuscript.title } : null}
+              manuscriptLabel={manuscriptLabel}
+              onChanged={reloadWorks}
+            />
+          </StudioPanel>
+        )}
+
+        {/* WS2-05B - a reading of this Work, in the manuscript column's place.
+            THE SAME PANEL ROLE, RELABELLED. No seventh panel is invented: the
+            contract's roles are read from the two reference architectures, and
+            neither shows one for this. A proposal is ABOUT the manuscript
+            column, so it takes that column's place and its label says which of
+            the two the member is looking at.
+            READ AND REVIEW ONLY. There is no adoption endpoint to reach from
+            here, so leaving the room leaves the Work exactly as it was. */}
+        {!workOpen && outlineOpen && readingId && manuscript?.id && (
+          <StudioPanel
+            role="manuscript-outline"
+            label="A reading"
+            onDismiss={() => setReadingId(null)}
+            style={{ width: compact ? '100%' : pct(L.outlinePanel), flexShrink: 0 }}
+          >
+            <StructureReview manuscriptId={manuscript.id} proposalId={readingId} />
+          </StudioPanel>
+        )}
+
+        {!workOpen && outlineOpen && !readingId && (
+          <StudioPanel
+            role="manuscript-outline"
+            label="Manuscript"
+            onDismiss={() => dismiss('outline')}
+            style={{ width: compact ? '100%' : pct(L.outlinePanel), flexShrink: 0 }}
+          >
+            {/* ONE NAMESPACE AT A TIME. In section_aware the rows are
+                manuscript_draft_sections ids and carry navigation; in every
+                other mode they are the immutable Source and carry none.
+                Combining Source rows with navigation callbacks would produce a
+                column that looks wired and misses every click. */}
+            {writeMount.mount === 'sections' && writing && manuscript?.id ? (
+              /* WS2-05A — the same navigable rows, grouped by whatever the
+                 member has authored. With no divisions yet it renders exactly
+                 the flat list this column has always shown; unplaced sections
+                 are never hidden. */
+              <>
+                <StructuredOutline
+                  manuscriptId={manuscript.id}
+                  sections={writeMount.rows}
+                  activeId={writing.activeId}
+                  statusOf={writing.statusOf}
+                  onSelect={writing.goToSection}
+                />
+                {/* Renders NOTHING when no reading exists. The absence of an
+                    interpreter must look like absence, not like an offer. */}
+                <ReadingsEntry manuscriptId={manuscript.id} onOpen={setReadingId} />
+              </>
+            ) : writeMount.mount === 'sections' && writing ? (
+              <ManuscriptOutline
+                manuscriptId={manuscript?.id ?? null}
+                phase="ready"
+                sections={writeMount.rows}
+                activeId={writing.activeId}
+                statusOf={writing.statusOf}
+                onSelect={writing.goToSection}
+              />
+            ) : (
+              <>
+                <ManuscriptOutline
+                  manuscriptId={manuscript?.id ?? null}
+                  phase={sectionsPhase}
+                  sections={sections}
+                />
+                {writeMount.mount === 'worktable' && writeMount.notice && (
+                  <div style={{ marginTop: SPACE.comfortable, maxWidth: '34ch' }}>
+                    <StudioText role="metadata" style={{ marginBottom: SPACE.tight }}>
+                      {writeMount.notice.title}
+                    </StudioText>
+                    {writeMount.notice.body && (
+                      <StudioText role="quiet">{writeMount.notice.body}</StudioText>
+                    )}
+                  </div>
+                )}
+              </>
+            )}
+          </StudioPanel>
+        )}
+
+        {/* ══ THE WRITING FIELD — the largest, quietest surface ══════════ */}
+        <main
+          data-panel-role="writing-field"
+          style={{
+            width: compact ? '100%' : pct(L.writingField),
+            flexShrink: 0,
+            minWidth: compact ? 0 : MEASURE.fieldMinWidth,
+            minHeight: compact ? '60vh' : 0,
+            background: GROUND.field,
+            border: `1px solid ${RULE.soft}`,
+            borderRadius: RADIUS.panel,
+            display: 'flex',
+            flexDirection: 'column',
+            overflow: 'auto',
+          }}
+        >
+          <div
+            style={{
+              flex: 1,
+              display: 'flex',
+              flexDirection: 'column',
+              minHeight: 0,
+              width: '100%',
+              maxWidth: `${MEASURE.prose}ch`,
+              margin: '0 auto',
+              /* WS2-03B correction 2. The manuscript is the centre of gravity
+                 and was reading as one pane among four. Its measure and its
+                 column width are unchanged — MEASURE.prose and the geometry
+                 are measured values and not this correction's to move. What
+                 it gets is air: the field breathes where the panels do not. */
+              padding: `${SPACE.band}px ${MEASURE.roomGutter}px ${SPACE.generous}px`,
+            }}
+          >
+            <FieldBody
+              writeMount={writeMount}
+              witnessDelayMs={witnessDelayMs}
+              onWriting={setWriting}
+              listPhase={listPhase}
+              resolution={resolution}
+              manuscript={manuscript}
+              onPick={(id) => setRequested(id)}
+              onMeta={setDraftMeta}
+              onCheckpointed={() => setHistoryKey((k) => k + 1)}
+            />
+          </div>
+        </main>
+
+        {maiaOpen && (
+          <StudioPanel
+            role="maia"
+            label={conversationOpen ? 'MAIA · conversation' : 'MAIA'}
+            onDismiss={() => {
+              /* Dismissing the region closes the conversation with it. The
+                 exchange itself is not lost — reopening within this page
+                 continues the same conversation id. */
+              dismiss('maia');
+              dismiss('conversation');
+            }}
+            style={{
+              width: compact
+                ? '100%'
+                : conversationOpen
+                  ? pct(L.maiaPanel + L.materialsPanel + L.gutter)
+                  : pct(L.maiaPanel),
+              flexShrink: 0,
+            }}
+          >
+            {conversationOpen && work && manuscript ? (
+              <StudioConversation
+                work={work}
+                manuscriptId={manuscript.id}
+                conversationId={conversationId}
+                /* Puts her away without ending the exchange: the panel is
+                   hidden by `dismiss`, never unmounted, so calling her forward
+                   again returns to the same conversation. */
+                onClose={() => dismiss('conversation')}
+              />
+            ) : (
+              <MaiaColumn context={workContext} />
+            )}
+          </StudioPanel>
+        )}
+
+        {materialsOpen && !conversationOpen && !compact && (
+          <StudioPanel
+            role="materials"
+            label="Materials"
+            count={declaredMaterials || undefined}
+            onDismiss={() => dismiss('materials')}
+            style={{ width: pct(L.materialsPanel), flexShrink: 0 }}
+          >
+            <MaterialsDrawer
+              work={work ?? (works.length === 1 ? works[0] : null)}
+              manuscript={manuscript}
+              manuscripts={manuscripts}
+              onChanged={reloadWorks}
+            />
+          </StudioPanel>
+        )}
+    </WriterStudioShell>
+  );
+}
+
+/* ── The field's contents, one honest branch per resolution ──────────────── */
+
+function FieldBody({
+  listPhase,
+  resolution,
+  manuscript,
+  onPick,
+  onMeta,
+  onCheckpointed,
+  writeMount,
+  witnessDelayMs,
+  onWriting,
+}: {
+  listPhase: 'loading' | 'ready' | 'unauthorized' | 'error';
+  resolution: ManuscriptResolution<CurrentManuscript>;
+  manuscript: CurrentManuscript | null;
+  onPick: (id: string) => void;
+  onMeta: (m: { updatedAt: string | null; revisionCount: number | null; words: number }) => void;
+  onCheckpointed: () => void;
+  /** What the server said to mount. Resolved above; never guessed here. */
+  writeMount: WriteMount;
+  witnessDelayMs?: number;
+  /** Publishes the section session so the outline can share it. */
+  onWriting?: (w: SectionWriting | null) => void;
+}) {
+  if (listPhase === 'loading') {
+    return <StudioText role="metadata">opening…</StudioText>;
+  }
+  if (listPhase === 'error') {
+    return (
+      <StudioText role="prose" style={{ opacity: 0.75 }}>
+        The Studio could not be reached just now. Your work is not affected —
+        please try again in a moment.
+      </StudioText>
+    );
+  }
+
+  /* THE REFUSAL. An identity was named and does not resolve here.
+     This is the branch that used to be `?? manuscripts[0]`, and it is a
+     refusal rather than an error: the room is declining to guess, which is
+     correct behaviour and must not be dressed as a fault (STATE.refusal). */
+  if (resolution.kind === 'unresolved') {
+    return (
+      <div data-state="refusal" style={{ maxWidth: '46ch' }}>
+        <StudioText role="chapterSubtitle" as="h2" style={{ marginBottom: SPACE.base }}>
+          That manuscript is not on your shelf.
+        </StudioText>
+        <StudioText role="prose" style={{ opacity: 0.8, marginBottom: SPACE.comfortable }}>
+          The Studio was asked to open a specific manuscript and cannot find it
+          among yours. Nothing else has been put on the table in its place, and
+          nothing has been changed.
+        </StudioText>
+        <StudioText role="metadata" style={{ marginBottom: SPACE.comfortable }}>
+          requested: {resolution.requested}
+        </StudioText>
+        <Link href="/writers-studio" style={{ textDecoration: 'underline' }}>
+          <StudioText role="navItem" as="span">
+            Go to Studio Home →
+          </StudioText>
+        </Link>
+      </div>
+    );
+  }
+
+  /* THE QUESTION. Nothing was named and several exist. Not a fallback and not
+     a dead end: the member is the only one who can answer, so ask them. */
+  if (resolution.kind === 'ambiguous') {
+    return (
+      <div data-state="refusal" style={{ maxWidth: '46ch' }}>
+        <StudioText role="chapterSubtitle" as="h2" style={{ marginBottom: SPACE.base }}>
+          Which one are you working on?
+        </StudioText>
+        <StudioText role="prose" style={{ opacity: 0.8, marginBottom: SPACE.comfortable }}>
+          You have {resolution.manuscripts.length} manuscripts and none was
+          named. The Studio will not choose for you.
+        </StudioText>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: SPACE.snug }}>
+          {resolution.manuscripts.map((m) => (
+            <button
+              key={m.id}
+              type="button"
+              onClick={() => onPick(m.id)}
+              style={{
+                textAlign: 'left',
+                background: 'transparent',
+                border: `1px solid ${RULE.soft}`,
+                borderRadius: RADIUS.sm,
+                padding: `${SPACE.snug}px ${SPACE.base}px`,
+                cursor: 'pointer',
+              }}
+            >
+              <StudioText role="navItem" tone="secondary">
+                {m.title ?? UNTITLED_EXPRESSION}
+              </StudioText>
+              <StudioText role="metadata">
+                {m.sectionCount} section{m.sectionCount === 1 ? '' : 's'}
+              </StudioText>
+            </button>
+          ))}
         </div>
       </div>
     );
   }
 
-  // ── The unite rule (first slice, ruled 2026-08-05) ─────────────────────
-  // The head of the room may unite the Work and the table ONLY on the
-  // member's own declaration — a living_work_expressions row they created —
-  // and only when it is unambiguous (exactly one work declares this
-  // manuscript; expressions may belong to several works by design, and the
-  // room does not guess between them). Without a declaration, v0.1-close
-  // honesty stands: the manuscript heads the room, the Work stays in its
-  // drawer, near but not claimed.
-  const owningWorks = manuscript
-    ? works.filter((w) =>
-        w.expressions.some(
-          (e) => e.expressionType === 'manuscript' && e.expressionId === manuscript.id
-        )
-      )
-    : [];
-  const unitedWork = owningWorks.length === 1 ? owningWorks[0] : null;
-  const manuscriptLabel = manuscript ? (manuscript.title ?? UNTITLED_EXPRESSION) : '';
+  if (resolution.kind === 'empty') {
+    return (
+      <div style={{ maxWidth: '44ch' }}>
+        <StudioText role="prose" style={{ opacity: 0.8, marginBottom: SPACE.comfortable }}>
+          Nothing is on the table yet.
+        </StudioText>
+        <StudioText role="metadata">
+          Begin at{' '}
+          <Link href="/writers-studio" style={{ textDecoration: 'underline' }}>
+            Studio Home
+          </Link>{' '}
+          — start writing, or{' '}
+          <Link href={IMPORT_HREF} style={{ textDecoration: 'underline' }}>
+            bring in existing writing
+          </Link>
+          .
+        </StudioText>
+      </div>
+    );
+  }
 
-  const headline = unitedWork
-    ? (unitedWork.title ?? 'Your work')
-    : manuscript
-      ? manuscriptLabel
-      : work
-        ? (work.title ?? 'Your work')
-        : 'Writer Canvas';
-  const headlineNamed = unitedWork
-    ? unitedWork.title !== null
-    : manuscript
-      ? manuscript.title !== null
-      : Boolean(work?.title);
+  if (!manuscript) return null;
 
-  // Structure exists only where structure exists: a single-section draft has
-  // no Structure drawer, and its absence is correct, not a gap.
-  const drawers: { id: DrawerId; label: string }[] = [
-    { id: 'work', label: 'Work' },
-    { id: 'materials', label: 'Materials' },
-    ...(manuscript && manuscript.sectionCount > 1
-      ? [{ id: 'structure' as DrawerId, label: 'Structure' }]
-      : []),
-    // Develop exists only where there is a Work to read. The reading itself
-    // happens in its own room (BUILD-07D); this drawer is the door.
-    ...(manuscript ? [{ id: 'develop' as DrawerId, label: 'Develop' }] : []),
-    { id: 'history', label: 'History' },
-  ];
+  /* ══ THE WRITE-MODE BRANCH ══════════════════════════════════════════════
+     The server resolved which engine may touch this draft. Every case below
+     is one the server named; none is inferred here.
 
-  const drawerBody = (id: DrawerId) => {
-    switch (id) {
-      case 'work':
-        /* The anchor of the Study Wall (first slice): identity tended here,
-           the Shape declaration lives here. Everything member-authored. */
-        return (
-          <WorkDrawer
-            works={works}
-            unitedWork={unitedWork}
-            manuscript={manuscript ? { id: manuscript.id, title: manuscript.title } : null}
-            manuscriptLabel={manuscriptLabel}
-            onChanged={reloadWorks}
-          />
-        );
-      case 'materials':
-        /* Belongings: sentence first, thing second, home stated. The bring
-           gesture is the consent event; un-belonging deletes nothing. */
-        return (
-          <MaterialsDrawer
-            work={unitedWork ?? (works.length === 1 ? works[0] : null)}
-            manuscript={manuscript}
-            manuscripts={manuscripts}
-            onChanged={reloadWorks}
-          />
-        );
-      case 'structure':
-        return manuscript ? (
-          <>
-            <p className="text-[13px] leading-relaxed opacity-70 mb-3">
-              {manuscript.sectionCount} sections, carried in with your import.
-            </p>
-            <Link
-              href={byIdentity(SOURCE_HREF, manuscript.id)}
-              className="text-[13px] underline underline-offset-4 opacity-60 hover:opacity-90"
-            >
-              Read them in the Source
-            </Link>
+     `continuous` and `no_draft` reach the SAME unchanged Worktable — the
+     second matters because Worktable owns first-draft creation
+     (loadDraft → none → beginDraft), and treating the GET's 404 as an error
+     would strand a newly imported manuscript.
 
-            {/* THE INVOCATION. Nothing about the Work goes up this wire — the
-                server owns the read end to end, and this button contributes the
-                gesture and the member's identity, nothing else.
+     An unknown mode mounts NOTHING. Guessing continuous would let the
+     whole-manuscript writer touch a draft that may already be
+     section-authoritative, where one save overwrites every section at once. */
+  if (writeMount.mount === 'pending') {
+    return <StudioText role="metadata">opening…</StudioText>;
+  }
 
-                The sentence beneath it is not reassurance copy. A member is
-                about to let something read their book, and the true thing to
-                say is that a reading changes nothing until they decide. It
-                stays visible while the reading runs, because that is exactly
-                when it is load-bearing. */}
-            <div
-              className="mt-6 pt-5 border-t"
-              style={{ borderColor: PRESS.ruleSoft }}
-            >
-              <button
-                onClick={async () => {
-                  setReading('reading');
-                  const outcome = await requestStructureReading(manuscript.id);
-                  /* Navigate to the path the SERVER returned. Constructing it
-                     here would be a second copy of a contract that already has
-                     one home.
+  if (writeMount.mount === 'unavailable') {
+    return (
+      <div style={{ maxWidth: '44ch' }}>
+        <StudioText role="prose" style={{ opacity: 0.8 }}>
+          The writing surface could not be prepared just now. Nothing has been
+          changed, and your writing is unaffected.
+        </StudioText>
+      </div>
+    );
+  }
 
-                     The path is checked, not assumed: the outcome's success
-                     shape is asserted over parsed JSON rather than validated,
-                     so a missing path would otherwise reach router.push as
-                     undefined and throw in front of the member. A reading we
-                     cannot open is a reading that did not land. */
-                  if (outcome.ok && outcome.reviewPath) router.push(outcome.reviewPath);
-                  else setReading('failed');
-                }}
-                disabled={reading === 'reading'}
-                aria-busy={reading === 'reading'}
-                className="text-[13px] underline underline-offset-4 opacity-75 hover:opacity-100 disabled:opacity-40 disabled:no-underline"
-              >
-                {reading === 'reading' ? 'MAIA is reading…' : 'Ask MAIA to read the structure'}
-              </button>
-
-              <p className="text-[12.5px] leading-relaxed opacity-55 mt-2.5">
-                MAIA will bring back a reading of how the work seems to be
-                organized. Nothing changes until you decide.
-              </p>
-
-              {/* No refusal code on screen. A failed reading has no taxonomy
-                  that means anything about a book, and the second sentence is
-                  the half that matters. */}
-              {reading === 'failed' && (
-                <p className="text-[12.5px] leading-relaxed opacity-75 mt-3" role="status">
-                  MAIA couldn&rsquo;t complete the reading. Your work hasn&rsquo;t changed.
-                </p>
-              )}
-            </div>
-          </>
-        ) : null;
-      case 'develop':
-        /* BUILD-07D — the door to the Develop room. Nothing is read from
-           here; the room is where readings are asked for and encountered,
-           by durable identity, so the door carries only the Work's id. */
-        return manuscript ? (
-          <>
-            <p className="text-[13px] leading-relaxed opacity-70 mb-3">
-              What MAIA noticed when she read this work developmentally, kept exactly as she
-              noticed it. Ask for a reading there; nothing changes unless you change it.
-            </p>
-            <Link
-              href={canvasForManuscript(DEVELOP_HREF, manuscript.id)}
-              className="text-[13px] underline underline-offset-4 opacity-75 hover:opacity-100"
-              data-develop-door
-            >
-              Open Develop
-            </Link>
-          </>
-        ) : null;
-      case 'history':
-        return (
-          <>
-            <p className="text-[12.5px] leading-relaxed opacity-50 mb-4">
-              Autosave holds your latest words continuously. Versions you keep are set down here,
-              and nothing is ever silently overwritten.
-            </p>
-            {revisions === null ? (
-              <p className="text-[13px] opacity-40">opening…</p>
-            ) : revisions.length === 0 ? (
-              <p className="text-[13px] opacity-55 leading-relaxed">
-                No kept versions yet. “Keep a version” at the table sets one down.
-              </p>
-            ) : (
-              <ul className="space-y-2.5">
-                {revisions.map((r) => (
-                  <li
-                    key={r.revisionNumber}
-                    className="border px-4 py-2.5"
-                    style={{ borderColor: PRESS.ruleSoft }}
-                  >
-                    <p className="text-[13px]">
-                      Version {r.revisionNumber}
-                      {r.note ? ` — ${r.note}` : ''}
-                    </p>
-                    <p className="text-[11.5px] opacity-45 mt-0.5">
-                      ~{pageEstimate(r.contentChars)} page
-                      {pageEstimate(r.contentChars) === 1 ? '' : 's'} · {formatWhen(r.createdAt)}
-                    </p>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </>
-        );
-    }
-  };
-
-  const reflectionPanel = (
-    <div className="flex flex-col px-5 py-6">
-      <h2 className="text-[11px] tracking-[0.2em] uppercase opacity-40 mb-4">Reflection</h2>
-      <p className="text-[13.5px] leading-relaxed opacity-70 max-w-[16rem]">{WINDOW_SENTENCE}</p>
-      <button
-        onClick={() => setWindowOpen(false)}
-        className="mt-6 self-start text-[12px] opacity-45 hover:opacity-80 underline underline-offset-4"
+  if (writeMount.mount === 'sections') {
+    return (
+      <SectionWritingSession
+        manuscriptId={manuscript.id}
+        sections={writeMount.sections}
+        version={writeMount.version}
+        witnessDelayMs={witnessDelayMs}
       >
-        fold away
-      </button>
-    </div>
-  );
+        {(writing) => (
+          <SectionSurfaceBridge
+            writing={writing}
+            onWriting={onWriting}
+            manuscriptId={manuscript.id}
+            onCheckpointed={onCheckpointed}
+          />
+        )}
+      </SectionWritingSession>
+    );
+  }
 
   return (
+    <Worktable
+      manuscriptId={manuscript.id}
+      onMeta={onMeta}
+      onCheckpointed={onCheckpointed}
+    />
+  );
+}
+
+/**
+ * Publishes the section session upward so the outline renders from the SAME
+ * one, then draws the surface. A second useSectionWriting for the outline
+ * would give it a different queue, a different active id and statuses nobody
+ * can see.
+ */
+function SectionSurfaceBridge({
+  writing,
+  onWriting,
+  manuscriptId,
+  onCheckpointed,
+}: {
+  writing: SectionWriting;
+  onWriting?: (w: SectionWriting | null) => void;
+  manuscriptId: string;
+  onCheckpointed?: () => void;
+}) {
+  useEffect(() => {
+    onWriting?.(writing);
+    return () => onWriting?.(null);
+  }, [writing, onWriting]);
+  return (
+    <SectionWritingSurface
+      writing={writing}
+      manuscriptId={manuscriptId}
+      onCheckpointed={onCheckpointed}
+    />
+  );
+}
+
+function Bare({ children }: { children: React.ReactNode }) {
+  return (
     <div
-      className="min-h-screen flex flex-col"
-      style={{ background: PRESS.bg, color: PRESS.text, fontFamily: SERIF }}
+      style={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: SPACE.roomy,
+        textAlign: 'center',
+        background: GROUND.base,
+        color: INK.primary,
+      }}
     >
-      {/* ── The head of the room: what am I working on, and where am I. ── */}
-      <header className="px-6 md:px-10 pt-6 pb-5">
-        <Link
-          href="/writers-studio"
-          className="inline-block text-[11px] tracking-[0.2em] uppercase opacity-40 hover:opacity-75 mb-3"
-        >
-          ← Author Studio
-        </Link>
-        <p className="text-[12px] tracking-[0.25em] uppercase opacity-45 mb-1.5">Writer Canvas</p>
-        <h1
-          className="text-[24px] md:text-[27px] leading-snug"
-          style={{ fontFamily: SERIF, opacity: headlineNamed ? 1 : 0.75 }}
-        >
-          {headline}
-        </h1>
-        {/* The becoming — the member's one statement, in their words, shown
-            only when the member's declaration united work and table. */}
-        {unitedWork?.purpose && (
-          <p
-            className="text-[13px] leading-relaxed opacity-60 mt-1.5 max-w-md italic"
-            style={{ fontFamily: SERIF }}
-          >
-            {unitedWork.purpose}
-          </p>
-        )}
-        {/* Orientation, not measurement: authored facts only. */}
-        {draftMeta && (
-          <p className="text-[12.5px] mt-1.5 italic" style={{ color: PRESS.accent, opacity: 0.85 }}>
-            drafting
-            {draftMeta.updatedAt ? ` · last touched ${formatWhen(draftMeta.updatedAt)}` : ''}
-          </p>
-        )}
-        {/* Legitimate now, and only now: the belonging is the member's own
-            declaration, so saying it is honest display, not drawn containment. */}
-        {unitedWork && manuscript && (
-          <p className="text-[13px] opacity-55 mt-2">
-            On the table: {manuscriptLabel} — a form of this work, declared by you.
-          </p>
-        )}
-        {/* Several manuscripts, arrived without naming one: say which rule
-            picked. A fact about the room, not a claim about the work. */}
-        {manuscript && manuscripts.length > 1 && !manuscripts.some((m) => m.id === requested) && (
-          <p className="text-[13px] opacity-50 mt-2">
-            The most recent of your {manuscripts.length} manuscripts is on the table.
-          </p>
-        )}
-      </header>
-
-      <div
-        className="flex-1 flex flex-col md:flex-row min-h-0 border-t"
-        style={{ borderColor: PRESS.rule }}
-      >
-        {/* ── Study Wall: the folded spine. One drawer open at a time. ── */}
-        <nav
-          aria-label="This work"
-          className="flex md:flex-col md:w-12 shrink-0 border-b md:border-b-0 md:border-r px-3 md:px-0 md:pt-8 gap-1"
-          style={{ borderColor: PRESS.ruleSoft }}
-        >
-          {drawers.map((d) => {
-            const open = drawer === d.id;
-            return (
-              <button
-                key={d.id}
-                onClick={() => setDrawer(open ? null : d.id)}
-                aria-expanded={open}
-                className={`text-[10.5px] tracking-[0.15em] uppercase px-2.5 py-2.5 md:px-0 md:py-3 md:[writing-mode:vertical-rl] transition-opacity ${
-                  open ? 'opacity-100' : 'opacity-45 hover:opacity-80'
-                }`}
-                style={open ? { color: PRESS.accent } : undefined}
-              >
-                {d.label}
-              </button>
-            );
-          })}
-        </nav>
-
-        {drawer && (
-          <aside
-            className="md:w-72 shrink-0 border-b md:border-b-0 md:border-r px-5 py-6 overflow-y-auto"
-            style={{ borderColor: PRESS.ruleSoft }}
-          >
-            <h2 className="text-[11px] tracking-[0.2em] uppercase opacity-40 mb-4">
-              {drawers.find((d) => d.id === drawer)?.label}
-            </h2>
-            {drawerBody(drawer)}
-          </aside>
-        )}
-
-        {/* ── Worktable: the center, always the largest thing. ── */}
-        <main className="flex-1 min-w-0 flex flex-col px-6 md:px-12 py-7">
-          {listPhase === 'loading' && <p className="text-[14px] opacity-40">opening…</p>}
-          {listPhase === 'error' && (
-            <p className="text-[15px] opacity-70 max-w-md leading-relaxed">
-              The Canvas could not be reached just now. Your work is not affected — please try
-              again in a moment.
-            </p>
-          )}
-          {listPhase === 'none' && (
-            <div className="max-w-md">
-              <p className="text-[16px] leading-relaxed opacity-75 mb-6">
-                Nothing is on the table yet.
-              </p>
-              <p className="text-[14px] leading-relaxed opacity-55">
-                Begin at the{' '}
-                <Link href="/writers-studio" className="underline underline-offset-4 opacity-90">
-                  Studio Home
-                </Link>{' '}
-                — start writing, or{' '}
-                <Link href={IMPORT_HREF} className="underline underline-offset-4 opacity-90">
-                  bring in existing writing
-                </Link>
-                .
-              </p>
-            </div>
-          )}
-          {manuscript && (
-            <Worktable
-              manuscriptId={manuscript.id}
-              onMeta={setDraftMeta}
-              onCheckpointed={() => setHistoryKey((k) => k + 1)}
-            />
-          )}
-        </main>
-
-        {/* ── Window: MAIA's folded presence. Opens only when invited, and in
-            v0.1 opens onto one honest sentence — never an empty panel
-            pretending to be a capability. ── */}
-        <aside
-          className={`hidden md:block shrink-0 border-l transition-all ${windowOpen ? 'w-80' : 'w-10'}`}
-          style={{ borderColor: PRESS.ruleSoft }}
-        >
-          {windowOpen ? (
-            reflectionPanel
-          ) : (
-            <button
-              onClick={() => setWindowOpen(true)}
-              aria-label="Reflection"
-              title="Reflection"
-              className="w-full flex justify-center pt-8 opacity-40 hover:opacity-80 transition-opacity"
-            >
-              <span
-                className="w-2 h-2 rounded-full border"
-                style={{ borderColor: PRESS.text }}
-              />
-            </button>
-          )}
-        </aside>
-      </div>
-
-      {/* The Window's mobile form: a quiet line under the field, same honesty. */}
-      <div className="md:hidden border-t px-6 py-4" style={{ borderColor: PRESS.ruleSoft }}>
-        {windowOpen ? (
-          <div>
-            <p className="text-[13px] leading-relaxed opacity-70 mb-2">{WINDOW_SENTENCE}</p>
-            <button
-              onClick={() => setWindowOpen(false)}
-              className="text-[12px] opacity-45 underline underline-offset-4"
-            >
-              fold away
-            </button>
-          </div>
-        ) : (
-          <button
-            onClick={() => setWindowOpen(true)}
-            className="text-[11px] tracking-[0.2em] uppercase opacity-40"
-          >
-            Reflection
-          </button>
-        )}
+      <div style={{ maxWidth: '34ch' }}>
+        <StudioText role="bandLabel" style={{ marginBottom: SPACE.base }}>
+          Writer’s Studio
+        </StudioText>
+        <StudioText role="prose" style={{ opacity: 0.8, color: PRESS.text }}>
+          {children}
+        </StudioText>
       </div>
     </div>
   );

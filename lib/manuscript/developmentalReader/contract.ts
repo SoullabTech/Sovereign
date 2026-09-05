@@ -47,6 +47,44 @@ export function isDevelopmentalLens(v: unknown): v is DevelopmentalLens {
 }
 
 /**
+ * WS2-07-F1 — what each lens ASKS, verbatim from the authoritative source:
+ * `docs/programme/DEVELOPMENTAL_EDITOR_CAPABILITY.md` §"The lenses". Ratified
+ * by the founder 2026-09-04 as the meaning rendered to the reader.
+ *
+ * Before this, the reader received the lens as a bare token and supplied the
+ * meaning from the word itself. That is one half of the condition WS2-07C-F1
+ * found: underdefined semantics at exactly the boundary where reproducibility
+ * is required.
+ */
+export const LENS_MEANING: Readonly<Record<DevelopmentalLens, string>> = {
+  structure: 'Does this belong here? Does the sequence work? What is missing? What repeats?',
+  development: 'Which ideas are underdeveloped · sufficiently developed · overexplained · introduced too late · abandoned · repeated without advancing?',
+  continuity: 'Prospective language where later has already happened. Requires chronology across the Work, not phrase search.',
+  arc: 'What journey does this chapter take the reader through, and what journey has the whole book taken?',
+  voice: "Where does this depart from the established voice OF THIS WORK - the manuscript itself is the reference, never an external standard.",
+  coherence: 'Internally consistent? Has a term changed meaning? Does this contradict an earlier chapter?',
+  reader: 'What does the reader already know here? Where might they lose orientation?',
+};
+
+/**
+ * The two riders the sources attach, ratified with the meanings. Neither is a
+ * new lens semantic: each keeps a lens from smuggling a higher epistemic layer
+ * downward into the reading.
+ *
+ *   development  UNDERSTAND §4 places `unresolved` at the observation layer and
+ *                `abandoned` at interpretation. The capability spec's word
+ *                stands where the spec uses it; it is not available here.
+ *   arc          UNDERSTAND §4: arc is scope-sensitive, not uniformly
+ *                structure-aware. Local shape is structure-independent; a
+ *                division arc needs authored division identity; a whole-Work
+ *                arc needs authoritative structure.
+ */
+export const LENS_RIDER: Readonly<Partial<Record<DevelopmentalLens, string>>> = {
+  development: 'The word "abandoned" above is an INTERPRETATION and is not available to you. You may notice that something is introduced and not taken up again in what you read; you may not say it was abandoned, or why.',
+  arc: 'Arc is scope-sensitive. A bounded passage has a shape whether or not the Work has declared divisions; a claim about THIS DIVISION\'s journey requires the member\'s authored structure; a claim about the whole Work\'s journey requires structure you were given and coverage you actually read.',
+};
+
+/**
  * A7 — what a reading does NOT establish. A non-conclusion is not MAIA feeling
  * unsure; it is a structural statement about what authority the evidence does
  * not grant. Closed, and every claim carries at least one.

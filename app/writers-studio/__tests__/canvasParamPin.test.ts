@@ -1,51 +1,74 @@
 /**
- * Pins the Canvas's manuscript parameter WITHOUT modifying the Canvas.
+ * The Canvas manuscript parameter — no longer pinned by reading source.
  *
- * Home and the Canvas are different rooms with different Experience
- * Contracts, and `app/writers-studio/canvas/page.tsx` has no installed
- * contract yet — so this lane must not edit it. But the two sides must not be
- * free to drift, because they already did: Home shipped `?id=` while the
- * Canvas read `?m`, and the Canvas silently fell back to the first manuscript
- * in its list. "Continue writing Elemental Alchemy" opened something else.
+ * ── WHY THIS FILE CHANGED SHAPE AT WS2-03B ─────────────────────────────────
  *
- * So instead of importing the shared module into the Canvas, this test reads
- * the Canvas's source and asserts that what it actually parses is the same
- * string Home actually produces. If either side moves, this fails.
+ * The original guard existed because the Canvas could not be edited by the
+ * lane that found the defect: Home shipped `?id=` while the Canvas read `?m`,
+ * so the Canvas ignored the identity it was sent and silently fell back to
+ * `manuscripts[0]`. Unable to fix the room, that lane read its SOURCE and
+ * asserted the two strings matched. Its own closing note said what to do when
+ * the room could finally be changed:
  *
- * When the Writer Canvas contract is installed, the Canvas should import
- * canvasIdentity directly and this source-reading guard can be deleted.
+ *   "When the Writer Canvas contract is installed, the Canvas should import
+ *    canvasIdentity directly and this source-reading guard can be deleted."
+ *
+ * WS2-03B installs it. The room now imports `requestedManuscriptId` and
+ * `canvasForManuscript` from this module instead of inlining `'m'`, so the two
+ * sides cannot drift: there is one definition and both call it.
+ *
+ * One assertion here is DELETED rather than migrated, and deliberately named:
+ *
+ *   it('the Canvas still falls back — which is why a mismatch was silent')
+ *
+ * That test pinned the fallback in place. It was honest about hating it —
+ * "recorded, not celebrated" — but a passing test is a specification, and this
+ * one specified the substitution the founder later caught in runtime. It is
+ * replaced by its inverse, which now lives in shellProjection.test.ts: the
+ * room must NOT contain `manuscripts[0]`, and an unresolvable identity must
+ * fail visibly.
  */
 
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { CANVAS_MANUSCRIPT_PARAM, canvasForManuscript } from '../canvasIdentity';
+import {
+  CANVAS_MANUSCRIPT_PARAM,
+  canvasForManuscript,
+  requestedManuscriptId,
+  resolveManuscript,
+} from '../canvasIdentity';
 import { CANVAS_HREF } from '../studioMap';
 
-const canvasSource = readFileSync(
-  join(__dirname, '..', 'canvas', 'page.tsx'),
-  'utf8',
-);
+const canvasSource = readFileSync(join(__dirname, '..', 'canvas', 'page.tsx'), 'utf8');
+/** The room's comments explain the defect and therefore quote it. Assertions
+ *  about what the CODE does must read the code, not the history beside it. */
+const canvasCode = canvasSource
+  .replace(/\/\*[\s\S]*?\*\//g, '')
+  .replace(/\/\/.*/g, '');
 
-describe('Canvas manuscript parameter — pinned across an un-editable boundary', () => {
-  it('the Canvas parses exactly the parameter Home writes', () => {
-    const reads = canvasSource.match(/URLSearchParams\([^)]*\)\s*\.get\(\s*'([^']+)'\s*\)/);
-    expect(reads).not.toBeNull();
-    expect(reads![1]).toBe(CANVAS_MANUSCRIPT_PARAM);
+describe('Canvas manuscript parameter — one definition, imported by both sides', () => {
+  it('the room reads the parameter through the shared module, not a literal', () => {
+    expect(canvasSource).toContain('requestedManuscriptId');
+    expect(canvasSource).toMatch(/from '\.\.\/canvasIdentity'/);
+    // The inlined string is what allowed the drift in the first place.
+    expect(canvasCode).not.toMatch(/URLSearchParams\([^)]*\)\s*\.get\(\s*'m'\s*\)/);
   });
 
-  it('the href Home renders carries that parameter', () => {
+  it('the href Home renders round-trips through the reader the Canvas uses', () => {
     const href = canvasForManuscript(CANVAS_HREF, 'ms-alchemy');
-    const value = new URLSearchParams(href.slice(href.indexOf('?'))).get(
-      CANVAS_MANUSCRIPT_PARAM,
-    );
-    expect(value).toBe('ms-alchemy');
+    expect(requestedManuscriptId(href.slice(href.indexOf('?')))).toBe('ms-alchemy');
+    expect(href).toContain(`${CANVAS_MANUSCRIPT_PARAM}=ms-alchemy`);
   });
 
-  it('the Canvas still falls back — which is why a mismatch was silent', () => {
-    /* Recorded, not celebrated. The fallback is correct behaviour for a
-       deleted manuscript and catastrophic for a misspelled parameter, and
-       nothing in the Canvas can tell those apart. That is the whole reason
-       this guard exists rather than a code comment. */
-    expect(canvasSource).toMatch(/manuscripts\[0\]/);
+  it('the Canvas no longer falls back — a mismatch can never be silent again', () => {
+    // The replacement for the deleted fallback pin. A parameter the room
+    // cannot resolve is now a refusal, and a refusal is visible by definition.
+    expect(canvasCode).not.toMatch(/manuscripts\[0\]/);
+    expect(resolveManuscript('ms-missing', [{ id: 'ms-other' }]).kind).toBe('unresolved');
+  });
+
+  it('pins an unnamed arrival into the URL so a reload resolves the same book', () => {
+    expect(canvasSource).toContain('window.history.replaceState');
+    expect(canvasSource).toContain('canvasForManuscript(');
   });
 });

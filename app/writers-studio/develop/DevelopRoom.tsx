@@ -30,6 +30,9 @@ import { apiFetch } from '@/lib/http/apiBase';
 import type { DevelopmentalLens } from '@/lib/manuscript/developmentalReader/contract';
 import { PRESS, SERIF } from '../pressTheme';
 import { CANVAS_HREF } from '../studioMap';
+import { WriterStudioShell } from '../studio/WriterStudioShell';
+import { StudioShellRail } from '../studio/StudioRail';
+import { INK, RULE, SPACE } from '../studioTheme';
 import { canvasForManuscript } from '../canvasIdentity';
 import { UNTITLED_EXPRESSION } from '../shellIdentity';
 import { formatWhen } from '../../press/manuscript/workingDraftClient';
@@ -55,7 +58,48 @@ const INVOCATION_SENTENCE =
 function refusalSentence(o: Extract<CommissionOutcome, { ok: false }>): string {
   if (o.refusal === 'unauthorized') return 'You are signed out. Nothing has changed.';
   if (o.refusal === 'unreachable') return 'The Studio could not be reached. Nothing has changed.';
-  if (o.refusal === 'structured_inference_unavailable') return 'MAIA cannot read just now. Nothing has changed.';
+  /* NOTHING RAN. Availability and configuration failures are named by refusal
+     identity rather than by stage, because the stage does not change what the
+     member is owed: MAIA could not read, and the Work is untouched. */
+  if (
+    o.refusal === 'structured_inference_unavailable' ||
+    o.refusal === 'provider_unavailable' ||
+    o.refusal === 'not_configured' ||
+    o.refusal === 'invalid_inference_mode'
+  ) {
+    return 'MAIA cannot read just now. Nothing has changed.';
+  }
+  /* THE CLASSIFIER ANSWERED, AND ITS ANSWER VIOLATED THE TOOL CONTRACT.
+     `classifier_foreign_field` fires when the tool payload carries a key the
+     contract does not define; the other two when it is shaped wrongly or names
+     claim indices that do not line up (classify.ts). None of them mean the
+     observation fell outside the phenomenon family.
+
+     That distinction is why this branch exists. Under reading contract v2 an
+     honest decline is NOT a refusal at all: the observation is kept and its
+     phenomenon is simply absent. This room used to answer every classify-stage
+     refusal with a sentence describing that keeping path, and so gave the
+     member a false account of a malformed protocol response. Mapping a protocol
+     failure onto epistemic humility would manufacture a valid semantic state
+     out of an invalid one. The sentence is gone. The refusal is unchanged, and
+     there is no retry. */
+  if (
+    o.refusal === 'classifier_foreign_field' ||
+    o.refusal === 'classifier_malformed' ||
+    o.refusal === 'classifier_index_mismatch'
+  ) {
+    return 'MAIA’s classification response could not be read safely, so this reading was not kept. Your work has not changed.';
+  }
+  /* MAIA reads a KEPT version of the Work. If the writer has changed the Work
+     since the last kept version, capture refuses rather than attaching current
+     ranges to an older revision — and the member is owed that state by name,
+     not the generic "no sections" sentence, which misdescribes it. The act
+     that clears it already exists: "Keep a version", in the Writer Canvas.
+     The Develop room does not perform it: this room's only act is asking for
+     a reading, and it holds no control that changes the Work. */
+  if (o.refusal === 'revision_not_current') {
+    return 'This work has changed since the last version you kept. Keep a version in the Writer Canvas, then ask MAIA to read again. Nothing has changed.';
+  }
   switch (o.stage) {
     case 'capture':
     case 'recover':
@@ -64,8 +108,11 @@ function refusalSentence(o: Extract<CommissionOutcome, { ok: false }>): string {
       return o.refusal === 'ceiling_exceeded'
         ? 'This work is longer than MAIA reads in one sitting, so she did not read it. Nothing has changed.'
         : 'MAIA’s reading did not hold to its own rules, so nothing was kept. Your work has not changed.';
-    case 'classify':
-      return 'What MAIA noticed could not be named within her vocabulary, so nothing was kept. Your work has not changed.';
+    /* No `case 'classify'`. The classify-stage refusals that have something
+       specific to say are said above, by name. Anything else that stage can
+       produce — including the legacy `classifier_unclassifiable`, which v2 no
+       longer emits — falls to the neutral sentence rather than inheriting an
+       explanation that no longer corresponds to any refusal path. */
     case 'freeze':
     case 'store':
       return 'The reading could not be kept. Your work has not changed.';
@@ -187,25 +234,35 @@ export default function DevelopRoom({
   const headline = title === undefined ? '' : (title ?? UNTITLED_EXPRESSION);
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ fontFamily: SERIF }}>
-      <header className="px-6 md:px-10 pt-6 pb-5">
-        <Link
-          href={canvasForManuscript(CANVAS_HREF, manuscriptId)}
-          className="inline-block text-[11px] tracking-[0.2em] uppercase opacity-40 hover:opacity-75 mb-3"
-        >
-          ← Writer Canvas
-        </Link>
-        <p className="text-[12px] tracking-[0.25em] uppercase opacity-45 mb-1.5">Develop</p>
-        <h1 className="text-[24px] md:text-[27px] leading-snug" style={{ opacity: title ? 1 : 0.75 }}>
-          {headline}
-        </h1>
-        <p className="text-[13px] leading-relaxed opacity-55 mt-2 max-w-xl">
-          What MAIA noticed when she read this work, kept exactly as she noticed it. A reading is
-          about the work as it was then; the work is yours, and it moves.
-        </p>
-      </header>
-
-      <div className="flex-1 flex flex-col md:flex-row min-h-0 border-t" style={{ borderColor: PRESS.rule }}>
+    /* ── A MODE, NOT A PAGE ───────────────────────────────────────────────
+       Develop stands inside the same Studio as Write: same wordmark, same
+       Work, same mode bar, same rail. Only the interior differs — a reading is
+       not a draft, and forcing it into Write's columns would confuse the shell
+       with the stance. There is no link back out, because WRITE in the bar is
+       that link. */
+    <WriterStudioShell
+      currentMode="develop"
+      manuscriptId={manuscriptId}
+      workName={headline}
+      workNamed={Boolean(title)}
+      workNote="What MAIA noticed when she read this work, kept exactly as she noticed it."
+      rail={
+        <StudioShellRail
+          hasManuscript
+          manuscriptId={manuscriptId}
+          current="manuscript"
+          openPanels={[]}
+          onSelect={() => {}}
+        />
+      }
+    >
+    {/* min-w-0 so the interior SHARES the shell's body row with the rail
+        instead of overflowing across it: a flex child's default min-width is
+        its content, and a wide reading is wide. Without it the rail is
+        rendered and then covered, which reads as the Studio disappearing at
+        exactly the moment the writer changes stance. */}
+    <div className="flex-1 min-w-0 flex flex-col min-h-0" style={{ fontFamily: SERIF }}>
+      <div className="flex-1 flex flex-col md:flex-row min-h-0">
         {/* ── Readings: the ledger of what MAIA has read, newest first ── */}
         <aside
           className="md:w-80 shrink-0 border-b md:border-b-0 md:border-r px-5 py-6 overflow-y-auto"
@@ -292,6 +349,15 @@ export default function DevelopRoom({
               {commission.phase === 'refused' && (
                 <div className="mt-3" role="status" data-develop-refused={commission.outcome.refusal}>
                   <p className="text-[12.5px] leading-relaxed opacity-75">{refusalSentence(commission.outcome)}</p>
+                  {commission.outcome.refusal === 'revision_not_current' && (
+                    <Link
+                      href={canvasForManuscript(CANVAS_HREF, manuscriptId)}
+                      data-develop-keep-a-version
+                      className="inline-block text-[12.5px] underline underline-offset-4 opacity-70 hover:opacity-100 mt-1.5"
+                    >
+                      Go to the Writer Canvas
+                    </Link>
+                  )}
                   <p className="text-[11px] opacity-40 mt-1">
                     refused{commission.outcome.stage ? ` at ${commission.outcome.stage}` : ''}: {commission.outcome.refusal}
                   </p>
@@ -326,6 +392,7 @@ export default function DevelopRoom({
         </main>
       </div>
     </div>
+    </WriterStudioShell>
   );
 }
 
