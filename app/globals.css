@@ -1,10 +1,7 @@
-/* Import consciousness-aware fonts for archetypal communication */
-@import url('https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Spectral:ital,wght@0,400;0,600;1,400;1,600&display=swap');
-
-/* Enhanced typography for different consciousness styles */
-@import url('https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@200;300;400;600&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@300;400;600&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500&display=swap');
+/* Typefaces, self-hosted. Same families, weights, italics and subsets that were
+ * previously requested from Google's font CDN at page load — served from this host
+ * instead, so rendering the UI costs the member no third-party request. */
+@import './fonts.css';
 
 /* Import Z-Index Hierarchy - Solid Permanent Fix for Safari */
 @import './styles/z-index-hierarchy.css';
