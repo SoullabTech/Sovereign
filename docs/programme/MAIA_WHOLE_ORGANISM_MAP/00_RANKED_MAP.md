@@ -1,7 +1,7 @@
 # MAIA whole-organism map — the one ranked map for founder adjudication
 
 **Phase:** 1 of `JARVIS-HUMAN-EXPERIENCE-MASTER-RUN-v1` · **Date:** 2026-09-06 · **Status:**
-COMPILED 2026-09-06 after the thirteen-page acceptance gate — **awaiting FOUNDER RANKING.**
+COMPILED 2026-09-06 after the thirteen-page acceptance gate; **FOUNDER-ADJUDICATED 2026-09-06 (§9) — Phase 1 EXITED on `573d5268`; Phase 2 opened on the ranking below.**
 **Authority:** Synthesis v0.2 (accepted, not doctrine). **Stop rule:** nothing here repairs
 anything; a ranked gap is a proposal for a founder act. **Ranking is proposed by Jarvis; the
 founder ranks.**
@@ -242,3 +242,94 @@ defects (X5), and the write-side consent bypass (X4).
 6. **Confirm** that Phase 1 exits on this map (master run §5 exit gate) and that Phase 2 opens with the founder ranking as its first act.
 
 Nothing in this map is repaired. Nothing in MAIA changed during the census.
+
+---
+
+## 9 · Founder adjudication (2026-09-06) — order of authority changed, evidence unchanged
+
+**Two planes.** Constitutional breaches do not compete numerically with experiments. Voice
+sovereignty, consent, Sanctuary and record authority are constraints on what MAIA may do, not
+riskier research opportunities.
+
+### Plane A — constitutional decisions, first
+
+| | Item | Ruling |
+|---|---|---|
+| A1 | X6 OpenAI voice egress | **No exception to the sovereignty funnel.** Canonical MAIA voice does not egress through OpenAI TTS outside the governed allow-list. The read-only egress census establishes extent and possible double synthesis; it measures the breach, it does not decide whether it is acceptable. |
+| A2 | X4 / X5 memory consent + Sanctuary | **Ephemeral means no long-term write.** Sanctuary must be reachable and must govern cognition as well as storage: a no-memory boundary that blocks writes but still permits concealed corpus framing is not a complete Sanctuary boundary. |
+| A3 | X3 silent system-authored records | **MAIA may infer internally; an inference must not quietly acquire the standing of a member-authored fact.** System-authored relationship, rupture, developmental, breakthrough, pattern or spiral records require a visible distinction of authorship, an inspectable path, and a meaningful way for the member to reject or withdraw their authority. |
+| A4 | X16 claims above their rung | **Claim discipline stands.** Public copy, docs, comments and internal status language describe what has been established, not what the architecture intends eventually to establish. |
+| A5 | X1a (split) | The part of X1 where **persisted inferred developmental / cognitive state actually shapes treatment** crosses the existing admission boundary (R16) and Invariant 15/16 → governance. |
+| A6 | X9a (split) | The **live product-offer component** of the distress-keyed lineage reframe → governance. Permissibility does not need an A/B test; the activation census measures occurrence, it cannot authorize it. |
+
+These are governance work, not experiments.
+
+**Class split recorded:** X1 → **X1a** (governance: persisted inferred state shaping treatment across the admission/invariant boundary) + **X1b** (contradiction/inquiry: implicit calibration, framing and intimacy as a question of interpretive authority). X9 → **X9a** (governance: the product offer) + **X9b** (contradiction for study: the lineage reframe itself). The map's earlier single-class labels for X1 and X9 were inconsistent with its own class definition; corrected here.
+
+### Plane B — Phase 2 R&D ranking (founder)
+
+| Rank | Item | Founder's reason |
+|---|---|---|
+| 1 | **Build the capacity to know when MAIA is wrong** — correction / misattunement and agreement instrumentation (was rank 3) | Epistemically prior to making MAIA more sophisticated; today MAIA can become richer, deeper, more elemental or more personalized without a system-level way to notice "no — that isn't what I meant." AP14/AP15 are presently unfalsifiable. |
+| 2 | **Restore plurality before interpretation** — X8 | What is called parallel knowing collapses into scalar categorization before cognition; the Field layer operates over those scalars. **Order binds: E5 offline → E11 shadow → E6 registered participation.** Do not simply inject four elemental interpretations — that could create four times as much concealed authority; first establish whether simultaneous differentiated readings preserve ambiguity and enlarge perception rather than manufacture certainty. |
+| 3 | **Make participation inspectable** — X1b / X2 remainder | The organism-wide problem R11 exposed: concealed regulation of depth, framing, intensity, interpretation and relational intimacy on ten of thirteen subsystems — not behavioural sycophancy (unestablished) but hidden mechanisms and missing measurement. The manifest becomes philosophically important: *what participated in this response, under whose authority, and could the person know that?* |
+| 4 | **Establish transfer beyond MAIA** (was rank 2) | Design now, human experiment later. The eventual test of relational intelligence is not felt understanding; it is increased capacity to perceive, choose, relate, repair, create and act away from MAIA. No class C anywhere; no instrument. **A defining measurement architecture, not a feature metric.** |
+| 5 | **Memory: from accumulation to living revision** — X7 | detect → ask → record; history preserved without silently becoming identity. Encouraging counterpart: live recall does not use "you said before" as leverage — AP16 is structurally healthier than several other areas. |
+| 6 | **Honest in both directions** — X10 / X11 | Identity disclosure, consciousness claims and between-session relational language belong together. Presence arises through the encounter, not through fictional claims about what MAIA was doing when the person was absent. |
+| 7 | **FAST constitutional floor** — X12 | No lower-compute tier receives lower epistemic honesty; the floor is invariant to routing. |
+| 8 | **Validator authority** — X13 | A system elemental interpretation never silently gets the last word because it disagrees with the response; measure firing rate and inspect before/after pairs before deciding its future. |
+| 9 | **House vocabulary** — X14 | Audit which vocabulary helps perception and which pre-structures experience before the member has supplied it. |
+| 10 | **Instructed familiarity / provenance** — X15 + S5 | MAIA does not manufacture "knowing you"; interpretations drawn from traditions, corpora, practitioner material or house lenses eventually carry inspectable provenance appropriate to the surface. |
+
+### Authorizations
+
+**Read-only production censuses (§4) — AUTHORIZED, all, now**, under the narrow terms:
+
+```text
+READ ONLY · no schema mutation · no product mutation · no production writes
+exact production SHA recorded · query / log window recorded
+counts and distributions preferred over member content
+no claim beyond what the instrument actually observes
+```
+
+To run before the Phase 2 register freezes prevalence-sensitive rankings (X1 coverage, greeting
+tiers, FAST share, WisdomRouter activation, system-derived records, OpenAI TTS use, regeneration
+rates). Spec: `docs/programme/PHASE2_READONLY_CENSUS_SPEC_2026-09-06.md`.
+
+**Zero-diff shadow instruments — AUTHORIZED SEQUENTIALLY, not as a bundle:**
+
+1. **E1 correction-candidate shadow — first.**
+2. **E5 offline elemental comparison** — no live code change; runs before any elemental shadow wiring.
+3. **E7 memory present-vs-stored comparator** — shadow only, no response effect.
+4. **E11 / E6 elemental shadow** — only after E5 produces a sufficiently discriminating representation worth shadowing.
+5. **E12 calibration-disable comparison** — only if the production census establishes meaningful live coverage of inferred-profile calibration.
+
+Other addendum ablations wait until these narrow the problem. *The measurement layer must not
+become another unbounded architecture project.*
+
+**Human witnesses — design now, do not generalize yet.** The absence of class C is the census's
+most important epistemic finding: the architecture has reached the boundary where code inspection
+cannot answer the governing questions. Phase 4's consent architecture is designed around
+**phenomenological falsifiers, not satisfaction ratings**: *Did MAIA enlarge or narrow what you
+could perceive? Did an interpretation feel discovered, imposed, or genuinely co-created? Could you
+correct MAIA? Did MAIA's framing remain with you as a possibility or harden into a story about who
+you are? Did the encounter change anything in your relationship with another human, your body,
+your work, or the world? Did you become more capable without MAIA?*
+
+**Cat 4 — CONFIRMED as the current quarantine list.** Preserve as evidence; do not revive
+incidentally; no dormant service gains live callers without explicit re-admission against the
+current constitution. **Current, not exhaustive**: the later dormant-service cleanup performs its
+own import/reachability census so this list does not masquerade as proof that every hazard is found.
+
+### Phase 1 — EXIT
+
+Closed on `573d5268` with this ranking and the class clarification recorded. Phase 2 opens with
+this ranking as its first act.
+
+**Sentence carried into the Phase 2 header (founder):**
+
+> MAIA's next problem is not becoming more intelligent. It is making the sources, limits,
+> corrections, and consequences of its intelligence genuinely relational.
+
+*The question is no longer merely what can MAIA perceive? It is how can another intelligence
+participate in human life without quietly taking authorship of it?*

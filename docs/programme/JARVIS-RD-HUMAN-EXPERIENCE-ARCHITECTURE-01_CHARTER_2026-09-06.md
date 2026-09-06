@@ -1075,3 +1075,32 @@ the member; write-side consent bypass; Sanctuary unreachable in conversation (WA
 
 **State:** Phase 1 exit gate met on Jarvis's check. Per master run §13 the phase does not advance
 until the founder ranking is recorded. **Nothing repaired. Nothing in MAIA changed.**
+
+---
+
+## 27 · Founder adjudication of the ranked map · Phase 1 EXIT · Phase 2 OPEN (2026-09-06)
+
+**Order of authority changed, evidence unchanged.** Two planes: **Plane A** constitutional
+decisions first, never ranked against experiments — A1 no OpenAI voice egress outside the
+sovereignty funnel (census measures the breach, does not decide it) · A2 ephemeral means no
+long-term write; Sanctuary reachable and governing cognition as well as storage · A3 an inference
+never silently acquires member-authored standing (visible authorship, inspectable path, member
+reject/withdraw) · A4 claim discipline stands · A5 X1a (persisted inferred state shaping treatment
+across the admission boundary) · A6 X9a (the product offer inside the distress-keyed reframe).
+**Class splits:** X1 → X1a governance + X1b contradiction; X9 → X9a governance + X9b contradiction.
+**Plane B** ranking 1–10: know when MAIA is wrong → plurality before interpretation (E5 → E11 → E6,
+never inject four interpretations first) → inspectable participation → transfer beyond MAIA as
+measurement architecture → living-revision memory → honest in both directions → FAST floor →
+validator authority → house vocabulary → familiarity/provenance.
+
+**Authorizations.** All §4 read-only production censuses (narrow terms; spec
+`PHASE2_READONLY_CENSUS_SPEC_2026-09-06.md`; run from minisforum, not this session). Shadows
+sequentially: E1 correction-candidate first · E5 offline · E7 comparator · E11/E6 after E5 · E12
+after coverage. Human witnesses designed now around phenomenological falsifiers, not run. Cat 4
+confirmed as the current, not exhaustive, quarantine list.
+
+**Phase 1 EXITED on `573d5268`. Phase 2 OPEN** — register `HUMAN_EXPERIENCE_GAP_REGISTER.md`
+seeded from the ranking. Governing sentence carried into the Phase 2 header:
+
+> MAIA's next problem is not becoming more intelligent. It is making the sources, limits,
+> corrections, and consequences of its intelligence genuinely relational.

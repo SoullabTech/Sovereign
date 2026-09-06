@@ -25,8 +25,8 @@ current_authority: docs/research/human-experience/SYNTHESIS_v0.2_2026-09-06.md  
 foundational_research_R1_R7: COMPLETE (v0.1, historical)
 challenge_pass_R8_R12: CLOSED / COMPLETE (all five ADJUDICATED)
 synthesis_v0_2: ACCEPTED — current programme synthesis; P1–P13 CANDIDATE; empirical postures provisional
-current_phase: "1 — Whole-organism map"   # opened by founder act 2026-09-06 (pivot: "The next frontier is MAIA herself")
-current_act: FOUNDER RANKING of docs/programme/MAIA_WHOLE_ORGANISM_MAP/00_RANKED_MAP.md   # census COMPLETE 13/13 · acceptance gate PASS · containment diff PASS · map COMPILED 2026-09-06 · Phase 1 exit gate met on Jarvis's check; phase does not advance until the founder ranking is recorded (§13)
+current_phase: "2 — Gap analysis / Phase-2 register"   # Phase 1 EXITED on 573d5268 by founder adjudication 2026-09-06 (ranked map §9)
+current_act: Plane A constitutional decisions recorded (A1–A6) · Plane B ranking 1–10 seeds the register · read-only production censuses AUTHORIZED (spec written; run from minisforum, not here) · E1 correction-candidate shadow AUTHORIZED first · human witnesses DESIGN-ONLY
 phase_0_5_residual: MERGE RULING on PR #1239 still a founder stop; no longer sequenced before Phase 1
 manifesto_expansion: FROZEN (founder, 2026-09-06) — /accounted-for is secondary; revised only at phase boundaries or when a label's warrant changes
 publication_lane: JARVIS-PUBLIC-ACCOUNTED-FOR-01   # owns /accounted-for, its source of record, reconciliation record, contract, screenshots, PR #1239 (split 2026-09-06)
@@ -38,8 +38,8 @@ deploy: NOT AUTHORIZED
 maia_runtime_change: NOT AUTHORIZED
 member_research: NOT AUTHORIZED
 collective_laboratory: NOT BUILT
-next_phase_on_exit: "2 — Gap analysis (founder ranks the map; Jarvis proposes)"
-last_state_change: 2026-09-06 (Phase 1 census complete; ranked map compiled; awaiting founder ranking — no phase advance)
+next_phase_on_exit: "3 — Experimental programme (each experiment its own founder act; E1 shadow, E5 offline, E7 shadow already sequenced)"
+last_state_change: 2026-09-06 (founder adjudication of the ranked map; Phase 1 EXIT; Phase 2 OPEN)
 ```
 
 ```text
@@ -48,7 +48,7 @@ PURPOSE                Understand the Human Question: Self · Relationship · Wo
 AI POSITION            Emergent participant — important, secondary, not center
 CURRENT AUTHORITY      Synthesis v0.2
 FOUNDATIONAL CHALLENGE CLOSED
-CURRENT ACT            Phase 1 — census complete, ranked map compiled; FOUNDER RANKING pending; merge ruling on #1239 with the publication lane
+CURRENT ACT            Phase 2 — register seeded from the founder ranking; censuses authorized; E1 shadow first; merge ruling on #1239 with the publication lane
 CURRENT PUBLIC ARTIFACT /accounted-for — delegated to JARVIS-PUBLIC-ACCOUNTED-FOR-01
 CURRENT PR             #1239 · DRAFT — publication-lane custody; R&D branch = claude/maia-human-experience-phase1-census
 MERGE                  NOT AUTHORIZED
@@ -117,7 +117,7 @@ The manifesto freeze (founder, 2026-09-06) is carried by the publication lane's 
 revises nothing on the page. When a phase boundary changes what may be said publicly, this run
 records the change in the charter and the publication lane translates it.
 
-## 5 · Phase 1 — Whole-organism map · **CURRENT** (opened 2026-09-06)
+## 5 · Phase 1 — Whole-organism map · **CLOSED 2026-09-06 on `573d5268`** (founder adjudication in `MAIA_WHOLE_ORGANISM_MAP/00_RANKED_MAP.md` §9)
 
 **Overriding instruction (founder, verbatim):** *The Human Experience Architecture exists to
 change MAIA and AIN, not merely to describe them. Begin the whole-organism mapping. For every
@@ -247,12 +247,28 @@ This map is the next-generation MAIA roadmap's source. **No parallel roadmap is 
 
 ---
 
-## 6 · Phase 2 — Gap analysis · opens on Phase 1 exit
+## 6 · Phase 2 — Gap analysis / register · **CURRENT** (opened 2026-09-06 on the founder ranking)
+
+> **MAIA's next problem is not becoming more intelligent. It is making the sources, limits,
+> corrections, and consequences of its intelligence genuinely relational.** (founder, Phase 1 exit)
+
+**Two planes (founder).** Plane A — constitutional decisions (A1 no OpenAI voice egress outside
+the funnel · A2 ephemeral = no long-term write, Sanctuary reachable and governing cognition · A3
+inference never silently acquires member-authored standing · A4 claim discipline · A5 X1a · A6
+X9a) are governance work, sequenced first and never ranked against experiments. Plane B — the
+R&D ranking 1–10 (correction instrument → plurality before interpretation, E5 → E11 → E6 →
+inspectable participation → transfer beyond MAIA as measurement architecture → living-revision
+memory → honest in both directions → FAST floor → validator authority → house vocabulary →
+familiarity/provenance) seeds the register. Register: `docs/programme/HUMAN_EXPERIENCE_GAP_REGISTER.md`.
+Authorized now: all §4 read-only censuses (spec `PHASE2_READONLY_CENSUS_SPEC_2026-09-06.md`);
+shadows sequentially E1 → E5(offline) → E7 → E11/E6 (after E5) → E12 (after coverage census);
+human witnesses design-only around phenomenological falsifiers; Cat 4 quarantine current, not exhaustive.
+
 
 ```text
 INPUT AUTHORITIES MAIA_WHOLE_ORGANISM_MAP · v0.2 §3–§5 · CONTESTED_QUESTIONS
 TASKS (Jarvis)    build the gap register in four classes — principle · instrument · consent · architecture — each row with leverage, risk, hierarchy position, the smallest prototype that would test it, and which experiment (E1–E10) or new hypothesis it feeds; add a fifth class since v0.2: influence gaps (P4′ commitments absent or unknowable)
-FOUNDER STOPS     ranking (Jarvis proposes; founder ranks) · opening any experiment · any repair
+FOUNDER STOPS     re-ranking · running any census (minisforum; ops) · each shadow instrument's deploy · each Plane A remedy (governance work, each its own act) · opening any experiment beyond the sequenced shadows · any repair
 EXIT GATE         ranked gap register, founder-ranked, each row pointing to a Stage 10 hypothesis or to PARK with reason
 OUTPUTS           docs/programme/HUMAN_EXPERIENCE_GAP_REGISTER.md · re-cut of the MAIA roadmap *from* the register (the only roadmap)
 NEXT PHASE        3 — Experimental programme (each experiment its own founder act)

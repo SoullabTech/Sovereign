@@ -23,4 +23,5 @@ ADJUDICATED · CODIFIED. One row per inquiry. No secondary bureaucracy.
 | Interpretive layer (McGilchrist · Jung · contemplative) | QUESTION | 2026-09-06 | founder-designated; not carded |
 | Stage 5 ConsumerAppStudio card-by-card reading | QUESTION | 2026-09-06 | after paraphrase checks; answered against ANTI_PATTERNS + ledger |
 | Elemental Parallel Processing hypothesis (founder ruling, charter §11) | QUESTION | 2026-09-06 | H1 descriptive · H2 relational · H3 developmental; machine-facing model; not operationalized; after R8–R12 / v0.2 |
-| **Phase 1 — Whole-organism map** (master run §5) | **WITNESSING → census COMPLETE 13/13; gate PASS; ranked map COMPILED — awaiting FOUNDER RANKING** | 2026-09-06 | `docs/programme/MAIA_WHOLE_ORGANISM_MAP/00_RANKED_MAP.md`; X1–X17 clusters; top-10; governance items (TTS egress, silent records, consent bypass, Sanctuary reachability, copy above rung); no class C anywhere; nothing repaired |
+| **Phase 1 — Whole-organism map** | **ADJUDICATED · EXITED on `573d5268`** | 2026-09-06 | founder ranking in `00_RANKED_MAP.md` §9; two planes; X1/X9 split; sentence carried forward |
+| **Phase 2 — Gap register** (master run §6) | **PROTOTYPING → OPEN** | 2026-09-06 | `docs/programme/HUMAN_EXPERIENCE_GAP_REGISTER.md`; Plane A A1–A6 governance; Plane B 1–10; censuses AUTHORIZED (spec written, unrun); E1 shadow first |
