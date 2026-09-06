@@ -81,9 +81,26 @@ interface WorktableProps {
   }) => void;
   /** A version was kept; the History drawer re-reads. */
   onCheckpointed?: () => void;
+  /**
+   * NAV-03 — a draft was CREATED here, so the server's write authority for this
+   * Work has changed since the parent last read it.
+   *
+   * Carries nothing. The draft this room just created is section-addressable
+   * (`section_addressable_at` is stamped at creation), which means the parent
+   * should now be mounting a different engine than the one it mounted — but
+   * deciding that is the parent's job, not this room's. Passing the draft up
+   * would let Worktable adjudicate which surface wins, and the whole point of
+   * the write-state resolver is that the SERVER decides and the parent obeys.
+   * So this says only: read again.
+   *
+   * Without it, the first session after an import renders "not yet navigable"
+   * over a Work the server already calls section_aware, and only a manual
+   * reload fixes it — observed in production 2026-09-06.
+   */
+  onDraftBegun?: () => void;
 }
 
-export default function Worktable({ manuscriptId, onMeta, onCheckpointed }: WorktableProps) {
+export default function Worktable({ manuscriptId, onMeta, onCheckpointed, onDraftBegun }: WorktableProps) {
   const [phase, setPhase] = useState<Phase>('loading');
   const [editable, setEditable] = useState<Editable>({ addressable: false, content: '' });
   const [saveState, setSaveState] = useState<SaverState>('idle');
@@ -236,7 +253,16 @@ export default function Worktable({ manuscriptId, onMeta, onCheckpointed }: Work
       // Source, verbatim. (A blank page creates its draft at birth.)
       const begun = await beginDraft(apiFetch, manuscriptId);
       if (cancelled) return;
-      if (begun.kind === 'ok') return settle(begun);
+      if (begun.kind === 'ok') {
+        settle(begun);
+        /* Only on 'ok' — a true creation. `exists` means someone else got
+           there first and the parent's state is not stale on our account; a
+           notification there could ping-pong two rooms re-reading each other's
+           work. Fired after settle so this room is coherent even if the parent
+           unmounts it on the next tick. */
+        onDraftBegun?.();
+        return;
+      }
       if (begun.kind === 'exists') {
         const again = await loadDraft(apiFetch, manuscriptId);
         if (cancelled) return;
