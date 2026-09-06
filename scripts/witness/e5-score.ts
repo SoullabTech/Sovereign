@@ -11,7 +11,11 @@
  *   npx tsx scripts/witness/e5-score.ts --template        # prints the coding-sheet header
  *
  * Rater CSV columns (exact):
- *   id, fire, water, earth, air, fire_conf, water_conf, earth_conf, air_conf, contradiction, field_note, single_winner
+ *   id, fire, water, earth, air, fire_conf, water_conf, earth_conf, air_conf,
+ *   fire_evidence, water_evidence, earth_evidence, air_evidence,
+ *   fire_contra, water_contra, earth_contra, air_contra, field_note, single_winner
+ *   (manual v2, 2026-09-06 — conforms to the frozen protocol: evidence per element required for
+ *   scores 2–3 and NEVER printed by this tool; contradiction per element yes/no, turn-level derived)
  * Optional columns (M6, only meaningful on a consented sample): live_dominant, live_fire, live_water,
  *   live_earth, live_air — may sit in any rater CSV or in a separate --live CSV keyed by id.
  *
@@ -29,8 +33,9 @@
  *
  * Krippendorff's alpha is implemented here (coincidence-matrix form, Krippendorff 2011) — no dependency.
  */
-import { readFileSync, existsSync } from 'node:fs';
-import { basename } from 'node:path';
+import { readFileSync, existsSync, writeFileSync, mkdtempSync } from 'node:fs';
+import { basename, join } from 'node:path';
+import { tmpdir } from 'node:os';
 
 // ---------------------------------------------------------------------------------------------
 // Types
@@ -39,7 +44,11 @@ import { basename } from 'node:path';
 type Elem = 'fire' | 'water' | 'earth' | 'air';
 const ELEMS: Elem[] = ['fire', 'water', 'earth', 'air'];
 const CONFS = new Set(['low', 'medium', 'high']);
-const REQUIRED = ['id', 'fire', 'water', 'earth', 'air', 'fire_conf', 'water_conf', 'earth_conf', 'air_conf', 'contradiction', 'field_note', 'single_winner'];
+const REQUIRED = ['id', 'fire', 'water', 'earth', 'air', 'fire_conf', 'water_conf', 'earth_conf', 'air_conf',
+  'fire_evidence', 'water_evidence', 'earth_evidence', 'air_evidence',
+  'fire_contra', 'water_contra', 'earth_contra', 'air_contra', 'field_note', 'single_winner'];
+const YES = new Set(['yes', 'y', 'true', '1']);
+const NO = new Set(['no', 'n', 'false', '0', '']);
 
 const THRESH = { m1Alpha: 0.67, m1MinElems: 3, m2MaxAbsR: 0.5, m3MinProp: 0.30 } as const;
 
@@ -118,15 +127,29 @@ export function loadRater(path: string, problems: string[]): { rater: Rater; liv
       if (!CONFS.has(c)) problems.push(`${name} ${id}: ${e}_conf="${col(r, `${e}_conf`)}" not low/medium/high`);
       conf[e] = c;
     }
-    const contradictionRaw = norm(col(r, 'contradiction'));
-    const contradiction = !(contradictionRaw === '' || contradictionRaw === 'no' || contradictionRaw === 'n' || contradictionRaw === 'none' || contradictionRaw === '0' || contradictionRaw === 'false');
-    if (contradiction) {
-      const parts = contradictionRaw.split(/[\s;]+/).filter(Boolean);
-      for (const p of parts) {
-        const pair = p.split('+');
-        if (pair.length < 2 || !pair.every(isElem)) problems.push(`${name} ${id}: contradiction="${col(r, 'contradiction')}" — expected "no" or e.g. "air+fire" (treated as yes)`);
+    // Evidence (protocol §3): required for every 2/3; never echoed. Only its presence is checked.
+    for (const e of ELEMS) {
+      const ev = col(r, `${e}_evidence`).trim();
+      const evNorm = norm(ev);
+      if (presence[e] >= 2 && (evNorm === '' || evNorm === 'none' || evNorm === 'tone')) {
+        problems.push(`${name} ${id}: ${e}=${presence[e]} without an evidence span (protocol §3) — row rejected`);
+        ok = false;
       }
     }
+    // Contradiction (protocol §3): per-element yes/no; turn-level derived (any yes) for M4.
+    const flagged: Elem[] = [];
+    for (const e of ELEMS) {
+      const f = norm(col(r, `${e}_contra`));
+      if (YES.has(f)) {
+        flagged.push(e);
+        if (presence[e] < 2) problems.push(`${name} ${id}: ${e}_contra=yes on a score below 2 (manual §7) — treated as yes`);
+      } else if (!NO.has(f)) {
+        problems.push(`${name} ${id}: ${e}_contra="${col(r, `${e}_contra`)}" not yes/no (treated as no)`);
+      }
+    }
+    if (flagged.length === 1) problems.push(`${name} ${id}: a single ${flagged[0]}_contra=yes — a tension involves at least two modes (manual §7); treated as yes`);
+    const contradiction = flagged.length > 0;
+    const contradictionRaw = flagged.join('+');
     const fieldNote = col(r, 'field_note').trim();
     if (fieldNote.split(/\s+/).filter(Boolean).length > 20) problems.push(`${name} ${id}: field_note exceeds 20 words`);
     const winner = norm(col(r, 'single_winner'));
@@ -463,6 +486,21 @@ function selfTest(): number {
   // Fixture E — CSV parser: quoted comma, doubled quote, CRLF, BOM.
   const rows = parseCsv('﻿id,field_note,x\r\nS01,"a, b ""c""",1\r\n');
   checks.push({ name: 'CSV parser — quoted comma / doubled quote / CRLF / BOM', ok: rows.length === 2 && rows[1][1] === 'a, b "c"' && rows[1][2] === '1', detail: JSON.stringify(rows[1]) });
+
+  // Fixture G — manual v2 contract (protocol §3): evidence required for 2/3 and never echoed;
+  // contradiction per element yes/no, turn-level derived.
+  {
+    const dir = mkdtempSync(join(tmpdir(), 'e5-selftest-'));
+    const hdr = REQUIRED.join(',');
+    const good = `${hdr}\nS07,3,1,3,0,high,medium,high,high,"booked the flight | I'm going",tone,"hands wouldn't pack",none,yes,no,yes,no,"Wants to go; body voted no.",fire\n`;
+    const bad = `${hdr}\nS08,3,0,0,0,high,high,high,high,none,none,none,none,no,no,no,no,"plain",fire\n`;
+    writeFileSync(join(dir, 'good.csv'), good); writeFileSync(join(dir, 'bad.csv'), bad);
+    const pg: string[] = []; const g = loadRater(join(dir, 'good.csv'), pg).rater.rows.get('S07');
+    checks.push({ name: 'v2 sheet — per-element flags derive turn-level contradiction fire+earth', ok: !!g && g.contradiction === true && g.contradictionRaw === 'fire+earth' && pg.length === 0, detail: `${g?.contradictionRaw} problems=${pg.length}` });
+    const pb: string[] = []; const b = loadRater(join(dir, 'bad.csv'), pb).rater.rows.get('S08');
+    checks.push({ name: 'v2 sheet — a 3 without an evidence span is rejected (row dropped, problem recorded)', ok: b === undefined && pb.some((x) => /without an evidence span/.test(x)), detail: pb[0] ?? 'no problem recorded' });
+    checks.push({ name: 'v2 sheet — evidence text never appears in problems or output', ok: !pg.concat(pb).some((x) => /booked the flight|hands wouldn/.test(x)), detail: 'spans not echoed' });
+  }
 
   // Fixture F — end-to-end M2 / M3 / M4 / M5 / verdict on a tiny 3-rater set (S-prefixed → synthetic banner).
   const mk = (name: string, spec: Record<string, [number, number, number, number, string, Elem]>): Rater => {

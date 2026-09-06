@@ -19,6 +19,13 @@ counts and distributions preferred over member content
 no claim beyond what the instrument actually observes
 ```
 
+**Acceptance condition before minisforum execution (founder, 2026-09-06): read-only is ENFORCED,
+not merely intended.** The SQL script sets `default_transaction_read_only = on` for the session
+(each statement then runs in its own read-only transaction, so a failing item does not abort the
+rest) and is inspected to contain no mutation statement (INSERT · UPDATE · DELETE · TRUNCATE ·
+ALTER · CREATE · DROP · GRANT · COPY … TO / FROM a file); the log script issues only `docker logs`
+and `printenv` reads. Acceptance is recorded in this file's §Acceptance before any run.
+
 **Record format per item:** `{ item, production_sha (docker exec maia-sovereign printenv GIT_COMMIT),
 window, query_or_grep, result (counts/distributions only), observed_at, operator }` appended to
 `docs/programme/MAIA_WHOLE_ORGANISM_MAP/CENSUS_RESULTS_<date>.md`. Sanctuary rows are never

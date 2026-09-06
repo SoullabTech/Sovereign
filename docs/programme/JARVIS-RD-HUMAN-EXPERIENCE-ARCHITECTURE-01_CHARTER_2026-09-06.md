@@ -1175,3 +1175,43 @@ ssh soullab@minisforum 'cd ~/MAIA-SOVEREIGN && git fetch origin claude/e1-correc
 # verify: docker exec maia-sovereign printenv GIT_COMMIT → 0780f368 ; MAIA_CORRECTION_SHADOW unset
 # witness: docker logs maia-sovereign --since 336h | grep -c "\[MAIA/shadow\] correction-candidate"
 ```
+
+---
+
+## 31 · Founder check on the ruling set — E1 verified, pp-2 accepted, one E5 correction, census acceptance condition (2026-09-06)
+
+**E1 — ready.** Founder independently verified `0780f368` against canonical `ca5fdff4`: one
+commit ahead, diff exactly the six E1 paths. Deploy authorization stands; pp-2 creates no hold.
+
+**pp-2 — accepted.** `318a2bd2` encodes the ruling correctly: pp-1 historical; explicit
+restraints; house interpretation held until member invocation; practitioner observations held;
+the shadow divergence retained as evidence rather than fixed. R30 resolved.
+
+**E5 — one correction before any synthetic coding.** The v1 manual departed from the
+preregistered instrument in two places: evidence spans were kept out of the submitted sheet (no
+CSV field), removing the audit trail that distinguishes textual evidence from impression; and the
+per-element yes/no contradiction flag became one turn-level pair field. Ruling:
+
+```text
+E5 protocol       KEEP FROZEN
+E5 manual v1      SUPERSEDED BEFORE USE
+E5 manual v2      conform to protocol
+coded v1 turns    ZERO
+```
+
+Executed: `E5_CODING_MANUAL_v2.md` — per-element evidence columns (`fire_evidence` …) required
+for every 2/3, `tone`/`none` for 1/0, sheet offline and never published; per-element flags
+(`fire_contra` …) yes/no, turn-level M4 derived by the scorer; v1 carries a superseded header.
+Scorer: v2 contract; rejects a 2/3 without evidence (row dropped, problem recorded); derives the
+turn-level flag; never emits a span; self-test 18/18 including three v2 fixtures. No measure,
+threshold or hypothesis changed. Execution remains HOLD until the founder accepts the conformed
+artifacts.
+
+**Census scripts — acceptance condition added:** read-only enforced (`default_transaction_read_only
+= on`; no mutation statement on inspection; log script reads only), recorded in the census spec
+before any minisforum run.
+
+**State:** E1 DEPLOY AUTHORIZED · candidate verified — PP-2 ACCEPTED — CENSUS C1–C18 AUTHORIZED,
+scripts awaiting the acceptance gate — E5 SYNTHETIC AUTHORIZED, HOLD until acceptance of v2 —
+E5 MEMBER SAMPLE NOT AUTHORIZED — C19 NOT AUTHORIZED. Next act after the agents land: accept
+artifacts against these boundaries; begin no new implementation.

@@ -1,10 +1,12 @@
 # E5 · Coding Manual v1 — reading one turn four ways
 
-> **SUPERSEDED BEFORE USE (founder ruling 2026-09-06).** This v1 did not conform to the frozen
-> protocol on two points — evidence spans were kept out of the submitted sheet, and the
-> contradiction flag was recorded per turn as element pairs rather than per element as yes/no.
-> **No turn was coded under v1 (coded v1 turns: zero).** Use `E5_CODING_MANUAL_v2.md`. Kept as the
-> record of an instrument mismatch that preregistration caught before observation.
+> **v2 (2026-09-06) — conforms to the frozen protocol.** Changes from v1, both required by the
+> protocol §3 as preregistered: (1) the evidence span for each element is recorded **in the coding
+> sheet** (`fire_evidence` … `air_evidence`), required for every score of 2 or 3; the sheet is
+> offline material and the scorer never emits a span — it only checks that required evidence exists;
+> (2) the contradiction flag is recorded **per element as yes/no** (`fire_contra` … `air_contra`);
+> the turn-level value used for M4 is derived by the scorer (any element flagged). No measure,
+> threshold or hypothesis changes. v1 was superseded before any turn was coded.
 
 ```text
 VERSION     v1 (2026-09-06). Frozen by commit before the first coded turn. If this manual changes
@@ -188,25 +190,31 @@ point at it, so I've put 0").
 
 ## 6 · The evidence-span rule
 
-For every score of 2 or 3, you must be able to write down the exact words in the turn that carry
-it. For a 1, write the words if you can, or "tone". For a 0, write "none".
+For every score of 2 or 3, write the exact words in the turn that carry it into that element's
+evidence column (`fire_evidence`, `water_evidence`, `earth_evidence`, `air_evidence`). Copy the
+words as they appear; a short phrase is enough; several phrases may be separated by ` | `. For a 1,
+write the words if you can, or `tone`. For a 0, write `none`.
 
-**Keep the spans in your own working notes, not in the coding sheet you submit.** They are for
-you: they stop you scoring on impression. If you cannot find a span for a 2 or 3, the score is
-not a 2 or 3.
+**If you cannot find a span for a 2 or 3, the score is not a 2 or 3.** The evidence column is
+what lets the study later ask whether raters coded textual evidence or impression. The coding
+sheet is offline material: it is never published and the scoring tool never prints a span — it
+only checks that every 2 or 3 has one.
 
-## 7 · The contradiction flag
+## 7 · The contradiction flags (one per element, yes/no)
 
 After the four readings, ask: **does one present mode read *against* another present mode in this
 same turn?** Examples of "against": the person explains why something is right while being unable
 to do it; wants to go while the body will not; loves and wants to leave; has grieved in words while
 the body still flinches.
 
-- Record `no` if the modes present sit together without strain (co-presence is not contradiction).
-- Otherwise record the modes involved, joined with `+`, e.g. `air+fire`, `fire+earth`, `water+fire`.
-  If more than one pair is in tension, list them separated by a space: `air+fire water+earth`.
-- Only flag a contradiction between modes you scored 2 or 3. A faint trace cannot contradict.
+Record a `yes` in the flag column of **each** mode that is in tension (`fire_contra`,
+`water_contra`, `earth_contra`, `air_contra`), and `no` for the others.
+
+- If the modes present sit together without strain, all four flags are `no` (co-presence is not contradiction).
+- A tension always involves at least two modes, so a turn with any `yes` has at least two `yes` flags.
+- Only flag a mode you scored 2 or 3. A faint trace cannot contradict.
 - The contradiction must be *in the turn*. Do not flag one because the earlier reply hinted at it.
+- The scoring tool derives the turn-level contradiction used for M4 (any flag `yes`); you do not record it.
 
 ## 8 · The Field line
 
@@ -238,7 +246,7 @@ readings of this turn, which would you keep?** Record one of `fire`, `water`, `e
 Submit one CSV file per rater with exactly this header line and one row per turn:
 
 ```text
-id,fire,water,earth,air,fire_conf,water_conf,earth_conf,air_conf,contradiction,field_note,single_winner
+id,fire,water,earth,air,fire_conf,water_conf,earth_conf,air_conf,fire_evidence,water_evidence,earth_evidence,air_evidence,fire_contra,water_contra,earth_contra,air_contra,field_note,single_winner
 ```
 
 | Column | Allowed values |
@@ -246,17 +254,18 @@ id,fire,water,earth,air,fire_conf,water_conf,earth_conf,air_conf,contradiction,f
 | `id` | the turn id, e.g. `S07` (training turns are `T01`–`T10` and go in a separate file) |
 | `fire`, `water`, `earth`, `air` | `0`, `1`, `2` or `3` |
 | `fire_conf`, `water_conf`, `earth_conf`, `air_conf` | `low`, `medium`, `high` |
-| `contradiction` | `no`, or modes joined with `+` (e.g. `air+fire`) |
+| `fire_evidence`, `water_evidence`, `earth_evidence`, `air_evidence` | the words carrying the score (required for 2 or 3); `tone` allowed for 1; `none` for 0; in double quotes if it contains a comma |
+| `fire_contra`, `water_contra`, `earth_contra`, `air_contra` | `yes` or `no` (a `yes` only on a mode scored 2 or 3; never a single `yes`) |
 | `field_note` | your Field line, in double quotes if it contains a comma |
 | `single_winner` | `fire`, `water`, `earth` or `air` |
 
 A completed row looks like:
 
 ```text
-S07,3,1,3,0,high,medium,high,high,fire+earth,"Wants to go; the body has quietly voted no.",fire
+S07,3,1,3,0,high,medium,high,high,"booked the flight | I'm going",tone,"my hands wouldn't pack | stomach dropped",none,yes,no,yes,no,"Wants to go; the body has quietly voted no.",fire
 ```
 
-Leave no cells empty. Do not add columns. Your evidence spans stay in your own notes.
+Leave no cells empty. Do not add columns. The sheet is offline material and is never published.
 
 ## 11 · Frequent difficulties
 
@@ -372,7 +381,7 @@ one of them. What matters is that your **presence scores** land in the ranges an
 **contradiction flags** match; if they do not, re-read the relevant part of section 3 or 11 before
 starting the corpus.
 
-| id | fire | water | earth | air | contradiction | winner | why |
+| id | fire | water | earth | air | contradiction (v2: a pair such as fire+earth means `fire_contra=yes` and `earth_contra=yes`; "no" means all four `no`) | winner | why |
 |---|---|---|---|---|---|---|---|
 | T01 | 3 | 1 | 0 | 1 | no | fire | "I'm going to smash it… I'm not letting" carries the turn. The brother is a faint relational trace, "I know the material" a faint Air trace. Nothing bodily. |
 | T02 | 0 | 2 | 2 | 1 | no | water *or* earth | Attachment to the grandfather (Water) and the concrete hands and clocks (Earth) are fused; "I don't know why" is a faint reach for meaning. Two modes co-present without strain → no flag. Winners legitimately differ. |
