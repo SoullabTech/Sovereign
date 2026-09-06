@@ -7,10 +7,13 @@
 ```text
 UNIT             BUILD-07F  DEVELOPMENTAL DECISIONS
 CANONICAL        d8fc2082d
-REVIEW           founder, 2026-09-06 — HOLD on candidate dc48528d7:
-                 R1 D3 delete path (BLOCKER) · R2 async identity (BLOCKER)
-                 R3 graph coverage (repair before PR) · conflict copy (small)
-                 All four repaired below; §6 records what each invalidated.
+REVIEW 1         founder, 2026-09-06 — HOLD on dc48528d7: R1 delete path ·
+                 R2 async identity · R3 graph coverage · conflict copy (§5)
+REVIEW 2         founder, 2026-09-06 — HOLD on b3e3ff7c8: R1 PASS · R2 success
+                 path PASS · R3 PASS · conflict copy PASS; two blockers remain —
+                 R2 LATE CONFLICT and the D5/D6 RAW-SQL BYPASS (§6)
+INTEGRATION      merged forward to canonical 2732706b6 (§7); overlapping
+                 DevelopRoom change reviewed, gates rerun on the merged program
 BRANCH           claude/writer-author-studios-roadmap-b2tqf5
 CENSUS           WS2-07-BUILD-07F_STANDING_CENSUS_2026-09-05.md       (canonical)
 ADJUDICATION     WS2-07-BUILD-07F_ADJUDICATION_2026-09-05.md          (canonical)
@@ -263,7 +266,96 @@ npm run check:no-supabase    clean
 
 ---
 
-## 6 · What this record does not do
+## 6 · Second review 2026-09-06 — the two remaining holes
+
+### 6.1 R2, the late CONFLICT path · BLOCKER
+
+The first repair addressed a late SUCCESS: `adoptInto` refuses an event from a reading the room has
+left. It did not address the late REFUSAL. `loadStandings(readingId)` began with an unconditional
+`beginLookup(readingId)`, so a stale `stale_expectation` returning from an unmounted A component put
+the room into `loading(A)`:
+
+```text
+B current and loaded
+old A conflict returns → loadStandings(A) → loading(A)
+  → B reads UNKNOWN(other-reading)
+  → B's own in-flight completion is discarded
+  → A settles into the room
+```
+
+A could no longer inject its VALUE into B, but it could still take B's state away. The beginning of
+a refresh is now reading-addressed exactly as its completion is (`beginRefresh`), and refuses to
+start over a different reading; the stale fetch still runs and is discarded by `settleLookup`, which
+costs one request and cannot corrupt a state. `beginLookup` remains the transition for a
+**deliberate** change of reading, where the room is the one changing it.
+
+Falsified both as a transition (`beginRefresh(heldB, A) === heldB`) and as the full sequence, with a
+companion check that a refresh of the CURRENT reading still starts — so the repair cannot be a
+refusal to refresh at all.
+
+**What this invalidated.** The earlier R2 evidence covered one of two paths and read as though it
+covered the failure. It is now two named falsifiers, success and refusal.
+
+### 6.2 D5/D6 could be bypassed without importing the store · BLOCKER
+
+The import allowlist proved **who may reach `standing/store.ts`**. It did not prove standing was
+unreachable: any module could import the generic `query` and name the table itself.
+
+```text
+D5  a MAIA helper     → generic query → SELECT … FROM the standing table
+D6  a background job  → generic query → INSERT INTO the standing table
+```
+
+Neither needs the store, and the accepted claim is stronger than "nobody imports this writer" — it
+is that *standing has no ambient route into cognition and the system cannot set it*.
+
+The companion invariant is now stated over the TABLE NAME in executable `app/` + `lib/` (tests
+excluded, since they are not the running program and the gates must be able to say the name): only
+`lib/manuscript/standing/store.ts` may name it. Both directions are falsified with modules that
+import only `query` — and **each falsifier also asserts that the import gate would NOT have seen
+it**, so the two gates are recorded as complementary rather than redundant.
+
+---
+
+## 7 · Integration — brought forward to canonical `2732706b6`
+
+Canonical moved during review, and one of its changes is in the same file (`DevelopRoom.tsx`:
+BUILD-07D's preparation state, disclosure and member gesture). Merged forward rather than assumed to
+compose.
+
+```text
+CONFLICT   one hunk, both sides adding room state — kept both
+COMPOSED   preparation governs whether the ASK is offered, in the list column;
+           standing is a per-observation axis inside an already frozen reading.
+           Independent surfaces, independent state, no shared transition.
+SCHEMA     canonical touched no migration, no lib/db, no standing module
+```
+
+A preparation act changes the LIVE Work, which can move a reading's measured state — that is 07D's
+three-state assessment doing its job, and it does not touch standing: a standing is addressed to the
+frozen `(readingId, observationKey)` and does not transfer (§3, D4).
+
+Gates on the MERGED program — not the branch alone, per this lane's own lesson that each program is
+its own evidence class:
+
+```text
+persistence falsification    15 checks · 0 failures
+write-boundary falsification 14 checks · 0 failures
+standing gates + surface     76 checks · 0 failures
+npm run typecheck            no regressions (230 vs 239 baseline)
+npm run check:no-supabase    clean
+lib/ + app/ jest             failure set IDENTICAL to canonical 2732706b6,
+                             measured in a separate worktree at that commit
+```
+
+An earlier attempt at that last comparison was invalid — the baseline checkout failed on an
+unresolved merge index and both sides were measured from the same tree. It was rerun in a detached
+worktree at `2732706b6`. Recorded because a comparison that silently measures itself is worse than
+none.
+
+---
+
+## 8 · What this record does not do
 
 ```text
 no PR · no merge · no deploy · no production migration · no promotion
@@ -273,4 +365,4 @@ nothing absorbed from the parked ledger
 no re-adjudication of Shape B, values, identity, CAS semantics, deletion semantics or D1–D7
 ```
 
-**The next act is founder review of these repairs. PR remains unauthorized until that act.**
+**The next act is founder review of the integration candidate. PR remains unauthorized until that act.**
