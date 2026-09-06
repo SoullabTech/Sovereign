@@ -354,9 +354,19 @@ gate barrier       typecheck RED at 2b5d153c (TS2561)
                       forbidden crossing
 
 custody barrier    stored on frozen/reflection-opening-v1-cmt01
-                   -> never a merge candidate
-                   -> defeated only by a deliberate cherry-pick
+                   -> governance status: not a merge candidate
+                   -> NOT a GitHub branch-protection state
+                      (the branch is reported unprotected)
+                   -> defeated by a deliberate cherry-pick, or by
+                      anyone who simply does not know the status
 ```
+
+**The custody barrier is a ruling, not an enforcement.** "Frozen branch" and
+"never a merge candidate" describe how Soullab governs the branch, not a
+mechanism GitHub applies to it. Verified 2026-09-06: the archive branch carries
+no protection rule. This does not weaken the ruling — it locates it. The barrier
+holds because the status is written down and known, which is precisely why it is
+written down here.
 
 Greening the gate without the CMT-01 ruling defeats the first barrier while
 leaving the actual defect — an unmodelled prompt-reaching input invisible to the
