@@ -19,7 +19,8 @@ BRANCH           claude/writer-author-studios-roadmap-b2tqf5
 CENSUS           WS2-07-BUILD-07F_STANDING_CENSUS_2026-09-05.md       (canonical)
 ADJUDICATION     WS2-07-BUILD-07F_ADJUDICATION_2026-09-05.md          (canonical)
 DESIGN           WS2-07-BUILD-07F_DESIGN_2026-09-05.md                (canonical, accepted)
-STATE            IMPLEMENTED ON BRANCH · FALSIFIED · NOT CLOSED · NO PR · NO DEPLOY
+STATE            SOURCE MERGED · NOT CLOSED · NOT DEPLOYED
+MERGED           PR #1229 · merge commit cb557b8fb · exact-head CI 8/8 (§8)
 ```
 
 The lane's sequence: **census → adjudication → design → falsification → build.** This record is the
@@ -411,14 +412,116 @@ rerun rather than assumed to carry over from §7.1.
 
 ---
 
-## 8 · What this record does not do
+## 8 · Post-merge state — what is settled and what is not
+
+PR #1229 (Class B) merged 2026-09-06 01:45:06Z by the founder.
 
 ```text
-no PR · no merge · no deploy · no production migration · no promotion
+MERGE COMMIT     cb557b8fb057a8c5944abd1e1e9b479aa66091ef
+PARENTS          c84bf2d93  ·  54776ed5d      (the adjudicated head, unmoved)
+NET DIFF         16 files — exactly the accepted set
+CANONICAL NOW    cb557b8fb
+```
+
+### 8.1 Exact-head CI — the full set, green before the merge
+
+```text
+auto-label                          PASS
+Axis 1 — authoritative adjudication PASS
+covenant-gates                      PASS   (repaired metadata-only; see 8.2)
+sovereignty                         PASS
+check-diagrams                      PASS
+Empty database reconstruction       PASS
+TypeScript no-regression gate       PASS
+build (Docker Build Check)          PASS   01:44:49Z, 16s before the merge commit
+```
+
+All eight on head `54776ed5d`. No CI deficit is carried forward.
+
+### 8.2 Two record corrections from the merge window
+
+**The covenant-gates failure was a PR-format defect, not a code defect.** The Class B gate requires
+one of four literal checkbox strings in the PR body; the body carried a fuller `## Rollback plan`
+in prose, which matched none of them. The founder ruled `- [x] Revert commit is sufficient` as the
+truthful option and declined `Migration rollback script provided`, which would overstate the
+post-event rollback contract. The body edit re-ran the gate on the **unchanged head** — PR metadata
+only, no commit. The failed first run remains visible as history; its successor is the conclusion.
+
+**An agent reading error, recorded rather than dropped.** After the merge, this session reported
+that `build` had never reported a conclusion on `54776ed5d`. That was wrong: the check was read via
+the legacy **commit-statuses** API (`get_status`, which returned `total_count: 0`) rather than the
+**check-runs** API that every other check in this lane was read from. The founder corrected it and
+the check-runs API confirms `conclusion: success` at 01:44:49Z. The error is the lane's own recurring
+shape — absence of evidence from the wrong instrument read as evidence of absence — and is recorded
+here for the same reason the earlier apparatus defects are.
+
+### 8.3 What merging did NOT settle
+
+```text
+SOURCE / CI            ACCEPTED · MERGED
+MIGRATION DESIGN       ACCEPTED
+INTEGRATION            ACCEPTED on ccd1c50ce · rerun on the deployed 66da58b4c
+PRODUCTION RUNTIME     LIVE at 66da58b4c · migration APPLIED 11:36:34+00
+PRIOR CONSENT          NOT GIVEN — checkpoint crossed by deployment
+STANDING ACTS          0
+PRODUCTION ACCEPTANCE  NOT STARTED · gated on a prospective founder act
+07F CLOSURE            NOT AUTHORISED
+BUILD-07G / 07H        UNOPENED
+```
+
+**The promotion subject moved** from `cb557b8fb` to `ccd1c50ce` after #1228 merged onto it. The
+integrated program was measured read-only and passes this unit's own gates (254 · 15 · 14 ·
+typecheck), and #1228's only overlap is refusal copy for a different refusal. One deploy will carry
+both units; each keeps its own acceptance record.
+
+**07F reached production before its consent checkpoint.** Read-only queries on 2026-09-06 established
+it: runtime `66da58b4c`, migration applied 11:36:34+00, the `developmental_readings` delete guard
+live, `standing_events = 0`. The reserved consent was never given and is **not** recorded as given —
+the box stays unchecked as the record of the sequence. The act now open is prospective (runbook
+§2.2). Nothing in this unit's evidence changes; what changes is that promotion is no longer this
+lane's to authorize, only its acceptance is.
+
+A design note, and no stronger than this. **Source inspection establishes the counterfactual failure
+posture: if the standing resource were unavailable, the client would render UNKNOWN with disabled
+controls rather than UNSET. This was NOT exercised by the observed production interval, because the
+table was present.** The earlier phrasing here said the interval demonstrated it and that the repair
+held; it did neither. That would have laundered a code inference into runtime evidence — the exact
+move this lane spent three reviews refusing — and W8 remains the witness that would actually
+establish it.
+
+The migration HAS run against production, and no standing event exists anywhere but the ephemeral
+laboratory: `standing_events = 0` at last read. The two records now serve different purposes than
+when they were written:
+
+```text
+docs/ops/WS2-07F_PRODUCTION_PROMOTION_RUNBOOK_2026-09-06.md
+    a promotion RECORD, not an instruction — §2.1 holds the never-given checkpoint,
+    §2.2 holds the live prospective authority
+
+docs/programme/WS2-07-BUILD-07F_ACCEPTANCE_WALK_SPEC_2026-09-06.md
+    retargeted to the deployed runtime 66da58b4c; NOT STARTED; W3 onward gated on §2.2
+```
+
+**There is no deployment left for this lane to authorize.** The act now open is §2.2: acknowledge
+that the migration was applied before its consent checkpoint, decline to authorize that deployment
+retroactively, and authorize the standing behaviour to remain in production and the walk to create
+standing events. Until that act, W1 (read-only) may be run and W3 may not.
+
+---
+
+## 9 · What this record does not do
+
+The merge is now part of the record (§8) and is not undone by this footer. What THIS RECORD does
+not do:
+
+```text
+no deploy · no production migration · no promotion
 no closure of BUILD-07F — the founder closes a unit, not a session
 no opening of BUILD-07G or 07H
 nothing absorbed from the parked ledger
 no re-adjudication of Shape B, values, identity, CAS semantics, deletion semantics or D1–D7
 ```
 
-**The next act is founder review of the integration candidate. PR remains unauthorized until that act.**
+**The next act is the founder's §2.2 decision. After it: #1228's retained production witness, if its
+own lane has not already completed it, then the frozen W1–W12b. Closure follows the walk; it was not
+granted by the merge, and it is not granted by the deployment that overtook it.**
