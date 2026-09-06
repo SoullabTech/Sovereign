@@ -97,8 +97,18 @@ session resolved no member; a signed-in member saw it, contradicting the arrival
 state's *MAIA presence: none*. This was left for a founder ruling. It is now ruled.
 
 **Ruling.** *House MAIA availability does not imply an ambient MAIA affordance in
-every room.* Journal suppresses the floating handle. Its sole MAIA affordance is
-the room-owned `Reflect with MAIA` gesture on a kept entry.
+every room.* Journal suppresses the floating handle. Its sole **in-room MAIA
+invocation affordance** is the room-owned `Reflect with MAIA` gesture on a kept
+entry.
+
+**Sharpened 2026-09-06** after the closure walk observed a header back-link
+reading `← MAIA` at arrival. That link **may remain**: it is egress/navigation,
+not in-room invocation. It takes the member *out of Journal to MAIA*; it does not
+bring MAIA into Journal, open a conversation over a Journal entry, or compete with
+`Reflect with MAIA`. Accordingly, *MAIA presence: none* means **no ambient or
+in-room MAIA presence on arrival**; it does not prohibit a clearly directional
+link that leaves the room. This closes the apparent contradiction without
+weakening the threshold ruling.
 
 **Scope: throughout `/journal`, not merely on arrival.** The handle broke the room
 in both directions:
