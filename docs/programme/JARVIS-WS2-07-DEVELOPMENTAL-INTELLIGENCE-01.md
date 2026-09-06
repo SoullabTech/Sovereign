@@ -1,25 +1,52 @@
 # JARVIS-WS2-07-DEVELOPMENTAL-INTELLIGENCE-01
 
-> **Lane active. BUILD-07E DEVELOPMENTAL DIALOGUE — CLOSED / ACCEPTED (founder act, 2026-09-05) at canonical `6ff0beafc`, LIVE. BUILD-07A, 07B, 07C, 07D and 07E are CLOSED / ACCEPTED and canonical — Stage 7.1 complete and BUILD-07E with it. BUILD-07F opened by its own act (block below); BUILD-07G–H unauthorized.**
+> **Lane active. BUILD-07E DEVELOPMENTAL DIALOGUE — CLOSED / ACCEPTED (founder act, 2026-09-05) at canonical `6ff0beafc`, LIVE. BUILD-07A, 07B, 07C, 07D and 07E are CLOSED / ACCEPTED and canonical — Stage 7.1 complete and BUILD-07E with it. BUILD-07F source is MERGED but NOT CLOSED (block below); BUILD-07G–H unauthorized.**
 >
-> **BUILD-07F DEVELOPMENTAL DECISIONS — OPEN (founder acts, 2026-09-05 / 2026-09-06).** Census,
-> adjudication and design are canonical and accepted; **implementation authorized 2026-09-06 bound
-> to canonical `d8fc2082d`**, falsification-first. A branch candidate now exists on
-> `claude/writer-author-studios-roadmap-b2tqf5` — **NOT CLOSED, no PR, nothing deployed**. Its
-> evidence: `docs/programme/WS2-07-BUILD-07F_IMPLEMENTATION_WITNESS_2026-09-06.md` (eight deficient
-> persistence variants and six deficient write-boundary variants each observed RED on its named
-> guard before the repair was accepted; `15 checks · 0 failures` and `14 checks · 0 failures` on the
-> code as written; D5/D6 module-graph gates falsified over an in-memory overlay across every
-> module-loading form). **Founder review 2026-09-06 returned HOLD on `dc48528d7` — two blockers (the
-> D3 delete path through a directly deleted reading; a late async completion able to carry reading
-> A's standing into reading B), one gate-coverage defect and one copy repair; all four repaired,
-> §5 of the witness records what each invalidated. A second review returned HOLD on `b3e3ff7c8`
-> with R1/R3/copy PASS and two remaining blockers — the late-conflict refresh path and a raw-SQL
-> bypass of the D5/D6 import gate — both repaired (§6), and the branch is now the INTEGRATION
-> CANDIDATE brought forward to canonical `2732706b6` with its overlapping DevelopRoom change
-> reviewed and gates rerun on the merged program (§7). **07F SOURCE ACCEPTED (founder, 2026-09-06) on
-> `96db26f62`; brought forward to canonical `df9594592` and then `c84bf2d93` — head `238c9dd47`, 16-file net diff, gates
-> bound to that head (§7.1). PR AWAITS THE FOUNDER'S OPENING ACT; deploy not authorized.** **BUILD-07G and 07H remain unopened.**
+> **BUILD-07F DEVELOPMENTAL DECISIONS — SOURCE MERGED (2026-09-06), NOT CLOSED.** Census,
+> adjudication and design are canonical and accepted; implementation was authorized falsification-first
+> and passed two founder source reviews (four repairs, then two blockers: the late-conflict refresh
+> path and a raw-SQL bypass of the D5/D6 import gate). **PR #1229 (Class B) merged as `cb557b8fb`
+> with exact-head CI 8/8 on `54776ed5d`; canonical has since moved through `ccd1c50ce` to
+> `66da58b4c`, which is what production runs.** Records:
+> `docs/programme/WS2-07-BUILD-07F_IMPLEMENTATION_WITNESS_2026-09-06.md` (§8 post-merge state),
+> `docs/ops/WS2-07F_PRODUCTION_PROMOTION_RUNBOOK_2026-09-06.md` — now a promotion RECORD, since the
+> promotion happened — and `docs/programme/WS2-07-BUILD-07F_ACCEPTANCE_WALK_SPEC_2026-09-06.md`,
+> retargeted to the deployed runtime and NOT STARTED.
+>
+> ```text
+> SOURCE / CI            ACCEPTED · MERGED as cb557b8fb · CI 8/8
+> MIGRATION DESIGN       ACCEPTED
+> INTEGRATION            ACCEPTED on ccd1c50ce, rerun on 66da58b4c (254 · 15 · 14 · typecheck)
+> 07F RUNTIME            LIVE in production at 66da58b4c
+> 07F MIGRATION          APPLIED 2026-09-06 11:36:34+00
+> PRIOR CONSENT          NOT GIVEN — the checkpoint was CROSSED BY DEPLOYMENT, not sanitized
+> STANDING ACTS          0 — the boundary before acceptance
+> PRODUCTION ACCEPTANCE  NOT STARTED · gated on a PROSPECTIVE founder act (runbook §2.2)
+> BUILD-07F              NOT CLOSED
+> BUILD-07G / 07H        UNOPENED
+> ```
+>
+> **Cross-lane boundary, resolved 2026-09-06.** `ccd1c50ce` is #1228 merged onto 07F's own merge, so
+> the integrated program contains both and no lawful deploy separates them. The founder adjudicated
+> #1228 independently fit for promotion rather than let 07F carry it in silently; the older ancestor
+> `cb557b8f` is explicitly NOT the target. **One deploy, two acceptance records** — #1228's witness
+> runs first (it clears an obstruction 07F's walk needs), and neither result counts as the other's.
+> Bounded integration check on `ccd1c50ce`: 254 standing/surface · 15 persistence falsifiers · 14
+> write-boundary falsifiers · typecheck no regressions.
+>
+> **The consent checkpoint was crossed by a deployment, and the record says so.** 07F was promoted
+> outside this lane's runbook; the migration applied at 11:36:34+00 and the `developmental_readings`
+> delete guard is live. The reserved §2 box stays **permanently unchecked** — checking it now would
+> falsify the sequence. What remains is a different, prospective act (runbook §2.2): acknowledge the
+> crossing without retroactively authorizing it, and authorize the standing behaviour to remain and
+> the walk to create events. **`standing_events = 0`** is what keeps that decision clean; W3 ends it.
+> There is no deployment left for this lane to authorize.
+>
+> The behaviour change that consent item reserved — a `BEFORE DELETE` trigger on the existing
+> `developmental_readings` table, refusing direct reading deletion while its Work exists and
+> preserving whole-Work cascade — is now LIVE, applied before the act. Runbook **§2.1** holds that
+> never-given checkpoint, permanently unchecked as the record of the sequence; runbook **§2.2** holds
+> the live authority, which is prospective and gates the WALK rather than a deploy.
 >
 > **07E's closure evidence: `docs/programme/WS2-07-BUILD-07E_DIALOGUE_CLOSURE_2026-09-05.md` (the walk W1–W9, bound to `6ff0beafc`, with two retained production artifacts named in §3). Its boundary and build records sit beside it. The lesson worth carrying into 07F: the anchored-ask spine already existed in canonical, and reading canonical before designing is why 07E was an extension rather than a second conversation model.**
 >
