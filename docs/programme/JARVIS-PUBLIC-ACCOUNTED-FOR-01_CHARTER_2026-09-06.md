@@ -43,14 +43,16 @@ docs/design/contracts/accounted-for.md
 docs/design/contracts/screenshots/accounted-for-desktop.png
 docs/design/contracts/screenshots/accounted-for-mobile.png
 
-CURRENT PR
+PUBLICATION PR
 #1239 — https://github.com/SoullabTech/Sovereign/pull/1239
-branch claude/maia-human-experience-arch-12g5r6
+MERGED 2026-09-06 18:33:04Z → `ca5fdff445526562ce11f68c01e20db9bf64548f`
 
 CURRENT PUBLICATION STATE
-DRAFT PR · UNMERGED · UNDEPLOYED
-MERGE    NOT AUTHORIZED
-DEPLOY   NOT AUTHORIZED
+INITIAL PUBLICATION RUN   CLOSED / ACCEPTED
+PUBLIC PAGE               LIVE · production-witnessed at `ca5fdff44`
+PUBLIC-LEDGER LANE        STANDING · resumes on an upstream claim-changing event (§11)
+MERGE                     COMPLETE
+DEPLOY                    COMPLETE · governed gate + dual provenance + public-path render witness
 ```
 
 Do not open a replacement PR unless the existing PR becomes technically unusable.
@@ -299,6 +301,7 @@ The first lane does not block the second except where a public claim or governan
 |---|---|
 | 2026-09-06 | Lane opened by founder ruling (split). Custody of `/accounted-for`, PR #1239, source of record, contract, screenshots and reconciliation record transferred in. Custody check §9 performed. No page, pitch or PR-branch edit made by this lane yet. State: awaiting founder merge ruling. |
 | 2026-09-06 ~18:25Z | **Publication run at the PR head — COMPLETE.** Founder authorization (bounded, 2026-09-06) executed in order: (1) canonical `2b4ec96a` merged into the branch as `18dfc0a2` (remote head verified `a7b42f29` before writing); (2) CLAUDE.md resolved keeping both bullets, split bullet above; (3) PR #1239 title/body rewritten to this lane's custody, R&D material through `a7b42f29` explained and preserved; (4) custody check: canonical contained, only app file `app/accounted-for/page.tsx` (unchanged since `cf6d9ebf`), pitch + contract unchanged since `cf6d9ebf`, no research statistic in page prose, every commit after `a7b42f29` is canonical history or the freshness merge; (5) render walk at 1280×900 + 390×844 PASS (contract `experience_verification`, eighth walk; screenshots byte-identical to the seventh revision); (6) contract updated with the observations; (7) gates: design-canon PASS · no-supabase PASS · diff --check PASS · typecheck no-regression PASS (230 vs 239); (8) pushed. **`READY FOR FOUNDER MERGE RULING`.** Merge NOT AUTHORIZED · deploy NOT AUTHORIZED; "live" only after a founder deploy act and production witness. |
+| 2026-09-06 ~18:55Z | **Initial publication run CLOSED / ACCEPTED; lane transitions to standing public-ledger mode (§11).** Founder merged #1239 at pinned head `f61a1f2c`; merge commit `ca5fdff445526562ce11f68c01e20db9bf64548f`. Founder then authorized and executed the governed deploy of that exact merge: the pre-deploy gate built/swapped `ca5fdff44`, and both container provenance channels (`printenv` and `Config.Env`) reported `ca5fdff44`. Public-path witness from the Mac Studio then returned `/api/health` version `ca5fdff44`; a browser walk of `https://soullab.life/accounted-for` found all five production parts — `I · If · Fire`, `II · Why · Water`, `III · How · Earth`, `IV · What · Air`, `V · Who · Aether` — plus `Why Soul Lab`; and the raw public response contained exactly one serialized RSC marker for each `I/If` through `V/Who`. The raw-response marker requires payload-form matching because the page content is serialized through the root RSC/provider path; recorded as an upstream rendering/SEO observation, not a publication defect or closure blocker. No claim or maturity label moved during deployment. Canonical later advanced to `0d8746c1` via docs-only PR #1242; this closure record branches from that newer canonical tip and does not alter the production witness bound to `ca5fdff44`. |
 | 2026-09-06 ~17:58Z | **Operational transfer CLOSED.** Final containment `a7b42f29` (test in split record §7b satisfied: R&D session on its Phase-1 branch, merge-base = `a7b42f29`, its charter §25 + master-run delegation landed there). Governance transfer still open on PR #1241 (7/8 checks green, `build` running). This lane is now the only writer on #1239. Next, after #1241 merges: freshness merge of `69f6fb7c`, both CLAUDE.md bullets kept, PR title/body to publication custody, custody check + gates rerun. |
 | 2026-09-06 ~17:48Z | **Founder ruling on the collision — accepted with custody correction** (split record §7a): containment at `6ce59f82`, late arrivals recorded not erased (observed drift to `f7705937`), this lane sole writer thereafter, R&D commits preserved. Stop instruction relayed into the R&D session by Routine (`trig_01GpBz6zR8XtKLhSHyGxovsN`, run `cse_01WdfehBCtjB2gS5VuNYtgeR`). Sequence: governance PR merges first → #1239 absorbs `69f6fb7c` → both CLAUDE.md bullets kept → title/body to publication custody → custody check + gates rerun → then, and only then, `READY FOR FOUNDER MERGE RULING`. No merge ruling due yet (Docker Build · Canonical PR Quality Gate running at `6ce59f82`). |
 | 2026-09-06 17:43Z | **Collision.** The R&D lane's session pushed the pivot act (master run, Phase 1 open, manifesto FROZEN, its charter §24) and a census skeleton onto the PR branch without recording the split; master run §4/§11 still assign `/accounted-for` tasks to the R&D cockpit. Custody item 1 = FAIL until ruled. Freeze inherited as a constraint. Transfer message to that session attempted and refused (session unreachable from here); founder relay needed. Founder ruling requested on branch topology (split record §7). `READY FOR FOUNDER MERGE RULING` **withheld** until the collision is ruled and the freshness merge from `69f6fb7c` is made. |
