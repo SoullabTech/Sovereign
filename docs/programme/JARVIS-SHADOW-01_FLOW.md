@@ -18,7 +18,7 @@ constitute: CLOSED / RATIFIED
 design_stage: CLOSED / ACCEPTED
 claim_state: DESIGNED · NOT LIVE
 hard_stop: CROSSED   # explicit founder act 2026-09-06
-prototype: OPEN — P0–P7 ALL GREEN after P5-C1 (Leave ends turn authority) and P4-C2 (S5 atom attestation); 31 gate checks + 16 DB acceptance checks against the current atom contract; P8 ready for the founder walk
+prototype: OPEN — P0–P7 GREEN; P8 OPEN: technical + model-behaviour (rater) portion PASS on founder's run against 6516a3224; authenticated browser walk PENDING (credentials unavailable in that environment; boundary not worked around)
 witness: HOLD
 promote: HOLD
 runtime: UNCHANGED
@@ -28,9 +28,9 @@ invoked_entrance: DESIGNED · DEFERRED until activation-turn isolation is struct
 merge: NOT AUTHORIZED
 deploy: NOT AUTHORIZED
 maia_runtime_change: NOT AUTHORIZED
-current_node: PROTOTYPE / P8 ready
-next_possible_act: the founder prototype walk (P8), including the F16 adversarial specimen
-last_state_change: 2026-09-06 (P5-C1 + P4-C2 corrections; gates 31/0, acceptance 16/0 with the S5 mint gate armed)
+current_node: PROTOTYPE / P8 open
+next_possible_act: the founder's authenticated browser walk — seven paths plus the F16 probe; closure is a felt judgment, not a technical one
+last_state_change: 2026-09-06 (founder P8 verification pass recorded: six adversarial model-behaviour cases PASS — first evidence for the rater halves of F4/F7/F13/F15/F16; five browser-walk items remain unobserved)
 ```
 
 ```text
@@ -42,7 +42,7 @@ CONSTITUTE     CLOSED / RATIFIED
 DESIGN         CLOSED / ACCEPTED
 CLAIM STATE    DESIGNED · NOT LIVE
 HARD STOP      CROSSED
-PROTOTYPE      OPEN · P0–P7 GREEN · P8 READY (founder walk)
+PROTOTYPE      OPEN · P0–P7 GREEN · P8 OPEN (rater PASS · browser walk pending)
 WITNESS        HOLD
 PROMOTE        HOLD
 RUNTIME        UNCHANGED
