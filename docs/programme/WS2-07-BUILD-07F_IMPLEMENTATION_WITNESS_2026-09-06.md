@@ -460,9 +460,11 @@ here for the same reason the earlier apparatus defects are.
 ```text
 SOURCE / CI            ACCEPTED · MERGED
 MIGRATION DESIGN       ACCEPTED
-INTEGRATION            ACCEPTED on ccd1c50ce — one combined promotion with PR #1228
-PRODUCTION DEPLOY      APPROVED IN PRINCIPLE · FOUNDER CONSENT NOT GIVEN
-PRODUCTION ACCEPTANCE  NOT STARTED
+INTEGRATION            ACCEPTED on ccd1c50ce · rerun on the deployed 66da58b4c
+PRODUCTION RUNTIME     LIVE at 66da58b4c · migration APPLIED 11:36:34+00
+PRIOR CONSENT          NOT GIVEN — checkpoint crossed by deployment
+STANDING ACTS          0
+PRODUCTION ACCEPTANCE  NOT STARTED · gated on a prospective founder act
 07F CLOSURE            NOT AUTHORISED
 BUILD-07G / 07H        UNOPENED
 ```
@@ -472,9 +474,17 @@ integrated program was measured read-only and passes this unit's own gates (254 
 typecheck), and #1228's only overlap is refusal copy for a different refusal. One deploy will carry
 both units; each keeps its own acceptance record.
 
-**Also observed and not yet resolved:** production already reports `GIT_COMMIT = ccd1c50ce`,
-promoted outside this lane. Whether 07F's migration ran with it is unestablished — the runbook's §0
-settles it with three read-only queries before anything else is run.
+**07F reached production before its consent checkpoint.** Read-only queries on 2026-09-06 established
+it: runtime `66da58b4c`, migration applied 11:36:34+00, the `developmental_readings` delete guard
+live, `standing_events = 0`. The reserved consent was never given and is **not** recorded as given —
+the box stays unchecked as the record of the sequence. The act now open is prospective (runbook
+§2.2). Nothing in this unit's evidence changes; what changes is that promotion is no longer this
+lane's to authorize, only its acceptance is.
+
+One thing the interval demonstrated, stated as a design note and not as mitigation: during the
+window when it was unknown whether the table existed, the surface's failure mode was
+*"Your standing could not be reached"* with controls disabled — never a false "No standing taken."
+The unknown-vs-UNSET repair held under a condition no one designed for.
 
 The migration has not run against production; no standing event exists anywhere but the ephemeral
 laboratory. Promotion and the acceptance walk are prepared, not performed:

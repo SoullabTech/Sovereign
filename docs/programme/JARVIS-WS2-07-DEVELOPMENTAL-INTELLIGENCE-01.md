@@ -14,9 +14,12 @@
 > ```text
 > SOURCE / CI            ACCEPTED · MERGED as cb557b8fb · CI 8/8
 > MIGRATION DESIGN       ACCEPTED
-> INTEGRATION            ACCEPTED on ccd1c50ce (one combined promotion with PR #1228)
-> PRODUCTION PROMOTION   APPROVED IN PRINCIPLE · FOUNDER CONSENT (runbook §2) NOT GIVEN
-> PRODUCTION ACCEPTANCE  NOT STARTED
+> INTEGRATION            ACCEPTED on ccd1c50ce, rerun on 66da58b4c (254 · 15 · 14 · typecheck)
+> 07F RUNTIME            LIVE in production at 66da58b4c
+> 07F MIGRATION          APPLIED 2026-09-06 11:36:34+00
+> PRIOR CONSENT          NOT GIVEN — the checkpoint was CROSSED BY DEPLOYMENT, not sanitized
+> STANDING ACTS          0 — the boundary before acceptance
+> PRODUCTION ACCEPTANCE  NOT STARTED · gated on a PROSPECTIVE founder act (runbook §2.2)
 > BUILD-07F              NOT CLOSED
 > BUILD-07G / 07H        UNOPENED
 > ```
@@ -29,8 +32,13 @@
 > Bounded integration check on `ccd1c50ce`: 254 standing/surface · 15 persistence falsifiers · 14
 > write-boundary falsifiers · typecheck no regressions.
 >
-> **Observed, unresolved:** production already reports `GIT_COMMIT = ccd1c50ce` — promoted outside
-> this lane's runbook. Whether 07F's migration ran with it is not yet established (runbook §0).
+> **The consent checkpoint was crossed by a deployment, and the record says so.** 07F was promoted
+> outside this lane's runbook; the migration applied at 11:36:34+00 and the `developmental_readings`
+> delete guard is live. The reserved §2 box stays **permanently unchecked** — checking it now would
+> falsify the sequence. What remains is a different, prospective act (runbook §2.2): acknowledge the
+> crossing without retroactively authorizing it, and authorize the standing behaviour to remain and
+> the walk to create events. **`standing_events = 0`** is what keeps that decision clean; W3 ends it.
+> There is no deployment left for this lane to authorize.
 >
 > The promotion runbook carries an unchecked founder consent item: 07F's migration adds a
 > `BEFORE DELETE` trigger to the existing `developmental_readings` table (direct reading deletion

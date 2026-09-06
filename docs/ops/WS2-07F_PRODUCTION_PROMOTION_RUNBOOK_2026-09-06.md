@@ -1,252 +1,161 @@
-# WS2-07 · BUILD-07F — production promotion runbook
+# WS2-07 · BUILD-07F — production promotion record
 
-> **PREPARATION ONLY. Nothing in this document has been executed. Production promotion is NOT
-> authorized; the consent checkpoint in §2 has NOT been given. Every command below is run by the
-> founder from the Mac Studio against minisforum — this runbook is written by an agent with no
-> shell on either host and no production database contact.**
+> **SUPERSEDED BY EVENTS. This began as a promotion runbook for an act that had not happened. It is
+> now the RECORD of a promotion that occurred before its consent checkpoint was given. There is no
+> deployment left for this lane to authorize: 07F's runtime and its migration are already in
+> production. The prospective founder act that remains is in §2, and it is not the act this document
+> originally reserved.**
 
 ```text
-SUBJECT          ONE COMBINED PROMOTION — BUILD-07F (PR #1229) + PR #1228
-CANONICAL        ccd1c50ce822128d9b784c657e21929ca8095379
-DEPLOY TARGET    ccd1c50ce
-07F SOURCE / CI  ACCEPTED · MERGED (PR #1229, exact-head CI 8/8)
-#1228 SOURCE/CI  ACCEPTED · MERGED (exact head 36036e2f3, checks green)
-MIGRATION        20260906000001_developmental_observation_standing.sql
-STATE            07F PROMOTION APPROVED IN PRINCIPLE · FOUNDER CONSENT (§2) NOT GIVEN
+SUBJECT               BUILD-07F (PR #1229) + PR #1228, integrated
+DEPLOYED RUNTIME      66da58b4c4a4979240db460c045dd9daf1cd47d3
+07F MIGRATION         APPLIED IN PRODUCTION 2026-09-06 11:36:34+00
+DELETE GUARD          LIVE
+PRIOR §2 CONSENT      NOT GIVEN — the checkpoint was crossed by deployment
+STANDING ACTS         0
+07F ACCEPTANCE        NOT STARTED
 ```
-
-**Why one deploy carries two units.** `ccd1c50ce` is the merge of #1228 onto `cb557b8fb`, which is
-the merge of 07F — so the integrated program contains both, and there is no lawful way to put 07F
-into production without #1228 short of deliberately deploying an older ancestor. The founder
-adjudicated #1228 independently fit for promotion (2026-09-06) rather than let 07F carry it in
-silently. **The older ancestor `cb557b8f` is NOT the promotion target and must not be deployed** —
-see §10.
-
-**Two units, two acceptance records, one runtime.** Passing #1228's witness is not a 07F witness and
-passing 07F's walk does not close #1228 (§9).
 
 ---
 
-## 0 · ⚠ OBSERVED BEFORE EXECUTION — production already reports this program
+## 0 · WHAT ACTUALLY HAPPENED — the consent checkpoint was crossed by a deployment
 
-On 2026-09-06, while this promotion was still unauthorized, the founder ran:
-
-```bash
-ssh soullab@minisforum 'docker exec maia-sovereign printenv GIT_COMMIT'
-→ ccd1c50ce
-```
-
-**The deploy target is already the running container.** Something promoted `ccd1c50ce` outside this
-runbook — plausibly #1228's own lane, whose post-merge sequence is `deploy → Keep a version →
-production witness`. That changes what this document is for, and the change must be established
-before anything else is run:
+Established by read-only queries run from the founder's connected Mac Studio on 2026-09-06, not
+inferred:
 
 ```text
-IF the full path ran      migrations ran too — including 07F's — and the §2 consent was
-                          CROSSED BY A DEPLOY rather than given. The correct response is to
-                          RECORD what happened, not to retroactively authorize it.
-IF the quick path ran     no migrations ran. 07F's runtime is live against a database with no
-                          standing table; the lawful remaining act is migrations only, after
-                          consent (see below).
+CURRENT CANONICAL      66da58b4c4a4979240db460c045dd9daf1cd47d3
+RUNNING GIT_COMMIT     66da58b4c
+DEPLOY_LANE            deploy-lane
+CONTAINER CREATED      2026-09-06T11:36:04.283455028Z
+07F MIGRATION APPLIED  2026-09-06 11:36:34.367017+00
+STANDING TABLE         PRESENT
+STANDING EVENTS        0
+
+developmental_readings triggers:
+  developmental_readings_immutable_check          (07C, intact)
+  developmental_readings_no_orphan_delete_check   (07F — the guard reserved for consent)
+  developmental_readings_observations             (07C insert-shape check, intact)
 ```
 
-Settle it with three reads — none of them mutate anything:
+**The behaviour change this document reserved for an explicit act is already live.** Container
+creation and migration application fall in the same deployment window and the lane token is
+`deploy-lane`, which is consistent with the full deploy path — but the reads establish *what is
+true*, not which invocation caused it, and this record does not claim the latter.
 
-```bash
-# a · did 07F's migration apply?
-ssh soullab@minisforum 'docker exec maia-postgres psql -U soullab maia_consciousness -c \
-  "SELECT filename, applied_at FROM schema_migrations \
-    WHERE filename LIKE '\''2026090%'\'' ORDER BY applied_at DESC LIMIT 10;"'
+### What is NOT done about it
 
-# b · do the objects exist?
-ssh soullab@minisforum 'docker exec maia-postgres psql -U soullab maia_consciousness -c \
-  "SELECT to_regclass('\''developmental_observation_standing_events'\'') AS standing_table;"'
+**The §2 box is not checked retroactively.** It said consent must precede the behaviour change. It
+did not. Marking it now would falsify the sequence, and a record that falsifies its own sequence is
+worth less than no record.
 
-# c · which lane built the live container, and when
-ssh soullab@minisforum 'docker exec maia-sovereign printenv DEPLOY_LANE; \
-  docker inspect maia-sovereign --format "{{.Id}} {{.Created}}"'
-```
-
-**If the table is absent, the live 07F surface is degraded but honest** — and this is the one place
-the design earns its keep unplanned. `fetchStandings` cannot reach the resource, the room settles to
-`unavailable`, and every observation reads *"Your standing could not be reached. Nothing has been
-changed."* with the controls disabled. It does **not** read "No standing taken." A member is told the
-truth about an instrument failure rather than shown a false absence, which is exactly what W8 was
-written to check. It is still a broken feature and 07F cannot be walked until the table exists.
-
-**If the table is absent, the remaining act is migrations only:**
-
-```bash
-ssh soullab@minisforum 'cd ~/MAIA-SOVEREIGN && ./scripts/deploy-production.sh migrate'
-```
-
-That path takes the deploy-lane lock and runs **all** pending migrations — so §2's consent still
-governs it, and so does knowing what else is pending. It does not rebuild or swap the container,
-which is correct here: the container is already the intended commit.
-
-**Nothing in this section is authorized by observing it.** Consent (§2) has not been given.
-
-
-## 1 · Why this is the FULL deploy path, not the quick one
+### The one fact that keeps a clean decision available
 
 ```text
-scripts/pre-deploy-gate.sh deploy-maia <SHA>     ← NOT THIS
-scripts/deploy-production.sh deploy ccd1c50ce    ← THIS
+STANDING EVENTS = 0
 ```
 
-The quick path rebuilds **only** the `maia` service and **runs no migrations**. 07F ships a schema
-change, so a quick deploy would put code that reads and writes
-`developmental_observation_standing_events` in front of a database that does not have it. The full
-path acquires the deploy-lane lock, materializes the named commit into an isolated snapshot, builds
-from that snapshot, tags for rollback, verifies provenance on both sides of the swap, and runs
-migrations from the same snapshot.
+No member judgment has been recorded under the new mechanism. Every option — proceed, or reverse —
+is still available without destroying a member act, because there is no member act yet. That is the
+boundary this record marks, and it closes the moment W3 of the acceptance walk creates the first
+event.
+
+### What the interval showed about the design
+
+Between the deploy and these reads, the state was unknown to us. Had the migration NOT run, the live
+surface would have degraded to *"Your standing could not be reached. Nothing has been changed."*
+with its controls disabled — never to a false "No standing taken." The unknown-vs-UNSET repair
+forced through source review did exactly what it was built to do in a situation nobody planned for.
+That is a note about the design, **not** a mitigation of the governance fact above.
 
 ---
 
-## 2 · FOUNDER AUTHORIZATION — the behaviour change this deploy makes
+## 1 · The promotion path — RETAINED AS REFERENCE, not an instruction
 
-**This is a consent item, not a consequence of merging. It has not been given.**
+**There is no deploy or migrate command in this document any more.** The acts it once instructed —
+`deploy ccd1c50ce`, and the migrations-only fallback — have been overtaken by reality: production is
+already at `66da58b4c` with the migration applied. Naming a target SHA here now would be an
+instruction to redo something that is done.
 
-- [ ] **I knowingly authorize this production behaviour change.**
+What is worth keeping from that path, because a future promotion in this lane will need it:
+
+```text
+FULL vs QUICK      pre-deploy-gate.sh deploy-maia rebuilds only the maia service and runs NO
+                   migrations; a schema-bearing commit must go through deploy-production.sh deploy,
+                   which snapshots the named commit, builds from it, tags for rollback, verifies
+                   provenance on BOTH sides of the swap (fail-closed), and migrates from the same
+                   snapshot.
+MIGRATION FAILURE  cmd_deploy does NOT abort on it. It warns, prints "Deployment complete!" and runs
+                   smoke anyway — so a migration is never evidenced by the deploy's own success
+                   message. Verify it independently (§3).
+UNADJUDICATED      after any migration ERROR the database state is unadjudicated: each file runs
+                   transactionally with ON_ERROR_STOP=1, so a failure inside the file rolls back, but
+                   the migration's own COMMIT can succeed and the SEPARATE schema_migrations INSERT
+                   can fail — objects present, ledger silent. Inspect both before retry or cleanup.
+BENIGN WARNINGS    the runner wraps each file in BEGIN;/COMMIT; and this lane's migrations carry
+                   their own, so Postgres emits "there is already a transaction in progress" and
+                   "there is no transaction in progress". Warnings, not errors.
+```
+
+Any future use of this path is a new act: it names its own SHA, and it takes its own consent.
+
+---
+
+## 2 · FOUNDER AUTHORIZATION — now prospective, because the original act was overtaken
+
+### 2.1 What this section reserved, and what happened to it
 
 > The 07F migration adds a `BEFORE DELETE` trigger to the existing `developmental_readings` table,
-> preventing direct deletion of a reading while its Work exists, while preserving whole-Work
-> cascade deletion.
+> preventing direct deletion of a reading while its Work exists, while preserving whole-Work cascade
+> deletion.
 
-What that means in production, stated plainly so the consent is informed:
+- [ ] ~~I knowingly authorize this production behaviour change.~~ **NEVER GIVEN.**
+
+**Left unchecked deliberately and permanently.** The guard went live at 2026-09-06 11:36:34+00
+without this act. Checking it now would say consent preceded the change; it did not. The empty box
+is the record of that, and this section does not become a retroactive authorization by sitting above
+the one below.
+
+What the change means in production — unchanged, and now live:
 
 ```text
 DELETE FROM developmental_readings WHERE id = R    while its manuscript exists   → REFUSED
 DELETE FROM member_manuscripts WHERE id = M        → reading cascade → standing cascade  → PERMITTED
 ```
 
-- It is the **only** place 07F alters the behaviour of an existing production object. Everything
-  else in the migration is additive.
-- No code path in the repository issues a direct delete of a reading, so no running feature changes.
-  The change is to what a future caller — including a human at `psql` — is able to do.
-- It is required for the accepted D3 ruling to be structurally true rather than inferred from the
-  absence of a route: the standing stream's own delete guard permits erasure exactly when its
-  reading is already gone, and that inference is only sound if a reading cannot be removed while
-  the Work stands.
-- Reversing it later is one `DROP TRIGGER` — but see §7: while standing history exists, this trigger
-  is part of the integrity path and should not be dropped merely to roll code back.
+No code path in the repository issues a direct delete of a reading, so no running feature changed.
+The change is to what a future caller — including a human at `psql` — is able to do.
 
-**Until this box is checked by the founder, do not proceed past this section.**
+### 2.2 The act that is actually open now
 
----
+Prospective, not retroactive, and the founder's alone:
 
-## 3 · Preconditions
+> **I acknowledge that the 07F migration was applied before its explicit consent checkpoint was
+> given. I do not retroactively authorize that deployment. I now authorize the 07F standing
+> behaviour to remain in production and authorize the production acceptance walk to create standing
+> events.**
 
-```text
-1  canonical is still ccd1c50ce                     git fetch && git rev-parse origin/clean-main-no-secrets
-2  the deploy lane is free                          a refusal prints the holder; NEVER delete .deploy.lock
-3  .env.production exists, no REPLACE_ME values     the script refuses otherwise
-4  run from the Mac Studio, executing on minisforum  ssh soullab@minisforum
-5  §2 consent given
-```
+- [ ] **Given.**
 
-If canonical has moved, STOP: this runbook is bound to `ccd1c50ce`, and a different SHA is a
-different act. Canonical moving is not by itself a defect — it means the promotion subject must be
-re-adjudicated for the new program, exactly as the `cb557b8f → ccd1c50ce` move was.
+**This gates the WALK, not a deploy.** Until it is given, W1 (read-only provenance and schema) may be
+run; **W3 must not** — it creates the first durable member standing act, and `standing_events = 0`
+is the boundary that keeps every option open (§0).
+
+If it is not given, stop. The table is empty, so reversal destroys no member act — but reversal
+needs its own plan against current canonical, and "drop the table" is not that plan: it would leave
+the live 07F surface reaching a resource that no longer exists. See §4.
 
 ---
 
-## 4 · The sequence, and what each step guarantees
+## 3 · Establishing the production state — the reads that produced §0
+
+These are the queries that established §0, and the procedure for re-establishing it. All are
+read-only. Container freshness is comparative — an id and a window, never a stopwatch: the deploy
+waits for startup, migrates, then runs the full constitutional suite, which legitimately exceeds a
+minute, so a threshold would fail a correct deploy and pass a stale one.
 
 ```bash
-ssh soullab@minisforum 'cd ~/MAIA-SOVEREIGN \
-  && git fetch origin clean-main-no-secrets \
-  && ./scripts/deploy-production.sh deploy ccd1c50ce'
-```
-
-| step | guarantee |
-|---|---|
-| `acquire_deploy_lock` | one deploy at a time; the record names the **asserted** SHA, not the checkout |
-| `deploy_ctx_assert_and_materialize` | builds a `git archive` snapshot of the named commit — a concurrent checkout cannot change what is built; exports `GIT_COMMIT` |
-| dependency audit | blocks on moderate+ vulnerabilities (`SKIP_AUDIT=1` overrides — do not use silently) |
-| `pre-deploy-gate.sh disk` | refuses before the storage-expanding build |
-| compose build (from snapshot) | image stamped with `GIT_COMMIT` / `APP_VERSION` / `BUILD_DATE` |
-| `deploy_ctx_verify_image` | **pre-swap**: the built image carries the asserted stamp, or abort with the old container untouched |
-| `tag_images_for_rollback` | `maia-sovereign:current` / `:previous` / `:<sha>` refreshed **before** the swap |
-| `up -d` + `deploy_ctx_verify_running` | **post-swap, fail-closed**: the running container reports `ccd1c50ce`, or ABORT before migrations |
-| `--profile migrate run --rm migrate` | applies pending migrations from the snapshot, recording each in `schema_migrations` |
-| `run_smoke_tests` | HTTP-level post-deploy checks |
-
----
-
-## 5 · STOP CONDITIONS
-
-**The most important one first, because the script does not enforce it:**
-
-> ⛔ **A FAILED MIGRATION DOES NOT ABORT THE DEPLOY.** `cmd_deploy` logs a warning block and then
-> prints `Deployment complete!` and runs smoke tests anyway. For a schema-bearing deploy this is the
-> hazard that matters: the new code would already be serving against a database without the table.
-> **Read the migration output. Do not treat `Deployment complete!` as evidence that the migration
-> applied.** §6 verifies it independently.
-
-Also STOP — do not "fix forward" — on any of:
-
-```text
-deploy-lane refusal                    inspect the holder; never delete the lockfile
-disk gate refusal                      free space first
-pre-swap image verify failure          nothing swapped; investigate the build
-post-swap provenance failure           the script aborts and points at `rollback` — take it
-running GIT_COMMIT ≠ ccd1c50ce         rollback, then diagnose
-any ERROR in the migration output      DATABASE STATE IS UNADJUDICATED — see below
-smoke failures naming maia-sovereign   investigate before declaring the deploy good
-```
-
-**After a migration ERROR, the database state is UNADJUDICATED. Do not retry and do not clean up
-until it has been inspected.** Each file is applied with `ON_ERROR_STOP=1` inside a transaction, so
-an ordinary failure *within* the file rolls back rather than leaving a half-created table. The real
-asymmetry is elsewhere: the migration's own transaction can COMMIT and the **separate**
-`INSERT INTO schema_migrations` that follows it can fail. The objects would then exist while the
-ledger says they do not — and a blind re-run would re-execute a migration that has already applied.
-So inspect BOTH sides before deciding what happened:
-
-```bash
-# what the ledger believes
-… psql -c "SELECT filename FROM schema_migrations ORDER BY applied_at DESC LIMIT 5;"
-# what the schema actually holds
-… psql -c "\d developmental_observation_standing_events"
-… psql -c "SELECT tgname FROM pg_trigger WHERE tgrelid = 'developmental_readings'::regclass AND NOT tgisinternal;"
-```
-
-Only once those two agree — or the disagreement is understood — is a retry or a rollback a decision
-rather than a guess.
-
-**Expected benign output, so it is not misread as failure.** `run-sql-migrations.sh` wraps each file
-as `-c "BEGIN;" -f "$f" -c "COMMIT;"`, and 07F's migration carries its own `BEGIN;`/`COMMIT;` (the
-convention its sibling migrations follow). Postgres therefore emits:
-
-```text
-WARNING:  there is already a transaction in progress
-WARNING:  there is no transaction in progress
-```
-
-Those are warnings, not errors; `ON_ERROR_STOP=1` does not trip on them, and the file's own
-transaction is what commits. An `ERROR:` line is a different matter and is a STOP.
-
----
-
-## 6 · Verification after the deploy — provenance, then schema
-
-Run all of these. The first four are the standing post-deploy checks; the rest are specific to this
-unit and are what actually establishes that 07F is present.
-
-**Record the OLD container before deploying**, so freshness is proved by comparison rather than by
-a stopwatch:
-
-```bash
-# BEFORE the deploy — keep this output
-ssh soullab@minisforum 'docker inspect maia-sovereign --format "{{.Id}} {{.Created}}"'
-```
-
-```bash
-# 1 · container freshness — the id MUST differ from the pre-deploy id, and Created must belong to
-#     this deployment window. NOT "under a minute": the deploy waits for startup, runs migrations,
-#     then runs the full constitutional smoke suite before returning, which legitimately exceeds
-#     a minute. A stopwatch threshold would fail a correct deploy and pass a stale one.
+# 1 · container identity and creation window (observed: 2026-09-06T11:36:04.283455028Z)
 ssh soullab@minisforum 'docker inspect maia-sovereign --format "{{.Id}} {{.Created}}"'
 
 # 2 · LAN IP sanity (expect 192.168.0.104 — see the drift trap in CLAUDE.md)
@@ -255,10 +164,11 @@ ssh soullab@minisforum 'hostname -I'
 # 3 · public reachability
 curl -k https://soullab.life/api/health
 
-# 4 · provenance — MUST be ccd1c50ce, never "unknown"
-ssh soullab@minisforum 'docker exec maia-sovereign printenv GIT_COMMIT'
+# 4 · provenance and lane (observed: 66da58b4c · deploy-lane)
+ssh soullab@minisforum 'docker exec maia-sovereign printenv GIT_COMMIT; \
+  docker exec maia-sovereign printenv DEPLOY_LANE'
 
-# 5 · the migration is RECORDED (independent of the deploy's exit status)
+# 5 · the migration is RECORDED (observed applied 2026-09-06 11:36:34.367017+00)
 ssh soullab@minisforum 'docker exec maia-postgres psql -U soullab maia_consciousness -c \
   "SELECT filename, applied_at FROM schema_migrations \
     WHERE filename = '\''20260906000001_developmental_observation_standing.sql'\'';"'
@@ -267,27 +177,48 @@ ssh soullab@minisforum 'docker exec maia-postgres psql -U soullab maia_conscious
 ssh soullab@minisforum 'docker exec maia-postgres psql -U soullab maia_consciousness -c \
   "\d developmental_observation_standing_events"'
 
-# 7 · the middle-link guard is on the 07C table, and 07C'\''s own immutability trigger SURVIVES
+# 7 · the guards on the 07C table — 07C's own must SURVIVE alongside 07F's
 ssh soullab@minisforum 'docker exec maia-postgres psql -U soullab maia_consciousness -c \
   "SELECT tgname FROM pg_trigger \
     WHERE tgrelid = '\''developmental_readings'\''::regclass AND NOT tgisinternal ORDER BY tgname;"'
 ```
 
-Expected from (7) — **both** rows, the second being the one this deploy adds:
+Observed from (7) — all three, 07C's two intact beside 07F's one:
 
 ```text
-developmental_readings_immutable_check
-developmental_readings_no_orphan_delete_check
+developmental_readings_immutable_check          (07C)
+developmental_readings_no_orphan_delete_check   (07F)
+developmental_readings_observations             (07C insert-shape check)
 ```
 
-If `developmental_readings_immutable_check` is missing, STOP: something removed a 07C guarantee.
+If `developmental_readings_immutable_check` ever goes missing, STOP: something removed a 07C
+guarantee.
+
+**And the boundary fact, to be re-read immediately before the walk:**
+
+```bash
+ssh soullab@minisforum 'docker exec maia-postgres psql -U soullab maia_consciousness -c \
+  "SELECT count(*) AS standing_events FROM developmental_observation_standing_events;"'
+```
+
+Observed **0**. While it is 0, no member judgment exists under this mechanism and every option is
+open. W3 of the walk is what ends that.
 
 ---
 
-## 7 · Rollback posture
+## 4 · Reversal posture — if the §2.2 act is NOT given
 
-**Code.** `./scripts/deploy-production.sh rollback` swaps back to `maia-sovereign:previous`. The
-rollback tags are refreshed before the swap, so this is available immediately after the deploy.
+This is no longer "rollback after our deploy" — the deploy was someone else's act and canonical has
+moved twice since. Reversal now needs its own plan against **current** canonical, and this section
+states only what must hold in any such plan.
+
+**Code.** `deploy-production.sh rollback` swaps to `maia-sovereign:previous`, which is *not*
+07F-shaped: it is whatever preceded the deploy that carried both units. Reversing 07F specifically
+would be a new commit reverting its runtime, deployed as its own act — not a tag swap.
+
+**Never leave the live surface reaching a resource that is gone.** Dropping the table under running
+07F code is not a reversal; it is the broken state §0 describes as the quick-path hazard. Runtime
+must go first, or not at all.
 
 **Database — asymmetric, deliberately.**
 
@@ -301,11 +232,12 @@ The reading-delete trigger stays while standing history exists: it is part of th
 that makes the standing stream's own delete guard sound. Dropping it to "clean up" would silently
 re-open the hole R1 closed.
 
-No destructive rollback of member standing history is promised, in this runbook or in the PR.
+No destructive rollback of member standing history is promised, in this record or in the PR. Today
+the table is empty, so the first branch applies — but only until W3.
 
 ---
 
-## 8 · Two observed facts about the surrounding machinery
+## 5 · Two observed facts about the surrounding machinery
 
 Recorded because the runbook should not repeat a claim it cannot verify:
 
@@ -341,17 +273,18 @@ Recorded because the runbook should not repeat a claim it cannot verify:
 
 ---
 
-## 9 · The integrated program — measured, and the two acceptance records it feeds
+## 6 · The deployed program — measured, and the two acceptance records it feeds
 
-### 9.1 Bounded integration check (read-only, 2026-09-06)
+### 6.1 Bounded integration check, rerun on the DEPLOYED program (read-only, 2026-09-06)
 
-`ccd1c50ce` contains both units. #1228's only overlap with 07F is in
+The acceptance subject is now `66da58b4c` — the program actually running in production — so the set
+was rerun there rather than carried over from `ccd1c50ce`. #1228's only overlap with 07F is in
 `app/writers-studio/develop/DevelopRoom.tsx`: one early return added inside `refusalSentence`, a
 pure function over commission outcomes, handling `partition_not_recorded`. It touches no standing
 state, no `YourStanding`, and none of 07F's reading-addressed transitions (`beginRefresh`,
 `settleLookup`, `adoptInto`). Same file, different concern.
 
-Measured in a detached worktree at `ccd1c50ce` — no branch moved, nothing deployed:
+Measured in a detached worktree at `66da58b4c` — no branch moved, nothing deployed:
 
 ```text
 standing gates + surface + evidence gate   254 checks · 0 failures
@@ -360,12 +293,15 @@ write-boundary falsification                14 checks · 0 failures
 npm run typecheck                           no regressions
 ```
 
-This is an **integration** result, not a production one. It says the merged program still satisfies
-07F's own gates; it says nothing about the deployed runtime, which is what the walk is for.
+The same set at `ccd1c50ce` gave the same result; the intervening canonical delta is the
+Journal/Reflections lane (`lib/maia/presence/place.ts` and its contracts), which touches no 07F file.
 
-### 9.2 #1228's acceptance — a SEPARATE sequence, run FIRST
+This is still a **static** result, not a production one. It says the deployed program satisfies 07F's
+own gates when run here; it says nothing about the running container, which is what the walk is for.
 
-Not folded into W1–W12b. Its own lane's post-merge witness, run on the shared `ccd1c50ce` runtime:
+### 6.2 #1228's acceptance — a SEPARATE sequence, run FIRST
+
+Not folded into W1–W12b. Its own lane's post-merge witness, run on the shared `66da58b4c` runtime — **if it has not already been completed in its own lane**:
 
 ```text
 1  Keep a version on the affected Work (the one that reproduced the defect)
@@ -377,10 +313,10 @@ Run first, because it removes a known obstruction in the very path 07F's walk th
 commissioning and re-reading (W9). **Passing this does not count as a 07F witness, and passing 07F
 does not close #1228.**
 
-### 9.3 Attribution
+### 6.3 Attribution
 
 ```text
-DEPLOY / PROVENANCE   shared evidence: exact ccd1c50ce runtime
+DEPLOY / PROVENANCE   shared evidence: exact 66da58b4c runtime
         │
         ├── #1228 ACCEPTANCE   the three steps above
         └── 07F ACCEPTANCE     W1–W12a/b exactly as frozen in the walk spec
@@ -388,22 +324,28 @@ DEPLOY / PROVENANCE   shared evidence: exact ccd1c50ce runtime
 
 ---
 
-## 10 · The older ancestor is not an option
+## 7 · The older-ancestor question, closed
 
-Deploying `cb557b8f` to keep the lanes separate was considered and dropped. Authority is preserved
-by separate acceptance records, not by forcing production to run an older integrated program — and
-in this case the older program is actively worse for 07F's own walk: without #1228, a Work converted
-before 2026-09-06 can convert successfully, report `ready`, and still refuse `partition_not_recorded`
-with copy that tells the member to prepare an already-prepared Work. That is a loop with no exit,
-sitting directly in the path W9 needs.
+Deploying `cb557b8f` to keep the lanes separate was considered, then dropped: authority is preserved
+by separate acceptance records, not by forcing production to run an older program — and the older
+program was actively worse for 07F's own walk, since without #1228 a Work converted before
+2026-09-06 can report `ready` and still refuse `partition_not_recorded` in the path W9 needs.
+
+It is now moot in fact as well as in principle: production runs `66da58b4c`, and there is no
+deployment left for this lane to authorize.
 
 ---
 
-## 11 · What this runbook does not do
+## 8 · What this record does not do
 
 ```text
+no retroactive authorization of the deployment that crossed §2
 no execution · no production database contact · no minisforum action
-no quick-path deploy · no migration edit · no implementation edit
+no deploy or migrate instruction — those acts are done (§1)
+no migration edit · no implementation edit
 no 07F closure — the acceptance walk (its own spec) comes first, then a founder act
 no opening of BUILD-07G or 07H
 ```
+
+The next act is the founder's §2.2 decision. Everything downstream of it — #1228's retained witness,
+then frozen W1–W12b — waits on that.

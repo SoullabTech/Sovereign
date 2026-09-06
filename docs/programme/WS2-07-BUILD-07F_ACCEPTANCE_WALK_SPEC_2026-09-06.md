@@ -6,16 +6,26 @@
 
 ```text
 UNIT             BUILD-07F  DEVELOPMENTAL DECISIONS
-CANONICAL        ccd1c50ce822128d9b784c657e21929ca8095379
-PROMOTION        docs/ops/WS2-07F_PRODUCTION_PROMOTION_RUNBOOK_2026-09-06.md
-RUNS AFTER       #1228's own witness (runbook §9.2) — a separate record, not a step of this walk
+DEPLOYED RUNTIME ccd1c50ce → **66da58b4c4a4979240db460c045dd9daf1cd47d3** (live in production)
+07F MIGRATION    APPLIED 2026-09-06 11:36:34+00 — before its consent checkpoint (runbook §0)
+STANDING EVENTS  0 at the time of writing — the boundary this walk crosses at W3
+GATED ON         the founder's prospective act, runbook §2.2 — NOT YET GIVEN
+RUNS AFTER       #1228's own witness (runbook §6.2) — a separate record, not a step of this walk
 STATE            PRODUCTION ACCEPTANCE NOT STARTED
 ```
 
-**The subject moved from `cb557b8fb` to `ccd1c50ce`** when the founder adjudicated one combined
-promotion carrying 07F and #1228. The claims below are unchanged by that: they were fixed before
-either SHA was the target, and #1228's only overlap with this unit is refusal copy for a different
-refusal (runbook §9.1). What changed is which runtime they will be walked against.
+**The subject moved twice** — `cb557b8fb` → `ccd1c50ce` when the founder adjudicated one combined
+promotion, then to `66da58b4c`, which is what production actually runs. The claims below are
+unchanged by either move: they were fixed before any of those SHAs was the subject. #1228's only
+overlap with this unit is refusal copy for a different refusal, and the intervening
+Journal/Reflections delta touches no 07F file. What changed is which runtime they will be walked
+against.
+
+> ⛔ **W3 MAY NOT BE RUN BEFORE THE §2.2 ACT.** W1 is read-only and may be run to establish state.
+> W3 creates the first durable member standing act in production, and `standing_events = 0` is the
+> boundary that keeps reversal available without destroying a member act. That boundary is the
+> founder's to cross, and crossing it is the walk's first irreversible step — not a formality
+> inside it.
 
 ---
 
@@ -27,8 +37,12 @@ walk measures the deployed runtime, and **none substitutes for the next**. 07F a
 ```text
 L  ephemeral laboratory   deliberately deficient variants, destructive paths, race interleavings
 M  merge program (CI)     8/8 on exact head 54776ed5d
-R  deployed runtime       this walk
+S  deployed program       07F's own gates rerun statically at 66da58b4c: 254 · 15 · 14 · typecheck
+R  deployed RUNTIME       this walk — the running container, which none of the above touches
 ```
+
+`S` is not `R`. The same program passing its gates on a checkout says nothing about the container
+serving members; that gap is the whole reason this walk exists.
 
 Every claim below is labelled with the class that establishes it. A claim carried by **L** is not
 weaker for being carried there — it is carried there because reproducing it in **R** would require
@@ -49,10 +63,14 @@ proof that the member was shown the truth. Where both matter, the claim names bo
 ## 2 · Preconditions
 
 ```text
-the runbook's §0 question is settled — whether the migration has already run, and by which path
-the runbook's §6 verification passed — GIT_COMMIT = ccd1c50ce, migration recorded, objects present
-#1228's own witness (runbook §9.2) has been run and recorded SEPARATELY — it clears an
-  obstruction this walk needs for W9, and its result is never counted as a 07F witness
+the runbook's §0 is established — migration applied, guard live, consent checkpoint crossed
+the runbook's §3 reads pass on the CURRENT container — GIT_COMMIT = 66da58b4c, migration
+  recorded, table and all three developmental_readings triggers present
+standing_events re-read immediately before starting, and its value recorded whatever it is
+the founder's §2.2 act GIVEN — without it, W1 only
+#1228's own witness (runbook §6.2) has been run and recorded SEPARATELY, if it was not already
+  completed in its own lane — it clears an obstruction this walk needs for W9, and its result is
+  never counted as a 07F witness
 one authenticated founder member session in a browser
 at least one existing frozen developmental reading with ≥ 2 observations
   (or one commissioned during W0 — a commissioning act, not a standing act)
@@ -67,11 +85,16 @@ No credential is handled by the agent. Every authenticated act is performed by t
 ### W1 · provenance and schema `[D]`
 
 The runbook's §6 checks, re-stated here as the walk's first witness so the walk stands alone:
-`GIT_COMMIT = ccd1c50ce`; `schema_migrations` carries the 07F filename; the events table exists with
+`GIT_COMMIT = 66da58b4c`; `schema_migrations` carries the 07F filename; the events table exists with
 its UNIQUE quad and two triggers; `developmental_readings` carries **both**
 `developmental_readings_immutable_check` and `developmental_readings_no_orphan_delete_check`.
 
 **Fails if:** any object missing, or 07C's immutability trigger gone.
+
+**W1 also records the pre-walk count.** `SELECT count(*) FROM developmental_observation_standing_events`
+was **0** when this spec was retargeted. If it is non-zero when the walk begins, STOP and classify
+before W2: a member act exists that this lane did not author, and the walk's own arithmetic (W3's
+"exactly one row", W5's "two rows", W7's "three rows") assumes it starts from zero.
 
 ### W2 · UNSET is what a writer sees before they act `[B]` + `[D]`
 
