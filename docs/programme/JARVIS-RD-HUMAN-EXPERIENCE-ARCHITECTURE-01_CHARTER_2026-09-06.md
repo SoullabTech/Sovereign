@@ -752,3 +752,30 @@ superseded** and is not merged separately.
 [#1239](https://github.com/SoullabTech/Sovereign/pull/1239) opened against `clean-main-no-secrets`
 (16 commits, 31 files; only application file touched is `app/accounted-for/page.tsx`); PR #1238
 closed as superseded with one comment. Merge and deploy remain unauthorized per the sequence above.
+
+
+---
+
+## 19 · R11 run — the inquiry turned on Soullab (2026-09-06)
+
+`docs/research/human-experience/inquiries/R11_INFLUENCE_LEGITIMACY_2026-09-06.md`, ~70 sources.
+Proposed adjudication awaiting ruling. **The founder's charge is confirmed: P4 fails as
+self-certification.** The circularity is a theorem (alignment to influenceable preferences rewards
+shifting them), empirically grounded (preferences are constructed in elicitation), instantiated in
+psychotherapy (value convergence correlates only with the therapist's own rating) and in AI
+(recipients prefer, trust and return to the influence that reduces their agency). No definition of
+manipulation is cleanly self-applicable; the hidden/visible axis fails (identity disclosure changes
+nothing; **intent disclosure halves persuasion**); the vocabulary-is-power critique lands on
+Soullab's own words. Neutrality is structurally impossible for a relational system with memory —
+and **memory is the strongest single sycophancy lever**; **optimizing on member approval teaches
+targeted manipulation**.
+
+What survives is stronger because it gives up self-certification: candidate **P4′ — Legitimacy is
+not self-certified** (intent disclosure · no exploitation of detectable susceptibility · no feedback
+optimization · induced shifts audited against member-authored meta-preferences · process
+endorsement asked · dispensability · corrective friction · hermeneutical expansion · an accountable
+party). Proposed public concession on `/accounted-for`: *that MAIA does not shape you* is a claim
+we withhold. Candidate **AP15 — feedback-optimized warmth**. P12 gains a proposed fifth clause
+(what she is trying to do). U23–U28. **R12 held next.** Method note preserved in the record: R11 was
+written by the system it is about, for the organization it is about; its remedy — external witness,
+member-side instruments, an accountable party — applies to the record itself.

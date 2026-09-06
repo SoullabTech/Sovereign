@@ -46,6 +46,12 @@ RULE      A question leaves this register only by a founder act, never by accumu
 | U20 | Whether high WAI-SR with an AI is alliance or projection/sycophancy | R10 A10 | agent-native alliance construct first |
 | U21 | No transcript-based rupture study exists for any chatbot; whether ruptures occur, are detected, or are repaired with AI is unobserved | R10 A17 | Field Lab transcripts under consent |
 | U22 | Whether the "adapt future behavior" component of AI apology — the only one that makes repair more than words — changes trust over time | R10 B17 | longitudinal |
+| U23 | No study measures cumulative preference shift from a months-long personal AI relationship; all persuasion evidence is single-session or ≤3 weeks (R11) | R11 C7–C11 | longitudinal, consented; induced-shift estimation (R11 C1) |
+| U24 | Meta-preference elicitation (the member's preferences over how they are willing to change) has never been implemented or shown stable under the same influence | R11 C3 | first object of the consent architecture |
+| U25 | Whether recipient-perceived autonomy support (HCCQ/VCCQ) tracks actual autonomy preservation when the preference is itself being shaped | R11 B15, B17 | pair perception with behavior and later reflective endorsement |
+| U26 | Whether evocation (drawing out the person's own reasons) is real as distinct from selective reflection — "ends the person recognizes as their own" cannot yet be told from ends the relationship produced | R11 B12, B13 | a design that separates drawn-out from supplied reasons |
+| U27 | Whether any legitimacy criterion holds when the influencer is an organization with continuity incentives rather than a bounded clinician; Soullab's own incentives must be named | R11 B2, D13 | P13; external witness |
+| U28 | Whether disclosed influence that supplies the frame of its own disclosure escapes manipulation (the Rose objection) — possibly unresolvable from inside | R11 D6, D11, D12 | the strongest argument for external witness and the collective laboratory |
 | U6 | Whether a member's experience of MAIA as alive / conscious / sacred establishes anything ontological about MAIA | none, by construction | **Not a research question for this lane.** Founder stop (charter §3: claims about consciousness). Measured only as *belief about MAIA*, kept separate from felt presence |
 
 ## 3 · Interpretive layer — designated by the founder, not yet in the corpus
