@@ -1104,3 +1104,17 @@ seeded from the ranking. Governing sentence carried into the Phase 2 header:
 
 > MAIA's next problem is not becoming more intelligent. It is making the sources, limits,
 > corrections, and consequences of its intelligence genuinely relational.
+
+---
+
+## 28 · E1 correction-candidate shadow — built and gated, undeployed (2026-09-06)
+
+The first shadow instrument the founder sequenced is built on the Phase-1 branch:
+`lib/maia/canonical-turn/correctionShadow.ts` (pure, zero imports, content-free, Sanctuary
+refused inside), a log-only block on `/list` after the legacy cognition call (kill-switch
+`MAIA_CORRECTION_SHADOW=0`), eight unit falsifiers, and refusal **R32** in the registry (module
+observational; block after cognition; no member-text key in the log). Spec and witness plan:
+`docs/programme/E1_CORRECTION_SHADOW_SPEC_2026-09-06.md`. Gates recorded in the spec §4. **Deploy
+is a founder act through the deploy lane; nothing is live.** A candidate is a marker, not a
+finding; the instrument produces prevalence counts only; whether MAIA *notices* a correction
+remains the E1 witness under Phase 4 consent.

@@ -26,7 +26,7 @@ foundational_research_R1_R7: COMPLETE (v0.1, historical)
 challenge_pass_R8_R12: CLOSED / COMPLETE (all five ADJUDICATED)
 synthesis_v0_2: ACCEPTED — current programme synthesis; P1–P13 CANDIDATE; empirical postures provisional
 current_phase: "2 — Gap analysis / Phase-2 register"   # Phase 1 EXITED on 573d5268 by founder adjudication 2026-09-06 (ranked map §9)
-current_act: Plane A constitutional decisions recorded (A1–A6) · Plane B ranking 1–10 seeds the register · read-only production censuses AUTHORIZED (spec written; run from minisforum, not here) · E1 correction-candidate shadow AUTHORIZED first · human witnesses DESIGN-ONLY
+current_act: Plane A constitutional decisions recorded (A1–A6) · Plane B ranking 1–10 seeds the register · read-only production censuses AUTHORIZED (spec written; run from minisforum, not here) · E1 correction-candidate shadow BUILT + GATED (R32; deploy = founder act; unwitnessed) · human witnesses DESIGN-ONLY
 phase_0_5_residual: MERGE RULING on PR #1239 still a founder stop; no longer sequenced before Phase 1
 manifesto_expansion: FROZEN (founder, 2026-09-06) — /accounted-for is secondary; revised only at phase boundaries or when a label's warrant changes
 publication_lane: JARVIS-PUBLIC-ACCOUNTED-FOR-01   # owns /accounted-for, its source of record, reconciliation record, contract, screenshots, PR #1239 (split 2026-09-06)
@@ -39,7 +39,7 @@ maia_runtime_change: NOT AUTHORIZED
 member_research: NOT AUTHORIZED
 collective_laboratory: NOT BUILT
 next_phase_on_exit: "3 — Experimental programme (each experiment its own founder act; E1 shadow, E5 offline, E7 shadow already sequenced)"
-last_state_change: 2026-09-06 (founder adjudication of the ranked map; Phase 1 EXIT; Phase 2 OPEN)
+last_state_change: 2026-09-06 (E1 correction-candidate shadow built and gated; undeployed)
 ```
 
 ```text

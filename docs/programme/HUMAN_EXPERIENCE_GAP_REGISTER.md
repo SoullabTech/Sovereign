@@ -25,7 +25,7 @@ PARKED (with reason).
 
 | Rank | Item | Map clusters | Class | Authorized instrument(s) | Endpoint | Status |
 |---|---|---|---|---|---|---|
-| 1 | Know when MAIA is wrong — correction / misattunement + agreement instrumentation | X (04 C1/C3, 01 G6) | INQUIRY | **E1 correction-candidate shadow (first shadow authorized)**; offline blind rating on E9 dimensions after Phase 4 consent | E1 · E9 | INSTRUMENT-AUTHORIZED (E1 shadow: spec then build, zero diff) |
+| 1 | Know when MAIA is wrong — correction / misattunement + agreement instrumentation | X (04 C1/C3, 01 G6) | INQUIRY | **E1 correction-candidate shadow (first shadow authorized)**; offline blind rating on E9 dimensions after Phase 4 consent | E1 · E9 | **E1 shadow BUILT 2026-09-06** (`lib/maia/canonical-turn/correctionShadow.ts`; route block; R32; spec `E1_CORRECTION_SHADOW_SPEC_2026-09-06.md`) — UNDEPLOYED (founder act) · UNWITNESSED |
 | 2 | Plurality before interpretation | X8 | CONTRADICTION + INQUIRY | **E5 offline first** (no live code) → E11 shadow ablation → E6 registered `inferred.elemental_shadow` producer, only after E5 discriminates | E5 → E11 → E6 | IN-DESIGN (E5 protocol) |
 | 3 | Make participation inspectable | X1b, X2 | CONTRADICTION | prompt census of every technique/concealment instruction across modes; coverage census; E12 only if coverage is meaningful; implicit-vs-explicit rendering rated offline | manifest → member-facing inspectability (design); E4 | CENSUS-PENDING |
 | 4 | Transfer beyond MAIA | 05 V1, 06, 07, 08 | INQUIRY | E8 qualifying design on paper; Relational Navigation post-use falsifier as consented question; Deep-Intelligence Gate voice witness (E2) | measurement architecture (Phase 4 inputs) | IN-DESIGN (design now, human experiment later) |
@@ -63,3 +63,9 @@ revival; re-admission only against the current constitution. The dormant-service
 import/reachability census.
 
 ## Just below the line (recorded, unranked): V2 undisclosed silent wait · X17 hazards · doc defects (Co-Lab gate doc; absent practice-field spec; documented onboarding flow ≠ live).
+
+## Found during the E1 build (recorded, not repaired)
+
+| Item | Finding | Endpoint |
+|---|---|---|
+| CMT-01 R30 RED at baseline | pp-1 admission has expanded beyond the adjudicated seed by four producers (practitioner.atoms_observations; divination intent / cast / interpretation) landed by earlier lanes; the falsifier expects GREEN | CMT-01 owner: policy-version bump (pp-2) with the cells adjudicated, or seed reconciliation — founder decision |
