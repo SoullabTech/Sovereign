@@ -158,8 +158,8 @@ async function main() {
     console.log('\nAFTER');
     if (!now) { check('a working draft exists', false); }
     else {
-      const sections = await query<{ text: string; source_section_id: string | null; position: number }>(
-        `SELECT text, source_section_id, position FROM manuscript_draft_sections
+      const sections = await query<{ id: string; text: string; source_section_id: string | null; position: number }>(
+        `SELECT id, text, source_section_id, position FROM manuscript_draft_sections
           WHERE draft_id = $1 ORDER BY position ASC`, [now.id]);
       const sourceIds = await query<{ id: string }>(
         `SELECT id FROM manuscript_sections WHERE manuscript_id = $1 ORDER BY position ASC`, [manuscriptId]);
@@ -174,8 +174,12 @@ async function main() {
          them exactly as one converted under the repaired path does, and an
          instrument that called the first a failure would be reporting its own
          expectations rather than the Work. */
-      const newest = await query<{ revision_number: number; note: string | null; content: string; has_partition: boolean }>(
-        `SELECT revision_number, note, content, section_partition IS NOT NULL AS has_partition
+      const newest = await query<{
+        revision_number: number; note: string | null; content: string;
+        has_partition: boolean; section_partition: { sectionId: string }[] | null;
+      }>(
+        `SELECT revision_number, note, content, section_partition,
+                section_partition IS NOT NULL AS has_partition
            FROM working_draft_revisions WHERE draft_id = $1
           ORDER BY revision_number DESC LIMIT 1`, [now.id]);
       const rev = newest.rows[0];
@@ -191,6 +195,22 @@ async function main() {
       check('the newest revision holds the draft bytes exactly',
         rev?.content === now.content,
         rev ? `${rev.content.length} vs ${now.content.length} chars` : 'no revision');
+
+      /* ⛔ PRESENT IS NOT THE SAME AS CORRECT. `freezeReadState` proves the
+         partition names the draft's sections in the draft's order, so reaching
+         the validator implies this — but implied is weaker than asserted, and
+         a witness that only checked presence would pass an empty array and a
+         partition over some other topology alike. Named here so the record
+         carries the claim rather than a consequence of it. */
+      const partition = rev?.section_partition ?? [];
+      row('partition entries', partition.length);
+      check('the partition names every draft section',
+        partition.length === sections.rows.length,
+        `${partition.length} entries over ${sections.rows.length} sections`);
+      check('the partition names them in the draft\'s own order',
+        partition.length === sections.rows.length
+        && partition.every((e, i) => e.sectionId === sections.rows[i].id),
+        'partition section ids diverge from the draft topology');
 
       const post = await resolveDevelopPreparation(manuscriptId, memberId);
       check('preparation now reports ready',
