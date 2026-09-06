@@ -256,3 +256,47 @@ DRAFT         MAIA-SHADOW-FIELD-01_CONSTITUTION_v0.1_2026-09-06.md
 RATIFICATION  only if the reworded Guardian fails the text because its architecture is
               impossible under it
 ```
+
+---
+
+## 10 · Final ratification (2026-09-06) — CONSTITUTE CLOSED / RATIFIED · DESIGN OPEN
+
+> "Shadow Field Constitution v0.2 is RATIFIED. CONSTITUTE closes. DESIGN opens."
+
+The founder confirmed both required defects resolved: **C1** — a MAIA POSSIBILITY keeps
+`system · inferred · infer`; member take-up creates a distinct MEMBER INTERPRETATION with member
+provenance; a MAIA-originated interpretation can no longer become retrospectively
+member-authored. **C2** — speaking permits only visible transcript carriage within the current
+Field session; no storage, scoring, profiling, routing, personalization, or later-session
+retrieval; durable authority requires the keep act; L8 says the same without the former
+"spoken" exception. The memory instrument correctly makes every MAIA POSSIBILITY ineligible for
+persistence, taken up or not. **F12 remains PASS** — the compliant Guardian fails six of seven
+tests architecturally; C1/C2 give it no new route around entry, encounterability, recurrence,
+ablation, or assembly sovereignty; its sole pass is the register ceiling. **Naming ratified**:
+Shadow Field · `shadowField` · `[MAIA/shadow-field]` · `shadow-field`.
+
+Editorial residue cleared in the same act: the §9 heading of v0.2 now reads RATIFIED, matching
+its body.
+
+**Limits of this ratification (founder).** It is ratification for the Shadow Field lane. It
+does not promote L8 to a system-wide Sovereignty Invariant, alter the ordinary conversational
+path, or authorize runtime code.
+
+```text
+DISCOVER        CLOSED / ACCEPTED
+FALSIFY         CLOSED / ACCEPTED
+CONSTITUTE      CLOSED / RATIFIED
+
+CONSTITUTION    v0.2 RATIFIED
+F1–F16          ACCEPTANCE INSTRUMENT v1
+F12             PASS
+NAMING          RATIFIED
+
+DESIGN          OPEN — record: MAIA-SHADOW-FIELD-01_DESIGN_2026-09-06.md
+PROTOTYPE       HOLD — HARD STOP REMAINS
+WITNESS         HOLD
+PROMOTE         HOLD
+
+RUNTIME         UNCHANGED
+S1 GUARDIAN     PRESERVED AS SPECIMEN
+```

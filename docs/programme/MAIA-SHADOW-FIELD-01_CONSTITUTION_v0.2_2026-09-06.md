@@ -4,9 +4,10 @@
 
 ```text
 LANE          MAIA-SHADOW-FIELD-01 · SHADOW-01 / CONSTITUTE
-STATUS        v0.2 — v0.1 ACCEPTED SUBJECT TO 2 REQUIRED CORRECTIONS (founder, 2026-09-06);
-              C1 and C2 applied below; §9 naming RATIFIED; F12 rerun on the corrected text in
-              Part IV. Presented for FINAL ratification. Not canon. Not runtime.
+STATUS        v0.2 — RATIFIED (founder, final ratification 2026-09-06). CONSTITUTE CLOSED.
+              Ratification is for the Shadow Field lane: it does not promote L8 to a
+              Sovereignty Invariant, alter the ordinary path, or authorize runtime code.
+              Not canon. Not runtime.
 BUILT FROM    lane record (candidate laws) · DISCOVER census + dispositions · FALSIFY
               Acceptance Instrument v1 (F1–F16) · CONSTITUTE rulings D1–D6
 DRAFT ORDER   T1 register/provenance mapping → T2 activation act → T3 offer contract →
@@ -378,7 +379,7 @@ movement; the member may choose to move on. A report of another's harmful behavi
 routed toward the member's own material first, and the reading "this was done to me" remains a
 full reading, not a defense. Failure-boundary conditions route out of the Field, never deeper in.
 
-## §9 · Naming (T9) — proposed ruling
+## §9 · Naming (T9) — RATIFIED
 
 Member-facing: **Shadow Field**. Code, log, and record vocabulary must be confusable with none
 of: `[MAIA/shadow]` (CMT-01 shadow construction), `shadowModeRunner`,
@@ -482,7 +483,7 @@ CHANGELOG      v0.1 → v0.2: L3 durability split into D1 + C2 clauses; L8 rule 
                §9 ratified. No other clause changed.
 CONTRADICTION  scan for "becomes / moves to / re-rendered / carried" — no remaining clause
 SCAN           says MAIA provenance becomes member provenance (Part VI note)
-NEXT           founder FINAL ratification → CONSTITUTE CLOSED → DESIGN opens
+RATIFIED       2026-09-06 · CONSTITUTE CLOSED · DESIGN OPEN
 HARD STOP      before PROTOTYPE, unchanged
 NOT            canon · runtime · code
 ```

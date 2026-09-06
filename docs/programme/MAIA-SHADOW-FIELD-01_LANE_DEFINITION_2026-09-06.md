@@ -10,9 +10,10 @@ OPENED      2026-09-06 (founder, in-session; split out of the whole-organism cen
 BASE        clean-main-no-secrets @ 69f6fb7c
 BRANCH      claude/maia-shadow-practice-3pvlms
 STATUS      SHADOW-01 · DISCOVER CLOSED/ACCEPTED · FALSIFY CLOSED/ACCEPTED (Acceptance Instrument v1:
-            F1–F14 ratified with amendments, F15–F16 added, 0 struck) · CONSTITUTION v0.1 ACCEPTED SUBJECT TO C1/C2 → v0.2 CORRECTED (F12 green on
-            corrected text; §9 naming ratified), presented for FINAL ratification · NO CODE · RUNTIME UNCHANGED
-            (records: …_DISCOVER · …_FALSIFY · …_CONSTITUTE · …_CONSTITUTION_v0.2_2026-09-06.md)
+            F1–F14 ratified with amendments, F15–F16 added, 0 struck) · CONSTITUTE CLOSED / RATIFIED (Constitution v0.2, 2026-09-06) · DESIGN OPEN — design
+            drafted, awaiting founder acceptance · HARD STOP before PROTOTYPE stands · NO CODE · RUNTIME UNCHANGED
+            (records: …_DISCOVER · …_FALSIFY · …_CONSTITUTE · …_CONSTITUTION_v0.2 · …_DESIGN_2026-09-06.md ·
+            docs/design/contracts/shadow-field.md)
 PARENT      JARVIS-HUMAN-EXPERIENCE-MASTER-RUN-v1 (Phase 1 census is the source of this lane's constraints;
             this lane is NOT a Phase-2 register row and does not edit that programme's cockpit)
 AUTHORITY   docs/canon/MAIA_OATH.md · MAIA_CANON_v1.1 · MAIA_SOVEREIGNTY_INVARIANTS (5, 6, 14, 16) ·
@@ -362,8 +363,9 @@ own session to place in its register:
 DONE      DISCOVER — CLOSED / ACCEPTED; founder dispositions in census §12
 DONE      FALSIFY — CLOSED / ACCEPTED; Acceptance Instrument v1 in FALSIFY §7 (F1–F16)
 DONE      CONSTITUTE decisions D1–D6 — RULED (CONSTITUTE record §9)
-NOW       CONSTITUTION v0.2 (…_CONSTITUTION_v0.2_2026-09-06.md) — C1 provenance immutability + C2 spoken ≠ durable applied;
-          naming ratified; F12 rerun green (6 of 7, structural); awaiting FINAL ratification → CONSTITUTE CLOSED → DESIGN
+DONE      CONSTITUTE — CLOSED / RATIFIED (v0.2; C1, C2; naming; F12 PASS)
+NOW       DESIGN — drafted (MAIA-SHADOW-FIELD-01_DESIGN_2026-09-06.md + docs/design/contracts/shadow-field.md); awaiting founder
+          acceptance → the Field is *Designed* → ▌HARD STOP▐ → PROTOTYPE only on an explicit founder act
 THEN      FALSIFY → CONSTITUTE → founder ratification → DESIGN → HARD STOP
 NOT       any code, repair, migration, rename, prototype, or retirement decision
 ```
