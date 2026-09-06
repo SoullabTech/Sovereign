@@ -40,6 +40,9 @@ export type MemoryAtomSourceType =
   | 'change'           // a change block, or standalone
   | 'session_excerpt'  // excerpt from a conversation session
   | 'spontaneous'      // member typed directly into Keep (body required)
+  | 'shadow_field'     // member-authored material explicitly kept from the
+                       // Shadow Field. Member-placed: no source row, no
+                       // facilitator, no epistemic status, no provenance payload.
   | 'capsule'          // reflection_capsules — a developed conversational
                        // artifact the member reviewed, then explicitly declared
                        // into their Field. NOT 'reflection': source_type names

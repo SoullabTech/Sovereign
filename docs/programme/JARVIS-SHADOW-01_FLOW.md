@@ -18,7 +18,7 @@ constitute: CLOSED / RATIFIED
 design_stage: CLOSED / ACCEPTED
 claim_state: DESIGNED · NOT LIVE
 hard_stop: CROSSED   # explicit founder act 2026-09-06
-prototype: OPEN — P0·P1·P2·P3·P5·P6·P7 built/green; P4 STOPPED (memory carrier); P8 not started
+prototype: OPEN — P0–P7 built/green (P4 resolved: dedicated source_type shadow_field, migration unapplied); P8 needs the room surface
 witness: HOLD
 promote: HOLD
 runtime: UNCHANGED
@@ -28,9 +28,9 @@ invoked_entrance: DESIGNED · DEFERRED until activation-turn isolation is struct
 merge: NOT AUTHORIZED
 deploy: NOT AUTHORIZED
 maia_runtime_change: NOT AUTHORIZED
-current_node: PROTOTYPE / P4 STOP
-next_possible_act: founder ruling on the P4 memory carrier, then the room surface, then P8
-last_state_change: 2026-09-06 (PROTOTYPE authorized and entered; v1 assembly + prompt law + 3 falsifiers green; P4 stopped on provenance-through-retrieval)
+current_node: PROTOTYPE / P8 pending
+next_possible_act: build the walkable Dedicated-room surface, then the founder walk (P8)
+last_state_change: 2026-09-06 (P4 re-opened and built on the founder's resolution 2 — source_type shadow_field; gates 25/0)
 ```
 
 ```text
@@ -42,7 +42,7 @@ CONSTITUTE     CLOSED / RATIFIED
 DESIGN         CLOSED / ACCEPTED
 CLAIM STATE    DESIGNED · NOT LIVE
 HARD STOP      CROSSED
-PROTOTYPE      OPEN · P4 STOPPED · P8 pending
+PROTOTYPE      OPEN · P0–P7 GREEN · P8 pending (room surface)
 WITNESS        HOLD
 PROMOTE        HOLD
 RUNTIME        UNCHANGED

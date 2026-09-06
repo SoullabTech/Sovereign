@@ -133,3 +133,77 @@ structurally absent.
 
 A green P8 proves a prototype. It does not authorize WITNESS and does not make the Shadow
 Field Live.
+
+---
+
+## 6 · P4 RE-OPENED and BUILT — founder ruling 2026-09-06, resolution 2
+
+The founder authorized a narrowly bounded schema act: author the carrier properly, as a
+dedicated `source_type`, because the constitution requires an adopted item to carry a
+provenance tag naming the Field as origin, and because `source_type` already means *where
+this material originated before it was kept* and is already selected by the runtime loader.
+The P4 stop finding stands unchanged: `provenance` JSONB is practitioner-shaped audit
+history, is not runtime identity, and was **not** used, widened, or reinterpreted.
+
+### What was built
+
+| File | Change |
+|---|---|
+| `database/migrations/20260906000002_shadow_field_atom_source_type.sql` | `'shadow_field'` joins the closed `source_type` vocabulary (all eleven existing values preserved exactly, behind the capsule-precedent guard that refuses rather than outlaws unknown values); `sourcing_discipline` widened so `shadow_field` behaves like `spontaneous` (body required, nothing tightened); new `shadow_field_member_placed` constraint. No backfill. |
+| `lib/maia/memoryAtomsLoader.ts` | `'shadow_field'` added to `MemoryAtomSourceType`; body carried for `spontaneous ∥ shadow_field ∥ practitioner_observation`. `SELECT_COLUMNS` unchanged — `provenance` is still not selected. |
+| `lib/psyche/types.ts` | `'shadow_field'` added to the second union, with its semantics. |
+| `app/api/maia/shadow-field/keep/route.ts` | The keep act. The only Shadow Field writer. |
+
+**Test #7 is enforced at the schema, not by convention.** `shadow_field_member_placed`
+requires that a `shadow_field` row carry `source_id`, `facilitator_id`,
+`epistemological_status` **and** `provenance` all NULL. A future writer cannot dress a Field
+atom as practitioner-attributed or system-inferred material without removing that constraint
+in a visible migration. Nothing else in the loader needed an epistemic branch, because it
+already treats every non-`practitioner_observation` atom as member-placed.
+
+The atom defaults to `return_preference: 'member_pulled'`, which the prompt loader does not
+ambiently retrieve. Keeping something from the Field does not make it background
+psychological context for ordinary MAIA.
+
+### P4 acceptance tests
+
+```
+npx tsx tests/constitutional/refusal-registry/shadow-01-gates.ts
+  R32 · R33 · R34   ALL GREEN     25 passed · 0 failed · 0 warned
+```
+
+| # | Test | State |
+|---|---|---|
+| 1 | kept atom round-trips as `shadow_field` with member body intact | **structurally prepared, not yet witnessed** — the loader carries body for `shadow_field` and returns `sourceType` from the row (R32 green), but an actual round-trip needs a database. It is P8 walk item 6. |
+| 2 | a MAIA POSSIBILITY cannot be passed to or written by the keep endpoint | GREEN — not representable on the wire (no such authorship variant) and refused explicitly |
+| 3 | MAIA-proposed wording requires explicit acceptance before write | GREEN |
+| 4 | no write on withdrawal | GREEN — exit short-circuits in the turn route before any model call; the keep route is never reached |
+| 5 | Sanctuary blocks persistence server-side | GREEN statically — `shouldPersistKeep` precedes the write, so a forged or direct request creates zero rows. The forged-request proof under a live session is P8 walk item 7. |
+| 6 | nothing except the keep path writes a Shadow Field atom | GREEN — exactly one `INSERT INTO member_memory_atoms` exists in the whole room |
+| 7 | `shadow_field` never receives practitioner or system authority | GREEN — DB constraint, plus no new epistemic branch in the loader |
+| 8 | existing atom types render identically | GREEN — the body rule adds `shadow_field` only; every other type is untouched, and `provenance` is still not selected |
+
+**A second check was wrong before it was right.** R32's compatibility assertion first went
+RED because it anchored on the row interface's `body:` field rather than the mapping's
+ternary, and so read the wrong span of the loader. Anchored on `r.source_type ===` it is
+green. Recorded for the same reason as the first: a check reading the wrong text can fail in
+the reassuring direction later.
+
+### Not done, and not authorized
+
+`provenance` was not added to `SELECT_COLUMNS`; the JSONB contract was not widened or
+reinterpreted; memory selection policy, salience and recall logic are untouched; no
+Shadow-specific recall exists; no derived or inferred memory class was created; CMT-01 and
+the producer registry are untouched. The migration has **not been applied** anywhere —
+merge and deploy remain unauthorized.
+
+**The Co-Lab release gate is now mandatory before any tester wave**, because P4 writes memory
+atoms — a named trigger of that gate.
+
+```text
+P0 P1 P2 P3 P5   BUILT / GREEN
+P4               BUILT / GREEN (7 of 8 acceptance tests; #1 and the runtime half of #5 are P8 walk items)
+P6 P7            RERUN GREEN after P4 — 25 passed · 0 failed
+P8               HOLD — needs the walkable Dedicated-room surface
+RUNTIME          UNCHANGED · migration unapplied · not merged · not deployed
+```

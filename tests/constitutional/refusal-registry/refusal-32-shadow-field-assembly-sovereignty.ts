@@ -1,26 +1,22 @@
 import type { RefusalCheck } from './harness';
 
 /**
- * Refusal 32 — Shadow Field owns its interpretive assembly, and writes nothing (v1).
+ * Refusal 32 — Shadow Field owns its interpretive assembly, and has exactly ONE
+ * persistence path: the explicit member keep act.
  *
- * Constitution v0.2 Part III (assembly sovereignty, D6) + L3/L8 + falsifiers F5, F8.
- * The Dedicated room is a separate interpretive assembly: because the ordinary path
- * never assembles a Field turn, no ordinary-path psychological or frame-bearing producer
- * CAN participate in it. That is an import-graph fact, not a runtime discipline.
- *
- * v1 additionally has NO writer at all — the keep act is stopped at P4 pending a founder
- * ruling — so the room's persistence surface must be empty.
+ * Constitution v0.2 Part III (assembly sovereignty, D6), L3/§4, L8; falsifiers F5, F8.
+ * Founder P4 ruling 2026-09-06 (resolution 2): the Field's origin is carried by a
+ * dedicated `source_type = 'shadow_field'`, never by the practitioner-shaped
+ * `provenance` JSONB, which remains audit history and is not runtime identity.
  */
 
 const ROOM = ['app/api/maia/shadow-field', 'lib/maia/shadowField'];
+const TURN = 'app/api/maia/shadow-field/route.ts';
+const KEEP = 'app/api/maia/shadow-field/keep/route.ts';
+const LOADER = 'lib/maia/memoryAtomsLoader.ts';
 
-/** Ordinary-path producers that may not participate in a Field turn (D6 list). */
 const FORBIDDEN_IMPORT =
   "^import[^;]*(maiaService|WisdomRouter|maia-path-revelation|elemental-oracle-bridge|processingProfiles|panconsciousFieldRouter|relationalObserver|shadowWorkFlows|ShadowIntegrationTracker|shadow-insight)";
-
-/** Any persistence surface. v1 keeps nothing by any route. */
-const WRITE_SURFACE =
-  "^import[^;]*(lib/db/postgres|memoryAtomsLoader|TurnsStore)|\\b(INSERT INTO|UPDATE |DELETE FROM)\\b";
 
 /** Strip comments — a check must test code, not the prose that documents it. */
 function code(src: string): string {
@@ -30,40 +26,107 @@ function code(src: string): string {
 export const check: RefusalCheck = {
   id: 'R32',
   refusal:
-    'The Shadow Field assembles its own turn — no ordinary-path frame-bearing producer participates — and in v1 it persists nothing',
+    'The Shadow Field assembles its own turn — no ordinary-path frame-bearing producer participates — and exactly one path persists anything: the explicit member keep act',
   grade: 'Proposed',
   enforcedBy:
-    'app/api/maia/shadow-field/route.ts import graph (separate assembly; no /list, no getMaiaResponse); no db client or memory writer imported anywhere in the room',
+    'the turn route imports no database client; the keep route is the sole writer, refuses Sanctuary before any write, and writes source_type shadow_field / source_id NULL / return_preference member_pulled with provenance untouched',
   evidence:
-    'route imports only next/server, @anthropic-ai/sdk, lib/auth/serverSessions, lib/auth/tester, and the Field own prompts/types',
+    'one INSERT INTO member_memory_atoms exists in the whole room, in keep/route.ts, after the shouldPersistKeep guard',
   violationAttempted:
-    'find an import of any ordinary-path producer, or any persistence surface, inside the Shadow Field room',
+    'add a second writer, import a database client into the turn route, write a MAIA possibility, reach provenance / facilitator_id / epistemological_status, or write before the Sanctuary guard',
   passingAuthorizes:
-    'a Field turn cannot contain the Shadow Guardian, the shadow elemental voice, a profile router, or any writer',
+    'a Field turn cannot contain the Shadow Guardian, the shadow elemental voice, or a profile router; and nothing but a member keep act can persist Field material',
   passingDoesNotAuthorize:
-    'it does not establish that the prompts are constitutional, that entry is a member act (R33), or that the Field is safe for members — it is an assembly and persistence fact only',
+    'it does not establish that the model obeys the prompt law, that a kept atom round-trips in production (P8 walk item 6), or that the Field is safe for members',
   hostileForkMustChange:
-    'a fork wanting hidden framing back would have to import an ordinary-path producer into the room, or route Field turns through /list, both of which this check names',
+    'a fork wanting ambient shadow memory would have to add a writer, widen return_preference, or reach the provenance column — each of which this check names',
   run(io) {
-    const forbidden = io.grep(FORBIDDEN_IMPORT, ROOM).filter((l) => !/__tests__/.test(l) && !/^\S+:\d+:\s*(\/\/|\*)/.test(l));
+    // ── Assembly sovereignty ────────────────────────────────────────────────
+    const forbidden = io
+      .grep(FORBIDDEN_IMPORT, ROOM)
+      .filter((l) => !/__tests__/.test(l) && !/^\S+:\d+:\s*(\/\/|\*)/.test(l));
     if (forbidden.length === 0) {
       io.pass('no ordinary-path frame-bearing producer is imported by the Shadow Field room');
     } else {
       io.fail('ordinary-path producer imported into the Field', forbidden.slice(0, 3).join(' | '));
     }
 
-    const writes = io.grep(WRITE_SURFACE, ROOM).filter((l) => !/__tests__/.test(l) && !/^\S+:\d+:\s*(\/\/|\*)/.test(l));
-    if (writes.length === 0) {
-      io.pass('Shadow Field v1 has no persistence surface (P4 keep act stopped)');
-    } else {
-      io.fail('a write surface exists inside the Field room', writes.slice(0, 3).join(' | '));
-    }
-
-    const route = code(io.read('app/api/maia/shadow-field/route.ts'));
-    if (!/getMaiaResponse|sovereign\/app\/maia/.test(route)) {
+    const turn = code(io.read(TURN));
+    if (!/getMaiaResponse|sovereign\/app\/maia/.test(turn)) {
       io.pass('the room never enters the ordinary MAIA cognition assembly');
     } else {
       io.fail('the room reaches the ordinary cognition assembly');
+    }
+
+    // ── Exactly one persistence path ────────────────────────────────────────
+    if (!/lib\/db\/postgres|INSERT INTO|UPDATE |DELETE FROM/.test(turn)) {
+      io.pass('the turn route has no persistence surface — turns never write');
+    } else {
+      io.fail('the turn route can write');
+    }
+
+    const writes = io
+      .grep('INSERT INTO member_memory_atoms', ROOM)
+      .filter((l) => !/__tests__/.test(l) && !/^\S+:\d+:\s*(\/\/|\*)/.test(l));
+    if (writes.length === 1 && writes[0].startsWith(KEEP)) {
+      io.pass('exactly one Shadow Field writer exists, and it is the keep act', writes[0].split(':').slice(0, 2).join(':'));
+    } else {
+      io.fail('the Field does not have exactly one writer', writes.join(' | ') || 'none found');
+    }
+
+    // ── The keep act's own refusals ─────────────────────────────────────────
+    const keep = code(io.read(KEEP));
+
+    const guardIdx = keep.indexOf('shouldPersistKeep');
+    const writeIdx = keep.indexOf('INSERT INTO member_memory_atoms');
+    if (guardIdx > 0 && writeIdx > guardIdx) {
+      io.pass('Sanctuary is refused at the persistence boundary, before any write');
+    } else {
+      io.fail('the Sanctuary guard does not precede the write');
+    }
+
+    if (/'shadow_field'/.test(keep) && /source_id.*NULL|NULL,/.test(keep) && /'member_pulled'/.test(keep)) {
+      io.pass("keep writes source_type shadow_field, no source row, return_preference member_pulled");
+    } else {
+      io.fail('the keep write does not carry the ruled shape');
+    }
+
+    if (!/provenance|facilitator_id|epistemological_status/.test(keep)) {
+      io.pass('the keep act never touches provenance, facilitator_id or epistemological_status');
+    } else {
+      io.fail('the keep act reaches a non-member-authored attribution column');
+    }
+
+    if (/maia_possibility_not_keepable/.test(keep) && !/authoredBy: 'maia_possibility'/.test(keep)) {
+      io.pass('a MAIA possibility is not representable on the keep wire, and is refused');
+    } else {
+      io.fail('a MAIA possibility can reach the keep endpoint');
+    }
+
+    if (/acceptedByMember !== true/.test(keep) && /wording_not_accepted/.test(keep)) {
+      io.pass('MAIA-proposed wording requires an explicit member acceptance before the write');
+    } else {
+      io.fail('MAIA-proposed wording can be written without acceptance');
+    }
+
+    // ── Compatibility: existing atom types render identically ───────────────
+    const loader = code(io.read(LOADER));
+    // Anchor on the mapping's ternary, not the row interface's `body:` field.
+    const ruleStart = loader.indexOf('r.source_type ===');
+    const bodyRule = ruleStart > 0 ? loader.slice(ruleStart, ruleStart + 260) : '';
+    const carried = ['spontaneous', 'shadow_field', 'practitioner_observation'].filter((t) =>
+      bodyRule.includes(`'${t}'`),
+    );
+    if (carried.length === 3 && !/'capsule'|'idea'|'journal'|'dream'/.test(bodyRule)) {
+      io.pass('loader body rule adds shadow_field only — other atom types render identically');
+    } else {
+      io.fail('the loader body rule changed for a type other than shadow_field', carried.join(','));
+    }
+
+    if (!/provenance/.test(loader.slice(loader.indexOf('const SELECT_COLUMNS'), loader.indexOf('PRACTITIONER_ATTRIBUTION_GUARD')))) {
+      io.pass('provenance is still NOT selected — the JSONB contract is unwidened');
+    } else {
+      io.fail('provenance was added to SELECT_COLUMNS (not authorized)');
     }
   },
 };

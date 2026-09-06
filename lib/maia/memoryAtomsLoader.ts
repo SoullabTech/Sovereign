@@ -84,7 +84,9 @@ export type MemoryAtomSourceType =
   | 'change'
   | 'session_excerpt'
   | 'spontaneous'
-  | 'practitioner_observation';
+  | 'practitioner_observation'
+  /** Member-authored material explicitly kept from the Shadow Field (P4, 2026-09-06). */
+  | 'shadow_field';
 
 export type MemoryScope = 'personal' | 'colab' | 'client' | 'encounter';
 
@@ -293,11 +295,15 @@ export async function loadMemberMemoryAtomsForPrompt(
     return result.rows.map((r) => ({
       id: r.id,
       title: r.title,
-      // Body carried for spontaneous (member-typed) and practitioner_observation atoms.
+      // Body carried for spontaneous and shadow_field (both member-typed, no source
+      // row) and practitioner_observation atoms.
       // Sourced atoms (idea/journal/etc.) keep content in their native table.
-      body: (r.source_type === 'spontaneous' || r.source_type === 'practitioner_observation')
-        ? r.body
-        : null,
+      body:
+        r.source_type === 'spontaneous' ||
+        r.source_type === 'shadow_field' ||
+        r.source_type === 'practitioner_observation'
+          ? r.body
+          : null,
       primaryRegister: r.primary_register,
       registers: r.registers ?? [],
       elementalLenses: r.elemental_lenses ?? [],
