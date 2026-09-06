@@ -25,6 +25,7 @@ current_authority: docs/research/human-experience/SYNTHESIS_v0.2_2026-09-06.md  
 foundational_research_R1_R7: COMPLETE (v0.1, historical)
 challenge_pass_R8_R12: CLOSED / COMPLETE (all five ADJUDICATED)
 synthesis_v0_2: ACCEPTED — current programme synthesis; P1–P13 CANDIDATE; empirical postures provisional
+phase_2_posture: OBSERVE · DO NOT DESIGN — new instruments HOLD, new implementation HOLD; a result returns to the register as an evidence-state change (observed | downgraded | falsified | still unknown | instrument-inadequate), never as a repair
 current_phase: "2 — Gap analysis / Phase-2 register"   # Phase 1 EXITED on 573d5268 by founder adjudication 2026-09-06 (ranked map §9)
 current_act: Plane A constitutional decisions recorded (A1–A6) · Plane B ranking 1–10 seeds the register · read-only production censuses AUTHORIZED (spec written; run from minisforum, not here) · E1 correction-candidate shadow BUILT + GATED (R32; deploy = founder act; unwitnessed) · human witnesses DESIGN-ONLY
 phase_0_5_residual: MERGE RULING on PR #1239 still a founder stop; no longer sequenced before Phase 1
@@ -39,7 +40,7 @@ maia_runtime_change: NOT AUTHORIZED
 member_research: NOT AUTHORIZED
 collective_laboratory: NOT BUILT
 next_phase_on_exit: "3 — Experimental programme (each experiment its own founder act; E1 shadow, E5 offline, E7 shadow already sequenced)"
-last_state_change: 2026-09-06 (second ruling set executed: E1 isolated candidate pushed; pp-2 opened, R30 GREEN; census script + E5 materials authored)
+last_state_change: 2026-09-06 (instruments complete and accepted; lane crossed into evidence collection — E1 deploy → census, C5 early → E5 synthetic)
 ```
 
 ```text

@@ -83,3 +83,26 @@ import/reachability census.
 **Shadow Field** stays out of this execution chain: it is its own Jarvis lane, inheriting member
 interpretive authority, voluntary entry, plural readings, explicit memory adoption and transfer
 beyond MAIA from here — not another Phase-2 experiment folded into this register.
+
+## Evidence intake rule (founder, 2026-09-06) — an observation never triggers a repair
+
+**Phase 2 posture: OBSERVE · DO NOT DESIGN.** New instruments HOLD. New implementation HOLD.
+
+A result from any authorized instrument (E1 witness · census C1–C18 · E5 synthetic) returns **to
+this register first**, as an evidence-state change on the row it bears on — never as a repair, a
+fix, a code change, or a new instrument. The five states a result may produce:
+
+| State | Meaning |
+|---|---|
+| **OBSERVED** | the instrument reached its subject and the finding stands as recorded, within its verdict boundary |
+| **DOWNGRADED** | prevalence or coverage narrows the row's extent (e.g. C5 near zero narrows the cognitive-profile-mediated pathway, and only that pathway) |
+| **FALSIFIED** | the row's premise does not hold against the observation |
+| **STILL UNKNOWN** | the instrument ran and did not settle the question |
+| **INSTRUMENT-INADEQUATE** | the instrument could not reach the subject (C15, C18) — licenses nothing in either direction, and naming a better instrument is a founder act, not an implementation |
+
+**Then the next founder act decides what deserves intervention.** Plane A items remain governance
+decisions; Plane B items remain inquiries. A result recorded without its verdict boundary is not a
+finding, and a finding is not an authorization.
+
+**Sequencing (founder):** E1 deploy → production census with C5 early → E5 synthetic calibration.
+Independent enough to proceed in parallel once each human/ops prerequisite is available.
