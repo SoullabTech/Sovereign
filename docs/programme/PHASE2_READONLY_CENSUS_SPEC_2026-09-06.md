@@ -93,3 +93,25 @@ from the writer, not a migration; `breakthrough_moments` has no trigger-class co
 not of a profile table; the X1a/X1b downgrade rule reads against that proxy. C15 cannot answer the
 Temporal Memory F2 propagation question without a persisted `selectionTrace` (a code change; not
 authorized here).
+
+## Verdict boundaries (founder corrections 2026-09-06) — binding on how each result may be read
+
+**C3 — observation only.** The authorization is navigation and observation. The operator locates
+every Sanctuary control, records its current visible state and copy, counts taps from `/maia`, and
+records whether each surface is a control or merely descriptive. **Do not toggle anything. Do not
+alter defaults. Do not send a test turn.** Whether Sanctuary state propagates to a live session is
+a **separate founder act**, recorded in the walk as NOT OBSERVABLE UNDER THIS AUTHORIZATION.
+(Checklist in the SQL script rewritten accordingly; the earlier toggle-and-restore wording exceeded
+the ruling and is removed.)
+
+| Item | Verdict the result may carry | Verdict it may NOT carry |
+|---|---|---|
+| **C2** | **PROXY / INCONCLUSIVE for same-turn bypass.** The ephemeral-request line and the memory-write line share no turn id, so counts establish only aggregate coexistence in a window. | "any nonzero = breach extent". A nonzero count does not establish that an ephemeral turn wrote memory. |
+| **C5** | **PROXY.** A low result downgrades only the **cognitive-profile-mediated calibration pathway**. | A downgrade of X1's other shaping mechanisms — awareness-level routing, greeting intimacy tiers, Bloom scaffolding — each of which has its own instrument. |
+| **C15** | **NOT OBSERVABLE.** `selectionTrace` is in-process only; it is never persisted or logged. | "zero". It cannot answer the Temporal Memory F2 propagation question without a new instrumentation act. |
+| **C18** | **NOT OBSERVABLE SERVER-SIDE.** The reject is a browser-side `console.warn`. | "0 rejects". Zero container lines is not behavioural evidence. |
+| **C14** | SQL portion may run; **render occurrence remains unknown** (no render marker exists). | any claim about how often the block renders. |
+| **C4** | Accepted with the disclosed exception: the query reads `insight` internally for regex classification and exports **aggregate trigger-class counts only**. | any result record containing raw member text — raw text must never enter the result record. |
+
+These boundaries are part of the census instrument. A result recorded without its verdict boundary
+is not a finding.

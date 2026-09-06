@@ -1215,3 +1215,49 @@ before any minisforum run.
 scripts awaiting the acceptance gate — E5 SYNTHETIC AUTHORIZED, HOLD until acceptance of v2 —
 E5 MEMBER SAMPLE NOT AUTHORIZED — C19 NOT AUTHORIZED. Next act after the agents land: accept
 artifacts against these boundaries; begin no new implementation.
+
+---
+
+## 32 · Package accepted — two corrections applied; the transition to observation (founder, 2026-09-06)
+
+**E5 v2 — substantively accepted; clerical identity correction applied.** The methodological
+repair was right, but the file still carried v1 identity: title, `VERSION` line, the scorer's
+reference, and the corpus + sealed design sheet all named manual v1. Not a new protocol version —
+a clerical correction before observation. Applied: manual v2 titled and versioned v2 (with the
+supersession and the "no measure, threshold or hypothesis moved" note in the VERSION block);
+corpus, design sheet and `scripts/witness/e5-score.ts` now reference v2; self-test still 18/18.
+**Synthetic coding is authorized to begin. The external rater is the one outstanding human
+appointment.** Corpus adversarial composition accepted: 12 mixed · 9 contradictory · 9 ambiguous ·
+9 element-poor · 11 clean single-mode.
+
+**Census — run authorized; C3 tightened and verdict boundaries fixed.** The C3 checklist as
+authored allowed toggling and restoring and asked the operator to start a session with the default
+ON; that exceeded the ruling. Rewritten as **observation only**: locate every Sanctuary control,
+record current visible state and copy, count taps from `/maia`, record control vs descriptive — do
+not toggle, do not alter defaults, do not send a test turn. Propagation of Sanctuary state to a
+live session is a **separate founder act** and is recorded in the walk as NOT OBSERVABLE UNDER
+THIS AUTHORIZATION. Verdict boundaries now binding (census spec §Verdict boundaries): **C2**
+PROXY / INCONCLUSIVE for same-turn bypass (no shared turn id — aggregate coexistence only, never
+"any nonzero = breach extent"); **C5** PROXY narrowing only the cognitive-profile-mediated
+calibration pathway, not awareness-level routing or greeting intimacy; **C15** NOT OBSERVABLE,
+never zero; **C18** NOT OBSERVABLE SERVER-SIDE, never "0 rejects"; **C14** SQL may run, render
+occurrence unknown; **C4** accepted, raw text never enters the result record.
+
+**Final state of the ruling set.**
+
+```text
+E1                  DEPLOY AUTHORIZATION STANDS
+PP-2                CLOSED / ACCEPTED
+E5 v2               ACCEPTED · synthetic coding AUTHORIZED TO BEGIN
+E5 member sample    HOLD · Phase-4 consent
+external rater      STILL TO APPOINT
+CENSUS C1–C18       RUN AUTHORIZED · scripts accepted
+C3                  observation only
+C2 · C5             PROXY verdicts
+C15 · C18           NOT OBSERVABLE
+C19                 NOT AUTHORIZED
+```
+
+**The transition (founder):** *stop designing and collect evidence. Phase 2 has enough
+instruments. The next value comes from observations, not more architecture.* No further instrument
+is designed in this lane until observations exist to design against.

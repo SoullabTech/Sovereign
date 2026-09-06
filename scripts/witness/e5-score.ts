@@ -3,7 +3,7 @@
  *
  * Protocol: docs/programme/E5_ELEMENTAL_DESCRIPTIVE_VALIDITY_PROTOCOL_2026-09-06.md (§4 measures,
  * thresholds FIXED there). Manual: docs/research/human-experience/experiments/elemental/
- * E5_CODING_MANUAL_v1.md (§10 coding-sheet format).
+ * E5_CODING_MANUAL_v2.md (§10 coding-sheet format).
  *
  * Usage:
  *   npx tsx scripts/witness/e5-score.ts rater1.csv rater2.csv rater3.csv rater4.csv [--live live.csv] [--json]

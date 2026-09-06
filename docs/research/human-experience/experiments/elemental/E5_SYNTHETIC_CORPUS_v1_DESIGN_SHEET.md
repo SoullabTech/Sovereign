@@ -10,7 +10,7 @@ PURPOSE     Records what the AUTHOR intended each synthetic turn to be, so the d
             The author's readings are NOT ground truth for the corpus and are never used as a
             criterion in M1–M6. They are a design record.
 STATUS      SYNTHETIC RUN — licenses nothing about H1.
-CORPUS      E5_SYNTHETIC_CORPUS_v1.md · MANUAL E5_CODING_MANUAL_v1.md
+CORPUS      E5_SYNTHETIC_CORPUS_v1.md · MANUAL E5_CODING_MANUAL_v2.md
 ```
 
 ## 1 · Composition (as built)

@@ -5,7 +5,7 @@ STATUS      SYNTHETIC. Every turn below is fictional and was written for this dr
             No real person, no real member, no real transcript, no real data.
             A run on this corpus calibrates the instrument and LICENSES NOTHING ABOUT H1.
 PROTOCOL    docs/programme/E5_ELEMENTAL_DESCRIPTIVE_VALIDITY_PROTOCOL_2026-09-06.md (§2 materials)
-MANUAL      E5_CODING_MANUAL_v1.md (same directory) — read and complete the training set first
+MANUAL      E5_CODING_MANUAL_v2.md (same directory) — read and complete the training set first
 DESIGN      E5_SYNTHETIC_CORPUS_v1_DESIGN_SHEET.md — SEALED. Raters must not open it before coding.
 IDS         S01–S50. The "S" prefix tells the scorer this is a synthetic run.
 ```

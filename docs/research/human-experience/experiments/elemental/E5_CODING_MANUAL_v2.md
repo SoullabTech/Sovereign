@@ -1,4 +1,4 @@
-# E5 · Coding Manual v1 — reading one turn four ways
+# E5 · Coding Manual v2 — reading one turn four ways
 
 > **v2 (2026-09-06) — conforms to the frozen protocol.** Changes from v1, both required by the
 > protocol §3 as preregistered: (1) the evidence span for each element is recorded **in the coding
@@ -9,8 +9,11 @@
 > threshold or hypothesis changes. v1 was superseded before any turn was coded.
 
 ```text
-VERSION     v1 (2026-09-06). Frozen by commit before the first coded turn. If this manual changes
-            in any material way it becomes v2, and any coding done under v1 is re-run, not patched.
+VERSION     v2 (2026-09-06). Frozen by commit before the first coded turn. v1 was superseded
+            before use (per-element evidence and per-element contradiction flags were missing);
+            zero turns were coded under it. If this manual changes in any material way it becomes
+            v3, and any coding done under v2 is re-run, not patched. The protocol itself is
+            unchanged: no measure, threshold or hypothesis moved.
 FOR         Raters. You do not need to know anything about the organisation running this study,
             its software, or its ideas. Everything you need is in this document.
 PROTOCOL    docs/programme/E5_ELEMENTAL_DESCRIPTIVE_VALIDITY_PROTOCOL_2026-09-06.md — the
