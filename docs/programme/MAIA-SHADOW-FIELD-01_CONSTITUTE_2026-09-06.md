@@ -223,3 +223,36 @@ THEN         T1–T10 in order · F12 run · founder ratification → DESIGN
 RUNTIME      UNCHANGED · S1 Guardian preserved
 NOT          any code
 ```
+
+---
+
+## 9 · Founder rulings D1–D6 (2026-09-06) — DECISION GATE SATISFIED · DRAFTING AUTHORIZED
+
+> "All six are now decided. The recommendations are accepted, with three precision amendments
+> in D1, D4, and D6. No packet is sent back unresolved."
+
+| Decision | Ruling | Binding form |
+|---|---|---|
+| **D1 · Durability** | **A — TURN, amended** | An **unspoken system-authored psychological reading expires with the turn that produced it**. It may affect that turn through MAIA's question or spoken possibility, but no hidden representation crosses into the next turn. Once MAIA speaks a reading, the **visible transcript** may carry it through the current Field session, retaining its original source/register. Speaking it does **not** make it durable psychological memory: it is ineligible for later-session retrieval, profiling, or personalization unless the member explicitly adopts it. |
+| **D2 · Content-prompted offer** | **A′ — RATIFIED** | MAIA may offer the Shadow Field through ordinary turn cognition. **No dedicated shadow-relevance detector, classifier, router, keyword mechanism, embedding match, or shadow-specific pre-frame may decide that the offer should occur.** The offer is itself visible, names the Shadow Field, is plainly optional, and may refer to what the member actually said or to a visible observation — but may not smuggle in a shadow interpretation. Nothing Field-specific activates until the member acts. |
+| **D3 · Practitioner material** | **B — PROVENANCE, NOT REGISTER** | A practitioner is a **source**, not an epistemic category. Practitioner material retains practitioner provenance and must become visible and attributed before it can participate in the Field. It cannot arrive as silent system context, cannot be promoted above its actual epistemic status, and cannot activate the Field. Only the member enters. |
+| **D4 · Astrology / symbolic systems** | **A constitutionally; B for prototype — amended** | Symbolic material may enter only because **the member chooses that symbolic lens for this exploration**. "Member-brought" includes an explicit request such as *use my chart here*: MAIA may then consult a chart or symbolic source the member has already supplied or authorized. What is forbidden is **autonomous consultation** of that source to generate psychological content. Astrology stays out of prototype v1. |
+| **D5 · L8′** | **A — RATIFY AS FIELD LAW L8** | L8′ becomes the eighth Shadow Field law. **Entry is an act, not a match** becomes the structural form of L1. **A frame must be encounterable** belongs within L8. L8 is Field-scoped now; its possible promotion to a Sovereignty Invariant remains a post-WITNESS proposition, not something this lane may pre-ratify. |
+| **D6 · Scope** | **A — FIELD-ONLY, amended** | The constitution does not govern or dispose of the ordinary path. But a Shadow Field turn cannot simultaneously contain an **ordinary-path psychological / frame-bearing producer**. M1/M2-class systems therefore do not participate while the Field is active. This isolation begins on the **activation turn itself**, so an explicit "let's do shadow work" cannot first pass through the Guardian. Canonical safety / failure-boundary mechanisms, core conversation infrastructure, and permitted member-authored / adopted context are **not** excluded merely because they live outside the Field registry. |
+
+**Two boundaries the founder placed on the drafting.** D1 must not turn *"MAIA said it once"*
+into *"MAIA now knows this about me"* — encounterability lets a hypothesis remain part of a
+conversation; only adoption confers durable authority; a transcript is history, not
+automatically memory. D6 means **assembly sovereignty**, not software isolation — the Field owns
+which *interpretive authorities* participate in its turn; it does not secede from safety,
+identity, transport, or other non-interpretive foundations. D4's distinction is the same one:
+authority flowing from the member toward a symbolic system is lawful; a system silently
+consulting a chart to explain the person is the reverse flow.
+
+```text
+D1–D6         RULED
+CONSTITUTE    OPEN / DRAFTING AUTHORIZED — T1–T10 in the recorded sequence; F12 rerun last
+DRAFT         MAIA-SHADOW-FIELD-01_CONSTITUTION_v0.1_2026-09-06.md
+RATIFICATION  only if the reworded Guardian fails the text because its architecture is
+              impossible under it
+```

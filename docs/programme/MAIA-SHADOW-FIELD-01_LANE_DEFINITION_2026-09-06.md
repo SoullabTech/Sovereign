@@ -10,9 +10,9 @@ OPENED      2026-09-06 (founder, in-session; split out of the whole-organism cen
 BASE        clean-main-no-secrets @ 69f6fb7c
 BRANCH      claude/maia-shadow-practice-3pvlms
 STATUS      SHADOW-01 · DISCOVER CLOSED/ACCEPTED · FALSIFY CLOSED/ACCEPTED (Acceptance Instrument v1:
-            F1–F14 ratified with amendments, F15–F16 added, 0 struck) · CONSTITUTE OPEN — six decision
-            packets D1–D6 prepared, awaiting founder rulings; law text not drafted · NO CODE · RUNTIME UNCHANGED
-            (records: …_DISCOVER · …_FALSIFY · …_CONSTITUTE_2026-09-06.md)
+            F1–F14 ratified with amendments, F15–F16 added, 0 struck) · D1–D6 RULED · CONSTITUTION v0.1 DRAFTED
+            (eight laws, nine instruments, F12 rerun passed structurally), awaiting founder ratification · NO CODE · RUNTIME UNCHANGED
+            (records: …_DISCOVER · …_FALSIFY · …_CONSTITUTE · …_CONSTITUTION_v0.1_2026-09-06.md)
 PARENT      JARVIS-HUMAN-EXPERIENCE-MASTER-RUN-v1 (Phase 1 census is the source of this lane's constraints;
             this lane is NOT a Phase-2 register row and does not edit that programme's cockpit)
 AUTHORITY   docs/canon/MAIA_OATH.md · MAIA_CANON_v1.1 · MAIA_SOVEREIGNTY_INVARIANTS (5, 6, 14, 16) ·
@@ -361,8 +361,9 @@ own session to place in its register:
 ```text
 DONE      DISCOVER — CLOSED / ACCEPTED; founder dispositions in census §12
 DONE      FALSIFY — CLOSED / ACCEPTED; Acceptance Instrument v1 in FALSIFY §7 (F1–F16)
-NOW       CONSTITUTE — decision packets D1–D6 (MAIA-SHADOW-FIELD-01_CONSTITUTE_2026-09-06.md); awaiting founder rulings;
-          then T1–T10 drafting → F12 run → ratification → DESIGN
+DONE      CONSTITUTE decisions D1–D6 — RULED (CONSTITUTE record §9)
+NOW       CONSTITUTION v0.1 DRAFT (MAIA-SHADOW-FIELD-01_CONSTITUTION_v0.1_2026-09-06.md) — T1–T10 done, F12 rerun: reworded
+          Guardian fails structurally on 6 of 7 points; §9 naming is a founder decision; awaiting ratification → DESIGN
 THEN      FALSIFY → CONSTITUTE → founder ratification → DESIGN → HARD STOP
 NOT       any code, repair, migration, rename, prototype, or retirement decision
 ```
