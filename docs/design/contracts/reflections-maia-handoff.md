@@ -101,3 +101,44 @@ the House conversation layer. It is not a bespoke Reflection chatbot.
 **Distinct room?** Yes. The member's Reflection stays legible as the place beneath
 the scrim, and the sheet is intentionally subordinate to it. Closing MAIA reveals
 the same Reflection exactly where the member left it.
+## Not yet a pattern (held against a second specimen)
+
+This room is **one specimen**, not a reusable architecture. Reflections is the
+first place MAIA has entered a member-owned object without displacing it; that
+is not yet evidence that a general contained-presence pattern exists. Extracting
+one now would repeat the move the COACHING-TEMPLATE-EXTRACTION-01 naming ruling
+refused on 2026-09-04 — *the first specimen is not the generic architecture*.
+
+**Sequence (founder, 2026-09-06).** Reflections closes first: desktop walk PASS,
+mobile walk outstanding, console errors outstanding. Only when all three settle
+does **Journal** open as specimen two. Nothing is named or extracted before the
+two rooms can be compared.
+
+**Why Journal and not Co-Lab or Writer's Studio.** Journal shares the load-bearing
+condition — the member already owns an object underneath, MAIA can enter in
+relation to it, leaving must restore precisely that object — and there is already
+a House/Room boundary record (`docs/design/contracts/journal-room.md`) to test
+against. It is also different enough from a Reflection that anything surviving
+both starts to look like an invariant rather than Reflections-specific UI. Co-Lab
+and Writer's Studio add other authority and collaboration semantics, which would
+make it impossible to tell whether a difference came from the presence pattern or
+from the room itself. They are not candidates for specimen two.
+
+**The comparison is behavioral, not component-based.** The question is not whether
+Journal reuses `MaiaPresence`. Sharing a component proves nothing; a room could
+mount the same sheet and still displace its subject. What must survive both rooms:
+
+- the member-owned object remains primary
+- canonical MAIA continuity (one relationship, one thread — never a fresh identity)
+- no navigation required to reach MAIA
+- closing MAIA restores the exact prior place and state
+- exit carries no penalty
+
+The deeper criterion these serve, in the founder's words: *contained presence is
+not "MAIA in a drawer" — it is MAIA entering a member-owned place without
+displacing its subject.* "Contained presence" is a working handle here, not a
+canonized name; naming waits on the comparison.
+
+**If one of these disappears in Journal, that is the finding** — it tells us the
+property was Reflections-specific before anything got canonized. A failure in
+specimen two is the cheapest possible outcome, and the reason for running it.
