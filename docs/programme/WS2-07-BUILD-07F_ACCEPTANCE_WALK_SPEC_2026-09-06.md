@@ -47,8 +47,13 @@ STATE            W1 CLOSED — all parts evidenced on production 2026-09-06. §2
                    W5               PASS 2026-09-06 — the first act is unchanged, the second
                                     appended (see W4/W5 EVIDENCE below)
                    W6               PASS 2026-09-06 — the repeat wrote nothing
-                   W7               ATTEMPT 1 INCONCLUSIVE — browser-context custody could not
-                                    be reconstructed; one-event re-attempt AUTHORIZED
+                   W7               NOT EXERCISED CLEANLY — attempt 1 INCONCLUSIVE, retry NOT
+                                    EXECUTED (the "stale" window was on the wrong reading).
+                                    CONCURRENCY GUARD UNPROVEN, NOT FAILED. STOPPED 2026-09-06.
+                   FINDING F-CTX    Develop reading-context ambiguity — a member can make a
+                                    durable standing act on a different reading than intended.
+                                    PRODUCT FINDING, not operator error. Gates the standing
+                                    surface out of the pilot boundary.
                  W3 is the first irreversible step. W1 and W2 no longer gate it; the founder's own
                  gesture in an authenticated browser is what performs it.
 
@@ -668,3 +673,92 @@ would have cost three before the test began, and would have moved off the pinned
 The standing/decision feature would need fixing first or would sit outside any pilot boundary: the
 defect would live exactly where two browser contexts can silently disagree about a writer's explicit
 decision, which is the one thing this unit exists to prevent.
+
+---
+
+## W7 STOPPED · FINDING F-CTX — Develop reading-context ambiguity
+
+**Founder ruling, 2026-09-06: stop W7. No further standing button is to be clicked; every Develop
+window closed; the database preserved exactly as it stands.**
+
+```text
+W7 ATTEMPT 1       INCONCLUSIVE — browser-context identity not proven
+W7 RETRY           NOT EXECUTED — the "stale" window was on the wrong reading
+CONCURRENCY GUARD  UNPROVEN, not failed
+W7 concurrency defect   NOT ESTABLISHED
+W7 pass                 NOT ESTABLISHED
+```
+
+```text
+R / o1 stream as it stands — PRESERVED, not to be altered
+  0  keep        17:21:42.823886+00
+  1  dismiss     17:44:23.724811+00
+  2  unresolved  17:55:04.385572+00
+  3  keep        17:55:48.794477+00
+  4  dismiss     18:03:38.138045+00   ← current
+```
+
+**Wrong-reading acts are REAL, DURABLE, and PRESERVED.** During the walk, standing acts were made on
+`d527997e-bb8a-499e-bc1c-248bcec6ee2b` — a different reading of the same Work — while the operator
+believed they were acting on `R`. Confirmed: `d527997e / o1 / 0 / keep / 17:58:48.616471+00`. Further
+acts on that reading were observed in the surface after that census and are not yet enumerated; a
+read-only census of the full table is OUTSTANDING and should be taken before this record is closed.
+None of these are to be deleted.
+
+### The finding, stated at product level
+
+> **A member can make a permanent authorial decision on a different reading than the one they believe
+> they are looking at.**
+
+Mechanism, as observed:
+
+```text
+· the Work has two readings whose list entries are visually near-identical
+· selecting one rewrites ?r= IN PLACE via history.replaceState — silent, no navigation
+· the standing controls are identical on both, and both render the same three buttons
+· nothing in the standing block names which reading it belongs to
+```
+
+The two readings are distinguishable only by details a member has no reason to be tracking:
+
+```text
+R                  Sep 5, 10:31 AM · 7 observations · o1 = MOVEMENT   · Superseded
+NOT R (d527997e)   Sep 5, 12:53 PM · 6 observations · o1 = RECURRENCE · Current
+```
+
+⛔ **This is NOT test-operator confusion, and must not be recorded as such.** The walk's operator was
+attending closely, had the identity in hand, and still made durable acts on the wrong reading more
+than once. A writer with less context would fare worse. **It is a human-factors hazard on the exact
+surface where a permanent authorial decision is recorded** — which is the one place this unit exists
+to make trustworthy.
+
+### Consequence for the pilot boundary
+
+```text
+STANDING / DECISION SURFACE   NOT EXPOSED to testers until the context problem is fixed or made
+                              unmistakable
+REST OF WRITER'S STUDIO       may still be piloted on its own merits
+```
+
+The rest of the room's behaviour was not implicated: W1–W6 passed, the append-only guarantees held on
+production, and the observation content was never touched. What is gated is the standing interaction
+specifically.
+
+### Instrument change required BEFORE W7 resumes
+
+The retry procedure used here was unsound, and the record should say why rather than blame its
+execution: **it relied on "the untouched window" — an assumption about operator memory — instead of
+requiring a positive identity proof inside each window before every irreversible click.** A test whose
+validity depends on recalling which window is which is not an instrument.
+
+When W7 resumes, each window must independently prove, on screen, before any click:
+
+```text
+READING   Sep 5 10:31 AM
+          7 observations
+O1        MOVEMENT
+          SUPERSEDED
+R =       cb589ab0-3532-433b-b52d-916d155382c8
+```
+
+and no irreversible click until BOTH windows have shown it. Close every Develop window first.

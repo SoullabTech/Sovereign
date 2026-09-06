@@ -32,6 +32,12 @@
 >                        walk's frozen anchor by the docs-only #1232 merge, and has advanced
 >                        further since (now 50302f5d9); the walk must rebind. W2–W12 NOT STARTED,
 >                        and W3 onward remains gated on a PROSPECTIVE founder act (runbook §2.2)
+>                        W1–W6 PASS on production 50302f5d9; W7 STOPPED 2026-09-06, guard
+>                        UNPROVEN (not failed). FINDING F-CTX: a member can make a durable
+>                        standing act on a different reading than intended — a human-factors
+>                        hazard on the decision surface itself. The standing/decision surface is
+>                        NOT to be exposed to pilot testers until that context problem is fixed
+>                        or made unmistakable; the rest of Writer's Studio may still be piloted.
 > BUILD-07F              NOT CLOSED
 > BUILD-07G              INSTRUMENT v1 RATIFIED 2026-09-06 · FALSIFIERS FILED ·
 >                        IMPLEMENTATION UNAUTHORIZED
