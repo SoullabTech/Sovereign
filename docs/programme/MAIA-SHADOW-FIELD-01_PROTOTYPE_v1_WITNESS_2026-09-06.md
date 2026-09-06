@@ -602,7 +602,7 @@ P8   OPEN — founder walk may resume from The House → Shadow Field
 
 ---
 
-## 11 · Walk environment — provenance, and one hazard worth naming
+## 11 · Walk environment — provenance, and the host hazards
 
 Recorded so that any walk evidence can be tied to what was actually being looked at.
 
@@ -644,3 +644,82 @@ Do not restart the server, do not kill the SSH tunnel, and do not start a second
 `npm run dev` — the running server is already at the right commit. A second `npm run dev`
 collides with it and fails on `EADDRINUSE`, which is a symptom of the correct server already
 running, not of a defect.
+
+---
+
+## 11a · Superseded walk target, and a fourth hazard: a stale server
+
+**Everything above about port 3011 is history.** The founder found the running `[::1]:3011`
+server was **started before the P3-R1 route existed**, so it served the app's *Path Not Found*
+for `/maia/shadow-field` although the route file was present on disk. A stale dev server is
+therefore a **fourth** way to record a false "the Field is missing" result — and the most
+deceptive of the four, because the host is correct and the commit on disk is correct; only the
+compiled server is behind. The standing instruction above (do not restart) was written for a
+server that was current, and did not survive contact with one that was not.
+
+The founder restarted **only** the local Shadow dev server — no code, schema, database, gate,
+merge, or deploy change — and moved it off 3011 entirely.
+
+```text
+Walk target   http://localhost:3012/maia     ← current, correct
+              (local Mac only; no minisforum SSH forward on 3012)
+```
+
+The four wrong targets, consolidated:
+
+```text
+soullab.life            production minisforum      ✗ Shadow Field absent / 404
+http://127.0.0.1:3011   SSH forward to minisforum  ✗ production masquerading as localhost
+http://[::1]:3011       stale local server         ✗ correct host, pre-P3-R1 build
+localhost / [::1]       different cookie origins   ✗ auth does not carry between them
+```
+
+The last line is the reason `localhost` — not `[::1]` — is the walk subject: an authenticated
+founder session held on `localhost` is a **different host cookie** from `[::1]`, so walking the
+IPv6 literal walks unauthenticated without saying so.
+
+### Arrival browser mechanics — founder-executed, unauthenticated headless Chrome
+
+Real browser evidence at `http://localhost:3012/maia/shadow-field`:
+
+```text
+HTTP 200 · URL /maia/shadow-field
+Shadow Field                visible
+Enter the Shadow Field      visible
+Leave                       visible
+
+Shadow API requests on Arrival:   ZERO
+  /api/maia/shadow-field/enter    0
+  turn route                      0
+```
+
+Rendered Arrival copy, as observed:
+
+> A place to meet what you have not yet been able to include.
+> MAIA holds the lantern; you name what is in the room.
+
+*Arriving is not entering* is now **browser-observed**, not merely structural. Pressing **Leave
+before entering** produced `0 /enter` and `0 /keep` — it cannot mint a sitting or persist
+anything.
+
+The run was deliberately unauthenticated, so the exit POST returned `401` and the app moved
+toward sign-in. **That run cannot adjudicate authenticated navigation after Leave**, and is not
+recorded as doing so.
+
+```text
+P3-R1 browser mechanics
+
+Arrival renders                PASS
+Arrival does not activate      PASS — 0 Shadow API requests
+Leave present at Arrival       PASS
+Pre-entry Leave mints none     PASS — 0 /enter, 0 /keep
+
+Authenticated Leave return     NOT YET FOUNDER-WITNESSED
+Felt quality                   PENDING FOUNDER
+```
+
+No code, schema, gate, merge, or deploy change followed this evidence.
+
+```text
+P8   OPEN — founder walk resumes at http://localhost:3012/maia → The House → Shadow Field
+```
